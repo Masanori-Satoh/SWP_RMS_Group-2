@@ -93,16 +93,32 @@ application-secret.properties
 application-secret.yml
 
 # ===================================================================
-# 8. Operating System Files
+# 8. Spring Boot / Maven Wrapper
+# ===================================================================
+# Maven Wrapper binary (không cần commit, tự download khi chạy)
+.mvn/wrapper/maven-wrapper.jar
+
+# Spring Boot restart trigger file (sinh ra khi dùng DevTools)
+.reloadtrigger
+
+# Thư mục upload file tạm (nếu có lưu file local khi dev)
+uploads/
+upload-temp/
+
+# ===================================================================
+# 9. Operating System Files
 # ===================================================================
 # Windows
 Thumbs.db
 ehthumbs.db
 Desktop.ini
 $RECYCLE.BIN/
+*.lnk
 
 # macOS
 .DS_Store
 .AppleDouble
 .LSOverride
 ._*
+.Spotlight-V100
+.Trashes
