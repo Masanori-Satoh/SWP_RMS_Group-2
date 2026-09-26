@@ -1,0 +1,38 @@
+# HƯỚNG DẪN: COPY file này thành 'application.properties' (cùng thư mục).
+# SAU ĐÓ, tìm các dòng có chữ 'YOUR_...' bên dưới và thay bằng thông tin máy bạn.
+
+# ======================== APPLICATION ========================
+spring.application.name=SWP_RMS_Group-2
+
+# ======================== DATABASE (MS SQL SERVER) ========================
+# Đổi YOUR_DB_NAME thành tên Database bạn đã tạo (ví dụ: RMS_DB)
+spring.datasource.url=jdbc:sqlserver://localhost:1433;databaseName=YOUR_DB_NAME;encrypt=true;trustServerCertificate=true
+
+# Đổi YOUR_DB_USERNAME (thường là sa) và YOUR_DB_PASSWORD
+spring.datasource.username=YOUR_DB_USERNAME
+spring.datasource.password=YOUR_DB_PASSWORD
+spring.datasource.driver-class-name=com.microsoft.sqlserver.jdbc.SQLServerDriver
+
+# ======================== JPA / HIBERNATE ========================
+spring.jpa.hibernate.ddl-auto=update
+spring.jpa.show-sql=true
+spring.jpa.properties.hibernate.format_sql=true
+spring.jpa.properties.hibernate.dialect=org.hibernate.dialect.SQLServerDialect
+spring.jpa.open-in-view=false
+
+# ======================== SERVER ========================
+# Đổi 8080 thành cổng khác nếu máy bạn bị lỗi trùng cổng
+server.port=8080
+server.servlet.context-path=/
+server.servlet.encoding.charset=UTF-8
+server.servlet.encoding.force=true
+
+# ======================== THYMELEAF ========================
+spring.thymeleaf.cache=false
+spring.thymeleaf.encoding=UTF-8
+spring.thymeleaf.mode=HTML
+spring.thymeleaf.prefix=classpath:/templates/
+spring.thymeleaf.suffix=.html
+
+# ======================== LOGGING ========================
+logging.level.com.group2.rms=DEBUG

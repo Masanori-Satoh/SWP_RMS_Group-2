@@ -30,9 +30,9 @@ out/
 # ===================================================================
 # 3. Visual Studio Code (VS Code)
 # ===================================================================
-# Bỏ qua cache và workspace cá nhân, giữ lại cấu hình dùng chung cho cả nhóm
+# Bỏ qua cache, workspace cá nhân và settings cục bộ
 .vscode/*
-!.vscode/settings.json
+!.vscode/settings.example.json
 !.vscode/tasks.json
 !.vscode/launch.json
 !.vscode/extensions.json
@@ -87,6 +87,10 @@ database/backups/
 # ===================================================================
 .env
 .env.local
+# application.properties chứa password database thật - không được commit lên Git!
+# Dùng application.properties.example làm template cho team
+application.properties
+application.yml
 application-local.properties
 application-local.yml
 application-secret.properties

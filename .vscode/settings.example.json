@@ -1,0 +1,16 @@
+{
+    "//": "HƯỚNG DẪN: COPY file này thành settings.json (cùng thư mục) và sửa 2 đường dẫn bên dưới thành đường dẫn máy bạn.",
+    "//": "Lưu ý: Dùng 2 dấu gạch chéo ngược (\\\\) hoặc 1 dấu gạch chéo xuôi (/) trên Windows.",
+
+    "java.configuration.runtimes": [
+        {
+            "name": "JavaSE-21",
+            "path": "C:\\ĐƯỜNG_DẪN_TỚI_JDK_CỦA_BẠN",
+            "default": true
+        }
+    ],
+    "java.jdt.ls.java.home": "C:\\ĐƯỜNG_DẪN_TỚI_JDK_CỦA_BẠN",
+    
+    "maven.executable.path": "C:\\ĐƯỜNG_DẪN_TỚI_MAVEN_CỦA_BẠN\\bin\\mvn.cmd",
+    "maven.terminal.useJavaHome": true
+}

@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<!--
+    fragments/head.html
+    =====================================================================
+    Fragment dùng chung cho phần <head> toàn bộ trang
+    Cách dùng: <head th:replace="~{fragments/head :: head(title='Tên Trang')}">
+
+    Bao gồm:
+      - Google Fonts (Inter)
+      - main.css
+      - Bootstrap Icons (CDN)
+    =====================================================================
+-->
+<head th:fragment="head(title)">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Recruitment Management System - Group 2 SE2064">
+
+    <!-- Title động cho từng trang -->
+    <title th:text="${title} + ' | RMS Group-2'">RMS Group-2</title>
+
+    <!-- Google Fonts: Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+    <!-- Bootstrap Icons (CDN) -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+
+    <!-- Main CSS của project -->
+    <link rel="stylesheet" th:href="@{/css/main.css}">
+
+</head>
+</html>
