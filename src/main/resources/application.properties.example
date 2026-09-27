@@ -1,4 +1,4 @@
-# HƯỚNG DẪN: COPY file này thành 'application.properties' (cùng thư mục).
+﻿# HƯỚNG DẪN: COPY file này thành 'application.properties' (cùng thư mục).
 # SAU ĐÓ, tìm các dòng có chữ 'YOUR_...' bên dưới và thay bằng thông tin máy bạn.
 
 # ======================== APPLICATION ========================
@@ -19,6 +19,9 @@ spring.jpa.show-sql=true
 spring.jpa.properties.hibernate.format_sql=true
 spring.jpa.properties.hibernate.dialect=org.hibernate.dialect.SQLServerDialect
 spring.jpa.open-in-view=false
+
+# FIX TIENG VIET: Bat Hibernate dung NVARCHAR thay vi VARCHAR cho tat ca cot String.
+spring.jpa.properties.hibernate.use_nationalized_character_data=true
 
 # ======================== SERVER ========================
 # Đổi 8080 thành cổng khác nếu máy bạn bị lỗi trùng cổng

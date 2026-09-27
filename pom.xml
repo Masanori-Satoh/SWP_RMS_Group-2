@@ -59,6 +59,12 @@
             <scope>runtime</scope>
         </dependency>
 
+        <!-- ===== SPRING SECURITY (Cung cấp PasswordEncoder, Authentication,...) ===== -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-security</artifactId>
+        </dependency>
+
         <!-- ===== LOMBOK (Giảm boilerplate getter/setter/constructor) ===== -->
         <dependency>
             <groupId>org.projectlombok</groupId>
