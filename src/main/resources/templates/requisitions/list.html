@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Job Requisitions List - RMS</title>
+    <!-- Link tới file CSS dùng chung đã có sẵn của project -->
+    <link rel="stylesheet" th:href="@{/css/main.css}">
+</head>
+
+<body>
+
+    <div class="page-wrapper">
+
+        <!-- SIDEBAR ẢO ĐỂ GIỮ BỐ CỤC (Đang ẩn) -->
+        <div class="sidebar" style="display: none; padding: 20px; color: white;">
+            <h3 style="color: white; margin-bottom: 20px;">RMS Group 2</h3>
+            <p>📋 Requisitions</p>
+        </div>
+
+        <div class="main-content" style="width: 100%; margin-left: 0;">
+            <!-- TOPBAR ẢO -->
+            <div class="topbar">
+                <div><strong>Requisition Management</strong></div>
+                <div> Test User</div>
+            </div>
+
+            <div class="page-content">
+                <!-- PAGE HEADER -->
+                <div class="d-flex justify-between align-center mb-6">
+                    <div>
+                        <h2>Job Requisitions List</h2>
+
+                    </div>
+                    <a th:href="@{/requisitions/create}" class="btn btn-primary">
+                        Create New Requisition
+                    </a>
+                </div>
+
+                <!-- BẢNG DỮ LIỆU -->
+                <div class="card">
+                    <div class="table-wrapper">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>REQ_ID</th>
+                                    <th>Position</th>
+                                    <th>Department</th>
+                                    <th>Quantity</th>
+                                    <th>Type</th>
+                                    <th>Status</th>
+                                    <th>Created Date</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <!-- Thymeleaf loop qua chiếc hộp 'requisitions' -->
+                                <tr th:each="req : ${requisitions}">
+                                    <td th:text="${req.requisitionId}">1</td>
+                                    <td class="fw-semi text-primary" th:text="${req.title}">Backend Dev</td>
+                                    <td th:text="${req.departmentName}">IT Dept</td>
+                                    <td th:text="${req.numberOfPositions}">2</td>
+                                    <td th:text="${req.employmentType}">Full-time</td>
+                                    <td>
+                                        <span th:if="${req.approvalStatus == 'Draft'}" class="badge badge-secondary">
+                                            Draft</span>
+                                        <span th:if="${req.approvalStatus == 'Pending_Director'}"
+                                            class="badge badge-warning"> Pending</span>
+                                        <span th:if="${req.approvalStatus == 'Approved'}" class="badge badge-success">
+                                            Approved</span>
+                                        <span th:if="${req.approvalStatus == 'Rejected'}" class="badge badge-danger">
+                                            Rejected</span>
+                                    </td>
+                                    <!-- Format ngày tháng -->
+                                    <td th:text="${#temporals.format(req.createdAt, 'dd/MM/yyyy')}">27/09/2026</td>
+                                    <td>
+                                        <a th:href="@{/requisitions/{id}(id=${req.requisitionId})}"
+                                            class="btn btn-sm btn-secondary">View</a>
+                                    </td>
+                                </tr>
+
+                                <!-- Nếu không có data -->
+                                <tr th:if="${#lists.isEmpty(requisitions)}">
+                                    <td colspan="8" class="text-center text-muted" style="padding: 20px;">
+                                        No job requisitions found in the system.
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- Phân trang (Pagination) -->
+                    <div th:if="${totalPages > 1}" class="d-flex justify-end mt-4"
+                        style="margin-top: 20px; display: flex; justify-content: flex-end;">
+                        <ul class="pagination" style="display: flex; list-style: none; gap: 8px; padding: 0;">
+                            <!-- Nút Back -->
+                            <li th:if="${currentPage > 1}">
+                                <a th:href="@{/requisitions(page=${currentPage - 1})}" class="btn btn-sm btn-secondary"
+                                    style="padding: 5px 12px; border-radius: 4px; background: #e0e0e0; color: #333; text-decoration: none;">&lt;</a>
+                            </li>
+                            <!-- Số trang -->
+                            <li th:each="i : ${#numbers.sequence(1, totalPages)}">
+                                <a th:href="@{/requisitions(page=${i})}" th:text="${i}"
+                                    th:classappend="${currentPage == i ? 'btn-primary' : 'btn-secondary'}"
+                                    class="btn btn-sm"
+                                    th:style="${currentPage == i ? 'padding: 5px 12px; border-radius: 4px; background: #007bff; color: white; text-decoration: none;' : 'padding: 5px 12px; border-radius: 4px; background: #e0e0e0; color: #333; text-decoration: none;'}">1</a>
+                            </li>
+                            <!-- Nút Next -->
+                            <li th:if="${currentPage < totalPages}">
+                                <a th:href="@{/requisitions(page=${currentPage + 1})}" class="btn btn-sm btn-secondary"
+                                    style="padding: 5px 12px; border-radius: 4px; background: #e0e0e0; color: #333; text-decoration: none;">&gt;</a>
+                            </li>
+                        </ul>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </div>
+
+</body>
+
+</html>

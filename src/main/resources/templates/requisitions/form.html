@@ -1,0 +1,673 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Create Recruitment Requisition</title>
+    <!-- Font Awesome de lay icon -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary: #3b82f6;
+            --primary-hover: #2563eb;
+            --text-dark: #1e293b;
+            --text-gray: #475569;
+            --text-light: #94a3b8;
+            --border: #e2e8f0;
+            --bg-body: #f8fafc;
+            --danger: #ef4444;
+            --danger-bg: #fee2e2;
+        }
+
+        body {
+            background-color: var(--bg-body);
+            font-family: 'Segoe UI', system-ui, sans-serif;
+            margin: 0;
+            padding: 30px;
+            color: var(--text-dark);
+        }
+
+        .page-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 24px;
+        }
+
+        .page-title {
+            font-size: 24px;
+            font-weight: bold;
+            margin: 0 0 8px 0;
+            color: #0f172a;
+        }
+
+        .page-subtitle {
+            color: var(--text-gray);
+            font-size: 14px;
+            margin: 0;
+        }
+
+        .breadcrumb {
+            color: var(--text-light);
+            font-size: 13px;
+        }
+
+        .breadcrumb span {
+            color: var(--text-gray);
+        }
+
+        .card {
+            background: white;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 24px;
+            margin-bottom: 24px;
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.02);
+        }
+
+        .card-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 20px;
+            padding-bottom: 12px;
+            border-bottom: 1px solid #f1f5f9;
+        }
+
+        .card-title {
+            font-size: 16px;
+            font-weight: 700;
+            margin: 0;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .card-icon {
+            color: var(--primary);
+            font-size: 18px;
+            background: #eff6ff;
+            padding: 8px 12px;
+            border-radius: 6px;
+        }
+
+        .grid-2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 24px;
+        }
+
+        .form-group {
+            margin-bottom: 16px;
+        }
+
+        .form-label {
+            display: block;
+            font-size: 13px;
+            font-weight: 600;
+            margin-bottom: 6px;
+            color: var(--text-dark);
+        }
+
+        .required {
+            color: var(--danger);
+            margin-left: 2px;
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 9px 12px;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            font-size: 14px;
+            color: var(--text-dark);
+            box-sizing: border-box;
+            transition: all 0.2s;
+        }
+
+        .form-control:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        }
+
+        .salary-group {
+            display: grid;
+            grid-template-columns: 1fr auto 1fr;
+            gap: 12px;
+            align-items: center;
+        }
+
+        .editor-container {
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            overflow: hidden;
+        }
+
+        .editor-toolbar {
+            background: #f8fafc;
+            padding: 8px 12px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            gap: 16px;
+            color: var(--text-gray);
+        }
+
+        .editor-toolbar i {
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+        .editor-toolbar i:hover {
+            color: var(--text-dark);
+        }
+
+        .editor-textarea {
+            width: 100%;
+            border: none;
+            padding: 12px;
+            min-height: 120px;
+            resize: vertical;
+            box-sizing: border-box;
+            font-family: inherit;
+        }
+
+        .editor-textarea:focus {
+            outline: none;
+        }
+
+        .char-count {
+            text-align: right;
+            padding: 8px 12px;
+            font-size: 12px;
+            color: var(--text-light);
+            border-top: 1px solid #f1f5f9;
+        }
+
+        /* Table Styles */
+        .table-responsive {
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th {
+            background: #f8fafc;
+            padding: 12px;
+            text-align: left;
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text-dark);
+            border-bottom: 1px solid var(--border);
+            border-top: 1px solid var(--border);
+        }
+
+        td {
+            padding: 12px;
+            border-bottom: 1px solid #f1f5f9;
+            vertical-align: middle;
+        }
+
+        .btn-icon-danger {
+            background: var(--danger-bg);
+            color: var(--danger);
+            border: none;
+            width: 32px;
+            height: 32px;
+            border-radius: 6px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: 0.2s;
+        }
+
+        .btn-icon-danger:hover {
+            background: #fca5a5;
+            color: white;
+        }
+
+        /* Toggle Switch */
+        .switch-wrapper {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 40px;
+            height: 22px;
+        }
+
+        .switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #cbd5e1; /* Gray when OFF */
+            transition: .4s;
+            border-radius: 22px;
+        }
+
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 16px;
+            width: 16px;
+            left: 3px;
+            bottom: 3px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+
+        input:checked ~ .slider {
+            background-color: var(--primary);
+        }
+
+        input:checked ~ .slider:before {
+            transform: translateX(18px);
+        }
+
+        .switch-label {
+            font-size: 13px;
+            font-weight: 500;
+        }
+
+        /* Actions Footer */
+        .actions-footer {
+            display: flex;
+            justify-content: flex-end;
+            gap: 12px;
+            margin-top: 30px;
+            padding-bottom: 30px;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-outline {
+            background: white;
+            border: 1px solid var(--border);
+            color: var(--text-dark);
+        }
+
+        .btn-outline:hover {
+            background: #f8fafc;
+        }
+
+        .btn-outline-primary {
+            background: white;
+            border: 1px solid var(--primary);
+            color: var(--primary);
+        }
+
+        .btn-outline-primary:hover {
+            background: #eff6ff;
+        }
+
+        .btn-primary {
+            background: var(--primary);
+            border: 1px solid var(--primary);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: var(--primary-hover);
+        }
+
+        .btn-sm {
+            padding: 6px 12px;
+            font-size: 13px;
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Form bắt đầu -->
+    <form th:action="@{/requisitions/create}" th:object="${requisitionDto}" method="POST">
+
+        <!-- Header -->
+        <div class="page-header">
+            <div>
+                <h1 class="page-title">Create Recruitment Requisition</h1>
+                <p class="page-subtitle">Create a new job requisition to request approval for hiring.</p>
+            </div>
+            <div class="breadcrumb">
+                Job Requisitions / <span>Create</span>
+            </div>
+        </div>
+
+        <!-- Section 1: Basic Information -->
+        <div class="card">
+            <div class="card-header">
+                <div class="card-icon"><i class="fa-solid fa-file-lines"></i></div>
+                <h2 class="card-title">Basic Information</h2>
+            </div>
+
+            <div class="grid-2">
+                <div class="form-group">
+                    <label class="form-label">Job Title <span class="required">*</span></label>
+                    <input type="text" th:field="*{title}" class="form-control" placeholder="Enter job title" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Employment Type <span class="required">*</span></label>
+                    <select th:field="*{employmentType}" class="form-control" required>
+                        <option value="">Select employment type</option>
+                        <option value="Full-time">Full-time</option>
+                        <option value="Part-time">Part-time</option>
+                        <option value="Contract">Contract</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Department <span class="required">*</span></label>
+                    <select th:field="*{departmentId}" class="form-control" required>
+                        <option value="">Select department</option>
+                        <option th:each="dept : ${departments}" th:value="${dept.departmentId}"
+                            th:text="${dept.departmentName}"></option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Number of Openings <span class="required">*</span></label>
+                    <input type="number" th:field="*{numberOfPositions}" class="form-control" value="1" min="1"
+                        required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Hiring Manager <span class="required">*</span></label>
+                    <select th:field="*{hiringManagerId}" class="form-control" required>
+                        <option value="">Select hiring manager</option>
+                        <option th:each="manager : ${hiringManagers}" th:value="${manager.userId}"
+                            th:text="${manager.fullName}"></option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Proposed Salary Range (VND)</label>
+                    <div class="salary-group">
+                        <input type="number" min="0" th:field="*{minSalary}" class="form-control"
+                            placeholder="Min salary">
+                        <span>-</span>
+                        <input type="number" min="0" th:field="*{maxSalary}" class="form-control"
+                            placeholder="Max salary">
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-group" style="margin-top: 8px;">
+                <label class="form-label">Reason for Hiring</label>
+                <textarea th:field="*{reasonForHiring}" class="form-control" rows="3" maxlength="500"
+                    placeholder="Enter reason for hiring (e.g., new position, replacement, business expansion...)"
+                    required></textarea>
+                <div style="text-align: right; font-size: 12px; color: var(--text-light); margin-top: 4px;">0/500</div>
+            </div>
+        </div>
+
+        <!-- Section 2 & 3: Description & Requirements -->
+        <div class="grid-2">
+            <!-- Job Description -->
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-icon"><i class="fa-solid fa-file-alt"></i></div>
+                    <h2 class="card-title">Job Description <span class="required">*</span></h2>
+                </div>
+                <div class="editor-container">
+
+                    <textarea th:field="*{jobDescription}" class="editor-textarea" maxlength="2000" required
+                        placeholder="Enter detailed job description..."></textarea>
+                    <div class="char-count">0/2000</div>
+                </div>
+            </div>
+
+            <!-- Candidate Requirements -->
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-icon"><i class="fa-solid fa-user-group"></i></div>
+                    <h2 class="card-title">Candidate Requirements <span class="required">*</span></h2>
+                </div>
+                <div class="editor-container">
+
+                    <textarea th:field="*{requirementDetails}" class="editor-textarea" maxlength="2000" required
+                        placeholder="Enter candidate requirements (skills, experience, education, etc.)..."></textarea>
+                    <div class="char-count">0/2000</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Section 4: Screening Criteria -->
+        <div class="card">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                <div class="card-title" style="margin:0;">
+                    <div class="card-icon"><i class="fa-solid fa-clipboard-check"></i></div>
+                    <span style="font-size: 16px; font-weight: 700; margin-left: 10px;">Screening Criteria</span>
+                </div>
+                <button type="button" class="btn btn-outline-primary btn-sm" onclick="addCriteriaRow()">
+                    <i class="fa-solid fa-plus"></i> Add Criteria
+                </button>
+            </div>
+
+            <div class="table-responsive">
+                <table id="criteriaTable">
+                    <thead>
+                        <tr>
+                            <th style="width: 5%;">#</th>
+                            <th style="width: 25%;">Criteria <span class="required">*</span></th>
+                            <th style="width: 20%;">Criteria Type <span class="required">*</span></th>
+                            <th style="width: 20%;">Required Value <span class="required">*</span></th>
+                            <th style="width: 12%;">Weight (%) <span class="required">*</span></th>
+                            <th style="width: 13%;">Mandatory</th>
+                            <th style="width: 5%; text-align: center;">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="criteriaTableBody">
+                        <!-- Dynamic rows will be added here -->
+                        <tr class="criteria-row" id="row0">
+                            <td class="row-index">1</td>
+                            <td><input type="text" th:field="*{screeningCriteria[0].criteriaName}" class="form-control"
+                                    placeholder="Enter criteria name" required></td>
+                            <td>
+                                <select th:field="*{screeningCriteria[0].criteriaType}" class="form-control" required>
+                                    <option value="">Select type</option>
+                                    <option value="Education">Education</option>
+                                    <option value="Experience">Experience</option>
+                                    <option value="Skill">Skill</option>
+                                    <option value="Certification">Certification</option>
+                                </select>
+                            </td>
+                            <td><input type="text" th:field="*{screeningCriteria[0].requiredValue}" class="form-control"
+                                    placeholder="Enter required value" required></td>
+                            <td><input type="number" th:field="*{screeningCriteria[0].weight}" class="form-control"
+                                    value="0" min="0" max="100" required>
+                            </td>
+
+                            <td>
+                                <div class="switch-wrapper">
+
+                                    <label class="switch">
+                                        <input type="checkbox" th:field="*{screeningCriteria[0].isMandatory}"
+                                            class="mandatory-switch">
+
+                                        <span class="slider"></span>
+                                    </label>
+
+                                    <span class="switch-label">No</span>
+
+                                </div>
+                            </td>
+
+                            </td>
+                            <td style="text-align: center;">
+                                <button type="button" class="btn-icon-danger" onclick="removeCriteriaRow(0)"><i
+                                        class="fa-regular fa-trash-can"></i></button>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Actions -->
+        <div class="actions-footer">
+            <a th:href="@{/requisitions}" class="btn btn-outline">Cancel</a>
+            <button type="submit" name="action" value="draft" class="btn btn-outline-primary">Save as Draft</button>
+            <button type="submit" name="action" value="submit" class="btn btn-primary">Submit for Approval</button>
+        </div>
+
+    </form>
+
+    <script>
+        let criteriaIndex = 1;
+        function addCriteriaRow() {
+            const tbody = document.getElementById('criteriaTableBody');
+            const rowId = criteriaIndex;
+            const tr = document.createElement('tr');
+            tr.className = 'criteria-row';
+            tr.id = 'row' + rowId;
+            tr.innerHTML = `
+                <td class="row-index">${rowId + 1}</td>
+                <td><input type="text" name="screeningCriteria[${rowId}].criteriaName" class="form-control" placeholder="Enter criteria name" required></td>
+                <td>
+                    <select name="screeningCriteria[${rowId}].criteriaType" class="form-control" required>
+                        <option value="">Select type</option>
+                        <option value="Education">Education</option>
+                        <option value="Experience">Experience</option>
+                        <option value="Skill">Skill</option>
+                        <option value="Certification">Certification</option>
+                    </select>
+                </td>
+                <td><input type="text" name="screeningCriteria[${rowId}].requiredValue" class="form-control" placeholder="Enter required value" required></td>
+                <td><input type="number" name="screeningCriteria[${rowId}].weight" class="form-control" value="0" min="0" max="100" required></td>
+                <td>
+                    <div class="switch-wrapper">
+                        <label class="switch">
+                            <input type="checkbox" name="screeningCriteria[${rowId}].isMandatory" class="mandatory-switch">
+                            <span class="slider"></span>
+                        </label>
+                        <span class="switch-label">No</span>
+                    </div>
+                </td>
+                <td style="text-align: center;">
+                    <button type="button" class="btn-icon-danger" onclick="removeCriteriaRow(${rowId})"><i class="fa-regular fa-trash-can"></i></button>
+                </td>
+            `;
+            tbody.appendChild(tr);
+
+            // Bind the toggle event for the newly created row
+            const newCheckbox = tr.querySelector('.mandatory-switch');
+            const newLabel = tr.querySelector('.switch-label');
+            newCheckbox.addEventListener('change', function() {
+                newLabel.textContent = newCheckbox.checked ? 'Yes' : 'No';
+            });
+
+            updateRowIndices();
+            criteriaIndex++;
+        }
+
+        function removeCriteriaRow(id) {
+            const row = document.getElementById('row' + id);
+            if (row) {
+                row.remove();
+                updateRowIndices();
+            }
+        }
+
+        function updateRowIndices() {
+            const rows = document.querySelectorAll('.criteria-row');
+            rows.forEach((row, index) => {
+                row.querySelector('.row-index').textContent = index + 1;
+            });
+        }
+
+        // Initialize character counters
+        function initCharCounters() {
+            const textareas = document.querySelectorAll('textarea[maxlength]');
+            textareas.forEach(textarea => {
+                // Find the associated char-count div (usually next sibling or nearby)
+                let counter = textarea.nextElementSibling;
+                if (!counter || !counter.textContent.includes('/')) {
+                    counter = textarea.parentElement.querySelector('div[style*="text-align: right"]');
+                }
+
+                if (counter) {
+                    const updateCount = () => {
+                        counter.textContent = textarea.value.length + '/' + textarea.getAttribute('maxlength');
+                    };
+                    textarea.addEventListener('input', updateCount);
+                    updateCount(); // Initial count
+                }
+            });
+        }
+
+        // Validate salary and criteria weights
+        document.querySelector('form').addEventListener('submit', function (e) {
+            // Validate Salary
+            const minSalary = document.querySelector('input[name="minSalary"]').value;
+            const maxSalary = document.querySelector('input[name="maxSalary"]').value;
+            if (minSalary && maxSalary) {
+                if (parseFloat(minSalary) > parseFloat(maxSalary)) {
+                    e.preventDefault();
+                    alert('Max Salary must be greater than or equal to Min Salary!');
+                    return;
+                }
+            }
+
+            // Validate Total Weight
+            let totalWeight = 0;
+            const weightInputs = document.querySelectorAll('input[name$=".weight"]');
+            weightInputs.forEach(input => {
+                const val = parseFloat(input.value);
+                if (!isNaN(val)) {
+                    totalWeight += val;
+                }
+            });
+
+            if (totalWeight !== 100) {
+                e.preventDefault();
+                alert('Total weight of all Screening Criteria must be exactly 100%. Currently it is ' + totalWeight + '%.');
+            }
+        });
+
+        document.addEventListener('DOMContentLoaded', initCharCounters);
+    </script>
+
+    <script>
+        document.querySelectorAll('.mandatory-switch').forEach(function (checkbox) {
+
+            const label = checkbox
+                .closest('.switch-wrapper')
+                .querySelector('.switch-label');
+
+            function updateSwitch() {
+                label.textContent = checkbox.checked ? 'Yes' : 'No';
+            }
+
+            updateSwitch();
+
+            checkbox.addEventListener('change', updateSwitch);
+        });
+    </script>
+
+</body>
+
+</html>

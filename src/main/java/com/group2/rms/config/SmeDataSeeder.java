@@ -92,21 +92,17 @@ public class SmeDataSeeder implements CommandLineRunner {
     // ====================================================================
     // NGUON DU LIEU GIA (Fake Data) - Ten Viet, Job Title IT, v.v.
     // ====================================================================
-    private static final String[] HO = {
-        "Nguyễn", "Trần", "Lê", "Phạm", "Hoàng", "Huỳnh", "Phan", "Vũ",
-        "Võ", "Đặng", "Bùi", "Đỗ", "Hồ", "Ngô", "Dương", "Lý"
+    private static final String[] FIRST_NAMES = {
+        "John", "Jane", "Michael", "Emily", "David", "Sarah", "James", "Laura",
+        "Robert", "Emma", "William", "Olivia", "Richard", "Sophia", "Thomas", "Mia"
     };
 
-    private static final String[] DEM = {
-        "Văn", "Thị", "Đức", "Minh", "Hoàng", "Quốc", "Thanh", "Xuân",
-        "Ngọc", "Tuấn", "Hữu", "Công", "Bảo", "Phương", "Anh", "Hồng"
+    private static final String[] LAST_NAMES = {
+        "Smith", "Johnson", "Williams", "Jones", "Brown", "Davis", "Miller", "Wilson",
+        "Moore", "Taylor", "Anderson", "Thomas", "Jackson", "White", "Harris", "Martin"
     };
 
-    private static final String[] TEN = {
-        "An", "Bình", "Cường", "Dũng", "Hải", "Hùng", "Khoa", "Linh",
-        "Long", "Mai", "Nam", "Phúc", "Quân", "Sơn", "Tâm", "Thảo",
-        "Toàn", "Trung", "Tùng", "Vy", "Hà", "Đạt", "Kiệt", "Nhung"
-    };
+    
 
     private static final String[] JOB_TITLES = {
         "Senior Java Developer", "Frontend React Developer", "DevOps Engineer",
@@ -122,8 +118,8 @@ public class SmeDataSeeder implements CommandLineRunner {
     };
 
     private static final String[] WORK_LOCATIONS = {
-        "Quận 1, TP.HCM", "Quận 7, TP.HCM", "Cầu Giấy, Hà Nội",
-        "Đống Đa, Hà Nội", "Hải Châu, Đà Nẵng", "Remote"
+        "District 1, HCMC", "District 7, HCMC", "Cau Giay, Hanoi",
+        "Dong Da, Hanoi", "Hai Chau, Da Nang", "Remote"
     };
 
     private static final String[] CANDIDATE_SOURCES = {
@@ -133,18 +129,18 @@ public class SmeDataSeeder implements CommandLineRunner {
     private static final String[] GENDERS = {"Male", "Female", "Other"};
 
     private static final String[] ADDRESSES = {
-        "123 Nguyễn Huệ, Q.1, TP.HCM", "456 Lê Lợi, Q.1, TP.HCM",
-        "789 Trần Hưng Đạo, Q.5, TP.HCM", "12 Phạm Ngọc Thạch, Q.3, TP.HCM",
-        "34 Hoàng Diệu, Q.4, TP.HCM", "56 Nguyễn Trãi, Q.5, TP.HCM",
-        "78 Lạc Long Quân, Tây Hồ, HN", "90 Giải Phóng, Đống Đa, HN",
-        "11 Trần Phú, Hải Châu, ĐN", "22 Nguyễn Văn Linh, Hải Châu, ĐN"
+        "123 Nguyen Hue, Dist 1, HCMC", "456 Le Loi, Dist 1, HCMC",
+        "789 Tran Hung Dao, Dist 5, HCMC", "12 Pham Ngoc Thach, Dist 3, HCMC",
+        "34 Hoang Dieu, Dist 4, HCMC", "56 Nguyen Trai, Dist 5, HCMC",
+        "78 Lac Long Quan, Tay Ho, HN", "90 Giai Phong, Dong Da, HN",
+        "11 Tran Phu, Hai Chau, DN", "22 Nguyen Van Linh, Hai Chau, DN"
     };
 
     private static final String[] BENEFITS = {
-        "Bảo hiểm sức khỏe Premium, Lương tháng 13, Laptop cấp mới",
-        "Team building hàng quý, Gửi xe miễn phí, Gym & Yoga tại văn phòng",
-        "Review lương 2 lần/năm, Training budget $500/năm, WFH 2 ngày/tuần",
-        "Thưởng performance, ESOP, Snack bar & Coffee miễn phí"
+        "Premium Health Insurance, 13th-month salary, New Macbook",
+        "Quarterly team building, Free parking, Gym & Yoga at office",
+        "Salary review twice a year, $500/year training budget, WFH 2 days/week",
+        "Performance bonus, ESOP, Free snack bar & coffee"
     };
 
     private static final String[] INTERVIEW_ROUNDS = {
@@ -157,20 +153,20 @@ public class SmeDataSeeder implements CommandLineRunner {
 
     /** HR review notes mẫu */
     private static final String[] HR_REVIEW_NOTES = {
-        "CV đầy đủ, kinh nghiệm phù hợp với JD. Đề xuất chuyển sang vòng phỏng vấn.",
-        "Kỹ năng cơ bản đạt, cần đánh giá thêm kỹ năng chuyên môn.",
-        "Profile tốt, có chứng chỉ AWS. Ưu tiên phỏng vấn sớm.",
-        "Hồ sơ khá, kinh nghiệm 3 năm tương đương. Cần test kỹ năng lập trình.",
-        "CV ấn tượng, có dự án open-source trên GitHub. Đề xuất phỏng vấn ngay."
+        "Complete CV, experience matches JD. Recommend for interview.",
+        "Basic skills are fine, needs technical assessment.",
+        "Good profile, has AWS cert. Priority for early interview.",
+        "Decent profile, 3 years equivalent experience. Needs coding test.",
+        "Impressive CV, has open-source projects. Recommend immediate interview."
     };
 
     /** HM review notes mẫu */
     private static final String[] HM_REVIEW_NOTES = {
-        "Ứng viên trả lời tốt câu hỏi kỹ thuật. Khả năng problem-solving mạnh.",
-        "Có kiến thức về System Design, nhưng chưa sâu. Cần đào tạo thêm.",
-        "Kinh nghiệm thực tế tốt, đã làm việc với tech stack tương tự.",
-        "Kỹ năng communication tốt, teamwork cao. Phù hợp văn hóa công ty.",
-        "Ứng viên xuất sắc, đã làm lead team 5 người. Recommend hire."
+        "Candidate answered technical questions well. Strong problem-solving.",
+        "Has System Design knowledge, but not deep. Needs training.",
+        "Good practical experience, worked with similar tech stack.",
+        "Good communication, high teamwork. Fits company culture.",
+        "Excellent candidate, led a team of 5. Recommend hire."
     };
 
     private final Random random = new Random(42); // Seed cố định để data lặp lại được
@@ -196,11 +192,11 @@ public class SmeDataSeeder implements CommandLineRunner {
         // ================================================================
         // BUOC 1: TAO 5 ROLE (bang cha, khong FK ra ngoai)
         // ================================================================
-        Role rAdmin       = Role.builder().roleName("System Admin").description("Quản trị viên hệ thống, toàn quyền quản lý").build();
-        Role rHR          = Role.builder().roleName("HR").description("Nhân sự, quản lý quy trình tuyển dụng").build();
-        Role rHiringMgr   = Role.builder().roleName("Hiring Manager").description("Quản lý tuyển dụng tại phòng ban").build();
-        Role rDirector    = Role.builder().roleName("Director").description("Giám đốc, phê duyệt yêu cầu tuyển dụng và offer").build();
-        Role rInterviewer = Role.builder().roleName("Interviewer").description("Người phỏng vấn ứng viên").build();
+        Role rAdmin       = Role.builder().roleName("System Admin").description("System administrator, full access").build();
+        Role rHR          = Role.builder().roleName("HR").description("HR, manages recruitment process").build();
+        Role rHiringMgr   = Role.builder().roleName("Hiring Manager").description("Hiring Manager at department level").build();
+        Role rDirector    = Role.builder().roleName("Director").description("Director, approves requisitions and offers").build();
+        Role rInterviewer = Role.builder().roleName("Interviewer").description("Interviewer for candidates").build();
         roleRepository.saveAll(List.of(rAdmin, rHR, rHiringMgr, rDirector, rInterviewer));
         System.out.println("  [OK] 5 Roles da tao.");
 
@@ -272,7 +268,7 @@ public class SmeDataSeeder implements CommandLineRunner {
                     .employmentType(pickRandom(EMPLOYMENT_TYPES))
                     .minSalary(minSalary)
                     .maxSalary(maxSalary)
-                    .reasonForHiring(i % 2 == 0 ? "Tuyển mới mở rộng đội ngũ" : "Thay thế nhân sự nghỉ việc")
+                    .reasonForHiring(i % 2 == 0 ? "New headcount for expansion" : "Replacement for resigned employee")
                     .jobDescription(generateJobDescription(JOB_TITLES[i % JOB_TITLES.length]))
                     .requirementDetails(generateRequirements(JOB_TITLES[i % JOB_TITLES.length]))
                     .approvalStatus("Approved")
@@ -314,7 +310,7 @@ public class SmeDataSeeder implements CommandLineRunner {
         // ================================================================
         List<Candidate> candidates = new ArrayList<>();
         for (int i = 0; i < NUM_CANDIDATES; i++) {
-            String fullName = generateVietnameseName();
+            String fullName = generateEnglishName();
             String emailSlug = toEmailSlug(fullName) + (i + 1);
 
             candidates.add(Candidate.builder()
@@ -459,7 +455,7 @@ public class SmeDataSeeder implements CommandLineRunner {
                     .endTime(startTime.plusMinutes(60))
                     .locationOrLink(format.equals("Online_GoogleMeet")
                             ? "https://meet.google.com/rms-interview-" + (1000 + i)
-                            : "Phong hop A" + (1 + i % 5) + ", Tang " + (3 + i % 3))
+                            : "Meeting Room A" + (1 + i % 5) + ", Floor " + (3 + i % 3))
                     .interviewStatus("Scheduled")
                     .createdBy(hr)
                     .build());
@@ -536,7 +532,7 @@ public class SmeDataSeeder implements CommandLineRunner {
     }
 
     private User buildSingleUser(String username, Role role, Department dept, String passwordHash) {
-        String fullName = generateVietnameseName();
+        String fullName = generateEnglishName();
         return User.builder()
                 .username(username)
                 .passwordHash(passwordHash)
@@ -553,8 +549,8 @@ public class SmeDataSeeder implements CommandLineRunner {
     // ====================================================================
     // HELPER: Sinh tên người Việt ngẫu nhiên (có dấu, NVARCHAR hỗ trợ Unicode)
     // ====================================================================
-    private String generateVietnameseName() {
-        return pickRandom(HO) + " " + pickRandom(DEM) + " " + pickRandom(TEN);
+    private String generateEnglishName() {
+        return pickRandom(FIRST_NAMES) + " " + pickRandom(LAST_NAMES);
     }
 
     // ====================================================================
@@ -586,28 +582,28 @@ public class SmeDataSeeder implements CommandLineRunner {
     // HELPER: Sinh Job Description
     // ====================================================================
     private String generateJobDescription(String title) {
-        return "Chúng tôi đang tìm kiếm " + title + " tài năng để gia nhập đội ngũ.\n\n"
-                + "Trách nhiệm chính:\n"
-                + "- Thiết kế, phát triển và bảo trì các giải pháp phần mềm chất lượng cao.\n"
-                + "- Phối hợp với các team liên quan để đảm bảo tiến độ sản phẩm.\n"
-                + "- Review code và hướng dẫn các developer junior.\n"
-                + "- Tham gia các buổi Agile/Scrum hàng ngày.\n\n"
-                + "Chúng tôi mang đến:\n"
-                + "- Môi trường làm việc năng động, trẻ trung.\n"
-                + "- Review lương 2 lần/năm. Thưởng hiệu suất hấp dẫn.";
+        return "We are looking for a talented " + title + " to join our team.\n\n"
+                + "Key Responsibilities:\n"
+                + "- Design, develop and maintain high-quality software solutions.\n"
+                + "- Collaborate with cross-functional teams to ensure product delivery.\n"
+                + "- Review code and mentor junior developers.\n"
+                + "- Participate in daily Agile/Scrum meetings.\n\n"
+                + "We offer:\n"
+                + "- Dynamic and youthful working environment.\n"
+                + "- Salary review twice a year. Attractive performance bonus.";
     }
 
     // ====================================================================
     // HELPER: Sinh Requirements
     // ====================================================================
     private String generateRequirements(String title) {
-        return "Yêu cầu cho vị trí " + title + ":\n\n"
-                + "- Tốt nghiệp Đại học chuyên ngành Khoa học Máy tính, CNTT hoặc lĩnh vực liên quan.\n"
-                + "- Tối thiểu 2 năm kinh nghiệm ở vị trí tương đương.\n"
-                + "- Thành thạo ít nhất một ngôn ngữ lập trình: Java, C#, JavaScript, Python.\n"
-                + "- Có kinh nghiệm với Git, CI/CD, Docker là lợi thế.\n"
-                + "- Kỹ năng giao tiếp tốt và tinh thần làm việc nhóm cao.\n"
-                + "- Có khả năng đọc hiểu tài liệu kỹ thuật tiếng Anh.";
+        return "Requirements for " + title + ":\n\n"
+                + "- Bachelor degree in Computer Science, IT or related fields.\n"
+                + "- Minimum 2 years of experience in an equivalent position.\n"
+                + "- Proficient in at least one programming language: Java, C#, JavaScript, Python.\n"
+                + "- Experience with Git, CI/CD, Docker is a plus.\n"
+                + "- Good communication and teamwork skills.\n"
+                + "- Ability to read and understand English technical documents.";
     }
 
     // ====================================================================
@@ -616,7 +612,7 @@ public class SmeDataSeeder implements CommandLineRunner {
     private String formatSalaryDisplay(BigDecimal min, BigDecimal max) {
         long minM = min.longValue() / 1_000_000;
         long maxM = max.longValue() / 1_000_000;
-        return minM + " - " + maxM + " triệu VND";
+        return minM + " - " + maxM + " Million VND";
     }
 
     // ====================================================================

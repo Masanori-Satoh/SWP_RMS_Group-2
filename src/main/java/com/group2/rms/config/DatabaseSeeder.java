@@ -71,11 +71,11 @@ public class DatabaseSeeder implements CommandLineRunner {
         // 3. TẠO 5 ROLE
         //    Mỗi Role tương ứng với một vai trò cụ thể trong quy trình tuyển dụng.
         // ====================================================================
-        Role roleAdmin       = Role.builder().roleName("System Admin").description("Quản trị viên hệ thống, toàn quyền quản lý").build();
-        Role roleHR          = Role.builder().roleName("HR").description("Nhân sự, quản lý quy trình tuyển dụng").build();
-        Role roleHiringMgr   = Role.builder().roleName("Hiring Manager").description("Quản lý tuyển dụng tại phòng ban").build();
-        Role roleDirector    = Role.builder().roleName("Director").description("Giám đốc, phê duyệt yêu cầu tuyển dụng và offer").build();
-        Role roleInterviewer = Role.builder().roleName("Interviewer").description("Người phỏng vấn ứng viên").build();
+        Role roleAdmin       = Role.builder().roleName("System Admin").description("System administrator, full access").build();
+        Role roleHR          = Role.builder().roleName("HR").description("HR, manages recruitment process").build();
+        Role roleHiringMgr   = Role.builder().roleName("Hiring Manager").description("Hiring Manager at department level").build();
+        Role roleDirector    = Role.builder().roleName("Director").description("Director, approves requisitions and offers").build();
+        Role roleInterviewer = Role.builder().roleName("Interviewer").description("Interviewer for candidates").build();
 
         // saveAll() lưu tất cả trong 1 batch, hiệu quả hơn gọi save() 5 lần
         roleRepository.saveAll(List.of(roleAdmin, roleHR, roleHiringMgr, roleDirector, roleInterviewer));
@@ -113,7 +113,7 @@ public class DatabaseSeeder implements CommandLineRunner {
                 .username("admin")
                 .passwordHash(encodedPassword)
                 .email("admin@rms.com")
-                .fullName("Nguyễn Văn Admin")
+                .fullName("Admin Nguyen")
                 .role(roleAdmin)
                 .department(deptIT)
                 .accountStatus("Active")
@@ -123,7 +123,7 @@ public class DatabaseSeeder implements CommandLineRunner {
                 .username("hr_user")
                 .passwordHash(encodedPassword)
                 .email("hr@rms.com")
-                .fullName("Trần Thị HR")
+                .fullName("HR Tran")
                 .role(roleHR)
                 .department(deptHR)
                 .accountStatus("Active")
@@ -133,7 +133,7 @@ public class DatabaseSeeder implements CommandLineRunner {
                 .username("hiring_manager")
                 .passwordHash(encodedPassword)
                 .email("hiring.manager@rms.com")
-                .fullName("Lê Văn Hiring Manager")
+                .fullName("Hiring Manager Le")
                 .role(roleHiringMgr)
                 .department(deptIT)
                 .accountStatus("Active")
@@ -143,7 +143,7 @@ public class DatabaseSeeder implements CommandLineRunner {
                 .username("director")
                 .passwordHash(encodedPassword)
                 .email("director@rms.com")
-                .fullName("Phạm Thị Director")
+                .fullName("Director Pham")
                 .role(roleDirector)
                 .department(deptBOD)
                 .accountStatus("Active")
@@ -153,7 +153,7 @@ public class DatabaseSeeder implements CommandLineRunner {
                 .username("interviewer")
                 .passwordHash(encodedPassword)
                 .email("interviewer@rms.com")
-                .fullName("Hoàng Văn Interviewer")
+                .fullName("Interviewer Hoang")
                 .role(roleInterviewer)
                 .department(deptIT)
                 .accountStatus("Active")

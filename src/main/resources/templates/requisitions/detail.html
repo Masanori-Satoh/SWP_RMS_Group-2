@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Requisition Detail</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary: #3b82f6;
+            --text-dark: #1e293b;
+            --text-gray: #475569;
+            --text-light: #94a3b8;
+            --border: #e2e8f0;
+            --bg-body: #e2e8f0;
+        }
+        body {
+            background-color: var(--bg-body);
+            font-family: 'Segoe UI', system-ui, sans-serif;
+            margin: 0;
+            padding: 30px;
+            color: var(--text-dark);
+        }
+        .page-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+        }
+        .page-title {
+            font-size: 24px;
+            font-weight: bold;
+            margin: 0;
+            color: #0f172a;
+        }
+        .btn-back {
+            background: white;
+            border: 1px solid var(--border);
+            padding: 8px 16px;
+            border-radius: 6px;
+            color: var(--text-dark);
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 14px;
+            transition: 0.2s;
+        }
+        .btn-back:hover { background: #f8fafc; }
+
+        .grid-2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 24px;
+            margin-bottom: 24px;
+        }
+
+        .card {
+            background: white;
+            border-radius: 4px;
+            padding: 24px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        .card-title {
+            font-size: 18px;
+            font-weight: bold;
+            margin: 0 0 20px 0;
+            color: #2d3748;
+        }
+
+        /* Detail List Styles */
+        .info-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+        .info-row {
+            display: flex;
+            font-size: 14px;
+        }
+        .info-label {
+            width: 160px;
+            color: var(--text-gray);
+        }
+        .info-value {
+            flex: 1;
+            font-weight: 500;
+            color: var(--text-dark);
+        }
+
+        /* Activity Log Table */
+        table { width: 100%; border-collapse: collapse; font-size: 13px; }
+        th {
+            background: #f8fafc;
+            padding: 10px;
+            text-align: left;
+            font-weight: 600;
+            color: var(--text-gray);
+            border-bottom: 1px solid var(--border);
+        }
+        td {
+            padding: 10px;
+            border-bottom: 1px solid #f1f5f9;
+        }
+
+        /* Rich Text Display */
+        .rich-text {
+            font-size: 14px;
+            line-height: 1.6;
+            color: var(--text-dark);
+            white-space: pre-wrap;
+        }
+    </style>
+</head>
+<body>
+    <div style="max-width: 1200px; margin: 0 auto;">
+        <div class="page-header">
+            <h1 class="page-title">Recruitment Requisition Detail</h1>
+            <a th:href="@{/requisitions}" class="btn-back"><i class="fa-solid fa-arrow-left"></i> Back to List</a>
+        </div>
+
+        <!-- Row 1 -->
+        <div class="grid-2">
+            <!-- Basic Information -->
+            <div class="card">
+                <h2 class="card-title">Basic Information</h2>
+                <div class="info-list">
+                    <div class="info-row">
+                        <div class="info-label">Requisition ID:</div>
+                        <div class="info-value" th:text="${'REQ-' + req.requisitionId}">REQ-028</div>
+                    </div>
+                    <div class="info-row">
+                        <div class="info-label">Position:</div>
+                        <div class="info-value" th:text="${req.title}">Data Analyst</div>
+                    </div>
+                    <div class="info-row">
+                        <div class="info-label">Department:</div>
+                        <div class="info-value" th:text="${req.departmentName}">Data</div>
+                    </div>
+                    <div class="info-row">
+                        <div class="info-label">Hiring Manager:</div>
+                        <div class="info-value" th:text="${req.hiringManagerName}">Nguyễn Văn An</div>
+                    </div>
+                    <div class="info-row">
+                        <div class="info-label">Number of Positions:</div>
+                        <div class="info-value" th:text="${req.numberOfPositions}">2</div>
+                    </div>
+                    <div class="info-row">
+                        <div class="info-label">Employment Type:</div>
+                        <div class="info-value" th:text="${req.employmentType}">Full-time</div>
+                    </div>
+                    <div class="info-row">
+                        <div class="info-label">Salary Range (VND):</div>
+                        <div class="info-value">
+                            <span th:text="${req.minSalary != null ? req.minSalary : 'N/A'}"></span>
+                            -
+                            <span th:text="${req.maxSalary != null ? req.maxSalary : 'N/A'}"></span>
+                        </div>
+                    </div>
+                    <div class="info-row">
+                        <div class="info-label">Reason for Hiring:</div>
+                        <div class="info-value" th:text="${req.reasonForHiring}">New hire</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Activity Log -->
+            <div class="card">
+                <h2 class="card-title">Activity Log</h2>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Time</th>
+                            <th>Action</th>
+                            <th>By</th>
+                            <th>Comments</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td th:text="${#temporals.format(req.createdAt, 'dd/MM/yyyy HH:mm')}">20/08/2026</td>
+                            <td>Created</td>
+                            <td th:text="${req.hiringManagerName}">Nguyễn Văn An</td>
+                            <td>Created requisitions</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Row 2 -->
+        <div class="grid-2">
+            <!-- Job Description -->
+            <div class="card">
+                <h2 class="card-title">Job Description</h2>
+                <div class="rich-text" th:text="${req.jobDescription}">
+                    - Collect, process and analyze...
+                </div>
+            </div>
+
+            <!-- Requirement Details -->
+            <div class="card">
+                <h2 class="card-title">Requirement Details</h2>
+                <div class="rich-text" th:text="${req.requirementDetails}">
+                    - Bachelor's degree in Computer Science...
+                </div>
+            </div>
+        </div>
+
+        <!-- Row 3: Screening Criteria -->
+        <div class="card">
+            <h2 class="card-title">Screening Criteria</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th style="background: #ebf8ff; color: #2b6cb0;">ID</th>
+                        <th style="background: #ebf8ff; color: #2b6cb0;">Criteria</th>
+                        <th style="background: #ebf8ff; color: #2b6cb0;">Criteria Type</th>
+                        <th style="background: #ebf8ff; color: #2b6cb0;">Required Value</th>
+                        <th style="background: #ebf8ff; color: #2b6cb0;">Weight(%)</th>
+                        <th style="background: #ebf8ff; color: #2b6cb0;">Mandatory</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr th:each="criteria, iterStat : ${req.screeningCriteria}">
+                        <td th:text="${iterStat.count}">1</td>
+                        <td th:text="${criteria.criteriaName}">SQL Proficiency</td>
+                        <td th:text="${criteria.criteriaType}">Skill</td>
+                        <td th:text="${criteria.requiredValue}">2+ years</td>
+                        <td th:text="${criteria.weight}">30</td>
+                        <td th:text="${criteria.isMandatory != null && criteria.isMandatory ? 'Yes' : 'No'}">Yes</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</body>
+</html>

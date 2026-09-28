@@ -64,4 +64,7 @@ public class JobRequisition extends BaseEntity {
      */
     @Column(name = "ApprovalStatus", nullable = false, length = 30)
     private String approvalStatus;
+
+    @OneToMany(mappedBy = "requisition", cascade = CascadeType.ALL, orphanRemoval = true)
+    private java.util.List<ScreeningCriteria> screeningCriteria;
 }
