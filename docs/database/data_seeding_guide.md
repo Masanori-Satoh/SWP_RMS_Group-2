@@ -1,5 +1,20 @@
 # Hướng Dẫn Kiến Trúc & Cơ Chế Khởi Tạo Dữ Liệu (Database Seeding Guide)
 
+> **Lưu trữ lịch sử:** Phần nội dung bên dưới mô tả seeder Java và schema cũ;
+> không dùng làm hướng dẫn khởi tạo database hiện tại. Nguồn chuẩn hiện nay là
+> `database/schema/db.sql` (20 bảng, database `RitirementManagement2`). Dữ liệu mẫu
+> hiện nay do `database/seeds/build_seed.py` tạo thành `database/seeds/seed_data.sql`;
+> project không còn `SmeDataSeeder.java` tự chạy khi Spring khởi động.
+>
+> **Cách dùng hiện tại:** Chỉ chạy `db.sql` cho database đích có thể xóa toàn bộ,
+> vì đầu script chứa `DROP DATABASE RitirementManagement2`. Sau đó chạy
+> `seed_data.sql` một lần nếu cần dữ liệu mẫu. Cấu hình local (không commit mật
+> khẩu) phải trỏ tới `RitirementManagement2` và dùng `ddl-auto=validate`. Java
+> giữ nguyên tên PascalCase bằng `SchemaNamingConfig`. Mỗi Candidate có
+> `UserId NOT NULL UNIQUE`; CV ứng tuyển nằm ở `Application.AppliedCvUrl`;
+> `ApplicationReview` là quyết định review, không phải bảng Resume. Xem
+> `docs/schema-migration-impact.md` để biết đối chiếu schema và mã nguồn.
+
 > **Dự án**: Hệ thống Quản lý Tuyển dụng (Recruitment Management System - RMS)  
 > **Nhóm thực hiện**: SWP391 - Group 2  
 > **Công nghệ sử dụng**: Java 21, Spring Boot 3, Spring Data JPA, Hibernate 6, MS SQL Server, Spring Security (BCrypt)
@@ -273,7 +288,7 @@ SWP_RMS_Group-2/
 | [`docs/database/data_seeding_guide.md`](file:///d:/Coding_source/swp_project/SWP_RMS_Group-2/docs/database/data_seeding_guide.md) | Markdown | **Tài liệu hướng dẫn tổng hợp** (file này). Ghi chép toàn bộ kiến trúc khởi tạo dữ liệu, kinh nghiệm sửa lỗi tiếng Việt/NULL, ưu/nhược điểm và hướng dẫn cho người phát triển sau. |
 | [`src/main/java/com/group2/rms/config/SmeDataSeeder.java`](file:///d:/Coding_source/swp_project/SWP_RMS_Group-2/src/main/java/com/group2/rms/config/SmeDataSeeder.java) | Java Class | **Bộ nạp dữ liệu chính**. Chạy khi ứng dụng khởi động (`CommandLineRunner`). Tạo ~300 records quy mô SME phủ khắp 10 thực thể chính, hỗ trợ 100% tiếng Việt có dấu, kiểm soát thứ tự FK, tối ưu BCrypt 1 lần, batch `saveAll`. |
 | [`src/main/java/com/group2/rms/config/DatabaseSeeder.java`](file:///d:/Coding_source/swp_project/SWP_RMS_Group-2/src/main/java/com/group2/rms/config/DatabaseSeeder.java) | Java Class | **Bộ nạp dữ liệu cơ bản ban đầu**. Chỉ tạo 5 Roles, 4 Depts, 3 Users. Hiện tại đã được comment `@Component` để nhường quyền kích hoạt cho `SmeDataSeeder`. |
-| [`src/main/java/com/group2/rms/config/SecurityConfig.java`](file:///d:/Coding_source/swp_project/SWP_RMS_Group-2/src/main/java/com/group2/rms/config/SecurityConfig.java) | Java Class | **Cấu hình Spring Security**. Cung cấp Bean `PasswordEncoder` (sử dụng thuật toán `BCryptPasswordEncoder`) cho seeder và các service; tạm thời cấu hình `permitAll()` toàn bộ endpoint để phục vụ phát triển giao diện. |
+| [`src/main/java/com/group2/rms/config/SecurityConfig.java`](file:///d:/Coding_source/swp_project/SWP_RMS_Group-2/src/main/java/com/group2/rms/config/SecurityConfig.java) | Java Class | **Cấu hình Spring Security**. Cung cấp Bean `PasswordEncoder` (sử dụng thuật toán `BCryptPasswordEncoder`) cho seeder và các service; bật form login, CSRF và phân quyền các route LinhDN đã xác nhận. |
 | [`src/main/java/com/group2/rms/repository/RoleRepository.java`](file:///d:/Coding_source/swp_project/SWP_RMS_Group-2/src/main/java/com/group2/rms/repository/RoleRepository.java) | Java Interface | Repository thao tác CRUD và đếm số lượng bản ghi bảng `Role`. |
 | [`src/main/java/com/group2/rms/repository/DepartmentRepository.java`](file:///d:/Coding_source/swp_project/SWP_RMS_Group-2/src/main/java/com/group2/rms/repository/DepartmentRepository.java) | Java Interface | Repository thao tác CRUD bảng `Department`. |
 | [`src/main/java/com/group2/rms/repository/UserRepository.java`](file:///d:/Coding_source/swp_project/SWP_RMS_Group-2/src/main/java/com/group2/rms/repository/UserRepository.java) | Java Interface | Repository quản lý người dùng, tìm kiếm theo `username`, `email`. |

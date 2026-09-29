@@ -7,7 +7,7 @@ import java.time.LocalDateTime;
 
 /**
  * 3.5 AuditLog - Nhật ký hành động trong hệ thống.
- * Lưu toàn bộ các thao tác: CREATE, UPDATE, DELETE, LOGIN, VIEW.
+ * Lưu các thao tác được schema hỗ trợ: CREATE, UPDATE, DELETE, LOGIN.
  * Dùng BIGINT cho AuditLogId do log có thể rất lớn.
  */
 @Entity
@@ -29,9 +29,9 @@ public class AuditLog {
     private User user;
 
     /**
-     * Loại hành động: CREATE, UPDATE, DELETE, LOGIN, VIEW
+     * Loại hành động: CREATE, UPDATE, DELETE, LOGIN
      */
-    @Column(name = "Action", nullable = false, length = 20)
+    @Column(name = "Action", nullable = false, length = 50)
     private String action;
 
     @Column(name = "EntityName", nullable = false, length = 100)
@@ -52,7 +52,7 @@ public class AuditLog {
     @Column(name = "NewValue", columnDefinition = "NVARCHAR(MAX)")
     private String newValue;
 
-    @Column(name = "IpAddress", length = 50)
+    @Column(name = "IpAddress", length = 45)
     private String ipAddress;
 
     @Column(name = "Timestamp", nullable = false)

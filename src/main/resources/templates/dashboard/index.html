@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Dashboard | RMS</title>
+    <link rel="stylesheet" th:href="@{/css/main.css}">
+    <link rel="stylesheet" th:href="@{/css/dashboard.css}">
+</head>
+<body>
+<header class="dashboard-topbar">
+    <a class="dashboard-brand" th:href="@{/dashboard}" aria-label="RMS Dashboard">RMS <span>Dashboard</span></a>
+    <form th:action="@{/logout}" method="post">
+        <button class="btn btn-secondary" type="submit">Đăng xuất</button>
+    </form>
+</header>
+
+<main class="dashboard-main">
+    <div class="dashboard-intro">
+        <div>
+            <p class="dashboard-eyebrow" th:text="${dashboard.roleName}">Vai trò</p>
+            <h1 th:text="'Xin chào, ' + ${dashboard.fullName}">Xin chào</h1>
+            <p class="dashboard-scope" th:text="${dashboard.scope}">Phạm vi dữ liệu</p>
+        </div>
+    </div>
+
+    <section aria-label="Chỉ số tổng quan" th:if="${not #lists.isEmpty(dashboard.metrics)}">
+        <div class="dashboard-grid">
+            <article class="dashboard-metric" th:each="metric : ${dashboard.metrics}">
+                <h2 th:text="${metric.title}">Chỉ số</h2>
+                <p class="dashboard-value" th:text="${metric.value}">0</p>
+                <p class="dashboard-detail" th:text="${metric.detail}">Nguồn dữ liệu</p>
+            </article>
+        </div>
+    </section>
+
+    <section class="dashboard-section" th:if="${not #lists.isEmpty(dashboard.breakdowns)}"
+             aria-label="Phân bố trạng thái">
+        <div class="dashboard-grid dashboard-grid-wide">
+            <article class="dashboard-card" th:each="breakdown : ${dashboard.breakdowns}">
+                <h2 th:text="${breakdown.title}">Trạng thái</h2>
+                <p class="dashboard-empty" th:if="${#lists.isEmpty(breakdown.statuses)}">Chưa có dữ liệu trong phạm vi tài khoản này.</p>
+                <ul class="dashboard-status-list" th:unless="${#lists.isEmpty(breakdown.statuses)}">
+                    <li th:each="item : ${breakdown.statuses}">
+                        <span th:text="${item.status}">Trạng thái</span>
+                        <strong th:text="${item.count}">0</strong>
+                    </li>
+                </ul>
+            </article>
+        </div>
+    </section>
+
+    <section class="dashboard-section" th:if="${dashboard.roleName == 'Director'}" aria-label="Hoạt động phê duyệt gần đây">
+        <article class="dashboard-card">
+            <h2>Phê duyệt và từ chối gần đây của tôi</h2>
+            <p class="dashboard-empty" th:if="${#lists.isEmpty(dashboard.activities)}">Chưa có bản ghi phê duyệt hoặc từ chối.</p>
+            <ul class="dashboard-activity-list" th:unless="${#lists.isEmpty(dashboard.activities)}">
+                <li th:each="activity : ${dashboard.activities}">
+                    <div>
+                        <strong th:text="${activity.type}">Loại</strong>
+                        <span th:text="${activity.title}">Tên</span>
+                    </div>
+                    <div class="dashboard-activity-meta">
+                        <span th:text="${activity.status}">Trạng thái</span>
+                        <time th:text="${#temporals.format(activity.at, 'dd/MM/yyyy HH:mm')}">Thời điểm</time>
+                    </div>
+                </li>
+            </ul>
+        </article>
+    </section>
+
+    <section class="dashboard-section" th:if="${not #lists.isEmpty(dashboard.shortcuts)}" aria-label="Lối tắt">
+        <h2 class="dashboard-section-title">Lối tắt</h2>
+        <div class="dashboard-shortcuts">
+            <th:block th:each="shortcut : ${dashboard.shortcuts}">
+                <a class="btn btn-primary" th:if="${shortcut.url != null}"
+                   th:href="@{${shortcut.url}}" th:text="${shortcut.title}">Mở chức năng</a>
+                <span class="btn btn-secondary dashboard-disabled" th:unless="${shortcut.url != null}"
+                      aria-disabled="true" th:text="${shortcut.title}">Chưa khả dụng</span>
+            </th:block>
+        </div>
+    </section>
+
+    <section class="dashboard-section" th:if="${not #lists.isEmpty(dashboard.unavailable)}"
+             aria-label="Chức năng chưa có nguồn dữ liệu">
+        <h2 class="dashboard-section-title">Chưa có nguồn dữ liệu</h2>
+        <div class="dashboard-grid dashboard-grid-wide">
+            <article class="dashboard-card dashboard-unavailable" th:each="item : ${dashboard.unavailable}">
+                <h3 th:text="${item.title}">Chức năng</h3>
+                <p th:text="${item.reason}">Chưa hỗ trợ</p>
+            </article>
+        </div>
+    </section>
+</main>
+</body>
+</html>
