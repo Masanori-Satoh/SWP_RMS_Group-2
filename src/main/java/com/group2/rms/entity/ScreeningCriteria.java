@@ -10,7 +10,8 @@ import java.math.BigDecimal;
  * CriteriaType: Education, Experience, Skill, Knockout
  */
 @Entity
-@Table(name = "ScreeningCriteria")
+@Table(name = "ScreeningCriteria", uniqueConstraints =
+        @UniqueConstraint(name = "UQ_ScreeningCriteria_Requisition_Name", columnNames = {"RequisitionId", "CriteriaName"}))
 @Getter
 @Setter
 @NoArgsConstructor
@@ -27,13 +28,13 @@ public class ScreeningCriteria {
     @JoinColumn(name = "RequisitionId", nullable = false, referencedColumnName = "RequisitionId")
     private JobRequisition requisition;
 
-    @Column(name = "CriteriaName", nullable = false, length = 200)
+    @Column(name = "CriteriaName", nullable = false, length = 150)
     private String criteriaName;
 
     /**
      * Education, Experience, Skill, Knockout
      */
-    @Column(name = "CriteriaType", nullable = false, length = 50)
+    @Column(name = "CriteriaType", nullable = false, length = 30)
     private String criteriaType;
 
     @Column(name = "RequiredValue", nullable = false, length = 255)

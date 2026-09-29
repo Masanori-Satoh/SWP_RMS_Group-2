@@ -3,7 +3,7 @@ package com.group2.rms.entity;
 import jakarta.persistence.*;
 import lombok.*;
 
-import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 /**
  * 3.10 JobPosting - Tin tuyển dụng công khai (từ JobRequisition đã được duyệt).
@@ -42,14 +42,14 @@ public class JobPosting extends BaseEntity {
     @Column(name = "SalaryDisplay", length = 100)
     private String salaryDisplay;
 
-    @Column(name = "WorkLocation", length = 200)
+    @Column(name = "WorkLocation", length = 255)
     private String workLocation;
 
     @Column(name = "PostingDate")
-    private LocalDate postingDate;
+    private LocalDateTime postingDate;
 
     @Column(name = "ApplicationDeadline")
-    private LocalDate applicationDeadline;
+    private LocalDateTime applicationDeadline;
 
     /**
      * Draft, Published, Paused, Closed

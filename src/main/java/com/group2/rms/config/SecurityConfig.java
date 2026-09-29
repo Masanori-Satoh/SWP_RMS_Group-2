@@ -1,46 +1,69 @@
 package com.group2.rms.config;
 
+import com.group2.rms.repository.UserRepository;
+import com.group2.rms.security.AccountSessionGuardFilter;
+import com.group2.rms.security.DatabaseUserDetailsService;
+import com.group2.rms.security.RoleAuthorities;
+import org.springframework.boot.autoconfigure.security.servlet.PathRequest;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
+import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.access.intercept.AuthorizationFilter;
 
-/**
- * Cấu hình Spring Security.
- * - Khai báo bean PasswordEncoder (BCrypt) để mã hoá mật khẩu.
- * - Tạm thời cho phép TẤT CẢ request truy cập (permitAll) để dễ phát triển.
- *   Khi triển khai authentication/authorization thật, sẽ siết lại ở đây.
- */
+/** Shared authentication foundation and the route rules confirmed for LinhDN. */
 @Configuration
 @EnableWebSecurity
 public class SecurityConfig {
 
-    /**
-     * Bean PasswordEncoder sử dụng thuật toán BCrypt.
-     * Được inject vào DatabaseSeeder và các Service cần mã hoá password.
-     */
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
     }
 
-    /**
-     * Cấu hình SecurityFilterChain.
-     * Giai đoạn phát triển: cho phép tất cả request, tắt CSRF.
-     */
     @Bean
-    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
-        http
-            .csrf(csrf -> csrf.disable())
-            .authorizeHttpRequests(auth -> auth
-                .anyRequest().permitAll()
-            )
-            .formLogin(form -> form.disable())
-            .httpBasic(basic -> basic.disable());
+    public SecurityFilterChain filterChain(HttpSecurity http,
+                                           DatabaseUserDetailsService userDetailsService,
+                                           PasswordEncoder passwordEncoder,
+                                           UserRepository userRepository) throws Exception {
+        DaoAuthenticationProvider provider = new DaoAuthenticationProvider(userDetailsService);
+        provider.setPasswordEncoder(passwordEncoder);
 
+        http
+            .authenticationProvider(provider)
+            .authorizeHttpRequests(auth -> auth
+                .requestMatchers(PathRequest.toStaticResources().atCommonLocations()).permitAll()
+                .requestMatchers("/favicon.ico", "/error").permitAll()
+                .requestMatchers("/login", "/register", "/forgot-password", "/reset-password/**").permitAll()
+                .requestMatchers(HttpMethod.GET, "/jobs", "/jobs/**", "/public/jobs", "/public/jobs/**").permitAll()
+                .requestMatchers("/admin/accounts", "/admin/accounts/**",
+                        "/admin/api-monitoring", "/admin/api-monitoring/**",
+                        "/admin/ai-configuration", "/admin/ai-configuration/**")
+                    .hasAuthority(RoleAuthorities.SYSTEM_ADMIN)
+                .requestMatchers("/dashboard", "/dashboard/**").authenticated()
+                .anyRequest().authenticated()
+            )
+            .formLogin(form -> form
+                .loginPage("/login")
+                .loginProcessingUrl("/login")
+                .defaultSuccessUrl("/dashboard", true)
+                .failureUrl("/login?error")
+                .permitAll()
+            )
+            .logout(logout -> logout
+                .logoutUrl("/logout")
+                .logoutSuccessUrl("/login?logout")
+                .permitAll()
+            )
+            .httpBasic(basic -> basic.disable())
+            .addFilterBefore(new AccountSessionGuardFilter(userRepository), AuthorizationFilter.class);
+
+        // Spring Security's default CSRF protection stays enabled for web POST forms.
         return http.build();
     }
 }

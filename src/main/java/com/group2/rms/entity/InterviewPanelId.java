@@ -16,9 +16,9 @@ import java.io.Serializable;
 @EqualsAndHashCode
 public class InterviewPanelId implements Serializable {
 
-    @Column(name = "InterviewId")
+    @Column(name = "InterviewId", nullable = false)
     private Integer interviewId;
 
-    @Column(name = "InterviewerId")
+    @Column(name = "InterviewerId", nullable = false)
     private Integer interviewerId;
 }
