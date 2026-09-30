@@ -28,9 +28,9 @@ INSERT INTO [Role] (RoleName, [Description]) VALUES (N'Candidate', N'Ứng viên
 -- =============================================================================
 -- 2. DEPARTMENT (3 SME Departments)
 -- =============================================================================
-INSERT INTO Department (DepartmentName, ManagerId) VALUES (N'Engineering', NULL);
-INSERT INTO Department (DepartmentName, ManagerId) VALUES (N'Sales & Marketing', NULL);
-INSERT INTO Department (DepartmentName, ManagerId) VALUES (N'Human Resources', NULL);
+INSERT INTO Department (DepartmentName, ManagerId, DepartmentStatus) VALUES (N'Engineering', NULL, N'Active');
+INSERT INTO Department (DepartmentName, ManagerId, DepartmentStatus) VALUES (N'Sales & Marketing', NULL, N'Active');
+INSERT INTO Department (DepartmentName, ManagerId, DepartmentStatus) VALUES (N'Human Resources', NULL, N'Active');
 
 -- =============================================================================
 -- 3. INTERNAL USERS (10 Accounts: Admin, Director, 2 HR, 2 HM, 4 Interviewers)
