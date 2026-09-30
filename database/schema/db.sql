@@ -129,6 +129,11 @@ CREATE TABLE JobRequisition (
     ReasonForHiring NVARCHAR(500) NULL,
     JobDescription NVARCHAR(MAX) NOT NULL,
     RequirementDetails NVARCHAR(MAX) NOT NULL,
+    RequiredGender NVARCHAR(20) NOT NULL CONSTRAINT DF_JobRequisition_RequiredGender DEFAULT N'Any',
+    ProbationDuration NVARCHAR(50) NULL,
+    WorkModel NVARCHAR(20) NOT NULL CONSTRAINT DF_JobRequisition_WorkModel DEFAULT N'On-site',
+    WorkLocation NVARCHAR(255) NULL,
+    ExpectedStartDate DATE NULL,
     ApprovalStatus NVARCHAR(30) NOT NULL CONSTRAINT DF_JobRequisition_ApprovalStatus DEFAULT N'Draft',
     CreatedAt DATETIME2 NOT NULL CONSTRAINT DF_JobRequisition_CreatedAt DEFAULT SYSDATETIME(),
     UpdatedAt DATETIME2 NULL,
@@ -144,6 +149,12 @@ CREATE TABLE JobRequisition (
 
     CONSTRAINT CK_JobRequisition_EmploymentType
         CHECK (EmploymentType IN (N'Full-time', N'Part-time', N'Internship', N'Contract')),
+
+    CONSTRAINT CK_JobRequisition_RequiredGender
+        CHECK (RequiredGender IN (N'Male', N'Female', N'Any')),
+
+    CONSTRAINT CK_JobRequisition_WorkModel
+        CHECK (WorkModel IN (N'On-site', N'Remote', N'Hybrid')),
 
     CONSTRAINT CK_JobRequisition_ApprovalStatus
         CHECK (ApprovalStatus IN (N'Draft', N'Pending_Director', N'Approved', N'Rejected')),

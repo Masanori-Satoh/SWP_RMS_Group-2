@@ -206,6 +206,7 @@ requisitions = [
         "Mở rộng đội ngũ kỹ thuật phát triển hệ thống Core RMS & Microservices",
         "Phát triển backend RESTful APIs bằng Spring Boot, tối ưu hóa cơ sở dữ liệu SQL Server, triển khai Docker/Kubernetes.",
         "Tối thiểu 3 năm kinh nghiệm lập trình Java, thành thạo Spring Boot, JPA/Hibernate, hiểu sâu về Caching Redis và Message Queue RabbitMQ.",
+        "Any", "2 tháng", "Hybrid", "Tầng 8, Tòa nhà RMS Tower, Phố Duy Tân, Cầu Giấy, Hà Nội", "2026-11-01",
         "Approved", "2026-09-10 09:00:00", "2026-09-15 10:00:00"
     ),
     (
@@ -213,6 +214,7 @@ requisitions = [
         "Xây dựng giao diện web portal quản trị và cổng ứng viên hiện đại, responsive",
         "Phát triển module giao diện người dùng bằng React 18, TypeScript, TailwindCSS/Vanilla CSS, tích hợp REST APIs.",
         "Tối thiểu 2 năm kinh nghiệm ReactJS, thành thạo Redux Toolkit hoặc Zustand, có kinh nghiệm tối ưu hóa hiệu năng web và UI/UX.",
+        "Any", "2 tháng", "Hybrid", "Tầng 8, Tòa nhà RMS Tower, Phố Duy Tân, Cầu Giấy, Hà Nội", "2026-11-01",
         "Approved", "2026-09-11 10:00:00", "2026-09-16 11:00:00"
     ),
     (
@@ -220,6 +222,7 @@ requisitions = [
         "Thiết lập quy trình kiểm thử tự động, đảm bảo chất lượng hệ thống phần mềm trước release",
         "Xây dựng test automation framework cho API và Web UI bằng Playwright/Selenium và Java/Python, tích hợp CI/CD.",
         "Tối thiểu 2 năm kinh nghiệm Automation Test, thành thạo Postman/Newman, k6 hoặc JMeter, hiểu biết về quy trình Agile/Scrum.",
+        "Any", "2 tháng", "On-site", "Tầng 8, Tòa nhà RMS Tower, Phố Duy Tân, Cầu Giấy, Hà Nội", "2026-11-15",
         "Approved", "2026-09-12 08:30:00", "2026-09-17 14:00:00"
     ),
     (
@@ -227,14 +230,15 @@ requisitions = [
         "Mở rộng thị trường khách hàng doanh nghiệp SME sử dụng giải pháp phần mềm",
         "Tìm kiếm khách hàng tiềm năng B2B, tư vấn giải pháp chuyển đổi số, đàm phán và ký kết hợp đồng dịch vụ phần mềm.",
         "Tối thiểu 1 năm kinh nghiệm Sales B2B khối phần mềm/IT, kỹ năng giao tiếp và thuyết trình xuất sắc, tiếng Anh giao tiếp tốt.",
+        "Any", "2 tháng", "On-site", "Quận 1, TP. Hồ Chí Minh & Cầu Giấy, Hà Nội", "2026-11-15",
         "Approved", "2026-09-15 14:00:00", "2026-09-18 09:30:00"
     )
 ]
 
-for title, d_id, hm_id, num_pos, emp_type, min_sal, max_sal, reason, jd, req_det, app_status, cr_at, up_at in requisitions:
+for title, d_id, hm_id, num_pos, emp_type, min_sal, max_sal, reason, jd, req_det, req_gender, prob_duration, work_model, work_loc, exp_start, app_status, cr_at, up_at in requisitions:
     lines.append(
-        f"INSERT INTO JobRequisition (Title, DepartmentId, HiringManagerId, NumberOfPositions, EmploymentType, MinSalary, MaxSalary, ReasonForHiring, JobDescription, RequirementDetails, ApprovalStatus, CreatedAt, UpdatedAt) "
-        f"VALUES (N'{title}', {d_id}, {hm_id}, {num_pos}, N'{emp_type}', {min_sal:.2f}, {max_sal:.2f}, N'{reason}', N'{jd}', N'{req_det}', N'{app_status}', '{cr_at}', '{up_at}');"
+        f"INSERT INTO JobRequisition (Title, DepartmentId, HiringManagerId, NumberOfPositions, EmploymentType, MinSalary, MaxSalary, ReasonForHiring, JobDescription, RequirementDetails, RequiredGender, ProbationDuration, WorkModel, WorkLocation, ExpectedStartDate, ApprovalStatus, CreatedAt, UpdatedAt) "
+        f"VALUES (N'{title}', {d_id}, {hm_id}, {num_pos}, N'{emp_type}', {min_sal:.2f}, {max_sal:.2f}, N'{reason}', N'{jd}', N'{req_det}', N'{req_gender}', N'{prob_duration}', N'{work_model}', N'{work_loc}', '{exp_start}', N'{app_status}', '{cr_at}', '{up_at}');"
     )
 lines.append("")
 
