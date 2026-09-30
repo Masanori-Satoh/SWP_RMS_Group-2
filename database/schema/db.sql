@@ -492,10 +492,11 @@ CREATE TABLE OfferProposal (
         CHECK (OfferStatus IN (
             N'Draft',
             N'Pending_Director',
-            N'Approved',
+            N'Director_Approved',
+            N'Director_Rejected',
             N'Sent_Candidate',
             N'Accepted',
-            N'Rejected',
+            N'Declined',
             N'Negotiating'
         )),
 

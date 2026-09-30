@@ -185,9 +185,9 @@ ProbationSalary;NOT NULL, CHECK >= 85% of ProposedSalary;Probation-period salary
 ExpectedStartDate;NULL;Expected start date
 WorkLocation;NULL;Work location
 BenefitsPackage;NULL;Benefits/bonus package attached to the offer
-OfferStatus;NOT NULL;Draft, Pending_Director, Approved, Sent_Candidate, Accepted, Rejected, Negotiating
-ProposedBy;NOT NULL, FOREIGN KEY -> User.UserId;Hiring Manager who created the offer
-CreatedAt;NOT NULL, DEFAULT SYSDATETIME();Creation date
+OfferStatus;NOT NULL;Draft, Pending_Director, Director_Approved, Director_Rejected, Sent_Candidate, Accepted, Declined, Negotiating
+ProposedBy;NOT NULL, FOREIGN KEY -> User.UserId;HR who created the offer
+CreatedAt;NOT NULL, DEFAULT GETDATE();Creation date
 UpdatedAt;NULL;Last update date
 3.19 OfferApproval
 Column;Constraints;Notes

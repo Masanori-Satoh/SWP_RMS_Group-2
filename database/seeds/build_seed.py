@@ -675,7 +675,7 @@ for day_idx in range(num_days):
                     exp_start_date = (int_date + datetime.timedelta(days=random.randint(14, 21))).strftime("%Y-%m-%d")
                     offer_created_dt = (int_end_dt + datetime.timedelta(days=1)).strftime("%Y-%m-%d %H:%M:%S")
                     
-                    off_status = random.choice(["Accepted", "Accepted", "Negotiating", "Approved"])
+                    off_status = random.choice(["Accepted", "Accepted", "Negotiating", "Director_Approved", "Sent_Candidate", "Declined"])
                     lines.append(
                         f"INSERT INTO OfferProposal (ApplicationId, OfferedPositionTitle, ProposedSalary, ProbationSalary, ExpectedStartDate, WorkLocation, BenefitsPackage, OfferStatus, ProposedBy, CreatedAt) "
                         f"VALUES ({c['app_id']}, N'{off_title}', {prop_sal:.2f}, {prob_sal:.2f}, '{exp_start_date}', N'Tầng 8, Tòa nhà RMS Tower, Duy Tân, Cầu Giấy, Hà Nội', N'Bảo hiểm PVI, 14 ngày phép năm, thưởng dự án, xét lương 2 lần/năm', N'{off_status}', 3, '{offer_created_dt}');"
@@ -688,13 +688,20 @@ for day_idx in range(num_days):
                         f"VALUES ({off_id}, 2, N'Approved', N'Phê duyệt mức đãi ngộ theo đề xuất của HR và HM.', '{off_app_dt}');"
                     )
                     
-                    # OfferNegotiation (if Negotiating or some Accepted)
-                    if off_status in ["Negotiating", "Accepted"]:
+                    # OfferNegotiation (if Negotiating or some Accepted/Declined)
+                    if off_status in ["Negotiating", "Accepted", "Declined"]:
                         neg_dt = (datetime.datetime.strptime(off_app_dt, "%Y-%m-%d %H:%M:%S") + datetime.timedelta(days=1)).strftime("%Y-%m-%d %H:%M:%S")
-                        counter_sal = prop_sal + 2000000.00
+                        if off_status == "Declined":
+                            counter_sal = prop_sal + 5000000.00
+                            c_notes = "Ứng viên nhận được offer khác với mức đãi ngộ cao hơn và mong muốn trao đổi lại."
+                            hr_notes = "HR đã trao đổi nhưng ngân sách vị trí hiện tại không thể đáp ứng, bảo lưu hồ sơ ứng viên."
+                        else:
+                            counter_sal = prop_sal + 2000000.00
+                            c_notes = "Ứng viên mong muốn hỗ trợ thêm 2 triệu phụ cấp đi lại hoặc chứng chỉ chuyên môn."
+                            hr_notes = "HR trao đổi và thống nhất hỗ trợ phụ cấp đào tạo chứng chỉ hàng năm."
                         lines.append(
                             f"INSERT INTO OfferNegotiation (OfferId, CandidateCounterSalary, CandidateNotes, HRResponseNotes, NegotiationDate) "
-                            f"VALUES ({off_id}, {counter_sal:.2f}, N'Ứng viên mong muốn hỗ trợ thêm 2 triệu phụ cấp đi lại hoặc chứng chỉ chuyên môn.', N'HR trao đổi và thống nhất hỗ trợ phụ cấp đào tạo chứng chỉ hàng năm.', '{neg_dt}');"
+                            f"VALUES ({off_id}, {counter_sal:.2f}, N'{c_notes}', N'{hr_notes}', '{neg_dt}');"
                         )
                         
     lines.append("")
