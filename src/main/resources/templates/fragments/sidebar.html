@@ -5,27 +5,33 @@
         <span class="brand-title">RMS</span>
         <span class="brand-badge">Enterprise Application</span>
     </div>
-    <nav class="sidebar-nav">
-        <a th:href="@{/dashboard}" class="nav-item" th:classappend="${activeMenu == 'dashboard' ? 'active' : ''}">
+    <nav class="sidebar-nav" aria-label="Main navigation">
+        <a th:href="@{/dashboard}" class="nav-item" th:classappend="${activeMenu == 'dashboard' ? 'active' : ''}" th:attr="aria-current=${activeMenu == 'dashboard' ? 'page' : null}">
             Dashboard
         </a>
-        <a th:href="@{/requisitions}" class="nav-item" th:classappend="${activeMenu == 'requisitions' ? 'active' : ''}">
+        <a th:href="@{/requisitions}" class="nav-item" th:classappend="${activeMenu == 'requisitions' ? 'active' : ''}" th:attr="aria-current=${activeMenu == 'requisitions' ? 'page' : null}">
             Job Requisitions
         </a>
-        <a th:href="@{/candidates}" class="nav-item" th:classappend="${activeMenu == 'candidates' ? 'active' : ''}">
+        <a th:href="@{/candidates}" class="nav-item" th:classappend="${activeMenu == 'candidates' ? 'active' : ''}" th:attr="aria-current=${activeMenu == 'candidates' ? 'page' : null}">
             Candidates
         </a>
-        <a th:href="@{/interviews}" class="nav-item" th:classappend="${activeMenu == 'interviews' ? 'active' : ''}">
+        <a th:href="@{/interviews}" class="nav-item" th:classappend="${activeMenu == 'interviews' ? 'active' : ''}" th:attr="aria-current=${activeMenu == 'interviews' ? 'page' : null}">
             Interview Schedule
         </a>
-        <a th:href="@{/offers}" class="nav-item" th:classappend="${activeMenu == 'offers' ? 'active' : ''}">
+        <a th:href="@{/offers}" class="nav-item" th:classappend="${activeMenu == 'offers' ? 'active' : ''}" th:attr="aria-current=${activeMenu == 'offers' ? 'page' : null}">
             Offer Management
         </a>
-        <a th:href="@{/notifications}" class="nav-item" th:classappend="${activeMenu == 'notifications' ? 'active' : ''}">
+        <a th:href="@{/notifications}" class="nav-item" th:classappend="${activeMenu == 'notifications' ? 'active' : ''}" th:attr="aria-current=${activeMenu == 'notifications' ? 'page' : null}">
             Notifications
         </a>
-        <a th:href="@{/profile}" class="nav-item" th:classappend="${activeMenu == 'profile' ? 'active' : ''}">
+        <a th:href="@{/profile}" class="nav-item" th:classappend="${activeMenu == 'profile' ? 'active' : ''}" th:attr="aria-current=${activeMenu == 'profile' ? 'page' : null}">
             Profile
+        </a>
+        <a th:href="@{/admin/accounts}" class="nav-item" th:classappend="${activeMenu == 'accounts' ? 'active' : ''}" th:attr="aria-current=${activeMenu == 'accounts' ? 'page' : null}">
+            Admin Accounts
+        </a>
+        <a th:href="@{/admin/api-monitoring}" class="nav-item" th:classappend="${activeMenu == 'api-monitoring' ? 'active' : ''}" th:attr="aria-current=${activeMenu == 'api-monitoring' ? 'page' : null}">
+            API Monitoring
         </a>
     </nav>
 </aside>

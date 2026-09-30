@@ -12,11 +12,4 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     document.getElementById('deactivate-cancel').addEventListener('click', () => dialog.close());
-
-    const menuButton = document.getElementById('account-menu-button');
-    const sidebar = document.getElementById('account-sidebar');
-    menuButton.addEventListener('click', () => {
-        const open = sidebar.classList.toggle('open');
-        menuButton.setAttribute('aria-expanded', String(open));
-    });
 });

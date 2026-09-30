@@ -10,22 +10,11 @@
 </head>
 <body>
 <div class="page-wrapper">
-    <aside class="sidebar account-sidebar" id="account-sidebar" aria-label="Điều hướng quản trị">
-        <div class="account-brand">RMS <span>Quản trị</span></div>
-        <nav class="account-nav">
-            <a th:href="@{/dashboard}">Tổng quan</a>
-            <a th:href="@{/admin/accounts}">Tài khoản</a>
-            <a class="active" th:href="@{/admin/api-monitoring}" aria-current="page">API Monitoring</a>
-        </nav>
-    </aside>
+    <aside th:replace="~{fragments/sidebar :: sidebar(activeMenu='api-monitoring')}"></aside>
 
     <div class="main-content">
         <header class="topbar account-topbar">
-            <div class="account-topbar-start">
-                <button class="account-menu-button" type="button" id="account-menu-button"
-                        aria-controls="account-sidebar" aria-expanded="false">☰ <span class="sr-only">Mở menu</span></button>
-                <span>Quản lý hệ thống</span>
-            </div>
+            <div class="topbar-title">Recruitment Management System</div>
             <form th:action="@{/logout}" method="post">
                 <button class="btn btn-secondary btn-sm" type="submit">Đăng xuất</button>
             </form>
@@ -102,6 +91,6 @@
         </main>
     </div>
 </div>
-<script th:src="@{/js/api-monitoring.js}"></script>
+
 </body>
 </html>

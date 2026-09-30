@@ -1,11 +1,4 @@
 document.addEventListener('DOMContentLoaded', () => {
-    const menuButton = document.getElementById('account-menu-button');
-    const sidebar = document.getElementById('account-sidebar');
-    menuButton.addEventListener('click', () => {
-        const open = sidebar.classList.toggle('open');
-        menuButton.setAttribute('aria-expanded', String(open));
-    });
-
     const role = document.getElementById('role');
     const department = document.getElementById('department');
     const syncRequiredFields = () => {

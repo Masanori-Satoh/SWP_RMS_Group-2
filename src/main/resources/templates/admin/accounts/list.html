@@ -4,31 +4,26 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Quản lý tài khoản | RMS</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" th:href="@{/css/main.css}">
     <link rel="stylesheet" th:href="@{/css/account-list.css}">
 </head>
 <body>
 <div class="page-wrapper">
-    <aside class="sidebar account-sidebar" id="account-sidebar" aria-label="Điều hướng quản trị">
-        <div class="account-brand">RMS <span>Quản trị</span></div>
-        <nav class="account-nav">
-            <a th:href="@{/dashboard}">Tổng quan</a>
-            <a class="active" th:href="@{/admin/accounts}" aria-current="page">Tài khoản</a>
-            <a th:href="@{/admin/api-monitoring}">API Monitoring</a>
-        </nav>
-    </aside>
+    <!-- SIDEBAR -->
+    <aside th:replace="~{fragments/sidebar :: sidebar(activeMenu='accounts')}"></aside>
 
     <div class="main-content">
-        <header class="topbar account-topbar">
-            <div class="account-topbar-start">
-                <button class="account-menu-button" type="button" id="account-menu-button"
-                        aria-controls="account-sidebar" aria-expanded="false">☰ <span class="sr-only">Mở menu</span></button>
-                <span>Quản lý hệ thống</span>
-            </div>
-            <form th:action="@{/logout}" method="post">
-                <button class="btn btn-secondary btn-sm" type="submit">Đăng xuất</button>
+        <!-- TOPBAR -->
+        <div class="topbar">
+            <div class="topbar-title">Recruitment Management System</div>
+            <form th:action="@{/logout}" method="post" style="margin:0">
+                <button type="submit" style="background:none;border:none;cursor:pointer;font-size:14px;color:#64748b;">Đăng xuất</button>
             </form>
-        </header>
+        </div>
 
         <main class="page-content">
             <div class="container">
