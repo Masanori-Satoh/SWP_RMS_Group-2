@@ -16,6 +16,18 @@ import lombok.Setter;
 public class RequisitionResponseDto {
     private Integer requisitionId;
     private String title;
+    private Long version;
+    private String gender;
+    private String workLocation;
+    private String workingHours;
+    private java.time.LocalDate expectedStartDate;
+    private boolean editable;
+    private boolean deletable;
+    private boolean decidable;
+    private boolean withdrawable;
+    private boolean incomplete;
+    private String rejectionReason;
+    private java.util.List<RequisitionTimelineDto> timeline;
     private String departmentName;
     private String hiringManagerName;
     private Integer numberOfPositions;

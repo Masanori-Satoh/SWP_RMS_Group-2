@@ -10,8 +10,7 @@ import java.math.BigDecimal;
  * CriteriaType: Education, Experience, Skill, Knockout
  */
 @Entity
-@Table(name = "ScreeningCriteria", uniqueConstraints =
-        @UniqueConstraint(name = "UQ_ScreeningCriteria_Requisition_Name", columnNames = {"RequisitionId", "CriteriaName"}))
+@Table(name = "ScreeningCriteria")
 @Getter
 @Setter
 @NoArgsConstructor
@@ -28,22 +27,22 @@ public class ScreeningCriteria {
     @JoinColumn(name = "RequisitionId", nullable = false, referencedColumnName = "RequisitionId")
     private JobRequisition requisition;
 
-    @Column(name = "CriteriaName", nullable = false, length = 150)
+    @Column(name = "CriteriaName", length = 150)
     private String criteriaName;
 
     /**
      * Education, Experience, Skill, Knockout
      */
-    @Column(name = "CriteriaType", nullable = false, length = 30)
+    @Column(name = "CriteriaType", length = 30)
     private String criteriaType;
 
-    @Column(name = "RequiredValue", nullable = false, length = 255)
+    @Column(name = "RequiredValue", length = 255)
     private String requiredValue;
 
     /**
      * Trọng số AI scoring, mặc định 1.00
      */
-    @Column(name = "Weight", nullable = false, precision = 5, scale = 2,
+    @Column(name = "Weight", precision = 5, scale = 2,
             columnDefinition = "DECIMAL(5,2) DEFAULT 1.00")
     private BigDecimal weight;
 

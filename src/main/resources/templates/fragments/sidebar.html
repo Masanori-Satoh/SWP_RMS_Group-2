@@ -27,10 +27,10 @@
         <a th:href="@{/profile}" class="nav-item" th:classappend="${activeMenu == 'profile' ? 'active' : ''}" th:attr="aria-current=${activeMenu == 'profile' ? 'page' : null}">
             Profile
         </a>
-        <a th:href="@{/admin/accounts}" class="nav-item" th:classappend="${activeMenu == 'accounts' ? 'active' : ''}" th:attr="aria-current=${activeMenu == 'accounts' ? 'page' : null}">
+        <a th:if="${sidebarAdmin == true}" th:href="@{/admin/accounts}" class="nav-item" th:classappend="${activeMenu == 'accounts' ? 'active' : ''}" th:attr="aria-current=${activeMenu == 'accounts' ? 'page' : null}">
             Admin Accounts
         </a>
-        <a th:href="@{/admin/api-monitoring}" class="nav-item" th:classappend="${activeMenu == 'api-monitoring' ? 'active' : ''}" th:attr="aria-current=${activeMenu == 'api-monitoring' ? 'page' : null}">
+        <a th:if="${sidebarAdmin == true}" th:href="@{/admin/api-monitoring}" class="nav-item" th:classappend="${activeMenu == 'api-monitoring' ? 'active' : ''}" th:attr="aria-current=${activeMenu == 'api-monitoring' ? 'page' : null}">
             API Monitoring
         </a>
     </nav>

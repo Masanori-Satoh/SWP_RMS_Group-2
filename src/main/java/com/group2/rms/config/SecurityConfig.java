@@ -46,6 +46,8 @@ public class SecurityConfig {
                         "/admin/ai-configuration", "/admin/ai-configuration/**")
                     .hasAuthority(RoleAuthorities.SYSTEM_ADMIN)
                 .requestMatchers("/dashboard", "/dashboard/**").authenticated()
+                .requestMatchers("/requisitions", "/requisitions/**")
+                    .hasAnyAuthority("ROLE_HIRING_MANAGER", "ROLE_DIRECTOR", "ROLE_HR", RoleAuthorities.SYSTEM_ADMIN)
                 .anyRequest().authenticated()
             )
             .formLogin(form -> form

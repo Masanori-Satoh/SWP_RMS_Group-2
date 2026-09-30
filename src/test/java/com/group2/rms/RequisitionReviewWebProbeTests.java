@@ -1,10 +1,11 @@
 package com.group2.rms;
 import com.group2.rms.config.SecurityConfig;
 import com.group2.rms.controller.RequisitionController;
-import com.group2.rms.dto.request.RequisitionRequestDto;
+import com.group2.rms.dto.request.*;
+import com.group2.rms.dto.response.*;
 import com.group2.rms.entity.*;
 import com.group2.rms.repository.*;
-import com.group2.rms.service.RequisitionService;
+import com.group2.rms.service.*;
 import com.group2.rms.security.*;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -17,43 +18,26 @@ import org.springframework.security.core.context.SecurityContextImpl;
 import org.springframework.security.web.csrf.CsrfToken;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.data.domain.Page;
+import org.springframework.data.domain.*;
+import java.time.*;
+import java.math.BigDecimal;
 import java.util.*;
 import static org.mockito.Mockito.*;
 import static org.mockito.ArgumentMatchers.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
-
-@WebMvcTest(RequisitionController.class)
-@Import({SecurityConfig.class, DatabaseUserDetailsService.class})
+import static org.hamcrest.Matchers.*;
+@WebMvcTest(RequisitionController.class) @Import({SecurityConfig.class,DatabaseUserDetailsService.class})
 class RequisitionReviewWebProbeTests {
-    @Autowired MockMvc mvc;
-    @MockitoBean RequisitionService service;
-    @MockitoBean UserRepository users;
-    @MockitoBean DepartmentRepository departments;
-    private MockHttpSession candidateSession() {
-        var user = User.builder().userId(123).username("review-candidate").accountStatus("Active")
-            .role(Role.builder().roleName("Candidate").build()).build();
-        when(users.findByUsernameIgnoreCase("review-candidate")).thenReturn(Optional.of(user));
-        var auth = UsernamePasswordAuthenticationToken.authenticated("review-candidate", "", List.of(new SimpleGrantedAuthority(RoleAuthorities.fromRoleName("Candidate"))));
-        var session = new MockHttpSession(); session.setAttribute("SPRING_SECURITY_CONTEXT", new SecurityContextImpl(auth)); return session;
-    }
-    @Test void candidateCanListAndDeleteUsingGetWithoutCsrf() throws Exception {
-        var session = candidateSession();
-        when(service.getAllRequisitions(1,10)).thenReturn(Page.empty());
-        mvc.perform(get("/requisitions").session(session)).andExpect(status().isOk());
-        mvc.perform(get("/requisitions/delete/999").session(session)).andExpect(status().is3xxRedirection());
-        verify(service).deleteRequisition(999);
-        System.out.println("WEB PROBE Candidate: list allowed, GET delete calls service without CSRF");
-    }
-    @Test void invalidSubmitIsForwardedToService() throws Exception {
-        var session = candidateSession();
-        var page = mvc.perform(get("/requisitions/create").session(session)).andExpect(status().isOk()).andReturn();
-        var csrf = (CsrfToken) page.getRequest().getAttribute(CsrfToken.class.getName());
-        mvc.perform(post("/requisitions/create").session(session).param(csrf.getParameterName(),csrf.getToken())
-            .param("title","   ").param("action","submit"))
-            .andExpect(status().is3xxRedirection());
-        verify(service).createRequisition(argThat((RequisitionRequestDto d) -> d.getTitle().isBlank() && d.getDepartmentId()==null),eq(1));
-        System.out.println("WEB PROBE submit: blank title and missing department forwarded without validation");
-    }
+ @Autowired MockMvc mvc; @MockitoBean RequisitionService service; @MockitoBean RequisitionAccess access;
+ @MockitoBean UserRepository users; @MockitoBean DepartmentRepository departments;
+ private MockHttpSession session(String role){var dept=Department.builder().departmentId(1).departmentName("Engineering").build();var u=User.builder().userId(123).username("req-user").fullName("Test Manager").accountStatus("Active").role(Role.builder().roleName(role).build()).department(dept).build();when(users.findByUsernameIgnoreCase("req-user")).thenReturn(Optional.of(u));when(access.actor()).thenReturn(u);when(access.canCreate(u)).thenReturn(!"Director".equals(role));when(departments.findAll()).thenReturn(List.of(dept));var auth=UsernamePasswordAuthenticationToken.authenticated("req-user","",List.of(new SimpleGrantedAuthority(RoleAuthorities.fromRoleName(role))));var s=new MockHttpSession();s.setAttribute("SPRING_SECURITY_CONTEXT",new SecurityContextImpl(auth));return s;}
+ private RequisitionResponseDto detail(){var criterion=new ScreeningCriteriaDto();criterion.setCriteriaId(1);criterion.setCriteriaName("Java programming");criterion.setCriteriaType("Skill");criterion.setRequiredValue("Two years");criterion.setWeight(new BigDecimal("100"));criterion.setIsMandatory(true);return RequisitionResponseDto.builder().requisitionId(10).version(0L).title("Business Development Executive (B2B)").departmentName("Sales & Marketing").hiringManagerName("Test Manager").approvalStatus("Approved").createdAt(LocalDateTime.now()).employmentType("Full-time").numberOfPositions(2).minSalary(new BigDecimal("15000000")).maxSalary(new BigDecimal("25000000")).gender("Any").workLocation("Da Nang").workingHours("Monday-Friday").expectedStartDate(LocalDate.now().plusDays(30)).reasonForHiring("Mở rộng đội ngũ kinh doanh phần mềm.").jobDescription("Tìm kiếm khách hàng tiềm năng B2B, tư vấn giải pháp chuyển đổi số.").requirementDetails("Kỹ năng giao tiếp và thuyết trình xuất sắc.").screeningCriteria(List.of(criterion)).approvals(List.of(ApprovalResponseDto.builder().approverName("Director").status("Approved").approvalDate(LocalDateTime.now()).comments("Phê duyệt mở 2 vị trí.").build())).timeline(List.of()).activityLog(List.of(ActivityLogDto.builder().action("CREATE").performedBy("Test Manager").timestamp(LocalDateTime.now()).description("Drafted B2B Sales requisition").build())).build();}
+ @Test void candidatesCannotAccessAndGetCannotDelete()throws Exception{mvc.perform(get("/requisitions").session(session("Candidate"))).andExpect(status().isForbidden());mvc.perform(get("/requisitions/delete/10").session(session("Hiring Manager"))).andExpect(status().isMethodNotAllowed());verifyNoInteractions(service);}
+ @Test void formOnlyBindsExistingDatabaseFields()throws Exception{mvc.perform(get("/requisitions/create").session(session("Hiring Manager"))).andExpect(status().isOk()).andExpect(content().string(containsString("name=\"workingHours\""))).andExpect(content().string(not(containsString("name=\"workFormat\"")))).andExpect(content().string(containsString("name=\"expectedStartDate\""))).andExpect(content().string(not(containsString("name=\"hiringManagerId\"")))).andExpect(content().string(containsString("name=\"_csrf\""))).andDo(r->preview("form",r));}
+ @Test void fieldErrorsKeepUserInputAndSaveDraftPassesItsAction()throws Exception{var s=session("Hiring Manager");var page=mvc.perform(get("/requisitions/create").session(s)).andReturn();var csrf=(CsrfToken)page.getRequest().getAttribute(CsrfToken.class.getName());when(service.createRequisition(any())).thenThrow(new RequisitionValidationException(Map.of("workLocation","Enter a location.")));mvc.perform(post("/requisitions/create").session(s).param(csrf.getParameterName(),csrf.getToken()).param("action","submit").param("title","Keep this title")).andExpect(status().isOk()).andExpect(content().string(containsString("Keep this title"))).andExpect(content().string(containsString("Enter a location.")));doReturn(10).when(service).createRequisition(any());mvc.perform(post("/requisitions/create").session(s).param(csrf.getParameterName(),csrf.getToken()).param("action","draft")).andExpect(redirectedUrl("/requisitions/10"));verify(service).createRequisition(argThat(d->"draft".equals(d.getAction())));}
+ @Test void listFiltersPaginationAndSafeDeleteRender()throws Exception{var s=session("System Admin");var draft=detail();draft.setApprovalStatus("Draft");draft.setEditable(true);draft.setDeletable(true);var pending=detail();pending.setRequisitionId(11);pending.setTitle("Japanese-speaking Engineer");pending.setApprovalStatus("Pending_Director");when(service.search(1,10,"",null,"","")).thenReturn(new PageImpl<>(List.of(draft,pending),PageRequest.of(0,10),12));when(service.countVisible()).thenReturn(12L);mvc.perform(get("/requisitions").session(s)).andExpect(status().isOk()).andExpect(content().string(containsString("name=\"status\""))).andExpect(content().string(containsString("data-delete-url=\"/requisitions/delete/10\""))).andExpect(content().string(containsString("name=\"_csrf\""))).andDo(r->preview("list",r));}
+ @Test void detailAndCopyRenderExistingValuesWithoutCreatingAnything()throws Exception{var s=session("Hiring Manager");when(service.getById(10)).thenReturn(detail());mvc.perform(get("/requisitions/10").session(s)).andExpect(status().isOk()).andExpect(content().string(containsString("Da Nang"))).andExpect(content().string(containsString("activity-details"))).andExpect(content().string(not(containsString("href=\"/admin/accounts\"")))).andDo(r->preview("detail",r));var copy=new RequisitionRequestDto();copy.setTitle("Copied role");when(service.copy(10)).thenReturn(copy);mvc.perform(get("/requisitions/copy/10").session(s)).andExpect(status().isOk()).andExpect(content().string(containsString("Copied role"))).andExpect(content().string(containsString("action=\"/requisitions/create\"")));verify(service,never()).createRequisition(any());}
+ @Test void deleteDecisionAndWithdrawRequireCsrfAndCarryVersion()throws Exception{var s=session("Director");var d=detail();d.setApprovalStatus("Pending_Director");d.setDecidable(true);when(service.getById(10)).thenReturn(d);var page=mvc.perform(get("/requisitions/10").session(s)).andExpect(status().isOk()).andDo(r->preview("decision",r)).andReturn();var csrf=(CsrfToken)page.getRequest().getAttribute(CsrfToken.class.getName());mvc.perform(post("/requisitions/delete/10").session(s).param("version","0")).andExpect(status().isForbidden());mvc.perform(post("/requisitions/10/decision").session(s).param(csrf.getParameterName(),csrf.getToken()).param("version","0").param("decision","reject").param("comment","Review budget")).andExpect(redirectedUrl("/requisitions/10"));verify(service).decide(10,0L,false,"Review budget");s=session("Hiring Manager");mvc.perform(post("/requisitions/delete/10").session(s).param(csrf.getParameterName(),csrf.getToken()).param("version","0")).andExpect(status().isForbidden());}
+ private void preview(String name,org.springframework.test.web.servlet.MvcResult r)throws Exception{if(!Boolean.getBoolean("requisition.preview"))return;var p=java.nio.file.Path.of("target","requisition-preview");java.nio.file.Files.createDirectories(p);java.nio.file.Files.writeString(p.resolve(name+".html"),r.getResponse().getContentAsString());}
 }

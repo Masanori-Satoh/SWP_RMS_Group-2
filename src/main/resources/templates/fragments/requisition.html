@@ -1,0 +1,6 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"><body>
+<header th:fragment="topbar" class="topbar"><span class="topbar-title">Recruitment Management System</span><div class="topbar-actions"><span>Welcome, <strong th:text="${viewerName}"></strong></span><form th:action="@{/logout}" method="post"><button type="submit" class="logout-button">Đăng xuất</button></form></div></header>
+<th:block th:fragment="messages"><p class="notice" role="status" th:if="${successMessage}" th:text="${successMessage}"></p><p class="alert alert-danger" role="alert" th:if="${failureMessage}" th:text="${failureMessage}"></p></th:block>
+<dialog th:fragment="deleteDialog" id="delete-dialog" aria-labelledby="delete-title"><form id="delete-form" method="post" th:action="@{/requisitions}"><input type="hidden" name="version" id="delete-version"><div class="delete-symbol" aria-hidden="true">!</div><h2 id="delete-title">Delete Requisition</h2><p>Delete “<strong id="delete-name"></strong>” and its criteria and approval records?</p><p class="muted">This cannot be undone. Audit history will be retained.</p><div class="dialog-actions"><button type="button" class="btn-outline" data-close-dialog>Cancel</button><button class="btn-danger" type="submit">Delete requisition</button></div></form></dialog>
+</body></html>

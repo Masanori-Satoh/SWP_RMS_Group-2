@@ -28,20 +28,20 @@ public class JobRequisition extends BaseEntity {
     private String title;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "DepartmentId", nullable = false, referencedColumnName = "DepartmentId")
+    @JoinColumn(name = "DepartmentId", referencedColumnName = "DepartmentId")
     private Department department;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "HiringManagerId", nullable = false, referencedColumnName = "UserId")
     private User hiringManager;
 
-    @Column(name = "NumberOfPositions", nullable = false)
+    @Column(name = "NumberOfPositions")
     private Integer numberOfPositions;
 
     /**
      * Full-time, Part-time, Internship, Contract
      */
-    @Column(name = "EmploymentType", nullable = false, length = 50)
+    @Column(name = "EmploymentType", length = 50)
     private String employmentType;
 
     @Column(name = "MinSalary", precision = 18, scale = 2)
@@ -50,13 +50,13 @@ public class JobRequisition extends BaseEntity {
     @Column(name = "MaxSalary", precision = 18, scale = 2)
     private BigDecimal maxSalary;
 
-    @Column(name = "ReasonForHiring", length = 500)
+    @Column(name = "ReasonForHiring", length = 2000, columnDefinition = "NVARCHAR(2000)")
     private String reasonForHiring;
 
-    @Column(name = "JobDescription", nullable = false, columnDefinition = "NVARCHAR(MAX)")
+    @Column(name = "JobDescription", columnDefinition = "NVARCHAR(MAX)")
     private String jobDescription;
 
-    @Column(name = "RequirementDetails", nullable = false, columnDefinition = "NVARCHAR(MAX)")
+    @Column(name = "RequirementDetails", columnDefinition = "NVARCHAR(MAX)")
     private String requirementDetails;
 
     /**
@@ -64,6 +64,21 @@ public class JobRequisition extends BaseEntity {
      */
     @Column(name = "ApprovalStatus", nullable = false, length = 30)
     private String approvalStatus;
+
+    @Column(name = "Gender", length = 20)
+    private String gender;
+    @Column(name = "WorkLocation", length = 255)
+    private String workLocation;
+    @Column(name = "WorkingHours", length = 255)
+    private String workingHours;
+    @Column(name = "ExpectedStartDate")
+    private java.time.LocalDate expectedStartDate;
+    @Column(name = "SubmittedAt")
+    private java.time.LocalDateTime submittedAt;
+    @Column(name = "DecidedAt")
+    private java.time.LocalDateTime decidedAt;
+    @Version @Column(name = "Version", nullable = false)
+    private Long version;
 
     @OneToMany(mappedBy = "requisition", cascade = CascadeType.ALL, orphanRemoval = true)
     private java.util.List<ScreeningCriteria> screeningCriteria;
