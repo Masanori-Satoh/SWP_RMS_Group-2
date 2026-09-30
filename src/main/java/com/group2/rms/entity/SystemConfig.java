@@ -26,7 +26,7 @@ public class SystemConfig {
     @Column(name = "ConfigValue", nullable = false, columnDefinition = "NVARCHAR(MAX)")
     private String configValue;
 
-    @Column(name = "Description", length = 500)
+    @Column(name = "Description", length = 255)
     private String description;
 
     @Column(name = "UpdatedAt", nullable = false)

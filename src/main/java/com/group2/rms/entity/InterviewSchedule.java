@@ -53,7 +53,7 @@ public class InterviewSchedule {
     /**
      * Scheduled, Completed, Cancelled, Rescheduled
      */
-    @Column(name = "InterviewStatus", nullable = false, length = 20)
+    @Column(name = "InterviewStatus", nullable = false, length = 30)
     private String interviewStatus;
 
     @ManyToOne(fetch = FetchType.LAZY)

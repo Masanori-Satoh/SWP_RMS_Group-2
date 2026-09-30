@@ -24,14 +24,9 @@ public class Candidate extends BaseEntity {
     @Column(name = "CandidateId")
     private Integer candidateId;
 
-    @Column(name = "FullName", nullable = false, length = 100)
-    private String fullName;
-
-    @Column(name = "Email", nullable = false, length = 100)
-    private String email;
-
-    @Column(name = "PhoneNumber", nullable = false, length = 20)
-    private String phoneNumber;
+    @OneToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "UserId", nullable = false, unique = true, referencedColumnName = "UserId")
+    private User account;
 
     @Column(name = "DateOfBirth")
     private LocalDate dateOfBirth;
@@ -39,7 +34,7 @@ public class Candidate extends BaseEntity {
     @Column(name = "Gender", length = 20)
     private String gender;
 
-    @Column(name = "Address", length = 500)
+    @Column(name = "Address", length = 255)
     private String address;
 
     @Column(name = "LinkedInUrl", length = 500)

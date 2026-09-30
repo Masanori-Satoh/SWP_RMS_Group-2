@@ -4,11 +4,13 @@ import jakarta.persistence.*;
 import lombok.*;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 
 /**
  * 3.19 OfferProposal - Đề xuất offer lương do Hiring Manager tạo.
  * Quan hệ 1-1 với Application (UNIQUE constraint trên ApplicationId).
- * OfferStatus: Draft, Pending_Director_Approval, Approved, Sent_To_Candidate, Accepted, Rejected
+ * OfferStatus: Draft, Pending_Director, Approved, Sent_Candidate,
+ * Accepted, Rejected, Negotiating
  */
 @Entity
 @Table(name = "OfferProposal")
@@ -28,6 +30,9 @@ public class OfferProposal extends BaseEntity {
     @JoinColumn(name = "ApplicationId", nullable = false, unique = true, referencedColumnName = "ApplicationId")
     private Application application;
 
+    @Column(name = "OfferedPositionTitle", nullable = false, length = 200)
+    private String offeredPositionTitle;
+
     @Column(name = "ProposedSalary", nullable = false, precision = 18, scale = 2)
     private BigDecimal proposedSalary;
 
@@ -37,24 +42,21 @@ public class OfferProposal extends BaseEntity {
     @Column(name = "ProbationSalary", nullable = false, precision = 18, scale = 2)
     private BigDecimal probationSalary;
 
-    /**
-     * Số ngày thử việc, mặc định 60
-     */
-    @Column(name = "ProbationDays", nullable = false, columnDefinition = "INT DEFAULT 60")
-    private Integer probationDays;
+    @Column(name = "ExpectedStartDate")
+    private LocalDate expectedStartDate;
 
-    @Column(name = "ProposedPosition", nullable = false, length = 200)
-    private String proposedPosition;
-
-    @Column(name = "WorkLocation", length = 200)
+    @Column(name = "WorkLocation", length = 255)
     private String workLocation;
+
+    @Column(name = "BenefitsPackage", columnDefinition = "NVARCHAR(MAX)")
+    private String benefitsPackage;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "ProposedBy", nullable = false, referencedColumnName = "UserId")
     private User proposedBy;
 
     /**
-     * Draft, Pending_Director_Approval, Approved, Sent_To_Candidate, Accepted, Rejected
+     * Draft, Pending_Director, Approved, Sent_Candidate, Accepted, Rejected, Negotiating
      */
     @Column(name = "OfferStatus", nullable = false, length = 40)
     private String offerStatus;

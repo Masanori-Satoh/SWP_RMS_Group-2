@@ -5,7 +5,7 @@ import lombok.*;
 
 /**
  * 3.2 Role - Bảng vai trò trong hệ thống.
- * Các role: System Admin, HR, Hiring Manager, Director, Interviewer
+ * Các role: System Admin, HR, Hiring Manager, Director, Interviewer, Candidate
  */
 @Entity
 @Table(name = "Role")
