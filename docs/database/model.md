@@ -22,6 +22,7 @@ Column;Constraints;Notes
 DepartmentId;PRIMARY KEY, IDENTITY(1,1);Department identifier
 DepartmentName;NOT NULL;Department name
 ManagerId;FOREIGN KEY -> User.UserId, NULL;Department head
+DepartmentStatus;NOT NULL;Active, Inactive
 3.4 AuditLog
 Column;Constraints;Notes
 AuditLogId;PRIMARY KEY, IDENTITY(1,1);Log entry identifier (BIGINT)

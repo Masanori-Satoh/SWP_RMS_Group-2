@@ -114,7 +114,7 @@ lines.append("-- 2. DEPARTMENT (3 SME Departments)")
 lines.append("-- =============================================================================")
 depts = ["Engineering", "Sales & Marketing", "Human Resources"]
 for d in depts:
-    lines.append(f"INSERT INTO Department (DepartmentName, ManagerId) VALUES (N'{d}', NULL);")
+    lines.append(f"INSERT INTO Department (DepartmentName, ManagerId, DepartmentStatus) VALUES (N'{d}', NULL, N'Active');")
 lines.append("")
 
 # 3. INTERNAL USERS

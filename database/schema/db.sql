@@ -38,7 +38,11 @@ GO
 CREATE TABLE Department (
     DepartmentId INT IDENTITY(1,1) PRIMARY KEY,
     DepartmentName NVARCHAR(100) NOT NULL CONSTRAINT UQ_Department_Name UNIQUE,
-    ManagerId INT NULL
+    ManagerId INT NULL,
+    DepartmentStatus NVARCHAR(20) NOT NULL CONSTRAINT DF_Department_Status DEFAULT N'Active',
+
+    CONSTRAINT CK_Department_Status
+        CHECK (DepartmentStatus IN (N'Active', N'Inactive'))
 );
 GO
 
@@ -75,6 +79,7 @@ ALTER TABLE Department
     ADD CONSTRAINT FK_Department_Manager
     FOREIGN KEY (ManagerId) REFERENCES [User](UserId);
 GO
+
 
 -- =============================================================================
 -- 3.4 AUDIT LOG (Nhật ký kiểm toán)
