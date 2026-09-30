@@ -173,6 +173,7 @@ FinalResultId;PRIMARY KEY, IDENTITY(1,1);Final decision identifier
 InterviewId;NOT NULL, UNIQUE, FOREIGN KEY -> InterviewSchedule.InterviewId;1-1 with the interview session
 HiringManagerId;NOT NULL, FOREIGN KEY -> User.UserId;Hiring Manager who made the decision
 FinalDecision;NOT NULL;Passed / Failed
+RecommendedSalary;NULL;Recommended salary after negotiation with the candidate
 FinalSummaryComments;NULL;Overall interview summary
 ApprovedAt;NOT NULL, DEFAULT SYSDATETIME();Decision timestamp
 3.18 OfferProposal

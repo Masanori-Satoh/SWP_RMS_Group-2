@@ -450,6 +450,7 @@ CREATE TABLE InterviewFinalResult (
     InterviewId INT NOT NULL CONSTRAINT UQ_InterviewFinalResult_Interview UNIQUE,
     HiringManagerId INT NOT NULL,
     FinalDecision NVARCHAR(20) NOT NULL,
+    RecommendedSalary DECIMAL(18,2) NULL,
     FinalSummaryComments NVARCHAR(MAX) NULL,
     ApprovedAt DATETIME2 NOT NULL CONSTRAINT DF_InterviewFinalResult_ApprovedAt DEFAULT SYSDATETIME(),
 
@@ -460,7 +461,10 @@ CREATE TABLE InterviewFinalResult (
         FOREIGN KEY (HiringManagerId) REFERENCES [User](UserId),
 
     CONSTRAINT CK_InterviewFinalResult_FinalDecision
-        CHECK (FinalDecision IN (N'Passed', N'Failed'))
+        CHECK (FinalDecision IN (N'Passed', N'Failed')),
+
+    CONSTRAINT CK_InterviewFinalResult_RecommendedSalary
+        CHECK (RecommendedSalary IS NULL OR RecommendedSalary >= 0)
 );
 GO
 

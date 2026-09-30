@@ -646,29 +646,31 @@ for day_idx in range(num_days):
                 final_decision = "Passed" if is_passed else "Failed"
                 hm_final_id = 6 if c["posting_id"] == 4 else 5
                 final_comments = f"Tổng hợp kết quả phỏng vấn ứng viên {c['full_name']}: Đạt yêu cầu đầu vào, đề xuất gửi thư mời nhận việc (Offer)." if is_passed else f"Ứng viên {c['full_name']} chưa đạt yêu cầu về chiều sâu chuyên môn ở vòng phỏng vấn kỹ thuật."
+                
+                pos_titles = {
+                    1: "Senior Java Backend Engineer",
+                    2: "Frontend ReactJS Developer",
+                    3: "QA Automation Engineer",
+                    4: "Business Development Executive"
+                }
+                base_salaries = {
+                    1: (36000000.00, 32000000.00), # proposed, probation (32M / 36M = 88.8% >= 85%)
+                    2: (26000000.00, 23000000.00), # 23M / 26M = 88.4% >= 85%
+                    3: (22000000.00, 19500000.00), # 19.5M / 22M = 88.6% >= 85%
+                    4: (20000000.00, 17500000.00)  # 17.5M / 20M = 87.5% >= 85%
+                }
+                prop_sal, prob_sal = base_salaries[c["posting_id"]]
+                rec_sal_sql = f"{prop_sal:.2f}" if is_passed else "NULL"
+
                 lines.append(
-                    f"INSERT INTO InterviewFinalResult (InterviewId, HiringManagerId, FinalDecision, FinalSummaryComments, ApprovedAt) "
-                    f"VALUES ({int_id}, {hm_final_id}, N'{final_decision}', N'{final_comments}', '{eval_time}');"
+                    f"INSERT INTO InterviewFinalResult (InterviewId, HiringManagerId, FinalDecision, RecommendedSalary, FinalSummaryComments, ApprovedAt) "
+                    f"VALUES ({int_id}, {hm_final_id}, N'{final_decision}', {rec_sal_sql}, N'{final_comments}', '{eval_time}');"
                 )
                 
                 # 7. Offer Proposal, Approval, Negotiation (for ~10% Passed)
                 if is_passed:
                     off_id = offer_id_counter
                     offer_id_counter += 1
-                    
-                    pos_titles = {
-                        1: "Senior Java Backend Engineer",
-                        2: "Frontend ReactJS Developer",
-                        3: "QA Automation Engineer",
-                        4: "Business Development Executive"
-                    }
-                    base_salaries = {
-                        1: (36000000.00, 32000000.00), # proposed, probation (32M / 36M = 88.8% >= 85%)
-                        2: (26000000.00, 23000000.00), # 23M / 26M = 88.4% >= 85%
-                        3: (22000000.00, 19500000.00), # 19.5M / 22M = 88.6% >= 85%
-                        4: (20000000.00, 17500000.00)  # 17.5M / 20M = 87.5% >= 85%
-                    }
-                    prop_sal, prob_sal = base_salaries[c["posting_id"]]
                     off_title = pos_titles[c["posting_id"]]
                     
                     # Start date 2-3 weeks after interview
