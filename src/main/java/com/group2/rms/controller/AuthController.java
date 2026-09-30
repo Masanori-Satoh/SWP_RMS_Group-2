@@ -11,8 +11,8 @@ public class AuthController {
         return "auth/login"; 
     }
 
-    @GetMapping({"/", "/dashboard"})
-    public String dashboard() {
+    @GetMapping("/")
+    public String root() {
         return "redirect:/requisitions";
     }
 }
