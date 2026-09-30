@@ -11,6 +11,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class ScreeningCriteriaRequestDto {
+    private Integer criteriaId;
     private String criteriaName;
     private String criteriaType;
     private String requiredValue;

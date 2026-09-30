@@ -31,4 +31,6 @@ public class RequisitionResponseDto {
     private String requirementDetails;
 
     private java.util.List<ScreeningCriteriaDto> screeningCriteria;
+    private java.util.List<ApprovalResponseDto> approvals;
+    private java.util.List<ActivityLogDto> activityLog;
 }

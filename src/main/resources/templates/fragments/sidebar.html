@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<aside th:fragment="sidebar(activeMenu)" class="app-sidebar">
+    <div class="sidebar-brand">
+        <span class="brand-title">RMS</span>
+        <span class="brand-badge">Enterprise Application</span>
+    </div>
+    <nav class="sidebar-nav">
+        <a th:href="@{/dashboard}" class="nav-item" th:classappend="${activeMenu == 'dashboard' ? 'active' : ''}">
+            Dashboard
+        </a>
+        <a th:href="@{/requisitions}" class="nav-item" th:classappend="${activeMenu == 'requisitions' ? 'active' : ''}">
+            Job Requisitions
+        </a>
+        <a th:href="@{/candidates}" class="nav-item" th:classappend="${activeMenu == 'candidates' ? 'active' : ''}">
+            Candidates
+        </a>
+        <a th:href="@{/interviews}" class="nav-item" th:classappend="${activeMenu == 'interviews' ? 'active' : ''}">
+            Interview Schedule
+        </a>
+        <a th:href="@{/offers}" class="nav-item" th:classappend="${activeMenu == 'offers' ? 'active' : ''}">
+            Offer Management
+        </a>
+        <a th:href="@{/notifications}" class="nav-item" th:classappend="${activeMenu == 'notifications' ? 'active' : ''}">
+            Notifications
+        </a>
+        <a th:href="@{/profile}" class="nav-item" th:classappend="${activeMenu == 'profile' ? 'active' : ''}">
+            Profile
+        </a>
+    </nav>
+</aside>
+</html>

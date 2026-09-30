@@ -16,6 +16,8 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class RequisitionRequestDto {
 
+    private String action;
+
     @NotBlank(message = "Title is required")
     private String title;
 

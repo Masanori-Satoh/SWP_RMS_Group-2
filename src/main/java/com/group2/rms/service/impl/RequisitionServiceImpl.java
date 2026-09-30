@@ -1,14 +1,22 @@
 package com.group2.rms.service.impl;
 
+import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 
 import org.springframework.stereotype.Service;
 
 import com.group2.rms.dto.request.RequisitionRequestDto;
+import com.group2.rms.dto.response.ActivityLogDto;
+import com.group2.rms.dto.response.ApprovalResponseDto;
 import com.group2.rms.dto.response.RequisitionResponseDto;
+import com.group2.rms.dto.response.ScreeningCriteriaDto;
+import com.group2.rms.entity.AuditLog;
 import com.group2.rms.entity.Department;
 import com.group2.rms.entity.JobRequisition;
+import com.group2.rms.entity.ScreeningCriteria;
 import com.group2.rms.entity.User;
+import com.group2.rms.repository.AuditLogRepository;
 import com.group2.rms.repository.DepartmentRepository;
 import com.group2.rms.repository.JobRequisitionRepository;
 import com.group2.rms.repository.RequisitionApprovalRepository;
@@ -27,27 +35,47 @@ import org.springframework.data.domain.Pageable;
 public class RequisitionServiceImpl implements RequisitionService {
 
     private final JobRequisitionRepository requisitionRepo;
-
     private final UserRepository userRepo;
-
     private final DepartmentRepository departmentRepo;
-
     private final RequisitionApprovalRepository approvalRepo;
-
     private final ScreeningCriteriaRepository criteriaRepo;
+    private final AuditLogRepository auditLogRepo;
 
-    // constructor injection
+    // Hệ thống hiện dùng mock user id=1 (Admin). Sau sẽ lấy từ SecurityContext.
+    private static final Integer SYSTEM_USER_ID = 1;
+
     public RequisitionServiceImpl(
             JobRequisitionRepository requisitionRepo,
             UserRepository userRepo,
             DepartmentRepository departmentRepo,
             RequisitionApprovalRepository approvalRepo,
-            ScreeningCriteriaRepository criteriaRepo) {
+            ScreeningCriteriaRepository criteriaRepo,
+            AuditLogRepository auditLogRepo) {
         this.requisitionRepo = requisitionRepo;
         this.userRepo = userRepo;
         this.departmentRepo = departmentRepo;
         this.approvalRepo = approvalRepo;
         this.criteriaRepo = criteriaRepo;
+        this.auditLogRepo = auditLogRepo;
+    }
+
+    /** Ghi AuditLog an toàn - không ném exception nếu user không tìm thấy */
+    private void writeLog(String action, String entityId, String description) {
+        try {
+            User actor = userRepo.findById(SYSTEM_USER_ID).orElse(null);
+            if (actor == null) return;
+            AuditLog log = AuditLog.builder()
+                    .user(actor)
+                    .action(action)
+                    .entityName("JobRequisition")
+                    .entityId(entityId)
+                    .newValue(description)
+                    .timestamp(LocalDateTime.now())
+                    .build();
+            auditLogRepo.save(log);
+        } catch (Exception ignored) {
+            // Không để lỗi log ảnh hưởng nghiệp vụ chính
+        }
     }
 
     @Override
@@ -58,32 +86,72 @@ public class RequisitionServiceImpl implements RequisitionService {
     }
 
     @Override
+    public RequisitionRequestDto getRequestDtoById(Integer id) {
+        JobRequisition req = requisitionRepo.findById(id)
+                .orElseThrow(() -> new RuntimeException("Requisition not found with id: " + id));
+
+        java.util.List<com.group2.rms.dto.request.ScreeningCriteriaRequestDto> criteriaDtoList = new java.util.ArrayList<>();
+        if (req.getScreeningCriteria() != null) {
+            criteriaDtoList = req.getScreeningCriteria().stream().map(c -> {
+                com.group2.rms.dto.request.ScreeningCriteriaRequestDto cDto = new com.group2.rms.dto.request.ScreeningCriteriaRequestDto();
+                cDto.setCriteriaId(c.getCriteriaId());
+                cDto.setCriteriaName(c.getCriteriaName());
+                cDto.setCriteriaType(c.getCriteriaType());
+                cDto.setRequiredValue(c.getRequiredValue());
+                cDto.setWeight(c.getWeight());
+                cDto.setIsMandatory(c.getIsMandatory());
+                return cDto;
+            }).collect(java.util.stream.Collectors.toList());
+        }
+
+        if (criteriaDtoList.isEmpty()) {
+            com.group2.rms.dto.request.ScreeningCriteriaRequestDto emptyCrit = new com.group2.rms.dto.request.ScreeningCriteriaRequestDto();
+            emptyCrit.setWeight(new java.math.BigDecimal(0));
+            emptyCrit.setIsMandatory(false);
+            criteriaDtoList.add(emptyCrit);
+        }
+
+        RequisitionRequestDto dto = new RequisitionRequestDto();
+        dto.setTitle(req.getTitle());
+        dto.setDepartmentId(req.getDepartment() != null ? req.getDepartment().getDepartmentId() : null);
+        dto.setHiringManagerId(req.getHiringManager() != null ? req.getHiringManager().getUserId() : null);
+        dto.setNumberOfPositions(req.getNumberOfPositions());
+        dto.setEmploymentType(req.getEmploymentType());
+        dto.setMinSalary(req.getMinSalary());
+        dto.setMaxSalary(req.getMaxSalary());
+        dto.setReasonForHiring(req.getReasonForHiring());
+        dto.setJobDescription(req.getJobDescription());
+        dto.setRequirementDetails(req.getRequirementDetails());
+        dto.setScreeningCriteria(criteriaDtoList);
+
+        return dto;
+    }
+
+    @Override
     public Page<RequisitionResponseDto> getAllRequisitions(int page, int size) {
-        Pageable pageable = PageRequest.of(page, size);
-        Page<JobRequisition> pagedResult = requisitionRepo.findAllByOrderByCreatedAtDesc(pageable);
-        return pagedResult.map(this::convertToDto);
+        int pageIndex = Math.max(0, page - 1);
+        int pageSize = size > 0 ? size : 10;
+        Pageable pageable = PageRequest.of(pageIndex, pageSize);
+        Page<JobRequisition> pagedReqs = requisitionRepo.findAllByOrderByCreatedAtDesc(pageable);
+        return pagedReqs.map(this::convertToDto);
     }
 
     @Override
     public List<RequisitionResponseDto> getByStatus(String status) {
-        // Loc theo 1 trang thai
         List<JobRequisition> list = requisitionRepo.findByApprovalStatusOrderByCreatedAtDesc(status);
         return list.stream().map(this::convertToDto).toList();
     }
 
     @Override
     public List<RequisitionResponseDto> getByHiringManager(Integer userId) {
-        // Hiring Manager xem req cua chinh minh
         List<JobRequisition> list = requisitionRepo.findByHiringManager_UserIdOrderByCreatedAtDesc(userId);
         return list.stream().map(this::convertToDto).toList();
     }
 
     @Override
     public void createRequisition(RequisitionRequestDto dto, Integer hiringManagerId) {
-        // Khoi tao entity moi
         JobRequisition req = new JobRequisition();
 
-        // set thong tin tu dto -> entity
         req.setTitle(dto.getTitle());
         req.setNumberOfPositions(dto.getNumberOfPositions());
         req.setEmploymentType(dto.getEmploymentType());
@@ -93,63 +161,161 @@ public class RequisitionServiceImpl implements RequisitionService {
         req.setJobDescription(dto.getJobDescription());
         req.setRequirementDetails(dto.getRequirementDetails());
 
-        // Khi khoi tao -> Draft
-        req.setApprovalStatus("Draft");
+        String statusLabel;
+        if (dto.getAction() != null && dto.getAction().equals("draft")) {
+            req.setApprovalStatus("Draft");
+            statusLabel = "saved as Draft";
+        } else {
+            req.setApprovalStatus("Pending_Director");
+            statusLabel = "submitted for Approval";
+        }
 
-        // Tim va set Department(Khoa ngoai)
-        Department dept = departmentRepo.findById(dto.getDepartmentId())
-                .orElseThrow(() -> new RuntimeException("Not find any department"));
-        req.setDepartment(dept);
+        Integer deptId = dto.getDepartmentId();
+        if (deptId != null) {
+            Department dept = departmentRepo.findById(deptId)
+                    .orElseThrow(() -> new RuntimeException("Not find any department with id: " + deptId));
+            req.setDepartment(dept);
+        }
 
-        // Tim va set Hiring Manager
-        User hm = userRepo.findById(hiringManagerId)
-                .orElseThrow(() -> new RuntimeException("Not found Hiring Manager"));
+        Integer hmId = dto.getHiringManagerId() != null ? dto.getHiringManagerId() : hiringManagerId;
+        User hm = userRepo.findById(hmId)
+                .orElseThrow(() -> new RuntimeException("Not found Hiring Manager with id: " + hmId));
         req.setHiringManager(hm);
 
-        // Luu vao db
         requisitionRepo.save(req);
 
-        // Luu danh sach tieu chi (Screening Criteria)
-        if (dto.getScreeningCriteria() != null && !dto.getScreeningCriteria().isEmpty()) {
-            List<com.group2.rms.entity.ScreeningCriteria> criteriaList = dto.getScreeningCriteria().stream().map(c -> {
-                com.group2.rms.entity.ScreeningCriteria entity = new com.group2.rms.entity.ScreeningCriteria();
-                entity.setRequisition(req);
-                entity.setCriteriaName(c.getCriteriaName());
-                entity.setCriteriaType(c.getCriteriaType());
-                entity.setRequiredValue(c.getRequiredValue());
-                entity.setWeight(c.getWeight() != null ? c.getWeight() : java.math.BigDecimal.ONE);
-                entity.setIsMandatory(c.getIsMandatory() != null ? c.getIsMandatory() : false);
-                return entity;
-            }).toList();
+        // Ghi criteria vào collection entity để Hibernate quản lý nhất quán
+        if (dto.getScreeningCriteria() != null) {
+            List<ScreeningCriteria> criteriaList = dto.getScreeningCriteria().stream()
+                .filter(c -> c.getCriteriaName() != null && !c.getCriteriaName().trim().isEmpty())
+                .map(c -> {
+                    ScreeningCriteria entity = new ScreeningCriteria();
+                    entity.setRequisition(req);
+                    entity.setCriteriaName(c.getCriteriaName());
+                    entity.setCriteriaType(c.getCriteriaType());
+                    entity.setRequiredValue(c.getRequiredValue());
+                    entity.setWeight(c.getWeight() != null ? c.getWeight() : java.math.BigDecimal.ONE);
+                    entity.setIsMandatory(c.getIsMandatory() != null ? c.getIsMandatory() : false);
+                    return entity;
+                }).toList();
             criteriaRepo.saveAll(criteriaList);
         }
+
+        // Ghi Activity Log
+        writeLog("CREATE", String.valueOf(req.getRequisitionId()),
+                "Requisition \"" + req.getTitle() + "\" " + statusLabel + " with " + req.getNumberOfPositions() + " position(s).");
     }
 
     @Override
     public void updateRequisition(Integer id, RequisitionRequestDto dto) {
-        // Tí code sau
+        JobRequisition req = requisitionRepo.findById(id)
+                .orElseThrow(() -> new RuntimeException("Requisition not found with id: " + id));
+
+        req.setTitle(dto.getTitle());
+        req.setNumberOfPositions(dto.getNumberOfPositions());
+        req.setEmploymentType(dto.getEmploymentType());
+        req.setMinSalary(dto.getMinSalary());
+        req.setMaxSalary(dto.getMaxSalary());
+        req.setReasonForHiring(dto.getReasonForHiring());
+        req.setJobDescription(dto.getJobDescription());
+        req.setRequirementDetails(dto.getRequirementDetails());
+
+        String actionLabel;
+        if ("draft".equals(dto.getAction())) {
+            req.setApprovalStatus("Draft");
+            actionLabel = "saved as Draft";
+        } else if ("submit".equals(dto.getAction())) {
+            req.setApprovalStatus("Pending_Director");
+            actionLabel = "submitted to Director";
+        } else {
+            // action="save" hoặc null → giữ nguyên status hiện tại
+            actionLabel = "updated (status kept: " + req.getApprovalStatus() + ")";
+        }
+
+        if (dto.getDepartmentId() != null) {
+            Department dept = departmentRepo.findById(dto.getDepartmentId())
+                    .orElseThrow(() -> new RuntimeException("Not find any department"));
+            req.setDepartment(dept);
+        }
+
+        if (dto.getHiringManagerId() != null) {
+            User hm = userRepo.findById(dto.getHiringManagerId())
+                    .orElseThrow(() -> new RuntimeException("Not found Hiring Manager"));
+            req.setHiringManager(hm);
+        }
+
+        // FIX: Thay vì dùng criteriaRepo.deleteByRequisition_RequisitionId (gây conflict với
+        // orphanRemoval=true trên entity collection), ta clear collection của entity và
+        // add lại. Hibernate sẽ tự quản lý DELETE + INSERT nhất quán.
+        if (req.getScreeningCriteria() == null) {
+            req.setScreeningCriteria(new ArrayList<>());
+        }
+        req.getScreeningCriteria().clear();
+
+        if (dto.getScreeningCriteria() != null) {
+            dto.getScreeningCriteria().stream()
+                .filter(c -> c.getCriteriaName() != null && !c.getCriteriaName().trim().isEmpty())
+                .forEach(c -> {
+                    ScreeningCriteria entity = new ScreeningCriteria();
+                    entity.setRequisition(req);
+                    entity.setCriteriaName(c.getCriteriaName());
+                    entity.setCriteriaType(c.getCriteriaType());
+                    entity.setRequiredValue(c.getRequiredValue());
+                    entity.setWeight(c.getWeight() != null ? c.getWeight() : java.math.BigDecimal.ONE);
+                    entity.setIsMandatory(c.getIsMandatory() != null ? c.getIsMandatory() : false);
+                    req.getScreeningCriteria().add(entity);
+                });
+        }
+
+        // Hibernate tự flush update + cascade criteria
+        requisitionRepo.save(req);
+
+        // Ghi Activity Log
+        writeLog("UPDATE", String.valueOf(id),
+                "Requisition \"" + req.getTitle() + "\" " + actionLabel + ". Positions: " + req.getNumberOfPositions() + ".");
+    }
+
+    @Override
+    public void deleteRequisition(Integer id) {
+        JobRequisition req = requisitionRepo.findById(id)
+                .orElseThrow(() -> new RuntimeException("Requisition not found with id: " + id));
+
+        String title = req.getTitle();
+
+        // Ghi log TRƯỚC khi xoá (vì sau xoá không còn entity)
+        writeLog("DELETE", String.valueOf(id),
+                "Requisition \"" + title + "\" (ID: " + id + ") was permanently deleted.");
+
+        var approvals = approvalRepo.findByRequisition_RequisitionIdOrderByApprovalDateDesc(id);
+        if (approvals != null && !approvals.isEmpty()) {
+            approvalRepo.deleteAll(approvals);
+        }
+
+        // Dùng collection entity để orphanRemoval tự dọn criteria
+        if (req.getScreeningCriteria() != null) {
+            req.getScreeningCriteria().clear();
+        }
+
+        requisitionRepo.delete(req);
     }
 
     @Override
     public void submitForApproval(Integer id) {
-        // Tí code sau
     }
 
     @Override
     public void approveRequisition(Integer id, Integer directorId, String comment) {
-        // Tí code sau
     }
 
     @Override
     public void rejectRequisition(Integer id, Integer directorId, String comment) {
-        // Tí code sau
     }
 
     private RequisitionResponseDto convertToDto(JobRequisition req) {
-        java.util.List<com.group2.rms.dto.response.ScreeningCriteriaDto> criteriaDtoList = null;
+        java.util.List<ScreeningCriteriaDto> criteriaDtoList = null;
         if (req.getScreeningCriteria() != null) {
             criteriaDtoList = req.getScreeningCriteria().stream().map(c -> {
-                com.group2.rms.dto.response.ScreeningCriteriaDto cDto = new com.group2.rms.dto.response.ScreeningCriteriaDto();
+                ScreeningCriteriaDto cDto = new ScreeningCriteriaDto();
                 cDto.setCriteriaId(c.getCriteriaId());
                 cDto.setCriteriaName(c.getCriteriaName());
                 cDto.setCriteriaType(c.getCriteriaType());
@@ -160,11 +326,42 @@ public class RequisitionServiceImpl implements RequisitionService {
             }).toList();
         }
 
+        var approvalsList = approvalRepo.findByRequisition_RequisitionIdOrderByApprovalDateDesc(req.getRequisitionId());
+        java.util.List<ApprovalResponseDto> approvalDtoList = new java.util.ArrayList<>();
+        if (approvalsList != null) {
+            int step = 1;
+            for (var a : approvalsList) {
+                approvalDtoList.add(ApprovalResponseDto.builder()
+                        .stepNumber(step++)
+                        .approverName(a.getDirector() != null ? a.getDirector().getFullName() : "Approver")
+                        .status(a.getStatus())
+                        .approvalDate(a.getApprovalDate())
+                        .comments(a.getComments())
+                        .build());
+            }
+        }
+
+        // Load activity log
+        List<ActivityLogDto> activityLogList = new ArrayList<>();
+        var auditLogs = auditLogRepo.findByEntityNameAndEntityIdOrderByTimestampDesc(
+                "JobRequisition", String.valueOf(req.getRequisitionId()));
+        if (auditLogs != null) {
+            for (var log : auditLogs) {
+                activityLogList.add(ActivityLogDto.builder()
+                        .auditLogId(log.getAuditLogId())
+                        .action(log.getAction())
+                        .performedBy(log.getUser() != null ? log.getUser().getFullName() : "System")
+                        .description(log.getNewValue())
+                        .timestamp(log.getTimestamp())
+                        .build());
+            }
+        }
+
         return RequisitionResponseDto.builder()
                 .requisitionId(req.getRequisitionId())
                 .title(req.getTitle())
-                .departmentName(req.getDepartment().getDepartmentName())
-                .hiringManagerName(req.getHiringManager().getFullName())
+                .departmentName(req.getDepartment() != null ? req.getDepartment().getDepartmentName() : "N/A")
+                .hiringManagerName(req.getHiringManager() != null ? req.getHiringManager().getFullName() : "N/A")
                 .numberOfPositions(req.getNumberOfPositions())
                 .employmentType(req.getEmploymentType())
                 .approvalStatus(req.getApprovalStatus())
@@ -175,6 +372,8 @@ public class RequisitionServiceImpl implements RequisitionService {
                 .jobDescription(req.getJobDescription())
                 .requirementDetails(req.getRequirementDetails())
                 .screeningCriteria(criteriaDtoList)
+                .approvals(approvalDtoList)
+                .activityLog(activityLogList)
                 .build();
     }
 }

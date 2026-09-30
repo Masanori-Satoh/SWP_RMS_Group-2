@@ -13,14 +13,20 @@ public interface RequisitionService {
     List<RequisitionResponseDto> getByStatus(String status);
     List<RequisitionResponseDto> getByHiringManager(Integer userId);
 
-    //Lay 1 req theo id
+    //Lay 1 req theo id de xem chi tiet
     RequisitionResponseDto getById(Integer id);
+
+    //Lay 1 req theo id de sua (form update)
+    RequisitionRequestDto getRequestDtoById(Integer id);
     
     //Create
     void createRequisition(RequisitionRequestDto dto, Integer hiringManagerId);
 
     //update
     void updateRequisition(Integer id, RequisitionRequestDto dto);
+
+    //delete
+    void deleteRequisition(Integer id);
 
     //Change Status
     void submitForApproval(Integer id);

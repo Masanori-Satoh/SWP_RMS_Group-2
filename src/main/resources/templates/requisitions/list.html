@@ -1,43 +1,507 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="vi" xmlns:th="http://www.thymeleaf.org">
 
 <head>
     <meta charset="UTF-8">
-    <title>Job Requisitions List - RMS</title>
-    <!-- Link tới file CSS dùng chung đã có sẵn của project -->
-    <link rel="stylesheet" th:href="@{/css/main.css}">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Job Requisitions - RMS</title>
+    <!-- Google Fonts: Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <style>
+        :root {
+            --primary: #4f46e5;
+            --primary-hover: #4338ca;
+            --primary-light: #eef2ff;
+            --text-dark: #0f172a;
+            --text-secondary: #64748b;
+            --text-muted: #94a3b8;
+            --border: #f1f5f9;
+            --bg-page: #f8fafc;
+            --bg-card: #ffffff;
+            --sidebar-width: 240px;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+            background-color: var(--bg-page);
+            color: var(--text-dark);
+            min-height: 100vh;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        .page-wrapper {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* Sidebar Styles */
+        .app-sidebar {
+            width: var(--sidebar-width);
+            background: #ffffff;
+            border-right: 1px solid #f1f5f9;
+            position: fixed;
+            top: 0;
+            left: 0;
+            bottom: 0;
+            display: flex;
+            flex-direction: column;
+            z-index: 100;
+        }
+
+        .sidebar-brand {
+            padding: 24px 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .brand-title {
+            font-size: 20px;
+            font-weight: 800;
+            color: #0f172a;
+            letter-spacing: -0.5px;
+        }
+
+        .brand-badge {
+            background: #eef2ff;
+            color: #4f46e5;
+            font-size: 11px;
+            font-weight: 600;
+            padding: 3px 8px;
+            border-radius: 6px;
+        }
+
+        .sidebar-nav {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            padding: 0 16px;
+        }
+
+        .nav-item {
+            display: flex;
+            align-items: center;
+            padding: 10px 14px;
+            font-size: 14px;
+            font-weight: 500;
+            color: #64748b;
+            border-radius: 8px;
+            text-decoration: none;
+            transition: all 0.15s ease;
+        }
+
+        .nav-item:hover {
+            background: #f8fafc;
+            color: #0f172a;
+        }
+
+        .nav-item.active {
+            background: #eff6ff;
+            color: #2563eb;
+            font-weight: 600;
+        }
+
+        /* Main Content */
+        .main-content {
+            margin-left: var(--sidebar-width);
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+
+        /* Topbar */
+        .topbar {
+            height: 60px;
+            background: #ffffff;
+            border-bottom: 1px solid #f1f5f9;
+            padding: 0 32px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            position: sticky;
+            top: 0;
+            z-index: 90;
+        }
+
+        .topbar-title {
+            font-size: 14px;
+            font-weight: 500;
+            color: #64748b;
+        }
+
+        .topbar-user {
+            font-size: 14px;
+            color: #64748b;
+        }
+
+        .topbar-user strong {
+            color: #0f172a;
+            font-weight: 700;
+        }
+
+        /* Page Content */
+        .page-content {
+            padding: 32px;
+            flex: 1;
+        }
+
+        .page-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+        }
+
+        .page-title {
+            font-size: 24px;
+            font-weight: 700;
+            color: #0f172a;
+            letter-spacing: -0.5px;
+        }
+
+        .btn-create {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: var(--primary);
+            color: #ffffff;
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            text-decoration: none;
+            border: none;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            box-shadow: 0 1px 2px rgba(79, 70, 229, 0.2);
+        }
+
+        .btn-create:hover {
+            background: var(--primary-hover);
+            transform: translateY(-1px);
+        }
+
+        /* Table Card */
+        .card {
+            background: #ffffff;
+            border-radius: 16px;
+            border: 1px solid #f1f5f9;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03);
+            overflow: visible;
+        }
+
+        .table-wrapper {
+            width: 100%;
+            overflow-x: auto;
+            border-radius: 16px;
+        }
+
+        .table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 14px;
+            text-align: left;
+        }
+
+        .table th {
+            padding: 16px 20px;
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: #94a3b8;
+            background: #ffffff;
+            border-bottom: 1px solid #f1f5f9;
+            white-space: nowrap;
+        }
+
+        .table td {
+            padding: 18px 20px;
+            border-bottom: 1px solid #f8fafc;
+            color: #334155;
+            vertical-align: middle;
+            font-size: 14px;
+        }
+
+        .table tbody tr:hover {
+            background-color: #fafbfc;
+        }
+
+        .table tbody tr:last-child td {
+            border-bottom: none;
+        }
+
+        .position-link {
+            color: #3b82f6;
+            font-weight: 500;
+            text-decoration: none;
+            transition: color 0.15s;
+        }
+
+        .position-link:hover {
+            color: #1d4ed8;
+            text-decoration: underline;
+        }
+
+        /* Status Badges */
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            padding: 4px 12px;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 600;
+            line-height: 1.2;
+        }
+
+        .badge-approved,
+        .badge-success {
+            background: #ecfdf5;
+            color: #059669;
+        }
+
+        .badge-pending,
+        .badge-warning {
+            background: #fef3c7;
+            color: #d97706;
+        }
+
+        .badge-draft,
+        .badge-secondary {
+            background: #f1f5f9;
+            color: #64748b;
+        }
+
+        .badge-rejected,
+        .badge-danger {
+            background: #fee2e2;
+            color: #dc2626;
+        }
+
+        /* Action Column Dropdown */
+        .action-cell {
+            text-align: center;
+            position: relative;
+        }
+
+        .action-dropdown {
+            position: relative;
+            display: inline-block;
+        }
+
+        .btn-dots {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border: 1px solid #e2e8f0;
+            background: #ffffff;
+            color: #94a3b8;
+            border-radius: 20px;
+            padding: 2px 14px;
+            font-size: 14px;
+            font-weight: 700;
+            letter-spacing: 1px;
+            cursor: pointer;
+            transition: all 0.15s;
+            line-height: 1.4;
+        }
+
+        .btn-dots:hover {
+            background: #f8fafc;
+            border-color: #cbd5e1;
+            color: #475569;
+        }
+
+        .dropdown-menu {
+            display: none;
+            position: absolute;
+            right: 0;
+            top: calc(100% + 4px);
+            background: #ffffff;
+            border-radius: 10px;
+            border: 1px solid #f1f5f9;
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.08), 0 8px 10px -6px rgba(0, 0, 0, 0.03);
+            min-width: 140px;
+            z-index: 1000;
+            padding: 6px;
+        }
+
+        .dropdown-menu.show {
+            display: block;
+            animation: dropdownFadeIn 0.15s ease-out;
+        }
+
+        @keyframes dropdownFadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(-4px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .dropdown-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 8px 12px;
+            font-size: 13px;
+            font-weight: 500;
+            color: #334155;
+            border-radius: 6px;
+            text-decoration: none;
+            width: 100%;
+            border: none;
+            background: transparent;
+            cursor: pointer;
+            text-align: left;
+            transition: background-color 0.15s ease;
+            box-sizing: border-box;
+        }
+
+        .dropdown-item:hover {
+            background: #f8fafc;
+            color: #0f172a;
+        }
+
+        .dropdown-item i {
+            font-size: 13px;
+            width: 16px;
+            text-align: center;
+        }
+
+        .dropdown-item.item-view:hover {
+            color: #2563eb;
+            background: #eff6ff;
+        }
+
+        .dropdown-item.item-update:hover {
+            color: #d97706;
+            background: #fffbeb;
+        }
+
+        .dropdown-item.item-delete {
+            color: #ef4444;
+        }
+
+        .dropdown-item.item-delete:hover {
+            color: #dc2626;
+            background: #fee2e2;
+        }
+
+        /* Pagination */
+        .pagination-container {
+            display: flex;
+            justify-content: flex-end;
+            padding: 20px 24px;
+        }
+
+        .pagination {
+            display: flex;
+            align-items: center;
+            list-style: none;
+            gap: 6px;
+        }
+
+        .page-btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 32px;
+            height: 32px;
+            padding: 0 8px;
+            border-radius: 6px;
+            font-size: 13px;
+            font-weight: 500;
+            text-decoration: none;
+            color: #475569;
+            background: #f1f5f9;
+            border: none;
+            transition: all 0.15s ease;
+        }
+
+        .page-btn:hover {
+            background: #e2e8f0;
+            color: #0f172a;
+        }
+
+        .page-btn.active {
+            background: #4f46e5;
+            color: #ffffff;
+            font-weight: 600;
+        }        /* Delete Modal Styles */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.45);
+            z-index: 9999;
+            align-items: center;
+            justify-content: center;
+        }
+        .modal-overlay.active { display: flex; }
+        .modal-box {
+            background: white;
+            border-radius: 16px;
+            padding: 32px;
+            width: 420px;
+            max-width: 90vw;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+            animation: popIn 0.2s ease;
+        }
+        @keyframes popIn { from { transform: scale(0.9); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+        .modal-icon { font-size: 40px; color: #ef4444; margin-bottom: 16px; }
+        .modal-title { font-size: 18px; font-weight: 700; color: #0f172a; margin-bottom: 8px; }
+        .modal-body { font-size: 14px; color: #64748b; margin-bottom: 24px; line-height: 1.6; }
+        .modal-actions { display: flex; gap: 12px; justify-content: flex-end; }
+        .btn-cancel-modal { padding: 9px 20px; border-radius: 8px; font-weight: 600; font-size: 14px; border: 1px solid #e2e8f0; background: white; color: #475569; cursor: pointer; }
+        .btn-confirm-delete { padding: 9px 20px; border-radius: 8px; font-weight: 600; font-size: 14px; background: #ef4444; color: white; border: none; cursor: pointer; }
+        .btn-confirm-delete:hover { background: #dc2626; }
+    </style>
 </head>
 
 <body>
 
     <div class="page-wrapper">
+        <!-- SIDEBAR -->
+        <aside th:replace="~{fragments/sidebar :: sidebar(activeMenu='requisitions')}"></aside>
 
-        <!-- SIDEBAR ẢO ĐỂ GIỮ BỐ CỤC (Đang ẩn) -->
-        <div class="sidebar" style="display: none; padding: 20px; color: white;">
-            <h3 style="color: white; margin-bottom: 20px;">RMS Group 2</h3>
-            <p>📋 Requisitions</p>
-        </div>
-
-        <div class="main-content" style="width: 100%; margin-left: 0;">
-            <!-- TOPBAR ẢO -->
+        <!-- MAIN CONTENT -->
+        <div class="main-content">
+            <!-- TOPBAR -->
             <div class="topbar">
-                <div><strong>Requisition Management</strong></div>
-                <div> Test User</div>
+                <div class="topbar-title">Recruitment Management System</div>
+                <div class="topbar-user">
+                    Welcome, <strong>Admin</strong>
+                </div>
             </div>
 
+            <!-- PAGE CONTENT -->
             <div class="page-content">
                 <!-- PAGE HEADER -->
-                <div class="d-flex justify-between align-center mb-6">
-                    <div>
-                        <h2>Job Requisitions List</h2>
-
-                    </div>
-                    <a th:href="@{/requisitions/create}" class="btn btn-primary">
+                <div class="page-header">
+                    <h1 class="page-title">Job Requisitions</h1>
+                    <a th:href="@{/requisitions/create}" class="btn-create">
                         Create New Requisition
                     </a>
                 </div>
 
-                <!-- BẢNG DỮ LIỆU -->
+                <!-- TABLE CARD -->
                 <div class="card">
                     <div class="table-wrapper">
                         <table class="table">
@@ -50,38 +514,60 @@
                                     <th>Type</th>
                                     <th>Status</th>
                                     <th>Created Date</th>
-                                    <th>Action</th>
+                                    <th style="text-align: center;">Action</th>
                                 </tr>
                             </thead>
                             <tbody>
-                                <!-- Thymeleaf loop qua chiếc hộp 'requisitions' -->
                                 <tr th:each="req : ${requisitions}">
                                     <td th:text="${req.requisitionId}">1</td>
-                                    <td class="fw-semi text-primary" th:text="${req.title}">Backend Dev</td>
-                                    <td th:text="${req.departmentName}">IT Dept</td>
+                                    <td>
+                                        <a th:href="@{/requisitions/{id}(id=${req.requisitionId})}"
+                                            class="position-link" th:text="${req.title}">Backend Developer</a>
+                                    </td>
+                                    <td th:text="${req.departmentName}">IT Department</td>
                                     <td th:text="${req.numberOfPositions}">2</td>
                                     <td th:text="${req.employmentType}">Full-time</td>
                                     <td>
-                                        <span th:if="${req.approvalStatus == 'Draft'}" class="badge badge-secondary">
-                                            Draft</span>
+                                        <span th:if="${req.approvalStatus == 'Draft'}"
+                                            class="badge badge-draft">Draft</span>
                                         <span th:if="${req.approvalStatus == 'Pending_Director'}"
-                                            class="badge badge-warning"> Pending</span>
-                                        <span th:if="${req.approvalStatus == 'Approved'}" class="badge badge-success">
-                                            Approved</span>
-                                        <span th:if="${req.approvalStatus == 'Rejected'}" class="badge badge-danger">
-                                            Rejected</span>
+                                            class="badge badge-pending">Pending</span>
+                                        <span th:if="${req.approvalStatus == 'Approved'}"
+                                            class="badge badge-approved">Approved</span>
+                                        <span th:if="${req.approvalStatus == 'Rejected'}"
+                                            class="badge badge-rejected">Rejected</span>
                                     </td>
-                                    <!-- Format ngày tháng -->
-                                    <td th:text="${#temporals.format(req.createdAt, 'dd/MM/yyyy')}">27/09/2026</td>
-                                    <td>
-                                        <a th:href="@{/requisitions/{id}(id=${req.requisitionId})}"
-                                            class="btn btn-sm btn-secondary">View</a>
+                                    <td th:text="${#temporals.format(req.createdAt, 'dd/MM/yyyy')}">28/09/2026</td>
+                                    <td class="action-cell">
+                                        <div class="action-dropdown">
+                                            <button type="button" class="btn-dots"
+                                                onclick="toggleDropdown(this, event)">
+                                                ...
+                                            </button>
+                                            <div class="dropdown-menu">
+                                                <!-- 1. View -->
+                                                <a th:href="@{/requisitions/{id}(id=${req.requisitionId})}"
+                                                    class="dropdown-item item-view">
+                                                    <i class="fa-regular fa-eye"></i> View
+                                                </a>
+                                                <!-- 2. Update -->
+                                                <a th:href="@{/requisitions/edit/{id}(id=${req.requisitionId})}"
+                                                    class="dropdown-item item-update">
+                                                    <i class="fa-regular fa-pen-to-square"></i> Update
+                                                </a>
+                                                <!-- 3. Delete -->
+                                                <button type="button" class="dropdown-item item-delete"
+                                                    th:onclick="|openDeleteModal(${req.requisitionId}, '[[${req.title}]]')|">
+                                                    <i class="fa-regular fa-trash-can"></i> Delete
+                                                </button>
+                                            </div>
+                                        </div>
                                     </td>
                                 </tr>
 
-                                <!-- Nếu không có data -->
                                 <tr th:if="${#lists.isEmpty(requisitions)}">
-                                    <td colspan="8" class="text-center text-muted" style="padding: 20px;">
+                                    <td colspan="8"
+                                        style="text-align: center; color: var(--text-muted); padding: 36px;">
                                         No job requisitions found in the system.
                                     </td>
                                 </tr>
@@ -89,35 +575,113 @@
                         </table>
                     </div>
 
-                    <!-- Phân trang (Pagination) -->
-                    <div th:if="${totalPages > 1}" class="d-flex justify-end mt-4"
-                        style="margin-top: 20px; display: flex; justify-content: flex-end;">
-                        <ul class="pagination" style="display: flex; list-style: none; gap: 8px; padding: 0;">
-                            <!-- Nút Back -->
-                            <li th:if="${currentPage > 1}">
-                                <a th:href="@{/requisitions(page=${currentPage - 1})}" class="btn btn-sm btn-secondary"
-                                    style="padding: 5px 12px; border-radius: 4px; background: #e0e0e0; color: #333; text-decoration: none;">&lt;</a>
+                    <!-- PAGINATION -->
+                    <div th:if="${totalPages > 1}" class="pagination-container">
+                        <ul class="pagination">
+
+                            <!-- Previous -->
+                            <li>
+                                <a th:href="@{/requisitions(page=${currentPage > 1 ? currentPage - 1 : 1})}"
+                                    class="page-btn">
+                                    &lt;
+                                </a>
                             </li>
-                            <!-- Số trang -->
-                            <li th:each="i : ${#numbers.sequence(1, totalPages)}">
+
+                            <!-- Chỉ hiển thị 1 2 3 -->
+                            <li th:each="i : ${#numbers.sequence(1, totalPages > 3 ? 3 : totalPages)}">
                                 <a th:href="@{/requisitions(page=${i})}" th:text="${i}"
-                                    th:classappend="${currentPage == i ? 'btn-primary' : 'btn-secondary'}"
-                                    class="btn btn-sm"
-                                    th:style="${currentPage == i ? 'padding: 5px 12px; border-radius: 4px; background: #007bff; color: white; text-decoration: none;' : 'padding: 5px 12px; border-radius: 4px; background: #e0e0e0; color: #333; text-decoration: none;'}">1</a>
+                                    th:classappend="${currentPage == i ? 'active' : ''}" class="page-btn">
+                                    1
+                                </a>
                             </li>
-                            <!-- Nút Next -->
-                            <li th:if="${currentPage < totalPages}">
-                                <a th:href="@{/requisitions(page=${currentPage + 1})}" class="btn btn-sm btn-secondary"
-                                    style="padding: 5px 12px; border-radius: 4px; background: #e0e0e0; color: #333; text-decoration: none;">&gt;</a>
+
+                            <!-- Next -->
+                            <li>
+                                <a th:href="@{/requisitions(page=${currentPage < totalPages ? currentPage + 1 : totalPages})}"
+                                    class="page-btn">
+                                    &gt;
+                                </a>
                             </li>
+
                         </ul>
                     </div>
-
                 </div>
             </div>
         </div>
     </div>
 
+    <script>
+        function toggleDropdown(btn, event) {
+            event.stopPropagation();
+            const currentMenu = btn.nextElementSibling;
+            const isOpen = currentMenu.classList.contains('show');
+            closeAllDropdowns();
+            if (!isOpen) {
+                currentMenu.classList.add('show');
+            }
+        }
+
+        function closeAllDropdowns() {
+            document.querySelectorAll('.dropdown-menu.show').forEach(menu => {
+                menu.classList.remove('show');
+            });
+        }
+
+        // Đóng dropdown khi click ra ngoài màn hình
+        document.addEventListener('click', function (e) {
+            if (!e.target.closest('.action-dropdown')) {
+                closeAllDropdowns();
+            }
+        });
+
+        // Đóng dropdown khi nhấn ESC
+        document.addEventListener('keydown', function (e) {
+            if (e.key === 'Escape') {
+                closeAllDropdowns();
+            }
+        });
+    </script>
+    <!-- Delete Confirmation Modal -->
+    <div class="modal-overlay" id="deleteModal">
+        <div class="modal-box">
+            <div class="modal-icon"><i class="fa-solid fa-triangle-exclamation"></i></div>
+            <div class="modal-title">Delete Requisition</div>
+            <div class="modal-body" id="deleteModalBody">
+                Are you sure you want to permanently delete this requisition?<br>
+                <strong>This action cannot be undone.</strong>
+            </div>
+            <div class="modal-actions">
+                <button class="btn-cancel-modal" onclick="closeDeleteModal()">Cancel</button>
+                <button class="btn-confirm-delete" onclick="submitDeleteFromList()">
+                    <i class="fa-solid fa-trash-can" style="margin-right:6px;"></i>Yes, Delete
+                </button>
+            </div>
+        </div>
+    </div>
+    <form id="deleteFormList" method="post" style="display:none;"></form>
+
+    <script>
+        var pendingDeleteId = null;
+        function openDeleteModal(id, title) {
+            pendingDeleteId = id;
+            document.getElementById('deleteModalBody').innerHTML =
+                'Are you sure you want to permanently delete <strong>REQ-' + id + ': ' + title + '</strong>?<br><strong>This action cannot be undone.</strong>';
+            document.getElementById('deleteModal').classList.add('active');
+        }
+        function closeDeleteModal() {
+            document.getElementById('deleteModal').classList.remove('active');
+            pendingDeleteId = null;
+        }
+        function submitDeleteFromList() {
+            if (!pendingDeleteId) return;
+            var form = document.getElementById('deleteFormList');
+            form.action = '/requisitions/delete/' + pendingDeleteId;
+            form.submit();
+        }
+        document.getElementById('deleteModal').addEventListener('click', function(e) {
+            if (e.target === this) closeDeleteModal();
+        });
+    </script>
 </body>
 
 </html>
