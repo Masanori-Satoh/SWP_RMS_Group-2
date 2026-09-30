@@ -75,6 +75,7 @@ class RequisitionReviewProbeTests {
         postings.saveAndFlush(JobPosting.builder().requisition(req).postingTitle("Review posting")
             .jobDescription("Review").jobRequirements("Review").postingStatus("Draft")
             .createdBy(users.findById(dto.getHiringManagerId()).orElseThrow()).build());
+        em.flush(); em.clear();
         rejected("delete with linked posting", () -> {service.deleteRequisition(req.getRequisitionId()); em.flush();});
     }
     @Test void approvedCanBeChangedWithoutApproval() {
