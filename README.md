@@ -2,6 +2,11 @@
 
 Dự án Hệ thống Quản lý Tuyển dụng (RMS) sử dụng **Spring Boot 3.5.16**, **Thymeleaf**, và **MS SQL Server**.
 
+Database hiện hành: [`database/schema/db.sql`](database/schema/db.sql).
+Xem [nhật ký công việc](docs/WORK_LOG.md) để tiếp tục dự án và
+[kịch bản kiểm thử từng bước](docs/TEST_PLAN.md) trước khi xác nhận tính năng.
+Kết quả theo từng đợt được ghi tại [thư mục tests](docs/tests/README.md).
+
 ---
 
 ## 🚀 1. YÊU CẦU CÀI ĐẶT
@@ -27,13 +32,18 @@ Thực hiện lần lượt các bước sau khi `git clone`:
 2. Cập nhật đường dẫn **JDK 21** và **Maven** của máy theo mẫu trong file settings.json (lưu ý dùng dùng `\\` trên Windows vì // gây lỗi).
 
 ### 2.2 Tạo Database & Cấu hình
-**⚠️ BẮT BUỘC: Phải tạo Database trống trước, nếu không app sẽ lỗi khi khởi động!**
+**`database/schema/db.sql` là source of truth. Hibernate chỉ kiểm tra schema,
+không tự tạo bảng.**
 
-1. Mở SSMS, tạo Database mới tên: **`RMS_DB`**. (Bảng sẽ do code tự sinh).
-2. Trong `src/main/resources/`, đổi tên `application.properties.example` thành `application.properties`.
-3. Mở `application.properties`:
-   - Sửa `spring.datasource.password=` thành mật khẩu SQL Server của bạn.
-   - Đổi `server.port=8080` thành cổng khác (vd `8081`) nếu bị lỗi trùng port.
+1. Nếu cần tạo DB mới từ đầu, đọc toàn bộ `database/schema/db.sql` trước khi
+   chạy bằng SSMS. Script này **xóa rồi tạo lại** `RitirementManagement2`, nên
+   tuyệt đối không chạy trên DB có dữ liệu cần giữ. Không chuyển dữ liệu từ DB cũ.
+2. Nếu cần dữ liệu mẫu, xem `database/seeds/seed_data.sql` và
+   `docs/database/data_seeding_guide.md`. Không chạy seed lặp trên DB đã có seed.
+3. Tạo/cập nhật `src/main/resources/application.properties` trên máy theo cấu
+   hình nội bộ của nhóm. JDBC URL phải trỏ `RitirementManagement2` và
+   `spring.jpa.hibernate.ddl-auto=validate`; giữ credential ngoài Git. Chọn
+   `server.port` phù hợp (cấu hình local đã kiểm tra dùng `8082`).
 
 ### 2.3 Cấu hình API Key (Có thể bỏ qua)
 - Ở thư mục gốc, đổi tên `.env.example` thành `.env`. Điền API Key nếu có.
@@ -66,9 +76,9 @@ mvn clean compile spring-boot:run
 
 ## 🔍 4. KIỂM TRA
 
-Vào các link sau (nhớ đổi `8080` nếu bạn đã sửa port):
-- **Giao diện:** http://localhost:8080/test-web
-- **Test Database:** http://localhost:8080/test-db
-- **Test Login:** http://localhost:8080/login
+Chạy `mvn test`, sau đó làm theo [TEST_PLAN.md](docs/TEST_PLAN.md) để kiểm tra
+login, Dashboard theo role, Account Management và API Monitoring. Mở trang chủ
+theo cổng `server.port` đã cấu hình để bắt đầu luồng đăng nhập. Các route demo
+`/test-web` và `/test-db` không thay thế kiểm thử tính năng hoặc JPA mapping.
 
 *Vướng mắc gì liên hệ Leader nhé!*

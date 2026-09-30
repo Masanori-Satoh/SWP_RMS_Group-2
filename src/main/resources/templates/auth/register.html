@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Đăng ký Candidate | RMS</title>
+    <link rel="stylesheet" th:href="@{/css/main.css}">
+    <link rel="stylesheet" th:href="@{/css/auth.css}">
+</head>
+<body class="auth-page">
+<main class="auth-card">
+    <h1>Đăng ký tài khoản Candidate</h1>
+    <p class="auth-intro">Tạo tài khoản để đăng nhập và quản lý đơn ứng tuyển của bạn.</p>
+    <form th:action="@{/register}" th:object="${form}" method="post">
+        <div class="auth-message auth-error" role="alert" th:if="${#fields.hasGlobalErrors()}">
+            <p th:each="error : ${#fields.globalErrors()}" th:text="${error}"></p>
+        </div>
+        <label for="full-name">Họ và tên</label>
+        <input id="full-name" type="text" th:field="*{fullName}" maxlength="100" autocomplete="name" required>
+        <span class="auth-field-error" th:if="${#fields.hasErrors('fullName')}" th:errors="*{fullName}"></span>
+
+        <label for="username">Username</label>
+        <input id="username" type="text" th:field="*{username}" maxlength="50" autocomplete="username" required>
+        <span class="auth-field-error" th:if="${#fields.hasErrors('username')}" th:errors="*{username}"></span>
+
+        <label for="email">Email</label>
+        <input id="email" type="email" th:field="*{email}" maxlength="150" autocomplete="email" required>
+        <span class="auth-field-error" th:if="${#fields.hasErrors('email')}" th:errors="*{email}"></span>
+
+        <label for="password">Mật khẩu</label>
+        <input id="password" type="password" name="password" minlength="8" maxlength="32" autocomplete="new-password" required>
+        <span class="auth-field-error" th:if="${#fields.hasErrors('password')}" th:errors="*{password}"></span>
+
+        <label for="confirm-password">Xác nhận mật khẩu</label>
+        <input id="confirm-password" type="password" name="confirmPassword" minlength="8" maxlength="32" autocomplete="new-password" required>
+        <span class="auth-field-error" th:if="${#fields.hasErrors('confirmPassword')}" th:errors="*{confirmPassword}"></span>
+
+        <button type="submit">Đăng ký</button>
+    </form>
+    <nav class="auth-links auth-links-single"><a th:href="@{/login}">Quay lại đăng nhập</a></nav>
+</main>
+</body>
+</html>

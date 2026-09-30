@@ -3,7 +3,6 @@ package com.group2.rms.entity;
 import jakarta.persistence.*;
 import lombok.*;
 
-import java.util.List;
 
 /**
  * 3.4 Department - Phòng ban trong tổ chức.
@@ -23,7 +22,7 @@ public class Department {
     @Column(name = "DepartmentId")
     private Integer departmentId;
 
-    @Column(name = "DepartmentName", nullable = false, length = 100)
+    @Column(name = "DepartmentName", nullable = false, unique = true, length = 100)
     private String departmentName;
 
     /**
@@ -34,6 +33,4 @@ public class Department {
     @JoinColumn(name = "ManagerId", referencedColumnName = "UserId")
     private User manager;
 
-    @Column(name = "Status", nullable = false, length = 20, columnDefinition = "NVARCHAR(20) DEFAULT 'Active'")
-    private String status;
 }

@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>API Monitoring | RMS</title>
+    <link rel="stylesheet" th:href="@{/css/main.css}">
+    <link rel="stylesheet" th:href="@{/css/account-list.css}">
+    <link rel="stylesheet" th:href="@{/css/api-monitoring.css}">
+</head>
+<body>
+<div class="page-wrapper">
+    <aside class="sidebar account-sidebar" id="account-sidebar" aria-label="Điều hướng quản trị">
+        <div class="account-brand">RMS <span>Quản trị</span></div>
+        <nav class="account-nav">
+            <a th:href="@{/dashboard}">Tổng quan</a>
+            <a th:href="@{/admin/accounts}">Tài khoản</a>
+            <a class="active" th:href="@{/admin/api-monitoring}" aria-current="page">API Monitoring</a>
+        </nav>
+    </aside>
+
+    <div class="main-content">
+        <header class="topbar account-topbar">
+            <div class="account-topbar-start">
+                <button class="account-menu-button" type="button" id="account-menu-button"
+                        aria-controls="account-sidebar" aria-expanded="false">☰ <span class="sr-only">Mở menu</span></button>
+                <span>Quản lý hệ thống</span>
+            </div>
+            <form th:action="@{/logout}" method="post">
+                <button class="btn btn-secondary btn-sm" type="submit">Đăng xuất</button>
+            </form>
+        </header>
+
+        <main class="page-content">
+            <div class="container">
+                <div class="account-heading">
+                    <div>
+                        <a class="account-back-link" th:href="@{/dashboard}">Tổng quan</a>
+                        <span aria-hidden="true"> / </span><span>API Monitoring</span>
+                        <h1>API Monitoring</h1>
+                        <p>Kiểm tra phản hồi thật từ endpoint nội bộ và theo dõi các tích hợp đã có contract.</p>
+                    </div>
+                </div>
+
+                <div class="alert alert-success" role="status" th:if="${successMessage}" th:text="${successMessage}"></div>
+                <div class="alert alert-danger" role="alert" th:if="${failureMessage}" th:text="${failureMessage}"></div>
+
+                <section class="card monitoring-card" aria-labelledby="monitoring-table-title">
+                    <div class="monitoring-heading">
+                        <div>
+                            <h2 id="monitoring-table-title">Trạng thái endpoint</h2>
+                            <p>Trạng thái dựa trên lần kiểm tra gần nhất. Thống kê tính trên tối đa 100 lần kiểm tra thật trong phiên chạy ứng dụng.</p>
+                        </div>
+                    </div>
+
+                    <div class="table-wrapper">
+                        <table class="table monitoring-table">
+                            <thead>
+                            <tr>
+                                <th scope="col">Endpoint / tích hợp</th>
+                                <th scope="col">Trạng thái</th>
+                                <th scope="col">Phản hồi TB</th>
+                                <th scope="col">Tỉ lệ lỗi</th>
+                                <th scope="col">Lỗi gần đây</th>
+                                <th scope="col">Lần phản hồi cuối</th>
+                                <th scope="col">Kiểm tra</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            <tr th:each="endpoint : ${endpoints}">
+                                <td>
+                                    <strong th:text="${endpoint.name}">Tên tích hợp</strong>
+                                    <small th:text="${endpoint.category}">Loại</small>
+                                    <code th:text="${endpoint.endpoint}">GET /endpoint</code>
+                                </td>
+                                <td>
+                                    <span class="badge" th:text="${endpoint.statusLabel}"
+                                          th:classappend="${endpoint.status == 'OPERATIONAL' ? ' badge-success' : (endpoint.status == 'FAILED' ? ' badge-danger' : ' badge-secondary')}">Chưa kiểm tra</span>
+                                </td>
+                                <td th:text="${endpoint.averageResponseMs != null ? endpoint.averageResponseMs + ' ms' : '—'}">—</td>
+                                <td th:text="${endpoint.errorRatePercent != null ? endpoint.errorRatePercent + '%' : '—'}">—</td>
+                                <td th:text="${endpoint.recentErrors != null ? endpoint.recentErrors : '—'}">—</td>
+                                <td>
+                                    <span th:text="${endpoint.lastHttpStatus != null ? 'HTTP ' + endpoint.lastHttpStatus : '—'}">—</span>
+                                    <small th:if="${endpoint.lastCheckedAt != null}"
+                                           th:text="${#temporals.format(endpoint.lastCheckedAt, 'dd/MM/yyyy HH:mm:ss')}">Thời điểm</small>
+                                </td>
+                                <td>
+                                    <form th:if="${endpoint.canProbe}" th:action="@{/admin/api-monitoring/probe/internal}" method="post">
+                                        <button class="btn btn-primary btn-sm" type="submit">Gửi GET</button>
+                                    </form>
+                                    <span class="monitoring-unavailable" th:unless="${endpoint.canProbe}">Chưa có target an toàn</span>
+                                </td>
+                            </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </section>
+
+                <p class="monitoring-note">Phép thử nội bộ gửi GET tới endpoint chỉ dành cho System Admin và kiểm tra ứng dụng cùng SQL Server bằng truy vấn <code>SELECT 1</code>. HTTP 2xx là thành công; redirect, lỗi HTTP hoặc không có phản hồi được ghi là thất bại. AI và email chưa được thử khi chưa có địa chỉ/contract xác nhận.</p>
+            </div>
+        </main>
+    </div>
+</div>
+<script th:src="@{/js/api-monitoring.js}"></script>
+</body>
+</html>

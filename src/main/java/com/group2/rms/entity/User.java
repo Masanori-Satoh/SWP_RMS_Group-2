@@ -2,6 +2,7 @@ package com.group2.rms.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.DynamicUpdate;
 
 import java.time.LocalDateTime;
 
@@ -10,7 +11,8 @@ import java.time.LocalDateTime;
  * Các trạng thái AccountStatus: Active, Inactive, Blocked
  */
 @Entity
-@Table(name = "[User]") // Dùng bracket vì "User" là từ khóa reserved trong SQL Server
+@Table(name = "\"User\"") // Quote the reserved SQL Server identifier without making brackets part of its name.
+@DynamicUpdate
 @Getter
 @Setter
 @NoArgsConstructor
@@ -33,7 +35,7 @@ public class User extends BaseEntity {
     @Column(name = "PasswordHash", nullable = false, length = 255)
     private String passwordHash;
 
-    @Column(name = "Email", nullable = false, unique = true, length = 100)
+    @Column(name = "Email", nullable = false, unique = true, length = 150)
     private String email;
 
     @Column(name = "FullName", nullable = false, length = 100)

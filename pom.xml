@@ -65,6 +65,12 @@
             <artifactId>spring-boot-starter-security</artifactId>
         </dependency>
 
+        <!-- SMTP delivery for one-time password recovery links. -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-mail</artifactId>
+        </dependency>
+
         <!-- ===== LOMBOK (Giảm boilerplate getter/setter/constructor) ===== -->
         <dependency>
             <groupId>org.projectlombok</groupId>

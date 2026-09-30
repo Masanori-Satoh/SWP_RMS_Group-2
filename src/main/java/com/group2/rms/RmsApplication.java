@@ -5,7 +5,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 /**
  * Entry point của ứng dụng Recruitment Management System.
- * Nhấn nút ▶️ (Run) ngay cạnh class này trong IntelliJ để khởi động.
+
  */
 @SpringBootApplication
 public class RmsApplication {

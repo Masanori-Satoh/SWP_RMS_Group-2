@@ -8,8 +8,8 @@ import java.time.LocalDateTime;
 
 /**
  * 3.13 Application - Hồ sơ ứng tuyển của ứng viên cho một vị trí.
- * ApplicationStatus: Applied, Screening, Interview_Pending, Interviewing,
- *                    Offered, Hired, Rejected
+ * ApplicationStatus: Applied, AI_Screened, HR_Passed, HM_Passed,
+ *                    Interviewing, Offered, Hired, Rejected
  */
 @Entity
 @Table(name = "Application")
@@ -34,16 +34,16 @@ public class Application extends BaseEntity {
     private JobPosting jobPosting;
 
     /**
-     * Đường dẫn CV dùng cho ứng tuyển này (TEXT)
+     * Đường dẫn CV dùng cho ứng tuyển này.
      */
-    @Column(name = "AppliedCvUrl", nullable = false, columnDefinition = "NVARCHAR(MAX)")
+    @Column(name = "AppliedCvUrl", nullable = false, length = 500)
     private String appliedCvUrl;
 
     @Column(name = "SubmissionDate", nullable = false)
     private LocalDateTime submissionDate;
 
     /**
-     * Applied, Screening, Interview_Pending, Interviewing, Offered, Hired, Rejected
+     * Applied, AI_Screened, HR_Passed, HM_Passed, Interviewing, Offered, Hired, Rejected
      */
     @Column(name = "ApplicationStatus", nullable = false, length = 30)
     private String applicationStatus;
@@ -53,19 +53,6 @@ public class Application extends BaseEntity {
      */
     @Column(name = "OverallScore", precision = 5, scale = 2)
     private BigDecimal overallScore;
-
-    @Column(name = "HRReviewNotes", columnDefinition = "NVARCHAR(MAX)")
-    private String hrReviewNotes;
-
-    @Column(name = "HMReviewNotes", columnDefinition = "NVARCHAR(MAX)")
-    private String hmReviewNotes;
-
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "ReviewedBy", referencedColumnName = "UserId")
-    private User reviewedBy;
-
-    @Column(name = "ReviewedAt")
-    private LocalDateTime reviewedAt;
 
     @PrePersist
     protected void onApplicationPersist() {

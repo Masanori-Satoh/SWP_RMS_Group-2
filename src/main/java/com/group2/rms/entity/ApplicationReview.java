@@ -6,9 +6,7 @@ import lombok.*;
 import java.time.LocalDateTime;
 
 /**
- * 3.12 ApplicationReview (Resume) - File CV của ứng viên.
- * Lưu metadata file CV: tên, đường dẫn, loại, kích thước.
- * FileType: PDF, DOCX
+ * 3.12 ApplicationReview - Đánh giá hồ sơ bởi HR hoặc Hiring Manager.
  */
 @Entity
 @Table(name = "ApplicationReview")
@@ -21,35 +19,35 @@ public class ApplicationReview {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "ResumeId")
-    private Integer resumeId;
+    @Column(name = "ReviewId")
+    private Integer reviewId;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "CandidateId", nullable = false, referencedColumnName = "CandidateId")
-    private Candidate candidate;
+    @JoinColumn(name = "ApplicationId", nullable = false, referencedColumnName = "ApplicationId")
+    private Application application;
 
-    @Column(name = "FileName", nullable = false, length = 255)
-    private String fileName;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "ReviewerId", nullable = false, referencedColumnName = "UserId")
+    private User reviewer;
 
-    @Column(name = "FilePath", nullable = false, length = 1000)
-    private String filePath;
+    /** HR or HiringManager. */
+    @Column(name = "ReviewerRole", nullable = false, length = 30)
+    private String reviewerRole;
 
-    /**
-     * PDF, DOCX
-     */
-    @Column(name = "FileType", length = 10)
-    private String fileType;
+    /** Pass, Fail or Hold. */
+    @Column(name = "Decision", nullable = false, length = 20)
+    private String decision;
 
-    @Column(name = "FileSize")
-    private Long fileSize;
+    @Column(name = "Comments", length = 1000)
+    private String comments;
 
-    @Column(name = "UploadedAt", nullable = false)
-    private LocalDateTime uploadedAt;
+    @Column(name = "ReviewedAt", nullable = false)
+    private LocalDateTime reviewedAt;
 
     @PrePersist
     protected void onPersist() {
-        if (this.uploadedAt == null) {
-            this.uploadedAt = LocalDateTime.now();
+        if (this.reviewedAt == null) {
+            this.reviewedAt = LocalDateTime.now();
         }
     }
 }

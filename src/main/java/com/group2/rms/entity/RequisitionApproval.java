@@ -37,7 +37,7 @@ public class RequisitionApproval {
     @Column(name = "Status", nullable = false, length = 20)
     private String status;
 
-    @Column(name = "Comments", columnDefinition = "NVARCHAR(MAX)")
+    @Column(name = "Comments", length = 1000)
     private String comments;
 
     @Column(name = "ApprovalDate", nullable = false)
