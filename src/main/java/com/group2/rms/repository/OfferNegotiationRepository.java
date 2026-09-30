@@ -1,0 +1,13 @@
+package com.group2.rms.repository;
+
+import com.group2.rms.entity.OfferNegotiation;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.stereotype.Repository;
+
+import java.util.List;
+
+@Repository
+public interface OfferNegotiationRepository extends JpaRepository<OfferNegotiation, Integer> {
+
+    List<OfferNegotiation> findByOfferProposalOfferIdOrderByNegotiationDateDesc(Integer offerId);
+}

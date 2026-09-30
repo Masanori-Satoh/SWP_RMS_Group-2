@@ -1,0 +1,490 @@
+/* =============================================================================
+   offer.css - Styling chuyên biệt cho module Offer (Internal & Candidate)
+   SWP_RMS_Group-2 | Recruitment Management System
+   ============================================================================= */
+
+/* --- Status Badges --- */
+.badge-status {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    font-size: 0.78rem;
+    font-weight: 600;
+    padding: 0.3rem 0.65rem;
+    border-radius: 9999px;
+    letter-spacing: 0.02em;
+    text-transform: none;
+}
+
+.badge-status::before {
+    content: '';
+    display: inline-block;
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+}
+
+.status-draft {
+    background-color: #f1f5f9;
+    color: #334155;
+    border: 1px solid #cbd5e1;
+}
+.status-draft::before { background-color: #64748b; }
+
+.status-pending {
+    background-color: #fef3c7;
+    color: #92400e;
+    border: 1px solid #fde68a;
+}
+.status-pending::before { background-color: #d97706; }
+
+.status-approved {
+    background-color: #dcfce7;
+    color: #166534;
+    border: 1px solid #bbf7d0;
+}
+.status-approved::before { background-color: #16a34a; }
+
+.status-sent {
+    background-color: #e0f2fe;
+    color: #0369a1;
+    border: 1px solid #bae6fd;
+}
+.status-sent::before { background-color: #0284c7; }
+
+.status-rejected {
+    background-color: #fee2e2;
+    color: #991b1b;
+    border: 1px solid #fecaca;
+}
+.status-rejected::before { background-color: #dc2626; }
+
+.status-negotiating {
+    background-color: #f3e8ff;
+    color: #6b21a8;
+    border: 1px solid #e9d5ff;
+}
+.status-negotiating::before { background-color: #9333ea; }
+
+.status-accepted {
+    background-color: #ccfbf1;
+    color: #115e59;
+    border: 1px solid #99f6e4;
+}
+.status-accepted::before { background-color: #0d9488; }
+
+.status-declined {
+    background-color: #f1f5f9;
+    color: #475569;
+    border: 1px solid #cbd5e1;
+}
+.status-declined::before { background-color: #64748b; }
+
+.status-expired {
+    background-color: #ffedd5;
+    color: #9a3412;
+    border: 1px solid #fed7aa;
+}
+.status-expired::before { background-color: #ea580c; }
+
+.status-voided {
+    background-color: #f3f4f6;
+    color: #6b7280;
+    border: 1px solid #e5e7eb;
+}
+.status-voided::before { background-color: #9ca3af; }
+
+/* --- Metrics Grid --- */
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1.25rem;
+    margin-bottom: 1.75rem;
+}
+
+.stat-card {
+    background: #ffffff;
+    border-radius: var(--radius-lg, 12px);
+    padding: 1.25rem 1.5rem;
+    border: 1px solid var(--color-border);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    min-height: 96px;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.stat-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.08);
+}
+
+.stat-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+}
+
+/* --- Salary Ratio Progress Indicator --- */
+.salary-ratio-container {
+    background: #f8fafc;
+    border: 1px dashed var(--color-border);
+    border-radius: var(--radius-md, 8px);
+    padding: 0.75rem 1rem;
+    margin-top: 0.5rem;
+}
+
+.salary-progress-bar {
+    height: 8px;
+    background: #e2e8f0;
+    border-radius: 4px;
+    overflow: hidden;
+    position: relative;
+    margin: 0.5rem 0;
+}
+
+.salary-progress-fill {
+    height: 100%;
+    transition: width 0.3s ease, background-color 0.3s ease;
+    border-radius: 4px;
+}
+
+.salary-progress-fill.valid {
+    background-color: var(--color-success, #16a34a);
+}
+
+.salary-progress-fill.invalid {
+    background-color: var(--color-danger, #dc2626);
+}
+
+.ratio-label {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.8rem;
+    font-weight: 500;
+}
+
+/* --- Modal & Overlay --- */
+.custom-modal-backdrop {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background-color: rgba(15, 23, 42, 0.6);
+    backdrop-filter: blur(4px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1050;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.25s ease, visibility 0.25s ease;
+    padding: 1rem;
+}
+
+.custom-modal-backdrop.active {
+    opacity: 1;
+    visibility: visible;
+}
+
+.custom-modal {
+    background: #ffffff;
+    border-radius: var(--radius-xl, 16px);
+    box-shadow: 0 20px 40px -15px rgba(0, 0, 0, 0.25);
+    width: 100%;
+    max-width: 680px;
+    max-height: 90vh;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden; /* Header và Footer cố định, chỉ cuộn body */
+    transform: scale(0.95) translateY(10px);
+    transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.custom-modal-backdrop.active .custom-modal {
+    transform: scale(1) translateY(0);
+}
+
+.modal-header-custom {
+    padding: 1.25rem 1.75rem;
+    border-bottom: 1px solid var(--color-border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background-color: #fafafa;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    flex-shrink: 0;
+}
+
+.modal-body-custom {
+    padding: 1.75rem;
+    overflow-y: auto;
+    flex: 1 1 auto;
+}
+
+.modal-footer-custom {
+    padding: 1rem 1.75rem;
+    border-top: 1px solid var(--color-border);
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 0.75rem;
+    background-color: #f8fafc;
+    position: sticky;
+    bottom: 0;
+    z-index: 10;
+    flex-shrink: 0;
+}
+
+.btn-close-modal {
+    background: none;
+    border: none;
+    font-size: 1.5rem;
+    cursor: pointer;
+    color: var(--color-text-secondary);
+    min-width: 40px;
+    min-height: 40px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: var(--radius-md, 8px);
+    transition: all 0.15s ease;
+}
+
+.btn-close-modal:hover {
+    background-color: #f1f5f9;
+    color: var(--color-text-primary);
+}
+
+/* --- Timeline Component for Approvals / Negotiations --- */
+.timeline {
+    position: relative;
+    padding-left: 1.75rem;
+    margin-top: 1rem;
+}
+
+.timeline::before {
+    content: '';
+    position: absolute;
+    top: 5px;
+    bottom: 5px;
+    left: 7px;
+    width: 2px;
+    background-color: #e2e8f0;
+}
+
+.timeline-item {
+    position: relative;
+    margin-bottom: 1.25rem;
+}
+
+.timeline-item:last-child {
+    margin-bottom: 0;
+}
+
+.timeline-marker {
+    position: absolute;
+    left: -1.75rem;
+    top: 2px;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background-color: #ffffff;
+    border: 3px solid var(--color-primary);
+}
+
+.timeline-marker.success {
+    border-color: var(--color-success);
+}
+
+.timeline-marker.danger {
+    border-color: var(--color-danger);
+}
+
+.timeline-marker.warning {
+    border-color: var(--color-warning);
+}
+
+.timeline-content {
+    background: #f8fafc;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md, 8px);
+    padding: 0.75rem 1rem;
+    font-size: 0.875rem;
+}
+
+/* --- Candidate Offer Letter Styles (Màn 40, 41, 42) --- */
+.offer-letter-container {
+    max-width: 860px;
+    margin: 2.5rem auto;
+    padding: 0 1rem;
+}
+
+.offer-letter-paper {
+    background: #ffffff;
+    border-radius: 12px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08), 0 1px 3px rgba(0, 0, 0, 0.05);
+    border: 1px solid #e2e8f0;
+    overflow: hidden;
+    position: relative;
+}
+
+.offer-letter-header {
+    background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+    color: #ffffff;
+    padding: 2.5rem 3rem;
+    position: relative;
+}
+
+.offer-letter-header::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: linear-gradient(90deg, #2563eb, #7c3aed, #0891b2);
+}
+
+.offer-letter-body {
+    padding: 3rem;
+}
+
+.offer-term-box {
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+    padding: 1.5rem;
+    margin: 1.5rem 0;
+}
+
+.term-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.75rem 0;
+    border-bottom: 1px solid #edf2f7;
+}
+
+.term-row:last-child {
+    border-bottom: none;
+}
+
+.term-label {
+    font-weight: 500;
+    color: #64748b;
+    font-size: 0.95rem;
+}
+
+.term-value {
+    font-weight: 600;
+    color: #0f172a;
+    font-size: 1.05rem;
+}
+
+.offer-actions-bar {
+    background: #f1f5f9;
+    border-top: 1px solid #e2e8f0;
+    padding: 1.5rem 3rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 1rem;
+}
+
+/* Toast notifications */
+.toast-container {
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    z-index: 2000;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.toast-msg {
+    padding: 14px 20px;
+    border-radius: 8px;
+    color: #ffffff;
+    font-weight: 500;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-width: 280px;
+    animation: slideInToast 0.3s ease;
+}
+
+.toast-success { background-color: #16a34a; }
+.toast-error { background-color: #dc2626; }
+.toast-info { background-color: #2563eb; }
+
+@keyframes slideInToast {
+    from {
+        transform: translateY(20px);
+        opacity: 0;
+    }
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+/* ======================== RESPONSIVE CHO MODULE OFFER ======================== */
+@media (max-width: 768px) {
+    .offer-letter-container {
+        margin: 1rem auto;
+        padding: 0 0.5rem;
+    }
+
+    .offer-letter-header {
+        padding: 1.5rem 1.25rem;
+    }
+
+    .offer-letter-header h1 {
+        font-size: 1.5rem !important;
+    }
+
+    .offer-letter-body {
+        padding: 1.5rem 1.25rem;
+    }
+
+    .offer-term-box {
+        padding: 1rem;
+    }
+
+    .term-row {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.25rem;
+    }
+
+    .offer-actions-bar {
+        padding: 1.25rem 1rem;
+        flex-direction: column;
+        align-items: stretch;
+        gap: 1rem;
+    }
+
+    .offer-actions-bar > div:last-child {
+        display: flex;
+        flex-direction: column;
+        width: 100%;
+        gap: 0.5rem;
+    }
+
+    .offer-actions-bar .btn {
+        width: 100%;
+        justify-content: center;
+    }
+}

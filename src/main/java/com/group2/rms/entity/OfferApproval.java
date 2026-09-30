@@ -25,10 +25,12 @@ public class OfferApproval {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "OfferId", nullable = false, referencedColumnName = "OfferId")
+    @ToString.Exclude
     private OfferProposal offerProposal;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "DirectorId", nullable = false, referencedColumnName = "UserId")
+    @ToString.Exclude
     private User director;
 
     /**

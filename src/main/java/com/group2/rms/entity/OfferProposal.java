@@ -26,6 +26,7 @@ public class OfferProposal extends BaseEntity {
 
     @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "ApplicationId", nullable = false, unique = true, referencedColumnName = "ApplicationId")
+    @ToString.Exclude
     private Application application;
 
     @Column(name = "ProposedSalary", nullable = false, precision = 18, scale = 2)
@@ -51,6 +52,7 @@ public class OfferProposal extends BaseEntity {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "ProposedBy", nullable = false, referencedColumnName = "UserId")
+    @ToString.Exclude
     private User proposedBy;
 
     /**

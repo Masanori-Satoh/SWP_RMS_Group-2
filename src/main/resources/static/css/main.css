@@ -367,29 +367,126 @@ a:hover { color: var(--color-primary-hover); }
 .text-success   { color: var(--color-success) !important; }
 .text-danger    { color: var(--color-danger) !important; }
 .text-warning   { color: var(--color-warning) !important; }
-.text-muted     { color: var(--color-text-muted) !important; }
+.text-muted     { color: var(--color-text-secondary) !important; } /* WCAG AA: Slate-500 thay vì Slate-400 */
 
 .d-flex         { display: flex; }
+.d-none         { display: none !important; }
 .align-center   { align-items: center; }
 .justify-between{ justify-content: space-between; }
+.justify-end    { justify-content: flex-end; }
+.gap-1          { gap: var(--space-1); }
 .gap-2          { gap: var(--space-2); }
+.gap-3          { gap: var(--space-3); }
 .gap-4          { gap: var(--space-4); }
 
+.mt-2 { margin-top: var(--space-2); }
+.mt-3 { margin-top: var(--space-3); }
 .mt-4 { margin-top: var(--space-4); }
+.mb-2 { margin-bottom: var(--space-2); }
+.mb-3 { margin-bottom: var(--space-3); }
 .mb-4 { margin-bottom: var(--space-4); }
 .mb-6 { margin-bottom: var(--space-6); }
 
 .w-100 { width: 100%; }
 .text-center { text-align: center; }
-.text-right  { text-align: right; }
+.text-right  { text-align: right !important; }
 
 .fw-bold  { font-weight: 700; }
 .fw-semi  { font-weight: 600; }
 
+/* Tiện ích số liệu bảng & ngắt chữ (Truncate) */
+.tabular-nums {
+    font-variant-numeric: tabular-nums;
+}
+
+.truncate {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.min-w-0 {
+    min-width: 0 !important;
+}
+
+.nowrap {
+    white-space: nowrap !important;
+}
+
+/* Khóa cuộn trang khi Modal mở */
+body.modal-open {
+    overflow: hidden !important;
+}
+
+/* --- Skeleton Shimmer Animation --- */
+@keyframes rmsShimmer {
+    0%   { background-position: -200% 0; }
+    100% { background-position: 200% 0; }
+}
+
+.skeleton-shimmer {
+    background: linear-gradient(90deg, #f1f5f9 25%, #e2e8f0 50%, #f1f5f9 75%);
+    background-size: 200% 100%;
+    animation: rmsShimmer 1.5s infinite;
+    display: inline-block;
+    border-radius: 4px;
+}
+
+/* --- Empty State Component --- */
+.empty-state-box {
+    padding: 3rem 1.5rem;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+
+.empty-state-icon {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    background-color: #f1f5f9;
+    color: #64748b;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.75rem;
+    margin-bottom: 1rem;
+}
+
+.empty-state-title {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: var(--color-text-primary);
+    margin-bottom: 0.35rem;
+}
+
+.empty-state-desc {
+    font-size: 0.875rem;
+    color: var(--color-text-secondary);
+    max-width: 440px;
+    margin: 0 auto;
+    line-height: 1.5;
+}
+
 /* ======================== RESPONSIVE ======================== */
+@media (max-width: 1024px) {
+    .sidebar {
+        width: 72px;
+    }
+    .sidebar .sidebar-text {
+        display: none;
+    }
+    .main-content {
+        margin-left: 72px;
+    }
+}
+
 @media (max-width: 768px) {
     .sidebar {
         transform: translateX(-100%);
+        width: var(--sidebar-width);
     }
     .sidebar.open {
         transform: translateX(0);

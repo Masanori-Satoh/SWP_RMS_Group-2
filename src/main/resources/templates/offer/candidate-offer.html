@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/head :: head(title='Thư Mời Nhận Việc - Candidate Offer')}">
+</head>
+<head>
+    <link rel="stylesheet" th:href="@{/css/offer.css}">
+</head>
+<body style="background-color: #f1f5f9; min-height: 100vh;">
+
+    <!-- Hidden holder for offerId passed from Controller -->
+    <span id="pageOfferId" th:text="${offerId}" style="display: none;"></span>
+
+    <!-- Top Navigation / Brand Bar -->
+    <nav style="background: #ffffff; border-bottom: 1px solid var(--color-border); padding: 1rem 2rem; display: flex; align-items: center; justify-content: space-between;">
+        <div style="display: flex; align-items: center; gap: 0.75rem;">
+            <div style="width: 38px; height: 38px; border-radius: 8px; background: #2563eb; color: #ffffff; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 1.1rem;">
+                RMS
+            </div>
+            <div>
+                <div style="font-weight: 700; color: var(--color-text-primary); font-size: 1.05rem;">Cổng Thông Tin Ứng Viên</div>
+                <div style="font-size: 0.75rem; color: var(--color-text-muted);">Recruitment Management System - Group 2</div>
+            </div>
+        </div>
+
+        <div style="display: flex; align-items: center; gap: 1rem;">
+            <!-- Nút quay lại trang quản trị nội bộ nếu là dev/test -->
+            <a th:href="@{/offers/internal}" class="btn btn-sm btn-outline-secondary" style="display: flex; align-items: center; gap: 0.35rem;">
+                <i class="bi bi-arrow-left"></i> Quay lại Quản trị Offer
+            </a>
+            <div id="offerStatusHeaderBadge" class="badge-status status-pending">Đang tải...</div>
+        </div>
+    </nav>
+
+    <!-- Candidate Offer Letter Paper -->
+    <div class="offer-letter-container">
+        
+        <!-- Status Notification Banner -->
+        <div id="statusAlertBanner" style="display: none; padding: 1rem 1.5rem; border-radius: 10px; margin-bottom: 1.5rem; font-size: 0.95rem; align-items: center; justify-content: space-between;">
+            <div id="statusAlertMessage" style="display: flex; align-items: center; gap: 0.75rem;">
+                <i class="bi bi-info-circle-fill" style="font-size: 1.25rem;"></i>
+                <span>Thông báo trạng thái Offer</span>
+            </div>
+        </div>
+
+        <div class="offer-letter-paper">
+            
+            <!-- Letter Header -->
+            <div class="offer-letter-header">
+                <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 1rem;">
+                    <div>
+                        <div style="font-size: 0.85rem; letter-spacing: 0.1em; text-transform: uppercase; color: #94a3b8; margin-bottom: 0.5rem;">
+                            OFFICIAL EMPLOYMENT OFFER
+                        </div>
+                        <h1 style="font-size: 2rem; font-weight: 800; margin: 0; color: #ffffff; letter-spacing: -0.02em;">
+                            THƯ MỜI NHẬN VIỆC
+                        </h1>
+                        <p style="margin: 0.5rem 0 0 0; color: #cbd5e1; font-size: 0.95rem;">
+                            Mã tham chiếu: <strong id="letterRefCode" style="color: #ffffff;">#---</strong>
+                        </p>
+                    </div>
+                    <div style="text-align: right;">
+                        <div style="font-size: 0.85rem; color: #94a3b8;">Ngày phát hành:</div>
+                        <div id="letterIssueDate" style="font-size: 1rem; font-weight: 600; color: #ffffff;">--/--/----</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Letter Body -->
+            <div class="offer-letter-body">
+                
+                <!-- Khung thông báo phản hồi từ HR (Kết quả đàm phán của công ty) -->
+                <div id="hrResponseAlertBox" style="display: none; background: #f0fdf4; border: 1.5px solid #86efac; border-radius: 10px; padding: 1.25rem 1.5rem; margin-bottom: 1.75rem;">
+                    <div style="display: flex; align-items: flex-start; gap: 0.85rem;">
+                        <div style="width: 38px; height: 38px; border-radius: 50%; background: #dcfce7; color: #16a34a; display: flex; align-items: center; justify-content: center; font-size: 1.25rem; flex-shrink: 0;">
+                            <i class="bi bi-chat-square-quote-fill"></i>
+                        </div>
+                        <div style="flex: 1;">
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.35rem; flex-wrap: wrap; gap: 0.5rem;">
+                                <strong style="color: #166534; font-size: 1rem;"><i class="bi bi-patch-check-fill me-1"></i> Phản hồi chính thức từ Phòng Nhân sự (HR):</strong>
+                                <span id="hrResponseDateBadge" class="tabular-nums" style="font-size: 0.8rem; color: #15803d; background: #dcfce7; padding: 0.2rem 0.6rem; border-radius: 999px;">--/--/----</span>
+                            </div>
+                            <div id="hrResponseText" style="color: #14532d; font-size: 0.95rem; line-height: 1.6; margin-top: 0.35rem; background: #ffffff; padding: 0.75rem 1rem; border-radius: 6px; border: 1px solid #bbf7d0;">
+                                (Nội dung phản hồi từ HR)
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Lời chào ứng viên -->
+                <div style="margin-bottom: 2rem;">
+                    <h3 style="font-weight: 700; color: var(--color-text-primary); margin-bottom: 0.75rem;">
+                        Kính gửi: <span id="candidateNameTitle" style="color: var(--color-primary);">Ứng viên</span>
+                    </h3>
+                    <p style="color: #334155; line-height: 1.7; margin-bottom: 1rem;">
+                        Thay mặt Ban Giám Đốc và toàn thể đội ngũ công ty <strong>RMS</strong>, chúng tôi xin chúc mừng bạn đã xuất sắc vượt qua các vòng phỏng vấn và đánh giá năng lực vừa qua. Chúng tôi rất ấn tượng với chuyên môn, kinh nghiệm và tinh thần làm việc của bạn.
+                    </p>
+                    <p style="color: #334155; line-height: 1.7;">
+                        Chúng tôi trân trọng gửi tới bạn lời mời gia nhập công ty với các điều khoản làm việc chi tiết như dưới đây:
+                    </p>
+                </div>
+
+                <!-- Bảng Điều khoản làm việc (Terms Box) -->
+                <div class="offer-term-box">
+                    <h4 style="font-weight: 700; color: #0f172a; margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem;">
+                        <i class="bi bi-briefcase-fill text-primary"></i> 1. Chi tiết Vị trí &amp; Địa điểm làm việc
+                    </h4>
+                    <div class="term-row">
+                        <span class="term-label">Vị trí công tác đề xuất:</span>
+                        <span id="termPosition" class="term-value text-primary">-</span>
+                    </div>
+                    <div class="term-row">
+                        <span class="term-label">Công việc tuyển dụng:</span>
+                        <span id="termJobTitle" class="term-value">-</span>
+                    </div>
+                    <div class="term-row">
+                        <span class="term-label">Địa điểm làm việc:</span>
+                        <span id="termLocation" class="term-value">-</span>
+                    </div>
+                    <div class="term-row">
+                        <span class="term-label">Hình thức làm việc:</span>
+                        <span class="term-value">Toàn thời gian cố định (Full-time)</span>
+                    </div>
+                </div>
+
+                <!-- Chế độ Lương thưởng (Compensation) -->
+                <div class="offer-term-box">
+                    <h4 style="font-weight: 700; color: #0f172a; margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem;">
+                        <i class="bi bi-cash-stack text-success"></i> 2. Mức Lương &amp; Chế độ Thử việc
+                    </h4>
+                    <div class="term-row">
+                        <span class="term-label">Mức lương chính thức (Gross/tháng):</span>
+                        <span id="termProposedSalary" class="term-value" style="font-size: 1.2rem; color: #1e293b;">0 ₫</span>
+                    </div>
+                    <div class="term-row">
+                        <span class="term-label">Mức lương thử việc (Gross/tháng):</span>
+                        <span id="termProbationSalary" class="term-value text-success" style="font-size: 1.15rem;">0 ₫</span>
+                    </div>
+                    <div class="term-row">
+                        <span class="term-label">Thời gian thử việc:</span>
+                        <span id="termProbationDays" class="term-value">60 ngày</span>
+                    </div>
+                </div>
+
+                <!-- Chế độ Đãi ngộ & Phúc lợi (Benefits) -->
+                <div class="offer-term-box">
+                    <h4 style="font-weight: 700; color: #0f172a; margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem;">
+                        <i class="bi bi-gift-fill text-warning"></i> 3. Chế độ Phúc lợi &amp; Đãi ngộ
+                    </h4>
+                    <ul style="padding-left: 1.5rem; color: #475569; line-height: 1.8;">
+                        <li>Được đóng đầy đủ các loại Bảo hiểm (BHXH, BHYT, BHTN) theo quy định Luật Lao động.</li>
+                        <li>Gói bảo hiểm chăm sóc sức khỏe cao cấp định kỳ hàng năm.</li>
+                        <li>Lương tháng 13 và thưởng hiệu quả kinh doanh (KPI) theo kết quả dự án.</li>
+                        <li>12 ngày nghỉ phép nguyên lương hàng năm, chế độ team building, du lịch công ty.</li>
+                        <li>Được cấp trang thiết bị làm việc hiện đại (Laptop cao cấp, phụ kiện).</li>
+                    </ul>
+                </div>
+
+                <!-- Lịch sử thương lượng nếu có -->
+                <div id="candidateNegotiationBox" style="display: none; background: #faf5ff; border: 1px solid #e9d5ff; border-radius: 10px; padding: 1.25rem; margin-top: 1.5rem;">
+                    <h5 style="font-weight: 700; color: #6b21a8; margin-bottom: 0.5rem;">
+                        <i class="bi bi-clock-history me-1"></i> Lịch sử đàm phán của bạn
+                    </h5>
+                    <div id="candidateNegotiationList"></div>
+                </div>
+
+            </div>
+
+            <!-- Footer Action Bar -->
+            <div id="offerActionBar" class="offer-actions-bar">
+                <div>
+                    <span style="font-weight: 500; color: var(--color-text-secondary); font-size: 0.9rem;">
+                        Vui lòng phản hồi đề nghị này trước khi hết hạn hiệu lực.
+                    </span>
+                </div>
+                <div style="display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap;">
+                    <!-- Nút Từ Chối -->
+                    <button type="button" id="btnOpenDeclineModal" class="btn btn-outline-danger" style="display: flex; align-items: center; gap: 0.35rem;">
+                        <i class="bi bi-x-circle"></i> Từ chối Offer
+                    </button>
+                    <!-- Nút Thương Lượng -->
+                    <button type="button" id="btnOpenNegotiateModal" class="btn btn-secondary" style="display: flex; align-items: center; gap: 0.35rem; background: #7c3aed; color: #ffffff; border-color: #7c3aed;">
+                        <i class="bi bi-chat-left-dots"></i> Đề xuất Thương lượng
+                    </button>
+                    <!-- Nút Đồng Ý -->
+                    <button type="button" id="btnOpenAcceptModal" class="btn btn-success" style="display: flex; align-items: center; gap: 0.35rem; padding: 0.6rem 1.25rem; font-weight: 600;">
+                        <i class="bi bi-check2-circle"></i> Đồng ý Nhận việc
+                    </button>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- =============================================================================
+         MODAL 1: ĐỒNG Ý NHẬN VIỆC (Accept Offer)
+         ============================================================================= -->
+    <div id="modalAccept" class="custom-modal-backdrop">
+        <div class="custom-modal" style="max-width: 540px;">
+            <div class="modal-header-custom" style="background: #f0fdf4;">
+                <div style="display: flex; align-items: center; gap: 0.5rem;">
+                    <i class="bi bi-check-circle-fill text-success" style="font-size: 1.3rem;"></i>
+                    <h5 style="margin: 0; font-weight: 700; color: #166534;">Xác nhận Đồng ý Nhận việc</h5>
+                </div>
+                <button type="button" class="btn-close-modal" style="background: none; border: none; font-size: 1.25rem; cursor: pointer;">&times;</button>
+            </div>
+            <div class="modal-body-custom">
+                <p style="color: #334155; line-height: 1.6; margin-bottom: 1rem;">
+                    Bằng việc nhấn <strong>"Đồng ý chính thức"</strong>, bạn xác nhận đồng ý với toàn bộ các điều khoản làm việc, mức lương và chế độ thử việc nêu trong Thư mời.
+                </p>
+                <div style="background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 8px; padding: 0.85rem 1rem; font-size: 0.85rem; color: #1e40af;">
+                    <i class="bi bi-shield-check me-1"></i>
+                    Hệ thống sẽ ghi nhận bạn đã chấp nhận đề xuất Offer (Accepted) và chuyển tới Quản lý tuyển dụng để hoàn tất bước Tuyển dụng chính thức.
+                </div>
+            </div>
+            <div class="modal-footer-custom">
+                <button type="button" class="btn btn-outline-secondary btn-close-modal">Hủy bỏ</button>
+                <button type="button" id="btnConfirmAccept" class="btn btn-success" style="display: flex; align-items: center; gap: 0.4rem;">
+                    <i class="bi bi-check-lg"></i> Đồng ý chính thức
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- =============================================================================
+         MODAL 2: THƯƠNG LƯỢNG OFFER (Negotiate)
+         ============================================================================= -->
+    <div id="modalNegotiate" class="custom-modal-backdrop">
+        <div class="custom-modal" style="max-width: 580px;">
+            <div class="modal-header-custom" style="background: #faf5ff;">
+                <div style="display: flex; align-items: center; gap: 0.5rem;">
+                    <i class="bi bi-chat-quote-fill" style="color: #7c3aed; font-size: 1.3rem;"></i>
+                    <h5 style="margin: 0; font-weight: 700; color: #6b21a8;">Đề xuất Thương lượng Offer</h5>
+                </div>
+                <button type="button" class="btn-close-modal" style="background: none; border: none; font-size: 1.25rem; cursor: pointer;">&times;</button>
+            </div>
+            <form id="formNegotiate">
+                <div class="modal-body-custom">
+                    <p style="color: var(--color-text-secondary); font-size: 0.9rem; margin-bottom: 1.25rem;">
+                        Nếu bạn có mong muốn điều chỉnh mức thu nhập hoặc các điều khoản đãi ngộ, vui lòng điền thông tin bên dưới để bộ phận Tuyển dụng xem xét lại.
+                    </p>
+
+                    <div style="margin-bottom: 1rem;">
+                        <label class="form-label">Mức lương mong muốn mới (VNĐ/tháng) <span class="text-danger">*</span></label>
+                        <input type="text" id="negotiateCounterSalary" class="form-control" required placeholder="VD: 28.000.000">
+                    </div>
+
+                    <div style="margin-bottom: 1rem;">
+                        <label class="form-label">Lý do &amp; Ghi chú gửi HR / Hiring Manager <span class="text-danger">*</span></label>
+                        <textarea id="negotiateCandidateNotes" class="form-control" rows="3" required placeholder="VD: Em xin đề xuất mức lương 28.000.000 VNĐ phù hợp với kinh nghiệm 3 năm và mong muốn đóng góp lâu dài cho dự án..."></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer-custom">
+                    <button type="button" class="btn btn-outline-secondary btn-close-modal">Hủy bỏ</button>
+                    <button type="submit" id="btnConfirmNegotiate" class="btn btn-primary" style="background: #7c3aed; border-color: #7c3aed; display: flex; align-items: center; gap: 0.4rem;">
+                        <i class="bi bi-send"></i> Gửi đề xuất thương lượng
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- =============================================================================
+         MODAL 3: TỪ CHỐI OFFER (Decline)
+         ============================================================================= -->
+    <div id="modalDecline" class="custom-modal-backdrop">
+        <div class="custom-modal" style="max-width: 520px;">
+            <div class="modal-header-custom" style="background: #fef2f2;">
+                <div style="display: flex; align-items: center; gap: 0.5rem;">
+                    <i class="bi bi-x-octagon-fill text-danger" style="font-size: 1.3rem;"></i>
+                    <h5 style="margin: 0; font-weight: 700; color: #991b1b;">Xác nhận Từ chối Thư mời</h5>
+                </div>
+                <button type="button" class="btn-close-modal" style="background: none; border: none; font-size: 1.25rem; cursor: pointer;">&times;</button>
+            </div>
+            <div class="modal-body-custom">
+                <p style="color: #334155; line-height: 1.6; margin-bottom: 1rem;">
+                    Bạn có chắc chắn muốn từ chối thư mời làm việc này không? Quyết định từ chối sau khi xác nhận sẽ không thể hoàn tác.
+                </p>
+                <div>
+                    <label class="form-label">Lý do từ chối (Tùy chọn):</label>
+                    <textarea id="declineReasonInput" class="form-control" rows="2" placeholder="VD: Em đã nhận được cơ hội khác phù hợp hơn với định hướng hiện tại..."></textarea>
+                </div>
+            </div>
+            <div class="modal-footer-custom">
+                <button type="button" class="btn btn-outline-secondary btn-close-modal">Xem lại</button>
+                <button type="button" id="btnConfirmDecline" class="btn btn-danger">Xác nhận Từ chối</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Notifications Container -->
+    <div id="toastContainer" class="toast-container"></div>
+
+    <!-- Javascript xử lý REST API -->
+    <script th:src="@{/js/offer/candidate-offer.js}"></script>
+</body>
+</html>
