@@ -444,34 +444,96 @@
             background: #4f46e5;
             color: #ffffff;
             font-weight: 600;
-        }        /* Delete Modal Styles */
+        }
+
+        /* Delete Modal Styles */
         .modal-overlay {
             display: none;
             position: fixed;
             inset: 0;
-            background: rgba(0,0,0,0.45);
+            background: rgba(0, 0, 0, 0.45);
             z-index: 9999;
             align-items: center;
             justify-content: center;
         }
-        .modal-overlay.active { display: flex; }
+
+        .modal-overlay.active {
+            display: flex;
+        }
+
         .modal-box {
             background: white;
             border-radius: 16px;
             padding: 32px;
             width: 420px;
             max-width: 90vw;
-            box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
             animation: popIn 0.2s ease;
         }
-        @keyframes popIn { from { transform: scale(0.9); opacity: 0; } to { transform: scale(1); opacity: 1; } }
-        .modal-icon { font-size: 40px; color: #ef4444; margin-bottom: 16px; }
-        .modal-title { font-size: 18px; font-weight: 700; color: #0f172a; margin-bottom: 8px; }
-        .modal-body { font-size: 14px; color: #64748b; margin-bottom: 24px; line-height: 1.6; }
-        .modal-actions { display: flex; gap: 12px; justify-content: flex-end; }
-        .btn-cancel-modal { padding: 9px 20px; border-radius: 8px; font-weight: 600; font-size: 14px; border: 1px solid #e2e8f0; background: white; color: #475569; cursor: pointer; }
-        .btn-confirm-delete { padding: 9px 20px; border-radius: 8px; font-weight: 600; font-size: 14px; background: #ef4444; color: white; border: none; cursor: pointer; }
-        .btn-confirm-delete:hover { background: #dc2626; }
+
+        @keyframes popIn {
+            from {
+                transform: scale(0.9);
+                opacity: 0;
+            }
+
+            to {
+                transform: scale(1);
+                opacity: 1;
+            }
+        }
+
+        .modal-icon {
+            font-size: 40px;
+            color: #ef4444;
+            margin-bottom: 16px;
+        }
+
+        .modal-title {
+            font-size: 18px;
+            font-weight: 700;
+            color: #0f172a;
+            margin-bottom: 8px;
+        }
+
+        .modal-body {
+            font-size: 14px;
+            color: #64748b;
+            margin-bottom: 24px;
+            line-height: 1.6;
+        }
+
+        .modal-actions {
+            display: flex;
+            gap: 12px;
+            justify-content: flex-end;
+        }
+
+        .btn-cancel-modal {
+            padding: 9px 20px;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 14px;
+            border: 1px solid #e2e8f0;
+            background: white;
+            color: #475569;
+            cursor: pointer;
+        }
+
+        .btn-confirm-delete {
+            padding: 9px 20px;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 14px;
+            background: #ef4444;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+
+        .btn-confirm-delete:hover {
+            background: #dc2626;
+        }
     </style>
 </head>
 
@@ -507,14 +569,14 @@
                         <table class="table">
                             <thead>
                                 <tr>
-                                    <th>REQ_ID</th>
+                                    <th>STT</th>
                                     <th>Position</th>
                                     <th>Department</th>
                                     <th>Quantity</th>
                                     <th>Type</th>
                                     <th>Status</th>
                                     <th>Created Date</th>
-                                    <th style="text-align: center;">Action</th>
+
                                 </tr>
                             </thead>
                             <tbody>
@@ -538,35 +600,11 @@
                                             class="badge badge-rejected">Rejected</span>
                                     </td>
                                     <td th:text="${#temporals.format(req.createdAt, 'dd/MM/yyyy')}">28/09/2026</td>
-                                    <td class="action-cell">
-                                        <div class="action-dropdown">
-                                            <button type="button" class="btn-dots"
-                                                onclick="toggleDropdown(this, event)">
-                                                ...
-                                            </button>
-                                            <div class="dropdown-menu">
-                                                <!-- 1. View -->
-                                                <a th:href="@{/requisitions/{id}(id=${req.requisitionId})}"
-                                                    class="dropdown-item item-view">
-                                                    <i class="fa-regular fa-eye"></i> View
-                                                </a>
-                                                <!-- 2. Update -->
-                                                <a th:href="@{/requisitions/edit/{id}(id=${req.requisitionId})}"
-                                                    class="dropdown-item item-update">
-                                                    <i class="fa-regular fa-pen-to-square"></i> Update
-                                                </a>
-                                                <!-- 3. Delete -->
-                                                <button type="button" class="dropdown-item item-delete"
-                                                    th:onclick="|openDeleteModal(${req.requisitionId}, '[[${req.title}]]')|">
-                                                    <i class="fa-regular fa-trash-can"></i> Delete
-                                                </button>
-                                            </div>
-                                        </div>
-                                    </td>
+
                                 </tr>
 
                                 <tr th:if="${#lists.isEmpty(requisitions)}">
-                                    <td colspan="8"
+                                    <td colspan="7"
                                         style="text-align: center; color: var(--text-muted); padding: 36px;">
                                         No job requisitions found in the system.
                                     </td>
@@ -612,19 +650,26 @@
 
     <script>
         function toggleDropdown(btn, event) {
-            event.stopPropagation();
-            const currentMenu = btn.nextElementSibling;
-            const isOpen = currentMenu.classList.contains('show');
+            if (event) {
+                event.stopPropagation();
+            }
+            // Use parentNode to find the dropdown menu reliably
+            var currentMenu = btn.parentNode.querySelector('.dropdown-menu');
+            if (!currentMenu) return;
+
+            var isOpen = currentMenu.classList.contains('show');
             closeAllDropdowns();
+
             if (!isOpen) {
                 currentMenu.classList.add('show');
             }
         }
 
         function closeAllDropdowns() {
-            document.querySelectorAll('.dropdown-menu.show').forEach(menu => {
-                menu.classList.remove('show');
-            });
+            var menus = document.querySelectorAll('.dropdown-menu.show');
+            for (var i = 0; i < menus.length; i++) {
+                menus[i].classList.remove('show');
+            }
         }
 
         // Đóng dropdown khi click ra ngoài màn hình
@@ -678,7 +723,7 @@
             form.action = '/requisitions/delete/' + pendingDeleteId;
             form.submit();
         }
-        document.getElementById('deleteModal').addEventListener('click', function(e) {
+        document.getElementById('deleteModal').addEventListener('click', function (e) {
             if (e.target === this) closeDeleteModal();
         });
     </script>
