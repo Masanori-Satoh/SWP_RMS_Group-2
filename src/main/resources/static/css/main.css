@@ -1,3 +1,5 @@
+@import url("./app-layout.css");
+
 /* =============================================================================
    main.css - Stylesheet chính toàn bộ project
    SWP_RMS_Group-2 | Recruitment Management System
@@ -100,8 +102,6 @@ body {
     --transition-fast:   150ms ease;
     --transition-normal: 250ms ease;
 
-    /* --- Sidebar width --- */
-    --sidebar-width: 260px;
 }
 
 /* ======================== 3. TYPOGRAPHY ======================== */
@@ -120,48 +120,6 @@ a {
 a:hover { color: var(--color-primary-hover); }
 
 /* ======================== 4. LAYOUT ======================== */
-.page-wrapper {
-    display: flex;
-    min-height: 100vh;
-}
-
-.sidebar {
-    width: var(--sidebar-width);
-    background: var(--color-bg-sidebar);
-    position: fixed;
-    top: 0; left: 0; bottom: 0;
-    overflow-y: auto;
-    z-index: 100;
-    transition: transform var(--transition-normal);
-}
-
-.main-content {
-    margin-left: var(--sidebar-width);
-    flex: 1;
-    min-height: 100vh;
-    display: flex;
-    flex-direction: column;
-}
-
-.topbar {
-    height: 64px;
-    background: var(--color-bg-card);
-    border-bottom: 1px solid var(--color-border);
-    padding: 0 var(--space-6);
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    position: sticky;
-    top: 0;
-    z-index: 90;
-    box-shadow: var(--shadow-sm);
-}
-
-.page-content {
-    padding: var(--space-8);
-    flex: 1;
-}
-
 .container { max-width: 1200px; margin: 0 auto; }
 
 /* ======================== 5. COMPONENTS ======================== */
@@ -385,19 +343,3 @@ a:hover { color: var(--color-primary-hover); }
 
 .fw-bold  { font-weight: 700; }
 .fw-semi  { font-weight: 600; }
-
-/* ======================== RESPONSIVE ======================== */
-@media (max-width: 768px) {
-    .sidebar {
-        transform: translateX(-100%);
-    }
-    .sidebar.open {
-        transform: translateX(0);
-    }
-    .main-content {
-        margin-left: 0;
-    }
-    .page-content {
-        padding: var(--space-4);
-    }
-}

@@ -1,0 +1,526 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Requisition Detail - RMS</title>
+    <!-- Google Fonts: Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <link rel="stylesheet" th:href="@{/css/app-layout.css}">
+
+    <style>
+        :root {
+            --primary: #4f46e5;
+            --primary-hover: #4338ca;
+            --text-dark: #0f172a;
+            --text-secondary: #64748b;
+            --text-muted: #94a3b8;
+            --border: #f1f5f9;
+            --bg-page: #f8fafc;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+            background-color: var(--bg-page);
+            color: var(--text-dark);
+            min-height: 100vh;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        .page-content { max-width: 1200px; }
+
+        .page-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+        }
+
+        .page-title {
+            font-size: 24px;
+            font-weight: 700;
+            color: #0f172a;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 12px;
+        }
+
+        .btn-back {
+            background: white;
+            border: 1px solid #e2e8f0;
+            padding: 8px 16px;
+            border-radius: 8px;
+            color: #334155;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 13px;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            transition: 0.15s;
+        }
+
+        .btn-back:hover {
+            background: #f8fafc;
+            color: #0f172a;
+        }
+
+        .btn-edit {
+            background: var(--primary);
+            color: white;
+            padding: 8px 16px;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 13px;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            transition: 0.15s;
+        }
+
+        .btn-delete {
+            background: #ef4444;
+            color: white;
+            padding: 8px 16px;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 13px;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            transition: 0.15s;
+            border: none;
+            cursor: pointer;
+        }
+
+        .btn-delete:hover {
+            background: #dc2626;
+        }
+
+        /* Delete Confirm Modal */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.45);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-overlay.active {
+            display: flex;
+        }
+
+        .modal-box {
+            background: white;
+            border-radius: 16px;
+            padding: 32px;
+            width: 420px;
+            max-width: 90vw;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
+            animation: popIn 0.2s ease;
+        }
+
+        @keyframes popIn {
+            from {
+                transform: scale(0.9);
+                opacity: 0;
+            }
+
+            to {
+                transform: scale(1);
+                opacity: 1;
+            }
+        }
+
+        .modal-icon {
+            font-size: 40px;
+            color: #ef4444;
+            margin-bottom: 16px;
+        }
+
+        .modal-title {
+            font-size: 18px;
+            font-weight: 700;
+            color: #0f172a;
+            margin-bottom: 8px;
+        }
+
+        .modal-body {
+            font-size: 14px;
+            color: #64748b;
+            margin-bottom: 24px;
+            line-height: 1.6;
+        }
+
+        .modal-actions {
+            display: flex;
+            gap: 12px;
+            justify-content: flex-end;
+        }
+
+        .btn-cancel-modal {
+            padding: 9px 20px;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 14px;
+            border: 1px solid #e2e8f0;
+            background: white;
+            color: #475569;
+            cursor: pointer;
+        }
+
+        .btn-confirm-delete {
+            padding: 9px 20px;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 14px;
+            background: #ef4444;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+
+        .btn-confirm-delete:hover {
+            background: #dc2626;
+        }
+
+        .btn-edit:hover {
+            background: var(--primary-hover);
+        }
+
+        .grid-2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 24px;
+            margin-bottom: 24px;
+        }
+
+        .card {
+            background: white;
+            border-radius: 14px;
+            padding: 24px;
+            border: 1px solid #f1f5f9;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
+            margin-bottom: 24px;
+        }
+
+        .card-title {
+            font-size: 16px;
+            font-weight: 700;
+            margin: 0 0 18px 0;
+            color: #0f172a;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .info-list {
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+        }
+
+        .info-row {
+            display: flex;
+            font-size: 14px;
+        }
+
+        .info-label {
+            width: 170px;
+            color: #64748b;
+        }
+
+        .info-value {
+            flex: 1;
+            font-weight: 500;
+            color: #0f172a;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 13px;
+        }
+
+        th {
+            background: #f8fafc;
+            padding: 12px 14px;
+            text-align: left;
+            font-weight: 600;
+            color: #64748b;
+            border-bottom: 1px solid #f1f5f9;
+        }
+
+        td {
+            padding: 12px 14px;
+            border-bottom: 1px solid #f8fafc;
+            color: #334155;
+        }
+
+        .rich-text {
+            font-size: 14px;
+            line-height: 1.6;
+            color: #334155;
+            white-space: pre-wrap;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="page-wrapper">
+        <!-- SIDEBAR -->
+        <aside th:replace="~{fragments/sidebar :: sidebar(activeMenu='requisitions')}"></aside>
+
+        <!-- MAIN CONTENT -->
+        <div class="main-content">
+            <!-- TOPBAR -->
+            <div class="topbar">
+                <div class="topbar-title">Recruitment Management System</div>
+                <div class="topbar-user">
+                    Welcome, <strong>Admin</strong>
+                </div>
+            </div>
+
+            <!-- PAGE CONTENT -->
+            <div class="page-content">
+                <div class="page-header">
+                    <h1 class="page-title">Recruitment Requisition Detail</h1>
+                    <div class="header-actions">
+                        <a th:href="@{/requisitions}" class="btn-back"><i class="fa-solid fa-arrow-left"></i> Back to
+                            List</a>
+                        <a th:href="@{/requisitions/edit/{id}(id=${req.requisitionId})}" class="btn-edit"><i
+                                class="fa-regular fa-pen-to-square"></i> Update</a>
+                        <button type="button" class="btn-delete" onclick="openDeleteModal()">
+                            <i class="fa-solid fa-trash-can"></i> Delete
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Row 1 -->
+                <div class="grid-2">
+                    <!-- Basic Information -->
+                    <div class="card">
+                        <h2 class="card-title"><i class="fa-solid fa-circle-info text-primary"></i> Basic Information
+                        </h2>
+                        <div class="info-list">
+
+                            <div class="info-row">
+                                <div class="info-label">Position:</div>
+                                <div class="info-value" th:text="${req.title}">Data Analyst</div>
+                            </div>
+                            <div class="info-row">
+                                <div class="info-label">Department:</div>
+                                <div class="info-value" th:text="${req.departmentName}">Data</div>
+                            </div>
+                            <div class="info-row">
+                                <div class="info-label">Hiring Manager:</div>
+                                <div class="info-value" th:text="${req.hiringManagerName}">Nguyễn Văn An</div>
+                            </div>
+                            <div class="info-row">
+                                <div class="info-label">Number of Positions:</div>
+                                <div class="info-value" th:text="${req.numberOfPositions}">2</div>
+                            </div>
+                            <div class="info-row">
+                                <div class="info-label">Employment Type:</div>
+                                <div class="info-value" th:text="${req.employmentType}">Full-time</div>
+                            </div>
+                            <div class="info-row">
+                                <div class="info-label">Salary Range (VND):</div>
+                                <div class="info-value">
+                                    <span th:if="${req.minSalary != null and req.maxSalary != null}"
+                                        th:text="${#numbers.formatDecimal(req.minSalary, 0, 'COMMA', 0, 'POINT') + ' - ' + #numbers.formatDecimal(req.maxSalary, 0, 'COMMA', 0, 'POINT')}">15,000,000
+                                        - 25,000,000</span>
+                                    <span th:if="${req.minSalary != null and req.maxSalary == null}"
+                                        th:text="${'From ' + #numbers.formatDecimal(req.minSalary, 0, 'COMMA', 0, 'POINT')}">From
+                                        15,000,000</span>
+                                    <span th:if="${req.minSalary == null and req.maxSalary != null}"
+                                        th:text="${'Up to ' + #numbers.formatDecimal(req.maxSalary, 0, 'COMMA', 0, 'POINT')}">Up
+                                        to 25,000,000</span>
+                                    <span th:if="${req.minSalary == null and req.maxSalary == null}">Negotiable</span>
+                                </div>
+                            </div>
+                            <div class="info-row">
+                                <div class="info-label">Reason for Hiring:</div>
+                                <div class="info-value" th:text="${req.reasonForHiring}">Replacement</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Activity Log -->
+                    <div class="card">
+                        <h2 class="card-title"><i class="fa-solid fa-list-check text-primary"></i> Activity Log</h2>
+                        <div class="info-list"
+                            style="margin-bottom: 20px; padding-bottom: 16px; border-bottom: 1px solid #f1f5f9;">
+                            <div class="info-row">
+                                <div class="info-label">Current Status:</div>
+                                <div class="info-value">
+                                    <span style="font-weight: 700; color: #4f46e5;"
+                                        th:text="${req.approvalStatus}">Pending</span>
+                                </div>
+                            </div>
+                            <div class="info-row">
+                                <div class="info-label">Created Date:</div>
+                                <div class="info-value"
+                                    th:text="${#temporals.format(req.createdAt, 'dd/MM/yyyy HH:mm')}">28/09/2026 14:00
+                                </div>
+                            </div>
+                        </div>
+                        <h3
+                            style="font-size: 12px; font-weight: 600; color: #94a3b8; margin-bottom: 12px; text-transform: uppercase; letter-spacing: 0.5px;">
+                            Change History</h3>
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th style="width: 16%;">Action</th>
+                                    <th style="width: 22%;">Performed By</th>
+                                    <th>Description</th>
+                                    <th style="width: 22%;">Date &amp; Time</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr th:each="log : ${req.activityLog}">
+                                    <td>
+                                        <span th:if="${log.action == 'CREATE'}"
+                                            style="background:#dcfce7;color:#15803d;font-size:11px;font-weight:700;padding:3px 9px;border-radius:12px;">+
+                                            CREATE</span>
+                                        <span th:if="${log.action == 'UPDATE'}"
+                                            style="background:#dbeafe;color:#1d4ed8;font-size:11px;font-weight:700;padding:3px 9px;border-radius:12px;">~
+                                            UPDATE</span>
+                                        <span th:if="${log.action == 'DELETE'}"
+                                            style="background:#fee2e2;color:#b91c1c;font-size:11px;font-weight:700;padding:3px 9px;border-radius:12px;">x
+                                            DELETE</span>
+                                        <span
+                                            th:if="${log.action != 'CREATE' and log.action != 'UPDATE' and log.action != 'DELETE'}"
+                                            style="background:#f1f5f9;color:#475569;font-size:11px;font-weight:700;padding:3px 9px;border-radius:12px;"
+                                            th:text="${log.action}">ACTION</span>
+                                    </td>
+                                    <td style="font-weight: 500;" th:text="${log.performedBy}">Admin</td>
+                                    <td style="color: #475569;" th:text="${log.description}">-</td>
+                                    <td style="color: #94a3b8; font-size: 12px;"
+                                        th:text="${#temporals.format(log.timestamp, 'dd/MM/yyyy HH:mm')}">28/09/2026
+                                    </td>
+                                </tr>
+                                <tr th:if="${#lists.isEmpty(req.activityLog)}">
+                                    <td colspan="4" style="text-align: center; color: #94a3b8; padding: 20px;">
+                                        <i class="fa-regular fa-clock" style="margin-right: 6px;"></i>No activity
+                                        recorded yet.
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Row 2 -->
+                <div class="grid-2">
+                    <div class="card">
+                        <h2 class="card-title"><i class="fa-solid fa-file-lines text-primary"></i> Job Description</h2>
+                        <div class="rich-text" th:text="${req.jobDescription}">
+                            Detailed job description goes here...
+                        </div>
+                    </div>
+                    <div class="card">
+                        <h2 class="card-title"><i class="fa-solid fa-user-check text-primary"></i> Requirement Details
+                        </h2>
+                        <div class="rich-text" th:text="${req.requirementDetails}">
+                            Requirements go here...
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Row 3: Screening Criteria -->
+                <div class="card">
+                    <h2 class="card-title"><i class="fa-solid fa-clipboard-check text-primary"></i> Screening Criteria
+                    </h2>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th style="width: 5%;">#</th>
+                                <th style="width: 30%;">Criteria</th>
+                                <th style="width: 20%;">Criteria Type</th>
+                                <th style="width: 25%;">Required Value</th>
+                                <th style="width: 10%;">Weight(%)</th>
+                                <th style="width: 10%;">Mandatory</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr th:each="criteria, iterStat : ${req.screeningCriteria}">
+                                <td th:text="${iterStat.count}">1</td>
+                                <td th:text="${criteria.criteriaName}">SQL Proficiency</td>
+                                <td th:text="${criteria.criteriaType}">Skill</td>
+                                <td th:text="${criteria.requiredValue}">2+ years</td>
+                                <td th:text="${criteria.weight}">30</td>
+                                <td th:text="${criteria.isMandatory != null && criteria.isMandatory ? 'Yes' : 'No'}">Yes
+                                </td>
+                            </tr>
+                            <tr th:if="${#lists.isEmpty(req.screeningCriteria)}">
+                                <td colspan="6" style="text-align: center; color: #94a3b8; padding: 16px;">
+                                    No screening criteria defined.
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- Delete Confirmation Modal -->
+    <div class="modal-overlay" id="deleteModal">
+        <div class="modal-box">
+            <div class="modal-icon"><i class="fa-solid fa-triangle-exclamation"></i></div>
+            <div class="modal-title">Delete Requisition</div>
+            <div class="modal-body">
+                Are you sure you want to permanently delete this requisition?<br>
+                <strong>This action cannot be undone.</strong> All related screening criteria and activity logs will
+                also be removed.
+            </div>
+            <div class="modal-actions">
+                <button class="btn-cancel-modal" onclick="closeDeleteModal()">Cancel</button>
+                <button class="btn-confirm-delete" onclick="submitDelete()">
+                    <i class="fa-solid fa-trash-can" style="margin-right:6px;"></i>Yes, Delete
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Hidden form for DELETE POST -->
+    <form id="deleteForm" th:action="@{/requisitions/delete/{id}(id=${req.requisitionId})}" method="post"
+        style="display:none;">
+    </form>
+
+    <script>
+        function openDeleteModal() {
+            document.getElementById('deleteModal').classList.add('active');
+        }
+        function closeDeleteModal() {
+            document.getElementById('deleteModal').classList.remove('active');
+        }
+        function submitDelete() {
+            document.getElementById('deleteForm').submit();
+        }
+        // Close on overlay click
+        document.getElementById('deleteModal').addEventListener('click', function (e) {
+            if (e.target === this) closeDeleteModal();
+        });
+    </script>
+</body>
+
+</html>
