@@ -1,7 +1,7 @@
 package com.group2.rms.controller;
 
-import com.group2.rms.controller.form.ForgotPasswordForm;
-import com.group2.rms.controller.form.ResetPasswordForm;
+import com.group2.rms.controller.form.ForgotPasswordRequest;
+import com.group2.rms.controller.form.ResetPasswordRequest;
 import com.group2.rms.service.AccountFieldException;
 import com.group2.rms.service.PasswordResetEmailSender;
 import com.group2.rms.service.PasswordResetService;
@@ -32,12 +32,12 @@ public class PasswordRecoveryController {
 
     @GetMapping("/forgot-password")
     public String forgotForm(Model model) {
-        model.addAttribute("form", new ForgotPasswordForm());
+        model.addAttribute("form", new ForgotPasswordRequest());
         return "auth/forgot-password";
     }
 
     @PostMapping("/forgot-password")
-    public String requestReset(@Valid @ModelAttribute("form") ForgotPasswordForm form,
+    public String requestReset(@Valid @ModelAttribute("form") ForgotPasswordRequest form,
                                BindingResult errors) {
         if (!emailSender.isConfigured() || !resetService.isConfigured()) {
             errors.reject("mail.unavailable", "Dịch vụ gửi email khôi phục chưa được cấu hình.");
@@ -59,7 +59,7 @@ public class PasswordRecoveryController {
     @GetMapping("/reset-password/{token}")
     public String resetForm(@PathVariable String token, Model model, HttpServletResponse response) {
         noStore(response);
-        model.addAttribute("form", new ResetPasswordForm());
+        model.addAttribute("form", new ResetPasswordRequest());
         model.addAttribute("token", token);
         model.addAttribute("validToken", resetService.isValid(token));
         return "auth/reset-password";
@@ -67,7 +67,7 @@ public class PasswordRecoveryController {
 
     @PostMapping("/reset-password/{token}")
     public String reset(@PathVariable String token,
-                        @Valid @ModelAttribute("form") ResetPasswordForm form,
+                        @Valid @ModelAttribute("form") ResetPasswordRequest form,
                         BindingResult errors, Model model, HttpServletResponse response) {
         noStore(response);
         if (form.getPassword() != null && form.getConfirmPassword() != null

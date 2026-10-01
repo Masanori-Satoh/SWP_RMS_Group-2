@@ -4,13 +4,14 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.group2.rms.dto.request.ScreeningCriteriaRequest;
 import org.springframework.stereotype.Service;
 
-import com.group2.rms.dto.request.RequisitionRequestDto;
-import com.group2.rms.dto.response.ActivityLogDto;
-import com.group2.rms.dto.response.ApprovalResponseDto;
-import com.group2.rms.dto.response.RequisitionResponseDto;
-import com.group2.rms.dto.response.ScreeningCriteriaDto;
+import com.group2.rms.dto.request.RequisitionRequest;
+import com.group2.rms.dto.response.ActivityLogResponse;
+import com.group2.rms.dto.response.ApprovalResponse;
+import com.group2.rms.dto.response.RequisitionResponse;
+import com.group2.rms.dto.response.ScreeningCriteriaResponse;
 import com.group2.rms.entity.AuditLog;
 import com.group2.rms.entity.Department;
 import com.group2.rms.entity.JobRequisition;
@@ -79,21 +80,21 @@ public class RequisitionServiceImpl implements RequisitionService {
     }
 
     @Override
-    public RequisitionResponseDto getById(Integer id) {
+    public RequisitionResponse getById(Integer id) {
         JobRequisition req = requisitionRepo.findById(id)
                 .orElseThrow(() -> new RuntimeException("Not find Requisition with ID: " + id));
         return convertToDto(req);
     }
 
     @Override
-    public RequisitionRequestDto getRequestDtoById(Integer id) {
+    public RequisitionRequest getRequestDtoById(Integer id) {
         JobRequisition req = requisitionRepo.findById(id)
                 .orElseThrow(() -> new RuntimeException("Requisition not found with id: " + id));
 
-        java.util.List<com.group2.rms.dto.request.ScreeningCriteriaRequestDto> criteriaDtoList = new java.util.ArrayList<>();
+        java.util.List<ScreeningCriteriaRequest> criteriaDtoList = new java.util.ArrayList<>();
         if (req.getScreeningCriteria() != null) {
             criteriaDtoList = req.getScreeningCriteria().stream().map(c -> {
-                com.group2.rms.dto.request.ScreeningCriteriaRequestDto cDto = new com.group2.rms.dto.request.ScreeningCriteriaRequestDto();
+                ScreeningCriteriaRequest cDto = new ScreeningCriteriaRequest();
                 cDto.setCriteriaId(c.getCriteriaId());
                 cDto.setCriteriaName(c.getCriteriaName());
                 cDto.setCriteriaType(c.getCriteriaType());
@@ -105,13 +106,13 @@ public class RequisitionServiceImpl implements RequisitionService {
         }
 
         if (criteriaDtoList.isEmpty()) {
-            com.group2.rms.dto.request.ScreeningCriteriaRequestDto emptyCrit = new com.group2.rms.dto.request.ScreeningCriteriaRequestDto();
+            ScreeningCriteriaRequest emptyCrit = new ScreeningCriteriaRequest();
             emptyCrit.setWeight(new java.math.BigDecimal(0));
             emptyCrit.setIsMandatory(false);
             criteriaDtoList.add(emptyCrit);
         }
 
-        RequisitionRequestDto dto = new RequisitionRequestDto();
+        RequisitionRequest dto = new RequisitionRequest();
         dto.setTitle(req.getTitle());
         dto.setDepartmentId(req.getDepartment() != null ? req.getDepartment().getDepartmentId() : null);
         dto.setHiringManagerId(req.getHiringManager() != null ? req.getHiringManager().getUserId() : null);
@@ -128,7 +129,7 @@ public class RequisitionServiceImpl implements RequisitionService {
     }
 
     @Override
-    public Page<RequisitionResponseDto> getAllRequisitions(int page, int size) {
+    public Page<RequisitionResponse> getAllRequisitions(int page, int size) {
         int pageIndex = Math.max(0, page - 1);
         int pageSize = size > 0 ? size : 10;
         Pageable pageable = PageRequest.of(pageIndex, pageSize);
@@ -137,19 +138,19 @@ public class RequisitionServiceImpl implements RequisitionService {
     }
 
     @Override
-    public List<RequisitionResponseDto> getByStatus(String status) {
+    public List<RequisitionResponse> getByStatus(String status) {
         List<JobRequisition> list = requisitionRepo.findByApprovalStatusOrderByCreatedAtDesc(status);
         return list.stream().map(this::convertToDto).toList();
     }
 
     @Override
-    public List<RequisitionResponseDto> getByHiringManager(Integer userId) {
+    public List<RequisitionResponse> getByHiringManager(Integer userId) {
         List<JobRequisition> list = requisitionRepo.findByHiringManager_UserIdOrderByCreatedAtDesc(userId);
         return list.stream().map(this::convertToDto).toList();
     }
 
     @Override
-    public void createRequisition(RequisitionRequestDto dto, Integer hiringManagerId) {
+    public void createRequisition(RequisitionRequest dto, Integer hiringManagerId) {
         JobRequisition req = new JobRequisition();
 
         req.setTitle(dto.getTitle());
@@ -207,7 +208,7 @@ public class RequisitionServiceImpl implements RequisitionService {
     }
 
     @Override
-    public void updateRequisition(Integer id, RequisitionRequestDto dto) {
+    public void updateRequisition(Integer id, RequisitionRequest dto) {
         JobRequisition req = requisitionRepo.findById(id)
                 .orElseThrow(() -> new RuntimeException("Requisition not found with id: " + id));
 
@@ -311,11 +312,11 @@ public class RequisitionServiceImpl implements RequisitionService {
     public void rejectRequisition(Integer id, Integer directorId, String comment) {
     }
 
-    private RequisitionResponseDto convertToDto(JobRequisition req) {
-        java.util.List<ScreeningCriteriaDto> criteriaDtoList = null;
+    private RequisitionResponse convertToDto(JobRequisition req) {
+        java.util.List<ScreeningCriteriaResponse> criteriaDtoList = null;
         if (req.getScreeningCriteria() != null) {
             criteriaDtoList = req.getScreeningCriteria().stream().map(c -> {
-                ScreeningCriteriaDto cDto = new ScreeningCriteriaDto();
+                ScreeningCriteriaResponse cDto = new ScreeningCriteriaResponse();
                 cDto.setCriteriaId(c.getCriteriaId());
                 cDto.setCriteriaName(c.getCriteriaName());
                 cDto.setCriteriaType(c.getCriteriaType());
@@ -327,11 +328,11 @@ public class RequisitionServiceImpl implements RequisitionService {
         }
 
         var approvalsList = approvalRepo.findByRequisition_RequisitionIdOrderByApprovalDateDesc(req.getRequisitionId());
-        java.util.List<ApprovalResponseDto> approvalDtoList = new java.util.ArrayList<>();
+        java.util.List<ApprovalResponse> approvalDtoList = new java.util.ArrayList<>();
         if (approvalsList != null) {
             int step = 1;
             for (var a : approvalsList) {
-                approvalDtoList.add(ApprovalResponseDto.builder()
+                approvalDtoList.add(ApprovalResponse.builder()
                         .stepNumber(step++)
                         .approverName(a.getDirector() != null ? a.getDirector().getFullName() : "Approver")
                         .status(a.getStatus())
@@ -342,12 +343,12 @@ public class RequisitionServiceImpl implements RequisitionService {
         }
 
         // Load activity log
-        List<ActivityLogDto> activityLogList = new ArrayList<>();
+        List<ActivityLogResponse> activityLogList = new ArrayList<>();
         var auditLogs = auditLogRepo.findByEntityNameAndEntityIdOrderByTimestampDesc(
                 "JobRequisition", String.valueOf(req.getRequisitionId()));
         if (auditLogs != null) {
             for (var log : auditLogs) {
-                activityLogList.add(ActivityLogDto.builder()
+                activityLogList.add(ActivityLogResponse.builder()
                         .auditLogId(log.getAuditLogId())
                         .action(log.getAction())
                         .performedBy(log.getUser() != null ? log.getUser().getFullName() : "System")
@@ -357,7 +358,7 @@ public class RequisitionServiceImpl implements RequisitionService {
             }
         }
 
-        return RequisitionResponseDto.builder()
+        return RequisitionResponse.builder()
                 .requisitionId(req.getRequisitionId())
                 .title(req.getTitle())
                 .departmentName(req.getDepartment() != null ? req.getDepartment().getDepartmentName() : "N/A")

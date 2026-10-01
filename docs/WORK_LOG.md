@@ -94,9 +94,9 @@ DB local `RitirementManagement2` có **0 dòng** trước khi xóa; đã xóa ri
 đó. Truy vấn metadata sau cùng: **20 bảng, `PasswordResetToken` = 0**. Không
 chạy script xóa/tạo DB và không đụng dữ liệu các bảng khác.
 
-**File code:** Thêm `RegistrationController`, `RegisterAccountForm`,
+**File code:** Thêm `RegistrationController`, `RegisterAccountRequest`,
 `CandidateRegistrationService`, template Register; thêm
-`PasswordRecoveryController`, `ForgotPasswordForm`, `ResetPasswordForm`,
+`PasswordRecoveryController`, `ForgotPasswordRequest`, `ResetPasswordRequest`,
 `PasswordResetService`, `PasswordResetEmailSender`, template Forgot/Reset; thêm
 CSS auth chung và liên kết Register/Forgot trên Login. `RoleRepository` có
 lookup Candidate; `UserRepository` có truy vấn khóa row khi reset. Xóa Entity

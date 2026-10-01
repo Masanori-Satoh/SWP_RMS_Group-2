@@ -25,18 +25,18 @@ class RequisitionReviewProbeTests {
     @Autowired JobPostingRepository postings;
     @Autowired EntityManager em;
 
-    private RequisitionRequestDto dto() {
-        return RequisitionRequestDto.builder().action("submit")
+    private RequisitionRequest dto() {
+        return RequisitionRequest.builder().action("submit")
             .title("review-probe-" + UUID.randomUUID()).departmentId(departments.findAll().getFirst().getDepartmentId())
             .hiringManagerId(users.findAll().getFirst().getUserId()).numberOfPositions(1).employmentType("Full-time")
             .reasonForHiring("Review test").jobDescription("Description").requirementDetails("Requirements")
             .screeningCriteria(new ArrayList<>()).build();
     }
-    private ScreeningCriteriaRequestDto criterion(String name, String type, String weight) {
-        return ScreeningCriteriaRequestDto.builder().criteriaName(name).criteriaType(type).requiredValue("Review")
+    private ScreeningCriteriaRequest criterion(String name, String type, String weight) {
+        return ScreeningCriteriaRequest.builder().criteriaName(name).criteriaType(type).requiredValue("Review")
             .weight(new BigDecimal(weight)).isMandatory(false).build();
     }
-    private JobRequisition create(RequisitionRequestDto dto) {
+    private JobRequisition create(RequisitionRequest dto) {
         service.createRequisition(dto, dto.getHiringManagerId());
         em.flush(); em.clear();
         return requisitions.findAll().stream().filter(r -> dto.getTitle().equals(r.getTitle())).findFirst().orElseThrow();

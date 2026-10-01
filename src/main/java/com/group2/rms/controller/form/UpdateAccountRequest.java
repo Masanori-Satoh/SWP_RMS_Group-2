@@ -10,7 +10,7 @@ import lombok.Setter;
 
 @Getter
 @Setter
-public class UpdateAccountForm {
+public class UpdateAccountRequest {
 
     @NotBlank(message = "Vui lòng nhập họ và tên.")
     @Size(max = 100, message = "Họ và tên tối đa 100 ký tự.")

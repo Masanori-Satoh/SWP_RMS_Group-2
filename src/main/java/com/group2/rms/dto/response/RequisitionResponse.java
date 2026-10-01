@@ -13,7 +13,7 @@ import lombok.Setter;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class RequisitionResponseDto {
+public class RequisitionResponse {
     private Integer requisitionId;
     private String title;
     private String departmentName;
@@ -30,7 +30,7 @@ public class RequisitionResponseDto {
     private String jobDescription;
     private String requirementDetails;
 
-    private java.util.List<ScreeningCriteriaDto> screeningCriteria;
-    private java.util.List<ApprovalResponseDto> approvals;
-    private java.util.List<ActivityLogDto> activityLog;
+    private java.util.List<ScreeningCriteriaResponse> screeningCriteria;
+    private java.util.List<ApprovalResponse> approvals;
+    private java.util.List<ActivityLogResponse> activityLog;
 }

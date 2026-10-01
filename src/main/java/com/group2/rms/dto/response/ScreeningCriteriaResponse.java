@@ -10,7 +10,7 @@ import lombok.NoArgsConstructor;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class ScreeningCriteriaDto {
+public class ScreeningCriteriaResponse {
     private Integer criteriaId;
     private String criteriaName;
     private String criteriaType;

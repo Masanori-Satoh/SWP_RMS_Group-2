@@ -10,7 +10,7 @@ import lombok.NoArgsConstructor;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class ActivityLogDto {
+public class ActivityLogResponse {
     private Long auditLogId;
     private String action;       // CREATE, UPDATE, DELETE
     private String performedBy;  // Tên người thực hiện

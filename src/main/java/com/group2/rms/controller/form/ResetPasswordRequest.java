@@ -7,7 +7,8 @@ import lombok.Setter;
 
 @Getter
 @Setter
-public class ResetPasswordForm {
+public class
+ResetPasswordRequest {
     @NotBlank(message = "Vui lòng nhập mật khẩu mới.")
     @Size(min = 8, max = 32, message = "Mật khẩu phải từ 8 đến 32 ký tự.")
     private String password;

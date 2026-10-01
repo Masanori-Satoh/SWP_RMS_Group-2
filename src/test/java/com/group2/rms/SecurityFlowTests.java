@@ -4,8 +4,8 @@ import com.group2.rms.config.SecurityConfig;
 import com.group2.rms.controller.AuthController;
 import com.group2.rms.controller.AccountController;
 import com.group2.rms.controller.ApiMonitoringController;
-import com.group2.rms.controller.DashboardAccessController;
-import com.group2.rms.controller.InternalMonitoringHealthController;
+import com.group2.rms.controller.DashboardController;
+import com.group2.rms.controller.HealthController;
 import com.group2.rms.controller.PasswordRecoveryController;
 import com.group2.rms.controller.RegistrationController;
 import com.group2.rms.entity.Role;
@@ -54,8 +54,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.not;
 
-@WebMvcTest(controllers = {AuthController.class, DashboardAccessController.class, AccountController.class,
-        ApiMonitoringController.class, InternalMonitoringHealthController.class,
+@WebMvcTest(controllers = {AuthController.class, DashboardController.class, AccountController.class,
+        ApiMonitoringController.class, HealthController.class,
         RegistrationController.class, PasswordRecoveryController.class})
 @Import({SecurityConfig.class, DatabaseUserDetailsService.class})
 class SecurityFlowTests {

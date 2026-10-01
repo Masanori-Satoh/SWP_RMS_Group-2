@@ -11,7 +11,7 @@ Tài liệu này ghi nhận lại toàn bộ những chỉnh sửa, khắc phụ
 
 - **Sửa lỗi Mapping trong Controller:**
   - Khắc phục lỗi Server báo lỗi 500 (Ambiguous handler methods mapped for `'/dashboard'`). 
-  - Lỗi xuất phát từ việc `AuthController` và `DashboardAccessController` cùng map với endpoint `/dashboard`. Đã fix bằng cách gỡ map `/dashboard` ở `AuthController`.
+  - Lỗi xuất phát từ việc `AuthController` và `DashboardController` cùng map với endpoint `/dashboard`. Đã fix bằng cách gỡ map `/dashboard` ở `AuthController`.
 
 - **Sửa cấu hình Security (Dependency):**
   - Bổ sung thư viện và import cấu hình bị thiếu như `PasswordEncoder` và `BCryptPasswordEncoder` ở file `SecurityConfig`. Gỡ bỏ bean trùng lặp gây lỗi.
@@ -57,14 +57,14 @@ Dưới đây là tài liệu mô tả luồng hoạt động (Data Flow / Contr
   - Gọi tới `requisitionService.getAllRequisitions(validPage, size)`.
 - **Service (`RequisitionServiceImpl.java`):**
   - Chuyển `page` về index (0-based) và gọi `JobRequisitionRepository.findAllByOrderByCreatedAtDesc`.
-  - Ánh xạ (Map) danh sách entity `JobRequisition` sang `RequisitionResponseDto`.
+  - Ánh xạ (Map) danh sách entity `JobRequisition` sang `RequisitionResponse`.
 - **View (`list.html`):** Thymeleaf render bảng danh sách dựa trên `requisitions` nhận được từ Controller.
 
 ### 2. Luồng tạo mới (Create)
 - **GET Request (`/requisitions/create`):**
-  - Controller tạo sẵn một DTO rỗng (`RequisitionRequestDto`), đính kèm mặc định 1 `ScreeningCriteria` rỗng để giao diện hiển thị form nhập liệu. Trả về `form.html`.
+  - Controller tạo sẵn một DTO rỗng (`RequisitionRequest`), đính kèm mặc định 1 `ScreeningCriteria` rỗng để giao diện hiển thị form nhập liệu. Trả về `form.html`.
 - **POST Request (`/requisitions/create`):**
-  - Người dùng submit form, dữ liệu được binding vào `RequisitionRequestDto`.
+  - Người dùng submit form, dữ liệu được binding vào `RequisitionRequest`.
   - Controller gọi `requisitionService.createRequisition(dto, hiringManagerId)`.
   - **Service:**
     - Khởi tạo `JobRequisition` entity.
@@ -99,7 +99,7 @@ Dưới đây là tài liệu mô tả luồng hoạt động (Data Flow / Contr
 - **Controller:** `GET /requisitions/{id}`.
 - **Service:** 
   - Lấy Entity theo ID.
-  - Map toàn bộ thông tin chi tiết sang `RequisitionResponseDto`.
+  - Map toàn bộ thông tin chi tiết sang `RequisitionResponse`.
   - Load danh sách phê duyệt từ `RequisitionApprovalRepository`.
   - Load lịch sử log từ `AuditLogRepository` theo `entityId` và `entityName = "JobRequisition"`.
 - **View (`detail.html`):** Render giao diện chi tiết, hiển thị thông tin chung, tiêu chí sàng lọc (criteria) và lịch sử hoạt động (Activity Log).

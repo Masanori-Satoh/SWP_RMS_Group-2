@@ -12,11 +12,11 @@ import java.util.Map;
 
 /** Fixed admin-only endpoint used by the internal HTTP probe. */
 @RestController
-public class InternalMonitoringHealthController {
+public class HealthController {
 
     private final JdbcTemplate jdbcTemplate;
 
-    public InternalMonitoringHealthController(JdbcTemplate jdbcTemplate) {
+    public HealthController(JdbcTemplate jdbcTemplate) {
         this.jdbcTemplate = jdbcTemplate;
     }
 

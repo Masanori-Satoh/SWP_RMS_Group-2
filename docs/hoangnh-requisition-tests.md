@@ -23,13 +23,13 @@ Tài liệu này định nghĩa các kịch bản kiểm thử (Test Cases) cho 
 
 - **Test: Tạo mới Requisition (Save as Draft)**
   - **Mục tiêu:** Kiểm tra logic lưu và gắn trạng thái "Draft".
-  - **Dữ liệu đầu vào:** `RequisitionRequestDto` với thuộc tính `action = "draft"`.
+  - **Dữ liệu đầu vào:** `RequisitionRequest` với thuộc tính `action = "draft"`.
   - **Dữ liệu giả lập:** Mock repository để bắt argument `JobRequisition` lưu vào.
   - **Kết quả mong đợi:** Thực thể `JobRequisition` được gọi hàm `save()` với trạng thái `"Draft"`. Activity Log được ghi là "saved as Draft".
 
 - **Test: Tạo mới Requisition (Submit)**
   - **Mục tiêu:** Kiểm tra logic lưu và gắn trạng thái "Pending_Director".
-  - **Dữ liệu đầu vào:** `RequisitionRequestDto` với thuộc tính `action = "submit"`.
+  - **Dữ liệu đầu vào:** `RequisitionRequest` với thuộc tính `action = "submit"`.
   - **Kết quả mong đợi:** Thực thể được lưu với trạng thái `"Pending_Director"`. Activity Log được ghi.
 
 - **Test: Cập nhật Requisition**

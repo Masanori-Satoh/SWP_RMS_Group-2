@@ -7,7 +7,7 @@ import lombok.*;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class ApprovalResponseDto {
+public class ApprovalResponse {
     private Integer stepNumber;
     private String approverName;
     private String status;

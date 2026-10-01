@@ -1,6 +1,6 @@
 package com.group2.rms.controller;
 
-import com.group2.rms.controller.form.RegisterAccountForm;
+import com.group2.rms.controller.form.RegisterAccountRequest;
 import com.group2.rms.service.AccountFieldException;
 import com.group2.rms.service.CandidateRegistrationService;
 import jakarta.validation.Valid;
@@ -25,12 +25,12 @@ public class RegistrationController {
 
     @GetMapping
     public String form(Model model) {
-        model.addAttribute("form", new RegisterAccountForm());
+        model.addAttribute("form", new RegisterAccountRequest());
         return "auth/register";
     }
 
     @PostMapping
-    public String register(@Valid @ModelAttribute("form") RegisterAccountForm form,
+    public String register(@Valid @ModelAttribute("form") RegisterAccountRequest form,
                            BindingResult errors) {
         if (form.getPassword() != null && form.getConfirmPassword() != null
                 && !form.getPassword().equals(form.getConfirmPassword())) {

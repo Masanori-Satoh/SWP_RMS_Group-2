@@ -1,7 +1,7 @@
 package com.group2.rms;
 import com.group2.rms.config.SecurityConfig;
 import com.group2.rms.controller.RequisitionController;
-import com.group2.rms.dto.request.RequisitionRequestDto;
+import com.group2.rms.dto.request.RequisitionRequest;
 import com.group2.rms.entity.*;
 import com.group2.rms.repository.*;
 import com.group2.rms.service.RequisitionService;
@@ -20,7 +20,6 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.data.domain.Page;
 import java.util.*;
 import static org.mockito.Mockito.*;
-import static org.mockito.ArgumentMatchers.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
@@ -53,7 +52,7 @@ class RequisitionReviewWebProbeTests {
         mvc.perform(post("/requisitions/create").session(session).param(csrf.getParameterName(),csrf.getToken())
             .param("title","   ").param("action","submit"))
             .andExpect(status().is3xxRedirection());
-        verify(service).createRequisition(argThat((RequisitionRequestDto d) -> d.getTitle().isBlank() && d.getDepartmentId()==null),eq(1));
+        verify(service).createRequisition(argThat((RequisitionRequest d) -> d.getTitle().isBlank() && d.getDepartmentId()==null),eq(1));
         System.out.println("WEB PROBE submit: blank title and missing department forwarded without validation");
     }
 }

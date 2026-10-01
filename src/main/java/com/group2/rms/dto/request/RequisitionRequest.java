@@ -14,7 +14,7 @@ import lombok.NoArgsConstructor;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class RequisitionRequestDto {
+public class RequisitionRequest {
 
     private String action;
 
@@ -51,5 +51,5 @@ public class RequisitionRequestDto {
     @NotNull(message = "Hiring manager is required")
     private Integer hiringManagerId;
 
-    private java.util.List<ScreeningCriteriaRequestDto> screeningCriteria;
+    private java.util.List<ScreeningCriteriaRequest> screeningCriteria;
 }

@@ -8,7 +8,7 @@ import lombok.Setter;
 
 @Getter
 @Setter
-public class ForgotPasswordForm {
+public class ForgotPasswordRequest {
     @NotBlank(message = "Vui lòng nhập email.")
     @Email(message = "Email không đúng định dạng.")
     @Size(max = 150, message = "Email tối đa 150 ký tự.")

@@ -9,8 +9,8 @@ import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
-import com.group2.rms.dto.request.RequisitionRequestDto;
-import com.group2.rms.dto.request.ScreeningCriteriaRequestDto;
+import com.group2.rms.dto.request.RequisitionRequest;
+import com.group2.rms.dto.request.ScreeningCriteriaRequest;
 import com.group2.rms.repository.DepartmentRepository;
 import com.group2.rms.repository.UserRepository;
 import com.group2.rms.service.RequisitionService;
@@ -46,10 +46,10 @@ public class RequisitionController {
 
     @GetMapping("/create")
     public String showCreateForm(Model model) {
-        RequisitionRequestDto dto = new RequisitionRequestDto();
+        RequisitionRequest dto = new RequisitionRequest();
         dto.setNumberOfPositions(1);
-        var initialList = new ArrayList<ScreeningCriteriaRequestDto>();
-        var initialCriteria = new ScreeningCriteriaRequestDto();
+        var initialList = new ArrayList<ScreeningCriteriaRequest>();
+        var initialCriteria = new ScreeningCriteriaRequest();
         initialCriteria.setWeight(new BigDecimal(100));
         initialCriteria.setIsMandatory(false);
         initialList.add(initialCriteria);
@@ -64,7 +64,7 @@ public class RequisitionController {
     }
 
     @PostMapping("/create")
-    public String createRequisition(@ModelAttribute("requisitionDto") RequisitionRequestDto dto) {
+    public String createRequisition(@ModelAttribute("requisitionDto") RequisitionRequest dto) {
         Integer mockHiringManagerId = 1;
         requisitionService.createRequisition(dto, mockHiringManagerId);
         return "redirect:/requisitions";
@@ -84,7 +84,7 @@ public class RequisitionController {
     @PostMapping("/edit/{id}")
     public String updateRequisition(
             @PathVariable("id") Integer id,
-            @ModelAttribute("requisitionDto") RequisitionRequestDto dto) {
+            @ModelAttribute("requisitionDto") RequisitionRequest dto) {
         requisitionService.updateRequisition(id, dto);
         return "redirect:/requisitions";
     }

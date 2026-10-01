@@ -1,7 +1,7 @@
 package com.group2.rms.controller;
 
-import com.group2.rms.controller.form.CreateAccountForm;
-import com.group2.rms.controller.form.UpdateAccountForm;
+import com.group2.rms.controller.form.CreateAccountRequest;
+import com.group2.rms.controller.form.UpdateAccountRequest;
 import com.group2.rms.service.AccountListService;
 import com.group2.rms.service.AccountManagementService;
 import com.group2.rms.service.AccountFieldException;
@@ -61,13 +61,13 @@ public class AccountController {
 
     @GetMapping("/new")
     public String newAccount(Model model) {
-        model.addAttribute("form", new CreateAccountForm());
+        model.addAttribute("form", new CreateAccountRequest());
         prepareCreate(model);
         return "admin/accounts/form";
     }
 
     @PostMapping
-    public String create(@Valid @ModelAttribute("form") CreateAccountForm form,
+    public String create(@Valid @ModelAttribute("form") CreateAccountRequest form,
                          BindingResult errors, Model model, RedirectAttributes redirectAttributes) {
         if (form.getPassword() != null && form.getConfirmPassword() != null
                 && !form.getPassword().equals(form.getConfirmPassword())) {
@@ -93,7 +93,7 @@ public class AccountController {
     @GetMapping("/{userId}/edit")
     public String editAccount(@PathVariable int userId, Model model) {
         AccountManagementService.AccountForEdit account = management.findForEdit(userId);
-        UpdateAccountForm form = new UpdateAccountForm();
+        UpdateAccountRequest form = new UpdateAccountRequest();
         form.setFullName(account.fullName());
         form.setEmail(account.email());
         form.setPhoneNumber(account.phoneNumber());
@@ -107,7 +107,7 @@ public class AccountController {
 
     @PostMapping("/{userId}")
     public String update(@PathVariable int userId,
-                         @Valid @ModelAttribute("form") UpdateAccountForm form,
+                         @Valid @ModelAttribute("form") UpdateAccountRequest form,
                          BindingResult errors, Model model, RedirectAttributes redirectAttributes) {
         if (!errors.hasErrors()) {
             try {

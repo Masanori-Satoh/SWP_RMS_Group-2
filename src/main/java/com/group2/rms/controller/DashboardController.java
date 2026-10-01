@@ -10,11 +10,11 @@ import org.springframework.web.bind.annotation.RequestMapping;
 /** Authenticated landing page with role-scoped dashboard data. */
 @Controller
 @RequestMapping("/dashboard")
-public class DashboardAccessController {
+public class DashboardController {
 
     private final DashboardService dashboardService;
 
-    public DashboardAccessController(DashboardService dashboardService) {
+    public DashboardController(DashboardService dashboardService) {
         this.dashboardService = dashboardService;
     }
 
