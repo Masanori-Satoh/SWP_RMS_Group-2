@@ -1,10 +1,11 @@
 package com.group2.rms.service;
 
-import com.group2.rms.entity.Role;
-import com.group2.rms.entity.User;
-import com.group2.rms.repository.DepartmentRepository;
-import com.group2.rms.repository.RoleRepository;
-import com.group2.rms.repository.UserRepository;
+import com.group2.rms.user.entity.Role;
+import com.group2.rms.user.entity.User;
+import com.group2.rms.user.repository.DepartmentRepository;
+import com.group2.rms.user.repository.RoleRepository;
+import com.group2.rms.user.repository.UserRepository;
+import com.group2.rms.user.service.AccountListService;
 import org.junit.jupiter.api.Test;
 
 import java.util.Optional;

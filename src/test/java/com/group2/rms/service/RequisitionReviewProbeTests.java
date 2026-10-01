@@ -1,8 +1,15 @@
 package com.group2.rms.service;
 
-import com.group2.rms.dto.request.*;
-import com.group2.rms.entity.*;
-import com.group2.rms.repository.*;
+import com.group2.rms.requisition.dto.RequisitionRequest;
+import com.group2.rms.requisition.dto.ScreeningCriteriaRequest;
+import com.group2.rms.requisition.entity.JobPosting;
+import com.group2.rms.requisition.entity.JobRequisition;
+import com.group2.rms.requisition.repository.JobPostingRepository;
+import com.group2.rms.requisition.repository.JobRequisitionRepository;
+import com.group2.rms.requisition.repository.ScreeningCriteriaRepository;
+import com.group2.rms.requisition.service.RequisitionService;
+import com.group2.rms.user.repository.DepartmentRepository;
+import com.group2.rms.user.repository.UserRepository;
 import jakarta.persistence.EntityManager;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -17,12 +24,18 @@ import static org.junit.jupiter.api.Assertions.*;
 @Transactional
 @Rollback
 class RequisitionReviewProbeTests {
-    @Autowired RequisitionService service;
-    @Autowired JobRequisitionRepository requisitions;
-    @Autowired UserRepository users;
-    @Autowired DepartmentRepository departments;
-    @Autowired ScreeningCriteriaRepository criteria;
-    @Autowired JobPostingRepository postings;
+    @Autowired
+    RequisitionService service;
+    @Autowired
+    JobRequisitionRepository requisitions;
+    @Autowired
+    UserRepository users;
+    @Autowired
+    DepartmentRepository departments;
+    @Autowired
+    ScreeningCriteriaRepository criteria;
+    @Autowired
+    JobPostingRepository postings;
     @Autowired EntityManager em;
 
     private RequisitionRequest dto() {

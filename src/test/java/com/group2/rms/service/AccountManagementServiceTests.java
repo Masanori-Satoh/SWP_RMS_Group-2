@@ -1,13 +1,15 @@
 package com.group2.rms.service;
 
-import com.group2.rms.entity.Candidate;
-import com.group2.rms.entity.Department;
-import com.group2.rms.entity.Role;
-import com.group2.rms.entity.User;
-import com.group2.rms.repository.CandidateRepository;
-import com.group2.rms.repository.DepartmentRepository;
-import com.group2.rms.repository.RoleRepository;
-import com.group2.rms.repository.UserRepository;
+import com.group2.rms.candidate.Candidate;
+import com.group2.rms.candidate.CandidateRepository;
+import com.group2.rms.user.entity.Department;
+import com.group2.rms.user.entity.Role;
+import com.group2.rms.user.entity.User;
+import com.group2.rms.user.repository.DepartmentRepository;
+import com.group2.rms.user.repository.RoleRepository;
+import com.group2.rms.user.repository.UserRepository;
+import com.group2.rms.user.exception.AccountFieldException;
+import com.group2.rms.user.service.AccountManagementService;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
