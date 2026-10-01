@@ -141,7 +141,6 @@ ScreenedAt;NOT NULL, DEFAULT SYSDATETIME();Time AI finished processing
 Column;Constraints;Notes
 InterviewId;PRIMARY KEY, IDENTITY(1,1);Interview session identifier
 ApplicationId;NOT NULL, FOREIGN KEY -> Application.ApplicationId;Application being interviewed
-InterviewRound;NOT NULL;Round 1 - HR, Round 2 - Technical, Final
 InterviewFormat;NOT NULL;Online_GoogleMeet, Offline_Office
 StartTime;NOT NULL;Interview start time
 EndTime;NOT NULL, CHECK EndTime > StartTime;Interview end time
@@ -206,3 +205,4 @@ CandidateCounterSalary;NULL;Candidate's counter-offer salary
 CandidateNotes;NULL;Candidate's requests/feedback
 HRResponseNotes;NULL;HR's response
 NegotiationDate;NOT NULL, DEFAULT SYSDATETIME();Time of exchange
+

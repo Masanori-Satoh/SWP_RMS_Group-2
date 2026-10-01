@@ -120,9 +120,9 @@ lines.append("")
 # 3. INTERNAL USERS
 lines.append("-- =============================================================================")
 lines.append("-- 3. INTERNAL USERS (10 Accounts: Admin, Director, 2 HR, 2 HM, 4 Interviewers)")
-lines.append("-- Password: '123456' -> BCrypt: $2a$10$dXJ3SW6G7P50lGmMkkmwe.20cQQubK3.HZWzG3YB1tlRy.fqvM/BG")
+lines.append("-- Password: '12345678' -> BCrypt: $2a$10$p.RWJeHxArmCbQBg3GNXEew66veoolEXULwkrjzeoof8Me1dAD8PO")
 lines.append("-- =============================================================================")
-bcrypt_hash = "$2a$10$dXJ3SW6G7P50lGmMkkmwe.20cQQubK3.HZWzG3YB1tlRy.fqvM/BG"
+bcrypt_hash = "$2a$10$p.RWJeHxArmCbQBg3GNXEew66veoolEXULwkrjzeoof8Me1dAD8PO"
 
 internal_users = [
     # (RoleId, Username, Email, FullName, Phone, DeptId, CreatedAt)
@@ -587,14 +587,13 @@ for day_idx in range(num_days):
             start_str = int_start_dt.strftime("%Y-%m-%d %H:%M:%S")
             end_str = int_end_dt.strftime("%Y-%m-%d %H:%M:%S")
             
-            round_type = "Round 2 - Technical" if c["posting_id"] in [1, 2, 3] else "Round 1 - HR"
             fmt = "Offline_Office" if random.random() < 0.6 else "Online_GoogleMeet"
             loc = "Phòng họp 802, Tầng 8 Tòa nhà RMS Tower" if fmt == "Offline_Office" else f"https://meet.google.com/rms-int-{int_id:04d}"
             int_status = "Completed" if int_end_dt < datetime.datetime(2026, 12, 16) else "Scheduled"
             
             lines.append(
-                f"INSERT INTO InterviewSchedule (ApplicationId, InterviewRound, InterviewFormat, StartTime, EndTime, LocationOrLink, InterviewStatus, CreatedBy, CreatedAt) "
-                f"VALUES ({c['app_id']}, N'{round_type}', N'{fmt}', '{start_str}', '{end_str}', N'{loc}', N'{int_status}', 3, '{c['sub_time']}');"
+                f"INSERT INTO InterviewSchedule (ApplicationId, InterviewFormat, StartTime, EndTime, LocationOrLink, InterviewStatus, CreatedBy, CreatedAt) "
+                f"VALUES ({c['app_id']}, N'{fmt}', '{start_str}', '{end_str}', N'{loc}', N'{int_status}', 3, '{c['sub_time']}');"
             )
             
             # InterviewPanel (Composite PK: InterviewId, InterviewerId)
