@@ -587,14 +587,13 @@ for day_idx in range(num_days):
             start_str = int_start_dt.strftime("%Y-%m-%d %H:%M:%S")
             end_str = int_end_dt.strftime("%Y-%m-%d %H:%M:%S")
             
-            round_type = "Round 2 - Technical" if c["posting_id"] in [1, 2, 3] else "Round 1 - HR"
             fmt = "Offline_Office" if random.random() < 0.6 else "Online_GoogleMeet"
             loc = "Phòng họp 802, Tầng 8 Tòa nhà RMS Tower" if fmt == "Offline_Office" else f"https://meet.google.com/rms-int-{int_id:04d}"
             int_status = "Completed" if int_end_dt < datetime.datetime(2026, 12, 16) else "Scheduled"
             
             lines.append(
-                f"INSERT INTO InterviewSchedule (ApplicationId, InterviewRound, InterviewFormat, StartTime, EndTime, LocationOrLink, InterviewStatus, CreatedBy, CreatedAt) "
-                f"VALUES ({c['app_id']}, N'{round_type}', N'{fmt}', '{start_str}', '{end_str}', N'{loc}', N'{int_status}', 3, '{c['sub_time']}');"
+                f"INSERT INTO InterviewSchedule (ApplicationId, InterviewFormat, StartTime, EndTime, LocationOrLink, InterviewStatus, CreatedBy, CreatedAt) "
+                f"VALUES ({c['app_id']}, N'{fmt}', '{start_str}', '{end_str}', N'{loc}', N'{int_status}', 3, '{c['sub_time']}');"
             )
             
             # InterviewPanel (Composite PK: InterviewId, InterviewerId)

@@ -353,7 +353,6 @@ GO
 CREATE TABLE InterviewSchedule (
     InterviewId INT IDENTITY(1,1) PRIMARY KEY,
     ApplicationId INT NOT NULL,
-    InterviewRound NVARCHAR(50) NOT NULL,
     InterviewFormat NVARCHAR(30) NOT NULL,
     StartTime DATETIME2 NOT NULL,
     EndTime DATETIME2 NOT NULL,
@@ -370,9 +369,6 @@ CREATE TABLE InterviewSchedule (
 
     CONSTRAINT CK_InterviewSchedule_Time
         CHECK (EndTime > StartTime),
-
-    CONSTRAINT CK_InterviewSchedule_Round
-        CHECK (InterviewRound IN (N'Round 1 - HR', N'Round 2 - Technical', N'Final')),
 
     CONSTRAINT CK_InterviewSchedule_Format
         CHECK (InterviewFormat IN (N'Online_GoogleMeet', N'Offline_Office')),

@@ -1,4 +1,4 @@
-﻿# Database model reference
+# Database model reference
 
 `database/schema/db.sql` là nguồn chuẩn cho tên bảng/cột, kiểu dữ liệu và ràng
 buộc. Tài liệu này chỉ mô tả nghiệp vụ; khi khác SQL, ưu tiên SQL.
@@ -141,7 +141,6 @@ ScreenedAt;NOT NULL, DEFAULT SYSDATETIME();Time AI finished processing
 Column;Constraints;Notes
 InterviewId;PRIMARY KEY, IDENTITY(1,1);Interview session identifier
 ApplicationId;NOT NULL, FOREIGN KEY -> Application.ApplicationId;Application being interviewed
-InterviewRound;NOT NULL;Round 1 - HR, Round 2 - Technical, Final
 InterviewFormat;NOT NULL;Online_GoogleMeet, Offline_Office
 StartTime;NOT NULL;Interview start time
 EndTime;NOT NULL, CHECK EndTime > StartTime;Interview end time

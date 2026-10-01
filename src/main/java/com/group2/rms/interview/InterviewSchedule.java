@@ -9,7 +9,6 @@ import java.time.LocalDateTime;
 
 /**
  * 3.15 InterviewSchedule - Lịch phỏng vấn được HR tạo.
- * InterviewRound: Round 1 - HR, Round 2 - Technical, Final
  * InterviewFormat: Online_GoogleMeet, Offline_Office
  * InterviewStatus: Scheduled, Completed, Cancelled, Rescheduled
  */
@@ -30,12 +29,6 @@ public class InterviewSchedule {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "ApplicationId", nullable = false, referencedColumnName = "ApplicationId")
     private Application application;
-
-    /**
-     * Round 1 - HR, Round 2 - Technical, Final
-     */
-    @Column(name = "InterviewRound", nullable = false, length = 50)
-    private String interviewRound;
 
     /**
      * Online_GoogleMeet, Offline_Office
