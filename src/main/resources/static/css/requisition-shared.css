@@ -97,6 +97,27 @@
 .delete-symbol { width:40px; height:40px; border-radius:50%; display:grid; place-items:center; background:#fee2e2; color:#dc2626; font-size:26px; }
 .muted { color:#64748b; }
 .req-app :focus-visible { outline:2px solid #675cf6; outline-offset:3px; }
+.requisition-form-page .page-content,.requisition-detail-page .page-content { background:#f6f7fb; }
+.requisition-page-intro { margin:0 0 24px; }
+.requisition-form-page .requisition-page-intro { max-width:1100px; margin:0 auto 24px; }
+.requisition-page-breadcrumb { display:flex; align-items:center; flex-wrap:wrap; gap:4px; margin-bottom:6px; color:#17233b; font-size:12px; line-height:1.5; }
+.requisition-page-breadcrumb a { color:#6258ed; }
+.requisition-page-breadcrumb a:hover { text-decoration:underline; }
+.requisition-page-intro h1 { margin:0; color:#0f172a; font-size:24px; font-weight:700; line-height:1.3; letter-spacing:-.4px; overflow-wrap:anywhere; }
+.requisition-page-description { margin:5px 0 0; color:#748094; font-size:12px; line-height:1.6; overflow-wrap:anywhere; }
+.requisition-detail-heading { display:flex; justify-content:space-between; align-items:flex-end; gap:20px; }
+.requisition-heading-copy { min-width:0; }
+.requisition-title-row { display:flex; align-items:center; flex-wrap:wrap; gap:10px; }
+.requisition-status { display:inline-flex; align-items:center; flex-shrink:0; padding:3px 9px; border-radius:20px; background:#e8e9ef; color:#4c566c; font-size:10px; line-height:1.4; font-weight:500; white-space:nowrap; }
+.requisition-status[data-status="Pending_Director"] { background:#fef3c7; color:#995b0b; }
+.requisition-status[data-status="Approved"] { background:#d1fae5; color:#08745b; }
+.requisition-status[data-status="Rejected"] { background:#fee2e2; color:#b42335; }
+.requisition-heading-actions { display:flex; flex-shrink:0; align-items:center; gap:8px; }
+.req-app .requisition-heading-actions .btn-outline { min-height:34px; padding:7px 13px; border:1px solid #e1e3eb; border-radius:6px; color:#17233b; font-size:12px; font-weight:400; white-space:nowrap; }
+.req-app .requisition-heading-actions .btn-outline:disabled { background:#fafbfe; color:#9aa1af; border-color:#eceef3; cursor:not-allowed; }
+.requisition-form-page .form-card-header h2 { font-size:14px; }
+.requisition-form-page .form-card-header .icon-wrapper,.requisition-detail-page .card-header .icon-wrapper { width:28px; height:28px; flex-shrink:0; background:#f0efff; color:#6258ed; border-radius:7px; }
+@media(max-width:700px) { .requisition-detail-heading { align-items:flex-start; flex-direction:column; gap:14px; } .requisition-page-intro h1 { font-size:22px; } .requisition-heading-actions { flex-wrap:wrap; } }
 @media(max-width:1200px) { .req-app { --sidebar-width:240px; } .req-app .page-content { padding:24px; } .req-app .list-container { padding:20px; } .req-app .requisition-list-table th,.req-app .requisition-list-table td { padding:16px 6px; font-size:12px; } .criteria-table-custom { min-width:850px; } .req-app .detail-layout { flex-direction:column; } .req-app .detail-sidebar { width:100%; } }
 @media(max-width:900px) { .req-app .form-grid { grid-template-columns:1fr; row-gap:24px; } .req-app .list-header-bar,.req-app .list-filter-bar { align-items:flex-start; flex-direction:column; } .requisition-list-table colgroup,.requisition-list-table thead { display:none; } .requisition-list-table,.requisition-list-table tbody,.requisition-list-table tr { display:block; width:100%; } .req-app .requisition-list-table td { display:grid; grid-template-columns:105px minmax(0,1fr); gap:10px; padding:10px 14px; border:0; } .requisition-list-table td::before { content:attr(data-label); color:#64748b; } .requisition-list-table tr { padding:12px 0; border-bottom:1px solid #dce4f0; } }
 @media(max-width:600px) { .req-app .page-content { padding:16px; } .req-app .form-card { padding:20px; } .req-app .info-grid { grid-template-columns:1fr; } .req-app .salary-range { flex-wrap:wrap; } .req-app .salary-range span { display:none; } .req-app .topbar-actions>span { display:none; } .req-app .detail-header h1 { font-size:18px; } }

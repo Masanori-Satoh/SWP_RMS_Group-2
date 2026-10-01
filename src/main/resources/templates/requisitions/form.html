@@ -13,12 +13,17 @@
 <link rel="stylesheet" th:href="@{/css/requisition-shared.css}">
 <script th:src="@{/js/requisitions.js}" defer></script>
 </head>
-<body class="req-app">
+<body class="req-app requisition-form-page">
 <div class="page-wrapper">
     <aside th:replace="~{fragments/sidebar :: sidebar(activeMenu='requisitions')}"></aside>
     <div class="main-content">
         <header th:replace="~{fragments/requisition :: topbar}"></header>
         <main class="page-content">
+            <header class="requisition-page-intro">
+                <nav th:replace="~{fragments/requisition :: breadcrumb(current=${isEdit ? 'Edit' : 'Create'})}"></nav>
+                <h1 th:text="${isEdit ? 'Edit Requisition' : 'Create Requisition'}">Create Requisition</h1>
+                <p class="requisition-page-description" th:text="${isEdit ? 'Update the details below, then save your draft or submit it to the Director.' : 'Fill in the details below to save a draft or submit a new hiring request.'}"></p>
+            </header>
             <form class="form-container" id="requisition-form" th:object="${requisitionDto}" th:action="${isEdit} ? @{/requisitions/edit/{id}(id=${requisitionId})} : @{/requisitions/create}" method="post">
                 <input type="hidden" th:field="*{version}"><p class="notice" th:if="${copyNotice}" th:text="${copyNotice}"></p>
 
@@ -30,7 +35,7 @@
                 <!-- Basic Information -->
                 <div class="form-card">
                     <div class="form-card-header">
-                        <div class="icon-wrapper"><i class="fa-regular fa-file-lines"></i></div>
+                        <span th:replace="~{fragments/requisition :: informationIcon}"></span>
                         <h2>Basic Information</h2>
                     </div>
 

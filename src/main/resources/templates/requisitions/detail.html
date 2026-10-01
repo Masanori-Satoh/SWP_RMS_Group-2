@@ -1,258 +1,356 @@
 <!DOCTYPE html>
 <html lang="en" xmlns:th="http://www.thymeleaf.org">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Requisition Details - RMS</title>
+    <title th:text="${req.title + ' — Requisition Details | RMS'}">Requisition Details | RMS</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" th:href="@{/css/app-layout.css}">
     <link rel="stylesheet" th:href="@{/css/requisition-detail.css}">
-<link rel="stylesheet" th:href="@{/css/requisition-shared.css}">
-<script th:src="@{/js/requisitions.js}" defer></script>
+    <link rel="stylesheet" th:href="@{/css/requisition-shared.css}">
+    <script th:src="@{/js/requisitions.js}" defer></script>
 </head>
-<body class="req-app">
-<div class="page-wrapper">
-    <aside th:replace="~{fragments/sidebar :: sidebar(activeMenu='requisitions')}"></aside>
-    <div class="main-content">
-        <header th:replace="~{fragments/requisition :: topbar}"></header>
-        <main class="page-content requisition-page">
-            <th:block th:replace="~{fragments/requisition :: messages}"></th:block><a class="back-link" th:href="@{/requisitions}">← Job Requisitions</a><div class="detail-header">
-                <h1 th:text="${req.title}">Business Development Executive (B2B)</h1>
-                <a th:if="${canCreate}" th:href="@{/requisitions/copy/{id}(id=${req.requisitionId})}" class="btn-outline">Copy form</a>
-            </div>
 
+<body class="req-app requisition-detail-page">
+    <div class="page-wrapper">
+        <aside th:replace="~{fragments/sidebar :: sidebar(activeMenu='requisitions')}"></aside>
+        <div class="main-content">
+            <header th:replace="~{fragments/requisition :: topbar}"></header>
+            <main class="page-content requisition-page">
+                <header class="requisition-page-intro">
+                    <nav th:replace="~{fragments/requisition :: breadcrumb(current='Detail')}"></nav>
+                    <div class="requisition-detail-heading">
+                        <div class="requisition-heading-copy">
+                            <div class="requisition-title-row">
+                                <h1 th:text="${req.title}">Requisition details</h1>
+                                <span class="requisition-status" th:attr="data-status=${req.approvalStatus}"
+                                    th:title="${req.approvalStatus == 'Pending_Director' ? 'Pending Director Approval' : req.approvalStatus}"
+                                    th:text="${req.approvalStatus == 'Pending_Director' ? 'Pending' : req.approvalStatus}"></span>
+                            </div>
 
-            <p th:if="${req.incomplete}" class="incomplete-notice" style="margin-bottom: 20px; padding: 16px; background: #fffbeb; color: #92400e; border-radius: 8px;">This draft is incomplete. Complete the required fields and screening criteria before sending it to the Director.</p>
-            <aside th:if="${req.rejectionReason != null}" class="rejection-notice" role="note" style="margin-bottom: 20px; padding: 16px; background: #fef2f2; color: #991b1b; border-left: 4px solid #ef4444; border-radius: 8px;">
-                <strong style="display: block; margin-bottom: 8px;">Changes requested by the Director</strong>
-                <p class="text-content" th:text="${req.rejectionReason}" style="color: #991b1b; margin-bottom: 8px;"></p>
-                <a th:if="${req.editable}" th:href="@{/requisitions/edit/{id}(id=${req.requisitionId})}" style="color: #991b1b; font-weight: 600;">Revise this request →</a>
-            </aside>
-
-            <div class="detail-layout">
-                <div class="detail-main">
-                    <!-- Basic Information -->
-                    <div class="card">
-                        <div class="card-header">
-                            <div class="icon-wrapper">📄</div>
-                            <h2>Basic Information</h2>
                         </div>
-                        <div class="info-grid">
-                            <div class="info-item">
-                                <span class="info-label">Job Title</span>
-                                <span class="info-value" th:text="${req.title}">Business Development Executive (B2B)</span>
+                        <div class="requisition-heading-actions" role="group" aria-label="Requisition actions">
+                            <a th:href="@{/requisitions}" class="btn-outline">← Back</a>
+                            <a th:if="${req.editable}" th:href="@{/requisitions/edit/{id}(id=${req.requisitionId})}"
+                                class="btn-outline">Edit</a>
+                            <button th:unless="${req.editable}" type="button" class="btn-outline" disabled
+                                title="This requisition cannot be edited.">Edit</button>
+                            <a th:if="${canCreate}" th:href="@{/requisitions/copy/{id}(id=${req.requisitionId})}"
+                                class="btn-outline">Copy form</a>
+                        </div>
+                    </div>
+                </header>
+
+
+                <div class="detail-layout">
+                    <div class="detail-main">
+                        <!-- Basic Information -->
+                        <div class="card">
+                            <div class="card-header">
+                                <span th:replace="~{fragments/requisition :: informationIcon}"></span>
+                                <h2>Basic Information</h2>
                             </div>
-                            <div class="info-item">
-                                <span class="info-label">Employment Type</span>
-                                <span class="info-value" th:text="${req.employmentType ?: 'Chưa xác định'}">Full-time</span>
+                            <div class="info-grid">
+                                <div class="info-item">
+                                    <span class="info-label">Job Title</span>
+                                    <span class="info-value" th:text="${req.title}">Business Development Executive
+                                    </span>
+                                </div>
+                                <div class="info-item">
+                                    <span class="info-label">Employment Type</span>
+                                    <span class="info-value"
+                                        th:text="${req.employmentType ?: 'Chưa xác định'}">Full-time</span>
+                                </div>
+                                <div class="info-item">
+                                    <span class="info-label">Department</span>
+                                    <span class="info-value" th:text="${req.departmentName}">Sales & Marketing</span>
+                                </div>
+                                <div class="info-item">
+                                    <span class="info-label">Number of Openings</span>
+                                    <span class="info-value"
+                                        th:text="${req.numberOfPositions ?: 'Chưa xác định'}">2</span>
+                                </div>
+                                <div class="info-item">
+                                    <span class="info-label">Requester / Hiring Manager</span>
+                                    <span class="info-value" th:text="${req.hiringManagerName}">Đỗ Thu Hương</span>
+                                </div>
+                                <div class="info-item">
+                                    <span class="info-label">Salary Range (VND)</span>
+                                    <span class="info-value">
+                                        <span th:if="${req.minSalary != null and req.maxSalary != null}"
+                                            th:text="|${#numbers.formatDecimal(req.minSalary, 1, 'COMMA', 0, 'POINT')} – ${#numbers.formatDecimal(req.maxSalary, 1, 'COMMA', 0, 'POINT')}|"></span>
+                                        <span th:if="${req.minSalary != null and req.maxSalary == null}"
+                                            th:text="|Từ ${#numbers.formatDecimal(req.minSalary, 1, 'COMMA', 0, 'POINT')}|"></span>
+                                        <span th:if="${req.minSalary == null and req.maxSalary != null}"
+                                            th:text="|Đến ${#numbers.formatDecimal(req.maxSalary, 1, 'COMMA', 0, 'POINT')}|"></span>
+                                        <span th:if="${req.minSalary == null and req.maxSalary == null}">Thỏa
+                                            thuận</span>
+                                    </span>
+                                </div>
+                                <div class="info-item">
+                                    <span class="info-label">Expected Start Date</span>
+                                    <span class="info-value"
+                                        th:style="${req.expectedStartDate == null ? 'font-style: italic; color: #94a3b8;' : ''}"
+                                        th:text="${req.expectedStartDate != null ? #temporals.format(req.expectedStartDate, 'dd/MM/yyyy') : 'Chưa xác định'}">Chưa
+                                        xác định</span>
+                                </div>
+                                <div class="info-item">
+                                    <span class="info-label">Work Location</span>
+                                    <span class="info-value"
+                                        th:style="${req.workLocation == null ? 'font-style: italic; color: #94a3b8;' : ''}"
+                                        th:text="${req.workLocation ?: 'Chưa xác định'}">Chưa xác định</span>
+                                </div>
+                                <div class="info-item" th:if="${req.gender != null}"><span
+                                        class="info-label">Gender</span><span class="info-value"
+                                        th:text="${req.gender}"></span></div>
+                                <div class="info-item" th:if="${req.workingHours != null}"><span
+                                        class="info-label">Working Hours</span><span class="info-value"
+                                        th:text="${req.workingHours}"></span></div>
                             </div>
-                            <div class="info-item">
-                                <span class="info-label">Department</span>
-                                <span class="info-value" th:text="${req.departmentName}">Sales & Marketing</span>
+                        </div>
+
+                        <!-- Reason for Hiring -->
+                        <div class="card">
+                            <div class="card-header">
+                                <div class="icon-wrapper" style="background: #e0f2fe; color: #0284c7;">📍</div>
+                                <h2>Reason for Hiring</h2>
                             </div>
-                            <div class="info-item">
-                                <span class="info-label">Number of Openings</span>
-                                <span class="info-value" th:text="${req.numberOfPositions ?: 'Chưa xác định'}">2</span>
+                            <p class="text-content" th:text="${req.reasonForHiring ?: 'Chưa xác định'}">Mở rộng thị
+                                trường khách hàng doanh nghiệp SME sử dụng giải pháp phần mềm.</p>
+                        </div>
+
+                        <!-- Job Description -->
+                        <div class="card">
+                            <div class="card-header">
+                                <div class="icon-wrapper" style="background: #ede9fe; color: #7c3aed;">📝</div>
+                                <h2>Job Description</h2>
                             </div>
-                            <div class="info-item">
-                                <span class="info-label">Requester / Hiring Manager</span>
-                                <span class="info-value" th:text="${req.hiringManagerName}">Đỗ Thu Hương</span>
+                            <p class="text-content" th:text="${req.jobDescription ?: 'Chưa xác định'}">Tìm kiếm khách
+                                hàng tiềm năng B2B, tư vấn giải pháp chuyển đổi số, đàm phán và ký kết hợp đồng dịch vụ
+                                phần mềm.</p>
+                        </div>
+
+                        <!-- Candidate Requirements -->
+                        <div class="card">
+                            <div class="card-header">
+                                <div class="icon-wrapper" style="background: #eef2ff; color: #4f46e5;">☺</div>
+                                <h2>Candidate Requirements</h2>
                             </div>
-                            <div class="info-item">
-                                <span class="info-label">Salary Range (VND)</span>
-                                <span class="info-value">
-                                    <span th:if="${req.minSalary != null and req.maxSalary != null}" th:text="|${#numbers.formatDecimal(req.minSalary, 1, 'COMMA', 0, 'POINT')} – ${#numbers.formatDecimal(req.maxSalary, 1, 'COMMA', 0, 'POINT')}|"></span>
-                                    <span th:if="${req.minSalary != null and req.maxSalary == null}" th:text="|Từ ${#numbers.formatDecimal(req.minSalary, 1, 'COMMA', 0, 'POINT')}|"></span>
-                                    <span th:if="${req.minSalary == null and req.maxSalary != null}" th:text="|Đến ${#numbers.formatDecimal(req.maxSalary, 1, 'COMMA', 0, 'POINT')}|"></span>
-                                    <span th:if="${req.minSalary == null and req.maxSalary == null}">Thỏa thuận</span>
-                                </span>
+                            <p class="text-content" th:text="${req.requirementDetails ?: 'Chưa xác định'}">Tối thiểu 1
+                                năm kinh nghiệm Sales B2B khối phần mềm/IT, kỹ năng giao tiếp và thuyết trình xuất sắc,
+                                tiếng Anh giao tiếp tốt.</p>
+                        </div>
+
+                        <!-- Screening Criteria -->
+                        <div class="card">
+                            <div class="card-header">
+                                <div class="icon-wrapper" style="background: #f1f5f9; color: #475569;">≡</div>
+                                <h2>Screening Criteria</h2>
                             </div>
-                            <div class="info-item">
-                                <span class="info-label">Expected Start Date</span>
-                                <span class="info-value" th:style="${req.expectedStartDate == null ? 'font-style: italic; color: #94a3b8;' : ''}" th:text="${req.expectedStartDate != null ? #temporals.format(req.expectedStartDate, 'dd/MM/yyyy') : 'Chưa xác định'}">Chưa xác định</span>
+                            <div class="criteria-scroll">
+                                <table class="criteria-table">
+                                    <thead>
+                                        <tr>
+                                            <th>#</th>
+                                            <th>Criteria</th>
+                                            <th>Type</th>
+                                            <th>Required Value</th>
+                                            <th>Weight (%)</th>
+                                            <th>Mandatory</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr th:each="criterion, row : ${req.screeningCriteria}">
+                                            <td th:text="${row.count}">1</td>
+                                            <td th:text="${criterion.criteriaName ?: 'Not specified'}">Tốt nghiệp Cao
+                                                đẳng/Đại học chuyên ngành QTKD/Kinh tế/CNTT</td>
+                                            <td th:text="${criterion.criteriaType ?: 'Not specified'}">Education</td>
+                                            <td th:text="${criterion.requiredValue ?: 'Not specified'}">Cao đẳng / Đại
+                                                học</td>
+                                            <td>
+                                                <div class="weight-cell">
+                                                    <div class="weight-bar-container">
+                                                        <div class="weight-fill"
+                                                            th:style="|width: ${criterion.weight ?: 0}%|"></div>
+                                                    </div>
+                                                    <span class="weight-text"
+                                                        th:text="${criterion.weight != null ? criterion.weight + '%' : '—'}">22.2%</span>
+                                                </div>
+                                            </td>
+                                            <td>
+                                                <span
+                                                    th:class="${criterion.isMandatory ? 'badge badge-yes' : 'badge badge-no'}"
+                                                    th:text="${criterion.isMandatory ? 'Yes' : 'No'}">No</span>
+                                            </td>
+                                        </tr>
+                                        <tr th:if="${#lists.isEmpty(req.screeningCriteria)}">
+                                            <td colspan="6" style="text-align: center; color: #64748b; padding: 24px;">
+                                                No screening criteria have been added.</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
                             </div>
-                            <div class="info-item">
-                                <span class="info-label">Work Location</span>
-                                <span class="info-value" th:style="${req.workLocation == null ? 'font-style: italic; color: #94a3b8;' : ''}" th:text="${req.workLocation ?: 'Chưa xác định'}">Chưa xác định</span>
-                            </div>
-                            <div class="info-item" th:if="${req.gender != null}"><span class="info-label">Gender</span><span class="info-value" th:text="${req.gender}"></span></div>
-                            <div class="info-item" th:if="${req.workingHours != null}"><span class="info-label">Working Hours</span><span class="info-value" th:text="${req.workingHours}"></span></div>
                         </div>
                     </div>
 
-                    <!-- Reason for Hiring -->
-                    <div class="card">
-                        <div class="card-header">
-                            <div class="icon-wrapper" style="background: #e0f2fe; color: #0284c7;">📍</div>
-                            <h2>Reason for Hiring</h2>
-                        </div>
-                        <p class="text-content" th:text="${req.reasonForHiring ?: 'Chưa xác định'}">Mở rộng thị trường khách hàng doanh nghiệp SME sử dụng giải pháp phần mềm.</p>
-                    </div>
+                    <!-- Sidebar -->
+                    <div class="detail-sidebar">
+                        <!-- Approval Timeline -->
+                        <div class="card">
+                            <div class="card-header">
+                                <div class="icon-wrapper" style="background: #eef2ff; color: #4f46e5;">✓</div>
+                                <h2>Approval Timeline</h2>
+                            </div>
+                            <p class="workflow-status"><strong
+                                    th:text="${req.approvalStatus == 'Pending_Director' ? 'Pending Director Approval' : req.approvalStatus}"></strong>
+                            </p>
+                            <p class="activity-meta" th:switch="${req.approvalStatus}">
+                                <span th:case="'Draft'">Draft — complete the form before submitting.</span>
+                                <span th:case="'Pending_Director'">Editing is locked while a decision is pending.</span>
+                                <span th:case="'Approved'">Approved by the Director.</span>
+                                <span th:case="'Rejected'">Returned to the requester to revise or delete.</span>
+                            </p>
+                            <ul class="timeline">
+                                <li th:each="event : ${req.timeline}"
+                                    th:class="${event.action == 'Approved' ? 'timeline-item approved' : 'timeline-item'}">
+                                    <div class="timeline-icon"></div>
+                                    <div class="timeline-title" th:text="${event.action}">Tạo bản nháp</div>
+                                    <div class="timeline-meta"><span th:text="${event.actor}">Đỗ Thu Hương</span> ·
+                                        <span
+                                            th:text="${#temporals.format(event.occurredAt, 'dd/MM/yyyy HH:mm')}">15/09/2026
+                                            14:10</span>
+                                    </div>
+                                    <div th:if="${event.description != null and event.action != 'Approved' and event.action != 'Rejected'}"
+                                        class="feedback-box">
+                                        <span class="feedback-badge" th:text="${event.actor + ' feedback'}">Director
+                                            feedback</span>
+                                        <div th:text="${event.description}">Phê duyệt mở 2 vị trí Business Development
+                                            mở rộng tệp khách hàng B2B.</div>
+                                    </div>
+                                </li>
+                                <li th:if="${#lists.isEmpty(req.timeline)}" class="timeline-item">
+                                    <div class="timeline-icon"
+                                        style="background: #e2e8f0; box-shadow: 0 0 0 1px #e2e8f0;"></div>
+                                    <div class="timeline-title" style="color: #64748b;">Chưa có sự kiện workflow.</div>
+                                </li>
+                            </ul>
 
-                    <!-- Job Description -->
-                    <div class="card">
-                        <div class="card-header">
-                            <div class="icon-wrapper" style="background: #ede9fe; color: #7c3aed;">📝</div>
-                            <h2>Job Description</h2>
-                        </div>
-                        <p class="text-content" th:text="${req.jobDescription ?: 'Chưa xác định'}">Tìm kiếm khách hàng tiềm năng B2B, tư vấn giải pháp chuyển đổi số, đàm phán và ký kết hợp đồng dịch vụ phần mềm.</p>
-                    </div>
+                            <!-- Legacy approvals if not in timeline -->
+                            <div th:if="${!#lists.isEmpty(req.approvals)}" th:each="approval : ${req.approvals}"
+                                class="feedback-box" style="margin-top: 20px;">
+                                <span class="feedback-badge" th:text="${approval.approverName + ' feedback'}">Director
+                                    feedback</span>
+                                <p class="activity-meta"
+                                    th:text="|${approval.status} · ${#temporals.format(approval.approvalDate, 'dd/MM/yyyy HH:mm')}|">
+                                </p>
+                                <div th:text="${approval.comments ?: 'No additional comments.'}"></div>
+                            </div>
 
-                    <!-- Candidate Requirements -->
-                    <div class="card">
-                        <div class="card-header">
-                            <div class="icon-wrapper" style="background: #eef2ff; color: #4f46e5;">☺</div>
-                            <h2>Candidate Requirements</h2>
+                            <!-- Decision Form -->
+                            <div th:if="${req.decidable}"
+                                style="margin-top: 24px; border-top: 1px solid #f1f5f9; padding-top: 24px;">
+                                <h3 style="font-size: 14px; margin: 0 0 12px 0;">Director Decision</h3>
+                                <form id="decision-form"
+                                    th:action="@{/requisitions/{id}/decision(id=${req.requisitionId})}" method="post">
+                                    <input type="hidden" name="version" th:value="${req.version}">
+                                    <div style="margin-bottom: 16px;">
+                                        <label for="decision-comment"
+                                            style="display: block; font-size: 13px; font-weight: 600; color: #334155; margin-bottom: 6px;">Feedback
+                                            <span style="font-weight: 400; color: #64748b;">(required when
+                                                returning)</span></label>
+                                        <textarea id="decision-comment" name="comment" rows="3" maxlength="1000"
+                                            style="width: 100%; border: 1px solid #e2e8f0; border-radius: 6px; padding: 10px; font-size: 14px; outline: none;"
+                                            th:text="${decisionComment}"></textarea>
+                                    </div>
+                                    <div style="display: flex; gap: 8px;">
+                                        <button type="submit" name="decision" value="reject" class="btn-outline"
+                                            style="flex: 1;">Return</button>
+                                        <button type="submit" name="decision" value="approve"
+                                            style="flex: 1; background: #4f46e5; color: white; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; transition: all 0.2s;">Approve</button>
+                                    </div>
+                                </form>
+                            </div>
                         </div>
-                        <p class="text-content" th:text="${req.requirementDetails ?: 'Chưa xác định'}">Tối thiểu 1 năm kinh nghiệm Sales B2B khối phần mềm/IT, kỹ năng giao tiếp và thuyết trình xuất sắc, tiếng Anh giao tiếp tốt.</p>
-                    </div>
 
-                    <!-- Screening Criteria -->
-                    <div class="card">
-                        <div class="card-header">
-                            <div class="icon-wrapper" style="background: #f1f5f9; color: #475569;">≡</div>
-                            <h2>Screening Criteria</h2>
+                        <!-- Activity Log -->
+                        <div class="card">
+                            <div class="card-header">
+                                <div class="icon-wrapper" style="background: #eef2ff; color: #4f46e5;">⟳</div>
+                                <h2>Activity Log</h2>
+                            </div>
+                            <ul class="activity-log">
+                                <li th:each="log, iterStat : ${req.activityLog}" th:if="${iterStat.index < 3}"
+                                    class="activity-item">
+                                    <div class="activity-dot"></div>
+                                    <div class="activity-title">
+                                        <span th:text="${log.action}">Create</span>
+                                        <span style="font-weight: 400; color: #475569; font-size: 13px;"
+                                            th:if="${log.description != null}" th:text="${log.description}">· Drafted
+                                            B2B Sales requisition</span>
+                                    </div>
+                                    <div class="activity-meta"><span th:text="${log.performedBy}">Đỗ Thu Hương</span> ·
+                                        <span
+                                            th:text="${#temporals.format(log.timestamp, 'dd/MM/yyyy HH:mm')}">15/09/2026
+                                            14:10</span>
+                                    </div>
+                                </li>
+                                <li th:if="${#lists.isEmpty(req.activityLog)}" class="activity-item">
+                                    <div class="activity-dot" style="background: #e2e8f0;"></div>
+                                    <div class="activity-meta">Chưa có hoạt động nào.</div>
+                                </li>
+                            </ul>
+                            <details class="activity-details" th:if="${!#lists.isEmpty(req.activityLog)}">
+                                <summary class="activity-link">Xem chi tiết thay đổi</summary>
+                                <article th:each="log : ${req.activityLog}"><strong th:text="${log.action}"></strong>
+                                    <p class="activity-meta"
+                                        th:text="|${log.performedBy} · ${#temporals.format(log.timestamp, 'dd/MM/yyyy HH:mm')}|">
+                                    </p>
+                                    <pre th:text="${log.description}"></pre>
+                                </article>
+                            </details>
                         </div>
-                        <div class="criteria-scroll"><table class="criteria-table">
-                            <thead>
-                                <tr>
-                                    <th>#</th>
-                                    <th>Criteria</th>
-                                    <th>Type</th>
-                                    <th>Required Value</th>
-                                    <th>Weight (%)</th>
-                                    <th>Mandatory</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr th:each="criterion, row : ${req.screeningCriteria}">
-                                    <td th:text="${row.count}">1</td>
-                                    <td th:text="${criterion.criteriaName ?: 'Not specified'}">Tốt nghiệp Cao đẳng/Đại học chuyên ngành QTKD/Kinh tế/CNTT</td>
-                                    <td th:text="${criterion.criteriaType ?: 'Not specified'}">Education</td>
-                                    <td th:text="${criterion.requiredValue ?: 'Not specified'}">Cao đẳng / Đại học</td>
-                                    <td>
-                                        <div class="weight-cell">
-                                            <div class="weight-bar-container">
-                                                <div class="weight-fill" th:style="|width: ${criterion.weight ?: 0}%|"></div>
-                                            </div>
-                                            <span class="weight-text" th:text="${criterion.weight != null ? criterion.weight + '%' : '—'}">22.2%</span>
-                                        </div>
-                                    </td>
-                                    <td>
-                                        <span th:class="${criterion.isMandatory ? 'badge badge-yes' : 'badge badge-no'}" th:text="${criterion.isMandatory ? 'Yes' : 'No'}">No</span>
-                                    </td>
-                                </tr>
-                                <tr th:if="${#lists.isEmpty(req.screeningCriteria)}">
-                                    <td colspan="6" style="text-align: center; color: #64748b; padding: 24px;">No screening criteria have been added.</td>
-                                </tr>
-                            </tbody>
-                        </table></div>
+
+                        <!-- Actions -->
+                        <div class="card" th:if="${req.editable or req.withdrawable or req.deletable}">
+                            <div class="card-header">
+                                <div class="icon-wrapper" style="background: #f1f5f9; color: #475569;">⚙</div>
+                                <h2>Actions</h2>
+                            </div>
+                            <div style="display: flex; flex-direction: column; gap: 10px;">
+                                <form class="withdraw-form" th:if="${req.withdrawable}"
+                                    th:action="@{/requisitions/{id}/withdraw(id=${req.requisitionId})}" method="post"
+                                    style="margin: 0;">
+                                    <input type="hidden" name="version" th:value="${req.version}">
+                                    <button type="submit" class="btn-outline"
+                                        style="width: 100%; justify-content: center;">Withdraw to edit</button>
+                                </form>
+                                <a th:if="${req.editable}" th:href="@{/requisitions/edit/{id}(id=${req.requisitionId})}"
+                                    class="btn-outline"
+                                    style="background: #4f46e5; color: white; border-color: #4f46e5; justify-content: center;">Edit
+                                    requisition</a>
+                                <button th:if="${req.deletable}" type="button" class="btn-outline"
+                                    style="color: #ef4444; border-color: #fca5a5; justify-content: center;"
+                                    data-delete-requisition
+                                    th:data-delete-url="@{/requisitions/delete/{id}(id=${req.requisitionId})}"
+                                    th:data-title="${req.title}" th:data-version="${req.version}">Delete
+                                    requisition</button>
+                                <p th:if="${req.editable and !req.deletable}"
+                                    style="color: #ef4444; margin-top: 8px; font-size: 12px;">Deletion is unavailable
+                                    because this requisition has linked job postings.</p>
+                            </div>
+                        </div>
+
                     </div>
                 </div>
 
-                <!-- Sidebar -->
-                <div class="detail-sidebar">
-                    <!-- Approval Timeline -->
-                    <div class="card">
-                        <div class="card-header">
-                            <div class="icon-wrapper" style="background: #eef2ff; color: #4f46e5;">✓</div>
-                            <h2>Approval Timeline</h2>
-                        </div>
-                        <p class="workflow-status"><strong th:text="${req.approvalStatus == 'Pending_Director' ? 'Pending Director Approval' : req.approvalStatus}"></strong></p>
-                        <p class="activity-meta" th:switch="${req.approvalStatus}">
-                            <span th:case="'Draft'">Draft — complete the form before submitting.</span>
-                            <span th:case="'Pending_Director'">Editing is locked while a decision is pending.</span>
-                            <span th:case="'Approved'">Approved by the Director.</span>
-                            <span th:case="'Rejected'">Returned to the requester to revise or delete.</span>
-                        </p>
-                        <ul class="timeline">
-                            <li th:each="event : ${req.timeline}" th:class="${event.action == 'Approved' ? 'timeline-item approved' : 'timeline-item'}">
-                                <div class="timeline-icon"></div>
-                                <div class="timeline-title" th:text="${event.action}">Tạo bản nháp</div>
-                                <div class="timeline-meta"><span th:text="${event.actor}">Đỗ Thu Hương</span> · <span th:text="${#temporals.format(event.occurredAt, 'dd/MM/yyyy HH:mm')}">15/09/2026 14:10</span></div>
-                                <div th:if="${event.description != null and event.action != 'Approved' and event.action != 'Rejected'}" class="feedback-box">
-                                    <span class="feedback-badge" th:text="${event.actor + ' feedback'}">Director feedback</span>
-                                    <div th:text="${event.description}">Phê duyệt mở 2 vị trí Business Development mở rộng tệp khách hàng B2B.</div>
-                                </div>
-                            </li>
-                            <li th:if="${#lists.isEmpty(req.timeline)}" class="timeline-item">
-                                <div class="timeline-icon" style="background: #e2e8f0; box-shadow: 0 0 0 1px #e2e8f0;"></div>
-                                <div class="timeline-title" style="color: #64748b;">Chưa có sự kiện workflow.</div>
-                            </li>
-                        </ul>
-
-                        <!-- Legacy approvals if not in timeline -->
-                        <div th:if="${!#lists.isEmpty(req.approvals)}" th:each="approval : ${req.approvals}" class="feedback-box" style="margin-top: 20px;">
-                            <span class="feedback-badge" th:text="${approval.approverName + ' feedback'}">Director feedback</span>
-                            <p class="activity-meta" th:text="|${approval.status} · ${#temporals.format(approval.approvalDate, 'dd/MM/yyyy HH:mm')}|"></p><div th:text="${approval.comments ?: 'No additional comments.'}"></div>
-                        </div>
-
-                        <!-- Decision Form -->
-                        <div th:if="${req.decidable}" style="margin-top: 24px; border-top: 1px solid #f1f5f9; padding-top: 24px;">
-                            <h3 style="font-size: 14px; margin: 0 0 12px 0;">Director Decision</h3>
-                            <form id="decision-form" th:action="@{/requisitions/{id}/decision(id=${req.requisitionId})}" method="post">
-                                <input type="hidden" name="version" th:value="${req.version}">
-                                <div style="margin-bottom: 16px;">
-                                    <label for="decision-comment" style="display: block; font-size: 13px; font-weight: 600; color: #334155; margin-bottom: 6px;">Feedback <span style="font-weight: 400; color: #64748b;">(required when returning)</span></label>
-                                    <textarea id="decision-comment" name="comment" rows="3" maxlength="1000" style="width: 100%; border: 1px solid #e2e8f0; border-radius: 6px; padding: 10px; font-size: 14px; outline: none;" th:text="${decisionComment}"></textarea>
-                                </div>
-                                <div style="display: flex; gap: 8px;">
-                                    <button type="submit" name="decision" value="reject" class="btn-outline" style="flex: 1;">Return</button>
-                                    <button type="submit" name="decision" value="approve" style="flex: 1; background: #4f46e5; color: white; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; transition: all 0.2s;">Approve</button>
-                                </div>
-                            </form>
-                        </div>
-                    </div>
-
-                    <!-- Activity Log -->
-                    <div class="card">
-                        <div class="card-header">
-                            <div class="icon-wrapper" style="background: #eef2ff; color: #4f46e5;">⟳</div>
-                            <h2>Activity Log</h2>
-                        </div>
-                        <ul class="activity-log">
-                            <li th:each="log, iterStat : ${req.activityLog}" th:if="${iterStat.index < 3}" class="activity-item">
-                                <div class="activity-dot"></div>
-                                <div class="activity-title">
-                                    <span th:text="${log.action}">Create</span>
-                                    <span style="font-weight: 400; color: #475569; font-size: 13px;" th:if="${log.description != null}" th:text="${log.description}">· Drafted B2B Sales requisition</span>
-                                </div>
-                                <div class="activity-meta"><span th:text="${log.performedBy}">Đỗ Thu Hương</span> · <span th:text="${#temporals.format(log.timestamp, 'dd/MM/yyyy HH:mm')}">15/09/2026 14:10</span></div>
-                            </li>
-                            <li th:if="${#lists.isEmpty(req.activityLog)}" class="activity-item">
-                                <div class="activity-dot" style="background: #e2e8f0;"></div>
-                                <div class="activity-meta">Chưa có hoạt động nào.</div>
-                            </li>
-                        </ul>
-                        <details class="activity-details" th:if="${!#lists.isEmpty(req.activityLog)}"><summary class="activity-link">Xem chi tiết thay đổi</summary><article th:each="log : ${req.activityLog}"><strong th:text="${log.action}"></strong><p class="activity-meta" th:text="|${log.performedBy} · ${#temporals.format(log.timestamp, 'dd/MM/yyyy HH:mm')}|"></p><pre th:text="${log.description}"></pre></article></details>
-                    </div>
-
-                    <!-- Actions -->
-                    <div class="card" th:if="${req.editable or req.withdrawable or req.deletable}">
-                        <div class="card-header">
-                            <div class="icon-wrapper" style="background: #f1f5f9; color: #475569;">⚙</div>
-                            <h2>Actions</h2>
-                        </div>
-                        <div style="display: flex; flex-direction: column; gap: 10px;">
-                            <form class="withdraw-form" th:if="${req.withdrawable}" th:action="@{/requisitions/{id}/withdraw(id=${req.requisitionId})}" method="post" style="margin: 0;">
-                                <input type="hidden" name="version" th:value="${req.version}">
-                                <button type="submit" class="btn-outline" style="width: 100%; justify-content: center;">Withdraw to edit</button>
-                            </form>
-                            <a th:if="${req.editable}" th:href="@{/requisitions/edit/{id}(id=${req.requisitionId})}" class="btn-outline" style="background: #4f46e5; color: white; border-color: #4f46e5; justify-content: center;">Edit requisition</a>
-                            <button th:if="${req.deletable}" type="button" class="btn-outline" style="color: #ef4444; border-color: #fca5a5; justify-content: center;" data-delete-requisition th:data-delete-url="@{/requisitions/delete/{id}(id=${req.requisitionId})}" th:data-title="${req.title}" th:data-version="${req.version}">Delete requisition</button>
-                            <p th:if="${req.editable and !req.deletable}" style="color: #ef4444; margin-top: 8px; font-size: 12px;">Deletion is unavailable because this requisition has linked job postings.</p>
-                        </div>
-                    </div>
-
-                </div>
-            </div>
-
-        </main>
+            </main>
+        </div>
     </div>
-</div>
-<dialog th:replace="~{fragments/requisition :: deleteDialog}"></dialog>
+    <dialog th:replace="~{fragments/requisition :: deleteDialog}"></dialog>
 </body>
+
 </html>
