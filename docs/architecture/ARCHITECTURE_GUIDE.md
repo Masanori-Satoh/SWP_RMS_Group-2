@@ -17,7 +17,7 @@ src/main/java/com/group2/rms/
 ├── {feature_nho}/                <-- Tính năng nhỏ (VD: dashboard, admin)
 │   ├── DashboardController.java  <-- Nằm phẳng ngay bên ngoài
 │   ├── DashboardService.java
-│   └── DashboardMetrics.java     (Entity)
+│   └── DashboardMetrics.java     (DTO)
 ├── {feature_lon}/                <-- Tính năng lớn (VD: requisition, user)
 │   ├── controller/               
 │   ├── service/                  
