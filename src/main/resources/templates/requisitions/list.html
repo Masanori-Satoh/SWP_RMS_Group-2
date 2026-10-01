@@ -1,18 +1,66 @@
 <!DOCTYPE html>
-<html lang="vi" xmlns:th="http://www.thymeleaf.org">
-<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Job Requisitions | RMS</title>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" th:href="@{/css/app-layout.css}"><link rel="stylesheet" th:href="@{/css/requisition-list.css}"><link rel="stylesheet" th:href="@{/css/requisition-shared.css}"><script th:src="@{/js/requisitions.js}" defer></script></head>
-<body class="req-app"><div class="page-wrapper"><aside th:replace="~{fragments/sidebar :: sidebar(activeMenu='requisitions')}"></aside><div class="main-content"><header th:replace="~{fragments/requisition :: topbar}"></header>
-<main class="page-content"><section class="list-container"><th:block th:replace="~{fragments/requisition :: messages}"></th:block>
-<form th:action="@{/requisitions}" method="get" id="filterForm"><div class="list-header-bar"><div class="search-wrapper"><button class="search-button" type="submit" aria-label="Search requisitions">⌕</button><input type="search" name="q" th:value="${search}" maxlength="120" class="search-input" placeholder="Tìm kiếm yêu cầu..." aria-label="Search requisitions"></div><a th:if="${canCreate}" th:href="@{/requisitions/create}" class="btn-create">+ Create New Requisition</a></div>
-<div class="list-filter-bar"><div class="filters-group"><select class="filter-select" name="departmentId" aria-label="Department"><option value="">All departments</option><option th:each="dept : ${departments}" th:value="${dept.departmentId}" th:text="${dept.departmentName}" th:selected="${dept.departmentId == selectedDepartment}"></option></select>
-<select class="filter-select" name="type" aria-label="Employment type"><option value="">All types</option><option th:each="type : ${employmentTypes}" th:value="${type}" th:text="${type}" th:selected="${type == selectedType}"></option></select>
-<select class="filter-select" name="status" aria-label="Status"><option value="">All statuses</option><option th:each="state : ${ {'Draft','Pending_Director','Approved','Rejected'} }" th:value="${state}" th:text="${state == 'Pending_Director' ? 'Pending' : state}" th:selected="${state == selectedStatus}"></option></select><a th:href="@{/requisitions}" class="clear-filters">Clear filters</a><noscript><button type="submit">Apply filters</button></noscript></div><span class="records-count" th:text="|${totalElements} / ${totalVisible} requisitions|"></span></div></form>
-<div class="requisition-table-wrap"><table class="table requisition-list-table"><colgroup><col style="width:5%"><col style="width:29%"><col style="width:17%"><col style="width:8%"><col style="width:11%"><col style="width:10%"><col style="width:14%"><col style="width:6%"></colgroup><thead><tr><th>STT</th><th>Position</th><th>Department</th><th>Quantity</th><th>Type</th><th>Status</th><th>Created Date</th><th>Action</th></tr></thead><tbody>
-<tr th:each="req,row : ${requisitions}"><td data-label="STT" th:text="${(currentPage - 1) * pageSize + row.count}"></td><td data-label="Position"><a class="position-title" th:href="@{/requisitions/{id}(id=${req.requisitionId})}" th:text="${req.title}"></a></td><td data-label="Department" th:text="${req.departmentName}"></td><td data-label="Quantity" th:text="${req.numberOfPositions ?: '—'}"></td><td data-label="Type" class="nowrap" th:text="${req.employmentType ?: '—'}"></td><td data-label="Status"><span class="list-status" th:title="${req.approvalStatus == 'Pending_Director' ? 'Pending Director Approval' : req.approvalStatus}" th:text="${req.approvalStatus == 'Pending_Director' ? 'Pending' : req.approvalStatus}"></span></td><td data-label="Created Date" class="nowrap" th:text="${#temporals.format(req.createdAt,'dd/MM/yyyy')}"></td><td data-label="Action" class="action-cell">
-<button type="button" class="btn-action-outline" data-action-menu th:popovertarget="|actions-${req.requisitionId}|" th:aria-label="|Actions for ${req.title}|">⋯</button>
-<div class="action-popover" popover="auto" th:id="|actions-${req.requisitionId}|"><a th:href="@{/requisitions/{id}(id=${req.requisitionId})}">View details</a><a th:if="${req.editable}" th:href="@{/requisitions/edit/{id}(id=${req.requisitionId})}">Edit</a><a th:if="${canCreate}" th:href="@{/requisitions/copy/{id}(id=${req.requisitionId})}">Copy form</a><button th:if="${req.deletable}" type="button" class="delete-action" data-delete-requisition th:data-delete-url="@{/requisitions/delete/{id}(id=${req.requisitionId})}" th:data-title="${req.title}" th:data-version="${req.version}">Delete</button></div>
-</td></tr><tr th:if="${#lists.isEmpty(requisitions)}"><td colspan="8" class="empty-state">No requisitions found. Adjust your filters or create a new request.</td></tr></tbody></table></div>
-<nav class="list-pagination-footer" aria-label="Requisition pages"><div class="pagination"><a th:if="${currentPage > 1}" class="page-link" aria-label="Previous page" th:href="@{/requisitions(page=${currentPage - 1},size=${pageSize},q=${search},departmentId=${selectedDepartment},type=${selectedType},status=${selectedStatus})}">‹</a><span th:if="${currentPage == 1}" class="page-link disabled">‹</span><a class="page-link" th:each="page : ${#numbers.sequence(startPage,endPage)}" th:classappend="${page == currentPage ? 'active' : ''}" th:attr="aria-current=${page == currentPage ? 'page' : null}" th:text="${page}" th:href="@{/requisitions(page=${page},size=${pageSize},q=${search},departmentId=${selectedDepartment},type=${selectedType},status=${selectedStatus})}"></a><a th:if="${currentPage < totalPages}" class="page-link" aria-label="Next page" th:href="@{/requisitions(page=${currentPage + 1},size=${pageSize},q=${search},departmentId=${selectedDepartment},type=${selectedType},status=${selectedStatus})}">›</a><span th:if="${currentPage == totalPages}" class="page-link disabled">›</span></div></nav>
-</section></main></div></div><dialog th:replace="~{fragments/requisition :: deleteDialog}"></dialog></body></html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Job Requisitions | RMS</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" th:href="@{/css/app-layout.css}"><link rel="stylesheet" th:href="@{/css/requisition-shared.css}"><link rel="stylesheet" th:href="@{/css/requisition-list.css}"><script th:src="@{/js/requisitions.js}" defer></script>
+</head>
+<body class="req-app req-list-page"><div class="page-wrapper">
+<aside th:replace="~{fragments/sidebar :: sidebar(activeMenu='requisitions')}"></aside>
+<div class="main-content"><header th:replace="~{fragments/requisition :: topbar}"></header>
+<main class="page-content">
+    <nav class="requisition-breadcrumb" aria-label="Breadcrumb"><a th:href="@{/dashboard}">Overview</a><span aria-hidden="true">/</span><span aria-current="page">Job Requisitions</span></nav>
+    <div class="requisition-page-header">
+        <div><h1>Job Requisitions</h1><p>View and manage hiring requests from every department.</p></div>
+        <a th:if="${canCreate}" th:href="@{/requisitions/create}" class="btn-create">+ Create requisition</a>
+    </div>
+    <th:block th:replace="~{fragments/requisition :: messages}"></th:block>
+    <section class="list-container" aria-labelledby="requisition-list-title">
+        <div class="requisition-list-heading"><h2 id="requisition-list-title">Requisition list</h2><p class="records-count" th:text="|${totalElements} matching requisitions in total|"></p></div>
+        <form th:action="@{/requisitions}" method="get" id="filterForm">
+            <input type="hidden" name="size" th:value="${pageSize}">
+            <div class="requisition-filter-grid">
+                <div class="filter-field filter-search"><label for="requisition-search">Search</label><input id="requisition-search" type="search" name="q" th:value="${search}" maxlength="120" placeholder="Position or department name"></div>
+                <div class="filter-field"><label for="department-filter">Department</label><select id="department-filter" name="departmentId"><option value="">All departments</option><option th:each="dept : ${departments}" th:value="${dept.departmentId}" th:text="${dept.departmentName}" th:selected="${dept.departmentId == selectedDepartment}"></option></select></div>
+                <div class="filter-field"><label for="type-filter">Type</label><select id="type-filter" name="type"><option value="">All types</option><option th:each="type : ${employmentTypes}" th:value="${type}" th:text="${type}" th:selected="${type == selectedType}"></option></select></div>
+                <div class="filter-field"><label for="status-filter">Status</label><select id="status-filter" name="status"><option value="">All statuses</option><option th:each="state : ${ {'Draft','Pending_Director','Approved','Rejected'} }" th:value="${state}" th:text="${state == 'Pending_Director' ? 'Pending' : state}" th:selected="${state == selectedStatus}"></option></select></div>
+                <div class="filter-field"><label for="sort-filter">Sort by</label><select id="sort-filter" name="sort"><option value="newest" th:selected="${selectedSort == 'newest'}">Newest first</option><option value="oldest" th:selected="${selectedSort == 'oldest'}">Oldest first</option><option value="position_asc" th:selected="${selectedSort == 'position_asc'}">Position A–Z</option><option value="position_desc" th:selected="${selectedSort == 'position_desc'}">Position Z–A</option></select></div>
+            </div>
+            <div class="filter-actions"><button type="submit" class="filter-apply">Apply</button><a th:href="@{/requisitions}" class="clear-filters">Clear filters</a></div>
+        </form>
+        <div class="requisition-table-wrap" role="region" aria-label="Requisition list" tabindex="0">
+            <table class="requisition-list-table">
+                <colgroup><col class="col-index"><col class="col-position"><col class="col-department"><col class="col-quantity"><col class="col-type"><col class="col-status"><col class="col-date"><col class="col-actions"></colgroup>
+                <thead><tr><th scope="col">STT</th><th scope="col">Position</th><th scope="col">Department</th><th scope="col">Quantity</th><th scope="col">Type</th><th scope="col">Status</th><th scope="col">Created date</th><th scope="col">Actions</th></tr></thead>
+                <tbody>
+                    <tr th:each="req,row : ${requisitions}">
+                        <td th:text="${(currentPage - 1) * pageSize + row.count}"></td>
+                        <td><a class="position-title" th:href="@{/requisitions/{id}(id=${req.requisitionId})}" th:text="${req.title}"></a></td>
+                        <td th:text="${req.departmentName}"></td><td th:text="${req.numberOfPositions ?: '—'}"></td><td th:text="${req.employmentType ?: '—'}"></td>
+                        <td><span class="list-status" th:attr="data-status=${req.approvalStatus}" th:title="${req.approvalStatus == 'Pending_Director' ? 'Pending Director Approval' : req.approvalStatus}" th:text="${req.approvalStatus == 'Pending_Director' ? 'Pending' : req.approvalStatus}"></span></td>
+                        <td class="nowrap" th:text="${#temporals.format(req.createdAt,'dd/MM/yyyy')}"></td>
+                        <td class="action-cell">
+                            <button type="button" class="btn-action-outline" data-action-menu th:popovertarget="|actions-${req.requisitionId}|" th:aria-label="|Actions for ${req.title}|">⋯</button>
+                            <div class="action-popover" popover="auto" th:id="|actions-${req.requisitionId}|">
+                                <a th:href="@{/requisitions/{id}(id=${req.requisitionId})}">View details</a>
+                                <a th:if="${req.editable}" th:href="@{/requisitions/edit/{id}(id=${req.requisitionId})}">Edit</a>
+                                <a th:if="${canCreate}" th:href="@{/requisitions/copy/{id}(id=${req.requisitionId})}">Copy form</a>
+                                <button th:if="${req.deletable}" type="button" class="delete-action" data-delete-requisition th:data-delete-url="@{/requisitions/delete/{id}(id=${req.requisitionId})}" th:data-title="${req.title}" th:data-version="${req.version}">Delete</button>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr th:if="${#lists.isEmpty(requisitions)}"><td colspan="8" class="empty-state">No requisitions found. Adjust your filters or create a new request.</td></tr>
+                </tbody>
+            </table>
+        </div>
+        <nav class="list-pagination-footer" aria-label="Requisition pages"><div class="pagination">
+            <a th:if="${currentPage > 1}" class="page-link" aria-label="Previous page" th:href="@{/requisitions(page=${currentPage - 1},size=${pageSize},q=${search},departmentId=${selectedDepartment},type=${selectedType},status=${selectedStatus},sort=${selectedSort})}">‹</a>
+            <span th:if="${currentPage == 1}" class="page-link disabled" aria-label="Previous page" aria-disabled="true">‹</span>
+            <a class="page-link" th:each="page : ${#numbers.sequence(startPage,endPage)}" th:classappend="${page == currentPage ? 'active' : ''}" th:attr="aria-current=${page == currentPage ? 'page' : null}" th:aria-label="|Page ${page}|" th:text="${page}" th:href="@{/requisitions(page=${page},size=${pageSize},q=${search},departmentId=${selectedDepartment},type=${selectedType},status=${selectedStatus},sort=${selectedSort})}"></a>
+            <a th:if="${currentPage < totalPages}" class="page-link" aria-label="Next page" th:href="@{/requisitions(page=${currentPage + 1},size=${pageSize},q=${search},departmentId=${selectedDepartment},type=${selectedType},status=${selectedStatus},sort=${selectedSort})}">›</a>
+            <span th:if="${currentPage == totalPages}" class="page-link disabled" aria-label="Next page" aria-disabled="true">›</span>
+        </div></nav>
+    </section>
+</main></div></div>
+<dialog th:replace="~{fragments/requisition :: deleteDialog}"></dialog>
+</body></html>

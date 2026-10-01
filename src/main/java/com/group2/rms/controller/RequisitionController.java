@@ -35,13 +35,16 @@ public class RequisitionController {
     @GetMapping
     public String list(@RequestParam(defaultValue="1") int page,@RequestParam(defaultValue="10") int size,
                        @RequestParam(defaultValue="") String q,@RequestParam(required=false) Integer departmentId,
-                       @RequestParam(defaultValue="") String type,@RequestParam(defaultValue="") String status,Model model) {
-        var result=service.search(page,size,q,departmentId,type,status);
+                       @RequestParam(defaultValue="") String type,@RequestParam(defaultValue="") String status,
+                       @RequestParam(defaultValue="newest") String sort,Model model) {
+        if(!java.util.Set.of("newest","oldest","position_asc","position_desc").contains(sort)) sort="newest";
+        var result=service.search(page,size,q,departmentId,type,status,sort);
         model.addAttribute("requisitions",result.getContent());model.addAttribute("currentPage",result.getNumber()+1);
         model.addAttribute("totalPages",Math.max(1,result.getTotalPages()));model.addAttribute("pageSize",result.getSize());
         model.addAttribute("startPage",Math.max(1,result.getNumber()-1));model.addAttribute("endPage",Math.min(Math.max(1,result.getTotalPages()),result.getNumber()+3));
         model.addAttribute("totalElements",result.getTotalElements());model.addAttribute("totalVisible",service.countVisible());
         model.addAttribute("search",q);model.addAttribute("selectedDepartment",departmentId);model.addAttribute("selectedType",type);model.addAttribute("selectedStatus",status);
+        model.addAttribute("selectedSort",sort);
         options(model);return "requisitions/list";
     }
     @GetMapping("/create")

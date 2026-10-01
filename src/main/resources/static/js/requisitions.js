@@ -1,6 +1,4 @@
 document.addEventListener('DOMContentLoaded', () => {
-    const filter = document.getElementById('filterForm');
-    filter?.querySelectorAll('select').forEach(select => select.addEventListener('change', () => filter.requestSubmit()));
     document.querySelectorAll('[data-action-menu]').forEach(button => {
         const menu = document.getElementById(button.getAttribute('popovertarget'));
         menu.addEventListener('toggle', event => {

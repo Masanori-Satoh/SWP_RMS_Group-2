@@ -37,15 +37,27 @@ public class RequisitionServiceImpl implements RequisitionService {
     }
     @Override @Transactional(readOnly=true)
     public Page<RequisitionResponseDto> search(int page,int size,String query,Integer department,String type,String status) {
+        return search(page,size,query,department,type,status,"newest");
+    }
+    @Override @Transactional(readOnly=true)
+    public Page<RequisitionResponseDto> search(int page,int size,String query,Integer department,String type,String status,String order) {
         User actor=access.actor(); var filter=scope(actor);
         String term=Objects.toString(query,"").trim().toLowerCase(Locale.ROOT);
         if(term.length()>120)term=term.substring(0,120);
         String pattern="%"+term.replace("\\","\\\\").replace("%","\\%").replace("_","\\_").replace("[","\\[")+"%";
-        if(!term.isEmpty()) filter=filter.and((r,q,cb)->cb.like(cb.lower(r.get("title")),pattern,'\\'));
+        if(!term.isEmpty()) filter=filter.and((r,q,cb)->cb.or(
+            cb.like(cb.lower(r.get("title")),pattern,'\\'),
+            cb.like(cb.lower(r.join("department",jakarta.persistence.criteria.JoinType.LEFT).get("departmentName")),pattern,'\\')));
         if(department!=null)filter=filter.and((r,q,cb)->cb.equal(r.get("department").get("departmentId"),department));
         if(type!=null&&!type.isBlank())filter=filter.and((r,q,cb)->cb.equal(r.get("employmentType"),type));
         if(status!=null&&!status.isBlank())filter=filter.and((r,q,cb)->cb.equal(r.get("approvalStatus"),status));
-        int count=Math.max(1,Math.min(size,50)); var sort=Sort.by(Sort.Order.desc("createdAt"),Sort.Order.desc("requisitionId"));
+        int count=Math.max(1,Math.min(size,50));
+        var sort=switch(Objects.toString(order,"newest")) {
+            case "oldest" -> Sort.by(Sort.Order.asc("createdAt"),Sort.Order.asc("requisitionId"));
+            case "position_asc" -> Sort.by(Sort.Order.asc("title"),Sort.Order.desc("requisitionId"));
+            case "position_desc" -> Sort.by(Sort.Order.desc("title"),Sort.Order.desc("requisitionId"));
+            default -> Sort.by(Sort.Order.desc("createdAt"),Sort.Order.desc("requisitionId"));
+        };
         var result=requisitions.findAll(filter,PageRequest.of(Math.max(0,page-1),count,sort));
         if(result.getTotalPages()>0&&result.getNumber()>=result.getTotalPages())result=requisitions.findAll(filter,PageRequest.of(result.getTotalPages()-1,count,sort));
         return result.map(r->response(r,actor,false));

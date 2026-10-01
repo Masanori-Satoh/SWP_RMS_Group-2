@@ -4,6 +4,7 @@ import com.group2.rms.dto.response.RequisitionResponseDto;
 import org.springframework.data.domain.Page;
 public interface RequisitionService {
  Page<RequisitionResponseDto> search(int page,int size,String query,Integer department,String type,String status);
+ Page<RequisitionResponseDto> search(int page,int size,String query,Integer department,String type,String status,String sort);
  long countVisible();
  RequisitionResponseDto getById(Integer id);
  RequisitionRequestDto getRequestDtoById(Integer id);

@@ -21,6 +21,22 @@ class RequisitionReviewProbeTests {
  @Autowired RoleRepository roles; @Autowired DepartmentRepository departments; @Autowired AuditLogRepository audit;
  @Autowired JobPostingRepository postings; @Autowired EntityManager em;
  User manager,director;
+ @Test void searchFindsDepartmentsAndSortsAcrossPages(){
+  var first=complete("draft");first.setTitle("Zulu Engineer");int older=service.createRequisition(first);
+  stored(older);
+  var second=complete("draft");second.setTitle("Alpha Engineer");int newer=service.createRequisition(second);stored(newer);
+  String department=manager.getDepartment().getDepartmentName();
+  assertEquals(2,service.search(1,10,department,null,"Full-time","Draft","newest").getTotalElements());
+  assertEquals(newer,service.search(1,1,"",null,"","","newest").getContent().getFirst().getRequisitionId());
+  assertEquals(older,service.search(2,1,"",null,"","","newest").getContent().getFirst().getRequisitionId());
+  assertEquals(older,service.search(1,1,"",null,"","","oldest").getContent().getFirst().getRequisitionId());
+  assertEquals(newer,service.search(1,1,"",null,"","","position_asc").getContent().getFirst().getRequisitionId());
+  assertEquals(older,service.search(1,1,"",null,"","","position_desc").getContent().getFirst().getRequisitionId());
+  var noDepartment=complete("draft");noDepartment.setTitle("No department role");noDepartment.setDepartmentId(null);
+  int unassigned=service.createRequisition(noDepartment);stored(unassigned);
+  assertEquals(unassigned,service.search(1,10,"No department",null,"","","newest").getContent().getFirst().getRequisitionId());
+  signIn(account("Hiring Manager"));assertTrue(service.search(1,10,department,null,"","","oldest").isEmpty());
+ }
  @BeforeEach void actors(){manager=account("Hiring Manager");director=account("Director");signIn(manager);}
  @AfterEach void cleanup(){SecurityContextHolder.clearContext();}
  private User account(String role){String id="reqtest"+UUID.randomUUID().toString().replace("-","").substring(0,12);return users.saveAndFlush(User.builder().username(id).email(id+"@example.test").fullName(role+" test").passwordHash("test-only").accountStatus("Active").department(departments.findAll().getFirst()).role(roles.findAll().stream().filter(r->role.equals(r.getRoleName())).findFirst().orElseThrow()).build());}
