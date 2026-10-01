@@ -120,9 +120,9 @@ lines.append("")
 # 3. INTERNAL USERS
 lines.append("-- =============================================================================")
 lines.append("-- 3. INTERNAL USERS (10 Accounts: Admin, Director, 2 HR, 2 HM, 4 Interviewers)")
-lines.append("-- Password: '123456' -> BCrypt: $2a$10$dXJ3SW6G7P50lGmMkkmwe.20cQQubK3.HZWzG3YB1tlRy.fqvM/BG")
+lines.append("-- Password: '12345678' -> BCrypt: $2a$10$p.RWJeHxArmCbQBg3GNXEew66veoolEXULwkrjzeoof8Me1dAD8PO")
 lines.append("-- =============================================================================")
-bcrypt_hash = "$2a$10$dXJ3SW6G7P50lGmMkkmwe.20cQQubK3.HZWzG3YB1tlRy.fqvM/BG"
+bcrypt_hash = "$2a$10$p.RWJeHxArmCbQBg3GNXEew66veoolEXULwkrjzeoof8Me1dAD8PO"
 
 internal_users = [
     # (RoleId, Username, Email, FullName, Phone, DeptId, CreatedAt)
