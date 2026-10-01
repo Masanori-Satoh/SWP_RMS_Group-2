@@ -1,4 +1,4 @@
-# LinhDN specification decisions and open data gaps
+﻿# LinhDN specification decisions and open data gaps
 
 ## Candidate accounts
 
@@ -34,3 +34,4 @@ If future settings include secrets, the UI must mask existing values, preserve a
 Monitor both internal APIs and the two external integration categories. The requested probe should send a request and report whether a response is returned. The concrete probe method and target must be checked against each integration contract before implementation so the health check does not accidentally submit a CV or send email.
 
 The current internal probe, missing external contracts, statistics window, and local schema validation incident are recorded in `linhdn-api-monitoring.md`.
+

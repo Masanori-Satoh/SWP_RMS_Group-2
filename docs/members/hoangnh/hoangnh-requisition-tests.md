@@ -1,4 +1,4 @@
-# Kiểm thử chức năng Job Requisition (Kế hoạch Test)
+﻿# Kiểm thử chức năng Job Requisition (Kế hoạch Test)
 
 Tài liệu này định nghĩa các kịch bản kiểm thử (Test Cases) cho chức năng Quản lý Yêu cầu tuyển dụng (Job Requisition) trong hệ thống RMS, bao gồm Unit Test, Integration Test và System Test.
 
@@ -106,3 +106,4 @@ Tài liệu này định nghĩa các kịch bản kiểm thử (Test Cases) cho 
   - Trở lại danh sách, chọn "Delete" qua action menu.
   - Một Modal xác nhận hiển thị. Click "Yes, Delete".
   - Trang tải lại, bản ghi "Java Dev" không còn trong danh sách.
+

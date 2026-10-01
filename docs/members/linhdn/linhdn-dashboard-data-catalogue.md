@@ -1,4 +1,4 @@
-# LinhDN Dashboard data catalogue (milestone 4)
+﻿# LinhDN Dashboard data catalogue (milestone 4)
 
 All numbers below are queried from the current SQL Server database on each dashboard request. A displayed `0` means the query returned zero. Status names follow the existing entity values; no metric is seeded or hardcoded in the view.
 
@@ -33,3 +33,4 @@ All numbers below are queried from the current SQL Server database on each dashb
 - The Director queues are global because approval assignment exists only on completed approval records. If Director queues must be partitioned by department, the assignment rule needs a separate requirement.
 
 Guest access remains denied by `SecurityConfig`; all six authenticated roles can open `/dashboard`. Account status and role changes invalidate existing sessions through `AccountSessionGuardFilter`.
+

@@ -1,4 +1,4 @@
-# Báo cáo tiến độ (Work Log)
+﻿# Báo cáo tiến độ (Work Log)
 
 Tài liệu này ghi nhận lại toàn bộ những chỉnh sửa, khắc phục lỗi (bug fixes) và định hướng công việc tiếp theo trong dự án.
 
@@ -103,3 +103,4 @@ Dưới đây là tài liệu mô tả luồng hoạt động (Data Flow / Contr
   - Load danh sách phê duyệt từ `RequisitionApprovalRepository`.
   - Load lịch sử log từ `AuditLogRepository` theo `entityId` và `entityName = "JobRequisition"`.
 - **View (`detail.html`):** Render giao diện chi tiết, hiển thị thông tin chung, tiêu chí sàng lọc (criteria) và lịch sử hoạt động (Activity Log).
+

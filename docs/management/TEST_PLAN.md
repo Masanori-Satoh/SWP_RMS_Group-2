@@ -1,4 +1,4 @@
-# Kịch bản kiểm thử sau khi đồng bộ schema
+﻿# Kịch bản kiểm thử sau khi đồng bộ schema
 
 Cập nhật: 2026-09-29. Nguồn chuẩn của database là `database/schema/db.sql`.
 Tài liệu này phân biệt **đã kiểm thử tự động** và **bước cần chạy thủ công**.
@@ -151,3 +151,4 @@ connection string có credential hoặc giá trị secret vào log.
 
 Khi có tính năng mới, thêm mã test vào tài liệu này với: điều kiện đầu vào,
 từng thao tác/lệnh, kết quả mong đợi, nơi xem bằng chứng và trạng thái đã chạy.
+

@@ -1,4 +1,4 @@
-# LinhDN Iteration 1 traceability
+﻿# LinhDN Iteration 1 traceability
 
 This matrix tracks only the features owned by LinhDN. The account-list entries reflect the decisions confirmed after the original SRS was written.
 
@@ -15,3 +15,4 @@ This matrix tracks only the features owned by LinhDN. The account-list entries r
 Account forms use the new `User` column lengths: username 50, email 150, full name 100, and phone 20. Candidate phone is optional because contact data lives in `User`. Creating a Candidate account or changing an account to Candidate creates a linked profile if absent. Switching a linked Candidate account to an internal role preserves its profile and history.
 
 The SRS Candidate registration mockup says email may be 255 characters, while the new `User.Email` column is 150 characters. The account form now validates at 150. Supporting 255-character registration emails requires an explicit schema decision.
+

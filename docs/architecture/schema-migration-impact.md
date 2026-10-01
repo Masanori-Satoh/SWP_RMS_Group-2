@@ -1,4 +1,4 @@
-# Schema migration impact analysis
+﻿# Schema migration impact analysis
 
 Source of truth: `database/schema/db.sql` (20 SQL Server tables). This analysis was
 completed before changing Java mappings. The schema script drops and recreates
@@ -88,3 +88,4 @@ then passed. Compilation alone was not treated as migration proof.
 - `mvn -DskipTests package`: passed and produced the application JAR.
 - Dependency search found no obsolete entity fields in active `src/main` or `src/test`. Historical terms remain in the old seeding guide and the archived candidate-link migration, both labeled non-applicable to the new schema.
 - `database/schema/db.sql` and current seed files were not modified or rerun.
+

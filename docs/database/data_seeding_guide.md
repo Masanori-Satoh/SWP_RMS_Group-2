@@ -1,4 +1,4 @@
-# Hướng Dẫn Kiến Trúc & Cơ Chế Khởi Tạo Dữ Liệu (Database Seeding Guide)
+﻿# Hướng Dẫn Kiến Trúc & Cơ Chế Khởi Tạo Dữ Liệu (Database Seeding Guide)
 
 > **Lưu trữ lịch sử:** Phần nội dung bên dưới mô tả seeder Java và schema cũ;
 > không dùng làm hướng dẫn khởi tạo database hiện tại. Nguồn chuẩn hiện nay là
@@ -25,7 +25,7 @@
 
 Tài liệu này được lập ra nhằm giúp các thành viên hiện tại và người kế thừa dự án sau này hiểu rõ:
 1. **Lịch sử & Các bước thực hiện**: Làm thế nào hệ thống sinh ra cấu trúc bảng và toàn bộ bộ dữ liệu mẫu (mock data quy mô SME ~300 bản ghi) hiện tại trên MS SQL Server.
-2. **Cơ chế nạp dữ liệu (Data Seeding)**: Cách thức [SmeDataSeeder.java](file:///d:/Coding_source/swp_project/SWP_RMS_Group-2/src/main/java/com/group2/rms/config/SmeDataSeeder.java) hoạt động, thứ tự nạp dữ liệu đảm bảo toàn vẹn ràng buộc khóa ngoại (Foreign Key Constraints).
+2. **Cơ chế nạp dữ liệu (Data Seeding)**: Cách thức [SmeDataSeeder.java](file:///d:/Coding_source/swp_project/SWP_RMS_Group-2/src/main/java/com/group2/rms/core/config/SmeDataSeeder.java) hoạt động, thứ tự nạp dữ liệu đảm bảo toàn vẹn ràng buộc khóa ngoại (Foreign Key Constraints).
 3. **Bài toán kỹ thuật & Cải tiến quan trọng**:
    - **Xử lý triệt để Tiếng Việt có dấu (Unicode)**: Phân tích cội rễ lỗi hiển thị dấu hỏi chấm `?` trên MS SQL Server, sự khác biệt giữa `VARCHAR` và `NVARCHAR`, cơ chế của Hibernate 6, cấu hình quốc tế hóa chuẩn và cách tránh hiểu lầm khi xem dữ liệu qua Terminal/Console.
    - **Lấp đầy dữ liệu mẫu thực tế**: Xóa bỏ tình trạng dữ liệu `NULL` ở các trường đánh giá, điểm số, liên kết người duyệt, ảnh đại diện, tạo nên bộ dữ liệu mẫu sinh động, bám sát nghiệp vụ tuyển dụng.
@@ -38,7 +38,7 @@ Tài liệu này được lập ra nhằm giúp các thành viên hiện tại v
 
 ### 2.1. Khởi tạo Schema từ Entity (JPA & Hibernate DDL)
 - Dựa trên tài liệu đặc tả thiết kế cơ sở dữ liệu tại [model.md](file:///d:/Coding_source/swp_project/SWP_RMS_Group-2/docs/database/model.md), hệ thống đã xây dựng 19 Entity JPA tương ứng với các bảng trong hệ thống.
-- Các Entity đều kế thừa [BaseEntity.java](file:///d:/Coding_source/swp_project/SWP_RMS_Group-2/src/main/java/com/group2/rms/entity/BaseEntity.java) để tự động quản lý thời gian tạo (`createdAt`) và cập nhật (`updatedAt`) thông qua cơ chế JPA Auditing (`@PrePersist`, `@PreUpdate`).
+- Các Entity đều kế thừa [BaseEntity.java](file:///d:/Coding_source/swp_project/SWP_RMS_Group-2/src/main/java/com/group2/rms/core/base/BaseEntity.java) để tự động quản lý thời gian tạo (`createdAt`) và cập nhật (`updatedAt`) thông qua cơ chế JPA Auditing (`@PrePersist`, `@PreUpdate`).
 - Tùy chọn `spring.jpa.hibernate.ddl-auto=update` trong [application.properties](file:///d:/Coding_source/swp_project/SWP_RMS_Group-2/src/main/resources/application.properties) tự động đồng bộ khai báo Java Entity thành cấu trúc bảng, khóa chính (Primary Key - Identity), khóa ngoại (Foreign Key) và các ràng buộc Unique trên MS SQL Server khi ứng dụng khởi động.
 
 ### 2.2. Cơ chế nạp dữ liệu tự động (Data Seeding)
@@ -190,7 +190,7 @@ Phương pháp hiện tại là: **Dùng class Java implements `CommandLineRunne
 - ❌ **Rủi ro khởi động trên môi trường thật (Staging / Production)**:
   - Nếu quên tắt hoặc không tách profile, Seeder có thể vô tình chạy trên môi trường thật.
   - Logic guard `roleRepository.count() > 0` chỉ kiểm tra bảng `Role`. Nếu ai đó xóa nhầm dữ liệu ở bảng `User` hay `Application`, seeder sẽ không chạy bù lại.
-- ❌ **Mã nguồn bị phình to (Code Bloat)**: File [SmeDataSeeder.java](file:///d:/Coding_source/swp_project/SWP_RMS_Group-2/src/main/java/com/group2/rms/config/SmeDataSeeder.java) hiện tại dài hơn 600 dòng code, chứa nhiều mảng dữ liệu mẫu (mảng tên, chức danh, mô tả công việc). Khi thay đổi cấu trúc bảng, lập trình viên phải sửa cả Entity lẫn Seeder.
+- ❌ **Mã nguồn bị phình to (Code Bloat)**: File [SmeDataSeeder.java](file:///d:/Coding_source/swp_project/SWP_RMS_Group-2/src/main/java/com/group2/rms/core/config/SmeDataSeeder.java) hiện tại dài hơn 600 dòng code, chứa nhiều mảng dữ liệu mẫu (mảng tên, chức danh, mô tả công việc). Khi thay đổi cấu trúc bảng, lập trình viên phải sửa cả Entity lẫn Seeder.
 - ❌ **Chưa kích hoạt JDBC Batching ở tầng Driver**:
   - Dù dùng `saveAll()`, mặc định Spring Boot và Hibernate vẫn gửi từng câu lệnh `INSERT` riêng lẻ qua mạng nếu chưa cấu hình `hibernate.jdbc.batch_size`. Với 300 records thì nhanh, nhưng nếu seed hàng nghìn records sẽ bị nghẽn cổ chai.
 
@@ -286,19 +286,19 @@ SWP_RMS_Group-2/
 | Đường dẫn file | Loại file | Vai trò & Giải thích chi tiết |
 |---|---|---|
 | [`docs/database/data_seeding_guide.md`](file:///d:/Coding_source/swp_project/SWP_RMS_Group-2/docs/database/data_seeding_guide.md) | Markdown | **Tài liệu hướng dẫn tổng hợp** (file này). Ghi chép toàn bộ kiến trúc khởi tạo dữ liệu, kinh nghiệm sửa lỗi tiếng Việt/NULL, ưu/nhược điểm và hướng dẫn cho người phát triển sau. |
-| [`src/main/java/com/group2/rms/config/SmeDataSeeder.java`](file:///d:/Coding_source/swp_project/SWP_RMS_Group-2/src/main/java/com/group2/rms/config/SmeDataSeeder.java) | Java Class | **Bộ nạp dữ liệu chính**. Chạy khi ứng dụng khởi động (`CommandLineRunner`). Tạo ~300 records quy mô SME phủ khắp 10 thực thể chính, hỗ trợ 100% tiếng Việt có dấu, kiểm soát thứ tự FK, tối ưu BCrypt 1 lần, batch `saveAll`. |
-| [`src/main/java/com/group2/rms/config/DatabaseSeeder.java`](file:///d:/Coding_source/swp_project/SWP_RMS_Group-2/src/main/java/com/group2/rms/config/DatabaseSeeder.java) | Java Class | **Bộ nạp dữ liệu cơ bản ban đầu**. Chỉ tạo 5 Roles, 4 Depts, 3 Users. Hiện tại đã được comment `@Component` để nhường quyền kích hoạt cho `SmeDataSeeder`. |
-| [`src/main/java/com/group2/rms/config/SecurityConfig.java`](file:///d:/Coding_source/swp_project/SWP_RMS_Group-2/src/main/java/com/group2/rms/config/SecurityConfig.java) | Java Class | **Cấu hình Spring Security**. Cung cấp Bean `PasswordEncoder` (sử dụng thuật toán `BCryptPasswordEncoder`) cho seeder và các service; bật form login, CSRF và phân quyền các route LinhDN đã xác nhận. |
-| [`src/main/java/com/group2/rms/repository/RoleRepository.java`](file:///d:/Coding_source/swp_project/SWP_RMS_Group-2/src/main/java/com/group2/rms/repository/RoleRepository.java) | Java Interface | Repository thao tác CRUD và đếm số lượng bản ghi bảng `Role`. |
-| [`src/main/java/com/group2/rms/repository/DepartmentRepository.java`](file:///d:/Coding_source/swp_project/SWP_RMS_Group-2/src/main/java/com/group2/rms/repository/DepartmentRepository.java) | Java Interface | Repository thao tác CRUD bảng `Department`. |
-| [`src/main/java/com/group2/rms/repository/UserRepository.java`](file:///d:/Coding_source/swp_project/SWP_RMS_Group-2/src/main/java/com/group2/rms/repository/UserRepository.java) | Java Interface | Repository quản lý người dùng, tìm kiếm theo `username`, `email`. |
-| [`src/main/java/com/group2/rms/repository/JobRequisitionRepository.java`](file:///d:/Coding_source/swp_project/SWP_RMS_Group-2/src/main/java/com/group2/rms/repository/JobRequisitionRepository.java) | Java Interface | Repository quản lý yêu cầu tuyển dụng từ Hiring Manager. |
-| [`src/main/java/com/group2/rms/repository/JobPostingRepository.java`](file:///d:/Coding_source/swp_project/SWP_RMS_Group-2/src/main/java/com/group2/rms/repository/JobPostingRepository.java) | Java Interface | Repository quản lý tin tuyển dụng công khai do HR đăng tải. |
-| [`src/main/java/com/group2/rms/repository/CandidateRepository.java`](file:///d:/Coding_source/swp_project/SWP_RMS_Group-2/src/main/java/com/group2/rms/repository/CandidateRepository.java) | Java Interface | Repository quản lý hồ sơ ứng viên. |
-| [`src/main/java/com/group2/rms/repository/ApplicationReviewRepository.java`](file:///d:/Coding_source/swp_project/SWP_RMS_Group-2/src/main/java/com/group2/rms/repository/ApplicationReviewRepository.java) | Java Interface | Repository quản lý file CV/Resume đính kèm của ứng viên. |
-| [`src/main/java/com/group2/rms/repository/ApplicationRepository.java`](file:///d:/Coding_source/swp_project/SWP_RMS_Group-2/src/main/java/com/group2/rms/repository/ApplicationRepository.java) | Java Interface | Repository quản lý đơn ứng tuyển, lưu trữ trạng thái tuyển dụng và điểm số/review notes. |
-| [`src/main/java/com/group2/rms/repository/InterviewScheduleRepository.java`](file:///d:/Coding_source/swp_project/SWP_RMS_Group-2/src/main/java/com/group2/rms/repository/InterviewScheduleRepository.java) | Java Interface | Repository quản lý lịch phỏng vấn (online/offline) giữa hội đồng và ứng viên. |
-| [`src/main/java/com/group2/rms/repository/OfferProposalRepository.java`](file:///d:/Coding_source/swp_project/SWP_RMS_Group-2/src/main/java/com/group2/rms/repository/OfferProposalRepository.java) | Java Interface | Repository quản lý đề xuất thư mời nhận việc (mức lương, vị trí, thời gian thử việc). |
+| [`../../src/main/java/com/group2/rms/core/config`](file:///d:/Coding_source/swp_project/SWP_RMS_Group-2/src/main/java/com/group2/rms/core/config/SmeDataSeeder.java) | Java Class | **Bộ nạp dữ liệu chính**. Chạy khi ứng dụng khởi động (`CommandLineRunner`). Tạo ~300 records quy mô SME phủ khắp 10 thực thể chính, hỗ trợ 100% tiếng Việt có dấu, kiểm soát thứ tự FK, tối ưu BCrypt 1 lần, batch `saveAll`. |
+| [`../../src/main/java/com/group2/rms/core/config`](file:///d:/Coding_source/swp_project/SWP_RMS_Group-2/src/main/java/com/group2/rms/core/config/DatabaseSeeder.java) | Java Class | **Bộ nạp dữ liệu cơ bản ban đầu**. Chỉ tạo 5 Roles, 4 Depts, 3 Users. Hiện tại đã được comment `@Component` để nhường quyền kích hoạt cho `SmeDataSeeder`. |
+| [`../../src/main/java/com/group2/rms/core/config`](file:///d:/Coding_source/swp_project/SWP_RMS_Group-2/src/main/java/com/group2/rms/core/config/SecurityConfig.java) | Java Class | **Cấu hình Spring Security**. Cung cấp Bean `PasswordEncoder` (sử dụng thuật toán `BCryptPasswordEncoder`) cho seeder và các service; bật form login, CSRF và phân quyền các route LinhDN đã xác nhận. |
+| [`src/main/java/com/group2/rms/user/repository/RoleRepository.java`](file:///d:/Coding_source/swp_project/SWP_RMS_Group-2/src/main/java/com/group2/rms/user/repository/RoleRepository.java) | Java Interface | Repository thao tác CRUD và đếm số lượng bản ghi bảng `Role`. |
+| [`src/main/java/com/group2/rms/user/repository/DepartmentRepository.java`](file:///d:/Coding_source/swp_project/SWP_RMS_Group-2/src/main/java/com/group2/rms/user/repository/DepartmentRepository.java) | Java Interface | Repository thao tác CRUD bảng `Department`. |
+| [`src/main/java/com/group2/rms/user/repository/UserRepository.java`](file:///d:/Coding_source/swp_project/SWP_RMS_Group-2/src/main/java/com/group2/rms/user/repository/UserRepository.java) | Java Interface | Repository quản lý người dùng, tìm kiếm theo `username`, `email`. |
+| [`src/main/java/com/group2/rms/requisition/repository/JobRequisitionRepository.java`](file:///d:/Coding_source/swp_project/SWP_RMS_Group-2/src/main/java/com/group2/rms/requisition/repository/JobRequisitionRepository.java) | Java Interface | Repository quản lý yêu cầu tuyển dụng từ Hiring Manager. |
+| [`src/main/java/com/group2/rms/requisition/repository/JobPostingRepository.java`](file:///d:/Coding_source/swp_project/SWP_RMS_Group-2/src/main/java/com/group2/rms/requisition/repository/JobPostingRepository.java) | Java Interface | Repository quản lý tin tuyển dụng công khai do HR đăng tải. |
+| [`src/main/java/com/group2/rms/candidate/CandidateRepository.java`](file:///d:/Coding_source/swp_project/SWP_RMS_Group-2/src/main/java/com/group2/rms/candidate/CandidateRepository.java) | Java Interface | Repository quản lý hồ sơ ứng viên. |
+| [`src/main/java/com/group2/rms/candidate/ApplicationReviewRepository.java`](file:///d:/Coding_source/swp_project/SWP_RMS_Group-2/src/main/java/com/group2/rms/candidate/ApplicationReviewRepository.java) | Java Interface | Repository quản lý file CV/Resume đính kèm của ứng viên. |
+| [`src/main/java/com/group2/rms/candidate/ApplicationRepository.java`](file:///d:/Coding_source/swp_project/SWP_RMS_Group-2/src/main/java/com/group2/rms/candidate/ApplicationRepository.java) | Java Interface | Repository quản lý đơn ứng tuyển, lưu trữ trạng thái tuyển dụng và điểm số/review notes. |
+| [`src/main/java/com/group2/rms/interview/InterviewScheduleRepository.java`](file:///d:/Coding_source/swp_project/SWP_RMS_Group-2/src/main/java/com/group2/rms/interview/InterviewScheduleRepository.java) | Java Interface | Repository quản lý lịch phỏng vấn (online/offline) giữa hội đồng và ứng viên. |
+| [`src/main/java/com/group2/rms/offer/OfferProposalRepository.java`](file:///d:/Coding_source/swp_project/SWP_RMS_Group-2/src/main/java/com/group2/rms/offer/OfferProposalRepository.java) | Java Interface | Repository quản lý đề xuất thư mời nhận việc (mức lương, vị trí, thời gian thử việc). |
 | [`src/main/resources/application.properties`](file:///d:/Coding_source/swp_project/SWP_RMS_Group-2/src/main/resources/application.properties) | Properties | **File cấu hình ứng dụng chính**. Đã bổ sung cấu hình `hibernate.use_nationalized_character_data=true` để bắt buộc Hibernate sử dụng `NVARCHAR` cho tất cả cột String. |
 | [`src/main/resources/application.properties.example`](file:///d:/Coding_source/swp_project/SWP_RMS_Group-2/src/main/resources/application.properties.example) | Properties | **File cấu hình mẫu**. Cung cấp template cấu hình kết nối DB và Hibernate chuẩn hóa cho các thành viên khác khi clone source code về máy. |
 | [`pom.xml`](file:///d:/Coding_source/swp_project/SWP_RMS_Group-2/pom.xml) | Maven POM | **File quản lý thư viện Maven**. Đã bổ sung dependency `spring-boot-starter-security` để hỗ trợ cơ chế mã hóa mật khẩu `BCryptPasswordEncoder`. |
@@ -340,3 +340,4 @@ SWP_RMS_Group-2/
    SELECT * FROM [Application];
    ```
    *(Lưu ý: Luôn kiểm tra tiếng Việt trong SSMS hoặc giao diện web. Tránh kiểm tra qua cửa sổ cmd/PowerShell trừ khi đã gõ `chcp 65001` vì console Windows mặc định không render font Unicode UTF-8)*.
+

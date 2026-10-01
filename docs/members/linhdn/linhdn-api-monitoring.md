@@ -1,4 +1,4 @@
-# LinhDN API Monitoring: source and probe contract
+﻿# LinhDN API Monitoring: source and probe contract
 
 ## Current sources
 
@@ -25,3 +25,4 @@ To probe AI or email safely, the team must provide the actual target and method.
 During a local `spring-boot:run` attempt, the ignored local `application.properties` still had `spring.jpa.hibernate.ddl-auto=update`. Passing `-Dspring.jpa.hibernate.ddl-auto=validate` to Maven did not pass that value into the forked application. Hibernate issued `ALTER TABLE` statements on 10 existing tables at 07:01:51. A read-only metadata check found 19 `nvarchar(max)` columns in those tables and confirmed table modification time. The observed record counts afterward were 17 User, 51 Candidate, and 100 Application. There is no pre-run schema snapshot, so the previous column definitions cannot be proved or safely restored from this check.
 
 The ignored local `application.properties` was changed to `ddl-auto=validate` immediately afterward. A subsequent startup attempt using validate did not advance the tables' schema modification timestamp. That attempt could not serve HTTP in this environment because the JDK/Tomcat failed to establish a loopback selector connection; MVC, service, and database tests remain the available verification. Keep `ddl-auto=validate` in local runtime configuration before starting the app on another machine.
+

@@ -1,4 +1,4 @@
-# Database model reference
+﻿# Database model reference
 
 `database/schema/db.sql` là nguồn chuẩn cho tên bảng/cột, kiểu dữ liệu và ràng
 buộc. Tài liệu này chỉ mô tả nghiệp vụ; khi khác SQL, ưu tiên SQL.
@@ -206,3 +206,4 @@ CandidateCounterSalary;NULL;Candidate's counter-offer salary
 CandidateNotes;NULL;Candidate's requests/feedback
 HRResponseNotes;NULL;HR's response
 NegotiationDate;NOT NULL, DEFAULT SYSDATETIME();Time of exchange
+
