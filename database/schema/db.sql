@@ -129,6 +129,11 @@ CREATE TABLE JobRequisition (
     ReasonForHiring NVARCHAR(2000) NULL,
     JobDescription NVARCHAR(MAX) NOT NULL,
     RequirementDetails NVARCHAR(MAX) NOT NULL,
+    RequiredGender NVARCHAR(20) NOT NULL CONSTRAINT DF_JobRequisition_RequiredGender DEFAULT N'Any',
+    ProbationDuration NVARCHAR(50) NULL,
+    WorkModel NVARCHAR(20) NOT NULL CONSTRAINT DF_JobRequisition_WorkModel DEFAULT N'On-site',
+    WorkLocation NVARCHAR(255) NULL,
+    ExpectedStartDate DATE NULL,
     ApprovalStatus NVARCHAR(30) NOT NULL CONSTRAINT DF_JobRequisition_ApprovalStatus DEFAULT N'Draft',
     CreatedAt DATETIME2 NOT NULL CONSTRAINT DF_JobRequisition_CreatedAt DEFAULT SYSDATETIME(),
     UpdatedAt DATETIME2 NULL,
@@ -144,6 +149,12 @@ CREATE TABLE JobRequisition (
 
     CONSTRAINT CK_JobRequisition_EmploymentType
         CHECK (EmploymentType IN (N'Full-time', N'Part-time', N'Internship', N'Contract')),
+
+    CONSTRAINT CK_JobRequisition_RequiredGender
+        CHECK (RequiredGender IN (N'Male', N'Female', N'Any')),
+
+    CONSTRAINT CK_JobRequisition_WorkModel
+        CHECK (WorkModel IN (N'On-site', N'Remote', N'Hybrid')),
 
     CONSTRAINT CK_JobRequisition_ApprovalStatus
         CHECK (ApprovalStatus IN (N'Draft', N'Pending_Director', N'Approved', N'Rejected')),
@@ -342,7 +353,6 @@ GO
 CREATE TABLE InterviewSchedule (
     InterviewId INT IDENTITY(1,1) PRIMARY KEY,
     ApplicationId INT NOT NULL,
-    InterviewRound NVARCHAR(50) NOT NULL,
     InterviewFormat NVARCHAR(30) NOT NULL,
     StartTime DATETIME2 NOT NULL,
     EndTime DATETIME2 NOT NULL,
@@ -359,9 +369,6 @@ CREATE TABLE InterviewSchedule (
 
     CONSTRAINT CK_InterviewSchedule_Time
         CHECK (EndTime > StartTime),
-
-    CONSTRAINT CK_InterviewSchedule_Round
-        CHECK (InterviewRound IN (N'Round 1 - HR', N'Round 2 - Technical', N'Final')),
 
     CONSTRAINT CK_InterviewSchedule_Format
         CHECK (InterviewFormat IN (N'Online_GoogleMeet', N'Offline_Office')),
@@ -439,6 +446,7 @@ CREATE TABLE InterviewFinalResult (
     InterviewId INT NOT NULL CONSTRAINT UQ_InterviewFinalResult_Interview UNIQUE,
     HiringManagerId INT NOT NULL,
     FinalDecision NVARCHAR(20) NOT NULL,
+    RecommendedSalary DECIMAL(18,2) NULL,
     FinalSummaryComments NVARCHAR(MAX) NULL,
     ApprovedAt DATETIME2 NOT NULL CONSTRAINT DF_InterviewFinalResult_ApprovedAt DEFAULT SYSDATETIME(),
 
@@ -449,7 +457,10 @@ CREATE TABLE InterviewFinalResult (
         FOREIGN KEY (HiringManagerId) REFERENCES [User](UserId),
 
     CONSTRAINT CK_InterviewFinalResult_FinalDecision
-        CHECK (FinalDecision IN (N'Passed', N'Failed'))
+        CHECK (FinalDecision IN (N'Passed', N'Failed')),
+
+    CONSTRAINT CK_InterviewFinalResult_RecommendedSalary
+        CHECK (RecommendedSalary IS NULL OR RecommendedSalary >= 0)
 );
 GO
 
@@ -481,10 +492,11 @@ CREATE TABLE OfferProposal (
         CHECK (OfferStatus IN (
             N'Draft',
             N'Pending_Director',
-            N'Approved',
+            N'Director_Approved',
+            N'Director_Rejected',
             N'Sent_Candidate',
             N'Accepted',
-            N'Rejected',
+            N'Declined',
             N'Negotiating'
         )),
 

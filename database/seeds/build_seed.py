@@ -120,9 +120,9 @@ lines.append("")
 # 3. INTERNAL USERS
 lines.append("-- =============================================================================")
 lines.append("-- 3. INTERNAL USERS (10 Accounts: Admin, Director, 2 HR, 2 HM, 4 Interviewers)")
-lines.append("-- Password: '123456' -> BCrypt: $2a$10$dXJ3SW6G7P50lGmMkkmwe.20cQQubK3.HZWzG3YB1tlRy.fqvM/BG")
+lines.append("-- Password: '12345678' -> BCrypt: $2a$10$p.RWJeHxArmCbQBg3GNXEew66veoolEXULwkrjzeoof8Me1dAD8PO")
 lines.append("-- =============================================================================")
-bcrypt_hash = "$2a$10$dXJ3SW6G7P50lGmMkkmwe.20cQQubK3.HZWzG3YB1tlRy.fqvM/BG"
+bcrypt_hash = "$2a$10$p.RWJeHxArmCbQBg3GNXEew66veoolEXULwkrjzeoof8Me1dAD8PO"
 
 internal_users = [
     # (RoleId, Username, Email, FullName, Phone, DeptId, CreatedAt)
@@ -206,6 +206,7 @@ requisitions = [
         "Mở rộng đội ngũ kỹ thuật phát triển hệ thống Core RMS & Microservices",
         "Phát triển backend RESTful APIs bằng Spring Boot, tối ưu hóa cơ sở dữ liệu SQL Server, triển khai Docker/Kubernetes.",
         "Tối thiểu 3 năm kinh nghiệm lập trình Java, thành thạo Spring Boot, JPA/Hibernate, hiểu sâu về Caching Redis và Message Queue RabbitMQ.",
+        "Any", "2 tháng", "Hybrid", "Tầng 8, Tòa nhà RMS Tower, Phố Duy Tân, Cầu Giấy, Hà Nội", "2026-11-01",
         "Approved", "2026-09-10 09:00:00", "2026-09-15 10:00:00"
     ),
     (
@@ -213,6 +214,7 @@ requisitions = [
         "Xây dựng giao diện web portal quản trị và cổng ứng viên hiện đại, responsive",
         "Phát triển module giao diện người dùng bằng React 18, TypeScript, TailwindCSS/Vanilla CSS, tích hợp REST APIs.",
         "Tối thiểu 2 năm kinh nghiệm ReactJS, thành thạo Redux Toolkit hoặc Zustand, có kinh nghiệm tối ưu hóa hiệu năng web và UI/UX.",
+        "Any", "2 tháng", "Hybrid", "Tầng 8, Tòa nhà RMS Tower, Phố Duy Tân, Cầu Giấy, Hà Nội", "2026-11-01",
         "Approved", "2026-09-11 10:00:00", "2026-09-16 11:00:00"
     ),
     (
@@ -220,6 +222,7 @@ requisitions = [
         "Thiết lập quy trình kiểm thử tự động, đảm bảo chất lượng hệ thống phần mềm trước release",
         "Xây dựng test automation framework cho API và Web UI bằng Playwright/Selenium và Java/Python, tích hợp CI/CD.",
         "Tối thiểu 2 năm kinh nghiệm Automation Test, thành thạo Postman/Newman, k6 hoặc JMeter, hiểu biết về quy trình Agile/Scrum.",
+        "Any", "2 tháng", "On-site", "Tầng 8, Tòa nhà RMS Tower, Phố Duy Tân, Cầu Giấy, Hà Nội", "2026-11-15",
         "Approved", "2026-09-12 08:30:00", "2026-09-17 14:00:00"
     ),
     (
@@ -227,14 +230,15 @@ requisitions = [
         "Mở rộng thị trường khách hàng doanh nghiệp SME sử dụng giải pháp phần mềm",
         "Tìm kiếm khách hàng tiềm năng B2B, tư vấn giải pháp chuyển đổi số, đàm phán và ký kết hợp đồng dịch vụ phần mềm.",
         "Tối thiểu 1 năm kinh nghiệm Sales B2B khối phần mềm/IT, kỹ năng giao tiếp và thuyết trình xuất sắc, tiếng Anh giao tiếp tốt.",
+        "Any", "2 tháng", "On-site", "Quận 1, TP. Hồ Chí Minh & Cầu Giấy, Hà Nội", "2026-11-15",
         "Approved", "2026-09-15 14:00:00", "2026-09-18 09:30:00"
     )
 ]
 
-for title, d_id, hm_id, num_pos, emp_type, min_sal, max_sal, reason, jd, req_det, app_status, cr_at, up_at in requisitions:
+for title, d_id, hm_id, num_pos, emp_type, min_sal, max_sal, reason, jd, req_det, req_gender, prob_duration, work_model, work_loc, exp_start, app_status, cr_at, up_at in requisitions:
     lines.append(
-        f"INSERT INTO JobRequisition (Title, DepartmentId, HiringManagerId, NumberOfPositions, EmploymentType, MinSalary, MaxSalary, ReasonForHiring, JobDescription, RequirementDetails, ApprovalStatus, CreatedAt, UpdatedAt) "
-        f"VALUES (N'{title}', {d_id}, {hm_id}, {num_pos}, N'{emp_type}', {min_sal:.2f}, {max_sal:.2f}, N'{reason}', N'{jd}', N'{req_det}', N'{app_status}', '{cr_at}', '{up_at}');"
+        f"INSERT INTO JobRequisition (Title, DepartmentId, HiringManagerId, NumberOfPositions, EmploymentType, MinSalary, MaxSalary, ReasonForHiring, JobDescription, RequirementDetails, RequiredGender, ProbationDuration, WorkModel, WorkLocation, ExpectedStartDate, ApprovalStatus, CreatedAt, UpdatedAt) "
+        f"VALUES (N'{title}', {d_id}, {hm_id}, {num_pos}, N'{emp_type}', {min_sal:.2f}, {max_sal:.2f}, N'{reason}', N'{jd}', N'{req_det}', N'{req_gender}', N'{prob_duration}', N'{work_model}', N'{work_loc}', '{exp_start}', N'{app_status}', '{cr_at}', '{up_at}');"
     )
 lines.append("")
 
@@ -583,14 +587,13 @@ for day_idx in range(num_days):
             start_str = int_start_dt.strftime("%Y-%m-%d %H:%M:%S")
             end_str = int_end_dt.strftime("%Y-%m-%d %H:%M:%S")
             
-            round_type = "Round 2 - Technical" if c["posting_id"] in [1, 2, 3] else "Round 1 - HR"
             fmt = "Offline_Office" if random.random() < 0.6 else "Online_GoogleMeet"
             loc = "Phòng họp 802, Tầng 8 Tòa nhà RMS Tower" if fmt == "Offline_Office" else f"https://meet.google.com/rms-int-{int_id:04d}"
             int_status = "Completed" if int_end_dt < datetime.datetime(2026, 12, 16) else "Scheduled"
             
             lines.append(
-                f"INSERT INTO InterviewSchedule (ApplicationId, InterviewRound, InterviewFormat, StartTime, EndTime, LocationOrLink, InterviewStatus, CreatedBy, CreatedAt) "
-                f"VALUES ({c['app_id']}, N'{round_type}', N'{fmt}', '{start_str}', '{end_str}', N'{loc}', N'{int_status}', 3, '{c['sub_time']}');"
+                f"INSERT INTO InterviewSchedule (ApplicationId, InterviewFormat, StartTime, EndTime, LocationOrLink, InterviewStatus, CreatedBy, CreatedAt) "
+                f"VALUES ({c['app_id']}, N'{fmt}', '{start_str}', '{end_str}', N'{loc}', N'{int_status}', 3, '{c['sub_time']}');"
             )
             
             # InterviewPanel (Composite PK: InterviewId, InterviewerId)
@@ -642,36 +645,38 @@ for day_idx in range(num_days):
                 final_decision = "Passed" if is_passed else "Failed"
                 hm_final_id = 6 if c["posting_id"] == 4 else 5
                 final_comments = f"Tổng hợp kết quả phỏng vấn ứng viên {c['full_name']}: Đạt yêu cầu đầu vào, đề xuất gửi thư mời nhận việc (Offer)." if is_passed else f"Ứng viên {c['full_name']} chưa đạt yêu cầu về chiều sâu chuyên môn ở vòng phỏng vấn kỹ thuật."
+                
+                pos_titles = {
+                    1: "Senior Java Backend Engineer",
+                    2: "Frontend ReactJS Developer",
+                    3: "QA Automation Engineer",
+                    4: "Business Development Executive"
+                }
+                base_salaries = {
+                    1: (36000000.00, 32000000.00), # proposed, probation (32M / 36M = 88.8% >= 85%)
+                    2: (26000000.00, 23000000.00), # 23M / 26M = 88.4% >= 85%
+                    3: (22000000.00, 19500000.00), # 19.5M / 22M = 88.6% >= 85%
+                    4: (20000000.00, 17500000.00)  # 17.5M / 20M = 87.5% >= 85%
+                }
+                prop_sal, prob_sal = base_salaries[c["posting_id"]]
+                rec_sal_sql = f"{prop_sal:.2f}" if is_passed else "NULL"
+
                 lines.append(
-                    f"INSERT INTO InterviewFinalResult (InterviewId, HiringManagerId, FinalDecision, FinalSummaryComments, ApprovedAt) "
-                    f"VALUES ({int_id}, {hm_final_id}, N'{final_decision}', N'{final_comments}', '{eval_time}');"
+                    f"INSERT INTO InterviewFinalResult (InterviewId, HiringManagerId, FinalDecision, RecommendedSalary, FinalSummaryComments, ApprovedAt) "
+                    f"VALUES ({int_id}, {hm_final_id}, N'{final_decision}', {rec_sal_sql}, N'{final_comments}', '{eval_time}');"
                 )
                 
                 # 7. Offer Proposal, Approval, Negotiation (for ~10% Passed)
                 if is_passed:
                     off_id = offer_id_counter
                     offer_id_counter += 1
-                    
-                    pos_titles = {
-                        1: "Senior Java Backend Engineer",
-                        2: "Frontend ReactJS Developer",
-                        3: "QA Automation Engineer",
-                        4: "Business Development Executive"
-                    }
-                    base_salaries = {
-                        1: (36000000.00, 32000000.00), # proposed, probation (32M / 36M = 88.8% >= 85%)
-                        2: (26000000.00, 23000000.00), # 23M / 26M = 88.4% >= 85%
-                        3: (22000000.00, 19500000.00), # 19.5M / 22M = 88.6% >= 85%
-                        4: (20000000.00, 17500000.00)  # 17.5M / 20M = 87.5% >= 85%
-                    }
-                    prop_sal, prob_sal = base_salaries[c["posting_id"]]
                     off_title = pos_titles[c["posting_id"]]
                     
                     # Start date 2-3 weeks after interview
                     exp_start_date = (int_date + datetime.timedelta(days=random.randint(14, 21))).strftime("%Y-%m-%d")
                     offer_created_dt = (int_end_dt + datetime.timedelta(days=1)).strftime("%Y-%m-%d %H:%M:%S")
                     
-                    off_status = random.choice(["Accepted", "Accepted", "Negotiating", "Approved"])
+                    off_status = random.choice(["Accepted", "Accepted", "Negotiating", "Director_Approved", "Sent_Candidate", "Declined"])
                     lines.append(
                         f"INSERT INTO OfferProposal (ApplicationId, OfferedPositionTitle, ProposedSalary, ProbationSalary, ExpectedStartDate, WorkLocation, BenefitsPackage, OfferStatus, ProposedBy, CreatedAt) "
                         f"VALUES ({c['app_id']}, N'{off_title}', {prop_sal:.2f}, {prob_sal:.2f}, '{exp_start_date}', N'Tầng 8, Tòa nhà RMS Tower, Duy Tân, Cầu Giấy, Hà Nội', N'Bảo hiểm PVI, 14 ngày phép năm, thưởng dự án, xét lương 2 lần/năm', N'{off_status}', 3, '{offer_created_dt}');"
@@ -684,13 +689,20 @@ for day_idx in range(num_days):
                         f"VALUES ({off_id}, 2, N'Approved', N'Phê duyệt mức đãi ngộ theo đề xuất của HR và HM.', '{off_app_dt}');"
                     )
                     
-                    # OfferNegotiation (if Negotiating or some Accepted)
-                    if off_status in ["Negotiating", "Accepted"]:
+                    # OfferNegotiation (if Negotiating or some Accepted/Declined)
+                    if off_status in ["Negotiating", "Accepted", "Declined"]:
                         neg_dt = (datetime.datetime.strptime(off_app_dt, "%Y-%m-%d %H:%M:%S") + datetime.timedelta(days=1)).strftime("%Y-%m-%d %H:%M:%S")
-                        counter_sal = prop_sal + 2000000.00
+                        if off_status == "Declined":
+                            counter_sal = prop_sal + 5000000.00
+                            c_notes = "Ứng viên nhận được offer khác với mức đãi ngộ cao hơn và mong muốn trao đổi lại."
+                            hr_notes = "HR đã trao đổi nhưng ngân sách vị trí hiện tại không thể đáp ứng, bảo lưu hồ sơ ứng viên."
+                        else:
+                            counter_sal = prop_sal + 2000000.00
+                            c_notes = "Ứng viên mong muốn hỗ trợ thêm 2 triệu phụ cấp đi lại hoặc chứng chỉ chuyên môn."
+                            hr_notes = "HR trao đổi và thống nhất hỗ trợ phụ cấp đào tạo chứng chỉ hàng năm."
                         lines.append(
                             f"INSERT INTO OfferNegotiation (OfferId, CandidateCounterSalary, CandidateNotes, HRResponseNotes, NegotiationDate) "
-                            f"VALUES ({off_id}, {counter_sal:.2f}, N'Ứng viên mong muốn hỗ trợ thêm 2 triệu phụ cấp đi lại hoặc chứng chỉ chuyên môn.', N'HR trao đổi và thống nhất hỗ trợ phụ cấp đào tạo chứng chỉ hàng năm.', '{neg_dt}');"
+                            f"VALUES ({off_id}, {counter_sal:.2f}, N'{c_notes}', N'{hr_notes}', '{neg_dt}');"
                         )
                         
     lines.append("")

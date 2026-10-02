@@ -58,6 +58,11 @@ MaxSalary;NULL;Proposed maximum salary
 ReasonForHiring;NULL;New hire / Replacement
 JobDescription;NOT NULL;Job description (JD)
 RequirementDetails;NOT NULL;Candidate requirements
+RequiredGender;NOT NULL, DEFAULT 'Any';Male, Female, Any
+ProbationDuration;NULL;Probation period length
+WorkModel;NOT NULL;On-site, Remote, Hybrid
+WorkLocation;NULL;Work location (nullable for fully remote positions)
+ExpectedStartDate;NULL;Expected start/probation date for the position
 ApprovalStatus;NOT NULL;Draft, Pending_Director, Approved, Rejected
 CreatedAt;NOT NULL, DEFAULT SYSDATETIME();Creation date
 UpdatedAt;NULL;Last update date
@@ -136,7 +141,6 @@ ScreenedAt;NOT NULL, DEFAULT SYSDATETIME();Time AI finished processing
 Column;Constraints;Notes
 InterviewId;PRIMARY KEY, IDENTITY(1,1);Interview session identifier
 ApplicationId;NOT NULL, FOREIGN KEY -> Application.ApplicationId;Application being interviewed
-InterviewRound;NOT NULL;Round 1 - HR, Round 2 - Technical, Final
 InterviewFormat;NOT NULL;Online_GoogleMeet, Offline_Office
 StartTime;NOT NULL;Interview start time
 EndTime;NOT NULL, CHECK EndTime > StartTime;Interview end time
@@ -168,6 +172,7 @@ FinalResultId;PRIMARY KEY, IDENTITY(1,1);Final decision identifier
 InterviewId;NOT NULL, UNIQUE, FOREIGN KEY -> InterviewSchedule.InterviewId;1-1 with the interview session
 HiringManagerId;NOT NULL, FOREIGN KEY -> User.UserId;Hiring Manager who made the decision
 FinalDecision;NOT NULL;Passed / Failed
+RecommendedSalary;NULL;Recommended salary after negotiation with the candidate
 FinalSummaryComments;NULL;Overall interview summary
 ApprovedAt;NOT NULL, DEFAULT SYSDATETIME();Decision timestamp
 3.18 OfferProposal
@@ -180,9 +185,9 @@ ProbationSalary;NOT NULL, CHECK >= 85% of ProposedSalary;Probation-period salary
 ExpectedStartDate;NULL;Expected start date
 WorkLocation;NULL;Work location
 BenefitsPackage;NULL;Benefits/bonus package attached to the offer
-OfferStatus;NOT NULL;Draft, Pending_Director, Approved, Sent_Candidate, Accepted, Rejected, Negotiating
-ProposedBy;NOT NULL, FOREIGN KEY -> User.UserId;Hiring Manager who created the offer
-CreatedAt;NOT NULL, DEFAULT SYSDATETIME();Creation date
+OfferStatus;NOT NULL;Draft, Pending_Director, Director_Approved, Director_Rejected, Sent_Candidate, Accepted, Declined, Negotiating
+ProposedBy;NOT NULL, FOREIGN KEY -> User.UserId;HR who created the offer
+CreatedAt;NOT NULL, DEFAULT GETDATE();Creation date
 UpdatedAt;NULL;Last update date
 3.19 OfferApproval
 Column;Constraints;Notes
@@ -200,3 +205,4 @@ CandidateCounterSalary;NULL;Candidate's counter-offer salary
 CandidateNotes;NULL;Candidate's requests/feedback
 HRResponseNotes;NULL;HR's response
 NegotiationDate;NOT NULL, DEFAULT SYSDATETIME();Time of exchange
+
