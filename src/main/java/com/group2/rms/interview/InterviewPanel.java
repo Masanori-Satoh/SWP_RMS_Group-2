@@ -4,10 +4,11 @@ import com.group2.rms.user.entity.User;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.util.Objects;
+
 /**
- * 3.16 InterviewPanel - Danh sách người tham gia phỏng vấn.
- * Bảng này có Composite Primary Key: (InterviewId, InterviewerId).
- * RoleInPanel: HR, HM
+ * 3.15 InterviewPanel - Bảng trung gian N-N lưu danh sách Hội đồng phỏng vấn.
+ * Sử dụng Composite Primary Key: InterviewPanelId (InterviewId + InterviewerId).
  */
 @Entity
 @Table(name = "InterviewPanel")
@@ -31,9 +32,28 @@ public class InterviewPanel {
     @JoinColumn(name = "InterviewerId", nullable = false, referencedColumnName = "UserId")
     private User interviewer;
 
-    /**
-     * HR, HM
-     */
+    @Enumerated(EnumType.STRING)
     @Column(name = "RoleInPanel", nullable = false, length = 30)
-    private String roleInPanel;
+    private RoleInPanel roleInPanel;
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        InterviewPanel that = (InterviewPanel) o;
+        return Objects.equals(id, that.id);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(id);
+    }
+
+    @Override
+    public String toString() {
+        return "InterviewPanel{" +
+               "id=" + id +
+               ", roleInPanel=" + roleInPanel +
+               '}';
+    }
 }
