@@ -21,7 +21,7 @@ public class PasswordRecoveryController {
     private final PasswordResetEmailSender emailSender;
 
     public PasswordRecoveryController(PasswordResetService resetService,
-                                      PasswordResetEmailSender emailSender) {
+            PasswordResetEmailSender emailSender) {
         this.resetService = resetService;
         this.emailSender = emailSender;
     }
@@ -34,7 +34,7 @@ public class PasswordRecoveryController {
 
     @PostMapping("/forgot-password")
     public String requestReset(@Valid @ModelAttribute("form") ForgotPasswordRequest form,
-                               BindingResult errors) {
+            BindingResult errors) {
         if (!emailSender.isConfigured() || !resetService.isConfigured()) {
             errors.reject("mail.unavailable", "Password recovery email is not configured yet.");
         }
@@ -63,8 +63,8 @@ public class PasswordRecoveryController {
 
     @PostMapping("/reset-password/{token}")
     public String reset(@PathVariable String token,
-                        @Valid @ModelAttribute("form") ResetPasswordRequest form,
-                        BindingResult errors, Model model, HttpServletResponse response) {
+            @Valid @ModelAttribute("form") ResetPasswordRequest form,
+            BindingResult errors, Model model, HttpServletResponse response) {
         noStore(response);
         if (form.getPassword() != null && form.getConfirmPassword() != null
                 && !form.getPassword().equals(form.getConfirmPassword())) {

@@ -1,12 +1,12 @@
 package com.group2.rms;
 
-import com.group2.rms.config.SecurityConfig;
-import com.group2.rms.controller.AuthController;
-import com.group2.rms.controller.CareerController;
-import com.group2.rms.entity.Role;
-import com.group2.rms.entity.User;
-import com.group2.rms.repository.UserRepository;
-import com.group2.rms.security.DatabaseUserDetailsService;
+import com.group2.rms.auth.AuthController;
+import com.group2.rms.auth.CareerController;
+import com.group2.rms.core.config.SecurityConfig;
+import com.group2.rms.core.security.DatabaseUserDetailsService;
+import com.group2.rms.user.entity.Role;
+import com.group2.rms.user.entity.User;
+import com.group2.rms.user.repository.UserRepository;
 import com.group2.rms.service.CareerService;
 import com.group2.rms.service.CareerService.*;
 import org.junit.jupiter.api.Test;

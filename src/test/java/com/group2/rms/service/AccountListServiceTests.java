@@ -5,6 +5,7 @@ import com.group2.rms.user.entity.User;
 import com.group2.rms.user.repository.DepartmentRepository;
 import com.group2.rms.user.repository.RoleRepository;
 import com.group2.rms.user.repository.UserRepository;
+import com.group2.rms.candidate.CandidateRepository;
 import com.group2.rms.user.service.AccountListService;
 import org.junit.jupiter.api.Test;
 
@@ -26,7 +27,7 @@ class AccountListServiceTests {
                 .accountStatus("Active").passwordHash("existing-bcrypt-hash").build();
         when(users.findById(12)).thenReturn(Optional.of(account));
 
-        new AccountListService(users, mock(RoleRepository.class), mock(DepartmentRepository.class), mock(com.group2.rms.repository.CandidateRepository.class))
+        new AccountListService(users, mock(RoleRepository.class), mock(DepartmentRepository.class), mock(CandidateRepository.class))
                 .deactivate(12);
 
         assertEquals("Inactive", account.getAccountStatus());
@@ -39,7 +40,7 @@ class AccountListServiceTests {
     @Test
     void deactivationRejectsCrossGroupTargetsAndPreservesInactive() {
         UserRepository users = mock(UserRepository.class);
-        AccountListService service = new AccountListService(users, mock(RoleRepository.class), mock(DepartmentRepository.class), mock(com.group2.rms.repository.CandidateRepository.class));
+        AccountListService service = new AccountListService(users, mock(RoleRepository.class), mock(DepartmentRepository.class), mock(CandidateRepository.class));
         User candidate = User.builder().userId(7).role(Role.builder().roleName("Candidate").build()).accountStatus("Active").build();
         User employee = User.builder().userId(8).role(Role.builder().roleName("HR").build()).accountStatus("Inactive").build();
         when(users.findById(7)).thenReturn(Optional.of(candidate));

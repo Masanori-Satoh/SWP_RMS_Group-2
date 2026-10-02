@@ -1,5 +1,9 @@
 package com.group2.rms.service;
 
+import com.group2.rms.candidate.CandidateRepository;
+import com.group2.rms.core.security.RoleAuthorities;
+import com.group2.rms.dashboard.DashboardMetricsRepository;
+import com.group2.rms.dashboard.DashboardService;
 import com.group2.rms.user.service.AccountListService;
 import com.group2.rms.user.repository.UserRepository;
 import org.junit.jupiter.api.Test;
@@ -18,15 +22,15 @@ class AccountListQueryTests {
 
     @Autowired private AccountListService accounts;
     @Autowired private UserRepository users;
-    @Autowired private com.group2.rms.repository.DashboardMetricsRepository metrics;
+    @Autowired private DashboardMetricsRepository metrics;
     @Autowired private DashboardService dashboard;
-    @Autowired private com.group2.rms.repository.CandidateRepository candidates;
+    @Autowired private CandidateRepository candidates;
 
     @Test
     void listUsesUserAccountsAndFiltersStoredFields() {
         Page<AccountListService.AccountRow> all = accounts.findAccounts("", null, null, "", "name", 0);
         var storedUsers = users.findAll();
-        long internalCount = storedUsers.stream().filter(user -> com.group2.rms.security.RoleAuthorities.INTERNAL_ROLE_NAMES.contains(user.getRole().getRoleName())).count();
+        long internalCount = storedUsers.stream().filter(user -> RoleAuthorities.INTERNAL_ROLE_NAMES.contains(user.getRole().getRoleName())).count();
         long candidateCount = storedUsers.stream().filter(user -> "Candidate".equals(user.getRole().getRoleName())).count();
         assertEquals(internalCount, all.getTotalElements());
         assertTrue(all.stream().noneMatch(row -> "Candidate".equals(row.roleName())));
@@ -41,7 +45,7 @@ class AccountListQueryTests {
         assertEquals(internalCount, metrics.internalAccountStatuses().stream().mapToLong(row -> row.count()).sum());
         assertEquals(candidateCount, metrics.candidateAccountStatuses().stream().mapToLong(row -> row.count()).sum());
         for (String status : java.util.List.of("Active", "Inactive", "Blocked")) {
-            long expectedInternal = storedUsers.stream().filter(user -> com.group2.rms.security.RoleAuthorities.INTERNAL_ROLE_NAMES.contains(user.getRole().getRoleName()) && status.equals(user.getAccountStatus())).count();
+            long expectedInternal = storedUsers.stream().filter(user -> RoleAuthorities.INTERNAL_ROLE_NAMES.contains(user.getRole().getRoleName()) && status.equals(user.getAccountStatus())).count();
             long expectedCandidate = storedUsers.stream().filter(user -> "Candidate".equals(user.getRole().getRoleName()) && status.equals(user.getAccountStatus())).count();
             assertEquals(expectedInternal, accounts.findAccounts("", null, null, status, "name", 0).getTotalElements());
             assertEquals(expectedCandidate, accounts.findCandidateAccounts("", status, "name", 0).getTotalElements());
@@ -62,7 +66,7 @@ class AccountListQueryTests {
                     all.stream().anyMatch(firstPageRow -> firstPageRow.id().equals(row.id()))));
         }
 
-        storedUsers.stream().filter(user -> com.group2.rms.security.RoleAuthorities.INTERNAL_ROLE_NAMES.contains(user.getRole().getRoleName())).findFirst().ifPresent(user -> {
+        storedUsers.stream().filter(user -> RoleAuthorities.INTERNAL_ROLE_NAMES.contains(user.getRole().getRoleName())).findFirst().ifPresent(user -> {
             Page<AccountListService.AccountRow> byUsername = accounts.findAccounts(
                     user.getUsername(), null, null, "", "username", 0);
             assertFalse(byUsername.isEmpty());
@@ -90,7 +94,7 @@ class AccountListQueryTests {
             assertTrue(profile.stream().anyMatch(row -> row.id().equals(user.getUserId())));
         });
         System.out.println("Account separation SELECT-only: internal=" + internalCount + ", candidate=" + candidateCount);
-        long historicalInternalProfiles = candidates.findAll().stream().filter(profile -> com.group2.rms.security.RoleAuthorities.INTERNAL_ROLE_NAMES.contains(profile.getAccount().getRole().getRoleName())).count();
+        long historicalInternalProfiles = candidates.findAll().stream().filter(profile -> RoleAuthorities.INTERNAL_ROLE_NAMES.contains(profile.getAccount().getRole().getRoleName())).count();
         long candidateDepartments = storedUsers.stream().filter(user -> "Candidate".equals(user.getRole().getRoleName()) && user.getDepartment() != null).count();
         System.out.println("Account separation legacy audit SELECT-only: internal-linked-profiles=" + historicalInternalProfiles + ", candidate-with-department=" + candidateDepartments);
     }

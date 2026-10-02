@@ -1,18 +1,21 @@
 package com.group2.rms.service;
 
-import com.group2.rms.entity.JobPosting;
-import com.group2.rms.repository.CandidateRepository;
-import com.group2.rms.repository.DepartmentRepository;
-import com.group2.rms.repository.JobPostingRepository;
-import com.group2.rms.repository.UserRepository;
+import com.group2.rms.requisition.entity.JobPosting;
+import com.group2.rms.requisition.repository.JobPostingRepository;
+import com.group2.rms.user.repository.DepartmentRepository;
+
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
+import com.group2.rms.user.repository.UserRepository;
+import com.group2.rms.candidate.CandidateRepository;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
-/** Read-only career views. Never expose User passwords or internal requisition fields. */
+/**
+ * Read-only career views. Never expose User passwords or internal requisition
+ * fields.
+ */
 @Service
 @Transactional(readOnly = true)
 public class CareerService {
@@ -22,7 +25,7 @@ public class CareerService {
     private final CandidateRepository candidates;
 
     public CareerService(JobPostingRepository postings, DepartmentRepository departments,
-                         UserRepository users, CandidateRepository candidates) {
+            UserRepository users, CandidateRepository candidates) {
         this.postings = postings;
         this.departments = departments;
         this.users = users;
@@ -65,18 +68,27 @@ public class CareerService {
                 lines(j.getJobDescription()), lines(j.getJobRequirements()), lines(j.getBenefits()));
     }
 
-    // SQL seed contains both literal \\n and actual newlines. Output stays escaped by th:text.
+    // SQL seed contains both literal \\n and actual newlines. Output stays escaped
+    // by th:text.
     private static List<String> lines(String value) {
-        if (value == null || value.isBlank()) return List.of();
+        if (value == null || value.isBlank())
+            return List.of();
         return value.replace("\\n", "\n").lines().map(String::trim).filter(s -> !s.isEmpty()).toList();
     }
 
     public record PublicJob(Integer jobPostingId, String postingTitle, Integer departmentId,
-                            String departmentName, String employmentType, String workLocation,
-                            String salaryDisplay, LocalDateTime postingDate, LocalDateTime applicationDeadline,
-                            List<String> description, List<String> requirements, List<String> benefits) { }
-    public record DepartmentOption(Integer departmentId, String departmentName) { }
-    public record Viewer(String fullName, String roleName) { }
+            String departmentName, String employmentType, String workLocation,
+            String salaryDisplay, LocalDateTime postingDate, LocalDateTime applicationDeadline,
+            List<String> description, List<String> requirements, List<String> benefits) {
+    }
+
+    public record DepartmentOption(Integer departmentId, String departmentName) {
+    }
+
+    public record Viewer(String fullName, String roleName) {
+    }
+
     public record CandidateDetails(String fullName, String email, String phoneNumber,
-                                   String linkedInUrl, String portfolioUrl, String address) { }
+            String linkedInUrl, String portfolioUrl, String address) {
+    }
 }

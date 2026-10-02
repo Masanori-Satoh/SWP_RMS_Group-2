@@ -9,15 +9,9 @@ import lombok.Setter;
 
 @Getter
 @Setter
-<<<<<<< Updated upstream:src/main/java/com/group2/rms/auth/RegisterAccountRequest.java
 public class RegisterAccountRequest {
-    @NotBlank(message = "Vui lòng nhập họ và tên.")
-    @Size(max = 100, message = "Họ và tên tối đa 100 ký tự.")
-=======
-public class RegisterAccountForm {
     @NotBlank(message = "Enter a full name.")
     @Size(max = 100, message = "Full name must be at most 100 characters.")
->>>>>>> Stashed changes:src/main/java/com/group2/rms/controller/form/RegisterAccountForm.java
     private String fullName;
 
     @NotBlank(message = "Enter a username.")

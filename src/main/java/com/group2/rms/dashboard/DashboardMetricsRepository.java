@@ -3,13 +3,18 @@ package com.group2.rms.dashboard;
 import jakarta.persistence.EntityManager;
 import org.springframework.stereotype.Repository;
 
+import com.group2.rms.core.security.RoleAuthorities;
+
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 
-/** Read-only aggregates for the LinhDN dashboard. Each personal query is scoped in JPQL. */
+/**
+ * Read-only aggregates for the LinhDN dashboard. Each personal query is scoped
+ * in JPQL.
+ */
 @Repository
 public class DashboardMetricsRepository {
 
@@ -29,7 +34,7 @@ public class DashboardMetricsRepository {
 
     public List<StatusCount> internalAccountStatuses() {
         return statuses("select u.accountStatus, count(u) from User u where u.role.roleName in :roles "
-                + "group by u.accountStatus", Map.of("roles", com.group2.rms.security.RoleAuthorities.INTERNAL_ROLE_NAMES));
+                + "group by u.accountStatus", Map.of("roles", RoleAuthorities.INTERNAL_ROLE_NAMES));
     }
 
     public List<StatusCount> candidateAccountStatuses() {
@@ -105,16 +110,16 @@ public class DashboardMetricsRepository {
     public List<ApprovalActivity> recentDirectorActivity(int userId) {
         List<ApprovalActivity> activity = new ArrayList<>();
         entityManager.createQuery("select r.title, a.status, a.approvalDate from RequisitionApproval a "
-                        + "join a.requisition r where a.director.userId = :userId order by a.approvalDate desc",
-                        Object[].class)
+                + "join a.requisition r where a.director.userId = :userId order by a.approvalDate desc",
+                Object[].class)
                 .setParameter("userId", userId)
                 .setMaxResults(5)
                 .getResultList()
                 .forEach(row -> activity.add(new ApprovalActivity("Job Requisition", (String) row[0],
                         (String) row[1], (LocalDateTime) row[2])));
         entityManager.createQuery("select o.offeredPositionTitle, a.status, a.approvedAt from OfferApproval a "
-                        + "join a.offerProposal o where a.director.userId = :userId order by a.approvedAt desc",
-                        Object[].class)
+                + "join a.offerProposal o where a.director.userId = :userId order by a.approvedAt desc",
+                Object[].class)
                 .setParameter("userId", userId)
                 .setMaxResults(5)
                 .getResultList()
@@ -182,7 +187,9 @@ public class DashboardMetricsRepository {
                 .toList();
     }
 
-    public record StatusCount(String status, long count) { }
+    public record StatusCount(String status, long count) {
+    }
 
-    public record ApprovalActivity(String type, String title, String status, LocalDateTime at) { }
+    public record ApprovalActivity(String type, String title, String status, LocalDateTime at) {
+    }
 }

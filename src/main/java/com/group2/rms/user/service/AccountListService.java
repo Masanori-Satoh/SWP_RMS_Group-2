@@ -1,22 +1,13 @@
 package com.group2.rms.user.service;
 
-<<<<<<< Updated upstream:src/main/java/com/group2/rms/user/service/AccountListService.java
+import com.group2.rms.candidate.CandidateRepository;
+import com.group2.rms.core.security.RoleAuthorities;
 import com.group2.rms.user.entity.Department;
 import com.group2.rms.user.entity.Role;
 import com.group2.rms.user.entity.User;
 import com.group2.rms.user.repository.DepartmentRepository;
 import com.group2.rms.user.repository.RoleRepository;
 import com.group2.rms.user.repository.UserRepository;
-=======
-import com.group2.rms.entity.Department;
-import com.group2.rms.entity.Role;
-import com.group2.rms.entity.User;
-import com.group2.rms.repository.DepartmentRepository;
-import com.group2.rms.repository.RoleRepository;
-import com.group2.rms.repository.UserRepository;
-import com.group2.rms.repository.CandidateRepository;
-import com.group2.rms.security.RoleAuthorities;
->>>>>>> Stashed changes:src/main/java/com/group2/rms/service/AccountListService.java
 import jakarta.persistence.criteria.Predicate;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -44,7 +35,7 @@ public class AccountListService {
     private final CandidateRepository candidates;
 
     public AccountListService(UserRepository users, RoleRepository roles, DepartmentRepository departments,
-                              CandidateRepository candidates) {
+            CandidateRepository candidates) {
         this.users = users;
         this.roles = roles;
         this.departments = departments;
@@ -53,7 +44,7 @@ public class AccountListService {
 
     @Transactional(readOnly = true)
     public Page<AccountRow> findAccounts(String search, Integer roleId, Integer departmentId,
-                                         String status, String sort, int page) {
+            String status, String sort, int page) {
         return findUsers(search, roleId, departmentId, status, sort, page, false)
                 .map(user -> new AccountRow(user.getUserId(), user.getFullName(), user.getEmail(),
                         user.getUsername(), user.getRole().getRoleName(),
@@ -74,7 +65,7 @@ public class AccountListService {
     }
 
     private Page<User> findUsers(String search, Integer roleId, Integer departmentId,
-                                String status, String sort, int page, boolean candidate) {
+            String status, String sort, int page, boolean candidate) {
         String term = search == null ? "" : search.trim().toLowerCase(Locale.ROOT);
         Specification<User> specification = (root, query, builder) -> {
             List<Predicate> filters = new ArrayList<>();
@@ -147,9 +138,10 @@ public class AccountListService {
     }
 
     public record AccountRow(Integer id, String fullName, String email, String username,
-                             String roleName, String departmentName, String status) {
+            String roleName, String departmentName, String status) {
     }
 
     public record CandidateRow(Integer id, String fullName, String email, String username,
-                               String status, java.time.LocalDateTime createdAt, Integer profileId) { }
+            String status, java.time.LocalDateTime createdAt, Integer profileId) {
+    }
 }
