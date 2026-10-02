@@ -1,0 +1,2872 @@
+{
+  "round": "round1",
+  "base": "http://127.0.0.1:8768",
+  "provenance": "Auth/Admin fictional MockMvc fixture HTML, real local UI assets; no form POST or live authentication.",
+  "total": 145,
+  "passed": 144,
+  "failed": 1,
+  "checks": [
+    {
+      "name": "login/1440: layout and shared typography",
+      "pass": true,
+      "evidence": {
+        "width": 1440,
+        "scrollWidth": 1440,
+        "h1": "Lora, Georgia, serif",
+        "body": "\"Source Sans 3\", \"Segoe UI\", sans-serif",
+        "background": "rgb(250, 249, 246)",
+        "smallControls": [],
+        "unlabelled": [],
+        "brokenReferences": [],
+        "duplicateIds": [],
+        "logout": 0,
+        "csrf": true,
+        "main": 1,
+        "table": null,
+        "grid": null,
+        "menu": null,
+        "gradients": 0,
+        "tokenStyles": [
+          "http://127.0.0.1:8768/css/design-tokens.css",
+          "http://127.0.0.1:8768/css/interface.css",
+          "http://127.0.0.1:8768/css/workspace.css",
+          "http://127.0.0.1:8768/css/auth.css"
+        ]
+      }
+    },
+    {
+      "name": "login/1440: form labels, references and target sizes",
+      "pass": true,
+      "evidence": {
+        "width": 1440,
+        "scrollWidth": 1440,
+        "h1": "Lora, Georgia, serif",
+        "body": "\"Source Sans 3\", \"Segoe UI\", sans-serif",
+        "background": "rgb(250, 249, 246)",
+        "smallControls": [],
+        "unlabelled": [],
+        "brokenReferences": [],
+        "duplicateIds": [],
+        "logout": 0,
+        "csrf": true,
+        "main": 1,
+        "table": null,
+        "grid": null,
+        "menu": null,
+        "gradients": 0,
+        "tokenStyles": [
+          "http://127.0.0.1:8768/css/design-tokens.css",
+          "http://127.0.0.1:8768/css/interface.css",
+          "http://127.0.0.1:8768/css/workspace.css",
+          "http://127.0.0.1:8768/css/auth.css"
+        ]
+      }
+    },
+    {
+      "name": "login/1440: text and control contrast",
+      "pass": true,
+      "evidence": {
+        "count": 17,
+        "minimum": 5.935250765418008,
+        "fails": [],
+        "borderFails": []
+      }
+    },
+    {
+      "name": "login/1024: layout and shared typography",
+      "pass": true,
+      "evidence": {
+        "width": 1024,
+        "scrollWidth": 1024,
+        "h1": "Lora, Georgia, serif",
+        "body": "\"Source Sans 3\", \"Segoe UI\", sans-serif",
+        "background": "rgb(250, 249, 246)",
+        "smallControls": [],
+        "unlabelled": [],
+        "brokenReferences": [],
+        "duplicateIds": [],
+        "logout": 0,
+        "csrf": true,
+        "main": 1,
+        "table": null,
+        "grid": null,
+        "menu": null,
+        "gradients": 0,
+        "tokenStyles": [
+          "http://127.0.0.1:8768/css/design-tokens.css",
+          "http://127.0.0.1:8768/css/interface.css",
+          "http://127.0.0.1:8768/css/workspace.css",
+          "http://127.0.0.1:8768/css/auth.css"
+        ]
+      }
+    },
+    {
+      "name": "login/1024: form labels, references and target sizes",
+      "pass": true,
+      "evidence": {
+        "width": 1024,
+        "scrollWidth": 1024,
+        "h1": "Lora, Georgia, serif",
+        "body": "\"Source Sans 3\", \"Segoe UI\", sans-serif",
+        "background": "rgb(250, 249, 246)",
+        "smallControls": [],
+        "unlabelled": [],
+        "brokenReferences": [],
+        "duplicateIds": [],
+        "logout": 0,
+        "csrf": true,
+        "main": 1,
+        "table": null,
+        "grid": null,
+        "menu": null,
+        "gradients": 0,
+        "tokenStyles": [
+          "http://127.0.0.1:8768/css/design-tokens.css",
+          "http://127.0.0.1:8768/css/interface.css",
+          "http://127.0.0.1:8768/css/workspace.css",
+          "http://127.0.0.1:8768/css/auth.css"
+        ]
+      }
+    },
+    {
+      "name": "login/1024: text and control contrast",
+      "pass": true,
+      "evidence": {
+        "count": 17,
+        "minimum": 5.935250765418008,
+        "fails": [],
+        "borderFails": []
+      }
+    },
+    {
+      "name": "login/768: layout and shared typography",
+      "pass": true,
+      "evidence": {
+        "width": 768,
+        "scrollWidth": 768,
+        "h1": "Lora, Georgia, serif",
+        "body": "\"Source Sans 3\", \"Segoe UI\", sans-serif",
+        "background": "rgb(250, 249, 246)",
+        "smallControls": [],
+        "unlabelled": [],
+        "brokenReferences": [],
+        "duplicateIds": [],
+        "logout": 0,
+        "csrf": true,
+        "main": 1,
+        "table": null,
+        "grid": null,
+        "menu": null,
+        "gradients": 0,
+        "tokenStyles": [
+          "http://127.0.0.1:8768/css/design-tokens.css",
+          "http://127.0.0.1:8768/css/interface.css",
+          "http://127.0.0.1:8768/css/workspace.css",
+          "http://127.0.0.1:8768/css/auth.css"
+        ]
+      }
+    },
+    {
+      "name": "login/768: form labels, references and target sizes",
+      "pass": true,
+      "evidence": {
+        "width": 768,
+        "scrollWidth": 768,
+        "h1": "Lora, Georgia, serif",
+        "body": "\"Source Sans 3\", \"Segoe UI\", sans-serif",
+        "background": "rgb(250, 249, 246)",
+        "smallControls": [],
+        "unlabelled": [],
+        "brokenReferences": [],
+        "duplicateIds": [],
+        "logout": 0,
+        "csrf": true,
+        "main": 1,
+        "table": null,
+        "grid": null,
+        "menu": null,
+        "gradients": 0,
+        "tokenStyles": [
+          "http://127.0.0.1:8768/css/design-tokens.css",
+          "http://127.0.0.1:8768/css/interface.css",
+          "http://127.0.0.1:8768/css/workspace.css",
+          "http://127.0.0.1:8768/css/auth.css"
+        ]
+      }
+    },
+    {
+      "name": "login/768: text and control contrast",
+      "pass": true,
+      "evidence": {
+        "count": 17,
+        "minimum": 5.935250765418008,
+        "fails": [],
+        "borderFails": []
+      }
+    },
+    {
+      "name": "login/375: layout and shared typography",
+      "pass": true,
+      "evidence": {
+        "width": 375,
+        "scrollWidth": 375,
+        "h1": "Lora, Georgia, serif",
+        "body": "\"Source Sans 3\", \"Segoe UI\", sans-serif",
+        "background": "rgb(250, 249, 246)",
+        "smallControls": [],
+        "unlabelled": [],
+        "brokenReferences": [],
+        "duplicateIds": [],
+        "logout": 0,
+        "csrf": true,
+        "main": 1,
+        "table": null,
+        "grid": null,
+        "menu": null,
+        "gradients": 0,
+        "tokenStyles": [
+          "http://127.0.0.1:8768/css/design-tokens.css",
+          "http://127.0.0.1:8768/css/interface.css",
+          "http://127.0.0.1:8768/css/workspace.css",
+          "http://127.0.0.1:8768/css/auth.css"
+        ]
+      }
+    },
+    {
+      "name": "login/375: form labels, references and target sizes",
+      "pass": true,
+      "evidence": {
+        "width": 375,
+        "scrollWidth": 375,
+        "h1": "Lora, Georgia, serif",
+        "body": "\"Source Sans 3\", \"Segoe UI\", sans-serif",
+        "background": "rgb(250, 249, 246)",
+        "smallControls": [],
+        "unlabelled": [],
+        "brokenReferences": [],
+        "duplicateIds": [],
+        "logout": 0,
+        "csrf": true,
+        "main": 1,
+        "table": null,
+        "grid": null,
+        "menu": null,
+        "gradients": 0,
+        "tokenStyles": [
+          "http://127.0.0.1:8768/css/design-tokens.css",
+          "http://127.0.0.1:8768/css/interface.css",
+          "http://127.0.0.1:8768/css/workspace.css",
+          "http://127.0.0.1:8768/css/auth.css"
+        ]
+      }
+    },
+    {
+      "name": "login/375: text and control contrast",
+      "pass": true,
+      "evidence": {
+        "count": 17,
+        "minimum": 5.935250765418008,
+        "fails": [],
+        "borderFails": []
+      }
+    },
+    {
+      "name": "register/1440: layout and shared typography",
+      "pass": true,
+      "evidence": {
+        "width": 1440,
+        "scrollWidth": 1440,
+        "h1": "Lora, Georgia, serif",
+        "body": "\"Source Sans 3\", \"Segoe UI\", sans-serif",
+        "background": "rgb(250, 249, 246)",
+        "smallControls": [],
+        "unlabelled": [],
+        "brokenReferences": [],
+        "duplicateIds": [],
+        "logout": 0,
+        "csrf": true,
+        "main": 1,
+        "table": null,
+        "grid": null,
+        "menu": null,
+        "gradients": 0,
+        "tokenStyles": [
+          "http://127.0.0.1:8768/css/design-tokens.css",
+          "http://127.0.0.1:8768/css/interface.css",
+          "http://127.0.0.1:8768/css/workspace.css",
+          "http://127.0.0.1:8768/css/auth.css"
+        ]
+      }
+    },
+    {
+      "name": "register/1440: form labels, references and target sizes",
+      "pass": true,
+      "evidence": {
+        "width": 1440,
+        "scrollWidth": 1440,
+        "h1": "Lora, Georgia, serif",
+        "body": "\"Source Sans 3\", \"Segoe UI\", sans-serif",
+        "background": "rgb(250, 249, 246)",
+        "smallControls": [],
+        "unlabelled": [],
+        "brokenReferences": [],
+        "duplicateIds": [],
+        "logout": 0,
+        "csrf": true,
+        "main": 1,
+        "table": null,
+        "grid": null,
+        "menu": null,
+        "gradients": 0,
+        "tokenStyles": [
+          "http://127.0.0.1:8768/css/design-tokens.css",
+          "http://127.0.0.1:8768/css/interface.css",
+          "http://127.0.0.1:8768/css/workspace.css",
+          "http://127.0.0.1:8768/css/auth.css"
+        ]
+      }
+    },
+    {
+      "name": "register/1440: text and control contrast",
+      "pass": true,
+      "evidence": {
+        "count": 24,
+        "minimum": 5.935250765418008,
+        "fails": [],
+        "borderFails": []
+      }
+    },
+    {
+      "name": "register/1024: layout and shared typography",
+      "pass": true,
+      "evidence": {
+        "width": 1024,
+        "scrollWidth": 1024,
+        "h1": "Lora, Georgia, serif",
+        "body": "\"Source Sans 3\", \"Segoe UI\", sans-serif",
+        "background": "rgb(250, 249, 246)",
+        "smallControls": [],
+        "unlabelled": [],
+        "brokenReferences": [],
+        "duplicateIds": [],
+        "logout": 0,
+        "csrf": true,
+        "main": 1,
+        "table": null,
+        "grid": null,
+        "menu": null,
+        "gradients": 0,
+        "tokenStyles": [
+          "http://127.0.0.1:8768/css/design-tokens.css",
+          "http://127.0.0.1:8768/css/interface.css",
+          "http://127.0.0.1:8768/css/workspace.css",
+          "http://127.0.0.1:8768/css/auth.css"
+        ]
+      }
+    },
+    {
+      "name": "register/1024: form labels, references and target sizes",
+      "pass": true,
+      "evidence": {
+        "width": 1024,
+        "scrollWidth": 1024,
+        "h1": "Lora, Georgia, serif",
+        "body": "\"Source Sans 3\", \"Segoe UI\", sans-serif",
+        "background": "rgb(250, 249, 246)",
+        "smallControls": [],
+        "unlabelled": [],
+        "brokenReferences": [],
+        "duplicateIds": [],
+        "logout": 0,
+        "csrf": true,
+        "main": 1,
+        "table": null,
+        "grid": null,
+        "menu": null,
+        "gradients": 0,
+        "tokenStyles": [
+          "http://127.0.0.1:8768/css/design-tokens.css",
+          "http://127.0.0.1:8768/css/interface.css",
+          "http://127.0.0.1:8768/css/workspace.css",
+          "http://127.0.0.1:8768/css/auth.css"
+        ]
+      }
+    },
+    {
+      "name": "register/1024: text and control contrast",
+      "pass": true,
+      "evidence": {
+        "count": 24,
+        "minimum": 5.935250765418008,
+        "fails": [],
+        "borderFails": []
+      }
+    },
+    {
+      "name": "register/768: layout and shared typography",
+      "pass": true,
+      "evidence": {
+        "width": 768,
+        "scrollWidth": 768,
+        "h1": "Lora, Georgia, serif",
+        "body": "\"Source Sans 3\", \"Segoe UI\", sans-serif",
+        "background": "rgb(250, 249, 246)",
+        "smallControls": [],
+        "unlabelled": [],
+        "brokenReferences": [],
+        "duplicateIds": [],
+        "logout": 0,
+        "csrf": true,
+        "main": 1,
+        "table": null,
+        "grid": null,
+        "menu": null,
+        "gradients": 0,
+        "tokenStyles": [
+          "http://127.0.0.1:8768/css/design-tokens.css",
+          "http://127.0.0.1:8768/css/interface.css",
+          "http://127.0.0.1:8768/css/workspace.css",
+          "http://127.0.0.1:8768/css/auth.css"
+        ]
+      }
+    },
+    {
+      "name": "register/768: form labels, references and target sizes",
+      "pass": true,
+      "evidence": {
+        "width": 768,
+        "scrollWidth": 768,
+        "h1": "Lora, Georgia, serif",
+        "body": "\"Source Sans 3\", \"Segoe UI\", sans-serif",
+        "background": "rgb(250, 249, 246)",
+        "smallControls": [],
+        "unlabelled": [],
+        "brokenReferences": [],
+        "duplicateIds": [],
+        "logout": 0,
+        "csrf": true,
+        "main": 1,
+        "table": null,
+        "grid": null,
+        "menu": null,
+        "gradients": 0,
+        "tokenStyles": [
+          "http://127.0.0.1:8768/css/design-tokens.css",
+          "http://127.0.0.1:8768/css/interface.css",
+          "http://127.0.0.1:8768/css/workspace.css",
+          "http://127.0.0.1:8768/css/auth.css"
+        ]
+      }
+    },
+    {
+      "name": "register/768: text and control contrast",
+      "pass": true,
+      "evidence": {
+        "count": 20,
+        "minimum": 5.935250765418008,
+        "fails": [],
+        "borderFails": []
+      }
+    },
+    {
+      "name": "register/375: layout and shared typography",
+      "pass": true,
+      "evidence": {
+        "width": 375,
+        "scrollWidth": 375,
+        "h1": "Lora, Georgia, serif",
+        "body": "\"Source Sans 3\", \"Segoe UI\", sans-serif",
+        "background": "rgb(250, 249, 246)",
+        "smallControls": [],
+        "unlabelled": [],
+        "brokenReferences": [],
+        "duplicateIds": [],
+        "logout": 0,
+        "csrf": true,
+        "main": 1,
+        "table": null,
+        "grid": null,
+        "menu": null,
+        "gradients": 0,
+        "tokenStyles": [
+          "http://127.0.0.1:8768/css/design-tokens.css",
+          "http://127.0.0.1:8768/css/interface.css",
+          "http://127.0.0.1:8768/css/workspace.css",
+          "http://127.0.0.1:8768/css/auth.css"
+        ]
+      }
+    },
+    {
+      "name": "register/375: form labels, references and target sizes",
+      "pass": true,
+      "evidence": {
+        "width": 375,
+        "scrollWidth": 375,
+        "h1": "Lora, Georgia, serif",
+        "body": "\"Source Sans 3\", \"Segoe UI\", sans-serif",
+        "background": "rgb(250, 249, 246)",
+        "smallControls": [],
+        "unlabelled": [],
+        "brokenReferences": [],
+        "duplicateIds": [],
+        "logout": 0,
+        "csrf": true,
+        "main": 1,
+        "table": null,
+        "grid": null,
+        "menu": null,
+        "gradients": 0,
+        "tokenStyles": [
+          "http://127.0.0.1:8768/css/design-tokens.css",
+          "http://127.0.0.1:8768/css/interface.css",
+          "http://127.0.0.1:8768/css/workspace.css",
+          "http://127.0.0.1:8768/css/auth.css"
+        ]
+      }
+    },
+    {
+      "name": "register/375: text and control contrast",
+      "pass": true,
+      "evidence": {
+        "count": 20,
+        "minimum": 5.935250765418008,
+        "fails": [],
+        "borderFails": []
+      }
+    },
+    {
+      "name": "forgot/1440: layout and shared typography",
+      "pass": true,
+      "evidence": {
+        "width": 1440,
+        "scrollWidth": 1440,
+        "h1": "Lora, Georgia, serif",
+        "body": "\"Source Sans 3\", \"Segoe UI\", sans-serif",
+        "background": "rgb(250, 249, 246)",
+        "smallControls": [],
+        "unlabelled": [],
+        "brokenReferences": [],
+        "duplicateIds": [],
+        "logout": 0,
+        "csrf": true,
+        "main": 1,
+        "table": null,
+        "grid": null,
+        "menu": null,
+        "gradients": 0,
+        "tokenStyles": [
+          "http://127.0.0.1:8768/css/design-tokens.css",
+          "http://127.0.0.1:8768/css/interface.css",
+          "http://127.0.0.1:8768/css/workspace.css",
+          "http://127.0.0.1:8768/css/auth.css"
+        ]
+      }
+    },
+    {
+      "name": "forgot/1440: form labels, references and target sizes",
+      "pass": true,
+      "evidence": {
+        "width": 1440,
+        "scrollWidth": 1440,
+        "h1": "Lora, Georgia, serif",
+        "body": "\"Source Sans 3\", \"Segoe UI\", sans-serif",
+        "background": "rgb(250, 249, 246)",
+        "smallControls": [],
+        "unlabelled": [],
+        "brokenReferences": [],
+        "duplicateIds": [],
+        "logout": 0,
+        "csrf": true,
+        "main": 1,
+        "table": null,
+        "grid": null,
+        "menu": null,
+        "gradients": 0,
+        "tokenStyles": [
+          "http://127.0.0.1:8768/css/design-tokens.css",
+          "http://127.0.0.1:8768/css/interface.css",
+          "http://127.0.0.1:8768/css/workspace.css",
+          "http://127.0.0.1:8768/css/auth.css"
+        ]
+      }
+    },
+    {
+      "name": "forgot/1440: text and control contrast",
+      "pass": true,
+      "evidence": {
+        "count": 13,
+        "minimum": 5.935250765418008,
+        "fails": [],
+        "borderFails": []
+      }
+    },
+    {
+      "name": "forgot/1024: layout and shared typography",
+      "pass": true,
+      "evidence": {
+        "width": 1024,
+        "scrollWidth": 1024,
+        "h1": "Lora, Georgia, serif",
+        "body": "\"Source Sans 3\", \"Segoe UI\", sans-serif",
+        "background": "rgb(250, 249, 246)",
+        "smallControls": [],
+        "unlabelled": [],
+        "brokenReferences": [],
+        "duplicateIds": [],
+        "logout": 0,
+        "csrf": true,
+        "main": 1,
+        "table": null,
+        "grid": null,
+        "menu": null,
+        "gradients": 0,
+        "tokenStyles": [
+          "http://127.0.0.1:8768/css/design-tokens.css",
+          "http://127.0.0.1:8768/css/interface.css",
+          "http://127.0.0.1:8768/css/workspace.css",
+          "http://127.0.0.1:8768/css/auth.css"
+        ]
+      }
+    },
+    {
+      "name": "forgot/1024: form labels, references and target sizes",
+      "pass": true,
+      "evidence": {
+        "width": 1024,
+        "scrollWidth": 1024,
+        "h1": "Lora, Georgia, serif",
+        "body": "\"Source Sans 3\", \"Segoe UI\", sans-serif",
+        "background": "rgb(250, 249, 246)",
+        "smallControls": [],
+        "unlabelled": [],
+        "brokenReferences": [],
+        "duplicateIds": [],
+        "logout": 0,
+        "csrf": true,
+        "main": 1,
+        "table": null,
+        "grid": null,
+        "menu": null,
+        "gradients": 0,
+        "tokenStyles": [
+          "http://127.0.0.1:8768/css/design-tokens.css",
+          "http://127.0.0.1:8768/css/interface.css",
+          "http://127.0.0.1:8768/css/workspace.css",
+          "http://127.0.0.1:8768/css/auth.css"
+        ]
+      }
+    },
+    {
+      "name": "forgot/1024: text and control contrast",
+      "pass": true,
+      "evidence": {
+        "count": 13,
+        "minimum": 5.935250765418008,
+        "fails": [],
+        "borderFails": []
+      }
+    },
+    {
+      "name": "forgot/768: layout and shared typography",
+      "pass": true,
+      "evidence": {
+        "width": 768,
+        "scrollWidth": 768,
+        "h1": "Lora, Georgia, serif",
+        "body": "\"Source Sans 3\", \"Segoe UI\", sans-serif",
+        "background": "rgb(250, 249, 246)",
+        "smallControls": [],
+        "unlabelled": [],
+        "brokenReferences": [],
+        "duplicateIds": [],
+        "logout": 0,
+        "csrf": true,
+        "main": 1,
+        "table": null,
+        "grid": null,
+        "menu": null,
+        "gradients": 0,
+        "tokenStyles": [
+          "http://127.0.0.1:8768/css/design-tokens.css",
+          "http://127.0.0.1:8768/css/interface.css",
+          "http://127.0.0.1:8768/css/workspace.css",
+          "http://127.0.0.1:8768/css/auth.css"
+        ]
+      }
+    },
+    {
+      "name": "forgot/768: form labels, references and target sizes",
+      "pass": true,
+      "evidence": {
+        "width": 768,
+        "scrollWidth": 768,
+        "h1": "Lora, Georgia, serif",
+        "body": "\"Source Sans 3\", \"Segoe UI\", sans-serif",
+        "background": "rgb(250, 249, 246)",
+        "smallControls": [],
+        "unlabelled": [],
+        "brokenReferences": [],
+        "duplicateIds": [],
+        "logout": 0,
+        "csrf": true,
+        "main": 1,
+        "table": null,
+        "grid": null,
+        "menu": null,
+        "gradients": 0,
+        "tokenStyles": [
+          "http://127.0.0.1:8768/css/design-tokens.css",
+          "http://127.0.0.1:8768/css/interface.css",
+          "http://127.0.0.1:8768/css/workspace.css",
+          "http://127.0.0.1:8768/css/auth.css"
+        ]
+      }
+    },
+    {
+      "name": "forgot/768: text and control contrast",
+      "pass": true,
+      "evidence": {
+        "count": 9,
+        "minimum": 5.935250765418008,
+        "fails": [],
+        "borderFails": []
+      }
+    },
+    {
+      "name": "forgot/375: layout and shared typography",
+      "pass": true,
+      "evidence": {
+        "width": 375,
+        "scrollWidth": 375,
+        "h1": "Lora, Georgia, serif",
+        "body": "\"Source Sans 3\", \"Segoe UI\", sans-serif",
+        "background": "rgb(250, 249, 246)",
+        "smallControls": [],
+        "unlabelled": [],
+        "brokenReferences": [],
+        "duplicateIds": [],
+        "logout": 0,
+        "csrf": true,
+        "main": 1,
+        "table": null,
+        "grid": null,
+        "menu": null,
+        "gradients": 0,
+        "tokenStyles": [
+          "http://127.0.0.1:8768/css/design-tokens.css",
+          "http://127.0.0.1:8768/css/interface.css",
+          "http://127.0.0.1:8768/css/workspace.css",
+          "http://127.0.0.1:8768/css/auth.css"
+        ]
+      }
+    },
+    {
+      "name": "forgot/375: form labels, references and target sizes",
+      "pass": true,
+      "evidence": {
+        "width": 375,
+        "scrollWidth": 375,
+        "h1": "Lora, Georgia, serif",
+        "body": "\"Source Sans 3\", \"Segoe UI\", sans-serif",
+        "background": "rgb(250, 249, 246)",
+        "smallControls": [],
+        "unlabelled": [],
+        "brokenReferences": [],
+        "duplicateIds": [],
+        "logout": 0,
+        "csrf": true,
+        "main": 1,
+        "table": null,
+        "grid": null,
+        "menu": null,
+        "gradients": 0,
+        "tokenStyles": [
+          "http://127.0.0.1:8768/css/design-tokens.css",
+          "http://127.0.0.1:8768/css/interface.css",
+          "http://127.0.0.1:8768/css/workspace.css",
+          "http://127.0.0.1:8768/css/auth.css"
+        ]
+      }
+    },
+    {
+      "name": "forgot/375: text and control contrast",
+      "pass": true,
+      "evidence": {
+        "count": 9,
+        "minimum": 5.935250765418008,
+        "fails": [],
+        "borderFails": []
+      }
+    },
+    {
+      "name": "reset/1440: layout and shared typography",
+      "pass": true,
+      "evidence": {
+        "width": 1440,
+        "scrollWidth": 1440,
+        "h1": "Lora, Georgia, serif",
+        "body": "\"Source Sans 3\", \"Segoe UI\", sans-serif",
+        "background": "rgb(250, 249, 246)",
+        "smallControls": [],
+        "unlabelled": [],
+        "brokenReferences": [],
+        "duplicateIds": [],
+        "logout": 0,
+        "csrf": true,
+        "main": 1,
+        "table": null,
+        "grid": null,
+        "menu": null,
+        "gradients": 0,
+        "tokenStyles": [
+          "http://127.0.0.1:8768/css/design-tokens.css",
+          "http://127.0.0.1:8768/css/interface.css",
+          "http://127.0.0.1:8768/css/workspace.css",
+          "http://127.0.0.1:8768/css/auth.css"
+        ]
+      }
+    },
+    {
+      "name": "reset/1440: form labels, references and target sizes",
+      "pass": true,
+      "evidence": {
+        "width": 1440,
+        "scrollWidth": 1440,
+        "h1": "Lora, Georgia, serif",
+        "body": "\"Source Sans 3\", \"Segoe UI\", sans-serif",
+        "background": "rgb(250, 249, 246)",
+        "smallControls": [],
+        "unlabelled": [],
+        "brokenReferences": [],
+        "duplicateIds": [],
+        "logout": 0,
+        "csrf": true,
+        "main": 1,
+        "table": null,
+        "grid": null,
+        "menu": null,
+        "gradients": 0,
+        "tokenStyles": [
+          "http://127.0.0.1:8768/css/design-tokens.css",
+          "http://127.0.0.1:8768/css/interface.css",
+          "http://127.0.0.1:8768/css/workspace.css",
+          "http://127.0.0.1:8768/css/auth.css"
+        ]
+      }
+    },
+    {
+      "name": "reset/1440: text and control contrast",
+      "pass": true,
+      "evidence": {
+        "count": 18,
+        "minimum": 5.935250765418008,
+        "fails": [],
+        "borderFails": []
+      }
+    },
+    {
+      "name": "reset/1024: layout and shared typography",
+      "pass": true,
+      "evidence": {
+        "width": 1024,
+        "scrollWidth": 1024,
+        "h1": "Lora, Georgia, serif",
+        "body": "\"Source Sans 3\", \"Segoe UI\", sans-serif",
+        "background": "rgb(250, 249, 246)",
+        "smallControls": [],
+        "unlabelled": [],
+        "brokenReferences": [],
+        "duplicateIds": [],
+        "logout": 0,
+        "csrf": true,
+        "main": 1,
+        "table": null,
+        "grid": null,
+        "menu": null,
+        "gradients": 0,
+        "tokenStyles": [
+          "http://127.0.0.1:8768/css/design-tokens.css",
+          "http://127.0.0.1:8768/css/interface.css",
+          "http://127.0.0.1:8768/css/workspace.css",
+          "http://127.0.0.1:8768/css/auth.css"
+        ]
+      }
+    },
+    {
+      "name": "reset/1024: form labels, references and target sizes",
+      "pass": true,
+      "evidence": {
+        "width": 1024,
+        "scrollWidth": 1024,
+        "h1": "Lora, Georgia, serif",
+        "body": "\"Source Sans 3\", \"Segoe UI\", sans-serif",
+        "background": "rgb(250, 249, 246)",
+        "smallControls": [],
+        "unlabelled": [],
+        "brokenReferences": [],
+        "duplicateIds": [],
+        "logout": 0,
+        "csrf": true,
+        "main": 1,
+        "table": null,
+        "grid": null,
+        "menu": null,
+        "gradients": 0,
+        "tokenStyles": [
+          "http://127.0.0.1:8768/css/design-tokens.css",
+          "http://127.0.0.1:8768/css/interface.css",
+          "http://127.0.0.1:8768/css/workspace.css",
+          "http://127.0.0.1:8768/css/auth.css"
+        ]
+      }
+    },
+    {
+      "name": "reset/1024: text and control contrast",
+      "pass": true,
+      "evidence": {
+        "count": 18,
+        "minimum": 5.935250765418008,
+        "fails": [],
+        "borderFails": []
+      }
+    },
+    {
+      "name": "reset/768: layout and shared typography",
+      "pass": true,
+      "evidence": {
+        "width": 768,
+        "scrollWidth": 768,
+        "h1": "Lora, Georgia, serif",
+        "body": "\"Source Sans 3\", \"Segoe UI\", sans-serif",
+        "background": "rgb(250, 249, 246)",
+        "smallControls": [],
+        "unlabelled": [],
+        "brokenReferences": [],
+        "duplicateIds": [],
+        "logout": 0,
+        "csrf": true,
+        "main": 1,
+        "table": null,
+        "grid": null,
+        "menu": null,
+        "gradients": 0,
+        "tokenStyles": [
+          "http://127.0.0.1:8768/css/design-tokens.css",
+          "http://127.0.0.1:8768/css/interface.css",
+          "http://127.0.0.1:8768/css/workspace.css",
+          "http://127.0.0.1:8768/css/auth.css"
+        ]
+      }
+    },
+    {
+      "name": "reset/768: form labels, references and target sizes",
+      "pass": true,
+      "evidence": {
+        "width": 768,
+        "scrollWidth": 768,
+        "h1": "Lora, Georgia, serif",
+        "body": "\"Source Sans 3\", \"Segoe UI\", sans-serif",
+        "background": "rgb(250, 249, 246)",
+        "smallControls": [],
+        "unlabelled": [],
+        "brokenReferences": [],
+        "duplicateIds": [],
+        "logout": 0,
+        "csrf": true,
+        "main": 1,
+        "table": null,
+        "grid": null,
+        "menu": null,
+        "gradients": 0,
+        "tokenStyles": [
+          "http://127.0.0.1:8768/css/design-tokens.css",
+          "http://127.0.0.1:8768/css/interface.css",
+          "http://127.0.0.1:8768/css/workspace.css",
+          "http://127.0.0.1:8768/css/auth.css"
+        ]
+      }
+    },
+    {
+      "name": "reset/768: text and control contrast",
+      "pass": true,
+      "evidence": {
+        "count": 14,
+        "minimum": 5.935250765418008,
+        "fails": [],
+        "borderFails": []
+      }
+    },
+    {
+      "name": "reset/375: layout and shared typography",
+      "pass": true,
+      "evidence": {
+        "width": 375,
+        "scrollWidth": 375,
+        "h1": "Lora, Georgia, serif",
+        "body": "\"Source Sans 3\", \"Segoe UI\", sans-serif",
+        "background": "rgb(250, 249, 246)",
+        "smallControls": [],
+        "unlabelled": [],
+        "brokenReferences": [],
+        "duplicateIds": [],
+        "logout": 0,
+        "csrf": true,
+        "main": 1,
+        "table": null,
+        "grid": null,
+        "menu": null,
+        "gradients": 0,
+        "tokenStyles": [
+          "http://127.0.0.1:8768/css/design-tokens.css",
+          "http://127.0.0.1:8768/css/interface.css",
+          "http://127.0.0.1:8768/css/workspace.css",
+          "http://127.0.0.1:8768/css/auth.css"
+        ]
+      }
+    },
+    {
+      "name": "reset/375: form labels, references and target sizes",
+      "pass": true,
+      "evidence": {
+        "width": 375,
+        "scrollWidth": 375,
+        "h1": "Lora, Georgia, serif",
+        "body": "\"Source Sans 3\", \"Segoe UI\", sans-serif",
+        "background": "rgb(250, 249, 246)",
+        "smallControls": [],
+        "unlabelled": [],
+        "brokenReferences": [],
+        "duplicateIds": [],
+        "logout": 0,
+        "csrf": true,
+        "main": 1,
+        "table": null,
+        "grid": null,
+        "menu": null,
+        "gradients": 0,
+        "tokenStyles": [
+          "http://127.0.0.1:8768/css/design-tokens.css",
+          "http://127.0.0.1:8768/css/interface.css",
+          "http://127.0.0.1:8768/css/workspace.css",
+          "http://127.0.0.1:8768/css/auth.css"
+        ]
+      }
+    },
+    {
+      "name": "reset/375: text and control contrast",
+      "pass": true,
+      "evidence": {
+        "count": 14,
+        "minimum": 5.935250765418008,
+        "fails": [],
+        "borderFails": []
+      }
+    },
+    {
+      "name": "dashboard/1440: layout and shared typography",
+      "pass": true,
+      "evidence": {
+        "width": 1440,
+        "scrollWidth": 1440,
+        "h1": "Lora, Georgia, serif",
+        "body": "\"Source Sans 3\", \"Segoe UI\", sans-serif",
+        "background": "rgb(250, 249, 246)",
+        "smallControls": [],
+        "unlabelled": [],
+        "brokenReferences": [],
+        "duplicateIds": [],
+        "logout": 1,
+        "csrf": true,
+        "main": 1,
+        "table": null,
+        "grid": null,
+        "menu": {
+          "visible": false,
+          "navHidden": false
+        },
+        "gradients": 0,
+        "tokenStyles": [
+          "http://127.0.0.1:8768/css/design-tokens.css",
+          "http://127.0.0.1:8768/css/interface.css",
+          "http://127.0.0.1:8768/css/workspace.css",
+          "http://127.0.0.1:8768/css/dashboard.css"
+        ]
+      }
+    },
+    {
+      "name": "dashboard/1440: form labels, references and target sizes",
+      "pass": true,
+      "evidence": {
+        "width": 1440,
+        "scrollWidth": 1440,
+        "h1": "Lora, Georgia, serif",
+        "body": "\"Source Sans 3\", \"Segoe UI\", sans-serif",
+        "background": "rgb(250, 249, 246)",
+        "smallControls": [],
+        "unlabelled": [],
+        "brokenReferences": [],
+        "duplicateIds": [],
+        "logout": 1,
+        "csrf": true,
+        "main": 1,
+        "table": null,
+        "grid": null,
+        "menu": {
+          "visible": false,
+          "navHidden": false
+        },
+        "gradients": 0,
+        "tokenStyles": [
+          "http://127.0.0.1:8768/css/design-tokens.css",
+          "http://127.0.0.1:8768/css/interface.css",
+          "http://127.0.0.1:8768/css/workspace.css",
+          "http://127.0.0.1:8768/css/dashboard.css"
+        ]
+      }
+    },
+    {
+      "name": "dashboard/1440: responsive shell",
+      "pass": true,
+      "evidence": {
+        "visible": false,
+        "navHidden": false
+      }
+    },
+    {
+      "name": "dashboard/1440: text and control contrast",
+      "pass": true,
+      "evidence": {
+        "count": 31,
+        "minimum": 5.935250765418008,
+        "fails": [],
+        "borderFails": []
+      }
+    },
+    {
+      "name": "dashboard/1024: layout and shared typography",
+      "pass": true,
+      "evidence": {
+        "width": 1024,
+        "scrollWidth": 1024,
+        "h1": "Lora, Georgia, serif",
+        "body": "\"Source Sans 3\", \"Segoe UI\", sans-serif",
+        "background": "rgb(250, 249, 246)",
+        "smallControls": [],
+        "unlabelled": [],
+        "brokenReferences": [],
+        "duplicateIds": [],
+        "logout": 1,
+        "csrf": true,
+        "main": 1,
+        "table": null,
+        "grid": null,
+        "menu": {
+          "visible": false,
+          "navHidden": false
+        },
+        "gradients": 0,
+        "tokenStyles": [
+          "http://127.0.0.1:8768/css/design-tokens.css",
+          "http://127.0.0.1:8768/css/interface.css",
+          "http://127.0.0.1:8768/css/workspace.css",
+          "http://127.0.0.1:8768/css/dashboard.css"
+        ]
+      }
+    },
+    {
+      "name": "dashboard/1024: form labels, references and target sizes",
+      "pass": true,
+      "evidence": {
+        "width": 1024,
+        "scrollWidth": 1024,
+        "h1": "Lora, Georgia, serif",
+        "body": "\"Source Sans 3\", \"Segoe UI\", sans-serif",
+        "background": "rgb(250, 249, 246)",
+        "smallControls": [],
+        "unlabelled": [],
+        "brokenReferences": [],
+        "duplicateIds": [],
+        "logout": 1,
+        "csrf": true,
+        "main": 1,
+        "table": null,
+        "grid": null,
+        "menu": {
+          "visible": false,
+          "navHidden": false
+        },
+        "gradients": 0,
+        "tokenStyles": [
+          "http://127.0.0.1:8768/css/design-tokens.css",
+          "http://127.0.0.1:8768/css/interface.css",
+          "http://127.0.0.1:8768/css/workspace.css",
+          "http://127.0.0.1:8768/css/dashboard.css"
+        ]
+      }
+    },
+    {
+      "name": "dashboard/1024: responsive shell",
+      "pass": true,
+      "evidence": {
+        "visible": false,
+        "navHidden": false
+      }
+    },
+    {
+      "name": "dashboard/1024: text and control contrast",
+      "pass": true,
+      "evidence": {
+        "count": 31,
+        "minimum": 5.935250765418008,
+        "fails": [],
+        "borderFails": []
+      }
+    },
+    {
+      "name": "dashboard/768: layout and shared typography",
+      "pass": true,
+      "evidence": {
+        "width": 768,
+        "scrollWidth": 768,
+        "h1": "Lora, Georgia, serif",
+        "body": "\"Source Sans 3\", \"Segoe UI\", sans-serif",
+        "background": "rgb(250, 249, 246)",
+        "smallControls": [],
+        "unlabelled": [],
+        "brokenReferences": [],
+        "duplicateIds": [],
+        "logout": 1,
+        "csrf": true,
+        "main": 1,
+        "table": null,
+        "grid": null,
+        "menu": {
+          "visible": true,
+          "navHidden": true
+        },
+        "gradients": 0,
+        "tokenStyles": [
+          "http://127.0.0.1:8768/css/design-tokens.css",
+          "http://127.0.0.1:8768/css/interface.css",
+          "http://127.0.0.1:8768/css/workspace.css",
+          "http://127.0.0.1:8768/css/dashboard.css"
+        ]
+      }
+    },
+    {
+      "name": "dashboard/768: form labels, references and target sizes",
+      "pass": true,
+      "evidence": {
+        "width": 768,
+        "scrollWidth": 768,
+        "h1": "Lora, Georgia, serif",
+        "body": "\"Source Sans 3\", \"Segoe UI\", sans-serif",
+        "background": "rgb(250, 249, 246)",
+        "smallControls": [],
+        "unlabelled": [],
+        "brokenReferences": [],
+        "duplicateIds": [],
+        "logout": 1,
+        "csrf": true,
+        "main": 1,
+        "table": null,
+        "grid": null,
+        "menu": {
+          "visible": true,
+          "navHidden": true
+        },
+        "gradients": 0,
+        "tokenStyles": [
+          "http://127.0.0.1:8768/css/design-tokens.css",
+          "http://127.0.0.1:8768/css/interface.css",
+          "http://127.0.0.1:8768/css/workspace.css",
+          "http://127.0.0.1:8768/css/dashboard.css"
+        ]
+      }
+    },
+    {
+      "name": "dashboard/768: responsive shell",
+      "pass": true,
+      "evidence": {
+        "visible": true,
+        "navHidden": true
+      }
+    },
+    {
+      "name": "dashboard/768: text and control contrast",
+      "pass": true,
+      "evidence": {
+        "count": 26,
+        "minimum": 5.935250765418008,
+        "fails": [],
+        "borderFails": []
+      }
+    },
+    {
+      "name": "dashboard/375: layout and shared typography",
+      "pass": true,
+      "evidence": {
+        "width": 375,
+        "scrollWidth": 360,
+        "h1": "Lora, Georgia, serif",
+        "body": "\"Source Sans 3\", \"Segoe UI\", sans-serif",
+        "background": "rgb(250, 249, 246)",
+        "smallControls": [],
+        "unlabelled": [],
+        "brokenReferences": [],
+        "duplicateIds": [],
+        "logout": 1,
+        "csrf": true,
+        "main": 1,
+        "table": null,
+        "grid": null,
+        "menu": {
+          "visible": true,
+          "navHidden": true
+        },
+        "gradients": 0,
+        "tokenStyles": [
+          "http://127.0.0.1:8768/css/design-tokens.css",
+          "http://127.0.0.1:8768/css/interface.css",
+          "http://127.0.0.1:8768/css/workspace.css",
+          "http://127.0.0.1:8768/css/dashboard.css"
+        ]
+      }
+    },
+    {
+      "name": "dashboard/375: form labels, references and target sizes",
+      "pass": true,
+      "evidence": {
+        "width": 375,
+        "scrollWidth": 360,
+        "h1": "Lora, Georgia, serif",
+        "body": "\"Source Sans 3\", \"Segoe UI\", sans-serif",
+        "background": "rgb(250, 249, 246)",
+        "smallControls": [],
+        "unlabelled": [],
+        "brokenReferences": [],
+        "duplicateIds": [],
+        "logout": 1,
+        "csrf": true,
+        "main": 1,
+        "table": null,
+        "grid": null,
+        "menu": {
+          "visible": true,
+          "navHidden": true
+        },
+        "gradients": 0,
+        "tokenStyles": [
+          "http://127.0.0.1:8768/css/design-tokens.css",
+          "http://127.0.0.1:8768/css/interface.css",
+          "http://127.0.0.1:8768/css/workspace.css",
+          "http://127.0.0.1:8768/css/dashboard.css"
+        ]
+      }
+    },
+    {
+      "name": "dashboard/375: responsive shell",
+      "pass": true,
+      "evidence": {
+        "visible": true,
+        "navHidden": true
+      }
+    },
+    {
+      "name": "dashboard/375: text and control contrast",
+      "pass": true,
+      "evidence": {
+        "count": 26,
+        "minimum": 5.935250765418008,
+        "fails": [],
+        "borderFails": []
+      }
+    },
+    {
+      "name": "accounts/1440: layout and shared typography",
+      "pass": true,
+      "evidence": {
+        "width": 1440,
+        "scrollWidth": 1425,
+        "h1": "Lora, Georgia, serif",
+        "body": "\"Source Sans 3\", \"Segoe UI\", sans-serif",
+        "background": "rgb(250, 249, 246)",
+        "smallControls": [],
+        "unlabelled": [],
+        "brokenReferences": [],
+        "duplicateIds": [],
+        "logout": 1,
+        "csrf": true,
+        "main": 1,
+        "table": {
+          "width": 1153,
+          "scroll": 1153,
+          "named": true,
+          "focusable": true
+        },
+        "grid": null,
+        "menu": {
+          "visible": false,
+          "navHidden": false
+        },
+        "gradients": 0,
+        "tokenStyles": [
+          "http://127.0.0.1:8768/css/design-tokens.css",
+          "http://127.0.0.1:8768/css/interface.css",
+          "http://127.0.0.1:8768/css/workspace.css",
+          "http://127.0.0.1:8768/css/account-list.css"
+        ]
+      }
+    },
+    {
+      "name": "accounts/1440: form labels, references and target sizes",
+      "pass": true,
+      "evidence": {
+        "width": 1440,
+        "scrollWidth": 1425,
+        "h1": "Lora, Georgia, serif",
+        "body": "\"Source Sans 3\", \"Segoe UI\", sans-serif",
+        "background": "rgb(250, 249, 246)",
+        "smallControls": [],
+        "unlabelled": [],
+        "brokenReferences": [],
+        "duplicateIds": [],
+        "logout": 1,
+        "csrf": true,
+        "main": 1,
+        "table": {
+          "width": 1153,
+          "scroll": 1153,
+          "named": true,
+          "focusable": true
+        },
+        "grid": null,
+        "menu": {
+          "visible": false,
+          "navHidden": false
+        },
+        "gradients": 0,
+        "tokenStyles": [
+          "http://127.0.0.1:8768/css/design-tokens.css",
+          "http://127.0.0.1:8768/css/interface.css",
+          "http://127.0.0.1:8768/css/workspace.css",
+          "http://127.0.0.1:8768/css/account-list.css"
+        ]
+      }
+    },
+    {
+      "name": "accounts/1440: responsive shell",
+      "pass": true,
+      "evidence": {
+        "visible": false,
+        "navHidden": false
+      }
+    },
+    {
+      "name": "accounts/1440: local table scrolling",
+      "pass": true,
+      "evidence": {
+        "width": 1153,
+        "scroll": 1153,
+        "named": true,
+        "focusable": true
+      }
+    },
+    {
+      "name": "accounts/1440: text and control contrast",
+      "pass": true,
+      "evidence": {
+        "count": 62,
+        "minimum": 5.935250765418008,
+        "fails": [],
+        "borderFails": []
+      }
+    },
+    {
+      "name": "accounts/1024: layout and shared typography",
+      "pass": true,
+      "evidence": {
+        "width": 1024,
+        "scrollWidth": 1009,
+        "h1": "Lora, Georgia, serif",
+        "body": "\"Source Sans 3\", \"Segoe UI\", sans-serif",
+        "background": "rgb(250, 249, 246)",
+        "smallControls": [],
+        "unlabelled": [],
+        "brokenReferences": [],
+        "duplicateIds": [],
+        "logout": 1,
+        "csrf": true,
+        "main": 1,
+        "table": {
+          "width": 777,
+          "scroll": 920,
+          "named": true,
+          "focusable": true
+        },
+        "grid": null,
+        "menu": {
+          "visible": false,
+          "navHidden": false
+        },
+        "gradients": 0,
+        "tokenStyles": [
+          "http://127.0.0.1:8768/css/design-tokens.css",
+          "http://127.0.0.1:8768/css/interface.css",
+          "http://127.0.0.1:8768/css/workspace.css",
+          "http://127.0.0.1:8768/css/account-list.css"
+        ]
+      }
+    },
+    {
+      "name": "accounts/1024: form labels, references and target sizes",
+      "pass": true,
+      "evidence": {
+        "width": 1024,
+        "scrollWidth": 1009,
+        "h1": "Lora, Georgia, serif",
+        "body": "\"Source Sans 3\", \"Segoe UI\", sans-serif",
+        "background": "rgb(250, 249, 246)",
+        "smallControls": [],
+        "unlabelled": [],
+        "brokenReferences": [],
+        "duplicateIds": [],
+        "logout": 1,
+        "csrf": true,
+        "main": 1,
+        "table": {
+          "width": 777,
+          "scroll": 920,
+          "named": true,
+          "focusable": true
+        },
+        "grid": null,
+        "menu": {
+          "visible": false,
+          "navHidden": false
+        },
+        "gradients": 0,
+        "tokenStyles": [
+          "http://127.0.0.1:8768/css/design-tokens.css",
+          "http://127.0.0.1:8768/css/interface.css",
+          "http://127.0.0.1:8768/css/workspace.css",
+          "http://127.0.0.1:8768/css/account-list.css"
+        ]
+      }
+    },
+    {
+      "name": "accounts/1024: responsive shell",
+      "pass": true,
+      "evidence": {
+        "visible": false,
+        "navHidden": false
+      }
+    },
+    {
+      "name": "accounts/1024: local table scrolling",
+      "pass": true,
+      "evidence": {
+        "width": 777,
+        "scroll": 920,
+        "named": true,
+        "focusable": true
+      }
+    },
+    {
+      "name": "accounts/1024: text and control contrast",
+      "pass": true,
+      "evidence": {
+        "count": 62,
+        "minimum": 5.935250765418008,
+        "fails": [],
+        "borderFails": []
+      }
+    },
+    {
+      "name": "accounts/768: layout and shared typography",
+      "pass": true,
+      "evidence": {
+        "width": 768,
+        "scrollWidth": 753,
+        "h1": "Lora, Georgia, serif",
+        "body": "\"Source Sans 3\", \"Segoe UI\", sans-serif",
+        "background": "rgb(250, 249, 246)",
+        "smallControls": [],
+        "unlabelled": [],
+        "brokenReferences": [],
+        "duplicateIds": [],
+        "logout": 1,
+        "csrf": true,
+        "main": 1,
+        "table": {
+          "width": 721,
+          "scroll": 920,
+          "named": true,
+          "focusable": true
+        },
+        "grid": null,
+        "menu": {
+          "visible": true,
+          "navHidden": true
+        },
+        "gradients": 0,
+        "tokenStyles": [
+          "http://127.0.0.1:8768/css/design-tokens.css",
+          "http://127.0.0.1:8768/css/interface.css",
+          "http://127.0.0.1:8768/css/workspace.css",
+          "http://127.0.0.1:8768/css/account-list.css"
+        ]
+      }
+    },
+    {
+      "name": "accounts/768: form labels, references and target sizes",
+      "pass": true,
+      "evidence": {
+        "width": 768,
+        "scrollWidth": 753,
+        "h1": "Lora, Georgia, serif",
+        "body": "\"Source Sans 3\", \"Segoe UI\", sans-serif",
+        "background": "rgb(250, 249, 246)",
+        "smallControls": [],
+        "unlabelled": [],
+        "brokenReferences": [],
+        "duplicateIds": [],
+        "logout": 1,
+        "csrf": true,
+        "main": 1,
+        "table": {
+          "width": 721,
+          "scroll": 920,
+          "named": true,
+          "focusable": true
+        },
+        "grid": null,
+        "menu": {
+          "visible": true,
+          "navHidden": true
+        },
+        "gradients": 0,
+        "tokenStyles": [
+          "http://127.0.0.1:8768/css/design-tokens.css",
+          "http://127.0.0.1:8768/css/interface.css",
+          "http://127.0.0.1:8768/css/workspace.css",
+          "http://127.0.0.1:8768/css/account-list.css"
+        ]
+      }
+    },
+    {
+      "name": "accounts/768: responsive shell",
+      "pass": true,
+      "evidence": {
+        "visible": true,
+        "navHidden": true
+      }
+    },
+    {
+      "name": "accounts/768: local table scrolling",
+      "pass": true,
+      "evidence": {
+        "width": 721,
+        "scroll": 920,
+        "named": true,
+        "focusable": true
+      }
+    },
+    {
+      "name": "accounts/768: text and control contrast",
+      "pass": true,
+      "evidence": {
+        "count": 57,
+        "minimum": 5.935250765418008,
+        "fails": [],
+        "borderFails": []
+      }
+    },
+    {
+      "name": "accounts/375: layout and shared typography",
+      "pass": true,
+      "evidence": {
+        "width": 375,
+        "scrollWidth": 360,
+        "h1": "Lora, Georgia, serif",
+        "body": "\"Source Sans 3\", \"Segoe UI\", sans-serif",
+        "background": "rgb(250, 249, 246)",
+        "smallControls": [],
+        "unlabelled": [],
+        "brokenReferences": [],
+        "duplicateIds": [],
+        "logout": 1,
+        "csrf": true,
+        "main": 1,
+        "table": {
+          "width": 328,
+          "scroll": 920,
+          "named": true,
+          "focusable": true
+        },
+        "grid": null,
+        "menu": {
+          "visible": true,
+          "navHidden": true
+        },
+        "gradients": 0,
+        "tokenStyles": [
+          "http://127.0.0.1:8768/css/design-tokens.css",
+          "http://127.0.0.1:8768/css/interface.css",
+          "http://127.0.0.1:8768/css/workspace.css",
+          "http://127.0.0.1:8768/css/account-list.css"
+        ]
+      }
+    },
+    {
+      "name": "accounts/375: form labels, references and target sizes",
+      "pass": true,
+      "evidence": {
+        "width": 375,
+        "scrollWidth": 360,
+        "h1": "Lora, Georgia, serif",
+        "body": "\"Source Sans 3\", \"Segoe UI\", sans-serif",
+        "background": "rgb(250, 249, 246)",
+        "smallControls": [],
+        "unlabelled": [],
+        "brokenReferences": [],
+        "duplicateIds": [],
+        "logout": 1,
+        "csrf": true,
+        "main": 1,
+        "table": {
+          "width": 328,
+          "scroll": 920,
+          "named": true,
+          "focusable": true
+        },
+        "grid": null,
+        "menu": {
+          "visible": true,
+          "navHidden": true
+        },
+        "gradients": 0,
+        "tokenStyles": [
+          "http://127.0.0.1:8768/css/design-tokens.css",
+          "http://127.0.0.1:8768/css/interface.css",
+          "http://127.0.0.1:8768/css/workspace.css",
+          "http://127.0.0.1:8768/css/account-list.css"
+        ]
+      }
+    },
+    {
+      "name": "accounts/375: responsive shell",
+      "pass": true,
+      "evidence": {
+        "visible": true,
+        "navHidden": true
+      }
+    },
+    {
+      "name": "accounts/375: local table scrolling",
+      "pass": true,
+      "evidence": {
+        "width": 328,
+        "scroll": 920,
+        "named": true,
+        "focusable": true
+      }
+    },
+    {
+      "name": "accounts/375: text and control contrast",
+      "pass": true,
+      "evidence": {
+        "count": 57,
+        "minimum": 5.935250765418008,
+        "fails": [],
+        "borderFails": []
+      }
+    },
+    {
+      "name": "create/1440: layout and shared typography",
+      "pass": true,
+      "evidence": {
+        "width": 1440,
+        "scrollWidth": 1425,
+        "h1": "Lora, Georgia, serif",
+        "body": "\"Source Sans 3\", \"Segoe UI\", sans-serif",
+        "background": "rgb(250, 249, 246)",
+        "smallControls": [],
+        "unlabelled": [],
+        "brokenReferences": [],
+        "duplicateIds": [],
+        "logout": 1,
+        "csrf": true,
+        "main": 1,
+        "table": null,
+        "grid": 2,
+        "menu": {
+          "visible": false,
+          "navHidden": false
+        },
+        "gradients": 0,
+        "tokenStyles": [
+          "http://127.0.0.1:8768/css/design-tokens.css",
+          "http://127.0.0.1:8768/css/interface.css",
+          "http://127.0.0.1:8768/css/workspace.css",
+          "http://127.0.0.1:8768/css/account-form.css"
+        ]
+      }
+    },
+    {
+      "name": "create/1440: form labels, references and target sizes",
+      "pass": true,
+      "evidence": {
+        "width": 1440,
+        "scrollWidth": 1425,
+        "h1": "Lora, Georgia, serif",
+        "body": "\"Source Sans 3\", \"Segoe UI\", sans-serif",
+        "background": "rgb(250, 249, 246)",
+        "smallControls": [],
+        "unlabelled": [],
+        "brokenReferences": [],
+        "duplicateIds": [],
+        "logout": 1,
+        "csrf": true,
+        "main": 1,
+        "table": null,
+        "grid": 2,
+        "menu": {
+          "visible": false,
+          "navHidden": false
+        },
+        "gradients": 0,
+        "tokenStyles": [
+          "http://127.0.0.1:8768/css/design-tokens.css",
+          "http://127.0.0.1:8768/css/interface.css",
+          "http://127.0.0.1:8768/css/workspace.css",
+          "http://127.0.0.1:8768/css/account-form.css"
+        ]
+      }
+    },
+    {
+      "name": "create/1440: responsive shell",
+      "pass": true,
+      "evidence": {
+        "visible": false,
+        "navHidden": false
+      }
+    },
+    {
+      "name": "create/1440: form columns",
+      "pass": true,
+      "evidence": 2
+    },
+    {
+      "name": "create/1440: text and control contrast",
+      "pass": true,
+      "evidence": {
+        "count": 38,
+        "minimum": 5.935250765418008,
+        "fails": [],
+        "borderFails": []
+      }
+    },
+    {
+      "name": "create/1024: layout and shared typography",
+      "pass": true,
+      "evidence": {
+        "width": 1024,
+        "scrollWidth": 1009,
+        "h1": "Lora, Georgia, serif",
+        "body": "\"Source Sans 3\", \"Segoe UI\", sans-serif",
+        "background": "rgb(250, 249, 246)",
+        "smallControls": [],
+        "unlabelled": [],
+        "brokenReferences": [],
+        "duplicateIds": [],
+        "logout": 1,
+        "csrf": true,
+        "main": 1,
+        "table": null,
+        "grid": 2,
+        "menu": {
+          "visible": false,
+          "navHidden": false
+        },
+        "gradients": 0,
+        "tokenStyles": [
+          "http://127.0.0.1:8768/css/design-tokens.css",
+          "http://127.0.0.1:8768/css/interface.css",
+          "http://127.0.0.1:8768/css/workspace.css",
+          "http://127.0.0.1:8768/css/account-form.css"
+        ]
+      }
+    },
+    {
+      "name": "create/1024: form labels, references and target sizes",
+      "pass": true,
+      "evidence": {
+        "width": 1024,
+        "scrollWidth": 1009,
+        "h1": "Lora, Georgia, serif",
+        "body": "\"Source Sans 3\", \"Segoe UI\", sans-serif",
+        "background": "rgb(250, 249, 246)",
+        "smallControls": [],
+        "unlabelled": [],
+        "brokenReferences": [],
+        "duplicateIds": [],
+        "logout": 1,
+        "csrf": true,
+        "main": 1,
+        "table": null,
+        "grid": 2,
+        "menu": {
+          "visible": false,
+          "navHidden": false
+        },
+        "gradients": 0,
+        "tokenStyles": [
+          "http://127.0.0.1:8768/css/design-tokens.css",
+          "http://127.0.0.1:8768/css/interface.css",
+          "http://127.0.0.1:8768/css/workspace.css",
+          "http://127.0.0.1:8768/css/account-form.css"
+        ]
+      }
+    },
+    {
+      "name": "create/1024: responsive shell",
+      "pass": true,
+      "evidence": {
+        "visible": false,
+        "navHidden": false
+      }
+    },
+    {
+      "name": "create/1024: form columns",
+      "pass": true,
+      "evidence": 2
+    },
+    {
+      "name": "create/1024: text and control contrast",
+      "pass": true,
+      "evidence": {
+        "count": 38,
+        "minimum": 5.935250765418008,
+        "fails": [],
+        "borderFails": []
+      }
+    },
+    {
+      "name": "create/768: layout and shared typography",
+      "pass": true,
+      "evidence": {
+        "width": 768,
+        "scrollWidth": 753,
+        "h1": "Lora, Georgia, serif",
+        "body": "\"Source Sans 3\", \"Segoe UI\", sans-serif",
+        "background": "rgb(250, 249, 246)",
+        "smallControls": [],
+        "unlabelled": [],
+        "brokenReferences": [],
+        "duplicateIds": [],
+        "logout": 1,
+        "csrf": true,
+        "main": 1,
+        "table": null,
+        "grid": 2,
+        "menu": {
+          "visible": true,
+          "navHidden": true
+        },
+        "gradients": 0,
+        "tokenStyles": [
+          "http://127.0.0.1:8768/css/design-tokens.css",
+          "http://127.0.0.1:8768/css/interface.css",
+          "http://127.0.0.1:8768/css/workspace.css",
+          "http://127.0.0.1:8768/css/account-form.css"
+        ]
+      }
+    },
+    {
+      "name": "create/768: form labels, references and target sizes",
+      "pass": true,
+      "evidence": {
+        "width": 768,
+        "scrollWidth": 753,
+        "h1": "Lora, Georgia, serif",
+        "body": "\"Source Sans 3\", \"Segoe UI\", sans-serif",
+        "background": "rgb(250, 249, 246)",
+        "smallControls": [],
+        "unlabelled": [],
+        "brokenReferences": [],
+        "duplicateIds": [],
+        "logout": 1,
+        "csrf": true,
+        "main": 1,
+        "table": null,
+        "grid": 2,
+        "menu": {
+          "visible": true,
+          "navHidden": true
+        },
+        "gradients": 0,
+        "tokenStyles": [
+          "http://127.0.0.1:8768/css/design-tokens.css",
+          "http://127.0.0.1:8768/css/interface.css",
+          "http://127.0.0.1:8768/css/workspace.css",
+          "http://127.0.0.1:8768/css/account-form.css"
+        ]
+      }
+    },
+    {
+      "name": "create/768: responsive shell",
+      "pass": true,
+      "evidence": {
+        "visible": true,
+        "navHidden": true
+      }
+    },
+    {
+      "name": "create/768: form columns",
+      "pass": true,
+      "evidence": 2
+    },
+    {
+      "name": "create/768: text and control contrast",
+      "pass": true,
+      "evidence": {
+        "count": 33,
+        "minimum": 5.935250765418008,
+        "fails": [],
+        "borderFails": []
+      }
+    },
+    {
+      "name": "create/375: layout and shared typography",
+      "pass": true,
+      "evidence": {
+        "width": 375,
+        "scrollWidth": 360,
+        "h1": "Lora, Georgia, serif",
+        "body": "\"Source Sans 3\", \"Segoe UI\", sans-serif",
+        "background": "rgb(250, 249, 246)",
+        "smallControls": [],
+        "unlabelled": [],
+        "brokenReferences": [],
+        "duplicateIds": [],
+        "logout": 1,
+        "csrf": true,
+        "main": 1,
+        "table": null,
+        "grid": 1,
+        "menu": {
+          "visible": true,
+          "navHidden": true
+        },
+        "gradients": 0,
+        "tokenStyles": [
+          "http://127.0.0.1:8768/css/design-tokens.css",
+          "http://127.0.0.1:8768/css/interface.css",
+          "http://127.0.0.1:8768/css/workspace.css",
+          "http://127.0.0.1:8768/css/account-form.css"
+        ]
+      }
+    },
+    {
+      "name": "create/375: form labels, references and target sizes",
+      "pass": true,
+      "evidence": {
+        "width": 375,
+        "scrollWidth": 360,
+        "h1": "Lora, Georgia, serif",
+        "body": "\"Source Sans 3\", \"Segoe UI\", sans-serif",
+        "background": "rgb(250, 249, 246)",
+        "smallControls": [],
+        "unlabelled": [],
+        "brokenReferences": [],
+        "duplicateIds": [],
+        "logout": 1,
+        "csrf": true,
+        "main": 1,
+        "table": null,
+        "grid": 1,
+        "menu": {
+          "visible": true,
+          "navHidden": true
+        },
+        "gradients": 0,
+        "tokenStyles": [
+          "http://127.0.0.1:8768/css/design-tokens.css",
+          "http://127.0.0.1:8768/css/interface.css",
+          "http://127.0.0.1:8768/css/workspace.css",
+          "http://127.0.0.1:8768/css/account-form.css"
+        ]
+      }
+    },
+    {
+      "name": "create/375: responsive shell",
+      "pass": true,
+      "evidence": {
+        "visible": true,
+        "navHidden": true
+      }
+    },
+    {
+      "name": "create/375: form columns",
+      "pass": true,
+      "evidence": 1
+    },
+    {
+      "name": "create/375: text and control contrast",
+      "pass": true,
+      "evidence": {
+        "count": 33,
+        "minimum": 5.935250765418008,
+        "fails": [],
+        "borderFails": []
+      }
+    },
+    {
+      "name": "edit/1440: layout and shared typography",
+      "pass": true,
+      "evidence": {
+        "width": 1440,
+        "scrollWidth": 1425,
+        "h1": "Lora, Georgia, serif",
+        "body": "\"Source Sans 3\", \"Segoe UI\", sans-serif",
+        "background": "rgb(250, 249, 246)",
+        "smallControls": [],
+        "unlabelled": [],
+        "brokenReferences": [],
+        "duplicateIds": [],
+        "logout": 1,
+        "csrf": true,
+        "main": 1,
+        "table": null,
+        "grid": 2,
+        "menu": {
+          "visible": false,
+          "navHidden": false
+        },
+        "gradients": 0,
+        "tokenStyles": [
+          "http://127.0.0.1:8768/css/design-tokens.css",
+          "http://127.0.0.1:8768/css/interface.css",
+          "http://127.0.0.1:8768/css/workspace.css",
+          "http://127.0.0.1:8768/css/account-form.css"
+        ]
+      }
+    },
+    {
+      "name": "edit/1440: form labels, references and target sizes",
+      "pass": true,
+      "evidence": {
+        "width": 1440,
+        "scrollWidth": 1425,
+        "h1": "Lora, Georgia, serif",
+        "body": "\"Source Sans 3\", \"Segoe UI\", sans-serif",
+        "background": "rgb(250, 249, 246)",
+        "smallControls": [],
+        "unlabelled": [],
+        "brokenReferences": [],
+        "duplicateIds": [],
+        "logout": 1,
+        "csrf": true,
+        "main": 1,
+        "table": null,
+        "grid": 2,
+        "menu": {
+          "visible": false,
+          "navHidden": false
+        },
+        "gradients": 0,
+        "tokenStyles": [
+          "http://127.0.0.1:8768/css/design-tokens.css",
+          "http://127.0.0.1:8768/css/interface.css",
+          "http://127.0.0.1:8768/css/workspace.css",
+          "http://127.0.0.1:8768/css/account-form.css"
+        ]
+      }
+    },
+    {
+      "name": "edit/1440: responsive shell",
+      "pass": true,
+      "evidence": {
+        "visible": false,
+        "navHidden": false
+      }
+    },
+    {
+      "name": "edit/1440: form columns",
+      "pass": true,
+      "evidence": 2
+    },
+    {
+      "name": "edit/1440: text and control contrast",
+      "pass": true,
+      "evidence": {
+        "count": 32,
+        "minimum": 5.935250765418008,
+        "fails": [],
+        "borderFails": []
+      }
+    },
+    {
+      "name": "edit/1024: layout and shared typography",
+      "pass": true,
+      "evidence": {
+        "width": 1024,
+        "scrollWidth": 1009,
+        "h1": "Lora, Georgia, serif",
+        "body": "\"Source Sans 3\", \"Segoe UI\", sans-serif",
+        "background": "rgb(250, 249, 246)",
+        "smallControls": [],
+        "unlabelled": [],
+        "brokenReferences": [],
+        "duplicateIds": [],
+        "logout": 1,
+        "csrf": true,
+        "main": 1,
+        "table": null,
+        "grid": 2,
+        "menu": {
+          "visible": false,
+          "navHidden": false
+        },
+        "gradients": 0,
+        "tokenStyles": [
+          "http://127.0.0.1:8768/css/design-tokens.css",
+          "http://127.0.0.1:8768/css/interface.css",
+          "http://127.0.0.1:8768/css/workspace.css",
+          "http://127.0.0.1:8768/css/account-form.css"
+        ]
+      }
+    },
+    {
+      "name": "edit/1024: form labels, references and target sizes",
+      "pass": true,
+      "evidence": {
+        "width": 1024,
+        "scrollWidth": 1009,
+        "h1": "Lora, Georgia, serif",
+        "body": "\"Source Sans 3\", \"Segoe UI\", sans-serif",
+        "background": "rgb(250, 249, 246)",
+        "smallControls": [],
+        "unlabelled": [],
+        "brokenReferences": [],
+        "duplicateIds": [],
+        "logout": 1,
+        "csrf": true,
+        "main": 1,
+        "table": null,
+        "grid": 2,
+        "menu": {
+          "visible": false,
+          "navHidden": false
+        },
+        "gradients": 0,
+        "tokenStyles": [
+          "http://127.0.0.1:8768/css/design-tokens.css",
+          "http://127.0.0.1:8768/css/interface.css",
+          "http://127.0.0.1:8768/css/workspace.css",
+          "http://127.0.0.1:8768/css/account-form.css"
+        ]
+      }
+    },
+    {
+      "name": "edit/1024: responsive shell",
+      "pass": true,
+      "evidence": {
+        "visible": false,
+        "navHidden": false
+      }
+    },
+    {
+      "name": "edit/1024: form columns",
+      "pass": true,
+      "evidence": 2
+    },
+    {
+      "name": "edit/1024: text and control contrast",
+      "pass": true,
+      "evidence": {
+        "count": 32,
+        "minimum": 5.935250765418008,
+        "fails": [],
+        "borderFails": []
+      }
+    },
+    {
+      "name": "edit/768: layout and shared typography",
+      "pass": true,
+      "evidence": {
+        "width": 768,
+        "scrollWidth": 753,
+        "h1": "Lora, Georgia, serif",
+        "body": "\"Source Sans 3\", \"Segoe UI\", sans-serif",
+        "background": "rgb(250, 249, 246)",
+        "smallControls": [],
+        "unlabelled": [],
+        "brokenReferences": [],
+        "duplicateIds": [],
+        "logout": 1,
+        "csrf": true,
+        "main": 1,
+        "table": null,
+        "grid": 2,
+        "menu": {
+          "visible": true,
+          "navHidden": true
+        },
+        "gradients": 0,
+        "tokenStyles": [
+          "http://127.0.0.1:8768/css/design-tokens.css",
+          "http://127.0.0.1:8768/css/interface.css",
+          "http://127.0.0.1:8768/css/workspace.css",
+          "http://127.0.0.1:8768/css/account-form.css"
+        ]
+      }
+    },
+    {
+      "name": "edit/768: form labels, references and target sizes",
+      "pass": true,
+      "evidence": {
+        "width": 768,
+        "scrollWidth": 753,
+        "h1": "Lora, Georgia, serif",
+        "body": "\"Source Sans 3\", \"Segoe UI\", sans-serif",
+        "background": "rgb(250, 249, 246)",
+        "smallControls": [],
+        "unlabelled": [],
+        "brokenReferences": [],
+        "duplicateIds": [],
+        "logout": 1,
+        "csrf": true,
+        "main": 1,
+        "table": null,
+        "grid": 2,
+        "menu": {
+          "visible": true,
+          "navHidden": true
+        },
+        "gradients": 0,
+        "tokenStyles": [
+          "http://127.0.0.1:8768/css/design-tokens.css",
+          "http://127.0.0.1:8768/css/interface.css",
+          "http://127.0.0.1:8768/css/workspace.css",
+          "http://127.0.0.1:8768/css/account-form.css"
+        ]
+      }
+    },
+    {
+      "name": "edit/768: responsive shell",
+      "pass": true,
+      "evidence": {
+        "visible": true,
+        "navHidden": true
+      }
+    },
+    {
+      "name": "edit/768: form columns",
+      "pass": true,
+      "evidence": 2
+    },
+    {
+      "name": "edit/768: text and control contrast",
+      "pass": true,
+      "evidence": {
+        "count": 27,
+        "minimum": 5.935250765418008,
+        "fails": [],
+        "borderFails": []
+      }
+    },
+    {
+      "name": "edit/375: layout and shared typography",
+      "pass": true,
+      "evidence": {
+        "width": 375,
+        "scrollWidth": 360,
+        "h1": "Lora, Georgia, serif",
+        "body": "\"Source Sans 3\", \"Segoe UI\", sans-serif",
+        "background": "rgb(250, 249, 246)",
+        "smallControls": [],
+        "unlabelled": [],
+        "brokenReferences": [],
+        "duplicateIds": [],
+        "logout": 1,
+        "csrf": true,
+        "main": 1,
+        "table": null,
+        "grid": 1,
+        "menu": {
+          "visible": true,
+          "navHidden": true
+        },
+        "gradients": 0,
+        "tokenStyles": [
+          "http://127.0.0.1:8768/css/design-tokens.css",
+          "http://127.0.0.1:8768/css/interface.css",
+          "http://127.0.0.1:8768/css/workspace.css",
+          "http://127.0.0.1:8768/css/account-form.css"
+        ]
+      }
+    },
+    {
+      "name": "edit/375: form labels, references and target sizes",
+      "pass": true,
+      "evidence": {
+        "width": 375,
+        "scrollWidth": 360,
+        "h1": "Lora, Georgia, serif",
+        "body": "\"Source Sans 3\", \"Segoe UI\", sans-serif",
+        "background": "rgb(250, 249, 246)",
+        "smallControls": [],
+        "unlabelled": [],
+        "brokenReferences": [],
+        "duplicateIds": [],
+        "logout": 1,
+        "csrf": true,
+        "main": 1,
+        "table": null,
+        "grid": 1,
+        "menu": {
+          "visible": true,
+          "navHidden": true
+        },
+        "gradients": 0,
+        "tokenStyles": [
+          "http://127.0.0.1:8768/css/design-tokens.css",
+          "http://127.0.0.1:8768/css/interface.css",
+          "http://127.0.0.1:8768/css/workspace.css",
+          "http://127.0.0.1:8768/css/account-form.css"
+        ]
+      }
+    },
+    {
+      "name": "edit/375: responsive shell",
+      "pass": true,
+      "evidence": {
+        "visible": true,
+        "navHidden": true
+      }
+    },
+    {
+      "name": "edit/375: form columns",
+      "pass": true,
+      "evidence": 1
+    },
+    {
+      "name": "edit/375: text and control contrast",
+      "pass": true,
+      "evidence": {
+        "count": 27,
+        "minimum": 5.935250765418008,
+        "fails": [],
+        "borderFails": []
+      }
+    },
+    {
+      "name": "monitoring/1440: layout and shared typography",
+      "pass": true,
+      "evidence": {
+        "width": 1440,
+        "scrollWidth": 1440,
+        "h1": "Lora, Georgia, serif",
+        "body": "\"Source Sans 3\", \"Segoe UI\", sans-serif",
+        "background": "rgb(250, 249, 246)",
+        "smallControls": [],
+        "unlabelled": [],
+        "brokenReferences": [],
+        "duplicateIds": [],
+        "logout": 1,
+        "csrf": true,
+        "main": 1,
+        "table": {
+          "width": 1168,
+          "scroll": 1168,
+          "named": true,
+          "focusable": true
+        },
+        "grid": null,
+        "menu": {
+          "visible": false,
+          "navHidden": false
+        },
+        "gradients": 0,
+        "tokenStyles": [
+          "http://127.0.0.1:8768/css/design-tokens.css",
+          "http://127.0.0.1:8768/css/interface.css",
+          "http://127.0.0.1:8768/css/workspace.css",
+          "http://127.0.0.1:8768/css/api-monitoring.css"
+        ]
+      }
+    },
+    {
+      "name": "monitoring/1440: form labels, references and target sizes",
+      "pass": true,
+      "evidence": {
+        "width": 1440,
+        "scrollWidth": 1440,
+        "h1": "Lora, Georgia, serif",
+        "body": "\"Source Sans 3\", \"Segoe UI\", sans-serif",
+        "background": "rgb(250, 249, 246)",
+        "smallControls": [],
+        "unlabelled": [],
+        "brokenReferences": [],
+        "duplicateIds": [],
+        "logout": 1,
+        "csrf": true,
+        "main": 1,
+        "table": {
+          "width": 1168,
+          "scroll": 1168,
+          "named": true,
+          "focusable": true
+        },
+        "grid": null,
+        "menu": {
+          "visible": false,
+          "navHidden": false
+        },
+        "gradients": 0,
+        "tokenStyles": [
+          "http://127.0.0.1:8768/css/design-tokens.css",
+          "http://127.0.0.1:8768/css/interface.css",
+          "http://127.0.0.1:8768/css/workspace.css",
+          "http://127.0.0.1:8768/css/api-monitoring.css"
+        ]
+      }
+    },
+    {
+      "name": "monitoring/1440: responsive shell",
+      "pass": true,
+      "evidence": {
+        "visible": false,
+        "navHidden": false
+      }
+    },
+    {
+      "name": "monitoring/1440: local table scrolling",
+      "pass": true,
+      "evidence": {
+        "width": 1168,
+        "scroll": 1168,
+        "named": true,
+        "focusable": true
+      }
+    },
+    {
+      "name": "monitoring/1440: text and control contrast",
+      "pass": true,
+      "evidence": {
+        "count": 47,
+        "minimum": 5.935250765418008,
+        "fails": [],
+        "borderFails": []
+      }
+    },
+    {
+      "name": "monitoring/1024: layout and shared typography",
+      "pass": true,
+      "evidence": {
+        "width": 1024,
+        "scrollWidth": 1024,
+        "h1": "Lora, Georgia, serif",
+        "body": "\"Source Sans 3\", \"Segoe UI\", sans-serif",
+        "background": "rgb(250, 249, 246)",
+        "smallControls": [],
+        "unlabelled": [],
+        "brokenReferences": [],
+        "duplicateIds": [],
+        "logout": 1,
+        "csrf": true,
+        "main": 1,
+        "table": {
+          "width": 792,
+          "scroll": 950,
+          "named": true,
+          "focusable": true
+        },
+        "grid": null,
+        "menu": {
+          "visible": false,
+          "navHidden": false
+        },
+        "gradients": 0,
+        "tokenStyles": [
+          "http://127.0.0.1:8768/css/design-tokens.css",
+          "http://127.0.0.1:8768/css/interface.css",
+          "http://127.0.0.1:8768/css/workspace.css",
+          "http://127.0.0.1:8768/css/api-monitoring.css"
+        ]
+      }
+    },
+    {
+      "name": "monitoring/1024: form labels, references and target sizes",
+      "pass": true,
+      "evidence": {
+        "width": 1024,
+        "scrollWidth": 1024,
+        "h1": "Lora, Georgia, serif",
+        "body": "\"Source Sans 3\", \"Segoe UI\", sans-serif",
+        "background": "rgb(250, 249, 246)",
+        "smallControls": [],
+        "unlabelled": [],
+        "brokenReferences": [],
+        "duplicateIds": [],
+        "logout": 1,
+        "csrf": true,
+        "main": 1,
+        "table": {
+          "width": 792,
+          "scroll": 950,
+          "named": true,
+          "focusable": true
+        },
+        "grid": null,
+        "menu": {
+          "visible": false,
+          "navHidden": false
+        },
+        "gradients": 0,
+        "tokenStyles": [
+          "http://127.0.0.1:8768/css/design-tokens.css",
+          "http://127.0.0.1:8768/css/interface.css",
+          "http://127.0.0.1:8768/css/workspace.css",
+          "http://127.0.0.1:8768/css/api-monitoring.css"
+        ]
+      }
+    },
+    {
+      "name": "monitoring/1024: responsive shell",
+      "pass": true,
+      "evidence": {
+        "visible": false,
+        "navHidden": false
+      }
+    },
+    {
+      "name": "monitoring/1024: local table scrolling",
+      "pass": true,
+      "evidence": {
+        "width": 792,
+        "scroll": 950,
+        "named": true,
+        "focusable": true
+      }
+    },
+    {
+      "name": "monitoring/1024: text and control contrast",
+      "pass": true,
+      "evidence": {
+        "count": 47,
+        "minimum": 5.935250765418008,
+        "fails": [],
+        "borderFails": []
+      }
+    },
+    {
+      "name": "monitoring/768: layout and shared typography",
+      "pass": true,
+      "evidence": {
+        "width": 768,
+        "scrollWidth": 768,
+        "h1": "Lora, Georgia, serif",
+        "body": "\"Source Sans 3\", \"Segoe UI\", sans-serif",
+        "background": "rgb(250, 249, 246)",
+        "smallControls": [],
+        "unlabelled": [],
+        "brokenReferences": [],
+        "duplicateIds": [],
+        "logout": 1,
+        "csrf": true,
+        "main": 1,
+        "table": {
+          "width": 736,
+          "scroll": 950,
+          "named": true,
+          "focusable": true
+        },
+        "grid": null,
+        "menu": {
+          "visible": true,
+          "navHidden": true
+        },
+        "gradients": 0,
+        "tokenStyles": [
+          "http://127.0.0.1:8768/css/design-tokens.css",
+          "http://127.0.0.1:8768/css/interface.css",
+          "http://127.0.0.1:8768/css/workspace.css",
+          "http://127.0.0.1:8768/css/api-monitoring.css"
+        ]
+      }
+    },
+    {
+      "name": "monitoring/768: form labels, references and target sizes",
+      "pass": true,
+      "evidence": {
+        "width": 768,
+        "scrollWidth": 768,
+        "h1": "Lora, Georgia, serif",
+        "body": "\"Source Sans 3\", \"Segoe UI\", sans-serif",
+        "background": "rgb(250, 249, 246)",
+        "smallControls": [],
+        "unlabelled": [],
+        "brokenReferences": [],
+        "duplicateIds": [],
+        "logout": 1,
+        "csrf": true,
+        "main": 1,
+        "table": {
+          "width": 736,
+          "scroll": 950,
+          "named": true,
+          "focusable": true
+        },
+        "grid": null,
+        "menu": {
+          "visible": true,
+          "navHidden": true
+        },
+        "gradients": 0,
+        "tokenStyles": [
+          "http://127.0.0.1:8768/css/design-tokens.css",
+          "http://127.0.0.1:8768/css/interface.css",
+          "http://127.0.0.1:8768/css/workspace.css",
+          "http://127.0.0.1:8768/css/api-monitoring.css"
+        ]
+      }
+    },
+    {
+      "name": "monitoring/768: responsive shell",
+      "pass": true,
+      "evidence": {
+        "visible": true,
+        "navHidden": true
+      }
+    },
+    {
+      "name": "monitoring/768: local table scrolling",
+      "pass": true,
+      "evidence": {
+        "width": 736,
+        "scroll": 950,
+        "named": true,
+        "focusable": true
+      }
+    },
+    {
+      "name": "monitoring/768: text and control contrast",
+      "pass": true,
+      "evidence": {
+        "count": 42,
+        "minimum": 5.935250765418008,
+        "fails": [],
+        "borderFails": []
+      }
+    },
+    {
+      "name": "monitoring/375: layout and shared typography",
+      "pass": true,
+      "evidence": {
+        "width": 375,
+        "scrollWidth": 360,
+        "h1": "Lora, Georgia, serif",
+        "body": "\"Source Sans 3\", \"Segoe UI\", sans-serif",
+        "background": "rgb(250, 249, 246)",
+        "smallControls": [],
+        "unlabelled": [],
+        "brokenReferences": [],
+        "duplicateIds": [],
+        "logout": 1,
+        "csrf": true,
+        "main": 1,
+        "table": {
+          "width": 328,
+          "scroll": 950,
+          "named": true,
+          "focusable": true
+        },
+        "grid": null,
+        "menu": {
+          "visible": true,
+          "navHidden": true
+        },
+        "gradients": 0,
+        "tokenStyles": [
+          "http://127.0.0.1:8768/css/design-tokens.css",
+          "http://127.0.0.1:8768/css/interface.css",
+          "http://127.0.0.1:8768/css/workspace.css",
+          "http://127.0.0.1:8768/css/api-monitoring.css"
+        ]
+      }
+    },
+    {
+      "name": "monitoring/375: form labels, references and target sizes",
+      "pass": true,
+      "evidence": {
+        "width": 375,
+        "scrollWidth": 360,
+        "h1": "Lora, Georgia, serif",
+        "body": "\"Source Sans 3\", \"Segoe UI\", sans-serif",
+        "background": "rgb(250, 249, 246)",
+        "smallControls": [],
+        "unlabelled": [],
+        "brokenReferences": [],
+        "duplicateIds": [],
+        "logout": 1,
+        "csrf": true,
+        "main": 1,
+        "table": {
+          "width": 328,
+          "scroll": 950,
+          "named": true,
+          "focusable": true
+        },
+        "grid": null,
+        "menu": {
+          "visible": true,
+          "navHidden": true
+        },
+        "gradients": 0,
+        "tokenStyles": [
+          "http://127.0.0.1:8768/css/design-tokens.css",
+          "http://127.0.0.1:8768/css/interface.css",
+          "http://127.0.0.1:8768/css/workspace.css",
+          "http://127.0.0.1:8768/css/api-monitoring.css"
+        ]
+      }
+    },
+    {
+      "name": "monitoring/375: responsive shell",
+      "pass": true,
+      "evidence": {
+        "visible": true,
+        "navHidden": true
+      }
+    },
+    {
+      "name": "monitoring/375: local table scrolling",
+      "pass": true,
+      "evidence": {
+        "width": 328,
+        "scroll": 950,
+        "named": true,
+        "focusable": true
+      }
+    },
+    {
+      "name": "monitoring/375: text and control contrast",
+      "pass": true,
+      "evidence": {
+        "count": 42,
+        "minimum": 5.935250765418008,
+        "fails": [],
+        "borderFails": []
+      }
+    },
+    {
+      "name": "Browser driver completion",
+      "pass": false,
+      "evidence": "Error: {\"exceptionId\":1,\"text\":\"Uncaught\",\"lineNumber\":0,\"columnNumber\":42,\"scriptId\":\"9\",\"stackTrace\":{\"callFrames\":[{\"functionName\":\"\",\"scriptId\":\"9\",\"url\":\"\",\"lineNumber\":0,\"columnNumber\":42}]},\"exception\":{\"type\":\"object\",\"subtype\":\"error\",\"className\":\"TypeError\",\"description\":\"TypeError: Cannot read properties of null (reading 'scrollIntoView')\\n    at <anonymous>:1:43\",\"objectId\":\"1590721333753633590.2.2\"}}"
+    }
+  ],
+  "fault": "Error: {\"exceptionId\":1,\"text\":\"Uncaught\",\"lineNumber\":0,\"columnNumber\":42,\"scriptId\":\"9\",\"stackTrace\":{\"callFrames\":[{\"functionName\":\"\",\"scriptId\":\"9\",\"url\":\"\",\"lineNumber\":0,\"columnNumber\":42}]},\"exception\":{\"type\":\"object\",\"subtype\":\"error\",\"className\":\"TypeError\",\"description\":\"TypeError: Cannot read properties of null (reading 'scrollIntoView')\\n    at <anonymous>:1:43\",\"objectId\":\"1590721333753633590.2.2\"}}"
+}

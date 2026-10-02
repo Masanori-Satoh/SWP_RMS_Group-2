@@ -1,0 +1,309 @@
+{
+  "base": "http://127.0.0.1:8766",
+  "fixture": true,
+  "round": "round1-driver-recovery",
+  "checks": [
+    {
+      "name": "No page overflow 1440",
+      "pass": true,
+      "details": {
+        "width": 1440,
+        "scrollWidth": 1425,
+        "header": "sticky",
+        "headerHeight": 73,
+        "jobCols": 3,
+        "processCols": 4,
+        "pillsWrap": "wrap",
+        "careers": "block",
+        "heroHeight": 572.546875
+      }
+    },
+    {
+      "name": "Grid columns 1440",
+      "pass": true,
+      "details": {
+        "width": 1440,
+        "scrollWidth": 1425,
+        "header": "sticky",
+        "headerHeight": 73,
+        "jobCols": 3,
+        "processCols": 4,
+        "pillsWrap": "wrap",
+        "careers": "block",
+        "heroHeight": 572.546875
+      }
+    },
+    {
+      "name": "Sticky header and brand 1440",
+      "pass": true
+    },
+    {
+      "name": "No page overflow 1024",
+      "pass": true,
+      "details": {
+        "width": 1024,
+        "scrollWidth": 1009,
+        "header": "sticky",
+        "headerHeight": 73,
+        "jobCols": 2,
+        "processCols": 2,
+        "pillsWrap": "wrap",
+        "careers": "block",
+        "heroHeight": 556.546875
+      }
+    },
+    {
+      "name": "Grid columns 1024",
+      "pass": true,
+      "details": {
+        "width": 1024,
+        "scrollWidth": 1009,
+        "header": "sticky",
+        "headerHeight": 73,
+        "jobCols": 2,
+        "processCols": 2,
+        "pillsWrap": "wrap",
+        "careers": "block",
+        "heroHeight": 556.546875
+      }
+    },
+    {
+      "name": "Sticky header and brand 1024",
+      "pass": true
+    },
+    {
+      "name": "No page overflow 768",
+      "pass": true,
+      "details": {
+        "width": 768,
+        "scrollWidth": 753,
+        "header": "sticky",
+        "headerHeight": 73,
+        "jobCols": 2,
+        "processCols": 2,
+        "pillsWrap": "wrap",
+        "careers": "block",
+        "heroHeight": 722.453125
+      }
+    },
+    {
+      "name": "Grid columns 768",
+      "pass": true,
+      "details": {
+        "width": 768,
+        "scrollWidth": 753,
+        "header": "sticky",
+        "headerHeight": 73,
+        "jobCols": 2,
+        "processCols": 2,
+        "pillsWrap": "wrap",
+        "careers": "block",
+        "heroHeight": 722.453125
+      }
+    },
+    {
+      "name": "Sticky header and brand 768",
+      "pass": true
+    },
+    {
+      "name": "No page overflow 375",
+      "pass": true,
+      "details": {
+        "width": 375,
+        "scrollWidth": 375,
+        "header": "sticky",
+        "headerHeight": 65,
+        "jobCols": 1,
+        "processCols": 1,
+        "pillsWrap": "nowrap",
+        "careers": "block",
+        "heroHeight": 804.25
+      }
+    },
+    {
+      "name": "Grid columns 375",
+      "pass": true,
+      "details": {
+        "width": 375,
+        "scrollWidth": 375,
+        "header": "sticky",
+        "headerHeight": 65,
+        "jobCols": 1,
+        "processCols": 1,
+        "pillsWrap": "nowrap",
+        "careers": "block",
+        "heroHeight": 804.25
+      }
+    },
+    {
+      "name": "Sticky header and brand 375",
+      "pass": true
+    },
+    {
+      "name": "Mobile pills stay in one scroll row",
+      "pass": true
+    },
+    {
+      "name": "Anchor clears sticky header",
+      "pass": true
+    },
+    {
+      "name": "Mobile account entry points",
+      "pass": true
+    },
+    {
+      "name": "Escape returns menu focus",
+      "pass": true
+    },
+    {
+      "name": "Empty filtering state is visible",
+      "pass": true
+    },
+    {
+      "name": "Clear stays in results context",
+      "pass": true,
+      "details": {
+        "before": 655,
+        "after": 922
+      }
+    },
+    {
+      "name": "Diacritic-insensitive title search",
+      "pass": true
+    },
+    {
+      "name": "Zero-count departments are muted",
+      "pass": true
+    },
+    {
+      "name": "Location filters DOM-backed data",
+      "pass": true
+    },
+    {
+      "name": "Homepage text and control contrast",
+      "pass": true,
+      "details": {
+        "minText": 5.364283498250894,
+        "textFailures": [],
+        "controlFailures": []
+      }
+    },
+    {
+      "name": "Reduced motion keeps instant scrolling",
+      "pass": true
+    },
+    {
+      "name": "Accessible names for practical filters",
+      "pass": true
+    },
+    {
+      "name": "Actual card activation navigates to role",
+      "pass": true
+    },
+    {
+      "name": "Detail overflow 1440",
+      "pass": true
+    },
+    {
+      "name": "Detail overflow 1024",
+      "pass": true
+    },
+    {
+      "name": "Detail overflow 768",
+      "pass": true
+    },
+    {
+      "name": "Detail overflow 375",
+      "pass": true
+    },
+    {
+      "name": "Detail keeps metadata and structured sections",
+      "pass": true
+    },
+    {
+      "name": "Authenticated fixture header has real form markup",
+      "pass": true
+    },
+    {
+      "name": "Mobile logged-in controls are visible",
+      "pass": true
+    },
+    {
+      "name": "Application layout 1440",
+      "pass": true
+    },
+    {
+      "name": "Application layout 1024",
+      "pass": true
+    },
+    {
+      "name": "Application layout 768",
+      "pass": true
+    },
+    {
+      "name": "Application layout 375",
+      "pass": true
+    },
+    {
+      "name": "Prefill and honest disabled submission",
+      "pass": true
+    },
+    {
+      "name": "No page runtime errors",
+      "pass": true,
+      "details": []
+    }
+  ],
+  "viewports": [
+    {
+      "width": 1440,
+      "scrollWidth": 1425,
+      "header": "sticky",
+      "headerHeight": 73,
+      "jobCols": 3,
+      "processCols": 4,
+      "pillsWrap": "wrap",
+      "careers": "block",
+      "heroHeight": 572.546875
+    },
+    {
+      "width": 1024,
+      "scrollWidth": 1009,
+      "header": "sticky",
+      "headerHeight": 73,
+      "jobCols": 2,
+      "processCols": 2,
+      "pillsWrap": "wrap",
+      "careers": "block",
+      "heroHeight": 556.546875
+    },
+    {
+      "width": 768,
+      "scrollWidth": 753,
+      "header": "sticky",
+      "headerHeight": 73,
+      "jobCols": 2,
+      "processCols": 2,
+      "pillsWrap": "wrap",
+      "careers": "block",
+      "heroHeight": 722.453125
+    },
+    {
+      "width": 375,
+      "scrollWidth": 375,
+      "header": "sticky",
+      "headerHeight": 65,
+      "jobCols": 1,
+      "processCols": 1,
+      "pillsWrap": "nowrap",
+      "careers": "block",
+      "heroHeight": 804.25
+    }
+  ],
+  "errors": [],
+  "contrast": {
+    "minText": 5.364283498250894,
+    "textFailures": [],
+    "controlFailures": []
+  }
+}

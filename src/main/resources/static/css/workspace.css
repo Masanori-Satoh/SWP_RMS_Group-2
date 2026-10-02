@@ -1,0 +1,57 @@
+/* Operational application layout. The legacy teammate shell is unaffected. */
+.rms-app .page-wrapper { display:grid; grid-template-columns:208px minmax(0,1fr); grid-template-rows:auto 1fr; min-height:100svh; }
+.rms-app .main-content { display:contents; }
+.workspace-header { grid-column:1 / -1; grid-row:1; position:sticky; top:0; z-index:20; display:flex; align-items:center; justify-content:space-between; gap:var(--s6); min-height:72px; padding:var(--s3) var(--s8); border-bottom:1px solid var(--line); background:var(--surface); }
+.workspace-header-actions { display:flex; align-items:center; flex-wrap:wrap; justify-content:flex-end; gap:var(--s4); min-width:0; }
+.workspace-header form { margin:0; }
+.workspace-identity { display:flex; flex-wrap:wrap; gap:var(--s2) var(--s4); font-size:14px; }
+.workspace-identity strong { font-weight:600; overflow-wrap:anywhere; }
+.workspace-role { color:var(--muted); }
+.workspace-sidebar { grid-column:1; grid-row:2; position:sticky; top:72px; align-self:start; min-height:calc(100svh - 72px); max-height:calc(100svh - 72px); overflow-y:auto; border-right:1px solid var(--line); padding:var(--s8) var(--s4); }
+.workspace-sidebar h2 { font-size:14px; font-weight:400; color:var(--muted); margin:0 var(--s3) var(--s4); }
+.workspace-nav { display:grid; gap:var(--s1); }
+.workspace-nav a { display:flex; align-items:center; min-height:44px; padding:var(--s2) var(--s3); color:var(--ink); text-decoration:none; font-size:15px; border-radius:4px; }
+.workspace-nav a:hover { background:var(--brand-soft); }
+.workspace-nav a[aria-current="page"] { background:var(--brand-soft); color:var(--brand-dark); font-weight:600; }
+.workspace-home { margin-top:var(--s8); border-top:1px solid var(--line); padding-top:var(--s4); }
+.rms-app .page-content { grid-column:2; grid-row:2; min-width:0; padding:var(--s8); }
+.rms-app .container { max-width:1240px; margin-inline:auto; }
+.account-heading { display:flex; align-items:end; justify-content:space-between; flex-wrap:wrap; gap:var(--s6); margin-bottom:var(--s8); }
+.account-heading h1 { margin-block:var(--s3) var(--s2); }
+.account-heading p { max-width:70ch; color:var(--muted); }
+.breadcrumbs { display:flex; gap:var(--s2); align-items:center; font-size:14px; }
+.breadcrumbs a { display:inline-flex; align-items:center; min-height:32px; }
+.account-back-link { display:inline-flex; align-items:center; min-height:44px; }
+.workspace-menu { min-width:64px; }
+.workspace-section { border-top:1px solid var(--line); padding-top:var(--s6); }
+.table-wrapper { max-width:100%; overflow-x:auto; border-block:1px solid var(--line); scroll-margin-top:96px; }
+.table { width:100%; border-collapse:collapse; text-align:left; font-size:14px; }
+.table th { padding:var(--s3); background:var(--page); font-weight:600; }
+.table td { padding:var(--s3); border-top:1px solid var(--line); vertical-align:middle; }
+.table tbody tr:hover { background:var(--page); }
+.table td { overflow-wrap:anywhere; }
+.table-scroll-note { font-size:14px; color:var(--muted); margin-bottom:var(--s3); }
+.badge { display:inline-block; padding:var(--s1) var(--s2); border:1px solid var(--line); border-radius:4px; font-size:13px; font-weight:600; color:var(--muted); }
+.badge-success { background:var(--brand-soft); color:var(--brand-dark); }
+.badge-danger { background:var(--error-soft); color:var(--error); border-color:var(--error); }
+.badge-secondary { background:var(--page); }
+.btn-sm { font-size:14px; }
+@media (max-width:1024px) {
+  .rms-app .page-wrapper { grid-template-columns:184px minmax(0,1fr); }
+  .rms-app .page-content { padding:var(--s6); }
+  .workspace-header { padding-inline:var(--s6); }
+}
+@media (max-width:768px) {
+  .rms-app .page-wrapper { grid-template-columns:minmax(0,1fr); grid-template-rows:auto auto 1fr; }
+  .workspace-sidebar { grid-column:1; grid-row:2; position:static; min-height:0; max-height:none; padding:var(--s4); border-right:0; border-bottom:1px solid var(--line); }
+  .workspace-nav { grid-template-columns:repeat(2,minmax(0,1fr)); }
+  .workspace-home { margin-top:var(--s4); }
+  .rms-app .page-content { grid-column:1; grid-row:3; padding:var(--s6) var(--s4); }
+  .workspace-header { flex-wrap:wrap; padding:var(--s2) var(--s4); gap:var(--s2) var(--s4); }
+  .workspace-header-actions { display:contents; }
+  .workspace-identity { order:4; flex-basis:100%; padding-bottom:var(--s1); }
+  .workspace-header .wordmark { margin-right:auto; }
+  input,select,textarea,.table-wrapper { scroll-margin-top:128px; }
+  .account-heading { align-items:start; }
+}
+.workspace-nav-group { display:block; grid-column:1 / -1; margin-top:var(--s4); padding:var(--s2) var(--s3); color:var(--muted); font-size:14px; font-weight:600; }

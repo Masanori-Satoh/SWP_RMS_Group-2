@@ -1,5 +1,6 @@
 package com.group2.rms;
 
+<<<<<<< Updated upstream
 import com.group2.rms.core.config.SecurityConfig;
 import com.group2.rms.auth.AuthController;
 import com.group2.rms.user.controller.AccountController;
@@ -21,6 +22,31 @@ import com.group2.rms.dashboard.DashboardView;
 import com.group2.rms.auth.CandidateRegistrationService;
 import com.group2.rms.auth.PasswordResetEmailSender;
 import com.group2.rms.auth.PasswordResetService;
+=======
+import com.group2.rms.config.SecurityConfig;
+import com.group2.rms.controller.AuthController;
+import com.group2.rms.controller.AccountController;
+import com.group2.rms.controller.CandidateAccountController;
+import com.group2.rms.controller.ApiMonitoringController;
+import com.group2.rms.controller.DashboardAccessController;
+import com.group2.rms.controller.InternalMonitoringHealthController;
+import com.group2.rms.controller.PasswordRecoveryController;
+import com.group2.rms.controller.RegistrationController;
+import com.group2.rms.entity.Role;
+import com.group2.rms.entity.Department;
+import com.group2.rms.entity.User;
+import com.group2.rms.repository.UserRepository;
+import com.group2.rms.repository.DashboardMetricsRepository.ApprovalActivity;
+import com.group2.rms.security.DatabaseUserDetailsService;
+import com.group2.rms.service.AccountListService;
+import com.group2.rms.service.AccountManagementService;
+import com.group2.rms.service.ApiMonitoringService;
+import com.group2.rms.service.DashboardService;
+import com.group2.rms.service.DashboardView;
+import com.group2.rms.service.CandidateRegistrationService;
+import com.group2.rms.service.PasswordResetEmailSender;
+import com.group2.rms.service.PasswordResetService;
+>>>>>>> Stashed changes
 import jakarta.servlet.http.HttpSession;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -29,6 +55,7 @@ import org.springframework.context.annotation.Import;
 import org.springframework.mock.web.MockHttpSession;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.dao.DataAccessResourceFailureException;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -40,6 +67,9 @@ import org.springframework.test.web.servlet.MvcResult;
 import java.util.Optional;
 import java.util.List;
 import java.time.LocalDateTime;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.charset.StandardCharsets;
 
 import static org.mockito.Mockito.when;
 import static org.mockito.ArgumentMatchers.any;
@@ -54,8 +84,13 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.not;
 
+<<<<<<< Updated upstream
 @WebMvcTest(controllers = {AuthController.class, DashboardController.class, AccountController.class,
         ApiMonitoringController.class, HealthController.class,
+=======
+@WebMvcTest(controllers = {AuthController.class, DashboardAccessController.class, AccountController.class, CandidateAccountController.class,
+        ApiMonitoringController.class, InternalMonitoringHealthController.class,
+>>>>>>> Stashed changes
         RegistrationController.class, PasswordRecoveryController.class})
 @Import({SecurityConfig.class, DatabaseUserDetailsService.class})
 class SecurityFlowTests {
@@ -116,7 +151,7 @@ class SecurityFlowTests {
         mvc.perform(post("/forgot-password")).andExpect(status().isForbidden());
 
         MvcResult page = mvc.perform(get("/forgot-password")).andExpect(status().isOk())
-                .andExpect(content().string(containsString("Gửi liên kết xác minh")))
+                .andExpect(content().string(containsString("Send Verification Link")))
                 .andReturn();
         CsrfToken csrf = (CsrfToken) page.getRequest().getAttribute(CsrfToken.class.getName());
         mvc.perform(post("/forgot-password")
@@ -143,7 +178,7 @@ class SecurityFlowTests {
         mvc.perform(post(route)).andExpect(status().isForbidden());
 
         MvcResult page = mvc.perform(get(route)).andExpect(status().isOk())
-                .andExpect(content().string(containsString("Mật khẩu mới")))
+                .andExpect(content().string(containsString("New Password")))
                 .andReturn();
         CsrfToken csrf = (CsrfToken) page.getRequest().getAttribute(CsrfToken.class.getName());
         mvc.perform(post(route)
@@ -162,20 +197,20 @@ class SecurityFlowTests {
         User admin = account("admin", "System Admin", "Active");
         MockHttpSession adminSession = login(admin);
         mvc.perform(get("/dashboard").session(adminSession)).andExpect(status().isOk())
-                .andExpect(content().string(containsString("Quản lý tài khoản")))
-                .andExpect(content().string(containsString("Cấu hình AI (chưa khả dụng)")));
+                .andExpect(content().string(containsString("Internal Accounts")))
+                .andExpect(content().string(containsString("AI Configuration (Unavailable)")));
         mvc.perform(get("/admin/accounts").session(adminSession)).andExpect(status().isOk());
         when(monitoringService.rows()).thenReturn(List.of(new ApiMonitoringService.MonitorRow(
-                "internal", "Nội bộ", "Ứng dụng và SQL Server", "GET /admin/api-monitoring/internal/health",
-                "OPERATIONAL", "Hoạt động", 12L, 0, 0, 200,
+                "internal", "Internal", "Application and SQL Server", "GET /admin/api-monitoring/internal/health",
+                "OPERATIONAL", "Operational", 12L, 0, 0, 200,
                 LocalDateTime.of(2026, 9, 28, 9, 0), 1, true),
-                new ApiMonitoringService.MonitorRow("ai", "Tích hợp ngoài", "AI CV Screening",
-                        "Chưa có endpoint", "UNCONFIGURED", "Chưa cấu hình",
+                new ApiMonitoringService.MonitorRow("ai", "External Integration", "AI CV Screening",
+                        "No endpoint configured", "UNCONFIGURED", "Not Configured",
                         null, null, null, null, null, 0, false)));
         mvc.perform(get("/admin/api-monitoring").session(adminSession)).andExpect(status().isOk())
-                .andExpect(content().string(containsString("Gửi GET")))
+                .andExpect(content().string(containsString("Send GET")))
                 .andExpect(content().string(containsString("HTTP 200")))
-                .andExpect(content().string(containsString("Chưa có target an toàn")));
+                .andExpect(content().string(containsString("No confirmed safe target")));
         when(jdbcTemplate.queryForObject("SELECT 1", Integer.class)).thenReturn(1);
         mvc.perform(get("/admin/api-monitoring/internal/health").session(adminSession))
                 .andExpect(status().isOk()).andExpect(content().string(containsString("UP")));
@@ -190,7 +225,7 @@ class SecurityFlowTests {
         User hr = account("hr", "HR", "Active");
         MockHttpSession hrSession = login(hr);
         mvc.perform(get("/dashboard").session(hrSession)).andExpect(status().isOk())
-                .andExpect(content().string(not(containsString("Quản lý tài khoản"))));
+                .andExpect(content().string(not(containsString("Internal Accounts"))));
         for (String route : new String[] {"/admin/api-monitoring", "/admin/api-monitoring/internal/health",
                 "/admin/ai-configuration"}) {
             mvc.perform(get(route).session(hrSession)).andExpect(status().isForbidden());
@@ -245,16 +280,76 @@ class SecurityFlowTests {
 
     @Test
     void accountListRendersCandidateAccountWithoutPasswordHash() throws Exception {
-        when(accountListService.findAccounts("", null, null, "", "name", 0)).thenReturn(
-                new PageImpl<>(List.of(new AccountListService.AccountRow(
-                        7, "Ứng viên A", "candidate@example.com", "candidate7", "Candidate", null, "Active"))));
+        when(accountListService.findCandidateAccounts("", "", "name", 0)).thenReturn(
+                new PageImpl<>(List.of(new AccountListService.CandidateRow(
+                        7, "Ứng viên A", "candidate@example.com", "candidate7", "Active", LocalDateTime.of(2026, 9, 1, 8, 0), 17),
+                        new AccountListService.CandidateRow(8, "Taylor Candidate", "taylorcandidate@example.test", "candidate8", "Inactive", LocalDateTime.of(2026, 9, 2, 8, 0), 18),
+                        new AccountListService.CandidateRow(9, "Jordan Candidate", "jordancandidate@example.test", "candidate9", "Blocked", LocalDateTime.of(2026, 9, 3, 8, 0), null))));
         MockHttpSession adminSession = login(account("admin", "System Admin", "Active"));
-        mvc.perform(get("/admin/accounts").session(adminSession))
+        MvcResult candidatePage = mvc.perform(get("/admin/candidate-accounts").session(adminSession))
                 .andExpect(status().isOk())
                 .andExpect(content().string(containsString("Ứng viên A")))
                 .andExpect(content().string(containsString("Candidate")))
-                .andExpect(content().string(containsString("/admin/accounts/7/deactivate")))
-                .andExpect(content().string(not(containsString("test-password"))));
+                .andExpect(content().string(containsString("/admin/candidate-accounts/7/deactivate")))
+                .andExpect(content().string(containsString("Linked · #17")))
+                .andExpect(content().string(containsString("Profile missing")))
+                .andExpect(content().string(not(containsString("/admin/candidate-accounts/8/deactivate"))))
+                .andExpect(content().string(not(containsString("name=\"departmentId\""))))
+                .andExpect(content().string(not(containsString("name=\"roleId\""))))
+                .andExpect(content().string(not(containsString("<th scope=\"col\">Department"))))
+                .andExpect(content().string(not(containsString("test-password")))).andReturn();
+        exportUi("candidate-accounts", candidatePage);
+        CsrfToken token = (CsrfToken) candidatePage.getRequest().getAttribute(CsrfToken.class.getName());
+        mvc.perform(post("/admin/candidate-accounts/7/deactivate").session(adminSession)).andExpect(status().isForbidden());
+        mvc.perform(post("/admin/candidate-accounts/7/deactivate").session(adminSession).param(token.getParameterName(), token.getToken()))
+                .andExpect(redirectedUrl("/admin/candidate-accounts"));
+        verify(accountListService).deactivateCandidate(7);
+        for (String role : List.of("HR", "Candidate")) {
+            MockHttpSession other = login(account("other" + role, role, "Active"));
+            mvc.perform(get("/admin/candidate-accounts").session(other)).andExpect(status().isForbidden());
+            mvc.perform(post("/admin/candidate-accounts/7/deactivate").session(other).param(token.getParameterName(), token.getToken()))
+                    .andExpect(status().isForbidden());
+        }
+        mvc.perform(get("/admin/candidate-accounts")).andExpect(redirectedUrlPattern("**/login"));
+    }
+
+    @Test
+    void internalFormCannotSubmitCandidateRoleOrEditCandidateIdentity() throws Exception {
+        prepareUiOptions();
+        MockHttpSession session = login(account("admin", "System Admin", "Active"));
+        MvcResult page = mvc.perform(get("/admin/accounts/new").session(session))
+                .andExpect(content().string(not(containsString("data-role-name=\"Candidate\"")))).andReturn();
+        CsrfToken token = (CsrfToken) page.getRequest().getAttribute(CsrfToken.class.getName());
+        org.mockito.Mockito.doThrow(new com.group2.rms.service.AccountFieldException("roleId", "Select an internal role."))
+                .when(accountManagementService).createInternal(any());
+        mvc.perform(post("/admin/accounts").session(session).param(token.getParameterName(), token.getToken())
+                .param("fullName", "Test Candidate").param("username", "tampered").param("email", "tampered@example.test")
+                .param("roleId", "6").param("password", "validPassword12").param("confirmPassword", "validPassword12"))
+                .andExpect(status().isOk()).andExpect(content().string(containsString("Select an internal role.")));
+        org.mockito.Mockito.doThrow(new org.springframework.web.server.ResponseStatusException(org.springframework.http.HttpStatus.NOT_FOUND))
+                .when(accountManagementService).findForEdit(7);
+        mvc.perform(get("/admin/accounts/7/edit").session(session)).andExpect(status().isNotFound());
+        mvc.perform(post("/admin/accounts/7").session(session).param(token.getParameterName(), token.getToken()).param("roleId", "2"))
+                .andExpect(status().isNotFound());
+        org.mockito.Mockito.verify(accountManagementService, org.mockito.Mockito.never()).updateInternal(org.mockito.ArgumentMatchers.eq(7), any());
+    }
+
+    @Test
+    void accountListOffersDeactivationOnlyForActiveOrBlockedAccounts() throws Exception {
+        when(accountListService.findAccounts("", null, null, "", "name", 0)).thenReturn(
+                new PageImpl<>(List.of(
+                        new AccountListService.AccountRow(41, "Active Employee", "active@example.test", "active41", "HR", "People", "Active"),
+                        new AccountListService.AccountRow(42, "Inactive Employee", "inactive@example.test", "inactive42", "HR", "People", "Inactive"),
+                        new AccountListService.AccountRow(43, "Blocked Employee", "blocked@example.test", "blocked43", "HR", "People", "Blocked"))));
+        MockHttpSession adminSession = login(account("admin", "System Admin", "Active"));
+        mvc.perform(get("/admin/accounts").session(adminSession))
+                .andExpect(status().isOk())
+                .andExpect(content().string(containsString("aria-label=\"Deactivate account active41\"")))
+                .andExpect(content().string(containsString("aria-label=\"Deactivate account blocked43\"")))
+                .andExpect(content().string(not(containsString("/admin/accounts/42/deactivate"))))
+                .andExpect(content().string(containsString("/admin/accounts/42/edit")))
+                .andExpect(content().string(not(containsString("Delete account"))))
+                .andExpect(content().string(not(containsString("Account Deletion"))));
     }
 
     @Test
@@ -296,7 +391,7 @@ class SecurityFlowTests {
                         .param("password", "validPassword12")
                         .param("confirmPassword", "differentPassword"))
                 .andExpect(status().isOk())
-                .andExpect(content().string(containsString("Mật khẩu xác nhận không khớp.")))
+                .andExpect(content().string(containsString("Passwords do not match.")))
                 .andExpect(content().string(not(containsString("value=\"validPassword12\""))));
         verifyNoInteractions(accountManagementService);
     }
@@ -309,7 +404,7 @@ class SecurityFlowTests {
         CsrfToken csrf = (CsrfToken) page.getRequest().getAttribute(CsrfToken.class.getName());
         AccountManagementService.CreateCommand create = new AccountManagementService.CreateCommand(
                 "Người mới", "newuser", "new@example.com", "0900000000", 2, 1, "validPassword12");
-        when(accountManagementService.create(create)).thenReturn(42);
+        when(accountManagementService.createInternal(create)).thenReturn(42);
         mvc.perform(post("/admin/accounts").session(adminSession)
                         .param(csrf.getParameterName(), csrf.getToken())
                         .param("fullName", "Người mới")
@@ -322,13 +417,13 @@ class SecurityFlowTests {
                         .param("confirmPassword", "validPassword12"))
                 .andExpect(status().is3xxRedirection())
                 .andExpect(redirectedUrl("/admin/accounts"));
-        verify(accountManagementService).create(create);
+        verify(accountManagementService).createInternal(create);
 
         AccountManagementService.UpdateCommand update = new AccountManagementService.UpdateCommand(
-                "Tên mới", "updated@example.com", null, 2, 1, "Inactive");
+                "Name mới", "updated@example.com", null, 2, 1, "Inactive");
         mvc.perform(post("/admin/accounts/42").session(adminSession)
                         .param(csrf.getParameterName(), csrf.getToken())
-                        .param("fullName", "Tên mới")
+                        .param("fullName", "Name mới")
                         .param("email", "updated@example.com")
                         .param("roleId", "2")
                         .param("departmentId", "1")
@@ -337,7 +432,7 @@ class SecurityFlowTests {
                         .param("password", "tampered-password"))
                 .andExpect(status().is3xxRedirection())
                 .andExpect(redirectedUrl("/admin/accounts"));
-        verify(accountManagementService).update(42, update);
+        verify(accountManagementService).updateInternal(42, update);
     }
 
     @Test
@@ -345,7 +440,10 @@ class SecurityFlowTests {
         String[] roles = {"System Admin", "HR", "Hiring Manager", "Director", "Interviewer", "Candidate"};
         for (int index = 0; index < roles.length; index++) {
             MockHttpSession session = login(account("role" + index, roles[index], "Active"));
-            mvc.perform(get("/dashboard").session(session)).andExpect(status().isOk());
+            mvc.perform(get("/dashboard").session(session)).andExpect(status().isOk())
+                    .andExpect(content().string("Candidate".equals(roles[index])
+                            ? not(containsString("href=\"/requisitions\""))
+                            : containsString("href=\"/requisitions\"")));
         }
     }
 
@@ -387,6 +485,132 @@ class SecurityFlowTests {
                 .andExpect(redirectedUrl("/login?logout"));
     }
 
+    @Test
+    void sharedUiKeepsServerRenderedRoutesCsrfAndAccountFields() throws Exception {
+        prepareUiOptions();
+        when(passwordResetService.isValid("visual-token")).thenReturn(true);
+        String[][] authPages = {{"/login", "login"}, {"/register", "register"},
+                {"/forgot-password", "forgot"}, {"/reset-password/visual-token", "reset"},
+                {"/login?error", "login-error"}, {"/login?logout", "login-logout"},
+                {"/forgot-password?sent", "forgot-sent"}, {"/reset-password/expired-visual", "reset-expired"}};
+        for (String[] entry : authPages) {
+            MvcResult result = mvc.perform(get(entry[0])).andExpect(status().isOk())
+                    .andExpect(content().string(containsString("/css/design-tokens.css")))
+                    .andExpect(content().string(containsString("/js/interface.js")))
+                    .andReturn();
+            exportUi(entry[1], result);
+        }
+        MockHttpSession session = login(account("visual-admin", "System Admin", "Active"));
+        when(dashboardService.forUsername("visual-admin")).thenReturn(new DashboardView(
+                "System Admin", "Alex Nguyen", "System-wide account administration.",
+                List.of(), List.of(new DashboardView.Breakdown("API and Integration Health", List.of(new com.group2.rms.repository.DashboardMetricsRepository.StatusCount("Available", 1)))), List.of(),
+                List.of(new DashboardView.Unavailable("AI Configuration", "Configuration keys are awaiting confirmation.")),
+                List.of(new DashboardView.Shortcut("API Monitoring", "/admin/api-monitoring")),
+                List.of(new DashboardView.AccountSummary("Internal Accounts", "/admin/accounts", 8, 6, 1, 1),
+                        new DashboardView.AccountSummary("Candidate Accounts", "/admin/candidate-accounts", 3, 1, 1, 1))));
+        PageImpl<AccountListService.AccountRow> visualAccounts = new PageImpl<>(
+                List.of(new AccountListService.AccountRow(42, "Nguyễn Minh Anh", "minhanh@example.test", "minhanh", "Interviewer", "Engineering", "Active"),
+                        new AccountListService.AccountRow(43, "Taylor Morgan", "taylor@example.test", "taylor", "HR", "People", "Inactive"),
+                        new AccountListService.AccountRow(44, "Jordan Lee", "jordan@example.test", "jordan", "Hiring Manager", "Engineering", "Blocked")),
+                PageRequest.of(0, 3), 8);
+        when(accountListService.findAccounts("", null, null, "", "name", 0)).thenReturn(visualAccounts);
+        when(accountListService.findAccounts("", null, 1, "", "newest", 0)).thenReturn(visualAccounts);
+        when(accountManagementService.findForEdit(42)).thenReturn(new AccountManagementService.AccountForEdit(
+                "minhanh", "Nguyễn Minh Anh", "minhanh@example.test", null, 5, 1, "Active"));
+        when(monitoringService.rows()).thenReturn(List.of(new ApiMonitoringService.MonitorRow(
+                "internal", "Internal", "Application and SQL Server", "GET /admin/api-monitoring/internal/health",
+                "OPERATIONAL", "Operational", 12L, 0, 0, 200, LocalDateTime.of(2026, 10, 1, 9, 0), 1, true),
+                new ApiMonitoringService.MonitorRow("ai", "External Integration", "AI CV Screening", "No endpoint configured",
+                        "UNCONFIGURED", "Not Configured", null, null, null, null, null, 0, false)));
+        String[][] adminPages = {{"/dashboard", "dashboard"}, {"/admin/accounts", "accounts"},
+                {"/admin/accounts/new", "create"}, {"/admin/accounts/42/edit", "edit"}, {"/admin/api-monitoring", "monitoring"},
+                {"/admin/accounts?departmentId=1&sort=newest", "accounts-filtered"}};
+        for (String[] entry : adminPages) {
+            MvcResult result = mvc.perform(get(entry[0]).session(session)).andExpect(status().isOk())
+                    .andExpect(content().string(containsString("name=\"_csrf\"")))
+                    .andReturn();
+            String html = result.getResponse().getContentAsString(StandardCharsets.UTF_8);
+            org.junit.jupiter.api.Assertions.assertEquals(1,
+                    java.util.regex.Pattern.compile("action=\"/logout\"").matcher(html).results().count());
+            org.junit.jupiter.api.Assertions.assertEquals(1,
+                    java.util.regex.Pattern.compile("<main id=\"main\"").matcher(html).results().count());
+            exportUi(entry[1], result);
+        }
+        mvc.perform(get("/admin/accounts/42/edit").session(session))
+                .andExpect(content().string(containsString("Nguyễn Minh Anh")))
+                .andExpect(content().string(containsString("readonly")))
+                .andExpect(content().string(not(containsString("name=\"password\""))))
+                .andExpect(content().string(not(containsString("name=\"username\""))));
+        mvc.perform(get("/admin/accounts/new").session(session))
+                .andExpect(content().string(containsString("name=\"confirmPassword\"")))
+                .andExpect(content().string(not(containsString("name=\"accountStatus\""))));
+        verifyNoInteractions(registrationService, passwordResetEmailSender);
+    }
+
+    @Test
+    void invalidFormsAssociateErrorsAndPreserveNonSecretInputWithoutServiceWrites() throws Exception {
+        prepareUiOptions();
+        MvcResult registration = mvc.perform(get("/register")).andReturn();
+        CsrfToken token = (CsrfToken) registration.getRequest().getAttribute(CsrfToken.class.getName());
+        MockHttpSession guest = (MockHttpSession) registration.getRequest().getSession(false);
+        MvcResult invalidRegister = mvc.perform(post("/register").session(guest)
+                        .param(token.getParameterName(), token.getToken()).param("fullName", "Alex Nguyen")
+                        .param("username", "alex").param("email", "invalid-email")
+                        .param("password", "validPassword12").param("confirmPassword", "differentPassword"))
+                .andExpect(status().isOk())
+                .andExpect(content().string(containsString("aria-describedby=\"email-error\"")))
+                .andExpect(content().string(containsString("data-validation-summary")))
+                .andExpect(content().string(containsString("value=\"invalid-email\"")))
+                .andExpect(content().string(not(containsString("value=\"validPassword12\""))))
+                .andReturn();
+        exportUi("register-invalid", invalidRegister);
+        MockHttpSession admin = login(account("visual-admin", "System Admin", "Active"));
+        MvcResult create = mvc.perform(get("/admin/accounts/new").session(admin)).andReturn();
+        CsrfToken csrf = (CsrfToken) create.getRequest().getAttribute(CsrfToken.class.getName());
+        MvcResult invalidCreate = mvc.perform(post("/admin/accounts").session(admin)
+                        .param(csrf.getParameterName(), csrf.getToken()).param("fullName", "Taylor Morgan")
+                        .param("username", "taylor").param("email", "invalid-email").param("roleId", "2")
+                        .param("departmentId", "1").param("password", "validPassword12")
+                        .param("confirmPassword", "differentPassword"))
+                .andExpect(status().isOk())
+                .andExpect(content().string(containsString("aria-describedby=\"email-error\"")))
+                .andExpect(content().string(containsString("aria-describedby=\"confirm-password-error\"")))
+                .andExpect(content().string(not(containsString("value=\"validPassword12\""))))
+                .andReturn();
+        exportUi("create-invalid", invalidCreate);
+        when(accountManagementService.findForEdit(42)).thenReturn(new AccountManagementService.AccountForEdit(
+                "minhanh", "Nguyễn Minh Anh", "minhanh@example.test", null, 5, 1, "Active"));
+        MvcResult invalidEdit = mvc.perform(post("/admin/accounts/42").session(admin)
+                        .param(csrf.getParameterName(), csrf.getToken()).param("fullName", "Nguyễn Minh Anh")
+                        .param("email", "invalid-email").param("roleId", "6").param("accountStatus", "Active"))
+                .andExpect(status().isOk()).andExpect(content().string(containsString("data-validation-summary")))
+                .andExpect(content().string(not(containsString("name=\"password\"")))).andReturn();
+        exportUi("edit-invalid", invalidEdit);
+        verifyNoInteractions(registrationService, passwordResetEmailSender);
+        org.mockito.Mockito.verify(accountManagementService, org.mockito.Mockito.atLeastOnce()).findForEdit(42);
+        org.mockito.Mockito.verify(accountManagementService, org.mockito.Mockito.never()).createInternal(any());
+        org.mockito.Mockito.verify(accountManagementService, org.mockito.Mockito.never()).updateInternal(org.mockito.ArgumentMatchers.anyInt(), any());
+    }
+
+    private void prepareUiOptions() {
+        when(accountListService.findRoles()).thenReturn(List.of(
+                Role.builder().roleId(1).roleName("System Admin").build(), Role.builder().roleId(2).roleName("HR").build(),
+                Role.builder().roleId(3).roleName("Hiring Manager").build(), Role.builder().roleId(4).roleName("Director").build(),
+                Role.builder().roleId(5).roleName("Interviewer").build()));
+        when(accountListService.findDepartments()).thenReturn(List.of(
+                Department.builder().departmentId(1).departmentName("Engineering").build(),
+                Department.builder().departmentId(2).departmentName("People").build()));
+    }
+
+    private void exportUi(String page, MvcResult result) throws Exception {
+        if (!Boolean.getBoolean("ui.preview")) return;
+        Path directory = Path.of("target", "auth-admin-preview", "preview", page);
+        Files.createDirectories(directory);
+        String html = result.getResponse().getContentAsString(StandardCharsets.UTF_8)
+                .replaceAll("(name=\"_csrf\" value=\")[^\"]+", "$1visual-csrf-fixture");
+        Files.writeString(directory.resolve("index.html"), html, StandardCharsets.UTF_8);
+    }
+
     private User account(String username, String roleName, String status) {
         User account = User.builder()
                 .userId(username.hashCode())
@@ -398,16 +622,16 @@ class SecurityFlowTests {
         when(userRepository.findByUsernameIgnoreCase(username)).thenReturn(Optional.of(account));
         when(dashboardService.forUsername(username)).thenReturn(new DashboardView(
                 roleName, username, "Phạm vi thử nghiệm",
-                List.of(new DashboardView.Metric("Chỉ số thử nghiệm", 0, "Dữ liệu kiểm thử")),
+                List.of(new DashboardView.Metric("Metric thử nghiệm", 0, "Dữ liệu kiểm thử")),
                 List.of(),
                 "Director".equals(roleName)
-                        ? List.of(new ApprovalActivity("Yêu cầu tuyển dụng", "Vị trí kiểm thử", "Approved",
+                        ? List.of(new ApprovalActivity("Job Requisition", "Vị trí kiểm thử", "Approved",
                                 LocalDateTime.of(2026, 9, 28, 9, 0)))
                         : List.of(),
                 List.of(),
                 "System Admin".equals(roleName)
-                        ? List.of(new DashboardView.Shortcut("Quản lý tài khoản", "/admin/accounts"),
-                                new DashboardView.Shortcut("Cấu hình AI (chưa khả dụng)", null))
+                        ? List.of(new DashboardView.Shortcut("Account Management", "/admin/accounts"),
+                                new DashboardView.Shortcut("AI Configuration (Unavailable)", null))
                         : List.of()));
         return account;
     }

@@ -14,7 +14,16 @@ public record DashboardView(
         List<Breakdown> breakdowns,
         List<ApprovalActivity> activities,
         List<Unavailable> unavailable,
-        List<Shortcut> shortcuts) {
+        List<Shortcut> shortcuts,
+        List<AccountSummary> accountSummaries) {
+
+    public DashboardView(String roleName, String fullName, String scope, List<Metric> metrics,
+                         List<Breakdown> breakdowns, List<ApprovalActivity> activities,
+                         List<Unavailable> unavailable, List<Shortcut> shortcuts) {
+        this(roleName, fullName, scope, metrics, breakdowns, activities, unavailable, shortcuts, List.of());
+    }
+
+    public record AccountSummary(String title, String url, long total, long active, long inactive, long blocked) { }
 
     public record Metric(String title, long value, String detail) { }
 

@@ -1,0 +1,2146 @@
+{
+  "method": "Independent fresh Chrome CDP tabs; read-only preview plus reversible controls; no screenshots; no POST",
+  "pages": [
+    {
+      "route": "login",
+      "width": 1440,
+      "title": "Sign In | Mộc RMS",
+      "h1": "Welcome back.",
+      "bodyClass": "auth-page",
+      "pageWidth": 1440,
+      "viewport": 1440,
+      "main": {
+        "x": 824,
+        "y": 244.609375,
+        "width": 440,
+        "height": 410.765625
+      },
+      "fontsLoaded": true,
+      "table": null,
+      "focus": "BODY",
+      "alerts": [],
+      "navigation": []
+    },
+    {
+      "route": "login",
+      "width": 1024,
+      "title": "Sign In | Mộc RMS",
+      "h1": "Welcome back.",
+      "bodyClass": "auth-page",
+      "pageWidth": 1024,
+      "viewport": 1024,
+      "main": {
+        "x": 522.390625,
+        "y": 247.921875,
+        "width": 440,
+        "height": 404.15625
+      },
+      "fontsLoaded": true,
+      "table": null,
+      "focus": "BODY",
+      "alerts": [],
+      "navigation": []
+    },
+    {
+      "route": "login",
+      "width": 768,
+      "title": "Sign In | Mộc RMS",
+      "h1": "Welcome back.",
+      "bodyClass": "auth-page",
+      "pageWidth": 768,
+      "viewport": 768,
+      "main": {
+        "x": 164,
+        "y": 108,
+        "width": 440,
+        "height": 400.765625
+      },
+      "fontsLoaded": true,
+      "table": null,
+      "focus": "BODY",
+      "alerts": [],
+      "navigation": []
+    },
+    {
+      "route": "login",
+      "width": 375,
+      "title": "Sign In | Mộc RMS",
+      "h1": "Welcome back.",
+      "bodyClass": "auth-page",
+      "pageWidth": 375,
+      "viewport": 375,
+      "main": {
+        "x": 24,
+        "y": 108,
+        "width": 327,
+        "height": 452.765625
+      },
+      "fontsLoaded": true,
+      "table": null,
+      "focus": "BODY",
+      "alerts": [],
+      "navigation": []
+    },
+    {
+      "route": "register",
+      "width": 1440,
+      "title": "Create a Candidate Account | Mộc RMS",
+      "h1": "Create your account.",
+      "bodyClass": "auth-page",
+      "pageWidth": 1440,
+      "viewport": 1440,
+      "main": {
+        "x": 824,
+        "y": 99.890625,
+        "width": 440,
+        "height": 700.21875
+      },
+      "fontsLoaded": true,
+      "table": null,
+      "focus": "BODY",
+      "alerts": [],
+      "navigation": []
+    },
+    {
+      "route": "register",
+      "width": 1024,
+      "title": "Create a Candidate Account | Mộc RMS",
+      "h1": "Create your account.",
+      "bodyClass": "auth-page",
+      "pageWidth": 1024,
+      "viewport": 1024,
+      "main": {
+        "x": 522.390625,
+        "y": 103.1875,
+        "width": 440,
+        "height": 693.609375
+      },
+      "fontsLoaded": true,
+      "table": null,
+      "focus": "BODY",
+      "alerts": [],
+      "navigation": []
+    },
+    {
+      "route": "register",
+      "width": 768,
+      "title": "Create a Candidate Account | Mộc RMS",
+      "h1": "Create your account.",
+      "bodyClass": "auth-page",
+      "pageWidth": 768,
+      "viewport": 768,
+      "main": {
+        "x": 164,
+        "y": 108,
+        "width": 440,
+        "height": 690.21875
+      },
+      "fontsLoaded": true,
+      "table": null,
+      "focus": "BODY",
+      "alerts": [],
+      "navigation": []
+    },
+    {
+      "route": "register",
+      "width": 375,
+      "title": "Create a Candidate Account | Mộc RMS",
+      "h1": "Create your account.",
+      "bodyClass": "auth-page",
+      "pageWidth": 375,
+      "viewport": 375,
+      "main": {
+        "x": 24,
+        "y": 108,
+        "width": 327,
+        "height": 715.015625
+      },
+      "fontsLoaded": true,
+      "table": null,
+      "focus": "BODY",
+      "alerts": [],
+      "navigation": []
+    },
+    {
+      "route": "dashboard",
+      "width": 1440,
+      "title": "Dashboard | Mộc RMS",
+      "h1": "Dashboard",
+      "bodyClass": "rms-app",
+      "pageWidth": 1440,
+      "viewport": 1440,
+      "main": {
+        "x": 208,
+        "y": 72,
+        "width": 1232,
+        "height": 828
+      },
+      "fontsLoaded": true,
+      "table": null,
+      "focus": "BODY",
+      "alerts": [],
+      "navigation": [
+        {
+          "label": "Dashboard",
+          "current": "page"
+        },
+        {
+          "label": "Account Management",
+          "current": null
+        },
+        {
+          "label": "API Monitoring",
+          "current": null
+        },
+        {
+          "label": "Job Requisitions",
+          "current": null
+        },
+        {
+          "label": "Back to Careers",
+          "current": null
+        }
+      ]
+    },
+    {
+      "route": "dashboard",
+      "width": 1024,
+      "title": "Dashboard | Mộc RMS",
+      "h1": "Dashboard",
+      "bodyClass": "rms-app",
+      "pageWidth": 1024,
+      "viewport": 1024,
+      "main": {
+        "x": 184,
+        "y": 72,
+        "width": 840,
+        "height": 828
+      },
+      "fontsLoaded": true,
+      "table": null,
+      "focus": "BODY",
+      "alerts": [],
+      "navigation": [
+        {
+          "label": "Dashboard",
+          "current": "page"
+        },
+        {
+          "label": "Account Management",
+          "current": null
+        },
+        {
+          "label": "API Monitoring",
+          "current": null
+        },
+        {
+          "label": "Job Requisitions",
+          "current": null
+        },
+        {
+          "label": "Back to Careers",
+          "current": null
+        }
+      ]
+    },
+    {
+      "route": "dashboard",
+      "width": 768,
+      "title": "Dashboard | Mộc RMS",
+      "h1": "Dashboard",
+      "bodyClass": "rms-app",
+      "pageWidth": 768,
+      "viewport": 768,
+      "main": {
+        "x": 0,
+        "y": 94.6875,
+        "width": 768,
+        "height": 805.3125
+      },
+      "fontsLoaded": true,
+      "table": null,
+      "focus": "BODY",
+      "alerts": [],
+      "navigation": [
+        {
+          "label": "Dashboard",
+          "current": "page"
+        },
+        {
+          "label": "Account Management",
+          "current": null
+        },
+        {
+          "label": "API Monitoring",
+          "current": null
+        },
+        {
+          "label": "Job Requisitions",
+          "current": null
+        },
+        {
+          "label": "Back to Careers",
+          "current": null
+        }
+      ]
+    },
+    {
+      "route": "dashboard",
+      "width": 375,
+      "title": "Dashboard | Mộc RMS",
+      "h1": "Dashboard",
+      "bodyClass": "rms-app",
+      "pageWidth": 375,
+      "viewport": 375,
+      "main": {
+        "x": 0,
+        "y": 94.6875,
+        "width": 375,
+        "height": 810.796875
+      },
+      "fontsLoaded": true,
+      "table": null,
+      "focus": "BODY",
+      "alerts": [],
+      "navigation": [
+        {
+          "label": "Dashboard",
+          "current": "page"
+        },
+        {
+          "label": "Account Management",
+          "current": null
+        },
+        {
+          "label": "API Monitoring",
+          "current": null
+        },
+        {
+          "label": "Job Requisitions",
+          "current": null
+        },
+        {
+          "label": "Back to Careers",
+          "current": null
+        }
+      ]
+    },
+    {
+      "route": "accounts",
+      "width": 1440,
+      "title": "Account Management | Mộc RMS",
+      "h1": "Account Management",
+      "bodyClass": "rms-app",
+      "pageWidth": 1425,
+      "viewport": 1440,
+      "main": {
+        "x": 208,
+        "y": 72,
+        "width": 1217,
+        "height": 845.34375
+      },
+      "fontsLoaded": true,
+      "table": {
+        "client": 1153,
+        "scroll": 1153
+      },
+      "focus": "BODY",
+      "alerts": [],
+      "navigation": [
+        {
+          "label": "Dashboard",
+          "current": null
+        },
+        {
+          "label": "Account Management",
+          "current": "page"
+        },
+        {
+          "label": "API Monitoring",
+          "current": null
+        },
+        {
+          "label": "Job Requisitions",
+          "current": null
+        },
+        {
+          "label": "Back to Careers",
+          "current": null
+        }
+      ]
+    },
+    {
+      "route": "accounts",
+      "width": 1024,
+      "title": "Account Management | Mộc RMS",
+      "h1": "Account Management",
+      "bodyClass": "rms-app",
+      "pageWidth": 1009,
+      "viewport": 1024,
+      "main": {
+        "x": 184,
+        "y": 72,
+        "width": 825,
+        "height": 1029.109375
+      },
+      "fontsLoaded": true,
+      "table": {
+        "client": 777,
+        "scroll": 920
+      },
+      "focus": "BODY",
+      "alerts": [],
+      "navigation": [
+        {
+          "label": "Dashboard",
+          "current": null
+        },
+        {
+          "label": "Account Management",
+          "current": "page"
+        },
+        {
+          "label": "API Monitoring",
+          "current": null
+        },
+        {
+          "label": "Job Requisitions",
+          "current": null
+        },
+        {
+          "label": "Back to Careers",
+          "current": null
+        }
+      ]
+    },
+    {
+      "route": "accounts",
+      "width": 768,
+      "title": "Account Management | Mộc RMS",
+      "h1": "Account Management",
+      "bodyClass": "rms-app",
+      "pageWidth": 753,
+      "viewport": 768,
+      "main": {
+        "x": 0,
+        "y": 94.6875,
+        "width": 753,
+        "height": 1025.71875
+      },
+      "fontsLoaded": true,
+      "table": {
+        "client": 721,
+        "scroll": 920
+      },
+      "focus": "BODY",
+      "alerts": [],
+      "navigation": [
+        {
+          "label": "Dashboard",
+          "current": null
+        },
+        {
+          "label": "Account Management",
+          "current": "page"
+        },
+        {
+          "label": "API Monitoring",
+          "current": null
+        },
+        {
+          "label": "Job Requisitions",
+          "current": null
+        },
+        {
+          "label": "Back to Careers",
+          "current": null
+        }
+      ]
+    },
+    {
+      "route": "accounts",
+      "width": 375,
+      "title": "Account Management | Mộc RMS",
+      "h1": "Account Management",
+      "bodyClass": "rms-app",
+      "pageWidth": 375,
+      "viewport": 375,
+      "main": {
+        "x": 0,
+        "y": 94.6875,
+        "width": 375,
+        "height": 1100.40625
+      },
+      "fontsLoaded": true,
+      "table": {
+        "client": 343,
+        "scroll": 920
+      },
+      "focus": "BODY",
+      "alerts": [],
+      "navigation": [
+        {
+          "label": "Dashboard",
+          "current": null
+        },
+        {
+          "label": "Account Management",
+          "current": "page"
+        },
+        {
+          "label": "API Monitoring",
+          "current": null
+        },
+        {
+          "label": "Job Requisitions",
+          "current": null
+        },
+        {
+          "label": "Back to Careers",
+          "current": null
+        }
+      ]
+    },
+    {
+      "route": "create",
+      "width": 1440,
+      "title": "Create Account | Mộc RMS",
+      "h1": "Create Account",
+      "bodyClass": "rms-app",
+      "pageWidth": 1425,
+      "viewport": 1440,
+      "main": {
+        "x": 208,
+        "y": 72,
+        "width": 1217,
+        "height": 1076.796875
+      },
+      "fontsLoaded": true,
+      "table": null,
+      "focus": "BODY",
+      "alerts": [],
+      "navigation": [
+        {
+          "label": "Dashboard",
+          "current": null
+        },
+        {
+          "label": "Account Management",
+          "current": "page"
+        },
+        {
+          "label": "API Monitoring",
+          "current": null
+        },
+        {
+          "label": "Job Requisitions",
+          "current": null
+        },
+        {
+          "label": "Back to Careers",
+          "current": null
+        }
+      ]
+    },
+    {
+      "route": "create",
+      "width": 1024,
+      "title": "Create Account | Mộc RMS",
+      "h1": "Create Account",
+      "bodyClass": "rms-app",
+      "pageWidth": 1009,
+      "viewport": 1024,
+      "main": {
+        "x": 184,
+        "y": 72,
+        "width": 825,
+        "height": 1054.1875
+      },
+      "fontsLoaded": true,
+      "table": null,
+      "focus": "BODY",
+      "alerts": [],
+      "navigation": [
+        {
+          "label": "Dashboard",
+          "current": null
+        },
+        {
+          "label": "Account Management",
+          "current": "page"
+        },
+        {
+          "label": "API Monitoring",
+          "current": null
+        },
+        {
+          "label": "Job Requisitions",
+          "current": null
+        },
+        {
+          "label": "Back to Careers",
+          "current": null
+        }
+      ]
+    },
+    {
+      "route": "create",
+      "width": 768,
+      "title": "Create Account | Mộc RMS",
+      "h1": "Create Account",
+      "bodyClass": "rms-app",
+      "pageWidth": 753,
+      "viewport": 768,
+      "main": {
+        "x": 0,
+        "y": 94.6875,
+        "width": 753,
+        "height": 1072.484375
+      },
+      "fontsLoaded": true,
+      "table": null,
+      "focus": "BODY",
+      "alerts": [],
+      "navigation": [
+        {
+          "label": "Dashboard",
+          "current": null
+        },
+        {
+          "label": "Account Management",
+          "current": "page"
+        },
+        {
+          "label": "API Monitoring",
+          "current": null
+        },
+        {
+          "label": "Job Requisitions",
+          "current": null
+        },
+        {
+          "label": "Back to Careers",
+          "current": null
+        }
+      ]
+    },
+    {
+      "route": "create",
+      "width": 375,
+      "title": "Create Account | Mộc RMS",
+      "h1": "Create Account",
+      "bodyClass": "rms-app",
+      "pageWidth": 375,
+      "viewport": 375,
+      "main": {
+        "x": 0,
+        "y": 94.6875,
+        "width": 375,
+        "height": 1385.140625
+      },
+      "fontsLoaded": true,
+      "table": null,
+      "focus": "BODY",
+      "alerts": [],
+      "navigation": [
+        {
+          "label": "Dashboard",
+          "current": null
+        },
+        {
+          "label": "Account Management",
+          "current": "page"
+        },
+        {
+          "label": "API Monitoring",
+          "current": null
+        },
+        {
+          "label": "Job Requisitions",
+          "current": null
+        },
+        {
+          "label": "Back to Careers",
+          "current": null
+        }
+      ]
+    },
+    {
+      "route": "edit",
+      "width": 1440,
+      "title": "Edit Account | Mộc RMS",
+      "h1": "Edit Account",
+      "bodyClass": "rms-app",
+      "pageWidth": 1425,
+      "viewport": 1440,
+      "main": {
+        "x": 208,
+        "y": 72,
+        "width": 1217,
+        "height": 1016
+      },
+      "fontsLoaded": true,
+      "table": null,
+      "focus": "BODY",
+      "alerts": [],
+      "navigation": [
+        {
+          "label": "Dashboard",
+          "current": null
+        },
+        {
+          "label": "Account Management",
+          "current": "page"
+        },
+        {
+          "label": "API Monitoring",
+          "current": null
+        },
+        {
+          "label": "Job Requisitions",
+          "current": null
+        },
+        {
+          "label": "Back to Careers",
+          "current": null
+        }
+      ]
+    },
+    {
+      "route": "edit",
+      "width": 1024,
+      "title": "Edit Account | Mộc RMS",
+      "h1": "Edit Account",
+      "bodyClass": "rms-app",
+      "pageWidth": 1009,
+      "viewport": 1024,
+      "main": {
+        "x": 184,
+        "y": 72,
+        "width": 825,
+        "height": 993.390625
+      },
+      "fontsLoaded": true,
+      "table": null,
+      "focus": "BODY",
+      "alerts": [],
+      "navigation": [
+        {
+          "label": "Dashboard",
+          "current": null
+        },
+        {
+          "label": "Account Management",
+          "current": "page"
+        },
+        {
+          "label": "API Monitoring",
+          "current": null
+        },
+        {
+          "label": "Job Requisitions",
+          "current": null
+        },
+        {
+          "label": "Back to Careers",
+          "current": null
+        }
+      ]
+    },
+    {
+      "route": "edit",
+      "width": 768,
+      "title": "Edit Account | Mộc RMS",
+      "h1": "Edit Account",
+      "bodyClass": "rms-app",
+      "pageWidth": 753,
+      "viewport": 768,
+      "main": {
+        "x": 0,
+        "y": 94.6875,
+        "width": 753,
+        "height": 1011.6875
+      },
+      "fontsLoaded": true,
+      "table": null,
+      "focus": "BODY",
+      "alerts": [],
+      "navigation": [
+        {
+          "label": "Dashboard",
+          "current": null
+        },
+        {
+          "label": "Account Management",
+          "current": "page"
+        },
+        {
+          "label": "API Monitoring",
+          "current": null
+        },
+        {
+          "label": "Job Requisitions",
+          "current": null
+        },
+        {
+          "label": "Back to Careers",
+          "current": null
+        }
+      ]
+    },
+    {
+      "route": "edit",
+      "width": 375,
+      "title": "Edit Account | Mộc RMS",
+      "h1": "Edit Account",
+      "bodyClass": "rms-app",
+      "pageWidth": 375,
+      "viewport": 375,
+      "main": {
+        "x": 0,
+        "y": 94.6875,
+        "width": 375,
+        "height": 1244.65625
+      },
+      "fontsLoaded": true,
+      "table": null,
+      "focus": "BODY",
+      "alerts": [],
+      "navigation": [
+        {
+          "label": "Dashboard",
+          "current": null
+        },
+        {
+          "label": "Account Management",
+          "current": "page"
+        },
+        {
+          "label": "API Monitoring",
+          "current": null
+        },
+        {
+          "label": "Job Requisitions",
+          "current": null
+        },
+        {
+          "label": "Back to Careers",
+          "current": null
+        }
+      ]
+    },
+    {
+      "route": "login-error",
+      "width": 1440,
+      "title": "Sign In | Mộc RMS",
+      "h1": "Welcome back.",
+      "bodyClass": "auth-page",
+      "pageWidth": 1440,
+      "viewport": 1440,
+      "main": {
+        "x": 824,
+        "y": 200.359375,
+        "width": 440,
+        "height": 499.265625
+      },
+      "fontsLoaded": true,
+      "table": null,
+      "focus": "BODY",
+      "alerts": [
+        "The credentials are incorrect or this account is not active. Please try again."
+      ],
+      "navigation": []
+    },
+    {
+      "route": "login-error",
+      "width": 1024,
+      "title": "Sign In | Mộc RMS",
+      "h1": "Welcome back.",
+      "bodyClass": "auth-page",
+      "pageWidth": 1024,
+      "viewport": 1024,
+      "main": {
+        "x": 522.390625,
+        "y": 203.671875,
+        "width": 440,
+        "height": 492.65625
+      },
+      "fontsLoaded": true,
+      "table": null,
+      "focus": "BODY",
+      "alerts": [
+        "The credentials are incorrect or this account is not active. Please try again."
+      ],
+      "navigation": []
+    },
+    {
+      "route": "login-error",
+      "width": 768,
+      "title": "Sign In | Mộc RMS",
+      "h1": "Welcome back.",
+      "bodyClass": "auth-page",
+      "pageWidth": 768,
+      "viewport": 768,
+      "main": {
+        "x": 164,
+        "y": 108,
+        "width": 440,
+        "height": 489.265625
+      },
+      "fontsLoaded": true,
+      "table": null,
+      "focus": "BODY",
+      "alerts": [
+        "The credentials are incorrect or this account is not active. Please try again."
+      ],
+      "navigation": []
+    },
+    {
+      "route": "login-error",
+      "width": 375,
+      "title": "Sign In | Mộc RMS",
+      "h1": "Welcome back.",
+      "bodyClass": "auth-page",
+      "pageWidth": 375,
+      "viewport": 375,
+      "main": {
+        "x": 24,
+        "y": 108,
+        "width": 327,
+        "height": 541.265625
+      },
+      "fontsLoaded": true,
+      "table": null,
+      "focus": "BODY",
+      "alerts": [
+        "The credentials are incorrect or this account is not active. Please try again."
+      ],
+      "navigation": []
+    },
+    {
+      "route": "login-logout",
+      "width": 1440,
+      "title": "Sign In | Mộc RMS",
+      "h1": "Welcome back.",
+      "bodyClass": "auth-page",
+      "pageWidth": 1440,
+      "viewport": 1440,
+      "main": {
+        "x": 824,
+        "y": 211.984375,
+        "width": 440,
+        "height": 476.015625
+      },
+      "fontsLoaded": true,
+      "table": null,
+      "focus": "BODY",
+      "alerts": [
+        "You have signed out."
+      ],
+      "navigation": []
+    },
+    {
+      "route": "login-logout",
+      "width": 1024,
+      "title": "Sign In | Mộc RMS",
+      "h1": "Welcome back.",
+      "bodyClass": "auth-page",
+      "pageWidth": 1024,
+      "viewport": 1024,
+      "main": {
+        "x": 522.390625,
+        "y": 215.296875,
+        "width": 440,
+        "height": 469.40625
+      },
+      "fontsLoaded": true,
+      "table": null,
+      "focus": "BODY",
+      "alerts": [
+        "You have signed out."
+      ],
+      "navigation": []
+    },
+    {
+      "route": "login-logout",
+      "width": 768,
+      "title": "Sign In | Mộc RMS",
+      "h1": "Welcome back.",
+      "bodyClass": "auth-page",
+      "pageWidth": 768,
+      "viewport": 768,
+      "main": {
+        "x": 164,
+        "y": 108,
+        "width": 440,
+        "height": 466.015625
+      },
+      "fontsLoaded": true,
+      "table": null,
+      "focus": "BODY",
+      "alerts": [
+        "You have signed out."
+      ],
+      "navigation": []
+    },
+    {
+      "route": "login-logout",
+      "width": 375,
+      "title": "Sign In | Mộc RMS",
+      "h1": "Welcome back.",
+      "bodyClass": "auth-page",
+      "pageWidth": 375,
+      "viewport": 375,
+      "main": {
+        "x": 24,
+        "y": 108,
+        "width": 327,
+        "height": 518.015625
+      },
+      "fontsLoaded": true,
+      "table": null,
+      "focus": "BODY",
+      "alerts": [
+        "You have signed out."
+      ],
+      "navigation": []
+    },
+    {
+      "route": "register-invalid",
+      "width": 1440,
+      "title": "Create a Candidate Account | Mộc RMS",
+      "h1": "Create your account.",
+      "bodyClass": "auth-page",
+      "pageWidth": 1425,
+      "viewport": 1440,
+      "main": {
+        "x": 813.125,
+        "y": 48,
+        "width": 440,
+        "height": 877.28125
+      },
+      "fontsLoaded": true,
+      "table": null,
+      "focus": "DIV",
+      "alerts": [
+        "Check your details\n  Email: Enter a valid email address.Confirm Password: Passwords do not match."
+      ],
+      "navigation": []
+    },
+    {
+      "route": "register-invalid",
+      "width": 1024,
+      "title": "Create a Candidate Account | Mộc RMS",
+      "h1": "Create your account.",
+      "bodyClass": "auth-page",
+      "pageWidth": 1009,
+      "viewport": 1024,
+      "main": {
+        "x": 511.515625,
+        "y": 48,
+        "width": 440,
+        "height": 870.671875
+      },
+      "fontsLoaded": true,
+      "table": null,
+      "focus": "DIV",
+      "alerts": [
+        "Check your details\n  Email: Enter a valid email address.Confirm Password: Passwords do not match."
+      ],
+      "navigation": []
+    },
+    {
+      "route": "register-invalid",
+      "width": 768,
+      "title": "Create a Candidate Account | Mộc RMS",
+      "h1": "Create your account.",
+      "bodyClass": "auth-page",
+      "pageWidth": 753,
+      "viewport": 768,
+      "main": {
+        "x": 156.5,
+        "y": 108,
+        "width": 440,
+        "height": 867.28125
+      },
+      "fontsLoaded": true,
+      "table": null,
+      "focus": "DIV",
+      "alerts": [
+        "Check your details\n  Email: Enter a valid email address.Confirm Password: Passwords do not match."
+      ],
+      "navigation": []
+    },
+    {
+      "route": "register-invalid",
+      "width": 375,
+      "title": "Create a Candidate Account | Mộc RMS",
+      "h1": "Create your account.",
+      "bodyClass": "auth-page",
+      "pageWidth": 375,
+      "viewport": 375,
+      "main": {
+        "x": 24,
+        "y": 108,
+        "width": 327,
+        "height": 915.328125
+      },
+      "fontsLoaded": true,
+      "table": null,
+      "focus": "DIV",
+      "alerts": [
+        "Check your details\n  Email: Enter a valid email address.Confirm Password: Passwords do not match."
+      ],
+      "navigation": []
+    },
+    {
+      "route": "create-invalid",
+      "width": 1440,
+      "title": "Create Account | Mộc RMS",
+      "h1": "Create Account",
+      "bodyClass": "rms-app",
+      "pageWidth": 1425,
+      "viewport": 1440,
+      "main": {
+        "x": 208,
+        "y": 72,
+        "width": 1217,
+        "height": 1244.171875
+      },
+      "fontsLoaded": true,
+      "table": null,
+      "focus": "DIV",
+      "alerts": [
+        "Check your details\n  Email: Enter a valid email address.Confirm Password: Passwords do not match."
+      ],
+      "navigation": [
+        {
+          "label": "Dashboard",
+          "current": null
+        },
+        {
+          "label": "Account Management",
+          "current": "page"
+        },
+        {
+          "label": "API Monitoring",
+          "current": null
+        },
+        {
+          "label": "Job Requisitions",
+          "current": null
+        },
+        {
+          "label": "Back to Careers",
+          "current": null
+        }
+      ]
+    },
+    {
+      "route": "create-invalid",
+      "width": 1024,
+      "title": "Create Account | Mộc RMS",
+      "h1": "Create Account",
+      "bodyClass": "rms-app",
+      "pageWidth": 1009,
+      "viewport": 1024,
+      "main": {
+        "x": 184,
+        "y": 72,
+        "width": 825,
+        "height": 1221.5625
+      },
+      "fontsLoaded": true,
+      "table": null,
+      "focus": "DIV",
+      "alerts": [
+        "Check your details\n  Email: Enter a valid email address.Confirm Password: Passwords do not match."
+      ],
+      "navigation": [
+        {
+          "label": "Dashboard",
+          "current": null
+        },
+        {
+          "label": "Account Management",
+          "current": "page"
+        },
+        {
+          "label": "API Monitoring",
+          "current": null
+        },
+        {
+          "label": "Job Requisitions",
+          "current": null
+        },
+        {
+          "label": "Back to Careers",
+          "current": null
+        }
+      ]
+    },
+    {
+      "route": "create-invalid",
+      "width": 768,
+      "title": "Create Account | Mộc RMS",
+      "h1": "Create Account",
+      "bodyClass": "rms-app",
+      "pageWidth": 753,
+      "viewport": 768,
+      "main": {
+        "x": 0,
+        "y": 94.6875,
+        "width": 753,
+        "height": 1239.859375
+      },
+      "fontsLoaded": true,
+      "table": null,
+      "focus": "DIV",
+      "alerts": [
+        "Check your details\n  Email: Enter a valid email address.Confirm Password: Passwords do not match."
+      ],
+      "navigation": [
+        {
+          "label": "Dashboard",
+          "current": null
+        },
+        {
+          "label": "Account Management",
+          "current": "page"
+        },
+        {
+          "label": "API Monitoring",
+          "current": null
+        },
+        {
+          "label": "Job Requisitions",
+          "current": null
+        },
+        {
+          "label": "Back to Careers",
+          "current": null
+        }
+      ]
+    },
+    {
+      "route": "create-invalid",
+      "width": 375,
+      "title": "Create Account | Mộc RMS",
+      "h1": "Create Account",
+      "bodyClass": "rms-app",
+      "pageWidth": 375,
+      "viewport": 375,
+      "main": {
+        "x": 0,
+        "y": 94.6875,
+        "width": 375,
+        "height": 1578.203125
+      },
+      "fontsLoaded": true,
+      "table": null,
+      "focus": "DIV",
+      "alerts": [
+        "Check your details\n  Email: Enter a valid email address.Confirm Password: Passwords do not match."
+      ],
+      "navigation": [
+        {
+          "label": "Dashboard",
+          "current": null
+        },
+        {
+          "label": "Account Management",
+          "current": "page"
+        },
+        {
+          "label": "API Monitoring",
+          "current": null
+        },
+        {
+          "label": "Job Requisitions",
+          "current": null
+        },
+        {
+          "label": "Back to Careers",
+          "current": null
+        }
+      ]
+    },
+    {
+      "route": "edit-invalid",
+      "width": 1440,
+      "title": "Edit Account | Mộc RMS",
+      "h1": "Edit Account",
+      "bodyClass": "rms-app",
+      "pageWidth": 1425,
+      "viewport": 1440,
+      "main": {
+        "x": 208,
+        "y": 72,
+        "width": 1217,
+        "height": 1130.4375
+      },
+      "fontsLoaded": true,
+      "table": null,
+      "focus": "DIV",
+      "alerts": [
+        "Check your details\n  Email: Enter a valid email address."
+      ],
+      "navigation": [
+        {
+          "label": "Dashboard",
+          "current": null
+        },
+        {
+          "label": "Account Management",
+          "current": "page"
+        },
+        {
+          "label": "API Monitoring",
+          "current": null
+        },
+        {
+          "label": "Job Requisitions",
+          "current": null
+        },
+        {
+          "label": "Back to Careers",
+          "current": null
+        }
+      ]
+    },
+    {
+      "route": "edit-invalid",
+      "width": 1024,
+      "title": "Edit Account | Mộc RMS",
+      "h1": "Edit Account",
+      "bodyClass": "rms-app",
+      "pageWidth": 1009,
+      "viewport": 1024,
+      "main": {
+        "x": 184,
+        "y": 72,
+        "width": 825,
+        "height": 1107.828125
+      },
+      "fontsLoaded": true,
+      "table": null,
+      "focus": "DIV",
+      "alerts": [
+        "Check your details\n  Email: Enter a valid email address."
+      ],
+      "navigation": [
+        {
+          "label": "Dashboard",
+          "current": null
+        },
+        {
+          "label": "Account Management",
+          "current": "page"
+        },
+        {
+          "label": "API Monitoring",
+          "current": null
+        },
+        {
+          "label": "Job Requisitions",
+          "current": null
+        },
+        {
+          "label": "Back to Careers",
+          "current": null
+        }
+      ]
+    },
+    {
+      "route": "edit-invalid",
+      "width": 768,
+      "title": "Edit Account | Mộc RMS",
+      "h1": "Edit Account",
+      "bodyClass": "rms-app",
+      "pageWidth": 753,
+      "viewport": 768,
+      "main": {
+        "x": 0,
+        "y": 94.6875,
+        "width": 753,
+        "height": 1126.125
+      },
+      "fontsLoaded": true,
+      "table": null,
+      "focus": "DIV",
+      "alerts": [
+        "Check your details\n  Email: Enter a valid email address."
+      ],
+      "navigation": [
+        {
+          "label": "Dashboard",
+          "current": null
+        },
+        {
+          "label": "Account Management",
+          "current": "page"
+        },
+        {
+          "label": "API Monitoring",
+          "current": null
+        },
+        {
+          "label": "Job Requisitions",
+          "current": null
+        },
+        {
+          "label": "Back to Careers",
+          "current": null
+        }
+      ]
+    },
+    {
+      "route": "edit-invalid",
+      "width": 375,
+      "title": "Edit Account | Mộc RMS",
+      "h1": "Edit Account",
+      "bodyClass": "rms-app",
+      "pageWidth": 375,
+      "viewport": 375,
+      "main": {
+        "x": 0,
+        "y": 94.6875,
+        "width": 375,
+        "height": 1384.78125
+      },
+      "fontsLoaded": true,
+      "table": null,
+      "focus": "DIV",
+      "alerts": [
+        "Check your details\n  Email: Enter a valid email address."
+      ],
+      "navigation": [
+        {
+          "label": "Dashboard",
+          "current": null
+        },
+        {
+          "label": "Account Management",
+          "current": "page"
+        },
+        {
+          "label": "API Monitoring",
+          "current": null
+        },
+        {
+          "label": "Job Requisitions",
+          "current": null
+        },
+        {
+          "label": "Back to Careers",
+          "current": null
+        }
+      ]
+    },
+    {
+      "route": "forgot",
+      "width": 1440,
+      "title": "Forgot Password | Mộc RMS",
+      "h1": "Forgot Password",
+      "bodyClass": "auth-page",
+      "pageWidth": 1440,
+      "viewport": 1440,
+      "main": {
+        "x": 824,
+        "y": 280.453125,
+        "width": 440,
+        "height": 339.078125
+      },
+      "fontsLoaded": true,
+      "table": null,
+      "focus": "BODY",
+      "alerts": [],
+      "navigation": []
+    },
+    {
+      "route": "forgot",
+      "width": 1024,
+      "title": "Forgot Password | Mộc RMS",
+      "h1": "Forgot Password",
+      "bodyClass": "auth-page",
+      "pageWidth": 1024,
+      "viewport": 1024,
+      "main": {
+        "x": 522.390625,
+        "y": 283.765625,
+        "width": 440,
+        "height": 332.46875
+      },
+      "fontsLoaded": true,
+      "table": null,
+      "focus": "BODY",
+      "alerts": [],
+      "navigation": []
+    },
+    {
+      "route": "forgot",
+      "width": 768,
+      "title": "Forgot Password | Mộc RMS",
+      "h1": "Forgot Password",
+      "bodyClass": "auth-page",
+      "pageWidth": 768,
+      "viewport": 768,
+      "main": {
+        "x": 164,
+        "y": 108,
+        "width": 440,
+        "height": 329.078125
+      },
+      "fontsLoaded": true,
+      "table": null,
+      "focus": "BODY",
+      "alerts": [],
+      "navigation": []
+    },
+    {
+      "route": "forgot",
+      "width": 375,
+      "title": "Forgot Password | Mộc RMS",
+      "h1": "Forgot Password",
+      "bodyClass": "auth-page",
+      "pageWidth": 375,
+      "viewport": 375,
+      "main": {
+        "x": 24,
+        "y": 108,
+        "width": 327,
+        "height": 329.078125
+      },
+      "fontsLoaded": true,
+      "table": null,
+      "focus": "BODY",
+      "alerts": [],
+      "navigation": []
+    },
+    {
+      "route": "forgot-sent",
+      "width": 1440,
+      "title": "Forgot Password | Mộc RMS",
+      "h1": "Forgot Password",
+      "bodyClass": "auth-page",
+      "pageWidth": 1440,
+      "viewport": 1440,
+      "main": {
+        "x": 824,
+        "y": 224.578125,
+        "width": 440,
+        "height": 450.828125
+      },
+      "fontsLoaded": true,
+      "table": null,
+      "focus": "BODY",
+      "alerts": [
+        "If this email belongs to an active account, the recovery request has been received. Check your inbox and try again later if no email arrives."
+      ],
+      "navigation": []
+    },
+    {
+      "route": "forgot-sent",
+      "width": 1024,
+      "title": "Forgot Password | Mộc RMS",
+      "h1": "Forgot Password",
+      "bodyClass": "auth-page",
+      "pageWidth": 1024,
+      "viewport": 1024,
+      "main": {
+        "x": 522.390625,
+        "y": 227.890625,
+        "width": 440,
+        "height": 444.21875
+      },
+      "fontsLoaded": true,
+      "table": null,
+      "focus": "BODY",
+      "alerts": [
+        "If this email belongs to an active account, the recovery request has been received. Check your inbox and try again later if no email arrives."
+      ],
+      "navigation": []
+    },
+    {
+      "route": "forgot-sent",
+      "width": 768,
+      "title": "Forgot Password | Mộc RMS",
+      "h1": "Forgot Password",
+      "bodyClass": "auth-page",
+      "pageWidth": 768,
+      "viewport": 768,
+      "main": {
+        "x": 164,
+        "y": 108,
+        "width": 440,
+        "height": 440.828125
+      },
+      "fontsLoaded": true,
+      "table": null,
+      "focus": "BODY",
+      "alerts": [
+        "If this email belongs to an active account, the recovery request has been received. Check your inbox and try again later if no email arrives."
+      ],
+      "navigation": []
+    },
+    {
+      "route": "forgot-sent",
+      "width": 375,
+      "title": "Forgot Password | Mộc RMS",
+      "h1": "Forgot Password",
+      "bodyClass": "auth-page",
+      "pageWidth": 375,
+      "viewport": 375,
+      "main": {
+        "x": 24,
+        "y": 108,
+        "width": 327,
+        "height": 464.078125
+      },
+      "fontsLoaded": true,
+      "table": null,
+      "focus": "BODY",
+      "alerts": [
+        "If this email belongs to an active account, the recovery request has been received. Check your inbox and try again later if no email arrives."
+      ],
+      "navigation": []
+    },
+    {
+      "route": "reset",
+      "width": 1440,
+      "title": "Reset Password | Mộc RMS",
+      "h1": "Reset Password",
+      "bodyClass": "auth-page",
+      "pageWidth": 1440,
+      "viewport": 1440,
+      "main": {
+        "x": 824,
+        "y": 232.21875,
+        "width": 440,
+        "height": 435.5625
+      },
+      "fontsLoaded": true,
+      "table": null,
+      "focus": "BODY",
+      "alerts": [],
+      "navigation": []
+    },
+    {
+      "route": "reset",
+      "width": 1024,
+      "title": "Reset Password | Mộc RMS",
+      "h1": "Reset Password",
+      "bodyClass": "auth-page",
+      "pageWidth": 1024,
+      "viewport": 1024,
+      "main": {
+        "x": 522.390625,
+        "y": 235.515625,
+        "width": 440,
+        "height": 428.953125
+      },
+      "fontsLoaded": true,
+      "table": null,
+      "focus": "BODY",
+      "alerts": [],
+      "navigation": []
+    },
+    {
+      "route": "reset",
+      "width": 768,
+      "title": "Reset Password | Mộc RMS",
+      "h1": "Reset Password",
+      "bodyClass": "auth-page",
+      "pageWidth": 768,
+      "viewport": 768,
+      "main": {
+        "x": 164,
+        "y": 108,
+        "width": 440,
+        "height": 425.5625
+      },
+      "fontsLoaded": true,
+      "table": null,
+      "focus": "BODY",
+      "alerts": [],
+      "navigation": []
+    },
+    {
+      "route": "reset",
+      "width": 375,
+      "title": "Reset Password | Mộc RMS",
+      "h1": "Reset Password",
+      "bodyClass": "auth-page",
+      "pageWidth": 375,
+      "viewport": 375,
+      "main": {
+        "x": 24,
+        "y": 108,
+        "width": 327,
+        "height": 425.5625
+      },
+      "fontsLoaded": true,
+      "table": null,
+      "focus": "BODY",
+      "alerts": [],
+      "navigation": []
+    },
+    {
+      "route": "reset-expired",
+      "width": 1440,
+      "title": "Reset Password | Mộc RMS",
+      "h1": "Reset Password",
+      "bodyClass": "auth-page",
+      "pageWidth": 1440,
+      "viewport": 1440,
+      "main": {
+        "x": 824,
+        "y": 364.875,
+        "width": 440,
+        "height": 170.25
+      },
+      "fontsLoaded": true,
+      "table": null,
+      "focus": "BODY",
+      "alerts": [
+        "This link is invalid, used, or expired. Request a new link."
+      ],
+      "navigation": []
+    },
+    {
+      "route": "reset-expired",
+      "width": 1024,
+      "title": "Reset Password | Mộc RMS",
+      "h1": "Reset Password",
+      "bodyClass": "auth-page",
+      "pageWidth": 1024,
+      "viewport": 1024,
+      "main": {
+        "x": 522.390625,
+        "y": 368.171875,
+        "width": 440,
+        "height": 163.640625
+      },
+      "fontsLoaded": true,
+      "table": null,
+      "focus": "BODY",
+      "alerts": [
+        "This link is invalid, used, or expired. Request a new link."
+      ],
+      "navigation": []
+    },
+    {
+      "route": "reset-expired",
+      "width": 768,
+      "title": "Reset Password | Mộc RMS",
+      "h1": "Reset Password",
+      "bodyClass": "auth-page",
+      "pageWidth": 768,
+      "viewport": 768,
+      "main": {
+        "x": 164,
+        "y": 108,
+        "width": 440,
+        "height": 160.25
+      },
+      "fontsLoaded": true,
+      "table": null,
+      "focus": "BODY",
+      "alerts": [
+        "This link is invalid, used, or expired. Request a new link."
+      ],
+      "navigation": []
+    },
+    {
+      "route": "reset-expired",
+      "width": 375,
+      "title": "Reset Password | Mộc RMS",
+      "h1": "Reset Password",
+      "bodyClass": "auth-page",
+      "pageWidth": 375,
+      "viewport": 375,
+      "main": {
+        "x": 24,
+        "y": 108,
+        "width": 327,
+        "height": 183.5
+      },
+      "fontsLoaded": true,
+      "table": null,
+      "focus": "BODY",
+      "alerts": [
+        "This link is invalid, used, or expired. Request a new link."
+      ],
+      "navigation": []
+    },
+    {
+      "route": "monitoring",
+      "width": 1440,
+      "title": "API Monitoring | Mộc RMS",
+      "h1": "API Monitoring",
+      "bodyClass": "rms-app",
+      "pageWidth": 1440,
+      "viewport": 1440,
+      "main": {
+        "x": 208,
+        "y": 72,
+        "width": 1232,
+        "height": 828
+      },
+      "fontsLoaded": true,
+      "table": {
+        "client": 1168,
+        "scroll": 1168
+      },
+      "focus": "BODY",
+      "alerts": [],
+      "navigation": [
+        {
+          "label": "Dashboard",
+          "current": null
+        },
+        {
+          "label": "Account Management",
+          "current": null
+        },
+        {
+          "label": "API Monitoring",
+          "current": "page"
+        },
+        {
+          "label": "Job Requisitions",
+          "current": null
+        },
+        {
+          "label": "Back to Careers",
+          "current": null
+        }
+      ]
+    },
+    {
+      "route": "monitoring",
+      "width": 1024,
+      "title": "API Monitoring | Mộc RMS",
+      "h1": "API Monitoring",
+      "bodyClass": "rms-app",
+      "pageWidth": 1024,
+      "viewport": 1024,
+      "main": {
+        "x": 184,
+        "y": 72,
+        "width": 840,
+        "height": 828
+      },
+      "fontsLoaded": true,
+      "table": {
+        "client": 792,
+        "scroll": 950
+      },
+      "focus": "BODY",
+      "alerts": [],
+      "navigation": [
+        {
+          "label": "Dashboard",
+          "current": null
+        },
+        {
+          "label": "Account Management",
+          "current": null
+        },
+        {
+          "label": "API Monitoring",
+          "current": "page"
+        },
+        {
+          "label": "Job Requisitions",
+          "current": null
+        },
+        {
+          "label": "Back to Careers",
+          "current": null
+        }
+      ]
+    },
+    {
+      "route": "monitoring",
+      "width": 768,
+      "title": "API Monitoring | Mộc RMS",
+      "h1": "API Monitoring",
+      "bodyClass": "rms-app",
+      "pageWidth": 768,
+      "viewport": 768,
+      "main": {
+        "x": 0,
+        "y": 94.6875,
+        "width": 768,
+        "height": 805.3125
+      },
+      "fontsLoaded": true,
+      "table": {
+        "client": 736,
+        "scroll": 950
+      },
+      "focus": "BODY",
+      "alerts": [],
+      "navigation": [
+        {
+          "label": "Dashboard",
+          "current": null
+        },
+        {
+          "label": "Account Management",
+          "current": null
+        },
+        {
+          "label": "API Monitoring",
+          "current": "page"
+        },
+        {
+          "label": "Job Requisitions",
+          "current": null
+        },
+        {
+          "label": "Back to Careers",
+          "current": null
+        }
+      ]
+    },
+    {
+      "route": "monitoring",
+      "width": 375,
+      "title": "API Monitoring | Mộc RMS",
+      "h1": "API Monitoring",
+      "bodyClass": "rms-app",
+      "pageWidth": 375,
+      "viewport": 375,
+      "main": {
+        "x": 0,
+        "y": 94.6875,
+        "width": 375,
+        "height": 834.84375
+      },
+      "fontsLoaded": true,
+      "table": {
+        "client": 343,
+        "scroll": 950
+      },
+      "focus": "BODY",
+      "alerts": [],
+      "navigation": [
+        {
+          "label": "Dashboard",
+          "current": null
+        },
+        {
+          "label": "Account Management",
+          "current": null
+        },
+        {
+          "label": "API Monitoring",
+          "current": "page"
+        },
+        {
+          "label": "Job Requisitions",
+          "current": null
+        },
+        {
+          "label": "Back to Careers",
+          "current": null
+        }
+      ]
+    }
+  ],
+  "controls": [
+    {
+      "route": "login",
+      "control": "Show / Hide password",
+      "shown": {
+        "type": "text",
+        "pressed": "true",
+        "label": "Hide password"
+      },
+      "hidden": "password"
+    },
+    {
+      "route": "register",
+      "control": "Show / Hide password",
+      "shown": {
+        "type": "text",
+        "pressed": "true",
+        "label": "Hide password"
+      },
+      "hidden": "password"
+    },
+    {
+      "route": "dashboard",
+      "control": "Mobile Menu / Escape",
+      "opened": true,
+      "dismissed": {
+        "hidden": true,
+        "focus": true
+      }
+    },
+    {
+      "route": "accounts",
+      "control": "Mobile Menu / Escape",
+      "opened": true,
+      "dismissed": {
+        "hidden": true,
+        "focus": true
+      }
+    },
+    {
+      "route": "accounts",
+      "control": "Delete opens confirmation; Cancel and Escape close; no submit",
+      "opened": {
+        "open": true,
+        "focus": "deactivate-cancel",
+        "name": "Nguyễn Minh Anh",
+        "explanation": "Account Nguyễn Minh Anh will be set to Inactive and will no longer be able to sign in. Related data will be preserved.",
+        "submit": "Deactivate"
+      },
+      "cancelled": {
+        "open": false,
+        "focusReturned": true
+      },
+      "escaped": {
+        "open": false,
+        "focusReturned": true
+      }
+    },
+    {
+      "route": "create",
+      "control": "Show / Hide password",
+      "shown": {
+        "type": "text",
+        "pressed": "true",
+        "label": "Hide password"
+      },
+      "hidden": "password"
+    },
+    {
+      "route": "create",
+      "control": "Mobile Menu / Escape",
+      "opened": true,
+      "dismissed": {
+        "hidden": true,
+        "focus": true
+      }
+    },
+    {
+      "route": "edit",
+      "control": "Mobile Menu / Escape",
+      "opened": true,
+      "dismissed": {
+        "hidden": true,
+        "focus": true
+      }
+    },
+    {
+      "route": "login-error",
+      "control": "Show / Hide password",
+      "shown": {
+        "type": "text",
+        "pressed": "true",
+        "label": "Hide password"
+      },
+      "hidden": "password"
+    },
+    {
+      "route": "login-logout",
+      "control": "Show / Hide password",
+      "shown": {
+        "type": "text",
+        "pressed": "true",
+        "label": "Hide password"
+      },
+      "hidden": "password"
+    },
+    {
+      "route": "register-invalid",
+      "control": "Show / Hide password",
+      "shown": {
+        "type": "text",
+        "pressed": "true",
+        "label": "Hide password"
+      },
+      "hidden": "password"
+    },
+    {
+      "route": "register-invalid",
+      "control": "Validation summary error link",
+      "target": {
+        "focus": "email",
+        "invalid": "true",
+        "summaryLinks": 2
+      }
+    },
+    {
+      "route": "create-invalid",
+      "control": "Show / Hide password",
+      "shown": {
+        "type": "text",
+        "pressed": "true",
+        "label": "Hide password"
+      },
+      "hidden": "password"
+    },
+    {
+      "route": "create-invalid",
+      "control": "Mobile Menu / Escape",
+      "opened": true,
+      "dismissed": {
+        "hidden": true,
+        "focus": true
+      }
+    },
+    {
+      "route": "create-invalid",
+      "control": "Validation summary error link",
+      "target": {
+        "focus": "email",
+        "invalid": "true",
+        "summaryLinks": 2
+      }
+    },
+    {
+      "route": "edit-invalid",
+      "control": "Mobile Menu / Escape",
+      "opened": true,
+      "dismissed": {
+        "hidden": true,
+        "focus": true
+      }
+    },
+    {
+      "route": "edit-invalid",
+      "control": "Validation summary error link",
+      "target": {
+        "focus": "email",
+        "invalid": "true",
+        "summaryLinks": 1
+      }
+    },
+    {
+      "route": "reset",
+      "control": "Show / Hide password",
+      "shown": {
+        "type": "text",
+        "pressed": "true",
+        "label": "Hide new password"
+      },
+      "hidden": "password"
+    },
+    {
+      "route": "monitoring",
+      "control": "Mobile Menu / Escape",
+      "opened": true,
+      "dismissed": {
+        "hidden": true,
+        "focus": true
+      }
+    }
+  ],
+  "errors": [],
+  "cleanup": "Chrome stopped; validated temporary profile removed"
+}

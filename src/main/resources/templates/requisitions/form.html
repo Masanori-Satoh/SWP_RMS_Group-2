@@ -687,7 +687,7 @@
             syncMandatorySwitches();
         }
 
-        // 2. Xóa dòng tiêu chí
+        // 2. Delete dòng tiêu chí
         function removeCriteriaRow(button) {
             const row = button.closest('.criteria-row');
             if (row) {
@@ -795,7 +795,7 @@
                 return;
             }
 
-            // Kiểm tra không để trống hoặc chỉ gõ khoảng trắng ở tên tiêu chí & giá trị
+            // Check không để trống hoặc chỉ gõ khoảng trắng ở tên tiêu chí & giá trị
             for (const row of rows) {
                 const nameInput = row.querySelector('[data-field="criteriaName"]');
                 if (nameInput && !nameInput.value.trim()) {

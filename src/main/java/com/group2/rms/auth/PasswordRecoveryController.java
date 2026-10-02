@@ -36,7 +36,7 @@ public class PasswordRecoveryController {
     public String requestReset(@Valid @ModelAttribute("form") ForgotPasswordRequest form,
                                BindingResult errors) {
         if (!emailSender.isConfigured() || !resetService.isConfigured()) {
-            errors.reject("mail.unavailable", "Dịch vụ gửi email khôi phục chưa được cấu hình.");
+            errors.reject("mail.unavailable", "Password recovery email is not configured yet.");
         }
         if (errors.hasErrors()) {
             return "auth/forgot-password";
@@ -68,14 +68,14 @@ public class PasswordRecoveryController {
         noStore(response);
         if (form.getPassword() != null && form.getConfirmPassword() != null
                 && !form.getPassword().equals(form.getConfirmPassword())) {
-            errors.rejectValue("confirmPassword", "password.mismatch", "Mật khẩu xác nhận không khớp.");
+            errors.rejectValue("confirmPassword", "password.mismatch", "Passwords do not match.");
         }
         if (!errors.hasErrors()) {
             try {
                 if (resetService.reset(token, form.getPassword())) {
                     return "redirect:/login?reset";
                 }
-                errors.reject("token.invalid", "Liên kết không hợp lệ, đã dùng hoặc đã hết hạn.");
+                errors.reject("token.invalid", "This link is invalid, used, or expired.");
             } catch (AccountFieldException exception) {
                 errors.rejectValue(exception.getField(), "password.invalid", exception.getMessage());
             }

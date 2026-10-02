@@ -1,0 +1,29 @@
+{
+  "assessment": "B",
+  "target": "src/main/resources/templates/careers/index.html",
+  "browser": {
+    "nativeUnavailable": "Parent actual CUA/node_repl attempt failed: deny-read ACLs",
+    "fallback": "Chrome headless CDP; own new tabs; port 9242",
+    "visibleToUser": false,
+    "profile": "C:\\Users\\ADMINI~1\\AppData\\Local\\Temp\\moc-careers-p93H6Q"
+  },
+  "preflight": {
+    "originalTitle": "Build useful products with us | Mộc Careers",
+    "title": "[Human] Mộc Careers — Assessment B",
+    "titleChanged": true,
+    "scriptAppended": true,
+    "scriptExecuted": true
+  },
+  "server": null,
+  "pages": [],
+  "cleanup": {
+    "ownBrowserClosed": true,
+    "ownProfileRemoved": true
+  },
+  "errors": [
+    {
+      "message": "Error: Command failed: cmd.exe /d /s /c \"D:\\kì 5\\SWP\\hireflow-api\\RetireManagement\\SWP_RMS_Group-2\\.agents\\skills\\impeccable\\scripts\\impeccable.cmd\" live-server --background\n'\\\"D:\\k� 5\\SWP\\hireflow-api\\RetireManagement\\SWP_RMS_Group-2\\.agents\\skills\\impeccable\\scripts\\impeccable.cmd\\\"' is not recognized as an internal or external command,\r\noperable program or batch file.\r\n",
+      "stack": "Error: Command failed: cmd.exe /d /s /c \"D:\\kì 5\\SWP\\hireflow-api\\RetireManagement\\SWP_RMS_Group-2\\.agents\\skills\\impeccable\\scripts\\impeccable.cmd\" live-server --background\n'\\\"D:\\k� 5\\SWP\\hireflow-api\\RetireManagement\\SWP_RMS_Group-2\\.agents\\skills\\impeccable\\scripts\\impeccable.cmd\\\"' is not recognized as an internal or external command,\r\noperable program or batch file.\r\n\n    at genericNodeError (node:internal/errors:985:15)\n    at wrappedFn (node:internal/errors:539:14)\n    at checkExecSyncError (node:child_process:925:11)\n    at execFileSync (node:child_process:961:15)\n    at command (file:///D:/k%C3%AC%205/SWP/hireflow-api/RetireManagement/SWP_RMS_Group-2/target/assessment-b-browser.mjs:19:15)\n    at file:///D:/k%C3%AC%205/SWP/hireflow-api/RetireManagement/SWP_RMS_Group-2/target/assessment-b-browser.mjs:44:15"
+    }
+  ]
+}

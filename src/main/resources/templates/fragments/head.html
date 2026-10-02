@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
 <!--
     fragments/head.html
     =====================================================================
     Fragment dùng chung cho phần <head> toàn bộ trang
-    Cách dùng: <head th:replace="~{fragments/head :: head(title='Tên Trang')}">
+    Cách dùng: <head th:replace="~{fragments/head :: head(title='Name Trang')}">
 
     Bao gồm:
       - Google Fonts (Inter)
@@ -31,5 +31,17 @@
     <!-- Main CSS của project -->
     <link rel="stylesheet" th:href="@{/css/main.css}">
 
+</head>
+<head th:fragment="interfaceHead(title, pageStyles)">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="referrer" content="no-referrer">
+    <title th:text="${title} + ' | Mộc RMS'">Mộc RMS</title>
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Cpath d='M15 27C8 23 6 13 11 7c4-5 11-4 16-3 0 9-3 18-12 23Z' fill='%233e7157'/%3E%3C/svg%3E">
+    <link rel="stylesheet" th:href="@{/css/design-tokens.css}">
+    <link rel="stylesheet" th:href="@{/css/interface.css}">
+    <link rel="stylesheet" th:href="@{/css/workspace.css}">
+    <th:block th:replace="${pageStyles}"></th:block>
+    <script defer th:src="@{/js/interface.js}"></script>
 </head>
 </html>

@@ -17,7 +17,7 @@ public class TestWebController {
     @GetMapping
     public String testWeb(Model model) {
         // Biến "message" này sẽ được đẩy sang file html
-        model.addAttribute("message", "Giao diện web đã chạy hoàn hảo! 🚀");
+        model.addAttribute("message", "The web interface is running. 🚀");
         return "hello"; // Trả về file src/main/resources/templates/hello.html
     }
 }

@@ -27,6 +27,16 @@ public class DashboardMetricsRepository {
         return count("select count(u) from User u where u.accountStatus = :status", Map.of("status", status));
     }
 
+    public List<StatusCount> internalAccountStatuses() {
+        return statuses("select u.accountStatus, count(u) from User u where u.role.roleName in :roles "
+                + "group by u.accountStatus", Map.of("roles", com.group2.rms.security.RoleAuthorities.INTERNAL_ROLE_NAMES));
+    }
+
+    public List<StatusCount> candidateAccountStatuses() {
+        return statuses("select u.accountStatus, count(u) from User u where u.role.roleName = 'Candidate' "
+                + "group by u.accountStatus", Map.of());
+    }
+
     public long activeJobPostings(LocalDateTime now) {
         return count("select count(j) from JobPosting j where j.postingStatus = 'Published' "
                 + "and (j.applicationDeadline is null or j.applicationDeadline >= :now)", Map.of("now", now));
@@ -100,7 +110,7 @@ public class DashboardMetricsRepository {
                 .setParameter("userId", userId)
                 .setMaxResults(5)
                 .getResultList()
-                .forEach(row -> activity.add(new ApprovalActivity("Yêu cầu tuyển dụng", (String) row[0],
+                .forEach(row -> activity.add(new ApprovalActivity("Job Requisition", (String) row[0],
                         (String) row[1], (LocalDateTime) row[2])));
         entityManager.createQuery("select o.offeredPositionTitle, a.status, a.approvedAt from OfferApproval a "
                         + "join a.offerProposal o where a.director.userId = :userId order by a.approvedAt desc",

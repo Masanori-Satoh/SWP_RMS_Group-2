@@ -1,0 +1,429 @@
+{
+  "command": ".agents/skills/impeccable/scripts/impeccable.cmd detect --json src/main/resources/templates",
+  "runCount": 1,
+  "observedExitCode": 0,
+  "totalRaw": 33,
+  "inScopeRaw": 3,
+  "outsideScopeRaw": 30,
+  "rules": [
+    {
+      "rule": "cramped-padding",
+      "count": 1
+    },
+    {
+      "rule": "flat-type-hierarchy",
+      "count": 5
+    },
+    {
+      "rule": "low-contrast",
+      "count": 21
+    },
+    {
+      "rule": "overused-font",
+      "count": 3
+    },
+    {
+      "rule": "tiny-text",
+      "count": 3
+    }
+  ],
+  "inScope": [
+    {
+      "antipattern": "flat-type-hierarchy",
+      "name": "Flat type hierarchy",
+      "description": "Dominant heading and body roles are separated by less than 1.25× at every step, leaving the size hierarchy flat. Add at least one stronger size step.",
+      "severity": "warning",
+      "category": "slop",
+      "file": "D:\\kì 5\\SWP\\hireflow-api\\RetireManagement\\SWP_RMS_Group-2\\src\\main\\resources\\templates\\admin\\accounts\\list.html",
+      "line": 0,
+      "snippet": "Role sizes: body 16px, h1 16px, h2 16px (largest adjacent step 1.00:1; target 1.25:1)"
+    },
+    {
+      "antipattern": "flat-type-hierarchy",
+      "name": "Flat type hierarchy",
+      "description": "Dominant heading and body roles are separated by less than 1.25× at every step, leaving the size hierarchy flat. Add at least one stronger size step.",
+      "severity": "warning",
+      "category": "slop",
+      "file": "D:\\kì 5\\SWP\\hireflow-api\\RetireManagement\\SWP_RMS_Group-2\\src\\main\\resources\\templates\\admin\\api-monitoring\\index.html",
+      "line": 0,
+      "snippet": "Role sizes: body 16px, h1 16px, h2 16px (largest adjacent step 1.00:1; target 1.25:1)"
+    },
+    {
+      "antipattern": "flat-type-hierarchy",
+      "name": "Flat type hierarchy",
+      "description": "Dominant heading and body roles are separated by less than 1.25× at every step, leaving the size hierarchy flat. Add at least one stronger size step.",
+      "severity": "warning",
+      "category": "slop",
+      "file": "D:\\kì 5\\SWP\\hireflow-api\\RetireManagement\\SWP_RMS_Group-2\\src\\main\\resources\\templates\\dashboard\\index.html",
+      "line": 0,
+      "snippet": "Role sizes: body 16px, h1 16px, h2 16px, h3 16px (largest adjacent step 1.00:1; target 1.25:1)"
+    }
+  ],
+  "outsideScope": [
+    {
+      "antipattern": "flat-type-hierarchy",
+      "name": "Flat type hierarchy",
+      "description": "Dominant heading and body roles are separated by less than 1.25× at every step, leaving the size hierarchy flat. Add at least one stronger size step.",
+      "severity": "warning",
+      "category": "slop",
+      "file": "D:\\kì 5\\SWP\\hireflow-api\\RetireManagement\\SWP_RMS_Group-2\\src\\main\\resources\\templates\\careers\\apply.html",
+      "line": 0,
+      "snippet": "Role sizes: body 16px, h1 16px, h2 16px (largest adjacent step 1.00:1; target 1.25:1)"
+    },
+    {
+      "antipattern": "flat-type-hierarchy",
+      "name": "Flat type hierarchy",
+      "description": "Dominant heading and body roles are separated by less than 1.25× at every step, leaving the size hierarchy flat. Add at least one stronger size step.",
+      "severity": "warning",
+      "category": "slop",
+      "file": "D:\\kì 5\\SWP\\hireflow-api\\RetireManagement\\SWP_RMS_Group-2\\src\\main\\resources\\templates\\careers\\index.html",
+      "line": 0,
+      "snippet": "Role sizes: body 16px, h1 16px, h2 16px, h3 16px (largest adjacent step 1.00:1; target 1.25:1)"
+    },
+    {
+      "antipattern": "low-contrast",
+      "name": "Low contrast text",
+      "description": "Text does not meet WCAG AA contrast requirements (4.5:1 for body, 3:1 for large text). Increase the contrast between text and background.",
+      "severity": "warning",
+      "category": "quality",
+      "file": "D:\\kì 5\\SWP\\hireflow-api\\RetireManagement\\SWP_RMS_Group-2\\src\\main\\resources\\templates\\requisitions\\detail.html",
+      "line": 0,
+      "snippet": "3.8:1 (need 4.5:1) — text #ffffff on #ef4444"
+    },
+    {
+      "antipattern": "low-contrast",
+      "name": "Low contrast text",
+      "description": "Text does not meet WCAG AA contrast requirements (4.5:1 for body, 3:1 for large text). Increase the contrast between text and background.",
+      "severity": "warning",
+      "category": "quality",
+      "file": "D:\\kì 5\\SWP\\hireflow-api\\RetireManagement\\SWP_RMS_Group-2\\src\\main\\resources\\templates\\requisitions\\detail.html",
+      "line": 0,
+      "snippet": "2.6:1 (need 4.5:1) — text #94a3b8 on #ffffff"
+    },
+    {
+      "antipattern": "low-contrast",
+      "name": "Low contrast text",
+      "description": "Text does not meet WCAG AA contrast requirements (4.5:1 for body, 3:1 for large text). Increase the contrast between text and background.",
+      "severity": "warning",
+      "category": "quality",
+      "file": "D:\\kì 5\\SWP\\hireflow-api\\RetireManagement\\SWP_RMS_Group-2\\src\\main\\resources\\templates\\requisitions\\detail.html",
+      "line": 0,
+      "snippet": "3.8:1 (need 4.5:1) — text #ffffff on #ef4444"
+    },
+    {
+      "antipattern": "tiny-text",
+      "name": "Tiny body text",
+      "description": "Body text below 12px is hard to read, especially on high-DPI screens. Use at least 14px for body content, 16px is ideal.",
+      "severity": "warning",
+      "category": "quality",
+      "file": "D:\\kì 5\\SWP\\hireflow-api\\RetireManagement\\SWP_RMS_Group-2\\src\\main\\resources\\templates\\requisitions\\detail.html",
+      "line": 0,
+      "snippet": "11px body text"
+    },
+    {
+      "antipattern": "tiny-text",
+      "name": "Tiny body text",
+      "description": "Body text below 12px is hard to read, especially on high-DPI screens. Use at least 14px for body content, 16px is ideal.",
+      "severity": "warning",
+      "category": "quality",
+      "file": "D:\\kì 5\\SWP\\hireflow-api\\RetireManagement\\SWP_RMS_Group-2\\src\\main\\resources\\templates\\requisitions\\detail.html",
+      "line": 0,
+      "snippet": "11px body text"
+    },
+    {
+      "antipattern": "tiny-text",
+      "name": "Tiny body text",
+      "description": "Body text below 12px is hard to read, especially on high-DPI screens. Use at least 14px for body content, 16px is ideal.",
+      "severity": "warning",
+      "category": "quality",
+      "file": "D:\\kì 5\\SWP\\hireflow-api\\RetireManagement\\SWP_RMS_Group-2\\src\\main\\resources\\templates\\requisitions\\detail.html",
+      "line": 0,
+      "snippet": "11px body text"
+    },
+    {
+      "antipattern": "overused-font",
+      "name": "Overused font",
+      "description": "Inter, Roboto, Fraunces, Geist, Plus Jakarta Sans, and Space Grotesk are used on so many sites they no longer feel distinctive. Each new wave of AI-generated UIs converges on the same handful of faces. Choose a face that gives your interface personality.",
+      "severity": "warning",
+      "category": "slop",
+      "file": "D:\\kì 5\\SWP\\hireflow-api\\RetireManagement\\SWP_RMS_Group-2\\src\\main\\resources\\templates\\requisitions\\detail.html",
+      "line": 0,
+      "snippet": "Primary font: inter"
+    },
+    {
+      "antipattern": "low-contrast",
+      "name": "Low contrast text",
+      "description": "Text does not meet WCAG AA contrast requirements (4.5:1 for body, 3:1 for large text). Increase the contrast between text and background.",
+      "severity": "warning",
+      "category": "quality",
+      "file": "D:\\kì 5\\SWP\\hireflow-api\\RetireManagement\\SWP_RMS_Group-2\\src\\main\\resources\\templates\\requisitions\\form.html",
+      "line": 0,
+      "snippet": "2.5:1 (need 4.5:1) — text #94a3b8 on #f8fafc"
+    },
+    {
+      "antipattern": "low-contrast",
+      "name": "Low contrast text",
+      "description": "Text does not meet WCAG AA contrast requirements (4.5:1 for body, 3:1 for large text). Increase the contrast between text and background.",
+      "severity": "warning",
+      "category": "quality",
+      "file": "D:\\kì 5\\SWP\\hireflow-api\\RetireManagement\\SWP_RMS_Group-2\\src\\main\\resources\\templates\\requisitions\\form.html",
+      "line": 0,
+      "snippet": "2.6:1 (need 4.5:1) — text #94a3b8 on #ffffff"
+    },
+    {
+      "antipattern": "low-contrast",
+      "name": "Low contrast text",
+      "description": "Text does not meet WCAG AA contrast requirements (4.5:1 for body, 3:1 for large text). Increase the contrast between text and background.",
+      "severity": "warning",
+      "category": "quality",
+      "file": "D:\\kì 5\\SWP\\hireflow-api\\RetireManagement\\SWP_RMS_Group-2\\src\\main\\resources\\templates\\requisitions\\form.html",
+      "line": 0,
+      "snippet": "2.5:1 (need 4.5:1) — text #94a3b8 on #f8fafc"
+    },
+    {
+      "antipattern": "low-contrast",
+      "name": "Low contrast text",
+      "description": "Text does not meet WCAG AA contrast requirements (4.5:1 for body, 3:1 for large text). Increase the contrast between text and background.",
+      "severity": "warning",
+      "category": "quality",
+      "file": "D:\\kì 5\\SWP\\hireflow-api\\RetireManagement\\SWP_RMS_Group-2\\src\\main\\resources\\templates\\requisitions\\form.html",
+      "line": 0,
+      "snippet": "2.5:1 (need 4.5:1) — text #94a3b8 on #f8fafc"
+    },
+    {
+      "antipattern": "low-contrast",
+      "name": "Low contrast text",
+      "description": "Text does not meet WCAG AA contrast requirements (4.5:1 for body, 3:1 for large text). Increase the contrast between text and background.",
+      "severity": "warning",
+      "category": "quality",
+      "file": "D:\\kì 5\\SWP\\hireflow-api\\RetireManagement\\SWP_RMS_Group-2\\src\\main\\resources\\templates\\requisitions\\form.html",
+      "line": 0,
+      "snippet": "2.1:1 (need 4.5:1) — text #ffffff on #f59e0b"
+    },
+    {
+      "antipattern": "low-contrast",
+      "name": "Low contrast text",
+      "description": "Text does not meet WCAG AA contrast requirements (4.5:1 for body, 3:1 for large text). Increase the contrast between text and background.",
+      "severity": "warning",
+      "category": "quality",
+      "file": "D:\\kì 5\\SWP\\hireflow-api\\RetireManagement\\SWP_RMS_Group-2\\src\\main\\resources\\templates\\requisitions\\form.html",
+      "line": 0,
+      "snippet": ":hover state 3.2:1 (need 4.5:1) — text #ffffff on #d97706"
+    },
+    {
+      "antipattern": "cramped-padding",
+      "name": "Cramped padding",
+      "description": "Text is too close to the edge of its container. Two shapes: (1) an element with its own text where the padding is too low for the font size, and (2) a wrapper with text-bearing children and near-zero padding against a visible boundary (border, outline, or non-transparent background) — children land flush against the boundary line. Add at least 8px (ideally 12–16px) of padding inside bordered, outlined, or colored containers.",
+      "severity": "warning",
+      "category": "quality",
+      "file": "D:\\kì 5\\SWP\\hireflow-api\\RetireManagement\\SWP_RMS_Group-2\\src\\main\\resources\\templates\\requisitions\\form.html",
+      "line": 0,
+      "snippet": "<div> \"table-responsive\": children flush against border on all sides (no inset)"
+    },
+    {
+      "antipattern": "overused-font",
+      "name": "Overused font",
+      "description": "Inter, Roboto, Fraunces, Geist, Plus Jakarta Sans, and Space Grotesk are used on so many sites they no longer feel distinctive. Each new wave of AI-generated UIs converges on the same handful of faces. Choose a face that gives your interface personality.",
+      "severity": "warning",
+      "category": "slop",
+      "file": "D:\\kì 5\\SWP\\hireflow-api\\RetireManagement\\SWP_RMS_Group-2\\src\\main\\resources\\templates\\requisitions\\form.html",
+      "line": 0,
+      "snippet": "Primary font: inter"
+    },
+    {
+      "antipattern": "low-contrast",
+      "name": "Low contrast text",
+      "description": "Text does not meet WCAG AA contrast requirements (4.5:1 for body, 3:1 for large text). Increase the contrast between text and background.",
+      "severity": "warning",
+      "category": "quality",
+      "file": "D:\\kì 5\\SWP\\hireflow-api\\RetireManagement\\SWP_RMS_Group-2\\src\\main\\resources\\templates\\requisitions\\list.html",
+      "line": 0,
+      "snippet": "2.6:1 (need 4.5:1) — text #94a3b8 on #ffffff"
+    },
+    {
+      "antipattern": "low-contrast",
+      "name": "Low contrast text",
+      "description": "Text does not meet WCAG AA contrast requirements (4.5:1 for body, 3:1 for large text). Increase the contrast between text and background.",
+      "severity": "warning",
+      "category": "quality",
+      "file": "D:\\kì 5\\SWP\\hireflow-api\\RetireManagement\\SWP_RMS_Group-2\\src\\main\\resources\\templates\\requisitions\\list.html",
+      "line": 0,
+      "snippet": "2.6:1 (need 4.5:1) — text #94a3b8 on #ffffff"
+    },
+    {
+      "antipattern": "low-contrast",
+      "name": "Low contrast text",
+      "description": "Text does not meet WCAG AA contrast requirements (4.5:1 for body, 3:1 for large text). Increase the contrast between text and background.",
+      "severity": "warning",
+      "category": "quality",
+      "file": "D:\\kì 5\\SWP\\hireflow-api\\RetireManagement\\SWP_RMS_Group-2\\src\\main\\resources\\templates\\requisitions\\list.html",
+      "line": 0,
+      "snippet": "2.6:1 (need 4.5:1) — text #94a3b8 on #ffffff"
+    },
+    {
+      "antipattern": "low-contrast",
+      "name": "Low contrast text",
+      "description": "Text does not meet WCAG AA contrast requirements (4.5:1 for body, 3:1 for large text). Increase the contrast between text and background.",
+      "severity": "warning",
+      "category": "quality",
+      "file": "D:\\kì 5\\SWP\\hireflow-api\\RetireManagement\\SWP_RMS_Group-2\\src\\main\\resources\\templates\\requisitions\\list.html",
+      "line": 0,
+      "snippet": "2.6:1 (need 4.5:1) — text #94a3b8 on #ffffff"
+    },
+    {
+      "antipattern": "low-contrast",
+      "name": "Low contrast text",
+      "description": "Text does not meet WCAG AA contrast requirements (4.5:1 for body, 3:1 for large text). Increase the contrast between text and background.",
+      "severity": "warning",
+      "category": "quality",
+      "file": "D:\\kì 5\\SWP\\hireflow-api\\RetireManagement\\SWP_RMS_Group-2\\src\\main\\resources\\templates\\requisitions\\list.html",
+      "line": 0,
+      "snippet": "2.6:1 (need 4.5:1) — text #94a3b8 on #ffffff"
+    },
+    {
+      "antipattern": "low-contrast",
+      "name": "Low contrast text",
+      "description": "Text does not meet WCAG AA contrast requirements (4.5:1 for body, 3:1 for large text). Increase the contrast between text and background.",
+      "severity": "warning",
+      "category": "quality",
+      "file": "D:\\kì 5\\SWP\\hireflow-api\\RetireManagement\\SWP_RMS_Group-2\\src\\main\\resources\\templates\\requisitions\\list.html",
+      "line": 0,
+      "snippet": "2.6:1 (need 4.5:1) — text #94a3b8 on #ffffff"
+    },
+    {
+      "antipattern": "low-contrast",
+      "name": "Low contrast text",
+      "description": "Text does not meet WCAG AA contrast requirements (4.5:1 for body, 3:1 for large text). Increase the contrast between text and background.",
+      "severity": "warning",
+      "category": "quality",
+      "file": "D:\\kì 5\\SWP\\hireflow-api\\RetireManagement\\SWP_RMS_Group-2\\src\\main\\resources\\templates\\requisitions\\list.html",
+      "line": 0,
+      "snippet": "2.6:1 (need 4.5:1) — text #94a3b8 on #ffffff"
+    },
+    {
+      "antipattern": "low-contrast",
+      "name": "Low contrast text",
+      "description": "Text does not meet WCAG AA contrast requirements (4.5:1 for body, 3:1 for large text). Increase the contrast between text and background.",
+      "severity": "warning",
+      "category": "quality",
+      "file": "D:\\kì 5\\SWP\\hireflow-api\\RetireManagement\\SWP_RMS_Group-2\\src\\main\\resources\\templates\\requisitions\\list.html",
+      "line": 0,
+      "snippet": "4.3:1 (need 4.5:1) — text #64748b on #f1f5f9"
+    },
+    {
+      "antipattern": "low-contrast",
+      "name": "Low contrast text",
+      "description": "Text does not meet WCAG AA contrast requirements (4.5:1 for body, 3:1 for large text). Increase the contrast between text and background.",
+      "severity": "warning",
+      "category": "quality",
+      "file": "D:\\kì 5\\SWP\\hireflow-api\\RetireManagement\\SWP_RMS_Group-2\\src\\main\\resources\\templates\\requisitions\\list.html",
+      "line": 0,
+      "snippet": "2.9:1 (need 4.5:1) — text #d97706 on #fef3c7"
+    },
+    {
+      "antipattern": "low-contrast",
+      "name": "Low contrast text",
+      "description": "Text does not meet WCAG AA contrast requirements (4.5:1 for body, 3:1 for large text). Increase the contrast between text and background.",
+      "severity": "warning",
+      "category": "quality",
+      "file": "D:\\kì 5\\SWP\\hireflow-api\\RetireManagement\\SWP_RMS_Group-2\\src\\main\\resources\\templates\\requisitions\\list.html",
+      "line": 0,
+      "snippet": "3.6:1 (need 4.5:1) — text #059669 on #ecfdf5"
+    },
+    {
+      "antipattern": "low-contrast",
+      "name": "Low contrast text",
+      "description": "Text does not meet WCAG AA contrast requirements (4.5:1 for body, 3:1 for large text). Increase the contrast between text and background.",
+      "severity": "warning",
+      "category": "quality",
+      "file": "D:\\kì 5\\SWP\\hireflow-api\\RetireManagement\\SWP_RMS_Group-2\\src\\main\\resources\\templates\\requisitions\\list.html",
+      "line": 0,
+      "snippet": "4.0:1 (need 4.5:1) — text #dc2626 on #fee2e2"
+    },
+    {
+      "antipattern": "low-contrast",
+      "name": "Low contrast text",
+      "description": "Text does not meet WCAG AA contrast requirements (4.5:1 for body, 3:1 for large text). Increase the contrast between text and background.",
+      "severity": "warning",
+      "category": "quality",
+      "file": "D:\\kì 5\\SWP\\hireflow-api\\RetireManagement\\SWP_RMS_Group-2\\src\\main\\resources\\templates\\requisitions\\list.html",
+      "line": 0,
+      "snippet": "3.8:1 (need 4.5:1) — text #ffffff on #ef4444"
+    },
+    {
+      "antipattern": "overused-font",
+      "name": "Overused font",
+      "description": "Inter, Roboto, Fraunces, Geist, Plus Jakarta Sans, and Space Grotesk are used on so many sites they no longer feel distinctive. Each new wave of AI-generated UIs converges on the same handful of faces. Choose a face that gives your interface personality.",
+      "severity": "warning",
+      "category": "slop",
+      "file": "D:\\kì 5\\SWP\\hireflow-api\\RetireManagement\\SWP_RMS_Group-2\\src\\main\\resources\\templates\\requisitions\\list.html",
+      "line": 0,
+      "snippet": "Primary font: inter"
+    }
+  ],
+  "browserStatus": "completed",
+  "scopeDisposition": {
+    "falsePositiveCLI": 3,
+    "confirmedOutstandingCLI": 0,
+    "outOfScope": 30,
+    "reason": "External interfaceHead CSS not resolved by static template scan; current browser headings are 36/20/18 and body16."
+  },
+  "browserEvidence": {
+    "status": "completed",
+    "computedViews": 9,
+    "injectedViews": 5,
+    "waitMilliseconds": 2600,
+    "pages": [
+      {
+        "page": "Login",
+        "rawFindingCount": 2,
+        "rules": [
+          "gray-on-color",
+          "gray-on-color"
+        ]
+      },
+      {
+        "page": "Register",
+        "rawFindingCount": 2,
+        "rules": [
+          "gray-on-color",
+          "gray-on-color"
+        ]
+      },
+      {
+        "page": "Admin Dashboard",
+        "rawFindingCount": 0,
+        "rules": []
+      },
+      {
+        "page": "Account List",
+        "rawFindingCount": 1,
+        "rules": [
+          "cramped-padding"
+        ]
+      },
+      {
+        "page": "Create Account",
+        "rawFindingCount": 0,
+        "rules": []
+      }
+    ],
+    "totalRawFindings": 5,
+    "uniqueDOMObservations": 3,
+    "falsePositiveRawFindings": 1,
+    "confirmedOutstanding": 0,
+    "brandCaptionContrast": 5.99,
+    "visibleOverlay": false,
+    "nativeFailure": "node_repl kernel exited unexpectedly; windows sandbox failed: helper_unknown_error: apply deny-read ACLs",
+    "attempt1Failure": "Overlay input absent after60seconds during helper startup metadata approval; ownChrome/profile cleaned",
+    "attempt2": "completed",
+    "liveServerStarts": 1,
+    "liveServerStopExit": 0,
+    "chromeCleanup": {
+      "chromeStopped": true,
+      "privateProfileRemoved": true
+    },
+    "parentPreviewStopped": false,
+    "intentionalBriefExceptionRawFindings": 4
+  }
+}

@@ -49,9 +49,9 @@ public class ApiMonitoringService {
             detail = "HTTP " + httpStatus;
         } catch (InterruptedException exception) {
             Thread.currentThread().interrupt();
-            detail = "Yêu cầu bị gián đoạn";
+            detail = "The request was interrupted";
         } catch (IOException exception) {
-            detail = "Không nhận được phản hồi HTTP";
+            detail = "No HTTP response was received";
         }
 
         long elapsedMs = TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - started);
@@ -72,26 +72,26 @@ public class ApiMonitoringService {
         }
         MonitorRow internal;
         if (samples.isEmpty()) {
-            internal = new MonitorRow("internal", "Nội bộ", "Ứng dụng và SQL Server",
-                    "GET " + INTERNAL_HEALTH_PATH, "NOT_CHECKED", "Chưa kiểm tra",
+            internal = new MonitorRow("internal", "Internal", "Application and SQL Server",
+                    "GET " + INTERNAL_HEALTH_PATH, "NOT_CHECKED", "Not Checked",
                     null, null, null, null, null, 0, true);
         } else {
             Probe latest = samples.getLast();
             int errors = (int) samples.stream().filter(sample -> !sample.success()).count();
             long averageMs = Math.round(samples.stream().mapToLong(Probe::elapsedMs).average().orElse(0));
             int errorRate = (int) Math.round(100.0 * errors / samples.size());
-            internal = new MonitorRow("internal", "Nội bộ", "Ứng dụng và SQL Server",
+            internal = new MonitorRow("internal", "Internal", "Application and SQL Server",
                     "GET " + INTERNAL_HEALTH_PATH,
                     latest.success() ? "OPERATIONAL" : "FAILED",
-                    latest.success() ? "Hoạt động" : "Lỗi",
+                    latest.success() ? "Operational" : "Error",
                     averageMs, errorRate, errors, latest.httpStatus(), latest.checkedAt(),
                     samples.size(), true);
         }
         return List.of(internal,
-                new MonitorRow("ai", "Tích hợp ngoài", "AI CV Screening", "Chưa có endpoint",
-                        "UNCONFIGURED", "Chưa cấu hình", null, null, null, null, null, 0, false),
-                new MonitorRow("email", "Tích hợp ngoài", "Dịch vụ email", "Chưa có endpoint hoặc SMTP host",
-                        "UNCONFIGURED", "Chưa cấu hình", null, null, null, null, null, 0, false));
+                new MonitorRow("ai", "External Integration", "AI CV Screening", "No endpoint configured",
+                        "UNCONFIGURED", "Not Configured", null, null, null, null, null, 0, false),
+                new MonitorRow("email", "External Integration", "Email Service", "No endpoint or SMTP host configured",
+                        "UNCONFIGURED", "Not Configured", null, null, null, null, null, 0, false));
     }
 
     private record Probe(boolean success, Integer httpStatus, long elapsedMs,

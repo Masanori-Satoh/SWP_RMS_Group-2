@@ -57,89 +57,93 @@ public class DashboardService {
         List<StatusCount> health = healthCounts.entrySet().stream()
                 .map(entry -> new StatusCount(entry.getKey(), entry.getValue()))
                 .toList();
-        return view(user, "Tất cả tài khoản trong hệ thống",
+        return new DashboardView(user.getRole().getRoleName(), user.getFullName(), "Internal employees and external candidates",
+                List.of(),
+                List.of(new Breakdown("API and Integration Health", health)), List.of(),
                 List.of(
-                        new Metric("Tổng tài khoản", metrics.accounts(), "Bao gồm tài khoản nội bộ và Candidate"),
-                        new Metric("Đang hoạt động", metrics.accountsWithStatus("Active"), "Trạng thái Active"),
-                        new Metric("Ngừng hoạt động", metrics.accountsWithStatus("Inactive"), "Trạng thái Inactive"),
-                        new Metric("Bị khóa", metrics.accountsWithStatus("Blocked"), "Trạng thái Blocked")),
-                List.of(new Breakdown("Sức khỏe API và tích hợp", health)), List.of(),
-                List.of(
-                        new Unavailable("Cấu hình AI", "Chưa có khóa cấu hình được xác nhận hoặc trang chỉnh sửa.")),
-                List.of(new Shortcut("Quản lý tài khoản", "/admin/accounts"),
-                        new Shortcut("API Monitoring", "/admin/api-monitoring"),
-                        new Shortcut("Cấu hình AI (chưa khả dụng)", null)));
+                        new Unavailable("AI Configuration", "No confirmed configuration keys or editing page are available yet.")),
+                List.of(new Shortcut("API Monitoring", "/admin/api-monitoring"),
+                        new Shortcut("AI Configuration (Unavailable)", null)),
+                List.of(accountSummary("Internal Accounts", "/admin/accounts", metrics.internalAccountStatuses()),
+                        accountSummary("Candidate Accounts", "/admin/candidate-accounts", metrics.candidateAccountStatuses())));
+    }
+
+    private AccountSummary accountSummary(String title, String url, List<StatusCount> statuses) {
+        Map<String, Long> counts = new java.util.HashMap<>();
+        statuses.forEach(row -> counts.put(row.status(), row.count()));
+        return new AccountSummary(title, url, statuses.stream().mapToLong(StatusCount::count).sum(),
+                counts.getOrDefault("Active", 0L), counts.getOrDefault("Inactive", 0L), counts.getOrDefault("Blocked", 0L));
     }
 
     private DashboardView hr(User user, LocalDateTime now) {
-        return view(user, "Toàn bộ quy trình tuyển dụng",
+        return view(user, "The entire recruitment process",
                 List.of(
-                        new Metric("Tin tuyển dụng đang mở", metrics.activeJobPostings(now),
-                                "Published và chưa quá hạn nộp"),
-                        new Metric("Tổng hồ sơ ứng tuyển", metrics.applications(), "Tất cả hồ sơ"),
-                        new Metric("Phỏng vấn sắp tới", metrics.upcomingInterviews(now), "Scheduled hoặc Rescheduled"),
-                        new Metric("Hồ sơ mới cần HR xem", metrics.newApplicationsAwaitingHrReview(),
-                                "Applied và chưa có người duyệt")),
-                List.of(new Breakdown("Ứng viên theo giai đoạn tuyển dụng", metrics.applicationStages())),
+                        new Metric("Open Job Postings", metrics.activeJobPostings(now),
+                                "Published and within the application deadline"),
+                        new Metric("Total Applications", metrics.applications(), "All Applications"),
+                        new Metric("Upcoming Interviews", metrics.upcomingInterviews(now), "Scheduled or Rescheduled"),
+                        new Metric("New Applications Awaiting HR Review", metrics.newApplicationsAwaitingHrReview(),
+                                "Applied and not yet reviewed")),
+                List.of(new Breakdown("Candidates by Recruitment Stage", metrics.applicationStages())),
                 List.of(), List.of(), List.of());
     }
 
     private DashboardView hiringManager(User user, LocalDateTime now) {
         int userId = user.getUserId();
         Integer departmentId = user.getDepartment() == null ? null : user.getDepartment().getDepartmentId();
-        return view(user, "Yêu cầu do tôi phụ trách" + (departmentId == null ? "" : " và phòng ban của tôi"),
+        return view(user, "Requisitions I Manage" + (departmentId == null ? "" : " and my department"),
                 List.of(
-                        new Metric("Yêu cầu của tôi", metrics.ownRequisitions(userId), "HiringManagerId của tài khoản"),
-                        new Metric("Yêu cầu của phòng ban",
+                        new Metric("My Requisitions", metrics.ownRequisitions(userId), "Linked to this account’s HiringManagerId"),
+                        new Metric("Department Requisitions",
                                 departmentId == null ? 0 : metrics.departmentRequisitions(departmentId),
-                                departmentId == null ? "Tài khoản chưa gắn phòng ban" : "Cùng DepartmentId"),
-                        new Metric("Yêu cầu chờ Giám đốc", metrics.ownPendingRequisitions(userId),
-                                "Pending_Director trong yêu cầu của tôi"),
-                        new Metric("Ứng viên trong yêu cầu của tôi", metrics.candidatesForOwnRequisitions(userId),
-                                "Số Candidate khác nhau đã ứng tuyển"),
-                        new Metric("Phỏng vấn sắp tới", metrics.upcomingInterviewsForHiringManager(userId, now),
-                                "Trong yêu cầu của tôi"),
-                        new Metric("Offer của tôi cần xử lý", metrics.offersNeedingHiringManagerAction(userId),
-                                "Offer Draft hoặc Approved do tôi đề xuất")),
+                                departmentId == null ? "This account has no department" : "Same DepartmentId"),
+                        new Metric("Requisitions Awaiting Director Approval", metrics.ownPendingRequisitions(userId),
+                                "My requisitions with Pending_Director status"),
+                        new Metric("Candidates for My Requisitions", metrics.candidatesForOwnRequisitions(userId),
+                                "Distinct candidates who have applied"),
+                        new Metric("Upcoming Interviews", metrics.upcomingInterviewsForHiringManager(userId, now),
+                                "Within my requisitions"),
+                        new Metric("My Offers Requiring Action", metrics.offersNeedingHiringManagerAction(userId),
+                                "Draft or Approved offers proposed by me")),
                 List.of(), List.of(), List.of(), List.of());
     }
 
     private DashboardView director(User user) {
-        return view(user, "Hàng chờ phê duyệt toàn hệ thống; hoạt động của riêng tôi",
+        return view(user, "System-wide approval queue; my own activity",
                 List.of(
-                        new Metric("Yêu cầu chờ duyệt", metrics.requisitionsAwaitingDirector(),
-                                "Pending_Director trên toàn hệ thống"),
-                        new Metric("Offer chờ duyệt", metrics.offersAwaitingDirector(),
-                                "Pending_Director trên toàn hệ thống")),
+                        new Metric("Requisitions Awaiting Approval", metrics.requisitionsAwaitingDirector(),
+                                "System-wide Pending_Director records"),
+                        new Metric("Offers Awaiting Approval", metrics.offersAwaitingDirector(),
+                                "System-wide Pending_Director records")),
                 List.of(), metrics.recentDirectorActivity(user.getUserId()), List.of(), List.of());
     }
 
     private DashboardView interviewer(User user, LocalDateTime now) {
         int userId = user.getUserId();
-        return view(user, "Chỉ các buổi phỏng vấn được phân công cho tôi",
+        return view(user, "Only interviews assigned to me",
                 List.of(
-                        new Metric("Phỏng vấn sắp tới", metrics.upcomingAssignedInterviews(userId, now),
-                                "Theo InterviewPanel"),
-                        new Metric("Ứng viên được phân công", metrics.assignedCandidatesForInterviewer(userId),
-                                "Candidate khác nhau trong InterviewPanel"),
-                        new Metric("Đánh giá cần hoàn thành", metrics.pendingInterviewEvaluations(userId),
-                                "Buổi Completed chưa có đánh giá của tôi")),
+                        new Metric("Upcoming Interviews", metrics.upcomingAssignedInterviews(userId, now),
+                                "Assigned through InterviewPanel"),
+                        new Metric("Assigned Candidates", metrics.assignedCandidatesForInterviewer(userId),
+                                "Distinct candidates linked through InterviewPanel"),
+                        new Metric("Pending Interview Evaluations", metrics.pendingInterviewEvaluations(userId),
+                                "Completed interviews without my evaluation")),
                 List.of(), List.of(), List.of(), List.of());
     }
 
     private DashboardView candidate(User user, LocalDateTime now) {
         int userId = user.getUserId();
-        return view(user, "Chỉ hồ sơ Candidate gắn với tài khoản của tôi",
+        return view(user, "Only the candidate profile linked to my account",
                 List.of(
-                        new Metric("Đơn ứng tuyển của tôi", metrics.candidateApplications(userId),
-                                "Theo Candidate.UserId của tài khoản"),
-                        new Metric("Phỏng vấn sắp tới", metrics.candidateUpcomingInterviews(userId, now),
-                                "Chỉ lịch phỏng vấn của tôi")),
+                        new Metric("My Applications", metrics.candidateApplications(userId),
+                                "Linked through this account’s Candidate.UserId"),
+                        new Metric("Upcoming Interviews", metrics.candidateUpcomingInterviews(userId, now),
+                                "Only my interview schedule")),
                 List.of(
-                        new Breakdown("Trạng thái đơn ứng tuyển", metrics.candidateApplicationStages(userId)),
-                        new Breakdown("Trạng thái offer", metrics.candidateOfferStatuses(userId))),
+                        new Breakdown("Application Status", metrics.candidateApplicationStages(userId)),
+                        new Breakdown("Offer Status", metrics.candidateOfferStatuses(userId))),
                 List.of(),
-                List.of(new Unavailable("Thông báo", "Hiện chưa có bảng hoặc dịch vụ thông báo để truy vấn.")),
+                List.of(new Unavailable("Notifications", "No notification table or service is available yet.")),
                 List.of());
     }
 
