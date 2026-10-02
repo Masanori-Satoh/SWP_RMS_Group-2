@@ -2,6 +2,7 @@ package com.group2.rms.interview.service;
 
 import com.group2.rms.candidate.Application;
 import com.group2.rms.candidate.ApplicationRepository;
+import com.group2.rms.core.security.RoleAuthorities;
 import com.group2.rms.interview.dto.InterviewScheduleRequest;
 import com.group2.rms.interview.dto.InterviewScheduleResponse;
 import com.group2.rms.interview.dto.PanelMemberRequest;
@@ -90,10 +91,14 @@ public class InterviewSchedulingServiceImpl implements InterviewSchedulingServic
             User interviewer = userRepository.findById(interviewerId)
                     .orElseThrow(() -> new EntityNotFoundException("Không tìm thấy người phỏng vấn với ID: " + interviewerId));
 
-            // Quy tắc: HR không còn tham gia phỏng vấn - Kiểm tra role hệ thống của người dùng
-            if (interviewer.getRole() != null && "HR".equalsIgnoreCase(interviewer.getRole().getRoleName())) {
+            // Quy tắc: HR và Ứng viên không tham gia hội đồng - Chỉ cho phép nhân sự nội bộ (Internal)
+            if (interviewer.getRole() != null && (!RoleAuthorities.INTERNAL_ROLE_NAMES.contains(interviewer.getRole().getRoleName())
+                    || "HR".equalsIgnoreCase(interviewer.getRole().getRoleName()))) {
                 throw new InterviewStatusException("Người dùng " + interviewer.getFullName() + " (ID: " + interviewerId +
-                        ") có vai trò HR, không được phép tham gia Hội đồng phỏng vấn.");
+                        ") không được phép tham gia Hội đồng phỏng vấn (chỉ nhân viên nội bộ không thuộc HR mới được tham gia).");
+            }
+            if (!"Active".equalsIgnoreCase(interviewer.getAccountStatus())) {
+                throw new InterviewStatusException("Tài khoản người phỏng vấn " + interviewer.getFullName() + " không ở trạng thái Active.");
             }
 
             RoleInPanel roleInPanel = memberReq.roleInPanel();
@@ -187,9 +192,13 @@ public class InterviewSchedulingServiceImpl implements InterviewSchedulingServic
                 User interviewer = userRepository.findById(interviewerId)
                         .orElseThrow(() -> new EntityNotFoundException("Không tìm thấy người phỏng vấn với ID: " + interviewerId));
 
-                if (interviewer.getRole() != null && "HR".equalsIgnoreCase(interviewer.getRole().getRoleName())) {
+                if (interviewer.getRole() != null && (!RoleAuthorities.INTERNAL_ROLE_NAMES.contains(interviewer.getRole().getRoleName())
+                        || "HR".equalsIgnoreCase(interviewer.getRole().getRoleName()))) {
                     throw new InterviewStatusException("Người dùng " + interviewer.getFullName() +
-                            " có vai trò HR, không được tham gia Hội đồng phỏng vấn.");
+                            " không được phép tham gia Hội đồng phỏng vấn (chỉ nhân viên nội bộ không thuộc HR mới được tham gia).");
+                }
+                if (!"Active".equalsIgnoreCase(interviewer.getAccountStatus())) {
+                    throw new InterviewStatusException("Tài khoản người phỏng vấn " + interviewer.getFullName() + " không ở trạng thái Active.");
                 }
 
                 RoleInPanel role = memberReq.roleInPanel() == RoleInPanel.HR || memberReq.roleInPanel() == null

@@ -2,6 +2,7 @@ package com.group2.rms.interview.controller;
 
 import com.group2.rms.candidate.Application;
 import com.group2.rms.candidate.ApplicationRepository;
+import com.group2.rms.core.security.RoleAuthorities;
 import com.group2.rms.interview.dto.InterviewScheduleRequest;
 import com.group2.rms.interview.dto.InterviewScheduleResponse;
 import com.group2.rms.interview.dto.PanelMemberResponse;
@@ -58,6 +59,10 @@ public class InterviewSchedulingController {
     @GetMapping
     public String listInterviews(Authentication authentication, Model model) {
         User currentUser = resolveEffectiveUser(authentication);
+        if (currentUser != null && currentUser.getRole() != null && "Candidate".equalsIgnoreCase(currentUser.getRole().getRoleName())) {
+            log.warn("Ứng viên (ID: {}) không có quyền truy cập trang quản lý lịch phỏng vấn nội bộ.", currentUser.getUserId());
+            return "redirect:/dashboard";
+        }
         boolean isHr = isHrUser(currentUser, authentication);
 
         List<InterviewScheduleResponse> schedules;
@@ -271,9 +276,11 @@ public class InterviewSchedulingController {
         List<Application> applications = applicationRepository.findAllWithCandidateAndJobPosting();
         model.addAttribute("applications", applications);
 
-        // Danh sách Interviewer hợp lệ (Rule HR Isolation: Lọc bỏ tài khoản có vai trò HR)
+        // Danh sách Interviewer hợp lệ (Chỉ gồm nhân viên nội bộ không thuộc HR, loại bỏ ứng viên)
         List<User> availableInterviewers = userRepository.findAll().stream()
-                .filter(u -> u.getRole() != null && !"HR".equalsIgnoreCase(u.getRole().getRoleName()))
+                .filter(u -> u.getRole() != null
+                        && RoleAuthorities.INTERNAL_ROLE_NAMES.contains(u.getRole().getRoleName())
+                        && !"HR".equalsIgnoreCase(u.getRole().getRoleName()))
                 .filter(u -> "Active".equalsIgnoreCase(u.getAccountStatus()))
                 .toList();
         model.addAttribute("availableInterviewers", availableInterviewers);
@@ -318,7 +325,7 @@ public class InterviewSchedulingController {
         }
         if (authentication != null) {
             return authentication.getAuthorities().stream()
-                    .anyMatch(a -> "ROLE_HR".equals(a.getAuthority()) || "ROLE_SYSTEM_ADMIN".equals(a.getAuthority()));
+                    .anyMatch(a -> "ROLE_HR".equals(a.getAuthority()) || RoleAuthorities.SYSTEM_ADMIN.equals(a.getAuthority()));
         }
         return true; // Mặc định dev mode
     }
