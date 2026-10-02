@@ -1,4 +1,4 @@
-# Hồ sơ kiểm thử theo từng đợt
+﻿# Hồ sơ kiểm thử theo từng đợt
 
 Mỗi đợt thay đổi có một file Markdown riêng trong thư mục này. Tên file bắt đầu
 bằng ngày và chủ đề, ví dụ `2026-09-29-auth-screens.md`. File cần ghi phạm vi,
@@ -12,3 +12,4 @@ duyệt phải được ghi riêng; một loại bằng chứng không thay cho 
 ## Các đợt
 
 - [2026-09-29 — sáu màn hình và use case xác thực/tài khoản](2026-09-29-auth-screens.md)
+

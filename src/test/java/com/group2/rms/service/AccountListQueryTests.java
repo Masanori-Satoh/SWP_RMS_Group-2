@@ -1,6 +1,7 @@
 package com.group2.rms.service;
 
-import com.group2.rms.repository.UserRepository;
+import com.group2.rms.user.service.AccountListService;
+import com.group2.rms.user.repository.UserRepository;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
