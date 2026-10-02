@@ -29,9 +29,11 @@ src/main/java/com/group2/rms/
 ├── core/                         <-- Chứa các thành phần dùng chung toàn hệ thống
 │   ├── config/                   <-- Cấu hình Spring (Security, WebMvc,...)
 │   ├── security/                 <-- Các class liên quan đến Security
-│   ├── exception/                <-- Nơi dự kiến đặt GlobalExceptionHandler
+│   ├── exception/                <-- GlobalExceptionHandler bắt lỗi toàn cục
 │   └── base/                     <-- BaseEntity, Auditable, v.v.
 └── RmsApplication.java
+
+> **Lưu ý Thư mục View chung:** Spring Boot tự động map lỗi hệ thống về thư mục `templates/error/`. Các view lỗi chung (như `404.html`, `500.html`) bắt buộc phải để ở `src/main/resources/templates/error/` để Global Exception Handler có thể "hạ cánh" an toàn mà không văng lỗi TemplateInputException.
 ```
 
 ### Danh sách các Features (Module) hiện có:
@@ -47,7 +49,8 @@ src/main/java/com/group2/rms/
 
 ## 2. Quy chuẩn Đặt tên (Naming Conventions)
 - **Controller**: `{Feature}Controller` (ví dụ: `JobRequisitionController`). Không đặt là `RequisitionRequestController`.
-- **DTO**: 
+- **DTO (Khuyến khích dùng Java Record):** 
+  - Khuyến khích sử dụng cấu trúc `record` của Java 14+ cho DTO để tăng tính bất biến (immutability) và gọn gàng.
   - Đuôi là `Request` cho Input (VD: `CreateAccountRequest`). Không dùng chữ `Form` hay `Dto`.
   - Đuôi là `Response` cho Output (VD: `UserProfileResponse`). Không tạo sub-folder `request/` hay `response/`, tất cả bỏ vào `dto/`.
 - **Entity**: Viết hoa chữ cái đầu, số ít (VD: `JobRequisition`, `Candidate`).
@@ -55,8 +58,10 @@ src/main/java/com/group2/rms/
 ## 3. Tổ chức Frontend (`templates/` vs `static/`)
 - **Quy chuẩn BẮT BUỘC cho code mới:** KHÔNG viết CSS/JS nội tuyến vào thẻ `<style>` hay `<script>` trong file HTML thuộc `templates/`.
 - **Cách triển khai:** 
-  - Style, mã màu chung phải đặt ở `static/css/global.css`.
-  - Style riêng của từng trang phải tách ra `static/css/[feature].css` và gọi qua thẻ `<link>`.
+  - Style, mã màu chung, typography và layout gốc phải đặt ở `static/css/global.css`.
+  - Logic JS dùng chung (như Toggle Header, Menu Dropdown, Notification) phải đặt ở `static/js/global.js`.
+  - Style/JS riêng của từng trang phải tách ra `static/css/[feature].css` và gọi qua thẻ `<link>`/`<script>`.
+  - Khi render text từ database có chứa ký tự `\n` (dummy data/text thô), nhớ format replace thành `<br/>` và dùng `th:utext` để HTML tự động xuống dòng an toàn.
 - **Lưu ý code hiện tại (WIP):** Các tính năng đang thiết kế dở (như file `form.html`), tác giả tự xem lại và bóc tách ra sau.
 
 ## 4. Xử lý Lỗi và Xác thực (Exception & Validator)
@@ -72,6 +77,10 @@ src/main/java/com/group2/rms/
   - Khuyến khích: Nếu nghiệp vụ đan chéo quá 2 tính năng, xem xét tạo Orchestrator Feature.
 - **Lưu ý code hiện tại (WIP):** Tự rà soát chiều gọi Service và sắp xếp lại sau.
 
+## 6. Truy xuất Dữ liệu (Database & JPA)
+- **Lazy Loading & Session:** Khi truy vấn các Entity có quan hệ `FetchType.LAZY` (như `@OneToMany`, `@ManyToOne`), nếu quá trình Mapping từ Entity sang DTO diễn ra ở tầng Service sau khi truy vấn kết thúc, session có thể đã đóng, dẫn đến lỗi `LazyInitializationException`.
+- **Giải pháp BẮT BUỘC:** Phải gắn annotation `@Transactional(readOnly = true)` (từ Spring) lên các class Service hoặc method Service chỉ đọc (GET) để giữ session sống trong suốt vòng đời mapping dữ liệu.
+
 ---
 > **📌 LỜI NHẮC DÀNH CHO AI ASSISTANT:**
-> Khi viết tính năng MỚI, AI **PHẢI** tuân thủ: Đẩy lỗi về Global Exception (không tự try-catch), tách CSS/JS ra file static ngay từ đầu, và phân tích kỹ Circular Dependency. Với code cũ User đang thao tác, AI chỉ lưu ý "nhớ refactor sau" chứ không can thiệp đập đi xây lại làm chậm tiến độ.
+> Khi viết tính năng MỚI, AI **PHẢI** tuân thủ: Dùng Java `record` cho DTO, đẩy lỗi về Global Exception (không tự try-catch), bọc `@Transactional(readOnly = true)` để chống lỗi Lazy Fetch, tách CSS/JS ra file static (`global.css/js`) ngay từ đầu, và tạo đúng file `404/500.html` trong `templates/error/`. Về code cũ, AI chỉ lưu ý "nhớ refactor sau" chứ không can thiệp đập đi xây lại làm chậm tiến độ.
