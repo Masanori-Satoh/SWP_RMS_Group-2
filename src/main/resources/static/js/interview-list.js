@@ -508,24 +508,5 @@ document.addEventListener('DOMContentLoaded', function () {
     });
   })();
 
-  // ── User Menu Dropdown ────────────────────────────────────────────────
-  (function () {
-    const trigger  = document.getElementById('user-menu-trigger');
-    const dropdown = document.getElementById('user-dropdown');
-    if (!trigger || !dropdown) return;
-
-    trigger.addEventListener('click', function (e) {
-      e.stopPropagation();
-      const isOpen = dropdown.classList.toggle('open');
-      trigger.setAttribute('aria-expanded', String(isOpen));
-    });
-
-    document.addEventListener('click', function () {
-      dropdown.classList.remove('open');
-      trigger.setAttribute('aria-expanded', 'false');
-    });
-
-    dropdown.addEventListener('click', function (e) { e.stopPropagation(); });
-  })();
-
 });
+
