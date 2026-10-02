@@ -21,7 +21,7 @@ public class TestDbController {
     public String testDatabaseConnection() {
         String template = """
             <!DOCTYPE html>
-            <html lang="vi">
+            <html lang="en">
             <head>
                 <meta charset="UTF-8">
                 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -93,13 +93,13 @@ public class TestDbController {
             Object portObj = row.get("local_tcp_port");
             String port = portObj != null ? portObj.toString() : "N/A";
 
-            String dbInfo = "📌 <b>Phiên bản SQL:</b> " + version + " (" + edition + ")<br>"
-                          + "🔌 <b>Giao thức:</b> " + transport + "<br>"
-                          + "🚪 <b>Port kết nối:</b> " + port;
+            String dbInfo = "📌 <b>SQL Version:</b> " + version + " (" + edition + ")<br>"
+                          + "🔌 <b>Protocol:</b> " + transport + "<br>"
+                          + "🚪 <b>Connection Port:</b> " + port;
 
-            return template.formatted("#16a34a", "✅", "success-text", "Kết nối DB Thành công!", dbInfo);
+            return template.formatted("#16a34a", "✅", "success-text", "Database connection successful.", dbInfo);
         } catch (Exception e) {
-            return template.formatted("#dc2626", "❌", "error-text", "Kết nối DB Thất bại!", "<b>Lỗi chi tiết:</b><br>" + e.getMessage());
+            return template.formatted("#dc2626", "❌", "error-text", "Database connection failed.", "<b>Error Details:</b><br>" + e.getMessage());
         }
     }
 }

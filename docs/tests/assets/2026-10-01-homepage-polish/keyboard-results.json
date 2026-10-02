@@ -1,0 +1,41 @@
+{
+  "phase": "keyboard",
+  "submit": {
+    "pass": true,
+    "active": "roles-title",
+    "events": [
+      {
+        "type": "key",
+        "key": "Enter",
+        "active": "keyword",
+        "menu": false
+      },
+      {
+        "type": "submit",
+        "id": "role-search"
+      }
+    ]
+  },
+  "nextResultControl": true,
+  "focusContained": true,
+  "backdropCloses": true,
+  "beforeEscape": {
+    "open": true,
+    "active": "SUMMARY",
+    "roleDialog": false
+  },
+  "escape": {
+    "pass": true,
+    "open": false,
+    "active": "SUMMARY",
+    "events": [
+      {
+        "type": "key",
+        "key": "Escape",
+        "active": "",
+        "menu": false
+      }
+    ]
+  },
+  "errors": []
+}

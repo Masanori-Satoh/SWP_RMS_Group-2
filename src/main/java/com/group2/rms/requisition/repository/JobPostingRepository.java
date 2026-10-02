@@ -21,4 +21,14 @@ public interface JobPostingRepository extends JpaRepository<JobPosting, Integer>
                                        @Param("departmentId") Integer departmentId, 
                                        @Param("employmentType") String employmentType, 
                                        Pageable pageable);
+
+    @Query("SELECT j FROM JobPosting j WHERE j.postingStatus = 'Published' "
+         + "AND (j.applicationDeadline IS NULL OR j.applicationDeadline >= :now) "
+         + "ORDER BY j.postingDate DESC")
+    java.util.List<JobPosting> findOpenPostings(@Param("now") java.time.LocalDateTime now);
+
+    @Query("SELECT j FROM JobPosting j WHERE j.jobPostingId = :id "
+         + "AND j.postingStatus = 'Published' "
+         + "AND (j.applicationDeadline IS NULL OR j.applicationDeadline >= :now)")
+    java.util.Optional<JobPosting> findOpenPosting(@Param("id") int id, @Param("now") java.time.LocalDateTime now);
 }

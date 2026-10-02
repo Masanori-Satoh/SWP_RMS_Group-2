@@ -1,13 +1,13 @@
 ﻿# Kịch bản kiểm thử sau khi đồng bộ schema
 
-Cập nhật: 2026-09-29. Nguồn chuẩn của database là `database/schema/db.sql`.
+Cập nhật: 2026-09-30. Nguồn chuẩn của database là `database/schema/db.sql`.
 Tài liệu này phân biệt **đã kiểm thử tự động** và **bước cần chạy thủ công**.
-Kết quả 28 tests PASS và Maven package PASS là từ **trước đợt thêm Register và
-Forgot/Reset ngày 2026-09-29**. Với mã hiện tại, phần ứng dụng compile PASS;
-test mới đã compile nhưng chưa được chạy vì yêu cầu quyền chạy Maven test đã bị
-từ chối. Thử khởi động HTTP bằng Maven đã lỗi ở Tomcat loopback socket; chưa
-xác nhận thao tác bằng trình duyệt hoặc SMTP thật. Chi tiết lỗi ở hồ sơ đợt.
-Biên bản theo từng đợt nằm trong [`docs/tests/`](tests/README.md).
+Trên checkout hiện tại, `mvn.cmd -q test` PASS 36 test/10 suite; Spring Context,
+SQL Server và JPA `validate` PASS. HTTP startup vẫn FAIL ở Tomcat loopback
+socket trên cổng 18083 (Maven trả exit 0 dù log báo lỗi), nên chưa xác nhận
+browser/SMTP/mailbox E2E. Biên bản ở [`docs/tests/`](tests/README.md); cách
+thiết lập riêng cho Forgot/Reset tại
+[`docs/testing/password-reset-test-setup.md`](testing/password-reset-test-setup.md).
 
 ## 1. Chuẩn bị
 
@@ -47,8 +47,9 @@ lần kiểm tra ngày 2026-09-29 đã chạy với
 | A06 | Chấm AI nhiều lần | Hai `AIScreeningResult` cùng một `ApplicationId` được lưu thành công | `DashboardDatabaseTests.applicationCanKeepMultipleAiScreeningResults` |
 | A07 | Login, quyền Admin, CSRF, form và Thymeleaf | Guest bị chuyển đến login; role không hợp lệ bị chặn; form render | `SecurityFlowTests` |
 | A08 | Account list, soft delete, API probe | Giữ User record khi deactivate; probe chỉ dùng kết quả phản hồi thật | `AccountList*Tests`, `ApiMonitoringServiceTests` |
-| A09 | Register Candidate | User và Candidate được tạo cùng giao dịch, Active, BCrypt; form và CSRF đúng | `AuthenticationDatabaseTests`, `SecurityFlowTests` — chưa chạy đợt này |
-| A10 | Forgot/Verify Email/Reset | Token HMAC hết hạn 15 phút, không dùng lại sau đổi hash, account Inactive bị chặn; form và CSRF đúng | `AuthenticationDatabaseTests`, `SecurityFlowTests` — chưa chạy đợt này |
+| A09 | Register Candidate | User và Candidate được tạo cùng giao dịch, Active, BCrypt; form và CSRF đúng | `AuthenticationDatabaseTests`, `SecurityFlowTests` — PASS trong 36 test |
+| A10 | Forgot/Verify Email/Reset | Token HMAC hết hạn 15 phút, không dùng lại sau đổi hash, account Inactive bị chặn; form và CSRF đúng | `AuthenticationDatabaseTests`, `SecurityFlowTests` — PASS tự động; SMTP E2E chưa chạy |
+| A11 | Binding mail local | Biến `SPRING_MAIL_*` map đúng và Spring tạo `JavaMailSender` khi có host; không gửi email | `MailEnvironmentBindingTests` — 2 test PASS |
 
 Rà tên field cũ trong mã đang chạy:
 
@@ -152,3 +153,10 @@ connection string có credential hoặc giá trị secret vào log.
 Khi có tính năng mới, thêm mã test vào tài liệu này với: điều kiện đầu vào,
 từng thao tác/lệnh, kết quả mong đợi, nơi xem bằng chứng và trạng thái đã chạy.
 
+## 7. Tài liệu trace và case chi tiết theo từng flow
+
+Từ 30/09/2026, dùng [`docs/flows/README.md`](flows/README.md) để tìm trace
+class/method/package từ browser đến DB/response. Danh mục 45 case có liên kết
+tới từng procedure ở [`docs/tests/2026-09-30-flow-cases.md`](tests/2026-09-30-flow-cases.md).
+Các case ngoài hệ thống hiện chưa chạy; kết quả `mvn test` không được ghi thay
+cho các bước browser/SMTP/probe HTTP.

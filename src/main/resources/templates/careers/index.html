@@ -1,0 +1,218 @@
+<!doctype html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+
+<head th:replace="~{careers/fragments :: head('Build useful products with us')}"></head>
+
+<body>
+  <header th:replace="~{careers/fragments :: header}"></header>
+  <main id="main" tabindex="-1">
+    <section class="hero" aria-labelledby="hero-title">
+      <div class="container hero-layout">
+        <div class="hero-content">
+          <h1 id="hero-title">Build useful products.<br>Do meaningful work.</h1>
+          <p class="hero-copy">We build workflow software that helps teams plan work, coordinate tasks, and keep project
+            decisions visible. Bring your perspective to what we build next.</p>
+          <div class="hero-actions"><a class="button" href="#roles">View Open Positions <svg class="icon"
+                viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                <path d="M5 12h14m-5-5 5 5-5 5" stroke="currentColor" stroke-width="1.5" />
+              </svg></a><a class="text-link" href="#about">About Moc</a></div>
+        </div>
+        <!-- Illustrative project document, not a screenshot or claim about internal systems. -->
+        <figure class="workspace-visual" aria-label="Illustrative project notes">
+          <div class="workspace-document">
+            <div class="document-toolbar"><span>Project notes</span><svg class="icon" viewBox="0 0 24 24" fill="none"
+                aria-hidden="true">
+                <path d="M7 3h8l4 4v14H5V3h2Zm7 0v5h5M8 12h8M8 16h6" stroke="currentColor" stroke-width="1.5" />
+              </svg></div>
+            <h2>Make the next<br>step clear.</h2>
+            <dl class="document-notes">
+              <div>
+                <dt>The problem</dt>
+                <dd>Good ideas get lost between meetings.</dd>
+              </div>
+              <div>
+                <dt>Our approach</dt>
+                <dd>Keep decisions where the work happens.</dd>
+              </div>
+              <div>
+                <dt>The next step</dt>
+                <dd>Share a draft. Learn together. Refine.</dd>
+              </div>
+            </dl>
+          </div>
+          <figcaption>A little clarity goes a long way.</figcaption>
+        </figure>
+      </div>
+    </section>
+    <section id="roles" class="section roles-section" aria-labelledby="roles-title">
+      <div class="container">
+        <div class="section-intro">
+          <h2 id="roles-title">Open Positions</h2>
+          <p>Find a role where your skills can make a difference. Every opportunity is part of Moc.</p>
+        </div>
+        <div class="search-form" id="job-search">
+          <div class="search-field"><label for="keyword">Job Title or Skill</label><input id="keyword" type="search"
+              placeholder="Try Java, design, or operations" autocomplete="off" aria-controls="job-grid"></div>
+          <div class="search-field"><label for="location">Location</label><select id="location"
+              aria-controls="job-grid">
+              <option value="">All Locations</option>
+              <option th:each="location : ${locations}" th:value="${location}" th:text="${location}"></option>
+            </select></div>
+        </div>
+        <fieldset class="department-filters">
+          <legend>Department</legend>
+          <div class="filter-pills">
+            <button type="button" class="department-filter" data-department="" aria-pressed="true"
+              aria-controls="job-grid">All Departments <span th:text="${#lists.size(jobs)}"></span></button>
+            <button th:each="department : ${departments}" type="button" class="department-filter"
+              th:attr="data-department=${department.departmentId}" aria-pressed="false" aria-controls="job-grid"><span
+                class="department-label" th:text="${department.departmentName}"></span><span
+                class="department-count"></span></button>
+          </div>
+          <p class="department-scroll-hint" hidden>Scroll horizontally for more departments.</p>
+        </fieldset>
+        <div class="results-line">
+          <p id="result-count" role="status" aria-live="polite" aria-atomic="true"
+            th:text="${#lists.size(jobs)} + ' open positions'"></p><button id="clear-filters" class="clear-filters"
+            type="button" hidden>Clear Filters</button>
+        </div>
+        <!-- Database-backed markup is the single job datasource. JS only reads these cards. -->
+        <div id="job-grid" class="job-grid">
+          <article th:each="job : ${jobs}" class="job-card"
+            th:attr="data-department=${job.departmentId},data-location=${job.workLocation},data-search=${job.postingTitle + ' ' + job.departmentName + ' ' + #strings.listJoin(job.description, ' ') + ' ' + #strings.listJoin(job.requirements, ' ')}">
+            <p class="job-department" th:text="${job.departmentName}"></p>
+            <h3><a class="job-link" th:href="@{/jobs/{id}(id=${job.jobPostingId})}" th:text="${job.postingTitle}"></a>
+            </h3>
+            <p class="job-meta"><span
+                th:text="${#strings.isEmpty(job.workLocation) ? 'Location to be confirmed' : job.workLocation}"></span><br><span
+                th:text="${job.employmentType}"></span></p>
+            <p class="job-salary"
+              th:text="${#strings.isEmpty(job.salaryDisplay) ? 'Salary to be discussed' : job.salaryDisplay}"></p>
+            <div class="job-bottom"><time th:if="${job.postingDate != null}" th:datetime="${job.postingDate}"
+                th:text="${#temporals.format(job.postingDate, 'yyyy-MM-dd')}"></time><span
+                th:if="${job.postingDate == null}">Date not provided</span><span class="job-view"
+                aria-hidden="true">View Role <svg class="icon" viewBox="0 0 24 24" fill="none">
+                  <path d="M5 12h14m-5-5 5 5-5 5" stroke="currentColor" stroke-width="1.5" />
+                </svg></span></div>
+          </article>
+        </div>
+        <div id="empty-state" class="empty-state" th:attr="hidden=${!#lists.isEmpty(jobs) ? 'hidden' : null}">
+          <h3>No open positions found</h3>
+          <p
+            th:text="${#lists.isEmpty(jobs) ? 'There are no open roles right now. You can still create a candidate account below.' : 'Try another keyword, location, or department.'}">
+          </p>
+        </div>
+        <noscript>
+          <p class="process-note">All open positions are shown. Enable JavaScript to filter the list.</p>
+        </noscript>
+      </div>
+    </section>
+    <section id="about" class="section">
+      <div class="container about-layout">
+        <h2>Useful software starts<br>with thoughtful people.</h2>
+        <div class="about-copy">
+          <p>Moc builds workflow software that helps teams plan work, coordinate tasks, and keep project decisions
+            visible.</p>
+          <p>We care about the everyday details: a clear handover, an understandable interface, and a decision that
+            someone can pick up later. Different perspectives help us get those details right.</p>
+        </div>
+      </div>
+    </section>
+    <!-- Company-wide sample policy copy approved during the earlier prototype audit. Not sourced from a nonexistent company config table. -->
+    <section id="benefits" class="section benefits-section">
+      <div class="container benefits-layout">
+        <div class="benefits-intro">
+          <h2>Benefits &amp;<br>Working Policy</h2>
+          <p>The practical support behind doing good work.</p>
+        </div>
+        <dl class="benefits-list">
+          <div class="benefit-row">
+            <dt>Working Model</dt>
+            <dd>Hybrid, with up to two remote days a week depending on the team.</dd>
+          </div>
+          <div class="benefit-row">
+            <dt>Working Hours</dt>
+            <dd>Monday to Friday, 9 am–6 pm.</dd>
+          </div>
+          <div class="benefit-row">
+            <dt>Leave &amp; Insurance</dt>
+            <dd>12 days of annual leave, plus statutory holidays and insurance.</dd>
+          </div>
+          <div class="benefit-row">
+            <dt>Learning</dt>
+            <dd>An annual learning budget of VND 3 million for courses and professional development.</dd>
+          </div>
+          <div class="benefit-row">
+            <dt>Equipment</dt>
+            <dd>A work laptop and the tools you need for your role.</dd>
+          </div>
+          <div class="benefit-row">
+            <dt>Feedback</dt>
+            <dd>A performance review every six months, with regular conversations along the way.</dd>
+          </div>
+        </dl>
+      </div>
+    </section>
+    <section id="life" class="section">
+      <div class="container life-layout">
+        <div class="work-intro">
+          <h2>How We Work</h2>
+          <p>Good work needs room to think and a way to move forward together.</p>
+          <p class="work-quote">“Make the work clear enough for someone else to continue.”</p>
+        </div>
+        <ul class="life-points">
+          <li><strong>Document decisions</strong>
+            <p>Write down the context, the choice, and what comes next.</p>
+          </li>
+          <li><strong>Give specific feedback</strong>
+            <p>Talk about the work. Explain what could be clearer and why.</p>
+          </li>
+          <li><strong>Protect focus time</strong>
+            <p>Leave space for thoughtful work, with clear handovers when help is needed.</p>
+          </li>
+          <li><strong>Keep meetings purposeful</strong>
+            <p>Start with a question to resolve. Finish with a decision or a next step.</p>
+          </li>
+        </ul>
+      </div>
+    </section>
+    <section id="process" class="section process-section">
+      <div class="container">
+        <h2>Your path to joining Moc</h2>
+        <ol class="process-list">
+          <li>
+            <h3>Submit Application</h3>
+            <p>Choose a role and share a CV that reflects your experience.</p>
+          </li>
+          <li>
+            <h3>CV Review</h3>
+            <p>Our hiring team reviews how your experience relates to the role.</p>
+          </li>
+          <li>
+            <h3>Interview</h3>
+            <p>Discuss the work, meet the team, and bring your own questions.</p>
+          </li>
+          <li>
+            <h3>Offer</h3>
+            <p>Review the role, compensation, and next steps together.</p>
+          </li>
+        </ol>
+        <p class="process-note">Online application submission is being prepared. You can browse roles and create a Candidate account today.</p>
+      </div>
+    </section>
+    <section class="section join-section">
+      <div class="container join-inner">
+        <div>
+          <h2>Didn't find the right role?</h2>
+          <p
+            th:text="${viewer == null ? 'Create a candidate account so you’re ready when a suitable position opens.' : 'Your account dashboard brings your activity together in one place.'}">
+          </p>
+        </div><a class="button" th:href="@{/register}" th:if="${viewer == null}">Create a Candidate Account</a><a
+          class="button" th:href="@{/dashboard}" th:if="${viewer != null}">Go to Dashboard</a>
+      </div>
+    </section>
+  </main>
+  <footer th:replace="~{careers/fragments :: footer}"></footer>
+</body>
+
+</html>

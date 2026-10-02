@@ -1,0 +1,14 @@
+{
+  "round": "round1",
+  "viewports": [],
+  "tests": [
+    {
+      "name": "Harness completed",
+      "pass": false,
+      "details": "Error: {\"exceptionId\":1,\"text\":\"Uncaught\",\"lineNumber\":0,\"columnNumber\":18,\"scriptId\":\"4\",\"stackTrace\":{\"callFrames\":[{\"functionName\":\"cs\",\"scriptId\":\"4\",\"url\":\"\",\"lineNumber\":0,\"columnNumber\":18},{\"functionName\":\"\",\"scriptId\":\"4\",\"url\":\"\",\"lineNumber\":0,\"columnNumber\":208},{\"functionName\":\"\",\"scriptId\":\"4\",\"url\":\"\",\"lineNumber\":0,\"columnNumber\":850}]},\"exception\":{\"type\":\"object\",\"subtype\":\"error\",\"className\":\"TypeError\",\"description\":\"TypeError: Failed to execute 'getComputedStyle' on 'Window': parameter 1 is not of type 'Element'.\\n    at cs (<anonymous>:1:19)\\n    at <anonymous>:1:209\\n    at <anonymous>:1:851\",\"objectId\":\"5763804139005942892.1.2\"}}"
+    }
+  ],
+  "errors": [
+    "Error: {\"exceptionId\":1,\"text\":\"Uncaught\",\"lineNumber\":0,\"columnNumber\":18,\"scriptId\":\"4\",\"stackTrace\":{\"callFrames\":[{\"functionName\":\"cs\",\"scriptId\":\"4\",\"url\":\"\",\"lineNumber\":0,\"columnNumber\":18},{\"functionName\":\"\",\"scriptId\":\"4\",\"url\":\"\",\"lineNumber\":0,\"columnNumber\":208},{\"functionName\":\"\",\"scriptId\":\"4\",\"url\":\"\",\"lineNumber\":0,\"columnNumber\":850}]},\"exception\":{\"type\":\"object\",\"subtype\":\"error\",\"className\":\"TypeError\",\"description\":\"TypeError: Failed to execute 'getComputedStyle' on 'Window': parameter 1 is not of type 'Element'.\\n    at cs (<anonymous>:1:19)\\n    at <anonymous>:1:209\\n    at <anonymous>:1:851\",\"objectId\":\"5763804139005942892.1.2\"}}"
+  ]
+}

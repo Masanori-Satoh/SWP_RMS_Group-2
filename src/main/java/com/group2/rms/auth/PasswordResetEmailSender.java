@@ -34,10 +34,10 @@ public class PasswordResetEmailSender {
         SimpleMailMessage message = new SimpleMailMessage();
         message.setFrom(from);
         message.setTo(to);
-        message.setSubject("Đặt lại mật khẩu RMS");
-        message.setText("Mở liên kết sau để xác minh email và đặt lại mật khẩu:\n"
-                + link + "\n\nLiên kết hết hạn sau 15 phút và chỉ dùng một lần."
-                + " Nếu bạn không yêu cầu, hãy bỏ qua email này.");
+        message.setSubject("Reset Password RMS");
+        message.setText("Open this link to verify your email and reset your password:\n"
+                + link + "\n\nThis link expires after 15 minutes and can be used once."
+                + " If you did not request this, ignore this email.");
         sender.send(message);
     }
 }

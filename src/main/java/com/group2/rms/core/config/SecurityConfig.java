@@ -15,6 +15,7 @@ import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.access.intercept.AuthorizationFilter;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.web.savedrequest.HttpSessionRequestCache;
 
 /** Shared authentication foundation and the route rules confirmed for LinhDN. */
 @Configuration
@@ -33,25 +34,31 @@ public class SecurityConfig {
                                            UserRepository userRepository) throws Exception {
         DaoAuthenticationProvider provider = new DaoAuthenticationProvider(userDetailsService);
         provider.setPasswordEncoder(passwordEncoder);
+        HttpSessionRequestCache requestCache = new HttpSessionRequestCache();
+        requestCache.setMatchingRequestParameterName(null);
 
         http
             .authenticationProvider(provider)
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers(PathRequest.toStaticResources().atCommonLocations()).permitAll()
                 .requestMatchers("/favicon.ico", "/error").permitAll()
+                .requestMatchers(HttpMethod.GET, "/", "/fonts/**").permitAll()
                 .requestMatchers("/login", "/register", "/forgot-password", "/reset-password/**").permitAll()
+                .requestMatchers("/jobs/*/apply", "/jobs/*/apply/**").hasAuthority("ROLE_CANDIDATE")
                 .requestMatchers(HttpMethod.GET, "/jobs", "/jobs/**", "/public/jobs", "/public/jobs/**").permitAll()
                 .requestMatchers("/admin/accounts", "/admin/accounts/**",
+                        "/admin/candidate-accounts", "/admin/candidate-accounts/**",
                         "/admin/api-monitoring", "/admin/api-monitoring/**",
                         "/admin/ai-configuration", "/admin/ai-configuration/**")
                     .hasAuthority(RoleAuthorities.SYSTEM_ADMIN)
                 .requestMatchers("/dashboard", "/dashboard/**").authenticated()
                 .anyRequest().authenticated()
             )
+            .requestCache(cache -> cache.requestCache(requestCache))
             .formLogin(form -> form
                 .loginPage("/login")
                 .loginProcessingUrl("/login")
-                .defaultSuccessUrl("/dashboard", true)
+                .defaultSuccessUrl("/dashboard", false)
                 .failureUrl("/login?error")
                 .permitAll()
             )

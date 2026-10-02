@@ -3,6 +3,9 @@ package com.group2.rms.core.security;
 /** Authorities for the roles defined by the RMS requirements. */
 public final class RoleAuthorities {
 
+    public static final java.util.Set<String> INTERNAL_ROLE_NAMES = java.util.Set.of(
+            "System Admin", "HR", "Hiring Manager", "Director", "Interviewer");
+
     public static final String SYSTEM_ADMIN = "ROLE_SYSTEM_ADMIN";
 
     private RoleAuthorities() {

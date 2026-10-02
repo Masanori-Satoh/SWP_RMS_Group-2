@@ -1,43 +1,41 @@
 <!DOCTYPE html>
-<html lang="vi" xmlns:th="http://www.thymeleaf.org">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Đăng ký Candidate | RMS</title>
-    <link rel="stylesheet" th:href="@{/css/main.css}">
-    <link rel="stylesheet" th:href="@{/css/auth.css}">
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/head :: interfaceHead('Create a Candidate Account', ~{::pageStyles})}">
+  <th:block th:fragment="pageStyles"><link rel="stylesheet" th:href="@{/css/auth.css}"></th:block>
 </head>
 <body class="auth-page">
-<main class="auth-card">
-    <h1>Đăng ký tài khoản Candidate</h1>
-    <p class="auth-intro">Tạo tài khoản để đăng nhập và quản lý đơn ứng tuyển của bạn.</p>
+<a class="skip-link" href="#main">Skip to content</a>
+<aside th:replace="~{fragments/auth-layout :: brandPanel}"></aside>
+<main id="main" class="auth-card" tabindex="-1">
+    <h1>Create your account.</h1>
+    <p class="auth-intro">Create an account to sign in and explore opportunities with us.</p>
     <form th:action="@{/register}" th:object="${form}" method="post">
-        <div class="auth-message auth-error" role="alert" th:if="${#fields.hasGlobalErrors()}">
-            <p th:each="error : ${#fields.globalErrors()}" th:text="${error}"></p>
-        </div>
-        <label for="full-name">Họ và tên</label>
-        <input id="full-name" type="text" th:field="*{fullName}" maxlength="100" autocomplete="name" required>
-        <span class="auth-field-error" th:if="${#fields.hasErrors('fullName')}" th:errors="*{fullName}"></span>
+        <div th:replace="~{fragments/messages :: validationSummary}"></div>
+        <label for="full-name">Full Name <span aria-hidden="true">*</span></label>
+        <input id="full-name" type="text" th:field="*{fullName}" maxlength="100" autocomplete="name" required th:attr="aria-invalid=${#fields.hasErrors('fullName')},aria-describedby=${#fields.hasErrors('fullName') ? 'full-name-error' : null}">
+        <span id="full-name-error" class="auth-field-error" th:if="${#fields.hasErrors('fullName')}" th:errors="*{fullName}"></span>
 
-        <label for="username">Username</label>
-        <input id="username" type="text" th:field="*{username}" maxlength="50" autocomplete="username" required>
-        <span class="auth-field-error" th:if="${#fields.hasErrors('username')}" th:errors="*{username}"></span>
+        <label for="username">Username <span aria-hidden="true">*</span></label>
+        <input id="username" type="text" th:field="*{username}" maxlength="50" autocomplete="username" required th:attr="aria-invalid=${#fields.hasErrors('username')},aria-describedby=${#fields.hasErrors('username') ? 'username-hint username-error' : 'username-hint'}">
+        <small id="username-hint">Username cannot be changed after creation.</small>
+        <span id="username-error" class="auth-field-error" th:if="${#fields.hasErrors('username')}" th:errors="*{username}"></span>
 
-        <label for="email">Email</label>
-        <input id="email" type="email" th:field="*{email}" maxlength="150" autocomplete="email" required>
-        <span class="auth-field-error" th:if="${#fields.hasErrors('email')}" th:errors="*{email}"></span>
+        <label for="email">Email <span aria-hidden="true">*</span></label>
+        <input id="email" type="email" th:field="*{email}" maxlength="150" autocomplete="email" required th:attr="aria-invalid=${#fields.hasErrors('email')},aria-describedby=${#fields.hasErrors('email') ? 'email-error' : null}">
+        <span id="email-error" class="auth-field-error" th:if="${#fields.hasErrors('email')}" th:errors="*{email}"></span>
 
-        <label for="password">Mật khẩu</label>
-        <input id="password" type="password" name="password" minlength="8" maxlength="32" autocomplete="new-password" required>
-        <span class="auth-field-error" th:if="${#fields.hasErrors('password')}" th:errors="*{password}"></span>
+        <label for="password">Password <span aria-hidden="true">*</span></label>
+        <input id="password" type="password" name="password" minlength="8" maxlength="32" autocomplete="new-password" required th:attr="aria-invalid=${#fields.hasErrors('password')},aria-describedby=${#fields.hasErrors('password') ? 'password-hint password-error' : 'password-hint'}">
+        <small id="password-hint">8–32 characters.</small>
+        <span id="password-error" class="auth-field-error" th:if="${#fields.hasErrors('password')}" th:errors="*{password}"></span>
 
-        <label for="confirm-password">Xác nhận mật khẩu</label>
-        <input id="confirm-password" type="password" name="confirmPassword" minlength="8" maxlength="32" autocomplete="new-password" required>
-        <span class="auth-field-error" th:if="${#fields.hasErrors('confirmPassword')}" th:errors="*{confirmPassword}"></span>
+        <label for="confirm-password">Confirm Password <span aria-hidden="true">*</span></label>
+        <input id="confirm-password" type="password" name="confirmPassword" minlength="8" maxlength="32" autocomplete="new-password" required th:attr="aria-invalid=${#fields.hasErrors('confirmPassword')},aria-describedby=${#fields.hasErrors('confirmPassword') ? 'confirm-password-error' : null}">
+        <span id="confirm-password-error" class="auth-field-error" th:if="${#fields.hasErrors('confirmPassword')}" th:errors="*{confirmPassword}"></span>
 
-        <button type="submit">Đăng ký</button>
+        <button class="btn btn-primary" type="submit">Register</button>
     </form>
-    <nav class="auth-links auth-links-single"><a th:href="@{/login}">Quay lại đăng nhập</a></nav>
+    <nav class="auth-links"><a th:href="@{/login}">Back to Sign In</a><a th:href="@{/}">Back to Careers</a></nav>
 </main>
 </body>
 </html>

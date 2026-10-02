@@ -1,0 +1,75 @@
+{
+  "assessment": "B",
+  "target": "src/main/resources/templates/careers/index.html",
+  "scanScope": "src/main/resources/templates/careers",
+  "cli": {
+    "runCount": 1,
+    "observedLauncherExitCode": 0,
+    "findingCount": 2,
+    "severityCounts": { "warning": 2 },
+    "ruleCounts": { "flat-type-hierarchy": 2 },
+    "acceptedFindingCount": 0,
+    "falsePositiveCount": 2,
+    "findings": [
+      {
+        "rule": "flat-type-hierarchy",
+        "file": "src/main/resources/templates/careers/index.html",
+        "line": 0,
+        "disposition": "false_positive",
+        "reason": "Static Thymeleaf markup scan reports all roles as 16px; rendered external CSS provides a distinct heading hierarchy.",
+        "computedDesktopPx": { "body": 16, "h1": 46, "sectionH2": 34, "jobH3": 20 },
+        "computedMobilePx": { "body": 16, "h1": 32, "sectionH2": 28, "jobH3": 20 },
+        "largestAdjacentDesktopRatio": 1.7,
+        "largestAdjacentMobileRatio": 1.4
+      },
+      {
+        "rule": "flat-type-hierarchy",
+        "file": "src/main/resources/templates/careers/apply.html",
+        "line": 0,
+        "disposition": "false_positive",
+        "reason": "Static Thymeleaf markup scan reports all roles as 16px; fictional rendered apply fixture uses the same shared CSS as the source template.",
+        "computedDesktopPx": { "body": 16, "h1": 40, "noticeH2": 20 },
+        "largestAdjacentRatio": 2
+      }
+    ]
+  },
+  "browser": {
+    "transport": "Independent headless Chrome CDP profile, port 9242",
+    "nativeAttemptUnavailableReason": "Parent's actual CUA/node_repl attempt failed to apply deny-read ACLs",
+    "mutableTitleAndScriptPreflight": "passed",
+    "liveServerBackgroundStartCount": 1,
+    "connection": "JSON parsed from live-server-created server.json after stdout pipe stalled; no restart",
+    "scriptInjectionCount": 3,
+    "scriptLoadSuccessCount": 3,
+    "runtimeIssueCount": 0,
+    "runtimeCountEvidence": "Each of 3 pages logged [impeccable] No anti-patterns found after a 2600ms wait",
+    "pages": [
+      { "name": "homepage-desktop", "runtimeIssueCount": 0, "provenance": "Actual DB to Spring MockMvc public HTML; local preview, not actual Tomcat HTTP" },
+      { "name": "actual-role-detail", "runtimeIssueCount": 0, "provenance": "Actual DB to Spring MockMvc public HTML; local preview, not actual Tomcat HTTP" },
+      { "name": "apply-fixture", "runtimeIssueCount": 0, "provenance": "Fictional MockMvc visual fixture; no real auth/backend" }
+    ],
+    "visibleToUser": false,
+    "visibleOverlayClaim": false,
+    "mobileComputedWidth": 375,
+    "mobileDocumentScrollWidth": 375,
+    "additionalObservation": "Detail document title contains literal job.postingTitle; apply fixture title also contains the same literal."
+  },
+  "cleanup": {
+    "liveServerStopped": true,
+    "healthUnavailableAfterStop": true,
+    "ownBrowserClosed": true,
+    "ownTemporaryChromeProfileRemoved": true,
+    "originalStarterEnded": true,
+    "temporaryRunnerFiles": ["target/assessment-b-browser.mjs", "target/assessment-b-recover.mjs", "target/assessment-b-detect-runtime.js"],
+    "temporaryRunnerRemoval": "performed after evidence collection",
+    "parentPreviewServer": "left running",
+    "productFilesEdited": false,
+    "sqlEdited": false
+  },
+  "evidence": {
+    "rawCli": "assessment-b-cli-raw.json",
+    "initialPreflightAndQuotingFailure": "assessment-b-browser-preflight-attempt.json",
+    "originalStarterAfterRecovery": "assessment-b-browser-raw.json",
+    "completedBrowserRecovery": "assessment-b-browser-recovery.json"
+  }
+}

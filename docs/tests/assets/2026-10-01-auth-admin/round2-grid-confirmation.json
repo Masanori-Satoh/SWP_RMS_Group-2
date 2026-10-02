@@ -1,0 +1,15 @@
+{
+  "pass": true,
+  "evidence": {
+    "tracks": [
+      "274px",
+      "274px",
+      "274px",
+      "274px",
+      "0px"
+    ],
+    "visibleColumns": 4,
+    "metrics": 4
+  },
+  "reason": "Original assertion counted a collapsed auto-fit 0px track. No UI change or new screenshot."
+}

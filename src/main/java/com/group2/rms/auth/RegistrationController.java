@@ -32,7 +32,7 @@ public class RegistrationController {
                            BindingResult errors) {
         if (form.getPassword() != null && form.getConfirmPassword() != null
                 && !form.getPassword().equals(form.getConfirmPassword())) {
-            errors.rejectValue("confirmPassword", "password.mismatch", "Mật khẩu xác nhận không khớp.");
+            errors.rejectValue("confirmPassword", "password.mismatch", "Passwords do not match.");
         }
         if (!errors.hasErrors()) {
             try {
@@ -41,7 +41,7 @@ public class RegistrationController {
             } catch (AccountFieldException exception) {
                 errors.rejectValue(exception.getField(), "account.invalid", exception.getMessage());
             } catch (DataIntegrityViolationException exception) {
-                errors.reject("account.conflict", "Username hoặc email đã được sử dụng.");
+                errors.reject("account.conflict", "The username or email is already in use.");
             }
         }
         form.setPassword(null);
