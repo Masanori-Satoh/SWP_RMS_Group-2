@@ -1,136 +1,103 @@
 <!DOCTYPE html>
-<html lang="vi" xmlns:th="http://www.thymeleaf.org">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title th:text="${createMode} ? 'Tạo tài khoản | RMS' : 'Sửa tài khoản | RMS'">Tài khoản | RMS</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" th:href="@{/css/main.css}">
-    <link rel="stylesheet" th:href="@{/css/account-list.css}">
-    <link rel="stylesheet" th:href="@{/css/account-form.css}">
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/head :: interfaceHead(${createMode ? 'Create Internal Account' : 'Edit Internal Account'}, ~{::pageStyles})}">
+  <th:block th:fragment="pageStyles"><link rel="stylesheet" th:href="@{/css/account-form.css}"></th:block>
 </head>
-<body>
+<body class="rms-app">
 <div class="page-wrapper">
     <!-- SIDEBAR -->
-    <aside th:replace="~{fragments/sidebar :: sidebar(activeMenu='accounts')}"></aside>
+    <aside th:replace="~{fragments/sidebar :: workspace('accounts', 'System Admin')}"></aside>
 
     <div class="main-content">
         <!-- TOPBAR -->
-        <div class="topbar">
-            <div class="topbar-title">Recruitment Management System</div>
-            <form th:action="@{/logout}" method="post" style="margin:0">
-                <button type="submit" style="background:none;border:none;cursor:pointer;font-size:14px;color:#64748b;">Đăng xuất</button>
-            </form>
-        </div>
-
-        <main class="page-content">
+        <header th:replace="~{fragments/workspace-header :: header('System Admin', null)}"></header>
+        <main id="main" class="page-content" tabindex="-1">
             <div class="container account-form-container">
                 <div class="account-heading">
                     <div>
-                        <a class="account-back-link" th:href="@{/admin/accounts}">Tài khoản</a>
+                        <a class="account-back-link" th:href="@{/admin/accounts}">Internal Accounts</a>
                         <span aria-hidden="true"> / </span>
-                        <span th:text="${createMode} ? 'Tạo mới' : 'Chỉnh sửa'">Tạo mới</span>
-                        <h1 th:text="${createMode} ? 'Tạo tài khoản' : 'Chỉnh sửa tài khoản'">Tạo tài khoản</h1>
-                        <p th:text="${createMode} ? 'Thông tin đăng nhập sẽ được tạo với trạng thái Active.' : 'Username và mật khẩu hiện tại được giữ nguyên.'"></p>
+                        <span th:text="${createMode} ? 'Create' : 'Edit'">Create</span>
+                        <h1 th:text="${createMode} ? 'Create Internal Account' : 'Edit Internal Account'">Create Internal Account</h1>
+                        <p th:text="${createMode} ? 'The account will be created with Active status.' : 'The existing username and password are preserved.'"></p>
                     </div>
                 </div>
 
-                <section class="card account-card">
+                <section class="workspace-section account-card">
                     <form th:action="${createMode} ? @{/admin/accounts} : @{/admin/accounts/{id}(id=${accountId})}"
                           th:object="${form}" method="post">
-                        <div class="alert alert-danger" role="alert" th:if="${#fields.hasGlobalErrors()}">
-                            <p th:each="error : ${#fields.globalErrors()}" th:text="${error}"></p>
-                        </div>
+                        <div th:replace="~{fragments/messages :: validationSummary}"></div>
 
-                        <div class="account-form-grid">
-                            <div class="form-group account-field-full">
-                                <label class="form-label" for="full-name">Họ và tên <span aria-hidden="true">*</span></label>
+                        <fieldset class="account-form-section" ><legend>Account Information</legend><div class="account-form-grid"><div class="form-group account-field-full">
+                                <label class="form-label" for="full-name">Full Name <span aria-hidden="true">*</span></label>
                                 <input class="form-control" id="full-name" type="text" th:field="*{fullName}"
-                                       maxlength="100" autocomplete="name" required>
-                                <span class="form-error" th:if="${#fields.hasErrors('fullName')}" th:errors="*{fullName}"></span>
-                            </div>
-
-                            <div class="form-group" th:if="${createMode}">
+                                       maxlength="100" autocomplete="name" required th:attr="aria-invalid=${#fields.hasErrors('fullName')},aria-describedby=${#fields.hasErrors('fullName') ? 'full-name-error' : null}">
+                                <span id="full-name-error" class="form-error" th:if="${#fields.hasErrors('fullName')}" th:errors="*{fullName}"></span>
+                            </div><div class="form-group" th:if="${createMode}">
                                 <label class="form-label" for="username">Username <span aria-hidden="true">*</span></label>
                                 <input class="form-control" id="username" type="text" th:field="*{username}"
-                                       maxlength="50" autocomplete="username" required>
-                                <span class="form-error" th:if="${#fields.hasErrors('username')}" th:errors="*{username}"></span>
-                            </div>
-                            <div class="form-group" th:unless="${createMode}">
+                                       maxlength="50" autocomplete="username" required th:attr="aria-invalid=${#fields.hasErrors('username')},aria-describedby=${#fields.hasErrors('username') ? 'username-hint username-error' : 'username-hint'}">
+                                <small id="username-hint" class="account-field-hint">Username cannot be changed after creation.</small>
+                                <span id="username-error" class="form-error" th:if="${#fields.hasErrors('username')}" th:errors="*{username}"></span>
+                            </div><div class="form-group" th:unless="${createMode}">
                                 <label class="form-label" for="username-readonly">Username</label>
                                 <input class="form-control account-readonly" id="username-readonly" type="text"
-                                       th:value="${accountUsername}" readonly>
-                                <small class="account-field-hint">Username không thể đổi sau khi tạo.</small>
-                            </div>
-
-                            <div class="form-group">
+                                       th:value="${accountUsername}" readonly aria-describedby="username-hint">
+                                <small id="username-hint" class="account-field-hint">Username cannot be changed after creation.</small>
+                            </div><div class="form-group">
                                 <label class="form-label" for="email">Email <span aria-hidden="true">*</span></label>
                                 <input class="form-control" id="email" type="email" th:field="*{email}"
-                                       maxlength="150" autocomplete="email" required>
-                                <span class="form-error" th:if="${#fields.hasErrors('email')}" th:errors="*{email}"></span>
-                            </div>
-
-                            <div class="form-group">
-                                <label class="form-label" for="phone-number">Số điện thoại</label>
+                                       maxlength="150" autocomplete="email" required th:attr="aria-invalid=${#fields.hasErrors('email')},aria-describedby=${#fields.hasErrors('email') ? 'email-error' : null}">
+                                <span id="email-error" class="form-error" th:if="${#fields.hasErrors('email')}" th:errors="*{email}"></span>
+                            </div><div class="form-group">
+                                <label class="form-label" for="phone-number">Phone Number</label>
                                 <input class="form-control" id="phone-number" type="tel" th:field="*{phoneNumber}"
-                                       maxlength="20" autocomplete="tel">
-                                <span class="form-error" th:if="${#fields.hasErrors('phoneNumber')}" th:errors="*{phoneNumber}"></span>
-                            </div>
-
-                            <div class="form-group">
-                                <label class="form-label" for="role">Vai trò <span aria-hidden="true">*</span></label>
-                                <select class="form-control" id="role" th:field="*{roleId}" required>
-                                    <option value="">Chọn vai trò</option>
+                                       maxlength="20" autocomplete="tel" th:attr="aria-invalid=${#fields.hasErrors('phoneNumber')},aria-describedby=${#fields.hasErrors('phoneNumber') ? 'phone-number-error' : null}">
+                                <span id="phone-number-error" class="form-error" th:if="${#fields.hasErrors('phoneNumber')}" th:errors="*{phoneNumber}"></span>
+                            </div></div></fieldset>
+<fieldset class="account-form-section" ><legend>Access & Status</legend><div class="account-form-grid"><div class="form-group">
+                                <label class="form-label" for="role">Role <span aria-hidden="true">*</span></label>
+                                <select class="form-control" id="role" th:field="*{roleId}" required th:attr="aria-invalid=${#fields.hasErrors('roleId')},aria-describedby=${#fields.hasErrors('roleId') ? 'role-error' : null}">
+                                    <option value="">Select a Role</option>
                                     <option th:each="role : ${roles}" th:value="${role.roleId}"
-                                            th:attr="data-role-name=${role.roleName}" th:text="${role.roleName}">Vai trò</option>
+                                            th:attr="data-role-name=${role.roleName}" th:text="${role.roleName}">Role</option>
                                 </select>
-                                <span class="form-error" th:if="${#fields.hasErrors('roleId')}" th:errors="*{roleId}"></span>
-                            </div>
-
-                            <div class="form-group">
-                                <label class="form-label" for="department">Phòng ban</label>
-                                <select class="form-control" id="department" th:field="*{departmentId}">
-                                    <option value="">Chọn phòng ban</option>
+                                <span id="role-error" class="form-error" th:if="${#fields.hasErrors('roleId')}" th:errors="*{roleId}"></span>
+                            </div><div class="form-group">
+                                <label class="form-label" for="department">Department <span aria-hidden="true">*</span></label>
+                                <select class="form-control" id="department" th:field="*{departmentId}" required th:attr="aria-invalid=${#fields.hasErrors('departmentId')},aria-describedby=${#fields.hasErrors('departmentId') ? 'department-error' : null}">
+                                    <option value="">Select a Department</option>
                                     <option th:each="department : ${departments}" th:value="${department.departmentId}"
-                                            th:text="${department.departmentName}">Phòng ban</option>
+                                            th:text="${department.departmentName}">Department</option>
                                 </select>
-                                <small class="account-field-hint">Bắt buộc cho vai trò nội bộ; không bắt buộc với Candidate.</small>
-                                <span class="form-error" th:if="${#fields.hasErrors('departmentId')}" th:errors="*{departmentId}"></span>
-                            </div>
-
-                            <div class="form-group" th:if="${createMode}">
-                                <label class="form-label" for="password">Mật khẩu <span aria-hidden="true">*</span></label>
-                                <input class="form-control" id="password" type="password" name="password"
-                                       minlength="8" maxlength="32" autocomplete="new-password" required>
-                                <small class="account-field-hint">Từ 8 đến 32 ký tự.</small>
-                                <span class="form-error" th:if="${#fields.hasErrors('password')}" th:errors="*{password}"></span>
-                            </div>
-
-                            <div class="form-group" th:if="${createMode}">
-                                <label class="form-label" for="confirm-password">Xác nhận mật khẩu <span aria-hidden="true">*</span></label>
-                                <input class="form-control" id="confirm-password" type="password" name="confirmPassword"
-                                       minlength="8" maxlength="32" autocomplete="new-password" required>
-                                <span class="form-error" th:if="${#fields.hasErrors('confirmPassword')}" th:errors="*{confirmPassword}"></span>
-                            </div>
-
-                            <div class="form-group" th:unless="${createMode}">
-                                <label class="form-label" for="account-status">Trạng thái <span aria-hidden="true">*</span></label>
-                                <select class="form-control" id="account-status" th:field="*{accountStatus}" required>
+                                <small class="account-field-hint">Required for all supported internal roles.</small>
+                                <span id="department-error" class="form-error" th:if="${#fields.hasErrors('departmentId')}" th:errors="*{departmentId}"></span>
+                            </div><div class="form-group" th:unless="${createMode}">
+                                <label class="form-label" for="account-status">Status <span aria-hidden="true">*</span></label>
+                                <select class="form-control" id="account-status" th:field="*{accountStatus}" required th:attr="aria-invalid=${#fields.hasErrors('accountStatus')},aria-describedby=${#fields.hasErrors('accountStatus') ? 'account-status-hint account-status-error' : 'account-status-hint'}">
                                     <option value="Active">Active</option>
                                     <option value="Inactive">Inactive</option>
                                     <option value="Blocked">Blocked</option>
                                 </select>
-                                <span class="form-error" th:if="${#fields.hasErrors('accountStatus')}" th:errors="*{accountStatus}"></span>
-                            </div>
-                        </div>
-
-                        <div class="account-form-actions">
-                            <a class="btn btn-secondary" th:href="@{/admin/accounts}">Hủy</a>
+                                <small id="account-status-hint" class="account-field-hint">Inactive and Blocked accounts cannot sign in or access protected pages.</small>
+                                <span id="account-status-error" class="form-error" th:if="${#fields.hasErrors('accountStatus')}" th:errors="*{accountStatus}"></span>
+                            </div></div></fieldset>
+<fieldset class="account-form-section" th:if="${createMode}"><legend>Initial Password</legend><div class="account-form-grid"><div class="form-group" th:if="${createMode}">
+                                <label class="form-label" for="password">Password <span aria-hidden="true">*</span></label>
+                                <input class="form-control" id="password" type="password" name="password"
+                                       minlength="8" maxlength="32" autocomplete="new-password" required th:attr="aria-invalid=${#fields.hasErrors('password')},aria-describedby=${#fields.hasErrors('password') ? 'password-hint password-error' : 'password-hint'}">
+                                <small id="password-hint" class="account-field-hint">8–32 characters.</small>
+                                <span id="password-error" class="form-error" th:if="${#fields.hasErrors('password')}" th:errors="*{password}"></span>
+                            </div><div class="form-group" th:if="${createMode}">
+                                <label class="form-label" for="confirm-password">Confirm Password <span aria-hidden="true">*</span></label>
+                                <input class="form-control" id="confirm-password" type="password" name="confirmPassword"
+                                       minlength="8" maxlength="32" autocomplete="new-password" required th:attr="aria-invalid=${#fields.hasErrors('confirmPassword')},aria-describedby=${#fields.hasErrors('confirmPassword') ? 'confirm-password-error' : null}">
+                                <span id="confirm-password-error" class="form-error" th:if="${#fields.hasErrors('confirmPassword')}" th:errors="*{confirmPassword}"></span>
+                            </div></div></fieldset>
+<div class="account-form-actions">
+                            <a class="btn btn-secondary" th:href="@{/admin/accounts}">Cancel</a>
                             <button class="btn btn-primary" type="submit"
-                                    th:text="${createMode} ? 'Tạo tài khoản' : 'Lưu thay đổi'">Lưu</button>
+                                    th:text="${createMode} ? 'Create Internal Account' : 'Save Changes'">Save</button>
                         </div>
                     </form>
                 </section>
@@ -138,6 +105,5 @@
         </main>
     </div>
 </div>
-<script th:src="@{/js/account-form.js}" defer></script>
 </body>
 </html>

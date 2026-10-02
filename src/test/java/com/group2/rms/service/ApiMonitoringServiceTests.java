@@ -77,7 +77,7 @@ class ApiMonitoringServiceTests {
 
         var outcome = monitoring.probeInternal(request);
         assertFalse(outcome.success());
-        assertEquals("Không nhận được phản hồi HTTP", outcome.detail());
+        assertEquals("No HTTP response was received", outcome.detail());
         assertNull(monitoring.rows().getFirst().lastHttpStatus());
         assertEquals(100, monitoring.rows().getFirst().errorRatePercent());
     }

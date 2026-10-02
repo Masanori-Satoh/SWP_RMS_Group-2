@@ -30,18 +30,19 @@ public class JobPostingController {
             @RequestParam(required = false) String employmentType,
             @PageableDefault(size = 9, sort = "postingDate", direction = Sort.Direction.DESC) Pageable pageable,
             Model model) {
-        
-        Page<JobPostingListResponse> jobsPage = jobPostingService.getPublishedJobs(keyword, departmentId, employmentType, pageable);
+
+        Page<JobPostingListResponse> jobsPage = jobPostingService.getPublishedJobs(keyword, departmentId,
+                employmentType, pageable);
         model.addAttribute("jobsPage", jobsPage);
         model.addAttribute("departments", jobPostingService.getAllActiveDepartments());
         model.addAttribute("selectedKeyword", keyword);
         model.addAttribute("selectedDept", departmentId);
         model.addAttribute("selectedType", employmentType);
-        
+
         return "candidate/job-board";
     }
 
-    @GetMapping("/{id}")
+    @GetMapping("/jobs/{id}")
     public String viewJobDetail(@PathVariable("id") Integer id, Model model, Authentication authentication) {
         JobPostingDetailResponse jobDetail = jobPostingService.getPublishedJobDetail(id, authentication);
         model.addAttribute("job", jobDetail);

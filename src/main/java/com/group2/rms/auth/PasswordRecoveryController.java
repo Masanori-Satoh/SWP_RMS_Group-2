@@ -21,7 +21,7 @@ public class PasswordRecoveryController {
     private final PasswordResetEmailSender emailSender;
 
     public PasswordRecoveryController(PasswordResetService resetService,
-                                      PasswordResetEmailSender emailSender) {
+            PasswordResetEmailSender emailSender) {
         this.resetService = resetService;
         this.emailSender = emailSender;
     }
@@ -34,9 +34,9 @@ public class PasswordRecoveryController {
 
     @PostMapping("/forgot-password")
     public String requestReset(@Valid @ModelAttribute("form") ForgotPasswordRequest form,
-                               BindingResult errors) {
+            BindingResult errors) {
         if (!emailSender.isConfigured() || !resetService.isConfigured()) {
-            errors.reject("mail.unavailable", "Dịch vụ gửi email khôi phục chưa được cấu hình.");
+            errors.reject("mail.unavailable", "Password recovery email is not configured yet.");
         }
         if (errors.hasErrors()) {
             return "auth/forgot-password";
@@ -63,19 +63,19 @@ public class PasswordRecoveryController {
 
     @PostMapping("/reset-password/{token}")
     public String reset(@PathVariable String token,
-                        @Valid @ModelAttribute("form") ResetPasswordRequest form,
-                        BindingResult errors, Model model, HttpServletResponse response) {
+            @Valid @ModelAttribute("form") ResetPasswordRequest form,
+            BindingResult errors, Model model, HttpServletResponse response) {
         noStore(response);
         if (form.getPassword() != null && form.getConfirmPassword() != null
                 && !form.getPassword().equals(form.getConfirmPassword())) {
-            errors.rejectValue("confirmPassword", "password.mismatch", "Mật khẩu xác nhận không khớp.");
+            errors.rejectValue("confirmPassword", "password.mismatch", "Passwords do not match.");
         }
         if (!errors.hasErrors()) {
             try {
                 if (resetService.reset(token, form.getPassword())) {
                     return "redirect:/login?reset";
                 }
-                errors.reject("token.invalid", "Liên kết không hợp lệ, đã dùng hoặc đã hết hạn.");
+                errors.reject("token.invalid", "This link is invalid, used, or expired.");
             } catch (AccountFieldException exception) {
                 errors.rejectValue(exception.getField(), "password.invalid", exception.getMessage());
             }

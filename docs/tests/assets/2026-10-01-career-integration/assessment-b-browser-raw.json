@@ -1,0 +1,39 @@
+{
+  "assessment": "B",
+  "target": "src/main/resources/templates/careers/index.html",
+  "browser": {
+    "nativeUnavailable": "Parent actual CUA/node_repl attempt failed: deny-read ACLs",
+    "fallback": "Chrome headless CDP; own new tabs; port 9242",
+    "visibleToUser": false,
+    "priorAttempt": "assessment-b-browser-preflight-attempt.json: CDP preflight succeeded; shell quoting failed before the live-server command could start; own profile cleaned",
+    "profile": "C:\\Users\\ADMINI~1\\AppData\\Local\\Temp\\moc-careers-MWQuxB"
+  },
+  "preflight": {
+    "originalTitle": "Build useful products with us | Mộc Careers",
+    "title": "[Human] Mộc Careers — Assessment B",
+    "titleChanged": true,
+    "scriptAppended": true,
+    "scriptExecuted": true
+  },
+  "server": {
+    "mode": "background",
+    "port": 8400,
+    "pid": 17616,
+    "connectionParsedAsJson": true,
+    "tokenPresent": true,
+    "stopMethod": "impeccable live-server stop --keep-inject"
+  },
+  "pages": [],
+  "cleanup": {
+    "liveServerStop": "No running live server found.",
+    "liveServerStopped": true,
+    "ownBrowserClosed": true,
+    "ownProfileRemoved": true
+  },
+  "errors": [
+    {
+      "message": "TypeError: fetch failed",
+      "stack": "TypeError: fetch failed"
+    }
+  ]
+}

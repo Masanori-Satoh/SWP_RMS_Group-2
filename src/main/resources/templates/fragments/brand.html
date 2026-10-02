@@ -1,0 +1,7 @@
+<!doctype html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"><body>
+<a th:fragment="wordmark(subtitle)" class="wordmark" th:href="@{/}" th:attr="aria-label=${'Mộc ' + subtitle + ' home'}">
+  <svg class="brand-mark" viewBox="0 0 32 32" fill="none" aria-hidden="true"><path d="M15 27C8 23 6 13 11 7c4-5 11-4 16-3 0 9-3 18-12 23Z" stroke="currentColor" stroke-width="1.6"/><path d="m12 25 9-15M15 19l-3-6m5 2 6-1" stroke="currentColor" stroke-width="1.6"/></svg>
+  <span class="brand-name">mộc.</span><span class="brand-sub" th:text="${subtitle}">CAREERS</span>
+</a>
+</body></html>

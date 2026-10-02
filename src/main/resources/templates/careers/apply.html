@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{careers/fragments :: head(${'Apply for ' + job.postingTitle})}"></head>
+<body><header th:replace="~{careers/fragments :: header}"></header>
+<main id="main" class="container application-page" tabindex="-1">
+  <a class="text-link" th:href="@{/jobs/{id}(id=${job.jobPostingId})}">Back to Role</a>
+  <h1>Apply for <span th:text="${job.postingTitle}"></span></h1>
+  <p class="application-intro">Your details below come from the account and candidate profile linked to your sign-in.</p>
+  <div id="submission-notice" class="submission-notice"><h2>Online submission is not available yet</h2><p>CV uploads and application submission are still being prepared. Your details are shown for review; no application will be created on this page.</p></div>
+  <!-- No POST handler until CV storage and submission policy are confirmed. Keep the skeleton non-submitting. -->
+  <form id="application-form" th:action="@{/jobs/{id}/apply(id=${job.jobPostingId})}" method="post" aria-describedby="submission-notice">
+    <fieldset class="account-review"><legend>Your Account Details — Read-only</legend>
+    <p class="process-note">Check the information linked to your account. Profile editing is not available here.</p>
+    <div class="application-fields">
+      <div class="search-field"><label for="full-name">Full Name</label><input id="full-name" name="fullName" autocomplete="name" th:value="${candidate.fullName}" readonly></div>
+      <div class="search-field"><label for="email">Email</label><input id="email" name="email" type="email" autocomplete="email" th:value="${candidate.email}" readonly></div>
+      <div class="search-field"><label for="phone">Phone Number</label><input id="phone" name="phoneNumber" type="tel" autocomplete="tel" th:value="${candidate.phoneNumber}" placeholder="Not provided" readonly></div>
+      <div class="search-field"><label for="linkedin">LinkedIn URL</label><input id="linkedin" name="linkedInUrl" type="url" th:value="${candidate.linkedInUrl}" placeholder="Not provided" readonly></div>
+      <div class="search-field"><label for="portfolio">Portfolio URL</label><input id="portfolio" name="portfolioUrl" type="url" th:value="${candidate.portfolioUrl}" placeholder="Not provided" readonly></div>
+      <div class="search-field"><label for="address">Address</label><input id="address" name="address" autocomplete="street-address" th:value="${candidate.address}" placeholder="Not provided" readonly></div>
+    </div>
+    </fieldset>
+    <div class="search-field cv-field"><label for="cv">CV / Resume</label><input id="cv" name="cv" type="file" disabled aria-describedby="submission-notice"></div>
+    <div class="application-actions"><button class="button" type="button" disabled aria-describedby="submission-notice">Submit Application</button><a class="text-link" th:href="@{/jobs/{id}(id=${job.jobPostingId})}">Return to Role</a></div>
+  </form>
+</main><footer th:replace="~{careers/fragments :: footer}"></footer></body></html>

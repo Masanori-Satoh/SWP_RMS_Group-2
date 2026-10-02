@@ -1,0 +1,251 @@
+{
+  "phase": "after",
+  "viewports": [
+    {
+      "width": 1440,
+      "scrollWidth": 1425,
+      "hero": {
+        "x": 0,
+        "y": 73,
+        "width": 1425,
+        "height": 671.53125
+      },
+      "firstCard": {
+        "x": 122.5,
+        "y": 1001.390625,
+        "width": 382.65625,
+        "height": 193.96875
+      },
+      "lifeFigure": {
+        "x": 122.5,
+        "y": 2641.109375,
+        "width": 633.140625,
+        "height": 402.46875
+      },
+      "jobColumns": "382.656px 382.672px 382.656px",
+      "smallTargets": []
+    },
+    {
+      "width": 1024,
+      "scrollWidth": 1009,
+      "hero": {
+        "x": 0,
+        "y": 73,
+        "width": 1009,
+        "height": 655.0625
+      },
+      "firstCard": {
+        "x": 24,
+        "y": 977.609375,
+        "width": 472.5,
+        "height": 193.96875
+      },
+      "lifeFigure": {
+        "x": 24,
+        "y": 2673.8125,
+        "width": 519.890625,
+        "height": 338.046875
+      },
+      "jobColumns": "472.5px 472.5px",
+      "smallTargets": []
+    },
+    {
+      "width": 768,
+      "scrollWidth": 753,
+      "hero": {
+        "x": 0,
+        "y": 73,
+        "width": 753,
+        "height": 780.28125
+      },
+      "firstCard": {
+        "x": 18,
+        "y": 1127.625,
+        "width": 350.5,
+        "height": 193.96875
+      },
+      "lifeFigure": {
+        "x": 18,
+        "y": 3290.140625,
+        "width": 717,
+        "height": 450.1875
+      },
+      "jobColumns": "350.5px 350.5px",
+      "smallTargets": []
+    },
+    {
+      "width": 375,
+      "scrollWidth": 375,
+      "hero": {
+        "x": 0,
+        "y": 67,
+        "width": 375,
+        "height": 735.796875
+      },
+      "firstCard": {
+        "x": 16,
+        "y": 1130.328125,
+        "width": 343,
+        "height": 193.96875
+      },
+      "lifeFigure": {
+        "x": 16,
+        "y": 4757.546875,
+        "width": 343,
+        "height": 237.390625
+      },
+      "jobColumns": "343px",
+      "smallTargets": []
+    },
+    {
+      "width": 320,
+      "scrollWidth": 305,
+      "hero": {
+        "x": 0,
+        "y": 67,
+        "width": 305,
+        "height": 798.84375
+      },
+      "firstCard": {
+        "x": 16,
+        "y": 1193.375,
+        "width": 273,
+        "height": 193.96875
+      },
+      "lifeFigure": {
+        "x": 16,
+        "y": 4972.65625,
+        "width": 273,
+        "height": 216.15625
+      },
+      "jobColumns": "273px",
+      "smallTargets": []
+    }
+  ],
+  "checks": [
+    {
+      "name": "no horizontal overflow",
+      "pass": true
+    },
+    {
+      "name": "44px interactive targets",
+      "pass": true,
+      "detail": []
+    },
+    {
+      "name": "text and placeholder contrast",
+      "pass": true,
+      "detail": {
+        "checked": 134,
+        "minRatio": 4.87,
+        "failures": []
+      }
+    },
+    {
+      "name": "initial roles",
+      "pass": true
+    },
+    {
+      "name": "skip link keyboard focus",
+      "pass": true
+    },
+    {
+      "name": "skip target focused",
+      "pass": true
+    },
+    {
+      "name": "keyword typing",
+      "pass": true
+    },
+    {
+      "name": "submit result focus",
+      "pass": false
+    },
+    {
+      "name": "detail dialog opens",
+      "pass": true
+    },
+    {
+      "name": "dialog accessible name",
+      "pass": true
+    },
+    {
+      "name": "dialog prevents background control focus",
+      "pass": true
+    },
+    {
+      "name": "dialog padding click stays open",
+      "pass": true
+    },
+    {
+      "name": "apply truthful notice",
+      "pass": true
+    },
+    {
+      "name": "escape closes dialog",
+      "pass": true
+    },
+    {
+      "name": "focus restored to role button",
+      "pass": true
+    },
+    {
+      "name": "empty state",
+      "pass": true
+    },
+    {
+      "name": "reset restores roles",
+      "pass": true
+    },
+    {
+      "name": "department filter",
+      "pass": true
+    },
+    {
+      "name": "department result focus",
+      "pass": true
+    },
+    {
+      "name": "role button specific accessible label",
+      "pass": true
+    },
+    {
+      "name": "location filter",
+      "pass": true
+    },
+    {
+      "name": "combined empty filter",
+      "pass": true
+    },
+    {
+      "name": "mobile menu opens",
+      "pass": true
+    },
+    {
+      "name": "mobile menu closes after navigation",
+      "pass": true
+    },
+    {
+      "name": "mobile escape closes and restores focus",
+      "pass": false
+    },
+    {
+      "name": "mobile outside tap closes menu",
+      "pass": true
+    },
+    {
+      "name": "long role title reflows",
+      "pass": true
+    },
+    {
+      "name": "reduced motion scroll",
+      "pass": true
+    },
+    {
+      "name": "no runtime errors",
+      "pass": true,
+      "detail": []
+    }
+  ],
+  "errors": []
+}

@@ -90,7 +90,7 @@ public class PasswordResetService {
         }
         if (newPassword == null || newPassword.isBlank()
                 || newPassword.length() < 8 || newPassword.length() > 32) {
-            throw new AccountFieldException("password", "Mật khẩu phải từ 8 đến 32 ký tự.");
+            throw new AccountFieldException("password", "Password must contain 8–32 characters.");
         }
         // Serialize two reset requests for the same account. The first password change
         // invalidates the signature before the second request acquires this row lock.

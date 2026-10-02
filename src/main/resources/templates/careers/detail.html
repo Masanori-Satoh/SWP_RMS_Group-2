@@ -1,0 +1,17 @@
+<!doctype html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{careers/fragments :: head(${job.postingTitle})}"></head>
+<body><header th:replace="~{careers/fragments :: header}"></header>
+<main id="main" class="container role-page" tabindex="-1">
+  <a class="text-link" th:href="@{/#roles}">Back to Open Positions</a>
+  <div class="role-page-top"><h1 th:text="${job.postingTitle}"></h1><a class="button" th:href="@{/jobs/{id}/apply(id=${job.jobPostingId})}">Apply Now</a></div>
+  <p class="process-note">Online submission is not available yet. Sign in with a Candidate account to review your details for this role.</p>
+  <dl th:replace="~{careers/fragments :: facts(${job})}"></dl>
+  <div class="job-description">
+    <section><h2>Overview &amp; Responsibilities</h2><p th:each="line : ${job.description}" th:text="${line}"></p></section>
+    <section><h2>Requirements</h2><p th:each="line : ${job.requirements}" th:text="${line}"></p></section>
+    <section><h2>Benefits</h2><p th:each="line : ${job.benefits}" th:text="${line}"></p><a class="text-link" th:href="@{/#benefits}">See Company-wide Benefits &amp; Working Policy</a></section>
+  </div>
+  <div class="role-page-actions"><a class="button" th:href="@{/jobs/{id}/apply(id=${job.jobPostingId})}">Apply Now</a><button class="clear-filters" id="share-role" type="button" hidden>Copy Role Link</button><span id="share-status" role="status" aria-live="polite"></span></div>
+  <p class="process-note" th:if="${viewer != null and viewer.roleName != 'Candidate'}">Applications require a Candidate account. Your current account is an internal account.</p>
+</main><footer th:replace="~{careers/fragments :: footer}"></footer></body></html>
