@@ -1,4 +1,4 @@
-package com.group2.rms.interview;
+package com.group2.rms.interview.entity;
 
 import lombok.Getter;
 

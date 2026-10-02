@@ -1,4 +1,4 @@
-package com.group2.rms.interview;
+package com.group2.rms.interview.entity;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Embeddable;

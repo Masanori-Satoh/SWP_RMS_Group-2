@@ -1,8 +1,8 @@
 package com.group2.rms.interview.dto;
 
-import com.group2.rms.interview.InterviewFormat;
-import com.group2.rms.interview.InterviewStatus;
-import com.group2.rms.interview.RoleInPanel;
+import com.group2.rms.interview.entity.InterviewFormat;
+import com.group2.rms.interview.entity.InterviewStatus;
+import com.group2.rms.interview.entity.RoleInPanel;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.AssertTrue;
 import jakarta.validation.constraints.Future;
@@ -14,6 +14,8 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+
+import org.springframework.format.annotation.DateTimeFormat;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -40,9 +42,11 @@ public class InterviewScheduleRequest {
 
     @NotNull(message = "Thời gian bắt đầu phỏng vấn không được để trống.")
     @Future(message = "Thời gian bắt đầu phỏng vấn phải ở trong tương lai.")
+    @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
     private LocalDateTime startTime;
 
     @NotNull(message = "Thời gian kết thúc phỏng vấn không được để trống.")
+    @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
     private LocalDateTime endTime;
 
     @Size(max = 500, message = "Địa điểm hoặc liên kết phòng họp tối đa 500 ký tự.")

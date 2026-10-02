@@ -1,5 +1,6 @@
-package com.group2.rms.interview;
+package com.group2.rms.interview.exception;
 
+import com.group2.rms.interview.entity.InterviewStatus;
 import lombok.Getter;
 
 /**

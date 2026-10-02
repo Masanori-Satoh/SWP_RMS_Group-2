@@ -1,10 +1,13 @@
-package com.group2.rms.interview;
+package com.group2.rms.interview.controller;
 
 import com.group2.rms.candidate.Application;
 import com.group2.rms.candidate.ApplicationRepository;
 import com.group2.rms.interview.dto.InterviewScheduleRequest;
 import com.group2.rms.interview.dto.InterviewScheduleResponse;
 import com.group2.rms.interview.dto.PanelMemberResponse;
+import com.group2.rms.interview.entity.*;
+import com.group2.rms.interview.exception.InterviewStatusException;
+import com.group2.rms.interview.service.InterviewSchedulingService;
 import com.group2.rms.user.entity.User;
 import com.group2.rms.user.repository.UserRepository;
 import jakarta.validation.Valid;
@@ -264,8 +267,8 @@ public class InterviewSchedulingController {
         model.addAttribute("isEdit", isEdit);
         model.addAttribute("interviewId", interviewId);
 
-        // Danh sách hồ sơ ứng tuyển
-        List<Application> applications = applicationRepository.findAll();
+        // Danh sách hồ sơ ứng tuyển (Eager load candidate, account, jobPosting tránh LazyInitializationException)
+        List<Application> applications = applicationRepository.findAllWithCandidateAndJobPosting();
         model.addAttribute("applications", applications);
 
         // Danh sách Interviewer hợp lệ (Rule HR Isolation: Lọc bỏ tài khoản có vai trò HR)

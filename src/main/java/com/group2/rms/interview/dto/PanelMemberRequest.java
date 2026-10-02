@@ -1,6 +1,6 @@
 package com.group2.rms.interview.dto;
 
-import com.group2.rms.interview.RoleInPanel;
+import com.group2.rms.interview.entity.RoleInPanel;
 import jakarta.validation.constraints.NotNull;
 
 /**

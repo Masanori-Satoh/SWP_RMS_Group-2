@@ -5,6 +5,7 @@ Tài liệu này là lịch sử tóm tắt các thay đổi quan trọng và b�
 ## Lịch sử Thay đổi
 
 | Ngày | Tên công việc / Yêu cầu chính | Người thực hiện | Chi tiết thay đổi |
+| **2026-10-03** | Tái cấu trúc Module Lịch phỏng vấn & Sửa lỗi Frontend/Backend | Đức | [Xem chi tiết](work_logs/2026-10-03-interview-refactor-and-bugfix.md) |
 | **2026-10-02** | Cải tiến Giao diện & Tách CSS/JS Lịch phỏng vấn | Đức | [Xem chi tiết](work_logs/2026-10-02-interview-schedule-ui-refactor.md) |
 | **2026-10-02** | Xây dựng Public Job Board & Details chuẩn kiến trúc | dunglt | [Xem chi tiết](work_logs/2026-10-02-plan-job-board.md) |
 | **2026-10-01** | Đại phẫu Kiến trúc & Database | Nhóm 2 | [Xem chi tiết](work_logs/2026-10-01-architecture-refactor.md) |

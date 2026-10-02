@@ -1,4 +1,4 @@
-package com.group2.rms.interview;
+package com.group2.rms.interview.service;
 
 import com.group2.rms.interview.dto.InterviewScheduleRequest;
 import com.group2.rms.interview.dto.InterviewScheduleResponse;

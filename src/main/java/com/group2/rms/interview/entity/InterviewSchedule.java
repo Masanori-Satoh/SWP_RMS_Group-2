@@ -1,4 +1,4 @@
-package com.group2.rms.interview;
+package com.group2.rms.interview.entity;
 
 import com.group2.rms.candidate.Application;
 import com.group2.rms.user.entity.User;

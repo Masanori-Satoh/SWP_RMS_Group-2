@@ -1,9 +1,9 @@
 package com.group2.rms.interview.dto;
 
 import com.group2.rms.candidate.Application;
-import com.group2.rms.interview.InterviewFormat;
-import com.group2.rms.interview.InterviewSchedule;
-import com.group2.rms.interview.InterviewStatus;
+import com.group2.rms.interview.entity.InterviewFormat;
+import com.group2.rms.interview.entity.InterviewSchedule;
+import com.group2.rms.interview.entity.InterviewStatus;
 import com.group2.rms.user.entity.User;
 
 import java.time.LocalDateTime;

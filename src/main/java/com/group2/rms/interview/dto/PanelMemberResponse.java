@@ -1,7 +1,7 @@
 package com.group2.rms.interview.dto;
 
-import com.group2.rms.interview.InterviewPanel;
-import com.group2.rms.interview.RoleInPanel;
+import com.group2.rms.interview.entity.InterviewPanel;
+import com.group2.rms.interview.entity.RoleInPanel;
 import com.group2.rms.user.entity.User;
 
 /**

@@ -1,5 +1,8 @@
-package com.group2.rms.interview;
+package com.group2.rms.interview.repository;
 
+import com.group2.rms.interview.entity.InterviewPanel;
+import com.group2.rms.interview.entity.InterviewPanelId;
+import com.group2.rms.interview.entity.RoleInPanel;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;

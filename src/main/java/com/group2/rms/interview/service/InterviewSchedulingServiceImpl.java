@@ -1,10 +1,14 @@
-package com.group2.rms.interview;
+package com.group2.rms.interview.service;
 
 import com.group2.rms.candidate.Application;
 import com.group2.rms.candidate.ApplicationRepository;
 import com.group2.rms.interview.dto.InterviewScheduleRequest;
 import com.group2.rms.interview.dto.InterviewScheduleResponse;
 import com.group2.rms.interview.dto.PanelMemberRequest;
+import com.group2.rms.interview.entity.*;
+import com.group2.rms.interview.exception.InterviewStatusException;
+import com.group2.rms.interview.repository.InterviewPanelRepository;
+import com.group2.rms.interview.repository.InterviewScheduleRepository;
 import com.group2.rms.user.entity.User;
 import com.group2.rms.user.repository.UserRepository;
 import jakarta.persistence.EntityNotFoundException;
