@@ -6,6 +6,7 @@ Tài liệu này là lịch sử tóm tắt các thay đổi quan trọng và b�
 
 | Ngày | Tên công việc / Yêu cầu chính | Người thực hiện | Chi tiết thay đổi |
 | :--- | :--- | :--- | :--- |
+| **2026-10-02** | Xây dựng Public Job Board & Details chuẩn kiến trúc | dunglt | [Xem chi tiết](logs/2026-10-02-plan-job-board.md) |
 | **2026-10-01** | Đại phẫu Kiến trúc & Database | Nhóm 2 | [Xem chi tiết](logs/2026-10-01-architecture-refactor.md) |
 | **2026-09-29** | Sáu màn hình xác thực/tài khoản | Nhóm 2 | [Xem chi tiết](logs/2026-09-29-auth-screens.md) |
 | **2026-09-29** | Tài liệu bàn giao và kịch bản test | Nhóm 2 | [Xem chi tiết](logs/2026-09-29-documentation-update.md) |
