@@ -65,8 +65,17 @@ class DashboardDatabaseTests {
                     .findFirst().orElseThrow();
             DashboardView view = dashboard.forUsername(account.getUsername());
             assertEquals(roleName, view.roleName());
-            assertFalse(view.metrics().isEmpty());
-            assertTrue(view.metrics().stream().allMatch(metric -> metric.value() >= 0));
+            if ("System Admin".equals(roleName)) {
+                // Admin dashboard shows internal/candidate account summaries instead of numeric metrics.
+                assertEquals(2, view.accountSummaries().size());
+                assertTrue(view.accountSummaries().stream().allMatch(summary -> summary.total() >= 0
+                        && summary.total() >= summary.active() + summary.inactive() + summary.blocked()));
+                assertEquals(metrics.accounts(), view.accountSummaries().stream()
+                        .mapToLong(DashboardView.AccountSummary::total).sum());
+            } else {
+                assertFalse(view.metrics().isEmpty());
+                assertTrue(view.metrics().stream().allMatch(metric -> metric.value() >= 0));
+            }
         }
 
         User candidateAccount = createCandidateAccount();
