@@ -5,6 +5,7 @@ Tài liệu này là lịch sử tóm tắt các thay đổi quan trọng và b�
 ## Lịch sử Thay đổi
 
 | Ngày | Tên công việc / Yêu cầu chính | Người thực hiện | Chi tiết thay đổi |
+| **2026-10-03** | Đồng bộ Main (PR7 & PR8) & Giải quyết Xung đột Kiến trúc | Đức | [Xem chi tiết](work_logs/2026-10-03-merge-main-resolve-conflicts.md) |
 | **2026-10-03** | Sửa lỗi Droplist Profile & Đăng xuất trên Topbar `/interviews` | Đức | [Xem chi tiết](work_logs/2026-10-03-fix-interview-topbar-dropdown.md) |
 | **2026-10-03** | Đồng bộ Module Lịch phỏng vấn với Phân quyền & Bảo mật của Linh | Đức | [Xem chi tiết](work_logs/2026-10-03-interview-sync-linhdn-security.md) |
 | **2026-10-03** | Tái cấu trúc Module Lịch phỏng vấn & Sửa lỗi Frontend/Backend | Đức | [Xem chi tiết](work_logs/2026-10-03-interview-refactor-and-bugfix.md) |

@@ -30,11 +30,12 @@
 - **Tinh chỉnh giao diện & Phục hồi chức năng:**
   - Khôi phục nút hành động "Tạo lịch phỏng vấn" dành cho vai trò HR.
   - Bố trí nút thu gọn / mở rộng bảng bộ lọc ở góc dưới bên phải trực quan, kèm hiệu ứng chuyển đổi mượt mà.
-- **Refactor kiến trúc giao diện & Tách biệt CSS / JavaScript (Clean Code):**
-  - Tách toàn bộ CSS từ thẻ inline `<style>` trong `list.html` sang file riêng: `src/main/resources/static/css/interview-list.css`.
-  - Tách toàn bộ JavaScript từ thẻ inline `<script>` trong `list.html` sang file riêng: `src/main/resources/static/js/interview-list.js`.
-  - Tối ưu `list.html` từ 1.551 dòng xuống còn 392 dòng sạch sẽ, dễ đọc, tuân thủ nguyên tắc không lấn sang các module khác.
-  - Đảm bảo dự án biên dịch thành công (`mvnw test-compile: BUILD SUCCESS`).
+- **Đồng bộ Main (PR7 & PR8) & Giải quyết Xung đột Kiến trúc (2026-10-03):**
+  - Thực hiện merge `origin/main` vào nhánh `feature/iter1-interview-schedule_duc`, giải quyết xung đột modify/delete ở thực thể `InterviewSchedule.java` (giữ bản trong `entity/`, xóa bản cũ ở root package).
+  - Cập nhật import cho 5 tệp trong module `interview` tương thích với cấu trúc package mới của `candidate` (`Application`, `ApplicationRepository`).
+  - Thiết lập cấu hình local `application-local.properties` an toàn, giữ mật khẩu máy cá nhân ngoài Git.
+  - Quy hoạch lại tài liệu: dời `docs/mockup/` về `docs/members/duc/mockup/mockup_design.html` theo chuẩn `docs/README.md`.
+  - Biên dịch toàn dự án thành công (`mvnw test-compile`: BUILD SUCCESS) và bộ test nghiệp vụ interview đạt 5/5 pass 100%. Chi tiết tại [work_logs/2026-10-03-merge-main-resolve-conflicts.md](../../management/work_logs/2026-10-03-merge-main-resolve-conflicts.md).
 
 ---
 
