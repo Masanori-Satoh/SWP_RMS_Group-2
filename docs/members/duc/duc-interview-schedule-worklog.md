@@ -36,6 +36,15 @@
   - Thiết lập cấu hình local `application-local.properties` an toàn, giữ mật khẩu máy cá nhân ngoài Git.
   - Quy hoạch lại tài liệu: dời `docs/mockup/` về `docs/members/duc/mockup/mockup_design.html` theo chuẩn `docs/README.md`.
   - Biên dịch toàn dự án thành công (`mvnw test-compile`: BUILD SUCCESS) và bộ test nghiệp vụ interview đạt 5/5 pass 100%. Chi tiết tại [work_logs/2026-10-03-merge-main-resolve-conflicts.md](../../management/work_logs/2026-10-03-merge-main-resolve-conflicts.md).
+- **Chuẩn hóa Kiến trúc Module Interview theo ARCHITECTURE_GUIDE.md (Mục 1, 3, 4, 5, 6, 8, 9) (2026-10-03):**
+  - **Mục 1 (Exception Hierarchy):** Chuyển `InterviewStatusException` kế thừa từ `BaseBusinessException` kèm mã lỗi nghiệp vụ (`INTERVIEW_STATUS_ERROR`, `INTERVIEW_INVALID_STATUS_TRANSITION`), hỗ trợ Global Exception Handler.
+  - **Mục 3 (Format Text xuống dòng an toàn):** Render text từ DB (`locationOrLink`) an toàn với `th:utext`, escapeXml thay thế `\n` thành `<br/>` và class CSS `.multiline-text` (`white-space: pre-line; word-break: break-word;`).
+  - **Mục 4 (Chuyển DTO sang Java Record):** Tái cấu trúc `InterviewScheduleRequest` thành Java Record bất biến, tích hợp compact constructor đồng bộ 2 chiều `interviewerIds` và `panelMembers`, `@Builder`, cùng các getter tương thích ngược cho Thymeleaf DataBinder và Service.
+  - **Mục 5 (Tái sử dụng Thymeleaf Fragment):** Bổ sung `globalHead` trong `fragments/head.html` và tái sử dụng cho `list.html`, `form.html`; tích hợp `fragments/brand :: wordmark(...)` trên header; chuẩn hóa toàn bộ URL sang cú pháp Spring `th:href="@{...}"`.
+  - **Mục 6 (Bóc tách CSS nội tuyến):** Xóa bỏ 100% thuộc tính inline `style="..."` trong `list.html` và `form.html`, gom vào các class CSS tương ứng trong `interview-list.css` và `interview-form.css`.
+  - **Mục 8 (Quản lý Transactional):** Rà soát và đảm bảo `@Transactional(readOnly = true)` cấp class cho các truy vấn đọc, và `@Transactional` độc lập cho các phương thức ghi (`createSchedule`, `updateSchedule`, `cancelSchedule`) chống LazyInitializationException.
+  - **Mục 9 (Tách biệt Script/Style):** Đảm bảo không có bất kỳ thẻ `<style>` hoặc `<script>` inline nào trong `templates/interview/` (100% nạp từ static css/js).
+  - Kiểm thử `InterviewSchedulingServiceTests`: **5/5 PASS (100%)**, `test-compile`: **BUILD SUCCESS**.
 
 ---
 
@@ -44,7 +53,7 @@
 1. Xây dựng giao diện và luồng xử lý cho màn hình Tạo mới lịch phỏng vấn (`/interviews/new`).
 2. Xây dựng màn hình Chi tiết lịch phỏng vấn (`/interviews/{id}`).
 3. Tích hợp tính năng Đánh giá phỏng vấn (`/interviews/evaluation`).
-4. Đồng bộ giao diện `interview/list.html` và `form.html` sang fragment chung (`fragments/head`, `fragments/workspace-header`).
+4. Phối hợp với Dũng/Core để hoàn thiện `GlobalExceptionHandler` cho form handling (để có thể an tâm bỏ try-catch ở Controller mà không ảnh hưởng UX).
 
 ---
 

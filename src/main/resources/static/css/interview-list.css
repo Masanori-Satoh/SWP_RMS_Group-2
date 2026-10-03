@@ -444,3 +444,43 @@
       .page-head { flex-direction:column; align-items:flex-start; }
       .filter-inputs-grid { grid-template-columns:1fr; }
     }
+
+    /* Extracted styles from list.html inline styles */
+    .page-title {
+      font-family: var(--serif);
+      font-size: 28px;
+      font-weight: 700;
+      color: var(--ink);
+      margin-bottom: var(--s1);
+    }
+    .btn-clear-filters {
+      display: none;
+    }
+    .meta-value-location {
+      word-break: break-all;
+      max-width: 200px;
+    }
+    .meta-link {
+      color: var(--brand);
+      text-decoration: underline;
+    }
+    .multiline-text {
+      white-space: pre-line;
+      word-break: break-word;
+    }
+    .panel-empty {
+      color: var(--muted);
+      font-size: 13px;
+      font-style: italic;
+    }
+    .action-form-inline {
+      display: inline;
+    }
+    .logout-form {
+      display: contents;
+    }
+    #filter-empty-state {
+      display: none;
+      margin-top: var(--s6);
+    }
+

@@ -1,26 +1,18 @@
 <!doctype html>
 <html lang="vi" xmlns:th="http://www.thymeleaf.org">
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title th:text="${isEdit ? 'Chỉnh sửa lịch phỏng vấn' : 'Lên lịch phỏng vấn mới'} + ' — Mộc Careers'">Lên lịch phỏng vấn — Mộc Careers</title>
-  <meta name="description" content="Lên lịch và phân công hội đồng phỏng vấn tuyển dụng Mộc Careers.">
-  <link rel="stylesheet" th:href="@{/css/global.css}" href="/css/global.css">
-  <link rel="stylesheet" th:href="@{/css/interview-form.css}" href="/css/interview-form.css">
+<head th:replace="~{fragments/head :: globalHead(${isEdit ? 'Chỉnh sửa lịch phỏng vấn' : 'Lên lịch phỏng vấn mới'}, ~{::pageStyles})}">
+  <th:block th:fragment="pageStyles">
+    <meta name="description" content="Lên lịch và phân công hội đồng phỏng vấn tuyển dụng Mộc Careers.">
+    <link rel="stylesheet" th:href="@{/css/interview-form.css}">
+  </th:block>
 </head>
 <body>
 
   <!-- Site Header -->
   <header class="site-header">
     <div class="container header-inner">
-      <a href="/interviews" class="wordmark">
-        <svg class="brand-mark" viewBox="0 0 32 32" aria-hidden="true">
-          <path d="M15 27C8 23 6 13 11 7c4-5 11-4 16-3 0 9-3 18-12 23Z" fill="currentColor"/>
-        </svg>
-        <span>Mộc Careers</span>
-        <span class="brand-sub">Tuyển dụng</span>
-      </a>
-      <a href="/interviews" class="text-link">← Quay lại danh sách lịch</a>
+      <a th:replace="~{fragments/brand :: wordmark('Tuyển dụng')}"></a>
+      <a th:href="@{/interviews}" class="text-link">← Quay lại danh sách lịch</a>
     </div>
   </header>
 
@@ -30,9 +22,9 @@
 
       <!-- Breadcrumb navigation -->
       <nav aria-label="Breadcrumb">
-        <a href="/interviews" class="text-link">Lịch phỏng vấn</a>
-        <span style="color:var(--muted); margin-inline:var(--s2);">/</span>
-        <span style="color:var(--ink); font-weight:600;" th:text="${isEdit ? 'Chỉnh sửa lịch #' + interviewId : 'Lên lịch mới'}">Lên lịch mới</span>
+        <a th:href="@{/interviews}" class="text-link">Lịch phỏng vấn</a>
+        <span class="breadcrumb-separator">/</span>
+        <span class="breadcrumb-current" th:text="${isEdit ? 'Chỉnh sửa lịch #' + interviewId : 'Lên lịch mới'}">Lên lịch mới</span>
       </nav>
 
       <!-- Form Card -->
@@ -52,7 +44,7 @@
 
           <!-- Global Errors Banner (Validation Rule GBR-01, MSG26 or general exceptions) -->
           <div th:if="${#fields.hasGlobalErrors()}" class="alert alert-error" role="alert">
-            <svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true" style="flex:none; margin-top:2px;">
+            <svg class="alert-icon" width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true">
               <path d="M10 18a8 8 0 100-16 8 8 0 000 16zM9 5h2v6H9V5zm0 8h2v2H9v-2z" fill="currentColor"/>
             </svg>
             <div>
@@ -189,7 +181,7 @@
 
           <!-- Form Actions -->
           <div class="form-actions">
-            <a href="/interviews" class="button button-secondary">Hủy bỏ</a>
+            <a th:href="@{/interviews}" class="button button-secondary">Hủy bỏ</a>
             <button type="submit" class="button button-brand">
               <svg width="18" height="18" viewBox="0 0 20 20" fill="none" aria-hidden="true">
                 <path d="M4 10l4 4L16 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>

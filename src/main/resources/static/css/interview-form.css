@@ -149,3 +149,18 @@
     width: 100%;
   }
 }
+
+/* Extracted from form.html inline styles */
+.breadcrumb-separator {
+  color: var(--muted);
+  margin-inline: var(--s2);
+}
+.breadcrumb-current {
+  color: var(--ink);
+  font-weight: 600;
+}
+.alert-icon {
+  flex: none;
+  margin-top: 2px;
+}
+

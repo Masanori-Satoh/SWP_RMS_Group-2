@@ -94,14 +94,14 @@ public class InterviewSchedulingController {
             return "redirect:/interviews";
         }
 
-        InterviewScheduleRequest request = new InterviewScheduleRequest();
-        request.setInterviewStatus(InterviewStatus.Scheduled);
-        request.setInterviewFormat(InterviewFormat.Online_GoogleMeet);
-
         // Gợi ý mặc định: 09:00 sáng ngày mai
         LocalDateTime defaultStartTime = LocalDateTime.now().plusDays(1).withHour(9).withMinute(0).withSecond(0).withNano(0);
-        request.setStartTime(defaultStartTime);
-        request.setEndTime(defaultStartTime.plusHours(1));
+        InterviewScheduleRequest request = InterviewScheduleRequest.builder()
+                .interviewStatus(InterviewStatus.Scheduled)
+                .interviewFormat(InterviewFormat.Online_GoogleMeet)
+                .startTime(defaultStartTime)
+                .endTime(defaultStartTime.plusHours(1))
+                .build();
 
         prepareFormModel(model, false, null);
         model.addAttribute("scheduleRequest", request);
@@ -171,20 +171,21 @@ public class InterviewSchedulingController {
         }
 
         // Điền dữ liệu hiện tại vào DTO form
-        InterviewScheduleRequest request = new InterviewScheduleRequest();
-        request.setApplicationId(detail.applicationId());
-        request.setInterviewFormat(detail.interviewFormat());
-        request.setStartTime(detail.startTime());
-        request.setEndTime(detail.endTime());
-        request.setLocationOrLink(detail.locationOrLink());
-        request.setInterviewStatus(detail.interviewStatus());
+        Set<Integer> interviewerIds = detail.interviewers() != null
+                ? detail.interviewers().stream()
+                        .map(PanelMemberResponse::interviewerId)
+                        .collect(Collectors.toSet())
+                : java.util.Collections.emptySet();
 
-        if (detail.interviewers() != null) {
-            Set<Integer> interviewerIds = detail.interviewers().stream()
-                    .map(PanelMemberResponse::interviewerId)
-                    .collect(Collectors.toSet());
-            request.setInterviewerIds(interviewerIds);
-        }
+        InterviewScheduleRequest request = InterviewScheduleRequest.builder()
+                .applicationId(detail.applicationId())
+                .interviewFormat(detail.interviewFormat())
+                .startTime(detail.startTime())
+                .endTime(detail.endTime())
+                .locationOrLink(detail.locationOrLink())
+                .interviewStatus(detail.interviewStatus())
+                .interviewerIds(interviewerIds)
+                .build();
 
         prepareFormModel(model, true, id);
         model.addAttribute("scheduleRequest", request);

@@ -9,62 +9,83 @@ import jakarta.validation.constraints.Future;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
-import lombok.AllArgsConstructor;
 import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
-
 import org.springframework.format.annotation.DateTimeFormat;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 /**
- * DTO nhận dữ liệu yêu cầu tạo mới hoặc cập nhật lịch phỏng vấn.
- * Áp dụng đầy đủ validation chuẩn: @NotNull, @Future, @Size, @NotEmpty và class-level @ValidInterviewTime.
+ * DTO nhận dữ liệu yêu cầu tạo mới hoặc cập nhật lịch phỏng vấn (sử dụng Java Record).
+ * Tuân thủ đầy đủ quy chuẩn DTO bất biến, validation và tương thích ngược với Spring MVC Binding / Thymeleaf.
  */
-@Getter
-@Setter
-@NoArgsConstructor
-@AllArgsConstructor
 @Builder
 @ValidInterviewTime
-public class InterviewScheduleRequest {
+public record InterviewScheduleRequest(
+        @NotNull(message = "Application ID không được để trống.")
+        Integer applicationId,
 
-    @NotNull(message = "Application ID không được để trống.")
-    private Integer applicationId;
+        @NotNull(message = "Hình thức phỏng vấn không được để trống (Online_GoogleMeet hoặc Offline_Office).")
+        InterviewFormat interviewFormat,
 
-    @NotNull(message = "Hình thức phỏng vấn không được để trống (Online_GoogleMeet hoặc Offline_Office).")
-    private InterviewFormat interviewFormat;
+        @NotNull(message = "Thời gian bắt đầu phỏng vấn không được để trống.")
+        @Future(message = "Thời gian bắt đầu phỏng vấn phải ở trong tương lai.")
+        @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
+        LocalDateTime startTime,
 
-    @NotNull(message = "Thời gian bắt đầu phỏng vấn không được để trống.")
-    @Future(message = "Thời gian bắt đầu phỏng vấn phải ở trong tương lai.")
-    @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
-    private LocalDateTime startTime;
+        @NotNull(message = "Thời gian kết thúc phỏng vấn không được để trống.")
+        @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
+        LocalDateTime endTime,
 
-    @NotNull(message = "Thời gian kết thúc phỏng vấn không được để trống.")
-    @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
-    private LocalDateTime endTime;
+        @Size(max = 500, message = "Địa điểm hoặc liên kết phòng họp tối đa 500 ký tự.")
+        String locationOrLink,
 
-    @Size(max = 500, message = "Địa điểm hoặc liên kết phòng họp tối đa 500 ký tự.")
-    private String locationOrLink;
+        InterviewStatus interviewStatus,
+
+        Set<Integer> interviewerIds,
+
+        @NotEmpty(message = "Hội đồng phỏng vấn phải có ít nhất 1 người phỏng vấn.")
+        @Valid
+        List<PanelMemberRequest> panelMembers
+) {
 
     /**
-     * Trạng thái phỏng vấn (tùy chọn khi tạo mới - mặc định Scheduled; dùng khi cập nhật trạng thái).
+     * Compact constructor: Đảm bảo tính toán đồng bộ giữa interviewerIds và panelMembers,
+     * đồng thời gán giá trị mặc định cho interviewStatus.
      */
-    private InterviewStatus interviewStatus;
+    public InterviewScheduleRequest {
+        if (panelMembers == null || panelMembers.isEmpty()) {
+            if (interviewerIds != null && !interviewerIds.isEmpty()) {
+                panelMembers = interviewerIds.stream()
+                        .filter(Objects::nonNull)
+                        .map(id -> new PanelMemberRequest(id, RoleInPanel.HM))
+                        .toList();
+            } else {
+                panelMembers = Collections.emptyList();
+            }
+        } else {
+            if (interviewerIds == null || interviewerIds.isEmpty()) {
+                interviewerIds = panelMembers.stream()
+                        .map(PanelMemberRequest::interviewerId)
+                        .filter(Objects::nonNull)
+                        .collect(Collectors.toSet());
+            }
+        }
+        if (interviewStatus == null) {
+            interviewStatus = InterviewStatus.Scheduled;
+        }
+    }
 
     /**
-     * Danh sách thành viên Hội đồng phỏng vấn (Interviewer).
-     * Bắt buộc có ít nhất 1 thành viên.
+     * No-args constructor hỗ trợ form binding khởi tạo ban đầu.
      */
-    @NotEmpty(message = "Hội đồng phỏng vấn phải có ít nhất 1 người phỏng vấn.")
-    @Valid
-    @Builder.Default
-    private List<PanelMemberRequest> panelMembers = new ArrayList<>();
+    public InterviewScheduleRequest() {
+        this(null, null, null, null, null, InterviewStatus.Scheduled, Collections.emptySet(), Collections.emptyList());
+    }
 
     /**
      * Class-level validation helper (Rule MSG26: endTime > startTime).
@@ -81,24 +102,38 @@ public class InterviewScheduleRequest {
         return endTime.isAfter(startTime);
     }
 
-    /**
-     * Tiện ích hỗ trợ client nếu chỉ truyền danh sách ID người phỏng vấn.
-     */
-    public void setInterviewerIds(Set<Integer> interviewerIds) {
-        if (interviewerIds != null) {
-            this.panelMembers = interviewerIds.stream()
-                    .map(id -> new PanelMemberRequest(id, RoleInPanel.HM))
-                    .toList();
-        }
+    // ==========================================
+    // BACKWARD-COMPATIBLE GETTERS (Thymeleaf / Service)
+    // ==========================================
+    public Integer getApplicationId() {
+        return applicationId;
+    }
+
+    public InterviewFormat getInterviewFormat() {
+        return interviewFormat;
+    }
+
+    public LocalDateTime getStartTime() {
+        return startTime;
+    }
+
+    public LocalDateTime getEndTime() {
+        return endTime;
+    }
+
+    public String getLocationOrLink() {
+        return locationOrLink;
+    }
+
+    public InterviewStatus getInterviewStatus() {
+        return interviewStatus;
     }
 
     public Set<Integer> getInterviewerIds() {
-        if (panelMembers == null) {
-            return java.util.Collections.emptySet();
-        }
-        return panelMembers.stream()
-                .map(PanelMemberRequest::interviewerId)
-                .filter(java.util.Objects::nonNull)
-                .collect(java.util.stream.Collectors.toSet());
+        return interviewerIds;
+    }
+
+    public List<PanelMemberRequest> getPanelMembers() {
+        return panelMembers;
     }
 }
