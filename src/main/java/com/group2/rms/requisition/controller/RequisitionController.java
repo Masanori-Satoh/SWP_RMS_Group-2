@@ -35,7 +35,7 @@ public class RequisitionController {
     }
     @ModelAttribute
     void viewer(Model model) {
-        var actor=access.actor();model.addAttribute("viewerName",actor.getFullName());model.addAttribute("canCreate",access.canCreate(actor));
+        var actor=access.actor();model.addAttribute("viewerName",actor.getFullName());model.addAttribute("viewerRole",actor.getRole().getRoleName());model.addAttribute("canCreate",access.canCreate(actor));
     }
     @GetMapping
     public String list(@RequestParam(defaultValue="1") int page,@RequestParam(defaultValue="10") int size,

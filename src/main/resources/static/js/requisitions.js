@@ -1,18 +1,33 @@
 document.addEventListener('DOMContentLoaded', () => {
+    const positionMenu = (button, menu) => {
+        const rect = button.getBoundingClientRect();
+        if (rect.bottom < 0 || rect.top > window.innerHeight || rect.right < 0 || rect.left > window.innerWidth) {
+            menu.hidePopover();
+            return;
+        }
+        menu.style.left = Math.max(8, Math.min(rect.right - menu.offsetWidth, window.innerWidth - menu.offsetWidth - 8)) + 'px';
+        menu.style.top = (rect.bottom + menu.offsetHeight + 8 > window.innerHeight ? Math.max(8, rect.top - menu.offsetHeight - 6) : rect.bottom + 6) + 'px';
+    };
     document.querySelectorAll('[data-action-menu]').forEach(button => {
         const menu = document.getElementById(button.getAttribute('popovertarget'));
         menu.addEventListener('toggle', event => {
             if (event.newState !== 'open') return;
-            const rect = button.getBoundingClientRect();
-            menu.style.left = Math.max(8, Math.min(rect.right - menu.offsetWidth, window.innerWidth - menu.offsetWidth - 8)) + 'px';
-            menu.style.top = (rect.bottom + menu.offsetHeight + 8 > window.innerHeight ? Math.max(8, rect.top - menu.offsetHeight - 6) : rect.bottom + 6) + 'px';
+            positionMenu(button, menu);
         });
     });
     const closeMenus = () => document.querySelectorAll('.action-popover:popover-open').forEach(menu => menu.hidePopover());
-    window.addEventListener('resize', closeMenus);
-    document.addEventListener('scroll', closeMenus, true);
+    // Scrolling a table to reach its action button must not immediately dismiss the menu.
+    const repositionMenus = () => document.querySelectorAll('[data-action-menu]').forEach(button => {
+        const menu = document.getElementById(button.getAttribute('popovertarget'));
+        if (menu.matches(':popover-open')) positionMenu(button, menu);
+    });
+    window.addEventListener('resize', repositionMenus);
+    document.addEventListener('scroll', repositionMenus, true);
     const dialog = document.getElementById('delete-dialog');
+    let deleteTrigger;
     document.querySelectorAll('[data-delete-requisition]').forEach(button => button.addEventListener('click', () => {
+        const menu = button.closest('.action-popover');
+        deleteTrigger = menu ? document.querySelector(`[popovertarget="${menu.id}"]`) : button;
         closeMenus();
         document.getElementById('delete-name').textContent = button.dataset.title;
         document.getElementById('delete-version').value = button.dataset.version;
@@ -20,6 +35,7 @@ document.addEventListener('DOMContentLoaded', () => {
         dialog.showModal(); dialog.querySelector('[data-close-dialog]').focus();
     }));
     dialog?.querySelector('[data-close-dialog]').addEventListener('click', () => dialog.close());
+    dialog?.addEventListener('close', () => deleteTrigger?.focus());
     dialog?.addEventListener('click', event => { if (event.target === dialog) dialog.close(); });
 
     const form = document.getElementById('requisition-form');

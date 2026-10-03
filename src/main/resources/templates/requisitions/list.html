@@ -1,23 +1,21 @@
 <!DOCTYPE html>
 <html lang="en" xmlns:th="http://www.thymeleaf.org">
 
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Job Requisitions | RMS</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" th:href="@{/css/app-layout.css}">
-    <link rel="stylesheet" th:href="@{/css/requisition-shared.css}">
-    <link rel="stylesheet" th:href="@{/css/requisition-list.css}">
-    <script th:src="@{/js/requisitions.js}" defer></script>
+<head th:replace="~{fragments/head :: interfaceHead('Job Requisitions', ~{::pageStyles})}">
+    <th:block th:fragment="pageStyles">
+        <link rel="stylesheet" th:href="@{/css/requisition-shared.css}">
+        <link rel="stylesheet" th:href="@{/css/requisition-list.css}">
+        <script th:src="@{/js/requisitions.js}" defer></script>
+    </th:block>
 </head>
 
-<body class="req-app req-list-page">
+<body class="rms-app req-app req-list-page">
     <div class="page-wrapper">
-        <aside th:replace="~{fragments/sidebar :: sidebar(activeMenu='requisitions')}"></aside>
+        <aside th:replace="~{fragments/sidebar :: workspace('requisitions', ${viewerRole})}"></aside>
         <div class="main-content">
-            <header th:replace="~{fragments/requisition :: topbar}"></header>
-            <main class="page-content">
+            <header th:replace="~{fragments/workspace-header :: header(${viewerRole}, ${viewerName})}"></header>
+            <main id="main" tabindex="-1" class="page-content">
+                <div class="container">
                 <nav class="requisition-breadcrumb" aria-label="Breadcrumb"><a
                         th:href="@{/dashboard}">Dashboard</a><span aria-hidden="true">/</span><span
                         aria-current="page">Job Requisitions</span></nav>
@@ -76,7 +74,8 @@
                         <div class="filter-actions"><button type="submit" class="filter-apply">Apply</button><a
                                 th:href="@{/requisitions}" class="clear-filters">Clear filters</a></div>
                     </form>
-                    <div class="requisition-table-wrap" role="region" aria-label="Requisition list" tabindex="0">
+                    <p class="table-scroll-note" hidden>Scroll horizontally to see all columns and actions.</p>
+                    <div class="table-wrapper requisition-table-wrap" role="region" aria-label="Requisition list" tabindex="0">
                         <table class="requisition-list-table">
                             <colgroup>
                                 <col class="col-index">
@@ -90,7 +89,7 @@
                             </colgroup>
                             <thead>
                                 <tr>
-                                    <th scope="col">STT</th>
+                                    <th scope="col">No.</th>
                                     <th scope="col">Position</th>
                                     <th scope="col">Department</th>
                                     <th scope="col">Quantity</th>
@@ -135,8 +134,7 @@
                                     </td>
                                 </tr>
                                 <tr th:if="${#lists.isEmpty(requisitions)}">
-                                    <td colspan="8" class="empty-state">No requisitions found. Adjust your filters or
-                                        create a new request.</td>
+                                    <td colspan="8" class="empty-state">No requisitions found. Try changing or clearing your filters.</td>
                                 </tr>
                             </tbody>
                         </table>
@@ -159,6 +157,7 @@
                         </div>
                     </nav>
                 </section>
+            </div>
             </main>
         </div>
     </div>

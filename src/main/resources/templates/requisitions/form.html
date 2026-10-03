@@ -1,88 +1,83 @@
 <!DOCTYPE html>
 <html lang="en" xmlns:th="http://www.thymeleaf.org">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title th:text="${isEdit ? 'Edit Requisition' : 'Create Requisition'} + ' | RMS'">Requisition Form</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" th:href="@{/css/app-layout.css}">
-    <link rel="stylesheet" th:href="@{/css/requisition-form.css}">
-<link rel="stylesheet" th:href="@{/css/requisition-shared.css}">
-<script th:src="@{/js/requisitions.js}" defer></script>
+<head th:replace="~{fragments/head :: interfaceHead(${isEdit ? 'Edit Requisition' : 'Create Requisition'}, ~{::pageStyles})}">
+    <th:block th:fragment="pageStyles">
+        <link rel="stylesheet" th:href="@{/css/requisition-shared.css}">
+        <link rel="stylesheet" th:href="@{/css/requisition-form.css}">
+        <script th:src="@{/js/requisitions.js}" defer></script>
+    </th:block>
 </head>
-<body class="req-app requisition-form-page">
+<body class="rms-app req-app requisition-form-page">
 <div class="page-wrapper">
-    <aside th:replace="~{fragments/sidebar :: sidebar(activeMenu='requisitions')}"></aside>
+    <aside th:replace="~{fragments/sidebar :: workspace('requisitions', ${viewerRole})}"></aside>
     <div class="main-content">
-        <header th:replace="~{fragments/requisition :: topbar}"></header>
-        <main class="page-content">
+        <header th:replace="~{fragments/workspace-header :: header(${viewerRole}, ${viewerName})}"></header>
+        <main id="main" tabindex="-1" class="page-content">
+                <div class="container">
             <header class="requisition-page-intro">
                 <nav th:replace="~{fragments/requisition :: breadcrumb(current=${isEdit ? 'Edit' : 'Create'})}"></nav>
                 <h1 th:text="${isEdit ? 'Edit Requisition' : 'Create Requisition'}">Create Requisition</h1>
                 <p class="requisition-page-description" th:text="${isEdit ? 'Update the details below, then save your draft or submit it to the Director.' : 'Fill in the details below to save a draft or submit a new hiring request.'}"></p>
+            <p class="field-help">Fields marked * are required to submit. You can save an incomplete draft.</p>
             </header>
             <form class="form-container" id="requisition-form" th:object="${requisitionDto}" th:action="${isEdit} ? @{/requisitions/edit/{id}(id=${requisitionId})} : @{/requisitions/create}" method="post">
                 <input type="hidden" th:field="*{version}"><p class="notice" th:if="${copyNotice}" th:text="${copyNotice}"></p>
 
-                <section th:if="${#fields.hasAnyErrors()}" id="validation-summary" role="alert" tabindex="-1" class="alert alert-danger" style="margin-bottom: 20px;">
-                    <p style="font-weight:600;">Please check the following details:</p>
-                    <ul style="padding-left: 20px; margin-top: 8px;"><li th:each="error : ${#fields.allErrors()}" th:text="${error}"></li></ul>
+                <section th:if="${#fields.hasAnyErrors()}" id="validation-summary" role="alert" tabindex="-1" class="alert alert-danger">
+                    <p>Please check the following details:</p>
+                    <ul><li th:each="error : ${#fields.allErrors()}" th:text="${error}"></li></ul>
                 </section>
 
                 <!-- Basic Information -->
                 <div class="form-card">
                     <div class="form-card-header">
-                        <span th:replace="~{fragments/requisition :: informationIcon}"></span>
                         <h2>Basic Information</h2>
                     </div>
 
                     <div class="form-grid">
                         <div class="form-group">
                             <label for="title">Job Title <span class="required-asterisk">*</span></label>
-                            <input class="form-control-custom" type="text" th:field="*{title}" placeholder="Enter job title" maxlength="200" required><small class="field-error" th:errors="*{title}"></small>
+                            <input class="form-control-custom" type="text" th:field="*{title}" th:attr="aria-invalid=${#fields.hasErrors('title')}" aria-describedby="title-error" placeholder="Enter job title" maxlength="200" required><small id="title-error" class="field-error" th:text="${#fields.hasErrors('title') ? #strings.listJoin(#fields.errors('title'), '; ') : ''}"></small>
                         </div>
                         <div class="form-group">
                             <label for="employmentType">Employment Type <span class="required-asterisk">*</span></label>
-                            <select class="form-control-custom" th:field="*{employmentType}" required>
+                            <select class="form-control-custom" th:field="*{employmentType}" th:attr="aria-invalid=${#fields.hasErrors('employmentType')}" aria-describedby="employmentType-error" required>
                                 <option value="">Select employment type</option>
                                 <option th:each="type : ${employmentTypes}" th:value="${type}" th:text="${type}"></option>
-                            </select><small class="field-error" th:errors="*{employmentType}"></small>
+                            </select><small id="employmentType-error" class="field-error" th:text="${#fields.hasErrors('employmentType') ? #strings.listJoin(#fields.errors('employmentType'), '; ') : ''}"></small>
                         </div>
                         <div class="form-group">
                             <label for="departmentId">Department <span class="required-asterisk">*</span></label>
-                            <select class="form-control-custom" th:field="*{departmentId}" required>
+                            <select class="form-control-custom" th:field="*{departmentId}" th:attr="aria-invalid=${#fields.hasErrors('departmentId')}" aria-describedby="departmentId-error" required>
                                 <option value="">Select department</option>
                                 <option th:each="department : ${departments}" th:value="${department.departmentId}" th:text="${department.departmentName}"></option>
-                            </select><small class="field-error" th:errors="*{departmentId}"></small>
+                            </select><small id="departmentId-error" class="field-error" th:text="${#fields.hasErrors('departmentId') ? #strings.listJoin(#fields.errors('departmentId'), '; ') : ''}"></small>
                         </div>
                         <div class="form-group">
                             <label for="numberOfPositions">Number of Openings <span class="required-asterisk">*</span></label>
-                            <input class="form-control-custom" type="number" th:field="*{numberOfPositions}" value="1" min="1" required><small class="field-error" th:errors="*{numberOfPositions}"></small>
+                            <input class="form-control-custom" type="number" th:field="*{numberOfPositions}" th:attr="aria-invalid=${#fields.hasErrors('numberOfPositions')}" aria-describedby="numberOfPositions-error" value="1" min="1" required><small id="numberOfPositions-error" class="field-error" th:text="${#fields.hasErrors('numberOfPositions') ? #strings.listJoin(#fields.errors('numberOfPositions'), '; ') : ''}"></small>
                         </div>
                         <div class="form-group">
                             <label for="gender">Gender</label>
-                            <select class="form-control-custom" th:field="*{gender}">
+                            <select class="form-control-custom" th:field="*{gender}" th:attr="aria-invalid=${#fields.hasErrors('gender')}" aria-describedby="gender-error">
                                 <option value="Any">Any</option>
                                 <option value="Male">Male</option>
                                 <option value="Female">Female</option>
-                            </select><small class="field-error" th:errors="*{gender}"></small>
+                            </select><small id="gender-error" class="field-error" th:text="${#fields.hasErrors('gender') ? #strings.listJoin(#fields.errors('gender'), '; ') : ''}"></small>
                         </div>
                         <div class="form-group">
                             <label for="expectedStartDate">Expected Start Date <span class="required-asterisk">*</span></label>
-                            <input class="form-control-custom" type="date" th:field="*{expectedStartDate}" required><small class="field-error" th:errors="*{expectedStartDate}"></small>
+                            <input class="form-control-custom" type="date" th:field="*{expectedStartDate}" th:attr="aria-invalid=${#fields.hasErrors('expectedStartDate')}" aria-describedby="expectedStartDate-error" required><small id="expectedStartDate-error" class="field-error" th:text="${#fields.hasErrors('expectedStartDate') ? #strings.listJoin(#fields.errors('expectedStartDate'), '; ') : ''}"></small>
                         </div>
                         <div class="form-group">
-                            <label for="workingHours">Working Hours</label><input class="form-control-custom" type="text" th:field="*{workingHours}" maxlength="255" placeholder="e.g. Monday–Friday, 08:00–17:00"><small class="field-error" th:errors="*{workingHours}"></small>
+                            <label for="workingHours">Working Hours</label><input class="form-control-custom" type="text" th:field="*{workingHours}" th:attr="aria-invalid=${#fields.hasErrors('workingHours')}" aria-describedby="workingHours-error" maxlength="255" placeholder="e.g. Monday–Friday, 08:00–17:00"><small id="workingHours-error" class="field-error" th:text="${#fields.hasErrors('workingHours') ? #strings.listJoin(#fields.errors('workingHours'), '; ') : ''}"></small>
                         </div>
                         <div class="form-group">
                             <label for="workLocation">Location <span class="required-asterisk">*</span></label>
-                            <input class="form-control-custom" type="text" th:field="*{workLocation}" placeholder="Enter work location" maxlength="255" required><small class="field-error" th:errors="*{workLocation}"></small>
+                            <input class="form-control-custom" type="text" th:field="*{workLocation}" th:attr="aria-invalid=${#fields.hasErrors('workLocation')}" aria-describedby="workLocation-error" placeholder="Enter work location" maxlength="255" required><small id="workLocation-error" class="field-error" th:text="${#fields.hasErrors('workLocation') ? #strings.listJoin(#fields.errors('workLocation'), '; ') : ''}"></small>
                         </div>
-                        <div class="form-group" style="grid-column: 1 / -1;">
-                            <label>Proposed Salary Range (VND)</label>
+                        <div class="form-group form-group-full">
+                            <span class="form-label">Proposed Salary Range (VND)</span>
                             <div class="salary-range">
                                 <input class="form-control-custom" type="number" th:field="*{minSalary}" placeholder="Min salary" min="0" step="0.01" aria-label="Minimum salary">
                                 <span>-</span>
@@ -95,52 +90,48 @@
                 <!-- Reason for Hiring -->
                 <div class="form-card">
                     <div class="form-card-header">
-                        <div class="icon-wrapper"><i class="fa-regular fa-comment-dots"></i></div>
                         <h2><label for="reasonForHiring">Reason for Hiring <span class="required-asterisk">*</span></label></h2>
                     </div>
-                    <textarea class="textarea-custom" th:field="*{reasonForHiring}" aria-describedby="reasonForHiring-count" placeholder="Enter reason for hiring (e.g., new position, replacement, business expansion...)" maxlength="2000" required></textarea>
-                    <div class="char-counter" id="reasonForHiring-count">0/2000</div><small class="field-error" th:errors="*{reasonForHiring}"></small>
+                    <textarea class="textarea-custom" th:field="*{reasonForHiring}" th:attr="aria-invalid=${#fields.hasErrors('reasonForHiring')}" aria-describedby="reasonForHiring-count reasonForHiring-error" placeholder="Enter reason for hiring (e.g., new position, replacement, business expansion...)" maxlength="2000" required></textarea>
+                    <div class="char-counter" id="reasonForHiring-count">0/2000</div><small id="reasonForHiring-error" class="field-error" th:text="${#fields.hasErrors('reasonForHiring') ? #strings.listJoin(#fields.errors('reasonForHiring'), '; ') : ''}"></small>
                 </div>
 
                 <!-- Job Description -->
                 <div class="form-card">
                     <div class="form-card-header">
-                        <div class="icon-wrapper"><i class="fa-regular fa-file-alt"></i></div>
                         <h2><label for="jobDescription">Job Description <span class="required-asterisk">*</span></label></h2>
                     </div>
-                    <textarea class="textarea-custom" th:field="*{jobDescription}" aria-describedby="jobDescription-count" placeholder="Enter detailed job description..." maxlength="2000" required></textarea>
-                    <div class="char-counter" id="jobDescription-count">0/2000</div><small class="field-error" th:errors="*{jobDescription}"></small>
+                    <textarea class="textarea-custom" th:field="*{jobDescription}" th:attr="aria-invalid=${#fields.hasErrors('jobDescription')}" aria-describedby="jobDescription-count jobDescription-error" placeholder="Enter detailed job description..." maxlength="2000" required></textarea>
+                    <div class="char-counter" id="jobDescription-count">0/2000</div><small id="jobDescription-error" class="field-error" th:text="${#fields.hasErrors('jobDescription') ? #strings.listJoin(#fields.errors('jobDescription'), '; ') : ''}"></small>
                 </div>
 
                 <!-- Candidate Requirements -->
                 <div class="form-card">
                     <div class="form-card-header">
-                        <div class="icon-wrapper"><i class="fa-solid fa-user-check"></i></div>
                         <h2><label for="requirementDetails">Candidate Requirements <span class="required-asterisk">*</span></label></h2>
                     </div>
-                    <textarea class="textarea-custom" th:field="*{requirementDetails}" aria-describedby="requirementDetails-count" placeholder="Enter candidate requirements (skills, experience, education, etc.)..." maxlength="2000" required></textarea>
-                    <div class="char-counter" id="requirementDetails-count">0/2000</div><small class="field-error" th:errors="*{requirementDetails}"></small>
+                    <textarea class="textarea-custom" th:field="*{requirementDetails}" th:attr="aria-invalid=${#fields.hasErrors('requirementDetails')}" aria-describedby="requirementDetails-count requirementDetails-error" placeholder="Enter candidate requirements (skills, experience, education, etc.)..." maxlength="2000" required></textarea>
+                    <div class="char-counter" id="requirementDetails-count">0/2000</div><small id="requirementDetails-error" class="field-error" th:text="${#fields.hasErrors('requirementDetails') ? #strings.listJoin(#fields.errors('requirementDetails'), '; ') : ''}"></small>
                 </div>
 
                 <!-- Screening Criteria -->
                 <div class="form-card">
                     <div class="form-card-header header-actions">
-                        <div style="display: flex; align-items: center; gap: 12px;">
-                            <div class="icon-wrapper"><i class="fa-solid fa-list-check"></i></div>
-                            <h2>Screening Criteria</h2><small class="field-error" th:errors="*{screeningCriteria}"></small>
+                        <div class="criteria-heading">
+                            <h2>Screening Criteria</h2><small class="field-error" th:text="${#fields.hasErrors('screeningCriteria') ? #strings.listJoin(#fields.errors('screeningCriteria'), '; ') : ''}"></small>
                         </div>
                         <button type="button" class="btn-add-criteria" id="btn-add-criteria">+ Add Criteria</button>
                     </div>
-                    <p class="field-error" id="criteria-error" role="alert" hidden></p><div class="criteria-scroll"><table class="criteria-table-custom">
+                    <p class="field-help criteria-help">Add at least one criterion. Weights must total 100% before submitting.</p><p class="field-error" id="criteria-error" role="alert" hidden></p><p class="table-scroll-note" hidden>Scroll horizontally to edit all criterion fields.</p><div class="table-wrapper criteria-scroll" role="region" aria-label="Screening criteria" tabindex="0"><table class="criteria-table-custom">
                         <thead>
                             <tr>
-                                <th style="width: 40px;">#</th>
+                                <th>#</th>
                                 <th>CRITERIA <span class="required-asterisk">*</span></th>
                                 <th>CRITERIA TYPE <span class="required-asterisk">*</span></th>
                                 <th>REQUIRED VALUE <span class="required-asterisk">*</span></th>
-                                <th style="width: 100px;">WEIGHT (%) <span class="required-asterisk">*</span></th>
-                                <th style="width: 120px;">MANDATORY</th>
-                                <th style="width: 60px;">ACTION</th>
+                                <th>WEIGHT (%) <span class="required-asterisk">*</span></th>
+                                <th>MANDATORY</th>
+                                <th>ACTION</th>
                             </tr>
                         </thead>
                         <tbody id="criteria-rows">
@@ -167,7 +158,7 @@
                                         <span class="switch-text">No</span>
                                     </div>
                                 </td>
-                                <td><button type="button" class="btn-trash" data-remove-criterion aria-label="Remove criterion"><i class="fa-solid fa-trash-can"></i></button></td>
+                                <td><button type="button" class="btn-trash" data-remove-criterion aria-label="Remove criterion"><span aria-hidden="true">×</span></button></td>
                             </tr>
                         </tbody>
                     </table></div>
@@ -176,7 +167,7 @@
                             <td class="row-index"></td>
                             <td>
                                 <input type="hidden" name="screeningCriteria[__INDEX__].criteriaId">
-                                <input class="form-control-custom" name="screeningCriteria[__INDEX__].criteriaName" placeholder="Enter criteria name" maxlength="50" required>
+                                <input class="form-control-custom" name="screeningCriteria[__INDEX__].criteriaName" placeholder="Enter criteria name" maxlength="150" required>
                             </td>
                             <td>
                                 <select class="form-control-custom" name="screeningCriteria[__INDEX__].criteriaType" required>
@@ -198,19 +189,20 @@
                                     <span class="switch-text">No</span>
                                 </div>
                             </td>
-                            <td><button type="button" class="btn-trash" data-remove-criterion aria-label="Remove criterion"><i class="fa-solid fa-trash-can"></i></button></td>
+                            <td><button type="button" class="btn-trash" data-remove-criterion aria-label="Remove criterion"><span aria-hidden="true">×</span></button></td>
                         </tr>
                     </template>
                 </div>
 
                 <!-- Footer Actions -->
                 <div class="form-footer-actions">
-                    <a class="btn-footer btn-cancel-custom" th:href="${isEdit} ? @{/requisitions/{id}(id=${requisitionId})} : @{/requisitions}">&#10005; Cancel</a>
+                    <a class="btn-footer btn-cancel-custom" th:href="${isEdit} ? @{/requisitions/{id}(id=${requisitionId})} : @{/requisitions}">Cancel</a>
                     <button type="submit" name="action" value="draft" class="btn-footer btn-save-draft" formnovalidate>Save Draft</button>
                     <button type="submit" name="action" value="submit" class="btn-footer btn-submit-director">Submit to Director</button>
                 </div>
             </form>
-        </main>
+        </div>
+            </main>
     </div>
 </div>
 
