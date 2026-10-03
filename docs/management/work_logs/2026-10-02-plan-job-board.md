@@ -25,9 +25,9 @@
 - Cập nhật lại UI của tính năng phỏng vấn để dùng các file global này.
 
 ### 2.3. Backend Job Board (Feature: `requisition`)
-- **DTO:** Khởi tạo `JobPostingListResponse` và `JobPostingDetailResponse` (chuẩn Java `record`).
+- **DTO:** Khởi tạo `CareerJobListResponse` và `CareerJobDetailResponse` (chuẩn Java `record`).
 - **Repository:** Cập nhật `JobPostingRepository` với `@Query` lấy danh sách công việc `Published`, còn hạn, kết hợp tìm kiếm và lọc.
-- **Service:** Tạo `JobPostingService` xử lý nghiệp vụ ánh xạ sang DTO, bắt lỗi `LazyInitializationException` bằng `@Transactional(readOnly = true)`, format lại chuỗi text `\n` sang `<br/>` HTML.
+- **Service:** Tạo `CareerPortalService` xử lý nghiệp vụ ánh xạ sang DTO, bắt lỗi `LazyInitializationException` bằng `@Transactional(readOnly = true)`, format lại chuỗi text `\n` sang `<br/>` HTML.
 - **Controller:** Tạo `JobPostingController.java` mapped với `/jobs`, không sử dụng `try-catch` thủ công, truyền thẳng model xuống View.
 
 ### 2.4. Frontend Job Board

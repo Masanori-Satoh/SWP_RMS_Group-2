@@ -1,6 +1,6 @@
 package com.group2.rms.offer;
 
-import com.group2.rms.candidate.Application;
+import com.group2.rms.candidate.entity.Application;
 import com.group2.rms.core.base.BaseEntity;
 import com.group2.rms.user.entity.User;
 import jakarta.persistence.*;

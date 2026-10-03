@@ -1,17 +1,17 @@
 package com.group2.rms.service;
 
-import com.group2.rms.candidate.Application;
-import com.group2.rms.candidate.ApplicationReview;
-import com.group2.rms.candidate.AIScreeningResult;
-import com.group2.rms.candidate.Candidate;
-import com.group2.rms.dashboard.DashboardService;
-import com.group2.rms.dashboard.DashboardView;
+import com.group2.rms.candidate.entity.Application;
+import com.group2.rms.candidate.entity.ApplicationReview;
+import com.group2.rms.candidate.entity.AIScreeningResult;
+import com.group2.rms.candidate.entity.Candidate;
+import com.group2.rms.dashboard.service.DashboardService;
+import com.group2.rms.dashboard.dto.DashboardView;
 import com.group2.rms.requisition.entity.JobPosting;
 import com.group2.rms.offer.OfferProposal;
-import com.group2.rms.candidate.ApplicationRepository;
-import com.group2.rms.candidate.ApplicationReviewRepository;
-import com.group2.rms.candidate.CandidateRepository;
-import com.group2.rms.dashboard.DashboardMetricsRepository;
+import com.group2.rms.candidate.repository.ApplicationRepository;
+import com.group2.rms.candidate.repository.ApplicationReviewRepository;
+import com.group2.rms.candidate.repository.CandidateRepository;
+import com.group2.rms.dashboard.repository.DashboardMetricsRepository;
 import com.group2.rms.requisition.repository.JobPostingRepository;
 import com.group2.rms.offer.OfferProposalRepository;
 import com.group2.rms.user.entity.Role;

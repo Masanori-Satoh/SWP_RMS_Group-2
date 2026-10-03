@@ -1,14 +1,14 @@
 package com.group2.rms;
 
-import com.group2.rms.auth.AuthController;
-import com.group2.rms.auth.CareerController;
+import com.group2.rms.auth.controller.AuthController;
+import com.group2.rms.career.controller.CareerController;
 import com.group2.rms.core.config.SecurityConfig;
 import com.group2.rms.core.security.DatabaseUserDetailsService;
 import com.group2.rms.user.entity.Role;
 import com.group2.rms.user.entity.User;
 import com.group2.rms.user.repository.UserRepository;
-import com.group2.rms.service.CareerService;
-import com.group2.rms.service.CareerService.*;
+import com.group2.rms.career.service.CareerService;
+import com.group2.rms.career.service.CareerService.*;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;

@@ -12,11 +12,11 @@ import com.group2.rms.requisition.repository.RequisitionApprovalRepository;
 import com.group2.rms.requisition.repository.ScreeningCriteriaRepository;
 import org.springframework.stereotype.Service;
 
-import com.group2.rms.admin.ActivityLogResponse;
-import com.group2.rms.admin.AuditLog;
+import com.group2.rms.admin.dto.ActivityLogResponse;
+import com.group2.rms.admin.entity.AuditLog;
 import com.group2.rms.user.entity.Department;
 import com.group2.rms.user.entity.User;
-import com.group2.rms.admin.AuditLogRepository;
+import com.group2.rms.admin.repository.AuditLogRepository;
 import com.group2.rms.user.repository.DepartmentRepository;
 import com.group2.rms.user.repository.UserRepository;
 
