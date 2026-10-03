@@ -30,7 +30,7 @@ public class OfferViewController {
     public String listOffers(
             @RequestParam(required = false) String status,
             @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "50") int size,
+            @RequestParam(defaultValue = "10") int size,
             Model model,
             Principal principal) {
 
@@ -39,6 +39,7 @@ public class OfferViewController {
         List<PassedCandidateResponseDto> passedCandidates = offerService.getPassedCandidatesForOffer();
 
         model.addAttribute("offers", pagedData.getContent());
+        model.addAttribute("offersPage", pagedData);
         model.addAttribute("currentPage", validPage);
         model.addAttribute("totalPages", Math.max(1, pagedData.getTotalPages()));
         model.addAttribute("totalElements", pagedData.getTotalElements());

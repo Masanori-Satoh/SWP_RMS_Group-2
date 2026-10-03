@@ -217,22 +217,8 @@
                     </table>
                 </div>
 
-                <!-- Pagination Navigation -->
-                <div class="offers-pagination" th:if="${totalPages > 1}" style="display:flex; justify-content:space-between; align-items:center; margin-top:var(--s4); font-size:14px; color:var(--muted); flex-wrap:wrap; gap:var(--s3);">
-                    <div>
-                        Trang <strong style="color:var(--ink);" th:text="${currentPage + 1}">1</strong> / <span th:text="${totalPages}">1</span> (Tổng cộng <span th:text="${totalElements}">0</span> đề xuất)
-                    </div>
-                    <div style="display:flex; gap:var(--s2);">
-                        <a class="btn btn-secondary btn-sm" th:if="${currentPage > 0}"
-                           th:href="@{/offers(page=${currentPage - 1}, status=${currentStatus != 'ALL' ? currentStatus : null})}">
-                            <i class="fa-solid fa-chevron-left" style="font-size:11px; margin-right:4px;"></i> Trang trước
-                        </a>
-                        <a class="btn btn-secondary btn-sm" th:if="${currentPage + 1 < totalPages}"
-                           th:href="@{/offers(page=${currentPage + 1}, status=${currentStatus != 'ALL' ? currentStatus : null})}">
-                            Trang sau <i class="fa-solid fa-chevron-right" style="font-size:11px; margin-left:4px;"></i>
-                        </a>
-                    </div>
-                </div>
+                <!-- Global Reusable Pagination (Dùng chung toàn bộ project & bảng ứng viên Offer) -->
+                <div th:replace="~{fragments/pagination :: pager(${currentPage}, ${totalPages}, ${totalElements}, '/offers')}"></div>
             </div>
         </main>
     </div>
@@ -539,7 +525,8 @@
             }
         });
 
-        document.getElementById('displayedCount').textContent = count;
+        const countEl = document.getElementById('displayedCount');
+        if (countEl) countEl.textContent = count;
     }
 
     // Modal Helpers
