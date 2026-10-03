@@ -11,15 +11,16 @@ import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.access.intercept.AuthorizationFilter;
-import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.web.savedrequest.HttpSessionRequestCache;
 
 /** Shared authentication foundation and the route rules confirmed for LinhDN. */
 @Configuration
 @EnableWebSecurity
+// @EnableMethodSecurity: Tạm tắt để cho phép test các luồng API trong giai đoạn phát triển (permitAll)
 public class SecurityConfig {
 
     @Bean
@@ -70,7 +71,9 @@ public class SecurityConfig {
             .httpBasic(basic -> basic.disable())
             .addFilterBefore(new AccountSessionGuardFilter(userRepository), AuthorizationFilter.class);
 
-        // Spring Security's default CSRF protection stays enabled for web POST forms.
+        // Spring Security's default CSRF protection stays enabled for web POST forms, but ignored for REST APIs.
+        http.csrf(csrf -> csrf.ignoringRequestMatchers("/api/**"));
+
         return http.build();
     }
 }

@@ -31,6 +31,12 @@ public class InterviewSchedule {
     private Application application;
 
     /**
+     * Round 1 - HR, Round 2 - Technical, Final
+     */
+    @Column(name = "InterviewRound", nullable = true, length = 50)
+    private String interviewRound;
+
+    /**
      * Online_GoogleMeet, Offline_Office
      */
     @Column(name = "InterviewFormat", nullable = false, length = 30)
