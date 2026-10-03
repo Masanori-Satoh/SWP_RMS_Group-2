@@ -65,9 +65,11 @@ src/main/java/com/group2/rms/
 - **Lưu ý code hiện tại (WIP):** Các tính năng đang thiết kế dở (như file `form.html`), tác giả tự xem lại và bóc tách ra sau.
 
 ## 4. Xử lý Lỗi và Xác thực (Exception & Validator)
-- **Validator:** Bắt buộc dùng DTO kèm Annotation (VD: `@Valid`) để kiểm tra dữ liệu đầu vào.
-- **Exception (Ép dùng Global Exception Handler cho code mới):**
-  - **Với code mới:** Service ném ra Custom Exception (kế thừa `BaseBusinessException`). Controller **CẤM** sử dụng `try-catch`, hãy để lỗi trôi lên `GlobalExceptionHandler` ở tầng `core`.
+- **Validator & Xử lý Lỗi Nhập liệu (Web Form / AJAX):**
+  - Bắt buộc dùng DTO kèm Annotation (VD: `@Valid`) để kiểm tra dữ liệu đầu vào.
+  - **Với các Form nhập liệu giao diện (Create/Edit):** Sử dụng `BindingResult` (`bindingResult.rejectValue(...)` hoặc trả về JSON status 400 kèm chi tiết lỗi từng trường qua AJAX) để **hiển thị thông báo lỗi inline trực tiếp trên form** và giữ nguyên dữ liệu người dùng đang nhập dở. **TUYỆT ĐỐI KHÔNG ném Exception văng ra trang 500 khi người dùng chỉ nhập sai dữ liệu Form.**
+- **Exception Hệ thống & Nghiệp vụ không thể khôi phục (Ép dùng Global Exception Handler):**
+  - **Với code mới:** Service ném ra Custom Exception (kế thừa `BaseBusinessException` cho lỗi nghiệp vụ hoặc `ResourceNotFoundException` cho 404). Controller **CẤM** sử dụng `try-catch` nuốt lỗi, hãy để lỗi trôi lên `GlobalExceptionHandler` ở tầng `core` để render các trang lỗi tương ứng (`404.html`, `403.html`, `500.html`).
   - **Lưu ý code hiện tại (WIP):** Các hàm Controller đang tự try-catch, tự dọn dẹp sau khi hệ thống Global Exception hoàn thiện.
 
 ## 5. Giao tiếp chéo giữa các Tính năng (Cross-Feature)
