@@ -1,273 +1,240 @@
 <!DOCTYPE html>
 <html lang="vi" xmlns:th="http://www.thymeleaf.org">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Quản lý Đề xuất Offer (Offer Management) | RMS Group-2</title>
-
-    <!-- Google Fonts: Inter -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    
-    <!-- Font Awesome Icons -->
+<head th:replace="~{fragments/head :: interfaceHead('Quản lý Đề xuất Offer', ~{::pageStyles})}">
+  <th:block th:fragment="pageStyles">
+    <!-- Font Awesome Icons for specialized actions & icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    
-    <!-- Kế thừa Design System của hệ thống -->
-    <link rel="stylesheet" th:href="@{/css/main.css}">
-    <link rel="stylesheet" th:href="@{/css/app-layout.css}">
     <link rel="stylesheet" th:href="@{/css/offers.css}">
-
-    <style>
-        .modal-overlay {
-            position: fixed !important;
-            top: 0 !important;
-            left: 0 !important;
-            right: 0 !important;
-            bottom: 0 !important;
-            background: rgba(15, 23, 42, 0.6) !important;
-            backdrop-filter: blur(3px);
-            display: none !important;
-            align-items: center !important;
-            justify-content: center !important;
-            z-index: 9999 !important;
-            padding: 20px !important;
-        }
-        .modal-overlay.active {
-            display: flex !important;
-        }
-    </style>
+  </th:block>
 </head>
-<body>
+<body class="rms-app">
 
 <div class="page-wrapper">
-    <!-- SIDEBAR: Kế thừa fragment dùng chung của hệ thống -->
-    <aside th:replace="~{fragments/sidebar :: sidebar(activeMenu='offers')}"></aside>
+    <!-- SIDEBAR: Kế thừa sidebar Recruitment Workspace chuẩn của Mộc RMS -->
+    <aside th:replace="~{fragments/sidebar :: workspace('offers', 'HR Specialist')}"></aside>
 
     <div class="main-content">
-        <!-- TOPBAR: Kế thừa topbar chung -->
-        <div class="topbar">
-            <div class="topbar-title">Recruitment Management System</div>
-            <div style="display:flex; align-items:center; gap:20px;">
-                <span style="font-size:13px; font-weight:600; color:#334155;">
-                    <i class="fa-solid fa-circle-user" style="margin-right:6px; color:#2563eb; font-size:16px;"></i>
-                    <span th:text="${currentUser}">HR Specialist</span>
-                </span>
-                <form th:action="@{/logout}" method="post" style="margin:0">
-                    <button type="submit" style="background:none;border:none;cursor:pointer;font-size:13px;color:#64748b;font-weight:500;">
-                        <i class="fa-solid fa-arrow-right-from-bracket" style="margin-right:4px;"></i>Đăng xuất
-                    </button>
-                </form>
-            </div>
-        </div>
+        <!-- TOPBAR: Kế thừa header chung của hệ thống với logo Mộc và người dùng hiện tại -->
+        <header th:replace="~{fragments/workspace-header :: header('HR Specialist', ${currentUser})}"></header>
 
         <!-- PAGE CONTENT -->
-        <div class="page-content" style="padding: 24px 32px;">
-            <!-- Header Section -->
-            <div class="offers-header">
-                <div class="offers-title-group">
-                    <h1>Quản lý Đề xuất Offer (Offer Proposals)</h1>
-                    <p class="offers-subtitle">
-                        Tiếp nhận ứng viên đỗ phỏng vấn, khởi tạo đề xuất đãi ngộ, trình duyệt Giám đốc và phát hành thư mời việc.
-                    </p>
-                </div>
-                <button class="btn btn-primary" onclick="openCreateOfferModal()" style="display:inline-flex; align-items:center; gap:8px; padding:10px 18px; font-weight:600; font-size:13px;">
-                    <i class="fa-solid fa-plus"></i> Tạo Offer Proposal
-                </button>
-            </div>
-
-            <!-- Stats Overview Cards -->
-            <div class="offers-stats-grid">
-                <div class="offer-stat-card">
-                    <div class="offer-stat-icon stat-icon-blue">
-                        <i class="fa-solid fa-file-invoice-dollar"></i>
+        <main id="main" class="page-content" tabindex="-1">
+            <div class="container">
+                <!-- Header Section -->
+                <div class="offers-header">
+                    <div class="offers-title-group">
+              
+                        <h1>Quản lý Đề xuất</h1>
+                     
                     </div>
-                    <div class="offer-stat-info">
-                        <div class="stat-label">Tổng đề xuất</div>
-                        <div class="stat-value" id="statTotal" th:text="${totalElements}">0</div>
-                    </div>
+                    <button class="btn btn-primary" onclick="openCreateOfferModal()">
+                        <i class="fa-solid fa-plus"></i> Tạo Offer Proposal
+                    </button>
                 </div>
 
-                <div class="offer-stat-card">
-                    <div class="offer-stat-icon stat-icon-amber">
-                        <i class="fa-solid fa-hourglass-half"></i>
+                <!-- Stats Overview Cards -->
+                <div class="offers-stats-grid">
+                    <div class="offer-stat-card">
+                        <div class="offer-stat-icon stat-icon-brand">
+                            <i class="fa-solid fa-file-invoice-dollar"></i>
+                        </div>
+                        <div class="offer-stat-info">
+                            <div class="stat-label">Tổng đề xuất</div>
+                            <div class="stat-value" id="statTotal" th:text="${totalElements}">0</div>
+                        </div>
                     </div>
-                    <div class="offer-stat-info">
-                        <div class="stat-label">Chờ duyệt Director</div>
-                        <div class="stat-value" id="statPending">...</div>
+
+                    <div class="offer-stat-card">
+                        <div class="offer-stat-icon stat-icon-amber">
+                            <i class="fa-solid fa-hourglass-half"></i>
+                        </div>
+                        <div class="offer-stat-info">
+                            <div class="stat-label">Chờ duyệt Director</div>
+                            <div class="stat-value" id="statPending">...</div>
+                        </div>
+                    </div>
+
+                    <div class="offer-stat-card">
+                        <div class="offer-stat-icon stat-icon-green">
+                            <i class="fa-solid fa-stamp"></i>
+                        </div>
+                        <div class="offer-stat-info">
+                            <div class="stat-label">Director đã duyệt</div>
+                            <div class="stat-value" id="statApproved">...</div>
+                        </div>
+                    </div>
+
+                    <div class="offer-stat-card">
+                        <div class="offer-stat-icon stat-icon-blue">
+                            <i class="fa-solid fa-paper-plane"></i>
+                        </div>
+                        <div class="offer-stat-info">
+                            <div class="stat-label">Đã gửi ứng viên</div>
+                            <div class="stat-value" id="statSent">...</div>
+                        </div>
+                    </div>
+
+                    <div class="offer-stat-card">
+                        <div class="offer-stat-icon stat-icon-emerald">
+                            <i class="fa-solid fa-user-check"></i>
+                        </div>
+                        <div class="offer-stat-info">
+                            <div class="stat-label">Đã nhận việc</div>
+                            <div class="stat-value" id="statAccepted">...</div>
+                        </div>
                     </div>
                 </div>
 
-                <div class="offer-stat-card">
-                    <div class="offer-stat-icon stat-icon-green">
-                        <i class="fa-solid fa-stamp"></i>
+                <!-- Filter Toolbar -->
+                <div class="offers-toolbar">
+                    <div class="toolbar-left">
+                        <div class="search-box">
+                            <i class="fa-solid fa-magnifying-glass"></i>
+                            <input type="text" id="searchInput" placeholder="Tìm theo tên ứng viên, vị trí..." onkeyup="handleFilterSearch()">
+                        </div>
+
+                        <select id="statusFilter" class="filter-select" onchange="handleFilterSearch()">
+                            <option value="ALL">-- Tất cả trạng thái --</option>
+                            <option value="Draft">Bản thảo (Draft)</option>
+                            <option value="Pending_Director">Chờ Director duyệt (Pending_Director)</option>
+                            <option value="Director_Approved">Director đã duyệt (Approved)</option>
+                            <option value="Director_Rejected">Director từ chối (Rejected)</option>
+                            <option value="Sent_Candidate">Đã gửi ứng viên (Sent_Candidate)</option>
+                            <option value="Accepted">Ứng viên đồng ý (Accepted)</option>
+                            <option value="Declined">Ứng viên từ chối (Declined)</option>
+                            <option value="Negotiating">Đang đàm phán (Negotiating)</option>
+                        </select>
                     </div>
-                    <div class="offer-stat-info">
-                        <div class="stat-label">Director đã duyệt</div>
-                        <div class="stat-value" id="statApproved">...</div>
-                    </div>
+
                 </div>
 
-                <div class="offer-stat-card">
-                    <div class="offer-stat-icon stat-icon-purple">
-                        <i class="fa-solid fa-paper-plane"></i>
-                    </div>
-                    <div class="offer-stat-info">
-                        <div class="stat-label">Đã gửi ứng viên</div>
-                        <div class="stat-value" id="statSent">...</div>
-                    </div>
-                </div>
-
-                <div class="offer-stat-card">
-                    <div class="offer-stat-icon stat-icon-green">
-                        <i class="fa-solid fa-user-check"></i>
-                    </div>
-                    <div class="offer-stat-info">
-                        <div class="stat-label">Đã nhận việc (Hired)</div>
-                        <div class="stat-value" id="statAccepted">...</div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Filter Toolbar -->
-            <div class="offers-toolbar">
-                <div class="toolbar-left">
-                    <div class="search-box">
-                        <i class="fa-solid fa-magnifying-glass"></i>
-                        <input type="text" id="searchInput" placeholder="Tìm theo tên ứng viên, vị trí..." onkeyup="handleFilterSearch()">
-                    </div>
-
-                    <select id="statusFilter" class="filter-select" onchange="handleFilterSearch()">
-                        <option value="ALL">-- Tất cả trạng thái --</option>
-                        <option value="Draft">Bản thảo (Draft)</option>
-                        <option value="Pending_Director">Chờ Director duyệt (Pending_Director)</option>
-                        <option value="Director_Approved">Director đã duyệt (Approved)</option>
-                        <option value="Director_Rejected">Director từ chối (Rejected)</option>
-                        <option value="Sent_Candidate">Đã gửi ứng viên (Sent_Candidate)</option>
-                        <option value="Accepted">Ứng viên đồng ý (Accepted)</option>
-                        <option value="Declined">Ứng viên từ chối (Declined)</option>
-                        <option value="Negotiating">Đang đàm phán (Negotiating)</option>
-                        <option value="Voided">Đã vô hiệu (Voided)</option>
-                    </select>
-                </div>
-
-                <div style="font-size:12.5px; color:#64748b;">
-                    Hiển thị <span id="displayedCount" style="font-weight:600; color:#0f172a;" th:text="${#lists.size(offers)}">0</span> đề xuất
-                </div>
-            </div>
-
-            <!-- Data Table (Screen 30) -->
-            <div class="offers-table-wrapper">
-                <table class="offers-table" id="offersTable">
-                    <thead>
-                        <tr>
-                            <th style="width: 80px;">Mã Offer</th>
-                            <th>Ứng viên</th>
-                            <th>Vị trí đề xuất</th>
-                            <th>Lương chính thức</th>
-                            <th>Lương thử việc</th>
-                            <th>Trạng thái</th>
-                            <th>Ngày lập</th>
-                            <th style="text-align: right; width: 140px;">Thao tác</th>
-                        </tr>
-                    </thead>
-                    <tbody id="offersTableBody">
-                        <tr th:if="${#lists.isEmpty(offers)}">
-                            <td colspan="8" style="text-align:center; padding:36px; color:#64748b;">
-                                <i class="fa-solid fa-inbox" style="font-size:28px; margin-bottom:8px; display:block; color:#cbd5e1;"></i>
-                                Chưa có đề xuất Offer nào trong hệ thống.
-                            </td>
-                        </tr>
-                        <tr th:each="o : ${offers}" th:attr="data-id=${o.offerId}, data-status=${o.offerStatus}, data-cand=${o.candidateName}, data-pos=${o.offeredPositionTitle}">
-                            <td>
-                                <strong style="color:#2563eb;" th:text="'#OFF-' + ${o.offerId}">#OFF-1</strong>
-                            </td>
-                            <td>
-                                <div class="cand-name-cell" th:text="${o.candidateName != null ? o.candidateName : 'Ứng viên'}">Nguyễn Văn A</div>
-                                <div class="cand-email-sub" th:text="${o.candidateEmail != null ? o.candidateEmail : 'N/A'}">a.nguyen@email.com</div>
-                            </td>
-                            <td>
-                                <strong th:text="${o.offeredPositionTitle}">Senior Java Developer</strong>
-                            </td>
-                            <td>
-                                <div class="salary-main" th:text="${#numbers.formatDecimal(o.proposedSalary, 0, 'POINT', 0, 'COMMA')} + ' VND'">25,000,000 VND</div>
-                            </td>
-                            <td>
-                                <div class="salary-probation">
-                                    <span th:text="${#numbers.formatDecimal(o.probationSalary, 0, 'POINT', 0, 'COMMA')} + ' VND'">21,250,000 VND</span>
-                                    <span class="salary-badge-pct" th:if="${o.proposedSalary != null and o.proposedSalary.compareTo(T(java.math.BigDecimal).ZERO) > 0}"
-                                          th:text="${#numbers.formatDecimal(o.probationSalary.multiply(new java.math.BigDecimal(100)).divide(o.proposedSalary, 0, T(java.math.RoundingMode).HALF_UP), 0, 0)} + '%'">
-                                        85%
+                <!-- Data Table (Screen 30) -->
+                <div class="offers-table-wrapper">
+                    <table class="offers-table" id="offersTable">
+                        <thead>
+                            <tr>
+                                <th style="width: 90px;">Mã Offer</th>
+                                <th>Ứng viên</th>
+                                <th>Vị trí đề xuất</th>
+                                <th>Lương chính thức</th>
+                                <th>Lương thử việc</th>
+                                <th>Trạng thái</th>
+                                <th>Ngày lập</th>
+                                <th style="text-align: right; width: 150px;">Thao tác</th>
+                            </tr>
+                        </thead>
+                        <tbody id="offersTableBody">
+                            <tr th:if="${#lists.isEmpty(offers)}">
+                                <td colspan="8" style="text-align:center; padding:48px 24px; color:var(--muted);">
+                                    <i class="fa-solid fa-inbox" style="font-size:32px; margin-bottom:12px; display:block; color:var(--control-line);"></i>
+                                    Chưa có đề xuất Offer nào trong hệ thống.
+                                </td>
+                            </tr>
+                            <tr th:each="o : ${offers}" th:attr="data-id=${o.offerId}, data-status=${o.offerStatus}, data-cand=${o.candidateName}, data-pos=${o.offeredPositionTitle}">
+                                <td>
+                                    <a href="javascript:void(0)" class="offer-id-link" th:onclick="'viewOfferDetail(' + ${o.offerId} + ')'" th:text="${o.offerId}">1</a>
+                                </td>
+                                <td>
+                                    <div class="cand-name-cell" style="cursor:pointer;" th:onclick="'viewOfferDetail(' + ${o.offerId} + ')'" th:title="'Bấm để xem chi tiết offer #' + ${o.offerId}" th:text="${o.candidateName != null ? o.candidateName : 'Ứng viên'}">Nguyễn Văn A</div>
+                                    <div class="cand-email-sub" th:text="${o.candidateEmail != null ? o.candidateEmail : 'N/A'}">a.nguyen@email.com</div>
+                                </td>
+                                <td>
+                                    <span style="font-weight:600; color:var(--ink);" th:text="${o.offeredPositionTitle}">Senior Java Developer</span>
+                                </td>
+                                <td>
+                                    <div class="salary-main" th:text="${#numbers.formatDecimal(o.proposedSalary, 0, 'POINT', 0, 'COMMA')} + ' VND'">25,000,000 VND</div>
+                                </td>
+                                <td>
+                                    <div class="salary-probation">
+                                        <span th:text="${#numbers.formatDecimal(o.probationSalary, 0, 'POINT', 0, 'COMMA')} + ' VND'">21,250,000 VND</span>
+                                        <span class="salary-badge-pct" th:if="${o.proposedSalary != null and o.proposedSalary.compareTo(T(java.math.BigDecimal).ZERO) > 0}"
+                                              th:text="${#numbers.formatDecimal(o.probationSalary.multiply(new java.math.BigDecimal(100)).divide(o.proposedSalary, 0, T(java.math.RoundingMode).HALF_UP), 0, 0)} + '%'">
+                                            85%
+                                        </span>
+                                    </div>
+                                </td>
+                                <td>
+                                    <!-- Status Badges -->
+                                    <span th:if="${o.offerStatus == 'Draft'}" class="status-badge status-draft">
+                                        <i class="fa-regular fa-file"></i> Bản thảo
                                     </span>
-                                </div>
-                            </td>
-                            <td>
-                                <!-- Status Badge -->
-                                <span th:if="${o.offerStatus == 'Draft'}" class="status-badge status-draft">
-                                    <i class="fa-regular fa-file"></i> Bản thảo
-                                </span>
-                                <span th:if="${o.offerStatus == 'Pending_Director'}" class="status-badge status-pending">
-                                    <i class="fa-regular fa-clock"></i> Chờ duyệt
-                                </span>
-                                <span th:if="${o.offerStatus == 'Director_Approved' or o.offerStatus == 'Approved'}" class="status-badge status-approved">
-                                    <i class="fa-solid fa-check"></i> Đã duyệt
-                                </span>
-                                <span th:if="${o.offerStatus == 'Director_Rejected' or o.offerStatus == 'Rejected'}" class="status-badge status-rejected">
-                                    <i class="fa-solid fa-xmark"></i> Bị từ chối
-                                </span>
-                                <span th:if="${o.offerStatus == 'Sent_Candidate'}" class="status-badge status-sent">
-                                    <i class="fa-regular fa-paper-plane"></i> Đã gửi ứng viên
-                                </span>
-                                <span th:if="${o.offerStatus == 'Accepted'}" class="status-badge status-accepted">
-                                    <i class="fa-solid fa-user-check"></i> Đã nhận việc
-                                </span>
-                                <span th:if="${o.offerStatus == 'Declined'}" class="status-badge status-declined">
-                                    <i class="fa-solid fa-user-xmark"></i> Từ chối
-                                </span>
-                                <span th:if="${o.offerStatus == 'Negotiating'}" class="status-badge status-negotiating">
-                                    <i class="fa-solid fa-comments"></i> Đang đàm phán
-                                </span>
-                                <span th:if="${o.offerStatus == 'Voided'}" class="status-badge status-voided">
-                                    <i class="fa-solid fa-ban"></i> Đã hủy
-                                </span>
-                            </td>
-                            <td th:text="${o.createdAt != null ? #temporals.format(o.createdAt, 'dd/MM/yyyy HH:mm') : '-'}">
-                                01/10/2026
-                            </td>
-                            <td style="text-align: right;">
-                                <div class="action-buttons" style="justify-content: flex-end;">
-                                    <!-- Xem chi tiết (Screen 32) -->
-                                    <button class="btn-icon btn-icon-primary" title="Xem chi tiết (Screen 32)" th:onclick="'viewOfferDetail(' + ${o.offerId} + ')'">
-                                        <i class="fa-solid fa-eye"></i>
-                                    </button>
+                                    <span th:if="${o.offerStatus == 'Pending_Director'}" class="status-badge status-pending">
+                                        <i class="fa-regular fa-clock"></i> Chờ duyệt
+                                    </span>
+                                    <span th:if="${o.offerStatus == 'Director_Approved' or o.offerStatus == 'Approved'}" class="status-badge status-approved">
+                                        <i class="fa-solid fa-check"></i> Đã duyệt
+                                    </span>
+                                    <span th:if="${o.offerStatus == 'Director_Rejected' or o.offerStatus == 'Rejected'}" class="status-badge status-rejected">
+                                        <i class="fa-solid fa-xmark"></i> Bị từ chối
+                                    </span>
+                                    <span th:if="${o.offerStatus == 'Sent_Candidate'}" class="status-badge status-sent">
+                                        <i class="fa-regular fa-paper-plane"></i> Đã gửi ứng viên
+                                    </span>
+                                    <span th:if="${o.offerStatus == 'Accepted'}" class="status-badge status-accepted">
+                                        <i class="fa-solid fa-user-check"></i> Đã nhận việc
+                                    </span>
+                                    <span th:if="${o.offerStatus == 'Declined'}" class="status-badge status-declined">
+                                        <i class="fa-solid fa-user-xmark"></i> Từ chối
+                                    </span>
+                                    <span th:if="${o.offerStatus == 'Negotiating'}" class="status-badge status-negotiating">
+                                        <i class="fa-solid fa-comments"></i> Đang đàm phán
+                                    </span>
+                                </td>
+                                <td style="color:var(--muted); font-size:13.5px;" th:text="${o.createdAt != null ? #temporals.format(o.createdAt, 'dd/MM/yyyy HH:mm') : '-'}">
+                                    01/10/2026
+                                </td>
+                                <td style="text-align: right;">
+                                    <div class="action-buttons" style="justify-content: flex-end;">
+                                        <!-- Xem chi tiết (Screen 32) -->
+                                        <button class="btn-icon btn-icon-primary" title="Xem chi tiết (Screen 32)" th:onclick="'viewOfferDetail(' + ${o.offerId} + ')'">
+                                            <i class="fa-solid fa-eye"></i>
+                                        </button>
 
-                                    <!-- Phát hành gửi Offer cho Candidate (Chỉ khi Director_Approved) -->
-                                    <button th:if="${o.offerStatus == 'Director_Approved' or o.offerStatus == 'Approved'}"
-                                            class="btn-icon btn-icon-success" title="Phát hành gửi Offer Letter"
-                                            th:onclick="'confirmSendOffer(' + ${o.offerId} + ')'">
-                                        <i class="fa-solid fa-paper-plane"></i>
-                                    </button>
+                                        <!-- Phát hành gửi Offer cho Candidate (Chỉ khi Director_Approved) -->
+                                        <button th:if="${o.offerStatus == 'Director_Approved' or o.offerStatus == 'Approved'}"
+                                                class="btn-icon btn-icon-success" title="Phát hành gửi Offer Letter"
+                                                th:onclick="'confirmSendOffer(' + ${o.offerId} + ')'">
+                                            <i class="fa-solid fa-paper-plane"></i>
+                                        </button>
 
-                                    <!-- Sửa Offer (Chỉ khi Draft hoặc Rejected) -->
-                                    <button th:if="${o.offerStatus == 'Draft' or o.offerStatus == 'Director_Rejected' or o.offerStatus == 'Rejected'}"
-                                            class="btn-icon" title="Chỉnh sửa đề xuất"
-                                            th:onclick="'openEditOfferModal(' + ${o.offerId} + ')'">
-                                        <i class="fa-solid fa-pen-to-square"></i>
-                                    </button>
+                                        <!-- Sửa Offer (Chỉ khi Draft hoặc Rejected) -->
+                                        <button th:if="${o.offerStatus == 'Draft' or o.offerStatus == 'Director_Rejected' or o.offerStatus == 'Rejected'}"
+                                                class="btn-icon" title="Chỉnh sửa đề xuất"
+                                                th:onclick="'openEditOfferModal(' + ${o.offerId} + ')'">
+                                            <i class="fa-solid fa-pen-to-square"></i>
+                                        </button>
 
-                                    <!-- Xóa Offer (Chỉ khi Draft) -->
-                                    <button th:if="${o.offerStatus == 'Draft'}"
-                                            class="btn-icon btn-icon-danger" title="Xóa bản thảo"
-                                            th:onclick="'confirmDeleteOffer(' + ${o.offerId} + ')'">
-                                        <i class="fa-solid fa-trash-can"></i>
-                                    </button>
-                                </div>
-                            </td>
-                        </tr>
-                    </tbody>
-                </table>
+                                        <!-- Xóa Offer (Chỉ khi Draft) -->
+                                        <button th:if="${o.offerStatus == 'Draft'}"
+                                                class="btn-icon btn-icon-danger" title="Xóa bản thảo"
+                                                th:onclick="'confirmDeleteOffer(' + ${o.offerId} + ')'">
+                                            <i class="fa-solid fa-trash-can"></i>
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Pagination Navigation -->
+                <div class="offers-pagination" th:if="${totalPages > 1}" style="display:flex; justify-content:space-between; align-items:center; margin-top:var(--s4); font-size:14px; color:var(--muted); flex-wrap:wrap; gap:var(--s3);">
+                    <div>
+                        Trang <strong style="color:var(--ink);" th:text="${currentPage + 1}">1</strong> / <span th:text="${totalPages}">1</span> (Tổng cộng <span th:text="${totalElements}">0</span> đề xuất)
+                    </div>
+                    <div style="display:flex; gap:var(--s2);">
+                        <a class="btn btn-secondary btn-sm" th:if="${currentPage > 0}"
+                           th:href="@{/offers(page=${currentPage - 1}, status=${currentStatus != 'ALL' ? currentStatus : null})}">
+                            <i class="fa-solid fa-chevron-left" style="font-size:11px; margin-right:4px;"></i> Trang trước
+                        </a>
+                        <a class="btn btn-secondary btn-sm" th:if="${currentPage + 1 < totalPages}"
+                           th:href="@{/offers(page=${currentPage + 1}, status=${currentStatus != 'ALL' ? currentStatus : null})}">
+                            Trang sau <i class="fa-solid fa-chevron-right" style="font-size:11px; margin-left:4px;"></i>
+                        </a>
+                    </div>
+                </div>
             </div>
-        </div>
+        </main>
     </div>
 </div>
 
@@ -278,19 +245,20 @@
     <div class="modal-box modal-lg">
         <div class="modal-header">
             <div style="display:flex; align-items:center; gap:8px;">
-                <i class="fa-solid fa-file-circle-plus" style="color:#2563eb;"></i>
+                <i class="fa-solid fa-file-circle-plus" style="color:var(--brand-dark);"></i>
                 <span>Tạo Mới Offer Proposal</span>
             </div>
-            <button class="btn btn-sm" onclick="closeModal('createOfferModal')">✕</button>
+            <button class="btn-icon" onclick="closeModal('createOfferModal')">✕</button>
         </div>
         <div class="modal-body">
             <form id="createOfferForm" onsubmit="handleCreateOfferSubmit(event)">
                 <!-- Bước 1: Chọn ứng viên đỗ phỏng vấn -->
                 <div class="form-group" style="margin-bottom:16px;">
-                    <label style="font-weight:700; color:#0f172a; font-size:12.5px;">
-                        1. Chọn Ứng viên đỗ phỏng vấn (Final Decision = Passed) *
-                    </label>
-                    <select id="createAppSelect" class="input-control" style="width:100%; font-size:13px;" onchange="handleSelectPassedCandidate(this.value)" required>
+                      <div class="section-title" style="margin-top:20px;">                    
+                         <i class="fa-solid fa-user"></i> 
+                        1. Chọn Ứng viên đỗ phỏng vấn
+                         </div>
+                    <select id="createAppSelect" class="input-control" onchange="handleSelectPassedCandidate(this.value)" required>
                         <option value="">-- Chọn ứng viên chờ tạo Offer --</option>
                         <option th:each="c : ${passedCandidates}"
                                 th:value="${c.applicationId}"
@@ -299,13 +267,12 @@
                             Nguyễn Văn A - Backend Dev (Engineering)
                         </option>
                     </select>
-                    <div class="form-hint">Chỉ hiển thị các ứng viên đã được Hội đồng phỏng vấn thông qua (Passed).</div>
                 </div>
 
                 <!-- Group A: Thông tin Ứng viên & Vị trí (Read-only Auto-fill) -->
                 <div class="detail-section" id="groupASection" style="display:none;">
                     <div class="section-title">
-                        <i class="fa-solid fa-id-card"></i> Thông tin Ứng viên & Vị trí (Tự động lấy từ CSDL)
+                        <i class="fa-solid fa-id-card"></i> Thông tin Ứng viên & Vị trí
                     </div>
                     <div class="detail-grid-3">
                         <div>
@@ -338,46 +305,46 @@
                         </div>
                         <div>
                             <div class="detail-item-label">Lương đề xuất từ Hiring Manager</div>
-                            <div class="detail-item-value" id="dispRecomSalary" style="color:#2563eb; font-weight:700;">-</div>
+                            <div class="detail-item-value" id="dispRecomSalary" style="color:var(--brand-dark); font-weight:700;">-</div>
                         </div>
                         <div>
                             <div class="detail-item-label">Hiring Manager phụ trách</div>
                             <div class="detail-item-value" id="dispHm">-</div>
                         </div>
                     </div>
-                    <div style="margin-top:10px; padding-top:10px; border-top:1px dashed #cbd5e1;">
+                    <div style="margin-top:10px; padding-top:10px; border-top:1px dashed var(--line);">
                         <div class="detail-item-label">Đánh giá / Nhận xét của Hội đồng phỏng vấn:</div>
-                        <div class="detail-item-value" id="dispInterviewComments" style="font-style:italic; color:#475569; margin-top:2px;">-</div>
+                        <div class="detail-item-value" id="dispInterviewComments" style="font-style:italic; color:var(--muted); margin-top:2px;">-</div>
                     </div>
                 </div>
 
                 <!-- Group B: Thông tin Đãi ngộ & Điều khoản Offer (HR nhập) -->
                 <div class="section-title" style="margin-top:20px;">
-                    <i class="fa-solid fa-coins"></i> 2. Thông tin Đãi ngộ & Điều khoản Offer (HR nhập)
+                    <i class="fa-solid fa-coins"></i> 2. Thông tin Đãi ngộ & Điều khoản Offer
                 </div>
 
                 <div class="form-group">
-                    <label>Vị trí chức danh chính thức đề xuất *</label>
-                    <input type="text" id="createOfferedTitle" class="input-control" style="width:100%;" required>
+                    <label>Vị trí chức danh chính thức đề xuất</label>
+                    <input type="text" id="createOfferedTitle" class="input-control" required>
                 </div>
 
                 <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px;">
                     <div class="form-group">
                         <label>
-                            Mức lương chính thức (VND/tháng) *
+                            Mức lương chính thức (VND/tháng)
                         </label>
-                        <input type="number" id="createProposedSalary" class="input-control" style="width:100%;" placeholder="VD: 20000000" min="1000000" step="100000" oninput="autoCalculateProbationSalary()" required>
+                        <input type="number" id="createProposedSalary" class="input-control" placeholder="VD: 20000000" min="1000000" step="100000" oninput="autoCalculateProbationSalary()" required>
                     </div>
 
                     <div class="form-group">
                         <label>
-                            Mức lương thử việc (VND/tháng) *
+                            Mức lương thử việc (VND/tháng)
                             <button type="button" class="quick-calc-btn" onclick="autoCalculateProbationSalary(true)" title="Gợi ý mức sàn 85% theo luật lao động">
                                 Gợi ý 85%
                             </button>
                         </label>
-                        <input type="number" id="createProbationSalary" class="input-control" style="width:100%;" placeholder="Tối thiểu 85% lương chính" min="850000" step="100000" oninput="validateProbationRuleUi()" required>
-                        <div id="probationRuleNotice" class="form-hint" style="color:#16a34a;">
+                        <input type="number" id="createProbationSalary" class="input-control" placeholder="Tối thiểu 85% lương chính" min="850000" step="100000" oninput="validateProbationRuleUi()" required>
+                        <div id="probationRuleNotice" class="form-hint" style="color:var(--brand-dark); font-size:12px; margin-top:4px;">
                             <i class="fa-solid fa-circle-check"></i> Tuân thủ quy định tối thiểu 85% lương chính thức (BR-OFF-01).
                         </div>
                     </div>
@@ -386,31 +353,31 @@
                 <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:16px;">
                     <div class="form-group">
                         <label>Thời gian thử việc (ngày)</label>
-                        <input type="number" id="createProbationDays" class="input-control" style="width:100%;" value="60" readonly>
+                        <input type="number" id="createProbationDays" class="input-control" value="60" readonly>
                     </div>
                     <div class="form-group">
                         <label>Ngày bắt đầu dự kiến</label>
-                        <input type="date" id="createStartDate" class="input-control" style="width:100%;">
+                        <input type="date" id="createStartDate" class="input-control">
                     </div>
                     <div class="form-group">
                         <label>Địa điểm làm việc</label>
-                        <input type="text" id="createWorkLocation" class="input-control" style="width:100%;" value="Trụ sở chính RMS, Tầng 5">
+                        <input type="text" id="createWorkLocation" class="input-control" value="Trụ sở chính Mộc RMS">
                     </div>
                 </div>
 
                 <div class="form-group">
-                    <label>Gói phúc lợi & Chế độ đãi ngộ (Benefits Package)</label>
-                    <textarea id="createBenefits" class="input-control" style="width:100%; height:70px;" placeholder="Bảo hiểm sức khỏe cao cấp, thưởng tháng 13, phụ cấp ăn trưa..."></textarea>
+                    <label>Gói phúc lợi & Chế độ đãi ngộ</label>
+                    <textarea id="createBenefits" class="input-control" style="height:76px;" placeholder="Bảo hiểm sức khỏe cao cấp, thưởng tháng 13, phụ cấp ăn trưa..."></textarea>
                 </div>
             </form>
         </div>
-        <div class="modal-footer" style="gap:10px;">
-            <button type="button" class="btn" onclick="closeModal('createOfferModal')">Hủy bỏ</button>
-            <button type="button" class="btn" style="background:#f1f5f9; color:#334155; font-weight:600;" onclick="submitCreateOffer(true)">
-                <i class="fa-regular fa-floppy-disk" style="margin-right:6px;"></i> Lưu Bản Thảo (Save Draft)
+        <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" onclick="closeModal('createOfferModal')">Hủy bỏ</button>
+            <button type="button" class="btn btn-secondary" onclick="submitCreateOffer(true)">
+                <i class="fa-regular fa-floppy-disk" style="margin-right:6px;"></i> Lưu Bản Thảo (Draft)
             </button>
             <button type="button" class="btn btn-primary" onclick="submitCreateOffer(false)">
-                <i class="fa-solid fa-paper-plane" style="margin-right:6px;"></i> Trình Giám Đốc (Submit to Director)
+                <i class="fa-solid fa-paper-plane" style="margin-right:6px;"></i> Trình Giám Đốc
             </button>
         </div>
     </div>
@@ -423,20 +390,20 @@
     <div class="modal-box modal-xl">
         <div class="modal-header">
             <div style="display:flex; align-items:center; gap:8px;">
-                <i class="fa-solid fa-file-lines" style="color:#2563eb;"></i>
-                <span id="detailModalTitle">Chi Tiết Đề Xuất Offer #OFF-</span>
+                <i class="fa-solid fa-file-lines" style="color:var(--brand-dark);"></i>
+                <span id="detailModalTitle">Chi Tiết Đề Xuất Offer </span>
             </div>
-            <button class="btn btn-sm" onclick="closeModal('detailOfferModal')">✕</button>
+            <button class="btn-icon" onclick="closeModal('detailOfferModal')">✕</button>
         </div>
         <div class="modal-body" id="detailModalBody">
             <!-- Dynamic Content loaded from /api/v1/hr/offers/{id} -->
-            <div style="text-align:center; padding:40px; color:#64748b;">
+            <div style="text-align:center; padding:40px; color:var(--muted);">
                 <i class="fa-solid fa-spinner fa-spin" style="font-size:24px;"></i>
                 <p style="margin-top:10px;">Đang tải thông tin chi tiết...</p>
             </div>
         </div>
         <div class="modal-footer" id="detailModalFooter">
-            <button type="button" class="btn" onclick="closeModal('detailOfferModal')">Đóng</button>
+            <button type="button" class="btn btn-secondary" onclick="closeModal('detailOfferModal')">Đóng</button>
         </div>
     </div>
 </div>
@@ -448,10 +415,10 @@
     <div class="modal-box modal-lg">
         <div class="modal-header">
             <div style="display:flex; align-items:center; gap:8px;">
-                <i class="fa-solid fa-pen-to-square" style="color:#2563eb;"></i>
+                <i class="fa-solid fa-pen-to-square" style="color:var(--brand-dark);"></i>
                 <span id="editModalTitle">Chỉnh Sửa Offer Proposal</span>
             </div>
-            <button class="btn btn-sm" onclick="closeModal('editOfferModal')">✕</button>
+            <button class="btn-icon" onclick="closeModal('editOfferModal')">✕</button>
         </div>
         <div class="modal-body">
             <form id="editOfferForm">
@@ -467,22 +434,22 @@
 
                 <div class="form-group">
                     <label>Vị trí chức danh đề xuất *</label>
-                    <input type="text" id="editOfferedTitle" class="input-control" style="width:100%;" required>
+                    <input type="text" id="editOfferedTitle" class="input-control" required>
                 </div>
 
                 <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px;">
                     <div class="form-group">
                         <label>Lương chính thức (VND/tháng) *</label>
-                        <input type="number" id="editProposedSalary" class="input-control" style="width:100%;" min="1000000" step="100000" oninput="editAutoCalculateProbation()" required>
+                        <input type="number" id="editProposedSalary" class="input-control" min="1000000" step="100000" oninput="editAutoCalculateProbation()" required>
                     </div>
                     <div class="form-group">
                         <label>
                             Lương thử việc (VND/tháng) *
                             <button type="button" class="quick-calc-btn" onclick="editAutoCalculateProbation(true)">Gợi ý 85%</button>
                         </label>
-                        <input type="number" id="editProbationSalary" class="input-control" style="width:100%;" min="850000" step="100000" oninput="editValidateProbation()" required>
-                        <div id="editProbationNotice" class="form-hint" style="color:#16a34a;">
-                            <i class="fa-solid fa-circle-check"></i> Đạt điều kiện $\ge 85\%$ lương chính thức (BR-OFF-01).
+                        <input type="number" id="editProbationSalary" class="input-control" min="850000" step="100000" oninput="editValidateProbation()" required>
+                        <div id="editProbationNotice" class="form-hint" style="color:var(--brand-dark);">
+                            <i class="fa-solid fa-circle-check"></i> Đạt điều kiện tối thiểu 85% lương chính thức (BR-OFF-01).
                         </div>
                     </div>
                 </div>
@@ -490,24 +457,27 @@
                 <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px;">
                     <div class="form-group">
                         <label>Ngày bắt đầu dự kiến</label>
-                        <input type="date" id="editStartDate" class="input-control" style="width:100%;">
+                        <input type="date" id="editStartDate" class="input-control">
                     </div>
                     <div class="form-group">
                         <label>Địa điểm làm việc</label>
-                        <input type="text" id="editWorkLocation" class="input-control" style="width:100%;">
+                        <input type="text" id="editWorkLocation" class="input-control">
                     </div>
                 </div>
 
                 <div class="form-group">
                     <label>Gói phúc lợi & Chế độ đãi ngộ</label>
-                    <textarea id="editBenefits" class="input-control" style="width:100%; height:70px;"></textarea>
+                    <textarea id="editBenefits" class="input-control" style="height:76px;"></textarea>
                 </div>
             </form>
         </div>
-        <div class="modal-footer" style="gap:10px;">
-            <button type="button" class="btn" onclick="closeModal('editOfferModal')">Hủy bỏ</button>
-            <button type="button" class="btn btn-primary" onclick="submitUpdateOffer()">
-                <i class="fa-solid fa-paper-plane" style="margin-right:6px;"></i> Nộp Trình Lại Giám Đốc (Resubmit)
+        <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" onclick="closeModal('editOfferModal')">Hủy bỏ</button>
+            <button type="button" class="btn btn-secondary" onclick="submitUpdateOffer(true)">
+                <i class="fa-regular fa-floppy-disk" style="margin-right:6px;"></i> Lưu Bản Thảo (Draft)
+            </button>
+            <button type="button" class="btn btn-primary" onclick="submitUpdateOffer(false)">
+                <i class="fa-solid fa-paper-plane" style="margin-right:6px;"></i> Trình Giám Đốc
             </button>
         </div>
     </div>
@@ -632,14 +602,15 @@
         document.getElementById('dispRecomSalary').textContent = recom ? Number(recom).toLocaleString('vi-VN') + ' VND' : 'Chưa có gợi ý';
         document.getElementById('dispInterviewComments').textContent = opt.getAttribute('data-comments') || 'Không có ghi chú thêm.';
 
+        // Hiển thị khung thông tin ứng viên ngay lập tức
+        document.getElementById('groupASection').style.display = 'block';
+
         // Gợi ý luôn vào form
         document.getElementById('createOfferedTitle').value = opt.getAttribute('data-pos') || '';
         if (recom) {
             document.getElementById('createProposedSalary').value = recom;
             autoCalculateProbationSalary(true);
         }
-
-        document.getElementById('groupASection').style.display = 'block';
     }
 
     function autoCalculateProbationSalary(forceSet = false) {
@@ -662,12 +633,16 @@
         if (!isNaN(proposed) && !isNaN(probation)) {
             const minProb = proposed * 0.85;
             if (probation < minProb) {
-                notice.style.color = '#dc2626';
-                notice.innerHTML = `<i class="fa-solid fa-triangle-exclamation"></i> CẢNH BÁO: Lương thử việc phải đạt tối thiểu 85% lương chính thức (${minProb.toLocaleString('vi-VN')} VND) theo luật BR-OFF-01.`;
+                if (notice) {
+                    notice.style.color = 'var(--error)';
+                    notice.innerHTML = `<i class="fa-solid fa-triangle-exclamation"></i> CẢNH BÁO: Lương thử việc phải đạt tối thiểu 85% lương chính thức (${minProb.toLocaleString('vi-VN')} VND) theo luật BR-OFF-01.`;
+                }
                 return false;
             } else {
-                notice.style.color = '#16a34a';
-                notice.innerHTML = `<i class="fa-solid fa-circle-check"></i> Hợp lệ: Đạt ${(probation / proposed * 100).toFixed(1)}% lương chính thức (Quy tắc BR-OFF-01).`;
+                if (notice) {
+                    notice.style.color = 'var(--brand-dark)';
+                    notice.innerHTML = `<i class="fa-solid fa-circle-check"></i> Hợp lệ: Đạt ${(probation / proposed * 100).toFixed(1)}% lương chính thức (Quy tắc BR-OFF-01).`;
+                }
                 return true;
             }
         }
@@ -701,7 +676,7 @@
             probationSalary: probation,
             probationDays: 60,
             expectedStartDate: document.getElementById('createStartDate').value || null,
-            workLocation: document.getElementById('createWorkLocation').value || 'Văn phòng chính',
+            workLocation: document.getElementById('createWorkLocation').value || 'Văn phòng chính Mộc RMS',
             benefitsPackage: document.getElementById('createBenefits').value || '',
             isDraft: isDraft
         };
@@ -711,18 +686,26 @@
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(payload)
         })
-        .then(res => res.json())
+        .then(async res => {
+            const isJson = res.headers.get('content-type')?.includes('application/json');
+            const data = isJson ? await res.json() : null;
+            if (!res.ok) {
+                const msg = data?.message || `Lỗi máy chủ (${res.status})`;
+                throw new Error(msg);
+            }
+            return data;
+        })
         .then(res => {
-            if (res.success) {
+            if (res && res.success) {
                 showToast(res.message, 'success');
                 closeModal('createOfferModal');
                 setTimeout(() => window.location.reload(), 800);
             } else {
-                showToast(res.message || 'Lỗi khi tạo Offer', 'danger');
+                showToast(res?.message || 'Lỗi khi tạo Offer', 'danger');
             }
         })
         .catch(err => {
-            showToast('Lỗi kết nối máy chủ: ' + err.message, 'danger');
+            showToast('Lỗi: ' + err.message, 'danger');
         });
     }
 
@@ -731,20 +714,20 @@
     // =========================================================================
     function viewOfferDetail(offerId) {
         openModal('detailOfferModal');
-        document.getElementById('detailModalTitle').textContent = `Chi Tiết Đề Xuất Offer #OFF-${offerId}`;
+        document.getElementById('detailModalTitle').textContent = `Chi Tiết Đề Xuất Offer ${offerId}`;
         
         fetch(`/api/v1/hr/offers/${offerId}`)
         .then(res => res.json())
         .then(res => {
             if (!res.success) {
-                document.getElementById('detailModalBody').innerHTML = `<p style="color:#dc2626;">${res.message}</p>`;
+                document.getElementById('detailModalBody').innerHTML = `<p style="color:var(--error);">${res.message}</p>`;
                 return;
             }
             const d = res.data;
             renderDetailModalHtml(d);
         })
         .catch(err => {
-            document.getElementById('detailModalBody').innerHTML = `<p style="color:#dc2626;">Lỗi tải dữ liệu: ${err.message}</p>`;
+            document.getElementById('detailModalBody').innerHTML = `<p style="color:var(--error);">Lỗi tải dữ liệu: ${err.message}</p>`;
         });
     }
 
@@ -755,13 +738,13 @@
         const formatVND = num => num ? Number(num).toLocaleString('vi-VN') + ' VND' : 'N/A';
         const pct = (d.proposedSalary && d.probationSalary) ? (d.probationSalary / d.proposedSalary * 100).toFixed(1) : 0;
 
-        let approvalLogsHtml = '<p style="color:#64748b; font-size:12px;">Chưa có lịch sử phê duyệt của Giám đốc.</p>';
+        let approvalLogsHtml = '<p style="color:var(--muted); font-size:13px;">Chưa có lịch sử phê duyệt của Giám đốc.</p>';
         if (d.approvalHistory && d.approvalHistory.length > 0) {
             approvalLogsHtml = '<div class="history-timeline">' + d.approvalHistory.map(a => `
                 <div class="timeline-item">
                     <div class="timeline-dot ${a.status === 'Approved' ? 'dot-approved' : 'dot-rejected'}"></div>
                     <div class="timeline-header">
-                        ${a.directorName || 'Giám đốc'} - <span style="font-weight:700; color:${a.status === 'Approved' ? '#16a34a' : '#dc2626'}">${a.status}</span>
+                        ${a.directorName || 'Giám đốc'} - <span style="font-weight:700; color:${a.status === 'Approved' ? 'var(--brand-dark)' : 'var(--error)'}">${a.status}</span>
                     </div>
                     <div class="timeline-time">${a.approvedAt ? a.approvedAt.replace('T', ' ') : ''}</div>
                     <div class="timeline-content">${a.directorComments || 'Không có ghi chú thêm.'}</div>
@@ -769,7 +752,7 @@
             `).join('') + '</div>';
         }
 
-        let negotiationLogsHtml = '<p style="color:#64748b; font-size:12px;">Chưa có vòng đàm phán lương nào từ ứng viên.</p>';
+        let negotiationLogsHtml = '<p style="color:var(--muted); font-size:13px;">Chưa có vòng đàm phán lương nào từ ứng viên.</p>';
         if (d.negotiationHistory && d.negotiationHistory.length > 0) {
             negotiationLogsHtml = '<div class="history-timeline">' + d.negotiationHistory.map(n => `
                 <div class="timeline-item">
@@ -787,7 +770,7 @@
         body.innerHTML = `
             <!-- Group A -->
             <div class="detail-section">
-                <div class="section-title"><i class="fa-solid fa-user"></i> Hồ Sơ Ứng Viên & Kết Quả Phỏng Vấn (Group A)</div>
+                <div class="section-title"><i class="fa-solid fa-user"></i> Hồ Sơ Ứng Viên & Kết Quả Phỏng Vấn</div>
                 <div class="detail-grid-3">
                     <div><div class="detail-item-label">Họ tên ứng viên</div><div class="detail-item-value" style="font-weight:700;">${d.candidateName || 'N/A'}</div></div>
                     <div><div class="detail-item-label">Email</div><div class="detail-item-value">${d.candidateEmail || 'N/A'}</div></div>
@@ -796,39 +779,39 @@
                     <div><div class="detail-item-label">Phòng ban</div><div class="detail-item-value">${d.departmentName || 'N/A'}</div></div>
                     <div><div class="detail-item-label">Mã Job Requisition</div><div class="detail-item-value">${d.requisitionId || 'N/A'}</div></div>
                 </div>
-                <div style="margin-top:12px; padding-top:10px; border-top:1px dashed #cbd5e1;" class="detail-grid">
+                <div style="margin-top:12px; padding-top:10px; border-top:1px dashed var(--line);" class="detail-grid">
                     <div>
                         <div class="detail-item-label">Kết quả Hội đồng phỏng vấn:</div>
-                        <div class="detail-item-value" style="color:#16a34a; font-weight:700;"><i class="fa-solid fa-circle-check"></i> ${d.finalDecision || 'Passed'}</div>
-                        <div style="font-size:12px; color:#64748b; margin-top:2px;">${d.interviewSummaryComments || ''}</div>
+                        <div class="detail-item-value" style="color:var(--brand-dark); font-weight:700;"><i class="fa-solid fa-circle-check"></i> ${d.finalDecision || 'Passed'}</div>
+                        <div style="font-size:12.5px; color:var(--muted); margin-top:2px;">${d.interviewSummaryComments || ''}</div>
                     </div>
                     <div>
                         <div class="detail-item-label">Lương khuyến nghị từ Hiring Manager:</div>
-                        <div class="detail-item-value" style="color:#2563eb; font-weight:700;">${formatVND(d.recommendedSalary)}</div>
+                        <div class="detail-item-value" style="color:var(--brand-dark); font-weight:700;">${formatVND(d.recommendedSalary)}</div>
                     </div>
                 </div>
             </div>
 
             <!-- Group B -->
             <div class="detail-section">
-                <div class="section-title"><i class="fa-solid fa-coins"></i> Gói Đãi Ngộ & Điều Khoản Offer (Group B)</div>
+                <div class="section-title"><i class="fa-solid fa-coins"></i> Gói Đãi Ngộ & Điều Khoản Offer</div>
                 <div class="detail-grid-3">
                     <div><div class="detail-item-label">Chức danh đề xuất</div><div class="detail-item-value" style="font-weight:700;">${d.offeredPositionTitle || '-'}</div></div>
-                    <div><div class="detail-item-label">Lương chính thức</div><div class="detail-item-value" style="color:#0f172a; font-weight:700;">${formatVND(d.proposedSalary)}</div></div>
+                    <div><div class="detail-item-label">Lương chính thức</div><div class="detail-item-value" style="color:var(--ink); font-weight:700;">${formatVND(d.proposedSalary)}</div></div>
                     <div>
                         <div class="detail-item-label">Lương thử việc</div>
-                        <div class="detail-item-value" style="color:#2563eb; font-weight:700;">
+                        <div class="detail-item-value" style="color:var(--brand-dark); font-weight:700;">
                             ${formatVND(d.probationSalary)} 
                             <span class="salary-badge-pct">${pct}%</span>
                         </div>
                     </div>
                     <div><div class="detail-item-label">Thời gian thử việc</div><div class="detail-item-value">${d.probationDays || 60} ngày</div></div>
                     <div><div class="detail-item-label">Ngày bắt đầu dự kiến</div><div class="detail-item-value">${d.expectedStartDate || 'Thỏa thuận'}</div></div>
-                    <div><div class="detail-item-label">Địa điểm làm việc</div><div class="detail-item-value">${d.workLocation || 'Văn phòng chính'}</div></div>
+                    <div><div class="detail-item-label">Địa điểm làm việc</div><div class="detail-item-value">${d.workLocation || 'Trụ sở chính Mộc RMS'}</div></div>
                 </div>
                 <div style="margin-top:12px;">
                     <div class="detail-item-label">Chế độ phúc lợi:</div>
-                    <div class="detail-item-value" style="background:#ffffff; padding:8px 12px; border:1px solid #e2e8f0; border-radius:6px; font-size:12.5px;">${d.benefitsPackage || 'Theo quy chế công ty.'}</div>
+                    <div class="detail-item-value" style="background:var(--surface); padding:8px 12px; border:1px solid var(--line); border-radius:4px; font-size:13px;">${d.benefitsPackage || 'Theo quy chế công ty.'}</div>
                 </div>
             </div>
 
@@ -846,18 +829,27 @@
         `;
 
         // Contextual Action Buttons in Footer
-        let actionButtonsHtml = '<button type="button" class="btn" onclick="closeModal(\'detailOfferModal\')">Đóng</button>';
+        let actionButtonsHtml = '<button type="button" class="btn btn-secondary" onclick="closeModal(\'detailOfferModal\')">Đóng</button>';
         
-        if (d.offerStatus === 'Director_Approved' || d.offerStatus === 'Approved') {
+        if (d.offerStatus === 'Draft') {
             actionButtonsHtml += `
-                <button type="button" class="btn btn-success" onclick="closeModal('detailOfferModal'); confirmSendOffer(${d.offerId});">
-                    <i class="fa-solid fa-paper-plane"></i> Phát Hành Offer Letter Tới Ứng Viên
+                <button type="button" class="btn btn-danger" style="background:#dc2626; border-color:#dc2626; color:#fff;" onclick="closeModal('detailOfferModal'); confirmDeleteOffer(${d.offerId});">
+                    <i class="fa-solid fa-trash-can" style="margin-right:6px;"></i> Xóa Bản Thảo (Delete)
+                </button>
+                <button type="button" class="btn btn-primary" onclick="closeModal('detailOfferModal'); openEditOfferModal(${d.offerId});">
+                    <i class="fa-solid fa-pen-to-square" style="margin-right:6px;"></i> Chỉnh Sửa (Update)
                 </button>
             `;
-        } else if (d.offerStatus === 'Draft' || d.offerStatus === 'Director_Rejected' || d.offerStatus === 'Rejected') {
+        } else if (d.offerStatus === 'Director_Approved' || d.offerStatus === 'Approved') {
+            actionButtonsHtml += `
+                <button type="button" class="btn btn-primary" onclick="closeModal('detailOfferModal'); confirmSendOffer(${d.offerId});">
+                    <i class="fa-solid fa-paper-plane" style="margin-right:6px;"></i> Phát Hành Offer Letter Tới Ứng Viên
+                </button>
+            `;
+        } else if (d.offerStatus === 'Director_Rejected' || d.offerStatus === 'Rejected') {
             actionButtonsHtml += `
                 <button type="button" class="btn btn-primary" onclick="closeModal('detailOfferModal'); openEditOfferModal(${d.offerId});">
-                    <i class="fa-solid fa-pen-to-square"></i> Chỉnh Sửa & Trình Lại
+                    <i class="fa-solid fa-pen-to-square" style="margin-right:6px;"></i> Chỉnh Sửa & Trình Lại
                 </button>
             `;
         }
@@ -876,7 +868,7 @@
             const d = res.data;
 
             document.getElementById('editOfferId').value = d.offerId;
-            document.getElementById('editModalTitle').textContent = `Chỉnh Sửa Offer Proposal #OFF-${d.offerId}`;
+            document.getElementById('editModalTitle').textContent = `Chỉnh Sửa Offer Proposal ${d.offerId}`;
             document.getElementById('editOfferedTitle').value = d.offeredPositionTitle || '';
             document.getElementById('editProposedSalary').value = d.proposedSalary || '';
             document.getElementById('editProbationSalary').value = d.probationSalary || '';
@@ -920,19 +912,23 @@
         if (!isNaN(proposed) && !isNaN(probation)) {
             const minProb = proposed * 0.85;
             if (probation < minProb) {
-                notice.style.color = '#dc2626';
-                notice.innerHTML = `<i class="fa-solid fa-triangle-exclamation"></i> CẢNH BÁO: Lương thử việc tối thiểu phải là ${minProb.toLocaleString('vi-VN')} VND (85%).`;
+                if (notice) {
+                    notice.style.color = 'var(--error)';
+                    notice.innerHTML = `<i class="fa-solid fa-triangle-exclamation"></i> CẢNH BÁO: Lương thử việc tối thiểu phải là ${minProb.toLocaleString('vi-VN')} VND (85%).`;
+                }
                 return false;
             } else {
-                notice.style.color = '#16a34a';
-                notice.innerHTML = `<i class="fa-solid fa-circle-check"></i> Đạt ${(probation / proposed * 100).toFixed(1)}% lương chính thức (BR-OFF-01).`;
+                if (notice) {
+                    notice.style.color = 'var(--brand-dark)';
+                    notice.innerHTML = `<i class="fa-solid fa-circle-check"></i> Đạt ${(probation / proposed * 100).toFixed(1)}% lương chính thức (BR-OFF-01).`;
+                }
                 return true;
             }
         }
         return true;
     }
 
-    function submitUpdateOffer() {
+    function submitUpdateOffer(isDraft = false) {
         const id = document.getElementById('editOfferId').value;
         const title = document.getElementById('editOfferedTitle').value;
         const proposed = parseFloat(document.getElementById('editProposedSalary').value);
@@ -955,7 +951,7 @@
             expectedStartDate: document.getElementById('editStartDate').value || null,
             workLocation: document.getElementById('editWorkLocation').value || '',
             benefitsPackage: document.getElementById('editBenefits').value || '',
-            isDraft: false // Resubmit to Director
+            isDraft: isDraft
         };
 
         fetch(`/api/v1/hr/offers/${id}`, {
@@ -963,14 +959,23 @@
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(payload)
         })
-        .then(res => res.json())
+        .then(async res => {
+            const isJson = res.headers.get('content-type')?.includes('application/json');
+            const data = isJson ? await res.json() : null;
+            if (!res.ok) {
+                const msg = data?.message || `Lỗi máy chủ (${res.status})`;
+                throw new Error(msg);
+            }
+            return data;
+        })
         .then(res => {
-            if (res.success) {
-                showToast('Đã cập nhật và nộp trình lại Giám đốc thành công!', 'success');
+            if (res && res.success) {
+                const msg = isDraft ? 'Đã lưu cập nhật bản thảo Offer thành công!' : 'Đã nộp trình đề xuất Offer lên Giám đốc thành công!';
+                showToast(msg, 'success');
                 closeModal('editOfferModal');
                 setTimeout(() => window.location.reload(), 800);
             } else {
-                showToast(res.message || 'Lỗi cập nhật Offer', 'danger');
+                showToast(res?.message || 'Lỗi cập nhật Offer', 'danger');
             }
         })
         .catch(err => showToast('Lỗi kết nối: ' + err.message, 'danger'));
@@ -980,18 +985,26 @@
     // 4. SEND OFFER WORKFLOW (Khi Status == Director_Approved)
     // =========================================================================
     function confirmSendOffer(offerId) {
-        if (!confirm(`Bạn có chắc chắn muốn phát hành Thư mời làm việc (Offer Letter) cho gói Offer #OFF-${offerId} tới ứng viên không?\n\nTrạng thái sẽ được chuyển sang 'Sent_Candidate' và đơn ứng tuyển sẽ được cập nhật.`)) {
+        if (!confirm(`Bạn có chắc chắn muốn phát hành Thư mời làm việc (Offer Letter) cho gói Offer ${offerId} tới ứng viên không?\n\nTrạng thái sẽ được chuyển sang 'Sent_Candidate' và đơn ứng tuyển sẽ được cập nhật.`)) {
             return;
         }
 
         fetch(`/api/v1/hr/offers/${offerId}/send`, { method: 'POST' })
-        .then(res => res.json())
+        .then(async res => {
+            const isJson = res.headers.get('content-type')?.includes('application/json');
+            const data = isJson ? await res.json() : null;
+            if (!res.ok) {
+                const msg = data?.message || `Lỗi máy chủ (${res.status})`;
+                throw new Error(msg);
+            }
+            return data;
+        })
         .then(res => {
-            if (res.success) {
+            if (res && res.success) {
                 showToast('Đã phát hành và gửi Offer Letter tới ứng viên thành công!', 'success');
                 setTimeout(() => window.location.reload(), 800);
             } else {
-                showToast(res.message || 'Lỗi khi gửi Offer', 'danger');
+                showToast(res?.message || 'Lỗi khi gửi Offer', 'danger');
             }
         })
         .catch(err => showToast('Lỗi kết nối: ' + err.message, 'danger'));
@@ -1001,18 +1014,26 @@
     // 5. DELETE DRAFT OFFER WORKFLOW (Chỉ khi Status == Draft)
     // =========================================================================
     function confirmDeleteOffer(offerId) {
-        if (!confirm(`Bạn có chắc chắn muốn xóa bản thảo Offer #OFF-${offerId} này không? Thao tác này không thể hoàn tác.`)) {
+        if (!confirm(`Bạn có chắc chắn muốn xóa bản thảo Offer ${offerId} này khỏi bảng không? (Dữ liệu sẽ được ẩn khỏi bảng danh sách nhưng vẫn lưu lại trong hệ thống)`)) {
             return;
         }
 
         fetch(`/api/v1/hr/offers/${offerId}`, { method: 'DELETE' })
-        .then(res => res.json())
+        .then(async res => {
+            const isJson = res.headers.get('content-type')?.includes('application/json');
+            const data = isJson ? await res.json() : null;
+            if (!res.ok) {
+                const msg = data?.message || `Lỗi máy chủ (${res.status})`;
+                throw new Error(msg);
+            }
+            return data;
+        })
         .then(res => {
-            if (res.success) {
+            if (res && res.success) {
                 showToast('Đã xóa bản thảo Offer thành công.', 'success');
                 setTimeout(() => window.location.reload(), 800);
             } else {
-                showToast(res.message || 'Lỗi khi xóa Offer', 'danger');
+                showToast(res?.message || 'Lỗi khi xóa Offer', 'danger');
             }
         })
         .catch(err => showToast('Lỗi kết nối: ' + err.message, 'danger'));

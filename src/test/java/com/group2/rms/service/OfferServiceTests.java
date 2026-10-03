@@ -2,13 +2,16 @@ package com.group2.rms.service;
 
 import com.group2.rms.dto.request.CreateOfferRequestDto;
 import com.group2.rms.dto.response.OfferResponseDto;
-import com.group2.rms.entity.Application;
-import com.group2.rms.entity.OfferProposal;
-import com.group2.rms.entity.User;
-import com.group2.rms.repository.ApplicationRepository;
-import com.group2.rms.repository.OfferProposalRepository;
-import com.group2.rms.repository.UserRepository;
-import com.group2.rms.service.impl.OfferServiceImpl;
+import com.group2.rms.candidate.entity.Application;
+import com.group2.rms.candidate.repository.ApplicationRepository;
+import com.group2.rms.offer.OfferProposal;
+import com.group2.rms.offer.OfferProposalRepository;
+import com.group2.rms.offer.service.OfferServiceImpl;
+import com.group2.rms.user.entity.User;
+import com.group2.rms.user.repository.UserRepository;
+import com.group2.rms.repository.InterviewFinalResultRepository;
+import com.group2.rms.repository.OfferApprovalRepository;
+import com.group2.rms.repository.OfferNegotiationRepository;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -38,6 +41,18 @@ class OfferServiceTests {
 
     @Mock
     private UserRepository userRepository;
+
+    @Mock
+    private InterviewFinalResultRepository interviewFinalResultRepository;
+
+    @Mock
+    private OfferApprovalRepository offerApprovalRepository;
+
+    @Mock
+    private OfferNegotiationRepository offerNegotiationRepository;
+
+    @Mock
+    private NotificationService notificationService;
 
     @InjectMocks
     private OfferServiceImpl offerService;

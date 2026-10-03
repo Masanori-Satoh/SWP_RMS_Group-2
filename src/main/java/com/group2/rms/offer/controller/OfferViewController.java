@@ -1,8 +1,8 @@
-package com.group2.rms.controller;
+package com.group2.rms.offer.controller;
 
 import com.group2.rms.dto.response.OfferResponseDto;
 import com.group2.rms.dto.response.PassedCandidateResponseDto;
-import com.group2.rms.service.OfferService;
+import com.group2.rms.offer.service.OfferService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -30,7 +30,7 @@ public class OfferViewController {
     public String listOffers(
             @RequestParam(required = false) String status,
             @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "50") int size,
             Model model,
             Principal principal) {
 

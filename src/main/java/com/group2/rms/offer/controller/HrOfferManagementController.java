@@ -1,4 +1,4 @@
-package com.group2.rms.controller;
+package com.group2.rms.offer.controller;
 
 import com.group2.rms.dto.request.CreateOfferRequestDto;
 import com.group2.rms.dto.request.UpdateOfferRequestDto;
@@ -6,7 +6,7 @@ import com.group2.rms.dto.response.ApiResponseDto;
 import com.group2.rms.dto.response.OfferDetailResponseDto;
 import com.group2.rms.dto.response.OfferResponseDto;
 import com.group2.rms.dto.response.PassedCandidateResponseDto;
-import com.group2.rms.service.OfferService;
+import com.group2.rms.offer.service.OfferService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -24,7 +24,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/v1/hr/offers")
 @RequiredArgsConstructor
-public class HrOfferController {
+public class HrOfferManagementController {
 
     private final OfferService offerService;
 
@@ -56,7 +56,7 @@ public class HrOfferController {
     public ResponseEntity<ApiResponseDto<Page<OfferResponseDto>>> getAllOffers(
             @RequestParam(required = false) String status,
             @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size) {
+            @RequestParam(defaultValue = "50") int size) {
         Page<OfferResponseDto> offers = offerService.getAllOffersForHr(status, PageRequest.of(Math.max(0, page), Math.max(1, size)));
         return ResponseEntity.ok(new ApiResponseDto<>(true, "Lấy danh sách Offer thành công.", offers));
     }

@@ -46,6 +46,20 @@ public class CreateOfferRequestDto {
 
     private Integer probationDays;
 
+    /**
+     * true: Lưu bản thảo (Draft)
+     * false hoặc null: Trình duyệt Director (Pending_Director)
+     */
+    private Boolean isDraft;
+
+    public Boolean getIsDraft() {
+        return this.isDraft;
+    }
+
+    public void setIsDraft(Boolean isDraft) {
+        this.isDraft = isDraft;
+    }
+
     // Alias hỗ trợ nếu caller dùng tên proposedPosition
     public String getProposedPosition() {
         return this.offeredPositionTitle;

@@ -1,6 +1,6 @@
 package com.group2.rms.service;
 
-import com.group2.rms.entity.OfferProposal;
+import com.group2.rms.offer.OfferProposal;
 
 public interface NotificationService {
 

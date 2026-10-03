@@ -1,6 +1,6 @@
 package com.group2.rms.service.impl;
 
-import com.group2.rms.entity.OfferProposal;
+import com.group2.rms.offer.OfferProposal;
 import com.group2.rms.service.NotificationService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.ObjectProvider;

@@ -63,4 +63,8 @@ public class OfferProposal extends BaseEntity {
      */
     @Column(name = "OfferStatus", nullable = false, length = 40)
     private String offerStatus;
+
+    @Column(name = "IsDeleted")
+    @Builder.Default
+    private Boolean isDeleted = false;
 }
