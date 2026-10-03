@@ -1,34 +1,36 @@
-# 📚 Quán triệt Cấu trúc Tài liệu & Database (SWP_RMS_Group-2)
+# 📚 SWP_RMS_Group-2 Documentation
 
-Tài liệu này sinh ra để thiết lập **kỷ luật thép** về cách tổ chức thư mục trong dự án. Tất cả thành viên vui lòng đọc kỹ để tránh làm "rác" kho chứa chung.
+Chào mừng đến với trung tâm tài liệu của dự án. Tài liệu này hướng dẫn cách tổ chức và quản lý các thư mục tài liệu để đảm bảo không gian làm việc của team luôn đồng bộ, sạch sẽ và chuyên nghiệp.
 
 ---
 
-## 1. 🗄️ Phân biệt ranh giới Database (Root vs Docs)
-Rất nhiều bạn đang nhầm lẫn chức năng của 2 thư mục này. Xin quán triệt như sau:
+## 1. 🗄️ Phân định ranh giới Database
+Dự án áp dụng quy tắc phân tách nghiêm ngặt giữa **Mã nguồn thực thi** và **Tài liệu tham khảo**:
 
-*   **Thư mục `database/` (Ở ngoài cùng, thư mục gốc):** 
-    *   **Chức năng:** Là nơi chứa CODE CHẠY THẬT.
-    *   **Được phép chứa:** Chỉ chứa các file script như `.sql` (tạo bảng, insert dữ liệu). 
-    *   **Cấm:** Không vứt tài liệu chữ, ảnh hay file Word vào đây.
+*   **`database/` (Thư mục gốc của dự án):**
+    *   **Mục đích:** Lưu trữ mã nguồn khởi tạo cơ sở dữ liệu (`.sql`).
+    *   **Quy định:** Chỉ chứa các script thực thi. Tuyệt đối không lưu trữ tài liệu giải nghĩa (Markdown, PDF, Image) tại đây.
 
-*   **Thư mục `docs/database/`:** 
-    *   **Chức năng:** Là nơi chứa TÀI LIỆU (cho con người đọc).
-    *   **Được phép chứa:** Các file Markdown (`.md`), file PDF mô tả sơ đồ ERD, thiết kế Model, hoặc bài viết Hướng dẫn cách tạo data mẫu (Seeding Guide).
+*   **`docs/database/`:**
+    *   **Mục đích:** Lưu trữ tài liệu mô tả thiết kế dữ liệu cho con người đọc.
+    *   **Quy định:** Chứa sơ đồ ERD, tài liệu mô tả Model, và hướng dẫn tạo dữ liệu mẫu (Data Seeding Guide).
 
 ---
 
 ## 2. 📂 Cấu trúc thư mục Docs
-*(Lưu ý: Tuyệt đối KHÔNG tự ý "đẻ" thêm các thư mục nghe cho sang trọng (như architecture, flows, design...) nếu nó không thực sự là tài sản chung của team. Những thứ do AI sinh ra hoặc tài liệu cá nhân bắt buộc phải đưa vào thư mục `members/`)*
+Không gian tài liệu chung của dự án được quy hoạch thành các phân khu chức năng dưới đây. Vui lòng không tự ý tạo thêm thư mục mới ở cấp gốc của `docs/` nếu chưa có sự thống nhất chung của team.
 
-Hiện tại, không gian chung chỉ công nhận 3 thư mục sau:
-
-*   **`database/`**: Xem lại điều số 1 ở trên.
-*   **`management/`**: Trung tâm quản lý dự án. Nơi lưu trữ duy nhất lịch sử thay đổi code và tiến độ của team (bao gồm file bảng `WORK_LOG.md` và thư mục chi tiết `work_logs/`).
-*   **`members/`**: 🚷 Không gian nháp cá nhân.
-    *   *Ví dụ: `members/linhdn/` là nơi chuyên chứa bằng chứng test (hàng đống file ảnh/json), các script chạy tự động, prototype giao diện, và các tài liệu flows/design ảo do AI sinh ra của riêng bạn linhdn. Khu vực này hoàn toàn KHÔNG ĐẠI DIỆN cho cấu trúc chuẩn của dự án.*
+*   **`architecture/`**: Sổ tay kiến trúc hệ thống và quy chuẩn lập trình (Coding Standards).
+*   **`database/`**: Sơ đồ thiết kế và hướng dẫn dữ liệu (như đã phân định ở trên).
+*   **`management/`**: Trung tâm lưu vết tiến độ dự án. Nơi lưu trữ duy nhất lịch sử thay đổi code của team (bao gồm file bảng `WORK_LOG.md` và thư mục chi tiết `work_logs/`). 
+*   **`prototype-reference/`**: Thư viện chứa các bản nháp HTML/CSS tĩnh (static prototypes) đóng vai trò làm giao diện tham chiếu chuẩn cho Frontend và AI.
+*   **`members/`**: Không gian lưu trữ tài liệu cá nhân của các thành viên.
+    *   *Mục đích:* Nơi lưu trữ tài liệu nháp, kịch bản kiểm thử riêng biệt (Test Plans), bằng chứng kiểm thử (Screenshots, JSON logs), hoặc các tài liệu do AI tạo ra đang trong quá trình thử nghiệm.
+    *   *Ví dụ:* `members/hoangnh/`, `members/linhdn/`...
+    *   *Quy định:* Tài liệu chưa hoàn thiện, sai lệch so với thực tế dự án, hoặc mang tính chất cá nhân bắt buộc phải lưu tại đây để không làm nhiễu tài liệu chính thức.
 
 ---
-> **🚨 TỐI HẬU THƯ:** 
-> 1. Không dùng không gian chung để lưu trữ ảnh chụp màn hình test. Git sinh ra để lưu code.
-> 2. Mọi tài liệu nháp, hoặc tài liệu do AI "chế" ra mà sai lệch với dự án thực tế, làm ơn ném hết vào thư mục `members/[tên-bạn]/`. Đừng lừa người khác đọc!
+
+## 💡 Nguyên tắc chung
+1. **Tối ưu dung lượng Repo:** Hạn chế tối đa việc commit hàng loạt ảnh chụp màn hình kiểm thử lên repository. Nếu cần thiết lưu vết, hãy đặt chúng vào không gian cá nhân (`members/`) hoặc cấu hình `.gitignore` nếu số lượng quá lớn.
+2. **Tính chính xác:** Mọi tài liệu nằm ngoài thư mục `members/` đều được coi là **Tài liệu chính thức**. Thành viên cần đảm bảo nội dung tài liệu luôn phản ánh đúng thực tế của mã nguồn hiện tại.
