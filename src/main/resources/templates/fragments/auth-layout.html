@@ -1,0 +1,8 @@
+<!doctype html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"><body>
+<aside th:fragment="brandPanel" class="auth-brand-panel" aria-label="Mộc Careers">
+  <div class="auth-brand-top"><a th:replace="~{fragments/brand :: wordmark('CAREERS')}"></a><a class="auth-home" th:href="@{/}">Back to Careers</a></div>
+  <div class="auth-story"><p class="auth-statement">Good work starts with clarity.</p><p>A single place for candidates and our hiring team.</p></div>
+  <p class="auth-brand-foot">Thoughtful people. Useful software.</p>
+</aside>
+</body></html>

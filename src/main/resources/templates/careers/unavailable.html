@@ -1,0 +1,4 @@
+<!doctype html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{careers/fragments :: head(${title})}"></head>
+<body><header th:replace="~{careers/fragments :: header}"></header><main id="main" class="container role-page unavailable-page" tabindex="-1"><h1 th:text="${title}"></h1><p th:text="${message}"></p><a class="button" th:href="@{/#roles}">View Open Positions</a></main><footer th:replace="~{careers/fragments :: footer}"></footer></body></html>

@@ -1,13 +1,15 @@
 package com.group2.rms.service;
 
-import com.group2.rms.entity.Candidate;
-import com.group2.rms.entity.Department;
-import com.group2.rms.entity.Role;
-import com.group2.rms.entity.User;
-import com.group2.rms.repository.CandidateRepository;
-import com.group2.rms.repository.DepartmentRepository;
-import com.group2.rms.repository.RoleRepository;
-import com.group2.rms.repository.UserRepository;
+import com.group2.rms.candidate.entity.Candidate;
+import com.group2.rms.candidate.repository.CandidateRepository;
+import com.group2.rms.user.entity.Department;
+import com.group2.rms.user.entity.Role;
+import com.group2.rms.user.entity.User;
+import com.group2.rms.user.repository.DepartmentRepository;
+import com.group2.rms.user.repository.RoleRepository;
+import com.group2.rms.user.repository.UserRepository;
+import com.group2.rms.user.exception.AccountFieldException;
+import com.group2.rms.user.service.AccountManagementService;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -118,7 +120,7 @@ class AccountManagementServiceTests {
         when(fixtures.users.saveAndFlush(account)).thenReturn(account);
 
         fixtures.service.update(22, new AccountManagementService.UpdateCommand(
-                "Tên mới", "new@example.com", null, 6, null, "Blocked"));
+                "Name mới", "new@example.com", null, 6, null, "Blocked"));
 
         assertEquals("stable-login", account.getUsername());
         assertEquals("existing-hash", account.getPasswordHash());
@@ -156,7 +158,7 @@ class AccountManagementServiceTests {
     }
 
     @Test
-    void switchingToCandidateCreatesProfileWithoutChangingPassword() {
+    void switchingToCandidateIsRejectedWithoutChangingIdentityOrProfile() {
         PasswordEncoder encoder = mock(PasswordEncoder.class);
         Fixtures fixtures = new Fixtures(encoder);
         Role candidateRole = Role.builder().roleId(6).roleName("Candidate").build();
@@ -166,17 +168,39 @@ class AccountManagementServiceTests {
                 .accountStatus("Active").build();
         when(fixtures.users.findById(30)).thenReturn(Optional.of(account));
         when(fixtures.roles.findById(6)).thenReturn(Optional.of(candidateRole));
-        when(fixtures.users.saveAndFlush(account)).thenReturn(account);
+        assertThrows(AccountFieldException.class, () -> fixtures.service.update(30, new AccountManagementService.UpdateCommand(
+                "Ứng viên chuyển vai trò", "new30@example.com", "0900000030", 6, null, "Active")));
 
-        fixtures.service.update(30, new AccountManagementService.UpdateCommand(
-                "Ứng viên chuyển vai trò", "new30@example.com", "0900000030", 6, null, "Active"));
-
-        ArgumentCaptor<Candidate> profile = ArgumentCaptor.forClass(Candidate.class);
-        verify(fixtures.candidates).save(profile.capture());
-        assertEquals(account, profile.getValue().getAccount());
-        assertEquals("new30@example.com", profile.getValue().getAccount().getEmail());
+        assertEquals("HR", account.getRole().getRoleName());
+        assertEquals("old30@example.com", account.getEmail());
         assertEquals("original-hash", account.getPasswordHash());
+        verify(fixtures.users, never()).saveAndFlush(any());
+        verifyNoInteractions(fixtures.candidates);
         verifyNoInteractions(encoder);
+    }
+
+    @Test
+    void candidateCannotBecomeEmployeeAndInternalCreateCannotAcceptCandidate() {
+        Fixtures f = new Fixtures(mock(PasswordEncoder.class));
+        Role candidate = Role.builder().roleId(6).roleName("Candidate").build();
+        Role hr = Role.builder().roleId(2).roleName("HR").build();
+        User account = User.builder().userId(90).username("candidate90").email("original@example.test")
+                .role(candidate).accountStatus("Active").passwordHash("unchanged").build();
+        when(f.users.findById(90)).thenReturn(Optional.of(account));
+        when(f.roles.findById(2)).thenReturn(Optional.of(hr));
+        when(f.roles.findById(6)).thenReturn(Optional.of(candidate));
+        assertThrows(AccountFieldException.class, () -> f.service.update(90,
+                new AccountManagementService.UpdateCommand("New name", "new@example.test", null, 2, 1, "Active")));
+        assertThrows(org.springframework.web.server.ResponseStatusException.class, () -> f.service.updateInternal(90,
+                new AccountManagementService.UpdateCommand("New name", "new@example.test", null, 2, 1, "Active")));
+        assertThrows(AccountFieldException.class, () -> f.service.createInternal(
+                new AccountManagementService.CreateCommand("Name", "name", "name@example.test", null, 6, null, "validPassword12")));
+        assertEquals(candidate, account.getRole());
+        assertEquals("original@example.test", account.getEmail());
+        verify(f.users, never()).saveAndFlush(any());
+        verifyNoInteractions(f.candidates, f.encoder);
+        assertThrows(AccountFieldException.class, () -> f.service.create(
+                new AccountManagementService.CreateCommand("Name", "name", "name@example.test", null, 6, 1, "validPassword12")));
     }
 
     private static class Fixtures {

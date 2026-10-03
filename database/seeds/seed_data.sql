@@ -2267,32 +2267,34 @@ UNION ALL SELECT 'OfferNegotiation', COUNT(*) FROM OfferNegotiation;
 GO
 
 -- Kiểm tra không có bảng nào trong 20 bảng bị rỗng (COUNT = 0)
-DECLARE @EmptyTables INT = 0;
-IF (SELECT COUNT(*) FROM [Role]) = 0 SET @EmptyTables = @EmptyTables + 1;
-IF (SELECT COUNT(*) FROM Department) = 0 SET @EmptyTables = @EmptyTables + 1;
-IF (SELECT COUNT(*) FROM [User]) = 0 SET @EmptyTables = @EmptyTables + 1;
-IF (SELECT COUNT(*) FROM AuditLog) = 0 SET @EmptyTables = @EmptyTables + 1;
-IF (SELECT COUNT(*) FROM SystemConfig) = 0 SET @EmptyTables = @EmptyTables + 1;
-IF (SELECT COUNT(*) FROM JobRequisition) = 0 SET @EmptyTables = @EmptyTables + 1;
-IF (SELECT COUNT(*) FROM RequisitionApproval) = 0 SET @EmptyTables = @EmptyTables + 1;
-IF (SELECT COUNT(*) FROM ScreeningCriteria) = 0 SET @EmptyTables = @EmptyTables + 1;
-IF (SELECT COUNT(*) FROM JobPosting) = 0 SET @EmptyTables = @EmptyTables + 1;
-IF (SELECT COUNT(*) FROM Candidate) = 0 SET @EmptyTables = @EmptyTables + 1;
-IF (SELECT COUNT(*) FROM Application) = 0 SET @EmptyTables = @EmptyTables + 1;
-IF (SELECT COUNT(*) FROM ApplicationReview) = 0 SET @EmptyTables = @EmptyTables + 1;
-IF (SELECT COUNT(*) FROM AIScreeningResult) = 0 SET @EmptyTables = @EmptyTables + 1;
-IF (SELECT COUNT(*) FROM InterviewSchedule) = 0 SET @EmptyTables = @EmptyTables + 1;
-IF (SELECT COUNT(*) FROM InterviewPanel) = 0 SET @EmptyTables = @EmptyTables + 1;
-IF (SELECT COUNT(*) FROM InterviewEvaluation) = 0 SET @EmptyTables = @EmptyTables + 1;
-IF (SELECT COUNT(*) FROM InterviewFinalResult) = 0 SET @EmptyTables = @EmptyTables + 1;
-IF (SELECT COUNT(*) FROM OfferProposal) = 0 SET @EmptyTables = @EmptyTables + 1;
-IF (SELECT COUNT(*) FROM OfferApproval) = 0 SET @EmptyTables = @EmptyTables + 1;
-IF (SELECT COUNT(*) FROM OfferNegotiation) = 0 SET @EmptyTables = @EmptyTables + 1;
+BEGIN
+    DECLARE @EmptyTables INT = 0;
+    IF (SELECT COUNT(*) FROM [Role]) = 0 SET @EmptyTables = @EmptyTables + 1;
+    IF (SELECT COUNT(*) FROM Department) = 0 SET @EmptyTables = @EmptyTables + 1;
+    IF (SELECT COUNT(*) FROM [User]) = 0 SET @EmptyTables = @EmptyTables + 1;
+    IF (SELECT COUNT(*) FROM AuditLog) = 0 SET @EmptyTables = @EmptyTables + 1;
+    IF (SELECT COUNT(*) FROM SystemConfig) = 0 SET @EmptyTables = @EmptyTables + 1;
+    IF (SELECT COUNT(*) FROM JobRequisition) = 0 SET @EmptyTables = @EmptyTables + 1;
+    IF (SELECT COUNT(*) FROM RequisitionApproval) = 0 SET @EmptyTables = @EmptyTables + 1;
+    IF (SELECT COUNT(*) FROM ScreeningCriteria) = 0 SET @EmptyTables = @EmptyTables + 1;
+    IF (SELECT COUNT(*) FROM JobPosting) = 0 SET @EmptyTables = @EmptyTables + 1;
+    IF (SELECT COUNT(*) FROM Candidate) = 0 SET @EmptyTables = @EmptyTables + 1;
+    IF (SELECT COUNT(*) FROM Application) = 0 SET @EmptyTables = @EmptyTables + 1;
+    IF (SELECT COUNT(*) FROM ApplicationReview) = 0 SET @EmptyTables = @EmptyTables + 1;
+    IF (SELECT COUNT(*) FROM AIScreeningResult) = 0 SET @EmptyTables = @EmptyTables + 1;
+    IF (SELECT COUNT(*) FROM InterviewSchedule) = 0 SET @EmptyTables = @EmptyTables + 1;
+    IF (SELECT COUNT(*) FROM InterviewPanel) = 0 SET @EmptyTables = @EmptyTables + 1;
+    IF (SELECT COUNT(*) FROM InterviewEvaluation) = 0 SET @EmptyTables = @EmptyTables + 1;
+    IF (SELECT COUNT(*) FROM InterviewFinalResult) = 0 SET @EmptyTables = @EmptyTables + 1;
+    IF (SELECT COUNT(*) FROM OfferProposal) = 0 SET @EmptyTables = @EmptyTables + 1;
+    IF (SELECT COUNT(*) FROM OfferApproval) = 0 SET @EmptyTables = @EmptyTables + 1;
+    IF (SELECT COUNT(*) FROM OfferNegotiation) = 0 SET @EmptyTables = @EmptyTables + 1;
 
-IF @EmptyTables > 0
-    RAISERROR(N'CẢNH BÁO: Phát hiện có bảng chưa có dữ liệu trong 20 bảng!', 16, 1);
-ELSE
-    PRINT N'>>> XÁC NHẬN HOÀN TOÀN: ĐỦ 20/20 BẢNG ĐỀU ĐÃ ĐƯỢC NẠP DỮ LIỆU CHUẨN MỰC!';
+    IF @EmptyTables > 0
+        RAISERROR(N'CẢNH BÁO: Phát hiện có bảng chưa có dữ liệu trong 20 bảng!', 16, 1);
+    ELSE
+        PRINT N'>>> XÁC NHẬN HOÀN TOÀN: ĐỦ 20/20 BẢNG ĐỀU ĐÃ ĐƯỢC NẠP DỮ LIỆU CHUẨN MỰC!';
+END;
 GO
 
 -- Kiểm tra số lượng đơn ứng tuyển theo từng ngày (Yêu cầu nghiêm ngặt: không dưới 3 và không quá 4 đơn/ngày)

@@ -3,9 +3,16 @@
 Dự án Hệ thống Quản lý Tuyển dụng (RMS) sử dụng **Spring Boot 3.5.16**, **Thymeleaf**, và **MS SQL Server**.
 
 Database hiện hành: [`database/schema/db.sql`](database/schema/db.sql).
-Xem [nhật ký công việc](docs/WORK_LOG.md) để tiếp tục dự án và
-[kịch bản kiểm thử từng bước](docs/TEST_PLAN.md) trước khi xác nhận tính năng.
+Xem [nhật ký công việc](docs/management/WORK_LOG.md) để tiếp tục dự án và
+[kịch bản kiểm thử từng bước](docs/management/TEST_PLAN.md) trước khi xác nhận tính năng.
 Kết quả theo từng đợt được ghi tại [thư mục tests](docs/tests/README.md).
+
+**📚 TÀI LIỆU DỰ ÁN (DOCS HUB):**
+- 🕒 **[Nhật ký công việc (Work Log)](docs/management/WORK_LOG.md):** Xem lịch sử thay đổi mỗi ngày, hôm nay ai làm gì, module nào được cập nhật.
+- 🏗️ **[Quy chuẩn Kiến trúc](docs/architecture/ARCHITECTURE_GUIDE.md):** Hướng dẫn cấu trúc code (Package-by-Feature), Naming Convention (thể hiện trạng thái hệ thống hiện tại).
+- 🗄️ **[Tài liệu Database](docs/database/model.md):** Cấu trúc DB và hướng dẫn [Seeding dữ liệu](docs/database/data_seeding_guide.md).
+- 🧪 **[Kế hoạch Kiểm thử](docs/management/TEST_PLAN.md):** Các bước test hệ thống.
+- ⚠️ **[Tác động Schema](docs/architecture/schema-migration-impact.md):** Ghi chú các ảnh hưởng khi cập nhật DB.
 
 ---
 
@@ -76,9 +83,10 @@ mvn clean compile spring-boot:run
 
 ## 🔍 4. KIỂM TRA
 
-Chạy `mvn test`, sau đó làm theo [TEST_PLAN.md](docs/TEST_PLAN.md) để kiểm tra
+Chạy `mvn test`, sau đó làm theo [TEST_PLAN.md](docs/management/TEST_PLAN.md) để kiểm tra
 login, Dashboard theo role, Account Management và API Monitoring. Mở trang chủ
 theo cổng `server.port` đã cấu hình để bắt đầu luồng đăng nhập. Các route demo
 `/test-web` và `/test-db` không thay thế kiểm thử tính năng hoặc JPA mapping.
 
 *Vướng mắc gì liên hệ Leader nhé!*
+

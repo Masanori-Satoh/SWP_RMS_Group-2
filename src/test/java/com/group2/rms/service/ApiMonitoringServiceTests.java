@@ -1,5 +1,7 @@
 package com.group2.rms.service;
 
+import com.group2.rms.admin.service.ApiMonitoringService;
+import com.group2.rms.admin.service.HttpProbeTransport;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
 import org.junit.jupiter.api.BeforeEach;
@@ -75,7 +77,7 @@ class ApiMonitoringServiceTests {
 
         var outcome = monitoring.probeInternal(request);
         assertFalse(outcome.success());
-        assertEquals("Không nhận được phản hồi HTTP", outcome.detail());
+        assertEquals("No HTTP response was received", outcome.detail());
         assertNull(monitoring.rows().getFirst().lastHttpStatus());
         assertEquals(100, monitoring.rows().getFirst().errorRatePercent());
     }

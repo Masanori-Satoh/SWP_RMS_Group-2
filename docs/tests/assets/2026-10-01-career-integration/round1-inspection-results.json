@@ -1,0 +1,237 @@
+{
+  "base": "http://127.0.0.1:8766",
+  "fixture": true,
+  "round": "round1-inspection",
+  "checks": [
+    {
+      "name": "No page overflow 1440",
+      "pass": true,
+      "details": {
+        "width": 1440,
+        "scrollWidth": 1425,
+        "header": "sticky",
+        "headerHeight": 73,
+        "jobCols": 3,
+        "processCols": 4,
+        "pillsWrap": "wrap",
+        "careers": "block",
+        "heroHeight": 572.546875
+      }
+    },
+    {
+      "name": "Grid columns 1440",
+      "pass": true,
+      "details": {
+        "width": 1440,
+        "scrollWidth": 1425,
+        "header": "sticky",
+        "headerHeight": 73,
+        "jobCols": 3,
+        "processCols": 4,
+        "pillsWrap": "wrap",
+        "careers": "block",
+        "heroHeight": 572.546875
+      }
+    },
+    {
+      "name": "Sticky header and brand 1440",
+      "pass": true
+    },
+    {
+      "name": "No page overflow 1024",
+      "pass": true,
+      "details": {
+        "width": 1024,
+        "scrollWidth": 1009,
+        "header": "sticky",
+        "headerHeight": 73,
+        "jobCols": 2,
+        "processCols": 2,
+        "pillsWrap": "wrap",
+        "careers": "block",
+        "heroHeight": 556.546875
+      }
+    },
+    {
+      "name": "Grid columns 1024",
+      "pass": true,
+      "details": {
+        "width": 1024,
+        "scrollWidth": 1009,
+        "header": "sticky",
+        "headerHeight": 73,
+        "jobCols": 2,
+        "processCols": 2,
+        "pillsWrap": "wrap",
+        "careers": "block",
+        "heroHeight": 556.546875
+      }
+    },
+    {
+      "name": "Sticky header and brand 1024",
+      "pass": true
+    },
+    {
+      "name": "No page overflow 768",
+      "pass": true,
+      "details": {
+        "width": 768,
+        "scrollWidth": 753,
+        "header": "sticky",
+        "headerHeight": 73,
+        "jobCols": 2,
+        "processCols": 2,
+        "pillsWrap": "wrap",
+        "careers": "block",
+        "heroHeight": 722.453125
+      }
+    },
+    {
+      "name": "Grid columns 768",
+      "pass": true,
+      "details": {
+        "width": 768,
+        "scrollWidth": 753,
+        "header": "sticky",
+        "headerHeight": 73,
+        "jobCols": 2,
+        "processCols": 2,
+        "pillsWrap": "wrap",
+        "careers": "block",
+        "heroHeight": 722.453125
+      }
+    },
+    {
+      "name": "Sticky header and brand 768",
+      "pass": true
+    },
+    {
+      "name": "No page overflow 375",
+      "pass": true,
+      "details": {
+        "width": 375,
+        "scrollWidth": 375,
+        "header": "sticky",
+        "headerHeight": 65,
+        "jobCols": 1,
+        "processCols": 1,
+        "pillsWrap": "nowrap",
+        "careers": "block",
+        "heroHeight": 804.25
+      }
+    },
+    {
+      "name": "Grid columns 375",
+      "pass": true,
+      "details": {
+        "width": 375,
+        "scrollWidth": 375,
+        "header": "sticky",
+        "headerHeight": 65,
+        "jobCols": 1,
+        "processCols": 1,
+        "pillsWrap": "nowrap",
+        "careers": "block",
+        "heroHeight": 804.25
+      }
+    },
+    {
+      "name": "Sticky header and brand 375",
+      "pass": true
+    },
+    {
+      "name": "Mobile pills stay in one scroll row",
+      "pass": true
+    },
+    {
+      "name": "Anchor clears sticky header",
+      "pass": true
+    },
+    {
+      "name": "Mobile account entry points",
+      "pass": true
+    },
+    {
+      "name": "Escape returns menu focus",
+      "pass": true
+    },
+    {
+      "name": "Empty filtering state is visible",
+      "pass": true
+    },
+    {
+      "name": "Clear stays in results context",
+      "pass": true,
+      "details": {
+        "before": 655,
+        "after": 922
+      }
+    },
+    {
+      "name": "Diacritic-insensitive title search",
+      "pass": true
+    },
+    {
+      "name": "Zero-count departments are muted",
+      "pass": true
+    },
+    {
+      "name": "Location filters DOM-backed data",
+      "pass": true
+    },
+    {
+      "name": "Harness completes",
+      "pass": false,
+      "details": "Error: {\"exceptionId\":1,\"text\":\"Uncaught\",\"lineNumber\":0,\"columnNumber\":36,\"scriptId\":\"28\",\"stackTrace\":{\"callFrames\":[{\"functionName\":\"rgb\",\"scriptId\":\"28\",\"url\":\"\",\"lineNumber\":0,\"columnNumber\":36},{\"functionName\":\"lum\",\"scriptId\":\"28\",\"url\":\"\",\"lineNumber\":0,\"columnNumber\":73},{\"functionName\":\"ratio\",\"scriptId\":\"28\",\"url\":\"\",\"lineNumber\":0,\"columnNumber\":219},{\"functionName\":\"\",\"scriptId\":\"28\",\"url\":\"\",\"lineNumber\":0,\"columnNumber\":676},{\"functionName\":\"\",\"scriptId\":\"28\",\"url\":\"\",\"lineNumber\":0,\"columnNumber\":588},{\"functionName\":\"\",\"scriptId\":\"28\",\"url\":\"\",\"lineNumber\":0,\"columnNumber\":1166}]},\"exception\":{\"type\":\"object\",\"subtype\":\"error\",\"className\":\"TypeError\",\"description\":\"TypeError: Cannot read properties of null (reading 'slice')\\n    at rgb (<anonymous>:1:37)\\n    at lum (<anonymous>:1:74)\\n    at ratio (<anonymous>:1:220)\\n    at <anonymous>:1:677\\n    at Array.map (<anonymous>)\\n    at <anonymous>:1:589\\n    at <anonymous>:1:1167\",\"objectId\":\"-8498163869013063525.1.2\"}}"
+    }
+  ],
+  "viewports": [
+    {
+      "width": 1440,
+      "scrollWidth": 1425,
+      "header": "sticky",
+      "headerHeight": 73,
+      "jobCols": 3,
+      "processCols": 4,
+      "pillsWrap": "wrap",
+      "careers": "block",
+      "heroHeight": 572.546875
+    },
+    {
+      "width": 1024,
+      "scrollWidth": 1009,
+      "header": "sticky",
+      "headerHeight": 73,
+      "jobCols": 2,
+      "processCols": 2,
+      "pillsWrap": "wrap",
+      "careers": "block",
+      "heroHeight": 556.546875
+    },
+    {
+      "width": 768,
+      "scrollWidth": 753,
+      "header": "sticky",
+      "headerHeight": 73,
+      "jobCols": 2,
+      "processCols": 2,
+      "pillsWrap": "wrap",
+      "careers": "block",
+      "heroHeight": 722.453125
+    },
+    {
+      "width": 375,
+      "scrollWidth": 375,
+      "header": "sticky",
+      "headerHeight": 65,
+      "jobCols": 1,
+      "processCols": 1,
+      "pillsWrap": "nowrap",
+      "careers": "block",
+      "heroHeight": 804.25
+    }
+  ],
+  "errors": [
+    "Error: {\"exceptionId\":1,\"text\":\"Uncaught\",\"lineNumber\":0,\"columnNumber\":36,\"scriptId\":\"28\",\"stackTrace\":{\"callFrames\":[{\"functionName\":\"rgb\",\"scriptId\":\"28\",\"url\":\"\",\"lineNumber\":0,\"columnNumber\":36},{\"functionName\":\"lum\",\"scriptId\":\"28\",\"url\":\"\",\"lineNumber\":0,\"columnNumber\":73},{\"functionName\":\"ratio\",\"scriptId\":\"28\",\"url\":\"\",\"lineNumber\":0,\"columnNumber\":219},{\"functionName\":\"\",\"scriptId\":\"28\",\"url\":\"\",\"lineNumber\":0,\"columnNumber\":676},{\"functionName\":\"\",\"scriptId\":\"28\",\"url\":\"\",\"lineNumber\":0,\"columnNumber\":588},{\"functionName\":\"\",\"scriptId\":\"28\",\"url\":\"\",\"lineNumber\":0,\"columnNumber\":1166}]},\"exception\":{\"type\":\"object\",\"subtype\":\"error\",\"className\":\"TypeError\",\"description\":\"TypeError: Cannot read properties of null (reading 'slice')\\n    at rgb (<anonymous>:1:37)\\n    at lum (<anonymous>:1:74)\\n    at ratio (<anonymous>:1:220)\\n    at <anonymous>:1:677\\n    at Array.map (<anonymous>)\\n    at <anonymous>:1:589\\n    at <anonymous>:1:1167\",\"objectId\":\"-8498163869013063525.1.2\"}}"
+  ]
+}

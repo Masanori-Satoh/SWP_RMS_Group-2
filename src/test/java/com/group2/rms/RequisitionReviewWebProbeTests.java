@@ -1,11 +1,14 @@
 package com.group2.rms;
-import com.group2.rms.config.SecurityConfig;
-import com.group2.rms.controller.RequisitionController;
-import com.group2.rms.dto.request.RequisitionRequestDto;
-import com.group2.rms.entity.*;
-import com.group2.rms.repository.*;
-import com.group2.rms.service.RequisitionService;
-import com.group2.rms.security.*;
+import com.group2.rms.core.config.SecurityConfig;
+import com.group2.rms.requisition.controller.RequisitionController;
+import com.group2.rms.core.security.DatabaseUserDetailsService;
+import com.group2.rms.core.security.RoleAuthorities;
+import com.group2.rms.requisition.dto.RequisitionRequest;
+import com.group2.rms.requisition.service.RequisitionService;
+import com.group2.rms.user.repository.DepartmentRepository;
+import com.group2.rms.user.entity.Role;
+import com.group2.rms.user.entity.User;
+import com.group2.rms.user.repository.UserRepository;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
@@ -20,7 +23,6 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.data.domain.Page;
 import java.util.*;
 import static org.mockito.Mockito.*;
-import static org.mockito.ArgumentMatchers.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
@@ -29,8 +31,10 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 class RequisitionReviewWebProbeTests {
     @Autowired MockMvc mvc;
     @MockitoBean RequisitionService service;
-    @MockitoBean UserRepository users;
-    @MockitoBean DepartmentRepository departments;
+    @MockitoBean
+    UserRepository users;
+    @MockitoBean
+    DepartmentRepository departments;
     private MockHttpSession candidateSession() {
         var user = User.builder().userId(123).username("review-candidate").accountStatus("Active")
             .role(Role.builder().roleName("Candidate").build()).build();
@@ -53,7 +57,7 @@ class RequisitionReviewWebProbeTests {
         mvc.perform(post("/requisitions/create").session(session).param(csrf.getParameterName(),csrf.getToken())
             .param("title","   ").param("action","submit"))
             .andExpect(status().is3xxRedirection());
-        verify(service).createRequisition(argThat((RequisitionRequestDto d) -> d.getTitle().isBlank() && d.getDepartmentId()==null),eq(1));
+        verify(service).createRequisition(argThat((RequisitionRequest d) -> d.getTitle().isBlank() && d.getDepartmentId()==null),eq(1));
         System.out.println("WEB PROBE submit: blank title and missing department forwarded without validation");
     }
 }

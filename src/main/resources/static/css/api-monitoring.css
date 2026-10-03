@@ -1,13 +1,14 @@
-.monitoring-card { padding: 0; overflow: hidden; }
-.monitoring-heading { padding: 1.5rem 1.5rem 1rem; }
-.monitoring-heading h2 { font-size: 1.15rem; margin-bottom: .25rem; }
-.monitoring-heading p, .monitoring-note { color: var(--color-text-secondary); font-size: .88rem; }
+.monitoring-heading { margin-bottom:var(--s6); }
+.monitoring-heading h2 { margin-bottom:var(--s1); }
+.monitoring-heading p,.monitoring-note { color:var(--muted); font-size:14px; max-width:75ch; }
 .monitoring-table { min-width: 950px; }
 .monitoring-table td { vertical-align: middle; }
 .monitoring-table td:first-child { min-width: 255px; }
 .monitoring-table strong, .monitoring-table small, .monitoring-table code { display: block; }
-.monitoring-table small { color: var(--color-text-secondary); font-size: .76rem; margin-top: .2rem; }
-.monitoring-table code { color: var(--color-primary); font-size: .76rem; margin-top: .35rem; overflow-wrap: anywhere; }
+.monitoring-table small { color:var(--muted); font-size:14px; margin-top:var(--s1); }
+.monitoring-table code { color:var(--ink); font-size:13px; margin-top:var(--s2); overflow-wrap:anywhere; }
 .monitoring-table form { margin: 0; }
-.monitoring-unavailable { color: var(--color-text-muted); font-size: .82rem; }
-.monitoring-note { max-width: 900px; margin: 1rem 0 0; line-height: 1.6; }
+.monitoring-unavailable { color:var(--muted); font-size:14px; }
+.monitoring-note { margin-top:var(--s6); line-height:1.6; }
+.monitoring-table td:not(:first-child) { font-variant-numeric:tabular-nums; }
+.monitoring-table .badge { white-space:nowrap; }
