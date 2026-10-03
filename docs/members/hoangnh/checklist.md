@@ -4,6 +4,8 @@
 - **Module:** Yêu cầu Tuyển dụng (Job Requisition)
 - **Nhánh Git:** `feat/hoang-Requisition-List-Screen`
 
+> **Cập nhật ngày 03/10/2026:** Các mục hoàn thành Iter1 bên dưới là ghi nhận triển khai trước lần rà soát này, chưa đồng nghĩa đã nghiệm thu toàn bộ luồng. Yêu cầu đã chốt: **HR chỉ được xem Requisition có trạng thái Approved** và **Hiring Manager phải nhận được thông báo riêng khi Director từ chối**, ngoài feedback trên trang chi tiết. Hai thiếu sót này được đưa vào phần VI để xử lý trước luồng Job Posting của Iter2. Các checkbox `[ ]` trong phần VI là kế hoạch, chưa triển khai hoặc xác nhận Passed.
+
 ---
 
 ## I. TỔNG QUAN PHẠM VI CÔNG VIỆC TRONG ITERATION 1
@@ -48,7 +50,7 @@ Hệ thống được xây dựng theo kiến trúc phân tầng chuẩn của *
 - **`RequisitionAccess.java`**: Kiểm soát quyền truy cập chi tiết theo vai trò người dùng:
   - **Hiring Manager**: Chỉ được xem/sửa đơn của chính mình; chỉ được tạo mới, lưu draft, submit và rút đơn (withdraw) khi đang chờ duyệt.
   - **Director**: Được xem các đơn không phải Draft; có thẩm quyền duyệt (`Approved`) hoặc từ chối (`Rejected`) kèm lý do đối với đơn `Pending_Director`.
-  - **HR**: Được xem danh sách các đơn đã submit để theo dõi tiến độ tuyển dụng.
+  - **HR**: Yêu cầu đã chốt là chỉ xem Requisition `Approved`. Code hiện tại còn cho xem các đơn không phải `Draft`; cần sửa cả truy vấn danh sách và kiểm tra quyền xem chi tiết theo mục VI.2.
   - **System Admin**: Toàn quyền quản trị.
 
 ### 6. Tầng Xử lý Nghiệp vụ (Service Layer)
@@ -165,3 +167,95 @@ Nhằm đảm bảo chất lượng code và phòng ngừa lỗi hồi quy (regr
   - [x] `JobRequisitionServiceTest.java` (Stage 2 - Service Unit Test).
   - [x] `JobRequisitionControllerTests.java` (Stage 3 - Controller / MVC Test).
   - [x] `RequisitionIntegrationTest.java` (Stage 4 - Database Integration Test).
+
+---
+
+## VI. KẾ HOẠCH ITERATION 2 — HOANGNH
+
+### 1. Phạm vi, hiện trạng và thứ tự thực hiện
+
+| Hạng mục | Mã trong bảng phân công | Nội dung Iter2 | Điều kiện hoàn thành |
+| :--- | :--- | :--- | :--- |
+| Khắc phục thiếu sót Requisition từ Iter1 | 5.1.14–5.1.16 | HR chỉ xem Approved; thông báo riêng cho HM khi bị từ chối; xác nhận lại test | Quyền được kiểm tra ở server và HM nhận đúng thông báo sau quyết định thành công |
+| Internal Job Management | 5.1.18 | HR xem, tìm kiếm, lọc, phân trang và mở chi tiết tin tuyển dụng nội bộ | Dữ liệu lấy từ database, đúng quyền, liên kết về requisition nguồn |
+| Post/Update Job Screen | 5.1.19 | HR tạo/sửa tin từ requisition Approved, validate, lưu và publish | Tin Published xuất hiện đúng trên trang công khai; HM nhận thông báo đăng tin |
+
+**Hiện trạng làm nền:** Đã có entity `JobPosting`, repository và service/controller phục vụ xem việc làm công khai. Chưa xem đây là bằng chứng đã có luồng HR tạo/sửa/publish nội bộ. Chưa thấy thành phần thông báo riêng trong module Requisition. `JobPosting` hiện có các trạng thái `Draft`, `Published`, `Paused`, `Closed`; tên trạng thái tồn tại không có nghĩa mọi thao tác chuyển trạng thái đã được triển khai.
+
+**Thứ tự:** VI.2 → VI.3 → VI.4 → VI.5 → VI.6 → VI.7. Mục VI.8 là điều kiện nghiệm thu chung.
+
+**Ranh giới phối hợp:** Public JD Board (5.1.34) và JD Details Screen (5.1.35) thuộc DungLT theo bảng phân công. HoangNH chịu trách nhiệm dữ liệu, quyền và luồng nội bộ tạo/sửa/publish; phối hợp kiểm thử việc tin xuất hiện công khai, không tự nhận toàn bộ phần màn hình của thành viên khác.
+
+### 2. P0 — Sửa quyền HR và xác nhận nền Iter1
+
+- [ ] **I2-REQ-01 — Scope danh sách:** Tách nhánh HR khỏi Director trong `RequisitionServiceImpl.scope()`. HR chỉ truy vấn `approvalStatus = Approved`; áp dụng cùng scope cho `search()`, `countVisible()`, tổng bản ghi và phân trang.
+- [ ] **I2-REQ-02 — Quyền chi tiết:** Sửa `RequisitionAccess.requireView()` để HR bị chặn khi truy cập trực tiếp ID của Draft, Pending_Director hoặc Rejected, kể cả khi tự sửa URL. Không dùng ẩn nút trên UI thay cho kiểm tra quyền.
+- [ ] **I2-REQ-03 — Bộ lọc và giao diện HR:** HR chỉ có lựa chọn Approved phù hợp với quyền. Tự gửi `status=Draft/Pending_Director/Rejected` không trả dữ liệu ngoài scope. Áp dụng lại quyền này tại các API/ô chọn requisition dùng để tạo Job Posting.
+- [ ] **I2-REQ-04 — Hồi quy các role khác:** HM tiếp tục xem request của mình; Director vẫn xem các request không phải Draft và chỉ quyết định khi Pending, không tự duyệt. Không mở rộng quyền Admin hoặc quyền chỉnh sửa ngoài quy tắc đã có.
+- [ ] **I2-TEST-01 — Cấu hình test:** Bổ sung dependency `spring-security-test` đúng scope test; build lại để loại bỏ class test cũ. Chạy lại Validator, Service và Controller tests trước khi kết luận lỗi chức năng.
+- [ ] **I2-TEST-02 — Database test:** Chuẩn bị profile/database test riêng và fixture độc lập trước khi chạy integration test; không dùng dữ liệu đang demo làm fixture mặc định.
+
+**Bằng chứng tại lần rà soát 03/10/2026:** Validator chạy 147 case Passed; Service chạy 4 case Passed; Controller có 11 Errors liên quan `WithMockUser`/`csrf()`. `pom.xml` chưa khai báo `spring-security-test`. Đây là kết quả lần chạy đã ghi nhận, không phải kết quả sau khi hoàn thành kế hoạch này. Integration test chưa được chạy trong lần rà soát.
+
+**Nghiệm thu quyền HR:** Với bốn requisition có trạng thái khác nhau, HR chỉ thấy Approved trong list/count; mở Approved trả 200; mở trực tiếp ba trạng thái còn lại trả 403. Director và HM vẫn thực hiện được đúng luồng cũ.
+
+### 3. P0 — Thông báo từ chối riêng cho Hiring Manager
+
+**Kênh đề xuất cho Iter2:** Thông báo trong hệ thống là phần bắt buộc của kế hoạch. Email là kênh bổ sung cần chốt với nhóm, chưa mặc định là điều kiện Done. Timeline/AuditLog không thay thế thông báo gửi tới người nhận.
+
+- [ ] **I2-NOTI-01 — Tái sử dụng thiết kế chung:** Kiểm tra thành phần Notification hiện có của dự án trước khi tạo mới. Nếu chưa có, thống nhất nơi đặt module dùng chung và chiều gọi service, tránh phụ thuộc vòng.
+- [ ] **I2-NOTI-02 — Dữ liệu thông báo:** Lưu người nhận, loại sự kiện, ID requisition/posting liên quan, nội dung, thời gian tạo, trạng thái đọc và định danh sự kiện để chống tạo trùng. Có migration SQL tương ứng nếu cần thêm bảng/index.
+- [ ] **I2-NOTI-03 — Phát sinh sau reject hợp lệ:** Khi Director từ chối Pending với feedback hợp lệ, lưu Rejected, approval, workflow event và thông báo cho đúng HM sở hữu requisition trong cùng giao dịch database, hoặc cơ chế outbox đã thống nhất. Không tạo thông báo khi validation/quyền/version thất bại hoặc giao dịch rollback.
+- [ ] **I2-NOTI-04 — Nội dung:** Thông báo nêu requisition nào bị từ chối, ai từ chối, thời điểm và lý do. Có liên kết về đúng trang chi tiết để HM sửa và gửi lại. Encode nội dung do người dùng nhập khi hiển thị.
+- [ ] **I2-NOTI-05 — Giao diện nhận:** HM có danh sách/badge thông báo chưa đọc, mở được thông báo và đánh dấu đã đọc. Mỗi người chỉ xem/đánh dấu thông báo của chính mình; kiểm tra quyền ở server và khi mở liên kết đích.
+- [ ] **I2-NOTI-06 — Chống trùng:** Gửi lại cùng request hoặc retry cùng sự kiện không tạo thông báo trùng. Một lần reject mới sau khi HM resubmit phải tạo thông báo mới và vẫn giữ lịch sử cũ.
+- [ ] **I2-NOTI-07 — Nếu triển khai email:** Dùng cấu hình mail chung, gửi sau commit qua cơ chế có retry; lỗi SMTP không đảo ngược quyết định đã lưu. Không gửi thư thật trong automated test, không đưa credentials vào source/checklist.
+
+**Nghiệm thu:** Director reject có lý do → HM đúng chủ nhận một thông báo chưa đọc → mở được feedback → sửa và resubmit cùng requisition ID. HM khác không thấy hoặc truy cập được thông báo đó. Reject thiếu lý do và giao dịch lỗi không sinh thông báo.
+
+### 4. P1 — Internal Job Management (5.1.18)
+
+- [ ] **I2-JOB-01 — Quyền và đường dẫn nội bộ:** Chốt route nội bộ riêng với route public `/jobs`; đề xuất `/internal/job-postings`. HR là actor tạo/sửa/publish theo swimlane. Quyền hỗ trợ của Admin phải chốt rõ; không mặc định cho HM/Director/Candidate thao tác thay HR.
+- [ ] **I2-JOB-02 — Danh sách:** Hiển thị tiêu đề, requisition nguồn, phòng ban, người tạo, trạng thái, ngày đăng, hạn ứng tuyển và thao tác được phép. Có tìm kiếm, lọc, sắp xếp, phân trang, trạng thái rỗng và thông báo lỗi.
+- [ ] **I2-JOB-03 — Chi tiết nội bộ:** Xem đủ nội dung posting, requisition Approved liên quan và lịch sử thao tác cần thiết. Nội dung chưa public không được lộ qua endpoint công khai.
+- [ ] **I2-JOB-04 — Giao diện đồng bộ:** Dùng layout/sidebar, typography và màu chung của dự án. Tách CSS/JS riêng; không viết inline style/script cho màn hình mới.
+
+### 5. P1 — Post/Update Job Screen (5.1.19)
+
+- [ ] **I2-JOB-05 — Tạo từ Approved:** HR chọn requisition đã duyệt; hệ thống gợi ý title, description, requirements, location và thông tin lương phù hợp. Đọc dữ liệu thật từ DB. Kiểm tra Approved lại ở service khi lưu, không chỉ lọc dropdown.
+- [ ] **I2-JOB-06 — DTO và validation:** Tạo Request/Response theo kiến trúc dự án. Chốt trường bắt buộc cho Draft và Publish dựa trên schema hiện có (`PostingTitle`, `JobDescription`, `JobRequirements` đang non-null), giới hạn độ dài và hạn ứng tuyển. Không hứa lưu Draft trống nếu schema chưa hỗ trợ.
+- [ ] **I2-JOB-07 — Lưu Draft:** Lưu tin cùng liên kết requisition và `CreatedBy` lấy từ session. Lỗi validation trả về đúng form, giữ dữ liệu và không tạo bản ghi dở dang. Draft không xuất hiện công khai.
+- [ ] **I2-JOB-08 — Sửa tin:** Load dữ liệu theo ID, kiểm tra quyền/trạng thái, cập nhật đúng bản ghi và ghi audit. Không sửa ngược requisition Approved khi HR thay nội dung tin tuyển dụng.
+- [ ] **I2-JOB-09 — Bảo vệ dữ liệu:** Không bind trực tiếp entity. Client không được tự gán người tạo, thời gian đăng hoặc trạng thái Published để vượt qua action publish. Chặn liên kết tới requisition không tồn tại hoặc chưa Approved.
+- [ ] **I2-JOB-10 — Cập nhật đồng thời:** Bổ sung cơ chế version/concurrency phù hợp cho JobPosting và migration nếu cần; báo lỗi rõ khi dữ liệu cũ, tránh hai HR ghi đè hoặc publish lặp.
+- [ ] **I2-JOB-11 — Chốt trước khi code:** Ghi rõ một requisition được có bao nhiêu posting; có cho sửa nội dung tin Published trực tiếp không; có cho đổi requisition nguồn không; deadline có bắt buộc không. Không suy diễn từ quan hệ `ManyToOne` rằng mọi trường hợp nhiều posting đều hợp lệ.
+
+### 6. P1 — Publish, hiển thị công khai và thông báo HM
+
+- [ ] **I2-PUB-01 — Publish:** Kiểm tra quyền HR, version, nội dung, deadline và trạng thái Approved của requisition trong thao tác ghi; chuyển Draft sang Published và đặt thời điểm đăng ở server.
+- [ ] **I2-PUB-02 — Tính nhất quán:** Save/publish phải thành công trước khi có thông báo thành công. Lỗi validation/database không tạo tin công khai, audit thành công hoặc thông báo Published sai.
+- [ ] **I2-PUB-03 — Public list/detail:** Phối hợp DungLT kiểm tra tin Published xuất hiện trên Public JD Board và JD Details theo cùng chính sách deadline. Truy cập trực tiếp ID của Draft/Paused/Closed không làm lộ nội dung nội bộ. Rà lại `getPublishedJobDetail()` hiện đang lấy theo ID mà chưa giới hạn trạng thái public.
+- [ ] **I2-PUB-04 — Notification Posting:** Sau publish thành công, gửi thông báo trong hệ thống đến HM sở hữu requisition nguồn, gồm tin nào được đăng và liên kết xem tin. Không nhầm người nhận thành HR tạo posting.
+- [ ] **I2-PUB-05 — Publish lặp:** Double-click/retry không tạo posting hoặc thông báo trùng và không ghi đè thời điểm đăng đầu tiên ngoài quy tắc đã chốt.
+- [ ] **I2-PUB-06 — Giới hạn Iter2:** Chốt riêng việc pause/close/reopen, lên lịch đăng và email. Chỉ thêm thao tác vào màn hình khi có quy tắc chuyển trạng thái và test tương ứng; không tự mở rộng phạm vi vì entity đã có tên trạng thái.
+
+### 7. P2 — Kiểm thử và cập nhật tài liệu
+
+- [ ] **I2-QA-01 — Requisition regression:** HM create → validate → submit → Director approve; nhánh reject → notification → HM sửa → resubmit. Kiểm tra dữ liệu sau khi flush/clear persistence context hoặc đọc trong giao dịch mới.
+- [ ] **I2-QA-02 — HR visibility:** Test đủ Role × Status cho list, count, detail và bộ chọn requisition. Cập nhật case Security cũ từng cho HR xem Pending thành kỳ vọng bị chặn; Director vẫn là nhánh riêng.
+- [ ] **I2-QA-03 — Posting integration:** Tạo Draft từ Approved, reload, sửa, publish và truy vấn public list/detail. Thử requisition chưa Approved, field thiếu/sai, stale version và posting không tồn tại.
+- [ ] **I2-QA-04 — Notification integration:** Đúng người nhận/nội dung/liên kết/read state; không sinh khi rollback; không trùng khi retry; lần reject mới sinh thông báo mới. Nếu có email, kiểm tra bằng mail giả lập.
+- [ ] **I2-QA-05 — Security:** Guest/Candidate/HM/Director không được gọi POST nội bộ thay HR; thiếu/sai CSRF bị chặn; không truy cập notification của người khác; không spoof owner/status/requisition; nội dung nhập được render an toàn, không thực thi script.
+- [ ] **I2-QA-06 — Cập nhật hai file test:** Bổ sung Integration/Security test cho Iter2, sửa expected result theo quyền HR mới. Chỉ ghi Passed sau khi chạy; ghi ngày test, tester HoangNH, round, bằng chứng và Defect ID nếu lỗi.
+- [ ] **I2-QA-07 — Kiến trúc:** Theo `docs/architecture/ARCHITECTURE_GUIDE.md`: package theo feature, DTO record cho code mới, validation phía server, custom business exception qua GlobalExceptionHandler, transaction phù hợp, CSS/JS trong static. Với nội dung người dùng nhập, ưu tiên text đã escape và CSS giữ xuống dòng; không render HTML thô chưa kiểm soát.
+
+### 8. Điều kiện hoàn thành Iter2 (Definition of Done)
+
+- [ ] **DONE-01:** HR chỉ xem được Approved qua mọi đường truy cập Requisition liên quan; tổng bản ghi và phân trang không lộ dữ liệu trạng thái khác.
+- [ ] **DONE-02:** Luồng reject có thông báo riêng cho HM, không chỉ feedback trong detail/timeline; HM sửa và resubmit thành công.
+- [ ] **DONE-03:** Demo trọn nhánh swimlane: HM tạo và submit → Director approve → HR xem Approved → tạo posting → validation lỗi quay lại form → lưu/publish hợp lệ → HM nhận Notification Posting.
+- [ ] **DONE-04:** Hai màn hình 5.1.18 và 5.1.19 hoạt động với database, giao diện đồng bộ; tin chưa Published không bị lộ trên public list/detail.
+- [ ] **DONE-05:** Build và các test trong phạm vi đã chốt Passed; không còn lỗi chặn hai luồng nghiệp vụ chính. Integration test chạy trên database test riêng và có bằng chứng kết quả.
+- [ ] **DONE-06:** Migration, quy tắc quyền/trạng thái, hai file test và kết quả demo được cập nhật. Các lựa chọn còn mở ở VI.5/VI.6 được chốt trước khi đánh dấu Done.
+
+**Nguyên tắc cập nhật:** Chỉ đổi `[ ]` thành `[x]` khi có code và bằng chứng kiểm tra tương ứng. Việc thêm kế hoạch này không đánh dấu Iter1 hoặc Iter2 đã hoàn thành, không triển khai chức năng và không gửi notification/email thật.
