@@ -4,6 +4,7 @@ import com.group2.rms.user.entity.User;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 /**
@@ -38,6 +39,9 @@ public class InterviewFinalResult {
      */
     @Column(name = "FinalDecision", nullable = false, length = 20)
     private String finalDecision;
+
+    @Column(name = "RecommendedSalary", precision = 18, scale = 2)
+    private BigDecimal recommendedSalary;
 
     @Column(name = "FinalSummaryComments", columnDefinition = "NVARCHAR(MAX)")
     private String finalSummaryComments;

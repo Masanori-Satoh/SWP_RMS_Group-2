@@ -39,27 +39,24 @@ Thực hiện lần lượt các bước sau khi `git clone`:
 2. Cập nhật đường dẫn **JDK 21** và **Maven** của máy theo mẫu trong file settings.json (lưu ý dùng dùng `\\` trên Windows vì // gây lỗi).
 
 ### 2.2 Tạo Database & Cấu hình
-**`database/schema/db.sql` là source of truth. Hibernate chỉ kiểm tra schema,
-không tự tạo bảng.**
+**`database/schema/db.sql` là source of truth. Schema chính thức được quản lý qua script SQL.**
 
 1. Nếu cần tạo DB mới từ đầu, đọc toàn bộ `database/schema/db.sql` trước khi
    chạy bằng SSMS. Script này **xóa rồi tạo lại** `RitirementManagement2`, nên
    tuyệt đối không chạy trên DB có dữ liệu cần giữ. Không chuyển dữ liệu từ DB cũ.
 2. Nếu cần dữ liệu mẫu, xem `database/seeds/seed_data.sql` và
    `docs/database/data_seeding_guide.md`. Không chạy seed lặp trên DB đã có seed.
-3. Tạo/cập nhật `src/main/resources/application.properties` trên máy theo cấu
-   hình nội bộ của nhóm. JDBC URL phải trỏ `RitirementManagement2` và
-   `spring.jpa.hibernate.ddl-auto=validate`; giữ credential ngoài Git. Chọn
-   `server.port` phù hợp (cấu hình local đã kiểm tra dùng `8082`).
+3. **Cấu hình Local (`application-local.properties`):**
+   - Tệp `src/main/resources/application.properties` là cấu hình chung mặc định được lưu trên Git.
+   - Để cấu hình tài khoản sa/mật khẩu SQL Server hoặc cổng chạy máy cá nhân, hãy sao chép:
+     `src/main/resources/application-local.properties.example` thành `src/main/resources/application-local.properties`.
+   - Tệp `application-local.properties` sẽ tự động ghi đè cấu hình khi chạy và đã được `.gitignore` bảo vệ, không lo lộ credential lên Git.
 
-### 2.3 Cấu hình API Key (Có thể bỏ qua)
-- Ở thư mục gốc, đổi tên `.env.example` thành `.env`. Điền API Key nếu có.
-
-### 2.4 Load Maven (Quan trọng)
+### 2.3 Load Maven (Quan trọng)
 - Khi mở dự án, IDE sẽ hỏi Load/Sync Maven. Chọn **Yes / Import / Load**.
 - Đợi 2-5 phút tải thư viện. Khi xong, lỗi đỏ ở các file Java sẽ tự biến mất.
 
-*(Lưu ý: Các file `settings.json`, `application.properties`, `.env` đã được ignore nên không lo commit nhầm).*
+*(Lưu ý: Các file `settings.json` và `application-local.properties` đã được ignore nên không lo commit nhầm).*
 
 ---
 

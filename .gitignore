@@ -12,6 +12,7 @@ out/
 *.zip
 *.tar.gz
 *.rar
+powershell.bat
 
 # Ngoại trừ file jar của Maven Wrapper để team không cần cài Maven thủ công
 *.jar
