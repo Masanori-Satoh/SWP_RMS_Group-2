@@ -35,4 +35,17 @@
         </a>
     </nav>
 </aside>
+<aside th:fragment="workspace(activeMenu, role)" class="workspace-sidebar" id="workspace-navigation">
+    <h2>Recruitment Workspace</h2>
+    <nav class="workspace-nav" aria-label="Workspace navigation">
+        <a th:href="@{/dashboard}" th:attr="aria-current=${activeMenu == 'dashboard' ? 'page' : null}">Dashboard</a>
+        <span th:if="${role == 'System Admin'}" class="workspace-nav-group">Accounts</span>
+        <a th:if="${role == 'System Admin'}" th:href="@{/admin/accounts}" th:attr="aria-current=${activeMenu == 'accounts' ? 'page' : null}">Internal Accounts</a>
+        <a th:if="${role == 'System Admin'}" th:href="@{/admin/candidate-accounts}" th:attr="aria-current=${activeMenu == 'candidate-accounts' ? 'page' : null}">Candidate Accounts</a>
+        <span th:if="${role == 'System Admin'}" class="workspace-nav-group">System</span>
+        <a th:if="${role == 'System Admin'}" th:href="@{/admin/api-monitoring}" th:attr="aria-current=${activeMenu == 'api-monitoring' ? 'page' : null}">API Monitoring</a>
+        <a th:if="${role != 'Candidate'}" th:href="@{/requisitions}">Job Requisitions</a>
+    </nav>
+    <nav class="workspace-nav workspace-home" aria-label="Public careers"><a th:href="@{/}">Back to Careers</a></nav>
+</aside>
 </html>

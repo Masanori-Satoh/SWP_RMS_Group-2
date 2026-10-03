@@ -1,0 +1,138 @@
+<!doctype html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Cơ hội việc làm — Mộc Careers</title>
+  <meta name="description" content="Danh sách các vị trí đang tuyển dụng tại Mộc Careers.">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Cpath d='M15 27C8 23 6 13 11 7c4-5 11-4 16-3 0 9-3 18-12 23Z' fill='%233e7157'/%3E%3C/svg%3E">
+  <link rel="stylesheet" th:href="@{/css/global.css}" href="/css/global.css">
+  <link rel="stylesheet" th:href="@{/css/job-board.css}" href="/css/job-board.css">
+</head>
+<body>
+
+  <!-- Site Header (Candidate Portal) -->
+  <header class="site-header">
+    <div class="container header-inner">
+      <a href="/jobs" class="wordmark" title="Trang chủ tuyển dụng">
+        <svg class="brand-mark" viewBox="0 0 32 32" aria-hidden="true">
+          <path d="M15 27C8 23 6 13 11 7c4-5 11-4 16-3 0 9-3 18-12 23Z" fill="currentColor"/>
+        </svg>
+        <span class="brand-name">Mộc Careers</span>
+      </a>
+
+      <nav class="nav-main">
+        <div class="nav-group">
+          <a href="/jobs" class="nav-link active">Việc làm</a>
+        </div>
+      </nav>
+
+      <div class="header-right">
+        <!-- Assume Candidate Login Check -->
+        <div th:if="${currentUser == null}">
+          <a href="/login" class="button button-secondary button-sm">Đăng nhập</a>
+        </div>
+        <div th:if="${currentUser != null}" class="user-menu" id="user-menu">
+          <button type="button" class="user-trigger" id="user-menu-trigger" aria-haspopup="true" aria-expanded="false">
+            <span class="user-avatar" th:text="${#strings.substring(currentUser.fullName, 0, 1)}">U</span>
+            <span th:text="${currentUser.fullName}">Ứng viên</span>
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+          </button>
+          
+          <div class="user-dropdown" id="user-dropdown" role="menu">
+            <div class="dropdown-header">
+              <div class="dropdown-name" th:text="${currentUser.fullName}">Ứng viên</div>
+              <div class="dropdown-email" th:text="${currentUser.email}">user@moc.vn</div>
+            </div>
+            <a href="/profile" class="dropdown-item" role="menuitem">Thông tin cá nhân</a>
+            <a href="/applications" class="dropdown-item" role="menuitem">Hồ sơ của tôi</a>
+            <div class="dropdown-divider" role="separator"></div>
+            <form th:action="@{/logout}" method="post" style="display:contents;">
+              <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
+              <button type="submit" class="dropdown-item danger" role="menuitem">Đăng xuất</button>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main class="section">
+    <div class="container">
+
+      <!-- Page Header & Filter -->
+      <div class="job-search-hero">
+        <h1>Khám phá cơ hội nghề nghiệp</h1>
+        <p class="page-subtitle">Tìm kiếm vị trí phù hợp với định hướng phát triển của bạn.</p>
+        
+        <form th:action="@{/jobs}" method="get" class="job-filter-bar">
+          <div class="filter-field search-field">
+            <input type="text" name="keyword" th:value="${selectedKeyword}" placeholder="Nhập tên vị trí...">
+          </div>
+          <div class="filter-field">
+            <select name="departmentId">
+              <option value="">Tất cả phòng ban</option>
+              <option th:each="dept : ${departments}" 
+                      th:value="${dept.departmentId}" 
+                      th:text="${dept.departmentName}"
+                      th:selected="${selectedDept == dept.departmentId}"></option>
+            </select>
+          </div>
+          <div class="filter-field">
+            <select name="employmentType">
+              <option value="">Tất cả hình thức</option>
+              <option value="Full-time" th:selected="${selectedType == 'Full-time'}">Full-time</option>
+              <option value="Part-time" th:selected="${selectedType == 'Part-time'}">Part-time</option>
+              <option value="Internship" th:selected="${selectedType == 'Internship'}">Internship</option>
+              <option value="Contract" th:selected="${selectedType == 'Contract'}">Contract</option>
+            </select>
+          </div>
+          <button type="submit" class="button button-brand">Tìm kiếm</button>
+        </form>
+      </div>
+
+      <!-- Empty State -->
+      <div th:if="${jobsPage.isEmpty()}" class="empty-state">
+        <h2 class="empty-title">Không tìm thấy kết quả</h2>
+        <p class="empty-desc">Rất tiếc, hiện tại không có vị trí nào khớp với tiêu chí tìm kiếm của bạn.</p>
+        <a href="/jobs" class="button button-secondary">Xóa bộ lọc</a>
+      </div>
+
+      <!-- Jobs Grid -->
+      <div th:unless="${jobsPage.isEmpty()}" class="base-grid">
+        <a th:each="job : ${jobsPage.content}" th:href="@{'/jobs/' + ${job.id}}" class="base-card job-card-link">
+          <div class="card-top">
+            <span class="status-badge status-published" th:text="${job.employmentType}">Full-time</span>
+          </div>
+          
+          <h2 class="job-title" th:text="${job.postingTitle}">Senior Java Developer</h2>
+          <div class="job-department-name" th:text="${job.departmentName}">Engineering</div>
+
+          <div class="job-meta-list">
+            <div class="job-meta">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>
+              <span th:text="${job.workLocation}">Hà Nội</span>
+            </div>
+            <div class="job-meta" th:if="${job.salaryDisplay != null}">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>
+              <span th:text="${job.salaryDisplay}">Thỏa thuận</span>
+            </div>
+            <div class="job-meta" th:if="${job.applicationDeadline != null}">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+              <span>Hạn nộp: <strong th:text="${#temporals.format(job.applicationDeadline, 'dd/MM/yyyy')}">31/12/2026</strong></span>
+            </div>
+          </div>
+        </a>
+      </div>
+
+      <!-- Pagination -->
+      <div class="pagination" th:if="${jobsPage.totalPages > 1}">
+        <span th:text="'Trang ' + ${jobsPage.number + 1} + ' / ' + ${jobsPage.totalPages}"></span>
+      </div>
+
+    </div>
+  </main>
+  
+  <script th:src="@{/js/global.js}" src="/js/global.js"></script>
+</body>
+</html>

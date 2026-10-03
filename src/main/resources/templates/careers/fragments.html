@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:fragment="head(title)">
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Explore work at Mộc and find your next role with us.">
+  <title th:text="${title} + ' | Mộc Careers'">Mộc Careers</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Cpath d='M15 27C8 23 6 13 11 7c4-5 11-4 16-3 0 9-3 18-12 23Z' fill='%233e7157'/%3E%3C/svg%3E">
+  <link rel="stylesheet" th:href="@{/css/careers.css}">
+  <link rel="stylesheet" th:href="@{/css/career-pages.css}">
+  <script defer th:src="@{/js/careers.js}"></script>
+</head>
+<body>
+<header class="site-header" th:fragment="header">
+  <a class="skip-link" href="#main">Skip to content</a>
+  <div class="container header-inner">
+    <a th:replace="~{fragments/brand :: wordmark('CAREERS')}"></a>
+    <nav class="desktop-nav" aria-label="Main navigation">
+      <a th:href="@{/#roles}">Open Positions</a><a th:href="@{/#about}">About Mộc</a>
+      <a th:href="@{/#benefits}">Benefits</a><a th:href="@{/#life}">How We Work</a><a th:href="@{/#process}">Our Process</a>
+    </nav>
+    <div class="account-actions desktop-account" th:insert="~{careers/fragments :: accountActions}"></div>
+    <details class="mobile-menu">
+      <summary>Menu <svg class="icon" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16" stroke="currentColor" stroke-width="1.5"/></svg></summary>
+      <nav aria-label="Mobile navigation">
+        <a th:href="@{/#roles}">Open Positions</a><a th:href="@{/#about}">About Mộc</a>
+        <a th:href="@{/#benefits}">Benefits</a><a th:href="@{/#life}">How We Work</a><a th:href="@{/#process}">Our Process</a>
+        <div class="mobile-account" th:insert="~{careers/fragments :: accountActions}"></div>
+      </nav>
+    </details>
+  </div>
+</header>
+<th:block th:fragment="accountActions">
+  <th:block th:if="${viewer == null}"><a th:href="@{/login}">Sign In</a><a class="register-link" th:href="@{/register}">Register</a></th:block>
+  <th:block th:if="${viewer != null}">
+    <span class="viewer-name" th:text="${viewer.fullName}"></span>
+    <a th:href="@{/dashboard}">Dashboard</a>
+    <form th:action="@{/logout}" method="post"><button class="logout-button" type="submit">Log Out</button></form>
+  </th:block>
+</th:block>
+<footer class="site-footer" th:fragment="footer">
+  <div class="container footer-grid">
+    <div class="footer-brand"><span class="brand-name">mộc.</span><p>Clear thinking. Useful software. Work that moves teams forward.</p></div>
+    <nav class="footer-group" aria-label="Careers"><h3>Careers</h3><a th:href="@{/#roles}">Open Positions</a><a th:if="${viewer == null}" th:href="@{/register}">Create a Candidate Account</a><a th:if="${viewer != null}" th:href="@{/dashboard}">Dashboard</a></nav>
+    <nav class="footer-group" aria-label="About us"><h3>Working at Mộc</h3><a th:href="@{/#benefits}">Benefits &amp; Working Policy</a><a th:href="@{/#process}">Recruitment Process</a></nav>
+  </div>
+  <p class="container footer-bottom">Mộc Careers · Opportunities within one team.</p>
+</footer>
+<dl class="role-facts" th:fragment="facts(job)">
+  <div><dt>Department</dt><dd th:text="${job.departmentName}"></dd></div>
+  <div><dt>Location</dt><dd th:text="${#strings.isEmpty(job.workLocation) ? 'Location to be confirmed' : job.workLocation}"></dd></div>
+  <div><dt>Employment Type</dt><dd th:text="${job.employmentType}"></dd></div>
+  <div><dt>Salary</dt><dd th:text="${#strings.isEmpty(job.salaryDisplay) ? 'Salary to be discussed' : job.salaryDisplay}"></dd></div>
+  <div><dt>Posted Date</dt><dd><time th:if="${job.postingDate != null}" th:datetime="${job.postingDate}" th:text="${#temporals.format(job.postingDate, 'yyyy-MM-dd')}"></time><span th:if="${job.postingDate == null}">Date not provided</span></dd></div>
+  <div><dt>Application Deadline</dt><dd><time th:if="${job.applicationDeadline != null}" th:datetime="${job.applicationDeadline}" th:text="${#temporals.format(job.applicationDeadline, 'yyyy-MM-dd')}"></time><span th:if="${job.applicationDeadline == null}">No deadline specified</span></dd></div>
+</dl>
+</body></html>

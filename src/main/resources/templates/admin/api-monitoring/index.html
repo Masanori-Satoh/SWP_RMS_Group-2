@@ -1,70 +1,62 @@
 <!DOCTYPE html>
-<html lang="vi" xmlns:th="http://www.thymeleaf.org">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>API Monitoring | RMS</title>
-    <link rel="stylesheet" th:href="@{/css/main.css}">
-    <link rel="stylesheet" th:href="@{/css/account-list.css}">
-    <link rel="stylesheet" th:href="@{/css/api-monitoring.css}">
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/head :: interfaceHead('API Monitoring', ~{::pageStyles})}">
+  <th:block th:fragment="pageStyles"><link rel="stylesheet" th:href="@{/css/api-monitoring.css}"></th:block>
 </head>
-<body>
+<body class="rms-app">
 <div class="page-wrapper">
-    <aside th:replace="~{fragments/sidebar :: sidebar(activeMenu='api-monitoring')}"></aside>
+    <aside th:replace="~{fragments/sidebar :: workspace('api-monitoring', 'System Admin')}"></aside>
 
     <div class="main-content">
-        <header class="topbar account-topbar">
-            <div class="topbar-title">Recruitment Management System</div>
-            <form th:action="@{/logout}" method="post">
-                <button class="btn btn-secondary btn-sm" type="submit">Đăng xuất</button>
-            </form>
-        </header>
+        <header th:replace="~{fragments/workspace-header :: header('System Admin', null)}"></header>
 
-        <main class="page-content">
+        <main id="main" class="page-content" tabindex="-1">
             <div class="container">
                 <div class="account-heading">
                     <div>
-                        <a class="account-back-link" th:href="@{/dashboard}">Tổng quan</a>
+                        <a class="account-back-link" th:href="@{/dashboard}">Dashboard</a>
                         <span aria-hidden="true"> / </span><span>API Monitoring</span>
                         <h1>API Monitoring</h1>
-                        <p>Kiểm tra phản hồi thật từ endpoint nội bộ và theo dõi các tích hợp đã có contract.</p>
+                        <p>Check real responses from internal endpoints and monitor configured integrations.</p>
                     </div>
                 </div>
 
                 <div class="alert alert-success" role="status" th:if="${successMessage}" th:text="${successMessage}"></div>
                 <div class="alert alert-danger" role="alert" th:if="${failureMessage}" th:text="${failureMessage}"></div>
 
-                <section class="card monitoring-card" aria-labelledby="monitoring-table-title">
+                <section class="workspace-section monitoring-card" aria-labelledby="monitoring-table-title">
                     <div class="monitoring-heading">
                         <div>
-                            <h2 id="monitoring-table-title">Trạng thái endpoint</h2>
-                            <p>Trạng thái dựa trên lần kiểm tra gần nhất. Thống kê tính trên tối đa 100 lần kiểm tra thật trong phiên chạy ứng dụng.</p>
+                            <h2 id="monitoring-table-title">Endpoint Status</h2>
+                            <p>Status reflects the latest check. Statistics cover up to 100 real checks during the current application run.</p>
                         </div>
                     </div>
 
-                    <div class="table-wrapper">
+                    <p class="table-scroll-note">Scroll the table horizontally to see all response details and actions.</p>
+                    <div class="table-wrapper" tabindex="0" role="region" aria-labelledby="monitoring-table-title">
                         <table class="table monitoring-table">
+                            <caption class="sr-only">Current endpoint status and results from real checks.</caption>
                             <thead>
                             <tr>
-                                <th scope="col">Endpoint / tích hợp</th>
-                                <th scope="col">Trạng thái</th>
-                                <th scope="col">Phản hồi TB</th>
-                                <th scope="col">Tỉ lệ lỗi</th>
-                                <th scope="col">Lỗi gần đây</th>
-                                <th scope="col">Lần phản hồi cuối</th>
-                                <th scope="col">Kiểm tra</th>
+                                <th scope="col">Endpoint / Integration</th>
+                                <th scope="col">Status</th>
+                                <th scope="col">Average Response</th>
+                                <th scope="col">Error Rate</th>
+                                <th scope="col">Recent Error</th>
+                                <th scope="col">Last Response</th>
+                                <th scope="col">Check</th>
                             </tr>
                             </thead>
                             <tbody>
                             <tr th:each="endpoint : ${endpoints}">
                                 <td>
-                                    <strong th:text="${endpoint.name}">Tên tích hợp</strong>
-                                    <small th:text="${endpoint.category}">Loại</small>
+                                    <strong th:text="${endpoint.name}">Integration Name</strong>
+                                    <small th:text="${endpoint.category}">Type</small>
                                     <code th:text="${endpoint.endpoint}">GET /endpoint</code>
                                 </td>
                                 <td>
                                     <span class="badge" th:text="${endpoint.statusLabel}"
-                                          th:classappend="${endpoint.status == 'OPERATIONAL' ? ' badge-success' : (endpoint.status == 'FAILED' ? ' badge-danger' : ' badge-secondary')}">Chưa kiểm tra</span>
+                                          th:classappend="${endpoint.status == 'OPERATIONAL' ? ' badge-success' : (endpoint.status == 'FAILED' ? ' badge-danger' : ' badge-secondary')}">Not Checked</span>
                                 </td>
                                 <td th:text="${endpoint.averageResponseMs != null ? endpoint.averageResponseMs + ' ms' : '—'}">—</td>
                                 <td th:text="${endpoint.errorRatePercent != null ? endpoint.errorRatePercent + '%' : '—'}">—</td>
@@ -72,13 +64,13 @@
                                 <td>
                                     <span th:text="${endpoint.lastHttpStatus != null ? 'HTTP ' + endpoint.lastHttpStatus : '—'}">—</span>
                                     <small th:if="${endpoint.lastCheckedAt != null}"
-                                           th:text="${#temporals.format(endpoint.lastCheckedAt, 'dd/MM/yyyy HH:mm:ss')}">Thời điểm</small>
+                                           th:text="${#temporals.format(endpoint.lastCheckedAt, 'dd/MM/yyyy HH:mm:ss')}">Date</small>
                                 </td>
                                 <td>
                                     <form th:if="${endpoint.canProbe}" th:action="@{/admin/api-monitoring/probe/internal}" method="post">
-                                        <button class="btn btn-primary btn-sm" type="submit">Gửi GET</button>
+                                        <button class="btn btn-primary btn-sm" type="submit">Send GET</button>
                                     </form>
-                                    <span class="monitoring-unavailable" th:unless="${endpoint.canProbe}">Chưa có target an toàn</span>
+                                    <span class="monitoring-unavailable" th:unless="${endpoint.canProbe}">No confirmed safe target</span>
                                 </td>
                             </tr>
                             </tbody>
@@ -86,7 +78,7 @@
                     </div>
                 </section>
 
-                <p class="monitoring-note">Phép thử nội bộ gửi GET tới endpoint chỉ dành cho System Admin và kiểm tra ứng dụng cùng SQL Server bằng truy vấn <code>SELECT 1</code>. HTTP 2xx là thành công; redirect, lỗi HTTP hoặc không có phản hồi được ghi là thất bại. AI và email chưa được thử khi chưa có địa chỉ/contract xác nhận.</p>
+                <p class="monitoring-note">The internal probe sends GET to an admin-only endpoint and checks the application and SQL Server using <code>SELECT 1</code>. HTTP 2xx is a success; redirects, HTTP errors, and missing responses are failures. AI and email probes remain unavailable until their targets and contracts are confirmed.</p>
             </div>
         </main>
     </div>

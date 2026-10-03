@@ -1,4 +1,4 @@
-# Kiểm thử sáu màn hình xác thực và tài khoản — 2026-09-29
+﻿# Kiểm thử sáu màn hình xác thực và tài khoản — 2026-09-29
 
 ## Quyết định và phạm vi
 
@@ -141,3 +141,4 @@ WHERE u.Username = @Username;
 Các test mới trong `AuthenticationDatabaseTests` và `SecurityFlowTests` kiểm tra
 đăng ký, hash, liên kết ký/hết hạn/dùng lại, CSRF và hiển thị form, nhưng chưa
 được chạy cho thay đổi này. Khi chạy lại, ghi kết quả và file surefire vào bảng.
+

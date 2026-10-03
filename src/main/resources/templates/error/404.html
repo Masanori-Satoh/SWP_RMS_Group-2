@@ -1,0 +1,15 @@
+<!doctype html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="utf-8">
+  <title>Lỗi 404 — Mộc Careers</title>
+  <link rel="stylesheet" th:href="@{/css/global.css}" href="/css/global.css">
+</head>
+<body style="display:flex;align-items:center;justify-content:center;height:100vh;background:var(--page);text-align:center;">
+  <div class="base-card" style="padding:var(--s8);max-width:500px;">
+    <h1 style="color:var(--brand-dark);margin-bottom:var(--s2);">404 - Không Tìm Thấy</h1>
+    <p style="color:var(--muted);margin-bottom:var(--s4);" th:text="${message}">Trang bạn yêu cầu không tồn tại hoặc đã bị xóa.</p>
+    <a href="/" class="button button-brand">Về Trang Chủ</a>
+  </div>
+</body>
+</html>

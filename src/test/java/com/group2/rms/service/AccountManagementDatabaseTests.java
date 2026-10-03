@@ -1,11 +1,12 @@
 package com.group2.rms.service;
 
-import com.group2.rms.entity.Candidate;
-import com.group2.rms.entity.Role;
-import com.group2.rms.entity.User;
-import com.group2.rms.repository.CandidateRepository;
-import com.group2.rms.repository.RoleRepository;
-import com.group2.rms.repository.UserRepository;
+import com.group2.rms.candidate.Candidate;
+import com.group2.rms.candidate.CandidateRepository;
+import com.group2.rms.user.entity.Role;
+import com.group2.rms.user.entity.User;
+import com.group2.rms.user.repository.RoleRepository;
+import com.group2.rms.user.repository.UserRepository;
+import com.group2.rms.user.service.AccountManagementService;
 import jakarta.persistence.EntityManager;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
