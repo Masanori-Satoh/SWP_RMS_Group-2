@@ -1,4 +1,4 @@
-package com.group2.rms.dto.response;
+package com.group2.rms.offer.dto;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -9,14 +9,14 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 /**
- * Response DTO cho danh sách ứng viên đỗ phỏng vấn (FinalDecision = Passed)
+ * Response cho danh sách ứng viên đỗ phỏng vấn (FinalDecision = Passed)
  * để HR chọn và tạo Offer Proposal (Group A: Read Only).
  */
 @Data
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class PassedCandidateResponseDto {
+public class PassedCandidateResponse {
 
     private Integer applicationId;
     private Integer candidateId;

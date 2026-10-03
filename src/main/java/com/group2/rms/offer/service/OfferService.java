@@ -1,10 +1,10 @@
 package com.group2.rms.offer.service;
 
-import com.group2.rms.dto.request.CreateOfferRequestDto;
-import com.group2.rms.dto.request.UpdateOfferRequestDto;
-import com.group2.rms.dto.response.OfferDetailResponseDto;
-import com.group2.rms.dto.response.OfferResponseDto;
-import com.group2.rms.dto.response.PassedCandidateResponseDto;
+import com.group2.rms.offer.dto.CreateOfferRequest;
+import com.group2.rms.offer.dto.OfferDetailResponse;
+import com.group2.rms.offer.dto.OfferResponse;
+import com.group2.rms.offer.dto.PassedCandidateResponse;
+import com.group2.rms.offer.dto.UpdateOfferRequest;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
@@ -18,42 +18,42 @@ public interface OfferService {
      * @param request Dữ liệu đề xuất lương
      * @return Thông tin OfferProposal đã được tạo
      */
-    OfferResponseDto createOfferProposal(CreateOfferRequestDto request);
+    OfferResponse createOfferProposal(CreateOfferRequest request);
 
     /**
      * Lấy thông tin OfferProposal theo OfferId.
      */
-    OfferResponseDto getOfferById(Integer offerId);
+    OfferResponse getOfferById(Integer offerId);
 
     /**
      * Lấy OfferProposal theo ApplicationId.
      */
-    OfferResponseDto getOfferByApplicationId(Integer applicationId);
+    OfferResponse getOfferByApplicationId(Integer applicationId);
 
     /**
      * Lấy danh sách ứng viên đã vượt qua phỏng vấn (Passed) chờ tạo Offer Proposal.
      */
-    List<PassedCandidateResponseDto> getPassedCandidatesForOffer();
+    List<PassedCandidateResponse> getPassedCandidatesForOffer();
 
     /**
      * HR tạo mới Offer Proposal (lưu Draft hoặc trình Director).
      */
-    OfferResponseDto createOfferByHr(CreateOfferRequestDto dto);
+    OfferResponse createOfferByHr(CreateOfferRequest dto);
 
     /**
      * Lấy danh sách Offer Proposal cho HR có lọc theo status và phân trang.
      */
-    Page<OfferResponseDto> getAllOffersForHr(String status, Pageable pageable);
+    Page<OfferResponse> getAllOffersForHr(String status, Pageable pageable);
 
     /**
      * Lấy thông tin chi tiết gói Offer (Group A + B + History).
      */
-    OfferDetailResponseDto getOfferDetailForHr(Integer id);
+    OfferDetailResponse getOfferDetailForHr(Integer id);
 
     /**
      * HR cập nhật Offer Proposal (chỉ khi Draft hoặc Rejected).
      */
-    OfferResponseDto updateOfferByHr(Integer id, UpdateOfferRequestDto dto);
+    OfferResponse updateOfferByHr(Integer id, UpdateOfferRequest dto);
 
     /**
      * HR xóa bản thảo Offer (chỉ khi Draft).
@@ -63,5 +63,5 @@ public interface OfferService {
     /**
      * HR gửi Offer Letter chính thức cho ứng viên sau khi Director Approved.
      */
-    OfferResponseDto sendOfferToCandidate(Integer id);
+    OfferResponse sendOfferToCandidate(Integer id);
 }

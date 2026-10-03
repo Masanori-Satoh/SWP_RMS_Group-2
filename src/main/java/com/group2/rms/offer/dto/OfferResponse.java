@@ -1,4 +1,4 @@
-package com.group2.rms.dto.response;
+package com.group2.rms.offer.dto;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -10,13 +10,13 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 /**
- * Response DTO trả về thông tin chi tiết Offer Proposal.
+ * Response trả về thông tin tóm tắt Offer Proposal (phục vụ danh sách Offer).
  */
 @Data
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class OfferResponseDto {
+public class OfferResponse {
 
     private Integer offerId;
     private Integer applicationId;

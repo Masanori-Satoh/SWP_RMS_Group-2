@@ -1,5 +1,6 @@
-package com.group2.rms.offer;
+package com.group2.rms.offer.repository;
 
+import com.group2.rms.offer.entity.OfferProposal;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;

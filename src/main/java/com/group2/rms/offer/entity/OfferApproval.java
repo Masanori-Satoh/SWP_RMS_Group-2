@@ -1,4 +1,4 @@
-package com.group2.rms.offer;
+package com.group2.rms.offer.entity;
 
 import com.group2.rms.user.entity.User;
 import jakarta.persistence.*;

@@ -1,21 +1,20 @@
 package com.group2.rms.service;
 
-import com.group2.rms.dto.request.CreateOfferRequestDto;
-import com.group2.rms.dto.response.OfferResponseDto;
 import com.group2.rms.candidate.entity.Application;
 import com.group2.rms.candidate.repository.ApplicationRepository;
-import com.group2.rms.offer.OfferProposal;
-import com.group2.rms.offer.OfferProposalRepository;
+import com.group2.rms.offer.dto.CreateOfferRequest;
+import com.group2.rms.offer.dto.OfferResponse;
+import com.group2.rms.offer.entity.OfferProposal;
+import com.group2.rms.offer.repository.OfferApprovalRepository;
+import com.group2.rms.offer.repository.OfferNegotiationRepository;
+import com.group2.rms.offer.repository.OfferProposalRepository;
 import com.group2.rms.offer.service.OfferServiceImpl;
+import com.group2.rms.repository.InterviewFinalResultRepository;
 import com.group2.rms.user.entity.User;
 import com.group2.rms.user.repository.UserRepository;
-import com.group2.rms.repository.InterviewFinalResultRepository;
-import com.group2.rms.repository.OfferApprovalRepository;
-import com.group2.rms.repository.OfferNegotiationRepository;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -60,7 +59,7 @@ class OfferServiceTests {
     @Test
     @DisplayName("BR-OFF-01: Lương thử việc < 85% lương chính thức phải ném IllegalArgumentException")
     void testProbationSalaryLessThan85Percent_throwsException() {
-        CreateOfferRequestDto request = CreateOfferRequestDto.builder()
+        CreateOfferRequest request = CreateOfferRequest.builder()
                 .applicationId(1)
                 .offeredPositionTitle("Senior Java Engineer")
                 .proposedSalary(new BigDecimal("20000000"))
@@ -90,7 +89,7 @@ class OfferServiceTests {
             return op;
         });
 
-        CreateOfferRequestDto request = CreateOfferRequestDto.builder()
+        CreateOfferRequest request = CreateOfferRequest.builder()
                 .applicationId(1)
                 .offeredPositionTitle("Senior Java Engineer")
                 .proposedSalary(new BigDecimal("20000000"))
@@ -99,7 +98,7 @@ class OfferServiceTests {
                 .proposedById(10)
                 .build();
 
-        OfferResponseDto response = offerService.createOfferProposal(request);
+        OfferResponse response = offerService.createOfferProposal(request);
 
         assertNotNull(response);
         assertEquals(new BigDecimal("20000000"), response.getProposedSalary());
@@ -133,14 +132,14 @@ class OfferServiceTests {
             return op;
         });
 
-        CreateOfferRequestDto request = CreateOfferRequestDto.builder()
+        CreateOfferRequest request = CreateOfferRequest.builder()
                 .applicationId(1)
                 .offeredPositionTitle("Senior Java Engineer")
                 .proposedSalary(new BigDecimal("30000000"))
                 .probationSalary(new BigDecimal("25500000")) // 85%
                 .build();
 
-        OfferResponseDto response = offerService.createOfferProposal(request);
+        OfferResponse response = offerService.createOfferProposal(request);
 
         assertNotNull(response);
         // Kiểm tra các offer cũ đã bị Voided

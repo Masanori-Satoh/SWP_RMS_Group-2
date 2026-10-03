@@ -1,12 +1,13 @@
 package com.group2.rms.core.exception;
 
-import com.group2.rms.dto.response.ApiResponseDto;
+import com.group2.rms.core.dto.ApiResponse;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.servlet.ModelAndView;
 
 @ControllerAdvice
@@ -22,12 +23,14 @@ public class GlobalExceptionHandler {
     }
 
     @ExceptionHandler(ResourceNotFoundException.class)
+    @ResponseStatus(HttpStatus.NOT_FOUND)
     public Object handleResourceNotFoundException(ResourceNotFoundException ex, HttpServletRequest request) {
         if (isApiRequest(request)) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                    .body(new ApiResponseDto<>(false, ex.getMessage()));
+                    .body(new ApiResponse<>(false, ex.getMessage()));
         }
         ModelAndView mav = new ModelAndView("error/404");
+        mav.setStatus(HttpStatus.NOT_FOUND);
         mav.addObject("message", ex.getMessage());
         mav.addObject("url", request.getRequestURL());
         return mav;
@@ -37,7 +40,7 @@ public class GlobalExceptionHandler {
     public Object handleBusinessException(BaseBusinessException ex, HttpServletRequest request) {
         if (isApiRequest(request)) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .body(new ApiResponseDto<>(false, ex.getMessage()));
+                    .body(new ApiResponse<>(false, ex.getMessage()));
         }
         ModelAndView mav = new ModelAndView("error/500");
         mav.addObject("message", ex.getMessage());
@@ -54,7 +57,7 @@ public class GlobalExceptionHandler {
                 .orElse("Dữ liệu gửi lên không hợp lệ.");
         if (isApiRequest(request)) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .body(new ApiResponseDto<>(false, message));
+                    .body(new ApiResponse<>(false, message));
         }
         ModelAndView mav = new ModelAndView("error/500");
         mav.addObject("message", message);
@@ -67,7 +70,7 @@ public class GlobalExceptionHandler {
         String message = "Ứng viên này đã có một đề xuất Offer trong hệ thống. Không thể tạo trùng lặp.";
         if (isApiRequest(request)) {
             return ResponseEntity.status(HttpStatus.CONFLICT)
-                    .body(new ApiResponseDto<>(false, message));
+                    .body(new ApiResponse<>(false, message));
         }
         ModelAndView mav = new ModelAndView("error/500");
         mav.addObject("message", message);
@@ -80,7 +83,7 @@ public class GlobalExceptionHandler {
         if (isApiRequest(request)) {
             String msg = ex.getMessage() != null ? ex.getMessage() : "Đã xảy ra lỗi hệ thống, vui lòng thử lại sau.";
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(new ApiResponseDto<>(false, msg));
+                    .body(new ApiResponse<>(false, msg));
         }
         ModelAndView mav = new ModelAndView("error/500");
         mav.addObject("message", "Đã xảy ra lỗi hệ thống, vui lòng thử lại sau.");

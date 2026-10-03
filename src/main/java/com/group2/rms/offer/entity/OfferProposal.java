@@ -1,4 +1,4 @@
-package com.group2.rms.offer;
+package com.group2.rms.offer.entity;
 
 import com.group2.rms.candidate.entity.Application;
 import com.group2.rms.core.base.BaseEntity;
@@ -10,10 +10,10 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 
 /**
- * 3.19 OfferProposal - Đề xuất offer lương do Hiring Manager tạo.
+ * 3.19 OfferProposal - Đề xuất offer lương do Hiring Manager / HR tạo.
  * Quan hệ 1-1 với Application (UNIQUE constraint trên ApplicationId).
- * OfferStatus: Draft, Pending_Director, Approved, Sent_Candidate,
- * Accepted, Rejected, Negotiating
+ * OfferStatus: Draft, Pending_Director, Director_Approved, Director_Rejected, Sent_Candidate,
+ * Accepted, Declined, Negotiating
  */
 @Entity
 @Table(name = "OfferProposal")
@@ -40,7 +40,7 @@ public class OfferProposal extends BaseEntity {
     private BigDecimal proposedSalary;
 
     /**
-     * Lương thử việc (>= 85% ProposedSalary theo constraint trong model)
+     * Lương thử việc (>= 85% ProposedSalary theo constraint trong model BR-OFF-01)
      */
     @Column(name = "ProbationSalary", nullable = false, precision = 18, scale = 2)
     private BigDecimal probationSalary;
@@ -59,7 +59,7 @@ public class OfferProposal extends BaseEntity {
     private User proposedBy;
 
     /**
-     * Draft, Pending_Director, Approved, Sent_Candidate, Accepted, Rejected, Negotiating
+     * Draft, Pending_Director, Director_Approved, Director_Rejected, Sent_Candidate, Accepted, Declined, Negotiating
      */
     @Column(name = "OfferStatus", nullable = false, length = 40)
     private String offerStatus;

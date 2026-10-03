@@ -1,4 +1,4 @@
-package com.group2.rms.dto.request;
+package com.group2.rms.offer.dto;
 
 import jakarta.validation.constraints.AssertTrue;
 import jakarta.validation.constraints.NotBlank;
@@ -13,14 +13,14 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 
 /**
- * Request DTO tạo mới Offer Proposal.
+ * Request tạo mới Offer Proposal.
  * Tích hợp quy tắc BR-OFF-01: Lương thử việc >= 85% lương chính thức.
  */
 @Data
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class CreateOfferRequestDto {
+public class CreateOfferRequest {
 
     @NotNull(message = "Application ID không được để trống.")
     private Integer applicationId;

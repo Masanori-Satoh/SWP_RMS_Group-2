@@ -1,25 +1,22 @@
 package com.group2.rms.dto.response;
 
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import com.group2.rms.core.dto.ApiResponse;
 
 /**
- * DTO chuẩn hóa kết quả phản hồi chung từ API.
+ * @deprecated Sử dụng {@link com.group2.rms.core.dto.ApiResponse} theo quy chuẩn ARCHITECTURE_GUIDE.md.
  */
-@Data
-@Builder
-@NoArgsConstructor
-@AllArgsConstructor
-public class ApiResponseDto<T> {
+@Deprecated
+public class ApiResponseDto<T> extends ApiResponse<T> {
 
-    private boolean success;
-    private String message;
-    private T data;
+    public ApiResponseDto() {
+        super();
+    }
 
     public ApiResponseDto(boolean success, String message) {
-        this.success = success;
-        this.message = message;
+        super(success, message);
+    }
+
+    public ApiResponseDto(boolean success, String message, T data) {
+        super(success, message, data);
     }
 }

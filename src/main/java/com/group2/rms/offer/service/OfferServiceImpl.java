@@ -4,17 +4,17 @@ import com.group2.rms.candidate.entity.Application;
 import com.group2.rms.candidate.repository.ApplicationRepository;
 import com.group2.rms.core.exception.BaseBusinessException;
 import com.group2.rms.core.exception.ResourceNotFoundException;
-import com.group2.rms.dto.request.CreateOfferRequestDto;
-import com.group2.rms.dto.request.UpdateOfferRequestDto;
-import com.group2.rms.dto.response.OfferDetailResponseDto;
-import com.group2.rms.dto.response.OfferResponseDto;
-import com.group2.rms.dto.response.PassedCandidateResponseDto;
 import com.group2.rms.interview.InterviewFinalResult;
-import com.group2.rms.offer.OfferProposal;
-import com.group2.rms.offer.OfferProposalRepository;
+import com.group2.rms.offer.dto.CreateOfferRequest;
+import com.group2.rms.offer.dto.OfferDetailResponse;
+import com.group2.rms.offer.dto.OfferResponse;
+import com.group2.rms.offer.dto.PassedCandidateResponse;
+import com.group2.rms.offer.dto.UpdateOfferRequest;
+import com.group2.rms.offer.entity.OfferProposal;
+import com.group2.rms.offer.repository.OfferApprovalRepository;
+import com.group2.rms.offer.repository.OfferNegotiationRepository;
+import com.group2.rms.offer.repository.OfferProposalRepository;
 import com.group2.rms.repository.InterviewFinalResultRepository;
-import com.group2.rms.repository.OfferApprovalRepository;
-import com.group2.rms.repository.OfferNegotiationRepository;
 import com.group2.rms.service.NotificationService;
 import com.group2.rms.user.entity.User;
 import com.group2.rms.user.repository.UserRepository;
@@ -47,7 +47,7 @@ public class OfferServiceImpl implements OfferService {
     private final NotificationService notificationService;
 
     @Override
-    public OfferResponseDto createOfferProposal(CreateOfferRequestDto request) {
+    public OfferResponse createOfferProposal(CreateOfferRequest request) {
         validateProbationSalaryRule(request.getProposedSalary(), request.getProbationSalary());
 
         Application application = applicationRepository.findById(request.getApplicationId())
@@ -70,28 +70,28 @@ public class OfferServiceImpl implements OfferService {
                 .build();
 
         OfferProposal savedOffer = offerProposalRepository.save(newOffer);
-        return mapToResponseDto(savedOffer);
+        return mapToResponse(savedOffer);
     }
 
     @Override
     @Transactional(readOnly = true)
-    public OfferResponseDto getOfferById(Integer offerId) {
+    public OfferResponse getOfferById(Integer offerId) {
         OfferProposal offer = offerProposalRepository.findById(offerId)
                 .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy OfferProposal với ID: " + offerId));
-        return mapToResponseDto(offer);
+        return mapToResponse(offer);
     }
 
     @Override
     @Transactional(readOnly = true)
-    public OfferResponseDto getOfferByApplicationId(Integer applicationId) {
+    public OfferResponse getOfferByApplicationId(Integer applicationId) {
         OfferProposal offer = offerProposalRepository.findByApplication_ApplicationId(applicationId)
                 .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy OfferProposal cho Application ID: " + applicationId));
-        return mapToResponseDto(offer);
+        return mapToResponse(offer);
     }
 
     @Override
     @Transactional(readOnly = true)
-    public List<PassedCandidateResponseDto> getPassedCandidatesForOffer() {
+    public List<PassedCandidateResponse> getPassedCandidatesForOffer() {
         List<InterviewFinalResult> passedResults = interviewFinalResultRepository.findAllPassedWithDetails();
         if (passedResults == null) {
             return Collections.emptyList();
@@ -106,7 +106,7 @@ public class OfferServiceImpl implements OfferService {
             var requisition = jobPosting != null ? jobPosting.getRequisition() : null;
             var department = requisition != null ? requisition.getDepartment() : null;
 
-            return PassedCandidateResponseDto.builder()
+            return PassedCandidateResponse.builder()
                     .applicationId(application != null ? application.getApplicationId() : null)
                     .candidateId(candidate != null ? candidate.getCandidateId() : null)
                     .candidateName(user != null ? user.getFullName() : null)
@@ -127,7 +127,7 @@ public class OfferServiceImpl implements OfferService {
     }
 
     @Override
-    public OfferResponseDto createOfferByHr(CreateOfferRequestDto dto) {
+    public OfferResponse createOfferByHr(CreateOfferRequest dto) {
         validateProbationSalaryRule(dto.getProposedSalary(), dto.getProbationSalary());
 
         Application application = applicationRepository.findById(dto.getApplicationId())
@@ -169,24 +169,24 @@ public class OfferServiceImpl implements OfferService {
         }
 
         OfferProposal saved = offerProposalRepository.save(offerToSave);
-        return mapToResponseDto(saved);
+        return mapToResponse(saved);
     }
 
     @Override
     @Transactional(readOnly = true)
-    public Page<OfferResponseDto> getAllOffersForHr(String status, Pageable pageable) {
+    public Page<OfferResponse> getAllOffersForHr(String status, Pageable pageable) {
         Page<OfferProposal> pagedEntities;
         if (status == null || status.isBlank() || "ALL".equalsIgnoreCase(status)) {
             pagedEntities = offerProposalRepository.findAllActiveByOrderByOfferIdAsc(pageable);
         } else {
             pagedEntities = offerProposalRepository.findActiveByStatusOrderByOfferIdAsc(status.trim(), pageable);
         }
-        return pagedEntities.map(this::mapToResponseDto);
+        return pagedEntities.map(this::mapToResponse);
     }
 
     @Override
     @Transactional(readOnly = true)
-    public OfferDetailResponseDto getOfferDetailForHr(Integer id) {
+    public OfferDetailResponse getOfferDetailForHr(Integer id) {
         OfferProposal offer = offerProposalRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy OfferProposal với ID: " + id));
 
@@ -218,10 +218,10 @@ public class OfferServiceImpl implements OfferService {
             }
         }
 
-        List<OfferDetailResponseDto.DirectorApprovalLogDto> approvalHistory = offerApprovalRepository
+        List<OfferDetailResponse.DirectorApprovalLog> approvalHistory = offerApprovalRepository
                 .findByOfferProposal_OfferIdOrderByApprovedAtDesc(id)
                 .stream()
-                .map(a -> OfferDetailResponseDto.DirectorApprovalLogDto.builder()
+                .map(a -> OfferDetailResponse.DirectorApprovalLog.builder()
                         .approvalId(a.getOfferApprovalId())
                         .directorId(a.getDirector() != null ? a.getDirector().getUserId() : null)
                         .directorName(a.getDirector() != null ? a.getDirector().getFullName() : null)
@@ -231,10 +231,10 @@ public class OfferServiceImpl implements OfferService {
                         .build())
                 .toList();
 
-        List<OfferDetailResponseDto.NegotiationRoundDto> negotiationHistory = offerNegotiationRepository
+        List<OfferDetailResponse.NegotiationRound> negotiationHistory = offerNegotiationRepository
                 .findByOfferProposal_OfferIdOrderByNegotiationDateDesc(id)
                 .stream()
-                .map(n -> OfferDetailResponseDto.NegotiationRoundDto.builder()
+                .map(n -> OfferDetailResponse.NegotiationRound.builder()
                         .negotiationId(n.getNegotiationId())
                         .candidateCounterSalary(n.getCandidateCounterSalary())
                         .candidateNotes(n.getCandidateNotes())
@@ -246,7 +246,7 @@ public class OfferServiceImpl implements OfferService {
         String proposedByName = offer.getProposedBy() != null ? offer.getProposedBy().getFullName() : null;
         Integer proposedById = offer.getProposedBy() != null ? offer.getProposedBy().getUserId() : null;
 
-        return OfferDetailResponseDto.builder()
+        return OfferDetailResponse.builder()
                 .offerId(offer.getOfferId())
                 .offerStatus(offer.getOfferStatus())
                 .offeredPositionTitle(offer.getOfferedPositionTitle())
@@ -282,7 +282,7 @@ public class OfferServiceImpl implements OfferService {
     }
 
     @Override
-    public OfferResponseDto updateOfferByHr(Integer id, UpdateOfferRequestDto dto) {
+    public OfferResponse updateOfferByHr(Integer id, UpdateOfferRequest dto) {
         OfferProposal offer = offerProposalRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy OfferProposal với ID: " + id));
 
@@ -316,7 +316,7 @@ public class OfferServiceImpl implements OfferService {
         }
 
         OfferProposal saved = offerProposalRepository.save(offer);
-        return mapToResponseDto(saved);
+        return mapToResponse(saved);
     }
 
     @Override
@@ -337,7 +337,7 @@ public class OfferServiceImpl implements OfferService {
     }
 
     @Override
-    public OfferResponseDto sendOfferToCandidate(Integer id) {
+    public OfferResponse sendOfferToCandidate(Integer id) {
         OfferProposal offer = offerProposalRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy OfferProposal với ID: " + id));
 
@@ -369,7 +369,7 @@ public class OfferServiceImpl implements OfferService {
             applicationRepository.save(application);
         }
 
-        return mapToResponseDto(saved);
+        return mapToResponse(saved);
     }
 
     private void validateProbationSalaryRule(BigDecimal proposedSalary, BigDecimal probationSalary) {
@@ -424,7 +424,7 @@ public class OfferServiceImpl implements OfferService {
         return userRepository.findAll().stream().findFirst().orElse(null);
     }
 
-    private OfferResponseDto mapToResponseDto(OfferProposal entity) {
+    private OfferResponse mapToResponse(OfferProposal entity) {
         String candidateName = null;
         String candidateEmail = null;
         if (entity.getApplication() != null && entity.getApplication().getCandidate() != null) {
@@ -442,7 +442,7 @@ public class OfferServiceImpl implements OfferService {
             proposedByName = entity.getProposedBy().getFullName();
         }
 
-        return OfferResponseDto.builder()
+        return OfferResponse.builder()
                 .offerId(entity.getOfferId())
                 .applicationId(entity.getApplication() != null ? entity.getApplication().getApplicationId() : null)
                 .candidateName(candidateName)

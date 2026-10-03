@@ -1,4 +1,4 @@
-package com.group2.rms.dto.request;
+package com.group2.rms.offer.dto;
 
 import jakarta.validation.constraints.AssertTrue;
 import jakarta.validation.constraints.NotNull;
@@ -12,13 +12,13 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 
 /**
- * Request DTO chỉnh sửa Offer Proposal (Chỉ áp dụng khi Offer ở trạng thái Draft hoặc Rejected).
+ * Request chỉnh sửa Offer Proposal (Chỉ áp dụng khi Offer ở trạng thái Draft hoặc Rejected).
  */
 @Data
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class UpdateOfferRequestDto {
+public class UpdateOfferRequest {
 
     private String offeredPositionTitle;
 

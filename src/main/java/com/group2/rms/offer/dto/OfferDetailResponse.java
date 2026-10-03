@@ -1,4 +1,4 @@
-package com.group2.rms.dto.response;
+package com.group2.rms.offer.dto;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -11,7 +11,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 /**
- * Response DTO chi tiết gói Offer (Screen 32):
+ * Response chi tiết gói Offer (Screen 32):
  * Tổng hợp thông tin ứng viên (Group A), thông tin đãi ngộ (Group B),
  * lịch sử phê duyệt của Director (OfferApproval) và lịch sử đàm phán (OfferNegotiation).
  */
@@ -19,7 +19,7 @@ import java.util.List;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class OfferDetailResponseDto {
+public class OfferDetailResponse {
 
     // --- Group B: Thông tin Đãi ngộ & Điều khoản Offer ---
     private Integer offerId;
@@ -57,16 +57,16 @@ public class OfferDetailResponseDto {
     private LocalDateTime interviewApprovedAt;
 
     // --- Audit Log: Lịch sử phê duyệt của Director (OfferApproval) ---
-    private List<DirectorApprovalLogDto> approvalHistory;
+    private List<DirectorApprovalLog> approvalHistory;
 
     // --- Lịch sử đàm phán (OfferNegotiation) ---
-    private List<NegotiationRoundDto> negotiationHistory;
+    private List<NegotiationRound> negotiationHistory;
 
     @Data
     @Builder
     @NoArgsConstructor
     @AllArgsConstructor
-    public static class DirectorApprovalLogDto {
+    public static class DirectorApprovalLog {
         private Integer approvalId;
         private Integer directorId;
         private String directorName;
@@ -79,7 +79,7 @@ public class OfferDetailResponseDto {
     @Builder
     @NoArgsConstructor
     @AllArgsConstructor
-    public static class NegotiationRoundDto {
+    public static class NegotiationRound {
         private Integer negotiationId;
         private BigDecimal candidateCounterSalary;
         private String candidateNotes;

@@ -1,7 +1,7 @@
 package com.group2.rms.offer.controller;
 
-import com.group2.rms.dto.response.OfferResponseDto;
-import com.group2.rms.dto.response.PassedCandidateResponseDto;
+import com.group2.rms.offer.dto.OfferResponse;
+import com.group2.rms.offer.dto.PassedCandidateResponse;
 import com.group2.rms.offer.service.OfferService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -35,8 +35,8 @@ public class OfferViewController {
             Principal principal) {
 
         int validPage = Math.max(0, page);
-        Page<OfferResponseDto> pagedData = offerService.getAllOffersForHr(status, PageRequest.of(validPage, size));
-        List<PassedCandidateResponseDto> passedCandidates = offerService.getPassedCandidatesForOffer();
+        Page<OfferResponse> pagedData = offerService.getAllOffersForHr(status, PageRequest.of(validPage, size));
+        List<PassedCandidateResponse> passedCandidates = offerService.getPassedCandidatesForOffer();
 
         model.addAttribute("offers", pagedData.getContent());
         model.addAttribute("offersPage", pagedData);

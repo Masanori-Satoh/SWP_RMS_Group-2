@@ -1,6 +1,6 @@
-package com.group2.rms.repository;
+package com.group2.rms.offer.repository;
 
-import com.group2.rms.offer.OfferNegotiation;
+import com.group2.rms.offer.entity.OfferNegotiation;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
