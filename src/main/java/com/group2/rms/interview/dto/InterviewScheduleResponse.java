@@ -1,6 +1,6 @@
 package com.group2.rms.interview.dto;
 
-import com.group2.rms.candidate.Application;
+import com.group2.rms.candidate.entity.Application;
 import com.group2.rms.interview.entity.InterviewFormat;
 import com.group2.rms.interview.entity.InterviewSchedule;
 import com.group2.rms.interview.entity.InterviewStatus;

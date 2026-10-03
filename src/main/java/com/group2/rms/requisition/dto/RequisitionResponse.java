@@ -2,7 +2,7 @@ package com.group2.rms.requisition.dto;
 
 import java.time.LocalDateTime;
 
-import com.group2.rms.admin.ActivityLogResponse;
+import com.group2.rms.admin.dto.ActivityLogResponse;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;

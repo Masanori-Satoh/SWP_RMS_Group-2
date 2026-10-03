@@ -32,26 +32,15 @@
         <div th:if="${currentUser == null}">
           <a href="/login" class="button button-secondary button-sm">Đăng nhập</a>
         </div>
-        <div th:if="${currentUser != null}" class="user-menu" id="user-menu">
-          <button type="button" class="user-trigger" id="user-menu-trigger" aria-haspopup="true" aria-expanded="false">
-            <span class="user-avatar" th:text="${#strings.substring(currentUser.fullName, 0, 1)}">U</span>
-            <span th:text="${currentUser.fullName}">Ứng viên</span>
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
-          </button>
-          
-          <div class="user-dropdown" id="user-dropdown" role="menu">
-            <div class="dropdown-header">
-              <div class="dropdown-name" th:text="${currentUser.fullName}">Ứng viên</div>
-              <div class="dropdown-email" th:text="${currentUser.email}">user@moc.vn</div>
-            </div>
-            <a href="/profile" class="dropdown-item" role="menuitem">Thông tin cá nhân</a>
-            <a href="/applications" class="dropdown-item" role="menuitem">Hồ sơ của tôi</a>
-            <div class="dropdown-divider" role="separator"></div>
-            <form th:action="@{/logout}" method="post" style="display:contents;">
-              <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
-              <button type="submit" class="dropdown-item danger" role="menuitem">Đăng xuất</button>
-            </form>
+        <div th:if="${currentUser != null}" style="display:flex; align-items:center; gap:var(--s4);">
+          <div style="text-align:right; line-height:1.2;">
+            <strong th:text="${currentUser.fullName}" style="font-size:14px; display:block;"></strong>
+            <span style="color:var(--muted); font-size:12px;" th:text="${currentUser.email}"></span>
           </div>
+          <form th:action="@{/logout}" method="post" style="margin:0;">
+            <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
+            <button type="submit" class="button button-secondary button-sm">Đăng xuất</button>
+          </form>
         </div>
       </div>
     </div>

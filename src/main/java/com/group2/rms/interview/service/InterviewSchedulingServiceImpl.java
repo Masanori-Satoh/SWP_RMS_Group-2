@@ -1,7 +1,7 @@
 package com.group2.rms.interview.service;
 
-import com.group2.rms.candidate.Application;
-import com.group2.rms.candidate.ApplicationRepository;
+import com.group2.rms.candidate.entity.Application;
+import com.group2.rms.candidate.repository.ApplicationRepository;
 import com.group2.rms.core.security.RoleAuthorities;
 import com.group2.rms.interview.dto.InterviewScheduleRequest;
 import com.group2.rms.interview.dto.InterviewScheduleResponse;

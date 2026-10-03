@@ -1,7 +1,7 @@
 package com.group2.rms.interview;
 
-import com.group2.rms.candidate.Application;
-import com.group2.rms.candidate.ApplicationRepository;
+import com.group2.rms.candidate.entity.Application;
+import com.group2.rms.candidate.repository.ApplicationRepository;
 import com.group2.rms.interview.dto.InterviewScheduleRequest;
 import com.group2.rms.interview.dto.InterviewScheduleResponse;
 import com.group2.rms.interview.dto.PanelMemberRequest;
