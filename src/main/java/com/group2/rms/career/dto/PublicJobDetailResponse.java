@@ -1,8 +1,9 @@
 package com.group2.rms.career.dto;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
-public record CareerJobDetailResponse(
+public record PublicJobDetailResponse(
     Integer id, 
     String postingTitle, 
     String departmentName, 
@@ -12,8 +13,11 @@ public record CareerJobDetailResponse(
     LocalDateTime applicationDeadline, 
     LocalDateTime postingDate, 
     String jobDescription, 
+    List<String> jobDescriptionList,
     String jobRequirements, 
+    List<String> jobRequirementsList,
     String benefits, 
+    List<String> benefitsList,
     boolean hasApplied, 
     boolean isAcceptingApplications
 ) {}

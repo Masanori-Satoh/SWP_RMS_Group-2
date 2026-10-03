@@ -2,7 +2,7 @@ package com.group2.rms.career.dto;
 
 import java.time.LocalDateTime;
 
-public record CareerJobListResponse(
+public record PublicJobListResponse(
     Integer id, 
     String postingTitle, 
     String departmentName, 
