@@ -44,3 +44,14 @@
 1. Xây dựng giao diện và luồng xử lý cho màn hình Tạo mới lịch phỏng vấn (`/interviews/new`).
 2. Xây dựng màn hình Chi tiết lịch phỏng vấn (`/interviews/{id}`).
 3. Tích hợp tính năng Đánh giá phỏng vấn (`/interviews/evaluation`).
+4. Đồng bộ giao diện `interview/list.html` và `form.html` sang fragment chung (`fragments/head`, `fragments/workspace-header`).
+
+---
+
+## 3. Nhược điểm Phát hiện từ Hệ thống & Đề xuất với Nhóm
+
+- **Vấn đề GlobalExceptionHandler:** Hiện nuốt các ngoại lệ HTTP chuẩn (`ResponseStatusException`, `NoResourceFoundException`, `AccessDeniedException`) thành mã 500 và không ghi log. Ngoài ra, `BaseBusinessException` trả về HTTP status 200 thay vì mã lỗi. Cần Dũng/Team Core sửa ở PR tiếp theo.
+- **Vấn đề Cấu hình ddl-auto:** File gốc `application.properties` đang để `update`, có rủi ro tự ý sửa schema DB chung. Nên đổi về `validate` và chuyển `update` sang `application-local.properties.example`.
+- **Vấn đề Try-Catch vs UX Form:** Quy chuẩn cấm try-catch ở Controller nhưng Global Exception hiện chỉ trả về view 500 chết. Vì vậy nhánh interview tạm thời giữ try-catch để hiển thị thông báo lỗi trên Form cho người dùng, chờ giải pháp toàn diện từ team core.
+- **Tài liệu README:** Cần cập nhật lại root `README.md` bỏ `.env` và hướng dẫn dùng `application-local.properties`.
+
