@@ -29,7 +29,7 @@ public class RequisitionController {
     void binder(WebDataBinder binder) {
         binder.setAutoGrowCollectionLimit(50);
         binder.setAllowedFields("action","version","title","departmentId","numberOfPositions","employmentType","minSalary","maxSalary",
-            "gender","workLocation","workingHours","expectedStartDate","reasonForHiring","jobDescription","requirementDetails",
+            "gender","workLocation","workModel","probationDuration","expectedStartDate","reasonForHiring","jobDescription","requirementDetails",
             "screeningCriteria[*].criteriaId","screeningCriteria[*].criteriaName","screeningCriteria[*].criteriaType",
             "screeningCriteria[*].requiredValue","screeningCriteria[*].weight","screeningCriteria[*].isMandatory");
     }

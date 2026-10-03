@@ -72,8 +72,10 @@ public class JobRequisition extends BaseEntity {
     private String gender;
     @Column(name = "WorkLocation", length = 255)
     private String workLocation;
-    @Column(name = "WorkingHours", length = 255)
-    private String workingHours;
+    @Column(name = "WorkModel", length = 50)
+    private String workModel;
+    @Column(name = "ProbationDuration", length = 255)
+    private String probationDuration;
     @Column(name = "ExpectedStartDate")
     private java.time.LocalDate expectedStartDate;
     @Column(name = "SubmittedAt")

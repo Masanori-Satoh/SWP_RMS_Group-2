@@ -99,9 +99,12 @@
                                 <div class="info-item" th:if="${req.gender != null}"><span
                                         class="info-label">Gender</span><span class="info-value"
                                         th:text="${req.gender}"></span></div>
-                                <div class="info-item" th:if="${req.workingHours != null}"><span
-                                        class="info-label">Working Hours</span><span class="info-value"
-                                        th:text="${req.workingHours}"></span></div>
+                                <div class="info-item"><span
+                                        class="info-label">Work Model</span><span class="info-value"
+                                        th:text="${req.workModel ?: 'Not specified'}"></span></div>
+                                <div class="info-item"><span
+                                        class="info-label">Probation Duration</span><span class="info-value"
+                                        th:text="${req.probationDuration ?: 'Not specified'}"></span></div>
                             </div>
                         </div>
 

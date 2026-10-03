@@ -95,7 +95,7 @@ public class RequisitionServiceImpl implements RequisitionService {
             .criteriaType(c.getCriteriaType()).requiredValue(c.getRequiredValue()).weight(c.getWeight()).isMandatory(c.getIsMandatory()).build()).collect(Collectors.toCollection(ArrayList::new));
         return RequisitionRequest.builder().version(r.getVersion()).title(r.getTitle()).departmentId(r.getDepartment()==null?null:r.getDepartment().getDepartmentId())
             .numberOfPositions(r.getNumberOfPositions()).employmentType(r.getEmploymentType()).minSalary(r.getMinSalary()).maxSalary(r.getMaxSalary())
-            .gender(r.getGender()).workLocation(r.getWorkLocation()).workingHours(r.getWorkingHours()).expectedStartDate(r.getExpectedStartDate())
+            .gender(r.getGender()).workLocation(r.getWorkLocation()).workModel(r.getWorkModel()).probationDuration(r.getProbationDuration()).expectedStartDate(r.getExpectedStartDate())
             .reasonForHiring(r.getReasonForHiring()).jobDescription(r.getJobDescription()).requirementDetails(r.getRequirementDetails()).screeningCriteria(rows).build();
     }
     @Override
@@ -141,7 +141,7 @@ public class RequisitionServiceImpl implements RequisitionService {
         r.setTitle(d.getTitle()==null?"Untitled requisition":d.getTitle());
         r.setDepartment(d.getDepartmentId()==null?null:departments.findById(d.getDepartmentId()).orElseThrow(()->invalid("departmentId","Select an existing department.")));
         r.setNumberOfPositions(d.getNumberOfPositions());r.setEmploymentType(d.getEmploymentType());r.setMinSalary(d.getMinSalary());r.setMaxSalary(d.getMaxSalary());
-        r.setGender(d.getGender());r.setWorkLocation(d.getWorkLocation());r.setWorkingHours(d.getWorkingHours());r.setExpectedStartDate(d.getExpectedStartDate());
+        r.setGender(d.getGender());r.setWorkLocation(d.getWorkLocation());r.setWorkModel(d.getWorkModel());r.setProbationDuration(d.getProbationDuration());r.setExpectedStartDate(d.getExpectedStartDate());
         r.setReasonForHiring(d.getReasonForHiring());r.setJobDescription(d.getJobDescription());r.setRequirementDetails(d.getRequirementDetails());
     }
     @Override
@@ -181,7 +181,7 @@ public class RequisitionServiceImpl implements RequisitionService {
     private Map<String,String> snapshot(JobRequisition r) {
         Map<String,String> m=new LinkedHashMap<>();m.put("Job title",r.getTitle());m.put("Department",r.getDepartment()==null?null:r.getDepartment().getDepartmentName());
         m.put("Openings",display(r.getNumberOfPositions()));m.put("Employment type",r.getEmploymentType());m.put("Minimum salary",number(r.getMinSalary()));m.put("Maximum salary",number(r.getMaxSalary()));
-        m.put("Gender",r.getGender());m.put("Location",r.getWorkLocation());m.put("Working hours",r.getWorkingHours());m.put("Expected start date",display(r.getExpectedStartDate()));
+        m.put("Gender",r.getGender());m.put("Location",r.getWorkLocation());m.put("Work model",r.getWorkModel());m.put("Probation duration",r.getProbationDuration());m.put("Expected start date",display(r.getExpectedStartDate()));
         m.put("Reason for hiring",r.getReasonForHiring());m.put("Job description",r.getJobDescription());m.put("Candidate requirements",r.getRequirementDetails());m.put("Status",r.getApprovalStatus());
         int i=0;for(var c:r.getScreeningCriteria())m.put("Criterion: "+(c.getCriteriaName()==null?"Unnamed "+(++i):c.getCriteriaName()),display(c.getCriteriaType())+"; "+display(c.getRequiredValue())+"; weight "+display(number(c.getWeight()))+"%; mandatory "+Boolean.TRUE.equals(c.getIsMandatory()));return m;
     }
@@ -190,7 +190,7 @@ public class RequisitionServiceImpl implements RequisitionService {
         var d=RequisitionResponse.builder().requisitionId(r.getRequisitionId()).version(r.getVersion()).title(r.getTitle())
             .departmentName(r.getDepartment()==null?"Not specified":r.getDepartment().getDepartmentName()).hiringManagerName(r.getHiringManager().getFullName())
             .numberOfPositions(r.getNumberOfPositions()).employmentType(r.getEmploymentType()).approvalStatus(r.getApprovalStatus()).createdAt(r.getCreatedAt())
-            .minSalary(r.getMinSalary()).maxSalary(r.getMaxSalary()).gender(r.getGender()).workLocation(r.getWorkLocation()).workingHours(r.getWorkingHours()).expectedStartDate(r.getExpectedStartDate())
+            .minSalary(r.getMinSalary()).maxSalary(r.getMaxSalary()).gender(r.getGender()).workLocation(r.getWorkLocation()).workModel(r.getWorkModel()).probationDuration(r.getProbationDuration()).expectedStartDate(r.getExpectedStartDate())
             .reasonForHiring(r.getReasonForHiring()).jobDescription(r.getJobDescription()).requirementDetails(r.getRequirementDetails())
             .editable(editable).deletable(editable&&!postings.existsByRequisition_RequisitionId(r.getRequisitionId())).decidable(access.canDecide(actor,r))
             .withdrawable(access.owns(actor,r)&&"Pending_Director".equals(r.getApprovalStatus())).build();

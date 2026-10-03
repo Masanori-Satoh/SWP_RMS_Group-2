@@ -17,7 +17,8 @@ public class RequisitionRequest {
     private BigDecimal maxSalary;
     private String gender;
     private String workLocation;
-    private String workingHours;
+    private String workModel;
+    private String probationDuration;
     @DateTimeFormat(iso=DateTimeFormat.ISO.DATE)
     private LocalDate expectedStartDate;
     private String reasonForHiring;

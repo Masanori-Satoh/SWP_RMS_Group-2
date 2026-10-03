@@ -16,19 +16,20 @@ public class RequisitionValidator {
     public static final List<String> EMPLOYMENT_TYPES=List.of("Full-time","Part-time","Internship","Contract");
     public static final List<String> CRITERIA_TYPES=List.of("Education","Experience","Skill","Knockout");
     public static final List<String> GENDERS=List.of("Any","Male","Female");
+    public static final List<String> WORK_MODELS=List.of("On-site","Remote","Hybrid");
     public void validate(RequisitionRequest d) {
         var errors=new LinkedHashMap<String,String>(); boolean submit="submit".equals(d.getAction());
         if(!Set.of("draft","submit").contains(Objects.toString(d.getAction(),""))) errors.put("action","Choose Save Draft or Submit to Director.");
         d.setTitle(clean(d.getTitle())); d.setEmploymentType(clean(d.getEmploymentType()));
         d.setReasonForHiring(clean(d.getReasonForHiring())); d.setJobDescription(clean(d.getJobDescription())); d.setRequirementDetails(clean(d.getRequirementDetails()));
-        d.setWorkLocation(clean(d.getWorkLocation())); d.setWorkingHours(clean(d.getWorkingHours())); d.setGender(clean(d.getGender()));
+        d.setWorkLocation(clean(d.getWorkLocation())); d.setWorkModel(clean(d.getWorkModel())); d.setProbationDuration(clean(d.getProbationDuration())); d.setGender(clean(d.getGender()));
         text(errors,"title",d.getTitle(),200,submit); text(errors,"reasonForHiring",d.getReasonForHiring(),REASON_LIMIT,submit);
         if (submit && "Untitled requisition".equalsIgnoreCase(d.getTitle())) {
             errors.put("title", "Replace the draft placeholder with a job title before submitting.");
         }
         text(errors,"jobDescription",d.getJobDescription(),2000,submit); text(errors,"requirementDetails",d.getRequirementDetails(),2000,submit);
-        text(errors,"workLocation",d.getWorkLocation(),255,submit); text(errors,"workingHours",d.getWorkingHours(),255,false);
-        choice(errors,"employmentType",d.getEmploymentType(),EMPLOYMENT_TYPES,submit); choice(errors,"gender",d.getGender(),GENDERS,false);
+        text(errors,"workLocation",d.getWorkLocation(),255,submit); text(errors,"probationDuration",d.getProbationDuration(),255,false);
+        choice(errors,"employmentType",d.getEmploymentType(),EMPLOYMENT_TYPES,submit); choice(errors,"workModel",d.getWorkModel(),WORK_MODELS,submit); choice(errors,"gender",d.getGender(),GENDERS,false);
         if(submit&&d.getDepartmentId()==null) errors.put("departmentId","Select a department.");
         if(submit&&d.getNumberOfPositions()==null) errors.put("numberOfPositions","Enter the number of openings.");
         if(d.getNumberOfPositions()!=null&&d.getNumberOfPositions()<1) errors.put("numberOfPositions","Use a whole number greater than zero.");

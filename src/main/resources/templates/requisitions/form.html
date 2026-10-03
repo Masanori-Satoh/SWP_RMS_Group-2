@@ -40,6 +40,14 @@
                             <input class="form-control-custom" type="text" th:field="*{title}" th:attr="aria-invalid=${#fields.hasErrors('title')}" aria-describedby="title-error" placeholder="Enter job title" maxlength="200" required><small id="title-error" class="field-error" th:text="${#fields.hasErrors('title') ? #strings.listJoin(#fields.errors('title'), '; ') : ''}"></small>
                         </div>
                         <div class="form-group">
+                            <label for="departmentId">Department <span class="required-asterisk">*</span></label>
+                            <select class="form-control-custom" th:field="*{departmentId}" th:attr="aria-invalid=${#fields.hasErrors('departmentId')}" aria-describedby="departmentId-error" required>
+                                <option value="">Select department</option>
+                                <option th:each="department : ${departments}" th:value="${department.departmentId}" th:text="${department.departmentName}"></option>
+                            </select><small id="departmentId-error" class="field-error" th:text="${#fields.hasErrors('departmentId') ? #strings.listJoin(#fields.errors('departmentId'), '; ') : ''}"></small>
+                        </div>
+
+                        <div class="form-group">
                             <label for="employmentType">Employment Type <span class="required-asterisk">*</span></label>
                             <select class="form-control-custom" th:field="*{employmentType}" th:attr="aria-invalid=${#fields.hasErrors('employmentType')}" aria-describedby="employmentType-error" required>
                                 <option value="">Select employment type</option>
@@ -47,35 +55,42 @@
                             </select><small id="employmentType-error" class="field-error" th:text="${#fields.hasErrors('employmentType') ? #strings.listJoin(#fields.errors('employmentType'), '; ') : ''}"></small>
                         </div>
                         <div class="form-group">
-                            <label for="departmentId">Department <span class="required-asterisk">*</span></label>
-                            <select class="form-control-custom" th:field="*{departmentId}" th:attr="aria-invalid=${#fields.hasErrors('departmentId')}" aria-describedby="departmentId-error" required>
-                                <option value="">Select department</option>
-                                <option th:each="department : ${departments}" th:value="${department.departmentId}" th:text="${department.departmentName}"></option>
-                            </select><small id="departmentId-error" class="field-error" th:text="${#fields.hasErrors('departmentId') ? #strings.listJoin(#fields.errors('departmentId'), '; ') : ''}"></small>
+                            <label for="workModel">Work Model <span class="required-asterisk">*</span></label>
+                            <select class="form-control-custom" th:field="*{workModel}" th:attr="aria-invalid=${#fields.hasErrors('workModel')}" aria-describedby="workModel-error" required>
+                                <option value="">Select work model</option>
+                                <option value="On-site">On-site</option>
+                                <option value="Remote">Remote</option>
+                                <option value="Hybrid">Hybrid</option>
+                            </select><small id="workModel-error" class="field-error" th:text="${#fields.hasErrors('workModel') ? #strings.listJoin(#fields.errors('workModel'), '; ') : ''}"></small>
                         </div>
+
+                        <div class="form-group">
+                            <label for="expectedStartDate">Expected Start Date <span class="required-asterisk">*</span></label>
+                            <input class="form-control-custom" type="date" th:field="*{expectedStartDate}" th:attr="aria-invalid=${#fields.hasErrors('expectedStartDate')}" aria-describedby="expectedStartDate-error" required><small id="expectedStartDate-error" class="field-error" th:text="${#fields.hasErrors('expectedStartDate') ? #strings.listJoin(#fields.errors('expectedStartDate'), '; ') : ''}"></small>
+                        </div>
+                        <div class="form-group">
+                            <label for="probationDuration">Probation Duration</label>
+                            <input class="form-control-custom" type="text" th:field="*{probationDuration}" th:attr="aria-invalid=${#fields.hasErrors('probationDuration')}" aria-describedby="probationDuration-error" maxlength="255" placeholder="e.g. 2 months"><small id="probationDuration-error" class="field-error" th:text="${#fields.hasErrors('probationDuration') ? #strings.listJoin(#fields.errors('probationDuration'), '; ') : ''}"></small>
+                        </div>
+
                         <div class="form-group">
                             <label for="numberOfPositions">Number of Openings <span class="required-asterisk">*</span></label>
                             <input class="form-control-custom" type="number" th:field="*{numberOfPositions}" th:attr="aria-invalid=${#fields.hasErrors('numberOfPositions')}" aria-describedby="numberOfPositions-error" value="1" min="1" required><small id="numberOfPositions-error" class="field-error" th:text="${#fields.hasErrors('numberOfPositions') ? #strings.listJoin(#fields.errors('numberOfPositions'), '; ') : ''}"></small>
                         </div>
                         <div class="form-group">
-                            <label for="gender">Gender</label>
+                            <label for="gender">Gender Requirement</label>
                             <select class="form-control-custom" th:field="*{gender}" th:attr="aria-invalid=${#fields.hasErrors('gender')}" aria-describedby="gender-error">
                                 <option value="Any">Any</option>
                                 <option value="Male">Male</option>
                                 <option value="Female">Female</option>
                             </select><small id="gender-error" class="field-error" th:text="${#fields.hasErrors('gender') ? #strings.listJoin(#fields.errors('gender'), '; ') : ''}"></small>
                         </div>
-                        <div class="form-group">
-                            <label for="expectedStartDate">Expected Start Date <span class="required-asterisk">*</span></label>
-                            <input class="form-control-custom" type="date" th:field="*{expectedStartDate}" th:attr="aria-invalid=${#fields.hasErrors('expectedStartDate')}" aria-describedby="expectedStartDate-error" required><small id="expectedStartDate-error" class="field-error" th:text="${#fields.hasErrors('expectedStartDate') ? #strings.listJoin(#fields.errors('expectedStartDate'), '; ') : ''}"></small>
-                        </div>
-                        <div class="form-group">
-                            <label for="workingHours">Working Hours</label><input class="form-control-custom" type="text" th:field="*{workingHours}" th:attr="aria-invalid=${#fields.hasErrors('workingHours')}" aria-describedby="workingHours-error" maxlength="255" placeholder="e.g. Monday–Friday, 08:00–17:00"><small id="workingHours-error" class="field-error" th:text="${#fields.hasErrors('workingHours') ? #strings.listJoin(#fields.errors('workingHours'), '; ') : ''}"></small>
-                        </div>
-                        <div class="form-group">
+
+                        <div class="form-group form-group-full">
                             <label for="workLocation">Location <span class="required-asterisk">*</span></label>
-                            <input class="form-control-custom" type="text" th:field="*{workLocation}" th:attr="aria-invalid=${#fields.hasErrors('workLocation')}" aria-describedby="workLocation-error" placeholder="Enter work location" maxlength="255" required><small id="workLocation-error" class="field-error" th:text="${#fields.hasErrors('workLocation') ? #strings.listJoin(#fields.errors('workLocation'), '; ') : ''}"></small>
+                            <input class="form-control-custom" type="text" th:field="*{workLocation}" th:attr="aria-invalid=${#fields.hasErrors('workLocation')}" aria-describedby="workLocation-error" placeholder="Enter full work location address" maxlength="255" required><small id="workLocation-error" class="field-error" th:text="${#fields.hasErrors('workLocation') ? #strings.listJoin(#fields.errors('workLocation'), '; ') : ''}"></small>
                         </div>
+
                         <div class="form-group form-group-full">
                             <span class="form-label">Proposed Salary Range (VND)</span>
                             <div class="salary-range">

@@ -21,7 +21,8 @@ public class RequisitionResponse {
     private Long version;
     private String gender;
     private String workLocation;
-    private String workingHours;
+    private String workModel;
+    private String probationDuration;
     private java.time.LocalDate expectedStartDate;
     private boolean editable;
     private boolean deletable;
