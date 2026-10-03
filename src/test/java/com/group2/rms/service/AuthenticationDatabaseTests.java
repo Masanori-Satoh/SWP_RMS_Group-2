@@ -24,7 +24,7 @@ import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-@SpringBootTest(properties = "APP_PASSWORD_RESET_SECRET=integration-test-signing-key-longer-than-32-bytes")
+@SpringBootTest(properties = "app.password.reset.secret=integration-test-signing-key-longer-than-32-bytes")
 @Transactional
 @Rollback
 class AuthenticationDatabaseTests {
