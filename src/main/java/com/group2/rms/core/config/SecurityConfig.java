@@ -52,6 +52,8 @@ public class SecurityConfig {
                         "/admin/api-monitoring", "/admin/api-monitoring/**",
                         "/admin/ai-configuration", "/admin/ai-configuration/**")
                     .hasAuthority(RoleAuthorities.SYSTEM_ADMIN)
+                .requestMatchers("/offers", "/offers/**", "/api/v1/hr/offers", "/api/v1/hr/offers/**")
+                    .hasAnyAuthority(RoleAuthorities.SYSTEM_ADMIN, "ROLE_HR", "ROLE_DIRECTOR")
                 .requestMatchers("/dashboard", "/dashboard/**").authenticated()
                 .anyRequest().authenticated()
             )

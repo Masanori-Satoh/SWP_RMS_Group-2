@@ -9,7 +9,7 @@ import com.group2.rms.offer.repository.OfferApprovalRepository;
 import com.group2.rms.offer.repository.OfferNegotiationRepository;
 import com.group2.rms.offer.repository.OfferProposalRepository;
 import com.group2.rms.offer.service.OfferServiceImpl;
-import com.group2.rms.interview.InterviewFinalResultRepository;
+import com.group2.rms.interview.repository.InterviewFinalResultRepository;
 import com.group2.rms.offer.service.NotificationService;
 import com.group2.rms.user.entity.User;
 import com.group2.rms.user.repository.UserRepository;

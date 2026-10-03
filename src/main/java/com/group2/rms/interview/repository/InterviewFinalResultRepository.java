@@ -1,5 +1,6 @@
-package com.group2.rms.interview;
+package com.group2.rms.interview.repository;
 
+import com.group2.rms.interview.entity.InterviewFinalResult;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
