@@ -26,8 +26,8 @@ public class OfferProposal extends BaseEntity {
     @Column(name = "OfferId")
     private Integer offerId;
 
-    @OneToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "ApplicationId", nullable = false, unique = true, referencedColumnName = "ApplicationId")
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "ApplicationId", nullable = false, referencedColumnName = "ApplicationId")
     private Application application;
 
     @Column(name = "OfferedPositionTitle", nullable = false, length = 200)

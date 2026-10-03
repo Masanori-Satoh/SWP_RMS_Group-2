@@ -32,7 +32,7 @@ public class InterviewSchedule {
     /**
      * Round 1 - HR, Round 2 - Technical, Final
      */
-    @Column(name = "InterviewRound", nullable = false, length = 50)
+    @Column(name = "InterviewRound", nullable = true, length = 50)
     private String interviewRound;
 
     /**
