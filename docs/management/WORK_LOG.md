@@ -6,6 +6,7 @@ Tài liệu này là lịch sử tóm tắt các thay đổi quan trọng và b�
 
 | Ngày | Tên công việc / Yêu cầu chính | Người thực hiện | Chi tiết thay đổi |
 | :--- | :--- | :--- | :--- |
+| **2026-10-03** | Khắc phục Xung đột PR #7, #8, #10 & Nâng cấp Core | dunglt | [Xem chi tiết](work_logs/2026-10-03-dunglt-pr-unification-and-core-update.md) |
 | **2026-10-02** | Xây dựng Public Job Board & Details chuẩn kiến trúc | dunglt | [Xem chi tiết](work_logs/2026-10-02-plan-job-board.md) |
 | **2026-10-01** | Đại phẫu Kiến trúc & Database | Nhóm 2 | [Xem chi tiết](work_logs/2026-10-01-architecture-refactor.md) |
 | **2026-09-29** | Sáu màn hình xác thực/tài khoản | Nhóm 2 | [Xem chi tiết](work_logs/2026-09-29-auth-screens.md) |
