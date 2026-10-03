@@ -87,10 +87,9 @@ database/backups/
 # ===================================================================
 .env
 .env.local
-# application.properties chứa password database thật - không được commit lên Git!
-# Dùng application.properties.example làm template cho team
-application.properties
-application.yml
+
+# Chỉ bỏ qua các file cấu hình chứa mật khẩu cá nhân local.
+# application.properties (chính) và application-local.properties.example sẽ được commit.
 application-local.properties
 application-local.yml
 application-secret.properties

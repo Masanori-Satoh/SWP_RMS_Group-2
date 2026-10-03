@@ -14,8 +14,8 @@ public class PasswordResetEmailSender {
     private final String publicBaseUrl;
 
     public PasswordResetEmailSender(ObjectProvider<JavaMailSender> mailSender,
-                                    @Value("${APP_MAIL_FROM:}") String from,
-                                    @Value("${APP_PUBLIC_BASE_URL:}") String publicBaseUrl) {
+                                    @Value("${app.mail.from:}") String from,
+                                    @Value("${app.public.base.url:}") String publicBaseUrl) {
         this.mailSender = mailSender;
         this.from = from;
         this.publicBaseUrl = publicBaseUrl;
