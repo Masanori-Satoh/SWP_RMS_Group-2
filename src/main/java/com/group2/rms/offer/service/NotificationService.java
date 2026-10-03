@@ -1,4 +1,4 @@
-package com.group2.rms.service;
+package com.group2.rms.offer.service;
 
 import com.group2.rms.offer.entity.OfferProposal;
 

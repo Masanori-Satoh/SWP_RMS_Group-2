@@ -1,5 +1,13 @@
 package com.group2.rms.core.exception;
 
+import org.springframework.http.HttpStatus;
+import org.springframework.web.bind.annotation.ResponseStatus;
+
+/**
+ * Base exception for all business logic errors.
+ * Mapped to HTTP 400 Bad Request by default instead of 500 Server Error.
+ */
+@ResponseStatus(HttpStatus.BAD_REQUEST)
 public class BaseBusinessException extends RuntimeException {
     private final String errorCode;
 
