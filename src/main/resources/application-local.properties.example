@@ -1,0 +1,26 @@
+# =========================================================================
+# 🚨 CẢNH BÁO TỐI KHẨN: TUYỆT ĐỐI KHÔNG ĐƯỢC ĐỔI TÊN (RENAME) FILE NÀY! 🚨
+# Hãy COPY file này ra một bản mới tên là 'application-local.properties'
+# Nếu bạn đổi tên, bạn sẽ xóa luôn file mẫu của cả team trên Git!
+# =========================================================================
+# FILE NÀY CHỈ CHỨA CÁC THÔNG TIN NHẠY CẢM MÀ BẠN CẦN GHI ĐÈ Ở MÁY CÁ NHÂN.
+
+# --- 1. DATABASE & SERVER (Tùy chỉnh theo máy cá nhân) ---
+# Sửa lại đúng mật khẩu SQL Server của máy bạn
+spring.datasource.password=12345
+
+# Bỏ comment 2 dòng dưới đây nếu máy bạn dùng port khác 8080 hoặc username khác 'sa'
+# server.port=8081
+# spring.datasource.username=sa
+
+# --- 2. GOOGLE LOGIN (Cần khi test chức năng Đăng nhập) ---
+spring.security.oauth2.client.registration.google.client-id=your_google_client_id_here
+spring.security.oauth2.client.registration.google.client-secret=your_google_client_secret_here
+
+# --- 3. EMAIL GỬI ĐI (Cần khi test chức năng Quên mật khẩu) ---
+spring.mail.username=your_email@gmail.com
+spring.mail.password=your_app_password
+app.mail.from=your_email@gmail.com
+
+# --- 4. BẢO MẬT (Chuỗi bí mật 32 ký tự để mã hóa token) ---
+app.password.reset.secret=your_32_byte_secret_here

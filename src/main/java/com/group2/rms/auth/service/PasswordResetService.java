@@ -37,7 +37,7 @@ public class PasswordResetService {
 
     @Autowired
     public PasswordResetService(UserRepository users, PasswordEncoder passwordEncoder,
-                                @Value("${APP_PASSWORD_RESET_SECRET:}") String secret) {
+                                @Value("${app.password.reset.secret:}") String secret) {
         this(users, passwordEncoder, secret, Clock.systemUTC());
     }
 

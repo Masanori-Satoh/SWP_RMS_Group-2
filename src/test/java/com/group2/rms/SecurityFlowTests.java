@@ -3,6 +3,7 @@ package com.group2.rms;
 import com.group2.rms.dashboard.controller.DashboardController;
 import com.group2.rms.core.config.SecurityConfig;
 import com.group2.rms.auth.controller.AuthController;
+import com.group2.rms.auth.controller.CandidateAccountController;
 import com.group2.rms.user.controller.AccountController;
 import com.group2.rms.admin.controller.ApiMonitoringController;
 import com.group2.rms.dashboard.repository.DashboardMetricsRepository;
@@ -63,7 +64,7 @@ import static org.hamcrest.Matchers.not;
 
 @WebMvcTest(controllers = { AuthController.class, DashboardController.class, AccountController.class,
                 ApiMonitoringController.class, HealthController.class,
-                RegistrationController.class, PasswordRecoveryController.class })
+                RegistrationController.class, PasswordRecoveryController.class, CandidateAccountController.class })
 @Import({ SecurityConfig.class, DatabaseUserDetailsService.class })
 class SecurityFlowTests {
 
