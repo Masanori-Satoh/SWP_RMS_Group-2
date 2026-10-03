@@ -277,8 +277,8 @@ public class InterviewSchedulingController {
         List<Application> applications = applicationRepository.findAllWithCandidateAndJobPosting();
         model.addAttribute("applications", applications);
 
-        // Danh sách Interviewer hợp lệ (Chỉ gồm nhân viên nội bộ không thuộc HR, loại bỏ ứng viên)
-        List<User> availableInterviewers = userRepository.findAll().stream()
+        // Danh sách Interviewer hợp lệ (Eager fetch role và department, loại bỏ HR và ứng viên)
+        List<User> availableInterviewers = userRepository.findAllWithRoleAndDepartment().stream()
                 .filter(u -> u.getRole() != null
                         && RoleAuthorities.INTERNAL_ROLE_NAMES.contains(u.getRole().getRoleName())
                         && !"HR".equalsIgnoreCase(u.getRole().getRoleName()))
