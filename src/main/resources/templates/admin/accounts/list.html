@@ -13,6 +13,11 @@
         <header th:replace="~{fragments/workspace-header :: header('System Admin', null)}"></header>
         <main id="main" class="page-content" tabindex="-1">
             <div class="container">
+                <nav class="breadcrumbs" aria-label="Breadcrumb" style="margin-bottom: var(--s2); font-size: 14px; display: flex; gap: 8px; align-items: center; color: var(--text-muted);">
+                  <a th:href="@{/dashboard}" style="color: var(--brand); text-decoration: none;">Dashboard</a>
+                  <span aria-hidden="true">/</span>
+                  <span aria-current="page" style="color: var(--text-color); font-weight: 500;">Internal Accounts</span>
+                </nav>
                 <div class="account-heading">
                     <div>
                         <a class="account-back-link" th:href="@{/dashboard}">Tổng quan</a>
@@ -130,15 +135,7 @@
                         </table>
                     </div>
 
-                    <div class="account-pagination" th:if="${accounts.totalPages > 1}">
-                        <span>Trang <strong th:text="${accounts.number + 1}">1</strong>/<span th:text="${accounts.totalPages}">1</span></span>
-                        <nav class="pagination" aria-label="Phân trang tài khoản">
-                            <a class="btn btn-secondary btn-sm" th:if="${accounts.hasPrevious()}"
-                               th:href="@{/admin/accounts(search=${search},roleId=${selectedRoleId},departmentId=${selectedDepartmentId},status=${selectedStatus},sort=${selectedSort},page=${accounts.number - 1})}">Trước</a>
-                            <a class="btn btn-secondary btn-sm" th:if="${accounts.hasNext()}"
-                               th:href="@{/admin/accounts(search=${search},roleId=${selectedRoleId},departmentId=${selectedDepartmentId},status=${selectedStatus},sort=${selectedSort},page=${accounts.number + 1})}">Sau</a>
-                        </nav>
-                    </div>
+                    <div th:replace="~{fragments/pagination :: paged(${accounts}, '/admin/accounts')}"></div>
                 </section>
             </div>
         </main>

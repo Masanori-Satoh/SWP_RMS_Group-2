@@ -4,9 +4,30 @@
   <a class="skip-link" href="#main" th:text="${role == 'Candidate' or role == 'System Admin' ? 'Đến nội dung chính' : 'Skip to content'}">Skip to content</a>
   <a th:replace="~{fragments/brand :: wordmark('RMS')}"></a>
   <div class="workspace-header-actions">
-    <div class="workspace-identity"><strong th:if="${fullName != null}" th:text="${fullName}"></strong><span class="workspace-role" th:text="${role == 'Candidate' ? 'Ứng viên' : (role == 'System Admin' ? 'Quản trị viên' : role)}"></span></div>
-    <button class="btn btn-secondary workspace-menu" type="button" data-workspace-menu aria-controls="workspace-navigation" aria-expanded="true" hidden th:text="${role == 'Candidate' or role == 'System Admin' ? 'Danh mục' : 'Menu'}">Menu</button>
-    <form th:action="@{/logout}" method="post" th:attr="data-confirm-logout=${role == 'Candidate' ? 'true' : null}"><button class="text-action" type="submit" th:text="${role == 'Candidate' or role == 'System Admin' ? 'Đăng xuất' : 'Log Out'}">Log Out</button></form>
+ <a th:href="@{/profile}" class="workspace-identity">
+      <strong th:if="${fullName != null}" th:text="${fullName}"></strong>
+      <span class="workspace-role"
+            th:text="${role == 'Candidate' ? 'Ứng viên'
+              : (role == 'System Admin' ? 'Quản trị viên' : role)}"></span>
+    </a>
+
+    <button class="btn btn-secondary workspace-menu"
+            type="button"
+            data-workspace-menu
+            aria-controls="workspace-navigation"
+            aria-expanded="true"
+            hidden
+            th:text="${role == 'Candidate' or role == 'System Admin'
+              ? 'Danh mục' : 'Menu'}">Menu</button>
+
+    <form th:action="@{/logout}"
+          method="post"
+          th:attr="data-confirm-logout=${role == 'Candidate' ? 'true' : null}">
+      <button class="text-action"
+              type="submit"
+              th:text="${role == 'Candidate' or role == 'System Admin'
+                ? 'Đăng xuất' : 'Log Out'}">Log Out</button>
+    </form>
   </div>
 </header>
 </body></html>

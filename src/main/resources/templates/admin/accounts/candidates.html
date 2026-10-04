@@ -10,6 +10,11 @@
         <header th:replace="~{fragments/workspace-header :: header('System Admin', null)}"></header>
         <main id="main" class="page-content" tabindex="-1">
             <div class="container">
+                <nav class="breadcrumbs" aria-label="Breadcrumb" style="margin-bottom: var(--s2); font-size: 14px; display: flex; gap: 8px; align-items: center; color: var(--text-muted);">
+                  <a th:href="@{/dashboard}" style="color: var(--brand); text-decoration: none;">Dashboard</a>
+                  <span aria-hidden="true">/</span>
+                  <span aria-current="page" style="color: var(--text-color); font-weight: 500;">Candidate Accounts</span>
+                </nav>
                 <div class="account-heading"><div>
                     <a class="account-back-link" th:href="@{/dashboard}">Tổng quan</a><span aria-hidden="true"> / </span><span>Tài khoản ứng viên</span>
                     <h1>Tài khoản ứng viên</h1><p>Quản lý quyền truy cập của ứng viên.</p>
@@ -52,13 +57,8 @@
                             </tr><tr th:if="${accounts.empty}"><td colspan="7" class="account-empty">No tài khoản ứng viên phù hợp found. Try changing the filters.</td></tr></tbody>
                         </table>
                     </div>
-                    <div class="account-pagination" th:if="${accounts.totalPages > 1}"><span>Trang <strong th:text="${accounts.number + 1}">1</strong>/<span th:text="${accounts.totalPages}">1</span></span>
-                        <nav class="pagination" aria-label="Phân trang tài khoản ứng viên">
-                            <a class="btn btn-secondary btn-sm" th:if="${accounts.hasPrevious()}" th:href="@{/admin/candidate-accounts(search=${search},status=${selectedStatus},sort=${selectedSort},page=${accounts.number - 1})}">Trước</a>
-                            <a class="btn btn-secondary btn-sm" th:if="${accounts.hasNext()}" th:href="@{/admin/candidate-accounts(search=${search},status=${selectedStatus},sort=${selectedSort},page=${accounts.number + 1})}">Sau</a>
-                        </nav>
-                    </div>
-                    <p class="candidate-profile-note">Hồ sơ ứng viên và lịch sử tuyển dụng được quản lý riêng với quyền truy cập tài khoản.</p>
+                    <div th:replace="~{fragments/pagination :: paged(${accounts}, '/admin/candidate-accounts')}"></div>
+                    <p class="candidate-profile-note">Candidate profiles and recruitment history are managed separately from account access.</p>
                 </section>
             </div>
         </main>

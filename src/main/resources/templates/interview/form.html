@@ -1,30 +1,28 @@
 <!doctype html>
 <html lang="vi" xmlns:th="http://www.thymeleaf.org">
-<head th:replace="~{fragments/head :: globalHead(${isEdit ? 'Chỉnh sửa lịch phỏng vấn' : 'Lên lịch phỏng vấn mới'}, ~{::pageStyles})}">
+<head th:replace="~{fragments/head :: interfaceHead(${isEdit ? 'Chỉnh sửa lịch phỏng vấn' : 'Lên lịch phỏng vấn mới'}, ~{::pageStyles})}">
   <th:block th:fragment="pageStyles">
     <meta name="description" content="Lên lịch và phân công hội đồng phỏng vấn tuyển dụng Mộc Careers.">
     <link rel="stylesheet" th:href="@{/css/interview-form.css}">
   </th:block>
 </head>
-<body>
+<body class="rms-app int-app">
 
-  <!-- Site Header -->
-  <header class="site-header">
-    <div class="container header-inner">
-      <a th:replace="~{fragments/brand :: wordmark('Tuyển dụng')}"></a>
-      <a th:href="@{/interviews}" class="text-link">← Quay lại danh sách lịch</a>
-    </div>
-  </header>
-
-  <!-- Main Content -->
-  <main class="section">
+  <div class="page-wrapper">
+    <aside th:replace="~{fragments/sidebar :: workspace('interviews', ${currentUser != null ? currentUser.role.roleName : ''})}"></aside>
+    <div class="main-content">
+      <header th:replace="~{fragments/workspace-header :: header(${currentUser != null ? currentUser.role.roleName : ''}, ${currentUser != null ? currentUser.fullName : 'Người dùng'})}"></header>
+      
+      <main class="page-content" id="main" tabindex="-1">
     <div class="container container-narrow">
 
       <!-- Breadcrumb navigation -->
-      <nav aria-label="Breadcrumb">
-        <a th:href="@{/interviews}" class="text-link">Lịch phỏng vấn</a>
-        <span class="breadcrumb-separator">/</span>
-        <span class="breadcrumb-current" th:text="${isEdit ? 'Chỉnh sửa lịch #' + interviewId : 'Lên lịch mới'}">Lên lịch mới</span>
+      <nav class="breadcrumbs" aria-label="Breadcrumb" style="margin-bottom: var(--s2); font-size: 14px; display: flex; gap: 8px; align-items: center; color: var(--text-muted);">
+        <a th:href="@{/dashboard}" style="color: var(--brand); text-decoration: none;">Dashboard</a>
+        <span aria-hidden="true">/</span>
+        <a th:href="@{/interviews}" style="color: var(--brand); text-decoration: none;">Interview Schedule</a>
+        <span aria-hidden="true">/</span>
+        <span aria-current="page" style="color: var(--text-color); font-weight: 500;" th:text="${isEdit ? 'Chỉnh sửa lịch #' + interviewId : 'Lên lịch mới'}">Lên lịch mới</span>
       </nav>
 
       <!-- Form Card -->
@@ -196,6 +194,8 @@
 
     </div>
   </main>
+  </div> <!-- /.main-content -->
+  </div> <!-- /.page-wrapper -->
   
   <script th:src="@{/js/global.js}" src="/js/global.js"></script>
 </body>

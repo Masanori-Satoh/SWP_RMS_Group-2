@@ -16,9 +16,11 @@
             <header th:replace="~{fragments/workspace-header :: header(${viewerRole}, ${viewerName})}"></header>
             <main id="main" tabindex="-1" class="page-content">
                 <div class="container">
-                <nav class="requisition-breadcrumb" aria-label="Breadcrumb"><a
-                        th:href="@{/dashboard}">Dashboard</a><span aria-hidden="true">/</span><span
-                        aria-current="page">Job Requisitions</span></nav>
+                <nav class="breadcrumbs" aria-label="Breadcrumb" style="margin-bottom: var(--s2); font-size: 14px; display: flex; gap: 8px; align-items: center; color: var(--text-muted);">
+                    <a th:href="@{/dashboard}" style="color: var(--brand); text-decoration: none;">Dashboard</a>
+                    <span aria-hidden="true">/</span>
+                    <span aria-current="page" style="color: var(--text-color); font-weight: 500;">Job Requisitions</span>
+                </nav>
                 <div class="requisition-page-header">
                     <div>
                         <h1>Job Requisitions</h1>
@@ -139,21 +141,23 @@
                         </table>
                     </div>
                     <nav class="list-pagination-footer" aria-label="Requisition pages">
-                        <div class="pagination">
-                            <a th:if="${currentPage > 1}" class="page-link" aria-label="Previous page"
-                                th:href="@{/requisitions(page=${currentPage - 1},size=${pageSize},q=${search},departmentId=${selectedDepartment},type=${selectedType},status=${selectedStatus},sort=${selectedSort})}">‹</a>
-                            <span th:if="${currentPage == 1}" class="page-link disabled" aria-label="Previous page"
-                                aria-disabled="true">‹</span>
-                            <a class="page-link" th:each="page : ${#numbers.sequence(startPage,endPage)}"
-                                th:classappend="${page == currentPage ? 'active' : ''}"
-                                th:attr="aria-current=${page == currentPage ? 'page' : null}"
-                                th:aria-label="|Page ${page}|" th:text="${page}"
-                                th:href="@{/requisitions(page=${page},size=${pageSize},q=${search},departmentId=${selectedDepartment},type=${selectedType},status=${selectedStatus},sort=${selectedSort})}"></a>
-                            <a th:if="${currentPage < totalPages}" class="page-link" aria-label="Next page"
-                                th:href="@{/requisitions(page=${currentPage + 1},size=${pageSize},q=${search},departmentId=${selectedDepartment},type=${selectedType},status=${selectedStatus},sort=${selectedSort})}">›</a>
-                            <span th:if="${currentPage == totalPages}" class="page-link disabled" aria-label="Next page"
-                                aria-disabled="true">›</span>
-                        </div>
+                        <div th:replace="~{fragments/pagination :: pager(${currentPage - 1}, ${totalPages}, ${totalElements}, '/requisitions')}"></div>
+                        <script>
+                            window.rmsGoToPage = function(zeroBasedPage) {
+                                const form = document.getElementById('filterForm');
+                                if (form) {
+                                    let pageInput = form.querySelector('input[name="page"]');
+                                    if (!pageInput) {
+                                        pageInput = document.createElement('input');
+                                        pageInput.type = 'hidden';
+                                        pageInput.name = 'page';
+                                        form.appendChild(pageInput);
+                                    }
+                                    pageInput.value = zeroBasedPage + 1;
+                                    form.submit();
+                                }
+                            };
+                        </script>
                     </nav>
                 </section>
             </div>
