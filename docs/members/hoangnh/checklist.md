@@ -25,7 +25,7 @@ Căn cứ theo bảng phân công công việc (Task Assignment) của Iteration
 Hệ thống được xây dựng theo kiến trúc phân tầng chuẩn của **Spring Boot (MVC Architecture)**:
 
 ### 1. Tầng Dữ liệu & Thực thể (Data & Entity Layer)
-- **`JobRequisition.java`**: Thực thể chính lưu trữ thông tin yêu cầu tuyển dụng (Tiêu đề, Phòng ban, Số lượng tuyển, Hình thức làm việc, Mức lương min/max, Địa điểm, Mô hình on-site/hybrid/remote, Hạn thử việc, Ngày bắt đầu dự kiến, Lý do tuyển, Mô tả công việc, Yêu cầu ứng viên, Trạng thái phê duyệt, Concurrency Version).
+- **`JobRequisition.java`**: Thực thể chính lưu trữ thông tin yêu cầu tuyển dụng (Tiêu đề, Phòng ban, Số lượng tuyển, Hình thức làm việc, Mức lương min/max, Địa điểm, Mô hình on-site/hybrid/remote, Hạn thử việc, Ngày bắt đầu dự kiến, Lý do tuyển, Mô tả công việc, Yêu cầu ứng viên, Trạng thái phê duyệt).
 - **`ScreeningCriteria.java`**: Quan hệ 1-N với `JobRequisition`, đại diện cho tiêu chí sàng lọc hồ sơ tự động của AI (Tên tiêu chí, Loại tiêu chí: Skill/Education/Experience/Knockout, Giá trị yêu cầu, Trọng số điểm Weight, Cờ bắt buộc isMandatory).
 - **`RequisitionApproval.java`**: Lưu trữ lịch sử duyệt/từ chối của Giám đốc (Director) kèm ý kiến nhận xét (Feedback/Comments).
 - **`RequisitionWorkflowEvent.java`**: Lưu trữ dòng thời gian (Timeline) các sự kiện luân chuyển trạng thái (Submitted, Approved, Rejected, Withdrawn).
@@ -57,10 +57,10 @@ Hệ thống được xây dựng theo kiến trúc phân tầng chuẩn của *
 - **`RequisitionService.java`** & **`RequisitionServiceImpl.java`**:
   - `search()`: Tìm kiếm, lọc và phân trang chuẩn hóa.
   - `createRequisition()`: Tạo mới đơn yêu cầu, map dữ liệu, tự động gán tiêu đề `"Untitled requisition"` nếu để trống, ghi `AuditLog` hành động `CREATE`.
-  - `updateRequisition()`: Cập nhật đơn nháp/bị từ chối, đồng bộ danh sách tiêu chí AI (thêm/sửa/xóa/đổi tên an toàn), kiểm tra concurrency version tránh ghi đè dữ liệu.
+  - `updateRequisition()`: Cập nhật đơn nháp/bị từ chối, đồng bộ danh sách tiêu chí AI (thêm/sửa/xóa/đổi tên an toàn), kiểm tra quyền/trạng thái dưới khóa ghi trong transaction.
   - `decide()`: Giám đốc phê duyệt hoặc từ chối kèm phản hồi bắt buộc.
   - `withdraw()`: Hiring Manager rút lại đơn đang chờ duyệt về trạng thái nháp.
-  - `copy()`: Nhân bản đơn cũ sang form mới (xóa ID và version để tạo bản ghi độc lập).
+  - `copy()`: Nhân bản đơn cũ sang form mới (xóa ID để tạo bản ghi độc lập).
   - `deleteRequisition()`: Xóa đơn nháp, kiểm tra bảo vệ chặn xóa nếu đơn đã được liên kết với Tin tuyển dụng (`JobPosting`).
 
 ### 7. Tầng Giao diện & Điều hướng (Controller & Thymeleaf UI)
@@ -93,10 +93,10 @@ Hệ thống được xây dựng theo kiến trúc phân tầng chuẩn của *
   - Lọc bỏ tự động các dòng tiêu chí trống (`blank`) khi lưu vào database.
 - [x] **Chức năng Chỉnh sửa (Update)**:
   - Cho phép sửa đơn ở trạng thái `Draft` hoặc `Rejected`.
-  - Áp dụng kiểm tra Version Optimistic Lock để ngăn chặn 2 người cùng sửa 1 lúc gây ghi đè dữ liệu.
+  - Dùng khóa ghi trong transaction để tuần tự hóa thao tác; chưa phát hiện form cũ đã mở trước một lần lưu khác.
 - [x] **Chức năng Sao chép (Copy)**:
   - Đọc dữ liệu từ bản ghi có sẵn và đổ vào form tạo mới.
-  - Reset `version` và toàn bộ `criteriaId` về null để không làm ảnh hưởng bản ghi gốc.
+  - Reset toàn bộ `criteriaId` về null để không làm ảnh hưởng bản ghi gốc.
 
 ### 3. Màn hình Xem chi tiết (`Job Requisition Details Screen`)
 - [x] Hiển thị đầy đủ thông tin chi tiết: Chức danh, Phòng ban, Lương min/max, Số lượng, Mô tả, Yêu cầu,...
@@ -146,7 +146,7 @@ Nhằm đảm bảo chất lượng code và phòng ngừa lỗi hồi quy (regr
   - **`it04_directorApprove_createsApprovalAndEvent`**: Kiểm tra luồng Director duyệt đơn, chuyển trạng thái `Approved`, lưu bản ghi `RequisitionApproval` và ghi nhận `RequisitionWorkflowEvent`.
   - **`it05_directorReject_recordsFeedback`**: Kiểm tra luồng Director từ chối đơn kèm lưu nhận xét lý do từ chối.
   - **`it06_withdraw_revertsToDraft`**: Kiểm tra Hiring Manager rút đơn `Pending_Director` về lại `Draft`.
-  - **`it08_copy_clearsIdentifiers`**: Kiểm tra sao chép đơn trả về DTO sạch (xóa version, xóa criteriaId).
+  - **`it08_copy_clearsIdentifiers`**: Kiểm tra sao chép đơn trả về DTO sạch (xóa criteriaId).
   - **`it10_delete_removesEntity`**: Kiểm tra xóa Requisition khỏi database thành công.
 
 ---
@@ -205,7 +205,7 @@ Nhằm đảm bảo chất lượng code và phòng ngừa lỗi hồi quy (regr
 
 - [x] **I2-NOTI-01 — Tái sử dụng thiết kế chung:** Kiểm tra thành phần Notification hiện có của dự án trước khi tạo mới. Xây dựng module dùng chung `com.group2.rms.notification` phẳng (< 10 files) theo `ARCHITECTURE_GUIDE.md`, tránh phụ thuộc vòng.
 - [x] **I2-NOTI-02 — Dữ liệu thông báo:** Lưu người nhận, loại sự kiện, ID requisition/posting liên quan, nội dung, thời gian tạo, trạng thái đọc và định danh sự kiện để chống tạo trùng. Có migration SQL `005_notification.sql` tương ứng.
-- [x] **I2-NOTI-03 — Phát sinh sau reject hợp lệ:** Khi Director từ chối Pending với feedback hợp lệ, lưu Rejected, approval, workflow event và thông báo cho đúng HM sở hữu requisition trong cùng giao dịch database. Không tạo thông báo khi validation/quyền/version thất bại hoặc giao dịch rollback.
+- [x] **I2-NOTI-03 — Phát sinh sau reject hợp lệ:** Khi Director từ chối Pending với feedback hợp lệ, lưu Rejected, approval, workflow event và thông báo cho đúng HM sở hữu requisition trong cùng giao dịch database. Không tạo thông báo khi validation/quyền/trạng thái thất bại hoặc giao dịch rollback.
 - [x] **I2-NOTI-04 — Nội dung:** Thông báo nêu requisition nào bị từ chối, ai từ chối, thời điểm và lý do. Có liên kết về đúng trang chi tiết để HM sửa và gửi lại.
 - [x] **I2-NOTI-05 — Giao diện nhận:** HM có danh sách/badge thông báo chưa đọc tại `/notifications`, mở được thông báo và đánh dấu đã đọc. Mỗi người chỉ xem/đánh dấu thông báo của chính mình; kiểm tra quyền ở server và khi mở liên kết đích.
 - [x] **I2-NOTI-06 — Chống trùng:** Gửi lại cùng request hoặc retry cùng sự kiện không tạo thông báo trùng qua `eventId`. Một lần reject mới sau khi HM resubmit tạo thông báo mới và vẫn giữ lịch sử cũ.

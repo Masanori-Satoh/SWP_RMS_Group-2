@@ -30,7 +30,6 @@ document.addEventListener('DOMContentLoaded', () => {
         deleteTrigger = menu ? document.querySelector(`[popovertarget="${menu.id}"]`) : button;
         closeMenus();
         document.getElementById('delete-name').textContent = button.dataset.title;
-        document.getElementById('delete-version').value = button.dataset.version;
         document.getElementById('delete-form').action = button.dataset.deleteUrl;
         dialog.showModal(); dialog.querySelector('[data-close-dialog]').focus();
     }));

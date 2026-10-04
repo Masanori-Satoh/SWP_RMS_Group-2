@@ -21,7 +21,7 @@
             <p class="field-help">Fields marked * are required to submit. You can save an incomplete draft.</p>
             </header>
             <form class="form-container" id="requisition-form" th:object="${requisitionDto}" th:action="${isEdit} ? @{/requisitions/edit/{id}(id=${requisitionId})} : @{/requisitions/create}" method="post">
-                <input type="hidden" th:field="*{version}"><p class="notice" th:if="${copyNotice}" th:text="${copyNotice}"></p>
+                <p class="notice" th:if="${copyNotice}" th:text="${copyNotice}"></p>
 
                 <section th:if="${#fields.hasAnyErrors()}" id="validation-summary" role="alert" tabindex="-1" class="alert alert-danger">
                     <p>Please check the following details:</p>

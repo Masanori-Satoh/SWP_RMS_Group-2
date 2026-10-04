@@ -8,7 +8,6 @@ import org.springframework.format.annotation.DateTimeFormat;
 @Data @Builder @NoArgsConstructor @AllArgsConstructor
 public class RequisitionRequest {
     private String action;
-    private Long version;
     private String title;
     private Integer departmentId;
     private Integer numberOfPositions;

@@ -48,13 +48,12 @@ import static org.mockito.Mockito.*;
  *               department không tồn tại trả lỗi field departmentId.
  * TODO [SVC-04] Update Draft/Rejected; chặn actor hoặc trạng thái không được sửa.
  * TODO [SVC-05] ID không tồn tại: exception thực tế, hiện là ResponseStatusException 404.
- * TODO [SVC-06] Thiếu/sai version trên update/delete/decide/withdraw -> không ghi đè state.
  * TODO [SVC-07] Approve/reject: đúng actor/status/record/timestamp/event;
  *               chặn sai role, tự duyệt, non-Pending, reject thiếu feedback, comment quá dài.
  * TODO [SVC-08] Withdraw: chủ request Pending được rút về Draft; sai chủ/trạng thái bị chặn.
- * TODO [SVC-09] Copy chỉ chuẩn bị form, không ghi DB; bỏ version/criteriaId, giữ nguyên nguồn.
+ * TODO [SVC-09] Copy chỉ chuẩn bị form, không ghi DB; bỏ criteriaId, giữ nguyên nguồn.
  *               Khi lưu hoặc submit bản copy mới gọi create với action tương ứng.
- * TODO [SVC-10] Delete: quyền/trạng thái/version; Job Posting liên kết chặn xóa;
+ * TODO [SVC-10] Delete: quyền/trạng thái; Job Posting liên kết chặn xóa;
  *               xóa phụ thuộc cần thiết và giữ audit history.
  * TODO [SVC-11] Criteria thêm/sửa/xóa; chặn ID của request khác hoặc dùng ID cũ khi create;
  *               map đúng mandatory/weight và các field còn lại.
@@ -237,7 +236,6 @@ class JobRequisitionServiceTest {
 
         JobRequisition req = JobRequisition.builder()
                 .requisitionId(50)
-                .version(1L)
                 .title("Senior Java")
                 .approvalStatus("Pending_Director")
                 .hiringManager(manager)
@@ -247,7 +245,7 @@ class JobRequisitionServiceTest {
         when(requisitions.findForUpdate(50)).thenReturn(Optional.of(req));
         when(access.canDecide(director, req)).thenReturn(true);
 
-        service.decide(50, 1L, false, "Budget exceeded");
+        service.decide(50, false, "Budget exceeded");
 
         assertEquals("Rejected", req.getApprovalStatus());
         assertNotNull(req.getDecidedAt());
@@ -272,6 +270,13 @@ class JobRequisitionServiceTest {
 
         service.search(1, 10, "", null, "", "", "newest");
 
-        verify(requisitions).findAll(any(org.springframework.data.jpa.domain.Specification.class), any(org.springframework.data.domain.Pageable.class));
+        var filter = ArgumentCaptor.forClass(org.springframework.data.jpa.domain.Specification.class);
+        verify(requisitions).findAll(filter.capture(), any(org.springframework.data.domain.Pageable.class));
+        var root = mock(jakarta.persistence.criteria.Root.class);
+        var builder = mock(jakarta.persistence.criteria.CriteriaBuilder.class);
+        var status = mock(jakarta.persistence.criteria.Path.class);
+        when(root.get("approvalStatus")).thenReturn(status);
+        filter.getValue().toPredicate(root, null, builder);
+        verify(builder).equal(status, "Approved");
     }
 }

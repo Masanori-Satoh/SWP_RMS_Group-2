@@ -91,12 +91,12 @@ public class RequisitionServiceImpl implements RequisitionService {
     @Override @Transactional(readOnly=true)
     public RequisitionRequest copy(Integer id) {
         var actor=access.actor();access.requireCreate(actor);var r=find(id,false);access.requireView(actor,r);
-        var copy=request(r);copy.setVersion(null);copy.getScreeningCriteria().forEach(c->c.setCriteriaId(null));return copy;
+        var copy=request(r);copy.getScreeningCriteria().forEach(c->c.setCriteriaId(null));return copy;
     }
     private RequisitionRequest request(JobRequisition r) {
         var rows=r.getScreeningCriteria().stream().map(c->ScreeningCriteriaRequest.builder().criteriaId(c.getCriteriaId()).criteriaName(c.getCriteriaName())
             .criteriaType(c.getCriteriaType()).requiredValue(c.getRequiredValue()).weight(c.getWeight()).isMandatory(c.getIsMandatory()).build()).collect(Collectors.toCollection(ArrayList::new));
-        return RequisitionRequest.builder().version(r.getVersion()).title(r.getTitle()).departmentId(r.getDepartment()==null?null:r.getDepartment().getDepartmentId())
+        return RequisitionRequest.builder().title(r.getTitle()).departmentId(r.getDepartment()==null?null:r.getDepartment().getDepartmentId())
             .numberOfPositions(r.getNumberOfPositions()).employmentType(r.getEmploymentType()).minSalary(r.getMinSalary()).maxSalary(r.getMaxSalary())
             .gender(r.getGender()).workLocation(r.getWorkLocation()).workModel(r.getWorkModel()).probationDuration(r.getProbationDuration()).expectedStartDate(r.getExpectedStartDate())
             .reasonForHiring(r.getReasonForHiring()).jobDescription(r.getJobDescription()).requirementDetails(r.getRequirementDetails()).screeningCriteria(rows).build();
@@ -115,7 +115,7 @@ public class RequisitionServiceImpl implements RequisitionService {
     }
     @Override
     public void updateRequisition(Integer id,RequisitionRequest d) {
-        var actor=access.actor();var r=find(id,true);access.requireEdit(actor,r);version(r,d.getVersion());validator.validate(d);
+        var actor=access.actor();var r=find(id,true);access.requireEdit(actor,r);validator.validate(d);
         var before=snapshot(r);synchronizeCriteria(r,d.getScreeningCriteria());apply(r,d);
         r.setApprovalStatus("submit".equals(d.getAction())?"Pending_Director":"Draft");
         if("submit".equals(d.getAction())) { r.setSubmittedAt(LocalDateTime.now());r.setDecidedAt(null);event(r,actor,"Submitted","Sent to the Director approval queue."); }
@@ -148,16 +148,16 @@ public class RequisitionServiceImpl implements RequisitionService {
         r.setReasonForHiring(d.getReasonForHiring());r.setJobDescription(d.getJobDescription());r.setRequirementDetails(d.getRequirementDetails());
     }
     @Override
-    public void deleteRequisition(Integer id,Long expectedVersion) {
-        var actor=access.actor();var r=find(id,true);access.requireEdit(actor,r);version(r,expectedVersion);
+    public void deleteRequisition(Integer id) {
+        var actor=access.actor();var r=find(id,true);access.requireEdit(actor,r);
         if(postings.existsByRequisition_RequisitionId(id))throw invalid("action","This request has linked job postings and cannot be deleted.");
         log(r,actor,"DELETE",null,"Deleted requisition: "+r.getTitle());
         approvals.deleteAll(approvals.findByRequisition_RequisitionIdOrderByApprovalDateDesc(id));events.deleteByRequisition_RequisitionId(id);
         requisitions.delete(r);requisitions.flush();
     }
     @Override
-    public void decide(Integer id,Long expectedVersion,boolean approved,String comment) {
-        var actor=access.actor();var r=find(id,true);access.requireView(actor,r);version(r,expectedVersion);
+    public void decide(Integer id,boolean approved,String comment) {
+        var actor=access.actor();var r=find(id,true);access.requireView(actor,r);
         if(!access.canDecide(actor,r))throw new AccessDeniedException("Only a Director can decide a pending request.");
         comment=RequisitionValidator.clean(comment);
         if(!approved&&comment==null)throw invalid("comment","Explain what the Hiring Manager must change.");
@@ -171,14 +171,13 @@ public class RequisitionServiceImpl implements RequisitionService {
         }
     }
     @Override
-    public void withdraw(Integer id,Long expectedVersion) {
-        var actor=access.actor();var r=find(id,true);access.requireView(actor,r);version(r,expectedVersion);
+    public void withdraw(Integer id) {
+        var actor=access.actor();var r=find(id,true);access.requireView(actor,r);
         if(!access.owns(actor,r)||!"Pending_Director".equals(r.getApprovalStatus()))throw new AccessDeniedException("Only the requester can withdraw a pending request.");
         r.setApprovalStatus("Draft");requisitions.saveAndFlush(r);event(r,actor,"Withdrawn","Withdrawn for editing.");
         log(r,actor,"UPDATE","Status: Pending_Director","Status: Pending_Director → Draft (withdrawn)");
     }
     private JobRequisition find(Integer id,boolean lock) { return (lock?requisitions.findForUpdate(id):requisitions.findById(id)).orElseThrow(()->new ResponseStatusException(HttpStatus.NOT_FOUND,"Requisition not found.")); }
-    private void version(JobRequisition r,Long expected) { if(expected==null||!Objects.equals(r.getVersion(),expected))throw invalid("action","This request has changed. Reload the page before trying again."); }
     private RequisitionValidationException invalid(String field,String message) { return new RequisitionValidationException(Map.of(field,message)); }
     private void log(JobRequisition r,User actor,String action,String old,String text) { audit.save(AuditLog.builder().user(actor).action(action).entityName("JobRequisition").entityId(r.getRequisitionId().toString()).oldValue(old).newValue(text).build()); }
     private void event(JobRequisition r,User actor,String type,String comment) { events.save(RequisitionWorkflowEvent.builder().requisition(r).actor(actor).eventType(type).occurredAt(LocalDateTime.now()).comment(comment).build()); }
@@ -193,7 +192,7 @@ public class RequisitionServiceImpl implements RequisitionService {
     }
     private RequisitionResponse response(JobRequisition r,User actor,boolean detail) {
         boolean editable=access.canEdit(actor,r);
-        var d=RequisitionResponse.builder().requisitionId(r.getRequisitionId()).version(r.getVersion()).title(r.getTitle())
+        var d=RequisitionResponse.builder().requisitionId(r.getRequisitionId()).title(r.getTitle())
             .departmentName(r.getDepartment()==null?"Not specified":r.getDepartment().getDepartmentName()).hiringManagerName(r.getHiringManager().getFullName())
             .numberOfPositions(r.getNumberOfPositions()).employmentType(r.getEmploymentType()).approvalStatus(r.getApprovalStatus()).createdAt(r.getCreatedAt())
             .minSalary(r.getMinSalary()).maxSalary(r.getMaxSalary()).gender(r.getGender()).workLocation(r.getWorkLocation()).workModel(r.getWorkModel()).probationDuration(r.getProbationDuration()).expectedStartDate(r.getExpectedStartDate())

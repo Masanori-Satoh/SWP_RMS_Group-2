@@ -13,7 +13,7 @@ public interface RequisitionService {
  RequisitionRequest copy(Integer id);
  Integer createRequisition(RequisitionRequest dto);
  void updateRequisition(Integer id,RequisitionRequest dto);
- void deleteRequisition(Integer id,Long version);
- void decide(Integer id,Long version,boolean approved,String comment);
- void withdraw(Integer id,Long version);
+ void deleteRequisition(Integer id);
+ void decide(Integer id,boolean approved,String comment);
+ void withdraw(Integer id);
 }

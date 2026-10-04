@@ -128,8 +128,7 @@
                                             <button th:if="${req.deletable}" type="button" class="delete-action"
                                                 data-delete-requisition
                                                 th:data-delete-url="@{/requisitions/delete/{id}(id=${req.requisitionId})}"
-                                                th:data-title="${req.title}"
-                                                th:data-version="${req.version}">Delete</button>
+                                                th:data-title="${req.title}">Delete</button>
                                         </div>
                                     </td>
                                 </tr>

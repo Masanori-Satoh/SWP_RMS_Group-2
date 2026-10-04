@@ -30,7 +30,10 @@ public class NotificationServiceImpl implements NotificationService {
         }
 
         User recipient = requisition.getHiringManager();
-        String eventId = "REQ_REJECT_" + requisition.getRequisitionId() + "_V" + requisition.getVersion();
+        String decidedTime = requisition.getDecidedAt() != null
+            ? requisition.getDecidedAt().format(DateTimeFormatter.ofPattern("yyyyMMddHHmmssSSSSSSS"))
+            : LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMddHHmmssSSSSSSS"));
+        String eventId = "REQ_REJECT_" + requisition.getRequisitionId() + "_" + decidedTime;
 
         // Idempotency: Kiểm tra chống trùng lặp nếu retry cùng sự kiện
         if (notificationRepository.existsByEventId(eventId)) {

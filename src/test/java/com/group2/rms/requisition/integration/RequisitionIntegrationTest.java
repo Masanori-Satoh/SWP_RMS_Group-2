@@ -174,7 +174,7 @@ class RequisitionIntegrationTest {
                 .screeningCriteria(new ArrayList<>())
                 .build());
 
-        service.decide(req.getRequisitionId(), req.getVersion(), true, "Approved for hiring");
+        service.decide(req.getRequisitionId(), true, "Approved for hiring");
 
         JobRequisition updated = requisitions.findById(req.getRequisitionId()).orElseThrow();
         assertEquals("Approved", updated.getApprovalStatus());
@@ -199,7 +199,7 @@ class RequisitionIntegrationTest {
                 .screeningCriteria(new ArrayList<>())
                 .build());
 
-        service.decide(req.getRequisitionId(), req.getVersion(), false, "Need more budget details");
+        service.decide(req.getRequisitionId(), false, "Need more budget details");
 
         JobRequisition updated = requisitions.findById(req.getRequisitionId()).orElseThrow();
         assertEquals("Rejected", updated.getApprovalStatus());
@@ -226,7 +226,7 @@ class RequisitionIntegrationTest {
                 .screeningCriteria(new ArrayList<>())
                 .build());
 
-        service.withdraw(req.getRequisitionId(), req.getVersion());
+        service.withdraw(req.getRequisitionId());
 
         JobRequisition updated = requisitions.findById(req.getRequisitionId()).orElseThrow();
         assertEquals("Draft", updated.getApprovalStatus());
@@ -238,7 +238,7 @@ class RequisitionIntegrationTest {
 
     @Test
     @WithMockUser(username = "it_hm", roles = "HIRING_MANAGER")
-    @DisplayName("IT-08: Copy -> Trả về DTO mới, version null, criteriaId null, chưa lưu DB")
+    @DisplayName("IT-08: Copy -> Trả về DTO mới, criteriaId null, chưa lưu DB")
     void it08_copy_clearsIdentifiers() {
         JobRequisition original = requisitions.save(JobRequisition.builder()
                 .title("Original Requisition")
@@ -251,7 +251,6 @@ class RequisitionIntegrationTest {
         RequisitionRequest copy = service.copy(original.getRequisitionId());
 
         assertEquals("Original Requisition", copy.getTitle());
-        assertNull(copy.getVersion(), "Bản copy phải xóa version");
     }
 
     // =========================================================================
@@ -271,7 +270,7 @@ class RequisitionIntegrationTest {
                 .build());
 
         Integer id = req.getRequisitionId();
-        service.deleteRequisition(id, req.getVersion());
+        service.deleteRequisition(id);
 
         assertTrue(requisitions.findById(id).isEmpty());
     }

@@ -241,7 +241,6 @@
                                 <h3>Director Decision</h3>
                                 <form id="decision-form"
                                     th:action="@{/requisitions/{id}/decision(id=${req.requisitionId})}" method="post">
-                                    <input type="hidden" name="version" th:value="${req.version}">
                                     <div class="decision-field">
                                         <label for="decision-comment">Feedback
                                             <span>(required when
@@ -302,7 +301,6 @@
                             <div class="detail-actions">
                                 <form class="withdraw-form" th:if="${req.withdrawable}"
                                     th:action="@{/requisitions/{id}/withdraw(id=${req.requisitionId})}" method="post">
-                                    <input type="hidden" name="version" th:value="${req.version}">
                                     <button type="submit" class="btn-outline">Withdraw to edit</button>
                                 </form>
                                 <a th:if="${req.editable}" th:href="@{/requisitions/edit/{id}(id=${req.requisitionId})}"
@@ -311,7 +309,7 @@
                                 <button th:if="${req.deletable}" type="button" class="btn-outline btn-danger"
                                     data-delete-requisition
                                     th:data-delete-url="@{/requisitions/delete/{id}(id=${req.requisitionId})}"
-                                    th:data-title="${req.title}" th:data-version="${req.version}">Delete
+                                    th:data-title="${req.title}">Delete
                                     requisition</button>
                                 <p th:if="${req.editable and !req.deletable}">Deletion is unavailable
                                     because this requisition has linked job postings.</p>

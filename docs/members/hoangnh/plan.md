@@ -74,7 +74,7 @@ Ghi quyết định cuối cùng và ngày chốt ngay tại bảng này trướ
 1. HM tạo requisition, nhập dữ liệu và Submit to Director.
 2. Server validate; lỗi trả lại form và giữ input; hợp lệ lưu `Pending_Director`.
 3. Director mở đúng request, chọn Reject và nhập feedback.
-4. Trong một transaction: kiểm tra quyền/status/version, lưu `Rejected`, approval, event, audit và notification cho HM.
+4. Trong một transaction: kiểm tra quyền/status dưới khóa ghi, lưu `Rejected`, approval, event, audit và notification cho HM.
 5. HM thấy thông báo chưa đọc, mở được detail với lý do từ chối.
 6. Nếu HM tiếp tục: sửa request đó, validate, resubmit cùng ID, giữ lịch sử reject trước đó.
 7. Nếu HM không tiếp tục: request giữ Rejected; không tự xóa hoặc đổi trạng thái ngoài sơ đồ.
@@ -270,9 +270,9 @@ Hợp đồng lỗi của posting mới không tự thay đổi HTTP behavior c�
 | --- | --- | --- |
 | T-REQ-01 | HR list/count/detail với đủ bốn status | Access + MVC + DB; chỉ Approved, status khác 403 khi detail |
 | T-REQ-02 | HR đổi query/status/ID, HR từng là owner | Security; không bypass Approved-only |
-| T-REQ-03 | HM submit; Director approve/reject; HM resubmit | Service + integration; đúng state, version, approval/event/audit |
+| T-REQ-03 | HM submit; Director approve/reject; HM resubmit | Service + integration; đúng state, approval/event/audit |
 | T-NOT-01 | Reject hợp lệ | Notification đúng HM, đúng feedback/link, chưa đọc |
-| T-NOT-02 | Reject thiếu lý do, sai quyền, stale version | Không thay state, không thêm notification thành công |
+| T-NOT-02 | Reject thiếu lý do, sai quyền, sai trạng thái | Không thay state, không thêm notification thành công |
 | T-NOT-03 | Retry cùng sự kiện; reject mới sau resubmit | Một thông báo cho retry; thông báo mới cho quyết định mới |
 | T-NOT-04 | HM khác list/read/count hoặc giả recipientId | Không lộ nội dung/count; read sai chủ bị chặn |
 | T-NOT-05 | Read hai lần; đối tượng nguồn đã xóa | Read idempotent; link không còn xử lý rõ, không lỗi 500 |

@@ -34,7 +34,7 @@ Pull Request này tập trung vào 3 mục tiêu chính:
 * **Tầng Service & Controller (`com.group2.rms.notification`):**
   * `NotificationService` & `NotificationServiceImpl`:
     * Phương thức `notifyRequisitionRejected()`: Kích hoạt tạo thông báo chi tiết cho Hiring Manager khi đơn bị từ chối.
-    * Tích hợp kiểm tra **Idempotency** thông qua `eventId = "REQ_REJECT_{id}_V{version}"`, ngăn chặn tạo trùng thông báo khi người dùng retry hoặc gửi lại request.
+    * Tích hợp kiểm tra **Idempotency** thông qua `eventId = "REQ_REJECT_{id}_{decidedTime}"`, ngăn chặn tạo trùng thông báo khi người dùng retry hoặc gửi lại request.
     * Xử lý đánh dấu đã đọc (`markAsRead`, `markAllAsRead`) có kiểm tra quyền sở hữu thông báo.
   * `NotificationController`:
     * Route `GET /notifications`: Render giao diện danh sách thông báo của tài khoản đang đăng nhập.
@@ -52,7 +52,15 @@ Pull Request này tập trung vào 3 mục tiêu chính:
 
 ---
 
-### 3. Giải quyết Xung đột Merge `main`, Cấu hình & Giao diện Sidebar
+### 3. Đồng bộ Schema Database và Loại bỏ Trường `Version`
+
+* **Khôi phục tương thích Database dùng chung (`db.sql`):**
+  * Gỡ bỏ hoàn toàn trường `@Version private Long version` khỏi entity `JobRequisition`, các DTO (`RequisitionRequest`, `RequisitionResponse`), giao diện form/modal HTML và API controller.
+  * Không yêu cầu nhóm thêm cột `Version`. Giữ nguyên `database/schema/db.sql`; những chênh lệch schema khác cần được kiểm tra riêng trước khi merge.
+
+---
+
+### 4. Giải quyết Xung đột Merge `main`, Cấu hình & Giao diện Sidebar
 
 * **Khắc phục lỗi biên dịch & Import:** Cập nhật lại đường dẫn import đúng của module `admin` (`com.group2.rms.admin.dto.ActivityLogResponse`, `admin.entity.AuditLog`, `admin.repository.AuditLogRepository`) sau khi nhánh `main` tái cấu trúc package; dọn sạch các thẻ conflict Git.
 * **Đồng bộ Schema Entity:** Ánh xạ lại `@Column(name = "RequiredGender")` trong `JobRequisition.java` khớp với cột trong cơ sở dữ liệu SQL Server.

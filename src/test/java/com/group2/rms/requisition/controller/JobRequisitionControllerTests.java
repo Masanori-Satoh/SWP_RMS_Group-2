@@ -87,7 +87,7 @@ class JobRequisitionControllerTests {
     void list_returnsListViewAndModel() throws Exception {
         when(service.search(anyInt(), anyInt(), anyString(), any(), anyString(), anyString(), anyString()))
                 .thenReturn(new PageImpl<>(List.of(RequisitionResponse.builder()
-                        .requisitionId(1).version(0L).title("Backend Engineer")
+                        .requisitionId(1).title("Backend Engineer")
                         .approvalStatus("Draft").createdAt(java.time.LocalDateTime.now())
                         .editable(true).deletable(true).build())));
         when(service.countVisible()).thenReturn(1L);
@@ -169,7 +169,6 @@ class JobRequisitionControllerTests {
     void update_success_redirectsToDetail() throws Exception {
         mvc.perform(post("/requisitions/edit/10")
                         .with(csrf())
-                        .param("version", "1")
                         .param("action", "submit")
                         .param("title", "Updated Title"))
                 .andExpect(status().is3xxRedirection())
@@ -184,13 +183,12 @@ class JobRequisitionControllerTests {
     @DisplayName("POST /requisitions/delete/{id} -> Xóa thành công redirect về list")
     void delete_success_redirectsToList() throws Exception {
         mvc.perform(post("/requisitions/delete/10")
-                        .with(csrf())
-                        .param("version", "2"))
+                        .with(csrf()))
                 .andExpect(status().is3xxRedirection())
                 .andExpect(redirectedUrl("/requisitions"))
                 .andExpect(flash().attribute("successMessage", "Requisition deleted."));
 
-        verify(service).deleteRequisition(10, 2L);
+        verify(service).deleteRequisition(10);
     }
 
     @Test
@@ -199,14 +197,13 @@ class JobRequisitionControllerTests {
     void decision_approve_success() throws Exception {
         mvc.perform(post("/requisitions/10/decision")
                         .with(csrf())
-                        .param("version", "1")
                         .param("decision", "approve")
                         .param("comment", "Looks good"))
                 .andExpect(status().is3xxRedirection())
                 .andExpect(redirectedUrl("/requisitions/10"))
                 .andExpect(flash().attribute("successMessage", "Decision saved."));
 
-        verify(service).decide(10, 1L, true, "Looks good");
+        verify(service).decide(10, true, "Looks good");
     }
 
     @Test
@@ -214,13 +211,12 @@ class JobRequisitionControllerTests {
     @DisplayName("POST /requisitions/{id}/withdraw -> Rút request thành công redirect về detail")
     void withdraw_success_redirectsToDetail() throws Exception {
         mvc.perform(post("/requisitions/10/withdraw")
-                        .with(csrf())
-                        .param("version", "1"))
+                        .with(csrf()))
                 .andExpect(status().is3xxRedirection())
                 .andExpect(redirectedUrl("/requisitions/10"))
                 .andExpect(flash().attribute("successMessage", "Request withdrawn. You can edit the draft."));
 
-        verify(service).withdraw(10, 1L);
+        verify(service).withdraw(10);
     }
 
     // =========================================================================

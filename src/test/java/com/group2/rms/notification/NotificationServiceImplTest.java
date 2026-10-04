@@ -44,7 +44,7 @@ class NotificationServiceImplTest {
                 .requisitionId(101)
                 .title("Senior Java Engineer")
                 .hiringManager(manager)
-                .version(2L)
+                .decidedAt(LocalDateTime.of(2026, 10, 4, 9, 30, 0, 123456700))
                 .build();
     }
 
@@ -67,17 +67,27 @@ class NotificationServiceImplTest {
         assertTrue(saved.getTitle().contains("Senior Java Engineer"));
         assertTrue(saved.getContent().contains("Kinh phí dự kiến vượt trần"));
         assertTrue(saved.getContent().contains("Director B"));
-        assertEquals("REQ_REJECT_101_V2", saved.getEventId());
+        assertEquals("REQ_REJECT_101_202610040930001234567", saved.getEventId());
     }
 
     @Test
     @DisplayName("notifyRequisitionRejected: Idempotent - Nếu cùng eventId đã tồn tại thì không tạo lại")
     void notifyRequisitionRejected_idempotent_skipsDuplicate() {
-        when(notificationRepository.existsByEventId("REQ_REJECT_101_V2")).thenReturn(true);
+        when(notificationRepository.existsByEventId("REQ_REJECT_101_202610040930001234567")).thenReturn(true);
 
         notificationService.notifyRequisitionRejected(requisition, director, "Duplicate test");
 
         verify(notificationRepository, never()).save(any());
+    }
+
+    @Test
+    void separateDecisionsWithinOneSecond_haveDifferentEventIds() {
+        notificationService.notifyRequisitionRejected(requisition, director, "First rejection");
+        requisition.setDecidedAt(requisition.getDecidedAt().plusNanos(100));
+        notificationService.notifyRequisitionRejected(requisition, director, "Second rejection");
+        var captor = ArgumentCaptor.forClass(Notification.class);
+        verify(notificationRepository, times(2)).save(captor.capture());
+        assertNotEquals(captor.getAllValues().get(0).getEventId(), captor.getAllValues().get(1).getEventId());
     }
 
     @Test

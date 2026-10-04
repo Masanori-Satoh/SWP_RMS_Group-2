@@ -10,7 +10,6 @@ import com.group2.rms.user.repository.DepartmentRepository;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.dao.DataIntegrityViolationException;
-import org.springframework.dao.OptimisticLockingFailureException;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
@@ -28,7 +27,7 @@ public class RequisitionController {
     @InitBinder("requisitionDto")
     void binder(WebDataBinder binder) {
         binder.setAutoGrowCollectionLimit(50);
-        binder.setAllowedFields("action","version","title","departmentId","numberOfPositions","employmentType","minSalary","maxSalary",
+        binder.setAllowedFields("action","title","departmentId","numberOfPositions","employmentType","minSalary","maxSalary",
             "gender","workLocation","workModel","probationDuration","expectedStartDate","reasonForHiring","jobDescription","requirementDetails",
             "screeningCriteria[*].criteriaId","screeningCriteria[*].criteriaName","screeningCriteria[*].criteriaType",
             "screeningCriteria[*].requiredValue","screeningCriteria[*].weight","screeningCriteria[*].isMandatory");
@@ -75,27 +74,27 @@ public class RequisitionController {
     @PostMapping("/edit/{id}")
     public String update(@PathVariable Integer id,@ModelAttribute("requisitionDto") RequisitionRequest d,BindingResult errors,Model model,RedirectAttributes flash) {
         if(!errors.hasErrors())try { service.updateRequisition(id,d);flash.addFlashAttribute("successMessage","submit".equals(d.getAction())?"Request submitted to Director.":"Draft saved.");return "redirect:/requisitions/"+id; }
-        catch(RequisitionValidationException e){addErrors(errors,e);}catch(OptimisticLockingFailureException e){errors.reject("stale","This request changed. Reload the form.");}
+        catch(RequisitionValidationException e){addErrors(errors,e);}
         catch(DataIntegrityViolationException e){errors.reject("storage","The data could not be saved. Check duplicate criteria and field values.");}
         return form(model,true,id);
     }
     @PostMapping("/delete/{id}")
-    public String delete(@PathVariable Integer id,@RequestParam Long version,RedirectAttributes flash) {
-        try { service.deleteRequisition(id,version);flash.addFlashAttribute("successMessage","Requisition deleted.");return "redirect:/requisitions"; }
+    public String delete(@PathVariable Integer id,RedirectAttributes flash) {
+        try { service.deleteRequisition(id);flash.addFlashAttribute("successMessage","Requisition deleted.");return "redirect:/requisitions"; }
         catch(RequisitionValidationException e){flash.addFlashAttribute("failureMessage",e.getMessage());}
         catch(DataIntegrityViolationException e){flash.addFlashAttribute("failureMessage","This request is linked to other records and cannot be deleted.");}
         return "redirect:/requisitions/"+id;
     }
     @PostMapping("/{id}/decision")
-    public String decide(@PathVariable Integer id,@RequestParam Long version,@RequestParam String decision,@RequestParam(defaultValue="") String comment,RedirectAttributes flash) {
+    public String decide(@PathVariable Integer id,@RequestParam String decision,@RequestParam(defaultValue="") String comment,RedirectAttributes flash) {
         if(!"approve".equals(decision)&&!"reject".equals(decision))flash.addFlashAttribute("failureMessage","Choose an approval decision.");
-        else try {service.decide(id,version,"approve".equals(decision),comment);flash.addFlashAttribute("successMessage","Decision saved.");}
+        else try {service.decide(id,"approve".equals(decision),comment);flash.addFlashAttribute("successMessage","Decision saved.");}
         catch(RequisitionValidationException e){flash.addFlashAttribute("failureMessage",e.getMessage());flash.addFlashAttribute("decisionComment",comment);}
         return "redirect:/requisitions/"+id;
     }
     @PostMapping("/{id}/withdraw")
-    public String withdraw(@PathVariable Integer id,@RequestParam Long version,RedirectAttributes flash) {
-        try { service.withdraw(id,version);flash.addFlashAttribute("successMessage","Request withdrawn. You can edit the draft."); }
+    public String withdraw(@PathVariable Integer id,RedirectAttributes flash) {
+        try { service.withdraw(id);flash.addFlashAttribute("successMessage","Request withdrawn. You can edit the draft."); }
         catch(RequisitionValidationException e){flash.addFlashAttribute("failureMessage",e.getMessage());}
         return "redirect:/requisitions/"+id;
     }

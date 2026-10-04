@@ -18,7 +18,6 @@ import lombok.Setter;
 public class RequisitionResponse {
     private Integer requisitionId;
     private String title;
-    private Long version;
     private String gender;
     private String workLocation;
     private String workModel;

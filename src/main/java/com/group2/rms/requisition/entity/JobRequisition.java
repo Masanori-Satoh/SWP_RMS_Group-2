@@ -82,8 +82,6 @@ public class JobRequisition extends BaseEntity {
     private java.time.LocalDateTime submittedAt;
     @Column(name = "DecidedAt")
     private java.time.LocalDateTime decidedAt;
-    @Version @Column(name = "Version", nullable = false)
-    private Long version;
 
     @OneToMany(mappedBy = "requisition", cascade = CascadeType.ALL, orphanRemoval = true)
     private java.util.List<ScreeningCriteria> screeningCriteria;

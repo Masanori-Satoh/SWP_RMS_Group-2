@@ -35,7 +35,7 @@ Tuân thủ nghiêm ngặt theo quy chuẩn kiến trúc **Package-by-Feature** 
   * Chứa đầy đủ `Notification`, `NotificationRepository`, `NotificationService`, `NotificationServiceImpl`, `NotificationController`, `NotificationResponse`.
 
 ### 2. Các Thực thể Cơ sở dữ liệu (Database Entities)
-* **`JobRequisition`**: Lưu trữ toàn bộ thông tin đơn (Tiêu đề, Phòng ban, Số lượng, Loại hình, Mức lương min/max, Địa điểm, Mô hình làm việc, Hạn thử việc, Ngày bắt đầu, Trạng thái phê duyệt, Concurrency Version `@Version`).
+* **`JobRequisition`**: Lưu trữ toàn bộ thông tin đơn (Tiêu đề, Phòng ban, Số lượng, Loại hình, Mức lương min/max, Địa điểm, Mô hình làm việc, Hạn thử việc, Ngày bắt đầu, Trạng thái phê duyệt).
 * **`ScreeningCriteria`**: Quan hệ 1–N với `JobRequisition`, lưu danh sách tiêu chí AI (Tên tiêu chí, Loại tiêu chí: Skill/Education/Experience/Knockout, Giá trị yêu cầu, Trọng số điểm Weight %, Cờ bắt buộc isMandatory).
 * **`RequisitionApproval`**: Lưu lịch sử các lần Giám đốc phê duyệt hoặc từ chối kèm phản hồi.
 * **`RequisitionWorkflowEvent`**: Lưu dòng thời gian (Timeline) các sự kiện luân chuyển trạng thái (Submitted, Approved, Rejected, Withdrawn).
@@ -62,8 +62,8 @@ Tuân thủ nghiêm ngặt theo quy chuẩn kiến trúc **Package-by-Feature** 
 - [x] **Lưu nháp (Save Draft):** Cho phép Hiring Manager lưu lại tiến độ đang làm dở mà không bắt buộc điền hết mọi trường.
 - [x] **Nộp duyệt (Submit to Director):** Server kiểm tra nghiêm ngặt: tiêu đề, phòng ban, số lượng > 0, ngày bắt đầu từ hiện tại trở đi, mô tả, yêu cầu; tổng trọng số tiêu chí AI bắt buộc phải tròn **100%**.
 - [x] **Quản lý Tiêu chí AI động:** Thêm/xóa dòng tiêu chí trực tiếp trên giao diện bằng JavaScript, tự động lọc bỏ các dòng trống khi lưu DB.
-- [x] **Chỉnh sửa an toàn (Edit):** Cho phép sửa đơn ở trạng thái `Draft` hoặc `Rejected`, kiểm tra Concurrency `@Version` chống xung đột ghi đè.
-- [x] **Sao chép đơn (Copy Requisition):** Nhân bản nhanh một đơn cũ sang form mới (tự động reset `version` và toàn bộ `criteriaId` về null).
+- [x] **Chỉnh sửa (Edit):** Cho phép sửa đơn ở trạng thái `Draft` hoặc `Rejected`; kiểm tra quyền và trạng thái dưới khóa ghi trong transaction. Khóa không phát hiện form cũ đã mở trước một lần lưu khác.
+- [x] **Sao chép đơn (Copy Requisition):** Nhân bản nhanh một đơn cũ sang form mới (tự động reset toàn bộ `criteriaId` về null).
 
 ### 3. Màn hình Chi tiết Requisition (Requisition Details Screen — 5.1.16)
 - [x] **Xem chi tiết đa chiều:** Hiển thị thông số tuyển dụng, bảng tiêu chí AI, lịch sử duyệt và Timeline tiến trình trực quan.
