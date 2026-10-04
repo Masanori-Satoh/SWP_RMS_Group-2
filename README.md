@@ -1,89 +1,98 @@
 # Recruitment Management System (RMS) - Group 2 (SE2064)
 
-Dự án Hệ thống Quản lý Tuyển dụng (RMS) sử dụng **Spring Boot 3.5.16**, **Thymeleaf**, và **MS SQL Server**.
+Hệ thống Quản lý Tuyển dụng (RMS) được xây dựng trên nền tảng **Spring Boot 3.5.16**, **Thymeleaf**, **Spring Security**, và **Microsoft SQL Server**.
 
-Database hiện hành: [`database/schema/db.sql`](database/schema/db.sql).
-Xem [nhật ký công việc](docs/management/WORK_LOG.md) để tiếp tục dự án và
-[kịch bản kiểm thử từng bước](docs/management/TEST_PLAN.md) trước khi xác nhận tính năng.
-Kết quả theo từng đợt được ghi tại [thư mục tests](docs/tests/README.md).
-
-**📚 TÀI LIỆU DỰ ÁN (DOCS HUB):**
-- 🕒 **[Nhật ký công việc (Work Log)](docs/management/WORK_LOG.md):** Xem lịch sử thay đổi mỗi ngày, hôm nay ai làm gì, module nào được cập nhật.
-- 🏗️ **[Quy chuẩn Kiến trúc](docs/architecture/ARCHITECTURE_GUIDE.md):** Hướng dẫn cấu trúc code (Package-by-Feature), Naming Convention (thể hiện trạng thái hệ thống hiện tại).
-- 🗄️ **[Tài liệu Database](docs/database/model.md):** Cấu trúc DB và hướng dẫn [Seeding dữ liệu](docs/database/data_seeding_guide.md).
-- 🧪 **[Kế hoạch Kiểm thử](docs/management/TEST_PLAN.md):** Các bước test hệ thống.
-- ⚠️ **[Tác động Schema](docs/architecture/schema-migration-impact.md):** Ghi chú các ảnh hưởng khi cập nhật DB.
+* **Database hiện hành (Source of Truth):** [`database/schema/db.sql`](database/schema/db.sql)
+* **Nhật ký tiến độ dự án:** [docs/management/WORK_LOG.md](docs/management/WORK_LOG.md)
+* **Quy chuẩn kiến trúc & Lập trình:** [docs/architecture/ARCHITECTURE_GUIDE.md](docs/architecture/ARCHITECTURE_GUIDE.md)
 
 ---
 
-## 🚀 1. YÊU CẦU CÀI ĐẶT
+## 📚 TRUNG TÂM TÀI LIỆU DỰ ÁN (DOCS HUB)
 
-Các phần mềm **BẮT BUỘC** cài đặt:
+Vui lòng tham khảo các tài liệu chuyên đề trước khi bắt tay vào code hoặc kiểm thử:
+* 🏗️ **[Quy chuẩn Kiến trúc (Architecture Guide)](docs/architecture/ARCHITECTURE_GUIDE.md):** Cấu trúc Package-by-Feature, quy chuẩn đặt tên DTO, xử lý ngoại lệ toàn cục `GlobalExceptionHandler`, quy chuẩn Frontend (CSS/JS tách biệt, CSRF, Unicode).
+* 🕒 **[Nhật ký công việc (Work Log)](docs/management/WORK_LOG.md):** Lịch sử thay đổi từng ngày của team, theo dõi module nào vừa được cập nhật qua các PR.
+* 🗄️ **[Thiết kế Cơ sở Dữ liệu](docs/database/model.md):** Sơ đồ quan hệ thực thể (ERD), bảng danh mục và ý nghĩa các trường.
+* 🌱 **[Hướng dẫn Seeding Dữ liệu](docs/database/data_seeding_guide.md):** Hướng dẫn nạp dữ liệu mẫu ban đầu để kiểm thử hệ thống.
+* ⚠️ **[Đánh giá Tác động Schema](docs/architecture/schema-migration-impact.md):** Báo cáo ảnh hưởng khi thay đổi cấu trúc bảng.
+* 📂 **[Hướng dẫn Tổ chức Thư mục Docs](docs/README.md):** Quy định lưu trữ tài liệu chung và tài liệu cá nhân của từng thành viên.
 
-1. **JDK 21 LTS** ([Tải tại đây](https://download.oracle.com/java/21/archive/jdk-21.0.12_windows-x64_bin.exe))
-   - Khuyên dùng: Oracle JDK 21. Nhớ tick "Add to PATH" và "Set JAVA_HOME".
-2. **Apache Maven 3.9+** ([Tải tại đây](https://dlcdn.apache.org/maven/maven-3/3.9.16/binaries/apache-maven-3.9.16-bin.zip))
-   - Giải nén và thêm thư mục `bin` vào biến môi trường `PATH` thành "MAVEN_HOME".
+---
+
+## 🚀 1. YÊU CẦU MÔI TRƯỜNG
+
+Các phần mềm **BẮT BUỘC** cài đặt trên máy lập trình viên:
+
+1. **JDK 21 LTS** ([Tải Oracle JDK 21](https://download.oracle.com/java/21/archive/jdk-21.0.12_windows-x64_bin.exe))
+   * Nhớ chọn "Add to PATH" và đặt biến môi trường `JAVA_HOME`.
+2. **Apache Maven 3.9+** ([Tải Apache Maven](https://dlcdn.apache.org/maven/maven-3/3.9.16/binaries/apache-maven-3.9.16-bin.zip))
+   * Thêm thư mục `bin` của Maven vào biến môi trường `PATH`.
 3. **Microsoft SQL Server & SSMS**
-   - Bật "Mixed Mode Authentication" và đặt mật khẩu tài khoản `sa`.
-4. **IDE**: IntelliJ IDEA hoặc Visual Studio Code (kèm Extension Pack for Java).
+   * Bật xác thực "Mixed Mode Authentication" (SQL Server and Windows Authentication).
+   * Đặt mật khẩu cho tài khoản quản trị `sa`.
+4. **IDE khuyến nghị:** IntelliJ IDEA (hoặc VS Code với Extension Pack for Java).
 
 ---
 
-## 🛠️ 2. HƯỚNG DẪN SETUP
+## 🛠️ 2. HƯỚNG DẪN KHỞI TẠO DỰ ÁN (SETUP)
 
 Thực hiện lần lượt các bước sau khi `git clone`:
 
-### 2.1 Cấu hình VS Code (Nếu dùng)
-1. Trong `.vscode/`, đổi tên `settings.example.json` thành `settings.json`.
-2. Cập nhật đường dẫn **JDK 21** và **Maven** của máy theo mẫu trong file settings.json (lưu ý dùng dùng `\\` trên Windows vì // gây lỗi).
+### 2.1 Cấu hình IDE (VS Code nếu có dùng)
+* Trong thư mục `.vscode/`, sao chép file `settings.example.json` thành `settings.json`.
+* Kiểm tra đường dẫn JDK 21 và Maven trỏ đúng thư mục cài đặt trên máy.
 
-### 2.2 Tạo Database & Cấu hình
-**`database/schema/db.sql` là source of truth. Schema chính thức được quản lý qua script SQL.**
+### 2.2 Tạo Database
+1. Mở file [`database/schema/db.sql`](database/schema/db.sql) bằng SSMS.
+2. Thực thi toàn bộ script để tạo database `RitirementManagement2`.
+   > ⚠️ **Lưu ý:** Script này sẽ xóa và tạo mới database. Không chạy lại nếu DB đang có dữ liệu cần giữ.
+3. Nếu cần dữ liệu mẫu thử nghiệm, mở và chạy file [`database/seeds/seed_data.sql`](database/seeds/seed_data.sql).
 
-1. Nếu cần tạo DB mới từ đầu, đọc toàn bộ `database/schema/db.sql` trước khi
-   chạy bằng SSMS. Script này **xóa rồi tạo lại** `RitirementManagement2`, nên
-   tuyệt đối không chạy trên DB có dữ liệu cần giữ. Không chuyển dữ liệu từ DB cũ.
-2. Nếu cần dữ liệu mẫu, xem `database/seeds/seed_data.sql` và
-   `docs/database/data_seeding_guide.md`. Không chạy seed lặp trên DB đã có seed.
-3. **Cấu hình Local (`application-local.properties`):**
-   - Tệp `src/main/resources/application.properties` là cấu hình chung mặc định được lưu trên Git.
-   - Để cấu hình tài khoản sa/mật khẩu SQL Server hoặc cổng chạy máy cá nhân, hãy sao chép:
-     `src/main/resources/application-local.properties.example` thành `src/main/resources/application-local.properties`.
-   - Tệp `application-local.properties` sẽ tự động ghi đè cấu hình khi chạy và đã được `.gitignore` bảo vệ, không lo lộ credential lên Git.
+### 2.3 Cấu hình Môi trường Local (`application-local.properties`)
+Dự án áp dụng cơ chế cấu hình tách biệt để **không bao giờ lộ mật khẩu cá nhân lên Git**:
+1. Trong thư mục `src/main/resources/`, sao chép file:
+   `application-local.properties.example` ➡️ thành ➡️ `application-local.properties`
+2. Mở file `application-local.properties` và điền thông tin tài khoản SQL Server cá nhân:
+   ```properties
+   spring.datasource.username=sa
+   spring.datasource.password=mat_khau_cua_ban
+   server.port=8082
+   ```
+   *(File `application-local.properties` đã được cấu hình trong `.gitignore`, tuyệt đối an toàn).*
 
-### 2.3 Load Maven (Quan trọng)
-- Khi mở dự án, IDE sẽ hỏi Load/Sync Maven. Chọn **Yes / Import / Load**.
-- Đợi 2-5 phút tải thư viện. Khi xong, lỗi đỏ ở các file Java sẽ tự biến mất.
-
-*(Lưu ý: Các file `settings.json` và `application-local.properties` đã được ignore nên không lo commit nhầm).*
+### 2.4 Đồng bộ Dependencies (Maven Sync)
+* Mở dự án bằng IDE, chọn **Reload / Sync Maven Project**.
+* Chờ 1–3 phút để tải toàn bộ thư viện cần thiết. Khi hoàn tất, các thông báo lỗi đỏ sẽ biến mất.
 
 ---
 
-## ▶️ 3. CÁCH CHẠY DỰ ÁN
+## ▶️ 3. KHỞI CHẠY DỰ ÁN
 
-Mở Terminal ở thư mục gốc và chọn 1 trong 2 cách:
+Mở Terminal tại thư mục gốc của dự án và chọn một trong hai cách:
 
-### Cách 1: Dùng Maven đã cài (Khuyên dùng)
+### Cách 1: Sử dụng Maven cục bộ (Khuyên dùng)
 ```bash
 mvn clean compile spring-boot:run
 ```
-👉 *Giúp IDE gợi ý code nhanh, chuẩn xác hơn.*
 
-### Cách 2: Dùng Maven Wrapper (Nhanh gọn)
-```bash
+### Cách 2: Sử dụng Maven Wrapper
+```powershell
 .\mvnw.cmd spring-boot:run
 ```
-👉 *Không cần cài Maven máy tính, script tự tải bản ảo.*
+
+Khi ứng dụng khởi động thành công, truy cập trình duyệt tại:
+* Cổng việc làm công khai (Public Careers): `http://localhost:8082/`
+* Đăng nhập nội bộ (Workspace Login): `http://localhost:8082/auth/login`
 
 ---
 
-## 🔍 4. KIỂM TRA
+## 🔍 4. KIỂM THỬ HỆ THỐNG
 
-Chạy `mvn test`, sau đó làm theo [TEST_PLAN.md](docs/management/TEST_PLAN.md) để kiểm tra
-login, Dashboard theo role, Account Management và API Monitoring. Mở trang chủ
-theo cổng `server.port` đã cấu hình để bắt đầu luồng đăng nhập. Các route demo
-`/test-web` và `/test-db` không thay thế kiểm thử tính năng hoặc JPA mapping.
+Chạy toàn bộ bộ kiểm thử tự động của dự án:
+```bash
+mvn test
+```
+Đảm bảo tất cả các test suite của các module (`CareerFlowTests`, `SecurityFlowTests`, `AccountManagementServiceTests`, `InterviewSchedulingServiceTests`, `OfferServiceTests`,...) đều đạt kết quả PASS (xanh).
 
-*Vướng mắc gì liên hệ Leader nhé!*
-
+*Mọi thắc mắc kỹ thuật hoặc xung đột mã nguồn, vui lòng trao đổi trực tiếp với Core Team / Leader!*
