@@ -1,36 +1,47 @@
-# 📚 SWP_RMS_Group-2 Documentation
+# 📚 Trung Tâm Tài Liệu Dự Án (RMS Docs Hub)
 
-Chào mừng đến với trung tâm tài liệu của dự án. Tài liệu này hướng dẫn cách tổ chức và quản lý các thư mục tài liệu để đảm bảo không gian làm việc của team luôn đồng bộ, sạch sẽ và chuyên nghiệp.
+Chào mừng bạn đến với trung tâm tài liệu của dự án **Recruitment Management System (RMS)**. Tài liệu này hướng dẫn cách tổ chức, tra cứu và đóng góp tài liệu để đảm bảo không gian làm việc của team luôn đồng bộ, sạch sẽ và chuyên nghiệp.
 
 ---
 
-## 1. 🗄️ Phân định ranh giới Database
+## 1. 🗄️ Phân Định Ranh Giới Database
 Dự án áp dụng quy tắc phân tách nghiêm ngặt giữa **Mã nguồn thực thi** và **Tài liệu tham khảo**:
 
-*   **`database/` (Thư mục gốc của dự án):**
-    *   **Mục đích:** Lưu trữ mã nguồn khởi tạo cơ sở dữ liệu (`.sql`).
-    *   **Quy định:** Chỉ chứa các script thực thi. Tuyệt đối không lưu trữ tài liệu giải nghĩa (Markdown, PDF, Image) tại đây.
-
-*   **`docs/database/`:**
-    *   **Mục đích:** Lưu trữ tài liệu mô tả thiết kế dữ liệu cho con người đọc.
-    *   **Quy định:** Chứa sơ đồ ERD, tài liệu mô tả Model, và hướng dẫn tạo dữ liệu mẫu (Data Seeding Guide).
-
----
-
-## 2. 📂 Cấu trúc thư mục Docs
-Không gian tài liệu chung của dự án được quy hoạch thành các phân khu chức năng dưới đây. Vui lòng không tự ý tạo thêm thư mục mới ở cấp gốc của `docs/` nếu chưa có sự thống nhất chung của team.
-
-*   **`architecture/`**: Sổ tay kiến trúc hệ thống và quy chuẩn lập trình (Coding Standards).
-*   **`database/`**: Sơ đồ thiết kế và hướng dẫn dữ liệu (như đã phân định ở trên).
-*   **`management/`**: Trung tâm lưu vết tiến độ dự án. Nơi lưu trữ duy nhất lịch sử thay đổi code của team (bao gồm file bảng `WORK_LOG.md` và thư mục chi tiết `work_logs/`). 
-*   **`prototype-reference/`**: Thư viện chứa các bản nháp HTML/CSS tĩnh (static prototypes) đóng vai trò làm giao diện tham chiếu chuẩn cho Frontend và AI.
-*   **`members/`**: Không gian lưu trữ tài liệu cá nhân của các thành viên.
-    *   *Mục đích:* Nơi lưu trữ tài liệu nháp, kịch bản kiểm thử riêng biệt (Test Plans), bằng chứng kiểm thử (Screenshots, JSON logs), hoặc các tài liệu do AI tạo ra đang trong quá trình thử nghiệm.
-    *   *Ví dụ:* `members/hoangnh/`, `members/linhdn/`...
-    *   *Quy định:* Tài liệu chưa hoàn thiện, sai lệch so với thực tế dự án, hoặc mang tính chất cá nhân bắt buộc phải lưu tại đây để không làm nhiễu tài liệu chính thức.
+* **`database/` (Tại thư mục gốc của dự án):**
+  * **Mục đích:** Lưu trữ mã nguồn khởi tạo cơ sở dữ liệu (`.sql`).
+  * **Quy định:** Chỉ chứa các script thực thi như `schema/db.sql` (Source of Truth) và `seeds/seed_data.sql`. Tuyệt đối không lưu trữ tài liệu giải nghĩa (Markdown, PDF, Image) tại đây.
+* **`docs/database/`:**
+  * **Mục đích:** Lưu trữ tài liệu mô tả thiết kế dữ liệu cho con người và AI đọc hiểu.
+  * **Quy định:** Chứa tài liệu [`model.md`](database/model.md) (sơ đồ ERD, mô tả chi tiết bảng/cột) và [`data_seeding_guide.md`](database/data_seeding_guide.md) (hướng dẫn tạo dữ liệu mẫu).
 
 ---
 
-## 💡 Nguyên tắc chung
-1. **Tối ưu dung lượng Repo:** Hạn chế tối đa việc commit hàng loạt ảnh chụp màn hình kiểm thử lên repository. Nếu cần thiết lưu vết, hãy đặt chúng vào không gian cá nhân (`members/`) hoặc cấu hình `.gitignore` nếu số lượng quá lớn.
-2. **Tính chính xác:** Mọi tài liệu nằm ngoài thư mục `members/` đều được coi là **Tài liệu chính thức**. Thành viên cần đảm bảo nội dung tài liệu luôn phản ánh đúng thực tế của mã nguồn hiện tại.
+## 2. 📂 Cấu Trúc Thư Mục Tài Liệu (`docs/`)
+
+Không gian tài liệu của dự án được quy hoạch thành các phân khu chức năng dưới đây. Vui lòng không tự ý tạo thêm thư mục mới ở cấp gốc của `docs/`:
+
+| Thư mục | Mục đích | Các tệp chính |
+| :--- | :--- | :--- |
+| **[`architecture/`](architecture/)** | Quy chuẩn kiến trúc hệ thống và tiêu chuẩn lập trình | [`ARCHITECTURE_GUIDE.md`](architecture/ARCHITECTURE_GUIDE.md)<br>[`schema-migration-impact.md`](architecture/schema-migration-impact.md) |
+| **[`database/`](database/)** | Sơ đồ thiết kế CSDL và hướng dẫn dữ liệu mẫu | [`model.md`](database/model.md)<br>[`data_seeding_guide.md`](database/data_seeding_guide.md) |
+| **[`management/`](management/)** | Lưu vết tiến độ, nhật ký thay đổi và kiểm thử | [`WORK_LOG.md`](management/WORK_LOG.md)<br>[`work_logs/`](management/work_logs/) (Chi tiết theo ngày) |
+| **[`prototype-reference/`](prototype-reference/)** | Bản nháp HTML/CSS tĩnh làm giao diện tham chiếu chuẩn | Các file mockup mẫu ban đầu |
+| **[`members/`](members/)** | Không gian lưu trữ tài liệu cá nhân của từng thành viên | [`duc/`](members/duc/), [`dunglt/`](members/dunglt/), [`hoangnh/`](members/hoangnh/), [`linhdn/`](members/linhdn/) |
+
+---
+
+## 💡 Nguyên Tắc Làm Việc & Đóng Góp Tài Liệu
+
+### 1. Phân định giữa Tài liệu Chính thức và Tài liệu Cá nhân:
+* Mọi tài liệu nằm ngoài thư mục `members/` đều được coi là **Tài liệu chính thức**. Thành viên khi cập nhật cần đảm bảo nội dung phản ánh chính xác 100% với mã nguồn hiện tại của dự án.
+* Thư mục `members/{member_name}/` là không gian riêng để lưu nháp, work log cá nhân, ghi chú nghiên cứu hoặc bằng chứng kiểm thử riêng biệt.
+
+### 2. Quy trình ghi Log công việc để chống Xung Đột Git (`WORK_LOG.md`):
+File `docs/management/WORK_LOG.md` là bảng mục lục chung nên rất dễ xảy ra xung đột khi nhiều người cùng push code cuối ngày. Quy trình bắt buộc:
+1. **Viết file chi tiết trước:** Tạo file báo cáo trong thư mục `docs/management/work_logs/` theo định dạng `YYYY-MM-DD-ten-cong-viec.md` (hoặc trong thư mục `docs/members/{name}/`).
+2. **Pull nhánh mới nhất:** Trước khi sửa `WORK_LOG.md`, luôn pull code mới nhất từ nhánh chung.
+3. **Thêm dòng tham chiếu:** Thêm 1 dòng tóm tắt vào bảng trong `WORK_LOG.md` trỏ liên kết tới file chi tiết vừa tạo.
+4. **Xử lý conflict (nếu có):** Tuyệt đối **không** chọn "Accept Current / Accept Yours" làm mất log của đồng đội. Phải chọn "Accept Both" và giữ lại đầy đủ dòng của cả hai bên.
+
+### 3. Tối ưu dung lượng Repository:
+* Tuyệt đối không commit các file nặng (video ghi hình, hàng trăm ảnh screenshot uncompressed, file binary tạm) lên repository. Nếu cần đính kèm ảnh kiểm thử, hãy nén dung lượng và đặt trong thư mục cá nhân `members/`.
