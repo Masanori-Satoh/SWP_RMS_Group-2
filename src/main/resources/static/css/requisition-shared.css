@@ -1,0 +1,49 @@
+/* Requisition UI extends the shared Mộc workspace and design tokens. */
+.req-app .requisition-breadcrumb,.req-app .requisition-page-breadcrumb { display:flex; align-items:center; flex-wrap:wrap; gap:var(--s2); font-size:14px; color:var(--muted); margin-bottom:var(--s3); }
+.req-app .requisition-breadcrumb a,.req-app .requisition-page-breadcrumb a { display:inline-flex; align-items:center; min-height:32px; text-decoration:none; }
+.req-app .requisition-breadcrumb a:hover,.req-app .requisition-page-breadcrumb a:hover { text-decoration:underline; }
+.req-app .requisition-page-header,.req-app .requisition-detail-heading { display:flex; align-items:flex-end; justify-content:space-between; gap:var(--s6); }
+.req-app .requisition-page-header,.req-app .requisition-page-intro { margin-bottom:var(--s8); }
+.req-app .requisition-page-header p,.req-app .requisition-page-description { color:var(--muted); margin-top:var(--s2); max-width:72ch; }
+.req-app h1 { overflow-wrap:anywhere; }
+.req-app .page-content h2,.req-app #delete-dialog h2 { font:600 20px/1.4 var(--serif); }
+.req-app .muted,.req-app .activity-meta { color:var(--muted); }
+.req-app .notice { margin-block:var(--s4); padding:var(--s3) var(--s4); border:1px solid var(--control-line); border-radius:4px; background:var(--brand-soft); color:var(--brand-dark); }
+.req-app :is(.btn-create,.filter-apply,.clear-filters,.btn-outline,.btn-primary,.btn-danger,.btn-footer,.btn-add-criteria,.btn-trash,.btn-action-outline,.page-link) { display:inline-flex; align-items:center; justify-content:center; gap:var(--s2); min-height:44px; padding:var(--s2) var(--s4); border:1px solid var(--control-line); border-radius:4px; background:var(--surface); color:var(--ink); font-weight:600; text-decoration:none; line-height:1.4; cursor:pointer; }
+.req-app :is(.btn-create,.filter-apply,.btn-primary,.btn-submit-director) { background:var(--brand-dark); border-color:var(--brand-dark); color:var(--surface); }
+.req-app :is(.btn-create,.filter-apply,.btn-primary,.btn-submit-director):hover { background:var(--ink); border-color:var(--ink); }
+.req-app :is(.clear-filters,.btn-outline,.btn-save-draft,.btn-cancel-custom,.btn-add-criteria,.btn-action-outline):hover { background:var(--brand-soft); }
+.req-app :is(.btn-danger,.delete-action,.btn-trash) { color:var(--error); }
+.req-app .btn-danger { border-color:var(--error); }
+.req-app :is(.btn-danger,.btn-trash):hover { background:var(--error-soft); }
+.req-app button:disabled { color:var(--muted); background:var(--page); border-color:var(--line); cursor:not-allowed; }
+.req-app :is(.list-status,.requisition-status) { display:inline-flex; align-items:center; width:max-content; max-width:100%; padding:4px 10px; border-radius:24px; background:#eeede7; color:#55594f; font-size:13px; font-weight:600; white-space:nowrap; }
+.req-app [data-status="Approved"] { background:var(--brand-soft); color:var(--brand-dark); }
+.req-app [data-status="Pending_Director"] { background:#f7efcf; color:#775817; }
+.req-app [data-status="Rejected"] { background:var(--error-soft); color:var(--error); }
+.req-app :is(.list-container,.form-card,.detail-layout .card) { min-width:0; padding:var(--s6); border:1px solid var(--line); border-radius:8px; background:var(--surface); }
+.req-app :where(input:not([type="checkbox"]):not([type="hidden"]),select,textarea) { width:100%; min-width:0; min-height:48px; padding:var(--s2) var(--s3); border:1px solid var(--control-line); border-radius:4px; background:var(--surface); font-size:16px; }
+.req-app textarea { resize:vertical; line-height:1.6; }
+.req-app :is(input,select,textarea)[aria-invalid="true"] { border-color:var(--error); }
+.req-app :is(.form-card-header,.card-header) { display:flex; align-items:center; gap:var(--s3); margin-bottom:var(--s6); }
+.req-app .field-error { display:block; color:var(--error); font-size:14px; margin-top:var(--s1); }
+.req-app .field-error:empty { display:none; }
+.req-app .required-asterisk { color:var(--error); }
+.req-app table { width:100%; border-collapse:collapse; text-align:left; font-size:14px; }
+.req-app th { font-weight:600; color:var(--muted); background:var(--page); }
+.req-app th,.req-app td { padding:var(--s3); border-bottom:1px solid var(--line); vertical-align:middle; }
+.req-app tbody tr:last-child td { border-bottom:0; }
+.req-app .empty-state { text-align:center; padding:var(--s8); color:var(--muted); }
+.req-app .nowrap { white-space:nowrap; }
+.req-app .criteria-scroll { max-width:100%; overflow-x:auto; }
+.req-app #delete-dialog { width:min(480px,calc(100% - 32px)); max-height:calc(100svh - 32px); overflow-y:auto; padding:var(--s8); border:1px solid var(--line); border-radius:8px; color:var(--ink); background:var(--surface); }
+.req-app #delete-dialog::backdrop { background:rgb(37 41 35 / .45); }
+.req-app #delete-dialog p { margin-top:var(--s3); overflow-wrap:anywhere; }
+.req-app .delete-symbol { display:grid; place-items:center; width:40px; height:40px; margin-bottom:var(--s4); border:1px solid var(--error); border-radius:50%; color:var(--error); font-weight:600; }
+.req-app .dialog-actions { display:flex; justify-content:flex-end; gap:var(--s3); flex-wrap:wrap; margin-top:var(--s6); }
+@media (max-width:768px) {
+  .req-app .requisition-page-header,.req-app .requisition-detail-heading { align-items:flex-start; flex-direction:column; gap:var(--s4); }
+  .req-app .requisition-page-header,.req-app .requisition-page-intro { margin-bottom:var(--s6); }
+  .req-app :is(.list-container,.form-card,.detail-layout .card) { padding:var(--s4); }
+  .req-app #delete-dialog { padding:var(--s6); }
+}

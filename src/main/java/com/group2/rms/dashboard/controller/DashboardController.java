@@ -18,6 +18,11 @@ public class DashboardController {
         this.dashboardService = dashboardService;
     }
 
+    @GetMapping("/")
+    public String root() {
+        return "redirect:/dashboard";
+    }
+
     @GetMapping
     public String dashboard(Authentication authentication, Model model) {
         model.addAttribute("dashboard", dashboardService.forUsername(authentication.getName()));

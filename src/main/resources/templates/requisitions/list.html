@@ -1,616 +1,166 @@
 <!DOCTYPE html>
 <html lang="en" xmlns:th="http://www.thymeleaf.org">
 
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Job Requisitions - RMS</title>
-    <!-- Google Fonts: Inter -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    <!-- Font Awesome -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-
-    <link rel="stylesheet" th:href="@{/css/app-layout.css}">
-
-    <style>
-        :root {
-            --primary: #4f46e5;
-            --primary-hover: #4338ca;
-            --primary-light: #eef2ff;
-            --text-dark: #0f172a;
-            --text-secondary: #64748b;
-            --text-muted: #94a3b8;
-            --border: #f1f5f9;
-            --bg-page: #f8fafc;
-            --bg-card: #ffffff;
-        }
-
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-        }
-
-        body {
-            font-family: 'Inter', system-ui, -apple-system, sans-serif;
-            background-color: var(--bg-page);
-            color: var(--text-dark);
-            min-height: 100vh;
-            -webkit-font-smoothing: antialiased;
-        }
-
-        .page-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 24px;
-        }
-
-        .page-title {
-            font-size: 24px;
-            font-weight: 700;
-            color: #0f172a;
-            letter-spacing: -0.5px;
-        }
-
-        .btn-create {
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            background: var(--primary);
-            color: #ffffff;
-            padding: 10px 20px;
-            border-radius: 8px;
-            font-size: 14px;
-            font-weight: 600;
-            text-decoration: none;
-            border: none;
-            cursor: pointer;
-            transition: all 0.2s ease;
-            box-shadow: 0 1px 2px rgba(79, 70, 229, 0.2);
-        }
-
-        .btn-create:hover {
-            background: var(--primary-hover);
-            transform: translateY(-1px);
-        }
-
-        /* Table Card */
-        .card {
-            background: #ffffff;
-            border-radius: 16px;
-            border: 1px solid #f1f5f9;
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03);
-            overflow: visible;
-        }
-
-        .table-wrapper {
-            width: 100%;
-            overflow: visible;
-            border-radius: 16px;
-        }
-
-        .table {
-            width: 100%;
-            border-collapse: collapse;
-            font-size: 14px;
-            text-align: left;
-        }
-
-        .table th {
-            padding: 16px 20px;
-            font-size: 12px;
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            color: #94a3b8;
-            background: #ffffff;
-            border-bottom: 1px solid #f1f5f9;
-            white-space: nowrap;
-        }
-
-        .table td {
-            padding: 18px 20px;
-            border-bottom: 1px solid #f8fafc;
-            color: #334155;
-            vertical-align: middle;
-            font-size: 14px;
-        }
-
-        .table tbody tr:hover {
-            background-color: #fafbfc;
-        }
-
-        .table tbody tr:last-child td {
-            border-bottom: none;
-        }
-
-        .position-link {
-            color: #3b82f6;
-            font-weight: 500;
-            text-decoration: none;
-            transition: color 0.15s;
-        }
-
-        .position-link:hover {
-            color: #1d4ed8;
-            text-decoration: underline;
-        }
-
-        /* Status Badges */
-        .badge {
-            display: inline-flex;
-            align-items: center;
-            padding: 4px 12px;
-            border-radius: 6px;
-            font-size: 12px;
-            font-weight: 600;
-            line-height: 1.2;
-        }
-
-        .badge-approved,
-        .badge-success {
-            background: #ecfdf5;
-            color: #059669;
-        }
-
-        .badge-pending,
-        .badge-warning {
-            background: #fef3c7;
-            color: #d97706;
-        }
-
-        .badge-draft,
-        .badge-secondary {
-            background: #f1f5f9;
-            color: #64748b;
-        }
-
-        .badge-rejected,
-        .badge-danger {
-            background: #fee2e2;
-            color: #dc2626;
-        }
-
-        /* Action Column Dropdown */
-        .action-cell {
-            text-align: center;
-            position: relative;
-        }
-
-        .action-dropdown {
-            position: relative;
-            display: inline-block;
-        }
-
-        .btn-dots {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            border: 1px solid #e2e8f0;
-            background: #ffffff;
-            color: #94a3b8;
-            border-radius: 20px;
-            padding: 2px 14px;
-            font-size: 14px;
-            font-weight: 700;
-            letter-spacing: 1px;
-            cursor: pointer;
-            transition: all 0.15s;
-            line-height: 1.4;
-        }
-
-        .btn-dots:hover {
-            background: #f8fafc;
-            border-color: #cbd5e1;
-            color: #475569;
-        }
-
-        .dropdown-menu {
-            display: none;
-            position: absolute;
-            right: 0;
-            top: calc(100% + 4px);
-            background: #ffffff;
-            border-radius: 10px;
-            border: 1px solid #f1f5f9;
-            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.08), 0 8px 10px -6px rgba(0, 0, 0, 0.03);
-            min-width: 140px;
-            z-index: 1000;
-            padding: 6px;
-        }
-
-        .dropdown-menu.show {
-            display: block;
-            animation: dropdownFadeIn 0.15s ease-out;
-        }
-
-        @keyframes dropdownFadeIn {
-            from {
-                opacity: 0;
-                transform: translateY(-4px);
-            }
-
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        .dropdown-item {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            padding: 8px 12px;
-            font-size: 13px;
-            font-weight: 500;
-            color: #334155;
-            border-radius: 6px;
-            text-decoration: none;
-            width: 100%;
-            border: none;
-            background: transparent;
-            cursor: pointer;
-            text-align: left;
-            transition: background-color 0.15s ease;
-            box-sizing: border-box;
-        }
-
-        .dropdown-item:hover {
-            background: #f8fafc;
-            color: #0f172a;
-        }
-
-        .dropdown-item i {
-            font-size: 13px;
-            width: 16px;
-            text-align: center;
-        }
-
-        .dropdown-item.item-view:hover {
-            color: #2563eb;
-            background: #eff6ff;
-        }
-
-        .dropdown-item.item-update:hover {
-            color: #d97706;
-            background: #fffbeb;
-        }
-
-        .dropdown-item.item-delete {
-            color: #ef4444;
-        }
-
-        .dropdown-item.item-delete:hover {
-            color: #dc2626;
-            background: #fee2e2;
-        }
-
-        /* Pagination */
-        .pagination-container {
-            display: flex;
-            justify-content: flex-end;
-            padding: 20px 24px;
-        }
-
-        .pagination {
-            display: flex;
-            align-items: center;
-            list-style: none;
-            gap: 6px;
-        }
-
-        .page-btn {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            min-width: 32px;
-            height: 32px;
-            padding: 0 8px;
-            border-radius: 6px;
-            font-size: 13px;
-            font-weight: 500;
-            text-decoration: none;
-            color: #475569;
-            background: #f1f5f9;
-            border: none;
-            transition: all 0.15s ease;
-        }
-
-        .page-btn:hover {
-            background: #e2e8f0;
-            color: #0f172a;
-        }
-
-        .page-btn.active {
-            background: #4f46e5;
-            color: #ffffff;
-            font-weight: 600;
-        }
-
-        /* Delete Modal Styles */
-        .modal-overlay {
-            display: none;
-            position: fixed;
-            inset: 0;
-            background: rgba(0, 0, 0, 0.45);
-            z-index: 9999;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .modal-overlay.active {
-            display: flex;
-        }
-
-        .modal-box {
-            background: white;
-            border-radius: 16px;
-            padding: 32px;
-            width: 420px;
-            max-width: 90vw;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
-            animation: popIn 0.2s ease;
-        }
-
-        @keyframes popIn {
-            from {
-                transform: scale(0.9);
-                opacity: 0;
-            }
-
-            to {
-                transform: scale(1);
-                opacity: 1;
-            }
-        }
-
-        .modal-icon {
-            font-size: 40px;
-            color: #ef4444;
-            margin-bottom: 16px;
-        }
-
-        .modal-title {
-            font-size: 18px;
-            font-weight: 700;
-            color: #0f172a;
-            margin-bottom: 8px;
-        }
-
-        .modal-body {
-            font-size: 14px;
-            color: #64748b;
-            margin-bottom: 24px;
-            line-height: 1.6;
-        }
-
-        .modal-actions {
-            display: flex;
-            gap: 12px;
-            justify-content: flex-end;
-        }
-
-        .btn-cancel-modal {
-            padding: 9px 20px;
-            border-radius: 8px;
-            font-weight: 600;
-            font-size: 14px;
-            border: 1px solid #e2e8f0;
-            background: white;
-            color: #475569;
-            cursor: pointer;
-        }
-
-        .btn-confirm-delete {
-            padding: 9px 20px;
-            border-radius: 8px;
-            font-weight: 600;
-            font-size: 14px;
-            background: #ef4444;
-            color: white;
-            border: none;
-            cursor: pointer;
-        }
-
-        .btn-confirm-delete:hover {
-            background: #dc2626;
-        }
-    </style>
+<head th:replace="~{fragments/head :: interfaceHead('Job Requisitions', ~{::pageStyles})}">
+    <th:block th:fragment="pageStyles">
+        <link rel="stylesheet" th:href="@{/css/requisition-shared.css}">
+        <link rel="stylesheet" th:href="@{/css/requisition-list.css}">
+        <script th:src="@{/js/requisitions.js}" defer></script>
+    </th:block>
 </head>
 
-<body>
-
+<body class="rms-app req-app req-list-page">
     <div class="page-wrapper">
-        <!-- SIDEBAR -->
-        <aside th:replace="~{fragments/sidebar :: sidebar(activeMenu='requisitions')}"></aside>
-
-        <!-- MAIN CONTENT -->
+        <aside th:replace="~{fragments/sidebar :: workspace('requisitions', ${viewerRole})}"></aside>
         <div class="main-content">
-            <!-- TOPBAR -->
-            <div class="topbar">
-                <div class="topbar-title">Recruitment Management System</div>
-                <div class="topbar-user">
-                    Welcome, <strong>Admin</strong>
+            <header th:replace="~{fragments/workspace-header :: header(${viewerRole}, ${viewerName})}"></header>
+            <main id="main" tabindex="-1" class="page-content">
+                <div class="container">
+                <nav class="requisition-breadcrumb" aria-label="Breadcrumb"><a
+                        th:href="@{/dashboard}">Dashboard</a><span aria-hidden="true">/</span><span
+                        aria-current="page">Job Requisitions</span></nav>
+                <div class="requisition-page-header">
+                    <div>
+                        <h1>Job Requisitions</h1>
+                        <p>View and manage hiring requests from every department.</p>
+                    </div>
+                    <a th:if="${canCreate}" th:href="@{/requisitions/create}" class="btn-create">+ Create
+                        requisition</a>
                 </div>
-            </div>
-
-            <!-- PAGE CONTENT -->
-            <div class="page-content">
-                <!-- PAGE HEADER -->
-                <div class="page-header">
-                    <h1 class="page-title">Job Requisitions</h1>
-                    <a th:href="@{/requisitions/create}" class="btn-create">
-                        Create New Requisition
-                    </a>
-                </div>
-
-                <!-- TABLE CARD -->
-                <div class="card">
-                    <div class="table-wrapper">
-                        <table class="table">
+                <th:block th:replace="~{fragments/requisition :: messages}"></th:block>
+                <section class="list-container" aria-labelledby="requisition-list-title">
+                    <div class="requisition-list-heading">
+                        <h2 id="requisition-list-title">Requisition list</h2>
+                        <p class="records-count" th:text="|${totalElements} matching requisitions in total|"></p>
+                    </div>
+                    <form th:action="@{/requisitions}" method="get" id="filterForm">
+                        <input type="hidden" name="size" th:value="${pageSize}">
+                        <div class="requisition-filter-grid">
+                            <div class="filter-field filter-search"><label for="requisition-search">Search</label><input
+                                    id="requisition-search" type="search" name="q" th:value="${search}" maxlength="120"
+                                    placeholder="Position or department name"></div>
+                            <div class="filter-field"><label for="department-filter">Department</label><select
+                                    id="department-filter" name="departmentId">
+                                    <option value="">All departments</option>
+                                    <option th:each="dept : ${departments}" th:value="${dept.departmentId}"
+                                        th:text="${dept.departmentName}"
+                                        th:selected="${dept.departmentId == selectedDepartment}"></option>
+                                </select></div>
+                            <div class="filter-field"><label for="type-filter">Type</label><select id="type-filter"
+                                    name="type">
+                                    <option value="">All types</option>
+                                    <option th:each="type : ${employmentTypes}" th:value="${type}" th:text="${type}"
+                                        th:selected="${type == selectedType}"></option>
+                                </select></div>
+                            <div class="filter-field"><label for="status-filter">Status</label><select
+                                    id="status-filter" name="status">
+                                    <option th:if="${viewerRole != 'HR'}" value="">All statuses</option>
+                                    <option th:each="state : ${viewerRole == 'HR' ? {'Approved'} : {'Draft','Pending_Director','Approved','Rejected'} }"
+                                        th:value="${state}" th:text="${state == 'Pending_Director' ? 'Pending' : state}"
+                                        th:selected="${state == selectedStatus || (viewerRole == 'HR' and (selectedStatus == '' or selectedStatus == null))}"></option>
+                                </select></div>
+                            <div class="filter-field"><label for="sort-filter">Sort by</label><select id="sort-filter"
+                                    name="sort">
+                                    <option value="newest" th:selected="${selectedSort == 'newest'}">Newest first
+                                    </option>
+                                    <option value="oldest" th:selected="${selectedSort == 'oldest'}">Oldest first
+                                    </option>
+                                    <option value="position_asc" th:selected="${selectedSort == 'position_asc'}">
+                                        Position A–Z</option>
+                                    <option value="position_desc" th:selected="${selectedSort == 'position_desc'}">
+                                        Position Z–A</option>
+                                </select></div>
+                        </div>
+                        <div class="filter-actions"><button type="submit" class="filter-apply">Apply</button><a
+                                th:href="@{/requisitions}" class="clear-filters">Clear filters</a></div>
+                    </form>
+                    <p class="table-scroll-note" hidden>Scroll horizontally to see all columns and actions.</p>
+                    <div class="table-wrapper requisition-table-wrap" role="region" aria-label="Requisition list" tabindex="0">
+                        <table class="requisition-list-table">
+                            <colgroup>
+                                <col class="col-index">
+                                <col class="col-position">
+                                <col class="col-department">
+                                <col class="col-quantity">
+                                <col class="col-type">
+                                <col class="col-status">
+                                <col class="col-date">
+                                <col class="col-actions">
+                            </colgroup>
                             <thead>
                                 <tr>
-                                    <th>STT</th>
-                                    <th>Position</th>
-                                    <th>Department</th>
-                                    <th>Quantity</th>
-                                    <th>Type</th>
-                                    <th>Status</th>
-                                    <th>Created Date</th>
-
+                                    <th scope="col">No.</th>
+                                    <th scope="col">Position</th>
+                                    <th scope="col">Department</th>
+                                    <th scope="col">Quantity</th>
+                                    <th scope="col">Type</th>
+                                    <th scope="col">Status</th>
+                                    <th scope="col">Created date</th>
+                                    <th scope="col">Actions</th>
                                 </tr>
                             </thead>
                             <tbody>
-                                <tr th:each="req : ${requisitions}">
-                                    <td th:text="${req.requisitionId}">1</td>
-                                    <td>
-                                        <a th:href="@{/requisitions/{id}(id=${req.requisitionId})}"
-                                            class="position-link" th:text="${req.title}">Backend Developer</a>
+                                <tr th:each="req,row : ${requisitions}">
+                                    <td th:text="${(currentPage - 1) * pageSize + row.count}"></td>
+                                    <td><a class="position-title"
+                                            th:href="@{/requisitions/{id}(id=${req.requisitionId})}"
+                                            th:text="${req.title}"></a></td>
+                                    <td th:text="${req.departmentName}"></td>
+                                    <td th:text="${req.numberOfPositions ?: '—'}"></td>
+                                    <td th:text="${req.employmentType ?: '—'}"></td>
+                                    <td><span class="list-status" th:attr="data-status=${req.approvalStatus}"
+                                            th:title="${req.approvalStatus == 'Pending_Director' ? 'Pending Director Approval' : req.approvalStatus}"
+                                            th:text="${req.approvalStatus == 'Pending_Director' ? 'Pending' : req.approvalStatus}"></span>
                                     </td>
-                                    <td th:text="${req.departmentName}">IT Department</td>
-                                    <td th:text="${req.numberOfPositions}">2</td>
-                                    <td th:text="${req.employmentType}">Full-time</td>
-                                    <td>
-                                        <span th:if="${req.approvalStatus == 'Draft'}"
-                                            class="badge badge-draft">Draft</span>
-                                        <span th:if="${req.approvalStatus == 'Pending_Director'}"
-                                            class="badge badge-pending">Pending</span>
-                                        <span th:if="${req.approvalStatus == 'Approved'}"
-                                            class="badge badge-approved">Approved</span>
-                                        <span th:if="${req.approvalStatus == 'Rejected'}"
-                                            class="badge badge-rejected">Rejected</span>
+                                    <td class="nowrap" th:text="${#temporals.format(req.createdAt,'dd/MM/yyyy')}"></td>
+                                    <td class="action-cell">
+                                        <button type="button" class="btn-action-outline" data-action-menu
+                                            th:popovertarget="|actions-${req.requisitionId}|"
+                                            th:aria-label="|Actions for ${req.title}|">⋯</button>
+                                        <div class="action-popover" popover="auto"
+                                            th:id="|actions-${req.requisitionId}|">
+                                            <a th:href="@{/requisitions/{id}(id=${req.requisitionId})}">View details</a>
+                                            <a th:if="${req.editable}"
+                                                th:href="@{/requisitions/edit/{id}(id=${req.requisitionId})}">Edit</a>
+                                            <a th:if="${canCreate}"
+                                                th:href="@{/requisitions/copy/{id}(id=${req.requisitionId})}">Copy
+                                                form</a>
+                                            <button th:if="${req.deletable}" type="button" class="delete-action"
+                                                data-delete-requisition
+                                                th:data-delete-url="@{/requisitions/delete/{id}(id=${req.requisitionId})}"
+                                                th:data-title="${req.title}">Delete</button>
+                                        </div>
                                     </td>
-                                    <td th:text="${#temporals.format(req.createdAt, 'dd/MM/yyyy')}">28/09/2026</td>
-
                                 </tr>
-
                                 <tr th:if="${#lists.isEmpty(requisitions)}">
-                                    <td colspan="7"
-                                        style="text-align: center; color: var(--text-muted); padding: 36px;">
-                                        No job requisitions found in the system.
-                                    </td>
+                                    <td colspan="8" class="empty-state">No requisitions found. Try changing or clearing your filters.</td>
                                 </tr>
                             </tbody>
                         </table>
                     </div>
-
-                    <!-- PAGINATION -->
-                    <div th:if="${totalPages >= 1}" class="pagination-container">
-                        <ul class="pagination">
-
-                            <!-- Previous -->
-                            <li>
-                                <a th:href="@{/requisitions(page=${currentPage > 1 ? currentPage - 1 : 1})}"
-                                    class="page-btn">
-                                    &lt;
-                                </a>
-                            </li>
-
-                            <!-- Chỉ hiển thị 1 2 3 -->
-                            <li th:each="i : ${#numbers.sequence(1, totalPages > 3 ? 3 : totalPages)}">
-                                <a th:href="@{/requisitions(page=${i})}" th:text="${i}"
-                                    th:classappend="${currentPage == i ? 'active' : ''}" class="page-btn">
-                                    1
-                                </a>
-                            </li>
-
-                            <!-- Next -->
-                            <li>
-                                <a th:href="@{/requisitions(page=${currentPage < totalPages ? currentPage + 1 : totalPages})}"
-                                    class="page-btn">
-                                    &gt;
-                                </a>
-                            </li>
-
-                        </ul>
-                    </div>
-                </div>
+                    <nav class="list-pagination-footer" aria-label="Requisition pages">
+                        <div class="pagination">
+                            <a th:if="${currentPage > 1}" class="page-link" aria-label="Previous page"
+                                th:href="@{/requisitions(page=${currentPage - 1},size=${pageSize},q=${search},departmentId=${selectedDepartment},type=${selectedType},status=${selectedStatus},sort=${selectedSort})}">‹</a>
+                            <span th:if="${currentPage == 1}" class="page-link disabled" aria-label="Previous page"
+                                aria-disabled="true">‹</span>
+                            <a class="page-link" th:each="page : ${#numbers.sequence(startPage,endPage)}"
+                                th:classappend="${page == currentPage ? 'active' : ''}"
+                                th:attr="aria-current=${page == currentPage ? 'page' : null}"
+                                th:aria-label="|Page ${page}|" th:text="${page}"
+                                th:href="@{/requisitions(page=${page},size=${pageSize},q=${search},departmentId=${selectedDepartment},type=${selectedType},status=${selectedStatus},sort=${selectedSort})}"></a>
+                            <a th:if="${currentPage < totalPages}" class="page-link" aria-label="Next page"
+                                th:href="@{/requisitions(page=${currentPage + 1},size=${pageSize},q=${search},departmentId=${selectedDepartment},type=${selectedType},status=${selectedStatus},sort=${selectedSort})}">›</a>
+                            <span th:if="${currentPage == totalPages}" class="page-link disabled" aria-label="Next page"
+                                aria-disabled="true">›</span>
+                        </div>
+                    </nav>
+                </section>
             </div>
+            </main>
         </div>
     </div>
-
-    <script>
-        function toggleDropdown(btn, event) {
-            if (event) {
-                event.stopPropagation();
-            }
-            // Use parentNode to find the dropdown menu reliably
-            var currentMenu = btn.parentNode.querySelector('.dropdown-menu');
-            if (!currentMenu) return;
-
-            var isOpen = currentMenu.classList.contains('show');
-            closeAllDropdowns();
-
-            if (!isOpen) {
-                currentMenu.classList.add('show');
-            }
-        }
-
-        function closeAllDropdowns() {
-            var menus = document.querySelectorAll('.dropdown-menu.show');
-            for (var i = 0; i < menus.length; i++) {
-                menus[i].classList.remove('show');
-            }
-        }
-
-        // Đóng dropdown khi click ra ngoài màn hình
-        document.addEventListener('click', function (e) {
-            if (!e.target.closest('.action-dropdown')) {
-                closeAllDropdowns();
-            }
-        });
-
-        // Đóng dropdown khi nhấn ESC
-        document.addEventListener('keydown', function (e) {
-            if (e.key === 'Escape') {
-                closeAllDropdowns();
-            }
-        });
-    </script>
-    <!-- Delete Confirmation Modal -->
-    <div class="modal-overlay" id="deleteModal">
-        <div class="modal-box">
-            <div class="modal-icon"><i class="fa-solid fa-triangle-exclamation"></i></div>
-            <div class="modal-title">Delete Requisition</div>
-            <div class="modal-body" id="deleteModalBody">
-                Are you sure you want to permanently delete this requisition?<br>
-                <strong>This action cannot be undone.</strong>
-            </div>
-            <div class="modal-actions">
-                <button class="btn-cancel-modal" onclick="closeDeleteModal()">Cancel</button>
-                <button class="btn-confirm-delete" onclick="submitDeleteFromList()">
-                    <i class="fa-solid fa-trash-can" style="margin-right:6px;"></i>Yes, Delete
-                </button>
-            </div>
-        </div>
-    </div>
-    <form id="deleteFormList" method="post" style="display:none;"></form>
-
-    <script>
-        var pendingDeleteId = null;
-        function openDeleteModal(id, title) {
-            pendingDeleteId = id;
-            document.getElementById('deleteModalBody').innerHTML =
-                'Are you sure you want to permanently delete <strong>REQ-' + id + ': ' + title + '</strong>?<br><strong>This action cannot be undone.</strong>';
-            document.getElementById('deleteModal').classList.add('active');
-        }
-        function closeDeleteModal() {
-            document.getElementById('deleteModal').classList.remove('active');
-            pendingDeleteId = null;
-        }
-        function submitDeleteFromList() {
-            if (!pendingDeleteId) return;
-            var form = document.getElementById('deleteFormList');
-            form.action = '/requisitions/delete/' + pendingDeleteId;
-            form.submit();
-        }
-        document.getElementById('deleteModal').addEventListener('click', function (e) {
-            if (e.target === this) closeDeleteModal();
-        });
-    </script>
+    <dialog th:replace="~{fragments/requisition :: deleteDialog}"></dialog>
 </body>
 
 </html>

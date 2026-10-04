@@ -10,8 +10,11 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
 @Repository 
-public interface JobRequisitionRepository extends JpaRepository<JobRequisition, Integer> {
+public interface JobRequisitionRepository extends JpaRepository<JobRequisition, Integer>, org.springframework.data.jpa.repository.JpaSpecificationExecutor<JobRequisition> {
     
+    @org.springframework.data.jpa.repository.Lock(jakarta.persistence.LockModeType.PESSIMISTIC_WRITE)
+    @org.springframework.data.jpa.repository.Query("select r from JobRequisition r where r.requisitionId = :id")
+    java.util.Optional<JobRequisition> findForUpdate(@org.springframework.data.repository.query.Param("id") Integer id);
     //Hiring Manager xem req cua chinh minh
     List<JobRequisition> findByHiringManager_UserIdOrderByCreatedAtDesc(Integer userId);
 
