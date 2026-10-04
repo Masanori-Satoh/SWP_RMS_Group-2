@@ -10,8 +10,12 @@
         <header th:replace="~{fragments/workspace-header :: header('System Admin', null)}"></header>
         <main id="main" class="page-content" tabindex="-1">
             <div class="container">
+                <nav class="breadcrumbs" aria-label="Breadcrumb" style="margin-bottom: var(--s2); font-size: 14px; display: flex; gap: 8px; align-items: center; color: var(--text-muted);">
+                  <a th:href="@{/dashboard}" style="color: var(--brand); text-decoration: none;">Dashboard</a>
+                  <span aria-hidden="true">/</span>
+                  <span aria-current="page" style="color: var(--text-color); font-weight: 500;">Candidate Accounts</span>
+                </nav>
                 <div class="account-heading"><div>
-                    <a class="account-back-link" th:href="@{/dashboard}">Dashboard</a><span aria-hidden="true"> / </span><span>Candidate Accounts</span>
                     <h1>Candidate Accounts</h1><p>Review and manage external candidate accounts.</p>
                 </div></div>
                 <div class="alert alert-success" role="status" th:if="${successMessage}" th:text="${successMessage}"></div>
@@ -47,12 +51,7 @@
                             </tr><tr th:if="${accounts.empty}"><td colspan="7" class="account-empty">No matching candidate accounts found. Try changing the filters.</td></tr></tbody>
                         </table>
                     </div>
-                    <div class="account-pagination" th:if="${accounts.totalPages > 1}"><span>Page <strong th:text="${accounts.number + 1}">1</strong>/<span th:text="${accounts.totalPages}">1</span></span>
-                        <nav class="pagination" aria-label="Candidate Account Pagination">
-                            <a class="btn btn-secondary btn-sm" th:if="${accounts.hasPrevious()}" th:href="@{/admin/candidate-accounts(search=${search},status=${selectedStatus},sort=${selectedSort},page=${accounts.number - 1})}">Previous</a>
-                            <a class="btn btn-secondary btn-sm" th:if="${accounts.hasNext()}" th:href="@{/admin/candidate-accounts(search=${search},status=${selectedStatus},sort=${selectedSort},page=${accounts.number + 1})}">Next</a>
-                        </nav>
-                    </div>
+                    <div th:replace="~{fragments/pagination :: paged(${accounts}, '/admin/candidate-accounts')}"></div>
                     <p class="candidate-profile-note">Candidate profiles and recruitment history are managed separately from account access.</p>
                 </section>
             </div>

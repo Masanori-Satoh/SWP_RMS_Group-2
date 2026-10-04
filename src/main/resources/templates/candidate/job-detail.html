@@ -13,12 +13,7 @@
   <!-- Site Header -->
   <header class="site-header">
     <div class="container header-inner">
-      <a href="/jobs" class="wordmark" title="Trang chủ tuyển dụng">
-        <svg class="brand-mark" viewBox="0 0 32 32" aria-hidden="true">
-          <path d="M15 27C8 23 6 13 11 7c4-5 11-4 16-3 0 9-3 18-12 23Z" fill="currentColor"/>
-        </svg>
-        <span class="brand-name">Mộc Careers</span>
-      </a>
+      <a th:replace="~{fragments/brand :: wordmark('Careers')}"></a>
       <nav class="nav-main">
         <div class="nav-group">
           <a href="/jobs" class="nav-link">Quay lại danh sách</a>
@@ -30,14 +25,23 @@
           <a href="/login" class="button button-secondary button-sm">Đăng nhập</a>
         </div>
         <div th:if="${currentUser != null}" style="display:flex; align-items:center; gap:var(--s4);">
-          <div style="text-align:right; line-height:1.2;">
+          <a href="/dashboard" class="button button-brand button-sm" style="margin-right: 8px;">Dashboard &rarr;</a>
+          <a th:href="@{/profile}" style="text-align:right; line-height:1.2; text-decoration:none; color:inherit;">
             <strong th:text="${currentUser.fullName}" style="font-size:14px; display:block;"></strong>
             <span style="color:var(--muted); font-size:12px;" th:text="${currentUser.email}"></span>
-          </div>
-          <form th:action="@{/logout}" method="post" style="margin:0;">
+          </a>
+          <form id="candidate-logout-form" th:action="@{/logout}" method="post" style="margin:0;">
             <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
-            <button type="submit" class="button button-secondary button-sm">Đăng xuất</button>
+            <button type="button" style="background:none; border:none; color:var(--text-color); cursor:pointer; font-size:14px; font-weight:500; text-decoration:underline;" onclick="document.getElementById('candidate-logout-dialog').showModal()">Đăng xuất</button>
           </form>
+          <dialog id="candidate-logout-dialog" style="padding: 24px; border-radius: 8px; border: 1px solid var(--border-color, #e2e8f0); box-shadow: 0 4px 12px rgba(0,0,0,0.1); max-width: 400px; background: white; text-align: left;">
+            <h3 style="margin-top: 0; margin-bottom: 8px; font-size: 18px; color: var(--text-color);">Xác nhận đăng xuất</h3>
+            <p style="color: var(--text-muted, #64748b); margin-bottom: 24px; font-size: 14px; font-weight: normal;">Bạn có chắc chắn muốn đăng xuất khỏi hệ thống?</p>
+            <div style="display: flex; gap: 12px; justify-content: flex-end;">
+              <button type="button" class="button button-secondary" onclick="document.getElementById('candidate-logout-dialog').close()">Hủy</button>
+              <button type="button" class="button button-danger" style="background: #ef4444; color: white; border: none; padding: 0.5rem 1rem; border-radius: 4px; cursor: pointer;" onclick="document.getElementById('candidate-logout-form').submit()">Đăng xuất</button>
+            </div>
+          </dialog>
         </div>
       </div>
     </div>
@@ -99,12 +103,23 @@
             <div class="action-wrap" style="margin-top:var(--s4);">
               <!-- Call to action -->
               <th:block th:if="${job.isAcceptingApplications}">
-                <a th:if="${!job.hasApplied}" th:href="@{'/jobs/' + ${job.id} + '/apply'}" class="button button-brand" style="width:100%;">
-                  Ứng tuyển ngay
-                </a>
-                <button th:if="${job.hasApplied}" class="button" disabled style="width:100%; opacity:0.6;">
-                  Đã ứng tuyển
-                </button>
+                
+                <!-- Internal Employee Case -->
+                <div th:if="${currentUser != null and currentUser.roleName != 'Candidate'}" style="background: var(--surface-2, #f1f5f9); color: var(--text-muted, #64748b); padding: 12px; border-radius: 6px; text-align: center; font-size: 13px; line-height: 1.5; border: 1px solid var(--border-color, #e2e8f0);">
+                  <strong style="display: block; color: var(--text-color, #1e293b); margin-bottom: 4px;">Tài khoản nội bộ</strong>
+                  Chỉ ứng viên mới có thể sử dụng chức năng nộp hồ sơ.
+                </div>
+
+                <!-- Candidate / Guest Case -->
+                <th:block th:if="${currentUser == null or currentUser.roleName == 'Candidate'}">
+                  <button th:if="${!job.hasApplied}" type="button" class="button button-brand" style="width:100%;" onclick="alert('Tính năng ứng tuyển trực tuyến đang được xây dựng và sẽ ra mắt trong Iteration 2! Xin cảm ơn sự quan tâm của bạn.')">
+                    Ứng tuyển ngay
+                  </button>
+                  <button th:if="${job.hasApplied}" type="button" class="button" disabled style="width:100%; opacity:0.6;">
+                    Đã ứng tuyển
+                  </button>
+                </th:block>
+
               </th:block>
               <button th:if="${!job.isAcceptingApplications}" class="button" disabled style="width:100%; opacity:0.6;">
                 Ngừng nhận hồ sơ
