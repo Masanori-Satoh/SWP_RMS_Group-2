@@ -287,7 +287,7 @@ class CareerFlowTests {
                 .passwordHash(encoder.encode("test-password")).build();
         when(users.findByUsernameIgnoreCase(username)).thenReturn(Optional.of(user));
         when(careers.getViewerProfile(username))
-                .thenReturn(Optional.of(new ViewerProfileResponse(user.getFullName(), user.getEmail())));
+                .thenReturn(Optional.of(new ViewerProfileResponse(user.getFullName(), user.getEmail(), user.getRole().getRoleName())));
     }
 
         private MockHttpSession login(MockHttpSession session, String username, String expected) throws Exception {

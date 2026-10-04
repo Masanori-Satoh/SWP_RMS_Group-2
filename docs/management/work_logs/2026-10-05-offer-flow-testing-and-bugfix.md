@@ -1,10 +1,10 @@
 # Nhật ký Công việc: Hoàn thiện Ràng buộc Lương, Single Active Offer (GBR-07) & Kiểm thử Luồng Offer
 
 - **Ngày thực hiện:** 05/10/2026
-- **Người thực hiện:** Nguyễn Thị Thu Huyền (HuyenPT)
+- **Người thực hiện:** Phạm Thị Huyền (HuyenPT)
 - **Nhánh làm việc:** `fix/huyenpt/offer-flow-bugfix`
 - **Module phụ trách:** `offer` (Quản lý Đề xuất Tuyển dụng)
-- **Tài liệu chi tiết kiểm thử:** [offer-flow-testing.md](../../members/huyenpt/offer-flow-testing.md)
+- **Tài liệu chi tiết kiểm thử:** [offer-inter1-flow-testing.md](../../members/huyenpt/offer-inter1-flow-testing.md)
 
 ---
 
@@ -36,6 +36,7 @@
 ---
 
 ## 4. Kết quả Kiểm thử (Testing)
-- **Unit Test (`OfferServiceTests.java`):** **20/20 PASS (100%)**.
-- **Integration Test (`OfferIntegrationTest.java`):** **7/7 PASS (100%)**.
+- **Unit Test (`OfferServiceTests.java`):** **31/31 PASS (100%)**.
+- **Integration Test (`OfferIntegrationTest.java`):** **12/12 PASS (100%)**.
+- **Tổng số test Offer:** **43/43 tests PASS (100%)**.
 - **Build Maven (`mvnw test-compile`):** **BUILD SUCCESS**.

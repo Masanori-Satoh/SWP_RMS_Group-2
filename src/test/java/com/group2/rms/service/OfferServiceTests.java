@@ -6,6 +6,10 @@ import com.group2.rms.offer.dto.CreateOfferRequest;
 import com.group2.rms.offer.dto.OfferResponse;
 import com.group2.rms.offer.dto.UpdateOfferRequest;
 import com.group2.rms.core.exception.BaseBusinessException;
+import com.group2.rms.core.exception.ResourceNotFoundException;
+import com.group2.rms.offer.dto.OfferDetailResponse;
+import com.group2.rms.offer.entity.OfferApproval;
+import com.group2.rms.offer.entity.OfferNegotiation;
 import com.group2.rms.offer.entity.OfferProposal;
 import com.group2.rms.offer.exception.OfferValidationException;
 import com.group2.rms.offer.repository.OfferApprovalRepository;
@@ -17,10 +21,15 @@ import com.group2.rms.interview.entity.InterviewFinalResult;
 import com.group2.rms.interview.entity.InterviewSchedule;
 import com.group2.rms.candidate.entity.Candidate;
 import com.group2.rms.requisition.entity.JobPosting;
+import com.group2.rms.requisition.entity.JobRequisition;
+import com.group2.rms.user.entity.Department;
 import com.group2.rms.offer.dto.PassedCandidateResponse;
 import com.group2.rms.offer.service.NotificationService;
 import com.group2.rms.user.entity.User;
 import com.group2.rms.user.repository.UserRepository;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
 import jakarta.validation.ConstraintViolation;
 import jakarta.validation.Validation;
 import jakarta.validation.Validator;
@@ -629,5 +638,232 @@ class OfferServiceTests {
 
         assertEquals("OFFER_STATUS_INVALID", ex.getErrorCode());
         assertTrue(ex.getMessage().contains("Nhóm A"));
+    }
+
+    @Test
+    @DisplayName("getOfferById: Tìm thấy Offer thành công trả về OfferResponse")
+    void testGetOfferById_found_returnsOfferResponse() {
+        OfferProposal offer = OfferProposal.builder()
+                .offerId(1)
+                .offeredPositionTitle("Senior Developer")
+                .proposedSalary(new BigDecimal("30000000"))
+                .probationSalary(new BigDecimal("25500000"))
+                .offerStatus("Draft")
+                .build();
+
+        when(offerProposalRepository.findById(1)).thenReturn(Optional.of(offer));
+
+        OfferResponse response = offerService.getOfferById(1);
+
+        assertNotNull(response);
+        assertEquals(1, response.getOfferId());
+        assertEquals("Senior Developer", response.getOfferedPositionTitle());
+    }
+
+    @Test
+    @DisplayName("getOfferById: Không tìm thấy Offer ném ResourceNotFoundException")
+    void testGetOfferById_notFound_throwsException() {
+        when(offerProposalRepository.findById(999)).thenReturn(Optional.empty());
+
+        assertThrows(ResourceNotFoundException.class, () -> {
+            offerService.getOfferById(999);
+        });
+    }
+
+    @Test
+    @DisplayName("getOfferByApplicationId: Tìm thấy Offer theo ApplicationId thành công")
+    void testGetOfferByApplicationId_found_returnsOfferResponse() {
+        OfferProposal offer = OfferProposal.builder()
+                .offerId(5)
+                .offerStatus("Pending_Director")
+                .build();
+
+        when(offerProposalRepository.findByApplication_ApplicationId(10)).thenReturn(Optional.of(offer));
+
+        OfferResponse response = offerService.getOfferByApplicationId(10);
+
+        assertNotNull(response);
+        assertEquals(5, response.getOfferId());
+        assertEquals("Pending_Director", response.getOfferStatus());
+    }
+
+    @Test
+    @DisplayName("getOfferByApplicationId: Không tìm thấy Offer theo ApplicationId ném ResourceNotFoundException")
+    void testGetOfferByApplicationId_notFound_throwsException() {
+        when(offerProposalRepository.findByApplication_ApplicationId(999)).thenReturn(Optional.empty());
+
+        assertThrows(ResourceNotFoundException.class, () -> {
+            offerService.getOfferByApplicationId(999);
+        });
+    }
+
+    @Test
+    @DisplayName("getAllOffersForHr: Lấy toàn bộ Offer (status = null hoặc ALL)")
+    void testGetAllOffersForHr_allStatus_queriesActive() {
+        PageRequest pageable = PageRequest.of(0, 10);
+        OfferProposal offer = OfferProposal.builder().offerId(1).offerStatus("Draft").build();
+        Page<OfferProposal> page = new PageImpl<>(List.of(offer), pageable, 1);
+
+        when(offerProposalRepository.findAllActiveByOrderByOfferIdAsc(pageable)).thenReturn(page);
+
+        Page<OfferResponse> resultAll = offerService.getAllOffersForHr("ALL", pageable);
+        assertNotNull(resultAll);
+        assertEquals(1, resultAll.getTotalElements());
+
+        Page<OfferResponse> resultNull = offerService.getAllOffersForHr(null, pageable);
+        assertNotNull(resultNull);
+        assertEquals(1, resultNull.getTotalElements());
+    }
+
+    @Test
+    @DisplayName("getAllOffersForHr: Lấy Offer theo Status cụ thể")
+    void testGetAllOffersForHr_filteredStatus_queriesByStatus() {
+        PageRequest pageable = PageRequest.of(0, 10);
+        OfferProposal offer = OfferProposal.builder().offerId(2).offerStatus("Pending_Director").build();
+        Page<OfferProposal> page = new PageImpl<>(List.of(offer), pageable, 1);
+
+        when(offerProposalRepository.findActiveByStatusOrderByOfferIdAsc("Pending_Director", pageable)).thenReturn(page);
+
+        Page<OfferResponse> result = offerService.getAllOffersForHr("Pending_Director", pageable);
+        assertNotNull(result);
+        assertEquals(1, result.getTotalElements());
+        assertEquals("Pending_Director", result.getContent().get(0).getOfferStatus());
+    }
+
+    @Test
+    @DisplayName("getOfferDetailForHr: Lấy chi tiết Offer đầy đủ Candidate, Lịch sử duyệt của Director và Đàm phán")
+    void testGetOfferDetailForHr_returnsComprehensiveDetails() {
+        Department dept = Department.builder().departmentId(1).departmentName("Phòng Công Nghệ").build();
+        JobRequisition req = JobRequisition.builder().requisitionId(10).department(dept).build();
+        JobPosting jp = JobPosting.builder().jobPostingId(20).postingTitle("Backend Engineer").requisition(req).build();
+        User candUser = User.builder().userId(100).fullName("Trần Thị B").email("b@test.com").phoneNumber("0912345678").build();
+        Candidate cand = Candidate.builder().candidateId(200).account(candUser).address("Đà Nẵng").build();
+        Application app = Application.builder().applicationId(300).jobPosting(jp).candidate(cand).appliedCvUrl("cv.pdf").build();
+
+        OfferProposal offer = OfferProposal.builder()
+                .offerId(1)
+                .application(app)
+                .offeredPositionTitle("Backend Engineer")
+                .proposedSalary(new BigDecimal("35000000"))
+                .probationSalary(new BigDecimal("30000000"))
+                .offerStatus("Approved")
+                .build();
+
+        User director = User.builder().userId(2).fullName("Nguyễn Giám Đốc").build();
+        OfferApproval approval = OfferApproval.builder()
+                .offerApprovalId(1)
+                .director(director)
+                .status("Approved")
+                .directorComments("Đồng ý tuyển dụng")
+                .build();
+
+        OfferNegotiation negotiation = OfferNegotiation.builder()
+                .negotiationId(1)
+                .candidateCounterSalary(new BigDecimal("38000000"))
+                .candidateNotes("Mong muốn mức lương cao hơn")
+                .hrResponseNotes("Đồng ý điều chỉnh lên 35M")
+                .build();
+
+        InterviewFinalResult finalResult = InterviewFinalResult.builder()
+                .finalResultId(1)
+                .finalDecision("Passed")
+                .finalSummaryComments("Ứng viên xuất sắc")
+                .recommendedSalary(new BigDecimal("35000000"))
+                .build();
+
+        when(offerProposalRepository.findById(1)).thenReturn(Optional.of(offer));
+        when(interviewFinalResultRepository.findByApplicationIdOrderByApprovedAtDesc(300)).thenReturn(List.of(finalResult));
+        when(offerApprovalRepository.findByOfferProposal_OfferIdOrderByApprovedAtDesc(1)).thenReturn(List.of(approval));
+        when(offerNegotiationRepository.findByOfferProposal_OfferIdOrderByNegotiationDateDesc(1)).thenReturn(List.of(negotiation));
+
+        OfferDetailResponse detail = offerService.getOfferDetailForHr(1);
+
+        assertNotNull(detail);
+        assertEquals(1, detail.getOfferId());
+        assertEquals("Backend Engineer", detail.getOfferedPositionTitle());
+        assertEquals("Trần Thị B", detail.getCandidateName());
+        assertEquals("b@test.com", detail.getCandidateEmail());
+        assertEquals("Phòng Công Nghệ", detail.getDepartmentName());
+        assertEquals("Passed", detail.getFinalDecision());
+        assertEquals(1, detail.getApprovalHistory().size());
+        assertEquals("Nguyễn Giám Đốc", detail.getApprovalHistory().get(0).getDirectorName());
+        assertEquals(1, detail.getNegotiationHistory().size());
+        assertEquals(new BigDecimal("38000000"), detail.getNegotiationHistory().get(0).getCandidateCounterSalary());
+    }
+
+    @Test
+    @DisplayName("deleteDraftOfferByHr: Xóa bản thảo Offer khi ở trạng thái Draft thành công (Soft delete)")
+    void testDeleteDraftOfferByHr_draftStatus_softDeletesSuccessfully() {
+        OfferProposal offer = OfferProposal.builder()
+                .offerId(1)
+                .offerStatus("Draft")
+                .isDeleted(false)
+                .build();
+
+        when(offerProposalRepository.findById(1)).thenReturn(Optional.of(offer));
+
+        offerService.deleteDraftOfferByHr(1);
+
+        assertTrue(offer.getIsDeleted());
+        verify(offerProposalRepository).save(offer);
+    }
+
+    @Test
+    @DisplayName("deleteDraftOfferByHr: Cố tình xóa Offer không phải Draft ném BaseBusinessException")
+    void testDeleteDraftOfferByHr_notDraft_throwsException() {
+        OfferProposal offer = OfferProposal.builder()
+                .offerId(1)
+                .offerStatus("Pending_Director")
+                .isDeleted(false)
+                .build();
+
+        when(offerProposalRepository.findById(1)).thenReturn(Optional.of(offer));
+
+        BaseBusinessException ex = assertThrows(BaseBusinessException.class, () -> {
+            offerService.deleteDraftOfferByHr(1);
+        });
+
+        assertEquals("OFFER_NOT_DRAFT", ex.getErrorCode());
+        assertTrue(ex.getMessage().contains("Chỉ được phép xóa bản thảo"));
+    }
+
+    @Test
+    @DisplayName("sendOfferToCandidate: HR gửi Offer đã duyệt cho ứng viên thành công, đổi trạng thái Application sang Offered")
+    void testSendOfferToCandidate_approvedStatus_success() {
+        Application app = Application.builder().applicationId(10).applicationStatus("Interview_Passed").build();
+        OfferProposal offer = OfferProposal.builder()
+                .offerId(1)
+                .application(app)
+                .offerStatus("Approved")
+                .build();
+
+        when(offerProposalRepository.findById(1)).thenReturn(Optional.of(offer));
+        when(offerProposalRepository.save(any(OfferProposal.class))).thenAnswer(i -> i.getArgument(0));
+
+        OfferResponse response = offerService.sendOfferToCandidate(1);
+
+        assertNotNull(response);
+        assertEquals("Sent_Candidate", response.getOfferStatus());
+        assertEquals("Offered", app.getApplicationStatus());
+        verify(applicationRepository).save(app);
+        verify(notificationService).sendOfferLetterToCandidate(offer);
+    }
+
+    @Test
+    @DisplayName("sendOfferToCandidate: Offer chưa được duyệt ném BaseBusinessException")
+    void testSendOfferToCandidate_notApprovedStatus_throwsException() {
+        OfferProposal offer = OfferProposal.builder()
+                .offerId(1)
+                .offerStatus("Draft")
+                .build();
+
+        when(offerProposalRepository.findById(1)).thenReturn(Optional.of(offer));
+
+        BaseBusinessException ex = assertThrows(BaseBusinessException.class, () -> {
+            offerService.sendOfferToCandidate(1);
+        });
+
+        assertEquals("OFFER_NOT_APPROVED", ex.getErrorCode());
+        assertTrue(ex.getMessage().contains("Chỉ được gửi thư mời nhận việc khi Offer đã được Director phê duyệt"));
     }
 }

@@ -3,7 +3,7 @@
 - **Người thực hiện:** Phạm Thị Huyền (HuyenPT)
 - **Nhánh làm việc:** `fix/huyenpt/offer-flow-bugfix`
 - **Module phụ trách:** `offer` (Quản lý Đề xuất tuyển dụng — Offer Proposal)
-- **Ngày lập:** 04/10/2026
+- **Ngày lập:** 05/10/2026
 - **Trạng thái:** Hoàn thành triển khai và kiểm thử Unit Test / Integration Test (100% PASS)
 - **Tài liệu tham chiếu:** [ARCHITECTURE_GUIDE.md](../../architecture/ARCHITECTURE_GUIDE.md), [model.md](../../database/model.md)
 
@@ -55,9 +55,9 @@ Hệ thống phân loại trạng thái Offer thành 2 nhóm:
   $env:SPRING_SQL_INIT_MODE = 'never'
   .\mvnw.cmd '-Dtest=OfferServiceTests' test
   ```
-- **Kết quả thực tế:** **20/20 tests PASS (100%)**, `BUILD SUCCESS`, không failure, không error.
+- **Kết quả thực tế:** **31/31 tests PASS (100%)**, `BUILD SUCCESS`, không failure, không error.
 
-#### Ma trận chi tiết 20 Unit Test Cases:
+#### Ma trận chi tiết 31 Unit Test Cases:
 
 | STT | Tên Test Case (Method) | Mục tiêu kiểm tra & Kết quả kỳ vọng | Kết quả |
 | :---: | :--- | :--- | :---: |
@@ -81,14 +81,29 @@ Hệ thống phân loại trạng thái Offer thành 2 nhóm:
 | 18 | `testCreateOfferByHr_existingOfferInGroupA_overridesSuccessfully` | `GBR-07`: Tạo Offer cho ứng viên có Offer Nhóm A (`Director_Rejected`) $\rightarrow$ Ghi đè in-place thành công | **PASS** |
 | 19 | `testUpdateOfferByHr_negotiatingAndDeclined_allowed` | `GBR-07`: Cho phép cập nhật Offer khi ở trạng thái `Negotiating` hoặc `Declined` (Nhóm A) | **PASS** |
 | 20 | `testUpdateOfferByHr_groupB_throwsException` | `GBR-07`: Cố tình cập nhật Offer ở trạng thái Nhóm B (`Pending_Director`) $\rightarrow$ Ném `OFFER_STATUS_INVALID` | **PASS** |
+| 21 | `testGetOfferById_found_returnsOfferResponse` | Tìm Offer theo ID thành công $\rightarrow$ Trả về `OfferResponse` chính xác | **PASS** |
+| 22 | `testGetOfferById_notFound_throwsException` | Tìm Offer theo ID không tồn tại $\rightarrow$ Ném `ResourceNotFoundException` | **PASS** |
+| 23 | `testGetOfferByApplicationId_found_returnsOfferResponse` | Tìm Offer theo ApplicationId thành công $\rightarrow$ Trả về `OfferResponse` | **PASS** |
+| 24 | `testGetOfferByApplicationId_notFound_throwsException` | Tìm Offer theo ApplicationId không tồn tại $\rightarrow$ Ném `ResourceNotFoundException` | **PASS** |
+| 25 | `testGetAllOffersForHr_allStatus_queriesActive` | Lấy danh sách Offer cho HR với trạng thái `ALL` hoặc `null` $\rightarrow$ Query toàn bộ | **PASS** |
+| 26 | `testGetAllOffersForHr_filteredStatus_queriesByStatus` | Lấy danh sách Offer có lọc theo status cụ thể (ví dụ `Pending_Director`) | **PASS** |
+| 27 | `testGetOfferDetailForHr_returnsComprehensiveDetails` | Lấy chi tiết Offer đầy đủ Candidate, Lịch sử duyệt Director và Đàm phán | **PASS** |
+| 28 | `testDeleteDraftOfferByHr_draftStatus_softDeletesSuccessfully` | Xóa bản thảo Offer khi ở trạng thái `Draft` thành công (Soft delete `isDeleted = true`) | **PASS** |
+| 29 | `testDeleteDraftOfferByHr_notDraft_throwsException` | Cố tình xóa Offer không phải `Draft` $\rightarrow$ Ném `OFFER_NOT_DRAFT` | **PASS** |
+| 30 | `testSendOfferToCandidate_approvedStatus_success` | HR gửi Offer đã duyệt cho ứng viên $\rightarrow$ Trạng thái Offer thành `Sent_Candidate`, Application thành `Offered` | **PASS** |
+| 31 | `testSendOfferToCandidate_notApprovedStatus_throwsException` | Gửi Offer chưa được duyệt $\rightarrow$ Ném `OFFER_NOT_APPROVED` | **PASS** |
 
 ---
 
 ### 2.2. Integration Test — Web API & Security Flow (`OfferIntegrationTest.java`)
 
 - **Vị trí file:** `src/test/java/com/group2/rms/offer/OfferIntegrationTest.java`
-- **Công nghệ sử dụng:** Spring WebMvcTest (`@WebMvcTest(OfferApiController.class)`), `MockMvc`, Spring Security Test (`@WithMockUser`, CSRF).
-- **Kết quả thực tế:** **7/7 tests PASS (100%)**.
+- **Công nghệ sử dụng:** Spring WebMvcTest (`@WebMvcTest(OfferController.class)`), `MockMvc`, Spring Security Test (`@WithMockUser`, CSRF).
+- **Lệnh thực thi:**
+  ```powershell
+  .\mvnw.cmd '-Dtest=OfferIntegrationTest' test
+  ```
+- **Kết quả thực tế:** **12/12 tests PASS (100%)**.
 
 | Mã Test | Endpoint / Method | Kịch bản kiểm tra | Kỳ vọng | Kết quả |
 | :---: | :--- | :--- | :--- | :---: |
@@ -99,6 +114,11 @@ Hệ thống phân loại trạng thái Offer thành 2 nhóm:
 | `IT-05` | `PUT /api/v1/hr/offers/{id}` | Cập nhật Offer hợp lệ ở Nhóm A | Trả về 200 OK + dữ liệu đã sửa | **PASS** |
 | `IT-06` | `POST /api/v1/hr/offers/{id}/send` | HR phát hành Offer Letter cho ứng viên | Trả về 200 OK + trạng thái `Sent_Candidate` | **PASS** |
 | `IT-07` | Security Matcher | Truy cập API khi chưa đăng nhập | Bị chặn (Redirect 302 về Login / 401 Unauthorized) | **PASS** |
+| `IT-08` | `GET /api/v1/hr/offers` | Lấy danh sách Offer có phân trang và lọc theo trạng thái | Trả về 200 OK + JSON Page | **PASS** |
+| `IT-09` | `GET /api/v1/hr/offers/{id}` | Lấy chi tiết Offer đầy đủ (Candidate + Proposal info) | Trả về 200 OK + JSON OfferDetailResponse | **PASS** |
+| `IT-10` | `DELETE /api/v1/hr/offers/{id}` | Xóa bản thảo Offer (Draft) thành công | Trả về 200 OK + Message thành công | **PASS** |
+| `IT-11` | `DELETE /api/v1/hr/offers/{id}` | Cố tình xóa Offer không phải Draft | Trả về 400 Bad Request (`OFFER_NOT_DRAFT`) | **PASS** |
+| `IT-12` | `POST /api/v1/hr/offers/{id}/send` | Gửi Offer chưa được duyệt Director | Trả về 400 Bad Request (`OFFER_NOT_APPROVED`) | **PASS** |
 
 ---
 
@@ -132,6 +152,26 @@ Dành cho Tester, Reviewer hoặc Giảng viên nghiệm thu trực tiếp trên
    - Chữ tiêu đề: "TỔNG ĐỀ XUẤT", "CHỜ PHÊ DUYỆT", "ĐÃ PHÊ DUYỆT", "TỪ CHỐI" nằm ở dòng trên và được căn giữa đều đặn.
    - Hàng dưới: Số lượng và Icon hiển thị song song, thẳng hàng, cân đối.
 
+### Kịch bản UI-04: Kiểm tra Xem chi tiết Offer & Lịch sử Phê duyệt / Đàm phán
+1. Tại trang danh sách Offer (`/offers`), bấm vào một dòng Offer hoặc nút **"Xem chi tiết"**.
+2. Modal/Trang chi tiết mở ra:
+   - Hiển thị đầy đủ thông tin ứng viên (Họ tên, Email, Vị trí, Điểm phỏng vấn, Nhận xét của Hiring Manager).
+   - Phần **Lịch sử Phê duyệt của Giám đốc**: Hiển thị tên Giám đốc, ngày giờ duyệt và nhận xét phê duyệt.
+   - Phần **Lịch sử Đàm phán**: Hiển thị mức lương ứng viên đề xuất lại (nếu có) và phản hồi từ phía HR.
+
+### Kịch bản UI-05: Kiểm tra Thao tác Xóa bản thảo Offer (Delete Draft)
+1. Tìm một Offer ở trạng thái **Bản thảo (Draft)**.
+2. Bấm nút **"Xóa"** $\rightarrow$ Hộp thoại xác nhận hiển thị $\rightarrow$ Bấm Đồng ý.
+   - *Kết quả mong đợi:* Bản ghi biến mất khỏi danh sách (`isDeleted = true` trong database), thông báo xóa thành công.
+3. Đối với các Offer ở trạng thái khác (`Pending_Director`, `Approved`, `Sent_Candidate`): Nút Xóa bị ẩn hoặc vô hiệu hóa.
+
+### Kịch bản UI-06: Kiểm tra Phát hành Offer Letter tới Ứng viên (Send Offer)
+1. Tìm một Offer đã được Giám đốc duyệt (Trạng thái **Đã phê duyệt / Approved**).
+2. Nút hành động **"Gửi thư mời" (Send Offer Letter)** được kích hoạt.
+3. Bấm gửi thư mời:
+   - *Kết quả mong đợi:* Trạng thái Offer đổi sang **Đã gửi ứng viên (Sent_Candidate)**; Trạng thái đơn ứng tuyển của ứng viên chuyển sang **Được đề xuất nhận việc (Offered)**.
+   - Đối với các Offer chưa duyệt (Draft, Pending_Director), thao tác gửi bị khóa.
+
 ---
 
 ## 4. Tệp tin đã thay đổi & Đối chiếu Git
@@ -141,6 +181,11 @@ Dành cho Tester, Reviewer hoặc Giảng viên nghiệm thu trực tiếp trên
 | `CreateOfferRequest.java` | Modified | Thêm validator kiểm tra lương thử việc $\le$ lương chính thức |
 | `UpdateOfferRequest.java` | Modified | Thêm validator kiểm tra lương thử việc $\le$ lương chính thức |
 | `OfferServiceImpl.java` | Modified | Cài đặt quy tắc `GBR-07` (Nhóm A ghi đè in-place, Nhóm B khóa; lọc Passed Candidates) |
-| `OfferServiceTests.java` | Modified | Bổ sung đầy đủ 20 Unit test cases cho toàn bộ nghiệp vụ |
+| `GlobalExceptionHandler.java` | Modified | Xử lý `MethodArgumentNotValidException` trả về HTTP 400 Bad Request cho API thay vì lỗi 500 |
+| `CareerFlowTests.java` | Modified | Đồng bộ tham số `roleName` trong constructor `ViewerProfileResponse` |
+| `OfferServiceTests.java` | Modified | Bổ sung đầy đủ **31 Unit test cases** bao phủ 100% nghiệp vụ Service |
+| `OfferIntegrationTest.java` | Modified | Bổ sung đầy đủ **12 Integration test cases** bao phủ REST API & Security |
 | `list.html` & `offers.css` | Modified | Căn chỉnh layout thẻ thống kê Stat Cards |
-| `docs/members/huyenpt/offer-flow-testing.md` | Created | Tài liệu chi tiết báo cáo và hướng dẫn kiểm thử luồng Offer |
+| `docs/members/huyenpt/offer-inter1-flow-testing.md` | Created/Updated | Báo cáo chi tiết và hướng dẫn kiểm thử tự động + kiểm thử thủ công cho luồng Offer |
+| `docs/management/work_logs/2026-10-05-offer-flow-testing-and-bugfix.md` | Created/Updated | Nhật ký công việc chi tiết của HuyenPT |
+| `docs/management/WORK_LOG.md` | Modified | Bổ sung dòng mục lục chung cho toàn bộ dự án |
