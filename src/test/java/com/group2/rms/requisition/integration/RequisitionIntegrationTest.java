@@ -3,6 +3,8 @@ package com.group2.rms.requisition.integration;
 import com.group2.rms.requisition.dto.RequisitionRequest;
 import com.group2.rms.requisition.dto.ScreeningCriteriaRequest;
 import com.group2.rms.requisition.entity.JobRequisition;
+import com.group2.rms.requisition.entity.RequisitionWorkflowEvent;
+import jakarta.persistence.EntityManager;
 import com.group2.rms.requisition.repository.JobRequisitionRepository;
 import com.group2.rms.requisition.repository.RequisitionApprovalRepository;
 import com.group2.rms.requisition.repository.RequisitionWorkflowEventRepository;
@@ -18,6 +20,8 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
+import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -27,12 +31,16 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.view;
 
 /*
  * STAGE 4 — INTEGRATION TEST.
  * Kiểm tra tích hợp thực tế giữa Service, Repository và Database với @Transactional rollback.
  */
-@SpringBootTest
+@SpringBootTest(properties = "spring.jpa.hibernate.ddl-auto=validate")
+@AutoConfigureMockMvc
 @Transactional
 class RequisitionIntegrationTest {
 
@@ -43,6 +51,8 @@ class RequisitionIntegrationTest {
     @Autowired private DepartmentRepository departments;
     @Autowired private UserRepository users;
     @Autowired private RoleRepository roles;
+    @Autowired private EntityManager entityManager;
+    @Autowired private MockMvc mvc;
 
     private Department department;
     private User hiringManager;
@@ -114,6 +124,38 @@ class RequisitionIntegrationTest {
         assertEquals(hiringManager.getUserId(), saved.getHiringManager().getUserId());
         assertEquals(department.getDepartmentId(), saved.getDepartment().getDepartmentId());
         assertEquals(1, saved.getScreeningCriteria().size());
+    }
+
+    // =========================================================================
+    // IT-11: Unicode columns and rendering through the real security filters
+    // =========================================================================
+
+    @Test
+    @WithMockUser(username = "it_hm", roles = "HIRING_MANAGER")
+    void it11_listAndDetail_readUnicodeColumns() throws Exception {
+        var requisition = requisitions.saveAndFlush(JobRequisition.builder()
+                .title("Unicode read regression").hiringManager(hiringManager).department(department)
+                .approvalStatus("Draft").gender("Female").workLocation("Văn phòng Hà Nội")
+                .workModel("Hybrid").probationDuration("2 tháng")
+                .screeningCriteria(new ArrayList<>()).build());
+        Integer id = requisition.getRequisitionId();
+        events.saveAndFlush(RequisitionWorkflowEvent.builder()
+                .requisition(requisition).actor(hiringManager).eventType("Withdrawn")
+                .occurredAt(java.time.LocalDateTime.now()).comment("Bổ sung yêu cầu tuyển dụng").build());
+        entityManager.clear(); // Exercise JDBC extraction, not the persistence-context cache.
+
+        assertEquals("Female", entityManager.createNativeQuery(
+                "SELECT RequiredGender FROM JobRequisition WHERE RequisitionId = :id")
+                .setParameter("id", id).getSingleResult());
+        var page = service.search(1, 10, "Unicode read regression", null, "", "", "newest");
+        var row = page.getContent().stream().filter(r -> id.equals(r.getRequisitionId())).findFirst().orElseThrow();
+        assertEquals("Female", row.getGender());
+        assertEquals("Văn phòng Hà Nội", row.getWorkLocation());
+        assertEquals("2 tháng", row.getProbationDuration());
+        assertEquals("Hybrid", row.getWorkModel());
+        assertEquals("Bổ sung yêu cầu tuyển dụng", service.getById(id).getTimeline().getFirst().description());
+        mvc.perform(get("/requisitions")).andExpect(status().isOk()).andExpect(view().name("requisitions/list"));
+        mvc.perform(get("/requisitions/{id}", id)).andExpect(status().isOk()).andExpect(view().name("requisitions/detail"));
     }
 
     // =========================================================================
