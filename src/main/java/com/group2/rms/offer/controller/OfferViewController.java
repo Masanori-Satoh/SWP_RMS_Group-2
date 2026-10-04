@@ -38,6 +38,17 @@ public class OfferViewController {
         Page<OfferResponse> pagedData = offerService.getAllOffersForHr(status, PageRequest.of(validPage, size));
         List<PassedCandidateResponse> passedCandidates = offerService.getPassedCandidatesForOffer();
 
+        String userRole = "HR";
+        if (principal instanceof org.springframework.security.core.Authentication auth) {
+            if (auth.getAuthorities().stream().anyMatch(a -> com.group2.rms.core.security.RoleAuthorities.SYSTEM_ADMIN.equals(a.getAuthority()))) {
+                userRole = "System Admin";
+            } else if (auth.getAuthorities().stream().anyMatch(a -> "ROLE_DIRECTOR".equals(a.getAuthority()))) {
+                userRole = "Director";
+            } else {
+                userRole = "HR";
+            }
+        }
+
         model.addAttribute("offers", pagedData.getContent());
         model.addAttribute("offersPage", pagedData);
         model.addAttribute("currentPage", validPage);
@@ -46,6 +57,7 @@ public class OfferViewController {
         model.addAttribute("currentStatus", status != null ? status : "ALL");
         model.addAttribute("passedCandidates", passedCandidates);
         model.addAttribute("currentUser", principal != null ? principal.getName() : "HR Specialist");
+        model.addAttribute("userRole", userRole);
 
         return "offers/list";
     }
