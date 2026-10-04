@@ -5,7 +5,7 @@ import com.group2.rms.user.entity.User;
 import com.group2.rms.user.repository.DepartmentRepository;
 import com.group2.rms.user.repository.RoleRepository;
 import com.group2.rms.user.repository.UserRepository;
-import com.group2.rms.candidate.CandidateRepository;
+import com.group2.rms.candidate.repository.CandidateRepository;
 import com.group2.rms.user.service.AccountListService;
 import org.junit.jupiter.api.Test;
 

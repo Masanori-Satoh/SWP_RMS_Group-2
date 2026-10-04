@@ -27,10 +27,10 @@
         <a th:href="@{/profile}" class="nav-item" th:classappend="${activeMenu == 'profile' ? 'active' : ''}" th:attr="aria-current=${activeMenu == 'profile' ? 'page' : null}">
             Profile
         </a>
-        <a th:if="${sidebarAdmin == true}" th:href="@{/admin/accounts}" class="nav-item" th:classappend="${activeMenu == 'accounts' ? 'active' : ''}" th:attr="aria-current=${activeMenu == 'accounts' ? 'page' : null}">
+        <a th:href="@{/admin/accounts}" class="nav-item" th:classappend="${activeMenu == 'accounts' ? 'active' : ''}" th:attr="aria-current=${activeMenu == 'accounts' ? 'page' : null}">
             Admin Accounts
         </a>
-        <a th:if="${sidebarAdmin == true}" th:href="@{/admin/api-monitoring}" class="nav-item" th:classappend="${activeMenu == 'api-monitoring' ? 'active' : ''}" th:attr="aria-current=${activeMenu == 'api-monitoring' ? 'page' : null}">
+        <a th:href="@{/admin/api-monitoring}" class="nav-item" th:classappend="${activeMenu == 'api-monitoring' ? 'active' : ''}" th:attr="aria-current=${activeMenu == 'api-monitoring' ? 'page' : null}">
             API Monitoring
         </a>
     </nav>
@@ -45,6 +45,7 @@
         <span th:if="${role == 'System Admin'}" class="workspace-nav-group">System</span>
         <a th:if="${role == 'System Admin'}" th:href="@{/admin/api-monitoring}" th:attr="aria-current=${activeMenu == 'api-monitoring' ? 'page' : null}">API Monitoring</a>
         <a th:if="${role != 'Candidate'}" th:href="@{/requisitions}" th:attr="aria-current=${activeMenu == 'requisitions' ? 'page' : null}">Job Requisitions</a>
+        <a th:if="${role == 'HR' or role == 'Director' or role == 'System Admin'}" th:href="@{/offers}" th:attr="aria-current=${activeMenu == 'offers' ? 'page' : null}">Offer Management</a>
     </nav>
     <nav class="workspace-nav workspace-home" aria-label="Public careers"><a th:href="@{/}">Back to Careers</a></nav>
 </aside>

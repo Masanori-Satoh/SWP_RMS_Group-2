@@ -1,29 +1,30 @@
 package com.group2.rms;
 
-import com.group2.rms.dashboard.DashboardController;
+import com.group2.rms.dashboard.controller.DashboardController;
 import com.group2.rms.core.config.SecurityConfig;
-import com.group2.rms.auth.AuthController;
+import com.group2.rms.auth.controller.AuthController;
+import com.group2.rms.auth.controller.CandidateAccountController;
 import com.group2.rms.user.controller.AccountController;
-import com.group2.rms.admin.ApiMonitoringController;
-import com.group2.rms.dashboard.DashboardMetricsRepository;
-import com.group2.rms.admin.HealthController;
-import com.group2.rms.auth.PasswordRecoveryController;
-import com.group2.rms.auth.RegistrationController;
+import com.group2.rms.admin.controller.ApiMonitoringController;
+import com.group2.rms.dashboard.repository.DashboardMetricsRepository;
+import com.group2.rms.admin.controller.HealthController;
+import com.group2.rms.auth.controller.PasswordRecoveryController;
+import com.group2.rms.auth.controller.RegistrationController;
 import com.group2.rms.user.entity.Department;
 import com.group2.rms.user.exception.AccountFieldException;
 import com.group2.rms.user.entity.Role;
 import com.group2.rms.user.entity.User;
 import com.group2.rms.user.repository.UserRepository;
-import com.group2.rms.dashboard.DashboardMetricsRepository.ApprovalActivity;
+import com.group2.rms.dashboard.repository.DashboardMetricsRepository.ApprovalActivity;
 import com.group2.rms.core.security.DatabaseUserDetailsService;
 import com.group2.rms.user.service.AccountListService;
 import com.group2.rms.user.service.AccountManagementService;
-import com.group2.rms.admin.ApiMonitoringService;
-import com.group2.rms.dashboard.DashboardService;
-import com.group2.rms.dashboard.DashboardView;
-import com.group2.rms.auth.CandidateRegistrationService;
-import com.group2.rms.auth.PasswordResetEmailSender;
-import com.group2.rms.auth.PasswordResetService;
+import com.group2.rms.admin.service.ApiMonitoringService;
+import com.group2.rms.dashboard.service.DashboardService;
+import com.group2.rms.dashboard.dto.DashboardView;
+import com.group2.rms.auth.service.CandidateRegistrationService;
+import com.group2.rms.auth.service.PasswordResetEmailSender;
+import com.group2.rms.auth.service.PasswordResetService;
 import jakarta.servlet.http.HttpSession;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -63,7 +64,7 @@ import static org.hamcrest.Matchers.not;
 
 @WebMvcTest(controllers = { AuthController.class, DashboardController.class, AccountController.class,
                 ApiMonitoringController.class, HealthController.class,
-                RegistrationController.class, PasswordRecoveryController.class })
+                RegistrationController.class, PasswordRecoveryController.class, CandidateAccountController.class })
 @Import({ SecurityConfig.class, DatabaseUserDetailsService.class })
 class SecurityFlowTests {
 

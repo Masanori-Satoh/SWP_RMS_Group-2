@@ -1,0 +1,15 @@
+<!doctype html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="utf-8">
+  <title>Lỗi 403 — Truy cập bị từ chối</title>
+  <link rel="stylesheet" th:href="@{/css/global.css}" href="/css/global.css">
+</head>
+<body style="display:flex;align-items:center;justify-content:center;height:100vh;background:var(--page);text-align:center;">
+  <div class="base-card" style="padding:var(--s8);max-width:520px;">
+    <h1 style="color:var(--brand-dark);margin-bottom:var(--s2);">403 - Truy Cập Bị Từ Chối</h1>
+    <p style="color:var(--muted);margin-bottom:var(--s4);" th:text="${message}">Bạn không có quyền truy cập vào tài nguyên này.</p>
+    <a href="/dashboard" class="button button-brand">Về Trang Điều Khiển</a>
+  </div>
+</body>
+</html>

@@ -1,7 +1,7 @@
 package com.group2.rms.user.service;
 
-import com.group2.rms.candidate.Candidate;
-import com.group2.rms.candidate.CandidateRepository;
+import com.group2.rms.candidate.entity.Candidate;
+import com.group2.rms.candidate.repository.CandidateRepository;
 import com.group2.rms.core.security.RoleAuthorities;
 import com.group2.rms.user.entity.Department;
 import com.group2.rms.user.entity.Role;

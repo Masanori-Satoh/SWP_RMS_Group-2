@@ -66,14 +66,14 @@ src/main/java/com/group2/rms/
 
 ## 4. Xử lý Lỗi và Xác thực (Exception & Validator)
 - **Validator:** Bắt buộc dùng DTO kèm Annotation (VD: `@Valid`) để kiểm tra dữ liệu đầu vào.
-- **Exception (Ép dùng Global Exception Handler cho code mới):**
+- **Exception (Áp dụng Global Exception Handler cho code mới):**
   - **Với code mới:** Service ném ra Custom Exception (kế thừa `BaseBusinessException`). Controller **CẤM** sử dụng `try-catch`, hãy để lỗi trôi lên `GlobalExceptionHandler` ở tầng `core`.
   - **Lưu ý code hiện tại (WIP):** Các hàm Controller đang tự try-catch, tự dọn dẹp sau khi hệ thống Global Exception hoàn thiện.
 
 ## 5. Giao tiếp chéo giữa các Tính năng (Cross-Feature)
 - **Quy tắc cho code mới:** XEM XÉT KỸ LƯỠNG khi gọi chéo:
   - Được phép: Tiêm (`@Autowired`) Service A vào Service B.
-  - CẤM TỐI KỴ: Tạo vòng lặp phụ thuộc (Circular Dependency).
+  - CẤM TUYỆT ĐỐI: Tạo vòng lặp phụ thuộc (Circular Dependency).
   - Khuyến khích: Nếu nghiệp vụ đan chéo quá 2 tính năng, xem xét tạo Orchestrator Feature.
 - **Lưu ý code hiện tại (WIP):** Tự rà soát chiều gọi Service và sắp xếp lại sau.
 

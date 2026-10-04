@@ -1,7 +1,7 @@
 package com.group2.rms.service;
 
-import com.group2.rms.admin.ApiMonitoringService;
-import com.group2.rms.admin.HttpProbeTransport;
+import com.group2.rms.admin.service.ApiMonitoringService;
+import com.group2.rms.admin.service.HttpProbeTransport;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
 import org.junit.jupiter.api.BeforeEach;

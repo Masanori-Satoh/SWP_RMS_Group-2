@@ -1,10 +1,10 @@
 package com.group2.rms.service;
 
-import com.group2.rms.auth.CandidateRegistrationService;
-import com.group2.rms.auth.PasswordResetService;
-import com.group2.rms.candidate.Candidate;
+import com.group2.rms.auth.service.CandidateRegistrationService;
+import com.group2.rms.auth.service.PasswordResetService;
+import com.group2.rms.candidate.entity.Candidate;
 import com.group2.rms.user.entity.User;
-import com.group2.rms.candidate.CandidateRepository;
+import com.group2.rms.candidate.repository.CandidateRepository;
 import com.group2.rms.user.repository.UserRepository;
 import jakarta.persistence.EntityManager;
 import org.junit.jupiter.api.Test;
@@ -24,7 +24,7 @@ import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-@SpringBootTest(properties = "APP_PASSWORD_RESET_SECRET=integration-test-signing-key-longer-than-32-bytes")
+@SpringBootTest(properties = "app.password.reset.secret=integration-test-signing-key-longer-than-32-bytes")
 @Transactional
 @Rollback
 class AuthenticationDatabaseTests {
