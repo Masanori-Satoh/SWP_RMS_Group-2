@@ -8,7 +8,7 @@ import org.springframework.web.bind.annotation.ResponseStatus;
  * Mapped to HTTP 400 Bad Request by default instead of 500 Server Error.
  */
 @ResponseStatus(HttpStatus.BAD_REQUEST)
-//400 core
+// 400 core
 public class BaseBusinessException extends RuntimeException {
     private final String errorCode;
 

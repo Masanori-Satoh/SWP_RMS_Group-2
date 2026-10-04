@@ -1,0 +1,32 @@
+.requisition-form-page .form-container { display:grid; gap:var(--s6); }
+.requisition-form-page .form-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:var(--s6); }
+.requisition-form-page .form-group-full { grid-column:1 / -1; }
+.requisition-form-page .form-group > label { display:block; margin-bottom:var(--s2); font-size:14px; font-weight:600; }
+.requisition-form-page .salary-range { display:flex; align-items:center; gap:var(--s3); }
+.requisition-form-page .textarea-custom { display:block; min-height:144px; }
+.requisition-form-page .char-counter { color:var(--muted); font-size:13px; text-align:right; margin-top:var(--s1); }
+.requisition-form-page .header-actions { justify-content:space-between; flex-wrap:wrap; gap:var(--s4); margin-bottom:var(--s3); }
+.requisition-form-page .criteria-help { margin-bottom:var(--s4); }
+.requisition-form-page .criteria-table-custom { min-width:960px; }
+.requisition-form-page .criteria-table-custom th { font-size:13px; }
+.requisition-form-page .criteria-table-custom th:nth-child(2) { width:24%; }
+.requisition-form-page .criteria-table-custom th:nth-child(3) { width:18%; }
+.requisition-form-page .criteria-table-custom th:nth-child(4) { width:24%; }
+.requisition-form-page .criteria-table-custom th:nth-child(5) { width:112px; }
+.requisition-form-page .criteria-table-custom th:nth-child(6) { width:112px; }
+.requisition-form-page .btn-trash { min-width:44px; padding:var(--s2); font-size:24px; }
+.requisition-form-page .switch-label { display:flex; align-items:center; gap:var(--s1); white-space:nowrap; }
+.requisition-form-page .switch { display:flex; align-items:center; justify-content:center; min-width:44px; min-height:44px; cursor:pointer; }
+.requisition-form-page input[type="checkbox"] { width:20px; height:20px; accent-color:var(--brand-dark); cursor:pointer; }
+.requisition-form-page .slider { display:none; }
+.requisition-form-page .form-footer-actions { display:flex; justify-content:flex-end; gap:var(--s3); flex-wrap:wrap; padding-block:var(--s4); border-top:1px solid var(--line); }
+.requisition-form-page .btn-cancel-custom { margin-right:auto; }
+.requisition-form-page #validation-summary { margin:0; scroll-margin-top:128px; }
+.requisition-form-page #validation-summary p { font-weight:600; }
+.requisition-form-page #validation-summary ul { padding-left:var(--s6); margin:var(--s2) 0 0; }
+@media (max-width:600px) {
+  .requisition-form-page .form-grid { grid-template-columns:minmax(0,1fr); gap:var(--s4); }
+  .requisition-form-page .form-footer-actions { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); }
+  .requisition-form-page .btn-cancel-custom { margin:0; }
+  .requisition-form-page .btn-submit-director { grid-column:1 / -1; }
+}

@@ -34,4 +34,7 @@ public interface UserRepository extends JpaRepository<User, Integer>, JpaSpecifi
     @Override
     @EntityGraph(attributePaths = {"role", "department"})
     Page<User> findAll(Specification<User> specification, Pageable pageable);
+
+    @Query("SELECT u FROM User u LEFT JOIN FETCH u.role LEFT JOIN FETCH u.department")
+    java.util.List<User> findAllWithRoleAndDepartment();
 }

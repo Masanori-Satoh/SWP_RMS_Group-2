@@ -37,7 +37,7 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(DepartmentFieldException.class)
     public ModelAndView handleDepartmentFieldException(DepartmentFieldException exception,
-                                                       HttpServletRequest request, HttpServletResponse response) {
+            HttpServletRequest request, HttpServletResponse response) {
         String target = request.getContextPath() + "/admin/departments/"
                 + (exception.getDepartmentId() == null ? "new" : exception.getDepartmentId() + "/edit");
         BindingResult errors = new BeanPropertyBindingResult(exception.getForm(), "form");

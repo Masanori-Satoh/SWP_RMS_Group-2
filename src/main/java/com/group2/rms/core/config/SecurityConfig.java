@@ -11,10 +11,10 @@ import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.access.intercept.AuthorizationFilter;
-import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.web.savedrequest.HttpSessionRequestCache;
 
 /**
@@ -22,6 +22,8 @@ import org.springframework.security.web.savedrequest.HttpSessionRequestCache;
  */
 @Configuration
 @EnableWebSecurity
+// @EnableMethodSecurity: Tạm tắt để cho phép test các luồng API trong giai đoạn
+// phát triển (permitAll)
 public class SecurityConfig {
 
     @Bean
@@ -69,8 +71,14 @@ public class SecurityConfig {
                                 // api config
                                 "/admin/ai-configuration", "/admin/ai-configuration/**")
                         .hasAuthority(RoleAuthorities.SYSTEM_ADMIN)
-                        // authenticaed require for dashboard
-                        .requestMatchers("/dashboard", "/dashboard/**").authenticated()
+                        // require authenticaed for SYSTEM_ADMIN, ROLE_HR, ROLE_DIRECTOR
+                        .requestMatchers("/offers", "/offers/**", "/api/v1/hr/offers", "/api/v1/hr/offers/**")
+                        .hasAnyAuthority(RoleAuthorities.SYSTEM_ADMIN, "ROLE_HR", "ROLE_DIRECTOR")
+                        // authenticaed require for dashboard notification
+                        .requestMatchers("/dashboard", "/dashboard/**", "/notifications", "/notifications/**")
+                        .authenticated()
+                        .requestMatchers("/requisitions", "/requisitions/**")
+                        .hasAnyAuthority("ROLE_HIRING_MANAGER", "ROLE_DIRECTOR", "ROLE_HR")
                         .anyRequest().authenticated())
                 // store target url before login
                 .requestCache(cache -> cache.requestCache(requestCache))

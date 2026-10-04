@@ -1,379 +1,217 @@
 package com.group2.rms.requisition.service;
 
-import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
-
-import com.group2.rms.requisition.dto.*;
-import com.group2.rms.requisition.entity.JobRequisition;
-import com.group2.rms.requisition.entity.ScreeningCriteria;
-import com.group2.rms.requisition.repository.JobRequisitionRepository;
-import com.group2.rms.requisition.repository.RequisitionApprovalRepository;
-import com.group2.rms.requisition.repository.ScreeningCriteriaRepository;
-import org.springframework.stereotype.Service;
-
 import com.group2.rms.admin.dto.ActivityLogResponse;
 import com.group2.rms.admin.entity.AuditLog;
-import com.group2.rms.user.entity.Department;
-import com.group2.rms.user.entity.User;
 import com.group2.rms.admin.repository.AuditLogRepository;
+import com.group2.rms.notification.NotificationService;
+import com.group2.rms.requisition.dto.ApprovalResponse;
+import com.group2.rms.requisition.dto.RequisitionRequest;
+import com.group2.rms.requisition.dto.RequisitionResponse;
+import com.group2.rms.requisition.dto.RequisitionTimelineResponse;
+import com.group2.rms.requisition.dto.ScreeningCriteriaRequest;
+import com.group2.rms.requisition.dto.ScreeningCriteriaResponse;
+import com.group2.rms.requisition.entity.JobRequisition;
+import com.group2.rms.requisition.entity.RequisitionApproval;
+import com.group2.rms.requisition.entity.RequisitionWorkflowEvent;
+import com.group2.rms.requisition.entity.ScreeningCriteria;
+import com.group2.rms.requisition.exception.RequisitionValidationException;
+import com.group2.rms.requisition.repository.JobPostingRepository;
+import com.group2.rms.requisition.repository.JobRequisitionRepository;
+import com.group2.rms.requisition.repository.RequisitionApprovalRepository;
+import com.group2.rms.requisition.repository.RequisitionWorkflowEventRepository;
+import com.group2.rms.requisition.validator.RequisitionValidator;
+import com.group2.rms.user.entity.User;
 import com.group2.rms.user.repository.DepartmentRepository;
-import com.group2.rms.user.repository.UserRepository;
 
+import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.*;
+import org.springframework.data.jpa.domain.Specification;
+import org.springframework.http.HttpStatus;
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.server.ResponseStatusException;
+import java.time.LocalDateTime;
+import java.util.*;
+import java.util.stream.Collectors;
 
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
-
-@Service
-@Transactional
+@Service @Transactional @RequiredArgsConstructor
 public class RequisitionServiceImpl implements RequisitionService {
+    private final JobRequisitionRepository requisitions;
+    private final DepartmentRepository departments;
+    private final RequisitionApprovalRepository approvals;
+    private final JobPostingRepository postings;
+    private final AuditLogRepository audit;
+    private final RequisitionWorkflowEventRepository events;
+    private final RequisitionAccess access;
+    private final RequisitionValidator validator;
+    private final NotificationService notificationService;
 
-    private final JobRequisitionRepository requisitionRepo;
-    private final UserRepository userRepo;
-    private final DepartmentRepository departmentRepo;
-    private final RequisitionApprovalRepository approvalRepo;
-    private final ScreeningCriteriaRepository criteriaRepo;
-    private final AuditLogRepository auditLogRepo;
-
-    // Hệ thống hiện dùng mock user id=1 (Admin). Sau sẽ lấy từ SecurityContext.
-    private static final Integer SYSTEM_USER_ID = 1;
-
-    public RequisitionServiceImpl(
-            JobRequisitionRepository requisitionRepo,
-            UserRepository userRepo,
-            DepartmentRepository departmentRepo,
-            RequisitionApprovalRepository approvalRepo,
-            ScreeningCriteriaRepository criteriaRepo,
-            AuditLogRepository auditLogRepo) {
-        this.requisitionRepo = requisitionRepo;
-        this.userRepo = userRepo;
-        this.departmentRepo = departmentRepo;
-        this.approvalRepo = approvalRepo;
-        this.criteriaRepo = criteriaRepo;
-        this.auditLogRepo = auditLogRepo;
+    private Specification<JobRequisition> scope(User actor) {
+        return (r,q,cb) -> switch(access.role(actor)) {
+            case "Hiring Manager" -> cb.equal(r.get("hiringManager").get("userId"),actor.getUserId());
+            case "Director" -> cb.notEqual(r.get("approvalStatus"),"Draft");
+            case "HR" -> cb.equal(r.get("approvalStatus"),"Approved");
+            default -> cb.conjunction();
+        };
     }
-
-    /** Ghi AuditLog an toàn - không ném exception nếu user không tìm thấy */
-    private void writeLog(String action, String entityId, String description) {
-        try {
-            User actor = userRepo.findById(SYSTEM_USER_ID).orElse(null);
-            if (actor == null)
-                return;
-            AuditLog log = AuditLog.builder()
-                    .user(actor)
-                    .action(action)
-                    .entityName("JobRequisition")
-                    .entityId(entityId)
-                    .newValue(description)
-                    .timestamp(LocalDateTime.now())
-                    .build();
-            auditLogRepo.save(log);
-        } catch (Exception ignored) {
-            // Không để lỗi log ảnh hưởng nghiệp vụ chính
-        }
+    @Override @Transactional(readOnly=true)
+    public Page<RequisitionResponse> search(int page,int size,String query,Integer department,String type,String status) {
+        return search(page,size,query,department,type,status,"newest");
     }
-
+    @Override @Transactional(readOnly=true)
+    public Page<RequisitionResponse> search(int page,int size,String query,Integer department,String type,String status,String order) {
+        User actor=access.actor(); var filter=scope(actor);
+        String term=Objects.toString(query,"").trim().toLowerCase(Locale.ROOT);
+        if(term.length()>120)term=term.substring(0,120);
+        String pattern="%"+term.replace("\\","\\\\").replace("%","\\%").replace("_","\\_").replace("[","\\[")+"%";
+        if(!term.isEmpty()) filter=filter.and((r,q,cb)->cb.or(
+            cb.like(cb.lower(r.get("title")),pattern,'\\'),
+            cb.like(cb.lower(r.join("department",jakarta.persistence.criteria.JoinType.LEFT).get("departmentName")),pattern,'\\')));
+        if(department!=null)filter=filter.and((r,q,cb)->cb.equal(r.get("department").get("departmentId"),department));
+        if(type!=null&&!type.isBlank())filter=filter.and((r,q,cb)->cb.equal(r.get("employmentType"),type));
+        if(status!=null&&!status.isBlank())filter=filter.and((r,q,cb)->cb.equal(r.get("approvalStatus"),status));
+        int count=Math.max(1,Math.min(size,50));
+        var sort=switch(Objects.toString(order,"newest")) {
+            case "oldest" -> Sort.by(Sort.Order.asc("createdAt"),Sort.Order.asc("requisitionId"));
+            case "position_asc" -> Sort.by(Sort.Order.asc("title"),Sort.Order.desc("requisitionId"));
+            case "position_desc" -> Sort.by(Sort.Order.desc("title"),Sort.Order.desc("requisitionId"));
+            default -> Sort.by(Sort.Order.desc("createdAt"),Sort.Order.desc("requisitionId"));
+        };
+        var result=requisitions.findAll(filter,PageRequest.of(Math.max(0,page-1),count,sort));
+        if(result.getTotalPages()>0&&result.getNumber()>=result.getTotalPages())result=requisitions.findAll(filter,PageRequest.of(result.getTotalPages()-1,count,sort));
+        return result.map(r->response(r,actor,false));
+    }
+    @Override @Transactional(readOnly=true)
+    public long countVisible() { return requisitions.count(scope(access.actor())); }
+    @Override @Transactional(readOnly=true)
+    public RequisitionResponse getById(Integer id) { var actor=access.actor();var r=find(id,false);access.requireView(actor,r);return response(r,actor,true); }
+    @Override @Transactional(readOnly=true)
+    public RequisitionRequest getRequestDtoById(Integer id) { var r=find(id,false);access.requireEdit(access.actor(),r);return request(r); }
+    @Override @Transactional(readOnly=true)
+    public RequisitionRequest copy(Integer id) {
+        var actor=access.actor();access.requireCreate(actor);var r=find(id,false);access.requireView(actor,r);
+        var copy=request(r);copy.getScreeningCriteria().forEach(c->c.setCriteriaId(null));return copy;
+    }
+    private RequisitionRequest request(JobRequisition r) {
+        var rows=r.getScreeningCriteria().stream().map(c->ScreeningCriteriaRequest.builder().criteriaId(c.getCriteriaId()).criteriaName(c.getCriteriaName())
+            .criteriaType(c.getCriteriaType()).requiredValue(c.getRequiredValue()).weight(c.getWeight()).isMandatory(c.getIsMandatory()).build()).collect(Collectors.toCollection(ArrayList::new));
+        return RequisitionRequest.builder().title(r.getTitle()).departmentId(r.getDepartment()==null?null:r.getDepartment().getDepartmentId())
+            .numberOfPositions(r.getNumberOfPositions()).employmentType(r.getEmploymentType()).minSalary(r.getMinSalary()).maxSalary(r.getMaxSalary())
+            .gender(r.getGender()).workLocation(r.getWorkLocation()).workModel(r.getWorkModel()).probationDuration(r.getProbationDuration()).expectedStartDate(r.getExpectedStartDate())
+            .reasonForHiring(r.getReasonForHiring()).jobDescription(r.getJobDescription()).requirementDetails(r.getRequirementDetails()).screeningCriteria(rows).build();
+    }
     @Override
-    public RequisitionResponse getById(Integer id) {
-        JobRequisition req = requisitionRepo.findById(id)
-                .orElseThrow(() -> new RuntimeException("Not find Requisition with ID: " + id));
-        return convertToDto(req);
+    public Integer createRequisition(RequisitionRequest d) {
+        var actor=access.actor();access.requireCreate(actor);validator.validate(d);
+        if(d.getScreeningCriteria().stream().anyMatch(c->c.getCriteriaId()!=null))throw invalid("screeningCriteria","New criteria cannot reference existing records.");
+        var r=new JobRequisition();r.setHiringManager(actor);r.setScreeningCriteria(new ArrayList<>());apply(r,d);
+        d.getScreeningCriteria().stream().filter(c->!RequisitionValidator.blank(c)).forEach(c->r.getScreeningCriteria().add(criterion(r,c)));
+        r.setApprovalStatus("submit".equals(d.getAction())?"Pending_Director":"Draft");
+        if("submit".equals(d.getAction()))r.setSubmittedAt(LocalDateTime.now());
+        requisitions.saveAndFlush(r);
+        if(r.getSubmittedAt()!=null)event(r,actor,"Submitted","Sent to the Director approval queue.");
+        log(r,actor,"CREATE",null,"Created "+r.getTitle()+" · "+r.getApprovalStatus());return r.getRequisitionId();
     }
-
     @Override
-    public RequisitionRequest getRequestDtoById(Integer id) {
-        JobRequisition req = requisitionRepo.findById(id)
-                .orElseThrow(() -> new RuntimeException("Requisition not found with id: " + id));
-
-        java.util.List<ScreeningCriteriaRequest> criteriaDtoList = new java.util.ArrayList<>();
-        if (req.getScreeningCriteria() != null) {
-            criteriaDtoList = req.getScreeningCriteria().stream().map(c -> {
-                ScreeningCriteriaRequest cDto = new ScreeningCriteriaRequest();
-                cDto.setCriteriaId(c.getCriteriaId());
-                cDto.setCriteriaName(c.getCriteriaName());
-                cDto.setCriteriaType(c.getCriteriaType());
-                cDto.setRequiredValue(c.getRequiredValue());
-                cDto.setWeight(c.getWeight());
-                cDto.setIsMandatory(c.getIsMandatory());
-                return cDto;
-            }).collect(java.util.stream.Collectors.toList());
+    public void updateRequisition(Integer id,RequisitionRequest d) {
+        var actor=access.actor();var r=find(id,true);access.requireEdit(actor,r);validator.validate(d);
+        var before=snapshot(r);synchronizeCriteria(r,d.getScreeningCriteria());apply(r,d);
+        r.setApprovalStatus("submit".equals(d.getAction())?"Pending_Director":"Draft");
+        if("submit".equals(d.getAction())) { r.setSubmittedAt(LocalDateTime.now());r.setDecidedAt(null);event(r,actor,"Submitted","Sent to the Director approval queue."); }
+        var after=snapshot(r);Set<String> keys=new LinkedHashSet<>(before.keySet());keys.addAll(after.keySet());
+        var changed=keys.stream().filter(k->!Objects.equals(before.get(k),after.get(k))).toList();
+        if(!changed.isEmpty()) {
+            r.setUpdatedAt(LocalDateTime.now());requisitions.saveAndFlush(r);
+            log(r,actor,"UPDATE",changed.stream().map(k->k+": "+display(before.get(k))).collect(Collectors.joining("\n")),
+                changed.stream().map(k->k+": "+display(before.get(k))+" → "+display(after.get(k))).collect(Collectors.joining("\n")));
         }
-
-        if (criteriaDtoList.isEmpty()) {
-            ScreeningCriteriaRequest emptyCrit = new ScreeningCriteriaRequest();
-            emptyCrit.setWeight(new java.math.BigDecimal(0));
-            emptyCrit.setIsMandatory(false);
-            criteriaDtoList.add(emptyCrit);
-        }
-
-        RequisitionRequest dto = new RequisitionRequest();
-        dto.setTitle(req.getTitle());
-        dto.setDepartmentId(req.getDepartment() != null ? req.getDepartment().getDepartmentId() : null);
-        dto.setHiringManagerId(req.getHiringManager() != null ? req.getHiringManager().getUserId() : null);
-        dto.setNumberOfPositions(req.getNumberOfPositions());
-        dto.setEmploymentType(req.getEmploymentType());
-        dto.setMinSalary(req.getMinSalary());
-        dto.setMaxSalary(req.getMaxSalary());
-        dto.setReasonForHiring(req.getReasonForHiring());
-        dto.setJobDescription(req.getJobDescription());
-        dto.setRequirementDetails(req.getRequirementDetails());
-        dto.setScreeningCriteria(criteriaDtoList);
-
-        return dto;
     }
-
-    @Override
-    public Page<RequisitionResponse> getAllRequisitions(int page, int size) {
-        int pageIndex = Math.max(0, page - 1);
-        int pageSize = size > 0 ? size : 10;
-        Pageable pageable = PageRequest.of(pageIndex, pageSize);
-        Page<JobRequisition> pagedReqs = requisitionRepo.findAllByOrderByCreatedAtDesc(pageable);
-        return pagedReqs.map(this::convertToDto);
+    private void synchronizeCriteria(JobRequisition r,List<ScreeningCriteriaRequest> input) {
+        var rows=input.stream().filter(c->!RequisitionValidator.blank(c)).toList();
+        var existing=r.getScreeningCriteria().stream().collect(Collectors.toMap(ScreeningCriteria::getCriteriaId,c->c));
+        if(rows.stream().anyMatch(c->c.getCriteriaId()!=null&&!existing.containsKey(c.getCriteriaId())))throw invalid("screeningCriteria","A criterion does not belong to this request.");
+        var kept=rows.stream().map(ScreeningCriteriaRequest::getCriteriaId).filter(Objects::nonNull).collect(Collectors.toSet());
+        boolean changed=r.getScreeningCriteria().removeIf(c->!kept.contains(c.getCriteriaId()));
+        // Release old unique names before swaps or replacement inserts.
+        for(var row:rows) { var old=existing.get(row.getCriteriaId());if(old!=null&&!Objects.equals(old.getCriteriaName(),row.getCriteriaName())) { old.setCriteriaName("__rename_"+UUID.randomUUID());changed=true; } }
+        if(changed)requisitions.flush();
+        for(var row:rows) { var old=existing.get(row.getCriteriaId());if(old==null)r.getScreeningCriteria().add(criterion(r,row));else copyCriterion(old,row); }
     }
-
-    @Override
-    public List<RequisitionResponse> getByStatus(String status) {
-        List<JobRequisition> list = requisitionRepo.findByApprovalStatusOrderByCreatedAtDesc(status);
-        return list.stream().map(this::convertToDto).toList();
+    private ScreeningCriteria criterion(JobRequisition r,ScreeningCriteriaRequest d) { var c=new ScreeningCriteria();c.setRequisition(r);copyCriterion(c,d);return c; }
+    private void copyCriterion(ScreeningCriteria c,ScreeningCriteriaRequest d) { c.setCriteriaName(d.getCriteriaName());c.setCriteriaType(d.getCriteriaType());c.setRequiredValue(d.getRequiredValue());c.setWeight(d.getWeight());c.setIsMandatory(Boolean.TRUE.equals(d.getIsMandatory())); }
+    private void apply(JobRequisition r,RequisitionRequest d) {
+        r.setTitle(d.getTitle()==null?"Untitled requisition":d.getTitle());
+        r.setDepartment(d.getDepartmentId()==null?null:departments.findById(d.getDepartmentId()).orElseThrow(()->invalid("departmentId","Select an existing department.")));
+        r.setNumberOfPositions(d.getNumberOfPositions());r.setEmploymentType(d.getEmploymentType());r.setMinSalary(d.getMinSalary());r.setMaxSalary(d.getMaxSalary());
+        r.setGender(d.getGender());r.setWorkLocation(d.getWorkLocation());r.setWorkModel(d.getWorkModel());r.setProbationDuration(d.getProbationDuration());r.setExpectedStartDate(d.getExpectedStartDate());
+        r.setReasonForHiring(d.getReasonForHiring());r.setJobDescription(d.getJobDescription());r.setRequirementDetails(d.getRequirementDetails());
     }
-
-    @Override
-    public List<RequisitionResponse> getByHiringManager(Integer userId) {
-        List<JobRequisition> list = requisitionRepo.findByHiringManager_UserIdOrderByCreatedAtDesc(userId);
-        return list.stream().map(this::convertToDto).toList();
-    }
-
-    @Override
-    public void createRequisition(RequisitionRequest dto, Integer hiringManagerId) {
-        JobRequisition req = new JobRequisition();
-
-        req.setTitle(dto.getTitle());
-        req.setNumberOfPositions(dto.getNumberOfPositions());
-        req.setEmploymentType(dto.getEmploymentType());
-        req.setMinSalary(dto.getMinSalary());
-        req.setMaxSalary(dto.getMaxSalary());
-        req.setReasonForHiring(dto.getReasonForHiring());
-        req.setJobDescription(dto.getJobDescription());
-        req.setRequirementDetails(dto.getRequirementDetails());
-
-        String statusLabel;
-        if (dto.getAction() != null && dto.getAction().equals("draft")) {
-            req.setApprovalStatus("Draft");
-            statusLabel = "saved as Draft";
-        } else {
-            req.setApprovalStatus("Pending_Director");
-            statusLabel = "submitted for Approval";
-        }
-
-        Integer deptId = dto.getDepartmentId();
-        if (deptId != null) {
-            Department dept = departmentRepo.findById(deptId)
-                    .orElseThrow(() -> new RuntimeException("Not find any department with id: " + deptId));
-            req.setDepartment(dept);
-        }
-
-        Integer hmId = dto.getHiringManagerId() != null ? dto.getHiringManagerId() : hiringManagerId;
-        User hm = userRepo.findById(hmId)
-                .orElseThrow(() -> new RuntimeException("Not found Hiring Manager with id: " + hmId));
-        req.setHiringManager(hm);
-
-        requisitionRepo.save(req);
-
-        // Ghi criteria vào collection entity để Hibernate quản lý nhất quán
-        if (dto.getScreeningCriteria() != null) {
-            List<ScreeningCriteria> criteriaList = dto.getScreeningCriteria().stream()
-                    .filter(c -> c.getCriteriaName() != null && !c.getCriteriaName().trim().isEmpty())
-                    .map(c -> {
-                        ScreeningCriteria entity = new ScreeningCriteria();
-                        entity.setRequisition(req);
-                        entity.setCriteriaName(c.getCriteriaName());
-                        entity.setCriteriaType(c.getCriteriaType());
-                        entity.setRequiredValue(c.getRequiredValue());
-                        entity.setWeight(c.getWeight() != null ? c.getWeight() : java.math.BigDecimal.ONE);
-                        entity.setIsMandatory(c.getIsMandatory() != null ? c.getIsMandatory() : false);
-                        return entity;
-                    }).toList();
-            criteriaRepo.saveAll(criteriaList);
-        }
-
-        // Ghi Activity Log
-        writeLog("CREATE", String.valueOf(req.getRequisitionId()),
-                "Requisition \"" + req.getTitle() + "\" " + statusLabel + " with " + req.getNumberOfPositions()
-                        + " position(s).");
-    }
-
-    @Override
-    public void updateRequisition(Integer id, RequisitionRequest dto) {
-        JobRequisition req = requisitionRepo.findById(id)
-                .orElseThrow(() -> new RuntimeException("Requisition not found with id: " + id));
-
-        req.setTitle(dto.getTitle());
-        req.setNumberOfPositions(dto.getNumberOfPositions());
-        req.setEmploymentType(dto.getEmploymentType());
-        req.setMinSalary(dto.getMinSalary());
-        req.setMaxSalary(dto.getMaxSalary());
-        req.setReasonForHiring(dto.getReasonForHiring());
-        req.setJobDescription(dto.getJobDescription());
-        req.setRequirementDetails(dto.getRequirementDetails());
-
-        String actionLabel;
-        if ("draft".equals(dto.getAction())) {
-            req.setApprovalStatus("Draft");
-            actionLabel = "saved as Draft";
-        } else if ("submit".equals(dto.getAction())) {
-            req.setApprovalStatus("Pending_Director");
-            actionLabel = "submitted to Director";
-        } else {
-            // action="save" hoặc null → giữ nguyên status hiện tại
-            actionLabel = "updated (status kept: " + req.getApprovalStatus() + ")";
-        }
-
-        if (dto.getDepartmentId() != null) {
-            Department dept = departmentRepo.findById(dto.getDepartmentId())
-                    .orElseThrow(() -> new RuntimeException("Not find any department"));
-            req.setDepartment(dept);
-        }
-
-        if (dto.getHiringManagerId() != null) {
-            User hm = userRepo.findById(dto.getHiringManagerId())
-                    .orElseThrow(() -> new RuntimeException("Not found Hiring Manager"));
-            req.setHiringManager(hm);
-        }
-
-        // FIX: Thay vì dùng criteriaRepo.deleteByRequisition_RequisitionId (gây
-        // conflict với
-        // orphanRemoval=true trên entity collection), ta clear collection của entity và
-        // add lại. Hibernate sẽ tự quản lý DELETE + INSERT nhất quán.
-        if (req.getScreeningCriteria() == null) {
-            req.setScreeningCriteria(new ArrayList<>());
-        }
-        req.getScreeningCriteria().clear();
-
-        if (dto.getScreeningCriteria() != null) {
-            dto.getScreeningCriteria().stream()
-                    .filter(c -> c.getCriteriaName() != null && !c.getCriteriaName().trim().isEmpty())
-                    .forEach(c -> {
-                        ScreeningCriteria entity = new ScreeningCriteria();
-                        entity.setRequisition(req);
-                        entity.setCriteriaName(c.getCriteriaName());
-                        entity.setCriteriaType(c.getCriteriaType());
-                        entity.setRequiredValue(c.getRequiredValue());
-                        entity.setWeight(c.getWeight() != null ? c.getWeight() : java.math.BigDecimal.ONE);
-                        entity.setIsMandatory(c.getIsMandatory() != null ? c.getIsMandatory() : false);
-                        req.getScreeningCriteria().add(entity);
-                    });
-        }
-
-        // Hibernate tự flush update + cascade criteria
-        requisitionRepo.save(req);
-
-        // Ghi Activity Log
-        writeLog("UPDATE", String.valueOf(id),
-                "Requisition \"" + req.getTitle() + "\" " + actionLabel + ". Positions: " + req.getNumberOfPositions()
-                        + ".");
-    }
-
     @Override
     public void deleteRequisition(Integer id) {
-        JobRequisition req = requisitionRepo.findById(id)
-                .orElseThrow(() -> new RuntimeException("Requisition not found with id: " + id));
-
-        String title = req.getTitle();
-
-        // Ghi log TRƯỚC khi xoá (vì sau xoá không còn entity)
-        writeLog("DELETE", String.valueOf(id),
-                "Requisition \"" + title + "\" (ID: " + id + ") was permanently deleted.");
-
-        var approvals = approvalRepo.findByRequisition_RequisitionIdOrderByApprovalDateDesc(id);
-        if (approvals != null && !approvals.isEmpty()) {
-            approvalRepo.deleteAll(approvals);
-        }
-
-        // Dùng collection entity để orphanRemoval tự dọn criteria
-        if (req.getScreeningCriteria() != null) {
-            req.getScreeningCriteria().clear();
-        }
-
-        requisitionRepo.delete(req);
+        var actor=access.actor();var r=find(id,true);access.requireEdit(actor,r);
+        if(postings.existsByRequisition_RequisitionId(id))throw invalid("action","This request has linked job postings and cannot be deleted.");
+        log(r,actor,"DELETE",null,"Deleted requisition: "+r.getTitle());
+        approvals.deleteAll(approvals.findByRequisition_RequisitionIdOrderByApprovalDateDesc(id));events.deleteByRequisition_RequisitionId(id);
+        requisitions.delete(r);requisitions.flush();
     }
-
     @Override
-    public void submitForApproval(Integer id) {
-    }
-
-    @Override
-    public void approveRequisition(Integer id, Integer directorId, String comment) {
-    }
-
-    @Override
-    public void rejectRequisition(Integer id, Integer directorId, String comment) {
-    }
-
-    private RequisitionResponse convertToDto(JobRequisition req) {
-        java.util.List<ScreeningCriteriaResponse> criteriaDtoList = null;
-        if (req.getScreeningCriteria() != null) {
-            criteriaDtoList = req.getScreeningCriteria().stream().map(c -> {
-                ScreeningCriteriaResponse cDto = new ScreeningCriteriaResponse();
-                cDto.setCriteriaId(c.getCriteriaId());
-                cDto.setCriteriaName(c.getCriteriaName());
-                cDto.setCriteriaType(c.getCriteriaType());
-                cDto.setRequiredValue(c.getRequiredValue());
-                cDto.setWeight(c.getWeight());
-                cDto.setIsMandatory(c.getIsMandatory());
-                return cDto;
-            }).toList();
+    public void decide(Integer id,boolean approved,String comment) {
+        var actor=access.actor();var r=find(id,true);access.requireView(actor,r);
+        if(!access.canDecide(actor,r))throw new AccessDeniedException("Only a Director can decide a pending request.");
+        comment=RequisitionValidator.clean(comment);
+        if(!approved&&comment==null)throw invalid("comment","Explain what the Hiring Manager must change.");
+        if(comment!=null&&comment.length()>1000)throw invalid("comment","Use at most 1000 characters.");
+        String status=approved?"Approved":"Rejected";r.setApprovalStatus(status);r.setDecidedAt(LocalDateTime.now());
+        approvals.save(RequisitionApproval.builder().requisition(r).director(actor).status(status).comments(comment).build());
+        requisitions.saveAndFlush(r);event(r,actor,status,comment);
+        log(r,actor,"UPDATE","Status: Pending_Director","Status: Pending_Director → "+status+(comment==null?"":"\nDirector feedback: "+comment));
+        if(!approved) {
+            notificationService.notifyRequisitionRejected(r,actor,comment);
         }
-
-        var approvalsList = approvalRepo.findByRequisition_RequisitionIdOrderByApprovalDateDesc(req.getRequisitionId());
-        java.util.List<ApprovalResponse> approvalDtoList = new java.util.ArrayList<>();
-        if (approvalsList != null) {
-            int step = 1;
-            for (var a : approvalsList) {
-                approvalDtoList.add(ApprovalResponse.builder()
-                        .stepNumber(step++)
-                        .approverName(a.getDirector() != null ? a.getDirector().getFullName() : "Approver")
-                        .status(a.getStatus())
-                        .approvalDate(a.getApprovalDate())
-                        .comments(a.getComments())
-                        .build());
+    }
+    @Override
+    public void withdraw(Integer id) {
+        var actor=access.actor();var r=find(id,true);access.requireView(actor,r);
+        if(!access.owns(actor,r)||!"Pending_Director".equals(r.getApprovalStatus()))throw new AccessDeniedException("Only the requester can withdraw a pending request.");
+        r.setApprovalStatus("Draft");requisitions.saveAndFlush(r);event(r,actor,"Withdrawn","Withdrawn for editing.");
+        log(r,actor,"UPDATE","Status: Pending_Director","Status: Pending_Director → Draft (withdrawn)");
+    }
+    private JobRequisition find(Integer id,boolean lock) { return (lock?requisitions.findForUpdate(id):requisitions.findById(id)).orElseThrow(()->new ResponseStatusException(HttpStatus.NOT_FOUND,"Requisition not found.")); }
+    private RequisitionValidationException invalid(String field,String message) { return new RequisitionValidationException(Map.of(field,message)); }
+    private void log(JobRequisition r,User actor,String action,String old,String text) { audit.save(AuditLog.builder().user(actor).action(action).entityName("JobRequisition").entityId(r.getRequisitionId().toString()).oldValue(old).newValue(text).build()); }
+    private void event(JobRequisition r,User actor,String type,String comment) { events.save(RequisitionWorkflowEvent.builder().requisition(r).actor(actor).eventType(type).occurredAt(LocalDateTime.now()).comment(comment).build()); }
+    private String display(Object v) { return v==null?"Not specified":v.toString(); }
+    private String number(java.math.BigDecimal v) { return v==null?null:v.stripTrailingZeros().toPlainString(); }
+    private Map<String,String> snapshot(JobRequisition r) {
+        Map<String,String> m=new LinkedHashMap<>();m.put("Job title",r.getTitle());m.put("Department",r.getDepartment()==null?null:r.getDepartment().getDepartmentName());
+        m.put("Openings",display(r.getNumberOfPositions()));m.put("Employment type",r.getEmploymentType());m.put("Minimum salary",number(r.getMinSalary()));m.put("Maximum salary",number(r.getMaxSalary()));
+        m.put("Gender",r.getGender());m.put("Location",r.getWorkLocation());m.put("Work model",r.getWorkModel());m.put("Probation duration",r.getProbationDuration());m.put("Expected start date",display(r.getExpectedStartDate()));
+        m.put("Reason for hiring",r.getReasonForHiring());m.put("Job description",r.getJobDescription());m.put("Candidate requirements",r.getRequirementDetails());m.put("Status",r.getApprovalStatus());
+        int i=0;for(var c:r.getScreeningCriteria())m.put("Criterion: "+(c.getCriteriaName()==null?"Unnamed "+(++i):c.getCriteriaName()),display(c.getCriteriaType())+"; "+display(c.getRequiredValue())+"; weight "+display(number(c.getWeight()))+"%; mandatory "+Boolean.TRUE.equals(c.getIsMandatory()));return m;
+    }
+    private RequisitionResponse response(JobRequisition r,User actor,boolean detail) {
+        boolean editable=access.canEdit(actor,r);
+        var d=RequisitionResponse.builder().requisitionId(r.getRequisitionId()).title(r.getTitle())
+            .departmentName(r.getDepartment()==null?"Not specified":r.getDepartment().getDepartmentName()).hiringManagerName(r.getHiringManager().getFullName())
+            .numberOfPositions(r.getNumberOfPositions()).employmentType(r.getEmploymentType()).approvalStatus(r.getApprovalStatus()).createdAt(r.getCreatedAt())
+            .minSalary(r.getMinSalary()).maxSalary(r.getMaxSalary()).gender(r.getGender()).workLocation(r.getWorkLocation()).workModel(r.getWorkModel()).probationDuration(r.getProbationDuration()).expectedStartDate(r.getExpectedStartDate())
+            .reasonForHiring(r.getReasonForHiring()).jobDescription(r.getJobDescription()).requirementDetails(r.getRequirementDetails())
+            .editable(editable).deletable(editable&&!postings.existsByRequisition_RequisitionId(r.getRequisitionId())).decidable(access.canDecide(actor,r))
+            .withdrawable(access.owns(actor,r)&&"Pending_Director".equals(r.getApprovalStatus())).build();
+        if(detail) {
+            if ("Draft".equals(r.getApprovalStatus())) {
+                var submission = request(r);
+                submission.setAction("submit");
+                try { validator.validate(submission); }
+                catch (RequisitionValidationException incomplete) { d.setIncomplete(true); }
             }
+            d.setScreeningCriteria(r.getScreeningCriteria().stream().map(c->{var x=new ScreeningCriteriaResponse();x.setCriteriaId(c.getCriteriaId());x.setCriteriaName(c.getCriteriaName());x.setCriteriaType(c.getCriteriaType());x.setRequiredValue(c.getRequiredValue());x.setWeight(c.getWeight());x.setIsMandatory(c.getIsMandatory());return x;}).toList());
+            d.setApprovals(approvals.findByRequisition_RequisitionIdOrderByApprovalDateDesc(r.getRequisitionId()).stream().map(a->ApprovalResponse.builder().approverName(a.getDirector().getFullName()).status(a.getStatus()).approvalDate(a.getApprovalDate()).comments(a.getComments()).build()).toList());
+            d.setActivityLog(audit.findByEntityNameAndEntityIdOrderByTimestampDesc("JobRequisition",r.getRequisitionId().toString()).stream().map(a->ActivityLogResponse.builder().auditLogId(a.getAuditLogId()).action(a.getAction()).performedBy(a.getUser().getFullName()).description(a.getNewValue()).timestamp(a.getTimestamp()).build()).toList());
+            d.setTimeline(events.findByRequisition_RequisitionIdOrderByOccurredAtDescEventIdDesc(r.getRequisitionId()).stream().map(e->new RequisitionTimelineResponse(e.getEventType(),e.getActor().getFullName(),e.getOccurredAt(),e.getComment())).toList());
+            if("Rejected".equals(r.getApprovalStatus())&&!d.getApprovals().isEmpty())d.setRejectionReason(d.getApprovals().getFirst().getComments());
         }
-
-        // Load activity log
-        List<ActivityLogResponse> activityLogList = new ArrayList<>();
-        var auditLogs = auditLogRepo.findByEntityNameAndEntityIdOrderByTimestampDesc(
-                "JobRequisition", String.valueOf(req.getRequisitionId()));
-        if (auditLogs != null) {
-            for (var log : auditLogs) {
-                activityLogList.add(ActivityLogResponse.builder()
-                        .auditLogId(log.getAuditLogId())
-                        .action(log.getAction())
-                        .performedBy(log.getUser() != null ? log.getUser().getFullName() : "System")
-                        .description(log.getNewValue())
-                        .timestamp(log.getTimestamp())
-                        .build());
-            }
-        }
-
-        return RequisitionResponse.builder()
-                .requisitionId(req.getRequisitionId())
-                .title(req.getTitle())
-                .departmentName(req.getDepartment() != null ? req.getDepartment().getDepartmentName() : "N/A")
-                .hiringManagerName(req.getHiringManager() != null ? req.getHiringManager().getFullName() : "N/A")
-                .numberOfPositions(req.getNumberOfPositions())
-                .employmentType(req.getEmploymentType())
-                .approvalStatus(req.getApprovalStatus())
-                .createdAt(req.getCreatedAt())
-                .minSalary(req.getMinSalary())
-                .maxSalary(req.getMaxSalary())
-                .reasonForHiring(req.getReasonForHiring())
-                .jobDescription(req.getJobDescription())
-                .requirementDetails(req.getRequirementDetails())
-                .screeningCriteria(criteriaDtoList)
-                .approvals(approvalDtoList)
-                .activityLog(activityLogList)
-                .build();
+        return d;
     }
 }

@@ -6,37 +6,50 @@
         <span class="brand-badge">Enterprise Application</span>
     </div>
     <nav class="sidebar-nav" aria-label="Main navigation">
-        <a th:href="@{/dashboard}" class="nav-item" th:classappend="${activeMenu == 'dashboard' ? 'active' : ''}" th:attr="aria-current=${activeMenu == 'dashboard' ? 'page' : null}">
+        <a th:href="@{/dashboard}" class="nav-item" th:classappend="${activeMenu == 'dashboard' ? 'active' : ''}"
+            th:attr="aria-current=${activeMenu == 'dashboard' ? 'page' : null}">
             Dashboard
         </a>
-        <a th:href="@{/requisitions}" class="nav-item" th:classappend="${activeMenu == 'requisitions' ? 'active' : ''}" th:attr="aria-current=${activeMenu == 'requisitions' ? 'page' : null}">
+        <a th:href="@{/requisitions}" class="nav-item" th:classappend="${activeMenu == 'requisitions' ? 'active' : ''}"
+            th:attr="aria-current=${activeMenu == 'requisitions' ? 'page' : null}">
             Job Requisitions
         </a>
-        <a th:href="@{/candidates}" class="nav-item" th:classappend="${activeMenu == 'candidates' ? 'active' : ''}" th:attr="aria-current=${activeMenu == 'candidates' ? 'page' : null}">
+        <a th:href="@{/candidates}" class="nav-item" th:classappend="${activeMenu == 'candidates' ? 'active' : ''}"
+            th:attr="aria-current=${activeMenu == 'candidates' ? 'page' : null}">
             Candidates
         </a>
-        <a th:href="@{/interviews}" class="nav-item" th:classappend="${activeMenu == 'interviews' ? 'active' : ''}" th:attr="aria-current=${activeMenu == 'interviews' ? 'page' : null}">
+        <a th:href="@{/interviews}" class="nav-item" th:classappend="${activeMenu == 'interviews' ? 'active' : ''}"
+            th:attr="aria-current=${activeMenu == 'interviews' ? 'page' : null}">
             Interview Schedule
         </a>
-        <a th:href="@{/offers}" class="nav-item" th:classappend="${activeMenu == 'offers' ? 'active' : ''}" th:attr="aria-current=${activeMenu == 'offers' ? 'page' : null}">
+        <a th:href="@{/offers}" class="nav-item" th:classappend="${activeMenu == 'offers' ? 'active' : ''}"
+            th:attr="aria-current=${activeMenu == 'offers' ? 'page' : null}">
             Offer Management
         </a>
-        <a th:href="@{/notifications}" class="nav-item" th:classappend="${activeMenu == 'notifications' ? 'active' : ''}" th:attr="aria-current=${activeMenu == 'notifications' ? 'page' : null}">
+        <a th:href="@{/notifications}" class="nav-item"
+            th:classappend="${activeMenu == 'notifications' ? 'active' : ''}"
+            th:attr="aria-current=${activeMenu == 'notifications' ? 'page' : null}">
             Notifications
         </a>
-        <a th:href="@{/profile}" class="nav-item" th:classappend="${activeMenu == 'profile' ? 'active' : ''}" th:attr="aria-current=${activeMenu == 'profile' ? 'page' : null}">
+        <a th:href="@{/profile}" class="nav-item" th:classappend="${activeMenu == 'profile' ? 'active' : ''}"
+            th:attr="aria-current=${activeMenu == 'profile' ? 'page' : null}">
             Profile
         </a>
-        <a th:href="@{/admin/accounts}" class="nav-item" th:classappend="${activeMenu == 'accounts' ? 'active' : ''}" th:attr="aria-current=${activeMenu == 'accounts' ? 'page' : null}">
+        <a th:href="@{/admin/accounts}" class="nav-item" th:classappend="${activeMenu == 'accounts' ? 'active' : ''}"
+            th:attr="aria-current=${activeMenu == 'accounts' ? 'page' : null}">
             Admin Accounts
         </a>
-        <a th:href="@{/admin/api-monitoring}" class="nav-item" th:classappend="${activeMenu == 'api-monitoring' ? 'active' : ''}" th:attr="aria-current=${activeMenu == 'api-monitoring' ? 'page' : null}">
+        <a th:href="@{/admin/api-monitoring}" class="nav-item"
+            th:classappend="${activeMenu == 'api-monitoring' ? 'active' : ''}"
+            th:attr="aria-current=${activeMenu == 'api-monitoring' ? 'page' : null}">
             API Monitoring
         </a>
     </nav>
 </aside>
 <aside th:fragment="workspace(activeMenu, role)" class="workspace-sidebar" id="workspace-navigation">
-    <h2 th:text="${role == 'Candidate' ? 'Không gian ứng viên' : (role == 'System Admin' ? 'Quản trị hệ thống' : 'Recruitment Workspace')}">Recruitment Workspace</h2>
+    <h2
+        th:text="${role == 'Candidate' ? 'Không gian ứng viên' : (role == 'System Admin' ? 'Quản trị hệ thống' : 'Recruitment Workspace')}">
+        Recruitment Workspace</h2>
     <nav th:if="${role == 'Candidate'}" class="workspace-nav" aria-label="Điều hướng ứng viên">
         <a th:href="@{/dashboard}" aria-current="page">Tổng quan</a>
         <a th:href="@{/dashboard#applications}">Đơn ứng tuyển</a>
@@ -46,18 +59,27 @@
         <a th:href="@{/dashboard#profile}">Hồ sơ của tôi</a>
     </nav>
     <nav th:unless="${role == 'Candidate'}" class="workspace-nav" aria-label="Workspace navigation">
-        <a th:href="@{/dashboard}" th:attr="aria-current=${activeMenu == 'dashboard' ? 'page' : null}" th:text="${role == 'System Admin' ? 'Tổng quan' : 'Dashboard'}">Dashboard</a>
+        <a th:href="@{/dashboard}" th:attr="aria-current=${activeMenu == 'dashboard' ? 'page' : null}"
+            th:text="${role == 'System Admin' ? 'Tổng quan' : 'Dashboard'}">Dashboard</a>
         <span th:if="${role == 'System Admin'}" class="workspace-nav-group">Tài khoản</span>
-        <a th:if="${role == 'System Admin'}" th:href="@{/admin/accounts}" th:attr="aria-current=${activeMenu == 'accounts' ? 'page' : null}">Tài khoản nội bộ</a>
-        <a th:if="${role == 'System Admin'}" th:href="@{/admin/candidate-accounts}" th:attr="aria-current=${activeMenu == 'candidate-accounts' ? 'page' : null}">Tài khoản ứng viên</a>
+        <a th:if="${role == 'System Admin'}" th:href="@{/admin/accounts}"
+            th:attr="aria-current=${activeMenu == 'accounts' ? 'page' : null}">Tài khoản nội bộ</a>
+        <a th:if="${role == 'System Admin'}" th:href="@{/admin/candidate-accounts}"
+            th:attr="aria-current=${activeMenu == 'candidate-accounts' ? 'page' : null}">Tài khoản ứng viên</a>
         <span th:if="${role == 'System Admin'}" class="workspace-nav-group">Hệ thống</span>
-        <a th:if="${role == 'System Admin'}" th:href="@{/admin/departments}" th:attr="aria-current=${activeMenu == 'departments' ? 'page' : null}">Phòng ban</a>
-        <a th:if="${role == 'System Admin'}" th:href="@{/admin/api-monitoring}" th:attr="aria-current=${activeMenu == 'api-monitoring' ? 'page' : null}">Giám sát API</a>
+        <a th:if="${role == 'System Admin'}" th:href="@{/admin/departments}"
+            th:attr="aria-current=${activeMenu == 'departments' ? 'page' : null}">Phòng ban</a>
+        <a th:if="${role == 'System Admin'}" th:href="@{/admin/api-monitoring}"
+            th:attr="aria-current=${activeMenu == 'api-monitoring' ? 'page' : null}">Giám sát API</a>
         <a th:if="${role != 'Candidate' and role != 'System Admin'}" th:href="@{/requisitions}">Job Requisitions</a>
     </nav>
-    <nav class="workspace-nav workspace-home" th:attr="aria-label=${role == 'Candidate' ? 'Trang tuyển dụng' : 'Public careers'}">
+    <nav class="workspace-nav workspace-home"
+        th:attr="aria-label=${role == 'Candidate' ? 'Trang tuyển dụng' : 'Public careers'}">
         <a th:if="${role == 'Candidate'}" th:href="@{/jobs}">Vị trí đang tuyển</a>
-        <a th:href="@{/}" th:text="${role == 'Candidate' or role == 'System Admin' ? 'Về trang tuyển dụng' : 'Back to Careers'}">Back to Careers</a>
+        <a th:href="@{/}"
+            th:text="${role == 'Candidate' or role == 'System Admin' ? 'Về trang tuyển dụng' : 'Back to Careers'}">Back
+            to Careers</a>
     </nav>
 </aside>
+
 </html>

@@ -44,4 +44,12 @@
     <th:block th:replace="${pageStyles}"></th:block>
     <script defer th:src="@{/js/interface.js}"></script>
 </head>
+<head th:fragment="globalHead(title, pageStyles)">
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title th:text="${title} + ' — Mộc Careers'">Mộc Careers</title>
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Cpath d='M15 27C8 23 6 13 11 7c4-5 11-4 16-3 0 9-3 18-12 23Z' fill='%233e7157'/%3E%3C/svg%3E">
+    <link rel="stylesheet" th:href="@{/css/global.css}">
+    <th:block th:replace="${pageStyles}"></th:block>
+</head>
 </html>

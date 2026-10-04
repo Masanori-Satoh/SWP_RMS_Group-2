@@ -126,7 +126,7 @@ CREATE TABLE JobRequisition (
     EmploymentType NVARCHAR(50) NOT NULL,
     MinSalary DECIMAL(18,2) NULL,
     MaxSalary DECIMAL(18,2) NULL,
-    ReasonForHiring NVARCHAR(500) NULL,
+    ReasonForHiring NVARCHAR(2000) NULL,
     JobDescription NVARCHAR(MAX) NOT NULL,
     RequirementDetails NVARCHAR(MAX) NOT NULL,
     RequiredGender NVARCHAR(20) NOT NULL CONSTRAINT DF_JobRequisition_RequiredGender DEFAULT N'Any',

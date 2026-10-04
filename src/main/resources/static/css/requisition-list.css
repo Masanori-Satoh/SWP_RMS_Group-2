@@ -1,0 +1,34 @@
+/* Quiet, scannable list with the same controls as the account workspace. */
+.req-list-page .btn-create { flex-shrink:0; }
+.req-list-page .requisition-list-heading { margin-bottom:var(--s6); }
+.req-list-page .records-count { margin-top:var(--s1); color:var(--muted); font-size:14px; }
+.req-list-page .requisition-filter-grid { display:grid; grid-template-columns:minmax(190px,1.5fr) repeat(4,minmax(120px,1fr)); gap:var(--s4); }
+.req-list-page .filter-field { min-width:0; }
+.req-list-page .filter-field label { display:block; margin-bottom:var(--s2); font-size:14px; font-weight:600; }
+.req-list-page .filter-actions { display:flex; gap:var(--s2); flex-wrap:wrap; margin-block:var(--s4) var(--s6); }
+.req-list-page .requisition-list-table { min-width:850px; }
+.req-list-page .requisition-list-table td { padding-block:var(--s2); }
+.req-list-page .requisition-list-table th { white-space:nowrap; }
+.req-list-page .requisition-list-table tbody tr:hover { background:var(--page); }
+.req-list-page .requisition-list-table td:first-child { color:var(--muted); }
+.req-list-page .position-title { display:flex; align-items:center; min-height:44px; min-width:160px; max-width:320px; font-weight:600; text-decoration:none; overflow-wrap:anywhere; }
+.req-list-page .position-title:hover { text-decoration:underline; }
+.req-list-page .btn-action-outline { min-width:44px; padding:var(--s2); font-size:20px; }
+.req-list-page .action-popover { position:fixed; inset:auto; margin:0; padding:var(--s1); min-width:176px; max-width:calc(100vw - 16px); border:1px solid var(--control-line); border-radius:4px; background:var(--surface); color:var(--ink); box-shadow:0 4px 12px rgb(37 41 35 / .1); }
+.req-list-page .action-popover :is(a,button) { display:flex; width:100%; align-items:center; min-height:44px; padding:var(--s2) var(--s3); background:transparent; border:0; border-radius:2px; text-align:left; text-decoration:none; font-size:15px; }
+.req-list-page .action-popover :is(a,button):hover { background:var(--brand-soft); }
+.req-list-page .action-popover .delete-action:hover { background:var(--error-soft); }
+.req-list-page .list-pagination-footer { display:flex; justify-content:flex-end; margin-top:var(--s6); }
+.req-list-page .pagination { display:flex; flex-wrap:wrap; gap:var(--s1); }
+.req-list-page .page-link { min-width:44px; padding:var(--s2); font-size:14px; }
+.req-list-page .page-link.active { color:var(--surface); background:var(--brand-dark); border-color:var(--brand-dark); }
+.req-list-page .page-link.disabled { cursor:default; color:var(--muted); background:var(--page); border-color:var(--line); }
+.req-list-page a.page-link:not(.active):hover { background:var(--brand-soft); }
+@media (max-width:1100px) {
+  .req-list-page .requisition-filter-grid { grid-template-columns:repeat(2,minmax(0,1fr)); }
+  .req-list-page .filter-search { grid-column:1 / -1; }
+}
+@media (max-width:480px) {
+  .req-list-page .requisition-filter-grid { grid-template-columns:minmax(0,1fr); }
+  .req-list-page .list-pagination-footer { justify-content:center; }
+}
