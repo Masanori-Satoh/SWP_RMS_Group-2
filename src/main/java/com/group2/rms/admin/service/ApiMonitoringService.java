@@ -16,7 +16,6 @@ import java.util.Deque;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
-/** Admin-initiated probes. Statistics use only real results from this process. */
 @Service
 public class ApiMonitoringService {
 
@@ -71,9 +70,11 @@ public class ApiMonitoringService {
     public List<MonitorRowResponse> rows() {
         List<Probe> samples;
         synchronized (internalHistory) {
+            
             samples = new ArrayList<>(internalHistory);
         }
         MonitorRowResponse internal;
+        //check if not check
         if (samples.isEmpty()) {
             internal = new MonitorRowResponse("internal", "Internal", "Application and SQL Server",
                     "GET " + INTERNAL_HEALTH_PATH, "NOT_CHECKED", "Not Checked",
@@ -90,6 +91,7 @@ public class ApiMonitoringService {
                     averageMs, errorRate, errors, latest.httpStatus(), latest.checkedAt(),
                     samples.size(), true);
         }
+        //id, category, name, status, can probe
         return List.of(internal,
                 new MonitorRowResponse("ai", "External Integration", "AI CV Screening", "No endpoint configured",
                         "UNCONFIGURED", "Not Configured", null, null, null, null, null, 0, false),

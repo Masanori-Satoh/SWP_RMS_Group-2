@@ -26,76 +26,89 @@ import org.springframework.security.web.savedrequest.HttpSessionRequestCache;
 // phát triển (permitAll)
 public class SecurityConfig {
 
-    @Bean
-    public PasswordEncoder passwordEncoder() {
-        return new BCryptPasswordEncoder();
-    }
+        @Bean
+        public PasswordEncoder passwordEncoder() {
+                return new BCryptPasswordEncoder();
+        }
 
-    @Bean
-    public SecurityFilterChain filterChain(HttpSecurity http,
-            DatabaseUserDetailsService userDetailsService,
-            PasswordEncoder passwordEncoder,
-            UserRepository userRepository) throws Exception {
-        // set authentication provider
-        DaoAuthenticationProvider provider = new DaoAuthenticationProvider(userDetailsService);
-        provider.setPasswordEncoder(passwordEncoder);
-        // set request cache
-        HttpSessionRequestCache requestCache = new HttpSessionRequestCache();
-        requestCache.setMatchingRequestParameterName(null);
+        @Bean
+        public SecurityFilterChain filterChain(HttpSecurity http,
+                        DatabaseUserDetailsService userDetailsService,
+                        PasswordEncoder passwordEncoder,
+                        UserRepository userRepository) throws Exception {
+                // set authentication provider
+                DaoAuthenticationProvider provider = new DaoAuthenticationProvider(userDetailsService);
+                provider.setPasswordEncoder(passwordEncoder);
+                // set request cache
+                HttpSessionRequestCache requestCache = new HttpSessionRequestCache();
+                requestCache.setMatchingRequestParameterName(null);
 
-        http
-                .authenticationProvider(provider)
-                .authorizeHttpRequests(auth -> auth
-                        // permit all for static resources
-                        .requestMatchers(PathRequest.toStaticResources().atCommonLocations()).permitAll()
-                        // permit all for icon and error
-                        .requestMatchers("/favicon.ico", "/error").permitAll()
-                        // permit all for defaultpage and font
-                        .requestMatchers(HttpMethod.GET, "/", "/fonts/**").permitAll()
-                        // permit all for login, register, forgot-password, reset-password
-                        .requestMatchers("/login", "/register", "/forgot-password", "/reset-password/**").permitAll()
-                        // required role canididate for job apply
-                        .requestMatchers("/jobs/*/apply", "/jobs/*/apply/**").hasAuthority("ROLE_CANDIDATE")
-                        // permit all for job and public job
-                        .requestMatchers(HttpMethod.GET, "/jobs", "/jobs/**", "/public/jobs", "/public/jobs/**")
-                        .permitAll()
-                        // requrired role system admin for admin pages
-                        // account
-                        .requestMatchers("/admin/accounts", "/admin/accounts/**",
-                                // department
-                                "/admin/departments", "/admin/departments/**",
-                                // candidate account
-                                "/admin/candidate-accounts", "/admin/candidate-accounts/**",
-                                // api
-                                "/admin/api-monitoring", "/admin/api-monitoring/**",
-                                // api config
-                                "/admin/ai-configuration", "/admin/ai-configuration/**")
-                        .hasAuthority(RoleAuthorities.SYSTEM_ADMIN)
-                        // require authenticaed for SYSTEM_ADMIN, ROLE_HR, ROLE_DIRECTOR
-                        .requestMatchers("/offers", "/offers/**", "/api/v1/hr/offers", "/api/v1/hr/offers/**")
-                        .hasAnyAuthority(RoleAuthorities.SYSTEM_ADMIN, "ROLE_HR", "ROLE_DIRECTOR")
-                        // authenticaed require for dashboard notification
-                        .requestMatchers("/dashboard", "/dashboard/**", "/notifications", "/notifications/**")
-                        .authenticated()
-                        .requestMatchers("/requisitions", "/requisitions/**")
-                        .hasAnyAuthority("ROLE_HIRING_MANAGER", "ROLE_DIRECTOR", "ROLE_HR")
-                        .anyRequest().authenticated())
-                // store target url before login
-                .requestCache(cache -> cache.requestCache(requestCache))
-                .formLogin(form -> form
-                        .loginPage("/login")
-                        .loginProcessingUrl("/login")
-                        .defaultSuccessUrl("/dashboard", false)
-                        .failureUrl("/login?error")
-                        .permitAll())
-                .logout(logout -> logout
-                        .logoutUrl("/logout")
-                        .logoutSuccessUrl("/login?logout")
-                        .permitAll())
-                .httpBasic(basic -> basic.disable())
-                // add filter before authorization filter
-                .addFilterBefore(new AccountSessionGuardFilter(userRepository), AuthorizationFilter.class);
+                http
+                                .authenticationProvider(provider)
+                                .csrf(csrf -> csrf
+                                                .ignoringRequestMatchers("/api/**"))
+                                .authorizeHttpRequests(auth -> auth
+                                                // permit all for static resources
+                                                .requestMatchers(PathRequest.toStaticResources().atCommonLocations())
+                                                .permitAll()
+                                                // permit all for icon and error
+                                                .requestMatchers("/favicon.ico", "/error").permitAll()
+                                                // permit all for defaultpage and font
+                                                .requestMatchers(HttpMethod.GET, "/", "/fonts/**").permitAll()
+                                                // permit all for login, register, forgot-password, reset-password
+                                                .requestMatchers("/login", "/register", "/forgot-password",
+                                                                "/reset-password/**")
+                                                .permitAll()
+                                                // required role canididate for job apply
+                                                .requestMatchers("/jobs/*/apply", "/jobs/*/apply/**")
+                                                .hasAuthority("ROLE_CANDIDATE")
+                                                // permit all for job and public job
+                                                .requestMatchers(HttpMethod.GET, "/jobs", "/jobs/**", "/public/jobs",
+                                                                "/public/jobs/**")
+                                                .permitAll()
+                                                // requrired role system admin for admin pages
+                                                // account
+                                                .requestMatchers("/admin/accounts", "/admin/accounts/**",
+                                                                // department
+                                                                "/admin/departments", "/admin/departments/**",
+                                                                // candidate account
+                                                                "/admin/candidate-accounts",
+                                                                "/admin/candidate-accounts/**",
+                                                                // api
+                                                                "/admin/api-monitoring", "/admin/api-monitoring/**",
+                                                                // api config
+                                                                "/admin/ai-configuration", "/admin/ai-configuration/**")
+                                                .hasAuthority(RoleAuthorities.SYSTEM_ADMIN)
+                                                // require authenticaed for SYSTEM_ADMIN, ROLE_HR, ROLE_DIRECTOR
+                                                .requestMatchers("/offers", "/offers/**", "/api/v1/hr/offers",
+                                                                "/api/v1/hr/offers/**")
+                                                .hasAnyAuthority("ROLE_CANDIDATE", "ROLE_HR", "ROLE_DIRECTOR",
+                                                                RoleAuthorities.SYSTEM_ADMIN)
+                                                // authenticaed require for dashboard notification
+                                                .requestMatchers("/dashboard", "/dashboard/**", "/notifications",
+                                                                "/notifications/**")
+                                                .authenticated()
+                                                .requestMatchers("/requisitions", "/requisitions/**")
+                                                .hasAnyAuthority("ROLE_HIRING_MANAGER", "ROLE_DIRECTOR", "ROLE_HR",
+                                                                RoleAuthorities.SYSTEM_ADMIN)
+                                                .anyRequest().authenticated())
+                                // store target url before login
+                                .requestCache(cache -> cache.requestCache(requestCache))
+                                .formLogin(form -> form
+                                                .loginPage("/login")
+                                                .loginProcessingUrl("/login")
+                                                .defaultSuccessUrl("/dashboard", false)
+                                                .failureUrl("/login?error")
+                                                .permitAll())
+                                .logout(logout -> logout
+                                                .logoutUrl("/logout")
+                                                .logoutSuccessUrl("/login?logout")
+                                                .permitAll())
+                                .httpBasic(basic -> basic.disable())
+                                // add filter before authorization filter
+                                .addFilterBefore(new AccountSessionGuardFilter(userRepository),
+                                                AuthorizationFilter.class);
 
-        return http.build();
-    }
+                return http.build();
+        }
 }

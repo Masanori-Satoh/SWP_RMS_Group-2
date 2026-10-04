@@ -12,6 +12,8 @@ import com.group2.rms.user.entity.Role;
 import com.group2.rms.user.entity.User;
 import com.group2.rms.user.repository.UserRepository;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.context.annotation.Import;
@@ -92,13 +94,34 @@ class CandidateDashboardWebTests {
                 .andExpect(content().string(containsString("lang=\"en\"")))
                 .andExpect(content().string(containsString("Open Job Postings")))
                 .andExpect(content().string(not(containsString("candidate-dashboard.js"))))
-                .andExpect(content().string(containsString("Log Out")));
+                .andExpect(content().string(containsString("id=\"workspace-logout-dialog\"")));
     }
 
     @Test
     void guestCannotOpenCandidateDashboard() throws Exception {
         mvc.perform(get("/dashboard")).andExpect(status().is3xxRedirection())
                 .andExpect(redirectedUrlPattern("**/login"));
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = { "System Admin", "HR", "Hiring Manager", "Director", "Interviewer", "Candidate" })
+    void restoredWorkspaceKeepsMainMenusAndSharedLogoutForEveryRole(String role) throws Exception {
+        var response = "Candidate".equals(role) ? empty() : new DashboardResponse(role, "Menu fixture", "Role scope",
+                List.of(), List.of(), List.of(), List.of(), List.of());
+        var result = mvc.perform(get("/dashboard").session(login(role, response))).andExpect(status().isOk())
+                .andExpect(content().string(containsString("href=\"/interviews\"")))
+                .andExpect(content().string(containsString("href=\"/profile\"")))
+                .andExpect(content().string(containsString("id=\"workspace-logout-form\"")))
+                .andExpect(content().string(containsString("id=\"workspace-logout-dialog\"")))
+                .andExpect(content().string(containsString("action=\"/logout\"")))
+                .andExpect(content().string(containsString("name=\"_csrf\""))).andReturn();
+        var html = result.getResponse().getContentAsString();
+        org.junit.jupiter.api.Assertions.assertEquals(List.of("System Admin", "HR", "Director").contains(role),
+                html.contains("href=\"/offers\""));
+        org.junit.jupiter.api.Assertions.assertEquals("System Admin".equals(role),
+                html.contains("href=\"/admin/departments\""));
+        org.junit.jupiter.api.Assertions.assertEquals("Candidate".equals(role),
+                html.contains("href=\"/dashboard#applications\""));
     }
 
     private MockHttpSession login(String role, DashboardResponse view) throws Exception {

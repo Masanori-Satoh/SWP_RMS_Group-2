@@ -1,33 +1,22 @@
 <!doctype html>
 <html lang="en" xmlns:th="http://www.thymeleaf.org"><body>
 <header th:fragment="header(role, fullName)" class="workspace-header">
-  <a class="skip-link" href="#main" th:text="${role == 'Candidate' or role == 'System Admin' ? 'Đến nội dung chính' : 'Skip to content'}">Skip to content</a>
+  <a class="skip-link" href="#main">Skip to content</a>
   <a th:replace="~{fragments/brand :: wordmark('RMS')}"></a>
   <div class="workspace-header-actions">
- <a th:href="@{/profile}" class="workspace-identity">
-      <strong th:if="${fullName != null}" th:text="${fullName}"></strong>
-      <span class="workspace-role"
-            th:text="${role == 'Candidate' ? 'Ứng viên'
-              : (role == 'System Admin' ? 'Quản trị viên' : role)}"></span>
-    </a>
-
-    <button class="btn btn-secondary workspace-menu"
-            type="button"
-            data-workspace-menu
-            aria-controls="workspace-navigation"
-            aria-expanded="true"
-            hidden
-            th:text="${role == 'Candidate' or role == 'System Admin'
-              ? 'Danh mục' : 'Menu'}">Menu</button>
-
-    <form th:action="@{/logout}"
-          method="post"
-          th:attr="data-confirm-logout=${role == 'Candidate' ? 'true' : null}">
-      <button class="text-action"
-              type="submit"
-              th:text="${role == 'Candidate' or role == 'System Admin'
-                ? 'Đăng xuất' : 'Log Out'}">Log Out</button>
+    <a th:href="@{/profile}" class="workspace-identity" style="text-decoration:none; color:inherit;"><strong th:if="${fullName != null}" th:text="${fullName}"></strong><span class="workspace-role" th:text="${role}"></span></a>
+    <button class="btn btn-secondary workspace-menu" type="button" data-workspace-menu aria-controls="workspace-navigation" aria-expanded="true" hidden>Menu</button>
+    <form id="workspace-logout-form" th:action="@{/logout}" method="post">
+      <button class="text-action" type="button" onclick="document.getElementById('workspace-logout-dialog').showModal()">Đăng xuất</button>
     </form>
+    <dialog id="workspace-logout-dialog" style="padding: 24px; border-radius: 8px; border: 1px solid var(--border-color, #e2e8f0); box-shadow: 0 4px 12px rgba(0,0,0,0.1); max-width: 400px; background: white;">
+      <h3 style="margin-top: 0; margin-bottom: 8px; font-size: 18px;">Xác nhận đăng xuất</h3>
+      <p style="color: var(--text-muted, #64748b); margin-bottom: 24px; font-size: 14px; font-weight: normal;">Bạn có chắc chắn muốn đăng xuất khỏi hệ thống?</p>
+      <div style="display: flex; gap: 12px; justify-content: flex-end;">
+        <button type="button" class="btn btn-secondary" onclick="document.getElementById('workspace-logout-dialog').close()">Hủy</button>
+        <button type="button" class="btn btn-danger" style="background: #ef4444; color: white; border: none; padding: 0.5rem 1rem; border-radius: 4px; cursor: pointer;" onclick="document.getElementById('workspace-logout-form').submit()">Đăng xuất</button>
+      </div>
+    </dialog>
   </div>
 </header>
 </body></html>

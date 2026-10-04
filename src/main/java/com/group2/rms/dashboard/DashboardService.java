@@ -47,12 +47,14 @@ public class DashboardService {
         public DashboardResponse forUsername(String username) {
                 User user = userRepository.findByUsernameIgnoreCase(username)
                                 .orElseThrow(() -> new UsernameNotFoundException("Account not found"));
+                //check if  user is inactive
                 if (!"Active".equals(user.getAccountStatus())) {
                         throw new AccessDeniedException("Inactive account cannot access dashboard");
                 }
 
                 LocalDateTime now = LocalDateTime.now();
                 String role = user.getRole().getRoleName();
+                // performed navigation based role
                 return switch (role) {
                         case "System Admin" -> admin(user);
                         case "HR" -> hr(user, now);

@@ -49,7 +49,7 @@ class AdminDepartmentWebTests {
                 .andExpect(content().string(containsString("/admin/departments/7/deactivate")))
                 .andExpect(content().string(containsString("/admin/departments/8/activate")))
                 .andExpect(content().string(containsString("name=\"_csrf\"")))
-                .andExpect(content().string(not(containsString("href=\"/requisitions\""))))
+                .andExpect(content().string(containsString("href=\"/requisitions\"")))
                 .andExpect(content().string(containsString("&lt;script&gt;"))).andReturn();
         fixture("departments",list);
         fixture("new",mvc.perform(get("/admin/departments/new").session(session)).andExpect(status().isOk()).andReturn());
@@ -138,13 +138,16 @@ class AdminDepartmentWebTests {
         fixture("candidates",mvc.perform(get("/admin/candidate-accounts").session(session)).andExpect(status().isOk())
                 .andExpect(content().string(containsString("/admin/candidate-accounts/62/activate"))).andReturn());
     }
-    @Test void adminDashboardHasDepartmentsAndNoRequisitionWhileHrKeepsIt() throws Exception {
+    @Test void adminDashboardAddsDepartmentsAndPreservesMainNavigation() throws Exception {
         when(dashboard.forUsername("admin-ui-System Admin")).thenReturn(new DashboardResponse("System Admin","Admin kiểm thử","Quản lý hệ thống",
                 List.of(),List.of(),List.of(),List.of(),List.of(),List.of(new AccountSummary("Tài khoản nội bộ","/admin/accounts",3,1,1,1)),null,new DepartmentSummary(2,1,1)));
         fixture("dashboard",mvc.perform(get("/dashboard").session(login("System Admin"))).andExpect(status().isOk())
                 .andExpect(content().string(containsString("lang=\"vi\"")))
                 .andExpect(content().string(containsString("href=\"/admin/departments\"")))
-                .andExpect(content().string(not(containsString("href=\"/requisitions\"")))).andReturn());
+                .andExpect(content().string(containsString("href=\"/requisitions\"")))
+                .andExpect(content().string(containsString("href=\"/interviews\"")))
+                .andExpect(content().string(containsString("href=\"/offers\"")))
+                .andExpect(content().string(containsString("href=\"/profile\""))).andReturn());
         when(dashboard.forUsername("admin-ui-HR")).thenReturn(new DashboardResponse("HR","HR","Existing scope",List.of(),List.of(),List.of(),List.of(),List.of()));
         mvc.perform(get("/dashboard").session(login("HR"))).andExpect(status().isOk()).andExpect(content().string(containsString("href=\"/requisitions\"")));
     }
