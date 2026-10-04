@@ -44,10 +44,10 @@ function handleFilterSearch() {
         const rPos = (r.getAttribute('data-pos') || '').toLowerCase();
 
         const matchSearch = !search || rCand.includes(search) || rPos.includes(search);
-        const matchStatus = (status === 'ALL') || 
-                            (status === 'Director_Approved' && (rStatus === 'Director_Approved' || rStatus === 'Approved')) ||
-                            (status === 'Director_Rejected' && (rStatus === 'Director_Rejected' || rStatus === 'Rejected')) ||
-                            (rStatus === status);
+        const matchStatus = (status === 'ALL') ||
+            (status === 'Director_Approved' && (rStatus === 'Director_Approved' || rStatus === 'Approved')) ||
+            (status === 'Director_Rejected' && (rStatus === 'Director_Rejected' || rStatus === 'Rejected')) ||
+            (rStatus === status);
 
         if (matchSearch && matchStatus) {
             r.style.display = '';
@@ -78,7 +78,7 @@ function showToast(message, type = 'info') {
 
     const toast = document.createElement('div');
     toast.className = `toast toast-${type}`;
-    
+
     let icon = 'fa-info-circle';
     if (type === 'success') icon = 'fa-check-circle';
     else if (type === 'danger') icon = 'fa-exclamation-circle';
@@ -93,6 +93,24 @@ function showToast(message, type = 'info') {
     }, 3000);
 }
 
+// Helper lấy ngày hiện tại và ngày mai định dạng YYYY-MM-DD theo giờ địa phương
+function getTodayDateString() {
+    const today = new Date();
+    const yyyy = today.getFullYear();
+    const mm = String(today.getMonth() + 1).padStart(2, '0');
+    const dd = String(today.getDate()).padStart(2, '0');
+    return `${yyyy}-${mm}-${dd}`;
+}
+
+function getTomorrowDateString() {
+    const tomorrow = new Date();
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    const yyyy = tomorrow.getFullYear();
+    const mm = String(tomorrow.getMonth() + 1).padStart(2, '0');
+    const dd = String(tomorrow.getDate()).padStart(2, '0');
+    return `${yyyy}-${mm}-${dd}`;
+}
+
 // =========================================================================
 // 1. CREATE OFFER WORKFLOW
 // =========================================================================
@@ -101,6 +119,21 @@ function openCreateOfferModal() {
     if (form) form.reset();
     const grpA = document.getElementById('groupASection');
     if (grpA) grpA.style.display = 'none';
+
+    // Ràng buộc lịch: Ngày bắt đầu dự kiến phải > ngày hiện tại (tối thiểu là ngày mai)
+    const startDateInput = document.getElementById('createStartDate');
+    if (startDateInput) {
+        startDateInput.min = getTomorrowDateString();
+    }
+    const probationDaysInput = document.getElementById('createProbationDays');
+    if (probationDaysInput) {
+        probationDaysInput.value = '60';
+    }
+    const workLocInput = document.getElementById('createWorkLocation');
+    if (workLocInput) {
+        workLocInput.value = '';
+    }
+
     openModal('createOfferModal');
 }
 
@@ -112,6 +145,8 @@ function handleSelectPassedCandidate(appId) {
     if (!appId || !opt) {
         const grpA = document.getElementById('groupASection');
         if (grpA) grpA.style.display = 'none';
+        const workLocInput = document.getElementById('createWorkLocation');
+        if (workLocInput) workLocInput.value = '';
         return;
     }
 
@@ -124,6 +159,10 @@ function handleSelectPassedCandidate(appId) {
     document.getElementById('dispDept').textContent = opt.getAttribute('data-dept') || 'N/A';
     document.getElementById('dispReqId').textContent = opt.getAttribute('data-req-id') || 'N/A';
     document.getElementById('dispHm').textContent = opt.getAttribute('data-hm') || 'N/A';
+
+    const workLoc = opt.getAttribute('data-work-location') || 'Trụ sở chính Mộc RMS';
+    const dispWorkLoc = document.getElementById('dispWorkLocation');
+    if (dispWorkLoc) dispWorkLoc.textContent = workLoc;
 
     const recom = opt.getAttribute('data-recom-salary');
     document.getElementById('dispRecomSalary').textContent = recom ? Number(recom).toLocaleString('vi-VN') + ' VND' : 'Chưa có gợi ý';
@@ -140,6 +179,12 @@ function handleSelectPassedCandidate(appId) {
         const proposedInput = document.getElementById('createProposedSalary');
         if (proposedInput) proposedInput.value = recom;
         autoCalculateProbationSalary(true);
+    }
+
+    // Tự động điền Địa điểm làm việc theo database WorkLocation của ứng viên, HR vẫn có thể tự sửa
+    const workLocationInput = document.getElementById('createWorkLocation');
+    if (workLocationInput) {
+        workLocationInput.value = workLoc;
     }
 }
 
@@ -165,13 +210,13 @@ function validateProbationRuleUi() {
         if (probation < minProb) {
             if (notice) {
                 notice.style.color = 'var(--error)';
-                notice.innerHTML = `<i class="fa-solid fa-triangle-exclamation"></i> CẢNH BÁO: Lương thử việc phải đạt tối thiểu 85% lương chính thức (${minProb.toLocaleString('vi-VN')} VND) theo luật BR-OFF-01.`;
+                notice.innerHTML = `<i class="fa-solid fa-triangle-exclamation"></i> CẢNH BÁO: Lương thử việc phải đạt tối thiểu 85% lương chính thức (${minProb.toLocaleString('vi-VN')} VND).`;
             }
             return false;
         } else {
             if (notice) {
                 notice.style.color = 'var(--brand-dark)';
-                notice.innerHTML = `<i class="fa-solid fa-circle-check"></i> Hợp lệ: Đạt ${(probation / proposed * 100).toFixed(1)}% lương chính thức (Quy tắc BR-OFF-01).`;
+                notice.innerHTML = `<i class="fa-solid fa-circle-check"></i> Hợp lệ: Đạt ${(probation / proposed * 100).toFixed(1)}% lương chính thức.`;
             }
             return true;
         }
@@ -181,21 +226,63 @@ function validateProbationRuleUi() {
 
 function submitCreateOffer(isDraft) {
     const appId = document.getElementById('createAppSelect').value;
-    const title = document.getElementById('createOfferedTitle').value;
+    const title = (document.getElementById('createOfferedTitle').value || '').trim();
     const proposed = parseFloat(document.getElementById('createProposedSalary').value);
     const probation = parseFloat(document.getElementById('createProbationSalary').value);
+    const probationDays = parseInt(document.getElementById('createProbationDays').value);
+    const startDate = document.getElementById('createStartDate').value;
+    const workLocation = (document.getElementById('createWorkLocation').value || '').trim();
+    const benefits = document.getElementById('createBenefits').value || '';
 
+    // 1. Bắt buộc chọn ứng viên
     if (!appId) {
         showToast('Vui lòng chọn ứng viên đỗ phỏng vấn.', 'warning');
         return;
     }
-    if (!title || isNaN(proposed) || isNaN(probation)) {
-        showToast('Vui lòng điền đầy đủ chức danh và mức lương.', 'warning');
+
+    // 2. Bắt buộc nhập vị trí chức danh
+    if (!title) {
+        showToast('Vị trí chức danh đề xuất không được để trống.', 'warning');
         return;
     }
 
+    // 3. Mức lương chính thức phải > 0
+    if (isNaN(proposed) || proposed <= 0) {
+        showToast('Mức lương chính thức phải lớn hơn 0.', 'warning');
+        return;
+    }
+
+    // 4. Mức lương thử việc phải > 0
+    if (isNaN(probation) || probation <= 0) {
+        showToast('Mức lương thử việc phải lớn hơn 0.', 'warning');
+        return;
+    }
+
+    // 5. Tuân thủ quy định BR-OFF-01: Lương thử việc >= 85% lương chính thức
     if (!validateProbationRuleUi()) {
-        showToast('Mức lương thử việc không tuân thủ luật BR-OFF-01 (>= 85%).', 'danger');
+        showToast('Mức lương thử việc không tuân thủ luật (>= 85%).', 'danger');
+        return;
+    }
+
+    // 6. Thời gian thử việc phải > 0
+    if (isNaN(probationDays) || probationDays <= 0) {
+        showToast('Thời gian thử việc phải lớn hơn 0 ngày.', 'warning');
+        return;
+    }
+
+    // 7. Ngày bắt đầu dự kiến bắt buộc và phải > ngày hiện tại
+    if (!startDate) {
+        showToast('Ngày bắt đầu dự kiến không được để trống.', 'warning');
+        return;
+    }
+    if (startDate <= getTodayDateString()) {
+        showToast('Ngày bắt đầu dự kiến phải lớn hơn ngày hiện tại.', 'danger');
+        return;
+    }
+
+    // 8. Địa điểm làm việc bắt buộc
+    if (!workLocation) {
+        showToast('Địa điểm làm việc không được để trống.', 'warning');
         return;
     }
 
@@ -204,10 +291,10 @@ function submitCreateOffer(isDraft) {
         offeredPositionTitle: title,
         proposedSalary: proposed,
         probationSalary: probation,
-        probationDays: 60,
-        expectedStartDate: document.getElementById('createStartDate').value || null,
-        workLocation: document.getElementById('createWorkLocation').value || 'Văn phòng chính Mộc RMS',
-        benefitsPackage: document.getElementById('createBenefits').value || '',
+        probationDays: probationDays,
+        expectedStartDate: startDate,
+        workLocation: workLocation,
+        benefitsPackage: benefits,
         isDraft: isDraft
     };
 
@@ -216,27 +303,27 @@ function submitCreateOffer(isDraft) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)
     })
-    .then(async res => {
-        const isJson = res.headers.get('content-type')?.includes('application/json');
-        const data = isJson ? await res.json() : null;
-        if (!res.ok) {
-            const msg = data?.message || `Lỗi máy chủ (${res.status})`;
-            throw new Error(msg);
-        }
-        return data;
-    })
-    .then(res => {
-        if (res && res.success) {
-            showToast(res.message, 'success');
-            closeModal('createOfferModal');
-            setTimeout(() => window.location.reload(), 800);
-        } else {
-            showToast(res?.message || 'Lỗi khi tạo Offer', 'danger');
-        }
-    })
-    .catch(err => {
-        showToast('Lỗi: ' + err.message, 'danger');
-    });
+        .then(async res => {
+            const isJson = res.headers.get('content-type')?.includes('application/json');
+            const data = isJson ? await res.json() : null;
+            if (!res.ok) {
+                const msg = data?.message || `Lỗi máy chủ (${res.status})`;
+                throw new Error(msg);
+            }
+            return data;
+        })
+        .then(res => {
+            if (res && res.success) {
+                showToast(res.message, 'success');
+                closeModal('createOfferModal');
+                setTimeout(() => window.location.reload(), 800);
+            } else {
+                showToast(res?.message || 'Lỗi khi tạo Offer', 'danger');
+            }
+        })
+        .catch(err => {
+            showToast('Lỗi: ' + err.message, 'danger');
+        });
 }
 
 // =========================================================================
@@ -245,20 +332,20 @@ function submitCreateOffer(isDraft) {
 function viewOfferDetail(offerId) {
     openModal('detailOfferModal');
     document.getElementById('detailModalTitle').textContent = `Chi Tiết Đề Xuất Offer ${offerId}`;
-    
+
     fetch(`/api/v1/hr/offers/${offerId}`)
-    .then(res => res.json())
-    .then(res => {
-        if (!res.success) {
-            document.getElementById('detailModalBody').innerHTML = `<p style="color:var(--error);">${res.message}</p>`;
-            return;
-        }
-        const d = res.data;
-        renderDetailModalHtml(d);
-    })
-    .catch(err => {
-        document.getElementById('detailModalBody').innerHTML = `<p style="color:var(--error);">Lỗi tải dữ liệu: ${err.message}</p>`;
-    });
+        .then(res => res.json())
+        .then(res => {
+            if (!res.success) {
+                document.getElementById('detailModalBody').innerHTML = `<p style="color:var(--error);">${res.message}</p>`;
+                return;
+            }
+            const d = res.data;
+            renderDetailModalHtml(d);
+        })
+        .catch(err => {
+            document.getElementById('detailModalBody').innerHTML = `<p style="color:var(--error);">Lỗi tải dữ liệu: ${err.message}</p>`;
+        });
 }
 
 function renderDetailModalHtml(d) {
@@ -360,7 +447,7 @@ function renderDetailModalHtml(d) {
 
     // Contextual Action Buttons in Footer
     let actionButtonsHtml = '<button type="button" class="btn btn-secondary" onclick="closeModal(\'detailOfferModal\')">Đóng</button>';
-    
+
     if (d.offerStatus === 'Draft') {
         actionButtonsHtml += `
             <button type="button" class="btn btn-danger" style="background:#dc2626; border-color:#dc2626; color:#fff;" onclick="closeModal('detailOfferModal'); confirmDeleteOffer(${d.offerId});">
@@ -392,34 +479,41 @@ function renderDetailModalHtml(d) {
 // =========================================================================
 function openEditOfferModal(offerId) {
     fetch(`/api/v1/hr/offers/${offerId}`)
-    .then(res => res.json())
-    .then(res => {
-        if (!res.success) { showToast(res.message, 'danger'); return; }
-        const d = res.data;
+        .then(res => res.json())
+        .then(res => {
+            if (!res.success) { showToast(res.message, 'danger'); return; }
+            const d = res.data;
 
-        document.getElementById('editOfferId').value = d.offerId;
-        document.getElementById('editModalTitle').textContent = `Chỉnh Sửa Offer Proposal ${d.offerId}`;
-        document.getElementById('editOfferedTitle').value = d.offeredPositionTitle || '';
-        document.getElementById('editProposedSalary').value = d.proposedSalary || '';
-        document.getElementById('editProbationSalary').value = d.probationSalary || '';
-        document.getElementById('editStartDate').value = d.expectedStartDate || '';
-        document.getElementById('editWorkLocation').value = d.workLocation || '';
-        document.getElementById('editBenefits').value = d.benefitsPackage || '';
+            document.getElementById('editOfferId').value = d.offerId;
+            document.getElementById('editModalTitle').textContent = `Chỉnh Sửa Offer Proposal ${d.offerId}`;
+            document.getElementById('editOfferedTitle').value = d.offeredPositionTitle || '';
+            document.getElementById('editProposedSalary').value = d.proposedSalary || '';
+            document.getElementById('editProbationSalary').value = d.probationSalary || '';
+            document.getElementById('editProbationDays').value = d.probationDays || 60;
+            document.getElementById('editStartDate').value = d.expectedStartDate || '';
+            document.getElementById('editWorkLocation').value = d.workLocation || '';
+            document.getElementById('editBenefits').value = d.benefitsPackage || '';
 
-        // Nếu bị Director_Rejected -> hiển thị lý do
-        const rejectBanner = document.getElementById('editRejectBanner');
-        if (d.offerStatus === 'Director_Rejected' || d.offerStatus === 'Rejected') {
-            const latestReject = (d.approvalHistory && d.approvalHistory.length > 0) ? d.approvalHistory[0].directorComments : 'Vui lòng điều chỉnh lại mức lương/định biên theo yêu cầu.';
-            document.getElementById('editRejectComment').textContent = latestReject;
-            rejectBanner.style.display = 'flex';
-        } else {
-            rejectBanner.style.display = 'none';
-        }
+            // Giới hạn ngày chọn cho editStartDate: phải lớn hơn ngày hiện tại
+            const editStartDateInput = document.getElementById('editStartDate');
+            if (editStartDateInput) {
+                editStartDateInput.min = getTomorrowDateString();
+            }
 
-        editValidateProbation();
-        openModal('editOfferModal');
-    })
-    .catch(err => showToast('Lỗi nạp dữ liệu: ' + err.message, 'danger'));
+            // Nếu bị Director_Rejected -> hiển thị lý do
+            const rejectBanner = document.getElementById('editRejectBanner');
+            if (d.offerStatus === 'Director_Rejected' || d.offerStatus === 'Rejected') {
+                const latestReject = (d.approvalHistory && d.approvalHistory.length > 0) ? d.approvalHistory[0].directorComments : 'Vui lòng điều chỉnh lại mức lương/định biên theo yêu cầu.';
+                document.getElementById('editRejectComment').textContent = latestReject;
+                rejectBanner.style.display = 'flex';
+            } else {
+                rejectBanner.style.display = 'none';
+            }
+
+            editValidateProbation();
+            openModal('editOfferModal');
+        })
+        .catch(err => showToast('Lỗi nạp dữ liệu: ' + err.message, 'danger'));
 }
 
 function editAutoCalculateProbation(forceSet = false) {
@@ -450,7 +544,7 @@ function editValidateProbation() {
         } else {
             if (notice) {
                 notice.style.color = 'var(--brand-dark)';
-                notice.innerHTML = `<i class="fa-solid fa-circle-check"></i> Đạt ${(probation / proposed * 100).toFixed(1)}% lương chính thức (BR-OFF-01).`;
+                notice.innerHTML = `<i class="fa-solid fa-circle-check"></i> Đạt ${(probation / proposed * 100).toFixed(1)}% lương chính thức.`;
             }
             return true;
         }
@@ -460,17 +554,57 @@ function editValidateProbation() {
 
 function submitUpdateOffer(isDraft = false) {
     const id = document.getElementById('editOfferId').value;
-    const title = document.getElementById('editOfferedTitle').value;
+    const title = (document.getElementById('editOfferedTitle').value || '').trim();
     const proposed = parseFloat(document.getElementById('editProposedSalary').value);
     const probation = parseFloat(document.getElementById('editProbationSalary').value);
+    const probationDays = parseInt(document.getElementById('editProbationDays').value);
+    const startDate = document.getElementById('editStartDate').value;
+    const workLocation = (document.getElementById('editWorkLocation').value || '').trim();
+    const benefits = document.getElementById('editBenefits').value || '';
 
-    if (!title || isNaN(proposed) || isNaN(probation)) {
-        showToast('Vui lòng điền đủ chức danh và mức lương.', 'warning');
+    // 1. Chức danh bắt buộc
+    if (!title) {
+        showToast('Vị trí chức danh đề xuất không được để trống.', 'warning');
         return;
     }
 
+    // 2. Lương chính thức phải > 0
+    if (isNaN(proposed) || proposed <= 0) {
+        showToast('Mức lương chính thức phải lớn hơn 0.', 'warning');
+        return;
+    }
+
+    // 3. Lương thử việc phải > 0
+    if (isNaN(probation) || probation <= 0) {
+        showToast('Mức lương thử việc phải lớn hơn 0.', 'warning');
+        return;
+    }
+
+    // 4. Tuân thủ luật BR-OFF-01: Lương thử việc >= 85% lương chính thức
     if (!editValidateProbation()) {
-        showToast('Lương thử việc chưa đạt 85% lương chính thức.', 'danger');
+        showToast('Lương thử việc chưa đạt tối thiểu 85% lương chính thức.', 'danger');
+        return;
+    }
+
+    // 5. Thời gian thử việc phải > 0
+    if (isNaN(probationDays) || probationDays <= 0) {
+        showToast('Thời gian thử việc phải lớn hơn 0 ngày.', 'warning');
+        return;
+    }
+
+    // 6. Ngày bắt đầu dự kiến bắt buộc và phải > ngày hiện tại
+    if (!startDate) {
+        showToast('Ngày bắt đầu dự kiến không được để trống.', 'warning');
+        return;
+    }
+    if (startDate <= getTodayDateString()) {
+        showToast('Ngày bắt đầu dự kiến phải lớn hơn ngày hiện tại.', 'danger');
+        return;
+    }
+
+    // 7. Địa điểm làm việc bắt buộc
+    if (!workLocation) {
+        showToast('Địa điểm làm việc không được để trống.', 'warning');
         return;
     }
 
@@ -478,9 +612,10 @@ function submitUpdateOffer(isDraft = false) {
         offeredPositionTitle: title,
         proposedSalary: proposed,
         probationSalary: probation,
-        expectedStartDate: document.getElementById('editStartDate').value || null,
-        workLocation: document.getElementById('editWorkLocation').value || '',
-        benefitsPackage: document.getElementById('editBenefits').value || '',
+        probationDays: probationDays,
+        expectedStartDate: startDate,
+        workLocation: workLocation,
+        benefitsPackage: benefits,
         isDraft: isDraft
     };
 
@@ -489,26 +624,26 @@ function submitUpdateOffer(isDraft = false) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)
     })
-    .then(async res => {
-        const isJson = res.headers.get('content-type')?.includes('application/json');
-        const data = isJson ? await res.json() : null;
-        if (!res.ok) {
-            const msg = data?.message || `Lỗi máy chủ (${res.status})`;
-            throw new Error(msg);
-        }
-        return data;
-    })
-    .then(res => {
-        if (res && res.success) {
-            const msg = isDraft ? 'Đã lưu cập nhật bản thảo Offer thành công!' : 'Đã nộp trình đề xuất Offer lên Giám đốc thành công!';
-            showToast(msg, 'success');
-            closeModal('editOfferModal');
-            setTimeout(() => window.location.reload(), 800);
-        } else {
-            showToast(res?.message || 'Lỗi cập nhật Offer', 'danger');
-        }
-    })
-    .catch(err => showToast('Lỗi kết nối: ' + err.message, 'danger'));
+        .then(async res => {
+            const isJson = res.headers.get('content-type')?.includes('application/json');
+            const data = isJson ? await res.json() : null;
+            if (!res.ok) {
+                const msg = data?.message || `Lỗi máy chủ (${res.status})`;
+                throw new Error(msg);
+            }
+            return data;
+        })
+        .then(res => {
+            if (res && res.success) {
+                const msg = isDraft ? 'Đã lưu cập nhật bản thảo Offer thành công!' : 'Đã nộp trình đề xuất Offer lên Giám đốc thành công!';
+                showToast(msg, 'success');
+                closeModal('editOfferModal');
+                setTimeout(() => window.location.reload(), 800);
+            } else {
+                showToast(res?.message || 'Lỗi cập nhật Offer', 'danger');
+            }
+        })
+        .catch(err => showToast('Lỗi kết nối: ' + err.message, 'danger'));
 }
 
 // =========================================================================
@@ -520,24 +655,24 @@ function confirmSendOffer(offerId) {
     }
 
     fetch(`/api/v1/hr/offers/${offerId}/send`, { method: 'POST' })
-    .then(async res => {
-        const isJson = res.headers.get('content-type')?.includes('application/json');
-        const data = isJson ? await res.json() : null;
-        if (!res.ok) {
-            const msg = data?.message || `Lỗi máy chủ (${res.status})`;
-            throw new Error(msg);
-        }
-        return data;
-    })
-    .then(res => {
-        if (res && res.success) {
-            showToast('Đã phát hành và gửi Offer Letter tới ứng viên thành công!', 'success');
-            setTimeout(() => window.location.reload(), 800);
-        } else {
-            showToast(res?.message || 'Lỗi khi gửi Offer', 'danger');
-        }
-    })
-    .catch(err => showToast('Lỗi kết nối: ' + err.message, 'danger'));
+        .then(async res => {
+            const isJson = res.headers.get('content-type')?.includes('application/json');
+            const data = isJson ? await res.json() : null;
+            if (!res.ok) {
+                const msg = data?.message || `Lỗi máy chủ (${res.status})`;
+                throw new Error(msg);
+            }
+            return data;
+        })
+        .then(res => {
+            if (res && res.success) {
+                showToast('Đã phát hành và gửi Offer Letter tới ứng viên thành công!', 'success');
+                setTimeout(() => window.location.reload(), 800);
+            } else {
+                showToast(res?.message || 'Lỗi khi gửi Offer', 'danger');
+            }
+        })
+        .catch(err => showToast('Lỗi kết nối: ' + err.message, 'danger'));
 }
 
 // =========================================================================
@@ -549,22 +684,22 @@ function confirmDeleteOffer(offerId) {
     }
 
     fetch(`/api/v1/hr/offers/${offerId}`, { method: 'DELETE' })
-    .then(async res => {
-        const isJson = res.headers.get('content-type')?.includes('application/json');
-        const data = isJson ? await res.json() : null;
-        if (!res.ok) {
-            const msg = data?.message || `Lỗi máy chủ (${res.status})`;
-            throw new Error(msg);
-        }
-        return data;
-    })
-    .then(res => {
-        if (res && res.success) {
-            showToast('Đã xóa bản thảo Offer thành công.', 'success');
-            setTimeout(() => window.location.reload(), 800);
-        } else {
-            showToast(res?.message || 'Lỗi khi xóa Offer', 'danger');
-        }
-    })
-    .catch(err => showToast('Lỗi kết nối: ' + err.message, 'danger'));
+        .then(async res => {
+            const isJson = res.headers.get('content-type')?.includes('application/json');
+            const data = isJson ? await res.json() : null;
+            if (!res.ok) {
+                const msg = data?.message || `Lỗi máy chủ (${res.status})`;
+                throw new Error(msg);
+            }
+            return data;
+        })
+        .then(res => {
+            if (res && res.success) {
+                showToast('Đã xóa bản thảo Offer thành công.', 'success');
+                setTimeout(() => window.location.reload(), 800);
+            } else {
+                showToast(res?.message || 'Lỗi khi xóa Offer', 'danger');
+            }
+        })
+        .catch(err => showToast('Lỗi kết nối: ' + err.message, 'danger'));
 }

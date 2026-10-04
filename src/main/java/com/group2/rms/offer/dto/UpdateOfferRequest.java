@@ -1,6 +1,8 @@
 package com.group2.rms.offer.dto;
 
 import jakarta.validation.constraints.AssertTrue;
+import jakarta.validation.constraints.Future;
+import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
 import lombok.AllArgsConstructor;
@@ -12,7 +14,8 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 
 /**
- * Request chỉnh sửa Offer Proposal (Chỉ áp dụng khi Offer ở trạng thái Draft hoặc Rejected).
+ * Request chỉnh sửa Offer Proposal (Chỉ áp dụng khi Offer ở trạng thái Draft
+ * hoặc Rejected).
  */
 @Data
 @Builder
@@ -20,20 +23,26 @@ import java.time.LocalDate;
 @AllArgsConstructor
 public class UpdateOfferRequest {
 
+    @NotBlank(message = "Vị trí chức danh đề xuất không được để trống.")
     private String offeredPositionTitle;
 
-    @NotNull(message = "Lương chính thức không được để trống.")
-    @Positive(message = "Lương chính thức phải lớn hơn 0.")
+    @NotNull(message = "Mức lương chính thức không được để trống.")
+    @Positive(message = "Mức lương chính thức phải lớn hơn 0.")
     private BigDecimal proposedSalary;
 
-    @NotNull(message = "Lương thử việc không được để trống.")
-    @Positive(message = "Lương thử việc phải lớn hơn 0.")
+    @NotNull(message = "Mức lương thử việc không được để trống.")
+    @Positive(message = "Mức lương thử việc phải lớn hơn 0.")
     private BigDecimal probationSalary;
 
+    @NotNull(message = "Thời gian thử việc không được để trống.")
+    @Positive(message = "Thời gian thử việc phải lớn hơn 0.")
     private Integer probationDays;
 
+    @NotNull(message = "Ngày bắt đầu dự kiến không được để trống.")
+    @Future(message = "Ngày bắt đầu dự kiến phải lớn hơn ngày hiện tại.")
     private LocalDate expectedStartDate;
 
+    @NotBlank(message = "Địa điểm làm việc không được để trống.")
     private String workLocation;
 
     private String benefitsPackage;
@@ -54,9 +63,10 @@ public class UpdateOfferRequest {
     }
 
     /**
-     * Quy tắc BR-OFF-01: Kiểm tra lương thử việc >= 85% lương chính thức ở tầng Bean Validation
+     * Quy tắc BR-OFF-01: Kiểm tra lương thử việc >= 85% lương chính thức ở tầng
+     * Bean Validation
      */
-    @AssertTrue(message = "Lương thử việc phải đạt tối thiểu 85% lương chính thức (quy định BR-OFF-01).")
+    @AssertTrue(message = "Lương thử việc phải đạt tối thiểu 85% lương chính thức.")
     public boolean isProbationSalaryValid() {
         if (proposedSalary == null || probationSalary == null) {
             return true;
@@ -66,5 +76,16 @@ public class UpdateOfferRequest {
         }
         BigDecimal minProbation = proposedSalary.multiply(new BigDecimal("0.85"));
         return probationSalary.compareTo(minProbation) >= 0;
+    }
+
+    /**
+     * Ràng buộc: Ngày bắt đầu dự kiến phải lớn hơn ngày hiện tại
+     */
+    @AssertTrue(message = "Ngày bắt đầu dự kiến phải lớn hơn ngày hiện tại.")
+    public boolean isExpectedStartDateValid() {
+        if (expectedStartDate == null) {
+            return true; // Để @NotNull xử lý
+        }
+        return expectedStartDate.isAfter(LocalDate.now());
     }
 }

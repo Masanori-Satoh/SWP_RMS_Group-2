@@ -11,11 +11,11 @@
 
 <div class="page-wrapper">
     <!-- SIDEBAR: Kế thừa sidebar Recruitment Workspace chuẩn của Mộc RMS -->
-    <aside th:replace="~{fragments/sidebar :: workspace('offers', 'HR Specialist')}"></aside>
+    <aside th:replace="~{fragments/sidebar :: workspace('offers', ${userRole != null ? userRole : 'HR'})}"></aside>
 
     <div class="main-content">
         <!-- TOPBAR: Kế thừa header chung của hệ thống với logo Mộc và người dùng hiện tại -->
-        <header th:replace="~{fragments/workspace-header :: header('HR Specialist', ${currentUser})}"></header>
+        <header th:replace="~{fragments/workspace-header :: header(${userRole != null ? (userRole == 'HR' ? 'HR Specialist' : userRole) : 'HR Specialist'}, ${currentUser})}"></header>
 
         <!-- PAGE CONTENT -->
         <main id="main" class="page-content" tabindex="-1">
@@ -248,7 +248,7 @@
                         <option value="">-- Chọn ứng viên chờ tạo Offer --</option>
                         <option th:each="c : ${passedCandidates}"
                                 th:value="${c.applicationId}"
-                                th:attr="data-cand-id=${c.candidateId}, data-cand-name=${c.candidateName}, data-email=${c.email}, data-phone=${c.phoneNumber}, data-pos=${c.appliedPosition}, data-dept=${c.departmentName}, data-req-id=${c.requisitionId}, data-job-id=${c.jobPostingId}, data-comments=${c.interviewSummaryComments}, data-recom-salary=${c.recommendedSalary}, data-hm=${c.hiringManagerName}"
+                                th:attr="data-cand-id=${c.candidateId}, data-cand-name=${c.candidateName}, data-email=${c.email}, data-phone=${c.phoneNumber}, data-pos=${c.appliedPosition}, data-dept=${c.departmentName}, data-req-id=${c.requisitionId}, data-job-id=${c.jobPostingId}, data-work-location=${c.workLocation}, data-comments=${c.interviewSummaryComments}, data-recom-salary=${c.recommendedSalary}, data-hm=${c.hiringManagerName}"
                                 th:text="${c.candidateName} + ' - ' + ${c.appliedPosition} + ' (' + ${c.departmentName} + ')'">
                             Nguyễn Văn A - Backend Dev (Engineering)
                         </option>
@@ -297,6 +297,10 @@
                             <div class="detail-item-label">Hiring Manager phụ trách</div>
                             <div class="detail-item-value" id="dispHm">-</div>
                         </div>
+                        <div>
+                            <div class="detail-item-label">Địa điểm làm việc</div>
+                            <div class="detail-item-value" id="dispWorkLocation">-</div>
+                        </div>
                     </div>
                     <div style="margin-top:10px; padding-top:10px; border-top:1px dashed var(--line);">
                         <div class="detail-item-label">Đánh giá / Nhận xét của Hội đồng phỏng vấn:</div>
@@ -310,49 +314,49 @@
                 </div>
 
                 <div class="form-group">
-                    <label>Vị trí chức danh chính thức đề xuất</label>
-                    <input type="text" id="createOfferedTitle" class="input-control" required>
+                    <label>Vị trí chức danh chính thức đề xuất <span style="color:var(--error, #ef4444);">*</span></label>
+                    <input type="text" id="createOfferedTitle" class="input-control" placeholder="VD: Senior Java Developer" required>
                 </div>
 
                 <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px;">
                     <div class="form-group">
                         <label>
-                            Mức lương chính thức (VND/tháng)
+                            Mức lương chính thức (VND/tháng) <span style="color:var(--error, #ef4444);">*</span>
                         </label>
-                        <input type="number" id="createProposedSalary" class="input-control" placeholder="VD: 20000000" min="1000000" step="100000" oninput="autoCalculateProbationSalary()" required>
+                        <input type="number" id="createProposedSalary" class="input-control" placeholder="VD: 20000000" min="1" step="100000" oninput="autoCalculateProbationSalary()" required>
                     </div>
 
                     <div class="form-group">
                         <label>
-                            Mức lương thử việc (VND/tháng)
+                            Mức lương thử việc (VND/tháng) <span style="color:var(--error, #ef4444);">*</span>
                             <button type="button" class="quick-calc-btn" onclick="autoCalculateProbationSalary(true)" title="Gợi ý mức sàn 85% theo luật lao động">
                                 Gợi ý 85%
                             </button>
                         </label>
-                        <input type="number" id="createProbationSalary" class="input-control" placeholder="Tối thiểu 85% lương chính" min="850000" step="100000" oninput="validateProbationRuleUi()" required>
+                        <input type="number" id="createProbationSalary" class="input-control" placeholder="Tối thiểu 85% lương chính" min="1" step="100000" oninput="validateProbationRuleUi()" required>
                         <div id="probationRuleNotice" class="form-hint" style="color:var(--brand-dark); font-size:12px; margin-top:4px;">
-                            <i class="fa-solid fa-circle-check"></i> Tuân thủ quy định tối thiểu 85% lương chính thức (BR-OFF-01).
+                            <i class="fa-solid fa-circle-check"></i> Tuân thủ quy định tối thiểu 85% lương chính thức.
                         </div>
                     </div>
                 </div>
 
                 <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:16px;">
                     <div class="form-group">
-                        <label>Thời gian thử việc (ngày)</label>
-                        <input type="number" id="createProbationDays" class="input-control" value="60" readonly>
+                        <label>Thời gian thử việc (ngày) <span style="color:var(--error, #ef4444);">*</span></label>
+                        <input type="number" id="createProbationDays" class="input-control" value="60" min="1" placeholder="VD: 60" required>
                     </div>
                     <div class="form-group">
-                        <label>Ngày bắt đầu dự kiến</label>
-                        <input type="date" id="createStartDate" class="input-control">
+                        <label>Ngày bắt đầu dự kiến <span style="color:var(--error, #ef4444);">*</span></label>
+                        <input type="date" id="createStartDate" class="input-control" required>
                     </div>
                     <div class="form-group">
-                        <label>Địa điểm làm việc</label>
-                        <input type="text" id="createWorkLocation" class="input-control" value="Trụ sở chính Mộc RMS">
+                        <label>Địa điểm làm việc <span style="color:var(--error, #ef4444);">*</span></label>
+                        <input type="text" id="createWorkLocation" class="input-control" placeholder="Địa điểm làm việc" required>
                     </div>
                 </div>
 
                 <div class="form-group">
-                    <label>Gói phúc lợi & Chế độ đãi ngộ</label>
+                    <label>Gói phúc lợi & Chế độ đãi ngộ <span style="color:var(--muted, #64748b); font-weight:normal;">(Không bắt buộc)</span></label>
                     <textarea id="createBenefits" class="input-control" style="height:76px;" placeholder="Bảo hiểm sức khỏe cao cấp, thưởng tháng 13, phụ cấp ăn trưa..."></textarea>
                 </div>
             </form>
@@ -419,40 +423,44 @@
                 </div>
 
                 <div class="form-group">
-                    <label>Vị trí chức danh đề xuất *</label>
+                    <label>Vị trí chức danh đề xuất <span style="color:var(--error, #ef4444);">*</span></label>
                     <input type="text" id="editOfferedTitle" class="input-control" required>
                 </div>
 
                 <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px;">
                     <div class="form-group">
-                        <label>Lương chính thức (VND/tháng) *</label>
-                        <input type="number" id="editProposedSalary" class="input-control" min="1000000" step="100000" oninput="editAutoCalculateProbation()" required>
+                        <label>Lương chính thức (VND/tháng) <span style="color:var(--error, #ef4444);">*</span></label>
+                        <input type="number" id="editProposedSalary" class="input-control" min="1" step="100000" oninput="editAutoCalculateProbation()" required>
                     </div>
                     <div class="form-group">
                         <label>
-                            Lương thử việc (VND/tháng) *
+                            Lương thử việc (VND/tháng) <span style="color:var(--error, #ef4444);">*</span>
                             <button type="button" class="quick-calc-btn" onclick="editAutoCalculateProbation(true)">Gợi ý 85%</button>
                         </label>
-                        <input type="number" id="editProbationSalary" class="input-control" min="850000" step="100000" oninput="editValidateProbation()" required>
+                        <input type="number" id="editProbationSalary" class="input-control" min="1" step="100000" oninput="editValidateProbation()" required>
                         <div id="editProbationNotice" class="form-hint" style="color:var(--brand-dark);">
-                            <i class="fa-solid fa-circle-check"></i> Đạt điều kiện tối thiểu 85% lương chính thức (BR-OFF-01).
+                            <i class="fa-solid fa-circle-check"></i> Đạt điều kiện tối thiểu 85% lương chính thức.
                         </div>
                     </div>
                 </div>
 
-                <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px;">
+                <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:16px;">
                     <div class="form-group">
-                        <label>Ngày bắt đầu dự kiến</label>
-                        <input type="date" id="editStartDate" class="input-control">
+                        <label>Thời gian thử việc (ngày) <span style="color:var(--error, #ef4444);">*</span></label>
+                        <input type="number" id="editProbationDays" class="input-control" min="1" placeholder="VD: 60" required>
                     </div>
                     <div class="form-group">
-                        <label>Địa điểm làm việc</label>
-                        <input type="text" id="editWorkLocation" class="input-control">
+                        <label>Ngày bắt đầu dự kiến <span style="color:var(--error, #ef4444);">*</span></label>
+                        <input type="date" id="editStartDate" class="input-control" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Địa điểm làm việc <span style="color:var(--error, #ef4444);">*</span></label>
+                        <input type="text" id="editWorkLocation" class="input-control" required>
                     </div>
                 </div>
 
                 <div class="form-group">
-                    <label>Gói phúc lợi & Chế độ đãi ngộ</label>
+                    <label>Gói phúc lợi & Chế độ đãi ngộ <span style="color:var(--muted, #64748b); font-weight:normal;">(Không bắt buộc)</span></label>
                     <textarea id="editBenefits" class="input-control" style="height:76px;"></textarea>
                 </div>
             </form>
