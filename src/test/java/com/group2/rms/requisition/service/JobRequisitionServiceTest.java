@@ -1,12 +1,15 @@
 package com.group2.rms.requisition.service;
 
-import com.group2.rms.admin.AuditLog;
-import com.group2.rms.admin.AuditLogRepository;
+import com.group2.rms.admin.entity.AuditLog;
+import com.group2.rms.admin.repository.AuditLogRepository;
 import com.group2.rms.requisition.dto.RequisitionRequest;
 import com.group2.rms.requisition.dto.ScreeningCriteriaRequest;
 import com.group2.rms.requisition.entity.JobRequisition;
 import com.group2.rms.requisition.entity.ScreeningCriteria;
 import com.group2.rms.requisition.exception.RequisitionValidationException;
+import com.group2.rms.notification.NotificationService;
+import com.group2.rms.requisition.entity.RequisitionApproval;
+import com.group2.rms.requisition.repository.RequisitionApprovalRepository;
 import com.group2.rms.requisition.repository.JobRequisitionRepository;
 import com.group2.rms.requisition.repository.RequisitionWorkflowEventRepository;
 import com.group2.rms.requisition.validator.RequisitionValidator;
@@ -67,9 +70,11 @@ class JobRequisitionServiceTest {
     @Mock private JobRequisitionRepository requisitions;
     @Mock private DepartmentRepository departments;
     @Mock private AuditLogRepository audit;
+    @Mock private RequisitionApprovalRepository approvals;
     @Mock private RequisitionWorkflowEventRepository events;
     @Mock private RequisitionAccess access;
     @Mock private RequisitionValidator validator;
+    @Mock private NotificationService notificationService;
 
     @InjectMocks private RequisitionServiceImpl service;
 
@@ -218,5 +223,55 @@ class JobRequisitionServiceTest {
 
         verify(requisitions, never()).saveAndFlush(any());
         verifyNoInteractions(audit);
+    }
+
+    // =========================================================================
+    // [SVC-07] Decide: Reject -> Tạo thông báo riêng cho Hiring Manager
+    // =========================================================================
+
+    @Test
+    @DisplayName("SVC-07: Director reject -> Chuyển Rejected, lưu approval, log event và gửi notification cho HM")
+    void svc07_reject_notifiesHiringManager() {
+        User director = User.builder().userId(20).username("director").fullName("Director B").build();
+        when(access.actor()).thenReturn(director);
+
+        JobRequisition req = JobRequisition.builder()
+                .requisitionId(50)
+                .version(1L)
+                .title("Senior Java")
+                .approvalStatus("Pending_Director")
+                .hiringManager(manager)
+                .screeningCriteria(new ArrayList<>())
+                .build();
+
+        when(requisitions.findForUpdate(50)).thenReturn(Optional.of(req));
+        when(access.canDecide(director, req)).thenReturn(true);
+
+        service.decide(50, 1L, false, "Budget exceeded");
+
+        assertEquals("Rejected", req.getApprovalStatus());
+        assertNotNull(req.getDecidedAt());
+        verify(approvals).save(any(RequisitionApproval.class));
+        verify(requisitions).saveAndFlush(req);
+        verify(notificationService).notifyRequisitionRejected(req, director, "Budget exceeded");
+    }
+
+    // =========================================================================
+    // [SVC-HR] Scope: HR chỉ truy vấn Requisition Approved
+    // =========================================================================
+
+    @Test
+    @DisplayName("SVC-HR: Role HR gọi search -> Áp dụng scope chỉ Approved")
+    void svc_hr_searchScope_onlyApproved() {
+        User hrUser = User.builder().userId(30).username("hr_user").fullName("HR Specialist").build();
+        when(access.actor()).thenReturn(hrUser);
+        when(access.role(hrUser)).thenReturn("HR");
+
+        when(requisitions.findAll(any(org.springframework.data.jpa.domain.Specification.class), any(org.springframework.data.domain.Pageable.class)))
+                .thenReturn(new org.springframework.data.domain.PageImpl<>(List.of()));
+
+        service.search(1, 10, "", null, "", "", "newest");
+
+        verify(requisitions).findAll(any(org.springframework.data.jpa.domain.Specification.class), any(org.springframework.data.domain.Pageable.class));
     }
 }

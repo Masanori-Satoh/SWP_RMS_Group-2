@@ -61,7 +61,7 @@ src/main/java/com/group2/rms/
   - Style, mã màu chung, typography và layout gốc phải đặt ở `static/css/global.css`.
   - Logic JS dùng chung (như Toggle Header, Menu Dropdown, Notification) phải đặt ở `static/js/global.js`.
   - Style/JS riêng của từng trang phải tách ra `static/css/[feature].css` và gọi qua thẻ `<link>`/`<script>`.
-  - Khi render text từ database có chứa ký tự `\n` (dummy data/text thô), nhớ format replace thành `<br/>` và dùng `th:utext` để HTML tự động xuống dòng an toàn.
+  - Khi render văn bản từ database, dùng `th:text` để escape HTML và CSS `white-space: pre-wrap` để giữ xuống dòng. Nếu dữ liệu chứa chuỗi `\n` thay vì ký tự xuống dòng thật, chuẩn hóa thành ký tự xuống dòng trước khi render. Không dùng `th:utext` với văn bản chưa được làm sạch: nội dung người dùng nhập có thể gây stored XSS. Chỉ render HTML khi đã qua bộ sanitization có allowlist phù hợp.
 - **Lưu ý code hiện tại (WIP):** Các tính năng đang thiết kế dở (như file `form.html`), tác giả tự xem lại và bóc tách ra sau.
 
 ## 4. Xử lý Lỗi và Xác thực (Exception & Validator)

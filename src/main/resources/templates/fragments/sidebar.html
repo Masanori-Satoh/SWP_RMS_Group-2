@@ -45,7 +45,9 @@
         <span th:if="${role == 'System Admin'}" class="workspace-nav-group">System</span>
         <a th:if="${role == 'System Admin'}" th:href="@{/admin/api-monitoring}" th:attr="aria-current=${activeMenu == 'api-monitoring' ? 'page' : null}">API Monitoring</a>
         <a th:if="${role != 'Candidate'}" th:href="@{/requisitions}" th:attr="aria-current=${activeMenu == 'requisitions' ? 'page' : null}">Job Requisitions</a>
+        <a th:if="${role != 'Candidate'}" th:href="@{/interviews}" th:attr="aria-current=${activeMenu == 'interviews' ? 'page' : null}">Interview Schedule</a>
         <a th:if="${role == 'HR' or role == 'Director' or role == 'System Admin'}" th:href="@{/offers}" th:attr="aria-current=${activeMenu == 'offers' ? 'page' : null}">Offer Management</a>
+        <a th:href="@{/notifications}" th:attr="aria-current=${activeMenu == 'notifications' ? 'page' : null}">Notifications</a>
     </nav>
     <nav class="workspace-nav workspace-home" aria-label="Public careers"><a th:href="@{/}">Back to Careers</a></nav>
 </aside>

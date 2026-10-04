@@ -54,7 +54,7 @@ public class SecurityConfig {
                     .hasAuthority(RoleAuthorities.SYSTEM_ADMIN)
                 .requestMatchers("/offers", "/offers/**", "/api/v1/hr/offers", "/api/v1/hr/offers/**")
                     .hasAnyAuthority(RoleAuthorities.SYSTEM_ADMIN, "ROLE_HR", "ROLE_DIRECTOR")
-                .requestMatchers("/dashboard", "/dashboard/**").authenticated()
+                .requestMatchers("/dashboard", "/dashboard/**", "/notifications", "/notifications/**").authenticated()
                 .requestMatchers("/requisitions", "/requisitions/**")
                     .hasAnyAuthority("ROLE_HIRING_MANAGER", "ROLE_DIRECTOR", "ROLE_HR", RoleAuthorities.SYSTEM_ADMIN)
                 .anyRequest().authenticated()

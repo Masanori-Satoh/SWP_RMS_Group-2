@@ -188,11 +188,11 @@ Nhằm đảm bảo chất lượng code và phòng ngừa lỗi hồi quy (regr
 
 ### 2. P0 — Sửa quyền HR và xác nhận nền Iter1
 
-- [ ] **I2-REQ-01 — Scope danh sách:** Tách nhánh HR khỏi Director trong `RequisitionServiceImpl.scope()`. HR chỉ truy vấn `approvalStatus = Approved`; áp dụng cùng scope cho `search()`, `countVisible()`, tổng bản ghi và phân trang.
-- [ ] **I2-REQ-02 — Quyền chi tiết:** Sửa `RequisitionAccess.requireView()` để HR bị chặn khi truy cập trực tiếp ID của Draft, Pending_Director hoặc Rejected, kể cả khi tự sửa URL. Không dùng ẩn nút trên UI thay cho kiểm tra quyền.
-- [ ] **I2-REQ-03 — Bộ lọc và giao diện HR:** HR chỉ có lựa chọn Approved phù hợp với quyền. Tự gửi `status=Draft/Pending_Director/Rejected` không trả dữ liệu ngoài scope. Áp dụng lại quyền này tại các API/ô chọn requisition dùng để tạo Job Posting.
+- [x] **I2-REQ-01 — Scope danh sách:** Tách nhánh HR khỏi Director trong `RequisitionServiceImpl.scope()`. HR chỉ truy vấn `approvalStatus = Approved`; áp dụng cùng scope cho `search()`, `countVisible()`, tổng bản ghi và phân trang.
+- [x] **I2-REQ-02 — Quyền chi tiết:** Sửa `RequisitionAccess.requireView()` để HR bị chặn khi truy cập trực tiếp ID của Draft, Pending_Director hoặc Rejected, kể cả khi tự sửa URL. Không dùng ẩn nút trên UI thay cho kiểm tra quyền.
+- [x] **I2-REQ-03 — Bộ lọc và giao diện HR:** HR chỉ có lựa chọn Approved phù hợp với quyền. Tự gửi `status=Draft/Pending_Director/Rejected` không trả dữ liệu ngoài scope. Áp dụng lại quyền này tại các API/ô chọn requisition dùng để tạo Job Posting.
 - [ ] **I2-REQ-04 — Hồi quy các role khác:** HM tiếp tục xem request của mình; Director vẫn xem các request không phải Draft và chỉ quyết định khi Pending, không tự duyệt. Không mở rộng quyền Admin hoặc quyền chỉnh sửa ngoài quy tắc đã có.
-- [ ] **I2-TEST-01 — Cấu hình test:** Bổ sung dependency `spring-security-test` đúng scope test; build lại để loại bỏ class test cũ. Chạy lại Validator, Service và Controller tests trước khi kết luận lỗi chức năng.
+- [x] **I2-TEST-01 — Cấu hình test:** Bổ sung dependency `spring-security-test` đúng scope test; build lại để loại bỏ class test cũ. Chạy lại Validator, Service và Controller tests trước khi kết luận lỗi chức năng.
 - [ ] **I2-TEST-02 — Database test:** Chuẩn bị profile/database test riêng và fixture độc lập trước khi chạy integration test; không dùng dữ liệu đang demo làm fixture mặc định.
 
 **Bằng chứng tại lần rà soát 03/10/2026:** Validator chạy 147 case Passed; Service chạy 4 case Passed; Controller có 11 Errors liên quan `WithMockUser`/`csrf()`. `pom.xml` chưa khai báo `spring-security-test`. Đây là kết quả lần chạy đã ghi nhận, không phải kết quả sau khi hoàn thành kế hoạch này. Integration test chưa được chạy trong lần rà soát.
@@ -203,12 +203,12 @@ Nhằm đảm bảo chất lượng code và phòng ngừa lỗi hồi quy (regr
 
 **Kênh đề xuất cho Iter2:** Thông báo trong hệ thống là phần bắt buộc của kế hoạch. Email là kênh bổ sung cần chốt với nhóm, chưa mặc định là điều kiện Done. Timeline/AuditLog không thay thế thông báo gửi tới người nhận.
 
-- [ ] **I2-NOTI-01 — Tái sử dụng thiết kế chung:** Kiểm tra thành phần Notification hiện có của dự án trước khi tạo mới. Nếu chưa có, thống nhất nơi đặt module dùng chung và chiều gọi service, tránh phụ thuộc vòng.
-- [ ] **I2-NOTI-02 — Dữ liệu thông báo:** Lưu người nhận, loại sự kiện, ID requisition/posting liên quan, nội dung, thời gian tạo, trạng thái đọc và định danh sự kiện để chống tạo trùng. Có migration SQL tương ứng nếu cần thêm bảng/index.
-- [ ] **I2-NOTI-03 — Phát sinh sau reject hợp lệ:** Khi Director từ chối Pending với feedback hợp lệ, lưu Rejected, approval, workflow event và thông báo cho đúng HM sở hữu requisition trong cùng giao dịch database, hoặc cơ chế outbox đã thống nhất. Không tạo thông báo khi validation/quyền/version thất bại hoặc giao dịch rollback.
-- [ ] **I2-NOTI-04 — Nội dung:** Thông báo nêu requisition nào bị từ chối, ai từ chối, thời điểm và lý do. Có liên kết về đúng trang chi tiết để HM sửa và gửi lại. Encode nội dung do người dùng nhập khi hiển thị.
-- [ ] **I2-NOTI-05 — Giao diện nhận:** HM có danh sách/badge thông báo chưa đọc, mở được thông báo và đánh dấu đã đọc. Mỗi người chỉ xem/đánh dấu thông báo của chính mình; kiểm tra quyền ở server và khi mở liên kết đích.
-- [ ] **I2-NOTI-06 — Chống trùng:** Gửi lại cùng request hoặc retry cùng sự kiện không tạo thông báo trùng. Một lần reject mới sau khi HM resubmit phải tạo thông báo mới và vẫn giữ lịch sử cũ.
+- [x] **I2-NOTI-01 — Tái sử dụng thiết kế chung:** Kiểm tra thành phần Notification hiện có của dự án trước khi tạo mới. Xây dựng module dùng chung `com.group2.rms.notification` phẳng (< 10 files) theo `ARCHITECTURE_GUIDE.md`, tránh phụ thuộc vòng.
+- [x] **I2-NOTI-02 — Dữ liệu thông báo:** Lưu người nhận, loại sự kiện, ID requisition/posting liên quan, nội dung, thời gian tạo, trạng thái đọc và định danh sự kiện để chống tạo trùng. Có migration SQL `005_notification.sql` tương ứng.
+- [x] **I2-NOTI-03 — Phát sinh sau reject hợp lệ:** Khi Director từ chối Pending với feedback hợp lệ, lưu Rejected, approval, workflow event và thông báo cho đúng HM sở hữu requisition trong cùng giao dịch database. Không tạo thông báo khi validation/quyền/version thất bại hoặc giao dịch rollback.
+- [x] **I2-NOTI-04 — Nội dung:** Thông báo nêu requisition nào bị từ chối, ai từ chối, thời điểm và lý do. Có liên kết về đúng trang chi tiết để HM sửa và gửi lại.
+- [x] **I2-NOTI-05 — Giao diện nhận:** HM có danh sách/badge thông báo chưa đọc tại `/notifications`, mở được thông báo và đánh dấu đã đọc. Mỗi người chỉ xem/đánh dấu thông báo của chính mình; kiểm tra quyền ở server và khi mở liên kết đích.
+- [x] **I2-NOTI-06 — Chống trùng:** Gửi lại cùng request hoặc retry cùng sự kiện không tạo thông báo trùng qua `eventId`. Một lần reject mới sau khi HM resubmit tạo thông báo mới và vẫn giữ lịch sử cũ.
 - [ ] **I2-NOTI-07 — Nếu triển khai email:** Dùng cấu hình mail chung, gửi sau commit qua cơ chế có retry; lỗi SMTP không đảo ngược quyết định đã lưu. Không gửi thư thật trong automated test, không đưa credentials vào source/checklist.
 
 **Nghiệm thu:** Director reject có lý do → HM đúng chủ nhận một thông báo chưa đọc → mở được feedback → sửa và resubmit cùng requisition ID. HM khác không thấy hoặc truy cập được thông báo đó. Reject thiếu lý do và giao dịch lỗi không sinh thông báo.

@@ -26,8 +26,13 @@ public class RequisitionAccess {
     public boolean canDecide(User user,JobRequisition req) { return "Director".equals(role(user))&&!owns(user,req)&&"Pending_Director".equals(req.getApprovalStatus()); }
     public void requireCreate(User user) { if(!canCreate(user)) throw new AccessDeniedException("Only Hiring Managers and administrators can create requests."); }
     public void requireView(User user,JobRequisition req) {
-        if("System Admin".equals(role(user))||owns(user,req)) return;
-        if(Set.of("Director","HR").contains(role(user))&&!"Draft".equals(req.getApprovalStatus())) return;
+        if("System Admin".equals(role(user))) return;
+        if("HR".equals(role(user))) {
+            if("Approved".equals(req.getApprovalStatus())) return;
+            throw new AccessDeniedException("HR is only permitted to view approved requisitions.");
+        }
+        if(owns(user,req)) return;
+        if("Director".equals(role(user))&&!"Draft".equals(req.getApprovalStatus())) return;
         throw new AccessDeniedException("This request is outside your scope.");
     }
     public void requireEdit(User user,JobRequisition req) { requireView(user,req); if(!canEdit(user,req)) throw new AccessDeniedException("Only a draft or rejected request can be edited or deleted."); }
