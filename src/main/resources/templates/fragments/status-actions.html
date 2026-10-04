@@ -1,0 +1,17 @@
+<!doctype html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org"><body>
+<form th:fragment="action(url, title, message, label, danger)" class="status-action-form"
+      th:action="${url}" method="post" data-status-confirm
+      th:attr="data-confirm-title=${title},data-confirm-message=${message},data-confirm-label=${label},data-confirm-danger=${danger}">
+    <button class="btn btn-sm" th:classappend="${danger ? 'btn-danger' : 'btn-secondary'}" type="submit"
+            th:attr="aria-label=${title}" th:text="${label}">Xác nhận</button>
+</form>
+<dialog th:fragment="confirmation" class="account-dialog" id="status-dialog" aria-labelledby="status-title" aria-describedby="status-description">
+    <h2 id="status-title">Xác nhận thay đổi trạng thái</h2>
+    <p id="status-description"></p>
+    <div class="account-dialog-actions">
+        <button class="btn btn-secondary" type="button" id="status-cancel" autofocus>Hủy</button>
+        <button class="btn btn-primary" type="button" id="status-confirm">Xác nhận</button>
+    </div>
+</dialog>
+</body></html>

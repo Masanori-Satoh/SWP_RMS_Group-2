@@ -14,6 +14,7 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.Optional;
+import java.util.List;
 
 /**
  * Repository cho entity User.
@@ -23,6 +24,8 @@ public interface UserRepository extends JpaRepository<User, Integer>, JpaSpecifi
     Optional<User> findByUsernameIgnoreCase(String username);
 
     Optional<User> findByEmailIgnoreCase(String email);
+
+    List<User> findAllByDepartmentDepartmentIdAndAccountStatusOrderByFullNameAscUserIdAsc(Integer departmentId, String accountStatus);
 
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("select u from User u where u.userId = :id")

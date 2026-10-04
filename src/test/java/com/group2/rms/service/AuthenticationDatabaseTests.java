@@ -1,5 +1,6 @@
 package com.group2.rms.service;
 
+import com.group2.rms.auth.exception.InvalidResetTokenException;
 import com.group2.rms.auth.service.CandidateRegistrationService;
 import com.group2.rms.auth.service.PasswordResetService;
 import com.group2.rms.candidate.entity.Candidate;
@@ -22,6 +23,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @SpringBootTest(properties = "app.password.reset.secret=integration-test-signing-key-longer-than-32-bytes")
@@ -65,14 +67,14 @@ class AuthenticationDatabaseTests {
         assertFalse(link.token().contains(user.getPasswordHash()));
         assertTrue(reset.isValid(link.token()));
 
-        assertTrue(reset.reset(link.token(), "newPassword12"));
+        reset.reset(link.token(), link.otp(), "newPassword12");
+
         entityManager.flush();
         entityManager.clear();
         User updated = users.findById(user.getUserId()).orElseThrow();
         assertTrue(passwordEncoder.matches("newPassword12", updated.getPasswordHash()));
         assertFalse(passwordEncoder.matches("oldPassword12", updated.getPasswordHash()));
-        assertFalse(reset.isValid(link.token()));
-        assertFalse(reset.reset(link.token(), "anotherPassword12"));
+        assertThrows(InvalidResetTokenException.class, () -> reset.reset(link.token(), link.otp(), "anotherPassword12"));
     }
 
     @Test
@@ -82,13 +84,13 @@ class AuthenticationDatabaseTests {
         PasswordResetService future = new PasswordResetService(users, passwordEncoder,
                 TEST_SECRET, Clock.offset(Clock.systemUTC(), Duration.ofMinutes(16)));
         assertFalse(future.isValid(link.token()));
-        assertFalse(future.reset(link.token(), "newPassword12"));
+        assertThrows(InvalidResetTokenException.class, () -> future.reset(link.token(), link.otp(), "newPassword12"));
         assertFalse(reset.isValid(link.token() + "tampered"));
 
         user.setAccountStatus("Inactive");
         entityManager.flush();
         assertFalse(reset.isValid(link.token()));
-        assertFalse(reset.reset(link.token(), "newPassword12"));
+        assertThrows(InvalidResetTokenException.class, () -> reset.reset(link.token(), link.otp(), "newPassword12"));
         assertTrue(reset.request(user.getEmail()).isEmpty());
     }
 

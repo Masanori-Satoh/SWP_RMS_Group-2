@@ -35,29 +35,48 @@ test('account form updates required department without the removed menu button',
     assert.equal(department.required, false);
 });
 
-test('account list opens and cancels deactivation without the removed menu button', () => {
-    let deactivate;
-    let cancel;
+test('status confirmation cancels safely and submits the original scoped form exactly once', () => {
+    const handlers = {};
+    const trigger = { focus() { this.focused = true; } };
     const dialog = {
         open: false,
         showModal() { this.open = true; },
-        close() { this.open = false; },
+        close() { this.open = false; handlers.close(); },
+        addEventListener: (name, callback) => { handlers[name] = callback; },
     };
-    const form = {};
-    const name = {};
-    loadScript('account-list.js', {
-        'deactivate-dialog': dialog,
-        'deactivate-form': form,
-        'deactivate-account-name': name,
-        'deactivate-cancel': { addEventListener: (_, callback) => { cancel = callback; } },
-    }, [{
-        dataset: { accountName: 'Test account', deactivateUrl: '/admin/accounts/7/deactivate' },
-        addEventListener: (_, callback) => { deactivate = callback; },
-    }]);
-    deactivate();
+    const cancel = { focus() { this.focused = true; }, addEventListener: (_, callback) => { handlers.cancel = callback; } };
+    const confirm = { addEventListener: (_, callback) => { handlers.confirm = callback; } };
+    const title = {};
+    const description = {};
+    let submits = 0;
+    let submit;
+    const form = {
+        action: '/admin/candidate-accounts/7/activate',
+        csrf: 'test-token',
+        dataset: { confirmTitle: 'Restore test account', confirmMessage: 'Preserve history.', confirmLabel: 'Restore', confirmDanger: 'false' },
+        querySelector: () => trigger,
+        addEventListener: (_, callback) => { submit = callback; },
+        requestSubmit(button) {
+            let prevented = false;
+            submit({ submitter: button, preventDefault() { prevented = true; } });
+            if (!prevented) submits++;
+        },
+    };
+    loadScript('status-confirmation.js', {
+        'status-dialog': dialog, 'status-title': title, 'status-description': description,
+        'status-cancel': cancel, 'status-confirm': confirm,
+    }, [form]);
+    const request = () => submit({ submitter: trigger, preventDefault() {} });
+    request();
     assert.equal(dialog.open, true);
-    assert.equal(name.textContent, 'Test account');
-    assert.equal(form.action, '/admin/accounts/7/deactivate');
-    cancel();
+    assert.equal(cancel.focused, true);
+    assert.equal(title.textContent, 'Restore test account');
+    handlers.cancel();
+    assert.equal(submits, 0);
+    assert.equal(trigger.focused, true);
+    request(); handlers.confirm(); handlers.confirm();
+    assert.equal(submits, 1);
+    assert.equal(form.action, '/admin/candidate-accounts/7/activate');
+    assert.equal(form.csrf, 'test-token');
     assert.equal(dialog.open, false);
 });

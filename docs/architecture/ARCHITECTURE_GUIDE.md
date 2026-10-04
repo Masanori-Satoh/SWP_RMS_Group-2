@@ -36,6 +36,52 @@ src/main/java/com/group2/rms/
 └── RmsApplication.java
 ```
 
+### Danh sách các Features (Module) hiện có:
+1. **`auth`**: Đăng nhập, Quên mật khẩu, Reset mật khẩu.
+2. **`user`**: Quản lý tài khoản, Hồ sơ, Phòng ban, Vai trò.
+3. **`requisition`**: Yêu cầu tuyển dụng, Phê duyệt, Tiêu chí sàng lọc.
+4. **`candidate`**: Hồ sơ ứng tuyển, Ứng viên, Chấm điểm AI.
+5. **`interview`**: Lịch phỏng vấn, Đánh giá, Hội đồng.
+6. **`offer`**: Đề xuất lương, Thương lượng.
+7. **`dashboard`**: Thống kê, Báo cáo.
+8. **`admin`**: System Config, Health Check, Audit Logs.
+9. **`core`**: Base entity, exception chung, security, config.
+
+## 2. Quy chuẩn Đặt tên (Naming Conventions)
+- **Controller**: `{Feature}Controller` (ví dụ: `JobRequisitionController`). Không đặt là `RequisitionRequestController`.
+- **DTO (Khuyến khích dùng Java Record):** 
+  - Khuyến khích sử dụng cấu trúc `record` của Java 14+ cho DTO để tăng tính bất biến (immutability) và gọn gàng.
+  - Đuôi là `Request` cho Input (VD: `CreateAccountRequest`). Không dùng chữ `Form` hay `Dto`.
+  - Đuôi là `Response` cho Output (VD: `UserProfileResponse`). Không tạo sub-folder `request/` hay `response/`, tất cả bỏ vào `dto/`.
+- **Entity**: Viết hoa chữ cái đầu, số ít (VD: `JobRequisition`, `Candidate`).
+
+## 3. Tổ chức Frontend (`templates/` vs `static/`)
+- **Quy chuẩn BẮT BUỘC cho code mới:** KHÔNG viết CSS/JS nội tuyến vào thẻ `<style>` hay `<script>` trong file HTML thuộc `templates/`.
+- **Cách triển khai:** 
+  - Style, mã màu chung, typography và layout gốc phải đặt ở `static/css/global.css`.
+  - Logic JS dùng chung (như Toggle Header, Menu Dropdown, Notification) phải đặt ở `static/js/global.js`.
+  - Style/JS riêng của từng trang phải tách ra `static/css/[feature].css` và gọi qua thẻ `<link>`/`<script>`.
+  - Khi render text từ database có chứa ký tự `\n` (dummy data/text thô), nhớ format replace thành `<br/>` và dùng `th:utext` để HTML tự động xuống dòng an toàn.
+- **Lưu ý code hiện tại (WIP):** Các tính năng đang thiết kế dở (như file `form.html`), tác giả tự xem lại và bóc tách ra sau.
+
+## 4. Xử lý Lỗi và Xác thực (Exception & Validator)
+- **Validator & Xử lý Lỗi Nhập liệu (Web Form / AJAX):**
+  - Bắt buộc dùng DTO kèm Annotation (VD: `@Valid`) để kiểm tra dữ liệu đầu vào.
+  - **Với các Form nhập liệu giao diện (Create/Edit):** Sử dụng `BindingResult` (`bindingResult.rejectValue(...)` hoặc trả về JSON status 400 kèm chi tiết lỗi từng trường qua AJAX) để **hiển thị thông báo lỗi inline trực tiếp trên form** và giữ nguyên dữ liệu người dùng đang nhập dở. **TUYỆT ĐỐI KHÔNG ném Exception văng ra trang 500 khi người dùng chỉ nhập sai dữ liệu Form.**
+- **Exception Hệ thống & Nghiệp vụ không thể khôi phục (Ép dùng Global Exception Handler):**
+  - **Với code mới:** Service ném ra Custom Exception (kế thừa `BaseBusinessException` cho lỗi nghiệp vụ hoặc `ResourceNotFoundException` cho 404). Controller **CẤM** sử dụng `try-catch` nuốt lỗi, hãy để lỗi trôi lên `GlobalExceptionHandler` ở tầng `core` để render các trang lỗi tương ứng (`404.html`, `403.html`, `500.html`).
+  - **Lưu ý code hiện tại (WIP):** Các hàm Controller đang tự try-catch, tự dọn dẹp sau khi hệ thống Global Exception hoàn thiện.
+
+## 5. Giao tiếp chéo giữa các Tính năng (Cross-Feature)
+- **Quy tắc cho code mới:** XEM XÉT KỸ LƯỠNG khi gọi chéo:
+  - Được phép: Tiêm (`@Autowired`) Service A vào Service B.
+  - CẤM TỐI KỴ: Tạo vòng lặp phụ thuộc (Circular Dependency).
+  - Khuyến khích: Nếu nghiệp vụ đan chéo quá 2 tính năng, xem xét tạo Orchestrator Feature.
+- **Lưu ý code hiện tại (WIP):** Tự rà soát chiều gọi Service và sắp xếp lại sau.
+
+## 6. Truy xuất Dữ liệu (Database & JPA)
+- **Lazy Loading & Session:** Khi truy vấn các Entity có quan hệ `FetchType.LAZY` (như `@OneToMany`, `@ManyToOne`), nếu quá trình Mapping từ Entity sang DTO diễn ra ở tầng Service sau khi truy vấn kết thúc, session có thể đã đóng, dẫn đến lỗi `LazyInitializationException`.
+- **Giải pháp BẮT BUỘC:** Phải gắn annotation `@Transactional(readOnly = true)` (từ Spring) lên các class Service hoặc method Service chỉ đọc (GET) để giữ session sống trong suốt vòng đời mapping dữ liệu.
 ### Danh sách 10 Module (Features) chính thức của hệ thống:
 1. **`career`**: Cổng thông tin tuyển dụng công khai cho ứng viên (Public Job Board), xem chi tiết tin tuyển dụng (Job Details) và nộp hồ sơ ứng tuyển trực tuyến.
 2. **`auth`**: Đăng nhập, Đăng ký tài khoản ứng viên, Quên mật khẩu, Đặt lại mật khẩu.
