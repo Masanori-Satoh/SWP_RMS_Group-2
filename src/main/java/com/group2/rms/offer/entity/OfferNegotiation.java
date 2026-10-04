@@ -1,4 +1,4 @@
-package com.group2.rms.offer;
+package com.group2.rms.offer.entity;
 
 import jakarta.persistence.*;
 import lombok.*;

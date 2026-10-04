@@ -1,0 +1,384 @@
+<!doctype html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/head :: globalHead('Lịch phỏng vấn', ~{::pageStyles})}">
+  <th:block th:fragment="pageStyles">
+    <meta name="description" content="Quản lý và theo dõi lịch phỏng vấn tuyển dụng Mộc Careers.">
+    <link rel="stylesheet" th:href="@{/css/interview-list.css}">
+  </th:block>
+</head>
+<body>
+
+  <!-- Site Header (Full-featured Topbar) -->
+  <header class="site-header">
+    <div class="container header-inner">
+
+      <!-- Logo → về Dashboard -->
+      <a th:replace="~{fragments/brand :: wordmark('Nội bộ')}"></a>
+
+      <!-- Navigation Groups -->
+      <nav class="nav-main" aria-label="Điều hướng chính">
+
+        <!-- Chung (all roles) -->
+        <div class="nav-group">
+          <a th:href="@{/jobs}" class="nav-link" title="Danh sách vị trí tuyển dụng đang mở">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v2"/></svg>
+            Vị trí tuyển dụng
+          </a>
+          <a th:href="@{/applications}" class="nav-link" title="Hồ sơ ứng tuyển">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+            Hồ sơ
+          </a>
+        </div>
+
+        <span class="nav-divider" aria-hidden="true"></span>
+
+        <!-- HR / HM -->
+        <div class="nav-group" th:if="${isHr}">
+          <a th:href="@{/requisitions}" class="nav-link" title="Yêu cầu tuyển dụng đã phê duyệt">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg>
+            Yêu cầu tuyển dụng
+          </a>
+          <a th:href="@{/candidates}" class="nav-link" title="Sơ tuyển & shortlist ứng viên">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/></svg>
+            Sơ tuyển
+          </a>
+          <a th:href="@{/offers}" class="nav-link" title="Danh sách đề xuất offer">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+            Offer
+          </a>
+          <a th:href="@{/interviews}" class="nav-link active" title="Lịch phỏng vấn">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+            Lịch phỏng vấn
+          </a>
+        </div>
+
+        <!-- Interviewer / HM -->
+        <div class="nav-group" th:unless="${isHr}">
+          <a th:href="@{/interviews}" class="nav-link active" title="Lịch phỏng vấn của tôi">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+            Lịch phỏng vấn
+          </a>
+          <a th:href="@{/interviews/evaluation}" class="nav-link" title="Gửi đánh giá phỏng vấn">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+            Đánh giá
+          </a>
+          <a th:href="@{/candidates/cv}" class="nav-link" title="Xem CV ứng viên">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+            CV ứng viên
+          </a>
+          <a th:href="@{/requisitions}" class="nav-link" title="Danh sách yêu cầu tuyển dụng" th:if="${currentUser != null and currentUser.role.roleName == 'Hiring Manager'}">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg>
+            Yêu cầu tuyển dụng
+          </a>
+        </div>
+
+      </nav>
+
+      <!-- Right Side Controls -->
+      <div class="header-right">
+
+        <!-- Notification Bell -->
+        <button type="button" class="notif-btn" title="Thông báo" onclick="window.location.href='/notifications'" aria-label="Thông báo">
+          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg>
+          <span class="notif-badge" aria-hidden="true"></span>
+        </button>
+
+        <!-- User Menu -->
+        <div class="user-menu" id="user-menu">
+          <button type="button" class="user-trigger" id="user-menu-trigger" aria-haspopup="true" aria-expanded="false">
+            <span class="user-avatar" th:text="${currentUser != null ? #strings.substring(currentUser.fullName, 0, 1) : 'U'}" id="user-avatar-initials">A</span>
+            <span th:text="${currentUser != null ? currentUser.fullName : 'Người dùng'}" id="user-display-name">Người dùng</span>
+            <span class="user-role-tag" th:text="${currentUser != null ? currentUser.role.roleName : ''}">HR</span>
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+          </button>
+
+          <div class="user-dropdown" id="user-dropdown" role="menu">
+            <div class="dropdown-header">
+              <div class="dropdown-name" th:text="${currentUser != null ? currentUser.fullName : 'Người dùng'}">Người dùng</div>
+              <div class="dropdown-email" th:text="${currentUser != null ? currentUser.email : ''}">user@moc.vn</div>
+            </div>
+            <a th:href="@{/profile}" class="dropdown-item" role="menuitem">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+              Thông tin cá nhân
+            </a>
+            <a th:href="@{/jobs}" class="dropdown-item" role="menuitem">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v2"/></svg>
+              Danh sách vị trí mở
+            </a>
+            <div class="dropdown-divider" role="separator"></div>
+            <form th:action="@{/logout}" method="post" class="logout-form">
+              <button type="submit" class="dropdown-item danger" role="menuitem">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+                Đăng xuất
+              </button>
+            </form>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Content -->
+  <main class="section">
+    <div class="container">
+
+      <!-- Page Header -->
+      <div class="page-head">
+        <div>
+          <h1 class="page-title">Lịch phỏng vấn</h1>
+          <p class="page-subtitle">Quản lý và theo dõi toàn bộ buổi phỏng vấn tuyển dụng.</p>
+        </div>
+        <div th:if="${isHr}">
+          <a th:href="@{/interviews/new}" class="button button-brand" id="btn-create-interview">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            Tạo lịch phỏng vấn
+          </a>
+        </div>
+      </div>
+
+      <!-- Alerts -->
+      <div th:if="${successMessage}" class="alert alert-success" role="alert">
+        <svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true">
+          <path d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.7-10.3l-4.5 4.5a1 1 0 01-1.4 0l-2-2a1 1 0 111.4-1.4l1.3 1.3 3.8-3.8a1 1 0 011.4 1.4z" fill="currentColor"/>
+        </svg>
+        <span th:text="${successMessage}">Thao tác thành công.</span>
+      </div>
+
+      <div th:if="${errorMessage}" class="alert alert-error" role="alert">
+        <svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true">
+          <path d="M10 18a8 8 0 100-16 8 8 0 000 16zM9 5h2v6H9V5zm0 8h2v2H9v-2z" fill="currentColor"/>
+        </svg>
+        <span th:text="${errorMessage}">Đã xảy ra lỗi.</span>
+      </div>
+
+      <!-- Filter & Mini Calendar Dashboard -->
+      <div th:unless="${#lists.isEmpty(schedules)}" class="filter-calendar-dashboard" id="filter-dashboard">
+        <div class="filter-body" id="filter-body">
+        <div class="dashboard-grid">
+          
+          <!-- Mini Calendar Widget -->
+          <div class="calendar-widget">
+            <div class="calendar-header">
+              <button type="button" class="cal-nav-btn" id="cal-prev" title="Tháng trước">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M15 18l-6-6 6-6"/></svg>
+              </button>
+              <div class="cal-title" id="cal-month-year">Tháng 10, 2026</div>
+              <button type="button" class="cal-nav-btn" id="cal-next" title="Tháng sau">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M9 18l6-6-6-6"/></svg>
+              </button>
+            </div>
+
+            <!-- Weekdays row -->
+            <div class="cal-weekdays">
+              <span>T2</span><span>T3</span><span>T4</span><span>T5</span><span>T6</span><span>T7</span><span>CN</span>
+            </div>
+
+            <!-- Days grid generated by JS -->
+            <div class="cal-days-grid" id="cal-days"></div>
+
+            <div class="cal-legend">
+              <span class="cal-dot-sample"></span>
+              <span>Ngày có lịch phỏng vấn</span>
+            </div>
+          </div>
+
+          <!-- Controls & Filters Section -->
+          <div class="filters-widget">
+            <!-- Time Presets Bar -->
+            <div class="time-presets-bar">
+              <span class="preset-label">Thời gian:</span>
+              <div class="preset-buttons">
+                <button type="button" class="preset-btn active" id="btn-filter-today">Hôm nay</button>
+                <button type="button" class="preset-btn" id="btn-filter-this-week">Tuần này</button>
+                <button type="button" class="preset-btn" id="btn-filter-this-month">Tháng này</button>
+                <button type="button" class="preset-btn" id="btn-filter-all">Tất cả các cuộc họp</button>
+              </div>
+            </div>
+
+            <!-- Detailed Filter Inputs -->
+            <div class="filter-inputs-grid">
+              <!-- Search -->
+              <div class="filter-field search-field">
+                <label for="filter-search">Tìm kiếm</label>
+                <div class="search-input-wrap">
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+                  <input type="text" id="filter-search" placeholder="Ứng viên, email, mã hồ sơ...">
+                </div>
+              </div>
+
+              <!-- Job Filter -->
+              <div class="filter-field">
+                <label for="filter-job">Vị trí tuyển dụng</label>
+                <select id="filter-job">
+                  <option value="">Tất cả vị trí tuyển dụng</option>
+                </select>
+              </div>
+
+              <!-- Level / Experience Filter -->
+              <div class="filter-field">
+                <label for="filter-level">Cấp bậc / Kinh nghiệm</label>
+                <select id="filter-level">
+                  <option value="">Tất cả cấp bậc</option>
+                  <option value="Senior">Senior</option>
+                  <option value="Middle">Middle / Mid</option>
+                  <option value="Junior">Junior</option>
+                  <option value="Lead">Lead</option>
+                  <option value="Intern">Intern / Thực tập</option>
+                </select>
+              </div>
+
+              <!-- Status Filter -->
+              <div class="filter-field">
+                <label for="filter-status">Trạng thái</label>
+                <select id="filter-status">
+                  <option value="">Tất cả trạng thái</option>
+                  <option value="Scheduled">Đã lên lịch</option>
+                  <option value="In_Progress">Đang diễn ra</option>
+                  <option value="Completed">Đã hoàn thành</option>
+                  <option value="Cancelled">Đã hủy</option>
+                </select>
+              </div>
+
+              <!-- Interviewer Filter -->
+              <div class="filter-field">
+                <label for="filter-interviewer">Người phỏng vấn</label>
+                <select id="filter-interviewer">
+                  <option value="">Tất cả người phỏng vấn</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+        </div>
+        </div><!-- /filter-body -->
+
+        <!-- Bottom Bar: Status on Left, Collapse Toggle on Bottom-Right -->
+        <div class="filter-bottom-bar">
+          <div class="filter-bottom-left">
+            <span class="filter-summary" id="filter-count-text">Hiển thị 0 / 0 buổi phỏng vấn</span>
+            <div class="active-pills" id="active-pills"></div>
+            <button type="button" class="btn-clear-filters" id="btn-clear-all">Xóa tất cả bộ lọc</button>
+          </div>
+          <div class="filter-bottom-right">
+            <button type="button" class="btn-toggle-filter" id="btn-toggle-filter" aria-expanded="true" title="Thu gọn bộ lọc">
+              <span id="toggle-filter-label">Thu gọn bộ lọc</span>
+              <svg id="toggle-filter-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="18 15 12 9 6 15"/></svg>
+            </button>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Schedule Cards Grid -->
+      <div th:unless="${#lists.isEmpty(schedules)}" class="job-grid">
+        <div class="job-card" th:each="s : ${schedules}"
+             th:data-id="${s.interviewId}"
+             th:data-date="${#temporals.format(s.startTime, 'yyyy-MM-dd')}"
+             th:data-job="${s.jobPostingTitle != null ? s.jobPostingTitle : ''}"
+             th:data-candidate="${s.candidateFullName != null ? s.candidateFullName : ''}"
+             th:data-candidate-email="${s.candidateEmail != null ? s.candidateEmail : ''}"
+             th:data-app-id="${s.applicationId}"
+             th:data-status="${s.interviewStatus != null ? s.interviewStatus.name() : ''}"
+             th:data-format="${s.interviewFormat != null ? s.interviewFormat.name() : ''}">
+          
+          <div class="card-top">
+            <span class="job-department"
+                  th:text="${s.jobPostingTitle != null ? s.jobPostingTitle : 'Vị trí tuyển dụng'}"
+                  th:data-job-name="${s.jobPostingTitle != null ? s.jobPostingTitle : ''}"
+                  th:title="${s.jobPostingTitle != null ? ('Vị trí: ' + s.jobPostingTitle + ' (Nhấn để lọc)') : ''}">
+              Vị trí
+            </span>
+            <!-- Status Badge -->
+            <span th:class="'status-badge status-' + ${#strings.toLowerCase(s.interviewStatus.name())}"
+                  th:text="${s.interviewStatusDisplay}">
+              Scheduled
+            </span>
+          </div>
+
+          <!-- Candidate Info -->
+          <h2 class="candidate-name" th:text="${s.candidateFullName != null ? s.candidateFullName : 'Ứng viên #' + s.applicationId}">Ứng viên</h2>
+          <div class="job-position" th:text="'Hồ sơ #' + ${s.applicationId} + ' • ' + ${s.candidateEmail != null ? s.candidateEmail : 'Chưa có email'}">
+            Hồ sơ ứng tuyển
+          </div>
+
+          <!-- Schedule Meta -->
+          <div class="schedule-meta-list">
+            <div class="meta-row">
+              <span class="meta-label">Thời gian bắt đầu</span>
+              <span class="meta-value" th:text="${#temporals.format(s.startTime, 'dd/MM/yyyy HH:mm')}">10/10/2026 09:00</span>
+            </div>
+            <div class="meta-row">
+              <span class="meta-label">Thời gian kết thúc</span>
+              <span class="meta-value" th:text="${#temporals.format(s.endTime, 'dd/MM/yyyy HH:mm')}">10/10/2026 10:00</span>
+            </div>
+            <div class="meta-row">
+              <span class="meta-label">Hình thức</span>
+              <span class="meta-value format-tag" th:classappend="${s.interviewFormat.name() == 'Online_GoogleMeet' ? 'format-online' : 'format-offline'}">
+                <span th:text="${s.interviewFormatDisplay}">Online Google Meet</span>
+              </span>
+            </div>
+            <div class="meta-row" th:if="${s.locationOrLink != null and !#strings.isEmpty(s.locationOrLink)}">
+              <span class="meta-label">Địa điểm / Link</span>
+              <span class="meta-value meta-value-location multiline-text">
+                <a th:if="${#strings.startsWith(s.locationOrLink, 'http')}" th:href="${s.locationOrLink}" target="_blank" rel="noopener" class="meta-link">
+                  Tham gia Meet ↗
+                </a>
+                <span th:unless="${#strings.startsWith(s.locationOrLink, 'http')}"
+                      th:utext="${#strings.replace(#strings.escapeXml(s.locationOrLink), '&#10;', '&lt;br/&gt;')}">Phòng họp</span>
+              </span>
+            </div>
+          </div>
+
+          <!-- Interview Panel Members (Rule HR Isolation: only HM / technical interviewers) -->
+          <div class="panel-box">
+            <div class="panel-title">Hội đồng phỏng vấn:</div>
+            <div class="panel-tags" th:if="${s.interviewers != null and !#lists.isEmpty(s.interviewers)}">
+              <span class="panel-member" th:each="m : ${s.interviewers}"
+                    th:data-member-name="${m.fullName}"
+                    th:title="'Nhấn để xem các lịch phỏng vấn của ' + ${m.fullName}">
+                <span th:text="${m.fullName}">Nguyễn Chuyên Gia</span>
+                <span class="panel-role" th:text="'(' + ${m.roleInPanelDisplay} + ')'">(HM)</span>
+              </span>
+            </div>
+            <div th:if="${s.interviewers == null or #lists.isEmpty(s.interviewers)}" class="panel-empty">
+              Chưa phân công người phỏng vấn.
+            </div>
+          </div>
+
+          <!-- Actions Bar: Strictly for HR only (GBR-05). Hidden completely for Interviewers -->
+          <div class="card-actions" th:if="${isHr}">
+            <a th:href="@{'/interviews/' + ${s.interviewId} + '/edit'}" class="button button-secondary button-sm">
+              Sửa lịch
+            </a>
+
+            <!-- Cancel Button Form (Available only if not yet cancelled or completed) -->
+            <form th:if="${s.interviewStatus.name() != 'Cancelled' and s.interviewStatus.name() != 'Completed'}"
+                  th:action="@{'/interviews/' + ${s.interviewId} + '/cancel'}"
+                  method="post"
+                  class="action-form-inline"
+                  onsubmit="return confirm('Bạn có chắc chắn muốn hủy lịch phỏng vấn này? Hành động này tuân thủ Rule GBR-01 và không thể hoàn tác.');">
+              <input type="hidden" name="cancelReason" value="Hủy theo yêu cầu của HR"/>
+              <button type="submit" class="button button-danger button-sm">
+                Hủy lịch
+              </button>
+            </form>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- Client-side Filter Empty State -->
+      <div id="filter-empty-state" class="empty-state">
+        <h2 class="empty-title" id="empty-state-title">Hôm nay không có lịch phỏng vấn nào</h2>
+        <p class="empty-desc" id="empty-state-desc">Không có buổi phỏng vấn nào được lên lịch cho ngày được chọn. Bạn có thể chọn ngày có dấu chấm trên cuốn lịch hoặc bấm xem toàn bộ.</p>
+        <button type="button" class="button" id="btn-empty-action">Xem tất cả các cuộc họp</button>
+      </div>
+
+    </div>
+  </main>
+
+  <script th:src="@{/js/global.js}" src="/js/global.js"></script>
+  <script th:src="@{/js/interview-list.js}" src="/js/interview-list.js"></script>
+</body>
+</html>
