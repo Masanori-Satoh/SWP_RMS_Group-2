@@ -5,6 +5,7 @@ import com.group2.rms.candidate.repository.ApplicationRepository;
 import com.group2.rms.offer.dto.CreateOfferRequest;
 import com.group2.rms.offer.dto.OfferResponse;
 import com.group2.rms.offer.dto.UpdateOfferRequest;
+import com.group2.rms.core.exception.BaseBusinessException;
 import com.group2.rms.offer.entity.OfferProposal;
 import com.group2.rms.offer.exception.OfferValidationException;
 import com.group2.rms.offer.repository.OfferApprovalRepository;
@@ -419,5 +420,214 @@ class OfferServiceTests {
         assertEquals(1, list.size());
         assertEquals("Tầng 8, Tòa nhà RMS Tower, Duy Tân, Cầu Giấy, Hà Nội", list.get(0).getWorkLocation());
         assertEquals("Nguyễn Văn A", list.get(0).getCandidateName());
+    }
+
+    @Test
+    @DisplayName("Nghiệp vụ: Lương thử việc lớn hơn lương chính thức phải ném OfferValidationException")
+    void testCreateOfferByHr_probationSalaryGreaterThanProposed_throwsException() {
+        CreateOfferRequest request = CreateOfferRequest.builder()
+                .applicationId(10)
+                .offeredPositionTitle("Backend Dev")
+                .proposedSalary(new BigDecimal("20000000"))
+                .probationSalary(new BigDecimal("25000000")) // > 20.000.000
+                .probationDays(60)
+                .expectedStartDate(LocalDate.now().plusDays(2))
+                .workLocation("Trụ sở chính")
+                .build();
+
+        OfferValidationException ex = assertThrows(OfferValidationException.class, () -> {
+            offerService.createOfferByHr(request);
+        });
+
+        assertTrue(ex.getMessage().contains("Lương thử việc không được vượt quá lương chính thức"));
+    }
+
+    @Test
+    @DisplayName("Bean Validation: Lương thử việc lớn hơn lương chính thức vi phạm validation")
+    void testCreateOfferRequest_probationSalaryGreaterThanProposed_hasViolation() {
+        ValidatorFactory factory = Validation.buildDefaultValidatorFactory();
+        Validator validator = factory.getValidator();
+
+        CreateOfferRequest request = CreateOfferRequest.builder()
+                .applicationId(10)
+                .offeredPositionTitle("Backend Dev")
+                .proposedSalary(new BigDecimal("20000000"))
+                .probationSalary(new BigDecimal("21000000")) // > 20.000.000
+                .probationDays(60)
+                .expectedStartDate(LocalDate.now().plusDays(2))
+                .workLocation("Trụ sở chính")
+                .build();
+
+        var violations = validator.validate(request);
+        assertFalse(violations.isEmpty());
+        assertTrue(violations.stream().anyMatch(v -> v.getMessage().contains("Lương thử việc không được vượt quá lương chính thức")));
+    }
+
+    @Test
+    @DisplayName("GBR-07 getPassedCandidatesForOffer: Loại bỏ ứng viên có Offer Nhóm B và giữ lại ứng viên Nhóm A hoặc chưa có Offer")
+    void testGetPassedCandidatesForOffer_filtersGroupB_keepsGroupA() {
+        // App 1: có offer Pending_Director (Nhóm B -> BỊ LOẠI)
+        Application app1 = Application.builder().applicationId(1).build();
+        InterviewSchedule s1 = InterviewSchedule.builder().application(app1).build();
+        InterviewFinalResult r1 = InterviewFinalResult.builder().finalResultId(1).interviewSchedule(s1).finalDecision("Passed").build();
+
+        // App 2: có offer Accepted (Nhóm B -> BỊ LOẠI)
+        Application app2 = Application.builder().applicationId(2).build();
+        InterviewSchedule s2 = InterviewSchedule.builder().application(app2).build();
+        InterviewFinalResult r2 = InterviewFinalResult.builder().finalResultId(2).interviewSchedule(s2).finalDecision("Passed").build();
+
+        // App 3: có offer Rejected (Nhóm A -> ĐƯỢC PHÉP HIỂN THỊ ĐỂ TẠO ĐÈ)
+        Application app3 = Application.builder().applicationId(3).build();
+        InterviewSchedule s3 = InterviewSchedule.builder().application(app3).build();
+        InterviewFinalResult r3 = InterviewFinalResult.builder().finalResultId(3).interviewSchedule(s3).finalDecision("Passed").build();
+
+        // App 4: chưa có Offer nào -> ĐƯỢC PHÉP HIỂN THỊ
+        Application app4 = Application.builder().applicationId(4).build();
+        InterviewSchedule s4 = InterviewSchedule.builder().application(app4).build();
+        InterviewFinalResult r4 = InterviewFinalResult.builder().finalResultId(4).interviewSchedule(s4).finalDecision("Passed").build();
+
+        OfferProposal offer1 = OfferProposal.builder().offerId(101).offerStatus("Pending_Director").build();
+        OfferProposal offer2 = OfferProposal.builder().offerId(102).offerStatus("Accepted").build();
+        OfferProposal offer3 = OfferProposal.builder().offerId(103).offerStatus("Rejected").build();
+
+        when(interviewFinalResultRepository.findAllPassedWithDetails()).thenReturn(List.of(r1, r2, r3, r4));
+        when(offerProposalRepository.findByApplication_ApplicationId(1)).thenReturn(Optional.of(offer1));
+        when(offerProposalRepository.findByApplication_ApplicationId(2)).thenReturn(Optional.of(offer2));
+        when(offerProposalRepository.findByApplication_ApplicationId(3)).thenReturn(Optional.of(offer3));
+        when(offerProposalRepository.findByApplication_ApplicationId(4)).thenReturn(Optional.empty());
+
+        List<PassedCandidateResponse> list = offerService.getPassedCandidatesForOffer();
+
+        assertNotNull(list);
+        assertEquals(2, list.size());
+        assertEquals(3, list.get(0).getApplicationId());
+        assertEquals("Rejected", list.get(0).getExistingOfferStatus());
+        assertEquals(4, list.get(1).getApplicationId());
+        assertNull(list.get(1).getExistingOfferStatus());
+    }
+
+    @Test
+    @DisplayName("GBR-07 createOfferByHr: Đơn ứng tuyển đang có Offer thuộc Nhóm B bị chặn ném BaseBusinessException")
+    void testCreateOfferByHr_existingOfferInGroupB_throwsException() {
+        Application application = Application.builder().applicationId(1).build();
+        OfferProposal existingOffer = OfferProposal.builder()
+                .offerId(100)
+                .application(application)
+                .offerStatus("Sent_Candidate") // Nhóm B
+                .isDeleted(false)
+                .build();
+
+        when(applicationRepository.findById(1)).thenReturn(Optional.of(application));
+        when(offerProposalRepository.findByApplication_ApplicationId(1)).thenReturn(Optional.of(existingOffer));
+
+        CreateOfferRequest request = CreateOfferRequest.builder()
+                .applicationId(1)
+                .offeredPositionTitle("Backend Dev")
+                .proposedSalary(new BigDecimal("20000000"))
+                .probationSalary(new BigDecimal("17000000"))
+                .probationDays(60)
+                .expectedStartDate(LocalDate.now().plusDays(5))
+                .workLocation("Trụ sở chính")
+                .isDraft(false)
+                .build();
+
+        BaseBusinessException ex = assertThrows(BaseBusinessException.class, () -> {
+            offerService.createOfferByHr(request);
+        });
+
+        assertEquals("OFFER_LOCKED_STATE", ex.getErrorCode());
+        assertTrue(ex.getMessage().contains("Nhóm B"));
+    }
+
+    @Test
+    @DisplayName("GBR-07 createOfferByHr: Đơn ứng tuyển đang có Offer thuộc Nhóm A được phép tạo đè thành công")
+    void testCreateOfferByHr_existingOfferInGroupA_overridesSuccessfully() {
+        Application application = Application.builder().applicationId(1).build();
+        OfferProposal existingOffer = OfferProposal.builder()
+                .offerId(100)
+                .application(application)
+                .offeredPositionTitle("Old Title")
+                .proposedSalary(new BigDecimal("15000000"))
+                .probationSalary(new BigDecimal("13000000"))
+                .offerStatus("Director_Rejected") // Nhóm A
+                .isDeleted(false)
+                .build();
+
+        when(applicationRepository.findById(1)).thenReturn(Optional.of(application));
+        when(offerProposalRepository.findByApplication_ApplicationId(1)).thenReturn(Optional.of(existingOffer));
+        when(offerProposalRepository.save(any(OfferProposal.class))).thenAnswer(i -> i.getArgument(0));
+
+        CreateOfferRequest request = CreateOfferRequest.builder()
+                .applicationId(1)
+                .offeredPositionTitle("New Senior Title")
+                .proposedSalary(new BigDecimal("25000000"))
+                .probationSalary(new BigDecimal("21500000"))
+                .probationDays(60)
+                .expectedStartDate(LocalDate.now().plusDays(5))
+                .workLocation("Văn phòng mới")
+                .isDraft(false)
+                .build();
+
+        OfferResponse response = offerService.createOfferByHr(request);
+
+        assertNotNull(response);
+        assertEquals(100, response.getOfferId());
+        assertEquals("New Senior Title", response.getOfferedPositionTitle());
+        assertEquals(new BigDecimal("25000000"), response.getProposedSalary());
+        assertEquals("Pending_Director", response.getOfferStatus());
+    }
+
+    @Test
+    @DisplayName("GBR-07 updateOfferByHr: Cho phép cập nhật Offer khi ở trạng thái Negotiating hoặc Declined (Nhóm A)")
+    void testUpdateOfferByHr_negotiatingAndDeclined_allowed() {
+        OfferProposal offer = OfferProposal.builder()
+                .offerId(50)
+                .offerStatus("Negotiating")
+                .build();
+
+        when(offerProposalRepository.findById(50)).thenReturn(Optional.of(offer));
+        when(offerProposalRepository.save(any(OfferProposal.class))).thenAnswer(i -> i.getArgument(0));
+
+        UpdateOfferRequest request = UpdateOfferRequest.builder()
+                .offeredPositionTitle("Lead Developer")
+                .proposedSalary(new BigDecimal("40000000"))
+                .probationSalary(new BigDecimal("35000000"))
+                .probationDays(60)
+                .expectedStartDate(LocalDate.now().plusDays(10))
+                .workLocation("Trụ sở chính")
+                .isDraft(true)
+                .build();
+
+        OfferResponse response = offerService.updateOfferByHr(50, request);
+
+        assertNotNull(response);
+        assertEquals("Draft", response.getOfferStatus());
+        assertEquals(new BigDecimal("40000000"), response.getProposedSalary());
+    }
+
+    @Test
+    @DisplayName("GBR-07 updateOfferByHr: Cố tình cập nhật Offer ở trạng thái Nhóm B bị chặn ném BaseBusinessException")
+    void testUpdateOfferByHr_groupB_throwsException() {
+        OfferProposal offer = OfferProposal.builder()
+                .offerId(50)
+                .offerStatus("Pending_Director") // Nhóm B
+                .build();
+
+        when(offerProposalRepository.findById(50)).thenReturn(Optional.of(offer));
+
+        UpdateOfferRequest request = UpdateOfferRequest.builder()
+                .proposedSalary(new BigDecimal("40000000"))
+                .probationSalary(new BigDecimal("35000000"))
+                .probationDays(60)
+                .expectedStartDate(LocalDate.now().plusDays(10))
+                .workLocation("Trụ sở chính")
+                .build();
+
+        BaseBusinessException ex = assertThrows(BaseBusinessException.class, () -> {
+            offerService.updateOfferByHr(50, request);
+        });
+
+        assertEquals("OFFER_STATUS_INVALID", ex.getErrorCode());
+        assertTrue(ex.getMessage().contains("Nhóm A"));
     }
 }

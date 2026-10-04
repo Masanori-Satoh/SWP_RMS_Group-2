@@ -36,4 +36,8 @@ public class PassedCandidateResponse {
     private BigDecimal recommendedSalary;
     private LocalDateTime interviewApprovedAt;
     private String hiringManagerName;
+
+    // Thông tin Offer hiện tại (nếu có, thuộc Nhóm A cho phép tạo đè theo quy tắc GBR-07)
+    private String existingOfferStatus;
+    private Integer existingOfferId;
 }
