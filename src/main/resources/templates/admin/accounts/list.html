@@ -1,6 +1,6 @@
 <!DOCTYPE html>
-<html lang="en" xmlns:th="http://www.thymeleaf.org">
-<head th:replace="~{fragments/head :: interfaceHead('Internal Accounts', ~{::pageStyles})}">
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/head :: interfaceHead('Tài khoản nội bộ', ~{::pageStyles})}">
   <th:block th:fragment="pageStyles"><link rel="stylesheet" th:href="@{/css/account-list.css}"></th:block>
 </head>
 <body class="rms-app">
@@ -20,10 +20,12 @@
                 </nav>
                 <div class="account-heading">
                     <div>
-                        <h1>Internal Accounts</h1>
-                        <p>Manage access for employees and internal recruitment actors.</p>
+                        <a class="account-back-link" th:href="@{/dashboard}">Tổng quan</a>
+                        <span aria-hidden="true"> / </span><span>Tài khoản nội bộ</span>
+                        <h1>Tài khoản nội bộ</h1>
+                        <p>Quản lý quyền truy cập của nhân viên nội bộ.</p>
                     </div>
-                    <a class="btn btn-primary" th:href="@{/admin/accounts/new}">Create Internal Account</a>
+                    <a class="btn btn-primary" th:href="@{/admin/accounts/new}">Tạo tài khoản nội bộ</a>
                 </div>
 
                 <div class="alert alert-success" role="status" th:if="${successMessage}" th:text="${successMessage}"></div>
@@ -31,76 +33,76 @@
                 <section class="workspace-section account-card" aria-labelledby="account-list-title">
                     <div class="account-section-heading">
                         <div>
-                            <h2 id="account-list-title">Employee Accounts</h2>
-                            <p th:text="|${accounts.totalElements} matching accounts|">0 matching accounts</p>
+                            <h2 id="account-list-title">Tài khoản nhân viên</h2>
+                            <p th:text="|${accounts.totalElements} tài khoản phù hợp|">0 tài khoản phù hợp</p>
                         </div>
                     </div>
 
-                    <form class="account-filters" th:action="@{/admin/accounts}" method="get" aria-label="Account Filters">
+                    <form class="account-filters" th:action="@{/admin/accounts}" method="get" aria-label="Bộ lọc tài khoản">
                         <div class="account-search-field">
-                            <label class="form-label" for="account-search">Search</label>
+                            <label class="form-label" for="account-search">Tìm kiếm</label>
                             <input class="form-control" id="account-search" type="search" name="search"
-                                   placeholder="Name, email, or username" th:value="${search}" maxlength="100">
+                                   placeholder="Họ tên, email hoặc tên đăng nhập" th:value="${search}" maxlength="100">
                         </div>
                         <div>
-                            <label class="form-label" for="account-role">Role</label>
+                            <label class="form-label" for="account-role">Vai trò</label>
                             <select class="form-control" id="account-role" name="roleId">
-                                <option value="">All Roles</option>
+                                <option value="">Tất cả vai trò</option>
                                 <option th:each="role : ${roles}" th:value="${role.roleId}"
-                                        th:text="${role.roleName}" th:selected="${role.roleId == selectedRoleId}">Role</option>
+                                        th:text="${role.roleName}" th:selected="${role.roleId == selectedRoleId}">Vai trò</option>
                             </select>
                         </div>
                         <div>
-                            <label class="form-label" for="account-status">Status</label>
+                            <label class="form-label" for="account-status">Trạng thái</label>
                             <select class="form-control" id="account-status" name="status">
-                                <option value="">All Statuses</option>
-                                <option value="Active" th:selected="${selectedStatus == 'Active'}">Active</option>
-                                <option value="Inactive" th:selected="${selectedStatus == 'Inactive'}">Inactive</option>
-                                <option value="Blocked" th:selected="${selectedStatus == 'Blocked'}">Blocked</option>
+                                <option value="">Tất cả trạng thái</option>
+                                <option value="Active" th:selected="${selectedStatus == 'Active'}">Hoạt động</option>
+                                <option value="Inactive" th:selected="${selectedStatus == 'Inactive'}">Vô hiệu hóa</option>
+                                <option value="Blocked" th:selected="${selectedStatus == 'Blocked'}">Bị khóa</option>
                             </select>
                         </div>
                         <details class="account-filter-details" open th:attr="data-active=${selectedDepartmentId != null or selectedSort != 'name'}">
-                            <summary th:text="${selectedDepartmentId != null or selectedSort != 'name'} ? 'More Filters (active)' : 'More Filters'">More Filters</summary>
+                            <summary th:text="${selectedDepartmentId != null or selectedSort != 'name'} ? 'Bộ lọc thêm (đang dùng)' : 'Bộ lọc thêm'">Bộ lọc thêm</summary>
                             <div class="account-secondary-filters">
                         <div>
-                            <label class="form-label" for="account-department">Department</label>
+                            <label class="form-label" for="account-department">Phòng ban</label>
                             <select class="form-control" id="account-department" name="departmentId">
-                                <option value="">All Departments</option>
+                                <option value="">Tất cả phòng ban</option>
                                 <option th:each="department : ${departments}" th:value="${department.departmentId}"
                                         th:text="${department.departmentName}"
-                                        th:selected="${department.departmentId == selectedDepartmentId}">Department</option>
+                                        th:selected="${department.departmentId == selectedDepartmentId}">Phòng ban</option>
                             </select>
                         </div>
                         <div>
-                            <label class="form-label" for="account-sort">Sort By</label>
+                            <label class="form-label" for="account-sort">Sắp xếp</label>
                             <select class="form-control" id="account-sort" name="sort">
-                                <option value="name" th:selected="${selectedSort == 'name'}">Name A–Z</option>
-                                <option value="name_desc" th:selected="${selectedSort == 'name_desc'}">Name Z–A</option>
-                                <option value="username" th:selected="${selectedSort == 'username'}">Username A–Z</option>
-                                <option value="newest" th:selected="${selectedSort == 'newest'}">Newest First</option>
+                                <option value="name" th:selected="${selectedSort == 'name'}">Họ tên A–Z</option>
+                                <option value="name_desc" th:selected="${selectedSort == 'name_desc'}">Họ tên Z–A</option>
+                                <option value="username" th:selected="${selectedSort == 'username'}">Tên đăng nhập A–Z</option>
+                                <option value="newest" th:selected="${selectedSort == 'newest'}">Mới nhất</option>
                             </select>
                         </div>
                             </div>
                         </details>
                         <div class="account-filter-actions">
-                            <button class="btn btn-primary" type="submit">Apply Filters</button>
-                            <a class="btn btn-secondary" th:href="@{/admin/accounts}">Clear Filters</a>
+                            <button class="btn btn-primary" type="submit">Lọc</button>
+                            <a class="btn btn-secondary" th:href="@{/admin/accounts}">Xóa bộ lọc</a>
                         </div>
                     </form>
 
-                    <p class="table-scroll-note">Scroll the table horizontally to see all account details and actions.</p>
+                    <p class="table-scroll-note">Cuộn ngang để xem đầy đủ thông tin và thao tác.</p>
                     <div class="table-wrapper" tabindex="0" role="region" aria-labelledby="account-list-title">
                         <table class="table account-table">
-                            <caption class="sr-only">Internal employee accounts with edit and deactivation actions.</caption>
+                            <caption class="sr-only">Tài khoản nội bộ với thao tác sửa và thay đổi trạng thái.</caption>
                             <thead>
                             <tr>
-                                <th scope="col">Full Name</th>
+                                <th scope="col">Họ và tên</th>
                                 <th scope="col">Email</th>
-                                <th scope="col">Username</th>
-                                <th scope="col">Role</th>
-                                <th scope="col">Department</th>
-                                <th scope="col">Status</th>
-                                <th scope="col">Actions</th>
+                                <th scope="col">Tên đăng nhập</th>
+                                <th scope="col">Vai trò</th>
+                                <th scope="col">Phòng ban</th>
+                                <th scope="col">Trạng thái</th>
+                                <th scope="col">Thao tác</th>
                             </tr>
                             </thead>
                             <tbody>
@@ -108,24 +110,26 @@
                                 <td class="account-name" th:text="${account.fullName}">Account Name</td>
                                 <td th:text="${account.email}">Email</td>
                                 <td th:text="${account.username}">username</td>
-                                <td th:text="${account.roleName}">Role</td>
+                                <td th:text="${account.roleName}">Vai trò</td>
                                 <td th:text="${account.departmentName != null ? account.departmentName : '—'}">—</td>
                                 <td>
-                                    <span class="badge" th:text="${account.status}"
-                                          th:classappend="${account.status == 'Active' ? ' badge-success' : (account.status == 'Blocked' ? ' badge-danger' : ' badge-secondary')}">Active</span>
+                                    <span class="badge" th:text="${account.status == 'Active' ? 'Hoạt động' : (account.status == 'Inactive' ? 'Vô hiệu hóa' : 'Bị khóa')}"
+                                          th:classappend="${account.status == 'Active' ? ' badge-success' : (account.status == 'Blocked' ? ' badge-danger' : ' badge-secondary')}">Hoạt động</span>
                                 </td>
                                 <td class="account-actions">
                                     <a class="btn btn-secondary btn-sm"
                                        th:href="@{/admin/accounts/{id}/edit(id=${account.id})}"
-                                       th:attr="aria-label=|Edit account ${account.username}|">Edit</a>
-                                    <button th:if="${account.status != 'Inactive'}" class="btn btn-danger btn-sm" type="button" data-deactivate-account
-                                            th:attr="data-account-name=${account.fullName},data-account-username=${account.username},aria-label=|Deactivate account ${account.username}|,data-deactivate-url=@{/admin/accounts/{id}/deactivate(id=${account.id})}">
-                                        Deactivate
-                                    </button>
+                                       th:attr="aria-label=|Sửa tài khoản ${account.username}|">Sửa</a>
+                                    <th:block th:if="${account.status != 'Inactive'}">
+                                        <form th:replace="~{fragments/status-actions :: action(@{/admin/accounts/{id}/deactivate(id=${account.id})}, 'Vô hiệu hóa tài khoản ' + ${account.username}, 'Tài khoản sẽ bị vô hiệu hóa và không thể đăng nhập. Dữ liệu liên quan được giữ nguyên.', 'Vô hiệu hóa', true)}"></form>
+                                    </th:block>
+                                    <th:block th:if="${account.status == 'Inactive'}">
+                                        <form th:replace="~{fragments/status-actions :: action(@{/admin/accounts/{id}/activate(id=${account.id})}, 'Kích hoạt lại tài khoản ' + ${account.username}, 'Tài khoản sẽ hoạt động trở lại và có thể đăng nhập với vai trò hiện tại.', 'Kích hoạt lại', false)}"></form>
+                                    </th:block>
                                 </td>
                             </tr>
                             <tr th:if="${accounts.empty}">
-                                <td colspan="7" class="account-empty">No matching accounts found. Try changing the filters.</td>
+                                <td colspan="7" class="account-empty">No tài khoản phù hợp found. Try changing the filters.</td>
                             </tr>
                             </tbody>
                         </table>
@@ -138,17 +142,8 @@
     </div>
 </div>
 
-<dialog class="account-dialog" id="deactivate-dialog" aria-labelledby="deactivate-title" aria-describedby="deactivate-description">
-    <h2 id="deactivate-title">Deactivate Account</h2>
-    <p id="deactivate-description">Account <strong id="deactivate-account-name"></strong> (<span id="deactivate-account-username"></span>) will be set to Inactive and will no longer be able to sign in. Related data will be preserved.</p>
-    <form id="deactivate-form" th:action="@{/admin/accounts}" method="post">
-        <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
-        <div class="account-dialog-actions">
-            <button class="btn btn-secondary" type="button" id="deactivate-cancel">Cancel</button>
-            <button class="btn btn-danger" type="submit">Deactivate</button>
-        </div>
-    </form>
-</dialog>
+<dialog th:replace="~{fragments/status-actions :: confirmation}"></dialog>
+<script th:src="@{/js/status-confirmation.js}" defer></script>
 
 <script th:src="@{/js/account-list.js}" defer></script>
 </body>

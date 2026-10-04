@@ -14,7 +14,6 @@ import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
 
-/** Revokes existing sessions when an account is disabled or its role changes. */
 public class AccountSessionGuardFilter extends OncePerRequestFilter {
 
     private final UserRepository userRepository;
@@ -28,10 +27,12 @@ public class AccountSessionGuardFilter extends OncePerRequestFilter {
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response,
                                     FilterChain chain) throws ServletException, IOException {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        // check authentication is valid
         if (authentication != null && authentication.isAuthenticated()
                 && !(authentication instanceof AnonymousAuthenticationToken)) {
             User account = userRepository.findByUsernameIgnoreCase(authentication.getName()).orElse(null);
             String currentAuthority = null;
+            // check if account and role is valid
             if (account != null && account.getRole() != null) {
                 try {
                     currentAuthority = RoleAuthorities.fromRoleName(account.getRole().getRoleName());
@@ -44,6 +45,7 @@ public class AccountSessionGuardFilter extends OncePerRequestFilter {
             boolean roleUnchanged = expectedAuthority != null
                     && authentication.getAuthorities().stream()
                     .anyMatch(granted -> expectedAuthority.equals(granted.getAuthority()));
+            // check if account is active and role is unchanged
             if (account == null || !"Active".equals(account.getAccountStatus()) || !roleUnchanged) {
                 logoutHandler.logout(request, response, authentication);
                 response.sendRedirect(request.getContextPath() + "/login?session-expired");

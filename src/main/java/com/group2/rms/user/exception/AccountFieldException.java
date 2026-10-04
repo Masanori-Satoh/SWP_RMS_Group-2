@@ -1,6 +1,9 @@
 package com.group2.rms.user.exception;
 
-public class AccountFieldException extends RuntimeException {
+import com.group2.rms.core.exception.BaseBusinessException;
+
+//500
+public class AccountFieldException extends BaseBusinessException {
 
     private final String field;
 

@@ -120,6 +120,28 @@ public class AccountListService {
         deactivateScoped(userId, true);
     }
 
+    @Transactional
+    public void activate(int userId) { activateScoped(userId, false); }
+
+    @Transactional
+    public void activateCandidate(int userId) { activateScoped(userId, true); }
+
+    private void activateScoped(int userId, boolean candidate) {
+        User user = users.findById(userId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Không tìm thấy tài khoản."));
+        if (candidate ? !"Candidate".equals(user.getRole().getRoleName())
+                : !RoleAuthorities.INTERNAL_ROLE_NAMES.contains(user.getRole().getRoleName())) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Tài khoản không thuộc nhóm này.");
+        }
+        if ("Blocked".equals(user.getAccountStatus())) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "Không thể kích hoạt tài khoản đang bị khóa bằng thao tác này.");
+        }
+        if ("Inactive".equals(user.getAccountStatus())) {
+            user.setAccountStatus("Active");
+            users.save(user);
+        }
+    }
+
     private void deactivateScoped(int userId, boolean candidate) {
         User user = users.findById(userId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Account not found"));

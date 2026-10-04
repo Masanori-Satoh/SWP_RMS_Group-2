@@ -1,13 +1,13 @@
 package com.group2.rms;
 
-import com.group2.rms.dashboard.controller.DashboardController;
+import com.group2.rms.dashboard.DashboardController;
 import com.group2.rms.core.config.SecurityConfig;
 import com.group2.rms.auth.controller.AuthController;
-import com.group2.rms.auth.controller.CandidateAccountController;
 import com.group2.rms.user.controller.AccountController;
+import com.group2.rms.dashboard.DashboardMetricsRepository;
 import com.group2.rms.admin.controller.ApiMonitoringController;
-import com.group2.rms.dashboard.repository.DashboardMetricsRepository;
-import com.group2.rms.admin.controller.HealthController;
+import com.group2.rms.admin.dto.MonitorRowResponse;
+import com.group2.rms.admin.dto.ProbeOutcomeResponse;
 import com.group2.rms.auth.controller.PasswordRecoveryController;
 import com.group2.rms.auth.controller.RegistrationController;
 import com.group2.rms.user.entity.Department;
@@ -15,13 +15,13 @@ import com.group2.rms.user.exception.AccountFieldException;
 import com.group2.rms.user.entity.Role;
 import com.group2.rms.user.entity.User;
 import com.group2.rms.user.repository.UserRepository;
-import com.group2.rms.dashboard.repository.DashboardMetricsRepository.ApprovalActivity;
+import com.group2.rms.dashboard.DashboardMetricsRepository.ApprovalActivity;
 import com.group2.rms.core.security.DatabaseUserDetailsService;
 import com.group2.rms.user.service.AccountListService;
 import com.group2.rms.user.service.AccountManagementService;
 import com.group2.rms.admin.service.ApiMonitoringService;
-import com.group2.rms.dashboard.service.DashboardService;
-import com.group2.rms.dashboard.dto.DashboardView;
+import com.group2.rms.dashboard.DashboardService;
+import com.group2.rms.dashboard.DashboardResponse;
 import com.group2.rms.auth.service.CandidateRegistrationService;
 import com.group2.rms.auth.service.PasswordResetEmailSender;
 import com.group2.rms.auth.service.PasswordResetService;
@@ -48,7 +48,6 @@ import java.time.LocalDateTime;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.charset.StandardCharsets;
-
 import static org.mockito.Mockito.when;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.verify;
@@ -61,7 +60,9 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.not;
-
+import com.group2.rms.user.controller.CandidateAccountController;
+import com.group2.rms.admin.controller.HealthController;
+import com.group2.rms.admin.controller.ApiMonitoringController;
 @WebMvcTest(controllers = { AuthController.class, DashboardController.class, AccountController.class,
                 ApiMonitoringController.class, HealthController.class,
                 RegistrationController.class, PasswordRecoveryController.class, CandidateAccountController.class })
@@ -132,7 +133,7 @@ class SecurityFlowTests {
                 when(passwordResetEmailSender.isConfigured()).thenReturn(true);
                 when(passwordResetService.request("candidate@example.test")).thenReturn(
                                 Optional.of(new PasswordResetService.ResetLink("candidate@example.test",
-                                                "signed-token")));
+                                                "signed-token", "123456")));
                 mvc.perform(post("/forgot-password")).andExpect(status().isForbidden());
 
                 MvcResult page = mvc.perform(get("/forgot-password")).andExpect(status().isOk())
@@ -145,7 +146,7 @@ class SecurityFlowTests {
                                 .param("email", "candidate@example.test"))
                                 .andExpect(status().is3xxRedirection())
                                 .andExpect(redirectedUrl("/forgot-password?sent"));
-                verify(passwordResetEmailSender).send("candidate@example.test", "signed-token");
+                verify(passwordResetEmailSender).send("candidate@example.test", "signed-token", "123456");
 
                 mvc.perform(post("/forgot-password")
                                 .session((MockHttpSession) page.getRequest().getSession(false))
@@ -159,7 +160,6 @@ class SecurityFlowTests {
         void signedResetLinkRendersFormAndChangesPasswordOnlyWithCsrf() throws Exception {
                 String route = "/reset-password/signed-token";
                 when(passwordResetService.isValid("signed-token")).thenReturn(true);
-                when(passwordResetService.reset("signed-token", "newPassword12")).thenReturn(true);
                 mvc.perform(post(route)).andExpect(status().isForbidden());
 
                 MvcResult page = mvc.perform(get(route)).andExpect(status().isOk())
@@ -169,11 +169,12 @@ class SecurityFlowTests {
                 mvc.perform(post(route)
                                 .session((MockHttpSession) page.getRequest().getSession(false))
                                 .param(csrf.getParameterName(), csrf.getToken())
+                                .param("otp", "123456")
                                 .param("password", "newPassword12")
                                 .param("confirmPassword", "newPassword12"))
                                 .andExpect(status().is3xxRedirection())
                                 .andExpect(redirectedUrl("/login?reset"));
-                verify(passwordResetService).reset("signed-token", "newPassword12");
+                verify(passwordResetService).reset("signed-token", "123456", "newPassword12");
         }
 
         @Test
@@ -185,12 +186,12 @@ class SecurityFlowTests {
                                 .andExpect(content().string(containsString("Internal Accounts")))
                                 .andExpect(content().string(containsString("AI Configuration (Unavailable)")));
                 mvc.perform(get("/admin/accounts").session(adminSession)).andExpect(status().isOk());
-                when(monitoringService.rows()).thenReturn(List.of(new ApiMonitoringService.MonitorRow(
+                when(monitoringService.rows()).thenReturn(List.of(new MonitorRowResponse(
                                 "internal", "Internal", "Application and SQL Server",
                                 "GET /admin/api-monitoring/internal/health",
                                 "OPERATIONAL", "Operational", 12L, 0, 0, 200,
                                 LocalDateTime.of(2026, 9, 28, 9, 0), 1, true),
-                                new ApiMonitoringService.MonitorRow("ai", "External Integration", "AI CV Screening",
+                                new MonitorRowResponse("ai", "External Integration", "AI CV Screening",
                                                 "No endpoint configured", "UNCONFIGURED", "Not Configured",
                                                 null, null, null, null, null, 0, false)));
                 mvc.perform(get("/admin/api-monitoring").session(adminSession)).andExpect(status().isOk())
@@ -229,7 +230,7 @@ class SecurityFlowTests {
                                 .andExpect(status().isOk()).andReturn();
                 CsrfToken csrf = (CsrfToken) page.getRequest().getAttribute(CsrfToken.class.getName());
                 when(monitoringService.probeInternal(any())).thenReturn(
-                                new ApiMonitoringService.ProbeOutcome(true, "HTTP 200", 12));
+                                new ProbeOutcomeResponse(true, "HTTP 200", 12));
                 mvc.perform(post("/admin/api-monitoring/probe/internal").session(adminSession)
                                 .param(csrf.getParameterName(), csrf.getToken()))
                                 .andExpect(status().is3xxRedirection())
@@ -516,19 +517,19 @@ class SecurityFlowTests {
                         exportUi(entry[1], result);
                 }
                 MockHttpSession session = login(account("visual-admin", "System Admin", "Active"));
-                when(dashboardService.forUsername("visual-admin")).thenReturn(new DashboardView(
+                when(dashboardService.forUsername("visual-admin")).thenReturn(new DashboardResponse(
                                 "System Admin", "Alex Nguyen", "System-wide account administration.",
                                 List.of(),
-                                List.of(new DashboardView.Breakdown("API and Integration Health", List.of(
+                                List.of(new DashboardResponse.Breakdown("API and Integration Health", List.of(
                                                 new DashboardMetricsRepository.StatusCount(
                                                                 "Available", 1)))),
                                 List.of(),
-                                List.of(new DashboardView.Unavailable("AI Configuration",
+                                List.of(new DashboardResponse.Unavailable("AI Configuration",
                                                 "Configuration keys are awaiting confirmation.")),
-                                List.of(new DashboardView.Shortcut("API Monitoring", "/admin/api-monitoring")),
-                                List.of(new DashboardView.AccountSummary("Internal Accounts", "/admin/accounts", 8, 6,
+                                List.of(new DashboardResponse.Shortcut("API Monitoring", "/admin/api-monitoring")),
+                                List.of(new DashboardResponse.AccountSummary("Internal Accounts", "/admin/accounts", 8, 6,
                                                 1, 1),
-                                                new DashboardView.AccountSummary("Candidate Accounts",
+                                                new DashboardResponse.AccountSummary("Candidate Accounts",
                                                                 "/admin/candidate-accounts", 3, 1, 1, 1))));
                 PageImpl<AccountListService.AccountRow> visualAccounts = new PageImpl<>(
                                 List.of(new AccountListService.AccountRow(42, "Nguyễn Minh Anh", "minhanh@example.test",
@@ -544,12 +545,12 @@ class SecurityFlowTests {
                 when(accountListService.findAccounts("", null, 1, "", "newest", 0)).thenReturn(visualAccounts);
                 when(accountManagementService.findForEdit(42)).thenReturn(new AccountManagementService.AccountForEdit(
                                 "minhanh", "Nguyễn Minh Anh", "minhanh@example.test", null, 5, 1, "Active"));
-                when(monitoringService.rows()).thenReturn(List.of(new ApiMonitoringService.MonitorRow(
+                when(monitoringService.rows()).thenReturn(List.of(new MonitorRowResponse(
                                 "internal", "Internal", "Application and SQL Server",
                                 "GET /admin/api-monitoring/internal/health",
                                 "OPERATIONAL", "Operational", 12L, 0, 0, 200, LocalDateTime.of(2026, 10, 1, 9, 0), 1,
                                 true),
-                                new ApiMonitoringService.MonitorRow("ai", "External Integration", "AI CV Screening",
+                                new MonitorRowResponse("ai", "External Integration", "AI CV Screening",
                                                 "No endpoint configured",
                                                 "UNCONFIGURED", "Not Configured", null, null, null, null, null, 0,
                                                 false)));
@@ -660,9 +661,9 @@ class SecurityFlowTests {
                                 .accountStatus(status)
                                 .build();
                 when(userRepository.findByUsernameIgnoreCase(username)).thenReturn(Optional.of(account));
-                when(dashboardService.forUsername(username)).thenReturn(new DashboardView(
+                when(dashboardService.forUsername(username)).thenReturn(new DashboardResponse(
                                 roleName, username, "Phạm vi thử nghiệm",
-                                List.of(new DashboardView.Metric("Metric thử nghiệm", 0, "Dữ liệu kiểm thử")),
+                                List.of(new DashboardResponse.Metric("Metric thử nghiệm", 0, "Dữ liệu kiểm thử")),
                                 List.of(),
                                 "Director".equals(roleName)
                                                 ? List.of(new ApprovalActivity("Job Requisition", "Vị trí kiểm thử",
@@ -671,9 +672,9 @@ class SecurityFlowTests {
                                                 : List.of(),
                                 List.of(),
                                 "System Admin".equals(roleName)
-                                                ? List.of(new DashboardView.Shortcut("Account Management",
+                                                ? List.of(new DashboardResponse.Shortcut("Account Management",
                                                                 "/admin/accounts"),
-                                                                new DashboardView.Shortcut(
+                                                                new DashboardResponse.Shortcut(
                                                                                 "AI Configuration (Unavailable)", null))
                                                 : List.of()));
                 return account;

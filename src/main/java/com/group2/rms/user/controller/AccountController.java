@@ -55,7 +55,14 @@ public class AccountController {
     @PostMapping("/{userId}/deactivate")
     public String deactivate(@PathVariable int userId, RedirectAttributes redirectAttributes) {
         accounts.deactivate(userId);
-        redirectAttributes.addFlashAttribute("successMessage", "Account deactivated successfully.");
+        redirectAttributes.addFlashAttribute("successMessage", "Đã vô hiệu hóa tài khoản.");
+        return "redirect:/admin/accounts";
+    }
+
+    @PostMapping("/{userId}/activate")
+    public String activate(@PathVariable int userId, RedirectAttributes redirectAttributes) {
+        accounts.activate(userId);
+        redirectAttributes.addFlashAttribute("successMessage", "Đã kích hoạt lại tài khoản.");
         return "redirect:/admin/accounts";
     }
 
@@ -69,10 +76,7 @@ public class AccountController {
     @PostMapping
     public String create(@Valid @ModelAttribute("form") CreateAccountRequest form,
                          BindingResult errors, Model model, RedirectAttributes redirectAttributes) {
-        if (form.getPassword() != null && form.getConfirmPassword() != null
-                && !form.getPassword().equals(form.getConfirmPassword())) {
-            errors.rejectValue("confirmPassword", "password.mismatch", "Passwords do not match.");
-        }
+        
         if (!errors.hasErrors()) {
             try {
                 management.createInternal(form.toCommand());
@@ -126,15 +130,19 @@ public class AccountController {
     }
 
     private void prepareCreate(Model model) {
+        model.addAttribute("vietnameseUi", true);
         model.addAttribute("createMode", true);
+        model.addAttribute("currentDepartmentId", null);
         model.addAttribute("roles", accounts.findRoles());
         model.addAttribute("departments", accounts.findDepartments());
     }
 
     private void prepareEdit(Model model, int userId, String username) {
+        model.addAttribute("vietnameseUi", true);
         model.addAttribute("createMode", false);
         model.addAttribute("accountId", userId);
         model.addAttribute("accountUsername", username);
+        model.addAttribute("currentDepartmentId", management.findForEdit(userId).departmentId());
         model.addAttribute("roles", accounts.findRoles());
         model.addAttribute("departments", accounts.findDepartments());
     }
