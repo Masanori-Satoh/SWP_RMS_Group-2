@@ -417,6 +417,10 @@ public class OfferServiceImpl implements OfferService {
                     "Lương thử việc (" + probationSalary + " VND) phải đạt tối thiểu 85% lương chính thức ("
                             + minProbationSalary + " VND) theo quy định Luật Lao động .");
         }
+
+        if (probationSalary.compareTo(proposedSalary) > 0) {
+            throw new IllegalArgumentException("Lương thử việc không được vượt quá lương chính thức.");
+        }
     }
 
     private void validateOfferBusinessRules(
@@ -441,6 +445,9 @@ public class OfferServiceImpl implements OfferService {
             throw new OfferValidationException(
                     "Lương thử việc (" + probationSalary + " VND) phải đạt tối thiểu 85% lương chính thức ("
                             + minProbationSalary + " VND) theo quy định Luật Lao động.");
+        }
+        if (probationSalary.compareTo(proposedSalary) > 0) {
+            throw new OfferValidationException("Lương thử việc không được vượt quá lương chính thức.");
         }
         if (probationDays == null || probationDays <= 0) {
             throw new OfferValidationException("Thời gian thử việc phải lớn hơn 0.");

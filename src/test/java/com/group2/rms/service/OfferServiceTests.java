@@ -420,4 +420,45 @@ class OfferServiceTests {
         assertEquals("Tầng 8, Tòa nhà RMS Tower, Duy Tân, Cầu Giấy, Hà Nội", list.get(0).getWorkLocation());
         assertEquals("Nguyễn Văn A", list.get(0).getCandidateName());
     }
+
+    @Test
+    @DisplayName("Nghiệp vụ: Lương thử việc lớn hơn lương chính thức phải ném OfferValidationException")
+    void testCreateOfferByHr_probationSalaryGreaterThanProposed_throwsException() {
+        CreateOfferRequest request = CreateOfferRequest.builder()
+                .applicationId(10)
+                .offeredPositionTitle("Backend Dev")
+                .proposedSalary(new BigDecimal("20000000"))
+                .probationSalary(new BigDecimal("25000000")) // > 20.000.000
+                .probationDays(60)
+                .expectedStartDate(LocalDate.now().plusDays(2))
+                .workLocation("Trụ sở chính")
+                .build();
+
+        OfferValidationException ex = assertThrows(OfferValidationException.class, () -> {
+            offerService.createOfferByHr(request);
+        });
+
+        assertTrue(ex.getMessage().contains("Lương thử việc không được vượt quá lương chính thức"));
+    }
+
+    @Test
+    @DisplayName("Bean Validation: Lương thử việc lớn hơn lương chính thức vi phạm validation")
+    void testCreateOfferRequest_probationSalaryGreaterThanProposed_hasViolation() {
+        ValidatorFactory factory = Validation.buildDefaultValidatorFactory();
+        Validator validator = factory.getValidator();
+
+        CreateOfferRequest request = CreateOfferRequest.builder()
+                .applicationId(10)
+                .offeredPositionTitle("Backend Dev")
+                .proposedSalary(new BigDecimal("20000000"))
+                .probationSalary(new BigDecimal("21000000")) // > 20.000.000
+                .probationDays(60)
+                .expectedStartDate(LocalDate.now().plusDays(2))
+                .workLocation("Trụ sở chính")
+                .build();
+
+        var violations = validator.validate(request);
+        assertFalse(violations.isEmpty());
+        assertTrue(violations.stream().anyMatch(v -> v.getMessage().contains("Lương thử việc không được vượt quá lương chính thức")));
+    }
 }

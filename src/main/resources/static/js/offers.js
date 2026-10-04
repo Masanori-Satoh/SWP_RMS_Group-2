@@ -213,6 +213,12 @@ function validateProbationRuleUi() {
                 notice.innerHTML = `<i class="fa-solid fa-triangle-exclamation"></i> CẢNH BÁO: Lương thử việc phải đạt tối thiểu 85% lương chính thức (${minProb.toLocaleString('vi-VN')} VND).`;
             }
             return false;
+        } else if (probation > proposed) {
+            if (notice) {
+                notice.style.color = 'var(--error)';
+                notice.innerHTML = `<i class="fa-solid fa-triangle-exclamation"></i> CẢNH BÁO: Lương thử việc không được vượt quá lương chính thức (${proposed.toLocaleString('vi-VN')} VND).`;
+            }
+            return false;
         } else {
             if (notice) {
                 notice.style.color = 'var(--brand-dark)';
@@ -258,9 +264,13 @@ function submitCreateOffer(isDraft) {
         return;
     }
 
-    // 5. Tuân thủ quy định BR-OFF-01: Lương thử việc >= 85% lương chính thức
+    // 5. Tuân thủ quy định: Lương thử việc >= 85% và <= 100% lương chính thức
     if (!validateProbationRuleUi()) {
-        showToast('Mức lương thử việc không tuân thủ luật (>= 85%).', 'danger');
+        if (probation > proposed) {
+            showToast('Lương thử việc không được vượt quá lương chính thức.', 'danger');
+        } else {
+            showToast('Mức lương thử việc không tuân thủ luật (>= 85%).', 'danger');
+        }
         return;
     }
 
@@ -541,6 +551,12 @@ function editValidateProbation() {
                 notice.innerHTML = `<i class="fa-solid fa-triangle-exclamation"></i> CẢNH BÁO: Lương thử việc tối thiểu phải là ${minProb.toLocaleString('vi-VN')} VND (85%).`;
             }
             return false;
+        } else if (probation > proposed) {
+            if (notice) {
+                notice.style.color = 'var(--error)';
+                notice.innerHTML = `<i class="fa-solid fa-triangle-exclamation"></i> CẢNH BÁO: Lương thử việc không được vượt quá lương chính thức (${proposed.toLocaleString('vi-VN')} VND).`;
+            }
+            return false;
         } else {
             if (notice) {
                 notice.style.color = 'var(--brand-dark)';
@@ -580,9 +596,13 @@ function submitUpdateOffer(isDraft = false) {
         return;
     }
 
-    // 4. Tuân thủ luật BR-OFF-01: Lương thử việc >= 85% lương chính thức
+    // 4. Tuân thủ quy định: Lương thử việc >= 85% và <= 100% lương chính thức
     if (!editValidateProbation()) {
-        showToast('Lương thử việc chưa đạt tối thiểu 85% lương chính thức.', 'danger');
+        if (probation > proposed) {
+            showToast('Lương thử việc không được vượt quá lương chính thức.', 'danger');
+        } else {
+            showToast('Lương thử việc chưa đạt tối thiểu 85% lương chính thức.', 'danger');
+        }
         return;
     }
 
