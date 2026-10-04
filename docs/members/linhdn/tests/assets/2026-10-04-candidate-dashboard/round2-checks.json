@@ -1,0 +1,704 @@
+[
+  {
+    "name": "populated/1440: layout/fonts/locale",
+    "pass": true,
+    "evidence": {
+      "width": 1440,
+      "scroll": 1425,
+      "lang": "vi",
+      "title": "Tổng quan ứng viên | Mộc RMS",
+      "fonts": [
+        "Lora, Georgia, serif",
+        "\"Source Sans 3\", \"Segoe UI\", sans-serif"
+      ],
+      "small": [],
+      "unlabeled": [],
+      "missing": [],
+      "csrf": true,
+      "tables": [
+        {
+          "width": 1153,
+          "scroll": 1153,
+          "tab": 0
+        },
+        {
+          "width": 1153,
+          "scroll": 1153,
+          "tab": 0
+        }
+      ],
+      "assets": true,
+      "menu": {
+        "visible": false,
+        "hidden": false
+      }
+    }
+  },
+  {
+    "name": "populated/1440: labels/targets/ARIA/CSRF/assets",
+    "pass": true,
+    "evidence": {
+      "width": 1440,
+      "scroll": 1425,
+      "lang": "vi",
+      "title": "Tổng quan ứng viên | Mộc RMS",
+      "fonts": [
+        "Lora, Georgia, serif",
+        "\"Source Sans 3\", \"Segoe UI\", sans-serif"
+      ],
+      "small": [],
+      "unlabeled": [],
+      "missing": [],
+      "csrf": true,
+      "tables": [
+        {
+          "width": 1153,
+          "scroll": 1153,
+          "tab": 0
+        },
+        {
+          "width": 1153,
+          "scroll": 1153,
+          "tab": 0
+        }
+      ],
+      "assets": true,
+      "menu": {
+        "visible": false,
+        "hidden": false
+      }
+    }
+  },
+  {
+    "name": "populated/1440: table containment",
+    "pass": true,
+    "evidence": [
+      {
+        "width": 1153,
+        "scroll": 1153,
+        "tab": 0
+      },
+      {
+        "width": 1153,
+        "scroll": 1153,
+        "tab": 0
+      }
+    ]
+  },
+  {
+    "name": "populated/1440: responsive navigation",
+    "pass": true,
+    "evidence": {
+      "visible": false,
+      "hidden": false
+    }
+  },
+  {
+    "name": "populated/1024: layout/fonts/locale",
+    "pass": true,
+    "evidence": {
+      "width": 1024,
+      "scroll": 1009,
+      "lang": "vi",
+      "title": "Tổng quan ứng viên | Mộc RMS",
+      "fonts": [
+        "Lora, Georgia, serif",
+        "\"Source Sans 3\", \"Segoe UI\", sans-serif"
+      ],
+      "small": [],
+      "unlabeled": [],
+      "missing": [],
+      "csrf": true,
+      "tables": [
+        {
+          "width": 777,
+          "scroll": 777,
+          "tab": 0
+        },
+        {
+          "width": 777,
+          "scroll": 777,
+          "tab": 0
+        }
+      ],
+      "assets": true,
+      "menu": {
+        "visible": false,
+        "hidden": false
+      }
+    }
+  },
+  {
+    "name": "populated/1024: labels/targets/ARIA/CSRF/assets",
+    "pass": true,
+    "evidence": {
+      "width": 1024,
+      "scroll": 1009,
+      "lang": "vi",
+      "title": "Tổng quan ứng viên | Mộc RMS",
+      "fonts": [
+        "Lora, Georgia, serif",
+        "\"Source Sans 3\", \"Segoe UI\", sans-serif"
+      ],
+      "small": [],
+      "unlabeled": [],
+      "missing": [],
+      "csrf": true,
+      "tables": [
+        {
+          "width": 777,
+          "scroll": 777,
+          "tab": 0
+        },
+        {
+          "width": 777,
+          "scroll": 777,
+          "tab": 0
+        }
+      ],
+      "assets": true,
+      "menu": {
+        "visible": false,
+        "hidden": false
+      }
+    }
+  },
+  {
+    "name": "populated/1024: table containment",
+    "pass": true,
+    "evidence": [
+      {
+        "width": 777,
+        "scroll": 777,
+        "tab": 0
+      },
+      {
+        "width": 777,
+        "scroll": 777,
+        "tab": 0
+      }
+    ]
+  },
+  {
+    "name": "populated/1024: responsive navigation",
+    "pass": true,
+    "evidence": {
+      "visible": false,
+      "hidden": false
+    }
+  },
+  {
+    "name": "populated/768: layout/fonts/locale",
+    "pass": true,
+    "evidence": {
+      "width": 768,
+      "scroll": 753,
+      "lang": "vi",
+      "title": "Tổng quan ứng viên | Mộc RMS",
+      "fonts": [
+        "Lora, Georgia, serif",
+        "\"Source Sans 3\", \"Segoe UI\", sans-serif"
+      ],
+      "small": [],
+      "unlabeled": [],
+      "missing": [],
+      "csrf": true,
+      "tables": [
+        {
+          "width": 721,
+          "scroll": 721,
+          "tab": 0
+        },
+        {
+          "width": 721,
+          "scroll": 721,
+          "tab": 0
+        }
+      ],
+      "assets": true,
+      "menu": {
+        "visible": true,
+        "hidden": true
+      }
+    }
+  },
+  {
+    "name": "populated/768: labels/targets/ARIA/CSRF/assets",
+    "pass": true,
+    "evidence": {
+      "width": 768,
+      "scroll": 753,
+      "lang": "vi",
+      "title": "Tổng quan ứng viên | Mộc RMS",
+      "fonts": [
+        "Lora, Georgia, serif",
+        "\"Source Sans 3\", \"Segoe UI\", sans-serif"
+      ],
+      "small": [],
+      "unlabeled": [],
+      "missing": [],
+      "csrf": true,
+      "tables": [
+        {
+          "width": 721,
+          "scroll": 721,
+          "tab": 0
+        },
+        {
+          "width": 721,
+          "scroll": 721,
+          "tab": 0
+        }
+      ],
+      "assets": true,
+      "menu": {
+        "visible": true,
+        "hidden": true
+      }
+    }
+  },
+  {
+    "name": "populated/768: table containment",
+    "pass": true,
+    "evidence": [
+      {
+        "width": 721,
+        "scroll": 721,
+        "tab": 0
+      },
+      {
+        "width": 721,
+        "scroll": 721,
+        "tab": 0
+      }
+    ]
+  },
+  {
+    "name": "populated/768: responsive navigation",
+    "pass": true,
+    "evidence": {
+      "visible": true,
+      "hidden": true
+    }
+  },
+  {
+    "name": "populated/375: layout/fonts/locale",
+    "pass": true,
+    "evidence": {
+      "width": 375,
+      "scroll": 360,
+      "lang": "vi",
+      "title": "Tổng quan ứng viên | Mộc RMS",
+      "fonts": [
+        "Lora, Georgia, serif",
+        "\"Source Sans 3\", \"Segoe UI\", sans-serif"
+      ],
+      "small": [],
+      "unlabeled": [],
+      "missing": [],
+      "csrf": true,
+      "tables": [
+        {
+          "width": 328,
+          "scroll": 640,
+          "tab": 0
+        },
+        {
+          "width": 328,
+          "scroll": 640,
+          "tab": 0
+        }
+      ],
+      "assets": true,
+      "menu": {
+        "visible": true,
+        "hidden": true
+      }
+    }
+  },
+  {
+    "name": "populated/375: labels/targets/ARIA/CSRF/assets",
+    "pass": true,
+    "evidence": {
+      "width": 375,
+      "scroll": 360,
+      "lang": "vi",
+      "title": "Tổng quan ứng viên | Mộc RMS",
+      "fonts": [
+        "Lora, Georgia, serif",
+        "\"Source Sans 3\", \"Segoe UI\", sans-serif"
+      ],
+      "small": [],
+      "unlabeled": [],
+      "missing": [],
+      "csrf": true,
+      "tables": [
+        {
+          "width": 328,
+          "scroll": 640,
+          "tab": 0
+        },
+        {
+          "width": 328,
+          "scroll": 640,
+          "tab": 0
+        }
+      ],
+      "assets": true,
+      "menu": {
+        "visible": true,
+        "hidden": true
+      }
+    }
+  },
+  {
+    "name": "populated/375: table containment",
+    "pass": true,
+    "evidence": [
+      {
+        "width": 328,
+        "scroll": 640,
+        "tab": 0
+      },
+      {
+        "width": 328,
+        "scroll": 640,
+        "tab": 0
+      }
+    ]
+  },
+  {
+    "name": "populated/375: responsive navigation",
+    "pass": true,
+    "evidence": {
+      "visible": true,
+      "hidden": true
+    }
+  },
+  {
+    "name": "Vietnamese accent insensitive search",
+    "pass": true
+  },
+  {
+    "name": "Clear restores rows and keeps contextual focus",
+    "pass": true
+  },
+  {
+    "name": "Status filter works",
+    "pass": true
+  },
+  {
+    "name": "Vietnamese D stroke normalization",
+    "pass": true
+  },
+  {
+    "name": "No-results state",
+    "pass": true
+  },
+  {
+    "name": "Native offer details opens",
+    "pass": true
+  },
+  {
+    "name": "Native offer details closes by keyboard",
+    "pass": true
+  },
+  {
+    "name": "Offers search independent from applications",
+    "pass": true
+  },
+  {
+    "name": "populated: logout dialog/default focus",
+    "pass": true
+  },
+  {
+    "name": "populated: logout cancel/focus restore",
+    "pass": true
+  },
+  {
+    "name": "populated: mobile menu",
+    "pass": true
+  },
+  {
+    "name": "populated: Escape closes menu",
+    "pass": true
+  },
+  {
+    "name": "populated: reduced motion",
+    "pass": true
+  },
+  {
+    "name": "populated: no browser JS exceptions",
+    "pass": true,
+    "evidence": []
+  },
+  {
+    "name": "empty/1440: layout/fonts/locale",
+    "pass": true,
+    "evidence": {
+      "width": 1440,
+      "scroll": 1425,
+      "lang": "vi",
+      "title": "Tổng quan ứng viên | Mộc RMS",
+      "fonts": [
+        "Lora, Georgia, serif",
+        "\"Source Sans 3\", \"Segoe UI\", sans-serif"
+      ],
+      "small": [],
+      "unlabeled": [],
+      "missing": [],
+      "csrf": true,
+      "tables": [],
+      "assets": true,
+      "menu": {
+        "visible": false,
+        "hidden": false
+      }
+    }
+  },
+  {
+    "name": "empty/1440: labels/targets/ARIA/CSRF/assets",
+    "pass": true,
+    "evidence": {
+      "width": 1440,
+      "scroll": 1425,
+      "lang": "vi",
+      "title": "Tổng quan ứng viên | Mộc RMS",
+      "fonts": [
+        "Lora, Georgia, serif",
+        "\"Source Sans 3\", \"Segoe UI\", sans-serif"
+      ],
+      "small": [],
+      "unlabeled": [],
+      "missing": [],
+      "csrf": true,
+      "tables": [],
+      "assets": true,
+      "menu": {
+        "visible": false,
+        "hidden": false
+      }
+    }
+  },
+  {
+    "name": "empty/1440: table containment",
+    "pass": true,
+    "evidence": []
+  },
+  {
+    "name": "empty/1440: responsive navigation",
+    "pass": true,
+    "evidence": {
+      "visible": false,
+      "hidden": false
+    }
+  },
+  {
+    "name": "empty/1024: layout/fonts/locale",
+    "pass": true,
+    "evidence": {
+      "width": 1024,
+      "scroll": 1009,
+      "lang": "vi",
+      "title": "Tổng quan ứng viên | Mộc RMS",
+      "fonts": [
+        "Lora, Georgia, serif",
+        "\"Source Sans 3\", \"Segoe UI\", sans-serif"
+      ],
+      "small": [],
+      "unlabeled": [],
+      "missing": [],
+      "csrf": true,
+      "tables": [],
+      "assets": true,
+      "menu": {
+        "visible": false,
+        "hidden": false
+      }
+    }
+  },
+  {
+    "name": "empty/1024: labels/targets/ARIA/CSRF/assets",
+    "pass": true,
+    "evidence": {
+      "width": 1024,
+      "scroll": 1009,
+      "lang": "vi",
+      "title": "Tổng quan ứng viên | Mộc RMS",
+      "fonts": [
+        "Lora, Georgia, serif",
+        "\"Source Sans 3\", \"Segoe UI\", sans-serif"
+      ],
+      "small": [],
+      "unlabeled": [],
+      "missing": [],
+      "csrf": true,
+      "tables": [],
+      "assets": true,
+      "menu": {
+        "visible": false,
+        "hidden": false
+      }
+    }
+  },
+  {
+    "name": "empty/1024: table containment",
+    "pass": true,
+    "evidence": []
+  },
+  {
+    "name": "empty/1024: responsive navigation",
+    "pass": true,
+    "evidence": {
+      "visible": false,
+      "hidden": false
+    }
+  },
+  {
+    "name": "empty/768: layout/fonts/locale",
+    "pass": true,
+    "evidence": {
+      "width": 768,
+      "scroll": 753,
+      "lang": "vi",
+      "title": "Tổng quan ứng viên | Mộc RMS",
+      "fonts": [
+        "Lora, Georgia, serif",
+        "\"Source Sans 3\", \"Segoe UI\", sans-serif"
+      ],
+      "small": [],
+      "unlabeled": [],
+      "missing": [],
+      "csrf": true,
+      "tables": [],
+      "assets": true,
+      "menu": {
+        "visible": true,
+        "hidden": true
+      }
+    }
+  },
+  {
+    "name": "empty/768: labels/targets/ARIA/CSRF/assets",
+    "pass": true,
+    "evidence": {
+      "width": 768,
+      "scroll": 753,
+      "lang": "vi",
+      "title": "Tổng quan ứng viên | Mộc RMS",
+      "fonts": [
+        "Lora, Georgia, serif",
+        "\"Source Sans 3\", \"Segoe UI\", sans-serif"
+      ],
+      "small": [],
+      "unlabeled": [],
+      "missing": [],
+      "csrf": true,
+      "tables": [],
+      "assets": true,
+      "menu": {
+        "visible": true,
+        "hidden": true
+      }
+    }
+  },
+  {
+    "name": "empty/768: table containment",
+    "pass": true,
+    "evidence": []
+  },
+  {
+    "name": "empty/768: responsive navigation",
+    "pass": true,
+    "evidence": {
+      "visible": true,
+      "hidden": true
+    }
+  },
+  {
+    "name": "empty/375: layout/fonts/locale",
+    "pass": true,
+    "evidence": {
+      "width": 375,
+      "scroll": 360,
+      "lang": "vi",
+      "title": "Tổng quan ứng viên | Mộc RMS",
+      "fonts": [
+        "Lora, Georgia, serif",
+        "\"Source Sans 3\", \"Segoe UI\", sans-serif"
+      ],
+      "small": [],
+      "unlabeled": [],
+      "missing": [],
+      "csrf": true,
+      "tables": [],
+      "assets": true,
+      "menu": {
+        "visible": true,
+        "hidden": true
+      }
+    }
+  },
+  {
+    "name": "empty/375: labels/targets/ARIA/CSRF/assets",
+    "pass": true,
+    "evidence": {
+      "width": 375,
+      "scroll": 360,
+      "lang": "vi",
+      "title": "Tổng quan ứng viên | Mộc RMS",
+      "fonts": [
+        "Lora, Georgia, serif",
+        "\"Source Sans 3\", \"Segoe UI\", sans-serif"
+      ],
+      "small": [],
+      "unlabeled": [],
+      "missing": [],
+      "csrf": true,
+      "tables": [],
+      "assets": true,
+      "menu": {
+        "visible": true,
+        "hidden": true
+      }
+    }
+  },
+  {
+    "name": "empty/375: table containment",
+    "pass": true,
+    "evidence": []
+  },
+  {
+    "name": "empty/375: responsive navigation",
+    "pass": true,
+    "evidence": {
+      "visible": true,
+      "hidden": true
+    }
+  },
+  {
+    "name": "empty: logout dialog/default focus",
+    "pass": true
+  },
+  {
+    "name": "empty: logout cancel/focus restore",
+    "pass": true
+  },
+  {
+    "name": "empty: mobile menu",
+    "pass": true
+  },
+  {
+    "name": "empty: Escape closes menu",
+    "pass": true
+  },
+  {
+    "name": "empty: reduced motion",
+    "pass": true
+  },
+  {
+    "name": "empty: no browser JS exceptions",
+    "pass": true,
+    "evidence": []
+  }
+]

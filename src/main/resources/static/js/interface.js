@@ -18,21 +18,24 @@
     sync();
   }
   document.querySelectorAll('input[type="password"]').forEach(input => {
+    const vi = document.documentElement.lang === 'vi';
+    const show = vi ? 'Hiện' : 'Show';
+    const hide = vi ? 'Ẩn' : 'Hide';
     const wrapper = document.createElement('div');
     wrapper.className = 'password-field';
     input.before(wrapper);
     wrapper.append(input);
     const button = document.createElement('button');
-    button.type = 'button'; button.className = 'password-toggle'; button.textContent = 'Show';
+    button.type = 'button'; button.className = 'password-toggle'; button.textContent = show;
     button.setAttribute('aria-controls', input.id); button.setAttribute('aria-pressed', 'false');
     const label = document.querySelector(`label[for="${input.id}"]`).textContent.replace('*', '').trim().toLowerCase();
-    button.setAttribute('aria-label', `Show ${label}`);
+    button.setAttribute('aria-label', `${show} ${label}`);
     button.addEventListener('click', () => {
       const visible = input.type === 'password';
       input.type = visible ? 'text' : 'password';
-      button.textContent = visible ? 'Hide' : 'Show';
+      button.textContent = visible ? hide : show;
       button.setAttribute('aria-pressed', String(visible));
-      button.setAttribute('aria-label', `${visible ? 'Hide' : 'Show'} ${label}`);
+      button.setAttribute('aria-label', `${visible ? hide : show} ${label}`);
     });
     wrapper.append(button);
     input.form?.addEventListener('submit', () => { input.type = 'password'; });

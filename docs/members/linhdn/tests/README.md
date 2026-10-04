@@ -11,6 +11,12 @@ duyệt phải được ghi riêng; một loại bằng chứng không thay cho 
 
 ## Các đợt
 
+- [2026-10-04 — Department CRUD, Account activation, Dashboard Admin: automated evidence và manual test steps](2026-10-04-admin-departments-activation.md)
+
+- [2026-10-04 — Dashboard Candidate tiếng Việt: scope/privacy, bảng/filter, responsive và logout](2026-10-04-candidate-dashboard-ui.md)
+
+- [2026-10-04 — audit project trước Candidate UI: kết quả build/startup/test và các bước retest](2026-10-04-project-audit.md)
+
 - [2026-10-02 — tách lifecycle Internal/Candidate, scoped queries/actions, Dashboard và manual steps](2026-10-02-account-separation.md)
 
 - [2026-09-29 — sáu màn hình và use case xác thực/tài khoản](2026-09-29-auth-screens.md)

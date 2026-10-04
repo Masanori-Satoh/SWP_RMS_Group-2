@@ -6,9 +6,10 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 import lombok.Getter;
 import lombok.Setter;
-
+import com.group2.rms.core.validation.PasswordMatches;
 @Getter
 @Setter
+@PasswordMatches(message = "Passwords do not match.")
 public class RegisterAccountRequest {
     @NotBlank(message = "Enter a full name.")
     @Size(max = 100, message = "Full name must be at most 100 characters.")

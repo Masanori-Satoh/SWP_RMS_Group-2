@@ -3,6 +3,9 @@ package com.group2.rms.admin.service;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
 import org.springframework.stereotype.Service;
+import com.group2.rms.admin.dto.MonitorRowResponse;
+import com.group2.rms.admin.dto.ProbeOutcomeResponse;
+import com.group2.rms.admin.exception.MonitoringSessionRequiredException;
 
 import java.io.IOException;
 import java.net.URI;
@@ -27,10 +30,10 @@ public class ApiMonitoringService {
         this.transport = transport;
     }
 
-    public ProbeOutcome probeInternal(HttpServletRequest request) {
+    public ProbeOutcomeResponse probeInternal(HttpServletRequest request) {
         HttpSession session = request.getSession(false);
         if (session == null) {
-            throw new IllegalStateException("Authenticated session is required");
+            throw new MonitoringSessionRequiredException();
         }
         String contextPath = request.getContextPath();
         if (contextPath == null || "/".equals(contextPath)) {
@@ -62,17 +65,17 @@ public class ApiMonitoringService {
                 internalHistory.removeFirst();
             }
         }
-        return new ProbeOutcome(success, detail, elapsedMs);
+        return new ProbeOutcomeResponse(success, detail, elapsedMs);
     }
 
-    public List<MonitorRow> rows() {
+    public List<MonitorRowResponse> rows() {
         List<Probe> samples;
         synchronized (internalHistory) {
             samples = new ArrayList<>(internalHistory);
         }
-        MonitorRow internal;
+        MonitorRowResponse internal;
         if (samples.isEmpty()) {
-            internal = new MonitorRow("internal", "Internal", "Application and SQL Server",
+            internal = new MonitorRowResponse("internal", "Internal", "Application and SQL Server",
                     "GET " + INTERNAL_HEALTH_PATH, "NOT_CHECKED", "Not Checked",
                     null, null, null, null, null, 0, true);
         } else {
@@ -80,7 +83,7 @@ public class ApiMonitoringService {
             int errors = (int) samples.stream().filter(sample -> !sample.success()).count();
             long averageMs = Math.round(samples.stream().mapToLong(Probe::elapsedMs).average().orElse(0));
             int errorRate = (int) Math.round(100.0 * errors / samples.size());
-            internal = new MonitorRow("internal", "Internal", "Application and SQL Server",
+            internal = new MonitorRowResponse("internal", "Internal", "Application and SQL Server",
                     "GET " + INTERNAL_HEALTH_PATH,
                     latest.success() ? "OPERATIONAL" : "FAILED",
                     latest.success() ? "Operational" : "Error",
@@ -88,20 +91,16 @@ public class ApiMonitoringService {
                     samples.size(), true);
         }
         return List.of(internal,
-                new MonitorRow("ai", "External Integration", "AI CV Screening", "No endpoint configured",
+                new MonitorRowResponse("ai", "External Integration", "AI CV Screening", "No endpoint configured",
                         "UNCONFIGURED", "Not Configured", null, null, null, null, null, 0, false),
-                new MonitorRow("email", "External Integration", "Email Service", "No endpoint or SMTP host configured",
+                new MonitorRowResponse("email", "External Integration", "Email Service", "No endpoint or SMTP host configured",
                         "UNCONFIGURED", "Not Configured", null, null, null, null, null, 0, false));
     }
 
     private record Probe(boolean success, Integer httpStatus, long elapsedMs,
                          LocalDateTime checkedAt, String detail) { }
 
-    public record ProbeOutcome(boolean success, String detail, long elapsedMs) { }
+   
 
-    public record MonitorRow(String id, String category, String name, String endpoint,
-                             String status, String statusLabel, Long averageResponseMs,
-                             Integer errorRatePercent, Integer recentErrors,
-                             Integer lastHttpStatus, LocalDateTime lastCheckedAt,
-                             int sampleCount, boolean canProbe) { }
+    
 }

@@ -24,12 +24,14 @@ public class DatabaseUserDetailsService implements UserDetailsService {
     @Transactional(readOnly = true)
     public UserDetails loadUserByUsername(String identifier) throws UsernameNotFoundException {
         String login = identifier == null ? "" : identifier.trim();
+        // check if username is empty
         if (login.isEmpty()) {
             throw new UsernameNotFoundException("Invalid credentials");
         }
 
         Optional<User> byUsername = userRepository.findByUsernameIgnoreCase(login);
         Optional<User> byEmail = userRepository.findByEmailIgnoreCase(login);
+        // check if username and email is the sam
         if (byUsername.isPresent() && byEmail.isPresent()
                 && !Objects.equals(byUsername.get().getUserId(), byEmail.get().getUserId())) {
             // A login identifier must never resolve to two different accounts.

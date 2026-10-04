@@ -4,6 +4,7 @@ Nguồn ban đầu: commit `13b44be` (30/09/2026), schema và Spring Boot `3.5.1
 
 | Luồng | Tài liệu | Trạng thái xác minh |
 |---|---|---|
+| Department CRUD, Account restore, Inactive assignment và Admin Dashboard | [admin-departments-account-activation-flow.md](admin-departments-account-activation-flow.md) | 04/10: 45 Java/2 JS PASS; JPA SELECT PASS; Chrome fixture115/115; live CRUD chưa test |
 | Account lifecycles: Internal/Candidate lists, scoped create/edit/deactivate và Admin counts | [account-lifecycle-flow.md](account-lifecycle-flow.md) | Current rule02/10; selected tests/JPA SELECT PASS; live HTTP blocked bởi environment |
 | Preflight lịch sử trước business confirmation (02/10) | [2026-10-02-account-separation-preflight.md](2026-10-02-account-separation-preflight.md) | Historical18testgate; hiện dùng account-lifecycle-flow.md |
 | Truy cập URL bảo vệ và đăng nhập | [authentication-login-flow.md](authentication-login-flow.md) | Mã nguồn; HTTP thực tế chưa chạy trong lượt này |
@@ -12,6 +13,7 @@ Nguồn ban đầu: commit `13b44be` (30/09/2026), schema và Spring Boot `3.5.1
 | Yêu cầu email khôi phục | [forgot-password-flow.md](forgot-password-flow.md) | Mã nguồn; SMTP thực tế chưa chạy |
 | Xác minh link và đặt lại mật khẩu | [reset-password-flow.md](reset-password-flow.md) | Mã nguồn; SMTP/browser thực tế chưa chạy |
 | Dashboard theo vai trò | [role-dashboard-flow.md](role-dashboard-flow.md) | Mã nguồn; browser thực tế chưa chạy |
+| Candidate Dashboard tiếng Việt, scoped panel, filter và logout xác nhận | [candidate-dashboard-ui-flow.md](candidate-dashboard-ui-flow.md) | Verification theo tài liệu test ngày 04/10/2026 |
 | Danh sách tài khoản | [account-list-flow.md](account-list-flow.md) | Mã nguồn; browser thực tế chưa chạy |
 | Tạo tài khoản | [create-account-flow.md](create-account-flow.md) | Mã nguồn; browser thực tế chưa chạy |
 | Cập nhật tài khoản | [update-account-flow.md](update-account-flow.md) | Mã nguồn; browser thực tế chưa chạy |

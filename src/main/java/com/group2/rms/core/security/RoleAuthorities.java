@@ -12,6 +12,7 @@ public final class RoleAuthorities {
     }
 
     public static String fromRoleName(String roleName) {
+        // check if role is null
         if (roleName == null) {
             throw new IllegalArgumentException("Role is missing");
         }

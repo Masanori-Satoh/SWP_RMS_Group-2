@@ -4,14 +4,15 @@ import com.group2.rms.candidate.entity.Application;
 import com.group2.rms.candidate.entity.ApplicationReview;
 import com.group2.rms.candidate.entity.AIScreeningResult;
 import com.group2.rms.candidate.entity.Candidate;
-import com.group2.rms.dashboard.service.DashboardService;
-import com.group2.rms.dashboard.dto.DashboardView;
+import com.group2.rms.dashboard.DashboardService;
+import com.group2.rms.dashboard.DashboardResponse;
 import com.group2.rms.requisition.entity.JobPosting;
 import com.group2.rms.offer.OfferProposal;
 import com.group2.rms.candidate.repository.ApplicationRepository;
 import com.group2.rms.candidate.repository.ApplicationReviewRepository;
 import com.group2.rms.candidate.repository.CandidateRepository;
-import com.group2.rms.dashboard.repository.DashboardMetricsRepository;
+import com.group2.rms.dashboard.DashboardMetricsRepository;
+import com.group2.rms.dashboard.DashboardResponse;
 import com.group2.rms.requisition.repository.JobPostingRepository;
 import com.group2.rms.offer.OfferProposalRepository;
 import com.group2.rms.user.entity.Role;
@@ -63,7 +64,7 @@ class DashboardDatabaseTests {
                     .filter(user -> roleName.equals(user.getRole().getRoleName()))
                     .filter(user -> "Active".equals(user.getAccountStatus()))
                     .findFirst().orElseThrow();
-            DashboardView view = dashboard.forUsername(account.getUsername());
+            DashboardResponse view = dashboard.forUsername(account.getUsername());
             assertEquals(roleName, view.roleName());
             if ("System Admin".equals(roleName)) {
                 // Admin dashboard shows internal/candidate account summaries instead of numeric metrics.
@@ -71,7 +72,7 @@ class DashboardDatabaseTests {
                 assertTrue(view.accountSummaries().stream().allMatch(summary -> summary.total() >= 0
                         && summary.total() >= summary.active() + summary.inactive() + summary.blocked()));
                 assertEquals(metrics.accounts(), view.accountSummaries().stream()
-                        .mapToLong(DashboardView.AccountSummary::total).sum());
+                        .mapToLong(DashboardResponse.AccountSummary::total).sum());
             } else {
                 assertFalse(view.metrics().isEmpty());
                 assertTrue(view.metrics().stream().allMatch(metric -> metric.value() >= 0));
@@ -79,7 +80,7 @@ class DashboardDatabaseTests {
         }
 
         User candidateAccount = createCandidateAccount();
-        DashboardView candidateView = dashboard.forUsername(candidateAccount.getUsername());
+        DashboardResponse candidateView = dashboard.forUsername(candidateAccount.getUsername());
         assertEquals("Candidate", candidateView.roleName());
         assertEquals(0, candidateView.metrics().getFirst().value());
     }

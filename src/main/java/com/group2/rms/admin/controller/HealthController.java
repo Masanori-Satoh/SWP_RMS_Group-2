@@ -1,37 +1,30 @@
 package com.group2.rms.admin.controller;
 
-import org.springframework.dao.DataAccessException;
-import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.CacheControl;
 import org.springframework.http.ResponseEntity;
-import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import java.util.Map;
+import com.group2.rms.admin.dto.HealthResponse;
+import com.group2.rms.admin.service.HealthService;
+
 
 /** Fixed admin-only endpoint used by the internal HTTP probe. */
 @RestController
 public class HealthController {
+    private final HealthService healthService;
 
-    private final JdbcTemplate jdbcTemplate;
-
-    public HealthController(JdbcTemplate jdbcTemplate) {
-        this.jdbcTemplate = jdbcTemplate;
+    public HealthController(HealthService healthService) {
+        this.healthService = healthService;
     }
 
-    @GetMapping("/admin/api-monitoring/internal/health")
-    public ResponseEntity<Map<String, String>> health() {
-        try {
-            Integer result = jdbcTemplate.queryForObject("SELECT 1", Integer.class);
-            if (Integer.valueOf(1).equals(result)) {
-                return ResponseEntity.ok().cacheControl(CacheControl.noStore())
-                        .body(Map.of("status", "UP"));
-            }
-        } catch (DataAccessException ignored) {
-            // Only a generic health status is exposed; no SQL error details.
-        }
-        return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE)
-                .cacheControl(CacheControl.noStore()).body(Map.of("status", "DOWN"));
+    @GetMapping(value = "/admin/api-monitoring/internal/health", produces = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<HealthResponse> health() {
+        healthService.checkDatabase();
+
+        return ResponseEntity.ok()
+                .cacheControl(CacheControl.noStore())
+                .body(new HealthResponse("UP"));
     }
 }

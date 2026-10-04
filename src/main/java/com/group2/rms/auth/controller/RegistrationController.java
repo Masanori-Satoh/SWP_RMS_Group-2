@@ -32,10 +32,7 @@ public class RegistrationController {
     @PostMapping
     public String register(@Valid @ModelAttribute("form") RegisterAccountRequest form,
                            BindingResult errors) {
-        if (form.getPassword() != null && form.getConfirmPassword() != null
-                && !form.getPassword().equals(form.getConfirmPassword())) {
-            errors.rejectValue("confirmPassword", "password.mismatch", "Passwords do not match.");
-        }
+      
         if (!errors.hasErrors()) {
             try {
                 registration.register(form.toCommand());

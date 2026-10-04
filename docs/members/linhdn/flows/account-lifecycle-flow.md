@@ -1,5 +1,7 @@
 # Internal / Candidate account lifecycle — flow hiện tại
 
+> Cập nhật 04/10/2026: đã bổ sung activation và quy tắc Department Inactive. Package/class trong phần ghi ngày02/10 bên dưới là tên trước refactor; xem [flow mới với package hiện tại](admin-departments-account-activation-flow.md) mục8–9 khi tiếp tục code/test lifecycle.
+
 Nguồn 02/10/2026: schema hiện tại, working tree và business rule được user xác nhận. Không JWT, không bảng/cột mới, không migration dữ liệu. Package ghi dưới đây là **project code**; framework dispatch/render ghi cơ chế, không tuyên bố source nội bộ library đã đối chiếu.
 
 ## 1. Rule và route
