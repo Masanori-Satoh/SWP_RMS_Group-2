@@ -27,6 +27,7 @@ public class PassedCandidateResponse {
     private String departmentName;
     private Integer requisitionId;
     private Integer jobPostingId;
+    private String workLocation;
 
     // Thông tin tóm tắt kết quả phỏng vấn
     private Integer finalResultId;
