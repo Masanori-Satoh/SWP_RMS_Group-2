@@ -122,7 +122,7 @@ class CareerFlowTests {
                                                 containsString("<title>Senior Java Engineer — Mộc Careers</title>")))
                                 .andExpect(content().string(containsString("VND 30–45 million")))
                                 .andExpect(content().string(containsString("Hà Nội")))
-                                .andExpect(content().string(containsString("href=\"/jobs/41/apply\"")))
+                                .andExpect(content().string(containsString("onclick=\"alert('Tính năng ứng tuyển trực tuyến đang được xây dựng")))
                                 .andExpect(content().string(containsString("Ứng tuyển ngay")))
                                 .andExpect(content().string(not(containsString("Ngừng nhận hồ sơ"))))
                                 .andReturn();

@@ -79,6 +79,17 @@ public class UpdateOfferRequest {
     }
 
     /**
+     * Ràng buộc: Lương thử việc không được vượt quá lương chính thức
+     */
+    @AssertTrue(message = "Lương thử việc không được vượt quá lương chính thức.")
+    public boolean isProbationSalaryNotExceedProposed() {
+        if (proposedSalary == null || probationSalary == null) {
+            return true;
+        }
+        return probationSalary.compareTo(proposedSalary) <= 0;
+    }
+
+    /**
      * Ràng buộc: Ngày bắt đầu dự kiến phải lớn hơn ngày hiện tại
      */
     @AssertTrue(message = "Ngày bắt đầu dự kiến phải lớn hơn ngày hiện tại.")
