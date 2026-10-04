@@ -30,9 +30,12 @@ import org.springframework.transaction.annotation.Transactional;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 @Service
 @RequiredArgsConstructor
@@ -46,6 +49,36 @@ public class OfferServiceImpl implements OfferService {
     private final OfferApprovalRepository offerApprovalRepository;
     private final OfferNegotiationRepository offerNegotiationRepository;
     private final NotificationService notificationService;
+
+    /**
+     * Quy tắc GBR-07:
+     * NHÓM A: Được phép tạo đè / cập nhật lại (Editable / Overridable States).
+     */
+    public static final Set<String> OVERRIDABLE_STATUSES = Set.of(
+            "Draft", "Rejected", "Director_Rejected", "Negotiating", "Declined", "Canceled", "Voided");
+
+    /**
+     * Quy tắc GBR-07:
+     * NHÓM B: Phải giữ nguyên - KHÔNG ĐƯỢC TẠO ĐÈ TỰ Ý (Locked / Finalized States).
+     */
+    public static final Set<String> LOCKED_STATUSES = Set.of(
+            "Pending_Director", "Approved", "Director_Approved", "Sent_Candidate", "Accepted");
+
+    public static boolean isOverridableStatus(String status) {
+        if (status == null) return true;
+        for (String s : OVERRIDABLE_STATUSES) {
+            if (s.equalsIgnoreCase(status)) return true;
+        }
+        return false;
+    }
+
+    public static boolean isLockedStatus(String status) {
+        if (status == null) return false;
+        for (String s : LOCKED_STATUSES) {
+            if (s.equalsIgnoreCase(status)) return true;
+        }
+        return false;
+    }
 
     @Override
     public OfferResponse createOfferProposal(CreateOfferRequest request) {
@@ -100,12 +133,45 @@ public class OfferServiceImpl implements OfferService {
             return Collections.emptyList();
         }
 
-        return passedResults.stream().map(r -> {
+        List<PassedCandidateResponse> list = new ArrayList<>();
+        Set<Integer> processedAppIds = new HashSet<>();
+
+        for (InterviewFinalResult r : passedResults) {
             var schedule = r.getInterviewSchedule();
             var application = schedule != null ? schedule.getApplication() : null;
-            var candidate = application != null ? application.getCandidate() : null;
+            if (application == null || application.getApplicationId() == null) {
+                continue;
+            }
+
+            Integer appId = application.getApplicationId();
+            if (processedAppIds.contains(appId)) {
+                continue;
+            }
+
+            // Quy tắc GBR-07: Kiểm tra gói Offer hiện tại của đơn ứng tuyển
+            Optional<OfferProposal> offerOpt = offerProposalRepository.findByApplication_ApplicationId(appId);
+            String existingStatus = null;
+            Integer existingOfferId = null;
+
+            if (offerOpt.isPresent()) {
+                OfferProposal existingOffer = offerOpt.get();
+                if (!Boolean.TRUE.equals(existingOffer.getIsDeleted())) {
+                    String status = existingOffer.getOfferStatus();
+                    // NHÓM B: Đang trong luồng xử lý hoặc đã chốt tuyển dụng -> KHÓA, KHÔNG HIỂN THỊ
+                    if (isLockedStatus(status)) {
+                        continue;
+                    }
+                    // NHÓM A: Được phép tạo đè / cập nhật lại
+                    existingStatus = status;
+                    existingOfferId = existingOffer.getOfferId();
+                }
+            }
+
+            processedAppIds.add(appId);
+
+            var candidate = application.getCandidate();
             var user = candidate != null ? candidate.getAccount() : null;
-            var jobPosting = application != null ? application.getJobPosting() : null;
+            var jobPosting = application.getJobPosting();
             var requisition = jobPosting != null ? jobPosting.getRequisition() : null;
             var department = requisition != null ? requisition.getDepartment() : null;
 
@@ -118,8 +184,8 @@ public class OfferServiceImpl implements OfferService {
                 workLocation = "Trụ sở chính Mộc RMS";
             }
 
-            return PassedCandidateResponse.builder()
-                    .applicationId(application != null ? application.getApplicationId() : null)
+            list.add(PassedCandidateResponse.builder()
+                    .applicationId(appId)
                     .candidateId(candidate != null ? candidate.getCandidateId() : null)
                     .candidateName(user != null ? user.getFullName() : null)
                     .email(user != null ? user.getEmail() : null)
@@ -135,8 +201,12 @@ public class OfferServiceImpl implements OfferService {
                     .recommendedSalary(r.getRecommendedSalary())
                     .interviewApprovedAt(r.getApprovedAt())
                     .hiringManagerName(r.getHiringManager() != null ? r.getHiringManager().getFullName() : null)
-                    .build();
-        }).toList();
+                    .existingOfferStatus(existingStatus)
+                    .existingOfferId(existingOfferId)
+                    .build());
+        }
+
+        return list;
     }
 
     @Override
@@ -159,14 +229,26 @@ public class OfferServiceImpl implements OfferService {
 
         // Bảng OfferProposal có ràng buộc UNIQUE trên ApplicationId
         // (UQ_OfferProposal_Application)
-        // Nếu Application này đã có OfferProposal, cập nhật bản ghi hiện tại (upsert)
-        // để tránh lỗi trùng khóa UQ
+        // Áp dụng quy tắc Single Active Offer Rule (GBR-07)
         Optional<OfferProposal> existingOfferOpt = offerProposalRepository
                 .findByApplication_ApplicationId(application.getApplicationId());
 
         OfferProposal offerToSave;
         if (existingOfferOpt.isPresent()) {
-            offerToSave = existingOfferOpt.get();
+            OfferProposal existingOffer = existingOfferOpt.get();
+            String currentStatus = existingOffer.getOfferStatus();
+
+            // Nếu đơn ứng tuyển đang có Offer thuộc Nhóm B (Pending_Director, Approved, Sent_Candidate, Accepted)
+            // -> Chặn hoàn toàn thao tác tạo đè trực tiếp
+            if (!Boolean.TRUE.equals(existingOffer.getIsDeleted()) && isLockedStatus(currentStatus)) {
+                throw new BaseBusinessException(
+                        "Theo quy tắc GBR-07, không thể tạo đè Offer Proposal vì đơn ứng tuyển đang có gói Offer ở trạng thái ["
+                                + currentStatus + "] thuộc Nhóm B (đang trong luồng xử lý hoặc đã hoàn tất).",
+                        "OFFER_LOCKED_STATE");
+            }
+
+            // Ghi đè bản thảo mới lên gói Offer cũ thuộc Nhóm A (Draft, Rejected, Negotiating, Declined)
+            offerToSave = existingOffer;
             offerToSave.setOfferedPositionTitle(dto.getOfferedPositionTitle());
             offerToSave.setProposedSalary(dto.getProposedSalary());
             offerToSave.setProbationSalary(dto.getProbationSalary());
@@ -310,13 +392,11 @@ public class OfferServiceImpl implements OfferService {
                 .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy OfferProposal với ID: " + id));
 
         String currentStatus = offer.getOfferStatus();
-        boolean canEdit = "Draft".equalsIgnoreCase(currentStatus)
-                || "Rejected".equalsIgnoreCase(currentStatus)
-                || "Director_Rejected".equalsIgnoreCase(currentStatus);
+        boolean canEdit = isOverridableStatus(currentStatus);
 
         if (!canEdit) {
             throw new BaseBusinessException(
-                    "Chỉ được phép cập nhật Offer khi ở trạng thái Draft hoặc Bị từ chối. Trạng thái hiện tại: "
+                    "Theo quy tắc GBR-07, chỉ được phép cập nhật Offer khi ở trạng thái thuộc Nhóm A (Draft, Rejected, Negotiating, Declined). Trạng thái hiện tại: "
                             + currentStatus,
                     "OFFER_STATUS_INVALID");
         }

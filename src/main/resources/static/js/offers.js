@@ -133,6 +133,10 @@ function openCreateOfferModal() {
     if (workLocInput) {
         workLocInput.value = '';
     }
+    const overrideNotice = document.getElementById('createOverrideNotice');
+    if (overrideNotice) {
+        overrideNotice.style.display = 'none';
+    }
 
     openModal('createOfferModal');
 }
@@ -147,6 +151,8 @@ function handleSelectPassedCandidate(appId) {
         if (grpA) grpA.style.display = 'none';
         const workLocInput = document.getElementById('createWorkLocation');
         if (workLocInput) workLocInput.value = '';
+        const overrideNotice = document.getElementById('createOverrideNotice');
+        if (overrideNotice) overrideNotice.style.display = 'none';
         return;
     }
 
@@ -185,6 +191,19 @@ function handleSelectPassedCandidate(appId) {
     const workLocationInput = document.getElementById('createWorkLocation');
     if (workLocationInput) {
         workLocationInput.value = workLoc;
+    }
+
+    // Hiển thị thông báo ghi đè nếu ứng viên đã có Offer thuộc Nhóm A (GBR-07)
+    const existingStatus = opt.getAttribute('data-existing-status');
+    const overrideNotice = document.getElementById('createOverrideNotice');
+    if (overrideNotice) {
+        if (existingStatus) {
+            document.getElementById('createOverrideNoticeText').textContent =
+                `Ứng viên này hiện có gói Offer ở trạng thái [${existingStatus}]. Khi lưu bản mới, hệ thống sẽ tự động ghi đè.`;
+            overrideNotice.style.display = 'flex';
+        } else {
+            overrideNotice.style.display = 'none';
+        }
     }
 }
 
@@ -479,6 +498,12 @@ function renderDetailModalHtml(d) {
                 <i class="fa-solid fa-pen-to-square" style="margin-right:6px;"></i> Chỉnh Sửa & Trình Lại
             </button>
         `;
+    } else if (d.offerStatus === 'Negotiating' || d.offerStatus === 'Declined') {
+        actionButtonsHtml += `
+            <button type="button" class="btn btn-primary" onclick="closeModal('detailOfferModal'); openEditOfferModal(${d.offerId});">
+                <i class="fa-solid fa-pen-to-square" style="margin-right:6px;"></i> Điều Chỉnh & Trình Duyệt Lại (GBR-07)
+            </button>
+        `;
     }
 
     footer.innerHTML = actionButtonsHtml;
@@ -510,11 +535,17 @@ function openEditOfferModal(offerId) {
                 editStartDateInput.min = getTomorrowDateString();
             }
 
-            // Nếu bị Director_Rejected -> hiển thị lý do
+            // Nếu bị Director_Rejected hoặc Negotiating hoặc Declined -> hiển thị lý do / hướng dẫn
             const rejectBanner = document.getElementById('editRejectBanner');
             if (d.offerStatus === 'Director_Rejected' || d.offerStatus === 'Rejected') {
                 const latestReject = (d.approvalHistory && d.approvalHistory.length > 0) ? d.approvalHistory[0].directorComments : 'Vui lòng điều chỉnh lại mức lương/định biên theo yêu cầu.';
-                document.getElementById('editRejectComment').textContent = latestReject;
+                document.getElementById('editRejectComment').textContent = 'Director từ chối: ' + latestReject;
+                rejectBanner.style.display = 'flex';
+            } else if (d.offerStatus === 'Negotiating') {
+                document.getElementById('editRejectComment').textContent = 'Ứng viên phản hồi đàm phán lại các điều khoản. HR điều chỉnh gói Offer và trình duyệt lại Director.';
+                rejectBanner.style.display = 'flex';
+            } else if (d.offerStatus === 'Declined') {
+                document.getElementById('editRejectComment').textContent = 'Ứng viên đã từ chối thư mời trước đó. HR phát hành lại gói Offer mới theo quy tắc GBR-07.';
                 rejectBanner.style.display = 'flex';
             } else {
                 rejectBanner.style.display = 'none';
