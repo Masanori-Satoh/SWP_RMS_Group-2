@@ -95,7 +95,7 @@ public class NotificationServiceImpl implements NotificationService {
         if (notificationId == null || user == null) {
             return;
         }
-        Notification notification = notificationRepository.findByIdAndRecipient_UserId(notificationId, user.getUserId())
+        Notification notification = notificationRepository.findByNotificationIdAndRecipient_UserId(notificationId, user.getUserId())
             .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Thông báo không tồn tại hoặc không thuộc về bạn."));
         if (!Boolean.TRUE.equals(notification.getIsRead())) {
             notification.setIsRead(true);

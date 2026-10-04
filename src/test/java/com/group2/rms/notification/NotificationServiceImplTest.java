@@ -89,7 +89,7 @@ class NotificationServiceImplTest {
                 .isRead(false)
                 .build();
 
-        when(notificationRepository.findByIdAndRecipient_UserId(1L, 10)).thenReturn(Optional.of(n));
+        when(notificationRepository.findByNotificationIdAndRecipient_UserId(1L, 10)).thenReturn(Optional.of(n));
 
         notificationService.markAsRead(1L, manager);
 
@@ -100,7 +100,7 @@ class NotificationServiceImplTest {
     @Test
     @DisplayName("markAsRead: Không tìm thấy hoặc khác user -> Ném ResponseStatusException 404")
     void markAsRead_unauthorizedOrNotFound_throwsException() {
-        when(notificationRepository.findByIdAndRecipient_UserId(99L, 10)).thenReturn(Optional.empty());
+        when(notificationRepository.findByNotificationIdAndRecipient_UserId(99L, 10)).thenReturn(Optional.empty());
 
         assertThrows(ResponseStatusException.class, () -> notificationService.markAsRead(99L, manager));
         verify(notificationRepository, never()).save(any());
