@@ -1,6 +1,6 @@
 <!DOCTYPE html>
-<html lang="en" xmlns:th="http://www.thymeleaf.org">
-<head th:replace="~{fragments/head :: interfaceHead('Candidate Accounts', ~{::pageStyles})}">
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/head :: interfaceHead('Tài khoản ứng viên', ~{::pageStyles})}">
     <th:block th:fragment="pageStyles"><link rel="stylesheet" th:href="@{/css/account-list.css}"></th:block>
 </head>
 <body class="rms-app">
@@ -10,63 +10,62 @@
         <header th:replace="~{fragments/workspace-header :: header('System Admin', null)}"></header>
         <main id="main" class="page-content" tabindex="-1">
             <div class="container">
+                <nav class="breadcrumbs" aria-label="Breadcrumb" style="margin-bottom: var(--s2); font-size: 14px; display: flex; gap: 8px; align-items: center; color: var(--text-muted);">
+                  <a th:href="@{/dashboard}" style="color: var(--brand); text-decoration: none;">Dashboard</a>
+                  <span aria-hidden="true">/</span>
+                  <span aria-current="page" style="color: var(--text-color); font-weight: 500;">Candidate Accounts</span>
+                </nav>
                 <div class="account-heading"><div>
-                    <a class="account-back-link" th:href="@{/dashboard}">Dashboard</a><span aria-hidden="true"> / </span><span>Candidate Accounts</span>
-                    <h1>Candidate Accounts</h1><p>Review and manage external candidate accounts.</p>
+                    <a class="account-back-link" th:href="@{/dashboard}">Tổng quan</a><span aria-hidden="true"> / </span><span>Tài khoản ứng viên</span>
+                    <h1>Tài khoản ứng viên</h1><p>Quản lý quyền truy cập của ứng viên.</p>
                 </div></div>
                 <div class="alert alert-success" role="status" th:if="${successMessage}" th:text="${successMessage}"></div>
                 <section class="workspace-section account-card" aria-labelledby="candidate-list-title">
-                    <div class="account-section-heading"><h2 id="candidate-list-title">Candidate Access</h2>
-                        <p th:text="|${accounts.totalElements} matching candidate accounts|">0 matching candidate accounts</p>
+                    <div class="account-section-heading"><h2 id="candidate-list-title">Quyền truy cập ứng viên</h2>
+                        <p th:text="|${accounts.totalElements} tài khoản ứng viên phù hợp|">0 tài khoản ứng viên phù hợp</p>
                     </div>
-                    <form class="account-filters candidate-filters" th:action="@{/admin/candidate-accounts}" method="get" aria-label="Candidate Account Filters">
-                        <div class="account-search-field"><label class="form-label" for="account-search">Search</label>
-                            <input class="form-control" id="account-search" type="search" name="search" th:value="${search}" placeholder="Name, email, or username" maxlength="100"></div>
-                        <div><label class="form-label" for="account-status">Status</label><select class="form-control" id="account-status" name="status">
-                            <option value="">All Statuses</option><option value="Active" th:selected="${selectedStatus == 'Active'}">Active</option>
-                            <option value="Inactive" th:selected="${selectedStatus == 'Inactive'}">Inactive</option><option value="Blocked" th:selected="${selectedStatus == 'Blocked'}">Blocked</option>
+                    <form class="account-filters candidate-filters" th:action="@{/admin/candidate-accounts}" method="get" aria-label="Bộ lọc tài khoản ứng viên">
+                        <div class="account-search-field"><label class="form-label" for="account-search">Tìm kiếm</label>
+                            <input class="form-control" id="account-search" type="search" name="search" th:value="${search}" placeholder="Họ tên, email hoặc tên đăng nhập" maxlength="100"></div>
+                        <div><label class="form-label" for="account-status">Trạng thái</label><select class="form-control" id="account-status" name="status">
+                            <option value="">Tất cả trạng thái</option><option value="Active" th:selected="${selectedStatus == 'Active'}">Hoạt động</option>
+                            <option value="Inactive" th:selected="${selectedStatus == 'Inactive'}">Vô hiệu hóa</option><option value="Blocked" th:selected="${selectedStatus == 'Blocked'}">Bị khóa</option>
                         </select></div>
-                        <div><label class="form-label" for="account-sort">Sort By</label><select class="form-control" id="account-sort" name="sort">
-                            <option value="name" th:selected="${selectedSort == 'name'}">Name A–Z</option><option value="name_desc" th:selected="${selectedSort == 'name_desc'}">Name Z–A</option>
-                            <option value="username" th:selected="${selectedSort == 'username'}">Username A–Z</option><option value="newest" th:selected="${selectedSort == 'newest'}">Newest First</option>
+                        <div><label class="form-label" for="account-sort">Sắp xếp</label><select class="form-control" id="account-sort" name="sort">
+                            <option value="name" th:selected="${selectedSort == 'name'}">Họ tên A–Z</option><option value="name_desc" th:selected="${selectedSort == 'name_desc'}">Họ tên Z–A</option>
+                            <option value="username" th:selected="${selectedSort == 'username'}">Tên đăng nhập A–Z</option><option value="newest" th:selected="${selectedSort == 'newest'}">Mới nhất</option>
                         </select></div>
-                        <div class="account-filter-actions"><button class="btn btn-primary" type="submit">Apply Filters</button><a class="btn btn-secondary" th:href="@{/admin/candidate-accounts}">Clear Filters</a></div>
+                        <div class="account-filter-actions"><button class="btn btn-primary" type="submit">Lọc</button><a class="btn btn-secondary" th:href="@{/admin/candidate-accounts}">Xóa bộ lọc</a></div>
                     </form>
-                    <p class="table-scroll-note">Scroll the table horizontally to see all account details and actions.</p>
+                    <p class="table-scroll-note">Cuộn ngang để xem đầy đủ thông tin và thao tác.</p>
                     <div class="table-wrapper" tabindex="0" role="region" aria-labelledby="candidate-list-title">
-                        <table class="table account-table"><caption class="sr-only">Candidate accounts and their linked profile identifiers.</caption>
-                            <thead><tr><th scope="col">Full Name</th><th scope="col">Email</th><th scope="col">Username</th><th scope="col">Status</th><th scope="col">Created At</th><th scope="col">Profile</th><th scope="col">Actions</th></tr></thead>
+                        <table class="table account-table"><caption class="sr-only">Tài khoản ứng viên và mã hồ sơ liên kết.</caption>
+                            <thead><tr><th scope="col">Họ và tên</th><th scope="col">Email</th><th scope="col">Tên đăng nhập</th><th scope="col">Trạng thái</th><th scope="col">Ngày tạo</th><th scope="col">Hồ sơ</th><th scope="col">Thao tác</th></tr></thead>
                             <tbody><tr th:each="account : ${accounts.content}">
-                                <td class="account-name" th:text="${account.fullName}">Name</td><td th:text="${account.email}">Email</td><td th:text="${account.username}">Username</td>
-                                <td><span class="badge" th:text="${account.status}" th:classappend="${account.status == 'Active' ? ' badge-success' : (account.status == 'Blocked' ? ' badge-danger' : ' badge-secondary')}">Status</span></td>
+                                <td class="account-name" th:text="${account.fullName}">Name</td><td th:text="${account.email}">Email</td><td th:text="${account.username}">Tên đăng nhập</td>
+                                <td><span class="badge" th:text="${account.status == 'Active' ? 'Hoạt động' : (account.status == 'Inactive' ? 'Vô hiệu hóa' : 'Bị khóa')}" th:classappend="${account.status == 'Active' ? ' badge-success' : (account.status == 'Blocked' ? ' badge-danger' : ' badge-secondary')}">Trạng thái</span></td>
                                 <td><time th:if="${account.createdAt != null}" th:datetime="${account.createdAt}" th:text="${#temporals.format(account.createdAt, 'dd MMM yyyy')}">Date</time><span th:unless="${account.createdAt != null}">—</span></td>
-                                <td><span th:if="${account.profileId != null}" th:text="|Linked · #${account.profileId}|">Linked</span><span class="candidate-profile-note" th:unless="${account.profileId != null}">Profile missing</span></td>
-                                <td class="account-actions"><button th:if="${account.status != 'Inactive'}" class="btn btn-danger btn-sm" type="button" data-deactivate-account
-                                    th:attr="data-account-name=${account.fullName},data-account-username=${account.username},aria-label=|Deactivate account ${account.username}|,data-deactivate-url=@{/admin/candidate-accounts/{id}/deactivate(id=${account.id})}">Deactivate</button>
-                                    <span class="candidate-profile-note" th:if="${account.status == 'Inactive'}">No action available</span></td>
-                            </tr><tr th:if="${accounts.empty}"><td colspan="7" class="account-empty">No matching candidate accounts found. Try changing the filters.</td></tr></tbody>
+                                <td><span th:if="${account.profileId != null}" th:text="|Đã liên kết · #${account.profileId}|">Linked</span><span class="candidate-profile-note" th:unless="${account.profileId != null}">Chưa có hồ sơ</span></td>
+                                <td class="account-actions">
+                                    <th:block th:if="${account.status != 'Inactive'}">
+                                        <form th:replace="~{fragments/status-actions :: action(@{/admin/candidate-accounts/{id}/deactivate(id=${account.id})}, 'Vô hiệu hóa tài khoản ' + ${account.username}, 'Tài khoản sẽ bị vô hiệu hóa và không thể đăng nhập. Hồ sơ ứng viên và lịch sử tuyển dụng được giữ nguyên.', 'Vô hiệu hóa', true)}"></form>
+                                    </th:block>
+                                    <th:block th:if="${account.status == 'Inactive'}">
+                                        <form th:replace="~{fragments/status-actions :: action(@{/admin/candidate-accounts/{id}/activate(id=${account.id})}, 'Kích hoạt lại tài khoản ' + ${account.username}, 'Tài khoản sẽ hoạt động trở lại và tiếp tục đăng nhập với vai trò ứng viên.', 'Kích hoạt lại', false)}"></form>
+                                    </th:block>
+                                </td>
+                            </tr><tr th:if="${accounts.empty}"><td colspan="7" class="account-empty">No tài khoản ứng viên phù hợp found. Try changing the filters.</td></tr></tbody>
                         </table>
                     </div>
-                    <div class="account-pagination" th:if="${accounts.totalPages > 1}"><span>Page <strong th:text="${accounts.number + 1}">1</strong>/<span th:text="${accounts.totalPages}">1</span></span>
-                        <nav class="pagination" aria-label="Candidate Account Pagination">
-                            <a class="btn btn-secondary btn-sm" th:if="${accounts.hasPrevious()}" th:href="@{/admin/candidate-accounts(search=${search},status=${selectedStatus},sort=${selectedSort},page=${accounts.number - 1})}">Previous</a>
-                            <a class="btn btn-secondary btn-sm" th:if="${accounts.hasNext()}" th:href="@{/admin/candidate-accounts(search=${search},status=${selectedStatus},sort=${selectedSort},page=${accounts.number + 1})}">Next</a>
-                        </nav>
-                    </div>
+                    <div th:replace="~{fragments/pagination :: paged(${accounts}, '/admin/candidate-accounts')}"></div>
                     <p class="candidate-profile-note">Candidate profiles and recruitment history are managed separately from account access.</p>
                 </section>
             </div>
         </main>
     </div>
 </div>
-<dialog class="account-dialog" id="deactivate-dialog" aria-labelledby="deactivate-title" aria-describedby="deactivate-description">
-    <h2 id="deactivate-title">Deactivate Candidate Account</h2>
-    <p id="deactivate-description">Account <strong id="deactivate-account-name"></strong> (<span id="deactivate-account-username"></span>) will be set to Inactive and will no longer be able to sign in. The candidate profile and recruitment history will be preserved.</p>
-    <form id="deactivate-form" th:action="@{/admin/candidate-accounts}" method="post">
-        <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
-        <div class="account-dialog-actions"><button class="btn btn-secondary" type="button" id="deactivate-cancel">Cancel</button><button class="btn btn-danger" type="submit">Deactivate</button></div>
-    </form>
-</dialog>
+<dialog th:replace="~{fragments/status-actions :: confirmation}"></dialog>
+<script th:src="@{/js/status-confirmation.js}" defer></script>
 <script th:src="@{/js/account-list.js}" defer></script>
 </body>
 </html>

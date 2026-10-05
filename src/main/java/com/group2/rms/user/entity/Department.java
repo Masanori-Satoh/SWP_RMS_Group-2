@@ -25,6 +25,10 @@ public class Department {
     @Column(name = "DepartmentName", nullable = false, unique = true, length = 100)
     private String departmentName;
 
+    @Builder.Default
+    @Column(name = "DepartmentStatus", nullable = false, length = 20)
+    private String departmentStatus = "Active";
+
     /**
      * Trưởng phòng - tham chiếu đến User.
      * FetchType.LAZY để tránh load toàn bộ User khi chỉ cần Department.

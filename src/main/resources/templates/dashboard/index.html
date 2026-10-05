@@ -1,9 +1,12 @@
 <!DOCTYPE html>
-<html lang="en" xmlns:th="http://www.thymeleaf.org">
-<head th:replace="~{fragments/head :: interfaceHead('Dashboard', ~{::pageStyles})}">
-  <th:block th:fragment="pageStyles"><link rel="stylesheet" th:href="@{/css/dashboard.css}"></th:block>
+<html lang="en" xmlns:th="http://www.thymeleaf.org" th:lang="${dashboard.roleName == 'Candidate' or dashboard.roleName == 'System Admin' ? 'vi' : 'en'}">
+<head th:replace="~{fragments/head :: interfaceHead(${dashboard.roleName == 'Candidate' ? 'Tổng quan ứng viên' : (dashboard.roleName == 'System Admin' ? 'Tổng quan hệ thống' : 'Dashboard')}, ~{::pageStyles})}">
+  <th:block th:fragment="pageStyles">
+    <link rel="stylesheet" th:href="@{/css/dashboard.css}">
+    <script th:if="${dashboard.roleName == 'Candidate'}" defer th:src="@{/js/candidate-dashboard.js}"></script>
+  </th:block>
 </head>
-<body class="rms-app">
+<body class="rms-app" th:classappend="${dashboard.roleName == 'Candidate' ? 'candidate-workspace' : ''}">
 <div class="page-wrapper">
     <!-- SIDEBAR -->
     <aside th:replace="~{fragments/sidebar :: workspace('dashboard', ${dashboard.roleName})}"></aside>
@@ -14,23 +17,44 @@
         <header th:replace="~{fragments/workspace-header :: header(${dashboard.roleName}, ${dashboard.fullName})}"></header>
         <!-- PAGE CONTENT -->
         <main id="main" class="page-content" tabindex="-1">
+            <th:block th:if="${dashboard.roleName == 'Candidate'}">
+                <section th:if="${dashboard.candidate == null}" class="dashboard-intro">
+                    <h1>Tổng quan ứng viên</h1>
+                    <p>Chưa tải được thông tin hồ sơ. Vui lòng tải lại trang hoặc liên hệ bộ phận tuyển dụng.</p>
+                    <a class="btn btn-primary" th:href="@{/jobs}">Xem vị trí đang tuyển</a>
+                </section>
+                <th:block th:if="${dashboard.candidate != null}"><section th:replace="~{dashboard/candidate :: panel(${dashboard})}"></section></th:block>
+            </th:block>
+            <th:block th:unless="${dashboard.roleName == 'Candidate'}">
             <div class="dashboard-intro">
                 <div>
-                    <h1>Dashboard</h1>
+                    <h1 th:text="${dashboard.roleName == 'System Admin' ? 'Tổng quan hệ thống' : 'Dashboard'}">Dashboard</h1>
                     <p class="dashboard-scope" th:text="${dashboard.scope}">Data Scope</p>
                 </div>
             </div>
 
             <section class="dashboard-accounts" aria-labelledby="dashboard-accounts-title" th:if="${not #lists.isEmpty(dashboard.accountSummaries)}">
-                <h2 id="dashboard-accounts-title">Accounts</h2>
+                <h2 id="dashboard-accounts-title" th:text="${dashboard.roleName == 'System Admin' ? 'Tài khoản' : 'Accounts'}">Accounts</h2>
                 <article class="dashboard-account-summary" th:each="summary : ${dashboard.accountSummaries}">
                     <div><h3 th:text="${summary.title}">Account Group</h3>
-                        <a class="text-action" th:href="@{${summary.url}}" th:text="|View ${summary.title}|">View Accounts</a></div>
+                        <a class="text-action" th:href="@{${summary.url}}" th:text="${dashboard.roleName == 'System Admin' ? 'Quản lý' : 'View'} + ' ' + ${summary.title}">View Accounts</a></div>
                     <dl class="dashboard-account-counts">
-                        <div><dt>Total</dt><dd th:text="${summary.total}">0</dd></div>
-                        <div><dt>Active</dt><dd th:text="${summary.active}">0</dd></div>
-                        <div><dt>Inactive</dt><dd th:text="${summary.inactive}">0</dd></div>
-                        <div><dt>Blocked</dt><dd th:text="${summary.blocked}">0</dd></div>
+                        <div><dt>Tổng số</dt><dd th:text="${summary.total}">0</dd></div>
+                        <div><dt>Hoạt động</dt><dd th:text="${summary.active}">0</dd></div>
+                        <div><dt>Vô hiệu hóa</dt><dd th:text="${summary.inactive}">0</dd></div>
+                        <div><dt>Bị khóa</dt><dd th:text="${summary.blocked}">0</dd></div>
+                    </dl>
+                </article>
+            </section>
+
+            <section class="dashboard-accounts dashboard-section" th:if="${dashboard.roleName == 'System Admin' and dashboard.departments != null}" aria-labelledby="dashboard-departments-title">
+                <h2 id="dashboard-departments-title">Phòng ban</h2>
+                <article class="dashboard-account-summary"><div><h3>Cơ cấu phòng ban</h3>
+                    <a class="text-action" th:href="@{/admin/departments}">Quản lý phòng ban</a></div>
+                    <dl class="dashboard-account-counts">
+                        <div><dt>Tổng số</dt><dd th:text="${dashboard.departments.total}"></dd></div>
+                        <div><dt>Hoạt động</dt><dd th:text="${dashboard.departments.active}"></dd></div>
+                        <div><dt>Vô hiệu hóa</dt><dd th:text="${dashboard.departments.inactive}"></dd></div>
                     </dl>
                 </article>
             </section>
@@ -47,7 +71,7 @@
 
             <section class="dashboard-section" th:if="${not #lists.isEmpty(dashboard.breakdowns)}"
                      th:attr="aria-label=${dashboard.roleName == 'System Admin' ? 'System Health' : 'Status Breakdown'}">
-                <h2 class="dashboard-section-title" th:if="${dashboard.roleName == 'System Admin'}">System Health</h2>
+                <h2 class="dashboard-section-title" th:if="${dashboard.roleName == 'System Admin'}">Tình trạng hệ thống</h2>
                 <div class="dashboard-grid dashboard-grid-wide">
                     <article class="dashboard-card" th:each="breakdown : ${dashboard.breakdowns}">
                         <h2 th:text="${breakdown.title}">Status</h2>
@@ -82,7 +106,7 @@
             </section>
 
             <section class="dashboard-section" th:if="${not #lists.isEmpty(dashboard.shortcuts)}" aria-label="Shortcuts">
-                <h2 class="dashboard-section-title">Shortcuts</h2>
+                <h2 class="dashboard-section-title" th:text="${dashboard.roleName == 'System Admin' ? 'Truy cập nhanh' : 'Shortcuts'}">Shortcuts</h2>
                 <div class="dashboard-shortcuts">
                     <th:block th:each="shortcut : ${dashboard.shortcuts}">
                         <a class="text-action" th:if="${shortcut.url != null}"
@@ -95,7 +119,7 @@
 
             <section class="dashboard-section" th:if="${not #lists.isEmpty(dashboard.unavailable)}"
                      aria-label="Features Without a Datasource">
-                <h2 class="dashboard-section-title">Unavailable Features</h2>
+                <h2 class="dashboard-section-title" th:text="${dashboard.roleName == 'System Admin' ? 'Chưa khả dụng' : 'Unavailable Features'}">Unavailable Features</h2>
                 <div class="dashboard-grid dashboard-grid-wide">
                     <article class="dashboard-card dashboard-unavailable" th:each="item : ${dashboard.unavailable}">
                         <h3 th:text="${item.title}">Feature</h3>
@@ -103,6 +127,7 @@
                     </article>
                 </div>
             </section>
+            </th:block>
         </main>
     </div>
 </div>

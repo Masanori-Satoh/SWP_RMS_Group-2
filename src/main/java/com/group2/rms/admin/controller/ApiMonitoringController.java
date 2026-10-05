@@ -1,5 +1,6 @@
 package com.group2.rms.admin.controller;
 
+import com.group2.rms.admin.dto.ProbeOutcomeResponse;
 import com.group2.rms.admin.service.ApiMonitoringService;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.stereotype.Controller;
@@ -28,7 +29,7 @@ public class ApiMonitoringController {
 
     @PostMapping("/probe/internal")
     public String probeInternal(HttpServletRequest request, RedirectAttributes redirectAttributes) {
-        ApiMonitoringService.ProbeOutcome outcome = monitoring.probeInternal(request);
+        ProbeOutcomeResponse  outcome = monitoring.probeInternal(request);
         String message = outcome.detail() + " • " + outcome.elapsedMs() + " ms";
         redirectAttributes.addFlashAttribute(outcome.success() ? "successMessage" : "failureMessage", message);
         return "redirect:/admin/api-monitoring";

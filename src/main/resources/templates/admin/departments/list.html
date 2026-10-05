@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/head :: interfaceHead('Quản lý phòng ban', ~{::pageStyles})}">
+    <th:block th:fragment="pageStyles"><link rel="stylesheet" th:href="@{/css/account-list.css}"></th:block>
+</head>
+<body class="rms-app">
+<div class="page-wrapper">
+    <aside th:replace="~{fragments/sidebar :: workspace('departments', 'System Admin')}"></aside>
+    <div class="main-content">
+        <header th:replace="~{fragments/workspace-header :: header('System Admin', null)}"></header>
+        <main id="main" class="page-content" tabindex="-1"><div class="container">
+            <div class="account-heading"><div>
+                <a class="account-back-link" th:href="@{/dashboard}">Tổng quan</a><span aria-hidden="true"> / </span><span>Phòng ban</span>
+                <h1>Quản lý phòng ban</h1><p>Tổ chức phòng ban và quản lý trạng thái hoạt động.</p>
+            </div><a class="btn btn-primary" th:href="@{/admin/departments/new}">Tạo phòng ban</a></div>
+            <div class="alert alert-success" role="status" th:if="${successMessage}" th:text="${successMessage}"></div>
+            <section class="workspace-section account-card" aria-labelledby="departments-title">
+                <div class="account-section-heading"><h2 id="departments-title">Danh sách phòng ban</h2>
+                    <p th:text="|${departments.totalElements} phòng ban phù hợp|">0 phòng ban phù hợp</p></div>
+                <form class="account-filters department-filters" th:action="@{/admin/departments}" method="get" aria-label="Bộ lọc phòng ban">
+                    <div class="account-search-field"><label class="form-label" for="department-search">Tìm kiếm</label>
+                        <input class="form-control" id="department-search" type="search" name="search" maxlength="100" th:value="${search}" placeholder="Tên phòng ban"></div>
+                    <div><label class="form-label" for="department-status">Trạng thái</label>
+                        <select class="form-control" id="department-status" name="status">
+                            <option value="">Tất cả trạng thái</option><option value="Active" th:selected="${selectedStatus == 'Active'}">Đang hoạt động</option>
+                            <option value="Inactive" th:selected="${selectedStatus == 'Inactive'}">Đã vô hiệu hóa</option>
+                        </select></div>
+                    <div class="account-filter-actions"><button class="btn btn-primary" type="submit">Lọc</button>
+                        <a class="btn btn-secondary" th:href="@{/admin/departments}">Xóa bộ lọc</a></div>
+                </form>
+                <p class="table-scroll-note">Cuộn ngang để xem đầy đủ thông tin và thao tác.</p>
+                <div class="table-wrapper" tabindex="0" role="region" aria-labelledby="departments-title">
+                    <table class="table account-table department-table"><caption class="sr-only">Phòng ban, trưởng phòng và trạng thái hoạt động.</caption>
+                        <thead><tr><th scope="col">Tên phòng ban</th><th scope="col">Trưởng phòng</th><th scope="col">Trạng thái</th><th scope="col">Thao tác</th></tr></thead>
+                        <tbody><tr th:each="department : ${departments.content}">
+                            <td class="account-name" th:text="${department.name}">Phòng ban</td>
+                            <td><span th:text="${department.managerName != null ? department.managerName : 'Chưa phân công'}"></span>
+                                <span class="department-manager" th:if="${department.managerUsername != null}" th:text="${department.managerUsername}"></span></td>
+                            <td><span class="badge" th:classappend="${department.status == 'Active' ? 'badge-success' : 'badge-secondary'}"
+                                      th:text="${department.status == 'Active' ? 'Đang hoạt động' : 'Đã vô hiệu hóa'}"></span></td>
+                            <td class="account-actions">
+                                <a class="btn btn-secondary btn-sm" th:href="@{/admin/departments/{id}/edit(id=${department.id})}" th:attr="aria-label=|Sửa phòng ban ${department.name}|">Sửa</a>
+                                <th:block th:if="${department.status == 'Active'}">
+                                    <form th:replace="~{fragments/status-actions :: action(@{/admin/departments/{id}/deactivate(id=${department.id})}, 'Vô hiệu hóa phòng ban ' + ${department.name}, 'Phòng ban sẽ bị vô hiệu hóa. Tài khoản và yêu cầu tuyển dụng liên quan được giữ nguyên.', 'Vô hiệu hóa', true)}"></form>
+                                </th:block>
+                                <th:block th:if="${department.status == 'Inactive'}">
+                                    <form th:replace="~{fragments/status-actions :: action(@{/admin/departments/{id}/activate(id=${department.id})}, 'Kích hoạt lại phòng ban ' + ${department.name}, 'Phòng ban sẽ hoạt động trở lại và có thể được chọn khi tạo hoặc chuyển tài khoản nội bộ.', 'Kích hoạt lại', false)}"></form>
+                                </th:block>
+                            </td>
+                        </tr><tr th:if="${departments.empty}"><td colspan="4" class="account-empty">Không tìm thấy phòng ban phù hợp. Hãy thử thay đổi bộ lọc.</td></tr></tbody>
+                    </table>
+                </div>
+                <div class="account-pagination" th:if="${departments.totalPages > 1}"><span>Trang <strong th:text="${departments.number + 1}"></strong>/<span th:text="${departments.totalPages}"></span></span>
+                    <nav class="pagination" aria-label="Phân trang phòng ban">
+                        <a class="btn btn-secondary btn-sm" th:if="${departments.hasPrevious()}" th:href="@{/admin/departments(search=${search},status=${selectedStatus},page=${departments.number - 1})}">Trước</a>
+                        <a class="btn btn-secondary btn-sm" th:if="${departments.hasNext()}" th:href="@{/admin/departments(search=${search},status=${selectedStatus},page=${departments.number + 1})}">Sau</a>
+                    </nav>
+                </div>
+            </section>
+        </div></main>
+    </div>
+</div>
+<dialog th:replace="~{fragments/status-actions :: confirmation}"></dialog>
+<script defer th:src="@{/js/status-confirmation.js}"></script>
+</body></html>

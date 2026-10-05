@@ -1,0 +1,149 @@
+<!doctype html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org"><body>
+<div th:fragment="panel(dashboard)" class="candidate-dashboard container" th:with="panel=${dashboard.candidate}">
+    <div class="candidate-heading">
+        <div>
+            <h1>Tổng quan ứng viên</h1>
+            <p class="dashboard-scope" th:text="${dashboard.scope}">Theo dõi hành trình ứng tuyển của bạn.</p>
+        </div>
+        <a class="btn btn-primary" th:href="@{/jobs}">Xem vị trí đang tuyển</a>
+    </div>
+
+    <section aria-label="Tổng quan hồ sơ" class="candidate-summary">
+        <article th:each="metric, state : ${dashboard.metrics}">
+            <h2 th:text="${metric.title}">Đơn ứng tuyển</h2>
+            <p class="dashboard-value" th:text="${metric.value}">0</p>
+            <p class="dashboard-detail" th:text="${metric.detail}">Hồ sơ của bạn</p>
+            <a class="text-action" th:href="${state.index == 0 ? '#applications' : (state.index == 1 ? '#interviews' : '#offers')}"
+               th:text="${state.index == 0 ? 'Xem đơn ứng tuyển' : (state.index == 1 ? 'Xem lịch phỏng vấn' : 'Xem thư mời')}">Xem chi tiết</a>
+        </article>
+    </section>
+
+    <section id="applications" class="candidate-section" aria-labelledby="candidate-applications-title" data-candidate-filter="applications">
+        <div class="candidate-section-heading">
+            <div><h2 id="candidate-applications-title">Đơn ứng tuyển của tôi</h2>
+                <p class="dashboard-detail">Theo dõi trạng thái của 20 hồ sơ mới nhất bạn đã nộp.</p></div>
+            <span class="candidate-result-count" data-result-count role="status" aria-live="polite" aria-atomic="true"
+                  th:text="|${#lists.size(panel.recentApplications)} hồ sơ hiển thị|">0 hồ sơ hiển thị</span>
+        </div>
+        <div th:if="${#lists.isEmpty(panel.recentApplications)}" class="candidate-empty">
+            <h3>Bạn chưa có đơn ứng tuyển</h3>
+            <p>Khám phá các vị trí đang tuyển để tìm cơ hội phù hợp với bạn.</p>
+            <a class="text-action" th:href="@{/jobs}">Tìm vị trí phù hợp</a>
+        </div>
+        <th:block th:unless="${#lists.isEmpty(panel.recentApplications)}">
+            <div class="candidate-filters" data-filter-controls hidden>
+                <div class="form-group"><label class="form-label" for="application-search">Tìm hồ sơ</label>
+                    <input id="application-search" class="form-control" type="search" placeholder="Tên vị trí đã ứng tuyển..." data-filter-keyword></div>
+                <div class="form-group"><label class="form-label" for="application-status">Trạng thái tuyển dụng</label>
+                    <select id="application-status" class="form-control" data-filter-status><option value="">Tất cả trạng thái</option>
+                        <option th:each="status : ${dashboard.breakdowns[0].statuses}" th:value="${status.status}" th:text="${status.status}"></option>
+                    </select></div>
+                <button class="text-action" type="button" data-filter-clear hidden>Xóa bộ lọc</button>
+            </div>
+            <p class="table-scroll-note">Vuốt ngang hoặc dùng phím mũi tên để xem đầy đủ bảng.</p>
+            <div class="table-wrapper" tabindex="0" role="region" aria-labelledby="candidate-applications-title">
+                <table class="table candidate-table"><caption class="sr-only">Các đơn ứng tuyển của tài khoản đang đăng nhập</caption>
+                    <thead><tr><th scope="col">Vị trí ứng tuyển</th><th scope="col">Ngày nộp</th><th scope="col">Trạng thái tuyển dụng</th><th scope="col">Thao tác</th></tr></thead>
+                    <tbody><tr th:each="item : ${panel.recentApplications}" data-filter-row th:attr="data-title=${item.jobTitle},data-status=${item.status}">
+                        <th scope="row" th:text="${item.jobTitle}">Tên vị trí</th>
+                        <td><time th:datetime="${item.appliedDate}" th:text="${#temporals.format(item.appliedDate, 'dd/MM/yyyy')}"></time></td>
+                        <td><span class="badge badge-secondary" th:text="${item.status}">Đã nộp hồ sơ</span></td>
+                        <td><button class="btn btn-secondary btn-sm" type="button" disabled aria-describedby="withdraw-unavailable">Rút đơn</button></td>
+                    </tr></tbody>
+                </table>
+            </div>
+            <p class="candidate-filter-empty" data-filter-empty hidden>Không có hồ sơ phù hợp. Thử từ khóa khác hoặc xóa bộ lọc.</p>
+            <p id="withdraw-unavailable" class="candidate-feature-note">Rút đơn chưa khả dụng. Bạn vẫn có thể theo dõi trạng thái hồ sơ tại đây.</p>
+        </th:block>
+    </section>
+
+    <div class="candidate-status-grid" aria-label="Tóm tắt trạng thái">
+        <section th:each="breakdown : ${dashboard.breakdowns}" class="candidate-status-section">
+            <h2 th:text="${breakdown.title}">Trạng thái hồ sơ</h2>
+            <p class="dashboard-empty" th:if="${#lists.isEmpty(breakdown.statuses)}">Chưa có thông tin để thống kê.</p>
+            <ul class="dashboard-status-list" th:unless="${#lists.isEmpty(breakdown.statuses)}">
+                <li th:each="status : ${breakdown.statuses}"><span th:text="${status.status}"></span><strong th:text="${status.count}"></strong></li>
+            </ul>
+        </section>
+    </div>
+
+    <section id="interviews" class="candidate-section" aria-labelledby="candidate-interviews-title">
+        <div class="candidate-section-heading"><div><h2 id="candidate-interviews-title">Lịch phỏng vấn sắp tới</h2>
+            <p class="dashboard-detail">10 lịch gần nhất đã được hẹn hoặc đổi lịch.</p></div></div>
+        <div th:if="${#lists.isEmpty(panel.upcomingInterviews)}" class="candidate-empty">
+            <h3>Bạn chưa có lịch phỏng vấn sắp tới</h3><p>Lịch hẹn sẽ xuất hiện tại đây khi bộ phận tuyển dụng sắp xếp phỏng vấn.</p>
+        </div>
+        <th:block th:unless="${#lists.isEmpty(panel.upcomingInterviews)}">
+            <p class="table-scroll-note">Vuốt ngang hoặc dùng phím mũi tên để xem đầy đủ bảng.</p>
+            <div class="table-wrapper" tabindex="0" role="region" aria-labelledby="candidate-interviews-title">
+                <table class="table candidate-table"><caption class="sr-only">Lịch phỏng vấn sắp tới của bạn</caption>
+                    <thead><tr><th scope="col">Vị trí</th><th scope="col">Thời gian</th><th scope="col">Hình thức</th><th scope="col">Địa điểm / Tham gia</th></tr></thead>
+                    <tbody><tr th:each="interview : ${panel.upcomingInterviews}">
+                        <th scope="row" th:text="${interview.jobTitle}"></th>
+                        <td class="candidate-date"><time th:datetime="${interview.startTime}" th:text="${#temporals.format(interview.startTime, 'dd/MM/yyyy HH:mm')}"></time>
+                            <span th:if="${interview.endTime != null}" th:text="|Đến ${#temporals.format(interview.endTime, 'dd/MM/yyyy HH:mm')}|"></span></td>
+                        <td th:text="${interview.formatLabel}"></td>
+                        <td><a class="text-action" th:if="${interview.meetingUrl != null}" th:href="${interview.meetingUrl}" target="_blank" rel="noopener noreferrer">Tham gia phỏng vấn<span class="sr-only"> (mở tab mới)</span></a>
+                            <span th:if="${interview.meetingUrl == null}" th:text="${interview.location == null or #strings.isEmpty(interview.location) ? 'Bộ phận tuyển dụng sẽ cập nhật thông tin tham gia.' : interview.location}"></span></td>
+                    </tr></tbody>
+                </table>
+            </div>
+        </th:block>
+    </section>
+
+    <section id="offers" class="candidate-section" aria-labelledby="candidate-offers-title" data-candidate-filter="offers">
+        <div class="candidate-section-heading"><div><h2 id="candidate-offers-title">Thư mời nhận việc</h2>
+            <p class="dashboard-detail">Thông tin đãi ngộ trong các thư mời chính thức đã gửi cho bạn, tối đa 20 thư mời gần nhất.</p></div>
+            <span class="candidate-result-count" data-result-count role="status" aria-live="polite" aria-atomic="true" th:text="|${#lists.size(panel.offers)} thư mời hiển thị|">0 thư mời hiển thị</span></div>
+        <div th:if="${#lists.isEmpty(panel.offers)}" class="candidate-empty"><h3>Bạn chưa nhận được thư mời</h3><p>Khi có thư mời chính thức, bạn có thể xem thông tin lương và ngày bắt đầu tại đây.</p></div>
+        <th:block th:unless="${#lists.isEmpty(panel.offers)}">
+            <div class="candidate-filters" data-filter-controls hidden>
+                <div class="form-group"><label class="form-label" for="offer-search">Tìm thư mời</label><input id="offer-search" class="form-control" type="search" placeholder="Tên vị trí trong thư mời..." data-filter-keyword></div>
+                <div class="form-group"><label class="form-label" for="offer-status">Trạng thái thư mời</label><select id="offer-status" class="form-control" data-filter-status><option value="">Tất cả trạng thái</option>
+                    <option th:each="status : ${dashboard.breakdowns[1].statuses}" th:value="${status.status}" th:text="${status.status}"></option></select></div>
+                <button class="text-action" type="button" data-filter-clear hidden>Xóa bộ lọc</button>
+            </div>
+            <div class="candidate-offers">
+                <article th:each="offer : ${panel.offers}" class="candidate-offer" data-filter-row th:attr="data-title=${offer.jobTitle},data-status=${offer.statusLabel}">
+                    <div class="candidate-offer-heading"><h3 th:text="${offer.jobTitle}"></h3><span class="badge badge-success" th:text="${offer.statusLabel}"></span></div>
+                    <dl class="candidate-offer-summary">
+                        <div><dt>Lương chính thức / tháng</dt><dd th:text="|${#numbers.formatDecimal(offer.salary, 1, 'POINT', 0, 'COMMA')} ₫|"></dd></div>
+                        <div><dt>Ngày bắt đầu dự kiến</dt><dd th:text="${offer.startDate == null ? 'Chưa xác định' : #temporals.format(offer.startDate, 'dd/MM/yyyy')}"></dd></div>
+                    </dl>
+                    <details class="candidate-offer-details"><summary>Xem chi tiết thư mời</summary>
+                        <dl class="candidate-detail-list"><div><dt>Lương thử việc / tháng</dt><dd th:text="${offer.probationSalary == null ? 'Chưa có thông tin' : #numbers.formatDecimal(offer.probationSalary, 1, 'POINT', 0, 'COMMA') + ' ₫'}"></dd></div>
+                            <div><dt>Địa điểm làm việc</dt><dd th:text="${offer.workLocation == null or #strings.isEmpty(offer.workLocation) ? 'Chưa có thông tin' : offer.workLocation}"></dd></div>
+                            <div><dt>Quyền lợi</dt><dd class="candidate-preserve-text" th:text="${offer.benefits == null or #strings.isEmpty(offer.benefits) ? 'Chưa có thông tin' : offer.benefits}"></dd></div></dl>
+                    </details>
+                    <div class="candidate-offer-actions" aria-describedby="offer-actions-unavailable"><button class="btn btn-secondary" type="button" disabled>Chấp nhận</button><button class="btn btn-secondary" type="button" disabled>Từ chối</button><button class="btn btn-secondary" type="button" disabled>Thương lượng</button></div>
+                </article>
+            </div>
+            <p class="candidate-filter-empty" data-filter-empty hidden>Không có thư mời phù hợp. Thử từ khóa khác hoặc xóa bộ lọc.</p>
+            <p id="offer-actions-unavailable" class="candidate-feature-note">Chức năng phản hồi và thương lượng thư mời chưa khả dụng trên hệ thống.</p>
+        </th:block>
+    </section>
+
+    <div class="candidate-secondary-grid">
+        <section id="notifications" class="candidate-section" aria-labelledby="candidate-notifications-title">
+            <div class="candidate-section-heading"><h2 id="candidate-notifications-title">Thông báo</h2><span class="badge badge-secondary">Chưa khả dụng</span></div>
+            <p class="dashboard-detail">Hệ thống chưa hỗ trợ thông báo và nhắc nhở cá nhân. Bạn có thể theo dõi lịch phỏng vấn và thư mời ở các mục bên trên.</p>
+            <button class="btn btn-secondary" type="button" disabled>Thêm nhắc nhở cá nhân</button>
+        </section>
+        <section id="profile" class="candidate-section" aria-labelledby="candidate-profile-title">
+            <div class="candidate-section-heading"><h2 id="candidate-profile-title">Hồ sơ của tôi</h2><span class="badge badge-secondary">Chỉ xem</span></div>
+            <dl class="candidate-detail-list"><div><dt>Họ và tên</dt><dd th:text="${panel.profile.fullName}"></dd></div>
+                <div><dt>Email</dt><dd th:text="${panel.profile.email}"></dd></div><div><dt>Vai trò</dt><dd>Ứng viên</dd></div>
+                <div><dt>Phòng ban</dt><dd th:text="${panel.profile.departmentName == null ? 'Không áp dụng' : panel.profile.departmentName}"></dd></div></dl>
+            <div class="candidate-offer-actions"><button class="btn btn-secondary" type="button" disabled aria-describedby="profile-edit-unavailable">Lưu hồ sơ</button><button class="btn btn-secondary" type="button" disabled aria-describedby="profile-edit-unavailable">Đổi mật khẩu</button></div>
+            <p id="profile-edit-unavailable" class="candidate-feature-note">Chỉnh sửa hồ sơ và đổi mật khẩu từ trang này chưa khả dụng.</p>
+        </section>
+    </div>
+
+    <dialog class="candidate-logout-dialog" id="candidate-logout-dialog" aria-labelledby="candidate-logout-title" aria-describedby="candidate-logout-description">
+        <h2 id="candidate-logout-title">Đăng xuất khỏi hệ thống?</h2>
+        <p id="candidate-logout-description">Bạn có thể đăng nhập lại để tiếp tục theo dõi hồ sơ ứng tuyển.</p>
+        <div class="candidate-dialog-actions"><button class="btn btn-secondary" type="button" data-logout-cancel autofocus>Ở lại</button><button class="btn btn-primary" type="button" data-logout-confirm>Đăng xuất</button></div>
+    </dialog>
+</div>
+</body></html>

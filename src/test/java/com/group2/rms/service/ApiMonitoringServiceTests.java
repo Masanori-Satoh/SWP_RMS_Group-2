@@ -1,5 +1,6 @@
 package com.group2.rms.service;
 
+import com.group2.rms.admin.dto.MonitorRowResponse;
 import com.group2.rms.admin.service.ApiMonitoringService;
 import com.group2.rms.admin.service.HttpProbeTransport;
 import jakarta.servlet.http.HttpServletRequest;
@@ -25,9 +26,12 @@ import static org.mockito.Mockito.when;
 @ExtendWith(MockitoExtension.class)
 class ApiMonitoringServiceTests {
 
-    @Mock private HttpProbeTransport transport;
-    @Mock private HttpServletRequest request;
-    @Mock private HttpSession session;
+    @Mock
+    private HttpProbeTransport transport;
+    @Mock
+    private HttpServletRequest request;
+    @Mock
+    private HttpSession session;
 
     private ApiMonitoringService monitoring;
     private URI internalUrl;
@@ -63,7 +67,7 @@ class ApiMonitoringServiceTests {
         assertEquals(50, internal.errorRatePercent());
         assertEquals(1, internal.recentErrors());
         assertTrue(internal.averageResponseMs() >= 0);
-        assertTrue(monitoring.rows().stream().skip(1).noneMatch(ApiMonitoringService.MonitorRow::canProbe));
+        assertTrue(monitoring.rows().stream().skip(1).noneMatch(MonitorRowResponse::canProbe));
     }
 
     @Test

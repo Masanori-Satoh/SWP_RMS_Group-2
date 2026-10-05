@@ -83,7 +83,7 @@ public class AccountManagementService {
         String phone = optional(command.phoneNumber());
         validatePassword(command.password());
         Role role = findRole(command.roleId());
-        Department department = findDepartment(command.departmentId(), role);
+        Department department = findDepartment(command.departmentId(), role, null);
         checkUsernameAvailable(username, null);
         checkEmailAvailable(email, null);
         User user = users.saveAndFlush(User.builder()
@@ -113,7 +113,8 @@ public class AccountManagementService {
         String fullName = required(command.fullName(), "fullName", "Enter a full name.");
         String email = required(command.email(), "email", "Enter an email address.");
         String phone = optional(command.phoneNumber());
-        Department department = findDepartment(command.departmentId(), role);
+        Department department = findDepartment(command.departmentId(), role,
+                user.getDepartment() == null ? null : user.getDepartment().getDepartmentId());
         if (command.accountStatus() == null || !STATUSES.contains(command.accountStatus())) {
             throw new AccountFieldException("accountStatus", "Invalid account status.");
         }
@@ -148,7 +149,7 @@ public class AccountManagementService {
         return role;
     }
 
-    private Department findDepartment(Integer departmentId, Role role) {
+    private Department findDepartment(Integer departmentId, Role role, Integer currentDepartmentId) {
         if (isCandidate(role) && departmentId != null) {
             throw new AccountFieldException("departmentId", "Candidate accounts do not belong to internal departments.");
         }
@@ -158,8 +159,12 @@ public class AccountManagementService {
             }
             return null;
         }
-        return departments.findById(departmentId)
+        Department department = departments.findById(departmentId)
                 .orElseThrow(() -> new AccountFieldException("departmentId", "Invalid department."));
+        if (!"Active".equals(department.getDepartmentStatus()) && !departmentId.equals(currentDepartmentId)) {
+            throw new AccountFieldException("departmentId", "Không thể gán tài khoản vào phòng ban đã vô hiệu hóa.");
+        }
+        return department;
     }
 
     private void checkUsernameAvailable(String username, Integer currentId) {

@@ -2,8 +2,8 @@ package com.group2.rms.service;
 
 import com.group2.rms.candidate.repository.CandidateRepository;
 import com.group2.rms.core.security.RoleAuthorities;
-import com.group2.rms.dashboard.repository.DashboardMetricsRepository;
-import com.group2.rms.dashboard.service.DashboardService;
+import com.group2.rms.dashboard.DashboardMetricsRepository;
+import com.group2.rms.dashboard.DashboardService;
 import com.group2.rms.user.service.AccountListService;
 import com.group2.rms.user.repository.UserRepository;
 import org.junit.jupiter.api.Test;
