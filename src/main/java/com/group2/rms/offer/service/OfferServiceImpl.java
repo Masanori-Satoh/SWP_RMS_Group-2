@@ -53,16 +53,18 @@ public class OfferServiceImpl implements OfferService {
     /**
      * Quy tắc GBR-07:
      * NHÓM A: Được phép tạo đè / cập nhật lại (Editable / Overridable States).
+     * Chỉ duy nhất trạng thái Draft.
      */
-    public static final Set<String> OVERRIDABLE_STATUSES = Set.of(
-            "Draft", "Rejected", "Director_Rejected", "Negotiating", "Declined", "Canceled", "Voided");
+    public static final Set<String> OVERRIDABLE_STATUSES = Set.of("Draft");
 
     /**
      * Quy tắc GBR-07:
      * NHÓM B: Phải giữ nguyên - KHÔNG ĐƯỢC TẠO ĐÈ TỰ Ý (Locked / Finalized States).
+     * Tất cả các trạng thái còn lại đều thuộc Nhóm B (không cho phép ghi đè).
      */
     public static final Set<String> LOCKED_STATUSES = Set.of(
-            "Pending_Director", "Approved", "Director_Approved", "Sent_Candidate", "Accepted");
+            "Pending_Director", "Approved", "Director_Approved", "Sent_Candidate", "Accepted",
+            "Rejected", "Director_Rejected", "Negotiating", "Declined", "Canceled", "Voided");
 
     public static boolean isOverridableStatus(String status) {
         if (status == null) return true;
@@ -396,7 +398,7 @@ public class OfferServiceImpl implements OfferService {
 
         if (!canEdit) {
             throw new BaseBusinessException(
-                    "Theo quy tắc GBR-07, chỉ được phép cập nhật Offer khi ở trạng thái thuộc Nhóm A (Draft, Rejected, Negotiating, Declined). Trạng thái hiện tại: "
+                    "Theo quy tắc GBR-07, chỉ được phép cập nhật Offer khi ở trạng thái thuộc Nhóm A (Draft). Trạng thái hiện tại: "
                             + currentStatus,
                     "OFFER_STATUS_INVALID");
         }

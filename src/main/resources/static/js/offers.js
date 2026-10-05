@@ -31,12 +31,36 @@ function calculateStatsFromTable() {
     if (elAccepted) elAccepted.textContent = accepted;
 }
 
-// Bộ lọc và tìm kiếm client-side nhanh
+// Bộ lọc, tìm kiếm và sắp xếp client-side nhanh
 function handleFilterSearch() {
     const search = (document.getElementById('searchInput')?.value || '').toLowerCase().trim();
     const status = document.getElementById('statusFilter')?.value || 'ALL';
+    const timeSort = document.getElementById('timeSortFilter')?.value || 'DEFAULT';
+    const tbody = document.getElementById('offersTableBody');
     const rows = document.querySelectorAll('#offersTableBody tr[data-status]');
     let count = 0;
+
+    // Sắp xếp các dòng theo thời gian nếu có chọn
+    if (tbody && rows.length > 0) {
+        const rowArray = Array.from(rows);
+        rowArray.sort((a, b) => {
+            const timeA = a.getAttribute('data-created') || '';
+            const timeB = b.getAttribute('data-created') || '';
+            const dateA = timeA ? new Date(timeA).getTime() : 0;
+            const dateB = timeB ? new Date(timeB).getTime() : 0;
+
+            if (timeSort === 'EARLIEST') {
+                return dateA - dateB; // Sớm nhất lên trước (tăng dần theo ngày)
+            } else if (timeSort === 'LATEST') {
+                return dateB - dateA; // Muộn nhất lên trước (giảm dần theo ngày)
+            } else {
+                const idA = parseInt(a.getAttribute('data-id') || '0', 10);
+                const idB = parseInt(b.getAttribute('data-id') || '0', 10);
+                return idA - idB; // Mặc định theo OfferId
+            }
+        });
+        rowArray.forEach(r => tbody.appendChild(r));
+    }
 
     rows.forEach(r => {
         const rStatus = r.getAttribute('data-status');
@@ -492,18 +516,6 @@ function renderDetailModalHtml(d) {
                 <i class="fa-solid fa-paper-plane" style="margin-right:6px;"></i> Phát Hành Offer Letter Tới Ứng Viên
             </button>
         `;
-    } else if (d.offerStatus === 'Director_Rejected' || d.offerStatus === 'Rejected') {
-        actionButtonsHtml += `
-            <button type="button" class="btn btn-primary" onclick="closeModal('detailOfferModal'); openEditOfferModal(${d.offerId});">
-                <i class="fa-solid fa-pen-to-square" style="margin-right:6px;"></i> Chỉnh Sửa & Trình Lại
-            </button>
-        `;
-    } else if (d.offerStatus === 'Negotiating' || d.offerStatus === 'Declined') {
-        actionButtonsHtml += `
-            <button type="button" class="btn btn-primary" onclick="closeModal('detailOfferModal'); openEditOfferModal(${d.offerId});">
-                <i class="fa-solid fa-pen-to-square" style="margin-right:6px;"></i> Điều Chỉnh & Trình Duyệt Lại (GBR-07)
-            </button>
-        `;
     }
 
     footer.innerHTML = actionButtonsHtml;
@@ -518,6 +530,11 @@ function openEditOfferModal(offerId) {
         .then(res => {
             if (!res.success) { showToast(res.message, 'danger'); return; }
             const d = res.data;
+
+            if (d.offerStatus !== 'Draft') {
+                showToast('Chỉ duy nhất đề xuất ở trạng thái Bản thảo (Draft) mới được phép chỉnh sửa.', 'warning');
+                return;
+            }
 
             document.getElementById('editOfferId').value = d.offerId;
             document.getElementById('editModalTitle').textContent = `Chỉnh Sửa Offer Proposal ${d.offerId}`;

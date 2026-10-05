@@ -32,12 +32,12 @@ Bao gồm **56 test executions** kiểm thử độc lập với Mockito và JUn
   * Cả hai đều thiếu $\rightarrow$ Fallback về giá trị mặc định của hệ thống (`Trụ sở chính Mộc RMS`).
 * **Kiểm thử Quy tắc Single Active Offer (`GBR-07` Toàn diện):**
   * **Luồng Tạo mới (`createOfferByHr`)**:
-    * Đơn ứng tuyển đang có Offer thuộc **Nhóm B (Locked - 5 trạng thái)**: `Pending_Director`, `Approved`, `Director_Approved`, `Sent_Candidate`, `Accepted` $\rightarrow$ Chặn hoàn toàn, ném mã lỗi `OFFER_LOCKED_STATE`, không lưu xuống DB (`never().save()`).
-    * Đơn ứng tuyển đang có Offer thuộc **Nhóm A (Overridable - 7 trạng thái)**: `Draft`, `Rejected`, `Director_Rejected`, `Negotiating`, `Declined`, `Canceled`, `Voided` $\rightarrow$ Ghi đè in-place an toàn giữ nguyên `offerId`, triệt tiêu lỗi xung đột khóa duy nhất `UQ_OfferProposal_Application UNIQUE`.
+    * Đơn ứng tuyển đang có Offer thuộc **Nhóm B (Locked - 11 trạng thái)**: `Pending_Director`, `Approved`, `Director_Approved`, `Sent_Candidate`, `Accepted`, `Rejected`, `Director_Rejected`, `Negotiating`, `Declined`, `Canceled`, `Voided` $\rightarrow$ Chặn hoàn toàn, ném mã lỗi `OFFER_LOCKED_STATE`, không lưu xuống DB (`never().save()`).
+    * Đơn ứng tuyển đang có Offer thuộc **Nhóm A (Overridable - Chỉ duy nhất 1 trạng thái)**: `Draft` $\rightarrow$ Ghi đè in-place an toàn giữ nguyên `offerId`, triệt tiêu lỗi xung đột khóa duy nhất `UQ_OfferProposal_Application UNIQUE`.
   * **Luồng Cập nhật (`updateOfferByHr`)**:
-    * Offer đang ở **Nhóm A (Editable - 7 trạng thái)** $\rightarrow$ Cho phép cập nhật thành công và lưu DB.
-    * Offer đang ở **Nhóm B (Non-editable - 5 trạng thái)** $\rightarrow$ Chặn cập nhật, ném mã lỗi `OFFER_STATUS_INVALID`, không lưu DB (`never().save()`).
-  * **Bộ lọc ứng viên đỗ (`getPassedCandidatesForOffer`)**: Tự động loại trừ toàn bộ ứng viên đang có Offer Nhóm B, giữ lại Nhóm A và ứng viên chưa có Offer.
+    * Offer đang ở **Nhóm A (Editable - Chỉ `Draft`)** $\rightarrow$ Cho phép cập nhật thành công và lưu DB.
+    * Offer đang ở **Nhóm B (Non-editable - 11 trạng thái)** $\rightarrow$ Chặn cập nhật, ném mã lỗi `OFFER_STATUS_INVALID`, không lưu DB (`never().save()`).
+  * **Bộ lọc ứng viên đỗ (`getPassedCandidatesForOffer`)**: Tự động loại trừ toàn bộ ứng viên đang có Offer Nhóm B, chỉ giữ lại ứng viên chưa có Offer hoặc có Offer ở trạng thái `Draft` (Nhóm A).
 * **Kiểm thử Chu trình Vòng đời Offer (Offer Proposal Lifecycle):**
   * Tra cứu Offer theo ID và Application ID (tìm thấy vs không tìm thấy ném `ResourceNotFoundException`).
   * Lấy danh sách phân trang (toàn bộ trạng thái vs lọc theo trạng thái cụ thể).

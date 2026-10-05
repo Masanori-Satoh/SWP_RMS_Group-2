@@ -96,14 +96,21 @@
 
                         <select id="statusFilter" class="filter-select" onchange="handleFilterSearch()">
                             <option value="ALL">-- Tất cả trạng thái --</option>
-                            <option value="Draft">Bản thảo (Draft)</option>
-                            <option value="Pending_Director">Chờ Director duyệt (Pending_Director)</option>
-                            <option value="Director_Approved">Director đã duyệt (Approved)</option>
-                            <option value="Director_Rejected">Director từ chối (Rejected)</option>
-                            <option value="Sent_Candidate">Đã gửi ứng viên (Sent_Candidate)</option>
-                            <option value="Accepted">Ứng viên đồng ý (Accepted)</option>
-                            <option value="Declined">Ứng viên từ chối (Declined)</option>
-                            <option value="Negotiating">Đang đàm phán (Negotiating)</option>
+                            <option value="Draft">Bản thảo</option>
+                            <option value="Pending_Director">Chờ Director duyệt</option>
+                            <option value="Director_Approved">Director đã duyệt</option>
+                            <option value="Director_Rejected">Director từ chối</option>
+                            <option value="Sent_Candidate">Đã gửi ứng viên</option>
+                            <option value="Accepted">Ứng viên đồng ý</option>
+                            <option value="Declined">Ứng viên từ chối</option>
+                            <option value="Negotiating">Đang đàm phán</option>
+                        </select>
+
+                        <!-- Sắp xếp theo thời gian -->
+                        <select id="timeSortFilter" class="filter-select" onchange="handleFilterSearch()">
+                            <option value="DEFAULT">-- Sắp xếp theo thời gian --</option>
+                            <option value="EARLIEST">Sớm nhất</option>
+                            <option value="LATEST">Muộn nhất</option>
                         </select>
                     </div>
 
@@ -131,7 +138,7 @@
                                     Chưa có đề xuất Offer nào trong hệ thống.
                                 </td>
                             </tr>
-                            <tr th:each="o : ${offers}" th:attr="data-id=${o.offerId}, data-status=${o.offerStatus}, data-cand=${o.candidateName}, data-pos=${o.offeredPositionTitle}">
+                            <tr th:each="o : ${offers}" th:attr="data-id=${o.offerId}, data-status=${o.offerStatus}, data-cand=${o.candidateName}, data-pos=${o.offeredPositionTitle}, data-created=${o.createdAt != null ? o.createdAt.toString() : ''}">
                                 <td>
                                     <a href="javascript:void(0)" class="offer-id-link" th:onclick="'viewOfferDetail(' + ${o.offerId} + ')'" th:text="${o.offerId}">1</a>
                                 </td>
@@ -198,8 +205,8 @@
                                             <i class="fa-solid fa-paper-plane"></i>
                                         </button>
 
-                                        <!-- Sửa Offer (Chỉ khi thuộc Nhóm A: Draft, Rejected, Negotiating, Declined) -->
-                                        <button th:if="${o.offerStatus == 'Draft' or o.offerStatus == 'Director_Rejected' or o.offerStatus == 'Rejected' or o.offerStatus == 'Negotiating' or o.offerStatus == 'Declined'}"
+                                        <!-- Sửa Offer (Chỉ khi Draft) -->
+                                        <button th:if="${o.offerStatus == 'Draft'}"
                                                 class="btn-icon" title="Chỉnh sửa đề xuất"
                                                 th:onclick="'openEditOfferModal(' + ${o.offerId} + ')'">
                                             <i class="fa-solid fa-pen-to-square"></i>

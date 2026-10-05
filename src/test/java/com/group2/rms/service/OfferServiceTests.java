@@ -521,7 +521,7 @@ class OfferServiceTests {
     }
 
     @Test
-    @DisplayName("GBR-07 getPassedCandidatesForOffer: Loại bỏ ứng viên có Offer Nhóm B và giữ lại ứng viên Nhóm A hoặc chưa có Offer")
+    @DisplayName("GBR-07 getPassedCandidatesForOffer: Loại bỏ ứng viên có Offer Nhóm B và giữ lại ứng viên Nhóm A (Draft) hoặc chưa có Offer")
     void testGetPassedCandidatesForOffer_filtersGroupB_keepsGroupA() {
         // App 1: có offer Pending_Director (Nhóm B -> BỊ LOẠI)
         Application app1 = Application.builder().applicationId(1).build();
@@ -533,7 +533,7 @@ class OfferServiceTests {
         InterviewSchedule s2 = InterviewSchedule.builder().application(app2).build();
         InterviewFinalResult r2 = InterviewFinalResult.builder().finalResultId(2).interviewSchedule(s2).finalDecision("Passed").build();
 
-        // App 3: có offer Rejected (Nhóm A -> ĐƯỢC PHÉP HIỂN THỊ ĐỂ TẠO ĐÈ)
+        // App 3: có offer Draft (Nhóm A duy nhất -> ĐƯỢC PHÉP HIỂN THỊ ĐỂ TẠO ĐÈ)
         Application app3 = Application.builder().applicationId(3).build();
         InterviewSchedule s3 = InterviewSchedule.builder().application(app3).build();
         InterviewFinalResult r3 = InterviewFinalResult.builder().finalResultId(3).interviewSchedule(s3).finalDecision("Passed").build();
@@ -543,28 +543,38 @@ class OfferServiceTests {
         InterviewSchedule s4 = InterviewSchedule.builder().application(app4).build();
         InterviewFinalResult r4 = InterviewFinalResult.builder().finalResultId(4).interviewSchedule(s4).finalDecision("Passed").build();
 
+        // App 5: có offer Rejected (Nhóm B -> BỊ LOẠI)
+        Application app5 = Application.builder().applicationId(5).build();
+        InterviewSchedule s5 = InterviewSchedule.builder().application(app5).build();
+        InterviewFinalResult r5 = InterviewFinalResult.builder().finalResultId(5).interviewSchedule(s5).finalDecision("Passed").build();
+
         OfferProposal offer1 = OfferProposal.builder().offerId(101).offerStatus("Pending_Director").build();
         OfferProposal offer2 = OfferProposal.builder().offerId(102).offerStatus("Accepted").build();
-        OfferProposal offer3 = OfferProposal.builder().offerId(103).offerStatus("Rejected").build();
+        OfferProposal offer3 = OfferProposal.builder().offerId(103).offerStatus("Draft").build();
+        OfferProposal offer5 = OfferProposal.builder().offerId(105).offerStatus("Rejected").build();
 
-        when(interviewFinalResultRepository.findAllPassedWithDetails()).thenReturn(List.of(r1, r2, r3, r4));
+        when(interviewFinalResultRepository.findAllPassedWithDetails()).thenReturn(List.of(r1, r2, r3, r4, r5));
         when(offerProposalRepository.findByApplication_ApplicationId(1)).thenReturn(Optional.of(offer1));
         when(offerProposalRepository.findByApplication_ApplicationId(2)).thenReturn(Optional.of(offer2));
         when(offerProposalRepository.findByApplication_ApplicationId(3)).thenReturn(Optional.of(offer3));
         when(offerProposalRepository.findByApplication_ApplicationId(4)).thenReturn(Optional.empty());
+        when(offerProposalRepository.findByApplication_ApplicationId(5)).thenReturn(Optional.of(offer5));
 
         List<PassedCandidateResponse> list = offerService.getPassedCandidatesForOffer();
 
         assertNotNull(list);
         assertEquals(2, list.size());
         assertEquals(3, list.get(0).getApplicationId());
-        assertEquals("Rejected", list.get(0).getExistingOfferStatus());
+        assertEquals("Draft", list.get(0).getExistingOfferStatus());
         assertEquals(4, list.get(1).getApplicationId());
         assertNull(list.get(1).getExistingOfferStatus());
     }
 
     @ParameterizedTest
-    @ValueSource(strings = {"Pending_Director", "Approved", "Director_Approved", "Sent_Candidate", "Accepted"})
+    @ValueSource(strings = {
+            "Pending_Director", "Approved", "Director_Approved", "Sent_Candidate", "Accepted",
+            "Rejected", "Director_Rejected", "Negotiating", "Declined", "Canceled", "Voided"
+    })
     @DisplayName("GBR-07 createOfferByHr: Đơn ứng tuyển đang có Offer thuộc Nhóm B bị chặn ném BaseBusinessException (OFFER_LOCKED_STATE)")
     void testCreateOfferByHr_existingOfferInGroupB_throwsException(String lockedStatus) {
         Application application = Application.builder().applicationId(1).build();
@@ -599,8 +609,8 @@ class OfferServiceTests {
     }
 
     @ParameterizedTest
-    @ValueSource(strings = {"Draft", "Rejected", "Director_Rejected", "Negotiating", "Declined", "Canceled", "Voided"})
-    @DisplayName("GBR-07 createOfferByHr: Đơn ứng tuyển đang có Offer thuộc Nhóm A được phép tạo đè in-place thành công")
+    @ValueSource(strings = {"Draft"})
+    @DisplayName("GBR-07 createOfferByHr: Đơn ứng tuyển đang có Offer thuộc Nhóm A (Draft) được phép tạo đè in-place thành công")
     void testCreateOfferByHr_existingOfferInGroupA_overridesSuccessfully(String overridableStatus) {
         Application application = Application.builder().applicationId(1).build();
         OfferProposal existingOffer = OfferProposal.builder()
@@ -609,7 +619,7 @@ class OfferServiceTests {
                 .offeredPositionTitle("Old Title")
                 .proposedSalary(new BigDecimal("15000000"))
                 .probationSalary(new BigDecimal("13000000"))
-                .offerStatus(overridableStatus) // Nhóm A
+                .offerStatus(overridableStatus) // Nhóm A (Draft)
                 .isDeleted(false)
                 .build();
 
@@ -639,12 +649,12 @@ class OfferServiceTests {
     }
 
     @ParameterizedTest
-    @ValueSource(strings = {"Draft", "Rejected", "Director_Rejected", "Negotiating", "Declined", "Canceled", "Voided"})
-    @DisplayName("GBR-07 updateOfferByHr: Cho phép cập nhật Offer khi ở trạng thái thuộc Nhóm A (Editable)")
+    @ValueSource(strings = {"Draft"})
+    @DisplayName("GBR-07 updateOfferByHr: Cho phép cập nhật Offer khi ở trạng thái thuộc Nhóm A (Draft)")
     void testUpdateOfferByHr_groupA_allowed(String editableStatus) {
         OfferProposal offer = OfferProposal.builder()
                 .offerId(50)
-                .offerStatus(editableStatus) // Nhóm A
+                .offerStatus(editableStatus) // Nhóm A (Draft)
                 .build();
 
         when(offerProposalRepository.findById(50)).thenReturn(Optional.of(offer));
@@ -669,7 +679,10 @@ class OfferServiceTests {
     }
 
     @ParameterizedTest
-    @ValueSource(strings = {"Pending_Director", "Approved", "Director_Approved", "Sent_Candidate", "Accepted"})
+    @ValueSource(strings = {
+            "Pending_Director", "Approved", "Director_Approved", "Sent_Candidate", "Accepted",
+            "Rejected", "Director_Rejected", "Negotiating", "Declined", "Canceled", "Voided"
+    })
     @DisplayName("GBR-07 updateOfferByHr: Cố tình cập nhật Offer ở trạng thái Nhóm B bị chặn ném BaseBusinessException (OFFER_STATUS_INVALID)")
     void testUpdateOfferByHr_groupB_throwsException(String lockedStatus) {
         OfferProposal offer = OfferProposal.builder()
