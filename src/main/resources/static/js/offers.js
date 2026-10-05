@@ -216,19 +216,6 @@ function handleSelectPassedCandidate(appId) {
     if (workLocationInput) {
         workLocationInput.value = workLoc;
     }
-
-    // Hiển thị thông báo ghi đè nếu ứng viên đã có Offer thuộc Nhóm A (GBR-07)
-    const existingStatus = opt.getAttribute('data-existing-status');
-    const overrideNotice = document.getElementById('createOverrideNotice');
-    if (overrideNotice) {
-        if (existingStatus) {
-            document.getElementById('createOverrideNoticeText').textContent =
-                `Ứng viên này hiện có gói Offer ở trạng thái [${existingStatus}]. Khi lưu bản mới, hệ thống sẽ tự động ghi đè.`;
-            overrideNotice.style.display = 'flex';
-        } else {
-            overrideNotice.style.display = 'none';
-        }
-    }
 }
 
 function autoCalculateProbationSalary(forceSet = false) {

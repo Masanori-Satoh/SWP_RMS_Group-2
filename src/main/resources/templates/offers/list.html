@@ -256,15 +256,11 @@
                         <option value="">-- Chọn ứng viên chờ tạo Offer --</option>
                         <option th:each="c : ${passedCandidates}"
                                 th:value="${c.applicationId}"
-                                th:attr="data-cand-id=${c.candidateId}, data-cand-name=${c.candidateName}, data-email=${c.email}, data-phone=${c.phoneNumber}, data-pos=${c.appliedPosition}, data-dept=${c.departmentName}, data-req-id=${c.requisitionId}, data-job-id=${c.jobPostingId}, data-work-location=${c.workLocation}, data-comments=${c.interviewSummaryComments}, data-recom-salary=${c.recommendedSalary}, data-hm=${c.hiringManagerName}, data-existing-status=${c.existingOfferStatus}, data-existing-offer-id=${c.existingOfferId}"
-                                th:text="${c.candidateName} + ' - ' + ${c.appliedPosition} + ' (' + ${c.departmentName} + ')' + (${c.existingOfferStatus != null} ? ' [Ghi đè: ' + ${c.existingOfferStatus} + ']' : '')">
+                                th:attr="data-cand-id=${c.candidateId}, data-cand-name=${c.candidateName}, data-email=${c.email}, data-phone=${c.phoneNumber}, data-pos=${c.appliedPosition}, data-dept=${c.departmentName}, data-req-id=${c.requisitionId}, data-job-id=${c.jobPostingId}, data-work-location=${c.workLocation}, data-comments=${c.interviewSummaryComments}, data-recom-salary=${c.recommendedSalary}, data-hm=${c.hiringManagerName}"
+                                th:text="${c.candidateName} + ' - ' + ${c.appliedPosition} + ' (' + ${c.departmentName} + ')'">
                             Nguyễn Văn A - Backend Dev (Engineering)
                         </option>
                     </select>
-                    <div id="createOverrideNotice" style="display:none; margin-top:8px; padding:10px 14px; background:#eff6ff; border:1px solid #bfdbfe; border-radius:6px; color:#1e40af; font-size:13px; align-items:center; gap:8px;">
-                        <i class="fa-solid fa-circle-info"></i>
-                        <span id="createOverrideNoticeText"></span>
-                    </div>
                 </div>
 
                 <!-- Group A: Thông tin Ứng viên & Vị trí (Read-only Auto-fill) -->

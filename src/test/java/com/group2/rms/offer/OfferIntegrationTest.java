@@ -83,7 +83,7 @@ class OfferIntegrationTest {
                 .candidateName("Nguyễn Văn A")
                 .appliedPosition("Senior Java Backend Engineer")
                 .departmentName("Engineering")
-                .existingOfferStatus("Draft") // Nhóm A (Draft)
+                .existingOfferStatus(null)
                 .build();
 
         when(offerService.getPassedCandidatesForOffer()).thenReturn(List.of(cand));
@@ -93,7 +93,7 @@ class OfferIntegrationTest {
                 .andExpect(jsonPath("$.success").value(true))
                 .andExpect(jsonPath("$.data", hasSize(1)))
                 .andExpect(jsonPath("$.data[0].candidateName").value("Nguyễn Văn A"))
-                .andExpect(jsonPath("$.data[0].existingOfferStatus").value("Draft"));
+                .andExpect(jsonPath("$.data[0].existingOfferStatus").doesNotExist());
     }
 
     @Test

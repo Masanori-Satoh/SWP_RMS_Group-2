@@ -52,22 +52,22 @@ public class OfferServiceImpl implements OfferService {
 
     /**
      * Quy tắc GBR-07:
-     * NHÓM A: Được phép tạo đè / cập nhật lại (Editable / Overridable States).
-     * Chỉ duy nhất trạng thái Draft.
+     * - Chỉ chấp nhận tạo mới Offer Proposal đối với ứng viên đã đỗ phỏng vấn (Passed) và CHƯA CÓ bất kỳ lịch sử/gói Offer nào.
+     * - Khi đơn ứng tuyển đã có Offer trong hệ thống (kể cả trạng thái Draft), không gợi ý trong mục tạo đề xuất mới
+     *   và chặn thao tác tạo mới trực tiếp (bắt buộc HR chỉnh sửa trực tiếp trên danh sách Offer).
      */
-    public static final Set<String> OVERRIDABLE_STATUSES = Set.of("Draft");
+    public static final Set<String> OVERRIDABLE_STATUSES = Collections.emptySet();
 
     /**
      * Quy tắc GBR-07:
-     * NHÓM B: Phải giữ nguyên - KHÔNG ĐƯỢC TẠO ĐÈ TỰ Ý (Locked / Finalized States).
-     * Tất cả các trạng thái còn lại đều thuộc Nhóm B (không cho phép ghi đè).
+     * Tất cả các trạng thái có Offer đang hoạt động (kể cả Draft) đều bị khóa khỏi luồng tạo mới trực tiếp.
      */
     public static final Set<String> LOCKED_STATUSES = Set.of(
-            "Pending_Director", "Approved", "Director_Approved", "Sent_Candidate", "Accepted",
+            "Draft", "Pending_Director", "Approved", "Director_Approved", "Sent_Candidate", "Accepted",
             "Rejected", "Director_Rejected", "Negotiating", "Declined", "Canceled", "Voided");
 
     public static boolean isOverridableStatus(String status) {
-        if (status == null) return true;
+        if (status == null) return false;
         for (String s : OVERRIDABLE_STATUSES) {
             if (s.equalsIgnoreCase(status)) return true;
         }
@@ -150,23 +150,10 @@ public class OfferServiceImpl implements OfferService {
                 continue;
             }
 
-            // Quy tắc GBR-07: Kiểm tra gói Offer hiện tại của đơn ứng tuyển
+            // Quy tắc GBR-07: Chỉ chấp nhận tạo mới đối với ứng viên chưa từng có bất kỳ Offer nào (kể cả bản Draft)
             Optional<OfferProposal> offerOpt = offerProposalRepository.findByApplication_ApplicationId(appId);
-            String existingStatus = null;
-            Integer existingOfferId = null;
-
-            if (offerOpt.isPresent()) {
-                OfferProposal existingOffer = offerOpt.get();
-                if (!Boolean.TRUE.equals(existingOffer.getIsDeleted())) {
-                    String status = existingOffer.getOfferStatus();
-                    // NHÓM B: Đang trong luồng xử lý hoặc đã chốt tuyển dụng -> KHÓA, KHÔNG HIỂN THỊ
-                    if (isLockedStatus(status)) {
-                        continue;
-                    }
-                    // NHÓM A: Được phép tạo đè / cập nhật lại
-                    existingStatus = status;
-                    existingOfferId = existingOffer.getOfferId();
-                }
+            if (offerOpt.isPresent() && !Boolean.TRUE.equals(offerOpt.get().getIsDeleted())) {
+                continue; // Ứng viên đã có Offer (kể cả Draft) -> Không gợi ý trong mục tạo đề xuất mới
             }
 
             processedAppIds.add(appId);
@@ -203,8 +190,8 @@ public class OfferServiceImpl implements OfferService {
                     .recommendedSalary(r.getRecommendedSalary())
                     .interviewApprovedAt(r.getApprovedAt())
                     .hiringManagerName(r.getHiringManager() != null ? r.getHiringManager().getFullName() : null)
-                    .existingOfferStatus(existingStatus)
-                    .existingOfferId(existingOfferId)
+                    .existingOfferStatus(null)
+                    .existingOfferId(null)
                     .build());
         }
 
@@ -231,49 +218,31 @@ public class OfferServiceImpl implements OfferService {
 
         // Bảng OfferProposal có ràng buộc UNIQUE trên ApplicationId
         // (UQ_OfferProposal_Application)
-        // Áp dụng quy tắc Single Active Offer Rule (GBR-07)
+        // Áp dụng quy tắc Single Active Offer Rule (GBR-07):
+        // Chỉ chấp nhận tạo mới cho ứng viên chưa có Offer; nếu đã tồn tại Offer (kể cả Draft) thì chặn lại
         Optional<OfferProposal> existingOfferOpt = offerProposalRepository
                 .findByApplication_ApplicationId(application.getApplicationId());
 
-        OfferProposal offerToSave;
-        if (existingOfferOpt.isPresent()) {
-            OfferProposal existingOffer = existingOfferOpt.get();
-            String currentStatus = existingOffer.getOfferStatus();
-
-            // Nếu đơn ứng tuyển đang có Offer thuộc Nhóm B (Pending_Director, Approved, Sent_Candidate, Accepted)
-            // -> Chặn hoàn toàn thao tác tạo đè trực tiếp
-            if (!Boolean.TRUE.equals(existingOffer.getIsDeleted()) && isLockedStatus(currentStatus)) {
-                throw new BaseBusinessException(
-                        "Theo quy tắc GBR-07, không thể tạo đè Offer Proposal vì đơn ứng tuyển đang có gói Offer ở trạng thái ["
-                                + currentStatus + "] thuộc Nhóm B (đang trong luồng xử lý hoặc đã hoàn tất).",
-                        "OFFER_LOCKED_STATE");
-            }
-
-            // Ghi đè bản thảo mới lên gói Offer cũ thuộc Nhóm A (Draft, Rejected, Negotiating, Declined)
-            offerToSave = existingOffer;
-            offerToSave.setOfferedPositionTitle(dto.getOfferedPositionTitle());
-            offerToSave.setProposedSalary(dto.getProposedSalary());
-            offerToSave.setProbationSalary(dto.getProbationSalary());
-            offerToSave.setExpectedStartDate(dto.getExpectedStartDate());
-            offerToSave.setWorkLocation(dto.getWorkLocation());
-            offerToSave.setBenefitsPackage(dto.getBenefitsPackage());
-            offerToSave.setProposedBy(proposedBy);
-            offerToSave.setOfferStatus(status);
-            offerToSave.setIsDeleted(false);
-        } else {
-            offerToSave = OfferProposal.builder()
-                    .application(application)
-                    .offeredPositionTitle(dto.getOfferedPositionTitle())
-                    .proposedSalary(dto.getProposedSalary())
-                    .probationSalary(dto.getProbationSalary())
-                    .expectedStartDate(dto.getExpectedStartDate())
-                    .workLocation(dto.getWorkLocation())
-                    .benefitsPackage(dto.getBenefitsPackage())
-                    .proposedBy(proposedBy)
-                    .offerStatus(status)
-                    .isDeleted(false)
-                    .build();
+        if (existingOfferOpt.isPresent() && !Boolean.TRUE.equals(existingOfferOpt.get().getIsDeleted())) {
+            String currentStatus = existingOfferOpt.get().getOfferStatus();
+            throw new BaseBusinessException(
+                    "Theo quy tắc GBR-07, không thể tạo mới Offer Proposal vì đơn ứng tuyển đang có gói Offer ở trạng thái ["
+                            + currentStatus + "]. Vui lòng chỉnh sửa trực tiếp trên danh sách Offer thay vì tạo mới.",
+                    "OFFER_LOCKED_STATE");
         }
+
+        OfferProposal offerToSave = OfferProposal.builder()
+                .application(application)
+                .offeredPositionTitle(dto.getOfferedPositionTitle())
+                .proposedSalary(dto.getProposedSalary())
+                .probationSalary(dto.getProbationSalary())
+                .expectedStartDate(dto.getExpectedStartDate())
+                .workLocation(dto.getWorkLocation())
+                .benefitsPackage(dto.getBenefitsPackage())
+                .proposedBy(proposedBy)
+                .offerStatus(status)
+                .isDeleted(false)
+                .build();
 
         OfferProposal saved = offerProposalRepository.save(offerToSave);
         return mapToResponse(saved);
@@ -394,7 +363,7 @@ public class OfferServiceImpl implements OfferService {
                 .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy OfferProposal với ID: " + id));
 
         String currentStatus = offer.getOfferStatus();
-        boolean canEdit = isOverridableStatus(currentStatus);
+        boolean canEdit = "Draft".equalsIgnoreCase(currentStatus);
 
         if (!canEdit) {
             throw new BaseBusinessException(

@@ -521,29 +521,29 @@ class OfferServiceTests {
     }
 
     @Test
-    @DisplayName("GBR-07 getPassedCandidatesForOffer: Loại bỏ ứng viên có Offer Nhóm B và giữ lại ứng viên Nhóm A (Draft) hoặc chưa có Offer")
-    void testGetPassedCandidatesForOffer_filtersGroupB_keepsGroupA() {
-        // App 1: có offer Pending_Director (Nhóm B -> BỊ LOẠI)
+    @DisplayName("GBR-07 getPassedCandidatesForOffer: Loại bỏ tất cả ứng viên đã có Offer (kể cả Draft) và chỉ giữ lại ứng viên chưa có Offer")
+    void testGetPassedCandidatesForOffer_filtersAllExistingOffers_keepsOnlyNoOffer() {
+        // App 1: có offer Pending_Director (BỊ LOẠI)
         Application app1 = Application.builder().applicationId(1).build();
         InterviewSchedule s1 = InterviewSchedule.builder().application(app1).build();
         InterviewFinalResult r1 = InterviewFinalResult.builder().finalResultId(1).interviewSchedule(s1).finalDecision("Passed").build();
 
-        // App 2: có offer Accepted (Nhóm B -> BỊ LOẠI)
+        // App 2: có offer Accepted (BỊ LOẠI)
         Application app2 = Application.builder().applicationId(2).build();
         InterviewSchedule s2 = InterviewSchedule.builder().application(app2).build();
         InterviewFinalResult r2 = InterviewFinalResult.builder().finalResultId(2).interviewSchedule(s2).finalDecision("Passed").build();
 
-        // App 3: có offer Draft (Nhóm A duy nhất -> ĐƯỢC PHÉP HIỂN THỊ ĐỂ TẠO ĐÈ)
+        // App 3: có offer Draft (Đã có bản thảo -> BỊ LOẠI, không gợi ý trong mục tạo mới)
         Application app3 = Application.builder().applicationId(3).build();
         InterviewSchedule s3 = InterviewSchedule.builder().application(app3).build();
         InterviewFinalResult r3 = InterviewFinalResult.builder().finalResultId(3).interviewSchedule(s3).finalDecision("Passed").build();
 
-        // App 4: chưa có Offer nào -> ĐƯỢC PHÉP HIỂN THỊ
+        // App 4: chưa có Offer nào -> ĐƯỢC PHÉP HIỂN THỊ DUY NHẤT
         Application app4 = Application.builder().applicationId(4).build();
         InterviewSchedule s4 = InterviewSchedule.builder().application(app4).build();
         InterviewFinalResult r4 = InterviewFinalResult.builder().finalResultId(4).interviewSchedule(s4).finalDecision("Passed").build();
 
-        // App 5: có offer Rejected (Nhóm B -> BỊ LOẠI)
+        // App 5: có offer Rejected (BỊ LOẠI)
         Application app5 = Application.builder().applicationId(5).build();
         InterviewSchedule s5 = InterviewSchedule.builder().application(app5).build();
         InterviewFinalResult r5 = InterviewFinalResult.builder().finalResultId(5).interviewSchedule(s5).finalDecision("Passed").build();
@@ -563,25 +563,23 @@ class OfferServiceTests {
         List<PassedCandidateResponse> list = offerService.getPassedCandidatesForOffer();
 
         assertNotNull(list);
-        assertEquals(2, list.size());
-        assertEquals(3, list.get(0).getApplicationId());
-        assertEquals("Draft", list.get(0).getExistingOfferStatus());
-        assertEquals(4, list.get(1).getApplicationId());
-        assertNull(list.get(1).getExistingOfferStatus());
+        assertEquals(1, list.size(), "Chỉ có ứng viên chưa có bất kỳ Offer nào mới được gợi ý tạo mới");
+        assertEquals(4, list.get(0).getApplicationId());
+        assertNull(list.get(0).getExistingOfferStatus());
     }
 
     @ParameterizedTest
     @ValueSource(strings = {
-            "Pending_Director", "Approved", "Director_Approved", "Sent_Candidate", "Accepted",
+            "Draft", "Pending_Director", "Approved", "Director_Approved", "Sent_Candidate", "Accepted",
             "Rejected", "Director_Rejected", "Negotiating", "Declined", "Canceled", "Voided"
     })
-    @DisplayName("GBR-07 createOfferByHr: Đơn ứng tuyển đang có Offer thuộc Nhóm B bị chặn ném BaseBusinessException (OFFER_LOCKED_STATE)")
-    void testCreateOfferByHr_existingOfferInGroupB_throwsException(String lockedStatus) {
+    @DisplayName("GBR-07 createOfferByHr: Đơn ứng tuyển đang có Offer (kể cả Draft) bị chặn ném BaseBusinessException (OFFER_LOCKED_STATE)")
+    void testCreateOfferByHr_existingOffer_throwsException(String lockedStatus) {
         Application application = Application.builder().applicationId(1).build();
         OfferProposal existingOffer = OfferProposal.builder()
                 .offerId(100)
                 .application(application)
-                .offerStatus(lockedStatus) // Nhóm B
+                .offerStatus(lockedStatus)
                 .isDeleted(false)
                 .build();
 
@@ -604,31 +602,26 @@ class OfferServiceTests {
         });
 
         assertEquals("OFFER_LOCKED_STATE", ex.getErrorCode());
-        assertTrue(ex.getMessage().contains("Nhóm B"));
+        assertTrue(ex.getMessage().contains("không thể tạo mới Offer Proposal"));
         verify(offerProposalRepository, never()).save(any());
     }
 
-    @ParameterizedTest
-    @ValueSource(strings = {"Draft"})
-    @DisplayName("GBR-07 createOfferByHr: Đơn ứng tuyển đang có Offer thuộc Nhóm A (Draft) được phép tạo đè in-place thành công")
-    void testCreateOfferByHr_existingOfferInGroupA_overridesSuccessfully(String overridableStatus) {
-        Application application = Application.builder().applicationId(1).build();
+    @Test
+    @DisplayName("GBR-07 updateOfferByHr: Cập nhật bản thảo Offer (Draft) thành công")
+    void testUpdateOfferByHr_draft_updatesSuccessfully() {
         OfferProposal existingOffer = OfferProposal.builder()
                 .offerId(100)
-                .application(application)
                 .offeredPositionTitle("Old Title")
                 .proposedSalary(new BigDecimal("15000000"))
                 .probationSalary(new BigDecimal("13000000"))
-                .offerStatus(overridableStatus) // Nhóm A (Draft)
+                .offerStatus("Draft")
                 .isDeleted(false)
                 .build();
 
-        when(applicationRepository.findById(1)).thenReturn(Optional.of(application));
-        when(offerProposalRepository.findByApplication_ApplicationId(1)).thenReturn(Optional.of(existingOffer));
+        when(offerProposalRepository.findById(100)).thenReturn(Optional.of(existingOffer));
         when(offerProposalRepository.save(any(OfferProposal.class))).thenAnswer(i -> i.getArgument(0));
 
-        CreateOfferRequest request = CreateOfferRequest.builder()
-                .applicationId(1)
+        UpdateOfferRequest request = UpdateOfferRequest.builder()
                 .offeredPositionTitle("New Senior Title")
                 .proposedSalary(new BigDecimal("25000000"))
                 .probationSalary(new BigDecimal("21500000"))
@@ -638,10 +631,10 @@ class OfferServiceTests {
                 .isDraft(false)
                 .build();
 
-        OfferResponse response = offerService.createOfferByHr(request);
+        OfferResponse response = offerService.updateOfferByHr(100, request);
 
         assertNotNull(response);
-        assertEquals(100, response.getOfferId(), "Offer ID phải được giữ nguyên khi cập nhật in-place");
+        assertEquals(100, response.getOfferId());
         assertEquals("New Senior Title", response.getOfferedPositionTitle());
         assertEquals(new BigDecimal("25000000"), response.getProposedSalary());
         assertEquals("Pending_Director", response.getOfferStatus());
