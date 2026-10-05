@@ -37,6 +37,9 @@ import jakarta.validation.ValidatorFactory;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -79,20 +82,24 @@ class OfferServiceTests {
     private OfferServiceImpl offerService;
 
     @Test
-    @DisplayName("Lương thử việc < 85% lương chính thức phải ném IllegalArgumentException")
+    @DisplayName("Nghiệp vụ: Lương thử việc < 85% lương chính thức phải ném OfferValidationException")
     void testProbationSalaryLessThan85Percent_throwsException() {
         CreateOfferRequest request = CreateOfferRequest.builder()
                 .applicationId(1)
                 .offeredPositionTitle("Senior Java Engineer")
                 .proposedSalary(new BigDecimal("20000000"))
                 .probationSalary(new BigDecimal("16900000")) // 16.9M < 17M (85% của 20M)
+                .probationDays(60)
+                .expectedStartDate(LocalDate.now().plusDays(5))
+                .workLocation("Trụ sở chính")
                 .build();
 
-        IllegalArgumentException ex = assertThrows(IllegalArgumentException.class, () -> {
-            offerService.createOfferProposal(request);
+        OfferValidationException ex = assertThrows(OfferValidationException.class, () -> {
+            offerService.createOfferByHr(request);
         });
 
-        assertTrue(ex.getMessage().contains(""));
+        assertTrue(ex.getMessage().contains("85%"));
+        verify(offerProposalRepository, never()).save(any());
     }
 
     @Test
@@ -128,50 +135,8 @@ class OfferServiceTests {
         assertEquals("Pending_Director", response.getOfferStatus());
     }
 
-    @Test
-    @DisplayName("Khi tạo Offer mới, các Offer cũ đang active phải chuyển sang trạng thái Voided")
-    void testSingleActiveOfferRule_deactivatesOldOffers() {
-        Application application = Application.builder().applicationId(1).build();
-
-        OfferProposal oldOffer1 = OfferProposal.builder()
-                .offerId(1)
-                .application(application)
-                .offerStatus("Draft")
-                .build();
-
-        OfferProposal oldOffer2 = OfferProposal.builder()
-                .offerId(2)
-                .application(application)
-                .offerStatus("Pending_Director")
-                .build();
-
-        when(applicationRepository.findById(1)).thenReturn(Optional.of(application));
-        when(offerProposalRepository.findByApplication_ApplicationIdAndOfferStatusNotIn(eq(1), any()))
-                .thenReturn(List.of(oldOffer1, oldOffer2));
-        when(offerProposalRepository.save(any(OfferProposal.class))).thenAnswer(i -> {
-            OfferProposal op = i.getArgument(0);
-            op.setOfferId(999);
-            return op;
-        });
-
-        CreateOfferRequest request = CreateOfferRequest.builder()
-                .applicationId(1)
-                .offeredPositionTitle("Senior Java Engineer")
-                .proposedSalary(new BigDecimal("30000000"))
-                .probationSalary(new BigDecimal("25500000")) // 85%
-                .build();
-
-        OfferResponse response = offerService.createOfferProposal(request);
-
-        assertNotNull(response);
-        // Kiểm tra các offer cũ đã bị Voided
-        assertEquals("Voided", oldOffer1.getOfferStatus());
-        assertEquals("Voided", oldOffer2.getOfferStatus());
-
-        // Kiểm tra đã gọi saveAll và flush để lưu trạng thái Voided
-        verify(offerProposalRepository).saveAll(List.of(oldOffer1, oldOffer2));
-        verify(offerProposalRepository).flush();
-    }
+    // Lưu ý: Đã loại bỏ testSingleActiveOfferRule_deactivatesOldOffers() cũ (triết lý Voided offer đang Pending_Director)
+    // để đồng nhất 100% với quy tắc GBR-07 (Nhóm B bị khóa, ném OFFER_LOCKED_STATE; Nhóm A cập nhật in-place).
 
     @Test
     @DisplayName("Validation: Ngày bắt đầu dự kiến bằng ngày hiện tại phải bị chặn (OfferValidationException)")
@@ -213,15 +178,16 @@ class OfferServiceTests {
         assertTrue(ex.getMessage().contains("Ngày bắt đầu dự kiến phải lớn hơn ngày hiện tại"));
     }
 
-    @Test
+    @ParameterizedTest
+    @ValueSource(ints = {0, -1, -60})
     @DisplayName("Validation: Thời gian thử việc <= 0 phải bị chặn (OfferValidationException)")
-    void testCreateOfferByHr_probationDaysZeroOrNegative_throwsException() {
+    void testCreateOfferByHr_probationDaysZeroOrNegative_throwsException(int days) {
         CreateOfferRequest request = CreateOfferRequest.builder()
                 .applicationId(1)
                 .offeredPositionTitle("Senior Java Engineer")
                 .proposedSalary(new BigDecimal("20000000"))
                 .probationSalary(new BigDecimal("17000000"))
-                .probationDays(0) // <= 0
+                .probationDays(days) // 0, -1, -60
                 .expectedStartDate(LocalDate.now().plusDays(5))
                 .workLocation("Trụ sở chính")
                 .build();
@@ -231,15 +197,17 @@ class OfferServiceTests {
         });
 
         assertTrue(ex.getMessage().contains("Thời gian thử việc phải lớn hơn 0"));
+        verify(offerProposalRepository, never()).save(any());
     }
 
-    @Test
+    @ParameterizedTest
+    @CsvSource({"0", "-1", "-10000000"})
     @DisplayName("Validation: Mức lương chính thức <= 0 phải bị chặn (OfferValidationException)")
-    void testCreateOfferByHr_salaryZeroOrNegative_throwsException() {
+    void testCreateOfferByHr_salaryZeroOrNegative_throwsException(String salaryStr) {
         CreateOfferRequest request = CreateOfferRequest.builder()
                 .applicationId(1)
                 .offeredPositionTitle("Senior Java Engineer")
-                .proposedSalary(BigDecimal.ZERO) // <= 0
+                .proposedSalary(new BigDecimal(salaryStr)) // 0, -1, -10000000
                 .probationSalary(new BigDecimal("17000000"))
                 .probationDays(60)
                 .expectedStartDate(LocalDate.now().plusDays(5))
@@ -251,6 +219,7 @@ class OfferServiceTests {
         });
 
         assertTrue(ex.getMessage().contains("Mức lương chính thức phải lớn hơn 0"));
+        verify(offerProposalRepository, never()).save(any());
     }
 
     @Test
@@ -389,8 +358,8 @@ class OfferServiceTests {
     }
 
     @Test
-    @DisplayName("getPassedCandidatesForOffer: Tự động map đúng WorkLocation từ JobPosting hoặc Candidate")
-    void testGetPassedCandidatesForOffer_mapsWorkLocationCorrectly() {
+    @DisplayName("WorkLocation Precedence: Khi cả JobPosting và Candidate đều có địa chỉ, ưu tiên JobPosting")
+    void testGetPassedCandidatesForOffer_whenBothLocationsPresent_prefersJobPostingLocation() {
         JobPosting jp = JobPosting.builder()
                 .jobPostingId(101)
                 .postingTitle("Senior Java Backend Engineer")
@@ -400,7 +369,7 @@ class OfferServiceTests {
         Candidate cand = Candidate.builder()
                 .candidateId(201)
                 .account(User.builder().userId(301).fullName("Nguyễn Văn A").email("a@test.com").phoneNumber("0987654321").build())
-                .address("Hà Nội")
+                .address("Cầu Giấy, Hà Nội")
                 .build();
 
         Application app = Application.builder()
@@ -409,10 +378,7 @@ class OfferServiceTests {
                 .candidate(cand)
                 .build();
 
-        InterviewSchedule schedule = InterviewSchedule.builder()
-                .application(app)
-                .build();
-
+        InterviewSchedule schedule = InterviewSchedule.builder().application(app).build();
         InterviewFinalResult result = InterviewFinalResult.builder()
                 .finalResultId(1)
                 .interviewSchedule(schedule)
@@ -427,8 +393,90 @@ class OfferServiceTests {
 
         assertNotNull(list);
         assertEquals(1, list.size());
+        // Khẳng định ưu tiên JobPosting.workLocation
         assertEquals("Tầng 8, Tòa nhà RMS Tower, Duy Tân, Cầu Giấy, Hà Nội", list.get(0).getWorkLocation());
         assertEquals("Nguyễn Văn A", list.get(0).getCandidateName());
+    }
+
+    @Test
+    @DisplayName("WorkLocation Precedence: Khi JobPosting không có địa chỉ, fallback về Candidate.address")
+    void testGetPassedCandidatesForOffer_whenJobLocationMissing_fallbackToCandidateAddress() {
+        JobPosting jp = JobPosting.builder()
+                .jobPostingId(102)
+                .postingTitle("Frontend React Engineer")
+                .workLocation(null) // Không có workLocation
+                .build();
+
+        Candidate cand = Candidate.builder()
+                .candidateId(202)
+                .account(User.builder().userId(302).fullName("Trần Thị B").email("b@test.com").phoneNumber("0912345678").build())
+                .address("Thanh Xuân, Hà Nội") // Có address
+                .build();
+
+        Application app = Application.builder()
+                .applicationId(13)
+                .jobPosting(jp)
+                .candidate(cand)
+                .build();
+
+        InterviewSchedule schedule = InterviewSchedule.builder().application(app).build();
+        InterviewFinalResult result = InterviewFinalResult.builder()
+                .finalResultId(2)
+                .interviewSchedule(schedule)
+                .finalDecision("Passed")
+                .finalSummaryComments("Tốt")
+                .recommendedSalary(new BigDecimal("22000000"))
+                .build();
+
+        when(interviewFinalResultRepository.findAllPassedWithDetails()).thenReturn(List.of(result));
+
+        List<PassedCandidateResponse> list = offerService.getPassedCandidatesForOffer();
+
+        assertNotNull(list);
+        assertEquals(1, list.size());
+        // Khẳng định fallback về Candidate.address
+        assertEquals("Thanh Xuân, Hà Nội", list.get(0).getWorkLocation());
+        assertEquals("Trần Thị B", list.get(0).getCandidateName());
+    }
+
+    @Test
+    @DisplayName("WorkLocation Precedence: Khi cả JobPosting và Candidate đều không có địa chỉ, fallback về default")
+    void testGetPassedCandidatesForOffer_whenBothLocationsMissing_fallbackToDefaultLocation() {
+        JobPosting jp = JobPosting.builder()
+                .jobPostingId(103)
+                .postingTitle("DevOps Engineer")
+                .workLocation("   ") // Rỗng
+                .build();
+
+        Candidate cand = Candidate.builder()
+                .candidateId(203)
+                .account(User.builder().userId(303).fullName("Lê Văn C").email("c@test.com").phoneNumber("0900112233").build())
+                .address(null) // Trống
+                .build();
+
+        Application app = Application.builder()
+                .applicationId(14)
+                .jobPosting(jp)
+                .candidate(cand)
+                .build();
+
+        InterviewSchedule schedule = InterviewSchedule.builder().application(app).build();
+        InterviewFinalResult result = InterviewFinalResult.builder()
+                .finalResultId(3)
+                .interviewSchedule(schedule)
+                .finalDecision("Passed")
+                .finalSummaryComments("Tốt")
+                .recommendedSalary(new BigDecimal("28000000"))
+                .build();
+
+        when(interviewFinalResultRepository.findAllPassedWithDetails()).thenReturn(List.of(result));
+
+        List<PassedCandidateResponse> list = offerService.getPassedCandidatesForOffer();
+
+        assertNotNull(list);
+        assertEquals(1, list.size());
+        // Khẳng định fallback về giá trị mặc định của hệ thống
+        assertEquals("Trụ sở chính Mộc RMS", list.get(0).getWorkLocation());
     }
 
     @Test
@@ -515,14 +563,15 @@ class OfferServiceTests {
         assertNull(list.get(1).getExistingOfferStatus());
     }
 
-    @Test
-    @DisplayName("GBR-07 createOfferByHr: Đơn ứng tuyển đang có Offer thuộc Nhóm B bị chặn ném BaseBusinessException")
-    void testCreateOfferByHr_existingOfferInGroupB_throwsException() {
+    @ParameterizedTest
+    @ValueSource(strings = {"Pending_Director", "Approved", "Director_Approved", "Sent_Candidate", "Accepted"})
+    @DisplayName("GBR-07 createOfferByHr: Đơn ứng tuyển đang có Offer thuộc Nhóm B bị chặn ném BaseBusinessException (OFFER_LOCKED_STATE)")
+    void testCreateOfferByHr_existingOfferInGroupB_throwsException(String lockedStatus) {
         Application application = Application.builder().applicationId(1).build();
         OfferProposal existingOffer = OfferProposal.builder()
                 .offerId(100)
                 .application(application)
-                .offerStatus("Sent_Candidate") // Nhóm B
+                .offerStatus(lockedStatus) // Nhóm B
                 .isDeleted(false)
                 .build();
 
@@ -546,11 +595,13 @@ class OfferServiceTests {
 
         assertEquals("OFFER_LOCKED_STATE", ex.getErrorCode());
         assertTrue(ex.getMessage().contains("Nhóm B"));
+        verify(offerProposalRepository, never()).save(any());
     }
 
-    @Test
-    @DisplayName("GBR-07 createOfferByHr: Đơn ứng tuyển đang có Offer thuộc Nhóm A được phép tạo đè thành công")
-    void testCreateOfferByHr_existingOfferInGroupA_overridesSuccessfully() {
+    @ParameterizedTest
+    @ValueSource(strings = {"Draft", "Rejected", "Director_Rejected", "Negotiating", "Declined", "Canceled", "Voided"})
+    @DisplayName("GBR-07 createOfferByHr: Đơn ứng tuyển đang có Offer thuộc Nhóm A được phép tạo đè in-place thành công")
+    void testCreateOfferByHr_existingOfferInGroupA_overridesSuccessfully(String overridableStatus) {
         Application application = Application.builder().applicationId(1).build();
         OfferProposal existingOffer = OfferProposal.builder()
                 .offerId(100)
@@ -558,7 +609,7 @@ class OfferServiceTests {
                 .offeredPositionTitle("Old Title")
                 .proposedSalary(new BigDecimal("15000000"))
                 .probationSalary(new BigDecimal("13000000"))
-                .offerStatus("Director_Rejected") // Nhóm A
+                .offerStatus(overridableStatus) // Nhóm A
                 .isDeleted(false)
                 .build();
 
@@ -580,18 +631,20 @@ class OfferServiceTests {
         OfferResponse response = offerService.createOfferByHr(request);
 
         assertNotNull(response);
-        assertEquals(100, response.getOfferId());
+        assertEquals(100, response.getOfferId(), "Offer ID phải được giữ nguyên khi cập nhật in-place");
         assertEquals("New Senior Title", response.getOfferedPositionTitle());
         assertEquals(new BigDecimal("25000000"), response.getProposedSalary());
         assertEquals("Pending_Director", response.getOfferStatus());
+        verify(offerProposalRepository).save(any(OfferProposal.class));
     }
 
-    @Test
-    @DisplayName("GBR-07 updateOfferByHr: Cho phép cập nhật Offer khi ở trạng thái Negotiating hoặc Declined (Nhóm A)")
-    void testUpdateOfferByHr_negotiatingAndDeclined_allowed() {
+    @ParameterizedTest
+    @ValueSource(strings = {"Draft", "Rejected", "Director_Rejected", "Negotiating", "Declined", "Canceled", "Voided"})
+    @DisplayName("GBR-07 updateOfferByHr: Cho phép cập nhật Offer khi ở trạng thái thuộc Nhóm A (Editable)")
+    void testUpdateOfferByHr_groupA_allowed(String editableStatus) {
         OfferProposal offer = OfferProposal.builder()
                 .offerId(50)
-                .offerStatus("Negotiating")
+                .offerStatus(editableStatus) // Nhóm A
                 .build();
 
         when(offerProposalRepository.findById(50)).thenReturn(Optional.of(offer));
@@ -612,14 +665,16 @@ class OfferServiceTests {
         assertNotNull(response);
         assertEquals("Draft", response.getOfferStatus());
         assertEquals(new BigDecimal("40000000"), response.getProposedSalary());
+        verify(offerProposalRepository).save(any(OfferProposal.class));
     }
 
-    @Test
-    @DisplayName("GBR-07 updateOfferByHr: Cố tình cập nhật Offer ở trạng thái Nhóm B bị chặn ném BaseBusinessException")
-    void testUpdateOfferByHr_groupB_throwsException() {
+    @ParameterizedTest
+    @ValueSource(strings = {"Pending_Director", "Approved", "Director_Approved", "Sent_Candidate", "Accepted"})
+    @DisplayName("GBR-07 updateOfferByHr: Cố tình cập nhật Offer ở trạng thái Nhóm B bị chặn ném BaseBusinessException (OFFER_STATUS_INVALID)")
+    void testUpdateOfferByHr_groupB_throwsException(String lockedStatus) {
         OfferProposal offer = OfferProposal.builder()
                 .offerId(50)
-                .offerStatus("Pending_Director") // Nhóm B
+                .offerStatus(lockedStatus) // Nhóm B
                 .build();
 
         when(offerProposalRepository.findById(50)).thenReturn(Optional.of(offer));
@@ -638,6 +693,7 @@ class OfferServiceTests {
 
         assertEquals("OFFER_STATUS_INVALID", ex.getErrorCode());
         assertTrue(ex.getMessage().contains("Nhóm A"));
+        verify(offerProposalRepository, never()).save(any());
     }
 
     @Test

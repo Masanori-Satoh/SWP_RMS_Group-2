@@ -48,50 +48,75 @@ Hệ thống phân loại trạng thái Offer thành 2 nhóm:
 ### 2.1. Unit Test — Service & Validation (`OfferServiceTests.java`)
 
 - **Vị trí file:** `src/test/java/com/group2/rms/service/OfferServiceTests.java`
-- **Công nghệ sử dụng:** JUnit 5, Mockito (`@ExtendWith(MockitoExtension.class)`), Jakarta Bean Validation.
+- **Công nghệ sử dụng:** JUnit 5, `@ParameterizedTest` (`@ValueSource`, `@CsvSource`), Mockito (`@ExtendWith(MockitoExtension.class)`), Jakarta Bean Validation.
 - **Lệnh thực thi:**
   ```powershell
   $env:SPRING_JPA_HIBERNATE_DDL_AUTO = 'validate'
   $env:SPRING_SQL_INIT_MODE = 'never'
   .\mvnw.cmd '-Dtest=OfferServiceTests' test
   ```
-- **Kết quả thực tế:** **31/31 tests PASS (100%)**, `BUILD SUCCESS`, không failure, không error.
+- **Kết quả thực tế:** **56/56 test executions PASS (100%)**, `BUILD SUCCESS`, 0 failure, 0 error.
 
-#### Ma trận chi tiết 31 Unit Test Cases:
+#### Ma trận chi tiết 56 Unit Test Cases (100% PASS):
 
-| STT | Tên Test Case (Method) | Mục tiêu kiểm tra & Kết quả kỳ vọng | Kết quả |
-| :---: | :--- | :--- | :---: |
-| 1 | `testProbationSalaryLessThan85Percent_throwsException` | Lương thử việc $< 85\%$ lương chính thức $\rightarrow$ Ném ngoại lệ validation | **PASS** |
-| 2 | `testProbationSalaryExactly85Percent_passes` | Lương thử việc đúng bằng $85\%$ lương chính thức $\rightarrow$ Hợp lệ | **PASS** |
-| 3 | `testCreateOfferByHr_probationSalaryGreaterThanProposed_throwsException` | Lương thử việc $>$ lương chính thức $\rightarrow$ Ném `OfferValidationException` | **PASS** |
-| 4 | `testCreateOfferRequest_probationSalaryGreaterThanProposed_hasViolation` | Bean Validation phát hiện lỗi lương thử việc $>$ lương chính thức | **PASS** |
-| 5 | `testSingleActiveOfferRule_deactivatesOldOffers` | Tạo offer theo quy trình cũ $\rightarrow$ Đánh dấu các bản ghi cũ thành `Voided` | **PASS** |
-| 6 | `testCreateOfferByHr_startDateToday_throwsException` | Ngày bắt đầu dự kiến $=$ hôm nay $\rightarrow$ Chặn với `OfferValidationException` | **PASS** |
-| 7 | `testCreateOfferByHr_startDatePast_throwsException` | Ngày bắt đầu trong quá khứ $\rightarrow$ Chặn với `OfferValidationException` | **PASS** |
-| 8 | `testCreateOfferByHr_probationDaysZeroOrNegative_throwsException` | Thời gian thử việc $\le 0$ ngày $\rightarrow$ Bị chặn | **PASS** |
-| 9 | `testCreateOfferByHr_salaryZeroOrNegative_throwsException` | Lương chính thức $\le 0$ $\rightarrow$ Bị chặn | **PASS** |
-| 10 | `testCreateOfferByHr_workLocationBlank_throwsException` | Địa điểm làm việc rỗng/chỉ chứa khoảng trắng $\rightarrow$ Bị chặn | **PASS** |
-| 11 | `testCreateOfferByHr_allValidExceptBenefits_passes` | Các trường hợp lệ, gói phúc lợi để `null` $\rightarrow$ Tạo thành công | **PASS** |
-| 12 | `testUpdateOfferByHr_invalidStartDate_throwsException` | Cập nhật Offer với ngày bắt đầu $\le$ hôm nay $\rightarrow$ Bị chặn | **PASS** |
-| 13 | `testCreateOfferRequest_beanValidationConstraints` | Bean Validation bắt đủ vi phạm các trường bắt buộc; `benefitsPackage` không bị vi phạm | **PASS** |
-| 14 | `testCreateOfferRequest_beanValidationSuccess` | DTO hợp lệ qua được Bean Validation | **PASS** |
-| 15 | `testGetPassedCandidatesForOffer_mapsWorkLocationCorrectly` | Tự động lấy đúng `workLocation` từ `JobPosting` hoặc `Candidate` | **PASS** |
-| 16 | `testGetPassedCandidatesForOffer_filtersGroupB_keepsGroupA` | `GBR-07`: Loại ứng viên có Offer Nhóm B (`Pending_Director`, `Accepted`), giữ lại Nhóm A (`Rejected`) hoặc chưa có Offer | **PASS** |
-| 17 | `testCreateOfferByHr_existingOfferInGroupB_throwsException` | `GBR-07`: Tạo Offer cho ứng viên có Offer Nhóm B (`Sent_Candidate`) $\rightarrow$ Ném `OFFER_LOCKED_STATE` | **PASS** |
-| 18 | `testCreateOfferByHr_existingOfferInGroupA_overridesSuccessfully` | `GBR-07`: Tạo Offer cho ứng viên có Offer Nhóm A (`Director_Rejected`) $\rightarrow$ Ghi đè in-place thành công | **PASS** |
-| 19 | `testUpdateOfferByHr_negotiatingAndDeclined_allowed` | `GBR-07`: Cho phép cập nhật Offer khi ở trạng thái `Negotiating` hoặc `Declined` (Nhóm A) | **PASS** |
-| 20 | `testUpdateOfferByHr_groupB_throwsException` | `GBR-07`: Cố tình cập nhật Offer ở trạng thái Nhóm B (`Pending_Director`) $\rightarrow$ Ném `OFFER_STATUS_INVALID` | **PASS** |
-| 21 | `testGetOfferById_found_returnsOfferResponse` | Tìm Offer theo ID thành công $\rightarrow$ Trả về `OfferResponse` chính xác | **PASS** |
-| 22 | `testGetOfferById_notFound_throwsException` | Tìm Offer theo ID không tồn tại $\rightarrow$ Ném `ResourceNotFoundException` | **PASS** |
-| 23 | `testGetOfferByApplicationId_found_returnsOfferResponse` | Tìm Offer theo ApplicationId thành công $\rightarrow$ Trả về `OfferResponse` | **PASS** |
-| 24 | `testGetOfferByApplicationId_notFound_throwsException` | Tìm Offer theo ApplicationId không tồn tại $\rightarrow$ Ném `ResourceNotFoundException` | **PASS** |
-| 25 | `testGetAllOffersForHr_allStatus_queriesActive` | Lấy danh sách Offer cho HR với trạng thái `ALL` hoặc `null` $\rightarrow$ Query toàn bộ | **PASS** |
-| 26 | `testGetAllOffersForHr_filteredStatus_queriesByStatus` | Lấy danh sách Offer có lọc theo status cụ thể (ví dụ `Pending_Director`) | **PASS** |
-| 27 | `testGetOfferDetailForHr_returnsComprehensiveDetails` | Lấy chi tiết Offer đầy đủ Candidate, Lịch sử duyệt Director và Đàm phán | **PASS** |
-| 28 | `testDeleteDraftOfferByHr_draftStatus_softDeletesSuccessfully` | Xóa bản thảo Offer khi ở trạng thái `Draft` thành công (Soft delete `isDeleted = true`) | **PASS** |
-| 29 | `testDeleteDraftOfferByHr_notDraft_throwsException` | Cố tình xóa Offer không phải `Draft` $\rightarrow$ Ném `OFFER_NOT_DRAFT` | **PASS** |
-| 30 | `testSendOfferToCandidate_approvedStatus_success` | HR gửi Offer đã duyệt cho ứng viên $\rightarrow$ Trạng thái Offer thành `Sent_Candidate`, Application thành `Offered` | **PASS** |
-| 31 | `testSendOfferToCandidate_notApprovedStatus_throwsException` | Gửi Offer chưa được duyệt $\rightarrow$ Ném `OFFER_NOT_APPROVED` | **PASS** |
+| STT | Tên Test Case (Method) | Tham số đầu vào / Kịch bản chi tiết | Mục tiêu kiểm tra & Hợp đồng nghiệp vụ (Contract) | Kết quả |
+| :---: | :--- | :--- | :--- | :---: |
+| 1 | `testProbationSalaryLessThan85Percent_throwsException` | `proposed: 20M`, `probation: 16.9M` ($< 85\%$) | Lương thử việc $< 85\%$ lương chính thức $\rightarrow$ Ném `OfferValidationException`, kiểm tra `never().save()` | **PASS** |
+| 2 | `testProbationSalaryExactly85Percent_passes` | `proposed: 20M`, `probation: 17M` ($= 85\%$) | Lương thử việc đúng bằng $85\%$ lương chính thức $\rightarrow$ Tạo thành công | **PASS** |
+| 3 | `testCreateOfferByHr_probationSalaryGreaterThanProposed_throwsException` | `proposed: 20M`, `probation: 25M` ($> 20M$) | Lương thử việc $>$ lương chính thức $\rightarrow$ Ném `OfferValidationException` | **PASS** |
+| 4 | `testCreateOfferRequest_probationSalaryGreaterThanProposed_hasViolation` | DTO validation trực tiếp | Bean Validation `@AssertTrue` phát hiện lỗi lương thử việc $>$ lương chính thức | **PASS** |
+| 5 | `testCreateOfferByHr_startDateToday_throwsException` | `expectedStartDate = LocalDate.now()` | Ngày bắt đầu dự kiến bằng ngày hiện tại $\rightarrow$ Chặn với `OfferValidationException` | **PASS** |
+| 6 | `testCreateOfferByHr_startDatePast_throwsException` | `expectedStartDate = LocalDate.now().minusDays(1)` | Ngày bắt đầu trong quá khứ $\rightarrow$ Chặn với `OfferValidationException` | **PASS** |
+| 7 | `testCreateOfferByHr_probationDaysZeroOrNegative_throwsException` | `probationDays = 0` | Thời gian thử việc $= 0$ ngày $\rightarrow$ Ném `OfferValidationException`, `never().save()` | **PASS** |
+| 8 | `testCreateOfferByHr_probationDaysZeroOrNegative_throwsException` | `probationDays = -1` | Thời gian thử việc âm ($-1$ ngày) $\rightarrow$ Ném `OfferValidationException`, `never().save()` | **PASS** |
+| 9 | `testCreateOfferByHr_probationDaysZeroOrNegative_throwsException` | `probationDays = -60` | Thời gian thử việc âm ($-60$ ngày) $\rightarrow$ Ném `OfferValidationException`, `never().save()` | **PASS** |
+| 10 | `testCreateOfferByHr_salaryZeroOrNegative_throwsException` | `proposedSalary = 0` | Mức lương chính thức $= 0$ $\rightarrow$ Ném `OfferValidationException`, `never().save()` | **PASS** |
+| 11 | `testCreateOfferByHr_salaryZeroOrNegative_throwsException` | `proposedSalary = -1` | Mức lương chính thức âm ($-1$) $\rightarrow$ Ném `OfferValidationException`, `never().save()` | **PASS** |
+| 12 | `testCreateOfferByHr_salaryZeroOrNegative_throwsException` | `proposedSalary = -10,000,000` | Mức lương chính thức âm ($-10M$) $\rightarrow$ Ném `OfferValidationException`, `never().save()` | **PASS** |
+| 13 | `testCreateOfferByHr_workLocationBlank_throwsException` | `workLocation = "   "` (khoảng trắng) | Địa điểm làm việc rỗng $\rightarrow$ Ném `OfferValidationException` | **PASS** |
+| 14 | `testCreateOfferByHr_allValidExceptBenefits_passes` | `benefitsPackage = null` | Các trường hợp lệ, gói phúc lợi để `null` $\rightarrow$ Vẫn tạo thành công | **PASS** |
+| 15 | `testUpdateOfferByHr_invalidStartDate_throwsException` | `expectedStartDate = LocalDate.now()` | Cập nhật Offer với ngày bắt đầu $\le$ hôm nay $\rightarrow$ Bị chặn với `OfferValidationException` | **PASS** |
+| 16 | `testCreateOfferRequest_beanValidationConstraints` | DTO thiếu các trường bắt buộc | Bean Validation bắt đủ vi phạm các trường bắt buộc; `benefitsPackage` cho phép null | **PASS** |
+| 17 | `testCreateOfferRequest_beanValidationSuccess` | DTO đầy đủ dữ liệu chuẩn | DTO hợp lệ qua được Bean Validation với 0 vi phạm | **PASS** |
+| 18 | `testGetPassedCandidatesForOffer_whenBothLocationsPresent_prefersJobPostingLocation` | JobPosting có địa chỉ, Candidate có địa chỉ | WorkLocation Precedence: Ưu tiên tuyệt đối `JobPosting.workLocation` | **PASS** |
+| 19 | `testGetPassedCandidatesForOffer_whenJobLocationMissing_fallbackToCandidateAddress` | JobPosting không có địa chỉ, Candidate có địa chỉ | WorkLocation Precedence: Fallback về `Candidate.address` | **PASS** |
+| 20 | `testGetPassedCandidatesForOffer_whenBothLocationsMissing_fallbackToDefaultLocation` | Cả JobPosting và Candidate đều không có địa chỉ | WorkLocation Precedence: Fallback về mặc định `"Trụ sở chính Mộc RMS"` | **PASS** |
+| 21 | `testGetPassedCandidatesForOffer_filtersGroupB_keepsGroupA` | Danh sách ứng viên có offer Nhóm B và Nhóm A | `GBR-07`: Tự động loại ứng viên có Offer Nhóm B (`Pending_Director`, `Accepted`), giữ lại Nhóm A (`Rejected`) hoặc chưa có Offer | **PASS** |
+| 22 | `testCreateOfferByHr_existingOfferInGroupB_throwsException` | Trạng thái hiện tại: `Pending_Director` (Nhóm B) | `GBR-07`: Chặn tạo đè trực tiếp $\rightarrow$ Ném `OFFER_LOCKED_STATE`, `never().save()` | **PASS** |
+| 23 | `testCreateOfferByHr_existingOfferInGroupB_throwsException` | Trạng thái hiện tại: `Approved` (Nhóm B) | `GBR-07`: Chặn tạo đè trực tiếp $\rightarrow$ Ném `OFFER_LOCKED_STATE`, `never().save()` | **PASS** |
+| 24 | `testCreateOfferByHr_existingOfferInGroupB_throwsException` | Trạng thái hiện tại: `Director_Approved` (Nhóm B) | `GBR-07`: Chặn tạo đè trực tiếp $\rightarrow$ Ném `OFFER_LOCKED_STATE`, `never().save()` | **PASS** |
+| 25 | `testCreateOfferByHr_existingOfferInGroupB_throwsException` | Trạng thái hiện tại: `Sent_Candidate` (Nhóm B) | `GBR-07`: Chặn tạo đè trực tiếp $\rightarrow$ Ném `OFFER_LOCKED_STATE`, `never().save()` | **PASS** |
+| 26 | `testCreateOfferByHr_existingOfferInGroupB_throwsException` | Trạng thái hiện tại: `Accepted` (Nhóm B) | `GBR-07`: Chặn tạo đè trực tiếp $\rightarrow$ Ném `OFFER_LOCKED_STATE`, `never().save()` | **PASS** |
+| 27 | `testCreateOfferByHr_existingOfferInGroupA_overridesSuccessfully` | Trạng thái hiện tại: `Draft` (Nhóm A) | `GBR-07`: Cho phép ghi đè in-place thành công, giữ nguyên `offerId`, `verify().save()` | **PASS** |
+| 28 | `testCreateOfferByHr_existingOfferInGroupA_overridesSuccessfully` | Trạng thái hiện tại: `Rejected` (Nhóm A) | `GBR-07`: Cho phép ghi đè in-place thành công, giữ nguyên `offerId`, `verify().save()` | **PASS** |
+| 29 | `testCreateOfferByHr_existingOfferInGroupA_overridesSuccessfully` | Trạng thái hiện tại: `Director_Rejected` (Nhóm A) | `GBR-07`: Cho phép ghi đè in-place thành công, giữ nguyên `offerId`, `verify().save()` | **PASS** |
+| 30 | `testCreateOfferByHr_existingOfferInGroupA_overridesSuccessfully` | Trạng thái hiện tại: `Negotiating` (Nhóm A) | `GBR-07`: Cho phép ghi đè in-place thành công, giữ nguyên `offerId`, `verify().save()` | **PASS** |
+| 31 | `testCreateOfferByHr_existingOfferInGroupA_overridesSuccessfully` | Trạng thái hiện tại: `Declined` (Nhóm A) | `GBR-07`: Cho phép ghi đè in-place thành công, giữ nguyên `offerId`, `verify().save()` | **PASS** |
+| 32 | `testCreateOfferByHr_existingOfferInGroupA_overridesSuccessfully` | Trạng thái hiện tại: `Canceled` (Nhóm A) | `GBR-07`: Cho phép ghi đè in-place thành công, giữ nguyên `offerId`, `verify().save()` | **PASS** |
+| 33 | `testCreateOfferByHr_existingOfferInGroupA_overridesSuccessfully` | Trạng thái hiện tại: `Voided` (Nhóm A) | `GBR-07`: Cho phép ghi đè in-place thành công, giữ nguyên `offerId`, `verify().save()` | **PASS** |
+| 34 | `testUpdateOfferByHr_groupA_allowed` | Trạng thái cập nhật: `Draft` (Nhóm A) | `GBR-07`: Cập nhật thành công thông tin Offer và lưu DB (`verify().save()`) | **PASS** |
+| 35 | `testUpdateOfferByHr_groupA_allowed` | Trạng thái cập nhật: `Rejected` (Nhóm A) | `GBR-07`: Cập nhật thành công thông tin Offer và lưu DB (`verify().save()`) | **PASS** |
+| 36 | `testUpdateOfferByHr_groupA_allowed` | Trạng thái cập nhật: `Director_Rejected` (Nhóm A) | `GBR-07`: Cập nhật thành công thông tin Offer và lưu DB (`verify().save()`) | **PASS** |
+| 37 | `testUpdateOfferByHr_groupA_allowed` | Trạng thái cập nhật: `Negotiating` (Nhóm A) | `GBR-07`: Cập nhật thành công thông tin Offer và lưu DB (`verify().save()`) | **PASS** |
+| 38 | `testUpdateOfferByHr_groupA_allowed` | Trạng thái cập nhật: `Declined` (Nhóm A) | `GBR-07`: Cập nhật thành công thông tin Offer và lưu DB (`verify().save()`) | **PASS** |
+| 39 | `testUpdateOfferByHr_groupA_allowed` | Trạng thái cập nhật: `Canceled` (Nhóm A) | `GBR-07`: Cập nhật thành công thông tin Offer và lưu DB (`verify().save()`) | **PASS** |
+| 40 | `testUpdateOfferByHr_groupA_allowed` | Trạng thái cập nhật: `Voided` (Nhóm A) | `GBR-07`: Cập nhật thành công thông tin Offer và lưu DB (`verify().save()`) | **PASS** |
+| 41 | `testUpdateOfferByHr_groupB_throwsException` | Trạng thái cập nhật: `Pending_Director` (Nhóm B) | `GBR-07`: Cố tình cập nhật Offer Nhóm B $\rightarrow$ Ném `OFFER_STATUS_INVALID`, `never().save()` | **PASS** |
+| 42 | `testUpdateOfferByHr_groupB_throwsException` | Trạng thái cập nhật: `Approved` (Nhóm B) | `GBR-07`: Cố tình cập nhật Offer Nhóm B $\rightarrow$ Ném `OFFER_STATUS_INVALID`, `never().save()` | **PASS** |
+| 43 | `testUpdateOfferByHr_groupB_throwsException` | Trạng thái cập nhật: `Director_Approved` (Nhóm B) | `GBR-07`: Cố tình cập nhật Offer Nhóm B $\rightarrow$ Ném `OFFER_STATUS_INVALID`, `never().save()` | **PASS** |
+| 44 | `testUpdateOfferByHr_groupB_throwsException` | Trạng thái cập nhật: `Sent_Candidate` (Nhóm B) | `GBR-07`: Cố tình cập nhật Offer Nhóm B $\rightarrow$ Ném `OFFER_STATUS_INVALID`, `never().save()` | **PASS** |
+| 45 | `testUpdateOfferByHr_groupB_throwsException` | Trạng thái cập nhật: `Accepted` (Nhóm B) | `GBR-07`: Cố tình cập nhật Offer Nhóm B $\rightarrow$ Ném `OFFER_STATUS_INVALID`, `never().save()` | **PASS** |
+| 46 | `testGetOfferById_found_returnsOfferResponse` | Offer ID $= 1$ (tồn tại) | Tìm Offer theo ID thành công $\rightarrow$ Trả về `OfferResponse` chính xác | **PASS** |
+| 47 | `testGetOfferById_notFound_throwsException` | Offer ID $= 999$ (không tồn tại) | Tìm Offer theo ID không tồn tại $\rightarrow$ Ném `ResourceNotFoundException` | **PASS** |
+| 48 | `testGetOfferByApplicationId_found_returnsOfferResponse` | Application ID $= 10$ (tồn tại) | Tìm Offer theo ApplicationId thành công $\rightarrow$ Trả về `OfferResponse` | **PASS** |
+| 49 | `testGetOfferByApplicationId_notFound_throwsException` | Application ID $= 999$ (không tồn tại) | Tìm Offer theo ApplicationId không tồn tại $\rightarrow$ Ném `ResourceNotFoundException` | **PASS** |
+| 50 | `testGetAllOffersForHr_allStatus_queriesActive` | Status query: `"ALL"` hoặc `null` | Lấy danh sách Offer cho HR $\rightarrow$ Query toàn bộ active không lọc | **PASS** |
+| 51 | `testGetAllOffersForHr_filteredStatus_queriesByStatus` | Status query: `"Pending_Director"` | Lấy danh sách Offer cho HR $\rightarrow$ Query lọc theo đúng trạng thái chỉ định | **PASS** |
+| 52 | `testGetOfferDetailForHr_returnsComprehensiveDetails` | Offer ID đầy đủ quan hệ phụ thuộc | Lấy chi tiết Offer đầy đủ Candidate, Lịch sử duyệt Director và Đàm phán | **PASS** |
+| 53 | `testDeleteDraftOfferByHr_draftStatus_softDeletesSuccessfully` | Offer ID $= 1$ ở trạng thái `Draft` | Xóa bản thảo Offer khi ở trạng thái `Draft` thành công (Soft delete `isDeleted = true`) | **PASS** |
+| 54 | `testDeleteDraftOfferByHr_notDraft_throwsException` | Offer ID $= 2$ ở trạng thái `Pending_Director` | Cố tình xóa Offer không phải `Draft` $\rightarrow$ Ném `OFFER_NOT_DRAFT` | **PASS** |
+| 55 | `testSendOfferToCandidate_approvedStatus_success` | Offer ID $= 1$ ở trạng thái `Approved` | HR gửi Offer đã duyệt cho ứng viên $\rightarrow$ Trạng thái Offer thành `Sent_Candidate`, Application thành `Offered` | **PASS** |
+| 56 | `testSendOfferToCandidate_notApprovedStatus_throwsException` | Offer ID $= 1$ ở trạng thái `Draft` | Gửi Offer chưa được duyệt $\rightarrow$ Ném `OFFER_NOT_APPROVED` | **PASS** |
 
 ---
 

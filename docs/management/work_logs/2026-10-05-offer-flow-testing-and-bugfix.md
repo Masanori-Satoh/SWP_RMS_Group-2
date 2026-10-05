@@ -36,7 +36,7 @@
 ---
 
 ## 4. Kết quả Kiểm thử (Testing)
-- **Unit Test (`OfferServiceTests.java`):** **31/31 PASS (100%)**.
+- **Unit Test (`OfferServiceTests.java`):** **56/56 PASS (100%)** (32 test methods tham số hóa toàn diện).
 - **Integration Test (`OfferIntegrationTest.java`):** **12/12 PASS (100%)**.
-- **Tổng số test Offer:** **43/43 tests PASS (100%)**.
-- **Build Maven (`mvnw test-compile`):** **BUILD SUCCESS**.
+- **Tổng số test Offer:** **68/68 tests PASS (100%)**.
+- **Build Maven (`mvnw test`):** **BUILD SUCCESS**.
