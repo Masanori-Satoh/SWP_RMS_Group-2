@@ -35,9 +35,10 @@
                         <h2 id="requisition-list-title">Requisition list</h2>
                         <p class="records-count" th:text="|${totalElements} matching requisitions in total|"></p>
                     </div>
-                    <form th:action="@{/requisitions}" method="get" id="filterForm">
+                    <form th:action="@{/requisitions}" method="get" id="filterForm"
+                        th:with="canFilterStatus=${viewerRole == 'Hiring Manager' or viewerRole == 'System Admin'}">
                         <input type="hidden" name="size" th:value="${pageSize}">
-                        <div class="requisition-filter-grid">
+                        <div class="requisition-filter-grid" th:classappend="${!canFilterStatus} ? 'without-status-filter' : ''">
                             <div class="filter-field filter-search"><label for="requisition-search">Search</label><input
                                     id="requisition-search" type="search" name="q" th:value="${search}" maxlength="120"
                                     placeholder="Position or department name"></div>
@@ -54,12 +55,12 @@
                                     <option th:each="type : ${employmentTypes}" th:value="${type}" th:text="${type}"
                                         th:selected="${type == selectedType}"></option>
                                 </select></div>
-                            <div class="filter-field"><label for="status-filter">Status</label><select
+                            <div class="filter-field" th:if="${canFilterStatus}"><label for="status-filter">Status</label><select
                                     id="status-filter" name="status">
-                                    <option th:if="${viewerRole != 'HR'}" value="">All statuses</option>
-                                    <option th:each="state : ${viewerRole == 'HR' ? {'Approved'} : {'Draft','Pending_Director','Approved','Rejected'} }"
+                                    <option value="">All statuses</option>
+                                    <option th:each="state : ${ {'Draft','Pending_Director','Approved','Rejected'} }"
                                         th:value="${state}" th:text="${state == 'Pending_Director' ? 'Pending' : state}"
-                                        th:selected="${state == selectedStatus || (viewerRole == 'HR' and (selectedStatus == '' or selectedStatus == null))}"></option>
+                                        th:selected="${state == selectedStatus}"></option>
                                 </select></div>
                             <div class="filter-field"><label for="sort-filter">Sort by</label><select id="sort-filter"
                                     name="sort">

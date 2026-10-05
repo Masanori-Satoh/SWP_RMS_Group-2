@@ -2,7 +2,8 @@
 .req-list-page .btn-create { flex-shrink:0; }
 .req-list-page .requisition-list-heading { margin-bottom:var(--s6); }
 .req-list-page .records-count { margin-top:var(--s1); color:var(--muted); font-size:14px; }
-.req-list-page .requisition-filter-grid { display:grid; grid-template-columns:minmax(190px,1.5fr) repeat(4,minmax(120px,1fr)); gap:var(--s4); }
+.req-list-page .requisition-filter-grid { display:grid; grid-template-columns:minmax(190px,1.5fr) repeat(var(--filter-column-count,4),minmax(120px,1fr)); gap:var(--s4); }
+.req-list-page .without-status-filter { --filter-column-count:3; }
 .req-list-page .filter-field { min-width:0; }
 .req-list-page .filter-field label { display:block; margin-bottom:var(--s2); font-size:14px; font-weight:600; }
 .req-list-page .filter-actions { display:flex; gap:var(--s2); flex-wrap:wrap; margin-block:var(--s4) var(--s6); }
