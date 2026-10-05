@@ -118,15 +118,6 @@
                             <option value="EARLIEST" th:selected="${currentTimeSort == 'EARLIEST'}">Sớm nhất</option>
                             <option value="LATEST" th:selected="${currentTimeSort == 'LATEST'}">Muộn nhất</option>
                         </select>
-
-                        <!-- Nút Xóa bộ lọc nếu có bất kỳ bộ lọc nào đang kích hoạt -->
-                        <a th:if="${(search != null and search != '') or (currentStatus != 'ALL' and currentStatus != null) or (currentTimeSort != 'DEFAULT' and currentTimeSort != null)}"
-                           th:href="@{/offers}"
-                           class="btn-clear-filter"
-                           style="display:inline-flex; align-items:center; gap:6px; color:var(--danger, #dc2626); font-size:13.5px; text-decoration:none; margin-left:8px; font-weight:500;"
-                           title="Đặt lại toàn bộ bộ lọc về mặc định">
-                            <i class="fa-solid fa-rotate-left"></i> Xóa bộ lọc
-                        </a>
                     </div>
 
                 </div>
