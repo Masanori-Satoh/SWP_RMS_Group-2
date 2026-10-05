@@ -40,7 +40,8 @@ public class OfferViewController {
 
         String userRole = "HR";
         if (principal instanceof org.springframework.security.core.Authentication auth) {
-            if (auth.getAuthorities().stream().anyMatch(a -> com.group2.rms.core.security.RoleAuthorities.SYSTEM_ADMIN.equals(a.getAuthority()))) {
+            if (auth.getAuthorities().stream().anyMatch(
+                    a -> com.group2.rms.core.security.RoleAuthorities.SYSTEM_ADMIN.equals(a.getAuthority()))) {
                 userRole = "System Admin";
             } else if (auth.getAuthorities().stream().anyMatch(a -> "ROLE_DIRECTOR".equals(a.getAuthority()))) {
                 userRole = "Director";
@@ -56,7 +57,7 @@ public class OfferViewController {
         model.addAttribute("totalElements", pagedData.getTotalElements());
         model.addAttribute("currentStatus", status != null ? status : "ALL");
         model.addAttribute("passedCandidates", passedCandidates);
-        model.addAttribute("currentUser", principal != null ? principal.getName() : "HR Specialist");
+        model.addAttribute("currentUser", principal != null ? principal.getName() : "HR");
         model.addAttribute("userRole", userRole);
 
         return "offers/list";

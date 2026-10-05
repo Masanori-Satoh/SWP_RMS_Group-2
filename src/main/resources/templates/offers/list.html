@@ -15,7 +15,7 @@
 
     <div class="main-content">
         <!-- TOPBAR: Kế thừa header chung của hệ thống với logo Mộc và người dùng hiện tại -->
-        <header th:replace="~{fragments/workspace-header :: header(${userRole != null ? (userRole == 'HR' ? 'HR Specialist' : userRole) : 'HR Specialist'}, ${currentUser})}"></header>
+        <header th:replace="~{fragments/workspace-header :: header(${userRole != null ? (userRole == 'HR' ? 'HR' : userRole) : 'HR Specialist'}, ${currentUser})}"></header>
 
         <!-- PAGE CONTENT -->
         <main id="main" class="page-content" tabindex="-1">
@@ -28,7 +28,8 @@
                      
                     </div>
                     <button class="btn btn-primary" onclick="openCreateOfferModal()">
-                        <i class="fa-solid fa-plus"></i> Tạo Offer Proposal
+                        <i class="fa-solid fa-plus"></i> Tạo Đề Xuất
+
                     </button>
                 </div>
 
