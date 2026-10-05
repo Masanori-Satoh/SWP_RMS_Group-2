@@ -53,9 +53,9 @@ Hệ thống phân loại trạng thái Offer thành 2 nhóm:
   $env:SPRING_SQL_INIT_MODE = 'never'
   .\mvnw.cmd '-Dtest=OfferServiceTests' test
   ```
-- **Kết quả thực tế:** **56/56 test executions PASS (100%)**, `BUILD SUCCESS`, 0 failure, 0 error.
+- **Kết quả thực tế:** **59/59 test executions PASS (100%)**, `BUILD SUCCESS`, 0 failure, 0 error.
 
-#### Ma trận chi tiết 56 Unit Test Cases (100% PASS):
+#### Ma trận chi tiết 59 Unit Test Cases (100% PASS):
 
 | STT | Tên Test Case (Method) | Tham số đầu vào / Kịch bản chi tiết | Mục tiêu kiểm tra & Hợp đồng nghiệp vụ (Contract) | Kết quả |
 | :---: | :--- | :--- | :--- | :---: |
@@ -110,11 +110,13 @@ Hệ thống phân loại trạng thái Offer thành 2 nhóm:
 | 49 | `testGetOfferByApplicationId_notFound_throwsException` | Application ID $= 999$ (không tồn tại) | Tìm Offer theo ApplicationId không tồn tại $\rightarrow$ Ném `ResourceNotFoundException` | **PASS** |
 | 50 | `testGetAllOffersForHr_allStatus_queriesActive` | Status query: `"ALL"` hoặc `null` | Lấy danh sách Offer cho HR $\rightarrow$ Query toàn bộ active không lọc | **PASS** |
 | 51 | `testGetAllOffersForHr_filteredStatus_queriesByStatus` | Status query: `"Pending_Director"` | Lấy danh sách Offer cho HR $\rightarrow$ Query lọc theo đúng trạng thái chỉ định | **PASS** |
-| 52 | `testGetOfferDetailForHr_returnsComprehensiveDetails` | Offer ID đầy đủ quan hệ phụ thuộc | Lấy chi tiết Offer đầy đủ Candidate, Lịch sử duyệt Director và Đàm phán | **PASS** |
-| 53 | `testDeleteDraftOfferByHr_draftStatus_softDeletesSuccessfully` | Offer ID $= 1$ ở trạng thái `Draft` | Xóa bản thảo Offer khi ở trạng thái `Draft` thành công (Soft delete `isDeleted = true`) | **PASS** |
-| 54 | `testDeleteDraftOfferByHr_notDraft_throwsException` | Offer ID $= 2$ ở trạng thái `Pending_Director` | Cố tình xóa Offer không phải `Draft` $\rightarrow$ Ném `OFFER_NOT_DRAFT` | **PASS** |
-| 55 | `testSendOfferToCandidate_approvedStatus_success` | Offer ID $= 1$ ở trạng thái `Approved` | HR gửi Offer đã duyệt cho ứng viên $\rightarrow$ Trạng thái Offer thành `Sent_Candidate`, Application thành `Offered` | **PASS** |
-| 56 | `testSendOfferToCandidate_notApprovedStatus_throwsException` | Offer ID $= 1$ ở trạng thái `Draft` | Gửi Offer chưa được duyệt $\rightarrow$ Ném `OFFER_NOT_APPROVED` | **PASS** |
+| 52 | `testGetAllOffersForHr_withSearchAndSort_queriesWithSpecification` | Search: `"Java"`, Status: `"Draft"`, Sort: `"EARLIEST"` | Lọc kết hợp 3 tiêu chí từ khóa, trạng thái, thời gian trên toàn bộ dữ liệu hệ thống với JPA Specification | **PASS** |
+| 53 | `testGetOfferStats_returnsAccurateCounts` | Đếm theo 4 nhóm trạng thái chính | Thống kê số lượng Offer cho 4 thẻ Stat Cards từ database chính xác | **PASS** |
+| 54 | `testGetOfferDetailForHr_returnsComprehensiveDetails` | Offer ID đầy đủ quan hệ phụ thuộc | Lấy chi tiết Offer đầy đủ Candidate, Lịch sử duyệt Director và Đàm phán | **PASS** |
+| 55 | `testDeleteDraftOfferByHr_draftStatus_softDeletesSuccessfully` | Offer ID $= 1$ ở trạng thái `Draft` | Xóa bản thảo Offer khi ở trạng thái `Draft` thành công (Soft delete `isDeleted = true`) | **PASS** |
+| 56 | `testDeleteDraftOfferByHr_notDraft_throwsException` | Offer ID $= 2$ ở trạng thái `Pending_Director` | Cố tình xóa Offer không phải `Draft` $\rightarrow$ Ném `OFFER_NOT_DRAFT` | **PASS** |
+| 57 | `testSendOfferToCandidate_approvedStatus_success` | Offer ID $= 1$ ở trạng thái `Approved` | HR gửi Offer đã duyệt cho ứng viên $\rightarrow$ Trạng thái Offer thành `Sent_Candidate`, Application thành `Offered` | **PASS** |
+| 58 | `testSendOfferToCandidate_notApprovedStatus_throwsException` | Offer ID $= 1$ ở trạng thái `Draft` | Gửi Offer chưa được duyệt $\rightarrow$ Ném `OFFER_NOT_APPROVED` | **PASS** |
 
 ---
 

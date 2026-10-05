@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 
 import java.security.Principal;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Controller điều hướng giao diện quản lý Offer (Screen 30 & Screen 32)
@@ -28,14 +29,16 @@ public class OfferViewController {
 
     @GetMapping
     public String listOffers(
+            @RequestParam(required = false) String search,
             @RequestParam(required = false) String status,
+            @RequestParam(required = false) String timeSort,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
             Model model,
             Principal principal) {
 
         int validPage = Math.max(0, page);
-        Page<OfferResponse> pagedData = offerService.getAllOffersForHr(status, PageRequest.of(validPage, size));
+        Page<OfferResponse> pagedData = offerService.getAllOffersForHr(search, status, timeSort, PageRequest.of(validPage, size));
         List<PassedCandidateResponse> passedCandidates = offerService.getPassedCandidatesForOffer();
 
         String userRole = "HR";
@@ -50,12 +53,20 @@ public class OfferViewController {
             }
         }
 
+        Map<String, Long> stats = offerService.getOfferStats();
+        model.addAttribute("statPending", stats.getOrDefault("statPending", 0L));
+        model.addAttribute("statApproved", stats.getOrDefault("statApproved", 0L));
+        model.addAttribute("statSent", stats.getOrDefault("statSent", 0L));
+        model.addAttribute("statAccepted", stats.getOrDefault("statAccepted", 0L));
+
         model.addAttribute("offers", pagedData.getContent());
         model.addAttribute("offersPage", pagedData);
         model.addAttribute("currentPage", validPage);
         model.addAttribute("totalPages", Math.max(1, pagedData.getTotalPages()));
         model.addAttribute("totalElements", pagedData.getTotalElements());
-        model.addAttribute("currentStatus", status != null ? status : "ALL");
+        model.addAttribute("search", search != null ? search.trim() : "");
+        model.addAttribute("currentStatus", status != null && !status.isBlank() ? status.trim() : "ALL");
+        model.addAttribute("currentTimeSort", timeSort != null && !timeSort.isBlank() ? timeSort.trim() : "DEFAULT");
         model.addAttribute("passedCandidates", passedCandidates);
         model.addAttribute("currentUser", principal != null ? principal.getName() : "HR");
         model.addAttribute("userRole", userRole);

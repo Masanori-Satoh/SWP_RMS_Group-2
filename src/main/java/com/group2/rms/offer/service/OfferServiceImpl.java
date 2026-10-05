@@ -19,8 +19,15 @@ import com.group2.rms.offer.exception.OfferValidationException;
 import com.group2.rms.user.entity.User;
 import com.group2.rms.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
+import com.group2.rms.candidate.entity.Candidate;
+import jakarta.persistence.criteria.Join;
+import jakarta.persistence.criteria.JoinType;
+import jakarta.persistence.criteria.Predicate;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.security.authentication.AnonymousAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -32,8 +39,11 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Locale;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 
@@ -251,13 +261,95 @@ public class OfferServiceImpl implements OfferService {
     @Override
     @Transactional(readOnly = true)
     public Page<OfferResponse> getAllOffersForHr(String status, Pageable pageable) {
-        Page<OfferProposal> pagedEntities;
-        if (status == null || status.isBlank() || "ALL".equalsIgnoreCase(status)) {
-            pagedEntities = offerProposalRepository.findAllActiveByOrderByOfferIdAsc(pageable);
-        } else {
-            pagedEntities = offerProposalRepository.findActiveByStatusOrderByOfferIdAsc(status.trim(), pageable);
+        return getAllOffersForHr(null, status, null, pageable);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Page<OfferResponse> getAllOffersForHr(String search, String status, String timeSort, Pageable pageable) {
+        boolean hasSearch = search != null && !search.trim().isEmpty();
+        boolean hasStatus = status != null && !status.trim().isEmpty() && !"ALL".equalsIgnoreCase(status.trim());
+        boolean hasCustomSort = timeSort != null && !timeSort.trim().isEmpty() && !"DEFAULT".equalsIgnoreCase(timeSort.trim());
+
+        // Fast-path: Nếu không tìm kiếm theo từ khóa và không chọn sắp xếp tùy biến
+        if (!hasSearch && !hasCustomSort) {
+            Page<OfferProposal> pagedEntities;
+            if (!hasStatus) {
+                pagedEntities = offerProposalRepository.findAllActiveByOrderByOfferIdAsc(pageable);
+            } else {
+                pagedEntities = offerProposalRepository.findActiveByStatusOrderByOfferIdAsc(status.trim(), pageable);
+            }
+            return pagedEntities.map(this::mapToResponse);
         }
+
+        // Cấu hình sắp xếp theo thời gian (EARLIEST / LATEST / DEFAULT)
+        Sort sort;
+        if ("EARLIEST".equalsIgnoreCase(timeSort)) {
+            sort = Sort.by(Sort.Order.asc("createdAt"), Sort.Order.asc("offerId"));
+        } else if ("LATEST".equalsIgnoreCase(timeSort)) {
+            sort = Sort.by(Sort.Order.desc("createdAt"), Sort.Order.desc("offerId"));
+        } else {
+            sort = Sort.by(Sort.Order.asc("offerId"));
+        }
+
+        Pageable sortedPageable = PageRequest.of(pageable.getPageNumber(), pageable.getPageSize(), sort);
+
+        Specification<OfferProposal> spec = (root, query, builder) -> {
+            List<Predicate> predicates = new ArrayList<>();
+
+            // 1. Chỉ lấy các bản ghi chưa bị xóa mềm
+            predicates.add(builder.or(
+                    builder.isNull(root.get("isDeleted")),
+                    builder.isFalse(root.get("isDeleted"))
+            ));
+
+            // 2. Lọc theo từ khóa (tên ứng viên, vị trí đề xuất)
+            if (hasSearch) {
+                String pattern = "%" + search.trim().toLowerCase(Locale.ROOT) + "%";
+                Join<OfferProposal, Application> appJoin = root.join("application", JoinType.LEFT);
+                Join<Application, Candidate> candJoin = appJoin.join("candidate", JoinType.LEFT);
+                Join<Candidate, User> userJoin = candJoin.join("account", JoinType.LEFT);
+
+                predicates.add(builder.or(
+                        builder.like(builder.lower(root.get("offeredPositionTitle")), pattern),
+                        builder.like(builder.lower(userJoin.get("fullName")), pattern)
+                ));
+            }
+
+            // 3. Lọc theo trạng thái
+            if (hasStatus) {
+                String s = status.trim();
+                if ("Director_Approved".equalsIgnoreCase(s) || "Approved".equalsIgnoreCase(s)) {
+                    predicates.add(builder.or(
+                            builder.equal(builder.lower(root.get("offerStatus")), "director_approved"),
+                            builder.equal(builder.lower(root.get("offerStatus")), "approved")
+                    ));
+                } else if ("Director_Rejected".equalsIgnoreCase(s) || "Rejected".equalsIgnoreCase(s)) {
+                    predicates.add(builder.or(
+                            builder.equal(builder.lower(root.get("offerStatus")), "director_rejected"),
+                            builder.equal(builder.lower(root.get("offerStatus")), "rejected")
+                    ));
+                } else {
+                    predicates.add(builder.equal(builder.lower(root.get("offerStatus")), s.toLowerCase(Locale.ROOT)));
+                }
+            }
+
+            return builder.and(predicates.toArray(new Predicate[0]));
+        };
+
+        Page<OfferProposal> pagedEntities = offerProposalRepository.findAll(spec, sortedPageable);
         return pagedEntities.map(this::mapToResponse);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Map<String, Long> getOfferStats() {
+        Map<String, Long> stats = new HashMap<>();
+        stats.put("statPending", offerProposalRepository.countPendingDirector());
+        stats.put("statApproved", offerProposalRepository.countDirectorApproved());
+        stats.put("statSent", offerProposalRepository.countSentCandidate());
+        stats.put("statAccepted", offerProposalRepository.countAccepted());
+        return stats;
     }
 
     @Override

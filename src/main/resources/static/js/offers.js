@@ -3,86 +3,45 @@
  * Tuân thủ quy chuẩn ARCHITECTURE_GUIDE.md (tách rời script khỏi templates HTML).
  */
 
-document.addEventListener('DOMContentLoaded', () => {
-    calculateStatsFromTable();
-});
-
-// Tính toán số lượng thống kê nhanh trên Stat Cards
-function calculateStatsFromTable() {
-    const rows = document.querySelectorAll('#offersTableBody tr[data-status]');
-    let pending = 0, approved = 0, sent = 0, accepted = 0;
-
-    rows.forEach(r => {
-        const st = r.getAttribute('data-status');
-        if (st === 'Pending_Director') pending++;
-        else if (st === 'Director_Approved' || st === 'Approved') approved++;
-        else if (st === 'Sent_Candidate') sent++;
-        else if (st === 'Accepted') accepted++;
-    });
-
-    const elPending = document.getElementById('statPending');
-    const elApproved = document.getElementById('statApproved');
-    const elSent = document.getElementById('statSent');
-    const elAccepted = document.getElementById('statAccepted');
-
-    if (elPending) elPending.textContent = pending;
-    if (elApproved) elApproved.textContent = approved;
-    if (elSent) elSent.textContent = sent;
-    if (elAccepted) elAccepted.textContent = accepted;
-}
-
-// Bộ lọc, tìm kiếm và sắp xếp client-side nhanh
-function handleFilterSearch() {
-    const search = (document.getElementById('searchInput')?.value || '').toLowerCase().trim();
+// Áp dụng bộ lọc 3 tiêu chí trên toàn bộ dữ liệu hệ thống (Server-side Filtering & Sorting)
+function applyOfferFilters() {
+    const search = (document.getElementById('searchInput')?.value || '').trim();
     const status = document.getElementById('statusFilter')?.value || 'ALL';
     const timeSort = document.getElementById('timeSortFilter')?.value || 'DEFAULT';
-    const tbody = document.getElementById('offersTableBody');
-    const rows = document.querySelectorAll('#offersTableBody tr[data-status]');
-    let count = 0;
 
-    // Sắp xếp các dòng theo thời gian nếu có chọn
-    if (tbody && rows.length > 0) {
-        const rowArray = Array.from(rows);
-        rowArray.sort((a, b) => {
-            const timeA = a.getAttribute('data-created') || '';
-            const timeB = b.getAttribute('data-created') || '';
-            const dateA = timeA ? new Date(timeA).getTime() : 0;
-            const dateB = timeB ? new Date(timeB).getTime() : 0;
-
-            if (timeSort === 'EARLIEST') {
-                return dateA - dateB; // Sớm nhất lên trước (tăng dần theo ngày)
-            } else if (timeSort === 'LATEST') {
-                return dateB - dateA; // Muộn nhất lên trước (giảm dần theo ngày)
-            } else {
-                const idA = parseInt(a.getAttribute('data-id') || '0', 10);
-                const idB = parseInt(b.getAttribute('data-id') || '0', 10);
-                return idA - idB; // Mặc định theo OfferId
-            }
-        });
-        rowArray.forEach(r => tbody.appendChild(r));
+    const url = new URL(window.location.origin + window.location.pathname);
+    if (search) {
+        url.searchParams.set('search', search);
+    } else {
+        url.searchParams.delete('search');
     }
 
-    rows.forEach(r => {
-        const rStatus = r.getAttribute('data-status');
-        const rCand = (r.getAttribute('data-cand') || '').toLowerCase();
-        const rPos = (r.getAttribute('data-pos') || '').toLowerCase();
+    if (status && status !== 'ALL') {
+        url.searchParams.set('status', status);
+    } else {
+        url.searchParams.delete('status');
+    }
 
-        const matchSearch = !search || rCand.includes(search) || rPos.includes(search);
-        const matchStatus = (status === 'ALL') ||
-            (status === 'Director_Approved' && (rStatus === 'Director_Approved' || rStatus === 'Approved')) ||
-            (status === 'Director_Rejected' && (rStatus === 'Director_Rejected' || rStatus === 'Rejected')) ||
-            (rStatus === status);
+    if (timeSort && timeSort !== 'DEFAULT') {
+        url.searchParams.set('timeSort', timeSort);
+    } else {
+        url.searchParams.delete('timeSort');
+    }
 
-        if (matchSearch && matchStatus) {
-            r.style.display = '';
-            count++;
-        } else {
-            r.style.display = 'none';
-        }
-    });
+    url.searchParams.set('page', '0'); // Reset về trang đầu khi đổi điều kiện lọc
+    window.location.href = url.toString();
+}
 
-    const countEl = document.getElementById('displayedCount');
-    if (countEl) countEl.textContent = count;
+function handleFilterSearch() {
+    applyOfferFilters();
+}
+
+function clearSearchInput() {
+    const searchInput = document.getElementById('searchInput');
+    if (searchInput) {
+        searchInput.value = '';
+    }
+    applyOfferFilters();
 }
 
 // Modal Helpers

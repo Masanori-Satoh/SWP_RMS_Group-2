@@ -30,6 +30,7 @@ import com.group2.rms.user.repository.UserRepository;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import jakarta.validation.ConstraintViolation;
 import jakarta.validation.Validation;
 import jakarta.validation.Validator;
@@ -47,6 +48,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -790,6 +792,37 @@ class OfferServiceTests {
         assertNotNull(result);
         assertEquals(1, result.getTotalElements());
         assertEquals("Pending_Director", result.getContent().get(0).getOfferStatus());
+    }
+
+    @Test
+    @DisplayName("getAllOffersForHr: Lọc theo 3 tiêu chí search, status và timeSort với Specification")
+    void testGetAllOffersForHr_withSearchAndSort_queriesWithSpecification() {
+        PageRequest pageable = PageRequest.of(0, 10);
+        OfferProposal offer = OfferProposal.builder().offerId(3).offerStatus("Draft").offeredPositionTitle("Senior Java").build();
+        Page<OfferProposal> page = new PageImpl<>(List.of(offer), pageable, 1);
+
+        when(offerProposalRepository.findAll(any(org.springframework.data.jpa.domain.Specification.class), any(Pageable.class))).thenReturn(page);
+
+        Page<OfferResponse> result = offerService.getAllOffersForHr("Java", "Draft", "EARLIEST", pageable);
+        assertNotNull(result);
+        assertEquals(1, result.getTotalElements());
+        assertEquals("Senior Java", result.getContent().get(0).getOfferedPositionTitle());
+    }
+
+    @Test
+    @DisplayName("getOfferStats: Lấy thống kê số lượng Offer cho 4 stat cards từ database")
+    void testGetOfferStats_returnsAccurateCounts() {
+        when(offerProposalRepository.countPendingDirector()).thenReturn(3L);
+        when(offerProposalRepository.countDirectorApproved()).thenReturn(5L);
+        when(offerProposalRepository.countSentCandidate()).thenReturn(2L);
+        when(offerProposalRepository.countAccepted()).thenReturn(4L);
+
+        Map<String, Long> stats = offerService.getOfferStats();
+        assertNotNull(stats);
+        assertEquals(3L, stats.get("statPending"));
+        assertEquals(5L, stats.get("statApproved"));
+        assertEquals(2L, stats.get("statSent"));
+        assertEquals(4L, stats.get("statAccepted"));
     }
 
     @Test

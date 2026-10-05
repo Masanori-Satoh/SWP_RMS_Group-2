@@ -2,8 +2,8 @@
 
 Pull Request này tập trung chuyên biệt vào việc **xây dựng bộ kiểm thử tự động toàn diện (Unit Test & Integration Test)** và **lập tài liệu hướng dẫn kiểm thử** cho phân hệ **Quản lý Đề xuất Tuyển dụng (Offer Proposal)** của thành viên **Phạm Thị Huyền (HuyenPT)**:
 
-1. **Xây dựng Bộ Kiểm thử Tự động Toàn diện (69/69 Test Executions PASS — 100%):**
-   - Hoàn thiện **57 Unit Test Executions** (32 methods) tại `OfferServiceTests.java` ứng dụng `@ParameterizedTest`, bao phủ toàn diện hợp đồng nghiệp vụ tầng Service, các điều kiện biên, độ ưu tiên địa điểm làm việc và ma trận trạng thái chuẩn của quy tắc `GBR-07`.
+1. **Xây dựng Bộ Kiểm thử Tự động Toàn diện (71/71 Test Executions PASS — 100%):**
+   - Hoàn thiện **59 Unit Test Executions** (34 methods) tại `OfferServiceTests.java` ứng dụng `@ParameterizedTest`, bao phủ toàn diện hợp đồng nghiệp vụ tầng Service, các điều kiện biên, độ ưu tiên địa điểm làm việc, ma trận trạng thái chuẩn của quy tắc `GBR-07` và bộ lọc 3 tiêu chí server-side với JPA Specification.
    - Hoàn thiện **12 Integration Tests** tại `OfferIntegrationTest.java` kiểm tra toàn bộ 7 REST API endpoints, mã phản hồi HTTP, CSRF token và phân quyền Spring Security.
 2. **Khắc phục lỗi bổ trợ kiểm thử theo chuẩn Kiến trúc (Architecture Test Support):**
    - Bổ sung xử lý lỗi `MethodArgumentNotValidException` trong `GlobalExceptionHandler.java` để API trả về đúng mã chuẩn HTTP 400 Bad Request (thay vì bị bắt vào lỗi hệ thống 500).
@@ -17,7 +17,7 @@ Pull Request này tập trung chuyên biệt vào việc **xây dựng bộ ki�
 ## 🎯 Chi tiết các Hạng mục Kiểm thử (Test Details)
 
 ### 1. Unit Testing — Tầng Dịch vụ & Ràng buộc Nghiệp vụ (`OfferServiceTests.java`)
-Bao gồm **57 test executions** kiểm thử độc lập với Mockito và JUnit 5 Parameterized:
+Bao gồm **59 test executions** kiểm thử độc lập với Mockito và JUnit 5 Parameterized:
 * **Kiểm thử Ràng buộc Lương (Salary Constraints):**
   * Lương thử việc $< 85\%$ mức lương chính thức $\rightarrow$ Ném `OfferValidationException` ở Service, khẳng định `never().save()`.
   * Lương thử việc $= 85\%$ mức lương chính thức $\rightarrow$ Hợp lệ.
@@ -79,10 +79,10 @@ Log kết quả chạy thực tế:
 [INFO] Running com.group2.rms.offer.OfferIntegrationTest
 [INFO] Tests run: 12, Failures: 0, Errors: 0, Skipped: 0
 [INFO] Running com.group2.rms.service.OfferServiceTests
-[INFO] Tests run: 57, Failures: 0, Errors: 0, Skipped: 0
+[INFO] Tests run: 59, Failures: 0, Errors: 0, Skipped: 0
 [INFO] -------------------------------------------------------
 [INFO] Results:
-[INFO] Tests run: 69, Failures: 0, Errors: 0, Skipped: 0 (100% PASS)
+[INFO] Tests run: 71, Failures: 0, Errors: 0, Skipped: 0 (100% PASS)
 [INFO] -------------------------------------------------------
 [INFO] BUILD SUCCESS
 ```
