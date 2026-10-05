@@ -1,14 +1,36 @@
 <!DOCTYPE html>
-<html lang="en" xmlns:th="http://www.thymeleaf.org"><body>
-<header th:fragment="topbar" class="topbar"><span class="topbar-title">Recruitment Management System</span><div class="topbar-actions"><span>Welcome, <strong th:text="${viewerName}"></strong></span><form th:action="@{/logout}" method="post"><button type="submit" class="logout-button">Đăng xuất</button></form></div></header>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org"><body>
+<header th:fragment="topbar" class="topbar">
+    <span class="topbar-title">Hệ thống quản lý tuyển dụng Mộc RMS</span>
+    <div class="topbar-actions">
+        <span>Xin chào, <strong th:text="${viewerName}"></strong></span>
+        <form th:action="@{/logout}" method="post">
+            <button type="submit" class="logout-button">Đăng xuất</button>
+        </form>
+    </div>
+</header>
 <nav th:fragment="breadcrumb(current)" class="requisition-page-breadcrumb" aria-label="Breadcrumb">
-    <a th:href="@{/dashboard}">Dashboard</a><span aria-hidden="true">/</span>
-    <a th:href="@{/requisitions}">Job Requisitions</a><span aria-hidden="true">/</span>
+    <a th:href="@{/dashboard}">Bảng điều khiển</a><span aria-hidden="true">/</span>
+    <a th:href="@{/requisitions}">Yêu cầu tuyển dụng</a><span aria-hidden="true">/</span>
     <span aria-current="page" th:text="${current}"></span>
 </nav>
 <span th:fragment="informationIcon" class="icon-wrapper" aria-hidden="true">
     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="5" width="14" height="14" rx="2"/><path d="M8 9h8M8 12h8M8 15h4"/></svg>
 </span>
-<th:block th:fragment="messages"><p class="notice" role="status" th:if="${successMessage}" th:text="${successMessage}"></p><p class="alert alert-danger" role="alert" th:if="${failureMessage}" th:text="${failureMessage}"></p></th:block>
-<dialog th:fragment="deleteDialog" id="delete-dialog" aria-labelledby="delete-title"><form id="delete-form" method="post" th:action="@{/requisitions}"><div class="delete-symbol" aria-hidden="true">!</div><h2 id="delete-title">Delete Requisition</h2><p>Delete “<strong id="delete-name"></strong>” and its criteria and approval records?</p><p class="muted">This cannot be undone. Audit history will be retained.</p><div class="dialog-actions"><button type="button" class="btn-outline" data-close-dialog>Cancel</button><button class="btn-danger" type="submit">Delete requisition</button></div></form></dialog>
+<th:block th:fragment="messages">
+    <p class="notice" role="status" th:if="${successMessage}" th:text="${successMessage}"></p>
+    <p class="alert alert-danger" role="alert" th:if="${failureMessage}" th:text="${failureMessage}"></p>
+</th:block>
+<dialog th:fragment="deleteDialog" id="delete-dialog" aria-labelledby="delete-title">
+    <form id="delete-form" method="post" th:action="@{/requisitions}">
+        <div class="delete-symbol" aria-hidden="true">!</div>
+        <h2 id="delete-title">Xác nhận xóa yêu cầu tuyển dụng</h2>
+        <p>Bạn có chắc chắn muốn xóa “<strong id="delete-name"></strong>” cùng các tiêu chí và lịch sử phê duyệt liên quan?</p>
+        <p class="muted">Thao tác này không thể hoàn tác. Lịch sử kiểm toán sẽ được lưu trữ.</p>
+        <div class="dialog-actions">
+            <button type="button" class="btn-outline" data-close-dialog>Hủy</button>
+            <button class="btn-danger" type="submit">Xóa yêu cầu</button>
+        </div>
+    </form>
+</dialog>
 </body></html>

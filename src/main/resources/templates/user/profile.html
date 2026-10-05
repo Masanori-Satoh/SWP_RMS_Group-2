@@ -1,6 +1,6 @@
 <!DOCTYPE html>
-<html lang="en" xmlns:th="http://www.thymeleaf.org">
-<head th:replace="~{fragments/head :: interfaceHead('My Profile', ~{::pageStyles})}">
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/head :: interfaceHead('Hồ sơ cá nhân', ~{::pageStyles})}">
   <th:block th:fragment="pageStyles">
     <meta name="_csrf" th:content="${_csrf.token}"/>
     <meta name="_csrf_header" th:content="${_csrf.headerName}"/>
@@ -16,25 +16,25 @@
         <main id="main" class="page-content" tabindex="-1">
             <div class="container profile-container">
                 <div class="profile-heading">
-                    <h1>My Profile</h1>
-                    <p>View and update your personal information.</p>
+                    <h1>Hồ sơ cá nhân</h1>
+                    <p>Xem và cập nhật thông tin cá nhân của bạn.</p>
                 </div>
 
-                <!-- Profile Update Success Toast/Alert -->
+                <!-- Thông báo cập nhật hồ sơ thành công -->
                 <div class="alert alert-success" role="status" th:if="${successMessage}" th:text="${successMessage}"></div>
 
-                <!-- Card 1: General Information -->
+                <!-- Thẻ 1: Thông tin chung -->
                 <section class="profile-card" aria-labelledby="general-title">
-                    <h2 id="general-title">General Information</h2>
+                    <h2 id="general-title">Thông tin chung</h2>
 
                     <div class="profile-identity">
                         <img class="profile-avatar" th:if="${userProfile.avatarUrl != null and !userProfile.avatarUrl.isBlank()}"
-                             th:src="${userProfile.avatarUrl}" alt="Profile picture" referrerpolicy="no-referrer">
+                             th:src="${userProfile.avatarUrl}" alt="Ảnh đại diện" referrerpolicy="no-referrer">
                         <div class="profile-avatar profile-avatar-fallback" th:unless="${userProfile.avatarUrl != null and !userProfile.avatarUrl.isBlank()}"
                              aria-hidden="true" th:text="${#strings.toUpperCase(#strings.substring(userProfile.fullName, 0, 1))}">A</div>
                         <div>
-                            <p class="profile-identity-name" th:text="${userProfile.fullName}">Full Name</p>
-                            <p class="profile-identity-meta" th:text="${userProfile.roleName}">Role</p>
+                            <p class="profile-identity-name" th:text="${userProfile.fullName}">Họ và tên</p>
+                            <p class="profile-identity-meta" th:text="${userProfile.roleName}">Vai trò</p>
                         </div>
                     </div>
 
@@ -48,65 +48,65 @@
                                        th:value="${userProfile.email}" disabled>
                             </div>
                             <div class="form-group">
-                                <label class="form-label" for="username">Username</label>
+                                <label class="form-label" for="username">Tên đăng nhập</label>
                                 <input class="form-control profile-readonly" id="username" type="text"
                                        th:value="${userProfile.username}" disabled>
                             </div>
                             <div class="form-group">
-                                <label class="form-label" for="role">Role</label>
+                                <label class="form-label" for="role">Vai trò</label>
                                 <input class="form-control profile-readonly" id="role" type="text"
                                        th:value="${userProfile.roleName}" disabled>
                             </div>
                             <div class="form-group">
-                                <label class="form-label" for="department">Department</label>
+                                <label class="form-label" for="department">Phòng ban</label>
                                 <input class="form-control profile-readonly" id="department" type="text"
                                        th:value="${userProfile.departmentName}" disabled>
                             </div>
 
                             <div class="form-group profile-field-full">
-                                <label class="form-label" for="full-name">Full Name <span aria-hidden="true">*</span></label>
+                                <label class="form-label" for="full-name">Họ và tên <span aria-hidden="true">*</span></label>
                                 <input class="form-control" id="full-name" type="text" th:field="*{fullName}"
                                        minlength="2" maxlength="100" autocomplete="name" required
                                        pattern="^[\p{L}][\p{L}\s.'-]*$"
-                                       title="Full name must start with a letter and can only contain letters, spaces, hyphens, and apostrophes."
+                                       title="Họ và tên phải bắt đầu bằng chữ cái và chỉ chứa chữ cái, khoảng trắng, dấu gạch nối và dấu nháy đơn."
                                        th:attr="aria-invalid=${#fields.hasErrors('fullName')},aria-describedby=${#fields.hasErrors('fullName') ? 'full-name-error' : null}">
                                 <span id="full-name-error" class="form-error" th:if="${#fields.hasErrors('fullName')}" th:errors="*{fullName}"></span>
                             </div>
                             <div class="form-group">
-                                <label class="form-label" for="phone-number">Phone Number</label>
+                                <label class="form-label" for="phone-number">Số điện thoại</label>
                                 <input class="form-control" id="phone-number" type="tel" th:field="*{phoneNumber}"
                                        maxlength="15" autocomplete="tel"
                                        pattern="^[0-9+\s()-]*$"
-                                       title="Phone number can only contain digits, spaces, hyphens, and plus signs."
+                                       title="Số điện thoại chỉ có thể chứa chữ số, khoảng trắng, dấu gạch nối và dấu cộng."
                                        th:attr="aria-invalid=${#fields.hasErrors('phoneNumber')},aria-describedby=${#fields.hasErrors('phoneNumber') ? 'phone-number-error' : 'phone-number-hint'}">
-                                <small id="phone-number-hint" class="account-field-hint">Max 15 characters (digits, spaces, hyphens, plus sign).</small>
+                                <small id="phone-number-hint" class="account-field-hint">Tối đa 15 ký tự (chữ số, khoảng trắng, dấu gạch nối, dấu cộng).</small>
                                 <span id="phone-number-error" class="form-error" th:if="${#fields.hasErrors('phoneNumber')}" th:errors="*{phoneNumber}"></span>
                             </div>
                             <div class="form-group">
-                                <label class="form-label" for="avatar-url">Avatar URL</label>
+                                <label class="form-label" for="avatar-url">Đường dẫn ảnh đại diện</label>
                                 <input class="form-control" id="avatar-url" type="text" th:field="*{avatarUrl}"
                                        maxlength="500" placeholder="https://"
                                        pattern="^$|^https?://[^\s<>]+$"
-                                       title="Must be a valid URL starting with http:// or https:// and cannot contain spaces."
+                                       title="Phải là URL hợp lệ bắt đầu bằng http:// hoặc https:// và không chứa khoảng trắng."
                                        th:attr="aria-invalid=${#fields.hasErrors('avatarUrl')},aria-describedby=${#fields.hasErrors('avatarUrl') ? 'avatar-url-error' : 'avatar-url-hint'}">
-                                <small id="avatar-url-hint" class="account-field-hint">Optional, must start with http:// or https://.</small>
+                                <small id="avatar-url-hint" class="account-field-hint">Không bắt buộc, phải bắt đầu bằng http:// hoặc https://.</small>
                                 <span id="avatar-url-error" class="form-error" th:if="${#fields.hasErrors('avatarUrl')}" th:errors="*{avatarUrl}"></span>
                             </div>
                         </div>
 
                         <div class="profile-actions">
-                            <button class="btn btn-secondary" id="btnDiscardProfile" type="button" style="display: none;">Discard Changes</button>
-                            <button class="btn btn-primary" id="btnSaveProfile" type="button" disabled>Save Profile</button>
+                            <button class="btn btn-secondary" id="btnDiscardProfile" type="button" style="display: none;">Hủy thay đổi</button>
+                            <button class="btn btn-primary" id="btnSaveProfile" type="button" disabled>Lưu hồ sơ</button>
                         </div>
                     </form>
                 </section>
 
-                <!-- Card 2: Security Settings -->
+                <!-- Thẻ 2: Cài đặt bảo mật -->
                 <section class="profile-card" aria-labelledby="security-title">
-                    <h2 id="security-title">Password &amp; Security</h2>
+                    <h2 id="security-title">Mật khẩu &amp; Bảo mật</h2>
                     <div class="profile-security">
-                        <p aria-label="Password hidden">Password: ••••••••</p>
-                        <button class="btn btn-secondary" type="button" data-open-modal="changePasswordModal">Change Password</button>
+                        <p aria-label="Đã ẩn mật khẩu">Mật khẩu: ••••••••</p>
+                        <button class="btn btn-secondary" type="button" data-open-modal="changePasswordModal">Đổi mật khẩu</button>
                     </div>
                 </section>
             </div>
@@ -114,15 +114,15 @@
     </div>
 </div>
 
-<!-- Change Password Modal -->
+<!-- Modal Đổi mật khẩu -->
 <dialog id="changePasswordModal" class="profile-modal" aria-labelledby="change-password-title"
         th:attr="data-open-on-load=${openPasswordModal != null} ? 'true' : 'false'">
     <div class="profile-modal-header">
-        <h2 id="change-password-title">Change Password</h2>
-        <button class="modal-close-icon" type="button" data-close-modal aria-label="Close dialog">&times;</button>
+        <h2 id="change-password-title">Đổi mật khẩu</h2>
+        <button class="modal-close-icon" type="button" data-close-modal aria-label="Đóng hộp thoại">&times;</button>
     </div>
 
-    <!-- Alert container inside modal for AJAX errors -->
+    <!-- Hộp cảnh báo lỗi AJAX bên trong modal -->
     <div id="changePasswordAlert" class="alert alert-danger" role="alert" style="display: none;"></div>
 
     <form id="changePasswordForm" th:action="@{/profile/change-password}" th:object="${passwordRequest}" method="post">
@@ -130,48 +130,48 @@
         <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
 
         <div class="form-group">
-            <label class="form-label" for="currentPassword">Current Password <span aria-hidden="true">*</span></label>
+            <label class="form-label" for="currentPassword">Mật khẩu hiện tại <span aria-hidden="true">*</span></label>
             <input class="form-control" id="currentPassword" type="password" name="currentPassword"
                    autocomplete="current-password" required
                    aria-describedby="currentPassword-error">
             <span class="form-error" id="currentPassword-error" style="display: none;"></span>
         </div>
         <div class="form-group">
-            <label class="form-label" for="newPassword">New Password <span aria-hidden="true">*</span></label>
+            <label class="form-label" for="newPassword">Mật khẩu mới <span aria-hidden="true">*</span></label>
             <input class="form-control" id="newPassword" type="password" name="newPassword"
                    minlength="8" maxlength="32" autocomplete="new-password" required
                    aria-describedby="newPassword-hint newPassword-error">
-            <small id="newPassword-hint" class="account-field-hint">Must contain 8–32 characters. All special characters are allowed.</small>
+            <small id="newPassword-hint" class="account-field-hint">Độ dài từ 8–32 ký tự. Cho phép tất cả các ký tự đặc biệt.</small>
             <span class="form-error" id="newPassword-error" style="display: none;"></span>
         </div>
         <div class="form-group">
-            <label class="form-label" for="confirmPassword">Confirm Password <span aria-hidden="true">*</span></label>
+            <label class="form-label" for="confirmPassword">Xác nhận mật khẩu mới <span aria-hidden="true">*</span></label>
             <input class="form-control" id="confirmPassword" type="password" name="confirmPassword"
                    minlength="8" maxlength="32" autocomplete="new-password" required
                    aria-describedby="confirmPassword-error">
             <span class="form-error" id="confirmPassword-error" style="display: none;"></span>
         </div>
         <div class="profile-actions">
-            <button class="btn btn-secondary" type="button" data-close-modal>Cancel</button>
-            <button class="btn btn-primary" id="btnSubmitPassword" type="submit">Update Password</button>
+            <button class="btn btn-secondary" type="button" data-close-modal>Hủy</button>
+            <button class="btn btn-primary" id="btnSubmitPassword" type="submit">Cập nhật mật khẩu</button>
         </div>
     </form>
 </dialog>
 
-<!-- Confirm Save Profile Modal -->
+<!-- Modal Xác nhận lưu hồ sơ -->
 <dialog id="confirmSaveModal" class="profile-modal" aria-labelledby="confirm-save-title">
     <div class="profile-modal-header">
-        <h2 id="confirm-save-title">Confirm Profile Update</h2>
-        <button class="modal-close-icon" type="button" data-close-modal aria-label="Close dialog">&times;</button>
+        <h2 id="confirm-save-title">Xác nhận cập nhật hồ sơ</h2>
+        <button class="modal-close-icon" type="button" data-close-modal aria-label="Đóng hộp thoại">&times;</button>
     </div>
-    <p>Are you sure you want to save the changes made to your profile?</p>
+    <p>Bạn có chắc chắn muốn lưu các thay đổi trong hồ sơ của mình không?</p>
     <div class="profile-actions">
-        <button class="btn btn-secondary" type="button" data-close-modal>Cancel</button>
-        <button class="btn btn-primary" id="btnConfirmSave" type="button">Yes, Save Changes</button>
+        <button class="btn btn-secondary" type="button" data-close-modal>Hủy</button>
+        <button class="btn btn-primary" id="btnConfirmSave" type="button">Đồng ý, Lưu thay đổi</button>
     </div>
 </dialog>
 
-<!-- Toast Notification Container -->
+<!-- Vùng chứa thông báo Toast -->
 <div id="toastContainer" class="toast-container" aria-live="polite" aria-atomic="true"></div>
 
 <script th:src="@{/js/profile.js}"></script>

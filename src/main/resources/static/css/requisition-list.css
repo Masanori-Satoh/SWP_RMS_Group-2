@@ -2,17 +2,19 @@
 .req-list-page .btn-create { flex-shrink:0; }
 .req-list-page .requisition-list-heading { margin-bottom:var(--s6); }
 .req-list-page .records-count { margin-top:var(--s1); color:var(--muted); font-size:14px; }
-.req-list-page .requisition-filter-grid { display:grid; grid-template-columns:minmax(190px,1.5fr) repeat(var(--filter-column-count,4),minmax(120px,1fr)); gap:var(--s4); }
-.req-list-page .without-status-filter { --filter-column-count:3; }
+.req-list-page .requisition-filter-grid { display:grid; grid-template-columns:repeat(auto-fit, minmax(150px, 1fr)); gap:var(--s4); }
+.req-list-page .filter-search { min-width:180px; }
 .req-list-page .filter-field { min-width:0; }
 .req-list-page .filter-field label { display:block; margin-bottom:var(--s2); font-size:14px; font-weight:600; }
 .req-list-page .filter-actions { display:flex; gap:var(--s2); flex-wrap:wrap; margin-block:var(--s4) var(--s6); }
-.req-list-page .requisition-list-table { min-width:850px; }
+.req-list-page .requisition-list-table { min-width:920px; }
 .req-list-page .requisition-list-table td { padding-block:var(--s2); }
 .req-list-page .requisition-list-table th { white-space:nowrap; }
 .req-list-page .requisition-list-table tbody tr:hover { background:var(--page); }
 .req-list-page .requisition-list-table td:first-child { color:var(--muted); }
-.req-list-page .position-title { display:flex; align-items:center; min-height:44px; min-width:160px; max-width:320px; font-weight:600; text-decoration:none; overflow-wrap:anywhere; }
+.req-list-page .code-badge { display:inline-block; font-family:monospace; font-size:12px; font-weight:600; padding:2px 6px; border-radius:4px; background:var(--brand-soft); color:var(--brand-dark); white-space:nowrap; }
+.req-list-page .round-badge { display:inline-block; font-size:11px; font-weight:600; padding:2px 8px; border-radius:10px; background:#e0e7ff; color:#3730a3; white-space:nowrap; }
+.req-list-page .position-title { display:flex; align-items:center; min-height:44px; min-width:140px; max-width:280px; font-weight:600; text-decoration:none; overflow-wrap:anywhere; }
 .req-list-page .position-title:hover { text-decoration:underline; }
 .req-list-page .btn-action-outline { min-width:44px; padding:var(--s2); font-size:20px; }
 .req-list-page .action-popover { position:fixed; inset:auto; margin:0; padding:var(--s1); min-width:176px; max-width:calc(100vw - 16px); border:1px solid var(--control-line); border-radius:4px; background:var(--surface); color:var(--ink); box-shadow:0 4px 12px rgb(37 41 35 / .1); }

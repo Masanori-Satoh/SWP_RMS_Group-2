@@ -12,7 +12,6 @@ import com.group2.rms.offer.dto.PassedCandidateResponse;
 import com.group2.rms.offer.dto.UpdateOfferRequest;
 import com.group2.rms.offer.entity.OfferProposal;
 import com.group2.rms.offer.repository.OfferApprovalRepository;
-import com.group2.rms.offer.repository.OfferNegotiationRepository;
 import com.group2.rms.offer.repository.OfferProposalRepository;
 import com.group2.rms.interview.repository.InterviewFinalResultRepository;
 import com.group2.rms.offer.exception.OfferValidationException;
@@ -47,7 +46,6 @@ public class OfferServiceImpl implements OfferService {
     private final UserRepository userRepository;
     private final InterviewFinalResultRepository interviewFinalResultRepository;
     private final OfferApprovalRepository offerApprovalRepository;
-    private final OfferNegotiationRepository offerNegotiationRepository;
     private final NotificationService notificationService;
 
     /**
@@ -336,17 +334,7 @@ public class OfferServiceImpl implements OfferService {
                         .build())
                 .toList();
 
-        List<OfferDetailResponse.NegotiationRound> negotiationHistory = offerNegotiationRepository
-                .findByOfferProposal_OfferIdOrderByNegotiationDateDesc(id)
-                .stream()
-                .map(n -> OfferDetailResponse.NegotiationRound.builder()
-                        .negotiationId(n.getNegotiationId())
-                        .candidateCounterSalary(n.getCandidateCounterSalary())
-                        .candidateNotes(n.getCandidateNotes())
-                        .hrResponseNotes(n.getHrResponseNotes())
-                        .negotiationDate(n.getNegotiationDate())
-                        .build())
-                .toList();
+        List<OfferDetailResponse.NegotiationRound> negotiationHistory = Collections.emptyList();
 
         String proposedByName = offer.getProposedBy() != null ? offer.getProposedBy().getFullName() : null;
         Integer proposedById = offer.getProposedBy() != null ? offer.getProposedBy().getUserId() : null;

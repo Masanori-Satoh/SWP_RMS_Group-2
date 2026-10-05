@@ -92,7 +92,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (phoneInput) phoneInput.value = initialProfileValues.phoneNumber;
             if (avatarInput) avatarInput.value = initialProfileValues.avatarUrl;
             updateProfileFormState();
-            showToast('Changes discarded. Profile restored to original values.');
+            showToast('Đã hủy các thay đổi. Khôi phục thông tin ban đầu.');
         });
     }
 
@@ -115,7 +115,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             if (!val) {
                 if (fullNameErr) {
-                    fullNameErr.textContent = 'Full name is required.';
+                    fullNameErr.textContent = 'Vui lòng nhập họ và tên.';
                     fullNameErr.style.display = 'block';
                 }
                 if (fullNameInput) {
@@ -127,7 +127,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             if (!namePattern.test(val)) {
                 if (fullNameErr) {
-                    fullNameErr.textContent = 'Full name must start with a letter and can only contain letters, spaces, hyphens, and apostrophes.';
+                    fullNameErr.textContent = 'Họ và tên phải bắt đầu bằng chữ cái và chỉ chứa chữ cái, khoảng trắng, dấu gạch nối và dấu nháy đơn.';
                     fullNameErr.style.display = 'block';
                 }
                 if (fullNameInput) {
@@ -294,33 +294,33 @@ document.addEventListener('DOMContentLoaded', () => {
             let firstInvalidField = null;
 
             if (!currentPassword) {
-                setPasswordFieldError('currentPassword', 'Enter your current password.');
+                setPasswordFieldError('currentPassword', 'Vui lòng nhập mật khẩu hiện tại.');
                 hasError = true;
                 if (!firstInvalidField) firstInvalidField = passwordForm.currentPassword;
             }
 
             if (!newPassword) {
-                setPasswordFieldError('newPassword', 'Enter a new password.');
+                setPasswordFieldError('newPassword', 'Vui lòng nhập mật khẩu mới.');
                 hasError = true;
                 if (!firstInvalidField) firstInvalidField = passwordForm.newPassword;
             } else if (newPassword.length < 8 || newPassword.length > 32) {
-                setPasswordFieldError('newPassword', 'Password must contain 8–32 characters.');
+                setPasswordFieldError('newPassword', 'Mật khẩu phải từ 8–32 ký tự.');
                 hasError = true;
                 if (!firstInvalidField) firstInvalidField = passwordForm.newPassword;
             }
 
             if (!confirmPassword) {
-                setPasswordFieldError('confirmPassword', 'Confirm your new password.');
+                setPasswordFieldError('confirmPassword', 'Vui lòng xác nhận mật khẩu mới.');
                 hasError = true;
                 if (!firstInvalidField) firstInvalidField = passwordForm.confirmPassword;
             } else if (newPassword && confirmPassword !== newPassword) {
-                setPasswordFieldError('confirmPassword', 'Passwords do not match.');
+                setPasswordFieldError('confirmPassword', 'Mật khẩu xác nhận không khớp.');
                 hasError = true;
                 if (!firstInvalidField) firstInvalidField = passwordForm.confirmPassword;
             }
 
             if (hasError) {
-                showPasswordAlert('Please review the highlighted errors.');
+                showPasswordAlert('Vui lòng kiểm tra lại các trường thông tin bị lỗi.');
                 if (firstInvalidField) firstInvalidField.focus();
                 return;
             }
@@ -347,7 +347,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             if (btnSubmitPassword) {
                 btnSubmitPassword.disabled = true;
-                btnSubmitPassword.textContent = 'Updating...';
+                btnSubmitPassword.textContent = 'Đang cập nhật...';
             }
 
             try {
@@ -364,9 +364,9 @@ document.addEventListener('DOMContentLoaded', () => {
                     passwordForm.reset();
                     clearPasswordErrors();
                     if (passwordModal) passwordModal.close();
-                    showToast(data.message || 'Password changed successfully.', 'success');
+                    showToast(data.message || 'Đổi mật khẩu thành công.', 'success');
                 } else {
-                    showPasswordAlert(data.message || 'Unable to update password.');
+                    showPasswordAlert(data.message || 'Không thể cập nhật mật khẩu.');
                     if (data.errors) {
                         for (const [field, errorMsg] of Object.entries(data.errors)) {
                             setPasswordFieldError(field, errorMsg);
@@ -374,11 +374,11 @@ document.addEventListener('DOMContentLoaded', () => {
                     }
                 }
             } catch (err) {
-                showPasswordAlert('A network error occurred. Please check your connection and try again.');
+                showPasswordAlert('Đã xảy ra lỗi mạng. Vui lòng kiểm tra kết nối và thử lại.');
             } finally {
                 if (btnSubmitPassword) {
                     btnSubmitPassword.disabled = false;
-                    btnSubmitPassword.textContent = 'Update Password';
+                    btnSubmitPassword.textContent = 'Cập nhật mật khẩu';
                 }
             }
         });

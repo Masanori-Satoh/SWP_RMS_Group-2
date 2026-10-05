@@ -17,7 +17,10 @@ import lombok.Setter;
 @Builder
 public class RequisitionResponse {
     private Integer requisitionId;
+    private String requisitionCode;
     private String title;
+    private Integer recruitmentRound;
+    private Integer departmentId;
     private String gender;
     private String workLocation;
     private String workModel;

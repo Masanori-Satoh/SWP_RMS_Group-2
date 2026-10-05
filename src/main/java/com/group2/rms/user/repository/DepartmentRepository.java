@@ -17,6 +17,9 @@ public interface DepartmentRepository extends JpaRepository<Department, Integer>
     boolean existsByDepartmentNameIgnoreCase(String departmentName);
     boolean existsByDepartmentNameIgnoreCaseAndDepartmentIdNot(String departmentName, Integer departmentId);
 
+    java.util.List<Department> findByManager_UserId(Integer managerId);
+    java.util.List<Department> findByDepartmentStatus(String departmentStatus);
+
     @Override
     @EntityGraph(attributePaths = "manager")
     Page<Department> findAll(Specification<Department> specification, Pageable pageable);

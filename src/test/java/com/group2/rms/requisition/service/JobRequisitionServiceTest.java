@@ -7,11 +7,10 @@ import com.group2.rms.requisition.dto.ScreeningCriteriaRequest;
 import com.group2.rms.requisition.entity.JobRequisition;
 import com.group2.rms.requisition.entity.ScreeningCriteria;
 import com.group2.rms.requisition.exception.RequisitionValidationException;
-import com.group2.rms.notification.NotificationService;
 import com.group2.rms.requisition.entity.RequisitionApproval;
 import com.group2.rms.requisition.repository.RequisitionApprovalRepository;
 import com.group2.rms.requisition.repository.JobRequisitionRepository;
-import com.group2.rms.requisition.repository.RequisitionWorkflowEventRepository;
+import com.group2.rms.requisition.repository.ScreeningCriteriaRepository;
 import com.group2.rms.requisition.validator.RequisitionValidator;
 import com.group2.rms.user.entity.Department;
 import com.group2.rms.user.entity.User;
@@ -70,10 +69,9 @@ class JobRequisitionServiceTest {
     @Mock private DepartmentRepository departments;
     @Mock private AuditLogRepository audit;
     @Mock private RequisitionApprovalRepository approvals;
-    @Mock private RequisitionWorkflowEventRepository events;
+    @Mock private ScreeningCriteriaRepository screeningCriteriaRepository;
     @Mock private RequisitionAccess access;
     @Mock private RequisitionValidator validator;
-    @Mock private NotificationService notificationService;
 
     @InjectMocks private RequisitionServiceImpl service;
 
@@ -83,6 +81,7 @@ class JobRequisitionServiceTest {
     void setUp() {
         manager = User.builder().userId(10).username("hm").fullName("Nguyen Van A").build();
         lenient().when(access.actor()).thenReturn(manager);
+        lenient().when(access.canManageDepartment(any(), any(), any())).thenReturn(true);
         lenient().when(requisitions.saveAndFlush(any())).thenAnswer(inv -> {
             JobRequisition r = inv.getArgument(0);
             r.setRequisitionId(101);
@@ -278,5 +277,92 @@ class JobRequisitionServiceTest {
         when(root.get("approvalStatus")).thenReturn(status);
         filter.getValue().toPredicate(root, null, builder);
         verify(builder).equal(status, "Approved");
+    }
+
+    @Test
+    @DisplayName("SVC: Copy requisition tự động tăng RecruitmentRound và xoá RequisitionCode để sinh mới")
+    void svc_copy_incrementsRecruitmentRound() {
+        Department dept = Department.builder().departmentId(5).departmentName("Product").build();
+        JobRequisition original = JobRequisition.builder()
+                .requisitionId(80)
+                .requisitionCode("REQ-2026-080")
+                .title("Business Analyst")
+                .recruitmentRound(1)
+                .department(dept)
+                .hiringManager(manager)
+                .screeningCriteria(new ArrayList<>())
+                .build();
+
+        when(requisitions.findById(80)).thenReturn(Optional.of(original));
+        when(requisitions.findMaxRecruitmentRound("Business Analyst", 5)).thenReturn(1);
+
+        var copy = service.copy(80);
+
+        assertEquals("Business Analyst", copy.getTitle());
+        assertEquals(2, copy.getRecruitmentRound(), "Đợt tuyển tiếp theo phải tăng lên 2");
+        assertNull(copy.getRequisitionCode(), "RequisitionCode của bản copy phải là null để tạo mới");
+    }
+
+    @Test
+    @DisplayName("SVC: Director tạo và Submit -> Tự động Approved trực tiếp, không cần qua HM")
+    void svc_director_createAndSubmit_approvesDirectly() {
+        User director = User.builder().userId(20).username("director").fullName("Mr Director").build();
+        when(access.actor()).thenReturn(director);
+        when(access.role(director)).thenReturn("Director");
+        Department dept = Department.builder().departmentId(1).departmentName("Executive").build();
+        when(departments.findById(1)).thenReturn(Optional.of(dept));
+
+        var req = RequisitionRequest.builder()
+                .action("submit")
+                .title("Secretary to Director")
+                .departmentId(1)
+                .numberOfPositions(1)
+                .employmentType("Full-time")
+                .screeningCriteria(new ArrayList<>())
+                .build();
+
+        Integer id = service.createRequisition(req);
+        assertEquals(101, id);
+
+        var captor = ArgumentCaptor.forClass(JobRequisition.class);
+        verify(requisitions).saveAndFlush(captor.capture());
+        JobRequisition saved = captor.getValue();
+
+        assertEquals("Approved", saved.getApprovalStatus(), "Director submit phải được duyệt trực tiếp");
+        assertNotNull(saved.getSubmittedAt());
+        assertNotNull(saved.getDecidedAt());
+        verify(approvals).save(any(RequisitionApproval.class));
+    }
+
+    @Test
+    @DisplayName("SVC: HM tạo requisition cho phòng ban không quản lý -> Bị chặn lỗi validation")
+    void svc_create_unauthorizedDepartment_throwsValidationException() {
+        Department otherDept = Department.builder().departmentId(99).departmentName("Finance").build();
+        when(departments.findById(99)).thenReturn(Optional.of(otherDept));
+        when(access.canManageDepartment(manager, 99, null)).thenReturn(false);
+
+        var req = RequisitionRequest.builder()
+                .action("draft")
+                .title("Accountant")
+                .departmentId(99)
+                .build();
+
+        var ex = assertThrows(RequisitionValidationException.class, () -> service.createRequisition(req));
+        assertTrue(ex.getErrors().containsKey("departmentId"));
+        assertEquals("Bạn chỉ có thể tạo yêu cầu tuyển dụng cho các phòng ban mình quản lý.", ex.getErrors().get("departmentId"));
+    }
+
+    @Test
+    @DisplayName("SVC: HM getAvailablePositions chỉ lấy danh sách vị trí thuộc các phòng ban HM quản lý")
+    void svc_hm_getAvailablePositions_scopedToManagedDepartments() {
+        when(access.role(manager)).thenReturn("Hiring Manager");
+        Department dept1 = Department.builder().departmentId(1).departmentName("Engineering").manager(manager).build();
+        when(departments.findByManager_UserId(manager.getUserId())).thenReturn(List.of(dept1));
+        when(requisitions.findDistinctTitlesByDepartmentIds(List.of(1))).thenReturn(List.of("Backend Dev", "Frontend Dev"));
+
+        List<String> positions = service.getAvailablePositions(manager);
+        assertEquals(2, positions.size());
+        assertEquals(List.of("Backend Dev", "Frontend Dev"), positions);
+        verify(requisitions).findDistinctTitlesByDepartmentIds(List.of(1));
     }
 }

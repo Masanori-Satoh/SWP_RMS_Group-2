@@ -59,13 +59,13 @@ public class UserProfileController {
             return "redirect:/profile";
         }
         profileService.updateProfile(authentication.getName(), request);
-        redirectAttributes.addFlashAttribute("successMessage", "Profile updated successfully.");
+        redirectAttributes.addFlashAttribute("successMessage", "Cập nhật hồ sơ thành công.");
         return "redirect:/profile";
     }
 
     /**
-     * AJAX endpoint for changing password without page reload.
-     * Receives JSON payload with full UTF-8 support and returns status and inline field errors.
+     * AJAX endpoint đổi mật khẩu trực tiếp không cần tải lại trang.
+     * Nhận payload JSON hỗ trợ UTF-8 và trả về trạng thái cùng lỗi từng trường.
      */
     @PostMapping(value = "/change-password", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
     @ResponseBody
@@ -78,18 +78,18 @@ public class UserProfileController {
 
         if (request.newPassword() != null && request.confirmPassword() != null
                 && !request.newPassword().equals(request.confirmPassword())) {
-            bindingResult.addError(new FieldError("changePasswordRequest", "confirmPassword", "Passwords do not match."));
+            bindingResult.addError(new FieldError("changePasswordRequest", "confirmPassword", "Mật khẩu xác nhận không khớp."));
         }
 
         if (!bindingResult.hasErrors()
                 && !profileService.changePassword(authentication.getName(), request)) {
             bindingResult.addError(new FieldError("changePasswordRequest", "currentPassword",
-                    "Incorrect current password. Please check again."));
+                    "Mật khẩu hiện tại không chính xác. Vui lòng kiểm tra lại."));
         }
 
         if (bindingResult.hasErrors()) {
             response.put("success", false);
-            response.put("message", "Unable to update password. Please check the errors below.");
+            response.put("message", "Không thể cập nhật mật khẩu. Vui lòng kiểm tra các lỗi bên dưới.");
             Map<String, String> fieldErrors = new HashMap<>();
             for (FieldError error : bindingResult.getFieldErrors()) {
                 fieldErrors.putIfAbsent(error.getField(), error.getDefaultMessage());
@@ -99,12 +99,12 @@ public class UserProfileController {
         }
 
         response.put("success", true);
-        response.put("message", "Password changed successfully.");
+        response.put("message", "Đổi mật khẩu thành công.");
         return ResponseEntity.ok(response);
     }
 
     /**
-     * Fallback standard form submission endpoint (in case JavaScript is disabled).
+     * Endpoint dự phòng submit form chuẩn (trường hợp trình duyệt tắt JavaScript).
      */
     @PostMapping(value = "/change-password", consumes = MediaType.APPLICATION_FORM_URLENCODED_VALUE)
     public String changePasswordForm(
@@ -115,12 +115,12 @@ public class UserProfileController {
 
         if (request.newPassword() != null && request.confirmPassword() != null
                 && !request.newPassword().equals(request.confirmPassword())) {
-            bindingResult.addError(new FieldError("passwordRequest", "confirmPassword", "Passwords do not match."));
+            bindingResult.addError(new FieldError("passwordRequest", "confirmPassword", "Mật khẩu xác nhận không khớp."));
         }
         if (!bindingResult.hasErrors()
                 && !profileService.changePassword(authentication.getName(), request)) {
             bindingResult.addError(new FieldError("passwordRequest", "currentPassword",
-                    "Incorrect current password. Please check again."));
+                    "Mật khẩu hiện tại không chính xác. Vui lòng kiểm tra lại."));
         }
         if (bindingResult.hasErrors()) {
             redirectAttributes.addFlashAttribute("openPasswordModal", true);
@@ -128,7 +128,7 @@ public class UserProfileController {
             redirectAttributes.addFlashAttribute("passwordRequest", new ChangePasswordRequest("", "", ""));
             return "redirect:/profile";
         }
-        redirectAttributes.addFlashAttribute("successMessage", "Password changed successfully.");
+        redirectAttributes.addFlashAttribute("successMessage", "Đổi mật khẩu thành công.");
         return "redirect:/profile";
     }
 }

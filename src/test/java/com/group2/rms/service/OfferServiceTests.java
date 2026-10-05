@@ -9,11 +9,9 @@ import com.group2.rms.core.exception.BaseBusinessException;
 import com.group2.rms.core.exception.ResourceNotFoundException;
 import com.group2.rms.offer.dto.OfferDetailResponse;
 import com.group2.rms.offer.entity.OfferApproval;
-import com.group2.rms.offer.entity.OfferNegotiation;
 import com.group2.rms.offer.entity.OfferProposal;
 import com.group2.rms.offer.exception.OfferValidationException;
 import com.group2.rms.offer.repository.OfferApprovalRepository;
-import com.group2.rms.offer.repository.OfferNegotiationRepository;
 import com.group2.rms.offer.repository.OfferProposalRepository;
 import com.group2.rms.offer.service.OfferServiceImpl;
 import com.group2.rms.interview.repository.InterviewFinalResultRepository;
@@ -71,9 +69,6 @@ class OfferServiceTests {
 
     @Mock
     private OfferApprovalRepository offerApprovalRepository;
-
-    @Mock
-    private OfferNegotiationRepository offerNegotiationRepository;
 
     @Mock
     private NotificationService notificationService;
@@ -813,13 +808,6 @@ class OfferServiceTests {
                 .directorComments("Đồng ý tuyển dụng")
                 .build();
 
-        OfferNegotiation negotiation = OfferNegotiation.builder()
-                .negotiationId(1)
-                .candidateCounterSalary(new BigDecimal("38000000"))
-                .candidateNotes("Mong muốn mức lương cao hơn")
-                .hrResponseNotes("Đồng ý điều chỉnh lên 35M")
-                .build();
-
         InterviewFinalResult finalResult = InterviewFinalResult.builder()
                 .finalResultId(1)
                 .finalDecision("Passed")
@@ -830,7 +818,6 @@ class OfferServiceTests {
         when(offerProposalRepository.findById(1)).thenReturn(Optional.of(offer));
         when(interviewFinalResultRepository.findByApplicationIdOrderByApprovedAtDesc(300)).thenReturn(List.of(finalResult));
         when(offerApprovalRepository.findByOfferProposal_OfferIdOrderByApprovedAtDesc(1)).thenReturn(List.of(approval));
-        when(offerNegotiationRepository.findByOfferProposal_OfferIdOrderByNegotiationDateDesc(1)).thenReturn(List.of(negotiation));
 
         OfferDetailResponse detail = offerService.getOfferDetailForHr(1);
 
@@ -843,8 +830,7 @@ class OfferServiceTests {
         assertEquals("Passed", detail.getFinalDecision());
         assertEquals(1, detail.getApprovalHistory().size());
         assertEquals("Nguyễn Giám Đốc", detail.getApprovalHistory().get(0).getDirectorName());
-        assertEquals(1, detail.getNegotiationHistory().size());
-        assertEquals(new BigDecimal("38000000"), detail.getNegotiationHistory().get(0).getCandidateCounterSalary());
+        assertTrue(detail.getNegotiationHistory().isEmpty());
     }
 
     @Test

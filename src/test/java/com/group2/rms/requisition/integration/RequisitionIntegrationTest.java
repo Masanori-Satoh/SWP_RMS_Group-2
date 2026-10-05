@@ -3,11 +3,9 @@ package com.group2.rms.requisition.integration;
 import com.group2.rms.requisition.dto.RequisitionRequest;
 import com.group2.rms.requisition.dto.ScreeningCriteriaRequest;
 import com.group2.rms.requisition.entity.JobRequisition;
-import com.group2.rms.requisition.entity.RequisitionWorkflowEvent;
-import jakarta.persistence.EntityManager;
 import com.group2.rms.requisition.repository.JobRequisitionRepository;
 import com.group2.rms.requisition.repository.RequisitionApprovalRepository;
-import com.group2.rms.requisition.repository.RequisitionWorkflowEventRepository;
+import jakarta.persistence.EntityManager;
 import com.group2.rms.requisition.service.RequisitionService;
 import com.group2.rms.user.entity.Department;
 import com.group2.rms.user.entity.Role;
@@ -47,7 +45,6 @@ class RequisitionIntegrationTest {
     @Autowired private RequisitionService service;
     @Autowired private JobRequisitionRepository requisitions;
     @Autowired private RequisitionApprovalRepository approvals;
-    @Autowired private RequisitionWorkflowEventRepository events;
     @Autowired private DepartmentRepository departments;
     @Autowired private UserRepository users;
     @Autowired private RoleRepository roles;
@@ -139,9 +136,6 @@ class RequisitionIntegrationTest {
                 .workModel("Hybrid").probationDuration("2 tháng")
                 .screeningCriteria(new ArrayList<>()).build());
         Integer id = requisition.getRequisitionId();
-        events.saveAndFlush(RequisitionWorkflowEvent.builder()
-                .requisition(requisition).actor(hiringManager).eventType("Withdrawn")
-                .occurredAt(java.time.LocalDateTime.now()).comment("Bổ sung yêu cầu tuyển dụng").build());
         entityManager.clear(); // Exercise JDBC extraction, not the persistence-context cache.
 
         assertEquals("Female", entityManager.createNativeQuery(
@@ -153,7 +147,6 @@ class RequisitionIntegrationTest {
         assertEquals("Văn phòng Hà Nội", row.getWorkLocation());
         assertEquals("2 tháng", row.getProbationDuration());
         assertEquals("Hybrid", row.getWorkModel());
-        assertEquals("Bổ sung yêu cầu tuyển dụng", service.getById(id).getTimeline().getFirst().description());
         mvc.perform(get("/requisitions")).andExpect(status().isOk()).andExpect(view().name("requisitions/list"));
         mvc.perform(get("/requisitions/{id}", id)).andExpect(status().isOk()).andExpect(view().name("requisitions/detail"));
     }

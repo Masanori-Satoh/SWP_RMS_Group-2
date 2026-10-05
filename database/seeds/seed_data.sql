@@ -230,7 +230,7 @@ INSERT INTO InterviewEvaluation (InterviewId, InterviewerId, TechnicalScore, Sof
 INSERT INTO InterviewFinalResult (InterviewId, HiringManagerId, FinalDecision, RecommendedSalary, FinalSummaryComments, ApprovedAt) VALUES (3, 5, N'Passed', 36000000.00, N'Tổng hợp kết quả phỏng vấn ứng viên Huỳnh Hoàng Trung: Đạt yêu cầu đầu vào, đề xuất gửi thư mời nhận việc (Offer).', '2026-10-07 16:30:00');
 INSERT INTO OfferProposal (ApplicationId, OfferedPositionTitle, ProposedSalary, ProbationSalary, ExpectedStartDate, WorkLocation, BenefitsPackage, OfferStatus, ProposedBy, CreatedAt) VALUES (12, N'Senior Java Backend Engineer', 36000000.00, 32000000.00, '2026-10-24', N'Tầng 8, Tòa nhà RMS Tower, Duy Tân, Cầu Giấy, Hà Nội', N'Bảo hiểm PVI, 14 ngày phép năm, thưởng dự án, xét lương 2 lần/năm', N'Declined', 3, '2026-10-08 16:00:00');
 INSERT INTO OfferApproval (OfferId, DirectorId, [Status], DirectorComments, ApprovedAt) VALUES (1, 2, N'Approved', N'Phê duyệt mức đãi ngộ theo đề xuất của HR và HM.', '2026-10-08 22:00:00');
-INSERT INTO OfferNegotiation (OfferId, CandidateCounterSalary, CandidateNotes, HRResponseNotes, NegotiationDate) VALUES (1, 41000000.00, N'Ứng viên nhận được offer khác với mức đãi ngộ cao hơn và mong muốn trao đổi lại.', N'HR đã trao đổi nhưng ngân sách vị trí hiện tại không thể đáp ứng, bảo lưu hồ sơ ứng viên.', '2026-10-09 22:00:00');
+-- INSERT INTO OfferNegotiation (OfferId, CandidateCounterSalary, CandidateNotes, HRResponseNotes, NegotiationDate) VALUES (1, 41000000.00, N'Ứng viên nhận được offer khác với mức đãi ngộ cao hơn và mong muốn trao đổi lại.', N'HR đã trao đổi nhưng ngân sách vị trí hiện tại không thể đáp ứng, bảo lưu hồ sơ ứng viên.', '2026-10-09 22:00:00');
 
 -- -----------------------------------------------------------------------------
 -- DAY 05 / 77: 2026-10-04 (3 Applications)
@@ -347,7 +347,7 @@ INSERT INTO InterviewEvaluation (InterviewId, InterviewerId, TechnicalScore, Sof
 INSERT INTO InterviewFinalResult (InterviewId, HiringManagerId, FinalDecision, RecommendedSalary, FinalSummaryComments, ApprovedAt) VALUES (6, 5, N'Passed', 36000000.00, N'Tổng hợp kết quả phỏng vấn ứng viên Vũ Hoàng Huy: Đạt yêu cầu đầu vào, đề xuất gửi thư mời nhận việc (Offer).', '2026-10-11 17:30:00');
 INSERT INTO OfferProposal (ApplicationId, OfferedPositionTitle, ProposedSalary, ProbationSalary, ExpectedStartDate, WorkLocation, BenefitsPackage, OfferStatus, ProposedBy, CreatedAt) VALUES (25, N'Senior Java Backend Engineer', 36000000.00, 32000000.00, '2026-10-29', N'Tầng 8, Tòa nhà RMS Tower, Duy Tân, Cầu Giấy, Hà Nội', N'Bảo hiểm PVI, 14 ngày phép năm, thưởng dự án, xét lương 2 lần/năm', N'Declined', 3, '2026-10-12 17:00:00');
 INSERT INTO OfferApproval (OfferId, DirectorId, [Status], DirectorComments, ApprovedAt) VALUES (2, 2, N'Approved', N'Phê duyệt mức đãi ngộ theo đề xuất của HR và HM.', '2026-10-12 23:00:00');
-INSERT INTO OfferNegotiation (OfferId, CandidateCounterSalary, CandidateNotes, HRResponseNotes, NegotiationDate) VALUES (2, 41000000.00, N'Ứng viên nhận được offer khác với mức đãi ngộ cao hơn và mong muốn trao đổi lại.', N'HR đã trao đổi nhưng ngân sách vị trí hiện tại không thể đáp ứng, bảo lưu hồ sơ ứng viên.', '2026-10-13 23:00:00');
+-- INSERT INTO OfferNegotiation (OfferId, CandidateCounterSalary, CandidateNotes, HRResponseNotes, NegotiationDate) VALUES (2, 41000000.00, N'Ứng viên nhận được offer khác với mức đãi ngộ cao hơn và mong muốn trao đổi lại.', N'HR đã trao đổi nhưng ngân sách vị trí hiện tại không thể đáp ứng, bảo lưu hồ sơ ứng viên.', '2026-10-13 23:00:00');
 INSERT INTO InterviewSchedule (ApplicationId, InterviewFormat, StartTime, EndTime, LocationOrLink, InterviewStatus, CreatedBy, CreatedAt) VALUES (28, N'Offline_Office', '2026-10-10 14:00:00', '2026-10-10 15:00:00', N'Phòng họp 802, Tầng 8 Tòa nhà RMS Tower', N'Completed', 3, '2026-10-07 14:20:25');
 INSERT INTO InterviewPanel (InterviewId, InterviewerId, RoleInPanel) VALUES (7, 4, N'HR');
 INSERT INTO InterviewPanel (InterviewId, InterviewerId, RoleInPanel) VALUES (7, 9, N'HM');
@@ -583,7 +583,7 @@ INSERT INTO InterviewEvaluation (InterviewId, InterviewerId, TechnicalScore, Sof
 INSERT INTO InterviewFinalResult (InterviewId, HiringManagerId, FinalDecision, RecommendedSalary, FinalSummaryComments, ApprovedAt) VALUES (15, 5, N'Passed', 26000000.00, N'Tổng hợp kết quả phỏng vấn ứng viên Bùi Trọng Hải: Đạt yêu cầu đầu vào, đề xuất gửi thư mời nhận việc (Offer).', '2026-10-21 11:30:00');
 INSERT INTO OfferProposal (ApplicationId, OfferedPositionTitle, ProposedSalary, ProbationSalary, ExpectedStartDate, WorkLocation, BenefitsPackage, OfferStatus, ProposedBy, CreatedAt) VALUES (55, N'Frontend ReactJS Developer', 26000000.00, 23000000.00, '2026-11-10', N'Tầng 8, Tòa nhà RMS Tower, Duy Tân, Cầu Giấy, Hà Nội', N'Bảo hiểm PVI, 14 ngày phép năm, thưởng dự án, xét lương 2 lần/năm', N'Declined', 3, '2026-10-22 11:00:00');
 INSERT INTO OfferApproval (OfferId, DirectorId, [Status], DirectorComments, ApprovedAt) VALUES (3, 2, N'Approved', N'Phê duyệt mức đãi ngộ theo đề xuất của HR và HM.', '2026-10-22 17:00:00');
-INSERT INTO OfferNegotiation (OfferId, CandidateCounterSalary, CandidateNotes, HRResponseNotes, NegotiationDate) VALUES (3, 31000000.00, N'Ứng viên nhận được offer khác với mức đãi ngộ cao hơn và mong muốn trao đổi lại.', N'HR đã trao đổi nhưng ngân sách vị trí hiện tại không thể đáp ứng, bảo lưu hồ sơ ứng viên.', '2026-10-23 17:00:00');
+-- INSERT INTO OfferNegotiation (OfferId, CandidateCounterSalary, CandidateNotes, HRResponseNotes, NegotiationDate) VALUES (3, 31000000.00, N'Ứng viên nhận được offer khác với mức đãi ngộ cao hơn và mong muốn trao đổi lại.', N'HR đã trao đổi nhưng ngân sách vị trí hiện tại không thể đáp ứng, bảo lưu hồ sơ ứng viên.', '2026-10-23 17:00:00');
 
 -- -----------------------------------------------------------------------------
 -- DAY 17 / 77: 2026-10-16 (3 Applications)
@@ -638,7 +638,7 @@ INSERT INTO InterviewEvaluation (InterviewId, InterviewerId, TechnicalScore, Sof
 INSERT INTO InterviewFinalResult (InterviewId, HiringManagerId, FinalDecision, RecommendedSalary, FinalSummaryComments, ApprovedAt) VALUES (17, 5, N'Passed', 26000000.00, N'Tổng hợp kết quả phỏng vấn ứng viên Hoàng Hữu Việt: Đạt yêu cầu đầu vào, đề xuất gửi thư mời nhận việc (Offer).', '2026-10-22 11:30:00');
 INSERT INTO OfferProposal (ApplicationId, OfferedPositionTitle, ProposedSalary, ProbationSalary, ExpectedStartDate, WorkLocation, BenefitsPackage, OfferStatus, ProposedBy, CreatedAt) VALUES (60, N'Frontend ReactJS Developer', 26000000.00, 23000000.00, '2026-11-10', N'Tầng 8, Tòa nhà RMS Tower, Duy Tân, Cầu Giấy, Hà Nội', N'Bảo hiểm PVI, 14 ngày phép năm, thưởng dự án, xét lương 2 lần/năm', N'Declined', 3, '2026-10-23 11:00:00');
 INSERT INTO OfferApproval (OfferId, DirectorId, [Status], DirectorComments, ApprovedAt) VALUES (4, 2, N'Approved', N'Phê duyệt mức đãi ngộ theo đề xuất của HR và HM.', '2026-10-23 17:00:00');
-INSERT INTO OfferNegotiation (OfferId, CandidateCounterSalary, CandidateNotes, HRResponseNotes, NegotiationDate) VALUES (4, 31000000.00, N'Ứng viên nhận được offer khác với mức đãi ngộ cao hơn và mong muốn trao đổi lại.', N'HR đã trao đổi nhưng ngân sách vị trí hiện tại không thể đáp ứng, bảo lưu hồ sơ ứng viên.', '2026-10-24 17:00:00');
+-- INSERT INTO OfferNegotiation (OfferId, CandidateCounterSalary, CandidateNotes, HRResponseNotes, NegotiationDate) VALUES (4, 31000000.00, N'Ứng viên nhận được offer khác với mức đãi ngộ cao hơn và mong muốn trao đổi lại.', N'HR đã trao đổi nhưng ngân sách vị trí hiện tại không thể đáp ứng, bảo lưu hồ sơ ứng viên.', '2026-10-24 17:00:00');
 
 -- -----------------------------------------------------------------------------
 -- DAY 19 / 77: 2026-10-18 (3 Applications)
@@ -883,7 +883,7 @@ INSERT INTO InterviewEvaluation (InterviewId, InterviewerId, TechnicalScore, Sof
 INSERT INTO InterviewFinalResult (InterviewId, HiringManagerId, FinalDecision, RecommendedSalary, FinalSummaryComments, ApprovedAt) VALUES (25, 5, N'Passed', 36000000.00, N'Tổng hợp kết quả phỏng vấn ứng viên Bùi Tuấn Tuấn: Đạt yêu cầu đầu vào, đề xuất gửi thư mời nhận việc (Offer).', '2026-10-31 15:30:00');
 INSERT INTO OfferProposal (ApplicationId, OfferedPositionTitle, ProposedSalary, ProbationSalary, ExpectedStartDate, WorkLocation, BenefitsPackage, OfferStatus, ProposedBy, CreatedAt) VALUES (91, N'Senior Java Backend Engineer', 36000000.00, 32000000.00, '2026-11-16', N'Tầng 8, Tòa nhà RMS Tower, Duy Tân, Cầu Giấy, Hà Nội', N'Bảo hiểm PVI, 14 ngày phép năm, thưởng dự án, xét lương 2 lần/năm', N'Declined', 3, '2026-11-01 15:00:00');
 INSERT INTO OfferApproval (OfferId, DirectorId, [Status], DirectorComments, ApprovedAt) VALUES (5, 2, N'Approved', N'Phê duyệt mức đãi ngộ theo đề xuất của HR và HM.', '2026-11-01 21:00:00');
-INSERT INTO OfferNegotiation (OfferId, CandidateCounterSalary, CandidateNotes, HRResponseNotes, NegotiationDate) VALUES (5, 41000000.00, N'Ứng viên nhận được offer khác với mức đãi ngộ cao hơn và mong muốn trao đổi lại.', N'HR đã trao đổi nhưng ngân sách vị trí hiện tại không thể đáp ứng, bảo lưu hồ sơ ứng viên.', '2026-11-02 21:00:00');
+-- INSERT INTO OfferNegotiation (OfferId, CandidateCounterSalary, CandidateNotes, HRResponseNotes, NegotiationDate) VALUES (5, 41000000.00, N'Ứng viên nhận được offer khác với mức đãi ngộ cao hơn và mong muốn trao đổi lại.', N'HR đã trao đổi nhưng ngân sách vị trí hiện tại không thể đáp ứng, bảo lưu hồ sơ ứng viên.', '2026-11-02 21:00:00');
 
 -- -----------------------------------------------------------------------------
 -- DAY 28 / 77: 2026-10-27 (4 Applications)
@@ -972,7 +972,7 @@ INSERT INTO InterviewEvaluation (InterviewId, InterviewerId, TechnicalScore, Sof
 INSERT INTO InterviewFinalResult (InterviewId, HiringManagerId, FinalDecision, RecommendedSalary, FinalSummaryComments, ApprovedAt) VALUES (27, 5, N'Passed', 26000000.00, N'Tổng hợp kết quả phỏng vấn ứng viên Trịnh Đức Hùng: Đạt yêu cầu đầu vào, đề xuất gửi thư mời nhận việc (Offer).', '2026-11-02 16:30:00');
 INSERT INTO OfferProposal (ApplicationId, OfferedPositionTitle, ProposedSalary, ProbationSalary, ExpectedStartDate, WorkLocation, BenefitsPackage, OfferStatus, ProposedBy, CreatedAt) VALUES (104, N'Frontend ReactJS Developer', 26000000.00, 23000000.00, '2026-11-23', N'Tầng 8, Tòa nhà RMS Tower, Duy Tân, Cầu Giấy, Hà Nội', N'Bảo hiểm PVI, 14 ngày phép năm, thưởng dự án, xét lương 2 lần/năm', N'Accepted', 3, '2026-11-03 16:00:00');
 INSERT INTO OfferApproval (OfferId, DirectorId, [Status], DirectorComments, ApprovedAt) VALUES (6, 2, N'Approved', N'Phê duyệt mức đãi ngộ theo đề xuất của HR và HM.', '2026-11-03 22:00:00');
-INSERT INTO OfferNegotiation (OfferId, CandidateCounterSalary, CandidateNotes, HRResponseNotes, NegotiationDate) VALUES (6, 28000000.00, N'Ứng viên mong muốn hỗ trợ thêm 2 triệu phụ cấp đi lại hoặc chứng chỉ chuyên môn.', N'HR trao đổi và thống nhất hỗ trợ phụ cấp đào tạo chứng chỉ hàng năm.', '2026-11-04 22:00:00');
+-- INSERT INTO OfferNegotiation (OfferId, CandidateCounterSalary, CandidateNotes, HRResponseNotes, NegotiationDate) VALUES (6, 28000000.00, N'Ứng viên mong muốn hỗ trợ thêm 2 triệu phụ cấp đi lại hoặc chứng chỉ chuyên môn.', N'HR trao đổi và thống nhất hỗ trợ phụ cấp đào tạo chứng chỉ hàng năm.', '2026-11-04 22:00:00');
 
 -- -----------------------------------------------------------------------------
 -- DAY 31 / 77: 2026-10-30 (3 Applications)
@@ -1141,7 +1141,7 @@ INSERT INTO InterviewEvaluation (InterviewId, InterviewerId, TechnicalScore, Sof
 INSERT INTO InterviewFinalResult (InterviewId, HiringManagerId, FinalDecision, RecommendedSalary, FinalSummaryComments, ApprovedAt) VALUES (33, 5, N'Passed', 26000000.00, N'Tổng hợp kết quả phỏng vấn ứng viên Nguyễn Mai Thảo: Đạt yêu cầu đầu vào, đề xuất gửi thư mời nhận việc (Offer).', '2026-11-07 15:30:00');
 INSERT INTO OfferProposal (ApplicationId, OfferedPositionTitle, ProposedSalary, ProbationSalary, ExpectedStartDate, WorkLocation, BenefitsPackage, OfferStatus, ProposedBy, CreatedAt) VALUES (123, N'Frontend ReactJS Developer', 26000000.00, 23000000.00, '2026-11-27', N'Tầng 8, Tòa nhà RMS Tower, Duy Tân, Cầu Giấy, Hà Nội', N'Bảo hiểm PVI, 14 ngày phép năm, thưởng dự án, xét lương 2 lần/năm', N'Accepted', 3, '2026-11-08 15:00:00');
 INSERT INTO OfferApproval (OfferId, DirectorId, [Status], DirectorComments, ApprovedAt) VALUES (7, 2, N'Approved', N'Phê duyệt mức đãi ngộ theo đề xuất của HR và HM.', '2026-11-08 21:00:00');
-INSERT INTO OfferNegotiation (OfferId, CandidateCounterSalary, CandidateNotes, HRResponseNotes, NegotiationDate) VALUES (7, 28000000.00, N'Ứng viên mong muốn hỗ trợ thêm 2 triệu phụ cấp đi lại hoặc chứng chỉ chuyên môn.', N'HR trao đổi và thống nhất hỗ trợ phụ cấp đào tạo chứng chỉ hàng năm.', '2026-11-09 21:00:00');
+-- INSERT INTO OfferNegotiation (OfferId, CandidateCounterSalary, CandidateNotes, HRResponseNotes, NegotiationDate) VALUES (7, 28000000.00, N'Ứng viên mong muốn hỗ trợ thêm 2 triệu phụ cấp đi lại hoặc chứng chỉ chuyên môn.', N'HR trao đổi và thống nhất hỗ trợ phụ cấp đào tạo chứng chỉ hàng năm.', '2026-11-09 21:00:00');
 INSERT INTO InterviewSchedule (ApplicationId, InterviewFormat, StartTime, EndTime, LocationOrLink, InterviewStatus, CreatedBy, CreatedAt) VALUES (124, N'Online_GoogleMeet', '2026-11-08 16:00:00', '2026-11-08 17:00:00', N'https://meet.google.com/rms-int-0034', N'Completed', 3, '2026-11-04 11:38:32');
 INSERT INTO InterviewPanel (InterviewId, InterviewerId, RoleInPanel) VALUES (34, 3, N'HR');
 INSERT INTO InterviewPanel (InterviewId, InterviewerId, RoleInPanel) VALUES (34, 9, N'HM');
@@ -1150,7 +1150,7 @@ INSERT INTO InterviewEvaluation (InterviewId, InterviewerId, TechnicalScore, Sof
 INSERT INTO InterviewFinalResult (InterviewId, HiringManagerId, FinalDecision, RecommendedSalary, FinalSummaryComments, ApprovedAt) VALUES (34, 5, N'Passed', 22000000.00, N'Tổng hợp kết quả phỏng vấn ứng viên Đinh Hoàng Hiếu: Đạt yêu cầu đầu vào, đề xuất gửi thư mời nhận việc (Offer).', '2026-11-08 17:30:00');
 INSERT INTO OfferProposal (ApplicationId, OfferedPositionTitle, ProposedSalary, ProbationSalary, ExpectedStartDate, WorkLocation, BenefitsPackage, OfferStatus, ProposedBy, CreatedAt) VALUES (124, N'QA Automation Engineer', 22000000.00, 19500000.00, '2026-11-23', N'Tầng 8, Tòa nhà RMS Tower, Duy Tân, Cầu Giấy, Hà Nội', N'Bảo hiểm PVI, 14 ngày phép năm, thưởng dự án, xét lương 2 lần/năm', N'Declined', 3, '2026-11-09 17:00:00');
 INSERT INTO OfferApproval (OfferId, DirectorId, [Status], DirectorComments, ApprovedAt) VALUES (8, 2, N'Approved', N'Phê duyệt mức đãi ngộ theo đề xuất của HR và HM.', '2026-11-09 23:00:00');
-INSERT INTO OfferNegotiation (OfferId, CandidateCounterSalary, CandidateNotes, HRResponseNotes, NegotiationDate) VALUES (8, 27000000.00, N'Ứng viên nhận được offer khác với mức đãi ngộ cao hơn và mong muốn trao đổi lại.', N'HR đã trao đổi nhưng ngân sách vị trí hiện tại không thể đáp ứng, bảo lưu hồ sơ ứng viên.', '2026-11-10 23:00:00');
+-- INSERT INTO OfferNegotiation (OfferId, CandidateCounterSalary, CandidateNotes, HRResponseNotes, NegotiationDate) VALUES (8, 27000000.00, N'Ứng viên nhận được offer khác với mức đãi ngộ cao hơn và mong muốn trao đổi lại.', N'HR đã trao đổi nhưng ngân sách vị trí hiện tại không thể đáp ứng, bảo lưu hồ sơ ứng viên.', '2026-11-10 23:00:00');
 
 -- -----------------------------------------------------------------------------
 -- DAY 37 / 77: 2026-11-05 (4 Applications)
@@ -1689,7 +1689,7 @@ INSERT INTO InterviewEvaluation (InterviewId, InterviewerId, TechnicalScore, Sof
 INSERT INTO InterviewFinalResult (InterviewId, HiringManagerId, FinalDecision, RecommendedSalary, FinalSummaryComments, ApprovedAt) VALUES (48, 5, N'Passed', 36000000.00, N'Tổng hợp kết quả phỏng vấn ứng viên Vũ Văn Nam: Đạt yêu cầu đầu vào, đề xuất gửi thư mời nhận việc (Offer).', '2026-11-28 11:30:00');
 INSERT INTO OfferProposal (ApplicationId, OfferedPositionTitle, ProposedSalary, ProbationSalary, ExpectedStartDate, WorkLocation, BenefitsPackage, OfferStatus, ProposedBy, CreatedAt) VALUES (196, N'Senior Java Backend Engineer', 36000000.00, 32000000.00, '2026-12-16', N'Tầng 8, Tòa nhà RMS Tower, Duy Tân, Cầu Giấy, Hà Nội', N'Bảo hiểm PVI, 14 ngày phép năm, thưởng dự án, xét lương 2 lần/năm', N'Accepted', 3, '2026-11-29 11:00:00');
 INSERT INTO OfferApproval (OfferId, DirectorId, [Status], DirectorComments, ApprovedAt) VALUES (10, 2, N'Approved', N'Phê duyệt mức đãi ngộ theo đề xuất của HR và HM.', '2026-11-29 17:00:00');
-INSERT INTO OfferNegotiation (OfferId, CandidateCounterSalary, CandidateNotes, HRResponseNotes, NegotiationDate) VALUES (10, 38000000.00, N'Ứng viên mong muốn hỗ trợ thêm 2 triệu phụ cấp đi lại hoặc chứng chỉ chuyên môn.', N'HR trao đổi và thống nhất hỗ trợ phụ cấp đào tạo chứng chỉ hàng năm.', '2026-11-30 17:00:00');
+-- INSERT INTO OfferNegotiation (OfferId, CandidateCounterSalary, CandidateNotes, HRResponseNotes, NegotiationDate) VALUES (10, 38000000.00, N'Ứng viên mong muốn hỗ trợ thêm 2 triệu phụ cấp đi lại hoặc chứng chỉ chuyên môn.', N'HR trao đổi và thống nhất hỗ trợ phụ cấp đào tạo chứng chỉ hàng năm.', '2026-11-30 17:00:00');
 
 -- -----------------------------------------------------------------------------
 -- DAY 58 / 77: 2026-11-26 (4 Applications)
@@ -2077,7 +2077,7 @@ INSERT INTO InterviewEvaluation (InterviewId, InterviewerId, TechnicalScore, Sof
 INSERT INTO InterviewFinalResult (InterviewId, HiringManagerId, FinalDecision, RecommendedSalary, FinalSummaryComments, ApprovedAt) VALUES (62, 6, N'Passed', 20000000.00, N'Tổng hợp kết quả phỏng vấn ứng viên Phan Thảo Quỳnh: Đạt yêu cầu đầu vào, đề xuất gửi thư mời nhận việc (Offer).', '2026-12-15 16:30:00');
 INSERT INTO OfferProposal (ApplicationId, OfferedPositionTitle, ProposedSalary, ProbationSalary, ExpectedStartDate, WorkLocation, BenefitsPackage, OfferStatus, ProposedBy, CreatedAt) VALUES (243, N'Business Development Executive', 20000000.00, 17500000.00, '2026-12-29', N'Tầng 8, Tòa nhà RMS Tower, Duy Tân, Cầu Giấy, Hà Nội', N'Bảo hiểm PVI, 14 ngày phép năm, thưởng dự án, xét lương 2 lần/năm', N'Negotiating', 3, '2026-12-16 16:00:00');
 INSERT INTO OfferApproval (OfferId, DirectorId, [Status], DirectorComments, ApprovedAt) VALUES (13, 2, N'Approved', N'Phê duyệt mức đãi ngộ theo đề xuất của HR và HM.', '2026-12-16 22:00:00');
-INSERT INTO OfferNegotiation (OfferId, CandidateCounterSalary, CandidateNotes, HRResponseNotes, NegotiationDate) VALUES (13, 22000000.00, N'Ứng viên mong muốn hỗ trợ thêm 2 triệu phụ cấp đi lại hoặc chứng chỉ chuyên môn.', N'HR trao đổi và thống nhất hỗ trợ phụ cấp đào tạo chứng chỉ hàng năm.', '2026-12-17 22:00:00');
+-- INSERT INTO OfferNegotiation (OfferId, CandidateCounterSalary, CandidateNotes, HRResponseNotes, NegotiationDate) VALUES (13, 22000000.00, N'Ứng viên mong muốn hỗ trợ thêm 2 triệu phụ cấp đi lại hoặc chứng chỉ chuyên môn.', N'HR trao đổi và thống nhất hỗ trợ phụ cấp đào tạo chứng chỉ hàng năm.', '2026-12-17 22:00:00');
 INSERT INTO InterviewSchedule (ApplicationId, InterviewFormat, StartTime, EndTime, LocationOrLink, InterviewStatus, CreatedBy, CreatedAt) VALUES (244, N'Online_GoogleMeet', '2026-12-15 15:00:00', '2026-12-15 16:00:00', N'https://meet.google.com/rms-int-0063', N'Completed', 3, '2026-12-09 14:27:30');
 INSERT INTO InterviewPanel (InterviewId, InterviewerId, RoleInPanel) VALUES (63, 3, N'HR');
 INSERT INTO InterviewPanel (InterviewId, InterviewerId, RoleInPanel) VALUES (63, 5, N'HM');
@@ -2155,7 +2155,7 @@ INSERT INTO InterviewEvaluation (InterviewId, InterviewerId, TechnicalScore, Sof
 INSERT INTO InterviewFinalResult (InterviewId, HiringManagerId, FinalDecision, RecommendedSalary, FinalSummaryComments, ApprovedAt) VALUES (65, 5, N'Passed', 36000000.00, N'Tổng hợp kết quả phỏng vấn ứng viên Đặng Hoàng Tùng: Đạt yêu cầu đầu vào, đề xuất gửi thư mời nhận việc (Offer).', '2026-12-15 16:30:00');
 INSERT INTO OfferProposal (ApplicationId, OfferedPositionTitle, ProposedSalary, ProbationSalary, ExpectedStartDate, WorkLocation, BenefitsPackage, OfferStatus, ProposedBy, CreatedAt) VALUES (252, N'Senior Java Backend Engineer', 36000000.00, 32000000.00, '2027-01-02', N'Tầng 8, Tòa nhà RMS Tower, Duy Tân, Cầu Giấy, Hà Nội', N'Bảo hiểm PVI, 14 ngày phép năm, thưởng dự án, xét lương 2 lần/năm', N'Accepted', 3, '2026-12-16 16:00:00');
 INSERT INTO OfferApproval (OfferId, DirectorId, [Status], DirectorComments, ApprovedAt) VALUES (15, 2, N'Approved', N'Phê duyệt mức đãi ngộ theo đề xuất của HR và HM.', '2026-12-16 22:00:00');
-INSERT INTO OfferNegotiation (OfferId, CandidateCounterSalary, CandidateNotes, HRResponseNotes, NegotiationDate) VALUES (15, 38000000.00, N'Ứng viên mong muốn hỗ trợ thêm 2 triệu phụ cấp đi lại hoặc chứng chỉ chuyên môn.', N'HR trao đổi và thống nhất hỗ trợ phụ cấp đào tạo chứng chỉ hàng năm.', '2026-12-17 22:00:00');
+-- INSERT INTO OfferNegotiation (OfferId, CandidateCounterSalary, CandidateNotes, HRResponseNotes, NegotiationDate) VALUES (15, 38000000.00, N'Ứng viên mong muốn hỗ trợ thêm 2 triệu phụ cấp đi lại hoặc chứng chỉ chuyên môn.', N'HR trao đổi và thống nhất hỗ trợ phụ cấp đào tạo chứng chỉ hàng năm.', '2026-12-17 22:00:00');
 
 -- -----------------------------------------------------------------------------
 -- DAY 75 / 77: 2026-12-13 (3 Applications)
@@ -2262,11 +2262,10 @@ UNION ALL SELECT 'InterviewPanel', COUNT(*) FROM InterviewPanel
 UNION ALL SELECT 'InterviewEvaluation', COUNT(*) FROM InterviewEvaluation
 UNION ALL SELECT 'InterviewFinalResult', COUNT(*) FROM InterviewFinalResult
 UNION ALL SELECT 'OfferProposal', COUNT(*) FROM OfferProposal
-UNION ALL SELECT 'OfferApproval', COUNT(*) FROM OfferApproval
-UNION ALL SELECT 'OfferNegotiation', COUNT(*) FROM OfferNegotiation;
+UNION ALL SELECT 'OfferApproval', COUNT(*) FROM OfferApproval;
 GO
 
--- Kiểm tra không có bảng nào trong 20 bảng bị rỗng (COUNT = 0)
+-- Kiểm tra không có bảng nào trong 19 bảng bị rỗng (COUNT = 0)
 BEGIN
     DECLARE @EmptyTables INT = 0;
     IF (SELECT COUNT(*) FROM [Role]) = 0 SET @EmptyTables = @EmptyTables + 1;
@@ -2288,12 +2287,11 @@ BEGIN
     IF (SELECT COUNT(*) FROM InterviewFinalResult) = 0 SET @EmptyTables = @EmptyTables + 1;
     IF (SELECT COUNT(*) FROM OfferProposal) = 0 SET @EmptyTables = @EmptyTables + 1;
     IF (SELECT COUNT(*) FROM OfferApproval) = 0 SET @EmptyTables = @EmptyTables + 1;
-    IF (SELECT COUNT(*) FROM OfferNegotiation) = 0 SET @EmptyTables = @EmptyTables + 1;
 
     IF @EmptyTables > 0
-        RAISERROR(N'CẢNH BÁO: Phát hiện có bảng chưa có dữ liệu trong 20 bảng!', 16, 1);
+        RAISERROR(N'CẢNH BÁO: Phát hiện có bảng chưa có dữ liệu trong 19 bảng!', 16, 1);
     ELSE
-        PRINT N'>>> XÁC NHẬN HOÀN TOÀN: ĐỦ 20/20 BẢNG ĐỀU ĐÃ ĐƯỢC NẠP DỮ LIỆU CHUẨN MỰC!';
+        PRINT N'>>> XÁC NHẬN HOÀN TOÀN: ĐỦ 19/19 BẢNG ĐỀU ĐÃ ĐƯỢC NẠP DỮ LIỆU CHUẨN MỰC!';
 END;
 GO
 

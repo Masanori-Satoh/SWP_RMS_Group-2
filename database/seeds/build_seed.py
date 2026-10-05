@@ -689,21 +689,7 @@ for day_idx in range(num_days):
                         f"VALUES ({off_id}, 2, N'Approved', N'Phê duyệt mức đãi ngộ theo đề xuất của HR và HM.', '{off_app_dt}');"
                     )
                     
-                    # OfferNegotiation (if Negotiating or some Accepted/Declined)
-                    if off_status in ["Negotiating", "Accepted", "Declined"]:
-                        neg_dt = (datetime.datetime.strptime(off_app_dt, "%Y-%m-%d %H:%M:%S") + datetime.timedelta(days=1)).strftime("%Y-%m-%d %H:%M:%S")
-                        if off_status == "Declined":
-                            counter_sal = prop_sal + 5000000.00
-                            c_notes = "Ứng viên nhận được offer khác với mức đãi ngộ cao hơn và mong muốn trao đổi lại."
-                            hr_notes = "HR đã trao đổi nhưng ngân sách vị trí hiện tại không thể đáp ứng, bảo lưu hồ sơ ứng viên."
-                        else:
-                            counter_sal = prop_sal + 2000000.00
-                            c_notes = "Ứng viên mong muốn hỗ trợ thêm 2 triệu phụ cấp đi lại hoặc chứng chỉ chuyên môn."
-                            hr_notes = "HR trao đổi và thống nhất hỗ trợ phụ cấp đào tạo chứng chỉ hàng năm."
-                        lines.append(
-                            f"INSERT INTO OfferNegotiation (OfferId, CandidateCounterSalary, CandidateNotes, HRResponseNotes, NegotiationDate) "
-                            f"VALUES ({off_id}, {counter_sal:.2f}, N'{c_notes}', N'{hr_notes}', '{neg_dt}');"
-                        )
+
                         
     lines.append("")
 
@@ -747,11 +733,10 @@ lines.append("UNION ALL SELECT 'InterviewPanel', COUNT(*) FROM InterviewPanel")
 lines.append("UNION ALL SELECT 'InterviewEvaluation', COUNT(*) FROM InterviewEvaluation")
 lines.append("UNION ALL SELECT 'InterviewFinalResult', COUNT(*) FROM InterviewFinalResult")
 lines.append("UNION ALL SELECT 'OfferProposal', COUNT(*) FROM OfferProposal")
-lines.append("UNION ALL SELECT 'OfferApproval', COUNT(*) FROM OfferApproval")
-lines.append("UNION ALL SELECT 'OfferNegotiation', COUNT(*) FROM OfferNegotiation;")
+lines.append("UNION ALL SELECT 'OfferApproval', COUNT(*) FROM OfferApproval;")
 lines.append("GO")
 lines.append("")
-lines.append("-- Kiểm tra không có bảng nào trong 20 bảng bị rỗng (COUNT = 0)")
+lines.append("-- Kiểm tra không có bảng nào trong 19 bảng bị rỗng (COUNT = 0)")
 lines.append("BEGIN")
 lines.append("    DECLARE @EmptyTables INT = 0;")
 lines.append("    IF (SELECT COUNT(*) FROM [Role]) = 0 SET @EmptyTables = @EmptyTables + 1;")
@@ -773,12 +758,11 @@ lines.append("    IF (SELECT COUNT(*) FROM InterviewEvaluation) = 0 SET @EmptyTa
 lines.append("    IF (SELECT COUNT(*) FROM InterviewFinalResult) = 0 SET @EmptyTables = @EmptyTables + 1;")
 lines.append("    IF (SELECT COUNT(*) FROM OfferProposal) = 0 SET @EmptyTables = @EmptyTables + 1;")
 lines.append("    IF (SELECT COUNT(*) FROM OfferApproval) = 0 SET @EmptyTables = @EmptyTables + 1;")
-lines.append("    IF (SELECT COUNT(*) FROM OfferNegotiation) = 0 SET @EmptyTables = @EmptyTables + 1;")
 lines.append("")
 lines.append("    IF @EmptyTables > 0")
-lines.append("        RAISERROR(N'CẢNH BÁO: Phát hiện có bảng chưa có dữ liệu trong 20 bảng!', 16, 1);")
+lines.append("        RAISERROR(N'CẢNH BÁO: Phát hiện có bảng chưa có dữ liệu trong 19 bảng!', 16, 1);")
 lines.append("    ELSE")
-lines.append("        PRINT N'>>> XÁC NHẬN HOÀN TOÀN: ĐỦ 20/20 BẢNG ĐỀU ĐÃ ĐƯỢC NẠP DỮ LIỆU CHUẨN MỰC!';")
+lines.append("        PRINT N'>>> XÁC NHẬN HOÀN TOÀN: ĐỦ 19/19 BẢNG ĐỀU ĐÃ ĐƯỢC NẠP DỮ LIỆU CHUẨN MỰC!';")
 lines.append("END;")
 lines.append("GO")
 lines.append("")

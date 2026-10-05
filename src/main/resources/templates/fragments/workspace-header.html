@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="en" xmlns:th="http://www.thymeleaf.org"><body>
 <header th:fragment="header(role, fullName)" class="workspace-header">
-  <a class="skip-link" href="#main">Skip to content</a>
+  <a class="skip-link" href="#main">Chuyển đến nội dung chính</a>
   <a th:replace="~{fragments/brand :: wordmark('RMS')}"></a>
   <div class="workspace-header-actions">
     <a th:href="@{/profile}" class="workspace-identity" style="text-decoration:none; color:inherit;"><strong th:if="${fullName != null}" th:text="${fullName}"></strong><span class="workspace-role" th:text="${role}"></span></a>

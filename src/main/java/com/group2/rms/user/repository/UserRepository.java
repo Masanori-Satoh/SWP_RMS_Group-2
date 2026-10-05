@@ -21,6 +21,7 @@ import java.util.List;
  */
 @Repository
 public interface UserRepository extends JpaRepository<User, Integer>, JpaSpecificationExecutor<User> {
+    @EntityGraph(attributePaths = {"role", "department"})
     Optional<User> findByUsernameIgnoreCase(String username);
 
     Optional<User> findByEmailIgnoreCase(String email);

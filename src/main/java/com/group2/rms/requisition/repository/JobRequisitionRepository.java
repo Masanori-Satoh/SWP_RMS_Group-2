@@ -26,4 +26,13 @@ public interface JobRequisitionRepository extends JpaRepository<JobRequisition, 
 
     //Lay tat ca req theo thu tu moi nhat, co phan trang
     Page<JobRequisition> findAllByOrderByCreatedAtDesc(Pageable pageable);
+
+    @org.springframework.data.jpa.repository.Query("SELECT DISTINCT r.title FROM JobRequisition r WHERE r.title IS NOT NULL AND TRIM(r.title) <> '' ORDER BY r.title ASC")
+    List<String> findDistinctTitles();
+
+    @org.springframework.data.jpa.repository.Query("SELECT DISTINCT r.title FROM JobRequisition r WHERE r.department.departmentId IN (:departmentIds) AND r.title IS NOT NULL AND r.title <> '' ORDER BY r.title ASC")
+    List<String> findDistinctTitlesByDepartmentIds(@org.springframework.data.repository.query.Param("departmentIds") List<Integer> departmentIds);
+
+    @org.springframework.data.jpa.repository.Query("SELECT COALESCE(MAX(r.recruitmentRound), 0) FROM JobRequisition r WHERE LOWER(TRIM(r.title)) = LOWER(TRIM(:title)) AND r.department.departmentId = :departmentId")
+    Integer findMaxRecruitmentRound(@org.springframework.data.repository.query.Param("title") String title, @org.springframework.data.repository.query.Param("departmentId") Integer departmentId);
 }

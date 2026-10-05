@@ -1,32 +1,87 @@
-.requisition-form-page .form-container { display:grid; gap:var(--s6); }
-.requisition-form-page .form-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:var(--s6); }
-.requisition-form-page .form-group-full { grid-column:1 / -1; }
-.requisition-form-page .form-group > label { display:block; margin-bottom:var(--s2); font-size:14px; font-weight:600; }
-.requisition-form-page .salary-range { display:flex; align-items:center; gap:var(--s3); }
-.requisition-form-page .textarea-custom { display:block; min-height:144px; }
-.requisition-form-page .char-counter { color:var(--muted); font-size:13px; text-align:right; margin-top:var(--s1); }
-.requisition-form-page .header-actions { justify-content:space-between; flex-wrap:wrap; gap:var(--s4); margin-bottom:var(--s3); }
-.requisition-form-page .criteria-help { margin-bottom:var(--s4); }
-.requisition-form-page .criteria-table-custom { min-width:960px; }
-.requisition-form-page .criteria-table-custom th { font-size:13px; }
-.requisition-form-page .criteria-table-custom th:nth-child(2) { width:24%; }
-.requisition-form-page .criteria-table-custom th:nth-child(3) { width:18%; }
-.requisition-form-page .criteria-table-custom th:nth-child(4) { width:24%; }
-.requisition-form-page .criteria-table-custom th:nth-child(5) { width:112px; }
-.requisition-form-page .criteria-table-custom th:nth-child(6) { width:112px; }
-.requisition-form-page .btn-trash { min-width:44px; padding:var(--s2); font-size:24px; }
-.requisition-form-page .switch-label { display:flex; align-items:center; gap:var(--s1); white-space:nowrap; }
-.requisition-form-page .switch { display:flex; align-items:center; justify-content:center; min-width:44px; min-height:44px; cursor:pointer; }
-.requisition-form-page input[type="checkbox"] { width:20px; height:20px; accent-color:var(--brand-dark); cursor:pointer; }
-.requisition-form-page .slider { display:none; }
-.requisition-form-page .form-footer-actions { display:flex; justify-content:flex-end; gap:var(--s3); flex-wrap:wrap; padding-block:var(--s4); border-top:1px solid var(--line); }
-.requisition-form-page .btn-cancel-custom { margin-right:auto; }
-.requisition-form-page #validation-summary { margin:0; scroll-margin-top:128px; }
-.requisition-form-page #validation-summary p { font-weight:600; }
-.requisition-form-page #validation-summary ul { padding-left:var(--s6); margin:var(--s2) 0 0; }
+/* Scoped to the create/edit requisition form. */
+.req-form-page .requisition-page-intro { margin-bottom:var(--s4); }
+.req-form-page h1 { color:var(--brand-dark); }
+.req-form-page .form-card { padding:var(--s4); box-shadow:0 1px 3px rgb(37 41 35 / 8%); }
+.req-form-page .form-card-header { margin-bottom:var(--s3); }
+.req-form-page .form-card-header h2 { display:flex; align-items:center; font:600 18px/1.4 var(--sans); }
+.req-form-page .form-control-custom { min-height:44px; }
+.req-form-page .required-asterisk { color:var(--brand-dark); }
+.req-form-page .criteria-table-custom thead .required-asterisk { color:inherit; }
+.req-form-page .form-container { display:grid; gap:var(--s4); }
+.req-form-page .form-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:var(--s4); }
+.req-form-page .form-group-full { grid-column:1 / -1; }
+.req-form-page .form-group > label,
+.req-form-page .form-label { display:block; margin-bottom:var(--s2); font-size:14px; font-weight:600; }
+.req-form-page .step-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    background: var(--brand-dark);
+    color: #ffffff;
+    font-size: 13px;
+    font-weight: 700;
+    margin-right: 8px;
+    flex-shrink: 0;
+}
+.req-form-page .salary-range { display:flex; align-items:center; gap:var(--s3); }
+.req-form-page .textarea-custom { display:block; min-height:88px; }
+.req-form-page .char-counter { color:var(--muted); font-size:13px; text-align:right; margin-top:var(--s1); }
+.req-form-page .header-actions { justify-content:space-between; flex-wrap:wrap; gap:var(--s4); margin-bottom:var(--s3); }
+.req-form-page .criteria-help { margin-bottom:var(--s4); }
+.req-form-page .criteria-table-custom { min-width:960px; border-collapse: separate; border-spacing: 0; border-radius: 6px; overflow: hidden; }
+.req-form-page .criteria-table-custom thead th {
+    background: var(--brand-dark);
+    color: #ffffff;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    padding: 10px 12px;
+    border: none;
+    text-transform: uppercase;
+}
+.req-form-page .criteria-table-custom thead th:first-child { text-align: center; }
+.req-form-page .criteria-table-custom thead th:last-child { text-align: center; }
+.req-form-page .criteria-table-custom td:first-child { text-align: center; font-weight: 600; }
+.req-form-page .criteria-table-custom td:last-child { text-align: center; }
+.req-form-page .criteria-table-custom td { padding: 10px 12px; }
+.req-form-page .btn-add-criteria {
+    background: #ecfdf5;
+    color: #047857;
+    border: 1px solid #a7f3d0;
+    border-radius: 6px;
+    padding: 6px 14px;
+    font-weight: 600;
+    font-size: 14px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+.req-form-page .btn-add-criteria:hover {
+    background: #d1fae5;
+    border-color: #6ee7b7;
+}
+.req-form-page .btn-trash { min-width:44px; padding:var(--s2); font-size:24px; background:#fff; border-color:#d1d5db; color:#6b7280; }
+.req-form-page .btn-trash:hover { background:#f3f4f6; border-color:#9ca3af; }
+.req-form-page .switch-label { display:flex; align-items:center; gap:var(--s2); white-space:nowrap; }
+.req-form-page .switch { display:flex; align-items:center; justify-content:center; min-width:24px; min-height:24px; cursor:pointer; }
+.req-form-page input[type="checkbox"] { width:18px; height:18px; accent-color:var(--brand-dark); cursor:pointer; }
+.req-form-page .slider { display:none; }
+.req-form-page .form-footer-actions { display:flex; justify-content:flex-end; gap:var(--s3); flex-wrap:wrap; padding-block:var(--s4); border-top:1px solid var(--line); }
+.req-form-page .btn-cancel-custom { margin-right:auto; background:#fff; border-color:#d1d5db; color:#6b7280; }
+.req-form-page .btn-cancel-custom:hover { background:#f9fafb; border-color:#9ca3af; color:#6b7280; }
+.req-form-page .btn-save-draft { background:#fff; border-color:var(--control-line); color:var(--brand-dark); }
+.req-form-page .btn-save-draft:hover { background:var(--brand-soft); border-color:var(--brand); }
+.req-form-page .btn-submit-director { background: var(--brand-dark); border-color: var(--brand-dark); color: #ffffff; }
+.req-form-page .btn-submit-director:hover { background: #244735; border-color: #244735; }
+.req-form-page button:disabled { color:var(--muted); background:var(--page); border-color:var(--line); cursor:not-allowed; }
+.req-form-page #validation-summary { margin:0; scroll-margin-top:128px; }
+.req-form-page #validation-summary p { font-weight:600; }
+.req-form-page #validation-summary ul { padding-left:var(--s6); margin:var(--s2) 0 0; }
 @media (max-width:600px) {
-  .requisition-form-page .form-grid { grid-template-columns:minmax(0,1fr); gap:var(--s4); }
-  .requisition-form-page .form-footer-actions { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); }
-  .requisition-form-page .btn-cancel-custom { margin:0; }
-  .requisition-form-page .btn-submit-director { grid-column:1 / -1; }
+  .req-form-page .form-grid { grid-template-columns:minmax(0,1fr); gap:var(--s4); }
+  .req-form-page .form-footer-actions { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); }
+  .req-form-page .btn-cancel-custom { margin:0; }
+  .req-form-page .btn-submit-director { grid-column:1 / -1; }
 }

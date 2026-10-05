@@ -84,9 +84,7 @@ public class SecurityConfig {
                                                                 "/api/v1/hr/offers/**")
                                                 .hasAnyAuthority("ROLE_CANDIDATE", "ROLE_HR", "ROLE_DIRECTOR",
                                                                 RoleAuthorities.SYSTEM_ADMIN)
-                                                // authenticaed require for dashboard notification
-                                                .requestMatchers("/dashboard", "/dashboard/**", "/notifications",
-                                                                "/notifications/**")
+                                                .requestMatchers("/dashboard", "/dashboard/**")
                                                 .authenticated()
                                                 .requestMatchers("/requisitions", "/requisitions/**")
                                                 .hasAnyAuthority("ROLE_HIRING_MANAGER", "ROLE_DIRECTOR", "ROLE_HR",

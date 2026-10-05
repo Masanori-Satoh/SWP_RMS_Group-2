@@ -5,63 +5,207 @@ import com.group2.rms.requisition.dto.ScreeningCriteriaRequest;
 import com.group2.rms.requisition.exception.RequisitionValidationException;
 
 import org.springframework.stereotype.Component;
+
 import java.math.BigDecimal;
 import java.time.LocalDate;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
 
-/** Drafts skip completeness rules; storage limits still prevent failed or truncated writes. */
+/**
+ * Validator cho Job Requisition.
+ * Rule: Bản nháp (draft) bỏ qua các quy tắc bắt buộc; chỉ kiểm tra giới hạn độ dài và định dạng cơ bản.
+ * Khi gửi duyệt (submit), tất cả các trường bắt buộc và tổng trọng số tiêu chí (100%) phải thỏa mãn.
+ * Mọi thông báo lỗi hiển thị frontend bằng tiếng Việt theo quy chuẩn dự án.
+ */
 @Component
 public class RequisitionValidator {
-    public static final int REASON_LIMIT=2000;
-    public static final List<String> EMPLOYMENT_TYPES=List.of("Full-time","Part-time","Internship","Contract");
-    public static final List<String> CRITERIA_TYPES=List.of("Education","Experience","Skill","Knockout");
-    public static final List<String> GENDERS=List.of("Any","Male","Female");
-    public static final List<String> WORK_MODELS=List.of("On-site","Remote","Hybrid");
-    public void validate(RequisitionRequest d) {
-        var errors=new LinkedHashMap<String,String>(); boolean submit="submit".equals(d.getAction());
-        if(!Set.of("draft","submit").contains(Objects.toString(d.getAction(),""))) errors.put("action","Choose Save Draft or Submit to Director.");
-        d.setTitle(clean(d.getTitle())); d.setEmploymentType(clean(d.getEmploymentType()));
-        d.setReasonForHiring(clean(d.getReasonForHiring())); d.setJobDescription(clean(d.getJobDescription())); d.setRequirementDetails(clean(d.getRequirementDetails()));
-        d.setWorkLocation(clean(d.getWorkLocation())); d.setWorkModel(clean(d.getWorkModel())); d.setProbationDuration(clean(d.getProbationDuration())); d.setGender(clean(d.getGender()));
-        text(errors,"title",d.getTitle(),200,submit); text(errors,"reasonForHiring",d.getReasonForHiring(),REASON_LIMIT,submit);
-        if (submit && "Untitled requisition".equalsIgnoreCase(d.getTitle())) {
-            errors.put("title", "Replace the draft placeholder with a job title before submitting.");
+
+    public static final int REASON_LIMIT = 2000;
+    public static final int TITLE_LIMIT = 200;
+    public static final int TEXT_AREA_LIMIT = 2000;
+    public static final int LOCATION_LIMIT = 255;
+    public static final int PROBATION_LIMIT = 255;
+    public static final int CRITERIA_NAME_LIMIT = 150;
+    public static final int CRITERIA_VALUE_LIMIT = 255;
+    public static final int MAX_CRITERIA_COUNT = 50;
+
+    public static final String ACTION_DRAFT = "draft";
+    public static final String ACTION_SUBMIT = "submit";
+
+    public static final List<String> EMPLOYMENT_TYPES = List.of("Full-time", "Part-time", "Internship", "Contract");
+    public static final List<String> CRITERIA_TYPES = List.of("Education", "Experience", "Skill", "Knockout");
+    public static final List<String> GENDERS = List.of("Any", "Male", "Female");
+    public static final List<String> WORK_MODELS = List.of("On-site", "Remote", "Hybrid");
+
+    public void validate(RequisitionRequest requisitionRequest) {
+        Map<String, String> validationErrors = new LinkedHashMap<>();
+        boolean isSubmitAction = ACTION_SUBMIT.equals(requisitionRequest.getAction());
+
+        // Rule: Thao tác phải là lưu bản nháp hoặc gửi duyệt
+        if (!Set.of(ACTION_DRAFT, ACTION_SUBMIT).contains(Objects.toString(requisitionRequest.getAction(), ""))) {
+            validationErrors.put("action", "Vui lòng chọn Lưu bản nháp hoặc Gửi Giám đốc duyệt.");
         }
-        text(errors,"jobDescription",d.getJobDescription(),2000,submit); text(errors,"requirementDetails",d.getRequirementDetails(),2000,submit);
-        text(errors,"workLocation",d.getWorkLocation(),255,submit); text(errors,"probationDuration",d.getProbationDuration(),255,false);
-        choice(errors,"employmentType",d.getEmploymentType(),EMPLOYMENT_TYPES,submit); choice(errors,"workModel",d.getWorkModel(),WORK_MODELS,submit); choice(errors,"gender",d.getGender(),GENDERS,false);
-        if(submit&&d.getDepartmentId()==null) errors.put("departmentId","Select a department.");
-        if(submit&&d.getNumberOfPositions()==null) errors.put("numberOfPositions","Enter the number of openings.");
-        if(d.getNumberOfPositions()!=null&&d.getNumberOfPositions()<1) errors.put("numberOfPositions","Use a whole number greater than zero.");
-        if(submit&&(d.getExpectedStartDate()==null||d.getExpectedStartDate().isBefore(LocalDate.now()))) errors.put("expectedStartDate","Choose today or a future date.");
-        money(errors,"minSalary",d.getMinSalary()); money(errors,"maxSalary",d.getMaxSalary());
-        if(d.getMinSalary()!=null&&d.getMaxSalary()!=null&&d.getMinSalary().compareTo(d.getMaxSalary())>0) errors.put("maxSalary","Maximum salary must be at least the minimum salary.");
-        if(d.getScreeningCriteria()==null) d.setScreeningCriteria(new ArrayList<>());
-        if(d.getScreeningCriteria().size()>50) errors.put("screeningCriteria","Use at most 50 criteria.");
-        Set<String> names=new HashSet<>(); Set<Integer> ids=new HashSet<>(); BigDecimal total=BigDecimal.ZERO; int count=0;
-        for(int i=0;i<d.getScreeningCriteria().size();i++) {
-            var row=d.getScreeningCriteria().get(i); String key="screeningCriteria["+i+"].";
-            if(row==null) { errors.put("screeningCriteria","Invalid criterion."); continue; }
-            row.setCriteriaName(clean(row.getCriteriaName())); row.setCriteriaType(clean(row.getCriteriaType())); row.setRequiredValue(clean(row.getRequiredValue()));
-            if(blank(row)&&!submit) continue;
-            count++;
-            text(errors,key+"criteriaName",row.getCriteriaName(),150,submit); text(errors,key+"requiredValue",row.getRequiredValue(),255,submit);
-            choice(errors,key+"criteriaType",row.getCriteriaType(),CRITERIA_TYPES,submit);
-            if(row.getCriteriaName()!=null&&!names.add(row.getCriteriaName().toLowerCase(Locale.ROOT))) errors.put(key+"criteriaName","Criterion names must be unique.");
-            if(row.getCriteriaId()!=null&&!ids.add(row.getCriteriaId())) errors.put(key+"criteriaName","A criterion was submitted twice.");
-            var weight=row.getWeight();
-            if(submit&&weight==null) errors.put(key+"weight","Enter a weight.");
-            if(weight!=null) {
-                if(weight.signum()<=0||weight.compareTo(new BigDecimal(submit?"100":"999.99"))>0||weight.stripTrailingZeros().scale()>2) errors.put(key+"weight",submit?"Use 0.01–100 with at most two decimal places.":"Use a positive weight with at most two decimal places.");
-                total=total.add(weight);
+
+        // Làm sạch dữ liệu đầu vào dạng văn bản
+        requisitionRequest.setTitle(clean(requisitionRequest.getTitle()));
+        requisitionRequest.setEmploymentType(clean(requisitionRequest.getEmploymentType()));
+        requisitionRequest.setReasonForHiring(clean(requisitionRequest.getReasonForHiring()));
+        requisitionRequest.setJobDescription(clean(requisitionRequest.getJobDescription()));
+        requisitionRequest.setRequirementDetails(clean(requisitionRequest.getRequirementDetails()));
+        requisitionRequest.setWorkLocation(clean(requisitionRequest.getWorkLocation()));
+        requisitionRequest.setWorkModel(clean(requisitionRequest.getWorkModel()));
+        requisitionRequest.setProbationDuration(clean(requisitionRequest.getProbationDuration()));
+        requisitionRequest.setGender(clean(requisitionRequest.getGender()));
+
+        // Rule: Kiểm tra các trường văn bản cơ bản
+        validateTextField(validationErrors, "title", requisitionRequest.getTitle(), TITLE_LIMIT, isSubmitAction);
+        validateTextField(validationErrors, "reasonForHiring", requisitionRequest.getReasonForHiring(), REASON_LIMIT, isSubmitAction);
+
+        if (isSubmitAction && "Untitled requisition".equalsIgnoreCase(requisitionRequest.getTitle())) {
+            validationErrors.put("title", "Vui lòng nhập vị trí tuyển dụng cụ thể trước khi gửi duyệt.");
+        }
+
+        validateTextField(validationErrors, "jobDescription", requisitionRequest.getJobDescription(), TEXT_AREA_LIMIT, isSubmitAction);
+        validateTextField(validationErrors, "requirementDetails", requisitionRequest.getRequirementDetails(), TEXT_AREA_LIMIT, isSubmitAction);
+        validateTextField(validationErrors, "workLocation", requisitionRequest.getWorkLocation(), LOCATION_LIMIT, isSubmitAction);
+        validateTextField(validationErrors, "probationDuration", requisitionRequest.getProbationDuration(), PROBATION_LIMIT, false);
+
+        // Rule: Kiểm tra giá trị lựa chọn (combobox/select)
+        validateChoiceField(validationErrors, "employmentType", requisitionRequest.getEmploymentType(), EMPLOYMENT_TYPES, isSubmitAction);
+        validateChoiceField(validationErrors, "workModel", requisitionRequest.getWorkModel(), WORK_MODELS, isSubmitAction);
+        validateChoiceField(validationErrors, "gender", requisitionRequest.getGender(), GENDERS, false);
+
+        // Rule: Phòng ban bắt buộc khi gửi duyệt
+        if (isSubmitAction && requisitionRequest.getDepartmentId() == null) {
+            validationErrors.put("departmentId", "Vui lòng chọn phòng ban.");
+        }
+
+        // Rule: Số lượng tuyển dụng bắt buộc khi gửi duyệt và phải là số nguyên dương (> 0)
+        if (isSubmitAction && requisitionRequest.getNumberOfPositions() == null) {
+            validationErrors.put("numberOfPositions", "Vui lòng nhập số lượng tuyển dụng.");
+        }
+        if (requisitionRequest.getNumberOfPositions() != null && requisitionRequest.getNumberOfPositions() < 1) {
+            validationErrors.put("numberOfPositions", "Số lượng tuyển dụng phải là số nguyên lớn hơn 0.");
+        }
+
+        // Rule: Ngày bắt đầu dự kiến không được trong quá khứ khi gửi duyệt
+        if (isSubmitAction && (requisitionRequest.getExpectedStartDate() == null || requisitionRequest.getExpectedStartDate().isBefore(LocalDate.now()))) {
+            validationErrors.put("expectedStartDate", "Ngày bắt đầu dự kiến phải là hôm nay hoặc trong tương lai.");
+        }
+
+        // Rule: Kiểm tra khoảng lương
+        validateMonetaryAmount(validationErrors, "minSalary", requisitionRequest.getMinSalary());
+        validateMonetaryAmount(validationErrors, "maxSalary", requisitionRequest.getMaxSalary());
+        if (requisitionRequest.getMinSalary() != null && requisitionRequest.getMaxSalary() != null
+                && requisitionRequest.getMinSalary().compareTo(requisitionRequest.getMaxSalary()) > 0) {
+            validationErrors.put("maxSalary", "Mức lương tối đa phải lớn hơn hoặc bằng mức lương tối thiểu.");
+        }
+
+        // Rule: Tiêu chí sàng lọc (screening criteria)
+        if (requisitionRequest.getScreeningCriteria() == null) {
+            requisitionRequest.setScreeningCriteria(new ArrayList<>());
+        }
+        if (requisitionRequest.getScreeningCriteria().size() > MAX_CRITERIA_COUNT) {
+            validationErrors.put("screeningCriteria", "Tối đa 50 tiêu chí sàng lọc.");
+        }
+
+        Set<String> uniqueCriteriaNames = new HashSet<>();
+        Set<Integer> uniqueCriteriaIds = new HashSet<>();
+        BigDecimal totalCriteriaWeight = BigDecimal.ZERO;
+        int validCriteriaCount = 0;
+
+        for (int criteriaIndex = 0; criteriaIndex < requisitionRequest.getScreeningCriteria().size(); criteriaIndex++) {
+            ScreeningCriteriaRequest criteriaItem = requisitionRequest.getScreeningCriteria().get(criteriaIndex);
+            String fieldPrefixKey = "screeningCriteria[" + criteriaIndex + "].";
+
+            if (criteriaItem == null) {
+                validationErrors.put("screeningCriteria", "Tiêu chí sàng lọc không hợp lệ.");
+                continue;
+            }
+
+            criteriaItem.setCriteriaName(clean(criteriaItem.getCriteriaName()));
+            criteriaItem.setCriteriaType(clean(criteriaItem.getCriteriaType()));
+            criteriaItem.setRequiredValue(clean(criteriaItem.getRequiredValue()));
+
+            if (blank(criteriaItem) && !isSubmitAction) {
+                continue;
+            }
+
+            validCriteriaCount++;
+            validateTextField(validationErrors, fieldPrefixKey + "criteriaName", criteriaItem.getCriteriaName(), CRITERIA_NAME_LIMIT, isSubmitAction);
+            validateTextField(validationErrors, fieldPrefixKey + "requiredValue", criteriaItem.getRequiredValue(), CRITERIA_VALUE_LIMIT, isSubmitAction);
+            validateChoiceField(validationErrors, fieldPrefixKey + "criteriaType", criteriaItem.getCriteriaType(), CRITERIA_TYPES, isSubmitAction);
+
+            // Rule: Tên các tiêu chí sàng lọc không được trùng lặp
+            if (criteriaItem.getCriteriaName() != null && !uniqueCriteriaNames.add(criteriaItem.getCriteriaName().toLowerCase(Locale.ROOT))) {
+                validationErrors.put(fieldPrefixKey + "criteriaName", "Tên các tiêu chí sàng lọc không được trùng lặp.");
+            }
+            if (criteriaItem.getCriteriaId() != null && !uniqueCriteriaIds.add(criteriaItem.getCriteriaId())) {
+                validationErrors.put(fieldPrefixKey + "criteriaName", "Tiêu chí sàng lọc bị gửi trùng lặp.");
+            }
+
+            // Rule: Trọng số tiêu chí
+            BigDecimal weightValue = criteriaItem.getWeight();
+            if (isSubmitAction && weightValue == null) {
+                validationErrors.put(fieldPrefixKey + "weight", "Vui lòng nhập trọng số.");
+            }
+            if (weightValue != null) {
+                BigDecimal maximumAllowedWeight = new BigDecimal(isSubmitAction ? "100" : "999.99");
+                if (weightValue.signum() <= 0 || weightValue.compareTo(maximumAllowedWeight) > 0 || weightValue.stripTrailingZeros().scale() > 2) {
+                    validationErrors.put(fieldPrefixKey + "weight", isSubmitAction
+                            ? "Trọng số phải từ 0.01 đến 100 và tối đa 2 chữ số thập phân."
+                            : "Trọng số phải là số dương và tối đa 2 chữ số thập phân.");
+                }
+                totalCriteriaWeight = totalCriteriaWeight.add(weightValue);
             }
         }
-        if(submit&&(count==0||total.compareTo(new BigDecimal("100"))!=0)) errors.put("screeningCriteria","Add complete criteria with total weight exactly 100%.");
-        if(!errors.isEmpty()) throw new RequisitionValidationException(errors);
+
+        // Rule: Khi gửi duyệt, phải có ít nhất 1 tiêu chí và tổng trọng số phải đúng 100%
+        if (isSubmitAction && (validCriteriaCount == 0 || totalCriteriaWeight.compareTo(new BigDecimal("100")) != 0)) {
+            validationErrors.put("screeningCriteria", "Vui lòng nhập đầy đủ tiêu chí với tổng trọng số đúng 100%.");
+        }
+
+        if (!validationErrors.isEmpty()) {
+            throw new RequisitionValidationException(validationErrors);
+        }
     }
-    public static String clean(String v) { return v==null||v.isBlank()?null:v.trim(); }
-    public static boolean blank(ScreeningCriteriaRequest r) { return clean(r.getCriteriaName())==null&&clean(r.getCriteriaType())==null&&clean(r.getRequiredValue())==null&&!Boolean.TRUE.equals(r.getIsMandatory()); }
-    private void text(Map<String,String> e,String key,String v,int max,boolean required) { if(required&&v==null)e.put(key,"Required before submitting to the Director."); else if(v!=null&&v.length()>max)e.put(key,"Use at most "+max+" characters."); }
-    private void choice(Map<String,String> e,String key,String v,List<String> choices,boolean required) { if((required||v!=null)&&(v==null||!choices.contains(v)))e.put(key,"Select a valid option."); }
-    private void money(Map<String,String> e,String key,BigDecimal v) { if(v!=null&&(v.signum()<0||v.compareTo(new BigDecimal("9999999999999999.99"))>0||v.stripTrailingZeros().scale()>2))e.put(key,"Enter a non-negative amount with at most two decimal places."); }
+
+    public static String clean(String textValue) {
+        return (textValue == null || textValue.isBlank()) ? null : textValue.trim();
+    }
+
+    public static boolean blank(ScreeningCriteriaRequest criteriaRequest) {
+        return clean(criteriaRequest.getCriteriaName()) == null
+                && clean(criteriaRequest.getCriteriaType()) == null
+                && clean(criteriaRequest.getRequiredValue()) == null
+                && !Boolean.TRUE.equals(criteriaRequest.getIsMandatory());
+    }
+
+    private void validateTextField(Map<String, String> errors, String fieldKey, String fieldValue, int maximumLength, boolean isRequired) {
+        if (isRequired && fieldValue == null) {
+            errors.put(fieldKey, "Bắt buộc nhập trước khi gửi Giám đốc phê duyệt.");
+        } else if (fieldValue != null && fieldValue.length() > maximumLength) {
+            errors.put(fieldKey, "Tối đa " + maximumLength + " ký tự.");
+        }
+    }
+
+    private void validateChoiceField(Map<String, String> errors, String fieldKey, String fieldValue, List<String> allowedChoices, boolean isRequired) {
+        if ((isRequired || fieldValue != null) && (fieldValue == null || !allowedChoices.contains(fieldValue))) {
+            errors.put(fieldKey, "Vui lòng chọn giá trị hợp lệ.");
+        }
+    }
+
+    private void validateMonetaryAmount(Map<String, String> errors, String fieldKey, BigDecimal monetaryAmount) {
+        if (monetaryAmount != null && (monetaryAmount.signum() < 0
+                || monetaryAmount.compareTo(new BigDecimal("9999999999999999.99")) > 0
+                || monetaryAmount.stripTrailingZeros().scale() > 2)) {
+            errors.put(fieldKey, "Số tiền phải không âm và tối đa 2 chữ số thập phân.");
+        }
+    }
 }

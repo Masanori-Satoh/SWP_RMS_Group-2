@@ -28,11 +28,11 @@ Hệ thống được xây dựng theo kiến trúc phân tầng chuẩn của *
 - **`JobRequisition.java`**: Thực thể chính lưu trữ thông tin yêu cầu tuyển dụng (Tiêu đề, Phòng ban, Số lượng tuyển, Hình thức làm việc, Mức lương min/max, Địa điểm, Mô hình on-site/hybrid/remote, Hạn thử việc, Ngày bắt đầu dự kiến, Lý do tuyển, Mô tả công việc, Yêu cầu ứng viên, Trạng thái phê duyệt).
 - **`ScreeningCriteria.java`**: Quan hệ 1-N với `JobRequisition`, đại diện cho tiêu chí sàng lọc hồ sơ tự động của AI (Tên tiêu chí, Loại tiêu chí: Skill/Education/Experience/Knockout, Giá trị yêu cầu, Trọng số điểm Weight, Cờ bắt buộc isMandatory).
 - **`RequisitionApproval.java`**: Lưu trữ lịch sử duyệt/từ chối của Giám đốc (Director) kèm ý kiến nhận xét (Feedback/Comments).
-- **`RequisitionWorkflowEvent.java`**: Lưu trữ dòng thời gian (Timeline) các sự kiện luân chuyển trạng thái (Submitted, Approved, Rejected, Withdrawn).
+- **`AuditLog.java`**: Ghi nhận toàn bộ vết thay đổi và kiểm toán dữ liệu cho Requisition.
 
 ### 2. Tầng Truy cập Dữ liệu (Repository Layer)
 - **`JobRequisitionRepository.java`**: Kế thừa `JpaRepository` và `JpaSpecificationExecutor`, hỗ trợ truy vấn lọc động, tìm kiếm toàn văn theo từ khóa, lọc theo phòng ban, hình thức, trạng thái và phân trang/sắp xếp linh hoạt.
-- **`RequisitionApprovalRepository.java`**, **`RequisitionWorkflowEventRepository.java`**, **`JobPostingRepository.java`**.
+- **`RequisitionApprovalRepository.java`**, **`JobPostingRepository.java`**, **`AuditLogRepository.java`**.
 
 ### 3. Tầng Dữ liệu Truyền tải (DTO Layer)
 - **Request DTOs**:

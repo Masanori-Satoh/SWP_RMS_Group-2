@@ -142,7 +142,7 @@ class JobRequisitionControllerTests {
                         .param("title", "New Dev"))
                 .andExpect(status().is3xxRedirection())
                 .andExpect(redirectedUrl("/requisitions/10"))
-                .andExpect(flash().attribute("successMessage", "Draft saved."));
+                .andExpect(flash().attribute("successMessage", RequisitionController.MSG_DRAFT_SAVED));
 
         verify(service).createRequisition(any(RequisitionRequest.class));
     }
@@ -173,7 +173,7 @@ class JobRequisitionControllerTests {
                         .param("title", "Updated Title"))
                 .andExpect(status().is3xxRedirection())
                 .andExpect(redirectedUrl("/requisitions/10"))
-                .andExpect(flash().attribute("successMessage", "Request submitted to Director."));
+                .andExpect(flash().attribute("successMessage", RequisitionController.MSG_SUBMITTED));
 
         verify(service).updateRequisition(eq(10), any(RequisitionRequest.class));
     }
@@ -186,7 +186,7 @@ class JobRequisitionControllerTests {
                         .with(csrf()))
                 .andExpect(status().is3xxRedirection())
                 .andExpect(redirectedUrl("/requisitions"))
-                .andExpect(flash().attribute("successMessage", "Requisition deleted."));
+                .andExpect(flash().attribute("successMessage", RequisitionController.MSG_DELETED));
 
         verify(service).deleteRequisition(10);
     }
@@ -201,7 +201,7 @@ class JobRequisitionControllerTests {
                         .param("comment", "Looks good"))
                 .andExpect(status().is3xxRedirection())
                 .andExpect(redirectedUrl("/requisitions/10"))
-                .andExpect(flash().attribute("successMessage", "Decision saved."));
+                .andExpect(flash().attribute("successMessage", RequisitionController.MSG_DECISION_SAVED));
 
         verify(service).decide(10, true, "Looks good");
     }
@@ -214,7 +214,7 @@ class JobRequisitionControllerTests {
                         .with(csrf()))
                 .andExpect(status().is3xxRedirection())
                 .andExpect(redirectedUrl("/requisitions/10"))
-                .andExpect(flash().attribute("successMessage", "Request withdrawn. You can edit the draft."));
+                .andExpect(flash().attribute("successMessage", RequisitionController.MSG_WITHDRAWN));
 
         verify(service).withdraw(10);
     }

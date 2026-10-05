@@ -8,8 +8,10 @@ import org.springframework.format.annotation.DateTimeFormat;
 @Data @Builder @NoArgsConstructor @AllArgsConstructor
 public class RequisitionRequest {
     private String action;
+    private String requisitionCode;
     private String title;
     private Integer departmentId;
+    private Integer recruitmentRound;
     private Integer numberOfPositions;
     private String employmentType;
     private BigDecimal minSalary;

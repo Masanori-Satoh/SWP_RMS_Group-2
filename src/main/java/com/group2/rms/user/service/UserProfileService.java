@@ -61,7 +61,7 @@ public class UserProfileService {
 
     private User findByUsername(String username) {
         return users.findByUsernameIgnoreCase(username)
-                .orElseThrow(() -> new ResourceNotFoundException("Account not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy tài khoản người dùng."));
     }
 
     private static String blankToNull(String value) {
