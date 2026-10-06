@@ -1,7 +1,7 @@
 <!DOCTYPE html>
-<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
 
-<head th:replace="~{fragments/head :: interfaceHead('Job Requisitions', ~{::pageStyles})}">
+<head th:replace="~{fragments/head :: interfaceHead('Yêu cầu tuyển dụng', ~{::pageStyles})}">
     <th:block th:fragment="pageStyles">
         <link rel="stylesheet" th:href="@{/css/requisition-shared.css}">
         <link rel="stylesheet" th:href="@{/css/requisition-list.css}">
@@ -16,68 +16,77 @@
             <header th:replace="~{fragments/workspace-header :: header(${viewerRole}, ${viewerName})}"></header>
             <main id="main" tabindex="-1" class="page-content">
                 <div class="container">
-                <nav class="breadcrumbs" aria-label="Breadcrumb" style="margin-bottom: var(--s2); font-size: 14px; display: flex; gap: 8px; align-items: center; color: var(--text-muted);">
-                    <a th:href="@{/dashboard}" style="color: var(--brand); text-decoration: none;">Dashboard</a>
+                <nav class="requisition-page-breadcrumb" aria-label="Điều hướng">
+                    <a th:href="@{/dashboard}">Bảng điều khiển</a>
                     <span aria-hidden="true">/</span>
-                    <span aria-current="page" style="color: var(--text-color); font-weight: 500;">Job Requisitions</span>
+                    <span aria-current="page">Yêu cầu tuyển dụng</span>
                 </nav>
                 <div class="requisition-page-header">
                     <div>
-                        <h1>Job Requisitions</h1>
-                        <p>View and manage hiring requests from every department.</p>
+                        <h1>Yêu cầu tuyển dụng</h1>
+                        <p>Xem và quản lý các yêu cầu tuyển dụng nhân sự từ tất cả các phòng ban.</p>
                     </div>
-                    <a th:if="${canCreate}" th:href="@{/requisitions/create}" class="btn-create">+ Create
-                        requisition</a>
+                    <a th:if="${canCreate}" th:href="@{/requisitions/create}" class="btn-create">+ Tạo yêu cầu mới</a>
                 </div>
                 <th:block th:replace="~{fragments/requisition :: messages}"></th:block>
                 <section class="list-container" aria-labelledby="requisition-list-title">
                     <div class="requisition-list-heading">
-                        <h2 id="requisition-list-title">Requisition list</h2>
-                        <p class="records-count" th:text="|${totalElements} matching requisitions in total|"></p>
+                        <h2 id="requisition-list-title">Danh sách yêu cầu</h2>
+                        <p class="records-count" th:text="|Tổng cộng ${totalElements} yêu cầu phù hợp|"></p>
                     </div>
                     <form th:action="@{/requisitions}" method="get" id="filterForm">
                         <input type="hidden" name="size" th:value="${pageSize}">
                         <div class="requisition-filter-grid">
-                            <div class="filter-field filter-search"><label for="requisition-search">Search</label><input
-                                    id="requisition-search" type="search" name="q" th:value="${search}" maxlength="120"
-                                    placeholder="Position or department name"></div>
-                            <div class="filter-field"><label for="department-filter">Department</label><select
-                                    id="department-filter" name="departmentId">
-                                    <option value="">All departments</option>
+                            <div class="filter-field filter-search">
+                                <label for="requisition-search">Tìm kiếm</label>
+                                <input id="requisition-search" type="search" name="q" th:value="${search}" maxlength="120"
+                                    placeholder="Tên vị trí hoặc phòng ban">
+                            </div>
+                            <div class="filter-field">
+                                <label for="department-filter">Phòng ban</label>
+                                <select id="department-filter" name="departmentId">
+                                    <option value="">Tất cả phòng ban</option>
                                     <option th:each="dept : ${departments}" th:value="${dept.departmentId}"
                                         th:text="${dept.departmentName}"
                                         th:selected="${dept.departmentId == selectedDepartment}"></option>
-                                </select></div>
-                            <div class="filter-field"><label for="type-filter">Type</label><select id="type-filter"
-                                    name="type">
-                                    <option value="">All types</option>
-                                    <option th:each="type : ${employmentTypes}" th:value="${type}" th:text="${type}"
+                                </select>
+                            </div>
+                            <div class="filter-field">
+                                <label for="type-filter">Hình thức làm việc</label>
+                                <select id="type-filter" name="type">
+                                    <option value="">Tất cả hình thức</option>
+                                    <option th:each="type : ${employmentTypes}" th:value="${type}"
+                                        th:text="${type == 'Full-time' ? 'Toàn thời gian' : (type == 'Part-time' ? 'Bán thời gian' : (type == 'Internship' ? 'Thực tập' : (type == 'Contract' ? 'Hợp đồng' : type)))}"
                                         th:selected="${type == selectedType}"></option>
-                                </select></div>
-                            <div class="filter-field"><label for="status-filter">Status</label><select
-                                    id="status-filter" name="status">
-                                    <option th:if="${viewerRole != 'HR'}" value="">All statuses</option>
+                                </select>
+                            </div>
+                            <div class="filter-field">
+                                <label for="status-filter">Trạng thái</label>
+                                <select id="status-filter" name="status">
+                                    <option th:if="${viewerRole != 'HR'}" value="">Tất cả trạng thái</option>
                                     <option th:each="state : ${viewerRole == 'HR' ? {'Approved'} : {'Draft','Pending_Director','Approved','Rejected'} }"
-                                        th:value="${state}" th:text="${state == 'Pending_Director' ? 'Pending' : state}"
+                                        th:value="${state}"
+                                        th:text="${state == 'Draft' ? 'Bản nháp' : (state == 'Pending_Director' ? 'Chờ Giám đốc duyệt' : (state == 'Approved' ? 'Đã duyệt' : (state == 'Rejected' ? 'Từ chối' : state)))}"
                                         th:selected="${state == selectedStatus || (viewerRole == 'HR' and (selectedStatus == '' or selectedStatus == null))}"></option>
-                                </select></div>
-                            <div class="filter-field"><label for="sort-filter">Sort by</label><select id="sort-filter"
-                                    name="sort">
-                                    <option value="newest" th:selected="${selectedSort == 'newest'}">Newest first
-                                    </option>
-                                    <option value="oldest" th:selected="${selectedSort == 'oldest'}">Oldest first
-                                    </option>
-                                    <option value="position_asc" th:selected="${selectedSort == 'position_asc'}">
-                                        Position A–Z</option>
-                                    <option value="position_desc" th:selected="${selectedSort == 'position_desc'}">
-                                        Position Z–A</option>
-                                </select></div>
+                                </select>
+                            </div>
+                            <div class="filter-field">
+                                <label for="sort-filter">Sắp xếp theo</label>
+                                <select id="sort-filter" name="sort">
+                                    <option value="newest" th:selected="${selectedSort == 'newest'}">Mới nhất trước</option>
+                                    <option value="oldest" th:selected="${selectedSort == 'oldest'}">Cũ nhất trước</option>
+                                    <option value="position_asc" th:selected="${selectedSort == 'position_asc'}">Vị trí A–Z</option>
+                                    <option value="position_desc" th:selected="${selectedSort == 'position_desc'}">Vị trí Z–A</option>
+                                </select>
+                            </div>
                         </div>
-                        <div class="filter-actions"><button type="submit" class="filter-apply">Apply</button><a
-                                th:href="@{/requisitions}" class="clear-filters">Clear filters</a></div>
+                        <div class="filter-actions">
+                            <button type="submit" class="filter-apply">Áp dụng</button>
+                            <a th:href="@{/requisitions}" class="clear-filters">Đặt lại bộ lọc</a>
+                        </div>
                     </form>
-                    <p class="table-scroll-note" hidden>Scroll horizontally to see all columns and actions.</p>
-                    <div class="table-wrapper requisition-table-wrap" role="region" aria-label="Requisition list" tabindex="0">
+                    <p class="table-scroll-note" hidden>Cuộn ngang để xem toàn bộ các cột và thao tác.</p>
+                    <div class="table-wrapper requisition-table-wrap" role="region" aria-label="Danh sách yêu cầu tuyển dụng" tabindex="0">
                         <table class="requisition-list-table">
                             <colgroup>
                                 <col class="col-index">
@@ -91,14 +100,14 @@
                             </colgroup>
                             <thead>
                                 <tr>
-                                    <th scope="col">No.</th>
-                                    <th scope="col">Position</th>
-                                    <th scope="col">Department</th>
-                                    <th scope="col">Quantity</th>
-                                    <th scope="col">Type</th>
-                                    <th scope="col">Status</th>
-                                    <th scope="col">Created date</th>
-                                    <th scope="col">Actions</th>
+                                    <th scope="col">STT</th>
+                                    <th scope="col">Vị trí</th>
+                                    <th scope="col">Phòng ban</th>
+                                    <th scope="col">Số lượng</th>
+                                    <th scope="col">Hình thức</th>
+                                    <th scope="col">Trạng thái</th>
+                                    <th scope="col">Ngày tạo</th>
+                                    <th scope="col">Thao tác</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -109,38 +118,37 @@
                                             th:text="${req.title}"></a></td>
                                     <td th:text="${req.departmentName}"></td>
                                     <td th:text="${req.numberOfPositions ?: '—'}"></td>
-                                    <td th:text="${req.employmentType ?: '—'}"></td>
+                                    <td th:text="${req.employmentType == 'Full-time' ? 'Toàn thời gian' : (req.employmentType == 'Part-time' ? 'Bán thời gian' : (req.employmentType == 'Internship' ? 'Thực tập' : (req.employmentType == 'Contract' ? 'Hợp đồng' : (req.employmentType ?: '—'))))}"></td>
                                     <td><span class="list-status" th:attr="data-status=${req.approvalStatus}"
-                                            th:title="${req.approvalStatus == 'Pending_Director' ? 'Pending Director Approval' : req.approvalStatus}"
-                                            th:text="${req.approvalStatus == 'Pending_Director' ? 'Pending' : req.approvalStatus}"></span>
+                                            th:title="${req.approvalStatus == 'Pending_Director' ? 'Chờ Giám đốc phê duyệt' : (req.approvalStatus == 'Draft' ? 'Bản nháp' : (req.approvalStatus == 'Approved' ? 'Đã duyệt' : (req.approvalStatus == 'Rejected' ? 'Từ chối' : req.approvalStatus)))}"
+                                            th:text="${req.approvalStatus == 'Pending_Director' ? 'Chờ duyệt' : (req.approvalStatus == 'Draft' ? 'Bản nháp' : (req.approvalStatus == 'Approved' ? 'Đã duyệt' : (req.approvalStatus == 'Rejected' ? 'Từ chối' : req.approvalStatus)))}"></span>
                                     </td>
                                     <td class="nowrap" th:text="${#temporals.format(req.createdAt,'dd/MM/yyyy')}"></td>
                                     <td class="action-cell">
                                         <button type="button" class="btn-action-outline" data-action-menu
                                             th:popovertarget="|actions-${req.requisitionId}|"
-                                            th:aria-label="|Actions for ${req.title}|">⋯</button>
+                                            th:aria-label="|Thao tác cho ${req.title}|">⋯</button>
                                         <div class="action-popover" popover="auto"
                                             th:id="|actions-${req.requisitionId}|">
-                                            <a th:href="@{/requisitions/{id}(id=${req.requisitionId})}">View details</a>
+                                            <a th:href="@{/requisitions/{id}(id=${req.requisitionId})}">Xem chi tiết</a>
                                             <a th:if="${req.editable}"
-                                                th:href="@{/requisitions/edit/{id}(id=${req.requisitionId})}">Edit</a>
+                                                th:href="@{/requisitions/edit/{id}(id=${req.requisitionId})}">Chỉnh sửa</a>
                                             <a th:if="${canCreate}"
-                                                th:href="@{/requisitions/copy/{id}(id=${req.requisitionId})}">Copy
-                                                form</a>
+                                                th:href="@{/requisitions/copy/{id}(id=${req.requisitionId})}">Sao chép mẫu</a>
                                             <button th:if="${req.deletable}" type="button" class="delete-action"
                                                 data-delete-requisition
                                                 th:data-delete-url="@{/requisitions/delete/{id}(id=${req.requisitionId})}"
-                                                th:data-title="${req.title}">Delete</button>
+                                                th:data-title="${req.title}">Xóa yêu cầu</button>
                                         </div>
                                     </td>
                                 </tr>
                                 <tr th:if="${#lists.isEmpty(requisitions)}">
-                                    <td colspan="8" class="empty-state">No requisitions found. Try changing or clearing your filters.</td>
+                                    <td colspan="8" class="empty-state">Không tìm thấy yêu cầu tuyển dụng nào. Hãy thử thay đổi hoặc đặt lại bộ lọc.</td>
                                 </tr>
                             </tbody>
                         </table>
                     </div>
-                    <nav class="list-pagination-footer" aria-label="Requisition pages">
+                    <nav class="list-pagination-footer" aria-label="Phân trang yêu cầu tuyển dụng">
                         <div th:replace="~{fragments/pagination :: pager(${currentPage - 1}, ${totalPages}, ${totalElements}, '/requisitions')}"></div>
                         <script>
                             window.rmsGoToPage = function(zeroBasedPage) {
