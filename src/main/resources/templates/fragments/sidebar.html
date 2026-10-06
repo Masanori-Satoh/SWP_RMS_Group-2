@@ -58,7 +58,7 @@
         <th:block th:if="${role == 'Candidate'}">
             <span class="workspace-nav-group">Khu vực ứng viên</span>
             <a th:href="@{/dashboard#applications}">Hồ sơ đã ứng tuyển</a>
-            <a th:href="@{/dashboard#interviews}">Lịch phỏng vấn sắp tới</a>
+            <a th:href="@{/interviews}" th:attr="aria-current=${activeMenu == 'interviews' ? 'page' : null}">Lịch phỏng vấn của tôi</a>
             <a th:href="@{/dashboard#offers}">Đề nghị tuyển dụng</a>
             <a th:href="@{/dashboard#notifications}">Thông báo của tôi</a>
             <a th:href="@{/jobs}">Vị trí đang tuyển</a>
@@ -75,7 +75,7 @@
             th:attr="aria-current=${activeMenu == 'api-monitoring' ? 'page' : null}">Giám sát API</a>
         <a th:if="${role != 'Candidate' and role != 'Interviewer'}" th:href="@{/requisitions}"
             th:attr="aria-current=${activeMenu == 'requisitions' ? 'page' : null}">Yêu cầu tuyển dụng</a>
-        <a th:if="${role == 'HR' or role == 'System Admin' or role == 'Hiring Manager' or role == 'Interviewer' or role == 'Director' or role == 'Candidate'}"
+        <a th:if="${role == 'HR' or role == 'System Admin' or role == 'Hiring Manager' or role == 'Interviewer' or role == 'Director'}"
             th:href="@{/interviews}" th:attr="aria-current=${activeMenu == 'interviews' ? 'page' : null}">Lịch phỏng vấn</a>
         <a th:if="${role == 'HR' or role == 'HR Specialist' or role == 'Director' or role == 'System Admin' or (role != null and #strings.contains(role, 'HR'))}"
             th:href="@{/offers}" th:attr="aria-current=${activeMenu == 'offers' ? 'page' : null}">Quản lý đề nghị tuyển dụng</a>

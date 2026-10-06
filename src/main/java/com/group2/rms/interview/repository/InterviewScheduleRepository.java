@@ -48,7 +48,11 @@ public interface InterviewScheduleRepository extends JpaRepository<InterviewSche
      * HR Query: Lọc lịch phỏng vấn theo trạng thái (có eager fetch Application và CreatedBy).
      */
     @EntityGraph(attributePaths = {"application", "createdBy"})
-    List<InterviewSchedule> findByInterviewStatusOrderByStartTimeDesc(InterviewStatus status);
+    List<InterviewSchedule> findByInterviewStatusOrderByStartTimeDesc(String status);
+
+    default List<InterviewSchedule> findByInterviewStatusOrderByStartTimeDesc(InterviewStatus status) {
+        return findByInterviewStatusOrderByStartTimeDesc(status != null ? status.name() : null);
+    }
 
     /**
      * HR Query: Lấy toàn bộ lịch phỏng vấn theo ApplicationId (kèm Application, Candidate, JobPosting, Panel).
@@ -142,7 +146,15 @@ public interface InterviewScheduleRepository extends JpaRepository<InterviewSche
     List<InterviewSchedule> findUpcomingAssignedInterviews(
             @Param("interviewerId") Integer interviewerId,
             @Param("fromTime") LocalDateTime fromTime,
-            @Param("statuses") List<InterviewStatus> statuses);
+            @Param("statuses") List<String> statuses);
+
+    default List<InterviewSchedule> findUpcomingAssignedInterviewsWithEnums(
+            Integer interviewerId,
+            LocalDateTime fromTime,
+            List<InterviewStatus> statuses) {
+        return findUpcomingAssignedInterviews(interviewerId, fromTime,
+                statuses != null ? statuses.stream().map(Enum::name).toList() : List.of());
+    }
 
     /**
      * Kiểm tra quyền bảo mật: Interviewer có được phân công vào lịch phỏng vấn cụ thể này hay không.
@@ -154,4 +166,64 @@ public interface InterviewScheduleRepository extends JpaRepository<InterviewSche
     boolean isInterviewerAssigned(
             @Param("interviewId") Long interviewId,
             @Param("interviewerId") Integer interviewerId);
+
+    // =========================================================================
+    // DÀNH CHO CANDIDATE & HIRING MANAGER (PHÒNG BAN) & KIỂM TRA TRÙNG LỊCH
+    // =========================================================================
+
+    /**
+     * Candidate Query: Chỉ lấy các lịch phỏng vấn của chính ứng viên đang đăng nhập.
+     */
+    @Query("SELECT DISTINCT s FROM InterviewSchedule s " +
+           "LEFT JOIN FETCH s.application a " +
+           "LEFT JOIN FETCH a.candidate c " +
+           "LEFT JOIN FETCH a.jobPosting jp " +
+           "LEFT JOIN FETCH s.createdBy u " +
+           "WHERE c.account.userId = :candidateUserId " +
+           "ORDER BY s.startTime DESC")
+    List<InterviewSchedule> findAllByCandidateUserId(@Param("candidateUserId") Integer candidateUserId);
+
+    /**
+     * Hiring Manager Query: Lấy các lịch phỏng vấn thuộc về phòng ban của Hiring Manager.
+     */
+    @Query("SELECT DISTINCT s FROM InterviewSchedule s " +
+           "LEFT JOIN FETCH s.application a " +
+           "LEFT JOIN FETCH a.candidate c " +
+           "LEFT JOIN FETCH a.jobPosting jp " +
+           "LEFT JOIN FETCH jp.requisition req " +
+           "LEFT JOIN FETCH s.createdBy u " +
+           "LEFT JOIN FETCH s.interviewPanels p " +
+           "LEFT JOIN FETCH p.interviewer i " +
+           "WHERE req.department.departmentId = :departmentId " +
+           "ORDER BY s.startTime DESC")
+    List<InterviewSchedule> findAllByDepartmentId(@Param("departmentId") Integer departmentId);
+
+    /**
+     * Kiểm tra trùng lịch của Ứng viên (ApplicationId) trong khoảng thời gian [startTime, endTime].
+     */
+    @Query("SELECT COUNT(s) FROM InterviewSchedule s " +
+           "WHERE s.application.applicationId = :applicationId " +
+           "AND (:excludeInterviewId IS NULL OR s.interviewId != :excludeInterviewId) " +
+           "AND s.interviewStatus IN ('Scheduled', 'Rescheduled') " +
+           "AND s.startTime < :endTime AND s.endTime > :startTime")
+    long countConflictingSchedulesForApplication(
+            @Param("applicationId") Integer applicationId,
+            @Param("startTime") LocalDateTime startTime,
+            @Param("endTime") LocalDateTime endTime,
+            @Param("excludeInterviewId") Long excludeInterviewId);
+
+    /**
+     * Kiểm tra trùng lịch của một Người phỏng vấn (InterviewerId) trong khoảng thời gian [startTime, endTime].
+     */
+    @Query("SELECT COUNT(s) FROM InterviewSchedule s " +
+           "JOIN s.interviewPanels p " +
+           "WHERE p.interviewer.userId = :interviewerId " +
+           "AND (:excludeInterviewId IS NULL OR s.interviewId != :excludeInterviewId) " +
+           "AND s.interviewStatus IN ('Scheduled', 'Rescheduled') " +
+           "AND s.startTime < :endTime AND s.endTime > :startTime")
+    long countConflictingSchedulesForInterviewer(
+            @Param("interviewerId") Integer interviewerId,
+            @Param("startTime") LocalDateTime startTime,
+            @Param("endTime") LocalDateTime endTime,
+            @Param("excludeInterviewId") Long excludeInterviewId);
 }

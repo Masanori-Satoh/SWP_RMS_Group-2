@@ -1,202 +1,446 @@
 <!doctype html>
 <html lang="vi" xmlns:th="http://www.thymeleaf.org">
-<head th:replace="~{fragments/head :: interfaceHead(${isEdit ? 'Chỉnh sửa lịch phỏng vấn' : 'Lên lịch phỏng vấn mới'}, ~{::pageStyles})}">
+
+<head
+  th:replace="~{fragments/head :: interfaceHead(${isEdit ? 'Chỉnh sửa lịch phỏng vấn' : 'Lên lịch phỏng vấn mới'}, ~{::pageStyles})}">
   <th:block th:fragment="pageStyles">
     <meta name="description" content="Lên lịch và phân công hội đồng phỏng vấn tuyển dụng Mộc Careers.">
     <link rel="stylesheet" th:href="@{/css/interview-form.css}">
   </th:block>
 </head>
+
 <body class="rms-app int-app">
 
   <div class="page-wrapper">
-    <aside th:replace="~{fragments/sidebar :: workspace('interviews', ${currentUser != null ? currentUser.role.roleName : ''})}"></aside>
+    <aside
+      th:replace="~{fragments/sidebar :: workspace('interviews', ${currentUser != null ? currentUser.role.roleName : ''})}">
+    </aside>
     <div class="main-content">
-      <header th:replace="~{fragments/workspace-header :: header(${currentUser != null ? currentUser.role.roleName : ''}, ${currentUser != null ? currentUser.fullName : 'Người dùng'})}"></header>
-      
+      <header
+        th:replace="~{fragments/workspace-header :: header(${currentUser != null ? currentUser.role.roleName : ''}, ${currentUser != null ? currentUser.fullName : 'Người dùng'})}">
+      </header>
+
       <main class="page-content" id="main" tabindex="-1">
-    <div class="container container-narrow">
+        <div class="container container-narrow">
 
-      <!-- Breadcrumb navigation -->
-      <nav class="breadcrumbs" aria-label="Breadcrumb" style="margin-bottom: var(--s2); font-size: 14px; display: flex; gap: 8px; align-items: center; color: var(--text-muted);">
-        <a th:href="@{/dashboard}" style="color: var(--brand); text-decoration: none;">Dashboard</a>
-        <span aria-hidden="true">/</span>
-        <a th:href="@{/interviews}" style="color: var(--brand); text-decoration: none;">Interview Schedule</a>
-        <span aria-hidden="true">/</span>
-        <span aria-current="page" style="color: var(--text-color); font-weight: 500;" th:text="${isEdit ? 'Chỉnh sửa lịch #' + interviewId : 'Lên lịch mới'}">Lên lịch mới</span>
-      </nav>
+          <!-- Breadcrumb navigation -->
+          <nav class="breadcrumbs" aria-label="Breadcrumb"
+            style="margin-bottom: var(--s2); font-size: 14px; display: flex; gap: 8px; align-items: center; color: var(--text-muted);">
+            <a th:href="@{/dashboard}" style="color: var(--brand); text-decoration: none;">Dashboard</a>
+            <span aria-hidden="true">/</span>
+            <a th:href="@{/interviews}" style="color: var(--brand); text-decoration: none;">Interview Schedule</a>
+            <span aria-hidden="true">/</span>
+            <span aria-current="page" style="color: var(--text-color); font-weight: 500;"
+              th:text="${isEdit ? 'Chỉnh sửa lịch #' + interviewId : 'Lên lịch mới'}">Lên lịch mới</span>
+          </nav>
 
-      <!-- Form Card -->
-      <div class="form-card">
-        
-        <div class="form-header">
-          <h1 class="form-title" th:text="${isEdit ? 'Chỉnh sửa lịch phỏng vấn #' + interviewId : 'Lên lịch phỏng vấn mới'}">Lên lịch phỏng vấn</h1>
-          <p class="form-desc" th:if="${!isEdit}">Điền thông tin buổi phỏng vấn, chọn thời gian và phân công Hội đồng phỏng vấn (Hiring Manager / Interviewer chuyên môn).</p>
-          <p class="form-desc" th:if="${isEdit}">Cập nhật thông tin buổi phỏng vấn. Lưu ý tuân thủ Rule GBR-01 (không thể lùi trạng thái).</p>
+          <!-- Form Card -->
+          <div class="form-card">
+
+            <div class="form-header">
+              <h1 class="form-title"
+                th:text="${isEdit ? 'Chỉnh sửa lịch phỏng vấn #' + interviewId : 'Lên lịch phỏng vấn mới'}">Lên lịch
+                phỏng vấn</h1>
+              <p class="form-desc" th:if="${!isEdit}">Điền thông tin buổi phỏng vấn, chọn thời gian và phân công Hội
+                đồng phỏng vấn (Hiring Manager / Interviewer chuyên môn).</p>
+              <p class="form-desc" th:if="${isEdit}">Cập nhật thông tin buổi phỏng vấn. Lưu ý tuân thủ Rule GBR-01
+                (không thể lùi trạng thái).</p>
+            </div>
+
+            <!-- Form Element -->
+            <form th:action="${isEdit ? '/interviews/' + interviewId + '/edit' : '/interviews/new'}"
+              th:object="${scheduleRequest}" method="post" class="form-grid">
+
+              <!-- Global Errors Banner (Validation Rule GBR-01, MSG26 or general exceptions) -->
+              <div th:if="${#fields.hasGlobalErrors()}" class="alert alert-error" role="alert">
+                <svg class="alert-icon" width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true">
+                  <path d="M10 18a8 8 0 100-16 8 8 0 000 16zM9 5h2v6H9V5zm0 8h2v2H9v-2z" fill="currentColor" />
+                </svg>
+                <div>
+                  <strong>Thông báo lỗi nghiệp vụ:</strong>
+                  <ul>
+                    <li th:each="err : ${#fields.globalErrors()}" th:text="${err}">Lỗi nghiệp vụ.</li>
+                  </ul>
+                </div>
+              </div>
+
+              <!-- 1. Hồ sơ ứng tuyển (Application) -->
+              <div class="search-field" th:classappend="${#fields.hasErrors('applicationId')} ? 'has-error' : ''">
+                <label for="applicationId">
+                  Hồ sơ ứng tuyển ứng viên <span class="required">*</span>
+                </label>
+
+                <!-- Ô tìm kiếm hồ sơ ứng viên theo tên, email, vị trí -->
+                <div style="display: flex; gap: 8px; margin-bottom: 8px;">
+                  <input type="text" id="applicationSearchBox"
+                    placeholder="Tìm kiếm hồ sơ theo tên ứng viên, email, vị trí tuyển dụng..."
+                    style="flex: 1; padding: 8px 12px; border: 1px solid var(--border-color, #cbd5e1); border-radius: 6px; font-size: 14px; background: #ffffff;">
+                  <button type="button" id="btnClearAppSearch"
+                    style="padding: 8px 14px; border: 1px solid var(--border-color, #cbd5e1); background: #ffffff; border-radius: 6px; cursor: pointer; font-size: 13px; color: var(--text-muted, #64748b);">
+                    Xóa tìm kiếm
+                  </button>
+                </div>
+
+                <select id="applicationId" th:field="*{applicationId}" required>
+                  <option value="" disabled selected>-- Chọn hồ sơ ứng viên cần phỏng vấn --</option>
+                  <option th:each="app : ${applications}" th:value="${app.applicationId}"
+                    th:data-search="${#strings.toLowerCase('hồ sơ #' + app.applicationId + ' ' + (app.candidate != null and app.candidate.account != null ? app.candidate.account.fullName + ' ' + (app.candidate.account.email != null ? app.candidate.account.email : '') : '') + ' ' + (app.jobPosting != null ? app.jobPosting.postingTitle : ''))}"
+                    th:text="'Hồ sơ #' + ${app.applicationId} + ' - Ứng viên: ' + (${app.candidate != null and app.candidate.account != null ? app.candidate.account.fullName : 'Ứng viên #' + app.candidate.candidateId}) + (${app.candidate != null and app.candidate.account != null and app.candidate.account.email != null ? ' (' + app.candidate.account.email + ')' : ''}) + ' - ' + (${app.jobPosting != null ? app.jobPosting.postingTitle : 'Chưa gắn tin'})">
+                    Hồ sơ #1 - Ứng viên: Nguyễn Văn A (a.nguyen@example.com) - Kỹ sư phần mềm Java
+                  </option>
+                </select>
+                <div id="appSearchSummary" style="margin-top: 4px; font-size: 12px; color: var(--text-muted, #64748b); display: none;"></div>
+                <div class="field-error" th:if="${#fields.hasErrors('applicationId')}" th:errors="*{applicationId}">
+                  Application ID không được để trống.
+                </div>
+              </div>
+
+              <!-- 2. Hình thức phỏng vấn (InterviewFormat) & Trạng thái (nếu Edit) -->
+              <div class="form-row-2">
+
+                <div class="search-field" th:classappend="${#fields.hasErrors('interviewFormat')} ? 'has-error' : ''">
+                  <label for="interviewFormat">
+                    Hình thức phỏng vấn <span class="required">*</span>
+                  </label>
+                  <select id="interviewFormat" th:field="*{interviewFormat}" required>
+                    <option th:each="fmt : ${interviewFormats}" th:value="${fmt}"
+                      th:text="${fmt.name() == 'Online_GoogleMeet' ? 'Trực tuyến (Online qua Google Meet)' : 'Trực tiếp tại văn phòng (Offline)'}">
+                      Trực tuyến
+                    </option>
+                  </select>
+                  <div class="field-error" th:if="${#fields.hasErrors('interviewFormat')}"
+                    th:errors="*{interviewFormat}">
+                    Vui lòng chọn hình thức phỏng vấn.
+                  </div>
+                </div>
+
+                <!-- Trạng thái phỏng vấn (Hiện khi chỉnh sửa hoặc tạo mới) -->
+                <div class="search-field" th:classappend="${#fields.hasErrors('interviewStatus')} ? 'has-error' : ''">
+                  <label for="interviewStatus">Trạng thái buổi phỏng vấn</label>
+                  <select id="interviewStatus" th:field="*{interviewStatus}">
+                    <option th:each="st : ${interviewStatuses}" th:value="${st}"
+                      th:text="${st.displayName} + ' (' + ${st.name()} + ')'">
+                      Đã lên lịch
+                    </option>
+                  </select>
+                  <span class="field-hint" th:if="${isEdit}">Tuân thủ Rule GBR-01: Trạng thái chỉ đi tiến, không được
+                    lùi.</span>
+                  <div class="field-error" th:if="${#fields.hasErrors('interviewStatus')}"
+                    th:errors="*{interviewStatus}">
+                    Trạng thái không hợp lệ.
+                  </div>
+                </div>
+
+              </div>
+
+              <!-- 3. Thời gian bắt đầu & Thời gian kết thúc (Rule MSG26: endTime > startTime) -->
+              <div class="form-row-2">
+
+                <div class="search-field" th:classappend="${#fields.hasErrors('startTime')} ? 'has-error' : ''">
+                  <label for="startTime">
+                    Thời gian bắt đầu <span class="required">*</span>
+                  </label>
+                  <input type="datetime-local" id="startTime" th:field="*{startTime}" required />
+                  <div class="field-error" th:if="${#fields.hasErrors('startTime')}" th:errors="*{startTime}">
+                    Thời gian bắt đầu phải ở trong tương lai.
+                  </div>
+                </div>
+
+                <div class="search-field"
+                  th:classappend="${#fields.hasErrors('endTime') or #fields.hasErrors('endTimeAfterStartTime')} ? 'has-error' : ''">
+                  <label for="endTime">
+                    Thời gian kết thúc <span class="required">*</span>
+                  </label>
+                  <input type="datetime-local" id="endTime" th:field="*{endTime}" required />
+                  <div class="field-error" th:if="${#fields.hasErrors('endTime')}" th:errors="*{endTime}">
+                    Thời gian kết thúc không được để trống.
+                  </div>
+                  <div class="field-error" th:if="${#fields.hasErrors('endTimeAfterStartTime')}"
+                    th:errors="*{endTimeAfterStartTime}">
+                    Thời gian kết thúc phải lớn hơn thời gian bắt đầu.
+                  </div>
+                </div>
+
+              </div>
+
+              <!-- 4. Địa điểm hoặc Đường dẫn phòng họp (LocationOrLink) -->
+              <div class="search-field" th:classappend="${#fields.hasErrors('locationOrLink')} ? 'has-error' : ''">
+                <label for="locationOrLink">Địa điểm văn phòng hoặc Liên kết phòng họp (Google Meet / Zoom)</label>
+                <input type="text" id="locationOrLink" th:field="*{locationOrLink}"
+                  placeholder="Ví dụ: https://meet.google.com/xyz-abcd-uvw hoặc Phòng Phỏng vấn 204, Tòa nhà Mộc" />
+                <span class="field-hint">Nếu phỏng vấn Online, nhập liên kết phòng họp. Nếu Offline, nhập địa chỉ phòng
+                  họp cụ thể.</span>
+                <div class="field-error" th:if="${#fields.hasErrors('locationOrLink')}" th:errors="*{locationOrLink}">
+                  Địa điểm hoặc đường dẫn không hợp lệ.
+                </div>
+              </div>
+
+              <!-- 5. Hội đồng phỏng vấn (InterviewPanel) - Tìm kiếm & Lọc nhân viên -->
+              <div class="search-field"
+                th:classappend="${#fields.hasErrors('panelMembers') or #fields.hasErrors('interviewerIds')} ? 'has-error' : ''">
+                <label for="interviewerIds">
+                  Hội đồng phỏng vấn (Interviewer / Hiring Manager / Director) <span class="required">*</span>
+                </label>
+
+                <!-- Bộ lọc & Ô tìm kiếm nhân viên thời gian thực -->
+                <div class="interviewer-filter-wrapper"
+                  style="margin-bottom: 10px; background: #f8fafc; padding: 12px; border-radius: 8px; border: 1px solid var(--border-color, #e2e8f0);">
+                  <div style="display: flex; gap: 8px; margin-bottom: 8px;">
+                    <input type="text" id="interviewerSearchBox"
+                      placeholder="Tìm kiếm nhân viên theo tên, email, vai trò, phòng ban..."
+                      style="flex: 1; padding: 8px 12px; border: 1px solid var(--border-color, #cbd5e1); border-radius: 6px; font-size: 14px; background: #ffffff;">
+                    <button type="button" id="btnClearSearch"
+                      style="padding: 8px 14px; border: 1px solid var(--border-color, #cbd5e1); background: #ffffff; border-radius: 6px; cursor: pointer; font-size: 13px; color: var(--text-muted, #64748b);">
+                      Xóa tìm kiếm
+                    </button>
+                  </div>
+
+                  <!-- Filter Pills theo vai trò -->
+                  <div style="display: flex; gap: 6px; flex-wrap: wrap; align-items: center;">
+                    <span
+                      style="font-size: 12px; color: var(--text-muted, #64748b); font-weight: 500; margin-right: 4px;">Lọc
+                      theo vai trò:</span>
+                    <button type="button" class="role-filter-pill active" data-role="ALL"
+                      style="padding: 4px 10px; border-radius: 12px; border: 1px solid var(--brand, #3e7157); background: var(--brand, #3e7157); color: white; font-size: 12px; cursor: pointer;">
+                      Tất cả
+                    </button>
+                    <button type="button" class="role-filter-pill" data-role="Hiring Manager"
+                      style="padding: 4px 10px; border-radius: 12px; border: 1px solid #cbd5e1; background: #ffffff; color: #334155; font-size: 12px; cursor: pointer;">
+                      Hiring Manager
+                    </button>
+                    <button type="button" class="role-filter-pill" data-role="Interviewer"
+                      style="padding: 4px 10px; border-radius: 12px; border: 1px solid #cbd5e1; background: #ffffff; color: #334155; font-size: 12px; cursor: pointer;">
+                      Interviewer
+                    </button>
+                    <button type="button" class="role-filter-pill" data-role="Director"
+                      style="padding: 4px 10px; border-radius: 12px; border: 1px solid #cbd5e1; background: #ffffff; color: #334155; font-size: 12px; cursor: pointer;">
+                      Director
+                    </button>
+                  </div>
+                </div>
+
+                <select multiple="multiple" id="interviewerIds" th:field="*{interviewerIds}" required
+                  style="min-height: 150px; width: 100%; padding: 8px; border: 1px solid var(--border-color, #cbd5e1); border-radius: 6px; font-size: 14px; line-height: 1.6;">
+                  <option th:each="user : ${availableInterviewers}" th:value="${user.userId}"
+                    th:data-role="${user.role != null ? user.role.roleName : ''}"
+                    th:data-search="${#strings.toLowerCase(user.fullName + ' ' + (user.email != null ? user.email : '') + ' ' + (user.role != null ? user.role.roleName : '') + ' ' + (user.department != null ? user.department.departmentName : ''))}"
+                    th:text="${user.fullName} + (${user.email != null ? ' (' + user.email + ')' : ''}) + ' — ' + (${user.role != null ? user.role.roleName : 'Chuyên môn'}) + ' (' + (${user.department != null ? user.department.departmentName : 'Chưa phân bổ'}) + ')'">
+                    Nguyễn Chuyên Gia (chuyengia@company.com) — Hiring Manager (Phòng Kỹ thuật)
+                  </option>
+                </select>
+
+                <!-- Tóm tắt số lượng và danh sách đã chọn -->
+                <div id="selectedSummary" style="margin-top: 8px; font-size: 13px; color: var(--text-color);">
+                  Đã chọn: <strong id="selectedCount">0</strong> thành viên hội đồng
+                  <div id="selectedChipsContainer" style="display: flex; gap: 6px; flex-wrap: wrap; margin-top: 6px;">
+                  </div>
+                </div>
+
+                <span class="field-hint" style="margin-top: 8px;">
+                  Giữ phím <strong>Ctrl</strong> (hoặc <strong>Cmd</strong> trên Mac) để chọn nhiều người phỏng vấn.
+                  <em>Quy tắc: HR không tham gia hội đồng; Director được phép tự đặt lịch cho chính mình.</em>
+                </span>
+
+                <div class="field-error" th:if="${#fields.hasErrors('panelMembers')}" th:errors="*{panelMembers}">
+                  Hội đồng phỏng vấn phải có ít nhất 1 người phỏng vấn.
+                </div>
+                <div class="field-error" th:if="${#fields.hasErrors('interviewerIds')}" th:errors="*{interviewerIds}">
+                  Vui lòng chọn người phỏng vấn hợp lệ.
+                </div>
+              </div>
+
+              <!-- Form Actions -->
+              <div class="form-actions">
+                <a th:href="@{/interviews}" class="button button-secondary">Hủy bỏ</a>
+                <button type="submit" class="button button-brand">
+                  <svg width="18" height="18" viewBox="0 0 20 20" fill="none" aria-hidden="true">
+                    <path d="M4 10l4 4L16 6" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                      stroke-linejoin="round" />
+                  </svg>
+                  <span th:text="${isEdit ? 'Lưu thay đổi' : 'Lên lịch phỏng vấn'}">Lên lịch phỏng vấn</span>
+                </button>
+              </div>
+
+            </form>
+
+          </div>
+
         </div>
-
-        <!-- Form Element -->
-        <form th:action="${isEdit ? '/interviews/' + interviewId + '/edit' : '/interviews/new'}"
-              th:object="${scheduleRequest}"
-              method="post"
-              class="form-grid">
-
-          <!-- Global Errors Banner (Validation Rule GBR-01, MSG26 or general exceptions) -->
-          <div th:if="${#fields.hasGlobalErrors()}" class="alert alert-error" role="alert">
-            <svg class="alert-icon" width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true">
-              <path d="M10 18a8 8 0 100-16 8 8 0 000 16zM9 5h2v6H9V5zm0 8h2v2H9v-2z" fill="currentColor"/>
-            </svg>
-            <div>
-              <strong>Thông báo lỗi nghiệp vụ:</strong>
-              <ul>
-                <li th:each="err : ${#fields.globalErrors()}" th:text="${err}">Lỗi nghiệp vụ.</li>
-              </ul>
-            </div>
-          </div>
-
-          <!-- 1. Hồ sơ ứng tuyển (Application) -->
-          <div class="search-field" th:classappend="${#fields.hasErrors('applicationId')} ? 'has-error' : ''">
-            <label for="applicationId">
-              Hồ sơ ứng tuyển ứng viên <span class="required">*</span>
-            </label>
-            <select id="applicationId" th:field="*{applicationId}" required>
-              <option value="" disabled selected>-- Chọn hồ sơ ứng viên cần phỏng vấn --</option>
-              <option th:each="app : ${applications}"
-                      th:value="${app.applicationId}"
-                      th:text="'Hồ sơ #' + ${app.applicationId} + ' - Ứng viên: ' + (${app.candidate != null and app.candidate.account != null ? app.candidate.account.fullName : 'Ứng viên #' + app.candidate.candidateId}) + ' (' + (${app.jobPosting != null ? app.jobPosting.postingTitle : 'Chưa gắn tin'}) + ')'">
-                Hồ sơ #1 - Ứng viên: Nguyễn Văn A (Kỹ sư phần mềm Java)
-              </option>
-            </select>
-            <div class="field-error" th:if="${#fields.hasErrors('applicationId')}" th:errors="*{applicationId}">
-              Application ID không được để trống.
-            </div>
-          </div>
-
-          <!-- 2. Hình thức phỏng vấn (InterviewFormat) & Trạng thái (nếu Edit) -->
-          <div class="form-row-2">
-            
-            <div class="search-field" th:classappend="${#fields.hasErrors('interviewFormat')} ? 'has-error' : ''">
-              <label for="interviewFormat">
-                Hình thức phỏng vấn <span class="required">*</span>
-              </label>
-              <select id="interviewFormat" th:field="*{interviewFormat}" required>
-                <option th:each="fmt : ${interviewFormats}"
-                        th:value="${fmt}"
-                        th:text="${fmt.name() == 'Online_GoogleMeet' ? 'Trực tuyến (Online qua Google Meet)' : 'Trực tiếp tại văn phòng (Offline)'}">
-                  Trực tuyến
-                </option>
-              </select>
-              <div class="field-error" th:if="${#fields.hasErrors('interviewFormat')}" th:errors="*{interviewFormat}">
-                Vui lòng chọn hình thức phỏng vấn.
-              </div>
-            </div>
-
-            <!-- Trạng thái phỏng vấn (Hiện khi chỉnh sửa hoặc tạo mới) -->
-            <div class="search-field" th:classappend="${#fields.hasErrors('interviewStatus')} ? 'has-error' : ''">
-              <label for="interviewStatus">Trạng thái buổi phỏng vấn</label>
-              <select id="interviewStatus" th:field="*{interviewStatus}">
-                <option th:each="st : ${interviewStatuses}"
-                        th:value="${st}"
-                        th:text="${st.displayName} + ' (' + ${st.name()} + ')'">
-                  Đã lên lịch
-                </option>
-              </select>
-              <span class="field-hint" th:if="${isEdit}">Tuân thủ Rule GBR-01: Trạng thái chỉ đi tiến, không được lùi.</span>
-              <div class="field-error" th:if="${#fields.hasErrors('interviewStatus')}" th:errors="*{interviewStatus}">
-                Trạng thái không hợp lệ.
-              </div>
-            </div>
-
-          </div>
-
-          <!-- 3. Thời gian bắt đầu & Thời gian kết thúc (Rule MSG26: endTime > startTime) -->
-          <div class="form-row-2">
-            
-            <div class="search-field" th:classappend="${#fields.hasErrors('startTime')} ? 'has-error' : ''">
-              <label for="startTime">
-                Thời gian bắt đầu <span class="required">*</span>
-              </label>
-              <input type="datetime-local" id="startTime" th:field="*{startTime}" required/>
-              <div class="field-error" th:if="${#fields.hasErrors('startTime')}" th:errors="*{startTime}">
-                Thời gian bắt đầu phải ở trong tương lai.
-              </div>
-            </div>
-
-            <div class="search-field" th:classappend="${#fields.hasErrors('endTime') or #fields.hasErrors('endTimeAfterStartTime')} ? 'has-error' : ''">
-              <label for="endTime">
-                Thời gian kết thúc <span class="required">*</span>
-              </label>
-              <input type="datetime-local" id="endTime" th:field="*{endTime}" required/>
-              <div class="field-error" th:if="${#fields.hasErrors('endTime')}" th:errors="*{endTime}">
-                Thời gian kết thúc không được để trống.
-              </div>
-              <div class="field-error" th:if="${#fields.hasErrors('endTimeAfterStartTime')}" th:errors="*{endTimeAfterStartTime}">
-                Thời gian kết thúc phải lớn hơn thời gian bắt đầu.
-              </div>
-            </div>
-
-          </div>
-
-          <!-- 4. Địa điểm hoặc Đường dẫn phòng họp (LocationOrLink) -->
-          <div class="search-field" th:classappend="${#fields.hasErrors('locationOrLink')} ? 'has-error' : ''">
-            <label for="locationOrLink">Địa điểm văn phòng hoặc Liên kết phòng họp (Google Meet / Zoom)</label>
-            <input type="text"
-                   id="locationOrLink"
-                   th:field="*{locationOrLink}"
-                   placeholder="Ví dụ: https://meet.google.com/xyz-abcd-uvw hoặc Phòng Phỏng vấn 204, Tòa nhà Mộc"/>
-            <span class="field-hint">Nếu phỏng vấn Online, nhập liên kết phòng họp. Nếu Offline, nhập địa chỉ phòng họp cụ thể.</span>
-            <div class="field-error" th:if="${#fields.hasErrors('locationOrLink')}" th:errors="*{locationOrLink}">
-              Địa điểm hoặc đường dẫn không hợp lệ.
-            </div>
-          </div>
-
-          <!-- 5. Hội đồng phỏng vấn (InterviewPanel) - Multi-Select -->
-          <!-- Quy tắc: HR KHÔNG tham gia hội đồng. Chỉ chọn HM hoặc Interviewer chuyên môn. -->
-          <div class="search-field" th:classappend="${#fields.hasErrors('panelMembers') or #fields.hasErrors('interviewerIds')} ? 'has-error' : ''">
-            <label for="interviewerIds">
-              Hội đồng phỏng vấn (Interviewer / Hiring Manager) <span class="required">*</span>
-            </label>
-            
-            <select multiple="multiple" id="interviewerIds" th:field="*{interviewerIds}" required>
-              <option th:each="user : ${availableInterviewers}"
-                      th:value="${user.userId}"
-                      th:text="${user.fullName} + ' — ' + (${user.role != null ? user.role.roleName : 'Chuyên môn'}) + ' (' + (${user.department != null ? user.department.departmentName : 'Mộc'}) + ')'">
-                Nguyễn Chuyên Gia — Hiring Manager (Phòng Kỹ thuật)
-              </option>
-            </select>
-
-            <span class="field-hint">
-              Giữ phím <strong>Ctrl</strong> (hoặc <strong>Cmd</strong> trên Mac) để chọn một hoặc nhiều người phỏng vấn.
-              <em>Quy tắc: Nhân sự (HR) không tham gia hội đồng, danh sách chỉ hiển thị Hiring Manager và người phỏng vấn chuyên môn.</em>
-            </span>
-
-            <div class="field-error" th:if="${#fields.hasErrors('panelMembers')}" th:errors="*{panelMembers}">
-              Hội đồng phỏng vấn phải có ít nhất 1 người phỏng vấn.
-            </div>
-            <div class="field-error" th:if="${#fields.hasErrors('interviewerIds')}" th:errors="*{interviewerIds}">
-              Vui lòng chọn người phỏng vấn hợp lệ.
-            </div>
-          </div>
-
-          <!-- Form Actions -->
-          <div class="form-actions">
-            <a th:href="@{/interviews}" class="button button-secondary">Hủy bỏ</a>
-            <button type="submit" class="button button-brand">
-              <svg width="18" height="18" viewBox="0 0 20 20" fill="none" aria-hidden="true">
-                <path d="M4 10l4 4L16 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-              </svg>
-              <span th:text="${isEdit ? 'Lưu thay đổi' : 'Lên lịch phỏng vấn'}">Lên lịch phỏng vấn</span>
-            </button>
-          </div>
-
-        </form>
-
-      </div>
-
-    </div>
-  </main>
-  </div> <!-- /.main-content -->
+      </main>
+    </div> <!-- /.main-content -->
   </div> <!-- /.page-wrapper -->
-  
+
   <script th:src="@{/js/global.js}" src="/js/global.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', function () {
+      // 1. Quản lý tìm kiếm Hồ sơ ứng tuyển (Application) theo tên ứng viên, email, vị trí
+      const appSearchBox = document.getElementById('applicationSearchBox');
+      const btnClearAppSearch = document.getElementById('btnClearAppSearch');
+      const appSelect = document.getElementById('applicationId');
+      const appSearchSummary = document.getElementById('appSearchSummary');
+
+      if (appSelect && appSearchBox) {
+        function filterApplications() {
+          const query = appSearchBox.value.trim().toLowerCase();
+          const options = appSelect.options;
+          let matchCount = 0;
+
+          for (let i = 0; i < options.length; i++) {
+            const opt = options[i];
+            // Option placeholder mặc định
+            if (opt.value === '') {
+              opt.hidden = query !== '';
+              opt.style.display = query !== '' ? 'none' : '';
+              continue;
+            }
+
+            const searchData = opt.getAttribute('data-search') || opt.text.toLowerCase();
+            const matches = query === '' || searchData.includes(query);
+
+            if (matches) {
+              opt.hidden = false;
+              opt.style.display = '';
+              matchCount++;
+            } else {
+              opt.hidden = true;
+              opt.style.display = 'none';
+            }
+          }
+
+          if (appSearchSummary) {
+            if (query === '') {
+              appSearchSummary.style.display = 'none';
+              appSearchSummary.textContent = '';
+            } else {
+              appSearchSummary.style.display = 'block';
+              appSearchSummary.textContent = 'Tìm thấy ' + matchCount + ' hồ sơ ứng viên phù hợp với từ khóa "' + query + '"';
+            }
+          }
+        }
+
+        appSearchBox.addEventListener('input', filterApplications);
+
+        appSearchBox.addEventListener('keydown', function (e) {
+          if (e.key === 'Enter') {
+            e.preventDefault();
+            const options = appSelect.options;
+            for (let i = 0; i < options.length; i++) {
+              if (options[i].value !== '' && !options[i].hidden && options[i].style.display !== 'none') {
+                appSelect.selectedIndex = i;
+                break;
+              }
+            }
+          }
+        });
+
+        if (btnClearAppSearch) {
+          btnClearAppSearch.addEventListener('click', function () {
+            appSearchBox.value = '';
+            filterApplications();
+            appSearchBox.focus();
+          });
+        }
+      }
+
+      // 2. Quản lý tìm kiếm & lọc Hội đồng phỏng vấn (InterviewPanel)
+      const searchBox = document.getElementById('interviewerSearchBox');
+      const btnClear = document.getElementById('btnClearSearch');
+      const rolePills = document.querySelectorAll('.role-filter-pill');
+      const selectElement = document.getElementById('interviewerIds');
+      const countDisplay = document.getElementById('selectedCount');
+      const chipsContainer = document.getElementById('selectedChipsContainer');
+
+      if (!selectElement) return;
+
+      let currentRoleFilter = 'ALL';
+
+      function applyFilter() {
+        const query = searchBox ? searchBox.value.trim().toLowerCase() : '';
+        const options = selectElement.options;
+
+        for (let i = 0; i < options.length; i++) {
+          const opt = options[i];
+          const searchData = opt.getAttribute('data-search') || opt.text.toLowerCase();
+          const roleData = opt.getAttribute('data-role') || '';
+
+          const matchesQuery = query === '' || searchData.includes(query);
+          const matchesRole = currentRoleFilter === 'ALL' || roleData.toLowerCase() === currentRoleFilter.toLowerCase();
+
+          if (matchesQuery && matchesRole) {
+            opt.hidden = false;
+            opt.style.display = '';
+          } else {
+            opt.hidden = true;
+            opt.style.display = 'none';
+          }
+        }
+      }
+
+      function updateSelectedSummary() {
+        if (!countDisplay || !chipsContainer) return;
+        chipsContainer.innerHTML = '';
+        let count = 0;
+
+        const options = selectElement.options;
+        for (let i = 0; i < options.length; i++) {
+          const opt = options[i];
+          if (opt.selected) {
+            count++;
+            const chip = document.createElement('span');
+            chip.style.cssText = 'display: inline-flex; align-items: center; gap: 4px; padding: 3px 8px; background: #e2e8f0; border-radius: 12px; font-size: 12px; color: #1e293b;';
+            chip.textContent = opt.text.split('—')[0].trim();
+
+            const removeBtn = document.createElement('button');
+            removeBtn.type = 'button';
+            removeBtn.textContent = '×';
+            removeBtn.style.cssText = 'border: none; background: transparent; cursor: pointer; font-size: 14px; font-weight: bold; line-height: 1; padding: 0 2px; color: #64748b;';
+            removeBtn.title = 'Bỏ chọn';
+            removeBtn.addEventListener('click', function (e) {
+              e.preventDefault();
+              opt.selected = false;
+              updateSelectedSummary();
+            });
+
+            chip.appendChild(removeBtn);
+            chipsContainer.appendChild(chip);
+          }
+        }
+        countDisplay.textContent = count;
+      }
+
+      if (searchBox) {
+        searchBox.addEventListener('input', applyFilter);
+      }
+
+      if (btnClear) {
+        btnClear.addEventListener('click', function () {
+          if (searchBox) searchBox.value = '';
+          applyFilter();
+        });
+      }
+
+      rolePills.forEach(pill => {
+        pill.addEventListener('click', function () {
+          rolePills.forEach(p => {
+            p.style.background = '#ffffff';
+            p.style.color = '#334155';
+            p.style.borderColor = '#cbd5e1';
+          });
+          this.style.background = 'var(--brand, #3e7157)';
+          this.style.color = 'white';
+          this.style.borderColor = 'var(--brand, #3e7157)';
+
+          currentRoleFilter = this.getAttribute('data-role');
+          applyFilter();
+        });
+      });
+
+      selectElement.addEventListener('change', updateSelectedSummary);
+
+      // Khởi tạo ban đầu
+      updateSelectedSummary();
+    });
+  </script>
 </body>
+
 </html>
