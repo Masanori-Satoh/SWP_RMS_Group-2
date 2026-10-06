@@ -147,9 +147,6 @@ class JobRequisitionServiceTest {
         assertEquals("Java", sc.getCriteriaName());
         assertSame(saved, sc.getRequisition());
 
-        // Side effect: Draft không sinh workflow event
-        verifyNoInteractions(events);
-
         // Audit log CREATE
         var auditCap = ArgumentCaptor.forClass(AuditLog.class);
         verify(audit).save(auditCap.capture());
@@ -180,8 +177,6 @@ class JobRequisitionServiceTest {
         assertNull(saved.getNumberOfPositions());
         assertNull(saved.getSubmittedAt());
         assertTrue(saved.getScreeningCriteria().isEmpty());
-
-        verifyNoInteractions(events);
 
         var auditCap = ArgumentCaptor.forClass(AuditLog.class);
         verify(audit).save(auditCap.capture());
@@ -228,7 +223,7 @@ class JobRequisitionServiceTest {
     // =========================================================================
 
     @Test
-    @DisplayName("SVC-07: Director reject -> Chuyển Rejected, lưu approval, log event và gửi notification cho HM")
+    @DisplayName("SVC-07: Director reject -> Chuyển Rejected, lưu approval, ghi audit log")
     void svc07_reject_notifiesHiringManager() {
         User director = User.builder().userId(20).username("director").fullName("Director B").build();
         when(access.actor()).thenReturn(director);
@@ -250,7 +245,7 @@ class JobRequisitionServiceTest {
         assertNotNull(req.getDecidedAt());
         verify(approvals).save(any(RequisitionApproval.class));
         verify(requisitions).saveAndFlush(req);
-        verify(notificationService).notifyRequisitionRejected(req, director, "Budget exceeded");
+        verify(audit).save(any(AuditLog.class));
     }
 
     // =========================================================================

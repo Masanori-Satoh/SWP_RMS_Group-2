@@ -119,11 +119,11 @@ GO
 -- =============================================================================
 CREATE TABLE JobRequisition (
     RequisitionId INT IDENTITY(1,1) PRIMARY KEY,
-    RequisitionCode NVARCHAR(50) NULL, --add
+    RequisitionCode NVARCHAR(50) NULL,
     Title NVARCHAR(200) NOT NULL,
     DepartmentId INT NOT NULL,
     HiringManagerId INT NOT NULL,
-    RecruitmentRound INT NOT NULL CONSTRAINT DF_JobRequisition_RecruitmentRound DEFAULT 1, --add
+    RecruitmentRound INT NOT NULL CONSTRAINT DF_JobRequisition_RecruitmentRound DEFAULT 1, 
     NumberOfPositions INT NOT NULL,
     EmploymentType NVARCHAR(50) NOT NULL,
     MinSalary DECIMAL(18,2) NULL,
