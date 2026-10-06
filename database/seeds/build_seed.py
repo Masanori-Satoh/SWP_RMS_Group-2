@@ -119,23 +119,34 @@ lines.append("")
 
 # 3. INTERNAL USERS
 lines.append("-- =============================================================================")
-lines.append("-- 3. INTERNAL USERS (10 Accounts: Admin, Director, 2 HR, 2 HM, 4 Interviewers)")
+lines.append("-- 3. INTERNAL USERS (12 Accounts: Admin, Director, 2 HR, 2 HM, 2 Interviewers, 4 Interviewers-role)")
 lines.append("-- Password: '12345678' -> BCrypt: $2a$10$p.RWJeHxArmCbQBg3GNXEew66veoolEXULwkrjzeoof8Me1dAD8PO")
+lines.append("-- RoleId: 1=Admin, 2=HR, 3=HiringManager, 4=Director, 5=Interviewer, 6=Candidate")
 lines.append("-- =============================================================================")
 bcrypt_hash = "$2a$10$p.RWJeHxArmCbQBg3GNXEew66veoolEXULwkrjzeoof8Me1dAD8PO"
 
 internal_users = [
     # (RoleId, Username, Email, FullName, Phone, DeptId, CreatedAt)
+    # UserId 1: Admin
     (1, "admin", "admin@rms-tech.vn", "Trần Minh Đức", "0901234567", 1, "2026-08-01 08:00:00"),
+    # UserId 2: Director (RoleInPanel: Director)
     (4, "director", "hoang.director@rms-tech.vn", "Nguyễn Thế Hoàng", "0902345678", 3, "2026-08-01 08:30:00"),
+    # UserId 3: HR (RoleInPanel: HR)
     (2, "hr_lan", "lan.le@rms-tech.vn", "Lê Thị Mai Lan", "0903456789", 3, "2026-08-05 09:00:00"),
+    # UserId 4: HR (RoleInPanel: HR)
     (2, "hr_quang", "quang.pham@rms-tech.vn", "Phạm Quang Huy", "0904567890", 3, "2026-08-05 09:15:00"),
+    # UserId 5: HiringManager (RoleInPanel: HM)
     (3, "hm_tuan", "tuan.vu@rms-tech.vn", "Vũ Anh Tuấn", "0905678901", 1, "2026-08-10 10:00:00"),
+    # UserId 6: HiringManager (RoleInPanel: HM)
     (3, "hm_huong", "huong.do@rms-tech.vn", "Đỗ Thu Hương", "0906789012", 2, "2026-08-10 10:30:00"),
-    (5, "dev_nam", "nam.hoang@rms-tech.vn", "Hoàng Nhật Nam", "0907890123", 1, "2026-08-15 08:45:00"),
-    (5, "dev_viet", "viet.bui@rms-tech.vn", "Bùi Quốc Việt", "0908901234", 1, "2026-08-15 09:00:00"),
-    (5, "qa_thao", "thao.ngo@rms-tech.vn", "Ngô Phương Thảo", "0909012345", 1, "2026-08-15 09:30:00"),
-    (5, "sales_trung", "trung.dang@rms-tech.vn", "Đặng Thành Trung", "0909123456", 2, "2026-08-15 10:00:00")
+    # UserId 7: Interviewer (RoleInPanel: Interviewer) - Java/Backend specialist
+    (5, "interviewer_nam", "nam.hoang@rms-tech.vn", "Hoàng Nhật Nam", "0907890123", 1, "2026-08-15 08:45:00"),
+    # UserId 8: Interviewer (RoleInPanel: Interviewer) - Frontend specialist
+    (5, "interviewer_viet", "viet.bui@rms-tech.vn", "Bùi Quốc Việt", "0908901234", 1, "2026-08-15 09:00:00"),
+    # UserId 9: Interviewer (RoleInPanel: Interviewer) - QA specialist
+    (5, "interviewer_thao", "thao.ngo@rms-tech.vn", "Ngô Phương Thảo", "0909012345", 1, "2026-08-15 09:30:00"),
+    # UserId 10: Interviewer (RoleInPanel: Interviewer) - Sales specialist
+    (5, "interviewer_trung", "trung.dang@rms-tech.vn", "Đặng Thành Trung", "0909123456", 2, "2026-08-15 10:00:00")
 ]
 
 for role_id, uname, email, fname, phone, dept_id, created_at in internal_users:
@@ -235,10 +246,13 @@ requisitions = [
     )
 ]
 
-for title, d_id, hm_id, num_pos, emp_type, min_sal, max_sal, reason, jd, req_det, req_gender, prob_duration, work_model, work_loc, exp_start, app_status, cr_at, up_at in requisitions:
+# Schema mới yêu cầu RequisitionCode và RecruitmentRound (NOT NULL, > 0)
+for idx, (title, d_id, hm_id, num_pos, emp_type, min_sal, max_sal, reason, jd, req_det, req_gender, prob_duration, work_model, work_loc, exp_start, app_status, cr_at, up_at) in enumerate(requisitions, start=1):
+    req_code = f"REQ-2026-{idx:04d}"
+    rec_round = 1  # Vòng tuyển dụng đầu tiên
     lines.append(
-        f"INSERT INTO JobRequisition (Title, DepartmentId, HiringManagerId, NumberOfPositions, EmploymentType, MinSalary, MaxSalary, ReasonForHiring, JobDescription, RequirementDetails, RequiredGender, ProbationDuration, WorkModel, WorkLocation, ExpectedStartDate, ApprovalStatus, CreatedAt, UpdatedAt) "
-        f"VALUES (N'{title}', {d_id}, {hm_id}, {num_pos}, N'{emp_type}', {min_sal:.2f}, {max_sal:.2f}, N'{reason}', N'{jd}', N'{req_det}', N'{req_gender}', N'{prob_duration}', N'{work_model}', N'{work_loc}', '{exp_start}', N'{app_status}', '{cr_at}', '{up_at}');"
+        f"INSERT INTO JobRequisition (Title, RequisitionCode, RecruitmentRound, DepartmentId, HiringManagerId, NumberOfPositions, EmploymentType, MinSalary, MaxSalary, ReasonForHiring, JobDescription, RequirementDetails, RequiredGender, ProbationDuration, WorkModel, WorkLocation, ExpectedStartDate, ApprovalStatus, CreatedAt, UpdatedAt) "
+        f"VALUES (N'{title}', N'{req_code}', {rec_round}, {d_id}, {hm_id}, {num_pos}, N'{emp_type}', {min_sal:.2f}, {max_sal:.2f}, N'{reason}', N'{jd}', N'{req_det}', N'{req_gender}', N'{prob_duration}', N'{work_model}', N'{work_loc}', '{exp_start}', N'{app_status}', '{cr_at}', '{up_at}');"
     )
 lines.append("")
 
@@ -507,9 +521,11 @@ for day_idx in range(num_days):
         linkedin = f"https://linkedin.com/in/{c['username'].replace('.', '-')}"
         github = f"https://github.com/{c['username'].replace('.', '')}" if c['posting_id'] in [1, 2, 3] else "NULL"
         gh_sql = f"N'{github}'" if github != "NULL" else "NULL"
+        # IsPotential: ứng viên có điểm AI cao (>= 80) hoặc vào được vòng phỏng vấn đều là potential
+        is_potential = 1 if c.get('funnel_rand', 1) < 0.30 else 0
         lines.append(
-            f"INSERT INTO Candidate (UserId, DateOfBirth, Gender, Address, LinkedInUrl, PortfolioUrl, CandidateSource, CreatedAt) "
-            f"VALUES ({c['user_id']}, '{c['dob']}', N'{c['gender']}', N'{c['address']}', N'{linkedin}', {gh_sql}, N'{c['source']}', '{c['sub_time']}');"
+            f"INSERT INTO Candidate (UserId, DateOfBirth, Gender, Address, LinkedInUrl, PortfolioUrl, CandidateSource, IsPotential, CreatedAt) "
+            f"VALUES ({c['user_id']}, '{c['dob']}', N'{c['gender']}', N'{c['address']}', N'{linkedin}', {gh_sql}, N'{c['source']}', {is_potential}, '{c['sub_time']}');"
         )
         
     # 3. Application records
@@ -572,6 +588,11 @@ for day_idx in range(num_days):
             )
             
     # 6. Interview Flow (InterviewSchedule, InterviewPanel, InterviewEvaluation, InterviewFinalResult) (for Stage 3 & 4: ~30%)
+    # UserId mapping:
+    # HR: 3 (hr_lan), 4 (hr_quang)
+    # HM: 5 (hm_tuan - Engineering), 6 (hm_huong - Sales)
+    # Interviewer: 7 (interviewer_nam - Java), 8 (interviewer_viet - Frontend), 9 (interviewer_thao - QA), 10 (interviewer_trung - Sales)
+    # Director: 2 (director)
     for c in day_cands:
         if c["funnel_rand"] < 0.30:
             int_id = interview_id_counter
@@ -589,36 +610,59 @@ for day_idx in range(num_days):
             
             fmt = "Offline_Office" if random.random() < 0.6 else "Online_GoogleMeet"
             loc = "Phòng họp 802, Tầng 8 Tòa nhà RMS Tower" if fmt == "Offline_Office" else f"https://meet.google.com/rms-int-{int_id:04d}"
-            int_status = "Completed" if int_end_dt < datetime.datetime(2026, 12, 16) else "Scheduled"
+            # FIX: Trạng thái hợp lý theo thời gian thực
+            # Chỉ đánh dấu Completed nếu ngày phỏng vấn đã QUA ngày hiện tại thực tế (2026-10-07)
+            # Các lịch trong tương lai -> Scheduled, các lịch đã qua -> Completed
+            today_cutoff = datetime.datetime(2026, 10, 7)  # Ngày seed data được tạo
+            int_status = "Completed" if int_end_dt < today_cutoff else "Scheduled"
+            c["int_status"] = int_status
+            c["int_end_dt"] = int_end_dt
             
             lines.append(
                 f"INSERT INTO InterviewSchedule (ApplicationId, InterviewFormat, StartTime, EndTime, LocationOrLink, InterviewStatus, CreatedBy, CreatedAt) "
                 f"VALUES ({c['app_id']}, N'{fmt}', '{start_str}', '{end_str}', N'{loc}', N'{int_status}', 3, '{c['sub_time']}');"
             )
             
-            # InterviewPanel (Composite PK: InterviewId, InterviewerId)
-            # RoleInPanel CHECK: IN (N'HR', N'HM')
-            hr_interviewer = random.choice([3, 4])
+            # InterviewPanel - 4 roles: HR, HM, Interviewer, Director
+            # RoleInPanel CHECK: IN (N'HR', N'HM', N'Interviewer', N'Director')
+            hr_member = random.choice([3, 4])  # HR role
             lines.append(
                 f"INSERT INTO InterviewPanel (InterviewId, InterviewerId, RoleInPanel) "
-                f"VALUES ({int_id}, {hr_interviewer}, N'HR');"
+                f"VALUES ({int_id}, {hr_member}, N'HR');"
             )
             
+            # HM role (theo department của vị trí)
+            hm_member = 6 if c["posting_id"] == 4 else 5
+            lines.append(
+                f"INSERT INTO InterviewPanel (InterviewId, InterviewerId, RoleInPanel) "
+                f"VALUES ({int_id}, {hm_member}, N'HM');"
+            )
+            
+            # Interviewer role (chuyên môn theo vị trí)
             if c["posting_id"] == 4:
-                tech_interviewer = 6 # hm_huong
+                interviewer_member = 10  # interviewer_trung - Sales specialist
             elif c["posting_id"] == 1:
-                tech_interviewer = random.choice([5, 7, 8]) # hm_tuan, dev_nam, dev_viet
+                interviewer_member = 7   # interviewer_nam - Java specialist
             elif c["posting_id"] == 2:
-                tech_interviewer = random.choice([5, 8])
+                interviewer_member = 8   # interviewer_viet - Frontend specialist
             else:
-                tech_interviewer = 9 # qa_thao
-                
+                interviewer_member = 9   # interviewer_thao - QA specialist
             lines.append(
                 f"INSERT INTO InterviewPanel (InterviewId, InterviewerId, RoleInPanel) "
-                f"VALUES ({int_id}, {tech_interviewer}, N'HM');"
+                f"VALUES ({int_id}, {interviewer_member}, N'Interviewer');"
             )
             
-            # InterviewEvaluation
+            # Director role - luôn có Director trong panel
+            lines.append(
+                f"INSERT INTO InterviewPanel (InterviewId, InterviewerId, RoleInPanel) "
+                f"VALUES ({int_id}, 2, N'Director');"
+            )
+            
+            # Alias để dùng trong evaluation block bên dưới
+            hr_interviewer = hr_member
+            tech_interviewer = interviewer_member
+            
+            # InterviewEvaluation - chỉ tạo khi đã hoàn thành
             if int_status == "Completed":
                 eval_time = (int_end_dt + datetime.timedelta(minutes=30)).strftime("%Y-%m-%d %H:%M:%S")
                 is_passed = c["funnel_rand"] < 0.10
@@ -688,23 +732,9 @@ for day_idx in range(num_days):
                         f"INSERT INTO OfferApproval (OfferId, DirectorId, [Status], DirectorComments, ApprovedAt) "
                         f"VALUES ({off_id}, 2, N'Approved', N'Phê duyệt mức đãi ngộ theo đề xuất của HR và HM.', '{off_app_dt}');"
                     )
-                    
-                    # OfferNegotiation (if Negotiating or some Accepted/Declined)
-                    if off_status in ["Negotiating", "Accepted", "Declined"]:
-                        neg_dt = (datetime.datetime.strptime(off_app_dt, "%Y-%m-%d %H:%M:%S") + datetime.timedelta(days=1)).strftime("%Y-%m-%d %H:%M:%S")
-                        if off_status == "Declined":
-                            counter_sal = prop_sal + 5000000.00
-                            c_notes = "Ứng viên nhận được offer khác với mức đãi ngộ cao hơn và mong muốn trao đổi lại."
-                            hr_notes = "HR đã trao đổi nhưng ngân sách vị trí hiện tại không thể đáp ứng, bảo lưu hồ sơ ứng viên."
-                        else:
-                            counter_sal = prop_sal + 2000000.00
-                            c_notes = "Ứng viên mong muốn hỗ trợ thêm 2 triệu phụ cấp đi lại hoặc chứng chỉ chuyên môn."
-                            hr_notes = "HR trao đổi và thống nhất hỗ trợ phụ cấp đào tạo chứng chỉ hàng năm."
-                        lines.append(
-                            f"INSERT INTO OfferNegotiation (OfferId, CandidateCounterSalary, CandidateNotes, HRResponseNotes, NegotiationDate) "
-                            f"VALUES ({off_id}, {counter_sal:.2f}, N'{c_notes}', N'{hr_notes}', '{neg_dt}');"
-                        )
-                        
+                    # OfferNegotiation đã bị DROP trong schema mới db (1) (1).sql - không INSERT
+
+            c["int_status"] = int_status
     lines.append("")
 
 lines.append("COMMIT TRANSACTION;")
@@ -724,10 +754,11 @@ lines.append("")
 # ASSERTION BLOCK
 lines.append("-- =============================================================================")
 lines.append("-- 🔍 KHỐI ĐỐI SOÁT & KIỂM TRA CHẤT LƯỢNG TỰ ĐỘNG (ASSERTION BLOCK)")
+lines.append("-- Schema v2: 19 bảng (OfferNegotiation đã bị DROP)")
 lines.append("-- =============================================================================")
 lines.append("PRINT N'';")
 lines.append("PRINT N'=============================================================================';")
-lines.append("PRINT N'               BÁO CÁO TỔNG SỐ BẢN GHI THEO TOÀN BỘ 20 BẢNG                   ';")
+lines.append("PRINT N'               BÁO CÁO TỔNG SỐ BẢN GHI THEO TOÀN BỘ 19 BẢNG                   ';")
 lines.append("PRINT N'=============================================================================';")
 lines.append("SELECT 'Role' AS TableName, COUNT(*) AS TotalRecords FROM [Role]")
 lines.append("UNION ALL SELECT 'Department', COUNT(*) FROM Department")
@@ -747,11 +778,11 @@ lines.append("UNION ALL SELECT 'InterviewPanel', COUNT(*) FROM InterviewPanel")
 lines.append("UNION ALL SELECT 'InterviewEvaluation', COUNT(*) FROM InterviewEvaluation")
 lines.append("UNION ALL SELECT 'InterviewFinalResult', COUNT(*) FROM InterviewFinalResult")
 lines.append("UNION ALL SELECT 'OfferProposal', COUNT(*) FROM OfferProposal")
-lines.append("UNION ALL SELECT 'OfferApproval', COUNT(*) FROM OfferApproval")
-lines.append("UNION ALL SELECT 'OfferNegotiation', COUNT(*) FROM OfferNegotiation;")
+lines.append("UNION ALL SELECT 'OfferApproval', COUNT(*) FROM OfferApproval;")
+# NOTE: OfferNegotiation đã bị XÓA khỏi schema db (1) (1).sql
 lines.append("GO")
 lines.append("")
-lines.append("-- Kiểm tra không có bảng nào trong 20 bảng bị rỗng (COUNT = 0)")
+lines.append("-- Kiểm tra không có bảng nào trong 19 bảng bị rỗng (COUNT = 0) - Schema v2: đã xóa OfferNegotiation")
 lines.append("BEGIN")
 lines.append("    DECLARE @EmptyTables INT = 0;")
 lines.append("    IF (SELECT COUNT(*) FROM [Role]) = 0 SET @EmptyTables = @EmptyTables + 1;")
@@ -773,12 +804,12 @@ lines.append("    IF (SELECT COUNT(*) FROM InterviewEvaluation) = 0 SET @EmptyTa
 lines.append("    IF (SELECT COUNT(*) FROM InterviewFinalResult) = 0 SET @EmptyTables = @EmptyTables + 1;")
 lines.append("    IF (SELECT COUNT(*) FROM OfferProposal) = 0 SET @EmptyTables = @EmptyTables + 1;")
 lines.append("    IF (SELECT COUNT(*) FROM OfferApproval) = 0 SET @EmptyTables = @EmptyTables + 1;")
-lines.append("    IF (SELECT COUNT(*) FROM OfferNegotiation) = 0 SET @EmptyTables = @EmptyTables + 1;")
+# NOTE: OfferNegotiation đã bị DROP - không kiểm tra
 lines.append("")
 lines.append("    IF @EmptyTables > 0")
-lines.append("        RAISERROR(N'CẢNH BÁO: Phát hiện có bảng chưa có dữ liệu trong 20 bảng!', 16, 1);")
+lines.append("        RAISERROR(N'CẢNH BÁO: Phát hiện có bảng chưa có dữ liệu trong 19 bảng!', 16, 1);")
 lines.append("    ELSE")
-lines.append("        PRINT N'>>> XÁC NHẬN HOÀN TOÀN: ĐỦ 20/20 BẢNG ĐỀU ĐÃ ĐƯỢC NẠP DỮ LIỆU CHUẨN MỰC!';")
+lines.append("        PRINT N'>>> XÁC NHẬN HOÀN TOÀN: ĐỦ 19/19 BẢNG ĐỀU ĐÃ ĐƯỢC NẠP DỮ LIỆU CHUẨN MỰC!';")
 lines.append("END;")
 lines.append("GO")
 lines.append("")
