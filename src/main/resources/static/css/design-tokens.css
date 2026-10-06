@@ -50,5 +50,5 @@
 
 
     :root { --page:#faf9f6; --surface:#fff; --ink:#252923; --muted:#59635b; --line:#d9ded7; --brand:#3e7157; --brand-dark:#2e5a45; --brand-soft:#e7f0e8; --control-line:#7b8b7d; --focus:#a06325;
-      --sans:'Source Sans 3','Segoe UI',sans-serif; --serif:'Lora',Georgia,serif;
+      --sans:'Source Sans 3','Segoe UI',sans-serif; --serif:'Lora','Times New Roman',serif;
       --s1:4px; --s2:8px; --s3:12px; --s4:16px; --s6:24px; --s8:32px; --s12:48px; --s16:64px; --s20:80px; }
