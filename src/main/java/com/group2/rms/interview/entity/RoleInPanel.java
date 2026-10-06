@@ -13,7 +13,9 @@ import lombok.Getter;
 @Getter
 public enum RoleInPanel {
     HR("HR Interviewer"),
-    HM("Hiring Manager");
+    HM("Hiring Manager"),
+    Interviewer("Interviewer"),
+    Director("Director");
 
     private final String displayName;
 
