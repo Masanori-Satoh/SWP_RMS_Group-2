@@ -1,88 +1,87 @@
 <!DOCTYPE html>
-<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
 <aside th:fragment="sidebar(activeMenu)" class="app-sidebar">
     <div class="sidebar-brand">
         <span class="brand-title">RMS</span>
-        <span class="brand-badge">Enterprise Application</span>
+        <span class="brand-badge">Hệ thống Tuyển dụng</span>
     </div>
-    <nav class="sidebar-nav" aria-label="Main navigation">
+    <nav class="sidebar-nav" aria-label="Điều hướng chính">
         <a th:href="@{/dashboard}" class="nav-item" th:classappend="${activeMenu == 'dashboard' ? 'active' : ''}"
             th:attr="aria-current=${activeMenu == 'dashboard' ? 'page' : null}">
-            Dashboard
+            Bảng điều khiển
         </a>
         <a th:href="@{/requisitions}" class="nav-item" th:classappend="${activeMenu == 'requisitions' ? 'active' : ''}"
             th:attr="aria-current=${activeMenu == 'requisitions' ? 'page' : null}">
-            Job Requisitions
+            Yêu cầu tuyển dụng
         </a>
         <a th:href="@{/candidates}" class="nav-item" th:classappend="${activeMenu == 'candidates' ? 'active' : ''}"
             th:attr="aria-current=${activeMenu == 'candidates' ? 'page' : null}">
-            Candidates
+            Ứng viên
         </a>
         <a th:href="@{/interviews}" class="nav-item" th:classappend="${activeMenu == 'interviews' ? 'active' : ''}"
             th:attr="aria-current=${activeMenu == 'interviews' ? 'page' : null}">
-            Interview Schedule
+            Lịch phỏng vấn
         </a>
         <a th:href="@{/offers}" class="nav-item" th:classappend="${activeMenu == 'offers' ? 'active' : ''}"
             th:attr="aria-current=${activeMenu == 'offers' ? 'page' : null}">
-            Offer Management
+            Quản lý đề nghị
         </a>
         <a th:href="@{/notifications}" class="nav-item"
             th:classappend="${activeMenu == 'notifications' ? 'active' : ''}"
             th:attr="aria-current=${activeMenu == 'notifications' ? 'page' : null}">
-            Notifications
+            Thông báo
         </a>
         <a th:href="@{/profile}" class="nav-item" th:classappend="${activeMenu == 'profile' ? 'active' : ''}"
             th:attr="aria-current=${activeMenu == 'profile' ? 'page' : null}">
-            Profile
+            Hồ sơ cá nhân
         </a>
         <a th:href="@{/admin/accounts}" class="nav-item" th:classappend="${activeMenu == 'accounts' ? 'active' : ''}"
             th:attr="aria-current=${activeMenu == 'accounts' ? 'page' : null}">
-            Admin Accounts
+            Quản lý tài khoản
         </a>
         <a th:href="@{/admin/departments}" class="nav-item"
             th:classappend="${activeMenu == 'departments' ? 'active' : ''}"
             th:attr="aria-current=${activeMenu == 'departments' ? 'page' : null}">
-            Admin Departments
+            Quản lý phòng ban
         </a>
         <a th:href="@{/admin/api-monitoring}" class="nav-item"
             th:classappend="${activeMenu == 'api-monitoring' ? 'active' : ''}"
             th:attr="aria-current=${activeMenu == 'api-monitoring' ? 'page' : null}">
-            API Monitoring
+            Giám sát API
         </a>
     </nav>
 </aside>
 <aside th:fragment="workspace(activeMenu, role)" class="workspace-sidebar" id="workspace-navigation">
-    <h2>Recruitment Workspace</h2>
-    <nav class="workspace-nav" aria-label="Workspace navigation">
-        <a th:href="@{/dashboard}" th:attr="aria-current=${activeMenu == 'dashboard' ? 'page' : null}">Dashboard</a>
+    <h2>Không gian Tuyển dụng</h2>
+    <nav class="workspace-nav" aria-label="Điều hướng không gian làm việc">
+        <a th:href="@{/dashboard}" th:attr="aria-current=${activeMenu == 'dashboard' ? 'page' : null}">Bảng điều khiển</a>
         <th:block th:if="${role == 'Candidate'}">
-            <span class="workspace-nav-group">Candidate Dashboard</span>
-            <a th:href="@{/dashboard#applications}">My Applications</a>
-            <a th:href="@{/dashboard#interviews}">Upcoming Interviews</a>
-            <a th:href="@{/dashboard#offers}">My Offers</a>
-            <a th:href="@{/dashboard#notifications}">My Notifications</a>
-            <a th:href="@{/jobs}">Open Positions</a>
+            <span class="workspace-nav-group">Khu vực ứng viên</span>
+            <a th:href="@{/dashboard#applications}">Hồ sơ đã ứng tuyển</a>
+            <a th:href="@{/dashboard#interviews}">Lịch phỏng vấn sắp tới</a>
+            <a th:href="@{/dashboard#offers}">Đề nghị tuyển dụng</a>
+            <a th:href="@{/dashboard#notifications}">Thông báo của tôi</a>
+            <a th:href="@{/jobs}">Vị trí đang tuyển</a>
         </th:block>
-        <span th:if="${role == 'System Admin'}" class="workspace-nav-group">Accounts</span>
+        <span th:if="${role == 'System Admin'}" class="workspace-nav-group">Tài khoản</span>
         <a th:if="${role == 'System Admin'}" th:href="@{/admin/accounts}"
-            th:attr="aria-current=${activeMenu == 'accounts' ? 'page' : null}">Internal Accounts</a>
+            th:attr="aria-current=${activeMenu == 'accounts' ? 'page' : null}">Tài khoản nội bộ</a>
         <a th:if="${role == 'System Admin'}" th:href="@{/admin/candidate-accounts}"
-            th:attr="aria-current=${activeMenu == 'candidate-accounts' ? 'page' : null}">Candidate Accounts</a>
-        <span th:if="${role == 'System Admin'}" class="workspace-nav-group">System</span>
+            th:attr="aria-current=${activeMenu == 'candidate-accounts' ? 'page' : null}">Tài khoản ứng viên</a>
+        <span th:if="${role == 'System Admin'}" class="workspace-nav-group">Hệ thống</span>
         <a th:if="${role == 'System Admin'}" th:href="@{/admin/departments}"
-            th:attr="aria-current=${activeMenu == 'departments' ? 'page' : null}">Admin Departments</a>
+            th:attr="aria-current=${activeMenu == 'departments' ? 'page' : null}">Quản lý phòng ban</a>
         <a th:if="${role == 'System Admin'}" th:href="@{/admin/api-monitoring}"
-            th:attr="aria-current=${activeMenu == 'api-monitoring' ? 'page' : null}">API Monitoring</a>
+            th:attr="aria-current=${activeMenu == 'api-monitoring' ? 'page' : null}">Giám sát API</a>
         <a th:if="${role != 'Candidate' and role != 'Interviewer'}" th:href="@{/requisitions}"
-            th:attr="aria-current=${activeMenu == 'requisitions' ? 'page' : null}">Job Requisitions</a>
+            th:attr="aria-current=${activeMenu == 'requisitions' ? 'page' : null}">Yêu cầu tuyển dụng</a>
         <a th:if="${role == 'HR' or role == 'System Admin' or role == 'Hiring Manager' or role == 'Interviewer' or role == 'Director' or role == 'Candidate'}"
-            th:href="@{/interviews}" th:attr="aria-current=${activeMenu == 'interviews' ? 'page' : null}">Interview
-            Schedule</a>
+            th:href="@{/interviews}" th:attr="aria-current=${activeMenu == 'interviews' ? 'page' : null}">Lịch phỏng vấn</a>
         <a th:if="${role == 'HR' or role == 'HR Specialist' or role == 'Director' or role == 'System Admin' or (role != null and #strings.contains(role, 'HR'))}"
-            th:href="@{/offers}" th:attr="aria-current=${activeMenu == 'offers' ? 'page' : null}">Offer Management</a>
-        <a th:href="@{/profile}" th:attr="aria-current=${activeMenu == 'profile' ? 'page' : null}">My Profile</a>
+            th:href="@{/offers}" th:attr="aria-current=${activeMenu == 'offers' ? 'page' : null}">Quản lý đề nghị tuyển dụng</a>
+        <a th:href="@{/profile}" th:attr="aria-current=${activeMenu == 'profile' ? 'page' : null}">Hồ sơ cá nhân</a>
     </nav>
-    <nav class="workspace-nav workspace-home" aria-label="Public careers"><a th:href="@{/}">Back to Careers</a></nav>
+    <nav class="workspace-nav workspace-home" aria-label="Cổng tuyển dụng"><a th:href="@{/}">Về trang Tuyển dụng</a></nav>
 </aside>
 
 </html>

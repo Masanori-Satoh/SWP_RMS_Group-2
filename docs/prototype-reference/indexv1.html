@@ -1,445 +1,72 @@
 <!doctype html>
-<html lang="vi">
+<html lang="en">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="description" content="Bản mẫu trang tuyển dụng của một công ty: khám phá Mộc, tìm vị trí đang tuyển và tìm hiểu quy trình ứng tuyển.">
-  <title>Cơ hội nghề nghiệp tại Mộc — Bản mẫu</title>
-  <style>
-    :root {
-      color-scheme: light;
-      --page: #faf9f6;
-      --surface: #ffffff;
-      --ink: #252923;
-      --muted: #59635b;
-      --line: #d9ded7;
-      --brand: #3e7157;
-      --brand-dark: #2e5a45;
-      --brand-soft: #e7f0e8;
-      --focus: #a06325;
-      --serif: Georgia, "Times New Roman", serif;
-      --sans: "Segoe UI Variable", "Segoe UI", "Noto Sans", Arial, sans-serif;
-    }
-
-    *, *::before, *::after { box-sizing: border-box; }
-    html { scroll-behavior: smooth; scroll-padding-top: 24px; }
-    body { margin: 0; background: var(--page); color: var(--ink); font: 400 16px/1.55 var(--sans); }
-    button, input, select { font: inherit; }
-    button { cursor: pointer; }
-    a { color: inherit; }
-    :focus-visible { outline: 3px solid var(--focus); outline-offset: 3px; }
-    [hidden] { display: none !important; }
-    .container { width: min(100% - 48px, 1180px); margin-inline: auto; }
-    .skip-link { position: absolute; z-index: 20; top: -60px; left: 16px; padding: 10px 14px; background: var(--ink); color: #fff; border-radius: 6px; }
-    .skip-link:focus { top: 10px; }
-    .eyebrow { margin: 0 0 12px; color: var(--brand-dark); font-size: 12px; font-weight: 700; letter-spacing: .13em; text-transform: uppercase; }
-    h1, h2, h3, p { margin-top: 0; }
-    h1, h2 { font-family: var(--serif); font-weight: 600; letter-spacing: -.035em; }
-    h2 { font-size: clamp(27px, 2.6vw, 34px); line-height: 1.18; }
-    .section-lead { max-width: 620px; color: var(--muted); }
-    .pill-button, .outline-button { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 45px; padding: 9px 20px; border-radius: 999px; font-size: 14px; font-weight: 700; text-decoration: none; transition: background-color .18s ease, color .18s ease; }
-    .pill-button { border: 1px solid var(--ink); background: var(--ink); color: #fff; }
-    .pill-button:hover { background: #414841; }
-    .outline-button { border: 1px solid #9daa9d; background: transparent; color: var(--ink); }
-    .outline-button:hover { background: var(--brand-soft); }
-    .text-button { min-height: 44px; padding: 7px 0; border: 0; background: none; color: var(--ink); font-size: 14px; font-weight: 600; text-decoration: underline; text-underline-offset: 4px; }
-    .text-button:hover { color: var(--brand-dark); }
-    .arrow { width: 16px; height: 16px; flex: none; }
-
-    .site-header { border-bottom: 1px solid var(--line); background: var(--surface); }
-    .header-inner { min-height: 72px; display: flex; align-items: center; gap: 28px; }
-    .wordmark { display: inline-flex; align-items: center; gap: 8px; text-decoration: none; white-space: nowrap; }
-    .wordmark-mark { width: 28px; height: 28px; color: var(--brand); }
-    .wordmark-name { font: 700 25px/1 var(--serif); letter-spacing: -.06em; }
-    .wordmark-sub { margin-left: 3px; padding-left: 9px; border-left: 1px solid var(--line); color: var(--muted); font-size: 11px; font-weight: 700; letter-spacing: .13em; }
-    .desktop-nav { display: flex; gap: clamp(14px, 2vw, 28px); align-items: center; margin-left: auto; }
-    .desktop-nav a { color: #47514a; font-size: 13px; font-weight: 600; text-decoration: none; white-space: nowrap; }
-    .desktop-nav a:hover { color: var(--brand-dark); text-decoration: underline; text-underline-offset: 5px; }
-    .header-actions { display: flex; align-items: center; gap: 17px; margin-left: 9px; }
-    .header-actions .pill-button { min-height: 39px; padding-inline: 16px; font-size: 12px; white-space: nowrap; }
-    .header-actions .text-button { font-size: 12px; white-space: nowrap; }
-    .mobile-menu { display: none; }
-
-    .hero { overflow: hidden; }
-    .hero-inner { padding-top: 52px; text-align: center; }
-    .hero h1 { max-width: 750px; margin: 0 auto 15px; font-size: clamp(33px, 4vw, 49px); line-height: 1.12; }
-    .hero-copy { max-width: 655px; margin: 0 auto 30px; color: var(--muted); }
-    .search-form { display: grid; grid-template-columns: minmax(0, 1.35fr) minmax(150px, .8fr) minmax(150px, .8fr) auto; max-width: 1010px; margin: 0 auto; padding: 7px; border: 1px solid var(--line); border-radius: 12px; background: var(--surface); text-align: left; }
-    .search-field { min-width: 0; display: grid; gap: 1px; padding: 5px 13px; }
-    .search-field + .search-field { border-left: 1px solid var(--line); }
-    .search-field label { color: var(--muted); font-size: 11px; font-weight: 700; }
-    .search-field input, .search-field select { width: 100%; min-width: 0; height: 30px; padding: 0; border: 0; background: transparent; color: var(--ink); font-size: 14px; }
-    .search-field input::placeholder { color: #69746b; opacity: 1; }
-    .search-field select { cursor: pointer; }
-    .search-form .pill-button { min-height: 51px; align-self: center; white-space: nowrap; }
-    .search-context { margin: 11px 0 0; color: var(--muted); font-size: 12px; }
-    .hero-art { width: min(100%, 760px); height: auto; display: block; margin: 20px auto 0; }
-
-    .section { padding-block: 72px; }
-    .section-top { display: flex; justify-content: space-between; align-items: end; gap: 24px; margin-bottom: 25px; }
-    .section-top h2 { margin-bottom: 8px; }
-    .section-top .section-lead { margin-bottom: 0; }
-    .prototype-note { max-width: 205px; margin: 0 0 4px; color: var(--muted); font-size: 12px; text-align: right; }
-
-    .roles-section { padding-top: 54px; border-top: 1px solid var(--line); background: #fff; }
-    .results-line { display: flex; justify-content: space-between; align-items: center; gap: 16px; margin-bottom: 16px; border-top: 1px solid var(--line); padding-top: 14px; }
-    .results-line p { margin: 0; color: var(--muted); font-size: 13px; }
-    .results-line button { min-height: 40px; border: 0; background: none; color: var(--brand-dark); font-size: 13px; font-weight: 700; text-decoration: underline; text-underline-offset: 4px; }
-    .job-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; }
-    .job-card { min-width: 0; display: flex; flex-direction: column; min-height: 212px; padding: 19px 20px 18px; border: 1px solid var(--line); border-radius: 8px; background: #fff; }
-    .job-card:hover { border-color: #9bb6a1; }
-    .job-department { margin: 0 0 13px; color: var(--brand-dark); font-size: 12px; font-weight: 700; }
-    .job-card h3 { margin: 0 0 12px; font: 600 19px/1.3 var(--serif); letter-spacing: -.02em; overflow-wrap: anywhere; }
-    .job-meta { display: flex; flex-wrap: wrap; gap: 4px 8px; margin: 0 0 12px; color: var(--muted); font-size: 12px; }
-    .job-meta span + span::before { content: "·"; margin-right: 8px; color: #89968a; }
-    .job-salary { margin: 0; color: var(--ink); font-size: 13px; font-weight: 700; }
-    .job-bottom { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-top: auto; padding-top: 20px; }
-    .job-bottom time { color: var(--muted); font-size: 11px; }
-    .job-bottom button { min-height: 42px; display: inline-flex; align-items: center; gap: 5px; border: 0; background: none; color: var(--brand-dark); font-size: 13px; font-weight: 700; white-space: nowrap; }
-    .job-bottom button:hover { text-decoration: underline; text-underline-offset: 4px; }
-    .empty-state { padding: 26px; border: 1px solid var(--line); border-radius: 9px; }
-    .empty-state h3 { margin-bottom: 6px; font-size: 18px; }
-    .empty-state p { color: var(--muted); }
-
-    .departments-section { border-bottom: 1px solid var(--line); }
-    .department-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); column-gap: 30px; }
-    .department-button { display: flex; align-items: center; justify-content: space-between; gap: 10px; width: 100%; min-height: 66px; padding: 12px 0; border: 0; border-top: 1px solid var(--line); background: transparent; color: var(--ink); text-align: left; font-size: 16px; font-weight: 600; }
-    .department-button:hover { color: var(--brand-dark); }
-    .department-button svg { color: var(--brand); }
-
-    .about-section { background: var(--brand-soft); }
-    .about-layout { display: grid; grid-template-columns: minmax(0, .8fr) minmax(0, 1.2fr); gap: 80px; align-items: start; }
-    .about-layout h2 { margin-bottom: 0; }
-    .about-copy { max-width: 640px; }
-    .about-copy p { margin-bottom: 14px; }
-    .about-copy p:last-child { margin-bottom: 0; }
-    .about-copy .outline-button { margin-top: 13px; }
-
-    .why-section { background: #fff; }
-    .reasons { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 30px; margin-top: 29px; }
-    .reason { padding-top: 19px; border-top: 1px solid var(--line); }
-    .reason-number { color: var(--brand-dark); font-size: 12px; font-weight: 700; }
-    .reason h3 { margin: 8px 0 8px; font: 600 21px/1.3 var(--serif); }
-    .reason p { max-width: 310px; margin: 0; color: var(--muted); font-size: 14px; }
-
-    .life-section { border-top: 1px solid var(--line); }
-    .life-layout { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, .75fr); gap: 76px; align-items: center; }
-    .life-visual { padding: 19px; border: 1px solid var(--line); border-radius: 9px; background: #f0f3ec; }
-    .life-visual svg { display: block; width: 100%; height: auto; }
-    .life-visual figcaption { margin-top: 9px; color: var(--muted); font-size: 12px; }
-    .life-copy h2 { margin-bottom: 14px; }
-    .life-copy p:not(.eyebrow) { color: var(--muted); }
-    .life-points { margin: 23px 0 0; padding: 0; list-style: none; }
-    .life-points li { padding: 11px 0; border-top: 1px solid var(--line); font-size: 14px; font-weight: 600; }
-
-    .process-section { border-top: 1px solid var(--line); background: #fff; }
-    .process-list { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 22px; margin: 27px 0 0; padding: 0; list-style: none; counter-reset: process; }
-    .process-list li { padding-top: 16px; border-top: 1px solid var(--line); counter-increment: process; }
-    .process-list li::before { content: "0" counter(process); display: block; margin-bottom: 15px; color: var(--brand-dark); font-size: 12px; font-weight: 700; }
-    .process-list strong { display: block; margin-bottom: 7px; font-size: 15px; }
-    .process-list span { color: var(--muted); font-size: 13px; }
-
-    .join-section { padding-block: 65px; background: #eaf1e9; }
-    .join-inner { display: flex; align-items: center; justify-content: space-between; gap: 30px; }
-    .join-inner h2 { max-width: 620px; margin-bottom: 9px; }
-    .join-inner p { max-width: 600px; margin-bottom: 0; color: var(--muted); }
-    .join-actions { display: flex; flex-wrap: wrap; gap: 10px; }
-
-    .site-footer { padding-block: 48px 25px; border-top: 1px solid var(--line); background: #fff; }
-    .footer-grid { display: grid; grid-template-columns: minmax(0, 1.35fr) repeat(4, minmax(0, .7fr)); gap: 30px; }
-    .footer-brand p { max-width: 280px; margin-top: 14px; color: var(--muted); font-size: 13px; }
-    .footer-group h3 { margin: 0 0 11px; font-size: 13px; }
-    .footer-group a, .footer-group button { display: block; width: fit-content; min-height: 30px; padding: 2px 0; border: 0; background: none; color: var(--muted); font-size: 12px; text-align: left; text-decoration: none; }
-    .footer-group a:hover, .footer-group button:hover { color: var(--brand-dark); text-decoration: underline; }
-    .footer-bottom { display: flex; justify-content: space-between; gap: 20px; margin-top: 36px; padding-top: 18px; border-top: 1px solid var(--line); color: var(--muted); font-size: 11px; }
-
-    dialog { width: min(100% - 32px, 540px); max-height: min(85vh, 680px); padding: 26px; border: 1px solid var(--line); border-radius: 12px; background: var(--surface); color: var(--ink); box-shadow: 0 14px 45px #1f2a201c; }
-    dialog::backdrop { background: #18251b99; }
-    .dialog-top { display: flex; justify-content: space-between; gap: 20px; }
-    .dialog-top h2 { margin-bottom: 6px; font-size: 29px; }
-    .dialog-close { flex: none; width: 44px; height: 44px; border: 1px solid var(--line); border-radius: 50%; background: #fff; color: var(--ink); font-size: 20px; }
-    .dialog-close:hover { background: var(--brand-soft); }
-    .dialog-meta { margin: 0 0 18px; color: var(--muted); font-size: 14px; }
-    .dialog-summary { color: var(--ink); }
-    .dialog-note { margin-top: 16px; padding: 11px 13px; border-left: 3px solid var(--brand); background: var(--brand-soft); color: var(--ink); font-size: 13px; }
-    .dialog-actions { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 24px; }
-
-    @media (max-width: 1120px) {
-      .desktop-nav { gap: 12px; }
-      .desktop-nav a { font-size: 12px; }
-      .header-actions { gap: 10px; }
-    }
-    @media (max-width: 1024px) {
-      .desktop-nav, .header-actions .text-button { display: none; }
-      .header-actions { margin-left: auto; }
-      .mobile-menu { display: block; position: relative; }
-      .mobile-menu summary { display: flex; align-items: center; min-height: 44px; padding: 6px 10px; cursor: pointer; font-size: 14px; font-weight: 700; list-style: none; }
-      .mobile-menu summary::-webkit-details-marker { display: none; }
-      .mobile-menu nav { position: absolute; z-index: 10; top: 46px; right: 0; display: grid; min-width: 220px; padding: 10px; border: 1px solid var(--line); border-radius: 9px; background: #fff; box-shadow: 0 12px 24px #1f2a2016; }
-      .mobile-menu nav a { padding: 10px; border-radius: 5px; font-size: 14px; text-decoration: none; }
-      .mobile-menu nav a:hover { background: var(--brand-soft); }
-      .job-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-      .footer-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
-      .footer-brand { grid-column: 1 / -1; }
-    }
-    @media (max-width: 768px) {
-      .container { width: min(100% - 36px, 1180px); }
-      .hero-inner { padding-top: 48px; }
-      .search-form { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-      .search-field:nth-child(3) { border-left: 0; border-top: 1px solid var(--line); }
-      .search-form .pill-button { margin-top: 5px; }
-      .hero-art { margin-top: 28px; }
-      .section { padding-block: 56px; }
-      .about-layout, .life-layout { grid-template-columns: 1fr; gap: 26px; }
-      .life-copy { order: -1; }
-      .reasons { gap: 18px; }
-      .process-list { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-      .join-inner { align-items: start; flex-direction: column; }
-    }
-    @media (max-width: 580px) {
-      .container { width: min(100% - 32px, 1180px); }
-      .header-inner { min-height: 66px; gap: 9px; }
-      .wordmark-sub { display: none; }
-      .header-actions .pill-button { display: none; }
-      .hero-inner { padding-top: 39px; }
-      .hero h1 { font-size: 32px; }
-      .hero-copy { margin-bottom: 25px; }
-      .search-form { grid-template-columns: 1fr; }
-      .search-field { min-height: 58px; }
-      .search-field + .search-field, .search-field:nth-child(3) { border-left: 0; border-top: 1px solid var(--line); }
-      .search-form .pill-button { width: 100%; }
-      .hero-art { width: 125%; max-width: none; margin: 18px 0 0 -12.5%; }
-      .section-top { align-items: start; flex-direction: column; gap: 12px; }
-      .prototype-note { max-width: 100%; text-align: left; }
-      .job-grid, .department-grid, .reasons, .process-list { grid-template-columns: 1fr; }
-      .job-card { min-height: 0; }
-      .reasons { gap: 22px; }
-      .footer-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 25px 18px; }
-      .footer-brand { grid-column: 1 / -1; }
-      .footer-bottom { flex-direction: column; gap: 6px; }
-    }
-    @media (prefers-reduced-motion: reduce) {
-      html { scroll-behavior: auto; }
-      *, *::before, *::after { transition-duration: .01ms !important; animation-duration: .01ms !important; }
-    }
-  </style>
+  <meta name="description" content="Mộc RMS requisition detail interface preview.">
+  <title>Requisition Details — Mộc RMS</title>
+  <link rel="stylesheet" href="../../src/main/resources/static/css/design-tokens.css">
+  <link rel="stylesheet" href="../../src/main/resources/static/css/interface.css">
+  <link rel="stylesheet" href="../../src/main/resources/static/css/workspace.css">
+  <link rel="stylesheet" href="../../src/main/resources/static/css/requisition-shared.css">
+  <link rel="stylesheet" href="../../src/main/resources/static/css/requisition-detail.css">
 </head>
-<body>
-  <a class="skip-link" href="#main-content">Bỏ qua điều hướng</a>
-  <header class="site-header" id="top">
-    <div class="container header-inner">
-      <a class="wordmark" href="#top" aria-label="Mộc Careers, về đầu trang">
-        <svg class="wordmark-mark" viewBox="0 0 32 32" fill="none" aria-hidden="true"><path d="M15 27C8 23 6 13 11 7c4-5 11-4 16-3 0 9-3 18-12 23Z" fill="#d9e9da" stroke="currentColor" stroke-width="1.7"/><path d="M7 28c5-7 10-12 17-17" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>
-        <span class="wordmark-name">mộc.</span><span class="wordmark-sub">CAREERS</span>
-      </a>
-      <nav class="desktop-nav" aria-label="Điều hướng chính">
-        <a href="#top">Trang chủ</a><a href="#careers">Nghề nghiệp</a><a href="#roles">Vị trí đang tuyển</a><a href="#life">Đời sống Mộc</a><a href="#about">Về Mộc</a>
-      </nav>
-      <div class="header-actions">
-        <button class="text-button" type="button" data-open-info="account">Hồ sơ của tôi</button>
-        <a class="pill-button" href="#roles">Xem vị trí <svg class="arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M5 12h14m-6-6 6 6-6 6"/></svg></a>
-      </div>
-      <details class="mobile-menu" id="mobile-menu"><summary>Menu</summary><nav aria-label="Điều hướng di động"><a href="#top">Trang chủ</a><a href="#careers">Nghề nghiệp</a><a href="#roles">Vị trí đang tuyển</a><a href="#life">Đời sống Mộc</a><a href="#about">Về Mộc</a><button class="text-button" type="button" data-open-info="account">Hồ sơ của tôi</button></nav></details>
-    </div>
+<body class="rms-app req-app requisition-detail-page">
+<a class="skip-link" href="#main">Skip to requisition details</a>
+<main class="page-content" id="main" tabindex="-1"><div class="container">
+  <div class="prototype-note"><span>Mộc RMS · Interface preview · Sample data</span><a href="http://localhost:8082/requisitions">Open RMS</a></div>
+  <header class="requisition-page-intro">
+    <nav class="requisition-page-breadcrumb" aria-label="Breadcrumb"><a href="http://localhost:8082/dashboard">Dashboard</a><span aria-hidden="true">/</span><a href="http://localhost:8082/requisitions">Job Requisitions</a><span aria-hidden="true">/</span><span aria-current="page">Detail</span></nav>
+    <div class="requisition-detail-heading"><div class="requisition-heading-copy"><div class="requisition-title-row"><h1>Business Development Executive (B2B)</h1><span class="requisition-status" data-status="Approved">Approved</span></div></div>
+    <div class="requisition-heading-actions" role="group" aria-label="Requisition actions"><a class="btn-outline" href="http://localhost:8082/requisitions">← Back</a><button class="btn-outline" disabled title="An approved requisition cannot be edited.">Edit</button><button class="btn-outline" disabled title="Open a requisition in RMS to copy its form.">Copy form</button></div></div>
   </header>
+  <div class="detail-layout"><div class="detail-main">
+<section class="card" aria-labelledby="basic-information">
+  <div class="card-header"><span class="section-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z"/><path d="M14 2v6h6M8 13h8M8 17h5"/></svg></span><h2 id="basic-information">Basic Information</h2></div>
+<div class="info-grid">
+<div class="info-item"><span class="info-label">Job Title</span><span class="info-value">Business Development Executive (B2B)</span></div>
+<div class="info-item"><span class="info-label">Employment Type</span><span class="info-value">Full-time</span></div>
+<div class="info-item"><span class="info-label">Department</span><span class="info-value">Sales &amp; Marketing</span></div>
+<div class="info-item"><span class="info-label">Number of Openings</span><span class="info-value">2</span></div>
+<div class="info-item"><span class="info-label">Requester / Hiring Manager</span><span class="info-value">Đỗ Thu Hương</span></div>
+<div class="info-item"><span class="info-label">Salary Range (VND)</span><span class="info-value">15,000,000 – 25,000,000</span></div>
+<div class="info-item"><span class="info-label">Expected Start Date</span><span class="info-value">15/11/2026</span></div>
+<div class="info-item"><span class="info-label">Work Location</span><span class="info-value">Quận 1, TP. Hồ Chí Minh &amp; Cầu Giấy, Hà Nội</span></div>
+<div class="info-item"><span class="info-label">Gender</span><span class="info-value">Any</span></div>
+<div class="info-item"><span class="info-label">Work Model</span><span class="info-value">On-site</span></div>
+<div class="info-item"><span class="info-label">Probation Duration</span><span class="info-value">2 tháng</span></div>
+</div>
+</section>
 
-  <main id="main-content">
-    <section class="hero" aria-labelledby="hero-title">
-      <div class="container hero-inner">
-        <p class="eyebrow">Cơ hội nghề nghiệp tại Mộc</p>
-        <h1 id="hero-title">Làm việc cùng Mộc.<br>Xây sản phẩm hữu ích.</h1>
-        <p class="hero-copy">Mộc phát triển phần mềm giúp các nhóm quản lý công việc rõ ràng hơn. Chúng tôi đang tuyển đồng đội cho sản phẩm, kỹ thuật và vận hành.</p>
-        <form class="search-form" id="role-search" role="search" aria-label="Tìm vị trí đang tuyển tại Mộc">
-          <div class="search-field"><label for="keyword">Chức danh, kỹ năng hoặc từ khóa</label><input id="keyword" type="search" name="keyword" placeholder="Ví dụ: Java, phân tích, nhân sự" autocomplete="off"></div>
-          <div class="search-field"><label for="department">Phòng ban</label><select id="department" name="department"><option value="">Tất cả phòng ban</option><option>Kỹ thuật</option><option>Sản phẩm & Vận hành</option><option>Thiết kế</option><option>Dữ liệu</option><option>Con người & Văn hóa</option><option>Tài chính</option></select></div>
-          <div class="search-field"><label for="location">Địa điểm</label><select id="location" name="location"><option value="">Tất cả địa điểm</option><option>Hà Nội</option><option>TP. Hồ Chí Minh</option><option>Đà Nẵng</option></select></div>
-          <button class="pill-button" type="submit">Tìm vị trí <svg class="arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M5 12h14m-6-6 6 6-6 6"/></svg></button>
-        </form>
-        <p class="search-context">Tìm kiếm chỉ trong các vị trí minh họa của Mộc.</p>
+<section class="card" aria-labelledby="reason-for-hiring">
+  <div class="card-header"><span class="section-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.4 8.4 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.4 8.4 0 0 1-3.8-.9L3 21l1.9-5.7a8.4 8.4 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6A8.4 8.4 0 0 1 12.5 3h.5a8.5 8.5 0 0 1 8 8v.5Z"/></svg></span><h2 id="reason-for-hiring">Reason for Hiring</h2></div>
+<p class="text-content" lang="vi">Mở rộng thị trường khách hàng doanh nghiệp SME sử dụng giải pháp phần mềm.</p>
+</section>
 
-        <svg class="hero-art" viewBox="0 0 900 340" role="img" aria-labelledby="hero-art-title">
-          <title id="hero-art-title">Minh họa ba đồng nghiệp trao đổi bên bàn làm việc, có laptop và cây xanh</title>
-          <g fill="none" stroke="#2b3430" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M42 314H858" stroke="#b9c3b8"/>
-            <path d="M251 111v-31m-33 31h66m-56 0v17m45-17v17" stroke="#9ba9a0"/>
-            <path d="M228 127c0 20 46 20 46 0" stroke="#9ba9a0"/>
-            <path d="M663 110v-30m-31 30h62m-52 0v18m42-18v18" stroke="#9ba9a0"/>
-            <path d="M642 128c0 19 42 19 42 0" stroke="#9ba9a0"/>
-            <path d="M127 282c-3-42 2-79 10-116m-9 75c-24-16-37-35-39-52m42 28c19-23 29-43 31-61m-30 75c-26-4-44-14-57-29" stroke="#4f8061"/>
-            <path d="M86 190c-19-13-29-11-28 4 1 12 18 19 31 20m73-57c13-18 27-23 32-11 5 12-8 30-27 36m-79 21c-19-1-28 8-25 20 4 11 18 15 32 12m53-27c15-18 27-19 33-10 6 10-3 25-21 32" fill="#c4dec8" stroke="#4f8061"/>
-            <path d="M103 281h59l-7 32h-45z" fill="#e9ece4"/>
-            <path d="M752 279c5-48 14-77 27-114m-17 75c-22-22-29-39-28-57m37 42c18-21 30-41 31-58" stroke="#4f8061"/>
-            <path d="M734 184c-17-18-27-16-27-1 0 12 12 23 28 27m67-43c12-15 27-16 29-4 3 14-11 28-31 32m-59 33c-21-13-32-9-31 4 0 13 16 22 31 24m39-30c19-16 34-17 37-4 2 13-12 25-33 30" fill="#c4dec8" stroke="#4f8061"/>
-            <path d="M738 280h67l-7 33h-53z" fill="#e9ece4"/>
-            <path d="M339 215h297v13H339z" fill="#e4e6e0"/>
-            <path d="M359 228v85m257-85v85" stroke-width="3"/>
-            <path d="M427 168h114l-6 48H433z" fill="#34413b"/><path d="M418 216h132" stroke-width="3"/>
-            <path d="M475 145v22m-18-18 18-13 18 13" stroke="#6f8f75"/>
-            <path d="M357 156c-7-12-14-29-8-42 5-11 19-16 31-12 13 4 20 16 18 29-2 13-16 26-27 32" fill="#f3ddc7"/>
-            <path d="M348 122c5-25 29-32 44-15m-34-1c5 12 21 11 34 7" fill="#303932"/>
-            <path d="M344 159c-28 10-43 27-42 56l-2 77h88l4-87c0-23-15-40-36-46" fill="#d4e5d6"/>
-            <path d="M302 206c23 7 39 7 60 4m-38 13 32 7"/>
-            <path d="M317 292v21m55-21v21" stroke-width="3"/>
-            <path d="M566 157c-7-14-5-29 8-39 11-9 28-8 38 2 11 12 8 30-3 41-11 10-32 12-43-4" fill="#f0d9c5"/>
-            <path d="M562 144c-1-25 16-38 36-34 14 3 21 16 21 29-10-7-13-18-18-19-12 15-22 19-39 24" fill="#303932"/>
-            <path d="M566 162c-29 5-47 22-46 52l2 78h103l-3-77c0-30-17-49-44-53" fill="#eff0e9"/>
-            <path d="M557 199c-11 8-17 14-25 17m62-14c13 10 21 13 35 14"/>
-            <path d="M543 292v21m66-21v21" stroke-width="3"/>
-            <path d="M216 151c-6-13-4-28 8-36 12-9 28-6 36 5 8 11 5 26-5 36-11 10-30 8-39-5" fill="#f1dcc8"/>
-            <path d="M214 138c-1-24 17-36 34-31 9 3 14 8 16 17-16-6-29-5-50 14" fill="#303932"/>
-            <path d="M215 160c-23 5-39 22-37 48l4 76h80l2-74c1-26-13-43-36-50" fill="#f3f3ec"/>
-            <path d="M208 190c23 16 43 20 65 19m-39-35 3 52"/>
-            <path d="M196 284v29m54-29v29" stroke-width="3"/>
-            <path d="M278 200c23-1 39-8 57-21"/>
-            <path d="M282 198c-8-5-15-4-20 1"/>
-            <path d="M392 202c10-3 22-7 31-15"/>
-            <path d="M714 83c16-8 29-12 47-16l-15 12 6 17-15-11-12 8 2-14z" stroke="#a9b7ad"/>
-            <path d="M709 110c-14 12-29 17-43 16" stroke="#a9b7ad" stroke-dasharray="4 7"/>
-          </g>
-          <circle cx="212" cy="143" r="2" fill="#2b3430"/><circle cx="577" cy="146" r="2" fill="#2b3430"/>
-        </svg>
-      </div>
-    </section>
+<section class="card" aria-labelledby="job-description">
+  <div class="card-header"><span class="section-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 8h8M8 12h8M8 16h5"/></svg></span><h2 id="job-description">Job Description</h2></div>
+<p class="text-content" lang="vi">Tìm kiếm khách hàng tiềm năng B2B, tư vấn giải pháp chuyển đổi số, đàm phán và ký kết hợp đồng dịch vụ phần mềm.</p>
+</section>
 
-    <section class="section roles-section" id="roles" aria-labelledby="roles-title">
-      <div class="container">
-        <div class="section-top"><div><p class="eyebrow">Cơ hội tại Mộc</p><h2 id="roles-title">Vị trí đang tuyển</h2><p class="section-lead">Xem vai trò, nơi làm việc và điều kiện cơ bản trước khi đi sâu vào mô tả.</p></div><p class="prototype-note">Công ty, vị trí, lương và ngày đăng bên dưới đều là dữ liệu minh họa.</p></div>
-        <div class="results-line"><p id="result-count" role="status" aria-live="polite"></p><button id="clear-search" type="button">Xóa bộ lọc</button></div>
-        <div class="job-grid" id="job-grid">
-          <article class="job-card" data-role data-department="Kỹ thuật" data-location="Hà Nội" data-keywords="senior java developer kỹ thuật spring boot backend" data-summary="Thiết kế và phát triển dịch vụ backend, làm việc cùng nhóm sản phẩm để đưa tính năng từ ý tưởng đến vận hành ổn định.">
-            <p class="job-department">Kỹ thuật</p><h3>Senior Java Developer</h3><p class="job-meta"><span>Hà Nội</span><span>Toàn thời gian</span></p><p class="job-salary">25–35 triệu VND</p><div class="job-bottom"><time datetime="2026-09-25">25/09/2026</time><button type="button" data-view-role>Xem vị trí <svg class="arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M5 12h14m-6-6 6 6-6 6"/></svg></button></div>
-          </article>
-          <article class="job-card" data-role data-department="Sản phẩm & Vận hành" data-location="Hà Nội" data-keywords="business analyst sản phẩm vận hành quy trình phân tích" data-summary="Làm rõ yêu cầu nghiệp vụ, mô tả luồng sử dụng và phối hợp với thiết kế, kỹ thuật để xây sản phẩm dễ dùng.">
-            <p class="job-department">Sản phẩm & Vận hành</p><h3>Business Analyst</h3><p class="job-meta"><span>Hà Nội</span><span>Toàn thời gian</span></p><p class="job-salary">20–30 triệu VND</p><div class="job-bottom"><time datetime="2026-09-24">24/09/2026</time><button type="button" data-view-role>Xem vị trí <svg class="arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M5 12h14m-6-6 6 6-6 6"/></svg></button></div>
-          </article>
-          <article class="job-card" data-role data-department="Con người & Văn hóa" data-location="Hà Nội" data-keywords="hr specialist nhân sự tuyển dụng con người văn hóa" data-summary="Đồng hành cùng các nhóm trong tuyển dụng, trải nghiệm nhân viên và các hoạt động phát triển đội ngũ.">
-            <p class="job-department">Con người & Văn hóa</p><h3>HR Specialist</h3><p class="job-meta"><span>Hà Nội</span><span>Toàn thời gian</span></p><p class="job-salary">Thỏa thuận</p><div class="job-bottom"><time datetime="2026-09-23">23/09/2026</time><button type="button" data-view-role>Xem vị trí <svg class="arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M5 12h14m-6-6 6 6-6 6"/></svg></button></div>
-          </article>
-          <article class="job-card" data-role data-department="Thiết kế" data-location="TP. Hồ Chí Minh" data-keywords="product designer thiết kế ux ui figma" data-summary="Thiết kế trải nghiệm sản phẩm rõ ràng, thử nghiệm giải pháp và duy trì tính nhất quán của giao diện.">
-            <p class="job-department">Thiết kế</p><h3>Product Designer</h3><p class="job-meta"><span>TP. Hồ Chí Minh</span><span>Toàn thời gian</span></p><p class="job-salary">22–30 triệu VND</p><div class="job-bottom"><time datetime="2026-09-22">22/09/2026</time><button type="button" data-view-role>Xem vị trí <svg class="arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M5 12h14m-6-6 6 6-6 6"/></svg></button></div>
-          </article>
-          <article class="job-card" data-role data-department="Dữ liệu" data-location="Đà Nẵng" data-keywords="data analyst dữ liệu sql báo cáo phân tích" data-summary="Biến dữ liệu sản phẩm thành những báo cáo dễ hiểu để các nhóm ra quyết định tốt hơn.">
-            <p class="job-department">Dữ liệu</p><h3>Data Analyst</h3><p class="job-meta"><span>Đà Nẵng</span><span>Toàn thời gian</span></p><p class="job-salary">18–26 triệu VND</p><div class="job-bottom"><time datetime="2026-09-20">20/09/2026</time><button type="button" data-view-role>Xem vị trí <svg class="arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M5 12h14m-6-6 6 6-6 6"/></svg></button></div>
-          </article>
-          <article class="job-card" data-role data-department="Tài chính" data-location="Hà Nội" data-keywords="finance associate tài chính kế toán đối chiếu" data-summary="Theo dõi chứng từ, hỗ trợ báo cáo tài chính và giúp các nhóm nắm rõ số liệu vận hành.">
-            <p class="job-department">Tài chính</p><h3>Finance Associate</h3><p class="job-meta"><span>Hà Nội</span><span>Toàn thời gian</span></p><p class="job-salary">16–22 triệu VND</p><div class="job-bottom"><time datetime="2026-09-18">18/09/2026</time><button type="button" data-view-role>Xem vị trí <svg class="arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M5 12h14m-6-6 6 6-6 6"/></svg></button></div>
-          </article>
-        </div>
-        <div class="empty-state" id="empty-state" hidden><h3>Chưa có vị trí phù hợp</h3><p>Thử từ khóa rộng hơn, chọn phòng ban hoặc địa điểm khác.</p><button class="outline-button" type="button" id="empty-reset">Xem tất cả vị trí</button></div>
-      </div>
-    </section>
+<section class="card" aria-labelledby="candidate-requirements">
+  <div class="card-header"><span class="section-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M5 21v-2a7 7 0 0 1 14 0v2"/></svg></span><h2 id="candidate-requirements">Candidate Requirements</h2></div>
+<p class="text-content" lang="vi">Tối thiểu 1 năm kinh nghiệm Sales B2B khối phần mềm/IT, kỹ năng giao tiếp và thuyết trình xuất sắc. Tiếng Anh giao tiếp tốt.</p>
+</section>
 
-    <section class="section departments-section" id="departments" aria-labelledby="departments-title">
-      <div class="container"><div class="section-top"><div><p class="eyebrow">Các nhóm tại Mộc</p><h2 id="departments-title">Khám phá theo phòng ban</h2></div><p class="section-lead">Chọn một nhóm để xem những vị trí minh họa đang mở trong nhóm đó.</p></div>
-        <div class="department-grid">
-          <button class="department-button" type="button" data-select-department="Kỹ thuật">Kỹ thuật <svg class="arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M5 12h14m-6-6 6 6-6 6"/></svg></button>
-          <button class="department-button" type="button" data-select-department="Sản phẩm & Vận hành">Sản phẩm & Vận hành <svg class="arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M5 12h14m-6-6 6 6-6 6"/></svg></button>
-          <button class="department-button" type="button" data-select-department="Thiết kế">Thiết kế <svg class="arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M5 12h14m-6-6 6 6-6 6"/></svg></button>
-          <button class="department-button" type="button" data-select-department="Dữ liệu">Dữ liệu <svg class="arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M5 12h14m-6-6 6 6-6 6"/></svg></button>
-          <button class="department-button" type="button" data-select-department="Con người & Văn hóa">Con người & Văn hóa <svg class="arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M5 12h14m-6-6 6 6-6 6"/></svg></button>
-          <button class="department-button" type="button" data-select-department="Tài chính">Tài chính <svg class="arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M5 12h14m-6-6 6 6-6 6"/></svg></button>
-        </div>
-      </div>
-    </section>
-
-    <section class="section about-section" id="about" aria-labelledby="about-title"><div class="container about-layout"><div><p class="eyebrow">Về Mộc</p><h2 id="about-title">Một đội ngũ nhỏ, công việc được làm đến nơi đến chốn.</h2></div><div class="about-copy"><p>Mộc xây phần mềm cho công việc hằng ngày. Chúng tôi chọn những vấn đề cụ thể, tìm hiểu người dùng và phát triển giải pháp có thể dùng lâu dài.</p><p>Đội ngũ gồm nhiều chuyên môn cùng làm việc: sản phẩm, kỹ thuật, thiết kế, dữ liệu và vận hành. Mỗi vai trò đều có tiếng nói trong kết quả chung.</p><a class="outline-button" href="#careers">Xem cách chúng tôi làm việc <svg class="arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M5 12h14m-6-6 6 6-6 6"/></svg></a></div></div></section>
-
-    <section class="section why-section" id="careers" aria-labelledby="careers-title"><div class="container"><p class="eyebrow">Vì sao làm việc tại đây</p><h2 id="careers-title">Có chỗ cho chuyên môn. Có chỗ để lớn lên.</h2><div class="reasons"><div class="reason"><span class="reason-number">01 / Công việc</span><h3>Việc có đầu ra rõ ràng</h3><p>Nhóm thống nhất điều cần giải quyết và cách biết công việc đã tạo ra giá trị.</p></div><div class="reason"><span class="reason-number">02 / Phát triển</span><h3>Học từ việc thật</h3><p>Phản hồi cụ thể, chia sẻ chuyên môn và thời gian để thử cách làm tốt hơn.</p></div><div class="reason"><span class="reason-number">03 / Đồng đội</span><h3>Hợp tác thẳng thắn</h3><p>Quyết định được trao đổi cởi mở, tôn trọng khác biệt và trách nhiệm của từng người.</p></div></div></div></section>
-
-    <section class="section life-section" id="life" aria-labelledby="life-title"><div class="container life-layout"><figure class="life-visual"><svg viewBox="0 0 580 330" role="img" aria-labelledby="life-art-title"><title id="life-art-title">Minh họa hai đồng nghiệp trao đổi ý tưởng bên bảng kế hoạch</title><rect x="43" y="31" width="492" height="258" rx="7" fill="#f8f9f4" stroke="#b8c8b7" stroke-width="2"/><rect x="89" y="57" width="285" height="152" rx="3" fill="#fff" stroke="#485a4b" stroke-width="2"/><path d="M113 87h98m-98 25h180m-180 25h143m-143 25h180" stroke="#a8b5a9" stroke-width="2"/><rect x="277" y="75" width="62" height="49" rx="3" fill="#d4e5d6"/><path d="m290 107 14-17 9 7 14-14" fill="none" stroke="#3e7157" stroke-width="3"/><path d="M65 289h450" stroke="#758777" stroke-width="2"/><circle cx="190" cy="226" r="18" fill="#f0d9c5" stroke="#37443a" stroke-width="2"/><path d="M172 225c2-20 20-27 33-17 5 4 7 11 6 17-14-7-26-8-39 0" fill="#303b32"/><path d="M163 250c12-12 40-13 54 0l9 39h-71z" fill="#d8e7d9" stroke="#37443a" stroke-width="2"/><circle cx="368" cy="224" r="18" fill="#f0d9c5" stroke="#37443a" stroke-width="2"/><path d="M352 215c8-21 31-18 36 0l-12-6-24 13" fill="#303b32"/><path d="M339 250c13-13 43-13 56 1l9 38h-77z" fill="#f0f2ec" stroke="#37443a" stroke-width="2"/><path d="M218 255c21-1 39-5 62-18m60 15c-22-4-40-9-61-16" fill="none" stroke="#37443a" stroke-width="2"/><path d="M275 229h24l-4 13h-17z" fill="#f5e1bb" stroke="#37443a" stroke-width="2"/><path d="M449 273c0-51 12-82 31-118m-21 73c-17-17-25-33-27-48m41 35c18-14 27-29 31-46" fill="none" stroke="#3e7157" stroke-width="2"/><path d="M431 179c-16-12-25-8-23 5 2 12 13 20 26 23m70-36c14-12 27-9 25 4-2 12-14 19-28 19" fill="#c9dfcb" stroke="#3e7157" stroke-width="2"/><path d="M448 273h59l-7 16h-45z" fill="#dfe9dd" stroke="#485a4b" stroke-width="2"/></svg><figcaption>Minh họa không gian trao đổi và làm việc cùng nhau.</figcaption></figure><div class="life-copy"><p class="eyebrow">Đời sống tại Mộc</p><h2 id="life-title">Nhịp làm việc có thời gian để lắng nghe.</h2><p>Ý tưởng được đưa ra bàn, thử bằng sản phẩm và điều chỉnh qua phản hồi. Các nhóm gặp nhau khi cần giải quyết việc chung, đồng thời giữ khoảng lặng cho công việc cần tập trung.</p><ul class="life-points"><li>Chia sẻ kiến thức giữa các nhóm</li><li>Trao đổi trực tiếp về sản phẩm</li><li>Tôn trọng thời gian làm việc sâu</li></ul></div></div></section>
-
-    <section class="section process-section" id="process" aria-labelledby="process-title"><div class="container"><p class="eyebrow">Ứng tuyển tại Mộc</p><h2 id="process-title">Quy trình ngắn gọn, rõ bước.</h2><ol class="process-list"><li><strong>Gửi hồ sơ</strong><span>Chọn vị trí phù hợp và gửi thông tin ứng tuyển.</span></li><li><strong>Xem xét CV</strong><span>Nhóm tuyển dụng đối chiếu hồ sơ với yêu cầu vai trò.</span></li><li><strong>Trao đổi</strong><span>Gặp nhóm liên quan để hiểu công việc và cách hợp tác.</span></li><li><strong>Đề nghị</strong><span>Thống nhất điều kiện làm việc nếu hai bên phù hợp.</span></li></ol></div></section>
-
-    <section class="join-section" id="join" aria-labelledby="join-title"><div class="container join-inner"><div><p class="eyebrow">Bước tiếp theo</p><h2 id="join-title">Sẵn sàng làm việc cùng Mộc?</h2><p>Khám phá các vị trí minh họa và xem đâu là vai trò gần với kinh nghiệm của bạn.</p></div><div class="join-actions"><a class="pill-button" href="#roles">Xem vị trí đang tuyển <svg class="arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M5 12h14m-6-6 6 6-6 6"/></svg></a><a class="outline-button" href="#life">Đời sống tại Mộc</a></div></div></section>
-  </main>
-
-  <footer class="site-footer" id="footer"><div class="container"><div class="footer-grid"><div class="footer-brand"><a class="wordmark" href="#top"><svg class="wordmark-mark" viewBox="0 0 32 32" fill="none" aria-hidden="true"><path d="M15 27C8 23 6 13 11 7c4-5 11-4 16-3 0 9-3 18-12 23Z" fill="#d9e9da" stroke="currentColor" stroke-width="1.7"/><path d="M7 28c5-7 10-12 17-17" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg><span class="wordmark-name">mộc.</span></a><p>Một trang tuyển dụng minh họa cho duy nhất một công ty. Chưa kết nối chức năng nộp hoặc theo dõi hồ sơ.</p></div><div class="footer-group"><h3>Nghề nghiệp</h3><a href="#roles">Vị trí đang tuyển</a><a href="#departments">Phòng ban</a><a href="#process">Quy trình</a></div><div class="footer-group"><h3>Công ty</h3><a href="#about">Về Mộc</a><a href="#life">Đời sống Mộc</a><button type="button" data-open-info="contact">Liên hệ</button></div><div class="footer-group"><h3>Ứng viên</h3><button type="button" data-open-info="account">Hồ sơ của tôi</button><button type="button" data-open-info="faq">Câu hỏi thường gặp</button></div><div class="footer-group"><h3>Pháp lý</h3><button type="button" data-open-info="privacy">Quyền riêng tư</button><button type="button" data-open-info="terms">Điều khoản</button></div></div><div class="footer-bottom"><span>© 2026 Mộc · Bản mẫu giao diện.</span><span>Tên doanh nghiệp, vị trí và nội dung chỉ để trình bày ý tưởng.</span></div></div></footer>
-
-  <dialog id="role-dialog" aria-labelledby="dialog-role-title"><div class="dialog-top"><div><p class="eyebrow">Vị trí tại Mộc</p><h2 id="dialog-role-title"></h2></div><button class="dialog-close" type="button" data-close-dialog aria-label="Đóng chi tiết vị trí">×</button></div><p class="dialog-meta" id="dialog-role-meta"></p><p class="dialog-summary" id="dialog-role-summary"></p><p class="dialog-note">Thông tin vị trí trong bản mẫu này chỉ để minh họa.</p><div class="dialog-actions"><button class="pill-button" type="button" id="apply-demo">Ứng tuyển</button><button class="outline-button" type="button" data-close-dialog>Đóng</button></div><p class="dialog-note" id="apply-note" role="status" hidden>Đây là bản mẫu giao diện; thao tác ứng tuyển chưa gửi hồ sơ vào hệ thống.</p></dialog>
-  <dialog id="info-dialog" aria-labelledby="info-dialog-title"><div class="dialog-top"><h2 id="info-dialog-title"></h2><button class="dialog-close" type="button" data-close-dialog aria-label="Đóng thông báo">×</button></div><p id="info-dialog-copy"></p><div class="dialog-actions"><button class="outline-button" type="button" data-close-dialog>Đóng</button></div></dialog>
-
-  <script>
-    (() => {
-      const form = document.getElementById('role-search');
-      const keyword = document.getElementById('keyword');
-      const department = document.getElementById('department');
-      const location = document.getElementById('location');
-      const roleCards = [...document.querySelectorAll('[data-role]')];
-      const resultCount = document.getElementById('result-count');
-      const emptyState = document.getElementById('empty-state');
-      const roleDialog = document.getElementById('role-dialog');
-      const infoDialog = document.getElementById('info-dialog');
-      const normalize = value => value.normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/đ/g, 'd').replace(/Đ/g, 'D').toLowerCase().trim();
-
-      function updateRoles() {
-        const term = normalize(keyword.value);
-        let visible = 0;
-        for (const card of roleCards) {
-          const matches = (!term || normalize(card.dataset.keywords).includes(term))
-            && (!department.value || card.dataset.department === department.value)
-            && (!location.value || card.dataset.location === location.value);
-          card.hidden = !matches;
-          if (matches) visible += 1;
-        }
-        resultCount.textContent = `${visible} vị trí minh họa của Mộc`;
-        emptyState.hidden = visible !== 0;
-      }
-
-      function clearSearch() {
-        form.reset();
-        updateRoles();
-        keyword.focus();
-      }
-
-      form.addEventListener('submit', event => { event.preventDefault(); updateRoles(); document.getElementById('roles').scrollIntoView(); });
-      keyword.addEventListener('input', updateRoles);
-      department.addEventListener('change', updateRoles);
-      location.addEventListener('change', updateRoles);
-      document.getElementById('clear-search').addEventListener('click', clearSearch);
-      document.getElementById('empty-reset').addEventListener('click', clearSearch);
-
-      for (const button of document.querySelectorAll('[data-select-department]')) {
-        button.addEventListener('click', () => { form.reset(); department.value = button.dataset.selectDepartment; updateRoles(); document.getElementById('roles').scrollIntoView(); });
-      }
-      for (const button of document.querySelectorAll('[data-view-role]')) {
-        button.addEventListener('click', () => {
-          const card = button.closest('[data-role]');
-          document.getElementById('dialog-role-title').textContent = card.querySelector('h3').textContent;
-          document.getElementById('dialog-role-meta').textContent = `${card.dataset.department} · ${card.dataset.location} · ${card.querySelector('.job-meta span:last-child').textContent}`;
-          document.getElementById('dialog-role-summary').textContent = card.dataset.summary;
-          document.getElementById('apply-note').hidden = true;
-          roleDialog.showModal();
-        });
-      }
-      document.getElementById('apply-demo').addEventListener('click', () => { document.getElementById('apply-note').hidden = false; });
-
-      const infoCopy = {
-        account: ['Hồ sơ của tôi', 'Bản mẫu này chưa có đăng nhập hoặc theo dõi hồ sơ. Khi tích hợp hệ thống, ứng viên sẽ truy cập hồ sơ của mình tại đây.'],
-        contact: ['Liên hệ', 'Thông tin liên hệ sẽ được thay bằng kênh chính thức của công ty khi trang đi vào sử dụng.'],
-        faq: ['Câu hỏi thường gặp', 'Nội dung hướng dẫn ứng viên sẽ được bổ sung sau khi quy trình tuyển dụng được xác nhận.'],
-        privacy: ['Quyền riêng tư', 'Chính sách quyền riêng tư chính thức cần được công ty phê duyệt trước khi công bố.'],
-        terms: ['Điều khoản', 'Điều khoản sử dụng chính thức cần được công ty phê duyệt trước khi công bố.']
-      };
-      for (const button of document.querySelectorAll('[data-open-info]')) {
-        button.addEventListener('click', () => {
-          const [title, copy] = infoCopy[button.dataset.openInfo];
-          document.getElementById('info-dialog-title').textContent = title;
-          document.getElementById('info-dialog-copy').textContent = copy;
-          document.getElementById('mobile-menu').open = false;
-          infoDialog.showModal();
-        });
-      }
-      for (const button of document.querySelectorAll('[data-close-dialog]')) {
-        button.addEventListener('click', () => button.closest('dialog').close());
-      }
-      for (const dialog of [roleDialog, infoDialog]) {
-        dialog.addEventListener('click', event => { if (event.target === dialog) dialog.close(); });
-      }
-      for (const link of document.querySelectorAll('#mobile-menu nav a')) {
-        link.addEventListener('click', () => { document.getElementById('mobile-menu').open = false; });
-      }
-      updateRoles();
-    })();
-  </script>
+<section class="card" aria-labelledby="screening-criteria">
+  <div class="card-header"><span class="section-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="m3 6 2 2 4-4M12 6h9M3 13l2 2 4-4M12 13h9M3 20l2 2 4-4M12 20h9"/></svg></span><h2 id="screening-criteria">Screening Criteria</h2></div>
+<div class="table-wrapper criteria-scroll" role="region" aria-label="Screening criteria" tabindex="0"><table class="criteria-table"><thead><tr><th scope="col">#</th><th scope="col">Criteria</th><th scope="col">Type</th><th scope="col">Required Value</th><th scope="col">Weight (%)</th><th scope="col">Mandatory</th></tr></thead><tbody><tr><td>1</td><td lang="vi">Tốt nghiệp Cao đẳng/Đại học chuyên ngành QTKD/Kinh tế/CNTT</td><td>Education</td><td>Cao đẳng / Đại học</td><td><div class="weight-cell"><progress class="weight-meter" max="100" value="30" aria-label="Criterion weight"></progress><span>30%</span></div></td><td><span class="badge badge-no">No</span></td></tr><tr><td>2</td><td lang="vi">Kinh nghiệm Sales B2B giải pháp phần mềm</td><td>Experience</td><td>Từ 1 năm</td><td><div class="weight-cell"><progress class="weight-meter" max="100" value="40" aria-label="Criterion weight"></progress><span>40%</span></div></td><td><span class="badge badge-yes">Yes</span></td></tr><tr><td>3</td><td lang="vi">Kỹ năng thuyết trình, đàm phán và giao tiếp tốt</td><td>Skill</td><td>Giao tiếp, Đàm phán</td><td><div class="weight-cell"><progress class="weight-meter" max="100" value="30" aria-label="Criterion weight"></progress><span>30%</span></div></td><td><span class="badge badge-yes">Yes</span></td></tr></tbody></table></div>
+</section>
+</div>
+<aside class="detail-sidebar" aria-label="Requisition activity">
+<section class="card activity-card" aria-labelledby="activity-heading">
+  <div class="card-header"><span class="section-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg></span><h2 id="activity-heading">Activity Log</h2><span class="activity-count">1 event</span></div>
+<ul class="activity-log">
+<li class="activity-item"><span class="activity-dot" aria-hidden="true"></span><div class="activity-title"><span>CREATE</span><span>Created and approved the B2B Sales requisition.</span></div><p class="activity-meta">Đỗ Thu Hương · <time datetime="2026-09-15T14:10:00">15/09/2026 14:10</time></p></li>
+</ul>
+<details class="activity-details"><summary class="activity-link">View full change history</summary><article><strong>CREATE</strong><p class="activity-meta">Đỗ Thu Hương · 15/09/2026 14:10</p><pre>Created and approved the B2B Sales requisition. Hiring target: 2 openings. Expected start date: 15/11/2026.</pre></article></details>
+</section>
+</aside></div>
+</div></main>
 </body>
 </html>

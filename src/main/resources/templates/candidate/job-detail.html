@@ -16,7 +16,7 @@
   <!-- Site Header -->
   <header class="site-header">
     <div class="container header-inner">
-      <a th:replace="~{fragments/brand :: wordmark('Careers')}"></a>
+      <a th:replace="~{fragments/brand :: wordmark('Tuyển dụng')}"></a>
       <nav class="nav-main">
         <div class="nav-group">
           <a href="/jobs" class="nav-link">Quay lại danh sách</a>
@@ -28,7 +28,7 @@
           <a href="/login" class="button button-secondary button-sm">Đăng nhập</a>
         </div>
         <div th:if="${currentUser != null}" style="display:flex; align-items:center; gap:var(--s4);">
-          <a href="/dashboard" class="button button-brand button-sm" style="margin-right: 8px;">Dashboard &rarr;</a>
+          <a href="/dashboard" class="button button-brand button-sm" style="margin-right: 8px;">Bảng điều khiển &rarr;</a>
           <a th:href="@{/profile}" style="text-align:right; line-height:1.2; text-decoration:none; color:inherit;">
             <strong th:text="${currentUser.fullName}" style="font-size:14px; display:block;"></strong>
             <span style="color:var(--muted); font-size:12px;" th:text="${currentUser.email}"></span>
