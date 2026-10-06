@@ -34,11 +34,13 @@ class InterviewSchedulingServiceTests {
     private InterviewPanelRepository interviewPanelRepository;
     private ApplicationRepository applicationRepository;
     private UserRepository userRepository;
+    private com.group2.rms.interview.service.InterviewTimeValidationService interviewTimeValidationService;
     private InterviewSchedulingServiceImpl service;
 
     private User hrUser;
     private User candidateUser;
     private User hmUser;
+    private User directorUser;
     private Application application;
 
     @BeforeEach
@@ -47,12 +49,14 @@ class InterviewSchedulingServiceTests {
         interviewPanelRepository = mock(InterviewPanelRepository.class);
         applicationRepository = mock(ApplicationRepository.class);
         userRepository = mock(UserRepository.class);
+        interviewTimeValidationService = new com.group2.rms.interview.service.InterviewTimeValidationService(interviewScheduleRepository);
 
         service = new InterviewSchedulingServiceImpl(
                 interviewScheduleRepository,
                 interviewPanelRepository,
                 applicationRepository,
-                userRepository
+                userRepository,
+                interviewTimeValidationService
         );
 
         hrUser = User.builder()
@@ -84,9 +88,18 @@ class InterviewSchedulingServiceTests {
                 .applicationStatus("Applied")
                 .build();
 
+        directorUser = User.builder()
+                .userId(6)
+                .username("director_user")
+                .fullName("Pham Director")
+                .accountStatus("Active")
+                .role(Role.builder().roleId(4).roleName("Director").build())
+                .build();
+
         when(userRepository.findById(1)).thenReturn(Optional.of(hrUser));
         when(userRepository.findById(2)).thenReturn(Optional.of(candidateUser));
         when(userRepository.findById(3)).thenReturn(Optional.of(hmUser));
+        when(userRepository.findById(6)).thenReturn(Optional.of(directorUser));
         when(applicationRepository.findById(10)).thenReturn(Optional.of(application));
     }
 
@@ -134,7 +147,7 @@ class InterviewSchedulingServiceTests {
                 service.createSchedule(request, 1)
         );
 
-        assertTrue(ex.getMessage().contains("không được phép tham gia Hội đồng phỏng vấn"));
+        assertTrue(ex.getMessage().contains("không tham gia Hội đồng phỏng vấn"));
     }
 
     @Test
@@ -190,6 +203,66 @@ class InterviewSchedulingServiceTests {
     }
 
     @Test
+    @DisplayName("Director có thể tự đặt lịch và tự gán mình vào Hội đồng phỏng vấn")
+    void directorCanAssignSelfToInterviewPanel() {
+        LocalDateTime now = LocalDateTime.now().plusDays(1);
+        InterviewScheduleRequest request = InterviewScheduleRequest.builder()
+                .applicationId(10)
+                .interviewFormat(InterviewFormat.Online_GoogleMeet)
+                .startTime(now)
+                .endTime(now.plusHours(1))
+                .panelMembers(List.of(new PanelMemberRequest(6, RoleInPanel.Director)))
+                .build();
+
+        when(interviewScheduleRepository.save(any(InterviewSchedule.class))).thenAnswer(invocation -> {
+            InterviewSchedule s = invocation.getArgument(0);
+            s.setInterviewId(101L);
+            return s;
+        });
+
+        InterviewScheduleResponse response = service.createSchedule(request, 6);
+        assertNotNull(response);
+        assertEquals(InterviewStatus.Scheduled, response.interviewStatus());
+    }
+
+    @Test
+    @DisplayName("HR tự gán mình vào Hội đồng phỏng vấn bị ném ngoại lệ")
+    void hrCannotAssignSelfToInterviewPanel() {
+        LocalDateTime now = LocalDateTime.now().plusDays(1);
+        InterviewScheduleRequest request = InterviewScheduleRequest.builder()
+                .applicationId(10)
+                .interviewFormat(InterviewFormat.Online_GoogleMeet)
+                .startTime(now)
+                .endTime(now.plusHours(1))
+                .panelMembers(List.of(new PanelMemberRequest(1, RoleInPanel.HM)))
+                .build();
+
+        InterviewStatusException ex = assertThrows(InterviewStatusException.class, () ->
+                service.createSchedule(request, 1)
+        );
+        assertTrue(ex.getMessage().contains("HR tạo lịch không được phép tự gán mình vào Hội đồng phỏng vấn"));
+    }
+
+    @Test
+    @DisplayName("Không được phép tạo mới một lịch phỏng vấn với trạng thái Rescheduled hoặc Cancelled")
+    void cannotCreateScheduleWithRescheduledOrCancelledStatus() {
+        LocalDateTime now = LocalDateTime.now().plusDays(1);
+        InterviewScheduleRequest request = InterviewScheduleRequest.builder()
+                .applicationId(10)
+                .interviewFormat(InterviewFormat.Online_GoogleMeet)
+                .startTime(now)
+                .endTime(now.plusHours(1))
+                .interviewStatus(InterviewStatus.Rescheduled)
+                .panelMembers(List.of(new PanelMemberRequest(3, RoleInPanel.HM)))
+                .build();
+
+        InterviewStatusException ex = assertThrows(InterviewStatusException.class, () ->
+                service.createSchedule(request, 1)
+        );
+        assertTrue(ex.getMessage().contains("Không thể tạo mới một lịch phỏng vấn với trạng thái"));
+    }
+
+    @Test
     @DisplayName("Rule GBR-01: Cập nhật đi lùi trạng thái từ Completed về Scheduled bị ném ngoại lệ")
     void forwardOnlyStateTransitionEnforced() {
         InterviewSchedule existingSchedule = InterviewSchedule.builder()
@@ -208,5 +281,41 @@ class InterviewSchedulingServiceTests {
         assertThrows(InterviewStatusException.class, () ->
                 service.updateSchedule(200L, request, 1)
         );
+    }
+
+    @Test
+    @DisplayName("Candidate có thể lấy lịch phỏng vấn của riêng mình")
+    void candidateCanGetTheirOwnSchedules() {
+        InterviewSchedule s1 = InterviewSchedule.builder()
+                .interviewId(301L)
+                .startTime(LocalDateTime.now().plusDays(2))
+                .endTime(LocalDateTime.now().plusDays(2).plusHours(1))
+                .interviewStatus(InterviewStatus.Scheduled)
+                .build();
+
+        when(interviewScheduleRepository.findAllByCandidateUserId(2)).thenReturn(List.of(s1));
+
+        List<InterviewScheduleResponse> results = service.getSchedulesForCandidate(2);
+        assertNotNull(results);
+        assertEquals(1, results.size());
+        assertEquals(301L, results.get(0).interviewId());
+    }
+
+    @Test
+    @DisplayName("Hiring Manager có thể lấy lịch phỏng vấn theo phòng ban")
+    void hiringManagerCanGetSchedulesForDepartment() {
+        InterviewSchedule s1 = InterviewSchedule.builder()
+                .interviewId(401L)
+                .startTime(LocalDateTime.now().plusDays(3))
+                .endTime(LocalDateTime.now().plusDays(3).plusHours(1))
+                .interviewStatus(InterviewStatus.Scheduled)
+                .build();
+
+        when(interviewScheduleRepository.findAllByDepartmentId(10)).thenReturn(List.of(s1));
+
+        List<InterviewScheduleResponse> results = service.getSchedulesForDepartment(10);
+        assertNotNull(results);
+        assertEquals(1, results.size());
+        assertEquals(401L, results.get(0).interviewId());
     }
 }
