@@ -58,7 +58,7 @@
         <th:block th:if="${role == 'Candidate'}">
             <span class="workspace-nav-group">Khu vực ứng viên</span>
             <a th:href="@{/dashboard#applications}">Hồ sơ đã ứng tuyển</a>
-            <a th:href="@{/dashboard#interviews}">Lịch phỏng vấn sắp tới</a>
+            <a th:href="@{/interviews}" th:attr="aria-current=${activeMenu == 'interviews' ? 'page' : null}">Lịch phỏng vấn của tôi</a>
             <a th:href="@{/dashboard#offers}">Đề nghị tuyển dụng</a>
             <a th:href="@{/dashboard#notifications}">Thông báo của tôi</a>
             <a th:href="@{/jobs}">Vị trí đang tuyển</a>
