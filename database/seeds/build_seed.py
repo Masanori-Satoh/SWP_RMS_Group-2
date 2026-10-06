@@ -610,10 +610,9 @@ for day_idx in range(num_days):
             
             fmt = "Offline_Office" if random.random() < 0.6 else "Online_GoogleMeet"
             loc = "Phòng họp 802, Tầng 8 Tòa nhà RMS Tower" if fmt == "Offline_Office" else f"https://meet.google.com/rms-int-{int_id:04d}"
-            # FIX: Trạng thái hợp lý theo thời gian thực
-            # Chỉ đánh dấu Completed nếu ngày phỏng vấn đã QUA ngày hiện tại thực tế (2026-10-07)
-            # Các lịch trong tương lai -> Scheduled, các lịch đã qua -> Completed
-            today_cutoff = datetime.datetime(2026, 10, 7)  # Ngày seed data được tạo
+            # FIX: Trạng thái hợp lý theo thời gian thực (Giả định mốc ngày hiện tại hệ thống chạy seed là 2026-10-25)
+            # Các lịch trước mốc hiện tại -> Completed, các lịch sau mốc hiện tại -> Scheduled
+            today_cutoff = datetime.datetime(2026, 10, 25)
             int_status = "Completed" if int_end_dt < today_cutoff else "Scheduled"
             c["int_status"] = int_status
             c["int_end_dt"] = int_end_dt
@@ -665,7 +664,8 @@ for day_idx in range(num_days):
             # InterviewEvaluation - chỉ tạo khi đã hoàn thành
             if int_status == "Completed":
                 eval_time = (int_end_dt + datetime.timedelta(minutes=30)).strftime("%Y-%m-%d %H:%M:%S")
-                is_passed = c["funnel_rand"] < 0.10
+                # Cho 35% ứng viên hoàn thành được Đạt (Passed) để có dữ liệu OfferProposal & OfferApproval
+                is_passed = c["funnel_rand"] < 0.12 or random.random() < 0.25
                 
                 # Eval 1: HR
                 hr_rec = "Hire" if is_passed else ("Consider" if random.random() < 0.5 else "No_Hire")
