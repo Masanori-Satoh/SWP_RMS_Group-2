@@ -74,16 +74,20 @@ public class RequisitionController {
 
     @GetMapping("/create")
     public String createForm(Model model) {
-        var actor = access.actor();
-        access.requireCreate(actor);
-        var d = new RequisitionRequest();
-        d.setNumberOfPositions(1);
-        d.setGender("Any");
-        if (actor.getDepartment() != null)
-            d.setDepartmentId(actor.getDepartment().getDepartmentId());
-        d.getScreeningCriteria()
+        var currentUser = access.actor();
+        // Rule: Chỉ người dùng có quyền (Hiring Manager / Admin) mới được tạo yêu cầu
+        access.requireCreate(currentUser);
+
+        RequisitionRequest requisitionRequest = new RequisitionRequest();
+        requisitionRequest.setNumberOfPositions(1);
+        requisitionRequest.setGender("Any");
+        if (currentUser.getDepartment() != null) {
+            requisitionRequest.setDepartmentId(currentUser.getDepartment().getDepartmentId());
+        }
+        requisitionRequest.getScreeningCriteria()
                 .add(ScreeningCriteriaRequest.builder().weight(new BigDecimal("100")).isMandatory(false).build());
-        model.addAttribute("requisitionDto", d);
+
+        model.addAttribute("requisitionDto", requisitionRequest);
         return form(model, false, null);
     }
 
@@ -102,37 +106,43 @@ public class RequisitionController {
     }
 
     @PostMapping("/create")
-    public String create(@ModelAttribute("requisitionDto") RequisitionRequest d, BindingResult errors, Model model,
+    public String create(@ModelAttribute("requisitionDto") RequisitionRequest requisitionRequest, BindingResult errors, Model model,
             RedirectAttributes flash) {
+        // Rule: Xác thực quyền tạo trước khi xử lý nghiệp vụ
         access.requireCreate(access.actor());
-        if (!errors.hasErrors())
+        if (!errors.hasErrors()) {
             try {
-                Integer id = service.createRequisition(d);
+                Integer requisitionId = service.createRequisition(requisitionRequest);
+                // Rule: Phân biệt thông báo khi lưu bản nháp hoặc nộp phê duyệt
+                boolean isSubmitted = "submit".equals(requisitionRequest.getAction());
                 flash.addFlashAttribute("successMessage",
-                        "submit".equals(d.getAction()) ? "Yêu cầu đã được gửi lên Giám đốc phê duyệt." : "Đã lưu bản nháp thành công.");
-                return "redirect:/requisitions/" + id;
+                        isSubmitted ? "Yêu cầu đã được gửi lên Giám đốc phê duyệt." : "Đã lưu bản nháp thành công.");
+                return "redirect:/requisitions/" + requisitionId;
             } catch (RequisitionValidationException e) {
                 addErrors(errors, e);
             } catch (DataIntegrityViolationException e) {
                 errors.reject("storage", "Không thể lưu dữ liệu. Vui lòng kiểm tra lại tính trùng lặp tiêu chí và giá trị các trường.");
             }
+        }
         return form(model, false, null);
     }
 
     @PostMapping("/edit/{id}")
-    public String update(@PathVariable Integer id, @ModelAttribute("requisitionDto") RequisitionRequest d,
+    public String update(@PathVariable Integer id, @ModelAttribute("requisitionDto") RequisitionRequest requisitionRequest,
             BindingResult errors, Model model, RedirectAttributes flash) {
-        if (!errors.hasErrors())
+        if (!errors.hasErrors()) {
             try {
-                service.updateRequisition(id, d);
+                service.updateRequisition(id, requisitionRequest);
+                boolean isSubmitted = "submit".equals(requisitionRequest.getAction());
                 flash.addFlashAttribute("successMessage",
-                        "submit".equals(d.getAction()) ? "Yêu cầu đã được gửi lên Giám đốc phê duyệt." : "Đã lưu bản nháp thành công.");
+                        isSubmitted ? "Yêu cầu đã được gửi lên Giám đốc phê duyệt." : "Đã lưu bản nháp thành công.");
                 return "redirect:/requisitions/" + id;
             } catch (RequisitionValidationException e) {
                 addErrors(errors, e);
             } catch (DataIntegrityViolationException e) {
                 errors.reject("storage", "Không thể lưu dữ liệu. Vui lòng kiểm tra lại tính trùng lặp tiêu chí và giá trị các trường.");
             }
+        }
         return form(model, true, id);
     }
 
