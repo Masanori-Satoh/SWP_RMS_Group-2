@@ -1510,3 +1510,50 @@ body {
   color: var(--muted);
 }
 
+/* Job Detail Helper Classes (Zero Inline Styles) */
+.job-detail-alert {
+  margin-bottom: var(--s6);
+}
+
+.job-action-wrap {
+  margin-top: var(--s4);
+}
+
+.internal-employee-notice {
+  background: var(--surface-alt, #f8faf8);
+  color: var(--muted);
+  padding: 14px;
+  border-radius: var(--radius-sm);
+  text-align: center;
+  font-size: 13px;
+  line-height: 1.5;
+  border: 1px solid var(--line-light);
+}
+
+.internal-employee-notice strong {
+  display: block;
+  color: var(--ink);
+  margin-bottom: 4px;
+}
+
+.btn-full-width {
+  width: 100%;
+}
+
+.btn-disabled-applied {
+  width: 100%;
+  opacity: 0.65;
+  cursor: not-allowed;
+}
+
+.header-logout-btn-link {
+  background: none;
+  border: none;
+  color: var(--ink);
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  text-decoration: underline;
+  padding: 0;
+}
+
