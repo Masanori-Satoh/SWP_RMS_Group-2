@@ -1,44 +1,18 @@
 <!DOCTYPE html>
 <html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<!--
+    JOB-POSTINGS/LIST.HTML
+    =============================================================================
+    Màn hình Quản lý Danh sách Tin Tuyển dụng Nội bộ (/internal/job-postings)
+    =============================================================================
+-->
 
 <head th:replace="~{fragments/head :: interfaceHead('Quản lý tin tuyển dụng', ~{::pageStyles})}">
     <th:block th:fragment="pageStyles">
         <link rel="stylesheet" th:href="@{/css/requisition-shared.css}">
         <link rel="stylesheet" th:href="@{/css/requisition-list.css}">
-        <style>
-            .posting-status-badge {
-                display: inline-block;
-                padding: 4px 10px;
-                border-radius: 999px;
-                font-size: 12px;
-                font-weight: 600;
-                line-height: 1.2;
-            }
-            .posting-status-badge.status-published {
-                background: #e6f9ed;
-                color: #15803d;
-                border: 1px solid #bbf7d0;
-            }
-            .posting-status-badge.status-draft {
-                background: #f1f5f9;
-                color: #475569;
-                border: 1px solid #cbd5e1;
-            }
-            .posting-status-badge.status-closed {
-                background: #fee2e2;
-                color: #b91c1c;
-                border: 1px solid #fecaca;
-            }
-            .posting-status-badge.status-paused {
-                background: #fef9c3;
-                color: #a16207;
-                border: 1px solid #fef08a;
-            }
-            .deadline-warning {
-                color: #dc2626;
-                font-weight: 600;
-            }
-        </style>
+        <link rel="stylesheet" th:href="@{/css/job-posting-list.css}">
+        <script th:src="@{/js/requisitions.js}" defer></script>
     </th:block>
 </head>
 
@@ -47,153 +21,243 @@
         <aside th:replace="~{fragments/sidebar :: workspace('job-postings', ${viewerRole})}"></aside>
         <div class="main-content">
             <header th:replace="~{fragments/workspace-header :: header(${viewerRole}, ${viewerName})}"></header>
-            <main id="main" tabindex="-1" class="page-content">
-                <div class="container">
-                    <nav class="breadcrumbs" aria-label="Breadcrumb"
-                        style="margin-bottom: var(--s2); font-size: 14px; display: flex; gap: 8px; align-items: center; color: var(--text-muted);">
-                        <a th:href="@{/dashboard}" style="color: var(--brand); text-decoration: none;">Bảng điều khiển</a>
-                        <span aria-hidden="true">/</span>
-                        <span aria-current="page" style="color: var(--text-color); font-weight: 500;">Tin tuyển dụng nội bộ</span>
-                    </nav>
+            <main id="main" tabindex="-1" class="page-content jp-page-content">
+                <div class="jp-list-wrapper">
 
-                    <div class="requisition-page-header">
-                        <div>
+                    <!-- Header with Title & Action Button -->
+                    <div class="jp-list-header">
+                        <div class="jp-list-header-content">
                             <h1>Quản lý tin tuyển dụng</h1>
-                            <p>Danh sách tin tuyển dụng nội bộ được tạo và phát hành từ các yêu cầu tuyển dụng đã duyệt.</p>
+                            <p>Danh sách tin tuyển dụng nội bộ được tạo và phát hành từ các yêu cầu tuyển dụng đã duyệt.
+                            </p>
                         </div>
-                        <a th:href="@{/requisitions}" class="btn-create" style="background: var(--brand); color: white;">
-                            + Đăng tin từ Yêu cầu duyệt
+                        <a th:href="@{/requisitions}" class="jp-btn-create-post">
+                            + Đăng tin từ yêu cầu đã duyệt
                         </a>
                     </div>
 
+                    <!-- Flash Notification Message -->
                     <th:block th:if="${message != null}">
-                        <div class="alert alert-success" style="margin-bottom: var(--s4); padding: 12px 16px; background: #e6f9ed; color: #15803d; border-radius: 8px; border: 1px solid #bbf7d0;"
+                        <div class="alert alert-success"
+                            style="margin-bottom: 20px; padding: 12px 16px; background: #e8f5e9; color: #15803d; border-radius: 8px; border: 1px solid #c6ebd0;"
                             th:text="${message}"></div>
                     </th:block>
 
-                    <section class="list-container" aria-labelledby="posting-list-title">
-                        <div class="requisition-list-heading">
-                            <h2 id="posting-list-title">Danh sách tin tuyển dụng</h2>
-                            <p class="records-count" th:text="|Tổng cộng ${totalElements} tin tuyển dụng|"></p>
+                    <!-- Main Card Container -->
+                    <div class="jp-card-container">
+                        <!-- Card Header -->
+                        <div class="jp-card-top">
+                            <div class="jp-card-icon-box" aria-hidden="true">📄</div>
+                            <div class="jp-card-top-info">
+                                <h2>Danh sách tin tuyển dụng</h2>
+                                <p th:text="|Tổng cộng ${totalElements} tin tuyển dụng|">Tổng cộng 6 tin tuyển dụng</p>
+                            </div>
                         </div>
 
-                        <form th:action="@{/internal/job-postings}" method="get" id="filterForm">
+                        <!-- Filter Form -->
+                        <form th:action="@{/internal/job-postings}" method="get" id="filterForm"
+                            class="jp-filter-section">
                             <input type="hidden" name="size" th:value="${pageSize}">
-                            <div class="requisition-filter-grid">
-                                <div class="filter-field filter-search">
+                            <div class="jp-filter-grid">
+                                <div class="jp-filter-item">
                                     <label for="posting-search">Tìm kiếm</label>
-                                    <input id="posting-search" type="search" name="q" th:value="${search}" maxlength="120"
-                                        placeholder="Tiêu đề tin tuyển dụng hoặc mã yêu cầu">
+                                    <div class="jp-search-wrapper">
+                                        <span class="jp-search-icon" aria-hidden="true">🔍</span>
+                                        <input id="posting-search" type="search" name="q" th:value="${search}"
+                                            maxlength="120" placeholder="Tiêu đề tin tuyển dụng hoặc mã yêu cầu"
+                                            class="jp-search-input">
+                                    </div>
                                 </div>
 
-                                <div class="filter-field" th:if="${departments != null and not #lists.isEmpty(departments)}">
+                                <div class="jp-filter-item">
                                     <label for="department-filter">Phòng ban</label>
-                                    <select id="department-filter" name="departmentId">
-                                        <option value="">Tất cả phòng ban</option>
-                                        <option th:each="dept : ${departments}" th:value="${dept.departmentId}"
-                                            th:text="${dept.departmentName}"
-                                            th:selected="${dept.departmentId == selectedDepartment}"></option>
-                                    </select>
+                                    <div class="jp-select-box">
+                                        <select id="department-filter" name="departmentId" class="jp-filter-select">
+                                            <option value="">Tất cả phòng ban</option>
+                                            <option th:each="dept : ${departments}" th:value="${dept.departmentId}"
+                                                th:text="${dept.departmentName}"
+                                                th:selected="${dept.departmentId == selectedDepartment}"></option>
+                                        </select>
+                                        <span class="jp-select-arrow" aria-hidden="true">▼</span>
+                                    </div>
                                 </div>
 
-                                <div class="filter-field">
+                                <div class="jp-filter-item">
                                     <label for="status-filter">Trạng thái tin</label>
-                                    <select id="status-filter" name="status">
-                                        <option value="">Tất cả trạng thái</option>
-                                        <option value="Draft" th:selected="${selectedStatus == 'Draft'}">Bản nháp</option>
-                                        <option value="Published" th:selected="${selectedStatus == 'Published'}">Đang đăng tuyển</option>
-                                        <option value="Paused" th:selected="${selectedStatus == 'Paused'}">Tạm dừng</option>
-                                        <option value="Closed" th:selected="${selectedStatus == 'Closed'}">Đã đóng</option>
-                                    </select>
+                                    <div class="jp-select-box">
+                                        <select id="status-filter" name="status" class="jp-filter-select">
+                                            <option value="">Tất cả trạng thái</option>
+                                            <option value="Draft" th:selected="${selectedStatus == 'Draft'}">Bản nháp
+                                            </option>
+                                            <option value="Published" th:selected="${selectedStatus == 'Published'}">
+                                                Đang đăng tuyển</option>
+                                            <option value="Paused" th:selected="${selectedStatus == 'Paused'}">Tạm dừng
+                                            </option>
+                                            <option value="Closed" th:selected="${selectedStatus == 'Closed'}">Đã đóng
+                                            </option>
+                                        </select>
+                                        <span class="jp-select-arrow" aria-hidden="true">▼</span>
+                                    </div>
                                 </div>
 
-                                <div class="filter-field">
+                                <div class="jp-filter-item">
                                     <label for="sort-filter">Sắp xếp</label>
-                                    <select id="sort-filter" name="sort">
-                                        <option value="newest" th:selected="${selectedSort == 'newest'}">Mới nhất</option>
-                                        <option value="oldest" th:selected="${selectedSort == 'oldest'}">Cũ nhất</option>
-                                        <option value="title_asc" th:selected="${selectedSort == 'title_asc'}">Tiêu đề (A-Z)</option>
-                                        <option value="title_desc" th:selected="${selectedSort == 'title_desc'}">Tiêu đề (Z-A)</option>
-                                        <option value="deadline_asc" th:selected="${selectedSort == 'deadline_asc'}">Hạn nộp gần nhất</option>
-                                    </select>
+                                    <div class="jp-select-box">
+                                        <select id="sort-filter" name="sort" class="jp-filter-select">
+                                            <option value="newest" th:selected="${selectedSort == 'newest'}">Mới nhất
+                                            </option>
+                                            <option value="oldest" th:selected="${selectedSort == 'oldest'}">Cũ nhất
+                                            </option>
+                                            <option value="title_asc" th:selected="${selectedSort == 'title_asc'}">Tiêu
+                                                đề (A-Z)</option>
+                                            <option value="title_desc" th:selected="${selectedSort == 'title_desc'}">
+                                                Tiêu đề (Z-A)</option>
+                                            <option value="deadline_asc"
+                                                th:selected="${selectedSort == 'deadline_asc'}">Hạn nộp gần nhất
+                                            </option>
+                                        </select>
+                                        <span class="jp-select-arrow" aria-hidden="true">▼</span>
+                                    </div>
                                 </div>
                             </div>
 
-                            <div class="filter-actions">
-                                <button type="submit" class="btn-filter-apply">Áp dụng bộ lọc</button>
-                                <a th:href="@{/internal/job-postings}" class="btn-filter-reset">Đặt lại</a>
+                            <div class="jp-filter-actions">
+                                <button type="submit" class="jp-btn-filter-apply">
+                                    <span aria-hidden="true">⛛</span> Áp dụng bộ lọc
+                                </button>
+                                <a th:href="@{/internal/job-postings}" class="jp-btn-filter-reset">
+                                    <span aria-hidden="true">⟲</span> Đặt lại
+                                </a>
                             </div>
                         </form>
 
-                        <div class="table-responsive">
-                            <table class="data-table" aria-describedby="posting-list-title">
+                        <!-- Table -->
+                        <div class="jp-table-wrapper">
+                            <table class="jp-data-table" aria-describedby="posting-list-title">
                                 <thead>
                                     <tr>
-                                        <th scope="col">STT</th>
-                                        <th scope="col">Tiêu đề tin tuyển dụng</th>
-                                        <th scope="col">Mã yêu cầu</th>
-                                        <th scope="col">Phòng ban</th>
-                                        <th scope="col">Đợt tuyển</th>
-                                        <th scope="col">Trạng thái</th>
-                                        <th scope="col">Hạn nộp hồ sơ</th>
-                                        <th scope="col">Người tạo</th>
-                                        <th scope="col">Ngày tạo</th>
-                                        <th scope="col">Thao tác</th>
+                                        <th scope="col" class="col-stt">STT</th>
+                                        <th scope="col" class="col-title">Tiêu đề tin tuyển dụng</th>
+                                        <th scope="col" class="col-dept">Phòng ban</th>
+                                        <th scope="col" class="col-round">Đợt tuyển</th>
+                                        <th scope="col" class="col-status">Trạng thái</th>
+                                        <th scope="col" class="col-deadline">Hạn nộp hồ sơ</th>
+                                        <th th:if="${viewerRole != 'HR'}" scope="col" class="col-creator">Người tạo</th>
+                                        <th scope="col" class="col-date">Ngày tạo</th>
+                                        <th scope="col" class="col-action">Thao tác</th>
                                     </tr>
                                 </thead>
                                 <tbody>
                                     <tr th:each="item, row : ${postings}">
-                                        <td th:text="${(currentPage - 1) * pageSize + row.count}"></td>
-                                        <td>
-                                            <strong style="color: var(--text-color);" th:text="${item.postingTitle}">Java Developer</strong>
+                                        <td class="col-stt" th:text="${(currentPage - 1) * pageSize + row.count}">1</td>
+                                        <td class="col-title jp-title-cell">
+                                            <strong th:text="${item.postingTitle}">JAVA</strong>
                                         </td>
-                                        <td>
-                                            <a th:if="${item.requisitionId != null}"
-                                                th:href="@{/requisitions/{id}(id=${item.requisitionId})}"
-                                                class="code-badge" th:text="${item.requisitionCode}">REQ-2026-001</a>
-                                            <span th:unless="${item.requisitionId != null}" class="code-badge">—</span>
+                                        <td class="col-dept" th:text="${item.departmentName ?: '—'}">Human Resources
                                         </td>
-                                        <td th:text="${item.departmentName ?: '—'}">Phòng Công Nghệ</td>
-                                        <td>
-                                            <span class="round-badge" th:text="|Đợt ${item.recruitmentRound}|">Đợt 1</span>
+                                        <td class="col-round">
+                                            <span class="jp-round-badge" th:text="|Đợt ${item.recruitmentRound}|">Đợt
+                                                1</span>
                                         </td>
-                                        <td>
-                                            <span th:if="${item.postingStatus == 'Published'}" class="posting-status-badge status-published">Đang đăng tuyển</span>
-                                            <span th:if="${item.postingStatus == 'Draft'}" class="posting-status-badge status-draft">Bản nháp</span>
-                                            <span th:if="${item.postingStatus == 'Paused'}" class="posting-status-badge status-paused">Tạm dừng</span>
-                                            <span th:if="${item.postingStatus == 'Closed'}" class="posting-status-badge status-closed">Đã đóng</span>
+                                        <td class="col-status">
+                                            <span th:if="${item.postingStatus == 'Published'}"
+                                                class="jp-status-pill jp-status-published">
+                                                <span class="dot"></span> Đang đăng tuyển
+                                            </span>
+                                            <span th:if="${item.postingStatus == 'Draft'}"
+                                                class="jp-status-pill jp-status-draft">
+                                                <span class="dot"></span> Bản nháp
+                                            </span>
+                                            <span th:if="${item.postingStatus == 'Paused'}"
+                                                class="jp-status-pill jp-status-paused">
+                                                <span class="dot"></span> Tạm dừng
+                                            </span>
+                                            <span th:if="${item.postingStatus == 'Closed'}"
+                                                class="jp-status-pill jp-status-closed">
+                                                <span class="dot"></span> Đã đóng
+                                            </span>
                                         </td>
-                                        <td>
+                                        <td class="col-deadline">
                                             <span th:if="${item.applicationDeadline != null}"
-                                                th:classappend="${item.expired} ? 'deadline-warning' : ''"
-                                                th:text="${#temporals.format(item.applicationDeadline, 'dd/MM/yyyy')}">31/10/2026</span>
-                                            <span th:if="${item.expired}" class="deadline-warning" style="font-size: 11px;">(Hết hạn)</span>
+                                                th:text="${#temporals.format(item.applicationDeadline, 'dd/MM/yyyy')}">06/11/2026</span>
                                             <span th:unless="${item.applicationDeadline != null}">Không giới hạn</span>
                                         </td>
-                                        <td th:text="${item.createdByName ?: '—'}">HR Specialist</td>
-                                        <td class="nowrap" th:text="${item.createdAt != null ? #temporals.format(item.createdAt, 'dd/MM/yyyy') : '—'}"></td>
-                                        <td class="action-cell">
-                                            <div style="display: flex; gap: 6px; align-items: center;">
+                                        <td th:if="${viewerRole != 'HR'}" class="col-creator"
+                                            th:text="${item.createdByName ?: '—'}">Lê Thị Mai Lan</td>
+                                        <td class="col-date"
+                                            th:text="${item.createdAt != null ? #temporals.format(item.createdAt, 'dd/MM/yyyy') : '—'}">
+                                            07/10/2026</td>
+                                        <td class="col-action action-cell">
+                                            <button type="button" class="btn-action-outline" data-action-menu
+                                                th:popovertarget="|actions-${item.jobPostingId}|"
+                                                th:aria-label="|Thao tác cho ${item.postingTitle}|">⋯</button>
+                                            <div class="action-popover" popover="auto"
+                                                th:id="|actions-${item.jobPostingId}|">
                                                 <a th:if="${item.postingStatus == 'Published'}"
-                                                    th:href="@{/jobs/{id}(id=${item.jobPostingId})}" target="_blank"
-                                                    class="btn-outline" style="padding: 4px 8px; font-size: 12px; text-decoration: none;"
-                                                    title="Xem trên trang việc làm công khai">Xem tin</a>
-                                                <span th:if="${item.postingStatus == 'Draft'}"
-                                                    style="color: var(--text-muted); font-size: 13px;">Bản nháp</span>
+                                                    th:href="@{/jobs/{id}(id=${item.jobPostingId})}" target="_blank">
+                                                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none"
+                                                        stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                                        stroke-linejoin="round" aria-hidden="true">
+                                                        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                                                        <circle cx="12" cy="12" r="3" />
+                                                    </svg>
+                                                    Xem tin tuyển dụng
+                                                </a>
+                                                <a th:unless="${item.postingStatus == 'Published'}"
+                                                    th:href="@{/internal/job-postings/{id}/edit(id=${item.jobPostingId})}">
+                                                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none"
+                                                        stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                                        stroke-linejoin="round" aria-hidden="true">
+                                                        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                                                        <circle cx="12" cy="12" r="3" />
+                                                    </svg>
+                                                    Xem chi tiết
+                                                </a>
+                                                <a
+                                                    th:href="@{/internal/job-postings/{id}/edit(id=${item.jobPostingId})}">
+                                                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none"
+                                                        stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                                        stroke-linejoin="round" aria-hidden="true">
+                                                        <path
+                                                            d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+                                                        <path
+                                                            d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+                                                    </svg>
+                                                    Sửa tin
+                                                </a>
+                                                <button type="button" class="delete-action" data-delete-requisition
+                                                    th:data-delete-url="@{/internal/job-postings/delete/{id}(id=${item.jobPostingId})}"
+                                                    th:data-title="${item.postingTitle}">
+                                                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none"
+                                                        stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                                        stroke-linejoin="round" aria-hidden="true">
+                                                        <polyline points="3 6 5 6 21 6" />
+                                                        <path
+                                                            d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+                                                        <line x1="10" y1="11" x2="10" y2="17" />
+                                                        <line x1="14" y1="11" x2="14" y2="17" />
+                                                    </svg>
+                                                    Xóa tin
+                                                </button>
                                             </div>
                                         </td>
                                     </tr>
                                     <tr th:if="${#lists.isEmpty(postings)}">
-                                        <td colspan="10" class="empty-state">Không tìm thấy tin tuyển dụng nào. Hãy thử thay đổi bộ lọc tìm kiếm.</td>
+                                        <td th:colspan="${viewerRole == 'HR' ? 8 : 9}" class="jp-empty-cell">Không tìm
+                                            thấy tin tuyển dụng nào. Hãy thử thay đổi bộ lọc tìm kiếm.</td>
                                     </tr>
                                 </tbody>
                             </table>
                         </div>
 
-                        <nav class="list-pagination-footer" aria-label="Phân trang tin tuyển dụng">
-                            <div th:replace="~{fragments/pagination :: pager(${currentPage - 1}, ${totalPages}, ${totalElements}, '/internal/job-postings')}"></div>
+                        <!-- Pagination Footer -->
+                        <nav class="list-pagination-footer" aria-label="Phân trang tin tuyển dụng"
+                            style="padding: 16px 24px; border-top: 1px solid #f1f5f9;">
+                            <div
+                                th:replace="~{fragments/pagination :: pager(${currentPage - 1}, ${totalPages}, ${totalElements}, '/internal/job-postings')}">
+                            </div>
                             <script>
-                                window.rmsGoToPage = function(zeroBasedPage) {
+                                window.rmsGoToPage = function (zeroBasedPage) {
                                     const form = document.getElementById('filterForm');
                                     if (form) {
                                         let pageInput = form.querySelector('input[name="page"]');
@@ -209,11 +273,26 @@
                                 };
                             </script>
                         </nav>
-                    </section>
+                    </div>
+
                 </div>
             </main>
         </div>
     </div>
+
+    <!-- Modal Xác nhận Xóa Tin tuyển dụng -->
+    <dialog id="delete-dialog" aria-labelledby="delete-title">
+        <form id="delete-form" method="post" th:action="@{/internal/job-postings}">
+            <div class="delete-symbol" aria-hidden="true">!</div>
+            <h2 id="delete-title">Xác nhận xóa tin tuyển dụng</h2>
+            <p>Bạn có chắc chắn muốn xóa tin tuyển dụng “<strong id="delete-name"></strong>”?</p>
+            <p class="muted">Thao tác này không thể hoàn tác. Tin tuyển dụng sẽ bị gỡ bỏ khỏi hệ thống.</p>
+            <div class="dialog-actions">
+                <button type="button" class="btn-outline" data-close-dialog>Hủy</button>
+                <button class="btn-danger" type="submit">Xóa tin</button>
+            </div>
+        </form>
+    </dialog>
 </body>
 
 </html>
