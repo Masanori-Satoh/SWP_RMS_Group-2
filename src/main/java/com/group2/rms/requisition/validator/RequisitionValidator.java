@@ -36,6 +36,7 @@ public class RequisitionValidator {
     public static final int CRITERIA_NAME_LIMIT = 150;
     public static final int CRITERIA_VALUE_LIMIT = 255;
     public static final int MAX_CRITERIA_COUNT = 50;
+    public static final int REASON_CHAR_LIMIT = 255;
 
     public static final String ACTION_DRAFT = "draft";
     public static final String ACTION_SUBMIT = "submit";
