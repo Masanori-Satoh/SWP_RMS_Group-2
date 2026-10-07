@@ -5,6 +5,7 @@ import com.group2.rms.user.entity.User;
 import jakarta.persistence.*;
 import lombok.*;
 
+
 import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.Set;
@@ -29,6 +30,7 @@ public class InterviewSchedule {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "InterviewId")
+   
     private Long interviewId;
 
     @ManyToOne(fetch = FetchType.LAZY)

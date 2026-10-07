@@ -12,7 +12,7 @@ import java.util.Optional;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 import static org.mockito.ArgumentMatchers.any;
-
+ 
 class AccountActivationDepartmentTests {
     private final UserRepository users=mock(UserRepository.class);
     private final RoleRepository roles=mock(RoleRepository.class);

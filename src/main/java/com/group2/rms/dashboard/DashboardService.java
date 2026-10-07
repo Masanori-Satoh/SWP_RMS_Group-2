@@ -72,16 +72,15 @@ public class DashboardService {
                 List<StatusCount> health = healthCounts.entrySet().stream()
                                 .map(entry -> new StatusCount(entry.getKey(), entry.getValue()))
                                 .toList();
-                return new DashboardResponse(user.getRole().getRoleName(), user.getFullName(),
-                                "Quản lý tài khoản, phòng ban và tình trạng tích hợp của hệ thống.",
+                return new DashboardResponse(user.getRole().getRoleName(),
+                                        user.getFullName(),
+                                        "Quản lý tài khoản, phòng ban và tình trạng tích hợp của hệ thống.",
                                 List.of(),
                                 List.of(new Breakdown("API và dịch vụ tích hợp", health)), List.of(),
-                                List.of(
-                                                new Unavailable("Cấu hình AI",
-                                                                "Chưa có danh mục cấu hình được xác nhận để triển khai trang chỉnh sửa.")),
+                                List.of(new Unavailable("Cấu hình AI",                                                               "Chưa có danh mục cấu hình được xác nhận để triển khai trang chỉnh sửa.")),
                                 List.of(new Shortcut("Quản lý phòng ban", "/admin/departments"),
-                                                new Shortcut("Giám sát API", "/admin/api-monitoring"),
-                                                new Shortcut("Cấu hình AI (chưa khả dụng)", null)),
+                                        new Shortcut("Giám sát API", "/admin/api-monitoring"),
+                                        new Shortcut("Cấu hình AI (chưa khả dụng)", null)),
                                 List.of(accountSummary("Tài khoản nội bộ", "/admin/accounts",
                                                 metrics.internalAccountStatuses()),
                                                 accountSummary("Tài khoản ứng viên", "/admin/candidate-accounts",

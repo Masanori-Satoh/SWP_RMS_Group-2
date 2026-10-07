@@ -18,6 +18,7 @@ import java.util.*;
 public class RequisitionValidator {
 
     public static final int REASON_CHAR_LIMIT = 2000;
+    public static final int REASON_LIMIT = REASON_CHAR_LIMIT;
     public static final int TITLE_CHAR_LIMIT = 200;
     public static final int TEXT_FIELD_CHAR_LIMIT = 2000;
     public static final int SHORT_FIELD_CHAR_LIMIT = 255;

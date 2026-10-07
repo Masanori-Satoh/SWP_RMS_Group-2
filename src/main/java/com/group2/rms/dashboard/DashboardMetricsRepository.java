@@ -3,6 +3,7 @@ import jakarta.persistence.EntityManager;
 import org.springframework.stereotype.Repository;
 
 import com.group2.rms.core.security.RoleAuthorities;
+import com.group2.rms.interview.entity.InterviewFormat;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -217,7 +218,7 @@ public class DashboardMetricsRepository {
                 .setMaxResults(limit)
                 .getResultList().stream()
                 .map(row -> new CandidateInterviewRow((String) row[0], (LocalDateTime) row[1],
-                        (LocalDateTime) row[2], (String) row[3], (String) row[4]))
+                        (LocalDateTime) row[2], ((InterviewFormat) row[3]).name(), (String) row[4]))
                 .toList();
     }
 

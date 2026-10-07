@@ -17,6 +17,7 @@ import java.util.Optional;
 @Repository
 public interface InterviewScheduleRepository extends JpaRepository<InterviewSchedule, Long> {
 
+
     // =========================================================================
     // DÀNH CHO HR: Xem tất cả lịch phỏng vấn (Giải pháp xử lý N+1 Query Problem)
     // =========================================================================

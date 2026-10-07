@@ -7,6 +7,8 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+
+
 import java.io.Serial;
 import java.io.Serializable;
 import java.util.Objects;
@@ -32,6 +34,7 @@ public class InterviewPanelId implements Serializable {
     private static final long serialVersionUID = 1L;
 
     @Column(name = "InterviewId", nullable = false)
+  
     private Long interviewId;
 
     @Column(name = "InterviewerId", nullable = false)

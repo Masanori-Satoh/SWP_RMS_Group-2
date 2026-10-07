@@ -35,6 +35,7 @@ public class PasswordResetEmailSender {
 
     public void send(String to, String token, String otp) {
         JavaMailSender sender = mailSender.getIfAvailable();
+        //check if mail not configured , lack of email , wrong url
         if (sender == null || from.isBlank() || publicBaseUrl.isBlank()) {
             throw new PasswordRecoveryUnavailableException();
         }
