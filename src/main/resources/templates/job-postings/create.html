@@ -70,22 +70,16 @@
 
                         <div class="jp-step-item" data-step="4" role="tab" aria-selected="false">
                             <span class="jp-step-circle">4</span>
-                            <span class="jp-step-label">Thông tin đăng tuyển</span>
+                            <span class="jp-step-label">Quyền lợi & Đãi ngộ</span>
                         </div>
                         <div class="jp-step-divider"></div>
 
-                        <div class="jp-step-item disabled" data-step="5" role="tab" aria-selected="false"
-                            title="Giai đoạn tiếp theo sau khi đăng tin">
+                        <div class="jp-step-item" data-step="5" role="tab" aria-selected="false">
                             <span class="jp-step-circle">5</span>
-                            <span class="jp-step-label">Lịch phỏng vấn</span>
+                            <span class="jp-step-label">Xác nhận & Đăng tuyển</span>
                         </div>
-                        <div class="jp-step-divider"></div>
+                        <!-- <div class="jp-step-divider"></div> -->
 
-                        <div class="jp-step-item disabled" data-step="6" role="tab" aria-selected="false"
-                            title="Giai đoạn tiếp theo sau khi đăng tin">
-                            <span class="jp-step-circle">6</span>
-                            <span class="jp-step-label">Đề nghị nhận việc</span>
-                        </div>
                     </div>
 
                     <!-- Server Error Alert -->
@@ -337,14 +331,44 @@
                         <!-- ============================================================== -->
                         <!-- STEP 4: THÔNG TIN ĐĂNG TUYỂN (PUBLISH & DRAFT)                 -->
                         <!-- ============================================================== -->
+                        <!-- ============================================================== -->
+                        <!-- STEP 4: QUYỀN LỢI & ĐÃI NGỘ                                     -->
+                        <!-- ============================================================== -->
                         <div class="jp-step-panel" data-step="4">
+                            <div class="jp-form-card">
+                                <div class="jp-card-header">
+                                    <div class="jp-card-icon">🎁</div>
+                                    <div>
+                                        <h2>Quyền lợi & đãi ngộ</h2>
+                                        <p>Nhập chế độ đãi ngộ, bảo hiểm, thưởng và phúc lợi cho ứng viên.</p>
+                                    </div>
+                                </div>
+
+                                <div class="jp-form-grid">
+                                    <div class="jp-form-group jp-col-full">
+                                        <label for="benefits">Quyền lợi & Đãi ngộ</label>
+                                        <textarea id="benefits" th:field="*{benefits}" class="jp-textarea" rows="6"
+                                            placeholder="Bảo hiểm sức khỏe, thưởng KPI, teambuilding, máy tính cá nhân..."></textarea>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="jp-actions-bar">
+                                <button type="button" class="jp-btn jp-btn-outline" data-prev-step="3">← Quay lại</button>
+                                <button type="button" class="jp-btn jp-btn-primary" data-next-step="5">Tiếp theo →</button>
+                            </div>
+                        </div>
+
+                        <!-- ============================================================== -->
+                        <!-- STEP 5: XÁC NHẬN & ĐĂNG TUYỂN (PUBLISH & DRAFT)                 -->
+                        <!-- ============================================================== -->
+                        <div class="jp-step-panel" data-step="5">
                             <div class="jp-form-card">
                                 <div class="jp-card-header">
                                     <div class="jp-card-icon">📢</div>
                                     <div>
-                                        <h2>Thông tin đăng tuyển</h2>
-                                        <p>Quyền lợi & đãi ngộ, thời hạn nộp hồ sơ công khai và xuất bản tin tuyển dụng.
-                                        </p>
+                                        <h2>Xác nhận & Đăng tuyển</h2>
+                                        <p>Mức lương hiển thị công khai, hạn chót nộp hồ sơ và xuất bản tin tuyển dụng.</p>
                                     </div>
                                 </div>
 
@@ -364,22 +388,13 @@
                                         <div th:if="${#fields.hasErrors('applicationDeadline')}"
                                             class="jp-error-text show" th:errors="*{applicationDeadline}"></div>
                                     </div>
-
-                                    <div class="jp-form-group jp-col-full">
-                                        <label for="benefits">Quyền lợi & Đãi ngộ</label>
-                                        <textarea id="benefits" th:field="*{benefits}" class="jp-textarea" rows="6"
-                                            placeholder="Bảo hiểm sức khỏe, thưởng KPI, teambuilding, máy tính cá nhân..."></textarea>
-                                    </div>
                                 </div>
                             </div>
 
                             <div class="jp-actions-bar">
-                                <button type="button" class="jp-btn jp-btn-outline" data-prev-step="3">← Quay
-                                    lại</button>
-                                <button type="submit" name="action" value="draft" class="jp-btn jp-btn-secondary">Lưu
-                                    bản nháp</button>
-                                <button type="submit" name="action" value="publish" class="jp-btn jp-btn-primary">Đăng
-                                    tuyển ngay</button>
+                                <button type="button" class="jp-btn jp-btn-outline" data-prev-step="4">← Quay lại</button>
+                                <button type="submit" name="action" value="draft" class="jp-btn jp-btn-secondary">Lưu bản nháp</button>
+                                <button type="submit" name="action" value="publish" class="jp-btn jp-btn-primary">Đăng tuyển ngay</button>
                             </div>
                         </div>
                     </form>

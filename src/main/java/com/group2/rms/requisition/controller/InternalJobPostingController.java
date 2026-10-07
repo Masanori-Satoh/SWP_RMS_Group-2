@@ -1,5 +1,6 @@
 package com.group2.rms.requisition.controller;
 
+import com.group2.rms.requisition.dto.InternalJobPostingDetailResponse;
 import com.group2.rms.requisition.dto.InternalJobPostingResponse;
 import com.group2.rms.requisition.dto.JobPostingCreateRequest;
 import com.group2.rms.requisition.service.JobPostingService;
@@ -107,6 +108,14 @@ public class InternalJobPostingController {
             model.addAttribute("errorMessage", ex.getReason());
             return "job-postings/create";
         }
+    }
+
+    @GetMapping("/{id}")
+    public String showJobPostingDetail(@PathVariable("id") Integer id, Model model) {
+        User currentUser = requisitionAccess.actor();
+        InternalJobPostingDetailResponse detail = jobPostingService.getInternalJobPostingDetail(id, currentUser);
+        model.addAttribute("posting", detail);
+        return "job-postings/detail";
     }
 
     @GetMapping("/{id}/edit")

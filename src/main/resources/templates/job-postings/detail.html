@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<!--
+    JOB-POSTINGS/DETAIL.HTML
+    =============================================================================
+    Màn hình Xem Chi tiết Tin Tuyển dụng Nội bộ (/internal/job-postings/{id})
+    Đầy đủ Sidebar điều hướng, Header quản lý, và Bố cục chi tiết chuẩn Workspace
+    =============================================================================
+-->
+
+<head th:replace="~{fragments/head :: interfaceHead('Chi tiết tin tuyển dụng', ~{::pageStyles})}">
+    <th:block th:fragment="pageStyles">
+        <link rel="stylesheet" th:href="@{/css/requisition-shared.css}">
+        <link rel="stylesheet" th:href="@{/css/job-posting-detail.css}">
+    </th:block>
+</head>
+
+<body class="rms-app req-app">
+    <div class="page-wrapper">
+        <!-- Sidebar thanh điều hướng nội bộ -->
+        <aside th:replace="~{fragments/sidebar :: workspace('job-postings', ${viewerRole})}"></aside>
+
+        <div class="main-content">
+            <!-- Header góc trên chứa thông tin tài khoản -->
+            <header th:replace="~{fragments/workspace-header :: header(${viewerRole}, ${viewerName})}"></header>
+
+            <main id="main" tabindex="-1" class="page-content">
+                <div class="jp-detail-page-wrapper">
+
+                    <!-- 1. Thanh điều hướng phân cấp (Breadcrumbs) & Nút hành động -->
+                    <div class="jp-detail-topbar">
+                        <div class="jp-detail-breadcrumbs">
+                            <a th:href="@{/internal/job-postings}">Tin tuyển dụng</a>
+                            <span class="sep">/</span>
+                            <span class="current" th:text="${posting.postingTitle}">Chi tiết tin</span>
+                        </div>
+                        <div class="jp-detail-actions-top">
+                            <a th:href="@{/internal/job-postings}" class="jp-btn-outline">
+                                ← Quay lại danh sách
+                            </a>
+                            <a th:if="${posting.isPublished()}" th:href="@{/jobs/{id}(id=${posting.jobPostingId})}"
+                                target="_blank" class="jp-btn-public" title="Xem giao diện hiển thị cho ứng viên">
+                                🌐 Xem trên cổng ứng viên ↗
+                            </a>
+                            <a th:href="@{/internal/job-postings/{id}/edit(id=${posting.jobPostingId})}"
+                                class="jp-btn-primary">
+                                ✏️ Sửa tin tuyển dụng
+                            </a>
+                        </div>
+                    </div>
+
+                    <!-- 2. Khối Hero giới thiệu Tin tuyển dụng -->
+                    <div class="jp-detail-hero">
+                        <div class="jp-hero-meta-row">
+                            <span class="jp-badge-round" th:text="|Đợt ${posting.recruitmentRound}|">Đợt 1</span>
+
+                            <!-- Status Pill -->
+                            <span th:if="${posting.postingStatus == 'Published'}"
+                                class="jp-badge-status jp-badge-published">
+                                <span class="dot"></span> Đang đăng tuyển
+                            </span>
+                            <span th:if="${posting.postingStatus == 'Draft'}"
+                                class="jp-badge-status jp-badge-draft">
+                                <span class="dot"></span> Bản nháp
+                            </span>
+                            <span th:if="${posting.postingStatus == 'Paused'}"
+                                class="jp-badge-status jp-badge-paused">
+                                <span class="dot"></span> Tạm dừng
+                            </span>
+                            <span th:if="${posting.postingStatus == 'Closed'}"
+                                class="jp-badge-status jp-badge-closed">
+                                <span class="dot"></span> Đã đóng
+                            </span>
+                        </div>
+
+                        <h1 class="jp-hero-title" th:text="${posting.postingTitle}">JAVA Backend Developer</h1>
+
+                        <div class="jp-hero-subtitle">
+                            <span>🏢 <strong th:text="${posting.departmentName}">Engineering</strong></span>
+                            <span>📍 <span th:text="${posting.workLocation}">Hà Nội</span></span>
+                            <span>💼 <span th:text="${posting.employmentType}">Toàn thời gian</span></span>
+                            <span>💰 <span class="jp-salary-highlight" th:text="${posting.salaryDisplay}">Thỏa thuận</span></span>
+                        </div>
+                    </div>
+
+                    <!-- 3. Lưới nội dung chi tiết (Cột trái: Nội dung / Cột phải: Thông số tóm tắt) -->
+                    <div class="jp-detail-grid">
+
+                        <!-- Cột trái: Nội dung chi tiết tin -->
+                        <div class="jp-detail-main">
+
+                            <!-- Thẻ Mô tả công việc -->
+                            <div class="jp-content-card">
+                                <div class="jp-section-header">
+                                    <span class="jp-section-icon" aria-hidden="true">📋</span>
+                                    <h2 class="jp-section-title">Mô tả công việc</h2>
+                                </div>
+                                <div class="jp-rich-text" th:text="${posting.jobDescription}">
+                                    Nội dung mô tả công việc...
+                                </div>
+                            </div>
+
+                            <!-- Thẻ Yêu cầu ứng viên -->
+                            <div class="jp-content-card">
+                                <div class="jp-section-header">
+                                    <span class="jp-section-icon" aria-hidden="true">🎯</span>
+                                    <h2 class="jp-section-title">Yêu cầu ứng viên</h2>
+                                </div>
+                                <div class="jp-rich-text" th:text="${posting.jobRequirements}">
+                                    Nội dung yêu cầu ứng viên...
+                                </div>
+                            </div>
+
+                            <!-- Thẻ Quyền lợi & Chế độ đãi ngộ -->
+                            <div class="jp-content-card" th:if="${posting.benefits != null and !#strings.isEmpty(posting.benefits)}">
+                                <div class="jp-section-header">
+                                    <span class="jp-section-icon" aria-hidden="true">🎁</span>
+                                    <h2 class="jp-section-title">Quyền lợi & Chế độ đãi ngộ</h2>
+                                </div>
+                                <div class="jp-rich-text" th:text="${posting.benefits}">
+                                    Nội dung quyền lợi...
+                                </div>
+                            </div>
+
+                            <!-- Thẻ Tiêu chí sàng lọc (nếu có từ Requisition) -->
+                            <div class="jp-content-card" th:if="${posting.screeningCriteria != null and !#lists.isEmpty(posting.screeningCriteria)}">
+                                <div class="jp-section-header">
+                                    <span class="jp-section-icon" aria-hidden="true">⚖️</span>
+                                    <h2 class="jp-section-title">Tiêu chí sàng lọc liên kết (từ Yêu cầu tuyển dụng)</h2>
+                                </div>
+                                <div class="jp-criteria-tags">
+                                    <div class="jp-criterion-item" th:each="crit : ${posting.screeningCriteria}">
+                                        <span class="jp-criterion-bullet">✔</span>
+                                        <span th:text="${crit}">Kinh nghiệm lập trình (30%)</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                        </div>
+
+                        <!-- Cột phải: Thông số tóm tắt -->
+                        <div class="jp-detail-sidebar">
+
+                            <!-- Thẻ Thông tin tổng quan -->
+                            <div class="jp-meta-card">
+                                <h3 class="jp-meta-card-title">
+                                    <span>📌</span> Thông tin vị trí & Yêu cầu
+                                </h3>
+
+                                <div class="jp-meta-list">
+                                    <div class="jp-meta-item">
+                                        <span class="jp-meta-label">Mã yêu cầu tuyển dụng</span>
+                                        <span class="jp-meta-value">
+                                            <a th:if="${posting.requisitionId != null}"
+                                               th:href="@{/requisitions/{id}(id=${posting.requisitionId})}"
+                                               th:text="${posting.requisitionCode}">REQ-2026-001</a>
+                                            <span th:unless="${posting.requisitionId != null}" th:text="${posting.requisitionCode}">—</span>
+                                        </span>
+                                    </div>
+
+                                    <div class="jp-meta-item">
+                                        <span class="jp-meta-label">Yêu cầu gốc</span>
+                                        <span class="jp-meta-value" th:text="${posting.requisitionTitle}">—</span>
+                                    </div>
+
+                                    <div class="jp-meta-item">
+                                        <span class="jp-meta-label">Phòng ban</span>
+                                        <span class="jp-meta-value" th:text="${posting.departmentName}">—</span>
+                                    </div>
+
+                                    <div class="jp-meta-item">
+                                        <span class="jp-meta-label">Trưởng phòng phụ trách</span>
+                                        <span class="jp-meta-value" th:text="${posting.hiringManagerName}">—</span>
+                                    </div>
+
+                                    <div class="jp-meta-item">
+                                        <span class="jp-meta-label">Số lượng cần tuyển</span>
+                                        <span class="jp-meta-value" th:text="|${posting.numberOfPositions} nhân sự|">1 nhân sự</span>
+                                    </div>
+
+                                    <div class="jp-meta-item">
+                                        <span class="jp-meta-label">Hình thức làm việc</span>
+                                        <span class="jp-meta-value" th:text="${posting.employmentType}">Toàn thời gian</span>
+                                    </div>
+
+                                    <div class="jp-meta-item">
+                                        <span class="jp-meta-label">Mô hình làm việc</span>
+                                        <span class="jp-meta-value" th:text="${posting.workModel}">Tại văn phòng</span>
+                                    </div>
+
+                                    <div class="jp-meta-item">
+                                        <span class="jp-meta-label">Mức lương hiển thị</span>
+                                        <span class="jp-meta-value jp-salary-highlight" th:text="${posting.salaryDisplay}">Thỏa thuận</span>
+                                    </div>
+
+                                    <div class="jp-meta-item">
+                                        <span class="jp-meta-label">Địa điểm làm việc</span>
+                                        <span class="jp-meta-value" th:text="${posting.workLocation}">Hà Nội</span>
+                                    </div>
+
+                                    <div class="jp-meta-item">
+                                        <span class="jp-meta-label">Ngày đăng tin</span>
+                                        <span class="jp-meta-value"
+                                            th:text="${posting.postingDate != null ? #temporals.format(posting.postingDate, 'dd/MM/yyyy HH:mm') : 'Chưa phát hành'}">
+                                            07/10/2026
+                                        </span>
+                                    </div>
+
+                                    <div class="jp-meta-item">
+                                        <span class="jp-meta-label">Hạn nộp hồ sơ</span>
+                                        <span class="jp-meta-value jp-deadline-highlight"
+                                            th:text="${posting.applicationDeadline != null ? #temporals.format(posting.applicationDeadline, 'dd/MM/yyyy') : 'Tuyển liên tục (Không giới hạn)'}">
+                                            06/11/2026
+                                        </span>
+                                    </div>
+
+                                    <div class="jp-meta-item">
+                                        <span class="jp-meta-label">Người tạo tin</span>
+                                        <span class="jp-meta-value" th:text="${posting.createdByName}">Lê Thị Mai Lan</span>
+                                    </div>
+
+                                    <div class="jp-meta-item">
+                                        <span class="jp-meta-label">Ngày tạo bản ghi</span>
+                                        <span class="jp-meta-value"
+                                            th:text="${posting.createdAt != null ? #temporals.format(posting.createdAt, 'dd/MM/yyyy HH:mm') : '—'}">
+                                            07/10/2026 10:00
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Thẻ Thông báo Cổng tuyển dụng công khai -->
+                            <div class="jp-public-preview-box" th:if="${posting.isPublished()}">
+                                <strong>🟢 Tin đang phát hành công khai</strong>
+                                <span>Ứng viên bên ngoài có thể xem chi tiết và ứng tuyển vị trí này trên Cổng thông tin Tuyển dụng.</span>
+                                <a th:href="@{/jobs/{id}(id=${posting.jobPostingId})}" target="_blank"
+                                   style="color: var(--jp-brand); font-weight: 700; text-decoration: underline; margin-top: 4px;">
+                                    Mở trang tuyển dụng công khai &rarr;
+                                </a>
+                            </div>
+
+                            <div class="jp-public-preview-box" th:unless="${posting.isPublished()}"
+                                 style="background: #f8fafc; border-color: #cbd5e1; color: #475569;">
+                                <strong>📝 Tin chưa được phát hành</strong>
+                                <span>Tin tuyển dụng này hiện đang ở trạng thái <strong th:text="${posting.postingStatusLabel}">Bản nháp</strong> và chưa hiển thị cho ứng viên trên cổng việc làm công khai.</span>
+                                <a th:href="@{/internal/job-postings/{id}/edit(id=${posting.jobPostingId})}"
+                                   style="color: var(--jp-brand); font-weight: 700; text-decoration: underline; margin-top: 4px;">
+                                    Chỉnh sửa và phát hành tin &rarr;
+                                </a>
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </div>
+            </main>
+        </div>
+    </div>
+</body>
+
+</html>

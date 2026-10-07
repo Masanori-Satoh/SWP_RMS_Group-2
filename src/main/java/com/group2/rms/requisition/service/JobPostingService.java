@@ -40,4 +40,9 @@ public interface JobPostingService {
      * Xóa tin tuyển dụng (kèm audit log).
      */
     void deleteJobPosting(Integer id, User currentUser);
+
+    /**
+     * Lấy thông tin chi tiết nội bộ của một tin tuyển dụng.
+     */
+    com.group2.rms.requisition.dto.InternalJobPostingDetailResponse getInternalJobPostingDetail(Integer id, User currentUser);
 }

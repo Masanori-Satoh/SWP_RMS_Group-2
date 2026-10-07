@@ -1,0 +1,411 @@
+/* ==========================================================================
+   JOB-POSTING-DETAIL.CSS
+   File CSS cho trang Chi tiết Tin Tuyển dụng Nội bộ (/internal/job-postings/{id})
+   ========================================================================== */
+
+:root {
+    --jp-brand: #1e4d38;
+    --jp-brand-hover: #153728;
+    --jp-brand-light: #e8f5e9;
+    --jp-brand-border: #c6ebd0;
+    --jp-text-main: #0f172a;
+    --jp-text-muted: #64748b;
+    --jp-border: #e2e8f0;
+    --jp-bg-card: #ffffff;
+    --jp-bg-subtle: #f8fafc;
+    --jp-radius: 12px;
+    --jp-radius-sm: 8px;
+    --jp-shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.05), 0 1px 2px rgba(0, 0, 0, 0.03);
+    --jp-shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.07), 0 2px 4px -2px rgba(0, 0, 0, 0.04);
+}
+
+.jp-detail-page-wrapper {
+    max-width: 1240px;
+    margin: 0 auto;
+    padding: 24px 24px 48px;
+}
+
+/* 1. Header & Navigation Bar */
+.jp-detail-topbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.jp-detail-breadcrumbs {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 14px;
+    color: var(--jp-text-muted);
+}
+
+.jp-detail-breadcrumbs a {
+    color: var(--jp-text-muted);
+    text-decoration: none;
+    transition: color 0.15s ease;
+}
+
+.jp-detail-breadcrumbs a:hover {
+    color: var(--jp-brand);
+}
+
+.jp-detail-breadcrumbs .sep {
+    color: #cbd5e1;
+    font-size: 12px;
+}
+
+.jp-detail-breadcrumbs .current {
+    color: var(--jp-text-main);
+    font-weight: 600;
+}
+
+.jp-detail-actions-top {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.jp-btn-outline {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 14px;
+    font-size: 13.5px;
+    font-weight: 500;
+    color: var(--jp-text-main);
+    background: #ffffff;
+    border: 1px solid var(--jp-border);
+    border-radius: var(--jp-radius-sm);
+    text-decoration: none;
+    transition: all 0.15s ease;
+    cursor: pointer;
+}
+
+.jp-btn-outline:hover {
+    background: #f8fafc;
+    border-color: #cbd5e1;
+    color: var(--jp-brand);
+}
+
+.jp-btn-primary {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 16px;
+    font-size: 13.5px;
+    font-weight: 600;
+    color: #ffffff;
+    background: var(--jp-brand);
+    border: 1px solid var(--jp-brand);
+    border-radius: var(--jp-radius-sm);
+    text-decoration: none;
+    transition: all 0.15s ease;
+    cursor: pointer;
+}
+
+.jp-btn-primary:hover {
+    background: var(--jp-brand-hover);
+    border-color: var(--jp-brand-hover);
+}
+
+.jp-btn-public {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 14px;
+    font-size: 13.5px;
+    font-weight: 500;
+    color: #0369a1;
+    background: #f0f9ff;
+    border: 1px solid #bae6fd;
+    border-radius: var(--jp-radius-sm);
+    text-decoration: none;
+    transition: all 0.15s ease;
+}
+
+.jp-btn-public:hover {
+    background: #e0f2fe;
+    border-color: #7dd3fc;
+}
+
+/* 2. Hero Banner Card */
+.jp-detail-hero {
+    background: #ffffff;
+    border: 1px solid var(--jp-border);
+    border-radius: var(--jp-radius);
+    padding: 24px 28px;
+    margin-bottom: 24px;
+    box-shadow: var(--jp-shadow-sm);
+}
+
+.jp-hero-meta-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-bottom: 12px;
+}
+
+.jp-hero-title {
+    font-size: 26px;
+    font-weight: 700;
+    color: var(--jp-text-main);
+    margin: 0 0 10px 0;
+    letter-spacing: -0.02em;
+    line-height: 1.3;
+}
+
+.jp-hero-subtitle {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    flex-wrap: wrap;
+    font-size: 14px;
+    color: var(--jp-text-muted);
+}
+
+.jp-hero-subtitle span {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+
+/* Pills & Badges */
+.jp-badge-round {
+    background: #f1f5f9;
+    color: #475569;
+    font-size: 12px;
+    font-weight: 600;
+    padding: 3px 10px;
+    border-radius: 9999px;
+    border: 1px solid #e2e8f0;
+}
+
+.jp-badge-status {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12.5px;
+    font-weight: 600;
+    padding: 4px 12px;
+    border-radius: 9999px;
+}
+
+.jp-badge-status .dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+}
+
+.jp-badge-published {
+    background: #ecfdf5;
+    color: #047857;
+    border: 1px solid #a7f3d0;
+}
+.jp-badge-published .dot {
+    background: #10b981;
+}
+
+.jp-badge-draft {
+    background: #f1f5f9;
+    color: #475569;
+    border: 1px solid #cbd5e1;
+}
+.jp-badge-draft .dot {
+    background: #94a3b8;
+}
+
+.jp-badge-paused {
+    background: #fffbeb;
+    color: #b45309;
+    border: 1px solid #fde68a;
+}
+.jp-badge-paused .dot {
+    background: #f59e0b;
+}
+
+.jp-badge-closed {
+    background: #fef2f2;
+    color: #b91c1c;
+    border: 1px solid #fecaca;
+}
+.jp-badge-closed .dot {
+    background: #ef4444;
+}
+
+/* 3. Grid Layout */
+.jp-detail-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 340px;
+    gap: 24px;
+    align-items: start;
+}
+
+@media (max-width: 992px) {
+    .jp-detail-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* Left Column: Content Sections */
+.jp-detail-main {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    min-width: 0;
+}
+
+.jp-content-card {
+    background: #ffffff;
+    border: 1px solid var(--jp-border);
+    border-radius: var(--jp-radius);
+    padding: 24px 28px;
+    box-shadow: var(--jp-shadow-sm);
+}
+
+.jp-section-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 16px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid #f1f5f9;
+}
+
+.jp-section-icon {
+    font-size: 18px;
+    line-height: 1;
+}
+
+.jp-section-title {
+    font-size: 17px;
+    font-weight: 700;
+    color: var(--jp-text-main);
+    margin: 0;
+}
+
+.jp-rich-text {
+    font-size: 14.5px;
+    line-height: 1.75;
+    color: #334155;
+    white-space: pre-wrap;
+    word-break: break-word;
+}
+
+/* Right Column: Metadata Sidebar Card */
+.jp-detail-sidebar {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.jp-meta-card {
+    background: #ffffff;
+    border: 1px solid var(--jp-border);
+    border-radius: var(--jp-radius);
+    padding: 22px 24px;
+    box-shadow: var(--jp-shadow-sm);
+}
+
+.jp-meta-card-title {
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--jp-text-main);
+    margin: 0 0 16px 0;
+    padding-bottom: 10px;
+    border-bottom: 1px solid #f1f5f9;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.jp-meta-list {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+}
+
+.jp-meta-item {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.jp-meta-label {
+    font-size: 12.5px;
+    font-weight: 500;
+    color: var(--jp-text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+}
+
+.jp-meta-value {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--jp-text-main);
+    word-break: break-word;
+}
+
+.jp-meta-value a {
+    color: var(--jp-brand);
+    text-decoration: none;
+    font-weight: 600;
+}
+
+.jp-meta-value a:hover {
+    text-decoration: underline;
+}
+
+.jp-salary-highlight {
+    color: #047857;
+    font-size: 15px;
+    font-weight: 700;
+}
+
+.jp-deadline-highlight {
+    color: #b45309;
+}
+
+/* Criteria Tags */
+.jp-criteria-tags {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-top: 6px;
+}
+
+.jp-criterion-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    padding: 8px 12px;
+    border-radius: var(--jp-radius-sm);
+    font-size: 13.5px;
+    color: #334155;
+}
+
+.jp-criterion-bullet {
+    color: var(--jp-brand);
+    font-weight: bold;
+}
+
+/* Public preview prompt box */
+.jp-public-preview-box {
+    background: #f0fdf4;
+    border: 1px solid #bbf7d0;
+    border-radius: var(--jp-radius-sm);
+    padding: 14px 16px;
+    font-size: 13.5px;
+    color: #166534;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.jp-public-preview-box strong {
+    font-size: 14px;
+}

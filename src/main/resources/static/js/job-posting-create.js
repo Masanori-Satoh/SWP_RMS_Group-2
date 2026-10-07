@@ -11,7 +11,7 @@ document.addEventListener('DOMContentLoaded', function () {
     const MAX_PROBATION_DAYS = 180;        // Thời gian thử việc tối đa 180 ngày
 
     let currentStep = 1;
-    const totalSteps = 4;
+    const totalSteps = 5;
 
     // Các phần tử DOM cốt lõi
     const form = document.getElementById('jobPostingForm');

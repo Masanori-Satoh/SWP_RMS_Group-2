@@ -2,6 +2,7 @@ package com.group2.rms.requisition.service;
 
 import com.group2.rms.admin.entity.AuditLog;
 import com.group2.rms.admin.repository.AuditLogRepository;
+import com.group2.rms.requisition.dto.InternalJobPostingDetailResponse;
 import com.group2.rms.requisition.dto.InternalJobPostingResponse;
 import com.group2.rms.requisition.dto.JobPostingCreateRequest;
 import com.group2.rms.requisition.entity.JobPosting;
@@ -127,6 +128,10 @@ public class JobPostingServiceImpl implements JobPostingService {
     @Override
     @Transactional(readOnly = true)
     public JobPostingCreateRequest prepareCreateForm(Integer requisitionId, User currentUser) {
+        return prepareCreateFormInternal(requisitionId, currentUser, true);
+    }
+
+    private JobPostingCreateRequest prepareCreateFormInternal(Integer requisitionId, User currentUser, boolean checkExistingActive) {
         requireHrOrAdmin(currentUser);
 
         if (requisitionId == null) {
@@ -140,11 +145,13 @@ public class JobPostingServiceImpl implements JobPostingService {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Chỉ có thể tạo tin tuyển dụng từ yêu cầu đã được phê duyệt.");
         }
 
-        boolean hasActivePosting = jobPostingRepository.existsByRequisition_RequisitionIdAndPostingStatusIn(
-                requisitionId, List.of("Draft", "Published")
-        );
-        if (hasActivePosting) {
-            throw new ResponseStatusException(HttpStatus.CONFLICT, "Yêu cầu tuyển dụng này đã có tin tuyển dụng đang hoạt động hoặc đang ở bản nháp.");
+        if (checkExistingActive) {
+            boolean hasActivePosting = jobPostingRepository.existsByRequisition_RequisitionIdAndPostingStatusIn(
+                    requisitionId, List.of("Draft", "Published")
+            );
+            if (hasActivePosting) {
+                throw new ResponseStatusException(HttpStatus.CONFLICT, "Yêu cầu tuyển dụng này đã có tin tuyển dụng đang hoạt động hoặc đang ở bản nháp.");
+            }
         }
 
         // Tạo chuỗi mức lương gợi ý
@@ -217,11 +224,14 @@ public class JobPostingServiceImpl implements JobPostingService {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Chỉ có thể tạo tin tuyển dụng từ yêu cầu đã được phê duyệt.");
         }
 
-        boolean hasActivePosting = jobPostingRepository.existsByRequisition_RequisitionIdAndPostingStatusIn(
-                request.getRequisitionId(), List.of("Draft", "Published")
-        );
-        if (hasActivePosting) {
-            throw new ResponseStatusException(HttpStatus.CONFLICT, "Yêu cầu tuyển dụng này đã có tin tuyển dụng đang hoạt động hoặc đang ở bản nháp.");
+        boolean isUpdate = request.getJobPostingId() != null;
+        if (!isUpdate) {
+            boolean hasActivePosting = jobPostingRepository.existsByRequisition_RequisitionIdAndPostingStatusIn(
+                    request.getRequisitionId(), List.of("Draft", "Published")
+            );
+            if (hasActivePosting) {
+                throw new ResponseStatusException(HttpStatus.CONFLICT, "Yêu cầu tuyển dụng này đã có tin tuyển dụng đang hoạt động hoặc đang ở bản nháp.");
+            }
         }
 
         boolean isPublish = "publish".equalsIgnoreCase(request.getAction());
@@ -245,7 +255,6 @@ public class JobPostingServiceImpl implements JobPostingService {
         }
 
         JobPosting jobPosting;
-        boolean isUpdate = request.getJobPostingId() != null;
         if (isUpdate) {
             jobPosting = jobPostingRepository.findById(request.getJobPostingId())
                     .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Không tìm thấy tin tuyển dụng cần cập nhật."));
@@ -294,7 +303,7 @@ public class JobPostingServiceImpl implements JobPostingService {
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Không tìm thấy tin tuyển dụng với mã: " + jobPostingId));
 
         JobRequisition req = posting.getRequisition();
-        JobPostingCreateRequest form = prepareCreateForm(req.getRequisitionId(), currentUser);
+        JobPostingCreateRequest form = prepareCreateFormInternal(req.getRequisitionId(), currentUser, false);
         form.setJobPostingId(posting.getJobPostingId());
         form.setPostingTitle(posting.getPostingTitle());
         form.setJobDescription(posting.getJobDescription());
@@ -304,6 +313,7 @@ public class JobPostingServiceImpl implements JobPostingService {
         form.setWorkLocation(posting.getWorkLocation());
         form.setApplicationDeadline(posting.getApplicationDeadline() != null ? posting.getApplicationDeadline().toLocalDate() : null);
         form.setIsContinuousRecruitment(posting.getApplicationDeadline() == null);
+        form.setAction("draft".equalsIgnoreCase(posting.getPostingStatus()) ? "draft" : "publish");
 
         return form;
     }
@@ -326,6 +336,65 @@ public class JobPostingServiceImpl implements JobPostingService {
                 .newValue(String.format("Xóa tin tuyển dụng: %s", posting.getPostingTitle()))
                 .timestamp(LocalDateTime.now())
                 .build());
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public InternalJobPostingDetailResponse getInternalJobPostingDetail(Integer id, User currentUser) {
+        requireHrOrAdmin(currentUser);
+
+        if (id == null) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Mã tin tuyển dụng không hợp lệ.");
+        }
+
+        JobPosting posting = jobPostingRepository.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Không tìm thấy tin tuyển dụng với mã: " + id));
+
+        JobRequisition req = posting.getRequisition();
+
+        String statusLabel = switch (posting.getPostingStatus()) {
+            case "Published" -> "Đang đăng tuyển";
+            case "Draft" -> "Bản nháp";
+            case "Paused" -> "Tạm dừng";
+            case "Closed" -> "Đã đóng";
+            default -> posting.getPostingStatus();
+        };
+
+        List<String> criteriaList = (req != null && req.getScreeningCriteria() != null)
+                ? req.getScreeningCriteria().stream()
+                        .map(c -> c.getCriteriaName() + " (Trọng số: " + c.getWeight() + "%)")
+                        .collect(Collectors.toList())
+                : List.of();
+
+        return InternalJobPostingDetailResponse.builder()
+                .jobPostingId(posting.getJobPostingId())
+                .postingTitle(posting.getPostingTitle())
+                .requisitionId(req != null ? req.getRequisitionId() : null)
+                .requisitionCode(req != null ? req.getRequisitionCode() : "—")
+                .requisitionTitle(req != null ? req.getTitle() : "—")
+                .departmentId(req != null && req.getDepartment() != null ? req.getDepartment().getDepartmentId() : null)
+                .departmentName(req != null && req.getDepartment() != null ? req.getDepartment().getDepartmentName() : "Chưa xác định")
+                .recruitmentRound(req != null && req.getRecruitmentRound() != null ? req.getRecruitmentRound() : 1)
+                .numberOfPositions(req != null ? req.getNumberOfPositions() : 1)
+                .employmentType(req != null ? formatEmploymentType(req.getEmploymentType()) : "—")
+                .workModel(req != null && req.getWorkModel() != null ? req.getWorkModel() : "Tại văn phòng")
+                .workLocation(posting.getWorkLocation() != null ? posting.getWorkLocation() : (req != null ? req.getWorkLocation() : "—"))
+                .salaryDisplay(posting.getSalaryDisplay() != null ? posting.getSalaryDisplay() : "Thoả thuận")
+                .jobDescription(posting.getJobDescription())
+                .jobRequirements(posting.getJobRequirements())
+                .benefits(posting.getBenefits())
+                .postingStatus(posting.getPostingStatus())
+                .postingStatusLabel(statusLabel)
+                .postingDate(posting.getPostingDate())
+                .applicationDeadline(posting.getApplicationDeadline())
+                .createdAt(posting.getCreatedAt())
+                .updatedAt(posting.getUpdatedAt())
+                .createdByName(posting.getCreatedBy() != null ? posting.getCreatedBy().getFullName() : "—")
+                .createdByEmail(posting.getCreatedBy() != null ? posting.getCreatedBy().getEmail() : null)
+                .hiringManagerName(req != null && req.getHiringManager() != null ? req.getHiringManager().getFullName() : "—")
+                .hiringManagerEmail(req != null && req.getHiringManager() != null ? req.getHiringManager().getEmail() : null)
+                .screeningCriteria(criteriaList)
+                .build();
     }
 
     private String formatSalary(BigDecimal min, BigDecimal max) {
