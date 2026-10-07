@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/head :: interfaceHead('My Interviews', ~{::pageStyles})}">
+  <th:block th:fragment="pageStyles">
+    <link rel="stylesheet" th:href="@{/css/global.css}">
+  </th:block>
+</head>
+<body class="rms-app">
+<div class="page-wrapper">
+  <aside th:replace="~{fragments/sidebar :: workspace('interviews', 'Candidate')}"></aside>
+  <div class="main-content">
+    <header th:replace="~{fragments/workspace-header :: header('Candidate', ${currentUser.fullName})}"></header>
+    <main id="main" class="page-content" tabindex="-1">
+      <div class="container">
+        <nav class="breadcrumbs" aria-label="Breadcrumb">
+          <a th:href="@{/dashboard}">Dashboard</a><span aria-hidden="true">/</span>
+          <span aria-current="page">My Interviews</span>
+        </nav>
+        <div class="account-heading">
+          <div><h1>My Interviews</h1><p>Interview times, locations and meeting links for your applications.</p></div>
+        </div>
+        <div class="module-nav-container workspace-section">
+          <nav class="module-tabs breadcrumbs" aria-label="Interview navigation">
+            <a th:href="@{/portal/interviews}" aria-current="page">Interview Schedule</a>
+            <a th:href="@{/jobs}">Open Positions</a>
+          </nav>
+        </div>
+        <section th:if="${#lists.isEmpty(schedules)}" class="empty-state workspace-section" aria-labelledby="empty-title">
+          <h2 id="empty-title">No interviews scheduled yet</h2>
+          <p>Your interview invitations will appear here when the recruitment team schedules them.</p>
+          <a class="btn btn-secondary" th:href="@{/dashboard#applications}">My Applications</a>
+        </section>
+        <th:block th:unless="${#lists.isEmpty(schedules)}">
+          <p class="table-scroll-note">On small screens, scroll the table to see all interview details.</p>
+          <div class="table-wrapper" tabindex="0" role="region" aria-label="My interview schedule">
+            <table class="table">
+              <caption class="sr-only">Interviews for your applications</caption>
+              <thead><tr><th scope="col">Job Title</th><th scope="col">Start</th><th scope="col">End</th>
+                <th scope="col">Format</th><th scope="col">Location / Meeting</th><th scope="col">Status</th></tr></thead>
+              <tbody>
+              <tr th:each="schedule : ${schedules}">
+                <th scope="row" th:text="${schedule.jobPostingTitle}">Job title</th>
+                <td><time th:datetime="${schedule.startTime}" th:text="${#temporals.format(schedule.startTime, 'yyyy-MM-dd HH:mm')}"></time></td>
+                <td><time th:datetime="${schedule.endTime}" th:text="${#temporals.format(schedule.endTime, 'yyyy-MM-dd HH:mm')}"></time></td>
+                <td th:text="${schedule.interviewFormat.name() == 'Online_GoogleMeet' ? 'Online (Google Meet)' : 'Onsite'}"></td>
+                <td>
+                  <a th:if="${schedule.meetingLink() != null}" th:href="${schedule.meetingLink()}" target="_blank" rel="noopener noreferrer">Join meeting</a>
+                  <span th:unless="${schedule.meetingLink() != null}" th:text="${#strings.isEmpty(schedule.locationOrLink) ? 'To be confirmed' : schedule.locationOrLink}"></span>
+                </td>
+                <td><span class="badge" th:text="${schedule.interviewStatus.name()}">Scheduled</span></td>
+              </tr>
+              </tbody>
+            </table>
+          </div>
+        </th:block>
+      </div>
+    </main>
+  </div>
+</div>
+</body>
+</html>

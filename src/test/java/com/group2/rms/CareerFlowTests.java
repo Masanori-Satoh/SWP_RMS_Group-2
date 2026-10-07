@@ -289,7 +289,7 @@ class CareerFlowTests {
                 when(users.findByUsernameIgnoreCase(username)).thenReturn(Optional.of(user));
                 when(careers.getViewerProfile(username))
                                 .thenReturn(Optional
-                                                .of(new ViewerProfileResponse(user.getFullName(), user.getEmail())));
+                                                .of(new ViewerProfileResponse(user.getFullName(), user.getEmail(), user.getRole() != null ? user.getRole().getRoleName() : "")));
         }
 
         private MockHttpSession login(MockHttpSession session, String username, String expected) throws Exception {

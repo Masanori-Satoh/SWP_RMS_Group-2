@@ -105,6 +105,10 @@ class RequisitionIntegrationTest {
                 .departmentId(department.getDepartmentId())
                 .numberOfPositions(2)
                 .employmentType("Full-time")
+                .gender("Any")
+                .workModel("On-site")
+                .jobDescription("Integration-test responsibilities")
+                .requirementDetails("Integration-test requirements")
                 .screeningCriteria(new ArrayList<>(List.of(
                         ScreeningCriteriaRequest.builder()
                                 .criteriaName("Spring Boot")
@@ -133,7 +137,7 @@ class RequisitionIntegrationTest {
     @Test
     @WithMockUser(username = "it_hm", roles = "HIRING_MANAGER")
     void it11_listAndDetail_readUnicodeColumns() throws Exception {
-        var requisition = requisitions.saveAndFlush(JobRequisition.builder()
+        var requisition = requisitions.saveAndFlush(validRequisition()
                 .title("Unicode read regression").hiringManager(hiringManager).department(department)
                 .approvalStatus("Draft").gender("Female").workLocation("Văn phòng Hà Nội")
                 .workModel("Hybrid").probationDuration("2 tháng")
@@ -166,7 +170,7 @@ class RequisitionIntegrationTest {
     @WithMockUser(username = "it_dir", roles = "DIRECTOR")
     @DisplayName("IT-04: Director Approve -> Cập nhật Approved, tạo approval record và workflow event")
     void it04_directorApprove_createsApprovalAndEvent() {
-        JobRequisition req = requisitions.save(JobRequisition.builder()
+        JobRequisition req = requisitions.save(validRequisition()
                 .title("Pending Dev")
                 .hiringManager(hiringManager)
                 .department(department)
@@ -191,7 +195,7 @@ class RequisitionIntegrationTest {
     @WithMockUser(username = "it_dir", roles = "DIRECTOR")
     @DisplayName("IT-05: Director Reject -> Cập nhật Rejected kèm feedback comment")
     void it05_directorReject_recordsFeedback() {
-        JobRequisition req = requisitions.save(JobRequisition.builder()
+        JobRequisition req = requisitions.save(validRequisition()
                 .title("Pending QA")
                 .hiringManager(hiringManager)
                 .department(department)
@@ -218,7 +222,7 @@ class RequisitionIntegrationTest {
     @WithMockUser(username = "it_hm", roles = "HIRING_MANAGER")
     @DisplayName("IT-06: HM rút request Pending -> Quay về trạng thái Draft")
     void it06_withdraw_revertsToDraft() {
-        JobRequisition req = requisitions.save(JobRequisition.builder()
+        JobRequisition req = requisitions.save(validRequisition()
                 .title("Pending UX")
                 .hiringManager(hiringManager)
                 .department(department)
@@ -240,7 +244,7 @@ class RequisitionIntegrationTest {
     @WithMockUser(username = "it_hm", roles = "HIRING_MANAGER")
     @DisplayName("IT-08: Copy -> Trả về DTO mới, criteriaId null, chưa lưu DB")
     void it08_copy_clearsIdentifiers() {
-        JobRequisition original = requisitions.save(JobRequisition.builder()
+        JobRequisition original = requisitions.save(validRequisition()
                 .title("Original Requisition")
                 .hiringManager(hiringManager)
                 .department(department)
@@ -261,7 +265,7 @@ class RequisitionIntegrationTest {
     @WithMockUser(username = "it_hm", roles = "HIRING_MANAGER")
     @DisplayName("IT-10: Delete -> Xóa bản ghi requisition khỏi DB")
     void it10_delete_removesEntity() {
-        JobRequisition req = requisitions.save(JobRequisition.builder()
+        JobRequisition req = requisitions.save(validRequisition()
                 .title("To be deleted")
                 .hiringManager(hiringManager)
                 .department(department)
@@ -273,5 +277,16 @@ class RequisitionIntegrationTest {
         service.deleteRequisition(id);
 
         assertTrue(requisitions.findById(id).isEmpty());
+    }
+
+    /** Supply the schema's mandatory fields; each test still controls the workflow under test. */
+    private JobRequisition.JobRequisitionBuilder validRequisition() {
+        return JobRequisition.builder()
+                .numberOfPositions(1)
+                .employmentType("Full-time")
+                .gender("Any")
+                .workModel("On-site")
+                .jobDescription("Integration-test responsibilities")
+                .requirementDetails("Integration-test requirements");
     }
 }

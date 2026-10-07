@@ -155,9 +155,15 @@ CREATE TABLE JobRequisition (
 
     CONSTRAINT CK_JobRequisition_WorkModel
         CHECK (WorkModel IN (N'On-site', N'Remote', N'Hybrid')),
-
+        -- update close andcacelled
     CONSTRAINT CK_JobRequisition_ApprovalStatus
-        CHECK (ApprovalStatus IN (N'Draft', N'Pending_Director', N'Approved', N'Rejected')),
+        CHECK (ApprovalStatus IN (N'Draft',
+                 N'Pending_Director',
+                 N'Approved', 
+                 N'Rejected',
+                 N'Closed',
+            N'Cancelled'
+            )),
 
     CONSTRAINT CK_JobRequisition_Salary_Range
         CHECK (MinSalary IS NULL OR MaxSalary IS NULL OR MinSalary <= MaxSalary),
@@ -261,6 +267,8 @@ CREATE TABLE Candidate (
     LinkedInUrl NVARCHAR(500) NULL,
     PortfolioUrl NVARCHAR(500) NULL,
     CandidateSource NVARCHAR(50) NULL,
+    --update isPotential
+    IsPotential BIT NOT NULL CONSTRAINT DF_Candidate_IsPotential DEFAULT 0,
     CreatedAt DATETIME2 NOT NULL CONSTRAINT DF_Candidate_CreatedAt DEFAULT SYSDATETIME(),
     UpdatedAt DATETIME2 NULL,
 
@@ -321,9 +329,9 @@ CREATE TABLE ApplicationReview (
 
     CONSTRAINT FK_ApplicationReview_Reviewer
         FOREIGN KEY (ReviewerId) REFERENCES [User](UserId),
-
+       -- add director
     CONSTRAINT CK_ApplicationReview_Role
-        CHECK (ReviewerRole IN (N'HR', N'HiringManager')),
+        CHECK (ReviewerRole IN (N'HR', N'HiringManager',N'Director')),
 
     CONSTRAINT CK_ApplicationReview_Decision
         CHECK (Decision IN (N'Pass', N'Fail', N'Hold'))
@@ -395,9 +403,9 @@ CREATE TABLE InterviewPanel (
 
     CONSTRAINT FK_InterviewPanel_User
         FOREIGN KEY (InterviewerId) REFERENCES [User](UserId),
-
+        --add director
     CONSTRAINT CK_InterviewPanel_Role
-        CHECK (RoleInPanel IN (N'HR', N'HM'))
+        CHECK (RoleInPanel IN (N'HR', N'HM', N'Interviewer', N'Director'))
 );
 GO
 
@@ -530,22 +538,8 @@ CREATE TABLE OfferApproval (
         CHECK ([Status] IN (N'Approved', N'Rejected'))
 );
 GO
+-- delete cho huyền
 
--- =============================================================================
--- 3.20 OFFER NEGOTIATION (Các vòng thương lượng offer giữa HR & ứng viên)
--- =============================================================================
-CREATE TABLE OfferNegotiation (
-    NegotiationId INT IDENTITY(1,1) PRIMARY KEY,
-    OfferId INT NOT NULL,
-    CandidateCounterSalary DECIMAL(18,2) NULL,
-    CandidateNotes NVARCHAR(MAX) NULL,
-    HRResponseNotes NVARCHAR(MAX) NULL,
-    NegotiationDate DATETIME2 NOT NULL CONSTRAINT DF_OfferNegotiation_Date DEFAULT SYSDATETIME(),
-
-    CONSTRAINT FK_OfferNegotiation_Offer
-        FOREIGN KEY (OfferId) REFERENCES OfferProposal(OfferId)
-);
-GO
 
 -- =============================================================================
 -- INDEXES FOR PERFORMANCE OPTIMIZATION (Non-Clustered Indexes on Foreign Keys)
@@ -561,20 +555,16 @@ CREATE NONCLUSTERED INDEX IX_RequisitionApproval_DirectorId ON RequisitionApprov
 CREATE NONCLUSTERED INDEX IX_ScreeningCriteria_RequisitionId ON ScreeningCriteria(RequisitionId);
 CREATE NONCLUSTERED INDEX IX_JobPosting_RequisitionId ON JobPosting(RequisitionId);
 CREATE NONCLUSTERED INDEX IX_JobPosting_CreatedBy ON JobPosting(CreatedBy);
+CREATE NONCLUSTERED INDEX IX_Candidate_IsPotential ON Candidate(IsPotential) WHERE IsPotential = 1;
 CREATE NONCLUSTERED INDEX IX_Application_CandidateId ON Application(CandidateId);
 CREATE NONCLUSTERED INDEX IX_Application_JobPostingId ON Application(JobPostingId);
 CREATE NONCLUSTERED INDEX IX_ApplicationReview_ApplicationId ON ApplicationReview(ApplicationId);
 CREATE NONCLUSTERED INDEX IX_ApplicationReview_ReviewerId ON ApplicationReview(ReviewerId);
-CREATE NONCLUSTERED INDEX IX_AIScreeningResult_ApplicationId ON AIScreeningResult(ApplicationId);
-CREATE NONCLUSTERED INDEX IX_InterviewSchedule_ApplicationId ON InterviewSchedule(ApplicationId);
 CREATE NONCLUSTERED INDEX IX_InterviewSchedule_CreatedBy ON InterviewSchedule(CreatedBy);
-CREATE NONCLUSTERED INDEX IX_InterviewPanel_InterviewId ON InterviewPanel(InterviewId);
 CREATE NONCLUSTERED INDEX IX_InterviewPanel_InterviewerId ON InterviewPanel(InterviewerId);
-CREATE NONCLUSTERED INDEX IX_InterviewEvaluation_InterviewId ON InterviewEvaluation(InterviewId);
 CREATE NONCLUSTERED INDEX IX_InterviewEvaluation_InterviewerId ON InterviewEvaluation(InterviewerId);
 CREATE NONCLUSTERED INDEX IX_InterviewFinalResult_HiringManagerId ON InterviewFinalResult(HiringManagerId);
 CREATE NONCLUSTERED INDEX IX_OfferProposal_ProposedBy ON OfferProposal(ProposedBy);
 CREATE NONCLUSTERED INDEX IX_OfferApproval_OfferId ON OfferApproval(OfferId);
 CREATE NONCLUSTERED INDEX IX_OfferApproval_DirectorId ON OfferApproval(DirectorId);
-CREATE NONCLUSTERED INDEX IX_OfferNegotiation_OfferId ON OfferNegotiation(OfferId);
 GO

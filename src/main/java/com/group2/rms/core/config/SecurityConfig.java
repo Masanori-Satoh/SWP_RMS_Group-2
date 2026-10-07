@@ -79,6 +79,18 @@ public class SecurityConfig {
                                                                 // api config
                                                                 "/admin/ai-configuration", "/admin/ai-configuration/**")
                                                 .hasAuthority(RoleAuthorities.SYSTEM_ADMIN)
+                                                // Candidate portal is read-only and isolated from internal schedules.
+                                                .requestMatchers(HttpMethod.GET, "/portal/interviews")
+                                                .hasAuthority("ROLE_CANDIDATE")
+                                                .requestMatchers("/portal/interviews", "/portal/interviews/**").denyAll()
+                                                // Forms and all writes remain restricted to existing HR/Admin editors.
+                                                .requestMatchers("/interviews/new", "/interviews/*/edit")
+                                                .hasAnyAuthority("ROLE_HR", RoleAuthorities.SYSTEM_ADMIN)
+                                                .requestMatchers(HttpMethod.GET, "/interviews", "/interviews/**")
+                                                .hasAnyAuthority("ROLE_HR", RoleAuthorities.SYSTEM_ADMIN,
+                                                                "ROLE_DIRECTOR", "ROLE_HIRING_MANAGER", "ROLE_INTERVIEWER")
+                                                .requestMatchers("/interviews", "/interviews/**")
+                                                .hasAnyAuthority("ROLE_HR", RoleAuthorities.SYSTEM_ADMIN)
                                                 // require authenticaed for SYSTEM_ADMIN, ROLE_HR, ROLE_DIRECTOR
                                                 .requestMatchers("/offers", "/offers/**", "/api/v1/hr/offers",
                                                                 "/api/v1/hr/offers/**")

@@ -2,6 +2,7 @@ package com.group2.rms.service;
 
 import com.group2.rms.admin.dto.MonitorRowResponse;
 import com.group2.rms.admin.service.ApiMonitoringService;
+import com.group2.rms.admin.exception.MonitoringSessionRequiredException;
 import com.group2.rms.admin.service.HttpProbeTransport;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
@@ -89,7 +90,7 @@ class ApiMonitoringServiceTests {
     @Test
     void unauthenticatedRequestCannotStartProbe() {
         when(request.getSession(false)).thenReturn(null);
-        assertThrows(IllegalStateException.class, () -> monitoring.probeInternal(request));
+        assertThrows(MonitoringSessionRequiredException.class, () -> monitoring.probeInternal(request));
         verifyNoInteractions(transport);
     }
 }

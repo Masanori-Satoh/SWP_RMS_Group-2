@@ -20,6 +20,8 @@ import com.group2.rms.core.security.DatabaseUserDetailsService;
 import com.group2.rms.user.service.AccountListService;
 import com.group2.rms.user.service.AccountManagementService;
 import com.group2.rms.admin.service.ApiMonitoringService;
+import com.group2.rms.admin.service.HealthService;
+import com.group2.rms.auth.service.PasswordRecoveryService;
 import com.group2.rms.dashboard.DashboardService;
 import com.group2.rms.dashboard.DashboardResponse;
 import com.group2.rms.auth.service.CandidateRegistrationService;
@@ -66,7 +68,7 @@ import com.group2.rms.admin.controller.ApiMonitoringController;
 @WebMvcTest(controllers = { AuthController.class, DashboardController.class, AccountController.class,
                 ApiMonitoringController.class, HealthController.class,
                 RegistrationController.class, PasswordRecoveryController.class, CandidateAccountController.class })
-@Import({ SecurityConfig.class, DatabaseUserDetailsService.class })
+@Import({ SecurityConfig.class, DatabaseUserDetailsService.class, HealthService.class, PasswordRecoveryService.class })
 class SecurityFlowTests {
 
         @Autowired
@@ -94,25 +96,33 @@ class SecurityFlowTests {
 
         @Test
         void guestsNeedAuthenticationAndLoginNeedsCsrf() throws Exception {
+                //guest to dashboard
                 mvc.perform(get("/dashboard")).andExpect(status().is3xxRedirection())
                                 .andExpect(redirectedUrlPattern("**/login"));
+                //guest to admin account
                 mvc.perform(get("/admin/accounts")).andExpect(status().is3xxRedirection())
                                 .andExpect(redirectedUrlPattern("**/login"));
-                mvc.perform(post("/login").param("username", "admin").param("password", "test-password"))
+                //csrf login
+                mvc.perform(post("/login").param("username", "admin")
+                                .param("password", "test-password"))
                                 .andExpect(status().isForbidden());
         }
 
         @Test
         void loginShowsRegisterAndForgotPasswordAndRegistrationRequiresCsrf() throws Exception {
+                // form login
                 mvc.perform(get("/login")).andExpect(status().isOk())
                                 .andExpect(content().string(containsString("href=\"/register\"")))
                                 .andExpect(content().string(containsString("href=\"/forgot-password\"")));
+                // register without csrf
                 mvc.perform(post("/register")).andExpect(status().isForbidden());
-
+                //get page and test get regist
                 MvcResult page = mvc.perform(get("/register")).andExpect(status().isOk())
                                 .andExpect(content().string(containsString("name=\"username\"")))
                                 .andReturn();
+                // get csrf
                 CsrfToken csrf = (CsrfToken) page.getRequest().getAttribute(CsrfToken.class.getName());
+                // register with csrf
                 mvc.perform(post("/register")
                                 .session((MockHttpSession) page.getRequest().getSession(false))
                                 .param(csrf.getParameterName(), csrf.getToken())
@@ -129,17 +139,20 @@ class SecurityFlowTests {
 
         @Test
         void passwordRecoveryRequiresCsrfAndRendersGenericConfirmation() throws Exception {
+                // reset password without csrf
                 when(passwordResetService.isConfigured()).thenReturn(true);
                 when(passwordResetEmailSender.isConfigured()).thenReturn(true);
                 when(passwordResetService.request("candidate@example.test")).thenReturn(
                                 Optional.of(new PasswordResetService.ResetLink("candidate@example.test",
                                                 "signed-token", "123456")));
                 mvc.perform(post("/forgot-password")).andExpect(status().isForbidden());
-
+                //get page and check get for forget
                 MvcResult page = mvc.perform(get("/forgot-password")).andExpect(status().isOk())
                                 .andExpect(content().string(containsString("Send Verification Link")))
                                 .andReturn();
+                 //get csrf
                 CsrfToken csrf = (CsrfToken) page.getRequest().getAttribute(CsrfToken.class.getName());
+                // test forgot-password post
                 mvc.perform(post("/forgot-password")
                                 .session((MockHttpSession) page.getRequest().getSession(false))
                                 .param(csrf.getParameterName(), csrf.getToken())
@@ -147,7 +160,7 @@ class SecurityFlowTests {
                                 .andExpect(status().is3xxRedirection())
                                 .andExpect(redirectedUrl("/forgot-password?sent"));
                 verify(passwordResetEmailSender).send("candidate@example.test", "signed-token", "123456");
-
+                // test forgot-password post with unknown email
                 mvc.perform(post("/forgot-password")
                                 .session((MockHttpSession) page.getRequest().getSession(false))
                                 .param(csrf.getParameterName(), csrf.getToken())
@@ -229,6 +242,7 @@ class SecurityFlowTests {
                 MvcResult page = mvc.perform(get("/admin/api-monitoring").session(adminSession))
                                 .andExpect(status().isOk()).andReturn();
                 CsrfToken csrf = (CsrfToken) page.getRequest().getAttribute(CsrfToken.class.getName());
+                //true 
                 when(monitoringService.probeInternal(any())).thenReturn(
                                 new ProbeOutcomeResponse(true, "HTTP 200", 12));
                 mvc.perform(post("/admin/api-monitoring/probe/internal").session(adminSession)
@@ -236,7 +250,15 @@ class SecurityFlowTests {
                                 .andExpect(status().is3xxRedirection())
                                 .andExpect(redirectedUrl("/admin/api-monitoring"));
                 verify(monitoringService).probeInternal(any());
-
+                //false
+                when(monitoringService.probeInternal(any())).thenReturn(
+                                new ProbeOutcomeResponse(false, "HTTP 503", 15));
+                mvc.perform(post("/admin/api-monitoring/probe/internal").session(adminSession)
+                                .param(csrf.getParameterName(), csrf.getToken()))
+                                .andExpect(status().is3xxRedirection())
+                                .andExpect(redirectedUrl("/admin/api-monitoring"));
+                verify(monitoringService).probeInternal(any());
+            
                 MockHttpSession hrSession = login(account("hr", "HR", "Active"));
                 mvc.perform(post("/admin/api-monitoring/probe/internal").session(hrSession)
                                 .param(csrf.getParameterName(), csrf.getToken()))
@@ -283,8 +305,8 @@ class SecurityFlowTests {
                                 .andExpect(content().string(containsString("Ứng viên A")))
                                 .andExpect(content().string(containsString("Candidate")))
                                 .andExpect(content().string(containsString("/admin/candidate-accounts/7/deactivate")))
-                                .andExpect(content().string(containsString("Linked · #17")))
-                                .andExpect(content().string(containsString("Profile missing")))
+                                .andExpect(content().string(containsString("Đã liên kết · #17")))
+                                .andExpect(content().string(containsString("Chưa có hồ sơ")))
                                 .andExpect(content()
                                                 .string(not(containsString("/admin/candidate-accounts/8/deactivate"))))
                                 .andExpect(content().string(not(containsString("name=\"departmentId\""))))
@@ -357,9 +379,9 @@ class SecurityFlowTests {
                 mvc.perform(get("/admin/accounts").session(adminSession))
                                 .andExpect(status().isOk())
                                 .andExpect(content()
-                                                .string(containsString("aria-label=\"Deactivate account active41\"")))
+                                                .string(containsString("aria-label=\"Vô hiệu hóa tài khoản active41\"")))
                                 .andExpect(content()
-                                                .string(containsString("aria-label=\"Deactivate account blocked43\"")))
+                                                .string(containsString("aria-label=\"Vô hiệu hóa tài khoản blocked43\"")))
                                 .andExpect(content().string(not(containsString("/admin/accounts/42/deactivate"))))
                                 .andExpect(content().string(containsString("/admin/accounts/42/edit")))
                                 .andExpect(content().string(not(containsString("Delete account"))))
@@ -456,7 +478,7 @@ class SecurityFlowTests {
                 for (int index = 0; index < roles.length; index++) {
                         MockHttpSession session = login(account("role" + index, roles[index], "Active"));
                         mvc.perform(get("/dashboard").session(session)).andExpect(status().isOk())
-                                        .andExpect(content().string("Candidate".equals(roles[index])
+                                        .andExpect(content().string(List.of("Candidate", "Interviewer").contains(roles[index])
                                                         ? not(containsString("href=\"/requisitions\""))
                                                         : containsString("href=\"/requisitions\"")));
                 }
@@ -629,7 +651,7 @@ class SecurityFlowTests {
                 org.mockito.Mockito.verify(accountManagementService, org.mockito.Mockito.never())
                                 .updateInternal(org.mockito.ArgumentMatchers.anyInt(), any());
         }
-
+       //registerHandlesAccountFieldAndDataIntegrityExceptions
         private void prepareUiOptions() {
                 when(accountListService.findRoles()).thenReturn(List.of(
                                 Role.builder().roleId(1).roleName("System Admin").build(),

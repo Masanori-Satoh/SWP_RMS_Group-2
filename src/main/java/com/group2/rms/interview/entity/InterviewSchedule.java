@@ -4,6 +4,8 @@ import com.group2.rms.candidate.entity.Application;
 import com.group2.rms.user.entity.User;
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 
 import java.time.LocalDateTime;
 import java.util.HashSet;
@@ -29,6 +31,7 @@ public class InterviewSchedule {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "InterviewId")
+    @JdbcTypeCode(SqlTypes.INTEGER)
     private Long interviewId;
 
     @ManyToOne(fetch = FetchType.LAZY)

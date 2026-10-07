@@ -1,6 +1,7 @@
 package com.group2.rms.interview.repository;
 
 import com.group2.rms.interview.entity.InterviewSchedule;
+import com.group2.rms.interview.dto.CandidateInterviewResponse;
 import com.group2.rms.interview.entity.InterviewStatus;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -16,6 +17,16 @@ import java.util.Optional;
 
 @Repository
 public interface InterviewScheduleRepository extends JpaRepository<InterviewSchedule, Long> {
+
+    /** Filter by the authenticated UserId, not CandidateId; select only public schedule fields. */
+    @Query("SELECT new com.group2.rms.interview.dto.CandidateInterviewResponse(" +
+           "s.interviewId, jp.postingTitle, s.startTime, s.endTime, " +
+           "s.interviewFormat, s.interviewStatus, s.locationOrLink) " +
+           "FROM InterviewSchedule s JOIN s.application a JOIN a.candidate c " +
+           "JOIN c.account u JOIN a.jobPosting jp " +
+           "WHERE u.userId = :userId ORDER BY s.startTime DESC, s.interviewId DESC")
+    List<CandidateInterviewResponse> findAllByCandidateUserId(
+            @Param("userId") Integer userId);
 
     // =========================================================================
     // DÀNH CHO HR: Xem tất cả lịch phỏng vấn (Giải pháp xử lý N+1 Query Problem)

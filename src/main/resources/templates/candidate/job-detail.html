@@ -126,10 +126,9 @@
 
                 <!-- Candidate / Guest Case -->
                 <th:block th:if="${currentUser == null or currentUser.roleName == 'Candidate'}">
-                  <button th:if="${!job.hasApplied}" type="button" class="button button-brand" style="width:100%;"
-                    onclick="alert('Tính năng ứng tuyển trực tuyến đang được xây dựng và sẽ ra mắt trong Iteration 2! Xin cảm ơn sự quan tâm của bạn.')">
+                  <a th:if="${!job.hasApplied}" th:href="@{'/jobs/' + ${job.id} + '/apply'}" class="button button-brand" style="width:100%; text-align:center; display:block;">
                     Ứng tuyển ngay
-                  </button>
+                  </a>
                   <button th:if="${job.hasApplied}" type="button" class="button" disabled
                     style="width:100%; opacity:0.6;">
                     Đã ứng tuyển

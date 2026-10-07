@@ -109,7 +109,7 @@ class CandidateDashboardWebTests {
         var response = "Candidate".equals(role) ? empty() : new DashboardResponse(role, "Menu fixture", "Role scope",
                 List.of(), List.of(), List.of(), List.of(), List.of());
         var result = mvc.perform(get("/dashboard").session(login(role, response))).andExpect(status().isOk())
-                .andExpect(content().string(containsString("href=\"/interviews\"")))
+                .andExpect(content().string(containsString("href=\"" + ("Candidate".equals(role) ? "/portal/interviews" : "/interviews") + "\"")))
                 .andExpect(content().string(containsString("href=\"/profile\"")))
                 .andExpect(content().string(containsString("id=\"workspace-logout-form\"")))
                 .andExpect(content().string(containsString("id=\"workspace-logout-dialog\"")))

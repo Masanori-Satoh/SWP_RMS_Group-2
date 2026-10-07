@@ -31,8 +31,8 @@ public class AccountManagementService {
     private final PasswordEncoder passwordEncoder;
 
     public AccountManagementService(UserRepository users, RoleRepository roles,
-                                    DepartmentRepository departments, CandidateRepository candidates,
-                                    PasswordEncoder passwordEncoder) {
+            DepartmentRepository departments, CandidateRepository candidates,
+            PasswordEncoder passwordEncoder) {
         this.users = users;
         this.roles = roles;
         this.departments = departments;
@@ -71,7 +71,8 @@ public class AccountManagementService {
 
     private static void requireInternalRole(Role role) {
         if (!RoleAuthorities.INTERNAL_ROLE_NAMES.contains(role.getRoleName())) {
-            throw new AccountFieldException("roleId", "Select an internal role. Candidate accounts have a separate lifecycle.");
+            throw new AccountFieldException("roleId",
+                    "Select an internal role. Candidate accounts have a separate lifecycle.");
         }
     }
 
@@ -108,7 +109,8 @@ public class AccountManagementService {
         User user = findUser(userId);
         Role role = findRole(command.roleId());
         if (isCandidate(user.getRole()) != isCandidate(role)) {
-            throw new AccountFieldException("roleId", "Account types cannot be changed. Create a new account for the other lifecycle.");
+            throw new AccountFieldException("roleId",
+                    "Account types cannot be changed. Create a new account for the other lifecycle.");
         }
         String fullName = required(command.fullName(), "fullName", "Enter a full name.");
         String email = required(command.email(), "email", "Enter an email address.");
@@ -151,7 +153,8 @@ public class AccountManagementService {
 
     private Department findDepartment(Integer departmentId, Role role, Integer currentDepartmentId) {
         if (isCandidate(role) && departmentId != null) {
-            throw new AccountFieldException("departmentId", "Candidate accounts do not belong to internal departments.");
+            throw new AccountFieldException("departmentId",
+                    "Candidate accounts do not belong to internal departments.");
         }
         if (departmentId == null) {
             if (!isCandidate(role)) {
@@ -212,14 +215,14 @@ public class AccountManagementService {
     }
 
     public record CreateCommand(String fullName, String username, String email, String phoneNumber,
-                                Integer roleId, Integer departmentId, String password) {
+            Integer roleId, Integer departmentId, String password) {
     }
 
     public record UpdateCommand(String fullName, String email, String phoneNumber,
-                                Integer roleId, Integer departmentId, String accountStatus) {
+            Integer roleId, Integer departmentId, String accountStatus) {
     }
 
     public record AccountForEdit(String username, String fullName, String email, String phoneNumber,
-                                 Integer roleId, Integer departmentId, String accountStatus) {
+            Integer roleId, Integer departmentId, String accountStatus) {
     }
 }
