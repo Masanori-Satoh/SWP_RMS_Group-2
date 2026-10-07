@@ -208,42 +208,11 @@
 /* -----------------------------------------------------------------------------
    6. THANH PHÂN TRANG (Pagination)
    ----------------------------------------------------------------------------- */
-/* .req-list-page .list-pagination-footer {
+.req-list-page .list-pagination-footer {
   display: flex;
   justify-content: flex-end;
   margin-top: var(--s6);
 }
-
-.req-list-page .pagination {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--s1);
-}
-
-.req-list-page .page-link {
-  min-width: 44px;
-  padding: var(--s2);
-  font-size: 14px;
-}
-
-/* Nút trang hiện tại đang chọn */
-/* .req-list-page .page-link.active {
-  color: var(--surface);
-  background: var(--brand-dark);
-  border-color: var(--brand-dark);
-}
-
-/* Nút trang bị vô hiệu hóa */
-/* .req-list-page .page-link.disabled {
-  cursor: default;
-  color: var(--muted);
-  background: var(--page);
-  border-color: var(--line);
-}
-
-.req-list-page a.page-link:not(.active):hover {
-  background: var(--brand-soft);
-}  */
 
 /* -----------------------------------------------------------------------------
    7. THÍCH ỨNG THIẾT BỊ (Responsive Queries)

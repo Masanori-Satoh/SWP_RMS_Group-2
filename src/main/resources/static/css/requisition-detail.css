@@ -1,6 +1,7 @@
 /* =============================================================================
    REQUISITION-DETAIL.CSS
    File CSS cho trang Chi tiết Yêu cầu Tuyển dụng (/requisitions/{id})
+   Phụ trách: Nguyễn Huy Hoàng (HoangNH) - Iteration 1 & 2
    Bao gồm: Thông tin tổng quan, Bảng tiêu chí, Quy trình phê duyệt (Workflow),
             Khối phản hồi duyệt/từ chối của Giám đốc, và Lịch sử kiểm toán (Audit).
    ============================================================================= */

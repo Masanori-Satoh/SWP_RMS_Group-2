@@ -1,5 +1,13 @@
 <!DOCTYPE html>
-<html lang="vi" xmlns:th="http://www.thymeleaf.org"><body>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<!--
+    FRAGMENTS/REQUISITION.HTML
+    =============================================================================
+    Các thành phần giao diện dùng chung cho phân hệ Yêu cầu Tuyển dụng (Job Requisition)
+    Phụ trách: Nguyễn Huy Hoàng (HoangNH) - Iteration 1 & 2
+    =============================================================================
+-->
+<body>
 <header th:fragment="topbar" class="topbar"><span class="topbar-title">Hệ thống Quản lý Tuyển dụng (RMS)</span><div class="topbar-actions"><span>Xin chào, <strong th:text="${viewerName}"></strong></span><form th:action="@{/logout}" method="post"><button type="submit" class="logout-button">Đăng xuất</button></form></div></header>
 <nav th:fragment="breadcrumb(current)" class="requisition-page-breadcrumb" aria-label="Điều hướng">
     <a th:href="@{/dashboard}">Bảng điều khiển</a><span aria-hidden="true">/</span>
