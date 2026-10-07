@@ -496,8 +496,7 @@ CREATE TABLE OfferProposal (
             N'Director_Rejected',
             N'Sent_Candidate',
             N'Accepted',
-            N'Declined',
-            N'Negotiating'
+            N'Declined'
         )),
 
     CONSTRAINT CK_OfferProposal_Salaries
@@ -532,22 +531,6 @@ CREATE TABLE OfferApproval (
 GO
 
 -- =============================================================================
--- 3.20 OFFER NEGOTIATION (Các vòng thương lượng offer giữa HR & ứng viên)
--- =============================================================================
-CREATE TABLE OfferNegotiation (
-    NegotiationId INT IDENTITY(1,1) PRIMARY KEY,
-    OfferId INT NOT NULL,
-    CandidateCounterSalary DECIMAL(18,2) NULL,
-    CandidateNotes NVARCHAR(MAX) NULL,
-    HRResponseNotes NVARCHAR(MAX) NULL,
-    NegotiationDate DATETIME2 NOT NULL CONSTRAINT DF_OfferNegotiation_Date DEFAULT SYSDATETIME(),
-
-    CONSTRAINT FK_OfferNegotiation_Offer
-        FOREIGN KEY (OfferId) REFERENCES OfferProposal(OfferId)
-);
-GO
-
--- =============================================================================
 -- INDEXES FOR PERFORMANCE OPTIMIZATION (Non-Clustered Indexes on Foreign Keys)
 -- =============================================================================
 CREATE NONCLUSTERED INDEX IX_User_RoleId ON [User](RoleId);
@@ -576,5 +559,4 @@ CREATE NONCLUSTERED INDEX IX_InterviewFinalResult_HiringManagerId ON InterviewFi
 CREATE NONCLUSTERED INDEX IX_OfferProposal_ProposedBy ON OfferProposal(ProposedBy);
 CREATE NONCLUSTERED INDEX IX_OfferApproval_OfferId ON OfferApproval(OfferId);
 CREATE NONCLUSTERED INDEX IX_OfferApproval_DirectorId ON OfferApproval(DirectorId);
-CREATE NONCLUSTERED INDEX IX_OfferNegotiation_OfferId ON OfferNegotiation(OfferId);
 GO

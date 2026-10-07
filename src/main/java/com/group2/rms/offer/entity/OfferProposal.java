@@ -13,7 +13,7 @@ import java.time.LocalDate;
  * 3.19 OfferProposal - Đề xuất offer lương do Hiring Manager / HR tạo.
  * Quan hệ 1-1 với Application (UNIQUE constraint trên ApplicationId).
  * OfferStatus: Draft, Pending_Director, Director_Approved, Director_Rejected, Sent_Candidate,
- * Accepted, Declined, Negotiating
+ * Accepted, Declined
  */
 @Entity
 @Table(name = "OfferProposal")
@@ -59,7 +59,7 @@ public class OfferProposal extends BaseEntity {
     private User proposedBy;
 
     /**
-     * Draft, Pending_Director, Director_Approved, Director_Rejected, Sent_Candidate, Accepted, Declined, Negotiating
+     * Draft, Pending_Director, Director_Approved, Director_Rejected, Sent_Candidate, Accepted, Declined
      */
     @Column(name = "OfferStatus", nullable = false, length = 40)
     private String offerStatus;

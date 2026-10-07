@@ -54,10 +54,17 @@ public class OfferController {
      */
     @GetMapping
     public ResponseEntity<ApiResponse<Page<OfferResponse>>> getAllOffers(
+            @RequestParam(required = false) String search,
             @RequestParam(required = false) String status,
+            @RequestParam(required = false) String timeSort,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "50") int size) {
-        Page<OfferResponse> offers = offerService.getAllOffersForHr(status, PageRequest.of(Math.max(0, page), Math.max(1, size)));
+        Page<OfferResponse> offers;
+        if (search == null && timeSort == null) {
+            offers = offerService.getAllOffersForHr(status, PageRequest.of(Math.max(0, page), Math.max(1, size)));
+        } else {
+            offers = offerService.getAllOffersForHr(search, status, timeSort, PageRequest.of(Math.max(0, page), Math.max(1, size)));
+        }
         return ResponseEntity.ok(new ApiResponse<>(true, "Lấy danh sách Offer thành công.", offers));
     }
 

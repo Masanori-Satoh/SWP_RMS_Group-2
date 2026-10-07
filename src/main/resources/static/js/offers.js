@@ -3,62 +3,45 @@
  * Tuân thủ quy chuẩn ARCHITECTURE_GUIDE.md (tách rời script khỏi templates HTML).
  */
 
-document.addEventListener('DOMContentLoaded', () => {
-    calculateStatsFromTable();
-});
+// Áp dụng bộ lọc 3 tiêu chí trên toàn bộ dữ liệu hệ thống (Server-side Filtering & Sorting)
+function applyOfferFilters() {
+    const search = (document.getElementById('searchInput')?.value || '').trim();
+    const status = document.getElementById('statusFilter')?.value || 'ALL';
+    const timeSort = document.getElementById('timeSortFilter')?.value || 'DEFAULT';
 
-// Tính toán số lượng thống kê nhanh trên Stat Cards
-function calculateStatsFromTable() {
-    const rows = document.querySelectorAll('#offersTableBody tr[data-status]');
-    let pending = 0, approved = 0, sent = 0, accepted = 0;
+    const url = new URL(window.location.origin + window.location.pathname);
+    if (search) {
+        url.searchParams.set('search', search);
+    } else {
+        url.searchParams.delete('search');
+    }
 
-    rows.forEach(r => {
-        const st = r.getAttribute('data-status');
-        if (st === 'Pending_Director') pending++;
-        else if (st === 'Director_Approved' || st === 'Approved') approved++;
-        else if (st === 'Sent_Candidate') sent++;
-        else if (st === 'Accepted') accepted++;
-    });
+    if (status && status !== 'ALL') {
+        url.searchParams.set('status', status);
+    } else {
+        url.searchParams.delete('status');
+    }
 
-    const elPending = document.getElementById('statPending');
-    const elApproved = document.getElementById('statApproved');
-    const elSent = document.getElementById('statSent');
-    const elAccepted = document.getElementById('statAccepted');
+    if (timeSort && timeSort !== 'DEFAULT') {
+        url.searchParams.set('timeSort', timeSort);
+    } else {
+        url.searchParams.delete('timeSort');
+    }
 
-    if (elPending) elPending.textContent = pending;
-    if (elApproved) elApproved.textContent = approved;
-    if (elSent) elSent.textContent = sent;
-    if (elAccepted) elAccepted.textContent = accepted;
+    url.searchParams.set('page', '0'); // Reset về trang đầu khi đổi điều kiện lọc
+    window.location.href = url.toString();
 }
 
-// Bộ lọc và tìm kiếm client-side nhanh
 function handleFilterSearch() {
-    const search = (document.getElementById('searchInput')?.value || '').toLowerCase().trim();
-    const status = document.getElementById('statusFilter')?.value || 'ALL';
-    const rows = document.querySelectorAll('#offersTableBody tr[data-status]');
-    let count = 0;
+    applyOfferFilters();
+}
 
-    rows.forEach(r => {
-        const rStatus = r.getAttribute('data-status');
-        const rCand = (r.getAttribute('data-cand') || '').toLowerCase();
-        const rPos = (r.getAttribute('data-pos') || '').toLowerCase();
-
-        const matchSearch = !search || rCand.includes(search) || rPos.includes(search);
-        const matchStatus = (status === 'ALL') ||
-            (status === 'Director_Approved' && (rStatus === 'Director_Approved' || rStatus === 'Approved')) ||
-            (status === 'Director_Rejected' && (rStatus === 'Director_Rejected' || rStatus === 'Rejected')) ||
-            (rStatus === status);
-
-        if (matchSearch && matchStatus) {
-            r.style.display = '';
-            count++;
-        } else {
-            r.style.display = 'none';
-        }
-    });
-
-    const countEl = document.getElementById('displayedCount');
-    if (countEl) countEl.textContent = count;
+function clearSearchInput() {
+    const searchInput = document.getElementById('searchInput');
+    if (searchInput) {
+        searchInput.value = '';
+    }
+    applyOfferFilters();
 }
 
 // Modal Helpers
@@ -191,19 +174,6 @@ function handleSelectPassedCandidate(appId) {
     const workLocationInput = document.getElementById('createWorkLocation');
     if (workLocationInput) {
         workLocationInput.value = workLoc;
-    }
-
-    // Hiển thị thông báo ghi đè nếu ứng viên đã có Offer thuộc Nhóm A (GBR-07)
-    const existingStatus = opt.getAttribute('data-existing-status');
-    const overrideNotice = document.getElementById('createOverrideNotice');
-    if (overrideNotice) {
-        if (existingStatus) {
-            document.getElementById('createOverrideNoticeText').textContent =
-                `Ứng viên này hiện có gói Offer ở trạng thái [${existingStatus}]. Khi lưu bản mới, hệ thống sẽ tự động ghi đè.`;
-            overrideNotice.style.display = 'flex';
-        } else {
-            overrideNotice.style.display = 'none';
-        }
     }
 }
 
@@ -398,20 +368,6 @@ function renderDetailModalHtml(d) {
         `).join('') + '</div>';
     }
 
-    let negotiationLogsHtml = '<p style="color:var(--muted); font-size:13px;">Chưa có vòng đàm phán lương nào từ ứng viên.</p>';
-    if (d.negotiationHistory && d.negotiationHistory.length > 0) {
-        negotiationLogsHtml = '<div class="history-timeline">' + d.negotiationHistory.map(n => `
-            <div class="timeline-item">
-                <div class="timeline-dot"></div>
-                <div class="timeline-header">Ứng viên đề xuất mức lương: ${formatVND(n.candidateCounterSalary)}</div>
-                <div class="timeline-time">${n.negotiationDate ? n.negotiationDate.replace('T', ' ') : ''}</div>
-                <div class="timeline-content">
-                    <strong>Ghi chú của ứng viên:</strong> ${n.candidateNotes || '-'}<br>
-                    ${n.hrResponseNotes ? `<strong>Phản hồi của HR:</strong> ${n.hrResponseNotes}` : ''}
-                </div>
-            </div>
-        `).join('') + '</div>';
-    }
 
     body.innerHTML = `
         <!-- Group A -->
@@ -461,16 +417,10 @@ function renderDetailModalHtml(d) {
             </div>
         </div>
 
-        <!-- Audit Logs & Negotiation -->
-        <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px;">
-            <div class="detail-section">
-                <div class="section-title"><i class="fa-solid fa-stamp"></i> Lịch Sử Phê Duyệt Của Director</div>
-                ${approvalLogsHtml}
-            </div>
-            <div class="detail-section">
-                <div class="section-title"><i class="fa-solid fa-comments"></i> Lịch Sử Đàm Phán Lương</div>
-                ${negotiationLogsHtml}
-            </div>
+        <!-- Audit Logs: Lịch Sử Phê Duyệt Của Director -->
+        <div class="detail-section">
+            <div class="section-title"><i class="fa-solid fa-stamp"></i> Lịch Sử Phê Duyệt Của Director</div>
+            ${approvalLogsHtml}
         </div>
     `;
 
@@ -492,18 +442,6 @@ function renderDetailModalHtml(d) {
                 <i class="fa-solid fa-paper-plane" style="margin-right:6px;"></i> Phát Hành Offer Letter Tới Ứng Viên
             </button>
         `;
-    } else if (d.offerStatus === 'Director_Rejected' || d.offerStatus === 'Rejected') {
-        actionButtonsHtml += `
-            <button type="button" class="btn btn-primary" onclick="closeModal('detailOfferModal'); openEditOfferModal(${d.offerId});">
-                <i class="fa-solid fa-pen-to-square" style="margin-right:6px;"></i> Chỉnh Sửa & Trình Lại
-            </button>
-        `;
-    } else if (d.offerStatus === 'Negotiating' || d.offerStatus === 'Declined') {
-        actionButtonsHtml += `
-            <button type="button" class="btn btn-primary" onclick="closeModal('detailOfferModal'); openEditOfferModal(${d.offerId});">
-                <i class="fa-solid fa-pen-to-square" style="margin-right:6px;"></i> Điều Chỉnh & Trình Duyệt Lại (GBR-07)
-            </button>
-        `;
     }
 
     footer.innerHTML = actionButtonsHtml;
@@ -518,6 +456,11 @@ function openEditOfferModal(offerId) {
         .then(res => {
             if (!res.success) { showToast(res.message, 'danger'); return; }
             const d = res.data;
+
+            if (d.offerStatus !== 'Draft') {
+                showToast('Chỉ duy nhất đề xuất ở trạng thái Bản thảo (Draft) mới được phép chỉnh sửa.', 'warning');
+                return;
+            }
 
             document.getElementById('editOfferId').value = d.offerId;
             document.getElementById('editModalTitle').textContent = `Chỉnh Sửa Offer Proposal ${d.offerId}`;
@@ -535,14 +478,11 @@ function openEditOfferModal(offerId) {
                 editStartDateInput.min = getTomorrowDateString();
             }
 
-            // Nếu bị Director_Rejected hoặc Negotiating hoặc Declined -> hiển thị lý do / hướng dẫn
+            // Nếu bị Director_Rejected hoặc Declined -> hiển thị lý do / hướng dẫn
             const rejectBanner = document.getElementById('editRejectBanner');
             if (d.offerStatus === 'Director_Rejected' || d.offerStatus === 'Rejected') {
                 const latestReject = (d.approvalHistory && d.approvalHistory.length > 0) ? d.approvalHistory[0].directorComments : 'Vui lòng điều chỉnh lại mức lương/định biên theo yêu cầu.';
                 document.getElementById('editRejectComment').textContent = 'Director từ chối: ' + latestReject;
-                rejectBanner.style.display = 'flex';
-            } else if (d.offerStatus === 'Negotiating') {
-                document.getElementById('editRejectComment').textContent = 'Ứng viên phản hồi đàm phán lại các điều khoản. HR điều chỉnh gói Offer và trình duyệt lại Director.';
                 rejectBanner.style.display = 'flex';
             } else if (d.offerStatus === 'Declined') {
                 document.getElementById('editRejectComment').textContent = 'Ứng viên đã từ chối thư mời trước đó. HR phát hành lại gói Offer mới theo quy tắc GBR-07.';
