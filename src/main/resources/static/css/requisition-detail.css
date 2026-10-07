@@ -1,54 +1,76 @@
+/* Requisition detail: Mộc tokens, a content column and an activity-only sidebar. */
 .requisition-detail-page .requisition-heading-copy { min-width:0; }
+.requisition-detail-page .requisition-detail-heading { align-items:flex-start; flex-wrap:wrap; gap:var(--s4) var(--s6); }
 .requisition-detail-page .requisition-title-row { display:flex; align-items:center; flex-wrap:wrap; gap:var(--s3); }
-.requisition-detail-page .requisition-heading-actions { display:flex; gap:var(--s2); flex-wrap:wrap; flex-shrink:0; }
-.requisition-detail-page .detail-layout { display:grid; grid-template-columns:minmax(0,1fr) minmax(280px,340px); gap:var(--s6); align-items:start; }
-.requisition-detail-page .detail-main,.requisition-detail-page .detail-sidebar { display:grid; gap:var(--s6); min-width:0; }
-.requisition-detail-page .info-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:var(--s6); }
+.requisition-detail-page h1 { font-size:clamp(26px,2.4vw,34px); line-height:1.25; }
+.requisition-detail-page .requisition-heading-actions { display:flex; gap:var(--s2); flex-wrap:wrap; }
+.requisition-detail-page .requisition-heading-actions .btn-outline { border-radius:8px; }
+.requisition-detail-page .detail-layout { display:grid; grid-template-columns:minmax(0,1fr) minmax(260px,300px); gap:var(--s6); align-items:start; }
+.requisition-detail-page .detail-main { display:grid; gap:var(--s6); min-width:0; }
+.requisition-detail-page .detail-sidebar { min-width:0; align-self:start; }
+.requisition-detail-page .detail-layout .card { border-radius:12px; box-shadow:0 2px 5px rgb(37 41 35 / 3%),0 8px 24px rgb(37 41 35 / 3%); }
+.requisition-detail-page .card-header { gap:var(--s3); margin-bottom:var(--s4); }
+.requisition-detail-page .card-header h2 { font:600 19px/1.4 var(--serif); min-width:0; }
+.requisition-detail-page .section-icon { display:inline-flex; align-items:center; justify-content:center; flex:0 0 34px; height:34px; border-radius:9px; background:var(--brand-soft); color:var(--brand-dark); }
+.requisition-detail-page .section-icon svg { width:19px; height:19px; }
+.requisition-detail-page .info-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:20px var(--s6); }
 .requisition-detail-page .info-item { display:grid; align-content:start; gap:var(--s1); min-width:0; }
 .requisition-detail-page .info-label { color:var(--muted); font-size:14px; }
-.requisition-detail-page .info-value { font-weight:600; overflow-wrap:anywhere; }
-.requisition-detail-page .text-content { white-space:pre-wrap; overflow-wrap:anywhere; line-height:1.7; }
-.requisition-detail-page .criteria-table { min-width:640px; }
-.requisition-detail-page .weight-cell { display:flex; align-items:center; gap:var(--s2); }
-.requisition-detail-page .weight-meter { width:56px; height:6px; appearance:none; border:0; background:var(--line); border-radius:4px; accent-color:var(--brand); }
+.requisition-detail-page .info-value { font-weight:600; overflow-wrap:anywhere; line-height:1.55; }
+.requisition-detail-page .text-content { white-space:pre-wrap; overflow-wrap:anywhere; line-height:1.75; }
+.requisition-detail-page .criteria-scroll { border:1px solid var(--line); border-radius:8px; }
+.requisition-detail-page .criteria-table { min-width:620px; }
+.requisition-detail-page .criteria-table th { background:var(--brand-soft); color:var(--brand-dark); font-size:13px; }
+.requisition-detail-page .criteria-table td { line-height:1.55; }
+.requisition-detail-page .criteria-table td:nth-child(2) { min-width:180px; }
+.requisition-detail-page .criteria-table tbody tr:hover { background:var(--page); }
+.requisition-detail-page .weight-cell { display:flex; align-items:center; gap:var(--s2); white-space:nowrap; }
+.requisition-detail-page .weight-meter { width:44px; height:6px; appearance:none; border:0; background:var(--line); border-radius:4px; accent-color:var(--brand); }
 .requisition-detail-page .weight-meter::-webkit-progress-bar { background:var(--line); border-radius:4px; }
 .requisition-detail-page .weight-meter::-webkit-progress-value { background:var(--brand); border-radius:4px; }
 .requisition-detail-page .weight-meter::-moz-progress-bar { background:var(--brand); border-radius:4px; }
 .requisition-detail-page .badge-yes { color:var(--brand-dark); background:var(--brand-soft); }
-.requisition-detail-page .badge-no { background:var(--page); }
-.requisition-detail-page .workflow-status { margin-bottom:var(--s2); color:var(--brand-dark); }
-.requisition-detail-page .timeline,.requisition-detail-page .activity-log { list-style:none; margin:var(--s6) 0 0; padding:0; }
-.requisition-detail-page .timeline-item,.requisition-detail-page .activity-item { position:relative; padding:0 0 var(--s6) var(--s6); margin-left:var(--s1); border-left:1px solid var(--line); overflow-wrap:anywhere; }
-.requisition-detail-page .timeline-item:last-child,.requisition-detail-page .activity-item:last-child { padding-bottom:0; border-left-color:transparent; }
-.requisition-detail-page .timeline-icon,.requisition-detail-page .activity-dot { position:absolute; top:7px; left:-5px; width:9px; height:9px; border-radius:50%; background:var(--control-line); }
-.requisition-detail-page .approved .timeline-icon { background:var(--brand-dark); }
-.requisition-detail-page .timeline-title,.requisition-detail-page .activity-title { font-weight:600; }
-.requisition-detail-page .timeline-meta,.requisition-detail-page .activity-meta { font-size:14px; color:var(--muted); }
-.requisition-detail-page .activity-title > span + span { display:block; font-weight:400; color:var(--muted); }
-.requisition-detail-page .feedback-box { padding:var(--s3); margin-top:var(--s4); border-left:2px solid var(--control-line); background:var(--page); overflow-wrap:anywhere; }
-.requisition-detail-page .feedback-box > div { white-space:pre-wrap; }
-.requisition-detail-page .feedback-badge { display:block; font-weight:600; font-size:14px; color:var(--brand-dark); margin-bottom:var(--s1); }
-.requisition-detail-page .decision-section { margin-top:var(--s6); border-top:1px solid var(--line); padding-top:var(--s6); }
+.requisition-detail-page .badge-no { background:var(--page); color:var(--muted); }
+.requisition-detail-page .activity-card { padding:20px; }
+.requisition-detail-page .activity-card .card-header { flex-wrap:wrap; gap:var(--s2); }
+.requisition-detail-page .activity-card .card-header h2 { flex:1; white-space:nowrap; }
+.requisition-detail-page .activity-count { font-size:12px; color:var(--muted); white-space:nowrap; }
+.requisition-detail-page .activity-log { list-style:none; margin:var(--s6) 0 0; padding:0; }
+.requisition-detail-page .activity-item { position:relative; padding:0 0 var(--s6) 20px; margin-left:var(--s1); border-left:1px solid var(--line); overflow-wrap:anywhere; }
+.requisition-detail-page .activity-item:last-child { padding-bottom:0; border-left-color:transparent; }
+.requisition-detail-page .activity-dot { position:absolute; top:7px; left:-5px; width:9px; height:9px; border-radius:50%; background:var(--brand); box-shadow:0 0 0 4px var(--brand-soft); }
+.requisition-detail-page .activity-title { font-size:14px; font-weight:600; }
+.requisition-detail-page .activity-title > span + span { display:-webkit-box; -webkit-line-clamp:3; -webkit-box-orient:vertical; overflow:hidden; margin-top:var(--s1); color:var(--muted); font-weight:400; line-height:1.6; }
+.requisition-detail-page .activity-meta { margin-top:var(--s1); font-size:13px; color:var(--muted); line-height:1.6; }
+.requisition-detail-page .activity-details { margin-top:var(--s6); border-top:1px solid var(--line); padding-top:var(--s2); }
+.requisition-detail-page .activity-link { display:flex; align-items:center; gap:var(--s2); min-height:44px; color:var(--brand-dark); font-size:14px; font-weight:600; list-style:none; border-radius:4px; cursor:pointer; }
+.requisition-detail-page .activity-link::-webkit-details-marker { display:none; }
+.requisition-detail-page .activity-link::before { content:'+'; font-size:20px; font-weight:400; }
+.requisition-detail-page .activity-details[open] .activity-link::before { content:'−'; }
+.requisition-detail-page .activity-link:hover { text-decoration:underline; text-underline-offset:4px; }
+.requisition-detail-page .activity-details article { border-top:1px solid var(--line); padding-block:var(--s4); overflow-wrap:anywhere; }
+.requisition-detail-page pre { margin:var(--s2) 0 0; white-space:pre-wrap; overflow-wrap:anywhere; font:inherit; font-size:14px; line-height:1.6; }
+.requisition-detail-page .feedback-box { padding:var(--s4); margin-top:var(--s4); border-left:3px solid var(--brand); border-radius:0 8px 8px 0; background:var(--page); overflow-wrap:anywhere; }
+.requisition-detail-page .feedback-box > div { margin-top:var(--s2); white-space:pre-wrap; }
+.requisition-detail-page .feedback-badge { display:block; color:var(--brand-dark); font-size:14px; font-weight:600; }
+.requisition-detail-page .decision-section { margin-top:var(--s6); }
 .requisition-detail-page .decision-section h3 { margin-bottom:var(--s4); }
 .requisition-detail-page .decision-field { margin-bottom:var(--s4); }
 .requisition-detail-page .decision-field label { display:block; margin-bottom:var(--s2); font-size:14px; font-weight:600; }
-.requisition-detail-page .decision-field label span { font-weight:400; color:var(--muted); }
-.requisition-detail-page .decision-actions { display:flex; gap:var(--s2); }
-.requisition-detail-page .decision-actions button { flex:1; }
-.requisition-detail-page .activity-details { margin-top:var(--s4); }
-.requisition-detail-page .activity-link { display:flex; align-items:center; min-height:44px; color:var(--brand-dark); text-decoration:underline; }
-.requisition-detail-page .activity-link::before { content:'+'; margin-right:var(--s2); }
-.requisition-detail-page .activity-details[open] .activity-link::before { content:'−'; }
-.requisition-detail-page .activity-details article { border-top:1px solid var(--line); padding-block:var(--s3); }
-.requisition-detail-page pre { white-space:pre-wrap; overflow-wrap:anywhere; font:inherit; font-size:14px; }
-.requisition-detail-page .detail-actions { display:grid; gap:var(--s3); }
+.requisition-detail-page .decision-field label span { color:var(--muted); font-weight:400; }
+.requisition-detail-page .decision-actions,.requisition-detail-page .detail-actions { display:flex; justify-content:flex-start; flex-wrap:wrap; gap:var(--s3); }
+.requisition-detail-page .decision-actions { justify-content:flex-end; }
 .requisition-detail-page .withdraw-form { margin:0; }
-.requisition-detail-page .withdraw-form button { width:100%; }
-.requisition-detail-page .detail-actions p { color:var(--muted); font-size:14px; }
-@media (max-width:1200px) {
+.requisition-detail-page .detail-actions p { flex-basis:100%; color:var(--muted); font-size:14px; }
+.requisition-detail-page .prototype-note { display:flex; align-items:center; flex-wrap:wrap; justify-content:space-between; gap:var(--s3); margin-bottom:var(--s6); padding-bottom:var(--s4); border-bottom:1px solid var(--line); color:var(--muted); font-size:14px; }
+@media (max-width:900px) {
   .requisition-detail-page .detail-layout { grid-template-columns:minmax(0,1fr); }
-  .requisition-detail-page .requisition-detail-heading { align-items:flex-start; flex-direction:column; }
+  .requisition-detail-page .activity-card .card-header h2 { flex:0 1 auto; }
 }
 @media (max-width:600px) {
   .requisition-detail-page .info-grid { grid-template-columns:minmax(0,1fr); gap:var(--s4); }
+  .requisition-detail-page .detail-main,.requisition-detail-page .detail-layout { gap:var(--s4); }
+  .requisition-detail-page .requisition-heading-actions { width:100%; }
+  .requisition-detail-page .requisition-heading-actions > * { flex:1 1 auto; }
+  .requisition-detail-page .decision-actions > * { flex:1; }
 }

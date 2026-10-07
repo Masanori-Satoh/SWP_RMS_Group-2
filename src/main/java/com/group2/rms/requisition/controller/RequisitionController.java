@@ -74,16 +74,20 @@ public class RequisitionController {
 
     @GetMapping("/create")
     public String createForm(Model model) {
-        var actor = access.actor();
-        access.requireCreate(actor);
-        var d = new RequisitionRequest();
-        d.setNumberOfPositions(1);
-        d.setGender("Any");
-        if (actor.getDepartment() != null)
-            d.setDepartmentId(actor.getDepartment().getDepartmentId());
-        d.getScreeningCriteria()
+        var currentUser = access.actor();
+        // Rule: Chỉ người dùng có quyền (Hiring Manager / Admin) mới được tạo yêu cầu
+        access.requireCreate(currentUser);
+
+        RequisitionRequest requisitionRequest = new RequisitionRequest();
+        requisitionRequest.setNumberOfPositions(1);
+        requisitionRequest.setGender("Any");
+        if (currentUser.getDepartment() != null) {
+            requisitionRequest.setDepartmentId(currentUser.getDepartment().getDepartmentId());
+        }
+        requisitionRequest.getScreeningCriteria()
                 .add(ScreeningCriteriaRequest.builder().weight(new BigDecimal("100")).isMandatory(false).build());
-        model.addAttribute("requisitionDto", d);
+
+        model.addAttribute("requisitionDto", requisitionRequest);
         return form(model, false, null);
     }
 
@@ -91,7 +95,7 @@ public class RequisitionController {
     public String copy(@PathVariable Integer id, Model model) {
         model.addAttribute("requisitionDto", service.copy(id));
         model.addAttribute("copyNotice",
-                "Copied into a new form. Nothing is saved until you choose Save Draft or Submit to Director.");
+                "Đã sao chép vào biểu mẫu mới. Biểu mẫu chưa được lưu cho đến khi bạn chọn Lưu bản nháp hoặc Gửi Giám đốc duyệt.");
         return form(model, false, null);
     }
 
@@ -102,37 +106,43 @@ public class RequisitionController {
     }
 
     @PostMapping("/create")
-    public String create(@ModelAttribute("requisitionDto") RequisitionRequest d, BindingResult errors, Model model,
+    public String create(@ModelAttribute("requisitionDto") RequisitionRequest requisitionRequest, BindingResult errors, Model model,
             RedirectAttributes flash) {
+        // Rule: Xác thực quyền tạo trước khi xử lý nghiệp vụ
         access.requireCreate(access.actor());
-        if (!errors.hasErrors())
+        if (!errors.hasErrors()) {
             try {
-                Integer id = service.createRequisition(d);
+                Integer requisitionId = service.createRequisition(requisitionRequest);
+                // Rule: Phân biệt thông báo khi lưu bản nháp hoặc nộp phê duyệt
+                boolean isSubmitted = "submit".equals(requisitionRequest.getAction());
                 flash.addFlashAttribute("successMessage",
-                        "submit".equals(d.getAction()) ? "Request submitted to Director." : "Draft saved.");
-                return "redirect:/requisitions/" + id;
+                        isSubmitted ? "Yêu cầu đã được gửi lên Giám đốc phê duyệt." : "Đã lưu bản nháp thành công.");
+                return "redirect:/requisitions/" + requisitionId;
             } catch (RequisitionValidationException e) {
                 addErrors(errors, e);
             } catch (DataIntegrityViolationException e) {
-                errors.reject("storage", "The data could not be saved. Check duplicate criteria and field values.");
+                errors.reject("storage", "Không thể lưu dữ liệu. Vui lòng kiểm tra lại tính trùng lặp tiêu chí và giá trị các trường.");
             }
+        }
         return form(model, false, null);
     }
 
     @PostMapping("/edit/{id}")
-    public String update(@PathVariable Integer id, @ModelAttribute("requisitionDto") RequisitionRequest d,
+    public String update(@PathVariable Integer id, @ModelAttribute("requisitionDto") RequisitionRequest requisitionRequest,
             BindingResult errors, Model model, RedirectAttributes flash) {
-        if (!errors.hasErrors())
+        if (!errors.hasErrors()) {
             try {
-                service.updateRequisition(id, d);
+                service.updateRequisition(id, requisitionRequest);
+                boolean isSubmitted = "submit".equals(requisitionRequest.getAction());
                 flash.addFlashAttribute("successMessage",
-                        "submit".equals(d.getAction()) ? "Request submitted to Director." : "Draft saved.");
+                        isSubmitted ? "Yêu cầu đã được gửi lên Giám đốc phê duyệt." : "Đã lưu bản nháp thành công.");
                 return "redirect:/requisitions/" + id;
             } catch (RequisitionValidationException e) {
                 addErrors(errors, e);
             } catch (DataIntegrityViolationException e) {
-                errors.reject("storage", "The data could not be saved. Check duplicate criteria and field values.");
+                errors.reject("storage", "Không thể lưu dữ liệu. Vui lòng kiểm tra lại tính trùng lặp tiêu chí và giá trị các trường.");
             }
+        }
         return form(model, true, id);
     }
 
@@ -140,12 +150,12 @@ public class RequisitionController {
     public String delete(@PathVariable Integer id, RedirectAttributes flash) {
         try {
             service.deleteRequisition(id);
-            flash.addFlashAttribute("successMessage", "Requisition deleted.");
+            flash.addFlashAttribute("successMessage", "Đã xóa yêu cầu tuyển dụng thành công.");
             return "redirect:/requisitions";
         } catch (RequisitionValidationException e) {
             flash.addFlashAttribute("failureMessage", e.getMessage());
         } catch (DataIntegrityViolationException e) {
-            flash.addFlashAttribute("failureMessage", "This request is linked to other records and cannot be deleted.");
+            flash.addFlashAttribute("failureMessage", "Yêu cầu này đã được liên kết với dữ liệu khác và không thể xóa.");
         }
         return "redirect:/requisitions/" + id;
     }
@@ -154,11 +164,11 @@ public class RequisitionController {
     public String decide(@PathVariable Integer id, @RequestParam String decision,
             @RequestParam(defaultValue = "") String comment, RedirectAttributes flash) {
         if (!"approve".equals(decision) && !"reject".equals(decision))
-            flash.addFlashAttribute("failureMessage", "Choose an approval decision.");
+            flash.addFlashAttribute("failureMessage", "Vui lòng chọn quyết định phê duyệt.");
         else
             try {
                 service.decide(id, "approve".equals(decision), comment);
-                flash.addFlashAttribute("successMessage", "Decision saved.");
+                flash.addFlashAttribute("successMessage", "Đã lưu quyết định thành công.");
             } catch (RequisitionValidationException e) {
                 flash.addFlashAttribute("failureMessage", e.getMessage());
                 flash.addFlashAttribute("decisionComment", comment);
@@ -170,7 +180,7 @@ public class RequisitionController {
     public String withdraw(@PathVariable Integer id, RedirectAttributes flash) {
         try {
             service.withdraw(id);
-            flash.addFlashAttribute("successMessage", "Request withdrawn. You can edit the draft.");
+            flash.addFlashAttribute("successMessage", "Đã rút lại yêu cầu thành công. Bạn có thể chỉnh sửa lại bản nháp.");
         } catch (RequisitionValidationException e) {
             flash.addFlashAttribute("failureMessage", e.getMessage());
         }

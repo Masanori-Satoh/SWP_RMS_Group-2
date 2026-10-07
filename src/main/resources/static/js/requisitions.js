@@ -50,13 +50,13 @@ document.addEventListener('DOMContentLoaded', () => {
             row.querySelector('.row-index').textContent = index + 1;
             row.querySelectorAll('[name]').forEach(input => {
                 input.name = input.name.replace(/screeningCriteria\[(?:\d+|__INDEX__)\]/, 'screeningCriteria[' + index + ']');
-                if (input.type !== 'hidden') input.setAttribute('aria-label', ({criteriaName:'Criterion name',criteriaType:'Criterion type',requiredValue:'Required value',weight:'Weight percent',isMandatory:'Mandatory'})[input.name.split('.').pop()] || 'Criterion');
+                if (input.type !== 'hidden') input.setAttribute('aria-label', ({criteriaName:'Tên tiêu chí',criteriaType:'Loại tiêu chí',requiredValue:'Giá trị yêu cầu',weight:'Trọng số phần trăm',isMandatory:'Bắt buộc'})[input.name.split('.').pop()] || 'Tiêu chí');
             });
             const checkbox = row.querySelector('input[type="checkbox"]');
-            row.querySelector('.switch-text').textContent = checkbox.checked ? 'Yes' : 'No';
+            row.querySelector('.switch-text').textContent = checkbox.checked ? 'Có' : 'Không';
         });
         document.getElementById('btn-add-criteria').addEventListener('click', () => {
-            if (rows.children.length >= 50) { error.hidden = false; error.textContent = 'Use at most 50 criteria.'; return; }
+            if (rows.children.length >= 50) { error.hidden = false; error.textContent = 'Chỉ được thêm tối đa 50 tiêu chí.'; return; }
             const row = document.getElementById('criteria-template').content.firstElementChild.cloneNode(true);
             rows.appendChild(row); syncRows(); row.querySelector('input:not([type="hidden"])').focus();
         });
@@ -71,9 +71,9 @@ document.addEventListener('DOMContentLoaded', () => {
             const names = [...rows.querySelectorAll('[name$=".criteriaName"]')].map(input => input.value.trim().toLowerCase());
             const total = [...rows.querySelectorAll('[name$=".weight"]')].reduce((sum,input) => sum + Math.round((Number(input.value) || 0) * 100),0);
             let message = '';
-            if (!names.length || names.some(name => !name)) message = 'Add at least one complete screening criterion.';
-            else if (new Set(names).size !== names.length) message = 'Criterion names must be unique.';
-            else if (total !== 10000) message = 'Total screening weight must equal 100%.';
+            if (!names.length || names.some(name => !name)) message = 'Vui lòng thêm ít nhất một tiêu chí sàng lọc đầy đủ.';
+            else if (new Set(names).size !== names.length) message = 'Tên các tiêu chí không được trùng nhau.';
+            else if (total !== 10000) message = 'Tổng trọng số các tiêu chí phải đúng bằng 100%.';
             if (message) { event.preventDefault(); error.textContent = message; error.hidden = false; error.scrollIntoView({block:'center'}); }
         });
         document.getElementById('validation-summary')?.focus();
@@ -84,7 +84,7 @@ document.addEventListener('DOMContentLoaded', () => {
     feedback?.addEventListener('input', () => feedback.setCustomValidity(''));
     decision?.addEventListener('submit', event => {
         if (event.submitter?.value === 'reject' && !feedback.value.trim()) {
-            event.preventDefault(); feedback.setCustomValidity('Explain what the Hiring Manager must change.'); feedback.reportValidity();
+            event.preventDefault(); feedback.setCustomValidity('Vui lòng nhập lý do từ chối để Hiring Manager chỉnh sửa.'); feedback.reportValidity();
         }
     });
     // Preserve the submitter name/value while preventing duplicate requests.

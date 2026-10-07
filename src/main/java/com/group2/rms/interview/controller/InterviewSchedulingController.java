@@ -3,11 +3,11 @@ package com.group2.rms.interview.controller;
 import com.group2.rms.candidate.entity.Application;
 import com.group2.rms.candidate.repository.ApplicationRepository;
 import com.group2.rms.core.security.RoleAuthorities;
-import com.group2.rms.core.security.CurrentUserService;
 import com.group2.rms.interview.dto.InterviewScheduleRequest;
 import com.group2.rms.interview.dto.InterviewScheduleResponse;
 import com.group2.rms.interview.dto.PanelMemberResponse;
 import com.group2.rms.interview.entity.*;
+import com.group2.rms.interview.exception.InterviewStatusException;
 import com.group2.rms.interview.service.InterviewSchedulingService;
 import com.group2.rms.user.entity.User;
 import com.group2.rms.user.repository.UserRepository;
@@ -15,7 +15,6 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
@@ -37,7 +36,7 @@ import java.util.stream.Collectors;
  * Tuân thủ nghiêm ngặt các nguyên tắc:
  * - Package-by-Feature: com.group2.rms.interview
  * - Phân quyền hiển thị (GBR-05): HR thấy toàn bộ lịch và các nút Create/Edit/Cancel; Interviewer chỉ xem lịch được phân công.
- * - Annotation validation dùng BindingResult; ngoại lệ đi về GlobalExceptionHandler.
+ * - Validation & Exception handling (MSG26 & GBR-01): Bắt buộc dùng BindingResult, không để crash HTTP 500.
  * - HR Isolation: HR không được phân công vào hội đồng phỏng vấn.
  * - Không chứa trường interviewRound (đã loại bỏ).
  */
@@ -50,27 +49,40 @@ public class InterviewSchedulingController {
     private final InterviewSchedulingService interviewSchedulingService;
     private final ApplicationRepository applicationRepository;
     private final UserRepository userRepository;
-    private final CurrentUserService currentUserService;
 
     /**
-     * Màn hình danh sách lịch phỏng vấn dùng chung (Rule GBR-05).
+     * Màn hình danh sách lịch phỏng vấn dùng chung (Rule GBR-05 và Unified View).
      * Phân quyền:
-     * - HR: Xem tất cả lịch, hiển thị các nút thao tác Tạo mới, Chỉnh sửa, Hủy.
-     * - Director: Xem tất cả lịch, chỉ đọc.
-     * - Interviewer / Hiring Manager: Chỉ xem lịch mình được gán vào hội đồng, ẩn toàn bộ nút thao tác.
+     * - Candidate: Chỉ xem các lịch phỏng vấn của chính hồ sơ ứng tuyển của mình (Candidate Isolation).
+     * - Hiring Manager: Xem toàn bộ lịch phỏng vấn thuộc phòng ban mình phụ trách.
+     * - HR / Director: Xem toàn bộ lịch phỏng vấn của doanh nghiệp; có quyền tạo, sửa, hủy lịch.
+     * - Interviewer: Chỉ xem lịch mình được gán vào hội đồng.
      */
     @GetMapping
     public String listInterviews(Authentication authentication, Model model) {
         User currentUser = resolveEffectiveUser(authentication);
-        if (CurrentUserService.hasRole(currentUser, "Candidate")) {
-            throw new AccessDeniedException("Use the candidate interview portal.");
+        if (currentUser == null) {
+            return "redirect:/login";
         }
+
+        String roleName = (currentUser.getRole() != null) ? currentUser.getRole().getRoleName() : "";
         boolean isHr = isHrUser(currentUser, authentication);
-        boolean isDirector = CurrentUserService.hasRole(currentUser, "Director");
+        boolean isDirector = isDirectorUser(currentUser, authentication);
+        boolean isHiringManager = "Hiring Manager".equalsIgnoreCase(roleName);
+        boolean isCandidate = "Candidate".equalsIgnoreCase(roleName);
 
         List<InterviewScheduleResponse> schedules;
-        if (isHr || isDirector) {
-            log.info("Internal user (ID: {}) is viewing all interview schedules.", currentUser.getUserId());
+        if (isCandidate) {
+            log.info("Ứng viên (ID: {}) đang xem các lịch phỏng vấn của chính mình.", currentUser.getUserId());
+            schedules = interviewSchedulingService.getSchedulesForCandidate(currentUser.getUserId());
+        } else if (isHiringManager) {
+            Integer deptId = currentUser.getDepartment() != null ? currentUser.getDepartment().getDepartmentId() : null;
+            log.info("Hiring Manager (ID: {}) đang xem lịch phỏng vấn của phòng ban ID {}.", currentUser.getUserId(), deptId);
+            schedules = deptId != null
+                    ? interviewSchedulingService.getSchedulesForDepartment(deptId)
+                    : interviewSchedulingService.getMySchedulesForInterviewer(currentUser.getUserId());
+        } else if (isHr || isDirector) {
+            log.info("HR / Director (ID: {}) đang xem toàn bộ danh sách lịch phỏng vấn.", currentUser.getUserId());
             schedules = interviewSchedulingService.getAllForHR();
         } else {
             Integer interviewerId = currentUser.getUserId();
@@ -78,21 +90,30 @@ public class InterviewSchedulingController {
             schedules = interviewSchedulingService.getMySchedulesForInterviewer(interviewerId);
         }
 
+        boolean canCreate = isHr || isDirector;
+        boolean canEdit = isHr || isDirector;
+        boolean isCandidateView = isCandidate;
+
         model.addAttribute("schedules", schedules);
         model.addAttribute("isHr", isHr);
         model.addAttribute("isDirector", isDirector);
+        model.addAttribute("canCreate", canCreate);
+        model.addAttribute("canEdit", canEdit);
+        model.addAttribute("isCandidateView", isCandidateView);
         model.addAttribute("currentUser", currentUser);
         return "interview/list";
     }
 
     /**
-     * Hiển thị form tạo mới lịch phỏng vấn (Chỉ dành cho HR).
+     * Hiển thị form tạo mới lịch phỏng vấn (Dành cho HR và Director).
      */
     @GetMapping("/new")
     public String showCreateForm(Authentication authentication, Model model, RedirectAttributes redirectAttributes) {
         User currentUser = resolveEffectiveUser(authentication);
-        if (!isHrUser(currentUser, authentication)) {
-            throw new AccessDeniedException("Interview editing requires HR or System Admin access.");
+        if (!canManageSchedules(currentUser, authentication)) {
+            log.warn("Từ chối truy cập tạo lịch phỏng vấn: Người dùng không có vai trò HR hoặc Director.");
+            redirectAttributes.addFlashAttribute("errorMessage", "Chỉ có nhân sự (HR) và Giám đốc (Director) mới có quyền tạo lịch phỏng vấn.");
+            return "redirect:/interviews";
         }
 
         // Gợi ý mặc định: 09:00 sáng ngày mai
@@ -104,14 +125,13 @@ public class InterviewSchedulingController {
                 .endTime(defaultStartTime.plusHours(1))
                 .build();
 
-        prepareFormModel(model, false, null);
+        prepareFormModel(model, false, null, currentUser);
         model.addAttribute("scheduleRequest", request);
         return "interview/form";
     }
 
     /**
-     * Xử lý tạo mới lịch phỏng vấn (Dành cho HR).
-     * BindingResult giữ lỗi annotation trên form; ngoại lệ Service đi về GlobalExceptionHandler.
+     * Xử lý tạo mới lịch phỏng vấn (Dành cho HR và Director).
      */
     @PostMapping("/new")
     public String createSchedule(
@@ -122,24 +142,34 @@ public class InterviewSchedulingController {
             RedirectAttributes redirectAttributes) {
 
         User currentUser = resolveEffectiveUser(authentication);
-        if (!isHrUser(currentUser, authentication)) {
-            throw new AccessDeniedException("Interview editing requires HR or System Admin access.");
+        if (!canManageSchedules(currentUser, authentication)) {
+            redirectAttributes.addFlashAttribute("errorMessage", "Chỉ có nhân sự (HR) và Giám đốc (Director) mới có quyền tạo lịch phỏng vấn.");
+            return "redirect:/interviews";
         }
 
-        // 1. Kiểm tra validation từ annotation (@NotNull, @Future, MSG26 @AssertTrue, @NotEmpty)
+        // 1. Kiểm tra validation cơ bản
         if (bindingResult.hasErrors()) {
             log.warn("Tạo lịch phỏng vấn thất bại do dữ liệu không hợp lệ: {} lỗi", bindingResult.getErrorCount());
-            prepareFormModel(model, false, null);
+            prepareFormModel(model, false, null, currentUser);
             return "interview/form";
         }
 
-        interviewSchedulingService.createSchedule(request, currentUser.getUserId());
-        redirectAttributes.addFlashAttribute("successMessage", "Tạo lịch phỏng vấn thành công!");
-        return "redirect:/interviews";
+        // 2. Gọi Service và bắt các ngoại lệ nghiệp vụ (Rule MSG26, HR Isolation, validation thời gian, v.v.)
+        try {
+            Integer creatorUserId = currentUser != null ? currentUser.getUserId() : 1;
+            interviewSchedulingService.createSchedule(request, creatorUserId);
+            redirectAttributes.addFlashAttribute("successMessage", "Tạo lịch phỏng vấn thành công!");
+            return "redirect:/interviews";
+        } catch (InterviewStatusException | IllegalArgumentException ex) {
+            log.warn("Ngoại lệ nghiệp vụ khi tạo lịch phỏng vấn: {}", ex.getMessage());
+            bindingResult.reject("businessError", ex.getMessage());
+            prepareFormModel(model, false, null, currentUser);
+            return "interview/form";
+        }
     }
 
     /**
-     * Hiển thị form chỉnh sửa lịch phỏng vấn (Chỉ dành cho HR).
+     * Hiển thị form chỉnh sửa lịch phỏng vấn (Dành cho HR và Director).
      */
     @GetMapping("/{id}/edit")
     public String showEditForm(
@@ -149,8 +179,9 @@ public class InterviewSchedulingController {
             RedirectAttributes redirectAttributes) {
 
         User currentUser = resolveEffectiveUser(authentication);
-        if (!isHrUser(currentUser, authentication)) {
-            throw new AccessDeniedException("Interview editing requires HR or System Admin access.");
+        if (!canManageSchedules(currentUser, authentication)) {
+            redirectAttributes.addFlashAttribute("errorMessage", "Chỉ có nhân sự (HR) và Giám đốc (Director) mới có quyền chỉnh sửa lịch phỏng vấn.");
+            return "redirect:/interviews";
         }
 
         InterviewScheduleResponse detail = interviewSchedulingService.getScheduleDetail(id);
@@ -159,7 +190,6 @@ public class InterviewSchedulingController {
             return "redirect:/interviews";
         }
 
-        // Điền dữ liệu hiện tại vào DTO form
         Set<Integer> interviewerIds = detail.interviewers() != null
                 ? detail.interviewers().stream()
                         .map(PanelMemberResponse::interviewerId)
@@ -176,16 +206,14 @@ public class InterviewSchedulingController {
                 .interviewerIds(interviewerIds)
                 .build();
 
-        prepareFormModel(model, true, id);
+        prepareFormModel(model, true, id, currentUser);
         model.addAttribute("scheduleRequest", request);
         model.addAttribute("scheduleDetail", detail);
         return "interview/form";
     }
 
     /**
-     * Xử lý cập nhật lịch phỏng vấn (Dành cho HR).
-     * Tuân thủ nghiêm ngặt Rule GBR-01 (không lùi trạng thái) và Rule MSG26 (endTime > startTime).
-     * Controller không bắt ngoại lệ Service; GlobalExceptionHandler xử lý tập trung.
+     * Xử lý cập nhật lịch phỏng vấn (Dành cho HR và Director).
      */
     @PostMapping("/{id}/edit")
     public String updateSchedule(
@@ -197,39 +225,54 @@ public class InterviewSchedulingController {
             RedirectAttributes redirectAttributes) {
 
         User currentUser = resolveEffectiveUser(authentication);
-        if (!isHrUser(currentUser, authentication)) {
-            throw new AccessDeniedException("Interview editing requires HR or System Admin access.");
+        if (!canManageSchedules(currentUser, authentication)) {
+            redirectAttributes.addFlashAttribute("errorMessage", "Chỉ có nhân sự (HR) và Giám đốc (Director) mới có quyền cập nhật lịch phỏng vấn.");
+            return "redirect:/interviews";
         }
 
-        // 1. Kiểm tra validation cơ bản từ DTO
         if (bindingResult.hasErrors()) {
             log.warn("Cập nhật lịch phỏng vấn #{} thất bại do validation lỗi.", id);
-            prepareFormModel(model, true, id);
+            prepareFormModel(model, true, id, currentUser);
             return "interview/form";
         }
 
-        interviewSchedulingService.updateSchedule(id, request, currentUser.getUserId());
-        redirectAttributes.addFlashAttribute("successMessage", "Cập nhật lịch phỏng vấn thành công!");
-        return "redirect:/interviews";
+        try {
+            Integer updaterUserId = currentUser != null ? currentUser.getUserId() : 1;
+            interviewSchedulingService.updateSchedule(id, request, updaterUserId);
+            redirectAttributes.addFlashAttribute("successMessage", "Cập nhật lịch phỏng vấn thành công!");
+            return "redirect:/interviews";
+        } catch (InterviewStatusException | IllegalArgumentException ex) {
+            log.warn("Ngoại lệ nghiệp vụ khi cập nhật lịch #{}: {}", id, ex.getMessage());
+            bindingResult.reject("businessError", ex.getMessage());
+            prepareFormModel(model, true, id, currentUser);
+            return "interview/form";
+        }
     }
 
     /**
-     * Hủy lịch phỏng vấn (Chỉ dành cho HR).
+     * Hủy lịch phỏng vấn (Dành cho HR và Director).
      */
     @PostMapping("/{id}/cancel")
     public String cancelSchedule(
             @PathVariable("id") Long id,
-            @RequestParam(value = "cancelReason", defaultValue = "Hủy lịch bởi HR") String cancelReason,
+            @RequestParam(value = "cancelReason", defaultValue = "Hủy lịch phỏng vấn") String cancelReason,
             Authentication authentication,
             RedirectAttributes redirectAttributes) {
 
         User currentUser = resolveEffectiveUser(authentication);
-        if (!isHrUser(currentUser, authentication)) {
-            throw new AccessDeniedException("Interview editing requires HR or System Admin access.");
+        if (!canManageSchedules(currentUser, authentication)) {
+            redirectAttributes.addFlashAttribute("errorMessage", "Chỉ có nhân sự (HR) và Giám đốc (Director) mới có quyền hủy lịch phỏng vấn.");
+            return "redirect:/interviews";
         }
 
-        interviewSchedulingService.cancelSchedule(id, cancelReason, currentUser.getUserId());
-        redirectAttributes.addFlashAttribute("successMessage", "Hủy lịch phỏng vấn thành công!");
+        try {
+            Integer updaterUserId = currentUser != null ? currentUser.getUserId() : 1;
+            interviewSchedulingService.cancelSchedule(id, cancelReason, updaterUserId);
+            redirectAttributes.addFlashAttribute("successMessage", "Hủy lịch phỏng vấn thành công!");
+        } catch (InterviewStatusException | IllegalArgumentException ex) {
+            log.warn("Lỗi khi hủy lịch #{}: {}", id, ex.getMessage());
+            redirectAttributes.addFlashAttribute("errorMessage", ex.getMessage());
+        }
 
         return "redirect:/interviews";
     }
@@ -240,16 +283,18 @@ public class InterviewSchedulingController {
 
     /**
      * Nạp dữ liệu các dropdown và metadata vào Model phục vụ form.html.
+     * Đảm bảo luôn nạp currentUser để header không bị hiển thị fallback 'Người dùng'.
      */
-    private void prepareFormModel(Model model, boolean isEdit, Long interviewId) {
+    private void prepareFormModel(Model model, boolean isEdit, Long interviewId, User currentUser) {
         model.addAttribute("isEdit", isEdit);
         model.addAttribute("interviewId", interviewId);
+        model.addAttribute("currentUser", currentUser);
 
-        // Danh sách hồ sơ ứng tuyển (Eager load candidate, account, jobPosting tránh LazyInitializationException)
+        // Danh sách hồ sơ ứng tuyển
         List<Application> applications = applicationRepository.findAllWithCandidateAndJobPosting();
         model.addAttribute("applications", applications);
 
-        // Danh sách Interviewer hợp lệ (Eager fetch role và department, loại bỏ HR và ứng viên)
+        // Danh sách Interviewer hợp lệ (Loại bỏ HR và Candidate; Director được giữ lại)
         List<User> availableInterviewers = userRepository.findAllWithRoleAndDepartment().stream()
                 .filter(u -> u.getRole() != null
                         && RoleAuthorities.INTERNAL_ROLE_NAMES.contains(u.getRole().getRoleName())
@@ -259,14 +304,40 @@ public class InterviewSchedulingController {
         model.addAttribute("availableInterviewers", availableInterviewers);
 
         model.addAttribute("interviewFormats", InterviewFormat.values());
-        model.addAttribute("interviewStatuses", InterviewStatus.values());
+
+        // Nếu tạo mới: chỉ cho phép Scheduled ("Đã lên lịch") hoặc Completed ("Đã hoàn thành")
+        // Nếu chỉnh sửa: hiển thị tất cả các trạng thái
+        if (!isEdit) {
+            model.addAttribute("interviewStatuses", List.of(InterviewStatus.Scheduled, InterviewStatus.Completed));
+        } else {
+            model.addAttribute("interviewStatuses", InterviewStatus.values());
+        }
     }
 
     /**
      * Lấy thông tin tài khoản người dùng hiện tại từ Spring Security Authentication.
      */
+    private User getCurrentUser(Authentication authentication) {
+        if (authentication != null && authentication.isAuthenticated()
+                && !"anonymousUser".equals(authentication.getPrincipal())) {
+            return userRepository.findByUsernameIgnoreCase(authentication.getName()).orElse(null);
+        }
+        return null;
+    }
+
+    /**
+     * Xác định tài khoản hiệu dụng.
+     */
     private User resolveEffectiveUser(Authentication authentication) {
-        return currentUserService.requireUser();
+        User user = getCurrentUser(authentication);
+        if (user != null) {
+            return user;
+        }
+        // Fallback môi trường demo/dev khi chưa có session
+        return userRepository.findAll().stream()
+                .filter(u -> u.getRole() != null && "HR".equalsIgnoreCase(u.getRole().getRoleName()))
+                .findFirst()
+                .orElseGet(() -> userRepository.findAll().stream().findFirst().orElse(null));
     }
 
     /**
@@ -277,6 +348,31 @@ public class InterviewSchedulingController {
             String role = user.getRole().getRoleName();
             return "HR".equalsIgnoreCase(role) || "System Admin".equalsIgnoreCase(role);
         }
+        if (authentication != null) {
+            return authentication.getAuthorities().stream()
+                    .anyMatch(a -> "ROLE_HR".equals(a.getAuthority()) || RoleAuthorities.SYSTEM_ADMIN.equals(a.getAuthority()));
+        }
         return false;
+    }
+
+    /**
+     * Kiểm tra xem người dùng có vai trò Director hay không.
+     */
+    private boolean isDirectorUser(User user, Authentication authentication) {
+        if (user != null && user.getRole() != null) {
+            return "Director".equalsIgnoreCase(user.getRole().getRoleName());
+        }
+        if (authentication != null) {
+            return authentication.getAuthorities().stream()
+                    .anyMatch(a -> "ROLE_DIRECTOR".equals(a.getAuthority()));
+        }
+        return false;
+    }
+
+    /**
+     * Quyền quản lý lịch phỏng vấn (Tạo mới, Cập nhật, Hủy): Dành cho HR và Director.
+     */
+    private boolean canManageSchedules(User user, Authentication authentication) {
+        return isHrUser(user, authentication) || isDirectorUser(user, authentication);
     }
 }

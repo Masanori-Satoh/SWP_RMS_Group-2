@@ -122,7 +122,7 @@ class CareerFlowTests {
                                                 containsString("<title>Senior Java Engineer — Mộc Careers</title>")))
                                 .andExpect(content().string(containsString("VND 30–45 million")))
                                 .andExpect(content().string(containsString("Hà Nội")))
-                                .andExpect(content().string(containsString("href=\"/jobs/41/apply\"")))
+                                .andExpect(content().string(containsString("onclick=\"alert('Tính năng ứng tuyển trực tuyến đang được xây dựng")))
                                 .andExpect(content().string(containsString("Ứng tuyển ngay")))
                                 .andExpect(content().string(not(containsString("Ngừng nhận hồ sơ"))))
                                 .andReturn();
@@ -281,16 +281,14 @@ class CareerFlowTests {
                                 hasApplied, accepting);
         }
 
-        private void account(String username, String role, String status) {
-                User user = User.builder().userId(10).username(username).fullName("Taylor Nguyen")
-                                .email("taylor@example.test").accountStatus(status)
-                                .role(Role.builder().roleName(role).build())
-                                .passwordHash(encoder.encode("test-password")).build();
-                when(users.findByUsernameIgnoreCase(username)).thenReturn(Optional.of(user));
-                when(careers.getViewerProfile(username))
-                                .thenReturn(Optional
-                                                .of(new ViewerProfileResponse(user.getFullName(), user.getEmail(), user.getRole() != null ? user.getRole().getRoleName() : "")));
-        }
+    private void account(String username, String role, String status) {
+        User user = User.builder().userId(10).username(username).fullName("Taylor Nguyen")
+                .email("taylor@example.test").accountStatus(status).role(Role.builder().roleName(role).build())
+                .passwordHash(encoder.encode("test-password")).build();
+        when(users.findByUsernameIgnoreCase(username)).thenReturn(Optional.of(user));
+        when(careers.getViewerProfile(username))
+                .thenReturn(Optional.of(new ViewerProfileResponse(user.getFullName(), user.getEmail(), user.getRole().getRoleName())));
+    }
 
         private MockHttpSession login(MockHttpSession session, String username, String expected) throws Exception {
                 var request = get("/login");

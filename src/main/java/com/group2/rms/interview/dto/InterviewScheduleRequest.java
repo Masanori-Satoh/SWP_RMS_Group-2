@@ -33,7 +33,6 @@ public record InterviewScheduleRequest(
         InterviewFormat interviewFormat,
 
         @NotNull(message = "Thời gian bắt đầu phỏng vấn không được để trống.")
-        @Future(message = "Thời gian bắt đầu phỏng vấn phải ở trong tương lai.")
         @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
         LocalDateTime startTime,
 

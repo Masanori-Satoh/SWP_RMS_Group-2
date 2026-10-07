@@ -121,6 +121,31 @@ public class GlobalExceptionHandler {
         return mav;
     }
 
+    // 400 validation error
+    @ExceptionHandler(org.springframework.web.bind.MethodArgumentNotValidException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public Object handleMethodArgumentNotValidException(
+            org.springframework.web.bind.MethodArgumentNotValidException ex,
+            HttpServletRequest request) {
+        String errorMsg = ex.getBindingResult().getAllErrors().stream()
+                .map(org.springframework.context.support.DefaultMessageSourceResolvable::getDefaultMessage)
+                .filter(java.util.Objects::nonNull)
+                .findFirst()
+                .orElse("Dữ liệu gửi lên không hợp lệ.");
+        log.warn("Validation error at [{}]: {}", request.getRequestURL(), errorMsg);
+
+        if (request.getRequestURI() != null && request.getRequestURI().contains("/api/")) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(new com.group2.rms.core.dto.ApiResponse<>(false, errorMsg));
+        }
+
+        ModelAndView mav = new ModelAndView("error/500");
+        mav.setStatus(HttpStatus.BAD_REQUEST);
+        mav.addObject("message", errorMsg);
+        mav.addObject("url", request.getRequestURL());
+        return mav;
+    }
+
     // =========================================================================
     // 6. SPRING RESPONSE STATUS EXCEPTION HANDLER
     // =========================================================================

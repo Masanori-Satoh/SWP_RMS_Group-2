@@ -102,4 +102,20 @@ public interface InterviewSchedulingService {
      * @return Chi tiết lịch phỏng vấn
      */
     InterviewScheduleResponse getMyScheduleDetailForInterviewer(Long interviewId, Integer interviewerId);
+
+    /**
+     * Lấy danh sách lịch phỏng vấn của riêng ứng viên (Candidate Isolation).
+     *
+     * @param candidateUserId ID người dùng của ứng viên
+     * @return Danh sách lịch phỏng vấn của ứng viên đó
+     */
+    List<InterviewScheduleResponse> getSchedulesForCandidate(Integer candidateUserId);
+
+    /**
+     * Lấy danh sách lịch phỏng vấn thuộc về phòng ban của Hiring Manager.
+     *
+     * @param departmentId ID phòng ban
+     * @return Danh sách lịch phỏng vấn của phòng ban đó
+     */
+    List<InterviewScheduleResponse> getSchedulesForDepartment(Integer departmentId);
 }
