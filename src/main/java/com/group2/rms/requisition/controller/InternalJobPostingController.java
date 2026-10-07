@@ -90,17 +90,38 @@ public class InternalJobPostingController {
         }
 
         try {
+            boolean isUpdate = request.getJobPostingId() != null;
             Integer postingId = jobPostingService.createJobPosting(request, currentUser);
             boolean isPublished = "publish".equalsIgnoreCase(request.getAction());
             if (isPublished) {
-                redirectAttributes.addFlashAttribute("message", "Đã đăng tin tuyển dụng thành công lên cổng việc làm công khai.");
+                redirectAttributes.addFlashAttribute("message", isUpdate
+                        ? "Đã cập nhật và phát hành tin tuyển dụng thành công."
+                        : "Đã đăng tin tuyển dụng thành công lên cổng việc làm công khai.");
             } else {
-                redirectAttributes.addFlashAttribute("message", "Đã lưu bản nháp tin tuyển dụng thành công.");
+                redirectAttributes.addFlashAttribute("message", isUpdate
+                        ? "Đã cập nhật bản nháp tin tuyển dụng thành công."
+                        : "Đã lưu bản nháp tin tuyển dụng thành công.");
             }
-            return "redirect:/requisitions";
+            return "redirect:/internal/job-postings";
         } catch (ResponseStatusException ex) {
             model.addAttribute("errorMessage", ex.getReason());
             return "job-postings/create";
         }
+    }
+
+    @GetMapping("/{id}/edit")
+    public String showEditForm(@PathVariable("id") Integer id, Model model) {
+        User currentUser = requisitionAccess.actor();
+        JobPostingCreateRequest formDto = jobPostingService.prepareEditForm(id, currentUser);
+        model.addAttribute("postingDto", formDto);
+        return "job-postings/create";
+    }
+
+    @PostMapping("/delete/{id}")
+    public String deleteJobPosting(@PathVariable("id") Integer id, RedirectAttributes redirectAttributes) {
+        User currentUser = requisitionAccess.actor();
+        jobPostingService.deleteJobPosting(id, currentUser);
+        redirectAttributes.addFlashAttribute("message", "Đã xóa tin tuyển dụng thành công.");
+        return "redirect:/internal/job-postings";
     }
 }

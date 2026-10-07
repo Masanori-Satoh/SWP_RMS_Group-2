@@ -130,4 +130,35 @@ class InternalJobPostingControllerTest {
         mvc.perform(get("/internal/job-postings"))
                 .andExpect(status().isForbidden());
     }
+
+    @Test
+    @WithMockUser(username = "hr_officer", roles = {"HR"})
+    @DisplayName("GET /internal/job-postings/{id}/edit: Mở form chỉnh sửa tin thành công")
+    void showEditForm_asHr_returnsCreateView() throws Exception {
+        JobPostingCreateRequest dto = JobPostingCreateRequest.builder()
+                .jobPostingId(99)
+                .requisitionId(101)
+                .postingTitle("Java Developer")
+                .build();
+
+        when(jobPostingService.prepareEditForm(eq(99), any(User.class))).thenReturn(dto);
+
+        mvc.perform(get("/internal/job-postings/99/edit"))
+                .andExpect(status().isOk())
+                .andExpect(view().name("job-postings/create"))
+                .andExpect(model().attributeExists("postingDto"));
+    }
+
+    @Test
+    @WithMockUser(username = "hr_officer", roles = {"HR"})
+    @DisplayName("POST /internal/job-postings/delete/{id}: Xóa tin tuyển dụng thành công và redirect")
+    void deleteJobPosting_asHr_redirectsWithFlashMessage() throws Exception {
+        org.mockito.Mockito.doNothing().when(jobPostingService).deleteJobPosting(eq(99), any(User.class));
+
+        mvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post("/internal/job-postings/delete/99")
+                        .with(org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf()))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrl("/internal/job-postings"))
+                .andExpect(flash().attributeExists("message"));
+    }
 }

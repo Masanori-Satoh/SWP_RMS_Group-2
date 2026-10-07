@@ -30,4 +30,14 @@ public interface JobPostingService {
      * @return ID của Job Posting vừa tạo
      */
     Integer createJobPosting(JobPostingCreateRequest request, User currentUser);
+
+    /**
+     * Chuẩn bị dữ liệu cho form chỉnh sửa tin tuyển dụng.
+     */
+    JobPostingCreateRequest prepareEditForm(Integer jobPostingId, User currentUser);
+
+    /**
+     * Xóa tin tuyển dụng (kèm audit log).
+     */
+    void deleteJobPosting(Integer id, User currentUser);
 }

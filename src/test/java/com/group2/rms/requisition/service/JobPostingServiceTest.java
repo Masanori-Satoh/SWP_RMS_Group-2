@@ -244,4 +244,78 @@ class JobPostingServiceTest {
                 jobPostingService.searchInternalJobPostings(1, 10, "", null, "", "newest", hmUser));
         verify(jobPostingRepository, never()).findAll(any(Specification.class), any(Pageable.class));
     }
+
+    @Test
+    @DisplayName("deleteJobPosting: Xóa tin tuyển dụng thành công và lưu audit log")
+    void deleteJobPosting_success() {
+        when(requisitionAccess.role(hrUser)).thenReturn(RequisitionAccess.ROLE_HR);
+        JobPosting posting = JobPosting.builder().jobPostingId(99).postingTitle("Test Posting").build();
+        when(jobPostingRepository.findById(99)).thenReturn(Optional.of(posting));
+
+        jobPostingService.deleteJobPosting(99, hrUser);
+
+        verify(jobPostingRepository).delete(posting);
+        verify(auditLogRepository).save(any(AuditLog.class));
+    }
+
+    @Test
+    @DisplayName("deleteJobPosting: Chặn role không phải HR/Admin")
+    void deleteJobPosting_nonHr_throwsAccessDenied() {
+        when(requisitionAccess.role(hmUser)).thenReturn(RequisitionAccess.ROLE_HIRING_MANAGER);
+
+        assertThrows(AccessDeniedException.class, () -> jobPostingService.deleteJobPosting(99, hmUser));
+        verify(jobPostingRepository, never()).delete(any(JobPosting.class));
+    }
+
+    @Test
+    @DisplayName("prepareEditForm: Lấy thông tin tin tuyển dụng thành công")
+    void prepareEditForm_success() {
+        when(requisitionAccess.role(hrUser)).thenReturn(RequisitionAccess.ROLE_HR);
+        JobPosting posting = JobPosting.builder()
+                .jobPostingId(88)
+                .requisition(approvedReq)
+                .postingTitle("React Dev")
+                .jobDescription("Desc")
+                .jobRequirements("Reqs")
+                .salaryDisplay("15 - 20 Triệu")
+                .workLocation("Hà Nội")
+                .build();
+        when(jobPostingRepository.findById(88)).thenReturn(Optional.of(posting));
+        when(jobRequisitionRepository.findById(101)).thenReturn(Optional.of(approvedReq));
+        when(jobPostingRepository.existsByRequisition_RequisitionIdAndPostingStatusIn(eq(101), any())).thenReturn(false);
+
+        JobPostingCreateRequest form = jobPostingService.prepareEditForm(88, hrUser);
+
+        assertNotNull(form);
+        assertEquals(88, form.getJobPostingId());
+        assertEquals("React Dev", form.getPostingTitle());
+    }
+
+    @Test
+    @DisplayName("createJobPosting: Cập nhật tin tuyển dụng hiện có thành công")
+    void createJobPosting_update_success() {
+        when(requisitionAccess.role(hrUser)).thenReturn(RequisitionAccess.ROLE_HR);
+        when(jobRequisitionRepository.findById(101)).thenReturn(Optional.of(approvedReq));
+
+        JobPosting existing = JobPosting.builder().jobPostingId(88).postingTitle("Old Title").postingStatus("Draft").build();
+        when(jobPostingRepository.findById(88)).thenReturn(Optional.of(existing));
+        when(jobPostingRepository.save(any(JobPosting.class))).thenReturn(existing);
+
+        JobPostingCreateRequest request = JobPostingCreateRequest.builder()
+                .jobPostingId(88)
+                .requisitionId(101)
+                .postingTitle("Updated Title")
+                .jobDescription("Desc")
+                .jobRequirements("Reqs")
+                .action("publish")
+                .build();
+
+        Integer resultId = jobPostingService.createJobPosting(request, hrUser);
+
+        assertEquals(88, resultId);
+        verify(jobPostingRepository).save(existing);
+        assertEquals("Updated Title", existing.getPostingTitle());
+        assertEquals("Published", existing.getPostingStatus());
+        verify(auditLogRepository).save(any(AuditLog.class));
+    }
 }

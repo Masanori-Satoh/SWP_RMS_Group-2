@@ -15,6 +15,8 @@ import java.time.LocalDate;
 @Builder
 public class JobPostingCreateRequest {
 
+    private Integer jobPostingId;
+
     @NotNull(message = "Yêu cầu tuyển dụng nguồn không được để trống.")
     private Integer requisitionId;
 
@@ -25,6 +27,20 @@ public class JobPostingCreateRequest {
     private String employmentType;
     private Integer numberOfPositions;
     private String hiringManagerName;
+
+    // Chi tiết bổ sung cho form tạo tin (đồng bộ từ Requisition và có thể tinh chỉnh)
+    private java.math.BigDecimal minSalary;
+    private java.math.BigDecimal maxSalary;
+    private String probationDuration;
+    private String gender;
+
+    @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
+    private LocalDate expectedStartDate;
+
+    private Boolean isContinuousRecruitment;
+
+    @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
+    private LocalDate recruitmentDeadline;
 
     @NotBlank(message = "Tiêu đề tin tuyển dụng không được để trống.")
     @Size(max = 200, message = "Tiêu đề tin tuyển dụng không vượt quá 200 ký tự.")

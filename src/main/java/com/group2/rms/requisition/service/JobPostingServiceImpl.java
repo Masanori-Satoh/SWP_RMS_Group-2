@@ -184,12 +184,19 @@ public class JobPostingServiceImpl implements JobPostingService {
                 .employmentType(formatEmploymentType(requisition.getEmploymentType()))
                 .numberOfPositions(requisition.getNumberOfPositions())
                 .hiringManagerName(requisition.getHiringManager() != null ? requisition.getHiringManager().getFullName() : "—")
+                .minSalary(requisition.getMinSalary())
+                .maxSalary(requisition.getMaxSalary())
+                .probationDuration(requisition.getProbationDuration())
+                .gender(requisition.getGender() != null ? requisition.getGender() : "Any")
+                .expectedStartDate(requisition.getExpectedStartDate())
+                .recruitmentDeadline(requisition.getExpectedStartDate())
+                .isContinuousRecruitment(false)
                 .jobDescription(requisition.getJobDescription())
                 .jobRequirements(requirements.toString())
                 .workLocation(requisition.getWorkLocation() != null ? requisition.getWorkLocation() : "")
                 .salaryDisplay(salaryDisplay)
                 .benefits("")
-                .applicationDeadline(LocalDate.now().plusDays(30))
+                .applicationDeadline(requisition.getExpectedStartDate() != null ? requisition.getExpectedStartDate() : LocalDate.now().plusDays(30))
                 .action("draft")
                 .build();
     }
@@ -221,39 +228,104 @@ public class JobPostingServiceImpl implements JobPostingService {
         LocalDateTime now = LocalDateTime.now();
 
         LocalDateTime deadline = null;
-        if (request.getApplicationDeadline() != null) {
+        if (Boolean.TRUE.equals(request.getIsContinuousRecruitment())) {
+            deadline = null;
+        } else if (request.getApplicationDeadline() != null) {
             deadline = request.getApplicationDeadline().atTime(23, 59, 59);
             if (deadline.isBefore(now)) {
                 throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Hạn nộp hồ sơ phải sau ngày hiện tại.");
             }
+        } else if (request.getRecruitmentDeadline() != null) {
+            deadline = request.getRecruitmentDeadline().atTime(23, 59, 59);
         }
 
-        JobPosting jobPosting = JobPosting.builder()
-                .requisition(requisition)
-                .postingTitle(request.getPostingTitle().trim())
-                .jobDescription(request.getJobDescription().trim())
-                .jobRequirements(request.getJobRequirements().trim())
-                .benefits(request.getBenefits() != null && !request.getBenefits().isBlank() ? request.getBenefits().trim() : null)
-                .salaryDisplay(request.getSalaryDisplay() != null && !request.getSalaryDisplay().isBlank() ? request.getSalaryDisplay().trim() : null)
-                .workLocation(request.getWorkLocation() != null && !request.getWorkLocation().isBlank() ? request.getWorkLocation().trim() : null)
-                .postingDate(isPublish ? now : null)
-                .applicationDeadline(deadline)
-                .postingStatus(isPublish ? "Published" : "Draft")
-                .createdBy(currentUser)
-                .build();
+        String salaryDisplay = request.getSalaryDisplay();
+        if ((salaryDisplay == null || salaryDisplay.isBlank()) && (request.getMinSalary() != null || request.getMaxSalary() != null)) {
+            salaryDisplay = formatSalary(request.getMinSalary(), request.getMaxSalary());
+        }
+
+        JobPosting jobPosting;
+        boolean isUpdate = request.getJobPostingId() != null;
+        if (isUpdate) {
+            jobPosting = jobPostingRepository.findById(request.getJobPostingId())
+                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Không tìm thấy tin tuyển dụng cần cập nhật."));
+        } else {
+            jobPosting = new JobPosting();
+            jobPosting.setRequisition(requisition);
+            jobPosting.setCreatedBy(currentUser);
+        }
+
+        jobPosting.setPostingTitle(request.getPostingTitle().trim());
+        jobPosting.setJobDescription(request.getJobDescription().trim());
+        jobPosting.setJobRequirements(request.getJobRequirements().trim());
+        jobPosting.setBenefits(request.getBenefits() != null && !request.getBenefits().isBlank() ? request.getBenefits().trim() : null);
+        jobPosting.setSalaryDisplay(salaryDisplay != null && !salaryDisplay.isBlank() ? salaryDisplay.trim() : null);
+        jobPosting.setWorkLocation(request.getWorkLocation() != null && !request.getWorkLocation().isBlank() ? request.getWorkLocation().trim() : null);
+        if (isPublish && jobPosting.getPostingDate() == null) {
+            jobPosting.setPostingDate(now);
+        }
+        jobPosting.setApplicationDeadline(deadline);
+        jobPosting.setPostingStatus(isPublish ? "Published" : "Draft");
 
         JobPosting saved = jobPostingRepository.save(jobPosting);
 
         auditLogRepository.save(AuditLog.builder()
                 .user(currentUser)
-                .action("CREATE")
+                .action(isUpdate ? "UPDATE" : "CREATE")
                 .entityName("JobPosting")
                 .entityId(String.valueOf(saved.getJobPostingId()))
-                .newValue(String.format("Tạo tin tuyển dụng: %s · %s", saved.getPostingTitle(), saved.getPostingStatus()))
+                .newValue(String.format("%s tin tuyển dụng: %s · %s", isUpdate ? "Cập nhật" : "Tạo", saved.getPostingTitle(), saved.getPostingStatus()))
                 .timestamp(now)
                 .build());
 
         return saved.getJobPostingId();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public JobPostingCreateRequest prepareEditForm(Integer jobPostingId, User currentUser) {
+        requireHrOrAdmin(currentUser);
+
+        if (jobPostingId == null) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Mã tin tuyển dụng không hợp lệ.");
+        }
+
+        JobPosting posting = jobPostingRepository.findById(jobPostingId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Không tìm thấy tin tuyển dụng với mã: " + jobPostingId));
+
+        JobRequisition req = posting.getRequisition();
+        JobPostingCreateRequest form = prepareCreateForm(req.getRequisitionId(), currentUser);
+        form.setJobPostingId(posting.getJobPostingId());
+        form.setPostingTitle(posting.getPostingTitle());
+        form.setJobDescription(posting.getJobDescription());
+        form.setJobRequirements(posting.getJobRequirements());
+        form.setBenefits(posting.getBenefits());
+        form.setSalaryDisplay(posting.getSalaryDisplay());
+        form.setWorkLocation(posting.getWorkLocation());
+        form.setApplicationDeadline(posting.getApplicationDeadline() != null ? posting.getApplicationDeadline().toLocalDate() : null);
+        form.setIsContinuousRecruitment(posting.getApplicationDeadline() == null);
+
+        return form;
+    }
+
+    @Override
+    @Transactional
+    public void deleteJobPosting(Integer id, User currentUser) {
+        requireHrOrAdmin(currentUser);
+
+        JobPosting posting = jobPostingRepository.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Không tìm thấy tin tuyển dụng."));
+
+        jobPostingRepository.delete(posting);
+
+        auditLogRepository.save(AuditLog.builder()
+                .user(currentUser)
+                .action("DELETE")
+                .entityName("JobPosting")
+                .entityId(String.valueOf(id))
+                .newValue(String.format("Xóa tin tuyển dụng: %s", posting.getPostingTitle()))
+                .timestamp(LocalDateTime.now())
+                .build());
     }
 
     private String formatSalary(BigDecimal min, BigDecimal max) {
