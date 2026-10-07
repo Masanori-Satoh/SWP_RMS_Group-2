@@ -4,7 +4,7 @@
   <a class="skip-link" href="#main">Chuyển đến nội dung chính</a>
   <a th:replace="~{fragments/brand :: wordmark('RMS')}"></a>
   <div class="workspace-header-actions">
-    <a th:href="@{/profile}" class="workspace-identity" style="text-decoration:none; color:inherit;"><strong th:if="${fullName != null}" th:text="${fullName}"></strong><span class="workspace-role" th:text="${role}"></span></a>
+    <a th:href="@{/profile}" class="workspace-identity" style="text-decoration:none; color:inherit;"><strong th:if="${fullName != null}" th:text="${fullName}"></strong><span class="workspace-role" th:text="${role == 'Hiring Manager' ? 'Trưởng phòng tuyển dụng' : (role == 'HR' ? 'Nhân sự' : (role == 'HR Specialist' ? 'Chuyên viên Nhân sự' : (role == 'Director' ? 'Giám đốc' : (role == 'System Admin' ? 'Quản trị hệ thống' : (role == 'Interviewer' ? 'Người phỏng vấn' : (role == 'Candidate' ? 'Ứng viên' : role))))))}"></span></a>
     <button class="btn btn-secondary workspace-menu" type="button" data-workspace-menu aria-controls="workspace-navigation" aria-expanded="true" hidden>Menu</button>
     <form id="workspace-logout-form" th:action="@{/logout}" method="post">
       <button class="text-action" type="button" onclick="document.getElementById('workspace-logout-dialog').showModal()">Đăng xuất</button>
