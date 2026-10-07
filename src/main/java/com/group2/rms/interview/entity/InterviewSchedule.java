@@ -35,9 +35,8 @@ public class InterviewSchedule {
     @JoinColumn(name = "ApplicationId", nullable = false, referencedColumnName = "ApplicationId")
     private Application application;
 
-    @Enumerated(EnumType.STRING)
     @Column(name = "InterviewFormat", nullable = false, length = 30)
-    private InterviewFormat interviewFormat;
+    private String interviewFormat;
 
     @Column(name = "StartTime", nullable = false)
     private LocalDateTime startTime;
@@ -48,10 +47,8 @@ public class InterviewSchedule {
     @Column(name = "LocationOrLink", length = 500)
     private String locationOrLink;
 
-    @Enumerated(EnumType.STRING)
     @Column(name = "InterviewStatus", nullable = false, length = 30)
-    @Builder.Default
-    private InterviewStatus interviewStatus = InterviewStatus.Scheduled;
+    private String interviewStatus = "Scheduled";
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "CreatedBy", nullable = false, referencedColumnName = "UserId")
@@ -63,6 +60,51 @@ public class InterviewSchedule {
     @OneToMany(mappedBy = "interviewSchedule", cascade = CascadeType.ALL, orphanRemoval = true)
     @Builder.Default
     private Set<InterviewPanel> interviewPanels = new HashSet<>();
+
+    public Set<InterviewPanel> getInterviewPanels() {
+        if (this.interviewPanels == null) {
+            this.interviewPanels = new HashSet<>();
+        }
+        return this.interviewPanels;
+    }
+
+    public InterviewFormat getInterviewFormat() {
+        if (this.interviewFormat == null) {
+            return null;
+        }
+        try {
+            return InterviewFormat.valueOf(this.interviewFormat);
+        } catch (IllegalArgumentException e) {
+            return null;
+        }
+    }
+
+    public void setInterviewFormat(InterviewFormat interviewFormat) {
+        this.interviewFormat = (interviewFormat != null) ? interviewFormat.name() : null;
+    }
+
+    public void setInterviewFormat(String interviewFormat) {
+        this.interviewFormat = interviewFormat;
+    }
+
+    public InterviewStatus getInterviewStatus() {
+        if (this.interviewStatus == null) {
+            return null;
+        }
+        try {
+            return InterviewStatus.valueOf(this.interviewStatus);
+        } catch (IllegalArgumentException e) {
+            return null;
+        }
+    }
+
+    public void setInterviewStatus(InterviewStatus interviewStatus) {
+        this.interviewStatus = (interviewStatus != null) ? interviewStatus.name() : null;
+    }
+
+    public void setInterviewStatus(String interviewStatus) {
+        this.interviewStatus = interviewStatus;
+    }
 
     /**
      * Ràng buộc nghiệp vụ cấp Entity trước khi lưu vào Database:
@@ -96,11 +138,12 @@ public class InterviewSchedule {
      * @throws IllegalStateException nếu vi phạm quy tắc đi tiến không lùi
      */
     public void transitionTo(InterviewStatus targetStatus) {
-        if (!this.interviewStatus.canTransitionTo(targetStatus)) {
+        InterviewStatus current = getInterviewStatus();
+        if (current == null || !current.canTransitionTo(targetStatus)) {
             throw new IllegalStateException("Business Rule GBR-01 Violation: Không thể chuyển trạng thái từ [" +
                     this.interviewStatus + "] sang [" + targetStatus + "]. Trạng thái chỉ được đi tiến, không được đi lùi.");
         }
-        this.interviewStatus = targetStatus;
+        this.interviewStatus = targetStatus.name();
     }
 
     /**
@@ -117,6 +160,9 @@ public class InterviewSchedule {
                 .interviewer(interviewer)
                 .roleInPanel(roleInPanel)
                 .build();
+        if (this.interviewPanels == null) {
+            this.interviewPanels = new HashSet<>();
+        }
         this.interviewPanels.add(panel);
     }
 
@@ -127,6 +173,28 @@ public class InterviewSchedule {
         if (panel != null) {
             this.interviewPanels.remove(panel);
             panel.setInterviewSchedule(null);
+        }
+    }
+
+    public static class InterviewScheduleBuilder {
+        public InterviewScheduleBuilder interviewFormat(InterviewFormat interviewFormat) {
+            this.interviewFormat = (interviewFormat != null) ? interviewFormat.name() : null;
+            return this;
+        }
+
+        public InterviewScheduleBuilder interviewFormat(String interviewFormat) {
+            this.interviewFormat = interviewFormat;
+            return this;
+        }
+
+        public InterviewScheduleBuilder interviewStatus(InterviewStatus interviewStatus) {
+            this.interviewStatus = (interviewStatus != null) ? interviewStatus.name() : null;
+            return this;
+        }
+
+        public InterviewScheduleBuilder interviewStatus(String interviewStatus) {
+            this.interviewStatus = interviewStatus;
+            return this;
         }
     }
 }
