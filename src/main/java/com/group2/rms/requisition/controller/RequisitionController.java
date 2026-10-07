@@ -87,6 +87,7 @@ public class RequisitionController {
         String sanitizedSort = ALLOWED_SORTS.contains(sort) ? sort : DEFAULT_SORT;
         User currentUser = requisitionAccess.actor();
 
+        // Rule: Tùy theo tham số bộ lọc nâng cao (vị trí hoặc đợt tuyển), gọi phương thức tìm kiếm phù hợp
         Page<RequisitionResponse> requisitionPage;
         if ((position != null && !position.isBlank()) || round != null) {
             requisitionPage = requisitionService.search(page, size, q, departmentId, position, round, type, status, sanitizedSort);
@@ -127,6 +128,7 @@ public class RequisitionController {
 
     @GetMapping("/create")
     public String showCreateForm(Model model) {
+        // Security: Xác thực quyền tạo Requisition trước khi hiển thị form
         User currentUser = requisitionAccess.actor();
         requisitionAccess.requireCreate(currentUser);
 
@@ -173,6 +175,7 @@ public class RequisitionController {
             Model model,
             RedirectAttributes redirectAttributes) {
 
+        // Security: Kiểm tra quyền tạo trước khi lưu yêu cầu tuyển dụng
         requisitionAccess.requireCreate(requisitionAccess.actor());
 
         if (!bindingResult.hasErrors()) {
@@ -201,6 +204,7 @@ public class RequisitionController {
             Model model,
             RedirectAttributes redirectAttributes) {
 
+        // Rule: Xác thực dữ liệu và cập nhật yêu cầu tuyển dụng theo ID
         if (!bindingResult.hasErrors()) {
             try {
                 requisitionService.updateRequisition(id, requisitionDto);
@@ -221,6 +225,7 @@ public class RequisitionController {
 
     @PostMapping("/delete/{id}")
     public String handleDeleteRequisition(@PathVariable Integer id, RedirectAttributes redirectAttributes) {
+        // Rule: Xóa yêu cầu tuyển dụng hợp lệ và thông báo kết quả
         try {
             requisitionService.deleteRequisition(id);
             redirectAttributes.addFlashAttribute("successMessage", MSG_DELETED);
@@ -240,6 +245,7 @@ public class RequisitionController {
             @RequestParam(defaultValue = "") String comment,
             RedirectAttributes redirectAttributes) {
 
+        // Rule: Kiểm tra quyết định phê duyệt ('approve') hoặc từ chối ('reject')
         if (!"approve".equals(decision) && !"reject".equals(decision)) {
             redirectAttributes.addFlashAttribute("failureMessage", "Vui lòng chọn quyết định phê duyệt hợp lệ.");
             return "redirect:/requisitions/" + id;
@@ -258,6 +264,7 @@ public class RequisitionController {
 
     @PostMapping("/{id}/withdraw")
     public String handleWithdraw(@PathVariable Integer id, RedirectAttributes redirectAttributes) {
+        // Rule: Rút lại yêu cầu đang chờ duyệt về trạng thái bản nháp
         try {
             requisitionService.withdraw(id);
             redirectAttributes.addFlashAttribute("successMessage", MSG_WITHDRAWN);

@@ -118,7 +118,7 @@ public class RequisitionServiceImpl implements RequisitionService {
     public List<Department> getAvailableDepartments(User currentUser) {
         String roleName = requisitionAccess.role(currentUser);
 
-        // Director và System Admin quản lý toàn bộ phòng ban hoạt động
+        // Security: Director và System Admin quản lý toàn bộ phòng ban hoạt động
         if (Set.of(RequisitionAccess.ROLE_DIRECTOR, RequisitionAccess.ROLE_SYSTEM_ADMIN).contains(roleName)) {
             return departmentRepository.findByDepartmentStatus("Active");
         }
@@ -254,6 +254,7 @@ public class RequisitionServiceImpl implements RequisitionService {
     public RequisitionResponse getById(Integer requisitionId) {
         User currentUser = requisitionAccess.actor();
         JobRequisition requisition = findRequisitionById(requisitionId, false);
+        // Security: Kiểm tra quyền xem chi tiết yêu cầu tuyển dụng
         requisitionAccess.requireView(currentUser, requisition);
         return toResponse(requisition, currentUser, true);
     }
@@ -262,6 +263,7 @@ public class RequisitionServiceImpl implements RequisitionService {
     @Transactional(readOnly = true)
     public RequisitionRequest getRequestDtoById(Integer requisitionId) {
         JobRequisition requisition = findRequisitionById(requisitionId, false);
+        // Security: Kiểm tra quyền chỉnh sửa yêu cầu tuyển dụng
         requisitionAccess.requireEdit(requisitionAccess.actor(), requisition);
         return toRequestDto(requisition);
     }
@@ -270,6 +272,7 @@ public class RequisitionServiceImpl implements RequisitionService {
     @Transactional(readOnly = true)
     public RequisitionRequest copy(Integer requisitionId) {
         User currentUser = requisitionAccess.actor();
+        // Security: Kiểm tra quyền tạo yêu cầu tuyển dụng khi sao chép
         requisitionAccess.requireCreate(currentUser);
         JobRequisition existingRequisition = findRequisitionById(requisitionId, false);
         requisitionAccess.requireView(currentUser, existingRequisition);
@@ -294,6 +297,7 @@ public class RequisitionServiceImpl implements RequisitionService {
     @Override
     public Integer createRequisition(RequisitionRequest request) {
         User currentUser = requisitionAccess.actor();
+        // Security: Kiểm tra quyền tạo yêu cầu tuyển dụng
         requisitionAccess.requireCreate(currentUser);
         requisitionValidator.validate(request);
 
@@ -371,6 +375,7 @@ public class RequisitionServiceImpl implements RequisitionService {
     public void updateRequisition(Integer requisitionId, RequisitionRequest request) {
         User currentUser = requisitionAccess.actor();
         JobRequisition requisition = findRequisitionById(requisitionId, true);
+        // Security: Kiểm tra quyền chỉnh sửa yêu cầu tuyển dụng
         requisitionAccess.requireEdit(currentUser, requisition);
         requisitionValidator.validate(request);
 
@@ -415,6 +420,7 @@ public class RequisitionServiceImpl implements RequisitionService {
     public void deleteRequisition(Integer requisitionId) {
         User currentUser = requisitionAccess.actor();
         JobRequisition requisition = findRequisitionById(requisitionId, true);
+        // Security: Kiểm tra quyền xóa yêu cầu tuyển dụng
         requisitionAccess.requireEdit(currentUser, requisition);
 
         // Rule: Requisition đã liên kết tin tuyển dụng thì không được phép xóa
@@ -437,6 +443,7 @@ public class RequisitionServiceImpl implements RequisitionService {
     public void decide(Integer requisitionId, boolean isApproved, String comment) {
         User currentUser = requisitionAccess.actor();
         JobRequisition requisition = findRequisitionById(requisitionId, true);
+        // Security: Kiểm tra quyền xem chi tiết trước khi quyết định
         requisitionAccess.requireView(currentUser, requisition);
 
         // Rule: Chỉ Director mới có quyền duyệt hoặc từ chối yêu cầu
@@ -476,6 +483,7 @@ public class RequisitionServiceImpl implements RequisitionService {
     public void withdraw(Integer requisitionId) {
         User currentUser = requisitionAccess.actor();
         JobRequisition requisition = findRequisitionById(requisitionId, true);
+        // Security: Kiểm tra quyền xem chi tiết trước khi rút yêu cầu
         requisitionAccess.requireView(currentUser, requisition);
 
         // Rule: Chỉ người tạo mới được rút lại yêu cầu đang chờ duyệt
