@@ -91,6 +91,14 @@
 | 19 | `docs/members/huyenpt/pr-description.md` | Modified | Cập nhật tài liệu mô tả Pull Request |
 | 20 | `src/test/java/com/group2/rms/service/OfferServiceTests.java` | Modified | Cập nhật các test case phù hợp với luồng mới |
 | 21 | `src/test/java/com/group2/rms/requisition/validator/RequisitionValidatorTests.java` | Modified | Đồng bộ hằng số validator |
+| 22 | `pom.xml` | Modified | Bổ sung Apache POI `poi-ooxml:5.3.0` phục vụ xuất Excel |
+| 23 | `com/group2/rms/offer/dto/OfferExportScope.java` | Created | Enum 3 phạm vi: `FILTERED`, `SELECTED`, `ALL` |
+| 24 | `com/group2/rms/offer/dto/OfferExportRequest.java` | Created | Record nhận request export kèm validation |
+| 25 | `com/group2/rms/offer/service/OfferExportService.java` | Created | Interface xuất Excel cho HR |
+| 26 | `com/group2/rms/offer/service/OfferExportServiceImpl.java` | Created | Triển khai tạo workbook Apache POI (Sheet Offers + Summary) |
+| 27 | `com/group2/rms/offer/controller/OfferController.java` | Modified | Thêm endpoint `POST /offers/export` phân quyền HR |
+| 28 | `src/test/java/com/group2/rms/offer/OfferExportServiceTests.java` | Created | 7 Unit test cases kiểm tra nghiệp vụ xuất Excel |
+| 29 | `src/test/java/com/group2/rms/offer/OfferIntegrationTest.java` | Modified | 9 WebMvc integration tests kiểm tra MVC routes và export |
 
 ---
 
@@ -98,13 +106,16 @@
 
 1. **Kiểm thử Tự động (Automated Test Suite):**
    ```powershell
-   .\mvnw.cmd test "-Dtest=OfferServiceTests,InterviewSchedulingServiceTests"
+   .\mvnw.cmd test "-Dtest=OfferExportServiceTests,OfferIntegrationTest,OfferServiceTests"
    ```
-   - **Kết quả:** `BUILD SUCCESS`, **67/67 tests PASS (100%)**, không có lỗi hay thất bại nào.
+   - **Kết quả:** `BUILD SUCCESS`, **73/73 tests PASS (100%)**, 0 failure, 0 error.
+     - `OfferExportServiceTests`: **7/7 PASS** (Kiểm tra 3 scope FILTERED/SELECTED/ALL, numeric cell formatting cho lương và tỷ lệ, date formatting, mapping tiếng Việt, whitelist bảo mật).
+     - `OfferIntegrationTest`: **9/9 PASS** (Kiểm tra endpoint `POST /offers/export`, phân quyền HR, chặn Candidate 403, kiểm tra validation payload 400).
+     - `OfferServiceTests`: **57/57 PASS** (Toàn bộ quy tắc nghiệp vụ GBR-07, BR-OFF-01, CRUD Offer giữ nguyên vẹn).
 
-2. **Kiểm thử HTTP Thực tế trên Live Server (Tất cả phản hồi HTTP 200 OK):**
-   - `GET /offers`: **200 OK** (Trang danh sách Offer hoạt động trơn tru, không còn lỗi 500).
-   - `GET /api/v1/hr/offers/passed-candidates`: **200 OK** (Trả về chính xác danh sách **10 ứng viên** đỗ phỏng vấn chưa có Offer).
-   - `GET /interviews`: **200 OK** (Khắc phục triệt để ngoại lệ Enum `RoleInPanel`).
-   - `GET /dashboard`, `GET /requisitions`, `GET /`, `GET /admin/accounts`, `GET /profile`: **200 OK**.
-   - Kiểm tra giao diện modal *"Tạo Mới Offer Proposal"*: Tên ứng viên, vị trí, phòng ban, lương gợi ý và nhận xét của Hội đồng hiển thị chuẩn Unicode tiếng Việt sắc nét.
+2. **Kiểm thử Tính năng Xuất Excel (Offer Export Management):**
+   - **Nút bấm & Selection Toolbar:** Nút `[Xuất Excel]` thứ cấp cạnh `[+ Tạo Đề Xuất]`; checkbox chọn từng dòng và thanh công cụ nổi `Đã chọn X đề xuất | Xuất X đề xuất | Bỏ chọn` hiển thị mượt mà.
+   - **Modal xuất dữ liệu:** Hỗ trợ 3 scope linh hoạt; bộ chọn cột phân chia rõ ràng nhóm Mặc định và Mở rộng kèm nút chọn nhanh; tự động tải Blob file `.xlsx` và hiển thị toast thông báo.
+   - **Cấu trúc file `.xlsx`:**
+     - **Sheet 1 (`Offers`):** Freeze header, auto-filter, auto-width, lương là numeric cell (`#,##0`), tỷ lệ là percentage cell (`0.00%`), ngày tháng là date cell, status tiếng Việt thân thiện HR.
+     - **Sheet 2 (`Summary`):** Báo cáo tổng hợp số lượng Offer theo từng trạng thái tính trên đúng tập dữ liệu được xuất, hiển thị người xuất, ngày giờ và bộ lọc đã áp dụng.

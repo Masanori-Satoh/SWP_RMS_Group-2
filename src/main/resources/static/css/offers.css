@@ -735,3 +735,203 @@
         grid-template-columns: 1fr;
     }
 }
+
+/* =========================================================================
+ * 9. EXCEL EXPORT & SELECTION TOOLBAR STYLES (Screen 30)
+ * ========================================================================= */
+.offers-header-actions {
+    display: inline-flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.export-btn-icon {
+    color: #107c41;
+}
+
+.offer-checkbox {
+    width: 16px;
+    height: 16px;
+    cursor: pointer;
+    accent-color: var(--brand-dark);
+}
+
+.selection-toolbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 16px;
+    margin-bottom: 12px;
+    background: #f0fdf4;
+    border: 1px solid #bbf7d0;
+    border-radius: 6px;
+    animation: toolbarFadeIn 0.2s ease;
+}
+
+@keyframes toolbarFadeIn {
+    from { opacity: 0; transform: translateY(-4px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.selection-toolbar-left {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13.5px;
+    color: #166534;
+    font-weight: 500;
+}
+
+.selection-toolbar-left i {
+    color: #15803d;
+    font-size: 15px;
+}
+
+.selection-toolbar-right {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+/* Modal Export Dialog */
+.modal-export-card {
+    max-width: 680px;
+    width: 100%;
+}
+
+.export-section {
+    margin-bottom: 16px;
+}
+
+.export-section-title {
+    display: block;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--ink);
+    margin-bottom: 8px;
+}
+
+.export-scope-options {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.scope-radio-label {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 10px 14px;
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    cursor: pointer;
+    background: var(--surface);
+    transition: all 0.15s ease;
+}
+
+.scope-radio-label:hover {
+    border-color: var(--control-line);
+    background: var(--page);
+}
+
+.scope-radio-label.selected,
+.scope-radio-label:has(input[type="radio"]:checked) {
+    border-color: var(--brand-dark);
+    background: #f6faf8;
+}
+
+.scope-radio-label input[type="radio"] {
+    margin-top: 3px;
+    accent-color: var(--brand-dark);
+    cursor: pointer;
+}
+
+.scope-radio-content {
+    flex: 1;
+}
+
+.scope-name {
+    font-size: 13.5px;
+    font-weight: 600;
+    color: var(--ink);
+}
+
+.scope-desc {
+    font-size: 12px;
+    color: var(--muted);
+    margin-top: 2px;
+}
+
+.scope-radio-label.disabled,
+.scope-radio-label:has(input[type="radio"]:disabled) {
+    opacity: 0.55;
+    cursor: not-allowed;
+    background: var(--page);
+}
+
+.export-columns-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 10px;
+}
+
+.columns-quick-actions {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12.5px;
+}
+
+.btn-link-action {
+    background: none;
+    border: none;
+    padding: 0;
+    color: var(--brand-dark);
+    font-size: 12.5px;
+    font-weight: 500;
+    cursor: pointer;
+}
+
+.btn-link-action:hover {
+    text-decoration: underline;
+}
+
+.sep-dot {
+    color: var(--control-line);
+    font-size: 11px;
+}
+
+.column-group-label {
+    font-size: 11.5px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--muted);
+    margin-bottom: 6px;
+}
+
+.columns-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+    gap: 8px 12px;
+    background: var(--page);
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    padding: 12px 14px;
+}
+
+.column-checkbox-label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13px;
+    color: var(--ink);
+    cursor: pointer;
+    user-select: none;
+}
+
+.column-checkbox-label input[type="checkbox"] {
+    accent-color: var(--brand-dark);
+    cursor: pointer;
+}

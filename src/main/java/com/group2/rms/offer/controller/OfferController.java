@@ -1,5 +1,6 @@
 package com.group2.rms.offer.controller;
 
+import com.group2.rms.core.dto.ApiResponse;
 import com.group2.rms.core.exception.BaseBusinessException;
 import com.group2.rms.offer.dto.CreateOfferRequest;
 import com.group2.rms.offer.dto.OfferDetailResponse;
@@ -11,6 +12,9 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
@@ -33,6 +37,7 @@ import java.util.Map;
 public class OfferController {
 
     private final OfferService offerService;
+    private final com.group2.rms.offer.service.OfferExportService offerExportService;
 
     @ModelAttribute
     public void populateCommonAttributes(Model model, Principal principal) {
@@ -117,7 +122,26 @@ public class OfferController {
     }
 
     /**
-     * 3. SUBMIT CREATE: Tiếp nhận form tạo mới Offer (Save Draft hoặc Submit Director)
+     * 3a. SUBMIT CREATE VIA AJAX (JSON): Tiếp nhận request từ pop-up Modal trên trang danh sách
+     */
+    @PostMapping(value = "/create", consumes = MediaType.APPLICATION_JSON_VALUE)
+    @ResponseBody
+    public ResponseEntity<ApiResponse<OfferResponse>> createOfferJson(
+            @Valid @RequestBody CreateOfferRequest createRequest) {
+        try {
+            OfferResponse created = offerService.createOfferByHr(createRequest);
+            boolean isDraft = Boolean.TRUE.equals(createRequest.getIsDraft());
+            String msg = isDraft
+                    ? "Lưu bản thảo Offer (Draft) thành công!"
+                    : "Đã nộp trình đề xuất Offer lên Giám đốc (Pending_Director) thành công!";
+            return ResponseEntity.status(HttpStatus.CREATED).body(new ApiResponse<>(true, msg, created));
+        } catch (BaseBusinessException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ApiResponse<>(false, e.getMessage()));
+        }
+    }
+
+    /**
+     * 3b. SUBMIT CREATE: Tiếp nhận form tạo mới Offer (Save Draft hoặc Submit Director)
      */
     @PostMapping("/create")
     public String createOffer(
@@ -238,5 +262,31 @@ public class OfferController {
             flash.addFlashAttribute("errorMessage", e.getMessage());
         }
         return "redirect:/offers/" + id;
+    }
+
+    /**
+     * 9. EXPORT EXCEL: Xuất dữ liệu Offer theo phạm vi và bộ cột được chọn (Screen 30)
+     */
+    @PostMapping("/export")
+    public org.springframework.http.ResponseEntity<byte[]> exportOffers(
+            @Valid @RequestBody com.group2.rms.offer.dto.OfferExportRequest request,
+            Principal principal) {
+        if (principal instanceof org.springframework.security.core.Authentication auth) {
+            boolean isAuthorized = auth.getAuthorities().stream().anyMatch(a ->
+                    "ROLE_HR".equals(a.getAuthority())
+                            || "ROLE_DIRECTOR".equals(a.getAuthority())
+                            || com.group2.rms.core.security.RoleAuthorities.SYSTEM_ADMIN.equals(a.getAuthority()));
+            if (!isAuthorized) {
+                return org.springframework.http.ResponseEntity.status(org.springframework.http.HttpStatus.FORBIDDEN).build();
+            }
+        }
+        String exportedBy = principal != null ? principal.getName() : "HR";
+        byte[] excelBytes = offerExportService.exportOffersToExcel(request, exportedBy);
+        String filename = offerExportService.generateExportFilename(request);
+
+        return org.springframework.http.ResponseEntity.ok()
+                .header(org.springframework.http.HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + filename + "\"")
+                .header(org.springframework.http.HttpHeaders.CONTENT_TYPE, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
+                .body(excelBytes);
     }
 }

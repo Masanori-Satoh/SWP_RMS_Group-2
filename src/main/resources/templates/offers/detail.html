@@ -180,7 +180,7 @@
                             <div class="detail-item-label">Lương thử việc (Gross/tháng)</div>
                             <div class="detail-item-value" style="color:var(--brand-dark); font-weight:700; font-size:15px;">
                                 <span th:text="${detail.probationSalary != null ? #numbers.formatDecimal(detail.probationSalary, 0, 'POINT', 0, 'COMMA') + ' VND' : '-'}">25,500,000 VND</span>
-                                <span class="salary-badge-pct" th:if="${detail.proposedSalary != null and detail.proposedSalary.compareTo(T(java.math.BigDecimal).ZERO) > 0}"
+                                <span class="salary-badge-pct" th:if="${detail.proposedSalary != null and detail.proposedSalary.compareTo(T(java.math.BigDecimal).ZERO) > 0 and detail.probationSalary != null}"
                                       th:text="${#numbers.formatDecimal(detail.probationSalary.multiply(new java.math.BigDecimal(100)).divide(detail.proposedSalary, 0, T(java.math.RoundingMode).HALF_UP), 0, 0)} + '%'">
                                     85%
                                 </span>
