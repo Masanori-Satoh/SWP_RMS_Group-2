@@ -13,7 +13,7 @@ import java.util.List;
 /**
  * Response chi tiết gói Offer (Screen 32):
  * Tổng hợp thông tin ứng viên (Group A), thông tin đãi ngộ (Group B),
- * lịch sử phê duyệt của Director (OfferApproval) và lịch sử đàm phán (OfferNegotiation).
+ * và lịch sử phê duyệt của Director (OfferApproval).
  */
 @Data
 @Builder
@@ -59,9 +59,6 @@ public class OfferDetailResponse {
     // --- Audit Log: Lịch sử phê duyệt của Director (OfferApproval) ---
     private List<DirectorApprovalLog> approvalHistory;
 
-    // --- Lịch sử đàm phán (OfferNegotiation) ---
-    private List<NegotiationRound> negotiationHistory;
-
     @Data
     @Builder
     @NoArgsConstructor
@@ -73,17 +70,5 @@ public class OfferDetailResponse {
         private String status;
         private String directorComments;
         private LocalDateTime approvedAt;
-    }
-
-    @Data
-    @Builder
-    @NoArgsConstructor
-    @AllArgsConstructor
-    public static class NegotiationRound {
-        private Integer negotiationId;
-        private BigDecimal candidateCounterSalary;
-        private String candidateNotes;
-        private String hrResponseNotes;
-        private LocalDateTime negotiationDate;
     }
 }

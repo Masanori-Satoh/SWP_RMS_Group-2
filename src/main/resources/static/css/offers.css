@@ -349,11 +349,6 @@
     border: 1px solid var(--line);
 }
 
-.status-negotiating {
-    background: #f5f3ff;
-    color: #6b21a8;
-    border: 1px solid #e9d5ff;
-}
 
 .status-voided {
     background: #f1f3f0;

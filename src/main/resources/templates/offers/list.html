@@ -109,7 +109,6 @@
                             <option value="Sent_Candidate" th:selected="${currentStatus == 'Sent_Candidate'}">Đã gửi ứng viên</option>
                             <option value="Accepted" th:selected="${currentStatus == 'Accepted'}">Ứng viên đồng ý</option>
                             <option value="Declined" th:selected="${currentStatus == 'Declined'}">Ứng viên từ chối</option>
-                            <option value="Negotiating" th:selected="${currentStatus == 'Negotiating'}">Đang đàm phán</option>
                         </select>
 
                         <!-- Sắp xếp theo thời gian -->
@@ -189,9 +188,6 @@
                                     </span>
                                     <span th:if="${o.offerStatus == 'Declined'}" class="status-badge status-declined">
                                         <i class="fa-solid fa-user-xmark"></i> Từ chối
-                                    </span>
-                                    <span th:if="${o.offerStatus == 'Negotiating'}" class="status-badge status-negotiating">
-                                        <i class="fa-solid fa-comments"></i> Đang đàm phán
                                     </span>
                                 </td>
                                 <td style="color:var(--muted); font-size:13.5px;" th:text="${o.createdAt != null ? #temporals.format(o.createdAt, 'dd/MM/yyyy HH:mm') : '-'}">

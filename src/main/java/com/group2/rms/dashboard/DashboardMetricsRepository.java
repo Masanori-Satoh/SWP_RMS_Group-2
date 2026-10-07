@@ -21,7 +21,7 @@ public class DashboardMetricsRepository {
 
     /** Only offers sent to the candidate are visible; director decisions stay internal. */
     private static final String CANDIDATE_VISIBLE_OFFER_STATUSES =
-            "('Sent_Candidate', 'Negotiating', 'Accepted', 'Declined')";
+            "('Sent_Candidate', 'Accepted', 'Declined')";
 
     private final EntityManager entityManager;
 

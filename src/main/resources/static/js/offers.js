@@ -368,20 +368,6 @@ function renderDetailModalHtml(d) {
         `).join('') + '</div>';
     }
 
-    let negotiationLogsHtml = '<p style="color:var(--muted); font-size:13px;">Chưa có vòng đàm phán lương nào từ ứng viên.</p>';
-    if (d.negotiationHistory && d.negotiationHistory.length > 0) {
-        negotiationLogsHtml = '<div class="history-timeline">' + d.negotiationHistory.map(n => `
-            <div class="timeline-item">
-                <div class="timeline-dot"></div>
-                <div class="timeline-header">Ứng viên đề xuất mức lương: ${formatVND(n.candidateCounterSalary)}</div>
-                <div class="timeline-time">${n.negotiationDate ? n.negotiationDate.replace('T', ' ') : ''}</div>
-                <div class="timeline-content">
-                    <strong>Ghi chú của ứng viên:</strong> ${n.candidateNotes || '-'}<br>
-                    ${n.hrResponseNotes ? `<strong>Phản hồi của HR:</strong> ${n.hrResponseNotes}` : ''}
-                </div>
-            </div>
-        `).join('') + '</div>';
-    }
 
     body.innerHTML = `
         <!-- Group A -->
@@ -431,16 +417,10 @@ function renderDetailModalHtml(d) {
             </div>
         </div>
 
-        <!-- Audit Logs & Negotiation -->
-        <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px;">
-            <div class="detail-section">
-                <div class="section-title"><i class="fa-solid fa-stamp"></i> Lịch Sử Phê Duyệt Của Director</div>
-                ${approvalLogsHtml}
-            </div>
-            <div class="detail-section">
-                <div class="section-title"><i class="fa-solid fa-comments"></i> Lịch Sử Đàm Phán Lương</div>
-                ${negotiationLogsHtml}
-            </div>
+        <!-- Audit Logs: Lịch Sử Phê Duyệt Của Director -->
+        <div class="detail-section">
+            <div class="section-title"><i class="fa-solid fa-stamp"></i> Lịch Sử Phê Duyệt Của Director</div>
+            ${approvalLogsHtml}
         </div>
     `;
 
@@ -498,14 +478,11 @@ function openEditOfferModal(offerId) {
                 editStartDateInput.min = getTomorrowDateString();
             }
 
-            // Nếu bị Director_Rejected hoặc Negotiating hoặc Declined -> hiển thị lý do / hướng dẫn
+            // Nếu bị Director_Rejected hoặc Declined -> hiển thị lý do / hướng dẫn
             const rejectBanner = document.getElementById('editRejectBanner');
             if (d.offerStatus === 'Director_Rejected' || d.offerStatus === 'Rejected') {
                 const latestReject = (d.approvalHistory && d.approvalHistory.length > 0) ? d.approvalHistory[0].directorComments : 'Vui lòng điều chỉnh lại mức lương/định biên theo yêu cầu.';
                 document.getElementById('editRejectComment').textContent = 'Director từ chối: ' + latestReject;
-                rejectBanner.style.display = 'flex';
-            } else if (d.offerStatus === 'Negotiating') {
-                document.getElementById('editRejectComment').textContent = 'Ứng viên phản hồi đàm phán lại các điều khoản. HR điều chỉnh gói Offer và trình duyệt lại Director.';
                 rejectBanner.style.display = 'flex';
             } else if (d.offerStatus === 'Declined') {
                 document.getElementById('editRejectComment').textContent = 'Ứng viên đã từ chối thư mời trước đó. HR phát hành lại gói Offer mới theo quy tắc GBR-07.';

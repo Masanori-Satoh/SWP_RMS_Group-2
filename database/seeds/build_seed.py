@@ -720,7 +720,7 @@ for day_idx in range(num_days):
                     exp_start_date = (int_date + datetime.timedelta(days=random.randint(14, 21))).strftime("%Y-%m-%d")
                     offer_created_dt = (int_end_dt + datetime.timedelta(days=1)).strftime("%Y-%m-%d %H:%M:%S")
                     
-                    off_status = random.choice(["Accepted", "Accepted", "Negotiating", "Director_Approved", "Sent_Candidate", "Declined"])
+                    off_status = random.choice(["Accepted", "Accepted", "Director_Approved", "Sent_Candidate", "Declined"])
                     lines.append(
                         f"INSERT INTO OfferProposal (ApplicationId, OfferedPositionTitle, ProposedSalary, ProbationSalary, ExpectedStartDate, WorkLocation, BenefitsPackage, OfferStatus, ProposedBy, CreatedAt) "
                         f"VALUES ({c['app_id']}, N'{off_title}', {prop_sal:.2f}, {prob_sal:.2f}, '{exp_start_date}', N'Tầng 8, Tòa nhà RMS Tower, Duy Tân, Cầu Giấy, Hà Nội', N'Bảo hiểm PVI, 14 ngày phép năm, thưởng dự án, xét lương 2 lần/năm', N'{off_status}', 3, '{offer_created_dt}');"
