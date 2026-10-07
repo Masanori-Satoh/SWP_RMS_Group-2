@@ -6,8 +6,8 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import org.hibernate.annotations.JdbcTypeCode;
-import org.hibernate.type.SqlTypes;
+
+
 
 import java.io.Serial;
 import java.io.Serializable;
@@ -34,7 +34,7 @@ public class InterviewPanelId implements Serializable {
     private static final long serialVersionUID = 1L;
 
     @Column(name = "InterviewId", nullable = false)
-    @JdbcTypeCode(SqlTypes.INTEGER)
+  
     private Long interviewId;
 
     @Column(name = "InterviewerId", nullable = false)
