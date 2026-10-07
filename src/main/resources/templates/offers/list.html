@@ -279,21 +279,19 @@
 </div>
 
 <!-- Modal Xuất Excel Offer (HR) -->
-<div id="offerExportModal" class="modal-backdrop" style="display: none;" onclick="handleExportModalBackdropClick(event)">
-    <div class="modal-card modal-export-card" onclick="event.stopPropagation()">
+<div id="offerExportModal" class="modal-overlay modal-backdrop" style="display: none;" onclick="handleExportModalBackdropClick(event)">
+    <div class="modal-box modal-lg modal-export-card" onclick="event.stopPropagation()">
         <div class="modal-header">
-            <div class="modal-title-wrap">
-                <div class="modal-icon-brand">
+            <div style="display: flex; align-items: center; gap: 10px;">
+                <div class="offer-stat-icon stat-icon-green" style="width: 36px; height: 36px; font-size: 16px; border-radius: 6px;">
                     <i class="fa-solid fa-file-excel"></i>
                 </div>
                 <div>
-                    <h3 class="modal-title">Xuất dữ liệu Offer</h3>
-                    <p class="modal-subtitle">Tải dữ liệu đề xuất lương ra file Microsoft Excel (.xlsx)</p>
+                    <div style="font-size: 17px; font-weight: 700; color: var(--ink);">Xuất dữ liệu Offer</div>
+                    <div style="font-size: 12.5px; color: var(--muted); font-family: var(--sans); font-weight: normal; margin-top: 2px;">Tải dữ liệu đề xuất lương ra file Microsoft Excel (.xlsx)</div>
                 </div>
             </div>
-            <button type="button" class="modal-close-btn" onclick="closeExportModal()" title="Đóng">
-                <i class="fa-solid fa-xmark"></i>
-            </button>
+            <button type="button" class="btn-icon" onclick="closeExportModal()" title="Đóng">✕</button>
         </div>
 
         <div class="modal-body">

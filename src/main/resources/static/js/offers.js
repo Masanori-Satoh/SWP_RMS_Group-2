@@ -516,6 +516,7 @@ function openExportModal() {
 
     const modal = document.getElementById('offerExportModal');
     if (modal) {
+        modal.classList.add('active');
         modal.style.display = 'flex';
     }
 }
@@ -537,6 +538,7 @@ function openExportModalWithScope(scope) {
 function closeExportModal() {
     const modal = document.getElementById('offerExportModal');
     if (modal) {
+        modal.classList.remove('active');
         modal.style.display = 'none';
     }
 }

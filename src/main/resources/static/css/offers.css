@@ -417,7 +417,8 @@
 }
 
 /* Modals & Dialog Overlays */
-.modal-overlay {
+.modal-overlay,
+.modal-backdrop {
     position: fixed;
     top: 0;
     left: 0;
@@ -432,11 +433,13 @@
     padding: 20px;
 }
 
-.modal-overlay.active {
+.modal-overlay.active,
+.modal-backdrop.active {
     display: flex;
 }
 
-.modal-box {
+.modal-box,
+.modal-card {
     background: var(--surface);
     border: 1px solid var(--line);
     border-radius: 8px;
@@ -448,6 +451,25 @@
     flex-direction: column;
     max-height: 90vh;
     animation: popInModal 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.modal-close-btn {
+    border: none;
+    background: transparent;
+    cursor: pointer;
+    font-size: 18px;
+    color: var(--muted);
+    padding: 4px;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.15s ease;
+}
+
+.modal-close-btn:hover {
+    background: rgba(0, 0, 0, 0.05);
+    color: var(--ink);
 }
 
 @keyframes popInModal {
