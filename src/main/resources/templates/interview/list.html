@@ -21,9 +21,9 @@
         <div class="container">
 
       <nav class="breadcrumbs" aria-label="Breadcrumb" style="margin-bottom: var(--s2); font-size: 14px; display: flex; gap: 8px; align-items: center; color: var(--text-muted);">
-        <a th:href="@{/dashboard}" style="color: var(--brand); text-decoration: none;">Dashboard</a>
+        <a th:href="@{/dashboard}" style="color: var(--brand); text-decoration: none;">Bảng điều khiển</a>
         <span aria-hidden="true">/</span>
-        <span aria-current="page" style="color: var(--text-color); font-weight: 500;">Interview Schedule</span>
+        <span aria-current="page" style="color: var(--text-color); font-weight: 500;">Lịch phỏng vấn</span>
       </nav>
 
       <div class="page-head" style="margin-bottom: var(--s4); display: flex; justify-content: space-between; align-items: flex-start;">
@@ -216,7 +216,7 @@
             <!-- Status Badge (Hiển thị trạng thái theo mốc thời gian thực tế) -->
             <span th:class="'status-badge status-' + ${#strings.toLowerCase(s.timeStatus != null ? s.timeStatus : s.interviewStatus.name())}"
                   th:text="${s.timeStatusDisplay != null ? s.timeStatusDisplay : s.interviewStatusDisplay}">
-              Scheduled
+              Đã lên lịch
             </span>
           </div>
 

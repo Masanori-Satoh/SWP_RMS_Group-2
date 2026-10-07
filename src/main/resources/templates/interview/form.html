@@ -26,9 +26,9 @@
           <!-- Breadcrumb navigation -->
           <nav class="breadcrumbs" aria-label="Breadcrumb"
             style="margin-bottom: var(--s2); font-size: 14px; display: flex; gap: 8px; align-items: center; color: var(--text-muted);">
-            <a th:href="@{/dashboard}" style="color: var(--brand); text-decoration: none;">Dashboard</a>
+            <a th:href="@{/dashboard}" style="color: var(--brand); text-decoration: none;">Bảng điều khiển</a>
             <span aria-hidden="true">/</span>
-            <a th:href="@{/interviews}" style="color: var(--brand); text-decoration: none;">Interview Schedule</a>
+            <a th:href="@{/interviews}" style="color: var(--brand); text-decoration: none;">Lịch phỏng vấn</a>
             <span aria-hidden="true">/</span>
             <span aria-current="page" style="color: var(--text-color); font-weight: 500;"
               th:text="${isEdit ? 'Chỉnh sửa lịch #' + interviewId : 'Lên lịch mới'}">Lên lịch mới</span>
@@ -42,7 +42,7 @@
                 th:text="${isEdit ? 'Chỉnh sửa lịch phỏng vấn #' + interviewId : 'Lên lịch phỏng vấn mới'}">Lên lịch
                 phỏng vấn</h1>
               <p class="form-desc" th:if="${!isEdit}">Điền thông tin buổi phỏng vấn, chọn thời gian và phân công Hội
-                đồng phỏng vấn (Hiring Manager / Interviewer chuyên môn).</p>
+                đồng phỏng vấn (Trưởng phòng chuyên môn / Người phỏng vấn).</p>
               <p class="form-desc" th:if="${isEdit}">Cập nhật thông tin buổi phỏng vấn. Lưu ý tuân thủ Rule GBR-01
                 (không thể lùi trạng thái).</p>
             </div>
@@ -179,7 +179,7 @@
               <div class="search-field"
                 th:classappend="${#fields.hasErrors('panelMembers') or #fields.hasErrors('interviewerIds')} ? 'has-error' : ''">
                 <label for="interviewerIds">
-                  Hội đồng phỏng vấn (Interviewer / Hiring Manager / Director) <span class="required">*</span>
+                  Hội đồng phỏng vấn (Người phỏng vấn / Trưởng phòng chuyên môn / Giám đốc) <span class="required">*</span>
                 </label>
 
                 <!-- Bộ lọc & Ô tìm kiếm nhân viên thời gian thực -->
@@ -206,15 +206,15 @@
                     </button>
                     <button type="button" class="role-filter-pill" data-role="Hiring Manager"
                       style="padding: 4px 10px; border-radius: 12px; border: 1px solid #cbd5e1; background: #ffffff; color: #334155; font-size: 12px; cursor: pointer;">
-                      Hiring Manager
+                      Trưởng phòng chuyên môn
                     </button>
                     <button type="button" class="role-filter-pill" data-role="Interviewer"
                       style="padding: 4px 10px; border-radius: 12px; border: 1px solid #cbd5e1; background: #ffffff; color: #334155; font-size: 12px; cursor: pointer;">
-                      Interviewer
+                      Người phỏng vấn
                     </button>
                     <button type="button" class="role-filter-pill" data-role="Director"
                       style="padding: 4px 10px; border-radius: 12px; border: 1px solid #cbd5e1; background: #ffffff; color: #334155; font-size: 12px; cursor: pointer;">
-                      Director
+                      Giám đốc
                     </button>
                   </div>
                 </div>
@@ -224,8 +224,8 @@
                   <option th:each="user : ${availableInterviewers}" th:value="${user.userId}"
                     th:data-role="${user.role != null ? user.role.roleName : ''}"
                     th:data-search="${#strings.toLowerCase(user.fullName + ' ' + (user.email != null ? user.email : '') + ' ' + (user.role != null ? user.role.roleName : '') + ' ' + (user.department != null ? user.department.departmentName : ''))}"
-                    th:text="${user.fullName} + (${user.email != null ? ' (' + user.email + ')' : ''}) + ' — ' + (${user.role != null ? user.role.roleName : 'Chuyên môn'}) + ' (' + (${user.department != null ? user.department.departmentName : 'Chưa phân bổ'}) + ')'">
-                    Nguyễn Chuyên Gia (chuyengia@company.com) — Hiring Manager (Phòng Kỹ thuật)
+                    th:text="${user.fullName} + (${user.email != null ? ' (' + user.email + ')' : ''}) + ' — ' + (${user.role != null ? (user.role.roleName == 'Hiring Manager' ? 'Trưởng phòng chuyên môn' : (user.role.roleName == 'Interviewer' ? 'Người phỏng vấn' : (user.role.roleName == 'Director' ? 'Giám đốc' : user.role.roleName))) : 'Chuyên môn'}) + ' (' + (${user.department != null ? user.department.departmentName : 'Chưa phân bổ'}) + ')'">
+                    Nguyễn Chuyên Gia (chuyengia@company.com) — Trưởng phòng chuyên môn (Phòng Kỹ thuật)
                   </option>
                 </select>
 

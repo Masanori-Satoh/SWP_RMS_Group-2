@@ -34,14 +34,14 @@
   <th:block th:if="${viewer == null}"><a th:href="@{/login}">Sign In</a><a class="register-link" th:href="@{/register}">Register</a></th:block>
   <th:block th:if="${viewer != null}">
     <span class="viewer-name" th:text="${viewer.fullName}"></span>
-    <a th:href="@{/dashboard}">Dashboard</a>
+    <a th:href="@{/dashboard}">Bảng điều khiển</a>
     <form th:action="@{/logout}" method="post"><button class="logout-button" type="submit">Log Out</button></form>
   </th:block>
 </th:block>
 <footer class="site-footer" th:fragment="footer">
   <div class="container footer-grid">
     <div class="footer-brand"><span class="brand-name">mộc.</span><p>Clear thinking. Useful software. Work that moves teams forward.</p></div>
-    <nav class="footer-group" aria-label="Careers"><h3>Careers</h3><a th:href="@{/#roles}">Open Positions</a><a th:if="${viewer == null}" th:href="@{/register}">Create a Candidate Account</a><a th:if="${viewer != null}" th:href="@{/dashboard}">Dashboard</a></nav>
+    <nav class="footer-group" aria-label="Careers"><h3>Careers</h3><a th:href="@{/#roles}">Open Positions</a><a th:if="${viewer == null}" th:href="@{/register}">Create a Candidate Account</a><a th:if="${viewer != null}" th:href="@{/dashboard}">Bảng điều khiển</a></nav>
     <nav class="footer-group" aria-label="About us"><h3>Working at Mộc</h3><a th:href="@{/#benefits}">Benefits &amp; Working Policy</a><a th:href="@{/#process}">Recruitment Process</a></nav>
   </div>
   <p class="container footer-bottom">Mộc Careers · Opportunities within one team.</p>
