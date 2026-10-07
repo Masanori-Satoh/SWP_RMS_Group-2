@@ -273,7 +273,7 @@
         <div class="search-field"><label for="location">Địa điểm</label><select id="location" name="location"><option value="">Tất cả địa điểm</option><option>Hà Nội</option><option>TP. Hồ Chí Minh</option><option>Đà Nẵng</option></select></div>
       </form>
       <fieldset class="department-filters"><legend>Phòng ban</legend><div class="filter-pills"><button type="button" class="department-filter" data-department="" aria-pressed="true" aria-controls="job-grid">Tất cả <span>6</span></button><button type="button" class="department-filter" data-department="Kỹ thuật" aria-pressed="false" aria-controls="job-grid">Kỹ thuật <span>1</span></button><button type="button" class="department-filter" data-department="Sản phẩm & Vận hành" aria-pressed="false" aria-controls="job-grid">Sản phẩm & Vận hành <span>1</span></button><button type="button" class="department-filter" data-department="Con người & Văn hóa" aria-pressed="false" aria-controls="job-grid">Con người & Văn hóa <span>1</span></button><button type="button" class="department-filter" data-department="Thiết kế" aria-pressed="false" aria-controls="job-grid">Thiết kế <span>1</span></button><button type="button" class="department-filter" data-department="Dữ liệu" aria-pressed="false" aria-controls="job-grid">Dữ liệu <span>1</span></button><button type="button" class="department-filter" data-department="Tài chính" aria-pressed="false" aria-controls="job-grid">Tài chính <span>1</span></button></div></fieldset>
-      <div class="results-line"><p id="result-count" role="status" aria-live="polite" aria-atomic="true">6 vị trí đang tuyển</p><button id="clear-filters" class="clear-filters" type="button" hidden>Xóa bộ lọc</button></div>
+      <div class="results-line"><p id="result-count" role="status" aria-live="polite" aria-atomic="true">6 vị trí đang tuyển</p></div>
       <p id="route-notice" class="route-notice" role="status" hidden></p>
       <div class="job-grid" id="job-grid"><article class="job-card" data-slug="senior-java-developer">
       <p class="job-department">Kỹ thuật</p>
@@ -312,7 +312,7 @@
       <p class="job-salary">16–22 triệu / tháng</p>
       <div class="job-bottom"><time datetime="2026-09-18">Đăng 18/09/2026</time><span class="job-view" aria-hidden="true">Chi tiết <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M5 12h14m-6-6 6 6-6 6"/></svg></span></div>
     </article></div>
-      <div class="empty-state" id="empty-state" hidden><h3>Chưa tìm thấy vị trí phù hợp</h3><p>Thử từ khóa ngắn hơn, chọn địa điểm khác hoặc xem lại tất cả vị trí.</p><button id="empty-reset" class="clear-filters" type="button">Xóa bộ lọc</button></div>
+      <div class="empty-state" id="empty-state" hidden><h3>Chưa tìm thấy vị trí phù hợp</h3><p>Thử từ khóa ngắn hơn, chọn địa điểm khác hoặc xem lại tất cả vị trí.</p></div>
       <noscript><p>Bật JavaScript để lọc và đọc chi tiết vị trí. Bạn có thể <a href="mailto:tuyendung@moc.example">liên hệ đội ngũ tuyển dụng</a> qua email.</p></noscript>
     </div></section>
     <section class="section" id="about" aria-labelledby="about-title"><div class="container about-layout">
@@ -546,7 +546,6 @@
     const normalize = value => value.normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/đ/g, 'd').replace(/Đ/g, 'D').toLowerCase().trim();
     const keyword = document.getElementById('keyword');
     const locationFilter = document.getElementById('location');
-    const clearButton = document.getElementById('clear-filters');
     const departmentButtons = [...document.querySelectorAll('.department-filter')];
     const cards = [...document.querySelectorAll('.job-card')];
     const emptyState = document.getElementById('empty-state');
@@ -569,7 +568,6 @@
       let count = 0;
       jobs.forEach((job,index) => { cards[index].hidden = !matches(job); if (!cards[index].hidden) count++; });
       const active = Boolean(keyword.value.trim() || locationFilter.value || selectedDepartment);
-      clearButton.hidden = !active;
       emptyState.hidden = count !== 0;
       resultCount.textContent = `${count} vị trí${active ? ' phù hợp' : ' đang tuyển'}`;
       departmentButtons.forEach(button => {
@@ -577,19 +575,10 @@
         button.querySelector('span').textContent = jobs.filter(job => matches(job,false) && (!button.dataset.department || job.department === button.dataset.department)).length;
       });
     }
-    function clearFilters() {
-      // Only move focus if its current control is about to disappear; stay in positions, without scrolling.
-      const disappearingFocus = document.activeElement === clearButton || document.activeElement === document.getElementById('empty-reset');
-      keyword.value = ''; locationFilter.value = ''; selectedDepartment = '';
-      if (disappearingFocus) keyword.focus({preventScroll:true});
-      updateRoles();
-    }
     keyword.addEventListener('input', updateRoles);
     locationFilter.addEventListener('change', updateRoles);
     document.getElementById('role-search').addEventListener('submit', event => { event.preventDefault(); updateRoles(); });
     departmentButtons.forEach(button => button.addEventListener('click', () => { selectedDepartment = button.dataset.department; updateRoles(); }));
-    clearButton.addEventListener('click', clearFilters);
-    document.getElementById('empty-reset').addEventListener('click', clearFilters);
 
     function fact(label, value, date) {
       const group = document.createElement('div');

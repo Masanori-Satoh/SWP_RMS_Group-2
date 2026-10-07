@@ -238,7 +238,6 @@ public class DashboardService {
         private String offerLabel(String status) {
                 return switch (status) {
                         case "Sent_Candidate" -> "Chờ phản hồi";
-                        case "Negotiating" -> "Đang thương lượng";
                         case "Accepted" -> "Đã chấp nhận";
                         case "Declined" -> "Đã từ chối";
                         default -> status;

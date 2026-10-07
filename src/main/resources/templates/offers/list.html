@@ -15,7 +15,7 @@
 
     <div class="main-content">
         <!-- TOPBAR: Kế thừa header chung của hệ thống với logo Mộc và người dùng hiện tại -->
-        <header th:replace="~{fragments/workspace-header :: header(${userRole != null ? (userRole == 'HR' ? 'HR Specialist' : userRole) : 'HR Specialist'}, ${currentUser})}"></header>
+        <header th:replace="~{fragments/workspace-header :: header(${userRole != null ? (userRole == 'HR' ? 'HR' : userRole) : 'HR Specialist'}, ${currentUser})}"></header>
 
         <!-- PAGE CONTENT -->
         <main id="main" class="page-content" tabindex="-1">
@@ -28,7 +28,8 @@
                      
                     </div>
                     <button class="btn btn-primary" onclick="openCreateOfferModal()">
-                        <i class="fa-solid fa-plus"></i> Tạo Offer Proposal
+                        <i class="fa-solid fa-plus"></i> Tạo Đề Xuất
+
                     </button>
                 </div>
 
@@ -50,7 +51,7 @@
                             <div class="offer-stat-icon stat-icon-amber">
                                 <i class="fa-solid fa-hourglass-half"></i>
                             </div>
-                            <div class="stat-value" id="statPending">...</div>
+                            <div class="stat-value" id="statPending" th:text="${statPending}">0</div>
                         </div>
                     </div>
 
@@ -60,7 +61,7 @@
                             <div class="offer-stat-icon stat-icon-green">
                                 <i class="fa-solid fa-stamp"></i>
                             </div>
-                            <div class="stat-value" id="statApproved">...</div>
+                            <div class="stat-value" id="statApproved" th:text="${statApproved}">0</div>
                         </div>
                     </div>
 
@@ -70,7 +71,7 @@
                             <div class="offer-stat-icon stat-icon-blue">
                                 <i class="fa-solid fa-paper-plane"></i>
                             </div>
-                            <div class="stat-value" id="statSent">...</div>
+                            <div class="stat-value" id="statSent" th:text="${statSent}">0</div>
                         </div>
                     </div>
 
@@ -80,29 +81,41 @@
                             <div class="offer-stat-icon stat-icon-emerald">
                                 <i class="fa-solid fa-user-check"></i>
                             </div>
-                            <div class="stat-value" id="statAccepted">...</div>
+                            <div class="stat-value" id="statAccepted" th:text="${statAccepted}">0</div>
                         </div>
                     </div>
                 </div>
 
-                <!-- Filter Toolbar -->
+                <!-- Filter Toolbar (Server-side 3 Filters) -->
                 <div class="offers-toolbar">
                     <div class="toolbar-left">
                         <div class="search-box">
-                            <i class="fa-solid fa-magnifying-glass"></i>
-                            <input type="text" id="searchInput" placeholder="Tìm theo tên ứng viên, vị trí..." onkeyup="handleFilterSearch()">
+                            <i class="fa-solid fa-magnifying-glass" onclick="applyOfferFilters()" style="cursor: pointer;" title="Bấm để tìm kiếm"></i>
+                            <input type="text" id="searchInput" placeholder="Tìm theo tên ứng viên, vị trí..."
+                                   th:value="${search}"
+                                   onkeydown="if(event.key==='Enter'){ applyOfferFilters(); }">
+                            <button type="button" th:if="${search != null and search != ''}" onclick="clearSearchInput()"
+                                    style="background:none; border:none; cursor:pointer; color:var(--muted); padding:0 4px; display:inline-flex; align-items:center;" title="Xóa từ khóa">
+                                <i class="fa-solid fa-xmark"></i>
+                            </button>
                         </div>
 
-                        <select id="statusFilter" class="filter-select" onchange="handleFilterSearch()">
-                            <option value="ALL">-- Tất cả trạng thái --</option>
-                            <option value="Draft">Bản thảo (Draft)</option>
-                            <option value="Pending_Director">Chờ Director duyệt (Pending_Director)</option>
-                            <option value="Director_Approved">Director đã duyệt (Approved)</option>
-                            <option value="Director_Rejected">Director từ chối (Rejected)</option>
-                            <option value="Sent_Candidate">Đã gửi ứng viên (Sent_Candidate)</option>
-                            <option value="Accepted">Ứng viên đồng ý (Accepted)</option>
-                            <option value="Declined">Ứng viên từ chối (Declined)</option>
-                            <option value="Negotiating">Đang đàm phán (Negotiating)</option>
+                        <select id="statusFilter" class="filter-select" onchange="applyOfferFilters()">
+                            <option value="ALL" th:selected="${currentStatus == 'ALL'}">-- Tất cả trạng thái --</option>
+                            <option value="Draft" th:selected="${currentStatus == 'Draft'}">Bản thảo</option>
+                            <option value="Pending_Director" th:selected="${currentStatus == 'Pending_Director'}">Chờ Director duyệt</option>
+                            <option value="Director_Approved" th:selected="${currentStatus == 'Director_Approved' or currentStatus == 'Approved'}">Director đã duyệt</option>
+                            <option value="Director_Rejected" th:selected="${currentStatus == 'Director_Rejected' or currentStatus == 'Rejected'}">Director từ chối</option>
+                            <option value="Sent_Candidate" th:selected="${currentStatus == 'Sent_Candidate'}">Đã gửi ứng viên</option>
+                            <option value="Accepted" th:selected="${currentStatus == 'Accepted'}">Ứng viên đồng ý</option>
+                            <option value="Declined" th:selected="${currentStatus == 'Declined'}">Ứng viên từ chối</option>
+                        </select>
+
+                        <!-- Sắp xếp theo thời gian -->
+                        <select id="timeSortFilter" class="filter-select" onchange="applyOfferFilters()">
+                            <option value="DEFAULT" th:selected="${currentTimeSort == 'DEFAULT'}">-- Sắp xếp theo thời gian --</option>
+                            <option value="EARLIEST" th:selected="${currentTimeSort == 'EARLIEST'}">Sớm nhất</option>
+                            <option value="LATEST" th:selected="${currentTimeSort == 'LATEST'}">Muộn nhất</option>
                         </select>
                     </div>
 
@@ -127,10 +140,10 @@
                             <tr th:if="${#lists.isEmpty(offers)}">
                                 <td colspan="8" style="text-align:center; padding:48px 24px; color:var(--muted);">
                                     <i class="fa-solid fa-inbox" style="font-size:32px; margin-bottom:12px; display:block; color:var(--control-line);"></i>
-                                    Chưa có đề xuất Offer nào trong hệ thống.
+                                    Không tìm thấy đề xuất Offer nào phù hợp với bộ lọc.
                                 </td>
                             </tr>
-                            <tr th:each="o : ${offers}" th:attr="data-id=${o.offerId}, data-status=${o.offerStatus}, data-cand=${o.candidateName}, data-pos=${o.offeredPositionTitle}">
+                            <tr th:each="o : ${offers}" th:attr="data-id=${o.offerId}, data-status=${o.offerStatus}, data-cand=${o.candidateName}, data-pos=${o.offeredPositionTitle}, data-created=${o.createdAt != null ? o.createdAt.toString() : ''}">
                                 <td>
                                     <a href="javascript:void(0)" class="offer-id-link" th:onclick="'viewOfferDetail(' + ${o.offerId} + ')'" th:text="${o.offerId}">1</a>
                                 </td>
@@ -176,9 +189,6 @@
                                     <span th:if="${o.offerStatus == 'Declined'}" class="status-badge status-declined">
                                         <i class="fa-solid fa-user-xmark"></i> Từ chối
                                     </span>
-                                    <span th:if="${o.offerStatus == 'Negotiating'}" class="status-badge status-negotiating">
-                                        <i class="fa-solid fa-comments"></i> Đang đàm phán
-                                    </span>
                                 </td>
                                 <td style="color:var(--muted); font-size:13.5px;" th:text="${o.createdAt != null ? #temporals.format(o.createdAt, 'dd/MM/yyyy HH:mm') : '-'}">
                                     01/10/2026
@@ -197,8 +207,8 @@
                                             <i class="fa-solid fa-paper-plane"></i>
                                         </button>
 
-                                        <!-- Sửa Offer (Chỉ khi thuộc Nhóm A: Draft, Rejected, Negotiating, Declined) -->
-                                        <button th:if="${o.offerStatus == 'Draft' or o.offerStatus == 'Director_Rejected' or o.offerStatus == 'Rejected' or o.offerStatus == 'Negotiating' or o.offerStatus == 'Declined'}"
+                                        <!-- Sửa Offer (Chỉ khi Draft) -->
+                                        <button th:if="${o.offerStatus == 'Draft'}"
                                                 class="btn-icon" title="Chỉnh sửa đề xuất"
                                                 th:onclick="'openEditOfferModal(' + ${o.offerId} + ')'">
                                             <i class="fa-solid fa-pen-to-square"></i>
@@ -248,15 +258,11 @@
                         <option value="">-- Chọn ứng viên chờ tạo Offer --</option>
                         <option th:each="c : ${passedCandidates}"
                                 th:value="${c.applicationId}"
-                                th:attr="data-cand-id=${c.candidateId}, data-cand-name=${c.candidateName}, data-email=${c.email}, data-phone=${c.phoneNumber}, data-pos=${c.appliedPosition}, data-dept=${c.departmentName}, data-req-id=${c.requisitionId}, data-job-id=${c.jobPostingId}, data-work-location=${c.workLocation}, data-comments=${c.interviewSummaryComments}, data-recom-salary=${c.recommendedSalary}, data-hm=${c.hiringManagerName}, data-existing-status=${c.existingOfferStatus}, data-existing-offer-id=${c.existingOfferId}"
-                                th:text="${c.candidateName} + ' - ' + ${c.appliedPosition} + ' (' + ${c.departmentName} + ')' + (${c.existingOfferStatus != null} ? ' [Ghi đè: ' + ${c.existingOfferStatus} + ']' : '')">
+                                th:attr="data-cand-id=${c.candidateId}, data-cand-name=${c.candidateName}, data-email=${c.email}, data-phone=${c.phoneNumber}, data-pos=${c.appliedPosition}, data-dept=${c.departmentName}, data-req-id=${c.requisitionId}, data-job-id=${c.jobPostingId}, data-work-location=${c.workLocation}, data-comments=${c.interviewSummaryComments}, data-recom-salary=${c.recommendedSalary}, data-hm=${c.hiringManagerName}"
+                                th:text="${c.candidateName} + ' - ' + ${c.appliedPosition} + ' (' + ${c.departmentName} + ')'">
                             Nguyễn Văn A - Backend Dev (Engineering)
                         </option>
                     </select>
-                    <div id="createOverrideNotice" style="display:none; margin-top:8px; padding:10px 14px; background:#eff6ff; border:1px solid #bfdbfe; border-radius:6px; color:#1e40af; font-size:13px; align-items:center; gap:8px;">
-                        <i class="fa-solid fa-circle-info"></i>
-                        <span id="createOverrideNoticeText"></span>
-                    </div>
                 </div>
 
                 <!-- Group A: Thông tin Ứng viên & Vị trí (Read-only Auto-fill) -->

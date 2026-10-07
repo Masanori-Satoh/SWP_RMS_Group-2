@@ -2,8 +2,8 @@
 
 Pull Request này tập trung chuyên biệt vào việc **xây dựng bộ kiểm thử tự động toàn diện (Unit Test & Integration Test)** và **lập tài liệu hướng dẫn kiểm thử** cho phân hệ **Quản lý Đề xuất Tuyển dụng (Offer Proposal)** của thành viên **Phạm Thị Huyền (HuyenPT)**:
 
-1. **Xây dựng Bộ Kiểm thử Tự động Toàn diện (68/68 Test Executions PASS — 100%):**
-   - Hoàn thiện **56 Unit Test Executions** (32 methods) tại `OfferServiceTests.java` ứng dụng `@ParameterizedTest`, bao phủ toàn diện hợp đồng nghiệp vụ tầng Service, các điều kiện biên, độ ưu tiên địa điểm làm việc và ma trận trạng thái chuẩn của quy tắc `GBR-07`.
+1. **Xây dựng Bộ Kiểm thử Tự động Toàn diện (71/71 Test Executions PASS — 100%):**
+   - Hoàn thiện **59 Unit Test Executions** (34 methods) tại `OfferServiceTests.java` ứng dụng `@ParameterizedTest`, bao phủ toàn diện hợp đồng nghiệp vụ tầng Service, các điều kiện biên, độ ưu tiên địa điểm làm việc, ma trận trạng thái chuẩn của quy tắc `GBR-07` và bộ lọc 3 tiêu chí server-side với JPA Specification.
    - Hoàn thiện **12 Integration Tests** tại `OfferIntegrationTest.java` kiểm tra toàn bộ 7 REST API endpoints, mã phản hồi HTTP, CSRF token và phân quyền Spring Security.
 2. **Khắc phục lỗi bổ trợ kiểm thử theo chuẩn Kiến trúc (Architecture Test Support):**
    - Bổ sung xử lý lỗi `MethodArgumentNotValidException` trong `GlobalExceptionHandler.java` để API trả về đúng mã chuẩn HTTP 400 Bad Request (thay vì bị bắt vào lỗi hệ thống 500).
@@ -17,7 +17,7 @@ Pull Request này tập trung chuyên biệt vào việc **xây dựng bộ ki�
 ## 🎯 Chi tiết các Hạng mục Kiểm thử (Test Details)
 
 ### 1. Unit Testing — Tầng Dịch vụ & Ràng buộc Nghiệp vụ (`OfferServiceTests.java`)
-Bao gồm **56 test executions** kiểm thử độc lập với Mockito và JUnit 5 Parameterized:
+Bao gồm **59 test executions** kiểm thử độc lập với Mockito và JUnit 5 Parameterized:
 * **Kiểm thử Ràng buộc Lương (Salary Constraints):**
   * Lương thử việc $< 85\%$ mức lương chính thức $\rightarrow$ Ném `OfferValidationException` ở Service, khẳng định `never().save()`.
   * Lương thử việc $= 85\%$ mức lương chính thức $\rightarrow$ Hợp lệ.
@@ -32,12 +32,12 @@ Bao gồm **56 test executions** kiểm thử độc lập với Mockito và JUn
   * Cả hai đều thiếu $\rightarrow$ Fallback về giá trị mặc định của hệ thống (`Trụ sở chính Mộc RMS`).
 * **Kiểm thử Quy tắc Single Active Offer (`GBR-07` Toàn diện):**
   * **Luồng Tạo mới (`createOfferByHr`)**:
-    * Đơn ứng tuyển đang có Offer thuộc **Nhóm B (Locked - 5 trạng thái)**: `Pending_Director`, `Approved`, `Director_Approved`, `Sent_Candidate`, `Accepted` $\rightarrow$ Chặn hoàn toàn, ném mã lỗi `OFFER_LOCKED_STATE`, không lưu xuống DB (`never().save()`).
-    * Đơn ứng tuyển đang có Offer thuộc **Nhóm A (Overridable - 7 trạng thái)**: `Draft`, `Rejected`, `Director_Rejected`, `Negotiating`, `Declined`, `Canceled`, `Voided` $\rightarrow$ Ghi đè in-place an toàn giữ nguyên `offerId`, triệt tiêu lỗi xung đột khóa duy nhất `UQ_OfferProposal_Application UNIQUE`.
+    * Đơn ứng tuyển đang có Offer ở bất kỳ trạng thái nào (kể cả `Draft`, `Pending_Director`, `Approved`, `Sent_Candidate`, `Accepted`, `Rejected`, v.v. - 12 trạng thái) $\rightarrow$ Chặn hoàn toàn thao tác tạo mới trực tiếp, ném mã lỗi `OFFER_LOCKED_STATE`, không lưu xuống DB (`never().save()`).
+    * Chỉ cho phép tạo mới đối với ứng viên đã đỗ phỏng vấn và **chưa từng có bất kỳ gói Offer nào**.
   * **Luồng Cập nhật (`updateOfferByHr`)**:
-    * Offer đang ở **Nhóm A (Editable - 7 trạng thái)** $\rightarrow$ Cho phép cập nhật thành công và lưu DB.
-    * Offer đang ở **Nhóm B (Non-editable - 5 trạng thái)** $\rightarrow$ Chặn cập nhật, ném mã lỗi `OFFER_STATUS_INVALID`, không lưu DB (`never().save()`).
-  * **Bộ lọc ứng viên đỗ (`getPassedCandidatesForOffer`)**: Tự động loại trừ toàn bộ ứng viên đang có Offer Nhóm B, giữ lại Nhóm A và ứng viên chưa có Offer.
+    * Offer đang ở trạng thái **`Draft`** $\rightarrow$ Cho phép chỉnh sửa thông tin Offer trực tiếp từ bảng danh sách và lưu DB (`verify().save()`).
+    * Offer đang ở các trạng thái khác (`Pending_Director`, `Approved`, `Rejected`, v.v.) $\rightarrow$ Chặn cập nhật, ném mã lỗi `OFFER_STATUS_INVALID`, không lưu DB (`never().save()`).
+  * **Bộ lọc ứng viên đỗ (`getPassedCandidatesForOffer`)**: Tự động loại trừ toàn bộ ứng viên đang có bất kỳ Offer nào (kể cả `Draft`), chỉ gợi ý ứng viên đỗ phỏng vấn và chưa hề có lịch sử tạo Offer nào.
 * **Kiểm thử Chu trình Vòng đời Offer (Offer Proposal Lifecycle):**
   * Tra cứu Offer theo ID và Application ID (tìm thấy vs không tìm thấy ném `ResourceNotFoundException`).
   * Lấy danh sách phân trang (toàn bộ trạng thái vs lọc theo trạng thái cụ thể).
@@ -47,11 +47,11 @@ Bao gồm **56 test executions** kiểm thử độc lập với Mockito và JUn
 
 ### 2. Integration Testing — Tầng REST API & Bảo mật (`OfferIntegrationTest.java`)
 Bao gồm **12 test cases** kiểm thử tích hợp qua Spring `MockMvc`:
-* `IT-01`: `GET /api/v1/hr/offers/passed-candidates` $\rightarrow$ Trả về 200 OK + JSON danh sách ứng viên đỗ hợp lệ.
+* `IT-01`: `GET /api/v1/hr/offers/passed-candidates` $\rightarrow$ Trả về 200 OK + JSON danh sách ứng viên đỗ hợp lệ (chỉ gồm ứng viên chưa có Offer).
 * `IT-02`: `POST /api/v1/hr/offers` $\rightarrow$ Tạo Offer mới hợp lệ trả về 201 Created + JSON Offer.
 * `IT-03`: `POST /api/v1/hr/offers` $\rightarrow$ Vi phạm ràng buộc lương trả về HTTP 400 Bad Request.
-* `IT-04`: `POST /api/v1/hr/offers` $\rightarrow$ Tạo đè khi đơn có Offer Nhóm B trả về HTTP 400 Bad Request (`OFFER_LOCKED_STATE`).
-* `IT-05`: `PUT /api/v1/hr/offers/{id}` $\rightarrow$ Cập nhật Offer Nhóm A hợp lệ trả về 200 OK.
+* `IT-04`: `POST /api/v1/hr/offers` $\rightarrow$ Tạo Offer khi đơn đã có Offer trả về HTTP 400 Bad Request (`OFFER_LOCKED_STATE`).
+* `IT-05`: `PUT /api/v1/hr/offers/{id}` $\rightarrow$ Cập nhật Offer Draft hợp lệ trả về 200 OK.
 * `IT-06`: `POST /api/v1/hr/offers/{id}/send` $\rightarrow$ Phát hành Offer Letter thành công trả về 200 OK (`Sent_Candidate`).
 * `IT-07`: `GET /api/v1/hr/offers/passed-candidates` $\rightarrow$ Truy cập khi chưa đăng nhập bị chặn (Redirect 302 về Login / 401 Unauthorized).
 * `IT-08`: `GET /api/v1/hr/offers` $\rightarrow$ Lấy danh sách có phân trang và lọc status trả về 200 OK + JSON Page.
@@ -79,10 +79,10 @@ Log kết quả chạy thực tế:
 [INFO] Running com.group2.rms.offer.OfferIntegrationTest
 [INFO] Tests run: 12, Failures: 0, Errors: 0, Skipped: 0
 [INFO] Running com.group2.rms.service.OfferServiceTests
-[INFO] Tests run: 56, Failures: 0, Errors: 0, Skipped: 0
+[INFO] Tests run: 59, Failures: 0, Errors: 0, Skipped: 0
 [INFO] -------------------------------------------------------
 [INFO] Results:
-[INFO] Tests run: 68, Failures: 0, Errors: 0, Skipped: 0 (100% PASS)
+[INFO] Tests run: 71, Failures: 0, Errors: 0, Skipped: 0 (100% PASS)
 [INFO] -------------------------------------------------------
 [INFO] BUILD SUCCESS
 ```

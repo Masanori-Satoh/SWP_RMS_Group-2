@@ -12,15 +12,21 @@ import com.group2.rms.offer.dto.PassedCandidateResponse;
 import com.group2.rms.offer.dto.UpdateOfferRequest;
 import com.group2.rms.offer.entity.OfferProposal;
 import com.group2.rms.offer.repository.OfferApprovalRepository;
-import com.group2.rms.offer.repository.OfferNegotiationRepository;
 import com.group2.rms.offer.repository.OfferProposalRepository;
 import com.group2.rms.interview.repository.InterviewFinalResultRepository;
 import com.group2.rms.offer.exception.OfferValidationException;
 import com.group2.rms.user.entity.User;
 import com.group2.rms.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
+import com.group2.rms.candidate.entity.Candidate;
+import jakarta.persistence.criteria.Join;
+import jakarta.persistence.criteria.JoinType;
+import jakarta.persistence.criteria.Predicate;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.security.authentication.AnonymousAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -32,8 +38,11 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Locale;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 
@@ -47,25 +56,26 @@ public class OfferServiceImpl implements OfferService {
     private final UserRepository userRepository;
     private final InterviewFinalResultRepository interviewFinalResultRepository;
     private final OfferApprovalRepository offerApprovalRepository;
-    private final OfferNegotiationRepository offerNegotiationRepository;
     private final NotificationService notificationService;
 
     /**
      * Quy tắc GBR-07:
-     * NHÓM A: Được phép tạo đè / cập nhật lại (Editable / Overridable States).
+     * - Chỉ chấp nhận tạo mới Offer Proposal đối với ứng viên đã đỗ phỏng vấn (Passed) và CHƯA CÓ bất kỳ lịch sử/gói Offer nào.
+     * - Khi đơn ứng tuyển đã có Offer trong hệ thống (kể cả trạng thái Draft), không gợi ý trong mục tạo đề xuất mới
+     *   và chặn thao tác tạo mới trực tiếp (bắt buộc HR chỉnh sửa trực tiếp trên danh sách Offer).
      */
-    public static final Set<String> OVERRIDABLE_STATUSES = Set.of(
-            "Draft", "Rejected", "Director_Rejected", "Negotiating", "Declined", "Canceled", "Voided");
+    public static final Set<String> OVERRIDABLE_STATUSES = Collections.emptySet();
 
     /**
      * Quy tắc GBR-07:
-     * NHÓM B: Phải giữ nguyên - KHÔNG ĐƯỢC TẠO ĐÈ TỰ Ý (Locked / Finalized States).
+     * Tất cả các trạng thái có Offer đang hoạt động (kể cả Draft) đều bị khóa khỏi luồng tạo mới trực tiếp.
      */
     public static final Set<String> LOCKED_STATUSES = Set.of(
-            "Pending_Director", "Approved", "Director_Approved", "Sent_Candidate", "Accepted");
+            "Draft", "Pending_Director", "Approved", "Director_Approved", "Sent_Candidate", "Accepted",
+            "Rejected", "Director_Rejected", "Declined", "Canceled", "Voided");
 
     public static boolean isOverridableStatus(String status) {
-        if (status == null) return true;
+        if (status == null) return false;
         for (String s : OVERRIDABLE_STATUSES) {
             if (s.equalsIgnoreCase(status)) return true;
         }
@@ -148,23 +158,10 @@ public class OfferServiceImpl implements OfferService {
                 continue;
             }
 
-            // Quy tắc GBR-07: Kiểm tra gói Offer hiện tại của đơn ứng tuyển
+            // Quy tắc GBR-07: Chỉ chấp nhận tạo mới đối với ứng viên chưa từng có bất kỳ Offer nào (kể cả bản Draft)
             Optional<OfferProposal> offerOpt = offerProposalRepository.findByApplication_ApplicationId(appId);
-            String existingStatus = null;
-            Integer existingOfferId = null;
-
-            if (offerOpt.isPresent()) {
-                OfferProposal existingOffer = offerOpt.get();
-                if (!Boolean.TRUE.equals(existingOffer.getIsDeleted())) {
-                    String status = existingOffer.getOfferStatus();
-                    // NHÓM B: Đang trong luồng xử lý hoặc đã chốt tuyển dụng -> KHÓA, KHÔNG HIỂN THỊ
-                    if (isLockedStatus(status)) {
-                        continue;
-                    }
-                    // NHÓM A: Được phép tạo đè / cập nhật lại
-                    existingStatus = status;
-                    existingOfferId = existingOffer.getOfferId();
-                }
+            if (offerOpt.isPresent() && !Boolean.TRUE.equals(offerOpt.get().getIsDeleted())) {
+                continue; // Ứng viên đã có Offer (kể cả Draft) -> Không gợi ý trong mục tạo đề xuất mới
             }
 
             processedAppIds.add(appId);
@@ -201,8 +198,8 @@ public class OfferServiceImpl implements OfferService {
                     .recommendedSalary(r.getRecommendedSalary())
                     .interviewApprovedAt(r.getApprovedAt())
                     .hiringManagerName(r.getHiringManager() != null ? r.getHiringManager().getFullName() : null)
-                    .existingOfferStatus(existingStatus)
-                    .existingOfferId(existingOfferId)
+                    .existingOfferStatus(null)
+                    .existingOfferId(null)
                     .build());
         }
 
@@ -229,49 +226,31 @@ public class OfferServiceImpl implements OfferService {
 
         // Bảng OfferProposal có ràng buộc UNIQUE trên ApplicationId
         // (UQ_OfferProposal_Application)
-        // Áp dụng quy tắc Single Active Offer Rule (GBR-07)
+        // Áp dụng quy tắc Single Active Offer Rule (GBR-07):
+        // Chỉ chấp nhận tạo mới cho ứng viên chưa có Offer; nếu đã tồn tại Offer (kể cả Draft) thì chặn lại
         Optional<OfferProposal> existingOfferOpt = offerProposalRepository
                 .findByApplication_ApplicationId(application.getApplicationId());
 
-        OfferProposal offerToSave;
-        if (existingOfferOpt.isPresent()) {
-            OfferProposal existingOffer = existingOfferOpt.get();
-            String currentStatus = existingOffer.getOfferStatus();
-
-            // Nếu đơn ứng tuyển đang có Offer thuộc Nhóm B (Pending_Director, Approved, Sent_Candidate, Accepted)
-            // -> Chặn hoàn toàn thao tác tạo đè trực tiếp
-            if (!Boolean.TRUE.equals(existingOffer.getIsDeleted()) && isLockedStatus(currentStatus)) {
-                throw new BaseBusinessException(
-                        "Theo quy tắc GBR-07, không thể tạo đè Offer Proposal vì đơn ứng tuyển đang có gói Offer ở trạng thái ["
-                                + currentStatus + "] thuộc Nhóm B (đang trong luồng xử lý hoặc đã hoàn tất).",
-                        "OFFER_LOCKED_STATE");
-            }
-
-            // Ghi đè bản thảo mới lên gói Offer cũ thuộc Nhóm A (Draft, Rejected, Negotiating, Declined)
-            offerToSave = existingOffer;
-            offerToSave.setOfferedPositionTitle(dto.getOfferedPositionTitle());
-            offerToSave.setProposedSalary(dto.getProposedSalary());
-            offerToSave.setProbationSalary(dto.getProbationSalary());
-            offerToSave.setExpectedStartDate(dto.getExpectedStartDate());
-            offerToSave.setWorkLocation(dto.getWorkLocation());
-            offerToSave.setBenefitsPackage(dto.getBenefitsPackage());
-            offerToSave.setProposedBy(proposedBy);
-            offerToSave.setOfferStatus(status);
-            offerToSave.setIsDeleted(false);
-        } else {
-            offerToSave = OfferProposal.builder()
-                    .application(application)
-                    .offeredPositionTitle(dto.getOfferedPositionTitle())
-                    .proposedSalary(dto.getProposedSalary())
-                    .probationSalary(dto.getProbationSalary())
-                    .expectedStartDate(dto.getExpectedStartDate())
-                    .workLocation(dto.getWorkLocation())
-                    .benefitsPackage(dto.getBenefitsPackage())
-                    .proposedBy(proposedBy)
-                    .offerStatus(status)
-                    .isDeleted(false)
-                    .build();
+        if (existingOfferOpt.isPresent() && !Boolean.TRUE.equals(existingOfferOpt.get().getIsDeleted())) {
+            String currentStatus = existingOfferOpt.get().getOfferStatus();
+            throw new BaseBusinessException(
+                    "Theo quy tắc GBR-07, không thể tạo mới Offer Proposal vì đơn ứng tuyển đang có gói Offer ở trạng thái ["
+                            + currentStatus + "]. Vui lòng chỉnh sửa trực tiếp trên danh sách Offer thay vì tạo mới.",
+                    "OFFER_LOCKED_STATE");
         }
+
+        OfferProposal offerToSave = OfferProposal.builder()
+                .application(application)
+                .offeredPositionTitle(dto.getOfferedPositionTitle())
+                .proposedSalary(dto.getProposedSalary())
+                .probationSalary(dto.getProbationSalary())
+                .expectedStartDate(dto.getExpectedStartDate())
+                .workLocation(dto.getWorkLocation())
+                .benefitsPackage(dto.getBenefitsPackage())
+                .proposedBy(proposedBy)
+                .offerStatus(status)
+                .isDeleted(false)
+                .build();
 
         OfferProposal saved = offerProposalRepository.save(offerToSave);
         return mapToResponse(saved);
@@ -280,13 +259,95 @@ public class OfferServiceImpl implements OfferService {
     @Override
     @Transactional(readOnly = true)
     public Page<OfferResponse> getAllOffersForHr(String status, Pageable pageable) {
-        Page<OfferProposal> pagedEntities;
-        if (status == null || status.isBlank() || "ALL".equalsIgnoreCase(status)) {
-            pagedEntities = offerProposalRepository.findAllActiveByOrderByOfferIdAsc(pageable);
-        } else {
-            pagedEntities = offerProposalRepository.findActiveByStatusOrderByOfferIdAsc(status.trim(), pageable);
+        return getAllOffersForHr(null, status, null, pageable);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Page<OfferResponse> getAllOffersForHr(String search, String status, String timeSort, Pageable pageable) {
+        boolean hasSearch = search != null && !search.trim().isEmpty();
+        boolean hasStatus = status != null && !status.trim().isEmpty() && !"ALL".equalsIgnoreCase(status.trim());
+        boolean hasCustomSort = timeSort != null && !timeSort.trim().isEmpty() && !"DEFAULT".equalsIgnoreCase(timeSort.trim());
+
+        // Fast-path: Nếu không tìm kiếm theo từ khóa và không chọn sắp xếp tùy biến
+        if (!hasSearch && !hasCustomSort) {
+            Page<OfferProposal> pagedEntities;
+            if (!hasStatus) {
+                pagedEntities = offerProposalRepository.findAllActiveByOrderByOfferIdAsc(pageable);
+            } else {
+                pagedEntities = offerProposalRepository.findActiveByStatusOrderByOfferIdAsc(status.trim(), pageable);
+            }
+            return pagedEntities.map(this::mapToResponse);
         }
+
+        // Cấu hình sắp xếp theo thời gian (EARLIEST / LATEST / DEFAULT)
+        Sort sort;
+        if ("EARLIEST".equalsIgnoreCase(timeSort)) {
+            sort = Sort.by(Sort.Order.asc("createdAt"), Sort.Order.asc("offerId"));
+        } else if ("LATEST".equalsIgnoreCase(timeSort)) {
+            sort = Sort.by(Sort.Order.desc("createdAt"), Sort.Order.desc("offerId"));
+        } else {
+            sort = Sort.by(Sort.Order.asc("offerId"));
+        }
+
+        Pageable sortedPageable = PageRequest.of(pageable.getPageNumber(), pageable.getPageSize(), sort);
+
+        Specification<OfferProposal> spec = (root, query, builder) -> {
+            List<Predicate> predicates = new ArrayList<>();
+
+            // 1. Chỉ lấy các bản ghi chưa bị xóa mềm
+            predicates.add(builder.or(
+                    builder.isNull(root.get("isDeleted")),
+                    builder.isFalse(root.get("isDeleted"))
+            ));
+
+            // 2. Lọc theo từ khóa (tên ứng viên, vị trí đề xuất)
+            if (hasSearch) {
+                String pattern = "%" + search.trim().toLowerCase(Locale.ROOT) + "%";
+                Join<OfferProposal, Application> appJoin = root.join("application", JoinType.LEFT);
+                Join<Application, Candidate> candJoin = appJoin.join("candidate", JoinType.LEFT);
+                Join<Candidate, User> userJoin = candJoin.join("account", JoinType.LEFT);
+
+                predicates.add(builder.or(
+                        builder.like(builder.lower(root.get("offeredPositionTitle")), pattern),
+                        builder.like(builder.lower(userJoin.get("fullName")), pattern)
+                ));
+            }
+
+            // 3. Lọc theo trạng thái
+            if (hasStatus) {
+                String s = status.trim();
+                if ("Director_Approved".equalsIgnoreCase(s) || "Approved".equalsIgnoreCase(s)) {
+                    predicates.add(builder.or(
+                            builder.equal(builder.lower(root.get("offerStatus")), "director_approved"),
+                            builder.equal(builder.lower(root.get("offerStatus")), "approved")
+                    ));
+                } else if ("Director_Rejected".equalsIgnoreCase(s) || "Rejected".equalsIgnoreCase(s)) {
+                    predicates.add(builder.or(
+                            builder.equal(builder.lower(root.get("offerStatus")), "director_rejected"),
+                            builder.equal(builder.lower(root.get("offerStatus")), "rejected")
+                    ));
+                } else {
+                    predicates.add(builder.equal(builder.lower(root.get("offerStatus")), s.toLowerCase(Locale.ROOT)));
+                }
+            }
+
+            return builder.and(predicates.toArray(new Predicate[0]));
+        };
+
+        Page<OfferProposal> pagedEntities = offerProposalRepository.findAll(spec, sortedPageable);
         return pagedEntities.map(this::mapToResponse);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Map<String, Long> getOfferStats() {
+        Map<String, Long> stats = new HashMap<>();
+        stats.put("statPending", offerProposalRepository.countPendingDirector());
+        stats.put("statApproved", offerProposalRepository.countDirectorApproved());
+        stats.put("statSent", offerProposalRepository.countSentCandidate());
+        stats.put("statAccepted", offerProposalRepository.countAccepted());
+        return stats;
     }
 
     @Override
@@ -336,18 +397,6 @@ public class OfferServiceImpl implements OfferService {
                         .build())
                 .toList();
 
-        List<OfferDetailResponse.NegotiationRound> negotiationHistory = offerNegotiationRepository
-                .findByOfferProposal_OfferIdOrderByNegotiationDateDesc(id)
-                .stream()
-                .map(n -> OfferDetailResponse.NegotiationRound.builder()
-                        .negotiationId(n.getNegotiationId())
-                        .candidateCounterSalary(n.getCandidateCounterSalary())
-                        .candidateNotes(n.getCandidateNotes())
-                        .hrResponseNotes(n.getHrResponseNotes())
-                        .negotiationDate(n.getNegotiationDate())
-                        .build())
-                .toList();
-
         String proposedByName = offer.getProposedBy() != null ? offer.getProposedBy().getFullName() : null;
         Integer proposedById = offer.getProposedBy() != null ? offer.getProposedBy().getUserId() : null;
 
@@ -382,7 +431,6 @@ public class OfferServiceImpl implements OfferService {
                 .hiringManagerName(hiringManagerName)
                 .interviewApprovedAt(interviewApprovedAt)
                 .approvalHistory(approvalHistory)
-                .negotiationHistory(negotiationHistory)
                 .build();
     }
 
@@ -392,11 +440,11 @@ public class OfferServiceImpl implements OfferService {
                 .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy OfferProposal với ID: " + id));
 
         String currentStatus = offer.getOfferStatus();
-        boolean canEdit = isOverridableStatus(currentStatus);
+        boolean canEdit = "Draft".equalsIgnoreCase(currentStatus);
 
         if (!canEdit) {
             throw new BaseBusinessException(
-                    "Theo quy tắc GBR-07, chỉ được phép cập nhật Offer khi ở trạng thái thuộc Nhóm A (Draft, Rejected, Negotiating, Declined). Trạng thái hiện tại: "
+                    "Theo quy tắc GBR-07, chỉ được phép cập nhật Offer khi ở trạng thái thuộc Nhóm A (Draft). Trạng thái hiện tại: "
                             + currentStatus,
                     "OFFER_STATUS_INVALID");
         }

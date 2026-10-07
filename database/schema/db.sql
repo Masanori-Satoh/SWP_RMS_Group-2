@@ -504,8 +504,7 @@ CREATE TABLE OfferProposal (
             N'Director_Rejected',
             N'Sent_Candidate',
             N'Accepted',
-            N'Declined',
-            N'Negotiating'
+            N'Declined'
         )),
 
     CONSTRAINT CK_OfferProposal_Salaries
@@ -539,7 +538,6 @@ CREATE TABLE OfferApproval (
 );
 GO
 -- delete cho huyền
-
 
 -- =============================================================================
 -- INDEXES FOR PERFORMANCE OPTIMIZATION (Non-Clustered Indexes on Foreign Keys)
