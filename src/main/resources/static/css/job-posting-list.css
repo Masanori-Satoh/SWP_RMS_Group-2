@@ -1,0 +1,564 @@
+/* ==========================================================================
+   JOB-POSTING-LIST.CSS
+   ========================================================================== */
+
+:root {
+    --jp-brand: #1e4d38;
+    --jp-brand-hover: #153728;
+    --jp-brand-light: #e8f5e9;
+    --jp-text-main: #0f172a;
+    --jp-text-muted: #64748b;
+    --jp-border: #e2e8f0;
+    --jp-bg-card: #ffffff;
+    --jp-radius: 10px;
+}
+
+/* 1. Bố cục ngoài cùng: Loại bỏ đệm thừa để tối ưu 100% chiều rộng màn hình */
+.rms-app .page-content.jp-page-content {
+    padding: 18px 24px 40px !important;
+    min-width: 0;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.jp-list-wrapper {
+    width: 100%;
+    max-width: 100%;
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+/* 2. Tiêu đề trang & Nút hành động đăng tin mới */
+.jp-list-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 18px;
+    gap: 16px;
+}
+
+.jp-list-header-content h1 {
+    font-size: 24px;
+    font-weight: 700;
+    color: var(--jp-text-main);
+    margin: 0 0 4px 0;
+    letter-spacing: -0.02em;
+}
+
+.jp-list-header-content p {
+    font-size: 13.5px;
+    color: var(--jp-text-muted);
+    margin: 0;
+}
+
+.jp-btn-create-post {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 16px;
+    background: var(--jp-brand);
+    color: #ffffff;
+    font-size: 13.5px;
+    font-weight: 600;
+    border-radius: 7px;
+    text-decoration: none;
+    border: none;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+
+.jp-btn-create-post:hover {
+    background: var(--jp-brand-hover);
+    color: #ffffff;
+}
+
+/* 3. Thẻ chứa chính của danh sách tin tuyển dụng (Main Card Container) */
+.jp-card-container {
+    background: var(--jp-bg-card);
+    border: 1px solid var(--jp-border);
+    border-radius: var(--jp-radius);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03);
+    width: 100%;
+    box-sizing: border-box;
+}
+
+/* Phần đầu thẻ kèm biểu tượng trang (Card Header with Icon) */
+.jp-card-top {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 14px 20px;
+    border-bottom: 1px solid #f1f5f9;
+}
+
+.jp-card-icon-box {
+    width: 38px;
+    height: 38px;
+    border-radius: 8px;
+    background: var(--jp-brand-light);
+    color: var(--jp-brand);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    flex-shrink: 0;
+}
+
+.jp-card-top-info h2 {
+    font-size: 16.5px;
+    font-weight: 700;
+    color: var(--jp-text-main);
+    margin: 0 0 2px 0;
+}
+
+.jp-card-top-info p {
+    font-size: 13px;
+    color: var(--jp-text-muted);
+    margin: 0;
+}
+
+/* 4. Khối bộ lọc tìm kiếm & trạng thái tin tuyển dụng (Filter Section) */
+.jp-filter-section {
+    padding: 14px 20px;
+    border-bottom: 1px solid var(--jp-border);
+    background: #fafbfb;
+}
+
+.jp-filter-grid {
+    display: grid;
+    grid-template-columns: minmax(160px, 2fr) minmax(130px, 1.2fr) minmax(130px, 1.2fr) minmax(120px, 1fr);
+    gap: 12px;
+    margin-bottom: 12px;
+}
+
+.jp-filter-item {
+    display: flex;
+    flex-direction: column;
+}
+
+.jp-filter-item label {
+    font-size: 12.5px;
+    font-weight: 600;
+    color: var(--jp-text-main);
+    margin-bottom: 4px;
+}
+
+.jp-search-wrapper {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.jp-search-icon {
+    position: absolute;
+    left: 10px;
+    color: #94a3b8;
+    font-size: 13px;
+    pointer-events: none;
+}
+
+.jp-search-input {
+    width: 100%;
+    height: 36px;
+    padding: 6px 10px 6px 32px;
+    border: 1px solid var(--jp-border);
+    border-radius: 6px;
+    font-size: 13px;
+    color: var(--jp-text-main);
+    background: #ffffff;
+    outline: none;
+    box-sizing: border-box;
+    transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.jp-search-input:focus {
+    border-color: var(--jp-brand);
+    box-shadow: 0 0 0 2px rgba(30, 77, 56, 0.1);
+}
+
+.jp-select-box {
+    position: relative;
+}
+
+.jp-filter-select {
+    width: 100%;
+    height: 36px;
+    padding: 6px 28px 6px 10px;
+    border: 1px solid var(--jp-border);
+    border-radius: 6px;
+    font-size: 13px;
+    color: var(--jp-text-main);
+    background: #ffffff;
+    appearance: none;
+    outline: none;
+    cursor: pointer;
+    box-sizing: border-box;
+    transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.jp-filter-select:focus {
+    border-color: var(--jp-brand);
+    box-shadow: 0 0 0 2px rgba(30, 77, 56, 0.1);
+}
+
+.jp-select-arrow {
+    position: absolute;
+    right: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #64748b;
+    pointer-events: none;
+    font-size: 9px;
+}
+
+.jp-filter-actions {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+}
+
+.jp-btn-filter-apply {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    height: 34px;
+    padding: 0 14px;
+    background: var(--jp-brand);
+    color: #ffffff;
+    font-size: 13px;
+    font-weight: 600;
+    border-radius: 6px;
+    border: none;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+}
+
+.jp-btn-filter-apply:hover {
+    background: var(--jp-brand-hover);
+}
+
+.jp-btn-filter-reset {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 13px;
+    font-weight: 500;
+    color: #475569;
+    text-decoration: none;
+    cursor: pointer;
+    background: transparent;
+    border: none;
+    transition: color 0.2s ease;
+}
+
+.jp-btn-filter-reset:hover {
+    color: #0f172a;
+}
+
+/* 5. Vùng bảng dữ liệu: Hiển thị vừa vặn 100% chiều rộng màn hình */
+.jp-table-wrapper {
+    width: 100%;
+    overflow-x: auto;
+}
+
+.jp-data-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+    text-align: left;
+}
+
+.jp-data-table th {
+    background: #f8fafc;
+    color: #475569;
+    font-weight: 600;
+    padding: 10px 8px;
+    border-bottom: 1px solid var(--jp-border);
+    white-space: nowrap;
+    font-size: 12.5px;
+}
+
+.jp-data-table td {
+    padding: 10px 8px;
+    border-bottom: 1px solid #f1f5f9;
+    vertical-align: middle;
+    color: #334155;
+}
+
+.jp-data-table tbody tr:hover {
+    background-color: #f8fafc;
+}
+
+/* 6. Định dạng độ rộng và căn lề cho từng cột cụ thể */
+.col-stt {
+    width: 36px;
+    text-align: center;
+    white-space: nowrap;
+}
+
+.col-title {
+    min-width: 160px;
+    max-width: 280px;
+}
+
+.jp-title-cell strong {
+    color: var(--jp-text-main);
+    font-weight: 600;
+    line-height: 1.35;
+    word-break: break-word;
+}
+
+.col-code {
+    width: 110px;
+    white-space: nowrap;
+}
+
+.col-dept {
+    min-width: 110px;
+    max-width: 160px;
+    line-height: 1.3;
+}
+
+.col-round {
+    width: 65px;
+    text-align: center;
+    white-space: nowrap;
+}
+
+.col-status {
+    width: 125px;
+    white-space: nowrap;
+}
+
+.col-deadline {
+    width: 105px;
+    white-space: nowrap;
+}
+
+.col-creator {
+    width: 115px;
+    white-space: nowrap;
+}
+
+.col-date {
+    width: 85px;
+    white-space: nowrap;
+}
+
+.col-action {
+    width: 75px;
+    text-align: center;
+    white-space: nowrap;
+}
+
+/* 7. Nhãn mã yêu cầu và đợt tuyển dụng (Badges) */
+.jp-code-badge {
+    display: inline-block;
+    padding: 2px 7px;
+    background: #e8f5e9;
+    color: #1e4d38;
+    border-radius: 5px;
+    font-weight: 700;
+    font-family: monospace;
+    font-size: 12px;
+    text-decoration: none;
+    letter-spacing: 0.02em;
+}
+
+.jp-round-badge {
+    display: inline-block;
+    padding: 2px 7px;
+    background: #ede9fe;
+    color: #4f46e5;
+    border-radius: 5px;
+    font-weight: 600;
+    font-size: 11.5px;
+    white-space: nowrap;
+}
+
+/* Nhãn viên thuốc trạng thái tin đăng (Status Pills: Đã đăng, Bản nháp, Tạm dừng, Đã đóng) */
+.jp-status-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 3px 8px;
+    border-radius: 999px;
+    font-size: 11.5px;
+    font-weight: 500;
+    white-space: nowrap;
+}
+
+.jp-status-pill .dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+}
+
+.jp-status-published {
+    background: #e8f5e9;
+    color: #15803d;
+    border: 1px solid #c6ebd0;
+}
+
+.jp-status-published .dot {
+    background: #22c55e;
+}
+
+.jp-status-draft {
+    background: #f1f5f9;
+    color: #475569;
+    border: 1px solid #cbd5e1;
+}
+
+.jp-status-draft .dot {
+    background: #94a3b8;
+}
+
+.jp-status-paused {
+    background: #fef9c3;
+    color: #854d0e;
+    border: 1px solid #fde047;
+}
+
+.jp-status-paused .dot {
+    background: #eab308;
+}
+
+.jp-status-closed {
+    background: #fee2e2;
+    color: #991b1b;
+    border: 1px solid #fca5a5;
+}
+
+.jp-status-closed .dot {
+    background: #ef4444;
+}
+
+/* 8. Nút thao tác ba chấm (...) & Menu Popover hành động */
+.action-cell {
+    position: relative;
+    text-align: center;
+}
+
+.btn-action-outline {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    min-width: 32px;
+    padding: 0;
+    border: 1px solid #cbd5e1;
+    border-radius: 6px;
+    background: #ffffff;
+    color: #475569;
+    font-size: 18px;
+    font-weight: 700;
+    line-height: 1;
+    cursor: pointer;
+    transition: all 0.15s ease;
+}
+
+.btn-action-outline:hover,
+.btn-action-outline:focus-visible {
+    background: #f1f5f9;
+    border-color: #94a3b8;
+    color: #0f172a;
+}
+
+.action-popover {
+    position: fixed;
+    inset: auto;
+    margin: 0;
+    padding: 6px;
+    min-width: 180px;
+    max-width: calc(100vw - 16px);
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    background: #ffffff;
+    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+    z-index: 1000;
+}
+
+.action-popover :is(a, button) {
+    display: flex;
+    width: 100%;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 12px;
+    background: transparent;
+    border: 0;
+    border-radius: 6px;
+    text-align: left;
+    text-decoration: none;
+    font-size: 13.5px;
+    font-weight: 500;
+    color: #334155;
+    cursor: pointer;
+    transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+.action-popover :is(a, button):hover {
+    background: #f1f5f9;
+    color: #0f172a;
+}
+
+.action-popover .delete-action {
+    color: #ef4444;
+}
+
+.action-popover .delete-action:hover {
+    background: #fef2f2;
+    color: #dc2626;
+}
+
+.jp-btn-view-job {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 4px 11px;
+    border: 1px solid #cbd5e1;
+    border-radius: 5px;
+    background: #ffffff;
+    color: #334155;
+    font-size: 12.5px;
+    font-weight: 500;
+    text-decoration: none;
+    transition: all 0.2s ease;
+    white-space: nowrap;
+}
+
+.jp-btn-view-job:hover {
+    background: #f8fafc;
+    border-color: #94a3b8;
+    color: #0f172a;
+}
+
+.jp-empty-cell {
+    text-align: center;
+    padding: 40px 16px;
+    color: #64748b;
+    font-size: 13.5px;
+}
+
+/* 9. Thiết kế tương thích kích thước màn hình nhỏ (Responsive) */
+@media (max-width: 992px) {
+    .jp-filter-grid {
+        grid-template-columns: 1fr 1fr;
+        gap: 10px;
+    }
+}
+
+@media (max-width: 600px) {
+    .jp-filter-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .jp-list-header {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+}
