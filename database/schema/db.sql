@@ -120,8 +120,11 @@ GO
 CREATE TABLE JobRequisition (
     RequisitionId INT IDENTITY(1,1) PRIMARY KEY,
     Title NVARCHAR(200) NOT NULL,
+	RequisitionCode NVARCHAR(50) NULL, --add
     DepartmentId INT NOT NULL,
     HiringManagerId INT NOT NULL,
+	RecruitmentRound INT NOT NULL CONSTRAINT CK_JobRequisition_RecruitmentRound
+    CHECK (RecruitmentRound > 0), --add
     NumberOfPositions INT NOT NULL,
     EmploymentType NVARCHAR(50) NOT NULL,
     MinSalary DECIMAL(18,2) NULL,
