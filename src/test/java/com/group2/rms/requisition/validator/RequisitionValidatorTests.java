@@ -53,6 +53,7 @@ class RequisitionValidatorTests {
                 .employmentType("Full-time")
                 .workModel("On-site")
                 .expectedStartDate(LocalDate.now().plusDays(1))
+                .probationDuration("60")
                 .workLocation("Office")
                 .reasonForHiring("Expansion")
                 .jobDescription("Develop software")
@@ -369,17 +370,34 @@ class RequisitionValidatorTests {
         assertTrue(expectFail(d).getErrors().containsKey("workLocation"));
     }
 
-    @Test void val010_probationDurationAtMaxLengthPasses() {
-        var d = valid(); d.setProbationDuration("x".repeat(255)); expectPass(d);
+    @Test void val010_probationDurationValidIntegerDaysPasses() {
+        var d = valid(); d.setProbationDuration("60"); expectPass(d);
     }
 
-    @Test void val010_probationDurationOverMaxLengthFails() {
-        var d = valid(); d.setProbationDuration("x".repeat(256));
+    @Test void val010_probationDurationRequiredOnSubmit() {
+        var d = valid(); d.setProbationDuration(null);
         assertTrue(expectFail(d).getErrors().containsKey("probationDuration"));
     }
 
-    @Test void val010_probationDurationNeverRequiredOnSubmit() {
-        var d = valid(); d.setProbationDuration(null); expectPass(d);
+    @Test void val010_probationDurationNotRequiredOnDraft() {
+        var d = emptyDraft(); d.setProbationDuration(null);
+        expectPass(d);
+    }
+
+    @Test void val010_probationDurationZeroOrNegativeFails() {
+        var d1 = valid(); d1.setProbationDuration("0");
+        assertTrue(expectFail(d1).getErrors().containsKey("probationDuration"));
+
+        var d2 = valid(); d2.setProbationDuration("-5");
+        assertTrue(expectFail(d2).getErrors().containsKey("probationDuration"));
+    }
+
+    @Test void val010_probationDurationNonNumericFails() {
+        var d1 = valid(); d1.setProbationDuration("abc");
+        assertTrue(expectFail(d1).getErrors().containsKey("probationDuration"));
+
+        var d2 = valid(); d2.setProbationDuration("1.5");
+        assertTrue(expectFail(d2).getErrors().containsKey("probationDuration"));
     }
 
     @Test void val010_criteriaNameAtMaxLengthPasses() {

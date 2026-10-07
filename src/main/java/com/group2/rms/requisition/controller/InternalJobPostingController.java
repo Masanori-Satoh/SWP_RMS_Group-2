@@ -1,0 +1,106 @@
+package com.group2.rms.requisition.controller;
+
+import com.group2.rms.requisition.dto.InternalJobPostingResponse;
+import com.group2.rms.requisition.dto.JobPostingCreateRequest;
+import com.group2.rms.requisition.service.JobPostingService;
+import com.group2.rms.requisition.service.RequisitionAccess;
+import com.group2.rms.user.entity.User;
+import com.group2.rms.user.repository.DepartmentRepository;
+import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.validation.BindingResult;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+
+import java.util.List;
+
+@Controller
+@RequestMapping("/internal/job-postings")
+@RequiredArgsConstructor
+public class InternalJobPostingController {
+
+    private final JobPostingService jobPostingService;
+    private final RequisitionAccess requisitionAccess;
+    private final DepartmentRepository departmentRepository;
+
+    @ModelAttribute
+    void populateViewerAttributes(Model model) {
+        User currentUser = requisitionAccess.actor();
+        model.addAttribute("viewerRole", requisitionAccess.role(currentUser));
+        model.addAttribute("viewerName", currentUser.getFullName());
+    }
+
+    @GetMapping
+    public String listJobPostings(
+            @RequestParam(defaultValue = "1") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "") String q,
+            @RequestParam(required = false) Integer departmentId,
+            @RequestParam(defaultValue = "") String status,
+            @RequestParam(defaultValue = "newest") String sort,
+            Model model) {
+
+        User currentUser = requisitionAccess.actor();
+        Page<InternalJobPostingResponse> postingPage = jobPostingService.searchInternalJobPostings(
+                page, size, q, departmentId, status, sort, currentUser
+        );
+
+        model.addAttribute("postings", postingPage.getContent());
+        model.addAttribute("currentPage", postingPage.getNumber() + 1);
+        model.addAttribute("totalPages", Math.max(1, postingPage.getTotalPages()));
+        model.addAttribute("pageSize", postingPage.getSize());
+        model.addAttribute("startPage", Math.max(1, postingPage.getNumber() - 1));
+        model.addAttribute("endPage", Math.min(Math.max(1, postingPage.getTotalPages()), postingPage.getNumber() + 3));
+        model.addAttribute("totalElements", postingPage.getTotalElements());
+
+        model.addAttribute("search", q);
+        model.addAttribute("selectedDepartment", departmentId);
+        model.addAttribute("selectedStatus", status);
+        model.addAttribute("selectedSort", sort);
+
+        model.addAttribute("departments", departmentRepository.findAll());
+        model.addAttribute("statuses", List.of("Draft", "Published", "Closed", "Paused"));
+
+        return "job-postings/list";
+    }
+
+    @GetMapping("/create")
+    public String showCreateForm(@RequestParam("requisitionId") Integer requisitionId, Model model) {
+        User currentUser = requisitionAccess.actor();
+        JobPostingCreateRequest formDto = jobPostingService.prepareCreateForm(requisitionId, currentUser);
+        model.addAttribute("postingDto", formDto);
+        return "job-postings/create";
+    }
+
+    @PostMapping("/create")
+    public String handleCreatePost(
+            @Valid @ModelAttribute("postingDto") JobPostingCreateRequest request,
+            BindingResult bindingResult,
+            Model model,
+            RedirectAttributes redirectAttributes) {
+
+        User currentUser = requisitionAccess.actor();
+
+        if (bindingResult.hasErrors()) {
+            return "job-postings/create";
+        }
+
+        try {
+            Integer postingId = jobPostingService.createJobPosting(request, currentUser);
+            boolean isPublished = "publish".equalsIgnoreCase(request.getAction());
+            if (isPublished) {
+                redirectAttributes.addFlashAttribute("message", "Đã đăng tin tuyển dụng thành công lên cổng việc làm công khai.");
+            } else {
+                redirectAttributes.addFlashAttribute("message", "Đã lưu bản nháp tin tuyển dụng thành công.");
+            }
+            return "redirect:/requisitions";
+        } catch (ResponseStatusException ex) {
+            model.addAttribute("errorMessage", ex.getReason());
+            return "job-postings/create";
+        }
+    }
+}

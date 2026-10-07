@@ -9,6 +9,7 @@ import com.group2.rms.requisition.dto.RequisitionResponse;
 import com.group2.rms.requisition.dto.RequisitionTimelineResponse;
 import com.group2.rms.requisition.dto.ScreeningCriteriaRequest;
 import com.group2.rms.requisition.dto.ScreeningCriteriaResponse;
+import com.group2.rms.requisition.entity.JobPosting;
 import com.group2.rms.requisition.entity.JobRequisition;
 import com.group2.rms.requisition.entity.RequisitionApproval;
 import com.group2.rms.requisition.entity.ScreeningCriteria;
@@ -668,6 +669,12 @@ public class RequisitionServiceImpl implements RequisitionService {
                 ? requisition.getRequisitionCode()
                 : String.format("REQ-%d-%03d", requisition.getCreatedAt() != null ? requisition.getCreatedAt().getYear() : 2026, requisition.getRequisitionId() != null ? requisition.getRequisitionId() : 0);
 
+        var activePosting = jobPostingRepository != null && requisition.getRequisitionId() != null
+                ? jobPostingRepository.findTopByRequisition_RequisitionIdOrderByJobPostingIdDesc(requisition.getRequisitionId())
+                : Optional.<JobPosting>empty();
+        String postingStatus = activePosting.map(JobPosting::getPostingStatus).orElse("None");
+        Integer jobPostingId = activePosting.map(JobPosting::getJobPostingId).orElse(null);
+
         RequisitionResponse response = RequisitionResponse.builder()
                 .requisitionId(requisition.getRequisitionId())
                 .requisitionCode(generatedCode)
@@ -680,6 +687,8 @@ public class RequisitionServiceImpl implements RequisitionService {
                 .employmentType(requisition.getEmploymentType())
                 .approvalStatus(requisition.getApprovalStatus())
                 .createdAt(requisition.getCreatedAt())
+                .postingStatus(postingStatus)
+                .jobPostingId(jobPostingId)
                 .minSalary(requisition.getMinSalary())
                 .maxSalary(requisition.getMaxSalary())
                 .gender(requisition.getGender())

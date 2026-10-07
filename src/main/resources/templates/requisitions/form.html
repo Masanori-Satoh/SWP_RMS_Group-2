@@ -146,12 +146,14 @@
                                         th:text="${#fields.hasErrors('expectedStartDate') ? #strings.listJoin(#fields.errors('expectedStartDate'), '; ') : ''}"></small>
                                 </div>
                                 <div class="form-group">
-                                    <label for="probationDuration">Thời gian thử việc</label>
-                                    <input class="form-control-custom" type="text" th:field="*{probationDuration}"
+                                    <label for="probationDuration">Thời gian thử việc (ngày) <span
+                                            class="required-asterisk">*</span></label>
+                                    <input class="form-control-custom" type="number" th:field="*{probationDuration}"
                                         th:attr="aria-invalid=${#fields.hasErrors('probationDuration')}"
-                                        aria-describedby="probationDuration-error" maxlength="255"
-                                        placeholder="Ví dụ: 2 tháng"><small id="probationDuration-error"
-                                        class="field-error"
+                                        aria-describedby="probationDuration-error" min="1" step="1"
+                                        placeholder="Ví dụ: 60"
+                                        onkeydown="return event.key !== 'e' && event.key !== 'E' && event.key !== '+' && event.key !== '-' && event.key !== '.'"><small
+                                        id="probationDuration-error" class="field-error"
                                         th:text="${#fields.hasErrors('probationDuration') ? #strings.listJoin(#fields.errors('probationDuration'), '; ') : ''}"></small>
                                 </div>
 

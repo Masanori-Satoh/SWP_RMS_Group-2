@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+
+<head th:replace="~{fragments/head :: interfaceHead('Tạo tin tuyển dụng', ~{::pageStyles})}">
+    <th:block th:fragment="pageStyles">
+        <link rel="stylesheet" th:href="@{/css/requisition-shared.css}">
+        <link rel="stylesheet" th:href="@{/css/requisition-form.css}">
+        <style>
+            .source-card {
+                background: #f8fafc;
+                border: 1px solid #e2e8f0;
+                border-radius: 8px;
+                padding: 16px 20px;
+                margin-bottom: 24px;
+            }
+            .source-card-title {
+                font-size: 15px;
+                font-weight: 700;
+                color: #1e293b;
+                display: flex;
+                align-items: center;
+                gap: 8px;
+                margin-bottom: 12px;
+            }
+            .source-grid {
+                display: grid;
+                grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+                gap: 12px 20px;
+                font-size: 14px;
+            }
+            .source-item label {
+                display: block;
+                color: #64748b;
+                font-size: 12px;
+                font-weight: 600;
+                text-transform: uppercase;
+                margin-bottom: 2px;
+            }
+            .source-item span {
+                font-weight: 600;
+                color: #0f172a;
+            }
+            .source-note {
+                margin-top: 12px;
+                font-size: 13px;
+                color: #0284c7;
+                background: #f0f9ff;
+                padding: 8px 12px;
+                border-radius: 6px;
+                border: 1px solid #bae6fd;
+            }
+            .field-error {
+                color: #dc2626;
+                font-size: 13px;
+                margin-top: 4px;
+            }
+        </style>
+    </th:block>
+</head>
+
+<body class="rms-app req-app req-form-page">
+    <div class="page-wrapper">
+        <aside th:replace="~{fragments/sidebar :: workspace('requisitions', ${viewerRole})}"></aside>
+        <div class="main-content">
+            <header th:replace="~{fragments/workspace-header :: header(${viewerRole}, ${viewerName})}"></header>
+            <main id="main" tabindex="-1" class="page-content">
+                <div class="container">
+                    <nav class="breadcrumbs" aria-label="Breadcrumb" style="margin-bottom: var(--s2); font-size: 14px; display: flex; gap: 8px; align-items: center; color: var(--text-muted);">
+                        <a th:href="@{/dashboard}" style="color: var(--brand); text-decoration: none;">Bảng điều khiển</a>
+                        <span aria-hidden="true">/</span>
+                        <a th:href="@{/requisitions}" style="color: var(--brand); text-decoration: none;">Yêu cầu tuyển dụng</a>
+                        <span aria-hidden="true">/</span>
+                        <span aria-current="page" style="color: var(--text-color); font-weight: 500;">Tạo tin tuyển dụng</span>
+                    </nav>
+
+                    <div class="requisition-page-header">
+                        <div>
+                            <h1>Tạo tin tuyển dụng mới</h1>
+                            <p>Soạn thảo và xuất bản tin tuyển dụng công khai từ yêu cầu đã được phê duyệt.</p>
+                        </div>
+                    </div>
+
+                    <div th:if="${errorMessage}" class="alert alert-danger" style="margin-bottom: 20px; padding: 12px 16px; background: #fef2f2; border: 1px solid #fecaca; color: #b91c1c; border-radius: 6px;">
+                        <span th:text="${errorMessage}"></span>
+                    </div>
+
+                    <!-- Thẻ nguồn thông tin Requisition -->
+                    <div class="source-card">
+                        <div class="source-card-title">
+                            <span>📄 Thông tin yêu cầu tuyển dụng gốc</span>
+                            <span class="code-badge" th:text="${postingDto.requisitionCode}">REQ-2026-001</span>
+                        </div>
+                        <div class="source-grid">
+                            <div class="source-item">
+                                <label>Phòng ban</label>
+                                <span th:text="${postingDto.departmentName}">Kỹ thuật</span>
+                            </div>
+                            <div class="source-item">
+                                <label>Đợt tuyển dụng</label>
+                                <span th:text="|Đợt ${postingDto.recruitmentRound}|">Đợt 1</span>
+                            </div>
+                            <div class="source-item">
+                                <label>Hình thức làm việc</label>
+                                <span th:text="${postingDto.employmentType}">Toàn thời gian</span>
+                            </div>
+                            <div class="source-item">
+                                <label>Số lượng cần tuyển</label>
+                                <span th:text="${postingDto.numberOfPositions != null ? postingDto.numberOfPositions + ' người' : '—'}">3 người</span>
+                            </div>
+                            <div class="source-item">
+                                <label>Người yêu cầu</label>
+                                <span th:text="${postingDto.hiringManagerName}">Trưởng bộ phận</span>
+                            </div>
+                        </div>
+                        <div class="source-note">
+                            💡 <strong>Gợi ý:</strong> Biểu mẫu bên dưới đã được điền sẵn từ nội dung yêu cầu đã duyệt. Bạn có thể chỉnh sửa lại tiêu đề, mô tả, yêu cầu và quyền lợi để thu hút ứng viên tốt nhất.
+                        </div>
+                    </div>
+
+                    <form th:action="@{/internal/job-postings/create}" th:object="${postingDto}" method="post" id="jobPostingForm" class="form-container">
+                        <input type="hidden" th:field="*{requisitionId}">
+                        <input type="hidden" th:field="*{requisitionCode}">
+                        <input type="hidden" th:field="*{departmentName}">
+                        <input type="hidden" th:field="*{recruitmentRound}">
+                        <input type="hidden" th:field="*{employmentType}">
+                        <input type="hidden" th:field="*{numberOfPositions}">
+                        <input type="hidden" th:field="*{hiringManagerName}">
+
+                        <!-- Card 1: Thông tin chung bài đăng -->
+                        <div class="form-card card">
+                            <div class="form-card-header">
+                                <h2><span class="step-badge">1</span> Thông tin chung bài đăng</h2>
+                            </div>
+                            <div class="form-grid">
+                                <div class="form-group form-group-full">
+                                    <label for="postingTitle">Tiêu đề tin tuyển dụng <span class="required-asterisk">*</span></label>
+                                    <input type="text" id="postingTitle" th:field="*{postingTitle}" class="form-control form-control-custom"
+                                           placeholder="VD: Senior Java Backend Engineer (Spring Boot)" required maxlength="200">
+                                    <div th:if="${#fields.hasErrors('postingTitle')}" class="field-error" th:errors="*{postingTitle}"></div>
+                                </div>
+
+                                <div class="form-group">
+                                    <label for="salaryDisplay">Mức lương hiển thị</label>
+                                    <input type="text" id="salaryDisplay" th:field="*{salaryDisplay}" class="form-control form-control-custom"
+                                           placeholder="VD: 15.000.000 - 25.000.000 VNĐ hoặc Thoả thuận" maxlength="100">
+                                    <div th:if="${#fields.hasErrors('salaryDisplay')}" class="field-error" th:errors="*{salaryDisplay}"></div>
+                                </div>
+
+                                <div class="form-group">
+                                    <label for="workLocation">Địa điểm làm việc</label>
+                                    <input type="text" id="workLocation" th:field="*{workLocation}" class="form-control form-control-custom"
+                                           placeholder="VD: Tòa nhà FPT, Cầu Giấy, Hà Nội" maxlength="255">
+                                    <div th:if="${#fields.hasErrors('workLocation')}" class="field-error" th:errors="*{workLocation}"></div>
+                                </div>
+
+                                <div class="form-group">
+                                    <label for="applicationDeadline">Hạn nộp hồ sơ</label>
+                                    <input type="date" id="applicationDeadline" th:field="*{applicationDeadline}" class="form-control form-control-custom">
+                                    <div th:if="${#fields.hasErrors('applicationDeadline')}" class="field-error" th:errors="*{applicationDeadline}"></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Card 2: Nội dung chi tiết tin tuyển dụng -->
+                        <div class="form-card card">
+                            <div class="form-card-header">
+                                <h2><span class="step-badge">2</span> Nội dung chi tiết tin đăng</h2>
+                            </div>
+                            <div class="form-grid">
+                                <div class="form-group form-group-full">
+                                    <label for="jobDescription">Mô tả công việc <span class="required-asterisk">*</span></label>
+                                    <textarea id="jobDescription" th:field="*{jobDescription}" class="form-control textarea-custom"
+                                              rows="7" placeholder="Nhiệm vụ và trách nhiệm cụ thể của vị trí..." required></textarea>
+                                    <div th:if="${#fields.hasErrors('jobDescription')}" class="field-error" th:errors="*{jobDescription}"></div>
+                                </div>
+
+                                <div class="form-group form-group-full">
+                                    <label for="jobRequirements">Yêu cầu ứng viên <span class="required-asterisk">*</span></label>
+                                    <textarea id="jobRequirements" th:field="*{jobRequirements}" class="form-control textarea-custom"
+                                              rows="7" placeholder="Yêu cầu về kinh nghiệm, kỹ năng, bằng cấp..." required></textarea>
+                                    <div th:if="${#fields.hasErrors('jobRequirements')}" class="field-error" th:errors="*{jobRequirements}"></div>
+                                </div>
+
+                                <div class="form-group form-group-full">
+                                    <label for="benefits">Quyền lợi & Đãi ngộ</label>
+                                    <textarea id="benefits" th:field="*{benefits}" class="form-control textarea-custom"
+                                              rows="5" placeholder="Bảo hiểm sức khỏe, thưởng KPI, du lịch hàng năm, phụ cấp..."></textarea>
+                                    <div th:if="${#fields.hasErrors('benefits')}" class="field-error" th:errors="*{benefits}"></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Footer Actions -->
+                        <div class="form-footer-actions">
+                            <a th:href="@{/requisitions}" class="btn btn-cancel-custom">← Hủy bỏ</a>
+                            <button type="submit" name="action" value="draft" class="btn btn-save-draft">Lưu bản nháp</button>
+                            <button type="submit" name="action" value="publish" class="btn btn-submit-director">Đăng tuyển ngay</button>
+                        </div>
+                    </form>
+                </div>
+            </main>
+        </div>
+    </div>
+</body>
+
+</html>

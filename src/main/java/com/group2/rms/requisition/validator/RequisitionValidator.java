@@ -19,8 +19,10 @@ import java.util.Set;
 
 /**
  * Validator cho Job Requisition.
- * Rule: Bản nháp (draft) bỏ qua các quy tắc bắt buộc; chỉ kiểm tra giới hạn độ dài và định dạng cơ bản.
- * Khi gửi duyệt (submit), tất cả các trường bắt buộc và tổng trọng số tiêu chí (100%) phải thỏa mãn.
+ * Rule: Bản nháp (draft) bỏ qua các quy tắc bắt buộc; chỉ kiểm tra giới hạn độ
+ * dài và định dạng cơ bản.
+ * Khi gửi duyệt (submit), tất cả các trường bắt buộc và tổng trọng số tiêu chí
+ * (100%) phải thỏa mãn.
  * Mọi thông báo lỗi hiển thị frontend bằng tiếng Việt theo quy chuẩn dự án.
  */
 @Component
@@ -65,20 +67,35 @@ public class RequisitionValidator {
 
         // Rule: Kiểm tra các trường văn bản cơ bản
         validateTextField(validationErrors, "title", requisitionRequest.getTitle(), TITLE_LIMIT, isSubmitAction);
-        validateTextField(validationErrors, "reasonForHiring", requisitionRequest.getReasonForHiring(), REASON_LIMIT, isSubmitAction);
+        validateTextField(validationErrors, "reasonForHiring", requisitionRequest.getReasonForHiring(), REASON_LIMIT,
+                isSubmitAction);
 
         if (isSubmitAction && "Untitled requisition".equalsIgnoreCase(requisitionRequest.getTitle())) {
             validationErrors.put("title", "Vui lòng nhập vị trí tuyển dụng cụ thể trước khi gửi duyệt.");
         }
 
-        validateTextField(validationErrors, "jobDescription", requisitionRequest.getJobDescription(), TEXT_AREA_LIMIT, isSubmitAction);
-        validateTextField(validationErrors, "requirementDetails", requisitionRequest.getRequirementDetails(), TEXT_AREA_LIMIT, isSubmitAction);
-        validateTextField(validationErrors, "workLocation", requisitionRequest.getWorkLocation(), LOCATION_LIMIT, isSubmitAction);
-        validateTextField(validationErrors, "probationDuration", requisitionRequest.getProbationDuration(), PROBATION_LIMIT, false);
+        validateTextField(validationErrors, "jobDescription", requisitionRequest.getJobDescription(), TEXT_AREA_LIMIT,
+                isSubmitAction);
+        validateTextField(validationErrors, "requirementDetails", requisitionRequest.getRequirementDetails(),
+                TEXT_AREA_LIMIT, isSubmitAction);
+        validateTextField(validationErrors, "workLocation", requisitionRequest.getWorkLocation(), LOCATION_LIMIT,
+                isSubmitAction);
+
+        // Rule: Thời gian thử việc (số ngày) - bắt buộc khi gửi duyệt, phải là số
+        // nguyên > 0. Lưu nháp cho phép để trống.
+        if (isSubmitAction) {
+            if (requisitionRequest.getProbationDuration() == null) {
+                validationErrors.put("probationDuration", "Vui lòng nhập thời gian thử việc.");
+            } else {
+                validateProbationDays(validationErrors, requisitionRequest.getProbationDuration());
+            }
+        }
 
         // Rule: Kiểm tra giá trị lựa chọn (combobox/select)
-        validateChoiceField(validationErrors, "employmentType", requisitionRequest.getEmploymentType(), EMPLOYMENT_TYPES, isSubmitAction);
-        validateChoiceField(validationErrors, "workModel", requisitionRequest.getWorkModel(), WORK_MODELS, isSubmitAction);
+        validateChoiceField(validationErrors, "employmentType", requisitionRequest.getEmploymentType(),
+                EMPLOYMENT_TYPES, isSubmitAction);
+        validateChoiceField(validationErrors, "workModel", requisitionRequest.getWorkModel(), WORK_MODELS,
+                isSubmitAction);
         validateChoiceField(validationErrors, "gender", requisitionRequest.getGender(), GENDERS, false);
 
         // Rule: Phòng ban bắt buộc khi gửi duyệt
@@ -86,7 +103,8 @@ public class RequisitionValidator {
             validationErrors.put("departmentId", "Vui lòng chọn phòng ban.");
         }
 
-        // Rule: Số lượng tuyển dụng bắt buộc khi gửi duyệt và phải là số nguyên dương (> 0)
+        // Rule: Số lượng tuyển dụng bắt buộc khi gửi duyệt và phải là số nguyên dương
+        // (> 0)
         if (isSubmitAction && requisitionRequest.getNumberOfPositions() == null) {
             validationErrors.put("numberOfPositions", "Vui lòng nhập số lượng tuyển dụng.");
         }
@@ -95,7 +113,8 @@ public class RequisitionValidator {
         }
 
         // Rule: Ngày bắt đầu dự kiến không được trong quá khứ khi gửi duyệt
-        if (isSubmitAction && (requisitionRequest.getExpectedStartDate() == null || requisitionRequest.getExpectedStartDate().isBefore(LocalDate.now()))) {
+        if (isSubmitAction && (requisitionRequest.getExpectedStartDate() == null
+                || requisitionRequest.getExpectedStartDate().isBefore(LocalDate.now()))) {
             validationErrors.put("expectedStartDate", "Ngày bắt đầu dự kiến phải là hôm nay hoặc trong tương lai.");
         }
 
@@ -138,13 +157,18 @@ public class RequisitionValidator {
             }
 
             validCriteriaCount++;
-            validateTextField(validationErrors, fieldPrefixKey + "criteriaName", criteriaItem.getCriteriaName(), CRITERIA_NAME_LIMIT, isSubmitAction);
-            validateTextField(validationErrors, fieldPrefixKey + "requiredValue", criteriaItem.getRequiredValue(), CRITERIA_VALUE_LIMIT, isSubmitAction);
-            validateChoiceField(validationErrors, fieldPrefixKey + "criteriaType", criteriaItem.getCriteriaType(), CRITERIA_TYPES, isSubmitAction);
+            validateTextField(validationErrors, fieldPrefixKey + "criteriaName", criteriaItem.getCriteriaName(),
+                    CRITERIA_NAME_LIMIT, isSubmitAction);
+            validateTextField(validationErrors, fieldPrefixKey + "requiredValue", criteriaItem.getRequiredValue(),
+                    CRITERIA_VALUE_LIMIT, isSubmitAction);
+            validateChoiceField(validationErrors, fieldPrefixKey + "criteriaType", criteriaItem.getCriteriaType(),
+                    CRITERIA_TYPES, isSubmitAction);
 
             // Rule: Tên các tiêu chí sàng lọc không được trùng lặp
-            if (criteriaItem.getCriteriaName() != null && !uniqueCriteriaNames.add(criteriaItem.getCriteriaName().toLowerCase(Locale.ROOT))) {
-                validationErrors.put(fieldPrefixKey + "criteriaName", "Tên các tiêu chí sàng lọc không được trùng lặp.");
+            if (criteriaItem.getCriteriaName() != null
+                    && !uniqueCriteriaNames.add(criteriaItem.getCriteriaName().toLowerCase(Locale.ROOT))) {
+                validationErrors.put(fieldPrefixKey + "criteriaName",
+                        "Tên các tiêu chí sàng lọc không được trùng lặp.");
             }
             if (criteriaItem.getCriteriaId() != null && !uniqueCriteriaIds.add(criteriaItem.getCriteriaId())) {
                 validationErrors.put(fieldPrefixKey + "criteriaName", "Tiêu chí sàng lọc bị gửi trùng lặp.");
@@ -157,7 +181,8 @@ public class RequisitionValidator {
             }
             if (weightValue != null) {
                 BigDecimal maximumAllowedWeight = new BigDecimal(isSubmitAction ? "100" : "999.99");
-                if (weightValue.signum() <= 0 || weightValue.compareTo(maximumAllowedWeight) > 0 || weightValue.stripTrailingZeros().scale() > 2) {
+                if (weightValue.signum() <= 0 || weightValue.compareTo(maximumAllowedWeight) > 0
+                        || weightValue.stripTrailingZeros().scale() > 2) {
                     validationErrors.put(fieldPrefixKey + "weight", isSubmitAction
                             ? "Trọng số phải từ 0.01 đến 100 và tối đa 2 chữ số thập phân."
                             : "Trọng số phải là số dương và tối đa 2 chữ số thập phân.");
@@ -166,7 +191,8 @@ public class RequisitionValidator {
             }
         }
 
-        // Rule: Khi gửi duyệt, phải có ít nhất 1 tiêu chí và tổng trọng số phải đúng 100%
+        // Rule: Khi gửi duyệt, phải có ít nhất 1 tiêu chí và tổng trọng số phải đúng
+        // 100%
         if (isSubmitAction && (validCriteriaCount == 0 || totalCriteriaWeight.compareTo(new BigDecimal("100")) != 0)) {
             validationErrors.put("screeningCriteria", "Vui lòng nhập đầy đủ tiêu chí với tổng trọng số đúng 100%.");
         }
@@ -187,7 +213,8 @@ public class RequisitionValidator {
                 && !Boolean.TRUE.equals(criteriaRequest.getIsMandatory());
     }
 
-    private void validateTextField(Map<String, String> errors, String fieldKey, String fieldValue, int maximumLength, boolean isRequired) {
+    private void validateTextField(Map<String, String> errors, String fieldKey, String fieldValue, int maximumLength,
+            boolean isRequired) {
         if (isRequired && fieldValue == null) {
             errors.put(fieldKey, "Bắt buộc nhập trước khi gửi Giám đốc phê duyệt.");
         } else if (fieldValue != null && fieldValue.length() > maximumLength) {
@@ -195,7 +222,8 @@ public class RequisitionValidator {
         }
     }
 
-    private void validateChoiceField(Map<String, String> errors, String fieldKey, String fieldValue, List<String> allowedChoices, boolean isRequired) {
+    private void validateChoiceField(Map<String, String> errors, String fieldKey, String fieldValue,
+            List<String> allowedChoices, boolean isRequired) {
         if ((isRequired || fieldValue != null) && (fieldValue == null || !allowedChoices.contains(fieldValue))) {
             errors.put(fieldKey, "Vui lòng chọn giá trị hợp lệ.");
         }
@@ -206,6 +234,19 @@ public class RequisitionValidator {
                 || monetaryAmount.compareTo(new BigDecimal("9999999999999999.99")) > 0
                 || monetaryAmount.stripTrailingZeros().scale() > 2)) {
             errors.put(fieldKey, "Số tiền phải không âm và tối đa 2 chữ số thập phân.");
+        }
+    }
+
+    private void validateProbationDays(Map<String, String> errors, String value) {
+        if (value == null)
+            return;
+        try {
+            long days = Long.parseLong(value);
+            if (days <= 0 || days > 181) {
+                errors.put("probationDuration", "Thời gian thử việc phải là số ngày nguyên trong khoảng 1-180.");
+            }
+        } catch (NumberFormatException e) {
+            errors.put("probationDuration", "Thời gian thử việc phải là số ngày nguyên trong khoảng 1-180.");
         }
     }
 }

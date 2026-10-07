@@ -42,7 +42,7 @@
 }
 
 .req-list-page .requisition-list-table {
-  min-width: 920px;
+  min-width: 1020px;
 }
 
 .req-list-page .requisition-list-table td {
@@ -174,6 +174,37 @@
 
 .req-list-page a.page-link:not(.active):hover {
   background: var(--brand-soft);
+}
+
+.req-list-page .posting-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 8px;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+.req-list-page .posting-badge.badge-published {
+  background: #ecfdf5;
+  color: #065f46;
+  border: 1px solid #a7f3d0;
+}
+.req-list-page .posting-badge.badge-draft {
+  background: #fefce8;
+  color: #854d0e;
+  border: 1px solid #fef08a;
+}
+.req-list-page .posting-badge.badge-none {
+  background: #f3f4f6;
+  color: #6b7280;
+  border: 1px dashed #d1d5db;
+}
+.req-list-page .posting-badge.badge-closed,
+.req-list-page .posting-badge.badge-paused {
+  background: #f3f4f6;
+  color: #4b5563;
+  border: 1px solid #e5e7eb;
 }
 
 @media (max-width:1100px) {

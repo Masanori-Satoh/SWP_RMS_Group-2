@@ -9,6 +9,7 @@ import com.group2.rms.requisition.entity.ScreeningCriteria;
 import com.group2.rms.requisition.exception.RequisitionValidationException;
 import com.group2.rms.requisition.entity.RequisitionApproval;
 import com.group2.rms.requisition.repository.RequisitionApprovalRepository;
+import com.group2.rms.requisition.repository.JobPostingRepository;
 import com.group2.rms.requisition.repository.JobRequisitionRepository;
 import com.group2.rms.requisition.repository.ScreeningCriteriaRepository;
 import com.group2.rms.requisition.validator.RequisitionValidator;
@@ -65,15 +66,25 @@ import static org.mockito.Mockito.*;
 @ExtendWith(MockitoExtension.class)
 class JobRequisitionServiceTest {
 
-    @Mock private JobRequisitionRepository requisitions;
-    @Mock private DepartmentRepository departments;
-    @Mock private AuditLogRepository audit;
-    @Mock private RequisitionApprovalRepository approvals;
-    @Mock private ScreeningCriteriaRepository screeningCriteriaRepository;
-    @Mock private RequisitionAccess access;
-    @Mock private RequisitionValidator validator;
+    @Mock
+    private JobRequisitionRepository requisitions;
+    @Mock
+    private DepartmentRepository departments;
+    @Mock
+    private AuditLogRepository audit;
+    @Mock
+    private RequisitionApprovalRepository approvals;
+    @Mock
+    private ScreeningCriteriaRepository screeningCriteriaRepository;
+    @Mock
+    private RequisitionAccess access;
+    @Mock
+    private RequisitionValidator validator;
+    @Mock
+    private JobPostingRepository jobPostingRepository;
 
-    @InjectMocks private RequisitionServiceImpl service;
+    @InjectMocks
+    private RequisitionServiceImpl service;
 
     private User manager;
 
@@ -118,8 +129,8 @@ class JobRequisitionServiceTest {
                 .screeningCriteria(new ArrayList<>(List.of(
                         ScreeningCriteriaRequest.builder()
                                 .criteriaName("Java").criteriaType("Skill")
-                                .requiredValue("2+ years").weight(new BigDecimal("50.00")).isMandatory(true).build()
-                ))).build();
+                                .requiredValue("2+ years").weight(new BigDecimal("50.00")).isMandatory(true).build())))
+                .build();
 
         assertEquals(101, service.createRequisition(req));
 
@@ -154,11 +165,11 @@ class JobRequisitionServiceTest {
         assertEquals("CREATE", log.getAction());
         assertEquals("JobRequisition", log.getEntityName());
         assertEquals("101", log.getEntityId());
-        assertEquals("Created Java Engineer · Draft", log.getNewValue());
+        assertEquals("Tạo yêu cầu: Java Engineer · Draft", log.getNewValue());
     }
 
     @Test
-    @DisplayName("SVC-01: Draft thiếu field -> Gán default title 'Untitled requisition', null các field còn lại")
+    @DisplayName("SVC-01: Draft thiếu field -> Gán default title 'Yêu cầu tuyển dụng chưa đặt tên', null các field còn lại")
     void svc01_createDraft_missingFields_appliesDefaults() {
         var req = RequisitionRequest.builder().action("draft").build();
 
@@ -170,7 +181,7 @@ class JobRequisitionServiceTest {
         verify(requisitions).saveAndFlush(reqCap.capture());
         JobRequisition saved = reqCap.getValue();
 
-        assertEquals("Untitled requisition", saved.getTitle());
+        assertEquals("Yêu cầu tuyển dụng chưa đặt tên", saved.getTitle());
         assertEquals("Draft", saved.getApprovalStatus());
         assertSame(manager, saved.getHiringManager());
         assertNull(saved.getDepartment());
@@ -180,7 +191,7 @@ class JobRequisitionServiceTest {
 
         var auditCap = ArgumentCaptor.forClass(AuditLog.class);
         verify(audit).save(auditCap.capture());
-        assertEquals("Created Untitled requisition · Draft", auditCap.getValue().getNewValue());
+        assertEquals("Tạo yêu cầu: Yêu cầu tuyển dụng chưa đặt tên · Draft", auditCap.getValue().getNewValue());
     }
 
     @Test
@@ -208,8 +219,8 @@ class JobRequisitionServiceTest {
         var req = RequisitionRequest.builder()
                 .action("draft")
                 .screeningCriteria(new ArrayList<>(List.of(
-                        ScreeningCriteriaRequest.builder().criteriaId(99).criteriaName("Java").build()
-                ))).build();
+                        ScreeningCriteriaRequest.builder().criteriaId(99).criteriaName("Java").build())))
+                .build();
 
         var ex = assertThrows(RequisitionValidationException.class, () -> service.createRequisition(req));
         assertTrue(ex.getErrors().containsKey("screeningCriteria"));
@@ -259,7 +270,8 @@ class JobRequisitionServiceTest {
         when(access.actor()).thenReturn(hrUser);
         when(access.role(hrUser)).thenReturn("HR");
 
-        when(requisitions.findAll(any(org.springframework.data.jpa.domain.Specification.class), any(org.springframework.data.domain.Pageable.class)))
+        when(requisitions.findAll(any(org.springframework.data.jpa.domain.Specification.class),
+                any(org.springframework.data.domain.Pageable.class)))
                 .thenReturn(new org.springframework.data.domain.PageImpl<>(List.of()));
 
         service.search(1, 10, "", null, "", "", "newest");
@@ -344,7 +356,8 @@ class JobRequisitionServiceTest {
 
         var ex = assertThrows(RequisitionValidationException.class, () -> service.createRequisition(req));
         assertTrue(ex.getErrors().containsKey("departmentId"));
-        assertEquals("Bạn chỉ có thể tạo yêu cầu tuyển dụng cho các phòng ban mình quản lý.", ex.getErrors().get("departmentId"));
+        assertEquals("Bạn chỉ có thể tạo yêu cầu tuyển dụng cho các phòng ban mình quản lý.",
+                ex.getErrors().get("departmentId"));
     }
 
     @Test
@@ -353,7 +366,8 @@ class JobRequisitionServiceTest {
         when(access.role(manager)).thenReturn("Hiring Manager");
         Department dept1 = Department.builder().departmentId(1).departmentName("Engineering").manager(manager).build();
         when(departments.findByManager_UserId(manager.getUserId())).thenReturn(List.of(dept1));
-        when(requisitions.findDistinctTitlesByDepartmentIds(List.of(1))).thenReturn(List.of("Backend Dev", "Frontend Dev"));
+        when(requisitions.findDistinctTitlesByDepartmentIds(List.of(1)))
+                .thenReturn(List.of("Backend Dev", "Frontend Dev"));
 
         List<String> positions = service.getAvailablePositions(manager);
         assertEquals(2, positions.size());

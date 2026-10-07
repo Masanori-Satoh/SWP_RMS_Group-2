@@ -7,12 +7,19 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
+import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.stereotype.Repository;
 
 @Repository
-public interface JobPostingRepository extends JpaRepository<JobPosting, Integer> {
+public interface JobPostingRepository extends JpaRepository<JobPosting, Integer>, JpaSpecificationExecutor<JobPosting> {
 
     boolean existsByRequisition_RequisitionId(Integer id);
+
+    java.util.Optional<JobPosting> findTopByRequisition_RequisitionIdOrderByJobPostingIdDesc(Integer requisitionId);
+
+    boolean existsByRequisition_RequisitionIdAndPostingStatusIn(Integer requisitionId, java.util.Collection<String> statuses);
+
+    java.util.List<JobPosting> findByRequisition_RequisitionIdIn(java.util.Collection<Integer> requisitionIds);
 
     @Query("SELECT j FROM JobPosting j " +
            "WHERE j.postingStatus = 'Published' " +

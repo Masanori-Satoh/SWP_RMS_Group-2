@@ -14,6 +14,10 @@
             th:attr="aria-current=${activeMenu == 'requisitions' ? 'page' : null}">
             Yêu cầu tuyển dụng
         </a>
+        <a th:href="@{/internal/job-postings}" class="nav-item" th:classappend="${activeMenu == 'job-postings' ? 'active' : ''}"
+            th:attr="aria-current=${activeMenu == 'job-postings' ? 'page' : null}">
+            Tin tuyển dụng
+        </a>
         <a th:href="@{/candidates}" class="nav-item" th:classappend="${activeMenu == 'candidates' ? 'active' : ''}"
             th:attr="aria-current=${activeMenu == 'candidates' ? 'page' : null}">
             Ứng viên
@@ -70,6 +74,8 @@
             th:attr="aria-current=${activeMenu == 'api-monitoring' ? 'page' : null}">Giám sát API</a>
         <a th:if="${role != 'Candidate' and role != 'Interviewer'}" th:href="@{/requisitions}"
             th:attr="aria-current=${activeMenu == 'requisitions' ? 'page' : null}">Yêu cầu tuyển dụng</a>
+        <a th:if="${role == 'HR' or role == 'System Admin'}" th:href="@{/internal/job-postings}"
+            th:attr="aria-current=${activeMenu == 'job-postings' ? 'page' : null}">Tin tuyển dụng</a>
         <a th:if="${role == 'HR' or role == 'System Admin' or role == 'Hiring Manager' or role == 'Interviewer' or role == 'Director' or role == 'Candidate'}"
             th:href="@{/interviews}" th:attr="aria-current=${activeMenu == 'interviews' ? 'page' : null}">Lịch phỏng vấn</a>
         <a th:if="${role == 'HR' or role == 'HR Specialist' or role == 'Director' or role == 'System Admin' or (role != null and #strings.contains(role, 'HR'))}"
