@@ -335,11 +335,11 @@ class RequisitionValidatorTests {
     }
 
     @Test void val010_reasonForHiringAtMaxLengthPasses() {
-        var d = valid(); d.setReasonForHiring("x".repeat(RequisitionValidator.REASON_LIMIT)); expectPass(d);
+        var d = valid(); d.setReasonForHiring("x".repeat(RequisitionValidator.REASON_CHAR_LIMIT)); expectPass(d);
     }
 
     @Test void val010_reasonForHiringOverMaxLengthFails() {
-        var d = valid(); d.setReasonForHiring("x".repeat(RequisitionValidator.REASON_LIMIT + 1));
+        var d = valid(); d.setReasonForHiring("x".repeat(RequisitionValidator.REASON_CHAR_LIMIT + 1));
         assertTrue(expectFail(d).getErrors().containsKey("reasonForHiring"));
     }
 

@@ -163,13 +163,16 @@
 
 .search-box input {
     padding-left: 36px;
+    padding-right: var(--s4);
     width: 280px;
     min-height: 42px;
+    height: 42px;
     border: 1px solid var(--control-line);
     border-radius: 4px;
     font-size: 14px;
     background: var(--surface);
     color: var(--ink);
+    box-sizing: border-box;
     transition: border-color 0.15s ease, box-shadow 0.15s ease;
 }
 
@@ -180,7 +183,9 @@
 }
 
 .filter-select {
+    width: 280px;
     min-height: 42px;
+    height: 42px;
     padding: 0 var(--s4);
     border: 1px solid var(--control-line);
     border-radius: 4px;
@@ -188,7 +193,8 @@
     background: var(--surface);
     color: var(--ink);
     cursor: pointer;
-    transition: border-color 0.15s ease;
+    box-sizing: border-box;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
 }
 
 .filter-select:focus {
@@ -343,11 +349,6 @@
     border: 1px solid var(--line);
 }
 
-.status-negotiating {
-    background: #f5f3ff;
-    color: #6b21a8;
-    border: 1px solid #e9d5ff;
-}
 
 .status-voided {
     background: #f1f3f0;
@@ -717,7 +718,8 @@
     .offers-stats-grid {
         grid-template-columns: 1fr;
     }
-    .search-box input {
+    .search-box input,
+    .filter-select {
         width: 100%;
     }
     .detail-grid-3 {

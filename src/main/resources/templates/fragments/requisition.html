@@ -1,68 +1,14 @@
 <!DOCTYPE html>
-<html lang="vi" xmlns:th="http://www.thymeleaf.org">
-<!--
-    FRAGMENTS/REQUISITION.HTML
-    =============================================================================
-    Tập hợp các Thymeleaf fragments dùng chung cho phân hệ Yêu cầu Tuyển dụng.
-    Bao gồm:
-      - topbar: Thanh tiêu đề trên cùng kèm thông tin tài khoản và đăng xuất
-      - breadcrumb(current): Thanh điều hướng breadcrumb phân cấp
-      - informationIcon: Biểu tượng thông tin dạng SVG
-      - messages: Khối thông báo thành công (successMessage) hoặc lỗi (failureMessage)
-      - deleteDialog: Hộp thoại Modal xác nhận xóa yêu cầu tuyển dụng
-    =============================================================================
--->
-<body>
-
-<!-- 1. Thanh tiêu đề trên cùng (Topbar) -->
-<header th:fragment="topbar" class="topbar">
-    <span class="topbar-title">Hệ thống quản lý tuyển dụng Mộc RMS</span>
-    <div class="topbar-actions">
-        <span>Xin chào, <strong th:text="${viewerName}"></strong></span>
-        <form th:action="@{/logout}" method="post">
-            <button type="submit" class="logout-button">Đăng xuất</button>
-        </form>
-    </div>
-</header>
-
-<!-- 2. Điều hướng phân cấp (Breadcrumb) -->
-<nav th:fragment="breadcrumb(current)" class="requisition-page-breadcrumb" aria-label="Breadcrumb">
-    <a th:href="@{/dashboard}">Bảng điều khiển</a>
-    <span aria-hidden="true">/</span>
-    <th:block th:if="${current != null and current != ''}">
-        <a th:href="@{/requisitions}">Yêu cầu tuyển dụng</a>
-        <span aria-hidden="true">/</span>
-        <span aria-current="page" th:text="${current}"></span>
-    </th:block>
-    <th:block th:unless="${current != null and current != ''}">
-        <span aria-current="page">Yêu cầu tuyển dụng</span>
-    </th:block>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org"><body>
+<header th:fragment="topbar" class="topbar"><span class="topbar-title">Hệ thống Quản lý Tuyển dụng (RMS)</span><div class="topbar-actions"><span>Xin chào, <strong th:text="${viewerName}"></strong></span><form th:action="@{/logout}" method="post"><button type="submit" class="logout-button">Đăng xuất</button></form></div></header>
+<nav th:fragment="breadcrumb(current)" class="requisition-page-breadcrumb" aria-label="Điều hướng">
+    <a th:href="@{/dashboard}">Bảng điều khiển</a><span aria-hidden="true">/</span>
+    <a th:href="@{/requisitions}">Yêu cầu tuyển dụng</a><span aria-hidden="true">/</span>
+    <span aria-current="page" th:text="${current}"></span>
 </nav>
-
-<!-- 3. Biểu tượng thông tin tài liệu SVG -->
 <span th:fragment="informationIcon" class="icon-wrapper" aria-hidden="true">
     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="5" width="14" height="14" rx="2"/><path d="M8 9h8M8 12h8M8 15h4"/></svg>
 </span>
-
-<!-- 4. Khối hiển thị thông báo flash message (Thành công / Thất bại) -->
-<th:block th:fragment="messages">
-    <p class="notice" role="status" th:if="${successMessage}" th:text="${successMessage}"></p>
-    <p class="alert alert-danger" role="alert" th:if="${failureMessage}" th:text="${failureMessage}"></p>
-</th:block>
-
-<!-- 5. Hộp thoại Modal xác nhận xóa yêu cầu tuyển dụng -->
-<dialog th:fragment="deleteDialog" id="delete-dialog" aria-labelledby="delete-title">
-    <form id="delete-form" method="post" th:action="@{/requisitions}">
-        <div class="delete-symbol" aria-hidden="true">!</div>
-        <h2 id="delete-title">Xác nhận xóa yêu cầu tuyển dụng</h2>
-        <p>Bạn có chắc chắn muốn xóa “<strong id="delete-name"></strong>” cùng các tiêu chí và lịch sử phê duyệt liên quan?</p>
-        <p class="muted">Thao tác này không thể hoàn tác. Lịch sử kiểm toán sẽ được lưu trữ.</p>
-        <div class="dialog-actions">
-            <button type="button" class="btn-outline" data-close-dialog>Hủy</button>
-            <button class="btn-danger" type="submit">Xóa yêu cầu</button>
-        </div>
-    </form>
-</dialog>
-
-</body>
-</html>
+<th:block th:fragment="messages"><p class="notice" role="status" th:if="${successMessage}" th:text="${successMessage}"></p><p class="alert alert-danger" role="alert" th:if="${failureMessage}" th:text="${failureMessage}"></p></th:block>
+<dialog th:fragment="deleteDialog" id="delete-dialog" aria-labelledby="delete-title"><form id="delete-form" method="post" th:action="@{/requisitions}"><div class="delete-symbol" aria-hidden="true">!</div><h2 id="delete-title">Xóa yêu cầu tuyển dụng</h2><p>Bạn có chắc chắn muốn xóa “<strong id="delete-name"></strong>” cùng toàn bộ tiêu chí và lịch sử phê duyệt liên quan?</p><p class="muted">Hành động này không thể hoàn tác. Lịch sử nhật ký hệ thống vẫn sẽ được lưu trữ.</p><div class="dialog-actions"><button type="button" class="btn-outline" data-close-dialog>Hủy</button><button class="btn-danger" type="submit">Xác nhận xóa</button></div></form></dialog>
+</body></html>

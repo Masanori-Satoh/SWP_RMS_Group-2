@@ -29,9 +29,10 @@
       <div class="page-head" style="margin-bottom: var(--s4); display: flex; justify-content: space-between; align-items: flex-start;">
         <div>
           <h1 class="page-title">Lịch phỏng vấn</h1>
-          <p class="page-subtitle">Quản lý và theo dõi toàn bộ buổi phỏng vấn tuyển dụng.</p>
+          <p class="page-subtitle" th:if="${!isCandidateView}">Quản lý và theo dõi toàn bộ buổi phỏng vấn tuyển dụng.</p>
+          <p class="page-subtitle" th:if="${isCandidateView}">Theo dõi thời gian và thông tin các buổi phỏng vấn của bạn.</p>
         </div>
-        <div th:if="${isHr}">
+        <div th:if="${canCreate}">
           <a th:href="@{/interviews/new}" class="button" id="btn-create-interview" style="display: inline-flex; align-items: center; gap: 8px; background: var(--brand, #3e7157); color: white; border: none; padding: 8px 16px; border-radius: 4px; font-weight: 500; text-decoration: none; font-size: 14px; box-shadow: 0 1px 2px rgba(0,0,0,0.05);">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
             Tạo lịch phỏng vấn
@@ -39,7 +40,7 @@
         </div>
       </div>
 
-      <div class="module-nav-container" style="border-bottom: 1px solid var(--border-color, #e2e8f0); margin-bottom: 24px;">
+      <div class="module-nav-container" th:if="${!isCandidateView}" style="border-bottom: 1px solid var(--border-color, #e2e8f0); margin-bottom: 24px;">
         <nav class="module-tabs" style="display: flex; gap: 32px; overflow-x: auto;">
           <a th:href="@{/interviews}" style="padding: 12px 0; color: var(--brand, #3e7157); border-bottom: 2px solid var(--brand, #3e7157); font-weight: 500; text-decoration: none; display: flex; align-items: center; gap: 8px; white-space: nowrap;">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
@@ -163,8 +164,8 @@
                 </select>
               </div>
 
-              <!-- Interviewer Filter -->
-              <div class="filter-field">
+              <!-- Interviewer Filter (Ẩn với ứng viên) -->
+              <div class="filter-field" th:if="${!isCandidateView}">
                 <label for="filter-interviewer">Người phỏng vấn</label>
                 <select id="filter-interviewer">
                   <option value="">Tất cả người phỏng vấn</option>
@@ -212,16 +213,19 @@
                   th:title="${s.jobPostingTitle != null ? ('Vị trí: ' + s.jobPostingTitle + ' (Nhấn để lọc)') : ''}">
               Vị trí
             </span>
-            <!-- Status Badge -->
-            <span th:class="'status-badge status-' + ${#strings.toLowerCase(s.interviewStatus.name())}"
-                  th:text="${s.interviewStatusDisplay}">
+            <!-- Status Badge (Hiển thị trạng thái theo mốc thời gian thực tế) -->
+            <span th:class="'status-badge status-' + ${#strings.toLowerCase(s.timeStatus != null ? s.timeStatus : s.interviewStatus.name())}"
+                  th:text="${s.timeStatusDisplay != null ? s.timeStatusDisplay : s.interviewStatusDisplay}">
               Scheduled
             </span>
           </div>
 
           <!-- Candidate Info -->
           <h2 class="candidate-name" th:text="${s.candidateFullName != null ? s.candidateFullName : 'Ứng viên #' + s.applicationId}">Ứng viên</h2>
-          <div class="job-position" th:text="'Hồ sơ #' + ${s.applicationId} + ' • ' + ${s.candidateEmail != null ? s.candidateEmail : 'Chưa có email'}">
+          <div class="job-position" th:if="${!isCandidateView}" th:text="'Hồ sơ #' + ${s.applicationId} + ' • ' + ${s.candidateEmail != null ? s.candidateEmail : 'Chưa có email'}">
+            Hồ sơ ứng tuyển
+          </div>
+          <div class="job-position" th:if="${isCandidateView}" th:text="'Hồ sơ ứng tuyển #' + ${s.applicationId}">
             Hồ sơ ứng tuyển
           </div>
 
@@ -253,8 +257,8 @@
             </div>
           </div>
 
-          <!-- Interview Panel Members (Rule HR Isolation: only HM / technical interviewers) -->
-          <div class="panel-box">
+          <!-- Interview Panel Members (Ẩn đối với Candidate để bảo mật nội bộ) -->
+          <div class="panel-box" th:if="${!isCandidateView}">
             <div class="panel-title">Hội đồng phỏng vấn:</div>
             <div class="panel-tags" th:if="${s.interviewers != null and !#lists.isEmpty(s.interviewers)}">
               <span class="panel-member" th:each="m : ${s.interviewers}"
@@ -269,8 +273,8 @@
             </div>
           </div>
 
-          <!-- Actions Bar: Strictly for HR only (GBR-05). Hidden completely for Interviewers -->
-          <div class="card-actions" th:if="${isHr}">
+          <!-- Actions Bar: Dành cho HR và Director (canEdit) -->
+          <div class="card-actions" th:if="${canEdit}">
             <a th:href="@{'/interviews/' + ${s.interviewId} + '/edit'}" class="button button-secondary button-sm">
               Sửa lịch
             </a>
@@ -281,7 +285,7 @@
                   method="post"
                   class="action-form-inline"
                   onsubmit="return confirm('Bạn có chắc chắn muốn hủy lịch phỏng vấn này? Hành động này tuân thủ Rule GBR-01 và không thể hoàn tác.');">
-              <input type="hidden" name="cancelReason" value="Hủy theo yêu cầu của HR"/>
+              <input type="hidden" name="cancelReason" value="Hủy bởi Quản lý"/>
               <button type="submit" class="button button-danger button-sm">
                 Hủy lịch
               </button>

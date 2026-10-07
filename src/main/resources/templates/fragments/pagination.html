@@ -1,9 +1,8 @@
 <!DOCTYPE html>
 <html lang="vi" xmlns:th="http://www.thymeleaf.org">
-
 <body>
 
-    <!--
+<!--
     FRAGMENTS/PAGINATION.HTML
     =============================================================================
     Component phân trang chuẩn dùng chung cho toàn bộ dự án Mộc RMS.
@@ -20,285 +19,279 @@
     =============================================================================
 -->
 
-    <!-- 1. Adapter cho Spring Data Page object (tương thích các controller như của Linh) -->
-    <th:block th:fragment="paged(page, baseUrl)">
-        <th:block th:if="${page != null}"
-            th:replace="~{fragments/pagination :: pager(${page.number}, ${page.totalPages}, ${page.totalElements}, ${baseUrl})}">
-        </th:block>
+<!-- 1. Adapter cho Spring Data Page object (tương thích các controller như của Linh) -->
+<th:block th:fragment="paged(page, baseUrl)">
+    <th:block th:if="${page != null}"
+              th:replace="~{fragments/pagination :: pager(${page.number}, ${page.totalPages}, ${page.totalElements}, ${baseUrl})}">
     </th:block>
+</th:block>
 
-    <!-- 2. Core Pagination Component -->
-    <th:block th:fragment="pager(currPage, totPages, totElements, baseUrl)">
-        <style>
-            .rms-pagination-wrapper {
-                display: flex;
-                align-items: center;
-                justify-content: space-between;
-                flex-wrap: wrap;
-                gap: 16px;
-                margin-top: 24px;
-                padding: 16px 0;
-                font-size: 14px;
-                color: var(--muted, #59635b);
-            }
+<!-- 2. Core Pagination Component -->
+<th:block th:fragment="pager(currPage, totPages, totElements, baseUrl)">
+    <style>
+        .rms-pagination-wrapper {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 16px;
+            margin-top: 24px;
+            padding: 16px 0;
+            font-size: 14px;
+            color: var(--muted, #59635b);
+        }
+        .rms-pagination-info {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: var(--muted, #59635b);
+        }
+        .rms-pagination-controls {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            flex-wrap: wrap;
+        }
+        .rms-pagination-nav-container { display: inline-flex; }
+        .rms-pagination-list {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            list-style: none;
+            margin: 0;
+            padding: 0;
+        }
+        .rms-page-item { display: inline-flex; }
+        .rms-page-link {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 36px;
+            height: 36px;
+            padding: 0 10px;
+            border-radius: 4px;
+            font-size: 14px;
+            font-weight: 500;
+            color: var(--ink, #252923);
+            background: var(--surface, #ffffff);
+            border: 1px solid var(--line, #d9ded7);
+            text-decoration: none;
+            transition: all 0.15s ease-in-out;
+            user-select: none;
+        }
+        .rms-page-link:hover:not(.disabled):not(.active) {
+            background: var(--brand-soft, #e7f0e8);
+            border-color: var(--brand-dark, #2e5a45);
+            color: var(--brand-dark, #2e5a45);
+        }
+        .rms-page-link.active {
+            background: var(--brand-dark, #2e5a45);
+            border-color: var(--brand-dark, #2e5a45);
+            color: #ffffff;
+            font-weight: 700;
+            cursor: default;
+            box-shadow: 0 2px 4px rgba(46, 90, 69, 0.2);
+        }
+        .rms-page-link.disabled {
+            color: #a4afa6;
+            border-color: #e5eae3;
+            background: #f7faf7;
+            cursor: not-allowed;
+            pointer-events: none;
+        }
+        .rms-page-prev, .rms-page-next { font-size: 16px; font-weight: 600; }
+        .rms-pagination-ellipsis {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 24px;
+            height: 36px;
+            color: var(--muted, #59635b);
+            font-weight: 600;
+            letter-spacing: 2px;
+        }
+        .rms-pagination-jump {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            color: var(--muted, #59635b);
+            font-size: 14px;
+            margin-left: 8px;
+        }
+        .rms-pagination-jump-label { white-space: nowrap; color: var(--muted, #59635b); font-weight: 500; }
+        .rms-pagination-jump-input {
+            width: 48px;
+            height: 36px;
+            padding: 0 4px;
+            text-align: center;
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--ink, #252923);
+            background: var(--surface, #ffffff);
+            border: 1px solid var(--control-line, #7b8b7d);
+            border-radius: 4px;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+        .rms-pagination-jump-input:focus {
+            border-color: var(--brand-dark, #2e5a45);
+            box-shadow: 0 0 0 2px var(--brand-soft, #e7f0e8);
+        }
+        .rms-pagination-jump-btn {
+            height: 36px;
+            min-height: 36px;
+            padding: 0 14px;
+            font-size: 13px;
+            font-weight: 600;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+    </style>
 
-            .rms-pagination-info {
-                display: flex;
-                align-items: center;
-                gap: 8px;
-                color: var(--muted, #59635b);
-            }
-
-            .rms-pagination-controls {
-                display: flex;
-                align-items: center;
-                gap: 16px;
-                flex-wrap: wrap;
-            }
-
-            .rms-pagination-nav-container {
-                display: inline-flex;
-            }
-
-            .rms-pagination-list {
-                display: inline-flex;
-                align-items: center;
-                gap: 6px;
-                list-style: none;
-                margin: 0;
-                padding: 0;
-            }
-
-            .rms-page-item {
-                display: inline-flex;
-            }
-
-            .rms-page-link {
-                display: inline-flex;
-                align-items: center;
-                justify-content: center;
-                min-width: 36px;
-                height: 36px;
-                padding: 0 10px;
-                border-radius: 4px;
-                font-size: 14px;
-                font-weight: 500;
-                color: var(--ink, #252923);
-                background: var(--surface, #ffffff);
-                border: 1px solid var(--line, #d9ded7);
-                text-decoration: none;
-                transition: all 0.15s ease-in-out;
-                user-select: none;
-            }
-
-            .rms-page-link:hover:not(.disabled):not(.active) {
-                background: var(--brand-soft, #e7f0e8);
-                border-color: var(--brand-dark, #2e5a45);
-                color: var(--brand-dark, #2e5a45);
-            }
-
-            .rms-page-link.active {
-                background: var(--brand-dark, #2e5a45);
-                border-color: var(--brand-dark, #2e5a45);
-                color: #ffffff;
-                font-weight: 700;
-                cursor: default;
-                box-shadow: 0 2px 4px rgba(46, 90, 69, 0.2);
-            }
-
-            .rms-page-link.disabled {
-                color: #a4afa6;
-                border-color: #e5eae3;
-                background: #f7faf7;
-                cursor: not-allowed;
-                pointer-events: none;
-            }
-
-            .rms-page-prev,
-            .rms-page-next {
-                font-size: 16px;
-                font-weight: 600;
-            }
-
-            .rms-pagination-ellipsis {
-                display: inline-flex;
-                align-items: center;
-                justify-content: center;
-                min-width: 24px;
-                height: 36px;
-                color: var(--muted, #59635b);
-                font-weight: 600;
-                letter-spacing: 2px;
-            }
-
-            .rms-pagination-jump {
-                display: inline-flex;
-                align-items: center;
-                gap: 8px;
-                color: var(--muted, #59635b);
-                font-size: 14px;
-                margin-left: 8px;
-            }
-
-            .rms-pagination-jump-label {
-                white-space: nowrap;
-                color: var(--muted, #59635b);
-                font-weight: 500;
-            }
-
-            .rms-pagination-jump-input {
-                width: 48px;
-                height: 36px;
-                padding: 0 4px;
-                text-align: center;
-                font-size: 14px;
-                font-weight: 600;
-                color: var(--ink, #252923);
-                background: var(--surface, #ffffff);
-                border: 1px solid var(--control-line, #7b8b7d);
-                border-radius: 4px;
-                outline: none;
-                transition: border-color 0.2s;
-            }
-
-            .rms-pagination-jump-input:focus {
-                border-color: var(--brand-dark, #2e5a45);
-                box-shadow: 0 0 0 2px var(--brand-soft, #e7f0e8);
-            }
-
-            .rms-pagination-jump-btn {
-                height: 36px;
-                min-height: 36px;
-                padding: 0 14px;
-                font-size: 13px;
-                font-weight: 600;
-                border-radius: 4px;
-                cursor: pointer;
-            }
-        </style>
-
-        <div class="rms-pagination-wrapper" th:if="${totPages != null and totPages > 0}"
-            th:with="curr1=${currPage != null ? currPage + 1 : 1},
+    <div class="rms-pagination-wrapper"
+         th:if="${totPages != null and totPages > 0}"
+         th:with="curr1=${currPage != null ? currPage + 1 : 1},
                   totalPages=${totPages != null ? totPages : 1},
                   startPage=${totalPages <= 7 ? 2 : (curr1 <= 4 ? 2 : (curr1 >= totalPages - 3 ? totalPages - 4 : curr1 - 1))},
                   endPage=${totalPages <= 7 ? (totalPages > 1 ? totalPages - 1 : 1) : (curr1 <= 4 ? 5 : (curr1 >= totalPages - 3 ? totalPages - 1 : curr1 + 1))}">
 
-            <!-- Thông tin số lượng bản ghi -->
-            <div class="rms-pagination-info" th:if="${totElements != null}">
-
-                <span th:if="${totalPages > 1}">(Trang <strong style="color:var(--ink);"
-                        th:text="${curr1}">1</strong>/<span th:text="${totalPages}">1</span>)</span>
-            </div>
-
-            <div class="rms-pagination-controls">
-                <!-- Navigation links: ‹  1  2  [3]  4  5  ...  12  › -->
-                <nav aria-label="Page navigation" class="rms-pagination-nav-container">
-                    <ul class="rms-pagination-list">
-                        <!-- Nút Previous: ‹ -->
-                        <li class="rms-page-item">
-                            <a th:if="${curr1 > 1}" th:href="@{${baseUrl}(page=${curr1 - 2})}"
-                                th:onclick="'rmsGoToPage(' + (${curr1 - 2}) + '); return false;'"
-                                class="rms-page-link rms-page-prev" aria-label="Trang trước" title="Trang trước">
-                                ‹
-                            </a>
-                            <span th:unless="${curr1 > 1}" class="rms-page-link rms-page-prev disabled"
-                                aria-disabled="true">
-                                ‹
-                            </span>
-                        </li>
-
-                        <!-- Trang đầu tiên: 1 -->
-                        <li class="rms-page-item">
-                            <a th:if="${curr1 != 1}" th:href="@{${baseUrl}(page=0)}"
-                                th:onclick="'rmsGoToPage(0); return false;'" class="rms-page-link" th:text="1">1</a>
-                            <span th:if="${curr1 == 1}" class="rms-page-link active" aria-current="page"
-                                th:text="1">1</span>
-                        </li>
-
-                        <!-- Dấu ba chấm bên trái: ... -->
-                        <li class="rms-page-item" th:if="${totalPages > 7 and curr1 > 4}">
-                            <span class="rms-pagination-ellipsis">&hellip;</span>
-                        </li>
-
-                        <!-- Các trang ở giữa -->
-                        <th:block th:if="${startPage <= endPage}">
-                            <li class="rms-page-item" th:each="i : ${#numbers.sequence(startPage, endPage)}">
-                                <a th:if="${curr1 != i}" th:href="@{${baseUrl}(page=${i - 1})}"
-                                    th:onclick="'rmsGoToPage(' + (${i - 1}) + '); return false;'" class="rms-page-link"
-                                    th:text="${i}">2</a>
-                                <span th:if="${curr1 == i}" class="rms-page-link active" aria-current="page"
-                                    th:text="${i}">3</span>
-                            </li>
-                        </th:block>
-
-                        <!-- Dấu ba chấm bên phải: ... -->
-                        <li class="rms-page-item" th:if="${totalPages > 7 and curr1 < totalPages - 3}">
-                            <span class="rms-pagination-ellipsis">&hellip;</span>
-                        </li>
-
-                        <!-- Trang cuối cùng -->
-                        <li class="rms-page-item" th:if="${totalPages > 1}">
-                            <a th:if="${curr1 != totalPages}" th:href="@{${baseUrl}(page=${totalPages - 1})}"
-                                th:onclick="'rmsGoToPage(' + (${totalPages - 1}) + '); return false;'"
-                                class="rms-page-link" th:text="${totalPages}">12</a>
-                            <span th:if="${curr1 == totalPages}" class="rms-page-link active" aria-current="page"
-                                th:text="${totalPages}">12</span>
-                        </li>
-
-                        <!-- Nút Next: › -->
-                        <li class="rms-page-item">
-                            <a th:if="${curr1 < totalPages}" th:href="@{${baseUrl}(page=${curr1})}"
-                                th:onclick="'rmsGoToPage(' + (${curr1}) + '); return false;'"
-                                class="rms-page-link rms-page-next" aria-label="Trang sau" title="Trang sau">
-                                ›
-                            </a>
-                            <span th:unless="${curr1 < totalPages}" class="rms-page-link rms-page-next disabled"
-                                aria-disabled="true">
-                                ›
-                            </span>
-                        </li>
-                    </ul>
-                </nav>
-
-                <!-- Nhảy nhanh: Đi tới trang: [  ] Đến -->
-                <div class="rms-pagination-jump">
-                    <span class="rms-pagination-jump-label">Đi tới trang:</span>
-                    <input type="number" class="rms-pagination-jump-input" min="1" th:attr="max=${totalPages}"
-                        th:placeholder="${curr1}"
-                        onkeydown="if(event.key==='Enter'){ rmsJumpToPage(this); event.preventDefault(); }"
-                        aria-label="Nhập số trang muốn chuyển tới" />
-                    <button type="button" class="btn btn-secondary btn-sm rms-pagination-jump-btn"
-                        onclick="rmsJumpToPage(this.previousElementSibling)">
-                        Đến
-                    </button>
-                </div>
-            </div>
-
-            <script>
-                if (typeof window.rmsGoToPage !== 'function') {
-                    window.rmsGoToPage = function (zeroBasedPage) {
-                        const url = new URL(window.location.href);
-                        url.searchParams.set('page', zeroBasedPage);
-                        window.location.href = url.toString();
-                    };
-                }
-                if (typeof window.rmsJumpToPage !== 'function') {
-                    window.rmsJumpToPage = function (input) {
-                        if (!input) return;
-                        const max = parseInt(input.getAttribute('max') || '1', 10);
-                        const val = parseInt(input.value, 10);
-                        if (isNaN(val) || val < 1 || val > max) {
-                            alert('Vui lòng nhập số trang từ 1 đến ' + max);
-                            input.focus();
-                            return;
-                        }
-                        window.rmsGoToPage(val - 1);
-                    };
-                }
-            </script>
+        <!-- Thông tin số lượng bản ghi -->
+        <div class="rms-pagination-info" th:if="${totElements != null}">
+            <span>Tổng cộng <strong style="color:var(--ink);" th:text="${totElements}">0</strong> bản ghi</span>
+            <span th:if="${totalPages > 1}">(Trang <strong style="color:var(--ink);" th:text="${curr1}">1</strong>/<span th:text="${totalPages}">1</span>)</span>
         </div>
-    </th:block>
+
+        <div class="rms-pagination-controls">
+            <!-- Navigation links: ‹  1  2  [3]  4  5  ...  12  › -->
+            <nav aria-label="Page navigation" class="rms-pagination-nav-container">
+                <ul class="rms-pagination-list">
+                    <!-- Nút Previous: ‹ -->
+                    <li class="rms-page-item">
+                        <a th:if="${curr1 > 1}"
+                           th:href="@{${baseUrl}(page=${curr1 - 2})}"
+                           th:onclick="'rmsGoToPage(' + (${curr1 - 2}) + '); return false;'"
+                           class="rms-page-link rms-page-prev"
+                           aria-label="Trang trước" title="Trang trước">
+                            ‹
+                        </a>
+                        <span th:unless="${curr1 > 1}"
+                              class="rms-page-link rms-page-prev disabled"
+                              aria-disabled="true">
+                            ‹
+                        </span>
+                    </li>
+
+                    <!-- Trang đầu tiên: 1 -->
+                    <li class="rms-page-item">
+                        <a th:if="${curr1 != 1}"
+                           th:href="@{${baseUrl}(page=0)}"
+                           th:onclick="'rmsGoToPage(0); return false;'"
+                           class="rms-page-link"
+                           th:text="1">1</a>
+                        <span th:if="${curr1 == 1}"
+                              class="rms-page-link active"
+                              aria-current="page"
+                              th:text="1">1</span>
+                    </li>
+
+                    <!-- Dấu ba chấm bên trái: ... -->
+                    <li class="rms-page-item" th:if="${totalPages > 7 and curr1 > 4}">
+                        <span class="rms-pagination-ellipsis">&hellip;</span>
+                    </li>
+
+                    <!-- Các trang ở giữa -->
+                    <th:block th:if="${startPage <= endPage}">
+                        <li class="rms-page-item" th:each="i : ${#numbers.sequence(startPage, endPage)}">
+                            <a th:if="${curr1 != i}"
+                               th:href="@{${baseUrl}(page=${i - 1})}"
+                               th:onclick="'rmsGoToPage(' + (${i - 1}) + '); return false;'"
+                               class="rms-page-link"
+                               th:text="${i}">2</a>
+                            <span th:if="${curr1 == i}"
+                                  class="rms-page-link active"
+                                  aria-current="page"
+                                  th:text="${i}">3</span>
+                        </li>
+                    </th:block>
+
+                    <!-- Dấu ba chấm bên phải: ... -->
+                    <li class="rms-page-item" th:if="${totalPages > 7 and curr1 < totalPages - 3}">
+                        <span class="rms-pagination-ellipsis">&hellip;</span>
+                    </li>
+
+                    <!-- Trang cuối cùng -->
+                    <li class="rms-page-item" th:if="${totalPages > 1}">
+                        <a th:if="${curr1 != totalPages}"
+                           th:href="@{${baseUrl}(page=${totalPages - 1})}"
+                           th:onclick="'rmsGoToPage(' + (${totalPages - 1}) + '); return false;'"
+                           class="rms-page-link"
+                           th:text="${totalPages}">12</a>
+                        <span th:if="${curr1 == totalPages}"
+                              class="rms-page-link active"
+                              aria-current="page"
+                              th:text="${totalPages}">12</span>
+                    </li>
+
+                    <!-- Nút Next: › -->
+                    <li class="rms-page-item">
+                        <a th:if="${curr1 < totalPages}"
+                           th:href="@{${baseUrl}(page=${curr1})}"
+                           th:onclick="'rmsGoToPage(' + (${curr1}) + '); return false;'"
+                           class="rms-page-link rms-page-next"
+                           aria-label="Trang sau" title="Trang sau">
+                            ›
+                        </a>
+                        <span th:unless="${curr1 < totalPages}"
+                              class="rms-page-link rms-page-next disabled"
+                              aria-disabled="true">
+                            ›
+                        </span>
+                    </li>
+                </ul>
+            </nav>
+
+            <!-- Nhảy nhanh: Đến trang: [  ] Đi -->
+            <div class="rms-pagination-jump">
+                <span class="rms-pagination-jump-label">Đến trang:</span>
+                <input type="number"
+                       class="rms-pagination-jump-input"
+                       min="1"
+                       th:attr="max=${totalPages}"
+                       th:placeholder="${curr1}"
+                       onkeydown="if(event.key==='Enter'){ rmsJumpToPage(this); event.preventDefault(); }"
+                       aria-label="Nhập số trang muốn chuyển tới" />
+                <button type="button"
+                        class="btn btn-secondary btn-sm rms-pagination-jump-btn"
+                        onclick="rmsJumpToPage(this.previousElementSibling)">
+                    Đi
+                </button>
+            </div>
+        </div>
+
+        <script>
+            if (typeof window.rmsGoToPage !== 'function') {
+                window.rmsGoToPage = function(zeroBasedPage) {
+                    const url = new URL(window.location.href);
+                    url.searchParams.set('page', zeroBasedPage);
+                    window.location.href = url.toString();
+                };
+            }
+            if (typeof window.rmsJumpToPage !== 'function') {
+                window.rmsJumpToPage = function(input) {
+                    if (!input) return;
+                    const max = parseInt(input.getAttribute('max') || '1', 10);
+                    const val = parseInt(input.value, 10);
+                    if (isNaN(val) || val < 1 || val > max) {
+                        alert('Vui lòng nhập số trang từ 1 đến ' + max);
+                        input.focus();
+                        return;
+                    }
+                    window.rmsGoToPage(val - 1);
+                };
+            }
+        </script>
+    </div>
+</th:block>
 
 </body>
-
 </html>

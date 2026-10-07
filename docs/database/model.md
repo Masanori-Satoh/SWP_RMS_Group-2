@@ -185,7 +185,7 @@ ProbationSalary;NOT NULL, CHECK >= 85% of ProposedSalary;Probation-period salary
 ExpectedStartDate;NULL;Expected start date
 WorkLocation;NULL;Work location
 BenefitsPackage;NULL;Benefits/bonus package attached to the offer
-OfferStatus;NOT NULL;Draft, Pending_Director, Director_Approved, Director_Rejected, Sent_Candidate, Accepted, Declined, Negotiating
+OfferStatus;NOT NULL;Draft, Pending_Director, Director_Approved, Director_Rejected, Sent_Candidate, Accepted, Declined
 ProposedBy;NOT NULL, FOREIGN KEY -> User.UserId;HR who created the offer
 CreatedAt;NOT NULL, DEFAULT GETDATE();Creation date
 UpdatedAt;NULL;Last update date
@@ -197,12 +197,4 @@ DirectorId;NOT NULL, FOREIGN KEY -> User.UserId;Director who approved the offer
 Status;NOT NULL;Approved / Rejected
 DirectorComments;NULL;Director's remarks
 ApprovedAt;NOT NULL, DEFAULT SYSDATETIME();Time of approval
-3.20 OfferNegotiation
-Column;Constraints;Notes
-NegotiationId;PRIMARY KEY, IDENTITY(1,1);Negotiation round identifier
-OfferId;NOT NULL, FOREIGN KEY -> OfferProposal.OfferId;Related offer proposal
-CandidateCounterSalary;NULL;Candidate's counter-offer salary
-CandidateNotes;NULL;Candidate's requests/feedback
-HRResponseNotes;NULL;HR's response
-NegotiationDate;NOT NULL, DEFAULT SYSDATETIME();Time of exchange
 

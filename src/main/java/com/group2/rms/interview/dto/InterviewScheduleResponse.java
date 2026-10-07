@@ -87,4 +87,44 @@ public record InterviewScheduleResponse(
                 panelResponses
         );
     }
+
+    /**
+     * Trạng thái dựa trên thời gian thực tế:
+     * - Cancelled: CANCELLED
+     * - Completed: COMPLETED
+     * - Scheduled / Rescheduled:
+     *     - now < startTime: UPCOMING (Sắp tới)
+     *     - now >= startTime && now <= endTime: IN_PROGRESS (Đang diễn ra)
+     *     - now > endTime: OVERDUE (Quá hạn)
+     */
+    public String getTimeStatus() {
+        if (interviewStatus == InterviewStatus.Cancelled) {
+            return "CANCELLED";
+        }
+        if (interviewStatus == InterviewStatus.Completed) {
+            return "COMPLETED";
+        }
+        LocalDateTime now = LocalDateTime.now();
+        if (startTime != null && now.isBefore(startTime)) {
+            return "UPCOMING";
+        }
+        if (startTime != null && endTime != null && !now.isBefore(startTime) && !now.isAfter(endTime)) {
+            return "IN_PROGRESS";
+        }
+        if (endTime != null && now.isAfter(endTime)) {
+            return "OVERDUE";
+        }
+        return "SCHEDULED";
+    }
+
+    public String getTimeStatusDisplay() {
+        return switch (getTimeStatus()) {
+            case "CANCELLED" -> "Đã hủy";
+            case "COMPLETED" -> "Đã hoàn thành";
+            case "UPCOMING" -> "Sắp tới";
+            case "IN_PROGRESS" -> "Đang diễn ra";
+            case "OVERDUE" -> "Quá hạn";
+            default -> interviewStatusDisplay != null ? interviewStatusDisplay : "Đã lên lịch";
+        };
+    }
 }

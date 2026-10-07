@@ -46,6 +46,16 @@ public interface OfferService {
     Page<OfferResponse> getAllOffersForHr(String status, Pageable pageable);
 
     /**
+     * Lấy danh sách Offer Proposal cho HR có lọc theo 3 tiêu chí: tìm kiếm từ khóa, trạng thái, sắp xếp thời gian trên toàn bộ dữ liệu.
+     */
+    Page<OfferResponse> getAllOffersForHr(String search, String status, String timeSort, Pageable pageable);
+
+    /**
+     * Lấy thống kê số lượng Offer theo các nhóm trạng thái chính trên toàn bộ hệ thống.
+     */
+    java.util.Map<String, Long> getOfferStats();
+
+    /**
      * Lấy thông tin chi tiết gói Offer (Group A + B + History).
      */
     OfferDetailResponse getOfferDetailForHr(Integer id);
