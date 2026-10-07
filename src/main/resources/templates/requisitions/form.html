@@ -213,13 +213,17 @@
                                 <div class="form-group form-group-full">
                                     <span class="form-label">Mức lương đề xuất (VNĐ)</span>
                                     <div class="salary-range">
-                                        <input class="form-control-custom" type="number" th:field="*{minSalary}"
+                                        <input class="form-control-custom" type="number" th:field="*{minSalary}" id="minSalary"
                                             placeholder="Lương tối thiểu" min="0" step="0.01"
                                             aria-label="Lương tối thiểu">
                                         <span>-</span>
-                                        <input class="form-control-custom" type="number" th:field="*{maxSalary}"
+                                        <input class="form-control-custom" type="number" th:field="*{maxSalary}" id="maxSalary"
                                             placeholder="Lương tối đa" min="0" step="0.01" aria-label="Lương tối đa">
                                     </div>
+                                    <small id="minSalary-error" class="field-error"
+                                        th:text="${#fields.hasErrors('minSalary') ? #strings.listJoin(#fields.errors('minSalary'), '; ') : ''}"></small>
+                                    <small id="maxSalary-error" class="field-error"
+                                        th:text="${#fields.hasErrors('maxSalary') ? #strings.listJoin(#fields.errors('maxSalary'), '; ') : ''}"></small>
                                 </div>
                             </div>
                         </div>

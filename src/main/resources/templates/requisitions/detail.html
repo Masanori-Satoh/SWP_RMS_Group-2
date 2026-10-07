@@ -57,6 +57,15 @@
                             <!-- Nhóm nút thao tác góc phải -->
                             <div class="requisition-heading-actions" role="group" aria-label="Thao tác yêu cầu">
                                 <a th:href="@{/requisitions}" class="btn-outline">← Quay lại</a>
+                                <a th:if="${req.approvalStatus == 'Approved' and (viewerRole == 'HR' or viewerRole == 'System Admin') and (req.postingStatus == null or req.postingStatus == 'None')}"
+                                    th:href="@{/internal/job-postings/create(requisitionId=${req.requisitionId})}"
+                                    class="btn-primary" style="background:var(--brand, #3e7157); color:white; text-decoration:none; display:inline-flex; align-items:center; padding:6px 14px; border-radius:6px; font-weight:500;">Tạo tin tuyển dụng</a>
+                                <a th:if="${req.postingStatus == 'Draft' and req.jobPostingId != null and (viewerRole == 'HR' or viewerRole == 'System Admin')}"
+                                    th:href="@{/internal/job-postings/{id}/edit(id=${req.jobPostingId})}"
+                                    class="btn-outline">Tiếp tục sửa tin</a>
+                                <a th:if="${req.postingStatus == 'Published' and req.jobPostingId != null}"
+                                    th:href="@{/internal/job-postings/{id}(id=${req.jobPostingId})}"
+                                    class="btn-outline">Xem tin đã đăng</a>
                                 <a th:if="${req.editable}" th:href="@{/requisitions/edit/{id}(id=${req.requisitionId})}"
                                     class="btn-outline">Chỉnh sửa</a>
                                 <button th:unless="${req.editable}" type="button" class="btn-outline" disabled

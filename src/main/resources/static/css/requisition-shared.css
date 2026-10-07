@@ -233,8 +233,11 @@
 }
 
 /* Ô nhập liệu có lỗi (Validation Error): viền đỏ cảnh báo */
-.req-app :is(input, select, textarea)[aria-invalid="true"] {
-  border-color: var(--error);
+.req-app :is(input, select, textarea)[aria-invalid="true"],
+.req-app :is(input, select, textarea).is-invalid {
+  border-color: #dc2626 !important;
+  background-color: #fff5f5 !important;
+  box-shadow: 0 0 0 1px #dc2626;
 }
 
 /* Tiêu đề trong các thẻ Card */
@@ -248,9 +251,10 @@
 /* Dòng chữ thông báo lỗi xác thực dữ liệu dưới mỗi ô nhập */
 .req-app .field-error {
   display: block;
-  color: var(--error);
-  font-size: 14px;
-  margin-top: var(--s1);
+  color: #dc2626;
+  font-size: 13.5px;
+  margin-top: 4px;
+  font-weight: 500;
 }
 
 /* Ẩn thẻ lỗi khi rỗng */
