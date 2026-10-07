@@ -183,10 +183,10 @@
                                     <input type="checkbox" class="offer-checkbox offer-row-checkbox" th:value="${o.offerId}" onchange="handleOfferRowSelectionChange()">
                                 </td>
                                 <td>
-                                    <a th:href="@{/offers/{id}(id=${o.offerId})}" class="offer-id-link" th:text="${o.offerId}">1</a>
+                                    <a href="javascript:void(0)" th:onclick="'viewOfferDetail(' + ${o.offerId} + ')'" class="offer-id-link" th:text="${o.offerId}">1</a>
                                 </td>
                                 <td>
-                                    <a th:href="@{/offers/{id}(id=${o.offerId})}" style="text-decoration:none; color:inherit;">
+                                    <a href="javascript:void(0)" th:onclick="'viewOfferDetail(' + ${o.offerId} + ')'" style="text-decoration:none; color:inherit;">
                                         <div class="cand-name-cell" th:text="${o.candidateName != null ? o.candidateName : 'Ứng viên'}">Nguyễn Văn A</div>
                                     </a>
                                     <div class="cand-email-sub" th:text="${o.candidateEmail != null ? o.candidateEmail : 'N/A'}">a.nguyen@email.com</div>
@@ -235,35 +235,28 @@
                                 </td>
                                 <td style="text-align: right;">
                                     <div class="action-buttons" style="justify-content: flex-end;">
-                                        <!-- Xem chi tiết (Screen 32) -->
-                                        <a th:href="@{/offers/{id}(id=${o.offerId})}" class="btn-icon btn-icon-primary" title="Xem chi tiết (Screen 32)">
+                                        <!-- Xem chi tiết pop-up (Screen 32) -->
+                                        <button type="button" th:onclick="'viewOfferDetail(' + ${o.offerId} + ')'" class="btn-icon btn-icon-primary" title="Xem chi tiết">
                                             <i class="fa-solid fa-eye"></i>
-                                        </a>
+                                        </button>
 
                                         <!-- Phát hành gửi Offer cho Candidate (Chỉ khi Director_Approved) -->
-                                        <form th:if="${o.offerStatus == 'Director_Approved' or o.offerStatus == 'Approved'}"
-                                              th:action="@{/offers/{id}/send(id=${o.offerId})}" method="post" style="display:inline;"
-                                              onsubmit="return confirm('Bạn có chắc chắn muốn phát hành Offer Letter tới ứng viên?');">
-                                            <button type="submit" class="btn-icon btn-icon-success" title="Phát hành gửi Offer Letter">
-                                                <i class="fa-solid fa-paper-plane"></i>
-                                            </button>
-                                        </form>
+                                        <button type="button" th:if="${o.offerStatus == 'Director_Approved' or o.offerStatus == 'Approved'}"
+                                                th:onclick="'confirmSendOffer(' + ${o.offerId} + ')'" class="btn-icon btn-icon-success" title="Phát hành gửi Offer Letter">
+                                            <i class="fa-solid fa-paper-plane"></i>
+                                        </button>
 
-                                        <!-- Sửa Offer (Chỉ khi Draft) -->
-                                        <a th:if="${o.offerStatus == 'Draft'}"
-                                           th:href="@{/offers/{id}/edit(id=${o.offerId})}"
-                                           class="btn-icon" title="Chỉnh sửa đề xuất">
+                                        <!-- Sửa Offer pop-up (Chỉ khi Draft hoặc Rejected) -->
+                                        <button type="button" th:if="${o.offerStatus == 'Draft' or o.offerStatus == 'Director_Rejected' or o.offerStatus == 'Rejected'}"
+                                                th:onclick="'openEditOfferModal(' + ${o.offerId} + ')'" class="btn-icon" title="Chỉnh sửa đề xuất">
                                             <i class="fa-solid fa-pen-to-square"></i>
-                                        </a>
+                                        </button>
 
                                         <!-- Xóa Offer (Chỉ khi Draft) -->
-                                        <form th:if="${o.offerStatus == 'Draft'}"
-                                              th:action="@{/offers/{id}/delete(id=${o.offerId})}" method="post" style="display:inline;"
-                                              onsubmit="return confirm('Bạn có chắc chắn muốn xóa bản thảo Offer này khỏi hệ thống?');">
-                                            <button type="submit" class="btn-icon btn-icon-danger" title="Xóa bản thảo">
-                                                <i class="fa-solid fa-trash-can"></i>
-                                            </button>
-                                        </form>
+                                        <button type="button" th:if="${o.offerStatus == 'Draft'}"
+                                                th:onclick="'confirmDeleteOffer(' + ${o.offerId} + ')'" class="btn-icon btn-icon-danger" title="Xóa bản thảo">
+                                            <i class="fa-solid fa-trash-can"></i>
+                                        </button>
                                     </div>
                                 </td>
                             </tr>
@@ -580,6 +573,109 @@
                 <i class="fa-regular fa-floppy-disk" style="margin-right:6px;"></i> Lưu Bản Thảo (Draft)
             </button>
             <button type="button" class="btn btn-primary" onclick="submitCreateOffer(false)">
+                <i class="fa-solid fa-paper-plane" style="margin-right:6px;"></i> Trình Giám Đốc
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- ===========================================================================
+     MODAL 2: XEM CHI TIẾT OFFER PROPOSAL (Pop-up Modal Screen 32 View Detail)
+     =========================================================================== -->
+<div class="modal-overlay" id="detailOfferModal" onclick="handleDetailModalBackdropClick(event)">
+    <div class="modal-box modal-xl" onclick="event.stopPropagation()">
+        <div class="modal-header">
+            <div style="display:flex; align-items:center; gap:8px;">
+                <i class="fa-solid fa-file-lines" style="color:var(--brand-dark);"></i>
+                <span id="detailModalTitle">Chi Tiết Đề Xuất Offer</span>
+            </div>
+            <button type="button" class="btn-icon" onclick="closeModal('detailOfferModal')">✕</button>
+        </div>
+        <div class="modal-body" id="detailModalBody">
+            <div style="text-align:center; padding:40px; color:var(--muted);">
+                <i class="fa-solid fa-spinner fa-spin" style="font-size:24px;"></i>
+                <p style="margin-top:10px;">Đang tải thông tin chi tiết...</p>
+            </div>
+        </div>
+        <div class="modal-footer" id="detailModalFooter">
+            <button type="button" class="btn btn-secondary" onclick="closeModal('detailOfferModal')">Đóng</button>
+        </div>
+    </div>
+</div>
+
+<!-- ===========================================================================
+     MODAL 3: CHỈNH SỬA OFFER PROPOSAL (Pop-up Modal Edit khi Draft hoặc Rejected)
+     =========================================================================== -->
+<div class="modal-overlay" id="editOfferModal" onclick="handleEditModalBackdropClick(event)">
+    <div class="modal-box modal-lg" onclick="event.stopPropagation()">
+        <div class="modal-header">
+            <div style="display:flex; align-items:center; gap:8px;">
+                <i class="fa-solid fa-pen-to-square" style="color:var(--brand-dark);"></i>
+                <span id="editModalTitle">Chỉnh Sửa Offer Proposal</span>
+            </div>
+            <button type="button" class="btn-icon" onclick="closeModal('editOfferModal')">✕</button>
+        </div>
+        <div class="modal-body">
+            <form id="editOfferForm" onsubmit="event.preventDefault(); submitUpdateOffer(false);">
+                <input type="hidden" id="editOfferId">
+                
+                <div id="editRejectBanner" class="modal-alert modal-alert-danger" style="display:none; margin-bottom:16px;">
+                    <i class="fa-solid fa-triangle-exclamation" style="font-size:16px;"></i>
+                    <div>
+                        <strong>Ghi chú từ chối của Giám đốc:</strong>
+                        <div id="editRejectComment" style="margin-top:2px;">-</div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>Vị trí chức danh đề xuất <span style="color:var(--error, #ef4444);">*</span></label>
+                    <input type="text" id="editOfferedTitle" class="input-control" required>
+                </div>
+
+                <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px;">
+                    <div class="form-group">
+                        <label>Lương chính thức (VND/tháng) <span style="color:var(--error, #ef4444);">*</span></label>
+                        <input type="number" id="editProposedSalary" class="input-control" min="1" step="100000" oninput="editAutoCalculateProbation()" required>
+                    </div>
+                    <div class="form-group">
+                        <label>
+                            Lương thử việc (VND/tháng) <span style="color:var(--error, #ef4444);">*</span>
+                            <button type="button" class="quick-calc-btn" onclick="editAutoCalculateProbation(true)">Gợi ý 85%</button>
+                        </label>
+                        <input type="number" id="editProbationSalary" class="input-control" min="1" step="100000" oninput="editValidateProbation()" required>
+                        <div id="editProbationNotice" class="form-hint" style="color:var(--brand-dark);">
+                            <i class="fa-solid fa-circle-check"></i> Đạt điều kiện tối thiểu 85% lương chính thức.
+                        </div>
+                    </div>
+                </div>
+
+                <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:16px;">
+                    <div class="form-group">
+                        <label>Thời gian thử việc (ngày) <span style="color:var(--error, #ef4444);">*</span></label>
+                        <input type="number" id="editProbationDays" class="input-control" min="1" placeholder="VD: 60" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Ngày bắt đầu dự kiến <span style="color:var(--error, #ef4444);">*</span></label>
+                        <input type="date" id="editStartDate" class="input-control" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Địa điểm làm việc <span style="color:var(--error, #ef4444);">*</span></label>
+                        <input type="text" id="editWorkLocation" class="input-control" required>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>Gói phúc lợi & Chế độ đãi ngộ <span style="color:var(--muted, #64748b); font-weight:normal;">(Không bắt buộc)</span></label>
+                    <textarea id="editBenefits" class="input-control" style="height:76px;"></textarea>
+                </div>
+            </form>
+        </div>
+        <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" onclick="closeModal('editOfferModal')">Hủy bỏ</button>
+            <button type="button" class="btn btn-secondary" onclick="submitUpdateOffer(true)">
+                <i class="fa-regular fa-floppy-disk" style="margin-right:6px;"></i> Lưu Bản Thảo (Draft)
+            </button>
+            <button type="button" class="btn btn-primary" onclick="submitUpdateOffer(false)">
                 <i class="fa-solid fa-paper-plane" style="margin-right:6px;"></i> Trình Giám Đốc
             </button>
         </div>

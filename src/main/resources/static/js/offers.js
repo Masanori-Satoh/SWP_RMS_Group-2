@@ -53,17 +53,35 @@ function clearSearchInput() {
 // =========================================================================
 function openModal(id) {
     const el = document.getElementById(id);
-    if (el) el.classList.add('active');
+    if (el) {
+        el.classList.add('active');
+        el.style.display = 'flex';
+    }
 }
 
 function closeModal(id) {
     const el = document.getElementById(id);
-    if (el) el.classList.remove('active');
+    if (el) {
+        el.classList.remove('active');
+        el.style.display = 'none';
+    }
 }
 
 function handleCreateModalBackdropClick(event) {
     if (event.target && event.target.id === 'createOfferModal') {
         closeModal('createOfferModal');
+    }
+}
+
+function handleDetailModalBackdropClick(event) {
+    if (event.target && event.target.id === 'detailOfferModal') {
+        closeModal('detailOfferModal');
+    }
+}
+
+function handleEditModalBackdropClick(event) {
+    if (event.target && event.target.id === 'editOfferModal') {
+        closeModal('editOfferModal');
     }
 }
 
@@ -365,6 +383,656 @@ function submitCreateOffer(isDraft) {
             setTimeout(() => window.location.reload(), 800);
         } else {
             showToast(res?.message || 'Lỗi khi tạo Offer', 'danger');
+        }
+    })
+    .catch(err => {
+        showToast(err.message, 'danger');
+    });
+}
+
+// =========================================================================
+// 3.1. POP-UP MODAL XEM CHI TIẾT OFFER (Screen 32 View Detail Modal)
+// =========================================================================
+
+function escapeOfferHtml(str) {
+    if (str == null) return '';
+    return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+}
+
+function formatOfferDate(dateStr) {
+    if (!dateStr) return '-';
+    try {
+        const parts = String(dateStr).split('-');
+        if (parts.length === 3) {
+            return `${parts[2]}/${parts[1]}/${parts[0]}`;
+        }
+        const d = new Date(dateStr);
+        if (isNaN(d.getTime())) return dateStr;
+        return d.toLocaleDateString('vi-VN');
+    } catch (e) {
+        return dateStr;
+    }
+}
+
+function formatOfferDateTime(dateTimeStr) {
+    if (!dateTimeStr) return '-';
+    try {
+        const d = new Date(dateTimeStr);
+        if (isNaN(d.getTime())) return dateTimeStr;
+        const day = String(d.getDate()).padStart(2, '0');
+        const month = String(d.getMonth() + 1).padStart(2, '0');
+        const year = d.getFullYear();
+        const hours = String(d.getHours()).padStart(2, '0');
+        const minutes = String(d.getMinutes()).padStart(2, '0');
+        return `${day}/${month}/${year} ${hours}:${minutes}`;
+    } catch (e) {
+        return dateTimeStr;
+    }
+}
+
+function getStatusBadgeHtml(status) {
+    switch (status) {
+        case 'Draft':
+            return '<span class="status-badge status-draft"><i class="fa-regular fa-file"></i> Bản thảo</span>';
+        case 'Pending_Director':
+            return '<span class="status-badge status-pending"><i class="fa-regular fa-clock"></i> Chờ duyệt</span>';
+        case 'Director_Approved':
+        case 'Approved':
+            return '<span class="status-badge status-approved"><i class="fa-solid fa-check"></i> Director đã duyệt</span>';
+        case 'Director_Rejected':
+        case 'Rejected':
+            return '<span class="status-badge status-rejected"><i class="fa-solid fa-xmark"></i> Bị từ chối</span>';
+        case 'Sent_Candidate':
+            return '<span class="status-badge status-sent"><i class="fa-regular fa-paper-plane"></i> Đã gửi ứng viên</span>';
+        case 'Accepted':
+            return '<span class="status-badge status-accepted"><i class="fa-solid fa-user-check"></i> Đã nhận việc</span>';
+        case 'Declined':
+            return '<span class="status-badge status-declined"><i class="fa-solid fa-user-xmark"></i> Ứng viên từ chối</span>';
+        default:
+            return `<span class="status-badge">${escapeOfferHtml(status || 'N/A')}</span>`;
+    }
+}
+
+function renderDetailModalHtml(d) {
+    const candidateName = escapeOfferHtml(d.candidateName || 'N/A');
+    const candidateEmail = escapeOfferHtml(d.candidateEmail || 'N/A');
+    const candidatePhone = escapeOfferHtml(d.candidatePhone || 'N/A');
+    const appliedPosition = escapeOfferHtml(d.appliedPosition || 'N/A');
+    const departmentName = escapeOfferHtml(d.departmentName || 'N/A');
+    const requisitionId = d.requisitionId ? `#${d.requisitionId}` : 'N/A';
+    const finalDecision = escapeOfferHtml(d.finalDecision || 'Passed');
+    const interviewComments = escapeOfferHtml(d.interviewSummaryComments || 'Không có ghi chú thêm.');
+    const recomSalary = d.recommendedSalary ? Number(d.recommendedSalary).toLocaleString('vi-VN') + ' VND' : 'Chưa có gợi ý';
+    const hiringManagerName = escapeOfferHtml(d.hiringManagerName || 'N/A');
+
+    const offeredTitle = escapeOfferHtml(d.offeredPositionTitle || '-');
+    const proposedSalary = d.proposedSalary ? Number(d.proposedSalary).toLocaleString('vi-VN') + ' VND' : '-';
+    const probationSalary = d.probationSalary ? Number(d.probationSalary).toLocaleString('vi-VN') + ' VND' : '-';
+
+    let probationPctBadge = '';
+    if (d.proposedSalary && d.probationSalary && Number(d.proposedSalary) > 0) {
+        const pct = Math.round((Number(d.probationSalary) * 100) / Number(d.proposedSalary));
+        probationPctBadge = `<span class="salary-badge-pct">${pct}%</span>`;
+    }
+
+    const probationDays = d.probationDays ? `${d.probationDays} ngày` : '60 ngày';
+    const expectedStartDate = formatOfferDate(d.expectedStartDate);
+    const workLocation = escapeOfferHtml(d.workLocation || 'Trụ sở chính Mộc RMS');
+    const benefits = escapeOfferHtml(d.benefitsPackage || 'Theo quy chế đãi ngộ chung của công ty.');
+
+    let approvalHtml = '';
+    if (d.approvalHistory && d.approvalHistory.length > 0) {
+        approvalHtml = '<div class="history-timeline">';
+        d.approvalHistory.forEach(a => {
+            const isApproved = a.status === 'Approved' || a.status === 'Director_Approved';
+            const dotClass = isApproved ? 'dot-approved' : 'dot-rejected';
+            const statusColor = isApproved ? 'var(--brand-dark)' : 'var(--error)';
+            const director = escapeOfferHtml(a.directorName || 'Giám đốc');
+            const statusText = escapeOfferHtml(a.status || '');
+            const timeText = formatOfferDateTime(a.approvedAt);
+            const commentsText = escapeOfferHtml(a.directorComments || 'Không có ghi chú thêm.');
+
+            approvalHtml += `
+                <div class="timeline-item">
+                    <div class="timeline-dot ${dotClass}"></div>
+                    <div class="timeline-header">
+                        <span>${director}</span> - 
+                        <span style="font-weight:700; color:${statusColor};">${statusText}</span>
+                    </div>
+                    <div class="timeline-time">${timeText}</div>
+                    <div class="timeline-content">${commentsText}</div>
+                </div>
+            `;
+        });
+        approvalHtml += '</div>';
+    } else {
+        approvalHtml = `
+            <div style="color:var(--muted); font-size:13.5px; padding: 12px 0;">
+                <i class="fa-regular fa-clock"></i> Chưa có ghi nhận lịch sử phê duyệt của Giám đốc đối với đề xuất này.
+            </div>
+        `;
+    }
+
+    return `
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px; padding-bottom:12px; border-bottom:1px solid var(--line);">
+            <div>
+                <span style="font-size:15px; font-weight:600; color:var(--ink);">${offeredTitle}</span>
+                <span style="color:var(--muted); font-size:13px; margin-left:8px;">&bull; Ứng viên: <strong>${candidateName}</strong></span>
+                <span style="color:var(--muted); font-size:13px; margin-left:8px;">&bull; Ngày tạo: ${formatOfferDateTime(d.createdAt)}</span>
+            </div>
+            <div>
+                ${getStatusBadgeHtml(d.offerStatus)}
+            </div>
+        </div>
+
+        <div class="detail-section">
+            <div class="section-title">
+                <i class="fa-solid fa-user"></i> 1. Hồ Sơ Ứng Viên & Kết Quả Phỏng Vấn
+            </div>
+            <div class="detail-grid-3">
+                <div>
+                    <div class="detail-item-label">Họ và tên ứng viên</div>
+                    <div class="detail-item-value" style="font-weight:700;">${candidateName}</div>
+                </div>
+                <div>
+                    <div class="detail-item-label">Email liên hệ</div>
+                    <div class="detail-item-value">${candidateEmail}</div>
+                </div>
+                <div>
+                    <div class="detail-item-label">Số điện thoại</div>
+                    <div class="detail-item-value">${candidatePhone}</div>
+                </div>
+                <div>
+                    <div class="detail-item-label">Vị trí ứng tuyển</div>
+                    <div class="detail-item-value">${appliedPosition}</div>
+                </div>
+                <div>
+                    <div class="detail-item-label">Phòng ban</div>
+                    <div class="detail-item-value">${departmentName}</div>
+                </div>
+                <div>
+                    <div class="detail-item-label">Mã Yêu cầu tuyển dụng (Requisition ID)</div>
+                    <div class="detail-item-value">${requisitionId}</div>
+                </div>
+            </div>
+
+            <div style="margin-top:14px; padding-top:12px; border-top:1px dashed var(--line);" class="detail-grid">
+                <div>
+                    <div class="detail-item-label">Kết quả Hội đồng phỏng vấn:</div>
+                    <div class="detail-item-value" style="color:var(--brand-dark); font-weight:700;">
+                        <i class="fa-solid fa-circle-check"></i> ${finalDecision}
+                    </div>
+                    <div style="font-size:13px; color:var(--muted); margin-top:4px;">${interviewComments}</div>
+                </div>
+                <div>
+                    <div class="detail-item-label">Lương khuyến nghị từ Hiring Manager:</div>
+                    <div class="detail-item-value" style="color:var(--brand-dark); font-weight:700; font-size:14.5px;">${recomSalary}</div>
+                    <div style="font-size:13px; color:var(--muted); margin-top:4px;">Người phụ trách: ${hiringManagerName}</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="detail-section">
+            <div class="section-title">
+                <i class="fa-solid fa-coins"></i> 2. Gói Đãi Ngộ & Điều Khoản Offer
+            </div>
+            <div class="detail-grid-3">
+                <div>
+                    <div class="detail-item-label">Chức danh chính thức đề xuất</div>
+                    <div class="detail-item-value" style="font-weight:700;">${offeredTitle}</div>
+                </div>
+                <div>
+                    <div class="detail-item-label">Lương chính thức (Gross/tháng)</div>
+                    <div class="detail-item-value" style="color:var(--ink); font-weight:700; font-size:15px;">${proposedSalary}</div>
+                </div>
+                <div>
+                    <div class="detail-item-label">Lương thử việc (Gross/tháng)</div>
+                    <div class="detail-item-value" style="color:var(--brand-dark); font-weight:700; font-size:15px;">
+                        <span>${probationSalary}</span> ${probationPctBadge}
+                    </div>
+                </div>
+                <div>
+                    <div class="detail-item-label">Thời gian thử việc</div>
+                    <div class="detail-item-value">${probationDays}</div>
+                </div>
+                <div>
+                    <div class="detail-item-label">Ngày bắt đầu dự kiến</div>
+                    <div class="detail-item-value">${expectedStartDate}</div>
+                </div>
+                <div>
+                    <div class="detail-item-label">Địa điểm làm việc</div>
+                    <div class="detail-item-value">${workLocation}</div>
+                </div>
+            </div>
+
+            <div style="margin-top:14px;">
+                <div class="detail-item-label">Chế độ phúc lợi & Đãi ngộ đặc thù:</div>
+                <div class="detail-item-value" style="background:var(--page); padding:10px 14px; border:1px solid var(--line); border-radius:6px; font-size:13.5px; margin-top:4px;">
+                    ${benefits}
+                </div>
+            </div>
+        </div>
+
+        <div class="detail-section" style="margin-bottom:0;">
+            <div class="section-title">
+                <i class="fa-solid fa-stamp"></i> 3. Lịch Sử Phê Duyệt Của Director
+            </div>
+            ${approvalHtml}
+        </div>
+    `;
+}
+
+function renderDetailFooterHtml(d) {
+    let btns = `<button type="button" class="btn btn-secondary" onclick="closeModal('detailOfferModal')">Đóng</button>`;
+
+    if (d.offerStatus === 'Draft') {
+        btns += `
+            <button type="button" class="btn btn-danger" style="background:#dc2626; border-color:#dc2626; color:#fff;" onclick="confirmDeleteOffer(${d.offerId})">
+                <i class="fa-solid fa-trash-can" style="margin-right:4px;"></i> Xóa bản thảo
+            </button>
+            <button type="button" class="btn btn-primary" onclick="openEditOfferModal(${d.offerId})">
+                <i class="fa-solid fa-pen-to-square" style="margin-right:4px;"></i> Chỉnh sửa
+            </button>
+        `;
+    } else if (d.offerStatus === 'Director_Approved' || d.offerStatus === 'Approved') {
+        btns += `
+            <button type="button" class="btn btn-primary" onclick="confirmSendOffer(${d.offerId})">
+                <i class="fa-solid fa-paper-plane" style="margin-right:4px;"></i> Phát hành Offer Letter
+            </button>
+        `;
+    } else if (d.offerStatus === 'Director_Rejected' || d.offerStatus === 'Rejected') {
+        btns += `
+            <button type="button" class="btn btn-primary" onclick="openEditOfferModal(${d.offerId})">
+                <i class="fa-solid fa-pen-to-square" style="margin-right:4px;"></i> Chỉnh sửa & Trình lại
+            </button>
+        `;
+    }
+
+    return btns;
+}
+
+function viewOfferDetail(offerId) {
+    if (!offerId) return;
+
+    const titleEl = document.getElementById('detailModalTitle');
+    const bodyEl = document.getElementById('detailModalBody');
+    const footerEl = document.getElementById('detailModalFooter');
+
+    if (titleEl) titleEl.textContent = `Chi Tiết Đề Xuất Offer #${offerId}`;
+    if (bodyEl) {
+        bodyEl.innerHTML = `
+            <div style="text-align:center; padding:40px; color:var(--muted);">
+                <i class="fa-solid fa-spinner fa-spin" style="font-size:24px;"></i>
+                <p style="margin-top:10px;">Đang tải thông tin chi tiết...</p>
+            </div>
+        `;
+    }
+    if (footerEl) {
+        footerEl.innerHTML = `<button type="button" class="btn btn-secondary" onclick="closeModal('detailOfferModal')">Đóng</button>`;
+    }
+
+    openModal('detailOfferModal');
+
+    fetch(`/offers/${offerId}`, {
+        method: 'GET',
+        headers: {
+            'Accept': 'application/json'
+        }
+    })
+    .then(async res => {
+        const isJson = res.headers.get('content-type')?.includes('application/json');
+        const data = isJson ? await res.json() : null;
+        if (!res.ok) {
+            throw new Error(data?.message || `Lỗi tải dữ liệu (${res.status})`);
+        }
+        return data;
+    })
+    .then(res => {
+        if (res && res.success && res.data) {
+            const d = res.data;
+            if (titleEl) titleEl.textContent = `Chi Tiết Đề Xuất Offer #${d.offerId}`;
+            if (bodyEl) bodyEl.innerHTML = renderDetailModalHtml(d);
+            if (footerEl) footerEl.innerHTML = renderDetailFooterHtml(d);
+        } else {
+            throw new Error(res?.message || 'Không thể hiển thị thông tin Offer.');
+        }
+    })
+    .catch(err => {
+        if (bodyEl) {
+            bodyEl.innerHTML = `
+                <div class="modal-alert modal-alert-danger">
+                    <i class="fa-solid fa-circle-exclamation"></i>
+                    <span>${escapeOfferHtml(err.message)}</span>
+                </div>
+            `;
+        }
+    });
+}
+
+// =========================================================================
+// 3.2. POP-UP MODAL CHỈNH SỬA OFFER (Screen 30/32 Edit Modal)
+// =========================================================================
+
+function openEditOfferModal(offerId) {
+    if (!offerId) return;
+
+    closeModal('detailOfferModal');
+
+    const form = document.getElementById('editOfferForm');
+    if (form) form.reset();
+
+    const titleEl = document.getElementById('editModalTitle');
+    if (titleEl) titleEl.textContent = `Chỉnh Sửa Offer Proposal #${offerId}`;
+
+    const idInput = document.getElementById('editOfferId');
+    if (idInput) idInput.value = offerId;
+
+    const startDateInput = document.getElementById('editStartDate');
+    if (startDateInput) {
+        startDateInput.min = getTomorrowDateString();
+    }
+
+    const rejectBanner = document.getElementById('editRejectBanner');
+    if (rejectBanner) rejectBanner.style.display = 'none';
+
+    openModal('editOfferModal');
+
+    fetch(`/offers/${offerId}`, {
+        method: 'GET',
+        headers: {
+            'Accept': 'application/json'
+        }
+    })
+    .then(async res => {
+        const isJson = res.headers.get('content-type')?.includes('application/json');
+        const data = isJson ? await res.json() : null;
+        if (!res.ok) {
+            throw new Error(data?.message || `Lỗi tải dữ liệu (${res.status})`);
+        }
+        return data;
+    })
+    .then(res => {
+        if (res && res.success && res.data) {
+            const d = res.data;
+            const setVal = (id, val) => {
+                const el = document.getElementById(id);
+                if (el) el.value = val != null ? val : '';
+            };
+
+            setVal('editOfferedTitle', d.offeredPositionTitle);
+            setVal('editProposedSalary', d.proposedSalary);
+            setVal('editProbationSalary', d.probationSalary);
+            setVal('editProbationDays', d.probationDays || 60);
+            setVal('editStartDate', d.expectedStartDate);
+            setVal('editWorkLocation', d.workLocation);
+            setVal('editBenefits', d.benefitsPackage);
+
+            if (d.offerStatus === 'Director_Rejected' || d.offerStatus === 'Rejected') {
+                let rejectComment = 'Không có ghi chú thêm.';
+                if (d.approvalHistory && d.approvalHistory.length > 0) {
+                    const lastReject = d.approvalHistory
+                        .filter(a => a.status === 'Rejected' || a.status === 'Director_Rejected')
+                        .pop();
+                    if (lastReject && lastReject.directorComments) {
+                        rejectComment = lastReject.directorComments;
+                    }
+                }
+                const commentEl = document.getElementById('editRejectComment');
+                if (commentEl) commentEl.textContent = rejectComment;
+                if (rejectBanner) rejectBanner.style.display = 'flex';
+            }
+
+            editValidateProbation();
+        } else {
+            throw new Error(res?.message || 'Không thể tải thông tin chỉnh sửa.');
+        }
+    })
+    .catch(err => {
+        showToast(err.message, 'danger');
+        closeModal('editOfferModal');
+    });
+}
+
+function editAutoCalculateProbation(forceSet = false) {
+    const proposedEl = document.getElementById('editProposedSalary');
+    const probationEl = document.getElementById('editProbationSalary');
+    if (!proposedEl || !probationEl) return;
+
+    const proposed = parseFloat(proposedEl.value);
+    if (!isNaN(proposed) && proposed > 0) {
+        const minProbation = Math.round(proposed * 0.85);
+        const currentProbation = parseFloat(probationEl.value);
+        if (forceSet || isNaN(currentProbation) || currentProbation === 0) {
+            probationEl.value = minProbation;
+        }
+        editValidateProbation();
+    }
+}
+
+function editValidateProbation() {
+    const proposedEl = document.getElementById('editProposedSalary');
+    const probationEl = document.getElementById('editProbationSalary');
+    const notice = document.getElementById('editProbationNotice');
+    if (!proposedEl || !probationEl || !notice) return true;
+
+    const proposed = parseFloat(proposedEl.value);
+    const probation = parseFloat(probationEl.value);
+
+    if (!isNaN(proposed) && !isNaN(probation)) {
+        const minProb = proposed * 0.85;
+        if (probation < minProb) {
+            notice.style.color = 'var(--error)';
+            notice.innerHTML = `<i class="fa-solid fa-triangle-exclamation"></i> CẢNH BÁO: Lương thử việc phải đạt tối thiểu 85% lương chính thức (${Math.round(minProb).toLocaleString('vi-VN')} VND).`;
+            return false;
+        } else if (probation > proposed) {
+            notice.style.color = 'var(--error)';
+            notice.innerHTML = `<i class="fa-solid fa-triangle-exclamation"></i> CẢNH BÁO: Lương thử việc không được vượt quá lương chính thức (${Math.round(proposed).toLocaleString('vi-VN')} VND).`;
+            return false;
+        } else {
+            const pct = (probation / proposed * 100).toFixed(1);
+            notice.style.color = 'var(--brand-dark)';
+            notice.innerHTML = `<i class="fa-solid fa-circle-check"></i> Hợp lệ: Đạt ${pct}% lương chính thức.`;
+            return true;
+        }
+    }
+    return true;
+}
+
+function submitUpdateOffer(isDraft) {
+    const offerIdInput = document.getElementById('editOfferId');
+    const offerId = offerIdInput ? offerIdInput.value : '';
+    if (!offerId) {
+        showToast('Không xác định được Offer cần cập nhật.', 'danger');
+        return;
+    }
+
+    const titleInput = document.getElementById('editOfferedTitle');
+    const title = titleInput ? titleInput.value.trim() : '';
+    const proposedEl = document.getElementById('editProposedSalary');
+    const proposed = proposedEl ? parseFloat(proposedEl.value) : NaN;
+    const probationEl = document.getElementById('editProbationSalary');
+    const probation = probationEl ? parseFloat(probationEl.value) : NaN;
+    const probationDaysEl = document.getElementById('editProbationDays');
+    const probationDays = probationDaysEl ? parseInt(probationDaysEl.value, 10) : NaN;
+    const startDateEl = document.getElementById('editStartDate');
+    const startDate = startDateEl ? startDateEl.value : '';
+    const workLocEl = document.getElementById('editWorkLocation');
+    const workLocation = workLocEl ? workLocEl.value.trim() : '';
+    const benefitsEl = document.getElementById('editBenefits');
+    const benefits = benefitsEl ? benefitsEl.value : '';
+
+    if (!title) {
+        showToast('Vị trí chức danh đề xuất không được để trống.', 'warning');
+        return;
+    }
+
+    if (isNaN(proposed) || proposed <= 0) {
+        showToast('Mức lương chính thức phải lớn hơn 0.', 'warning');
+        return;
+    }
+
+    if (isNaN(probation) || probation <= 0) {
+        showToast('Mức lương thử việc phải lớn hơn 0.', 'warning');
+        return;
+    }
+
+    if (!editValidateProbation()) {
+        if (probation > proposed) {
+            showToast('Lương thử việc không được vượt quá lương chính thức.', 'danger');
+        } else {
+            showToast('Mức lương thử việc không tuân thủ quy định tối thiểu 85%.', 'danger');
+        }
+        return;
+    }
+
+    if (isNaN(probationDays) || probationDays <= 0) {
+        showToast('Thời gian thử việc phải lớn hơn 0 ngày.', 'warning');
+        return;
+    }
+
+    if (!startDate) {
+        showToast('Ngày bắt đầu dự kiến không được để trống.', 'warning');
+        return;
+    }
+    if (startDate <= getTodayDateString()) {
+        showToast('Ngày bắt đầu dự kiến phải lớn hơn ngày hiện tại.', 'danger');
+        return;
+    }
+
+    if (!workLocation) {
+        showToast('Địa điểm làm việc không được để trống.', 'warning');
+        return;
+    }
+
+    const payload = {
+        offeredPositionTitle: title,
+        proposedSalary: proposed,
+        probationSalary: probation,
+        probationDays: probationDays,
+        expectedStartDate: startDate,
+        workLocation: workLocation,
+        benefitsPackage: benefits,
+        isDraft: Boolean(isDraft)
+    };
+
+    const csrf = getCsrfInfo();
+    const headers = {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json'
+    };
+    if (csrf.token) {
+        headers[csrf.header] = csrf.token;
+    }
+
+    fetch(`/offers/${offerId}`, {
+        method: 'PUT',
+        headers: headers,
+        body: JSON.stringify(payload)
+    })
+    .then(async res => {
+        const isJson = res.headers.get('content-type')?.includes('application/json');
+        const data = isJson ? await res.json() : null;
+        if (!res.ok) {
+            throw new Error(data?.message || `Lỗi máy chủ (${res.status})`);
+        }
+        return data;
+    })
+    .then(res => {
+        if (res && res.success) {
+            showToast(res.message, 'success');
+            closeModal('editOfferModal');
+            setTimeout(() => window.location.reload(), 800);
+        } else {
+            showToast(res?.message || 'Lỗi khi cập nhật Offer.', 'danger');
+        }
+    })
+    .catch(err => {
+        showToast(err.message, 'danger');
+    });
+}
+
+// =========================================================================
+// 3.3. THAO TÁC PHÁT HÀNH & XÓA OFFER (Send, Delete)
+// =========================================================================
+
+function confirmSendOffer(offerId) {
+    if (!offerId) return;
+    if (!confirm('Bạn có chắc chắn muốn phát hành Thư mời làm việc (Offer Letter) tới ứng viên? Trạng thái sẽ được chuyển sang Sent_Candidate.')) {
+        return;
+    }
+
+    const csrf = getCsrfInfo();
+    const headers = {
+        'Accept': 'application/json'
+    };
+    if (csrf.token) {
+        headers[csrf.header] = csrf.token;
+    }
+
+    fetch(`/offers/${offerId}/send`, {
+        method: 'POST',
+        headers: headers
+    })
+    .then(async res => {
+        const isJson = res.headers.get('content-type')?.includes('application/json');
+        const data = isJson ? await res.json() : null;
+        if (!res.ok) {
+            throw new Error(data?.message || `Lỗi phát hành Offer (${res.status})`);
+        }
+        return data;
+    })
+    .then(res => {
+        if (res && res.success) {
+            showToast(res.message, 'success');
+            closeModal('detailOfferModal');
+            setTimeout(() => window.location.reload(), 800);
+        } else {
+            showToast(res?.message || 'Lỗi phát hành Offer.', 'danger');
+        }
+    })
+    .catch(err => {
+        showToast(err.message, 'danger');
+    });
+}
+
+function confirmDeleteOffer(offerId) {
+    if (!offerId) return;
+    if (!confirm('Bạn có chắc chắn muốn xóa bản thảo Offer này khỏi hệ thống?')) {
+        return;
+    }
+
+    const csrf = getCsrfInfo();
+    const headers = {
+        'Accept': 'application/json'
+    };
+    if (csrf.token) {
+        headers[csrf.header] = csrf.token;
+    }
+
+    fetch(`/offers/${offerId}`, {
+        method: 'DELETE',
+        headers: headers
+    })
+    .then(async res => {
+        const isJson = res.headers.get('content-type')?.includes('application/json');
+        const data = isJson ? await res.json() : null;
+        if (!res.ok) {
+            throw new Error(data?.message || `Lỗi xóa bản thảo (${res.status})`);
+        }
+        return data;
+    })
+    .then(res => {
+        if (res && res.success) {
+            showToast(res.message, 'success');
+            closeModal('detailOfferModal');
+            setTimeout(() => window.location.reload(), 800);
+        } else {
+            showToast(res?.message || 'Lỗi xóa bản thảo.', 'danger');
         }
     })
     .catch(err => {

@@ -172,7 +172,17 @@ public class OfferController {
     }
 
     /**
-     * 4. VIEW DETAIL: Xem chi tiết 1 Offer + Thông tin ứng viên (Screen 32)
+     * 4a. VIEW DETAIL VIA AJAX (JSON): Trả về chi tiết Offer cho pop-up Modal trên trang danh sách
+     */
+    @GetMapping(value = "/{id}", produces = MediaType.APPLICATION_JSON_VALUE)
+    @ResponseBody
+    public ResponseEntity<ApiResponse<OfferDetailResponse>> getOfferDetailJson(@PathVariable Integer id) {
+        OfferDetailResponse detail = offerService.getOfferDetailForHr(id);
+        return ResponseEntity.ok(new ApiResponse<>(true, "Lấy chi tiết Offer thành công.", detail));
+    }
+
+    /**
+     * 4b. VIEW DETAIL: Xem chi tiết 1 Offer + Thông tin ứng viên (Screen 32)
      */
     @GetMapping("/{id}")
     public String viewOfferDetail(@PathVariable Integer id, Model model) {
@@ -201,7 +211,35 @@ public class OfferController {
     }
 
     /**
-     * 6. SUBMIT EDIT: Cập nhật Offer Proposal
+     * 6a. SUBMIT EDIT VIA AJAX (JSON): Cập nhật Offer Proposal từ pop-up Modal
+     */
+    @PutMapping(value = "/{id}", consumes = MediaType.APPLICATION_JSON_VALUE)
+    @ResponseBody
+    public ResponseEntity<ApiResponse<OfferResponse>> updateOfferJson(
+            @PathVariable Integer id,
+            @Valid @RequestBody UpdateOfferRequest updateRequest) {
+        try {
+            OfferResponse updated = offerService.updateOfferByHr(id, updateRequest);
+            boolean isDraft = Boolean.TRUE.equals(updateRequest.getIsDraft());
+            String msg = isDraft
+                    ? "Cập nhật bản thảo Offer thành công!"
+                    : "Đã nộp trình đề xuất Offer lên Giám đốc thành công!";
+            return ResponseEntity.ok(new ApiResponse<>(true, msg, updated));
+        } catch (BaseBusinessException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ApiResponse<>(false, e.getMessage()));
+        }
+    }
+
+    @PostMapping(value = "/{id}/edit", consumes = MediaType.APPLICATION_JSON_VALUE)
+    @ResponseBody
+    public ResponseEntity<ApiResponse<OfferResponse>> updateOfferJsonPost(
+            @PathVariable Integer id,
+            @Valid @RequestBody UpdateOfferRequest updateRequest) {
+        return updateOfferJson(id, updateRequest);
+    }
+
+    /**
+     * 6b. SUBMIT EDIT: Cập nhật Offer Proposal (Form Submit Fallback)
      */
     @PostMapping("/{id}/edit")
     public String updateOffer(
@@ -237,7 +275,21 @@ public class OfferController {
     }
 
     /**
-     * 7. DELETE: Xóa bản thảo Offer (Chỉ cho phép khi Draft)
+     * 7a. DELETE VIA AJAX (JSON): Xóa bản thảo Offer từ pop-up Modal
+     */
+    @DeleteMapping(value = "/{id}")
+    @ResponseBody
+    public ResponseEntity<ApiResponse<Void>> deleteOfferJson(@PathVariable Integer id) {
+        try {
+            offerService.deleteDraftOfferByHr(id);
+            return ResponseEntity.ok(new ApiResponse<>(true, "Đã xóa bản thảo Offer thành công."));
+        } catch (BaseBusinessException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ApiResponse<>(false, e.getMessage()));
+        }
+    }
+
+    /**
+     * 7b. DELETE: Xóa bản thảo Offer (Chỉ cho phép khi Draft)
      */
     @PostMapping("/{id}/delete")
     public String deleteOffer(@PathVariable Integer id, RedirectAttributes flash) {
@@ -251,7 +303,21 @@ public class OfferController {
     }
 
     /**
-     * 8. SEND OFFER: HR phát hành thư mời làm việc cho Candidate (Khi Status == Director_Approved)
+     * 8a. SEND OFFER VIA AJAX (JSON): Phát hành Offer Letter tới ứng viên từ pop-up Modal
+     */
+    @PostMapping(value = "/{id}/send", produces = MediaType.APPLICATION_JSON_VALUE)
+    @ResponseBody
+    public ResponseEntity<ApiResponse<OfferResponse>> sendOfferToCandidateJson(@PathVariable Integer id) {
+        try {
+            OfferResponse sentOffer = offerService.sendOfferToCandidate(id);
+            return ResponseEntity.ok(new ApiResponse<>(true, "Đã phát hành và gửi thư mời nhận việc (Offer Letter) tới ứng viên thành công!", sentOffer));
+        } catch (BaseBusinessException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ApiResponse<>(false, e.getMessage()));
+        }
+    }
+
+    /**
+     * 8b. SEND OFFER: HR phát hành thư mời làm việc cho Candidate (Khi Status == Director_Approved)
      */
     @PostMapping("/{id}/send")
     public String sendOfferToCandidate(@PathVariable Integer id, RedirectAttributes flash) {

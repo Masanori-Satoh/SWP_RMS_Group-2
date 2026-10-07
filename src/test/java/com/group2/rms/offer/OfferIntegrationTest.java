@@ -31,8 +31,10 @@ import java.util.Optional;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 /**
@@ -261,5 +263,84 @@ class OfferIntegrationTest {
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.success").value(false))
                 .andExpect(jsonPath("$.message").value("Ứng viên đã có offer"));
+    }
+
+    @Test
+    @DisplayName("IT-12 GET /offers/{id} (JSON): Pop-up chi tiết Offer trả về JSON ApiResponse và HTTP 200")
+    @WithMockUser(username = "hr_specialist", roles = {"HR"})
+    void it12_getOfferDetailJson_success() throws Exception {
+        OfferDetailResponse detail = OfferDetailResponse.builder()
+                .offerId(1)
+                .offeredPositionTitle("Senior Java Engineer")
+                .candidateName("Nguyễn Văn A")
+                .offerStatus("Draft")
+                .proposedSalary(new BigDecimal("30000000"))
+                .probationSalary(new BigDecimal("25500000"))
+                .probationDays(60)
+                .expectedStartDate(LocalDate.now().plusDays(14))
+                .build();
+        when(offerService.getOfferDetailForHr(1)).thenReturn(detail);
+
+        mvc.perform(get("/offers/1").accept(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.data.offerId").value(1))
+                .andExpect(jsonPath("$.data.candidateName").value("Nguyễn Văn A"));
+    }
+
+    @Test
+    @DisplayName("IT-13 PUT /offers/{id} (JSON): Pop-up chỉnh sửa Offer thành công trả về HTTP 200")
+    @WithMockUser(username = "hr_specialist", roles = {"HR"})
+    void it13_updateOfferJson_success() throws Exception {
+        UpdateOfferRequest req = new UpdateOfferRequest();
+        req.setOfferedPositionTitle("Lead Engineer");
+        req.setProposedSalary(new BigDecimal("35000000"));
+        req.setProbationSalary(new BigDecimal("29750000"));
+        req.setProbationDays(60);
+        req.setExpectedStartDate(LocalDate.now().plusDays(10));
+        req.setWorkLocation("Trụ sở Mộc RMS");
+        req.setIsDraft(true);
+
+        OfferResponse mockUpdated = OfferResponse.builder()
+                .offerId(1)
+                .offeredPositionTitle("Lead Engineer")
+                .offerStatus("Draft")
+                .build();
+        when(offerService.updateOfferByHr(any(), any())).thenReturn(mockUpdated);
+
+        mvc.perform(put("/offers/1")
+                        .with(csrf())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(req)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.data.offeredPositionTitle").value("Lead Engineer"));
+    }
+
+    @Test
+    @DisplayName("IT-14 DELETE /offers/{id} (JSON): Pop-up xóa bản thảo Offer thành công trả về HTTP 200")
+    @WithMockUser(username = "hr_specialist", roles = {"HR"})
+    void it14_deleteDraftOfferJson_success() throws Exception {
+        mvc.perform(delete("/offers/1").with(csrf()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.success").value(true));
+    }
+
+    @Test
+    @DisplayName("IT-15 POST /offers/{id}/send (JSON): Phát hành Offer Letter trả về JSON khi Accept application/json")
+    @WithMockUser(username = "hr_specialist", roles = {"HR"})
+    void it15_sendOfferJson_success() throws Exception {
+        OfferResponse mockSent = OfferResponse.builder()
+                .offerId(1)
+                .offerStatus("Sent_Candidate")
+                .build();
+        when(offerService.sendOfferToCandidate(1)).thenReturn(mockSent);
+
+        mvc.perform(post("/offers/1/send")
+                        .with(csrf())
+                        .accept(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.data.offerStatus").value("Sent_Candidate"));
     }
 }
