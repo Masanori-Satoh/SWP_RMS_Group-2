@@ -1,4 +1,14 @@
-/* Requisition UI extends the shared Mộc workspace and design tokens. */
+/* =============================================================================
+   REQUISITION-SHARED.CSS
+   File CSS dùng chung cho toàn bộ phân hệ Yêu cầu Tuyển dụng (Job Requisition)
+   Kế thừa hệ thống Design Tokens và Workspace layout của hệ thống Mộc RMS.
+   ============================================================================= */
+
+/* -----------------------------------------------------------------------------
+   1. BREADCRUMBS & TIÊU ĐỀ TRANG (Page Header & Navigation)
+   ----------------------------------------------------------------------------- */
+
+/* Thanh điều hướng phân cấp (Breadcrumbs) */
 .req-app .requisition-breadcrumb,
 .req-app .requisition-page-breadcrumb {
   display: flex;
@@ -10,12 +20,14 @@
   margin-bottom: var(--s3);
 }
 
+/* Liên kết trong breadcrumb */
 .req-app .requisition-breadcrumb a,
 .req-app .requisition-page-breadcrumb a {
   display: inline-flex;
   align-items: center;
   min-height: 32px;
   text-decoration: none;
+  color: var(--brand);
 }
 
 .req-app .requisition-breadcrumb a:hover,
@@ -23,6 +35,13 @@
   text-decoration: underline;
 }
 
+/* Trang hiện tại trong breadcrumb */
+.req-app :is(.requisition-breadcrumb, .requisition-page-breadcrumb) [aria-current="page"] {
+  color: var(--text-color, var(--ink));
+  font-weight: 500;
+}
+
+/* Phần đầu trang chứa tiêu đề lớn và các nút thao tác chính */
 .req-app .requisition-page-header,
 .req-app .requisition-detail-heading {
   display: flex;
@@ -36,6 +55,7 @@
   margin-bottom: var(--s8);
 }
 
+/* Đoạn văn bản mô tả phụ dưới tiêu đề trang */
 .req-app .requisition-page-header p,
 .req-app .requisition-page-description {
   color: var(--muted);
@@ -43,20 +63,24 @@
   max-width: 72ch;
 }
 
+/* Tiêu đề cấp 1: tự động ngắt dòng nếu từ quá dài */
 .req-app h1 {
   overflow-wrap: anywhere;
 }
 
+/* Tiêu đề cấp 2 trong nội dung trang và hộp thoại xác nhận xóa */
 .req-app .page-content h2,
 .req-app #delete-dialog h2 {
   font: 600 20px/1.4 var(--serif);
 }
 
+/* Màu chữ phụ/mờ (muted text) */
 .req-app .muted,
 .req-app .activity-meta {
   color: var(--muted);
 }
 
+/* Khối thông báo thành công hoặc lưu ý chung */
 .req-app .notice {
   margin-block: var(--s4);
   padding: var(--s3) var(--s4);
@@ -66,6 +90,11 @@
   color: var(--brand-dark);
 }
 
+/* -----------------------------------------------------------------------------
+   2. HỆ THỐNG NÚT BẤM (Buttons & Action Controls)
+   ----------------------------------------------------------------------------- */
+
+/* Kiểu dáng cơ bản dùng chung cho các nút bấm và liên kết dạng nút */
 .req-app :is(.btn-create, .filter-apply, .clear-filters, .btn-outline, .btn-primary, .btn-danger, .btn-footer, .btn-add-criteria, .btn-trash, .btn-action-outline, .page-link) {
   display: inline-flex;
   align-items: center;
@@ -83,21 +112,25 @@
   cursor: pointer;
 }
 
+/* Nhóm nút chính (Primary / Call-to-action): màu xanh thương hiệu Mộc RMS */
 .req-app :is(.btn-create, .filter-apply, .btn-primary, .btn-submit-director) {
   background: var(--brand-dark);
   border-color: var(--brand-dark);
   color: var(--surface);
 }
 
+/* Hiệu ứng rê chuột (Hover) cho nút chính: chuyển sang màu tối đậm */
 .req-app :is(.btn-create, .filter-apply, .btn-primary, .btn-submit-director):hover {
   background: var(--ink);
   border-color: var(--ink);
 }
 
+/* Hiệu ứng rê chuột cho các nút dạng viền/phụ: nền xanh nhạt */
 .req-app :is(.clear-filters, .btn-outline, .btn-save-draft, .btn-cancel-custom, .btn-add-criteria, .btn-action-outline):hover {
   background: var(--brand-soft);
 }
 
+/* Nhóm nút xóa và cảnh báo nguy hiểm (Danger / Delete) */
 .req-app :is(.btn-danger, .delete-action, .btn-trash) {
   color: var(--error);
 }
@@ -110,6 +143,7 @@
   background: var(--error-soft);
 }
 
+/* Trạng thái nút bị vô hiệu hóa (Disabled button) */
 .req-app button:disabled {
   color: var(--muted);
   background: var(--page);
@@ -117,6 +151,11 @@
   cursor: not-allowed;
 }
 
+/* -----------------------------------------------------------------------------
+   3. HUY HIỆU TRẠNG THÁI (Status Badges / Pills)
+   ----------------------------------------------------------------------------- */
+
+/* Huy hiệu hiển thị trạng thái phê duyệt của yêu cầu tuyển dụng */
 .req-app :is(.list-status, .requisition-status) {
   display: inline-flex;
   align-items: center;
@@ -131,21 +170,42 @@
   white-space: nowrap;
 }
 
+/* Trạng thái: Đã duyệt (Approved) - Xanh lá */
 .req-app [data-status="Approved"] {
   background: var(--brand-soft);
   color: var(--brand-dark);
 }
 
+/* Trạng thái: Chờ Giám đốc duyệt (Pending_Director) - Vàng nâu */
 .req-app [data-status="Pending_Director"] {
   background: #f7efcf;
   color: #775817;
 }
 
+/* Trạng thái: Bị từ chối (Rejected) - Đỏ */
 .req-app [data-status="Rejected"] {
   background: var(--error-soft);
   color: var(--error);
 }
 
+/* Huy hiệu đợt tuyển dụng dùng chung (Recruitment Round Badge) */
+.req-app .round-badge {
+  display: inline-flex;
+  align-items: center;
+  font-weight: 600;
+  white-space: nowrap;
+  border-radius: 12px;
+  background: #e0e7ff;
+  color: #3730a3;
+  padding: 2px 8px;
+  font-size: 11.5px;
+}
+
+/* -----------------------------------------------------------------------------
+   4. THẺ CHỨA & FORM NHẬP LIỆU (Cards, Containers & Form Controls)
+   ----------------------------------------------------------------------------- */
+
+/* Thẻ chứa nội dung chính dạng Card bo tròn viền xám nhẹ */
 .req-app :is(.list-container, .form-card, .detail-layout .card) {
   min-width: 0;
   padding: var(--s6);
@@ -154,6 +214,7 @@
   background: var(--surface);
 }
 
+/* Định dạng các ô nhập liệu chung (Input, Select, Textarea) */
 .req-app :where(input:not([type="checkbox"]):not([type="hidden"]), select, textarea) {
   width: 100%;
   min-width: 0;
@@ -165,15 +226,18 @@
   font-size: 16px;
 }
 
+/* Ô nhập nội dung dài (Textarea): cho phép co giãn theo chiều dọc */
 .req-app textarea {
   resize: vertical;
   line-height: 1.6;
 }
 
+/* Ô nhập liệu có lỗi (Validation Error): viền đỏ cảnh báo */
 .req-app :is(input, select, textarea)[aria-invalid="true"] {
   border-color: var(--error);
 }
 
+/* Tiêu đề trong các thẻ Card */
 .req-app :is(.form-card-header, .card-header) {
   display: flex;
   align-items: center;
@@ -181,6 +245,7 @@
   margin-bottom: var(--s6);
 }
 
+/* Dòng chữ thông báo lỗi xác thực dữ liệu dưới mỗi ô nhập */
 .req-app .field-error {
   display: block;
   color: var(--error);
@@ -188,14 +253,21 @@
   margin-top: var(--s1);
 }
 
+/* Ẩn thẻ lỗi khi rỗng */
 .req-app .field-error:empty {
   display: none;
 }
 
+/* Dấu sao màu đỏ đánh dấu trường bắt buộc nhập */
 .req-app .required-asterisk {
   color: var(--error);
 }
 
+/* -----------------------------------------------------------------------------
+   5. BẢNG DỮ LIỆU & TIỆN ÍCH (Tables & Layout Utilities)
+   ----------------------------------------------------------------------------- */
+
+/* Bảng dữ liệu chuẩn */
 .req-app table {
   width: 100%;
   border-collapse: collapse;
@@ -203,12 +275,14 @@
   font-size: 14px;
 }
 
+/* Dòng tiêu đề cột (TableHeader) */
 .req-app th {
   font-weight: 600;
   color: var(--muted);
   background: var(--page);
 }
 
+/* Ô dữ liệu bảng và tiêu đề cột */
 .req-app th,
 .req-app td {
   padding: var(--s3);
@@ -216,25 +290,34 @@
   vertical-align: middle;
 }
 
+/* Bỏ viền dưới cùng của hàng cuối cùng trong bảng */
 .req-app tbody tr:last-child td {
   border-bottom: 0;
 }
 
+/* Khối trạng thái rỗng khi không có bản ghi nào */
 .req-app .empty-state {
   text-align: center;
   padding: var(--s8);
   color: var(--muted);
 }
 
+/* Tiện ích chống ngắt dòng văn bản */
 .req-app .nowrap {
   white-space: nowrap;
 }
 
+/* Vùng cuộn ngang cho bảng tiêu chí dài */
 .req-app .criteria-scroll {
   max-width: 100%;
   overflow-x: auto;
 }
 
+/* -----------------------------------------------------------------------------
+   6. HỘP THOẠI XÁC NHẬN XÓA (Delete Confirmation Modal / Dialog)
+   ----------------------------------------------------------------------------- */
+
+/* Hộp thoại xóa dạng Native HTML5 Dialog */
 .req-app #delete-dialog {
   width: min(480px, calc(100% - 32px));
   max-height: calc(100svh - 32px);
@@ -246,6 +329,7 @@
   background: var(--surface);
 }
 
+/* Lớp phủ mờ nền phía sau khi modal mở (Backdrop) */
 .req-app #delete-dialog::backdrop {
   background: rgb(37 41 35 / .45);
 }
@@ -255,6 +339,7 @@
   overflow-wrap: anywhere;
 }
 
+/* Biểu tượng dấu chấm than đỏ cảnh báo trong hộp thoại xóa */
 .req-app .delete-symbol {
   display: grid;
   place-items: center;
@@ -267,6 +352,7 @@
   font-weight: 600;
 }
 
+/* Nhóm nút hành động trong hộp thoại (Hủy / Xác nhận Xóa) */
 .req-app .dialog-actions {
   display: flex;
   justify-content: flex-end;
@@ -275,8 +361,11 @@
   margin-top: var(--s6);
 }
 
-@media (max-width:768px) {
-
+/* -----------------------------------------------------------------------------
+   7. THÍCH ỨNG THIẾT BỊ DI ĐỘNG (Responsive Breakpoints)
+   ----------------------------------------------------------------------------- */
+@media (max-width: 768px) {
+  /* Xếp dọc tiêu đề và nút bấm khi màn hình nhỏ */
   .req-app .requisition-page-header,
   .req-app .requisition-detail-heading {
     align-items: flex-start;

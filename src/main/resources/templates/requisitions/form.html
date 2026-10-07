@@ -1,44 +1,66 @@
 <!DOCTYPE html>
 <html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<!--
+    REQUISITIONS/FORM.HTML
+    =============================================================================
+    Màn hình Tạo mới & Chỉnh sửa Yêu cầu Tuyển dụng (/requisitions/create, /edit/{id})
+    Phụ trách: Nguyễn Huy Hoàng (HoangNH) - Iteration 1
+    
+    Chức năng chính:
+      - Nhập thông tin yêu cầu tuyển dụng (Vị trí, Phòng ban, Đợt tuyển, Hình thức, Lương...)
+      - Thiết lập tiêu chí sàng lọc CV động (Thêm/xóa hàng, chọn loại, trọng số tổng 100%, bắt buộc)
+      - Lưu bản nháp (Draft) hoặc Gửi lên Giám đốc phê duyệt (Pending_Director)
+      - Hiển thị danh sách lỗi validation (Client-side & Server-side BindingResult)
+    =============================================================================
+-->
 
-<head
-    th:replace="~{fragments/head :: interfaceHead(${isEdit ? 'Chỉnh sửa yêu cầu tuyển dụng' : 'Tạo yêu cầu tuyển dụng'}, ~{::pageStyles})}">
+<head th:replace="~{fragments/head :: interfaceHead(${isEdit ? 'Chỉnh sửa yêu cầu tuyển dụng' : 'Tạo yêu cầu tuyển dụng'}, ~{::pageStyles})}">
     <th:block th:fragment="pageStyles">
+        <!-- CSS dùng chung và CSS chuyên biệt cho biểu mẫu -->
         <link rel="stylesheet" th:href="@{/css/requisition-shared.css}">
         <link rel="stylesheet" th:href="@{/css/requisition-form.css}">
+        <!-- JS điều khiển bảng tiêu chí động, đếm ký tự và validate tổng 100% -->
         <script th:src="@{/js/requisitions.js}" defer></script>
     </th:block>
 </head>
 
 <body class="rms-app req-app req-form-page">
     <div class="page-wrapper">
+        <!-- Sidebar thanh điều hướng -->
         <aside th:replace="~{fragments/sidebar :: workspace('requisitions', ${viewerRole})}"></aside>
+
         <div class="main-content">
+            <!-- Header góc trên chứa thông tin tài khoản -->
             <header th:replace="~{fragments/workspace-header :: header(${viewerRole}, ${viewerName})}"></header>
+
             <main id="main" tabindex="-1" class="page-content">
                 <div class="container">
+
+                    <!-- 1. Thanh tiêu đề trang & Hướng dẫn nhập liệu -->
                     <header class="requisition-page-intro">
-                        <nav
-                            th:replace="~{fragments/requisition :: breadcrumb(current=${isEdit ? 'Chỉnh sửa' : 'Tạo mới'})}">
-                        </nav>
-                        <h1 th:text="${isEdit ? 'Chỉnh sửa yêu cầu tuyển dụng' : 'Tạo yêu cầu tuyển dụng'}">Tạo yêu cầu
-                            tuyển dụng</h1>
+                        <nav th:replace="~{fragments/requisition :: breadcrumb(current=${isEdit ? 'Chỉnh sửa' : 'Tạo mới'})}"></nav>
+                        <h1 th:text="${isEdit ? 'Chỉnh sửa yêu cầu tuyển dụng' : 'Tạo yêu cầu tuyển dụng'}">Tạo yêu cầu tuyển dụng</h1>
                         <p class="requisition-page-description"
                             th:text="${isEdit ? 'Cập nhật thông tin chi tiết bên dưới, sau đó lưu bản nháp hoặc gửi lên Giám đốc phê duyệt.' : 'Điền đầy đủ thông tin bên dưới để lưu bản nháp hoặc gửi yêu cầu tuyển dụng mới.'}">
                         </p>
-                        <p class="field-help">Các trường có dấu <span class="required-asterisk">*</span> là bắt buộc khi
-                            gửi duyệt. Bạn có thể lưu bản nháp khi chưa điền đầy đủ.
-                        </p>
+                        <p class="field-help">Các trường có dấu <span class="required-asterisk">*</span> là bắt buộc khi gửi duyệt. Bạn có thể lưu bản nháp khi chưa điền đầy đủ.</p>
                     </header>
+
+                    <!-- 2. Biểu mẫu chính (Form) -->
                     <form class="form-container" id="requisition-form" th:object="${requisitionDto}"
                         th:action="${isEdit} ? @{/requisitions/edit/{id}(id=${requisitionId})} : @{/requisitions/create}"
                         method="post">
+                        
+                        <!-- Trường ẩn giữ thông tin khi tạo mới -->
                         <th:block th:unless="${isEdit}">
                             <input type="hidden" th:field="*{departmentId}">
                             <input type="hidden" th:field="*{recruitmentRound}">
                         </th:block>
+
+                        <!-- Thông báo sao chép biểu mẫu thành công (nếu có) -->
                         <p class="notice" th:if="${copyNotice}" th:text="${copyNotice}"></p>
 
+                        <!-- Khối hiển thị tổng hợp lỗi validation từ server trả về -->
                         <section th:if="${#fields.hasAnyErrors()}" id="validation-summary" role="alert" tabindex="-1"
                             class="alert alert-danger">
                             <p>Vui lòng kiểm tra lại các thông tin sau:</p>
@@ -47,34 +69,34 @@
                             </ul>
                         </section>
 
-                        <!-- Thông tin cơ bản -->
+                        <!-- BƯỚC 1: THÔNG TIN CƠ BẢN CỦA YÊU CẦU -->
                         <div class="form-card">
                             <div class="form-card-header">
                                 <h2>Thông tin cơ bản</h2>
                             </div>
 
                             <div class="form-grid">
+                                <!-- Vị trí tuyển dụng -->
                                 <div class="form-group">
-                                    <label for="title">Vị trí tuyển dụng <span
-                                            class="required-asterisk">*</span></label>
+                                    <label for="title">Vị trí tuyển dụng <span class="required-asterisk">*</span></label>
                                     <input class="form-control-custom" type="text" th:field="*{title}"
                                         th:attr="aria-invalid=${#fields.hasErrors('title')}"
                                         aria-describedby="title-error" placeholder="Nhập vị trí tuyển dụng"
-                                        maxlength="200" required><small id="title-error" class="field-error"
+                                        maxlength="200" required>
+                                    <small id="title-error" class="field-error"
                                         th:text="${#fields.hasErrors('title') ? #strings.listJoin(#fields.errors('title'), '; ') : ''}"></small>
                                 </div>
 
+                                <!-- Phòng ban & Đợt tuyển (khi ở chế độ chỉnh sửa) -->
                                 <th:block th:if="${isEdit}">
                                     <div class="form-group" th:if="${#lists.size(departments) == 1}">
-                                        <label for="departmentId">Phòng ban <span
-                                                class="required-asterisk">*</span></label>
+                                        <label for="departmentId">Phòng ban <span class="required-asterisk">*</span></label>
                                         <input type="hidden" th:field="*{departmentId}">
                                         <input class="form-control-custom" type="text"
                                             th:value="${departments[0].departmentName}" readonly>
                                     </div>
                                     <div class="form-group" th:if="${#lists.size(departments) > 1}">
-                                        <label for="departmentId">Phòng ban <span
-                                                class="required-asterisk">*</span></label>
+                                        <label for="departmentId">Phòng ban <span class="required-asterisk">*</span></label>
                                         <select class="form-control-custom" th:field="*{departmentId}"
                                             th:attr="aria-invalid=${#fields.hasErrors('departmentId')}"
                                             aria-describedby="departmentId-error" required>
@@ -87,95 +109,93 @@
                                             th:text="${#fields.hasErrors('departmentId') ? #strings.listJoin(#fields.errors('departmentId'), '; ') : ''}"></small>
                                     </div>
                                     <div class="form-group" th:if="${#lists.isEmpty(departments)}">
-                                        <label for="departmentId">Phòng ban <span
-                                                class="required-asterisk">*</span></label>
+                                        <label for="departmentId">Phòng ban <span class="required-asterisk">*</span></label>
                                         <input type="hidden" th:field="*{departmentId}">
-                                        <input class="form-control-custom" type="text" value="Chưa có phòng ban quản lý"
-                                            disabled>
+                                        <input class="form-control-custom" type="text" value="Chưa có phòng ban quản lý" disabled>
                                     </div>
 
                                     <div class="form-group">
-                                        <label for="recruitmentRound">Đợt tuyển dụng <span
-                                                class="required-asterisk">*</span></label>
+                                        <label for="recruitmentRound">Đợt tuyển dụng <span class="required-asterisk">*</span></label>
                                         <input class="form-control-custom" type="number" th:field="*{recruitmentRound}"
                                             min="1" max="100" placeholder="Ví dụ: 1" required>
                                     </div>
                                 </th:block>
 
+                                <!-- Hình thức làm việc -->
                                 <div class="form-group">
-                                    <label for="employmentType">Hình thức làm việc <span
-                                            class="required-asterisk">*</span></label>
+                                    <label for="employmentType">Hình thức làm việc <span class="required-asterisk">*</span></label>
                                     <select class="form-control-custom" th:field="*{employmentType}"
                                         th:attr="aria-invalid=${#fields.hasErrors('employmentType')}"
                                         aria-describedby="employmentType-error" required>
                                         <option value="">Chọn hình thức làm việc</option>
-                                        <option value="Full-time" th:selected="*{employmentType == 'Full-time'}">Toàn
-                                            thời gian</option>
-                                        <option value="Part-time" th:selected="*{employmentType == 'Part-time'}">Bán
-                                            thời gian</option>
-                                        <option value="Internship" th:selected="*{employmentType == 'Internship'}">Thực
-                                            tập</option>
-                                        <option value="Contract" th:selected="*{employmentType == 'Contract'}">Hợp đồng
-                                        </option>
-                                    </select><small id="employmentType-error" class="field-error"
+                                        <option value="Full-time" th:selected="*{employmentType == 'Full-time'}">Toàn thời gian</option>
+                                        <option value="Part-time" th:selected="*{employmentType == 'Part-time'}">Bán thời gian</option>
+                                        <option value="Internship" th:selected="*{employmentType == 'Internship'}">Thực tập</option>
+                                        <option value="Contract" th:selected="*{employmentType == 'Contract'}">Hợp đồng</option>
+                                    </select>
+                                    <small id="employmentType-error" class="field-error"
                                         th:text="${#fields.hasErrors('employmentType') ? #strings.listJoin(#fields.errors('employmentType'), '; ') : ''}"></small>
                                 </div>
+
+                                <!-- Mô hình làm việc -->
                                 <div class="form-group">
-                                    <label for="workModel">Mô hình làm việc <span
-                                            class="required-asterisk">*</span></label>
+                                    <label for="workModel">Mô hình làm việc <span class="required-asterisk">*</span></label>
                                     <select class="form-control-custom" th:field="*{workModel}"
                                         th:attr="aria-invalid=${#fields.hasErrors('workModel')}"
                                         aria-describedby="workModel-error" required>
                                         <option value="">Chọn mô hình làm việc</option>
-                                        <option value="On-site" th:selected="*{workModel == 'On-site'}">Trực tiếp
-                                        </option>
+                                        <option value="On-site" th:selected="*{workModel == 'On-site'}">Trực tiếp</option>
                                         <option value="Remote" th:selected="*{workModel == 'Remote'}">Từ xa</option>
-                                        <option value="Hybrid" th:selected="*{workModel == 'Hybrid'}">Kết hợp (Trực tiếp
-                                            & Từ xa)</option>
-                                    </select><small id="workModel-error" class="field-error"
+                                        <option value="Hybrid" th:selected="*{workModel == 'Hybrid'}">Kết hợp (Trực tiếp & Từ xa)</option>
+                                    </select>
+                                    <small id="workModel-error" class="field-error"
                                         th:text="${#fields.hasErrors('workModel') ? #strings.listJoin(#fields.errors('workModel'), '; ') : ''}"></small>
                                 </div>
 
+                                <!-- Ngày bắt đầu dự kiến -->
                                 <div class="form-group">
-                                    <label for="expectedStartDate">Ngày bắt đầu dự kiến <span
-                                            class="required-asterisk">*</span></label>
+                                    <label for="expectedStartDate">Ngày bắt đầu dự kiến <span class="required-asterisk">*</span></label>
                                     <input class="form-control-custom" type="date" th:field="*{expectedStartDate}"
                                         th:attr="aria-invalid=${#fields.hasErrors('expectedStartDate')}"
-                                        aria-describedby="expectedStartDate-error" required><small
-                                        id="expectedStartDate-error" class="field-error"
+                                        aria-describedby="expectedStartDate-error" required>
+                                    <small id="expectedStartDate-error" class="field-error"
                                         th:text="${#fields.hasErrors('expectedStartDate') ? #strings.listJoin(#fields.errors('expectedStartDate'), '; ') : ''}"></small>
                                 </div>
+
+                                <!-- Thời gian thử việc -->
                                 <div class="form-group">
-                                    <label for="probationDuration">Thời gian thử việc (ngày) <span
-                                            class="required-asterisk">*</span></label>
+                                    <label for="probationDuration">Thời gian thử việc (ngày) <span class="required-asterisk">*</span></label>
                                     <input class="form-control-custom" type="number" th:field="*{probationDuration}"
                                         th:attr="aria-invalid=${#fields.hasErrors('probationDuration')}"
                                         aria-describedby="probationDuration-error" min="1" step="1"
                                         placeholder="Ví dụ: 60"
-                                        onkeydown="return event.key !== 'e' && event.key !== 'E' && event.key !== '+' && event.key !== '-' && event.key !== '.'"><small
-                                        id="probationDuration-error" class="field-error"
+                                        onkeydown="return event.key !== 'e' && event.key !== 'E' && event.key !== '+' && event.key !== '-' && event.key !== '.'">
+                                    <small id="probationDuration-error" class="field-error"
                                         th:text="${#fields.hasErrors('probationDuration') ? #strings.listJoin(#fields.errors('probationDuration'), '; ') : ''}"></small>
                                 </div>
 
+                                <!-- Số lượng tuyển dụng -->
                                 <div class="form-group">
-                                    <label for="numberOfPositions">Số lượng tuyển dụng <span
-                                            class="required-asterisk">*</span></label>
+                                    <label for="numberOfPositions">Số lượng tuyển dụng <span class="required-asterisk">*</span></label>
                                     <input class="form-control-custom" type="number" th:field="*{numberOfPositions}"
                                         th:attr="aria-invalid=${#fields.hasErrors('numberOfPositions')}"
-                                        aria-describedby="numberOfPositions-error" value="1" min="1" required><small
-                                        id="numberOfPositions-error" class="field-error"
+                                        aria-describedby="numberOfPositions-error" value="1" min="1" required>
+                                    <small id="numberOfPositions-error" class="field-error"
                                         th:text="${#fields.hasErrors('numberOfPositions') ? #strings.listJoin(#fields.errors('numberOfPositions'), '; ') : ''}"></small>
                                 </div>
+
+                                <!-- Địa điểm làm việc chi tiết -->
                                 <div class="form-group">
-                                    <label for="workLocation">Địa điểm làm việc <span
-                                            class="required-asterisk">*</span></label>
+                                    <label for="workLocation">Địa điểm làm việc <span class="required-asterisk">*</span></label>
                                     <input class="form-control-custom" type="text" th:field="*{workLocation}"
                                         th:attr="aria-invalid=${#fields.hasErrors('workLocation')}"
                                         aria-describedby="workLocation-error"
-                                        placeholder="Nhập địa chỉ làm việc chi tiết" maxlength="255" required><small
-                                        id="workLocation-error" class="field-error"
+                                        placeholder="Nhập địa chỉ làm việc chi tiết" maxlength="255" required>
+                                    <small id="workLocation-error" class="field-error"
                                         th:text="${#fields.hasErrors('workLocation') ? #strings.listJoin(#fields.errors('workLocation'), '; ') : ''}"></small>
                                 </div>
+
+                                <!-- Yêu cầu giới tính -->
                                 <div class="form-group">
                                     <label for="gender">Yêu cầu giới tính</label>
                                     <select class="form-control-custom" th:field="*{gender}"
@@ -184,12 +204,12 @@
                                         <option value="Any" th:selected="*{gender == 'Any'}">Không yêu cầu</option>
                                         <option value="Male" th:selected="*{gender == 'Male'}">Nam</option>
                                         <option value="Female" th:selected="*{gender == 'Female'}">Nữ</option>
-                                    </select><small id="gender-error" class="field-error"
+                                    </select>
+                                    <small id="gender-error" class="field-error"
                                         th:text="${#fields.hasErrors('gender') ? #strings.listJoin(#fields.errors('gender'), '; ') : ''}"></small>
                                 </div>
 
-
-
+                                <!-- Khoảng mức lương đề xuất (Từ mức - Đến mức VNĐ) -->
                                 <div class="form-group form-group-full">
                                     <span class="form-label">Mức lương đề xuất (VNĐ)</span>
                                     <div class="salary-range">
@@ -204,55 +224,52 @@
                             </div>
                         </div>
 
-                        <!-- Lý do tuyển dụng -->
+                        <!-- BƯỚC 2: LÝ DO TUYỂN DỤNG -->
                         <div class="form-card">
                             <div class="form-card-header">
-                                <h2><label for="reasonForHiring">Lý
-                                        do tuyển dụng <span class="required-asterisk">*</span></label></h2>
+                                <h2><label for="reasonForHiring">Lý do tuyển dụng <span class="required-asterisk">*</span></label></h2>
                             </div>
                             <textarea class="textarea-custom" th:field="*{reasonForHiring}"
                                 th:attr="aria-invalid=${#fields.hasErrors('reasonForHiring')}"
                                 aria-describedby="reasonForHiring-count reasonForHiring-error"
                                 placeholder="Nhập lý do tuyển dụng (ví dụ: bổ sung nhân sự, mở rộng quy mô, thay thế nhân sự cũ...)"
                                 maxlength="2000" required></textarea>
-                            <div class="char-counter" id="reasonForHiring-count">0/2000</div><small
-                                id="reasonForHiring-error" class="field-error"
+                            <div class="char-counter" id="reasonForHiring-count">0/2000</div>
+                            <small id="reasonForHiring-error" class="field-error"
                                 th:text="${#fields.hasErrors('reasonForHiring') ? #strings.listJoin(#fields.errors('reasonForHiring'), '; ') : ''}"></small>
                         </div>
 
-                        <!-- Mô tả công việc -->
+                        <!-- BƯỚC 3: MÔ TẢ CÔNG VIỆC -->
                         <div class="form-card">
                             <div class="form-card-header">
-                                <h2><label for="jobDescription">Mô
-                                        tả công việc <span class="required-asterisk">*</span></label></h2>
+                                <h2><label for="jobDescription">Mô tả công việc <span class="required-asterisk">*</span></label></h2>
                             </div>
                             <textarea class="textarea-custom" th:field="*{jobDescription}"
                                 th:attr="aria-invalid=${#fields.hasErrors('jobDescription')}"
                                 aria-describedby="jobDescription-count jobDescription-error"
                                 placeholder="Nhập mô tả chi tiết trách nhiệm và công việc..." maxlength="2000"
                                 required></textarea>
-                            <div class="char-counter" id="jobDescription-count">0/2000</div><small
-                                id="jobDescription-error" class="field-error"
+                            <div class="char-counter" id="jobDescription-count">0/2000</div>
+                            <small id="jobDescription-error" class="field-error"
                                 th:text="${#fields.hasErrors('jobDescription') ? #strings.listJoin(#fields.errors('jobDescription'), '; ') : ''}"></small>
                         </div>
 
-                        <!-- Yêu cầu ứng viên -->
+                        <!-- BƯỚC 4: YÊU CẦU ỨNG VIÊN -->
                         <div class="form-card">
                             <div class="form-card-header">
-                                <h2><label for="requirementDetails">Yêu cầu ứng viên <span
-                                            class="required-asterisk">*</span></label></h2>
+                                <h2><label for="requirementDetails">Yêu cầu ứng viên <span class="required-asterisk">*</span></label></h2>
                             </div>
                             <textarea class="textarea-custom" th:field="*{requirementDetails}"
                                 th:attr="aria-invalid=${#fields.hasErrors('requirementDetails')}"
                                 aria-describedby="requirementDetails-count requirementDetails-error"
                                 placeholder="Nhập yêu cầu đối với ứng viên (kỹ năng, kinh nghiệm, bằng cấp...)..."
                                 maxlength="2000" required></textarea>
-                            <div class="char-counter" id="requirementDetails-count">0/2000</div><small
-                                id="requirementDetails-error" class="field-error"
+                            <div class="char-counter" id="requirementDetails-count">0/2000</div>
+                            <small id="requirementDetails-error" class="field-error"
                                 th:text="${#fields.hasErrors('requirementDetails') ? #strings.listJoin(#fields.errors('requirementDetails'), '; ') : ''}"></small>
                         </div>
 
-                        <!-- Tiêu chí sàng lọc hồ sơ -->
+                        <!-- BƯỚC 5: TIÊU CHÍ SÀNG LỌC HỒ SƠ ỨNG VIÊN -->
                         <div class="form-card">
                             <div class="form-card-header header-actions">
                                 <div class="criteria-heading">
@@ -260,15 +277,14 @@
                                     <small class="field-error"
                                         th:text="${#fields.hasErrors('screeningCriteria') ? #strings.listJoin(#fields.errors('screeningCriteria'), '; ') : ''}"></small>
                                 </div>
-                                <button type="button" class="btn-add-criteria" id="btn-add-criteria">+ Thêm tiêu
-                                    chí</button>
+                                <button type="button" class="btn-add-criteria" id="btn-add-criteria">+ Thêm tiêu chí</button>
                             </div>
-                            <p class="field-help criteria-help">Thêm ít nhất một tiêu chí. Tổng trọng số của các tiêu
-                                chí phải đạt đúng 100% trước khi gửi duyệt.</p>
+                            <p class="field-help criteria-help">Thêm ít nhất một tiêu chí. Tổng trọng số của các tiêu chí phải đạt đúng 100% trước khi gửi duyệt.</p>
                             <p class="field-error" id="criteria-error" role="alert" hidden></p>
                             <p class="table-scroll-note" hidden>Cuộn ngang để chỉnh sửa tất cả các trường tiêu chí.</p>
-                            <div class="table-wrapper criteria-scroll" role="region" aria-label="Tiêu chí sàng lọc"
-                                tabindex="0">
+
+                            <!-- Bảng tiêu chí -->
+                            <div class="table-wrapper criteria-scroll" role="region" aria-label="Tiêu chí sàng lọc" tabindex="0">
                                 <table class="criteria-table-custom">
                                     <thead>
                                         <tr>
@@ -282,57 +298,54 @@
                                         </tr>
                                     </thead>
                                     <tbody id="criteria-rows">
+                                        <!-- Danh sách tiêu chí hiện có từ DTO -->
                                         <tr th:each="criterion, row : *{screeningCriteria}">
                                             <td class="row-index" th:text="${row.count}">1</td>
                                             <td>
-                                                <input type="hidden"
-                                                    th:field="*{screeningCriteria[__${row.index}__].criteriaId}">
+                                                <input type="hidden" th:field="*{screeningCriteria[__${row.index}__].criteriaId}">
                                                 <input class="form-control-custom"
                                                     th:field="*{screeningCriteria[__${row.index}__].criteriaName}"
                                                     placeholder="Nhập tên tiêu chí" maxlength="150" required>
                                             </td>
                                             <td>
                                                 <select class="form-control-custom"
-                                                    th:field="*{screeningCriteria[__${row.index}__].criteriaType}"
-                                                    required>
+                                                    th:field="*{screeningCriteria[__${row.index}__].criteriaType}" required>
                                                     <option value="">Chọn loại tiêu chí</option>
-                                                    <option value="Education"
-                                                        th:selected="*{screeningCriteria[__${row.index}__].criteriaType == 'Education'}">
-                                                        Học vấn</option>
-                                                    <option value="Experience"
-                                                        th:selected="*{screeningCriteria[__${row.index}__].criteriaType == 'Experience'}">
-                                                        Kinh nghiệm</option>
-                                                    <option value="Skill"
-                                                        th:selected="*{screeningCriteria[__${row.index}__].criteriaType == 'Skill'}">
-                                                        Kỹ năng</option>
-                                                    <option value="Knockout"
-                                                        th:selected="*{screeningCriteria[__${row.index}__].criteriaType == 'Knockout'}">
-                                                        Điều kiện loại trừ</option>
+                                                    <option value="Education" th:selected="*{screeningCriteria[__${row.index}__].criteriaType == 'Education'}">Học vấn</option>
+                                                    <option value="Experience" th:selected="*{screeningCriteria[__${row.index}__].criteriaType == 'Experience'}">Kinh nghiệm</option>
+                                                    <option value="Skill" th:selected="*{screeningCriteria[__${row.index}__].criteriaType == 'Skill'}">Kỹ năng</option>
+                                                    <option value="Knockout" th:selected="*{screeningCriteria[__${row.index}__].criteriaType == 'Knockout'}">Điều kiện loại trừ</option>
                                                 </select>
                                             </td>
-                                            <td><input class="form-control-custom"
+                                            <td>
+                                                <input class="form-control-custom"
                                                     th:field="*{screeningCriteria[__${row.index}__].requiredValue}"
-                                                    placeholder="Nhập giá trị yêu cầu" maxlength="255" required></td>
-                                            <td><input class="form-control-custom" type="number"
+                                                    placeholder="Nhập giá trị yêu cầu" maxlength="255" required>
+                                            </td>
+                                            <td>
+                                                <input class="form-control-custom" type="number"
                                                     th:field="*{screeningCriteria[__${row.index}__].weight}" min="0.01"
-                                                    max="100" step="0.01" required></td>
+                                                    max="100" step="0.01" required>
+                                            </td>
                                             <td>
                                                 <div class="switch-label">
                                                     <label class="switch">
-                                                        <input type="checkbox"
-                                                            th:field="*{screeningCriteria[__${row.index}__].isMandatory}">
+                                                        <input type="checkbox" th:field="*{screeningCriteria[__${row.index}__].isMandatory}">
                                                         <span class="slider"></span>
                                                     </label>
                                                     <span class="switch-text">Không</span>
                                                 </div>
                                             </td>
-                                            <td><button type="button" class="btn-trash" data-remove-criterion
+                                            <td>
+                                                <button type="button" class="btn-trash" data-remove-criterion
                                                     aria-label="Xóa tiêu chí"><span aria-hidden="true">×</span></button>
                                             </td>
                                         </tr>
                                     </tbody>
                                 </table>
                             </div>
+
+                            <!-- Mẫu Template hàng tiêu chí khi bấm nút Thêm tiêu chí qua Javascript -->
                             <template id="criteria-template">
                                 <tr>
                                     <td class="row-index"></td>
@@ -352,31 +365,34 @@
                                             <option value="Knockout">Điều kiện loại trừ</option>
                                         </select>
                                     </td>
-                                    <td><input class="form-control-custom"
+                                    <td>
+                                        <input class="form-control-custom"
                                             name="screeningCriteria[__INDEX__].requiredValue"
-                                            placeholder="Nhập giá trị yêu cầu" maxlength="255" required></td>
-                                    <td><input class="form-control-custom" type="number"
-                                            name="screeningCriteria[__INDEX__].weight" min="0.01" max="100" step="0.01"
-                                            required></td>
+                                            placeholder="Nhập giá trị yêu cầu" maxlength="255" required>
+                                    </td>
+                                    <td>
+                                        <input class="form-control-custom" type="number"
+                                            name="screeningCriteria[__INDEX__].weight" min="0.01" max="100" step="0.01" required>
+                                    </td>
                                     <td>
                                         <div class="switch-label">
                                             <label class="switch">
-                                                <input type="hidden" name="_screeningCriteria[__INDEX__].isMandatory"
-                                                    value="on"><input type="checkbox"
-                                                    name="screeningCriteria[__INDEX__].isMandatory" value="true">
+                                                <input type="hidden" name="_screeningCriteria[__INDEX__].isMandatory" value="on">
+                                                <input type="checkbox" name="screeningCriteria[__INDEX__].isMandatory" value="true">
                                                 <span class="slider"></span>
                                             </label>
                                             <span class="switch-text">Không</span>
                                         </div>
                                     </td>
-                                    <td><button type="button" class="btn-trash" data-remove-criterion
+                                    <td>
+                                        <button type="button" class="btn-trash" data-remove-criterion
                                             aria-label="Xóa tiêu chí"><span aria-hidden="true">×</span></button>
                                     </td>
                                 </tr>
                             </template>
                         </div>
 
-                        <!-- Thao tác dưới form -->
+                        <!-- 3. Thanh nút hành động chân trang (Hủy / Lưu nháp / Gửi duyệt) -->
                         <div class="form-footer-actions">
                             <a class="btn-footer btn-cancel-custom"
                                 th:href="${isEdit} ? @{/requisitions/{id}(id=${requisitionId})} : @{/requisitions}">Hủy</a>

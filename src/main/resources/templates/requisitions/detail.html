@@ -1,34 +1,60 @@
 <!DOCTYPE html>
 <html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<!--
+    REQUISITIONS/DETAIL.HTML
+    =============================================================================
+    Màn hình Chi tiết Yêu cầu Tuyển dụng (/requisitions/{id})
+    Phụ trách: Nguyễn Huy Hoàng (HoangNH) - Iteration 1
+    
+    Chức năng chính:
+      - Xem thông tin chi tiết đầy đủ của một yêu cầu tuyển dụng
+      - Xem bảng tiêu chí sàng lọc hồ sơ ứng viên kèm thanh đo phần trăm trọng số
+      - Xem lịch sử hoạt động kiểm toán (Audit Activity Log dạng Accordion)
+      - Quy trình phê duyệt (Approval Workflow): Xem nhận xét duyệt / từ chối trước đó
+      - Form quyết định của Giám đốc (Director Decision Review): Phê duyệt hoặc Từ chối kèm lý do
+      - Thao tác của người tạo: Rút lại yêu cầu (Withdraw), Chỉnh sửa, Xóa yêu cầu
+      - Hộp thoại Modal xác nhận xóa
+    =============================================================================
+-->
 
 <head th:replace="~{fragments/head :: interfaceHead('Chi tiết yêu cầu tuyển dụng', ~{::pageStyles})}">
     <th:block th:fragment="pageStyles">
+        <!-- CSS dùng chung và CSS chuyên biệt cho trang chi tiết -->
         <link rel="stylesheet" th:href="@{/css/requisition-shared.css}">
         <link rel="stylesheet" th:href="@{/css/requisition-detail.css}">
+        <!-- JS điều khiển modal xóa, xác thực lý do từ chối -->
         <script th:src="@{/js/requisitions.js}" defer></script>
     </th:block>
 </head>
 
 <body class="rms-app req-app req-detail-page">
     <div class="page-wrapper">
+        <!-- Sidebar thanh điều hướng -->
         <aside th:replace="~{fragments/sidebar :: workspace('requisitions', ${viewerRole})}"></aside>
+
         <div class="main-content">
+            <!-- Header góc trên chứa thông tin tài khoản -->
             <header th:replace="~{fragments/workspace-header :: header(${viewerRole}, ${viewerName})}"></header>
+
             <main id="main" tabindex="-1" class="page-content">
                 <div class="container">
+
+                    <!-- 1. Tiêu đề trang & Các nút thao tác nhanh phía trên -->
                     <header class="requisition-page-intro">
                         <nav th:replace="~{fragments/requisition :: breadcrumb(current='Chi tiết')}"></nav>
+                        
                         <div class="requisition-detail-heading">
                             <div class="requisition-heading-copy">
                                 <div class="requisition-title-row">
                                     <h1 th:text="${req.title}">Chi tiết yêu cầu tuyển dụng</h1>
-                                    <span class="round-badge"
-                                        th:text="|Đợt ${req.recruitmentRound}|">Đợt 1</span>
+                                    <span class="round-badge" th:text="|Đợt ${req.recruitmentRound}|">Đợt 1</span>
                                     <span class="requisition-status" th:attr="data-status=${req.approvalStatus}"
                                         th:title="${req.approvalStatus == 'Pending_Director' ? 'Đang chờ Giám đốc duyệt' : (req.approvalStatus == 'Draft' ? 'Bản nháp' : (req.approvalStatus == 'Approved' ? 'Đã duyệt' : 'Bị từ chối'))}"
                                         th:text="${req.approvalStatus == 'Pending_Director' ? 'Chờ duyệt' : (req.approvalStatus == 'Draft' ? 'Bản nháp' : (req.approvalStatus == 'Approved' ? 'Đã duyệt' : (req.approvalStatus == 'Rejected' ? 'Từ chối' : req.approvalStatus)))}"></span>
                                 </div>
                             </div>
+
+                            <!-- Nhóm nút thao tác góc phải -->
                             <div class="requisition-heading-actions" role="group" aria-label="Thao tác yêu cầu">
                                 <a th:href="@{/requisitions}" class="btn-outline">← Quay lại</a>
                                 <a th:if="${req.editable}" th:href="@{/requisitions/edit/{id}(id=${req.requisitionId})}"
@@ -41,10 +67,14 @@
                         </div>
                     </header>
 
+                    <!-- Thông báo kết quả thao tác (Flash message) -->
                     <th:block th:replace="~{fragments/requisition :: messages}"></th:block>
+
+                    <!-- 2. Bố cục nội dung chi tiết -->
                     <div class="detail-layout">
                         <div class="detail-main">
-                            <!-- Thông tin cơ bản -->
+
+                            <!-- KHỐI 1: THÔNG TIN CƠ BẢN -->
                             <div class="card">
                                 <div class="card-header">
                                     <h2>Thông tin cơ bản</h2>
@@ -52,14 +82,12 @@
                                 <div class="info-grid">
                                     <div class="info-item">
                                         <span class="info-label">Mã yêu cầu</span>
-                                        <span class="info-value"
-                                            style="font-family: monospace; font-weight: 700; color: var(--brand-dark);"
+                                        <span class="info-value req-code-value"
                                             th:text="${req.requisitionCode}">REQ-2026-001</span>
                                     </div>
                                     <div class="info-item">
                                         <span class="info-label">Vị trí tuyển dụng</span>
-                                        <span class="info-value" th:text="${req.title}">Chuyên viên phát triển kinh
-                                            doanh</span>
+                                        <span class="info-value" th:text="${req.title}">Chuyên viên phát triển kinh doanh</span>
                                     </div>
                                     <div class="info-item">
                                         <span class="info-label">Đợt tuyển dụng</span>
@@ -67,8 +95,7 @@
                                     </div>
                                     <div class="info-item">
                                         <span class="info-label">Phòng ban</span>
-                                        <span class="info-value" th:text="${req.departmentName}">Kinh doanh & Tiếp
-                                            thị</span>
+                                        <span class="info-value" th:text="${req.departmentName}">Kinh doanh & Tiếp thị</span>
                                     </div>
                                     <div class="info-item">
                                         <span class="info-label">Người tạo yêu cầu</span>
@@ -76,14 +103,12 @@
                                     </div>
                                     <div class="info-item">
                                         <span class="info-label">Số lượng tuyển dụng</span>
-                                        <span class="info-value"
-                                            th:text="${req.numberOfPositions ?: 'Chưa xác định'}">2</span>
+                                        <span class="info-value" th:text="${req.numberOfPositions ?: 'Chưa xác định'}">2</span>
                                     </div>
                                     <div class="info-item">
                                         <span class="info-label">Hình thức làm việc</span>
                                         <span class="info-value"
-                                            th:text="${req.employmentType == 'Full-time' ? 'Toàn thời gian' : (req.employmentType == 'Part-time' ? 'Bán thời gian' : (req.employmentType == 'Internship' ? 'Thực tập' : (req.employmentType == 'Contract' ? 'Hợp đồng' : (req.employmentType ?: 'Chưa xác định'))))}">Toàn
-                                            thời gian</span>
+                                            th:text="${req.employmentType == 'Full-time' ? 'Toàn thời gian' : (req.employmentType == 'Part-time' ? 'Bán thời gian' : (req.employmentType == 'Internship' ? 'Thực tập' : (req.employmentType == 'Contract' ? 'Hợp đồng' : (req.employmentType ?: 'Chưa xác định'))))}">Toàn thời gian</span>
                                     </div>
                                     <div class="info-item">
                                         <span class="info-label">Mức lương (VNĐ)</span>
@@ -94,20 +119,17 @@
                                                 th:text="|Từ ${#numbers.formatDecimal(req.minSalary, 1, 'COMMA', 0, 'POINT')}|"></span>
                                             <span th:if="${req.minSalary == null and req.maxSalary != null}"
                                                 th:text="|Lên đến ${#numbers.formatDecimal(req.maxSalary, 1, 'COMMA', 0, 'POINT')}|"></span>
-                                            <span th:if="${req.minSalary == null and req.maxSalary == null}">Thỏa
-                                                thuận</span>
+                                            <span th:if="${req.minSalary == null and req.maxSalary == null}">Thỏa thuận</span>
                                         </span>
                                     </div>
                                     <div class="info-item">
                                         <span class="info-label">Ngày bắt đầu dự kiến</span>
                                         <span class="info-value"
-                                            th:text="${req.expectedStartDate != null ? #temporals.format(req.expectedStartDate, 'dd/MM/yyyy') : 'Chưa xác định'}">Chưa
-                                            xác định</span>
+                                            th:text="${req.expectedStartDate != null ? #temporals.format(req.expectedStartDate, 'dd/MM/yyyy') : 'Chưa xác định'}">Chưa xác định</span>
                                     </div>
                                     <div class="info-item">
                                         <span class="info-label">Địa điểm làm việc</span>
-                                        <span class="info-value" th:text="${req.workLocation ?: 'Chưa xác định'}">Chưa
-                                            xác định</span>
+                                        <span class="info-value" th:text="${req.workLocation ?: 'Chưa xác định'}">Chưa xác định</span>
                                     </div>
                                     <div class="info-item" th:if="${req.gender != null}">
                                         <span class="info-label">Yêu cầu giới tính</span>
@@ -127,7 +149,7 @@
                                 </div>
                             </div>
 
-                            <!-- Lý do tuyển dụng -->
+                            <!-- KHỐI 2: LÝ DO TUYỂN DỤNG -->
                             <div class="card">
                                 <div class="card-header">
                                     <h2>Lý do tuyển dụng</h2>
@@ -135,7 +157,7 @@
                                 <p class="text-content" th:text="${req.reasonForHiring ?: 'Chưa xác định'}"></p>
                             </div>
 
-                            <!-- Mô tả công việc -->
+                            <!-- KHỐI 3: MÔ TẢ CÔNG VIỆC -->
                             <div class="card">
                                 <div class="card-header">
                                     <h2>Mô tả công việc</h2>
@@ -143,7 +165,7 @@
                                 <p class="text-content" th:text="${req.jobDescription ?: 'Chưa xác định'}"></p>
                             </div>
 
-                            <!-- Yêu cầu ứng viên -->
+                            <!-- KHỐI 4: YÊU CẦU ỨNG VIÊN -->
                             <div class="card">
                                 <div class="card-header">
                                     <h2>Yêu cầu ứng viên</h2>
@@ -151,14 +173,13 @@
                                 <p class="text-content" th:text="${req.requirementDetails ?: 'Chưa xác định'}"></p>
                             </div>
 
-                            <!-- Tiêu chí sàng lọc hồ sơ -->
+                            <!-- KHỐI 5: TIÊU CHÍ SÀNG LỌC HỒ SƠ -->
                             <div class="card">
                                 <div class="card-header">
                                     <h2>Tiêu chí sàng lọc hồ sơ</h2>
                                 </div>
                                 <p class="table-scroll-note" hidden>Cuộn ngang để xem tất cả các tiêu chí.</p>
-                                <div class="table-wrapper criteria-scroll" role="region" aria-label="Tiêu chí sàng lọc"
-                                    tabindex="0">
+                                <div class="table-wrapper criteria-scroll" role="region" aria-label="Tiêu chí sàng lọc" tabindex="0">
                                     <table class="criteria-table">
                                         <thead>
                                             <tr>
@@ -174,11 +195,10 @@
                                             <tr th:each="criterion, row : ${req.screeningCriteria}">
                                                 <td th:text="${row.count}">1</td>
                                                 <td th:text="${criterion.criteriaName ?: 'Chưa xác định'}"></td>
-                                                <td
-                                                    th:text="${criterion.criteriaType == 'Education' ? 'Học vấn' : (criterion.criteriaType == 'Experience' ? 'Kinh nghiệm' : (criterion.criteriaType == 'Skill' ? 'Kỹ năng' : (criterion.criteriaType == 'Knockout' ? 'Điều kiện loại trừ' : (criterion.criteriaType ?: 'Chưa xác định'))))}">
-                                                </td>
+                                                <td th:text="${criterion.criteriaType == 'Education' ? 'Học vấn' : (criterion.criteriaType == 'Experience' ? 'Kinh nghiệm' : (criterion.criteriaType == 'Skill' ? 'Kỹ năng' : (criterion.criteriaType == 'Knockout' ? 'Điều kiện loại trừ' : (criterion.criteriaType ?: 'Chưa xác định'))))}"></td>
                                                 <td th:text="${criterion.requiredValue ?: 'Chưa xác định'}"></td>
                                                 <td>
+                                                    <!-- Hiển thị thanh đo trực quan phần trăm trọng số -->
                                                     <div class="weight-cell">
                                                         <progress class="weight-meter" max="100"
                                                             th:value="${criterion.weight ?: 0}"
@@ -188,14 +208,12 @@
                                                     </div>
                                                 </td>
                                                 <td>
-                                                    <span
-                                                        th:class="${criterion.isMandatory ? 'badge badge-yes' : 'badge badge-no'}"
+                                                    <span th:class="${criterion.isMandatory ? 'badge badge-yes' : 'badge badge-no'}"
                                                         th:text="${criterion.isMandatory ? 'Có' : 'Không'}">Không</span>
                                                 </td>
                                             </tr>
                                             <tr th:if="${#lists.isEmpty(req.screeningCriteria)}">
-                                                <td colspan="6" class="empty-state">Chưa có tiêu chí sàng lọc nào được
-                                                    thiết lập.</td>
+                                                <td colspan="6" class="empty-state">Chưa có tiêu chí sàng lọc nào được thiết lập.</td>
                                             </tr>
                                         </tbody>
                                     </table>
@@ -203,7 +221,7 @@
                             </div>
                         </div>
 
-                        <!-- Lịch sử hoạt động nằm ngay dưới nội dung yêu cầu -->
+                        <!-- KHỐI 6: LỊCH SỬ HOẠT ĐỘNG KIỂM TOÁN (AUDIT ACTIVITY LOG ACCORDION) -->
                         <details class="card activity-history">
                             <summary class="activity-summary">
                                 <span class="activity-summary-copy">
@@ -236,62 +254,62 @@
                             </div>
                         </details>
 
-                        <!-- Phản hồi và phê duyệt -->
+                        <!-- KHỐI 7: PHẢN HỒI VÀ QUY TRÌNH PHÊ DUYỆT (DIRECTOR APPROVAL WORKFLOW) -->
                         <section class="card detail-workflow" aria-label="Phản hồi và phê duyệt"
                             th:if="${req.decidable or !#lists.isEmpty(req.approvals)}">
 
-
-                            <!-- Lịch sử duyệt trước đó nếu có -->
+                            <!-- Lịch sử nhận xét của người duyệt trước đó -->
                             <div th:if="${!#lists.isEmpty(req.approvals)}" th:each="approval : ${req.approvals}"
                                 class="feedback-box">
-                                <span class="feedback-badge" th:text="|Phản hồi từ ${approval.approverName}|">Phản
-                                    hồi</span>
+                                <span class="feedback-badge" th:text="|Phản hồi từ ${approval.approverName}|">Phản hồi</span>
                                 <p class="activity-meta"
                                     th:text="|${approval.status == 'Approved' ? 'Đã duyệt' : (approval.status == 'Rejected' ? 'Từ chối' : approval.status)} · ${#temporals.format(approval.approvalDate, 'dd/MM/yyyy HH:mm')}|">
                                 </p>
                                 <div th:text="${approval.comments ?: 'Không có ghi chú thêm.'}"></div>
                             </div>
 
-                            <!-- Form phê duyệt dành cho Giám đốc -->
+                            <!-- Biểu mẫu quyết định dành riêng cho Giám đốc (Approve / Reject) -->
                             <div class="decision-section" th:if="${req.decidable}">
                                 <h3>Quyết định của Giám đốc</h3>
                                 <form id="decision-form"
                                     th:action="@{/requisitions/{id}/decision(id=${req.requisitionId})}" method="post">
                                     <div class="decision-field">
-                                        <label for="decision-comment">Ý kiến phản hồi <span>(bắt buộc khi từ
-                                                chối)</span></label>
+                                        <label for="decision-comment">Ý kiến phản hồi <span>(bắt buộc khi từ chối)</span></label>
                                         <textarea id="decision-comment" name="comment" rows="3" maxlength="1000"
                                             placeholder="Nhập ý kiến chỉ đạo hoặc lý do từ chối..."
                                             th:text="${decisionComment}"></textarea>
                                     </div>
                                     <div class="decision-actions">
-                                        <button type="submit" name="decision" value="reject" class="btn-outline">Từ
-                                            chối</button>
-                                        <button type="submit" name="decision" value="approve" class="btn-primary">Phê
-                                            duyệt</button>
+                                        <button type="submit" name="decision" value="reject" class="btn-outline">Từ chối</button>
+                                        <button type="submit" name="decision" value="approve" class="btn-primary">Phê duyệt</button>
                                     </div>
                                 </form>
                             </div>
                         </section>
 
-                        <!-- Thao tác hành động -->
+                        <!-- KHỐI 8: THAO TÁC HÀNH ĐỘNG CỦA NGƯỜI TẠO (RÚT LẠI / SỬA / XÓA) -->
                         <div class="card" th:if="${req.editable or req.withdrawable or req.deletable}">
                             <div class="card-header">
                                 <h2>Thao tác</h2>
                             </div>
                             <div class="detail-actions">
+                                <!-- Rút lại yêu cầu tuyển dụng để chỉnh sửa trước khi Giám đốc duyệt -->
                                 <form class="withdraw-form" th:if="${req.withdrawable}"
                                     th:action="@{/requisitions/{id}/withdraw(id=${req.requisitionId})}" method="post">
                                     <button type="submit" class="btn-outline">Rút lại để chỉnh sửa</button>
                                 </form>
+
+                                <!-- Chỉnh sửa yêu cầu -->
                                 <a th:if="${req.editable}" th:href="@{/requisitions/edit/{id}(id=${req.requisitionId})}"
                                     class="btn-outline">Chỉnh sửa yêu cầu</a>
+
+                                <!-- Xóa yêu cầu -->
                                 <button th:if="${req.deletable}" type="button" class="btn-outline btn-danger"
                                     data-delete-requisition
                                     th:data-delete-url="@{/requisitions/delete/{id}(id=${req.requisitionId})}"
                                     th:data-title="${req.title}">Xóa yêu cầu</button>
-                                <p th:if="${req.editable and !req.deletable}">Không thể xóa vì yêu cầu tuyển dụng này đã
-                                    liên kết với các tin đăng tuyển.</p>
+                                
+                                <p th:if="${req.editable and !req.deletable}">Không thể xóa vì yêu cầu tuyển dụng này đã liên kết với các tin đăng tuyển.</p>
                             </div>
                         </div>
 
@@ -300,6 +318,8 @@
             </main>
         </div>
     </div>
+
+    <!-- 9. Modal xác nhận xóa yêu cầu tuyển dụng -->
     <dialog th:replace="~{fragments/requisition :: deleteDialog}"></dialog>
 </body>
 

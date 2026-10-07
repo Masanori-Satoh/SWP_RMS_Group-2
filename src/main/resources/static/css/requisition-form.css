@@ -1,87 +1,354 @@
-/* Scoped to the create/edit requisition form. */
-.req-form-page .requisition-page-intro { margin-bottom:var(--s4); }
-.req-form-page h1 { color:var(--brand-dark); }
-.req-form-page .form-card { padding:var(--s4); box-shadow:0 1px 3px rgb(37 41 35 / 8%); }
-.req-form-page .form-card-header { margin-bottom:var(--s3); }
-.req-form-page .form-card-header h2 { display:flex; align-items:center; font:600 18px/1.4 var(--sans); }
-.req-form-page .form-control-custom { min-height:44px; }
-.req-form-page .required-asterisk { color:var(--brand-dark); }
-.req-form-page .criteria-table-custom thead .required-asterisk { color:inherit; }
-.req-form-page .form-container { display:grid; gap:var(--s4); }
-.req-form-page .form-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:var(--s4); }
-.req-form-page .form-group-full { grid-column:1 / -1; }
-.req-form-page .form-group > label,
-.req-form-page .form-label { display:block; margin-bottom:var(--s2); font-size:14px; font-weight:600; }
-.req-form-page .step-badge {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: 24px;
-    height: 24px;
-    border-radius: 50%;
-    background: var(--brand-dark);
-    color: #ffffff;
-    font-size: 13px;
-    font-weight: 700;
-    margin-right: 8px;
-    flex-shrink: 0;
+/* -----------------------------------------------------------------------------
+   1. BỐ CỤC TỔNG THỂ & THẺ CARD FORM (Container & Card Layout)
+   ----------------------------------------------------------------------------- */
+
+/* Khoảng cách đệm dưới khối tiêu đề giới thiệu đầu trang */
+:is(.req-form-page, .requisition-form-page) .requisition-page-intro {
+  margin-bottom: var(--s4);
 }
-.req-form-page .salary-range { display:flex; align-items:center; gap:var(--s3); }
-.req-form-page .textarea-custom { display:block; min-height:88px; }
-.req-form-page .char-counter { color:var(--muted); font-size:13px; text-align:right; margin-top:var(--s1); }
-.req-form-page .header-actions { justify-content:space-between; flex-wrap:wrap; gap:var(--s4); margin-bottom:var(--s3); }
-.req-form-page .criteria-help { margin-bottom:var(--s4); }
-.req-form-page .criteria-table-custom { min-width:960px; border-collapse: separate; border-spacing: 0; border-radius: 6px; overflow: hidden; }
-.req-form-page .criteria-table-custom thead th {
-    background: var(--brand-dark);
-    color: #ffffff;
-    font-size: 12px;
-    font-weight: 700;
-    letter-spacing: 0.5px;
-    padding: 10px 12px;
-    border: none;
-    text-transform: uppercase;
+
+/* Tiêu đề chính h1 mang màu sắc thương hiệu đậm của Mộc RMS */
+:is(.req-form-page, .requisition-form-page) h1 {
+  color: var(--brand-dark);
 }
-.req-form-page .criteria-table-custom thead th:first-child { text-align: center; }
-.req-form-page .criteria-table-custom thead th:last-child { text-align: center; }
-.req-form-page .criteria-table-custom td:first-child { text-align: center; font-weight: 600; }
-.req-form-page .criteria-table-custom td:last-child { text-align: center; }
-.req-form-page .criteria-table-custom td { padding: 10px 12px; }
-.req-form-page .btn-add-criteria {
-    background: #ecfdf5;
-    color: #047857;
-    border: 1px solid #a7f3d0;
-    border-radius: 6px;
-    padding: 6px 14px;
-    font-weight: 600;
-    font-size: 14px;
-    cursor: pointer;
-    transition: all 0.2s;
+
+/* Thẻ Card bao quanh từng bước nội dung (nền trắng, bo tròn, đổ bóng nhẹ) */
+:is(.req-form-page, .requisition-form-page) .form-card {
+  padding: var(--s4);
+  box-shadow: 0 1px 3px rgb(37 41 35 / 8%);
 }
-.req-form-page .btn-add-criteria:hover {
-    background: #d1fae5;
-    border-color: #6ee7b7;
+
+/* Phần đầu đề mục của mỗi thẻ card */
+:is(.req-form-page, .requisition-form-page) .form-card-header {
+  margin-bottom: var(--s3);
 }
-.req-form-page .btn-trash { min-width:44px; padding:var(--s2); font-size:24px; background:#fff; border-color:#d1d5db; color:#6b7280; }
-.req-form-page .btn-trash:hover { background:#f3f4f6; border-color:#9ca3af; }
-.req-form-page .switch-label { display:flex; align-items:center; gap:var(--s2); white-space:nowrap; }
-.req-form-page .switch { display:flex; align-items:center; justify-content:center; min-width:24px; min-height:24px; cursor:pointer; }
-.req-form-page input[type="checkbox"] { width:18px; height:18px; accent-color:var(--brand-dark); cursor:pointer; }
-.req-form-page .slider { display:none; }
-.req-form-page .form-footer-actions { display:flex; justify-content:flex-end; gap:var(--s3); flex-wrap:wrap; padding-block:var(--s4); border-top:1px solid var(--line); }
-.req-form-page .btn-cancel-custom { margin-right:auto; background:#fff; border-color:#d1d5db; color:#6b7280; }
-.req-form-page .btn-cancel-custom:hover { background:#f9fafb; border-color:#9ca3af; color:#6b7280; }
-.req-form-page .btn-save-draft { background:#fff; border-color:var(--control-line); color:var(--brand-dark); }
-.req-form-page .btn-save-draft:hover { background:var(--brand-soft); border-color:var(--brand); }
-.req-form-page .btn-submit-director { background: var(--brand-dark); border-color: var(--brand-dark); color: #ffffff; }
-.req-form-page .btn-submit-director:hover { background: #244735; border-color: #244735; }
-.req-form-page button:disabled { color:var(--muted); background:var(--page); border-color:var(--line); cursor:not-allowed; }
-.req-form-page #validation-summary { margin:0; scroll-margin-top:128px; }
-.req-form-page #validation-summary p { font-weight:600; }
-.req-form-page #validation-summary ul { padding-left:var(--s6); margin:var(--s2) 0 0; }
-@media (max-width:600px) {
-  .req-form-page .form-grid { grid-template-columns:minmax(0,1fr); gap:var(--s4); }
-  .req-form-page .form-footer-actions { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); }
-  .req-form-page .btn-cancel-custom { margin:0; }
-  .req-form-page .btn-submit-director { grid-column:1 / -1; }
+
+:is(.req-form-page, .requisition-form-page) .form-card-header h2 {
+  display: flex;
+  align-items: center;
+  font: 600 18px/1.4 var(--sans);
+}
+
+/* Chiều cao tối thiểu chuẩn cho các trường điều khiển input/select */
+:is(.req-form-page, .requisition-form-page) .form-control-custom {
+  min-height: 44px;
+}
+
+/* Dấu sao màu đỏ/xanh biểu thị trường thông tin bắt buộc phải nhập */
+:is(.req-form-page, .requisition-form-page) .required-asterisk {
+  color: var(--brand-dark);
+}
+
+:is(.req-form-page, .requisition-form-page) .criteria-table-custom thead .required-asterisk {
+  color: inherit;
+}
+
+/* -----------------------------------------------------------------------------
+   2. LƯỚI BIỂU MẪU & CÁC Ô NHẬP LIỆU (Form Grid & Controls)
+   ----------------------------------------------------------------------------- */
+
+/* Khung chứa các nhóm trường biểu mẫu sắp xếp theo chiều dọc */
+:is(.req-form-page, .requisition-form-page) .form-container {
+  display: grid;
+  gap: var(--s4);
+}
+
+/* Lưới 2 cột chia đôi không gian cho các trường thông tin cơ bản */
+:is(.req-form-page, .requisition-form-page) .form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--s4);
+}
+
+/* Ô nhập liệu trải dài toàn bộ chiều rộng 2 cột (vd: Mô tả công việc, Yêu cầu) */
+:is(.req-form-page, .requisition-form-page) .form-group-full {
+  grid-column: 1 / -1;
+}
+
+/* Nhãn hiển thị tên trường (Label) với phông chữ rõ ràng, dễ đọc */
+:is(.req-form-page, .requisition-form-page) .form-group>label,
+:is(.req-form-page, .requisition-form-page) .form-label {
+  display: block;
+  margin-bottom: var(--s2);
+  font-size: 14px;
+  font-weight: 600;
+}
+
+/* Khối hiển thị khoảng mức lương*/
+:is(.req-form-page, .requisition-form-page) .salary-range {
+  display: flex;
+  align-items: center;
+  gap: var(--s3);
+}
+
+/* Ô nhập văn bản dài nhiều dòng tùy biến (Textarea) */
+:is(.req-form-page, .requisition-form-page) .textarea-custom {
+  display: block;
+  min-height: 120px;
+}
+
+/* Bộ đếm số lượng ký tự nhập vào (vd: 150/1000 ký tự) */
+:is(.req-form-page, .requisition-form-page) .char-counter {
+  color: var(--muted);
+  font-size: 13px;
+  text-align: right;
+  margin-top: var(--s1);
+}
+
+/* -----------------------------------------------------------------------------
+   3. BẢNG TIÊU CHÍ SÀNG LỌC ỨNG VIÊN (Screening Criteria Table)
+   ----------------------------------------------------------------------------- */
+
+/* Thanh tiêu đề thao tác phía trên bảng tiêu chí */
+:is(.req-form-page, .requisition-form-page) .header-actions {
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: var(--s4);
+  margin-bottom: var(--s3);
+}
+
+/* Dòng văn bản hướng dẫn thiết lập trọng số tiêu chí (tổng bằng 100%) */
+:is(.req-form-page, .requisition-form-page) .criteria-help {
+  margin-bottom: var(--s4);
+}
+
+/* Bảng danh sách tiêu chí với góc bo tròn mềm mại và chiều rộng chuẩn */
+:is(.req-form-page, .requisition-form-page) .criteria-table-custom {
+  min-width: 960px;
+  border-collapse: separate;
+  border-spacing: 0;
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+/* Dòng tiêu đề cột màu xanh đậm thương hiệu Mộc RMS */
+:is(.req-form-page, .requisition-form-page) .criteria-table-custom thead th {
+  background: var(--brand-dark);
+  color: #ffffff;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  padding: 10px 12px;
+  border: none;
+  text-transform: uppercase;
+}
+
+/* Cột 1: STT (căn giữa, chiều rộng 48px) */
+:is(.req-form-page, .requisition-form-page) .criteria-table-custom thead th:first-child {
+  text-align: center;
+  width: 48px;
+}
+
+/* Cột cuối: Nút xóa dòng (căn giữa, chiều rộng 64px) */
+:is(.req-form-page, .requisition-form-page) .criteria-table-custom thead th:last-child {
+  text-align: center;
+  width: 64px;
+}
+
+/* Cột 2: Tên tiêu chí sàng lọc (chiếm 24% chiều rộng bảng) */
+:is(.req-form-page, .requisition-form-page) .criteria-table-custom th:nth-child(2) {
+  width: 24%;
+}
+
+/* Cột 3: Loại tiêu chí - Kinh nghiệm, Bằng cấp, Kỹ năng (chiếm 18%) */
+:is(.req-form-page, .requisition-form-page) .criteria-table-custom th:nth-child(3) {
+  width: 18%;
+}
+
+/* Cột 4: Giá trị yêu cầu cụ thể (chiếm 24%) */
+:is(.req-form-page, .requisition-form-page) .criteria-table-custom th:nth-child(4) {
+  width: 24%;
+}
+
+/* Cột 5: Trọng số % (cố định 112px) */
+:is(.req-form-page, .requisition-form-page) .criteria-table-custom th:nth-child(5) {
+  width: 112px;
+}
+
+/* Cột 6: Bắt buộc Có/Không (cố định 112px) */
+:is(.req-form-page, .requisition-form-page) .criteria-table-custom th:nth-child(6) {
+  width: 112px;
+}
+
+/* Căn giữa ô số thứ tự STT trong thân bảng */
+:is(.req-form-page, .requisition-form-page) .criteria-table-custom td:first-child {
+  text-align: center;
+  font-weight: 600;
+}
+
+/* Căn giữa ô chứa nút xóa trong thân bảng */
+:is(.req-form-page, .requisition-form-page) .criteria-table-custom td:last-child {
+  text-align: center;
+}
+
+/* Khoảng cách đệm cho tất cả các ô trong bảng */
+:is(.req-form-page, .requisition-form-page) .criteria-table-custom td {
+  padding: 10px 12px;
+}
+
+/* Nút thêm mới hàng tiêu chí (+ Thêm tiêu chí sàng lọc) */
+:is(.req-form-page, .requisition-form-page) .btn-add-criteria {
+  background: #ecfdf5;
+  color: #047857;
+  border: 1px solid #a7f3d0;
+  border-radius: 6px;
+  padding: 6px 14px;
+  font-weight: 600;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+:is(.req-form-page, .requisition-form-page) .btn-add-criteria:hover {
+  background: #d1fae5;
+  border-color: #6ee7b7;
+}
+
+/* Nút biểu tượng thùng rác xóa tiêu chí khỏi bảng */
+:is(.req-form-page, .requisition-form-page) .btn-trash {
+  min-width: 44px;
+  padding: var(--s2);
+  font-size: 24px;
+  background: #ffffff;
+  border: 1px solid #d1d5db;
+  color: #6b7280;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+:is(.req-form-page, .requisition-form-page) .btn-trash:hover {
+  background: #fee2e2;
+  border-color: #fca5a5;
+  color: #b91c1c;
+}
+
+/* Khối nhãn và công tắc lựa chọn Bắt buộc (Có / Không) */
+:is(.req-form-page, .requisition-form-page) .switch-label {
+  display: flex;
+  align-items: center;
+  gap: var(--s2);
+  white-space: nowrap;
+}
+
+:is(.req-form-page, .requisition-form-page) .switch {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 24px;
+  min-height: 24px;
+  cursor: pointer;
+}
+
+:is(.req-form-page, .requisition-form-page) input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  accent-color: var(--brand-dark);
+  cursor: pointer;
+}
+
+:is(.req-form-page, .requisition-form-page) .slider {
+  display: none;
+}
+
+/* -----------------------------------------------------------------------------
+   4. CÁC NÚT HÀNH ĐỘNG DƯỚI CHÂN FORM (Footer Action Controls)
+   ----------------------------------------------------------------------------- */
+
+/* Thanh chứa các nút hành động chân trang: phân cách bằng đường viền mờ */
+:is(.req-form-page, .requisition-form-page) .form-footer-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--s3);
+  flex-wrap: wrap;
+  padding-block: var(--s4);
+  border-top: 1px solid var(--line);
+}
+
+/* Nút Hủy (nằm sát lề trái, viền xám nhẹ) */
+:is(.req-form-page, .requisition-form-page) .btn-cancel-custom {
+  margin-right: auto;
+  background: #ffffff;
+  border-color: #d1d5db;
+  color: #6b7280;
+}
+
+:is(.req-form-page, .requisition-form-page) .btn-cancel-custom:hover {
+  background: #f9fafb;
+  border-color: #9ca3af;
+  color: #4b5563;
+}
+
+/* Nút Lưu bản nháp (Draft) */
+:is(.req-form-page, .requisition-form-page) .btn-save-draft {
+  background: #ffffff;
+  border-color: var(--control-line);
+  color: var(--brand-dark);
+}
+
+:is(.req-form-page, .requisition-form-page) .btn-save-draft:hover {
+  background: var(--brand-soft);
+  border-color: var(--brand);
+}
+
+/* Nút Gửi Giám đốc phê duyệt (Primary Call-To-Action) */
+:is(.req-form-page, .requisition-form-page) .btn-submit-director {
+  background: var(--brand-dark);
+  border-color: var(--brand-dark);
+  color: #ffffff;
+}
+
+:is(.req-form-page, .requisition-form-page) .btn-submit-director:hover {
+  background: #244735;
+  border-color: #244735;
+}
+
+/* Trạng thái nút bị vô hiệu hóa khi đang gửi dữ liệu */
+:is(.req-form-page, .requisition-form-page) button:disabled {
+  color: var(--muted);
+  background: var(--page);
+  border-color: var(--line);
+  cursor: not-allowed;
+}
+
+/* Khối cảnh báo danh sách lỗi xác thực (Validation Summary Alert) */
+:is(.req-form-page, .requisition-form-page) #validation-summary {
+  margin: 0;
+  scroll-margin-top: 128px;
+}
+
+:is(.req-form-page, .requisition-form-page) #validation-summary p {
+  font-weight: 600;
+}
+
+:is(.req-form-page, .requisition-form-page) #validation-summary ul {
+  padding-left: var(--s6);
+  margin: var(--s2) 0 0;
+}
+
+/* -----------------------------------------------------------------------------
+   5. THÍCH ỨNG HIỂN THỊ TRÊN THIẾT BỊ DI ĐỘNG (Responsive Breakpoints)
+   ----------------------------------------------------------------------------- */
+@media (max-width: 600px) {
+
+  /* Chuyển đổi lưới nhập liệu từ 2 cột sang 1 cột duy nhất */
+  :is(.req-form-page, .requisition-form-page) .form-grid {
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--s4);
+  }
+
+  /* Tái cấu trúc các nút hành động chân trang dạng lưới 2 cột */
+  :is(.req-form-page, .requisition-form-page) .form-footer-actions {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  :is(.req-form-page, .requisition-form-page) .btn-cancel-custom {
+    margin: 0;
+  }
+
+  /* Nút Gửi phê duyệt chiếm trọn 2 cột ở dưới cùng */
+  :is(.req-form-page, .requisition-form-page) .btn-submit-director {
+    grid-column: 1 / -1;
+  }
 }

@@ -1,64 +1,414 @@
-.req-detail-page .requisition-heading-copy { min-width:0; }
-.req-detail-page .requisition-title-row { display:flex; align-items:center; flex-wrap:wrap; gap:var(--s3); }
-.req-detail-page .requisition-heading-actions { display:flex; gap:var(--s2); flex-wrap:wrap; flex-shrink:0; }
-.req-detail-page .detail-layout { display:grid; grid-template-columns:minmax(0,1fr); gap:var(--s6); align-items:start; }
-.req-detail-page .detail-main,.req-detail-page .detail-workflow { display:grid; gap:var(--s6); min-width:0; }
-.req-detail-page .info-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:var(--s6); }
-.req-detail-page .info-item { display:grid; align-content:start; gap:var(--s1); min-width:0; }
-.req-detail-page .info-label { color:var(--muted); font-size:14px; }
-.req-detail-page .info-value { font-weight:600; overflow-wrap:anywhere; }
-.req-detail-page .text-content { white-space:pre-wrap; overflow-wrap:anywhere; line-height:1.7; }
-.req-detail-page .criteria-table { min-width:640px; }
-.req-detail-page .weight-cell { display:flex; align-items:center; gap:var(--s2); }
-.req-detail-page .weight-meter { width:56px; height:6px; appearance:none; border:0; background:var(--line); border-radius:4px; accent-color:var(--brand); }
-.req-detail-page .weight-meter::-webkit-progress-bar { background:var(--line); border-radius:4px; }
-.req-detail-page .weight-meter::-webkit-progress-value { background:var(--brand); border-radius:4px; }
-.req-detail-page .weight-meter::-moz-progress-bar { background:var(--brand); border-radius:4px; }
-.req-detail-page .badge-yes { color:var(--brand-dark); background:var(--brand-soft); }
-.req-detail-page .badge-no { background:var(--page); }
-.req-detail-page .workflow-status { margin-bottom:var(--s2); color:var(--brand-dark); }
-.req-detail-page .timeline,.req-detail-page .activity-log { list-style:none; margin:var(--s6) 0 0; padding:0; }
-.req-detail-page .timeline-item,.req-detail-page .activity-item { position:relative; padding:0 0 var(--s6) var(--s6); margin-left:var(--s1); border-left:1px solid var(--line); overflow-wrap:anywhere; }
-.req-detail-page .timeline-item:last-child,.req-detail-page .activity-item:last-child { padding-bottom:0; border-left-color:transparent; }
-.req-detail-page .timeline-icon,.req-detail-page .activity-dot { position:absolute; top:7px; left:-5px; width:9px; height:9px; border-radius:50%; background:var(--brand); }
-.req-detail-page .approved .timeline-icon { background:var(--brand-dark); }
-.req-detail-page .timeline-title,.req-detail-page .activity-title { font-weight:600; }
-.req-detail-page .timeline-meta,.req-detail-page .activity-meta { font-size:14px; color:var(--muted); }
-.req-detail-page .feedback-box { padding:var(--s4); border-left:2px solid var(--control-line); background:var(--page); overflow-wrap:anywhere; }
-.req-detail-page .feedback-box > div { white-space:pre-wrap; }
-.req-detail-page .feedback-badge { display:block; font-weight:600; font-size:14px; color:var(--brand-dark); margin-bottom:var(--s1); }
-.req-detail-page .decision-section:not(:first-child) { border-top:1px solid var(--line); padding-top:var(--s6); }
-.req-detail-page .decision-section h3 { margin-bottom:var(--s4); }
-.req-detail-page .decision-field { margin-bottom:var(--s4); }
-.req-detail-page .decision-field label { display:block; margin-bottom:var(--s2); font-size:14px; font-weight:600; }
-.req-detail-page .decision-field label span { font-weight:400; color:var(--muted); }
-.req-detail-page .decision-actions { display:flex; gap:var(--s2); }
-.req-detail-page .decision-actions button { flex:1; }
-.req-detail-page pre { white-space:pre-wrap; overflow-wrap:anywhere; font:inherit; font-size:14px; }
-.req-detail-page .detail-actions { display:flex; align-items:center; flex-wrap:wrap; gap:var(--s3); }
-.req-detail-page .withdraw-form { margin:0; }
-.req-detail-page .withdraw-form button { width:100%; }
-.req-detail-page .detail-actions p { flex-basis:100%; color:var(--muted); font-size:14px; }
-@media (max-width:1200px) {
-  .req-detail-page .detail-layout { grid-template-columns:minmax(0,1fr); }
-  .req-detail-page .requisition-detail-heading { align-items:flex-start; flex-direction:column; }
-}
-@media (max-width:600px) {
-  .req-detail-page .info-grid { grid-template-columns:minmax(0,1fr); gap:var(--s4); }
+/* =============================================================================
+   REQUISITION-DETAIL.CSS
+   File CSS cho trang Chi tiết Yêu cầu Tuyển dụng (/requisitions/{id})
+   Bao gồm: Thông tin tổng quan, Bảng tiêu chí, Quy trình phê duyệt (Workflow),
+            Khối phản hồi duyệt/từ chối của Giám đốc, và Lịch sử kiểm toán (Audit).
+   ============================================================================= */
+
+/* -----------------------------------------------------------------------------
+   1. ĐẦU TRANG & TIÊU ĐỀ CHI TIẾT (Page Header & Actions)
+   ----------------------------------------------------------------------------- */
+
+.req-detail-page .requisition-heading-copy {
+  min-width: 0;
 }
 
-/* Keep the audit history in the reading flow without a separate sidebar. */
-.req-detail-page .round-badge { padding:4px 12px; border-radius:24px; background:var(--brand-soft); color:var(--brand-dark); font-size:14px; font-weight:600; white-space:nowrap; }
-.req-detail-page .card-header h2 { color:var(--brand-dark); }
-.req-detail-page .criteria-table th { background:var(--brand-soft); color:var(--brand-dark); }
-.req-detail-page .activity-summary { display:flex; align-items:center; justify-content:space-between; gap:var(--s4); min-height:44px; list-style:none; cursor:pointer; border-radius:4px; }
-.req-detail-page .activity-summary::-webkit-details-marker { display:none; }
-.req-detail-page .activity-summary-copy { display:grid; gap:var(--s2); min-width:0; overflow-wrap:anywhere; }
-.req-detail-page .activity-summary-heading { display:flex; align-items:center; flex-wrap:wrap; gap:var(--s3); }
-.req-detail-page .activity-history-title { font:600 20px/1.4 var(--serif); color:var(--brand-dark); }
-.req-detail-page .activity-count { padding:4px 10px; border-radius:24px; background:var(--brand-soft); color:var(--brand-dark); font-size:13px; font-weight:600; white-space:nowrap; }
-.req-detail-page .activity-toggle { width:10px; height:10px; margin:0 var(--s2) 4px; flex-shrink:0; border-right:2px solid var(--brand); border-bottom:2px solid var(--brand); transform:rotate(45deg); }
-.req-detail-page .activity-history[open] .activity-toggle { transform:rotate(225deg); margin-bottom:0; }
-.req-detail-page .activity-summary:hover .activity-history-title { text-decoration:underline; text-underline-offset:4px; }
-.req-detail-page .activity-history-content { margin-top:var(--s4); border-top:1px solid var(--line); }
-.req-detail-page .activity-description { margin:var(--s2) 0 0; line-height:1.6; }
+/* Hàng tiêu đề chứa tên vị trí, mã yêu cầu và trạng thái */
+.req-detail-page .requisition-title-row {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--s3);
+}
+
+.req-detail-page .requisition-title-row .round-badge {
+  font-size: 13.5px;
+  padding: 4px 12px;
+  border-radius: 20px;
+}
+
+/* Nhóm nút thao tác góc trên bên phải (Chỉnh sửa, Sao chép, Đăng tin, Rút lại) */
+.req-detail-page .requisition-heading-actions {
+  display: flex;
+  gap: var(--s2);
+  flex-wrap: wrap;
+  flex-shrink: 0;
+}
+
+/* -----------------------------------------------------------------------------
+   2. BỐ CỤC CHI TIẾT (Detail Layout & Grid)
+   ----------------------------------------------------------------------------- */
+
+/* Khung bố cục tổng thể dạng lưới */
+.req-detail-page .detail-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--s6);
+  align-items: start;
+}
+
+/* Cột thông tin chính và cột quy trình phê duyệt */
+.req-detail-page .detail-main,
+.req-detail-page .detail-workflow {
+  display: grid;
+  gap: var(--s6);
+  min-width: 0;
+}
+
+/* Lưới hiển thị các cặp thông tin (Nhãn - Giá trị) 2 cột */
+.req-detail-page .info-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--s6);
+}
+
+.req-detail-page .info-item {
+  display: grid;
+  align-content: start;
+  gap: var(--s1);
+  min-width: 0;
+}
+
+/* Nhãn tên trường thông tin (Phòng ban, Số lượng, Mức lương...) */
+.req-detail-page .info-label {
+  color: var(--muted);
+  font-size: 14px;
+}
+
+/* Giá trị dữ liệu đậm và rõ ràng */
+.req-detail-page .info-value {
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+/* Mã yêu cầu tuyển dụng dạng monospace màu xanh đậm */
+.req-detail-page .req-code-value {
+  font-family: monospace;
+  font-weight: 700;
+  color: var(--brand-dark);
+}
+
+/* Khối nội dung văn bản dài (Mô tả công việc, Yêu cầu ứng viên) giữ nguyên ngắt dòng */
+.req-detail-page .text-content {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  line-height: 1.7;
+}
+
+/* -----------------------------------------------------------------------------
+   3. BẢNG TIÊU CHÍ & THANH TRỌNG SỐ (Criteria Table & Weight Meters)
+   ----------------------------------------------------------------------------- */
+
+.req-detail-page .criteria-table {
+  min-width: 640px;
+}
+
+/* Ô hiển thị trọng số kèm thanh tiến độ trực quan */
+.req-detail-page .weight-cell {
+  display: flex;
+  align-items: center;
+  gap: var(--s2);
+}
+
+/* Thanh đo phần trăm trọng số (HTML5 progress meter) */
+.req-detail-page .weight-meter {
+  width: 56px;
+  height: 6px;
+  appearance: none;
+  border: 0;
+  background: var(--line);
+  border-radius: 4px;
+  accent-color: var(--brand);
+}
+
+.req-detail-page .weight-meter::-webkit-progress-bar {
+  background: var(--line);
+  border-radius: 4px;
+}
+
+.req-detail-page .weight-meter::-webkit-progress-value {
+  background: var(--brand);
+  border-radius: 4px;
+}
+
+.req-detail-page .weight-meter::-moz-progress-bar {
+  background: var(--brand);
+  border-radius: 4px;
+}
+
+/* Huy hiệu tiêu chí bắt buộc: Có */
+.req-detail-page .badge-yes {
+  color: var(--brand-dark);
+  background: var(--brand-soft);
+}
+
+/* Huy hiệu tiêu chí không bắt buộc: Không */
+.req-detail-page .badge-no {
+  background: var(--page);
+}
+
+/* -----------------------------------------------------------------------------
+   4. QUY TRÌNH DUYỆT & LỊCH SỬ HOẠT ĐỘNG (Timeline & Activity Flow)
+   ----------------------------------------------------------------------------- */
+
+.req-detail-page .workflow-status {
+  margin-bottom: var(--s2);
+  color: var(--brand-dark);
+}
+
+/* Danh sách dòng thời gian phê duyệt (Timeline) */
+.req-detail-page .timeline,
+.req-detail-page .activity-log {
+  list-style: none;
+  margin: var(--s6) 0 0;
+  padding: 0;
+}
+
+/* Từng mốc trong dòng thời gian phê duyệt */
+.req-detail-page .timeline-item,
+.req-detail-page .activity-item {
+  position: relative;
+  padding: 0 0 var(--s6) var(--s6);
+  margin-left: var(--s1);
+  border-left: 1px solid var(--line);
+  overflow-wrap: anywhere;
+}
+
+/* Mốc cuối cùng: không kẻ viền nối xuống dưới */
+.req-detail-page .timeline-item:last-child,
+.req-detail-page .activity-item:last-child {
+  padding-bottom: 0;
+  border-left-color: transparent;
+}
+
+/* Chấm tròn biểu thị điểm mốc trên dòng thời gian */
+.req-detail-page .timeline-icon,
+.req-detail-page .activity-dot {
+  position: absolute;
+  top: 7px;
+  left: -5px;
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: var(--brand);
+}
+
+/* Điểm mốc đã được phê duyệt hoàn tất */
+.req-detail-page .approved .timeline-icon {
+  background: var(--brand-dark);
+}
+
+.req-detail-page .timeline-title,
+.req-detail-page .activity-title {
+  font-weight: 600;
+}
+
+.req-detail-page .timeline-meta,
+.req-detail-page .activity-meta {
+  font-size: 14px;
+  color: var(--muted);
+}
+
+/* -----------------------------------------------------------------------------
+   5. PHẢN HỒI PHÊ DUYỆT & TỪ CHỐI (Director Feedback Box)
+   ----------------------------------------------------------------------------- */
+
+/* Hộp hiển thị lý do từ chối hoặc nhận xét của Giám đốc */
+.req-detail-page .feedback-box {
+  padding: var(--s4);
+  border-left: 2px solid var(--control-line);
+  background: var(--page);
+  overflow-wrap: anywhere;
+}
+
+.req-detail-page .feedback-box > div {
+  white-space: pre-wrap;
+}
+
+.req-detail-page .feedback-badge {
+  display: block;
+  font-weight: 600;
+  font-size: 14px;
+  color: var(--brand-dark);
+  margin-bottom: var(--s1);
+}
+
+/* -----------------------------------------------------------------------------
+   6. KHỐI QUYẾT ĐỊNH CỦA GIÁM ĐỐC (Director Decision Form)
+   ----------------------------------------------------------------------------- */
+
+.req-detail-page .decision-section:not(:first-child) {
+  border-top: 1px solid var(--line);
+  padding-top: var(--s6);
+}
+
+.req-detail-page .decision-section h3 {
+  margin-bottom: var(--s4);
+}
+
+.req-detail-page .decision-field {
+  margin-bottom: var(--s4);
+}
+
+.req-detail-page .decision-field label {
+  display: block;
+  margin-bottom: var(--s2);
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.req-detail-page .decision-field label span {
+  font-weight: 400;
+  color: var(--muted);
+}
+
+/* Hai nút quyết định của Giám đốc: [Phê duyệt] [Từ chối] */
+.req-detail-page .decision-actions {
+  display: flex;
+  gap: var(--s2);
+}
+
+.req-detail-page .decision-actions button {
+  flex: 1;
+}
+
+.req-detail-page pre {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  font: inherit;
+  font-size: 14px;
+}
+
+/* Form rút lại yêu cầu tuyển dụng */
+.req-detail-page .detail-actions {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--s3);
+}
+
+.req-detail-page .withdraw-form {
+  margin: 0;
+}
+
+.req-detail-page .withdraw-form button {
+  width: 100%;
+}
+
+.req-detail-page .detail-actions p {
+  flex-basis: 100%;
+  color: var(--muted);
+  font-size: 14px;
+}
+
+/* -----------------------------------------------------------------------------
+   7. LỊCH SỬ HOẠT ĐỘNG KIỂM TOÁN (Audit History Accordion)
+   ----------------------------------------------------------------------------- */
+
+.req-detail-page .card-header h2 {
+  color: var(--brand-dark);
+}
+
+.req-detail-page .criteria-table th {
+  background: var(--brand-soft);
+  color: var(--brand-dark);
+}
+
+/* Thanh tiêu đề mở rộng lịch sử hoạt động (details/summary tag) */
+.req-detail-page .activity-summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s4);
+  min-height: 44px;
+  list-style: none;
+  cursor: pointer;
+  border-radius: 4px;
+}
+
+.req-detail-page .activity-summary::-webkit-details-marker {
+  display: none;
+}
+
+.req-detail-page .activity-summary-copy {
+  display: grid;
+  gap: var(--s2);
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.req-detail-page .activity-summary-heading {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--s3);
+}
+
+.req-detail-page .activity-history-title {
+  font: 600 20px/1.4 var(--serif);
+  color: var(--brand-dark);
+}
+
+/* Huy hiệu hiển thị tổng số lượt hoạt động ghi nhận */
+.req-detail-page .activity-count {
+  padding: 4px 10px;
+  border-radius: 24px;
+  background: var(--brand-soft);
+  color: var(--brand-dark);
+  font-size: 13px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+/* Mũi tên chỉ báo đóng/mở accordion */
+.req-detail-page .activity-toggle {
+  width: 10px;
+  height: 10px;
+  margin: 0 var(--s2) 4px;
+  flex-shrink: 0;
+  border-right: 2px solid var(--brand);
+  border-bottom: 2px solid var(--brand);
+  transform: rotate(45deg);
+}
+
+/* Xoay mũi tên lên khi accordion đang mở */
+.req-detail-page .activity-history[open] .activity-toggle {
+  transform: rotate(225deg);
+  margin-bottom: 0;
+}
+
+.req-detail-page .activity-summary:hover .activity-history-title {
+  text-decoration: underline;
+  text-underline-offset: 4px;
+}
+
+.req-detail-page .activity-history-content {
+  margin-top: var(--s4);
+  border-top: 1px solid var(--line);
+}
+
+.req-detail-page .activity-description {
+  margin: var(--s2) 0 0;
+  line-height: 1.6;
+}
+
+/* -----------------------------------------------------------------------------
+   8. THÍCH ỨNG DI ĐỘNG (Responsive Breakpoints)
+   ----------------------------------------------------------------------------- */
+@media (max-width: 1200px) {
+  .req-detail-page .detail-layout {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .req-detail-page .requisition-detail-heading {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+}
+
+@media (max-width: 600px) {
+  .req-detail-page .info-grid {
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--s4);
+  }
+}

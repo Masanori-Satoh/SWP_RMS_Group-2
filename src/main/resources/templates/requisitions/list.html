@@ -1,49 +1,81 @@
 <!DOCTYPE html>
 <html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<!--
+    REQUISITIONS/LIST.HTML
+    =============================================================================
+    Màn hình Danh sách Yêu cầu Tuyển dụng (/requisitions)
+    Phụ trách: Nguyễn Huy Hoàng (HoangNH) - Iteration 1
+    
+    Chức năng chính:
+      - Xem danh sách yêu cầu tuyển dụng phân quyền theo Role (HR / Hiring Manager / Admin)
+      - Tìm kiếm theo từ khóa (Vị trí, Phòng ban)
+      - Bộ lọc nâng cao: Vị trí, Phòng ban, Đợt tuyển, Hình thức làm việc, Trạng thái
+      - Menu thao tác ba chấm (...) dạng Popover: Xem chi tiết, Chỉnh sửa, Sao chép, Xóa, Tạo tin
+      - Phân trang chuẩn RMS Pager kèm nhảy trang
+      - Modal xác nhận xóa yêu cầu tuyển dụng
+    =============================================================================
+-->
 
 <head th:replace="~{fragments/head :: interfaceHead('Yêu cầu tuyển dụng', ~{::pageStyles})}">
     <th:block th:fragment="pageStyles">
+        <!-- CSS dùng chung và CSS chuyên biệt cho danh sách -->
         <link rel="stylesheet" th:href="@{/css/requisition-shared.css}">
         <link rel="stylesheet" th:href="@{/css/requisition-list.css}">
+        <!-- JS điều khiển menu popover và modal xóa -->
         <script th:src="@{/js/requisitions.js}" defer></script>
     </th:block>
 </head>
 
 <body class="rms-app req-app req-list-page">
     <div class="page-wrapper">
+        <!-- Sidebar điều hướng nội bộ -->
         <aside th:replace="~{fragments/sidebar :: workspace('requisitions', ${viewerRole})}"></aside>
+
         <div class="main-content">
+            <!-- Header góc trên chứa thông tin người dùng -->
             <header th:replace="~{fragments/workspace-header :: header(${viewerRole}, ${viewerName})}"></header>
+
             <main id="main" tabindex="-1" class="page-content">
                 <div class="container">
-                    <nav class="breadcrumbs" aria-label="Breadcrumb" style="margin-bottom: var(--s2); font-size: 14px; display: flex; gap: 8px; align-items: center; color: var(--text-muted);">
-                        <a th:href="@{/dashboard}" style="color: var(--brand); text-decoration: none;">Bảng điều khiển</a>
-                        <span aria-hidden="true">/</span>
-                        <span aria-current="page" style="color: var(--text-color); font-weight: 500;">Yêu cầu tuyển dụng</span>
-                    </nav>
+
+                    <!-- 1. Thanh điều hướng phân cấp (Breadcrumb) -->
+                    <nav th:replace="~{fragments/requisition :: breadcrumb(current=null)}"></nav>
+
+                    <!-- 2. Phần đầu trang: Tiêu đề & Nút Tạo mới -->
                     <div class="requisition-page-header">
                         <div>
                             <h1>Yêu cầu tuyển dụng</h1>
                             <p th:if="${viewerRole != 'HR'}">Xem và quản lý các yêu cầu tuyển dụng nhân sự từ các phòng ban.</p>
                             <p th:if="${viewerRole == 'HR'}">Danh sách các yêu cầu tuyển dụng đã được phê duyệt sẵn sàng để tiến hành tạo tin và tuyển dụng.</p>
                         </div>
+                        <!-- Nút tạo mới chỉ hiển thị với Role có quyền tạo (Hiring Manager / Admin) -->
                         <a th:if="${canCreate}" th:href="@{/requisitions/create}" class="btn-create">+ Tạo yêu cầu tuyển dụng</a>
                     </div>
+
+                    <!-- 3. Thông báo flash message (Thành công / Lỗi) -->
                     <th:block th:replace="~{fragments/requisition :: messages}"></th:block>
+
+                    <!-- 4. Khối danh sách chính -->
                     <section class="list-container" aria-labelledby="requisition-list-title">
                         <div class="requisition-list-heading">
                             <h2 id="requisition-list-title">Danh sách yêu cầu tuyển dụng</h2>
                             <p class="records-count" th:text="|Tổng cộng ${totalElements} yêu cầu phù hợp|"></p>
                         </div>
+
+                        <!-- 5. Form bộ lọc tìm kiếm & sắp xếp -->
                         <form th:action="@{/requisitions}" method="get" id="filterForm"
                             th:with="canFilterStatus=${viewerRole == 'Hiring Manager' or viewerRole == 'System Admin'}">
                             <input type="hidden" name="size" th:value="${pageSize}">
                             <div class="requisition-filter-grid" th:classappend="${!canFilterStatus} ? 'without-status-filter' : ''">
+                                
+                                <!-- Tìm kiếm từ khóa -->
                                 <div class="filter-field filter-search">
                                     <label for="requisition-search">Tìm kiếm</label>
                                     <input id="requisition-search" type="search" name="q" th:value="${search}" maxlength="120"
                                         placeholder="Vị trí, mã yêu cầu hoặc phòng ban">
                                 </div>
+
+                                <!-- Lọc theo Vị trí -->
                                 <div class="filter-field">
                                     <label for="position-filter">Vị trí</label>
                                     <select id="position-filter" name="position">
@@ -52,6 +84,8 @@
                                             th:selected="${pos == selectedPosition}"></option>
                                     </select>
                                 </div>
+
+                                <!-- Lọc theo Phòng ban (chỉ hiển thị nếu không phải Hiring Manager bị khóa theo phòng ban) -->
                                 <div class="filter-field" th:if="${viewerRole != 'Hiring Manager' and departments != null and not #lists.isEmpty(departments)}">
                                     <label for="department-filter">Phòng ban</label>
                                     <select id="department-filter" name="departmentId">
@@ -61,6 +95,8 @@
                                             th:selected="${dept.departmentId == selectedDepartment}"></option>
                                     </select>
                                 </div>
+
+                                <!-- Lọc theo Đợt tuyển dụng -->
                                 <div class="filter-field">
                                     <label for="round-filter">Đợt tuyển</label>
                                     <select id="round-filter" name="round">
@@ -69,6 +105,8 @@
                                             th:selected="${rnd == selectedRound}"></option>
                                     </select>
                                 </div>
+
+                                <!-- Lọc theo Hình thức làm việc -->
                                 <div class="filter-field">
                                     <label for="type-filter">Hình thức</label>
                                     <select id="type-filter" name="type">
@@ -79,6 +117,8 @@
                                         <option value="Contract" th:selected="${selectedType == 'Contract'}">Hợp đồng</option>
                                     </select>
                                 </div>
+
+                                <!-- Lọc theo Trạng thái phê duyệt (Dành cho Hiring Manager / Admin) -->
                                 <div class="filter-field" th:if="${canFilterStatus}">
                                     <label for="status-filter">Trạng thái</label>
                                     <select id="status-filter" name="status">
@@ -89,6 +129,8 @@
                                         <option value="Rejected" th:selected="${selectedStatus == 'Rejected'}">Từ chối</option>
                                     </select>
                                 </div>
+
+                                <!-- Sắp xếp thứ tự danh sách -->
                                 <div class="filter-field">
                                     <label for="sort-filter">Sắp xếp</label>
                                     <select id="sort-filter" name="sort">
@@ -99,17 +141,21 @@
                                     </select>
                                 </div>
                             </div>
+
+                            <!-- Nút bấm áp dụng / xóa bộ lọc -->
                             <div class="filter-actions">
                                 <button type="submit" class="filter-apply">Áp dụng</button>
                                 <a th:href="@{/requisitions}" class="clear-filters">Xóa bộ lọc</a>
                             </div>
                         </form>
+
                         <p class="table-scroll-note" hidden>Cuộn ngang để xem tất cả các cột và thao tác.</p>
+                        
+                        <!-- 6. Bảng hiển thị danh sách Yêu cầu tuyển dụng -->
                         <div class="table-wrapper requisition-table-wrap" role="region" aria-label="Danh sách yêu cầu tuyển dụng" tabindex="0">
                             <table class="requisition-list-table">
                                 <colgroup>
                                     <col class="col-index">
-                                    <col class="col-code">
                                     <col class="col-position">
                                     <col class="col-department">
                                     <col th:if="${viewerRole == 'HR'}" class="col-requester">
@@ -123,7 +169,6 @@
                                 <thead>
                                     <tr>
                                         <th scope="col">STT</th>
-                                        <th scope="col">Mã yêu cầu</th>
                                         <th scope="col">Vị trí tuyển dụng</th>
                                         <th scope="col">Phòng ban</th>
                                         <th th:if="${viewerRole == 'HR'}" scope="col">Người yêu cầu</th>
@@ -137,25 +182,39 @@
                                 </thead>
                                 <tbody>
                                     <tr th:each="req,row : ${requisitions}">
+                                        <!-- Cột STT -->
                                         <td th:text="${(currentPage - 1) * pageSize + row.count}"></td>
-                                        <td><span class="code-badge" th:text="${req.requisitionCode}">REQ-2026-001</span></td>
+
+                                        <!-- Cột Tên vị trí & Huy hiệu đợt tuyển -->
                                         <td>
-                                            <div style="display:flex; align-items:center; gap:8px;">
+                                            <div class="position-badge-group">
                                                 <a class="position-title"
                                                     th:href="@{/requisitions/{id}(id=${req.requisitionId})}"
                                                     th:text="${req.title}"></a>
                                                 <span class="round-badge" th:text="|Đợt ${req.recruitmentRound}|">Đợt 1</span>
                                             </div>
                                         </td>
+
+                                        <!-- Phòng ban -->
                                         <td th:text="${req.departmentName}"></td>
+
+                                        <!-- Người yêu cầu (chỉ HR xem) -->
                                         <td th:if="${viewerRole == 'HR'}" th:text="${req.hiringManagerName ?: '—'}"></td>
+
+                                        <!-- Số lượng tuyển -->
                                         <td th:text="${req.numberOfPositions ?: '—'}"></td>
+
+                                        <!-- Hình thức làm việc -->
                                         <td th:text="${req.employmentType == 'Full-time' ? 'Toàn thời gian' : (req.employmentType == 'Part-time' ? 'Bán thời gian' : (req.employmentType == 'Internship' ? 'Thực tập' : (req.employmentType == 'Contract' ? 'Hợp đồng' : (req.employmentType ?: '—'))))}"></td>
+
+                                        <!-- Trạng thái phê duyệt -->
                                         <td>
                                             <span class="list-status" th:attr="data-status=${req.approvalStatus}"
                                                 th:title="${req.approvalStatus == 'Pending_Director' ? 'Đang chờ Giám đốc duyệt' : (req.approvalStatus == 'Draft' ? 'Bản nháp' : (req.approvalStatus == 'Approved' ? 'Đã duyệt' : 'Bị từ chối'))}"
                                                 th:text="${req.approvalStatus == 'Pending_Director' ? 'Chờ duyệt' : (req.approvalStatus == 'Draft' ? 'Bản nháp' : (req.approvalStatus == 'Approved' ? 'Đã duyệt' : (req.approvalStatus == 'Rejected' ? 'Từ chối' : req.approvalStatus)))}"></span>
                                         </td>
+
+                                        <!-- Tình trạng tạo tin tuyển dụng (chỉ HR xem) -->
                                         <td th:if="${viewerRole == 'HR'}">
                                             <span th:if="${req.postingStatus == 'Published'}" class="posting-badge badge-published">Đã đăng tin</span>
                                             <span th:if="${req.postingStatus == 'Draft'}" class="posting-badge badge-draft">Bản nháp</span>
@@ -163,14 +222,22 @@
                                             <span th:if="${req.postingStatus == 'Closed'}" class="posting-badge badge-closed">Đã đóng</span>
                                             <span th:if="${req.postingStatus == null or req.postingStatus == 'None'}" class="posting-badge badge-none">Chưa tạo tin</span>
                                         </td>
+
+                                        <!-- Ngày tạo -->
                                         <td class="nowrap" th:text="${req.createdAt != null ? #temporals.format(req.createdAt,'dd/MM/yyyy') : '—'}"></td>
+
+                                        <!-- Cột Thao tác: Nút ba chấm (...) & Menu Popover -->
                                         <td class="action-cell">
                                             <button type="button" class="btn-action-outline" data-action-menu
                                                 th:popovertarget="|actions-${req.requisitionId}|"
                                                 th:aria-label="|Thao tác cho ${req.title}|">⋯</button>
+                                            
+                                            <!-- Menu hành động động theo quyền hạn người xem -->
                                             <div class="action-popover" popover="auto"
                                                 th:id="|actions-${req.requisitionId}|">
                                                 <a th:href="@{/requisitions/{id}(id=${req.requisitionId})}">Xem chi tiết</a>
+                                                
+                                                <!-- Hành động của Hiring Manager -->
                                                 <th:block th:if="${viewerRole == 'Hiring Manager'}">
                                                     <a th:if="${req.editable}"
                                                         th:href="@{/requisitions/edit/{id}(id=${req.requisitionId})}">Chỉnh sửa</a>
@@ -181,6 +248,8 @@
                                                         th:data-delete-url="@{/requisitions/delete/{id}(id=${req.requisitionId})}"
                                                         th:data-title="${req.title}">Xóa</button>
                                                 </th:block>
+
+                                                <!-- Hành động của HR từ yêu cầu đã duyệt -->
                                                 <th:block th:if="${viewerRole == 'HR'}">
                                                     <a th:if="${req.postingStatus == null or req.postingStatus == 'None'}"
                                                         th:href="@{/internal/job-postings/create(requisitionId=${req.requisitionId})}">Tạo tin tuyển dụng</a>
@@ -192,15 +261,20 @@
                                             </div>
                                         </td>
                                     </tr>
+
+                                    <!-- Hàng thông báo khi không có bản ghi nào -->
                                     <tr th:if="${#lists.isEmpty(requisitions)}">
-                                        <td th:colspan="${viewerRole == 'HR' ? 11 : 9}" class="empty-state">Không tìm thấy yêu cầu tuyển dụng nào. Hãy thử thay đổi hoặc xóa bộ lọc tìm kiếm.</td>
+                                        <td th:colspan="${viewerRole == 'HR' ? 10 : 8}" class="empty-state">Không tìm thấy yêu cầu tuyển dụng nào. Hãy thử thay đổi hoặc xóa bộ lọc tìm kiếm.</td>
                                     </tr>
                                 </tbody>
                             </table>
                         </div>
+
+                        <!-- 7. Thanh phân trang Pager -->
                         <nav class="list-pagination-footer" aria-label="Phân trang yêu cầu tuyển dụng">
                             <div th:replace="~{fragments/pagination :: pager(${currentPage - 1}, ${totalPages}, ${totalElements}, '/requisitions')}"></div>
                             <script>
+                                // Hàm chuyển trang JavaScript tích hợp cùng form lọc
                                 window.rmsGoToPage = function(zeroBasedPage) {
                                     const form = document.getElementById('filterForm');
                                     if (form) {
@@ -222,6 +296,8 @@
             </main>
         </div>
     </div>
+
+    <!-- 8. Modal xác nhận xóa yêu cầu tuyển dụng -->
     <dialog th:replace="~{fragments/requisition :: deleteDialog}"></dialog>
 </body>
 

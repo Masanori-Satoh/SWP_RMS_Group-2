@@ -1,28 +1,46 @@
-/* Quiet, scannable list with the same controls as the account workspace. */
+/* =============================================================================
+   REQUISITION-LIST.CSS
+   File CSS cho trang Danh sách Yêu cầu Tuyển dụng (/requisitions)
+   ============================================================================= */
+
+/* -----------------------------------------------------------------------------
+   1. ĐẦU TRANG & TIÊU ĐỀ 
+   ----------------------------------------------------------------------------- */
+
+/* Nút tạo mới yêu cầu tuyển dụng */
 .req-list-page .btn-create {
   flex-shrink: 0;
 }
 
+/* Khoảng cách dưới tiêu đề danh sách */
 .req-list-page .requisition-list-heading {
   margin-bottom: var(--s6);
 }
 
+/* Dòng hiển thị tổng số bản ghi tìm thấy */
 .req-list-page .records-count {
   margin-top: var(--s1);
   color: var(--muted);
   font-size: 14px;
 }
 
+/* -----------------------------------------------------------------------------
+   2. BỘ LỌC TÌM KIẾM (Search & Filter Section)
+   ----------------------------------------------------------------------------- */
+
+/* Lưới bố cục các trường lọc (Tìm kiếm, Phòng ban, Trạng thái, Sắp xếp) */
 .req-list-page .requisition-filter-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
   gap: var(--s4);
 }
 
+/* Ô nhập từ khóa tìm kiếm */
 .req-list-page .filter-search {
   min-width: 180px;
 }
 
+/* Từng ô chứa nhãn và input/select lọc */
 .req-list-page .filter-field {
   min-width: 0;
 }
@@ -34,6 +52,7 @@
   font-weight: 600;
 }
 
+/* Khối nút bấm áp dụng bộ lọc và đặt lại bộ lọc */
 .req-list-page .filter-actions {
   display: flex;
   gap: var(--s2);
@@ -41,6 +60,11 @@
   margin-block: var(--s4) var(--s6);
 }
 
+/* -----------------------------------------------------------------------------
+   3. BẢNG DỮ LIỆU DANH SÁCH (Data Table)
+   ----------------------------------------------------------------------------- */
+
+/* Chiều rộng bảng */
 .req-list-page .requisition-list-table {
   min-width: 1020px;
 }
@@ -49,41 +73,29 @@
   padding-block: var(--s2);
 }
 
+/* phải luôn nằm trên một dòng duy nhất */
 .req-list-page .requisition-list-table th {
   white-space: nowrap;
 }
 
+/* Hiệu ứng nổi bật hàng khi rê chuột qua */
 .req-list-page .requisition-list-table tbody tr:hover {
   background: var(--page);
 }
 
+/* Cột số thứ tự: màu chữ mờ */
 .req-list-page .requisition-list-table td:first-child {
   color: var(--muted);
 }
 
-.req-list-page .code-badge {
-  display: inline-block;
-  font-family: monospace;
-  font-size: 12px;
-  font-weight: 600;
-  padding: 2px 6px;
-  border-radius: 4px;
-  background: var(--brand-soft);
-  color: var(--brand-dark);
-  white-space: nowrap;
+/* Khối bọc tên vị trí và huy hiệu đợt tuyển dụng */
+.req-list-page .position-badge-group {
+  display: flex;
+  align-items: center;
+  gap: var(--s2);
 }
 
-.req-list-page .round-badge {
-  display: inline-block;
-  font-size: 11px;
-  font-weight: 600;
-  padding: 2px 8px;
-  border-radius: 10px;
-  background: #e0e7ff;
-  color: #3730a3;
-  white-space: nowrap;
-}
-
+/* Tên vị trí công việc */
 .req-list-page .position-title {
   display: flex;
   align-items: center;
@@ -99,12 +111,18 @@
   text-decoration: underline;
 }
 
+/* -----------------------------------------------------------------------------
+   4. NÚT THAO TÁC & MENU POPOVER (Actions Dropdown Menu)
+   ----------------------------------------------------------------------------- */
+
+/* Nút ... */
 .req-list-page .btn-action-outline {
   min-width: 44px;
   padding: var(--s2);
   font-size: 20px;
 }
 
+/* Menu Popover nổi khi bấm nút ba chấm (...) */
 .req-list-page .action-popover {
   position: fixed;
   inset: auto;
@@ -119,6 +137,7 @@
   box-shadow: 0 4px 12px rgb(37 41 35 / .1);
 }
 
+/* Từng mục lựa chọn trong menu thao tác (Xem, Sửa, Sao chép, Xóa, Tạo tin) */
 .req-list-page .action-popover :is(a, button) {
   display: flex;
   width: 100%;
@@ -133,15 +152,63 @@
   font-size: 15px;
 }
 
+/* Hiệu ứng rê chuột vào từng mục hành động */
 .req-list-page .action-popover :is(a, button):hover {
   background: var(--brand-soft);
 }
 
+/* Hiệu ứng rê chuột riêng cho nút Xóa: chuyển nền đỏ nhạt */
 .req-list-page .action-popover .delete-action:hover {
   background: var(--error-soft);
 }
 
-.req-list-page .list-pagination-footer {
+/* -----------------------------------------------------------------------------
+   5. HUY HIỆU TRẠNG THÁI TIN TUYỂN DỤNG (Job Posting Badges)
+   Cột dành riêng cho HR theo dõi tình trạng phát hành tin từ yêu cầu đã duyệt.
+   ----------------------------------------------------------------------------- */
+.req-list-page .posting-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 8px;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+/* Đã đăng tin tuyển dụng lên cổng tìm việc */
+.req-list-page .posting-badge.badge-published {
+  background: #ecfdf5;
+  color: #065f46;
+  border: 1px solid #a7f3d0;
+}
+
+/* Tin đang ở dạng bản nháp */
+.req-list-page .posting-badge.badge-draft {
+  background: #fefce8;
+  color: #854d0e;
+  border: 1px solid #fef08a;
+}
+
+/* Chưa tạo tin tuyển dụng */
+.req-list-page .posting-badge.badge-none {
+  background: #f3f4f6;
+  color: #6b7280;
+  border: 1px dashed #d1d5db;
+}
+
+/* Tin đã đóng hoặc tạm dừng */
+.req-list-page .posting-badge.badge-closed,
+.req-list-page .posting-badge.badge-paused {
+  background: #f3f4f6;
+  color: #4b5563;
+  border: 1px solid #e5e7eb;
+}
+
+/* -----------------------------------------------------------------------------
+   6. THANH PHÂN TRANG (Pagination)
+   ----------------------------------------------------------------------------- */
+/* .req-list-page .list-pagination-footer {
   display: flex;
   justify-content: flex-end;
   margin-top: var(--s6);
@@ -159,13 +226,15 @@
   font-size: 14px;
 }
 
-.req-list-page .page-link.active {
+/* Nút trang hiện tại đang chọn */
+/* .req-list-page .page-link.active {
   color: var(--surface);
   background: var(--brand-dark);
   border-color: var(--brand-dark);
 }
 
-.req-list-page .page-link.disabled {
+/* Nút trang bị vô hiệu hóa */
+/* .req-list-page .page-link.disabled {
   cursor: default;
   color: var(--muted);
   background: var(--page);
@@ -174,40 +243,12 @@
 
 .req-list-page a.page-link:not(.active):hover {
   background: var(--brand-soft);
-}
+}  */
 
-.req-list-page .posting-badge {
-  display: inline-flex;
-  align-items: center;
-  padding: 3px 8px;
-  border-radius: 4px;
-  font-size: 12px;
-  font-weight: 600;
-  white-space: nowrap;
-}
-.req-list-page .posting-badge.badge-published {
-  background: #ecfdf5;
-  color: #065f46;
-  border: 1px solid #a7f3d0;
-}
-.req-list-page .posting-badge.badge-draft {
-  background: #fefce8;
-  color: #854d0e;
-  border: 1px solid #fef08a;
-}
-.req-list-page .posting-badge.badge-none {
-  background: #f3f4f6;
-  color: #6b7280;
-  border: 1px dashed #d1d5db;
-}
-.req-list-page .posting-badge.badge-closed,
-.req-list-page .posting-badge.badge-paused {
-  background: #f3f4f6;
-  color: #4b5563;
-  border: 1px solid #e5e7eb;
-}
-
-@media (max-width:1100px) {
+/* -----------------------------------------------------------------------------
+   7. THÍCH ỨNG THIẾT BỊ (Responsive Queries)
+   ----------------------------------------------------------------------------- */
+@media (max-width: 1100px) {
   .req-list-page .requisition-filter-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
@@ -217,7 +258,7 @@
   }
 }
 
-@media (max-width:480px) {
+@media (max-width: 480px) {
   .req-list-page .requisition-filter-grid {
     grid-template-columns: minmax(0, 1fr);
   }
