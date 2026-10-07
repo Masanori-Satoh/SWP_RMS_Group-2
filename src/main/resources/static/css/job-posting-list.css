@@ -311,6 +311,15 @@
     word-break: break-word;
 }
 
+.jp-title-link {
+    transition: color 0.15s ease;
+}
+
+.jp-title-link:hover strong {
+    color: var(--jp-brand);
+    text-decoration: underline;
+}
+
 .col-code {
     width: 110px;
     white-space: nowrap;
@@ -348,6 +357,22 @@
     white-space: nowrap;
 }
 
+.col-qty {
+    width: 65px;
+    text-align: center;
+    white-space: nowrap;
+}
+
+.col-type {
+    min-width: 105px;
+    white-space: nowrap;
+}
+
+.col-posting {
+    min-width: 115px;
+    white-space: nowrap;
+}
+
 .col-action {
     width: 75px;
     text-align: center;
@@ -379,7 +404,7 @@
     white-space: nowrap;
 }
 
-/* Nhãn viên thuốc trạng thái tin đăng (Status Pills: Đã đăng, Bản nháp, Tạm dừng, Đã đóng) */
+/* Nhãn viên thuốc trạng thái tin đăng (Status Pills: Đã đăng, Bản nháp, Tạm dừng, Đã đóng, Đã duyệt, Chờ duyệt, Từ chối, Chưa tạo tin) */
 .jp-status-pill {
     display: inline-flex;
     align-items: center;
@@ -397,13 +422,15 @@
     border-radius: 50%;
 }
 
-.jp-status-published {
+.jp-status-published,
+.jp-status-approved {
     background: #e8f5e9;
     color: #15803d;
     border: 1px solid #c6ebd0;
 }
 
-.jp-status-published .dot {
+.jp-status-published .dot,
+.jp-status-approved .dot {
     background: #22c55e;
 }
 
@@ -417,24 +444,38 @@
     background: #94a3b8;
 }
 
-.jp-status-paused {
+.jp-status-paused,
+.jp-status-pending {
     background: #fef9c3;
     color: #854d0e;
     border: 1px solid #fde047;
 }
 
-.jp-status-paused .dot {
+.jp-status-paused .dot,
+.jp-status-pending .dot {
     background: #eab308;
 }
 
-.jp-status-closed {
+.jp-status-closed,
+.jp-status-rejected {
     background: #fee2e2;
     color: #991b1b;
     border: 1px solid #fca5a5;
 }
 
-.jp-status-closed .dot {
+.jp-status-closed .dot,
+.jp-status-rejected .dot {
     background: #ef4444;
+}
+
+.jp-status-none {
+    background: #f8fafc;
+    color: #64748b;
+    border: 1px dashed #cbd5e1;
+}
+
+.jp-status-none .dot {
+    background: #94a3b8;
 }
 
 /* 8. Nút thao tác ba chấm (...) & Menu Popover hành động */
@@ -443,6 +484,7 @@
     text-align: center;
 }
 
+.rms-app .btn-action-outline,
 .btn-action-outline {
     display: inline-flex;
     align-items: center;
@@ -462,6 +504,8 @@
     transition: all 0.15s ease;
 }
 
+.rms-app .btn-action-outline:hover,
+.rms-app .btn-action-outline:focus-visible,
 .btn-action-outline:hover,
 .btn-action-outline:focus-visible {
     background: #f1f5f9;
@@ -469,6 +513,7 @@
     color: #0f172a;
 }
 
+.rms-app .action-popover,
 .action-popover {
     position: fixed;
     inset: auto;
@@ -483,10 +528,12 @@
     z-index: 1000;
 }
 
+.rms-app .action-popover :is(a, button),
 .action-popover :is(a, button) {
     display: flex;
     width: 100%;
     align-items: center;
+    min-height: auto;
     gap: 10px;
     padding: 8px 12px;
     background: transparent;
@@ -501,15 +548,18 @@
     transition: background-color 0.15s ease, color 0.15s ease;
 }
 
+.rms-app .action-popover :is(a, button):hover,
 .action-popover :is(a, button):hover {
     background: #f1f5f9;
     color: #0f172a;
 }
 
+.rms-app .action-popover .delete-action,
 .action-popover .delete-action {
     color: #ef4444;
 }
 
+.rms-app .action-popover .delete-action:hover,
 .action-popover .delete-action:hover {
     background: #fef2f2;
     color: #dc2626;
@@ -544,16 +594,32 @@
     font-size: 13.5px;
 }
 
-/* 9. Thiết kế tương thích kích thước màn hình nhỏ (Responsive) */
+/* 9. Lưới bộ lọc mở rộng cho Yêu cầu tuyển dụng (Requisition Filter Grid) */
+.req-filter-grid {
+    display: grid;
+    grid-template-columns: minmax(180px, 1.8fr) repeat(auto-fit, minmax(130px, 1fr));
+    gap: 12px;
+    margin-bottom: 12px;
+}
+
+/* 10. Thiết kế tương thích kích thước màn hình nhỏ (Responsive) */
+@media (max-width: 1200px) {
+    .req-filter-grid {
+        grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    }
+}
+
 @media (max-width: 992px) {
-    .jp-filter-grid {
+    .jp-filter-grid,
+    .req-filter-grid {
         grid-template-columns: 1fr 1fr;
         gap: 10px;
     }
 }
 
 @media (max-width: 600px) {
-    .jp-filter-grid {
+    .jp-filter-grid,
+    .req-filter-grid {
         grid-template-columns: 1fr;
     }
 
