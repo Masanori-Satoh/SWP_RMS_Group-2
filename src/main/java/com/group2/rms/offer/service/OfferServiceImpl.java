@@ -477,6 +477,32 @@ public class OfferServiceImpl implements OfferService {
     }
 
     @Override
+    @Transactional(readOnly = true)
+    public UpdateOfferRequest getUpdateOfferRequestById(Integer id) {
+        OfferProposal offer = offerProposalRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy OfferProposal với ID: " + id));
+
+        String currentStatus = offer.getOfferStatus();
+        if (!"Draft".equalsIgnoreCase(currentStatus)) {
+            throw new BaseBusinessException(
+                    "Theo quy tắc GBR-07, chỉ được phép chỉnh sửa Offer khi ở trạng thái Bản thảo (Draft). Trạng thái hiện tại: "
+                            + currentStatus,
+                    "OFFER_STATUS_INVALID");
+        }
+
+        return UpdateOfferRequest.builder()
+                .offeredPositionTitle(offer.getOfferedPositionTitle())
+                .proposedSalary(offer.getProposedSalary())
+                .probationSalary(offer.getProbationSalary())
+                .probationDays(60)
+                .expectedStartDate(offer.getExpectedStartDate())
+                .workLocation(offer.getWorkLocation())
+                .benefitsPackage(offer.getBenefitsPackage())
+                .isDraft(true)
+                .build();
+    }
+
+    @Override
     public void deleteDraftOfferByHr(Integer id) {
         OfferProposal offer = offerProposalRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy OfferProposal với ID: " + id));

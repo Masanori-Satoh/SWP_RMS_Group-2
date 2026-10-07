@@ -71,6 +71,11 @@ public interface OfferService {
     void deleteDraftOfferByHr(Integer id);
 
     /**
+     * Lấy thông tin DTO phục vụ cho form chỉnh sửa Offer Proposal (Screen 32 Update).
+     */
+    UpdateOfferRequest getUpdateOfferRequestById(Integer id);
+
+    /**
      * HR gửi Offer Letter chính thức cho ứng viên sau khi Director Approved.
      */
     OfferResponse sendOfferToCandidate(Integer id);
