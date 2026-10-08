@@ -2,7 +2,7 @@
 
 - **Dự án:** Hệ Thống Quản Lý Tuyển Dụng — SWP_RMS_Group-2 (Mộc RMS)
 - **Thành viên phụ trách:** Phạm Thị Huyền (`HuyenPT`)
-- **Nhánh làm việc (Branch):** `feat/huyenpt/inte1/hr-offer-ui-enhancements`
+- **Nhánh làm việc (Branch):** `feat/huyenpt/inte2/hr-offer-ui-enhancements`
 - **Phân hệ (Module):** Quản lý Đề xuất Lương & Tuyển dụng (`Offer Management`) — Screen 30 (List), Screen 32 (Detail), Create, Edit, Export Excel.
 - **Tài liệu tham chiếu:**
   - Quy chuẩn kiến trúc: [`docs/architecture/ARCHITECTURE_GUIDE.md`](../../architecture/ARCHITECTURE_GUIDE.md)
@@ -13,7 +13,7 @@
 
 ## I. MỤC TIÊU VÀ BỐI CẢNH TRIỂN KHAI
 
-Nhánh `feat/huyenpt/inte1/hr-offer-ui-enhancements` được thực hiện nhằm hoàn thiện toàn diện trải nghiệm người dùng (UX) và bổ sung các tính năng cốt lõi cho phân hệ **Quản lý Đề xuất Offer (HR Offer Management)**:
+Nhánh `feat/huyenpt/inte2/hr-offer-ui-enhancements` được thực hiện nhằm hoàn thiện toàn diện trải nghiệm người dùng (UX) và bổ sung các tính năng cốt lõi cho phân hệ **Quản lý Đề xuất Offer (HR Offer Management)**:
 
 1. **Bổ sung Tính năng Xuất Excel (Offer Excel Export) — Screen 30:**
    - Cho phép chuyên viên Nhân sự (HR) xuất danh sách dữ liệu đề xuất lương ra file Microsoft Excel (`.xlsx`) phục vụ báo cáo định kỳ, lưu trữ hồ sơ và trình Ban Giám đốc.
@@ -170,7 +170,7 @@ Nhánh `feat/huyenpt/inte1/hr-offer-ui-enhancements` được thực hiện nh�
 
 ## V. KẾT LUẬN
 
-Nhánh `feat/huyenpt/inte1/hr-offer-ui-enhancements` đã giải quyết triệt để tất cả các yêu cầu về trải nghiệm người dùng, nghiệp vụ và kỹ thuật:
+Nhánh `feat/huyenpt/inte2/hr-offer-ui-enhancements` đã giải quyết triệt để tất cả các yêu cầu về trải nghiệm người dùng, nghiệp vụ và kỹ thuật:
 - ✅ Tính năng Xuất Excel hoàn chỉnh, linh hoạt và chuyên nghiệp.
 - ✅ Khôi phục và nâng cấp toàn bộ thao tác (Tạo, Xem, Sửa, Xóa, Gửi) thành Pop-up Modal trực tiếp trên màn hình danh sách Screen 30.
 - ✅ Giao diện đồng bộ nhận diện thương hiệu Mộc RMS, mượt mà và không còn lỗi hiển thị.
