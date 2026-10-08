@@ -1,0 +1,419 @@
+/* ==========================================================================
+   JOB-POSTING-CREATE.CSS
+   Styles for Create / Update Job Posting (/internal/job-postings/create)
+   Strictly scoped under .jp-create-page.
+   Enforces: Max 2 fields per row, full-width textareas, distinct read-only source cards.
+   ========================================================================== */
+
+:root {
+    --jp-brand: #1b4d38;
+    --jp-brand-hover: #153e32;
+    --jp-brand-light: #e8f5e9;
+    --jp-text-main: #0f172a;
+    --jp-text-secondary: #475569;
+    --jp-text-muted: #64748b;
+    --jp-border: #e2e8f0;
+    --jp-border-focus: #1b4d38;
+    --jp-bg-card: #ffffff;
+    --jp-bg-readonly: #f8fafc;
+    --jp-error: #dc2626;
+    --jp-error-border: #ef4444;
+    --jp-radius: 10px;
+}
+
+/* Page Wrapper */
+.jp-create-page .jp-create-wrapper {
+    max-width: 1080px;
+    margin: 0 auto;
+    padding: 24px 24px 56px;
+    box-sizing: border-box;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    color: var(--jp-text-main);
+}
+
+/* Breadcrumbs & Header Bar */
+.jp-create-page .jp-header-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.jp-create-page .jp-breadcrumbs {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13.5px;
+    color: var(--jp-text-muted);
+}
+
+.jp-create-page .jp-breadcrumbs a {
+    color: var(--jp-text-muted);
+    text-decoration: none;
+    transition: color 0.15s ease;
+}
+
+.jp-create-page .jp-breadcrumbs a:hover {
+    color: var(--jp-brand);
+}
+
+.jp-create-page .jp-breadcrumbs .sep {
+    color: #cbd5e1;
+    font-size: 12px;
+}
+
+.jp-create-page .jp-breadcrumbs .current {
+    color: var(--jp-text-main);
+    font-weight: 600;
+}
+
+.jp-create-page .jp-btn-back {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 7px 14px;
+    border: 1px solid var(--jp-border);
+    border-radius: 6px;
+    background: #ffffff;
+    color: var(--jp-text-secondary);
+    font-size: 13.5px;
+    font-weight: 500;
+    text-decoration: none;
+    transition: all 0.15s ease;
+}
+
+.jp-create-page .jp-btn-back:hover {
+    background: #f8fafc;
+    color: var(--jp-text-main);
+    border-color: #cbd5e1;
+}
+
+/* Title & Description */
+.jp-create-page .jp-page-intro {
+    margin-bottom: 28px;
+}
+
+.jp-create-page .jp-page-intro h1 {
+    font-size: 24px;
+    font-weight: 700;
+    color: var(--jp-text-main);
+    margin: 0 0 6px 0;
+    letter-spacing: -0.015em;
+}
+
+.jp-create-page .jp-page-intro .subtitle {
+    font-size: 14px;
+    color: var(--jp-text-muted);
+    margin: 0;
+    line-height: 1.5;
+}
+
+/* Server Error Alert */
+.jp-create-page .jp-server-alert {
+    margin-bottom: 24px;
+    padding: 14px 18px;
+    background: #fef2f2;
+    border: 1px solid #fecaca;
+    color: #991b1b;
+    border-radius: 8px;
+    font-size: 14px;
+}
+
+/* Form Card */
+.jp-create-page .jp-form-card {
+    background: var(--jp-bg-card);
+    border: 1px solid var(--jp-border);
+    border-radius: var(--jp-radius);
+    padding: 26px 30px;
+    margin-bottom: 24px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03);
+}
+
+.jp-create-page .jp-source-card {
+    background: #fafaf9;
+    border-color: #e5e5e4;
+}
+
+.jp-create-page .jp-card-header {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    margin-bottom: 22px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid var(--jp-border);
+}
+
+.jp-create-page .jp-card-icon-box {
+    width: 38px;
+    height: 38px;
+    border-radius: 8px;
+    background: #f1f5f9;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    flex-shrink: 0;
+}
+
+.jp-create-page .jp-card-icon-box.jp-icon-edit {
+    background: #ecfdf5;
+}
+
+.jp-create-page .jp-card-header h2 {
+    font-size: 16.5px;
+    font-weight: 700;
+    color: var(--jp-text-main);
+    margin: 0 0 4px 0;
+}
+
+.jp-create-page .jp-card-desc {
+    font-size: 13.5px;
+    color: var(--jp-text-muted);
+    margin: 0;
+    line-height: 1.45;
+}
+
+/* 2-Column Form Grid (Strictly max 2 fields per row) */
+.jp-create-page .jp-grid-two-col {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 20px 24px;
+}
+
+.jp-create-page .jp-col-full {
+    grid-column: 1 / -1;
+}
+
+.jp-create-page .jp-field-group {
+    display: flex;
+    flex-direction: column;
+}
+
+.jp-create-page .jp-flex-align-bottom {
+    justify-content: flex-end;
+}
+
+.jp-create-page .jp-field-label {
+    font-size: 13.5px;
+    font-weight: 600;
+    color: var(--jp-text-main);
+    margin-bottom: 6px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.jp-create-page .jp-label-note {
+    font-size: 12.5px;
+    font-weight: 400;
+    color: var(--jp-text-muted);
+}
+
+.jp-create-page .required-asterisk {
+    color: #dc2626;
+    font-weight: 700;
+}
+
+.jp-create-page .jp-help-text {
+    font-size: 12px;
+    color: var(--jp-text-muted);
+    margin-top: 4px;
+}
+
+/* Read-Only Box Styling (Distinct from editable inputs) */
+.jp-create-page .jp-readonly-box {
+    min-height: 40px;
+    padding: 9px 13px;
+    background: #f1f5f9;
+    border: 1px solid #cbd5e1;
+    border-radius: 6px;
+    font-size: 13.5px;
+    color: #334155;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    box-sizing: border-box;
+}
+
+.jp-create-page .jp-readonly-textarea {
+    min-height: 72px;
+    padding: 10px 14px;
+    background: #f1f5f9;
+    border: 1px solid #cbd5e1;
+    border-radius: 6px;
+    font-size: 13.5px;
+    color: #334155;
+    line-height: 1.6;
+    box-sizing: border-box;
+    white-space: pre-line;
+}
+
+/* Editable Inputs */
+.jp-create-page .jp-input {
+    width: 100%;
+    min-height: 42px;
+    padding: 9px 13px;
+    background: #ffffff;
+    border: 1px solid var(--jp-border);
+    border-radius: 6px;
+    font-size: 14px;
+    color: var(--jp-text-main);
+    box-sizing: border-box;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
+    outline: none;
+}
+
+.jp-create-page .jp-input:focus {
+    border-color: var(--jp-brand);
+    box-shadow: 0 0 0 3px rgba(27, 77, 56, 0.12);
+}
+
+.jp-create-page .jp-input.is-invalid {
+    border-color: var(--jp-error-border) !important;
+    background-color: #fffafb;
+}
+
+.jp-create-page .jp-textarea {
+    width: 100%;
+    padding: 12px 14px;
+    background: #ffffff;
+    border: 1px solid var(--jp-border);
+    border-radius: 6px;
+    font-size: 14px;
+    color: var(--jp-text-main);
+    box-sizing: border-box;
+    line-height: 1.65;
+    font-family: inherit;
+    resize: vertical;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
+    outline: none;
+}
+
+.jp-create-page .jp-textarea:focus {
+    border-color: var(--jp-brand);
+    box-shadow: 0 0 0 3px rgba(27, 77, 56, 0.12);
+}
+
+.jp-create-page .jp-textarea.is-invalid {
+    border-color: var(--jp-error-border) !important;
+    background-color: #fffafb;
+}
+
+/* Validation Error Message */
+.jp-create-page .field-error {
+    font-size: 12.5px;
+    color: var(--jp-error);
+    margin-top: 4px;
+    font-weight: 500;
+    display: none;
+}
+
+.jp-create-page .field-error.show {
+    display: block;
+}
+
+/* Checkbox */
+.jp-create-page .jp-checkbox-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-height: 42px;
+}
+
+.jp-create-page .jp-checkbox {
+    width: 18px;
+    height: 18px;
+    accent-color: var(--jp-brand);
+    cursor: pointer;
+}
+
+.jp-create-page .jp-checkbox-label {
+    font-size: 13.5px;
+    color: var(--jp-text-main);
+    cursor: pointer;
+}
+
+/* Actions Bar (3 Buttons) */
+.jp-create-page .jp-form-actions-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 18px 24px;
+    background: #ffffff;
+    border: 1px solid var(--jp-border);
+    border-radius: var(--jp-radius);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+}
+
+.jp-create-page .jp-actions-right {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.jp-create-page .jp-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    padding: 9px 18px;
+    font-size: 14px;
+    font-weight: 600;
+    border-radius: 6px;
+    border: 1px solid transparent;
+    cursor: pointer;
+    text-decoration: none;
+    transition: all 0.15s ease;
+}
+
+.jp-create-page .jp-btn-secondary {
+    background: #ffffff;
+    border-color: var(--jp-border);
+    color: var(--jp-text-secondary);
+}
+
+.jp-create-page .jp-btn-secondary:hover {
+    background: #f8fafc;
+    color: var(--jp-text-main);
+    border-color: #cbd5e1;
+}
+
+.jp-create-page .jp-btn-draft {
+    background: #f1f5f9;
+    border-color: #cbd5e1;
+    color: #334155;
+}
+
+.jp-create-page .jp-btn-draft:hover {
+    background: #e2e8f0;
+    color: #0f172a;
+}
+
+.jp-create-page .jp-btn-publish {
+    background: var(--jp-brand);
+    border-color: var(--jp-brand);
+    color: #ffffff;
+}
+
+.jp-create-page .jp-btn-publish:hover {
+    background: var(--jp-brand-hover);
+    border-color: var(--jp-brand-hover);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .jp-create-page .jp-grid-two-col {
+        grid-template-columns: 1fr;
+    }
+    .jp-create-page .jp-form-actions-bar {
+        flex-direction: column;
+        gap: 12px;
+        align-items: stretch;
+    }
+    .jp-create-page .jp-actions-right {
+        flex-direction: column;
+    }
+    .jp-create-page .jp-btn {
+        width: 100%;
+    }
+}
