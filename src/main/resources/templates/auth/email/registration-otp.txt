@@ -1,0 +1,17 @@
+Mộc Tuyển dụng
+
+Xác minh email đăng ký
+
+Chúng tôi nhận được yêu cầu đăng ký tài khoản ứng viên tại Mộc với email này.
+Nhập mã này tại trang xác minh để hoàn tất đăng ký:
+
+{{otp}}
+
+Mã có hiệu lực trong 15 phút kể từ khi gửi.
+Không chia sẻ mã này với bất kỳ ai.
+
+Nếu bạn không đăng ký tài khoản, hãy bỏ qua email này.
+Tài khoản chưa được tạo và bạn không cần thực hiện thêm thao tác nào.
+
+Mộc Tuyển dụng
+Đồng hành cùng sự nghiệp của bạn.

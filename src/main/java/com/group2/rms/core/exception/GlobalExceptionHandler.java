@@ -2,6 +2,13 @@ package com.group2.rms.core.exception;
 
 import com.group2.rms.admin.dto.HealthResponse;
 import com.group2.rms.admin.exception.DatabaseHealthException;
+import com.group2.rms.auth.dto.ForgotPasswordRequest;
+import com.group2.rms.auth.dto.ResetPasswordRequest;
+import com.group2.rms.auth.dto.RegisterAccountRequest;
+import com.group2.rms.auth.dto.VerifyRegistrationOtpRequest;
+import com.group2.rms.auth.exception.RegistrationFlowException;
+import com.group2.rms.auth.dto.VerifyPasswordResetOtpRequest;
+import com.group2.rms.auth.exception.PasswordRecoveryFlowException;
 import com.group2.rms.auth.exception.PasswordRecoveryUnavailableException;
 import com.group2.rms.auth.exception.PasswordResetDeliveryException;
 import com.group2.rms.user.exception.DepartmentFieldException;
@@ -23,6 +30,7 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.servlet.ModelAndView;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import org.springframework.web.servlet.resource.NoResourceFoundException;
 
 /**
@@ -34,6 +42,40 @@ import org.springframework.web.servlet.resource.NoResourceFoundException;
 public class GlobalExceptionHandler {
 
     private static final Logger log = LoggerFactory.getLogger(GlobalExceptionHandler.class);
+
+    @ExceptionHandler(RegistrationFlowException.class)
+    public ModelAndView handleRegistrationFlowException(RegistrationFlowException exception,
+            HttpServletRequest request, RedirectAttributes attributes) {
+        Object form;
+        String target;
+        if (exception.getStep() == RegistrationFlowException.Step.OTP) {
+            form = new VerifyRegistrationOtpRequest();
+            target = "/register/otp";
+        } else {
+            RegisterAccountRequest registrationForm = new RegisterAccountRequest();
+            var details = exception.getDetails();
+            registrationForm.setFullName(details == null ? request.getParameter("fullName") : details.fullName());
+            registrationForm.setUsername(details == null ? request.getParameter("username") : details.username());
+            registrationForm.setEmail(details == null ? request.getParameter("email") : details.email());
+            form = registrationForm;
+            target = "/register";
+        }
+        BindingResult errors = new BeanPropertyBindingResult(form, "form");
+        if (exception.getField() == null || exception.getField().isBlank()) {
+            errors.reject(exception.getErrorCode(), exception.getMessage());
+        } else {
+            errors.rejectValue(exception.getField(), exception.getErrorCode(), exception.getMessage());
+        }
+        attributes.addFlashAttribute("form", form);
+        attributes.addFlashAttribute(BindingResult.MODEL_KEY_PREFIX + "form", errors);
+        if (exception.getRetryAfterSeconds() > 0) {
+            attributes.addFlashAttribute("retryAfterSeconds", exception.getRetryAfterSeconds());
+        }
+        log.warn("Registration rejected [{}]", exception.getErrorCode());
+        ModelAndView view = new ModelAndView("redirect:" + target);
+        view.setStatus(HttpStatus.SEE_OTHER);
+        return view;
+    }
 
     @ExceptionHandler(DepartmentFieldException.class)
     public ModelAndView handleDepartmentFieldException(DepartmentFieldException exception,
@@ -99,13 +141,37 @@ public class GlobalExceptionHandler {
                 .body(new HealthResponse("DOWN"));
     }
 
-    // speical bussiness flow
-    @ExceptionHandler({ PasswordResetDeliveryException.class, PasswordRecoveryUnavailableException.class })
-    public ModelAndView handlePasswordRecoveryMailFailure(BaseBusinessException exception) {
-        log.error("Password recovery mail failure [{}]", exception.getErrorCode());
-        ModelAndView mav = new ModelAndView("redirect:/forgot-password?sent");
-        mav.setStatus(HttpStatus.FOUND);
-        return mav;
+    @ExceptionHandler({
+            PasswordResetDeliveryException.class,
+            PasswordRecoveryUnavailableException.class
+    })
+    public ModelAndView handlePasswordRecoveryMailFailure(BaseBusinessException exception, HttpServletRequest request,
+            RedirectAttributes attributes) {
+
+        ForgotPasswordRequest form = new ForgotPasswordRequest();
+        form.setEmail(request.getParameter("email"));
+
+        BindingResult errors = new BeanPropertyBindingResult(form, "form");
+
+        errors.reject(
+                exception.getErrorCode(),
+                "Unable to send the verification email. Please try again later.");
+
+        attributes.addFlashAttribute("form", form);
+
+        attributes.addFlashAttribute(
+                BindingResult.MODEL_KEY_PREFIX + "form",
+                errors);
+
+        log.error(
+                "Password recovery mail failure [{}]",
+                exception.getErrorCode());
+
+        ModelAndView view = new ModelAndView("redirect:/forgot-password");
+
+        view.setStatus(HttpStatus.SEE_OTHER);
+
+        return view;
     }
 
     // 400 bad request
@@ -144,6 +210,58 @@ public class GlobalExceptionHandler {
         mav.addObject("message", errorMsg);
         mav.addObject("url", request.getRequestURL());
         return mav;
+    }
+
+    @ExceptionHandler(PasswordRecoveryFlowException.class)
+    public ModelAndView handlePasswordRecoveryFlowException(PasswordRecoveryFlowException exception,
+            HttpServletRequest request, RedirectAttributes attributes) {
+
+        String target = switch (exception.getStep()) {
+            case FORGOT -> "/forgot-password";
+            case OTP -> "/reset-password/otp";
+            case PASSWORD -> "/reset-password";
+        };
+
+        // create empty form
+        Object form = switch (exception.getStep()) {
+            case FORGOT -> {
+                ForgotPasswordRequest forgotForm = new ForgotPasswordRequest();
+                // store email
+                forgotForm.setEmail(request.getParameter("email"));
+                yield forgotForm;
+            }
+            case OTP -> new VerifyPasswordResetOtpRequest();
+            case PASSWORD -> new ResetPasswordRequest();
+        };
+
+        BindingResult errors = new BeanPropertyBindingResult(form, "form");
+        // get field has error
+        String field = exception.getField();
+        // check if error is a field
+        if (field != null && !field.isBlank()) {
+            errors.rejectValue(field, exception.getErrorCode(), exception.getMessage());
+
+        }
+        // error is global
+        else {
+            errors.reject(exception.getErrorCode(), exception.getMessage());
+        }
+
+        attributes.addFlashAttribute("form", form);
+
+        attributes.addFlashAttribute(BindingResult.MODEL_KEY_PREFIX + "form", errors);
+        // check if retry is remain
+        if (exception.getRetryAfterSeconds() > 0) {
+            attributes.addFlashAttribute(
+                    "retryAfterSeconds", exception.getRetryAfterSeconds());
+        }
+
+        log.warn("Password recovery rejected [{}]", exception.getErrorCode());
+
+        ModelAndView view = new ModelAndView("redirect:" + target);
+        view.setStatus(HttpStatus.SEE_OTHER);
+
+        return view;
     }
 
     // =========================================================================

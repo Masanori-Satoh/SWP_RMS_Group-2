@@ -56,7 +56,7 @@ public class SecurityConfig {
                                                 // permit all for defaultpage and font
                                                 .requestMatchers(HttpMethod.GET, "/", "/fonts/**").permitAll()
                                                 // permit all for login, register, forgot-password, reset-password
-                                                .requestMatchers("/login", "/register", "/forgot-password",
+                                                .requestMatchers("/login", "/register", "/register/**", "/forgot-password",
                                                                 "/reset-password/**")
                                                 .permitAll()
                                                 // required role canididate for job apply

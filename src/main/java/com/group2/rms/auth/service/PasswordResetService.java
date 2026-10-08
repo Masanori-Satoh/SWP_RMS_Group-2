@@ -1,6 +1,8 @@
 package com.group2.rms.auth.service;
 
 import com.group2.rms.auth.exception.InvalidResetTokenException;
+import com.group2.rms.auth.exception.PasswordRecoveryFlowException;
+import com.group2.rms.auth.exception.PasswordRecoveryFlowException.Step;
 import com.group2.rms.user.entity.User;
 import com.group2.rms.user.repository.UserRepository;
 import com.group2.rms.user.exception.AccountFieldException;
@@ -12,12 +14,16 @@ import org.springframework.transaction.annotation.Transactional;
 
 import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
+
+import java.io.Serializable;
 import java.nio.charset.StandardCharsets;
 import java.security.GeneralSecurityException;
 import java.security.MessageDigest;
 import java.security.SecureRandom;
 import java.time.Clock;
+import java.time.Instant;
 import java.util.Base64;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -29,148 +35,135 @@ import com.group2.rms.auth.exception.InvalidResetTokenException;
  */
 @Service
 public class PasswordResetService {
-    private static final SecureRandom RANDOM = new SecureRandom();
-    private static final Base64.Encoder ENCODER = Base64.getUrlEncoder().withoutPadding();
-    private static final Pattern TOKEN_FORMAT = Pattern.compile(
-            "v1\\.([1-9][0-9]{0,9})\\.([0-9]{1,15})\\.([A-Za-z0-9_-]{32})\\.([A-Za-z0-9_-]{43})");
-    private static final long EXPIRY_SECONDS = 15 * 60;
-
     private final UserRepository users;
     private final PasswordEncoder passwordEncoder;
     private final Clock clock;
-    private final byte[] signingKey;
 
     @Autowired
-    public PasswordResetService(UserRepository users, PasswordEncoder passwordEncoder,
-            @Value("${app.password.reset.secret:}") String secret) {
-        this(users, passwordEncoder, secret, Clock.systemUTC());
+    public PasswordResetService(
+            UserRepository users,
+            PasswordEncoder passwordEncoder) {
+        this(users, passwordEncoder, Clock.systemUTC());
     }
 
-    public PasswordResetService(UserRepository users, PasswordEncoder passwordEncoder,
-            String secret, Clock clock) {
+    public PasswordResetService(
+            UserRepository users,
+            PasswordEncoder passwordEncoder,
+            Clock clock) {
+
         this.users = users;
         this.passwordEncoder = passwordEncoder;
         this.clock = clock;
-        byte[] suppliedKey = secret == null ? new byte[0] : secret.getBytes(StandardCharsets.UTF_8);
-        this.signingKey = suppliedKey.length >= 32 ? suppliedKey : null;
-    }
-
-    public boolean isConfigured() {
-        return signingKey != null;
     }
 
     @Transactional(readOnly = true)
-    public Optional<ResetLink> request(String email) {
-        if (!isConfigured() || email == null || email.isBlank()) {
-            return Optional.empty();
+    public AccountSnapshot findActiveAccount(String email) {
+        // check if email is not valid
+        if (email == null || email.isBlank()) {
+            throw new PasswordRecoveryFlowException(
+                    Step.FORGOT,
+                    "email",
+                    "EMAIL_REQUIRED",
+                    "Enter an email address.");
         }
-        User user = users.findByEmailIgnoreCase(email.trim()).orElse(null);
-        if (user == null || !"Active".equals(user.getAccountStatus())) {
-            return Optional.empty();
+
+        User user = users.findByEmailIgnoreCase(email.trim())
+                // check if email is not found
+                .orElseThrow(() -> new PasswordRecoveryFlowException(
+                        Step.FORGOT,
+                        "email",
+                        "EMAIL_NOT_FOUND",
+                        "No account exists with this email address."));
+        // check if account is not active
+        if (!"Active".equals(user.getAccountStatus())) {
+            throw new PasswordRecoveryFlowException(
+                    Step.FORGOT,
+                    "email",
+                    "ACCOUNT_NOT_ACTIVE",
+                    "This account is not active.");
         }
-        byte[] nonce = new byte[24];
-        RANDOM.nextBytes(nonce);
-        long expiresAt = clock.instant().getEpochSecond() + EXPIRY_SECONDS;
-        String payload = "v1." + user.getUserId() + "." + expiresAt + "." + ENCODER.encodeToString(nonce);
-        String signature = ENCODER.encodeToString(sign(payload, user));
-        String otp = generateOtp(payload, user);
-        return Optional.of(new ResetLink(user.getEmail(), payload + "." + signature, otp));
+
+        return new AccountSnapshot(
+                user.getUserId(),
+                user.getEmail(),
+                user.getPasswordHash());
     }
 
     @Transactional(readOnly = true)
-    public boolean isValid(String token) {
-        ParsedToken parsed = parse(token);
-        if (parsed == null) {
+    public boolean isCurrent(AccountSnapshot expected) {
+
+        if (expected == null) {
             return false;
         }
-        return users.findById(parsed.userId())
-                .filter(user -> validForUser(parsed, user))
+
+        return users.findById(expected.userId())
+                .filter(user -> matchesAccount(user, expected))
                 .isPresent();
     }
 
     @Transactional
-    public void reset(String token, String otp, String newPassword) {
-        ParsedToken parsed = parse(token);
-        if (parsed == null) {
-            throw new InvalidResetTokenException("This link is invalid, used, or expired.");
+    public void changePassword(
+            AccountSnapshot expected,
+            String newPassword,
+            Instant expiresAt) {
+
+        if (expected == null || expiresAt == null) {
+            throw invalidRequest();
         }
-        if (newPassword == null || newPassword.isBlank()
-                || newPassword.length() < 8 || newPassword.length() > 32) {
-            throw new AccountFieldException("password", "Password must contain 8–32 characters.");
+
+        if (newPassword == null
+                || newPassword.isBlank()
+                || newPassword.length() < 8
+                || newPassword.length() > 32) {
+
+            throw new PasswordRecoveryFlowException(
+                    Step.PASSWORD,
+                    "password",
+                    "PASSWORD_INVALID",
+                    "Password must contain 8–32 characters.");
         }
-        User user = users.findByIdForUpdate(parsed.userId()).orElse(null);
-        if (user == null || !validForUser(parsed, user)) {
-            throw new InvalidResetTokenException();
-        }
-        // Check OTP code
-        String expectedOtp = generateOtp(parsed.payload(), user);
-        if (otp == null || !MessageDigest.isEqual(
-                expectedOtp.getBytes(StandardCharsets.UTF_8),
-                otp.trim().getBytes(StandardCharsets.UTF_8))) {
-            throw new AccountFieldException("otp", "Invalid OTP code.");
+
+        User user = users.findByIdForUpdate(expected.userId())
+                .orElseThrow(PasswordResetService::invalidRequest);
+
+        // Kiểm tra lại sau khi đã lấy khóa ghi của User.
+        if (!clock.instant().isBefore(expiresAt)
+                || !matchesAccount(user, expected)) {
+            throw invalidRequest();
         }
 
         user.setPasswordHash(passwordEncoder.encode(newPassword));
         users.saveAndFlush(user);
-
     }
 
-    private String generateOtp(String payload, User user) {
-        byte[] hash = sign("OTP:" + payload, user);
-        int code = ((hash[0] & 0x7f) << 24)
-                | ((hash[1] & 0xff) << 16)
-                | ((hash[2] & 0xff) << 8)
-                | (hash[3] & 0xff);
-        return String.format("%06d", code % 1_000_000);
+    private static boolean matchesAccount(
+            User user,
+            AccountSnapshot expected) {
+
+        return "Active".equals(user.getAccountStatus())
+                && Objects.equals(user.getEmail(), expected.email())
+                && Objects.equals(
+                        user.getPasswordHash(),
+                        expected.passwordHash());
     }
 
-    private ParsedToken parse(String token) {
-        if (!isConfigured() || token == null) {
-            return null;
+    private static PasswordRecoveryFlowException invalidRequest() {
+        return new PasswordRecoveryFlowException(
+                Step.FORGOT,
+                null,
+                "RESET_REQUEST_INVALID",
+                "Your reset request is invalid or expired. Request a new code.");
+    }
+
+    // Snapshot nội bộ giữa các Service; không đưa vào Model/JSON/log.
+    record AccountSnapshot(
+            Integer userId,
+            String email,
+            String passwordHash) implements Serializable {
+
+        @Override
+        public String toString() {
+            return "AccountSnapshot[redacted]";
         }
-        Matcher matcher = TOKEN_FORMAT.matcher(token);
-        if (!matcher.matches()) {
-            return null;
-        }
-        try {
-            int userId = Integer.parseInt(matcher.group(1));
-            long expiry = Long.parseLong(matcher.group(2));
-            byte[] signature = Base64.getUrlDecoder().decode(matcher.group(4));
-            if (signature.length != 32) {
-                return null;
-            }
-            String payload = token.substring(0, token.lastIndexOf('.'));
-            return new ParsedToken(userId, expiry, payload, signature);
-        } catch (IllegalArgumentException exception) {
-            return null;
-        }
-    }
-
-    private boolean validForUser(ParsedToken parsed, User user) {
-        long now = clock.instant().getEpochSecond();
-        if (!"Active".equals(user.getAccountStatus()) || parsed.expiresAt() <= now
-                || parsed.expiresAt() > now + EXPIRY_SECONDS) {
-            return false;
-        }
-        byte[] expected = sign(parsed.payload(), user);
-        return MessageDigest.isEqual(expected, parsed.signature());
-    }
-
-    private byte[] sign(String payload, User user) {
-        try {
-            Mac mac = Mac.getInstance("HmacSHA256");
-            mac.init(new SecretKeySpec(signingKey, "HmacSHA256"));
-            // Email and the BCrypt hash are part of the MAC, never included in the link.
-            String boundPayload = payload + "\n" + user.getEmail() + "\n" + user.getPasswordHash();
-            return mac.doFinal(boundPayload.getBytes(StandardCharsets.UTF_8));
-        } catch (GeneralSecurityException exception) {
-            throw new IllegalStateException("HMAC-SHA256 is unavailable", exception);
-        }
-    }
-
-    private record ParsedToken(int userId, long expiresAt, String payload, byte[] signature) {
-    }
-
-    public record ResetLink(String email, String token, String otp) {
     }
 }
