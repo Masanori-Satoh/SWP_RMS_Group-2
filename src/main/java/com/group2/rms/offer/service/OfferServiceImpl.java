@@ -687,4 +687,68 @@ public class OfferServiceImpl implements OfferService {
                 .updatedAt(entity.getUpdatedAt())
                 .build();
     }
+
+    @Override
+    public OfferResponse approveOfferByDirector(Integer id, String comments) {
+        OfferProposal offer = offerProposalRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy OfferProposal với ID: " + id));
+
+        if (!"Pending_Director".equalsIgnoreCase(offer.getOfferStatus())) {
+            throw new BaseBusinessException(
+                    "Chỉ được phê duyệt đề xuất Offer khi ở trạng thái chờ duyệt (Pending_Director). Trạng thái hiện tại: "
+                            + offer.getOfferStatus(),
+                    "OFFER_STATUS_INVALID");
+        }
+
+        User director = resolveProposedBy(null); // Resolve current logged in user (Director)
+        if (director == null) {
+            throw new BaseBusinessException("Không xác định được danh tính Director để thực hiện phê duyệt.", "USER_NOT_FOUND");
+        }
+
+        offer.setOfferStatus("Director_Approved");
+        OfferProposal saved = offerProposalRepository.save(offer);
+
+        OfferApproval approval = OfferApproval.builder()
+                .offerProposal(saved)
+                .director(director)
+                .status("Approved")
+                .directorComments(comments)
+                .approvedAt(LocalDateTime.now())
+                .build();
+        offerApprovalRepository.save(approval);
+
+        return mapToResponse(saved);
+    }
+
+    @Override
+    public OfferResponse rejectOfferByDirector(Integer id, String comments) {
+        OfferProposal offer = offerProposalRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy OfferProposal với ID: " + id));
+
+        if (!"Pending_Director".equalsIgnoreCase(offer.getOfferStatus())) {
+            throw new BaseBusinessException(
+                    "Chỉ được từ chối đề xuất Offer khi ở trạng thái chờ duyệt (Pending_Director). Trạng thái hiện tại: "
+                            + offer.getOfferStatus(),
+                    "OFFER_STATUS_INVALID");
+        }
+
+        User director = resolveProposedBy(null); // Resolve current logged in user (Director)
+        if (director == null) {
+            throw new BaseBusinessException("Không xác định được danh tính Director để thực hiện từ chối.", "USER_NOT_FOUND");
+        }
+
+        offer.setOfferStatus("Director_Rejected");
+        OfferProposal saved = offerProposalRepository.save(offer);
+
+        OfferApproval approval = OfferApproval.builder()
+                .offerProposal(saved)
+                .director(director)
+                .status("Rejected")
+                .directorComments(comments)
+                .approvedAt(LocalDateTime.now())
+                .build();
+        offerApprovalRepository.save(approval);
+
+        return mapToResponse(saved);
+    }
 }

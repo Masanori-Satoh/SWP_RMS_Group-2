@@ -79,4 +79,14 @@ public interface OfferService {
      * HR gửi Offer Letter chính thức cho ứng viên sau khi Director Approved.
      */
     OfferResponse sendOfferToCandidate(Integer id);
+
+    /**
+     * Director phê duyệt Offer.
+     */
+    OfferResponse approveOfferByDirector(Integer id, String comments);
+
+    /**
+     * Director từ chối Offer.
+     */
+    OfferResponse rejectOfferByDirector(Integer id, String comments);
 }

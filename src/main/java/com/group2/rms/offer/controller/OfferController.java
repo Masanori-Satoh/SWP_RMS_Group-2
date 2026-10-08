@@ -3,6 +3,7 @@ package com.group2.rms.offer.controller;
 import com.group2.rms.core.dto.ApiResponse;
 import com.group2.rms.core.exception.BaseBusinessException;
 import com.group2.rms.offer.dto.CreateOfferRequest;
+import com.group2.rms.offer.dto.DirectorDecisionRequest;
 import com.group2.rms.offer.dto.OfferDetailResponse;
 import com.group2.rms.offer.dto.OfferResponse;
 import com.group2.rms.offer.dto.PassedCandidateResponse;
@@ -331,7 +332,39 @@ public class OfferController {
     }
 
     /**
-     * 9. EXPORT EXCEL: Xuất dữ liệu Offer theo phạm vi và bộ cột được chọn (Screen 30)
+     * 9a. DIRECTOR APPROVE VIA AJAX (JSON): Director duyệt Offer Proposal
+     */
+    @PostMapping(value = "/{id}/approve", consumes = MediaType.APPLICATION_JSON_VALUE)
+    @ResponseBody
+    public ResponseEntity<ApiResponse<OfferResponse>> approveOfferJson(
+            @PathVariable Integer id,
+            @Valid @RequestBody DirectorDecisionRequest request) {
+        try {
+            OfferResponse approved = offerService.approveOfferByDirector(id, request.getComments());
+            return ResponseEntity.ok(new ApiResponse<>(true, "Đã phê duyệt đề xuất Offer thành công!", approved));
+        } catch (BaseBusinessException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ApiResponse<>(false, e.getMessage()));
+        }
+    }
+
+    /**
+     * 9b. DIRECTOR REJECT VIA AJAX (JSON): Director từ chối Offer Proposal
+     */
+    @PostMapping(value = "/{id}/reject", consumes = MediaType.APPLICATION_JSON_VALUE)
+    @ResponseBody
+    public ResponseEntity<ApiResponse<OfferResponse>> rejectOfferJson(
+            @PathVariable Integer id,
+            @Valid @RequestBody DirectorDecisionRequest request) {
+        try {
+            OfferResponse rejected = offerService.rejectOfferByDirector(id, request.getComments());
+            return ResponseEntity.ok(new ApiResponse<>(true, "Đã từ chối đề xuất Offer thành công!", rejected));
+        } catch (BaseBusinessException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ApiResponse<>(false, e.getMessage()));
+        }
+    }
+
+    /**
+     * 10. EXPORT EXCEL: Xuất dữ liệu Offer theo phạm vi và bộ cột được chọn (Screen 30)
      */
     @PostMapping("/export")
     public org.springframework.http.ResponseEntity<byte[]> exportOffers(

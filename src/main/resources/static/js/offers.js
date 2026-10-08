@@ -1397,3 +1397,87 @@ function showOfferToast(message, type = 'info') {
         setTimeout(() => toast.remove(), 300);
     }, 4000);
 }
+
+// =========================================================================
+// 8. DIRECTOR APPROVAL MODAL (Screen 30 & 32)
+// =========================================================================
+
+function openDirectorDecisionModal(offerId, actionType) {
+    const modal = document.getElementById('directorDecisionModal');
+    if (!modal) return;
+    
+    document.getElementById('directorDecisionOfferId').value = offerId;
+    document.getElementById('directorDecisionAction').value = actionType;
+    document.getElementById('directorDecisionComments').value = '';
+    
+    const titleEl = document.getElementById('directorDecisionTitle');
+    const btnSubmit = document.getElementById('btnSubmitDecision');
+    
+    if (actionType === 'APPROVE') {
+        titleEl.innerHTML = '<i class="fa-solid fa-check-circle" style="color:var(--success);"></i> Phê Duyệt Đề Xuất Offer';
+        btnSubmit.innerHTML = '<i class="fa-solid fa-check"></i> Phê Duyệt';
+        btnSubmit.className = 'btn btn-primary';
+    } else {
+        titleEl.innerHTML = '<i class="fa-solid fa-xmark-circle" style="color:var(--error);"></i> Từ Chối Đề Xuất Offer';
+        btnSubmit.innerHTML = '<i class="fa-solid fa-xmark"></i> Từ Chối';
+        btnSubmit.className = 'btn btn-danger';
+    }
+    
+    modal.classList.add('active');
+    modal.style.display = 'flex';
+}
+
+function closeDirectorDecisionModal() {
+    const modal = document.getElementById('directorDecisionModal');
+    if (modal) {
+        modal.classList.remove('active');
+        modal.style.display = 'none';
+    }
+}
+
+function submitDirectorDecision() {
+    const offerId = document.getElementById('directorDecisionOfferId').value;
+    const actionType = document.getElementById('directorDecisionAction').value;
+    const comments = document.getElementById('directorDecisionComments').value.trim();
+    
+    if (!offerId || !actionType) return;
+    
+    const btn = document.getElementById('btnSubmitDecision');
+    const originalBtnHtml = btn.innerHTML;
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Đang xử lý...';
+    
+    const token = document.querySelector('meta[name="_csrf"]')?.getAttribute('content');
+    const url = actionType === 'APPROVE' ? `/offers/${offerId}/approve` : `/offers/${offerId}/reject`;
+    
+    fetch(url, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRF-TOKEN': token || ''
+        },
+        body: JSON.stringify({ comments: comments })
+    })
+    .then(async (res) => {
+        let data;
+        try { data = await res.json(); } catch(e) {}
+        if (!res.ok) {
+            throw new Error(data?.message || 'Có lỗi xảy ra khi xử lý quyết định.');
+        }
+        return data;
+    })
+    .then(data => {
+        closeDirectorDecisionModal();
+        showOfferToast(data.message || 'Xử lý thành công!', 'success');
+        // Refresh trang sau 1s để cập nhật list/detail
+        setTimeout(() => {
+            window.location.reload();
+        }, 1000);
+    })
+    .catch(err => {
+        alert(err.message);
+        showOfferToast(err.message, 'danger');
+        btn.disabled = false;
+        btn.innerHTML = originalBtnHtml;
+    });
+}
