@@ -27,6 +27,9 @@ public class JobRequisition extends BaseEntity {
     @Column(name = "RequisitionId")
     private Integer requisitionId;
 
+    @Column(name = "RequisitionCode", length = 50)
+    private String requisitionCode;
+
     @Column(name = "Title", nullable = false, length = 200)
     private String title;
 
@@ -37,6 +40,9 @@ public class JobRequisition extends BaseEntity {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "HiringManagerId", nullable = false, referencedColumnName = "UserId")
     private User hiringManager;
+
+    @Column(name = "RecruitmentRound")
+    private Integer recruitmentRound;
 
     @Column(name = "NumberOfPositions")
     private Integer numberOfPositions;

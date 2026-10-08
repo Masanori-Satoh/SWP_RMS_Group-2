@@ -1,82 +1,36 @@
-<!DOCTYPE html>
-<html lang="en" xmlns:th="http://www.thymeleaf.org">
-<head th:replace="~{fragments/head :: interfaceHead('Sign In', ~{::pageStyles})}">
-  <th:block th:fragment="pageStyles">
-    <link rel="stylesheet" th:href="@{/css/auth.css}">
-    <style>
-      html {
-        height: 100%;
-        min-height: 100%;
-      }
-      body.auth-page {
-        min-height: 100vh !important;
-        min-height: 100% !important;
-        display: grid !important;
-        grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr) !important;
-        grid-template-rows: minmax(100vh, 1fr) !important;
-        margin: 0 !important;
-      }
-      .auth-brand-panel {
-        display: flex !important;
-        flex-direction: column !important;
-        justify-content: space-between !important;
-        min-height: 100vh !important;
-        min-height: 100% !important;
-        height: 100% !important;
-        box-sizing: border-box !important;
-        overflow-y: auto;
-      }
-      .auth-story {
-        display: block !important;
-        margin-block: auto;
-      }
-      .auth-brand-foot {
-        display: block !important;
-      }
-      .auth-card {
-        width: min(440px, calc(100% - 32px)) !important;
-        max-width: 440px;
-        align-self: safe center !important;
-        justify-self: center !important;
-        margin-block: auto !important;
-        box-sizing: border-box;
-      }
-      .auth-links {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 8px 16px;
-        align-items: center;
-      }
-      .auth-links a {
-        min-height: 36px;
-        line-height: 1.4;
-      }
-    </style>
-  </th:block>
-</head>
+<!doctype html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{auth/fragments :: head('Đăng nhập')}"></head>
 <body class="auth-page">
-<a class="skip-link" href="#main">Skip to content</a>
-<aside th:replace="~{fragments/auth-layout :: brandPanel}"></aside>
-<main id="main" class="auth-card" tabindex="-1">
-    <h1>Welcome back.</h1>
-    <p class="auth-intro">Sign in to your recruitment workspace.</p>
-    <p class="auth-message auth-error" role="alert" th:if="${param.error}">The credentials are incorrect or this account is not active. Please try again, or <a th:href="@{/forgot-password}">reset your password</a>.</p>
-    <p class="auth-message" role="status" th:if="${param.logout}">You have signed out.</p>
-    <p class="auth-message" role="status" th:if="${param.registered}">Account created. Please sign in.</p>
-    <p class="auth-message" role="status" th:if="${param.reset}">Password reset. Please sign in.</p>
-    <p class="auth-message auth-error" role="alert" th:if="${param['session-expired']}">Your session has expired. Please sign in again.</p>
-    <form th:action="@{/login}" method="post">
-        <label for="username">Username or Email <span aria-hidden="true">*</span></label>
-        <input id="username" name="username" autocomplete="username" required>
-        <label for="password">Password <span aria-hidden="true">*</span></label>
-        <input id="password" type="password" name="password" autocomplete="current-password" required>
-        <button class="btn btn-primary" type="submit">Sign In</button>
+<header th:replace="~{auth/fragments :: header}"></header>
+<div class="auth-container auth-shell">
+  <aside th:replace="~{auth/fragments :: story}"></aside>
+  <main id="main" class="auth-card" tabindex="-1">
+    <p class="auth-card-label">Tài khoản Mộc</p>
+    <h1>Chào mừng bạn trở lại.</h1>
+    <p class="auth-intro">Đăng nhập tài khoản ứng viên hoặc không gian tuyển dụng nội bộ.</p>
+    <p class="auth-message auth-error" role="alert" th:if="${param.error}">Thông tin đăng nhập không đúng hoặc tài khoản không hoạt động. Vui lòng thử lại hoặc <a th:href="@{/forgot-password}">đặt lại mật khẩu</a>.</p>
+    <p class="auth-message" role="status" th:if="${param.logout}">Bạn đã đăng xuất.</p>
+    <p class="auth-message" role="status" th:if="${param.registered}"><strong>Tạo tài khoản thành công.</strong>Đăng nhập để tiếp tục.</p>
+    <p class="auth-message" role="status" th:if="${param.reset}"><strong>Đặt lại mật khẩu thành công.</strong>Đăng nhập bằng mật khẩu mới.</p>
+    <p class="auth-message auth-error" role="alert" th:if="${param['session-expired']}">Phiên làm việc đã hết hạn. Vui lòng đăng nhập lại.</p>
+    <form class="auth-form" th:action="@{/login}" method="post" data-auth-form>
+      <div class="auth-field">
+        <label for="username">Tên đăng nhập hoặc email</label>
+        <input id="username" name="username" type="text" autocomplete="username" autocapitalize="none" spellcheck="false" required>
+      </div>
+      <div class="auth-field">
+        <div class="auth-label-row"><label for="password">Mật khẩu</label><a th:href="@{/forgot-password}">Quên mật khẩu?</a></div>
+        <div class="auth-password">
+          <input id="password" name="password" type="password" autocomplete="current-password" required>
+          <button class="auth-password-toggle" type="button" data-password-toggle aria-controls="password" aria-label="Hiện mật khẩu" data-show-label="Hiện mật khẩu" data-hide-label="Ẩn mật khẩu" aria-pressed="false" hidden>Hiện</button>
+        </div>
+      </div>
+      <button class="button auth-submit" type="submit" data-auth-submit data-busy-label="Đang đăng nhập…">Đăng nhập</button>
     </form>
-    <nav class="auth-links" aria-label="Account">
-        <a th:href="@{/forgot-password}">Forgot Password?</a>
-        <a th:href="@{/register}">Create a Candidate Account</a>
-        <a th:href="@{/}">Back to Careers</a>
-    </nav>
-</main>
+    <nav class="auth-links auth-divider" aria-label="Tạo tài khoản"><span>Bạn chưa có tài khoản?</span><a th:href="@{/register}">Đăng ký ứng viên</a></nav>
+  </main>
+</div>
+<footer th:replace="~{auth/fragments :: footer}"></footer>
 </body>
 </html>

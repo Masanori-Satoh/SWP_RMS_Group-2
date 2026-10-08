@@ -87,6 +87,35 @@ public class AccountManagementService {
         Department department = findDepartment(command.departmentId(), role, null);
         checkUsernameAvailable(username, null);
         checkEmailAvailable(email, null);
+        return persistAccount(fullName, username, email, phone, role, department,
+                passwordEncoder.encode(command.password()));
+    }
+
+    @Transactional(readOnly = true)
+    public void assertLoginIdentifiersAvailable(String username, String email) {
+        checkUsernameAvailable(required(username, "username", "Enter a username."), null);
+        checkEmailAvailable(required(email, "email", "Enter an email address."), null);
+    }
+
+    /** Trusted registration service only; the browser never supplies a password hash. */
+    @Transactional
+    public int createCandidateWithPasswordHash(CandidateWithPasswordHashCommand command) {
+        String fullName = required(command.fullName(), "fullName", "Enter a full name.");
+        String username = required(command.username(), "username", "Enter a username.");
+        String email = required(command.email(), "email", "Enter an email address.");
+        String hash = command.passwordHash();
+        if (hash == null || !hash.matches("\\$2[aby]\\$\\d{2}\\$[./A-Za-z0-9]{53}")) {
+            throw new IllegalArgumentException("Registration requires a server-generated BCrypt hash");
+        }
+        Role candidate = roles.findByRoleName("Candidate")
+                .orElseThrow(() -> new IllegalStateException("Candidate role is not configured"));
+        checkUsernameAvailable(username, null);
+        checkEmailAvailable(email, null);
+        return persistAccount(fullName, username, email, null, candidate, null, hash);
+    }
+
+    private int persistAccount(String fullName, String username, String email, String phone,
+            Role role, Department department, String passwordHash) {
         User user = users.saveAndFlush(User.builder()
                 .fullName(fullName)
                 .username(username)
@@ -94,7 +123,7 @@ public class AccountManagementService {
                 .phoneNumber(phone)
                 .role(role)
                 .department(department)
-                .passwordHash(passwordEncoder.encode(command.password()))
+                .passwordHash(passwordHash)
                 .accountStatus("Active")
                 .build());
 
@@ -216,6 +245,14 @@ public class AccountManagementService {
 
     public record CreateCommand(String fullName, String username, String email, String phoneNumber,
             Integer roleId, Integer departmentId, String password) {
+    }
+
+    public record CandidateWithPasswordHashCommand(String fullName, String username,
+            String email, String passwordHash) {
+        @Override
+        public String toString() {
+            return "CandidateWithPasswordHashCommand[redacted]";
+        }
     }
 
     public record UpdateCommand(String fullName, String email, String phoneNumber,

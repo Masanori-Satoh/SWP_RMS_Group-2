@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<!--
+    JOB-POSTINGS/CREATE.HTML
+    =============================================================================
+    Màn hình Tạo / Chỉnh sửa Tin Tuyển dụng Nội bộ (/internal/job-postings/create)
+    Phụ trách: Nguyễn Huy Hoàng (HoangNH) - Iteration 2
+    
+    Quy tắc thiết kế UI/UX theo Enterprise HR Design System:
+      - Phân tách rõ ràng 2 khối:
+        * SECTION A: THÔNG TIN YÊU CẦU TUYỂN DỤNG NGUỒN (Chỉ đọc - Read-only)
+        * SECTION B: NỘI DUNG TIN TUYỂN DỤNG CÔNG KHAI (Chỉnh sửa - Editable)
+      - Quy tắc biểu mẫu nghiêm ngặt: Tối đa 2 trường trên 1 hàng, văn bản dài chiếm full-width.
+      - Nhãn luôn hiển thị, trường bắt buộc có dấu (*), lỗi validation hiển thị sát trường nhập liệu.
+      - 3 nút hành động chuẩn: Quay lại, Lưu nháp, Đăng tin tuyển dụng.
+      - Không sử dụng inline CSS / inline script, tách biệt sang các tệp static.
+    =============================================================================
+-->
+
+<head th:replace="~{fragments/head :: interfaceHead(${postingDto.jobPostingId != null ? 'Chỉnh sửa tin tuyển dụng' : 'Tạo tin tuyển dụng'}, ~{::pageStyles})}">
+    <th:block th:fragment="pageStyles">
+        <link rel="stylesheet" th:href="@{/css/requisition-shared.css}">
+        <link rel="stylesheet" th:href="@{/css/job-posting-create.css}">
+        <script th:src="@{/js/job-posting-create.js}" defer></script>
+    </th:block>
+</head>
+
+<body class="rms-app req-app jp-create-page">
+    <div class="page-wrapper">
+        <!-- Sidebar thanh điều hướng nội bộ -->
+        <aside th:replace="~{fragments/sidebar :: workspace('job-postings', ${viewerRole})}"></aside>
+
+        <div class="main-content">
+            <!-- Header góc trên chứa thông tin tài khoản -->
+            <header th:replace="~{fragments/workspace-header :: header(${viewerRole}, ${viewerName})}"></header>
+
+            <main id="main" tabindex="-1" class="page-content">
+                <div class="jp-create-wrapper">
+
+                    <!-- 1. Thanh điều hướng phân cấp (Breadcrumbs) & Nút Quay lại -->
+                    <div class="jp-header-bar">
+                        <nav class="jp-breadcrumbs" aria-label="Breadcrumb">
+                            <a th:href="@{/dashboard}">Bảng điều khiển</a>
+                            <span class="sep">/</span>
+                            <a th:href="@{/internal/job-postings}">Tin tuyển dụng</a>
+                            <span class="sep">/</span>
+                            <span class="current" aria-current="page"
+                                th:text="${postingDto.jobPostingId != null ? 'Chỉnh sửa tin tuyển dụng' : 'Tạo tin tuyển dụng'}">
+                                Tạo tin tuyển dụng
+                            </span>
+                        </nav>
+                        <a th:href="@{/internal/job-postings}" class="jp-btn-back">
+                            &larr; Quay lại danh sách
+                        </a>
+                    </div>
+
+                    <!-- 2. Tiêu đề trang & Lời dẫn -->
+                    <div class="jp-page-intro">
+                        <h1 th:text="${postingDto.jobPostingId != null ? 'Chỉnh sửa tin tuyển dụng' : 'Tạo tin tuyển dụng mới'}">
+                            Tạo tin tuyển dụng mới
+                        </h1>
+                        <p class="subtitle"
+                            th:text="${postingDto.jobPostingId != null ? 'Cập nhật nội dung tin tuyển dụng nội bộ và phát hành lên cổng việc làm công khai.' : 'Tạo tin tuyển dụng từ yêu cầu đã được phê duyệt. Vui lòng rà soát thông tin nguồn và hoàn thiện nội dung đăng tuyển.'}">
+                            Tạo tin tuyển dụng từ yêu cầu đã được phê duyệt. Vui lòng rà soát thông tin nguồn và hoàn thiện nội dung đăng tuyển.
+                        </p>
+                    </div>
+
+                    <!-- 3. Thông báo lỗi từ server nếu có -->
+                    <div th:if="${errorMessage}" class="alert alert-danger jp-server-alert" role="alert">
+                        <strong>Lưu ý: </strong>
+                        <span th:text="${errorMessage}">Đã xảy ra lỗi khi xử lý tin tuyển dụng.</span>
+                    </div>
+
+                    <!-- 4. Biểu mẫu chính (Form) -->
+                    <form th:action="@{/internal/job-postings/create}" th:object="${postingDto}" method="post" id="jobPostingForm">
+                        <input type="hidden" th:field="*{jobPostingId}">
+                        <input type="hidden" th:field="*{requisitionId}">
+                        <input type="hidden" th:field="*{requisitionCode}">
+                        <input type="hidden" th:field="*{departmentName}">
+                        <input type="hidden" th:field="*{recruitmentRound}">
+                        <input type="hidden" th:field="*{hiringManagerName}">
+                        <input type="hidden" th:field="*{employmentType}">
+                        <input type="hidden" th:field="*{workModel}">
+                        <input type="hidden" th:field="*{numberOfPositions}">
+                        <input type="hidden" th:field="*{minSalary}">
+                        <input type="hidden" th:field="*{maxSalary}">
+                        <input type="hidden" th:field="*{probationDuration}">
+                        <input type="hidden" th:field="*{gender}">
+                        <input type="hidden" th:field="*{expectedStartDate}">
+                        <input type="hidden" th:field="*{recruitmentDeadline}">
+                        <input type="hidden" th:field="*{reasonForHiring}">
+                        <input type="hidden" id="formActionInput" name="action" th:value="*{action ?: 'publish'}">
+
+                        <!-- ============================================================== -->
+                        <!-- SECTION A: THÔNG TIN YÊU CẦU TUYỂN DỤNG NGUỒN (CHỈ ĐỌC)          -->
+                        <!-- ============================================================== -->
+                        <section class="jp-form-card jp-source-card" aria-labelledby="sec-source-title">
+                            <div class="jp-card-header">
+                                <div class="jp-card-icon-box">🔒</div>
+                                <div>
+                                    <h2 id="sec-source-title">Thông tin yêu cầu tuyển dụng nguồn (Chỉ đọc)</h2>
+                                    <p class="jp-card-desc">Dữ liệu được đồng bộ từ yêu cầu tuyển dụng đã được Giám đốc phê duyệt. Thông tin này được bảo toàn và không thể chỉnh sửa trực tiếp.</p>
+                                </div>
+                            </div>
+
+                            <div class="jp-grid-two-col">
+                                <!-- Hàng 1 -->
+                                <div class="jp-field-group">
+                                    <label class="jp-field-label">Mã yêu cầu</label>
+                                    <div class="jp-readonly-box" th:text="*{requisitionCode}">REQ-2026-001</div>
+                                </div>
+
+                                <div class="jp-field-group">
+                                    <label class="jp-field-label">Vị trí tuyển dụng nguồn</label>
+                                    <div class="jp-readonly-box" th:text="*{postingTitle}">Java Backend Developer</div>
+                                </div>
+
+                                <!-- Hàng 2 -->
+                                <div class="jp-field-group">
+                                    <label class="jp-field-label">Phòng ban</label>
+                                    <div class="jp-readonly-box" th:text="*{departmentName}">Công nghệ thông tin</div>
+                                </div>
+
+                                <div class="jp-field-group">
+                                    <label class="jp-field-label">Đợt tuyển dụng</label>
+                                    <div class="jp-readonly-box" th:text="|Đợt *{recruitmentRound}|">Đợt 1</div>
+                                </div>
+
+                                <!-- Hàng 3 -->
+                                <div class="jp-field-group">
+                                    <label class="jp-field-label">Người tạo yêu cầu</label>
+                                    <div class="jp-readonly-box" th:text="*{hiringManagerName}">Trưởng bộ phận</div>
+                                </div>
+
+                                <div class="jp-field-group">
+                                    <label class="jp-field-label">Số lượng tuyển dụng</label>
+                                    <div class="jp-readonly-box" th:text="|*{numberOfPositions} nhân sự|">1 nhân sự</div>
+                                </div>
+
+                                <!-- Hàng 4 -->
+                                <div class="jp-field-group">
+                                    <label class="jp-field-label">Hình thức làm việc</label>
+                                    <div class="jp-readonly-box" th:text="*{employmentType}">Toàn thời gian</div>
+                                </div>
+
+                                <div class="jp-field-group">
+                                    <label class="jp-field-label">Mô hình làm việc</label>
+                                    <div class="jp-readonly-box" th:text="*{workModel}">Tại văn phòng</div>
+                                </div>
+
+                                <!-- Hàng 5 -->
+                                <div class="jp-field-group">
+                                    <label class="jp-field-label">Ngày bắt đầu dự kiến</label>
+                                    <div class="jp-readonly-box"
+                                        th:text="*{expectedStartDate != null ? #temporals.format(expectedStartDate, 'dd/MM/yyyy') : 'Chưa xác định'}">
+                                        01/11/2026
+                                    </div>
+                                </div>
+
+                                <div class="jp-field-group">
+                                    <label class="jp-field-label">Địa điểm làm việc nguồn</label>
+                                    <div class="jp-readonly-box" th:text="*{workLocation != null and !#strings.isEmpty(workLocation) ? workLocation : 'Chưa xác định'}">
+                                        Hà Nội
+                                    </div>
+                                </div>
+
+                                <!-- Hàng 6 -->
+                                <div class="jp-field-group">
+                                    <label class="jp-field-label">Yêu cầu giới tính</label>
+                                    <div class="jp-readonly-box"
+                                        th:text="*{gender == 'Male' ? 'Nam' : (gender == 'Female' ? 'Nữ' : 'Không yêu cầu')}">
+                                        Không yêu cầu
+                                    </div>
+                                </div>
+
+                                <div class="jp-field-group">
+                                    <label class="jp-field-label">Thời gian thử việc</label>
+                                    <div class="jp-readonly-box"
+                                        th:text="*{probationDuration != null ? probationDuration + ' ngày' : 'Chưa xác định'}">
+                                        60 ngày
+                                    </div>
+                                </div>
+
+                                <!-- Hàng 7 -->
+                                <div class="jp-field-group">
+                                    <label class="jp-field-label">Mức lương tối thiểu (VNĐ)</label>
+                                    <div class="jp-readonly-box"
+                                        th:text="*{minSalary != null ? #numbers.formatDecimal(minSalary, 1, 'COMMA', 0, 'POINT') + ' VNĐ' : 'Thỏa thuận'}">
+                                        15,000,000 VNĐ
+                                    </div>
+                                </div>
+
+                                <div class="jp-field-group">
+                                    <label class="jp-field-label">Mức lương tối đa (VNĐ)</label>
+                                    <div class="jp-readonly-box"
+                                        th:text="*{maxSalary != null ? #numbers.formatDecimal(maxSalary, 1, 'COMMA', 0, 'POINT') + ' VNĐ' : 'Thỏa thuận'}">
+                                        25,000,000 VNĐ
+                                    </div>
+                                </div>
+
+                                <!-- Hàng 8 (Full-width): Lý do tuyển dụng -->
+                                <div class="jp-field-group jp-col-full">
+                                    <label class="jp-field-label">
+                                        Lý do tuyển dụng
+                                        <span class="jp-label-note">(Chỉ lưu hành nội bộ HR, không hiển thị trên tin tuyển dụng công khai)</span>
+                                    </label>
+                                    <div class="jp-readonly-textarea" th:text="*{reasonForHiring != null and !#strings.isEmpty(reasonForHiring) ? reasonForHiring : 'Không có ghi chú'}">
+                                        Bổ sung nhân sự cho dự án mới...
+                                    </div>
+                                </div>
+                            </div>
+                        </section>
+
+                        <!-- ============================================================== -->
+                        <!-- SECTION B: NỘI DUNG TIN TUYỂN DỤNG CÔNG KHAI (CHỈNH SỬA)         -->
+                        <!-- ============================================================== -->
+                        <section class="jp-form-card" aria-labelledby="sec-public-title">
+                            <div class="jp-card-header">
+                                <div class="jp-card-icon-box jp-icon-edit">✏️</div>
+                                <div>
+                                    <h2 id="sec-public-title">Nội dung tin tuyển dụng công khai</h2>
+                                    <p class="jp-card-desc">Nội dung này sẽ hiển thị trực tiếp cho ứng viên trên Cổng thông tin Tuyển dụng. Vui lòng rà soát chuẩn xác câu từ.</p>
+                                </div>
+                            </div>
+
+                            <div class="jp-grid-two-col">
+                                <!-- Hàng 1 (Full-width): Tiêu đề tin tuyển dụng -->
+                                <div class="jp-field-group jp-col-full">
+                                    <label for="postingTitle" class="jp-field-label">
+                                        Tiêu đề tin tuyển dụng <span class="required-asterisk">*</span>
+                                    </label>
+                                    <input type="text" id="postingTitle" th:field="*{postingTitle}"
+                                        class="jp-input" placeholder="Ví dụ: Chuyên viên Lập trình Frontend ReactJS (Mid-level)"
+                                        maxlength="200" required>
+                                    <small id="postingTitle-error" class="field-error"
+                                        th:text="${#fields.hasErrors('postingTitle') ? #strings.listJoin(#fields.errors('postingTitle'), '; ') : ''}"></small>
+                                </div>
+
+                                <!-- Hàng 2 (Full-width): Mô tả công việc -->
+                                <div class="jp-field-group jp-col-full">
+                                    <label for="jobDescription" class="jp-field-label">
+                                        Mô tả công việc <span class="required-asterisk">*</span>
+                                    </label>
+                                    <textarea id="jobDescription" th:field="*{jobDescription}"
+                                        class="jp-textarea" rows="6"
+                                        placeholder="Mô tả chi tiết các nhiệm vụ, trách nhiệm chính của vị trí..." required></textarea>
+                                    <small id="jobDescription-error" class="field-error"
+                                        th:text="${#fields.hasErrors('jobDescription') ? #strings.listJoin(#fields.errors('jobDescription'), '; ') : ''}"></small>
+                                </div>
+
+                                <!-- Hàng 3 (Full-width): Yêu cầu ứng viên -->
+                                <div class="jp-field-group jp-col-full">
+                                    <label for="jobRequirements" class="jp-field-label">
+                                        Yêu cầu ứng viên <span class="required-asterisk">*</span>
+                                    </label>
+                                    <textarea id="jobRequirements" th:field="*{jobRequirements}"
+                                        class="jp-textarea" rows="6"
+                                        placeholder="Yêu cầu về kinh nghiệm, kỹ năng chuyên môn, kỹ năng mềm..." required></textarea>
+                                    <small id="jobRequirements-error" class="field-error"
+                                        th:text="${#fields.hasErrors('jobRequirements') ? #strings.listJoin(#fields.errors('jobRequirements'), '; ') : ''}"></small>
+                                </div>
+
+                                <!-- Hàng 4 (Full-width): Quyền lợi & Đãi ngộ -->
+                                <div class="jp-field-group jp-col-full">
+                                    <label for="benefits" class="jp-field-label">
+                                        Quyền lợi &amp; Đãi ngộ
+                                    </label>
+                                    <textarea id="benefits" th:field="*{benefits}"
+                                        class="jp-textarea" rows="5"
+                                        placeholder="Chế độ đãi ngộ, bảo hiểm, thưởng, đào tạo, du lịch công ty..."></textarea>
+                                    <small id="benefits-error" class="field-error"
+                                        th:text="${#fields.hasErrors('benefits') ? #strings.listJoin(#fields.errors('benefits'), '; ') : ''}"></small>
+                                </div>
+
+                                <!-- Hàng 5: Mức lương hiển thị & Địa điểm làm việc (2 trường trên 1 hàng) -->
+                                <div class="jp-field-group">
+                                    <label for="salaryDisplay" class="jp-field-label">
+                                        Mức lương hiển thị cho ứng viên
+                                    </label>
+                                    <input type="text" id="salaryDisplay" th:field="*{salaryDisplay}"
+                                        class="jp-input" placeholder="Ví dụ: 15.000.000 - 25.000.000 VNĐ hoặc Thỏa thuận"
+                                        maxlength="100">
+                                    <small class="jp-help-text">Gợi ý từ yêu cầu gốc hoặc nhập "Thỏa thuận", "Cạnh tranh".</small>
+                                    <small id="salaryDisplay-error" class="field-error"
+                                        th:text="${#fields.hasErrors('salaryDisplay') ? #strings.listJoin(#fields.errors('salaryDisplay'), '; ') : ''}"></small>
+                                </div>
+
+                                <div class="jp-field-group">
+                                    <label for="workLocation" class="jp-field-label">
+                                        Địa điểm làm việc hiển thị
+                                    </label>
+                                    <input type="text" id="workLocation" th:field="*{workLocation}"
+                                        class="jp-input" placeholder="Ví dụ: Tầng 8, Tòa nhà RMS Tower, Cầu Giấy, Hà Nội"
+                                        maxlength="255">
+                                    <small class="jp-help-text">Địa chỉ ứng viên sẽ đến phỏng vấn và làm việc hàng ngày.</small>
+                                    <small id="workLocation-error" class="field-error"
+                                        th:text="${#fields.hasErrors('workLocation') ? #strings.listJoin(#fields.errors('workLocation'), '; ') : ''}"></small>
+                                </div>
+
+                                <!-- Hàng 6: Hạn nộp hồ sơ & Tuyển liên tục (2 trường trên 1 hàng) -->
+                                <div class="jp-field-group">
+                                    <label for="applicationDeadline" class="jp-field-label">
+                                        Hạn nộp hồ sơ <span class="required-asterisk" id="deadlineStar">*</span>
+                                    </label>
+                                    <input type="date" id="applicationDeadline" th:field="*{applicationDeadline}"
+                                        class="jp-input">
+                                    <small id="applicationDeadline-error" class="field-error"
+                                        th:text="${#fields.hasErrors('applicationDeadline') ? #strings.listJoin(#fields.errors('applicationDeadline'), '; ') : ''}"></small>
+                                </div>
+
+                                <div class="jp-field-group jp-flex-align-bottom">
+                                    <div class="jp-checkbox-wrapper">
+                                        <input type="checkbox" id="isContinuousRecruitment" th:field="*{isContinuousRecruitment}"
+                                            class="jp-checkbox">
+                                        <label for="isContinuousRecruitment" class="jp-checkbox-label">
+                                            <strong>Tuyển dụng liên tục</strong> (Không giới hạn ngày hết hạn nộp hồ sơ)
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                        </section>
+
+                        <!-- ============================================================== -->
+                        <!-- THANH NÚT HÀNH ĐỘNG (ACTION CONTROLS - 3 NÚT CHUẨN)             -->
+                        <!-- ============================================================== -->
+                        <div class="jp-form-actions-bar">
+                            <a th:href="@{/internal/job-postings}" class="jp-btn jp-btn-secondary">
+                                &larr; Quay lại
+                            </a>
+
+                            <div class="jp-actions-right">
+                                <button type="button" class="jp-btn jp-btn-draft" id="btnSaveDraft">
+                                    &#128190; Lưu bản nháp
+                                </button>
+                                <button type="button" class="jp-btn jp-btn-publish" id="btnPublish">
+                                    &#128640; Đăng tin tuyển dụng
+                                </button>
+                            </div>
+                        </div>
+
+                    </form>
+
+                </div>
+            </main>
+        </div>
+    </div>
+</body>
+
+</html>

@@ -56,7 +56,7 @@ public class SecurityConfig {
                                                 // permit all for defaultpage and font
                                                 .requestMatchers(HttpMethod.GET, "/", "/fonts/**").permitAll()
                                                 // permit all for login, register, forgot-password, reset-password
-                                                .requestMatchers("/login", "/register", "/forgot-password",
+                                                .requestMatchers("/login", "/register", "/register/**", "/forgot-password",
                                                                 "/reset-password/**")
                                                 .permitAll()
                                                 // required role canididate for job apply
@@ -103,6 +103,8 @@ public class SecurityConfig {
                                                 .requestMatchers("/requisitions", "/requisitions/**")
                                                 .hasAnyAuthority("ROLE_HIRING_MANAGER", "ROLE_DIRECTOR", "ROLE_HR",
                                                                 RoleAuthorities.SYSTEM_ADMIN)
+                                                .requestMatchers("/internal/job-postings", "/internal/job-postings/**")
+                                                .hasAnyAuthority("ROLE_HR", RoleAuthorities.SYSTEM_ADMIN)
                                                 .anyRequest().authenticated())
                                 // store target url before login
                                 .requestCache(cache -> cache.requestCache(requestCache))

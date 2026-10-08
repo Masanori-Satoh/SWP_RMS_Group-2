@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head th:fragment="head(title)" th:replace="~{fragments/head :: globalHead(${title}, ~{auth/fragments :: assets})}"></head>
+<body>
+<th:block th:fragment="assets">
+  <meta name="referrer" content="no-referrer">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&amp;display=swap">
+  <link rel="stylesheet" th:href="@{/css/design-tokens.css}">
+  <link rel="stylesheet" th:href="@{/css/auth.css}">
+  <script defer th:src="@{/js/auth.js}"></script>
+</th:block>
+<header class="auth-header" th:fragment="header">
+  <a class="skip-link" href="#main">Đến nội dung chính</a>
+  <div class="auth-container auth-header-inner">
+    <a th:replace="~{fragments/brand :: wordmark('TUYỂN DỤNG')}"></a>
+    <a class="auth-home" th:href="@{/}">Về trang tuyển dụng</a>
+  </div>
+</header>
+<aside class="auth-story" th:fragment="story" aria-label="Làm việc tại Mộc">
+  <p class="auth-brand-badge"><span aria-hidden="true"></span>Cơ hội nghề nghiệp tại Mộc</p>
+  <p class="auth-statement">Làm việc cùng Mộc.<br><span>Kết nối tài năng, kiến tạo giá trị thật.</span></p>
+  <p class="auth-story-copy">Mộc phát triển phần mềm quản trị tuyển dụng minh bạch và tinh gọn. Cùng chúng tôi xây dựng những sản phẩm hữu ích mỗi ngày.</p>
+  <a class="auth-story-link" th:href="@{/#roles}">Khám phá vị trí đang tuyển</a>
+</aside>
+<nav class="auth-steps" th:fragment="resetSteps(step)" aria-label="Các bước khôi phục mật khẩu">
+  <ol>
+    <li th:attr="aria-current=${step == 1 ? 'step' : null}"><span class="auth-step-number" aria-hidden="true">1</span><span>Email</span></li>
+    <li th:attr="aria-current=${step == 2 ? 'step' : null}"><span class="auth-step-number" aria-hidden="true">2</span><span>Xác minh mã</span></li>
+    <li th:attr="aria-current=${step == 3 ? 'step' : null}"><span class="auth-step-number" aria-hidden="true">3</span><span>Mật khẩu mới</span></li>
+  </ol>
+</nav>
+<nav class="auth-steps" th:fragment="registrationSteps(step)" data-registration-steps aria-label="Các bước đăng ký tài khoản">
+  <ol>
+    <li th:attr="aria-current=${step == 1 ? 'step' : null}"><span class="auth-step-number" aria-hidden="true">1</span><span>Thông tin tài khoản</span></li>
+    <li th:attr="aria-current=${step == 2 ? 'step' : null}"><span class="auth-step-number" aria-hidden="true">2</span><span>Xác minh email</span></li>
+  </ol>
+</nav>
+<div th:fragment="errors" class="auth-error-summary" data-auth-errors role="alert" tabindex="-1" aria-labelledby="auth-error-title" th:if="${#fields.hasAnyErrors()}">
+  <h2 id="auth-error-title">Kiểm tra lại thông tin</h2>
+  <ul>
+    <li th:each="error : ${#fields.detailedErrors()}">
+      <span th:if="${error.global}"><span th:replace="~{auth/fragments :: message(${error.message})}"></span></span>
+      <a th:unless="${error.global}" th:href="${'#' + (error.fieldName == 'fullName' ? 'full-name' : (error.fieldName == 'confirmPassword' ? 'confirm-password' : error.fieldName))}" ><span th:replace="~{auth/fragments :: message(${error.message})}"></span></a>
+    </li>
+  </ul>
+</div>
+<th:block th:fragment="fieldErrors(field)">
+  <th:block th:each="message : ${#fields.errors(field)}">
+    <span th:replace="~{auth/fragments :: message(${message})}"></span><br th:if="${!messageStat.last}">
+  </th:block>
+</th:block>
+<span th:fragment="message(text)" th:with="translations=${ {
+    'Enter a full name.': 'Vui lòng nhập họ và tên.',
+    'Full name must be at most 100 characters.': 'Họ và tên không được quá 100 ký tự.',
+    'Enter a username.': 'Vui lòng nhập tên đăng nhập.',
+    'Username must be at most 50 characters.': 'Tên đăng nhập không được quá 50 ký tự.',
+    'Enter an email address.': 'Vui lòng nhập email.',
+    'Enter a valid email address.': 'Vui lòng nhập email hợp lệ.',
+    'Email must be at most 150 characters.': 'Email không được quá 150 ký tự.',
+    'Enter a password.': 'Vui lòng nhập mật khẩu.',
+    'Enter a new password.': 'Vui lòng nhập mật khẩu mới.',
+    'Password must contain 8–32 characters.': 'Mật khẩu phải có từ 8 đến 32 ký tự.',
+    'Confirm your password.': 'Vui lòng xác nhận mật khẩu.',
+    'Passwords do not match.': 'Mật khẩu xác nhận không khớp.',
+    'Enter the verification code.': 'Vui lòng nhập mã xác minh.',
+    'OTP code must be exactly 6 digits.': 'Mã OTP phải gồm đúng 6 chữ số.',
+    'This username is already used as a username or email.': 'Tên đăng nhập này đã được sử dụng.',
+    'This email is already used as an email or username.': 'Email này đã được sử dụng.',
+    'The username or email is already in use.': 'Tên đăng nhập hoặc email đã được sử dụng.',
+    'No account exists with this email address.': 'Không có tài khoản sử dụng email này.',
+    'This account is not active.': 'Tài khoản này hiện không hoạt động.',
+    'A reset email is already being sent. Please wait.': 'Email xác minh đang được gửi. Vui lòng chờ.',
+    'Please wait before requesting another code.': 'Vui lòng chờ trước khi yêu cầu gửi lại mã.',
+    'Too many incorrect attempts. Request a new code.': 'Bạn đã nhập sai mã 5 lần. Vui lòng yêu cầu mã mới.',
+    'The verification code is incorrect.': 'Mã xác minh không đúng. Vui lòng nhập lại.',
+    'Verify your email code before resetting your password.': 'Vui lòng xác minh mã gửi qua email trước khi đặt mật khẩu mới.',
+    'Your reset request is invalid or expired. Request a new code.': 'Yêu cầu đặt lại mật khẩu không hợp lệ hoặc đã hết hạn. Vui lòng yêu cầu mã mới.',
+    'Unable to send the verification email. Please try again later.': 'Chưa thể gửi email xác minh. Vui lòng thử lại sau.',
+    'Your registration request is invalid or expired. Register again.': 'Yêu cầu đăng ký đã hết hạn hoặc không hợp lệ. Vui lòng đăng ký lại.',
+    'Too many incorrect attempts. Register again.': 'Bạn đã nhập sai mã 5 lần. Vui lòng đăng ký lại.',
+    'A registration email is already being sent. Please wait.': 'Mã xác minh đăng ký đang được gửi. Vui lòng chờ.'
+  } }" th:text="${translations.get(text) != null ? translations.get(text) : 'Không thể hoàn tất yêu cầu. Vui lòng kiểm tra thông tin và thử lại.'}"></span>
+<footer class="auth-footer" th:fragment="footer"><p class="auth-container">Mộc Tuyển dụng · Đồng hành cùng sự nghiệp của bạn.</p></footer>
+</body>
+</html>
