@@ -66,9 +66,17 @@
         </dependency>
 
         <!-- SMTP delivery for one-time password recovery links. -->
+        <!-- ===== SPRING BOOT STARTER MAIL ===== -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-mail</artifactId>
+        </dependency>
+
+        <!-- ===== APACHE POI (EXCEL GENERATION) ===== -->
+        <dependency>
+            <groupId>org.apache.poi</groupId>
+            <artifactId>poi-ooxml</artifactId>
+            <version>5.3.0</version>
         </dependency>
 
         <!-- ===== LOMBOK (Giảm boilerplate getter/setter/constructor) ===== -->

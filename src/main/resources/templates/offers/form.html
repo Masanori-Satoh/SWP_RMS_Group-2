@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/head :: interfaceHead(${isEdit ? 'Chỉnh sửa Đề xuất Offer #' + offerId : 'Tạo Mới Đề Xuất Offer Proposal'}, ~{::pageStyles})}">
+  <th:block th:fragment="pageStyles">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" th:href="@{/css/offers.css}">
+  </th:block>
+</head>
+<body class="rms-app">
+
+<div class="page-wrapper">
+    <!-- SIDEBAR -->
+    <aside th:replace="~{fragments/sidebar :: workspace('offers', ${userRole != null ? userRole : 'HR'})}"></aside>
+
+    <div class="main-content">
+        <!-- TOPBAR -->
+        <header th:replace="~{fragments/workspace-header :: header(${userRole != null ? (userRole == 'HR' ? 'HR' : userRole) : 'HR Specialist'}, ${currentUser})}"></header>
+
+        <!-- PAGE CONTENT -->
+        <main id="main" class="page-content" tabindex="-1">
+            <div class="container" style="max-width: 960px; margin: 0 auto; padding-bottom: 50px;">
+
+                <!-- BREADCRUMB -->
+                <nav class="breadcrumb" style="margin-bottom: 16px; font-size: 13.5px; color: var(--muted);">
+                    <a th:href="@{/dashboard}" style="color: var(--muted); text-decoration: none;">Trang chủ</a> &gt;
+                    <a th:href="@{/offers}" style="color: var(--muted); text-decoration: none;">Quản lý Đề xuất</a> &gt;
+                    <span style="color: var(--ink); font-weight: 600;" th:text="${isEdit ? 'Chỉnh sửa Offer #' + offerId : 'Tạo mới Đề xuất'}">Tạo mới Đề xuất</span>
+                </nav>
+
+                <!-- HEADER -->
+                <div class="offers-header" style="border-bottom: 1px solid var(--line); padding-bottom: 16px; margin-bottom: 24px;">
+                    <div class="offers-title-group">
+                        <h1 th:text="${isEdit ? 'Chỉnh Sửa Offer Proposal #' + offerId : 'Tạo Mới Offer Proposal'}">Tạo Mới Offer Proposal</h1>
+                        <p class="offers-subtitle">
+                            <span th:if="${!isEdit}">Chọn ứng viên đã đạt phỏng vấn để thiết lập gói đãi ngộ và điều khoản hợp đồng lao động.</span>
+                            <span th:if="${isEdit}">Cập nhật các điều khoản đãi ngộ cho bản thảo Offer trước khi trình duyệt Giám đốc.</span>
+                        </p>
+                    </div>
+                </div>
+
+                <!-- DIRECTOR REJECTION NOTE (IF EDIT & REJECTED) -->
+                <div th:if="${isEdit and detail != null and (detail.offerStatus == 'Director_Rejected' or detail.offerStatus == 'Rejected')}"
+                     class="modal-alert modal-alert-danger" style="display:flex; margin-bottom: 20px;">
+                    <i class="fa-solid fa-circle-exclamation" style="font-size:18px;"></i>
+                    <div>
+                        <strong>Lý do từ chối từ Giám đốc:</strong>
+                        <div style="margin-top:2px; font-size:13.5px;"
+                             th:text="${#lists.isEmpty(detail.approvalHistory) ? 'Vui lòng điều chỉnh lại mức lương/định biên theo yêu cầu.' : detail.approvalHistory[0].directorComments}">
+                            Cần điều chỉnh lại lương.
+                        </div>
+                    </div>
+                </div>
+
+                <!-- MAIN FORM -->
+                <form id="offerForm" th:object="${offerDto}"
+                      th:action="${isEdit ? '/offers/' + offerId + '/edit' : '/offers/create'}"
+                      method="post">
+
+                    <!-- VALIDATION SUMMARY ALERT -->
+                    <div th:if="${#fields.hasAnyErrors()}" class="modal-alert modal-alert-danger" style="display:flex; margin-bottom: 20px;">
+                        <i class="fa-solid fa-triangle-exclamation" style="font-size:18px;"></i>
+                        <div>
+                            <strong>Dữ liệu nhập chưa hợp lệ. Vui lòng kiểm tra lại:</strong>
+                            <ul style="margin: 4px 0 0 16px; padding: 0; font-size: 13.5px;">
+                                <li th:each="err : ${#fields.allErrors()}" th:text="${err}"></li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <!-- STEP 1: CHỌN ỨNG VIÊN ĐỖ PHỎNG VẤN (CREATE) HOẶC XEM HỒ SƠ (EDIT) -->
+                    <div class="detail-section" style="background:var(--surface); border:1px solid var(--line); border-radius:8px; padding:20px; margin-bottom:24px;">
+                        <div class="section-title" style="font-size:16px; margin-bottom:16px;">
+                            <i class="fa-solid fa-user"></i> 1. Thông Tin Ứng Viên Đỗ Phỏng Vấn
+                        </div>
+
+                        <!-- Trường hợp TẠO MỚI: Dropdown chọn ứng viên -->
+                        <div th:if="${!isEdit}">
+                            <div class="form-group" style="margin-bottom:16px;">
+                                <label for="createAppSelect" style="font-weight:600; font-size:13.5px; display:block; margin-bottom:6px;">
+                                    Chọn ứng viên chờ tạo Offer <span style="color:var(--error);">*</span>
+                                </label>
+                                <select id="createAppSelect" th:field="*{applicationId}" class="input-control" onchange="handleSelectPassedCandidate(this.value)" required>
+                                    <option value="">-- Chọn ứng viên đã đỗ phỏng vấn --</option>
+                                    <option th:each="c : ${passedCandidates}"
+                                            th:value="${c.applicationId}"
+                                            th:attr="data-cand-id=${c.candidateId}, data-cand-name=${c.candidateName}, data-email=${c.email}, data-phone=${c.phoneNumber}, data-pos=${c.appliedPosition}, data-dept=${c.departmentName}, data-req-id=${c.requisitionId}, data-work-location=${c.workLocation}, data-comments=${c.interviewSummaryComments}, data-recom-salary=${c.recommendedSalary}, data-hm=${c.hiringManagerName}"
+                                            th:text="${c.candidateName} + ' - ' + ${c.appliedPosition} + ' (' + ${c.departmentName} + ')'">
+                                        Nguyễn Văn A - Backend Dev (Engineering)
+                                    </option>
+                                </select>
+                                <small class="field-error" style="color:var(--error); font-size:12px; display:block; margin-top:4px;"
+                                       th:if="${#fields.hasErrors('applicationId')}" th:errors="*{applicationId}"></small>
+                            </div>
+
+                            <!-- Khung xem trước thông tin Group A (Tự động cập nhật qua JS khi chọn dropdown) -->
+                            <div id="groupASection" style="display:none; background:var(--page); border:1px dashed var(--line); border-radius:6px; padding:16px; margin-top:12px;">
+                                <div class="detail-grid-3">
+                                    <div><div class="detail-item-label">Mã Ứng viên</div><div class="detail-item-value" id="dispCandId">-</div></div>
+                                    <div><div class="detail-item-label">Họ và tên</div><div class="detail-item-value" style="font-weight:700;" id="dispCandName">-</div></div>
+                                    <div><div class="detail-item-label">Email</div><div class="detail-item-value" id="dispCandEmail">-</div></div>
+                                    <div><div class="detail-item-label">Số điện thoại</div><div class="detail-item-value" id="dispCandPhone">-</div></div>
+                                    <div><div class="detail-item-label">Vị trí ứng tuyển</div><div class="detail-item-value" id="dispPosition">-</div></div>
+                                    <div><div class="detail-item-label">Phòng ban</div><div class="detail-item-value" id="dispDept">-</div></div>
+                                    <div><div class="detail-item-label">Mã Requisition</div><div class="detail-item-value" id="dispReqId">-</div></div>
+                                    <div><div class="detail-item-label">Lương đề xuất Hiring Manager</div><div class="detail-item-value" style="color:var(--brand-dark); font-weight:700;" id="dispRecomSalary">-</div></div>
+                                    <div><div class="detail-item-label">Hiring Manager</div><div class="detail-item-value" id="dispHm">-</div></div>
+                                </div>
+                                <div style="margin-top:10px; padding-top:10px; border-top:1px dashed var(--line);">
+                                    <div class="detail-item-label">Đánh giá Hội đồng phỏng vấn:</div>
+                                    <div class="detail-item-value" id="dispInterviewComments" style="font-style:italic; color:var(--muted); margin-top:2px;">-</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Trường hợp CHỈNH SỬA: Hiển thị thông tin ứng viên cố định (Read-only) -->
+                        <div th:if="${isEdit and detail != null}">
+                            <div class="detail-grid-3">
+                                <div><div class="detail-item-label">Họ và tên ứng viên</div><div class="detail-item-value" style="font-weight:700;" th:text="${detail.candidateName}">-</div></div>
+                                <div><div class="detail-item-label">Email</div><div class="detail-item-value" th:text="${detail.candidateEmail}">-</div></div>
+                                <div><div class="detail-item-label">Số điện thoại</div><div class="detail-item-value" th:text="${detail.candidatePhone}">-</div></div>
+                                <div><div class="detail-item-label">Vị trí ứng tuyển</div><div class="detail-item-value" th:text="${detail.appliedPosition}">-</div></div>
+                                <div><div class="detail-item-label">Phòng ban</div><div class="detail-item-value" th:text="${detail.departmentName}">-</div></div>
+                                <div><div class="detail-item-label">Mã Requisition</div><div class="detail-item-value" th:text="'#' + ${detail.requisitionId}">-</div></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- STEP 2: THÔNG TIN ĐÃI NGỘ & ĐIỀU KHOẢN (GROUP B) -->
+                    <div class="detail-section" style="background:var(--surface); border:1px solid var(--line); border-radius:8px; padding:20px; margin-bottom:24px;">
+                        <div class="section-title" style="font-size:16px; margin-bottom:16px;">
+                            <i class="fa-solid fa-coins"></i> 2. Thông Tin Đãi Ngộ & Điều Khoản Offer
+                        </div>
+
+                        <div class="form-group" style="margin-bottom:16px;">
+                            <label for="offeredPositionTitle" style="font-weight:600; font-size:13.5px; display:block; margin-bottom:6px;">
+                                Vị trí chức danh chính thức đề xuất <span style="color:var(--error);">*</span>
+                            </label>
+                            <input type="text" id="offeredPositionTitle" th:field="*{offeredPositionTitle}" class="input-control" placeholder="VD: Senior Java Developer" required>
+                            <small class="field-error" style="color:var(--error); font-size:12px; display:block; margin-top:4px;"
+                                   th:if="${#fields.hasErrors('offeredPositionTitle')}" th:errors="*{offeredPositionTitle}"></small>
+                        </div>
+
+                        <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-bottom:16px;">
+                            <div class="form-group">
+                                <label for="proposedSalary" style="font-weight:600; font-size:13.5px; display:block; margin-bottom:6px;">
+                                    Lương chính thức (VND/tháng) <span style="color:var(--error);">*</span>
+                                </label>
+                                <input type="number" id="proposedSalary" th:field="*{proposedSalary}" class="input-control"
+                                       placeholder="VD: 25000000" min="1" step="100000"
+                                       oninput="autoCalculateProbationSalary()" required>
+                                <small class="field-error" style="color:var(--error); font-size:12px; display:block; margin-top:4px;"
+                                       th:if="${#fields.hasErrors('proposedSalary')}" th:errors="*{proposedSalary}"></small>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="probationSalary" style="font-weight:600; font-size:13.5px; display:block; margin-bottom:6px;">
+                                    Lương thử việc (VND/tháng) <span style="color:var(--error);">*</span>
+                                    <button type="button" class="quick-calc-btn" onclick="autoCalculateProbationSalary(true)" title="Gợi ý mức sàn 85% theo quy định BR-OFF-01">
+                                        Gợi ý 85%
+                                    </button>
+                                </label>
+                                <input type="number" id="probationSalary" th:field="*{probationSalary}" class="input-control"
+                                       placeholder="Tối thiểu 85% lương chính thức" min="1" step="100000"
+                                       oninput="validateProbationRuleUi()" required>
+                                <div id="probationRuleNotice" class="form-hint" style="color:var(--brand-dark); font-size:12px; margin-top:4px;">
+                                    <i class="fa-solid fa-circle-check"></i> Tuân thủ quy định tối thiểu 85% lương chính thức.
+                                </div>
+                                <small class="field-error" style="color:var(--error); font-size:12px; display:block; margin-top:4px;"
+                                       th:if="${#fields.hasErrors('probationSalary')}" th:errors="*{probationSalary}"></small>
+                            </div>
+                        </div>
+
+                        <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:16px; margin-bottom:16px;">
+                            <div class="form-group">
+                                <label for="probationDays" style="font-weight:600; font-size:13.5px; display:block; margin-bottom:6px;">
+                                    Thời gian thử việc (ngày) <span style="color:var(--error);">*</span>
+                                </label>
+                                <input type="number" id="probationDays" th:field="*{probationDays}" class="input-control" min="1" placeholder="60" required>
+                                <small class="field-error" style="color:var(--error); font-size:12px; display:block; margin-top:4px;"
+                                       th:if="${#fields.hasErrors('probationDays')}" th:errors="*{probationDays}"></small>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="expectedStartDate" style="font-weight:600; font-size:13.5px; display:block; margin-bottom:6px;">
+                                    Ngày bắt đầu dự kiến <span style="color:var(--error);">*</span>
+                                </label>
+                                <input type="date" id="expectedStartDate" th:field="*{expectedStartDate}" class="input-control" required>
+                                <small class="field-error" style="color:var(--error); font-size:12px; display:block; margin-top:4px;"
+                                       th:if="${#fields.hasErrors('expectedStartDate')}" th:errors="*{expectedStartDate}"></small>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="workLocation" style="font-weight:600; font-size:13.5px; display:block; margin-bottom:6px;">
+                                    Địa điểm làm việc <span style="color:var(--error);">*</span>
+                                </label>
+                                <input type="text" id="workLocation" th:field="*{workLocation}" class="input-control" placeholder="Địa điểm làm việc" required>
+                                <small class="field-error" style="color:var(--error); font-size:12px; display:block; margin-top:4px;"
+                                       th:if="${#fields.hasErrors('workLocation')}" th:errors="*{workLocation}"></small>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="benefitsPackage" style="font-weight:600; font-size:13.5px; display:block; margin-bottom:6px;">
+                                Gói phúc lợi & Chế độ đãi ngộ <span style="color:var(--muted); font-weight:normal;">(Không bắt buộc)</span>
+                            </label>
+                            <textarea id="benefitsPackage" th:field="*{benefitsPackage}" class="input-control" style="height:86px;"
+                                      placeholder="Bảo hiểm sức khỏe, phụ cấp ăn trưa, thưởng tháng 13..."></textarea>
+                        </div>
+                    </div>
+
+                    <!-- FOOTER ACTIONS -->
+                    <div style="display:flex; justify-content:flex-end; gap:12px; align-items:center; border-top:1px solid var(--line); padding-top:20px;">
+                        <a th:href="${isEdit ? '/offers/' + offerId : '/offers'}" class="btn btn-secondary">
+                            Hủy bỏ
+                        </a>
+
+                        <!-- Submit as Draft -->
+                        <button type="submit" name="isDraft" value="true" class="btn btn-secondary">
+                            <i class="fa-regular fa-floppy-disk" style="margin-right:6px;"></i> Lưu Bản Thảo (Draft)
+                        </button>
+
+                        <!-- Submit to Director -->
+                        <button type="submit" name="isDraft" value="false" class="btn btn-primary">
+                            <i class="fa-solid fa-paper-plane" style="margin-right:6px;"></i> Trình Giám Đốc
+                        </button>
+                    </div>
+
+                </form>
+
+            </div>
+        </main>
+    </div>
+</div>
+
+<!-- SCRIPTS BỔ TRỢ UX -->
+<script th:src="@{/js/offers.js}" defer></script>
+
+</body>
+</html>

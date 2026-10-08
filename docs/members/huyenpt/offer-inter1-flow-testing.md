@@ -196,18 +196,48 @@ Dành cho Tester, Reviewer hoặc Giảng viên nghiệm thu trực tiếp trên
 
 ---
 
+### Kịch bản UI-07: Kiểm tra Tính năng Xuất Excel (Offer Export Management)
+1. **Phạm vi xuất theo Danh sách đang lọc (FILTERED):**
+   - Tìm kiếm từ khóa: "Java", Trạng thái: "Đã gửi ứng viên".
+   - Bấm nút `[Xuất Excel]`, chọn phạm vi *(•) Danh sách đang lọc*.
+   - Bấm `[Xuất Excel]`: Trình duyệt tải về file `offers_filtered_YYYY-MM-DD.xlsx` chứa toàn bộ kết quả lọc (không bị cắt ngắn theo trang).
+2. **Phạm vi xuất theo Đề xuất được chọn (SELECTED):**
+   - Tích chọn checkbox của 2 ứng viên trên bảng danh sách.
+   - Thanh công cụ nổi hiển thị: `Đã chọn 2 đề xuất | [Xuất 2 đề xuất] | [Bỏ chọn]`.
+   - Bấm `[Xuất 2 đề xuất]`: Modal mở ra với scope *(•) Các đề xuất đã chọn (2)* được chọn sẵn.
+   - Tải về file `offers_selected_2_YYYY-MM-DD.xlsx` chứa chính xác 2 bản ghi.
+3. **Phạm vi xuất Toàn bộ (ALL):**
+   - Chọn scope *(•) Toàn bộ Offer* $\rightarrow$ Tải về file `offers_YYYY-MM-DD.xlsx` chứa tất cả Offer active trong hệ thống.
+4. **Kiểm tra Định dạng File Excel (.xlsx):**
+   - **Sheet 1 (`Offers`):**
+     - Cột Lương: Kiểu `NUMERIC`, format `#,##0`.
+     - Cột Tỷ lệ thử việc: Kiểu `NUMERIC`, format `0.00%`.
+     - Cột Ngày: Kiểu date/datetime chuẩn (`dd/MM/yyyy`).
+     - Trạng thái: Nhãn tiếng Việt (`Bản thảo`, `Chờ Director duyệt`, `Đã gửi ứng viên`, v.v.).
+     - Dòng tiêu đề: In đậm, nền xám, cố định Freeze Pane và bật Auto Filter.
+   - **Sheet 2 (`Summary`):**
+     - Báo cáo tổng hợp số lượng Offer theo từng trạng thái tính trên đúng tập dữ liệu được xuất.
+     - Hiển thị người xuất, ngày giờ xuất, phạm vi và điều kiện lọc áp dụng.
+
+---
+
 ## 4. Tệp tin đã thay đổi & Đối chiếu Git
 
 | Tệp tin | Thao tác | Mô tả thay đổi |
 | :--- | :---: | :--- |
-| `CreateOfferRequest.java` | Modified | Thêm validator kiểm tra lương thử việc $\le$ lương chính thức |
-| `UpdateOfferRequest.java` | Modified | Thêm validator kiểm tra lương thử việc $\le$ lương chính thức |
-| `OfferServiceImpl.java` | Modified | Cài đặt quy tắc `GBR-07` (Nhóm A ghi đè in-place, Nhóm B khóa; lọc Passed Candidates) |
-| `GlobalExceptionHandler.java` | Modified | Xử lý `MethodArgumentNotValidException` trả về HTTP 400 Bad Request cho API thay vì lỗi 500 |
-| `CareerFlowTests.java` | Modified | Đồng bộ tham số `roleName` trong constructor `ViewerProfileResponse` |
-| `OfferServiceTests.java` | Modified | Bổ sung đầy đủ **31 Unit test cases** bao phủ 100% nghiệp vụ Service |
-| `OfferIntegrationTest.java` | Modified | Bổ sung đầy đủ **12 Integration test cases** bao phủ REST API & Security |
-| `list.html` & `offers.css` | Modified | Căn chỉnh layout thẻ thống kê Stat Cards |
-| `docs/members/huyenpt/offer-inter1-flow-testing.md` | Created/Updated | Báo cáo chi tiết và hướng dẫn kiểm thử tự động + kiểm thử thủ công cho luồng Offer |
-| `docs/management/work_logs/2026-10-05-offer-flow-testing-and-bugfix.md` | Created/Updated | Nhật ký công việc chi tiết của HuyenPT |
-| `docs/management/WORK_LOG.md` | Modified | Bổ sung dòng mục lục chung cho toàn bộ dự án |
+| `pom.xml` | Modified | Bổ sung thư viện Apache POI (`poi-ooxml:5.3.0`) xuất Excel |
+| `OfferExportScope.java` | Created | Enum định nghĩa 3 phạm vi: `FILTERED`, `SELECTED`, `ALL` |
+| `OfferExportFilterRequest.java` | Created | Java record nhận điều kiện tìm kiếm và sắp xếp |
+| `OfferExportRequest.java` | Created | Java record nhận yêu cầu xuất Excel kèm validation annotations |
+| `OfferExportRow.java` | Created | Java record chứa dữ liệu phẳng một bản ghi Offer để ghi vào Excel cell |
+| `OfferExportService.java` | Created | Interface dịch vụ xuất Excel cho HR |
+| `OfferExportServiceImpl.java` | Created | Triển khai query JPA Specification, format cell types, build 2 sheets `Offers` & `Summary` |
+| `OfferController.java` | Modified | Thêm endpoint `POST /offers/export` phân quyền HR/Admin trả về binary `.xlsx` |
+| `list.html` | Modified | Bổ sung nút `[Xuất Excel]`, checkbox chọn dòng, Selection Toolbar và Export Modal |
+| `offers.css` | Modified | Bổ sung styling cho Selection Toolbar, checkbox và Export Modal |
+| `offers.js` | Modified | Bổ sung logic toggle checkbox, CSRF header và AJAX Blob download |
+| `OfferExportServiceTests.java` | Created | 7 Unit test cases kiểm tra 3 scope, validation, numeric format, tiếng Việt |
+| `OfferIntegrationTest.java` | Modified | 9 WebMvc integration test cases kiểm tra MVC routes và endpoint export |
+| `OfferServiceTests.java` | Maintained | 57 Unit test cases luồng nghiệp vụ Offer (100% PASS) |
+| `docs/members/huyenpt/offer-inter1-flow-testing.md` | Updated | Cập nhật kịch bản kiểm thử tính năng xuất Excel |
+| `docs/members/huyenpt/pr-description.md` | Updated | Cập nhật mô tả PR bổ sung tính năng xuất Excel |

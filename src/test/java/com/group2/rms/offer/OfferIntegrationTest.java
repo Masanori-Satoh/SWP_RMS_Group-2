@@ -2,14 +2,10 @@ package com.group2.rms.offer;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.group2.rms.core.config.SecurityConfig;
-import com.group2.rms.core.exception.BaseBusinessException;
 import com.group2.rms.core.security.DatabaseUserDetailsService;
 import com.group2.rms.offer.controller.OfferController;
-import com.group2.rms.offer.dto.CreateOfferRequest;
-import com.group2.rms.offer.dto.OfferDetailResponse;
-import com.group2.rms.offer.dto.OfferResponse;
-import com.group2.rms.offer.dto.PassedCandidateResponse;
-import com.group2.rms.offer.dto.UpdateOfferRequest;
+import com.group2.rms.offer.dto.*;
+import com.group2.rms.offer.service.OfferExportService;
 import com.group2.rms.offer.service.OfferService;
 import com.group2.rms.user.entity.Role;
 import com.group2.rms.user.entity.User;
@@ -20,6 +16,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.context.annotation.Import;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.http.MediaType;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
@@ -27,24 +24,22 @@ import org.springframework.test.web.servlet.MockMvc;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
-import org.springframework.data.domain.PageImpl;
-import org.springframework.data.domain.PageRequest;
-
-import static org.hamcrest.Matchers.*;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.when;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 /**
- * Integration Test cho tầng Web / REST API của phân hệ Offer Proposal:
- * Kiểm tra các endpoint bảo mật, CSRF, HTTP response codes, Bean validation và quy tắc GBR-07.
+ * Integration Test cho tầng Web / MVC của phân hệ Offer Proposal:
+ * Kiểm tra các endpoint bảo mật, điều hướng View, xuất Excel và quy tắc phân quyền.
  */
 @WebMvcTest(OfferController.class)
 @Import({SecurityConfig.class, DatabaseUserDetailsService.class})
@@ -60,6 +55,9 @@ class OfferIntegrationTest {
     private OfferService offerService;
 
     @MockitoBean
+    private OfferExportService offerExportService;
+
+    @MockitoBean
     private UserRepository userRepository;
 
     @BeforeEach
@@ -72,242 +70,277 @@ class OfferIntegrationTest {
                 .role(hrRole)
                 .build();
         when(userRepository.findByUsernameIgnoreCase("hr_specialist")).thenReturn(Optional.of(hrUser));
+
+        Role candRole = Role.builder().roleId(4).roleName("Candidate").build();
+        User candUser = User.builder()
+                .userId(2)
+                .username("cand_user")
+                .accountStatus("Active")
+                .role(candRole)
+                .build();
+        when(userRepository.findByUsernameIgnoreCase("cand_user")).thenReturn(Optional.of(candUser));
     }
 
     @Test
-    @DisplayName("IT-01 GET /api/v1/hr/offers/passed-candidates: Trả về danh sách ứng viên đỗ hợp lệ theo GBR-07")
+    @DisplayName("IT-01 GET /offers: Danh sách Offer trả về View offers/list và HTTP 200")
     @WithMockUser(username = "hr_specialist", roles = {"HR"})
-    void it01_getPassedCandidates_returnsOk() throws Exception {
-        PassedCandidateResponse cand = PassedCandidateResponse.builder()
-                .applicationId(10)
-                .candidateName("Nguyễn Văn A")
-                .appliedPosition("Senior Java Backend Engineer")
-                .departmentName("Engineering")
-                .existingOfferStatus(null)
-                .build();
+    void it01_listOffers_returnsOkView() throws Exception {
+        when(offerService.getAllOffersForHr(any(), any(), any(), any()))
+                .thenReturn(new PageImpl<>(Collections.emptyList()));
+        when(offerService.getPassedCandidatesForOffer()).thenReturn(Collections.emptyList());
 
-        when(offerService.getPassedCandidatesForOffer()).thenReturn(List.of(cand));
-
-        mvc.perform(get("/api/v1/hr/offers/passed-candidates"))
+        mvc.perform(get("/offers"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.success").value(true))
-                .andExpect(jsonPath("$.data", hasSize(1)))
-                .andExpect(jsonPath("$.data[0].candidateName").value("Nguyễn Văn A"))
-                .andExpect(jsonPath("$.data[0].existingOfferStatus").doesNotExist());
+                .andExpect(view().name("offers/list"))
+                .andExpect(model().attributeExists("offers", "statPending"));
     }
 
     @Test
-    @DisplayName("IT-02 POST /api/v1/hr/offers: Tạo Offer hợp lệ trả về 201 Created")
+    @DisplayName("IT-02 GET /offers/create: Màn hình tạo Offer trả về View offers/form")
     @WithMockUser(username = "hr_specialist", roles = {"HR"})
-    void it02_createOffer_validPayload_returnsCreated() throws Exception {
-        CreateOfferRequest request = CreateOfferRequest.builder()
-                .applicationId(10)
-                .offeredPositionTitle("Senior Java Backend Engineer")
-                .proposedSalary(new BigDecimal("30000000"))
-                .probationSalary(new BigDecimal("26000000"))
-                .probationDays(60)
-                .expectedStartDate(LocalDate.now().plusDays(7))
-                .workLocation("Tầng 8, Tòa nhà RMS Tower, Hà Nội")
-                .isDraft(false)
-                .build();
+    void it02_showCreateForm_returnsFormView() throws Exception {
+        when(offerService.getPassedCandidatesForOffer()).thenReturn(Collections.emptyList());
 
-        OfferResponse response = OfferResponse.builder()
-                .offerId(101)
-                .applicationId(10)
-                .offeredPositionTitle("Senior Java Backend Engineer")
-                .proposedSalary(new BigDecimal("30000000"))
-                .probationSalary(new BigDecimal("26000000"))
-                .offerStatus("Pending_Director")
-                .build();
-
-        when(offerService.createOfferByHr(any(CreateOfferRequest.class))).thenReturn(response);
-
-        mvc.perform(post("/api/v1/hr/offers")
-                        .with(csrf())
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(request)))
-                .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.success").value(true))
-                .andExpect(jsonPath("$.data.offerId").value(101))
-                .andExpect(jsonPath("$.data.offerStatus").value("Pending_Director"));
+        mvc.perform(get("/offers/create"))
+                .andExpect(status().isOk())
+                .andExpect(view().name("offers/form"))
+                .andExpect(model().attributeExists("offerDto", "passedCandidates"));
     }
 
     @Test
-    @DisplayName("IT-03 POST /api/v1/hr/offers: Lương thử việc lớn hơn lương chính thức vi phạm Bean Validation -> 400 Bad Request")
+    @DisplayName("IT-03 GET /offers/{id}: Xem chi tiết Offer trả về View offers/detail")
     @WithMockUser(username = "hr_specialist", roles = {"HR"})
-    void it03_createOffer_probationSalaryGreaterThanProposed_returnsBadRequest() throws Exception {
-        CreateOfferRequest request = CreateOfferRequest.builder()
-                .applicationId(10)
-                .offeredPositionTitle("Senior Java Backend Engineer")
-                .proposedSalary(new BigDecimal("20000000"))
-                .probationSalary(new BigDecimal("25000000")) // Vi phạm: 25M > 20M
+    void it03_showOfferDetail_returnsDetailView() throws Exception {
+        OfferDetailResponse detail = OfferDetailResponse.builder()
+                .offerId(1)
+                .offeredPositionTitle("Senior Java Engineer")
+                .candidateName("Nguyễn Văn A")
+                .offerStatus("Draft")
+                .proposedSalary(new BigDecimal("30000000"))
+                .probationSalary(new BigDecimal("25500000"))
                 .probationDays(60)
-                .expectedStartDate(LocalDate.now().plusDays(7))
-                .workLocation("Trụ sở chính")
-                .isDraft(false)
+                .expectedStartDate(LocalDate.now().plusDays(14))
                 .build();
+        when(offerService.getOfferDetailForHr(1)).thenReturn(detail);
 
-        mvc.perform(post("/api/v1/hr/offers")
+        mvc.perform(get("/offers/1"))
+                .andExpect(status().isOk())
+                .andExpect(view().name("offers/detail"))
+                .andExpect(model().attributeExists("detail"));
+    }
+
+    @Test
+    @DisplayName("IT-04 POST /offers/{id}/delete: Xóa bản thảo Offer điều hướng về /offers")
+    @WithMockUser(username = "hr_specialist", roles = {"HR"})
+    void it04_deleteDraftOffer_redirectsToList() throws Exception {
+        mvc.perform(post("/offers/1/delete").with(csrf()))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrl("/offers"));
+    }
+
+    @Test
+    @DisplayName("IT-05 POST /offers/{id}/send: Phát hành Offer Letter điều hướng về /offers/{id}")
+    @WithMockUser(username = "hr_specialist", roles = {"HR"})
+    void it05_sendOffer_redirectsToDetail() throws Exception {
+        mvc.perform(post("/offers/1/send").with(csrf()))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrl("/offers/1"));
+    }
+
+    @Test
+    @DisplayName("IT-06 POST /offers/export: HR xuất Excel thành công (HTTP 200 OK, Content-Type xlsx, attachment header)")
+    @WithMockUser(username = "hr_specialist", roles = {"HR"})
+    void it06_exportOffers_hrSuccess() throws Exception {
+        OfferExportRequest request = new OfferExportRequest(
+                OfferExportScope.FILTERED,
+                null,
+                new OfferExportFilterRequest("Java", "ALL", "DEFAULT"),
+                List.of("offerId", "candidateName", "proposedSalary")
+        );
+        byte[] mockBytes = new byte[]{0x50, 0x4B, 0x03, 0x04};
+        when(offerExportService.exportOffersToExcel(any(), any())).thenReturn(mockBytes);
+        when(offerExportService.generateExportFilename(any())).thenReturn("offers_filtered_2026-10-07.xlsx");
+
+        mvc.perform(post("/offers/export")
                         .with(csrf())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isOk())
+                .andExpect(header().string("Content-Disposition", "attachment; filename=\"offers_filtered_2026-10-07.xlsx\""))
+                .andExpect(content().contentTypeCompatibleWith("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"))
+                .andExpect(content().bytes(mockBytes));
+    }
+
+    @Test
+    @DisplayName("IT-07 POST /offers/export: Candidate bị chặn truy cập (403 Forbidden)")
+    @WithMockUser(username = "cand_user", roles = {"CANDIDATE"})
+    void it07_exportOffers_unauthorizedRole_forbidden() throws Exception {
+        OfferExportRequest request = new OfferExportRequest(
+                OfferExportScope.ALL,
+                null,
+                null,
+                List.of("offerId")
+        );
+
+        mvc.perform(post("/offers/export")
+                        .with(csrf())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    @DisplayName("IT-08 POST /offers/export: Payload thiếu scope trả về lỗi 400 Bad Request")
+    @WithMockUser(username = "hr_specialist", roles = {"HR"})
+    void it08_exportOffers_invalidPayload_badRequest() throws Exception {
+        String invalidJson = "{\"scope\":null,\"columns\":[\"offerId\"]}";
+
+        mvc.perform(post("/offers/export")
+                        .with(csrf())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(invalidJson))
                 .andExpect(status().isBadRequest());
     }
 
     @Test
-    @DisplayName("IT-04 POST /api/v1/hr/offers: Tạo đè khi đơn có Offer thuộc Nhóm B bị chặn trả về lỗi")
-    @WithMockUser(username = "hr_specialist", roles = {"HR"})
-    void it04_createOffer_groupBLockedState_returnsError() throws Exception {
-        CreateOfferRequest request = CreateOfferRequest.builder()
-                .applicationId(10)
-                .offeredPositionTitle("Senior Java Backend Engineer")
-                .proposedSalary(new BigDecimal("30000000"))
-                .probationSalary(new BigDecimal("26000000"))
-                .probationDays(60)
-                .expectedStartDate(LocalDate.now().plusDays(7))
-                .workLocation("Trụ sở chính")
-                .isDraft(false)
-                .build();
-
-        when(offerService.createOfferByHr(any(CreateOfferRequest.class)))
-                .thenThrow(new BaseBusinessException("Offer đang ở trạng thái Nhóm B", "OFFER_LOCKED_STATE"));
-
-        mvc.perform(post("/api/v1/hr/offers")
-                        .with(csrf())
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(request)))
-                .andExpect(status().is4xxClientError());
-    }
-
-    @Test
-    @DisplayName("IT-05 PUT /api/v1/hr/offers/{id}: Cập nhật Offer hợp lệ trả về 200 OK")
-    @WithMockUser(username = "hr_specialist", roles = {"HR"})
-    void it05_updateOffer_valid_returnsOk() throws Exception {
-        UpdateOfferRequest request = UpdateOfferRequest.builder()
-                .offeredPositionTitle("Tech Lead")
-                .proposedSalary(new BigDecimal("45000000"))
-                .probationSalary(new BigDecimal("39000000"))
-                .probationDays(60)
-                .expectedStartDate(LocalDate.now().plusDays(14))
-                .workLocation("Trụ sở chính")
-                .isDraft(true)
-                .build();
-
-        OfferResponse response = OfferResponse.builder()
-                .offerId(1)
-                .offeredPositionTitle("Tech Lead")
-                .proposedSalary(new BigDecimal("45000000"))
-                .probationSalary(new BigDecimal("39000000"))
-                .offerStatus("Draft")
-                .build();
-
-        when(offerService.updateOfferByHr(eq(1), any(UpdateOfferRequest.class))).thenReturn(response);
-
-        mvc.perform(put("/api/v1/hr/offers/1")
-                        .with(csrf())
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(request)))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.success").value(true))
-                .andExpect(jsonPath("$.data.offerStatus").value("Draft"))
-                .andExpect(jsonPath("$.data.offeredPositionTitle").value("Tech Lead"));
-    }
-
-    @Test
-    @DisplayName("IT-06 POST /api/v1/hr/offers/{id}/send: HR phát hành Offer Letter thành công trả về 200 OK")
-    @WithMockUser(username = "hr_specialist", roles = {"HR"})
-    void it06_sendOfferToCandidate_returnsOk() throws Exception {
-        OfferResponse sentOffer = OfferResponse.builder()
-                .offerId(1)
-                .offerStatus("Sent_Candidate")
-                .build();
-
-        when(offerService.sendOfferToCandidate(1)).thenReturn(sentOffer);
-
-        mvc.perform(post("/api/v1/hr/offers/1/send").with(csrf()))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.success").value(true))
-                .andExpect(jsonPath("$.data.offerStatus").value("Sent_Candidate"));
-    }
-
-    @Test
-    @DisplayName("IT-07 Security: Truy cập API khi chưa đăng nhập bị chuyển hướng hoặc chặn 401/403")
-    void it07_unauthenticatedAccess_isForbiddenOrRedirected() throws Exception {
-        mvc.perform(get("/api/v1/hr/offers/passed-candidates"))
+    @DisplayName("IT-09 Security: Chưa đăng nhập truy cập /offers bị điều hướng về login")
+    void it09_unauthenticatedAccess_redirectsToLogin() throws Exception {
+        mvc.perform(get("/offers"))
                 .andExpect(status().is3xxRedirection());
     }
 
     @Test
-    @DisplayName("IT-08 GET /api/v1/hr/offers: Lấy danh sách Offer có phân trang và lọc theo trạng thái trả về 200 OK")
+    @DisplayName("IT-10 POST /offers/create (JSON): Modal tạo Offer thành công trả về HTTP 201 Created")
     @WithMockUser(username = "hr_specialist", roles = {"HR"})
-    void it08_getAllOffers_withStatusAndPaging_returnsOk() throws Exception {
-        OfferResponse offer = OfferResponse.builder()
-                .offerId(1)
-                .offerStatus("Draft")
-                .offeredPositionTitle("Senior Developer")
+    void it10_createOfferJson_success() throws Exception {
+        CreateOfferRequest req = new CreateOfferRequest();
+        req.setApplicationId(10);
+        req.setOfferedPositionTitle("Senior Java Dev");
+        req.setProposedSalary(new BigDecimal("25000000"));
+        req.setProbationSalary(new BigDecimal("21250000"));
+        req.setProbationDays(60);
+        req.setExpectedStartDate(LocalDate.now().plusDays(7));
+        req.setWorkLocation("Trụ sở Mộc RMS");
+        req.setIsDraft(false);
+
+        OfferResponse mockCreated = OfferResponse.builder()
+                .offerId(99)
+                .candidateName("Trần Văn B")
+                .offerStatus("Pending_Director")
                 .build();
-        PageImpl<OfferResponse> pagedResult = new PageImpl<>(List.of(offer), PageRequest.of(0, 10), 1);
+        when(offerService.createOfferByHr(any())).thenReturn(mockCreated);
 
-        when(offerService.getAllOffersForHr(eq("Draft"), any())).thenReturn(pagedResult);
-
-        mvc.perform(get("/api/v1/hr/offers").param("status", "Draft").param("page", "0").param("size", "10"))
-                .andExpect(status().isOk())
+        mvc.perform(post("/offers/create")
+                        .with(csrf())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(req)))
+                .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.success").value(true))
-                .andExpect(jsonPath("$.data.content", hasSize(1)))
-                .andExpect(jsonPath("$.data.content[0].offerStatus").value("Draft"));
+                .andExpect(jsonPath("$.data.offerId").value(99));
     }
 
     @Test
-    @DisplayName("IT-09 GET /api/v1/hr/offers/{id}: Lấy chi tiết Offer đầy đủ trả về 200 OK")
+    @DisplayName("IT-11 POST /offers/create (JSON): Lỗi nghiệp vụ từ chối tạo offer trả về HTTP 400")
     @WithMockUser(username = "hr_specialist", roles = {"HR"})
-    void it09_getOfferDetail_returnsOk() throws Exception {
+    void it11_createOfferJson_businessError() throws Exception {
+        CreateOfferRequest req = new CreateOfferRequest();
+        req.setApplicationId(10);
+        req.setOfferedPositionTitle("Senior Java Dev");
+        req.setProposedSalary(new BigDecimal("25000000"));
+        req.setProbationSalary(new BigDecimal("21250000"));
+        req.setProbationDays(60);
+        req.setExpectedStartDate(LocalDate.now().plusDays(7));
+        req.setWorkLocation("Trụ sở Mộc RMS");
+        req.setIsDraft(false);
+
+        when(offerService.createOfferByHr(any()))
+                .thenThrow(new com.group2.rms.core.exception.BaseBusinessException("Ứng viên đã có offer", "ERR_ACTIVE_OFFER"));
+
+        mvc.perform(post("/offers/create")
+                        .with(csrf())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(req)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.success").value(false))
+                .andExpect(jsonPath("$.message").value("Ứng viên đã có offer"));
+    }
+
+    @Test
+    @DisplayName("IT-12 GET /offers/{id} (JSON): Pop-up chi tiết Offer trả về JSON ApiResponse và HTTP 200")
+    @WithMockUser(username = "hr_specialist", roles = {"HR"})
+    void it12_getOfferDetailJson_success() throws Exception {
         OfferDetailResponse detail = OfferDetailResponse.builder()
                 .offerId(1)
-                .offeredPositionTitle("Senior Developer")
+                .offeredPositionTitle("Senior Java Engineer")
                 .candidateName("Nguyễn Văn A")
-                .offerStatus("Pending_Director")
+                .offerStatus("Draft")
                 .proposedSalary(new BigDecimal("30000000"))
+                .probationSalary(new BigDecimal("25500000"))
+                .probationDays(60)
+                .expectedStartDate(LocalDate.now().plusDays(14))
                 .build();
-
         when(offerService.getOfferDetailForHr(1)).thenReturn(detail);
 
-        mvc.perform(get("/api/v1/hr/offers/1"))
+        mvc.perform(get("/offers/1").accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.success").value(true))
                 .andExpect(jsonPath("$.data.offerId").value(1))
-                .andExpect(jsonPath("$.data.candidateName").value("Nguyễn Văn A"))
-                .andExpect(jsonPath("$.data.offeredPositionTitle").value("Senior Developer"));
+                .andExpect(jsonPath("$.data.candidateName").value("Nguyễn Văn A"));
     }
 
     @Test
-    @DisplayName("IT-10 DELETE /api/v1/hr/offers/{id}: Xóa bản thảo Offer (Draft) thành công trả về 200 OK")
+    @DisplayName("IT-13 PUT /offers/{id} (JSON): Pop-up chỉnh sửa Offer thành công trả về HTTP 200")
     @WithMockUser(username = "hr_specialist", roles = {"HR"})
-    void it10_deleteDraftOffer_returnsOk() throws Exception {
-        mvc.perform(delete("/api/v1/hr/offers/1").with(csrf()))
+    void it13_updateOfferJson_success() throws Exception {
+        UpdateOfferRequest req = new UpdateOfferRequest();
+        req.setOfferedPositionTitle("Lead Engineer");
+        req.setProposedSalary(new BigDecimal("35000000"));
+        req.setProbationSalary(new BigDecimal("29750000"));
+        req.setProbationDays(60);
+        req.setExpectedStartDate(LocalDate.now().plusDays(10));
+        req.setWorkLocation("Trụ sở Mộc RMS");
+        req.setIsDraft(true);
+
+        OfferResponse mockUpdated = OfferResponse.builder()
+                .offerId(1)
+                .offeredPositionTitle("Lead Engineer")
+                .offerStatus("Draft")
+                .build();
+        when(offerService.updateOfferByHr(any(), any())).thenReturn(mockUpdated);
+
+        mvc.perform(put("/offers/1")
+                        .with(csrf())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(req)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.success").value(true))
-                .andExpect(jsonPath("$.message").value(containsString("Đã xóa bản thảo Offer thành công")));
+                .andExpect(jsonPath("$.data.offeredPositionTitle").value("Lead Engineer"));
     }
 
     @Test
-    @DisplayName("IT-11 DELETE /api/v1/hr/offers/{id}: Cố tình xóa Offer không phải Draft trả về lỗi 400 Bad Request")
+    @DisplayName("IT-14 DELETE /offers/{id} (JSON): Pop-up xóa bản thảo Offer thành công trả về HTTP 200")
     @WithMockUser(username = "hr_specialist", roles = {"HR"})
-    void it11_deleteNonDraftOffer_returnsBadRequest() throws Exception {
-        doThrow(new BaseBusinessException("Chỉ được phép xóa bản thảo Offer (Draft)", "OFFER_NOT_DRAFT"))
-                .when(offerService).deleteDraftOfferByHr(1);
-
-        mvc.perform(delete("/api/v1/hr/offers/1").with(csrf()))
-                .andExpect(status().is4xxClientError());
+    void it14_deleteDraftOfferJson_success() throws Exception {
+        mvc.perform(delete("/offers/1").with(csrf()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.success").value(true));
     }
 
     @Test
-    @DisplayName("IT-12 POST /api/v1/hr/offers/{id}/send: Gửi Offer chưa được duyệt trả về lỗi 400 Bad Request")
+    @DisplayName("IT-15 POST /offers/{id}/send (JSON): Phát hành Offer Letter trả về JSON khi Accept application/json")
     @WithMockUser(username = "hr_specialist", roles = {"HR"})
-    void it12_sendOffer_notApproved_returnsBadRequest() throws Exception {
-        when(offerService.sendOfferToCandidate(1))
-                .thenThrow(new BaseBusinessException("Chỉ được gửi thư mời nhận việc khi Offer đã được Director phê duyệt", "OFFER_NOT_APPROVED"));
+    void it15_sendOfferJson_success() throws Exception {
+        OfferResponse mockSent = OfferResponse.builder()
+                .offerId(1)
+                .offerStatus("Sent_Candidate")
+                .build();
+        when(offerService.sendOfferToCandidate(1)).thenReturn(mockSent);
 
-        mvc.perform(post("/api/v1/hr/offers/1/send").with(csrf()))
-                .andExpect(status().is4xxClientError());
+        mvc.perform(post("/offers/1/send")
+                        .with(csrf())
+                        .accept(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.data.offerStatus").value("Sent_Candidate"));
     }
 }

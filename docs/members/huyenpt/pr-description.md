@@ -1,117 +1,121 @@
-## 🧪 Tổng quan Kiểm thử & Tài liệu hóa (Testing & Documentation Overview)
+# PR Description: Loại bỏ Luồng Đàm Phán Offer & Chuẩn Hóa Dữ Liệu Nghiệp Vụ (Remove Negotiation Flow)
 
-Pull Request này tập trung chuyên biệt vào việc **xây dựng bộ kiểm thử tự động toàn diện (Unit Test & Integration Test)** và **lập tài liệu hướng dẫn kiểm thử** cho phân hệ **Quản lý Đề xuất Tuyển dụng (Offer Proposal)** của thành viên **Phạm Thị Huyền (HuyenPT)**:
-
-1. **Xây dựng Bộ Kiểm thử Tự động Toàn diện (71/71 Test Executions PASS — 100%):**
-   - Hoàn thiện **59 Unit Test Executions** (34 methods) tại `OfferServiceTests.java` ứng dụng `@ParameterizedTest`, bao phủ toàn diện hợp đồng nghiệp vụ tầng Service, các điều kiện biên, độ ưu tiên địa điểm làm việc, ma trận trạng thái chuẩn của quy tắc `GBR-07` và bộ lọc 3 tiêu chí server-side với JPA Specification.
-   - Hoàn thiện **12 Integration Tests** tại `OfferIntegrationTest.java` kiểm tra toàn bộ 7 REST API endpoints, mã phản hồi HTTP, CSRF token và phân quyền Spring Security.
-2. **Khắc phục lỗi bổ trợ kiểm thử theo chuẩn Kiến trúc (Architecture Test Support):**
-   - Bổ sung xử lý lỗi `MethodArgumentNotValidException` trong `GlobalExceptionHandler.java` để API trả về đúng mã chuẩn HTTP 400 Bad Request (thay vì bị bắt vào lỗi hệ thống 500).
-   - Cập nhật đồng bộ tham số constructor `ViewerProfileResponse` trong `CareerFlowTests.java` để đảm bảo toàn dự án biên dịch test thành công (`test-compile BUILD SUCCESS`).
-3. **Thiết lập Bộ Tài liệu Kiểm thử & Nghiệm thu (QA Deliverables):**
-   - Xây dựng báo cáo ma trận chi tiết kiểm thử tự động và 6 kịch bản kiểm thử thủ công từng bước trên trình duyệt tại `offer-inter1-flow-testing.md`.
-   - Cập nhật nhật ký công việc cá nhân và bảng mục lục tiến độ chung của toàn team tại `WORK_LOG.md`.
+- **Nhánh thực hiện (Branch):** `fix/huyenpt/inte1/remove-negotiation-flow`
+- **Thành viên phụ trách (Assignee):** Phạm Thị Huyền (`HuyenPT`)
+- **Phân hệ (Module):** Quản lý Đề xuất Tuyển dụng (`Offer Proposal`) & Tích hợp Hệ thống
+- **Mục tiêu PR:** Loại bỏ hoàn toàn luồng đàm phán lương khỏi hệ thống theo yêu cầu nghiệp vụ mới; chuẩn hóa quy tắc tạo mới Offer `GBR-07`; sửa lỗi enum `RoleInPanel` gây lỗi 500; và bổ sung 10 ứng viên đỗ phỏng vấn chưa có Offer vào seed data để phục vụ kiểm thử tạo mới Offer.
 
 ---
 
-## 🎯 Chi tiết các Hạng mục Kiểm thử (Test Details)
+## 📌 Tóm tắt các Thay đổi Cốt lõi (Summary of Key Changes)
 
-### 1. Unit Testing — Tầng Dịch vụ & Ràng buộc Nghiệp vụ (`OfferServiceTests.java`)
-Bao gồm **59 test executions** kiểm thử độc lập với Mockito và JUnit 5 Parameterized:
-* **Kiểm thử Ràng buộc Lương (Salary Constraints):**
-  * Lương thử việc $< 85\%$ mức lương chính thức $\rightarrow$ Ném `OfferValidationException` ở Service, khẳng định `never().save()`.
-  * Lương thử việc $= 85\%$ mức lương chính thức $\rightarrow$ Hợp lệ.
-  * Lương thử việc $>$ mức lương chính thức $\rightarrow$ Ném `OfferValidationException` ở Service và bắt vi phạm qua Bean Validation.
-* **Kiểm thử Dữ liệu Đầu vào & Biên (Input Validation & Edge Cases):**
-  * Ngày bắt đầu dự kiến $=$ hôm nay hoặc trong quá khứ $\rightarrow$ Bị chặn với `OfferValidationException`.
-  * Thời gian thử việc $\le 0$ ngày (tham số hóa `0`, `-1`, `-60`), Mức lương $\le 0$ (tham số hóa `0`, `-1`, `-10.000.000`), Địa điểm làm việc để trống $\rightarrow$ Bị chặn, kiểm tra `never().save()`.
-  * Gói phúc lợi để trống (`null`) $\rightarrow$ Cho phép và tạo thành công.
-* **Kiểm thử Độ ưu tiên Địa điểm làm việc (WorkLocation Precedence):**
-  * Cả JobPosting và Candidate đều có địa chỉ $\rightarrow$ Ưu tiên tuyệt đối `JobPosting.workLocation`.
-  * JobPosting thiếu địa chỉ $\rightarrow$ Fallback về `Candidate.address`.
-  * Cả hai đều thiếu $\rightarrow$ Fallback về giá trị mặc định của hệ thống (`Trụ sở chính Mộc RMS`).
-* **Kiểm thử Quy tắc Single Active Offer (`GBR-07` Toàn diện):**
-  * **Luồng Tạo mới (`createOfferByHr`)**:
-    * Đơn ứng tuyển đang có Offer ở bất kỳ trạng thái nào (kể cả `Draft`, `Pending_Director`, `Approved`, `Sent_Candidate`, `Accepted`, `Rejected`, v.v. - 12 trạng thái) $\rightarrow$ Chặn hoàn toàn thao tác tạo mới trực tiếp, ném mã lỗi `OFFER_LOCKED_STATE`, không lưu xuống DB (`never().save()`).
-    * Chỉ cho phép tạo mới đối với ứng viên đã đỗ phỏng vấn và **chưa từng có bất kỳ gói Offer nào**.
-  * **Luồng Cập nhật (`updateOfferByHr`)**:
-    * Offer đang ở trạng thái **`Draft`** $\rightarrow$ Cho phép chỉnh sửa thông tin Offer trực tiếp từ bảng danh sách và lưu DB (`verify().save()`).
-    * Offer đang ở các trạng thái khác (`Pending_Director`, `Approved`, `Rejected`, v.v.) $\rightarrow$ Chặn cập nhật, ném mã lỗi `OFFER_STATUS_INVALID`, không lưu DB (`never().save()`).
-  * **Bộ lọc ứng viên đỗ (`getPassedCandidatesForOffer`)**: Tự động loại trừ toàn bộ ứng viên đang có bất kỳ Offer nào (kể cả `Draft`), chỉ gợi ý ứng viên đỗ phỏng vấn và chưa hề có lịch sử tạo Offer nào.
-* **Kiểm thử Chu trình Vòng đời Offer (Offer Proposal Lifecycle):**
-  * Tra cứu Offer theo ID và Application ID (tìm thấy vs không tìm thấy ném `ResourceNotFoundException`).
-  * Lấy danh sách phân trang (toàn bộ trạng thái vs lọc theo trạng thái cụ thể).
-  * Lấy chi tiết Offer đầy đủ thông tin ứng viên, kết quả phỏng vấn, lịch sử duyệt của Giám đốc và lịch sử đàm phán.
-  * Xóa bản thảo $\rightarrow$ Xóa mềm (`isDeleted = true`) thành công khi `Draft`; chặn xóa và ném `OFFER_NOT_DRAFT` với trạng thái khác.
-  * Phát hành thư mời $\rightarrow$ Gửi thành công khi đã duyệt (`Approved`), chuyển trạng thái Offer sang `Sent_Candidate` và Application sang `Offered`; ném `OFFER_NOT_APPROVED` khi chưa được duyệt.
-
-### 2. Integration Testing — Tầng REST API & Bảo mật (`OfferIntegrationTest.java`)
-Bao gồm **12 test cases** kiểm thử tích hợp qua Spring `MockMvc`:
-* `IT-01`: `GET /api/v1/hr/offers/passed-candidates` $\rightarrow$ Trả về 200 OK + JSON danh sách ứng viên đỗ hợp lệ (chỉ gồm ứng viên chưa có Offer).
-* `IT-02`: `POST /api/v1/hr/offers` $\rightarrow$ Tạo Offer mới hợp lệ trả về 201 Created + JSON Offer.
-* `IT-03`: `POST /api/v1/hr/offers` $\rightarrow$ Vi phạm ràng buộc lương trả về HTTP 400 Bad Request.
-* `IT-04`: `POST /api/v1/hr/offers` $\rightarrow$ Tạo Offer khi đơn đã có Offer trả về HTTP 400 Bad Request (`OFFER_LOCKED_STATE`).
-* `IT-05`: `PUT /api/v1/hr/offers/{id}` $\rightarrow$ Cập nhật Offer Draft hợp lệ trả về 200 OK.
-* `IT-06`: `POST /api/v1/hr/offers/{id}/send` $\rightarrow$ Phát hành Offer Letter thành công trả về 200 OK (`Sent_Candidate`).
-* `IT-07`: `GET /api/v1/hr/offers/passed-candidates` $\rightarrow$ Truy cập khi chưa đăng nhập bị chặn (Redirect 302 về Login / 401 Unauthorized).
-* `IT-08`: `GET /api/v1/hr/offers` $\rightarrow$ Lấy danh sách có phân trang và lọc status trả về 200 OK + JSON Page.
-* `IT-09`: `GET /api/v1/hr/offers/{id}` $\rightarrow$ Lấy chi tiết Offer đầy đủ trả về 200 OK + JSON Detail.
-* `IT-10`: `DELETE /api/v1/hr/offers/{id}` $\rightarrow$ Xóa bản thảo (Draft) thành công trả về 200 OK.
-* `IT-11`: `DELETE /api/v1/hr/offers/{id}` $\rightarrow$ Cố tình xóa Offer ngoài Draft trả về HTTP 400 Bad Request (`OFFER_NOT_DRAFT`).
-* `IT-12`: `POST /api/v1/hr/offers/{id}/send` $\rightarrow$ Gửi Offer chưa duyệt Director trả về HTTP 400 Bad Request (`OFFER_NOT_APPROVED`).
+### 1. Loại bỏ Hoàn toàn Luồng & Trạng thái Đàm phán (`Negotiating` / `OfferNegotiation`)
+- **Cơ sở dữ liệu (Database Schema & Seeds):**
+  - Xóa bỏ định nghĩa bảng `OfferNegotiation` trong schema (`database/schema/db.sql` và `db (1) (1).sql`).
+  - Loại bỏ giá trị `Negotiating` khỏi ràng buộc `CHECK (OfferStatus IN (...))` của bảng `OfferProposal`.
+  - Cập nhật `database/seeds/build_seed.py` và `database/seeds/seed_data.sql`: Xóa bỏ toàn bộ các câu lệnh `INSERT INTO OfferNegotiation`, chuyển đổi các bản ghi Offer mẫu từ trạng thái `Negotiating` sang các trạng thái hợp lệ (`Sent_Candidate`, `Accepted`, `Declined`).
+- **Tầng Backend (Entity, Repository, DTO, Service):**
+  - **Xóa vĩnh viễn** thực thể [OfferNegotiation.java](file:///c:/Users/Admin/Documents/Ky_5/SWP391/SWP_RMS_Group-2/src/main/java/com/group2/rms/offer/entity/OfferNegotiation.java) và repository [OfferNegotiationRepository.java](file:///c:/Users/Admin/Documents/Ky_5/SWP391/SWP_RMS_Group-2/src/main/java/com/group2/rms/offer/repository/OfferNegotiationRepository.java).
+  - Cập nhật [OfferProposal.java](file:///c:/Users/Admin/Documents/Ky_5/SWP391/SWP_RMS_Group-2/src/main/java/com/group2/rms/offer/entity/OfferProposal.java): Loại bỏ trạng thái `Negotiating` khỏi Javadoc và danh sách giá trị trạng thái hợp lệ.
+  - Cập nhật [OfferDetailResponse.java](file:///c:/Users/Admin/Documents/Ky_5/SWP391/SWP_RMS_Group-2/src/main/java/com/group2/rms/offer/dto/OfferDetailResponse.java): Loại bỏ trường `negotiationHistory` và inner class `NegotiationRound`.
+  - Cập nhật [OfferServiceImpl.java](file:///c:/Users/Admin/Documents/Ky_5/SWP391/SWP_RMS_Group-2/src/main/java/com/group2/rms/offer/service/OfferServiceImpl.java): Loại bỏ dependency `OfferNegotiationRepository`, xóa logic nạp lịch sử đàm phán trong `getOfferDetailById`, loại bỏ `Negotiating` khỏi tập `LOCKED_STATUSES`.
+  - Cập nhật [DashboardMetricsRepository.java](file:///c:/Users/Admin/Documents/Ky_5/SWP391/SWP_RMS_Group-2/src/main/java/com/group2/rms/dashboard/DashboardMetricsRepository.java) và [DashboardService.java](file:///c:/Users/Admin/Documents/Ky_5/SWP391/SWP_RMS_Group-2/src/main/java/com/group2/rms/dashboard/DashboardService.java): Loại bỏ trạng thái `Negotiating` khỏi danh sách trạng thái ứng viên có thể nhìn thấy và switch-case ánh xạ nhãn hiển thị.
+- **Tầng Giao diện Người dùng (Frontend):**
+  - [list.html](file:///c:/Users/Admin/Documents/Ky_5/SWP391/SWP_RMS_Group-2/src/main/resources/templates/offers/list.html): Xóa bỏ option "Đang đàm phán" trong dropdown lọc trạng thái và badge hiển thị trạng thái `Negotiating`.
+  - [offers.js](file:///c:/Users/Admin/Documents/Ky_5/SWP391/SWP_RMS_Group-2/src/main/resources/static/js/offers.js): Xóa bỏ khối hiển thị "Lịch Sử Đàm Phán Lương" trong modal chi tiết Offer (Screen 32) và xử lý liên quan trong modal chỉnh sửa.
+  - [offers.css](file:///c:/Users/Admin/Documents/Ky_5/SWP391/SWP_RMS_Group-2/src/main/resources/static/css/offers.css): Loại bỏ class `.status-negotiating`.
 
 ---
 
-## 📊 Kết quả Thực thi Kiểm thử (Execution Results)
-
-Câu lệnh thực thi kiểm thử tự động trên PowerShell:
-```powershell
-$env:SPRING_JPA_HIBERNATE_DDL_AUTO = 'validate'
-$env:SPRING_SQL_INIT_MODE = 'never'
-.\mvnw.cmd '-Dtest=OfferServiceTests,OfferIntegrationTest' test
-```
-
-Log kết quả chạy thực tế:
-```text
-[INFO] -------------------------------------------------------
-[INFO]  T E S T S
-[INFO] -------------------------------------------------------
-[INFO] Running com.group2.rms.offer.OfferIntegrationTest
-[INFO] Tests run: 12, Failures: 0, Errors: 0, Skipped: 0
-[INFO] Running com.group2.rms.service.OfferServiceTests
-[INFO] Tests run: 59, Failures: 0, Errors: 0, Skipped: 0
-[INFO] -------------------------------------------------------
-[INFO] Results:
-[INFO] Tests run: 71, Failures: 0, Errors: 0, Skipped: 0 (100% PASS)
-[INFO] -------------------------------------------------------
-[INFO] BUILD SUCCESS
-```
+### 2. Chuẩn hóa Quy tắc Nghiệp vụ `GBR-07` & Lọc Danh sách Offer
+- **Quy tắc Single Active Offer nghiêm ngặt:**
+  - Mục tạo đề xuất Offer chỉ chấp nhận tạo mới cho ứng viên **đã đỗ phỏng vấn (`FinalDecision = 'Passed'`) và chưa từng có bất kỳ đề xuất Offer nào trước đó (kể cả bản `Draft`)**.
+  - Tất cả các ứng viên đã có Offer trong hệ thống đều bị loại khỏi danh sách gợi ý trong API `/api/v1/hr/offers/passed-candidates`.
+- **Cơ chế Lọc Toàn cục & Loại bỏ Nút "Xóa bộ lọc":**
+  - Cả 3 bộ lọc (Từ khóa ứng viên, Trạng thái Offer, Sắp xếp) đều lọc chính xác trên toàn bộ tổng số bản ghi đề xuất hiện có (server-side query).
+  - Loại bỏ hoàn toàn nút/tính năng "Xóa bộ lọc" theo yêu cầu trải nghiệm người dùng tinh gọn.
 
 ---
 
-## 📝 Tài liệu Kiểm thử & Hướng dẫn Nghiệm thu (QA Documentation)
-
-Đã hoàn thiện tài liệu chi tiết tại thư mục cá nhân và hệ thống tài liệu chung của dự án:
-
-1. **Báo cáo Kiểm thử Toàn diện ([`docs/members/huyenpt/offer-inter1-flow-testing.md`](docs/members/huyenpt/offer-inter1-flow-testing.md)):**
-   - Bảng ma trận 31 Unit test cases và 12 Integration test cases.
-   - **Kịch bản kiểm thử thủ công (Manual UI Checklist):** Gồm 6 kịch bản thao tác trực quan từng bước trên trình duyệt (Kiểm tra form validation lương, kiểm tra Single Active Offer `GBR-07`, kiểm tra layout Stat Cards, kiểm tra xem chi tiết lịch sử duyệt/đàm phán, kiểm tra xóa bản thảo Draft, kiểm tra phát hành thư mời).
-2. **Nhật ký Công việc theo ngày ([`docs/management/work_logs/2026-10-05-offer-flow-testing-and-bugfix.md`](docs/management/work_logs/2026-10-05-offer-flow-testing-and-bugfix.md)):**
-   - Ghi nhận chi tiết kết quả xây dựng 43 test cases và cập nhật tài liệu.
-3. **Mục lục Tiến độ Chung ([`docs/management/WORK_LOG.md`](docs/management/WORK_LOG.md)):**
-   - Đã đồng bộ dòng cập nhật công việc ngày 05/10 của HuyenPT vào bảng theo dõi của cả nhóm.
+### 3. Sửa Lỗi Enum `RoleInPanel` (Khắc phục Triệt để Lỗi 500)
+- **Vấn đề phát hiện:** Khi truy cập `/interviews` hoặc các trang có nạp hội đồng phỏng vấn, Hibernate ném lỗi `IllegalArgumentException: No enum constant ... RoleInPanel.Director` do enum Java trước đó chỉ có `HR` và `HM`, trong khi DB và seed data chứa `HR`, `HM`, `Interviewer`, `Director`.
+- **Giải pháp:** Cập nhật [RoleInPanel.java](file:///c:/Users/Admin/Documents/Ky_5/SWP391/SWP_RMS_Group-2/src/main/java/com/group2/rms/interview/entity/RoleInPanel.java) bổ sung đầy đủ 2 giá trị `Interviewer` và `Director`, đảm bảo khớp 100% với ràng buộc DB và dữ liệu mẫu.
 
 ---
 
-## 📂 Danh sách Tệp tin Thay đổi trong Commit này (Files in this Commit)
+### 4. Bổ sung 10 Ứng viên Đỗ Phỏng vấn (`Passed`) Chờ Tạo Mới Offer
+- Cập nhật 10 cuộc phỏng vấn trong `seed_data.sql` (các Interview ID `1`, `2`, `5`, `7`, `9`, `10`, `11`, `13`, `14`, `16`) sang trạng thái `Passed` kèm mức lương đề xuất (`RecommendedSalary`) chuẩn định biên:
+  1. **Nguyễn Duy Phong** (`ApplicationId: 1`) — *Senior Java Backend Engineer* — 36,000,000 VND
+  2. **Phan Hải Ngọc** (`ApplicationId: 3`) — *QA Automation Engineer* — 22,000,000 VND
+  3. **Đinh Văn Hiếu** (`ApplicationId: 23`) — *Frontend ReactJS Developer* — 26,000,000 VND
+  4. **Phan Quốc Trung** (`ApplicationId: 28`) — *QA Automation Engineer* — 22,000,000 VND
+  5. **Bùi Tiến Tuấn** (`ApplicationId: 33`) — *Chuyên Viên B2B Software* — 20,000,000 VND
+  6. **Đỗ Thu Phương** (`ApplicationId: 36`) — *Chuyên Viên B2B Software* — 20,000,000 VND
+  7. **Hoàng Thế Bình** (`ApplicationId: 37`) — *Frontend ReactJS Developer* — 26,000,000 VND
+  8. **Dương Hoàng Trung** (`ApplicationId: 50`) — *Senior Java Backend Engineer* — 36,000,000 VND
+  9. **Huỳnh Văn Toàn** (`ApplicationId: 51`) — *Chuyên Viên B2B Software* — 20,000,000 VND
+  10. **Phạm Diệu Hà** (`ApplicationId: 58`) — *QA Automation Engineer* — 22,000,000 VND
+- **Chuẩn hóa Encoding:** Dữ liệu nhận xét được nạp vào MS SQL Server bằng UTF-8 (`-f 65001`), khắc phục triệt để lỗi phông chữ / Mojibake trên giao diện modal tạo Offer.
+- Cập nhật [build_seed.py](file:///c:/Users/Admin/Documents/Ky_5/SWP391/SWP_RMS_Group-2/database/seeds/build_seed.py) đồng bộ logic để khi re-generate vẫn giữ nguyên 10 ứng viên này.
 
-| STT | Tệp tin | Thao tác | Mục đích |
+---
+
+### 5. Việt hóa & Chuẩn hóa Sidebar (`sidebar.html`)
+- Việt hóa toàn bộ nhãn điều hướng trên [sidebar.html](file:///c:/Users/Admin/Documents/Ky_5/SWP391/SWP_RMS_Group-2/src/main/resources/templates/fragments/sidebar.html) sang tiếng Việt thống nhất (Bảng điều khiển, Yêu cầu tuyển dụng, Ứng viên, Lịch phỏng vấn, Quản lý Đề xuất, Thông báo, Hồ sơ cá nhân, Quản lý tài khoản, Quản lý phòng ban, Giám sát API).
+- Bổ sung menu Quản lý phòng ban (`/admin/departments`) cho System Admin.
+
+---
+
+## 📂 Danh sách Tệp tin Thay đổi (Files Changed)
+
+| STT | Tệp tin | Thao tác | Mô tả thay đổi |
 | :---: | :--- | :---: | :--- |
-| 1 | `src/test/java/com/group2/rms/service/OfferServiceTests.java` | Modified | Mở rộng và hoàn thiện **31 Unit test cases** cho Service layer |
-| 2 | `src/test/java/com/group2/rms/offer/OfferIntegrationTest.java` | Created/Tracked | Xây dựng **12 Integration test cases** cho REST API & Security |
-| 3 | `src/main/java/com/group2/rms/core/exception/GlobalExceptionHandler.java` | Modified | Bổ trợ test: Trả về HTTP 400 Bad Request cho lỗi validation của API |
-| 4 | `src/test/java/com/group2/rms/CareerFlowTests.java` | Modified | Bổ trợ test: Đồng bộ constructor `ViewerProfileResponse` |
-| 5 | `docs/members/huyenpt/offer-inter1-flow-testing.md` | Created | Tài liệu báo cáo kiểm thử chi tiết và kịch bản test tay UI |
-| 6 | `docs/management/work_logs/2026-10-05-offer-flow-testing-and-bugfix.md` | Created | Nhật ký công việc theo ngày của HuyenPT |
-| 7 | `docs/management/WORK_LOG.md` | Modified | Cập nhật mục lục tiến độ chung của toàn dự án |
-| 8 | `docs/members/huyenpt/pr-description.md` | Created | Mẫu mô tả Pull Request / Comment nghiệm thu GitHub |
+| 1 | `src/main/java/com/group2/rms/offer/entity/OfferNegotiation.java` | **Deleted** | Xóa bỏ entity đàm phán |
+| 2 | `src/main/java/com/group2/rms/offer/repository/OfferNegotiationRepository.java` | **Deleted** | Xóa bỏ repository đàm phán |
+| 3 | `src/main/java/com/group2/rms/offer/entity/OfferProposal.java` | Modified | Bỏ trạng thái `Negotiating` khỏi entity |
+| 4 | `src/main/java/com/group2/rms/offer/dto/OfferDetailResponse.java` | Modified | Bỏ `negotiationHistory` và DTO liên quan |
+| 5 | `src/main/java/com/group2/rms/offer/service/OfferServiceImpl.java` | Modified | Bỏ logic nạp đàm phán, cập nhật `LOCKED_STATUSES` |
+| 6 | `src/main/java/com/group2/rms/dashboard/DashboardMetricsRepository.java` | Modified | Bỏ `Negotiating` khỏi query hiển thị ứng viên |
+| 7 | `src/main/java/com/group2/rms/dashboard/DashboardService.java` | Modified | Bỏ nhãn `Negotiating` |
+| 8 | `src/main/java/com/group2/rms/interview/entity/RoleInPanel.java` | Modified | Bổ sung enum `Interviewer`, `Director` khớp database |
+| 9 | `src/main/resources/templates/offers/list.html` | Modified | Bỏ lọc trạng thái và badge `Negotiating` |
+| 10 | `src/main/resources/static/js/offers.js` | Modified | Bỏ timeline đàm phán trong modal chi tiết Screen 32 |
+| 11 | `src/main/resources/static/css/offers.css` | Modified | Xóa CSS class `.status-negotiating` |
+| 12 | `src/main/resources/templates/fragments/sidebar.html` | Modified | Việt hóa thanh điều hướng và bổ sung link phòng ban |
+| 13 | `database/schema/db.sql` | Modified | Xóa bảng `OfferNegotiation`, cập nhật check constraint |
+| 14 | `database/schema/db (1) (1).sql` | Modified | Xóa bảng `OfferNegotiation`, cập nhật check constraint |
+| 15 | `database/seeds/build_seed.py` | Modified | Loại bỏ đàm phán và giữ 10 ứng viên Passed chưa có Offer |
+| 16 | `database/seeds/seed_data.sql` | Modified | Cập nhật 10 ứng viên Passed và loại bỏ đàm phán |
+| 17 | `docs/database/model.md` | Modified | Cập nhật tài liệu mô hình dữ liệu (19 bảng) |
+| 18 | `docs/members/huyenpt/offer-inter1-flow-testing.md` | Modified | Cập nhật kịch bản kiểm thử không còn đàm phán |
+| 19 | `docs/members/huyenpt/pr-description.md` | Modified | Cập nhật tài liệu mô tả Pull Request |
+| 20 | `src/test/java/com/group2/rms/service/OfferServiceTests.java` | Modified | Cập nhật các test case phù hợp với luồng mới |
+| 21 | `src/test/java/com/group2/rms/requisition/validator/RequisitionValidatorTests.java` | Modified | Đồng bộ hằng số validator |
+| 22 | `pom.xml` | Modified | Bổ sung Apache POI `poi-ooxml:5.3.0` phục vụ xuất Excel |
+| 23 | `com/group2/rms/offer/dto/OfferExportScope.java` | Created | Enum 3 phạm vi: `FILTERED`, `SELECTED`, `ALL` |
+| 24 | `com/group2/rms/offer/dto/OfferExportRequest.java` | Created | Record nhận request export kèm validation |
+| 25 | `com/group2/rms/offer/service/OfferExportService.java` | Created | Interface xuất Excel cho HR |
+| 26 | `com/group2/rms/offer/service/OfferExportServiceImpl.java` | Created | Triển khai tạo workbook Apache POI (Sheet Offers + Summary) |
+| 27 | `com/group2/rms/offer/controller/OfferController.java` | Modified | Thêm endpoint `POST /offers/export` phân quyền HR |
+| 28 | `src/test/java/com/group2/rms/offer/OfferExportServiceTests.java` | Created | 7 Unit test cases kiểm tra nghiệp vụ xuất Excel |
+| 29 | `src/test/java/com/group2/rms/offer/OfferIntegrationTest.java` | Modified | 9 WebMvc integration tests kiểm tra MVC routes và export |
+
+---
+
+## 🧪 Kết quả Kiểm thử & Nghiệm thu (Test & Verification Results)
+
+1. **Kiểm thử Tự động (Automated Test Suite):**
+   ```powershell
+   .\mvnw.cmd test "-Dtest=OfferExportServiceTests,OfferIntegrationTest,OfferServiceTests"
+   ```
+   - **Kết quả:** `BUILD SUCCESS`, **73/73 tests PASS (100%)**, 0 failure, 0 error.
+     - `OfferExportServiceTests`: **7/7 PASS** (Kiểm tra 3 scope FILTERED/SELECTED/ALL, numeric cell formatting cho lương và tỷ lệ, date formatting, mapping tiếng Việt, whitelist bảo mật).
+     - `OfferIntegrationTest`: **9/9 PASS** (Kiểm tra endpoint `POST /offers/export`, phân quyền HR, chặn Candidate 403, kiểm tra validation payload 400).
+     - `OfferServiceTests`: **57/57 PASS** (Toàn bộ quy tắc nghiệp vụ GBR-07, BR-OFF-01, CRUD Offer giữ nguyên vẹn).
+
+2. **Kiểm thử Tính năng Xuất Excel (Offer Export Management):**
+   - **Nút bấm & Selection Toolbar:** Nút `[Xuất Excel]` thứ cấp cạnh `[+ Tạo Đề Xuất]`; checkbox chọn từng dòng và thanh công cụ nổi `Đã chọn X đề xuất | Xuất X đề xuất | Bỏ chọn` hiển thị mượt mà.
+   - **Modal xuất dữ liệu:** Hỗ trợ 3 scope linh hoạt; bộ chọn cột phân chia rõ ràng nhóm Mặc định và Mở rộng kèm nút chọn nhanh; tự động tải Blob file `.xlsx` và hiển thị toast thông báo.
+   - **Cấu trúc file `.xlsx`:**
+     - **Sheet 1 (`Offers`):** Freeze header, auto-filter, auto-width, lương là numeric cell (`#,##0`), tỷ lệ là percentage cell (`0.00%`), ngày tháng là date cell, status tiếng Việt thân thiện HR.
+     - **Sheet 2 (`Summary`):** Báo cáo tổng hợp số lượng Offer theo từng trạng thái tính trên đúng tập dữ liệu được xuất, hiển thị người xuất, ngày giờ và bộ lọc đã áp dụng.

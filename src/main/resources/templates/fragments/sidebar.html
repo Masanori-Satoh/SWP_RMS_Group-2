@@ -78,7 +78,7 @@
         <a th:if="${role == 'HR' or role == 'System Admin' or role == 'Hiring Manager' or role == 'Interviewer' or role == 'Director'}"
             th:href="@{/interviews}" th:attr="aria-current=${activeMenu == 'interviews' ? 'page' : null}">Lịch phỏng vấn</a>
         <a th:if="${role == 'HR' or role == 'HR Specialist' or role == 'Director' or role == 'System Admin' or (role != null and #strings.contains(role, 'HR'))}"
-            th:href="@{/offers}" th:attr="aria-current=${activeMenu == 'offers' ? 'page' : null}">Quản lý đề nghị tuyển dụng</a>
+            th:href="@{/offers}" th:attr="aria-current=${activeMenu == 'offers' ? 'page' : null}">Quản lý Đề xuất</a>
         <a th:href="@{/profile}" th:attr="aria-current=${activeMenu == 'profile' ? 'page' : null}">Hồ sơ cá nhân</a>
     </nav>
     <nav class="workspace-nav workspace-home" aria-label="Cổng tuyển dụng"><a th:href="@{/}">Về trang Tuyển dụng</a></nav>

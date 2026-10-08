@@ -2,6 +2,9 @@
 <html lang="vi" xmlns:th="http://www.thymeleaf.org">
 <head th:replace="~{fragments/head :: interfaceHead('Quản lý Đề xuất Offer', ~{::pageStyles})}">
   <th:block th:fragment="pageStyles">
+    <!-- CSRF Meta Tags for AJAX Requests -->
+    <meta name="_csrf" th:content="${_csrf?.token}"/>
+    <meta name="_csrf_header" th:content="${_csrf?.headerName}"/>
     <!-- Font Awesome Icons for specialized actions & icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" th:href="@{/css/offers.css}">
@@ -20,17 +23,31 @@
         <!-- PAGE CONTENT -->
         <main id="main" class="page-content" tabindex="-1">
             <div class="container">
+
+                <!-- FLASH MESSAGES -->
+                <div th:if="${successMessage}" class="modal-alert modal-alert-success" style="display:flex; margin-bottom: 20px;">
+                    <i class="fa-solid fa-circle-check" style="font-size:18px;"></i>
+                    <div style="font-size: 14px; font-weight: 500;" th:text="${successMessage}"></div>
+                </div>
+                <div th:if="${errorMessage}" class="modal-alert modal-alert-danger" style="display:flex; margin-bottom: 20px;">
+                    <i class="fa-solid fa-triangle-exclamation" style="font-size:18px;"></i>
+                    <div style="font-size: 14px; font-weight: 500;" th:text="${errorMessage}"></div>
+                </div>
+
                 <!-- Header Section -->
                 <div class="offers-header">
                     <div class="offers-title-group">
-              
                         <h1>Quản lý Đề xuất</h1>
-                     
+                        <p class="offers-subtitle">Theo dõi, tạo mới và quản lý quy trình phê duyệt gói lương đề xuất cho các ứng viên đỗ phỏng vấn.</p>
                     </div>
-                    <button class="btn btn-primary" onclick="openCreateOfferModal()">
-                        <i class="fa-solid fa-plus"></i> Tạo Đề Xuất
-
-                    </button>
+                    <div class="offers-header-actions">
+                        <button type="button" class="btn btn-secondary" id="btnOpenExportModal" onclick="openExportModal()">
+                            <i class="fa-solid fa-file-excel export-btn-icon"></i> Xuất Excel
+                        </button>
+                        <button type="button" class="btn btn-primary" onclick="openCreateOfferModal()">
+                            <i class="fa-solid fa-plus"></i> Tạo Đề Xuất
+                        </button>
+                    </div>
                 </div>
 
                 <!-- Stats Overview Cards -->
@@ -118,7 +135,22 @@
                             <option value="LATEST" th:selected="${currentTimeSort == 'LATEST'}">Muộn nhất</option>
                         </select>
                     </div>
+                </div>
 
+                <!-- Selection Toolbar (HR chọn 1 hoặc nhiều Offer) -->
+                <div id="selectionToolbar" class="selection-toolbar" style="display: none;">
+                    <div class="selection-toolbar-left">
+                        <i class="fa-solid fa-circle-check"></i>
+                        <span>Đã chọn <strong id="selectedOffersCount">0</strong> đề xuất</span>
+                    </div>
+                    <div class="selection-toolbar-right">
+                        <button type="button" class="btn btn-secondary btn-sm" onclick="openExportModalWithScope('SELECTED')">
+                            <i class="fa-solid fa-file-export"></i> Xuất <span id="selectedOffersBtnCount">0</span> đề xuất
+                        </button>
+                        <button type="button" class="btn btn-text btn-sm" onclick="deselectAllOffers()">
+                            Bỏ chọn
+                        </button>
+                    </div>
                 </div>
 
                 <!-- Data Table (Screen 30) -->
@@ -126,6 +158,9 @@
                     <table class="offers-table" id="offersTable">
                         <thead>
                             <tr>
+                                <th style="width: 44px; text-align: center;">
+                                    <input type="checkbox" id="selectAllOffers" class="offer-checkbox" onchange="toggleSelectAllOffers(this.checked)" title="Chọn tất cả trên trang này">
+                                </th>
                                 <th style="width: 90px;">Mã Offer</th>
                                 <th>Ứng viên</th>
                                 <th>Vị trí đề xuất</th>
@@ -138,17 +173,22 @@
                         </thead>
                         <tbody id="offersTableBody">
                             <tr th:if="${#lists.isEmpty(offers)}">
-                                <td colspan="8" style="text-align:center; padding:48px 24px; color:var(--muted);">
+                                <td colspan="9" style="text-align:center; padding:48px 24px; color:var(--muted);">
                                     <i class="fa-solid fa-inbox" style="font-size:32px; margin-bottom:12px; display:block; color:var(--control-line);"></i>
                                     Không tìm thấy đề xuất Offer nào phù hợp với bộ lọc.
                                 </td>
                             </tr>
-                            <tr th:each="o : ${offers}" th:attr="data-id=${o.offerId}, data-status=${o.offerStatus}, data-cand=${o.candidateName}, data-pos=${o.offeredPositionTitle}, data-created=${o.createdAt != null ? o.createdAt.toString() : ''}">
-                                <td>
-                                    <a href="javascript:void(0)" class="offer-id-link" th:onclick="'viewOfferDetail(' + ${o.offerId} + ')'" th:text="${o.offerId}">1</a>
+                            <tr th:each="o : ${offers}" th:attr="data-id=${o.offerId}, data-status=${o.offerStatus}">
+                                <td style="text-align: center;">
+                                    <input type="checkbox" class="offer-checkbox offer-row-checkbox" th:value="${o.offerId}" onchange="handleOfferRowSelectionChange()">
                                 </td>
                                 <td>
-                                    <div class="cand-name-cell" style="cursor:pointer;" th:onclick="'viewOfferDetail(' + ${o.offerId} + ')'" th:title="'Bấm để xem chi tiết offer #' + ${o.offerId}" th:text="${o.candidateName != null ? o.candidateName : 'Ứng viên'}">Nguyễn Văn A</div>
+                                    <a href="javascript:void(0)" th:onclick="'viewOfferDetail(' + ${o.offerId} + ')'" class="offer-id-link" th:text="${o.offerId}">1</a>
+                                </td>
+                                <td>
+                                    <a href="javascript:void(0)" th:onclick="'viewOfferDetail(' + ${o.offerId} + ')'" style="text-decoration:none; color:inherit;">
+                                        <div class="cand-name-cell" th:text="${o.candidateName != null ? o.candidateName : 'Ứng viên'}">Nguyễn Văn A</div>
+                                    </a>
                                     <div class="cand-email-sub" th:text="${o.candidateEmail != null ? o.candidateEmail : 'N/A'}">a.nguyen@email.com</div>
                                 </td>
                                 <td>
@@ -195,29 +235,26 @@
                                 </td>
                                 <td style="text-align: right;">
                                     <div class="action-buttons" style="justify-content: flex-end;">
-                                        <!-- Xem chi tiết (Screen 32) -->
-                                        <button class="btn-icon btn-icon-primary" title="Xem chi tiết (Screen 32)" th:onclick="'viewOfferDetail(' + ${o.offerId} + ')'">
+                                        <!-- Xem chi tiết pop-up (Screen 32) -->
+                                        <button type="button" th:onclick="'viewOfferDetail(' + ${o.offerId} + ')'" class="btn-icon btn-icon-primary" title="Xem chi tiết">
                                             <i class="fa-solid fa-eye"></i>
                                         </button>
 
                                         <!-- Phát hành gửi Offer cho Candidate (Chỉ khi Director_Approved) -->
-                                        <button th:if="${o.offerStatus == 'Director_Approved' or o.offerStatus == 'Approved'}"
-                                                class="btn-icon btn-icon-success" title="Phát hành gửi Offer Letter"
-                                                th:onclick="'confirmSendOffer(' + ${o.offerId} + ')'">
+                                        <button type="button" th:if="${o.offerStatus == 'Director_Approved' or o.offerStatus == 'Approved'}"
+                                                th:onclick="'confirmSendOffer(' + ${o.offerId} + ')'" class="btn-icon btn-icon-success" title="Phát hành gửi Offer Letter">
                                             <i class="fa-solid fa-paper-plane"></i>
                                         </button>
 
-                                        <!-- Sửa Offer (Chỉ khi Draft) -->
-                                        <button th:if="${o.offerStatus == 'Draft'}"
-                                                class="btn-icon" title="Chỉnh sửa đề xuất"
-                                                th:onclick="'openEditOfferModal(' + ${o.offerId} + ')'">
+                                        <!-- Sửa Offer pop-up (Chỉ khi Draft hoặc Rejected) -->
+                                        <button type="button" th:if="${o.offerStatus == 'Draft' or o.offerStatus == 'Director_Rejected' or o.offerStatus == 'Rejected'}"
+                                                th:onclick="'openEditOfferModal(' + ${o.offerId} + ')'" class="btn-icon" title="Chỉnh sửa đề xuất">
                                             <i class="fa-solid fa-pen-to-square"></i>
                                         </button>
 
                                         <!-- Xóa Offer (Chỉ khi Draft) -->
-                                        <button th:if="${o.offerStatus == 'Draft'}"
-                                                class="btn-icon btn-icon-danger" title="Xóa bản thảo"
-                                                th:onclick="'confirmDeleteOffer(' + ${o.offerId} + ')'">
+                                        <button type="button" th:if="${o.offerStatus == 'Draft'}"
+                                                th:onclick="'confirmDeleteOffer(' + ${o.offerId} + ')'" class="btn-icon btn-icon-danger" title="Xóa bản thảo">
                                             <i class="fa-solid fa-trash-can"></i>
                                         </button>
                                     </div>
@@ -227,33 +264,192 @@
                     </table>
                 </div>
 
-                <!-- Global Reusable Pagination (Dùng chung toàn bộ project & bảng ứng viên Offer) -->
+                <!-- Global Reusable Pagination -->
                 <div th:replace="~{fragments/pagination :: pager(${currentPage}, ${totalPages}, ${totalElements}, '/offers')}"></div>
             </div>
         </main>
     </div>
 </div>
 
+<!-- Modal Xuất Excel Offer (HR) -->
+<div id="offerExportModal" class="modal-overlay modal-backdrop" style="display: none;" onclick="handleExportModalBackdropClick(event)">
+    <div class="modal-box modal-lg modal-export-card" onclick="event.stopPropagation()">
+        <div class="modal-header">
+            <div style="display: flex; align-items: center; gap: 10px;">
+                <div class="offer-stat-icon stat-icon-green" style="width: 36px; height: 36px; font-size: 16px; border-radius: 6px;">
+                    <i class="fa-solid fa-file-excel"></i>
+                </div>
+                <div>
+                    <div style="font-size: 17px; font-weight: 700; color: var(--ink);">Xuất dữ liệu Offer</div>
+                    <div style="font-size: 12.5px; color: var(--muted); font-family: var(--sans); font-weight: normal; margin-top: 2px;">Tải dữ liệu đề xuất lương ra file Microsoft Excel (.xlsx)</div>
+                </div>
+            </div>
+            <button type="button" class="btn-icon" onclick="closeExportModal()" title="Đóng">✕</button>
+        </div>
+
+        <div class="modal-body">
+            <!-- PHẠM VI XUẤT -->
+            <div class="export-section">
+                <label class="export-section-title">Phạm vi xuất</label>
+                <div class="export-scope-options">
+                    <label class="scope-radio-label">
+                        <input type="radio" name="exportScope" value="FILTERED" checked onchange="handleScopeChange()">
+                        <div class="scope-radio-content">
+                            <div class="scope-name">Danh sách đang lọc</div>
+                            <div class="scope-desc" id="scopeFilteredDesc">Xuất tất cả đề xuất phù hợp với bộ lọc hiện tại (bỏ phân trang)</div>
+                        </div>
+                    </label>
+
+                    <label class="scope-radio-label" id="scopeSelectedWrapper">
+                        <input type="radio" name="exportScope" value="SELECTED" onchange="handleScopeChange()">
+                        <div class="scope-radio-content">
+                            <div class="scope-name">Các đề xuất đã chọn (<span id="scopeSelectedCount">0</span>)</div>
+                            <div class="scope-desc">Chỉ xuất các bản ghi đã tích chọn qua checkbox</div>
+                        </div>
+                    </label>
+
+                    <label class="scope-radio-label">
+                        <input type="radio" name="exportScope" value="ALL" onchange="handleScopeChange()">
+                        <div class="scope-radio-content">
+                            <div class="scope-name">Toàn bộ Offer</div>
+                            <div class="scope-desc">Xuất tất cả đề xuất đang hoạt động trong hệ thống</div>
+                        </div>
+                    </label>
+                </div>
+            </div>
+
+            <!-- CỘT DỮ LIỆU -->
+            <div class="export-section" style="margin-top: 18px;">
+                <div class="export-columns-header">
+                    <label class="export-section-title" style="margin-bottom:0;">Cột dữ liệu</label>
+                    <div class="columns-quick-actions">
+                        <button type="button" class="btn-link-action" onclick="selectAllColumns()">Chọn tất cả</button>
+                        <span class="sep-dot">•</span>
+                        <button type="button" class="btn-link-action" onclick="resetDefaultColumns()">Mặc định</button>
+                        <span class="sep-dot">•</span>
+                        <button type="button" class="btn-link-action" onclick="deselectAllColumns()">Bỏ chọn</button>
+                    </div>
+                </div>
+
+                <!-- Nhóm Mặc định -->
+                <div class="column-group-label">Nhóm mặc định</div>
+                <div class="columns-grid">
+                    <label class="column-checkbox-label">
+                        <input type="checkbox" name="exportCol" value="offerId" checked> Mã Offer
+                    </label>
+                    <label class="column-checkbox-label">
+                        <input type="checkbox" name="exportCol" value="candidateName" checked> Ứng viên
+                    </label>
+                    <label class="column-checkbox-label">
+                        <input type="checkbox" name="exportCol" value="candidateEmail" checked> Email
+                    </label>
+                    <label class="column-checkbox-label">
+                        <input type="checkbox" name="exportCol" value="offeredPositionTitle" checked> Vị trí đề xuất
+                    </label>
+                    <label class="column-checkbox-label">
+                        <input type="checkbox" name="exportCol" value="proposedSalary" checked> Lương chính thức
+                    </label>
+                    <label class="column-checkbox-label">
+                        <input type="checkbox" name="exportCol" value="probationSalary" checked> Lương thử việc
+                    </label>
+                    <label class="column-checkbox-label">
+                        <input type="checkbox" name="exportCol" value="probationPercentage" checked> Tỷ lệ lương thử việc
+                    </label>
+                    <label class="column-checkbox-label">
+                        <input type="checkbox" name="exportCol" value="offerStatus" checked> Trạng thái
+                    </label>
+                    <label class="column-checkbox-label">
+                        <input type="checkbox" name="exportCol" value="expectedStartDate" checked> Ngày bắt đầu dự kiến
+                    </label>
+                    <label class="column-checkbox-label">
+                        <input type="checkbox" name="exportCol" value="workLocation" checked> Địa điểm làm việc
+                    </label>
+                    <label class="column-checkbox-label">
+                        <input type="checkbox" name="exportCol" value="createdAt" checked> Ngày lập
+                    </label>
+                    <label class="column-checkbox-label">
+                        <input type="checkbox" name="exportCol" value="updatedAt" checked> Ngày cập nhật
+                    </label>
+                </div>
+
+                <!-- Nhóm Mở rộng -->
+                <div class="column-group-label" style="margin-top: 14px;">Nhóm mở rộng</div>
+                <div class="columns-grid">
+                    <label class="column-checkbox-label">
+                        <input type="checkbox" name="exportCol" value="applicationId"> Mã đơn ứng tuyển
+                    </label>
+                    <label class="column-checkbox-label">
+                        <input type="checkbox" name="exportCol" value="candidatePhone"> Số điện thoại
+                    </label>
+                    <label class="column-checkbox-label">
+                        <input type="checkbox" name="exportCol" value="departmentName"> Phòng ban
+                    </label>
+                    <label class="column-checkbox-label">
+                        <input type="checkbox" name="exportCol" value="requisitionId"> Mã Requisition
+                    </label>
+                    <label class="column-checkbox-label">
+                        <input type="checkbox" name="exportCol" value="jobPostingId"> Mã Job Posting
+                    </label>
+                    <label class="column-checkbox-label">
+                        <input type="checkbox" name="exportCol" value="probationDays"> Thời gian thử việc
+                    </label>
+                    <label class="column-checkbox-label">
+                        <input type="checkbox" name="exportCol" value="benefitsPackage"> Gói phúc lợi
+                    </label>
+                    <label class="column-checkbox-label">
+                        <input type="checkbox" name="exportCol" value="proposedByName"> Người tạo đề xuất
+                    </label>
+                    <label class="column-checkbox-label">
+                        <input type="checkbox" name="exportCol" value="directorName"> Director xử lý
+                    </label>
+                    <label class="column-checkbox-label">
+                        <input type="checkbox" name="exportCol" value="directorDecision"> Quyết định Director
+                    </label>
+                    <label class="column-checkbox-label">
+                        <input type="checkbox" name="exportCol" value="directorComments"> Phản hồi Director
+                    </label>
+                    <label class="column-checkbox-label">
+                        <input type="checkbox" name="exportCol" value="approvedAt"> Thời điểm duyệt
+                    </label>
+                </div>
+            </div>
+
+            <!-- Alert Box if Error inside Modal -->
+            <div id="exportModalError" class="modal-alert modal-alert-danger" style="display: none; margin-top: 14px;">
+                <i class="fa-solid fa-circle-exclamation"></i>
+                <span id="exportModalErrorText">Vui lòng chọn ít nhất một cột dữ liệu.</span>
+            </div>
+        </div>
+
+        <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" onclick="closeExportModal()">Hủy</button>
+            <button type="button" class="btn btn-primary" id="btnExecuteExport" onclick="executeOfferExport()">
+                <i class="fa-solid fa-file-excel"></i> Xuất Excel
+            </button>
+        </div>
+    </div>
+</div>
+
 <!-- ===========================================================================
-     MODAL 1: TẠO MỚI OFFER PROPOSAL (Screen 30 Create)
+     MODAL: TẠO MỚI OFFER PROPOSAL (Pop-up Modal Screen 30 Create)
      =========================================================================== -->
-<div class="modal-overlay" id="createOfferModal">
-    <div class="modal-box modal-lg">
+<div class="modal-overlay" id="createOfferModal" style="display: none;" onclick="handleCreateModalBackdropClick(event)">
+    <div class="modal-box modal-lg" onclick="event.stopPropagation()">
         <div class="modal-header">
             <div style="display:flex; align-items:center; gap:8px;">
                 <i class="fa-solid fa-file-circle-plus" style="color:var(--brand-dark);"></i>
                 <span>Tạo Mới Offer Proposal</span>
             </div>
-            <button class="btn-icon" onclick="closeModal('createOfferModal')">✕</button>
+            <button type="button" class="btn-icon" onclick="closeModal('createOfferModal')">✕</button>
         </div>
         <div class="modal-body">
-            <form id="createOfferForm" onsubmit="handleCreateOfferSubmit(event)">
+            <form id="createOfferForm" onsubmit="event.preventDefault(); submitCreateOffer(false);">
                 <!-- Bước 1: Chọn ứng viên đỗ phỏng vấn -->
                 <div class="form-group" style="margin-bottom:16px;">
-                      <div class="section-title" style="margin-top:20px;">                    
-                         <i class="fa-solid fa-user"></i> 
+                    <div class="section-title">                    
+                        <i class="fa-solid fa-user"></i> 
                         1. Chọn Ứng viên đỗ phỏng vấn
-                         </div>
+                    </div>
                     <select id="createAppSelect" class="input-control" onchange="handleSelectPassedCandidate(this.value)" required>
                         <option value="">-- Chọn ứng viên chờ tạo Offer --</option>
                         <option th:each="c : ${passedCandidates}"
@@ -339,7 +535,7 @@
                     <div class="form-group">
                         <label>
                             Lương thử việc (VND/tháng) <span style="color:var(--error, #ef4444);">*</span>
-                            <button type="button" class="quick-calc-btn" onclick="autoCalculateProbationSalary(true)" title="Gợi ý mức sàn 85% theo luật lao động">
+                            <button type="button" class="quick-calc-btn" onclick="autoCalculateProbationSalary(true)" title="Gợi ý mức sàn 85% theo quy định BR-OFF-01">
                                 Gợi ý 85%
                             </button>
                         </label>
@@ -384,19 +580,18 @@
 </div>
 
 <!-- ===========================================================================
-     MODAL 2: XEM CHI TIẾT OFFER PROPOSAL (Screen 32 View Detail)
+     MODAL 2: XEM CHI TIẾT OFFER PROPOSAL (Pop-up Modal Screen 32 View Detail)
      =========================================================================== -->
-<div class="modal-overlay" id="detailOfferModal">
-    <div class="modal-box modal-xl">
+<div class="modal-overlay" id="detailOfferModal" style="display: none;" onclick="handleDetailModalBackdropClick(event)">
+    <div class="modal-box modal-xl" onclick="event.stopPropagation()">
         <div class="modal-header">
             <div style="display:flex; align-items:center; gap:8px;">
                 <i class="fa-solid fa-file-lines" style="color:var(--brand-dark);"></i>
-                <span id="detailModalTitle">Chi Tiết Đề Xuất Offer </span>
+                <span id="detailModalTitle">Chi Tiết Đề Xuất Offer</span>
             </div>
-            <button class="btn-icon" onclick="closeModal('detailOfferModal')">✕</button>
+            <button type="button" class="btn-icon" onclick="closeModal('detailOfferModal')">✕</button>
         </div>
         <div class="modal-body" id="detailModalBody">
-            <!-- Dynamic Content loaded from /api/v1/hr/offers/{id} -->
             <div style="text-align:center; padding:40px; color:var(--muted);">
                 <i class="fa-solid fa-spinner fa-spin" style="font-size:24px;"></i>
                 <p style="margin-top:10px;">Đang tải thông tin chi tiết...</p>
@@ -409,22 +604,22 @@
 </div>
 
 <!-- ===========================================================================
-     MODAL 3: CHỈNH SỬA OFFER PROPOSAL (Edit khi Draft hoặc Rejected)
+     MODAL 3: CHỈNH SỬA OFFER PROPOSAL (Pop-up Modal Edit khi Draft hoặc Rejected)
      =========================================================================== -->
-<div class="modal-overlay" id="editOfferModal">
-    <div class="modal-box modal-lg">
+<div class="modal-overlay" id="editOfferModal" style="display: none;" onclick="handleEditModalBackdropClick(event)">
+    <div class="modal-box modal-lg" onclick="event.stopPropagation()">
         <div class="modal-header">
             <div style="display:flex; align-items:center; gap:8px;">
                 <i class="fa-solid fa-pen-to-square" style="color:var(--brand-dark);"></i>
                 <span id="editModalTitle">Chỉnh Sửa Offer Proposal</span>
             </div>
-            <button class="btn-icon" onclick="closeModal('editOfferModal')">✕</button>
+            <button type="button" class="btn-icon" onclick="closeModal('editOfferModal')">✕</button>
         </div>
         <div class="modal-body">
-            <form id="editOfferForm">
+            <form id="editOfferForm" onsubmit="event.preventDefault(); submitUpdateOffer(false);">
                 <input type="hidden" id="editOfferId">
                 
-                <div id="editRejectBanner" class="modal-alert modal-alert-danger" style="display:none;">
+                <div id="editRejectBanner" class="modal-alert modal-alert-danger" style="display:none; margin-bottom:16px;">
                     <i class="fa-solid fa-triangle-exclamation" style="font-size:16px;"></i>
                     <div>
                         <strong>Ghi chú từ chối của Giám đốc:</strong>
@@ -487,10 +682,10 @@
     </div>
 </div>
 
-<!-- Toast Container -->
+<!-- Toast Notification Container -->
 <div class="toast-container" id="toastContainer"></div>
 
-<!-- Logic JS riêng cho trang quản lý Offer theo quy chuẩn ARCHITECTURE_GUIDE.md -->
+<!-- Scripts bổ trợ bộ lọc và UX -->
 <script th:src="@{/js/offers.js}" defer></script>
 
 </body>

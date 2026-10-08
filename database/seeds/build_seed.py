@@ -494,7 +494,7 @@ for day_idx in range(num_days):
 # - User INSERTs for the day's candidates
 # - Candidate INSERTs for the day's candidates
 # - Application INSERTs for the day's candidates
-# - Downstream tables (AIScreeningResult, ApplicationReview, InterviewSchedule, InterviewPanel, InterviewEvaluation, InterviewFinalResult, OfferProposal, OfferApproval, OfferNegotiation)
+# - Downstream tables (AIScreeningResult, ApplicationReview, InterviewSchedule, InterviewPanel, InterviewEvaluation, InterviewFinalResult, OfferProposal, OfferApproval)
 
 interview_id_counter = 1
 offer_id_counter = 1
@@ -710,8 +710,8 @@ for day_idx in range(num_days):
                     f"VALUES ({int_id}, {hm_final_id}, N'{final_decision}', {rec_sal_sql}, N'{final_comments}', '{eval_time}');"
                 )
                 
-                # 7. Offer Proposal, Approval, Negotiation (for ~10% Passed)
-                if is_passed:
+                # 7. Offer Proposal, Approval (Giữ lại 10 ứng viên Passed chưa có Offer để HR tạo mới)
+                if is_passed and offer_id_counter <= 7 and int_id in [3, 4, 6, 8, 12, 15, 17]:
                     off_id = offer_id_counter
                     offer_id_counter += 1
                     off_title = pos_titles[c["posting_id"]]
@@ -732,7 +732,6 @@ for day_idx in range(num_days):
                         f"INSERT INTO OfferApproval (OfferId, DirectorId, [Status], DirectorComments, ApprovedAt) "
                         f"VALUES ({off_id}, 2, N'Approved', N'Phê duyệt mức đãi ngộ theo đề xuất của HR và HM.', '{off_app_dt}');"
                     )
-                    # OfferNegotiation đã bị DROP trong schema mới db (1) (1).sql - không INSERT
 
             c["int_status"] = int_status
     lines.append("")
@@ -779,7 +778,6 @@ lines.append("UNION ALL SELECT 'InterviewEvaluation', COUNT(*) FROM InterviewEva
 lines.append("UNION ALL SELECT 'InterviewFinalResult', COUNT(*) FROM InterviewFinalResult")
 lines.append("UNION ALL SELECT 'OfferProposal', COUNT(*) FROM OfferProposal")
 lines.append("UNION ALL SELECT 'OfferApproval', COUNT(*) FROM OfferApproval;")
-# NOTE: OfferNegotiation đã bị XÓA khỏi schema db (1) (1).sql
 lines.append("GO")
 lines.append("")
 lines.append("-- Kiểm tra không có bảng nào trong 19 bảng bị rỗng (COUNT = 0) - Schema v2: đã xóa OfferNegotiation")
