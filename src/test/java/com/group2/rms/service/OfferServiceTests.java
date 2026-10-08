@@ -24,7 +24,9 @@ import com.group2.rms.user.entity.Department;
 import com.group2.rms.offer.dto.PassedCandidateResponse;
 import com.group2.rms.offer.service.NotificationService;
 import com.group2.rms.user.entity.User;
+import com.group2.rms.user.entity.Role;
 import com.group2.rms.user.repository.UserRepository;
+import java.util.Collections;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
@@ -945,5 +947,56 @@ class OfferServiceTests {
 
         assertEquals("OFFER_NOT_APPROVED", ex.getErrorCode());
         assertTrue(ex.getMessage().contains("Chỉ được gửi thư mời nhận việc khi Offer đã được Director phê duyệt"));
+    }
+    @Test
+    @DisplayName("approveOfferByDirector: Director phê duyệt Offer thành công")
+    void testApproveOfferByDirector_success() {
+        OfferProposal offer = OfferProposal.builder()
+                .offerId(1)
+                .offerStatus("Pending_Director")
+                .build();
+        
+        when(offerProposalRepository.findById(1)).thenReturn(Optional.of(offer));
+        when(offerProposalRepository.save(any(OfferProposal.class))).thenAnswer(i -> i.getArgument(0));
+
+        Role role = Role.builder().roleId(1).roleName("Director").build();
+        User mockUser = User.builder().userId(5).username("director1").role(role).build();
+        when(userRepository.findByUsernameIgnoreCase(any())).thenReturn(Optional.of(mockUser));
+        
+        org.springframework.security.core.context.SecurityContextHolder.getContext().setAuthentication(
+                new org.springframework.security.authentication.UsernamePasswordAuthenticationToken(
+                        "director1", "password", Collections.emptyList()));
+
+        OfferResponse response = offerService.approveOfferByDirector(1, "Phê duyệt.");
+
+        assertNotNull(response);
+        assertEquals("Director_Approved", response.getOfferStatus());
+        verify(offerApprovalRepository).save(any(com.group2.rms.offer.entity.OfferApproval.class));
+    }
+
+    @Test
+    @DisplayName("rejectOfferByDirector: Director từ chối Offer thành công")
+    void testRejectOfferByDirector_success() {
+        OfferProposal offer = OfferProposal.builder()
+                .offerId(1)
+                .offerStatus("Pending_Director")
+                .build();
+        
+        when(offerProposalRepository.findById(1)).thenReturn(Optional.of(offer));
+        when(offerProposalRepository.save(any(OfferProposal.class))).thenAnswer(i -> i.getArgument(0));
+
+        Role role = Role.builder().roleId(1).roleName("Director").build();
+        User mockUser = User.builder().userId(5).username("director1").role(role).build();
+        when(userRepository.findByUsernameIgnoreCase(any())).thenReturn(Optional.of(mockUser));
+        
+        org.springframework.security.core.context.SecurityContextHolder.getContext().setAuthentication(
+                new org.springframework.security.authentication.UsernamePasswordAuthenticationToken(
+                        "director1", "password", Collections.emptyList()));
+
+        OfferResponse response = offerService.rejectOfferByDirector(1, "Từ chối vì lương cao.");
+
+        assertNotNull(response);
+        assertEquals("Director_Rejected", response.getOfferStatus());
+        verify(offerApprovalRepository).save(any(com.group2.rms.offer.entity.OfferApproval.class));
     }
 }

@@ -10,6 +10,7 @@ import com.group2.rms.offer.dto.OfferDetailResponse;
 import com.group2.rms.offer.dto.OfferResponse;
 import com.group2.rms.offer.dto.PassedCandidateResponse;
 import com.group2.rms.offer.dto.UpdateOfferRequest;
+import com.group2.rms.offer.entity.OfferApproval;
 import com.group2.rms.offer.entity.OfferProposal;
 import com.group2.rms.offer.repository.OfferApprovalRepository;
 import com.group2.rms.offer.repository.OfferProposalRepository;
