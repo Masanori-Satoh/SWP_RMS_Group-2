@@ -282,13 +282,67 @@ class JobPostingServiceTest {
                 .build();
         when(jobPostingRepository.findById(88)).thenReturn(Optional.of(posting));
         when(jobRequisitionRepository.findById(101)).thenReturn(Optional.of(approvedReq));
-        when(jobPostingRepository.existsByRequisition_RequisitionIdAndPostingStatusIn(eq(101), any())).thenReturn(false);
 
         JobPostingCreateRequest form = jobPostingService.prepareEditForm(88, hrUser);
 
         assertNotNull(form);
         assertEquals(88, form.getJobPostingId());
         assertEquals("React Dev", form.getPostingTitle());
+    }
+
+    @Test
+    @DisplayName("getInternalJobPostingDetail: Lấy chi tiết tin tuyển dụng nội bộ đầy đủ thông tin và activity history")
+    void getInternalJobPostingDetail_success() {
+        when(requisitionAccess.role(hrUser)).thenReturn(RequisitionAccess.ROLE_HR);
+
+        JobPosting posting = JobPosting.builder()
+                .jobPostingId(88)
+                .requisition(approvedReq)
+                .postingTitle("React Dev")
+                .jobDescription("Desc")
+                .jobRequirements("Reqs")
+                .benefits("Benefits")
+                .salaryDisplay("15 - 20 Triệu")
+                .workLocation("Hà Nội")
+                .postingStatus("Published")
+                .postingDate(LocalDateTime.now().minusDays(1))
+                .createdBy(hrUser)
+                .build();
+        posting.setCreatedAt(LocalDateTime.now().minusDays(3));
+        posting.setUpdatedAt(LocalDateTime.now().minusDays(1));
+
+        when(jobPostingRepository.findById(88)).thenReturn(Optional.of(posting));
+        when(auditLogRepository.findByEntityNameAndEntityIdOrderByTimestampDesc("JobPosting", "88"))
+                .thenReturn(List.of(
+                        AuditLog.builder()
+                                .auditLogId(1L)
+                                .action("CREATE")
+                                .user(hrUser)
+                                .newValue("Tạo tin tuyển dụng")
+                                .timestamp(posting.getCreatedAt())
+                                .build()
+                ));
+
+        var detail = jobPostingService.getInternalJobPostingDetail(88, hrUser);
+
+        assertNotNull(detail);
+        assertEquals(88, detail.getJobPostingId());
+        assertEquals("React Dev", detail.getPostingTitle());
+        assertEquals("REQ-2026-001", detail.getRequisitionCode());
+        assertEquals(RequisitionAccess.STATUS_APPROVED, detail.getRequisitionApprovalStatus());
+        assertEquals("Published", detail.getPostingStatus());
+        assertNotNull(detail.getActivityHistory());
+        assertFalse(detail.getActivityHistory().isEmpty());
+        assertEquals("POST-2026-088", detail.getPostingCode());
+    }
+
+    @Test
+    @DisplayName("getInternalJobPostingDetail: Chặn role không phải HR/Admin")
+    void getInternalJobPostingDetail_nonHr_throwsAccessDenied() {
+        when(requisitionAccess.role(hmUser)).thenReturn(RequisitionAccess.ROLE_HIRING_MANAGER);
+
+        assertThrows(AccessDeniedException.class, () -> jobPostingService.getInternalJobPostingDetail(88, hmUser));
+        verify(jobPostingRepository, never()).findById(any());
     }
 
     @Test

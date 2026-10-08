@@ -38,7 +38,9 @@ public class InternalJobPostingDetailResponse {
     private String createdByEmail;
     private String hiringManagerName;
     private String hiringManagerEmail;
+    private String requisitionApprovalStatus;
     private List<String> screeningCriteria;
+    private List<ActivityHistoryItem> activityHistory;
 
     public boolean isExpired() {
         return applicationDeadline != null && applicationDeadline.isBefore(LocalDateTime.now());
@@ -46,5 +48,25 @@ public class InternalJobPostingDetailResponse {
 
     public boolean isPublished() {
         return "Published".equalsIgnoreCase(postingStatus);
+    }
+
+    public String getPostingCode() {
+        if (jobPostingId == null) {
+            return "POST-000";
+        }
+        int year = (createdAt != null) ? createdAt.getYear() : 2026;
+        return String.format("POST-%d-%03d", year, jobPostingId);
+    }
+
+    @Getter
+    @Setter
+    @NoArgsConstructor
+    @AllArgsConstructor
+    @Builder
+    public static class ActivityHistoryItem {
+        private Integer no;
+        private String action;
+        private String performedBy;
+        private LocalDateTime timestamp;
     }
 }

@@ -26,6 +26,8 @@ import org.springframework.web.server.ResponseStatusException;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
@@ -366,12 +368,16 @@ public class JobPostingServiceImpl implements JobPostingService {
                         .collect(Collectors.toList())
                 : List.of();
 
+        // Rule: gather audit history logs or synthesize for job posting
+        List<InternalJobPostingDetailResponse.ActivityHistoryItem> history = buildActivityHistory(posting);
+
         return InternalJobPostingDetailResponse.builder()
                 .jobPostingId(posting.getJobPostingId())
                 .postingTitle(posting.getPostingTitle())
                 .requisitionId(req != null ? req.getRequisitionId() : null)
                 .requisitionCode(req != null ? req.getRequisitionCode() : "—")
                 .requisitionTitle(req != null ? req.getTitle() : "—")
+                .requisitionApprovalStatus(req != null ? req.getApprovalStatus() : "—")
                 .departmentId(req != null && req.getDepartment() != null ? req.getDepartment().getDepartmentId() : null)
                 .departmentName(req != null && req.getDepartment() != null ? req.getDepartment().getDepartmentName() : "Chưa xác định")
                 .recruitmentRound(req != null && req.getRecruitmentRound() != null ? req.getRecruitmentRound() : 1)
@@ -394,7 +400,67 @@ public class JobPostingServiceImpl implements JobPostingService {
                 .hiringManagerName(req != null && req.getHiringManager() != null ? req.getHiringManager().getFullName() : "—")
                 .hiringManagerEmail(req != null && req.getHiringManager() != null ? req.getHiringManager().getEmail() : null)
                 .screeningCriteria(criteriaList)
+                .activityHistory(history)
                 .build();
+    }
+
+    // Rule: build structured audit history for job posting detail view
+    private List<InternalJobPostingDetailResponse.ActivityHistoryItem> buildActivityHistory(JobPosting posting) {
+        List<AuditLog> logs = auditLogRepository.findByEntityNameAndEntityIdOrderByTimestampDesc(
+                "JobPosting", String.valueOf(posting.getJobPostingId())
+        );
+
+        List<InternalJobPostingDetailResponse.ActivityHistoryItem> history = new ArrayList<>();
+        if (logs != null && !logs.isEmpty()) {
+            List<AuditLog> chronological = new ArrayList<>(logs);
+            chronological.sort(Comparator.comparing(AuditLog::getTimestamp));
+            int index = 1;
+            for (AuditLog log : chronological) {
+                String actionText = "Tạo mới";
+                if ("UPDATE".equalsIgnoreCase(log.getAction())) {
+                    actionText = (log.getNewValue() != null && log.getNewValue().contains("Published")) ? "Đăng tin" : "Cập nhật";
+                } else if ("CREATE".equalsIgnoreCase(log.getAction())) {
+                    actionText = "Tạo mới";
+                } else if ("DELETE".equalsIgnoreCase(log.getAction())) {
+                    actionText = "Xóa";
+                }
+                history.add(InternalJobPostingDetailResponse.ActivityHistoryItem.builder()
+                        .no(index++)
+                        .action(actionText)
+                        .performedBy(log.getUser() != null ? log.getUser().getFullName() : "Hệ thống")
+                        .timestamp(log.getTimestamp())
+                        .build());
+            }
+        } else {
+            // NOTE: Fallback synthesis when older records do not yet have audit log entries
+            String author = posting.getCreatedBy() != null ? posting.getCreatedBy().getFullName() : "Hệ thống";
+            int index = 1;
+            if (posting.getCreatedAt() != null) {
+                history.add(InternalJobPostingDetailResponse.ActivityHistoryItem.builder()
+                        .no(index++)
+                        .action("Tạo mới")
+                        .performedBy(author)
+                        .timestamp(posting.getCreatedAt())
+                        .build());
+            }
+            if (posting.getUpdatedAt() != null && !posting.getUpdatedAt().equals(posting.getCreatedAt())) {
+                history.add(InternalJobPostingDetailResponse.ActivityHistoryItem.builder()
+                        .no(index++)
+                        .action("Cập nhật")
+                        .performedBy(author)
+                        .timestamp(posting.getUpdatedAt())
+                        .build());
+            }
+            if ("Published".equalsIgnoreCase(posting.getPostingStatus()) && posting.getPostingDate() != null) {
+                history.add(InternalJobPostingDetailResponse.ActivityHistoryItem.builder()
+                        .no(index++)
+                        .action("Đăng tin")
+                        .performedBy(author)
+                        .timestamp(posting.getPostingDate())
+                        .build());
+            }
+        }
+        return history;
     }
 
     private String formatSalary(BigDecimal min, BigDecimal max) {
