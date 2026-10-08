@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<!--
+    JOB-POSTINGS/DASHBOARD.HTML
+    =============================================================================
+    Bảng điều khiển Tuyển dụng dành riêng cho HR (HR Recruitment Dashboard)
+    Phụ trách: Nguyễn Huy Hoàng (HoangNH) - Module Job Posting & Requisition
+    
+    Tính năng:
+      - 4 Thẻ KPI: Tin đang mở, Bản nháp, Yêu cầu chờ đăng tin, Tin đã đóng/hết hạn
+      - Phân tích phân bố tin theo phòng ban (Progress bar tỉ lệ %)
+      - Danh sách yêu cầu đã duyệt cần đăng tin ngay (Quick action: Đăng tin)
+      - Bảng tin tuyển dụng mới phát hành gần nhất
+    =============================================================================
+-->
+
+<head th:replace="~{fragments/head :: interfaceHead('Bảng điều khiển Tuyển dụng HR', ~{::pageStyles})}">
+    <th:block th:fragment="pageStyles">
+        <link rel="stylesheet" th:href="@{/css/hr-dashboard.css}">
+    </th:block>
+</head>
+
+<body class="rms-app req-app hr-dashboard-page">
+    <div class="page-wrapper">
+        <!-- Sidebar Navigation -->
+        <aside th:replace="~{fragments/sidebar :: workspace('job-postings', ${viewerRole})}"></aside>
+
+        <div class="main-content">
+            <!-- Header Bar -->
+            <header th:replace="~{fragments/workspace-header :: header(${viewerRole}, ${viewerName})}"></header>
+
+            <main id="main" tabindex="-1" class="page-content">
+                <div class="hr-dashboard-wrapper">
+
+                    <!-- 1. HEADER SECTION & NAVIGATION SWITCHER -->
+                    <div class="hr-dash-header">
+                        <div class="hr-dash-title-group">
+                            <h1>Bảng điều khiển Tuyển dụng HR</h1>
+                            <p>Theo dõi tiến độ phát hành tin tuyển dụng và xử lý các yêu cầu tuyển dụng đã được phê duyệt.</p>
+                        </div>
+                        <div class="hr-dash-actions">
+                            <div class="hr-dash-tab-group" role="tablist">
+                                <a th:href="@{/internal/job-postings}" class="hr-dash-tab-link" title="Xem danh sách tin tuyển dụng">
+                                    📋 Danh sách tin
+                                </a>
+                                <a th:href="@{/internal/job-postings/dashboard}" class="hr-dash-tab-link active" title="Bảng điều khiển tổng quan">
+                                    📊 Tổng quan HR
+                                </a>
+                            </div>
+                            <a th:href="@{/requisitions}" class="hr-btn-create">
+                                + Đăng tin từ yêu cầu đã duyệt
+                            </a>
+                        </div>
+                    </div>
+
+                    <!-- 2. KPI METRICS CARDS -->
+                    <div class="hr-kpi-grid">
+                        <!-- KPI 1: Active Postings -->
+                        <div class="hr-kpi-card kpi-active">
+                            <div class="hr-kpi-top">
+                                <span class="hr-kpi-label">Tin đang mở tuyển</span>
+                                <div class="hr-kpi-icon" aria-hidden="true">📢</div>
+                            </div>
+                            <div class="hr-kpi-value" th:text="${activePostingsCount}">0</div>
+                            <div class="hr-kpi-subtext">
+                                <span>Đang đăng và nhận hồ sơ</span>
+                            </div>
+                        </div>
+
+                        <!-- KPI 2: Draft Postings -->
+                        <div class="hr-kpi-card kpi-draft">
+                            <div class="hr-kpi-top">
+                                <span class="hr-kpi-label">Tin bản nháp</span>
+                                <div class="hr-kpi-icon" aria-hidden="true">📝</div>
+                            </div>
+                            <div class="hr-kpi-value" th:text="${draftPostingsCount}">0</div>
+                            <div class="hr-kpi-subtext">
+                                <span>Đang soạn thảo, chưa đăng</span>
+                            </div>
+                        </div>
+
+                        <!-- KPI 3: Requisitions awaiting posting -->
+                        <div class="hr-kpi-card kpi-pending">
+                            <div class="hr-kpi-top">
+                                <span class="hr-kpi-label">Yêu cầu chờ đăng tin</span>
+                                <div class="hr-kpi-icon" aria-hidden="true">⏳</div>
+                            </div>
+                            <div class="hr-kpi-value" th:text="${pendingReqsCount}">0</div>
+                            <div class="hr-kpi-subtext">
+                                <span>Đã duyệt, chưa tạo tin</span>
+                            </div>
+                        </div>
+
+                        <!-- KPI 4: Closed / Expired -->
+                        <div class="hr-kpi-card kpi-closed">
+                            <div class="hr-kpi-top">
+                                <span class="hr-kpi-label">Đã đóng / Hết hạn</span>
+                                <div class="hr-kpi-icon" aria-hidden="true">📁</div>
+                            </div>
+                            <div class="hr-kpi-value" th:text="${closedPostingsCount}">0</div>
+                            <div class="hr-kpi-subtext">
+                                <span>Đã dừng nhận hồ sơ</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 3. VISUAL ANALYTICS GRID (2 COLUMNS) -->
+                    <div class="hr-analytics-grid">
+
+                        <!-- Cột Trái: Phân bố theo phòng ban -->
+                        <div class="hr-panel-card">
+                            <div class="hr-panel-header">
+                                <h2>🏢 Tin tuyển dụng theo phòng ban</h2>
+                                <span class="hr-panel-badge" th:text="|${deptStats.size()} phòng ban|">0 phòng ban</span>
+                            </div>
+                            <div class="hr-panel-body">
+                                <div class="hr-dept-list" th:if="${not #lists.isEmpty(deptStats)}">
+                                    <div class="hr-dept-item" th:each="dept : ${deptStats}">
+                                        <div class="hr-dept-meta">
+                                            <span class="hr-dept-name" th:text="${dept.deptName}">Kỹ thuật</span>
+                                            <span class="hr-dept-count" th:text="|${dept.count} tin (${dept.percentage}%)|">3 tin (50%)</span>
+                                        </div>
+                                        <div class="hr-dept-bar-track">
+                                            <div class="hr-dept-bar-fill" th:style="|width: ${dept.percentage}%|"></div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="hr-empty-state" th:if="${#lists.isEmpty(deptStats)}">
+                                    Chưa có dữ liệu phòng ban cho các tin tuyển dụng.
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Cột Phải: Yêu cầu tuyển dụng đã duyệt cần xử lý ngay -->
+                        <div class="hr-panel-card">
+                            <div class="hr-panel-header">
+                                <h2>⚡ Yêu cầu đã duyệt cần đăng tin</h2>
+                                <span class="hr-panel-badge" th:text="|${pendingReqsCount} yêu cầu|">0 yêu cầu</span>
+                            </div>
+                            <div class="hr-panel-body">
+                                <div class="hr-req-awaiting-list" th:if="${not #lists.isEmpty(reqsAwaitingPosting)}">
+                                    <div class="hr-req-awaiting-item" th:each="req : ${reqsAwaitingPosting}">
+                                        <div class="hr-req-awaiting-info">
+                                            <div class="hr-req-awaiting-title" th:text="${req.title}">Chuyên viên phát triển kinh doanh</div>
+                                            <div class="hr-req-awaiting-meta">
+                                                <span class="hr-req-code-tag" th:text="${req.requisitionCode}">REQ-001</span>
+                                                <span th:text="${req.department != null ? req.department.departmentName : 'Chưa gán phòng'}">Kinh doanh</span>
+                                                <span>·</span>
+                                                <span th:text="|Đợt ${req.recruitmentRound}|">Đợt 1</span>
+                                            </div>
+                                        </div>
+                                        <a th:href="@{/internal/job-postings/create(requisitionId=${req.requisitionId})}" class="hr-btn-post-now">
+                                            Đăng tin ngay
+                                        </a>
+                                    </div>
+                                </div>
+                                <div class="hr-empty-state" th:if="${#lists.isEmpty(reqsAwaitingPosting)}">
+                                    🎉 Tuyệt vời! Tất cả các yêu cầu đã duyệt đều đã được đăng tin.
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+
+                    <!-- 4. RECENT JOB POSTINGS TABLE -->
+                    <div class="hr-panel-card">
+                        <div class="hr-panel-header">
+                            <h2>🕒 Tin tuyển dụng mới nhất</h2>
+                            <a th:href="@{/internal/job-postings}" class="hr-btn-table-action">Xem tất cả →</a>
+                        </div>
+                        <div class="hr-table-responsive">
+                            <table class="hr-dash-table">
+                                <thead>
+                                    <tr>
+                                        <th>Tiêu đề tin tuyển dụng</th>
+                                        <th>Phòng ban</th>
+                                        <th>Trạng thái</th>
+                                        <th>Hạn nộp hồ sơ</th>
+                                        <th>Ngày đăng</th>
+                                        <th style="text-align: right;">Thao tác</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr th:each="post : ${recentPostings}">
+                                        <td>
+                                            <strong th:text="${post.postingTitle}">Lập trình viên Java Senior</strong>
+                                        </td>
+                                        <td th:text="${post.requisition != null and post.requisition.department != null ? post.requisition.department.departmentName : '—'}">
+                                            Kỹ thuật
+                                        </td>
+                                        <td>
+                                            <span th:if="${post.postingStatus == 'Published'}" class="hr-badge hr-badge-published">Đang đăng</span>
+                                            <span th:if="${post.postingStatus == 'Draft'}" class="hr-badge hr-badge-draft">Bản nháp</span>
+                                            <span th:if="${post.postingStatus == 'Closed'}" class="hr-badge hr-badge-closed">Đã đóng</span>
+                                            <span th:if="${post.postingStatus != 'Published' and post.postingStatus != 'Draft' and post.postingStatus != 'Closed'}"
+                                                  class="hr-badge hr-badge-closed" th:text="${post.postingStatus}">Khác</span>
+                                        </td>
+                                        <td>
+                                            <span th:if="${post.applicationDeadline != null}"
+                                                  th:text="${#temporals.format(post.applicationDeadline, 'dd/MM/yyyy')}">15/10/2026</span>
+                                            <span th:unless="${post.applicationDeadline != null}" style="color: #64748b;">Tuyển liên tục</span>
+                                        </td>
+                                        <td>
+                                            <span th:if="${post.postingDate != null}"
+                                                  th:text="${#temporals.format(post.postingDate, 'dd/MM/yyyy')}">01/10/2026</span>
+                                            <span th:unless="${post.postingDate != null}">—</span>
+                                        </td>
+                                        <td style="text-align: right;">
+                                            <a th:href="@{/internal/job-postings/{id}(id=${post.jobPostingId})}" class="hr-btn-table-action">Chi tiết</a>
+                                            <a th:if="${post.postingStatus == 'Draft'}" th:href="@{/internal/job-postings/{id}/edit(id=${post.jobPostingId})}" class="hr-btn-table-action">Sửa</a>
+                                        </td>
+                                    </tr>
+                                    <tr th:if="${#lists.isEmpty(recentPostings)}">
+                                        <td colspan="6" class="hr-empty-state">Chưa có tin tuyển dụng nào được tạo.</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                </div>
+            </main>
+        </div>
+    </div>
+</body>
+</html>
