@@ -103,6 +103,8 @@ public class SecurityConfig {
                                                 .requestMatchers("/requisitions", "/requisitions/**")
                                                 .hasAnyAuthority("ROLE_HIRING_MANAGER", "ROLE_DIRECTOR", "ROLE_HR",
                                                                 RoleAuthorities.SYSTEM_ADMIN)
+                                                .requestMatchers("/internal/job-postings", "/internal/job-postings/**")
+                                                .hasAnyAuthority("ROLE_HR", RoleAuthorities.SYSTEM_ADMIN)
                                                 .anyRequest().authenticated())
                                 // store target url before login
                                 .requestCache(cache -> cache.requestCache(requestCache))

@@ -51,6 +51,12 @@ class InternalJobPostingControllerTest {
     @MockitoBean
     private UserRepository userRepository;
 
+    @MockitoBean
+    private com.group2.rms.requisition.repository.JobPostingRepository jobPostingRepository;
+
+    @MockitoBean
+    private com.group2.rms.requisition.repository.JobRequisitionRepository jobRequisitionRepository;
+
     private User hrUser;
 
     @BeforeEach
