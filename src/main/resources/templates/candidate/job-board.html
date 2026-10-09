@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="vi"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/public}">
+<!--
+    CANDIDATE/JOB-BOARD.HTML — Jobs Board (/jobs)
+    Tìm kiếm, lọc và phân trang toàn bộ tin tuyển dụng công khai (6 tin / trang).
+    Dựng bằng catalog: page-header, card, form-input/form-select, btn, grid-3-col,
+    fragments/ui/cards :: jobCard, fragments/ui/pagination :: paged.
+    CSS riêng (bố cục form, thanh kết quả, trạng thái rỗng): static/css/pages/job-board.css (tiền tố jb-).
+-->
+<head>
+    <title>Vị trí đang tuyển — Mộc Tuyển dụng</title>
+    <th:block layout:fragment="styles">
+        <link rel="stylesheet" th:href="@{/css/pages/job-board.css}">
+    </th:block>
+</head>
+<body>
+<main id="main" layout:fragment="content" class="jb-page" tabindex="-1">
+    <div class="container">
+
+        <div class="page-header">
+            <div>
+                <h1 class="page-title">Vị trí đang tuyển</h1>
+                <p class="page-subtitle">Tìm vị trí phù hợp theo từ khóa, phòng ban và hình thức làm việc.</p>
+            </div>
+        </div>
+
+        <!-- Tìm kiếm & lọc -->
+        <form th:action="@{/jobs}" method="get" class="card jb-search" role="search" aria-label="Tìm kiếm vị trí tuyển dụng">
+            <div class="form-group jb-search__keyword">
+                <label class="form-label" for="jb-keyword">Từ khóa</label>
+                <input id="jb-keyword" type="search" name="keyword" class="form-input" th:value="${selectedKeyword}"
+                       placeholder="Chức danh, kỹ năng (vd: Java, BA, Nhân sự...)" autocomplete="off">
+            </div>
+            <div class="form-group">
+                <label class="form-label" for="jb-department">Phòng ban</label>
+                <select id="jb-department" name="departmentId" class="form-select">
+                    <option value="">Tất cả phòng ban</option>
+                    <option th:each="dept : ${departments}" th:value="${dept.departmentId}"
+                            th:text="${dept.departmentName}"
+                            th:selected="${selectedDept == dept.departmentId}">Kỹ thuật</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label class="form-label" for="jb-type">Hình thức</label>
+                <select id="jb-type" name="employmentType" class="form-select">
+                    <option value="">Tất cả hình thức</option>
+                    <option value="Full-time" th:selected="${selectedType == 'Full-time'}">Toàn thời gian (Full-time)</option>
+                    <option value="Part-time" th:selected="${selectedType == 'Part-time'}">Bán thời gian (Part-time)</option>
+                    <option value="Internship" th:selected="${selectedType == 'Internship'}">Thực tập (Internship)</option>
+                    <option value="Contract" th:selected="${selectedType == 'Contract'}">Hợp đồng (Contract)</option>
+                </select>
+            </div>
+            <div class="jb-search__submit">
+                <button type="submit" class="btn btn--primary">Tìm kiếm</button>
+            </div>
+        </form>
+
+        <!-- Thanh kết quả -->
+        <div class="jb-results">
+            <p class="jb-results__count">Tìm thấy <strong th:text="${jobsPage.totalElements}">0</strong> vị trí đang tuyển</p>
+            <a th:if="${selectedKeyword != null or selectedDept != null or selectedType != null}"
+               th:href="@{/jobs}" class="btn btn--secondary btn--sm">Xóa bộ lọc</a>
+        </div>
+
+        <!-- Không có kết quả -->
+        <div th:if="${jobsPage.isEmpty()}" class="card jb-empty">
+            <h2 class="jb-empty__title">Không tìm thấy vị trí phù hợp</h2>
+            <p class="jb-empty__desc text-muted">Hãy thử từ khóa ngắn hơn hoặc chọn phòng ban, hình thức khác.</p>
+            <a th:href="@{/jobs}" class="btn btn--outline">Xem tất cả vị trí</a>
+        </div>
+
+        <!-- Danh sách: thẻ việc làm chuẩn của catalog -->
+        <div th:unless="${jobsPage.isEmpty()}" class="grid-3-col jb-grid">
+            <th:block th:each="job : ${jobsPage.content}">
+                <article th:replace="~{fragments/ui/cards :: jobCard(job=${job})}"></article>
+            </th:block>
+        </div>
+
+        <!-- Phân trang chung (giữ nguyên từ khóa & bộ lọc khi chuyển trang) -->
+        <nav th:replace="~{fragments/ui/pagination :: paged(page=${jobsPage})}"></nav>
+    </div>
+</main>
+</body>
+</html>

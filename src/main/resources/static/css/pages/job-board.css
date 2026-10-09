@@ -1,0 +1,80 @@
+/* =============================================================================
+   PAGES/JOB-BOARD.CSS — Jobs Board (/jobs, candidate/job-board.html)
+   Chỉ chứa phần catalog chưa có: bố cục form tìm kiếm, thanh kết quả, trạng thái rỗng.
+   Thẻ việc làm, nút, form, lưới, phân trang dùng nguyên catalog (components.css).
+   Tiền tố class: jb-
+   ============================================================================= */
+
+.jb-page {
+  padding-block: var(--s8) var(--s12);
+}
+
+/* Form tìm kiếm: từ khóa rộng gấp đôi, 2 ô chọn, nút bấm thẳng hàng đáy */
+.jb-search {
+  display: grid;
+  grid-template-columns: 2fr 1fr 1fr auto;
+  gap: var(--s4);
+  align-items: end;
+  margin-bottom: var(--s6);
+}
+
+.jb-search .form-group {
+  margin-bottom: 0;
+}
+
+.jb-results {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: var(--s3);
+  margin-bottom: var(--s4);
+}
+
+.jb-results__count {
+  margin: 0;
+  color: var(--muted);
+}
+
+.jb-results__count strong {
+  color: var(--ink);
+}
+
+.jb-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--s3);
+  padding-block: var(--s12);
+  text-align: center;
+}
+
+.jb-empty__title {
+  margin: 0;
+  font-size: 20px;
+}
+
+.jb-empty__desc {
+  margin: 0 0 var(--s2);
+}
+
+.jb-page .pagination-wrapper {
+  margin-top: var(--s8);
+}
+
+@media (max-width: 992px) {
+  .jb-search {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .jb-search__keyword,
+  .jb-search__submit {
+    grid-column: 1 / -1;
+  }
+}
+
+@media (max-width: 768px) {
+  .jb-search {
+    grid-template-columns: 1fr;
+  }
+}
