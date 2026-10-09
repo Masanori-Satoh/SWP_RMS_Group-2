@@ -1,0 +1,106 @@
+/* =============================================================================
+   MỘC RMS — DESIGN TOKENS (tokens.css)
+   Nhận diện thương hiệu & Hằng số giao diện cốt lõi
+   ============================================================================= */
+
+/* 1. Offline WOFF2 Fonts (Lora & Source Sans 3): khai báo trong fonts.css */
+@import url("fonts.css");
+
+/* 2. Tokens Định Nghĩa Toàn Cục */
+:root {
+  /* Màu sắc chủ đạo & Nhận diện Mộc */
+  --brand: #3e7157;
+  --brand-dark: #2e5a45;
+  --brand-soft: #e7f0e8;
+  --brand-hover: #1e4d38;
+  --on-brand: #f7faf6;
+  --brand-caption: #d6e4d8;
+
+  /* Nền trang & Thẻ Card */
+  --page: #faf9f6;
+  --surface: #ffffff;
+  --surface-subtle: #f8faf8;
+
+  /* Màu chữ */
+  --ink: #252923;
+  --muted: #59635b;
+
+  /* Viền & Đường kẻ */
+  --line: #d9ded7;
+  --control-line: #7b8b7d;
+  --focus: #a06325;
+
+  /* Màu ngữ nghĩa (Semantic Status) */
+  --success: #2e5a45;
+  --success-soft: #e7f0e8;
+  --warning: #a06325;
+  --warning-soft: #fff4e5;
+  --error: #87372f;
+  --error-soft: #f7ece8;
+  --neutral: #59635b;
+  --neutral-soft: #f1f5f9;
+
+  /* Typography */
+  --sans: 'Inter', 'Source Sans 3', 'Segoe UI', system-ui, -apple-system, sans-serif;
+  --serif: 'Lora', 'Times New Roman', Georgia, serif;
+
+  /* Thang Cỡ Chữ Chuẩn DNA C++ (Typography Scale) */
+  --font-xs: 12.5px;
+  --font-sm: 13.5px;
+  --font-base: 15px;
+  --font-md: 16px;
+  --font-lg: 17px;
+  --font-xl: 20px;
+
+  /* Thang Khoảng Cách Chuẩn (Spacing Scale) */
+  --s1: 4px;
+  --s2: 8px;
+  --s3: 12px;
+  --s4: 16px;
+  --s6: 24px;
+  --s8: 32px;
+  --s12: 48px;
+  --s16: 64px;
+  --s20: 80px;
+
+  /* Chiều Cao Linh Kiện Chuẩn DNA C++ */
+  --topbar-h: 74px;
+  --btn-h: 48px;
+  --btn-sm-h: 40px;
+  --input-h: 48px;
+
+  /* Kích thước Sidebar thu gọn & Mở rộng */
+  --sidebar-collapsed-w: 68px;
+  --sidebar-expanded-w: 250px;
+  --sidebar-w: var(--sidebar-collapsed-w);
+  --sidebar-brand: #1e4d38;
+  --sidebar-brand-soft: #e8f5e9;
+  --sidebar-brand-hover: #153728;
+  --sidebar-border: #e2e8f0;
+  --sidebar-text: #334155;
+  --sidebar-text-muted: #64748b;
+  --sidebar-bg: #ffffff;
+  --sidebar-transition: 0.22s cubic-bezier(0.4, 0, 0.2, 1);
+
+  /* Bo góc (Border Radii) */
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --radius-full: 9999px;
+  --radius-pill: var(--radius-full);
+
+  /* Hiệu ứng chuyển cảnh */
+  --transition: 0.18s cubic-bezier(0.4, 0, 0.2, 1);
+
+  /* Bóng đổ (Box Shadows) */
+  --shadow-sm: 0 1px 2px rgba(37, 41, 35, 0.05);
+  --shadow-md: 0 4px 12px rgba(37, 41, 35, 0.08);
+  --shadow-lg: 0 12px 28px rgba(37, 41, 35, 0.12);
+}
+
+/* Sidebar ghim cố định qua class */
+:root.sidebar-pinned,
+html.sidebar-pinned body,
+body.sidebar-pinned {
+  --sidebar-w: var(--sidebar-expanded-w);
+}
