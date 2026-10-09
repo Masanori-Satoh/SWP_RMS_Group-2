@@ -1,0 +1,287 @@
+/* =============================================================================
+   PAGES/JOB-DETAIL.CSS — Chi tiết tin tuyển dụng (/jobs/{id}) candidate/job-detail.html
+   Tách từ job-board.css cũ. Chỉ chứa phần catalog chưa có; badge, nút, alert, card dùng
+   nguyên components.css. Chỉ dùng token của tokens.css.
+   ============================================================================= */
+
+.job-detail-layout {
+  display: grid;
+  grid-template-columns: 1fr 340px;
+  gap: 48px;
+  align-items: start;
+  margin-top: 32px;
+}
+
+.job-detail-title {
+  font-family: var(--sans);
+  font-size: clamp(28px, 3.4vw, 40px);
+  font-weight: 800;
+  line-height: 1.25;
+  letter-spacing: -0.02em;
+  margin-bottom: 12px;
+  color: var(--ink);
+}
+
+.section-title {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-family: var(--sans);
+  font-size: 20px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  margin-bottom: 18px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--line);
+  color: var(--brand-dark);
+}
+
+.section-title::before {
+  content: '';
+  display: inline-block;
+  width: 4px;
+  height: 18px;
+  border-radius: var(--radius-sm);
+  background: var(--brand);
+  flex-shrink: 0;
+}
+
+.section-title::after {
+  content: '';
+  position: absolute;
+  bottom: -1px;
+  left: 0;
+  width: 48px;
+  height: 2px;
+  border-radius: var(--radius-sm);
+  background: var(--brand);
+}
+
+.rich-text {
+  font-size: 16px;
+  line-height: 1.7;
+  color: var(--ink);
+}
+
+.rich-text ul, .rich-text ol {
+  padding-left: 24px;
+  margin-bottom: 16px;
+}
+
+.rich-text li {
+  margin-bottom: 8px;
+}
+
+.job-sidebar {
+  position: sticky;
+  top: 96px;
+}
+
+.summary-card {
+  padding: 28px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+}
+
+.summary-card h3 {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--sans);
+  font-size: 18px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  margin-bottom: 20px;
+  color: var(--ink);
+}
+
+.summary-card h3::before {
+  content: '';
+  display: inline-block;
+  width: 3.5px;
+  height: 16px;
+  border-radius: 3px;
+  background: linear-gradient(180deg, var(--brand), var(--brand));
+  flex-shrink: 0;
+}
+
+.summary-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  font-size: 14px;
+}
+
+.summary-label {
+  color: var(--muted);
+  display: block;
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: .06em;
+  font-weight: 700;
+  margin-bottom: 4px;
+}
+
+.summary-value {
+  font-weight: 600;
+  color: var(--ink);
+  font-size: 15px;
+}
+
+@media (max-width: 1024px) {
+  .job-detail-layout {
+    grid-template-columns: 1fr;
+  }
+  .job-sidebar {
+    position: static;
+  }
+}
+
+.job-detail-alert {
+  margin-bottom: var(--s6);
+}
+
+.job-action-wrap {
+  margin-top: var(--s4);
+}
+
+.internal-employee-notice {
+  background: var(--surface-subtle);
+  color: var(--muted);
+  padding: 14px;
+  border-radius: var(--radius-sm);
+  text-align: center;
+  font-size: 13px;
+  line-height: 1.5;
+  border: 1px solid var(--line);
+}
+
+.internal-employee-notice strong {
+  display: block;
+  color: var(--ink);
+  margin-bottom: 4px;
+}
+
+.btn-full-width {
+  width: 100%;
+}
+
+.job-detail-back-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--muted);
+  font-size: 14px;
+  font-weight: 600;
+  text-decoration: none;
+  padding: 8px 16px;
+  border-radius: var(--radius-md);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  margin-bottom: 24px;
+  transition: var(--transition);
+}
+
+.job-detail-back-link:hover {
+  color: var(--brand-dark);
+  background: var(--brand-soft);
+  border-color: var(--brand);
+  transform: translateX(-3px);
+}
+
+.job-detail-back-link svg {
+  transition: transform 0.2s ease;
+}
+
+.job-detail-back-link:hover svg {
+  transform: translateX(-2px);
+}
+
+.job-header-card {
+  padding: 32px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+  margin-bottom: 28px;
+}
+
+.job-header-badges {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 16px;
+}
+
+.job-department-name {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--brand);
+  margin-bottom: 12px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.job-meta-row {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 20px;
+  padding-top: 16px;
+  border-top: 1px solid var(--line);
+  color: var(--muted);
+  font-size: 13.5px;
+}
+
+.job-meta-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.job-meta-item svg {
+  color: var(--brand);
+}
+
+.job-section-card {
+  padding: 28px 32px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+  margin-bottom: 24px;
+}
+
+.support-card {
+  margin-top: 24px;
+  padding: 24px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+}
+
+.support-card h4 {
+  font-family: var(--sans);
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--brand-dark);
+  margin-top: 0;
+  margin-bottom: 8px;
+}
+
+.support-card p {
+  font-size: 13.5px;
+  color: var(--muted);
+  line-height: 1.5;
+  margin-bottom: 16px;
+}
