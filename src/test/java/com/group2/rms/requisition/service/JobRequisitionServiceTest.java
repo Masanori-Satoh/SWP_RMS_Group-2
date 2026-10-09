@@ -158,7 +158,7 @@ class JobRequisitionServiceTest {
         assertEquals("CREATE", log.getAction());
         assertEquals("JobRequisition", log.getEntityName());
         assertEquals("101", log.getEntityId());
-        assertEquals("Created Java Engineer · Draft", log.getNewValue());
+        assertEquals("Tạo yêu cầu: Java Engineer · Draft", log.getNewValue());
     }
 
     @Test
@@ -186,7 +186,7 @@ class JobRequisitionServiceTest {
 
         var auditCap = ArgumentCaptor.forClass(AuditLog.class);
         verify(audit).save(auditCap.capture());
-        assertEquals("Created Untitled requisition · Draft", auditCap.getValue().getNewValue());
+        assertEquals("Tạo yêu cầu: Untitled requisition · Draft", auditCap.getValue().getNewValue());
     }
 
     @Test

@@ -2,6 +2,8 @@
 .requisition-detail-page .requisition-heading-copy { min-width:0; }
 .requisition-detail-page .requisition-detail-heading { align-items:flex-start; flex-wrap:wrap; gap:var(--s4) var(--s6); }
 .requisition-detail-page .requisition-title-row { display:flex; align-items:center; flex-wrap:wrap; gap:var(--s3); }
+.requisition-detail-page .round-badge { display:inline-flex; align-items:center; padding:3px 10px; border-radius:999px; font-size:13px; font-weight:600; background:var(--brand-soft); color:var(--brand-dark); border:1px solid rgba(27,77,62,0.15); }
+.requisition-detail-page .req-code-value { color:var(--brand-dark); font-family:monospace; font-size:14px; }
 .requisition-detail-page h1 { font-size:clamp(26px,2.4vw,34px); line-height:1.25; }
 .requisition-detail-page .requisition-heading-actions { display:flex; gap:var(--s2); flex-wrap:wrap; }
 .requisition-detail-page .requisition-heading-actions .btn-outline { border-radius:8px; }
