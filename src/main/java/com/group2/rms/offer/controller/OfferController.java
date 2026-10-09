@@ -67,6 +67,7 @@ public class OfferController {
             @RequestParam(required = false) String timeSort,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
+            @ModelAttribute("userRole") String userRole,
             Model model) {
 
         int validPage = Math.max(0, page);
