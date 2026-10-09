@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<body>
+<!--
+    FRAGMENTS/LAYOUT/PUBLIC-TOPBAR.HTML
+    =============================================================================
+    Topbar công khai dùng chung cho landing (candidate/landing.html) và layout/public (jobs board, job-detail).
+    CSS: static/css/topbar.css (trang chứa phải nạp). JS: static/js/public-topbar.js.
+    Tham số:
+      - activeNav: mục menu đang chọn khi tải trang: 'jobs' (jobs board, job-detail) hoặc '' (landing:
+                   các mục 'process', 'culture', 'perks' tự sáng theo section khi cuộn)
+      - onLanding: true nếu đang ở trang landing (menu cuộn tới section trong trang),
+                   false ở trang khác (menu dẫn về landing kèm #section)
+    Người dùng lấy từ model attribute topbarUser (TopbarUserAdvice), giống topbar nội bộ.
+    =============================================================================
+-->
+<header th:fragment="topbar(activeNav, onLanding)" class="public-topbar"
+        th:with="viewer=${topbarUser}">
+  <div class="public-topbar__inner">
+    <a th:replace="~{fragments/brand :: wordmark('TUYỂN DỤNG')}"></a>
+
+    <nav class="public-topbar__nav" aria-label="Điều hướng trang tuyển dụng" data-public-nav>
+      <!-- Jobs Board là trang riêng (/jobs), không phải section của landing -->
+      <a class="public-topbar__link" th:href="@{/jobs}"
+         th:classappend="${activeNav == 'jobs'} ? 'active'"
+         th:attr="aria-current=${activeNav == 'jobs' ? 'page' : null}">Vị trí tuyển dụng</a>
+      <a class="public-topbar__link" data-section="process"
+         th:href="${onLanding} ? '#process' : @{/#process}"
+         th:classappend="${activeNav == 'process'} ? 'active'"
+         th:attr="aria-current=${activeNav == 'process' ? 'location' : null}">Quy trình</a>
+      <a class="public-topbar__link" data-section="culture"
+         th:href="${onLanding} ? '#culture' : @{/#culture}"
+         th:classappend="${activeNav == 'culture'} ? 'active'"
+         th:attr="aria-current=${activeNav == 'culture' ? 'location' : null}">Văn hóa Mộc</a>
+      <a class="public-topbar__link" data-section="perks"
+         th:href="${onLanding} ? '#perks' : @{/#perks}"
+         th:classappend="${activeNav == 'perks'} ? 'active'"
+         th:attr="aria-current=${activeNav == 'perks' ? 'location' : null}">Chế độ đãi ngộ</a>
+    </nav>
+
+    <div class="public-topbar__actions">
+      <!-- Khách chưa đăng nhập -->
+      <th:block th:if="${viewer == null}">
+        <a th:href="@{/login}" class="topbar-btn">Đăng nhập</a>
+        <a th:href="@{/register}" class="topbar-btn topbar-btn--primary">Tạo tài khoản ứng viên</a>
+      </th:block>
+
+      <!-- Đã đăng nhập: góc phải dùng chung với topbar nội bộ (fragments/layout/topbar-user) -->
+      <th:block th:if="${viewer != null}">
+        <a th:href="@{/dashboard}" class="topbar-btn topbar-btn--primary public-topbar__dashboard">Bảng điều khiển &rarr;</a>
+        <div th:replace="~{fragments/layout/topbar-user :: actions(${viewer.fullName}, ${viewer.email}, ${viewer.roleName}, ${viewer.avatarUrl}, 'public')}"></div>
+      </th:block>
+    </div>
+  </div>
+  <script defer th:src="@{/js/public-topbar.js}"></script>
+</header>
+</body>
+</html>
