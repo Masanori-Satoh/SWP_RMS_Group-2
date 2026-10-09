@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="vi"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/base}">
+<head>
+    <th:block layout:fragment="styles">
+        <link rel="stylesheet" th:href="@{/css/auth.css}">
+    </th:block>
+</head>
+<body class="auth-page">
+    <th:block layout:fragment="base-content">
+        <!-- Cột nhận diện thương hiệu bên trái (DNA Mộc) -->
+        <aside th:if="${hideBrandPanel != true}" th:replace="~{fragments/auth-layout :: brandPanel}"></aside>
+
+        <!-- Thẻ chính căn giữa màn hình cho Login, Register, Forgot Password, Error -->
+        <main id="main" class="auth-card" layout:fragment="content" tabindex="-1">
+            <!-- Nội dung form xác thực hoặc thông báo lỗi -->
+        </main>
+    </th:block>
+</body>
+</html>

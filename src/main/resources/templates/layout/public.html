@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="vi"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/base}">
+<head>
+    <link rel="stylesheet" th:href="@{/css/topbar.css}">
+    <th:block layout:fragment="styles">
+        <!-- Trang con có thể nạp thêm styles nếu cần -->
+    </th:block>
+</head>
+<body>
+    <th:block layout:fragment="base-content">
+        <!-- 1. Topbar công khai dùng chung với landing (fragments/layout/public-topbar.html) -->
+        <header th:replace="~{fragments/layout/public-topbar :: topbar('jobs', false)}"></header>
+
+        <!-- 2. Ruột trang công khai -->
+        <main id="main" layout:fragment="content">
+            <!-- Nội dung danh sách jobs hoặc chi tiết job -->
+        </main>
+
+        <!-- 3. Chân trang Footer Mộc (DNA) -->
+        <footer class="site-footer">
+            <div class="container">
+                <div class="footer-top-grid">
+                    <div class="footer-brand-col">
+                        <a th:replace="~{fragments/brand :: wordmark('TUYỂN DỤNG')}"></a>
+                        <p>Mộc RMS — Nền tảng quản lý quy trình tuyển dụng thông minh, kết nối doanh nghiệp và nhân tài đích thực.</p>
+                        <div class="footer-contact-info">
+                            <span>Email tuyển dụng: <strong>careers@moc.com</strong></span>
+                        </div>
+                    </div>
+
+                    <div class="footer-nav-col">
+                        <h4>Khám phá</h4>
+                        <ul class="footer-nav-links">
+                            <li><a th:href="@{/jobs}">Vị trí tuyển dụng</a></li>
+                            <li><a th:href="@{/#process}">Quy trình ứng tuyển</a></li>
+                            <li><a th:href="@{/#culture}">Văn hóa Mộc</a></li>
+                            <li><a th:href="@{/#perks}">Chế độ đãi ngộ</a></li>
+                        </ul>
+                    </div>
+
+                    <div class="footer-nav-col">
+                        <h4>Dành cho ứng viên</h4>
+                        <ul class="footer-nav-links">
+                            <li><a th:href="@{/login}">Đăng nhập tài khoản</a></li>
+                            <li><a th:href="@{/register}">Đăng ký ứng viên</a></li>
+                            <li><a th:href="@{/jobs}">Tìm kiếm việc làm</a></li>
+                        </ul>
+                    </div>
+
+                    <div class="footer-nav-col">
+                        <h4>Hệ thống RMS</h4>
+                        <ul class="footer-nav-links">
+                            <li><a th:href="@{/login}">Cổng nội bộ nhân viên</a></li>
+                            <li><a th:href="@{/privacy-policy}">Chính sách bảo mật</a></li>
+                            <li><a th:href="@{/terms}">Điều khoản sử dụng</a></li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="footer-bottom-bar">
+                    <span>© 2026 Mộc RMS (Group 2). Bản quyền được bảo lưu.</span>
+                    <div><a href="#main">Về đầu trang ↑</a></div>
+                </div>
+            </div>
+        </footer>
+    </th:block>
+</body>
+</html>
