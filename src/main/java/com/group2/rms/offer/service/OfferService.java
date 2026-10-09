@@ -56,6 +56,16 @@ public interface OfferService {
     java.util.Map<String, Long> getOfferStats();
 
     /**
+     * Lấy thống kê số lượng Offer cho Director (Chờ duyệt hệ thống, Đã duyệt của Director, Đã từ chối của Director)
+     */
+    java.util.Map<String, Long> getDirectorOfferStats();
+
+    /**
+     * Lấy lịch sử quyết định của Director hiện tại
+     */
+    Page<OfferResponse> getDirectorOfferHistory(Pageable pageable);
+
+    /**
      * Lấy thông tin chi tiết gói Offer (Group A + B + History).
      */
     OfferDetailResponse getOfferDetailForHr(Integer id);

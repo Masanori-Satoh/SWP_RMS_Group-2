@@ -783,4 +783,31 @@ public class OfferServiceImpl implements OfferService {
 
         return mapToResponse(saved);
     }
+    @Override
+    @Transactional(readOnly = true)
+    public Map<String, Long> getDirectorOfferStats() {
+        User director = resolveProposedBy(null);
+        Integer directorId = director != null ? director.getUserId() : 0;
+        
+        Map<String, Long> stats = new HashMap<>();
+        stats.put("statPending", offerProposalRepository.countPendingDirector());
+        stats.put("statApproved", offerApprovalRepository.countByDirector_UserIdAndStatusIgnoreCase(directorId, "Approved"));
+        stats.put("statRejected", offerApprovalRepository.countByDirector_UserIdAndStatusIgnoreCase(directorId, "Rejected"));
+        return stats;
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Page<OfferResponse> getDirectorOfferHistory(Pageable pageable) {
+        User director = resolveProposedBy(null);
+        Integer directorId = director != null ? director.getUserId() : 0;
+        
+        Page<OfferApproval> approvals = offerApprovalRepository.findByDirector_UserIdOrderByApprovedAtDesc(directorId, pageable);
+        return approvals.map(approval -> {
+            OfferProposal offer = approval.getOfferProposal();
+            OfferResponse response = mapToResponse(offer);
+            // Optionally, you can set the status or some other field based on the approval
+            return response;
+        });
+    }
 }
