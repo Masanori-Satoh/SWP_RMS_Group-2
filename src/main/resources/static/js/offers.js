@@ -1481,3 +1481,192 @@ function submitDirectorDecision() {
         btn.innerHTML = originalBtnHtml;
     });
 }
+
+/* =============================================================================
+   DIRECTOR VIEW - QUẢN LÝ ĐỀ XUẤT
+   ============================================================================= */
+
+function applyDirectorFilters() {
+    const search = document.getElementById('searchInput').value;
+    const timeSort = document.getElementById('timeSortFilter').value;
+    const urlParams = new URLSearchParams(window.location.search);
+    
+    // Maintain current tab
+    const currentTab = urlParams.get('status') === 'HISTORY' ? 'HISTORY' : 'PENDING';
+    
+    let url = '/offers?status=' + currentTab;
+    if (search && search.trim() !== '') url += '&search=' + encodeURIComponent(search.trim());
+    if (timeSort && timeSort !== 'DEFAULT') url += '&timeSort=' + encodeURIComponent(timeSort);
+    
+    window.location.href = url;
+}
+
+function clearDirectorSearch() {
+    document.getElementById('searchInput').value = '';
+    applyDirectorFilters();
+}
+
+let currentDirectorOfferId = null;
+
+function openDirectorDrawer(id) {
+    currentDirectorOfferId = id;
+    
+    // Show overlay and drawer (loading state)
+    document.getElementById('directorDrawerOverlay').classList.add('show');
+    document.getElementById('directorDrawer').classList.add('open');
+    document.body.style.overflow = 'hidden';
+    
+    document.getElementById('drawerOfferId').innerText = id + ' (Đang tải...)';
+    
+    fetch('/offers/' + id)
+        .then(res => res.json())
+        .then(data => {
+            if (data.success) {
+                const detail = data.data;
+                document.getElementById('drawerOfferId').innerText = detail.offerId;
+                
+                // Status badge
+                let statusHtml = '';
+                if (detail.offerStatus === 'Pending_Director') {
+                    statusHtml = '<span class="status-badge status-pending"><i class="fa-solid fa-hourglass-half"></i> Chờ duyệt Director</span>';
+                    document.getElementById('drawerActionArea').style.display = 'block';
+                } else if (detail.offerStatus === 'Director_Approved' || detail.offerStatus === 'Approved') {
+                    statusHtml = '<span class="status-badge status-approved"><i class="fa-solid fa-check"></i> Đã duyệt</span>';
+                    document.getElementById('drawerActionArea').style.display = 'none';
+                } else if (detail.offerStatus === 'Director_Rejected' || detail.offerStatus === 'Rejected') {
+                    statusHtml = '<span class="status-badge status-rejected"><i class="fa-solid fa-xmark"></i> Bị từ chối</span>';
+                    document.getElementById('drawerActionArea').style.display = 'none';
+                }
+                document.getElementById('drawerStatusBadge').innerHTML = statusHtml;
+                
+                // Cand Info
+                document.getElementById('drawerCandName').innerText = detail.candidateName || 'N/A';
+                document.getElementById('drawerCandEmail').innerText = detail.candidateEmail || 'N/A';
+                document.getElementById('drawerCandPhone').innerText = detail.candidatePhone || 'N/A';
+                
+                // Offer Info
+                document.getElementById('drawerPosition').innerText = detail.offeredPositionTitle || 'N/A';
+                
+                // Use formatCurrency from existing functions if available, or basic format
+                const formatVnd = (num) => {
+                    return num != null ? Number(num).toLocaleString('vi-VN') : '0';
+                };
+                
+                document.getElementById('drawerSalary').innerText = formatVnd(detail.proposedSalary) + ' VND';
+                document.getElementById('drawerProbationSalary').innerText = formatVnd(detail.probationSalary) + ' VND';
+                document.getElementById('drawerProbationDays').innerText = (detail.probationDays || 60) + ' ngày';
+                document.getElementById('drawerStartDate').innerText = detail.expectedStartDate || 'N/A';
+                document.getElementById('drawerLocation').innerText = detail.workLocation || 'N/A';
+                document.getElementById('drawerBenefits').innerText = detail.benefitsPackage || 'Không có';
+                
+                // HR Note
+                const hrName = detail.proposedByName || 'HR';
+                const createdDate = detail.createdAt ? new Date(detail.createdAt).toLocaleDateString('vi-VN') : '';
+                document.getElementById('drawerHrNote').innerHTML = 
+                    `<strong>Người tạo:</strong> ${hrName} <br>` +
+                    `<strong>Ngày tạo:</strong> ${createdDate} <br>` +
+                    (detail.interviewSummaryComments ? `<br><strong>Nhận xét phỏng vấn:</strong><br>${detail.interviewSummaryComments}` : '');
+                
+                // Reset reason
+                document.getElementById('rejectReasonInput').value = '';
+                document.getElementById('rejectReasonCount').innerText = '0';
+            } else {
+                Swal.fire('Lỗi', data.message || 'Không thể lấy thông tin chi tiết.', 'error');
+                closeDirectorDrawer();
+            }
+        })
+        .catch(err => {
+            console.error(err);
+            Swal.fire('Lỗi', 'Đã xảy ra lỗi khi kết nối server.', 'error');
+            closeDirectorDrawer();
+        });
+}
+
+function closeDirectorDrawer() {
+    document.getElementById('directorDrawerOverlay').classList.remove('show');
+    document.getElementById('directorDrawer').classList.remove('open');
+    document.body.style.overflow = '';
+    currentDirectorOfferId = null;
+}
+
+function updateRejectReasonCounter(el) {
+    const len = el.value.length;
+    document.getElementById('rejectReasonCount').innerText = len;
+}
+
+function submitDirectorApprove() {
+    if (!currentDirectorOfferId) return;
+    
+    Swal.fire({
+        title: 'Phê duyệt đề xuất?',
+        text: 'Sau khi phê duyệt, HR sẽ được thông báo để tiếp tục phát hành Offer cho ứng viên.',
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonText: 'Xác nhận phê duyệt',
+        cancelButtonText: 'Hủy',
+        confirmButtonColor: '#166534',
+        reverseButtons: true
+    }).then((result) => {
+        if (result.isConfirmed) {
+            const csrfToken = document.querySelector('meta[name="_csrf"]').content;
+            const csrfHeader = document.querySelector('meta[name="_csrf_header"]').content;
+
+            fetch(`/offers/${currentDirectorOfferId}/approve`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    [csrfHeader]: csrfToken
+                },
+                body: JSON.stringify({ comments: 'Phê duyệt trực tiếp' })
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    Swal.fire({ title: 'Thành công', text: data.message, icon: 'success', timer: 1500, showConfirmButton: false })
+                    .then(() => window.location.reload());
+                } else {
+                    Swal.fire('Lỗi', data.message || 'Có lỗi xảy ra.', 'error');
+                }
+            })
+            .catch(err => {
+                console.error(err);
+                Swal.fire('Lỗi', 'Lỗi kết nối.', 'error');
+            });
+        }
+    });
+}
+
+function submitDirectorReject() {
+    if (!currentDirectorOfferId) return;
+    
+    const reason = document.getElementById('rejectReasonInput').value.trim();
+    if (!reason) {
+        Swal.fire('Chú ý', 'Vui lòng nhập lý do từ chối.', 'warning');
+        return;
+    }
+    
+    const csrfToken = document.querySelector('meta[name="_csrf"]').content;
+    const csrfHeader = document.querySelector('meta[name="_csrf_header"]').content;
+
+    fetch(`/offers/${currentDirectorOfferId}/reject`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            [csrfHeader]: csrfToken
+        },
+        body: JSON.stringify({ comments: reason })
+    })
+    .then(res => res.json())
+    .then(data => {
+        if (data.success) {
+            Swal.fire({ title: 'Thành công', text: data.message, icon: 'success', timer: 1500, showConfirmButton: false })
+            .then(() => window.location.reload());
+        } else {
+            Swal.fire('Lỗi', data.message || 'Có lỗi xảy ra.', 'error');
+        }
+    })
+    .catch(err => {
+        console.error(err);
+        Swal.fire('Lỗi', 'Lỗi kết nối.', 'error');
+    });
+}

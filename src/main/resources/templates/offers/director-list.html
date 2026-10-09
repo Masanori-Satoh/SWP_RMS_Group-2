@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/head :: interfaceHead('Quản lý Đề xuất', ~{::pageStyles})}">
+  <th:block th:fragment="pageStyles">
+    <meta name="_csrf" th:content="${_csrf?.token}"/>
+    <meta name="_csrf_header" th:content="${_csrf?.headerName}"/>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" th:href="@{/css/offers.css}">
+  </th:block>
+</head>
+<body class="rms-app">
+
+<div class="page-wrapper">
+    <!-- SIDEBAR -->
+    <aside th:replace="~{fragments/sidebar :: workspace('offers', 'Director')}"></aside>
+
+    <div class="main-content" id="directorMainContent">
+        <!-- TOPBAR -->
+        <header th:replace="~{fragments/workspace-header :: header('Director', ${currentUser})}"></header>
+
+        <!-- PAGE CONTENT -->
+        <main id="main" class="page-content" tabindex="-1">
+            <div class="container">
+
+                <div class="offers-header">
+                    <div class="offers-title-group">
+                        <h1>Quản lý Đề xuất</h1>
+                        <p class="offers-subtitle">Xem xét và quyết định các đề xuất gói lương do HR gửi lên.</p>
+                    </div>
+                </div>
+
+                <!-- 3 Stat Cards -->
+                <div class="offers-stats-grid director-stats-grid">
+                    <div class="offer-stat-card">
+                        <div class="stat-label">CHỜ DUYỆT</div>
+                        <div class="offer-stat-bottom">
+                            <div class="offer-stat-icon stat-icon-amber">
+                                <i class="fa-solid fa-hourglass-half"></i>
+                            </div>
+                            <div class="stat-value" th:text="${statPending}">0</div>
+                        </div>
+                    </div>
+                    <div class="offer-stat-card">
+                        <div class="stat-label">ĐÃ DUYỆT</div>
+                        <div class="offer-stat-bottom">
+                            <div class="offer-stat-icon stat-icon-green">
+                                <i class="fa-solid fa-user-check"></i>
+                            </div>
+                            <div class="stat-value" th:text="${statApproved}">0</div>
+                        </div>
+                    </div>
+                    <div class="offer-stat-card">
+                        <div class="stat-label">ĐÃ TỪ CHỐI</div>
+                        <div class="offer-stat-bottom">
+                            <div class="offer-stat-icon stat-icon-danger">
+                                <i class="fa-solid fa-ban"></i>
+                            </div>
+                            <div class="stat-value" th:text="${statRejected}">0</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 2 Tabs -->
+                <div class="director-tabs">
+                    <a th:href="@{/offers(status='PENDING')}" th:classappend="${currentTab == 'PENDING'} ? 'active' : ''" class="director-tab">Chờ duyệt</a>
+                    <a th:href="@{/offers(status='HISTORY')}" th:classappend="${currentTab == 'HISTORY'} ? 'active' : ''" class="director-tab">Lịch sử quyết định</a>
+                </div>
+
+                <!-- Filter Toolbar -->
+                <div class="offers-toolbar">
+                    <div class="toolbar-left">
+                        <div class="search-box">
+                            <i class="fa-solid fa-magnifying-glass" onclick="applyDirectorFilters()"></i>
+                            <input type="text" id="searchInput" placeholder="Tìm theo tên ứng viên, vị trí, mã offer..."
+                                   th:value="${search}"
+                                   onkeydown="if(event.key==='Enter'){ applyDirectorFilters(); }">
+                            <button type="button" th:if="${search != null and search != ''}" onclick="clearDirectorSearch()"
+                                    style="background:none; border:none; cursor:pointer; color:var(--muted); padding:0 4px;" title="Xóa từ khóa">
+                                <i class="fa-solid fa-xmark"></i>
+                            </button>
+                        </div>
+                        <!-- Sort by time -->
+                        <select id="timeSortFilter" class="filter-select" onchange="applyDirectorFilters()">
+                            <option value="DEFAULT" th:selected="${currentTimeSort == 'DEFAULT'}">-- Sắp xếp theo thời gian --</option>
+                            <option value="EARLIEST" th:selected="${currentTimeSort == 'EARLIEST'}">Mới nhất</option>
+                            <option value="LATEST" th:selected="${currentTimeSort == 'LATEST'}">Cũ nhất</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Table -->
+                <div class="offers-table-wrapper">
+                    <table class="offers-table">
+                        <thead>
+                            <tr>
+                                <th style="width: 90px;">Mã Offer</th>
+                                <th>Ứng viên</th>
+                                <th>Vị trí đề xuất</th>
+                                <th>Lương chính thức</th>
+                                <th>Lương thử việc</th>
+                                <th>Trạng thái</th>
+                                <th>Ngày lập</th>
+                                <th>Người đề xuất</th>
+                                <th style="text-align: right; width: 60px;">Hành động</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr th:if="${#lists.isEmpty(offers)}">
+                                <td colspan="9" style="text-align:center; padding:48px 24px; color:var(--muted);">
+                                    <i class="fa-solid fa-inbox" style="font-size:32px; margin-bottom:12px; display:block; color:var(--control-line);"></i>
+                                    Không tìm thấy dữ liệu.
+                                </td>
+                            </tr>
+                            <tr th:each="o : ${offers}">
+                                <td><a href="javascript:void(0)" th:onclick="'openDirectorDrawer(' + ${o.offerId} + ')'" class="offer-id-link" th:text="${o.offerId}">1</a></td>
+                                <td>
+                                    <a href="javascript:void(0)" th:onclick="'openDirectorDrawer(' + ${o.offerId} + ')'" style="text-decoration:none; color:inherit;">
+                                        <div class="cand-name-cell" th:text="${o.candidateName != null ? o.candidateName : 'Ứng viên'}">Nguyễn Văn A</div>
+                                    </a>
+                                    <div class="cand-email-sub" th:text="${o.candidateEmail != null ? o.candidateEmail : 'N/A'}">a.nguyen@email.com</div>
+                                </td>
+                                <td>
+                                    <span style="font-weight:600; color:var(--ink);" th:text="${o.offeredPositionTitle}">Vị trí</span>
+                                </td>
+                                <td>
+                                    <div class="salary-main" th:text="${#numbers.formatDecimal(o.proposedSalary, 0, 'POINT', 0, 'COMMA')} + ' VND'">25,000,000 VND</div>
+                                </td>
+                                <td>
+                                    <div class="salary-probation">
+                                        <span th:text="${#numbers.formatDecimal(o.probationSalary, 0, 'POINT', 0, 'COMMA')} + ' VND'">21,250,000 VND</span>
+                                        <span class="salary-badge-pct" th:if="${o.proposedSalary != null and o.proposedSalary.compareTo(T(java.math.BigDecimal).ZERO) > 0}"
+                                              th:text="${#numbers.formatDecimal(o.probationSalary.multiply(new java.math.BigDecimal(100)).divide(o.proposedSalary, 0, T(java.math.RoundingMode).HALF_UP), 0, 0)} + '%'">85%</span>
+                                    </div>
+                                </td>
+                                <td>
+                                    <span th:if="${o.offerStatus == 'Pending_Director'}" class="status-badge status-pending">
+                                        <i class="fa-solid fa-hourglass-half"></i> Chờ duyệt Director
+                                    </span>
+                                    <span th:if="${o.offerStatus == 'Director_Approved' or o.offerStatus == 'Approved'}" class="status-badge status-approved">
+                                        <i class="fa-solid fa-check"></i> Đã duyệt
+                                    </span>
+                                    <span th:if="${o.offerStatus == 'Director_Rejected' or o.offerStatus == 'Rejected'}" class="status-badge status-rejected">
+                                        <i class="fa-solid fa-xmark"></i> Bị từ chối
+                                    </span>
+                                </td>
+                                <td style="color:var(--muted); font-size:13.5px;" th:text="${o.createdAt != null ? #temporals.format(o.createdAt, 'dd/MM/yyyy HH:mm') : '-'}">01/10/2026</td>
+                                <td>
+                                    <div th:text="${o.proposedByName != null ? o.proposedByName : 'HR'}">HR</div>
+                                    <div class="cand-email-sub">(HR)</div>
+                                </td>
+                                <td style="text-align: right;">
+                                    <button type="button" th:onclick="'openDirectorDrawer(' + ${o.offerId} + ')'" class="btn-icon btn-icon-primary" title="Xem chi tiết">
+                                        <i class="fa-solid fa-eye"></i>
+                                    </button>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div th:replace="~{fragments/pagination :: pager(${currentPage}, ${totalPages}, ${totalElements}, '/offers')}"></div>
+
+            </div>
+        </main>
+    </div>
+</div>
+
+<!-- DIRECTOR DRAWER -->
+<div id="directorDrawerOverlay" class="drawer-overlay" onclick="closeDirectorDrawer()"></div>
+<div id="directorDrawer" class="director-drawer">
+    <div class="drawer-header">
+        <div class="drawer-title-group">
+            <h2 class="drawer-title">Chi tiết đề xuất</h2>
+            <div class="drawer-subtitle">Mã Offer #<span id="drawerOfferId"></span></div>
+        </div>
+        <div class="drawer-actions">
+            <span id="drawerStatusBadge"></span>
+            <button class="btn-icon" onclick="closeDirectorDrawer()"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+    </div>
+    
+    <div class="drawer-body">
+        <div class="drawer-section">
+            <div class="drawer-section-title"><i class="fa-solid fa-user"></i> Thông tin ứng viên</div>
+            <div class="drawer-info-grid">
+                <div class="info-label">Họ và tên</div>
+                <div class="info-value" id="drawerCandName"></div>
+                
+                <div class="info-label">Email</div>
+                <div class="info-value" id="drawerCandEmail"></div>
+                
+                <div class="info-label">Số điện thoại</div>
+                <div class="info-value" id="drawerCandPhone"></div>
+            </div>
+        </div>
+
+        <div class="drawer-section">
+            <div class="drawer-section-title"><i class="fa-solid fa-file-contract"></i> Thông tin offer</div>
+            <div class="drawer-info-grid">
+                <div class="info-label">Vị trí đề xuất</div>
+                <div class="info-value" id="drawerPosition"></div>
+                
+                <div class="info-label">Lương chính thức</div>
+                <div class="info-value salary-main" id="drawerSalary"></div>
+                
+                <div class="info-label">Lương thử việc</div>
+                <div class="info-value" id="drawerProbationSalary"></div>
+                
+                <div class="info-label">Thời gian thử việc</div>
+                <div class="info-value" id="drawerProbationDays"></div>
+                
+                <div class="info-label">Ngày bắt đầu dự kiến</div>
+                <div class="info-value" id="drawerStartDate"></div>
+                
+                <div class="info-label">Địa điểm làm việc</div>
+                <div class="info-value" id="drawerLocation"></div>
+                
+                <div class="info-label">Phúc lợi</div>
+                <div class="info-value" id="drawerBenefits"></div>
+            </div>
+        </div>
+
+        <div class="drawer-section">
+            <div class="drawer-section-title"><i class="fa-solid fa-comment-dots"></i> Ghi chú từ HR</div>
+            <div class="drawer-hr-note" id="drawerHrNote"></div>
+        </div>
+
+        <!-- Approval Action Area (Only visible for PENDING tab) -->
+        <div class="drawer-section" id="drawerActionArea" style="display: none;">
+            <div class="drawer-section-title"><i class="fa-solid fa-check-circle"></i> Quyết định của Director</div>
+            <div class="reject-reason-group">
+                <label for="rejectReasonInput">Lý do từ chối <span style="color:var(--danger)">*</span></label>
+                <textarea id="rejectReasonInput" placeholder="Nhập lý do từ chối (bắt buộc nếu từ chối)..." oninput="updateRejectReasonCounter(this)"></textarea>
+                <div class="textarea-counter"><span id="rejectReasonCount">0</span>/500</div>
+            </div>
+            
+            <div class="drawer-action-buttons">
+                <button type="button" class="btn btn-outline-danger" onclick="submitDirectorReject()">
+                    <i class="fa-regular fa-circle-xmark"></i> Từ chối
+                </button>
+                <button type="button" class="btn btn-success" onclick="submitDirectorApprove()">
+                    <i class="fa-solid fa-check"></i> Phê duyệt
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script th:src="@{/js/offers.js}"></script>
+</body>
+</html>
