@@ -1,87 +1,273 @@
 <!DOCTYPE html>
 <html lang="vi" xmlns:th="http://www.thymeleaf.org">
-<aside th:fragment="sidebar(activeMenu)" class="app-sidebar">
-    <div class="sidebar-brand">
-        <span class="brand-title">RMS</span>
-        <span class="brand-badge">Hệ thống Tuyển dụng</span>
+<!--
+    FRAGMENTS/SIDEBAR.HTML
+    =============================================================================
+    Thanh điều hướng Sidebar đa trạng thái (Collapsible / Expandable Navigation)
+    Hỗ trợ:
+      - Trạng thái Thu gọn (Collapsed ~68px): Chỉ hiển thị icon, tiết kiệm không gian
+      - Trạng thái Mở rộng (Expanded ~250px): Hiển thị icon + tên chức năng
+      - Mở rộng mượt mà khi hover vào sidebar
+      - Nút Ghim (Pin / Unpin) lưu trạng thái vào localStorage
+      - Tooltip giải thích icon khi sidebar đang thu gọn
+      - Indicator và nền xanh nhạt nổi bật cho menu đang active
+      - Logo thương hiệu Mộc RMS chuyển đổi mượt mà giữa icon và chữ
+    =============================================================================
+-->
+
+<aside th:fragment="workspace(activeMenu, role)" class="workspace-sidebar" id="workspace-navigation" aria-label="Điều hướng hệ thống">
+    <!-- 1. Header / Logo thương hiệu & Nút Ghim -->
+    <div class="sidebar-top-bar">
+        <a th:href="@{/dashboard}" class="sidebar-brand" title="Mộc RMS">
+            <div class="brand-icon-box">
+                <svg class="brand-icon" viewBox="0 0 32 32" fill="none" aria-hidden="true">
+                    <path d="M15 27C8 23 6 13 11 7c4-5 11-4 16-3 0 9-3 18-12 23Z" stroke="currentColor" stroke-width="2"/>
+                    <path d="m12 25 9-15M15 19l-3-6m5 2 6-1" stroke="currentColor" stroke-width="2"/>
+                </svg>
+            </div>
+            <div class="brand-text-box">
+                <span class="brand-name">mộc.</span>
+                <span class="brand-badge">RMS</span>
+            </div>
+        </a>
+        <button type="button" class="sidebar-pin-btn" id="sidebar-pin-toggle" aria-label="Ghim hoặc mở rộng thanh điều hướng" title="Ghim thanh điều hướng">
+            <svg class="pin-icon-unpinned" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <polyline points="9 18 15 12 9 6"></polyline>
+            </svg>
+            <svg class="pin-icon-pinned" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <polyline points="15 18 9 12 15 6"></polyline>
+            </svg>
+        </button>
     </div>
-    <nav class="sidebar-nav" aria-label="Điều hướng chính">
-        <a th:href="@{/dashboard}" class="nav-item" th:classappend="${activeMenu == 'dashboard' ? 'active' : ''}"
-            th:attr="aria-current=${activeMenu == 'dashboard' ? 'page' : null}">
-            Bảng điều khiển
+
+    <!-- 2. Danh sách Menu chính -->
+    <nav class="sidebar-menu-list" aria-label="Menu chức năng">
+
+        <!-- Bảng điều khiển -->
+        <a th:href="@{/dashboard}" class="sidebar-nav-link"
+           th:classappend="${activeMenu == 'dashboard' ? 'active' : ''}"
+           th:attr="aria-current=${activeMenu == 'dashboard' ? 'page' : null}"
+           title="Bảng điều khiển"
+           data-tooltip="Bảng điều khiển">
+            <span class="nav-icon-wrapper">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
+                    <polyline points="9 22 9 12 15 12 15 22"/>
+                </svg>
+            </span>
+            <span class="nav-label-text">Bảng điều khiển</span>
         </a>
-        <a th:href="@{/requisitions}" class="nav-item" th:classappend="${activeMenu == 'requisitions' ? 'active' : ''}"
-            th:attr="aria-current=${activeMenu == 'requisitions' ? 'page' : null}">
-            Yêu cầu tuyển dụng
+
+        <!-- Yêu cầu tuyển dụng (Requisitions) -->
+        <a th:if="${role != 'Candidate' and role != 'Interviewer'}"
+           th:href="@{/requisitions}" class="sidebar-nav-link"
+           th:classappend="${activeMenu == 'requisitions' ? 'active' : ''}"
+           th:attr="aria-current=${activeMenu == 'requisitions' ? 'page' : null}"
+           title="Yêu cầu tuyển dụng"
+           data-tooltip="Yêu cầu tuyển dụng">
+            <span class="nav-icon-wrapper">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <rect x="2" y="7" width="20" height="14" rx="2" ry="2"/>
+                    <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/>
+                </svg>
+            </span>
+            <span class="nav-label-text">Yêu cầu tuyển dụng</span>
         </a>
-        <a th:href="@{/candidates}" class="nav-item" th:classappend="${activeMenu == 'candidates' ? 'active' : ''}"
-            th:attr="aria-current=${activeMenu == 'candidates' ? 'page' : null}">
-            Ứng viên
+
+        <!-- Tin tuyển dụng (Job Postings) -->
+        <a th:if="${role == 'HR' or role == 'System Admin' or role == 'HR Specialist' or (role != null and #strings.contains(role, 'HR'))}"
+           th:href="@{/internal/job-postings}" class="sidebar-nav-link"
+           th:classappend="${activeMenu == 'job-postings' ? 'active' : ''}"
+           th:attr="aria-current=${activeMenu == 'job-postings' ? 'page' : null}"
+           title="Tin tuyển dụng"
+           data-tooltip="Tin tuyển dụng">
+            <span class="nav-icon-wrapper">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                    <polyline points="14 2 14 8 20 8"/>
+                    <line x1="16" y1="13" x2="8" y2="13"/>
+                    <line x1="16" y1="17" x2="8" y2="17"/>
+                </svg>
+            </span>
+            <span class="nav-label-text">Tin tuyển dụng</span>
         </a>
-        <a th:href="@{/interviews}" class="nav-item" th:classappend="${activeMenu == 'interviews' ? 'active' : ''}"
-            th:attr="aria-current=${activeMenu == 'interviews' ? 'page' : null}">
-            Lịch phỏng vấn
-        </a>
-        <a th:href="@{/offers}" class="nav-item" th:classappend="${activeMenu == 'offers' ? 'active' : ''}"
-            th:attr="aria-current=${activeMenu == 'offers' ? 'page' : null}">
-            Quản lý đề nghị
-        </a>
-        <a th:href="@{/notifications}" class="nav-item"
-            th:classappend="${activeMenu == 'notifications' ? 'active' : ''}"
-            th:attr="aria-current=${activeMenu == 'notifications' ? 'page' : null}">
-            Thông báo
-        </a>
-        <a th:href="@{/profile}" class="nav-item" th:classappend="${activeMenu == 'profile' ? 'active' : ''}"
-            th:attr="aria-current=${activeMenu == 'profile' ? 'page' : null}">
-            Hồ sơ cá nhân
-        </a>
-        <a th:href="@{/admin/accounts}" class="nav-item" th:classappend="${activeMenu == 'accounts' ? 'active' : ''}"
-            th:attr="aria-current=${activeMenu == 'accounts' ? 'page' : null}">
-            Quản lý tài khoản
-        </a>
-        <a th:href="@{/admin/departments}" class="nav-item"
-            th:classappend="${activeMenu == 'departments' ? 'active' : ''}"
-            th:attr="aria-current=${activeMenu == 'departments' ? 'page' : null}">
-            Quản lý phòng ban
-        </a>
-        <a th:href="@{/admin/api-monitoring}" class="nav-item"
-            th:classappend="${activeMenu == 'api-monitoring' ? 'active' : ''}"
-            th:attr="aria-current=${activeMenu == 'api-monitoring' ? 'page' : null}">
-            Giám sát API
-        </a>
-    </nav>
-</aside>
-<aside th:fragment="workspace(activeMenu, role)" class="workspace-sidebar" id="workspace-navigation">
-    <h2>Không gian Tuyển dụng</h2>
-    <nav class="workspace-nav" aria-label="Điều hướng không gian làm việc">
-        <a th:href="@{/dashboard}" th:attr="aria-current=${activeMenu == 'dashboard' ? 'page' : null}">Bảng điều khiển</a>
-        <th:block th:if="${role == 'Candidate'}">
-            <span class="workspace-nav-group">Khu vực ứng viên</span>
-            <a th:href="@{/dashboard#applications}">Hồ sơ đã ứng tuyển</a>
-            <a th:href="@{/interviews}" th:attr="aria-current=${activeMenu == 'interviews' ? 'page' : null}">Lịch phỏng vấn của tôi</a>
-            <a th:href="@{/dashboard#offers}">Đề nghị tuyển dụng</a>
-            <a th:href="@{/dashboard#notifications}">Thông báo của tôi</a>
-            <a th:href="@{/jobs}">Vị trí đang tuyển</a>
-        </th:block>
-        <span th:if="${role == 'System Admin'}" class="workspace-nav-group">Tài khoản</span>
-        <a th:if="${role == 'System Admin'}" th:href="@{/admin/accounts}"
-            th:attr="aria-current=${activeMenu == 'accounts' ? 'page' : null}">Tài khoản nội bộ</a>
-        <a th:if="${role == 'System Admin'}" th:href="@{/admin/candidate-accounts}"
-            th:attr="aria-current=${activeMenu == 'candidate-accounts' ? 'page' : null}">Tài khoản ứng viên</a>
-        <span th:if="${role == 'System Admin'}" class="workspace-nav-group">Hệ thống</span>
-        <a th:if="${role == 'System Admin'}" th:href="@{/admin/departments}"
-            th:attr="aria-current=${activeMenu == 'departments' ? 'page' : null}">Quản lý phòng ban</a>
-        <a th:if="${role == 'System Admin'}" th:href="@{/admin/api-monitoring}"
-            th:attr="aria-current=${activeMenu == 'api-monitoring' ? 'page' : null}">Giám sát API</a>
-        <a th:if="${role != 'Candidate' and role != 'Interviewer'}" th:href="@{/requisitions}"
-            th:attr="aria-current=${activeMenu == 'requisitions' ? 'page' : null}">Yêu cầu tuyển dụng</a>
+
+        <!-- Lịch phỏng vấn (Interviews) -->
         <a th:if="${role == 'HR' or role == 'System Admin' or role == 'Hiring Manager' or role == 'Interviewer' or role == 'Director'}"
-            th:href="@{/interviews}" th:attr="aria-current=${activeMenu == 'interviews' ? 'page' : null}">Lịch phỏng vấn</a>
+           th:href="@{/interviews}" class="sidebar-nav-link"
+           th:classappend="${activeMenu == 'interviews' ? 'active' : ''}"
+           th:attr="aria-current=${activeMenu == 'interviews' ? 'page' : null}"
+           title="Lịch phỏng vấn"
+           data-tooltip="Lịch phỏng vấn">
+            <span class="nav-icon-wrapper">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+                    <line x1="16" y1="2" x2="16" y2="6"/>
+                    <line x1="8" y1="2" x2="8" y2="6"/>
+                    <line x1="3" y1="10" x2="21" y2="10"/>
+                </svg>
+            </span>
+            <span class="nav-label-text">Lịch phỏng vấn</span>
+        </a>
+
+        <!-- Quản lý đề nghị tuyển dụng (Offers) -->
         <a th:if="${role == 'HR' or role == 'HR Specialist' or role == 'Director' or role == 'System Admin' or (role != null and #strings.contains(role, 'HR'))}"
-            th:href="@{/offers}" th:attr="aria-current=${activeMenu == 'offers' ? 'page' : null}">Quản lý Đề xuất</a>
-        <a th:href="@{/profile}" th:attr="aria-current=${activeMenu == 'profile' ? 'page' : null}">Hồ sơ cá nhân</a>
+           th:href="@{/offers}" class="sidebar-nav-link"
+           th:classappend="${activeMenu == 'offers' ? 'active' : ''}"
+           th:attr="aria-current=${activeMenu == 'offers' ? 'page' : null}"
+           title="Quản lý đề nghị tuyển dụng"
+           data-tooltip="Quản lý đề nghị tuyển dụng">
+            <span class="nav-icon-wrapper">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+                    <polyline points="22 4 12 14.01 9 11.01"/>
+                </svg>
+            </span>
+            <span class="nav-label-text">Quản lý đề nghị tuyển dụng</span>
+        </a>
+
+        <!-- System Admin Menus -->
+        <th:block th:if="${role == 'System Admin'}">
+            <div class="sidebar-nav-divider"></div>
+            <a th:href="@{/admin/accounts}" class="sidebar-nav-link"
+               th:classappend="${activeMenu == 'accounts' ? 'active' : ''}"
+               th:attr="aria-current=${activeMenu == 'accounts' ? 'page' : null}"
+               data-tooltip="Tài khoản nội bộ">
+                <span class="nav-icon-wrapper">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+                        <circle cx="9" cy="7" r="4"/>
+                        <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+                        <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+                    </svg>
+                </span>
+                <span class="nav-label-text">Tài khoản nội bộ</span>
+            </a>
+            <a th:href="@{/admin/candidate-accounts}" class="sidebar-nav-link"
+               th:classappend="${activeMenu == 'candidate-accounts' ? 'active' : ''}"
+               th:attr="aria-current=${activeMenu == 'candidate-accounts' ? 'page' : null}"
+               data-tooltip="Tài khoản ứng viên">
+                <span class="nav-icon-wrapper">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+                        <circle cx="8.5" cy="7" r="4"/>
+                        <line x1="20" y1="8" x2="20" y2="14"/>
+                        <line x1="23" y1="11" x2="17" y2="11"/>
+                    </svg>
+                </span>
+                <span class="nav-label-text">Tài khoản ứng viên</span>
+            </a>
+            <a th:href="@{/admin/departments}" class="sidebar-nav-link"
+               th:classappend="${activeMenu == 'departments' ? 'active' : ''}"
+               th:attr="aria-current=${activeMenu == 'departments' ? 'page' : null}"
+               data-tooltip="Quản lý phòng ban">
+                <span class="nav-icon-wrapper">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <rect x="4" y="2" width="16" height="20" rx="2" ry="2"/>
+                        <line x1="9" y1="22" x2="9" y2="2"/>
+                        <line x1="8" y1="6" x2="10" y2="6"/>
+                        <line x1="14" y1="6" x2="16" y2="6"/>
+                        <line x1="8" y1="10" x2="10" y2="10"/>
+                        <line x1="14" y1="10" x2="16" y2="10"/>
+                    </svg>
+                </span>
+                <span class="nav-label-text">Quản lý phòng ban</span>
+            </a>
+            <a th:href="@{/admin/api-monitoring}" class="sidebar-nav-link"
+               th:classappend="${activeMenu == 'api-monitoring' ? 'active' : ''}"
+               th:attr="aria-current=${activeMenu == 'api-monitoring' ? 'page' : null}"
+               data-tooltip="Giám sát API">
+                <span class="nav-icon-wrapper">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <line x1="18" y1="20" x2="18" y2="10"/>
+                        <line x1="12" y1="20" x2="12" y2="4"/>
+                        <line x1="6" y1="20" x2="6" y2="14"/>
+                    </svg>
+                </span>
+                <span class="nav-label-text">Giám sát API</span>
+            </a>
+        </th:block>
+
+        <!-- Candidate Menus -->
+        <th:block th:if="${role == 'Candidate'}">
+            <a th:href="@{/dashboard#applications}" class="sidebar-nav-link" data-tooltip="Hồ sơ đã ứng tuyển">
+                <span class="nav-icon-wrapper">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                        <polyline points="14 2 14 8 20 8"/>
+                    </svg>
+                </span>
+                <span class="nav-label-text">Hồ sơ đã ứng tuyển</span>
+            </a>
+            <a th:href="@{/interviews}" class="sidebar-nav-link"
+               th:classappend="${activeMenu == 'interviews' ? 'active' : ''}"
+               th:attr="aria-current=${activeMenu == 'interviews' ? 'page' : null}"
+               data-tooltip="Lịch phỏng vấn">
+                <span class="nav-icon-wrapper">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+                        <line x1="16" y1="2" x2="16" y2="6"/>
+                        <line x1="8" y1="2" x2="8" y2="6"/>
+                        <line x1="3" y1="10" x2="21" y2="10"/>
+                    </svg>
+                </span>
+                <span class="nav-label-text">Lịch phỏng vấn của tôi</span>
+            </a>
+            <a th:href="@{/dashboard#offers}" class="sidebar-nav-link" data-tooltip="Đề nghị tuyển dụng">
+                <span class="nav-icon-wrapper">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+                        <polyline points="22 4 12 14.01 9 11.01"/>
+                    </svg>
+                </span>
+                <span class="nav-label-text">Đề nghị tuyển dụng</span>
+            </a>
+            <a th:href="@{/jobs}" class="sidebar-nav-link" data-tooltip="Vị trí đang tuyển">
+                <span class="nav-icon-wrapper">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <circle cx="11" cy="11" r="8"/>
+                        <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+                    </svg>
+                </span>
+                <span class="nav-label-text">Vị trí đang tuyển</span>
+            </a>
+        </th:block>
+
+        <div class="sidebar-nav-divider"></div>
+
+        <!-- Hồ sơ cá nhân (Profile) -->
+        <a th:href="@{/profile}" class="sidebar-nav-link"
+           th:classappend="${activeMenu == 'profile' ? 'active' : ''}"
+           th:attr="aria-current=${activeMenu == 'profile' ? 'page' : null}"
+           title="Hồ sơ cá nhân"
+           data-tooltip="Hồ sơ cá nhân">
+            <span class="nav-icon-wrapper">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                    <circle cx="12" cy="7" r="4"/>
+                </svg>
+            </span>
+            <span class="nav-label-text">Hồ sơ cá nhân</span>
+        </a>
+
+        <!-- Về trang Tuyển dụng công khai -->
+        <a th:href="@{/}" class="sidebar-nav-link nav-external-link"
+           title="Về trang Tuyển dụng"
+           data-tooltip="Về trang Tuyển dụng">
+            <span class="nav-icon-wrapper">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <circle cx="12" cy="12" r="10"/>
+                    <line x1="2" y1="12" x2="22" y2="12"/>
+                    <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
+                </svg>
+            </span>
+            <span class="nav-label-text">Về trang Tuyển dụng</span>
+        </a>
+
     </nav>
-    <nav class="workspace-nav workspace-home" aria-label="Cổng tuyển dụng"><a th:href="@{/}">Về trang Tuyển dụng</a></nav>
 </aside>
+
+<!-- Fragment kế thừa / tương thích ngược -->
+<aside th:fragment="sidebar(activeMenu)" th:replace="~{fragments/sidebar :: workspace(${activeMenu}, 'HR')}"></aside>
 
 </html>
