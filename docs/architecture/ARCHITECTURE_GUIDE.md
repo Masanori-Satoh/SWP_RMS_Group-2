@@ -56,13 +56,7 @@ src/main/java/com/group2/rms/
 - **Entity**: Viết hoa chữ cái đầu, số ít (VD: `JobRequisition`, `Candidate`).
 
 ## 3. Tổ chức Frontend (`templates/` vs `static/`)
-- **Quy chuẩn BẮT BUỘC cho code mới:** KHÔNG viết CSS/JS nội tuyến vào thẻ `<style>` hay `<script>` trong file HTML thuộc `templates/`.
-- **Cách triển khai:** 
-  - Style, mã màu chung, typography và layout gốc phải đặt ở `static/css/global.css`.
-  - Logic JS dùng chung (như Toggle Header, Menu Dropdown, Notification) phải đặt ở `static/js/global.js`.
-  - Style/JS riêng của từng trang phải tách ra `static/css/[feature].css` và gọi qua thẻ `<link>`/`<script>`.
-  - Khi render text từ database có chứa ký tự `\n` (dummy data/text thô), nhớ format replace thành `<br/>` và dùng `th:utext` để HTML tự động xuống dòng an toàn.
-- **Lưu ý code hiện tại (WIP):** Các tính năng đang thiết kế dở (như file `form.html`), tác giả tự xem lại và bóc tách ra sau.
+- Đã chuyển sang **mục 4 "Tổ chức Frontend & Kiến trúc Giao diện"** bên dưới (nội dung cũ ở đây đã lỗi thời).
 
 ## 4. Xử lý Lỗi và Xác thực (Exception & Validator)
 - **Validator & Xử lý Lỗi Nhập liệu (Web Form / AJAX):**
@@ -129,25 +123,78 @@ src/main/java/com/group2/rms/
 
 ---
 
-## 4. Tổ chức Frontend & Quy chuẩn UI/UX (`templates/` vs `static/`)
+## 4. Tổ chức Frontend & Kiến trúc Giao diện (`templates/` vs `static/`)
 
-### A. Tách bạch CSS/JS:
-- **QUY CHUẨN BẮT BUỘC:** KHÔNG viết CSS/JS nội tuyến vào thẻ `<style>` hay `<script>` trong file HTML thuộc `templates/`.
-- Style dùng chung, bảng màu, typography chuẩn RMS đặt tại: `static/css/global.css`.
-- Logic JS dùng chung (Toggle Header, Menu Dropdown, Toast notifications) đặt tại: `static/js/global.js`.
-- Style/JS riêng của từng trang/feature tách ra `static/css/[feature].css` và `static/js/[feature].js` (VD: `profile.css`, `profile.js`, `offers.css`, `offers.js`).
+> Mục này là **tổng quan**. Chi tiết nằm ở bộ tài liệu UI [`docs/architecture/UI/`](UI/): bắt đầu từ [`UI/README.md`](UI/README.md) (lộ trình, file nào cho việc gì), rồi `UI_RULES.md` (luật, vùng không được chạm/chỉ được thêm), `UI_CATALOG.md` (tra cứu), `UI_NEW_PAGE.md` (tạo trang mới), `UI_MIGRATION.md` (migrate trang cũ), `UI_CSS_GUIDE.md` (tổ chức CSS), `UI_LEGACY_CLEANUP.md` (dọn file cũ).
 
-### B. Form AJAX & Bảo vệ CSRF Token:
+### A. Kiến trúc giao diện: Layout + Sidebar theo role + File nội dung
+
+Dự án dùng **Thymeleaf Layout Dialect**. Một trang hoàn chỉnh được ghép từ 3 phần:
+
+```text
+templates/layout/base.html          ← <head> chung (tokens, global, components, CSRF meta) + interface.js
+├── layout/internal.html            ← Trang nội bộ: sidebar + topbar nội bộ + <main>
+│     ├── fragments/layout/sidebar-shell.html  → tự chọn menu theo role: fragments/layout/sidebars/{admin|candidate|interviewer|recruiter}.html
+│     └── fragments/workspace-header.html      → topbar nội bộ
+├── layout/public.html              ← Trang công khai: topbar công khai + footer
+└── layout/auth.html                ← Dự phòng cho trang xác thực/lỗi (auth hiện vẫn dùng auth/fragments)
+
+File nội dung (vd. requisitions/list.html):
+  <html layout:decorate="~{layout/internal}"> ... <main layout:fragment="content"> nội dung riêng </main>
+```
+
+- **File nội dung chỉ chứa phần riêng của trang.** Không tự dựng sidebar, topbar, logo, footer hay hộp thoại đăng xuất.
+- **Controller** chỉ cần `model.addAttribute("activeMenu", "...")` để sidebar sáng đúng mục. Thông tin người dùng ở topbar (`topbarUser`: tên, email, role, avatar) do `core/web/TopbarUserAdvice` cung cấp cho mọi trang.
+- **Trang công khai:** landing `/` (`candidate/landing.html`: giới thiệu + 3 vị trí mới nhất, không phân trang), Jobs Board `/jobs` (`candidate/job-board.html`: tìm kiếm, lọc, 6 tin/trang), chi tiết `/jobs/{id}`. Cả ba do `CareerPortalController` phục vụ.
+- **Ngoại lệ:** landing và các trang `auth/*` tự dựng khung, nhưng landing vẫn bắt buộc dùng topbar công khai dùng chung.
+
+### B. Thành phần dùng chung (luôn gọi fragment, không chép markup)
+
+| Thành phần | Fragment | Ghi chú |
+|---|---|---|
+| Topbar nội bộ | `fragments/workspace-header :: header(role, fullName)` | Cao 74px, logo nằm ở đầu sidebar |
+| Topbar công khai | `fragments/layout/public-topbar :: topbar(activeNav, onLanding)` | Dùng cho landing và `layout/public`; menu tự sáng theo section khi cuộn |
+| Góc phải topbar | `fragments/layout/topbar-user :: actions(name, email, role, avatar, idPrefix)` | Avatar + tên + role + email (về `/profile`), Đăng xuất ngoài cùng phải + hộp thoại xác nhận |
+| Logo | `fragments/brand :: wordmark(subtitle)` / `wordmarkLink(subtitle, href)` | Công khai "TUYỂN DỤNG", nội bộ "RMS" |
+| Sidebar | `fragments/layout/sidebar-shell :: shell(activeMenu, role)` | Thu gọn 68px / mở rộng 250px, nút ghim lưu trạng thái |
+
+### C. Bản đồ CSS / JS
+
+| File | Vai trò |
+|---|---|
+| `static/css/tokens.css` (+ `fonts.css`) | Biến thiết kế (màu, khoảng cách, bo góc, chiều cao) và font offline Lora / Source Sans 3. **Nguồn token duy nhất.** |
+| `static/css/global.css` | Reset, typography, bố cục nền |
+| `static/css/components.css` | Linh kiện BEM dùng chung: `.btn--*`, `.badge--*`, `.form-*`, `.card`, `.table`, `.alert--*`, dialog |
+| `static/css/topbar.css` | Topbar (công khai + góc phải nội bộ), logo, hộp thoại đăng xuất; token `--chrome-step` chỉnh cỡ chữ toàn bộ topbar/sidebar |
+| `static/css/workspace.css` | Sidebar + topbar nội bộ (tự `@import` `topbar.css`) |
+| `static/css/design-tokens.css`, `interface.css` | Bộ cũ cho các trang nội bộ chưa migrate (`fragments/head :: interfaceHead`). Không dùng cho trang mới. |
+| `static/css/<trang>.css` (cũ) / `static/css/pages/<trang>.css` (mới) | CSS riêng của từng trang, class có tiền tố trang, chỉ dùng token |
+| `templates/fragments/ui/pagination :: paged(page)` + `core/web/ViewHelpersAdvice` (`pageLinks`) | Phân trang dùng chung: giữ mọi tham số lọc khi chuyển trang; số phần tử/trang do Controller đặt |
+| `static/css/landing.css` | CSS riêng của trang landing (được phép có phong cách riêng, trừ topbar) |
+| `static/js/interface.js` | Menu mobile, nút ghim sidebar, hiện/ẩn mật khẩu, gợi ý bảng cuộn ngang |
+| `static/js/public-topbar.js` | Làm sáng menu topbar công khai khi bấm/cuộn |
+
+### D. Quy tắc bắt buộc (tóm tắt)
+
+- KHÔNG viết `style="..."`, thẻ `<style>` hay `<script>` nội tuyến trong `templates/`. KHÔNG mã màu hex: dùng token `var(--...)`.
+- Tra catalog trước: thứ gì đã có (nút, badge, form, card, bảng, dialog...) thì dùng nguyên. Chỉ viết CSS riêng cho phần catalog không có, và đặt tiền tố trang cho class.
+- Nút toàn hệ thống là chữ nhật bo góc 8px (`var(--radius-md)`), không dùng nút bo tròn kiểu pill. Bo tròn chỉ cho badge, chip lọc, avatar.
+- KHÔNG đổi tên/dời file template; KHÔNG đổi/xóa biến backend trong template (`${...}`, `th:field`, `name`, `id`).
+- Khi render text từ database có chứa ký tự `
+` (dummy data/text thô), format replace thành `<br/>` và dùng `th:utext` để xuống dòng an toàn.
+- **Hiện trạng:** mới có `notifications/list`, `candidate/job-board` và `candidate/job-detail` dùng layout; 20 trang nội bộ còn dựng khung kiểu cũ (`interfaceHead` + `fragments/sidebar`). Chúng vẫn dùng chung topbar, logo, góc phải và hộp thoại với trang mới. **Lưu ý:** menu sidebar đang có 2 nguồn (`fragments/sidebar.html` cho trang cũ, `fragments/layout/sidebars/*.html` cho trang mới); thêm mục menu phải sửa cả hai cho đến khi migrate xong.
+
+### E. Form AJAX & Bảo vệ CSRF Token:
 - Mọi form gửi qua AJAX (như Modal Đổi mật khẩu, Modal duyệt Offer) **BẮT BUỘC** phải gửi kèm CSRF Token:
   - Lấy token từ header meta tag: `document.querySelector('meta[name="_csrf"]')?.getAttribute('content')`.
   - Đính kèm vào request header: `'X-CSRF-TOKEN': token`.
 - Nếu thiếu CSRF Token, Spring Security sẽ trả về lỗi `403 Forbidden` ngay lập tức.
 
-### C. Cơ chế Dirty Checking & Modal Xác nhận:
+### F. Cơ chế Dirty Checking & Modal Xác nhận:
 - Với các màn hình chỉnh sửa hồ sơ/biểu mẫu quan trọng: Nút "Save" phải ở trạng thái disable ban đầu, chỉ kích hoạt khi người dùng thực sự thay đổi dữ liệu (Dirty state). Bổ sung nút "Discard" để khôi phục trạng thái gốc.
 - Các hành động cập nhật lớn hoặc xóa dữ liệu phải bật Modal xác nhận (`confirmModal`) trước khi gửi request thực tế.
 
-### D. Ràng buộc Dữ liệu tiếng Việt (Unicode Validation):
+### G. Ràng buộc Dữ liệu tiếng Việt (Unicode Validation):
 - Khi validate họ tên tiếng Việt, **KHÔNG** dùng regex ASCII `[a-zA-Z ]*` vì sẽ từ chối các ký tự có dấu tiếng Việt (à, á, ả, ã, ạ, đ,...).
 - Bắt buộc dùng Unicode property escapes:
   ```regex
@@ -187,5 +234,5 @@ Quy tắc kiểm soát phân quyền trong `SecurityConfig`:
 > 1. Dùng Java `record` hoặc POJO chuẩn cho DTO (Request/Response), đặt trực tiếp trong `dto/`.
 > 2. Đẩy ngoại lệ về `GlobalExceptionHandler` (kế thừa `BaseBusinessException`), không tự try-catch bừa bãi trong Controller.
 > 3. Bọc `@Transactional(readOnly = true)` cho các hàm đọc dữ liệu phức tạp.
-> 4. Tách CSS/JS ra file static riêng, hỗ trợ CSRF Token cho mọi request AJAX.
+> 4. Giao diện: dựng trang bằng layout + fragment dùng chung + catalog (mục 4); tách CSS/JS riêng ra file static, hỗ trợ CSRF Token cho mọi request AJAX.
 > 5. Luôn validate họ tên hỗ trợ ký tự tiếng Việt có dấu (Unicode).
