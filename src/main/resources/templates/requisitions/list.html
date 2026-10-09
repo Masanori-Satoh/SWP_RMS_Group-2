@@ -91,6 +91,7 @@
                             <colgroup>
                                 <col class="col-index">
                                 <col class="col-position">
+                                <col class="col-round">
                                 <col class="col-department">
                                 <col class="col-quantity">
                                 <col class="col-type">
@@ -102,6 +103,7 @@
                                 <tr>
                                     <th scope="col">STT</th>
                                     <th scope="col">Vị trí</th>
+                                    <th scope="col">Đợt</th>
                                     <th scope="col">Phòng ban</th>
                                     <th scope="col">Số lượng</th>
                                     <th scope="col">Hình thức</th>
@@ -116,6 +118,7 @@
                                     <td><a class="position-title"
                                             th:href="@{/requisitions/{id}(id=${req.requisitionId})}"
                                             th:text="${req.title}"></a></td>
+                                    <td><span class="round-badge" th:text="|Đợt ${req.recruitmentRound ?: 1}|">Đợt 1</span></td>
                                     <td th:text="${req.departmentName}"></td>
                                     <td th:text="${req.numberOfPositions ?: '—'}"></td>
                                     <td th:text="${req.employmentType == 'Full-time' ? 'Toàn thời gian' : (req.employmentType == 'Part-time' ? 'Bán thời gian' : (req.employmentType == 'Internship' ? 'Thực tập' : (req.employmentType == 'Contract' ? 'Hợp đồng' : (req.employmentType ?: '—'))))}"></td>
@@ -143,7 +146,7 @@
                                     </td>
                                 </tr>
                                 <tr th:if="${#lists.isEmpty(requisitions)}">
-                                    <td colspan="8" class="empty-state">Không tìm thấy yêu cầu tuyển dụng nào. Hãy thử thay đổi hoặc đặt lại bộ lọc.</td>
+                                    <td colspan="9" class="empty-state">Không tìm thấy yêu cầu tuyển dụng nào. Hãy thử thay đổi hoặc đặt lại bộ lọc.</td>
                                 </tr>
                             </tbody>
                         </table>

@@ -11,6 +11,7 @@
 .req-list-page .requisition-list-table th { white-space:nowrap; }
 .req-list-page .requisition-list-table tbody tr:hover { background:var(--page); }
 .req-list-page .requisition-list-table td:first-child { color:var(--muted); }
+.req-list-page .round-badge { display:inline-flex; align-items:center; padding:2px 8px; border-radius:999px; font-size:12.5px; font-weight:600; background:var(--brand-soft); color:var(--brand-dark); border:1px solid rgba(27,77,62,0.15); white-space:nowrap; }
 .req-list-page .position-title { display:flex; align-items:center; min-height:44px; min-width:160px; max-width:320px; font-weight:600; text-decoration:none; overflow-wrap:anywhere; }
 .req-list-page .position-title:hover { text-decoration:underline; }
 .req-list-page .btn-action-outline { min-width:44px; padding:var(--s2); font-size:20px; }
