@@ -57,3 +57,8 @@ Theo quyết định nghiệp vụ hiện tại:
 ## III. KẾT LUẬN
 
 Phase 2 đã tích hợp thành công luồng phê duyệt từ cấp quản lý (Director), đánh dấu việc khép kín quy trình tạo, đệ trình, phê duyệt và phát hành Thư mời làm việc (Offer Letter) trong hệ thống Mộc RMS. Kiến trúc phần mềm tuân thủ nghiêm ngặt các quy tắc hiện hành, hạn chế tối đa việc tạo thêm bảng cơ sở dữ liệu dư thừa và duy trì trải nghiệm liền mạch qua các Pop-up Modal.
+
+**Mở rộng (Phase 4) - Tích hợp Thông báo:**
+- Đã bổ sung 2 phương thức mới trong `NotificationService` để gửi Email thông báo tự động.
+- Khi HR trình Offer lên Giám đốc, hệ thống sẽ tự động gửi email báo cáo cho Giám đốc (`notifyDirectorNewPendingOffer`).
+- Khi Giám đốc quyết định Approve/Reject, hệ thống sẽ tự động gửi email phản hồi kết quả và Ghi chú về cho chuyên viên HR đã tạo Offer (`notifyHrOfDirectorDecision`).
