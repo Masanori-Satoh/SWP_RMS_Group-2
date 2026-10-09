@@ -254,6 +254,15 @@ public class OfferServiceImpl implements OfferService {
                 .build();
 
         OfferProposal saved = offerProposalRepository.save(offerToSave);
+
+        if ("Pending_Director".equals(status) && notificationService != null) {
+            try {
+                notificationService.notifyDirectorNewPendingOffer(saved);
+            } catch (Exception ignored) {
+                // Tiếp tục ngay cả khi gửi mail lỗi ngầm
+            }
+        }
+
         return mapToResponse(saved);
     }
 
@@ -474,6 +483,14 @@ public class OfferServiceImpl implements OfferService {
         }
 
         OfferProposal saved = offerProposalRepository.save(offer);
+
+        if ("Pending_Director".equals(offer.getOfferStatus()) && notificationService != null) {
+            try {
+                notificationService.notifyDirectorNewPendingOffer(saved);
+            } catch (Exception ignored) {
+            }
+        }
+
         return mapToResponse(saved);
     }
 
@@ -718,6 +735,13 @@ public class OfferServiceImpl implements OfferService {
                 .build();
         offerApprovalRepository.save(approval);
 
+        if (notificationService != null) {
+            try {
+                notificationService.notifyHrOfDirectorDecision(saved, "Approved", comments);
+            } catch (Exception ignored) {
+            }
+        }
+
         return mapToResponse(saved);
     }
 
@@ -749,6 +773,13 @@ public class OfferServiceImpl implements OfferService {
                 .approvedAt(LocalDateTime.now())
                 .build();
         offerApprovalRepository.save(approval);
+
+        if (notificationService != null) {
+            try {
+                notificationService.notifyHrOfDirectorDecision(saved, "Rejected", comments);
+            } catch (Exception ignored) {
+            }
+        }
 
         return mapToResponse(saved);
     }
