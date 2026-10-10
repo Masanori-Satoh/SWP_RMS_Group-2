@@ -138,6 +138,7 @@ class ApplicationPipelineServiceTests {
         assertEquals("Sales & Marketing", detail.departmentName());
         assertEquals(new BigDecimal("79.34"), detail.aiMatchScore());
         assertEquals("Đã sàng lọc", detail.statusLabel());
+        assertEquals("HR sàng lọc hồ sơ và chuyển cho trưởng bộ phận.", detail.currentStep());
         assertEquals(new ApplicationDetailResponse.Actions(true, false, false, false, true), detail.actions());
         assertEquals(List.of("Offer: Draft", "Lịch phỏng vấn: Scheduled", "HR: Đạt", "AI chấm điểm: 79,34",
                         "AI chấm điểm: 60,00", "Nộp hồ sơ"),

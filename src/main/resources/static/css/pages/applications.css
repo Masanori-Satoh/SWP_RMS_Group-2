@@ -210,6 +210,35 @@
   gap: var(--s2);
 }
 
+.app-next__current {
+  margin: 0 0 var(--s4);
+  font-size: 14px;
+  color: var(--ink);
+}
+
+.app-next__label {
+  font-weight: 600;
+  color: var(--muted);
+}
+
+.app-review {
+  margin-bottom: var(--s4);
+}
+
+.app-review .form-group {
+  margin-bottom: var(--s3);
+}
+
+.app-review__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s2);
+}
+
+.app-ai__rescreen {
+  margin-top: var(--s4);
+}
+
 /* --- Responsive ---------------------------------------------------------------- */
 @media (max-width: 992px) {
   .app-filter {

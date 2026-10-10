@@ -92,6 +92,8 @@ public class ApplicationPipelineService {
                 latest == null ? null : latest.getAiMatchScore(),
                 latest == null ? null : latest.getScreenedAt(),
                 timeline(application, account, scores),
+                ApplicationStatusLabels.currentStep(status,
+                        requisition.getDepartment() == null ? null : requisition.getDepartment().getDepartmentName()),
                 new ApplicationDetailResponse.Actions(
                         access.canReview(actor, application),
                         access.canRescreen(actor, application),

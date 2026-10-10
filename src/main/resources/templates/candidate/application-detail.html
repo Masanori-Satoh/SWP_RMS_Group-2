@@ -37,6 +37,9 @@
         <span class="badge app-detail__status" th:classappend="${detail.statusBadge}" th:text="${detail.statusLabel}">Đã sàng lọc</span>
     </div>
 
+    <div th:if="${successMessage}" class="alert alert--success" role="status" th:text="${successMessage}">Đã chuyển hồ sơ.</div>
+    <div th:if="${errorMessage}" class="alert alert--danger" role="alert" th:text="${errorMessage}">Không thể chấm lại.</div>
+
     <!-- Nguồn gốc: Requisition › Tin › Hồ sơ. Chỉ thành link khi người xem mở được trang đó -->
     <p class="app-lineage">
         <span class="app-lineage__label">Nguồn gốc:</span>
@@ -69,6 +72,43 @@
         </div>
 
         <aside class="app-detail__side">
+            <!-- Bước tiếp theo: luôn hiện "đang chờ ai", kèm việc của người xem nếu có -->
+            <section class="card app-next-card" aria-labelledby="app-next-title">
+                <h2 id="app-next-title" class="app-section-title">Bước tiếp theo</h2>
+                <p class="app-next__current">
+                    <span class="app-next__label">Đang chờ:</span>
+                    <span th:text="${detail.currentStep}">HR sàng lọc hồ sơ.</span>
+                </p>
+
+                <form th:if="${detail.actions.review}" th:action="@{/applications/{id}/review(id=${detail.applicationId})}"
+                      th:object="${reviewForm}" method="post" class="app-review" novalidate>
+                    <div th:if="${#fields.hasGlobalErrors() or #fields.hasErrors('decision')}" class="alert alert--danger" role="alert">
+                        <span th:each="message : ${#fields.globalErrors()}" th:text="${message}">Hồ sơ vừa được người khác xử lý.</span>
+                        <span th:each="message : ${#fields.errors('decision')}" th:text="${message}">Quyết định không hợp lệ.</span>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="app-review-comments">Nhận xét nội bộ (không gửi cho ứng viên)</label>
+                        <textarea id="app-review-comments" name="comments" class="form-textarea" rows="3" maxlength="1000"
+                                  placeholder="Lý do quyết định, nên ghi khi Không đạt hoặc Tạm giữ"
+                                  th:text="*{comments}" th:attr="aria-invalid=${#fields.hasErrors('comments')}"></textarea>
+                        <span th:if="${#fields.hasErrors('comments')}" th:errors="*{comments}" class="form-error">Nhận xét tối đa 1000 ký tự.</span>
+                    </div>
+                    <div class="app-review__actions">
+                        <button type="submit" name="decision" value="Pass" class="btn btn--primary btn--sm"
+                                th:text="${detail.applicationStatus == 'HR_Passed' ? 'Đạt' : 'Đạt, chuyển trưởng bộ phận'}">Đạt</button>
+                        <button type="submit" name="decision" value="Hold" class="btn btn--secondary btn--sm">Tạm giữ</button>
+                        <button type="submit" name="decision" value="Fail" class="btn btn--danger btn--sm">Không đạt</button>
+                    </div>
+                </form>
+
+                <div th:if="${detail.actions.scheduleInterview or detail.actions.createOffer}" class="app-next">
+                    <a th:if="${detail.actions.scheduleInterview}" class="btn btn--primary btn--sm"
+                       th:href="@{/interviews/new(applicationId=${detail.applicationId})}">Lên lịch phỏng vấn</a>
+                    <a th:if="${detail.actions.createOffer}" class="btn btn--outline btn--sm"
+                       th:href="@{/offers/create(applicationId=${detail.applicationId})}">Tạo offer</a>
+                </div>
+            </section>
+
             <section class="card" aria-labelledby="app-contact-title">
                 <h2 id="app-contact-title" class="app-section-title">Liên hệ</h2>
                 <dl class="app-facts">
@@ -108,18 +148,13 @@
                 </th:block>
                 <p th:if="${detail.aiMatchScore == null}" class="app-ai__meta text-muted">Chưa có điểm AI.</p>
                 <p class="app-ai__note text-muted">Điểm AI chỉ mang tính gợi ý; quyết định thuộc về người duyệt.</p>
+                <form th:if="${detail.actions.rescreen}" th:action="@{/applications/{id}/ai-screening(id=${detail.applicationId})}"
+                      method="post" class="app-ai__rescreen">
+                    <button type="submit" class="btn btn--secondary btn--sm"
+                            th:text="${detail.aiMatchScore == null ? 'Chấm điểm AI' : 'Chấm lại AI'}">Chấm lại AI</button>
+                </form>
             </section>
 
-            <section th:if="${detail.actions.scheduleInterview or detail.actions.createOffer}" class="card"
-                     aria-labelledby="app-next-title">
-                <h2 id="app-next-title" class="app-section-title">Bước tiếp theo</h2>
-                <div class="app-next">
-                    <a th:if="${detail.actions.scheduleInterview}" class="btn btn--primary btn--sm"
-                       th:href="@{/interviews/new(applicationId=${detail.applicationId})}">Lên lịch phỏng vấn</a>
-                    <a th:if="${detail.actions.createOffer}" class="btn btn--outline btn--sm"
-                       th:href="@{/offers/create(applicationId=${detail.applicationId})}">Tạo offer</a>
-                </div>
-            </section>
         </aside>
     </div>
 </main>

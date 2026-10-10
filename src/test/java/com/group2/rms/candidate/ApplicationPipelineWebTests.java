@@ -4,10 +4,14 @@ import com.group2.rms.candidate.controller.ApplicationPipelineController;
 import com.group2.rms.candidate.dto.ApplicationDetailResponse;
 import com.group2.rms.candidate.dto.ApplicationListResponse;
 import com.group2.rms.candidate.dto.ApplicationPipelineResponse;
+import com.group2.rms.candidate.dto.ApplicationReviewRequest;
 import com.group2.rms.candidate.dto.ApplicationSearch;
 import com.group2.rms.candidate.dto.JobPostingOption;
+import com.group2.rms.candidate.exception.ApplicationReviewException;
+import com.group2.rms.candidate.service.AiScreeningOutcome;
 import com.group2.rms.candidate.service.ApplicationCv;
 import com.group2.rms.candidate.service.ApplicationPipelineService;
+import com.group2.rms.candidate.service.ApplicationReviewService;
 import com.group2.rms.core.config.SecurityConfig;
 import com.group2.rms.core.exception.ResourceNotFoundException;
 import com.group2.rms.core.security.DatabaseUserDetailsService;
@@ -38,8 +42,10 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 /**
@@ -53,6 +59,7 @@ class ApplicationPipelineWebTests {
 
     @Autowired MockMvc mvc;
     @MockitoBean ApplicationPipelineService pipeline;
+    @MockitoBean ApplicationReviewService reviewService;
     @MockitoBean UserRepository users;
 
     // ------------------------------------------------------------------ quyền truy cập
@@ -165,7 +172,9 @@ class ApplicationPipelineWebTests {
                 .andExpect(content().string(not(containsString("/internal/job-postings/12"))))
                 .andExpect(content().string(containsString("Tin Digital Marketing Executive")))
                 .andExpect(content().string(not(containsString("href=\"javascript:"))))
-                .andExpect(content().string(not(containsString("Bước tiếp theo"))));
+                .andExpect(content().string(containsString("Bước tiếp theo")))
+                .andExpect(content().string(not(containsString("Lên lịch phỏng vấn"))))
+                .andExpect(content().string(not(containsString("app-review"))));
     }
 
     @Test
@@ -222,6 +231,90 @@ class ApplicationPipelineWebTests {
         verifyNoInteractions(pipeline);
     }
 
+    // ------------------------------------------------------------------ duyệt + chấm lại
+
+    @Test
+    void reviewerSeesReviewFormRescreenButtonAndCurrentStep() throws Exception {
+        when(pipeline.detail(298)).thenReturn(detail(false, true, null, true, true));
+
+        mvc.perform(get("/applications/298").with(as("hr_lan", "HR")))
+                .andExpect(status().isOk())
+                .andExpect(content().string(containsString("Đang chờ:")))
+                .andExpect(content().string(containsString("HR lên lịch phỏng vấn.")))
+                .andExpect(content().string(containsString("action=\"/applications/298/review\"")))
+                .andExpect(content().string(containsString("name=\"decision\" value=\"Pass\"")))
+                .andExpect(content().string(containsString("name=\"decision\" value=\"Hold\"")))
+                .andExpect(content().string(containsString("name=\"decision\" value=\"Fail\"")))
+                .andExpect(content().string(containsString("action=\"/applications/298/ai-screening\"")))
+                .andExpect(content().string(containsString("name=\"_csrf\"")));
+    }
+
+    @Test
+    void reviewSuccessRedirectsBackWithMessage() throws Exception {
+        when(reviewService.review(298, new ApplicationReviewRequest("Pass", "Hợp vị trí")))
+                .thenReturn("Đã chuyển hồ sơ cho trưởng bộ phận.");
+
+        mvc.perform(post("/applications/298/review").with(as("hr_lan", "HR")).with(csrf())
+                        .param("decision", "Pass").param("comments", "Hợp vị trí"))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrl("/applications/298"))
+                .andExpect(flash().attribute("successMessage", "Đã chuyển hồ sơ cho trưởng bộ phận."));
+    }
+
+    @Test
+    void businessErrorRendersDetailAgainWithMessage() throws Exception {
+        when(reviewService.review(eq(298), any())).thenThrow(
+                new ApplicationReviewException(null, "Hồ sơ vừa được người khác xử lý. Vui lòng tải lại trang."));
+        when(pipeline.detail(298)).thenReturn(detail(false, true, null, true, false));
+
+        mvc.perform(post("/applications/298/review").with(as("hr_lan", "HR")).with(csrf())
+                        .param("decision", "Fail").param("comments", "Thiếu kinh nghiệm"))
+                .andExpect(status().isOk())
+                .andExpect(view().name("candidate/application-detail"))
+                .andExpect(content().string(containsString("Hồ sơ vừa được người khác xử lý.")))
+                .andExpect(content().string(containsString(">Thiếu kinh nghiệm</textarea>")));
+    }
+
+    @Test
+    void invalidInputIsRejectedBeforeTheService() throws Exception {
+        when(pipeline.detail(298)).thenReturn(detail(false, true, null, true, false));
+
+        mvc.perform(post("/applications/298/review").with(as("hr_lan", "HR")).with(csrf())
+                        .param("decision", "Approve").param("comments", "x".repeat(1001)))
+                .andExpect(status().isOk())
+                .andExpect(model().attributeHasFieldErrors("reviewForm", "decision", "comments"))
+                .andExpect(content().string(containsString("Quyết định không hợp lệ.")))
+                .andExpect(content().string(containsString("Nhận xét tối đa 1000 ký tự.")));
+        verifyNoInteractions(reviewService);
+    }
+
+    @Test
+    void reviewNeedsCsrfAndAReviewerRole() throws Exception {
+        mvc.perform(post("/applications/298/review").with(as("hr_lan", "HR")).param("decision", "Pass"))
+                .andExpect(status().isForbidden());
+        when(reviewService.review(eq(298), any())).thenThrow(new AccessDeniedException("no"));
+        mvc.perform(post("/applications/298/review").with(as("director", "Director")).with(csrf())
+                        .param("decision", "Pass"))
+                .andExpect(status().isForbidden());
+        mvc.perform(post("/applications/298/review").with(as("phong.nguyen", "Candidate")).with(csrf())
+                        .param("decision", "Pass"))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    void rescreenShowsNewScoreOrReason() throws Exception {
+        when(reviewService.rescreen(293)).thenReturn(new AiScreeningOutcome(new BigDecimal("71.2")));
+        when(reviewService.rescreen(120)).thenThrow(
+                new ApplicationReviewException(null, "Chỉ chấm lại AI khi hồ sơ chưa qua vòng nhân sự."));
+
+        mvc.perform(post("/applications/293/ai-screening").with(as("hr_lan", "HR")).with(csrf()))
+                .andExpect(redirectedUrl("/applications/293"))
+                .andExpect(flash().attribute("successMessage", "Đã chấm lại AI: 71,20 điểm."));
+        mvc.perform(post("/applications/120/ai-screening").with(as("hr_lan", "HR")).with(csrf()))
+                .andExpect(redirectedUrl("/applications/120"))
+                .andExpect(flash().attribute("errorMessage", "Chỉ chấm lại AI khi hồ sơ chưa qua vòng nhân sự."));
+    }
+
     // ------------------------------------------------------------------ dữ liệu mẫu
 
     /** Đăng nhập giả + tài khoản đang hoạt động, để {@code AccountSessionGuardFilter} cho qua. */
@@ -245,12 +338,18 @@ class ApplicationPipelineWebTests {
     }
 
     private static ApplicationDetailResponse detail(boolean nextSteps, boolean openJobPosting, String linkedIn) {
+        return detail(nextSteps, openJobPosting, linkedIn, false, false);
+    }
+
+    private static ApplicationDetailResponse detail(boolean nextSteps, boolean openJobPosting, String linkedIn,
+                                                    boolean review, boolean rescreen) {
         return new ApplicationDetailResponse(298, "An Võ", "an.vo@example.com", "0901 234 567", linkedIn, null,
                 7, "REQ-007", 12, "Digital Marketing Executive", "Sales & Marketing", SUBMITTED,
                 "HM_Passed", "Qua vòng chuyên môn", "badge--warning", new BigDecimal("79.34"), SUBMITTED.plusMinutes(1),
                 List.of(new TimelineItem(SUBMITTED.plusDays(1), "HR: Đạt", "Lan HR", "Hợp vị trí", "success"),
                         new TimelineItem(SUBMITTED, "Nộp hồ sơ", "An Võ", null, "neutral")),
-                new ApplicationDetailResponse.Actions(false, false, nextSteps, nextSteps, openJobPosting),
+                "HR lên lịch phỏng vấn.",
+                new ApplicationDetailResponse.Actions(review, rescreen, nextSteps, nextSteps, openJobPosting),
                 openJobPosting ? "HR" : "Hiring Manager");
     }
 

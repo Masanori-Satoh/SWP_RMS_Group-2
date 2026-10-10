@@ -10,6 +10,7 @@ import java.util.List;
  * Chi tiết một hồ sơ cho người tuyển dụng (5.1.23). Chứa điểm AI và nhận xét nội bộ:
  * không bao giờ dùng DTO này cho màn của ứng viên (SRS GBR-02).
  *
+ * @param currentStep ai đang phải làm gì tiếp theo (ô "Bước tiếp theo")
  * @param viewerRole tên vai trò người xem, để layout nội bộ chọn đúng sidebar
  */
 public record ApplicationDetailResponse(
@@ -31,6 +32,7 @@ public record ApplicationDetailResponse(
         BigDecimal aiMatchScore,
         LocalDateTime screenedAt,
         List<TimelineItem> timeline,
+        String currentStep,
         Actions actions,
         String viewerRole) {
 
