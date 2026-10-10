@@ -134,12 +134,52 @@ class CareerFlowTests {
                                                 containsString("<title>Senior Java Engineer — Mộc Careers</title>")))
                                 .andExpect(content().string(containsString("VND 30–45 million")))
                                 .andExpect(content().string(containsString("Hà Nội")))
-                                .andExpect(content().string(containsString("onclick=\"alert('Tính năng ứng tuyển trực tuyến đang được xây dựng")))
+                                .andExpect(content().string(containsString("href=\"/jobs/41/apply\"")))
                                 .andExpect(content().string(containsString("Ứng tuyển ngay")))
+                                .andExpect(content().string(not(containsString("onclick="))))
+                                .andExpect(content().string(not(containsString("job-apply-dialog"))))
                                 .andExpect(content().string(not(containsString("Ngừng nhận hồ sơ"))))
                                 .andReturn();
                 snapshot("jobs/41/index.html", detail);
                 verify(careers).getPublishedJobDetail(41, null);
+        }
+
+        @Test
+        void candidateSeesApplyDialogWithMultipartForm() throws Exception {
+                setupJobs();
+                account("candidate-test", "Candidate", "Active");
+                MockHttpSession session = login(null, "candidate-test", "/dashboard");
+
+                mvc.perform(get("/jobs/41").session(session)).andExpect(status().isOk())
+                                .andExpect(content().string(containsString("id=\"job-apply-dialog\"")))
+                                .andExpect(content().string(containsString("data-open-on-load=\"false\"")))
+                                .andExpect(content().string(containsString("data-dialog-open=\"job-apply-dialog\"")))
+                                .andExpect(content().string(containsString("action=\"/jobs/41/apply\"")))
+                                .andExpect(content().string(containsString("enctype=\"multipart/form-data\"")))
+                                .andExpect(content().string(containsString("name=\"_csrf\"")))
+                                .andExpect(content().string(containsString("name=\"cvFile\"")))
+                                .andExpect(content().string(containsString("taylor@example.test")))
+                                .andExpect(content().string(containsString("/js/pages/job-detail.js")))
+                                .andExpect(content().string(not(containsString("href=\"/jobs/41/apply\""))));
+        }
+
+        @Test
+        void internalAccountSeesNoticeInsteadOfApplyDialog() throws Exception {
+                setupJobs();
+                account("hr-test", "HR", "Active");
+                MockHttpSession hr = login(null, "hr-test", "/dashboard");
+
+                mvc.perform(get("/jobs/41").session(hr)).andExpect(status().isOk())
+                                .andExpect(content().string(containsString("Tài khoản nội bộ")))
+                                .andExpect(content().string(not(containsString("job-apply-dialog"))))
+                                .andExpect(content().string(not(containsString("Ứng tuyển ngay"))));
+        }
+
+        @Test
+        void successFlashIsShownOnJobDetail() throws Exception {
+                setupJobs();
+                mvc.perform(get("/jobs/41").flashAttr("applySuccess", true)).andExpect(status().isOk())
+                                .andExpect(content().string(containsString("Đã nộp hồ sơ.")));
         }
 
         @Test
@@ -220,7 +260,28 @@ class CareerFlowTests {
                                 .andExpect(view().name("candidate/job-detail"))
                                 .andExpect(model().attributeHasFieldErrorCode("applyForm", "cvFile", "apply.invalid"))
                                 .andExpect(model().attribute("applyDialogOpen", true))
-                                .andExpect(model().attributeExists("job"));
+                                .andExpect(model().attributeExists("job"))
+                                .andExpect(content().string(containsString("data-open-on-load=\"true\"")))
+                                .andExpect(content().string(containsString("aria-invalid=\"true\"")))
+                                .andExpect(content().string(containsString("Chỉ nhận file PDF.")));
+        }
+
+        @Test
+        void duplicateSubmitShowsErrorInDialogEvenAfterJobIsMarkedApplied() throws Exception {
+                setupJobs();
+                when(careers.getPublishedJobDetail(eq(41), any()))
+                                .thenReturn(detail(41, "Senior Java Engineer", FUTURE_DEADLINE, true, true));
+                account("candidate-test", "Candidate", "Active");
+                MockHttpSession session = login(null, "candidate-test", "/dashboard");
+                when(applications.apply(eq("candidate-test"), eq(41), any()))
+                                .thenThrow(new ApplicationSubmissionException(null, "Bạn đã ứng tuyển vị trí này."));
+
+                mvc.perform(multipart("/jobs/41/apply").file(CV).session(session).with(csrf()))
+                                .andExpect(status().isOk())
+                                .andExpect(content().string(containsString("id=\"job-apply-dialog\"")))
+                                .andExpect(content().string(containsString("Bạn đã ứng tuyển vị trí này.")))
+                                .andExpect(content().string(containsString("Đã ứng tuyển")))
+                                .andExpect(content().string(not(containsString("name=\"cvFile\""))));
         }
 
         @Test

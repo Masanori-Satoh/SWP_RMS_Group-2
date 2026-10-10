@@ -285,3 +285,66 @@
   line-height: 1.5;
   margin-bottom: 16px;
 }
+
+/* -----------------------------------------------------------------------------
+   Hộp thoại ứng tuyển (#job-apply-dialog). Khung dùng .confirm-dialog trong components.css.
+   ----------------------------------------------------------------------------- */
+.job-apply-dialog {
+  max-height: calc(100vh - var(--s8));
+  overflow-y: auto;
+}
+
+.job-apply-position {
+  margin: var(--s1) 0 0;
+  font-size: var(--font-sm);
+  font-weight: 600;
+  color: var(--brand-dark);
+}
+
+.job-apply-applicant {
+  margin: 0 0 var(--s2);
+  padding: var(--s3) var(--s4);
+  background: var(--surface-subtle);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+}
+
+.job-apply-applicant__row {
+  display: flex;
+  gap: var(--s3);
+  font-size: var(--font-sm);
+  line-height: 1.6;
+}
+
+.job-apply-applicant__row dt {
+  flex: 0 0 64px;
+  color: var(--muted);
+}
+
+.job-apply-applicant__row dd {
+  margin: 0;
+  min-width: 0;
+  color: var(--ink);
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+.job-apply-profile-hint {
+  margin: 0 0 var(--s4);
+}
+
+.job-apply-file {
+  padding-top: var(--s2);
+  padding-bottom: var(--s2);
+  cursor: pointer;
+}
+
+@media (max-width: 480px) {
+  .job-apply-dialog .dialog-content {
+    padding: var(--s4);
+  }
+
+  .job-apply-dialog .dialog-actions .btn {
+    flex: 1;
+  }
+}

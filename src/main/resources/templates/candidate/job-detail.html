@@ -29,6 +29,11 @@
             <strong>Lưu ý:</strong> Vị trí này đã đóng hoặc ngừng nhận hồ sơ.
         </div>
 
+        <!-- Thông báo sau khi nộp hồ sơ thành công (flash từ POST /jobs/{id}/apply) -->
+        <div th:if="${applySuccess}" class="alert alert--success job-detail-alert" role="status">
+            <strong>Đã nộp hồ sơ.</strong> Bộ phận tuyển dụng sẽ liên hệ với bạn qua email.
+        </div>
+
         <div class="job-detail-layout">
             <!-- Cột nội dung chi tiết -->
             <div class="job-content">
@@ -117,10 +122,16 @@
                                 Chỉ ứng viên mới có thể sử dụng chức năng nộp hồ sơ.
                             </div>
 
-                            <!-- Ứng viên / Khách vãng lai -->
+                            <!-- Khách: đi qua /jobs/{id}/apply để đăng nhập rồi quay lại đúng tin -->
+                            <a th:if="${currentUser == null and !job.hasApplied}"
+                               th:href="@{/jobs/{id}/apply(id=${job.id})}" class="btn btn--primary btn-full-width">
+                                Ứng tuyển ngay
+                            </a>
+
+                            <!-- Ứng viên -->
                             <th:block th:if="${currentUser == null or currentUser.roleName == 'Candidate'}">
-                                <button th:if="${!job.hasApplied}" type="button" class="btn btn--primary btn-full-width"
-                                        onclick="alert('Tính năng ứng tuyển trực tuyến đang được xây dựng và sẽ ra mắt trong Iteration 2! Xin cảm ơn sự quan tâm của bạn.')">
+                                <button th:if="${currentUser != null and !job.hasApplied}" type="button"
+                                        class="btn btn--primary btn-full-width" data-dialog-open="job-apply-dialog">
                                     Ứng tuyển ngay
                                 </button>
                                 <button th:if="${job.hasApplied}" type="button" class="btn btn--secondary btn-full-width" disabled>
@@ -144,6 +155,66 @@
             </aside>
         </div>
     </div>
+
+    <!-- Hộp thoại ứng tuyển (chỉ ứng viên). Render lại sau POST lỗi thì mở sẵn để hiện lỗi,
+         kể cả khi tin vừa hết hạn hoặc đã nộp (lúc đó chỉ hiện lỗi, không hiện ô chọn file). -->
+    <th:block th:with="isCandidate=${currentUser != null and currentUser.roleName == 'Candidate'},
+                       canApply=${isCandidate and job.isAcceptingApplications and !job.hasApplied},
+                       reopened=${applyDialogOpen == true}">
+        <dialog th:if="${isCandidate and (canApply or reopened)}" id="job-apply-dialog"
+                class="confirm-dialog job-apply-dialog" aria-labelledby="job-apply-title"
+                th:attr="data-open-on-load=${reopened}">
+            <div class="dialog-content">
+                <div class="dialog-header">
+                    <h2 id="job-apply-title" class="dialog-title">Ứng tuyển vị trí</h2>
+                    <p class="job-apply-position" th:text="${job.postingTitle}">Senior Java Developer</p>
+                </div>
+
+                <form th:action="@{/jobs/{id}/apply(id=${job.id})}" th:object="${applyForm}" method="post"
+                      enctype="multipart/form-data" novalidate class="job-apply-form">
+                    <div th:if="${#fields.hasGlobalErrors()}" class="alert alert--danger" role="alert">
+                        <span th:each="message : ${#fields.globalErrors()}" th:text="${message}">Lỗi chung</span>
+                    </div>
+
+                    <th:block th:if="${canApply}">
+                        <dl class="job-apply-applicant">
+                            <div class="job-apply-applicant__row">
+                                <dt>Họ tên</dt>
+                                <dd th:text="${currentUser.fullName}">Nguyễn Văn A</dd>
+                            </div>
+                            <div class="job-apply-applicant__row">
+                                <dt>Email</dt>
+                                <dd th:text="${currentUser.email}">a@example.com</dd>
+                            </div>
+                        </dl>
+                        <p class="form-hint job-apply-profile-hint">
+                            Thông tin chưa đúng? Cập nhật tại <a th:href="@{/profile}">Hồ sơ cá nhân</a>.
+                        </p>
+
+                        <div class="form-group">
+                            <label for="cvFile" class="form-label form-label--required">File CV</label>
+                            <input type="file" id="cvFile" name="cvFile" class="form-input job-apply-file"
+                                   accept=".pdf,application/pdf" required aria-describedby="cvFile-hint"
+                                   th:attr="aria-invalid=${#fields.hasErrors('cvFile')}">
+                            <span id="cvFile-hint" class="form-hint">Chỉ nhận file PDF, tối đa 5 MB.</span>
+                            <span class="form-error" data-cv-client-error hidden></span>
+                            <span th:if="${#fields.hasErrors('cvFile')}" th:errors="*{cvFile}" class="form-error">Lỗi file</span>
+                        </div>
+                    </th:block>
+
+                    <div class="dialog-actions">
+                        <button type="button" class="btn btn--secondary btn--sm" data-dialog-close
+                                th:text="${canApply} ? 'Hủy' : 'Đóng'">Hủy</button>
+                        <button th:if="${canApply}" type="submit" class="btn btn--primary btn--sm"
+                                data-apply-submit>Nộp hồ sơ</button>
+                    </div>
+                </form>
+            </div>
+        </dialog>
+    </th:block>
 </main>
+<th:block layout:fragment="scripts">
+    <script defer th:src="@{/js/pages/job-detail.js}"></script>
+</th:block>
 </body>
 </html>
