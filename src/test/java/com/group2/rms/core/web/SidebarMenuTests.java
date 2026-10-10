@@ -16,6 +16,9 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
 import java.util.List;
+import java.util.regex.MatchResult;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -86,6 +89,26 @@ class SidebarMenuTests {
         assertTrue(tag.contains("aria-current=\"page\""), tag);
         assertFalse(shell("HR", "dashboard").substring(shell("HR", "dashboard").indexOf(MENU) - 120,
                 shell("HR", "dashboard").indexOf(MENU)).contains("aria-current"));
+    }
+
+    /** Cùng một vai trò phải thấy cùng một bộ mục, dù trang dùng layout mới hay sidebar cũ. */
+    @ParameterizedTest
+    @ValueSource(strings = {"HR", "Hiring Manager", "Director", "System Admin", "Interviewer", "Candidate"})
+    void bothSidebarSourcesShowTheSameEntriesForEachRole(String role) throws Exception {
+        assertEquals(links(legacy(role, "dashboard")), links(shell(role, "dashboard")), role);
+    }
+
+    /** href của mọi mục menu, theo thứ tự xuất hiện. */
+    private static List<String> links(String html) {
+        Pattern href = Pattern.compile("href=\"([^\"]*)\"");
+        return Pattern.compile("<a\\b[^>]*>").matcher(html).results()
+                .map(MatchResult::group)
+                .filter(tag -> tag.contains("sidebar-nav-link"))
+                .map(tag -> {
+                    Matcher m = href.matcher(tag);
+                    return m.find() ? m.group(1) : tag;
+                })
+                .toList();
     }
 
     private String shell(String role, String activeMenu) throws Exception {
