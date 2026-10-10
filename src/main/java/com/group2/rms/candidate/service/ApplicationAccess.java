@@ -84,6 +84,15 @@ public class ApplicationAccess {
         return Set.of(ROLE_HR, ROLE_SYSTEM_ADMIN).contains(role(user));
     }
 
+    /** HR hoặc Hiring Manager: hai vai trò duy nhất có bước duyệt hồ sơ. */
+    public boolean isReviewer(User user) {
+        return isHr(user) || isHiringManager(user);
+    }
+
+    public boolean isHr(User user) {
+        return ROLE_HR.equals(role(user));
+    }
+
     private boolean isHiringManager(User user) {
         return ROLE_HIRING_MANAGER.equals(role(user));
     }

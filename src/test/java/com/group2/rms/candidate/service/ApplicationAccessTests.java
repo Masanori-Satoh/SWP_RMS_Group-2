@@ -151,6 +151,17 @@ class ApplicationAccessTests {
     }
 
     @Test
+    void onlyHrAndHiringManagersAreReviewers() {
+        assertTrue(access.isReviewer(hr));
+        assertTrue(access.isReviewer(engineeringHead));
+        assertFalse(access.isReviewer(director));
+        assertFalse(access.isReviewer(admin));
+        assertFalse(access.isReviewer(interviewer));
+        assertTrue(access.isHr(hr));
+        assertFalse(access.isHr(engineeringHead));
+    }
+
+    @Test
     void onlyHrAndAdminGetLinkToInternalJobPosting() {
         assertTrue(access.canOpenJobPosting(hr));
         assertTrue(access.canOpenJobPosting(admin));

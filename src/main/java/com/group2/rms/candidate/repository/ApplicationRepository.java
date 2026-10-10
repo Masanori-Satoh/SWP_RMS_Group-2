@@ -12,6 +12,7 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.time.LocalDateTime;
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 
@@ -64,6 +65,18 @@ public interface ApplicationRepository extends JpaRepository<Application, Intege
     @Query("UPDATE Application a SET a.applicationStatus = 'AI_Screened', a.updatedAt = CURRENT_TIMESTAMP " +
            "WHERE a.applicationId = :id AND a.applicationStatus = 'Applied'")
     int markScreened(@Param("id") Integer applicationId);
+
+    /**
+     * Đổi trạng thái khi duyệt, chỉ khi đơn còn ở một trong các trạng thái {@code from}
+     * (người khác vừa xử lý thì không đè). Tự gán {@code updatedAt} vì câu update viết tay không chạy {@code @PreUpdate}.
+     *
+     * @return 1 nếu đã đổi, 0 nếu đơn không còn ở trạng thái mong đợi
+     */
+    @Modifying
+    @Query("UPDATE Application a SET a.applicationStatus = :to, a.updatedAt = CURRENT_TIMESTAMP " +
+           "WHERE a.applicationId = :id AND a.applicationStatus IN :from")
+    int transition(@Param("id") Integer applicationId, @Param("from") Collection<String> from,
+                   @Param("to") String to);
 
     /**
      * Danh sách hồ sơ (5.1.22), mỗi đơn một dòng kèm điểm AI mới nhất.

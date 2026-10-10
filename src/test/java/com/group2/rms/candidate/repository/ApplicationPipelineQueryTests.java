@@ -7,6 +7,7 @@ import com.group2.rms.candidate.entity.Application;
 import com.group2.rms.candidate.service.ApplicationScope;
 import com.group2.rms.user.entity.User;
 import com.group2.rms.user.repository.UserRepository;
+import jakarta.persistence.EntityManager;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -34,6 +35,7 @@ class ApplicationPipelineQueryTests {
     @Autowired ApplicationRepository applications;
     @Autowired ApplicationReviewRepository reviews;
     @Autowired UserRepository users;
+    @Autowired EntityManager entityManager;
 
     @Test
     void recruiterScopeListsEveryApplicationOnceWithBestScoreFirst() {
@@ -128,6 +130,23 @@ class ApplicationPipelineQueryTests {
             assertNotNull(event.getAt());
             assertNotNull(event.getStatus());
         });
+    }
+
+    /** Ghi thật rồi rollback khi test kết thúc (transaction của test không commit): DB không đổi. */
+    @Test
+    @Transactional
+    void transitionOnlyMovesApplicationsStillInExpectedStatus() {
+        Integer id = search(ApplicationScope.ALL, null, "AI_Screened", ApplicationSearch.SORT_SCORE)
+                .getContent().getFirst().applicationId();
+
+        assertEquals(0, applications.transition(id, List.of("HR_Passed"), "HM_Passed"), "sai trạng thái nguồn: không đổi");
+        assertEquals(1, applications.transition(id, List.of("Applied", "AI_Screened"), "HR_Passed"));
+        assertEquals(0, applications.transition(id, List.of("Applied", "AI_Screened"), "HR_Passed"),
+                "lần thứ hai (người duyệt sau): không đè");
+        entityManager.clear();
+        Application moved = applications.findById(id).orElseThrow();
+        assertEquals("HR_Passed", moved.getApplicationStatus());
+        assertNotNull(moved.getUpdatedAt());
     }
 
     private Page<ApplicationPipelineResponse> search(ApplicationScope scope, String keyword, String status, String sort) {
