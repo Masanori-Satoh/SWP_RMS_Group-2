@@ -56,7 +56,7 @@ Chúng **vẫn hiển thị đúng** (topbar, logo, góc phải, nút ghim, hộ
    | Badge/nút/card tự chế trong CSS trang | class catalog tương ứng (xem ví dụ `job-detail`: `badge-department` → `badge badge--neutral`) |
 
 9. **Dọn CSS trang** theo `UI_CSS_GUIDE.md`: xóa rule trùng catalog, đổi hex/`rgba()` → token, đổi biến tự đặt → token chuẩn, xóa rule không còn class nào dùng.
-10. **Menu:** đảm bảo trang có mục trong `fragments/layout/sidebars/<role>.html` của mọi role được vào (đối chiếu với `fragments/sidebar.html` cũ).
+10. **Menu:** đảm bảo trang có mục trong `fragments/layout/sidebars/<role>.html` của mọi role được vào. Đây là nguồn menu duy nhất (trang cũ cũng hiển thị từ đây qua cầu nối `fragments/sidebar.html`).
 11. **Kiểm tra** (mục 6), rồi **cập nhật bảng trạng thái** (mục 5).
 
 ---
@@ -76,7 +76,7 @@ Chúng **vẫn hiển thị đúng** (topbar, logo, góc phải, nút ghim, hộ
 - **JS tìm theo id/class của khung cũ** (`workspace-logout-dialog`, `candidate-logout-dialog`, `.page-wrapper`…): tìm trong `static/js/` trước khi xóa markup.
 - **CSS trang ghi đè class dùng chung** (`.btn`, `.card`…) để "sửa" giao diện cũ: sau migrate sẽ đè lên catalog. Xóa hoặc đổi sang class phụ có tiền tố.
 - **Biến CSS chỉ có trong `design-tokens.css`/`interface.css`** (vd `--color-primary`): đổi sang token `tokens.css` tương ứng (`--brand-dark`…), vì layout mới không nạp bộ cũ.
-- **Hai nguồn menu sidebar:** sau khi migrate trang cuối cùng mới được xóa `fragments/sidebar.html`.
+- **Cầu nối sidebar:** `fragments/sidebar.html` chỉ chuyển tiếp sang `sidebar-shell`; xóa sau khi migrate trang cuối cùng.
 
 ---
 
