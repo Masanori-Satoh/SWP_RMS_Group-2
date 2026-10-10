@@ -59,7 +59,7 @@ Khi xóa xong toàn bộ `fragments/head.html`: cập nhật `UI_CATALOG.md`, `U
 |---|---|
 | `templates/layout/auth.html`, `templates/fragments/auth-layout.html` | Chưa trang nào dùng, nhưng là đích migrate của các trang auth |
 | `templates/fragments/ui/dialogs.html` (`confirm`) | Linh kiện catalog, sẵn cho trang mới cần hộp thoại xác nhận |
-| `docs/prototype/`, `docs/prototype-reference/` | Bản nháp HTML ban đầu, chỉ giá trị lịch sử (không phải code chạy) |
+| `docs/prototype-reference/` | Bản nháp HTML ban đầu, chỉ giá trị lịch sử (không phải code chạy) |
 
 ---
 
@@ -67,4 +67,5 @@ Khi xóa xong toàn bộ `fragments/head.html`: cập nhật `UI_CATALOG.md`, `U
 
 | Ngày | Việc | Commit |
 |---|---|---|
-| 2026-10-09 | `candidate/job-board.html` (cũ) → `candidate/landing.html`; `css/job-board.css` → `css/landing.css`; tách CSS chi tiết sang `css/pages/job-detail.css`; xóa 93 rule chết khỏi `landing.css` (topbar cũ, ô tìm kiếm, phân trang) | (chưa commit) |
+| 2026-10-09 | `candidate/job-board.html` (cũ) → `candidate/landing.html`; `css/job-board.css` → `css/landing.css`; tách CSS chi tiết sang `css/pages/job-detail.css`; xóa 93 rule chết khỏi `landing.css` (topbar cũ, ô tìm kiếm, phân trang) | `edd3cc7` |
+| 2026-10-09 | Xóa `docs/prototype/` (bản trùng, thiếu `indexv1.html` so với `docs/prototype-reference/`) | `chore/dunglt/docs-cleanup` |

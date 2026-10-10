@@ -25,7 +25,7 @@ Không gian tài liệu của dự án được quy hoạch thành các phân kh
 | **[`architecture/`](architecture/)** | Quy chuẩn kiến trúc hệ thống (backend + tổng quan giao diện) và tiêu chuẩn lập trình | [`ARCHITECTURE_GUIDE.md`](architecture/ARCHITECTURE_GUIDE.md)<br>[`schema-migration-impact.md`](architecture/schema-migration-impact.md)<br>[`UI/`](architecture/UI/README.md): bộ tài liệu giao diện (luật, catalog, tạo trang mới, migrate, CSS, dọn file cũ); bắt đầu từ [`UI/USER_GUIDE.md`](architecture/UI/USER_GUIDE.md) |
 | **[`database/`](database/)** | Sơ đồ thiết kế CSDL và hướng dẫn dữ liệu mẫu | [`model.md`](database/model.md)<br>[`data_seeding_guide.md`](database/data_seeding_guide.md) |
 | **[`management/`](management/)** | Lưu vết tiến độ, nhật ký thay đổi và kiểm thử | [`WORK_LOG.md`](management/WORK_LOG.md)<br>[`work_logs/`](management/work_logs/) (Chi tiết theo ngày) |
-| **[`prototype/`](prototype/), [`prototype-reference/`](prototype-reference/)** | Bản nháp HTML/CSS tĩnh ban đầu, chỉ còn giá trị tham khảo lịch sử. **Giao diện chuẩn hiện tại là chính ứng dụng**, theo `ARCHITECTURE_GUIDE.md` mục 4 và [`architecture/UI/`](architecture/UI/README.md) | Các file mockup mẫu ban đầu |
+| **[`prototype-reference/`](prototype-reference/)** | Bản nháp HTML/CSS tĩnh ban đầu, chỉ còn giá trị tham khảo lịch sử. **Giao diện chuẩn hiện tại là chính ứng dụng**, theo `ARCHITECTURE_GUIDE.md` mục 6 và [`architecture/UI/`](architecture/UI/README.md) | Các file mockup mẫu ban đầu |
 | **[`members/`](members/)** | Không gian lưu trữ tài liệu cá nhân của từng thành viên | [`duc/`](members/duc/), [`dunglt/`](members/dunglt/), [`hoangnh/`](members/hoangnh/), [`huyenpt/`](members/huyenpt/), [`linhdn/`](members/linhdn/) |
 
 ---
