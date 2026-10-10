@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="vi"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/internal}">
+<!--
+    CANDIDATE/APPLICATIONS.HTML — Danh sách hồ sơ ứng tuyển (/applications, SRS 5.1.22)
+    HR, Director, Admin: "Danh sách ứng viên" (mọi đơn). Hiring Manager: "Hồ sơ được chuyển" (đơn HR đã chuyển).
+    Dựng bằng catalog: page-header, card, form-*, btn, badge, table-wrapper/table, more-menu,
+    fragments/ui/pagination :: paged. CSS riêng: static/css/pages/applications.css (tiền tố app-).
+-->
+<head>
+    <title>Hồ sơ ứng tuyển</title>
+    <th:block layout:fragment="styles">
+        <link rel="stylesheet" th:href="@{/css/pages/applications.css}">
+    </th:block>
+</head>
+<body>
+<main id="main" layout:fragment="content" class="page-content container app-page" tabindex="-1"
+      th:with="search=${result.search}, page=${result.applications}">
+
+    <div class="page-header">
+        <div th:if="${result.forwardedView}">
+            <h1 class="page-title">Hồ sơ được chuyển</h1>
+            <p class="page-subtitle">Hồ sơ HR đã chuyển cho phòng ban của bạn.</p>
+        </div>
+        <div th:unless="${result.forwardedView}">
+            <h1 class="page-title">Danh sách ứng viên</h1>
+            <p class="page-subtitle">Xếp theo điểm AI; chọn hồ sơ đạt để chuyển cho trưởng bộ phận.</p>
+        </div>
+    </div>
+
+    <!-- Lọc: GET, giữ trên URL để phân trang và quay lại vẫn đúng -->
+    <form th:action="@{/applications}" method="get" class="card app-filter" role="search" aria-label="Lọc hồ sơ ứng tuyển">
+        <div class="form-group">
+            <label class="form-label" for="app-keyword">Ứng viên</label>
+            <input id="app-keyword" type="search" name="keyword" class="form-input" maxlength="100"
+                   th:value="${search.keyword}" placeholder="Họ tên hoặc email" autocomplete="off">
+        </div>
+        <div class="form-group">
+            <label class="form-label" for="app-job">Vị trí</label>
+            <select id="app-job" name="jobPostingId" class="form-select">
+                <option value="">Tất cả vị trí</option>
+                <option th:each="job : ${result.jobOptions}" th:value="${job.jobPostingId}" th:text="${job.postingTitle}"
+                        th:selected="${search.jobPostingId == job.jobPostingId}">Java Developer</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label class="form-label" for="app-status">Trạng thái</label>
+            <select id="app-status" name="status" class="form-select">
+                <option value="">Tất cả trạng thái</option>
+                <option th:each="option : ${statusOptions}" th:value="${option.key}" th:text="${option.value}"
+                        th:selected="${search.status == option.key}">Đã nộp hồ sơ</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label class="form-label" for="app-sort">Sắp xếp</label>
+            <select id="app-sort" name="sort" class="form-select">
+                <option value="score" th:selected="${search.sort == 'score'}">Điểm AI cao nhất</option>
+                <option value="newest" th:selected="${search.sort == 'newest'}">Mới nộp nhất</option>
+            </select>
+        </div>
+        <div class="app-filter__actions">
+            <button type="submit" class="btn btn--primary">Lọc</button>
+        </div>
+    </form>
+
+    <div class="app-results">
+        <p class="app-results__count"><strong th:text="${page.totalElements}">0</strong> hồ sơ</p>
+        <a th:if="${search.keyword != null or search.jobPostingId != null or search.status != null}"
+           th:href="@{/applications}" class="btn btn--secondary btn--sm">Xóa bộ lọc</a>
+    </div>
+
+    <div th:if="${page.isEmpty()}" class="card app-empty">
+        <h2 class="app-empty__title">Chưa có hồ sơ phù hợp</h2>
+        <p class="app-empty__desc text-muted" th:if="${result.forwardedView}">Hồ sơ sẽ xuất hiện ở đây khi HR chuyển cho phòng ban của bạn.</p>
+        <p class="app-empty__desc text-muted" th:unless="${result.forwardedView}">Hãy thử bỏ bớt điều kiện lọc.</p>
+    </div>
+
+    <div th:unless="${page.isEmpty()}" class="table-wrapper">
+        <table class="table app-table">
+            <thead>
+            <tr>
+                <th scope="col">Ứng viên</th>
+                <th scope="col">Vị trí</th>
+                <th scope="col">Ngày nộp</th>
+                <th scope="col">Điểm AI</th>
+                <th scope="col">Trạng thái</th>
+                <th scope="col" class="app-table__actions-head">Thao tác</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr th:each="row : ${page.content}">
+                <td>
+                    <strong class="app-candidate__name" th:text="${row.fullName}">Nguyễn Văn An</strong>
+                    <span class="app-candidate__email" th:text="${row.email}">an@example.com</span>
+                </td>
+                <td th:text="${row.postingTitle}">Java Developer</td>
+                <td th:text="${#temporals.format(row.submissionDate, 'dd/MM/yyyy')}">10/10/2026</td>
+                <td>
+                    <strong th:if="${row.aiMatchScore != null}" class="app-score"
+                            th:text="${#numbers.formatDecimal(row.aiMatchScore, 1, 0)}">79</strong>
+                    <span th:if="${row.aiMatchScore == null}" class="app-score app-score--empty"
+                          th:text="${row.applicationStatus == 'Applied' ? 'Chờ AI chấm' : '—'}">Chờ AI chấm</span>
+                </td>
+                <td><span class="badge" th:classappend="${row.statusBadge}" th:text="${row.statusLabel}">Đã nộp hồ sơ</span></td>
+                <td class="app-table__actions">
+                    <a th:href="@{/applications/{id}(id=${row.applicationId})}" class="btn btn--secondary btn--sm">Xem</a>
+                    <details class="more-menu">
+                        <summary class="more-menu__toggle" title="Thao tác khác"
+                                 th:attr="aria-label=|Thao tác khác cho hồ sơ của ${row.fullName}|">⋯</summary>
+                        <div class="more-menu__list">
+                            <a class="more-menu__item" th:href="@{/applications/{id}/cv(id=${row.applicationId})}"
+                               target="_blank" rel="noopener">Mở CV</a>
+                            <a th:if="${row.canScheduleInterview}" class="more-menu__item"
+                               th:href="@{/interviews/new(applicationId=${row.applicationId})}">Lên lịch phỏng vấn</a>
+                            <a th:if="${row.canCreateOffer}" class="more-menu__item"
+                               th:href="@{/offers/create(applicationId=${row.applicationId})}">Tạo offer</a>
+                        </div>
+                    </details>
+                </td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <nav th:replace="~{fragments/ui/pagination :: paged(page=${page})}"></nav>
+</main>
+</body>
+</html>

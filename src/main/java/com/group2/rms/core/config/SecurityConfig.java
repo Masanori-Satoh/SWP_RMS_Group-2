@@ -15,7 +15,14 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.access.intercept.AuthorizationFilter;
+import org.springframework.security.web.header.writers.DelegatingRequestMatcherHeaderWriter;
+import org.springframework.security.web.header.writers.frameoptions.XFrameOptionsHeaderWriter;
+import org.springframework.security.web.header.writers.frameoptions.XFrameOptionsHeaderWriter.XFrameOptionsMode;
 import org.springframework.security.web.savedrequest.HttpSessionRequestCache;
+import org.springframework.security.web.servlet.util.matcher.PathPatternRequestMatcher;
+import org.springframework.security.web.util.matcher.NegatedRequestMatcher;
+import org.springframework.security.web.util.matcher.OrRequestMatcher;
+import org.springframework.security.web.util.matcher.RequestMatcher;
 
 /**
  * Shared authentication foundation and the route rules confirmed for LinhDN.
@@ -25,6 +32,14 @@ import org.springframework.security.web.savedrequest.HttpSessionRequestCache;
 // @EnableMethodSecurity: Tạm tắt để cho phép test các luồng API trong giai đoạn
 // phát triển (permitAll)
 public class SecurityConfig {
+
+        /**
+         * Paths the CV viewer frame loads: the protected CV endpoint and the seed sample CVs it redirects to.
+         * Only these may be framed by the same origin.
+         */
+        private static final RequestMatcher CV_PATHS = new OrRequestMatcher(
+                        PathPatternRequestMatcher.withDefaults().matcher("/applications/*/cv"),
+                        PathPatternRequestMatcher.withDefaults().matcher("/samples/cv/**"));
 
         @Bean
         public PasswordEncoder passwordEncoder() {
@@ -47,6 +62,14 @@ public class SecurityConfig {
                                 .authenticationProvider(provider)
                                 .csrf(csrf -> csrf
                                                 .ignoringRequestMatchers("/api/**"))
+                                // CV viewer: only CV paths may be framed (same origin); every other page keeps DENY
+                                .headers(headers -> headers
+                                                .frameOptions(frame -> frame.disable())
+                                                .addHeaderWriter(new DelegatingRequestMatcherHeaderWriter(CV_PATHS,
+                                                                new XFrameOptionsHeaderWriter(XFrameOptionsMode.SAMEORIGIN)))
+                                                .addHeaderWriter(new DelegatingRequestMatcherHeaderWriter(
+                                                                new NegatedRequestMatcher(CV_PATHS),
+                                                                new XFrameOptionsHeaderWriter(XFrameOptionsMode.DENY))))
                                 .authorizeHttpRequests(auth -> auth
                                                 // permit all for static resources
                                                 .requestMatchers(PathRequest.toStaticResources().atCommonLocations())
@@ -105,6 +128,10 @@ public class SecurityConfig {
                                                                 RoleAuthorities.SYSTEM_ADMIN)
                                                 .requestMatchers("/internal/job-postings", "/internal/job-postings/**")
                                                 .hasAnyAuthority("ROLE_HR", RoleAuthorities.SYSTEM_ADMIN)
+                                                // application pipeline: HM scope (own department) is checked in ApplicationAccess
+                                                .requestMatchers("/applications", "/applications/**")
+                                                .hasAnyAuthority("ROLE_HR", "ROLE_HIRING_MANAGER", "ROLE_DIRECTOR",
+                                                                RoleAuthorities.SYSTEM_ADMIN)
                                                 .anyRequest().authenticated())
                                 // store target url before login
                                 .requestCache(cache -> cache.requestCache(requestCache))
