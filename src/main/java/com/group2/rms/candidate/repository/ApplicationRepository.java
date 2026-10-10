@@ -15,5 +15,7 @@ public interface ApplicationRepository extends JpaRepository<Application, Intege
            "LEFT JOIN FETCH c.account " +
            "LEFT JOIN FETCH a.jobPosting")
     List<Application> findAllWithCandidateAndJobPosting();
+
+    boolean existsByCandidate_CandidateIdAndJobPosting_JobPostingId(Integer candidateId, Integer jobPostingId);
 }
 
