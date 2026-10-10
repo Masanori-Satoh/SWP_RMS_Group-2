@@ -49,6 +49,8 @@ Thực hiện lần lượt các bước sau khi `git clone`:
 2. Thực thi toàn bộ script để tạo database `RitirementManagement2`.
    > ⚠️ **Lưu ý:** Script này sẽ xóa và tạo mới database. Không chạy lại nếu DB đang có dữ liệu cần giữ.
 3. Nếu cần dữ liệu mẫu thử nghiệm, mở và chạy file [`database/seeds/seed_data.sql`](database/seeds/seed_data.sql).
+4. Chạy tiếp [`database/seeds/seed_extra_jobs_and_pipeline.sql`](database/seeds/seed_extra_jobs_and_pipeline.sql): thêm phòng ban, requisition đủ trạng thái, tin tuyển dụng đa dạng, đơn ứng tuyển trên tin mới và trỏ CV về file mẫu trong `static/samples/cv/`. Chạy lại nhiều lần vẫn an toàn.
+   > ⚠️ **Không chạy `build_seed.py` để sinh lại `seed_data.sql`:** từ commit `71149e1`, `seed_data.sql` có dữ liệu không còn nằm trong script; sinh lại sẽ mất dữ liệu test Offer.
 
 ### 2.3 Cấu hình Môi trường Local (`application-local.properties`)
 Dự án áp dụng cơ chế cấu hình tách biệt để **không bao giờ lộ mật khẩu cá nhân lên Git**:
