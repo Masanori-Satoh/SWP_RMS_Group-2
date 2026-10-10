@@ -9,7 +9,6 @@ import com.group2.rms.requisition.entity.JobPosting;
 import com.group2.rms.requisition.repository.JobPostingRepository;
 import com.group2.rms.user.repository.DepartmentRepository;
 import com.group2.rms.user.repository.UserRepository;
-import com.group2.rms.candidate.repository.CandidateRepository;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
@@ -36,8 +35,6 @@ public class CareerPortalService {
     private final DepartmentRepository departmentRepository;
 
     private final UserRepository userRepository;
-
-    private final CandidateRepository candidateRepository;
 
     public Page<PublicJobListResponse> getPublishedJobs(String keyword, Integer departmentId, String employmentType,
             Pageable pageable) {
