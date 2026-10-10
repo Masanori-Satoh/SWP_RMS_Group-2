@@ -1,238 +1,278 @@
 # Hướng dẫn Phát triển và Quy chuẩn Kiến trúc (RMS Project)
 
-Tài liệu này ghi chú các thay đổi và quy chuẩn code theo kiến trúc **Package-by-Feature** đang áp dụng cho dự án, đồng thời là "Kim chỉ nam" cho cả Lập trình viên (Devs) và Trợ lý AI (AI Assistants).
+Tài liệu này là "kim chỉ nam" cho Lập trình viên và Trợ lý AI: mô tả **cấu trúc thật của mã nguồn hiện tại** và **quy chuẩn bắt buộc cho code mới**. Chỗ nào code hiện tại còn lệch chuẩn được ghi riêng ở [mục 8](#8-hiện-trạng-những-điểm-code-cũ-lệch-chuẩn), không trộn vào quy tắc.
 
-Các quy chuẩn dưới đây **BẮT BUỘC ÁP DỤNG CHO TOÀN BỘ CODE MỚI**. Với các tính năng đang code dở (WIP) trước thời điểm tài liệu này ban hành, các bạn tác giả **tự xem lại và dọn dẹp sau**, ưu tiên giữ nguyên tiến độ hiện tại.
+> **Stack:** Spring Boot 3.5.16 · Java 21 · Spring Security · Spring Data JPA (SQL Server) · Thymeleaf + Layout Dialect · Bean Validation · Spring Mail · Apache POI (xuất Excel) · Lombok.
+>
+> **Giao diện:** mục 6 chỉ là tổng quan; chi tiết nằm ở bộ tài liệu [`UI/`](UI/README.md).
 
 ---
 
-## 1. Quy chuẩn Kiến trúc Backend (`core/` vs `feature/`)
+## 1. Kiến trúc Backend (Package-by-Feature)
 
-Dự án áp dụng kiến trúc **Package-by-Feature** để đóng gói toàn diện mã nguồn theo từng nghiệp vụ độc lập, áp dụng quy tắc **"Phẳng mặc định, Phân nhánh khi phình to" (Flat by default, Nested when needed)**:
+Mã nguồn đóng gói theo **nghiệp vụ**, không theo tầng. Quy tắc **"Phẳng mặc định, phân nhánh khi phình to"**:
 
-- **Với các tính năng NHỎ (< 10 files):** Mọi class (Controller, Service, Repository, Entity, DTO) đều nằm chung "phẳng" ngay trong package của tính năng đó (ví dụ: `dashboard`, `admin`, `career`).
-- **Với các tính năng LỚN (>= 10 files):** Bắt buộc phân lớp bên trong (`controller`, `service`, `repository`, `entity`, `dto`, `exception`, `validator`).
+- **Module nhỏ (< 10 file):** mọi class nằm phẳng trong package của module (hiện tại: `dashboard`, `notification`).
+- **Module lớn (≥ 10 file):** bắt buộc chia sub-package `controller/`, `service/`, `repository/`, `entity/`, `dto/`, và khi cần `exception/`, `validator/`.
 
-### Cấu trúc thư mục chuẩn:
 ```text
 src/main/java/com/group2/rms/
-├── {feature_small}/                <-- Tính năng nhỏ (VD: dashboard, admin, career)
-│   ├── DashboardController.java  <-- Nằm phẳng ngay bên ngoài
-│   ├── DashboardService.java
-│   └── DashboardMetrics.java     (DTO)
-├── {feature_large}/                <-- Tính năng lớn (VD: requisition, user, interview, offer, candidate, auth)
-│   ├── controller/               <-- Chứa Controller trả về View hoặc REST Controller
-│   ├── service/                  <-- Interface và Implementation xử lý nghiệp vụ
-│   ├── repository/               <-- Spring Data JPA Repositories
-│   ├── entity/                   <-- JPA Entities ánh xạ Database
-│   ├── dto/                      <-- Data Transfer Objects (Request/Response)
-│   └── exception/                <-- Custom Exception riêng của feature (nếu có)
-├── core/                         <-- Chứa các thành phần dùng chung toàn hệ thống
-│   ├── config/                   <-- Cấu hình Spring (Security, WebMvc, Database,...)
-│   ├── security/                 <-- UserDetails, Custom Authentication providers
-│   ├── exception/                <-- BaseBusinessException, GlobalExceptionHandler bắt lỗi toàn cục
-│   ├── dto/                      <-- ApiResponse<T> chuẩn hóa dữ liệu trả về
-│   └── base/                     <-- BaseEntity, Auditable, v.v.
+├── core/                  ← Dùng chung toàn hệ thống (KHÔNG chứa nghiệp vụ)
+│   ├── base/              ← BaseEntity
+│   ├── config/            ← SecurityConfig, SchemaNamingConfig
+│   ├── dto/               ← ApiResponse<T>
+│   ├── exception/         ← BaseBusinessException, ResourceNotFoundException, GlobalExceptionHandler, FormErrorViewHelper
+│   ├── security/          ← DatabaseUserDetailsService, CurrentUserService, RoleAuthorities, AccountSessionGuardFilter
+│   ├── validation/        ← @PasswordMatches + validator
+│   └── web/               ← @ControllerAdvice cấp model cho mọi view: TopbarUserAdvice (topbarUser), ViewHelpersAdvice (pageLinks)
+├── {module_nhỏ}/          ← dashboard, notification: Controller/Service/Repository/DTO nằm phẳng
+├── {module_lớn}/          ← auth, user, requisition, interview, offer, admin, career, candidate
+│   ├── controller/  service/  repository/  entity/  dto/
+│   └── exception/  validator/   (khi cần)
 └── RmsApplication.java
 ```
 
-### Danh sách các Features (Module) hiện có:
-1. **`auth`**: Đăng nhập, Quên mật khẩu, Reset mật khẩu.
-2. **`user`**: Quản lý tài khoản, Hồ sơ, Phòng ban, Vai trò.
-3. **`requisition`**: Yêu cầu tuyển dụng, Phê duyệt, Tiêu chí sàng lọc.
-4. **`candidate`**: Hồ sơ ứng tuyển, Ứng viên, Chấm điểm AI.
-5. **`interview`**: Lịch phỏng vấn, Đánh giá, Hội đồng.
-6. **`offer`**: Đề xuất lương, Thương lượng.
-7. **`dashboard`**: Thống kê, Báo cáo.
-8. **`admin`**: System Config, Health Check, Audit Logs.
-9. **`core`**: Base entity, exception chung, security, config.
+### 1.1. Bản đồ Module
 
-## 2. Quy chuẩn Đặt tên (Naming Conventions)
-- **Controller**: `{Feature}Controller` (ví dụ: `JobRequisitionController`). Không đặt là `RequisitionRequestController`.
-- **DTO (Khuyến khích dùng Java Record):** 
-  - Khuyến khích sử dụng cấu trúc `record` của Java 14+ cho DTO để tăng tính bất biến (immutability) và gọn gàng.
-  - Đuôi là `Request` cho Input (VD: `CreateAccountRequest`). Không dùng chữ `Form` hay `Dto`.
-  - Đuôi là `Response` cho Output (VD: `UserProfileResponse`). Không tạo sub-folder `request/` hay `response/`, tất cả bỏ vào `dto/`.
-- **Entity**: Viết hoa chữ cái đầu, số ít (VD: `JobRequisition`, `Candidate`).
+| Module | Nghiệp vụ | Route chính (Controller) | View (`templates/`) |
+|---|---|---|---|
+| `career` | Cổng tuyển dụng công khai: landing, Jobs Board, chi tiết tin, nút ứng tuyển | `/`, `/jobs`, `/jobs/{id}`, `/jobs/{id}/apply` (`CareerPortalController`) | `candidate/landing`, `candidate/job-board`, `candidate/job-detail` |
+| `auth` | Đăng nhập, đăng ký ứng viên (OTP email), quên/đặt lại mật khẩu (OTP) | `/login`, `/register/**`, `/forgot-password`, `/reset-password/**` | `auth/*`, `auth/email/*` |
+| `user` | Tài khoản nội bộ, tài khoản ứng viên, phòng ban, hồ sơ cá nhân, đổi mật khẩu | `/admin/accounts/**`, `/admin/candidate-accounts/**`, `/admin/departments/**`, `/profile/**` | `admin/accounts/*`, `admin/departments/*`, `user/profile` |
+| `requisition` | Yêu cầu tuyển dụng + phê duyệt + lịch sử; tin tuyển dụng nội bộ; tiêu chí sàng lọc | `/requisitions/**` (`RequisitionController`), `/internal/job-postings/**` (`InternalJobPostingController`) | `requisitions/*`, `job-postings/*` |
+| `candidate` | **Chỉ tầng dữ liệu:** `Candidate`, `Application`, `ApplicationReview`, `AIScreeningResult` + repository. Chưa có controller | — | — |
+| `interview` | Lập lịch phỏng vấn, hội đồng (panel), kết quả | `/interviews/**` (`InterviewSchedulingController`) | `interview/*` |
+| `offer` | Đề xuất offer, phê duyệt, gửi, xuất Excel | `/offers/**` (`OfferController`, có cả endpoint JSON) | `offers/*` |
+| `notification` | Thông báo trong ứng dụng | `/notifications/**` | `notifications/list` |
+| `dashboard` | Bảng điều khiển theo vai trò (nội bộ + ứng viên) | `/dashboard` | `dashboard/index` (+ `dashboard/candidate` là fragment) |
+| `admin` | Giám sát API, health check, audit log, system config | `/admin/api-monitoring/**` | `admin/api-monitoring/index` |
+| `demo` | Controller thử kết nối DB/web. **Không phải nghiệp vụ** (xem mục 8) | `/test-db`, `/test-web` | `hello` |
 
-## 3. Tổ chức Frontend (`templates/` vs `static/`)
-- Đã chuyển sang **mục 4 "Tổ chức Frontend & Kiến trúc Giao diện"** bên dưới (nội dung cũ ở đây đã lỗi thời).
-
-## 4. Xử lý Lỗi và Xác thực (Exception & Validator)
-- **Validator & Xử lý Lỗi Nhập liệu (Web Form / AJAX):**
-  - Bắt buộc dùng DTO kèm Annotation (VD: `@Valid`) để kiểm tra dữ liệu đầu vào.
-  - **Với các Form nhập liệu giao diện (Create/Edit):** Sử dụng `BindingResult` (`bindingResult.rejectValue(...)` hoặc trả về JSON status 400 kèm chi tiết lỗi từng trường qua AJAX) để **hiển thị thông báo lỗi inline trực tiếp trên form** và giữ nguyên dữ liệu người dùng đang nhập dở. **TUYỆT ĐỐI KHÔNG ném Exception văng ra trang 500 khi người dùng chỉ nhập sai dữ liệu Form.**
-- **Exception Hệ thống & Nghiệp vụ không thể khôi phục (Ép dùng Global Exception Handler):**
-  - **Với code mới:** Service ném ra Custom Exception (kế thừa `BaseBusinessException` cho lỗi nghiệp vụ hoặc `ResourceNotFoundException` cho 404). Controller **CẤM** sử dụng `try-catch` nuốt lỗi, hãy để lỗi trôi lên `GlobalExceptionHandler` ở tầng `core` để render các trang lỗi tương ứng (`404.html`, `403.html`, `500.html`).
-  - **Lưu ý code hiện tại (WIP):** Các hàm Controller đang tự try-catch, tự dọn dẹp sau khi hệ thống Global Exception hoàn thiện.
-
-## 5. Giao tiếp chéo giữa các Tính năng (Cross-Feature)
-- **Quy tắc cho code mới:** XEM XÉT KỸ LƯỠNG khi gọi chéo:
-  - Được phép: Tiêm (`@Autowired`) Service A vào Service B.
-  - CẤM TỐI KỴ: Tạo vòng lặp phụ thuộc (Circular Dependency).
-  - Khuyến khích: Nếu nghiệp vụ đan chéo quá 2 tính năng, xem xét tạo Orchestrator Feature.
-- **Lưu ý code hiện tại (WIP):** Tự rà soát chiều gọi Service và sắp xếp lại sau.
-
-## 6. Truy xuất Dữ liệu (Database & JPA)
-- **Lazy Loading & Session:** Khi truy vấn các Entity có quan hệ `FetchType.LAZY` (như `@OneToMany`, `@ManyToOne`), nếu quá trình Mapping từ Entity sang DTO diễn ra ở tầng Service sau khi truy vấn kết thúc, session có thể đã đóng, dẫn đến lỗi `LazyInitializationException`.
-- **Giải pháp BẮT BUỘC:** Phải gắn annotation `@Transactional(readOnly = true)` (từ Spring) lên các class Service hoặc method Service chỉ đọc (GET) để giữ session sống trong suốt vòng đời mapping dữ liệu.
-### Danh sách 10 Module (Features) chính thức của hệ thống:
-1. **`career`**: Cổng thông tin tuyển dụng công khai cho ứng viên (Public Job Board), xem chi tiết tin tuyển dụng (Job Details) và nộp hồ sơ ứng tuyển trực tuyến.
-2. **`auth`**: Đăng nhập, Đăng ký tài khoản ứng viên, Quên mật khẩu, Đặt lại mật khẩu.
-3. **`user`**: Quản lý tài khoản nội bộ (Admin Accounts), Quản lý tài khoản ứng viên, Hồ sơ cá nhân (My Profile), Đổi mật khẩu, Phòng ban (Departments), Vai trò (Roles).
-4. **`requisition`**: Yêu cầu tuyển dụng, Quy trình phê duyệt yêu cầu, Tiêu chí sàng lọc ứng viên.
-5. **`candidate`**: Quản lý ứng viên nội bộ, Hồ sơ ứng tuyển (Applications), Đánh giá và chấm điểm AI Screening.
-6. **`interview`**: Lập lịch phỏng vấn, Hội đồng phỏng vấn (Interview Panel), Đánh giá kết quả phỏng vấn.
-7. **`offer`**: Đề xuất lương (Offer Proposal), Phê duyệt đề xuất, Đàm phán hợp đồng, Lịch sử offer.
-8. **`dashboard`**: Thống kê số liệu tuyển dụng, biểu đồ hiệu suất, báo cáo quản trị.
-9. **`admin`**: Cấu hình hệ thống (System Config), Kiểm tra sức khỏe dịch vụ (Health Check), Giám sát API (API Monitoring), Nhật ký hệ thống (Audit Logs).
-10. **`core`**: Base entity, exception toàn cục, ApiResponse dùng chung, Spring Security, cấu hình toàn hệ thống.
-
----
-
-## 2. Quy chuẩn Tầng Core & Xử lý Ngoại lệ (Core Exception & Response)
-
-### A. Chuẩn hóa Response với `ApiResponse<T>`:
-- Mọi API JSON hoặc thao tác AJAX nên trả về đối tượng `com.group2.rms.core.dto.ApiResponse<T>`:
-  - `success`: Boolean xác định trạng thái thành công hay thất bại.
-  - `message`: Thông báo tóm tắt cho người dùng / frontend.
-  - `data`: Payload dữ liệu chính (hoặc null nếu chỉ thông báo).
-  - `errors`: Danh sách các lỗi chi tiết (nếu có validation errors).
-  - `timestamp`: Thời điểm phản hồi.
-
-### B. Cơ chế Global Exception Handler đa kênh:
-- Tất cả lỗi nghiệp vụ trong Service phải kế thừa từ `BaseBusinessException`.
-- Controller **CẤM** sử dụng `try-catch` tùy tiện để nuốt lỗi hoặc bung stacktrace ra ngoài. Hãy để ngoại lệ trôi lên `GlobalExceptionHandler`.
-- `GlobalExceptionHandler` tự động phân luồng thông minh:
-  - **Với Request AJAX/API** (có header `X-Requested-With: XMLHttpRequest` hoặc `Accept: application/json`): Trả về JSON chuẩn `ApiResponse` với mã HTTP tương ứng (400, 401, 403, 404, 409, 500).
-  - **Với Request Trình duyệt thông thường**: Điều hướng an toàn về view lỗi chuẩn tại `src/main/resources/templates/error/`:
-    - `404.html`: Không tìm thấy tài nguyên.
-    - `403.html`: Không đủ quyền hạn truy cập (Access Denied).
-    - `500.html`: Lỗi hệ thống nội bộ.
-
----
-
-## 3. Quy chuẩn Đặt tên (Naming Conventions)
-- **Controller**: `{Feature}Controller` (ví dụ: `JobRequisitionController`, `UserProfileController`, `InterviewSchedulingController`). Không đặt tên kiểu `RequisitionRequestController`.
-- **DTO (Khuyến khích dùng Java Record):**
-  - Khuyến khích sử dụng cấu trúc `record` của Java 14+ cho DTO để tăng tính bất biến (immutability) và gọn gàng. Với class POJO truyền thống, phải có validation annotations đầy đủ.
-  - Đuôi là `Request` cho Input (VD: `UpdateProfileRequest`, `ChangePasswordRequest`). Không dùng chữ `Form` hay `Dto`.
-  - Đuôi là `Response` cho Output (VD: `UserProfileResponse`, `OfferDetailResponse`).
-  - **CẤM:** Không tạo sub-folder con `request/` hay `response/`, tất cả DTO đặt trực tiếp trong package `dto/` của feature.
-- **Entity**: Viết hoa chữ cái đầu (PascalCase), danh từ số ít (VD: `JobRequisition`, `Candidate`, `InterviewSchedule`).
-
----
-
-## 4. Tổ chức Frontend & Kiến trúc Giao diện (`templates/` vs `static/`)
-
-> Mục này là **tổng quan**. Chi tiết nằm ở bộ tài liệu UI [`docs/architecture/UI/`](UI/): bắt đầu từ [`UI/README.md`](UI/README.md) (lộ trình, file nào cho việc gì), rồi `UI_RULES.md` (luật, vùng không được chạm/chỉ được thêm), `UI_CATALOG.md` (tra cứu), `UI_NEW_PAGE.md` (tạo trang mới), `UI_MIGRATION.md` (migrate trang cũ), `UI_CSS_GUIDE.md` (tổ chức CSS), `UI_LEGACY_CLEANUP.md` (dọn file cũ).
-
-### A. Kiến trúc giao diện: Layout + Sidebar theo role + File nội dung
-
-Dự án dùng **Thymeleaf Layout Dialect**. Một trang hoàn chỉnh được ghép từ 3 phần:
+### 1.2. Chiều phụ thuộc giữa các module (thực tế)
 
 ```text
-templates/layout/base.html          ← <head> chung (tokens, global, components, CSRF meta) + interface.js
-├── layout/internal.html            ← Trang nội bộ: sidebar + topbar nội bộ + <main>
-│     ├── fragments/layout/sidebar-shell.html  → tự chọn menu theo role: fragments/layout/sidebars/{admin|candidate|interviewer|recruiter}.html
-│     └── fragments/workspace-header.html      → topbar nội bộ
-├── layout/public.html              ← Trang công khai: topbar công khai + footer
-└── layout/auth.html                ← Dự phòng cho trang xác thực/lỗi (auth hiện vẫn dùng auth/fragments)
-
-File nội dung (vd. requisitions/list.html):
-  <html layout:decorate="~{layout/internal}"> ... <main layout:fragment="content"> nội dung riêng </main>
+career ──► requisition, user          interview ──► candidate, user
+offer  ──► candidate, interview, user requisition ──► user, admin (AuditLog), notification
+auth   ──► user                       dashboard ──► user, interview, admin
+user   ──► candidate                  mọi module ──► core
 ```
 
-- **File nội dung chỉ chứa phần riêng của trang.** Không tự dựng sidebar, topbar, logo, footer hay hộp thoại đăng xuất.
-- **Controller** chỉ cần `model.addAttribute("activeMenu", "...")` để sidebar sáng đúng mục. Thông tin người dùng ở topbar (`topbarUser`: tên, email, role, avatar) do `core/web/TopbarUserAdvice` cung cấp cho mọi trang.
-- **Trang công khai:** landing `/` (`candidate/landing.html`: giới thiệu + 3 vị trí mới nhất, không phân trang), Jobs Board `/jobs` (`candidate/job-board.html`: tìm kiếm, lọc, 6 tin/trang), chi tiết `/jobs/{id}`. Cả ba do `CareerPortalController` phục vụ.
-- **Ngoại lệ:** landing và các trang `auth/*` tự dựng khung, nhưng landing vẫn bắt buộc dùng topbar công khai dùng chung.
+`user` và `candidate` là module **nền** (nhiều module khác phụ thuộc vào): đổi entity ở đây phải rà các module phía trên.
 
-### B. Thành phần dùng chung (luôn gọi fragment, không chép markup)
+---
 
-| Thành phần | Fragment | Ghi chú |
+## 2. Luồng Request: Form, AJAX, Validation, Exception
+
+> Mục này là **chuẩn cho code mới**. Code cũ chưa theo chuẩn được liệt kê ở mục 8, không bắt chước.
+
+### 2.1. Hai cách giao tiếp với giao diện
+
+| | Form truyền thống (**mặc định**) | AJAX (`fetch` + JSON) |
 |---|---|---|
-| Topbar nội bộ | `fragments/workspace-header :: header(role, fullName)` | Cao 74px, logo nằm ở đầu sidebar |
-| Topbar công khai | `fragments/layout/public-topbar :: topbar(activeNav, onLanding)` | Dùng cho landing và `layout/public`; menu tự sáng theo section khi cuộn |
-| Góc phải topbar | `fragments/layout/topbar-user :: actions(name, email, role, avatar, idPrefix)` | Avatar + tên + role + email (về `/profile`), Đăng xuất ngoài cùng phải + hộp thoại xác nhận |
-| Logo | `fragments/brand :: wordmark(subtitle)` / `wordmarkLink(subtitle, href)` | Công khai "TUYỂN DỤNG", nội bộ "RMS" |
-| Sidebar | `fragments/layout/sidebar-shell :: shell(activeMenu, role)` | Thu gọn 68px / mở rộng 250px, nút ghim lưu trạng thái |
+| Dùng khi | Màn hình tạo/sửa/lọc thông thường | Thao tác nhỏ **cần ở lại trang**: form trong modal, nút bấm trên danh sách |
+| Controller nhận | `@Valid @ModelAttribute("form") XxxRequest form, BindingResult errors` | `@Valid @RequestBody XxxRequest req` + `@ResponseBody` |
+| Thành công | `return "redirect:/..."` (kèm flash message) | `ApiResponse(true, message, data)` |
+| Lỗi | Render lại **đúng template form**, lỗi hiện cạnh ô, dữ liệu đã nhập được giữ | `ApiResponse(false, message)` + HTTP 400, JS tự hiện lỗi |
+| Ví dụ trong code | `AccountController`, `DepartmentController`, `RequisitionController` | Đổi mật khẩu trong `profile.js`, thao tác offer trong `offers.js` |
 
-### C. Bản đồ CSS / JS
+- **Mỗi thao tác chỉ chọn một cách**: không viết cả endpoint form lẫn endpoint JSON cho cùng một việc.
+- AJAX bắt buộc gửi header `X-CSRF-TOKEN` (mục 6.3).
 
-| File | Vai trò |
+### 2.2. Ba loại lỗi, mỗi loại một cách xử lý
+
+| Loại lỗi | Ví dụ | Ai phát hiện | Người dùng thấy |
+|---|---|---|---|
+| **Nhập sai** | Bỏ trống, sai định dạng, mật khẩu nhập lại không khớp | Bean Validation trên DTO (mục 2.4) | Form + lỗi cạnh ô |
+| **Vi phạm nghiệp vụ** | Email đã tồn tại, sai trạng thái duyệt, vượt ngân sách | Service ném **exception của module** | Form + thông báo (form) / `ApiResponse(false)` (AJAX) |
+| **Không thể tiếp tục** | Không tìm thấy, không có quyền, lỗi hệ thống | Service ném exception chung / lỗi tự phát sinh | Trang `error/404`, `403`, `500` do `GlobalExceptionHandler` render |
+
+### 2.3. Exception: kiểu nằm ở module, Controller bắt đúng kiểu, Global lo phần còn lại
+
+**Service ném gì:**
+
+| Tình huống | Ném |
 |---|---|
-| `static/css/tokens.css` (+ `fonts.css`) | Biến thiết kế (màu, khoảng cách, bo góc, chiều cao) và font offline Lora / Source Sans 3. **Nguồn token duy nhất.** |
-| `static/css/global.css` | Reset, typography, bố cục nền |
-| `static/css/components.css` | Linh kiện BEM dùng chung: `.btn--*`, `.badge--*`, `.form-*`, `.card`, `.table`, `.alert--*`, dialog |
-| `static/css/topbar.css` | Topbar (công khai + góc phải nội bộ), logo, hộp thoại đăng xuất; token `--chrome-step` chỉnh cỡ chữ toàn bộ topbar/sidebar |
-| `static/css/workspace.css` | Sidebar + topbar nội bộ (tự `@import` `topbar.css`) |
-| `static/css/design-tokens.css`, `interface.css` | Bộ cũ cho các trang nội bộ chưa migrate (`fragments/head :: interfaceHead`). Không dùng cho trang mới. |
-| `static/css/<trang>.css` (cũ) / `static/css/pages/<trang>.css` (mới) | CSS riêng của từng trang, class có tiền tố trang, chỉ dùng token |
-| `templates/fragments/ui/pagination :: paged(page)` + `core/web/ViewHelpersAdvice` (`pageLinks`) | Phân trang dùng chung: giữ mọi tham số lọc khi chuyển trang; số phần tử/trang do Controller đặt |
-| `static/css/landing.css` | CSS riêng của trang landing (được phép có phong cách riêng, trừ topbar) |
-| `static/js/interface.js` | Menu mobile, nút ghim sidebar, hiện/ẩn mật khẩu, gợi ý bảng cuộn ngang |
-| `static/js/public-topbar.js` | Làm sáng menu topbar công khai khi bấm/cuộn |
+| Không tìm thấy bản ghi | `core.exception.ResourceNotFoundException` |
+| Không có quyền với một bản ghi cụ thể | `org.springframework.security.access.AccessDeniedException` |
+| Vi phạm nghiệp vụ | `{module}/exception/{Ngữ cảnh}Exception extends BaseBusinessException`; cần chỉ ra ô lỗi thì thêm field `field` (mẫu: `AccountFieldException`) |
 
-### D. Quy tắc bắt buộc (tóm tắt)
+**Không** dùng cho lỗi nghiệp vụ: `IllegalArgumentException`, `IllegalStateException`, `EntityNotFoundException`, `ResponseStatusException` (Global không hiểu đúng các kiểu này, dễ ra trang 500).
 
-- KHÔNG viết `style="..."`, thẻ `<style>` hay `<script>` nội tuyến trong `templates/`. KHÔNG mã màu hex: dùng token `var(--...)`.
-- Tra catalog trước: thứ gì đã có (nút, badge, form, card, bảng, dialog...) thì dùng nguyên. Chỉ viết CSS riêng cho phần catalog không có, và đặt tiền tố trang cho class.
-- Nút toàn hệ thống là chữ nhật bo góc 8px (`var(--radius-md)`), không dùng nút bo tròn kiểu pill. Bo tròn chỉ cho badge, chip lọc, avatar.
-- KHÔNG đổi tên/dời file template; KHÔNG đổi/xóa biến backend trong template (`${...}`, `th:field`, `name`, `id`).
-- Khi render text từ database có chứa ký tự `
-` (dummy data/text thô), format replace thành `<br/>` và dùng `th:utext` để xuống dòng an toàn.
-- **Hiện trạng:** mới có `notifications/list`, `candidate/job-board` và `candidate/job-detail` dùng layout; 20 trang nội bộ còn dựng khung kiểu cũ (`interfaceHead` + `fragments/sidebar`). Chúng vẫn dùng chung topbar, logo, góc phải và hộp thoại với trang mới. **Lưu ý:** menu sidebar đang có 2 nguồn (`fragments/sidebar.html` cho trang cũ, `fragments/layout/sidebars/*.html` cho trang mới); thêm mục menu phải sửa cả hai cho đến khi migrate xong.
+**Controller xử lý thế nào:** chỉ `try-catch` **đúng exception của module** để render lại form hoặc trả JSON. Mọi lỗi khác để bay lên Global.
 
-### E. Form AJAX & Bảo vệ CSRF Token:
-- Mọi form gửi qua AJAX (như Modal Đổi mật khẩu, Modal duyệt Offer) **BẮT BUỘC** phải gửi kèm CSRF Token:
-  - Lấy token từ header meta tag: `document.querySelector('meta[name="_csrf"]')?.getAttribute('content')`.
-  - Đính kèm vào request header: `'X-CSRF-TOKEN': token`.
-- Nếu thiếu CSRF Token, Spring Security sẽ trả về lỗi `403 Forbidden` ngay lập tức.
+```java
+@PostMapping
+public String create(@Valid @ModelAttribute("form") CreateAccountRequest form, BindingResult errors, Model model) {
+    if (!errors.hasErrors()) {
+        try {
+            accountService.create(form);
+            return "redirect:/admin/accounts";
+        } catch (AccountFieldException e) {                 // chỉ bắt đúng kiểu của module
+            errors.rejectValue(e.getField(), "account.invalid", e.getMessage());
+        }
+    }
+    return "admin/accounts/form";                           // render lại form, dữ liệu còn nguyên
+}
+```
 
-### F. Cơ chế Dirty Checking & Modal Xác nhận:
-- Với các màn hình chỉnh sửa hồ sơ/biểu mẫu quan trọng: Nút "Save" phải ở trạng thái disable ban đầu, chỉ kích hoạt khi người dùng thực sự thay đổi dữ liệu (Dirty state). Bổ sung nút "Discard" để khôi phục trạng thái gốc.
-- Các hành động cập nhật lớn hoặc xóa dữ liệu phải bật Modal xác nhận (`confirmModal`) trước khi gửi request thực tế.
+Không `catch (Exception e)`, không nuốt lỗi rồi trả về như thành công.
 
-### G. Ràng buộc Dữ liệu tiếng Việt (Unicode Validation):
-- Khi validate họ tên tiếng Việt, **KHÔNG** dùng regex ASCII `[a-zA-Z ]*` vì sẽ từ chối các ký tự có dấu tiếng Việt (à, á, ả, ã, ạ, đ,...).
-- Bắt buộc dùng Unicode property escapes:
-  ```regex
-  ^[\p{L}][\p{L}\s.'-]*$
-  ```
+**`GlobalExceptionHandler` (`core/exception/`)** chỉ dùng cho loại "không thể tiếp tục":
 
----
+| Exception | Trang |
+|---|---|
+| `ResourceNotFoundException`, `NoResourceFoundException` | `error/404` |
+| `AccessDeniedException` (ném từ controller/service) | `error/403` |
+| `BaseBusinessException` không được Controller bắt | `error/500` với HTTP 400 |
+| `Exception` (còn lại) | `error/500` + log |
 
-## 5. Phân quyền và Bảo mật (Security & Authorization)
+- **Không thêm handler riêng của module vào Global.** Lỗi cần quay lại form thì bắt ở Controller như mẫu trên.
+- Lỗi bị Spring Security chặn ở tầng filter (sai quyền theo URL, thiếu CSRF) không đi qua Global; Spring Boot tự render `templates/error/{status}.html`.
 
-Hệ thống phân chia 5 vai trò chính: `Candidate`, `Interviewer`, `Recruiter` (HR), `Hiring Manager` / `Director`, `System Admin`.
-Quy tắc kiểm soát phân quyền trong `SecurityConfig`:
-- **Công khai (`permitAll()`):** `/`, `/career/**`, `/auth/**`, `/css/**`, `/js/**`, `/images/**`.
-- **Đã xác thực (`authenticated()`):** `/dashboard/**`, `/profile/**`.
-- **Giới hạn nội bộ:** Tuyệt đối chặn vai trò `Candidate` truy cập vào các URL quản trị nội bộ (`/requisitions/**`, `/interviews/**`, `/offers/**`, `/admin/**`).
-- **Phân quyền đặc thù:**
-  - `/offers/**`: Chỉ dành cho `HR`, `Director`, `System Admin`.
-  - `/admin/**`: Chỉ dành cho `System Admin`.
+### 2.4. Validation: ba tầng
 
----
+| Tầng | Dùng khi | Đặt ở đâu | Ví dụ |
+|---|---|---|---|
+| Annotation trên trường | Kiểm tra từng ô | Trên DTO: `@NotBlank`, `@Size`, `@Email`, `@Pattern` | Hầu hết `*Request` |
+| Annotation tự viết cho cả class | So sánh nhiều ô với nhau | Dùng chung: `core/validation/`; riêng module: `{module}/validator/` | `@PasswordMatches` |
+| Validator nghiệp vụ | Cần đọc DB hoặc quy tắc nghiệp vụ | `@Component` trong `{module}/validator/`, **Service** gọi, lỗi thì ném exception của module | `RequisitionValidator` |
 
-## 6. Giao tiếp chéo giữa các Tính năng (Cross-Feature)
-- Được phép tiêm (`@Autowired`) Service của Feature A vào Service của Feature B nếu phục vụ luồng nghiệp vụ.
-- **CẤM TUYỆT ĐỐI:** Tạo vòng lặp phụ thuộc (Circular Dependency) giữa các Service/Component.
-- Không import chéo trực tiếp DTO nội bộ của feature khác nếu không thực sự cần thiết; ưu tiên dùng DTO chung từ `core/dto` hoặc trích xuất thông tin qua Service.
+- Lỗi của hai tầng đầu tự vào `BindingResult` (form) hoặc thành `MethodArgumentNotValidException` (JSON), không cần tự ném exception.
+- Họ tên tiếng Việt: **không** dùng regex ASCII `[a-zA-Z ]*`; dùng `^[\p{L}][\p{L}\s.'-]*$`.
 
----
+### 2.5. DTO: `record` hay `class`
 
-## 7. Truy xuất Dữ liệu (Database & JPA)
-- **Chống lỗi `LazyInitializationException`:** Khi truy vấn Entity có quan hệ `FetchType.LAZY` (như `@OneToMany`, `@ManyToOne`) mà cần mapping sang DTO sau khi truy vấn, session có thể bị đóng ngoài Service. Bắt buộc gắn annotation `@Transactional(readOnly = true)` (từ Spring) lên class Service hoặc method Service đọc dữ liệu (GET).
-- **Source of Truth:** File `database/schema/db.sql` là nguồn chân lý duy nhất của Database. Hibernate chỉ làm nhiệm vụ kiểm tra schema (`ddl-auto=validate`), không tự động sinh bảng.
+- `*Response`: **`record`**.
+- `*Request`: **`record`** nếu đơn giản; **`class`** (Lombok `@Getter @Setter @NoArgsConstructor`) khi cần tạo rỗng rồi gán giá trị mặc định cho form "tạo mới", hoặc form có danh sách lồng nhau.
+- Cả hai đều dùng được cho form lẫn JSON.
+
+### 2.6. `ApiResponse<T>`
+
+Endpoint JSON trả `core.dto.ApiResponse<T>` gồm `success`, `message`, `data` (có builder và constructor `(success, message)`).
 
 ---
 
-> **📌 LỜI NHẮC DÀNH CHO AI ASSISTANT & DEVELOPERS:**
-> Khi viết mã nguồn mới:
-> 1. Dùng Java `record` hoặc POJO chuẩn cho DTO (Request/Response), đặt trực tiếp trong `dto/`.
-> 2. Đẩy ngoại lệ về `GlobalExceptionHandler` (kế thừa `BaseBusinessException`), không tự try-catch bừa bãi trong Controller.
-> 3. Bọc `@Transactional(readOnly = true)` cho các hàm đọc dữ liệu phức tạp.
-> 4. Giao diện: dựng trang bằng layout + fragment dùng chung + catalog (mục 4); tách CSS/JS riêng ra file static, hỗ trợ CSRF Token cho mọi request AJAX.
-> 5. Luôn validate họ tên hỗ trợ ký tự tiếng Việt có dấu (Unicode).
+## 3. Quy chuẩn Đặt tên
+
+| Loại | Quy tắc | Ví dụ có thật trong code |
+|---|---|---|
+| Controller | `{Nghiệp vụ}Controller` | `RequisitionController`, `UserProfileController`, `InterviewSchedulingController` |
+| Service | Module lớn: interface `{X}Service` + `{X}ServiceImpl`; module nhỏ / service đơn giản: một class `{X}Service` | `OfferService`/`OfferServiceImpl`, `DepartmentService` |
+| DTO | Ưu tiên `record`. Input `*Request`, output `*Response`. Không dùng `Form`/`Dto`. Đặt thẳng trong `dto/`, **không** tạo `request/`, `response/` | `CreateAccountRequest`, `OfferDetailResponse` |
+| Entity | PascalCase, danh từ số ít | `JobRequisition`, `InterviewSchedule` |
+| Exception | `{Ngữ cảnh}Exception extends BaseBusinessException` | `OfferValidationException` |
+
+---
+
+## 4. Truy xuất Dữ liệu (Database & JPA)
+
+- **Nguồn chân lý của schema:** `database/schema/db.sql`. Script khác: `database/migrations/`, `database/seeds/`. Tài liệu ERD: `docs/database/model.md`.
+- **Không dựa vào Hibernate để đổi schema.** Mọi thay đổi bảng/cột phải viết vào `db.sql` (và migration). Lưu ý cấu hình hiện tại là `ddl-auto=update` (mục 8).
+- **`spring.jpa.open-in-view=false`** → session đóng khi ra khỏi Service. Vì vậy **bắt buộc** gắn `@Transactional(readOnly = true)` cho Service/method đọc dữ liệu và **map Entity → DTO ngay trong Service**; không trả Entity LAZY ra Controller/View (sẽ gặp `LazyInitializationException`).
+- Method ghi dữ liệu: `@Transactional`.
+
+---
+
+## 5. Phân quyền và Bảo mật
+
+**6 vai trò** (`RoleAuthorities.fromRoleName`): `Candidate`, `Interviewer`, `HR`, `Hiring Manager`, `Director`, `System Admin` → authority `ROLE_CANDIDATE`, `ROLE_INTERVIEWER`, `ROLE_HR`, `ROLE_HIRING_MANAGER`, `ROLE_DIRECTOR`, `ROLE_SYSTEM_ADMIN`.
+
+Phân quyền URL nằm tập trung trong `core/config/SecurityConfig` (chưa dùng `@PreAuthorize`):
+
+| URL | Quyền |
+|---|---|
+| Static, `/favicon.ico`, `/error`, `GET /`, `/fonts/**` | Công khai |
+| `/login`, `/register/**`, `/forgot-password`, `/reset-password/**` | Công khai |
+| `GET /jobs`, `/jobs/**`, `/public/jobs/**` | Công khai |
+| `/jobs/*/apply/**` | `CANDIDATE` |
+| `/admin/accounts`, `/admin/departments`, `/admin/candidate-accounts`, `/admin/api-monitoring`, `/admin/ai-configuration` (+ `/**`) | `SYSTEM_ADMIN` |
+| `/interviews/new`, `/interviews/*/edit`, mọi thao tác ghi `/interviews/**` | `HR`, `SYSTEM_ADMIN` |
+| `GET /interviews/**` | `HR`, `SYSTEM_ADMIN`, `DIRECTOR`, `HIRING_MANAGER`, `INTERVIEWER` |
+| `GET /portal/interviews` | `CANDIDATE` (các method khác: chặn) |
+| `/offers/**`, `/api/v1/hr/offers/**` | `CANDIDATE`, `HR`, `DIRECTOR`, `SYSTEM_ADMIN` |
+| `/requisitions/**` | `HIRING_MANAGER`, `DIRECTOR`, `HR`, `SYSTEM_ADMIN` |
+| `/internal/job-postings/**` | `HR`, `SYSTEM_ADMIN` |
+| `/dashboard/**`, `/notifications/**`, mọi URL còn lại | Đã đăng nhập |
+
+- Đăng nhập: form `/login` → `/dashboard`. Đăng xuất: `POST /logout` → `/login?logout`.
+- **Thêm route mới = thêm rule vào `SecurityConfig`.** Không có rule thì route rơi vào "đã đăng nhập", tức mọi vai trò (kể cả Candidate) đều vào được.
+- Người dùng hiện tại: dùng `core/security/CurrentUserService`, không tự query lại từ `Authentication` trong Controller.
+
+---
+
+## 6. Giao diện (tổng quan)
+
+> Chi tiết: [`UI/README.md`](UI/README.md) → `UI_RULES.md` (luật), `UI_CATALOG.md` (tra cứu), `UI_NEW_PAGE.md` (trang mới), `UI_MIGRATION.md` (migrate trang cũ), `UI_CSS_GUIDE.md` (CSS), `UI_LEGACY_CLEANUP.md` (file cũ).
+
+### 6.1. Ba cấp kế thừa (Thymeleaf Layout Dialect)
+
+```text
+Cấp 1  layout/base.html       ← <head> chung (tokens, global, components, CSRF meta), interface.js
+Cấp 2  layout/internal.html   ← sidebar theo role + topbar nội bộ + <main>
+       layout/public.html     ← topbar công khai + footer
+       layout/auth.html       ← dự phòng cho trang xác thực/lỗi
+Cấp 3  {feature}/*.html       ← chỉ chứa nội dung: <html layout:decorate="~{layout/internal}"> … layout:fragment="content"
+```
+
+- **Sidebar tách file theo role** (`fragments/layout/sidebars/{admin|candidate|interviewer|recruiter}.html`), `sidebar-shell` tự chọn theo role. **Không** gom mọi menu vào một sidebar rồi rẽ nhánh bằng `th:if`.
+- Controller chỉ đặt `model.addAttribute("activeMenu", "...")`; thông tin người dùng ở topbar do `TopbarUserAdvice` cấp sẵn.
+- `layout:decorate` **chỉ** dùng để kế thừa layout; `th:replace` **chỉ** dùng để nhúng fragment.
+
+### 6.2. Fragment: Khung vs Nội dung
+- `fragments/layout/`: mảnh của **khung** (topbar, sidebar, góc người dùng). Chỉ layout cấp 2 gọi.
+- `fragments/ui/`: linh kiện **nội dung** (`cards`, `dialogs`, `pagination`...). Trang cấp 3 gọi.
+- **Rule of 3:** chỉ tách fragment mới khi một khối markup **có cấu trúc và tham số** lặp lại **≥ 3 nơi**. Không tách các `div` bọc đơn thuần.
+
+### 6.3. Quy tắc bắt buộc (tóm tắt)
+- Không `style="..."`, không `<style>`/`<script>` nội tuyến, không mã màu hex: dùng token `var(--...)` và file trong `static/`.
+- Tra `UI_CATALOG.md` trước khi viết CSS mới. Nút: chữ nhật bo 8px (`var(--radius-md)`).
+- Không đổi tên/dời template, không đổi biến backend (`${...}`, `th:field`, `name`, `id`).
+- Mọi request AJAX gửi kèm CSRF: đọc `meta[name="_csrf"]` → header `X-CSRF-TOKEN` (thiếu sẽ bị 403).
+- Form chỉnh sửa quan trọng: nút Lưu chỉ bật khi có thay đổi (dirty check), có nút Hủy; thao tác xóa/cập nhật lớn phải qua hộp thoại xác nhận.
+- Text từ DB có `\n`: thay bằng `<br/>` ở Service rồi render bằng `th:utext`.
+
+---
+
+## 7. Giao tiếp chéo giữa các Module
+
+- Được tiêm Service/Repository của module khác khi nghiệp vụ cần. Ưu tiên gọi **Service** của module kia hơn là dùng thẳng Repository của nó.
+- **Cấm** phụ thuộc vòng (A → B → A).
+- `core` **không được** phụ thuộc module nghiệp vụ (hiện còn vi phạm, xem mục 8).
+- Không import DTO nội bộ của module khác nếu không thật cần. Nghiệp vụ đan chéo từ 3 module trở lên → cân nhắc một service điều phối riêng.
+
+---
+
+## 8. Hiện trạng: những điểm code cũ lệch chuẩn
+
+Code cũ chạy được, **chưa cần sửa ngay**. Khi viết code mới thì theo các mục 1–7, không bắt chước bảng dưới. Ai sửa xong điểm nào thì xóa dòng đó.
+
+| # | Hiện trạng | Hướng xử lý sau |
+|---|---|---|
+| 1 | `GlobalExceptionHandler` đang chứa handler riêng của `auth` (đăng ký, khôi phục mật khẩu), `user` (phòng ban), `admin` (health check) và import DTO của các module này; đây là file hay bị conflict | Chuyển dần về Controller/module theo mục 2.3 |
+| 2 | `interview` ném `IllegalArgumentException`, `EntityNotFoundException` (không tìm thấy dữ liệu đang ra trang 500); `requisition` dùng `ResponseStatusException`; `offer` ném `BaseBusinessException` trần | Đổi sang kiểu ở mục 2.3 |
+| 3 | `offer` có cả endpoint form lẫn JSON cho cùng thao tác tạo/sửa | Giữ một cách (mục 2.1) |
+| 4 | `BaseBusinessException` không được bắt đang hiện bằng `error/500` | Thêm `error/400.html` |
+| 5 | `core/exception/FormErrorViewHelper` (rỗng), `user/exception/AccountConflictException` không ai dùng | Xóa |
+| 6 | Hai `NotificationService` trùng tên (`notification` và `offer.service`) | Gộp về module `notification` |
+| 7 | `spring.jpa.hibernate.ddl-auto=update` | Chuyển `validate` khi `db.sql` khớp entity |
+| 8 | Package `demo` (`/test-db`, `/test-web`, `hello.html`), `templates/careers/*` không còn dùng | Xóa (xem `UI/UI_LEGACY_CLEANUP.md`) |
+| 9 | ~21 trang nội bộ còn dựng khung cũ (`interfaceHead` + `fragments/sidebar`) | Migrate theo `UI/UI_MIGRATION.md`; đến lúc đó **thêm menu phải sửa cả 2 nguồn sidebar** |
+| 10 | Module `candidate` chưa có controller/service; bước ứng tuyển dừng ở `ITERATION_2_PENDING` | Iteration 2 |
+| 11 | Còn 4 chỗ `@Autowired` field; test đặt tên lẫn `*Test`/`*Tests` | Code mới: `@RequiredArgsConstructor` + `private final`; test tên `*Tests` |
+
+---
+
+## 9. Pre-flight Checklist (trước khi mở PR, cho cả Dev và AI)
+
+- [ ] Class mới đặt đúng module và đúng sub-package (mục 1); không thêm nghiệp vụ vào `core`.
+- [ ] DTO là `record`/POJO có annotation validation, tên `*Request`/`*Response`, nằm thẳng trong `dto/`.
+- [ ] Form hay AJAX: chọn đúng một cách cho mỗi thao tác (mục 2.1).
+- [ ] Nhập sai → Bean Validation; vi phạm nghiệp vụ → exception của module, Controller bắt đúng kiểu đó; không tìm thấy/không có quyền → để Global xử lý (mục 2.2–2.4).
+- [ ] **Không sửa `GlobalExceptionHandler` vì một module.**
+- [ ] Service đọc có `@Transactional(readOnly = true)` và map sang DTO trong Service.
+- [ ] Route mới đã có rule trong `SecurityConfig`.
+- [ ] Thay đổi bảng/cột đã cập nhật `database/schema/db.sql` (+ `docs/database/model.md` nếu đổi thiết kế).
+- [ ] Trang mới dùng `layout:decorate`, đặt `activeMenu`, không có CSS/JS nội tuyến, dùng linh kiện trong `UI_CATALOG.md`.
+- [ ] AJAX có header `X-CSRF-TOKEN`; thao tác xóa có hộp thoại xác nhận.
+- [ ] Validate họ tên hỗ trợ tiếng Việt có dấu.
+- [ ] Có test cho Service/Controller mới (`src/test/java/com/group2/rms/...`) và `./mvnw test` pass.
