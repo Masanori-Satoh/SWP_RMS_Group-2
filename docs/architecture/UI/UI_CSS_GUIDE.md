@@ -88,7 +88,7 @@ Ví dụ thật — Jobs Board (`/jobs`):
 Khi một khối đã xuất hiện ở ≥ 2 trang:
 
 1. **Chọn tên catalog** không tiền tố trang, theo kiểu BEM của catalog (`.stat-strip`, `.stat-strip__item`, `.filter-bar`…). Kiểm tra chưa có tên trùng: tìm trong `components.css` và `UI_CATALOG.md`.
-2. **Thêm vào cuối mục tương ứng** của `components.css` (file chia mục A–L: A. Nút, B. Badge, C. Form, D. Card & lưới, E. Tiện ích chữ, F. Alert, G. Bảng, H. Dialog, I. Header/footer công khai, J. Stat card, K. Job card, L. Phân trang). Không có mục phù hợp thì thêm mục mới cuối file (M, N…) với comment tiêu đề cùng kiểu. Không đổi thuộc tính của selector đã có.
+2. **Thêm vào cuối mục tương ứng** của `components.css` (file chia mục A–N: A. Nút, B. Badge, C. Form, D. Card & lưới, E. Tiện ích chữ, F. Alert, G. Bảng, H. Dialog, I. Header/footer công khai, J. Stat card, K. Job card, L. Phân trang, M. Timeline, N. Menu "⋯"). Không có mục phù hợp thì thêm mục mới cuối file (O, P…) với comment tiêu đề cùng kiểu. Không đổi thuộc tính của selector đã có.
 3. Nếu là khối markup lặp lại: tạo fragment trong `templates/fragments/ui/<nhóm>.html`, ghi cách gọi + tham số ở comment đầu fragment.
 4. **Cập nhật `UI_CATALOG.md`** (cú pháp, bảng class, tham số) trong cùng PR.
 5. Chuyển các trang đang có bản riêng sang dùng bản chung, xóa CSS trùng trong file trang.

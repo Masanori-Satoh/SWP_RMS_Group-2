@@ -17,6 +17,7 @@
 8. [Hộp Thoại & Thông Báo (Dialogs & Alerts)](#8-hộp-thoại--thông-báo-dialogs--alerts)
 9. [Không Gian Làm Việc Nội Bộ (Workspace Topbar & Sidebar)](#9-không-gian-làm-việc-nội-bộ-workspace-topbar--sidebar)
 10. [Linh Kiện Tái Sử Dụng Bằng Fragment (`templates/fragments/ui/`)](#10-linh-kiện-tái-sử-dụng-bằng-fragment)
+11. [Menu Thao Tác Khác "⋯" (More Actions)](#11-menu-thao-tác-khác--more-actions)
 
 ---
 
@@ -365,3 +366,30 @@ Gọi bằng cú pháp Thymeleaf: `th:replace="~{fragments/ui/[file] :: [tênFra
 | **`actions`** (góc phải topbar) | `fragments/layout/topbar-user.html` | `<div th:replace="~{fragments/layout/topbar-user :: actions(${name}, ${email}, ${role}, ${avatar}, 'workspace')}"></div>` | `name`, `email`, `role`, `avatar`, `idPrefix`. Xem mục 9B |
 | **`header`** | `fragments/workspace-header.html` | `<header th:replace="~{fragments/workspace-header :: header(${role}, ${fullName})}"></header>` | `role`, `fullName` |
 | **`shell`** | `fragments/layout/sidebar-shell.html` | `<aside th:replace="~{fragments/layout/sidebar-shell :: shell(${activeMenu}, ${role})}"></aside>` | `activeMenu`, `role` |
+| **`timeline`** | `fragments/ui/timeline.html` | `<th:block th:replace="~{fragments/ui/timeline :: timeline(items=${detail.timeline})}"></th:block>` | `items`: `List<core.web.TimelineItem>` (`at`, `title`, `actor`, `body`, `tone` ∈ `neutral`/`brand`/`success`/`warning`/`danger`), sắp xếp sẵn. Rỗng thì hiện "Chưa có hoạt động". Mỗi module tự dựng danh sách mốc từ bảng của mình. CSS: `components.css` mục M. Dùng ở `candidate/application-detail.html` |
+
+---
+
+## 11. Menu Thao Tác Khác "⋯" (More Actions)
+
+Chỉ là class + markup (không có fragment), không cần JS: thẻ `<details>` tự mở/đóng, dùng được bằng bàn phím.
+
+```html
+<details class="more-menu">
+  <summary class="more-menu__toggle" aria-label="Thao tác khác cho hồ sơ của An Võ" title="Thao tác khác">⋯</summary>
+  <div class="more-menu__list">
+    <a class="more-menu__item" href="/applications/298/cv" target="_blank" rel="noopener">Mở CV</a>
+    <a class="more-menu__item" href="/interviews/new?applicationId=298">Lên lịch phỏng vấn</a>
+  </div>
+</details>
+```
+
+| Tên Class | Công dụng |
+|---|---|
+| `.more-menu` | Khung `<details>` |
+| `.more-menu__toggle` | Nút "⋯" (`<summary>`), cùng cỡ `btn--sm`. **Luôn có `aria-label`** nói rõ thao tác cho bản ghi nào |
+| `.more-menu__list` | Danh sách mục, mở **trong luồng** ngay dưới nút (không nổi đè) để không bị `.table-wrapper` (cuộn ngang) cắt ở các dòng cuối bảng |
+| `.more-menu__item` | Một mục: `<a>` hoặc `<button>` |
+
+- Chỉ đưa vào menu những mục người xem **dùng được** (kiểm quyền ở server); không còn mục nào thì không render menu.
+- Chưa tự đóng khi bấm ra ngoài (cần JS). CSS: `components.css` mục N.
