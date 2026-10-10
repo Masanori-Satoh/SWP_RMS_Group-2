@@ -32,8 +32,9 @@
         <span class="nav-label-text">Yêu cầu tuyển dụng</span>
     </a>
 
-    <!-- Tin tuyển dụng -->
-    <a th:href="@{/internal/job-postings}" class="sidebar-nav-link"
+    <!-- Tin tuyển dụng: chỉ HR (khớp SecurityConfig /internal/job-postings/**; Admin dùng admin.html) -->
+    <a th:if="${userRole == 'HR' or userRole == 'HR Specialist' or (userRole != null and #strings.contains(userRole, 'HR'))}"
+       th:href="@{/internal/job-postings}" class="sidebar-nav-link"
        th:classappend="${activeMenu == 'job-postings' ? 'active' : ''}"
        th:attr="aria-current=${activeMenu == 'job-postings' ? 'page' : null}"
        title="Tin tuyển dụng"
