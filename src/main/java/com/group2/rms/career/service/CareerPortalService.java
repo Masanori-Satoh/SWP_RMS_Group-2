@@ -1,5 +1,6 @@
 package com.group2.rms.career.service;
 
+import com.group2.rms.candidate.service.ApplicationSubmissionService;
 import com.group2.rms.core.exception.ResourceNotFoundException;
 import com.group2.rms.career.dto.PublicJobDetailResponse;
 import com.group2.rms.career.dto.PublicJobListResponse;
@@ -35,6 +36,8 @@ public class CareerPortalService {
     private final DepartmentRepository departmentRepository;
 
     private final UserRepository userRepository;
+
+    private final ApplicationSubmissionService applicationSubmissionService;
 
     public Page<PublicJobListResponse> getPublishedJobs(String keyword, Integer departmentId, String employmentType,
             Pageable pageable) {
@@ -81,8 +84,7 @@ public class CareerPortalService {
         boolean isAcceptingApplications = (job.getApplicationDeadline() == null
                 || !job.getApplicationDeadline().isBefore(LocalDateTime.now()));
 
-        boolean hasApplied = false;
-        // Có thể bổ sung check hasApplied ở đây (gọi CandidateRepository)
+        boolean hasApplied = applicationSubmissionService.hasApplied(username, id);
 
         return new PublicJobDetailResponse(
                 job.getJobPostingId(),
