@@ -194,3 +194,91 @@ input[aria-invalid="true"],select[aria-invalid="true"] { border-color:var(--erro
   border-radius: 4px;
 }
 
+
+/* =============================================================================
+   CẦU NỐI PHÂN TRANG CHO TRANG CŨ (interfaceHead)
+   fragments/pagination :: paged/pager giờ sinh class của catalog (.pagination-*, .page-*),
+   nhưng trang cũ không nạp components.css nên thanh phân trang mất style.
+   Bản sao mục L của components.css (giá trị phải giữ khớp). Token lấy từ design-tokens.css
+   (+ --radius-sm ở đầu file này). Xóa cùng interface.css khi trang cũ migrate xong
+   (UI_LEGACY_CLEANUP.md mục 3).
+   ============================================================================= */
+.pagination-wrapper {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: var(--s4);
+  margin-top: var(--s6);
+  padding: var(--s4) 0;
+  font-size: 14px;
+  color: var(--muted);
+}
+
+.pagination-info {
+  display: flex;
+  align-items: center;
+  gap: var(--s2);
+  color: var(--muted);
+}
+
+.pagination-controls {
+  display: flex;
+  align-items: center;
+  gap: var(--s4);
+  flex-wrap: wrap;
+}
+
+.pagination-list {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.page-item {
+  display: inline-flex;
+}
+
+.page-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 36px;
+  height: 36px;
+  padding: 0 10px;
+  border-radius: var(--radius-sm);
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--ink);
+  background-color: var(--surface);
+  border: 1px solid var(--line);
+  text-decoration: none;
+  transition: all 0.15s ease;
+  user-select: none;
+}
+
+.page-link:hover:not(.disabled):not(.active) {
+  background-color: var(--brand-soft);
+  border-color: var(--brand-dark);
+  color: var(--brand-dark);
+}
+
+.page-link.active {
+  background-color: var(--brand-dark);
+  border-color: var(--brand-dark);
+  color: var(--surface);
+  font-weight: 700;
+  cursor: default;
+}
+
+.page-link.disabled {
+  color: var(--control-line);
+  border-color: var(--line);
+  background-color: var(--page);
+  cursor: not-allowed;
+  pointer-events: none;
+  opacity: 0.6;
+}
