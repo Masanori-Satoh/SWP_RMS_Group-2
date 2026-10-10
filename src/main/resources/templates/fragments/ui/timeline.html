@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<body>
+
+<!-- =============================================================================
+     TIMELINE FRAGMENT: các mốc theo thời gian (ai làm gì, lúc nào)
+     Dữ liệu: List<com.group2.rms.core.web.TimelineItem>, đã sắp xếp sẵn (thường mới nhất trước).
+     Cách gọi:
+     <th:block th:replace="~{fragments/ui/timeline :: timeline(items=${detail.timeline})}"></th:block>
+     CSS: components.css mục M. Danh sách rỗng hiện "Chưa có hoạt động".
+     ============================================================================= -->
+<th:block th:fragment="timeline(items)">
+    <ol class="timeline" th:unless="${#lists.isEmpty(items)}">
+        <li th:each="item : ${items}" class="timeline__item"
+            th:classappend="'timeline__item--' + (${item.tone} ?: 'neutral')">
+            <span class="timeline__dot" aria-hidden="true"></span>
+            <div class="timeline__content">
+                <p class="timeline__title" th:text="${item.title}">Nộp hồ sơ</p>
+                <p class="timeline__meta">
+                    <time th:if="${item.at != null}"
+                          th:datetime="${#temporals.formatISO(item.at)}"
+                          th:text="${#temporals.format(item.at, 'dd/MM/yyyy HH:mm')}">10/10/2026 14:59</time>
+                    <span th:if="${item.actor != null}" th:text="${item.actor}">Nguyễn Văn An</span>
+                </p>
+                <p class="timeline__body" th:if="${!#strings.isEmpty(item.body)}" th:text="${item.body}">Nhận xét</p>
+            </div>
+        </li>
+    </ol>
+    <p class="timeline__empty" th:if="${#lists.isEmpty(items)}">Chưa có hoạt động</p>
+</th:block>
+
+</body>
+</html>
