@@ -256,7 +256,7 @@ Code cũ chạy được, **chưa cần sửa ngay**. Khi viết code mới thì
 | 6 | Hai `NotificationService` trùng tên (`notification` và `offer.service`) | Gộp về module `notification` |
 | 7 | `spring.jpa.hibernate.ddl-auto=update` | Chuyển `validate` khi `db.sql` khớp entity |
 | 8 | Package `demo` (`/test-db`, `/test-web`, `hello.html`), `templates/careers/*` không còn dùng | Xóa (xem `UI/UI_LEGACY_CLEANUP.md`) |
-| 9 | ~21 trang nội bộ còn dựng khung cũ (`interfaceHead` + `fragments/sidebar`) | Migrate theo `UI/UI_MIGRATION.md`; đến lúc đó **thêm menu phải sửa cả 2 nguồn sidebar** |
+| 9 | ~21 trang nội bộ còn dựng khung cũ (`interfaceHead` + `fragments/sidebar`) | Migrate theo `UI/UI_MIGRATION.md`. Menu đã về **một nguồn**: `fragments/sidebar :: workspace` chuyển tiếp sang `sidebar-shell`, thêm menu chỉ sửa `fragments/layout/sidebars/*.html` |
 | 10 | Module `candidate` chưa có controller/service; bước ứng tuyển dừng ở `ITERATION_2_PENDING` | Iteration 2 |
 | 11 | Còn 4 chỗ `@Autowired` field; test đặt tên lẫn `*Test`/`*Tests` | Code mới: `@RequiredArgsConstructor` + `private final`; test tên `*Tests` |
 

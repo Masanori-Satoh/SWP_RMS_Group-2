@@ -103,7 +103,7 @@ Ví dụ thật: `static/css/pages/job-board.css` chỉ có bố cục lưới c
 ## 5. Menu sidebar (trang nội bộ)
 
 1. Thêm một mục `<a>` vào `templates/fragments/layout/sidebars/<role>.html` của **mỗi role được phép vào trang**, copy đúng khuôn mục có sẵn (icon SVG + `nav-label-text` + `data-tooltip`), `activeMenu` khớp giá trị Controller đặt.
-2. **Giai đoạn chuyển tiếp:** trang cũ vẫn dùng menu trong `templates/fragments/sidebar.html`. Cho đến khi migrate xong, mục menu mới phải thêm ở **cả hai** nơi.
+2. Chỉ có **một nguồn menu**. Trang cũ gọi `fragments/sidebar :: workspace(...)` nhưng fragment đó chuyển tiếp sang `sidebar-shell`, nên **không** sửa `fragments/sidebar.html`. `SidebarMenuTests` kiểm tra mỗi role thấy đúng mục ở cả trang cũ lẫn trang mới.
 3. Kiểm tra quyền truy cập URL trong `SecurityConfig` khớp với các role có menu.
 
 ---
@@ -115,6 +115,6 @@ Ví dụ thật: `static/css/pages/job-board.css` chỉ có bố cục lưới c
 - [ ] Mọi khối có trong catalog đều dùng class/fragment của catalog; phân trang dùng `fragments/ui/pagination :: paged`.
 - [ ] CSS riêng (nếu có) ở `static/css/pages/<trang>.css`, class có tiền tố, chỉ dùng token, không định nghĩa lại class dùng chung.
 - [ ] Không `style="..."`, `<style>`, màu hex trong template.
-- [ ] Menu đã thêm cho đúng role (cả 2 nguồn menu trong giai đoạn chuyển tiếp).
+- [ ] Menu đã thêm cho đúng role trong `fragments/layout/sidebars/*.html` (một nguồn duy nhất).
 - [ ] Đã mở trang với từng role được phép; thu nhỏ màn hình không vỡ; bấm Đăng xuất ra hộp thoại chung.
 - [ ] Nếu đã thêm linh kiện dùng chung: đã cập nhật `UI_CATALOG.md` cùng PR.

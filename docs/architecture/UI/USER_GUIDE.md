@@ -97,8 +97,8 @@ class có tiền tố của trang, chỉ dùng token (var(--...)), không mã m�
 ```text
 Thêm mục menu "<tên>" dẫn tới <URL> cho role <...>.
 Đọc docs/architecture/UI/UI_NEW_PAGE.md mục 5.
-Sửa src/main/resources/templates/fragments/layout/sidebars/<role>.html
-VÀ src/main/resources/templates/fragments/sidebar.html (giai đoạn chuyển tiếp còn 2 nguồn menu).
+Sửa src/main/resources/templates/fragments/layout/sidebars/<role>.html (nguồn menu duy nhất,
+không sửa fragments/sidebar.html: file đó chỉ chuyển tiếp).
 Copy đúng khuôn một mục <a class="sidebar-nav-link"> có sẵn.
 ```
 
