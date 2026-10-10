@@ -11,22 +11,25 @@
 
 <body>
     <div layout:fragment="base-content" class="page-wrapper">
+        <!-- Vai trò + tên người dùng cho sidebar/topbar. Tính bằng th:with vì Thymeleaf 3.1 cấm T(...)
+             trong tham số của th:replace (lỗi "access to static classes is forbidden in this context"). -->
+        <th:block th:with="shellRole=${role ?: (userRole ?: (dashboard != null ? dashboard.roleName : (userProfile != null ? userProfile.roleName : (viewerRole != null ? viewerRole : (currentUser != null and currentUser instanceof T(com.group2.rms.user.entity.User) ? currentUser.role.roleName : (authenticatedUser != null ? authenticatedUser.role.roleName : (session.user != null ? session.user.role : null)))))))},
+                           shellName=${fullName ?: (userName ?: (dashboard != null ? dashboard.fullName : (userProfile != null ? userProfile.fullName : (viewerName != null ? viewerName : (currentUser != null and currentUser instanceof T(com.group2.rms.user.entity.User) ? currentUser.fullName : (authenticatedUser != null ? authenticatedUser.fullName : (session.user != null ? session.user.fullName : null)))))))}">
         <!-- 1. Thanh điều hướng Sidebar thu gọn 68px/250px của Hoàng -->
-        <aside
-            th:replace="~{fragments/layout/sidebar-shell :: shell(${activeMenu ?: 'dashboard'}, ${role ?: (userRole ?: (dashboard != null ? dashboard.roleName : (userProfile != null ? userProfile.roleName : (viewerRole != null ? viewerRole : (currentUser != null and currentUser instanceof T(com.group2.rms.user.entity.User) ? currentUser.role.roleName : (authenticatedUser != null ? authenticatedUser.role.roleName : (session.user != null ? session.user.role : null)))))))})}">
+        <aside th:replace="~{fragments/layout/sidebar-shell :: shell(${activeMenu ?: 'dashboard'}, ${shellRole})}">
         </aside>
 
         <!-- 2. Vùng làm việc chính -->
         <div class="main-content">
             <!-- Topbar nội bộ & Thông tin người dùng -->
-            <header
-                th:replace="~{fragments/workspace-header :: header(${role ?: (userRole ?: (dashboard != null ? dashboard.roleName : (userProfile != null ? userProfile.roleName : (viewerRole != null ? viewerRole : (currentUser != null and currentUser instanceof T(com.group2.rms.user.entity.User) ? currentUser.role.roleName : (authenticatedUser != null ? authenticatedUser.role.roleName : (session.user != null ? session.user.role : null)))))))}, ${fullName ?: (userName ?: (dashboard != null ? dashboard.fullName : (userProfile != null ? userProfile.fullName : (viewerName != null ? viewerName : (currentUser != null and currentUser instanceof T(com.group2.rms.user.entity.User) ? currentUser.fullName : (authenticatedUser != null ? authenticatedUser.fullName : (session.user != null ? session.user.fullName : null)))))))})}">
+            <header th:replace="~{fragments/workspace-header :: header(${shellRole}, ${shellName})}">
             </header>
             <!-- Slot nội dung nghiệp vụ của từng màn hình con -->
             <main id="main" layout:fragment="content" class="page-content container">
                 <!-- Ruột trang con đặt tại đây -->
             </main>
         </div>
+        </th:block>
     </div>
 </body>
 
