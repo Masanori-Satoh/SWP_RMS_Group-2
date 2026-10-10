@@ -6,4 +6,7 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public interface ApplicationReviewRepository extends JpaRepository<ApplicationReview, Integer> {
+
+    boolean existsByApplication_ApplicationIdAndReviewerRoleAndDecision(Integer applicationId, String reviewerRole,
+                                                                         String decision);
 }
