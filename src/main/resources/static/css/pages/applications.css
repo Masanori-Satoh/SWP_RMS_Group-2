@@ -1,0 +1,110 @@
+/* =============================================================================
+   PAGES/APPLICATIONS.CSS — Hồ sơ ứng tuyển (/applications, candidate/applications.html;
+   /applications/{id}, candidate/application-detail.html)
+   Chỉ chứa phần catalog chưa có: bố cục form lọc, thanh kết quả, ô ứng viên, điểm AI,
+   cột thao tác, trạng thái rỗng.
+   Tiền tố class: app-
+   ============================================================================= */
+
+/* --- Danh sách --------------------------------------------------------------- */
+.app-filter {
+  display: grid;
+  grid-template-columns: 2fr 2fr 1.5fr 1.5fr auto;
+  gap: var(--s4);
+  align-items: end;
+  margin-bottom: var(--s6);
+}
+
+.app-filter .form-group {
+  margin-bottom: 0;
+}
+
+.app-filter__actions {
+  display: flex;
+  gap: var(--s2);
+}
+
+.app-results {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s4);
+  margin-bottom: var(--s4);
+}
+
+.app-results__count {
+  margin: 0;
+  color: var(--muted);
+}
+
+.app-candidate__name {
+  display: block;
+  color: var(--ink);
+}
+
+.app-candidate__email {
+  display: block;
+  font-size: 13px;
+  color: var(--muted);
+}
+
+.app-score {
+  font-weight: 700;
+  color: var(--ink);
+}
+
+.app-score--empty {
+  font-weight: 400;
+  font-size: 13px;
+  color: var(--muted);
+  white-space: nowrap;
+}
+
+.app-table__actions-head {
+  text-align: right;
+}
+
+.app-table__actions {
+  text-align: right;
+  white-space: nowrap;
+}
+
+.app-table__actions .more-menu {
+  margin-left: var(--s2);
+  vertical-align: top;
+}
+
+.app-empty {
+  text-align: center;
+  margin-bottom: var(--s6);
+}
+
+.app-empty__title {
+  margin: 0 0 var(--s2);
+  font-size: var(--font-lg);
+}
+
+.app-empty__desc {
+  margin: 0;
+}
+
+/* --- Responsive ---------------------------------------------------------------- */
+@media (max-width: 992px) {
+  .app-filter {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .app-filter__actions {
+    grid-column: 1 / -1;
+  }
+}
+
+@media (max-width: 768px) {
+  .app-filter {
+    grid-template-columns: 1fr;
+  }
+
+  .app-results {
+    flex-wrap: wrap;
+  }
+}

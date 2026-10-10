@@ -105,6 +105,10 @@ public class SecurityConfig {
                                                                 RoleAuthorities.SYSTEM_ADMIN)
                                                 .requestMatchers("/internal/job-postings", "/internal/job-postings/**")
                                                 .hasAnyAuthority("ROLE_HR", RoleAuthorities.SYSTEM_ADMIN)
+                                                // application pipeline: HM scope (own department) is checked in ApplicationAccess
+                                                .requestMatchers("/applications", "/applications/**")
+                                                .hasAnyAuthority("ROLE_HR", "ROLE_HIRING_MANAGER", "ROLE_DIRECTOR",
+                                                                RoleAuthorities.SYSTEM_ADMIN)
                                                 .anyRequest().authenticated())
                                 // store target url before login
                                 .requestCache(cache -> cache.requestCache(requestCache))

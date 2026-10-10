@@ -60,7 +60,7 @@ public class ApplicationPipelineService {
         return new ApplicationListResponse(page,
                 applications.findPostingOptions(scope.allDepartments(), scope.managerUserId(), scope.departmentId(),
                         scope.forwardedOnly()),
-                filter, scope.forwardedOnly());
+                filter, scope.forwardedOnly(), actor.getRole() == null ? null : actor.getRole().getRoleName());
     }
 
     @Transactional(readOnly = true)
