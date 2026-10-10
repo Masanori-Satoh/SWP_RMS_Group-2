@@ -843,3 +843,176 @@ dialog.dialog::backdrop {
   pointer-events: none;
   opacity: 0.6;
 }
+
+/* -----------------------------------------------------------------------------
+   M. TIMELINE (fragment fragments/ui/timeline :: timeline(items))
+   Mốc theo thời gian: chấm màu theo tone + đường nối, tiêu đề, thời điểm · người làm, nội dung.
+   ----------------------------------------------------------------------------- */
+.timeline {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.timeline__item {
+  position: relative;
+  display: grid;
+  grid-template-columns: var(--s4) 1fr;
+  gap: var(--s3);
+  padding-bottom: var(--s4);
+}
+
+.timeline__item:not(:last-child)::before {
+  content: "";
+  position: absolute;
+  top: var(--s4);
+  bottom: 0;
+  left: calc(var(--s4) / 2 - 1px);
+  width: 2px;
+  background-color: var(--line);
+}
+
+.timeline__dot {
+  position: relative;
+  z-index: 1;
+  width: var(--s3);
+  height: var(--s3);
+  margin: var(--s1) auto 0;
+  border-radius: var(--radius-full);
+  background-color: var(--neutral);
+  box-shadow: 0 0 0 3px var(--surface);
+}
+
+.timeline__item--brand .timeline__dot { background-color: var(--brand); }
+.timeline__item--success .timeline__dot { background-color: var(--success); }
+.timeline__item--warning .timeline__dot { background-color: var(--warning); }
+.timeline__item--danger .timeline__dot { background-color: var(--error); }
+
+.timeline__content {
+  min-width: 0;
+}
+
+.timeline__title {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.timeline__meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s2);
+  margin: 2px 0 0;
+  font-size: 13px;
+  color: var(--muted);
+}
+
+.timeline__meta > * + *::before {
+  content: "·";
+  margin-right: var(--s2);
+}
+
+.timeline__body {
+  margin: var(--s2) 0 0;
+  padding: var(--s2) var(--s3);
+  border-radius: var(--radius-sm);
+  background-color: var(--surface-subtle);
+  font-size: 14px;
+  color: var(--ink);
+  white-space: pre-line;
+  overflow-wrap: anywhere;
+}
+
+.timeline__empty {
+  margin: 0;
+  font-size: 14px;
+  color: var(--muted);
+}
+
+/* -----------------------------------------------------------------------------
+   N. MENU "⋯" (MORE ACTIONS) — markup thuần, không cần JS:
+   <details class="more-menu">
+     <summary class="more-menu__toggle" aria-label="Thao tác khác">⋯</summary>
+     <div class="more-menu__list">
+       <a class="more-menu__item" href="...">Mở CV</a>
+     </div>
+   </details>
+   Danh sách mở ngay dưới nút, nằm trong luồng trang (không nổi đè), nên không bị
+   .table-wrapper (cuộn ngang) cắt mất ở các dòng cuối bảng.
+   ----------------------------------------------------------------------------- */
+.more-menu {
+  display: inline-block;
+  text-align: left;
+}
+
+.more-menu__toggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: var(--btn-sm-h);
+  min-height: var(--btn-sm-h);
+  padding: 0 var(--s2);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md);
+  background-color: var(--surface);
+  color: var(--ink);
+  font-size: 18px;
+  font-weight: 700;
+  line-height: 1;
+  list-style: none;
+  cursor: pointer;
+  user-select: none;
+}
+
+.more-menu__toggle::-webkit-details-marker {
+  display: none;
+}
+
+.more-menu__toggle:hover {
+  background-color: var(--surface-subtle);
+}
+
+.more-menu__toggle:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
+}
+
+.more-menu[open] > .more-menu__toggle {
+  border-color: var(--brand);
+  background-color: var(--brand-soft);
+}
+
+.more-menu__list {
+  display: flex;
+  flex-direction: column;
+  min-width: 180px;
+  margin-top: var(--s1);
+  padding: var(--s1);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md);
+  background-color: var(--surface);
+  box-shadow: var(--shadow-md);
+}
+
+.more-menu__item {
+  display: block;
+  width: 100%;
+  padding: var(--s2) var(--s3);
+  border: 0;
+  border-radius: var(--radius-sm);
+  background: none;
+  color: var(--ink);
+  font: inherit;
+  font-size: 14px;
+  text-align: left;
+  text-decoration: none;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.more-menu__item:hover,
+.more-menu__item:focus-visible {
+  background-color: var(--surface-subtle);
+  outline: none;
+}
