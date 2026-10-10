@@ -133,25 +133,21 @@ class ApplicationAccessTests {
     @ParameterizedTest
     @ValueSource(strings = {"HM_Passed", "Interviewing"})
     void nextStepsFollowTeammatesRouteRoles(String status) {
-        Application application = application(engineering, status);
+        assertTrue(access.canScheduleInterview(hr, status));
+        assertTrue(access.canScheduleInterview(admin, status));
+        assertFalse(access.canScheduleInterview(director, status));
+        assertFalse(access.canScheduleInterview(engineeringHead, status));
 
-        assertTrue(access.canScheduleInterview(hr, application));
-        assertTrue(access.canScheduleInterview(admin, application));
-        assertFalse(access.canScheduleInterview(director, application));
-        assertFalse(access.canScheduleInterview(engineeringHead, application));
-
-        assertTrue(access.canCreateOffer(hr, application));
-        assertTrue(access.canCreateOffer(director, application));
-        assertTrue(access.canCreateOffer(admin, application));
-        assertFalse(access.canCreateOffer(engineeringHead, application));
+        assertTrue(access.canCreateOffer(hr, status));
+        assertTrue(access.canCreateOffer(director, status));
+        assertTrue(access.canCreateOffer(admin, status));
+        assertFalse(access.canCreateOffer(engineeringHead, status));
     }
 
     @Test
     void nextStepsHiddenBeforeHiringManagerPasses() {
-        Application application = application(engineering, "HR_Passed");
-
-        assertFalse(access.canScheduleInterview(hr, application));
-        assertFalse(access.canCreateOffer(hr, application));
+        assertFalse(access.canScheduleInterview(hr, "HR_Passed"));
+        assertFalse(access.canCreateOffer(hr, "HR_Passed"));
     }
 
     @Test

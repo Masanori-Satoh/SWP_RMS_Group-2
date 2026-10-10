@@ -70,14 +70,13 @@ public class ApplicationAccess {
     }
 
     /** Khớp quyền URL {@code /interviews/new} (HR, Admin) bên module interview. */
-    public boolean canScheduleInterview(User user, Application application) {
-        return Set.of(ROLE_HR, ROLE_SYSTEM_ADMIN).contains(role(user))
-                && NEXT_STEP_STATUSES.contains(application.getApplicationStatus());
+    public boolean canScheduleInterview(User user, String applicationStatus) {
+        return Set.of(ROLE_HR, ROLE_SYSTEM_ADMIN).contains(role(user)) && NEXT_STEP_STATUSES.contains(applicationStatus);
     }
 
     /** Khớp quyền URL {@code /offers/**} (HR, Director, Admin) bên module offer. */
-    public boolean canCreateOffer(User user, Application application) {
-        return VIEW_ALL_ROLES.contains(role(user)) && NEXT_STEP_STATUSES.contains(application.getApplicationStatus());
+    public boolean canCreateOffer(User user, String applicationStatus) {
+        return VIEW_ALL_ROLES.contains(role(user)) && NEXT_STEP_STATUSES.contains(applicationStatus);
     }
 
     /** Khớp quyền URL {@code /internal/job-postings/**} (HR, Admin): chỉ khi đó mới hiện link sang trang tin nội bộ. */
