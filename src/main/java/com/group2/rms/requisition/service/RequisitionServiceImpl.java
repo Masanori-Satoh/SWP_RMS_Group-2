@@ -457,26 +457,26 @@ public class RequisitionServiceImpl implements RequisitionService {
 
     private Map<String, String> createSnapshot(JobRequisition jobRequisition) {
         Map<String, String> snapshotMap = new LinkedHashMap<>();
-        snapshotMap.put("Job title", jobRequisition.getTitle());
-        snapshotMap.put("Department", jobRequisition.getDepartment() == null ? null : jobRequisition.getDepartment().getDepartmentName());
-        snapshotMap.put("Openings", formatDisplayValue(jobRequisition.getNumberOfPositions()));
-        snapshotMap.put("Employment type", jobRequisition.getEmploymentType());
-        snapshotMap.put("Minimum salary", formatNumber(jobRequisition.getMinSalary()));
-        snapshotMap.put("Maximum salary", formatNumber(jobRequisition.getMaxSalary()));
-        snapshotMap.put("Gender", jobRequisition.getGender());
-        snapshotMap.put("Location", jobRequisition.getWorkLocation());
-        snapshotMap.put("Work model", jobRequisition.getWorkModel());
-        snapshotMap.put("Probation duration", jobRequisition.getProbationDuration());
-        snapshotMap.put("Expected start date", formatDisplayValue(jobRequisition.getExpectedStartDate()));
-        snapshotMap.put("Reason for hiring", jobRequisition.getReasonForHiring());
-        snapshotMap.put("Job description", jobRequisition.getJobDescription());
-        snapshotMap.put("Candidate requirements", jobRequisition.getRequirementDetails());
-        snapshotMap.put("Status", jobRequisition.getApprovalStatus());
+        snapshotMap.put("Chức danh công việc", jobRequisition.getTitle());
+        snapshotMap.put("Phòng ban", jobRequisition.getDepartment() == null ? null : jobRequisition.getDepartment().getDepartmentName());
+        snapshotMap.put("Số lượng cần tuyển", formatDisplayValue(jobRequisition.getNumberOfPositions()));
+        snapshotMap.put("Hình thức làm việc", jobRequisition.getEmploymentType());
+        snapshotMap.put("Mức lương tối thiểu", formatNumber(jobRequisition.getMinSalary()));
+        snapshotMap.put("Mức lương tối đa", formatNumber(jobRequisition.getMaxSalary()));
+        snapshotMap.put("Yêu cầu giới tính", jobRequisition.getGender());
+        snapshotMap.put("Địa điểm làm việc", jobRequisition.getWorkLocation());
+        snapshotMap.put("Mô hình làm việc", jobRequisition.getWorkModel());
+        snapshotMap.put("Thời gian thử việc", jobRequisition.getProbationDuration());
+        snapshotMap.put("Ngày bắt đầu dự kiến", formatDisplayValue(jobRequisition.getExpectedStartDate()));
+        snapshotMap.put("Lý do tuyển dụng", jobRequisition.getReasonForHiring());
+        snapshotMap.put("Mô tả công việc", jobRequisition.getJobDescription());
+        snapshotMap.put("Yêu cầu ứng viên", jobRequisition.getRequirementDetails());
+        snapshotMap.put("Trạng thái phê duyệt", jobRequisition.getApprovalStatus());
 
         int criteriaIndex = 0;
         for (ScreeningCriteria criterion : jobRequisition.getScreeningCriteria()) {
             String criterionName = (criterion.getCriteriaName() == null ? "Tiêu chí " + (++criteriaIndex) : criterion.getCriteriaName());
-            snapshotMap.put("Criterion: " + criterionName,
+            snapshotMap.put("Tiêu chí: " + criterionName,
                     formatDisplayValue(criterion.getCriteriaType()) + "; "
                             + formatDisplayValue(criterion.getRequiredValue()) + "; trọng số "
                             + formatDisplayValue(formatNumber(criterion.getWeight())) + "%; bắt buộc "
@@ -495,6 +495,8 @@ public class RequisitionServiceImpl implements RequisitionService {
                 .numberOfPositions(jobRequisition.getNumberOfPositions())
                 .employmentType(jobRequisition.getEmploymentType())
                 .approvalStatus(jobRequisition.getApprovalStatus())
+                .recruitmentRound(jobRequisition.getRecruitmentRound() != null ? jobRequisition.getRecruitmentRound() : 1)
+                .requisitionCode(jobRequisition.getRequisitionCode() != null ? jobRequisition.getRequisitionCode() : ("REQ-" + jobRequisition.getRequisitionId()))
                 .createdAt(jobRequisition.getCreatedAt())
                 .minSalary(jobRequisition.getMinSalary())
                 .maxSalary(jobRequisition.getMaxSalary())
@@ -513,6 +515,12 @@ public class RequisitionServiceImpl implements RequisitionService {
                 .build();
 
         if (isDetailView) {
+            postings.findTopByRequisition_RequisitionIdOrderByJobPostingIdDesc(jobRequisition.getRequisitionId())
+                    .ifPresent(p -> {
+                        responseDto.setPostingStatus(p.getPostingStatus());
+                        responseDto.setJobPostingId(p.getJobPostingId());
+                    });
+
             // Kiểm tra xem bản nháp đã điền đủ thông tin để submit chưa
             if ("Draft".equals(jobRequisition.getApprovalStatus())) {
                 RequisitionRequest submissionCheck = convertToRequestDto(jobRequisition);

@@ -75,10 +75,13 @@
             th:attr="aria-current=${activeMenu == 'api-monitoring' ? 'page' : null}">Giám sát API</a>
         <a th:if="${role != 'Candidate' and role != 'Interviewer'}" th:href="@{/requisitions}"
             th:attr="aria-current=${activeMenu == 'requisitions' ? 'page' : null}">Yêu cầu tuyển dụng</a>
+        <a th:if="${role == 'HR' or role == 'System Admin'}" th:href="@{/internal/job-postings}"
+            th:attr="aria-current=${activeMenu == 'job-postings' ? 'page' : null}">Tin tuyển dụng</a>
         <a th:if="${role == 'HR' or role == 'System Admin' or role == 'Hiring Manager' or role == 'Interviewer' or role == 'Director'}"
             th:href="@{/interviews}" th:attr="aria-current=${activeMenu == 'interviews' ? 'page' : null}">Lịch phỏng vấn</a>
         <a th:if="${role == 'HR' or role == 'HR Specialist' or role == 'Director' or role == 'System Admin' or (role != null and #strings.contains(role, 'HR'))}"
             th:href="@{/offers}" th:attr="aria-current=${activeMenu == 'offers' ? 'page' : null}">Quản lý Đề xuất</a>
+        <a th:href="@{/notifications}" th:attr="aria-current=${activeMenu == 'notifications' ? 'page' : null}">Thông báo</a>
         <a th:href="@{/profile}" th:attr="aria-current=${activeMenu == 'profile' ? 'page' : null}">Hồ sơ cá nhân</a>
     </nav>
     <nav class="workspace-nav workspace-home" aria-label="Cổng tuyển dụng"><a th:href="@{/}">Về trang Tuyển dụng</a></nav>

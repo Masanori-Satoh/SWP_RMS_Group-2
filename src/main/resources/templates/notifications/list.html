@@ -1,7 +1,7 @@
 <!DOCTYPE html>
-<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
 
-<head th:replace="~{fragments/head :: interfaceHead('Notifications', ~{::pageStyles})}">
+<head th:replace="~{fragments/head :: interfaceHead('Thông báo hệ thống', ~{::pageStyles})}">
     <th:block th:fragment="pageStyles">
         <link rel="stylesheet" th:href="@{/css/notifications.css}">
     </th:block>
@@ -14,21 +14,21 @@
             <header th:replace="~{fragments/workspace-header :: header(${viewerRole}, ${viewerName})}"></header>
             <main id="main" tabindex="-1" class="page-content">
                 <div class="container notif-container">
-                    <nav class="requisition-breadcrumb" aria-label="Breadcrumb">
-                        <a th:href="@{/dashboard}">Dashboard</a>
+                    <nav class="requisition-breadcrumb" aria-label="Điều hướng">
+                        <a th:href="@{/dashboard}">Bảng điều khiển</a>
                         <span aria-hidden="true">/</span>
-                        <span aria-current="page">Notifications</span>
+                        <span aria-current="page">Thông báo</span>
                     </nav>
 
                     <div class="notif-page-header">
                         <div>
-                            <h1>Notifications</h1>
-                            <p class="notif-subtitle" th:text="|You have ${unreadCount} unread notification(s)|"></p>
+                            <h1>Thông báo hệ thống</h1>
+                            <p class="notif-subtitle" th:text="|Bạn có ${unreadCount} thông báo chưa đọc|"></p>
                         </div>
                         <div class="notif-actions" th:if="${unreadCount > 0}">
                             <form th:action="@{/notifications/read-all}" method="post">
                                 <button type="submit" class="btn-read-all">
-                                    <i class="bi bi-check2-all"></i> Mark all as read
+                                    <i class="bi bi-check2-all"></i> Đánh dấu tất cả là đã đọc
                                 </button>
                             </form>
                         </div>
@@ -40,8 +40,9 @@
                         <div th:each="n : ${notifications}" class="notif-card" th:classappend="${n.isRead ? 'read' : 'unread'}">
                             <div class="notif-card-header">
                                 <div class="notif-badge-group">
-                                    <span class="notif-badge" th:classappend="${n.isRead ? 'status-read' : 'status-unread'}" th:text="${n.isRead ? 'Read' : 'New'}"></span>
-                                    <span th:if="${n.eventType == 'REQUISITION_REJECTED'}" class="notif-badge event-rejected">Requisition Rejected</span>
+                                    <span class="notif-badge" th:classappend="${n.isRead ? 'status-read' : 'status-unread'}" th:text="${n.isRead ? 'Đã đọc' : 'Mới'}"></span>
+                                    <span th:if="${n.eventType == 'REQUISITION_REJECTED'}" class="notif-badge event-rejected">Yêu cầu bị từ chối</span>
+                                    <span th:if="${n.eventType == 'JOB_POSTING_PUBLISHED'}" class="notif-badge" style="background:#dcfce7; color:#15803d;">Tin đã phát hành</span>
                                 </div>
                                 <span class="notif-time" th:text="${#temporals.format(n.createdAt, 'dd/MM/yyyy HH:mm')}"></span>
                             </div>
@@ -51,12 +52,12 @@
 
                             <div class="notif-footer">
                                 <form th:if="${!n.isRead}" th:action="@{'/notifications/' + ${n.notificationId} + '/read'}" method="post" style="display: inline;">
-                                    <button type="submit" class="btn-mark-read">Mark as read</button>
+                                    <button type="submit" class="btn-mark-read">Đánh dấu đã đọc</button>
                                 </form>
                                 <form th:if="${n.linkUrl != null}" th:action="@{'/notifications/' + ${n.notificationId} + '/read'}" method="post" style="display: inline;">
                                     <input type="hidden" name="redirectUrl" th:value="${n.linkUrl}">
                                     <button type="submit" class="btn-open-target">
-                                        View Details <i class="bi bi-arrow-right"></i>
+                                        Xem chi tiết <i class="bi bi-arrow-right"></i>
                                     </button>
                                 </form>
                             </div>
@@ -65,14 +66,14 @@
 
                     <div class="notif-empty" th:if="${#lists.isEmpty(notifications)}">
                         <div class="notif-empty-icon"><i class="bi bi-bell-slash"></i></div>
-                        <h3>No notifications yet</h3>
-                        <p>When there are updates regarding your requisitions, they will appear here.</p>
+                        <h3>Chưa có thông báo nào</h3>
+                        <p>Khi có cập nhật về yêu cầu tuyển dụng hoặc tin tuyển dụng liên quan, thông báo sẽ hiển thị tại đây.</p>
                     </div>
 
                     <div th:if="${totalPages > 1}" style="margin-top: 1.5rem; display: flex; justify-content: center; gap: 0.5rem;">
-                        <a th:if="${currentPage > 1}" th:href="@{/notifications(page=${currentPage - 1})}" class="btn btn-secondary">Previous</a>
-                        <span style="padding: 0.5rem 1rem; align-self: center;" th:text="|Page ${currentPage} of ${totalPages}|"></span>
-                        <a th:if="${currentPage < totalPages}" th:href="@{/notifications(page=${currentPage + 1})}" class="btn btn-secondary">Next</a>
+                        <a th:if="${currentPage > 1}" th:href="@{/notifications(page=${currentPage - 1})}" class="btn btn-secondary">Trước</a>
+                        <span style="padding: 0.5rem 1rem; align-self: center;" th:text="|Trang ${currentPage} / ${totalPages}|"></span>
+                        <a th:if="${currentPage < totalPages}" th:href="@{/notifications(page=${currentPage + 1})}" class="btn btn-secondary">Sau</a>
                     </div>
                 </div>
             </main>

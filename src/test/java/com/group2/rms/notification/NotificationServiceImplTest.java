@@ -91,6 +91,65 @@ class NotificationServiceImplTest {
     }
 
     @Test
+    @DisplayName("notifyJobPostingPublished: Lưu thông báo khi phát hành tin tuyển dụng tới HM")
+    void notifyJobPostingPublished_success() {
+        com.group2.rms.requisition.entity.JobPosting posting = com.group2.rms.requisition.entity.JobPosting.builder()
+                .jobPostingId(50)
+                .postingTitle("Senior Java Engineer")
+                .requisition(requisition)
+                .postingDate(LocalDateTime.of(2026, 10, 5, 14, 0, 0, 123456700))
+                .applicationDeadline(java.time.LocalDate.of(2026, 11, 30))
+                .build();
+        User hr = User.builder().userId(30).fullName("HR Nguyen Van C").build();
+
+        when(notificationRepository.existsByEventId(any())).thenReturn(false);
+
+        notificationService.notifyJobPostingPublished(posting, hr);
+
+        ArgumentCaptor<Notification> captor = ArgumentCaptor.forClass(Notification.class);
+        verify(notificationRepository).save(captor.capture());
+
+        Notification saved = captor.getValue();
+        assertEquals(manager, saved.getRecipient());
+        assertEquals("JOB_POSTING_PUBLISHED", saved.getEventType());
+        assertEquals("/internal/job-postings/50", saved.getLinkUrl());
+        assertEquals("50", saved.getReferenceId());
+        assertFalse(saved.getIsRead());
+        assertTrue(saved.getTitle().contains("Tin tuyển dụng đã phát hành: Senior Java Engineer"));
+        assertTrue(saved.getContent().contains("HR Nguyen Van C"));
+        assertTrue(saved.getContent().contains("30/11/2026"));
+        assertEquals("JOB_PUB_50_202610051400001234567", saved.getEventId());
+    }
+
+    @Test
+    @DisplayName("notifyJobPostingPublished: Idempotent - Nếu cùng eventId đã tồn tại thì bỏ qua")
+    void notifyJobPostingPublished_idempotent_skipsDuplicate() {
+        com.group2.rms.requisition.entity.JobPosting posting = com.group2.rms.requisition.entity.JobPosting.builder()
+                .jobPostingId(50)
+                .postingTitle("Senior Java Engineer")
+                .requisition(requisition)
+                .postingDate(LocalDateTime.of(2026, 10, 5, 14, 0, 0, 123456700))
+                .build();
+        User hr = User.builder().userId(30).fullName("HR Nguyen Van C").build();
+
+        when(notificationRepository.existsByEventId("JOB_PUB_50_202610051400001234567")).thenReturn(true);
+
+        notificationService.notifyJobPostingPublished(posting, hr);
+
+        verify(notificationRepository, never()).save(any());
+    }
+
+    @Test
+    @DisplayName("notifyJobPostingPublished: Không thực hiện nếu posting hoặc hiring manager là null")
+    void notifyJobPostingPublished_nullPostingOrOwner_doesNothing() {
+        notificationService.notifyJobPostingPublished(null, director);
+        com.group2.rms.requisition.entity.JobPosting postingNoReq = com.group2.rms.requisition.entity.JobPosting.builder().jobPostingId(1).build();
+        notificationService.notifyJobPostingPublished(postingNoReq, director);
+
+        verify(notificationRepository, never()).save(any());
+    }
+
+    @Test
     @DisplayName("markAsRead: Đánh dấu đã đọc thành công khi thuộc về user")
     void markAsRead_success() {
         Notification n = Notification.builder()

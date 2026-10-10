@@ -36,6 +36,10 @@ public class RequisitionResponse {
     private String employmentType;
     private String approvalStatus;
     private LocalDateTime createdAt;
+    private Integer recruitmentRound;
+    private String requisitionCode;
+    private String postingStatus;
+    private Integer jobPostingId;
 
     // Các trường phục vụ màn Chi tiết
     private java.math.BigDecimal minSalary;
