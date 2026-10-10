@@ -18,24 +18,24 @@
 <aside th:fragment="workspace(activeMenu, role)" class="workspace-sidebar" id="workspace-navigation" aria-label="Điều hướng hệ thống">
     <!-- 1. Header / Logo thương hiệu & Nút Ghim -->
     <div class="sidebar-top-bar">
-        <a th:href="@{/dashboard}" class="sidebar-brand" title="Mộc RMS">
-            <div class="brand-icon-box">
-                <svg class="brand-icon" viewBox="0 0 32 32" fill="none" aria-hidden="true">
-                    <path d="M15 27C8 23 6 13 11 7c4-5 11-4 16-3 0 9-3 18-12 23Z" stroke="currentColor" stroke-width="2"/>
-                    <path d="m12 25 9-15M15 19l-3-6m5 2 6-1" stroke="currentColor" stroke-width="2"/>
-                </svg>
-            </div>
-            <div class="brand-text-box">
-                <span class="brand-name">mộc.</span>
-                <span class="brand-badge">RMS</span>
-            </div>
-        </a>
-        <button type="button" class="sidebar-pin-btn" id="sidebar-pin-toggle" aria-label="Ghim hoặc mở rộng thanh điều hướng" title="Ghim thanh điều hướng">
+        <a th:replace="~{fragments/brand :: wordmarkLink('RMS', '/dashboard')}"></a>
+        <button type="button" class="sidebar-pin-btn" id="sidebar-pin-toggle" aria-label="Ghim thanh điều hướng luôn mở" aria-pressed="false" title="Ghim thanh điều hướng">
+            <!-- Chưa ghim: đinh ghim viền -->
             <svg class="pin-icon-unpinned" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                <polyline points="9 18 15 12 9 6"></polyline>
+                <line x1="12" y1="17" x2="12" y2="22"></line>
+                <path d="M5 17h14v-1.76a2 2 0 0 0-1.11-1.79l-1.78-.9A2 2 0 0 1 15 10.76V6h1a2 2 0 0 0 0-4H8a2 2 0 0 0 0 4h1v4.76a2 2 0 0 1-1.11 1.79l-1.78.9A2 2 0 0 0 5 15.24Z"></path>
             </svg>
-            <svg class="pin-icon-pinned" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                <polyline points="15 18 9 12 15 6"></polyline>
+            <!-- Đã ghim: đinh ghim tô đặc -->
+            <svg class="pin-icon-pinned" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <line x1="12" y1="17" x2="12" y2="22"></line>
+                <path d="M5 17h14v-1.76a2 2 0 0 0-1.11-1.79l-1.78-.9A2 2 0 0 1 15 10.76V6h1a2 2 0 0 0 0-4H8a2 2 0 0 0 0 4h1v4.76a2 2 0 0 1-1.11 1.79l-1.78.9A2 2 0 0 0 5 15.24Z"></path>
+            </svg>
+            <!-- Đã ghim + rê chuột: gợi ý bỏ ghim -->
+            <svg class="pin-icon-unpin" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M12 17v5"></path>
+                <path d="M15 9.34V7a1 1 0 0 1 1-1 2 2 0 0 0 0-4H7.89"></path>
+                <path d="m2 2 20 20"></path>
+                <path d="M9 9v1.76a2 2 0 0 1-1.11 1.79l-1.78.9A2 2 0 0 0 5 15.24V16a1 1 0 0 0 1 1h11"></path>
             </svg>
         </button>
     </div>
@@ -199,7 +199,7 @@
                 </span>
                 <span class="nav-label-text">Hồ sơ đã ứng tuyển</span>
             </a>
-            <a th:href="@{/interviews}" class="sidebar-nav-link"
+            <a th:href="@{/portal/interviews}" class="sidebar-nav-link"
                th:classappend="${activeMenu == 'interviews' ? 'active' : ''}"
                th:attr="aria-current=${activeMenu == 'interviews' ? 'page' : null}"
                data-tooltip="Lịch phỏng vấn">

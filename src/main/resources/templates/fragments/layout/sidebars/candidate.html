@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<body>
+<th:block th:fragment="menu(activeMenu)">
+    <!-- Bảng điều khiển / Hồ sơ đã ứng tuyển -->
+    <a th:href="@{/dashboard#applications}" class="sidebar-nav-link"
+       th:classappend="${activeMenu == 'dashboard' or activeMenu == 'applications' ? 'active' : ''}"
+       title="Hồ sơ đã ứng tuyển"
+       data-tooltip="Hồ sơ đã ứng tuyển">
+        <span class="nav-icon-wrapper">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                <polyline points="14 2 14 8 20 8"/>
+            </svg>
+        </span>
+        <span class="nav-label-text">Hồ sơ đã ứng tuyển</span>
+    </a>
+
+    <!-- Lịch phỏng vấn -->
+    <a th:href="@{/portal/interviews}" class="sidebar-nav-link"
+       th:classappend="${activeMenu == 'interviews' ? 'active' : ''}"
+       th:attr="aria-current=${activeMenu == 'interviews' ? 'page' : null}"
+       title="Lịch phỏng vấn của tôi"
+       data-tooltip="Lịch phỏng vấn của tôi">
+        <span class="nav-icon-wrapper">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+                <line x1="16" y1="2" x2="16" y2="6"/>
+                <line x1="8" y1="2" x2="8" y2="6"/>
+                <line x1="3" y1="10" x2="21" y2="10"/>
+            </svg>
+        </span>
+        <span class="nav-label-text">Lịch phỏng vấn</span>
+    </a>
+
+    <!-- Đề nghị tuyển dụng -->
+    <a th:href="@{/dashboard#offers}" class="sidebar-nav-link"
+       th:classappend="${activeMenu == 'offers' ? 'active' : ''}"
+       title="Đề nghị tuyển dụng"
+       data-tooltip="Đề nghị tuyển dụng">
+        <span class="nav-icon-wrapper">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+                <polyline points="22 4 12 14.01 9 11.01"/>
+            </svg>
+        </span>
+        <span class="nav-label-text">Đề nghị tuyển dụng</span>
+    </a>
+
+    <!-- Vị trí đang tuyển -->
+    <a th:href="@{/jobs}" class="sidebar-nav-link"
+       th:classappend="${activeMenu == 'jobs' ? 'active' : ''}"
+       title="Vị trí đang tuyển"
+       data-tooltip="Vị trí đang tuyển">
+        <span class="nav-icon-wrapper">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <circle cx="11" cy="11" r="8"/>
+                <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+            </svg>
+        </span>
+        <span class="nav-label-text">Vị trí đang tuyển</span>
+    </a>
+</th:block>
+</body>
+</html>

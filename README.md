@@ -11,7 +11,8 @@ Hệ thống Quản lý Tuyển dụng (RMS) được xây dựng trên nền t�
 ## 📚 TRUNG TÂM TÀI LIỆU DỰ ÁN (DOCS HUB)
 
 Vui lòng tham khảo các tài liệu chuyên đề trước khi bắt tay vào code hoặc kiểm thử:
-* 🏗️ **[Quy chuẩn Kiến trúc (Architecture Guide)](docs/architecture/ARCHITECTURE_GUIDE.md):** Cấu trúc Package-by-Feature, quy chuẩn đặt tên DTO, xử lý ngoại lệ toàn cục `GlobalExceptionHandler`, quy chuẩn Frontend (CSS/JS tách biệt, CSRF, Unicode).
+* 🏗️ **[Quy chuẩn Kiến trúc (Architecture Guide)](docs/architecture/ARCHITECTURE_GUIDE.md):** Cấu trúc Package-by-Feature, quy chuẩn đặt tên DTO, xử lý ngoại lệ toàn cục `GlobalExceptionHandler`, kiến trúc giao diện (Layout + Sidebar theo role + File nội dung, fragment dùng chung, bản đồ CSS/JS), CSRF, Unicode.
+* 🎨 **[Bộ tài liệu Giao diện (UI)](docs/architecture/UI/README.md):** Lộ trình làm giao diện, luật & vùng không được chạm, tra cứu class/token/fragment, hướng dẫn tạo trang mới, migrate trang cũ, tổ chức CSS và dọn file cũ.
 * 🕒 **[Nhật ký công việc (Work Log)](docs/management/WORK_LOG.md):** Lịch sử thay đổi từng ngày của team, theo dõi module nào vừa được cập nhật qua các PR.
 * 🗄️ **[Thiết kế Cơ sở Dữ liệu](docs/database/model.md):** Sơ đồ quan hệ thực thể (ERD), bảng danh mục và ý nghĩa các trường.
 * 🌱 **[Hướng dẫn Seeding Dữ liệu](docs/database/data_seeding_guide.md):** Hướng dẫn nạp dữ liệu mẫu ban đầu để kiểm thử hệ thống.
@@ -82,8 +83,9 @@ mvn clean compile spring-boot:run
 ```
 
 Khi ứng dụng khởi động thành công, truy cập trình duyệt tại:
-* Cổng việc làm công khai (Public Careers): `http://localhost:8082/`
-* Đăng nhập nội bộ (Workspace Login): `http://localhost:8082/auth/login`
+* Trang giới thiệu tuyển dụng (Landing): `http://localhost:8082/`
+* Danh sách vị trí đang tuyển (Jobs Board): `http://localhost:8082/jobs`
+* Đăng nhập (ứng viên & nội bộ): `http://localhost:8082/login`
 
 ---
 

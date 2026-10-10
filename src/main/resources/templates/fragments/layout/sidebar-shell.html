@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<body>
+<aside th:fragment="shell(activeMenu, role)" class="workspace-sidebar" id="workspace-navigation" aria-label="Điều hướng hệ thống">
+    <!-- 1. Header Sidebar: Logo thương hiệu Mộc RMS & Nút Ghim Pin -->
+    <div class="sidebar-top-bar">
+        <a th:replace="~{fragments/brand :: wordmarkLink('RMS', '/dashboard')}"></a>
+        <button type="button" class="sidebar-pin-btn" id="sidebar-pin-toggle" aria-label="Ghim thanh điều hướng luôn mở" aria-pressed="false" title="Ghim thanh điều hướng">
+            <!-- Chưa ghim: đinh ghim viền -->
+            <svg class="pin-icon-unpinned" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <line x1="12" y1="17" x2="12" y2="22"></line>
+                <path d="M5 17h14v-1.76a2 2 0 0 0-1.11-1.79l-1.78-.9A2 2 0 0 1 15 10.76V6h1a2 2 0 0 0 0-4H8a2 2 0 0 0 0 4h1v4.76a2 2 0 0 1-1.11 1.79l-1.78.9A2 2 0 0 0 5 15.24Z"></path>
+            </svg>
+            <!-- Đã ghim: đinh ghim tô đặc -->
+            <svg class="pin-icon-pinned" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <line x1="12" y1="17" x2="12" y2="22"></line>
+                <path d="M5 17h14v-1.76a2 2 0 0 0-1.11-1.79l-1.78-.9A2 2 0 0 1 15 10.76V6h1a2 2 0 0 0 0-4H8a2 2 0 0 0 0 4h1v4.76a2 2 0 0 1-1.11 1.79l-1.78.9A2 2 0 0 0 5 15.24Z"></path>
+            </svg>
+            <!-- Đã ghim + rê chuột: gợi ý bỏ ghim -->
+            <svg class="pin-icon-unpin" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M12 17v5"></path>
+                <path d="M15 9.34V7a1 1 0 0 1 1-1 2 2 0 0 0 0-4H7.89"></path>
+                <path d="m2 2 20 20"></path>
+                <path d="M9 9v1.76a2 2 0 0 1-1.11 1.79l-1.78.9A2 2 0 0 0 5 15.24V16a1 1 0 0 0 1 1h11"></path>
+            </svg>
+        </button>
+    </div>
+
+    <!-- 2. Danh sách Menu chính theo Role -->
+    <nav class="sidebar-menu-list" aria-label="Menu chức năng">
+        <th:block th:with="userRole=${role ?: (dashboard != null ? dashboard.roleName : (userProfile != null ? userProfile.roleName : (viewerRole != null ? viewerRole : (session.user != null ? session.user.role : null))))}">
+            <!-- Nhánh Admin -->
+            <th:block th:if="${userRole == 'System Admin' or userRole == 'Admin'}">
+                <th:block th:replace="~{fragments/layout/sidebars/admin :: menu(${activeMenu})}"></th:block>
+            </th:block>
+
+            <!-- Nhánh Candidate -->
+            <th:block th:if="${userRole == 'Candidate'}">
+                <th:block th:replace="~{fragments/layout/sidebars/candidate :: menu(${activeMenu})}"></th:block>
+            </th:block>
+
+            <!-- Nhánh Interviewer -->
+            <th:block th:if="${userRole == 'Interviewer'}">
+                <th:block th:replace="~{fragments/layout/sidebars/interviewer :: menu(${activeMenu})}"></th:block>
+            </th:block>
+
+            <!-- Nhánh Recruiter / HR / Hiring Manager / Director / HR Specialist (Mặc định cho nhân sự) -->
+            <th:block th:if="${userRole != 'System Admin' and userRole != 'Admin' and userRole != 'Candidate' and userRole != 'Interviewer'}">
+                <th:block th:replace="~{fragments/layout/sidebars/recruiter :: menu(${activeMenu}, ${userRole})}"></th:block>
+            </th:block>
+        </th:block>
+
+        <div class="sidebar-nav-divider"></div>
+
+        <!-- Hồ sơ cá nhân (Dùng chung cho mọi role) -->
+        <a th:href="@{/profile}" class="sidebar-nav-link"
+           th:classappend="${activeMenu == 'profile' ? 'active' : ''}"
+           th:attr="aria-current=${activeMenu == 'profile' ? 'page' : null}"
+           title="Hồ sơ cá nhân"
+           data-tooltip="Hồ sơ cá nhân">
+            <span class="nav-icon-wrapper">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                    <circle cx="12" cy="7" r="4"/>
+                </svg>
+            </span>
+            <span class="nav-label-text">Hồ sơ cá nhân</span>
+        </a>
+
+        <!-- Về trang Tuyển dụng công khai -->
+        <a th:href="@{/}" class="sidebar-nav-link"
+           title="Về trang Tuyển dụng"
+           data-tooltip="Về trang Tuyển dụng">
+            <span class="nav-icon-wrapper">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <circle cx="12" cy="12" r="10"/>
+                    <line x1="2" y1="12" x2="22" y2="12"/>
+                    <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1 4-10z"/>
+                </svg>
+            </span>
+            <span class="nav-label-text">Về trang Tuyển dụng</span>
+        </a>
+    </nav>
+</aside>
+</body>
+</html>

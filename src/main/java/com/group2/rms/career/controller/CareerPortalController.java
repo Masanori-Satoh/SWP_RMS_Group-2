@@ -25,6 +25,9 @@ public class CareerPortalController {
 
     private final CareerPortalService careerPortalService;
 
+    private static final int FEATURED_JOB_COUNT = 3;
+    private static final int JOBS_PER_PAGE = 6;
+
     @ModelAttribute("currentUser")
     public ViewerProfileResponse currentUser(Authentication authentication) {
         if (authentication == null || !authentication.isAuthenticated()
@@ -34,12 +37,20 @@ public class CareerPortalController {
         return careerPortalService.getViewerProfile(authentication.getName()).orElse(null);
     }
 
-    @GetMapping({ "/", "/jobs" })
+    /** Landing page: giới thiệu Mộc + 3 vị trí mới nhất (theo ngày đăng, lấy tại thời điểm truy cập). */
+    @GetMapping("/")
+    public String viewLandingPage(Model model) {
+        model.addAttribute("featuredJobs", careerPortalService.getLatestJobs(FEATURED_JOB_COUNT));
+        return "candidate/landing";
+    }
+
+    /** Jobs board: tìm kiếm, lọc và phân trang toàn bộ tin tuyển dụng công khai. */
+    @GetMapping("/jobs")
     public String viewPublicJobList(
             @RequestParam(required = false) String keyword,
             @RequestParam(required = false) Integer departmentId,
             @RequestParam(required = false) String employmentType,
-            @PageableDefault(size = 9, sort = "postingDate", direction = Sort.Direction.DESC) Pageable pageable,
+            @PageableDefault(size = JOBS_PER_PAGE, sort = "postingDate", direction = Sort.Direction.DESC) Pageable pageable,
             Model model) {
 
         if (keyword != null) {

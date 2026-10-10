@@ -172,7 +172,7 @@
     }
     .preset-btn {
       padding:5px 14px;
-      border-radius:20px;
+      border-radius:var(--radius-md);
       border:1px solid var(--control-line);
       background:var(--surface);
       font-size:13px;
@@ -273,7 +273,7 @@
       align-items:center;
       gap:6px;
       padding:6px 14px;
-      border-radius:20px;
+      border-radius:var(--radius-md);
       border:1px solid var(--control-line);
       background:var(--page);
       color:var(--muted);

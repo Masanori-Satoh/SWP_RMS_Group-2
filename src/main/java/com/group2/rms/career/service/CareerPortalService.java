@@ -9,9 +9,10 @@ import com.group2.rms.requisition.entity.JobPosting;
 import com.group2.rms.requisition.repository.JobPostingRepository;
 import com.group2.rms.user.repository.DepartmentRepository;
 import com.group2.rms.user.repository.UserRepository;
-import com.group2.rms.candidate.repository.CandidateRepository;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -35,8 +36,6 @@ public class CareerPortalService {
 
     private final UserRepository userRepository;
 
-    private final CandidateRepository candidateRepository;
-
     public Page<PublicJobListResponse> getPublishedJobs(String keyword, Integer departmentId, String employmentType,
             Pageable pageable) {
         Page<JobPosting> jobs = jobPostingRepository.findPublishedJobs(keyword, departmentId, employmentType, pageable);
@@ -51,6 +50,12 @@ public class CareerPortalService {
                 job.getSalaryDisplay(),
                 job.getApplicationDeadline(),
                 job.getPostingDate()));
+    }
+
+    /** Các tin đang tuyển mới nhất (theo ngày đăng), dùng cho landing page. */
+    public List<PublicJobListResponse> getLatestJobs(int limit) {
+        return getPublishedJobs(null, null, null,
+                PageRequest.of(0, limit, Sort.by(Sort.Direction.DESC, "postingDate"))).getContent();
     }
 
     private String formatRichText(String text) {
