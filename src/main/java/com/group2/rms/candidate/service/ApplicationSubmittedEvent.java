@@ -1,8 +1,8 @@
 package com.group2.rms.candidate.service;
 
 /**
- * Phát ra khi một đơn ứng tuyển vừa được lưu. Bên nghe (AI chấm điểm, làm sau) nên dùng
- * {@code @TransactionalEventListener(phase = AFTER_COMMIT)} để chỉ chạy khi đơn đã lưu thật.
+ * Phát ra khi một đơn ứng tuyển vừa được lưu. {@link AiScreeningListener} nghe sự kiện này
+ * sau khi transaction commit để chấm đơn ở luồng nền.
  */
 public record ApplicationSubmittedEvent(Integer applicationId) {
 }
