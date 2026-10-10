@@ -1,0 +1,12 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<!-- Chỉ dùng trong test (SidebarMenuTests): render 2 nguồn sidebar thật cho một vai trò. -->
+<body>
+<div id="shell">
+    <aside th:replace="~{fragments/layout/sidebar-shell :: shell(${probeMenu}, ${probeRole})}"></aside>
+</div>
+<div id="legacy">
+    <aside th:replace="~{fragments/sidebar :: workspace(${probeMenu}, ${probeRole})}"></aside>
+</div>
+</body>
+</html>
