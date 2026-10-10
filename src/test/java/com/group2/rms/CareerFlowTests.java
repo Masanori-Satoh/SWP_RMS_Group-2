@@ -1,6 +1,8 @@
 package com.group2.rms;
 
 import com.group2.rms.auth.controller.AuthController;
+import com.group2.rms.candidate.exception.ApplicationSubmissionException;
+import com.group2.rms.candidate.service.ApplicationSubmissionService;
 import com.group2.rms.career.controller.CareerPortalController;
 import com.group2.rms.career.dto.DepartmentFilterResponse;
 import com.group2.rms.career.dto.PublicJobDetailResponse;
@@ -22,6 +24,8 @@ import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.mock.web.MockHttpSession;
+import org.springframework.mock.web.MockMultipartFile;
+import org.springframework.validation.BindingResult;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.csrf.CsrfToken;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
@@ -37,6 +41,9 @@ import java.util.Optional;
 
 import static org.hamcrest.Matchers.*;
 import static org.mockito.ArgumentMatchers.any;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.mockito.ArgumentMatchers.argThat;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
@@ -59,6 +66,11 @@ class CareerFlowTests {
         CareerPortalService careers;
         @MockitoBean
         UserRepository users;
+        @MockitoBean
+        ApplicationSubmissionService applications;
+
+        private static final MockMultipartFile CV = new MockMultipartFile("cvFile", "cv.pdf", "application/pdf",
+                        "%PDF-1.7 sample".getBytes(StandardCharsets.US_ASCII));
 
         // ------------------------------------------------------------------ job board
 
@@ -173,14 +185,102 @@ class CareerFlowTests {
 
                 session = login(session, "candidate-test", "http://localhost/jobs/41/apply");
 
-                // Online submission is pending Iteration 2: the controller validates and then
-                // reports it via the error page.
+                // After login the apply URL sends the candidate back to the job with the dialog anchor.
                 mvc.perform(get("/jobs/41/apply").session(session))
-                                .andExpect(view().name("error/500"))
-                                .andExpect(model().attribute("errorCode", "ITERATION_2_PENDING"))
-                                .andExpect(content().string(containsString("Iteration 2")));
+                                .andExpect(status().is3xxRedirection())
+                                .andExpect(redirectedUrl("/jobs/41#apply"));
                 verify(careers).validateJobForApplication(41);
                 verify(careers).validateCandidateApplicationProfile("candidate-test");
+        }
+
+        @Test
+        void candidateSubmitsCvAndReturnsToJobWithSuccessFlash() throws Exception {
+                account("candidate-test", "Candidate", "Active");
+                MockHttpSession session = login(null, "candidate-test", "/dashboard");
+                when(applications.apply(eq("candidate-test"), eq(41), any())).thenReturn(301);
+
+                mvc.perform(multipart("/jobs/41/apply").file(CV).session(session).with(csrf()))
+                                .andExpect(status().is3xxRedirection())
+                                .andExpect(redirectedUrl("/jobs/41"))
+                                .andExpect(flash().attribute("applySuccess", true));
+                verify(applications).apply(eq("candidate-test"), eq(41),
+                                argThat(file -> file != null && "cv.pdf".equals(file.getOriginalFilename())));
+        }
+
+        @Test
+        void invalidCvRerendersJobDetailWithFieldErrorAndOpenDialog() throws Exception {
+                setupJobs();
+                account("candidate-test", "Candidate", "Active");
+                MockHttpSession session = login(null, "candidate-test", "/dashboard");
+                when(applications.apply(eq("candidate-test"), eq(41), any()))
+                                .thenThrow(new ApplicationSubmissionException("cvFile", "Chỉ nhận file PDF."));
+
+                mvc.perform(multipart("/jobs/41/apply").file(CV).session(session).with(csrf()))
+                                .andExpect(status().isOk())
+                                .andExpect(view().name("candidate/job-detail"))
+                                .andExpect(model().attributeHasFieldErrorCode("applyForm", "cvFile", "apply.invalid"))
+                                .andExpect(model().attribute("applyDialogOpen", true))
+                                .andExpect(model().attributeExists("job"));
+        }
+
+        @Test
+        void businessRuleViolationRerendersJobDetailWithGlobalError() throws Exception {
+                setupJobs();
+                account("candidate-test", "Candidate", "Active");
+                MockHttpSession session = login(null, "candidate-test", "/dashboard");
+                when(applications.apply(eq("candidate-test"), eq(41), any()))
+                                .thenThrow(new ApplicationSubmissionException(null, "Bạn đã ứng tuyển vị trí này."));
+
+                MvcResult result = mvc.perform(multipart("/jobs/41/apply").file(CV).session(session).with(csrf()))
+                                .andExpect(status().isOk())
+                                .andExpect(view().name("candidate/job-detail"))
+                                .andExpect(model().attributeErrorCount("applyForm", 1))
+                                .andExpect(model().attribute("applyDialogOpen", true))
+                                .andReturn();
+                BindingResult errors = (BindingResult) result.getModelAndView().getModel()
+                                .get(BindingResult.MODEL_KEY_PREFIX + "applyForm");
+                assertEquals("Bạn đã ứng tuyển vị trí này.",
+                                errors.getGlobalError().getDefaultMessage());
+        }
+
+        @Test
+        void unavailableJobOnSubmitReturnsNotFound() throws Exception {
+                account("candidate-test", "Candidate", "Active");
+                MockHttpSession session = login(null, "candidate-test", "/dashboard");
+                when(applications.apply(eq("candidate-test"), eq(999), any()))
+                                .thenThrow(new ResourceNotFoundException("Tin tuyển dụng này không còn khả dụng."));
+
+                mvc.perform(multipart("/jobs/999/apply").file(CV).session(session).with(csrf()))
+                                .andExpect(status().isNotFound())
+                                .andExpect(view().name("error/404"));
+        }
+
+        @Test
+        void submitWithoutCsrfIsForbidden() throws Exception {
+                account("candidate-test", "Candidate", "Active");
+                MockHttpSession session = login(null, "candidate-test", "/dashboard");
+
+                mvc.perform(multipart("/jobs/41/apply").file(CV).session(session))
+                                .andExpect(status().isForbidden());
+                verifyNoInteractions(applications);
+        }
+
+        @Test
+        void internalAccountCannotSubmitApplication() throws Exception {
+                account("hr-test", "HR", "Active");
+                MockHttpSession hr = login(null, "hr-test", "/dashboard");
+
+                mvc.perform(multipart("/jobs/41/apply").file(CV).session(hr).with(csrf()))
+                                .andExpect(status().isForbidden());
+                verifyNoInteractions(applications);
+        }
+
+        @Test
+        void guestSubmitIsSentToLogin() throws Exception {
+                mvc.perform(multipart("/jobs/41/apply").file(CV).with(csrf()))
+                                .andExpect(status().is3xxRedirection())
+                                .andExpect(redirectedUrl("http://localhost/login"));
+                verifyNoInteractions(applications);
         }
 
         @Test

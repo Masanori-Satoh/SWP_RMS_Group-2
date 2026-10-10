@@ -1,5 +1,8 @@
 package com.group2.rms.career.controller;
 
+import com.group2.rms.candidate.dto.ApplyJobRequest;
+import com.group2.rms.candidate.exception.ApplicationSubmissionException;
+import com.group2.rms.candidate.service.ApplicationSubmissionService;
 import com.group2.rms.career.dto.PublicJobDetailResponse;
 import com.group2.rms.career.dto.PublicJobListResponse;
 import com.group2.rms.career.dto.ViewerProfileResponse;
@@ -12,10 +15,13 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.authentication.AnonymousAuthenticationToken;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
+import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import lombok.RequiredArgsConstructor;
 
@@ -24,6 +30,8 @@ import lombok.RequiredArgsConstructor;
 public class CareerPortalController {
 
     private final CareerPortalService careerPortalService;
+
+    private final ApplicationSubmissionService applicationSubmissionService;
 
     private static final int FEATURED_JOB_COUNT = 3;
     private static final int JOBS_PER_PAGE = 6;
@@ -85,9 +93,13 @@ public class CareerPortalController {
         String username = authentication != null ? authentication.getName() : null;
         PublicJobDetailResponse jobDetail = careerPortalService.getPublishedJobDetail(id, username);
         model.addAttribute("job", jobDetail);
+        model.addAttribute("applyForm", new ApplyJobRequest(null));
         return "candidate/job-detail";
     }
 
+    /**
+     * Điểm vào sau đăng nhập: khách bấm "Ứng tuyển" → /login → quay lại đây → về trang tin với hộp thoại mở sẵn.
+     */
     @GetMapping("/jobs/{id}/apply")
     public String applyForJob(@PathVariable("id") Integer id, Authentication authentication) {
         if (authentication == null || !authentication.isAuthenticated()
@@ -98,7 +110,27 @@ public class CareerPortalController {
         careerPortalService.validateJobForApplication(id);
         careerPortalService.validateCandidateApplicationProfile(authentication.getName());
 
-        throw new com.group2.rms.core.exception.BaseBusinessException(
-                "Tính năng nộp hồ sơ trực tuyến sẽ được bổ sung ở Iteration 2.", "ITERATION_2_PENDING");
+        return "redirect:/jobs/" + id + "#apply";
+    }
+
+    @PostMapping("/jobs/{id}/apply")
+    public String submitApplication(@PathVariable("id") Integer id,
+            @ModelAttribute("applyForm") ApplyJobRequest form, BindingResult errors,
+            Authentication authentication, Model model, RedirectAttributes redirectAttributes) {
+        try {
+            applicationSubmissionService.apply(authentication.getName(), id, form.cvFile());
+            redirectAttributes.addFlashAttribute("applySuccess", true);
+            return "redirect:/jobs/" + id;
+        } catch (ApplicationSubmissionException e) {
+            if (e.getField() != null) {
+                errors.rejectValue(e.getField(), "apply.invalid", e.getMessage());
+            } else {
+                errors.reject("apply.invalid", e.getMessage());
+            }
+        }
+
+        model.addAttribute("job", careerPortalService.getPublishedJobDetail(id, authentication.getName()));
+        model.addAttribute("applyDialogOpen", true);
+        return "candidate/job-detail";
     }
 }
