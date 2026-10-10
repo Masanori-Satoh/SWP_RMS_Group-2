@@ -23,6 +23,10 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
+import org.springframework.core.io.ByteArrayResource;
+import org.springframework.core.io.Resource;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
@@ -51,13 +55,14 @@ class ApplicationPipelineServiceTests {
     @Mock AIScreeningResultRepository screeningResults;
     @Mock ApplicationReviewRepository reviews;
     @Mock ApplicationAccess access;
+    @Mock CvStorage cvStorage;
 
     private ApplicationPipelineService service;
     private final User actor = User.builder().userId(1).build();
 
     @BeforeEach
     void setUp() {
-        service = new ApplicationPipelineService(applications, screeningResults, reviews, access);
+        service = new ApplicationPipelineService(applications, screeningResults, reviews, access, cvStorage);
         when(access.actor()).thenReturn(actor);
     }
 
@@ -153,6 +158,54 @@ class ApplicationPipelineServiceTests {
         assertNull(detail.aiMatchScore());
         assertNull(detail.screenedAt());
         assertEquals(List.of("Nộp hồ sơ"), detail.timeline().stream().map(TimelineItem::title).toList());
+    }
+
+    // ------------------------------------------------------------------ CV
+
+    @Test
+    void cvStoredByWebSubmissionIsLoadedFromStorage() {
+        Application application = application();
+        application.setAppliedCvUrl("local:cv/15/abc.pdf");
+        Resource pdf = new ByteArrayResource("%PDF-1.7".getBytes());
+        when(applications.findDetailById(ID)).thenReturn(Optional.of(application));
+        when(cvStorage.load("cv/15/abc.pdf")).thenReturn(pdf);
+
+        ApplicationCv cv = service.cv(ID);
+
+        assertSame(pdf, cv.file());
+        assertNull(cv.redirectUrl());
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"/samples/cv/sample_cv_accountant.pdf", "https://res.cloudinary.com/x/cv.pdf"})
+    void sampleOrExternalCvIsRedirected(String url) {
+        Application application = application();
+        application.setAppliedCvUrl(url);
+        when(applications.findDetailById(ID)).thenReturn(Optional.of(application));
+
+        assertEquals(ApplicationCv.redirect(url), service.cv(ID));
+        verifyNoInteractions(cvStorage);
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"//evil.example/cv.pdf", "javascript:alert(1)", "s3://bucket/cv.pdf"})
+    void unknownCvLocationIsNotFoundInsteadOfRedirecting(String url) {
+        Application application = application();
+        application.setAppliedCvUrl(url);
+        when(applications.findDetailById(ID)).thenReturn(Optional.of(application));
+
+        assertThrows(ResourceNotFoundException.class, () -> service.cv(ID));
+    }
+
+    @Test
+    void cvOutsideViewerScopeIsDeniedBeforeTouchingStorage() {
+        Application application = application();
+        application.setAppliedCvUrl("local:cv/15/abc.pdf");
+        when(applications.findDetailById(ID)).thenReturn(Optional.of(application));
+        doThrow(new AccessDeniedException("no")).when(access).requireView(actor, application);
+
+        assertThrows(AccessDeniedException.class, () -> service.cv(ID));
+        verifyNoInteractions(cvStorage);
     }
 
     private static ApplicationPipelineResponse row(String status) {

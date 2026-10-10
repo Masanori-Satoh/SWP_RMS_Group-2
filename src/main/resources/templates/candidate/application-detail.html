@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="vi"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/internal}">
+<!--
+    CANDIDATE/APPLICATION-DETAIL.HTML — Chi tiết hồ sơ (/applications/{id}, SRS 5.1.23 Shared CV Details)
+    Dữ liệu nội bộ (điểm AI, nhận xét): chỉ cho người tuyển dụng, không dùng cho màn của ứng viên (GBR-02).
+    Dựng bằng catalog: page-header, card, badge, btn, fragments/ui/timeline :: timeline.
+    CSS riêng: static/css/pages/applications.css (tiền tố app-).
+-->
+<head>
+    <title th:text="|${detail.fullName} — Hồ sơ ứng tuyển|">Hồ sơ ứng tuyển</title>
+    <th:block layout:fragment="styles">
+        <link rel="stylesheet" th:href="@{/css/pages/applications.css}">
+    </th:block>
+</head>
+<body>
+<main id="main" layout:fragment="content" class="page-content container app-page" tabindex="-1">
+
+    <nav class="app-breadcrumb" aria-label="Breadcrumb">
+        <a th:href="@{/applications}">Hồ sơ ứng tuyển</a>
+        <span aria-hidden="true">/</span>
+        <span aria-current="page" th:text="${detail.fullName}">Nguyễn Văn An</span>
+    </nav>
+
+    <div class="page-header">
+        <div>
+            <h1 class="page-title" th:text="${detail.fullName}">Nguyễn Văn An</h1>
+            <p class="page-subtitle">
+                <span th:text="${detail.postingTitle}">Java Developer</span>
+                <th:block th:if="${detail.departmentName != null}"> · <span th:text="${detail.departmentName}">Kỹ thuật</span></th:block>
+                · Nộp <time th:datetime="${#temporals.formatISO(detail.submissionDate)}"
+                            th:text="${#temporals.format(detail.submissionDate, 'dd/MM/yyyy HH:mm')}">10/10/2026 14:59</time>
+            </p>
+        </div>
+        <span class="badge app-detail__status" th:classappend="${detail.statusBadge}" th:text="${detail.statusLabel}">Đã sàng lọc</span>
+    </div>
+
+    <!-- Nguồn gốc: Requisition › Tin › Hồ sơ. Chỉ thành link khi người xem mở được trang đó -->
+    <p class="app-lineage">
+        <span class="app-lineage__label">Nguồn gốc:</span>
+        <a th:href="@{/requisitions/{id}(id=${detail.requisitionId})}"
+           th:text="|Yêu cầu tuyển dụng ${detail.requisitionCode ?: '#' + detail.requisitionId}|">Yêu cầu tuyển dụng REQ-007</a>
+        <span aria-hidden="true">›</span>
+        <a th:if="${detail.actions.openJobPosting}" th:href="@{/internal/job-postings/{id}(id=${detail.jobPostingId})}"
+           th:text="|Tin ${detail.postingTitle}|">Tin Java Developer</a>
+        <span th:unless="${detail.actions.openJobPosting}" th:text="|Tin ${detail.postingTitle}|">Tin Java Developer</span>
+        <span aria-hidden="true">›</span>
+        <span th:text="|Hồ sơ #${detail.applicationId}|">Hồ sơ #298</span>
+    </p>
+
+    <div class="app-detail">
+        <div class="app-detail__main">
+            <section class="card app-cv" aria-labelledby="app-cv-title">
+                <div class="app-section-head">
+                    <h2 id="app-cv-title" class="app-section-title">CV</h2>
+                    <a th:href="@{/applications/{id}/cv(id=${detail.applicationId})}" target="_blank" rel="noopener"
+                       class="btn btn--secondary btn--sm">Mở CV trong tab mới</a>
+                </div>
+                <iframe class="app-cv__frame" th:src="@{/applications/{id}/cv(id=${detail.applicationId})}"
+                        th:title="|CV của ${detail.fullName}|" loading="lazy"></iframe>
+            </section>
+
+            <section class="card" aria-labelledby="app-timeline-title">
+                <h2 id="app-timeline-title" class="app-section-title">Hành trình hồ sơ</h2>
+                <th:block th:replace="~{fragments/ui/timeline :: timeline(items=${detail.timeline})}"></th:block>
+            </section>
+        </div>
+
+        <aside class="app-detail__side">
+            <section class="card" aria-labelledby="app-contact-title">
+                <h2 id="app-contact-title" class="app-section-title">Liên hệ</h2>
+                <dl class="app-facts">
+                    <dt>Email</dt>
+                    <dd><a th:href="|mailto:${detail.email}|" th:text="${detail.email}">an@example.com</a></dd>
+                    <dt>Điện thoại</dt>
+                    <dd th:text="${detail.phoneNumber ?: 'Chưa cung cấp'}">0901 234 567</dd>
+                    <dt>LinkedIn</dt>
+                    <dd>
+                        <th:block th:with="url=${detail.linkedInUrl}, lower=${#strings.toLowerCase(detail.linkedInUrl)},
+                                          web=${url != null and (#strings.startsWith(lower, 'https://') or #strings.startsWith(lower, 'http://'))}">
+                            <a th:if="${web}" th:href="${url}" target="_blank" rel="noopener noreferrer"
+                               th:text="${url}">linkedin.com/in/an</a>
+                            <span th:if="${url != null and !web}" th:text="${url}">linkedin.com/in/an</span>
+                            <span th:if="${url == null}" class="text-muted">Chưa cung cấp</span>
+                        </th:block>
+                    </dd>
+                    <dt>Portfolio</dt>
+                    <dd>
+                        <th:block th:with="url=${detail.portfolioUrl}, lower=${#strings.toLowerCase(detail.portfolioUrl)},
+                                          web=${url != null and (#strings.startsWith(lower, 'https://') or #strings.startsWith(lower, 'http://'))}">
+                            <a th:if="${web}" th:href="${url}" target="_blank" rel="noopener noreferrer"
+                               th:text="${url}">an.dev</a>
+                            <span th:if="${url != null and !web}" th:text="${url}">an.dev</span>
+                            <span th:if="${url == null}" class="text-muted">Chưa cung cấp</span>
+                        </th:block>
+                    </dd>
+                </dl>
+            </section>
+
+            <section class="card" aria-labelledby="app-ai-title">
+                <h2 id="app-ai-title" class="app-section-title">Đánh giá AI</h2>
+                <th:block th:if="${detail.aiMatchScore != null}">
+                    <p class="app-ai__score"><strong th:text="${#numbers.formatDecimal(detail.aiMatchScore, 1, 'POINT', 2, 'COMMA')}">79,34</strong><span>/100</span></p>
+                    <p class="app-ai__meta text-muted"
+                       th:text="|Chấm lúc ${#temporals.format(detail.screenedAt, 'dd/MM/yyyy HH:mm')}|">Chấm lúc 10/10/2026 14:59</p>
+                </th:block>
+                <p th:if="${detail.aiMatchScore == null}" class="app-ai__meta text-muted">Chưa có điểm AI.</p>
+                <p class="app-ai__note text-muted">Điểm AI chỉ mang tính gợi ý; quyết định thuộc về người duyệt.</p>
+            </section>
+
+            <section th:if="${detail.actions.scheduleInterview or detail.actions.createOffer}" class="card"
+                     aria-labelledby="app-next-title">
+                <h2 id="app-next-title" class="app-section-title">Bước tiếp theo</h2>
+                <div class="app-next">
+                    <a th:if="${detail.actions.scheduleInterview}" class="btn btn--primary btn--sm"
+                       th:href="@{/interviews/new(applicationId=${detail.applicationId})}">Lên lịch phỏng vấn</a>
+                    <a th:if="${detail.actions.createOffer}" class="btn btn--outline btn--sm"
+                       th:href="@{/offers/create(applicationId=${detail.applicationId})}">Tạo offer</a>
+                </div>
+            </section>
+        </aside>
+    </div>
+</main>
+</body>
+</html>

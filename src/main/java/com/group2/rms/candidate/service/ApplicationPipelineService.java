@@ -41,6 +41,7 @@ public class ApplicationPipelineService {
     private final AIScreeningResultRepository screeningResults;
     private final ApplicationReviewRepository reviews;
     private final ApplicationAccess access;
+    private final CvStorage cvStorage;
 
     /** Thứ tự do {@code search.sort()} quyết định; sort trong {@code pageable} bị bỏ qua. */
     @Transactional(readOnly = true)
@@ -96,7 +97,30 @@ public class ApplicationPipelineService {
                         access.canRescreen(actor, application),
                         access.canScheduleInterview(actor, status),
                         access.canCreateOffer(actor, status),
-                        access.canOpenJobPosting(actor)));
+                        access.canOpenJobPosting(actor)),
+                actor.getRole() == null ? null : actor.getRole().getRoleName());
+    }
+
+    /**
+     * CV của đơn, cùng quyền với trang chi tiết. {@code AppliedCvUrl} có 3 dạng: {@code local:{key}} (đơn nộp qua web),
+     * {@code /samples/cv/...} (seed), {@code http(s)://...} (dịch vụ lưu file ngoài sau này).
+     */
+    @Transactional(readOnly = true)
+    public ApplicationCv cv(Integer applicationId) {
+        User actor = access.actor();
+        Application application = applications.findDetailById(applicationId)
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy hồ sơ ứng tuyển."));
+        access.requireView(actor, application);
+
+        String url = application.getAppliedCvUrl();
+        if (url != null && url.startsWith(LocalCvStorage.URL_PREFIX)) {
+            return ApplicationCv.file(cvStorage.load(url.substring(LocalCvStorage.URL_PREFIX.length())));
+        }
+        if (url != null && (url.startsWith("/") && !url.startsWith("//")
+                || url.startsWith("https://") || url.startsWith("http://"))) {
+            return ApplicationCv.redirect(url);
+        }
+        throw new ResourceNotFoundException("Không tìm thấy CV của hồ sơ này.");
     }
 
     /** Hành trình của đơn, mới nhất trước: nộp, AI chấm, các lượt duyệt, lịch phỏng vấn, offer. */

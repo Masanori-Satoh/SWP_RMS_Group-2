@@ -88,10 +88,136 @@
   margin: 0;
 }
 
+/* --- Chi tiết ------------------------------------------------------------------ */
+.app-breadcrumb {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s2);
+  margin-bottom: var(--s4);
+  font-size: 14px;
+  color: var(--muted);
+}
+
+.app-breadcrumb a {
+  color: var(--brand);
+  text-decoration: none;
+}
+
+.app-breadcrumb a:hover {
+  text-decoration: underline;
+}
+
+.app-detail__status {
+  align-self: flex-start;
+}
+
+.app-lineage {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--s2);
+  margin: 0 0 var(--s6);
+  font-size: 14px;
+  color: var(--muted);
+}
+
+.app-lineage__label {
+  font-weight: 600;
+}
+
+.app-lineage a {
+  color: var(--brand);
+}
+
+.app-detail {
+  display: grid;
+  grid-template-columns: minmax(0, 2fr) minmax(0, 1fr);
+  gap: var(--s6);
+  align-items: start;
+}
+
+.app-detail__main,
+.app-detail__side {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s6);
+  min-width: 0;
+}
+
+.app-section-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s4);
+  margin-bottom: var(--s4);
+}
+
+.app-section-title {
+  margin: 0 0 var(--s4);
+  font-size: var(--font-md);
+}
+
+.app-section-head .app-section-title {
+  margin-bottom: 0;
+}
+
+.app-cv__frame {
+  display: block;
+  width: 100%;
+  height: 75vh;
+  min-height: 480px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  background-color: var(--surface-subtle);
+}
+
+.app-facts {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: var(--s2) var(--s4);
+  margin: 0;
+  font-size: 14px;
+}
+
+.app-facts dt {
+  color: var(--muted);
+}
+
+.app-facts dd {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
+.app-ai__score {
+  margin: 0;
+  color: var(--muted);
+}
+
+.app-ai__score strong {
+  font-size: var(--font-xl);
+  color: var(--ink);
+}
+
+.app-ai__meta,
+.app-ai__note {
+  margin: var(--s2) 0 0;
+  font-size: 13px;
+}
+
+.app-next {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s2);
+}
+
 /* --- Responsive ---------------------------------------------------------------- */
 @media (max-width: 992px) {
   .app-filter {
     grid-template-columns: 1fr 1fr;
+  }
+
+  .app-detail {
+    grid-template-columns: 1fr;
   }
 
   .app-filter__actions {
@@ -104,7 +230,13 @@
     grid-template-columns: 1fr;
   }
 
-  .app-results {
+  .app-results,
+  .app-section-head {
     flex-wrap: wrap;
+  }
+
+  .app-cv__frame {
+    height: 60vh;
+    min-height: 360px;
   }
 }

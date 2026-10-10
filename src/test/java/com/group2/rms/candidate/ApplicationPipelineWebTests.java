@@ -1,13 +1,17 @@
 package com.group2.rms.candidate;
 
 import com.group2.rms.candidate.controller.ApplicationPipelineController;
+import com.group2.rms.candidate.dto.ApplicationDetailResponse;
 import com.group2.rms.candidate.dto.ApplicationListResponse;
 import com.group2.rms.candidate.dto.ApplicationPipelineResponse;
 import com.group2.rms.candidate.dto.ApplicationSearch;
 import com.group2.rms.candidate.dto.JobPostingOption;
+import com.group2.rms.candidate.service.ApplicationCv;
 import com.group2.rms.candidate.service.ApplicationPipelineService;
 import com.group2.rms.core.config.SecurityConfig;
+import com.group2.rms.core.exception.ResourceNotFoundException;
 import com.group2.rms.core.security.DatabaseUserDetailsService;
+import com.group2.rms.core.web.TimelineItem;
 import com.group2.rms.user.entity.Role;
 import com.group2.rms.user.entity.User;
 import com.group2.rms.user.repository.UserRepository;
@@ -15,11 +19,13 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.context.annotation.Import;
+import org.springframework.core.io.ByteArrayResource;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.test.web.servlet.request.RequestPostProcessor;
 
 import java.math.BigDecimal;
@@ -127,6 +133,95 @@ class ApplicationPipelineWebTests {
                 argThat(p -> p.getPageNumber() == 2 && p.getPageSize() == 20));
     }
 
+    // ------------------------------------------------------------------ chi tiết
+
+    @Test
+    void recruiterSeesDetailWithLineageEmbeddedCvTimelineAndNextSteps() throws Exception {
+        when(pipeline.detail(298)).thenReturn(detail(true, true, "https://linkedin.com/in/an-vo"));
+
+        mvc.perform(get("/applications/298").with(as("hr_lan", "HR")))
+                .andExpect(status().isOk())
+                .andExpect(view().name("candidate/application-detail"))
+                .andExpect(model().attribute("activeMenu", "applications"))
+                .andExpect(model().attribute("viewerRole", "HR"))
+                .andExpect(content().string(containsString("href=\"/requisitions/7\"")))
+                .andExpect(content().string(containsString("Yêu cầu tuyển dụng REQ-007")))
+                .andExpect(content().string(containsString("href=\"/internal/job-postings/12\"")))
+                .andExpect(content().string(containsString("src=\"/applications/298/cv\"")))
+                .andExpect(content().string(containsString(">79,34<")))
+                .andExpect(content().string(containsString("HR: Đạt")))
+                .andExpect(content().string(containsString("Hợp vị trí")))
+                .andExpect(content().string(containsString("href=\"https://linkedin.com/in/an-vo\"")))
+                .andExpect(content().string(containsString("href=\"/interviews/new?applicationId=298\"")))
+                .andExpect(content().string(containsString("href=\"/offers/create?applicationId=298\"")));
+    }
+
+    @Test
+    void hiringManagerGetsNoLinkToHrOnlyPagesAndUnsafeUrlsAreNotLinked() throws Exception {
+        when(pipeline.detail(298)).thenReturn(detail(false, false, "javascript:alert(1)"));
+
+        mvc.perform(get("/applications/298").with(as("hm_huong", "Hiring Manager")))
+                .andExpect(status().isOk())
+                .andExpect(content().string(not(containsString("/internal/job-postings/12"))))
+                .andExpect(content().string(containsString("Tin Digital Marketing Executive")))
+                .andExpect(content().string(not(containsString("href=\"javascript:"))))
+                .andExpect(content().string(not(containsString("Bước tiếp theo"))));
+    }
+
+    @Test
+    void detailOutsideScopeIsForbiddenAndMissingIsNotFound() throws Exception {
+        when(pipeline.detail(298)).thenThrow(new AccessDeniedException("no"));
+        when(pipeline.detail(999)).thenThrow(new ResourceNotFoundException("missing"));
+
+        mvc.perform(get("/applications/298").with(as("hm_trang", "Hiring Manager"))).andExpect(status().isForbidden());
+        mvc.perform(get("/applications/999").with(as("hr_lan", "HR"))).andExpect(status().isNotFound());
+    }
+
+    // ------------------------------------------------------------------ CV + header nhúng khung
+
+    @Test
+    void storedCvIsServedInlineAndMayBeFramedBySameOrigin() throws Exception {
+        when(pipeline.cv(298)).thenReturn(ApplicationCv.file(new ByteArrayResource("%PDF-1.7".getBytes())));
+
+        mvc.perform(get("/applications/298/cv").with(as("hr_lan", "HR")))
+                .andExpect(status().isOk())
+                .andExpect(content().contentTypeCompatibleWith("application/pdf"))
+                .andExpect(header().string("Content-Disposition", "inline; filename=\"CV-298.pdf\""))
+                .andExpect(header().string("X-Frame-Options", "SAMEORIGIN"))
+                .andExpect(content().string("%PDF-1.7"));
+    }
+
+    @Test
+    void sampleCvRedirectsToStaticFileThatMayAlsoBeFramed() throws Exception {
+        when(pipeline.cv(120)).thenReturn(ApplicationCv.redirect("/samples/cv/sample_cv_accountant.pdf"));
+
+        mvc.perform(get("/applications/120/cv").with(as("hr_lan", "HR")))
+                .andExpect(status().isFound())
+                .andExpect(redirectedUrl("http://localhost/samples/cv/sample_cv_accountant.pdf"));
+        // /samples/** cần đăng nhập (anyRequest().authenticated()); khung CV gửi kèm phiên của người xem
+        mvc.perform(get("/samples/cv/sample_cv_accountant.pdf").with(as("hr_lan", "HR")))
+                .andExpect(status().isOk())
+                .andExpect(header().string("X-Frame-Options", "SAMEORIGIN"));
+    }
+
+    @Test
+    void everyOtherPageStillRefusesToBeFramed() throws Exception {
+        when(pipeline.list(any(), any())).thenReturn(listOf(false, "HR"));
+        when(pipeline.detail(298)).thenReturn(detail(true, true, null));
+
+        mvc.perform(get("/applications").with(as("hr_lan", "HR")))
+                .andExpect(header().string("X-Frame-Options", "DENY"));
+        mvc.perform(get("/applications/298").with(as("hr_lan", "HR")))
+                .andExpect(header().string("X-Frame-Options", "DENY"));
+        mvc.perform(get("/login")).andExpect(header().string("X-Frame-Options", "DENY"));
+    }
+
+    @Test
+    void cvIsForbiddenToCandidates() throws Exception {
+        mvc.perform(get("/applications/298/cv").with(as("phong.nguyen", "Candidate"))).andExpect(status().isForbidden());
+        verifyNoInteractions(pipeline);
+    }
+
     // ------------------------------------------------------------------ dữ liệu mẫu
 
     /** Đăng nhập giả + tài khoản đang hoạt động, để {@code AccountSessionGuardFilter} cho qua. */
@@ -147,6 +242,16 @@ class ApplicationPipelineWebTests {
         Page<ApplicationPipelineResponse> page = new PageImpl<>(List.of(rows), Pageable.ofSize(20), rows.length);
         return new ApplicationListResponse(page, List.of(new JobPostingOption(6, "Digital Marketing Executive")),
                 new ApplicationSearch(null, null, null, "score").normalized(), forwardedView, viewerRole);
+    }
+
+    private static ApplicationDetailResponse detail(boolean nextSteps, boolean openJobPosting, String linkedIn) {
+        return new ApplicationDetailResponse(298, "An Võ", "an.vo@example.com", "0901 234 567", linkedIn, null,
+                7, "REQ-007", 12, "Digital Marketing Executive", "Sales & Marketing", SUBMITTED,
+                "HM_Passed", "Qua vòng chuyên môn", "badge--warning", new BigDecimal("79.34"), SUBMITTED.plusMinutes(1),
+                List.of(new TimelineItem(SUBMITTED.plusDays(1), "HR: Đạt", "Lan HR", "Hợp vị trí", "success"),
+                        new TimelineItem(SUBMITTED, "Nộp hồ sơ", "An Võ", null, "neutral")),
+                new ApplicationDetailResponse.Actions(false, false, nextSteps, nextSteps, openJobPosting),
+                openJobPosting ? "HR" : "Hiring Manager");
     }
 
     private static ApplicationPipelineResponse row(int id, String status, String score, boolean schedule,
