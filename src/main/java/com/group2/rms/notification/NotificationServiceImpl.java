@@ -1,5 +1,6 @@
 package com.group2.rms.notification;
 
+import com.group2.rms.requisition.entity.JobPosting;
 import com.group2.rms.requisition.entity.JobRequisition;
 import com.group2.rms.user.entity.User;
 import lombok.RequiredArgsConstructor;
@@ -69,6 +70,61 @@ public class NotificationServiceImpl implements NotificationService {
 
         notificationRepository.save(notification);
         log.info("Sent rejection notification to Hiring Manager (User ID: {}) for Requisition ID: {}", recipient.getUserId(), requisition.getRequisitionId());
+    }
+
+    @Override
+    @Transactional
+    public void notifyJobPostingPublished(JobPosting posting, User hr) {
+        if (posting == null || posting.getRequisition() == null || posting.getRequisition().getHiringManager() == null) {
+            log.warn("Cannot send job posting published notification: Posting or Requisition owner is null");
+            return;
+        }
+
+        User recipient = posting.getRequisition().getHiringManager();
+        String postingTimeStr = posting.getPostingDate() != null
+                ? posting.getPostingDate().format(DateTimeFormatter.ofPattern("yyyyMMddHHmmssSSSSSSS"))
+                : LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMddHHmmssSSSSSSS"));
+        String eventId = "JOB_PUB_" + posting.getJobPostingId() + "_" + postingTimeStr;
+
+        if (notificationRepository.existsByEventId(eventId)) {
+            log.info("Notification for eventId {} already exists. Skipping duplicate creation.", eventId);
+            return;
+        }
+
+        String hrName = hr != null ? hr.getFullName() : "Nhân sự (HR)";
+        String timeDisplay = LocalDateTime.now().format(DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm"));
+        String deadlineDisplay = posting.getApplicationDeadline() != null
+                ? posting.getApplicationDeadline().format(DateTimeFormatter.ofPattern("dd/MM/yyyy"))
+                : "Không giới hạn";
+
+        String reqCode = posting.getRequisition().getRequisitionCode() != null
+                ? posting.getRequisition().getRequisitionCode()
+                : ("REQ-" + posting.getRequisition().getRequisitionId());
+
+        String title = "Tin tuyển dụng đã phát hành: " + posting.getPostingTitle();
+        String content = String.format(
+                "Tin tuyển dụng \"%s\" (thuộc yêu cầu %s) đã được nhân sự %s phát hành lên cổng việc làm công khai vào lúc %s.\nHạn nộp hồ sơ: %s.\nỨng viên hiện đã có thể xem chi tiết và nộp hồ sơ trực tuyến.",
+                posting.getPostingTitle(),
+                reqCode,
+                hrName,
+                timeDisplay,
+                deadlineDisplay
+        );
+
+        Notification notification = Notification.builder()
+                .recipient(recipient)
+                .title(title)
+                .content(content)
+                .eventType("JOB_POSTING_PUBLISHED")
+                .referenceId(String.valueOf(posting.getJobPostingId()))
+                .linkUrl("/internal/job-postings/" + posting.getJobPostingId())
+                .isRead(false)
+                .eventId(eventId)
+                .createdAt(LocalDateTime.now())
+                .build();
+
+        notificationRepository.save(notification);
+        log.info("Sent job posting published notification to Hiring Manager (User ID: {}) for Job Posting ID: {}", recipient.getUserId(), posting.getJobPostingId());
     }
 
     @Override

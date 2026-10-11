@@ -40,6 +40,7 @@ public class JobPostingServiceImpl implements JobPostingService {
     private final JobRequisitionRepository jobRequisitionRepository;
     private final AuditLogRepository auditLogRepository;
     private final RequisitionAccess requisitionAccess;
+    private final com.group2.rms.notification.NotificationService notificationService;
 
     private void requireHrOrAdmin(User currentUser) {
         String role = requisitionAccess.role(currentUser);
@@ -281,6 +282,10 @@ public class JobPostingServiceImpl implements JobPostingService {
         jobPosting.setPostingStatus(isPublish ? "Published" : "Draft");
 
         JobPosting saved = jobPostingRepository.save(jobPosting);
+
+        if (isPublish) {
+            notificationService.notifyJobPostingPublished(saved, currentUser);
+        }
 
         auditLogRepository.save(AuditLog.builder()
                 .user(currentUser)

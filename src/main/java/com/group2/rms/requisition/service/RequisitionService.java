@@ -7,6 +7,8 @@ import org.springframework.data.domain.Page;
 public interface RequisitionService {
  Page<RequisitionResponse> search(int page,int size,String query,Integer department,String type,String status);
  Page<RequisitionResponse> search(int page,int size,String query,Integer department,String type,String status,String sort);
+ Page<RequisitionResponse> search(int page,int size,String query,Integer department,String position,String type,String status,String sort);
+ java.util.List<String> getAvailablePositions();
  long countVisible();
  RequisitionResponse getById(Integer id);
  RequisitionRequest getRequestDtoById(Integer id);

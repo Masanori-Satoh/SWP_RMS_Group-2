@@ -8,6 +8,8 @@ public interface NotificationService {
 
     void notifyRequisitionRejected(JobRequisition requisition, User director, String comment);
 
+    void notifyJobPostingPublished(com.group2.rms.requisition.entity.JobPosting posting, User hr);
+
     Page<NotificationResponse> getNotificationsForUser(User user, int page, int size);
 
     long getUnreadCount(User user);
