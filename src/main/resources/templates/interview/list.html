@@ -275,6 +275,9 @@
 
           <!-- Actions Bar: Dành cho HR và Director (canEdit) -->
           <div class="card-actions" th:if="${canEdit}">
+            <a th:href="@{'/interviews/' + ${s.interviewId} + '/result'}" class="btn btn-secondary">
+              Kết quả
+            </a>
             <a th:href="@{'/interviews/' + ${s.interviewId} + '/edit'}" class="button button-secondary button-sm">
               Sửa lịch
             </a>
@@ -290,6 +293,13 @@
                 Hủy lịch
               </button>
             </form>
+          </div>
+
+          <!-- Kết quả & đánh giá phỏng vấn (Iter2/3): thành viên hội đồng, Hiring Manager -->
+          <div class="card-actions" th:if="${!canEdit and !isCandidateView}">
+            <a th:href="@{'/interviews/' + ${s.interviewId} + '/result'}" class="btn btn-primary">
+              Kết quả &amp; đánh giá
+            </a>
           </div>
 
         </div>

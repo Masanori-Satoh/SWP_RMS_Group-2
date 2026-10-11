@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="vi"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/internal}">
+<!--
+    INTERVIEW/CANDIDATE-LIST.HTML — Lịch phỏng vấn của tôi (/portal/interviews, chỉ ứng viên)
+    Chỉ hiện thông tin ứng viên cần biết: vị trí, thời gian, hình thức, địa điểm/link, trạng thái.
+    Không hiện hội đồng phỏng vấn và kết quả đánh giá (dữ liệu nội bộ).
+    Dựng hoàn toàn bằng catalog: page-header, card, table-wrapper, table, badge. Không có CSS riêng.
+-->
+<head>
+    <title>Lịch phỏng vấn của tôi</title>
+</head>
+<body>
+<main id="main" layout:fragment="content" class="page-content container" tabindex="-1">
+
+    <div class="page-header">
+        <div>
+            <h1 class="page-title">Lịch phỏng vấn của tôi</h1>
+            <p class="page-subtitle">Các buổi phỏng vấn của những hồ sơ bạn đã ứng tuyển</p>
+        </div>
+    </div>
+
+    <div th:if="${#lists.isEmpty(schedules)}" class="card">
+        <p class="text-muted">Bạn chưa có lịch phỏng vấn nào. Khi nhà tuyển dụng lên lịch, buổi phỏng vấn sẽ hiện ở đây.</p>
+    </div>
+
+    <div th:unless="${#lists.isEmpty(schedules)}" class="table-wrapper">
+        <table class="table">
+            <thead>
+            <tr>
+                <th scope="col">Vị trí</th>
+                <th scope="col">Thời gian</th>
+                <th scope="col">Hình thức</th>
+                <th scope="col">Địa điểm / Link</th>
+                <th scope="col">Trạng thái</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr th:each="s : ${schedules}">
+                <th scope="row" th:text="${s.jobPostingTitle ?: 'Hồ sơ #' + s.applicationId}">Java Developer</th>
+                <td>
+                    <time th:datetime="${#temporals.formatISO(s.startTime)}"
+                          th:text="${#temporals.format(s.startTime, 'dd/MM/yyyy HH:mm')}">10/10/2026 09:00</time>
+                    <span th:if="${s.endTime != null}" class="text-muted"
+                          th:text="|– ${#temporals.format(s.endTime, 'HH:mm')}|">– 10:00</span>
+                </td>
+                <td th:text="${s.interviewFormatDisplay ?: '—'}">Trực tuyến</td>
+                <td>
+                    <a th:if="${s.locationOrLink != null and #strings.startsWith(s.locationOrLink, 'http')}"
+                       th:href="${s.locationOrLink}" target="_blank" rel="noopener">Tham gia buổi phỏng vấn</a>
+                    <span th:unless="${s.locationOrLink != null and #strings.startsWith(s.locationOrLink, 'http')}"
+                          th:text="${s.locationOrLink ?: '—'}">Phòng họp 3</span>
+                </td>
+                <td>
+                    <span class="badge"
+                          th:classappend="${s.timeStatus == 'CANCELLED' ? 'badge--danger'
+                                          : (s.timeStatus == 'COMPLETED' ? 'badge--success'
+                                          : (s.timeStatus == 'OVERDUE' ? 'badge--neutral' : 'badge--warning'))}"
+                          th:text="${s.timeStatusDisplay}">Sắp tới</span>
+                </td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+</main>
+</body>
+</html>

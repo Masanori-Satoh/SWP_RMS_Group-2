@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<!--
+    INTERVIEW/EVALUATION-DIALOG.HTML — Pop-up Submit Evaluation Form (SRS 5.1.29)
+    Cách gọi (chỉ khi người xem được đánh giá; th:if ở thẻ ngoài, th:replace ở thẻ trong):
+      <th:block th:if="${result.canEvaluate}">
+          <dialog th:replace="~{interview/evaluation-dialog :: dialog(interviewId=${result.interviewId})}"></dialog>
+      </th:block>
+    Gửi JSON tới POST /interviews/{id}/evaluations bằng js/pages/interview-result.js (kèm X-CSRF-TOKEN).
+    Tên ô (name) khớp SubmitEvaluationRequest; lỗi từ server hiện ở [data-error-for="<tên ô>"].
+-->
+<body>
+<dialog th:fragment="dialog(interviewId)" id="iev-dialog" class="confirm-dialog iev-dialog" aria-labelledby="iev-title">
+    <form id="iev-form" class="dialog-content" novalidate data-ajax-form data-success-param="evaluated"
+          data-number-fields="technicalScore softSkillScore culturalFitScore"
+          th:attr="data-action=@{/interviews/{id}/evaluations(id=${interviewId})}">
+        <div class="dialog-header">
+            <h2 id="iev-title" class="dialog-title">Phiếu đánh giá phỏng vấn</h2>
+            <p class="form-hint">Chấm từ 1 (yếu) đến 5 (xuất sắc). Phiếu đã gửi không sửa được.</p>
+        </div>
+
+        <div class="alert alert--danger iev-alert" role="alert" data-form-alert hidden></div>
+
+        <div class="iev-body">
+            <fieldset class="form-group iev-score">
+                <legend class="form-label form-label--required">Kỹ năng kỹ thuật</legend>
+                <div class="iev-scale">
+                    <label th:each="n : ${#numbers.sequence(1, 5)}" class="iev-scale__option">
+                        <input type="radio" name="technicalScore" th:value="${n}" required
+                               data-required-message="Vui lòng chọn điểm từ 1 đến 5.">
+                        <span th:text="${n}">1</span>
+                    </label>
+                </div>
+                <p class="form-error iev-error" data-error-for="technicalScore" hidden></p>
+            </fieldset>
+
+            <fieldset class="form-group iev-score">
+                <legend class="form-label form-label--required">Kỹ năng mềm</legend>
+                <div class="iev-scale">
+                    <label th:each="n : ${#numbers.sequence(1, 5)}" class="iev-scale__option">
+                        <input type="radio" name="softSkillScore" th:value="${n}" required
+                               data-required-message="Vui lòng chọn điểm từ 1 đến 5.">
+                        <span th:text="${n}">1</span>
+                    </label>
+                </div>
+                <p class="form-error iev-error" data-error-for="softSkillScore" hidden></p>
+            </fieldset>
+
+            <fieldset class="form-group iev-score">
+                <legend class="form-label form-label--required">Phù hợp văn hóa</legend>
+                <div class="iev-scale">
+                    <label th:each="n : ${#numbers.sequence(1, 5)}" class="iev-scale__option">
+                        <input type="radio" name="culturalFitScore" th:value="${n}" required
+                               data-required-message="Vui lòng chọn điểm từ 1 đến 5.">
+                        <span th:text="${n}">1</span>
+                    </label>
+                </div>
+                <p class="form-error iev-error" data-error-for="culturalFitScore" hidden></p>
+            </fieldset>
+
+            <div class="form-group">
+                <label class="form-label form-label--required" for="iev-recommendation">Đề xuất</label>
+                <select id="iev-recommendation" name="recommendation" class="form-select" required
+                        data-required-message="Vui lòng chọn đề xuất.">
+                    <option value="">-- Chọn đề xuất --</option>
+                    <option value="Hire">Nên tuyển</option>
+                    <option value="Consider">Cân nhắc</option>
+                    <option value="No_Hire">Không tuyển</option>
+                </select>
+                <p class="form-error iev-error" data-error-for="recommendation" hidden></p>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label" for="iev-strengths">Điểm mạnh</label>
+                <textarea id="iev-strengths" name="strengths" class="form-textarea" rows="3" maxlength="2000"></textarea>
+                <p class="form-error iev-error" data-error-for="strengths" hidden></p>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label" for="iev-weaknesses">Điểm yếu</label>
+                <textarea id="iev-weaknesses" name="weaknesses" class="form-textarea" rows="3" maxlength="2000"></textarea>
+                <p class="form-error iev-error" data-error-for="weaknesses" hidden></p>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label" for="iev-comments">Nhận xét</label>
+                <textarea id="iev-comments" name="comments" class="form-textarea" rows="3" maxlength="2000"></textarea>
+                <p class="form-error iev-error" data-error-for="comments" hidden></p>
+            </div>
+        </div>
+
+        <div class="dialog-actions">
+            <button type="button" class="btn btn--secondary btn--sm" data-dialog-close>Hủy</button>
+            <button type="submit" class="btn btn--primary btn--sm" data-form-submit>Gửi đánh giá</button>
+        </div>
+    </form>
+</dialog>
+</body>
+</html>

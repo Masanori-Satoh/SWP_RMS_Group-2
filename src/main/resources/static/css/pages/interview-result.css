@@ -1,0 +1,322 @@
+/* =============================================================================
+   PAGES/INTERVIEW-RESULT.CSS — Kết quả phỏng vấn (/interviews/{id}/result, interview/result.html)
+   và pop-up phiếu đánh giá (interview/evaluation-dialog.html)
+   Chỉ chứa phần catalog chưa có: breadcrumb, bố cục 2 cột, bảng thông tin, ô điểm,
+   khối phiếu đánh giá, danh sách hội đồng, thang điểm 1–5 trong dialog.
+   Tiền tố class: ir- (trang kết quả), iev- (dialog đánh giá)
+   ============================================================================= */
+
+/* --- Đầu trang ----------------------------------------------------------------- */
+.ir-breadcrumb {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s2);
+  margin-bottom: var(--s4);
+  font-size: 14px;
+  color: var(--muted);
+}
+
+.ir-breadcrumb a {
+  color: var(--brand);
+  text-decoration: none;
+}
+
+.ir-breadcrumb a:hover {
+  text-decoration: underline;
+}
+
+.ir-header-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--s3);
+}
+
+/* --- Bố cục 2 cột ---------------------------------------------------------------- */
+.ir-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 2fr) minmax(0, 1fr);
+  gap: var(--s6);
+  align-items: start;
+}
+
+.ir-main,
+.ir-side {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s6);
+  min-width: 0;
+}
+
+/* --- Bảng thông tin (dt/dd) ----------------------------------------------------- */
+.ir-facts {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--s4) var(--s6);
+  margin: 0;
+}
+
+.ir-facts--stack {
+  grid-template-columns: 1fr;
+}
+
+.ir-facts__item dt {
+  font-size: 13px;
+  color: var(--muted);
+  margin-bottom: var(--s1);
+}
+
+.ir-facts__item dd {
+  margin: 0;
+  color: var(--ink);
+  overflow-wrap: anywhere;
+}
+
+.ir-facts__sub {
+  display: block;
+  font-size: 14px;
+}
+
+/* --- Ô điểm --------------------------------------------------------------------- */
+.ir-scores {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: var(--s3);
+  margin: 0 0 var(--s4);
+}
+
+.ir-scores--stack {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.ir-scores__item {
+  padding: var(--s3);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md);
+  background: var(--page);
+  text-align: center;
+}
+
+.ir-scores__item dt {
+  font-size: 13px;
+  color: var(--muted);
+}
+
+.ir-scores__item dd {
+  margin: var(--s1) 0 0;
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.ir-scores__item--total {
+  border-color: var(--brand);
+  background: var(--brand-soft);
+}
+
+.ir-overall {
+  display: flex;
+  align-items: baseline;
+  gap: var(--s2);
+  margin: 0 0 var(--s4);
+}
+
+.ir-overall__value {
+  font-family: var(--serif);
+  font-size: 40px;
+  font-weight: 600;
+  line-height: 1;
+}
+
+/* --- Phiếu đánh giá ------------------------------------------------------------- */
+.ir-eval + .ir-eval {
+  margin-top: var(--s6);
+  padding-top: var(--s6);
+  border-top: 1px solid var(--line);
+}
+
+.ir-eval__head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s3);
+  margin-bottom: var(--s4);
+}
+
+.ir-eval__who {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--s2);
+}
+
+.ir-eval__notes {
+  margin: 0;
+}
+
+.ir-eval__notes dt {
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.ir-eval__notes dd {
+  margin: var(--s1) 0 var(--s3);
+  color: var(--ink);
+  line-height: 1.6;
+  overflow-wrap: anywhere;
+}
+
+.ir-eval__time {
+  margin: 0;
+  font-size: 13px;
+}
+
+.ir-note {
+  margin: 0 0 var(--s4);
+  font-size: 14px;
+}
+
+.ir-empty {
+  margin: 0;
+  padding: var(--s6);
+  border: 1px dashed var(--control-line);
+  border-radius: var(--radius-md);
+  color: var(--muted);
+  text-align: center;
+}
+
+/* --- Phân bố đề xuất, hội đồng -------------------------------------------------- */
+.ir-recs,
+.ir-panel {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.ir-recs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s3);
+}
+
+.ir-recs__item {
+  display: flex;
+  align-items: center;
+  gap: var(--s2);
+}
+
+.ir-panel__item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s3);
+  padding: var(--s3) 0;
+}
+
+.ir-panel__item + .ir-panel__item {
+  border-top: 1px solid var(--line);
+}
+
+.ir-panel__name {
+  display: block;
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.ir-panel__role {
+  display: block;
+  font-size: 13px;
+}
+
+/* --- Dialog phiếu đánh giá (giữ class catalog confirm-dialog, chỉ nới rộng) ------ */
+dialog.iev-dialog {
+  max-width: 640px;
+}
+
+.iev-body {
+  max-height: 60vh;
+  overflow-y: auto;
+  margin-bottom: var(--s6);
+  padding-right: var(--s2);
+}
+
+.iev-alert {
+  margin-bottom: var(--s4);
+}
+
+.iev-alert[hidden],
+.iev-error[hidden] {
+  display: none;
+}
+
+.iev-score {
+  border: none;
+  padding: 0;
+  margin-left: 0;
+  margin-right: 0;
+}
+
+.iev-scale {
+  display: flex;
+  gap: var(--s2);
+}
+
+.iev-scale__option {
+  position: relative;
+  flex: 1;
+}
+
+.iev-scale__option input {
+  position: absolute;
+  opacity: 0;
+  inset: 0;
+  margin: 0;
+  cursor: pointer;
+}
+
+.iev-scale__option span {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: var(--btn-sm-h);
+  border: 1px solid var(--control-line);
+  border-radius: var(--radius-md);
+  background: var(--surface);
+  color: var(--ink);
+  font-weight: 600;
+  transition: background-color 0.15s ease, border-color 0.15s ease;
+}
+
+.iev-scale__option:hover span {
+  border-color: var(--brand);
+}
+
+.iev-scale__option input:checked + span {
+  border-color: var(--brand-dark);
+  background: var(--brand-dark);
+  color: var(--surface);
+}
+
+.iev-scale__option input:focus-visible + span {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
+}
+
+/* --- Responsive ---------------------------------------------------------------- */
+@media (max-width: 992px) {
+  .ir-layout {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 768px) {
+  .ir-facts,
+  .ir-scores--stack {
+    grid-template-columns: 1fr;
+  }
+
+  .ir-scores {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
