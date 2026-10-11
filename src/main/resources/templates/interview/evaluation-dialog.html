@@ -13,21 +13,27 @@
 <dialog th:fragment="dialog(interviewId)" id="iev-dialog" class="confirm-dialog iev-dialog" aria-labelledby="iev-title">
     <form id="iev-form" class="dialog-content" novalidate data-ajax-form data-success-param="evaluated"
           data-number-fields="technicalScore softSkillScore culturalFitScore"
+          data-require-any="technicalScore softSkillScore culturalFitScore"
+          data-require-any-field="anyScoreGiven"
+          data-require-any-message="Vui lòng chấm ít nhất một mục điểm."
           th:attr="data-action=@{/interviews/{id}/evaluations(id=${interviewId})}">
         <div class="dialog-header">
             <h2 id="iev-title" class="dialog-title">Phiếu đánh giá phỏng vấn</h2>
-            <p class="form-hint">Chấm từ 1 (yếu) đến 5 (xuất sắc). Phiếu đã gửi không sửa được.</p>
+            <p class="form-hint">Chấm từ 1 (yếu) đến 5 (xuất sắc). Chỉ chấm mục thuộc chuyên môn của bạn, mục còn lại chọn “Bỏ qua” (phải chấm ít nhất một mục). Phiếu đã gửi không sửa được.</p>
         </div>
 
         <div class="alert alert--danger iev-alert" role="alert" data-form-alert hidden></div>
 
         <div class="iev-body">
             <fieldset class="form-group iev-score">
-                <legend class="form-label form-label--required">Kỹ năng kỹ thuật</legend>
+                <legend class="form-label">Kỹ năng kỹ thuật</legend>
                 <div class="iev-scale">
+                    <label class="iev-scale__option iev-scale__option--skip">
+                        <input type="radio" name="technicalScore" value="" checked>
+                        <span>Bỏ qua</span>
+                    </label>
                     <label th:each="n : ${#numbers.sequence(1, 5)}" class="iev-scale__option">
-                        <input type="radio" name="technicalScore" th:value="${n}" required
-                               data-required-message="Vui lòng chọn điểm từ 1 đến 5.">
+                        <input type="radio" name="technicalScore" th:value="${n}">
                         <span th:text="${n}">1</span>
                     </label>
                 </div>
@@ -35,11 +41,14 @@
             </fieldset>
 
             <fieldset class="form-group iev-score">
-                <legend class="form-label form-label--required">Kỹ năng mềm</legend>
+                <legend class="form-label">Kỹ năng mềm</legend>
                 <div class="iev-scale">
+                    <label class="iev-scale__option iev-scale__option--skip">
+                        <input type="radio" name="softSkillScore" value="" checked>
+                        <span>Bỏ qua</span>
+                    </label>
                     <label th:each="n : ${#numbers.sequence(1, 5)}" class="iev-scale__option">
-                        <input type="radio" name="softSkillScore" th:value="${n}" required
-                               data-required-message="Vui lòng chọn điểm từ 1 đến 5.">
+                        <input type="radio" name="softSkillScore" th:value="${n}">
                         <span th:text="${n}">1</span>
                     </label>
                 </div>
@@ -47,16 +56,20 @@
             </fieldset>
 
             <fieldset class="form-group iev-score">
-                <legend class="form-label form-label--required">Phù hợp văn hóa</legend>
+                <legend class="form-label">Phù hợp văn hóa</legend>
                 <div class="iev-scale">
+                    <label class="iev-scale__option iev-scale__option--skip">
+                        <input type="radio" name="culturalFitScore" value="" checked>
+                        <span>Bỏ qua</span>
+                    </label>
                     <label th:each="n : ${#numbers.sequence(1, 5)}" class="iev-scale__option">
-                        <input type="radio" name="culturalFitScore" th:value="${n}" required
-                               data-required-message="Vui lòng chọn điểm từ 1 đến 5.">
+                        <input type="radio" name="culturalFitScore" th:value="${n}">
                         <span th:text="${n}">1</span>
                     </label>
                 </div>
                 <p class="form-error iev-error" data-error-for="culturalFitScore" hidden></p>
             </fieldset>
+            <p class="form-error iev-error" data-error-for="anyScoreGiven" hidden></p>
 
             <div class="form-group">
                 <label class="form-label form-label--required" for="iev-recommendation">Đề xuất</label>
