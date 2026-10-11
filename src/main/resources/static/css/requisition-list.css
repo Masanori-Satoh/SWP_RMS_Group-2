@@ -3,6 +3,7 @@
 .req-list-page .requisition-list-heading { margin-bottom:var(--s6); }
 .req-list-page .records-count { margin-top:var(--s1); color:var(--muted); font-size:14px; }
 .req-list-page .requisition-filter-grid { display:grid; grid-template-columns:minmax(190px,1.5fr) repeat(4,minmax(120px,1fr)); gap:var(--s4); }
+.req-list-page .requisition-filter-grid-4 { display:grid; grid-template-columns:minmax(200px,1.5fr) repeat(3,minmax(130px,1fr)); gap:var(--s4); }
 .req-list-page .filter-field { min-width:0; }
 .req-list-page .filter-field label { display:block; margin-bottom:var(--s2); font-size:14px; font-weight:600; }
 .req-list-page .filter-actions { display:flex; gap:var(--s2); flex-wrap:wrap; margin-block:var(--s4) var(--s6); }
@@ -89,10 +90,10 @@
 .req-list-page .page-link.disabled { cursor:default; color:var(--muted); background:var(--page); border-color:var(--line); }
 .req-list-page a.page-link:not(.active):hover { background:var(--brand-soft); }
 @media (max-width:1100px) {
-  .req-list-page .requisition-filter-grid { grid-template-columns:repeat(2,minmax(0,1fr)); }
+  .req-list-page :is(.requisition-filter-grid, .requisition-filter-grid-4) { grid-template-columns:repeat(2,minmax(0,1fr)); }
   .req-list-page .filter-search { grid-column:1 / -1; }
 }
 @media (max-width:480px) {
-  .req-list-page .requisition-filter-grid { grid-template-columns:minmax(0,1fr); }
+  .req-list-page :is(.requisition-filter-grid, .requisition-filter-grid-4) { grid-template-columns:minmax(0,1fr); }
   .req-list-page .list-pagination-footer { justify-content:center; }
 }
