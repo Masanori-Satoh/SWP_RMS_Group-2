@@ -17,6 +17,29 @@
     mobile.addEventListener('change', () => { open = false; sync(); });
     sync();
   }
+
+  // Sidebar Pin & Collapsible state management
+  const pinToggle = document.getElementById('sidebar-pin-toggle');
+  const isPinned = localStorage.getItem('rms_sidebar_pinned') === 'true';
+  if (isPinned) {
+    document.documentElement.classList.add('sidebar-pinned');
+    if (document.body) document.body.classList.add('sidebar-pinned');
+  }
+  if (pinToggle) {
+    pinToggle.setAttribute('aria-pressed', String(isPinned));
+    pinToggle.title = isPinned ? 'Bỏ ghim (Thu gọn thanh điều hướng)' : 'Ghim mở rộng thanh điều hướng';
+    pinToggle.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const nextPinned = !document.documentElement.classList.contains('sidebar-pinned');
+      document.documentElement.classList.toggle('sidebar-pinned', nextPinned);
+      if (document.body) document.body.classList.toggle('sidebar-pinned', nextPinned);
+      pinToggle.setAttribute('aria-pressed', String(nextPinned));
+      pinToggle.title = nextPinned ? 'Bỏ ghim (Thu gọn thanh điều hướng)' : 'Ghim mở rộng thanh điều hướng';
+      try {
+        localStorage.setItem('rms_sidebar_pinned', String(nextPinned));
+      } catch (err) {}
+    });
+  }
   document.querySelectorAll('input[type="password"]').forEach(input => {
     const vi = document.documentElement.lang === 'vi';
     const show = vi ? 'Hiện' : 'Show';

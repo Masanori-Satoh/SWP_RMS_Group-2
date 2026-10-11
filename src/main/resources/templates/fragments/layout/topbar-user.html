@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<body>
+<!--
+    FRAGMENTS/LAYOUT/TOPBAR-USER.HTML
+    =============================================================================
+    Góc phải topbar, DÙNG CHUNG cho topbar nội bộ (workspace-header.html) và
+    topbar công khai (public-topbar.html):
+      Avatar + Tên + Badge role + Email (click về /profile)  |  Nút Đăng xuất (ngoài cùng phải)
+      + Hộp thoại xác nhận đăng xuất.
+    CSS: static/css/topbar.css.
+    Tham số: name, email, role (tên role gốc, tự dịch sang tiếng Việt), avatar (URL hoặc null),
+          idPrefix ('workspace' hoặc 'public' → id form/dialog: {idPrefix}-logout-form / {idPrefix}-logout-dialog)
+    =============================================================================
+-->
+<div th:fragment="actions(name, email, role, avatar, idPrefix)" class="topbar-user"
+     th:with="roleLabel=${role == 'Hiring Manager' ? 'Trưởng phòng tuyển dụng' : (role == 'HR' ? 'Nhân sự' : (role == 'HR Specialist' ? 'Chuyên viên Nhân sự' : (role == 'Director' ? 'Giám đốc' : (role == 'System Admin' ? 'Quản trị hệ thống' : (role == 'Interviewer' ? 'Người phỏng vấn' : (role == 'Candidate' ? 'Ứng viên' : role))))))},
+              hasAvatar=${avatar != null and !#strings.isEmpty(avatar)}">
+  <!-- Khối định danh: click vào bất kỳ đâu đều về hồ sơ cá nhân -->
+  <a th:href="@{/profile}" class="workspace-identity" title="Xem hồ sơ cá nhân của bạn">
+    <img class="workspace-avatar" th:if="${hasAvatar}" th:src="${avatar}" alt="Avatar" referrerpolicy="no-referrer">
+    <div class="workspace-avatar workspace-avatar-fallback" th:unless="${hasAvatar}" aria-hidden="true"
+         th:text="${name != null and !#strings.isEmpty(name) ? #strings.toUpperCase(#strings.substring(name, 0, 1)) : 'U'}">U</div>
+    <div class="workspace-user-meta">
+      <div class="workspace-user-top">
+        <strong class="workspace-user-name" th:if="${name != null}" th:text="${name}">Họ và Tên</strong>
+        <span class="workspace-role" th:if="${roleLabel != null and !#strings.isEmpty(roleLabel)}" th:text="${roleLabel}">Vai trò</span>
+      </div>
+      <span class="workspace-user-email" th:if="${email != null and !#strings.isEmpty(email)}" th:text="${email}">email@example.com</span>
+    </div>
+  </a>
+
+  <!-- Nút Đăng xuất: mở hộp thoại xác nhận, gửi POST /logout (Thymeleaf tự gắn CSRF) -->
+  <form class="topbar-logout-form" th:id="${idPrefix + '-logout-form'}" th:action="@{/logout}" method="post">
+    <button class="workspace-logout-btn" type="button" onclick="this.closest('.topbar-user').querySelector('dialog').showModal()">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+        <polyline points="16 17 21 12 16 7"></polyline>
+        <line x1="21" y1="12" x2="9" y2="12"></line>
+      </svg>
+      <span>Đăng xuất</span>
+    </button>
+  </form>
+
+  <dialog class="topbar-dialog" th:id="${idPrefix + '-logout-dialog'}" th:attr="aria-labelledby=${idPrefix + '-logout-title'}">
+    <div class="topbar-dialog__content">
+      <h3 class="topbar-dialog__title" th:id="${idPrefix + '-logout-title'}">Xác nhận đăng xuất</h3>
+      <p class="topbar-dialog__body">Bạn có chắc chắn muốn đăng xuất khỏi hệ thống Mộc?</p>
+      <div class="topbar-dialog__actions">
+        <button type="button" class="topbar-btn" onclick="this.closest('dialog').close()">Ở lại</button>
+        <button type="button" class="topbar-btn topbar-btn--danger" onclick="this.closest('.topbar-user').querySelector('form').submit()">Đăng xuất</button>
+      </div>
+    </div>
+  </dialog>
+</div>
+</body>
+</html>
