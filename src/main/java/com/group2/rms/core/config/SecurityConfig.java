@@ -112,6 +112,10 @@ public class SecurityConfig {
                                                 .requestMatchers(HttpMethod.GET, "/interviews", "/interviews/**")
                                                 .hasAnyAuthority("ROLE_HR", RoleAuthorities.SYSTEM_ADMIN,
                                                                 "ROLE_DIRECTOR", "ROLE_HIRING_MANAGER", "ROLE_INTERVIEWER")
+                                                .requestMatchers(HttpMethod.POST, "/interviews/*/evaluations")
+                                                .hasAnyAuthority("ROLE_INTERVIEWER", "ROLE_HIRING_MANAGER", "ROLE_DIRECTOR", "ROLE_HR")
+                                                .requestMatchers(HttpMethod.POST, "/interviews/*/final-result")
+                                                .hasAuthority("ROLE_HIRING_MANAGER")
                                                 .requestMatchers("/interviews", "/interviews/**")
                                                 .hasAnyAuthority("ROLE_HR", RoleAuthorities.SYSTEM_ADMIN)
                                                 // require authenticaed for SYSTEM_ADMIN, ROLE_HR, ROLE_DIRECTOR

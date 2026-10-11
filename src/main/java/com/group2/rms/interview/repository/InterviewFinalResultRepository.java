@@ -33,4 +33,12 @@ public interface InterviewFinalResultRepository extends JpaRepository<InterviewF
            "LEFT JOIN FETCH r.hiringManager hm " +
            "WHERE LOWER(r.finalDecision) = 'passed'")
     List<InterviewFinalResult> findAllPassedWithDetails();
+
+    /**
+     * Kết quả cuối của một lịch phỏng vấn (id kiểu Long như InterviewSchedule), kèm Hiring Manager.
+     */
+    @Query("SELECT r FROM InterviewFinalResult r " +
+           "LEFT JOIN FETCH r.hiringManager hm " +
+           "WHERE r.interviewSchedule.interviewId = :interviewId")
+    Optional<InterviewFinalResult> findByScheduleId(@Param("interviewId") Long interviewId);
 }

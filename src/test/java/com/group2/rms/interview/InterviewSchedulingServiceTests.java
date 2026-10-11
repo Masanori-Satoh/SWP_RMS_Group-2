@@ -123,31 +123,96 @@ class InterviewSchedulingServiceTests {
     }
 
     @Test
-    @DisplayName("Gán người dùng có vai trò HR vào hội đồng phỏng vấn phải bị từ chối")
-    void cannotAssignHrUserToInterviewPanel() {
+    @DisplayName("HR được xếp một HR khác vào hội đồng; vai trò trong hội đồng tự suy là HR")
+    void hrCanAssignAnotherHrToInterviewPanel() {
         User anotherHr = User.builder()
                 .userId(4)
-                .username("hr_2")
-                .fullName("Another HR")
+                .username("hr_quang")
+                .fullName("Quang HR")
                 .accountStatus("Active")
                 .role(Role.builder().roleId(2).roleName("HR").build())
                 .build();
         when(userRepository.findById(4)).thenReturn(Optional.of(anotherHr));
+        when(interviewScheduleRepository.save(any(InterviewSchedule.class))).thenAnswer(invocation -> {
+            InterviewSchedule s = invocation.getArgument(0);
+            s.setInterviewId(102L);
+            return s;
+        });
 
         LocalDateTime now = LocalDateTime.now().plusDays(1);
+        // Form gửi interviewerIds (không kèm vai trò) như trên giao diện thật
         InterviewScheduleRequest request = InterviewScheduleRequest.builder()
                 .applicationId(10)
                 .interviewFormat(InterviewFormat.Online_GoogleMeet)
                 .startTime(now)
                 .endTime(now.plusHours(1))
-                .panelMembers(List.of(new PanelMemberRequest(4, RoleInPanel.HM)))
+                .interviewerIds(java.util.Set.of(4, 3))
                 .build();
 
-        InterviewStatusException ex = assertThrows(InterviewStatusException.class, () ->
-                service.createSchedule(request, 1)
-        );
+        InterviewScheduleResponse response = service.createSchedule(request, 1);
 
-        assertTrue(ex.getMessage().contains("không tham gia Hội đồng phỏng vấn"));
+        assertEquals(2, response.interviewers().size());
+        assertEquals(RoleInPanel.HR, response.interviewers().stream()
+                .filter(m -> m.interviewerId() == 4).findFirst().orElseThrow().roleInPanel());
+        assertEquals(RoleInPanel.HM, response.interviewers().stream()
+                .filter(m -> m.interviewerId() == 3).findFirst().orElseThrow().roleInPanel());
+    }
+
+    @Test
+    @DisplayName("HR sửa lịch mà HR khác đã xếp mình vào hội đồng: vẫn giữ được chỗ của mình")
+    void hrAlreadyInPanelCanKeepSelfWhenEditing() {
+        LocalDateTime now = LocalDateTime.now().plusDays(1);
+        InterviewSchedule existing = InterviewSchedule.builder()
+                .interviewId(103L)
+                .application(application)
+                .interviewFormat(InterviewFormat.Online_GoogleMeet)
+                .interviewStatus(InterviewStatus.Scheduled)
+                .startTime(now)
+                .endTime(now.plusHours(1))
+                .build();
+        existing.addPanelMember(hrUser, RoleInPanel.HR);
+        when(interviewScheduleRepository.findByIdWithDetails(103L)).thenReturn(Optional.of(existing));
+        when(interviewScheduleRepository.save(any(InterviewSchedule.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        InterviewScheduleRequest request = InterviewScheduleRequest.builder()
+                .applicationId(10)
+                .interviewFormat(InterviewFormat.Online_GoogleMeet)
+                .startTime(now)
+                .endTime(now.plusHours(1))
+                .interviewerIds(java.util.Set.of(1, 3))
+                .build();
+
+        InterviewScheduleResponse response = service.updateSchedule(103L, request, 1);
+
+        assertEquals(2, response.interviewers().size());
+    }
+
+    @Test
+    @DisplayName("HR sửa lịch không được tự thêm mình vào hội đồng")
+    void hrCannotAddSelfWhenEditing() {
+        LocalDateTime now = LocalDateTime.now().plusDays(1);
+        InterviewSchedule existing = InterviewSchedule.builder()
+                .interviewId(104L)
+                .application(application)
+                .interviewFormat(InterviewFormat.Online_GoogleMeet)
+                .interviewStatus(InterviewStatus.Scheduled)
+                .startTime(now)
+                .endTime(now.plusHours(1))
+                .build();
+        existing.addPanelMember(hmUser, RoleInPanel.HM);
+        when(interviewScheduleRepository.findByIdWithDetails(104L)).thenReturn(Optional.of(existing));
+
+        InterviewScheduleRequest request = InterviewScheduleRequest.builder()
+                .applicationId(10)
+                .interviewFormat(InterviewFormat.Online_GoogleMeet)
+                .startTime(now)
+                .endTime(now.plusHours(1))
+                .interviewerIds(java.util.Set.of(1, 3))
+                .build();
+
+        InterviewStatusException ex = assertThrows(InterviewStatusException.class,
+                () -> service.updateSchedule(104L, request, 1));
+        assertTrue(ex.getMessage().contains("không được phép tự gán mình"));
     }
 
     @Test

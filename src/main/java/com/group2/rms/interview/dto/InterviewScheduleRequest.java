@@ -2,7 +2,6 @@ package com.group2.rms.interview.dto;
 
 import com.group2.rms.interview.entity.InterviewFormat;
 import com.group2.rms.interview.entity.InterviewStatus;
-import com.group2.rms.interview.entity.RoleInPanel;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.AssertTrue;
 import jakarta.validation.constraints.Future;
@@ -61,7 +60,8 @@ public record InterviewScheduleRequest(
             if (interviewerIds != null && !interviewerIds.isEmpty()) {
                 panelMembers = interviewerIds.stream()
                         .filter(Objects::nonNull)
-                        .map(id -> new PanelMemberRequest(id, RoleInPanel.HM))
+                        // Để trống vai trò: Service tự suy RoleInPanel từ role của người được chọn (HR/HM/Interviewer/Director)
+                        .map(id -> new PanelMemberRequest(id, null))
                         .toList();
             } else {
                 panelMembers = Collections.emptyList();
