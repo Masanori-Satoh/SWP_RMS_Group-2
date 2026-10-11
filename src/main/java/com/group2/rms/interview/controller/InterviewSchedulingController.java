@@ -37,7 +37,7 @@ import java.util.stream.Collectors;
  * - Package-by-Feature: com.group2.rms.interview
  * - Phân quyền hiển thị (GBR-05): HR thấy toàn bộ lịch và các nút Create/Edit/Cancel; Interviewer chỉ xem lịch được phân công.
  * - Validation & Exception handling (MSG26 & GBR-01): Bắt buộc dùng BindingResult, không để crash HTTP 500.
- * - HR Isolation: HR không được phân công vào hội đồng phỏng vấn.
+ * - HR tự gán: HR được tham gia hội đồng, nhưng HR đặt lịch không tự đưa chính mình vào hội đồng.
  * - Không chứa trường interviewRound (đã loại bỏ).
  */
 @Controller
@@ -108,7 +108,11 @@ public class InterviewSchedulingController {
      * Hiển thị form tạo mới lịch phỏng vấn (Dành cho HR và Director).
      */
     @GetMapping("/new")
-    public String showCreateForm(Authentication authentication, Model model, RedirectAttributes redirectAttributes) {
+    public String showCreateForm(
+            @RequestParam(value = "applicationId", required = false) Integer applicationId,
+            Authentication authentication,
+            Model model,
+            RedirectAttributes redirectAttributes) {
         User currentUser = resolveEffectiveUser(authentication);
         if (!canManageSchedules(currentUser, authentication)) {
             log.warn("Từ chối truy cập tạo lịch phỏng vấn: Người dùng không có vai trò HR hoặc Director.");
@@ -118,7 +122,9 @@ public class InterviewSchedulingController {
 
         // Gợi ý mặc định: 09:00 sáng ngày mai
         LocalDateTime defaultStartTime = LocalDateTime.now().plusDays(1).withHour(9).withMinute(0).withSecond(0).withNano(0);
+        // Mở từ trang hồ sơ (/applications/{id}): chọn sẵn hồ sơ trong dropdown
         InterviewScheduleRequest request = InterviewScheduleRequest.builder()
+                .applicationId(applicationId)
                 .interviewStatus(InterviewStatus.Scheduled)
                 .interviewFormat(InterviewFormat.Online_GoogleMeet)
                 .startTime(defaultStartTime)
@@ -154,7 +160,7 @@ public class InterviewSchedulingController {
             return "interview/form";
         }
 
-        // 2. Gọi Service và bắt các ngoại lệ nghiệp vụ (Rule MSG26, HR Isolation, validation thời gian, v.v.)
+        // 2. Gọi Service và bắt các ngoại lệ nghiệp vụ (Rule MSG26, HR tự gán, validation thời gian, v.v.)
         try {
             Integer creatorUserId = currentUser != null ? currentUser.getUserId() : 1;
             interviewSchedulingService.createSchedule(request, creatorUserId);
@@ -294,12 +300,14 @@ public class InterviewSchedulingController {
         List<Application> applications = applicationRepository.findAllWithCandidateAndJobPosting();
         model.addAttribute("applications", applications);
 
-        // Danh sách Interviewer hợp lệ (Loại bỏ HR và Candidate; Director được giữ lại)
+        // Danh sách người phỏng vấn hợp lệ: mọi tài khoản nội bộ đang Active (kể cả HR khác, Director).
+        // HR đang đặt lịch không thấy chính mình, trừ khi sửa lịch mà HR khác đã xếp mình vào hội đồng.
+        Integer hiddenSelfId = isHrSelfHidden(currentUser, isEdit, interviewId) ? currentUser.getUserId() : null;
         List<User> availableInterviewers = userRepository.findAllWithRoleAndDepartment().stream()
                 .filter(u -> u.getRole() != null
-                        && RoleAuthorities.INTERNAL_ROLE_NAMES.contains(u.getRole().getRoleName())
-                        && !"HR".equalsIgnoreCase(u.getRole().getRoleName()))
+                        && RoleAuthorities.INTERNAL_ROLE_NAMES.contains(u.getRole().getRoleName()))
                 .filter(u -> "Active".equalsIgnoreCase(u.getAccountStatus()))
+                .filter(u -> hiddenSelfId == null || !hiddenSelfId.equals(u.getUserId()))
                 .toList();
         model.addAttribute("availableInterviewers", availableInterviewers);
 
@@ -312,6 +320,23 @@ public class InterviewSchedulingController {
         } else {
             model.addAttribute("interviewStatuses", InterviewStatus.values());
         }
+    }
+
+    /**
+     * HR không tự đưa mình vào hội đồng nên ẩn chính mình khỏi danh sách chọn.
+     * Ngoại lệ: đang sửa lịch mà mình đã có trong hội đồng (do HR khác xếp), để không bị gỡ ngầm khi lưu.
+     */
+    private boolean isHrSelfHidden(User currentUser, boolean isEdit, Long interviewId) {
+        if (currentUser == null || currentUser.getRole() == null
+                || !"HR".equalsIgnoreCase(currentUser.getRole().getRoleName())) {
+            return false;
+        }
+        if (!isEdit || interviewId == null) {
+            return true;
+        }
+        InterviewScheduleResponse detail = interviewSchedulingService.getScheduleDetail(interviewId);
+        return detail == null || detail.interviewers() == null || detail.interviewers().stream()
+                .noneMatch(member -> member != null && currentUser.getUserId().equals(member.interviewerId()));
     }
 
     /**
