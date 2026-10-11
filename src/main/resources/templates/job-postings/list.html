@@ -145,7 +145,7 @@
                                         <th scope="col" class="col-round">Đợt tuyển dụng</th>
                                         <th scope="col" class="col-status">Trạng thái</th>
                                         <th scope="col" class="col-deadline">Hạn nộp hồ sơ</th>
-                                        <th th:if="${viewerRole != 'HR'}" scope="col" class="col-creator">Người tạo</th>
+                                        <th scope="col" class="col-creator">Người tạo</th>
                                         <th scope="col" class="col-date">Ngày tạo</th>
                                         <th scope="col" class="col-action">Thao tác</th>
                                     </tr>
@@ -188,8 +188,8 @@
                                                 th:text="${#temporals.format(item.applicationDeadline, 'dd/MM/yyyy')}">06/11/2026</span>
                                             <span th:unless="${item.applicationDeadline != null}">Không giới hạn</span>
                                         </td>
-                                        <td th:if="${viewerRole != 'HR'}" class="col-creator"
-                                            th:text="${item.createdByName ?: '—'}">Lê Thị Mai Lan</td>
+                                        <td class="col-creator" th:text="${item.createdByName ?: '—'}">Lê Thị Mai Lan
+                                        </td>
                                         <td class="col-date"
                                             th:text="${item.createdAt != null ? #temporals.format(item.createdAt, 'dd/MM/yyyy') : '—'}">
                                             07/10/2026</td>
