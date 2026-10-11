@@ -51,7 +51,7 @@
 | D1' | Người được nộp: thành viên `InterviewPanel` của lịch (thực tế role Interviewer / Hiring Manager / Director), mỗi người **một phiếu** cho mỗi lịch | Mặc định |
 | D2' | Được nộp khi `now >= StartTime` và trạng thái là `Scheduled`, `Rescheduled` hoặc `Completed`; `Cancelled` thì chặn. Iter3 chỉ nộp mới, không sửa phiếu | Mặc định |
 | D3' | **Phiếu đầu tiên** của lịch đang `Scheduled`/`Rescheduled` → chuyển lịch sang `Completed` (buổi phỏng vấn coi như đã diễn ra). Các thành viên còn lại sẽ hiện trong "chờ đánh giá" ở dashboard, đúng với định nghĩa hiện có của LinhDN | **Cần bạn xác nhận** (thay D3 cũ) |
-| D4 | 3 điểm bắt buộc 1–5; `recommendation` bắt buộc (`Hire`/`No_Hire`/`Consider`); `strengths`/`weaknesses`/`comments` tùy chọn, `@Size(max = 2000)` | Giữ |
+| D4' | Từng điểm 1–5 được bỏ trống (vd HR chỉ chấm kỹ năng mềm / văn hóa), nhưng phải chấm ít nhất 1 mục; `recommendation` bắt buộc (`Hire`/`No_Hire`/`Consider`); `strengths`/`weaknesses`/`comments` tùy chọn, `@Size(max = 2000)` | Đã chốt (thay D4) |
 | D5 | HR, HM, Director, SA xem mọi phiếu + trung bình. Interviewer chỉ vào được lịch mình được gán (GBR-05) và chỉ thấy phiếu của mình cho đến khi có Final Result | Giữ |
 | D6 | Không thêm chức năng ghi `InterviewFinalResult`; trang Result chỉ hiển thị nếu có bản ghi | Giữ |
 | D7 | Tab chết `/interviews/evaluation` trong `list.html`: **giữ nguyên** ở iter này (sửa = đổi markup cũ). Nút "Kết quả" và "Đánh giá" thêm trên từng thẻ lịch | Mặc định |

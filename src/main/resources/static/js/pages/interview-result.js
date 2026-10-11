@@ -5,7 +5,8 @@
    Khuôn chung:
      nút mở   [data-dialog-open="<id dialog>"]
      form     [data-ajax-form] data-action (URL POST), data-success-param (tham số thêm vào URL khi tải lại),
-              data-number-fields (tên ô gửi dạng số, cách nhau bởi dấu cách)
+              data-number-fields (tên ô gửi dạng số, cách nhau bởi dấu cách; giá trị rỗng gửi null),
+              data-require-any (+ -field, -message): nhóm ô phải có ít nhất một ô có giá trị
      trong form: [data-dialog-close], [data-form-alert], [data-form-submit], [data-error-for="<tên ô>"]
    Gửi JSON kèm header CSRF (meta _csrf / _csrf_header). Server trả ApiResponse { success, message, data: { tênÔ: lỗi } }.
    ============================================================================= */
@@ -102,6 +103,19 @@
                 valid = false;
             }
         });
+
+        // data-require-any: trong nhóm ô này phải có ít nhất một ô có giá trị (vd chấm ít nhất một mục điểm)
+        const anyFields = (form.dataset.requireAny || '').split(/\s+/).filter(Boolean);
+        if (anyFields.length > 0) {
+            const hasAny = anyFields.some(function (name) {
+                return payload[name] !== null && payload[name] !== '';
+            });
+            if (!hasAny) {
+                showFieldError(form, form.dataset.requireAnyField || anyFields[0],
+                        form.dataset.requireAnyMessage || 'Vui lòng nhập ít nhất một mục.');
+                valid = false;
+            }
+        }
         return valid;
     }
 

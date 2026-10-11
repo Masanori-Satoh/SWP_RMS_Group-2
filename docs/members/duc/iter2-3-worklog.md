@@ -18,7 +18,7 @@
 | D1' | Chỉ thành viên panel được nộp, mỗi người 1 phiếu | `InterviewEvaluationServiceImpl.java:47`, `:55`; `SecurityConfig.java:115` (Interviewer/HM/Director) |
 | D2' | Nộp khi đã tới giờ bắt đầu, lịch chưa hủy | `InterviewEvaluationService.java:32-34` (`blockedReason`), dùng ở `InterviewEvaluationServiceImpl.java:50`, `InterviewResultServiceImpl.java:100` |
 | D3' | Phiếu đầu tiên chuyển Scheduled/Rescheduled → Completed (kiểm `canTransitionTo` trước) | `InterviewEvaluationServiceImpl.java:73-81` |
-| D4 | 3 điểm 1–5 bắt buộc, đề xuất `Hire/No_Hire/Consider`, text ≤ 2000 | `SubmitEvaluationRequest.java` |
+| D4' | Từng điểm 1–5 **được bỏ trống** (DB cho NULL) nhưng phải chấm ít nhất 1 mục (`isAnyScoreGiven`); đề xuất `Hire/No_Hire/Consider` bắt buộc, text ≤ 2000. (Đổi 2026-10-11, xem mục cuối) | `SubmitEvaluationRequest.java` |
 | D5 | HR/HM/Director/SA xem tất cả; Interviewer chỉ lịch được gán, chỉ phiếu của mình tới khi có Final Result | `InterviewResultServiceImpl.java:43`, `:57-60`, `:67` |
 | D6 | Không ghi `InterviewFinalResult`, chỉ hiển thị nếu có | `InterviewFinalResultRepository.findByScheduleId` (method mới) |
 | D7 | Không đụng tab chết `/interviews/evaluation` | `interview/list.html` dòng 49 giữ nguyên |
@@ -96,3 +96,9 @@
 **Docs chính thức đã cập nhật:** `UI_MIGRATION.md` mục 5 (interview ✅), `UI_LEGACY_CLEANUP.md` (dòng `global.js`).
 
 **Kiểm tra:** test module interview pass hết (thêm 2 web test: trang đã bỏ khung cũ, thẻ lịch + dialog hủy có CSRF). Toàn bộ 599 test, hỏng 13 + 9 như `main`. **Chưa mở trên trình duyệt.**
+
+## 2026-10-11 — D4': điểm đánh giá được bỏ trống từng mục
+
+- **Lý do:** thành viên hội đồng có thể chỉ phụ trách một phần (vd HR chỉ chấm Kỹ năng mềm / Phù hợp văn hóa). DB vốn cho `TechnicalScore`, `SoftSkillScore`, `CulturalFitScore` NULL. Trước đây form bắt buộc cả 3 và radio đã chọn thì không bỏ chọn được.
+- **Sửa:** `SubmitEvaluationRequest` bỏ `@NotNull` từng điểm (giữ 1–5), thêm `@AssertTrue isAnyScoreGiven` (phải chấm ít nhất 1 mục, lỗi trả về ô `anyScoreGiven`). Dialog có lựa chọn "Bỏ qua" (giá trị rỗng, chọn sẵn) cho từng mục; JS gửi `null`, kiểm tra trước "ít nhất một mục" qua `data-require-any`. Điểm trung bình đã bỏ qua NULL từ trước, ô điểm trống hiện "—".
+- **Kiểm tra:** test module interview 69/69 pass (thêm: phiếu thiếu mục được nhận, phiếu không có điểm nào bị chặn).

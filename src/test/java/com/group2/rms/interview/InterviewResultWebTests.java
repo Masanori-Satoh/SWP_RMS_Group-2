@@ -117,6 +117,8 @@ class InterviewResultWebTests {
                 .andExpect(status().isOk())
                 .andExpect(content().string(containsString("id=\"iev-dialog\"")))
                 .andExpect(content().string(containsString("data-action=\"/interviews/7/evaluations\"")))
+                .andExpect(content().string(containsString("Bỏ qua")))
+                .andExpect(content().string(containsString("data-require-any=\"technicalScore softSkillScore culturalFitScore\"")))
                 .andExpect(content().string(containsString("/js/pages/interview-result.js")))
                 .andExpect(content().string(containsString("Bạn chỉ xem được phiếu của mình")))
                 .andExpect(content().string(not(containsString("Tổng hợp điểm"))));
@@ -198,6 +200,36 @@ class InterviewResultWebTests {
                 .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$.success").value(false))
                 .andExpect(jsonPath("$.data.technicalScore").value("Điểm kỹ thuật phải từ 1 đến 5."));
+        verifyNoInteractions(evaluationService);
+    }
+
+    @Test
+    void partialScoresAreAccepted() throws Exception {
+        // HR trong hội đồng chỉ chấm kỹ năng mềm + văn hóa, bỏ qua kỹ thuật
+        String body = """
+                {"technicalScore":null,"softSkillScore":4,"culturalFitScore":5,"recommendation":"Consider"}
+                """;
+
+        mvc.perform(post("/interviews/7/evaluations").with(as(2, "hr_quang", "HR")).with(csrf())
+                        .contentType(MediaType.APPLICATION_JSON).content(body))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.success").value(true));
+
+        verify(evaluationService).submit(eq(7L),
+                eq(new SubmitEvaluationRequest(null, 4, 5, "Consider", null, null, null)), eq(2));
+    }
+
+    @Test
+    void evaluationWithoutAnyScoreIsRejected() throws Exception {
+        String body = """
+                {"technicalScore":null,"softSkillScore":null,"culturalFitScore":null,"recommendation":"Hire"}
+                """;
+
+        mvc.perform(post("/interviews/7/evaluations").with(as(11, "iv_minh", "Interviewer")).with(csrf())
+                        .contentType(MediaType.APPLICATION_JSON).content(body))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.success").value(false))
+                .andExpect(jsonPath("$.data.anyScoreGiven").value("Vui lòng chấm ít nhất một mục điểm."));
         verifyNoInteractions(evaluationService);
     }
 

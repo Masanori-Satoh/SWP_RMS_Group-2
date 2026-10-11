@@ -264,6 +264,22 @@ dialog.iev-dialog {
   color: var(--surface);
 }
 
+/* "Bỏ qua" (không chấm mục này): rộng hơn ô điểm, khi chọn hiện trung tính thay vì màu điểm */
+.iev-scale__option--skip {
+  flex: 1.6;
+}
+
+.iev-scale__option--skip span {
+  font-weight: 500;
+  color: var(--muted);
+}
+
+.iev-scale__option--skip input:checked + span {
+  border-color: var(--control-line);
+  background: var(--neutral-soft);
+  color: var(--neutral);
+}
+
 .iev-scale__option input:focus-visible + span {
   outline: 2px solid var(--focus);
   outline-offset: 2px;

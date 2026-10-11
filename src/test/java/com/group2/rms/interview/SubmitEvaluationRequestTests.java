@@ -45,10 +45,24 @@ class SubmitEvaluationRequestTests {
     }
 
     @Test
-    @DisplayName("Điểm ngoài 1–5 và thiếu điểm bị chặn")
+    @DisplayName("Điểm ngoài 1–5 bị chặn")
     void scoresOutOfRange() {
-        assertEquals(Set.of("technicalScore", "softSkillScore", "culturalFitScore"),
+        assertEquals(Set.of("technicalScore", "softSkillScore"),
                 invalidFields(new SubmitEvaluationRequest(6, 0, null, "Hire", null, null, null)));
+    }
+
+    @Test
+    @DisplayName("Được bỏ trống từng mục điểm (vd HR chỉ chấm kỹ năng mềm / văn hóa)")
+    void partialScoresAreAllowed() {
+        assertTrue(invalidFields(new SubmitEvaluationRequest(null, 4, 5, "Consider", null, null, null)).isEmpty());
+        assertTrue(invalidFields(new SubmitEvaluationRequest(null, null, 3, "Hire", null, null, null)).isEmpty());
+    }
+
+    @Test
+    @DisplayName("Không chấm mục nào: lỗi anyScoreGiven")
+    void atLeastOneScoreIsRequired() {
+        assertEquals(Set.of("anyScoreGiven"),
+                invalidFields(new SubmitEvaluationRequest(null, null, null, "Hire", null, null, null)));
     }
 
     @Test
