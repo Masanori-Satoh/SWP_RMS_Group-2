@@ -32,14 +32,7 @@
                             </p>
                         </div>
                         <div style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap;">
-                            <div style="display: inline-flex; background: #f1ede6; padding: 4px; border-radius: 10px; border: 1px solid #e7e2d8;">
-                                <a th:href="@{/internal/job-postings}" style="padding: 7px 14px; font-size: 13.5px; font-weight: 600; color: #1b4d3e; background: #ffffff; text-decoration: none; border-radius: 7px; box-shadow: 0 1px 3px rgba(0,0,0,0.08);" title="Xem danh sách tin tuyển dụng">
-                                    📋 Danh sách tin
-                                </a>
-                                <a th:href="@{/internal/job-postings/dashboard}" style="padding: 7px 14px; font-size: 13.5px; font-weight: 600; color: #64748b; text-decoration: none; border-radius: 7px;" title="Bảng điều khiển tổng quan">
-                                    📊 Tổng quan HR
-                                </a>
-                            </div>
+
                             <a th:href="@{/requisitions}" class="jp-btn-create-post">
                                 + Đăng tin từ yêu cầu đã duyệt
                             </a>
@@ -162,8 +155,7 @@
                                         <td class="col-stt" th:text="${(currentPage - 1) * pageSize + row.count}">1</td>
                                         <td class="col-title jp-title-cell">
                                             <a th:href="@{/internal/job-postings/{id}(id=${item.jobPostingId})}"
-                                               class="jp-title-link"
-                                               style="color: inherit; text-decoration: none;">
+                                                class="jp-title-link" style="color: inherit; text-decoration: none;">
                                                 <strong th:text="${item.postingTitle}">JAVA</strong>
                                             </a>
                                         </td>
@@ -221,9 +213,10 @@
                                                     <svg width="15" height="15" viewBox="0 0 24 24" fill="none"
                                                         stroke="currentColor" stroke-width="2" stroke-linecap="round"
                                                         stroke-linejoin="round" aria-hidden="true">
-                                                        <circle cx="12" cy="12" r="10"/>
-                                                        <line x1="2" y1="12" x2="22" y2="12"/>
-                                                        <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
+                                                        <circle cx="12" cy="12" r="10" />
+                                                        <line x1="2" y1="12" x2="22" y2="12" />
+                                                        <path
+                                                            d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" />
                                                     </svg>
                                                     Xem trên cổng ứng viên
                                                 </a>
