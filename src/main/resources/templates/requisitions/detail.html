@@ -33,7 +33,7 @@
                                 <a th:href="@{/requisitions}" class="btn-outline">← Quay lại</a>
                                 <a th:if="${req.approvalStatus == 'Approved' and (viewerRole == 'HR' or viewerRole == 'System Admin') and (req.postingStatus == null or req.postingStatus == 'None')}"
                                     th:href="@{/internal/job-postings/create(requisitionId=${req.requisitionId})}"
-                                    class="btn-primary" style="background:var(--brand, #1b4d3e); color:white; text-decoration:none; display:inline-flex; align-items:center; padding:6px 14px; border-radius:6px; font-weight:500;">Tạo tin tuyển dụng</a>
+                                    class="btn-primary">Tạo tin tuyển dụng</a>
                                 <a th:if="${req.postingStatus == 'Draft' and req.jobPostingId != null and (viewerRole == 'HR' or viewerRole == 'System Admin')}"
                                     th:href="@{/internal/job-postings/{id}/edit(id=${req.jobPostingId})}"
                                     class="btn-outline">Tiếp tục sửa tin</a>

@@ -157,8 +157,7 @@
                                         <td>
                                             <a th:if="${req.jobPostingId != null and req.postingStatus == 'Published'}"
                                                 th:href="@{/internal/job-postings/{id}(id=${req.jobPostingId})}"
-                                                class="jp-status-pill jp-status-published"
-                                                style="text-decoration:none;">
+                                                class="jp-status-pill jp-status-published">
                                                 <span class="dot"></span> Đã đăng tin
                                             </a>
                                             <span
@@ -168,7 +167,7 @@
                                             </span>
                                             <a th:if="${req.jobPostingId != null and req.postingStatus == 'Draft'}"
                                                 th:href="@{/internal/job-postings/{id}(id=${req.jobPostingId})}"
-                                                class="jp-status-pill jp-status-draft" style="text-decoration:none;">
+                                                class="jp-status-pill jp-status-draft">
                                                 <span class="dot"></span> Bản nháp
                                             </a>
                                             <span th:if="${req.jobPostingId == null and req.postingStatus == 'Draft'}"
@@ -177,12 +176,12 @@
                                             </span>
                                             <a th:if="${req.jobPostingId != null and req.postingStatus == 'Paused'}"
                                                 th:href="@{/internal/job-postings/{id}(id=${req.jobPostingId})}"
-                                                class="jp-status-pill jp-status-paused" style="text-decoration:none;">
+                                                class="jp-status-pill jp-status-paused">
                                                 <span class="dot"></span> Tạm dừng
                                             </a>
                                             <a th:if="${req.jobPostingId != null and req.postingStatus == 'Closed'}"
                                                 th:href="@{/internal/job-postings/{id}(id=${req.jobPostingId})}"
-                                                class="jp-status-pill jp-status-closed" style="text-decoration:none;">
+                                                class="jp-status-pill jp-status-closed">
                                                 <span class="dot"></span> Đã đóng
                                             </a>
                                             <span th:if="${req.postingStatus == null or req.postingStatus == 'None'}"
