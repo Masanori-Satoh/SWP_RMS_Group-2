@@ -31,7 +31,8 @@ import java.util.Set;
  * - Rule MSG26: endTime phải lớn hơn startTime.
  * - Rule GBR-01: Trạng thái lịch phỏng vấn chỉ đi tiến, không lùi.
  * - Rule GBR-05: Interviewer chỉ được xem các lịch phỏng vấn mà họ được phân công tham gia hội đồng.
- * - Rule HR Isolation: HR không tham gia hội đồng phỏng vấn, ngăn chặn HR tự gán mình vào hội đồng.
+ * - Rule HR tự gán: HR được tham gia hội đồng phỏng vấn, nhưng HR đặt lịch không được tự đưa chính mình vào hội đồng
+ *   (HR Lan có thể xếp HR Quang và ngược lại). Director được tự gán mình.
  */
 @Service
 @RequiredArgsConstructor
@@ -99,25 +100,15 @@ public class InterviewSchedulingServiceImpl implements InterviewSchedulingServic
                     throw new InterviewStatusException("Người dùng " + interviewer.getFullName() +
                             " không được phép tham gia Hội đồng phỏng vấn.");
                 }
-                if ("HR".equalsIgnoreCase(memberRole)) {
-                    throw new InterviewStatusException("Nhân sự (HR) không tham gia Hội đồng phỏng vấn.");
-                }
             }
 
             if (!"Active".equalsIgnoreCase(interviewer.getAccountStatus())) {
                 throw new InterviewStatusException("Tài khoản người phỏng vấn " + interviewer.getFullName() + " không ở trạng thái Active.");
             }
 
-            RoleInPanel roleInPanel = memberReq.roleInPanel();
-            if (roleInPanel == null) {
-                if (interviewer.getRole() != null && "Director".equalsIgnoreCase(interviewer.getRole().getRoleName())) {
-                    roleInPanel = RoleInPanel.Director;
-                } else if (interviewer.getRole() != null && "Interviewer".equalsIgnoreCase(interviewer.getRole().getRoleName())) {
-                    roleInPanel = RoleInPanel.Interviewer;
-                } else {
-                    roleInPanel = RoleInPanel.HM;
-                }
-            }
+            RoleInPanel roleInPanel = memberReq.roleInPanel() != null
+                    ? memberReq.roleInPanel()
+                    : defaultRoleInPanel(interviewer);
 
             validatedInterviewers.add(interviewer);
             validatedRoles.add(roleInPanel);
@@ -187,6 +178,13 @@ public class InterviewSchedulingServiceImpl implements InterviewSchedulingServic
 
         // 4. Cập nhật Hội đồng phỏng vấn (nếu có danh sách mới)
         if (request.getPanelMembers() != null && !request.getPanelMembers().isEmpty()) {
+            // HR đã được HR khác xếp vào hội đồng thì khi sửa lịch vẫn được giữ chỗ của mình
+            Set<Integer> currentMemberIds = new HashSet<>();
+            schedule.getInterviewPanels().forEach(panel -> {
+                if (panel.getInterviewer() != null) {
+                    currentMemberIds.add(panel.getInterviewer().getUserId());
+                }
+            });
             Set<Integer> uniqueIds = new HashSet<>();
             List<User> newInterviewers = new ArrayList<>();
             List<RoleInPanel> newRoles = new ArrayList<>();
@@ -197,8 +195,8 @@ public class InterviewSchedulingServiceImpl implements InterviewSchedulingServic
                     throw new IllegalArgumentException("Trùng lặp người phỏng vấn trong hội đồng: ID " + interviewerId);
                 }
 
-                // HR cập nhật không được phép tự gán mình vào hội đồng
-                if (isHrUpdater && interviewerId.equals(updaterUserId)) {
+                // HR cập nhật không được phép tự thêm mình vào hội đồng
+                if (isHrUpdater && interviewerId.equals(updaterUserId) && !currentMemberIds.contains(updaterUserId)) {
                     throw new InterviewStatusException("Quy tắc nghiệp vụ: HR không được phép tự gán mình vào Hội đồng phỏng vấn.");
                 }
 
@@ -211,24 +209,14 @@ public class InterviewSchedulingServiceImpl implements InterviewSchedulingServic
                         throw new InterviewStatusException("Người dùng " + interviewer.getFullName() +
                                 " không được phép tham gia Hội đồng phỏng vấn.");
                     }
-                    if ("HR".equalsIgnoreCase(memberRole)) {
-                        throw new InterviewStatusException("Nhân sự (HR) không tham gia Hội đồng phỏng vấn.");
-                    }
                 }
                 if (!"Active".equalsIgnoreCase(interviewer.getAccountStatus())) {
                     throw new InterviewStatusException("Tài khoản người phỏng vấn " + interviewer.getFullName() + " không ở trạng thái Active.");
                 }
 
-                RoleInPanel role = memberReq.roleInPanel();
-                if (role == null) {
-                    if (interviewer.getRole() != null && "Director".equalsIgnoreCase(interviewer.getRole().getRoleName())) {
-                        role = RoleInPanel.Director;
-                    } else if (interviewer.getRole() != null && "Interviewer".equalsIgnoreCase(interviewer.getRole().getRoleName())) {
-                        role = RoleInPanel.Interviewer;
-                    } else {
-                        role = RoleInPanel.HM;
-                    }
-                }
+                RoleInPanel role = memberReq.roleInPanel() != null
+                        ? memberReq.roleInPanel()
+                        : defaultRoleInPanel(interviewer);
 
                 newInterviewers.add(interviewer);
                 newRoles.add(role);
@@ -247,6 +235,23 @@ public class InterviewSchedulingServiceImpl implements InterviewSchedulingServic
         log.info("Cập nhật lịch phỏng vấn ID {} thành công", interviewId);
 
         return InterviewScheduleResponse.fromEntity(updated);
+    }
+
+    /**
+     * Vai trò trong hội đồng suy từ role tài khoản khi form không chỉ định (CK_InterviewPanel_Role: HR, HM, Interviewer, Director).
+     */
+    private static RoleInPanel defaultRoleInPanel(User interviewer) {
+        String roleName = interviewer.getRole() != null ? interviewer.getRole().getRoleName() : "";
+        if ("HR".equalsIgnoreCase(roleName)) {
+            return RoleInPanel.HR;
+        }
+        if ("Director".equalsIgnoreCase(roleName)) {
+            return RoleInPanel.Director;
+        }
+        if ("Interviewer".equalsIgnoreCase(roleName)) {
+            return RoleInPanel.Interviewer;
+        }
+        return RoleInPanel.HM;
     }
 
     @Override
