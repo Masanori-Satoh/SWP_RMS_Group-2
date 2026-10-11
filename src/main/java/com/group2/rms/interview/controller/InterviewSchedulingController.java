@@ -101,6 +101,7 @@ public class InterviewSchedulingController {
         model.addAttribute("canEdit", canEdit);
         model.addAttribute("isCandidateView", isCandidateView);
         model.addAttribute("currentUser", currentUser);
+        model.addAttribute("activeMenu", "interviews");
         return "interview/list";
     }
 
@@ -295,6 +296,7 @@ public class InterviewSchedulingController {
         model.addAttribute("isEdit", isEdit);
         model.addAttribute("interviewId", interviewId);
         model.addAttribute("currentUser", currentUser);
+        model.addAttribute("activeMenu", "interviews");
 
         // Danh sách hồ sơ ứng tuyển
         List<Application> applications = applicationRepository.findAllWithCandidateAndJobPosting();

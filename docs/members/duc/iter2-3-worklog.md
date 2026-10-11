@@ -75,3 +75,24 @@
   - `SecurityConfig`: thêm `ROLE_HR` vào rule `POST /interviews/*/evaluations` (HR trong hội đồng nộp được phiếu; Service vẫn kiểm tra tư cách thành viên).
 - **Lỗi kèm theo đã sửa:** `InterviewScheduleRequest` gán cứng `RoleInPanel.HM` cho mọi người được chọn qua `interviewerIds`, nên đoạn suy vai trò trong Service không bao giờ chạy (Interviewer, Director cũng bị lưu là HM). Nay để trống vai trò, Service suy từ role tài khoản qua `defaultRoleInPanel`: HR → `HR`, Director → `Director`, Interviewer → `Interviewer`, còn lại → `HM`. Dữ liệu cũ đã lưu là `HM` **không** tự đổi.
 - **Kiểm tra:** test module interview 63/63 pass (thêm: HR xếp HR khác, HR giữ chỗ khi sửa, HR không tự thêm khi sửa, form ẩn chính mình). Toàn bộ 597 test, hỏng 13 + 9 như `main`.
+
+## 2026-10-11 (đêm) — Đồng bộ giao diện iter1 / iter2 / iter3
+
+**Vấn đề:** `interview/list.html`, `form.html` (iter1) còn khung cũ (`interfaceHead` + `fragments/sidebar` + `workspace-header`), hàng chục `style="..."`, mã hex, `<script>` nội tuyến, class tự chế (`button`, `button-brand`, `status-badge`, `job-card` trùng tên thẻ việc làm trong `components.css`), CSS trang ghi đè class dùng chung (`.page-title`, `.container`); trong khi trang iter2/3 đã dùng `layout/internal` + catalog.
+
+**Đã làm (theo `UI_MIGRATION.md` mục 2):**
+- `list.html`, `form.html` → `layout/internal`; Controller đặt `activeMenu = "interviews"`. Giữ nguyên tên view, `th:object`, `th:field`, id/name mà JS và backend dùng.
+- Class catalog: `btn btn--primary|secondary|danger|sm`, `badge badge--*`, `alert alert--*`, `card`, `form-group/form-label/form-input/form-select/form-error/form-hint/form-actions`, `grid-2-col`, `page-header`.
+- CSS phẳng giữ vị trí (UI_CSS_GUIDE mục 3) nhưng viết lại: `interview-list.css` (tiền tố `il-`), `interview-form.css` (`if-`), chỉ token, không hex/rgba, không ghi đè class dùng chung.
+- Phần dùng chung 4 trang interview → `css/pages/interview-common.css` (`iv-`: breadcrumb, cụm nút page-header, trạng thái rỗng); `result.html` bỏ bản riêng `ir-breadcrumb/ir-header-actions/ir-empty`.
+- Màu badge trạng thái tính một chỗ: `InterviewScheduleResponse.getTimeStatusBadge()` (list + candidate-list dùng chung).
+- JS: `interview-list.js` viết lại theo class mới, ẩn/hiện bằng `hidden`, chip lọc dùng `textContent` (trước đây chèn chữ người dùng gõ bằng `innerHTML`); `<script>` nội tuyến của form → `js/interview-form.js`. Gỡ `global.js` khỏi 2 trang.
+- Bỏ thanh tab dẫn tới route không tồn tại (`/interviews/evaluation`, `/candidates/cv`, `/candidates`); điều hướng dùng sidebar.
+- "Hủy lịch": thay `onsubmit="return confirm(...)"` bằng hộp thoại `confirm-dialog` + một form chung (JS gán action).
+- Sửa kèm: trang danh sách trống trước đây không hiện gì (nay có trạng thái rỗng); bộ lọc trạng thái có giá trị `In_Progress` không bao giờ khớp (đổi thành `Rescheduled`); thêm nút lọc vai trò "HR" trong form.
+
+**Phát hiện cần báo Lead (DungLT):** `fragments/ui/dialogs :: confirm` (catalog) đặt biến chuỗi vào `th:onclick`; Thymeleaf 3.1 từ chối render (`TemplateProcessingException: Only variable expressions returning numbers or booleans...`). Trang nào gọi fragment này sẽ lỗi 500. Mình không sửa (khu "chỉ được thêm"), trang interview tự dựng dialog bằng class catalog.
+
+**Docs chính thức đã cập nhật:** `UI_MIGRATION.md` mục 5 (interview ✅), `UI_LEGACY_CLEANUP.md` (dòng `global.js`).
+
+**Kiểm tra:** test module interview pass hết (thêm 2 web test: trang đã bỏ khung cũ, thẻ lịch + dialog hủy có CSRF). Toàn bộ 599 test, hỏng 13 + 9 như `main`. **Chưa mở trên trình duyệt.**

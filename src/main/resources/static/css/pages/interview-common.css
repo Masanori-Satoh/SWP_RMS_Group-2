@@ -1,0 +1,71 @@
+/* =============================================================================
+   PAGES/INTERVIEW-COMMON.CSS — Phần dùng chung của mọi trang module interview
+   Nạp bởi: interview/list.html, interview/form.html, interview/result.html, interview/candidate-list.html
+   Chỉ chứa phần catalog chưa có: breadcrumb, cụm nút trên page-header, trạng thái rỗng.
+   (Breadcrumb cũng đang có bản riêng ở applications.css → ứng viên đưa lên components.css, cần Lead duyệt.)
+   Tiền tố class: iv-
+   ============================================================================= */
+
+/* --- Breadcrumb ------------------------------------------------------------------ */
+.iv-breadcrumb {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s2);
+  margin-bottom: var(--s4);
+  font-size: 14px;
+  color: var(--muted);
+}
+
+.iv-breadcrumb a {
+  color: var(--brand);
+  text-decoration: none;
+}
+
+.iv-breadcrumb a:hover {
+  text-decoration: underline;
+}
+
+.iv-breadcrumb [aria-current="page"] {
+  color: var(--ink);
+  font-weight: 600;
+}
+
+/* --- Cụm nút / badge bên phải page-header ------------------------------------------ */
+.iv-header-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--s3);
+}
+
+/* --- Trạng thái rỗng ---------------------------------------------------------------- */
+.iv-empty {
+  margin: 0;
+  padding: var(--s6);
+  border: 1px dashed var(--control-line);
+  border-radius: var(--radius-md);
+  background: var(--surface);
+  color: var(--muted);
+  text-align: center;
+}
+
+.iv-empty__title {
+  margin: 0 0 var(--s2);
+  font-family: var(--serif);
+  font-size: 20px;
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.iv-empty__desc {
+  max-width: 60ch;
+  margin: 0 auto;
+}
+
+.iv-empty__desc + .btn {
+  margin-top: var(--s4);
+}
+
+.iv-empty[hidden] {
+  display: none;
+}

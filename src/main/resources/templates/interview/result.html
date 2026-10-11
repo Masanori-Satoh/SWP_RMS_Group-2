@@ -9,18 +9,19 @@
     Nút "Đánh giá" mở pop-up interview/evaluation-dialog (SRS 5.1.29); nút "Chốt kết quả" (Hiring Manager phụ trách phòng ban)
     mở pop-up interview/final-result-dialog. Cả hai gửi AJAX bằng js/pages/interview-result.js.
     Dựng bằng catalog: page-header, card, card-header, badge, btn, alert, confirm-dialog.
-    CSS riêng: static/css/pages/interview-result.css (tiền tố ir-, iev-).
+    CSS riêng: static/css/pages/interview-common.css (iv-) + static/css/pages/interview-result.css (ir-, iev-).
 -->
 <head>
     <title th:text="|Kết quả phỏng vấn — ${result.candidateName ?: 'Ứng viên'}|">Kết quả phỏng vấn</title>
     <th:block layout:fragment="styles">
+        <link rel="stylesheet" th:href="@{/css/pages/interview-common.css}">
         <link rel="stylesheet" th:href="@{/css/pages/interview-result.css}">
     </th:block>
 </head>
 <body>
 <main id="main" layout:fragment="content" class="page-content container ir-page" tabindex="-1">
 
-    <nav class="ir-breadcrumb" aria-label="Breadcrumb">
+    <nav class="iv-breadcrumb" aria-label="Breadcrumb">
         <a th:href="@{/interviews}">Lịch phỏng vấn</a>
         <span aria-hidden="true">/</span>
         <span aria-current="page" th:text="|Kết quả buổi #${result.interviewId}|">Kết quả buổi #7</span>
@@ -37,7 +38,7 @@
                 </th:block>
             </p>
         </div>
-        <div class="ir-header-actions">
+        <div class="iv-header-actions">
             <span class="badge" th:classappend="${result.statusBadge}" th:text="${result.statusDisplay}">Đã hoàn thành</span>
             <a th:href="@{/interviews}" class="btn btn--secondary btn--sm">Quay lại</a>
             <button th:if="${result.canEvaluate}" type="button" class="btn btn--primary btn--sm"
@@ -109,7 +110,7 @@
                 <p th:unless="${result.canSeeAll}" class="ir-note text-muted">
                     Bạn chỉ xem được phiếu của mình cho tới khi có kết quả cuối.
                 </p>
-                <p th:if="${#lists.isEmpty(result.evaluations)}" class="ir-empty">Chưa có phiếu đánh giá nào.</p>
+                <p th:if="${#lists.isEmpty(result.evaluations)}" class="iv-empty">Chưa có phiếu đánh giá nào.</p>
 
                 <article th:each="evaluation : ${result.evaluations}" class="ir-eval">
                     <header class="ir-eval__head">
@@ -169,7 +170,7 @@
                 <div class="card-header">
                     <h2 id="ir-summary-title" class="card-title">Tổng hợp điểm</h2>
                 </div>
-                <p th:if="${result.averages == null}" class="ir-empty">Chưa có điểm để tổng hợp.</p>
+                <p th:if="${result.averages == null}" class="iv-empty">Chưa có điểm để tổng hợp.</p>
                 <th:block th:if="${result.averages != null}">
                     <p class="ir-overall">
                         <span class="ir-overall__value text-brand" th:text="${result.averages.overall ?: '—'}">3.6</span>
@@ -203,7 +204,7 @@
                 <div class="card-header">
                     <h2 id="ir-panel-title" class="card-title">Hội đồng phỏng vấn</h2>
                 </div>
-                <p th:if="${#lists.isEmpty(result.panel)}" class="ir-empty">Chưa có thành viên hội đồng.</p>
+                <p th:if="${#lists.isEmpty(result.panel)}" class="iv-empty">Chưa có thành viên hội đồng.</p>
                 <ul th:unless="${#lists.isEmpty(result.panel)}" class="ir-panel">
                     <li th:each="member : ${result.panel}" class="ir-panel__item">
                         <div>
