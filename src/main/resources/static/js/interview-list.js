@@ -1,91 +1,110 @@
-/* ============================================================
-   Mộc Careers — Interview List Page Logic
-   Module: interview/list
-   ============================================================ */
+/* =============================================================================
+   INTERVIEW-LIST.JS — Lịch phỏng vấn (/interviews, interview/list.html)
+   - Lọc phía client: lịch mini, khoảng thời gian, tìm kiếm, vị trí, cấp bậc, trạng thái, người phỏng vấn.
+   - Bấm tên vị trí / người phỏng vấn trên thẻ để lọc nhanh.
+   - Nút "Hủy lịch": gán action cho #il-cancel-form rồi mở hộp thoại xác nhận #il-cancel-dialog
+     (class catalog confirm-dialog; nút "Hủy lịch" trong dialog submit form qua thuộc tính form=).
+   Ẩn/hiện bằng thuộc tính hidden (không dùng style nội tuyến).
+   ============================================================================= */
+(function () {
+  'use strict';
 
-document.addEventListener('DOMContentLoaded', function () {
-  const cards = Array.from(document.querySelectorAll('.job-grid .job-card'));
-  if (cards.length === 0) return;
-
-  // 1. Gather all dates, jobs, interviewers
-  const meetingDateCounts = {};
-  const jobTitlesSet = new Set();
-  const interviewersSet = new Set();
-
-  cards.forEach(card => {
-    const d = card.dataset.date;
-    if (d) {
-      meetingDateCounts[d] = (meetingDateCounts[d] || 0) + 1;
-    }
-    if (card.dataset.job) {
-      jobTitlesSet.add(card.dataset.job.trim());
-    }
-    card.querySelectorAll('.panel-member').forEach(m => {
-      const name = m.dataset.memberName;
-      if (name) interviewersSet.add(name.trim());
+  // ---------------------------------------------------------------- Hủy lịch
+  const cancelForm = document.getElementById('il-cancel-form');
+  const cancelDialog = document.getElementById('il-cancel-dialog');
+  if (cancelForm && cancelDialog) {
+    document.querySelectorAll('[data-cancel-url]').forEach(function (button) {
+      button.addEventListener('click', function () {
+        cancelForm.action = button.getAttribute('data-cancel-url');
+        cancelDialog.showModal();
+      });
     });
-  });
-
-  // Populate Job filter
-  const jobSelect = document.getElementById('filter-job');
-  Array.from(jobTitlesSet).sort().forEach(job => {
-    const opt = document.createElement('option');
-    opt.value = job;
-    opt.textContent = job;
-    jobSelect.appendChild(opt);
-  });
-
-  // Populate Interviewer filter
-  const interviewerSelect = document.getElementById('filter-interviewer');
-  Array.from(interviewersSet).sort().forEach(name => {
-    const opt = document.createElement('option');
-    opt.value = name;
-    opt.textContent = name;
-    interviewerSelect.appendChild(opt);
-  });
-
-  // Date helper: YYYY-MM-DD
-  function getLocalDateStr(d) {
-    const y = d.getFullYear();
-    const m = String(d.getMonth() + 1).padStart(2, '0');
-    const day = String(d.getDate()).padStart(2, '0');
-    return `${y}-${m}-${day}`;
+    const dismiss = cancelDialog.querySelector('[data-cancel-dismiss]');
+    if (dismiss) {
+      dismiss.addEventListener('click', function () {
+        cancelDialog.close();
+      });
+    }
   }
 
-  const todayStr = getLocalDateStr(new Date());
+  // ---------------------------------------------------------------- Bộ lọc
+  const cards = Array.from(document.querySelectorAll('.il-grid .il-card'));
+  if (cards.length === 0) {
+    return;
+  }
 
-  // State: Default is today
-  let selectedDate = todayStr;
-  let activePreset = 'today'; // 'today', 'this-week', 'this-month', 'all', 'custom'
-  let currentCalMonth = new Date().getMonth();
-  let currentCalYear = new Date().getFullYear();
-
-  // Elements
   const calTitle = document.getElementById('cal-month-year');
   const calDaysGrid = document.getElementById('cal-days');
-  const btnCalPrev = document.getElementById('cal-prev');
-  const btnCalNext = document.getElementById('cal-next');
-
-  const btnFilterToday = document.getElementById('btn-filter-today');
-  const btnFilterThisWeek = document.getElementById('btn-filter-this-week');
-  const btnFilterThisMonth = document.getElementById('btn-filter-this-month');
-  const btnFilterAll = document.getElementById('btn-filter-all');
-
+  const presets = {
+    today: document.getElementById('btn-filter-today'),
+    'this-week': document.getElementById('btn-filter-this-week'),
+    'this-month': document.getElementById('btn-filter-this-month'),
+    all: document.getElementById('btn-filter-all')
+  };
   const searchInput = document.getElementById('filter-search');
+  const jobSelect = document.getElementById('filter-job');
   const levelSelect = document.getElementById('filter-level');
   const statusSelect = document.getElementById('filter-status');
-
+  const interviewerSelect = document.getElementById('filter-interviewer');
   const countText = document.getElementById('filter-count-text');
-  const activePillsContainer = document.getElementById('active-pills');
+  const pillsContainer = document.getElementById('active-pills');
   const btnClearAll = document.getElementById('btn-clear-all');
-
   const emptyState = document.getElementById('filter-empty-state');
-  const emptyStateTitle = document.getElementById('empty-state-title');
-  const emptyStateDesc = document.getElementById('empty-state-desc');
+  const emptyTitle = document.getElementById('empty-state-title');
+  const emptyDesc = document.getElementById('empty-state-desc');
   const btnEmptyAction = document.getElementById('btn-empty-action');
 
-  // Job Level deduction
-  function getJobLevel(title) {
+  // 1. Gom ngày có lịch, vị trí, người phỏng vấn để dựng lịch mini và dropdown
+  const meetingDateCounts = {};
+  const jobTitles = new Set();
+  const interviewers = new Set();
+  cards.forEach(function (card) {
+    const date = card.dataset.date;
+    if (date) {
+      meetingDateCounts[date] = (meetingDateCounts[date] || 0) + 1;
+    }
+    if (card.dataset.job) {
+      jobTitles.add(card.dataset.job.trim());
+    }
+    card.querySelectorAll('.il-member').forEach(function (member) {
+      if (member.dataset.memberName) {
+        interviewers.add(member.dataset.memberName.trim());
+      }
+    });
+  });
+  fillOptions(jobSelect, jobTitles);
+  fillOptions(interviewerSelect, interviewers);
+
+  function fillOptions(select, values) {
+    if (!select) {
+      return;
+    }
+    Array.from(values).sort().forEach(function (value) {
+      const option = document.createElement('option');
+      option.value = value;
+      option.textContent = value;
+      select.appendChild(option);
+    });
+  }
+
+  function toDateKey(date) {
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return date.getFullYear() + '-' + month + '-' + day;
+  }
+
+  function formatDateKey(key) {
+    const parts = key.split('-');
+    return parts[2] + '/' + parts[1] + '/' + parts[0];
+  }
+
+  const todayKey = toDateKey(new Date());
+  let selectedDate = todayKey;
+  let activePreset = 'today'; // today | this-week | this-month | all | custom
+  let calMonth = new Date().getMonth();
+  let calYear = new Date().getFullYear();
+
+  function jobLevel(title) {
     const t = (title || '').toLowerCase();
     if (t.includes('senior') || t.includes('sr.') || t.includes('trưởng')) return 'Senior';
     if (t.includes('lead') || t.includes('quản lý') || t.includes('manager')) return 'Lead';
@@ -95,418 +114,276 @@ document.addEventListener('DOMContentLoaded', function () {
     return 'Other';
   }
 
-  // Render Mini Calendar
-  function renderCalendar() {
-    const monthNames = [
-      'Tháng 1', 'Tháng 2', 'Tháng 3', 'Tháng 4', 'Tháng 5', 'Tháng 6',
-      'Tháng 7', 'Tháng 8', 'Tháng 9', 'Tháng 10', 'Tháng 11', 'Tháng 12'
-    ];
-    calTitle.textContent = `${monthNames[currentCalMonth]}, ${currentCalYear}`;
-    calDaysGrid.innerHTML = '';
+  function weekRange(date) {
+    const monday = new Date(date);
+    monday.setDate(date.getDate() - ((date.getDay() + 6) % 7));
+    const sunday = new Date(monday);
+    sunday.setDate(monday.getDate() + 6);
+    return { start: toDateKey(monday), end: toDateKey(sunday) };
+  }
 
-    const firstDay = new Date(currentCalYear, currentCalMonth, 1).getDay();
-    const startOffset = (firstDay + 6) % 7;
-    const daysInMonth = new Date(currentCalYear, currentCalMonth + 1, 0).getDate();
+  // 2. Lịch mini
+  function renderCalendar() {
+    calTitle.textContent = 'Tháng ' + (calMonth + 1) + ', ' + calYear;
+    calDaysGrid.replaceChildren();
+
+    const startOffset = (new Date(calYear, calMonth, 1).getDay() + 6) % 7;
+    const daysInMonth = new Date(calYear, calMonth + 1, 0).getDate();
 
     for (let i = 0; i < startOffset; i++) {
-      const emptyCell = document.createElement('div');
-      emptyCell.className = 'cal-day empty';
-      calDaysGrid.appendChild(emptyCell);
+      const empty = document.createElement('div');
+      empty.className = 'il-day il-day--empty';
+      calDaysGrid.appendChild(empty);
     }
 
     for (let day = 1; day <= daysInMonth; day++) {
-      const mStr = String(currentCalMonth + 1).padStart(2, '0');
-      const dStr = String(day).padStart(2, '0');
-      const dateKey = `${currentCalYear}-${mStr}-${dStr}`;
+      const key = toDateKey(new Date(calYear, calMonth, day));
+      const count = meetingDateCounts[key] || 0;
+      const button = document.createElement('button');
+      button.type = 'button';
+      button.className = 'il-day';
+      button.classList.toggle('is-today', key === todayKey);
+      button.classList.toggle('is-active', key === selectedDate);
+      button.title = formatDateKey(key) + ': ' + (count ? count + ' buổi phỏng vấn' : 'không có lịch');
 
-      const isToday = dateKey === todayStr;
-      const isSelected = selectedDate === dateKey;
-      const hasMeeting = Boolean(meetingDateCounts[dateKey]);
+      const label = document.createElement('span');
+      label.textContent = String(day);
+      button.appendChild(label);
+      if (count) {
+        const dot = document.createElement('span');
+        dot.className = 'il-calendar__dot';
+        button.appendChild(dot);
+      }
 
-      const dayBtn = document.createElement('button');
-      dayBtn.type = 'button';
-      dayBtn.className = 'cal-day' +
-        (isToday ? ' today' : '') +
-        (isSelected ? ' active' : '') +
-        (hasMeeting ? ' has-meeting' : '');
-      dayBtn.dataset.date = dateKey;
-      dayBtn.title = `${dateKey}: ${hasMeeting ? meetingDateCounts[dateKey] + ' cuộc họp' : 'Không có lịch'}`;
-
-      dayBtn.innerHTML = `<span>${day}</span>${hasMeeting ? '<span class="cal-dot"></span>' : ''}`;
-
-      dayBtn.addEventListener('click', function () {
-        selectedDate = this.dataset.date;
-        activePreset = 'custom';
-        updatePresetButtons();
-        renderCalendar();
-        applyFilters();
+      button.addEventListener('click', function () {
+        selectedDate = key;
+        setPreset('custom');
       });
-
-      calDaysGrid.appendChild(dayBtn);
+      calDaysGrid.appendChild(button);
     }
   }
 
-  function updatePresetButtons() {
-    btnFilterToday.classList.toggle('active', activePreset === 'today');
-    btnFilterThisWeek.classList.toggle('active', activePreset === 'this-week');
-    btnFilterThisMonth.classList.toggle('active', activePreset === 'this-month');
-    btnFilterAll.classList.toggle('active', activePreset === 'all');
+  function setPreset(preset) {
+    activePreset = preset;
+    if (preset === 'today') {
+      selectedDate = todayKey;
+      calMonth = new Date().getMonth();
+      calYear = new Date().getFullYear();
+    } else if (preset !== 'custom') {
+      selectedDate = null;
+    }
+    Object.entries(presets).forEach(function (entry) {
+      entry[1].classList.toggle('is-active', entry[0] === activePreset);
+    });
+    renderCalendar();
+    applyFilters();
   }
 
-  function getWeekRange(date) {
-    const d = new Date(date);
-    const day = d.getDay();
-    const diffToMonday = (day + 6) % 7;
-    const monday = new Date(d);
-    monday.setDate(d.getDate() - diffToMonday);
-    monday.setHours(0, 0, 0, 0);
-    const sunday = new Date(monday);
-    sunday.setDate(monday.getDate() + 6);
-    sunday.setHours(23, 59, 59, 999);
-    return { start: getLocalDateStr(monday), end: getLocalDateStr(sunday) };
-  }
-
+  // 3. Áp dụng bộ lọc
   function applyFilters() {
-    const searchVal = searchInput.value.trim().toLowerCase();
-    const jobVal = jobSelect.value;
-    const levelVal = levelSelect.value;
-    const statusVal = statusSelect.value;
-    const interviewerVal = interviewerSelect.value;
+    const search = searchInput.value.trim().toLowerCase();
+    const week = weekRange(new Date());
+    const monthPrefix = todayKey.substring(0, 7);
+    let visible = 0;
 
-    const currentWeek = getWeekRange(new Date());
-    const currentMonthPrefix = todayStr.substring(0, 7);
+    cards.forEach(function (card) {
+      const date = card.dataset.date || '';
+      const job = card.dataset.job || '';
+      let match;
 
-    let visibleCount = 0;
-
-    cards.forEach(card => {
-      const cardDate = card.dataset.date || '';
-      const cardJob = card.dataset.job || '';
-      const cardCandidate = (card.dataset.candidate || '').toLowerCase();
-      const cardEmail = (card.dataset.candidateEmail || '').toLowerCase();
-      const cardAppId = (card.dataset.appId || '').toLowerCase();
-      const cardStatus = card.dataset.status || '';
-      const cardLevel = getJobLevel(cardJob);
-
-      // Date Check
-      let dateMatch = true;
       if (activePreset === 'today' || activePreset === 'custom') {
-        dateMatch = cardDate === selectedDate;
+        match = date === selectedDate;
       } else if (activePreset === 'this-week') {
-        dateMatch = cardDate >= currentWeek.start && cardDate <= currentWeek.end;
+        match = date >= week.start && date <= week.end;
       } else if (activePreset === 'this-month') {
-        dateMatch = cardDate.startsWith(currentMonthPrefix);
-      } else if (activePreset === 'all') {
-        dateMatch = true;
-      }
-
-      // Search Check
-      let searchMatch = true;
-      if (searchVal) {
-        searchMatch = cardCandidate.includes(searchVal) ||
-                      cardEmail.includes(searchVal) ||
-                      cardJob.toLowerCase().includes(searchVal) ||
-                      cardAppId.includes(searchVal);
-      }
-
-      // Job Check
-      let jobMatch = true;
-      if (jobVal) {
-        jobMatch = cardJob === jobVal;
-      }
-
-      // Level Check
-      let levelMatch = true;
-      if (levelVal) {
-        levelMatch = cardLevel === levelVal;
-      }
-
-      // Status Check
-      let statusMatch = true;
-      if (statusVal) {
-        statusMatch = cardStatus === statusVal;
-      }
-
-      // Interviewer Check
-      let interviewerMatch = true;
-      if (interviewerVal) {
-        const members = Array.from(card.querySelectorAll('.panel-member')).map(m => m.dataset.memberName);
-        interviewerMatch = members.includes(interviewerVal);
-      }
-
-      if (dateMatch && searchMatch && jobMatch && levelMatch && statusMatch && interviewerMatch) {
-        card.style.display = '';
-        visibleCount++;
+        match = date.startsWith(monthPrefix);
       } else {
-        card.style.display = 'none';
+        match = true;
+      }
+
+      if (match && search) {
+        match = [card.dataset.candidate, card.dataset.candidateEmail, job, card.dataset.appId]
+          .some(function (value) {
+            return (value || '').toLowerCase().includes(search);
+          });
+      }
+      if (match && jobSelect.value) {
+        match = job === jobSelect.value;
+      }
+      if (match && levelSelect.value) {
+        match = jobLevel(job) === levelSelect.value;
+      }
+      if (match && statusSelect.value) {
+        match = card.dataset.status === statusSelect.value;
+      }
+      if (match && interviewerSelect && interviewerSelect.value) {
+        match = Array.from(card.querySelectorAll('.il-member'))
+          .some(function (member) {
+            return member.dataset.memberName === interviewerSelect.value;
+          });
+      }
+
+      card.hidden = !match;
+      if (match) {
+        visible++;
       }
     });
 
-    // Summary Text
-    countText.textContent = `Hiển thị ${visibleCount} / ${cards.length} buổi phỏng vấn`;
+    countText.textContent = 'Hiển thị ' + visible + ' / ' + cards.length + ' buổi phỏng vấn';
+    renderPills();
+    renderEmptyState(visible);
+  }
 
-    // Render Active Filter Pills
-    renderActivePills();
-
-    // Empty state handling
-    if (visibleCount === 0) {
-      emptyState.style.display = 'block';
-      if (activePreset === 'today') {
-        const parts = todayStr.split('-');
-        emptyStateTitle.textContent = `Hôm nay (${parts[2]}/${parts[1]}/${parts[0]}) không có lịch phỏng vấn nào`;
-        emptyStateDesc.textContent = 'Không có buổi phỏng vấn nào được lên lịch cho hôm nay. Bạn có thể chọn ngày có dấu chấm trên cuốn lịch hoặc bấm xem toàn bộ.';
-        btnEmptyAction.textContent = 'Xem tất cả các cuộc họp';
-        btnEmptyAction.onclick = () => {
-          activePreset = 'all';
-          selectedDate = null;
-          updatePresetButtons();
-          renderCalendar();
-          applyFilters();
-        };
-      } else {
-        emptyStateTitle.textContent = 'Không tìm thấy lịch phỏng vấn phù hợp';
-        emptyStateDesc.textContent = 'Không có kết quả nào thỏa mãn bộ lọc hiện tại. Thử xóa bớt bộ lọc hoặc chọn ngày khác.';
-        btnEmptyAction.textContent = 'Xóa tất cả bộ lọc';
-        btnEmptyAction.onclick = clearAllFilters;
-      }
+  function renderEmptyState(visible) {
+    emptyState.hidden = visible > 0;
+    if (visible > 0) {
+      return;
+    }
+    if (activePreset === 'today') {
+      emptyTitle.textContent = 'Hôm nay (' + formatDateKey(todayKey) + ') không có lịch phỏng vấn nào';
+      emptyDesc.textContent = 'Chọn ngày có dấu chấm trên lịch hoặc xem toàn bộ.';
+      btnEmptyAction.textContent = 'Xem tất cả';
+      btnEmptyAction.onclick = function () {
+        setPreset('all');
+      };
     } else {
-      emptyState.style.display = 'none';
+      emptyTitle.textContent = 'Không tìm thấy lịch phỏng vấn phù hợp';
+      emptyDesc.textContent = 'Thử bỏ bớt bộ lọc hoặc chọn ngày khác.';
+      btnEmptyAction.textContent = 'Xóa tất cả bộ lọc';
+      btnEmptyAction.onclick = clearAllFilters;
     }
   }
 
-  function renderActivePills() {
-    activePillsContainer.innerHTML = '';
-    let hasFilters = false;
+  // 4. Chip bộ lọc đang áp dụng (chữ người dùng gõ chỉ gán qua textContent)
+  function renderPills() {
+    pillsContainer.replaceChildren();
+    const resetDate = function () {
+      setPreset('all');
+    };
 
     if (activePreset === 'today') {
-      createPill('Hôm nay', () => {
-        activePreset = 'all';
-        selectedDate = null;
-        updatePresetButtons();
-        renderCalendar();
-        applyFilters();
-      });
-      hasFilters = true;
+      addPill('Hôm nay', resetDate);
     } else if (activePreset === 'custom' && selectedDate) {
-      const parts = selectedDate.split('-');
-      createPill(`Ngày ${parts[2]}/${parts[1]}/${parts[0]}`, () => {
-        activePreset = 'all';
-        selectedDate = null;
-        updatePresetButtons();
-        renderCalendar();
-        applyFilters();
-      });
-      hasFilters = true;
+      addPill('Ngày ' + formatDateKey(selectedDate), resetDate);
     } else if (activePreset === 'this-week') {
-      createPill('Tuần này', () => {
-        activePreset = 'all';
-        selectedDate = null;
-        updatePresetButtons();
-        applyFilters();
-      });
-      hasFilters = true;
+      addPill('Tuần này', resetDate);
     } else if (activePreset === 'this-month') {
-      createPill('Tháng này', () => {
-        activePreset = 'all';
-        selectedDate = null;
-        updatePresetButtons();
-        applyFilters();
-      });
-      hasFilters = true;
+      addPill('Tháng này', resetDate);
     }
-
     if (searchInput.value.trim()) {
-      createPill(`"${searchInput.value.trim()}"`, () => {
+      addPill('“' + searchInput.value.trim() + '”', function () {
         searchInput.value = '';
         applyFilters();
       });
-      hasFilters = true;
     }
+    addSelectPill(jobSelect, 'Vị trí');
+    addSelectPill(levelSelect, 'Cấp bậc');
+    addSelectPill(statusSelect, 'Trạng thái');
+    addSelectPill(interviewerSelect, 'Người phỏng vấn');
 
-    if (jobSelect.value) {
-      createPill(`Vị trí: ${jobSelect.value}`, () => {
-        jobSelect.value = '';
-        applyFilters();
-      });
-      hasFilters = true;
-    }
-
-    if (levelSelect.value) {
-      createPill(`Cấp bậc: ${levelSelect.value}`, () => {
-        levelSelect.value = '';
-        applyFilters();
-      });
-      hasFilters = true;
-    }
-
-    if (statusSelect.value) {
-      const text = statusSelect.options[statusSelect.selectedIndex].text;
-      createPill(`Trạng thái: ${text}`, () => {
-        statusSelect.value = '';
-        applyFilters();
-      });
-      hasFilters = true;
-    }
-
-    if (interviewerSelect.value) {
-      createPill(`Người phỏng vấn: ${interviewerSelect.value}`, () => {
-        interviewerSelect.value = '';
-        applyFilters();
-      });
-      hasFilters = true;
-    }
-
-    btnClearAll.style.display = hasFilters ? 'inline-block' : 'none';
+    btnClearAll.hidden = pillsContainer.childElementCount === 0;
   }
 
-  function createPill(text, onRemove) {
+  function addSelectPill(select, label) {
+    if (select && select.value) {
+      addPill(label + ': ' + select.options[select.selectedIndex].text, function () {
+        select.value = '';
+        applyFilters();
+      });
+    }
+  }
+
+  function addPill(text, onRemove) {
     const pill = document.createElement('span');
-    pill.className = 'active-pill';
-    pill.innerHTML = `<span>${text}</span><span class="pill-remove" title="Xóa lọc">✕</span>`;
-    pill.querySelector('.pill-remove').addEventListener('click', onRemove);
-    activePillsContainer.appendChild(pill);
+    pill.className = 'il-pill';
+    const label = document.createElement('span');
+    label.textContent = text;
+    const remove = document.createElement('button');
+    remove.type = 'button';
+    remove.className = 'il-pill__remove';
+    remove.textContent = '✕';
+    remove.setAttribute('aria-label', 'Bỏ lọc ' + text);
+    remove.addEventListener('click', onRemove);
+    pill.append(label, remove);
+    pillsContainer.appendChild(pill);
   }
 
   function clearAllFilters() {
-    activePreset = 'all';
-    selectedDate = null;
     searchInput.value = '';
-    jobSelect.value = '';
-    levelSelect.value = '';
-    statusSelect.value = '';
-    interviewerSelect.value = '';
-    updatePresetButtons();
-    renderCalendar();
-    applyFilters();
+    [jobSelect, levelSelect, statusSelect, interviewerSelect].forEach(function (select) {
+      if (select) {
+        select.value = '';
+      }
+    });
+    setPreset('all');
   }
 
-  // Event Listeners
-  btnFilterToday.addEventListener('click', () => {
-    selectedDate = todayStr;
-    activePreset = 'today';
-    currentCalMonth = new Date().getMonth();
-    currentCalYear = new Date().getFullYear();
-    updatePresetButtons();
-    renderCalendar();
-    applyFilters();
+  // 5. Sự kiện
+  presets.today.addEventListener('click', function () { setPreset('today'); });
+  presets['this-week'].addEventListener('click', function () { setPreset('this-week'); });
+  presets['this-month'].addEventListener('click', function () {
+    calMonth = new Date().getMonth();
+    calYear = new Date().getFullYear();
+    setPreset('this-month');
   });
+  presets.all.addEventListener('click', function () { setPreset('all'); });
 
-  btnFilterThisWeek.addEventListener('click', () => {
-    selectedDate = null;
-    activePreset = 'this-week';
-    updatePresetButtons();
-    renderCalendar();
-    applyFilters();
-  });
-
-  btnFilterThisMonth.addEventListener('click', () => {
-    selectedDate = null;
-    activePreset = 'this-month';
-    currentCalMonth = new Date().getMonth();
-    currentCalYear = new Date().getFullYear();
-    updatePresetButtons();
-    renderCalendar();
-    applyFilters();
-  });
-
-  btnFilterAll.addEventListener('click', () => {
-    selectedDate = null;
-    activePreset = 'all';
-    updatePresetButtons();
-    renderCalendar();
-    applyFilters();
-  });
-
-  btnCalPrev.addEventListener('click', () => {
-    currentCalMonth--;
-    if (currentCalMonth < 0) {
-      currentCalMonth = 11;
-      currentCalYear--;
+  document.getElementById('cal-prev').addEventListener('click', function () {
+    calMonth--;
+    if (calMonth < 0) {
+      calMonth = 11;
+      calYear--;
     }
     renderCalendar();
   });
-
-  btnCalNext.addEventListener('click', () => {
-    currentCalMonth++;
-    if (currentCalMonth > 11) {
-      currentCalMonth = 0;
-      currentCalYear++;
+  document.getElementById('cal-next').addEventListener('click', function () {
+    calMonth++;
+    if (calMonth > 11) {
+      calMonth = 0;
+      calYear++;
     }
     renderCalendar();
   });
 
   searchInput.addEventListener('input', applyFilters);
-  jobSelect.addEventListener('change', applyFilters);
-  levelSelect.addEventListener('change', applyFilters);
-  statusSelect.addEventListener('change', applyFilters);
-  interviewerSelect.addEventListener('change', applyFilters);
+  [jobSelect, levelSelect, statusSelect, interviewerSelect].forEach(function (select) {
+    if (select) {
+      select.addEventListener('change', applyFilters);
+    }
+  });
   btnClearAll.addEventListener('click', clearAllFilters);
 
-  // Click Job Title on card -> auto filter by job
-  document.querySelectorAll('.job-department').forEach(dept => {
-    dept.addEventListener('click', function (e) {
-      e.stopPropagation();
-      const jobName = this.dataset.jobName;
-      if (jobName) {
-        jobSelect.value = jobName;
-        activePreset = 'all';
-        selectedDate = null;
-        updatePresetButtons();
-        renderCalendar();
-        applyFilters();
+  document.querySelectorAll('.il-card__job').forEach(function (button) {
+    button.addEventListener('click', function () {
+      if (button.dataset.jobName) {
+        jobSelect.value = button.dataset.jobName;
+        setPreset('all');
+      }
+    });
+  });
+  document.querySelectorAll('.il-member').forEach(function (button) {
+    button.addEventListener('click', function () {
+      if (interviewerSelect && button.dataset.memberName) {
+        interviewerSelect.value = button.dataset.memberName;
+        setPreset('all');
       }
     });
   });
 
-  // Click Interviewer on card -> auto filter by interviewer
-  document.querySelectorAll('.panel-member').forEach(member => {
-    member.addEventListener('click', function (e) {
-      e.stopPropagation();
-      const name = this.dataset.memberName;
-      if (name) {
-        interviewerSelect.value = name;
-        activePreset = 'all';
-        selectedDate = null;
-        updatePresetButtons();
-        renderCalendar();
-        applyFilters();
-      }
+  // 6. Thu gọn / mở rộng khung bộ lọc
+  const toggle = document.getElementById('btn-toggle-filter');
+  const filterBody = document.getElementById('filter-body');
+  const filterBox = document.getElementById('filter-dashboard');
+  if (toggle && filterBody) {
+    toggle.addEventListener('click', function () {
+      const collapse = !filterBody.hidden;
+      filterBody.hidden = collapse;
+      filterBox.classList.toggle('is-collapsed', collapse);
+      toggle.setAttribute('aria-expanded', String(!collapse));
+      toggle.textContent = collapse ? 'Mở rộng bộ lọc & lịch' : 'Thu gọn bộ lọc';
     });
-  });
+  }
 
-  // Initial execution
   renderCalendar();
   applyFilters();
-
-  // ── Filter Collapse Toggle (Bottom-Right Button) ─────────────────────
-  (function () {
-    const toggleBtn   = document.getElementById('btn-toggle-filter');
-    const filterBody  = document.getElementById('filter-body');
-    const toggleIcon  = document.getElementById('toggle-filter-icon');
-    const toggleLabel = document.getElementById('toggle-filter-label');
-    const dashboard   = document.getElementById('filter-dashboard');
-    if (!toggleBtn || !filterBody) return;
-
-    let collapsed = false;
-    function setCollapsed(isCollapsed) {
-      collapsed = isCollapsed;
-      filterBody.classList.toggle('collapsed', collapsed);
-      if (dashboard) dashboard.classList.toggle('is-collapsed', collapsed);
-      toggleBtn.setAttribute('aria-expanded', String(!collapsed));
-      if (collapsed) {
-        toggleLabel.textContent = 'Mở rộng bộ lọc & lịch';
-        toggleIcon.setAttribute('points', '6 9 12 15 18 9');
-        toggleBtn.title = 'Mở rộng bộ lọc & lịch';
-      } else {
-        toggleLabel.textContent = 'Thu gọn bộ lọc';
-        toggleIcon.setAttribute('points', '18 15 12 9 6 15');
-        toggleBtn.title = 'Thu gọn bộ lọc';
-      }
-    }
-
-    toggleBtn.addEventListener('click', function () {
-      setCollapsed(!collapsed);
-    });
-  })();
-
-});
-
+})();

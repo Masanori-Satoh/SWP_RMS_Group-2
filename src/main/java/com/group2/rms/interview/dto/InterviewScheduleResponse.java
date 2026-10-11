@@ -117,6 +117,18 @@ public record InterviewScheduleResponse(
         return "SCHEDULED";
     }
 
+    /**
+     * Class badge catalog theo trạng thái thực tế (dùng chung cho danh sách nội bộ và trang của ứng viên).
+     */
+    public String getTimeStatusBadge() {
+        return switch (getTimeStatus()) {
+            case "CANCELLED" -> "badge--danger";
+            case "COMPLETED" -> "badge--success";
+            case "OVERDUE" -> "badge--neutral";
+            default -> "badge--warning";
+        };
+    }
+
     public String getTimeStatusDisplay() {
         return switch (getTimeStatus()) {
             case "CANCELLED" -> "Đã hủy";

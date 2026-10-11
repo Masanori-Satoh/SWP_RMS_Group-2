@@ -7,10 +7,13 @@
     INTERVIEW/CANDIDATE-LIST.HTML — Lịch phỏng vấn của tôi (/portal/interviews, chỉ ứng viên)
     Chỉ hiện thông tin ứng viên cần biết: vị trí, thời gian, hình thức, địa điểm/link, trạng thái.
     Không hiện hội đồng phỏng vấn và kết quả đánh giá (dữ liệu nội bộ).
-    Dựng hoàn toàn bằng catalog: page-header, card, table-wrapper, table, badge. Không có CSS riêng.
+    Dựng bằng catalog: page-header, table-wrapper, table, badge. CSS dùng chung module: css/pages/interview-common.css (iv-).
 -->
 <head>
     <title>Lịch phỏng vấn của tôi</title>
+    <th:block layout:fragment="styles">
+        <link rel="stylesheet" th:href="@{/css/pages/interview-common.css}">
+    </th:block>
 </head>
 <body>
 <main id="main" layout:fragment="content" class="page-content container" tabindex="-1">
@@ -22,8 +25,9 @@
         </div>
     </div>
 
-    <div th:if="${#lists.isEmpty(schedules)}" class="card">
-        <p class="text-muted">Bạn chưa có lịch phỏng vấn nào. Khi nhà tuyển dụng lên lịch, buổi phỏng vấn sẽ hiện ở đây.</p>
+    <div th:if="${#lists.isEmpty(schedules)}" class="iv-empty">
+        <h2 class="iv-empty__title">Bạn chưa có lịch phỏng vấn nào</h2>
+        <p class="iv-empty__desc">Khi nhà tuyển dụng lên lịch, buổi phỏng vấn sẽ hiện ở đây.</p>
     </div>
 
     <div th:unless="${#lists.isEmpty(schedules)}" class="table-wrapper">
@@ -54,10 +58,7 @@
                           th:text="${s.locationOrLink ?: '—'}">Phòng họp 3</span>
                 </td>
                 <td>
-                    <span class="badge"
-                          th:classappend="${s.timeStatus == 'CANCELLED' ? 'badge--danger'
-                                          : (s.timeStatus == 'COMPLETED' ? 'badge--success'
-                                          : (s.timeStatus == 'OVERDUE' ? 'badge--neutral' : 'badge--warning'))}"
+                    <span class="badge" th:classappend="${s.timeStatusBadge}"
                           th:text="${s.timeStatusDisplay}">Sắp tới</span>
                 </td>
             </tr>

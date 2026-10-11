@@ -61,6 +61,55 @@ class InterviewScheduleFormWebTests {
     }
 
     @Test
+    void migratedPagesUseInternalLayoutWithoutLegacyFrame() throws Exception {
+        when(schedulingService.getAllForHR()).thenReturn(List.of());
+
+        mvc.perform(get("/interviews").with(user("hr_lan").authorities(() -> "ROLE_HR")))
+                .andExpect(status().isOk())
+                .andExpect(view().name("interview/list"))
+                .andExpect(model().attribute("activeMenu", "interviews"))
+                .andExpect(content().string(containsString("/css/pages/interview-common.css")))
+                .andExpect(content().string(containsString("/js/interview-list.js")))
+                .andExpect(content().string(containsString("Chưa có lịch phỏng vấn nào")))
+                .andExpect(content().string(not(containsString("interface.css"))))
+                .andExpect(content().string(not(containsString("global.js"))))
+                .andExpect(content().string(not(containsString("style=\""))));
+
+        mvc.perform(get("/interviews/new").with(user("hr_lan").authorities(() -> "ROLE_HR")))
+                .andExpect(status().isOk())
+                .andExpect(model().attribute("activeMenu", "interviews"))
+                .andExpect(content().string(containsString("/js/interview-form.js")))
+                .andExpect(content().string(containsString("class=\"form-select\"")))
+                .andExpect(content().string(not(containsString("interface.css"))))
+                .andExpect(content().string(not(containsString("<script>"))));
+    }
+
+    @Test
+    void scheduleCardsRenderWithCatalogClassesAndCancelDialog() throws Exception {
+        java.time.LocalDateTime start = java.time.LocalDateTime.now().plusDays(2).withNano(0);
+        when(schedulingService.getAllForHR()).thenReturn(List.of(new com.group2.rms.interview.dto.InterviewScheduleResponse(
+                7L, 120, "Ung vien 120", "120@example.com", null, "Senior Java Developer",
+                com.group2.rms.interview.entity.InterviewFormat.Online_GoogleMeet, "Online Google Meet",
+                com.group2.rms.interview.entity.InterviewStatus.Scheduled, "Đã lên lịch",
+                start, start.plusHours(1), "https://meet.google.com/abc", 1, "Lan HR", start.minusDays(1),
+                List.of(new com.group2.rms.interview.dto.PanelMemberResponse(2, "hr_quang", "Quang HR", null, null,
+                        com.group2.rms.interview.entity.RoleInPanel.HR, "HR Interviewer")))));
+
+        mvc.perform(get("/interviews").with(user("hr_lan").authorities(() -> "ROLE_HR")))
+                .andExpect(status().isOk())
+                .andExpect(content().string(containsString("class=\"card il-card\"")))
+                .andExpect(content().string(containsString("badge badge--warning")))
+                .andExpect(content().string(containsString("data-member-name=\"Quang HR\"")))
+                .andExpect(content().string(containsString("href=\"/interviews/7/result\"")))
+                .andExpect(content().string(containsString("href=\"/interviews/7/edit\"")))
+                .andExpect(content().string(containsString("data-cancel-url=\"/interviews/7/cancel\"")))
+                .andExpect(content().string(containsString("id=\"il-cancel-dialog\"")))
+                .andExpect(content().string(matchesPattern("(?s).*<form id=\"il-cancel-form\".*name=\"_csrf\".*")))
+                // onclick còn trong topbar-user (khung chung) nên chỉ kiểm tra không còn confirm() nội tuyến của trang cũ
+                .andExpect(content().string(not(containsString("return confirm("))));
+    }
+
+    @Test
     void applicationIdFromApplicationPageIsPreselected() throws Exception {
         mvc.perform(get("/interviews/new").param("applicationId", "298").with(user("hr_lan").authorities(() -> "ROLE_HR")))
                 .andExpect(status().isOk())
