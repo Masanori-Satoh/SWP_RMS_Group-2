@@ -98,7 +98,7 @@ class NotificationServiceImplTest {
                 .postingTitle("Senior Java Engineer")
                 .requisition(requisition)
                 .postingDate(LocalDateTime.of(2026, 10, 5, 14, 0, 0, 123456700))
-                .applicationDeadline(java.time.LocalDate.of(2026, 11, 30))
+                .applicationDeadline(LocalDateTime.of(2026, 11, 30, 23, 59, 59))
                 .build();
         User hr = User.builder().userId(30).fullName("HR Nguyen Van C").build();
 

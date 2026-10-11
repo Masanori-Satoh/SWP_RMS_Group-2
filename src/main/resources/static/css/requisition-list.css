@@ -6,12 +6,75 @@
 .req-list-page .filter-field { min-width:0; }
 .req-list-page .filter-field label { display:block; margin-bottom:var(--s2); font-size:14px; font-weight:600; }
 .req-list-page .filter-actions { display:flex; gap:var(--s2); flex-wrap:wrap; margin-block:var(--s4) var(--s6); }
-.req-list-page .requisition-list-table { min-width:850px; }
+.req-list-page .requisition-list-table { min-width:1050px; }
 .req-list-page .requisition-list-table td { padding-block:var(--s2); }
 .req-list-page .requisition-list-table th { white-space:nowrap; }
 .req-list-page .requisition-list-table tbody tr:hover { background:var(--page); }
 .req-list-page .requisition-list-table td:first-child { color:var(--muted); }
-.req-list-page .round-badge { display:inline-flex; align-items:center; padding:2px 8px; border-radius:999px; font-size:12.5px; font-weight:600; background:var(--brand-soft); color:var(--brand-dark); border:1px solid rgba(27,77,62,0.15); white-space:nowrap; }
+.req-list-page .round-badge { display:inline-flex; align-items:center; padding:2px 8px; border-radius:999px; font-size:12px; font-weight:600; background:#f5f3ff; color:#6d28d9; border:1px solid #ddd6fe; white-space:nowrap; }
+
+/* Nhãn viên thuốc trạng thái (Status Pills) */
+.req-list-page .jp-status-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 3px 8px;
+    border-radius: 999px;
+    font-size: 11.5px;
+    font-weight: 500;
+    white-space: nowrap;
+}
+.req-list-page .jp-status-pill .dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+}
+.req-list-page .jp-status-published,
+.req-list-page .jp-status-approved {
+    background: #e8f5e9;
+    color: #15803d;
+    border: 1px solid #c6ebd0;
+}
+.req-list-page .jp-status-published .dot,
+.req-list-page .jp-status-approved .dot {
+    background: #22c55e;
+}
+.req-list-page .jp-status-draft {
+    background: #f1f5f9;
+    color: #475569;
+    border: 1px solid #cbd5e1;
+}
+.req-list-page .jp-status-draft .dot {
+    background: #94a3b8;
+}
+.req-list-page .jp-status-paused,
+.req-list-page .jp-status-pending {
+    background: #fef9c3;
+    color: #854d0e;
+    border: 1px solid #fde047;
+}
+.req-list-page .jp-status-paused .dot,
+.req-list-page .jp-status-pending .dot {
+    background: #eab308;
+}
+.req-list-page .jp-status-closed,
+.req-list-page .jp-status-rejected {
+    background: #fee2e2;
+    color: #991b1b;
+    border: 1px solid #fca5a5;
+}
+.req-list-page .jp-status-closed .dot,
+.req-list-page .jp-status-rejected .dot {
+    background: #ef4444;
+}
+.req-list-page .jp-status-none {
+    background: #f8fafc;
+    color: #64748b;
+    border: 1px dashed #cbd5e1;
+}
+.req-list-page .jp-status-none .dot {
+    background: #94a3b8;
+}
 .req-list-page .position-title { display:flex; align-items:center; min-height:44px; min-width:160px; max-width:320px; font-weight:600; text-decoration:none; overflow-wrap:anywhere; }
 .req-list-page .position-title:hover { text-decoration:underline; }
 .req-list-page .btn-action-outline { min-width:44px; padding:var(--s2); font-size:20px; }

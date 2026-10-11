@@ -44,7 +44,8 @@
                                     class="btn-outline">Chỉnh sửa</a>
                                 <button th:unless="${req.editable}" type="button" class="btn-outline" disabled
                                     title="Yêu cầu này hiện không thể chỉnh sửa.">Chỉnh sửa</button>
-                                <a th:if="${canCreate}" th:href="@{/requisitions/copy/{id}(id=${req.requisitionId})}"
+                                <a th:if="${canCreate and req.approvalStatus != 'Draft' and req.approvalStatus != 'Pending_Director'}"
+                                    th:href="@{/requisitions/copy/{id}(id=${req.requisitionId})}"
                                     class="btn-outline">Sao chép mẫu</a>
                             </div>
                         </div>

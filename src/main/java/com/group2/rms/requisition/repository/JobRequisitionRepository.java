@@ -26,4 +26,13 @@ public interface JobRequisitionRepository extends JpaRepository<JobRequisition, 
 
     //Lay tat ca req theo thu tu moi nhat, co phan trang
     Page<JobRequisition> findAllByOrderByCreatedAtDesc(Pageable pageable);
+
+    @org.springframework.data.jpa.repository.Query("SELECT COALESCE(MAX(r.recruitmentRound), 0) FROM JobRequisition r WHERE LOWER(TRIM(r.title)) = LOWER(TRIM(:title)) AND r.department.departmentId = :departmentId")
+    int findMaxRecruitmentRound(@org.springframework.data.repository.query.Param("title") String title, @org.springframework.data.repository.query.Param("departmentId") Integer departmentId);
+
+    @org.springframework.data.jpa.repository.Query("SELECT COUNT(r) > 0 FROM JobRequisition r WHERE LOWER(TRIM(r.title)) = LOWER(TRIM(:title)) AND r.department.departmentId = :departmentId AND r.approvalStatus = 'Draft' AND (:excludeId IS NULL OR r.requisitionId <> :excludeId)")
+    boolean existsDraftByTitleAndDepartment(@org.springframework.data.repository.query.Param("title") String title, @org.springframework.data.repository.query.Param("departmentId") Integer departmentId, @org.springframework.data.repository.query.Param("excludeId") Integer excludeId);
+
+    @org.springframework.data.jpa.repository.Query("SELECT DISTINCT r.title FROM JobRequisition r WHERE r.title IS NOT NULL AND TRIM(r.title) <> '' ORDER BY r.title ASC")
+    List<String> findDistinctTitles();
 }

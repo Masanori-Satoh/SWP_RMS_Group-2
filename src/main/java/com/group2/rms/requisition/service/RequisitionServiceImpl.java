@@ -80,6 +80,12 @@ public class RequisitionServiceImpl implements RequisitionService {
     @Override
     @Transactional(readOnly = true)
     public Page<RequisitionResponse> search(int page, int size, String query, Integer departmentId, String type, String status, String order) {
+        return search(page, size, query, departmentId, null, type, status, order);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Page<RequisitionResponse> search(int page, int size, String query, Integer departmentId, String position, String type, String status, String order) {
         User currentUser = access.actor();
         Specification<JobRequisition> filter = scope(currentUser);
 
@@ -96,6 +102,9 @@ public class RequisitionServiceImpl implements RequisitionService {
         }
         if (departmentId != null) {
             filter = filter.and((root, cq, cb) -> cb.equal(root.get("department").get("departmentId"), departmentId));
+        }
+        if (position != null && !position.isBlank()) {
+            filter = filter.and((root, cq, cb) -> cb.equal(root.get("title"), position));
         }
         if (type != null && !type.isBlank()) {
             filter = filter.and((root, cq, cb) -> cb.equal(root.get("employmentType"), type));
@@ -117,6 +126,12 @@ public class RequisitionServiceImpl implements RequisitionService {
             pageResult = requisitions.findAll(filter, PageRequest.of(pageResult.getTotalPages() - 1, pageSize, sort));
         }
         return pageResult.map(jobRequisition -> response(jobRequisition, currentUser, false));
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<String> getAvailablePositions() {
+        return requisitions.findDistinctTitles();
     }
 
     @Override
@@ -154,9 +169,26 @@ public class RequisitionServiceImpl implements RequisitionService {
         JobRequisition jobRequisition = findRequisitionById(id, false);
         access.requireView(currentUser, jobRequisition);
 
+        // Hướng 1: Chặn sao chép đối với các đơn Draft và Pending_Director
+        if ("Draft".equals(jobRequisition.getApprovalStatus()) || "Pending_Director".equals(jobRequisition.getApprovalStatus())) {
+            throw createValidationException("action", "Chỉ có thể sao chép yêu cầu đã hoàn tất phê duyệt hoặc bị từ chối.");
+        }
+
         RequisitionRequest copiedDto = convertToRequestDto(jobRequisition);
         // Reset criteria IDs để khi tạo mới sẽ sinh bản ghi mới
         copiedDto.getScreeningCriteria().forEach(criterion -> criterion.setCriteriaId(null));
+        copiedDto.setRequisitionCode(null);
+
+        // Tự động gán đợt tuyển tiếp theo
+        int currentRound = jobRequisition.getRecruitmentRound() != null ? jobRequisition.getRecruitmentRound() : 1;
+        Integer deptId = jobRequisition.getDepartment() != null ? jobRequisition.getDepartment().getDepartmentId() : null;
+        if (deptId != null && jobRequisition.getTitle() != null) {
+            int maxRound = requisitions.findMaxRecruitmentRound(jobRequisition.getTitle().trim(), deptId);
+            copiedDto.setRecruitmentRound(Math.max(currentRound, maxRound) + 1);
+        } else {
+            copiedDto.setRecruitmentRound(currentRound + 1);
+        }
+
         return copiedDto;
     }
 
@@ -173,6 +205,8 @@ public class RequisitionServiceImpl implements RequisitionService {
                 .collect(Collectors.toCollection(ArrayList::new));
 
         return RequisitionRequest.builder()
+                .requisitionCode(jobRequisition.getRequisitionCode())
+                .recruitmentRound(jobRequisition.getRecruitmentRound() != null ? jobRequisition.getRecruitmentRound() : 1)
                 .title(jobRequisition.getTitle())
                 .departmentId(jobRequisition.getDepartment() == null ? null : jobRequisition.getDepartment().getDepartmentId())
                 .numberOfPositions(jobRequisition.getNumberOfPositions())
@@ -196,7 +230,29 @@ public class RequisitionServiceImpl implements RequisitionService {
         User currentUser = access.actor();
         // Rule: Kiểm tra quyền tạo yêu cầu
         access.requireCreate(currentUser);
+
+        // HM chỉ tạo cho phòng ban mà mình quản lý
+        if (currentUser.getDepartment() != null) {
+            requestDto.setDepartmentId(currentUser.getDepartment().getDepartmentId());
+        }
+
         validator.validate(requestDto);
+
+        // Hướng 2: Bắt lỗi Validation chặn trùng lặp đơn Draft cho cùng vị trí trong phòng ban
+        if (requestDto.getDepartmentId() != null && requestDto.getTitle() != null && !requestDto.getTitle().isBlank()) {
+            boolean hasDraft = requisitions.existsDraftByTitleAndDepartment(requestDto.getTitle().trim(), requestDto.getDepartmentId(), null);
+            if (hasDraft) {
+                throw createValidationException("title", "Bạn đang có một bản nháp cho vị trí này trong phòng ban. Vui lòng hoàn thiện bản nháp hiện có.");
+            }
+        }
+
+        // Tự động tính đợt tuyển dụng nếu chưa có hoặc đợt 1
+        if (requestDto.getDepartmentId() != null && requestDto.getTitle() != null && !requestDto.getTitle().isBlank()) {
+            int maxRound = requisitions.findMaxRecruitmentRound(requestDto.getTitle().trim(), requestDto.getDepartmentId());
+            if (requestDto.getRecruitmentRound() == null || requestDto.getRecruitmentRound() <= 1) {
+                requestDto.setRecruitmentRound(maxRound > 0 ? maxRound + 1 : 1);
+            }
+        }
 
         // Rule: Tiêu chí mới không được chứa ID đã tồn tại
         if (requestDto.getScreeningCriteria().stream().anyMatch(c -> c.getCriteriaId() != null)) {
@@ -235,7 +291,20 @@ public class RequisitionServiceImpl implements RequisitionService {
         JobRequisition jobRequisition = findRequisitionById(id, true);
         // Rule: Chỉ cho phép chỉnh sửa khi còn là bản nháp và đúng người sở hữu
         access.requireEdit(currentUser, jobRequisition);
+
+        if (currentUser.getDepartment() != null) {
+            requestDto.setDepartmentId(currentUser.getDepartment().getDepartmentId());
+        }
+
         validator.validate(requestDto);
+
+        // Kiểm tra không trùng tên bản nháp khác trong cùng phòng ban
+        if (requestDto.getDepartmentId() != null && requestDto.getTitle() != null && !requestDto.getTitle().isBlank()) {
+            boolean hasDraft = requisitions.existsDraftByTitleAndDepartment(requestDto.getTitle().trim(), requestDto.getDepartmentId(), id);
+            if (hasDraft) {
+                throw createValidationException("title", "Bạn đang có một bản nháp khác cho vị trí này trong phòng ban.");
+            }
+        }
 
         Map<String, String> beforeSnapshot = createSnapshot(jobRequisition);
         synchronizeCriteria(jobRequisition, requestDto.getScreeningCriteria());
@@ -324,6 +393,11 @@ public class RequisitionServiceImpl implements RequisitionService {
 
     private void applyDataToEntity(JobRequisition jobRequisition, RequisitionRequest requestDto) {
         jobRequisition.setTitle(requestDto.getTitle() == null ? "Untitled requisition" : requestDto.getTitle());
+        if (requestDto.getRecruitmentRound() != null) {
+            jobRequisition.setRecruitmentRound(requestDto.getRecruitmentRound());
+        } else if (jobRequisition.getRecruitmentRound() == null) {
+            jobRequisition.setRecruitmentRound(1);
+        }
         jobRequisition.setDepartment(requestDto.getDepartmentId() == null ? null : departments.findById(requestDto.getDepartmentId()).orElseThrow(() -> createValidationException("departmentId", "Phòng ban không tồn tại.")));
         jobRequisition.setNumberOfPositions(requestDto.getNumberOfPositions());
         jobRequisition.setEmploymentType(requestDto.getEmploymentType());
@@ -514,12 +588,13 @@ public class RequisitionServiceImpl implements RequisitionService {
                 .withdrawable(access.owns(currentUser, jobRequisition) && "Pending_Director".equals(jobRequisition.getApprovalStatus()))
                 .build();
 
+        postings.findTopByRequisition_RequisitionIdOrderByJobPostingIdDesc(jobRequisition.getRequisitionId())
+                .ifPresent(p -> {
+                    responseDto.setPostingStatus(p.getPostingStatus());
+                    responseDto.setJobPostingId(p.getJobPostingId());
+                });
+
         if (isDetailView) {
-            postings.findTopByRequisition_RequisitionIdOrderByJobPostingIdDesc(jobRequisition.getRequisitionId())
-                    .ifPresent(p -> {
-                        responseDto.setPostingStatus(p.getPostingStatus());
-                        responseDto.setJobPostingId(p.getJobPostingId());
-                    });
 
             // Kiểm tra xem bản nháp đã điền đủ thông tin để submit chưa
             if ("Draft".equals(jobRequisition.getApprovalStatus())) {
