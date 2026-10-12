@@ -65,7 +65,13 @@ public class NotificationController {
         flash.addFlashAttribute("successMessage", "Đã đánh dấu thông báo là đã đọc.");
 
         if (redirectUrl != null && !redirectUrl.isBlank() && redirectUrl.startsWith("/")) {
-            return "redirect:" + redirectUrl;
+            String target = redirectUrl;
+            String roleName = user.getRole() != null ? user.getRole().getRoleName() : "";
+            boolean isHrOrAdmin = "HR".equalsIgnoreCase(roleName) || "System Admin".equalsIgnoreCase(roleName);
+            if (!isHrOrAdmin && target.startsWith("/internal/job-postings/")) {
+                target = target.replace("/internal/job-postings/", "/jobs/");
+            }
+            return "redirect:" + target;
         }
         return "redirect:/notifications";
     }
@@ -87,6 +93,22 @@ public class NotificationController {
             return ResponseEntity.ok(Map.of("unreadCount", count));
         } catch (Exception e) {
             return ResponseEntity.ok(Map.of("unreadCount", 0));
+        }
+    }
+
+    @GetMapping("/recent")
+    @ResponseBody
+    public ResponseEntity<Map<String, Object>> getRecentNotifications() {
+        try {
+            User user = currentUser();
+            Page<NotificationResponse> result = notificationService.getNotificationsForUser(user, 1, 5);
+            long unreadCount = notificationService.getUnreadCount(user);
+            return ResponseEntity.ok(Map.of(
+                "unreadCount", unreadCount,
+                "notifications", result.getContent()
+            ));
+        } catch (Exception e) {
+            return ResponseEntity.ok(Map.of("unreadCount", 0, "notifications", java.util.List.of()));
         }
     }
 }

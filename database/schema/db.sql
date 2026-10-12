@@ -540,7 +540,27 @@ CREATE TABLE OfferApproval (
         CHECK ([Status] IN (N'Approved', N'Rejected'))
 );
 GO
--- delete cho huyền
+
+-- =============================================================================
+-- 3.19 NOTIFICATION (Quản lý thông báo nội bộ hệ thống)
+-- =============================================================================
+CREATE TABLE [dbo].[Notification] (
+    [NotificationId] BIGINT IDENTITY(1,1) NOT NULL,
+    [RecipientId]    INT NOT NULL,
+    [Title]          NVARCHAR(255) NOT NULL,
+    [Content]        NVARCHAR(1000) NOT NULL,
+    [EventType]      VARCHAR(50) NOT NULL,
+    [ReferenceType]  VARCHAR(50) NULL,
+    [ReferenceId]    VARCHAR(50) NULL,
+    [LinkUrl]        NVARCHAR(255) NULL,
+    [IsRead]         BIT NOT NULL CONSTRAINT [DF_Notification_IsRead] DEFAULT (0),
+    [EventId]        VARCHAR(100) NULL,
+    [CreatedAt]      DATETIME2 NOT NULL CONSTRAINT [DF_Notification_CreatedAt] DEFAULT (SYSDATETIME()),
+
+    CONSTRAINT [PK_Notification] PRIMARY KEY CLUSTERED ([NotificationId] ASC),
+    CONSTRAINT [FK_Notification_User] FOREIGN KEY ([RecipientId]) REFERENCES [dbo].[User] ([UserId])
+);
+GO
 
 -- =============================================================================
 -- INDEXES FOR PERFORMANCE OPTIMIZATION (Non-Clustered Indexes on Foreign Keys)
@@ -568,4 +588,21 @@ CREATE NONCLUSTERED INDEX IX_InterviewFinalResult_HiringManagerId ON InterviewFi
 CREATE NONCLUSTERED INDEX IX_OfferProposal_ProposedBy ON OfferProposal(ProposedBy);
 CREATE NONCLUSTERED INDEX IX_OfferApproval_OfferId ON OfferApproval(OfferId);
 CREATE NONCLUSTERED INDEX IX_OfferApproval_DirectorId ON OfferApproval(DirectorId);
+
+-- =============================================================================
+-- INDEXES CHO NOTIFICATION (Tối ưu hóa hiệu năng Topbar & Danh sách)
+-- =============================================================================
+CREATE NONCLUSTERED INDEX [IX_Notification_Recipient_CreatedAt]
+ON [dbo].[Notification] ([RecipientId] ASC, [CreatedAt] DESC)
+INCLUDE ([IsRead], [Title], [EventType], [ReferenceId], [LinkUrl]);
+GO
+
+CREATE NONCLUSTERED INDEX [IX_Notification_Unread_Recipient]
+ON [dbo].[Notification] ([RecipientId])
+WHERE [IsRead] = 0;
+GO
+
+CREATE UNIQUE NONCLUSTERED INDEX [UX_Notification_Recipient_EventId]
+ON [dbo].[Notification] ([RecipientId], [EventId])
+WHERE [EventId] IS NOT NULL;
 GO

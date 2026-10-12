@@ -135,8 +135,11 @@ public class NotificationServiceImpl implements NotificationService {
         }
         int validPage = Math.max(0, page - 1);
         int validSize = Math.max(1, Math.min(size, 50));
+        String roleName = user.getRole() != null ? user.getRole().getRoleName() : "";
+        boolean isHrOrAdmin = "HR".equalsIgnoreCase(roleName) || "System Admin".equalsIgnoreCase(roleName);
+
         return notificationRepository.findByRecipient_UserIdOrderByCreatedAtDesc(user.getUserId(), PageRequest.of(validPage, validSize))
-            .map(NotificationResponse::from);
+            .map(n -> NotificationResponse.from(n, isHrOrAdmin));
     }
 
     @Override

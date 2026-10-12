@@ -400,3 +400,244 @@
 :root:has(.public-topbar) {
   scroll-padding-top: 74px;
 }
+
+/* -----------------------------------------------------------------------------
+   6. Chuông thông báo & Menu thả (Notification Bell & Dropdown)
+   - Tuân thủ UI_RULES: Sử dụng 100% token chuẩn từ tokens.css, không hardcode hex.
+   - Định dạng theo mockup wireframe người dùng cung cấp.
+   ----------------------------------------------------------------------------- */
+.topbar-notification {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+}
+
+.topbar-notification-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: var(--btn-sm-h, 40px);
+  padding: 0 10px;
+  border: 1px solid transparent;
+  border-radius: var(--radius-md);
+  background: transparent;
+  color: var(--ink);
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+.topbar-notification-btn:hover {
+  background: var(--brand-soft);
+  color: var(--brand-dark);
+  border-color: var(--line);
+}
+
+.topbar-notification-btn:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 2px;
+}
+
+.topbar-notif-icon {
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+}
+
+.topbar-notif-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 6px;
+  font-size: calc(11.5px + var(--chrome-step));
+  font-weight: 700;
+  line-height: 1;
+  color: var(--surface);
+  background: var(--ink);
+  border-radius: var(--radius-full);
+}
+
+.topbar-notif-badge[hidden] {
+  display: none !important;
+}
+
+.topbar-notif-dropdown {
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 0;
+  width: 380px;
+  max-width: calc(100vw - 32px);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md);
+  box-shadow: 0 16px 36px rgba(17, 45, 35, 0.12), 0 2px 6px rgba(0, 0, 0, 0.04);
+  z-index: 1050;
+  color: var(--ink);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  animation: notifDropdownIn 0.16s ease-out;
+}
+
+.topbar-notif-dropdown[hidden] {
+  display: none !important;
+}
+
+@keyframes notifDropdownIn {
+  from {
+    opacity: 0;
+    transform: translateY(-6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.topbar-notif-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 18px;
+  border-bottom: 1px solid var(--line);
+  gap: 12px;
+}
+
+.topbar-notif-title {
+  margin: 0;
+  font-size: calc(16px + var(--chrome-step));
+  font-weight: 700;
+  color: var(--ink);
+}
+
+.topbar-notif-mark-all {
+  background: none;
+  border: none;
+  padding: 0;
+  font-size: calc(13px + var(--chrome-step));
+  font-weight: 500;
+  color: var(--brand);
+  text-decoration: underline;
+  cursor: pointer;
+  transition: var(--transition);
+  font-family: inherit;
+}
+
+.topbar-notif-mark-all:hover {
+  color: var(--brand-dark);
+}
+
+.topbar-notif-list {
+  max-height: 380px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+.topbar-notif-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 18px;
+  border-bottom: 1px solid var(--line);
+  text-decoration: none;
+  color: inherit;
+  cursor: pointer;
+  transition: var(--transition);
+  background: var(--surface);
+}
+
+.topbar-notif-item:last-child {
+  border-bottom: none;
+}
+
+.topbar-notif-item:hover {
+  background: var(--brand-soft);
+}
+
+.topbar-notif-icon-circle {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: 1.5px solid var(--ink);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  color: var(--ink);
+  background: transparent;
+}
+
+.topbar-notif-item-body {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.topbar-notif-item-title {
+  font-size: calc(13.5px + var(--chrome-step));
+  font-weight: 600;
+  color: var(--ink);
+  line-height: 1.35;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.topbar-notif-item-time {
+  font-size: calc(12px + var(--chrome-step));
+  color: var(--muted);
+  line-height: 1.2;
+}
+
+.topbar-notif-unread-dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: var(--ink);
+  flex-shrink: 0;
+}
+
+.topbar-notif-item.is-read .topbar-notif-unread-dot {
+  visibility: hidden;
+}
+
+.topbar-notif-empty,
+.topbar-notif-loading {
+  padding: 24px 16px;
+  text-align: center;
+  font-size: calc(13.5px + var(--chrome-step));
+  color: var(--muted);
+}
+
+.topbar-notif-footer {
+  padding: 12px 18px;
+  border-top: 1px solid var(--line);
+  background: var(--surface);
+}
+
+.topbar-notif-view-all {
+  font-size: calc(13.5px + var(--chrome-step));
+  font-weight: 600;
+  color: var(--ink);
+  text-decoration: underline;
+  transition: var(--transition);
+}
+
+.topbar-notif-view-all:hover {
+  color: var(--brand);
+}
+
+@media (max-width: 768px) {
+  .topbar-notif-dropdown {
+    position: fixed;
+    top: var(--topbar-h, 74px);
+    right: 16px;
+    left: 16px;
+    width: auto;
+    max-width: none;
+  }
+}
