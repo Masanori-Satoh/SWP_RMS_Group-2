@@ -10,6 +10,7 @@ import com.group2.rms.offer.dto.OfferDetailResponse;
 import com.group2.rms.offer.dto.OfferResponse;
 import com.group2.rms.offer.dto.PassedCandidateResponse;
 import com.group2.rms.offer.dto.UpdateOfferRequest;
+import com.group2.rms.offer.entity.OfferApproval;
 import com.group2.rms.offer.entity.OfferProposal;
 import com.group2.rms.offer.repository.OfferApprovalRepository;
 import com.group2.rms.offer.repository.OfferProposalRepository;
@@ -253,6 +254,15 @@ public class OfferServiceImpl implements OfferService {
                 .build();
 
         OfferProposal saved = offerProposalRepository.save(offerToSave);
+
+        if ("Pending_Director".equals(status) && notificationService != null) {
+            try {
+                notificationService.notifyDirectorNewPendingOffer(saved);
+            } catch (Exception ignored) {
+                // Tiếp tục ngay cả khi gửi mail lỗi ngầm
+            }
+        }
+
         return mapToResponse(saved);
     }
 
@@ -473,6 +483,14 @@ public class OfferServiceImpl implements OfferService {
         }
 
         OfferProposal saved = offerProposalRepository.save(offer);
+
+        if ("Pending_Director".equals(offer.getOfferStatus()) && notificationService != null) {
+            try {
+                notificationService.notifyDirectorNewPendingOffer(saved);
+            } catch (Exception ignored) {
+            }
+        }
+
         return mapToResponse(saved);
     }
 
@@ -686,5 +704,112 @@ public class OfferServiceImpl implements OfferService {
                 .createdAt(entity.getCreatedAt())
                 .updatedAt(entity.getUpdatedAt())
                 .build();
+    }
+
+    @Override
+    public OfferResponse approveOfferByDirector(Integer id, String comments) {
+        OfferProposal offer = offerProposalRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy OfferProposal với ID: " + id));
+
+        if (!"Pending_Director".equalsIgnoreCase(offer.getOfferStatus())) {
+            throw new BaseBusinessException(
+                    "Chỉ được phê duyệt đề xuất Offer khi ở trạng thái chờ duyệt (Pending_Director). Trạng thái hiện tại: "
+                            + offer.getOfferStatus(),
+                    "OFFER_STATUS_INVALID");
+        }
+
+        User director = resolveProposedBy(null); // Resolve current logged in user (Director)
+        if (director == null) {
+            throw new BaseBusinessException("Không xác định được danh tính Director để thực hiện phê duyệt.", "USER_NOT_FOUND");
+        }
+
+        offer.setOfferStatus("Director_Approved");
+        OfferProposal saved = offerProposalRepository.save(offer);
+
+        OfferApproval approval = OfferApproval.builder()
+                .offerProposal(saved)
+                .director(director)
+                .status("Approved")
+                .directorComments(comments)
+                .approvedAt(LocalDateTime.now())
+                .build();
+        offerApprovalRepository.save(approval);
+
+        if (notificationService != null) {
+            try {
+                notificationService.notifyHrOfDirectorDecision(saved, "Approved", comments);
+            } catch (Exception ignored) {
+            }
+        }
+
+        return mapToResponse(saved);
+    }
+
+    @Override
+    public OfferResponse rejectOfferByDirector(Integer id, String comments) {
+        OfferProposal offer = offerProposalRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy OfferProposal với ID: " + id));
+
+        if (!"Pending_Director".equalsIgnoreCase(offer.getOfferStatus())) {
+            throw new BaseBusinessException(
+                    "Chỉ được từ chối đề xuất Offer khi ở trạng thái chờ duyệt (Pending_Director). Trạng thái hiện tại: "
+                            + offer.getOfferStatus(),
+                    "OFFER_STATUS_INVALID");
+        }
+
+        User director = resolveProposedBy(null); // Resolve current logged in user (Director)
+        if (director == null) {
+            throw new BaseBusinessException("Không xác định được danh tính Director để thực hiện từ chối.", "USER_NOT_FOUND");
+        }
+
+        offer.setOfferStatus("Director_Rejected");
+        OfferProposal saved = offerProposalRepository.save(offer);
+
+        OfferApproval approval = OfferApproval.builder()
+                .offerProposal(saved)
+                .director(director)
+                .status("Rejected")
+                .directorComments(comments)
+                .approvedAt(LocalDateTime.now())
+                .build();
+        offerApprovalRepository.save(approval);
+
+        if (notificationService != null) {
+            try {
+                notificationService.notifyHrOfDirectorDecision(saved, "Rejected", comments);
+            } catch (Exception ignored) {
+            }
+        }
+
+        return mapToResponse(saved);
+    }
+    @Override
+    @Transactional(readOnly = true)
+    public Map<String, Long> getDirectorOfferStats() {
+        User director = resolveProposedBy(null);
+        Integer directorId = director != null ? director.getUserId() : 0;
+        
+        Map<String, Long> stats = new HashMap<>();
+        stats.put("statPending", offerProposalRepository.countPendingDirector());
+        stats.put("statApproved", offerApprovalRepository.countByDirector_UserIdAndStatusIgnoreCase(directorId, "Approved"));
+        stats.put("statRejected", offerApprovalRepository.countByDirector_UserIdAndStatusIgnoreCase(directorId, "Rejected"));
+        return stats;
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Page<OfferResponse> getDirectorOfferHistory(Pageable pageable) {
+        User director = resolveProposedBy(null);
+        Integer directorId = director != null ? director.getUserId() : 0;
+        
+        Page<OfferApproval> approvals = offerApprovalRepository.findByDirector_UserIdOrderByApprovedAtDesc(directorId, pageable);
+        return approvals.map(approval -> {
+            OfferProposal offer = approval.getOfferProposal();
+            OfferResponse response = mapToResponse(offer);
+            if (approval.getStatus() != null && !approval.getStatus().isBlank()) {
+                response.setOfferStatus(approval.getStatus());
+            }
+            return response;
+        });
     }
 }

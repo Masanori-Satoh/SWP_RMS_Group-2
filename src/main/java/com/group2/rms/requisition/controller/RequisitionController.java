@@ -50,11 +50,14 @@ public class RequisitionController {
     @GetMapping
     public String list(@RequestParam(defaultValue = "1") int page, @RequestParam(defaultValue = "10") int size,
             @RequestParam(defaultValue = "") String q, @RequestParam(required = false) Integer departmentId,
+            @RequestParam(defaultValue = "") String position,
             @RequestParam(defaultValue = "") String type, @RequestParam(defaultValue = "") String status,
             @RequestParam(defaultValue = "newest") String sort, Model model) {
         if (!java.util.Set.of("newest", "oldest", "position_asc", "position_desc").contains(sort))
             sort = "newest";
-        var result = service.search(page, size, q, departmentId, type, status, sort);
+        var result = (position != null && !position.isBlank())
+                ? service.search(page, size, q, departmentId, position, type, status, sort)
+                : service.search(page, size, q, departmentId, type, status, sort);
         model.addAttribute("requisitions", result.getContent());
         model.addAttribute("currentPage", result.getNumber() + 1);
         model.addAttribute("totalPages", Math.max(1, result.getTotalPages()));
@@ -65,6 +68,8 @@ public class RequisitionController {
         model.addAttribute("totalVisible", service.countVisible());
         model.addAttribute("search", q);
         model.addAttribute("selectedDepartment", departmentId);
+        model.addAttribute("selectedPosition", position);
+        model.addAttribute("positions", service.getAvailablePositions());
         model.addAttribute("selectedType", type);
         model.addAttribute("selectedStatus", status);
         model.addAttribute("selectedSort", sort);
@@ -80,6 +85,7 @@ public class RequisitionController {
 
         RequisitionRequest requisitionRequest = new RequisitionRequest();
         requisitionRequest.setNumberOfPositions(1);
+        requisitionRequest.setRecruitmentRound(1);
         requisitionRequest.setGender("Any");
         if (currentUser.getDepartment() != null) {
             requisitionRequest.setDepartmentId(currentUser.getDepartment().getDepartmentId());

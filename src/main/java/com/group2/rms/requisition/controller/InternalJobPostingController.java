@@ -46,6 +46,7 @@ public class InternalJobPostingController {
         User currentUser = requisitionAccess.actor();
         model.addAttribute("viewerRole", requisitionAccess.role(currentUser));
         model.addAttribute("viewerName", currentUser.getFullName());
+        model.addAttribute("activeMenu", "job-postings");
     }
 
     @GetMapping

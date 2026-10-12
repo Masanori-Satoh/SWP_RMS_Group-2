@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org"><body>
+<!-- Presentation labels belong to the Dashboard views. Persisted data and DTO keys stay unchanged. -->
+<section th:fragment="metrics(items)" class="dashboard-grid" aria-label="Số liệu tổng quan"
+         th:with="titles=${ {'Open Job Postings':'Tin đang tuyển', 'Total Applications':'Tổng hồ sơ ứng tuyển', 'Upcoming Interviews':'Phỏng vấn sắp tới', 'New Applications Awaiting HR Review':'Hồ sơ chờ nhân sự duyệt', 'My Requisitions':'Yêu cầu của tôi', 'Department Requisitions':'Yêu cầu của phòng ban', 'Requisitions Awaiting Director Approval':'Yêu cầu chờ phê duyệt', 'Candidates for My Requisitions':'Ứng viên cho yêu cầu của tôi', 'My Offers Requiring Action':'Đề nghị cần xử lý', 'Requisitions Awaiting Approval':'Yêu cầu chờ phê duyệt', 'Offers Awaiting Approval':'Đề nghị chờ phê duyệt', 'Upcoming Assigned Interviews':'Phỏng vấn được phân công', 'Assigned Candidates':'Ứng viên được phân công', 'Pending Interview Evaluations':'Đánh giá còn chờ'} },
+                  details=${ {'Open Job Postings':'Đã đăng và còn hạn nhận hồ sơ', 'Total Applications':'Hồ sơ trong toàn bộ quy trình tuyển dụng', 'Upcoming Interviews':'Lịch đã hẹn hoặc được đổi lịch trong phạm vi của bạn', 'New Applications Awaiting HR Review':'Hồ sơ mới nộp, chưa được nhân sự duyệt', 'My Requisitions':'Các yêu cầu do bạn phụ trách', 'Department Requisitions':'Các yêu cầu thuộc phòng ban của bạn', 'Requisitions Awaiting Director Approval':'Yêu cầu của bạn đang chờ giám đốc duyệt', 'Candidates for My Requisitions':'Số ứng viên đã nộp vào các yêu cầu của bạn', 'My Offers Requiring Action':'Đề nghị do bạn đề xuất ở trạng thái nháp hoặc đã duyệt', 'Requisitions Awaiting Approval':'Yêu cầu đang chờ duyệt trên toàn hệ thống', 'Offers Awaiting Approval':'Đề nghị đang chờ duyệt trên toàn hệ thống', 'Upcoming Assigned Interviews':'Lịch bạn tham gia trong hội đồng phỏng vấn', 'Assigned Candidates':'Số ứng viên trong các lịch bạn được phân công', 'Pending Interview Evaluations':'Phỏng vấn đã hoàn tất, chưa có đánh giá của bạn'} }">
+    <th:block th:each="metric : ${items}">
+        <article th:replace="~{fragments/ui/cards :: statCard(title=${titles[metric.title] ?: metric.title}, value=${metric.value}, detail=${metric.title == 'Department Requisitions' and metric.detail == 'This account has no department' ? 'Tài khoản chưa được gán phòng ban' : (details[metric.title] ?: metric.detail)})}"></article>
+    </th:block>
+</section>
+
+<section th:fragment="statuses(title, items)" class="dash-section">
+    <h2 class="dash-section__title" th:text="${title}">Trạng thái</h2>
+    <p class="dash-empty" th:if="${#lists.isEmpty(items)}">Chưa có dữ liệu để thống kê.</p>
+    <th:block th:unless="${#lists.isEmpty(items)}"><dl th:replace="~{dashboard/fragments :: statusRows(${items})}"></dl></th:block>
+</section>
+<dl th:fragment="statusRows(items)" class="dash-statuses"
+        th:with="labels=${ {'Applied':'Đã nộp hồ sơ', 'AI_Screened':'Đã sàng lọc', 'HR_Passed':'Qua vòng nhân sự', 'HM_Passed':'Qua vòng chuyên môn', 'Interviewing':'Đang phỏng vấn', 'Offered':'Đã có thư mời', 'Hired':'Đã tuyển dụng', 'Rejected':'Không tiếp tục', 'OPERATIONAL':'Hoạt động', 'FAILED':'Có lỗi', 'NOT_CHECKED':'Chưa kiểm tra', 'Not check':'Chưa kiểm tra', 'UNCONFIGURED':'Chưa cấu hình', 'Unconfigured':'Chưa cấu hình'} }">
+        <div th:each="item : ${items}"><dt th:text="${labels[item.status] ?: item.status}">Trạng thái</dt><dd th:text="${item.count}">0</dd></div>
+</dl>
+</body></html>

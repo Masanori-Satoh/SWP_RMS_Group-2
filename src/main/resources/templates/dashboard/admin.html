@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout" layout:decorate="~{layout/internal}">
+<head>
+    <title>Tổng quan hệ thống · Mộc RMS</title>
+    <th:block layout:fragment="styles"><link rel="stylesheet" th:href="@{/css/dashboard.css}"></th:block>
+</head>
+<body>
+<main id="main" layout:fragment="content" class="page-content container dash-page" tabindex="-1">
+    <div class="page-header"><div><h1 class="page-title">Tổng quan hệ thống</h1><p class="page-subtitle" th:text="${dashboard.scope}"></p></div><a class="btn btn--primary" th:href="@{/admin/accounts}">Quản lý tài khoản</a></div>
+
+    <section class="dash-section dash-section--first" aria-labelledby="dash-accounts-title">
+        <div class="dash-section__heading"><h2 id="dash-accounts-title" class="dash-section__title">Tài khoản trong hệ thống</h2><p class="text-muted">Tài khoản nội bộ và ứng viên được quản lý riêng.</p></div>
+        <div class="grid-2-col">
+            <article class="card dash-account" th:each="summary : ${dashboard.accountSummaries}">
+                <div class="dash-section__heading"><h3 th:text="${summary.title}"></h3><a class="btn btn--outline btn--sm" th:href="@{${summary.url}}" th:attr="aria-label=|Quản lý ${summary.title}|">Quản lý</a></div>
+                <dl class="dash-account__counts">
+                    <div><dt>Tổng số</dt><dd th:text="${summary.total}"></dd></div>
+                    <div><dt>Hoạt động</dt><dd th:text="${summary.active}"></dd></div>
+                    <div><dt>Vô hiệu hóa</dt><dd th:text="${summary.inactive}"></dd></div>
+                    <div><dt>Bị khóa</dt><dd th:text="${summary.blocked}"></dd></div>
+                </dl>
+            </article>
+        </div>
+    </section>
+
+    <div class="dash-split">
+        <section class="dash-section" aria-labelledby="dash-departments-title">
+            <div class="dash-section__heading"><h2 id="dash-departments-title" class="dash-section__title">Phòng ban</h2><a class="dash-link" th:href="@{/admin/departments}">Quản lý phòng ban →</a></div>
+            <dl class="dash-statuses">
+                <div><dt>Tổng số phòng ban</dt><dd th:text="${dashboard.departments.totalCount}"></dd></div>
+                <div><dt>Hoạt động</dt><dd th:text="${dashboard.departments.activeCount}"></dd></div>
+                <div><dt>Vô hiệu hóa</dt><dd th:text="${dashboard.departments.inactiveCount}"></dd></div>
+            </dl>
+            <p class="dash-note">Vô hiệu hóa vẫn giữ các liên kết và lịch sử. Có thể kích hoạt lại trong trang quản lý.</p>
+        </section>
+        <section class="dash-section" aria-labelledby="dash-health-title">
+            <div class="dash-section__heading"><h2 id="dash-health-title" class="dash-section__title">API và dịch vụ tích hợp</h2><a class="dash-link" th:href="@{/admin/api-monitoring}">Mở giám sát →</a></div>
+            <p class="dash-note">Trạng thái đã ghi nhận; mở trang giám sát để thực hiện kiểm tra mới. Chưa kiểm tra không có nghĩa là dịch vụ hoạt động.</p>
+            <th:block th:each="breakdown : ${dashboard.breakdowns}">
+                <dl th:replace="~{dashboard/fragments :: statusRows(${breakdown.statuses})}"></dl>
+                <p class="dash-empty" th:if="${#lists.isEmpty(breakdown.statuses)}">Chưa ghi nhận trạng thái dịch vụ.</p>
+            </th:block>
+        </section>
+    </div>
+
+    <section class="dash-section" aria-labelledby="dash-admin-actions-title">
+        <h2 id="dash-admin-actions-title" class="dash-section__title">Công cụ quản trị</h2>
+        <nav class="dash-actions" aria-label="Công cụ quản trị hệ thống">
+            <th:block th:each="shortcut : ${dashboard.shortcuts}"><a class="btn btn--secondary" th:if="${shortcut.url != null}" th:href="@{${shortcut.url}}" th:text="${shortcut.title}"></a></th:block>
+        </nav>
+        <p class="dash-note">Cấu hình AI chưa khả dụng: danh mục tham số và quy tắc nhập liệu chưa được xác nhận.</p>
+    </section>
+</main>
+</body></html>

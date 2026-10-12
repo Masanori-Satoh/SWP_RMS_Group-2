@@ -1,166 +1,118 @@
-/* ============================================================
-   Mộc Careers — Interview Form Stylesheet
-   Module: interview/form
-   ============================================================ */
+/* =============================================================================
+   INTERVIEW-FORM.CSS — Tạo / sửa lịch phỏng vấn (/interviews/new, /interviews/{id}/edit, interview/form.html)
+   File phẳng của trang cũ (giữ vị trí theo UI_CSS_GUIDE mục 3), đã migrate sang layout/internal.
+   Chỉ chứa phần catalog chưa có: độ rộng trang form, ô tìm kiếm + nút, bộ lọc vai trò,
+   ô chọn nhiều người phỏng vấn, chip người đã chọn.
+   Tiền tố class: if-   (breadcrumb: css/pages/interview-common.css)
+   ============================================================================= */
 
-.container-narrow {
-  width: min(calc(100% - 64px), 880px);
-  margin-inline: auto;
+.if-page {
+  max-width: 920px;
 }
 
-/* Header Text Link */
-.text-link {
-  display: inline-flex;
+.if-row {
+  gap: var(--s4) var(--s6);
+}
+
+.if-error-list {
+  margin: var(--s2) 0 0;
+  padding-left: var(--s6);
+}
+
+/* --- Ô tìm kiếm + nút xóa ------------------------------------------------------------ */
+.if-search {
+  display: flex;
   align-items: center;
   gap: var(--s2);
-  font-weight: 600;
-  color: var(--brand-dark);
-}
-.text-link:hover {
-  text-decoration: underline;
-}
-
-/* Form Container Card */
-.form-card {
-  background: var(--surface);
-  border: 1px solid var(--line);
-  border-radius: 8px;
-  padding: var(--s8);
-  margin-top: var(--s6);
-  box-shadow: 0 2px 12px rgba(37, 41, 35, 0.04);
-}
-.form-header {
-  margin-bottom: var(--s8);
-  padding-bottom: var(--s4);
-  border-bottom: 1px solid var(--line);
-}
-.form-title {
   margin-bottom: var(--s2);
 }
-.form-desc {
-  color: var(--muted);
-  font-size: 14px;
-}
 
-/* Search Field & Grid */
-.form-grid {
-  display: grid;
-  gap: var(--s6);
-}
-.form-row-2 {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: var(--s6);
-}
-
-.search-field {
-  display: grid;
-  gap: var(--s2);
+.if-search .form-input {
+  flex: 1;
   min-width: 0;
 }
-.search-field label {
-  font-size: 14px;
-  font-weight: 600;
-  color: var(--ink);
-}
-.search-field label .required {
-  color: var(--focus);
-  margin-left: var(--s1);
-}
-.search-field input,
-.search-field select,
-.search-field textarea {
-  width: 100%;
-  min-width: 0;
-  height: 48px;
+
+/* --- Bộ lọc vai trò (nút catalog btn--secondary, sáng khi đang chọn) ----------------------- */
+.if-panel-tools {
+  margin-bottom: var(--s2);
   padding: var(--s3);
-  border: 1px solid var(--control-line);
-  border-radius: 4px;
-  background: var(--surface);
-  font-size: 15px;
-  color: var(--ink);
-  transition: border-color .2s ease, box-shadow .2s ease;
-}
-.search-field select[multiple] {
-  height: auto;
-  min-height: 130px;
-  padding: var(--s2);
-}
-.search-field input:focus,
-.search-field select:focus,
-.search-field textarea:focus {
-  outline: none;
-  border-color: var(--brand);
-  box-shadow: 0 0 0 3px var(--brand-soft);
-}
-.search-field input::placeholder {
-  color: var(--muted);
-  opacity: 0.8;
-}
-.search-field.has-error input,
-.search-field.has-error select {
-  border-color: var(--focus);
-  background: #fffdfb;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md);
+  background: var(--page);
 }
 
-/* Hints and Validation Errors */
-.field-hint {
-  font-size: 13px;
-  color: var(--muted);
-  line-height: 1.4;
-}
-.field-error {
-  font-size: 13px;
-  font-weight: 600;
-  color: var(--focus);
-  margin-top: 2px;
+.if-roles {
   display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--s2);
+}
+
+.if-roles__label {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--muted);
+}
+
+.if-role-pill.is-active {
+  border-color: var(--brand-dark);
+  background: var(--brand-dark);
+  color: var(--surface);
+}
+
+/* --- Ô chọn nhiều người phỏng vấn ----------------------------------------------------- */
+.if-panel-select {
+  height: auto;
+  min-height: 180px;
+  padding: var(--s2);
+  line-height: 1.6;
+}
+
+/* --- Người đã chọn ------------------------------------------------------------------- */
+.if-selected {
+  margin-top: var(--s2);
+  font-size: 14px;
+  color: var(--ink);
+}
+
+.if-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s2);
+  margin-top: var(--s2);
+}
+
+.if-chip {
+  display: inline-flex;
   align-items: center;
   gap: var(--s1);
-}
-
-/* Form Actions */
-.form-actions {
-  display: flex;
-  justify-content: flex-end;
-  align-items: center;
-  gap: var(--s4);
-  margin-top: var(--s8);
-  padding-top: var(--s6);
-  border-top: 1px solid var(--line);
-}
-
-@media (max-width: 600px) {
-  .container-narrow {
-    width: calc(100% - 32px);
-  }
-  .form-row-2 {
-    grid-template-columns: 1fr;
-    gap: var(--s4);
-  }
-  .form-card {
-    padding: var(--s6);
-  }
-  .form-actions {
-    flex-direction: column-reverse;
-    width: 100%;
-  }
-  .form-actions .button {
-    width: 100%;
-  }
-}
-
-/* Extracted from form.html inline styles */
-.breadcrumb-separator {
-  color: var(--muted);
-  margin-inline: var(--s2);
-}
-.breadcrumb-current {
-  color: var(--ink);
+  padding: 3px 4px 3px 10px;
+  border-radius: var(--radius-full);
+  background: var(--brand-soft);
+  color: var(--brand-dark);
+  font-size: 13px;
   font-weight: 600;
 }
-.alert-icon {
-  flex: none;
-  margin-top: 2px;
+
+.if-chip__remove {
+  padding: 0 var(--s1);
+  border: none;
+  background: transparent;
+  color: inherit;
+  font-weight: 700;
+  line-height: 1;
+  cursor: pointer;
+  opacity: 0.7;
 }
 
+.if-chip__remove:hover {
+  opacity: 1;
+}
+
+/* --- Responsive ---------------------------------------------------------------- */
+@media (max-width: 768px) {
+  .if-search {
+    flex-direction: column;
+    align-items: stretch;
+  }
+}

@@ -79,6 +79,15 @@ class OfferIntegrationTest {
                 .role(candRole)
                 .build();
         when(userRepository.findByUsernameIgnoreCase("cand_user")).thenReturn(Optional.of(candUser));
+
+        Role dirRole = Role.builder().roleId(3).roleName("Director").build();
+        User dirUser = User.builder()
+                .userId(3)
+                .username("director_user")
+                .accountStatus("Active")
+                .role(dirRole)
+                .build();
+        when(userRepository.findByUsernameIgnoreCase("director_user")).thenReturn(Optional.of(dirUser));
     }
 
     @Test
@@ -342,5 +351,46 @@ class OfferIntegrationTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.success").value(true))
                 .andExpect(jsonPath("$.data.offerStatus").value("Sent_Candidate"));
+    }
+    @Test
+    @DisplayName("IT-16 POST /offers/{id}/approve (JSON): Director phê duyệt Offer thành công trả về HTTP 200")
+    @WithMockUser(username = "director_user", roles = {"DIRECTOR"})
+    void it16_approveOfferJson_success() throws Exception {
+        DirectorDecisionRequest req = new DirectorDecisionRequest("Đồng ý với mức lương này.");
+
+        OfferResponse mockApproved = OfferResponse.builder()
+                .offerId(1)
+                .offerStatus("Director_Approved")
+                .build();
+        when(offerService.approveOfferByDirector(1, "Đồng ý với mức lương này.")).thenReturn(mockApproved);
+
+        mvc.perform(post("/offers/1/approve")
+                        .with(csrf())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(req)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.data.offerStatus").value("Director_Approved"));
+    }
+
+    @Test
+    @DisplayName("IT-17 POST /offers/{id}/reject (JSON): Director từ chối Offer thành công trả về HTTP 200")
+    @WithMockUser(username = "director_user", roles = {"DIRECTOR"})
+    void it17_rejectOfferJson_success() throws Exception {
+        DirectorDecisionRequest req = new DirectorDecisionRequest("Mức lương quá cao.");
+
+        OfferResponse mockRejected = OfferResponse.builder()
+                .offerId(1)
+                .offerStatus("Director_Rejected")
+                .build();
+        when(offerService.rejectOfferByDirector(1, "Mức lương quá cao.")).thenReturn(mockRejected);
+
+        mvc.perform(post("/offers/1/reject")
+                        .with(csrf())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(req)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.data.offerStatus").value("Director_Rejected"));
     }
 }

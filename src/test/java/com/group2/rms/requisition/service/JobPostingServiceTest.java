@@ -43,6 +43,7 @@ class JobPostingServiceTest {
     @Mock private JobRequisitionRepository jobRequisitionRepository;
     @Mock private AuditLogRepository auditLogRepository;
     @Mock private RequisitionAccess requisitionAccess;
+    @Mock private com.group2.rms.notification.NotificationService notificationService;
 
     @InjectMocks private JobPostingServiceImpl jobPostingService;
 
@@ -184,6 +185,7 @@ class JobPostingServiceTest {
         assertEquals("Published", captured.getPostingStatus());
         assertNotNull(captured.getPostingDate());
         assertEquals(hrUser, captured.getCreatedBy());
+        verify(notificationService).notifyJobPostingPublished(savedEntity, hrUser);
     }
 
     @Test

@@ -26,6 +26,8 @@ public class DashboardController {
     public String dashboard(Authentication authentication, Model model) {
         DashboardResponse dashboard = dashboardService.forUsername(authentication.getName());
         model.addAttribute("dashboard", dashboard);
+        model.addAttribute("activeMenu", "dashboard");
+        model.addAttribute("pageLang", "vi");
         return switch (dashboard.roleName()) {
             case "System Admin" -> "dashboard/admin";
             case "Candidate" -> "dashboard/candidate";

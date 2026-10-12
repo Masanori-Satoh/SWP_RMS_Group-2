@@ -8,7 +8,7 @@
 </nav>
 
 <nav th:fragment="pager(currPage, totPages, totElements, baseUrl)"
-     th:if="${totPages != null and totPages > 1}"
+    th:if="${totPages != null and (totPages > 1 or totElements > 0)}"
      class="pagination-wrapper"
      aria-label="Phân trang">
     <div class="pagination-info">

@@ -92,6 +92,16 @@
                             </a>
                         </th:block>
 
+                        <!-- Action when Pending_Director (Director View) -->
+                        <th:block th:if="${detail.offerStatus == 'Pending_Director' and (userRole == 'Director' or userRole == 'System Admin')}">
+                            <button type="button" th:onclick="'openDirectorDecisionModal(' + ${detail.offerId} + ', \'APPROVE\')'" class="btn btn-primary" style="background:#10b981; border-color:#10b981;">
+                                <i class="fa-solid fa-check" style="margin-right:4px;"></i> Phê duyệt
+                            </button>
+                            <button type="button" th:onclick="'openDirectorDecisionModal(' + ${detail.offerId} + ', \'REJECT\')'" class="btn btn-danger">
+                                <i class="fa-solid fa-xmark" style="margin-right:4px;"></i> Từ chối
+                            </button>
+                        </th:block>
+
                         <!-- Action when Director Approved -->
                         <th:block th:if="${detail.offerStatus == 'Director_Approved' or detail.offerStatus == 'Approved'}">
                             <form th:action="@{/offers/{id}/send(id=${detail.offerId})}" method="post" style="display:inline;"
@@ -238,6 +248,40 @@
         </main>
     </div>
 </div>
+
+<!-- ===========================================================================
+     MODAL 4: DIRECTOR APPROVAL MODAL (Duyệt / Từ chối Offer)
+     =========================================================================== -->
+<div class="modal-overlay" id="directorDecisionModal" style="display: none;">
+    <div class="modal-box" style="max-width: 500px;">
+        <div class="modal-header">
+            <div id="directorDecisionTitle" style="display:flex; align-items:center; gap:8px; font-weight:600; font-size:16px;">
+                Phê Duyệt Đề Xuất Offer
+            </div>
+            <button type="button" class="btn-icon" onclick="closeDirectorDecisionModal()">✕</button>
+        </div>
+        <div class="modal-body">
+            <input type="hidden" id="directorDecisionOfferId">
+            <input type="hidden" id="directorDecisionAction">
+            
+            <div class="form-group">
+                <label>Phản hồi / Ghi chú của Giám đốc (Không bắt buộc)</label>
+                <textarea id="directorDecisionComments" class="input-control" rows="4" placeholder="Nhập ghi chú hoặc lý do từ chối..."></textarea>
+            </div>
+        </div>
+        <div class="modal-footer" style="justify-content: flex-end; gap: 12px; margin-top: 16px;">
+            <button type="button" class="btn btn-secondary" onclick="closeDirectorDecisionModal()">Hủy</button>
+            <button type="button" id="btnSubmitDecision" class="btn btn-primary" onclick="submitDirectorDecision()">Xác Nhận</button>
+        </div>
+    </div>
+</div>
+
+<!-- Toast Notification Container -->
+<div class="toast-container" id="toastContainer"></div>
+<div class="toast-container" id="offerToastContainer"></div>
+
+<!-- Scripts bổ trợ bộ lọc và UX -->
+<script th:src="@{/js/offers.js}" defer></script>
 
 </body>
 </html>

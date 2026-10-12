@@ -32,7 +32,7 @@
 | `templates/careers/{index,detail,apply,unavailable,fragments}.html` | Không Controller nào trả về, không trang nào include | Cổng tuyển dụng cũ, đã thay bằng `candidate/landing`, `candidate/job-board`, `candidate/job-detail` |
 | `static/css/careers.css`, `static/css/career-pages.css`, `static/js/careers.js` | Chỉ `careers/fragments.html` (đã chết) nạp | Xóa cùng commit với `templates/careers/` |
 | Rule alias `.rms-page-*`, `.rms-pagination-*` trong `components.css` (và bản gốc trong `interface.css`) | Không template/JS nào dùng class `rms-page*` | Khu "chỉ được thêm" → Lead xóa |
-| `static/js/global.js` | Nạp ở `candidate/landing.html`, `interview/{list,form}.html` nhưng chỉ xử lý menu `.user-menu` — markup này **không còn ở đâu** | Gỡ thẻ `<script>` ở 3 trang rồi xóa file (báo người phụ trách Interview) |
+| `static/js/global.js` | Chỉ còn nạp ở `candidate/landing.html` (đã gỡ khỏi `interview/{list,form}.html` ngày 2026-10-11), chỉ xử lý menu `.user-menu` — markup này **không còn ở đâu** | Gỡ thẻ `<script>` ở `landing.html` rồi xóa file |
 
 ---
 

@@ -37,21 +37,4 @@
     update();
   });
 
-  const form = document.querySelector('form[data-confirm-logout]');
-  const dialog = document.getElementById('candidate-logout-dialog');
-  if (form && dialog && typeof dialog.showModal === 'function') {
-    let confirmed = false;
-    form.addEventListener('submit', event => {
-      if (confirmed) return;
-      event.preventDefault();
-      dialog.showModal();
-    });
-    dialog.querySelector('[data-logout-cancel]').addEventListener('click', () => dialog.close());
-    dialog.querySelector('[data-logout-confirm]').addEventListener('click', event => {
-      confirmed = true;
-      event.currentTarget.disabled = true;
-      form.requestSubmit();
-    });
-    // Native dialog restores focus and handles Escape; the existing POST form keeps its CSRF token.
-  }
 })();
