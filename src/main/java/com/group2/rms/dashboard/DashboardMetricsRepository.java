@@ -116,7 +116,7 @@ public class DashboardMetricsRepository {
     public long offersAwaitingDirector() {
         return count("select count(o) from OfferProposal o where o.offerStatus = 'Pending_Director'", Map.of());
     }
-
+    @SuppressWarnings("null")
     public List<ApprovalActivity> recentDirectorActivity(int userId) {
         List<ApprovalActivity> activity = new ArrayList<>();
         entityManager.createQuery("select r.title, a.status, a.approvalDate from RequisitionApproval a "
@@ -253,6 +253,7 @@ public class DashboardMetricsRepository {
                 .toList();
     }
 
+    //key-value
     public record StatusCount(String status, long count) {
     }
 

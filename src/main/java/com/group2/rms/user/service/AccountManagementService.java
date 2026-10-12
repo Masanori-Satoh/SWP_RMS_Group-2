@@ -97,23 +97,21 @@ public class AccountManagementService {
         checkEmailAvailable(required(email, "email", "Enter an email address."), null);
     }
 
-    /** Trusted registration service only; the browser never supplies a password hash. */
+    /**
+     * Trusted registration service only; the browser never supplies a password
+     * hash.
+     */
     @Transactional
-    public int createCandidateWithPasswordHash(CandidateWithPasswordHashCommand command) {
-        String fullName = required(command.fullName(), "fullName", "Enter a full name.");
-        String username = required(command.username(), "username", "Enter a username.");
-        String email = required(command.email(), "email", "Enter an email address.");
-        String hash = command.passwordHash();
-        if (hash == null || !hash.matches("\\$2[aby]\\$\\d{2}\\$[./A-Za-z0-9]{53}")) {
-            throw new IllegalArgumentException("Registration requires a server-generated BCrypt hash");
-        }
+    public int createCandidateWithPasswordHash(String fullName, String username, String email, String passwordHash) {
+        // check if role be configured
         Role candidate = roles.findByRoleName("Candidate")
                 .orElseThrow(() -> new IllegalStateException("Candidate role is not configured"));
         checkUsernameAvailable(username, null);
         checkEmailAvailable(email, null);
-        return persistAccount(fullName, username, email, null, candidate, null, hash);
+        return persistAccount(fullName, username, email, null, candidate, null, passwordHash);
     }
 
+    @SuppressWarnings("null")
     private int persistAccount(String fullName, String username, String email, String phone,
             Role role, Department department, String passwordHash) {
         User user = users.saveAndFlush(User.builder()
@@ -200,6 +198,7 @@ public class AccountManagementService {
     }
 
     private void checkUsernameAvailable(String username, Integer currentId) {
+        // check if email or username has exist
         if (belongsToAnother(users.findByUsernameIgnoreCase(username), currentId)
                 || belongsToAnother(users.findByEmailIgnoreCase(username), currentId)) {
             throw new AccountFieldException("username", "This username is already used as a username or email.");
@@ -207,6 +206,7 @@ public class AccountManagementService {
     }
 
     private void checkEmailAvailable(String email, Integer currentId) {
+        // check if email or username hasexist
         if (belongsToAnother(users.findByEmailIgnoreCase(email), currentId)
                 || belongsToAnother(users.findByUsernameIgnoreCase(email), currentId)) {
             throw new AccountFieldException("email", "This email is already used as an email or username.");
@@ -214,7 +214,11 @@ public class AccountManagementService {
     }
 
     private static boolean belongsToAnother(Optional<User> found, Integer currentId) {
-        return found.isPresent() && !found.get().getUserId().equals(currentId);
+        // check if account has exist
+        if (found.isPresent() && !found.get().getUserId().equals(currentId)) {
+            return true;
+        }
+        return false;
     }
 
     private static Candidate newCandidateProfile(User user) {
@@ -227,6 +231,7 @@ public class AccountManagementService {
 
     private static String required(String value, String field, String message) {
         String normalized = optional(value);
+        // check if value is null
         if (normalized == null) {
             throw new AccountFieldException(field, message);
         }
@@ -234,7 +239,11 @@ public class AccountManagementService {
     }
 
     private static String optional(String value) {
-        return value == null || value.isBlank() ? null : value.trim();
+        // check if string is not null and bank
+        if (value != null && !value.isBlank()) {
+            return value.trim();
+        }
+        return null;
     }
 
     private static void validatePassword(String password) {
@@ -247,13 +256,7 @@ public class AccountManagementService {
             Integer roleId, Integer departmentId, String password) {
     }
 
-    public record CandidateWithPasswordHashCommand(String fullName, String username,
-            String email, String passwordHash) {
-        @Override
-        public String toString() {
-            return "CandidateWithPasswordHashCommand[redacted]";
-        }
-    }
+  
 
     public record UpdateCommand(String fullName, String email, String phoneNumber,
             Integer roleId, Integer departmentId, String accountStatus) {

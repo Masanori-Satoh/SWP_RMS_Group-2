@@ -28,9 +28,10 @@ public class RegistrationEmailSender {
     public boolean isConfigured() {
         return mailSender.getIfAvailable() != null && from != null && !from.isBlank();
     }
-
+    @SuppressWarnings("null")
     public void sendOtp(String to, String otp) {
         JavaMailSender sender = mailSender.getIfAvailable();
+        // check if mail is not configured
         if (sender == null || from == null || from.isBlank()) {
             throw deliveryFailure("REGISTER_EMAIL_UNAVAILABLE");
         }
@@ -39,8 +40,8 @@ public class RegistrationEmailSender {
             helper.setFrom(from);
             helper.setTo(to);
             helper.setSubject("Mã xác minh đăng ký tài khoản Mộc");
-            helper.setText(render("txt", otp), render("html",
-                    HtmlUtils.htmlEscape(otp, StandardCharsets.UTF_8.name())));
+            helper.setText(render("txt", otp),
+             render("html",HtmlUtils.htmlEscape(otp, StandardCharsets.UTF_8.name())));
             sender.send(helper.getMimeMessage());
         } catch (MailException | MessagingException | IOException exception) {
             throw deliveryFailure("REGISTER_EMAIL_DELIVERY_FAILED");

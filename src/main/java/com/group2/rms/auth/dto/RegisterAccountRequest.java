@@ -1,12 +1,12 @@
 package com.group2.rms.auth.dto;
 
-import com.group2.rms.auth.service.CandidateRegistrationService.RegisterCommand;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 import lombok.Getter;
 import lombok.Setter;
 import com.group2.rms.core.validation.PasswordMatches;
+
 @Getter
 @Setter
 @PasswordMatches(message = "Passwords do not match.")
@@ -31,7 +31,4 @@ public class RegisterAccountRequest {
     @NotBlank(message = "Confirm your password.")
     private String confirmPassword;
 
-    public RegisterCommand toCommand() {
-        return new RegisterCommand(fullName, username, email, password);
-    }
 }
