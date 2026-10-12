@@ -142,7 +142,7 @@ public class OfferController {
                         createRequest.setOfferedPositionTitle(c.getAppliedPosition());
                         createRequest.setWorkLocation(c.getWorkLocation() != null ? c.getWorkLocation() : "Trụ sở chính Mộc RMS");
                         if (c.getRecommendedSalary() != null) {
-                            createRequest.setProposedSalary(c.getRecommendedSalary());
+                            createRequest.setProposedSalary(c.getRecommendedSalary().setScale(0, RoundingMode.HALF_UP));
                             createRequest.setProbationSalary(c.getRecommendedSalary().multiply(new BigDecimal("0.85")).setScale(0, RoundingMode.HALF_UP));
                         }
                     });

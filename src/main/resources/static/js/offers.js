@@ -204,7 +204,8 @@ function handleSelectPassedCandidate(appId) {
 
     const proposedInput = document.getElementById('proposedSalary');
     if (proposedInput && recom) {
-        proposedInput.value = recom;
+        const numericVal = Math.round(parseFloat(recom));
+        proposedInput.value = isNaN(numericVal) ? recom : numericVal;
         autoCalculateProbationSalary(true);
     }
 

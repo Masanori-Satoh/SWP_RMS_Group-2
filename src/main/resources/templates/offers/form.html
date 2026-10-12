@@ -78,7 +78,7 @@
             <option value="">-- Chọn ứng viên đã đỗ phỏng vấn --</option>
             <option th:each="c : ${passedCandidates}"
                     th:value="${c.applicationId}"
-                    th:attr="data-cand-id=${c.candidateId}, data-cand-name=${c.candidateName}, data-email=${c.email}, data-phone=${c.phoneNumber}, data-pos=${c.appliedPosition}, data-dept=${c.departmentName}, data-req-id=${c.requisitionId}, data-work-location=${c.workLocation}, data-comments=${c.interviewSummaryComments}, data-recom-salary=${c.recommendedSalary}, data-hm=${c.hiringManagerName}"
+                    th:attr="data-cand-id=${c.candidateId}, data-cand-name=${c.candidateName}, data-email=${c.email}, data-phone=${c.phoneNumber}, data-pos=${c.appliedPosition}, data-dept=${c.departmentName}, data-req-id=${c.requisitionId}, data-work-location=${c.workLocation}, data-comments=${c.interviewSummaryComments}, data-recom-salary=${c.recommendedSalary != null ? #numbers.formatDecimal(c.recommendedSalary, 0, 0) : ''}, data-hm=${c.hiringManagerName}"
                     th:text="${c.candidateName} + ' - ' + ${c.appliedPosition} + ' (' + ${c.departmentName} + ')'">
               Nguyễn Văn A - Backend Dev (Engineering)
             </option>
@@ -135,22 +135,30 @@
 
       <div class="grid-2-col">
         <div class="form-group">
-          <label class="form-label form-label--required" for="proposedSalary">Lương chính thức (VND/tháng)</label>
+          <div style="display: flex; align-items: center; justify-content: space-between; min-height: 32px; margin-bottom: 4px;">
+            <label class="form-label form-label--required" for="proposedSalary" style="margin-bottom: 0;">
+              Lương chính thức (VND/tháng)
+            </label>
+          </div>
           <input type="number" id="proposedSalary" th:field="*{proposedSalary}" class="form-input"
-                 placeholder="VD: 25000000" min="1" step="100000"
+                 placeholder="VD: 25000000" min="0" step="any"
                  oninput="autoCalculateProbationSalary()" required>
           <p class="form-error" th:if="${#fields.hasErrors('proposedSalary')}" th:errors="*{proposedSalary}"></p>
         </div>
 
         <div class="form-group">
-          <label class="form-label form-label--required" for="probationSalary">
-            Lương thử việc (VND/tháng)
-            <button type="button" class="btn btn--sm" style="margin-left: 8px;" onclick="autoCalculateProbationSalary(true)" title="Gợi ý mức sàn 85% theo quy định BR-OFF-01">
-              Gợi ý 85%
+          <div style="display: flex; align-items: center; justify-content: space-between; min-height: 32px; margin-bottom: 4px;">
+            <label class="form-label form-label--required" for="probationSalary" style="margin-bottom: 0;">
+              Lương thử việc (VND/tháng)
+            </label>
+            <button type="button" class="btn btn--sm" onclick="autoCalculateProbationSalary(true)"
+                    title="Gợi ý mức sàn 85% theo quy định BR-OFF-01"
+                    style="padding: 2px 10px; height: 28px; min-height: 28px; font-size: 12.5px; font-weight: 500; border-radius: var(--radius-sm);">
+              <i class="fa-solid fa-wand-magic-sparkles" style="margin-right: 4px;"></i> Gợi ý 85%
             </button>
-          </label>
+          </div>
           <input type="number" id="probationSalary" th:field="*{probationSalary}" class="form-input"
-                 placeholder="Tối thiểu 85% lương chính thức" min="1" step="100000"
+                 placeholder="Tối thiểu 85% lương chính thức" min="0" step="any"
                  oninput="validateProbationRuleUi()" required>
           <div id="probationRuleNotice" class="form-hint" style="color:var(--brand-dark); font-size:12px; margin-top:4px;">
             <i class="fa-solid fa-circle-check"></i> Tuân thủ quy định tối thiểu 85% lương chính thức.
