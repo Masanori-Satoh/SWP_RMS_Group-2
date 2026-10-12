@@ -1,0 +1,402 @@
+/* =============================================================================
+   TOPBAR.CSS — DNA topbar dùng chung
+   - Khối định danh người dùng + nút Đăng xuất: dùng cho topbar nội bộ
+     (workspace-header.html, nạp qua @import trong workspace.css) và topbar
+     công khai (fragments/layout/public-topbar.html).
+   - Khung topbar công khai .public-topbar: job-board, job-detail (layout/public).
+   ============================================================================= */
+
+@import url("fonts.css");
+
+/* Cỡ chữ & icon của topbar + sidebar ("chrome"): cộng thêm vào cỡ gốc.
+   Đổi một chỗ này để tăng/giảm toàn bộ topbar, sidebar, hộp thoại đăng xuất. Logo không bị ảnh hưởng. */
+:root {
+  --chrome-step: 1px;
+}
+
+/* Cầu nối token: trang landing (landing.css) tự định nghĩa lại --brand, --radius-md...
+   Gắn lại token chuẩn (giá trị lấy từ tokens.css) ngay trên topbar để topbar công khai
+   luôn khớp topbar nội bộ, bất kể trang chứa nó đổi token gì. Áp dụng cả cho logo (.wordmark)
+   vì logo còn xuất hiện ngoài topbar (vd footer landing). */
+.public-topbar,
+.wordmark {
+  --brand: #3e7157;
+  --brand-dark: #2e5a45;
+  --brand-soft: #e7f0e8;
+  --surface: #ffffff;
+  --ink: #252923;
+  --muted: #59635b;
+  --line: #d9ded7;
+  --focus: #a06325;
+  --error: #87372f;
+  --error-soft: #f7ece8;
+  --radius-md: 8px;
+  --topbar-h: 74px;
+  --btn-sm-h: 40px;
+  --s2: 8px;
+  --s3: 12px;
+  --s4: 16px;
+  --sans: 'Inter', 'Source Sans 3', 'Segoe UI', system-ui, -apple-system, sans-serif;
+  --serif: 'Lora', 'Times New Roman', Georgia, serif;
+  --transition: 0.18s cubic-bezier(0.4, 0, 0.2, 1);
+  font-family: var(--sans);
+}
+
+/* -----------------------------------------------------------------------------
+   1. Khối định danh người dùng (click về /profile)
+   ----------------------------------------------------------------------------- */
+.workspace-identity {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  padding: 6px 12px;
+  border-radius: var(--radius-md);
+  text-decoration: none;
+  color: inherit;
+  border: 1px solid transparent;
+  transition: var(--transition);
+}
+
+.workspace-identity:hover {
+  background: var(--brand-soft);
+  border-color: var(--line);
+}
+
+.workspace-avatar {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  object-fit: cover;
+  flex-shrink: 0;
+  border: 1.5px solid var(--brand);
+}
+
+.workspace-avatar-fallback {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: var(--brand-soft);
+  color: var(--brand-dark);
+  font-weight: 700;
+  font-size: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  border: 1.5px solid var(--line);
+  text-transform: uppercase;
+}
+
+.workspace-user-meta {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.3;
+  text-align: left;
+}
+
+.workspace-user-top {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.workspace-user-name {
+  font-weight: 700;
+  font-size: calc(16px + var(--chrome-step));
+  color: var(--ink);
+  white-space: nowrap;
+}
+
+.workspace-role-badge,
+.workspace-role {
+  font-size: calc(13px + var(--chrome-step));
+  font-weight: 600;
+  padding: 3px 10px;
+  border-radius: var(--radius-md);
+  background: var(--brand-soft);
+  color: var(--brand-dark);
+  border: 1px solid var(--line);
+  white-space: nowrap;
+}
+
+.workspace-user-email {
+  font-size: calc(13.5px + var(--chrome-step));
+  color: var(--muted);
+  white-space: nowrap;
+  max-width: 240px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* -----------------------------------------------------------------------------
+   2. Nút trên topbar: Đăng xuất (outline) + nút hành động topbar công khai
+   ----------------------------------------------------------------------------- */
+.workspace-logout-btn,
+.topbar-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: var(--btn-sm-h, 40px);
+  padding: 0 var(--s4, 16px);
+  border: 1px solid var(--brand);
+  border-radius: var(--radius-md);
+  background: transparent;
+  color: var(--brand);
+  font: inherit;
+  font-size: calc(14.5px + var(--chrome-step));
+  font-weight: 600;
+  line-height: 1.25;
+  text-decoration: none;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+.topbar-btn:hover {
+  background: var(--brand-soft);
+}
+
+.topbar-btn--primary {
+  background: var(--brand-dark);
+  border-color: var(--brand-dark);
+  color: var(--surface);
+}
+
+.topbar-btn--primary:hover {
+  background: var(--ink);
+  border-color: var(--ink);
+}
+
+.workspace-logout-btn:hover {
+  color: var(--error);
+  border-color: var(--error);
+  background: var(--error-soft);
+}
+
+.workspace-logout-btn:focus-visible,
+.topbar-btn:focus-visible,
+.workspace-identity:focus-visible,
+.public-topbar__link:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 2px;
+}
+
+/* -----------------------------------------------------------------------------
+   3. Góc phải dùng chung (fragments/layout/topbar-user :: actions)
+   ----------------------------------------------------------------------------- */
+.topbar-user {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+
+.topbar-user form {
+  margin: 0;
+}
+
+.topbar-btn--danger {
+  background: var(--error);
+  border-color: var(--error);
+  color: var(--surface);
+}
+
+.topbar-btn--danger:hover {
+  background: var(--ink);
+  border-color: var(--ink);
+}
+
+/* Hộp thoại xác nhận đăng xuất: một DNA cho mọi trang (nội bộ cũ không nạp components.css) */
+.topbar-dialog {
+  border: none;
+  border-radius: var(--radius-md);
+  padding: 0;
+  max-width: 440px;
+  width: calc(100% - 32px);
+  background: var(--surface);
+  box-shadow: 0 16px 36px rgba(17, 45, 35, 0.12);
+  color: var(--ink);
+  font-family: var(--sans);
+}
+
+.topbar-dialog::backdrop {
+  background: rgba(37, 41, 35, 0.45);
+}
+
+.topbar-dialog__content {
+  padding: 24px;
+}
+
+.topbar-dialog__title {
+  margin: 0 0 8px;
+  font: 600 calc(20px + var(--chrome-step))/1.3 var(--serif);
+  color: var(--ink);
+}
+
+.topbar-dialog__body {
+  margin: 0 0 24px;
+  color: var(--muted);
+  font-size: calc(15px + var(--chrome-step));
+  line-height: 1.5;
+}
+
+.topbar-dialog__actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+}
+
+/* -----------------------------------------------------------------------------
+   4. Logo — nguồn CSS duy nhất cho fragments/brand (topbar công khai, topbar nội bộ, sidebar)
+   ----------------------------------------------------------------------------- */
+.wordmark {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s2, 8px);
+  min-height: 44px;
+  color: var(--ink);
+  text-decoration: none;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.wordmark .brand-mark {
+  width: 28px;
+  height: 28px;
+  flex-shrink: 0;
+  color: var(--brand);
+}
+
+.wordmark .brand-name {
+  font: 600 25px/1 var(--serif);
+  color: var(--ink);
+}
+
+.wordmark .brand-sub {
+  border-left: 1px solid var(--line);
+  padding-left: var(--s3, 12px);
+  color: var(--muted);
+  font: 700 10px/1.2 var(--sans);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.wordmark:hover .brand-name {
+  color: var(--brand-dark);
+}
+
+/* -----------------------------------------------------------------------------
+   5. Khung topbar công khai — dãn hết chiều ngang, lề 32px như topbar nội bộ
+   ----------------------------------------------------------------------------- */
+.public-topbar {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background: var(--surface);
+  border-bottom: 1px solid var(--line);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
+  color: var(--ink);
+}
+
+.public-topbar__inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  min-height: var(--topbar-h);
+  padding: 0 32px;
+}
+
+.public-topbar__nav {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.public-topbar__link {
+  display: inline-flex;
+  align-items: center;
+  height: 40px;
+  padding: 0 14px;
+  border-radius: var(--radius-md);
+  font-size: calc(14.5px + var(--chrome-step));
+  font-weight: 600;
+  color: var(--muted);
+  text-decoration: none;
+  white-space: nowrap;
+  transition: var(--transition);
+}
+
+.public-topbar__link:hover {
+  background: var(--brand-soft);
+  color: var(--brand-dark);
+}
+
+/* Mục đang xem: sáng nền + gạch chân, cập nhật theo cuộn bởi public-topbar.js */
+.public-topbar__link.active,
+.public-topbar__link[aria-current] {
+  background: var(--brand-soft);
+  color: var(--brand-dark);
+  box-shadow: inset 0 -2px 0 var(--brand);
+}
+
+.public-topbar__actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+/* Thu dần khi màn hình hẹp: không bao giờ để chữ menu xuống dòng hay nút bị tràn.
+   Mốc đã kiểm tra với --chrome-step từ 1px đến 2px; tăng quá 2px thì kiểm tra lại các mốc này. */
+.workspace-logout-btn svg,
+.topbar-btn svg {
+  flex-shrink: 0;
+}
+
+@media (max-width: 1439px) {
+  .public-topbar .workspace-user-email {
+    display: none;
+  }
+}
+
+@media (max-width: 1365px) {
+  .public-topbar__link {
+    padding: 0 10px;
+  }
+
+  .public-topbar .workspace-role {
+    display: none;
+  }
+}
+
+/* Đã đăng nhập: góc phải rộng hơn nên ẩn menu sớm hơn */
+@media (max-width: 1299px) {
+  .public-topbar:has(.topbar-user) .public-topbar__nav {
+    display: none;
+  }
+}
+
+@media (max-width: 1149px) {
+  .public-topbar__nav {
+    display: none;
+  }
+}
+
+@media (max-width: 640px) {
+  .public-topbar__inner {
+    padding: 0 14px;
+    gap: 12px;
+  }
+
+  .public-topbar .brand-sub,
+  .public-topbar .workspace-user-meta,
+  .public-topbar__dashboard {
+    display: none;
+  }
+}
+
+/* Bấm menu cuộn tới section: chừa chỗ cho topbar sticky */
+:root:has(.public-topbar) {
+  scroll-padding-top: 74px;
+}

@@ -1,22 +1,26 @@
 <!doctype html>
-<html lang="en" xmlns:th="http://www.thymeleaf.org"><body>
-<header th:fragment="header(role, fullName)" class="workspace-header">
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<body>
+<!--
+    Topbar nội bộ. Góc phải lấy từ fragment dùng chung fragments/layout/topbar-user :: actions.
+    Dữ liệu người dùng ưu tiên model attribute topbarUser (TopbarUserAdvice, có ở mọi trang);
+    chuỗi biến cũ (dashboard, userProfile, ...) chỉ còn là phương án dự phòng.
+-->
+<header th:fragment="header(role, fullName)" class="workspace-header"
+        th:with="userRole=${topbarUser != null and topbarUser.roleName != null ? topbarUser.roleName : (role ?: (userRole ?: (dashboard != null ? dashboard.roleName : (userProfile != null ? userProfile.roleName : (viewerRole != null ? viewerRole : (currentUser != null and currentUser instanceof T(com.group2.rms.user.entity.User) ? currentUser.role.roleName : (authenticatedUser != null ? authenticatedUser.role.roleName : (session.user != null ? session.user.role : null))))))))},
+                 userName=${topbarUser != null ? topbarUser.fullName : (fullName ?: (userName ?: (dashboard != null ? dashboard.fullName : (userProfile != null ? userProfile.fullName : (viewerName != null ? viewerName : (currentUser != null and currentUser instanceof T(com.group2.rms.user.entity.User) ? currentUser.fullName : (authenticatedUser != null ? authenticatedUser.fullName : (session.user != null ? session.user.fullName : null))))))))},
+                 userAvatar=${topbarUser != null ? topbarUser.avatarUrl : (avatarUrl ?: (userProfile != null ? userProfile.avatarUrl : (authenticatedUser != null ? authenticatedUser.avatarUrl : (session.user != null ? session.user.avatarUrl : null))))},
+                 userEmail=${topbarUser != null ? topbarUser.email : (email ?: (userProfile != null ? userProfile.email : (dashboard != null and dashboard.candidate != null and dashboard.candidate.profile != null ? dashboard.candidate.profile.email : (authenticatedUser != null ? authenticatedUser.email : (session.user != null ? session.user.email : null)))))}">
   <a class="skip-link" href="#main">Chuyển đến nội dung chính</a>
   <a th:replace="~{fragments/brand :: wordmark('RMS')}"></a>
+
   <div class="workspace-header-actions">
-    <a th:href="@{/profile}" class="workspace-identity" style="text-decoration:none; color:inherit;"><strong th:if="${fullName != null}" th:text="${fullName}"></strong><span class="workspace-role" th:text="${role == 'Hiring Manager' ? 'Trưởng phòng tuyển dụng' : (role == 'HR' ? 'Nhân sự' : (role == 'HR Specialist' ? 'Chuyên viên Nhân sự' : (role == 'Director' ? 'Giám đốc' : (role == 'System Admin' ? 'Quản trị hệ thống' : (role == 'Interviewer' ? 'Người phỏng vấn' : (role == 'Candidate' ? 'Ứng viên' : role))))))}"></span></a>
-    <button class="btn btn-secondary workspace-menu" type="button" data-workspace-menu aria-controls="workspace-navigation" aria-expanded="true" hidden>Menu</button>
-    <form id="workspace-logout-form" th:action="@{/logout}" method="post">
-      <button class="text-action" type="button" onclick="document.getElementById('workspace-logout-dialog').showModal()">Đăng xuất</button>
-    </form>
-    <dialog id="workspace-logout-dialog" style="padding: 24px; border-radius: 8px; border: 1px solid var(--border-color, #e2e8f0); box-shadow: 0 4px 12px rgba(0,0,0,0.1); max-width: 400px; background: white;">
-      <h3 style="margin-top: 0; margin-bottom: 8px; font-size: 18px;">Xác nhận đăng xuất</h3>
-      <p style="color: var(--text-muted, #64748b); margin-bottom: 24px; font-size: 14px; font-weight: normal;">Bạn có chắc chắn muốn đăng xuất khỏi hệ thống?</p>
-      <div style="display: flex; gap: 12px; justify-content: flex-end;">
-        <button type="button" class="btn btn-secondary" onclick="document.getElementById('workspace-logout-dialog').close()">Hủy</button>
-        <button type="button" class="btn btn-danger" style="background: #ef4444; color: white; border: none; padding: 0.5rem 1rem; border-radius: 4px; cursor: pointer;" onclick="document.getElementById('workspace-logout-form').submit()">Đăng xuất</button>
-      </div>
-    </dialog>
+    <!-- Nút mở menu cho màn hình di động -->
+    <button class="btn btn--secondary workspace-menu" type="button" data-workspace-menu aria-controls="workspace-navigation" aria-expanded="true" hidden>Menu</button>
+
+    <!-- Avatar + Tên + Role + Email | Đăng xuất (dùng chung với topbar công khai) -->
+    <div th:replace="~{fragments/layout/topbar-user :: actions(${userName}, ${userEmail}, ${userRole}, ${userAvatar}, 'workspace')}"></div>
   </div>
 </header>
-</body></html>
+</body>
+</html>

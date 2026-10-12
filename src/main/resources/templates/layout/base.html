@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="vi"
+      th:lang="${pageLang ?: (dashboard != null and (dashboard.roleName != 'Candidate' and dashboard.roleName != 'System Admin') ? 'en' : 'vi')}"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="referrer" content="no-referrer">
+
+    <!-- CSRF Meta Tags for AJAX calls -->
+    <meta name="_csrf" th:content="${_csrf?.token}"/>
+    <meta name="_csrf_header" th:content="${_csrf?.headerName}"/>
+
+    <title layout:title-pattern="$CONTENT_TITLE">Mộc RMS</title>
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Cpath d='M15 27C8 23 6 13 11 7c4-5 11-4 16-3 0 9-3 18-12 23Z' fill='%233e7157'/%3E%3C/svg%3E">
+
+    <!-- CSS Cốt Lõi: Tokens, Global Reset, Components BEM -->
+    <link rel="stylesheet" th:href="@{/css/tokens.css}">
+    <link rel="stylesheet" th:href="@{/css/global.css}">
+    <link rel="stylesheet" th:href="@{/css/components.css}">
+
+    <!-- Slot nạp CSS riêng của từng trang/layout con -->
+    <th:block layout:fragment="styles"></th:block>
+</head>
+<body class="rms-app" th:classappend="${bodyClass ?: (dashboard != null and dashboard.roleName == 'Candidate' ? 'candidate-workspace' : '')}">
+    <a class="skip-link" href="#main">Chuyển đến nội dung chính</a>
+
+    <!-- Slot nội dung chính của Master Layout -->
+    <th:block layout:fragment="base-content">
+        <main id="main" layout:fragment="content"></main>
+    </th:block>
+
+    <!-- Script giao diện chung -->
+    <script defer th:src="@{/js/interface.js}"></script>
+
+    <!-- Slot nạp Script riêng của từng trang/layout con -->
+    <th:block layout:fragment="scripts"></th:block>
+</body>
+</html>

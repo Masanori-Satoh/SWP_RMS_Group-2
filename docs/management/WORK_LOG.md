@@ -6,6 +6,7 @@ Tài liệu này là lịch sử tóm tắt các thay đổi quan trọng và b�
 
 | Ngày | Tên công việc / Yêu cầu chính | Người thực hiện | Chi tiết thay đổi |
 | :--- | :--- | :--- | :--- |
+| **2026-10-11** | Kết quả phỏng vấn (5.1.28) & Pop-up phiếu đánh giá (5.1.29) | Đức | [Xem chi tiết](work_logs/2026-10-11-interview-result-evaluation.md) |
 | **2026-10-05** | Hoàn thiện Ràng buộc Lương, Single Active Offer (GBR-07) & Bộ Test Offer | HuyenPT | [Xem chi tiết](work_logs/2026-10-05-offer-flow-testing-and-bugfix.md) |
 | **2026-10-03** | Khắc phục Xung đột PR #7, #8, #10 & Nâng cấp Core | dunglt | [Xem chi tiết](work_logs/2026-10-03-dunglt-pr-unification-and-core-update.md) |
 | **2026-10-03** | Đồng bộ Main (PR7 & PR8) & Giải quyết Xung đột Kiến trúc | Đức | [Xem chi tiết](work_logs/2026-10-03-merge-main-resolve-conflicts.md) |

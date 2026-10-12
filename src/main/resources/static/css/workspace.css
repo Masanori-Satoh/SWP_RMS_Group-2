@@ -1,3 +1,5 @@
+@import url("topbar.css");
+
 :root {
   --sidebar-collapsed-w: 68px;
   --sidebar-expanded-w: 250px;
@@ -43,8 +45,8 @@ body.sidebar-pinned {
   align-items: center;
   justify-content: space-between;
   gap: var(--s6);
-  min-height: 64px;
-  padding: 0 28px;
+  min-height: var(--topbar-h, 74px);
+  padding: 0 32px;
   border-bottom: 1px solid var(--line);
   background: var(--surface);
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
@@ -69,21 +71,7 @@ body.sidebar-pinned {
   margin: 0;
 }
 
-.workspace-identity {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--s2) var(--s4);
-  font-size: 14px;
-}
-
-.workspace-identity strong {
-  font-weight: 600;
-  overflow-wrap: anywhere;
-}
-
-.workspace-role {
-  color: var(--muted);
-}
+/* Khối định danh người dùng + nút Đăng xuất: xem topbar.css (dùng chung với topbar công khai) */
 
 /* 2. Thanh điều hướng Sidebar đa trạng thái */
 .workspace-sidebar {
@@ -112,81 +100,50 @@ body.sidebar-pinned {
   box-shadow: 4px 0 24px rgba(0, 0, 0, 0.09);
 }
 
-/* Đầu thanh Sidebar (Logo thương hiệu & Nút Ghim) */
+/* Đầu thanh Sidebar: cùng chiều cao với topbar, logo dùng chung fragments/brand :: wordmarkLink */
 .sidebar-top-bar {
+  position: relative;
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  height: 64px;
-  min-height: 64px;
-  padding: 0 12px;
+  height: var(--topbar-h, 74px);
+  min-height: var(--topbar-h, 74px);
+  padding: 0 20px;
   border-bottom: 1px solid var(--sidebar-border);
-  gap: 8px;
   overflow: hidden;
   width: 100%;
   box-sizing: border-box;
 }
 
-.sidebar-brand {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  text-decoration: none;
+/* Dấu lá 28px + padding 20px: nằm giữa sidebar thu gọn 68px */
+.sidebar-top-bar .wordmark {
   min-width: 0;
-  flex: 1;
-}
-
-.brand-icon-box {
-  width: 44px;
-  height: 44px;
-  min-width: 44px;
-  border-radius: 10px;
-  background: var(--sidebar-brand-soft);
-  color: var(--sidebar-brand);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: transform 0.2s ease;
-}
-
-.brand-icon {
-  width: 24px;
-  height: 24px;
-}
-
-.brand-text-box {
-  display: flex;
-  align-items: baseline;
-  gap: 4px;
   white-space: nowrap;
+}
+
+.sidebar-top-bar .brand-mark {
+  flex-shrink: 0;
+}
+
+.sidebar-top-bar .brand-name,
+.sidebar-top-bar .brand-sub {
   opacity: 0;
   transform: translateX(-8px);
   transition: opacity 0.2s ease, transform 0.2s ease;
 }
 
-.sidebar-pinned .brand-text-box,
-:root:not(.sidebar-pinned) body:not(.sidebar-pinned) .workspace-sidebar:hover .brand-text-box {
+.sidebar-pinned .sidebar-top-bar .brand-name,
+.sidebar-pinned .sidebar-top-bar .brand-sub,
+:root:not(.sidebar-pinned) body:not(.sidebar-pinned) .workspace-sidebar:hover .sidebar-top-bar .brand-name,
+:root:not(.sidebar-pinned) body:not(.sidebar-pinned) .workspace-sidebar:hover .sidebar-top-bar .brand-sub {
   opacity: 1;
   transform: translateX(0);
 }
 
-.sidebar-brand .brand-name {
-  font-family: var(--font-display, inherit);
-  font-size: 20px;
-  font-weight: 800;
-  color: var(--sidebar-brand);
-  letter-spacing: -0.02em;
-}
-
-.sidebar-brand .brand-badge {
-  font-size: 11.5px;
-  font-weight: 700;
-  color: #64748b;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-}
-
 .sidebar-pin-btn {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
   width: 32px;
   height: 32px;
   min-width: 32px;
@@ -210,23 +167,46 @@ body.sidebar-pinned {
 }
 
 .sidebar-pin-btn:hover {
-  background: #f1f5f9;
+  background: var(--sidebar-brand-soft);
   color: var(--sidebar-brand);
-  border-color: #e2e8f0;
+  border-color: var(--sidebar-border);
 }
 
-.sidebar-pin-btn .pin-icon-pinned {
+/* Icon đinh ghim: chưa ghim (viền) / đã ghim (tô đặc, nền xanh nhạt) / đã ghim + rê chuột (bỏ ghim) */
+.sidebar-pin-btn svg {
   display: none;
 }
+
 .sidebar-pin-btn .pin-icon-unpinned {
   display: block;
+  transform: rotate(45deg);
+}
+
+.sidebar-pinned .sidebar-pin-btn {
+  color: var(--sidebar-brand);
+  background: var(--sidebar-brand-soft);
+  border-color: var(--sidebar-border);
+}
+
+.sidebar-pinned .sidebar-pin-btn .pin-icon-unpinned {
+  display: none;
 }
 
 .sidebar-pinned .sidebar-pin-btn .pin-icon-pinned {
   display: block;
 }
-.sidebar-pinned .sidebar-pin-btn .pin-icon-unpinned {
+
+.sidebar-pinned .sidebar-pin-btn:hover .pin-icon-pinned {
   display: none;
+}
+
+.sidebar-pinned .sidebar-pin-btn:hover .pin-icon-unpin {
+  display: block;
+}
+
+.sidebar-pin-btn svg {
+  width: calc(16px + var(--chrome-step));
+  height: calc(16px + var(--chrome-step));
 }
 
 /* Danh sách Menu */
@@ -256,7 +236,7 @@ body.sidebar-pinned {
   border-radius: 10px;
   text-decoration: none;
   color: var(--sidebar-text);
-  font-size: 14px;
+  font-size: calc(14px + var(--chrome-step));
   font-weight: 500;
   position: relative;
   transition: all 0.15s ease;
@@ -269,9 +249,9 @@ body.sidebar-pinned {
 }
 
 .sidebar-nav-link .nav-icon-wrapper {
-  width: 28px;
-  height: 28px;
-  min-width: 28px;
+  width: calc(28px + var(--chrome-step));
+  height: calc(28px + var(--chrome-step));
+  min-width: calc(28px + var(--chrome-step));
   display: flex;
   align-items: center;
   justify-content: center;
@@ -283,13 +263,18 @@ body.sidebar-pinned {
   color: var(--sidebar-brand);
 }
 
+.sidebar-nav-link .nav-icon-wrapper svg {
+  width: calc(20px + var(--chrome-step));
+  height: calc(20px + var(--chrome-step));
+}
+
 .sidebar-nav-link .nav-label-text {
   opacity: 0;
   transform: translateX(-6px);
   transition: opacity 0.2s ease, transform 0.2s ease;
   overflow: hidden;
   text-overflow: ellipsis;
-  font-size: 14px;
+  font-size: calc(14px + var(--chrome-step));
 }
 
 .sidebar-pinned .sidebar-nav-link .nav-label-text,
@@ -321,7 +306,7 @@ body:not(.sidebar-pinned) .workspace-sidebar:not(:hover) .sidebar-nav-link[data-
   transform: translateY(-50%) translateX(-4px);
   background: #0f172a;
   color: #ffffff;
-  font-size: 12.5px;
+  font-size: calc(12.5px + var(--chrome-step));
   font-weight: 500;
   padding: 6px 12px;
   border-radius: 6px;
@@ -484,10 +469,19 @@ body:not(.sidebar-pinned) .workspace-sidebar:not(:hover) .sidebar-nav-link[data-
 }
 
 @media (max-width:1024px) {
-  .rms-app .page-wrapper { grid-template-columns:184px minmax(0,1fr); }
-  .rms-app .page-content { padding:var(--s6); }
-  .workspace-header { padding-inline:var(--s6); }
+  .rms-app .page-wrapper {
+    grid-template-columns: 184px minmax(0, 1fr);
+  }
+
+  .rms-app .page-content {
+    padding: var(--s6);
+  }
+
+  .workspace-header {
+    padding-inline: var(--s6);
+  }
 }
+
 @media (max-width:768px) {
   .rms-app .page-wrapper {
     flex-direction: column !important;
@@ -505,7 +499,8 @@ body:not(.sidebar-pinned) .workspace-sidebar:not(:hover) .sidebar-nav-link[data-
     border-bottom: 1px solid var(--sidebar-border) !important;
   }
 
-  .workspace-sidebar .brand-text-box,
+  .workspace-sidebar .sidebar-top-bar .brand-name,
+  .workspace-sidebar .sidebar-top-bar .brand-sub,
   .workspace-sidebar .sidebar-nav-link .nav-label-text {
     opacity: 1 !important;
     transform: none !important;
@@ -564,4 +559,3 @@ body:not(.sidebar-pinned) .workspace-sidebar:not(:hover) .sidebar-nav-link[data-
     align-items: start;
   }
 }
-.workspace-nav-group { display:block; grid-column:1 / -1; margin-top:var(--s4); padding:var(--s2) var(--s3); color:var(--muted); font-size:14px; font-weight:600; }
