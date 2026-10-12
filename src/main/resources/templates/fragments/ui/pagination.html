@@ -11,7 +11,7 @@
 
 <!-- 1. Adapter chính nhận đối tượng Spring Data Page<T> -->
 <nav th:fragment="paged(page)"
-     th:if="${page != null and page.totalPages > 1}"
+     th:if="${page != null and page.totalPages >= 1 and page.totalElements > 0}"
      class="pagination-wrapper"
      aria-label="Điều hướng phân trang">
 
@@ -83,7 +83,7 @@
 
 <!-- 2. Overload hỗ trợ truyền thêm baseUrl (tương thích các view cũ) -->
 <nav th:fragment="pagedWithUrl(page, baseUrl)"
-     th:if="${page != null and page.totalPages > 1}"
+     th:if="${page != null and page.totalPages >= 1 and page.totalElements > 0}"
      class="pagination-wrapper"
      aria-label="Điều hướng phân trang">
 
