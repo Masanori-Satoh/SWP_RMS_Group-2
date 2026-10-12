@@ -1508,15 +1508,36 @@ function clearDirectorSearch() {
 
 let currentDirectorOfferId = null;
 
-function openDirectorDrawer(id) {
+function openDirectorDetailModal(id) {
     currentDirectorOfferId = id;
     
-    // Show overlay and drawer (loading state)
-    document.getElementById('directorDrawerOverlay').classList.add('show');
-    document.getElementById('directorDrawer').classList.add('open');
-    document.body.style.overflow = 'hidden';
+    // Show modal
+    const modal = document.getElementById('directorDetailModal');
+    if (modal) {
+        modal.classList.add('active');
+        modal.style.display = 'flex';
+        document.body.style.overflow = 'hidden';
+    }
     
-    document.getElementById('drawerOfferId').innerText = id + ' (Đang tải...)';
+    const offerIdEl = document.getElementById('directorOfferId');
+    if (offerIdEl) offerIdEl.innerText = id + ' (Đang tải...)';
+    
+    const statusBadgeEl = document.getElementById('directorStatusBadge');
+    if (statusBadgeEl) statusBadgeEl.innerHTML = '<span class="status-badge" style="background:var(--page); border-color:var(--line);"><i class="fa-solid fa-spinner fa-spin"></i> Đang tải...</span>';
+
+    // Hide action and history areas while loading
+    const actionArea = document.getElementById('directorActionArea');
+    const pendingBtns = document.getElementById('directorPendingButtons');
+    const historySec = document.getElementById('directorHistorySection');
+    if (actionArea) actionArea.style.display = 'none';
+    if (pendingBtns) pendingBtns.style.display = 'none';
+    if (historySec) historySec.style.display = 'none';
+
+    // Reset reject reason
+    const reasonInput = document.getElementById('rejectReasonInput');
+    const reasonCount = document.getElementById('rejectReasonCount');
+    if (reasonInput) reasonInput.value = '';
+    if (reasonCount) reasonCount.innerText = '0';
     
     fetch('/offers/' + id, {
         headers: {
@@ -1527,109 +1548,193 @@ function openDirectorDrawer(id) {
         .then(data => {
             if (data.success) {
                 const detail = data.data;
-                document.getElementById('drawerOfferId').innerText = detail.offerId;
+                if (offerIdEl) offerIdEl.innerText = detail.offerId;
                 
                 // Status badge
                 let statusHtml = '';
                 if (detail.offerStatus === 'Pending_Director') {
                     statusHtml = '<span class="status-badge status-pending"><i class="fa-solid fa-hourglass-half"></i> Chờ duyệt Director</span>';
-                    document.getElementById('drawerActionArea').style.display = 'block';
                 } else if (detail.offerStatus === 'Director_Approved' || detail.offerStatus === 'Approved') {
                     statusHtml = '<span class="status-badge status-approved"><i class="fa-solid fa-check"></i> Đã duyệt</span>';
-                    document.getElementById('drawerActionArea').style.display = 'none';
                 } else if (detail.offerStatus === 'Director_Rejected' || detail.offerStatus === 'Rejected') {
                     statusHtml = '<span class="status-badge status-rejected"><i class="fa-solid fa-xmark"></i> Bị từ chối</span>';
-                    document.getElementById('drawerActionArea').style.display = 'none';
                 } else if (detail.offerStatus === 'Sent_Candidate') {
                     statusHtml = '<span class="status-badge status-sent"><i class="fa-solid fa-paper-plane"></i> Đã gửi ứng viên</span>';
-                    document.getElementById('drawerActionArea').style.display = 'none';
                 } else if (detail.offerStatus === 'Accepted') {
                     statusHtml = '<span class="status-badge status-accepted"><i class="fa-solid fa-circle-check"></i> Ứng viên đồng ý</span>';
-                    document.getElementById('drawerActionArea').style.display = 'none';
                 } else if (detail.offerStatus === 'Declined') {
                     statusHtml = '<span class="status-badge status-rejected"><i class="fa-solid fa-circle-xmark"></i> Ứng viên từ chối</span>';
-                    document.getElementById('drawerActionArea').style.display = 'none';
                 } else {
                     statusHtml = `<span class="status-badge status-draft"><i class="fa-solid fa-file-lines"></i> ${detail.offerStatus || 'Không xác định'}</span>`;
-                    document.getElementById('drawerActionArea').style.display = 'none';
                 }
-                document.getElementById('drawerStatusBadge').innerHTML = statusHtml;
+                if (statusBadgeEl) statusBadgeEl.innerHTML = statusHtml;
                 
-                // Candidate and interview information
-                const setDrawerText = (id, value, fallback = 'N/A') => {
-                    const element = document.getElementById(id);
+                // Helper formatters
+                const setModalText = (elId, value, fallback = 'N/A') => {
+                    const element = document.getElementById(elId);
                     if (element) element.textContent = value || fallback;
                 };
-                const formatDrawerCurrency = (value, fallback = 'N/A') => {
+                const formatVnd = (num) => {
+                    return num != null ? Number(num).toLocaleString('vi-VN') : '0';
+                };
+                const formatCurrency = (value, fallback = 'N/A') => {
                     return value != null ? Number(value).toLocaleString('vi-VN') + ' VND' : fallback;
                 };
 
-                setDrawerText('drawerCandName', detail.candidateName);
-                setDrawerText('drawerCandEmail', detail.candidateEmail);
-                setDrawerText('drawerCandPhone', detail.candidatePhone);
-                setDrawerText('drawerCandAddress', detail.candidateAddress);
-                setDrawerText('drawerAppliedPosition', detail.appliedPosition);
-                setDrawerText('drawerDepartment', detail.departmentName);
+                // Section 1: Candidate information
+                setModalText('directorCandName', detail.candidateName);
+                setModalText('directorCandEmail', detail.candidateEmail);
+                setModalText('directorCandPhone', detail.candidatePhone);
+                setModalText('directorCandAddress', detail.candidateAddress);
+                setModalText('directorAppliedPosition', detail.appliedPosition);
+                setModalText('directorDepartment', detail.departmentName);
 
-                const cvLink = document.getElementById('drawerCvLink');
-                const cvEmpty = document.getElementById('drawerCvEmpty');
+                const cvLink = document.getElementById('directorCvLink');
+                const cvEmpty = document.getElementById('directorCvEmpty');
                 if (cvLink && cvEmpty) {
                     const cvUrl = typeof detail.appliedCvUrl === 'string' ? detail.appliedCvUrl.trim() : '';
                     const isSafeCvUrl = /^(https?:\/\/|\/)/i.test(cvUrl);
-                    cvLink.style.display = isSafeCvUrl ? 'inline' : 'none';
+                    cvLink.style.display = isSafeCvUrl ? 'inline-flex' : 'none';
                     cvLink.href = isSafeCvUrl ? cvUrl : '#';
                     cvEmpty.style.display = isSafeCvUrl ? 'none' : 'inline';
                 }
 
-                setDrawerText('drawerFinalDecision', detail.finalDecision, 'Chưa có kết quả');
-                setDrawerText('drawerRecommendedSalary', formatDrawerCurrency(detail.recommendedSalary, 'Chưa có gợi ý'));
-                setDrawerText('drawerHiringManager', detail.hiringManagerName);
-                setDrawerText('drawerInterviewComments', detail.interviewSummaryComments, 'Không có ghi chú thêm.');
+                // Section 2: Interview Results
+                setModalText('directorFinalDecision', detail.finalDecision, 'Chưa có kết quả');
+                setModalText('directorRecommendedSalary', formatCurrency(detail.recommendedSalary, 'Chưa có gợi ý'));
+                setModalText('directorHiringManager', detail.hiringManagerName);
+                setModalText('directorInterviewComments', detail.interviewSummaryComments, 'Không có ghi chú thêm.');
                 
-                // Offer Info
-                document.getElementById('drawerPosition').innerText = detail.offeredPositionTitle || 'N/A';
+                // Section 3: Compensation & Offer Details
+                setModalText('directorPosition', detail.offeredPositionTitle, 'N/A');
                 
-                // Use formatCurrency from existing functions if available, or basic format
-                const formatVnd = (num) => {
-                    return num != null ? Number(num).toLocaleString('vi-VN') : '0';
-                };
+                const salaryEl = document.getElementById('directorSalary');
+                if (salaryEl) salaryEl.innerText = formatVnd(detail.proposedSalary) + ' VND';
                 
-                document.getElementById('drawerSalary').innerText = formatVnd(detail.proposedSalary) + ' VND';
-                document.getElementById('drawerProbationSalary').innerText = formatVnd(detail.probationSalary) + ' VND';
-                document.getElementById('drawerProbationDays').innerText = (detail.probationDays || 60) + ' ngày';
-                document.getElementById('drawerStartDate').innerText = detail.expectedStartDate || 'N/A';
-                document.getElementById('drawerLocation').innerText = detail.workLocation || 'N/A';
-                document.getElementById('drawerBenefits').innerText = detail.benefitsPackage || 'Không có';
+                const probationSalaryEl = document.getElementById('directorProbationSalary');
+                if (probationSalaryEl) probationSalaryEl.innerText = formatVnd(detail.probationSalary) + ' VND';
+                
+                const pctEl = document.getElementById('directorProbationPct');
+                if (pctEl) {
+                    if (detail.proposedSalary && detail.probationSalary && Number(detail.proposedSalary) > 0) {
+                        const pct = Math.round((Number(detail.probationSalary) * 100) / Number(detail.proposedSalary));
+                        pctEl.innerText = pct + '%';
+                        pctEl.style.display = 'inline-block';
+                    } else {
+                        pctEl.innerText = '85%';
+                    }
+                }
+                
+                const probationDaysEl = document.getElementById('directorProbationDays');
+                if (probationDaysEl) probationDaysEl.innerText = (detail.probationDays || 60) + ' ngày';
+                
+                const startDateEl = document.getElementById('directorStartDate');
+                if (startDateEl) startDateEl.innerText = detail.expectedStartDate ? formatOfferDate(detail.expectedStartDate) : 'N/A';
+                
+                const locationEl = document.getElementById('directorLocation');
+                if (locationEl) locationEl.innerText = detail.workLocation || 'Trụ sở chính Mộc RMS';
+                
+                const benefitsEl = document.getElementById('directorBenefits');
+                if (benefitsEl) benefitsEl.innerText = detail.benefitsPackage || 'Theo quy chế đãi ngộ chung của công ty.';
                 
                 // HR Note
                 const hrName = detail.proposedByName || 'HR';
-                const createdDate = detail.createdAt ? new Date(detail.createdAt).toLocaleDateString('vi-VN') : 'N/A';
-                const hrNote = document.getElementById('drawerHrNote');
+                const createdDate = detail.createdAt ? (typeof formatOfferDateTime === 'function' ? formatOfferDateTime(detail.createdAt) : new Date(detail.createdAt).toLocaleDateString('vi-VN')) : 'N/A';
+                const hrNote = document.getElementById('directorHrNote');
                 if (hrNote) {
                     hrNote.textContent = `Người tạo: ${hrName}\nNgày tạo: ${createdDate}`;
                 }
-                
-                // Reset reason
-                document.getElementById('rejectReasonInput').value = '';
-                document.getElementById('rejectReasonCount').innerText = '0';
+
+                // Section 4 & 5: Conditional Actions vs History
+                if (detail.offerStatus === 'Pending_Director') {
+                    if (actionArea) actionArea.style.display = 'block';
+                    if (pendingBtns) pendingBtns.style.display = 'inline-flex';
+                    if (historySec) historySec.style.display = 'none';
+                } else {
+                    if (actionArea) actionArea.style.display = 'none';
+                    if (pendingBtns) pendingBtns.style.display = 'none';
+                    if (historySec) historySec.style.display = 'block';
+
+                    // Render approval history timeline
+                    const timelineEl = document.getElementById('directorApprovalTimeline');
+                    if (timelineEl) {
+                        if (detail.approvalHistory && detail.approvalHistory.length > 0) {
+                            let approvalHtml = '<div class="history-timeline">';
+                            detail.approvalHistory.forEach(a => {
+                                const isApproved = a.status === 'Approved' || a.status === 'Director_Approved';
+                                const dotClass = isApproved ? 'dot-approved' : 'dot-rejected';
+                                const statusColor = isApproved ? 'var(--brand-dark)' : 'var(--error)';
+                                const director = a.directorName || 'Giám đốc';
+                                const statusText = a.status || '';
+                                const timeText = a.approvedAt ? (typeof formatOfferDateTime === 'function' ? formatOfferDateTime(a.approvedAt) : new Date(a.approvedAt).toLocaleString('vi-VN')) : 'N/A';
+                                const commentsText = a.directorComments || 'Không có ghi chú thêm.';
+
+                                approvalHtml += `
+                                    <div class="timeline-item">
+                                        <div class="timeline-dot ${dotClass}"></div>
+                                        <div class="timeline-header">
+                                            <span>${escapeOfferHtml(director)}</span> - 
+                                            <span style="font-weight:700; color:${statusColor};">${escapeOfferHtml(statusText)}</span>
+                                        </div>
+                                        <div class="timeline-time">${timeText}</div>
+                                        <div class="timeline-content">${escapeOfferHtml(commentsText)}</div>
+                                    </div>
+                                `;
+                            });
+                            approvalHtml += '</div>';
+                            timelineEl.innerHTML = approvalHtml;
+                        } else {
+                            timelineEl.innerHTML = `
+                                <div style="color:var(--muted); font-size:13.5px; padding: 12px 0;">
+                                    <i class="fa-regular fa-clock"></i> Không có lịch sử phê duyệt chi tiết.
+                                </div>
+                            `;
+                        }
+                    }
+                }
             } else {
                 Swal.fire('Lỗi', data.message || 'Không thể lấy thông tin chi tiết.', 'error');
-                closeDirectorDrawer();
+                closeDirectorDetailModal();
             }
         })
         .catch(err => {
             console.error(err);
             Swal.fire('Lỗi', 'Đã xảy ra lỗi khi kết nối server.', 'error');
-            closeDirectorDrawer();
+            closeDirectorDetailModal();
         });
 }
 
-function closeDirectorDrawer() {
-    document.getElementById('directorDrawerOverlay').classList.remove('show');
-    document.getElementById('directorDrawer').classList.remove('open');
+function closeDirectorDetailModal() {
+    const modal = document.getElementById('directorDetailModal');
+    if (modal) {
+        modal.classList.remove('active');
+        modal.style.display = 'none';
+    }
     document.body.style.overflow = '';
     currentDirectorOfferId = null;
 }
+
+function handleDirectorModalBackdropClick(event) {
+    if (event.target && event.target.id === 'directorDetailModal') {
+        closeDirectorDetailModal();
+    }
+}
+
+document.addEventListener('keydown', function(event) {
+    if (event.key === 'Escape') {
+        const directorModal = document.getElementById('directorDetailModal');
+        if (directorModal && (directorModal.classList.contains('active') || directorModal.style.display === 'flex')) {
+            closeDirectorDetailModal();
+        }
+    }
+});
+
+// Backwards compatibility alias & global exports
+window.openDirectorDrawer = openDirectorDetailModal;
+window.closeDirectorDrawer = closeDirectorDetailModal;
+window.openDirectorDetailModal = openDirectorDetailModal;
+window.closeDirectorDetailModal = closeDirectorDetailModal;
+window.handleDirectorModalBackdropClick = handleDirectorModalBackdropClick;
 
 function updateRejectReasonCounter(el) {
     const len = el.value.length;

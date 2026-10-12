@@ -112,9 +112,9 @@
                                 </td>
                             </tr>
                             <tr th:each="o : ${offers}">
-                                <td><a href="javascript:void(0)" th:onclick="'openDirectorDrawer(' + ${o.offerId} + ')'" class="offer-id-link" th:text="${o.offerId}">1</a></td>
+                                <td><a href="javascript:void(0)" th:onclick="'openDirectorDetailModal(' + ${o.offerId} + ')'" class="offer-id-link" th:text="${o.offerId}">1</a></td>
                                 <td>
-                                    <a href="javascript:void(0)" th:onclick="'openDirectorDrawer(' + ${o.offerId} + ')'" style="text-decoration:none; color:inherit;">
+                                    <a href="javascript:void(0)" th:onclick="'openDirectorDetailModal(' + ${o.offerId} + ')'" style="text-decoration:none; color:inherit;">
                                         <div class="cand-name-cell" th:text="${o.candidateName != null ? o.candidateName : 'Ứng viên'}">Nguyễn Văn A</div>
                                     </a>
                                     <div class="cand-email-sub" th:text="${o.candidateEmail != null ? o.candidateEmail : 'N/A'}">a.nguyen@email.com</div>
@@ -161,7 +161,7 @@
                                     <div class="cand-email-sub">(HR)</div>
                                 </td>
                                 <td style="text-align: right;">
-                                    <button type="button" th:onclick="'openDirectorDrawer(' + ${o.offerId} + ')'" class="btn-icon btn-icon-primary" title="Xem chi tiết">
+                                    <button type="button" th:onclick="'openDirectorDetailModal(' + ${o.offerId} + ')'" class="btn-icon btn-icon-primary" title="Xem chi tiết">
                                         <i class="fa-solid fa-eye"></i>
                                     </button>
                                 </td>
@@ -177,110 +177,160 @@
     </div>
 </div>
 
-<!-- DIRECTOR DRAWER -->
-<div id="directorDrawerOverlay" class="drawer-overlay" onclick="closeDirectorDrawer()"></div>
-<div id="directorDrawer" class="director-drawer">
-    <div class="drawer-header">
-        <div class="drawer-title-group">
-            <h2 class="drawer-title">Chi tiết đề xuất</h2>
-            <div class="drawer-subtitle">Mã Offer #<span id="drawerOfferId"></span></div>
+<!-- ===========================================================================
+     DIRECTOR DETAIL MODAL (Pop-up Centered Modal View Detail & Approval)
+     =========================================================================== -->
+<div class="modal-overlay" id="directorDetailModal" style="display: none;" onclick="handleDirectorModalBackdropClick(event)">
+    <div class="modal-box modal-xl" onclick="event.stopPropagation()">
+        <div class="modal-header">
+            <div style="display: flex; align-items: center; gap: 10px;">
+                <i class="fa-solid fa-file-lines" style="color: var(--brand-dark);"></i>
+                <span>Chi tiết đề xuất #<span id="directorOfferId"></span></span>
+            </div>
+            <div style="display: flex; align-items: center; gap: 12px;">
+                <span id="directorStatusBadge"></span>
+                <button type="button" class="btn-icon" onclick="closeDirectorDetailModal()" title="Đóng">✕</button>
+            </div>
         </div>
-        <div class="drawer-actions">
-            <span id="drawerStatusBadge"></span>
-            <button class="btn-icon" onclick="closeDirectorDrawer()"><i class="fa-solid fa-xmark"></i></button>
-        </div>
-    </div>
-    
-    <div class="drawer-body">
-        <div class="drawer-section">
-            <div class="drawer-section-title"><i class="fa-solid fa-user"></i> Thông tin ứng viên</div>
-            <div class="drawer-info-grid">
-                <div class="info-label">Họ và tên</div>
-                <div class="info-value" id="drawerCandName"></div>
-                
-                <div class="info-label">Email</div>
-                <div class="info-value" id="drawerCandEmail"></div>
-                
-                <div class="info-label">Số điện thoại</div>
-                <div class="info-value" id="drawerCandPhone"></div>
+        
+        <div class="modal-body" id="directorModalBody">
+            <!-- Section 1: Thông tin ứng viên -->
+            <div class="detail-section">
+                <div class="section-title">
+                    <i class="fa-solid fa-user"></i> 1. Thông tin ứng viên
+                </div>
+                <div class="detail-grid-3">
+                    <div>
+                        <div class="detail-item-label">Họ và tên</div>
+                        <div class="detail-item-value" id="directorCandName" style="font-weight: 700;">-</div>
+                    </div>
+                    <div>
+                        <div class="detail-item-label">Email liên hệ</div>
+                        <div class="detail-item-value" id="directorCandEmail">-</div>
+                    </div>
+                    <div>
+                        <div class="detail-item-label">Số điện thoại</div>
+                        <div class="detail-item-value" id="directorCandPhone">-</div>
+                    </div>
+                    <div>
+                        <div class="detail-item-label">Vị trí ứng tuyển</div>
+                        <div class="detail-item-value" id="directorAppliedPosition">-</div>
+                    </div>
+                    <div>
+                        <div class="detail-item-label">Phòng ban</div>
+                        <div class="detail-item-value" id="directorDepartment">-</div>
+                    </div>
+                    <div>
+                        <div class="detail-item-label">Hồ sơ CV</div>
+                        <div class="detail-item-value">
+                            <a id="directorCvLink" href="#" target="_blank" rel="noopener noreferrer" style="display:none; color:var(--brand-dark); font-weight:600;">
+                                <i class="fa-solid fa-arrow-up-right-from-square"></i> Xem CV
+                            </a>
+                            <span id="directorCvEmpty" style="color:var(--muted);">-</span>
+                        </div>
+                    </div>
+                </div>
+                <div style="margin-top: 10px; padding-top: 10px; border-top: 1px dashed var(--line);">
+                    <div class="detail-item-label">Địa chỉ liên hệ</div>
+                    <div class="detail-item-value" id="directorCandAddress">-</div>
+                </div>
+            </div>
 
-                <div class="info-label">Địa chỉ</div>
-                <div class="info-value" id="drawerCandAddress"></div>
+            <!-- Section 2: Kết quả phỏng vấn -->
+            <div class="detail-section">
+                <div class="section-title">
+                    <i class="fa-solid fa-comments"></i> 2. Kết quả phỏng vấn của Hội đồng
+                </div>
+                <div class="detail-grid-3">
+                    <div>
+                        <div class="detail-item-label">Kết quả hội đồng</div>
+                        <div class="detail-item-value" id="directorFinalDecision" style="color:var(--brand-dark); font-weight: 700;">-</div>
+                    </div>
+                    <div>
+                        <div class="detail-item-label">Lương khuyến nghị từ HM</div>
+                        <div class="detail-item-value" id="directorRecommendedSalary" style="color:var(--brand-dark); font-weight: 700;">-</div>
+                    </div>
+                    <div>
+                        <div class="detail-item-label">Hiring Manager phụ trách</div>
+                        <div class="detail-item-value" id="directorHiringManager">-</div>
+                    </div>
+                </div>
+                <div style="margin-top: 10px; padding-top: 10px; border-top: 1px dashed var(--line);">
+                    <div class="detail-item-label">Nhận xét phỏng vấn</div>
+                    <div class="detail-item-value" id="directorInterviewComments" style="font-style: italic; color: var(--muted); margin-top: 2px;">-</div>
+                </div>
+            </div>
 
-                <div class="info-label">Vị trí ứng tuyển</div>
-                <div class="info-value" id="drawerAppliedPosition"></div>
+            <!-- Section 3: Thông tin đãi ngộ & điều khoản Offer -->
+            <div class="detail-section">
+                <div class="section-title">
+                    <i class="fa-solid fa-coins"></i> 3. Thông tin đãi ngộ & Điều khoản Offer
+                </div>
+                <div class="detail-grid-3">
+                    <div>
+                        <div class="detail-item-label">Chức danh đề xuất</div>
+                        <div class="detail-item-value" id="directorPosition" style="font-weight: 700;">-</div>
+                    </div>
+                    <div>
+                        <div class="detail-item-label">Lương chính thức (Gross)</div>
+                        <div class="detail-item-value salary-main" id="directorSalary" style="font-size: 15px; font-weight: 700;">-</div>
+                    </div>
+                    <div>
+                        <div class="detail-item-label">Lương thử việc (Gross)</div>
+                        <div class="detail-item-value" style="display:flex; align-items:center; gap:6px;">
+                            <span id="directorProbationSalary" style="font-weight: 700; color: var(--brand-dark); font-size: 15px;">-</span>
+                            <span id="directorProbationPct" class="salary-badge-pct">85%</span>
+                        </div>
+                    </div>
+                    <div>
+                        <div class="detail-item-label">Thời gian thử việc</div>
+                        <div class="detail-item-value" id="directorProbationDays">-</div>
+                    </div>
+                    <div>
+                        <div class="detail-item-label">Ngày bắt đầu dự kiến</div>
+                        <div class="detail-item-value" id="directorStartDate">-</div>
+                    </div>
+                    <div>
+                        <div class="detail-item-label">Địa điểm làm việc</div>
+                        <div class="detail-item-value" id="directorLocation">-</div>
+                    </div>
+                </div>
+                <div style="margin-top: 12px;">
+                    <div class="detail-item-label">Gói phúc lợi & Đãi ngộ đặc thù</div>
+                    <div class="detail-item-value" id="directorBenefits" style="background:var(--page); padding:10px 14px; border:1px solid var(--line); border-radius:6px; font-size:13.5px; margin-top:4px;">-</div>
+                </div>
+                <div style="margin-top: 10px; padding-top: 10px; border-top: 1px dashed var(--line);">
+                    <div class="detail-item-label">Ghi chú từ HR</div>
+                    <div class="detail-item-value" id="directorHrNote" style="white-space: pre-line; color: var(--muted);">-</div>
+                </div>
+            </div>
 
-                <div class="info-label">Phòng ban</div>
-                <div class="info-value" id="drawerDepartment"></div>
+            <!-- Section 4: Lịch sử phê duyệt (Hiển thị khi có dữ liệu duyệt) -->
+            <div class="detail-section" id="directorHistorySection" style="display: none; margin-bottom: 0;">
+                <div class="section-title">
+                    <i class="fa-solid fa-stamp"></i> 4. Lịch sử phê duyệt của Director
+                </div>
+                <div id="directorApprovalTimeline"></div>
+            </div>
 
-                <div class="info-label">CV ứng viên</div>
-                <div class="info-value">
-                    <a id="drawerCvLink" href="#" target="_blank" rel="noopener noreferrer" style="display:none; color:var(--brand-dark);">
-                        <i class="fa-solid fa-arrow-up-right-from-square"></i> Xem CV
-                    </a>
-                    <span id="drawerCvEmpty">N/A</span>
+            <!-- Section 5: Thao tác của Director (Chỉ hiển thị khi trạng thái là Pending_Director) -->
+            <div class="detail-section" id="directorActionArea" style="display: none; margin-bottom: 0; background: #fffcf0; border-color: #fde68a;">
+                <div class="section-title" style="color: #92400e;">
+                    <i class="fa-solid fa-check-circle"></i> 4. Quyết định của Director
+                </div>
+                <div class="form-group" style="margin-bottom: 8px;">
+                    <label for="rejectReasonInput" style="font-size: 13.5px; font-weight: 600; color: var(--ink);">
+                        Ý kiến phản hồi / Lý do từ chối <span style="color:var(--danger); font-size:12px;">(Bắt buộc nếu từ chối)</span>
+                    </label>
+                    <textarea id="rejectReasonInput" class="input-control" rows="3" placeholder="Nhập ý kiến duyệt hoặc lý do từ chối (bắt buộc nếu từ chối)..." oninput="updateRejectReasonCounter(this)" style="background:#fff;"></textarea>
+                    <div class="textarea-counter" style="text-align:right; font-size:12px; color:var(--muted); margin-top:4px;"><span id="rejectReasonCount">0</span>/500</div>
                 </div>
             </div>
         </div>
 
-        <div class="drawer-section">
-            <div class="drawer-section-title"><i class="fa-solid fa-comments"></i> Kết quả phỏng vấn</div>
-            <div class="drawer-info-grid">
-                <div class="info-label">Kết quả hội đồng</div>
-                <div class="info-value" id="drawerFinalDecision"></div>
-
-                <div class="info-label">Lương khuyến nghị</div>
-                <div class="info-value" id="drawerRecommendedSalary"></div>
-
-                <div class="info-label">Hiring Manager</div>
-                <div class="info-value" id="drawerHiringManager"></div>
-
-                <div class="info-label">Nhận xét phỏng vấn</div>
-                <div class="info-value" id="drawerInterviewComments"></div>
-            </div>
-        </div>
-
-        <div class="drawer-section">
-            <div class="drawer-section-title"><i class="fa-solid fa-file-contract"></i> Thông tin offer</div>
-            <div class="drawer-info-grid">
-                <div class="info-label">Vị trí đề xuất</div>
-                <div class="info-value" id="drawerPosition"></div>
-                
-                <div class="info-label">Lương chính thức</div>
-                <div class="info-value salary-main" id="drawerSalary"></div>
-                
-                <div class="info-label">Lương thử việc</div>
-                <div class="info-value" id="drawerProbationSalary"></div>
-                
-                <div class="info-label">Thời gian thử việc</div>
-                <div class="info-value" id="drawerProbationDays"></div>
-                
-                <div class="info-label">Ngày bắt đầu dự kiến</div>
-                <div class="info-value" id="drawerStartDate"></div>
-                
-                <div class="info-label">Địa điểm làm việc</div>
-                <div class="info-value" id="drawerLocation"></div>
-                
-                <div class="info-label">Phúc lợi</div>
-                <div class="info-value" id="drawerBenefits"></div>
-            </div>
-        </div>
-
-        <div class="drawer-section">
-            <div class="drawer-section-title"><i class="fa-solid fa-comment-dots"></i> Ghi chú từ HR</div>
-            <div class="drawer-hr-note" id="drawerHrNote"></div>
-        </div>
-
-        <!-- Approval Action Area (Only visible for PENDING tab) -->
-        <div class="drawer-section" id="drawerActionArea" style="display: none;">
-            <div class="drawer-section-title"><i class="fa-solid fa-check-circle"></i> Quyết định của Director</div>
-            <div class="reject-reason-group">
-                <label for="rejectReasonInput">Lý do từ chối <span style="color:var(--danger)">*</span></label>
-                <textarea id="rejectReasonInput" placeholder="Nhập lý do từ chối (bắt buộc nếu từ chối)..." oninput="updateRejectReasonCounter(this)"></textarea>
-                <div class="textarea-counter"><span id="rejectReasonCount">0</span>/500</div>
-            </div>
-            
-            <div class="drawer-action-buttons">
+        <div class="modal-footer" id="directorModalFooter">
+            <button type="button" class="btn btn-secondary" onclick="closeDirectorDetailModal()">Đóng</button>
+            <div id="directorPendingButtons" style="display:none; gap:10px; align-items:center;">
                 <button type="button" class="btn btn-outline-danger" onclick="submitDirectorReject()">
                     <i class="fa-regular fa-circle-xmark"></i> Từ chối
                 </button>
