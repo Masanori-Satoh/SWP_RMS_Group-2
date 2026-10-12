@@ -197,18 +197,18 @@ function handleSelectPassedCandidate(appId) {
     if (grpA) grpA.style.display = 'block';
 
     // Tự động gợi ý chức danh và mức lương nếu trường đang để trống
-    const titleInput = document.getElementById('createOfferedTitle') || document.getElementById('offeredPositionTitle');
+    const titleInput = document.getElementById('offeredPositionTitle');
     if (titleInput && (!titleInput.value.trim() || titleInput.value.trim() === '')) {
         titleInput.value = opt.getAttribute('data-pos') || '';
     }
 
-    const proposedInput = document.getElementById('createProposedSalary') || document.getElementById('proposedSalary');
+    const proposedInput = document.getElementById('proposedSalary');
     if (proposedInput && recom) {
         proposedInput.value = recom;
         autoCalculateProbationSalary(true);
     }
 
-    const workLocInput = document.getElementById('createWorkLocation') || document.getElementById('workLocation');
+    const workLocInput = document.getElementById('workLocation');
     if (workLocInput && (!workLocInput.value.trim() || workLocInput.value.trim() === '')) {
         workLocInput.value = defaultWorkLoc;
     }
@@ -218,8 +218,8 @@ function handleSelectPassedCandidate(appId) {
  * Tự động tính toán mức lương thử việc tối thiểu 85% (theo quy định BR-OFF-01)
  */
 function autoCalculateProbationSalary(forceSet = false) {
-    const proposedEl = document.getElementById('createProposedSalary') || document.getElementById('proposedSalary');
-    const probationEl = document.getElementById('createProbationSalary') || document.getElementById('probationSalary');
+    const proposedEl = document.getElementById('proposedSalary');
+    const probationEl = document.getElementById('probationSalary');
     if (!proposedEl || !probationEl) return;
 
     const proposed = parseFloat(proposedEl.value);
@@ -237,8 +237,8 @@ function autoCalculateProbationSalary(forceSet = false) {
  * Kiểm tra và hiển thị phản hồi trực quan về tỷ lệ lương thử việc trên giao diện
  */
 function validateProbationRuleUi() {
-    const proposedEl = document.getElementById('createProposedSalary') || document.getElementById('proposedSalary');
-    const probationEl = document.getElementById('createProbationSalary') || document.getElementById('probationSalary');
+    const proposedEl = document.getElementById('proposedSalary');
+    const probationEl = document.getElementById('probationSalary');
     const notice = document.getElementById('probationRuleNotice');
     if (!proposedEl || !probationEl || !notice) return true;
 

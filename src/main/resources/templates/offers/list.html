@@ -44,9 +44,9 @@
                         <button type="button" class="btn btn-secondary" id="btnOpenExportModal" onclick="openExportModal()">
                             <i class="fa-solid fa-file-excel export-btn-icon"></i> Xuất Excel
                         </button>
-                        <button type="button" class="btn btn-primary" onclick="openCreateOfferModal()">
+                        <a th:href="@{/offers/create}" class="btn btn--primary">
                             <i class="fa-solid fa-plus"></i> Tạo Đề Xuất
-                        </button>
+                        </a>
                     </div>
                 </div>
 
@@ -439,154 +439,6 @@
     </div>
 </div>
 
-<!-- ===========================================================================
-     MODAL: TẠO MỚI OFFER PROPOSAL (Pop-up Modal Screen 30 Create)
-     =========================================================================== -->
-<div class="modal-overlay" id="createOfferModal" style="display: none;" onclick="handleCreateModalBackdropClick(event)">
-    <div class="modal-box modal-lg" onclick="event.stopPropagation()">
-        <div class="modal-header">
-            <div style="display:flex; align-items:center; gap:8px;">
-                <i class="fa-solid fa-file-circle-plus" style="color:var(--brand-dark);"></i>
-                <span>Tạo Mới Offer Proposal</span>
-            </div>
-            <button type="button" class="btn-icon" onclick="closeModal('createOfferModal')">✕</button>
-        </div>
-        <div class="modal-body">
-            <form id="createOfferForm" onsubmit="event.preventDefault(); submitCreateOffer(false);">
-                <!-- Bước 1: Chọn ứng viên đỗ phỏng vấn -->
-                <div class="form-group" style="margin-bottom:16px;">
-                    <div class="section-title">                    
-                        <i class="fa-solid fa-user"></i> 
-                        1. Chọn Ứng viên đỗ phỏng vấn
-                    </div>
-                    <select id="createAppSelect" class="input-control" onchange="handleSelectPassedCandidate(this.value)" required>
-                        <option value="">-- Chọn ứng viên chờ tạo Offer --</option>
-                        <option th:each="c : ${passedCandidates}"
-                                th:value="${c.applicationId}"
-                                th:attr="data-cand-id=${c.candidateId}, data-cand-name=${c.candidateName}, data-email=${c.email}, data-phone=${c.phoneNumber}, data-pos=${c.appliedPosition}, data-dept=${c.departmentName}, data-req-id=${c.requisitionId}, data-job-id=${c.jobPostingId}, data-work-location=${c.workLocation}, data-comments=${c.interviewSummaryComments}, data-recom-salary=${c.recommendedSalary}, data-hm=${c.hiringManagerName}"
-                                th:text="${c.candidateName} + ' - ' + ${c.appliedPosition} + ' (' + ${c.departmentName} + ')'">
-                            Nguyễn Văn A - Backend Dev (Engineering)
-                        </option>
-                    </select>
-                </div>
-
-                <!-- Group A: Thông tin Ứng viên & Vị trí (Read-only Auto-fill) -->
-                <div class="detail-section" id="groupASection" style="display:none;">
-                    <div class="section-title">
-                        <i class="fa-solid fa-id-card"></i> Thông tin Ứng viên & Vị trí
-                    </div>
-                    <div class="detail-grid-3">
-                        <div>
-                            <div class="detail-item-label">Mã Ứng viên</div>
-                            <div class="detail-item-value" id="dispCandId">-</div>
-                        </div>
-                        <div>
-                            <div class="detail-item-label">Họ và tên</div>
-                            <div class="detail-item-value" id="dispCandName">-</div>
-                        </div>
-                        <div>
-                            <div class="detail-item-label">Email</div>
-                            <div class="detail-item-value" id="dispCandEmail">-</div>
-                        </div>
-                        <div>
-                            <div class="detail-item-label">Số điện thoại</div>
-                            <div class="detail-item-value" id="dispCandPhone">-</div>
-                        </div>
-                        <div>
-                            <div class="detail-item-label">Vị trí ứng tuyển</div>
-                            <div class="detail-item-value" id="dispPosition">-</div>
-                        </div>
-                        <div>
-                            <div class="detail-item-label">Phòng ban</div>
-                            <div class="detail-item-value" id="dispDept">-</div>
-                        </div>
-                        <div>
-                            <div class="detail-item-label">Mã Yêu cầu tuyển (Requisition ID)</div>
-                            <div class="detail-item-value" id="dispReqId">-</div>
-                        </div>
-                        <div>
-                            <div class="detail-item-label">Lương đề xuất từ Hiring Manager</div>
-                            <div class="detail-item-value" id="dispRecomSalary" style="color:var(--brand-dark); font-weight:700;">-</div>
-                        </div>
-                        <div>
-                            <div class="detail-item-label">Hiring Manager phụ trách</div>
-                            <div class="detail-item-value" id="dispHm">-</div>
-                        </div>
-                        <div>
-                            <div class="detail-item-label">Địa điểm làm việc</div>
-                            <div class="detail-item-value" id="dispWorkLocation">-</div>
-                        </div>
-                    </div>
-                    <div style="margin-top:10px; padding-top:10px; border-top:1px dashed var(--line);">
-                        <div class="detail-item-label">Đánh giá / Nhận xét của Hội đồng phỏng vấn:</div>
-                        <div class="detail-item-value" id="dispInterviewComments" style="font-style:italic; color:var(--muted); margin-top:2px;">-</div>
-                    </div>
-                </div>
-
-                <!-- Group B: Thông tin Đãi ngộ & Điều khoản Offer (HR nhập) -->
-                <div class="section-title" style="margin-top:20px;">
-                    <i class="fa-solid fa-coins"></i> 2. Thông tin Đãi ngộ & Điều khoản Offer
-                </div>
-
-                <div class="form-group">
-                    <label>Vị trí chức danh chính thức đề xuất <span style="color:var(--error, #ef4444);">*</span></label>
-                    <input type="text" id="createOfferedTitle" class="input-control" placeholder="VD: Senior Java Developer" required>
-                </div>
-
-                <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px;">
-                    <div class="form-group">
-                        <label>
-                            Lương chính thức (VND/tháng) <span style="color:var(--error, #ef4444);">*</span>
-                        </label>
-                        <input type="number" id="createProposedSalary" class="input-control" placeholder="VD: 20000000" min="1" step="100000" oninput="autoCalculateProbationSalary()" required>
-                    </div>
-
-                    <div class="form-group">
-                        <label>
-                            Lương thử việc (VND/tháng) <span style="color:var(--error, #ef4444);">*</span>
-                            <button type="button" class="quick-calc-btn" onclick="autoCalculateProbationSalary(true)" title="Gợi ý mức sàn 85% theo quy định BR-OFF-01">
-                                Gợi ý 85%
-                            </button>
-                        </label>
-                        <input type="number" id="createProbationSalary" class="input-control" placeholder="Tối thiểu 85% lương chính" min="1" step="100000" oninput="validateProbationRuleUi()" required>
-                        <div id="probationRuleNotice" class="form-hint" style="color:var(--brand-dark); font-size:12px; margin-top:4px;">
-                            <i class="fa-solid fa-circle-check"></i> Tuân thủ quy định tối thiểu 85% lương chính thức.
-                        </div>
-                    </div>
-                </div>
-
-                <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:16px;">
-                    <div class="form-group">
-                        <label>Thời gian thử việc (ngày) <span style="color:var(--error, #ef4444);">*</span></label>
-                        <input type="number" id="createProbationDays" class="input-control" value="60" min="1" placeholder="VD: 60" required>
-                    </div>
-                    <div class="form-group">
-                        <label>Ngày bắt đầu dự kiến <span style="color:var(--error, #ef4444);">*</span></label>
-                        <input type="date" id="createStartDate" class="input-control" required>
-                    </div>
-                    <div class="form-group">
-                        <label>Địa điểm làm việc <span style="color:var(--error, #ef4444);">*</span></label>
-                        <input type="text" id="createWorkLocation" class="input-control" placeholder="Địa điểm làm việc" required>
-                    </div>
-                </div>
-
-                <div class="form-group">
-                    <label>Gói phúc lợi & Chế độ đãi ngộ <span style="color:var(--muted, #64748b); font-weight:normal;">(Không bắt buộc)</span></label>
-                    <textarea id="createBenefits" class="input-control" style="height:76px;" placeholder="Bảo hiểm sức khỏe cao cấp, thưởng tháng 13, phụ cấp ăn trưa..."></textarea>
-                </div>
-            </form>
-        </div>
-        <div class="modal-footer">
-            <button type="button" class="btn btn-secondary" onclick="closeModal('createOfferModal')">Hủy bỏ</button>
-            <button type="button" class="btn btn-secondary" onclick="submitCreateOffer(true)">
-                <i class="fa-regular fa-floppy-disk" style="margin-right:6px;"></i> Lưu Bản Thảo (Draft)
-            </button>
-            <button type="button" class="btn btn-primary" onclick="submitCreateOffer(false)">
-                <i class="fa-solid fa-paper-plane" style="margin-right:6px;"></i> Trình Giám Đốc
-            </button>
-        </div>
-    </div>
-</div>
 
 <!-- ===========================================================================
      MODAL 2: XEM CHI TIẾT OFFER PROPOSAL (Pop-up Modal Screen 32 View Detail)

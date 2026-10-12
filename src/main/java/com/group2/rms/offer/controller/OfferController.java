@@ -55,6 +55,7 @@ public class OfferController {
         }
         model.addAttribute("currentUser", principal != null ? principal.getName() : "HR");
         model.addAttribute("userRole", userRole);
+        model.addAttribute("activeMenu", "offers");
     }
 
     /**
@@ -193,7 +194,7 @@ public class OfferController {
             flash.addFlashAttribute("successMessage", isDraft
                     ? "Lưu bản thảo Offer (Draft) thành công!"
                     : "Đã nộp trình đề xuất Offer lên Giám đốc (Pending_Director) thành công!");
-            return "redirect:/offers/" + created.getOfferId();
+            return "redirect:/offers";
         } catch (BaseBusinessException e) {
             errors.reject("businessError", e.getMessage());
             model.addAttribute("passedCandidates", offerService.getPassedCandidatesForOffer());
