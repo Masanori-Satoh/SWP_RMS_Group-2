@@ -123,12 +123,12 @@
                                     <span style="font-weight:600; color:var(--ink);" th:text="${o.offeredPositionTitle}">Vị trí</span>
                                 </td>
                                 <td>
-                                    <div class="salary-main" th:text="${#numbers.formatDecimal(o.proposedSalary, 0, 'POINT', 0, 'COMMA')} + ' VND'">25,000,000 VND</div>
+                                    <div class="salary-main" th:text="${o.proposedSalary != null ? #numbers.formatDecimal(o.proposedSalary, 0, 'POINT', 0, 'COMMA') + ' VND' : '-'}">25,000,000 VND</div>
                                 </td>
                                 <td>
                                     <div class="salary-probation">
-                                        <span th:text="${#numbers.formatDecimal(o.probationSalary, 0, 'POINT', 0, 'COMMA')} + ' VND'">21,250,000 VND</span>
-                                        <span class="salary-badge-pct" th:if="${o.proposedSalary != null and o.proposedSalary.compareTo(T(java.math.BigDecimal).ZERO) > 0}"
+                                        <span th:text="${o.probationSalary != null ? #numbers.formatDecimal(o.probationSalary, 0, 'POINT', 0, 'COMMA') + ' VND' : '-'}">21,250,000 VND</span>
+                                        <span class="salary-badge-pct" th:if="${o.proposedSalary != null and o.probationSalary != null and o.proposedSalary.compareTo(T(java.math.BigDecimal).ZERO) > 0}"
                                               th:text="${#numbers.formatDecimal(o.probationSalary.multiply(new java.math.BigDecimal(100)).divide(o.proposedSalary, 0, T(java.math.RoundingMode).HALF_UP), 0, 0)} + '%'">85%</span>
                                     </div>
                                 </td>
@@ -141,6 +141,18 @@
                                     </span>
                                     <span th:if="${o.offerStatus == 'Director_Rejected' or o.offerStatus == 'Rejected'}" class="status-badge status-rejected">
                                         <i class="fa-solid fa-xmark"></i> Bị từ chối
+                                    </span>
+                                    <span th:if="${o.offerStatus == 'Sent_Candidate'}" class="status-badge status-sent">
+                                        <i class="fa-solid fa-paper-plane"></i> Đã gửi ứng viên
+                                    </span>
+                                    <span th:if="${o.offerStatus == 'Accepted'}" class="status-badge status-accepted">
+                                        <i class="fa-solid fa-circle-check"></i> Ứng viên đồng ý
+                                    </span>
+                                    <span th:if="${o.offerStatus == 'Declined'}" class="status-badge status-rejected">
+                                        <i class="fa-solid fa-circle-xmark"></i> Ứng viên từ chối
+                                    </span>
+                                    <span th:if="${o.offerStatus == 'Draft'}" class="status-badge status-draft">
+                                        <i class="fa-solid fa-file-lines"></i> Bản nháp
                                     </span>
                                 </td>
                                 <td style="color:var(--muted); font-size:13.5px;" th:text="${o.createdAt != null ? #temporals.format(o.createdAt, 'dd/MM/yyyy HH:mm') : '-'}">01/10/2026</td>

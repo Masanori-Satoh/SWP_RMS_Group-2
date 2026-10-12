@@ -806,7 +806,9 @@ public class OfferServiceImpl implements OfferService {
         return approvals.map(approval -> {
             OfferProposal offer = approval.getOfferProposal();
             OfferResponse response = mapToResponse(offer);
-            // Optionally, you can set the status or some other field based on the approval
+            if (approval.getStatus() != null && !approval.getStatus().isBlank()) {
+                response.setOfferStatus(approval.getStatus());
+            }
             return response;
         });
     }

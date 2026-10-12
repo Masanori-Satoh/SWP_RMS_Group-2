@@ -1518,7 +1518,11 @@ function openDirectorDrawer(id) {
     
     document.getElementById('drawerOfferId').innerText = id + ' (Đang tải...)';
     
-    fetch('/offers/' + id)
+    fetch('/offers/' + id, {
+        headers: {
+            'Accept': 'application/json'
+        }
+    })
         .then(res => res.json())
         .then(data => {
             if (data.success) {
@@ -1535,6 +1539,18 @@ function openDirectorDrawer(id) {
                     document.getElementById('drawerActionArea').style.display = 'none';
                 } else if (detail.offerStatus === 'Director_Rejected' || detail.offerStatus === 'Rejected') {
                     statusHtml = '<span class="status-badge status-rejected"><i class="fa-solid fa-xmark"></i> Bị từ chối</span>';
+                    document.getElementById('drawerActionArea').style.display = 'none';
+                } else if (detail.offerStatus === 'Sent_Candidate') {
+                    statusHtml = '<span class="status-badge status-sent"><i class="fa-solid fa-paper-plane"></i> Đã gửi ứng viên</span>';
+                    document.getElementById('drawerActionArea').style.display = 'none';
+                } else if (detail.offerStatus === 'Accepted') {
+                    statusHtml = '<span class="status-badge status-accepted"><i class="fa-solid fa-circle-check"></i> Ứng viên đồng ý</span>';
+                    document.getElementById('drawerActionArea').style.display = 'none';
+                } else if (detail.offerStatus === 'Declined') {
+                    statusHtml = '<span class="status-badge status-rejected"><i class="fa-solid fa-circle-xmark"></i> Ứng viên từ chối</span>';
+                    document.getElementById('drawerActionArea').style.display = 'none';
+                } else {
+                    statusHtml = `<span class="status-badge status-draft"><i class="fa-solid fa-file-lines"></i> ${detail.offerStatus || 'Không xác định'}</span>`;
                     document.getElementById('drawerActionArea').style.display = 'none';
                 }
                 document.getElementById('drawerStatusBadge').innerHTML = statusHtml;
@@ -1608,15 +1624,18 @@ function submitDirectorApprove() {
         reverseButtons: true
     }).then((result) => {
         if (result.isConfirmed) {
-            const csrfToken = document.querySelector('meta[name="_csrf"]').content;
-            const csrfHeader = document.querySelector('meta[name="_csrf_header"]').content;
+            const csrf = getCsrfInfo();
+            const headers = {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json'
+            };
+            if (csrf.token) {
+                headers[csrf.header] = csrf.token;
+            }
 
             fetch(`/offers/${currentDirectorOfferId}/approve`, {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    [csrfHeader]: csrfToken
-                },
+                headers: headers,
                 body: JSON.stringify({ comments: 'Phê duyệt trực tiếp' })
             })
             .then(res => res.json())
@@ -1645,15 +1664,18 @@ function submitDirectorReject() {
         return;
     }
     
-    const csrfToken = document.querySelector('meta[name="_csrf"]').content;
-    const csrfHeader = document.querySelector('meta[name="_csrf_header"]').content;
+    const csrf = getCsrfInfo();
+    const headers = {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json'
+    };
+    if (csrf.token) {
+        headers[csrf.header] = csrf.token;
+    }
 
     fetch(`/offers/${currentDirectorOfferId}/reject`, {
         method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            [csrfHeader]: csrfToken
-        },
+        headers: headers,
         body: JSON.stringify({ comments: reason })
     })
     .then(res => res.json())
