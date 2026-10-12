@@ -40,10 +40,8 @@
                                 <a th:if="${req.postingStatus == 'Published' and req.jobPostingId != null}"
                                     th:href="@{/internal/job-postings/{id}(id=${req.jobPostingId})}"
                                     class="btn-outline">Xem tin đã đăng</a>
-                                <a th:if="${req.editable}" th:href="@{/requisitions/edit/{id}(id=${req.requisitionId})}"
+                                <a th:if="${req.editable and viewerRole != 'HR'}" th:href="@{/requisitions/edit/{id}(id=${req.requisitionId})}"
                                     class="btn-outline">Chỉnh sửa</a>
-                                <button th:unless="${req.editable}" type="button" class="btn-outline" disabled
-                                    title="Yêu cầu này hiện không thể chỉnh sửa.">Chỉnh sửa</button>
                                 <a th:if="${canCreate and req.approvalStatus != 'Draft' and req.approvalStatus != 'Pending_Director'}"
                                     th:href="@{/requisitions/copy/{id}(id=${req.requisitionId})}"
                                     class="btn-outline">Sao chép mẫu</a>
