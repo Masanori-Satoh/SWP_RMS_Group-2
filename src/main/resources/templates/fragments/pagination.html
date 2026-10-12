@@ -8,7 +8,7 @@
 </nav>
 
 <nav th:fragment="pager(currPage, totPages, totElements, baseUrl)"
-     th:if="${totPages != null and totPages >= 1 and (totElements == null or totElements > 0)}"
+    th:if="${totPages != null and (totPages > 1 or totElements > 0)}"
      class="pagination-wrapper"
      aria-label="Phân trang">
     <div class="pagination-info">
@@ -17,29 +17,17 @@
     </div>
     <div class="pagination-controls">
         <ul class="pagination-list"
-            th:with="startPage=${T(java.lang.Math).max(0, currPage - 2)}, endPage=${T(java.lang.Math).min(totPages - 1, currPage + 2)}, isZeroBased=${baseUrl == '/offers'}">
+            th:with="startPage=${T(java.lang.Math).max(0, currPage - 2)}, endPage=${T(java.lang.Math).min(totPages - 1, currPage + 2)}">
             <li class="page-item">
-                <a th:if="${currPage > 0}"
-                   th:href="${isZeroBased ? (pageLinks != null ? pageLinks.to(currPage - 1) : @{${baseUrl}(page=${currPage - 1})}) : (pageLinks != null ? pageLinks.to(currPage) : @{${baseUrl}(page=${currPage})})}"
-                   th:onclick="'if(window.rmsGoToPage){window.rmsGoToPage(' + (${currPage - 1}) + ');return false;}'"
-                   class="page-link"
-                   aria-label="Trang trước">&lsaquo;</a>
+                <a th:if="${currPage > 0}" th:href="@{${baseUrl}(page=${currPage - 1})}" class="page-link">&lsaquo;</a>
                 <span th:unless="${currPage > 0}" class="page-link disabled">&lsaquo;</span>
             </li>
             <li class="page-item" th:each="i : ${#numbers.sequence(startPage, endPage)}">
-                <a th:if="${i != currPage}"
-                   th:href="${isZeroBased ? (pageLinks != null ? pageLinks.to(i) : @{${baseUrl}(page=${i})}) : (pageLinks != null ? pageLinks.to(i + 1) : @{${baseUrl}(page=${i + 1})})}"
-                   th:onclick="'if(window.rmsGoToPage){window.rmsGoToPage(' + ${i} + ');return false;}'"
-                   th:text="${i + 1}"
-                   class="page-link">1</a>
+                <a th:if="${i != currPage}" th:href="@{${baseUrl}(page=${i})}" th:text="${i + 1}" class="page-link">1</a>
                 <span th:if="${i == currPage}" th:text="${i + 1}" class="page-link active" aria-current="page">1</span>
             </li>
             <li class="page-item">
-                <a th:if="${currPage < totPages - 1}"
-                   th:href="${isZeroBased ? (pageLinks != null ? pageLinks.to(currPage + 1) : @{${baseUrl}(page=${currPage + 1})}) : (pageLinks != null ? pageLinks.to(currPage + 2) : @{${baseUrl}(page=${currPage + 2})})}"
-                   th:onclick="'if(window.rmsGoToPage){window.rmsGoToPage(' + (${currPage + 1}) + ');return false;}'"
-                   class="page-link"
-                   aria-label="Trang sau">&rsaquo;</a>
+                <a th:if="${currPage < totPages - 1}" th:href="@{${baseUrl}(page=${currPage + 1})}" class="page-link">&rsaquo;</a>
                 <span th:unless="${currPage < totPages - 1}" class="page-link disabled">&rsaquo;</span>
             </li>
         </ul>

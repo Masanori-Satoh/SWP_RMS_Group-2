@@ -169,13 +169,12 @@
                         </tbody>
                     </table>
                 </div>
-
-                <div th:replace="~{fragments/pagination :: pager(${currentPage}, ${totalPages}, ${totalElements}, '/offers')}"></div>
+                <!-- Phân trang chuẩn UI catalog -->
+                <nav th:replace="~{fragments/ui/pagination :: paged(page=${offersPage})}"></nav>
 
             </div>
         </main>
     </div>
-</div>
 
 <!-- ===========================================================================
      DIRECTOR DETAIL MODAL (Pop-up Centered Modal View Detail & Approval)
