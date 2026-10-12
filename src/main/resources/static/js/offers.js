@@ -1555,10 +1555,36 @@ function openDirectorDrawer(id) {
                 }
                 document.getElementById('drawerStatusBadge').innerHTML = statusHtml;
                 
-                // Cand Info
-                document.getElementById('drawerCandName').innerText = detail.candidateName || 'N/A';
-                document.getElementById('drawerCandEmail').innerText = detail.candidateEmail || 'N/A';
-                document.getElementById('drawerCandPhone').innerText = detail.candidatePhone || 'N/A';
+                // Candidate and interview information
+                const setDrawerText = (id, value, fallback = 'N/A') => {
+                    const element = document.getElementById(id);
+                    if (element) element.textContent = value || fallback;
+                };
+                const formatDrawerCurrency = (value, fallback = 'N/A') => {
+                    return value != null ? Number(value).toLocaleString('vi-VN') + ' VND' : fallback;
+                };
+
+                setDrawerText('drawerCandName', detail.candidateName);
+                setDrawerText('drawerCandEmail', detail.candidateEmail);
+                setDrawerText('drawerCandPhone', detail.candidatePhone);
+                setDrawerText('drawerCandAddress', detail.candidateAddress);
+                setDrawerText('drawerAppliedPosition', detail.appliedPosition);
+                setDrawerText('drawerDepartment', detail.departmentName);
+
+                const cvLink = document.getElementById('drawerCvLink');
+                const cvEmpty = document.getElementById('drawerCvEmpty');
+                if (cvLink && cvEmpty) {
+                    const cvUrl = typeof detail.appliedCvUrl === 'string' ? detail.appliedCvUrl.trim() : '';
+                    const isSafeCvUrl = /^(https?:\/\/|\/)/i.test(cvUrl);
+                    cvLink.style.display = isSafeCvUrl ? 'inline' : 'none';
+                    cvLink.href = isSafeCvUrl ? cvUrl : '#';
+                    cvEmpty.style.display = isSafeCvUrl ? 'none' : 'inline';
+                }
+
+                setDrawerText('drawerFinalDecision', detail.finalDecision, 'Chưa có kết quả');
+                setDrawerText('drawerRecommendedSalary', formatDrawerCurrency(detail.recommendedSalary, 'Chưa có gợi ý'));
+                setDrawerText('drawerHiringManager', detail.hiringManagerName);
+                setDrawerText('drawerInterviewComments', detail.interviewSummaryComments, 'Không có ghi chú thêm.');
                 
                 // Offer Info
                 document.getElementById('drawerPosition').innerText = detail.offeredPositionTitle || 'N/A';
@@ -1577,11 +1603,11 @@ function openDirectorDrawer(id) {
                 
                 // HR Note
                 const hrName = detail.proposedByName || 'HR';
-                const createdDate = detail.createdAt ? new Date(detail.createdAt).toLocaleDateString('vi-VN') : '';
-                document.getElementById('drawerHrNote').innerHTML = 
-                    `<strong>Người tạo:</strong> ${hrName} <br>` +
-                    `<strong>Ngày tạo:</strong> ${createdDate} <br>` +
-                    (detail.interviewSummaryComments ? `<br><strong>Nhận xét phỏng vấn:</strong><br>${detail.interviewSummaryComments}` : '');
+                const createdDate = detail.createdAt ? new Date(detail.createdAt).toLocaleDateString('vi-VN') : 'N/A';
+                const hrNote = document.getElementById('drawerHrNote');
+                if (hrNote) {
+                    hrNote.textContent = `Người tạo: ${hrName}\nNgày tạo: ${createdDate}`;
+                }
                 
                 // Reset reason
                 document.getElementById('rejectReasonInput').value = '';
