@@ -3,62 +3,109 @@
 - **Dự án:** Hệ Thống Quản Lý Tuyển Dụng — SWP_RMS_Group-2 (Mộc RMS)
 - **Thành viên phụ trách:** Phạm Thị Huyền (`HuyenPT`)
 - **Phân hệ (Module):** Quản lý Đề xuất Lương & Tuyển dụng (`Offer Management`) — Phase 2: Luồng Phê duyệt của Giám đốc (Director Review & Approval).
+- **Nhánh phát triển (Branch):** `feat/huyenpt/inte2/director-offer-approval`
 
 ---
 
 ## I. MỤC TIÊU VÀ BỐI CẢNH TRIỂN KHAI
 
-Tiếp nối Phase 1 (Cải thiện UI/UX và Xuất Excel), Phase 2 tập trung vào việc hoàn thiện **luồng phê duyệt Offer chính thức từ Giám đốc (Director)**.
-Theo quyết định nghiệp vụ hiện tại:
-- Không xây dựng vòng lặp `Reject -> HR sửa -> Resubmit`.
-- Không thêm entity Negotiation.
-- Quyết định phê duyệt/từ chối của Director là quyết định chính thức được lưu thẳng vào hệ thống. Các lỗi nhỏ hoặc điều chỉnh sẽ được HR và Director thảo luận ngoài hệ thống trước khi Director đưa ra quyết định cuối cùng trên phần mềm.
-- Tuân thủ nghiêm ngặt `ARCHITECTURE_GUIDE.md`, thiết kế Controller mỏng, xử lý nghiệp vụ tại Service, và sử dụng UI Modal trực tiếp trên trang.
+Tiếp nối Phase 1 (Cải thiện UI/UX và Xuất Excel), Phase 2 tập trung vào việc hoàn thiện **luồng phê duyệt Offer chính thức từ Giám đốc (Director)** và **chuẩn hóa trải nghiệm giao diện người dùng (UI/UX)**:
+- Khép kín toàn bộ vòng đời của một Đề xuất Offer: Tạo bản thảo (Draft) -> Trình duyệt (`Pending_Director`) -> Giám đốc phê duyệt (`Director_Approved`) hoặc Từ chối (`Director_Rejected`) -> Phát hành Offer Letter (`Sent_Candidate`) -> Kết quả phản hồi từ Ứng viên (`Accepted` / `Declined`).
+- Theo quyết định nghiệp vụ hiện tại:
+  - Quyết định phê duyệt/từ chối của Director là quyết định chính thức được lưu vết vào hệ thống. Các điều chỉnh nhỏ được thảo luận ngoài hệ thống trước khi ra quyết định cuối cùng.
+  - Không phát sinh bảng cơ sở dữ liệu dư thừa, sử dụng bảng `OfferApproval` để ghi lại nhật ký phê duyệt.
+- Tuân thủ nghiêm ngặt quy chuẩn kiến trúc [`docs/architecture/ARCHITECTURE_GUIDE.md`](file:///c:/Users/Admin/Documents/Ky_5/SWP391/SWP_RMS_Group-2/docs/architecture/ARCHITECTURE_GUIDE.md):
+  - Controller giữ vai trò mỏng (Thin Controller), toàn bộ nghiệp vụ kiểm tra trạng thái và phân quyền được bao gói tại Service Layer.
+  - Đồng nhất trải nghiệm tương tác thông qua **Modal Pop-up căn giữa màn hình** thay vì chuyển trang phụ hay ngăn kéo trượt, đảm bảo giao diện gọn gàng, liền mạch theo hệ thống phong cách Mộc RMS.
 
 ---
 
-## II. CHI TIẾT CÁC TÍNH NĂNG ĐÃ TRIỂN KHAI
+## II. CHI TIẾT CÁC TÍNH NĂNG VÀ THAY ĐỔI ĐÃ TRIỂN KHAI
 
-### 1. Backend (Tầng Dữ liệu & Xử lý Nghiệp vụ)
+### 1. Backend (Tầng Dữ liệu, Nghiệp vụ & Điều hướng)
 
 - **DTO Mới:** 
-  - Tạo `DirectorDecisionRequest.java` trong package `dto` nhằm hứng dữ liệu ghi chú (comments) từ modal phê duyệt/từ chối của Giám đốc. Tích hợp validation `@Size(max = 2000)`.
+  - Tạo `DirectorDecisionRequest.java` trong package `dto` nhằm tiếp nhận dữ liệu nhận xét/lý do (`comments`) từ Giám đốc khi phê duyệt hoặc từ chối. Tích hợp validation `@Size(max = 2000)`.
   
+- **Tầng Repository (`OfferProposalRepository`):**
+  - Bổ sung các phương thức truy vấn và thống kê KPI dành riêng cho Director:
+    - Đếm số lượng theo trạng thái: Chờ duyệt (`countByOfferStatus(Pending_Director)`), Đã duyệt (`statApproved`), Bị từ chối (`statRejected`).
+    - Tìm kiếm và phân trang theo các tab trạng thái: `PENDING`, `APPROVED`, `REJECTED`, `ALL`/`HISTORY`.
+
 - **Tầng Service (`OfferService` & `OfferServiceImpl`):**
-  - Bổ sung 2 phương thức mới: `approveOfferByDirector(Integer id, String comments)` và `rejectOfferByDirector(Integer id, String comments)`.
-  - Nghiệp vụ kiểm tra trạng thái chặt chẽ: Chỉ cho phép thao tác khi Offer đang ở trạng thái chờ duyệt (`Pending_Director`).
-  - Ghi nhận lịch sử duyệt: Tạo mới và lưu bản ghi vào bảng `OfferApproval` với `status` tương ứng là `Approved` hoặc `Rejected`, cùng với nhận xét của Director.
-  - Chuyển đổi trạng thái Offer (State Machine): Cập nhật trạng thái của `OfferProposal` sang `Director_Approved` hoặc `Director_Rejected`.
+  - **Phê duyệt đề xuất (`approveOfferByDirector`):**
+    - Kiểm tra trạng thái nghiêm ngặt: Chỉ cho phép thao tác khi Offer ở trạng thái `Pending_Director`.
+    - Tạo bản ghi mới trong bảng `OfferApproval` với trạng thái `Approved`, ghi nhận Giám đốc phê duyệt, thời điểm và nhận xét.
+    - Cập nhật trạng thái của `OfferProposal` sang `Director_Approved`.
+  - **Từ chối đề xuất (`rejectOfferByDirector`):**
+    - Bắt buộc nhập lý do từ chối.
+    - Ghi nhận vào bảng `OfferApproval` với trạng thái `Rejected`.
+    - Cập nhật trạng thái `OfferProposal` sang `Director_Rejected`.
+  - **Lấy chi tiết đề xuất đầy đủ (`getOfferDetail`):**
+    - Trả về DTO `OfferDetailResponse` bao gồm thông tin ứng viên, kết quả đánh giá phỏng vấn của Hội đồng, chi tiết gói đãi ngộ, và danh sách lịch sử phê duyệt `approvalHistory`.
+    - Đảm bảo an toàn null-safety cho tất cả các trường dữ liệu quan trọng.
 
 - **Tầng Controller (`OfferController`):**
-  - Thêm 2 endpoint AJAX (JSON) mới:
-    - `POST /offers/{id}/approve`
-    - `POST /offers/{id}/reject`
-  - Các endpoint này tiếp nhận dữ liệu từ UI, gọi Service xử lý và trả về chuẩn `ApiResponse<OfferResponse>`.
-  - Phân quyền theo URL cấu hình trong `SecurityConfig` cho phép `ROLE_DIRECTOR` (và `System Admin`) truy cập.
+  - **Rẽ nhánh hiển thị danh sách (`GET /offers`):**
+    - Tự động kiểm tra quyền hạn của người dùng đăng nhập.
+    - Nếu người dùng có quyền `ROLE_DIRECTOR`, controller tự động điều hướng sang giao diện chuyên biệt `offers/director-list.html`, truyền kèm các số liệu KPI (`statPending`, `statApproved`, `statRejected`), danh sách phân trang và các bộ lọc tab.
+  - **Content Negotiation cho Pop-up Modal (`GET /offers/{id}`):**
+    - Khi nhận được request với header `Accept: application/json`, controller trả về dữ liệu JSON chi tiết qua `ApiResponse<OfferDetailResponse>`, phục vụ việc render động nội dung Modal mà không cần tải lại toàn bộ trang.
+  - **Endpoint xử lý quyết định:**
+    - `POST /offers/{id}/approve`: Nhận quyết định phê duyệt và trả về `ApiResponse<OfferResponse>`.
+    - `POST /offers/{id}/reject`: Nhận quyết định từ chối và lý do, trả về `ApiResponse<OfferResponse>`.
+    - Phân quyền URL trong Spring Security chỉ cho phép `ROLE_DIRECTOR` (và `System Admin`) thực thi.
 
-### 2. Frontend (Giao diện Người dùng - UI/UX)
+---
+
+### 2. Frontend (Giao diện Người dùng & Tương tác UX)
+
+- **Màn hình Danh sách chuyên biệt cho Director (`offers/director-list.html`):**
+  - **Thẻ thống kê KPI (Stat Cards):** Thiết kế 3 thẻ thống kê nổi bật: *Chờ duyệt* (Icon đồng hồ cát màu hổ phách), *Đã duyệt* (Icon tích xanh), và *Tổng đề xuất*.
+  - **Thanh công cụ lọc:** Hỗ trợ chuyển tab nhanh giữa *Chờ duyệt* và *Lịch sử đã duyệt/từ chối*, kết hợp ô tìm kiếm theo tên ứng viên hoặc vị trí.
+  - **Bảng danh sách chuẩn Mộc RMS:** Hiển thị rõ ràng mã đề xuất, họ tên ứng viên, vị trí tuyển dụng, mức lương đề xuất, mức lương thử việc (kèm badge % tự động), trạng thái có badge màu nhận diện, thời gian tạo và thông tin HR phụ trách.
+
+- **Tái thiết kế Modal Pop-up Chi tiết Ứng viên Căn Giữa (`#directorDetailModal`):**
+  - **Loại bỏ Drawer trượt bên phải:** Chuyển đổi toàn bộ cơ chế hiển thị chi tiết từ drawer trượt thành **Modal pop-up hiển thị chính giữa màn hình**, sử dụng các class chuẩn `.modal-overlay`, `.modal-box.modal-xl` đồng nhất với giao diện HR (`detailOfferModal`).
+  - **Bố cục 4 phân vùng thông tin mạch lạc, trực quan:**
+    1. **1. Thông tin ứng viên:** Họ và tên, email liên hệ, số điện thoại, vị trí ứng tuyển, phòng ban, liên kết xem file CV an toàn (Safe URL check, tự động ẩn nếu không có), địa chỉ liên hệ.
+    2. **2. Kết quả phỏng vấn của Hội đồng:** Quyết định của hội đồng, mức lương khuyến nghị từ Hiring Manager, tên HM phụ trách, nhận xét đánh giá chi tiết.
+    3. **3. Thông tin đãi ngộ & Điều khoản Offer:** Bố cục 3 cột tối ưu gồm chức danh đề xuất, lương chính thức (Gross/tháng), lương thử việc kèm badge tỷ lệ % (`85%`), thời gian thử việc, ngày bắt đầu dự kiến, địa điểm làm việc, gói phúc lợi & đãi ngộ đặc thù, cùng ghi chú từ chuyên viên HR.
+    4. **4. Thao tác phê duyệt / Lịch sử duyệt (Hiển thị có điều kiện theo trạng thái):**
+       - **Khi ở trạng thái `Pending_Director`:** Hiển thị khung nhập ý kiến phản hồi / lý do từ chối (có bộ đếm ký tự 0/500) và 2 nút hành động ở modal footer: **Từ chối** (`btn-outline-danger`) và **Phê duyệt** (`btn-success`).
+       - **Khi ở trạng thái khác:** Tự động ẩn khu vực hành động, thay vào đó hiển thị phân vùng **Lịch sử phê duyệt của Director** dưới dạng Timeline với mốc thời gian, tên người duyệt và nội dung nhận xét.
+  - **Trải nghiệm tương tác tiện ích cao cấp:**
+    - Nền mờ kính (Backdrop blur) tạo chiều sâu thị giác.
+    - Đóng mở linh hoạt bằng nút ✕ góc trên, nút "Đóng" ở footer, nhấp chuột vào vùng nền bên ngoài (Backdrop click), hoặc nhấn phím `Escape`.
 
 - **Cập nhật JavaScript (`offers.js`):**
-  - Bổ sung logic xử lý cho **Modal Phê duyệt / Từ chối (Director Decision Modal)**.
-  - Thêm các hàm `openDirectorDecisionModal()`, `closeDirectorDecisionModal()` và hàm gọi AJAX `submitDirectorDecision()` tích hợp trực tiếp token bảo mật CSRF.
-  - Tích hợp thông báo Toast khi thao tác thành công và tự động tải lại trang mượt mà sau 1 giây.
+  - Bổ sung các hàm điều khiển modal: `openDirectorDetailModal(id)`, `closeDirectorDetailModal()`, `handleDirectorModalBackdropClick(event)`, cùng event listener lắng nghe phím `Escape`.
+  - Tự động gọi API `GET /offers/{id}` với header `Accept: application/json`, điền dữ liệu động, định dạng tiền tệ VNĐ và tính toán tỷ lệ % thử việc chính xác.
+  - Xử lý hành động phê duyệt (`submitDirectorApprove`) và từ chối (`submitDirectorReject`) với hộp thoại xác nhận SweetAlert2 và tự động đính kèm CSRF token.
+  - Cung cấp alias tương thích ngược `window.openDirectorDrawer` và `window.closeDirectorDrawer` để không làm gián đoạn mã nguồn cũ.
 
-- **Cập nhật Màn hình Danh sách (`list.html` - Screen 30):**
-  - Tại cột "Thao tác" (Action Buttons): Thêm 2 nút bấm **Phê duyệt** (màu xanh lá) và **Từ chối** (màu đỏ) dành riêng cho người dùng có vai trò `Director` (hoặc `System Admin`) đối với các bản ghi đang ở trạng thái `Pending_Director`.
-  - Thêm HTML cấu trúc Modal `#directorDecisionModal` vào cuối trang để hứng thao tác click.
+---
 
-- **Cập nhật Màn hình Chi tiết (`detail.html` - Screen 32):**
-  - Tương tự như màn hình danh sách, bổ sung 2 nút **Phê duyệt** và **Từ chối** nổi bật tại khu vực Action Buttons trên cùng.
-  - Đính kèm Modal `#directorDecisionModal` và các file script/toast thông báo để đảm bảo hoạt động độc lập ngay trong màn chi tiết.
+### 3. Tích hợp Hệ thống Thông báo Tự động (Notification Integration)
+
+- Bổ sung 2 phương thức nghiệp vụ trong `NotificationService` tích hợp gửi Email tự động:
+  - `notifyDirectorNewPendingOffer`: Gửi email thông báo cho Giám đốc khi chuyên viên HR tạo mới hoặc đệ trình một đề xuất Offer lên cấp phê duyệt.
+  - `notifyHrOfDirectorDecision`: Gửi email phản hồi kết quả phê duyệt hoặc từ chối kèm theo nhận xét/lý do của Giám đốc về cho chuyên viên HR đã tạo Offer.
+
+---
+
+### 4. Kiểm thử & Đảm bảo Chất lượng (Testing & QA)
+
+- **Unit & Integration Tests:**
+  - `OfferIntegrationTest` (17/17 test cases passed): Kiểm thử toàn bộ luồng phê duyệt từ Director, kiểm tra chuyển đổi trạng thái, phân quyền truy cập và dữ liệu xuất ra.
+  - `OfferControllerBugTest` (Passed): Kiểm tra xử lý session và định tuyến bảo mật.
+- **Manual & Browser Testing (E2E):**
+  - Đã thực hiện kiểm thử thực tế trên trình duyệt bằng tài khoản `director`.
+  - Kiểm tra giao diện `/offers`: Bộ lọc tab hoạt động chính xác, modal pop-up hiển thị căn giữa sắc nét, dữ liệu ứng viên và mức lương được điền đầy đủ, đóng mở modal bằng click ra ngoài hoặc phím `Escape` hoạt động mượt mà.
+  - Ảnh chụp xác thực: Đã lưu trữ và kiểm chứng qua hình ảnh trực quan `director_offer_detail_modal_1791778752991.png`.
 
 ---
 
 ## III. KẾT LUẬN
 
-Phase 2 đã tích hợp thành công luồng phê duyệt từ cấp quản lý (Director), đánh dấu việc khép kín quy trình tạo, đệ trình, phê duyệt và phát hành Thư mời làm việc (Offer Letter) trong hệ thống Mộc RMS. Kiến trúc phần mềm tuân thủ nghiêm ngặt các quy tắc hiện hành, hạn chế tối đa việc tạo thêm bảng cơ sở dữ liệu dư thừa và duy trì trải nghiệm liền mạch qua các Pop-up Modal.
-
-**Mở rộng (Phase 4) - Tích hợp Thông báo:**
-- Đã bổ sung 2 phương thức mới trong `NotificationService` để gửi Email thông báo tự động.
-- Khi HR trình Offer lên Giám đốc, hệ thống sẽ tự động gửi email báo cáo cho Giám đốc (`notifyDirectorNewPendingOffer`).
-- Khi Giám đốc quyết định Approve/Reject, hệ thống sẽ tự động gửi email phản hồi kết quả và Ghi chú về cho chuyên viên HR đã tạo Offer (`notifyHrOfDirectorDecision`).
+Giai đoạn Phase 2 đã hoàn thành toàn diện luồng phê duyệt từ cấp quản lý (Director), hoàn thiện chu trình khép kín của phân hệ Quản lý Đề xuất Offer trong Mộc RMS. Kiến trúc triển khai đảm bảo tính mở, tuân thủ nghiêm ngặt quy chuẩn `ARCHITECTURE_GUIDE.md`, bảo vệ an toàn phân quyền bảo mật, đồng thời mang lại trải nghiệm giao diện người dùng trực quan, thống nhất thông qua mô hình Centered Pop-up Modal.
