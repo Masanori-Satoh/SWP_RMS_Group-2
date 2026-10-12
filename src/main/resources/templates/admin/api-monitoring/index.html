@@ -64,12 +64,16 @@
 
                                         <td>
                                             <span class="badge" th:classappend="${endpoint.status == 'OPERATIONAL'
-                  ? ' badge-success'
-                  : (endpoint.status == 'FAILED'
-                      ? ' badge-danger'
-                      : ' badge-secondary')}">
-                                                <span th:replace="~{fragments/monitoring-status
-                :: label(${endpoint.status})}"></span>
+              ? 'badge--success'
+              : (endpoint.status == 'FAILED'
+                  ? 'badge--danger'
+                  : 'badge--neutral')}" th:switch="${endpoint.status}">
+
+                                                <span th:case="'OPERATIONAL'">Hoạt động</span>
+                                                <span th:case="'FAILED'">Có lỗi</span>
+                                                <span th:case="'Not check'">Chưa kiểm tra</span>
+                                                <span th:case="'Unconfigured'">Chưa cấu hình</span>
+                                                <span th:case="*" th:text="${endpoint.status}"></span>
                                             </span>
                                         </td>
 
