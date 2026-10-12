@@ -183,10 +183,10 @@
                                     <input type="checkbox" class="offer-checkbox offer-row-checkbox" th:value="${o.offerId}" onchange="handleOfferRowSelectionChange()">
                                 </td>
                                 <td>
-                                    <a href="javascript:void(0)" th:onclick="'viewOfferDetail(' + ${o.offerId} + ')'" class="offer-id-link" th:text="${o.offerId}">1</a>
+                                    <a th:href="@{/offers/{id}(id=${o.offerId})}" class="offer-id-link" th:text="${o.offerId}">1</a>
                                 </td>
                                 <td>
-                                    <a href="javascript:void(0)" th:onclick="'viewOfferDetail(' + ${o.offerId} + ')'" style="text-decoration:none; color:inherit;">
+                                    <a th:href="@{/offers/{id}(id=${o.offerId})}" style="text-decoration:none; color:inherit;">
                                         <div class="cand-name-cell" th:text="${o.candidateName != null ? o.candidateName : 'Ứng viên'}">Nguyễn Văn A</div>
                                     </a>
                                     <div class="cand-email-sub" th:text="${o.candidateEmail != null ? o.candidateEmail : 'N/A'}">a.nguyen@email.com</div>
@@ -235,10 +235,10 @@
                                 </td>
                                 <td style="text-align: right;">
                                     <div class="action-buttons" style="justify-content: flex-end;">
-                                        <!-- Xem chi tiết pop-up (Screen 32) -->
-                                        <button type="button" th:onclick="'viewOfferDetail(' + ${o.offerId} + ')'" class="btn-icon btn-icon-primary" title="Xem chi tiết">
+                                        <!-- Xem chi tiết màn hình (Screen 32) -->
+                                        <a th:href="@{/offers/{id}(id=${o.offerId})}" class="btn-icon btn-icon-primary" title="Xem chi tiết">
                                             <i class="fa-solid fa-eye"></i>
-                                        </button>
+                                        </a>
 
                                         <!-- Phát hành gửi Offer cho Candidate (Chỉ khi Director_Approved) -->
                                         <button type="button" th:if="${o.offerStatus == 'Director_Approved' or o.offerStatus == 'Approved'}"
@@ -440,29 +440,7 @@
 </div>
 
 
-<!-- ===========================================================================
-     MODAL 2: XEM CHI TIẾT OFFER PROPOSAL (Pop-up Modal Screen 32 View Detail)
-     =========================================================================== -->
-<div class="modal-overlay" id="detailOfferModal" style="display: none;" onclick="handleDetailModalBackdropClick(event)">
-    <div class="modal-box modal-xl" onclick="event.stopPropagation()">
-        <div class="modal-header">
-            <div style="display:flex; align-items:center; gap:8px;">
-                <i class="fa-solid fa-file-lines" style="color:var(--brand-dark);"></i>
-                <span id="detailModalTitle">Chi Tiết Đề Xuất Offer</span>
-            </div>
-            <button type="button" class="btn-icon" onclick="closeModal('detailOfferModal')">✕</button>
-        </div>
-        <div class="modal-body" id="detailModalBody">
-            <div style="text-align:center; padding:40px; color:var(--muted);">
-                <i class="fa-solid fa-spinner fa-spin" style="font-size:24px;"></i>
-                <p style="margin-top:10px;">Đang tải thông tin chi tiết...</p>
-            </div>
-        </div>
-        <div class="modal-footer" id="detailModalFooter">
-            <button type="button" class="btn btn-secondary" onclick="closeModal('detailOfferModal')">Đóng</button>
-        </div>
-    </div>
-</div>
+
 
 <!-- ===========================================================================
      MODAL 3: CHỈNH SỬA OFFER PROPOSAL (Pop-up Modal Edit khi Draft hoặc Rejected)

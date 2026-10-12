@@ -659,60 +659,7 @@ function renderDetailFooterHtml(d) {
 
 function viewOfferDetail(offerId) {
     if (!offerId) return;
-
-    const titleEl = document.getElementById('detailModalTitle');
-    const bodyEl = document.getElementById('detailModalBody');
-    const footerEl = document.getElementById('detailModalFooter');
-
-    if (titleEl) titleEl.textContent = `Chi Tiết Đề Xuất Offer #${offerId}`;
-    if (bodyEl) {
-        bodyEl.innerHTML = `
-            <div style="text-align:center; padding:40px; color:var(--muted);">
-                <i class="fa-solid fa-spinner fa-spin" style="font-size:24px;"></i>
-                <p style="margin-top:10px;">Đang tải thông tin chi tiết...</p>
-            </div>
-        `;
-    }
-    if (footerEl) {
-        footerEl.innerHTML = `<button type="button" class="btn btn-secondary" onclick="closeModal('detailOfferModal')">Đóng</button>`;
-    }
-
-    openModal('detailOfferModal');
-
-    fetch(`/offers/${offerId}`, {
-        method: 'GET',
-        headers: {
-            'Accept': 'application/json'
-        }
-    })
-    .then(async res => {
-        const isJson = res.headers.get('content-type')?.includes('application/json');
-        const data = isJson ? await res.json() : null;
-        if (!res.ok) {
-            throw new Error(data?.message || `Lỗi tải dữ liệu (${res.status})`);
-        }
-        return data;
-    })
-    .then(res => {
-        if (res && res.success && res.data) {
-            const d = res.data;
-            if (titleEl) titleEl.textContent = `Chi Tiết Đề Xuất Offer #${d.offerId}`;
-            if (bodyEl) bodyEl.innerHTML = renderDetailModalHtml(d);
-            if (footerEl) footerEl.innerHTML = renderDetailFooterHtml(d);
-        } else {
-            throw new Error(res?.message || 'Không thể hiển thị thông tin Offer.');
-        }
-    })
-    .catch(err => {
-        if (bodyEl) {
-            bodyEl.innerHTML = `
-                <div class="modal-alert modal-alert-danger">
-                    <i class="fa-solid fa-circle-exclamation"></i>
-                    <span>${escapeOfferHtml(err.message)}</span>
-                </div>
-            `;
-        }
-    });
+    window.location.href = `/offers/${offerId}`;
 }
 
 // =========================================================================
