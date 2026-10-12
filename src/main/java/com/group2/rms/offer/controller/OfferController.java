@@ -3,6 +3,7 @@ package com.group2.rms.offer.controller;
 import com.group2.rms.core.dto.ApiResponse;
 import com.group2.rms.core.exception.BaseBusinessException;
 import com.group2.rms.offer.dto.CreateOfferRequest;
+import com.group2.rms.offer.dto.DirectorDecisionRequest;
 import com.group2.rms.offer.dto.OfferDetailResponse;
 import com.group2.rms.offer.dto.OfferResponse;
 import com.group2.rms.offer.dto.PassedCandidateResponse;
@@ -66,9 +67,39 @@ public class OfferController {
             @RequestParam(required = false) String timeSort,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
+            @ModelAttribute("userRole") String userRole,
             Model model) {
 
         int validPage = Math.max(0, page);
+        if ("Director".equals(userRole)) {
+            String currentTab = status != null && status.equalsIgnoreCase("HISTORY") ? "HISTORY" : "PENDING";
+            
+            if ("HISTORY".equals(currentTab)) {
+                Page<OfferResponse> historyData = offerService.getDirectorOfferHistory(PageRequest.of(validPage, size));
+                model.addAttribute("offersPage", historyData);
+                model.addAttribute("offers", historyData.getContent());
+                model.addAttribute("totalPages", Math.max(1, historyData.getTotalPages()));
+                model.addAttribute("totalElements", historyData.getTotalElements());
+            } else {
+                Page<OfferResponse> pendingData = offerService.getAllOffersForHr(search, "Pending_Director", timeSort, PageRequest.of(validPage, size));
+                model.addAttribute("offersPage", pendingData);
+                model.addAttribute("offers", pendingData.getContent());
+                model.addAttribute("totalPages", Math.max(1, pendingData.getTotalPages()));
+                model.addAttribute("totalElements", pendingData.getTotalElements());
+            }
+
+            Map<String, Long> directorStats = offerService.getDirectorOfferStats();
+            model.addAttribute("statPending", directorStats.getOrDefault("statPending", 0L));
+            model.addAttribute("statApproved", directorStats.getOrDefault("statApproved", 0L));
+            model.addAttribute("statRejected", directorStats.getOrDefault("statRejected", 0L));
+            model.addAttribute("currentTab", currentTab);
+            model.addAttribute("currentPage", validPage);
+            model.addAttribute("search", search != null ? search.trim() : "");
+            model.addAttribute("currentTimeSort", timeSort != null && !timeSort.isBlank() ? timeSort.trim() : "DEFAULT");
+
+            return "offers/director-list";
+        }
+
         Page<OfferResponse> pagedData = offerService.getAllOffersForHr(search, status, timeSort, PageRequest.of(validPage, size));
         List<PassedCandidateResponse> passedCandidates = offerService.getPassedCandidatesForOffer();
 
@@ -331,7 +362,39 @@ public class OfferController {
     }
 
     /**
-     * 9. EXPORT EXCEL: Xuất dữ liệu Offer theo phạm vi và bộ cột được chọn (Screen 30)
+     * 9a. DIRECTOR APPROVE VIA AJAX (JSON): Director duyệt Offer Proposal
+     */
+    @PostMapping(value = "/{id}/approve", consumes = MediaType.APPLICATION_JSON_VALUE)
+    @ResponseBody
+    public ResponseEntity<ApiResponse<OfferResponse>> approveOfferJson(
+            @PathVariable Integer id,
+            @Valid @RequestBody DirectorDecisionRequest request) {
+        try {
+            OfferResponse approved = offerService.approveOfferByDirector(id, request.getComments());
+            return ResponseEntity.ok(new ApiResponse<>(true, "Đã phê duyệt đề xuất Offer thành công!", approved));
+        } catch (BaseBusinessException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ApiResponse<>(false, e.getMessage()));
+        }
+    }
+
+    /**
+     * 9b. DIRECTOR REJECT VIA AJAX (JSON): Director từ chối Offer Proposal
+     */
+    @PostMapping(value = "/{id}/reject", consumes = MediaType.APPLICATION_JSON_VALUE)
+    @ResponseBody
+    public ResponseEntity<ApiResponse<OfferResponse>> rejectOfferJson(
+            @PathVariable Integer id,
+            @Valid @RequestBody DirectorDecisionRequest request) {
+        try {
+            OfferResponse rejected = offerService.rejectOfferByDirector(id, request.getComments());
+            return ResponseEntity.ok(new ApiResponse<>(true, "Đã từ chối đề xuất Offer thành công!", rejected));
+        } catch (BaseBusinessException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ApiResponse<>(false, e.getMessage()));
+        }
+    }
+
+    /**
+     * 10. EXPORT EXCEL: Xuất dữ liệu Offer theo phạm vi và bộ cột được chọn (Screen 30)
      */
     @PostMapping("/export")
     public org.springframework.http.ResponseEntity<byte[]> exportOffers(

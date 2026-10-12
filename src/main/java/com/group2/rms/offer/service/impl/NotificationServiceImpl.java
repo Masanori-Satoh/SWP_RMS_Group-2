@@ -67,4 +67,83 @@ public class NotificationServiceImpl implements NotificationService {
                     candidateName, candidateEmail, offer.getOfferedPositionTitle(), offer.getProposedSalary());
         }
     }
+
+    @Override
+    public void notifyDirectorNewPendingOffer(OfferProposal offer) {
+        // Trong thực tế, có thể dùng UserRepository để lấy danh sách email của tất cả Director.
+        // Ở đây giả lập gửi tới danh sách Ban Giám đốc.
+        String candidateName = (offer.getApplication() != null && offer.getApplication().getCandidate() != null)
+                ? offer.getApplication().getCandidate().getAccount().getFullName() : "N/A";
+        
+        JavaMailSender sender = mailSender.getIfAvailable();
+        if (sender != null) {
+            try {
+                SimpleMailMessage message = new SimpleMailMessage();
+                message.setFrom(from);
+                message.setTo("director@rms-tech.vn"); // Địa chỉ email chung hoặc danh sách các Giám đốc
+                message.setSubject("Yêu cầu phê duyệt Đề xuất Offer - " + candidateName);
+                message.setText(
+                        "Kính gửi Ban Giám đốc,\n\n"
+                        + "Hệ thống Mộc RMS vừa nhận được một Đề xuất Offer mới cần Ban Giám đốc xem xét và phê duyệt.\n"
+                        + "- Ứng viên: " + candidateName + "\n"
+                        + "- Vị trí đề xuất: " + offer.getOfferedPositionTitle() + "\n"
+                        + "- Mức lương chính thức: " + offer.getProposedSalary() + " VND/tháng\n\n"
+                        + "Vui lòng đăng nhập vào hệ thống để xem chi tiết và thực hiện phê duyệt/từ chối.\n\n"
+                        + "Trân trọng,\nHệ thống Mộc RMS"
+                );
+                sender.send(message);
+                log.info("Đã gửi email yêu cầu phê duyệt Offer (ID: {}) tới Ban Giám đốc.", offer.getOfferId());
+            } catch (Exception ex) {
+                log.error("Lỗi khi gửi email yêu cầu duyệt Offer tới Director: {}", ex.getMessage());
+            }
+        } else {
+            log.info("[MOCK EMAIL] Gửi yêu cầu duyệt Offer (ID: {}) tới Ban Giám đốc. Ứng viên: {}", 
+                     offer.getOfferId(), candidateName);
+        }
+    }
+
+    @Override
+    public void notifyHrOfDirectorDecision(OfferProposal offer, String decision, String comments) {
+        String hrEmail = null;
+        String hrName = "Chuyên viên HR";
+        
+        if (offer.getProposedBy() != null) {
+            hrEmail = offer.getProposedBy().getEmail();
+            hrName = offer.getProposedBy().getFullName();
+        }
+
+        if (hrEmail == null || hrEmail.isBlank()) {
+            log.warn("Không thể gửi thông báo quyết định Offer: HR tạo đề xuất (Offer ID {}) không có email hợp lệ.", offer.getOfferId());
+            return;
+        }
+
+        String statusVn = "Approved".equalsIgnoreCase(decision) ? "PHÊ DUYỆT" : "TỪ CHỐI";
+        String candidateName = (offer.getApplication() != null && offer.getApplication().getCandidate() != null)
+                ? offer.getApplication().getCandidate().getAccount().getFullName() : "N/A";
+
+        JavaMailSender sender = mailSender.getIfAvailable();
+        if (sender != null) {
+            try {
+                SimpleMailMessage message = new SimpleMailMessage();
+                message.setFrom(from);
+                message.setTo(hrEmail);
+                message.setSubject("Kết quả phê duyệt Đề xuất Offer - " + candidateName);
+                message.setText(
+                        "Chào " + hrName + ",\n\n"
+                        + "Đề xuất Offer của ứng viên " + candidateName + " cho vị trí " + offer.getOfferedPositionTitle() + " đã có kết quả từ Ban Giám đốc.\n\n"
+                        + "Quyết định: " + statusVn + "\n"
+                        + "Ghi chú của Giám đốc: " + (comments != null && !comments.isBlank() ? comments : "Không có") + "\n\n"
+                        + "Vui lòng đăng nhập vào hệ thống Mộc RMS để thực hiện các bước tiếp theo.\n\n"
+                        + "Trân trọng,\nHệ thống Mộc RMS"
+                );
+                sender.send(message);
+                log.info("Đã gửi email kết quả duyệt Offer (ID: {}) tới HR {}.", offer.getOfferId(), hrEmail);
+            } catch (Exception ex) {
+                log.error("Lỗi khi gửi email kết quả duyệt Offer tới {}: {}", hrEmail, ex.getMessage());
+            }
+        } else {
+            log.info("[MOCK EMAIL] Gửi kết quả duyệt Offer ({}) tới HR {} ({}): Quyết định = {}", 
+                     offer.getOfferId(), hrName, hrEmail, statusVn);
+        }
+    }
 }

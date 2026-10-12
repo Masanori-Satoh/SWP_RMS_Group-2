@@ -56,6 +56,16 @@ public interface OfferService {
     java.util.Map<String, Long> getOfferStats();
 
     /**
+     * Lấy thống kê số lượng Offer cho Director (Chờ duyệt hệ thống, Đã duyệt của Director, Đã từ chối của Director)
+     */
+    java.util.Map<String, Long> getDirectorOfferStats();
+
+    /**
+     * Lấy lịch sử quyết định của Director hiện tại
+     */
+    Page<OfferResponse> getDirectorOfferHistory(Pageable pageable);
+
+    /**
      * Lấy thông tin chi tiết gói Offer (Group A + B + History).
      */
     OfferDetailResponse getOfferDetailForHr(Integer id);
@@ -79,4 +89,14 @@ public interface OfferService {
      * HR gửi Offer Letter chính thức cho ứng viên sau khi Director Approved.
      */
     OfferResponse sendOfferToCandidate(Integer id);
+
+    /**
+     * Director phê duyệt Offer.
+     */
+    OfferResponse approveOfferByDirector(Integer id, String comments);
+
+    /**
+     * Director từ chối Offer.
+     */
+    OfferResponse rejectOfferByDirector(Integer id, String comments);
 }
