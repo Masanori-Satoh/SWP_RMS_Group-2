@@ -16,6 +16,33 @@
 <div th:fragment="actions(name, email, role, avatar, idPrefix)" class="topbar-user"
      th:with="roleLabel=${role == 'Hiring Manager' ? 'Trưởng phòng tuyển dụng' : (role == 'HR' ? 'Nhân sự' : (role == 'HR Specialist' ? 'Chuyên viên Nhân sự' : (role == 'Director' ? 'Giám đốc' : (role == 'System Admin' ? 'Quản trị hệ thống' : (role == 'Interviewer' ? 'Người phỏng vấn' : (role == 'Candidate' ? 'Ứng viên' : role))))))},
               hasAvatar=${avatar != null and !#strings.isEmpty(avatar)}">
+  <!-- Khối thông báo (Chuông + Badge + Dropdown danh sách nhanh) -->
+  <div class="topbar-notification" th:id="${idPrefix + '-notification'}">
+    <button type="button" class="topbar-notification-btn" th:id="${idPrefix + '-notif-trigger'}"
+            aria-label="Xem thông báo" aria-expanded="false" th:attr="aria-controls=${idPrefix + '-notif-dropdown'}">
+      <svg class="topbar-notif-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
+        <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+      </svg>
+      <span class="topbar-notif-badge" th:id="${idPrefix + '-notif-badge'}" hidden>0</span>
+    </button>
+
+    <div class="topbar-notif-dropdown" th:id="${idPrefix + '-notif-dropdown'}" role="region" aria-label="Hộp thông báo" hidden>
+      <div class="topbar-notif-header">
+        <h4 class="topbar-notif-title">Thông báo</h4>
+        <button type="button" class="topbar-notif-mark-all" th:id="${idPrefix + '-notif-mark-all'}">Đánh dấu tất cả đã đọc</button>
+      </div>
+
+      <div class="topbar-notif-list" th:id="${idPrefix + '-notif-list'}">
+        <div class="topbar-notif-loading">Đang tải thông báo...</div>
+      </div>
+
+      <div class="topbar-notif-footer">
+        <a th:href="@{/notifications}" class="topbar-notif-view-all">Xem tất cả thông báo</a>
+      </div>
+    </div>
+  </div>
+
   <!-- Khối định danh: click vào bất kỳ đâu đều về hồ sơ cá nhân -->
   <a th:href="@{/profile}" class="workspace-identity" title="Xem hồ sơ cá nhân của bạn">
     <img class="workspace-avatar" th:if="${hasAvatar}" th:src="${avatar}" alt="Avatar" referrerpolicy="no-referrer">
@@ -52,6 +79,8 @@
       </div>
     </div>
   </dialog>
+
+  <script defer th:src="@{/js/topbar-notifications.js}"></script>
 </div>
 </body>
 </html>

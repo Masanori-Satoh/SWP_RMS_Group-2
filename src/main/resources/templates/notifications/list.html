@@ -12,20 +12,20 @@
 <body>
 <main id="main" layout:fragment="content" class="container notif-container" tabindex="-1">
     <nav class="requisition-breadcrumb" aria-label="Breadcrumb">
-        <a th:href="@{/dashboard}">Dashboard</a>
+        <a th:href="@{/dashboard}">Bảng điều khiển</a>
         <span aria-hidden="true">/</span>
-        <span aria-current="page">Notifications</span>
+        <span aria-current="page">Thông báo</span>
     </nav>
 
     <div class="notif-page-header">
         <div>
-            <h1>Notifications</h1>
-            <p class="notif-subtitle" th:text="|You have ${unreadCount} unread notification(s)|"></p>
+            <h1>Thông báo</h1>
+            <p class="notif-subtitle" th:text="|Bạn có ${unreadCount} thông báo chưa đọc|"></p>
         </div>
         <div class="notif-actions" th:if="${unreadCount > 0}">
             <form th:action="@{/notifications/read-all}" method="post">
                 <button type="submit" class="btn btn--secondary btn--sm btn-read-all">
-                    Mark all as read
+                    Đánh dấu tất cả đã đọc
                 </button>
             </form>
         </div>
@@ -37,8 +37,9 @@
         <div th:each="n : ${notifications}" class="notif-card card" th:classappend="${n.isRead ? 'read' : 'unread'}">
             <div class="notif-card-header">
                 <div class="notif-badge-group">
-                    <span class="badge" th:classappend="${n.isRead ? 'badge--neutral status-read' : 'badge--warning status-unread'}" th:text="${n.isRead ? 'Read' : 'New'}"></span>
-                    <span th:if="${n.eventType == 'REQUISITION_REJECTED'}" class="badge badge--danger event-rejected">Requisition Rejected</span>
+                    <span class="badge" th:classappend="${n.isRead ? 'badge--neutral status-read' : 'badge--warning status-unread'}" th:text="${n.isRead ? 'Đã đọc' : 'Mới'}"></span>
+                    <span th:if="${n.eventType == 'REQUISITION_REJECTED'}" class="badge badge--danger event-rejected">Yêu cầu bị từ chối</span>
+                    <span th:if="${n.eventType == 'JOB_POSTING_PUBLISHED'}" class="badge badge--success event-published">Tin tuyển dụng đã phát hành</span>
                 </div>
                 <span class="notif-time text-muted" th:text="${#temporals.format(n.createdAt, 'dd/MM/yyyy HH:mm')}"></span>
             </div>
@@ -48,12 +49,12 @@
 
             <div class="notif-footer">
                 <form th:if="${!n.isRead}" th:action="@{'/notifications/' + ${n.notificationId} + '/read'}" method="post">
-                    <button type="submit" class="btn btn--outline btn--sm btn-mark-read">Mark as read</button>
+                    <button type="submit" class="btn btn--outline btn--sm btn-mark-read">Đánh dấu đã đọc</button>
                 </form>
                 <form th:if="${n.linkUrl != null}" th:action="@{'/notifications/' + ${n.notificationId} + '/read'}" method="post">
                     <input type="hidden" name="redirectUrl" th:value="${n.linkUrl}">
                     <button type="submit" class="btn btn--primary btn--sm btn-open-target">
-                        View Details &rarr;
+                        Xem chi tiết &rarr;
                     </button>
                 </form>
             </div>
