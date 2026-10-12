@@ -1,7 +1,6 @@
 package com.group2.rms.service;
 
-import com.group2.rms.auth.exception.InvalidResetTokenException;
-import com.group2.rms.auth.service.CandidateRegistrationService;
+import com.group2.rms.user.service.AccountManagementService;
 import com.group2.rms.auth.service.PasswordResetService;
 import com.group2.rms.candidate.entity.Candidate;
 import com.group2.rms.user.entity.User;
@@ -15,15 +14,13 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.annotation.Rollback;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.Clock;
-import java.time.Duration;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
+
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @SpringBootTest(properties = "app.password.reset.secret=integration-test-signing-key-longer-than-32-bytes")
@@ -31,9 +28,8 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 @Rollback
 class AuthenticationDatabaseTests {
     private static final String TEST_SECRET = "integration-test-signing-key-longer-than-32-bytes";
-
     @Autowired
-    private CandidateRegistrationService registration;
+    private AccountManagementService accounts;
     @Autowired
     private PasswordResetService reset;
     @Autowired
@@ -48,8 +44,11 @@ class AuthenticationDatabaseTests {
     @Test
     void verifiedRegistrationCreatesActiveCandidateAccountAndProfile() {
         String username = uniqueUsername();
-        registration.registerVerified(registration.prepare(new CandidateRegistrationService.RegisterCommand(
-                "Ứng viên đăng ký", username, username + "@example.test", "oldPassword12")));
+        accounts.createCandidateWithPasswordHash(
+                "Ứng viên đăng ký",
+                username,
+                username + "@example.test",
+                passwordEncoder.encode("oldPassword12"));
         entityManager.flush();
         entityManager.clear();
 
@@ -114,8 +113,8 @@ class AuthenticationDatabaseTests {
 
     private User registeredCandidate() {
         String username = uniqueUsername();
-        registration.registerVerified(registration.prepare(new CandidateRegistrationService.RegisterCommand(
-                "Ứng viên đăng ký", username, username + "@example.test", "oldPassword12")));
+        accounts.createCandidateWithPasswordHash("Ứng viên đăng ký", username, username + "@example.test",
+                "oldPassword12");
         entityManager.flush();
         return users.findByUsernameIgnoreCase(username).orElseThrow();
     }

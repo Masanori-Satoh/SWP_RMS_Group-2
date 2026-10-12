@@ -34,17 +34,19 @@ public class RegistrationController {
     @PostMapping
     public String register(@Valid @ModelAttribute("form") RegisterAccountRequest form,
                            BindingResult errors, HttpSession session) {
+        //check if form has error
         if (errors.hasErrors()) {
             form.setPassword(null);
             form.setConfirmPassword(null);
             return "auth/register";
         }
-        verification.requestRegistration(form.toCommand(), session);
+        verification.requestRegistration(form, session);
         return "redirect:/register/otp";
     }
 
     @GetMapping("/otp")
     public String otpForm(Model model, HttpSession session) {
+        //check if form is not exist
         if (!model.containsAttribute("form")) {
             model.addAttribute("form", new VerifyRegistrationOtpRequest());
         }
@@ -55,6 +57,7 @@ public class RegistrationController {
     @PostMapping("/otp")
     public String verifyOtp(@Valid @ModelAttribute("form") VerifyRegistrationOtpRequest form,
             BindingResult errors, Model model, HttpSession session) {
+        //check ì otp has error
         if (errors.hasErrors()) {
             addOtpContext(model, session);
             return "auth/register-otp";

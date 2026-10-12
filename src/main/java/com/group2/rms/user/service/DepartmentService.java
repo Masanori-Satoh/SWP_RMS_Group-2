@@ -65,6 +65,7 @@ public class DepartmentService {
     }
 
     @Transactional
+    @SuppressWarnings("null")
     public void update(int id, DepartmentRequest form) {
         Department department = find(id);
         String name = validateName(id, form);
@@ -106,7 +107,7 @@ public class DepartmentService {
         if (duplicate) throw invalid("departmentName", "Tên phòng ban đã được sử dụng, kể cả phòng ban đã vô hiệu hóa.", id, form);
         return name;
     }
-
+    @SuppressWarnings("null")
     private void persist(Department department, Integer id, DepartmentRequest form) {
         try {
             departments.saveAndFlush(department);

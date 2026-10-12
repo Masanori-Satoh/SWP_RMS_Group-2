@@ -1,33 +1,21 @@
 package com.group2.rms.auth.service;
+import com.group2.rms.auth.dto.AccountSnapshotResponse;
 
-import com.group2.rms.auth.exception.InvalidResetTokenException;
 import com.group2.rms.auth.exception.PasswordRecoveryFlowException;
 import com.group2.rms.auth.exception.PasswordRecoveryFlowException.Step;
 import com.group2.rms.user.entity.User;
 import com.group2.rms.user.repository.UserRepository;
-import com.group2.rms.user.exception.AccountFieldException;
+
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
+
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import javax.crypto.Mac;
-import javax.crypto.spec.SecretKeySpec;
-
-import java.io.Serializable;
-import java.nio.charset.StandardCharsets;
-import java.security.GeneralSecurityException;
-import java.security.MessageDigest;
-import java.security.SecureRandom;
 import java.time.Clock;
 import java.time.Instant;
-import java.util.Base64;
+
 import java.util.Objects;
-import java.util.Optional;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-import com.group2.rms.auth.exception.InvalidResetTokenException;
 
 /**
  * A short-lived signed email link, bound to the current account credentials. No
@@ -57,7 +45,7 @@ public class PasswordResetService {
     }
 
     @Transactional(readOnly = true)
-    public AccountSnapshot findActiveAccount(String email) {
+    public AccountSnapshotResponse  findActiveAccount(String email) {
         // check if email is not valid
         if (email == null || email.isBlank()) {
             throw new PasswordRecoveryFlowException(
@@ -83,38 +71,31 @@ public class PasswordResetService {
                     "This account is not active.");
         }
 
-        return new AccountSnapshot(
-                user.getUserId(),
-                user.getEmail(),
-                user.getPasswordHash());
+        return new AccountSnapshotResponse (user.getUserId(), user.getEmail(), user.getPasswordHash());
     }
 
     @Transactional(readOnly = true)
-    public boolean isCurrent(AccountSnapshot expected) {
-
+    @SuppressWarnings("null")
+    public boolean isCurrent(AccountSnapshotResponse  expected) {
+        // check if account is null
         if (expected == null) {
             return false;
         }
-
+        // check if account is current
         return users.findById(expected.userId())
                 .filter(user -> matchesAccount(user, expected))
                 .isPresent();
     }
 
     @Transactional
-    public void changePassword(
-            AccountSnapshot expected,
-            String newPassword,
-            Instant expiresAt) {
+    public void changePassword(AccountSnapshotResponse  expected, String newPassword, Instant expiresAt) {
 
+        // check if account is not exist or expiresAt is null  
         if (expected == null || expiresAt == null) {
             throw invalidRequest();
         }
-
-        if (newPassword == null
-                || newPassword.isBlank()
-                || newPassword.length() < 8
-                || newPassword.length() > 32) {
+        //check if new password is not valid
+        if (newPassword == null|| newPassword.isBlank()|| newPassword.length() < 8|| newPassword.length() > 32) {
 
             throw new PasswordRecoveryFlowException(
                     Step.PASSWORD,
@@ -124,11 +105,10 @@ public class PasswordResetService {
         }
 
         User user = users.findByIdForUpdate(expected.userId())
-                .orElseThrow(PasswordResetService::invalidRequest);
+                .orElseThrow(() -> PasswordResetService.invalidRequest());
 
-        // Kiểm tra lại sau khi đã lấy khóa ghi của User.
-        if (!clock.instant().isBefore(expiresAt)
-                || !matchesAccount(user, expected)) {
+        
+        if (!clock.instant().isBefore(expiresAt)|| !matchesAccount(user, expected)) {
             throw invalidRequest();
         }
 
@@ -136,15 +116,11 @@ public class PasswordResetService {
         users.saveAndFlush(user);
     }
 
-    private static boolean matchesAccount(
-            User user,
-            AccountSnapshot expected) {
-
+    private static boolean matchesAccount(User user, AccountSnapshotResponse  expected) {
+        // check if account is active email and password is not change
         return "Active".equals(user.getAccountStatus())
                 && Objects.equals(user.getEmail(), expected.email())
-                && Objects.equals(
-                        user.getPasswordHash(),
-                        expected.passwordHash());
+                && Objects.equals(user.getPasswordHash(), expected.passwordHash());
     }
 
     private static PasswordRecoveryFlowException invalidRequest() {
@@ -155,15 +131,5 @@ public class PasswordResetService {
                 "Your reset request is invalid or expired. Request a new code.");
     }
 
-    // Snapshot nội bộ giữa các Service; không đưa vào Model/JSON/log.
-    record AccountSnapshot(
-            Integer userId,
-            String email,
-            String passwordHash) implements Serializable {
-
-        @Override
-        public String toString() {
-            return "AccountSnapshot[redacted]";
-        }
-    }
+  
 }
