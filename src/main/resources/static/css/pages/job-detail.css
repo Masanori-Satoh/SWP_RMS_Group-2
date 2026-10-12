@@ -169,6 +169,10 @@
   margin-bottom: 4px;
 }
 
+.internal-employee-notice__link {
+  margin-top: 12px;
+}
+
 .btn-full-width {
   width: 100%;
 }

@@ -114,13 +114,22 @@
                     </ul>
 
                     <div class="action-wrap job-action-wrap">
+                        <!-- Tài khoản nội bộ: không nộp hồ sơ. HR, Admin có link sang tin nội bộ
+                             (khớp quyền SecurityConfig /internal/job-postings/**), vai trò khác chỉ thấy thông báo. -->
+                        <div th:if="${currentUser != null and currentUser.roleName != 'Candidate'}"
+                             th:with="canOpenInternal=${currentUser.roleName == 'HR' or currentUser.roleName == 'System Admin'}"
+                             class="internal-employee-notice">
+                            <strong>Tài khoản nội bộ</strong>
+                            <span th:if="${canOpenInternal}">Xem tin này trong trang quản lý để theo dõi hồ sơ ứng tuyển.</span>
+                            <span th:unless="${canOpenInternal}">Chỉ ứng viên mới có thể sử dụng chức năng nộp hồ sơ.</span>
+                            <a th:if="${canOpenInternal}" th:href="@{/internal/job-postings/{id}(id=${job.id})}"
+                               class="btn btn--outline btn--sm btn-full-width internal-employee-notice__link">
+                                Xem tin nội bộ
+                            </a>
+                        </div>
+
                         <!-- Nút hành động ứng tuyển -->
                         <th:block th:if="${job.isAcceptingApplications}">
-                            <!-- Tài khoản nhân sự nội bộ -->
-                            <div th:if="${currentUser != null and currentUser.roleName != 'Candidate'}" class="internal-employee-notice">
-                                <strong>Tài khoản nội bộ</strong>
-                                Chỉ ứng viên mới có thể sử dụng chức năng nộp hồ sơ.
-                            </div>
 
                             <!-- Khách: đi qua /jobs/{id}/apply để đăng nhập rồi quay lại đúng tin -->
                             <a th:if="${currentUser == null and !job.hasApplied}"
