@@ -2,9 +2,27 @@
 <html lang="vi" xmlns:th="http://www.thymeleaf.org">
 <body>
 <th:block th:fragment="menu(activeMenu)">
-    <!-- Bảng điều khiển / Hồ sơ đã ứng tuyển -->
-    <a th:href="@{/dashboard#applications}" class="sidebar-nav-link"
-       th:classappend="${activeMenu == 'dashboard' or activeMenu == 'applications' ? 'active' : ''}"
+    <!-- Bảng điều khiển -->
+    <a th:href="@{/dashboard}" class="sidebar-nav-link"
+       th:classappend="${activeMenu == 'dashboard' ? 'active' : ''}"
+       th:attr="aria-current=${activeMenu == 'dashboard' ? 'page' : null}"
+       title="Bảng điều khiển"
+       data-tooltip="Bảng điều khiển">
+        <span class="nav-icon-wrapper">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <rect x="3" y="3" width="7" height="7"/>
+                <rect x="14" y="3" width="7" height="7"/>
+                <rect x="14" y="14" width="7" height="7"/>
+                <rect x="3" y="14" width="7" height="7"/>
+            </svg>
+        </span>
+        <span class="nav-label-text">Bảng điều khiển</span>
+    </a>
+
+    <!-- Hồ sơ đã ứng tuyển (5.1.38, khớp SecurityConfig /portal/applications/** chỉ cho ứng viên) -->
+    <a th:href="@{/portal/applications}" class="sidebar-nav-link"
+       th:classappend="${activeMenu == 'applications' ? 'active' : ''}"
+       th:attr="aria-current=${activeMenu == 'applications' ? 'page' : null}"
        title="Hồ sơ đã ứng tuyển"
        data-tooltip="Hồ sơ đã ứng tuyển">
         <span class="nav-icon-wrapper">
