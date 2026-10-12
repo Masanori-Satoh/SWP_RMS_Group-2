@@ -1,0 +1,28 @@
+/* =============================================================================
+   PAGES/MY-APPLICATIONS.CSS — Hồ sơ đã ứng tuyển của ứng viên
+   (/portal/applications, candidate/my-applications.html)
+   Chỉ chứa phần catalog chưa có: trạng thái rỗng, form rút đơn nằm trong ô bảng, ghi chú cuối bảng.
+   Tiền tố class: myapp-
+   ============================================================================= */
+
+.myapp-empty {
+  text-align: center;
+}
+
+.myapp-empty__title {
+  margin: 0 0 var(--s2);
+  font-size: var(--font-lg);
+}
+
+.myapp-empty__desc {
+  margin: 0;
+}
+
+.myapp-withdraw-form {
+  margin: 0;
+}
+
+.myapp-note {
+  margin-top: var(--s4);
+  font-size: 14px;
+}
