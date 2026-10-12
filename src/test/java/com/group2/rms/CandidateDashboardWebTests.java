@@ -120,8 +120,9 @@ class CandidateDashboardWebTests {
                 html.contains("href=\"/offers\""));
         org.junit.jupiter.api.Assertions.assertEquals("System Admin".equals(role),
                 html.contains("href=\"/admin/departments\""));
+        // dunglt bổ sung: mục "Hồ sơ đã ứng tuyển" của ứng viên chuyển từ /dashboard#applications sang /portal/applications (5.1.38)
         org.junit.jupiter.api.Assertions.assertEquals("Candidate".equals(role),
-                html.contains("href=\"/dashboard#applications\""));
+                html.contains("href=\"/portal/applications\""));
     }
 
     private MockHttpSession login(String role, DashboardResponse view) throws Exception {

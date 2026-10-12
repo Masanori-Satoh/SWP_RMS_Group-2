@@ -106,6 +106,9 @@ public class SecurityConfig {
                                                 .requestMatchers(HttpMethod.GET, "/portal/interviews")
                                                 .hasAuthority("ROLE_CANDIDATE")
                                                 .requestMatchers("/portal/interviews", "/portal/interviews/**").denyAll()
+                                                // Candidate's own applications and withdrawal (ownership checked in MyApplicationService)
+                                                .requestMatchers("/portal/applications", "/portal/applications/**")
+                                                .hasAuthority("ROLE_CANDIDATE")
                                                 // Forms and all writes remain restricted to existing HR/Admin editors.
                                                 .requestMatchers("/interviews/new", "/interviews/*/edit")
                                                 .hasAnyAuthority("ROLE_HR", RoleAuthorities.SYSTEM_ADMIN)

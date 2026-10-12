@@ -68,6 +68,24 @@ class SidebarMenuTests {
         assertFalse(legacy(role, "dashboard").contains(MENU), role);
     }
 
+    /** Ứng viên có mục riêng "Hồ sơ đã ứng tuyển" (/portal/applications/** chỉ cho ứng viên), tách khỏi Bảng điều khiển. */
+    @Test
+    void candidateSeesOwnApplicationsEntryHighlightedOnItsPage() throws Exception {
+        String myApplications = "href=\"/portal/applications\"";
+        List<String> entries = links(shell("Candidate", "dashboard"));
+        assertTrue(entries.indexOf("/dashboard") < entries.indexOf("/portal/applications"), entries.toString());
+
+        String shell = shell("Candidate", "applications");
+        int link = shell.indexOf(myApplications);
+        String tag = shell.substring(shell.lastIndexOf("<a", link), shell.indexOf('>', link));
+        assertTrue(tag.contains("active"), tag);
+        assertTrue(tag.contains("aria-current=\"page\""), tag);
+
+        for (String role : List.of("HR", "Hiring Manager", "Director", "System Admin", "Interviewer")) {
+            assertFalse(shell(role, "dashboard").contains(myApplications), role);
+        }
+    }
+
     /** /internal/job-postings/** chỉ cho HR và Admin (SecurityConfig): vai trò khác không được thấy link dẫn tới 403. */
     @Test
     void jobPostingsEntryOnlyForRolesAllowedToOpenIt() throws Exception {

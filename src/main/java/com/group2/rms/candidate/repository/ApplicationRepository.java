@@ -126,6 +126,41 @@ public interface ApplicationRepository extends JpaRepository<Application, Intege
             """)
     Optional<Application> findDetailById(@Param("id") Integer applicationId);
 
+    /** Đơn của một ứng viên (My Applications), mới nhất trước. */
+    @Query("""
+            select a from Application a
+                join fetch a.jobPosting
+            where a.candidate.account.userId = :userId
+            order by a.submissionDate desc, a.applicationId desc
+            """)
+    List<Application> findOwnedByUserId(@Param("userId") Integer userId);
+
+    /** Một đơn, chỉ khi thuộc về ứng viên {@code userId}. */
+    @Query("""
+            select a from Application a
+                join fetch a.jobPosting
+            where a.applicationId = :id and a.candidate.account.userId = :userId
+            """)
+    Optional<Application> findOwnedById(@Param("id") Integer applicationId, @Param("userId") Integer userId);
+
+    /**
+     * Ghi dấu ứng viên tự rút đơn. Schema không có trạng thái {@code Withdrawn}: đơn chuyển {@code Rejected},
+     * dòng {@code AuditLog} này phân biệt "đã rút" với "bị loại". SQL thuần vì module admin (chủ bảng AuditLog)
+     * phụ thuộc user, user phụ thuộc candidate: import entity của admin vào đây sẽ thành vòng phụ thuộc.
+     */
+    @Modifying
+    @Query(value = "INSERT INTO AuditLog (UserId, [Action], EntityName, EntityId, OldValue, NewValue) "
+            + "VALUES (:userId, 'UPDATE', 'Application', CAST(:id AS NVARCHAR(50)), :oldStatus, 'Withdrawn')",
+            nativeQuery = true)
+    void recordWithdrawal(@Param("userId") Integer userId, @Param("id") Integer applicationId,
+                          @Param("oldStatus") String oldStatus);
+
+    /** Các đơn ứng viên {@code userId} đã tự rút (dấu do {@link #recordWithdrawal} ghi). */
+    @Query(value = "SELECT CAST(l.EntityId AS INT) FROM AuditLog l "
+            + "WHERE l.EntityName = 'Application' AND l.NewValue = 'Withdrawn' AND l.UserId = :userId",
+            nativeQuery = true)
+    List<Integer> findWithdrawnApplicationIds(@Param("userId") Integer userId);
+
     /**
      * Lịch phỏng vấn của đơn, cho timeline. SQL thuần vì module interview đã phụ thuộc candidate:
      * import entity của interview vào đây sẽ thành vòng phụ thuộc.

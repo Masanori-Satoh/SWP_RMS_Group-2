@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="vi"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/internal}">
+<!--
+    CANDIDATE/MY-APPLICATIONS.HTML — Hồ sơ đã ứng tuyển (/portal/applications, chỉ ứng viên; 5.1.38)
+    Chỉ hiện điều ứng viên cần biết: vị trí, ngày nộp, trạng thái. Không có điểm AI, nhận xét nội bộ (GBR-02).
+    Rút đơn: mỗi dòng một form POST thường; JS hỏi xác nhận bằng hộp thoại trước khi gửi.
+    Dựng bằng catalog: page-header, alert, table-wrapper, table, badge, btn, confirm-dialog.
+    CSS riêng: css/pages/my-applications.css (myapp-).
+-->
+<head>
+    <title>Hồ sơ đã ứng tuyển</title>
+    <th:block layout:fragment="styles">
+        <link rel="stylesheet" th:href="@{/css/pages/my-applications.css}">
+    </th:block>
+</head>
+<body>
+<main id="main" layout:fragment="content" class="page-content container" tabindex="-1">
+
+    <div class="page-header">
+        <div>
+            <h1 class="page-title">Hồ sơ đã ứng tuyển</h1>
+            <p class="page-subtitle">Theo dõi trạng thái các hồ sơ bạn đã nộp</p>
+        </div>
+        <a th:href="@{/jobs}" class="btn btn--outline">Xem vị trí đang tuyển</a>
+    </div>
+
+    <div th:if="${successMessage}" class="alert alert--success" role="status" th:text="${successMessage}">Đã rút hồ sơ.</div>
+    <div th:if="${errorMessage}" class="alert alert--danger" role="alert" th:text="${errorMessage}">Không thể rút hồ sơ.</div>
+
+    <div th:if="${#lists.isEmpty(applications)}" class="card myapp-empty">
+        <h2 class="myapp-empty__title">Bạn chưa ứng tuyển vị trí nào</h2>
+        <p class="myapp-empty__desc text-muted">Hồ sơ bạn nộp sẽ hiện ở đây cùng trạng thái xử lý.</p>
+    </div>
+
+    <div th:unless="${#lists.isEmpty(applications)}" class="table-wrapper">
+        <table class="table">
+            <caption class="sr-only">Các hồ sơ ứng tuyển của bạn</caption>
+            <thead>
+            <tr>
+                <th scope="col">Vị trí</th>
+                <th scope="col">Ngày nộp</th>
+                <th scope="col">Trạng thái</th>
+                <th scope="col">Thao tác</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr th:each="item : ${applications}">
+                <th scope="row">
+                    <a th:href="@{/jobs/{id}(id=${item.jobPostingId})}" th:text="${item.postingTitle}">Junior Java Developer</a>
+                </th>
+                <td>
+                    <time th:datetime="${#temporals.formatISO(item.submissionDate)}"
+                          th:text="${#temporals.format(item.submissionDate, 'dd/MM/yyyy')}">05/10/2026</time>
+                </td>
+                <td>
+                    <span class="badge" th:classappend="${item.statusBadge}" th:text="${item.statusLabel}">Đã nộp hồ sơ</span>
+                </td>
+                <td>
+                    <form th:if="${item.canWithdraw}" th:action="@{/portal/applications/{id}/withdraw(id=${item.applicationId})}"
+                          method="post" class="myapp-withdraw-form" data-withdraw-form
+                          th:attr="data-posting-title=${item.postingTitle}">
+                        <button type="submit" class="btn btn--outline btn--sm">Rút đơn</button>
+                    </form>
+                    <span th:unless="${item.canWithdraw}" class="text-muted">—</span>
+                </td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <p th:unless="${#lists.isEmpty(applications)}" class="text-muted myapp-note">
+        Bạn chỉ rút được hồ sơ khi bộ phận tuyển dụng chưa duyệt. Hồ sơ đã rút không nộp lại được cho cùng vị trí.
+    </p>
+
+    <dialog id="myapp-withdraw-dialog" class="confirm-dialog" aria-labelledby="myapp-withdraw-title"
+            aria-describedby="myapp-withdraw-message">
+        <div class="dialog-content">
+            <div class="dialog-header">
+                <h2 id="myapp-withdraw-title" class="dialog-title">Rút hồ sơ ứng tuyển?</h2>
+            </div>
+            <div class="dialog-body">
+                <p id="myapp-withdraw-message">
+                    Bạn sẽ rút hồ sơ vị trí <strong data-withdraw-title></strong>.
+                    Sau khi rút, bạn không thể nộp lại cho vị trí này.
+                </p>
+            </div>
+            <div class="dialog-actions">
+                <button type="button" class="btn btn--secondary btn--sm" data-withdraw-cancel>Giữ hồ sơ</button>
+                <button type="button" class="btn btn--danger btn--sm" data-withdraw-confirm>Rút hồ sơ</button>
+            </div>
+        </div>
+    </dialog>
+</main>
+<th:block layout:fragment="scripts">
+    <script defer th:src="@{/js/pages/my-applications.js}"></script>
+</th:block>
+</body>
+</html>
