@@ -1,88 +1,116 @@
 <!DOCTYPE html>
 <html lang="en" xmlns:th="http://www.thymeleaf.org">
+
 <head th:replace="~{fragments/head :: interfaceHead('API Monitoring', ~{::pageStyles})}">
-  <th:block th:fragment="pageStyles"><link rel="stylesheet" th:href="@{/css/api-monitoring.css}"></th:block>
+    <th:block th:fragment="pageStyles">
+        <link rel="stylesheet" th:href="@{/css/api-monitoring.css}">
+    </th:block>
 </head>
+
 <body class="rms-app">
-<div class="page-wrapper">
-    <aside th:replace="~{fragments/sidebar :: workspace('api-monitoring', 'System Admin')}"></aside>
+    <div class="page-wrapper">
+        <aside th:replace="~{fragments/sidebar :: workspace('api-monitoring', 'System Admin')}"></aside>
 
-    <div class="main-content">
-        <header th:replace="~{fragments/workspace-header :: header('System Admin', null)}"></header>
+        <div class="main-content">
+            <header th:replace="~{fragments/workspace-header :: header('System Admin', null)}"></header>
 
-        <main id="main" class="page-content" tabindex="-1">
-            <div class="container">
-                <div class="account-heading">
-                    <div>
-                        <a class="account-back-link" th:href="@{/dashboard}">Dashboard</a>
-                        <span aria-hidden="true"> / </span><span>API Monitoring</span>
-                        <h1>API Monitoring</h1>
-                        <p>Check real responses from internal endpoints and monitor configured integrations.</p>
-                    </div>
-                </div>
-
-                <div class="alert alert-success" role="status" th:if="${successMessage}" th:text="${successMessage}"></div>
-                <div class="alert alert-danger" role="alert" th:if="${failureMessage}" th:text="${failureMessage}"></div>
-
-                <section class="workspace-section monitoring-card" aria-labelledby="monitoring-table-title">
-                    <div class="monitoring-heading">
+            <main id="main" class="page-content" tabindex="-1">
+                <div class="container">
+                    <div class="account-heading">
                         <div>
-                            <h2 id="monitoring-table-title">Endpoint Status</h2>
-                            <p>Status reflects the latest check. Statistics cover up to 100 real checks during the current application run.</p>
+                            <a class="account-back-link" th:href="@{/dashboard}">Dashboard</a>
+                            <span aria-hidden="true"> / </span><span>API Monitoring</span>
+                            <h1>API Monitoring</h1>
+                            <p>Check real responses from internal endpoints and monitor configured integrations.</p>
                         </div>
                     </div>
 
-                    <p class="table-scroll-note">Scroll the table horizontally to see all response details and actions.</p>
-                    <div class="table-wrapper" tabindex="0" role="region" aria-labelledby="monitoring-table-title">
-                        <table class="table monitoring-table">
-                            <caption class="sr-only">Current endpoint status and results from real checks.</caption>
-                            <thead>
-                            <tr>
-                                <th scope="col">Endpoint / Integration</th>
-                                <th scope="col">Status</th>
-                                <th scope="col">Average Response</th>
-                                <th scope="col">Error Rate</th>
-                                <th scope="col">Recent Error</th>
-                                <th scope="col">Last Response</th>
-                                <th scope="col">Check</th>
-                            </tr>
-                            </thead>
-                            <tbody>
-                            <tr th:each="endpoint : ${endpoints}">
-                                <td>
-                                    <strong th:text="${endpoint.name}">Integration Name</strong>
-                                    <small th:text="${endpoint.category}">Type</small>
-                                    <code th:text="${endpoint.endpoint}">GET /endpoint</code>
-                                </td>
-                                <td>
-                                    <span class="badge" th:text="${endpoint.statusLabel}"
-                                          th:classappend="${endpoint.status == 'OPERATIONAL' ? ' badge-success' : (endpoint.status == 'FAILED' ? ' badge-danger' : ' badge-secondary')}">Not Checked</span>
-                                </td>
-                                <td th:text="${endpoint.averageResponseMs != null ? endpoint.averageResponseMs + ' ms' : '—'}">—</td>
-                                <td th:text="${endpoint.errorRatePercent != null ? endpoint.errorRatePercent + '%' : '—'}">—</td>
-                                <td th:text="${endpoint.recentErrors != null ? endpoint.recentErrors : '—'}">—</td>
-                                <td>
-                                    <span th:text="${endpoint.lastHttpStatus != null ? 'HTTP ' + endpoint.lastHttpStatus : '—'}">—</span>
-                                    <small th:if="${endpoint.lastCheckedAt != null}"
-                                           th:text="${#temporals.format(endpoint.lastCheckedAt, 'dd/MM/yyyy HH:mm:ss')}">Date</small>
-                                </td>
-                                <td>
-                                    <form th:if="${endpoint.canProbe}" th:action="@{/admin/api-monitoring/probe/internal}" method="post">
-                                        <button class="btn btn-primary btn-sm" type="submit">Send GET</button>
-                                    </form>
-                                    <span class="monitoring-unavailable" th:unless="${endpoint.canProbe}">No confirmed safe target</span>
-                                </td>
-                            </tr>
-                            </tbody>
-                        </table>
+                    <div class="alert alert-success" role="status" th:if="${successMessage}"
+                        th:text="${successMessage}"></div>
+                    <div class="alert alert-danger" role="alert" th:if="${failureMessage}" th:text="${failureMessage}">
                     </div>
-                </section>
 
-                <p class="monitoring-note">The internal probe sends GET to an admin-only endpoint and checks the application and SQL Server using <code>SELECT 1</code>. HTTP 2xx is a success; redirects, HTTP errors, and missing responses are failures. AI and email probes remain unavailable until their targets and contracts are confirmed.</p>
-            </div>
-        </main>
+                    <section class="workspace-section monitoring-card" aria-labelledby="monitoring-table-title">
+                        <div class="monitoring-heading">
+                            <div>
+                                <h2 id="monitoring-table-title">Endpoint Status</h2>
+                                <p>
+                                    Status and response time reflect the latest check
+                                    during the current application run.
+                                </p>
+                            </div>
+                        </div>
+
+                        <p class="table-scroll-note">Scroll the table horizontally to see all response details and
+                            actions.</p>
+                        <div class="table-wrapper" tabindex="0" role="region" aria-labelledby="monitoring-table-title">
+                            <table class="table monitoring-table">
+                                <caption class="sr-only">Current endpoint status and results from real checks.</caption>
+                                <thead>
+                                    <tr>
+                                        <th scope="col">Endpoint / Integration</th>
+                                        <th scope="col">Status</th>
+                                        <th scope="col">Response Time</th>
+                                        <th scope="col">Last Check</th>
+                                        <th scope="col">Check</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr th:each="endpoint : ${endpoints}">
+                                        <td>
+                                            <strong th:text="${endpoint.name}">Integration Name</strong>
+                                            <small th:text="${endpoint.category}">Type</small>
+                                        </td>
+
+                                        <td>
+                                            <span class="badge" th:classappend="${endpoint.status == 'OPERATIONAL'
+              ? 'badge--success'
+              : (endpoint.status == 'FAILED'
+                  ? 'badge--danger'
+                  : 'badge--neutral')}" th:switch="${endpoint.status}">
+
+                                                <span th:case="'OPERATIONAL'">Hoạt động</span>
+                                                <span th:case="'FAILED'">Có lỗi</span>
+                                                <span th:case="'Not check'">Chưa kiểm tra</span>
+                                                <span th:case="'Unconfigured'">Chưa cấu hình</span>
+                                                <span th:case="*" th:text="${endpoint.status}"></span>
+                                            </span>
+                                        </td>
+
+                                        <td th:text="${endpoint.responseTimeMs != null
+        ? endpoint.responseTimeMs + ' ms'
+        : '—'}">—</td>
+
+                                        <td th:text="${endpoint.lastCheckedAt != null
+        ? #temporals.format(endpoint.lastCheckedAt, 'dd/MM/yyyy HH:mm:ss')
+        : '—'}">—</td>
+
+                                        <td>
+                                            <form th:if="${endpoint.id == 'internal'}"
+                                                th:action="@{/admin/api-monitoring/probe/internal}" method="post">
+                                                <button class="btn btn-primary btn-sm" type="submit">Send GET</button>
+                                            </form>
+
+                                            <span class="monitoring-unavailable"
+                                                th:unless="${endpoint.id == 'internal'}">
+                                                No confirmed safe target
+                                            </span>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </section>
+
+                    <p class="monitoring-note">The internal probe sends GET to an admin-only endpoint and checks the
+                        application and SQL Server using <code>SELECT 1</code>. HTTP 2xx is a success; redirects, HTTP
+                        errors, and missing responses are failures. AI and email probes remain unavailable until their
+                        targets and contracts are confirmed.</p>
+                </div>
+            </main>
+        </div>
     </div>
-</div>
 
 </body>
+
 </html>

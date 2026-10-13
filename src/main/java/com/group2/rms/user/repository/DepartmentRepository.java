@@ -13,6 +13,7 @@ import org.springframework.data.domain.Pageable;
  * Repository cho entity Department.
  */
 @Repository
+@SuppressWarnings("null")
 public interface DepartmentRepository extends JpaRepository<Department, Integer>, JpaSpecificationExecutor<Department> {
     boolean existsByDepartmentNameIgnoreCase(String departmentName);
     boolean existsByDepartmentNameIgnoreCaseAndDepartmentIdNot(String departmentName, Integer departmentId);

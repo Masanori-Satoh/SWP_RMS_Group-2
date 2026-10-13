@@ -20,6 +20,7 @@ import java.util.List;
  * Repository cho entity User.
  */
 @Repository
+@SuppressWarnings("null")
 public interface UserRepository extends JpaRepository<User, Integer>, JpaSpecificationExecutor<User> {
     Optional<User> findByUsernameIgnoreCase(String username);
 

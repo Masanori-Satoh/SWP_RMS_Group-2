@@ -14,6 +14,17 @@
 > `UserId NOT NULL UNIQUE`; CV ứng tuyển nằm ở `Application.AppliedCvUrl`;
 > `ApplicationReview` là quyết định review, không phải bảng Resume. Xem
 > `docs/schema-migration-impact.md` để biết đối chiếu schema và mã nguồn.
+>
+> **Thứ tự chạy hiện tại** (script nào cũng chạy trên database `RitirementManagement2`):
+>
+> | # | File | Việc làm | Chạy lại |
+> |---|---|---|---|
+> | 1 | `database/schema/db.sql` | Xóa và tạo lại database + schema | Xóa toàn bộ dữ liệu |
+> | 2 | `database/seeds/seed_data.sql` | Dữ liệu mẫu nền | Không chạy lại (trùng khóa) |
+> | 3 | `database/seeds/seed_extra_jobs_and_pipeline.sql` | Phòng ban, tin tuyển dụng, hồ sơ bổ sung | An toàn (tự bỏ qua nếu đã chạy) |
+> | 4 | `database/seeds/seed_application_flow_fix.sql` | Đưa `Application.ApplicationStatus` về đúng luồng theo dữ liệu phỏng vấn và offer | An toàn (chỉ sửa hồ sơ còn lệch) |
+>
+> Không chạy lại `build_seed.py`: script này không còn sinh đúng `seed_data.sql`.
 
 > **Dự án**: Hệ thống Quản lý Tuyển dụng (Recruitment Management System - RMS)  
 > **Nhóm thực hiện**: SWP391 - Group 2  

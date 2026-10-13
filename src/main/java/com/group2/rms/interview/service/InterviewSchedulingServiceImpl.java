@@ -2,6 +2,7 @@ package com.group2.rms.interview.service;
 
 import com.group2.rms.candidate.entity.Application;
 import com.group2.rms.candidate.repository.ApplicationRepository;
+import com.group2.rms.candidate.service.ApplicationStatusService;
 import com.group2.rms.core.security.RoleAuthorities;
 import com.group2.rms.interview.dto.InterviewScheduleRequest;
 import com.group2.rms.interview.dto.InterviewScheduleResponse;
@@ -45,6 +46,8 @@ public class InterviewSchedulingServiceImpl implements InterviewSchedulingServic
     private final ApplicationRepository applicationRepository;
     private final UserRepository userRepository;
     private final InterviewTimeValidationService interviewTimeValidationService;
+    // dunglt bổ sung: đổi trạng thái hồ sơ khi xếp lịch (module candidate, chiều interview → candidate)
+    private final ApplicationStatusService applicationStatusService;
 
     @Override
     @Transactional
@@ -134,6 +137,8 @@ public class InterviewSchedulingServiceImpl implements InterviewSchedulingServic
         }
 
         InterviewSchedule fullySavedSchedule = interviewScheduleRepository.save(savedSchedule);
+        // dunglt bổ sung: xếp lịch thì hồ sơ HM_Passed → Interviewing (luồng trạng thái hồ sơ)
+        applicationStatusService.onInterviewScheduled(application.getApplicationId());
         log.info("Tạo lịch phỏng vấn thành công với Interview ID {}", fullySavedSchedule.getInterviewId());
 
         return InterviewScheduleResponse.fromEntity(fullySavedSchedule);

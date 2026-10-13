@@ -1,5 +1,6 @@
 package com.group2.rms.candidate.service;
 
+import com.group2.rms.candidate.dto.ApplicationProgressResponse;
 import com.group2.rms.candidate.entity.Application;
 import com.group2.rms.candidate.repository.ApplicationReviewRepository;
 import com.group2.rms.requisition.service.RequisitionAccess;
@@ -23,7 +24,6 @@ public class ApplicationAccess {
 
     static final Set<String> HR_REVIEW_STATUSES = Set.of("Applied", "AI_Screened");
     static final String HM_REVIEW_STATUS = "HR_Passed";
-    static final Set<String> NEXT_STEP_STATUSES = Set.of("HM_Passed", "Interviewing");
 
     private static final Set<String> VIEW_ALL_ROLES = Set.of(ROLE_HR, ROLE_DIRECTOR, ROLE_SYSTEM_ADMIN);
 
@@ -69,14 +69,17 @@ public class ApplicationAccess {
         return ROLE_HR.equals(role(user)) && HR_REVIEW_STATUSES.contains(application.getApplicationStatus());
     }
 
-    /** Khớp quyền URL {@code /interviews/new} (HR, Admin) bên module interview. */
-    public boolean canScheduleInterview(User user, String applicationStatus) {
-        return Set.of(ROLE_HR, ROLE_SYSTEM_ADMIN).contains(role(user)) && NEXT_STEP_STATUSES.contains(applicationStatus);
+    /**
+     * Khớp quyền URL {@code /interviews/new} (HR, Admin) bên module interview; chỉ khi hồ sơ đang ở giai đoạn
+     * phỏng vấn (sang offer thì thôi).
+     */
+    public boolean canScheduleInterview(User user, ApplicationProgressResponse progress) {
+        return Set.of(ROLE_HR, ROLE_SYSTEM_ADMIN).contains(role(user)) && progress.stage() == ApplicationStage.INTERVIEW;
     }
 
-    /** Khớp quyền URL {@code /offers/**} (HR, Director, Admin) bên module offer. */
-    public boolean canCreateOffer(User user, String applicationStatus) {
-        return VIEW_ALL_ROLES.contains(role(user)) && NEXT_STEP_STATUSES.contains(applicationStatus);
+    /** Khớp quyền URL {@code /offers/**} (HR, Director, Admin) bên module offer; chỉ khi đã đạt phỏng vấn, chưa có offer. */
+    public boolean canCreateOffer(User user, ApplicationProgressResponse progress) {
+        return VIEW_ALL_ROLES.contains(role(user)) && progress.step() == ApplicationProgressStep.PASSED_AWAITING_OFFER;
     }
 
     /** Khớp quyền URL {@code /internal/job-postings/**} (HR, Admin): chỉ khi đó mới hiện link sang trang tin nội bộ. */

@@ -1,8 +1,6 @@
 package com.group2.rms.candidate.service;
 
-import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Map;
 
 /**
  * Nhãn tiếng Việt và class badge cho trạng thái đơn và quyết định duyệt.
@@ -10,18 +8,11 @@ import java.util.Map;
  */
 public final class ApplicationStatusLabels {
 
-    /** Thứ tự theo luồng tuyển dụng, dùng cho ô lọc. */
+    /** Các trạng thái hợp lệ, theo thứ tự luồng tuyển dụng; tham số lọc {@code status} ngoài danh sách này bị bỏ qua. */
     public static final List<String> STATUSES = List.of(
             "Applied", "AI_Screened", "HR_Passed", "HM_Passed", "Interviewing", "Offered", "Hired", "Rejected");
 
     private ApplicationStatusLabels() {
-    }
-
-    /** Trạng thái → nhãn, giữ thứ tự {@link #STATUSES}, cho ô lọc trạng thái. */
-    public static Map<String, String> options() {
-        Map<String, String> options = new LinkedHashMap<>();
-        STATUSES.forEach(status -> options.put(status, label(status)));
-        return options;
     }
 
     public static String label(String status) {
@@ -32,7 +23,7 @@ public final class ApplicationStatusLabels {
             case "HM_Passed" -> "Qua vòng chuyên môn";
             case "Interviewing" -> "Đang phỏng vấn";
             case "Offered" -> "Đã có thư mời";
-            case "Hired" -> "Đã tuyển dụng";
+            case "Hired" -> "Đã nhận việc";
             case "Rejected" -> "Không tiếp tục";
             default -> status;
         };
@@ -49,7 +40,7 @@ public final class ApplicationStatusLabels {
             case "HM_Passed" -> "HR lên lịch phỏng vấn.";
             case "Interviewing" -> "Phỏng vấn và tổng hợp kết quả; đạt thì tạo offer.";
             case "Offered" -> "Chờ ứng viên phản hồi thư mời.";
-            case "Hired" -> "Đã tuyển dụng. Quy trình kết thúc.";
+            case "Hired" -> "Ứng viên đã nhận việc. Quy trình kết thúc.";
             case "Rejected" -> "Hồ sơ đã dừng. Quy trình kết thúc.";
             default -> "";
         };
@@ -82,6 +73,23 @@ public final class ApplicationStatusLabels {
             case "Pass" -> "success";
             case "Hold" -> "warning";
             case "Fail" -> "danger";
+            default -> "neutral";
+        };
+    }
+
+    /** Kết quả chốt phỏng vấn ({@code InterviewFinalResult.FinalDecision}). */
+    public static String interviewResultLabel(String finalDecision) {
+        return switch (finalDecision) {
+            case "Passed" -> "Đạt";
+            case "Failed" -> "Không đạt";
+            default -> finalDecision;
+        };
+    }
+
+    public static String interviewResultTone(String finalDecision) {
+        return switch (finalDecision) {
+            case "Passed" -> "success";
+            case "Failed" -> "danger";
             default -> "neutral";
         };
     }

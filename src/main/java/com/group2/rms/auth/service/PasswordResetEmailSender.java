@@ -10,15 +10,16 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.util.HtmlUtils;
 
 import jakarta.mail.MessagingException;
+import jakarta.mail.internet.MimeMessage;
+
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 
 import com.group2.rms.auth.exception.PasswordRecoveryUnavailableException;
 import com.group2.rms.auth.exception.PasswordResetDeliveryException;
 
-/**
- * Authentication email adapter; SMTP settings come only from runtime configuration.
- */
+
 @Component
 public class PasswordResetEmailSender {
     private final ObjectProvider<JavaMailSender> mailSender;
@@ -33,22 +34,25 @@ public class PasswordResetEmailSender {
     }
 
     public boolean isConfigured() {
-        return mailSender.getIfAvailable() != null
-                && from != null
-                && !from.isBlank();
+        // check if mail sender is configured
+        if (mailSender.getIfAvailable() != null && from != null && !from.isBlank()) {
+            return true;
+        }
+        return false;
     }
 
+    @SuppressWarnings("null")
     public void sendOtp(String to, String otp) {
 
         JavaMailSender sender = mailSender.getIfAvailable();
-
+        // check if mail sender not be configured
         if (sender == null || from == null || from.isBlank()) {
             throw new PasswordRecoveryUnavailableException();
         }
 
         try {
-            var message = sender.createMimeMessage();
-            var helper = new MimeMessageHelper(message, true, StandardCharsets.UTF_8.name());
+            MimeMessage message = sender.createMimeMessage();
+            MimeMessageHelper helper = new MimeMessageHelper(message, true, StandardCharsets.UTF_8.name());
             helper.setFrom(from);
             helper.setTo(to);
             helper.setSubject("Mã xác minh đặt lại mật khẩu Mộc");
@@ -62,8 +66,8 @@ public class PasswordResetEmailSender {
     }
 
     private String render(String extension, String otp) throws IOException {
-        var resource = new ClassPathResource("templates/auth/email/password-reset-otp." + extension);
-        try (var input = resource.getInputStream()) {
+        ClassPathResource resource = new ClassPathResource("templates/auth/email/password-reset-otp." + extension);
+        try (InputStream input = resource.getInputStream()) {
             return new String(input.readAllBytes(), StandardCharsets.UTF_8).replace("{{otp}}", otp);
         }
     }

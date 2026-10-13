@@ -3,6 +3,7 @@ package com.group2.rms.candidate.service;
 import com.group2.rms.candidate.dto.ApplicationDetailResponse;
 import com.group2.rms.candidate.dto.ApplicationListResponse;
 import com.group2.rms.candidate.dto.ApplicationPipelineResponse;
+import com.group2.rms.candidate.dto.ApplicationProgressResponse;
 import com.group2.rms.candidate.dto.ApplicationSearch;
 import com.group2.rms.candidate.entity.AIScreeningResult;
 import com.group2.rms.candidate.entity.Application;
@@ -14,19 +15,28 @@ import com.group2.rms.core.exception.ResourceNotFoundException;
 import com.group2.rms.core.web.TimelineItem;
 import com.group2.rms.requisition.entity.JobPosting;
 import com.group2.rms.requisition.entity.JobRequisition;
+import com.group2.rms.requisition.repository.JobPostingRepository;
 import com.group2.rms.user.entity.User;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.EnumMap;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
+import java.util.Objects;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 /**
  * Đọc dữ liệu cho danh sách hồ sơ (5.1.22) và chi tiết hồ sơ (5.1.23), trong phạm vi người xem được phép.
@@ -36,32 +46,66 @@ import java.util.Locale;
 public class ApplicationPipelineService {
 
     private static final Locale VIETNAMESE = Locale.of("vi", "VN");
+    private static final int FACTS_BATCH = 2000;
 
     private final ApplicationRepository applications;
     private final AIScreeningResultRepository screeningResults;
     private final ApplicationReviewRepository reviews;
     private final ApplicationAccess access;
     private final CvStorage cvStorage;
+    private final JobPostingRepository jobPostings;
 
-    /** Thứ tự do {@code search.sort()} quyết định; sort trong {@code pageable} bị bỏ qua. */
+    /**
+     * Một trang danh sách kèm số hồ sơ mỗi giai đoạn. Thứ tự do {@code search.sort()} quyết định; sort trong
+     * {@code pageable} bị bỏ qua.
+     * <p>
+     * Giai đoạn tính bằng {@link ApplicationProgressResolver} (cùng chỗ tính nhãn), không viết lại bằng SQL, để số
+     * đếm và nhãn không bao giờ lệch nhau. Vì vậy mỗi lần mở trang phải đọc dữ kiện của <b>mọi</b> đơn trong phạm vi
+     * và bộ lọc rồi mới đếm, lọc giai đoạn và cắt trang trong Java: ổn với vài nghìn đơn; lớn hơn nhiều thì cần
+     * xem lại (ví dụ lưu sẵn giai đoạn).
+     */
     @Transactional(readOnly = true)
     public ApplicationListResponse list(ApplicationSearch search, Pageable pageable) {
         User actor = access.actor();
         ApplicationScope scope = access.scopeOf(actor);
         ApplicationSearch filter = search.normalized();
 
-        Page<ApplicationPipelineResponse> page = applications.searchPipeline(
-                        scope.allDepartments(), scope.managerUserId(), scope.departmentId(), scope.forwardedOnly(),
-                        filter.jobPostingId(), filter.status(), filter.keyword(), filter.sort(),
-                        PageRequest.of(pageable.getPageNumber(), pageable.getPageSize()))
-                .map(row -> row.withActions(
-                        access.canScheduleInterview(actor, row.applicationStatus()),
-                        access.canCreateOffer(actor, row.applicationStatus())));
+        List<Integer> ids = applications.findPipelineIds(
+                scope.allDepartments(), scope.managerUserId(), scope.departmentId(), scope.forwardedOnly(),
+                filter.jobPostingId(), filter.status(), filter.keyword(), filter.sort());
+        Map<Integer, ApplicationProgressFacts> facts = progressFacts(ids);
+        LocalDateTime now = LocalDateTime.now();
+        Map<Integer, ApplicationProgressResponse> progress = new LinkedHashMap<>();
+        ids.stream().filter(facts::containsKey)
+                .forEach(id -> progress.put(id, ApplicationProgressResolver.resolve(facts.get(id), now)));
 
-        return new ApplicationListResponse(page,
+        Map<ApplicationStage, Long> stageCounts = new EnumMap<>(ApplicationStage.class);
+        for (ApplicationStage stage : ApplicationStage.values()) {
+            stageCounts.put(stage, 0L);
+        }
+        progress.values().forEach(p -> stageCounts.merge(p.stage(), 1L, Long::sum));
+
+        ApplicationStage stage = filter.stageFilter();
+        List<Integer> matching = progress.entrySet().stream()
+                .filter(entry -> stage == null || entry.getValue().stage() == stage)
+                .map(Map.Entry::getKey).toList();
+        Pageable pageRequest = PageRequest.of(pageable.getPageNumber(), pageable.getPageSize());
+        List<Integer> pageIds = matching.stream()
+                .skip(pageRequest.getOffset()).limit(pageRequest.getPageSize()).toList();
+        List<ApplicationPipelineResponse> rows = pageRows(pageIds).stream().map(row -> {
+            ApplicationProgressResponse rowProgress = progress.get(row.applicationId());
+            return row.withProgress(rowProgress,
+                    access.canScheduleInterview(actor, rowProgress), access.canCreateOffer(actor, rowProgress));
+        }).toList();
+
+        // Lấy thẳng từ bảng tin: tin chưa có hồ sơ nào (mở từ trang tin) không nằm trong danh sách lựa chọn.
+        String postingTitle = filter.jobPostingId() == null ? null
+                : jobPostings.findById(filter.jobPostingId()).map(JobPosting::getPostingTitle).orElse(null);
+        return new ApplicationListResponse(new PageImpl<>(rows, pageRequest, matching.size()), stageCounts,
                 applications.findPostingOptions(scope.allDepartments(), scope.managerUserId(), scope.departmentId(),
                         scope.forwardedOnly()),
-                filter, scope.forwardedOnly(), actor.getRole() == null ? null : actor.getRole().getRoleName());
+                filter, postingTitle, access.canOpenJobPosting(actor), scope.forwardedOnly(),
+                actor.getRole() == null ? null : actor.getRole().getRoleName());
     }
 
     @Transactional(readOnly = true)
@@ -79,6 +123,8 @@ public class ApplicationPipelineService {
         List<AIScreeningResult> scores = screeningResults
                 .findByApplication_ApplicationIdOrderByAiScreeningIdDesc(applicationId);
         AIScreeningResult latest = scores.isEmpty() ? null : scores.getFirst();
+        ApplicationProgressResponse progress = progress(applicationId, status,
+                progressFacts(List.of(applicationId)), LocalDateTime.now());
 
         return new ApplicationDetailResponse(
                 application.getApplicationId(),
@@ -88,7 +134,7 @@ public class ApplicationPipelineService {
                 job.getJobPostingId(), job.getPostingTitle(),
                 requisition.getDepartment() == null ? null : requisition.getDepartment().getDepartmentName(),
                 application.getSubmissionDate(),
-                status, ApplicationStatusLabels.label(status), ApplicationStatusLabels.badge(status),
+                status, progress.detailLabel(), progress.badge(),
                 latest == null ? null : latest.getAiMatchScore(),
                 latest == null ? null : latest.getScreenedAt(),
                 timeline(application, account, scores),
@@ -97,8 +143,8 @@ public class ApplicationPipelineService {
                 new ApplicationDetailResponse.Actions(
                         access.canReview(actor, application),
                         access.canRescreen(actor, application),
-                        access.canScheduleInterview(actor, status),
-                        access.canCreateOffer(actor, status),
+                        access.canScheduleInterview(actor, progress),
+                        access.canCreateOffer(actor, progress),
                         access.canOpenJobPosting(actor)),
                 actor.getRole() == null ? null : actor.getRole().getRoleName());
     }
@@ -125,7 +171,41 @@ public class ApplicationPipelineService {
         throw new ResourceNotFoundException("Không tìm thấy CV của hồ sơ này.");
     }
 
-    /** Hành trình của đơn, mới nhất trước: nộp, AI chấm, các lượt duyệt, lịch phỏng vấn, offer. */
+    /**
+     * Dữ kiện trạng thái chi tiết theo id đơn, mỗi lô {@value #FACTS_BATCH} id một câu query (giới hạn ~2100 tham số
+     * của SQL Server). Đơn vừa bị xóa giữa hai câu query thì không có trong kết quả.
+     */
+    private Map<Integer, ApplicationProgressFacts> progressFacts(List<Integer> applicationIds) {
+        Map<Integer, ApplicationProgressFacts> facts = new HashMap<>();
+        for (int from = 0; from < applicationIds.size(); from += FACTS_BATCH) {
+            applications.findProgressFacts(applicationIds.subList(from,
+                            Math.min(from + FACTS_BATCH, applicationIds.size()))).stream()
+                    .map(ApplicationProgressFacts::from)
+                    .forEach(row -> facts.put(row.applicationId(), row));
+        }
+        return facts;
+    }
+
+    /** Các dòng của một trang, đúng thứ tự của {@code pageIds}. */
+    private List<ApplicationPipelineResponse> pageRows(List<Integer> pageIds) {
+        if (pageIds.isEmpty()) {
+            return List.of();
+        }
+        Map<Integer, ApplicationPipelineResponse> byId = applications.findPipelineRows(pageIds).stream()
+                .collect(Collectors.toMap(ApplicationPipelineResponse::applicationId, Function.identity()));
+        return pageIds.stream().map(byId::get).filter(Objects::nonNull).toList();
+    }
+
+    /** Thiếu dữ kiện (không xảy ra với đơn vừa đọc) thì tính theo riêng trạng thái đơn, coi như chưa có lịch, offer. */
+    private static ApplicationProgressResponse progress(Integer applicationId, String status,
+                                                        Map<Integer, ApplicationProgressFacts> facts,
+                                                        LocalDateTime now) {
+        ApplicationProgressFacts known = facts.getOrDefault(applicationId,
+                new ApplicationProgressFacts(applicationId, status, false, null, null, 0, 0, null, null));
+        return ApplicationProgressResolver.resolve(known, now);
+    }
+
+    /** Hành trình của đơn, mới nhất trước: nộp, AI chấm, các lượt duyệt, lịch và kết quả phỏng vấn, offer. */
     private List<TimelineItem> timeline(Application application, User account, List<AIScreeningResult> scores) {
         Integer id = application.getApplicationId();
         List<TimelineItem> items = new ArrayList<>();
@@ -141,6 +221,9 @@ public class ApplicationPipelineService {
                 ApplicationStatusLabels.decisionTone(review.getDecision()))));
         applications.findInterviewEvents(id).forEach(event -> items.add(new TimelineItem(
                 event.getAt(), "Lịch phỏng vấn: " + event.getStatus(), null, null, "neutral")));
+        applications.findInterviewResultEvents(id).forEach(event -> items.add(new TimelineItem(
+                event.getAt(), "Kết quả phỏng vấn: " + ApplicationStatusLabels.interviewResultLabel(event.getStatus()),
+                null, null, ApplicationStatusLabels.interviewResultTone(event.getStatus()))));
         applications.findOfferEvents(id).forEach(event -> items.add(new TimelineItem(
                 event.getAt(), "Offer: " + event.getStatus(), null, null, "success")));
         items.sort(Comparator.comparing(TimelineItem::at, Comparator.nullsLast(Comparator.reverseOrder())));

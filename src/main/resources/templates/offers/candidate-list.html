@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="vi"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/internal}">
+<!--
+    OFFERS/CANDIDATE-LIST.HTML — Thư mời nhận việc của tôi (/portal/offers, chỉ ứng viên)
+    Chỉ hiện offer đã gửi cho ứng viên: vị trí, lương, ngày bắt đầu, địa điểm, quyền lợi, trạng thái.
+    Không có người đề xuất, lịch sử duyệt của Director hay ghi chú nội bộ.
+    Nhận / từ chối: mỗi nút một form POST thường; JS hỏi xác nhận bằng hộp thoại trước khi gửi.
+    Dựng bằng catalog: page-header, alert, table-wrapper, table, badge, btn, confirm-dialog.
+    CSS riêng: css/pages/candidate-offers.css (cof-).
+-->
+<head>
+    <title>Thư mời nhận việc</title>
+    <th:block layout:fragment="styles">
+        <link rel="stylesheet" th:href="@{/css/pages/candidate-offers.css}">
+    </th:block>
+</head>
+<body>
+<main id="main" layout:fragment="content" class="page-content container" tabindex="-1">
+
+    <div class="page-header">
+        <div>
+            <h1 class="page-title">Thư mời nhận việc</h1>
+            <p class="page-subtitle">Các thư mời chính thức nhà tuyển dụng đã gửi cho bạn</p>
+        </div>
+    </div>
+
+    <div th:if="${successMessage}" class="alert alert--success" role="status" th:text="${successMessage}">Bạn đã nhận offer.</div>
+    <div th:if="${errorMessage}" class="alert alert--danger" role="alert" th:text="${errorMessage}">Không thể trả lời thư mời.</div>
+
+    <div th:if="${#lists.isEmpty(offers)}" class="card cof-empty">
+        <h2 class="cof-empty__title">Bạn chưa nhận được thư mời nào</h2>
+        <p class="cof-empty__desc text-muted">Khi nhà tuyển dụng gửi thư mời chính thức, thông tin đãi ngộ sẽ hiện ở đây.</p>
+    </div>
+
+    <div th:unless="${#lists.isEmpty(offers)}" class="table-wrapper">
+        <table class="table">
+            <caption class="sr-only">Các thư mời nhận việc dành cho bạn</caption>
+            <thead>
+            <tr>
+                <th scope="col">Vị trí</th>
+                <th scope="col">Lương chính thức / tháng</th>
+                <th scope="col">Lương thử việc / tháng</th>
+                <th scope="col">Ngày bắt đầu dự kiến</th>
+                <th scope="col">Địa điểm</th>
+                <th scope="col">Trạng thái</th>
+                <th scope="col">Thao tác</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr th:each="offer : ${offers}">
+                <th scope="row">
+                    <span th:text="${offer.postingTitle}">Junior Java Developer</span>
+                    <span th:if="${offer.offeredPositionTitle != offer.postingTitle}" class="cof-sub text-muted"
+                          th:text="${offer.offeredPositionTitle}">Java Developer</span>
+                    <details th:unless="${#strings.isEmpty(offer.benefitsPackage)}" class="cof-benefits">
+                        <summary th:attr="aria-label=|Quyền lợi của thư mời vị trí ${offer.postingTitle}|">Xem quyền lợi</summary>
+                        <p class="cof-benefits__text" th:text="${offer.benefitsPackage}">Bảo hiểm, thưởng quý.</p>
+                    </details>
+                </th>
+                <td th:text="${offer.proposedSalary == null ? '—' : #numbers.formatDecimal(offer.proposedSalary, 1, 'POINT', 0, 'COMMA') + ' ₫'}">20.000.000 ₫</td>
+                <td th:text="${offer.probationSalary == null ? '—' : #numbers.formatDecimal(offer.probationSalary, 1, 'POINT', 0, 'COMMA') + ' ₫'}">18.000.000 ₫</td>
+                <td th:text="${offer.expectedStartDate == null ? 'Chưa xác định' : #temporals.format(offer.expectedStartDate, 'dd/MM/yyyy')}">01/11/2026</td>
+                <td th:text="${#strings.isEmpty(offer.workLocation) ? '—' : offer.workLocation}">Hà Nội</td>
+                <td>
+                    <span class="badge" th:classappend="${offer.statusBadge}" th:text="${offer.statusLabel}">Chờ bạn trả lời</span>
+                </td>
+                <td>
+                    <div th:if="${offer.canRespond}" class="cof-actions">
+                        <form th:action="@{/portal/offers/{id}/accept(id=${offer.offerId})}" method="post"
+                              class="cof-form" data-offer-form="accept"
+                              th:attr="data-posting-title=${offer.postingTitle}">
+                            <button type="submit" class="btn btn--primary btn--sm">Nhận offer</button>
+                        </form>
+                        <form th:action="@{/portal/offers/{id}/decline(id=${offer.offerId})}" method="post"
+                              class="cof-form" data-offer-form="decline"
+                              th:attr="data-posting-title=${offer.postingTitle}">
+                            <button type="submit" class="btn btn--outline btn--sm">Từ chối offer</button>
+                        </form>
+                    </div>
+                    <span th:unless="${offer.canRespond}" class="text-muted">—</span>
+                </td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <p th:unless="${#lists.isEmpty(offers)}" class="text-muted cof-note">
+        Sau khi nhận hoặc từ chối, bạn không thể đổi lại lựa chọn. Cần trao đổi thêm, vui lòng liên hệ bộ phận tuyển dụng.
+    </p>
+
+    <dialog id="cof-dialog" class="confirm-dialog" aria-labelledby="cof-dialog-title"
+            aria-describedby="cof-dialog-message">
+        <div class="dialog-content">
+            <div class="dialog-header">
+                <h2 id="cof-dialog-title" class="dialog-title">
+                    <span data-offer-copy="accept">Nhận offer?</span>
+                    <span data-offer-copy="decline" hidden>Từ chối offer?</span>
+                </h2>
+            </div>
+            <div class="dialog-body">
+                <p id="cof-dialog-message">
+                    <span data-offer-copy="accept">Bạn sẽ nhận offer vị trí <strong data-offer-title></strong>.
+                        Hồ sơ của bạn chuyển sang "Đã nhận việc" và bạn không thể đổi lại.</span>
+                    <span data-offer-copy="decline" hidden>Bạn sẽ từ chối offer vị trí <strong data-offer-title></strong>.
+                        Hồ sơ của bạn sẽ dừng lại và bạn không thể đổi lại.</span>
+                </p>
+            </div>
+            <div class="dialog-actions">
+                <button type="button" class="btn btn--secondary btn--sm" data-offer-cancel>Xem lại</button>
+                <button type="button" class="btn btn--primary btn--sm" data-offer-confirm>
+                    <span data-offer-copy="accept">Nhận offer</span>
+                    <span data-offer-copy="decline" hidden>Từ chối offer</span>
+                </button>
+            </div>
+        </div>
+    </dialog>
+</main>
+<th:block layout:fragment="scripts">
+    <script defer th:src="@{/js/pages/candidate-offers.js}"></script>
+</th:block>
+</body>
+</html>

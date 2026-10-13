@@ -1,0 +1,51 @@
+/* =============================================================================
+   PAGES/CANDIDATE-OFFERS.CSS — Thư mời nhận việc của ứng viên
+   (/portal/offers, offers/candidate-list.html)
+   Chỉ chứa phần catalog chưa có: trạng thái rỗng, hai nút nhận / từ chối trong ô bảng,
+   quyền lợi thu gọn dưới tên vị trí, ghi chú cuối bảng.
+   Tiền tố class: cof-
+   ============================================================================= */
+
+.cof-empty {
+  text-align: center;
+}
+
+.cof-empty__title {
+  margin: 0 0 var(--s2);
+  font-size: var(--font-lg);
+}
+
+.cof-empty__desc {
+  margin: 0;
+}
+
+.cof-sub {
+  display: block;
+  font-size: var(--font-sm);
+}
+
+.cof-benefits {
+  margin-top: var(--s2);
+  font-size: var(--font-sm);
+}
+
+.cof-benefits__text {
+  margin: var(--s2) 0 0;
+  font-weight: 400;
+  white-space: pre-line;
+}
+
+.cof-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s2);
+}
+
+.cof-form {
+  margin: 0;
+}
+
+.cof-note {
+  margin-top: var(--s4);
+  font-size: 14px;
+}

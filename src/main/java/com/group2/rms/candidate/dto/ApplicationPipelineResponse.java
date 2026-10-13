@@ -8,6 +8,7 @@ import java.time.LocalDateTime;
 /**
  * Một dòng của danh sách hồ sơ (5.1.22).
  *
+ * @param ownerLabel   ai cầm bóng (đang chờ ai xử lý); {@code null} khi hồ sơ đã kết thúc
  * @param aiMatchScore điểm AI mới nhất; {@code null} nếu chưa được chấm
  */
 public record ApplicationPipelineResponse(
@@ -19,20 +20,24 @@ public record ApplicationPipelineResponse(
         String applicationStatus,
         String statusLabel,
         String statusBadge,
+        String ownerLabel,
         BigDecimal aiMatchScore,
         boolean canScheduleInterview,
         boolean canCreateOffer) {
 
-    /** Dùng trong câu JPQL; quyền thao tác gán sau ở Service bằng {@link #withActions}. */
+    /** Dùng trong câu JPQL; nhãn trạng thái chi tiết và quyền thao tác gán sau ở Service bằng {@link #withProgress}. */
     public ApplicationPipelineResponse(Integer applicationId, String fullName, String email, String postingTitle,
                                        LocalDateTime submissionDate, String applicationStatus, BigDecimal aiMatchScore) {
         this(applicationId, fullName, email, postingTitle, submissionDate, applicationStatus,
                 ApplicationStatusLabels.label(applicationStatus), ApplicationStatusLabels.badge(applicationStatus),
-                aiMatchScore, false, false);
+                null, aiMatchScore, false, false);
     }
 
-    public ApplicationPipelineResponse withActions(boolean scheduleInterview, boolean createOffer) {
+    /** Nhãn, badge và người cầm bóng theo trạng thái chi tiết, kèm quyền thao tác. */
+    public ApplicationPipelineResponse withProgress(ApplicationProgressResponse progress, boolean scheduleInterview,
+                                                    boolean createOffer) {
         return new ApplicationPipelineResponse(applicationId, fullName, email, postingTitle, submissionDate,
-                applicationStatus, statusLabel, statusBadge, aiMatchScore, scheduleInterview, createOffer);
+                applicationStatus, progress.detailLabel(), progress.badge(), progress.ownerLabel(), aiMatchScore,
+                scheduleInterview, createOffer);
     }
 }

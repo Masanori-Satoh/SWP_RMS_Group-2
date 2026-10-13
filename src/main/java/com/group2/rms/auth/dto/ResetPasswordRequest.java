@@ -1,9 +1,7 @@
 package com.group2.rms.auth.dto;
 
 import com.group2.rms.core.validation.PasswordMatches;
-
 import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 import lombok.Getter;
 import lombok.Setter;

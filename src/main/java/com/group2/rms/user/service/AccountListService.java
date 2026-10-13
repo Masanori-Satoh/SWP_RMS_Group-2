@@ -43,6 +43,7 @@ public class AccountListService {
     }
 
     @Transactional(readOnly = true)
+    @SuppressWarnings("null")
     public Page<AccountRow> findAccounts(String search, Integer roleId, Integer departmentId,
             String status, String sort, int page) {
         return findUsers(search, roleId, departmentId, status, sort, page, false)
@@ -53,6 +54,7 @@ public class AccountListService {
     }
 
     @Transactional(readOnly = true)
+    @SuppressWarnings("null")
     public Page<CandidateRow> findCandidateAccounts(String search, String status, String sort, int page) {
         Page<User> result = findUsers(search, null, null, status, sort, page, true);
         java.util.Map<Integer, Integer> profileIds = new java.util.HashMap<>();

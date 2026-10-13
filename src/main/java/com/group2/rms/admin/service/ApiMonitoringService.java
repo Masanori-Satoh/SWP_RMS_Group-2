@@ -15,15 +15,16 @@ import java.util.ArrayList;
 import java.util.Deque;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicReference;
 
 @Service
 public class ApiMonitoringService {
 
-    private static final int HISTORY_LIMIT = 100;
     private static final String INTERNAL_HEALTH_PATH = "/admin/api-monitoring/internal/health";
-
+    // send request
     private final HttpProbeTransport transport;
-    private final Deque<Probe> internalHistory = new ArrayDeque<>();
+
+    private final AtomicReference<MonitorRowResponse> lastInternalProbe = new AtomicReference<>();
 
     public ApiMonitoringService(HttpProbeTransport transport) {
         this.transport = transport;
@@ -31,22 +32,24 @@ public class ApiMonitoringService {
 
     public ProbeOutcomeResponse probeInternal(HttpServletRequest request) {
         HttpSession session = request.getSession(false);
+        // check if session not valid
         if (session == null) {
             throw new MonitoringSessionRequiredException();
         }
         String contextPath = request.getContextPath();
+        // check context path not
         if (contextPath == null || "/".equals(contextPath)) {
             contextPath = "";
         }
         URI target = URI.create("http://127.0.0.1:" + request.getLocalPort()
                 + contextPath + INTERNAL_HEALTH_PATH);
-
+        // time check by nano
         long started = System.nanoTime();
-        Integer httpStatus = null;
+
         boolean success = false;
         String detail;
         try {
-            httpStatus = transport.get(target, session.getId());
+            int httpStatus = transport.get(target, session.getId());
             success = httpStatus >= 200 && httpStatus < 300;
             detail = "HTTP " + httpStatus;
         } catch (InterruptedException exception) {
@@ -57,52 +60,50 @@ public class ApiMonitoringService {
         }
 
         long elapsedMs = TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - started);
-        Probe probe = new Probe(success, httpStatus, elapsedMs, LocalDateTime.now(), detail);
-        synchronized (internalHistory) {
-            internalHistory.addLast(probe);
-            while (internalHistory.size() > HISTORY_LIMIT) {
-                internalHistory.removeFirst();
-            }
-        }
+
+        lastInternalProbe.set(new MonitorRowResponse(
+                "internal",
+                "Application and SQL Server",
+                "Internal",
+                success ? "OPERATIONAL" : "FAILED",
+                elapsedMs,
+                LocalDateTime.now()));
         return new ProbeOutcomeResponse(success, detail, elapsedMs);
     }
 
+    @SuppressWarnings("null")
     public List<MonitorRowResponse> rows() {
-        List<Probe> samples;
-        synchronized (internalHistory) {
-            
-            samples = new ArrayList<>(internalHistory);
+        MonitorRowResponse internal = lastInternalProbe.get();
+
+        // check if first time check
+        if (internal == null) {
+            internal = new MonitorRowResponse(
+                    "internal",
+                    "Application and SQL Server",
+                    "Internal",
+                    "Not check",
+                    null,
+                    null);
         }
-        MonitorRowResponse internal;
-        //check if not check
-        if (samples.isEmpty()) {
-            internal = new MonitorRowResponse("internal", "Internal", "Application and SQL Server",
-                    "GET " + INTERNAL_HEALTH_PATH, "NOT_CHECKED", "Not Checked",
-                    null, null, null, null, null, 0, true);
-        } else {
-            Probe latest = samples.getLast();
-            int errors = (int) samples.stream().filter(sample -> !sample.success()).count();
-            long averageMs = Math.round(samples.stream().mapToLong(Probe::elapsedMs).average().orElse(0));
-            int errorRate = (int) Math.round(100.0 * errors / samples.size());
-            internal = new MonitorRowResponse("internal", "Internal", "Application and SQL Server",
-                    "GET " + INTERNAL_HEALTH_PATH,
-                    latest.success() ? "OPERATIONAL" : "FAILED",
-                    latest.success() ? "Operational" : "Error",
-                    averageMs, errorRate, errors, latest.httpStatus(), latest.checkedAt(),
-                    samples.size(), true);
-        }
-        //id, category, name, status, can probe
+
         return List.of(internal,
-                new MonitorRowResponse("ai", "External Integration", "AI CV Screening", "No endpoint configured",
-                        "UNCONFIGURED", "Not Configured", null, null, null, null, null, 0, false),
-                new MonitorRowResponse("email", "External Integration", "Email Service", "No endpoint or SMTP host configured",
-                        "UNCONFIGURED", "Not Configured", null, null, null, null, null, 0, false));
+                new MonitorRowResponse(
+                        "ai",
+                        "AI CV Screening",
+                        "External Intergration",
+                        "Unconfigured",
+                        null,
+                        null),
+                new MonitorRowResponse(
+                        "email",
+                        "Email Service",
+                        "External Integration",
+                        "Unconfigured",
+                        null,
+                        null));
     }
 
-    private record Probe(boolean success, Integer httpStatus, long elapsedMs,
-                         LocalDateTime checkedAt, String detail) { }
+    private record Probe(boolean success, Integer httpStatus, long elapsedMs, LocalDateTime checkedAt, String detail) {
+    }
 
-   
-
-    
 }

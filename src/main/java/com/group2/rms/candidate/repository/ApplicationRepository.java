@@ -3,8 +3,6 @@ package com.group2.rms.candidate.repository;
 import com.group2.rms.candidate.dto.ApplicationPipelineResponse;
 import com.group2.rms.candidate.dto.JobPostingOption;
 import com.group2.rms.candidate.entity.Application;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
@@ -78,32 +76,40 @@ public interface ApplicationRepository extends JpaRepository<Application, Intege
     int transition(@Param("id") Integer applicationId, @Param("from") Collection<String> from,
                    @Param("to") String to);
 
+    /** Lần AI chấm mới nhất của đơn (mỗi đơn tối đa một dòng); đặt sau {@link #PIPELINE_JOINS}. */
+    String LATEST_SCORE_JOIN = """
+                left join AIScreeningResult ai on ai.application = a and ai.aiScreeningId = (
+                    select max(ai2.aiScreeningId) from AIScreeningResult ai2 where ai2.application = a)
+            """;
+
     /**
-     * Danh sách hồ sơ (5.1.22), mỗi đơn một dòng kèm điểm AI mới nhất.
-     * {@code sort = 'score'}: điểm cao trước, chưa có điểm xếp cuối; {@code 'newest'}: chỉ theo ngày nộp.
-     * Truyền {@code Pageable} không kèm sort: thứ tự cố định trong câu query.
+     * Id các đơn của danh sách hồ sơ (5.1.22) trong phạm vi người xem và bộ lọc, đúng thứ tự hiển thị:
+     * {@code sort = 'score'}: điểm AI cao trước, chưa có điểm xếp cuối; {@code 'newest'}: chỉ theo ngày nộp.
+     * Chỉ lấy id: giai đoạn của đơn tính ở Service (xem {@link #findProgressFacts}), rồi mới lọc và cắt trang.
      */
-    @Query(value = """
+    @Query("select a.applicationId " + PIPELINE_JOINS + LATEST_SCORE_JOIN + SCOPE_FILTER + SEARCH_FILTER + """
+            order by case when :sort = 'score' then ai.aiMatchScore end desc nulls last,
+                     a.submissionDate desc, a.applicationId desc
+            """)
+    List<Integer> findPipelineIds(@Param("allDepartments") boolean allDepartments,
+                                  @Param("managerUserId") Integer managerUserId,
+                                  @Param("departmentId") Integer departmentId,
+                                  @Param("forwardedOnly") boolean forwardedOnly,
+                                  @Param("jobPostingId") Integer jobPostingId,
+                                  @Param("status") String status,
+                                  @Param("keyword") String keyword,
+                                  @Param("sort") String sort);
+
+    /**
+     * Các dòng của một trang danh sách, kèm điểm AI mới nhất; không theo thứ tự nào (Service xếp lại theo
+     * {@link #findPipelineIds}). {@code ids} là id của một trang, không được rỗng.
+     */
+    @Query("""
             select new com.group2.rms.candidate.dto.ApplicationPipelineResponse(
                 a.applicationId, u.fullName, u.email, jp.postingTitle, a.submissionDate, a.applicationStatus,
                 ai.aiMatchScore)
-            """ + PIPELINE_JOINS + """
-                left join AIScreeningResult ai on ai.application = a and ai.aiScreeningId = (
-                    select max(ai2.aiScreeningId) from AIScreeningResult ai2 where ai2.application = a)
-            """ + SCOPE_FILTER + SEARCH_FILTER + """
-            order by case when :sort = 'score' then ai.aiMatchScore end desc nulls last,
-                     a.submissionDate desc, a.applicationId desc
-            """,
-            countQuery = "select count(a) " + PIPELINE_JOINS + SCOPE_FILTER + SEARCH_FILTER)
-    Page<ApplicationPipelineResponse> searchPipeline(@Param("allDepartments") boolean allDepartments,
-                                                     @Param("managerUserId") Integer managerUserId,
-                                                     @Param("departmentId") Integer departmentId,
-                                                     @Param("forwardedOnly") boolean forwardedOnly,
-                                                     @Param("jobPostingId") Integer jobPostingId,
-                                                     @Param("status") String status,
-                                                     @Param("keyword") String keyword,
-                                                     @Param("sort") String sort,
-                                                     Pageable pageable);
+            """ + PIPELINE_JOINS + LATEST_SCORE_JOIN + "where a.applicationId in :ids")
+    List<ApplicationPipelineResponse> findPipelineRows(@Param("ids") Collection<Integer> applicationIds);
 
     /** Các tin có đơn trong phạm vi người xem, cho ô lọc "Vị trí". */
     @Query("select distinct new com.group2.rms.candidate.dto.JobPostingOption(jp.jobPostingId, jp.postingTitle) "
@@ -169,10 +175,72 @@ public interface ApplicationRepository extends JpaRepository<Application, Intege
             + "WHERE s.ApplicationId = :id", nativeQuery = true)
     List<TimelineEventRow> findInterviewEvents(@Param("id") Integer applicationId);
 
+    /** Kết quả chốt các buổi phỏng vấn của đơn ({@code Passed}/{@code Failed}), cho timeline. SQL thuần, cùng lý do. */
+    @Query(value = "SELECT r.ApprovedAt AS at, r.FinalDecision AS status FROM InterviewFinalResult r "
+            + "JOIN InterviewSchedule s ON s.InterviewId = r.InterviewId "
+            + "WHERE s.ApplicationId = :id", nativeQuery = true)
+    List<TimelineEventRow> findInterviewResultEvents(@Param("id") Integer applicationId);
+
     /** Offer của đơn, cho timeline. SQL thuần, cùng lý do với {@link #findInterviewEvents}. */
     @Query(value = "SELECT o.CreatedAt AS at, o.OfferStatus AS status FROM OfferProposal o "
             + "WHERE o.ApplicationId = :id", nativeQuery = true)
     List<TimelineEventRow> findOfferEvents(@Param("id") Integer applicationId);
+
+    /**
+     * Dữ kiện tính trạng thái chi tiết cho nhiều đơn trong một câu (cả trang danh sách), xem
+     * {@code ApplicationProgressFacts}. Lịch mới nhất: {@code StartTime} lớn nhất, bỏ lịch đã hủy.
+     * SQL thuần, cùng lý do với {@link #findInterviewEvents}. {@code ids} không được rỗng, tối đa ~2000
+     * (giới hạn tham số của SQL Server): danh sách dài hơn thì gọi theo lô.
+     */
+    @Query(value = """
+            SELECT a.ApplicationId AS applicationId,
+                   a.ApplicationStatus AS applicationStatus,
+                   CAST(CASE WHEN EXISTS (
+                            SELECT 1 FROM AuditLog l
+                            WHERE l.EntityName = 'Application' AND l.NewValue = 'Withdrawn'
+                              AND l.EntityId = CAST(a.ApplicationId AS NVARCHAR(50)))
+                        THEN 1 ELSE 0 END AS BIT) AS withdrawn,
+                   s.InterviewStatus AS interviewStatus,
+                   s.StartTime AS interviewStart,
+                   (SELECT COUNT(*) FROM InterviewPanel p WHERE p.InterviewId = s.InterviewId) AS panelCount,
+                   (SELECT COUNT(DISTINCT e.InterviewerId) FROM InterviewEvaluation e
+                    WHERE e.InterviewId = s.InterviewId) AS evaluationCount,
+                   r.FinalDecision AS finalDecision,
+                   o.OfferStatus AS offerStatus
+            FROM Application a
+            OUTER APPLY (SELECT TOP 1 s1.InterviewId, s1.InterviewStatus, s1.StartTime
+                         FROM InterviewSchedule s1
+                         WHERE s1.ApplicationId = a.ApplicationId AND s1.InterviewStatus <> 'Cancelled'
+                         ORDER BY s1.StartTime DESC, s1.InterviewId DESC) s
+            LEFT JOIN InterviewFinalResult r ON r.InterviewId = s.InterviewId
+            OUTER APPLY (SELECT TOP 1 o1.OfferStatus
+                         FROM OfferProposal o1
+                         WHERE o1.ApplicationId = a.ApplicationId
+                         ORDER BY o1.OfferId DESC) o
+            WHERE a.ApplicationId IN (:ids)
+            """, nativeQuery = true)
+    List<ProgressFactsRow> findProgressFacts(@Param("ids") Collection<Integer> applicationIds);
+
+    /** Một dòng của {@link #findProgressFacts}; các trường lịch/offer {@code null} nếu chưa có. */
+    interface ProgressFactsRow {
+        Integer getApplicationId();
+
+        String getApplicationStatus();
+
+        Boolean getWithdrawn();
+
+        String getInterviewStatus();
+
+        LocalDateTime getInterviewStart();
+
+        Integer getPanelCount();
+
+        Integer getEvaluationCount();
+
+        String getFinalDecision();
+
+        String getOfferStatus();
+    }
 
     /** Một mốc đọc từ bảng của module khác: thời điểm + trạng thái gốc. */
     interface TimelineEventRow {

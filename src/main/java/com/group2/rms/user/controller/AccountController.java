@@ -74,6 +74,7 @@ public class AccountController {
     }
 
     @PostMapping
+    @SuppressWarnings("null")
     public String create(@Valid @ModelAttribute("form") CreateAccountRequest form,
                          BindingResult errors, Model model, RedirectAttributes redirectAttributes) {
         
@@ -110,6 +111,7 @@ public class AccountController {
     }
 
     @PostMapping("/{userId}")
+    @SuppressWarnings("null")
     public String update(@PathVariable int userId,
                          @Valid @ModelAttribute("form") UpdateAccountRequest form,
                          BindingResult errors, Model model, RedirectAttributes redirectAttributes) {
