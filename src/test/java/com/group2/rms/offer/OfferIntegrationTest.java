@@ -417,4 +417,24 @@ class OfferIntegrationTest {
         mvc.perform(post("/offers/create").with(csrf()))
                 .andExpect(status().isForbidden());
     }
+
+    @Test
+    @DisplayName("IT-21 POST /offers/create: Nhập sai định dạng ngày hoặc năm ngoài phạm vi (như 20165) trả về thông báo lỗi ngắn gọn tiếng Việt, không chứa ngoại lệ kỹ thuật Java")
+    @WithMockUser(username = "hr_specialist", roles = {"HR"})
+    void it21_createOfferWithInvalidDate_showsShortConciseErrorMessage() throws Exception {
+        mvc.perform(post("/offers/create")
+                        .with(csrf())
+                        .param("applicationId", "1")
+                        .param("offeredPositionTitle", "Java Dev")
+                        .param("proposedSalary", "20000000")
+                        .param("probationSalary", "18000000")
+                        .param("probationDays", "60")
+                        .param("workLocation", "Hà Nội")
+                        .param("expectedStartDate", "20165-07-14"))
+                .andExpect(status().isOk())
+                .andExpect(view().name("offers/form"))
+                .andExpect(model().attributeHasFieldErrors("offerDto", "expectedStartDate"))
+                .andExpect(content().string(org.hamcrest.Matchers.containsString("Ngày bắt đầu dự kiến không hợp lệ.")))
+                .andExpect(content().string(org.hamcrest.Matchers.not(org.hamcrest.Matchers.containsString("Failed to convert property value"))));
+    }
 }

@@ -145,6 +145,7 @@ function openCreateOfferModal() {
     const startDateInput = document.getElementById('createStartDate') || document.getElementById('expectedStartDate');
     if (startDateInput) {
         startDateInput.min = getTomorrowDateString();
+        startDateInput.max = '2099-12-31';
     }
     const probationDaysInput = document.getElementById('createProbationDays') || document.getElementById('probationDays');
     if (probationDaysInput) {

@@ -2,13 +2,16 @@ package com.group2.rms.offer.dto;
 
 import jakarta.validation.constraints.AssertTrue;
 import jakarta.validation.constraints.Future;
+import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
+import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.springframework.format.annotation.DateTimeFormat;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -27,6 +30,7 @@ public class CreateOfferRequest {
     private Integer applicationId;
 
     @NotBlank(message = "Vị trí chức danh đề xuất không được để trống.")
+    @Size(max = 150, message = "Vị trí chức danh đề xuất không được vượt quá 150 ký tự.")
     private String offeredPositionTitle;
 
     @NotNull(message = "Mức lương chính thức không được để trống.")
@@ -39,17 +43,21 @@ public class CreateOfferRequest {
 
     @NotNull(message = "Ngày bắt đầu dự kiến không được để trống.")
     @Future(message = "Ngày bắt đầu dự kiến phải lớn hơn ngày hiện tại.")
+    @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
     private LocalDate expectedStartDate;
 
     @NotBlank(message = "Địa điểm làm việc không được để trống.")
+    @Size(max = 255, message = "Địa điểm làm việc không được vượt quá 255 ký tự.")
     private String workLocation;
 
+    @Size(max = 2000, message = "Gói phúc lợi không được vượt quá 2000 ký tự.")
     private String benefitsPackage;
 
     private Integer proposedById;
 
     @NotNull(message = "Thời gian thử việc không được để trống.")
     @Positive(message = "Thời gian thử việc phải lớn hơn 0.")
+    @Max(value = 365, message = "Thời gian thử việc không được vượt quá 365 ngày.")
     private Integer probationDays;
 
     /**
@@ -103,13 +111,13 @@ public class CreateOfferRequest {
     }
 
     /**
-     * Ràng buộc: Ngày bắt đầu dự kiến phải lớn hơn ngày hiện tại
+     * Ràng buộc: Ngày bắt đầu dự kiến không được quá 2 năm tới
      */
-    @AssertTrue(message = "Ngày bắt đầu dự kiến phải lớn hơn ngày hiện tại.")
+    @AssertTrue(message = "Năm bắt đầu dự kiến không hợp lệ (không quá 2 năm tới).")
     public boolean isExpectedStartDateValid() {
         if (expectedStartDate == null) {
             return true; // Để @NotNull xử lý
         }
-        return expectedStartDate.isAfter(LocalDate.now());
+        return expectedStartDate.getYear() <= (LocalDate.now().getYear() + 2);
     }
 }
