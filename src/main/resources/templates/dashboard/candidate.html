@@ -58,7 +58,8 @@
                 <details class="dash-offer__details"><summary th:attr="aria-label=|Chi tiết thư mời cho vị trí ${offer.jobTitle}|">Xem chi tiết đãi ngộ</summary><dl class="dash-profile"><div><dt>Lương thử việc / tháng</dt><dd th:text="${offer.probationSalary == null ? 'Chưa có thông tin' : #numbers.formatDecimal(offer.probationSalary, 1, 'POINT', 0, 'COMMA') + ' ₫'}"></dd></div><div><dt>Địa điểm làm việc</dt><dd th:text="${#strings.isEmpty(offer.workLocation) ? 'Chưa có thông tin' : offer.workLocation}"></dd></div><div><dt>Quyền lợi</dt><dd class="dash-preserve" th:text="${#strings.isEmpty(offer.benefits) ? 'Chưa có thông tin' : offer.benefits}"></dd></div></dl></details>
             </article></div>
             <p class="dash-empty" data-filter-empty hidden>Không có thư mời phù hợp. Thử từ khóa khác hoặc xóa bộ lọc.</p>
-            <p class="dash-note">Phản hồi và thương lượng thư mời chưa được hỗ trợ trong Dashboard.</p>
+            <!-- dunglt bổ sung: nhận / từ chối offer đã có trang riêng /portal/offers -->
+            <p class="dash-note">Nhận hoặc từ chối thư mời tại trang <a class="dash-link" th:href="@{/portal/offers}">Thư mời nhận việc</a>.</p>
         </th:block>
     </section>
 
