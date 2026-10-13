@@ -12,6 +12,7 @@ import com.group2.rms.candidate.service.AiScreeningOutcome;
 import com.group2.rms.candidate.service.ApplicationCv;
 import com.group2.rms.candidate.service.ApplicationPipelineService;
 import com.group2.rms.candidate.service.ApplicationReviewService;
+import com.group2.rms.candidate.service.ApplicationStage;
 import com.group2.rms.candidate.service.ApplicationStatusLabels;
 import com.group2.rms.core.config.SecurityConfig;
 import com.group2.rms.core.exception.ResourceNotFoundException;
@@ -35,7 +36,9 @@ import org.springframework.test.web.servlet.request.RequestPostProcessor;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.EnumMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 import static org.hamcrest.Matchers.*;
@@ -133,11 +136,12 @@ class ApplicationPipelineWebTests {
 
         mvc.perform(get("/applications").with(as("hr_lan", "HR"))
                         .param("jobPostingId", "6").param("status", "Rejected")
-                        .param("keyword", "an.vo").param("sort", "newest").param("page", "2"))
+                        .param("keyword", "an.vo").param("sort", "newest").param("stage", "INTERVIEW")
+                        .param("page", "2"))
                 .andExpect(status().isOk());
 
         // "sort" cũng bị Spring Data đọc vào Pageable; service bỏ qua sort của Pageable nên chỉ so trang + cỡ trang.
-        verify(pipeline).list(eq(new ApplicationSearch(6, "Rejected", "an.vo", "newest")),
+        verify(pipeline).list(eq(new ApplicationSearch(6, "Rejected", "an.vo", "newest", "INTERVIEW")),
                 argThat(p -> p.getPageNumber() == 2 && p.getPageSize() == 20));
     }
 
@@ -334,8 +338,13 @@ class ApplicationPipelineWebTests {
     private static ApplicationListResponse listOf(boolean forwardedView, String viewerRole,
                                                   ApplicationPipelineResponse... rows) {
         Page<ApplicationPipelineResponse> page = new PageImpl<>(List.of(rows), Pageable.ofSize(20), rows.length);
-        return new ApplicationListResponse(page, List.of(new JobPostingOption(6, "Digital Marketing Executive")),
-                new ApplicationSearch(null, null, null, "score").normalized(), forwardedView, viewerRole);
+        Map<ApplicationStage, Long> counts = new EnumMap<>(ApplicationStage.class);
+        for (ApplicationStage stage : ApplicationStage.values()) {
+            counts.put(stage, 0L);
+        }
+        return new ApplicationListResponse(page, counts,
+                List.of(new JobPostingOption(6, "Digital Marketing Executive")),
+                new ApplicationSearch(null, null, null, "score", null).normalized(), forwardedView, viewerRole);
     }
 
     private static ApplicationDetailResponse detail(boolean nextSteps, boolean openJobPosting, String linkedIn) {

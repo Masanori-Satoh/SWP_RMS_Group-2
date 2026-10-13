@@ -17,7 +17,7 @@ import com.group2.rms.requisition.entity.JobPosting;
 import com.group2.rms.requisition.entity.JobRequisition;
 import com.group2.rms.user.entity.User;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -27,9 +27,13 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.EnumMap;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Objects;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -41,6 +45,7 @@ import java.util.stream.Collectors;
 public class ApplicationPipelineService {
 
     private static final Locale VIETNAMESE = Locale.of("vi", "VN");
+    private static final int FACTS_BATCH = 2000;
 
     private final ApplicationRepository applications;
     private final AIScreeningResultRepository screeningResults;
@@ -48,27 +53,50 @@ public class ApplicationPipelineService {
     private final ApplicationAccess access;
     private final CvStorage cvStorage;
 
-    /** Thứ tự do {@code search.sort()} quyết định; sort trong {@code pageable} bị bỏ qua. */
+    /**
+     * Một trang danh sách kèm số hồ sơ mỗi giai đoạn. Thứ tự do {@code search.sort()} quyết định; sort trong
+     * {@code pageable} bị bỏ qua.
+     * <p>
+     * Giai đoạn tính bằng {@link ApplicationProgressResolver} (cùng chỗ tính nhãn), không viết lại bằng SQL, để số
+     * đếm và nhãn không bao giờ lệch nhau. Vì vậy mỗi lần mở trang phải đọc dữ kiện của <b>mọi</b> đơn trong phạm vi
+     * và bộ lọc rồi mới đếm, lọc giai đoạn và cắt trang trong Java: ổn với vài nghìn đơn; lớn hơn nhiều thì cần
+     * xem lại (ví dụ lưu sẵn giai đoạn).
+     */
     @Transactional(readOnly = true)
     public ApplicationListResponse list(ApplicationSearch search, Pageable pageable) {
         User actor = access.actor();
         ApplicationScope scope = access.scopeOf(actor);
         ApplicationSearch filter = search.normalized();
 
-        Page<ApplicationPipelineResponse> rows = applications.searchPipeline(
+        List<Integer> ids = applications.findPipelineIds(
                 scope.allDepartments(), scope.managerUserId(), scope.departmentId(), scope.forwardedOnly(),
-                filter.jobPostingId(), filter.status(), filter.keyword(), filter.sort(),
-                PageRequest.of(pageable.getPageNumber(), pageable.getPageSize()));
-        Map<Integer, ApplicationProgressFacts> facts = progressFacts(
-                rows.map(ApplicationPipelineResponse::applicationId).getContent());
+                filter.jobPostingId(), filter.status(), filter.keyword(), filter.sort());
+        Map<Integer, ApplicationProgressFacts> facts = progressFacts(ids);
         LocalDateTime now = LocalDateTime.now();
-        Page<ApplicationPipelineResponse> page = rows.map(row -> {
-            ApplicationProgressResponse progress = progress(row.applicationId(), row.applicationStatus(), facts, now);
-            return row.withProgress(progress,
-                    access.canScheduleInterview(actor, progress), access.canCreateOffer(actor, progress));
-        });
+        Map<Integer, ApplicationProgressResponse> progress = new LinkedHashMap<>();
+        ids.stream().filter(facts::containsKey)
+                .forEach(id -> progress.put(id, ApplicationProgressResolver.resolve(facts.get(id), now)));
 
-        return new ApplicationListResponse(page,
+        Map<ApplicationStage, Long> stageCounts = new EnumMap<>(ApplicationStage.class);
+        for (ApplicationStage stage : ApplicationStage.values()) {
+            stageCounts.put(stage, 0L);
+        }
+        progress.values().forEach(p -> stageCounts.merge(p.stage(), 1L, Long::sum));
+
+        ApplicationStage stage = filter.stageFilter();
+        List<Integer> matching = progress.entrySet().stream()
+                .filter(entry -> stage == null || entry.getValue().stage() == stage)
+                .map(Map.Entry::getKey).toList();
+        Pageable pageRequest = PageRequest.of(pageable.getPageNumber(), pageable.getPageSize());
+        List<Integer> pageIds = matching.stream()
+                .skip(pageRequest.getOffset()).limit(pageRequest.getPageSize()).toList();
+        List<ApplicationPipelineResponse> rows = pageRows(pageIds).stream().map(row -> {
+            ApplicationProgressResponse rowProgress = progress.get(row.applicationId());
+            return row.withProgress(rowProgress,
+                    access.canScheduleInterview(actor, rowProgress), access.canCreateOffer(actor, rowProgress));
+        }).toList();
+
+        return new ApplicationListResponse(new PageImpl<>(rows, pageRequest, matching.size()), stageCounts,
                 applications.findPostingOptions(scope.allDepartments(), scope.managerUserId(), scope.departmentId(),
                         scope.forwardedOnly()),
                 filter, scope.forwardedOnly(), actor.getRole() == null ? null : actor.getRole().getRoleName());
@@ -137,14 +165,29 @@ public class ApplicationPipelineService {
         throw new ResourceNotFoundException("Không tìm thấy CV của hồ sơ này.");
     }
 
-    /** Dữ kiện trạng thái chi tiết theo id đơn, một câu query cho cả trang. */
+    /**
+     * Dữ kiện trạng thái chi tiết theo id đơn, mỗi lô {@value #FACTS_BATCH} id một câu query (giới hạn ~2100 tham số
+     * của SQL Server). Đơn vừa bị xóa giữa hai câu query thì không có trong kết quả.
+     */
     private Map<Integer, ApplicationProgressFacts> progressFacts(List<Integer> applicationIds) {
-        if (applicationIds.isEmpty()) {
-            return Map.of();
+        Map<Integer, ApplicationProgressFacts> facts = new HashMap<>();
+        for (int from = 0; from < applicationIds.size(); from += FACTS_BATCH) {
+            applications.findProgressFacts(applicationIds.subList(from,
+                            Math.min(from + FACTS_BATCH, applicationIds.size()))).stream()
+                    .map(ApplicationProgressFacts::from)
+                    .forEach(row -> facts.put(row.applicationId(), row));
         }
-        return applications.findProgressFacts(applicationIds).stream()
-                .map(ApplicationProgressFacts::from)
-                .collect(Collectors.toMap(ApplicationProgressFacts::applicationId, Function.identity()));
+        return facts;
+    }
+
+    /** Các dòng của một trang, đúng thứ tự của {@code pageIds}. */
+    private List<ApplicationPipelineResponse> pageRows(List<Integer> pageIds) {
+        if (pageIds.isEmpty()) {
+            return List.of();
+        }
+        Map<Integer, ApplicationPipelineResponse> byId = applications.findPipelineRows(pageIds).stream()
+                .collect(Collectors.toMap(ApplicationPipelineResponse::applicationId, Function.identity()));
+        return pageIds.stream().map(byId::get).filter(Objects::nonNull).toList();
     }
 
     /** Thiếu dữ kiện (không xảy ra với đơn vừa đọc) thì tính theo riêng trạng thái đơn, coi như chưa có lịch, offer. */
