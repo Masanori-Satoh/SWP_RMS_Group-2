@@ -14,8 +14,9 @@
     <p class="dash-empty" th:if="${#lists.isEmpty(items)}">Chưa có dữ liệu để thống kê.</p>
     <th:block th:unless="${#lists.isEmpty(items)}"><dl th:replace="~{dashboard/fragments :: statusRows(${items})}"></dl></th:block>
 </section>
+<!-- dunglt bổ sung: nhãn Hired "Đã nhận việc", khớp ApplicationStatusLabels và DashboardService -->
 <dl th:fragment="statusRows(items)" class="dash-statuses"
-        th:with="labels=${ {'Applied':'Đã nộp hồ sơ', 'AI_Screened':'Đã sàng lọc', 'HR_Passed':'Qua vòng nhân sự', 'HM_Passed':'Qua vòng chuyên môn', 'Interviewing':'Đang phỏng vấn', 'Offered':'Đã có thư mời', 'Hired':'Đã tuyển dụng', 'Rejected':'Không tiếp tục', 'OPERATIONAL':'Hoạt động', 'FAILED':'Có lỗi', 'NOT_CHECKED':'Chưa kiểm tra', 'Not check':'Chưa kiểm tra', 'UNCONFIGURED':'Chưa cấu hình', 'Unconfigured':'Chưa cấu hình'} }">
+        th:with="labels=${ {'Applied':'Đã nộp hồ sơ', 'AI_Screened':'Đã sàng lọc', 'HR_Passed':'Qua vòng nhân sự', 'HM_Passed':'Qua vòng chuyên môn', 'Interviewing':'Đang phỏng vấn', 'Offered':'Đã có thư mời', 'Hired':'Đã nhận việc', 'Rejected':'Không tiếp tục', 'OPERATIONAL':'Hoạt động', 'FAILED':'Có lỗi', 'NOT_CHECKED':'Chưa kiểm tra', 'Not check':'Chưa kiểm tra', 'UNCONFIGURED':'Chưa cấu hình', 'Unconfigured':'Chưa cấu hình'} }">
         <div th:each="item : ${items}"><dt th:text="${labels[item.status] ?: item.status}">Trạng thái</dt><dd th:text="${item.count}">0</dd></div>
 </dl>
 </body></html>

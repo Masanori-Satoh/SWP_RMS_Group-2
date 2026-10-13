@@ -311,7 +311,7 @@ var offerStatuses = metrics.candidateOfferStatuses(userId)
                         case "HM_Passed" -> "Qua vòng chuyên môn";
                         case "Interviewing" -> "Đang phỏng vấn";
                         case "Offered" -> "Đã có thư mời";
-                        case "Hired" -> "Đã tuyển dụng";
+                        case "Hired" -> "Đã nhận việc"; // dunglt bổ sung: khớp nhãn ApplicationStatusLabels
                         case "Rejected" -> "Không tiếp tục";
                         default -> status;
                 };
