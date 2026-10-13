@@ -127,7 +127,7 @@ public class SecurityConfig {
                                                 // require authenticaed for SYSTEM_ADMIN, ROLE_HR, ROLE_DIRECTOR
                                                 .requestMatchers("/offers", "/offers/**", "/api/v1/hr/offers",
                                                                 "/api/v1/hr/offers/**")
-                                                .hasAnyAuthority("ROLE_CANDIDATE", "ROLE_HR", "ROLE_DIRECTOR",
+                                                .hasAnyAuthority("ROLE_HR", "ROLE_DIRECTOR",
                                                                 RoleAuthorities.SYSTEM_ADMIN)
                                                 // authenticaed require for dashboard notification
                                                 .requestMatchers("/dashboard", "/dashboard/**", "/notifications",

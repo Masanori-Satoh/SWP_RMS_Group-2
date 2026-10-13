@@ -393,4 +393,28 @@ class OfferIntegrationTest {
                 .andExpect(jsonPath("$.success").value(true))
                 .andExpect(jsonPath("$.data.offerStatus").value("Director_Rejected"));
     }
+
+    @Test
+    @DisplayName("IT-18 GET /offers: Ứng viên (ROLE_CANDIDATE) bị chặn truy cập danh sách Offer nội bộ trả về HTTP 403 Forbidden")
+    @WithMockUser(username = "cand_user", roles = {"CANDIDATE"})
+    void it18_candidateAccessOffersList_isForbidden() throws Exception {
+        mvc.perform(get("/offers"))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    @DisplayName("IT-19 GET /offers/{id}: Ứng viên (ROLE_CANDIDATE) bị chặn truy cập chi tiết Offer nội bộ trả về HTTP 403 Forbidden")
+    @WithMockUser(username = "cand_user", roles = {"CANDIDATE"})
+    void it19_candidateAccessOfferDetail_isForbidden() throws Exception {
+        mvc.perform(get("/offers/1"))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    @DisplayName("IT-20 POST /offers/create: Ứng viên (ROLE_CANDIDATE) bị chặn tạo Offer trả về HTTP 403 Forbidden")
+    @WithMockUser(username = "cand_user", roles = {"CANDIDATE"})
+    void it20_candidateCreateOffer_isForbidden() throws Exception {
+        mvc.perform(post("/offers/create").with(csrf()))
+                .andExpect(status().isForbidden());
+    }
 }
