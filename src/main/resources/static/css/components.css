@@ -1021,7 +1021,7 @@ dialog.dialog::backdrop {
    O. STAGE BAR (fragment fragments/ui/stages :: stageBar(items, mode))
    Thanh giai đoạn: các ô trong luồng nối bằng "›"; ô ngoài luồng ("Tất cả", "Đã dừng")
    tách bằng vạch ngăn (.stage-bar__divider), ô ngoài luồng cuối cùng dạt sang phải. Mode tabs:
-   ô đang lọc ([aria-current]) nổi màu brand. Màn hẹp: cuộn ngang trong chính thanh.
+   ô đang lọc ([aria-current]) nổi màu brand. Màn ≤ 600px: các ô xuống dòng.
    ----------------------------------------------------------------------------- */
 .stage-bar {
   max-width: 100%;

@@ -9,7 +9,7 @@
      <nav th:replace="~{fragments/ui/stages :: stageBar(items=${stageItems}, mode='tabs')}"></nav>
      mode: hiện chỉ có 'tabs' (danh sách): mỗi ô là link lọc kèm số đếm, ô state='current'
      có aria-current="page". Ô có href = null hiện dạng chữ, không bấm được.
-     CSS: components.css mục O. Màn hẹp: cuộn ngang trong chính thanh.
+     CSS: components.css mục O. Màn ≤ 600px: các ô xuống dòng (ô đang lọc luôn nhìn thấy).
      Lưu ý: mỗi biểu thức chỉ chứa tối đa một "__" (Thymeleaf hiểu cặp __...__ là tiền xử lý),
      nên ô đang chọn dựa vào [aria-current], vạch ngăn là span riêng.
      ============================================================================= -->
