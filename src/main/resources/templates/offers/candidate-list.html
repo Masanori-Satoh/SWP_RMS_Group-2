@@ -7,6 +7,7 @@
     OFFERS/CANDIDATE-LIST.HTML — Thư mời nhận việc của tôi (/portal/offers, chỉ ứng viên)
     Chỉ hiện offer đã gửi cho ứng viên: vị trí, lương, ngày bắt đầu, địa điểm, quyền lợi, trạng thái.
     Không có người đề xuất, lịch sử duyệt của Director hay ghi chú nội bộ.
+    Mỗi hàng có nút "Xem thư mời" mở màn hình riêng (/portal/offers/{id}).
     Nhận / từ chối: mỗi nút một form POST thường; JS hỏi xác nhận bằng hộp thoại trước khi gửi.
     Dựng bằng catalog: page-header, alert, table-wrapper, table, badge, btn, confirm-dialog.
     CSS riêng: css/pages/candidate-offers.css (cof-).
@@ -27,7 +28,29 @@
         </div>
     </div>
 
-    <div th:if="${successMessage}" class="alert alert--success" role="status" th:text="${successMessage}">Bạn đã nhận offer.</div>
+    <!-- Thông báo phản hồi hệ thống -->
+    <div th:if="${decisionType == 'ACCEPTED'}" class="alert alert--success cof-system-banner" role="status">
+        <div class="cof-system-banner__header">
+            <strong>🎉 Chúc mừng bạn đã đồng ý nhận việc!</strong>
+        </div>
+        <p th:text="${successMessage}">Bạn đã nhận offer.</p>
+        <p class="cof-system-banner__guide text-muted">
+            Bộ phận Tuyển dụng Mộc RMS sẽ liên hệ với bạn trong vòng 24 - 48 giờ làm việc để hướng dẫn các thủ tục Onboarding tiếp theo.
+        </p>
+    </div>
+    <div th:if="${decisionType == 'DECLINED'}" class="alert alert--neutral cof-system-banner" role="status">
+        <div class="cof-system-banner__header">
+            <strong>Đã ghi nhận phản hồi từ chối thư mời</strong>
+        </div>
+        <p th:text="${successMessage}">Bạn đã từ chối offer.</p>
+        <p th:if="${declineReasonDisplay}" class="cof-system-banner__reason">
+            <em>Lý do chia sẻ:</em> <span th:text="${declineReasonDisplay}"></span>
+        </p>
+        <p class="cof-system-banner__guide text-muted">
+            Cảm ơn bạn đã quan tâm và đồng hành cùng Mộc RMS trong suốt quá trình tuyển dụng. Chúc bạn luôn thành công!
+        </p>
+    </div>
+    <div th:if="${successMessage != null and decisionType == null}" class="alert alert--success" role="status" th:text="${successMessage}">Bạn đã nhận offer.</div>
     <div th:if="${errorMessage}" class="alert alert--danger" role="alert" th:text="${errorMessage}">Không thể trả lời thư mời.</div>
 
     <div th:if="${#lists.isEmpty(offers)}" class="card cof-empty">
@@ -52,7 +75,7 @@
             <tbody>
             <tr th:each="offer : ${offers}">
                 <th scope="row">
-                    <span th:text="${offer.postingTitle}">Junior Java Developer</span>
+                    <a th:href="@{/portal/offers/{id}(id=${offer.offerId})}" class="cof-link" th:text="${offer.postingTitle}">Junior Java Developer</a>
                     <span th:if="${offer.offeredPositionTitle != offer.postingTitle}" class="cof-sub text-muted"
                           th:text="${offer.offeredPositionTitle}">Java Developer</span>
                     <details th:unless="${#strings.isEmpty(offer.benefitsPackage)}" class="cof-benefits">
@@ -68,19 +91,21 @@
                     <span class="badge" th:classappend="${offer.statusBadge}" th:text="${offer.statusLabel}">Chờ bạn trả lời</span>
                 </td>
                 <td>
-                    <div th:if="${offer.canRespond}" class="cof-actions">
-                        <form th:action="@{/portal/offers/{id}/accept(id=${offer.offerId})}" method="post"
-                              class="cof-form" data-offer-form="accept"
-                              th:attr="data-posting-title=${offer.postingTitle}">
-                            <button type="submit" class="btn btn--primary btn--sm">Nhận offer</button>
-                        </form>
-                        <form th:action="@{/portal/offers/{id}/decline(id=${offer.offerId})}" method="post"
-                              class="cof-form" data-offer-form="decline"
-                              th:attr="data-posting-title=${offer.postingTitle}">
-                            <button type="submit" class="btn btn--outline btn--sm">Từ chối offer</button>
-                        </form>
+                    <div class="cof-actions">
+                        <a th:href="@{/portal/offers/{id}(id=${offer.offerId})}" class="btn btn--outline btn--sm">Xem thư mời</a>
+                        <th:block th:if="${offer.canRespond}">
+                            <form th:action="@{/portal/offers/{id}/accept(id=${offer.offerId})}" method="post"
+                                  class="cof-form" data-offer-form="accept"
+                                  th:attr="data-posting-title=${offer.postingTitle}">
+                                <button type="submit" class="btn btn--primary btn--sm">Nhận offer</button>
+                            </form>
+                            <form th:action="@{/portal/offers/{id}/decline(id=${offer.offerId})}" method="post"
+                                  class="cof-form" data-offer-form="decline"
+                                  th:attr="data-posting-title=${offer.postingTitle}">
+                                <button type="submit" class="btn btn--outline btn--sm">Từ chối offer</button>
+                            </form>
+                        </th:block>
                     </div>
-                    <span th:unless="${offer.canRespond}" class="text-muted">—</span>
                 </td>
             </tr>
             </tbody>
@@ -107,6 +132,17 @@
                     <span data-offer-copy="decline" hidden>Bạn sẽ từ chối offer vị trí <strong data-offer-title></strong>.
                         Hồ sơ của bạn sẽ dừng lại và bạn không thể đổi lại.</span>
                 </p>
+                <div data-offer-copy="decline" hidden class="cof-dialog-reason">
+                    <label for="cof-dialog-reason-input" class="form-label">Lý do từ chối (tùy chọn):</label>
+                    <div class="cof-chips" role="group" aria-label="Lý do phổ biến">
+                        <button type="button" class="cof-chip" data-reason="Mức đãi ngộ chưa đạt kỳ vọng">Mức đãi ngộ chưa đạt kỳ vọng</button>
+                        <button type="button" class="cof-chip" data-reason="Đã nhận lời mời từ công ty khác">Đã nhận lời mời từ công ty khác</button>
+                        <button type="button" class="cof-chip" data-reason="Địa điểm hoặc thời gian làm việc chưa phù hợp">Địa điểm / thời gian chưa phù hợp</button>
+                        <button type="button" class="cof-chip" data-reason="Kế hoạch cá nhân thay đổi">Kế hoạch cá nhân thay đổi</button>
+                    </div>
+                    <textarea id="cof-dialog-reason-input" class="form-input cof-textarea" rows="3"
+                              placeholder="Chia sẻ thêm lý do hoặc nguyện vọng của bạn..."></textarea>
+                </div>
             </div>
             <div class="dialog-actions">
                 <button type="button" class="btn btn--secondary btn--sm" data-offer-cancel>Xem lại</button>

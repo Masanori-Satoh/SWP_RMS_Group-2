@@ -131,6 +131,43 @@ class CandidateOfferServiceTests {
         verifyNoInteractions(applicationStatusService);
     }
 
+    @Test
+    void getDetailReturnsFullOfferLetterData() {
+        when(offers.findVisibleById(eq(OFFER_ID), eq(USER_ID), anyCollection()))
+                .thenReturn(Optional.of(offer(OFFER_ID, "Sent_Candidate")));
+
+        var detail = service.getDetail(OFFER_ID);
+
+        assertNotNull(detail);
+        assertEquals(OFFER_ID, detail.offerId());
+        assertEquals("Junior Java Developer", detail.postingTitle());
+        assertEquals("Java Developer", detail.offeredPositionTitle());
+        assertEquals(new BigDecimal("20000000"), detail.proposedSalary());
+        assertEquals(new BigDecimal("18000000"), detail.probationSalary());
+        assertEquals(90, detail.probationRatePercent());
+        assertTrue(detail.canRespond());
+    }
+
+    @Test
+    void getDetailThrowsNotFoundWhenOfferDoesNotExistOrBelongsToOther() {
+        when(offers.findVisibleById(eq(OFFER_ID), eq(USER_ID), anyCollection()))
+                .thenReturn(Optional.empty());
+
+        assertThrows(ResourceNotFoundException.class, () -> service.getDetail(OFFER_ID));
+    }
+
+    @Test
+    void declineWithReasonSetsOfferDeclinedAndRejectsApplication() {
+        when(offers.findVisibleById(eq(OFFER_ID), eq(USER_ID), anyCollection()))
+                .thenReturn(Optional.of(offer(OFFER_ID, "Sent_Candidate")));
+        when(offers.answerIfSent(OFFER_ID, "Declined")).thenReturn(1);
+
+        String title = service.decline(OFFER_ID, "Mức đãi ngộ chưa đạt kỳ vọng");
+
+        assertEquals("Junior Java Developer", title);
+        verify(applicationStatusService).onOfferAnswered(APPLICATION_ID, false);
+    }
+
     private static OfferProposal offer(int id, String status) {
         return OfferProposal.builder()
                 .offerId(id)

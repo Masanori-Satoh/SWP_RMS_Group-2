@@ -1,11 +1,13 @@
 /* =============================================================================
    PAGES/CANDIDATE-OFFERS.CSS — Thư mời nhận việc của ứng viên
-   (/portal/offers, offers/candidate-list.html)
+   (/portal/offers, offers/candidate-list.html & offers/candidate-detail.html)
    Chỉ chứa phần catalog chưa có: trạng thái rỗng, hai nút nhận / từ chối trong ô bảng,
-   quyền lợi thu gọn dưới tên vị trí, ghi chú cuối bảng.
+   quyền lợi thu gọn dưới tên vị trí, thư mời nhận việc (letterhead), lưới chi tiết,
+   chips chọn lý do từ chối, và thông báo phản hồi từ hệ thống.
    Tiền tố class: cof-
    ============================================================================= */
 
+/* Danh sách - Trạng thái rỗng */
 .cof-empty {
   text-align: center;
 }
@@ -24,6 +26,16 @@
   font-size: var(--font-sm);
 }
 
+.cof-link {
+  color: var(--brand-dark);
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.cof-link:hover {
+  text-decoration: underline;
+}
+
 .cof-benefits {
   margin-top: var(--s2);
   font-size: var(--font-sm);
@@ -39,6 +51,7 @@
   display: flex;
   flex-wrap: wrap;
   gap: var(--s2);
+  align-items: center;
 }
 
 .cof-form {
@@ -47,5 +60,305 @@
 
 .cof-note {
   margin-top: var(--s4);
-  font-size: 14px;
+  font-size: var(--font-sm);
+}
+
+/* Thông báo phản hồi hệ thống (System Notification Banner) */
+.cof-system-banner {
+  padding: var(--s4);
+  border-radius: var(--radius-md);
+  margin-bottom: var(--s6);
+}
+
+.cof-system-banner__header {
+  font-size: var(--font-md);
+  margin-bottom: var(--s2);
+  display: flex;
+  align-items: center;
+  gap: var(--s2);
+}
+
+.cof-system-banner p {
+  margin: 0 0 var(--s2);
+}
+
+.cof-system-banner__guide {
+  font-size: var(--font-sm);
+  margin-top: var(--s2) !important;
+}
+
+.cof-system-banner__reason {
+  font-size: var(--font-sm);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  padding: var(--s2) var(--s3);
+  margin-top: var(--s2) !important;
+}
+
+/* Chi tiết Thư mời (Candidate Detail Screen) */
+.cof-breadcrumb {
+  margin-bottom: var(--s4);
+}
+
+.cof-back-link {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s2);
+  color: var(--muted);
+  font-size: var(--font-sm);
+  text-decoration: none;
+  font-weight: 500;
+  transition: color 0.15s ease;
+}
+
+.cof-back-link:hover {
+  color: var(--brand);
+}
+
+.cof-header-badge-row {
+  display: flex;
+  align-items: center;
+  gap: var(--s3);
+  margin-bottom: var(--s2);
+}
+
+.cof-id-tag {
+  font-size: var(--font-sm);
+}
+
+.cof-header-actions {
+  display: flex;
+  gap: var(--s3);
+  align-items: center;
+}
+
+/* Lưới bố cục chi tiết 2 cột */
+.cof-detail-grid {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: var(--s6);
+  align-items: start;
+}
+
+@media (max-width: 991px) {
+  .cof-detail-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.cof-detail-main,
+.cof-detail-sidebar {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s6);
+}
+
+/* Thư mời trang trọng (Letterhead Card) */
+.cof-letter {
+  border-top: 4px solid var(--brand);
+}
+
+.cof-letter-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  padding-bottom: var(--s4);
+  border-bottom: 1px solid var(--line);
+  margin-bottom: var(--s4);
+}
+
+.cof-letter-company {
+  font-size: var(--font-md);
+  font-weight: 700;
+  color: var(--brand-dark);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.cof-letter-brand-sub {
+  font-size: var(--font-xs);
+  color: var(--muted);
+  display: block;
+}
+
+.cof-letter-date {
+  font-size: var(--font-sm);
+  color: var(--muted);
+}
+
+.cof-letter-salutation {
+  margin-bottom: var(--s4);
+}
+
+.cof-letter-salutation strong {
+  color: var(--ink);
+  font-size: var(--font-lg);
+}
+
+.cof-letter-body {
+  font-size: var(--font-base);
+  line-height: 1.6;
+  color: var(--ink);
+}
+
+.cof-letter-closing {
+  margin-top: var(--s6);
+  padding-top: var(--s4);
+  border-top: 1px dashed var(--line);
+  font-size: var(--font-base);
+  line-height: 1.6;
+}
+
+/* Lưới thông tin Metadata */
+.cof-meta-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--s4);
+}
+
+@media (max-width: 600px) {
+  .cof-meta-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.cof-meta-item {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s1);
+}
+
+.cof-meta-label {
+  font-size: var(--font-xs);
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  font-weight: 600;
+}
+
+.cof-meta-val {
+  font-size: var(--font-base);
+  color: var(--ink);
+  font-weight: 500;
+}
+
+/* Chế độ đãi ngộ & Lương */
+.cof-salary-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--s4);
+  margin-bottom: var(--s4);
+}
+
+@media (max-width: 600px) {
+  .cof-salary-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.cof-salary-item {
+  background: var(--surface-subtle);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md);
+  padding: var(--s4);
+}
+
+.cof-salary-item--highlight {
+  border-color: var(--brand);
+  background: var(--brand-soft);
+}
+
+.cof-salary-figure {
+  font-size: var(--font-xl);
+  font-weight: 700;
+  color: var(--brand-dark);
+  margin: var(--s1) 0;
+}
+
+.cof-salary-figure--probation {
+  font-size: var(--font-lg);
+  font-weight: 700;
+  color: var(--ink);
+  margin: var(--s1) 0;
+}
+
+.cof-salary-rate {
+  display: inline-block;
+  font-size: var(--font-xs);
+  font-weight: 600;
+  color: var(--brand-dark);
+  background: var(--surface);
+  border: 1px solid var(--brand);
+  border-radius: var(--radius-full);
+  padding: 2px var(--s2);
+}
+
+.cof-benefits-box {
+  background: var(--surface-subtle);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md);
+  padding: var(--s4);
+}
+
+.cof-benefits-text {
+  font-size: var(--font-base);
+  line-height: 1.6;
+  white-space: pre-line;
+  margin: 0;
+}
+
+/* Thẻ liên hệ HR */
+.cof-contact-row {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s3);
+}
+
+.cof-contact-item {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s1);
+}
+
+/* Hộp thoại từ chối & Chips lý do */
+.cof-dialog-reason {
+  margin-top: var(--s4);
+}
+
+.cof-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s2);
+  margin: var(--s2) 0 var(--s3);
+}
+
+.cof-chip {
+  background: var(--surface-subtle);
+  border: 1px solid var(--control-line);
+  color: var(--ink);
+  font-size: var(--font-sm);
+  padding: var(--s1) var(--s3);
+  border-radius: var(--radius-full);
+  cursor: pointer;
+  transition: all 0.15s ease;
+  user-select: none;
+}
+
+.cof-chip:hover {
+  background: var(--brand-soft);
+  border-color: var(--brand);
+  color: var(--brand-dark);
+}
+
+.cof-chip--active {
+  background: var(--brand);
+  border-color: var(--brand-dark);
+  color: var(--surface);
+}
+
+.cof-textarea {
+  width: 100%;
+  resize: vertical;
+  min-height: 80px;
 }
