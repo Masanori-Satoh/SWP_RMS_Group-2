@@ -9,7 +9,8 @@ import com.group2.rms.candidate.service.AiScreeningOutcome;
 import com.group2.rms.candidate.service.ApplicationCv;
 import com.group2.rms.candidate.service.ApplicationPipelineService;
 import com.group2.rms.candidate.service.ApplicationReviewService;
-import com.group2.rms.candidate.service.ApplicationStatusLabels;
+import com.group2.rms.candidate.service.ApplicationStage;
+import com.group2.rms.core.web.StageItem;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.core.io.Resource;
@@ -29,9 +30,13 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
+import org.springframework.web.util.UriComponentsBuilder;
 
 import java.net.URI;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Locale;
+import java.util.Optional;
 
 /**
  * Hồ sơ ứng tuyển cho người tuyển dụng: danh sách (5.1.22), chi tiết, CV, duyệt và chấm lại AI (5.1.23). Quyền theo vai trò ở {@code SecurityConfig},
@@ -53,10 +58,39 @@ public class ApplicationPipelineController {
                        @PageableDefault(size = PAGE_SIZE) Pageable pageable, Model model) {
         ApplicationListResponse result = pipeline.list(search, pageable);
         model.addAttribute("result", result);
-        model.addAttribute("statusOptions", ApplicationStatusLabels.options());
+        model.addAttribute("stageItems", stageItems(result));
         model.addAttribute("activeMenu", "applications");
         model.addAttribute("viewerRole", result.viewerRole());
         return "candidate/applications";
+    }
+
+    /**
+     * Các ô của thanh giai đoạn: "Tất cả", các giai đoạn trong luồng, "Đã dừng". Link giữ bộ lọc đang có, chỉ đổi
+     * giai đoạn và quay về trang đầu.
+     */
+    static List<StageItem> stageItems(ApplicationListResponse result) {
+        ApplicationSearch search = result.search();
+        ApplicationStage selected = search.stageFilter();
+        List<StageItem> items = new ArrayList<>();
+        items.add(new StageItem("ALL", "Tất cả", Math.toIntExact(result.totalCount()), stageHref(search, null),
+                selected == null ? "current" : "upcoming", null, true));
+        for (ApplicationStage stage : ApplicationStage.values()) {
+            items.add(new StageItem(stage.name(), stage.label(), Math.toIntExact(result.stageCounts().get(stage)),
+                    stageHref(search, stage), stage == selected ? "current" : "upcoming", null,
+                    stage == ApplicationStage.CLOSED));
+        }
+        return items;
+    }
+
+    private static String stageHref(ApplicationSearch search, ApplicationStage stage) {
+        return UriComponentsBuilder.fromPath("/applications")
+                .queryParamIfPresent("jobPostingId", Optional.ofNullable(search.jobPostingId()))
+                .queryParamIfPresent("keyword", Optional.ofNullable(search.keyword()))
+                .queryParamIfPresent("status", Optional.ofNullable(search.status()))
+                .queryParam("sort", search.sort())
+                .queryParamIfPresent("stage", Optional.ofNullable(stage).map(Enum::name))
+                .encode()
+                .toUriString();
     }
 
     @GetMapping("/{id}")

@@ -17,6 +17,7 @@ import com.group2.rms.candidate.service.ApplicationStatusLabels;
 import com.group2.rms.core.config.SecurityConfig;
 import com.group2.rms.core.exception.ResourceNotFoundException;
 import com.group2.rms.core.security.DatabaseUserDetailsService;
+import com.group2.rms.core.web.StageItem;
 import com.group2.rms.core.web.TimelineItem;
 import com.group2.rms.user.entity.Role;
 import com.group2.rms.user.entity.User;
@@ -31,6 +32,7 @@ import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.test.web.servlet.request.RequestPostProcessor;
 
@@ -42,6 +44,7 @@ import java.util.Map;
 import java.util.Optional;
 
 import static org.hamcrest.Matchers.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.ArgumentMatchers.eq;
@@ -107,7 +110,42 @@ class ApplicationPipelineWebTests {
                 .andExpect(content().string(containsString("href=\"/interviews/new?applicationId=120\"")))
                 .andExpect(content().string(containsString("href=\"/offers/create?applicationId=120\"")))
                 .andExpect(content().string(not(containsString("applicationId=298"))))
-                .andExpect(content().string(containsString("class=\"more-menu\"")));
+                .andExpect(content().string(containsString("class=\"more-menu\"")))
+                .andExpect(content().string(containsString("Đang chờ: HR")))
+                .andExpect(content().string(not(containsString("name=\"status\""))));
+    }
+
+    /** Nghiệm thu PR 4: ô giai đoạn có số đếm, giữ bộ lọc đang có trên link, đánh dấu ô đang lọc. */
+    @Test
+    void stageBarKeepsFiltersAndMarksSelectedStage() throws Exception {
+        Map<ApplicationStage, Long> counts = zeroCounts();
+        counts.put(ApplicationStage.INTERVIEW, 4L);
+        counts.put(ApplicationStage.CLOSED, 2L);
+        ApplicationSearch search = new ApplicationSearch(6, null, "Võ", "newest", "INTERVIEW").normalized();
+        when(pipeline.list(any(), any())).thenReturn(new ApplicationListResponse(
+                new PageImpl<>(List.of(row(120, "HM_Passed", "88.10", true, false)), Pageable.ofSize(20), 4),
+                counts, List.of(), search, false, "HR"));
+
+        MvcResult result = mvc.perform(get("/applications").with(as("hr_lan", "HR")).param("stage", "INTERVIEW"))
+                .andExpect(status().isOk())
+                .andExpect(content().string(containsString("aria-label=\"Lọc theo giai đoạn\"")))
+                .andExpect(content().string(containsString("aria-current=\"page\"")))
+                .andExpect(content().string(containsString("class=\"stage-bar__divider\"")))
+                .andExpect(content().string(containsString("name=\"stage\" value=\"INTERVIEW\"")))
+                .andExpect(content().string(containsString("Xóa bộ lọc")))
+                .andReturn();
+
+        @SuppressWarnings("unchecked")
+        List<StageItem> items = (List<StageItem>) result.getModelAndView().getModel().get("stageItems");
+        assertEquals(List.of("ALL", "APPLIED", "SCREENING", "INTERVIEW", "OFFER", "HIRED", "CLOSED"),
+                items.stream().map(StageItem::key).toList());
+        assertEquals(List.of(6, 0, 0, 4, 0, 0, 2), items.stream().map(StageItem::count).toList());
+        assertEquals(List.of(true, false, false, false, false, false, true),
+                items.stream().map(StageItem::offFlow).toList());
+        assertEquals(List.of("upcoming", "upcoming", "upcoming", "current", "upcoming", "upcoming", "upcoming"),
+                items.stream().map(StageItem::state).toList());
+        assertEquals("/applications?jobPostingId=6&keyword=V%C3%B5&sort=newest", items.get(0).href());
+        assertEquals("/applications?jobPostingId=6&keyword=V%C3%B5&sort=newest&stage=CLOSED", items.get(6).href());
     }
 
     @Test
@@ -338,13 +376,17 @@ class ApplicationPipelineWebTests {
     private static ApplicationListResponse listOf(boolean forwardedView, String viewerRole,
                                                   ApplicationPipelineResponse... rows) {
         Page<ApplicationPipelineResponse> page = new PageImpl<>(List.of(rows), Pageable.ofSize(20), rows.length);
+        return new ApplicationListResponse(page, zeroCounts(),
+                List.of(new JobPostingOption(6, "Digital Marketing Executive")),
+                new ApplicationSearch(null, null, null, "score", null).normalized(), forwardedView, viewerRole);
+    }
+
+    private static Map<ApplicationStage, Long> zeroCounts() {
         Map<ApplicationStage, Long> counts = new EnumMap<>(ApplicationStage.class);
         for (ApplicationStage stage : ApplicationStage.values()) {
             counts.put(stage, 0L);
         }
-        return new ApplicationListResponse(page, counts,
-                List.of(new JobPostingOption(6, "Digital Marketing Executive")),
-                new ApplicationSearch(null, null, null, "score", null).normalized(), forwardedView, viewerRole);
+        return counts;
     }
 
     private static ApplicationDetailResponse detail(boolean nextSteps, boolean openJobPosting, String linkedIn) {
@@ -367,6 +409,7 @@ class ApplicationPipelineWebTests {
                                                    boolean offer) {
         return new ApplicationPipelineResponse(id, "An Võ", "an.vo@example.com", "Digital Marketing Executive",
                 SUBMITTED, status, ApplicationStatusLabels.label(status), ApplicationStatusLabels.badge(status),
+                "Applied".equals(status) ? null : "HR",
                 score == null ? null : new BigDecimal(score), schedule, offer);
     }
 }
