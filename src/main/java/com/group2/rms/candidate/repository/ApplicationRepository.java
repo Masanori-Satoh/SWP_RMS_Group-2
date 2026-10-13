@@ -3,8 +3,6 @@ package com.group2.rms.candidate.repository;
 import com.group2.rms.candidate.dto.ApplicationPipelineResponse;
 import com.group2.rms.candidate.dto.JobPostingOption;
 import com.group2.rms.candidate.entity.Application;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
@@ -78,32 +76,40 @@ public interface ApplicationRepository extends JpaRepository<Application, Intege
     int transition(@Param("id") Integer applicationId, @Param("from") Collection<String> from,
                    @Param("to") String to);
 
+    /** Lần AI chấm mới nhất của đơn (mỗi đơn tối đa một dòng); đặt sau {@link #PIPELINE_JOINS}. */
+    String LATEST_SCORE_JOIN = """
+                left join AIScreeningResult ai on ai.application = a and ai.aiScreeningId = (
+                    select max(ai2.aiScreeningId) from AIScreeningResult ai2 where ai2.application = a)
+            """;
+
     /**
-     * Danh sách hồ sơ (5.1.22), mỗi đơn một dòng kèm điểm AI mới nhất.
-     * {@code sort = 'score'}: điểm cao trước, chưa có điểm xếp cuối; {@code 'newest'}: chỉ theo ngày nộp.
-     * Truyền {@code Pageable} không kèm sort: thứ tự cố định trong câu query.
+     * Id các đơn của danh sách hồ sơ (5.1.22) trong phạm vi người xem và bộ lọc, đúng thứ tự hiển thị:
+     * {@code sort = 'score'}: điểm AI cao trước, chưa có điểm xếp cuối; {@code 'newest'}: chỉ theo ngày nộp.
+     * Chỉ lấy id: giai đoạn của đơn tính ở Service (xem {@link #findProgressFacts}), rồi mới lọc và cắt trang.
      */
-    @Query(value = """
+    @Query("select a.applicationId " + PIPELINE_JOINS + LATEST_SCORE_JOIN + SCOPE_FILTER + SEARCH_FILTER + """
+            order by case when :sort = 'score' then ai.aiMatchScore end desc nulls last,
+                     a.submissionDate desc, a.applicationId desc
+            """)
+    List<Integer> findPipelineIds(@Param("allDepartments") boolean allDepartments,
+                                  @Param("managerUserId") Integer managerUserId,
+                                  @Param("departmentId") Integer departmentId,
+                                  @Param("forwardedOnly") boolean forwardedOnly,
+                                  @Param("jobPostingId") Integer jobPostingId,
+                                  @Param("status") String status,
+                                  @Param("keyword") String keyword,
+                                  @Param("sort") String sort);
+
+    /**
+     * Các dòng của một trang danh sách, kèm điểm AI mới nhất; không theo thứ tự nào (Service xếp lại theo
+     * {@link #findPipelineIds}). {@code ids} là id của một trang, không được rỗng.
+     */
+    @Query("""
             select new com.group2.rms.candidate.dto.ApplicationPipelineResponse(
                 a.applicationId, u.fullName, u.email, jp.postingTitle, a.submissionDate, a.applicationStatus,
                 ai.aiMatchScore)
-            """ + PIPELINE_JOINS + """
-                left join AIScreeningResult ai on ai.application = a and ai.aiScreeningId = (
-                    select max(ai2.aiScreeningId) from AIScreeningResult ai2 where ai2.application = a)
-            """ + SCOPE_FILTER + SEARCH_FILTER + """
-            order by case when :sort = 'score' then ai.aiMatchScore end desc nulls last,
-                     a.submissionDate desc, a.applicationId desc
-            """,
-            countQuery = "select count(a) " + PIPELINE_JOINS + SCOPE_FILTER + SEARCH_FILTER)
-    Page<ApplicationPipelineResponse> searchPipeline(@Param("allDepartments") boolean allDepartments,
-                                                     @Param("managerUserId") Integer managerUserId,
-                                                     @Param("departmentId") Integer departmentId,
-                                                     @Param("forwardedOnly") boolean forwardedOnly,
-                                                     @Param("jobPostingId") Integer jobPostingId,
-                                                     @Param("status") String status,
-                                                     @Param("keyword") String keyword,
-                                                     @Param("sort") String sort,
-                                                     Pageable pageable);
+            """ + PIPELINE_JOINS + LATEST_SCORE_JOIN + "where a.applicationId in :ids")
+    List<ApplicationPipelineResponse> findPipelineRows(@Param("ids") Collection<Integer> applicationIds);
 
     /** Các tin có đơn trong phạm vi người xem, cho ô lọc "Vị trí". */
     @Query("select distinct new com.group2.rms.candidate.dto.JobPostingOption(jp.jobPostingId, jp.postingTitle) "
@@ -184,7 +190,7 @@ public interface ApplicationRepository extends JpaRepository<Application, Intege
      * Dữ kiện tính trạng thái chi tiết cho nhiều đơn trong một câu (cả trang danh sách), xem
      * {@code ApplicationProgressFacts}. Lịch mới nhất: {@code StartTime} lớn nhất, bỏ lịch đã hủy.
      * SQL thuần, cùng lý do với {@link #findInterviewEvents}. {@code ids} không được rỗng, tối đa ~2000
-     * (giới hạn tham số của SQL Server).
+     * (giới hạn tham số của SQL Server): danh sách dài hơn thì gọi theo lô.
      */
     @Query(value = """
             SELECT a.ApplicationId AS applicationId,

@@ -1,8 +1,6 @@
 package com.group2.rms.candidate.service;
 
-import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Map;
 
 /**
  * Nhãn tiếng Việt và class badge cho trạng thái đơn và quyết định duyệt.
@@ -10,18 +8,11 @@ import java.util.Map;
  */
 public final class ApplicationStatusLabels {
 
-    /** Thứ tự theo luồng tuyển dụng, dùng cho ô lọc. */
+    /** Các trạng thái hợp lệ, theo thứ tự luồng tuyển dụng; tham số lọc {@code status} ngoài danh sách này bị bỏ qua. */
     public static final List<String> STATUSES = List.of(
             "Applied", "AI_Screened", "HR_Passed", "HM_Passed", "Interviewing", "Offered", "Hired", "Rejected");
 
     private ApplicationStatusLabels() {
-    }
-
-    /** Trạng thái → nhãn, giữ thứ tự {@link #STATUSES}, cho ô lọc trạng thái. */
-    public static Map<String, String> options() {
-        Map<String, String> options = new LinkedHashMap<>();
-        STATUSES.forEach(status -> options.put(status, label(status)));
-        return options;
     }
 
     public static String label(String status) {

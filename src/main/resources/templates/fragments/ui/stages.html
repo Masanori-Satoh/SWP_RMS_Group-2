@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<body>
+
+<!-- =============================================================================
+     STAGE BAR FRAGMENT: thanh giai đoạn (các ô nối bằng "›", ô ngoài luồng tách bằng vạch ngăn)
+     Dữ liệu: List<com.group2.rms.core.web.StageItem>, đúng thứ tự hiển thị.
+     Cách gọi:
+     <nav th:replace="~{fragments/ui/stages :: stageBar(items=${stageItems}, mode='tabs')}"></nav>
+     mode: hiện chỉ có 'tabs' (danh sách): mỗi ô là link lọc kèm số đếm, ô state='current'
+     có aria-current="page". Ô có href = null hiện dạng chữ, không bấm được.
+     CSS: components.css mục O. Màn ≤ 600px: các ô xuống dòng (ô đang lọc luôn nhìn thấy).
+     Lưu ý: mỗi biểu thức chỉ chứa tối đa một "__" (Thymeleaf hiểu cặp __...__ là tiền xử lý),
+     nên ô đang chọn dựa vào [aria-current], vạch ngăn là span riêng.
+     ============================================================================= -->
+<nav th:fragment="stageBar(items, mode)" class="stage-bar" th:classappend="'stage-bar--' + ${mode}"
+     aria-label="Lọc theo giai đoạn">
+    <ol class="stage-bar__list">
+        <li th:each="item, it : ${items}" class="stage-bar__item"
+            th:classappend="${item.offFlow} ? 'stage-bar__item--off'">
+            <span th:if="${!it.first and items[it.index - 1].offFlow != item.offFlow}"
+                  class="stage-bar__divider" aria-hidden="true"></span>
+            <a th:if="${item.href != null}" class="stage-bar__link" th:href="@{${item.href}}"
+               th:attr="aria-current=${item.state == 'current' ? 'page' : null}">
+                <span th:text="${item.label}">Phỏng vấn</span>
+                <span th:if="${item.count != null}" class="stage-bar__count" th:text="${item.count}">41</span>
+            </a>
+            <span th:unless="${item.href != null}" class="stage-bar__link">
+                <span th:text="${item.label}">Phỏng vấn</span>
+                <span th:if="${item.count != null}" class="stage-bar__count" th:text="${item.count}">41</span>
+            </span>
+        </li>
+    </ol>
+</nav>
+
+</body>
+</html>

@@ -179,6 +179,12 @@
                         Xem trên cổng ứng viên &nearr;
                     </a>
 
+                    <!-- dunglt bổ sung: dẫn tới danh sách hồ sơ của tin này (thanh giai đoạn đếm theo tin) -->
+                    <a th:href="@{/applications(jobPostingId=${posting.jobPostingId})}"
+                       class="btn btn--secondary btn-full-width">
+                        Xem hồ sơ ứng tuyển
+                    </a>
+
                     <button type="button" class="btn btn--danger btn-full-width" onclick="document.getElementById('jpDeleteDialog').showModal()">
                         Xóa tin tuyển dụng
                     </button>
