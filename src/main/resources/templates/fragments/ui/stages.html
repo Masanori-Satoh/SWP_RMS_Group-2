@@ -10,14 +10,16 @@
      mode: hiện chỉ có 'tabs' (danh sách): mỗi ô là link lọc kèm số đếm, ô state='current'
      có aria-current="page". Ô có href = null hiện dạng chữ, không bấm được.
      CSS: components.css mục O. Màn hẹp: cuộn ngang trong chính thanh.
+     Lưu ý: mỗi biểu thức chỉ chứa tối đa một "__" (Thymeleaf hiểu cặp __...__ là tiền xử lý),
+     nên ô đang chọn dựa vào [aria-current], vạch ngăn là span riêng.
      ============================================================================= -->
 <nav th:fragment="stageBar(items, mode)" class="stage-bar" th:classappend="'stage-bar--' + ${mode}"
      aria-label="Lọc theo giai đoạn">
     <ol class="stage-bar__list">
-        <li th:each="item, it : ${items}"
-            th:with="split=${!it.first and items[it.index - 1].offFlow != item.offFlow}"
-            class="stage-bar__item"
-            th:classappend="|${item.state == 'current' ? 'stage-bar__item--current' : ''} ${item.offFlow ? 'stage-bar__item--off' : ''} ${split ? 'stage-bar__item--split' : ''}|">
+        <li th:each="item, it : ${items}" class="stage-bar__item"
+            th:classappend="${item.offFlow} ? 'stage-bar__item--off'">
+            <span th:if="${!it.first and items[it.index - 1].offFlow != item.offFlow}"
+                  class="stage-bar__divider" aria-hidden="true"></span>
             <a th:if="${item.href != null}" class="stage-bar__link" th:href="@{${item.href}}"
                th:attr="aria-current=${item.state == 'current' ? 'page' : null}">
                 <span th:text="${item.label}">Phỏng vấn</span>
