@@ -51,9 +51,10 @@
         <span class="nav-label-text">Lịch phỏng vấn</span>
     </a>
 
-    <!-- Đề nghị tuyển dụng -->
-    <a th:href="@{/dashboard#offers}" class="sidebar-nav-link"
+    <!-- Đề nghị tuyển dụng (dunglt bổ sung: trỏ trang /portal/offers thay cho khối #offers trên dashboard) -->
+    <a th:href="@{/portal/offers}" class="sidebar-nav-link"
        th:classappend="${activeMenu == 'offers' ? 'active' : ''}"
+       th:attr="aria-current=${activeMenu == 'offers' ? 'page' : null}"
        title="Đề nghị tuyển dụng"
        data-tooltip="Đề nghị tuyển dụng">
         <span class="nav-icon-wrapper">

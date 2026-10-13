@@ -86,6 +86,24 @@ class SidebarMenuTests {
         }
     }
 
+    /** Mục "Đề nghị tuyển dụng" của ứng viên dẫn tới /portal/offers (chỉ ứng viên), không còn là neo trên dashboard. */
+    @Test
+    void candidateOffersEntryOpensOffersPageAndIsHighlightedThere() throws Exception {
+        String offers = "href=\"/portal/offers\"";
+        assertTrue(links(shell("Candidate", "dashboard")).contains("/portal/offers"));
+        assertFalse(shell("Candidate", "dashboard").contains("/dashboard#offers"));
+
+        String shell = shell("Candidate", "offers");
+        int link = shell.indexOf(offers);
+        String tag = shell.substring(shell.lastIndexOf("<a", link), shell.indexOf('>', link));
+        assertTrue(tag.contains("active"), tag);
+        assertTrue(tag.contains("aria-current=\"page\""), tag);
+
+        for (String role : List.of("HR", "Hiring Manager", "Director", "System Admin", "Interviewer")) {
+            assertFalse(shell(role, "dashboard").contains(offers), role);
+        }
+    }
+
     /** /internal/job-postings/** chỉ cho HR và Admin (SecurityConfig): vai trò khác không được thấy link dẫn tới 403. */
     @Test
     void jobPostingsEntryOnlyForRolesAllowedToOpenIt() throws Exception {
