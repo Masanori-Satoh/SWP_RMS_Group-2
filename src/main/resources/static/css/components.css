@@ -1016,3 +1016,106 @@ dialog.dialog::backdrop {
   background-color: var(--surface-subtle);
   outline: none;
 }
+
+/* -----------------------------------------------------------------------------
+   O. STAGE BAR (fragment fragments/ui/stages :: stageBar(items, mode))
+   Thanh giai đoạn: các ô trong luồng nối bằng "›"; ô ngoài luồng ("Tất cả", "Đã dừng")
+   tách bằng vạch ngăn, ô ngoài luồng cuối cùng dạt sang phải. Mode tabs: ô đang lọc nổi
+   màu brand. Màn hẹp: cuộn ngang trong chính thanh, không làm tràn trang.
+   ----------------------------------------------------------------------------- */
+.stage-bar {
+  max-width: 100%;
+  margin-bottom: var(--s6);
+  overflow-x: auto;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  background-color: var(--surface);
+  box-shadow: var(--shadow-sm);
+}
+
+.stage-bar__list {
+  display: flex;
+  align-items: center;
+  width: max-content;
+  min-width: 100%;
+  margin: 0;
+  padding: var(--s2);
+  list-style: none;
+}
+
+.stage-bar__item {
+  display: flex;
+  flex: none;
+  align-items: center;
+}
+
+.stage-bar__item + .stage-bar__item::before {
+  content: "›";
+  padding: 0 var(--s1);
+  color: var(--muted);
+  font-size: var(--font-md);
+}
+
+.stage-bar__item + .stage-bar__item--split::before {
+  content: "";
+  align-self: stretch;
+  width: 1px;
+  margin: 0 var(--s2);
+  padding: 0;
+  background-color: var(--line);
+}
+
+.stage-bar__item--off:last-child {
+  margin-left: auto;
+}
+
+.stage-bar__link {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s2);
+  min-height: var(--btn-sm-h);
+  padding: 0 var(--s3);
+  border: 1px solid transparent;
+  border-radius: var(--radius-md);
+  color: var(--ink);
+  font-size: var(--font-sm);
+  font-weight: 600;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.stage-bar__item--off .stage-bar__link {
+  color: var(--muted);
+}
+
+a.stage-bar__link:hover {
+  background-color: var(--surface-subtle);
+}
+
+a.stage-bar__link:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: -2px;
+}
+
+.stage-bar__count {
+  min-width: var(--s6);
+  padding: 0 var(--s2);
+  border-radius: var(--radius-full);
+  background-color: var(--neutral-soft);
+  color: var(--muted);
+  font-size: var(--font-xs);
+  font-weight: 700;
+  line-height: 1.6;
+  text-align: center;
+}
+
+.stage-bar__item--current .stage-bar__link {
+  border-color: var(--brand);
+  background-color: var(--brand-soft);
+  color: var(--brand-dark);
+}
+
+.stage-bar__item--current .stage-bar__count {
+  background-color: var(--brand);
+  color: var(--on-brand);
+}
