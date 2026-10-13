@@ -1,5 +1,7 @@
 package com.group2.rms.candidate.service;
 
+import com.group2.rms.candidate.repository.ApplicationRepository;
+
 import java.time.LocalDateTime;
 
 /**
@@ -23,4 +25,12 @@ public record ApplicationProgressFacts(
         int evaluationCount,
         String finalDecision,
         String offerStatus) {
+
+    public static ApplicationProgressFacts from(ApplicationRepository.ProgressFactsRow row) {
+        return new ApplicationProgressFacts(row.getApplicationId(), row.getApplicationStatus(),
+                Boolean.TRUE.equals(row.getWithdrawn()), row.getInterviewStatus(), row.getInterviewStart(),
+                row.getPanelCount() == null ? 0 : row.getPanelCount(),
+                row.getEvaluationCount() == null ? 0 : row.getEvaluationCount(),
+                row.getFinalDecision(), row.getOfferStatus());
+    }
 }

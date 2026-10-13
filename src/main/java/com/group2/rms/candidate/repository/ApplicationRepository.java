@@ -174,6 +174,62 @@ public interface ApplicationRepository extends JpaRepository<Application, Intege
             + "WHERE o.ApplicationId = :id", nativeQuery = true)
     List<TimelineEventRow> findOfferEvents(@Param("id") Integer applicationId);
 
+    /**
+     * Dữ kiện tính trạng thái chi tiết cho nhiều đơn trong một câu (cả trang danh sách), xem
+     * {@code ApplicationProgressFacts}. Lịch mới nhất: {@code StartTime} lớn nhất, bỏ lịch đã hủy.
+     * SQL thuần, cùng lý do với {@link #findInterviewEvents}. {@code ids} không được rỗng, tối đa ~2000
+     * (giới hạn tham số của SQL Server).
+     */
+    @Query(value = """
+            SELECT a.ApplicationId AS applicationId,
+                   a.ApplicationStatus AS applicationStatus,
+                   CAST(CASE WHEN EXISTS (
+                            SELECT 1 FROM AuditLog l
+                            WHERE l.EntityName = 'Application' AND l.NewValue = 'Withdrawn'
+                              AND l.EntityId = CAST(a.ApplicationId AS NVARCHAR(50)))
+                        THEN 1 ELSE 0 END AS BIT) AS withdrawn,
+                   s.InterviewStatus AS interviewStatus,
+                   s.StartTime AS interviewStart,
+                   (SELECT COUNT(*) FROM InterviewPanel p WHERE p.InterviewId = s.InterviewId) AS panelCount,
+                   (SELECT COUNT(DISTINCT e.InterviewerId) FROM InterviewEvaluation e
+                    WHERE e.InterviewId = s.InterviewId) AS evaluationCount,
+                   r.FinalDecision AS finalDecision,
+                   o.OfferStatus AS offerStatus
+            FROM Application a
+            OUTER APPLY (SELECT TOP 1 s1.InterviewId, s1.InterviewStatus, s1.StartTime
+                         FROM InterviewSchedule s1
+                         WHERE s1.ApplicationId = a.ApplicationId AND s1.InterviewStatus <> 'Cancelled'
+                         ORDER BY s1.StartTime DESC, s1.InterviewId DESC) s
+            LEFT JOIN InterviewFinalResult r ON r.InterviewId = s.InterviewId
+            OUTER APPLY (SELECT TOP 1 o1.OfferStatus
+                         FROM OfferProposal o1
+                         WHERE o1.ApplicationId = a.ApplicationId
+                         ORDER BY o1.OfferId DESC) o
+            WHERE a.ApplicationId IN (:ids)
+            """, nativeQuery = true)
+    List<ProgressFactsRow> findProgressFacts(@Param("ids") Collection<Integer> applicationIds);
+
+    /** Một dòng của {@link #findProgressFacts}; các trường lịch/offer {@code null} nếu chưa có. */
+    interface ProgressFactsRow {
+        Integer getApplicationId();
+
+        String getApplicationStatus();
+
+        Boolean getWithdrawn();
+
+        String getInterviewStatus();
+
+        LocalDateTime getInterviewStart();
+
+        Integer getPanelCount();
+
+        Integer getEvaluationCount();
+
+        String getFinalDecision();
+
+        String getOfferStatus();
+    }
+
     /** Một mốc đọc từ bảng của module khác: thời điểm + trạng thái gốc. */
     interface TimelineEventRow {
         LocalDateTime getAt();
