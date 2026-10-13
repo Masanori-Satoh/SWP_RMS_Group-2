@@ -31,6 +31,19 @@ public record CandidateOfferDetailResponse(
         boolean canRespond,
         String hrContactName,
         String hrContactEmail,
+        String declineReason,
         LocalDateTime sentAt,
         LocalDateTime updatedAt) {
+
+    public CandidateOfferDetailResponse(
+            Integer offerId, String candidateName, String candidateEmail, String candidatePhone, String candidateAddress,
+            String postingTitle, String offeredPositionTitle, String departmentName, BigDecimal proposedSalary,
+            BigDecimal probationSalary, Integer probationRatePercent, String probationDuration, LocalDate expectedStartDate,
+            String workLocation, String benefitsPackage, String offerStatus, String statusLabel, String statusBadge,
+            boolean canRespond, String hrContactName, String hrContactEmail, LocalDateTime sentAt, LocalDateTime updatedAt) {
+        this(offerId, candidateName, candidateEmail, candidatePhone, candidateAddress, postingTitle, offeredPositionTitle,
+                departmentName, proposedSalary, probationSalary, probationRatePercent, probationDuration, expectedStartDate,
+                workLocation, benefitsPackage, offerStatus, statusLabel, statusBadge, canRespond, hrContactName,
+                hrContactEmail, null, sentAt, updatedAt);
+    }
 }

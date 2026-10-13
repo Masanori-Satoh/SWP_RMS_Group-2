@@ -129,6 +129,12 @@
     initReasonChips(declineDialog);
   }
 
+  // 4. Logic trang Từ chối riêng (/portal/offers/{id}/decline)
+  var declinePageContainer = document.querySelector('.cof-decline-form');
+  if (declinePageContainer) {
+    initReasonChips(declinePageContainer);
+  }
+
   // Mở modal từ nút kích hoạt trên thanh tác vụ trang chi tiết
   document.querySelectorAll('[data-detail-trigger]').forEach(function (btn) {
     btn.addEventListener('click', function () {
@@ -167,7 +173,7 @@
     document.querySelectorAll('button[type="submit"]').forEach(function (b) {
       b.disabled = false;
     });
-    if (confirmButton) {
+    if (typeof confirmButton !== 'undefined' && confirmButton) {
       confirmButton.disabled = false;
     }
   });

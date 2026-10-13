@@ -50,4 +50,9 @@ public interface CandidateOfferRepository extends JpaRepository<OfferProposal, I
     @Query("UPDATE OfferProposal o SET o.offerStatus = :to, o.updatedAt = CURRENT_TIMESTAMP " +
            "WHERE o.offerId = :id AND o.offerStatus = 'Sent_Candidate'")
     int answerIfSent(@Param("id") Integer offerId, @Param("to") String to);
+
+    @Modifying
+    @Query("UPDATE OfferProposal o SET o.offerStatus = :to, o.declineReason = :reason, o.updatedAt = CURRENT_TIMESTAMP " +
+           "WHERE o.offerId = :id AND o.offerStatus = 'Sent_Candidate'")
+    int answerIfSent(@Param("id") Integer offerId, @Param("to") String to, @Param("reason") String reason);
 }

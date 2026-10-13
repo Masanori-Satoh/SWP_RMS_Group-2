@@ -33,14 +33,13 @@
         <div>
             <div class="cof-header-badge-row">
                 <span class="badge" th:classappend="${offer.statusBadge}" th:text="${offer.statusLabel}">Chờ bạn trả lời</span>
-                <span class="cof-id-tag text-muted" th:text="|Mã thư mời: #OFFER-${offer.offerId}|">Mã thư mời: #OFFER-1</span>
             </div>
             <h1 class="page-title" th:text="|Thư mời nhận việc: ${offer.offeredPositionTitle}|">Thư mời nhận việc: Senior Java Developer</h1>
             <p class="page-subtitle" th:text="|Vị trí tuyển dụng: ${offer.postingTitle} • Phòng ban: ${offer.departmentName}|">Phòng Kỹ thuật</p>
         </div>
         <div class="cof-header-actions" th:if="${offer.canRespond}">
             <button type="button" class="btn btn--primary" data-detail-trigger="accept">Đồng ý nhận việc</button>
-            <button type="button" class="btn btn--outline" data-detail-trigger="decline">Từ chối thư mời</button>
+            <a th:href="@{/portal/offers/{id}/decline(id=${offer.offerId})}" class="btn btn--outline">Từ chối thư mời</a>
         </div>
     </div>
 
@@ -191,7 +190,7 @@
                         </p>
                         <div class="cof-actions">
                             <button type="button" class="btn btn--primary" data-detail-trigger="accept">Đồng ý nhận việc</button>
-                            <button type="button" class="btn btn--outline" data-detail-trigger="decline">Từ chối thư mời</button>
+                            <a th:href="@{/portal/offers/{id}/decline(id=${offer.offerId})}" class="btn btn--outline">Từ chối thư mời</a>
                         </div>
                         <p class="cof-note text-muted">
                             Lưu ý: Sau khi gửi phản hồi, bạn không thể thay đổi lại lựa chọn.

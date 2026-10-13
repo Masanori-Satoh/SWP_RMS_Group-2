@@ -160,7 +160,7 @@ class CandidateOfferServiceTests {
     void declineWithReasonSetsOfferDeclinedAndRejectsApplication() {
         when(offers.findVisibleById(eq(OFFER_ID), eq(USER_ID), anyCollection()))
                 .thenReturn(Optional.of(offer(OFFER_ID, "Sent_Candidate")));
-        when(offers.answerIfSent(OFFER_ID, "Declined")).thenReturn(1);
+        when(offers.answerIfSent(OFFER_ID, "Declined", "Mức đãi ngộ chưa đạt kỳ vọng")).thenReturn(1);
 
         String title = service.decline(OFFER_ID, "Mức đãi ngộ chưa đạt kỳ vọng");
 

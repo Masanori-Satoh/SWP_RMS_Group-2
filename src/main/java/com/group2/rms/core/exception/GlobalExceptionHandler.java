@@ -316,6 +316,17 @@ public class GlobalExceptionHandler {
         return mav;
     }
 
+    @ExceptionHandler(org.springframework.web.HttpRequestMethodNotSupportedException.class)
+    @ResponseStatus(HttpStatus.METHOD_NOT_ALLOWED)
+    public ModelAndView handleMethodNotSupported(org.springframework.web.HttpRequestMethodNotSupportedException ex, HttpServletRequest request) {
+        log.warn("Method [{}] not supported at [{}]: {}", ex.getMethod(), request.getRequestURL(), ex.getMessage());
+        ModelAndView mav = new ModelAndView("error/500");
+        mav.setStatus(HttpStatus.METHOD_NOT_ALLOWED);
+        mav.addObject("message", "Phương thức " + ex.getMethod() + " không được hỗ trợ cho đường dẫn này.");
+        mav.addObject("url", request.getRequestURL());
+        return mav;
+    }
+
     // =========================================================================
     // 7. 500 INTERNAL SERVER ERROR (UNHANDLED SYSTEM FALLBACK)
     // =========================================================================

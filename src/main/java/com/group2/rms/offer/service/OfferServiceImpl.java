@@ -413,6 +413,7 @@ public class OfferServiceImpl implements OfferService {
         return OfferDetailResponse.builder()
                 .offerId(offer.getOfferId())
                 .offerStatus(offer.getOfferStatus())
+                .declineReason(offer.getDeclineReason())
                 .offeredPositionTitle(offer.getOfferedPositionTitle())
                 .proposedSalary(offer.getProposedSalary())
                 .probationSalary(offer.getProbationSalary())
@@ -701,6 +702,7 @@ public class OfferServiceImpl implements OfferService {
                 .proposedById(proposedById)
                 .proposedByName(proposedByName)
                 .offerStatus(entity.getOfferStatus())
+                .declineReason(entity.getDeclineReason())
                 .createdAt(entity.getCreatedAt())
                 .updatedAt(entity.getUpdatedAt())
                 .build();

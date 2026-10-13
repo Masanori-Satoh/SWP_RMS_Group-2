@@ -40,6 +40,19 @@ public class CandidateOfferController {
         return "offers/candidate-detail";
     }
 
+    /** Màn hình riêng xác nhận từ chối Thư mời nhận việc (Decline Page). */
+    @GetMapping("/{id}/decline")
+    public String declinePage(@PathVariable Integer id, Model model, RedirectAttributes redirect) {
+        CandidateOfferDetailResponse offer = candidateOffers.getDetail(id);
+        if (!offer.canRespond()) {
+            redirect.addFlashAttribute("errorMessage", "Thư mời này đã được trả lời nên không thể thay đổi.");
+            return "redirect:/portal/offers/" + id;
+        }
+        model.addAttribute("offer", offer);
+        model.addAttribute("activeMenu", "offers");
+        return "offers/candidate-decline";
+    }
+
     /** Nhận offer; kết quả hoặc lỗi hiện bằng thông báo trên trang danh sách hoặc chi tiết. */
     @PostMapping("/{id}/accept")
     public String accept(@PathVariable Integer id,

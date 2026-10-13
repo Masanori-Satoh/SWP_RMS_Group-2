@@ -31,6 +31,7 @@ public class OfferResponse {
     private Integer proposedById;
     private String proposedByName;
     private String offerStatus;
+    private String declineReason;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 }

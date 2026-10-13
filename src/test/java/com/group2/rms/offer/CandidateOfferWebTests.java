@@ -193,6 +193,30 @@ class CandidateOfferWebTests {
                 .andExpect(flash().attribute("declineReasonDisplay", "Mức đãi ngộ chưa đạt kỳ vọng"));
     }
 
+    @Test
+    void candidateCanViewDeclinePage() throws Exception {
+        when(candidateOffers.getDetail(12)).thenReturn(detailOffer(12, "Sent_Candidate", "Chờ bạn trả lời", "badge--warning", true));
+
+        mvc.perform(get("/portal/offers/12/decline").with(as("an.vo", "Candidate")))
+                .andExpect(status().isOk())
+                .andExpect(view().name("offers/candidate-decline"))
+                .andExpect(model().attribute("activeMenu", "offers"))
+                .andExpect(content().string(containsString("Từ chối Thư mời nhận việc")))
+                .andExpect(content().string(containsString("action=\"/portal/offers/12/decline\"")))
+                .andExpect(content().string(containsString("Mức đãi ngộ chưa đạt kỳ vọng")))
+                .andExpect(content().string(not(containsString("style=\""))));
+    }
+
+    @Test
+    void declinePageWhenAlreadyAnsweredRedirectsToDetail() throws Exception {
+        when(candidateOffers.getDetail(12)).thenReturn(detailOffer(12, "Declined", "Đã từ chối", "badge--neutral", false));
+
+        mvc.perform(get("/portal/offers/12/decline").with(as("an.vo", "Candidate")))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrl("/portal/offers/12"))
+                .andExpect(flash().attribute("errorMessage", "Thư mời này đã được trả lời nên không thể thay đổi."));
+    }
+
     private static CandidateOfferResponse offer(int id, String postingTitle, String statusLabel, String badge,
                                                 boolean canRespond) {
         return new CandidateOfferResponse(id, postingTitle, postingTitle, new BigDecimal("20000000"),

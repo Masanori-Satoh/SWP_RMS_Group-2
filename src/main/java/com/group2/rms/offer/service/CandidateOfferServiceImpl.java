@@ -52,22 +52,27 @@ public class CandidateOfferServiceImpl implements CandidateOfferService {
     @Override
     @Transactional
     public String accept(Integer offerId) {
-        return answer(offerId, true);
+        return answer(offerId, true, null);
     }
 
     @Override
     @Transactional
     public String decline(Integer offerId, String declineReason) {
-        return answer(offerId, false);
+        return answer(offerId, false, declineReason);
     }
 
-    private String answer(Integer offerId, boolean accepted) {
+    private String answer(Integer offerId, boolean accepted, String declineReason) {
         Integer userId = currentUserService.requireUser().getUserId();
         OfferProposal offer = offers.findVisibleById(offerId, userId, CANDIDATE_VISIBLE_STATUSES)
                 .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy thư mời nhận việc."));
 
         requireAnswerable(offer);
-        if (offers.answerIfSent(offerId, accepted ? ACCEPTED : DECLINED) == 0) {
+        String toStatus = accepted ? ACCEPTED : DECLINED;
+        String cleanReason = (!accepted && declineReason != null && !declineReason.isBlank()) ? declineReason.trim() : null;
+        int updated = (cleanReason != null)
+                ? offers.answerIfSent(offerId, toStatus, cleanReason)
+                : offers.answerIfSent(offerId, toStatus);
+        if (updated == 0) {
             throw new OfferResponseException("Thư mời vừa được cập nhật. Vui lòng tải lại trang.");
         }
         applicationStatusService.onOfferAnswered(offer.getApplication().getApplicationId(), accepted);
@@ -162,6 +167,7 @@ public class CandidateOfferServiceImpl implements CandidateOfferService {
                 SENT.equals(status),
                 proposedBy != null ? proposedBy.getFullName() : "Phòng Tuyển dụng Mộc RMS",
                 proposedBy != null ? proposedBy.getEmail() : "tuyendung@mocrms.com.vn",
+                offer.getDeclineReason(),
                 offer.getCreatedAt(),
                 offer.getUpdatedAt());
     }
