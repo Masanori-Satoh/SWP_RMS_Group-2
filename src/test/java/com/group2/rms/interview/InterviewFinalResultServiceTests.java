@@ -1,6 +1,7 @@
 package com.group2.rms.interview;
 
 import com.group2.rms.candidate.entity.Application;
+import com.group2.rms.candidate.service.ApplicationStatusService;
 import com.group2.rms.core.exception.ResourceNotFoundException;
 import com.group2.rms.interview.dto.SubmitFinalResultRequest;
 import com.group2.rms.interview.entity.InterviewFinalResult;
@@ -37,6 +38,7 @@ class InterviewFinalResultServiceTests {
     private InterviewScheduleRepository interviewScheduleRepository;
     private InterviewFinalResultRepository interviewFinalResultRepository;
     private RequisitionAccess requisitionAccess;
+    private ApplicationStatusService applicationStatusService; // dunglt bổ sung
     private InterviewFinalResultServiceImpl service;
 
     private User hiringManager;
@@ -47,8 +49,10 @@ class InterviewFinalResultServiceTests {
         interviewScheduleRepository = mock(InterviewScheduleRepository.class);
         interviewFinalResultRepository = mock(InterviewFinalResultRepository.class);
         requisitionAccess = mock(RequisitionAccess.class);
+        applicationStatusService = mock(ApplicationStatusService.class); // dunglt bổ sung
         service = new InterviewFinalResultServiceImpl(
-                interviewScheduleRepository, interviewFinalResultRepository, requisitionAccess);
+                interviewScheduleRepository, interviewFinalResultRepository, requisitionAccess,
+                applicationStatusService); // dunglt bổ sung
 
         hiringManager = user(40, "Hoa HM", "Hiring Manager");
         requisition = JobRequisition.builder().build();
@@ -108,6 +112,23 @@ class InterviewFinalResultServiceTests {
 
         verify(interviewFinalResultRepository).save(any(InterviewFinalResult.class));
         verify(interviewScheduleRepository, never()).save(any());
+    }
+
+    // dunglt bổ sung: chốt xong thì báo module candidate đổi trạng thái hồ sơ (Passed → true, Failed → false)
+    @Test
+    @DisplayName("Chốt kết quả thì báo đổi trạng thái hồ sơ; chốt bị chặn thì không báo")
+    void decisionNotifiesApplicationStatus() {
+        schedule(InterviewStatus.Scheduled, LocalDateTime.now().minusHours(2));
+        service.decide(INTERVIEW_ID, passed(), hiringManager);
+        verify(applicationStatusService).onInterviewDecided(100, true);
+
+        schedule(InterviewStatus.Completed, LocalDateTime.now().minusDays(1));
+        service.decide(INTERVIEW_ID, new SubmitFinalResultRequest("Failed", null, null), hiringManager);
+        verify(applicationStatusService).onInterviewDecided(100, false);
+
+        schedule(InterviewStatus.Cancelled, LocalDateTime.now().minusDays(1));
+        assertThrows(InterviewFinalResultException.class, () -> service.decide(INTERVIEW_ID, passed(), hiringManager));
+        verifyNoMoreInteractions(applicationStatusService);
     }
 
     @Test

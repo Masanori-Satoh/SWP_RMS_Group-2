@@ -2,6 +2,7 @@ package com.group2.rms.interview;
 
 import com.group2.rms.candidate.entity.Application;
 import com.group2.rms.candidate.repository.ApplicationRepository;
+import com.group2.rms.candidate.service.ApplicationStatusService;
 import com.group2.rms.interview.dto.InterviewScheduleRequest;
 import com.group2.rms.interview.dto.InterviewScheduleResponse;
 import com.group2.rms.interview.dto.PanelMemberRequest;
@@ -35,6 +36,7 @@ class InterviewSchedulingServiceTests {
     private ApplicationRepository applicationRepository;
     private UserRepository userRepository;
     private com.group2.rms.interview.service.InterviewTimeValidationService interviewTimeValidationService;
+    private ApplicationStatusService applicationStatusService; // dunglt bổ sung
     private InterviewSchedulingServiceImpl service;
 
     private User hrUser;
@@ -50,13 +52,15 @@ class InterviewSchedulingServiceTests {
         applicationRepository = mock(ApplicationRepository.class);
         userRepository = mock(UserRepository.class);
         interviewTimeValidationService = new com.group2.rms.interview.service.InterviewTimeValidationService(interviewScheduleRepository);
+        applicationStatusService = mock(ApplicationStatusService.class); // dunglt bổ sung
 
         service = new InterviewSchedulingServiceImpl(
                 interviewScheduleRepository,
                 interviewPanelRepository,
                 applicationRepository,
                 userRepository,
-                interviewTimeValidationService
+                interviewTimeValidationService,
+                applicationStatusService // dunglt bổ sung
         );
 
         hrUser = User.builder()
@@ -265,6 +269,39 @@ class InterviewSchedulingServiceTests {
         assertNotNull(response);
         assertEquals(InterviewStatus.Scheduled, response.interviewStatus());
         verify(interviewScheduleRepository, atLeastOnce()).save(any(InterviewSchedule.class));
+    }
+
+    // dunglt bổ sung: xếp lịch xong thì báo module candidate đổi trạng thái hồ sơ; lỗi validate thì không báo
+    @Test
+    @DisplayName("Lên lịch thành công thì hồ sơ được chuyển sang Interviewing; lên lịch lỗi thì không")
+    void createScheduleNotifiesApplicationStatusOnlyOnSuccess() {
+        LocalDateTime start = LocalDateTime.now().plusDays(1);
+        InterviewScheduleRequest request = InterviewScheduleRequest.builder()
+                .applicationId(10)
+                .interviewFormat(InterviewFormat.Online_GoogleMeet)
+                .startTime(start)
+                .endTime(start.plusHours(1))
+                .panelMembers(List.of(new PanelMemberRequest(3, RoleInPanel.HM)))
+                .build();
+        when(interviewScheduleRepository.save(any(InterviewSchedule.class))).thenAnswer(invocation -> {
+            InterviewSchedule s = invocation.getArgument(0);
+            s.setInterviewId(100L);
+            return s;
+        });
+
+        service.createSchedule(request, 1);
+
+        verify(applicationStatusService).onInterviewScheduled(10);
+
+        InterviewScheduleRequest selfAssigned = InterviewScheduleRequest.builder()
+                .applicationId(10)
+                .interviewFormat(InterviewFormat.Online_GoogleMeet)
+                .startTime(start)
+                .endTime(start.plusHours(1))
+                .panelMembers(List.of(new PanelMemberRequest(1, RoleInPanel.HR)))
+                .build();
+        assertThrows(InterviewStatusException.class, () -> service.createSchedule(selfAssigned, 1));
+        verifyNoMoreInteractions(applicationStatusService);
     }
 
     @Test
