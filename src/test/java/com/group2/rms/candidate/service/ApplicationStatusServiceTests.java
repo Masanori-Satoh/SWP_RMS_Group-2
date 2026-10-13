@@ -58,6 +58,32 @@ class ApplicationStatusServiceTests {
         verify(applications).transition(ID, Set.of("HM_Passed", "Interviewing"), "Rejected");
     }
 
+    @Test
+    void acceptedOfferMovesOnlyOfferedToHired() {
+        when(applications.transition(anyInt(), anyCollection(), anyString())).thenReturn(1);
+
+        service.onOfferAnswered(ID, true);
+
+        verify(applications).transition(ID, Set.of("Offered"), "Hired");
+    }
+
+    @Test
+    void declinedOfferMovesOnlyOfferedToRejected() {
+        when(applications.transition(anyInt(), anyCollection(), anyString())).thenReturn(1);
+
+        service.onOfferAnswered(ID, false);
+
+        verify(applications).transition(ID, Set.of("Offered"), "Rejected");
+    }
+
+    @Test
+    void offerAnsweredOnApplicationNotOfferedIsLeftUntouchedWithoutError() {
+        when(applications.transition(anyInt(), anyCollection(), anyString())).thenReturn(0);
+
+        assertDoesNotThrow(() -> service.onOfferAnswered(ID, true));
+        assertDoesNotThrow(() -> service.onOfferAnswered(ID, false));
+    }
+
     /** Đơn đã Offered / Hired / Rejected: repository trả 0, hook không được chặn thao tác của module interview. */
     @Test
     void applicationAlreadyMovedOnIsLeftUntouchedWithoutError() {
