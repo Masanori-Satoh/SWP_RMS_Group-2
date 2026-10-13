@@ -13,10 +13,6 @@
 .dash-actions { display: flex; flex-wrap: wrap; gap: var(--s3); }
 .dash-link { display: inline-flex; align-items: center; min-height: var(--btn-sm-h); color: var(--brand-dark); text-decoration: underline; text-underline-offset: 4px; font-weight: 600; overflow-wrap: anywhere; }
 .dash-link:hover { color: var(--brand-hover); }
-.dash-account { padding: var(--s6); }
-.dash-account__counts { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: var(--s3); margin: 0; }
-.dash-account__counts dt { color: var(--muted); font-size: var(--font-sm); }
-.dash-account__counts dd { font-size: 24px; line-height: 1.3; font-weight: 600; color: var(--brand-dark); margin: var(--s2) 0 0; font-variant-numeric: tabular-nums; }
 .dash-statuses { display: grid; gap: 0; margin: 0; }
 .dash-statuses > div { display: flex; justify-content: space-between; align-items: baseline; gap: var(--s4); padding-block: var(--s3); border-bottom: 1px solid var(--line); }
 .dash-statuses dt { overflow-wrap: anywhere; }
@@ -41,9 +37,45 @@
 .dash-profile dt { color: var(--muted); }
 .dash-profile dd { margin: 0; overflow-wrap: anywhere; }
 .dash-preserve { white-space: pre-wrap; }
+
+/* System Admin only (adm-). The shared shell and other role layouts stay intact. */
+.adm-accounts { padding: 0; min-width: 0; }
+.adm-accounts__heading { padding: var(--s6); }
+.adm-accounts__heading h2 { margin-bottom: var(--s1); }
+.adm-accounts__heading p { font-size: var(--font-base); }
+.adm-accounts__table { margin-bottom: 0; }
+.adm-account-table { margin: 0; min-width: 720px; }
+.adm-account-table th, .adm-account-table td { padding: var(--s4) var(--s6); }
+.adm-account-table tbody th { font-weight: 600; white-space: normal; min-width: 210px; }
+.adm-account-table__name { color: var(--ink); text-decoration: underline; text-decoration-color: var(--control-line); text-underline-offset: 4px; }
+.adm-account-table__name:hover { color: var(--brand-dark); text-decoration-color: currentColor; }
+.adm-account-table__total { font-size: 28px; line-height: 1.3; font-weight: 600; font-variant-numeric: tabular-nums; }
+.adm-count-link { display: inline-flex; align-items: center; justify-content: center; min-width: 44px; min-height: 44px; padding: var(--s1) var(--s2); border-radius: var(--radius-sm); color: var(--brand-dark); font-size: var(--font-lg); font-weight: 600; font-variant-numeric: tabular-nums; text-decoration: underline; text-underline-offset: 4px; }
+.adm-count-link:hover { background: var(--brand-soft); }
+.adm-count-link--blocked { color: var(--error); background: var(--error-soft); }
+.adm-count-link--blocked:hover { background: var(--error-soft); text-decoration-thickness: 2px; }
+.adm-accounts__foot { display: flex; justify-content: space-between; flex-wrap: wrap; gap: var(--s2) var(--s6); padding: var(--s3) var(--s6); color: var(--muted); font-size: var(--font-sm); }
+.adm-details { margin-top: var(--s6); }
+.adm-panel { display: flex; flex-direction: column; min-width: 0; }
+.adm-panel h2 { margin: 0; }
+.adm-panel__body { flex: 1; }
+.adm-department-total { display: flex; align-items: baseline; flex-wrap: wrap; gap: var(--s3); margin-block: var(--s2) var(--s6); color: var(--muted); }
+.adm-department-total strong { color: var(--ink); font-size: 32px; line-height: 1.2; font-weight: 600; font-variant-numeric: tabular-nums; }
+.adm-department-statuses { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--s4); margin: 0; }
+.adm-department-statuses > div { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: var(--s2); padding-block: var(--s2); border-top: 1px solid var(--line); }
+.adm-department-statuses dd { margin: 0; }
+.adm-panel__footer { display: flex; flex-direction: column; align-items: flex-start; gap: var(--s2); margin-top: var(--s6); padding-top: var(--s4); border-top: 1px solid var(--line); }
+.adm-panel__footer p { color: var(--muted); font-size: var(--font-sm); max-width: 60ch; }
+.adm-health-caption { display: flex; justify-content: space-between; gap: var(--s4); color: var(--muted); font-size: var(--font-sm); }
+.adm-tools { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--s6); margin-top: var(--s8); padding-top: var(--s6); border-top: 1px solid var(--line); }
+.adm-tools h2 { margin-bottom: var(--s2); }
+.adm-tools__links { display: flex; flex-wrap: wrap; gap: var(--s2) var(--s6); }
+.adm-ai-note { color: var(--muted); font-size: var(--font-sm); }
+.adm-ai-note__title { display: flex; align-items: center; flex-wrap: wrap; gap: var(--s3); margin-bottom: var(--s2); }
+.adm-ai-note h3 { font-family: var(--sans); color: var(--ink); font-size: var(--font-md); font-weight: 600; }
 @media (max-width: 992px) {
   .dash-split { grid-template-columns: 1fr; }
-  .dash-account__counts { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--s4); }
+  .adm-details { grid-template-columns: 1fr; }
 }
 @media (max-width: 768px) {
   .dash-section__heading { align-items: flex-start; }
@@ -51,4 +83,11 @@
   .dash-filters > .form-group { flex-basis: 100%; }
   .dash-offer__summary { grid-template-columns: 1fr; }
   .dash-profile > div { grid-template-columns: 1fr; gap: var(--s1); }
+  .adm-accounts__heading { padding: var(--s4); }
+  .adm-account-table th, .adm-account-table td { padding: var(--s3) var(--s4); }
+  .adm-accounts__foot { padding: var(--s3) var(--s4); }
+  .adm-panel { padding: var(--s4); }
+  .adm-panel > .card-header { align-items: flex-start; flex-wrap: wrap; gap: var(--s2); }
+  .adm-department-statuses { grid-template-columns: 1fr; gap: 0; }
+  .adm-tools { grid-template-columns: 1fr; }
 }

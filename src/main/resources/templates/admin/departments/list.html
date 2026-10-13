@@ -31,8 +31,9 @@
                 <p class="table-scroll-note">Cuộn ngang để xem đầy đủ thông tin và thao tác.</p>
                 <div class="table-wrapper" tabindex="0" role="region" aria-labelledby="departments-title">
                     <table class="table account-table department-table"><caption class="sr-only">Phòng ban, trưởng phòng và trạng thái hoạt động.</caption>
-                        <thead><tr><th scope="col">Tên phòng ban</th><th scope="col">Trưởng phòng</th><th scope="col">Trạng thái</th><th scope="col">Thao tác</th></tr></thead>
-                        <tbody><tr th:each="department : ${departments.content}">
+                        <thead><tr><th scope="col">STT</th><th scope="col">Tên phòng ban</th><th scope="col">Trưởng phòng</th><th scope="col">Trạng thái</th><th scope="col">Thao tác</th></tr></thead>
+                        <tbody><tr th:each="department, row : ${departments.content}">
+                            <td th:text="${departments.number * departments.size + row.count}"></td>
                             <td class="account-name" th:text="${department.name}">Phòng ban</td>
                             <td><span th:text="${department.managerName != null ? department.managerName : 'Chưa phân công'}"></span>
                                 <span class="department-manager" th:if="${department.managerUsername != null}" th:text="${department.managerUsername}"></span></td>
@@ -47,7 +48,7 @@
                                     <form th:replace="~{fragments/status-actions :: action(@{/admin/departments/{id}/activate(id=${department.id})}, 'Kích hoạt lại phòng ban ' + ${department.name}, 'Phòng ban sẽ hoạt động trở lại và có thể được chọn khi tạo hoặc chuyển tài khoản nội bộ.', 'Kích hoạt lại', false)}"></form>
                                 </th:block>
                             </td>
-                        </tr><tr th:if="${departments.empty}"><td colspan="4" class="account-empty">Không tìm thấy phòng ban phù hợp. Hãy thử thay đổi bộ lọc.</td></tr></tbody>
+                        </tr><tr th:if="${departments.empty}"><td colspan="5" class="account-empty">Không tìm thấy phòng ban phù hợp. Hãy thử thay đổi bộ lọc.</td></tr></tbody>
                     </table>
                 </div>
                 <div class="account-pagination" th:if="${departments.totalPages > 1}"><span>Trang <strong th:text="${departments.number + 1}"></strong>/<span th:text="${departments.totalPages}"></span></span>
