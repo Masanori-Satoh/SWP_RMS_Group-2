@@ -169,6 +169,12 @@ public interface ApplicationRepository extends JpaRepository<Application, Intege
             + "WHERE s.ApplicationId = :id", nativeQuery = true)
     List<TimelineEventRow> findInterviewEvents(@Param("id") Integer applicationId);
 
+    /** Kết quả chốt các buổi phỏng vấn của đơn ({@code Passed}/{@code Failed}), cho timeline. SQL thuần, cùng lý do. */
+    @Query(value = "SELECT r.ApprovedAt AS at, r.FinalDecision AS status FROM InterviewFinalResult r "
+            + "JOIN InterviewSchedule s ON s.InterviewId = r.InterviewId "
+            + "WHERE s.ApplicationId = :id", nativeQuery = true)
+    List<TimelineEventRow> findInterviewResultEvents(@Param("id") Integer applicationId);
+
     /** Offer của đơn, cho timeline. SQL thuần, cùng lý do với {@link #findInterviewEvents}. */
     @Query(value = "SELECT o.CreatedAt AS at, o.OfferStatus AS status FROM OfferProposal o "
             + "WHERE o.ApplicationId = :id", nativeQuery = true)

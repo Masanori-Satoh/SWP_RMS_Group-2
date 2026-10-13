@@ -156,7 +156,7 @@ public class ApplicationPipelineService {
         return ApplicationProgressResolver.resolve(known, now);
     }
 
-    /** Hành trình của đơn, mới nhất trước: nộp, AI chấm, các lượt duyệt, lịch phỏng vấn, offer. */
+    /** Hành trình của đơn, mới nhất trước: nộp, AI chấm, các lượt duyệt, lịch và kết quả phỏng vấn, offer. */
     private List<TimelineItem> timeline(Application application, User account, List<AIScreeningResult> scores) {
         Integer id = application.getApplicationId();
         List<TimelineItem> items = new ArrayList<>();
@@ -172,6 +172,9 @@ public class ApplicationPipelineService {
                 ApplicationStatusLabels.decisionTone(review.getDecision()))));
         applications.findInterviewEvents(id).forEach(event -> items.add(new TimelineItem(
                 event.getAt(), "Lịch phỏng vấn: " + event.getStatus(), null, null, "neutral")));
+        applications.findInterviewResultEvents(id).forEach(event -> items.add(new TimelineItem(
+                event.getAt(), "Kết quả phỏng vấn: " + ApplicationStatusLabels.interviewResultLabel(event.getStatus()),
+                null, null, ApplicationStatusLabels.interviewResultTone(event.getStatus()))));
         applications.findOfferEvents(id).forEach(event -> items.add(new TimelineItem(
                 event.getAt(), "Offer: " + event.getStatus(), null, null, "success")));
         items.sort(Comparator.comparing(TimelineItem::at, Comparator.nullsLast(Comparator.reverseOrder())));

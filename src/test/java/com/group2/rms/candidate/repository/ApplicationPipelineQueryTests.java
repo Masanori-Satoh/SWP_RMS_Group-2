@@ -139,6 +139,22 @@ class ApplicationPipelineQueryTests {
         });
     }
 
+    @Test
+    void interviewResultEventsReadFinalResultTable() {
+        List<?> decided = entityManager.createNativeQuery("SELECT TOP 1 s.ApplicationId FROM InterviewFinalResult r "
+                + "JOIN InterviewSchedule s ON s.InterviewId = r.InterviewId").getResultList();
+        Assumptions.assumeFalse(decided.isEmpty(), "DB local chưa có kết quả phỏng vấn nào");
+        Integer id = ((Number) decided.getFirst()).intValue();
+
+        List<ApplicationRepository.TimelineEventRow> results = applications.findInterviewResultEvents(id);
+
+        assertFalse(results.isEmpty());
+        results.forEach(event -> {
+            assertNotNull(event.getAt());
+            assertTrue(List.of("Passed", "Failed").contains(event.getStatus()), event.getStatus());
+        });
+    }
+
     /** Đối chiếu từng đơn với các query timeline (đọc thẳng bảng gốc), trên mọi đơn của DB local. */
     @Test
     void progressFactsMatchInterviewAndOfferTables() {

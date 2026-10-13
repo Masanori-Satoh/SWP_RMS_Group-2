@@ -160,6 +160,7 @@ class ApplicationPipelineServiceTests {
                 .reviewer(User.builder().fullName("Lan HR").build())
                 .reviewedAt(SUBMITTED.plusDays(1)).build()));
         when(applications.findInterviewEvents(ID)).thenReturn(List.of(event(SUBMITTED.plusDays(3), "Scheduled")));
+        when(applications.findInterviewResultEvents(ID)).thenReturn(List.of(event(SUBMITTED.plusDays(4), "Passed")));
         when(applications.findOfferEvents(ID)).thenReturn(List.of(event(SUBMITTED.plusDays(5), "Draft")));
         when(access.canReview(actor, application)).thenReturn(true);
         when(access.canOpenJobPosting(actor)).thenReturn(true);
@@ -173,13 +174,27 @@ class ApplicationPipelineServiceTests {
         assertEquals("Chờ HR duyệt CV", detail.statusLabel());
         assertEquals("HR sàng lọc hồ sơ và chuyển cho trưởng bộ phận.", detail.currentStep());
         assertEquals(new ApplicationDetailResponse.Actions(true, false, false, false, true), detail.actions());
-        assertEquals(List.of("Offer: Draft", "Lịch phỏng vấn: Scheduled", "HR: Đạt", "AI chấm điểm: 79,34",
-                        "AI chấm điểm: 60,00", "Nộp hồ sơ"),
+        assertEquals(List.of("Offer: Draft", "Kết quả phỏng vấn: Đạt", "Lịch phỏng vấn: Scheduled", "HR: Đạt",
+                        "AI chấm điểm: 79,34", "AI chấm điểm: 60,00", "Nộp hồ sơ"),
                 detail.timeline().stream().map(TimelineItem::title).toList());
-        TimelineItem review = detail.timeline().get(2);
+        assertEquals("success", detail.timeline().get(1).tone());
+        TimelineItem review = detail.timeline().get(3);
         assertEquals("Lan HR", review.actor());
         assertEquals("Hợp vị trí", review.body());
         assertEquals("success", review.tone());
+    }
+
+    /** Nghiệm thu PR 1 dòng 2: chốt Không đạt hiện trên timeline màu đỏ. */
+    @Test
+    void failedInterviewResultIsDangerOnTimeline() {
+        when(applications.findDetailById(ID)).thenReturn(Optional.of(application()));
+        when(screeningResults.findByApplication_ApplicationIdOrderByAiScreeningIdDesc(ID)).thenReturn(List.of());
+        when(applications.findInterviewResultEvents(ID)).thenReturn(List.of(event(SUBMITTED.plusDays(4), "Failed")));
+
+        TimelineItem result = service.detail(ID).timeline().getFirst();
+
+        assertEquals("Kết quả phỏng vấn: Không đạt", result.title());
+        assertEquals("danger", result.tone());
     }
 
     @Test

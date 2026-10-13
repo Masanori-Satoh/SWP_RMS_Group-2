@@ -86,6 +86,23 @@ public final class ApplicationStatusLabels {
         };
     }
 
+    /** Kết quả chốt phỏng vấn ({@code InterviewFinalResult.FinalDecision}). */
+    public static String interviewResultLabel(String finalDecision) {
+        return switch (finalDecision) {
+            case "Passed" -> "Đạt";
+            case "Failed" -> "Không đạt";
+            default -> finalDecision;
+        };
+    }
+
+    public static String interviewResultTone(String finalDecision) {
+        return switch (finalDecision) {
+            case "Passed" -> "success";
+            case "Failed" -> "danger";
+            default -> "neutral";
+        };
+    }
+
     public static String reviewerRoleLabel(String reviewerRole) {
         return switch (reviewerRole) {
             case "HR" -> "HR";
