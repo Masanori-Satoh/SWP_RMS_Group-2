@@ -4,10 +4,13 @@ import com.group2.rms.candidate.dto.ApplicationPipelineResponse;
 import com.group2.rms.candidate.dto.ApplicationSearch;
 import com.group2.rms.candidate.dto.JobPostingOption;
 import com.group2.rms.candidate.entity.Application;
+import com.group2.rms.candidate.service.ApplicationProgressFacts;
+import com.group2.rms.candidate.service.ApplicationProgressResolver;
 import com.group2.rms.candidate.service.ApplicationScope;
 import com.group2.rms.user.entity.User;
 import com.group2.rms.user.repository.UserRepository;
 import jakarta.persistence.EntityManager;
+import org.junit.jupiter.api.Assumptions;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -16,9 +19,13 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
+import java.util.stream.Collectors;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -130,6 +137,71 @@ class ApplicationPipelineQueryTests {
             assertNotNull(event.getAt());
             assertNotNull(event.getStatus());
         });
+    }
+
+    @Test
+    void interviewResultEventsReadFinalResultTable() {
+        List<?> decided = entityManager.createNativeQuery("SELECT TOP 1 s.ApplicationId FROM InterviewFinalResult r "
+                + "JOIN InterviewSchedule s ON s.InterviewId = r.InterviewId").getResultList();
+        Assumptions.assumeFalse(decided.isEmpty(), "DB local chưa có kết quả phỏng vấn nào");
+        Integer id = ((Number) decided.getFirst()).intValue();
+
+        List<ApplicationRepository.TimelineEventRow> results = applications.findInterviewResultEvents(id);
+
+        assertFalse(results.isEmpty());
+        results.forEach(event -> {
+            assertNotNull(event.getAt());
+            assertTrue(List.of("Passed", "Failed").contains(event.getStatus()), event.getStatus());
+        });
+    }
+
+    /** Đối chiếu từng đơn với các query timeline (đọc thẳng bảng gốc), trên mọi đơn của DB local. */
+    @Test
+    void progressFactsMatchInterviewAndOfferTables() {
+        List<ApplicationPipelineResponse> pipeline = search(ApplicationScope.ALL, null, null,
+                ApplicationSearch.SORT_NEWEST).getContent().stream().limit(2000).toList();
+        Map<Integer, String> statusById = pipeline.stream().collect(Collectors.toMap(
+                ApplicationPipelineResponse::applicationId, ApplicationPipelineResponse::applicationStatus));
+
+        List<ApplicationRepository.ProgressFactsRow> rows = applications.findProgressFacts(statusById.keySet());
+
+        assertEquals(statusById.size(), rows.size(), "mỗi đơn đúng một dòng");
+        LocalDateTime now = LocalDateTime.now();
+        for (ApplicationRepository.ProgressFactsRow row : rows) {
+            Integer id = row.getApplicationId();
+            assertEquals(statusById.get(id), row.getApplicationStatus());
+
+            List<LocalDateTime> activeStarts = applications.findInterviewEvents(id).stream()
+                    .filter(event -> !"Cancelled".equals(event.getStatus()))
+                    .map(ApplicationRepository.TimelineEventRow::getAt).toList();
+            if (activeStarts.isEmpty()) {
+                assertNull(row.getInterviewStatus(), "không có lịch còn hiệu lực: " + id);
+                assertNull(row.getFinalDecision(), "không có lịch thì không có kết quả: " + id);
+                assertEquals(0, row.getPanelCount());
+                assertEquals(0, row.getEvaluationCount());
+            } else {
+                assertEquals(Collections.max(activeStarts), row.getInterviewStart(), "lịch mới nhất: " + id);
+                assertNotEquals("Cancelled", row.getInterviewStatus());
+            }
+
+            List<ApplicationRepository.TimelineEventRow> offers = applications.findOfferEvents(id);
+            assertEquals(offers.isEmpty() ? null : offers.getFirst().getStatus(), row.getOfferStatus(), "offer: " + id);
+
+            ApplicationProgressFacts facts = ApplicationProgressFacts.from(row);
+            assertNotNull(ApplicationProgressResolver.resolve(facts, now).step(), "tính được trạng thái: " + id);
+        }
+    }
+
+    @Test
+    void progressFactsFlagWithdrawnApplications() {
+        List<?> withdrawn = entityManager.createNativeQuery("SELECT TOP 1 CAST(l.EntityId AS INT) FROM AuditLog l "
+                + "WHERE l.EntityName = 'Application' AND l.NewValue = 'Withdrawn'").getResultList();
+        Assumptions.assumeFalse(withdrawn.isEmpty(), "DB local chưa có đơn nào bị rút");
+        Integer id = ((Number) withdrawn.getFirst()).intValue();
+
+        ApplicationRepository.ProgressFactsRow row = applications.findProgressFacts(List.of(id)).getFirst();
+
+        assertTrue(row.getWithdrawn());
     }
 
     /** Ghi thật rồi rollback khi test kết thúc (transaction của test không commit): DB không đổi. */

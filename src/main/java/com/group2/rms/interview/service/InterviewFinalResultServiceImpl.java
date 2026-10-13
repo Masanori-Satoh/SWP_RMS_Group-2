@@ -1,6 +1,7 @@
 package com.group2.rms.interview.service;
 
 import com.group2.rms.candidate.entity.Application;
+import com.group2.rms.candidate.service.ApplicationStatusService;
 import com.group2.rms.core.exception.ResourceNotFoundException;
 import com.group2.rms.core.security.CurrentUserService;
 import com.group2.rms.interview.dto.SubmitFinalResultRequest;
@@ -26,7 +27,8 @@ import java.time.LocalDateTime;
  * - Chỉ Hiring Manager quản lý phòng ban của yêu cầu tuyển dụng (cùng quy tắc bước duyệt hồ sơ).
  * - Mỗi lịch một kết quả (UQ_InterviewFinalResult_Interview), chốt xong không sửa.
  * - Không cần đủ phiếu đánh giá; phiếu nộp muộn vẫn được nhận.
- * - Không cập nhật trạng thái Application (thuộc module candidate).
+ * - Trạng thái Application do module candidate đổi qua ApplicationStatusService (dunglt bổ sung):
+ *   Failed → Rejected; Passed → giữ Interviewing để HR lập offer.
  */
 @Service
 @RequiredArgsConstructor
@@ -36,6 +38,8 @@ public class InterviewFinalResultServiceImpl implements InterviewFinalResultServ
     private final InterviewScheduleRepository interviewScheduleRepository;
     private final InterviewFinalResultRepository interviewFinalResultRepository;
     private final RequisitionAccess requisitionAccess;
+    // dunglt bổ sung: đổi trạng thái hồ sơ theo kết quả (module candidate, chiều interview → candidate)
+    private final ApplicationStatusService applicationStatusService;
 
     @Override
     @Transactional
@@ -73,6 +77,10 @@ public class InterviewFinalResultServiceImpl implements InterviewFinalResultServ
             schedule.transitionTo(InterviewStatus.Completed);
             interviewScheduleRepository.save(schedule);
         }
+
+        // dunglt bổ sung: chốt Failed thì hồ sơ → Rejected; Passed giữ Interviewing để HR lập offer
+        applicationStatusService.onInterviewDecided(schedule.getApplication().getApplicationId(),
+                "Passed".equals(request.finalDecision()));
 
         log.info("Hiring Manager #{} chốt kết quả {} cho lịch phỏng vấn #{}.",
                 hiringManager.getUserId(), request.finalDecision(), interviewId);
