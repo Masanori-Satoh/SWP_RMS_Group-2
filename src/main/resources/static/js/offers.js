@@ -1685,9 +1685,114 @@ window.closeDirectorDetailModal = closeDirectorDetailModal;
 window.handleDirectorModalBackdropClick = handleDirectorModalBackdropClick;
 
 function updateRejectReasonCounter(el) {
+    if (!el) return;
     const len = el.value.length;
-    document.getElementById('rejectReasonCount').innerText = len;
+    const cnt = document.getElementById('rejectReasonCount');
+    if (cnt) cnt.innerText = len;
 }
+
+function updateDirectorDetailCommentCounter(el) {
+    if (!el) return;
+    const len = el.value.length;
+    const cnt = document.getElementById('directorDetailCommentCount');
+    if (cnt) cnt.innerText = len;
+}
+
+function scrollToDirectorDecision() {
+    const sec = document.getElementById('directorDecisionSection');
+    if (sec) {
+        sec.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        const comments = document.getElementById('directorDetailComments');
+        if (comments) comments.focus();
+    }
+}
+
+function submitDirectorDecisionFromScreen(offerId, action) {
+    if (!offerId) return;
+    const commentsEl = document.getElementById('directorDetailComments');
+    const comments = commentsEl ? commentsEl.value.trim() : '';
+
+    if (action === 'REJECT') {
+        if (!comments) {
+            Swal.fire('Chú ý', 'Vui lòng nhập lý do từ chối vào ô nhận xét bên dưới.', 'warning')
+                .then(() => {
+                    if (commentsEl) commentsEl.focus();
+                });
+            return;
+        }
+
+        Swal.fire({
+            title: 'Từ chối đề xuất Offer?',
+            text: `Bạn có chắc chắn muốn từ chối đề xuất #${offerId}?`,
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonText: 'Xác nhận từ chối',
+            cancelButtonText: 'Hủy',
+            confirmButtonColor: '#dc2626',
+            reverseButtons: true
+        }).then((result) => {
+            if (result.isConfirmed) {
+                executeDirectorDecisionApi(offerId, `/offers/${offerId}/reject`, comments);
+            }
+        });
+    } else if (action === 'APPROVE') {
+        Swal.fire({
+            title: 'Phê duyệt đề xuất Offer?',
+            text: 'Sau khi phê duyệt, HR sẽ được thông báo để tiếp tục phát hành Offer Letter cho ứng viên.',
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonText: 'Xác nhận phê duyệt',
+            cancelButtonText: 'Hủy',
+            confirmButtonColor: '#166534',
+            reverseButtons: true
+        }).then((result) => {
+            if (result.isConfirmed) {
+                executeDirectorDecisionApi(offerId, `/offers/${offerId}/approve`, comments || 'Phê duyệt trực tiếp');
+            }
+        });
+    }
+}
+
+function executeDirectorDecisionApi(offerId, url, comments) {
+    const csrf = getCsrfInfo();
+    const headers = {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json'
+    };
+    if (csrf.token) {
+        headers[csrf.header] = csrf.token;
+    }
+
+    fetch(url, {
+        method: 'POST',
+        headers: headers,
+        body: JSON.stringify({ comments: comments })
+    })
+    .then(res => res.json())
+    .then(data => {
+        if (data.success) {
+            Swal.fire({
+                title: 'Thành công',
+                text: data.message,
+                icon: 'success',
+                timer: 1500,
+                showConfirmButton: false
+            }).then(() => {
+                window.location.href = '/offers';
+            });
+        } else {
+            Swal.fire('Lỗi', data.message || 'Có lỗi xảy ra.', 'error');
+        }
+    })
+    .catch(err => {
+        console.error(err);
+        Swal.fire('Lỗi', 'Không thể kết nối đến máy chủ.', 'error');
+    });
+}
+
+window.updateDirectorDetailCommentCounter = updateDirectorDetailCommentCounter;
+window.scrollToDirectorDecision = scrollToDirectorDecision;
+window.submitDirectorDecisionFromScreen = submitDirectorDecisionFromScreen;
 
 function submitDirectorApprove() {
     if (!currentDirectorOfferId) return;
@@ -1737,7 +1842,7 @@ function submitDirectorApprove() {
 function submitDirectorReject() {
     if (!currentDirectorOfferId) return;
     
-    const reason = document.getElementById('rejectReasonInput').value.trim();
+    const reason = document.getElementById('rejectReasonInput') ? document.getElementById('rejectReasonInput').value.trim() : '';
     if (!reason) {
         Swal.fire('Chú ý', 'Vui lòng nhập lý do từ chối.', 'warning');
         return;

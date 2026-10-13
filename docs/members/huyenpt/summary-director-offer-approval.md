@@ -84,6 +84,13 @@ Tiếp nối Phase 1 (Cải thiện UI/UX và Xuất Excel), Phase 2 tập trung
   - Xử lý hành động phê duyệt (`submitDirectorApprove`) và từ chối (`submitDirectorReject`) với hộp thoại xác nhận SweetAlert2 và tự động đính kèm CSRF token.
   - Cung cấp alias tương thích ngược `window.openDirectorDrawer` và `window.closeDirectorDrawer` để không làm gián đoạn mã nguồn cũ.
 
+- **Chuyển đổi Luồng Xem Chi tiết sang Màn hình Chuyên biệt (Dedicated Screen - URL `/offers/{id}`):**
+  - Tiếp tục hoàn thiện trải nghiệm theo chuẩn của màn hình HR, luồng xem chi tiết của Director được chuyển đổi hoàn toàn từ Pop-up Modal sang **Màn hình chuyên biệt (Dedicated Screen)**:
+    1. Thay thế toàn bộ liên kết click trên bảng `offers/director-list.html` sang thẻ điều hướng `GET /offers/{id}`.
+    2. Đồng bộ giao diện `offers/detail.html`: Bổ sung hiển thị liên kết xem hồ sơ CV (`appliedCvUrl`), địa chỉ liên hệ của ứng viên (`candidateAddress`), và thông tin người lập đề xuất (`proposedByName`).
+    3. Tích hợp trực tiếp **Card Quyết định của Giám đốc (Director Decision Panel)** trên trang chi tiết khi ở trạng thái `Pending_Director`: Có khung nhập lý do/ý kiến phản hồi kèm bộ đếm 0/500 ký tự và 2 nút hành động trực tiếp "Phê duyệt" / "Từ chối".
+    4. Bổ sung các hàm `submitDirectorDecisionFromScreen`, `scrollToDirectorDecision`, `updateDirectorDetailCommentCounter` trong `offers.js` gọi RESTful API và cập nhật trạng thái liền mạch.
+
 ---
 
 ### 3. Tích hợp Hệ thống Thông báo Tự động (Notification Integration)
@@ -98,14 +105,15 @@ Tiếp nối Phase 1 (Cải thiện UI/UX và Xuất Excel), Phase 2 tập trung
 
 - **Unit & Integration Tests:**
   - `OfferIntegrationTest` (17/17 test cases passed): Kiểm thử toàn bộ luồng phê duyệt từ Director, kiểm tra chuyển đổi trạng thái, phân quyền truy cập và dữ liệu xuất ra.
-  - `OfferControllerBugTest` (Passed): Kiểm tra xử lý session và định tuyến bảo mật.
+  - `OfferServiceTests` (59/59 test cases passed): Kiểm tra toàn diện các ràng buộc lương và quy tắc trạng thái.
+  - Tổng số test cases đạt **76/76 PASS (100%)**.
 - **Manual & Browser Testing (E2E):**
   - Đã thực hiện kiểm thử thực tế trên trình duyệt bằng tài khoản `director`.
-  - Kiểm tra giao diện `/offers`: Bộ lọc tab hoạt động chính xác, modal pop-up hiển thị căn giữa sắc nét, dữ liệu ứng viên và mức lương được điền đầy đủ, đóng mở modal bằng click ra ngoài hoặc phím `Escape` hoạt động mượt mà.
-  - Ảnh chụp xác thực: Đã lưu trữ và kiểm chứng qua hình ảnh trực quan `director_offer_detail_modal_1791778752991.png`.
+  - Kiểm tra giao diện `/offers`: Bộ lọc tab hoạt động chính xác, click vào bản ghi chuyển hướng mượt mà sang `/offers/{id}`, hiển thị đầy đủ thông tin ứng viên, mức lương, link CV và Card ra quyết định.
+  - Khi phê duyệt hoặc từ chối từ trang chi tiết, hệ thống ghi nhận thành công và chuyển hướng về danh sách với thông báo trạng thái.
 
 ---
 
 ## III. KẾT LUẬN
 
-Giai đoạn Phase 2 đã hoàn thành toàn diện luồng phê duyệt từ cấp quản lý (Director), hoàn thiện chu trình khép kín của phân hệ Quản lý Đề xuất Offer trong Mộc RMS. Kiến trúc triển khai đảm bảo tính mở, tuân thủ nghiêm ngặt quy chuẩn `ARCHITECTURE_GUIDE.md`, bảo vệ an toàn phân quyền bảo mật, đồng thời mang lại trải nghiệm giao diện người dùng trực quan, thống nhất thông qua mô hình Centered Pop-up Modal.
+Phân hệ Quản lý Đề xuất Offer của Director đã hoàn thiện toàn diện với luồng màn hình chuyên biệt (Dedicated Screen) thay thế cho Pop-up modal ban đầu. Kiến trúc mới không chỉ giúp trải nghiệm người dùng thoáng đãng, đồng bộ tuyệt đối với phân hệ của HR, mà còn gia tăng thêm giá trị màn hình độc lập (Level 7 - 240 LOC) phục vụ báo cáo và bảo vệ đồ án SWP391.
