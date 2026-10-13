@@ -9,6 +9,7 @@ import java.time.LocalDateTime;
  * "Lịch mới nhất" = lịch có {@code StartTime} lớn nhất, bỏ qua lịch đã hủy; các trường lịch {@code null} nếu chưa có.
  *
  * @param withdrawn       ứng viên tự rút (dấu {@code Withdrawn} trong AuditLog)
+ * @param interviewId     id lịch mới nhất, để dẫn sang trang kết quả phỏng vấn
  * @param interviewStatus trạng thái lịch mới nhất
  * @param panelCount      số người trong hội đồng của lịch mới nhất
  * @param evaluationCount số người đã nộp phiếu chấm cho lịch mới nhất
@@ -19,6 +20,7 @@ public record ApplicationProgressFacts(
         Integer applicationId,
         String applicationStatus,
         boolean withdrawn,
+        Long interviewId,
         String interviewStatus,
         LocalDateTime interviewStart,
         int panelCount,
@@ -28,7 +30,8 @@ public record ApplicationProgressFacts(
 
     public static ApplicationProgressFacts from(ApplicationRepository.ProgressFactsRow row) {
         return new ApplicationProgressFacts(row.getApplicationId(), row.getApplicationStatus(),
-                Boolean.TRUE.equals(row.getWithdrawn()), row.getInterviewStatus(), row.getInterviewStart(),
+                Boolean.TRUE.equals(row.getWithdrawn()), row.getInterviewId(), row.getInterviewStatus(),
+                row.getInterviewStart(),
                 row.getPanelCount() == null ? 0 : row.getPanelCount(),
                 row.getEvaluationCount() == null ? 0 : row.getEvaluationCount(),
                 row.getFinalDecision(), row.getOfferStatus());

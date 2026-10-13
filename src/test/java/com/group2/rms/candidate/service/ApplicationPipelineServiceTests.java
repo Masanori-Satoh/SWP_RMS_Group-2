@@ -411,6 +411,7 @@ class ApplicationPipelineServiceTests {
             @Override public Integer getApplicationId() { return id; }
             @Override public String getApplicationStatus() { return status; }
             @Override public Boolean getWithdrawn() { return false; }
+            @Override public Long getInterviewId() { return interviewed ? 77L : null; }
             @Override public String getInterviewStatus() { return interviewed ? "Completed" : null; }
             @Override public LocalDateTime getInterviewStart() { return interviewed ? SUBMITTED.plusDays(3) : null; }
             @Override public Integer getPanelCount() { return interviewed ? 2 : 0; }

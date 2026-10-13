@@ -201,7 +201,7 @@ public class ApplicationPipelineService {
                                                         Map<Integer, ApplicationProgressFacts> facts,
                                                         LocalDateTime now) {
         ApplicationProgressFacts known = facts.getOrDefault(applicationId,
-                new ApplicationProgressFacts(applicationId, status, false, null, null, 0, 0, null, null));
+                new ApplicationProgressFacts(applicationId, status, false, null, null, null, 0, 0, null, null));
         return ApplicationProgressResolver.resolve(known, now);
     }
 
