@@ -6,49 +6,74 @@
 </head>
 <body>
 <main id="main" layout:fragment="content" class="page-content container dash-page" tabindex="-1">
-    <div class="page-header"><div><h1 class="page-title">Tổng quan hệ thống</h1><p class="page-subtitle" th:text="${dashboard.scope}"></p></div><a class="btn btn--primary" th:href="@{/admin/accounts}">Quản lý tài khoản</a></div>
+    <div class="page-header">
+        <div><h1 class="page-title">Tổng quan hệ thống</h1><p class="page-subtitle" th:text="${dashboard.scope}"></p></div>
+        <a class="btn btn--primary" th:href="@{/admin/accounts/new}">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
+            Tạo tài khoản nội bộ
+        </a>
+    </div>
 
-    <section class="dash-section dash-section--first" aria-labelledby="dash-accounts-title">
-        <div class="dash-section__heading"><h2 id="dash-accounts-title" class="dash-section__title">Tài khoản trong hệ thống</h2><p class="text-muted">Tài khoản nội bộ và ứng viên được quản lý riêng.</p></div>
-        <div class="grid-2-col">
-            <article class="card dash-account" th:each="summary : ${dashboard.accountSummaries}">
-                <div class="dash-section__heading"><h3 th:text="${summary.title}"></h3><a class="btn btn--outline btn--sm" th:href="@{${summary.url}}" th:attr="aria-label=|Quản lý ${summary.title}|">Quản lý</a></div>
-                <dl class="dash-account__counts">
-                    <div><dt>Tổng số</dt><dd th:text="${summary.total}"></dd></div>
-                    <div><dt>Hoạt động</dt><dd th:text="${summary.active}"></dd></div>
-                    <div><dt>Vô hiệu hóa</dt><dd th:text="${summary.inactive}"></dd></div>
-                    <div><dt>Bị khóa</dt><dd th:text="${summary.blocked}"></dd></div>
-                </dl>
-            </article>
+    <section class="card adm-accounts" aria-labelledby="dash-accounts-title">
+        <div class="adm-accounts__heading">
+            <h2 id="dash-accounts-title" class="dash-section__title">Tài khoản trong hệ thống</h2>
+            <p class="text-muted">Theo dõi quyền truy cập của nhân viên và ứng viên.</p>
         </div>
+        <div class="table-wrapper adm-accounts__table" tabindex="0" role="region" aria-labelledby="dash-accounts-title" aria-describedby="adm-table-hint">
+            <table class="table adm-account-table">
+                <caption class="sr-only">Tổng số và trạng thái theo từng nhóm tài khoản. Chọn số lượng để mở danh sách tương ứng.</caption>
+                <thead><tr><th scope="col">Nhóm tài khoản</th><th scope="col">Tổng số</th><th scope="col">Hoạt động</th><th scope="col">Vô hiệu hóa</th><th scope="col">Bị khóa</th><th scope="col">Thao tác</th></tr></thead>
+                <tbody>
+                    <tr th:each="summary : ${dashboard.accountSummaries}">
+                        <th scope="row"><a class="adm-account-table__name" th:href="@{${summary.url}}" th:text="${summary.title}"></a></th>
+                        <td><strong class="adm-account-table__total" th:text="${summary.total}"></strong></td>
+                        <td><a class="adm-count-link" th:href="@{${summary.url}(status='Active')}" th:attr="aria-label=|${summary.title}: ${summary.active} đang hoạt động|" th:text="${summary.active}"></a></td>
+                        <td><a class="adm-count-link" th:href="@{${summary.url}(status='Inactive')}" th:attr="aria-label=|${summary.title}: ${summary.inactive} đã vô hiệu hóa|" th:text="${summary.inactive}"></a></td>
+                        <td><a class="adm-count-link" th:classappend="${summary.blocked > 0 ? 'adm-count-link--blocked' : ''}" th:href="@{${summary.url}(status='Blocked')}" th:attr="aria-label=|${summary.title}: ${summary.blocked} bị khóa|" th:text="${summary.blocked}"></a></td>
+                        <td><a class="btn btn--outline btn--sm" th:href="@{${summary.url}}" th:attr="aria-label=|Quản lý ${summary.title}|">Quản lý</a></td>
+                    </tr>
+                    <tr th:if="${#lists.isEmpty(dashboard.accountSummaries)}"><td colspan="6">Chưa có số liệu tài khoản để hiển thị.</td></tr>
+                </tbody>
+            </table>
+        </div>
+        <div class="adm-accounts__foot"><p>Hai nhóm tài khoản có vòng đời riêng.</p><p id="adm-table-hint">Chọn số lượng để lọc danh sách. Cuộn ngang nếu cần.</p></div>
     </section>
 
-    <div class="dash-split">
-        <section class="dash-section" aria-labelledby="dash-departments-title">
-            <div class="dash-section__heading"><h2 id="dash-departments-title" class="dash-section__title">Phòng ban</h2><a class="dash-link" th:href="@{/admin/departments}">Quản lý phòng ban →</a></div>
-            <dl class="dash-statuses">
-                <div><dt>Tổng số phòng ban</dt><dd th:text="${dashboard.departments.totalCount}"></dd></div>
-                <div><dt>Hoạt động</dt><dd th:text="${dashboard.departments.activeCount}"></dd></div>
-                <div><dt>Vô hiệu hóa</dt><dd th:text="${dashboard.departments.inactiveCount}"></dd></div>
-            </dl>
-            <p class="dash-note">Vô hiệu hóa vẫn giữ các liên kết và lịch sử. Có thể kích hoạt lại trong trang quản lý.</p>
+    <div class="grid-2-col adm-details">
+        <section class="card adm-panel" aria-labelledby="dash-departments-title">
+            <div class="card-header"><h2 id="dash-departments-title" class="dash-section__title">Phòng ban</h2><a class="dash-link" th:href="@{/admin/departments}">Quản lý phòng ban</a></div>
+            <div class="adm-panel__body">
+                <p class="adm-department-total"><strong th:text="${dashboard.departments.totalCount}"></strong><span>phòng ban trong hệ thống</span></p>
+                <dl class="adm-department-statuses">
+                    <div><dt>Hoạt động</dt><dd><a class="adm-count-link" th:href="@{/admin/departments(status='Active')}" th:attr="aria-label=|${dashboard.departments.activeCount} phòng ban đang hoạt động|" th:text="${dashboard.departments.activeCount}"></a></dd></div>
+                    <div><dt>Vô hiệu hóa</dt><dd><a class="adm-count-link" th:href="@{/admin/departments(status='Inactive')}" th:attr="aria-label=|${dashboard.departments.inactiveCount} phòng ban đã vô hiệu hóa|" th:text="${dashboard.departments.inactiveCount}"></a></dd></div>
+                </dl>
+                <p class="dash-note" th:if="${dashboard.departments.totalCount == 0}">Chưa có phòng ban. Tạo phòng ban để tổ chức tài khoản nội bộ.</p>
+            </div>
+            <div class="adm-panel__footer"><p>Phòng ban vô hiệu hóa vẫn giữ lịch sử và có thể kích hoạt lại.</p><a class="dash-link" th:href="@{/admin/departments/new}">Tạo phòng ban</a></div>
         </section>
-        <section class="dash-section" aria-labelledby="dash-health-title">
-            <div class="dash-section__heading"><h2 id="dash-health-title" class="dash-section__title">API và dịch vụ tích hợp</h2><a class="dash-link" th:href="@{/admin/api-monitoring}">Mở giám sát →</a></div>
-            <p class="dash-note">Trạng thái đã ghi nhận; mở trang giám sát để thực hiện kiểm tra mới. Chưa kiểm tra không có nghĩa là dịch vụ hoạt động.</p>
-            <th:block th:each="breakdown : ${dashboard.breakdowns}">
-                <dl th:replace="~{dashboard/fragments :: statusRows(${breakdown.statuses})}"></dl>
-                <p class="dash-empty" th:if="${#lists.isEmpty(breakdown.statuses)}">Chưa ghi nhận trạng thái dịch vụ.</p>
-            </th:block>
+        <section class="card adm-panel" aria-labelledby="dash-health-title">
+            <div class="card-header"><h2 id="dash-health-title" class="dash-section__title">API và tích hợp</h2></div>
+            <div class="adm-panel__body">
+                <div class="adm-health-caption" aria-hidden="true"><span>Trạng thái đã ghi nhận</span><span>Số dịch vụ</span></div>
+                <th:block th:each="breakdown : ${dashboard.breakdowns}">
+                    <dl th:replace="~{dashboard/fragments :: statusRows(${breakdown.statuses})}"></dl>
+                    <p class="dash-empty" th:if="${#lists.isEmpty(breakdown.statuses)}">Chưa ghi nhận trạng thái. Mở giám sát để kiểm tra dịch vụ.</p>
+                </th:block>
+                <p class="dash-empty" th:if="${#lists.isEmpty(dashboard.breakdowns)}">Chưa ghi nhận trạng thái. Mở giám sát để kiểm tra dịch vụ.</p>
+            </div>
+            <div class="adm-panel__footer"><p>Mở giám sát để kiểm tra mới. Chưa kiểm tra không có nghĩa là dịch vụ hoạt động.</p><a class="dash-link" th:href="@{/admin/api-monitoring}">Mở giám sát API</a></div>
         </section>
     </div>
 
-    <section class="dash-section" aria-labelledby="dash-admin-actions-title">
-        <h2 id="dash-admin-actions-title" class="dash-section__title">Công cụ quản trị</h2>
-        <nav class="dash-actions" aria-label="Công cụ quản trị hệ thống">
-            <th:block th:each="shortcut : ${dashboard.shortcuts}"><a class="btn btn--secondary" th:if="${shortcut.url != null}" th:href="@{${shortcut.url}}" th:text="${shortcut.title}"></a></th:block>
-        </nav>
-        <p class="dash-note">Cấu hình AI chưa khả dụng: danh mục tham số và quy tắc nhập liệu chưa được xác nhận.</p>
+    <section class="adm-tools" aria-labelledby="dash-admin-actions-title">
+        <div>
+            <h2 id="dash-admin-actions-title" class="dash-section__title">Công cụ quản trị</h2>
+            <nav class="adm-tools__links" aria-label="Công cụ quản trị hệ thống">
+                <th:block th:each="shortcut : ${dashboard.shortcuts}"><a class="dash-link" th:if="${shortcut.url != null}" th:href="@{${shortcut.url}}" th:text="${shortcut.title}"></a></th:block>
+            </nav>
+        </div>
+        <div class="adm-ai-note"><div class="adm-ai-note__title"><h3>Cấu hình AI</h3><span class="badge badge--neutral">Chưa khả dụng</span></div><p>Danh mục tham số và quy tắc nhập liệu đang chờ xác nhận.</p></div>
     </section>
 </main>
 </body></html>

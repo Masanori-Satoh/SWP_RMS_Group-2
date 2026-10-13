@@ -96,6 +96,7 @@
                             <caption class="sr-only">Tài khoản nội bộ với thao tác sửa và thay đổi trạng thái.</caption>
                             <thead>
                             <tr>
+                                <th scope="col">STT</th>
                                 <th scope="col">Họ và tên</th>
                                 <th scope="col">Email</th>
                                 <th scope="col">Tên đăng nhập</th>
@@ -106,7 +107,8 @@
                             </tr>
                             </thead>
                             <tbody>
-                            <tr th:each="account : ${accounts.content}">
+                            <tr th:each="account, row : ${accounts.content}">
+                                <td th:text="${accounts.number * accounts.size + row.count}"></td>
                                 <td class="account-name" th:text="${account.fullName}">Account Name</td>
                                 <td th:text="${account.email}">Email</td>
                                 <td th:text="${account.username}">username</td>
@@ -129,7 +131,7 @@
                                 </td>
                             </tr>
                             <tr th:if="${accounts.empty}">
-                                <td colspan="7" class="account-empty">No tài khoản phù hợp found. Try changing the filters.</td>
+                                <td colspan="8" class="account-empty">Không tìm thấy tài khoản phù hợp. Hãy thử thay đổi bộ lọc.</td>
                             </tr>
                             </tbody>
                         </table>

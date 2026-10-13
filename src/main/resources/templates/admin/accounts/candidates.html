@@ -40,8 +40,9 @@
                     <p class="table-scroll-note">Cuộn ngang để xem đầy đủ thông tin và thao tác.</p>
                     <div class="table-wrapper" tabindex="0" role="region" aria-labelledby="candidate-list-title">
                         <table class="table account-table"><caption class="sr-only">Tài khoản ứng viên và mã hồ sơ liên kết.</caption>
-                            <thead><tr><th scope="col">Họ và tên</th><th scope="col">Email</th><th scope="col">Tên đăng nhập</th><th scope="col">Trạng thái</th><th scope="col">Ngày tạo</th><th scope="col">Hồ sơ</th><th scope="col">Thao tác</th></tr></thead>
-                            <tbody><tr th:each="account : ${accounts.content}">
+                            <thead><tr><th scope="col">STT</th><th scope="col">Họ và tên</th><th scope="col">Email</th><th scope="col">Tên đăng nhập</th><th scope="col">Trạng thái</th><th scope="col">Ngày tạo</th><th scope="col">Hồ sơ</th><th scope="col">Thao tác</th></tr></thead>
+                            <tbody><tr th:each="account, row : ${accounts.content}">
+                                <td th:text="${accounts.number * accounts.size + row.count}"></td>
                                 <td class="account-name" th:text="${account.fullName}">Name</td><td th:text="${account.email}">Email</td><td th:text="${account.username}">Tên đăng nhập</td>
                                 <td><span class="badge" th:text="${account.status == 'Active' ? 'Hoạt động' : (account.status == 'Inactive' ? 'Vô hiệu hóa' : 'Bị khóa')}" th:classappend="${account.status == 'Active' ? ' badge-success' : (account.status == 'Blocked' ? ' badge-danger' : ' badge-secondary')}">Trạng thái</span></td>
                                 <td><time th:if="${account.createdAt != null}" th:datetime="${account.createdAt}" th:text="${#temporals.format(account.createdAt, 'dd MMM yyyy')}">Date</time><span th:unless="${account.createdAt != null}">—</span></td>
@@ -54,7 +55,7 @@
                                         <form th:replace="~{fragments/status-actions :: action(@{/admin/candidate-accounts/{id}/activate(id=${account.id})}, 'Kích hoạt lại tài khoản ' + ${account.username}, 'Tài khoản sẽ hoạt động trở lại và tiếp tục đăng nhập với vai trò ứng viên.', 'Kích hoạt lại', false)}"></form>
                                     </th:block>
                                 </td>
-                            </tr><tr th:if="${accounts.empty}"><td colspan="7" class="account-empty">No tài khoản ứng viên phù hợp found. Try changing the filters.</td></tr></tbody>
+                            </tr><tr th:if="${accounts.empty}"><td colspan="8" class="account-empty">Không tìm thấy tài khoản ứng viên phù hợp. Hãy thử thay đổi bộ lọc.</td></tr></tbody>
                         </table>
                     </div>
                     <div th:replace="~{fragments/pagination :: paged(${accounts}, '/admin/candidate-accounts')}"></div>
