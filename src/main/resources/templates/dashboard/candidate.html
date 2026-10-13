@@ -8,7 +8,7 @@
 <main id="main" layout:fragment="content" class="page-content container dash-page" tabindex="-1">
     <div class="page-header"><div><h1 class="page-title">Hành trình ứng tuyển của bạn</h1><p class="page-subtitle" th:text="${dashboard.scope}"></p></div><a class="btn btn--primary" th:href="@{/jobs}">Khám phá vị trí đang tuyển</a></div>
     <th:block th:replace="~{dashboard/fragments :: metrics(${dashboard.metrics})}"></th:block>
-    <nav class="dash-actions" aria-label="Truy cập nhanh dành cho ứng viên"><a class="btn btn--secondary" th:href="@{/portal/applications}">Hồ sơ đã ứng tuyển</a><a class="btn btn--secondary" th:href="@{/portal/interviews}">Lịch phỏng vấn của tôi</a><a class="btn btn--secondary" href="#offers">Thư mời nhận việc</a></nav>
+    <nav class="dash-actions" aria-label="Truy cập nhanh dành cho ứng viên"><a class="btn btn--secondary" th:href="@{/portal/applications}">Hồ sơ đã ứng tuyển</a><a class="btn btn--secondary" th:href="@{/portal/interviews}">Lịch phỏng vấn của tôi</a><!-- dunglt bổ sung: dẫn tới trang thư mời /portal/offers (nhận / từ chối); khối #offers bên dưới giữ nguyên --><a class="btn btn--secondary" th:href="@{/portal/offers}">Thư mời nhận việc</a></nav>
 
     <section id="applications" class="dash-section" aria-labelledby="candidate-applications-title" data-candidate-filter="applications">
         <div class="dash-section__heading"><div><h2 id="candidate-applications-title" class="dash-section__title">Hồ sơ ứng tuyển gần đây</h2><p class="text-muted">Tối đa 20 hồ sơ mới nhất. Xem toàn bộ và rút đơn trong trang hồ sơ đã ứng tuyển.</p></div><a class="dash-link" th:href="@{/portal/applications}">Xem toàn bộ →</a></div>
