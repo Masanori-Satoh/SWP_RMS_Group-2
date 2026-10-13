@@ -109,6 +109,9 @@ public class SecurityConfig {
                                                 // Candidate's own applications and withdrawal (ownership checked in MyApplicationService)
                                                 .requestMatchers("/portal/applications", "/portal/applications/**")
                                                 .hasAuthority("ROLE_CANDIDATE")
+                                                // dunglt bổ sung: ứng viên xem / nhận / từ chối offer đã gửi cho mình (phải đứng trước /offers/**)
+                                                .requestMatchers("/portal/offers", "/portal/offers/**")
+                                                .hasAuthority("ROLE_CANDIDATE")
                                                 // Forms and all writes remain restricted to existing HR/Admin editors.
                                                 .requestMatchers("/interviews/new", "/interviews/*/edit")
                                                 .hasAnyAuthority("ROLE_HR", RoleAuthorities.SYSTEM_ADMIN)
