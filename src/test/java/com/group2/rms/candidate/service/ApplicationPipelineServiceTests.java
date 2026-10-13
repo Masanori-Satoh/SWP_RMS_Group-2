@@ -10,6 +10,7 @@ import com.group2.rms.candidate.entity.ApplicationReview;
 import com.group2.rms.candidate.entity.Candidate;
 import com.group2.rms.candidate.repository.AIScreeningResultRepository;
 import com.group2.rms.candidate.repository.ApplicationRepository;
+import com.group2.rms.candidate.repository.ApplicationRepository.ProgressFactsRow;
 import com.group2.rms.candidate.repository.ApplicationRepository.TimelineEventRow;
 import com.group2.rms.candidate.repository.ApplicationReviewRepository;
 import com.group2.rms.core.exception.ResourceNotFoundException;
@@ -71,7 +72,9 @@ class ApplicationPipelineServiceTests {
         when(access.scopeOf(actor)).thenReturn(ApplicationScope.hiringManager(5, 10));
         when(applications.searchPipeline(anyBoolean(), any(), any(), anyBoolean(), any(), any(), any(), any(), any()))
                 .thenReturn(new PageImpl<>(List.of(row("HM_Passed"))));
-        when(access.canScheduleInterview(actor, "HM_Passed")).thenReturn(true);
+        when(applications.findProgressFacts(List.of(ID))).thenReturn(List.of(facts("HM_Passed", null)));
+        when(access.canScheduleInterview(eq(actor), argThat(p -> p.stage() == ApplicationStage.INTERVIEW)))
+                .thenReturn(true);
 
         ApplicationListResponse result = service.list(new ApplicationSearch(6, "Bogus", "  an.vo  ", "newest"),
                 PageRequest.of(2, 20, Sort.by("applicationId")));
@@ -83,7 +86,37 @@ class ApplicationPipelineServiceTests {
         ApplicationPipelineResponse first = result.applications().getContent().getFirst();
         assertTrue(first.canScheduleInterview());
         assertFalse(first.canCreateOffer());
-        assertEquals("Qua vòng chuyên môn", first.statusLabel());
+        assertEquals("Chờ xếp lịch phỏng vấn", first.statusLabel());
+        assertEquals("badge--warning", first.statusBadge());
+    }
+
+    /** Nghiệm thu PR 1 dòng 3: đạt phỏng vấn, chưa có offer thì mới có "Tạo offer", không còn "Lên lịch". */
+    @Test
+    void listLabelsAndActionsFollowInterviewResult() {
+        when(access.scopeOf(actor)).thenReturn(ApplicationScope.ALL);
+        when(applications.searchPipeline(anyBoolean(), any(), any(), anyBoolean(), any(), any(), any(), any(), any()))
+                .thenReturn(new PageImpl<>(List.of(row("Interviewing"))));
+        when(applications.findProgressFacts(List.of(ID))).thenReturn(List.of(facts("Interviewing", "Passed")));
+        when(access.canCreateOffer(eq(actor), argThat(p -> p.step() == ApplicationProgressStep.PASSED_AWAITING_OFFER)))
+                .thenReturn(true);
+
+        ApplicationPipelineResponse first = service.list(new ApplicationSearch(null, null, null, null),
+                PageRequest.of(0, 20)).applications().getContent().getFirst();
+
+        assertEquals("Đạt phỏng vấn, chờ lập offer", first.statusLabel());
+        assertFalse(first.canScheduleInterview());
+        assertTrue(first.canCreateOffer());
+    }
+
+    @Test
+    void emptyPageSkipsProgressQuery() {
+        when(access.scopeOf(actor)).thenReturn(ApplicationScope.ALL);
+        when(applications.searchPipeline(anyBoolean(), any(), any(), anyBoolean(), any(), any(), any(), any(), any()))
+                .thenReturn(new PageImpl<>(List.of()));
+
+        service.list(new ApplicationSearch(null, null, null, null), PageRequest.of(0, 20));
+
+        verify(applications, never()).findProgressFacts(any());
     }
 
     @Test
@@ -137,7 +170,7 @@ class ApplicationPipelineServiceTests {
         assertEquals("REQ-007", detail.requisitionCode());
         assertEquals("Sales & Marketing", detail.departmentName());
         assertEquals(new BigDecimal("79.34"), detail.aiMatchScore());
-        assertEquals("Đã sàng lọc", detail.statusLabel());
+        assertEquals("Chờ HR duyệt CV", detail.statusLabel());
         assertEquals("HR sàng lọc hồ sơ và chuyển cho trưởng bộ phận.", detail.currentStep());
         assertEquals(new ApplicationDetailResponse.Actions(true, false, false, false, true), detail.actions());
         assertEquals(List.of("Offer: Draft", "Lịch phỏng vấn: Scheduled", "HR: Đạt", "AI chấm điểm: 79,34",
@@ -230,6 +263,22 @@ class ApplicationPipelineServiceTests {
 
     private static AIScreeningResult score(String value, LocalDateTime at) {
         return AIScreeningResult.builder().aiMatchScore(new BigDecimal(value)).screenedAt(at).build();
+    }
+
+    /** Dữ kiện của đơn {@link #ID}: {@code decision == null} là chưa có lịch; có thì là lịch đã xong, đủ phiếu. */
+    private static ProgressFactsRow facts(String status, String decision) {
+        boolean interviewed = decision != null;
+        return new ProgressFactsRow() {
+            @Override public Integer getApplicationId() { return ID; }
+            @Override public String getApplicationStatus() { return status; }
+            @Override public Boolean getWithdrawn() { return false; }
+            @Override public String getInterviewStatus() { return interviewed ? "Completed" : null; }
+            @Override public LocalDateTime getInterviewStart() { return interviewed ? SUBMITTED.plusDays(3) : null; }
+            @Override public Integer getPanelCount() { return interviewed ? 2 : 0; }
+            @Override public Integer getEvaluationCount() { return interviewed ? 2 : 0; }
+            @Override public String getFinalDecision() { return decision; }
+            @Override public String getOfferStatus() { return null; }
+        };
     }
 
     private static TimelineEventRow event(LocalDateTime at, String status) {

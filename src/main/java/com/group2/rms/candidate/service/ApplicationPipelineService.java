@@ -3,6 +3,7 @@ package com.group2.rms.candidate.service;
 import com.group2.rms.candidate.dto.ApplicationDetailResponse;
 import com.group2.rms.candidate.dto.ApplicationListResponse;
 import com.group2.rms.candidate.dto.ApplicationPipelineResponse;
+import com.group2.rms.candidate.dto.ApplicationProgressResponse;
 import com.group2.rms.candidate.dto.ApplicationSearch;
 import com.group2.rms.candidate.entity.AIScreeningResult;
 import com.group2.rms.candidate.entity.Application;
@@ -23,10 +24,14 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 /**
  * Đọc dữ liệu cho danh sách hồ sơ (5.1.22) và chi tiết hồ sơ (5.1.23), trong phạm vi người xem được phép.
@@ -50,13 +55,18 @@ public class ApplicationPipelineService {
         ApplicationScope scope = access.scopeOf(actor);
         ApplicationSearch filter = search.normalized();
 
-        Page<ApplicationPipelineResponse> page = applications.searchPipeline(
-                        scope.allDepartments(), scope.managerUserId(), scope.departmentId(), scope.forwardedOnly(),
-                        filter.jobPostingId(), filter.status(), filter.keyword(), filter.sort(),
-                        PageRequest.of(pageable.getPageNumber(), pageable.getPageSize()))
-                .map(row -> row.withActions(
-                        access.canScheduleInterview(actor, row.applicationStatus()),
-                        access.canCreateOffer(actor, row.applicationStatus())));
+        Page<ApplicationPipelineResponse> rows = applications.searchPipeline(
+                scope.allDepartments(), scope.managerUserId(), scope.departmentId(), scope.forwardedOnly(),
+                filter.jobPostingId(), filter.status(), filter.keyword(), filter.sort(),
+                PageRequest.of(pageable.getPageNumber(), pageable.getPageSize()));
+        Map<Integer, ApplicationProgressFacts> facts = progressFacts(
+                rows.map(ApplicationPipelineResponse::applicationId).getContent());
+        LocalDateTime now = LocalDateTime.now();
+        Page<ApplicationPipelineResponse> page = rows.map(row -> {
+            ApplicationProgressResponse progress = progress(row.applicationId(), row.applicationStatus(), facts, now);
+            return row.withProgress(progress,
+                    access.canScheduleInterview(actor, progress), access.canCreateOffer(actor, progress));
+        });
 
         return new ApplicationListResponse(page,
                 applications.findPostingOptions(scope.allDepartments(), scope.managerUserId(), scope.departmentId(),
@@ -79,6 +89,8 @@ public class ApplicationPipelineService {
         List<AIScreeningResult> scores = screeningResults
                 .findByApplication_ApplicationIdOrderByAiScreeningIdDesc(applicationId);
         AIScreeningResult latest = scores.isEmpty() ? null : scores.getFirst();
+        ApplicationProgressResponse progress = progress(applicationId, status,
+                progressFacts(List.of(applicationId)), LocalDateTime.now());
 
         return new ApplicationDetailResponse(
                 application.getApplicationId(),
@@ -88,7 +100,7 @@ public class ApplicationPipelineService {
                 job.getJobPostingId(), job.getPostingTitle(),
                 requisition.getDepartment() == null ? null : requisition.getDepartment().getDepartmentName(),
                 application.getSubmissionDate(),
-                status, ApplicationStatusLabels.label(status), ApplicationStatusLabels.badge(status),
+                status, progress.detailLabel(), progress.badge(),
                 latest == null ? null : latest.getAiMatchScore(),
                 latest == null ? null : latest.getScreenedAt(),
                 timeline(application, account, scores),
@@ -97,8 +109,8 @@ public class ApplicationPipelineService {
                 new ApplicationDetailResponse.Actions(
                         access.canReview(actor, application),
                         access.canRescreen(actor, application),
-                        access.canScheduleInterview(actor, status),
-                        access.canCreateOffer(actor, status),
+                        access.canScheduleInterview(actor, progress),
+                        access.canCreateOffer(actor, progress),
                         access.canOpenJobPosting(actor)),
                 actor.getRole() == null ? null : actor.getRole().getRoleName());
     }
@@ -123,6 +135,25 @@ public class ApplicationPipelineService {
             return ApplicationCv.redirect(url);
         }
         throw new ResourceNotFoundException("Không tìm thấy CV của hồ sơ này.");
+    }
+
+    /** Dữ kiện trạng thái chi tiết theo id đơn, một câu query cho cả trang. */
+    private Map<Integer, ApplicationProgressFacts> progressFacts(List<Integer> applicationIds) {
+        if (applicationIds.isEmpty()) {
+            return Map.of();
+        }
+        return applications.findProgressFacts(applicationIds).stream()
+                .map(ApplicationProgressFacts::from)
+                .collect(Collectors.toMap(ApplicationProgressFacts::applicationId, Function.identity()));
+    }
+
+    /** Thiếu dữ kiện (không xảy ra với đơn vừa đọc) thì tính theo riêng trạng thái đơn, coi như chưa có lịch, offer. */
+    private static ApplicationProgressResponse progress(Integer applicationId, String status,
+                                                        Map<Integer, ApplicationProgressFacts> facts,
+                                                        LocalDateTime now) {
+        ApplicationProgressFacts known = facts.getOrDefault(applicationId,
+                new ApplicationProgressFacts(applicationId, status, false, null, null, 0, 0, null, null));
+        return ApplicationProgressResolver.resolve(known, now);
     }
 
     /** Hành trình của đơn, mới nhất trước: nộp, AI chấm, các lượt duyệt, lịch phỏng vấn, offer. */

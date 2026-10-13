@@ -12,6 +12,7 @@ import com.group2.rms.candidate.service.AiScreeningOutcome;
 import com.group2.rms.candidate.service.ApplicationCv;
 import com.group2.rms.candidate.service.ApplicationPipelineService;
 import com.group2.rms.candidate.service.ApplicationReviewService;
+import com.group2.rms.candidate.service.ApplicationStatusLabels;
 import com.group2.rms.core.config.SecurityConfig;
 import com.group2.rms.core.exception.ResourceNotFoundException;
 import com.group2.rms.core.security.DatabaseUserDetailsService;
@@ -356,6 +357,7 @@ class ApplicationPipelineWebTests {
     private static ApplicationPipelineResponse row(int id, String status, String score, boolean schedule,
                                                    boolean offer) {
         return new ApplicationPipelineResponse(id, "An Võ", "an.vo@example.com", "Digital Marketing Executive",
-                SUBMITTED, status, score == null ? null : new BigDecimal(score)).withActions(schedule, offer);
+                SUBMITTED, status, ApplicationStatusLabels.label(status), ApplicationStatusLabels.badge(status),
+                score == null ? null : new BigDecimal(score), schedule, offer);
     }
 }

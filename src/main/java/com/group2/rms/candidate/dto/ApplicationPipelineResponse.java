@@ -23,7 +23,7 @@ public record ApplicationPipelineResponse(
         boolean canScheduleInterview,
         boolean canCreateOffer) {
 
-    /** Dùng trong câu JPQL; quyền thao tác gán sau ở Service bằng {@link #withActions}. */
+    /** Dùng trong câu JPQL; nhãn trạng thái chi tiết và quyền thao tác gán sau ở Service bằng {@link #withProgress}. */
     public ApplicationPipelineResponse(Integer applicationId, String fullName, String email, String postingTitle,
                                        LocalDateTime submissionDate, String applicationStatus, BigDecimal aiMatchScore) {
         this(applicationId, fullName, email, postingTitle, submissionDate, applicationStatus,
@@ -31,8 +31,11 @@ public record ApplicationPipelineResponse(
                 aiMatchScore, false, false);
     }
 
-    public ApplicationPipelineResponse withActions(boolean scheduleInterview, boolean createOffer) {
+    /** Nhãn và badge theo trạng thái chi tiết (hồ sơ đang chờ ai), kèm quyền thao tác. */
+    public ApplicationPipelineResponse withProgress(ApplicationProgressResponse progress, boolean scheduleInterview,
+                                                    boolean createOffer) {
         return new ApplicationPipelineResponse(applicationId, fullName, email, postingTitle, submissionDate,
-                applicationStatus, statusLabel, statusBadge, aiMatchScore, scheduleInterview, createOffer);
+                applicationStatus, progress.detailLabel(), progress.badge(), aiMatchScore, scheduleInterview,
+                createOffer);
     }
 }

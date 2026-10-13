@@ -1,5 +1,6 @@
 package com.group2.rms.candidate.service;
 
+import com.group2.rms.candidate.dto.ApplicationProgressResponse;
 import com.group2.rms.candidate.entity.Application;
 import com.group2.rms.candidate.repository.ApplicationReviewRepository;
 import com.group2.rms.requisition.entity.JobPosting;
@@ -13,11 +14,13 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.EnumSource;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.access.AccessDeniedException;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -130,24 +133,41 @@ class ApplicationAccessTests {
         assertFalse(access.canReview(admin, application));
     }
 
+    /** Lên lịch: HR, Admin (quyền URL bên interview), chỉ ở giai đoạn phỏng vấn; sang offer thì ẩn. */
     @ParameterizedTest
-    @ValueSource(strings = {"HM_Passed", "Interviewing"})
-    void nextStepsFollowTeammatesRouteRoles(String status) {
-        assertTrue(access.canScheduleInterview(hr, status));
-        assertTrue(access.canScheduleInterview(admin, status));
-        assertFalse(access.canScheduleInterview(director, status));
-        assertFalse(access.canScheduleInterview(engineeringHead, status));
+    @EnumSource(ApplicationProgressStep.class)
+    void schedulingInterviewOnlyDuringInterviewStage(ApplicationProgressStep step) {
+        ApplicationProgressResponse progress = progress(step);
+        boolean interviewStage = step.stage() == ApplicationStage.INTERVIEW;
 
-        assertTrue(access.canCreateOffer(hr, status));
-        assertTrue(access.canCreateOffer(director, status));
-        assertTrue(access.canCreateOffer(admin, status));
-        assertFalse(access.canCreateOffer(engineeringHead, status));
+        assertEquals(interviewStage, access.canScheduleInterview(hr, progress));
+        assertEquals(interviewStage, access.canScheduleInterview(admin, progress));
+        assertFalse(access.canScheduleInterview(director, progress));
+        assertFalse(access.canScheduleInterview(engineeringHead, progress));
     }
 
+    /** Tạo offer: HR, Director, Admin (quyền URL bên offer), chỉ khi đã đạt phỏng vấn và chưa có offer. */
+    @ParameterizedTest
+    @EnumSource(ApplicationProgressStep.class)
+    void creatingOfferOnlyAfterPassedInterview(ApplicationProgressStep step) {
+        ApplicationProgressResponse progress = progress(step);
+        boolean passed = step == ApplicationProgressStep.PASSED_AWAITING_OFFER;
+
+        assertEquals(passed, access.canCreateOffer(hr, progress));
+        assertEquals(passed, access.canCreateOffer(director, progress));
+        assertEquals(passed, access.canCreateOffer(admin, progress));
+        assertFalse(access.canCreateOffer(engineeringHead, progress));
+    }
+
+    /** Nghiệm thu PR 1 dòng 4: hồ sơ HM_Passed chưa có lịch có "Lên lịch", không có "Tạo offer". */
     @Test
-    void nextStepsHiddenBeforeHiringManagerPasses() {
-        assertFalse(access.canScheduleInterview(hr, "HR_Passed"));
-        assertFalse(access.canCreateOffer(hr, "HR_Passed"));
+    void hiringManagerPassedWithoutScheduleOffersSchedulingOnly() {
+        ApplicationProgressResponse progress = ApplicationProgressResolver.resolve(
+                new ApplicationProgressFacts(APPLICATION_ID, "HM_Passed", false, null, null, 0, 0, null, null),
+                LocalDateTime.now());
+
+        assertTrue(access.canScheduleInterview(hr, progress));
+        assertFalse(access.canCreateOffer(hr, progress));
     }
 
     @Test
@@ -175,6 +195,10 @@ class ApplicationAccessTests {
                 .role(Role.builder().roleName(roleName).build())
                 .department(department)
                 .build();
+    }
+
+    private static ApplicationProgressResponse progress(ApplicationProgressStep step) {
+        return new ApplicationProgressResponse(step.stage(), step, step.label(), step.owner(), step.tone());
     }
 
     private static Application application(Department department, String status) {
