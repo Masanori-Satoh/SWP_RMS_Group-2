@@ -21,14 +21,23 @@
       th:with="search=${result.search}, page=${result.applications}">
 
     <div class="page-header">
-        <div th:if="${result.forwardedView}">
+        <div th:if="${result.postingTitle != null}">
+            <h1 class="page-title" th:text="|Hồ sơ cho tin: ${result.postingTitle}|">Hồ sơ cho tin: Java Developer</h1>
+            <p class="page-subtitle" th:text="${result.forwardedView}
+                    ? 'Hồ sơ HR đã chuyển cho phòng ban của bạn, chỉ của tin này.'
+                    : 'Số đếm và danh sách chỉ tính hồ sơ của tin này.'">Số đếm và danh sách chỉ tính hồ sơ của tin này.</p>
+        </div>
+        <div th:if="${result.postingTitle == null and result.forwardedView}">
             <h1 class="page-title">Hồ sơ được chuyển</h1>
             <p class="page-subtitle">Hồ sơ HR đã chuyển cho phòng ban của bạn.</p>
         </div>
-        <div th:unless="${result.forwardedView}">
+        <div th:if="${result.postingTitle == null and !result.forwardedView}">
             <h1 class="page-title">Danh sách ứng viên</h1>
             <p class="page-subtitle">Xếp theo điểm AI; chọn hồ sơ đạt để chuyển cho trưởng bộ phận.</p>
         </div>
+        <a th:if="${result.postingTitle != null and result.canOpenJobPosting}"
+           th:href="@{/internal/job-postings/{id}(id=${search.jobPostingId})}"
+           class="btn btn--secondary">← Về tin tuyển dụng</a>
     </div>
 
     <!-- Lọc: GET, giữ trên URL để phân trang và quay lại vẫn đúng -->

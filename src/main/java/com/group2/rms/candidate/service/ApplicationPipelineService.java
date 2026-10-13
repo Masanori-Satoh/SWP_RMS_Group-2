@@ -15,6 +15,7 @@ import com.group2.rms.core.exception.ResourceNotFoundException;
 import com.group2.rms.core.web.TimelineItem;
 import com.group2.rms.requisition.entity.JobPosting;
 import com.group2.rms.requisition.entity.JobRequisition;
+import com.group2.rms.requisition.repository.JobPostingRepository;
 import com.group2.rms.user.entity.User;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageImpl;
@@ -52,6 +53,7 @@ public class ApplicationPipelineService {
     private final ApplicationReviewRepository reviews;
     private final ApplicationAccess access;
     private final CvStorage cvStorage;
+    private final JobPostingRepository jobPostings;
 
     /**
      * Một trang danh sách kèm số hồ sơ mỗi giai đoạn. Thứ tự do {@code search.sort()} quyết định; sort trong
@@ -96,10 +98,14 @@ public class ApplicationPipelineService {
                     access.canScheduleInterview(actor, rowProgress), access.canCreateOffer(actor, rowProgress));
         }).toList();
 
+        // Lấy thẳng từ bảng tin: tin chưa có hồ sơ nào (mở từ trang tin) không nằm trong danh sách lựa chọn.
+        String postingTitle = filter.jobPostingId() == null ? null
+                : jobPostings.findById(filter.jobPostingId()).map(JobPosting::getPostingTitle).orElse(null);
         return new ApplicationListResponse(new PageImpl<>(rows, pageRequest, matching.size()), stageCounts,
                 applications.findPostingOptions(scope.allDepartments(), scope.managerUserId(), scope.departmentId(),
                         scope.forwardedOnly()),
-                filter, scope.forwardedOnly(), actor.getRole() == null ? null : actor.getRole().getRoleName());
+                filter, postingTitle, access.canOpenJobPosting(actor), scope.forwardedOnly(),
+                actor.getRole() == null ? null : actor.getRole().getRoleName());
     }
 
     @Transactional(readOnly = true)

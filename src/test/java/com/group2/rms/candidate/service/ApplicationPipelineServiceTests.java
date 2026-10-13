@@ -17,6 +17,7 @@ import com.group2.rms.core.exception.ResourceNotFoundException;
 import com.group2.rms.core.web.TimelineItem;
 import com.group2.rms.requisition.entity.JobPosting;
 import com.group2.rms.requisition.entity.JobRequisition;
+import com.group2.rms.requisition.repository.JobPostingRepository;
 import com.group2.rms.user.entity.Department;
 import com.group2.rms.user.entity.User;
 import org.junit.jupiter.api.BeforeEach;
@@ -58,13 +59,15 @@ class ApplicationPipelineServiceTests {
     @Mock ApplicationReviewRepository reviews;
     @Mock ApplicationAccess access;
     @Mock CvStorage cvStorage;
+    @Mock JobPostingRepository jobPostings;
 
     private ApplicationPipelineService service;
     private final User actor = User.builder().userId(1).build();
 
     @BeforeEach
     void setUp() {
-        service = new ApplicationPipelineService(applications, screeningResults, reviews, access, cvStorage);
+        service = new ApplicationPipelineService(applications, screeningResults, reviews, access, cvStorage,
+                jobPostings);
         when(access.actor()).thenReturn(actor);
     }
 
@@ -202,6 +205,34 @@ class ApplicationPipelineServiceTests {
         verify(applications, never()).findPipelineRows(any());
         assertEquals(0, result.totalCount());
         assertTrue(result.applications().isEmpty());
+    }
+
+    /** Nghiệm thu PR 4: lọc theo tin thì có tên tin cho tiêu đề, kể cả tin chưa có hồ sơ nào. */
+    @Test
+    void postingFilterLooksUpPostingTitle() {
+        when(access.scopeOf(actor)).thenReturn(ApplicationScope.ALL);
+        when(access.canOpenJobPosting(actor)).thenReturn(true);
+        when(applications.findPipelineIds(anyBoolean(), any(), any(), anyBoolean(), any(), any(), any(), any()))
+                .thenReturn(List.of());
+        when(jobPostings.findById(12)).thenReturn(Optional.of(
+                JobPosting.builder().jobPostingId(12).postingTitle("Digital Marketing Executive").build()));
+
+        ApplicationListResponse result = service.list(new ApplicationSearch(12, null, null, null, null),
+                PageRequest.of(0, 20));
+
+        assertEquals("Digital Marketing Executive", result.postingTitle());
+        assertTrue(result.canOpenJobPosting());
+    }
+
+    @Test
+    void withoutPostingFilterThereIsNoPostingTitle() {
+        when(access.scopeOf(actor)).thenReturn(ApplicationScope.ALL);
+        when(applications.findPipelineIds(anyBoolean(), any(), any(), anyBoolean(), any(), any(), any(), any()))
+                .thenReturn(List.of());
+
+        assertNull(service.list(new ApplicationSearch(null, null, null, null, null), PageRequest.of(0, 20))
+                .postingTitle());
+        verifyNoInteractions(jobPostings);
     }
 
     @Test

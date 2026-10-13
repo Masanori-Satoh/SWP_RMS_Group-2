@@ -124,7 +124,7 @@ class ApplicationPipelineWebTests {
         ApplicationSearch search = new ApplicationSearch(6, null, "Võ", "newest", "INTERVIEW").normalized();
         when(pipeline.list(any(), any())).thenReturn(new ApplicationListResponse(
                 new PageImpl<>(List.of(row(120, "HM_Passed", "88.10", true, false)), Pageable.ofSize(20), 4),
-                counts, List.of(), search, false, "HR"));
+                counts, List.of(), search, null, true, false, "HR"));
 
         MvcResult result = mvc.perform(get("/applications").with(as("hr_lan", "HR")).param("stage", "INTERVIEW"))
                 .andExpect(status().isOk())
@@ -158,6 +158,31 @@ class ApplicationPipelineWebTests {
                 .andExpect(content().string(containsString("Hồ sơ được chuyển")))
                 .andExpect(content().string(containsString("khi HR chuyển cho phòng ban của bạn")))
                 .andExpect(content().string(not(containsString("<table"))));
+    }
+
+    /** Nghiệm thu PR 4: lọc theo tin thì tiêu đề là tên tin; HR có link quay lại trang tin, HM thì không. */
+    @Test
+    void postingFilterShowsPostingTitleAndBackLinkOnlyWhenAllowed() throws Exception {
+        ApplicationSearch search = new ApplicationSearch(6, null, null, "score", null).normalized();
+        when(pipeline.list(any(), any())).thenReturn(new ApplicationListResponse(
+                new PageImpl<>(List.of(), Pageable.ofSize(20), 0), zeroCounts(), List.of(), search,
+                "Digital Marketing Executive", true, false, "HR"));
+
+        mvc.perform(get("/applications").with(as("hr_lan", "HR")).param("jobPostingId", "6"))
+                .andExpect(status().isOk())
+                .andExpect(content().string(containsString("Hồ sơ cho tin: Digital Marketing Executive")))
+                .andExpect(content().string(not(containsString("Danh sách ứng viên"))))
+                .andExpect(content().string(containsString("href=\"/internal/job-postings/6\"")));
+
+        when(pipeline.list(any(), any())).thenReturn(new ApplicationListResponse(
+                new PageImpl<>(List.of(), Pageable.ofSize(20), 0), zeroCounts(), List.of(), search,
+                "Digital Marketing Executive", false, true, "Hiring Manager"));
+
+        mvc.perform(get("/applications").with(as("hm_tuan", "Hiring Manager")).param("jobPostingId", "6"))
+                .andExpect(status().isOk())
+                .andExpect(content().string(containsString("Hồ sơ cho tin: Digital Marketing Executive")))
+                .andExpect(content().string(containsString("chỉ của tin này")))
+                .andExpect(content().string(not(containsString("/internal/job-postings/6"))));
     }
 
     @Test
@@ -378,7 +403,8 @@ class ApplicationPipelineWebTests {
         Page<ApplicationPipelineResponse> page = new PageImpl<>(List.of(rows), Pageable.ofSize(20), rows.length);
         return new ApplicationListResponse(page, zeroCounts(),
                 List.of(new JobPostingOption(6, "Digital Marketing Executive")),
-                new ApplicationSearch(null, null, null, "score", null).normalized(), forwardedView, viewerRole);
+                new ApplicationSearch(null, null, null, "score", null).normalized(), null, true, forwardedView,
+                viewerRole);
     }
 
     private static Map<ApplicationStage, Long> zeroCounts() {
