@@ -1726,7 +1726,18 @@ function scrollToDirectorDecision() {
     }
 }
 
-function showDirectorRejectReasonRequiredAlert(onCloseCallback) {
+function showDirectorCustomModal({
+    title,
+    desc,
+    subtext,
+    confirmText = 'Đã hiểu',
+    confirmClass = 'btn-director-reject-confirm',
+    showCancel = false,
+    cancelText = 'Hủy',
+    cancelClass = 'btn-director-modal-cancel',
+    onConfirm,
+    onClose
+}) {
     Swal.fire({
         html: `
             <div class="reject-warn-icon-wrapper">
@@ -1736,8 +1747,8 @@ function showDirectorRejectReasonRequiredAlert(onCloseCallback) {
                     <line x1="12" y1="16" x2="12.01" y2="16"></line>
                 </svg>
             </div>
-            <h3 class="reject-warn-title">Cần nhập lý do từ chối</h3>
-            <p class="reject-warn-desc">Vui lòng nhập lý do từ chối vào ô nhận xét bên dưới trước khi tiếp tục.</p>
+            <h3 class="reject-warn-title">${title}</h3>
+            <p class="reject-warn-desc">${desc}</p>
             <div class="reject-warn-divider"></div>
             <div class="reject-warn-subtext">
                 <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#475569" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -1745,21 +1756,54 @@ function showDirectorRejectReasonRequiredAlert(onCloseCallback) {
                     <line x1="12" y1="16" x2="12" y2="12"></line>
                     <line x1="12" y1="8" x2="12.01" y2="8"></line>
                 </svg>
-                <span>Thông tin này sẽ được gửi lại để HR xử lý tiếp.</span>
+                <span>${subtext || 'Thông tin này sẽ được gửi lại để HR xử lý tiếp.'}</span>
             </div>
         `,
         showConfirmButton: true,
-        confirmButtonText: 'Đã hiểu',
+        confirmButtonText: confirmText,
+        showCancelButton: showCancel,
+        cancelButtonText: cancelText,
         showCloseButton: true,
         buttonsStyling: false,
+        reverseButtons: true,
         customClass: {
             popup: 'director-reject-alert-modal',
-            confirmButton: 'btn-director-reject-confirm'
+            confirmButton: confirmClass,
+            cancelButton: cancelClass
         }
-    }).then(() => {
-        if (typeof onCloseCallback === 'function') {
-            onCloseCallback();
+    }).then((result) => {
+        if (result.isConfirmed) {
+            if (typeof onConfirm === 'function') onConfirm();
+        } else {
+            if (typeof onClose === 'function') onClose();
         }
+    });
+}
+
+function showDirectorRejectReasonRequiredAlert(onCloseCallback) {
+    showDirectorCustomModal({
+        title: 'Cần nhập lý do từ chối',
+        desc: 'Vui lòng nhập lý do từ chối vào ô nhận xét bên dưới trước khi tiếp tục.',
+        subtext: 'Thông tin này sẽ được gửi lại để HR xử lý tiếp.',
+        confirmText: 'Đã hiểu',
+        confirmClass: 'btn-director-reject-confirm',
+        showCancel: false,
+        onClose: onCloseCallback,
+        onConfirm: onCloseCallback
+    });
+}
+
+function showDirectorRejectConfirmModal(offerId, onConfirmCallback) {
+    showDirectorCustomModal({
+        title: 'Từ chối đề xuất Offer?',
+        desc: `Bạn có chắc chắn muốn từ chối đề xuất #${offerId}?`,
+        subtext: 'Lý do từ chối sẽ được gửi lại để HR xử lý tiếp.',
+        confirmText: 'Xác nhận từ chối',
+        confirmClass: 'btn-director-reject-danger',
+        showCancel: true,
+        cancelText: 'Hủy',
+        cancelClass: 'btn-director-modal-cancel',
+        onConfirm: onConfirmCallback
     });
 }
 
@@ -1776,19 +1820,8 @@ function submitDirectorDecisionFromScreen(offerId, action) {
             return;
         }
 
-        Swal.fire({
-            title: 'Từ chối đề xuất Offer?',
-            text: `Bạn có chắc chắn muốn từ chối đề xuất #${offerId}?`,
-            icon: 'warning',
-            showCancelButton: true,
-            confirmButtonText: 'Xác nhận từ chối',
-            cancelButtonText: 'Hủy',
-            confirmButtonColor: '#dc2626',
-            reverseButtons: true
-        }).then((result) => {
-            if (result.isConfirmed) {
-                executeDirectorDecisionApi(offerId, `/offers/${offerId}/reject`, comments);
-            }
+        showDirectorRejectConfirmModal(offerId, () => {
+            executeDirectorDecisionApi(offerId, `/offers/${offerId}/reject`, comments);
         });
     } else if (action === 'APPROVE') {
         Swal.fire({
@@ -1848,6 +1881,8 @@ function executeDirectorDecisionApi(offerId, url, comments) {
 window.updateDirectorDetailCommentCounter = updateDirectorDetailCommentCounter;
 window.scrollToDirectorDecision = scrollToDirectorDecision;
 window.submitDirectorDecisionFromScreen = submitDirectorDecisionFromScreen;
+window.showDirectorRejectReasonRequiredAlert = showDirectorRejectReasonRequiredAlert;
+window.showDirectorRejectConfirmModal = showDirectorRejectConfirmModal;
 
 function submitDirectorApprove() {
     if (!currentDirectorOfferId) return;
@@ -1906,31 +1941,33 @@ function submitDirectorReject() {
         return;
     }
     
-    const csrf = getCsrfInfo();
-    const headers = {
-        'Content-Type': 'application/json',
-        'Accept': 'application/json'
-    };
-    if (csrf.token) {
-        headers[csrf.header] = csrf.token;
-    }
-
-    fetch(`/offers/${currentDirectorOfferId}/reject`, {
-        method: 'POST',
-        headers: headers,
-        body: JSON.stringify({ comments: reason })
-    })
-    .then(res => res.json())
-    .then(data => {
-        if (data.success) {
-            Swal.fire({ title: 'Thành công', text: data.message, icon: 'success', timer: 1500, showConfirmButton: false })
-            .then(() => window.location.reload());
-        } else {
-            Swal.fire('Lỗi', data.message || 'Có lỗi xảy ra.', 'error');
+    showDirectorRejectConfirmModal(currentDirectorOfferId, () => {
+        const csrf = getCsrfInfo();
+        const headers = {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json'
+        };
+        if (csrf.token) {
+            headers[csrf.header] = csrf.token;
         }
-    })
-    .catch(err => {
-        console.error(err);
-        Swal.fire('Lỗi', 'Lỗi kết nối.', 'error');
+
+        fetch(`/offers/${currentDirectorOfferId}/reject`, {
+            method: 'POST',
+            headers: headers,
+            body: JSON.stringify({ comments: reason })
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.success) {
+                Swal.fire({ title: 'Thành công', text: data.message, icon: 'success', timer: 1500, showConfirmButton: false })
+                .then(() => window.location.reload());
+            } else {
+                Swal.fire('Lỗi', data.message || 'Có lỗi xảy ra.', 'error');
+            }
+        })
+        .catch(err => {
+            console.error(err);
+            Swal.fire('Lỗi', 'Lỗi kết nối.', 'error');
+        });
     });
 }
