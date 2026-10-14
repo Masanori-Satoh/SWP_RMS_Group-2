@@ -538,10 +538,30 @@ body:not(.sidebar-pinned) .workspace-sidebar:not(:hover) .sidebar-nav-link[data-
     display: contents;
   }
 
+  /* Hết chỗ thì khối định danh xuống hàng riêng; tên/email dài cắt "…" thay vì tràn ngang */
+  .workspace-header .topbar-user {
+    flex-wrap: wrap;
+  }
+
   .workspace-identity {
     order: 4;
-    flex-basis: 100%;
+    min-width: 0;
     padding-bottom: var(--s1);
+  }
+
+  .workspace-header .workspace-user-meta {
+    min-width: 0;
+  }
+
+  .workspace-header .workspace-user-top {
+    flex-wrap: wrap;
+    row-gap: var(--s1);
+  }
+
+  .workspace-header .workspace-user-name {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
 
   .workspace-header .wordmark {
@@ -557,5 +577,12 @@ body:not(.sidebar-pinned) .workspace-sidebar:not(:hover) .sidebar-nav-link[data-
 
   .account-heading {
     align-items: start;
+  }
+}
+
+/* Điện thoại: chỉ giữ avatar để topbar (sticky) không cao thêm một hàng, giống topbar công khai */
+@media (max-width:640px) {
+  .workspace-header .workspace-user-meta {
+    display: none;
   }
 }
