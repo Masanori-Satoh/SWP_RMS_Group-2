@@ -438,12 +438,14 @@
 }
 
 .topbar-notification-btn {
+  position: relative;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 6px;
+  width: 40px;
+  height: 40px;
   min-height: var(--btn-sm-h, 40px);
-  padding: 0 10px;
+  padding: 0;
   border: 1px solid transparent;
   border-radius: var(--radius-md);
   background: transparent;
@@ -470,18 +472,23 @@
 }
 
 .topbar-notif-badge {
+  position: absolute;
+  top: 3px;
+  right: 3px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  min-width: 20px;
-  height: 20px;
-  padding: 0 6px;
-  font-size: calc(11.5px + var(--chrome-step));
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  font-size: 11px;
   font-weight: 700;
   line-height: 1;
-  color: var(--surface);
-  background: var(--ink);
-  border-radius: var(--radius-full);
+  color: #ffffff;
+  background: #ef4444; /* Số đỏ nổi bật trên quả chuông */
+  border-radius: 9999px;
+  box-shadow: 0 0 0 2px var(--surface, #ffffff);
+  pointer-events: none;
 }
 
 .topbar-notif-badge[hidden] {
@@ -622,7 +629,7 @@
   width: 9px;
   height: 9px;
   border-radius: 50%;
-  background: var(--ink);
+  background: #ef4444;
   flex-shrink: 0;
 }
 

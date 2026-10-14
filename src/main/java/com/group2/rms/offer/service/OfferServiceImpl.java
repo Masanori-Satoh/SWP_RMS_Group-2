@@ -58,6 +58,7 @@ public class OfferServiceImpl implements OfferService {
     private final InterviewFinalResultRepository interviewFinalResultRepository;
     private final OfferApprovalRepository offerApprovalRepository;
     private final NotificationService notificationService;
+    private final com.group2.rms.notification.NotificationService systemNotificationService;
 
     /**
      * Quy tắc GBR-07:
@@ -413,6 +414,7 @@ public class OfferServiceImpl implements OfferService {
         return OfferDetailResponse.builder()
                 .offerId(offer.getOfferId())
                 .offerStatus(offer.getOfferStatus())
+                .declineReason(offer.getDeclineReason())
                 .offeredPositionTitle(offer.getOfferedPositionTitle())
                 .proposedSalary(offer.getProposedSalary())
                 .probationSalary(offer.getProbationSalary())
@@ -564,6 +566,14 @@ public class OfferServiceImpl implements OfferService {
             }
         }
 
+        if (systemNotificationService != null) {
+            try {
+                systemNotificationService.notifyOfferLetterSent(saved);
+            } catch (Exception ignored) {
+                // Tiếp tục ngay cả khi tạo thông báo in-app lỗi ngầm
+            }
+        }
+
         if (saved.getApplication() != null) {
             Application application = saved.getApplication();
             application.setApplicationStatus("Offered");
@@ -701,6 +711,7 @@ public class OfferServiceImpl implements OfferService {
                 .proposedById(proposedById)
                 .proposedByName(proposedByName)
                 .offerStatus(entity.getOfferStatus())
+                .declineReason(entity.getDeclineReason())
                 .createdAt(entity.getCreatedAt())
                 .updatedAt(entity.getUpdatedAt())
                 .build();

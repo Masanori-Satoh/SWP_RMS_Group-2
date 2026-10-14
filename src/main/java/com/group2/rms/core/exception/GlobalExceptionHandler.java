@@ -194,17 +194,45 @@ public class GlobalExceptionHandler {
             org.springframework.web.bind.MethodArgumentNotValidException ex,
             HttpServletRequest request) {
         String errorMsg = ex.getBindingResult().getAllErrors().stream()
-                .map(org.springframework.context.support.DefaultMessageSourceResolvable::getDefaultMessage)
+                .map(err -> {
+                    String msg = err.getDefaultMessage();
+                    if (msg != null && (msg.contains("Failed to convert") || msg.contains("typeMismatch") || msg.contains("ConversionFailedException"))) {
+                        if (msg.contains("expectedStartDate")) return "Ngày bắt đầu dự kiến không hợp lệ.";
+                        if (msg.contains("proposedSalary")) return "Mức lương chính thức phải là số hợp lệ.";
+                        if (msg.contains("probationSalary")) return "Mức lương thử việc phải là số hợp lệ.";
+                        if (msg.contains("probationDays")) return "Thời gian thử việc phải là số ngày hợp lệ.";
+                        return "Dữ liệu nhập vào không đúng định dạng.";
+                    }
+                    return msg;
+                })
                 .filter(java.util.Objects::nonNull)
                 .findFirst()
                 .orElse("Dữ liệu gửi lên không hợp lệ.");
         log.warn("Validation error at [{}]: {}", request.getRequestURL(), errorMsg);
 
-        if (request.getRequestURI() != null && request.getRequestURI().contains("/api/")) {
+        if (request.getRequestURI() != null && (request.getRequestURI().contains("/api/") || "XMLHttpRequest".equals(request.getHeader("X-Requested-With")) || MediaType.APPLICATION_JSON_VALUE.equals(request.getContentType()))) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                     .body(new com.group2.rms.core.dto.ApiResponse<>(false, errorMsg));
         }
 
+        ModelAndView mav = new ModelAndView("error/500");
+        mav.setStatus(HttpStatus.BAD_REQUEST);
+        mav.addObject("message", errorMsg);
+        mav.addObject("url", request.getRequestURL());
+        return mav;
+    }
+
+    @ExceptionHandler(org.springframework.http.converter.HttpMessageNotReadableException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public Object handleHttpMessageNotReadableException(
+            org.springframework.http.converter.HttpMessageNotReadableException ex,
+            HttpServletRequest request) {
+        log.warn("Malformed JSON/Payload at [{}]: {}", request.getRequestURL(), ex.getMessage());
+        String errorMsg = "Dữ liệu gửi lên không đúng định dạng.";
+        if (request.getRequestURI() != null && (request.getRequestURI().contains("/api/") || "XMLHttpRequest".equals(request.getHeader("X-Requested-With")) || MediaType.APPLICATION_JSON_VALUE.equals(request.getContentType()))) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(new com.group2.rms.core.dto.ApiResponse<>(false, errorMsg));
+        }
         ModelAndView mav = new ModelAndView("error/500");
         mav.setStatus(HttpStatus.BAD_REQUEST);
         mav.addObject("message", errorMsg);
@@ -284,6 +312,17 @@ public class GlobalExceptionHandler {
         ModelAndView mav = new ModelAndView(viewName);
         mav.setStatus(status);
         mav.addObject("message", ex.getReason() != null ? ex.getReason() : ex.getMessage());
+        mav.addObject("url", request.getRequestURL());
+        return mav;
+    }
+
+    @ExceptionHandler(org.springframework.web.HttpRequestMethodNotSupportedException.class)
+    @ResponseStatus(HttpStatus.METHOD_NOT_ALLOWED)
+    public ModelAndView handleMethodNotSupported(org.springframework.web.HttpRequestMethodNotSupportedException ex, HttpServletRequest request) {
+        log.warn("Method [{}] not supported at [{}]: {}", ex.getMethod(), request.getRequestURL(), ex.getMessage());
+        ModelAndView mav = new ModelAndView("error/500");
+        mav.setStatus(HttpStatus.METHOD_NOT_ALLOWED);
+        mav.addObject("message", "Phương thức " + ex.getMethod() + " không được hỗ trợ cho đường dẫn này.");
         mav.addObject("url", request.getRequestURL());
         return mav;
     }

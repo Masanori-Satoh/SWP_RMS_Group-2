@@ -58,7 +58,8 @@
     <div>
       <strong>Dữ liệu nhập chưa hợp lệ. Vui lòng kiểm tra lại:</strong>
       <ul style="margin: 4px 0 0 16px; padding: 0;">
-        <li th:each="err : ${#fields.allErrors()}" th:text="${err}"></li>
+        <li th:each="err : ${#fields.allErrors()}"
+            th:text="${#strings.contains(err, 'Failed to convert') or #strings.contains(err, 'typeMismatch') ? (#strings.contains(err, 'expectedStartDate') ? 'Ngày bắt đầu dự kiến không hợp lệ.' : (#strings.contains(err, 'proposedSalary') ? 'Mức lương chính thức phải là số hợp lệ.' : (#strings.contains(err, 'probationSalary') ? 'Mức lương thử việc phải là số hợp lệ.' : (#strings.contains(err, 'probationDays') ? 'Thời gian thử việc phải là số ngày hợp lệ.' : 'Dữ liệu nhập vào không đúng định dạng.')))) : err}"></li>
       </ul>
     </div>
   </div>
@@ -143,7 +144,8 @@
           <input type="number" id="proposedSalary" th:field="*{proposedSalary}" class="form-input"
                  placeholder="VD: 25000000" min="0" step="any"
                  oninput="autoCalculateProbationSalary()" required>
-          <p class="form-error" th:if="${#fields.hasErrors('proposedSalary')}" th:errors="*{proposedSalary}"></p>
+          <p class="form-error" th:if="${#fields.hasErrors('proposedSalary')}"
+             th:text="${#strings.contains(#fields.errors('proposedSalary')[0], 'Failed to convert') ? 'Mức lương chính thức phải là số hợp lệ.' : #fields.errors('proposedSalary')[0]}"></p>
         </div>
 
         <div class="form-group">
@@ -163,21 +165,24 @@
           <div id="probationRuleNotice" class="form-hint" style="color:var(--brand-dark); font-size:12px; margin-top:4px;">
             <i class="fa-solid fa-circle-check"></i> Tuân thủ quy định tối thiểu 85% lương chính thức.
           </div>
-          <p class="form-error" th:if="${#fields.hasErrors('probationSalary')}" th:errors="*{probationSalary}"></p>
+          <p class="form-error" th:if="${#fields.hasErrors('probationSalary')}"
+             th:text="${#strings.contains(#fields.errors('probationSalary')[0], 'Failed to convert') ? 'Mức lương thử việc phải là số hợp lệ.' : #fields.errors('probationSalary')[0]}"></p>
         </div>
       </div>
 
       <div class="grid-3-col">
         <div class="form-group">
           <label class="form-label form-label--required" for="probationDays">Thời gian thử việc (ngày)</label>
-          <input type="number" id="probationDays" th:field="*{probationDays}" class="form-input" min="1" placeholder="60" required>
-          <p class="form-error" th:if="${#fields.hasErrors('probationDays')}" th:errors="*{probationDays}"></p>
+          <input type="number" id="probationDays" th:field="*{probationDays}" class="form-input" min="1" max="365" placeholder="60" required>
+          <p class="form-error" th:if="${#fields.hasErrors('probationDays')}"
+             th:text="${#strings.contains(#fields.errors('probationDays')[0], 'Failed to convert') ? 'Thời gian thử việc phải là số ngày hợp lệ.' : #fields.errors('probationDays')[0]}"></p>
         </div>
 
         <div class="form-group">
           <label class="form-label form-label--required" for="expectedStartDate">Ngày bắt đầu dự kiến</label>
-          <input type="date" id="expectedStartDate" th:field="*{expectedStartDate}" class="form-input" required>
-          <p class="form-error" th:if="${#fields.hasErrors('expectedStartDate')}" th:errors="*{expectedStartDate}"></p>
+          <input type="date" id="expectedStartDate" th:field="*{expectedStartDate}" class="form-input" max="2099-12-31" required>
+          <p class="form-error" th:if="${#fields.hasErrors('expectedStartDate')}"
+             th:text="${#strings.contains(#fields.errors('expectedStartDate')[0], 'Failed to convert') ? 'Ngày bắt đầu dự kiến không hợp lệ.' : #fields.errors('expectedStartDate')[0]}"></p>
         </div>
 
         <div class="form-group">
@@ -222,6 +227,7 @@
         const mm = String(tomorrow.getMonth() + 1).padStart(2, '0');
         const dd = String(tomorrow.getDate()).padStart(2, '0');
         startDateInput.min = `${yyyy}-${mm}-${dd}`;
+        startDateInput.max = '2099-12-31';
       }
     });
   </script>
