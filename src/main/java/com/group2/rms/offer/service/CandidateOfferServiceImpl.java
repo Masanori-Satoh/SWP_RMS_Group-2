@@ -116,23 +116,42 @@ public class CandidateOfferServiceImpl implements CandidateOfferService {
             try {
                 systemNotificationService.markOfferNotificationRead(userId, offerId);
             } catch (Exception ignored) {}
+            try {
+                systemNotificationService.notifyOfferResponseFromCandidate(offer, accepted, cleanReason);
+            } catch (Exception ignored) {}
         }
         return offer.getApplication().getJobPosting().getPostingTitle();
     }
 
     /**
      * Nơi bổ sung ràng buộc trả lời offer (huyenpt). Accept và Decline cùng đi qua đây, ví dụ hạn trả lời,
-     * lý do từ chối, chặn theo ngày bắt đầu. Hiện chỉ có một luật: offer phải đang chờ ứng viên trả lời.
-     * Offer có thuộc ứng viên hay không đã được kiểm ở bước tải offer (không thuộc thì 404).
+     * lý do từ chối, chặn theo ngày bắt đầu. Offer phải đang chờ ứng viên trả lời và chưa quá ngày bắt đầu.
      */
     private void requireAnswerable(OfferProposal offer) {
         if (!SENT.equals(offer.getOfferStatus())) {
             throw new OfferResponseException("Thư mời này đã được trả lời nên không thể thay đổi.");
         }
+        if (isExpired(offer)) {
+            String dateStr = offer.getExpectedStartDate() != null
+                    ? java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy").format(offer.getExpectedStartDate())
+                    : "";
+            throw new OfferResponseException("Thư mời này đã quá ngày bắt đầu nhận việc dự kiến (" + dateStr + "). Vui lòng liên hệ bộ phận Tuyển dụng để được hỗ trợ.");
+        }
+    }
+
+    private static boolean isExpired(OfferProposal offer) {
+        return SENT.equals(offer.getOfferStatus())
+                && offer.getExpectedStartDate() != null
+                && offer.getExpectedStartDate().isBefore(java.time.LocalDate.now());
     }
 
     private static CandidateOfferResponse toResponse(OfferProposal offer) {
         String status = offer.getOfferStatus();
+        boolean expired = isExpired(offer);
+        boolean canRespond = SENT.equals(status) && !expired;
+        String label = expired ? "Đã quá hạn phản hồi" : statusLabel(status);
+        String badge = expired ? "badge--neutral" : statusBadge(status);
+
         return new CandidateOfferResponse(
                 offer.getOfferId(),
                 offer.getApplication().getJobPosting().getPostingTitle(),
@@ -142,9 +161,9 @@ public class CandidateOfferServiceImpl implements CandidateOfferService {
                 offer.getExpectedStartDate(),
                 offer.getWorkLocation(),
                 offer.getBenefitsPackage(),
-                statusLabel(status),
-                statusBadge(status),
-                SENT.equals(status));
+                label,
+                badge,
+                canRespond);
     }
 
     private static String statusLabel(String status) {
@@ -165,6 +184,11 @@ public class CandidateOfferServiceImpl implements CandidateOfferService {
 
     private static CandidateOfferDetailResponse toDetailResponse(OfferProposal offer) {
         String status = offer.getOfferStatus();
+        boolean expired = isExpired(offer);
+        boolean canRespond = SENT.equals(status) && !expired;
+        String label = expired ? "Đã quá hạn phản hồi" : statusLabel(status);
+        String badge = expired ? "badge--neutral" : statusBadge(status);
+
         var app = offer.getApplication();
         var posting = app != null ? app.getJobPosting() : null;
         var candidate = app != null ? app.getCandidate() : null;
@@ -203,9 +227,9 @@ public class CandidateOfferServiceImpl implements CandidateOfferService {
                 offer.getWorkLocation(),
                 offer.getBenefitsPackage(),
                 status,
-                statusLabel(status),
-                statusBadge(status),
-                SENT.equals(status),
+                label,
+                badge,
+                canRespond,
                 proposedBy != null ? proposedBy.getFullName() : "Phòng Tuyển dụng Mộc RMS",
                 proposedBy != null ? proposedBy.getEmail() : "tuyendung@mocrms.com.vn",
                 offer.getDeclineReason(),

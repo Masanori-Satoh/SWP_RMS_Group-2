@@ -39,12 +39,13 @@ class CandidateOfferServiceTests {
     @Mock CandidateOfferRepository offers;
     @Mock CurrentUserService currentUserService;
     @Mock ApplicationStatusService applicationStatusService;
+    @Mock com.group2.rms.notification.NotificationService systemNotificationService;
 
     private CandidateOfferServiceImpl service;
 
     @BeforeEach
     void setUp() {
-        service = new CandidateOfferServiceImpl(offers, currentUserService, applicationStatusService);
+        service = new CandidateOfferServiceImpl(offers, currentUserService, applicationStatusService, systemNotificationService);
         when(currentUserService.requireUser()).thenReturn(User.builder().userId(USER_ID).build());
     }
 
@@ -158,14 +159,87 @@ class CandidateOfferServiceTests {
 
     @Test
     void declineWithReasonSetsOfferDeclinedAndRejectsApplication() {
+        OfferProposal testOffer = offer(OFFER_ID, "Sent_Candidate");
         when(offers.findVisibleById(eq(OFFER_ID), eq(USER_ID), anyCollection()))
-                .thenReturn(Optional.of(offer(OFFER_ID, "Sent_Candidate")));
+                .thenReturn(Optional.of(testOffer));
         when(offers.answerIfSent(OFFER_ID, "Declined", "Mức đãi ngộ chưa đạt kỳ vọng")).thenReturn(1);
 
         String title = service.decline(OFFER_ID, "Mức đãi ngộ chưa đạt kỳ vọng");
 
         assertEquals("Junior Java Developer", title);
         verify(applicationStatusService).onOfferAnswered(APPLICATION_ID, false);
+        verify(systemNotificationService).notifyOfferResponseFromCandidate(testOffer, false, "Mức đãi ngộ chưa đạt kỳ vọng");
+    }
+
+    @Test
+    void acceptNotifiesHrProposedBy() {
+        OfferProposal testOffer = offer(OFFER_ID, "Sent_Candidate");
+        when(offers.findVisibleById(eq(OFFER_ID), eq(USER_ID), anyCollection()))
+                .thenReturn(Optional.of(testOffer));
+        when(offers.answerIfSent(OFFER_ID, "Accepted")).thenReturn(1);
+
+        String title = service.accept(OFFER_ID);
+
+        assertEquals("Junior Java Developer", title);
+        verify(applicationStatusService).onOfferAnswered(APPLICATION_ID, true);
+        verify(systemNotificationService).notifyOfferResponseFromCandidate(testOffer, true, null);
+    }
+
+    @Test
+    void listMapsExpiredOfferToAppropriateLabelAndDisablesResponse() {
+        OfferProposal expiredOffer = offer(3, "Sent_Candidate");
+        expiredOffer.setExpectedStartDate(java.time.LocalDate.now().minusDays(1));
+
+        when(offers.findVisibleByUserId(USER_ID, CandidateOfferServiceImpl.CANDIDATE_VISIBLE_STATUSES))
+                .thenReturn(List.of(expiredOffer));
+
+        List<CandidateOfferResponse> rows = service.list();
+
+        assertEquals(1, rows.size());
+        assertEquals("Đã quá hạn phản hồi", rows.get(0).statusLabel());
+        assertEquals("badge--neutral", rows.get(0).statusBadge());
+        assertFalse(rows.get(0).canRespond());
+    }
+
+    @Test
+    void getDetailMapsExpiredOfferToAppropriateLabelAndDisablesResponse() {
+        OfferProposal expiredOffer = offer(OFFER_ID, "Sent_Candidate");
+        expiredOffer.setExpectedStartDate(java.time.LocalDate.now().minusDays(2));
+
+        when(offers.findVisibleById(eq(OFFER_ID), eq(USER_ID), anyCollection()))
+                .thenReturn(Optional.of(expiredOffer));
+
+        var detail = service.getDetail(OFFER_ID);
+
+        assertEquals("Đã quá hạn phản hồi", detail.statusLabel());
+        assertEquals("badge--neutral", detail.statusBadge());
+        assertFalse(detail.canRespond());
+    }
+
+    @Test
+    void acceptExpiredOfferThrowsOfferResponseException() {
+        OfferProposal expiredOffer = offer(OFFER_ID, "Sent_Candidate");
+        expiredOffer.setExpectedStartDate(java.time.LocalDate.now().minusDays(1));
+
+        when(offers.findVisibleById(eq(OFFER_ID), eq(USER_ID), anyCollection()))
+                .thenReturn(Optional.of(expiredOffer));
+
+        var ex = assertThrows(OfferResponseException.class, () -> service.accept(OFFER_ID));
+        assertTrue(ex.getMessage().contains("đã quá ngày bắt đầu"));
+        verify(offers, never()).answerIfSent(anyInt(), anyString());
+    }
+
+    @Test
+    void declineExpiredOfferThrowsOfferResponseException() {
+        OfferProposal expiredOffer = offer(OFFER_ID, "Sent_Candidate");
+        expiredOffer.setExpectedStartDate(java.time.LocalDate.now().minusDays(1));
+
+        when(offers.findVisibleById(eq(OFFER_ID), eq(USER_ID), anyCollection()))
+                .thenReturn(Optional.of(expiredOffer));
+
+        var ex = assertThrows(OfferResponseException.class, () -> service.decline(OFFER_ID, "Lý do"));
+        assertTrue(ex.getMessage().contains("đã quá ngày bắt đầu"));
+        verify(offers, never()).answerIfSent(anyInt(), anyString(), anyString());
     }
 
     private static OfferProposal offer(int id, String status) {
