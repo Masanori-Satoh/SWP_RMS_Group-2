@@ -3,7 +3,6 @@ package com.group2.rms.notification;
 import com.group2.rms.user.entity.User;
 import com.group2.rms.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;
@@ -11,10 +10,8 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
 import java.util.Map;
 
-@Slf4j
 @RestController
 @RequestMapping("/api/notifications")
 @RequiredArgsConstructor
@@ -35,51 +32,33 @@ public class NotificationApiController {
 
     @GetMapping("/unread-count")
     public ResponseEntity<Map<String, Object>> getUnreadCount() {
-        try {
-            User user = currentUser();
-            long count = notificationService.getUnreadCount(user);
-            return ResponseEntity.ok(Map.of("unreadCount", count));
-        } catch (Exception e) {
-            log.error("Failed to fetch unread notification count: {}", e.getMessage(), e);
-            return ResponseEntity.ok(Map.of("unreadCount", 0));
-        }
+        User user = currentUser();
+        long count = notificationService.getUnreadCount(user);
+        return ResponseEntity.ok(Map.of("unreadCount", count));
     }
 
     @GetMapping("/recent")
     public ResponseEntity<Map<String, Object>> getRecentNotifications() {
-        try {
-            User user = currentUser();
-            Page<NotificationResponse> result = notificationService.getNotificationsForUser(user, 1, 5);
-            long unreadCount = notificationService.getUnreadCount(user);
-            return ResponseEntity.ok(Map.of(
+        User user = currentUser();
+        Page<NotificationResponse> result = notificationService.getNotificationsForUser(user, 1, 5);
+        long unreadCount = notificationService.getUnreadCount(user);
+        return ResponseEntity.ok(Map.of(
                 "unreadCount", unreadCount,
                 "notifications", result.getContent()
-            ));
-        } catch (Exception e) {
-            log.error("Failed to fetch recent notifications: {}", e.getMessage(), e);
-            return ResponseEntity.ok(Map.of("unreadCount", 0, "notifications", List.of()));
-        }
+        ));
     }
 
     @PostMapping("/read-all")
     public ResponseEntity<Map<String, Object>> markAllAsRead() {
-        try {
-            User user = currentUser();
-            notificationService.markAllAsRead(user);
-            return ResponseEntity.ok(Map.of("success", true));
-        } catch (Exception e) {
-            return ResponseEntity.badRequest().body(Map.of("success", false));
-        }
+        User user = currentUser();
+        notificationService.markAllAsRead(user);
+        return ResponseEntity.ok(Map.of("success", true));
     }
 
     @PostMapping("/{id}/read")
     public ResponseEntity<Map<String, Object>> markAsRead(@PathVariable Long id) {
-        try {
-            User user = currentUser();
-            notificationService.markAsRead(id, user);
-            return ResponseEntity.ok(Map.of("success", true));
-        } catch (Exception e) {
-            return ResponseEntity.badRequest().body(Map.of("success", false));
-        }
+        User user = currentUser();
+        notificationService.markAsRead(id, user);
+        return ResponseEntity.ok(Map.of("success", true));
     }
 }

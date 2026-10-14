@@ -61,6 +61,12 @@
         </div>
     </div>
 
+    <nav class="notif-pagination" aria-label="Phân trang thông báo" th:if="${totalPages > 1}">
+        <a th:if="${currentPage > 1}" th:href="@{/notifications(page=${currentPage - 1},size=${pageSize})}">Trang trước</a>
+        <span th:text="|Trang ${currentPage}/${totalPages}|"></span>
+        <a th:if="${currentPage < totalPages}" th:href="@{/notifications(page=${currentPage + 1},size=${pageSize})}">Trang sau</a>
+    </nav>
+
     <!-- Empty State -->
     <div class="empty-state" th:if="${#lists.isEmpty(notifications)}">
         <p class="empty-title">Không có thông báo nào</p>

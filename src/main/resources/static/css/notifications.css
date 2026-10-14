@@ -204,3 +204,18 @@
     margin-bottom: 0.75rem;
     color: #94a3b8;
 }
+
+.notif-pagination {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 1rem;
+    margin: 1.5rem 0;
+    color: #475569;
+}
+
+.notif-pagination a {
+    color: #2e5a44;
+    font-weight: 600;
+    text-decoration: underline;
+}

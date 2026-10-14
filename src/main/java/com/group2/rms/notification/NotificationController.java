@@ -64,14 +64,9 @@ public class NotificationController {
         notificationService.markAsRead(id, user);
         flash.addFlashAttribute("successMessage", "Đã đánh dấu thông báo là đã đọc.");
 
-        if (redirectUrl != null && !redirectUrl.isBlank() && redirectUrl.startsWith("/")) {
-            String target = redirectUrl;
-            String roleName = user.getRole() != null ? user.getRole().getRoleName() : "";
-            boolean isHrOrAdmin = "HR".equalsIgnoreCase(roleName) || "System Admin".equalsIgnoreCase(roleName);
-            if (!isHrOrAdmin && target.startsWith("/internal/job-postings/")) {
-                target = target.replace("/internal/job-postings/", "/jobs/");
-            }
-            return "redirect:" + target;
+        if (redirectUrl != null && !redirectUrl.isBlank() && redirectUrl.startsWith("/")
+                && !redirectUrl.startsWith("//") && !redirectUrl.contains("\\")) {
+            return "redirect:" + redirectUrl;
         }
         return "redirect:/notifications";
     }

@@ -21,6 +21,7 @@ import java.util.Map;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
@@ -66,6 +67,12 @@ class NotificationApiControllerTest {
         assertThat(response.getStatusCode().is2xxSuccessful()).isTrue();
         assertThat(response.getBody()).isNotNull();
         assertThat(response.getBody().get("unreadCount")).isEqualTo(3L);
+    }
+
+    @Test
+    void unreadCountFailureIsNotReportedAsZero() {
+        when(notificationService.getUnreadCount(testUser)).thenThrow(new IllegalStateException("database unavailable"));
+        assertThrows(IllegalStateException.class, () -> notificationApiController.getUnreadCount());
     }
 
     @Test
