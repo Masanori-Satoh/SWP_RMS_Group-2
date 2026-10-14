@@ -12,6 +12,8 @@
 </head>
 <body>
 <main id="main" layout:fragment="content" class="page-content container" tabindex="-1">
+    <div th:if="${successMessage}" class="alert alert--success" role="status" th:text="${successMessage}"></div>
+    <div th:if="${errorMessage}" class="alert alert--danger" role="alert" th:text="${errorMessage}"></div>
 
     <!-- Breadcrumb / Quay lại danh sách tin tuyển dụng -->
     <nav class="mb-4" aria-label="Điều hướng quay lại">
@@ -167,9 +169,19 @@
                 </ul>
 
                 <div class="action-wrap job-action-wrap">
-                    <a th:href="@{/internal/job-postings/{id}/edit(id=${posting.jobPostingId})}" class="btn btn--primary btn-full-width">
+                    <a th:if="${viewerRole == 'HR' or viewerRole == 'System Admin'}" th:href="@{/internal/job-postings/{id}/edit(id=${posting.jobPostingId})}" class="btn btn--primary btn-full-width">
                         Chỉnh sửa tin
                     </a>
+                    <a th:if="${viewerRole == 'Hiring Manager' and posting.isPublished()}" class="btn btn--secondary btn-full-width"
+                       th:href="@{/talent-pool(jobPostingId=${posting.jobPostingId})}">Thêm ứng viên tiềm năng</a>
+                    <a th:if="${viewerRole == 'HR' or viewerRole == 'Hiring Manager'}" class="btn btn--secondary btn-full-width"
+                       th:href="@{/talent-pool/jobs/{id}/suggestions(id=${posting.jobPostingId})}">Ứng viên được HM đề xuất</a>
+                    <button th:if="${viewerRole == 'HR' and posting.postingStatus != 'Closed'}" class="btn btn--danger btn-full-width" type="button" data-dialog-open="talent-close-job">Đóng đợt tuyển</button>
+                    <dialog th:if="${viewerRole == 'HR'}" id="talent-close-job" class="confirm-dialog" aria-labelledby="talent-close-title">
+                        <h2 id="talent-close-title">Đóng đợt tuyển dụng?</h2>
+                        <p>Hồ sơ đang xử lý sẽ dừng, lịch chưa diễn ra được hủy. Hồ sơ đã nhận việc và Offer đã chấp nhận được giữ lại. Hệ thống chặn đóng nếu còn Offer chưa kết thúc.</p>
+                        <form method="post" th:action="@{/talent-pool/jobs/{id}/close(id=${posting.jobPostingId})}"><button class="btn btn--secondary" type="button" data-dialog-close>Hủy</button><button class="btn btn--danger" type="submit">Xác nhận đóng</button></form>
+                    </dialog>
 
                     <a th:if="${posting.isPublished()}"
                        th:href="@{/jobs/{id}(id=${posting.jobPostingId})}"
@@ -272,7 +284,7 @@
     </div>
 
     <!-- Hộp thoại xác nhận xóa tin tuyển dụng -->
-    <dialog id="jpDeleteDialog" class="confirm-dialog">
+    <dialog th:if="${viewerRole == 'HR' or viewerRole == 'System Admin'}" id="jpDeleteDialog" class="confirm-dialog">
         <div class="dialog-content">
             <div class="dialog-header">
                 <h3 class="dialog-title">Xác nhận xóa tin tuyển dụng</h3>
@@ -290,5 +302,6 @@
         </div>
     </dialog>
 </main>
+<th:block layout:fragment="scripts"><script th:src="@{/js/pages/talent-pool.js}" defer></script></th:block>
 </body>
 </html>

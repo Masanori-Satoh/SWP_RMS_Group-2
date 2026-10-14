@@ -39,6 +39,7 @@ class ApplicationAccessTests {
 
     @Mock UserRepository userRepository;
     @Mock ApplicationReviewRepository reviews;
+    @Mock com.group2.rms.candidate.repository.ApplicationRepository applications;
 
     private ApplicationAccess access;
 
@@ -56,7 +57,7 @@ class ApplicationAccessTests {
     void setUp() {
         engineering.setManager(engineeringHead);
         sales.setManager(salesHead);
-        access = new ApplicationAccess(new RequisitionAccess(userRepository), reviews);
+        access = new ApplicationAccess(new RequisitionAccess(userRepository), reviews, applications);
     }
 
     @Test
@@ -182,11 +183,11 @@ class ApplicationAccessTests {
     }
 
     @Test
-    void onlyHrAndAdminGetLinkToInternalJobPosting() {
+    void hrAdminAndHiringManagerGetLinkToInternalJobPosting() {
         assertTrue(access.canOpenJobPosting(hr));
         assertTrue(access.canOpenJobPosting(admin));
         assertFalse(access.canOpenJobPosting(director));
-        assertFalse(access.canOpenJobPosting(engineeringHead));
+        assertTrue(access.canOpenJobPosting(engineeringHead));
     }
 
     private static User user(int id, String roleName, Department department) {

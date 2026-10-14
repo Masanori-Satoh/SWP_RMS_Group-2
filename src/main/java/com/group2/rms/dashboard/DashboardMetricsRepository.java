@@ -4,6 +4,7 @@ import org.springframework.stereotype.Repository;
 
 import com.group2.rms.core.security.RoleAuthorities;
 import com.group2.rms.interview.entity.InterviewFormat;
+import static com.group2.rms.candidate.repository.ApplicationRepository.FORMAL_FILTER;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -58,12 +59,12 @@ public class DashboardMetricsRepository {
     }
 
     public long applications() {
-        return count("select count(a) from Application a", Map.of());
+        return count("select count(a) from Application a where " + FORMAL_FILTER, Map.of());
     }
 
     public List<StatusCount> applicationStages() {
         return statuses("select a.applicationStatus, count(distinct a.candidate.candidateId) from Application a "
-                + "group by a.applicationStatus order by a.applicationStatus", Map.of());
+                + "where " + FORMAL_FILTER + " group by a.applicationStatus order by a.applicationStatus", Map.of());
     }
 
     public long upcomingInterviews(LocalDateTime now) {
@@ -159,14 +160,14 @@ public class DashboardMetricsRepository {
     }
 
     public long candidateApplications(int userId) {
-        return count("select count(a) from Application a where a.candidate.account.userId = :userId",
+        return count("select count(a) from Application a where a.candidate.account.userId = :userId and " + FORMAL_FILTER,
                 Map.of("userId", userId));
     }
 
     public List<StatusCount> candidateApplicationStages(int userId) {
         return statuses("select a.applicationStatus, count(a) from Application a "
                 + "where a.candidate.account.userId = :userId "
-                + "group by a.applicationStatus order by a.applicationStatus", Map.of("userId", userId));
+                + "and " + FORMAL_FILTER + " group by a.applicationStatus order by a.applicationStatus", Map.of("userId", userId));
     }
 
     public long candidateUpcomingInterviews(int userId, LocalDateTime now) {
@@ -198,7 +199,7 @@ public class DashboardMetricsRepository {
         return entityManager.createQuery("select a.applicationId, j.postingTitle, a.submissionDate, "
                 + "a.applicationStatus from Application a join a.jobPosting j "
                 + "where a.candidate.account.userId = :userId "
-                + "order by a.submissionDate desc, a.applicationId desc", Object[].class)
+                + "and " + FORMAL_FILTER + " order by a.submissionDate desc, a.applicationId desc", Object[].class)
                 .setParameter("userId", userId)
                 .setMaxResults(limit)
                 .getResultList().stream()

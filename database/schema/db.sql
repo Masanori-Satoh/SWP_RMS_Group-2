@@ -272,10 +272,32 @@ CREATE TABLE Candidate (
     CandidateSource NVARCHAR(50) NULL,
     --update isPotential
     IsPotential BIT NOT NULL CONSTRAINT DF_Candidate_IsPotential DEFAULT 0,
+    
     CreatedAt DATETIME2 NOT NULL CONSTRAINT DF_Candidate_CreatedAt DEFAULT SYSDATETIME(),
     UpdatedAt DATETIME2 NULL,
 
     CONSTRAINT FK_Candidate_User
+        FOREIGN KEY (UserId) REFERENCES [User](UserId)
+
+);
+GO
+
+
+-- =============================================================================
+-- 3.21 TalentPoolNote (Note for candidate talent)
+-- Lưu ý: Quan hệ N-1 với bảng Candidate (1 ứng viên có nhiều ghi chú) và và N-1 với bảng [User]
+-- =============================================================================
+CREATE TABLE TalentPoolNote (
+    NoteId INT IDENTITY(1,1) PRIMARY KEY,
+    CandidateId INT NOT NULL,
+    UserId INT NOT NULL,                  -- Bắt buộc phải có: ID của HR/HM thực hiện ghi chú
+    NoteContent NVARCHAR(1000) NOT NULL,  -- Nội dung ghi chú không được để trống
+    CreatedAt DATETIME2 NOT NULL CONSTRAINT DF_TalentPoolNote_CreatedAt DEFAULT SYSDATETIME(),
+
+    CONSTRAINT FK_TalentPoolNote_Candidate
+        FOREIGN KEY (CandidateId) REFERENCES Candidate(CandidateId),
+
+    CONSTRAINT FK_TalentPoolNote_User
         FOREIGN KEY (UserId) REFERENCES [User](UserId)
 );
 GO
@@ -307,6 +329,8 @@ CREATE TABLE Application (
             N'AI_Screened',
             N'HR_Passed',
             N'HM_Passed',
+            --new status for HM SUGGEST
+            N'HM_Suggested',
             N'Interviewing',
             N'Offered',
             N'Hired',
@@ -543,7 +567,7 @@ CREATE TABLE OfferApproval (
 GO
 
 -- =============================================================================
--- 3.19 NOTIFICATION (Quản lý thông báo nội bộ hệ thống)
+-- 3.20 NOTIFICATION (Quản lý thông báo nội bộ hệ thống)
 -- =============================================================================
 CREATE TABLE [dbo].[Notification] (
     [NotificationId] BIGINT IDENTITY(1,1) NOT NULL,
@@ -589,6 +613,8 @@ CREATE NONCLUSTERED INDEX IX_InterviewFinalResult_HiringManagerId ON InterviewFi
 CREATE NONCLUSTERED INDEX IX_OfferProposal_ProposedBy ON OfferProposal(ProposedBy);
 CREATE NONCLUSTERED INDEX IX_OfferApproval_OfferId ON OfferApproval(OfferId);
 CREATE NONCLUSTERED INDEX IX_OfferApproval_DirectorId ON OfferApproval(DirectorId);
+CREATE NONCLUSTERED INDEX IX_TalentPoolNote_CandidateId ON TalentPoolNote(CandidateId);
+CREATE NONCLUSTERED INDEX IX_TalentPoolNote_UserId ON TalentPoolNote(UserId);
 
 -- =============================================================================
 -- INDEXES CHO NOTIFICATION (Tối ưu hóa hiệu năng Topbar & Danh sách)

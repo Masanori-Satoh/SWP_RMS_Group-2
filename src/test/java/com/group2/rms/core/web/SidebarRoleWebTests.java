@@ -65,6 +65,7 @@ class SidebarRoleWebTests {
     @MockitoBean NotificationService notifications;
     @MockitoBean ApplicationPipelineService pipeline;
     @MockitoBean ApplicationReviewService reviewService;
+    @MockitoBean com.group2.rms.candidate.service.TalentPoolService talentPool;
 
     @Test
     void candidatePagesDrawCandidateSidebar() throws Exception {

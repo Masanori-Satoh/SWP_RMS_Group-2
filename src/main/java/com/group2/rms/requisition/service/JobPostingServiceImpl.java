@@ -49,6 +49,10 @@ public class JobPostingServiceImpl implements JobPostingService {
         }
     }
 
+    private void requirePostingReader(User user) {
+        if (!RequisitionAccess.ROLE_HIRING_MANAGER.equals(requisitionAccess.role(user))) requireHrOrAdmin(user);
+    }
+
     @Override
     @Transactional(readOnly = true)
     public Page<InternalJobPostingResponse> searchInternalJobPostings(
@@ -60,9 +64,18 @@ public class JobPostingServiceImpl implements JobPostingService {
             String sortOrder,
             User currentUser) {
 
-        requireHrOrAdmin(currentUser);
+        requirePostingReader(currentUser);
 
         Specification<JobPosting> spec = Specification.where(null);
+        if (RequisitionAccess.ROLE_HIRING_MANAGER.equals(requisitionAccess.role(currentUser))) {
+            Integer ownDepartment = currentUser.getDepartment() == null ? -1 : currentUser.getDepartment().getDepartmentId();
+            spec = spec.and((root, query, cb) -> {
+                var department = root.join("requisition").join("department");
+                var manager = department.join("manager", JoinType.LEFT);
+                return cb.or(cb.equal(department.get("departmentId"), ownDepartment),
+                        cb.equal(manager.get("userId"), currentUser.getUserId()));
+            });
+        }
 
         if (q != null && !q.isBlank()) {
             String trimmed = q.trim();
@@ -350,7 +363,7 @@ public class JobPostingServiceImpl implements JobPostingService {
     @Override
     @Transactional(readOnly = true)
     public InternalJobPostingDetailResponse getInternalJobPostingDetail(Integer id, User currentUser) {
-        requireHrOrAdmin(currentUser);
+        requirePostingReader(currentUser);
 
         if (id == null) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Mã tin tuyển dụng không hợp lệ.");
@@ -360,6 +373,10 @@ public class JobPostingServiceImpl implements JobPostingService {
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Không tìm thấy tin tuyển dụng với mã: " + id));
 
         JobRequisition req = posting.getRequisition();
+
+        if (RequisitionAccess.ROLE_HIRING_MANAGER.equals(requisitionAccess.role(currentUser))
+                && !requisitionAccess.inManagedDepartment(currentUser, req))
+            throw new AccessDeniedException("Tin tuyển dụng không thuộc phòng ban của bạn.");
 
         String statusLabel = switch (posting.getPostingStatus()) {
             case "Published" -> "Đang đăng tuyển";

@@ -190,6 +190,10 @@
                    class="btn btn--sm" th:classappend="${canEdit ? 'btn--secondary' : 'btn--primary'}"
                    th:text="${canEdit ? 'Kết quả' : 'Kết quả & đánh giá'}">Kết quả</a>
                 <th:block th:if="${canEdit}">
+                    <form th:if="${isHr and (s.interviewStatus.name() == 'Scheduled' or s.interviewStatus.name() == 'Rescheduled')}"
+                          method="post" th:action="@{/talent-pool/interviews/{id}/resend-email(id=${s.interviewId})}">
+                        <button class="btn btn--secondary btn--sm" type="submit">Gửi lại Email</button>
+                    </form>
                     <a th:href="@{/interviews/{id}/edit(id=${s.interviewId})}" class="btn btn--secondary btn--sm">Sửa lịch</a>
                     <button type="button" class="btn btn--danger btn--sm"
                             th:if="${s.interviewStatus.name() != 'Cancelled' and s.interviewStatus.name() != 'Completed'}"

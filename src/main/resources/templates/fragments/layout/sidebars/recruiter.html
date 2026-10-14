@@ -2,6 +2,12 @@
 <html lang="vi" xmlns:th="http://www.thymeleaf.org">
 <body>
 <th:block th:fragment="menu(activeMenu, userRole)">
+    <a th:if="${userRole == 'HR' or userRole == 'Hiring Manager'}" th:href="@{/talent-pool}" class="sidebar-nav-link"
+       th:classappend="${activeMenu == 'talent-pool' ? 'active' : ''}" th:attr="aria-current=${activeMenu == 'talent-pool' ? 'page' : null}"
+       title="Ứng viên tiềm năng" data-tooltip="Ứng viên tiềm năng">
+        <span class="nav-icon-wrapper"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="m17 8 2 2 4-4"/></svg></span>
+        <span class="nav-label-text">Ứng viên tiềm năng</span>
+    </a>
     <!-- Bảng điều khiển -->
     <a th:href="@{/dashboard}" class="sidebar-nav-link"
        th:classappend="${activeMenu == 'dashboard' ? 'active' : ''}"

@@ -37,7 +37,7 @@
                             <h1>Quản lý tin tuyển dụng</h1>
                             <p>Danh sách tin tuyển dụng nội bộ được tạo và phát hành từ các yêu cầu tuyển dụng đã duyệt.</p>
                         </div>
-                        <a th:href="@{/requisitions}" class="btn-create">+ Đăng tin từ yêu cầu đã duyệt</a>
+                        <a th:if="${viewerRole == 'HR' or viewerRole == 'System Admin'}" th:href="@{/requisitions}" class="btn-create">+ Đăng tin từ yêu cầu đã duyệt</a>
                     </div>
 
                     <!-- Flash Notification Message -->
@@ -162,8 +162,8 @@
                                                 <a th:href="@{/internal/job-postings/{id}(id=${item.jobPostingId})}">Xem chi tiết</a>
                                                 <a th:if="${item.postingStatus == 'Published'}"
                                                     th:href="@{/jobs/{id}(id=${item.jobPostingId})}" target="_blank">Xem trên cổng ứng viên</a>
-                                                <a th:href="@{/internal/job-postings/{id}/edit(id=${item.jobPostingId})}">Chỉnh sửa</a>
-                                                <button type="button" class="delete-action" data-delete-requisition
+                                                <a th:if="${viewerRole == 'HR' or viewerRole == 'System Admin'}" th:href="@{/internal/job-postings/{id}/edit(id=${item.jobPostingId})}">Chỉnh sửa</a>
+                                                <button th:if="${viewerRole == 'HR' or viewerRole == 'System Admin'}" type="button" class="delete-action" data-delete-requisition
                                                     th:data-delete-url="@{/internal/job-postings/delete/{id}(id=${item.jobPostingId})}"
                                                     th:data-title="${item.postingTitle}">Xóa tin</button>
                                             </div>

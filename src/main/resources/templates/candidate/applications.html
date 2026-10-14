@@ -88,6 +88,7 @@
         <table class="table app-table">
             <thead>
             <tr>
+                <th scope="col">STT</th>
                 <th scope="col">Ứng viên</th>
                 <th scope="col">Vị trí</th>
                 <th scope="col">Ngày nộp</th>
@@ -97,9 +98,11 @@
             </tr>
             </thead>
             <tbody>
-            <tr th:each="row : ${page.content}">
+            <tr th:each="row, stat : ${page.content}">
+                <td th:text="${page.number * page.size + stat.count}"></td>
                 <td>
                     <strong class="app-candidate__name" th:text="${row.fullName}">Nguyễn Văn An</strong>
+                    <span th:if="${row.isPotential}" class="badge badge--success">Tiềm năng</span>
                     <span class="app-candidate__email" th:text="${row.email}">an@example.com</span>
                 </td>
                 <td th:text="${row.postingTitle}">Java Developer</td>

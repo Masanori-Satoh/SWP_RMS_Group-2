@@ -45,6 +45,7 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 @Slf4j
 public class InterviewSchedulingController {
+    private final com.group2.rms.candidate.service.RecruitmentEmailService recruitmentEmail;
 
     private final InterviewSchedulingService interviewSchedulingService;
     private final ApplicationRepository applicationRepository;
@@ -164,10 +165,16 @@ public class InterviewSchedulingController {
         // 2. Gọi Service và bắt các ngoại lệ nghiệp vụ (Rule MSG26, HR tự gán, validation thời gian, v.v.)
         try {
             Integer creatorUserId = currentUser != null ? currentUser.getUserId() : 1;
-            interviewSchedulingService.createSchedule(request, creatorUserId);
+            InterviewScheduleResponse saved = interviewSchedulingService.createSchedule(request, creatorUserId);
             redirectAttributes.addFlashAttribute("successMessage", "Tạo lịch phỏng vấn thành công!");
+            if (saved != null && saved.interviewStatus() == InterviewStatus.Scheduled) {
+                try { recruitmentEmail.sendInterview(saved.interviewId()); }
+                catch (com.group2.rms.candidate.exception.RecruitmentEmailException e) {
+                    redirectAttributes.addFlashAttribute("errorMessage", e.getMessage());
+                }
+            }
             return "redirect:/interviews";
-        } catch (InterviewStatusException | IllegalArgumentException ex) {
+        } catch (InterviewStatusException | IllegalArgumentException | com.group2.rms.candidate.exception.TalentPoolException ex) {
             log.warn("Ngoại lệ nghiệp vụ khi tạo lịch phỏng vấn: {}", ex.getMessage());
             bindingResult.reject("businessError", ex.getMessage());
             prepareFormModel(model, false, null, currentUser);
@@ -299,7 +306,12 @@ public class InterviewSchedulingController {
         model.addAttribute("activeMenu", "interviews");
 
         // Danh sách hồ sơ ứng tuyển
-        List<Application> applications = applicationRepository.findAllWithCandidateAndJobPosting();
+        List<Application> applications = new java.util.ArrayList<>(applicationRepository.findEligibleForInterview());
+        if (isEdit && interviewId != null) {
+            Integer currentApplicationId = interviewSchedulingService.getScheduleDetail(interviewId).applicationId();
+            if (applications.stream().noneMatch(a -> a.getApplicationId().equals(currentApplicationId)))
+                applicationRepository.findDetailById(currentApplicationId).ifPresent(applications::add);
+        }
         model.addAttribute("applications", applications);
 
         // Danh sách người phỏng vấn hợp lệ: mọi tài khoản nội bộ đang Active (kể cả HR khác, Director).

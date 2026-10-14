@@ -77,7 +77,7 @@ public class ApplicationPipelineService {
         LocalDateTime now = LocalDateTime.now();
         Map<Integer, ApplicationProgressResponse> progress = new LinkedHashMap<>();
         ids.stream().filter(facts::containsKey)
-                .forEach(id -> progress.put(id, ApplicationProgressResolver.resolve(facts.get(id), now)));
+                .forEach(id -> progress.put(id, progress(facts.get(id), now)));
 
         Map<ApplicationStage, Long> stageCounts = new EnumMap<>(ApplicationStage.class);
         for (ApplicationStage stage : ApplicationStage.values()) {
@@ -124,10 +124,11 @@ public class ApplicationPipelineService {
                 .findByApplication_ApplicationIdOrderByAiScreeningIdDesc(applicationId);
         AIScreeningResult latest = scores.isEmpty() ? null : scores.getFirst();
         ApplicationProgressFacts facts = knownFacts(applicationId, status, progressFacts(List.of(applicationId)));
-        ApplicationProgressResponse progress = ApplicationProgressResolver.resolve(facts, LocalDateTime.now());
+        ApplicationProgressResponse progress = progress(facts, LocalDateTime.now());
 
         return new ApplicationDetailResponse(
                 application.getApplicationId(),
+                candidate.getCandidateId(), candidate.isPotential(),
                 account.getFullName(), account.getEmail(), account.getPhoneNumber(),
                 candidate.getLinkedInUrl(), candidate.getPortfolioUrl(),
                 requisition.getRequisitionId(), requisition.getRequisitionCode(),
@@ -147,6 +148,23 @@ public class ApplicationPipelineService {
                         access.canCreateOffer(actor, progress),
                         access.canOpenJobPosting(actor)),
                 actor.getRole() == null ? null : actor.getRole().getRoleName());
+    }
+
+    @Transactional(readOnly = true)
+    public boolean closedByPosting(Integer id) {
+        Application application = applications.findDetailById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy hồ sơ."));
+        access.requireView(access.actor(), application);
+        return applications.countPostingClosure(id) > 0;
+    }
+
+    /** Phân biệt đóng đợt thật (audit) với hồ sơ bị loại riêng lẻ. */
+    private ApplicationProgressResponse progress(ApplicationProgressFacts facts, LocalDateTime now) {
+        if ("Rejected".equals(facts.applicationStatus()) && applications.countPostingClosure(facts.applicationId()) > 0) {
+            ApplicationProgressStep step = ApplicationProgressStep.POSTING_CLOSED;
+            return new ApplicationProgressResponse(step.stage(), step, step.label(), step.owner(), step.tone());
+        }
+        return ApplicationProgressResolver.resolve(facts, now);
     }
 
     /**
@@ -224,6 +242,10 @@ public class ApplicationPipelineService {
                 null, null, ApplicationStatusLabels.interviewResultTone(event.getStatus()))));
         applications.findOfferEvents(id).forEach(event -> items.add(new TimelineItem(
                 event.getAt(), "Offer: " + event.getStatus(), null, null, "success")));
+        if ("Rejected".equals(application.getApplicationStatus()) && applications.countPostingClosure(id) > 0) {
+            items.add(new TimelineItem(application.getUpdatedAt(), "Đóng đợt tuyển dụng", "Hệ thống",
+                    "Đợt tuyển dụng đã kết thúc, hồ sơ dừng xử lý", "neutral"));
+        }
         items.sort(Comparator.comparing(TimelineItem::at, Comparator.nullsLast(Comparator.reverseOrder())));
         return items;
     }

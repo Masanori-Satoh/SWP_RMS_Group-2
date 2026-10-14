@@ -79,6 +79,11 @@ class ApplicationStepperTests {
         });
     }
 
+    @Test
+    void postingClosedKeepsTheReasonWithoutInferringPassedRounds() {
+        assertClosed(POSTING_CLOSED, "Đóng đợt tuyển dụng", List.of("APPLIED", "CLOSED"));
+    }
+
     private static void assertClosed(ApplicationProgressStep step, String reason, List<String> expectedKeys) {
         List<StageItem> items = ApplicationStepper.items(progress(step, reason));
 

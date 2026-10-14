@@ -1633,645 +1633,91 @@ INSERT INTO ApplicationReview (ApplicationId, ReviewerId, ReviewerRole, Decision
 INSERT INTO ApplicationReview (ApplicationId, ReviewerId, ReviewerRole, Decision, Comments, ReviewedAt) VALUES (187, 5, N'HiringManager', N'Hold', N'Đánh giá CV có kinh nghiệm thực chiến phù hợp với yêu cầu vị trí 1, phê duyệt chuyển sang hội đồng phỏng vấn.', '2026-11-25 20:42:57');
 
 -- -----------------------------------------------------------------------------
--- DAY 56 / 77: 2026-11-24 (4 Applications)
+-- DAY 56 / 77: 2026-11-24 (4 Applications) - ĐÃ FIX ĐỦ 4 USER (UserId: 199 -> 202)
 -- -----------------------------------------------------------------------------
 INSERT INTO [User] (RoleId, Username, PasswordHash, Email, FullName, PhoneNumber, AvatarUrl, DepartmentId, AccountStatus, CreatedAt) VALUES (6, N'hoang.ngo2', N'$2a$10$p.RWJeHxArmCbQBg3GNXEew66veoolEXULwkrjzeoof8Me1dAD8PO', N'hoang.duy.ngo@fpt.edu.vn', N'Ngô Duy Hoàng', N'0914841091', N'https://ui-avatars.com/api/?name=Ngô+Duy+Hoàng&background=random', NULL, N'Active', '2026-11-24 13:23:56');
 INSERT INTO [User] (RoleId, Username, PasswordHash, Email, FullName, PhoneNumber, AvatarUrl, DepartmentId, AccountStatus, CreatedAt) VALUES (6, N'hung.hoang', N'$2a$10$p.RWJeHxArmCbQBg3GNXEew66veoolEXULwkrjzeoof8Me1dAD8PO', N'hung.trong.hoang@gmail.com', N'Hoàng Trọng Hùng', N'0391142182', N'https://ui-avatars.com/api/?name=Hoàng+Trọng+Hùng&background=random', NULL, N'Active', '2026-11-24 11:40:47');
-INSERT INTO [User] (RoleId, Username, PasswordHash, Email, FullName, PhoneNumber, AvatarUrl, DepartmentId, AccountStatus, CreatedAt) VALUES (6, N'hai.phan', N'$2a$10$p.RWJeHxArmCbQBg3GNXEew66veoolEXULwkrjzeoof8Me1dAD8PO', N'hai.minh.phan@gmail.com', N'Phan Minh Hải', N'0917442986', N'https://ui-avatars.com/api/?name=Phan+Minh+Hải&background=random', NULL, N'Active', '2026-11-24 12:41:05');
-INSERT INTO [User] (RoleId, Username, PasswordHash, Email, FullName, PhoneNumber, AvatarUrl, DepartmentId, AccountStatus, CreatedAt) VALUES (6, N'binh.dang2', N'$2a$10$p.RWJeHxArmCbQBg3GNXEew66veoolEXULwkrjzeoof8Me1dAD8PO', N'binh.tien.dang@outlook.com', N'Đặng Tiến Bình', N'0984446807', N'https://ui-avatars.com/api/?name=Đặng+Tiến+Bình&background=random', NULL, N'Active', '2026-11-24 12:41:03');
-INSERT INTO Candidate (UserId, DateOfBirth, Gender, Address, LinkedInUrl, PortfolioUrl, CandidateSource, IsPotential, CreatedAt) VALUES (199, '1999-02-24', N'Nam', N'Số 45 Nguyễn Thị Minh Khai, Đa Kao, Quận 1, TP. Hồ Chí Minh', N'https://linkedin.com/in/hoang-ngo2', N'https://github.com/hoangngo2', N'LinkedIn', 0, '2026-11-24 13:23:56');
-INSERT INTO Candidate (UserId, DateOfBirth, Gender, Address, LinkedInUrl, PortfolioUrl, CandidateSource, IsPotential, CreatedAt) VALUES (200, '2002-11-06', N'Nam', N'Số 91 Chùa Bộc, Quang Trung, Đống Đa, Hà Nội', N'https://linkedin.com/in/hung-hoang', N'https://github.com/hunghoang', N'VietnamWorks', 0, '2026-11-24 11:40:47');
-INSERT INTO Candidate (UserId, DateOfBirth, Gender, Address, LinkedInUrl, PortfolioUrl, CandidateSource, IsPotential, CreatedAt) VALUES (201, '1998-07-11', N'Nam', N'Số 120 Cách Mạng Tháng 8, Phường 7, Quận 3, TP. Hồ Chí Minh', N'https://linkedin.com/in/hai-phan', N'https://github.com/haiphan', N'VietnamWorks', 0, '2026-11-24 12:41:05');
-INSERT INTO Candidate (UserId, DateOfBirth, Gender, Address, LinkedInUrl, PortfolioUrl, CandidateSource, IsPotential, CreatedAt) VALUES (202, '2001-10-17', N'Nam', N'Số 68 Hoàng Quốc Việt, Nghĩa Đô, Cầu Giấy, Hà Nội', N'https://linkedin.com/in/binh-dang2', N'https://github.com/binhdang2', N'VietnamWorks', 0, '2026-11-24 12:41:03');
-INSERT INTO Application (CandidateId, JobPostingId, AppliedCvUrl, SubmissionDate, ApplicationStatus, OverallScore, CreatedAt) VALUES (189, 1, N'https://rms-storage.s3.ap-southeast-1.amazonaws.com/cvs/2026/11/cand_199_hoang_20261124.pdf', '2026-11-24 13:23:56', N'HM_Passed', 71.78, '2026-11-24 13:23:56');
-INSERT INTO Application (CandidateId, JobPostingId, AppliedCvUrl, SubmissionDate, ApplicationStatus, OverallScore, CreatedAt) VALUES (190, 2, N'https://rms-storage.s3.ap-southeast-1.amazonaws.com/cvs/2026/11/cand_200_hung_20261124.pdf', '2026-11-24 11:40:47', N'AI_Screened', 61.30, '2026-11-24 11:40:47');
-INSERT INTO Application (CandidateId, JobPostingId, AppliedCvUrl, SubmissionDate, ApplicationStatus, OverallScore, CreatedAt) VALUES (191, 3, N'https://rms-storage.s3.ap-southeast-1.amazonaws.com/cvs/2026/11/cand_201_hai_20261124.pdf', '2026-11-24 12:41:05', N'Applied', NULL, '2026-11-24 12:41:05');
-INSERT INTO Application (CandidateId, JobPostingId, AppliedCvUrl, SubmissionDate, ApplicationStatus, OverallScore, CreatedAt) VALUES (192, 2, N'https://rms-storage.s3.ap-southeast-1.amazonaws.com/cvs/2026/11/cand_202_binh_20261124.pdf', '2026-11-24 12:41:03', N'HR_Passed', 68.93, '2026-11-24 12:41:03');
-INSERT INTO AIScreeningResult (ApplicationId, AIMatchScore, ScreenedAt) VALUES (189, 71.78, '2026-11-24 13:42:56');
-INSERT INTO AIScreeningResult (ApplicationId, AIMatchScore, ScreenedAt) VALUES (190, 61.30, '2026-11-24 12:00:47');
-INSERT INTO AIScreeningResult (ApplicationId, AIMatchScore, ScreenedAt) VALUES (192, 68.93, '2026-11-24 12:56:03');
-INSERT INTO ApplicationReview (ApplicationId, ReviewerId, ReviewerRole, Decision, Comments, ReviewedAt) VALUES (189, 3, N'HR', N'Pass', N'Hồ sơ ứng viên Ngô Duy Hoàng đáp ứng tốt tiêu chí cơ bản về học vấn và kinh nghiệm, liên hệ xếp lịch phỏng vấn chuyên môn.', '2026-11-25 17:23:56');
-INSERT INTO ApplicationReview (ApplicationId, ReviewerId, ReviewerRole, Decision, Comments, ReviewedAt) VALUES (189, 5, N'HiringManager', N'Pass', N'Đánh giá CV có kinh nghiệm thực chiến phù hợp với yêu cầu vị trí 1, phê duyệt chuyển sang hội đồng phỏng vấn.', '2026-11-26 22:23:56');
-INSERT INTO ApplicationReview (ApplicationId, ReviewerId, ReviewerRole, Decision, Comments, ReviewedAt) VALUES (192, 4, N'HR', N'Pass', N'Hồ sơ ứng viên Đặng Tiến Bình đáp ứng tốt tiêu chí cơ bản về học vấn và kinh nghiệm, liên hệ xếp lịch phỏng vấn chuyên môn.', '2026-11-25 13:41:03');
-INSERT INTO ApplicationReview (ApplicationId, ReviewerId, ReviewerRole, Decision, Comments, ReviewedAt) VALUES (192, 5, N'HiringManager', N'Pass', N'Đánh giá CV có kinh nghiệm thực chiến phù hợp với yêu cầu vị trí 2, phê duyệt chuyển sang hội đồng phỏng vấn.', '2026-11-26 17:41:03');
+INSERT INTO [User] (RoleId, Username, PasswordHash, Email, FullName, PhoneNumber, AvatarUrl, DepartmentId, AccountStatus, CreatedAt) VALUES (6, N'hai.phan', N'$2a$10$p.RWJeHxArmCbQBg3GNXEew66veoolEXULwkrjzeoof8Me1dAD8PO', N'hai.minh.phan@gmail.com', N'Phan Minh Hải', N'0938123456', N'https://ui-avatars.com/api/?name=Phan+Minh+Hải&background=random', NULL, N'Active', '2026-11-24 14:15:20');
+INSERT INTO [User] (RoleId, Username, PasswordHash, Email, FullName, PhoneNumber, AvatarUrl, DepartmentId, AccountStatus, CreatedAt) VALUES (6, N'linh.doan', N'$2a$10$p.RWJeHxArmCbQBg3GNXEew66veoolEXULwkrjzeoof8Me1dAD8PO', N'linh.ngoc.doan@gmail.com', N'Đoàn Ngọc Linh', N'0974567891', N'https://ui-avatars.com/api/?name=Đoàn+Ngọc+Linh&background=random', NULL, N'Active', '2026-11-24 16:30:10');
 
--- -----------------------------------------------------------------------------
--- DAY 57 / 77: 2026-11-25 (4 Applications)
--- -----------------------------------------------------------------------------
-INSERT INTO [User] (RoleId, Username, PasswordHash, Email, FullName, PhoneNumber, AvatarUrl, DepartmentId, AccountStatus, CreatedAt) VALUES (6, N'anh.le', N'$2a$10$p.RWJeHxArmCbQBg3GNXEew66veoolEXULwkrjzeoof8Me1dAD8PO', N'anh.khanh.le@gmail.com', N'Lê Khánh Anh', N'0863214305', N'https://ui-avatars.com/api/?name=Lê+Khánh+Anh&background=random', NULL, N'Active', '2026-11-25 10:48:30');
-INSERT INTO [User] (RoleId, Username, PasswordHash, Email, FullName, PhoneNumber, AvatarUrl, DepartmentId, AccountStatus, CreatedAt) VALUES (6, N'diep.phan', N'$2a$10$p.RWJeHxArmCbQBg3GNXEew66veoolEXULwkrjzeoof8Me1dAD8PO', N'diep.thi.phan@outlook.com', N'Phan Thị Diệp', N'0889499515', N'https://ui-avatars.com/api/?name=Phan+Thị+Diệp&background=random', NULL, N'Active', '2026-11-25 14:44:25');
-INSERT INTO [User] (RoleId, Username, PasswordHash, Email, FullName, PhoneNumber, AvatarUrl, DepartmentId, AccountStatus, CreatedAt) VALUES (6, N'quan.vo1', N'$2a$10$p.RWJeHxArmCbQBg3GNXEew66veoolEXULwkrjzeoof8Me1dAD8PO', N'quan.minh.vo@gmail.com', N'Võ Minh Quân', N'0394409088', N'https://ui-avatars.com/api/?name=Võ+Minh+Quân&background=random', NULL, N'Active', '2026-11-25 20:53:41');
-INSERT INTO [User] (RoleId, Username, PasswordHash, Email, FullName, PhoneNumber, AvatarUrl, DepartmentId, AccountStatus, CreatedAt) VALUES (6, N'nam.vu', N'$2a$10$p.RWJeHxArmCbQBg3GNXEew66veoolEXULwkrjzeoof8Me1dAD8PO', N'nam.van.vu@gmail.com', N'Vũ Văn Nam', N'0882945931', N'https://ui-avatars.com/api/?name=Vũ+Văn+Nam&background=random', NULL, N'Active', '2026-11-25 19:42:47');
-INSERT INTO Candidate (UserId, DateOfBirth, Gender, Address, LinkedInUrl, PortfolioUrl, CandidateSource, IsPotential, CreatedAt) VALUES (203, '1999-10-14', N'Nữ', N'Số 77 Xuân Thủy, Cầu Giấy, Hà Nội', N'https://linkedin.com/in/anh-le', N'https://github.com/anhle', N'TopCV', 0, '2026-11-25 10:48:30');
-INSERT INTO Candidate (UserId, DateOfBirth, Gender, Address, LinkedInUrl, PortfolioUrl, CandidateSource, IsPotential, CreatedAt) VALUES (204, '1997-11-23', N'Nữ', N'Số 68 Hoàng Quốc Việt, Nghĩa Đô, Cầu Giấy, Hà Nội', N'https://linkedin.com/in/diep-phan', NULL, N'TopCV', 0, '2026-11-25 14:44:25');
-INSERT INTO Candidate (UserId, DateOfBirth, Gender, Address, LinkedInUrl, PortfolioUrl, CandidateSource, IsPotential, CreatedAt) VALUES (205, '1995-09-11', N'Nam', N'Số 77 Xuân Thủy, Cầu Giấy, Hà Nội', N'https://linkedin.com/in/quan-vo1', N'https://github.com/quanvo1', N'TopCV', 0, '2026-11-25 20:53:41');
-INSERT INTO Candidate (UserId, DateOfBirth, Gender, Address, LinkedInUrl, PortfolioUrl, CandidateSource, IsPotential, CreatedAt) VALUES (206, '2000-10-20', N'Nam', N'Số 77 Xuân Thủy, Cầu Giấy, Hà Nội', N'https://linkedin.com/in/nam-vu', N'https://github.com/namvu', N'VietnamWorks', 1, '2026-11-25 19:42:47');
-INSERT INTO Application (CandidateId, JobPostingId, AppliedCvUrl, SubmissionDate, ApplicationStatus, OverallScore, CreatedAt) VALUES (193, 1, N'https://rms-storage.s3.ap-southeast-1.amazonaws.com/cvs/2026/11/cand_203_anh_20261125.pdf', '2026-11-25 10:48:30', N'HR_Passed', 76.01, '2026-11-25 10:48:30');
-INSERT INTO Application (CandidateId, JobPostingId, AppliedCvUrl, SubmissionDate, ApplicationStatus, OverallScore, CreatedAt) VALUES (194, 4, N'https://rms-storage.s3.ap-southeast-1.amazonaws.com/cvs/2026/11/cand_204_diep_20261125.pdf', '2026-11-25 14:44:25', N'HM_Passed', 76.98, '2026-11-25 14:44:25');
-INSERT INTO Application (CandidateId, JobPostingId, AppliedCvUrl, SubmissionDate, ApplicationStatus, OverallScore, CreatedAt) VALUES (195, 2, N'https://rms-storage.s3.ap-southeast-1.amazonaws.com/cvs/2026/11/cand_205_quan_20261125.pdf', '2026-11-25 20:53:41', N'AI_Screened', 43.00, '2026-11-25 20:53:41');
-INSERT INTO Application (CandidateId, JobPostingId, AppliedCvUrl, SubmissionDate, ApplicationStatus, OverallScore, CreatedAt) VALUES (196, 1, N'https://rms-storage.s3.ap-southeast-1.amazonaws.com/cvs/2026/11/cand_206_nam_20261125.pdf', '2026-11-25 19:42:47', N'Hired', 87.15, '2026-11-25 19:42:47');
-INSERT INTO AIScreeningResult (ApplicationId, AIMatchScore, ScreenedAt) VALUES (193, 76.01, '2026-11-25 11:07:30');
-INSERT INTO AIScreeningResult (ApplicationId, AIMatchScore, ScreenedAt) VALUES (194, 76.98, '2026-11-25 14:50:25');
-INSERT INTO AIScreeningResult (ApplicationId, AIMatchScore, ScreenedAt) VALUES (195, 43.00, '2026-11-25 21:05:41');
-INSERT INTO AIScreeningResult (ApplicationId, AIMatchScore, ScreenedAt) VALUES (196, 87.15, '2026-11-25 19:59:47');
-INSERT INTO ApplicationReview (ApplicationId, ReviewerId, ReviewerRole, Decision, Comments, ReviewedAt) VALUES (193, 4, N'HR', N'Pass', N'Hồ sơ ứng viên Lê Khánh Anh đáp ứng tốt tiêu chí cơ bản về học vấn và kinh nghiệm, liên hệ xếp lịch phỏng vấn chuyên môn.', '2026-11-26 11:48:30');
-INSERT INTO ApplicationReview (ApplicationId, ReviewerId, ReviewerRole, Decision, Comments, ReviewedAt) VALUES (193, 5, N'HiringManager', N'Pass', N'Đánh giá CV có kinh nghiệm thực chiến phù hợp với yêu cầu vị trí 1, phê duyệt chuyển sang hội đồng phỏng vấn.', '2026-11-27 13:48:30');
-INSERT INTO ApplicationReview (ApplicationId, ReviewerId, ReviewerRole, Decision, Comments, ReviewedAt) VALUES (194, 4, N'HR', N'Pass', N'Hồ sơ ứng viên Phan Thị Diệp đáp ứng tốt tiêu chí cơ bản về học vấn và kinh nghiệm, liên hệ xếp lịch phỏng vấn chuyên môn.', '2026-11-26 18:44:25');
-INSERT INTO ApplicationReview (ApplicationId, ReviewerId, ReviewerRole, Decision, Comments, ReviewedAt) VALUES (194, 6, N'HiringManager', N'Hold', N'Đánh giá CV có kinh nghiệm thực chiến phù hợp với yêu cầu vị trí 4, phê duyệt chuyển sang hội đồng phỏng vấn.', '2026-11-27 22:44:25');
-INSERT INTO ApplicationReview (ApplicationId, ReviewerId, ReviewerRole, Decision, Comments, ReviewedAt) VALUES (196, 4, N'HR', N'Pass', N'Hồ sơ ứng viên Vũ Văn Nam đáp ứng tốt tiêu chí cơ bản về học vấn và kinh nghiệm, liên hệ xếp lịch phỏng vấn chuyên môn.', '2026-11-26 22:42:47');
-INSERT INTO ApplicationReview (ApplicationId, ReviewerId, ReviewerRole, Decision, Comments, ReviewedAt) VALUES (196, 5, N'HiringManager', N'Pass', N'Đánh giá CV có kinh nghiệm thực chiến phù hợp với yêu cầu vị trí 1, phê duyệt chuyển sang hội đồng phỏng vấn.', '2026-11-28 01:42:47');
-INSERT INTO InterviewSchedule (ApplicationId, InterviewFormat, StartTime, EndTime, LocationOrLink, InterviewStatus, CreatedBy, CreatedAt) VALUES (196, N'Online_GoogleMeet', '2026-12-01 14:00:00', '2026-12-01 15:00:00', N'https://meet.google.com/rms-int-0048', N'Scheduled', 3, '2026-11-25 19:42:47');
-INSERT INTO InterviewPanel (InterviewId, InterviewerId, RoleInPanel) VALUES (48, 3, N'HR');
-INSERT INTO InterviewPanel (InterviewId, InterviewerId, RoleInPanel) VALUES (48, 5, N'HM');
-INSERT INTO InterviewPanel (InterviewId, InterviewerId, RoleInPanel) VALUES (48, 7, N'Interviewer');
-INSERT INTO InterviewPanel (InterviewId, InterviewerId, RoleInPanel) VALUES (48, 2, N'Director');
+INSERT INTO Candidate (UserId, DateOfBirth, Gender, Address, LinkedInUrl, PortfolioUrl, CandidateSource, IsPotential, CreatedAt) VALUES (199, '1997-04-12', N'Nam', N'Số 15 Duy Tân, Dịch Vọng Hậu, Cầu Giấy, Hà Nội', N'https://linkedin.com/in/hoang-ngo2', N'https://github.com/hoangngo2', N'TopCV', 0, '2026-11-24 13:23:56');
+INSERT INTO Candidate (UserId, DateOfBirth, Gender, Address, LinkedInUrl, PortfolioUrl, CandidateSource, IsPotential, CreatedAt) VALUES (200, '1995-09-18', N'Nam', N'Số 88 Láng Hạ, Đống Đa, Hà Nội', N'https://linkedin.com/in/hung-hoang', N'https://github.com/hunghoang', N'ITViec', 1, '2026-11-24 11:40:47');
+INSERT INTO Candidate (UserId, DateOfBirth, Gender, Address, LinkedInUrl, PortfolioUrl, CandidateSource, IsPotential, CreatedAt) VALUES (201, '1998-11-05', N'Nam', N'Số 102 Nguyễn Trãi, Thanh Xuân, Hà Nội', N'https://linkedin.com/in/hai-phan', N'https://github.com/haiphan', N'LinkedIn', 1, '2026-11-24 14:15:20');
+INSERT INTO Candidate (UserId, DateOfBirth, Gender, Address, LinkedInUrl, PortfolioUrl, CandidateSource, IsPotential, CreatedAt) VALUES (202, '2000-02-19', N'Nữ', N'Số 45 Nguyễn Thị Minh Khai, Đa Kao, Quận 1, TP. Hồ Chí Minh', N'https://linkedin.com/in/linh-doan', NULL, N'VietnamWorks', 0, '2026-11-24 16:30:10');
 
--- -----------------------------------------------------------------------------
--- DAY 58 / 77: 2026-11-26 (4 Applications)
--- -----------------------------------------------------------------------------
-INSERT INTO [User] (RoleId, Username, PasswordHash, Email, FullName, PhoneNumber, AvatarUrl, DepartmentId, AccountStatus, CreatedAt) VALUES (6, N'trinh.nguyen', N'$2a$10$p.RWJeHxArmCbQBg3GNXEew66veoolEXULwkrjzeoof8Me1dAD8PO', N'trinh.phuong.nguyen@gmail.com', N'Nguyễn Phương Trinh', N'0399677559', N'https://ui-avatars.com/api/?name=Nguyễn+Phương+Trinh&background=random', NULL, N'Active', '2026-11-26 21:17:46');
-INSERT INTO [User] (RoleId, Username, PasswordHash, Email, FullName, PhoneNumber, AvatarUrl, DepartmentId, AccountStatus, CreatedAt) VALUES (6, N'nghia.doan', N'$2a$10$p.RWJeHxArmCbQBg3GNXEew66veoolEXULwkrjzeoof8Me1dAD8PO', N'nghia.minh.doan@vnu.edu.vn', N'Đoàn Minh Nghĩa', N'0702293020', N'https://ui-avatars.com/api/?name=Đoàn+Minh+Nghĩa&background=random', NULL, N'Active', '2026-11-26 21:36:10');
-INSERT INTO [User] (RoleId, Username, PasswordHash, Email, FullName, PhoneNumber, AvatarUrl, DepartmentId, AccountStatus, CreatedAt) VALUES (6, N'ha.trinh', N'$2a$10$p.RWJeHxArmCbQBg3GNXEew66veoolEXULwkrjzeoof8Me1dAD8PO', N'ha.quynh.trinh@gmail.com', N'Trịnh Quỳnh Hà', N'0391043092', N'https://ui-avatars.com/api/?name=Trịnh+Quỳnh+Hà&background=random', NULL, N'Active', '2026-11-26 14:58:09');
-INSERT INTO [User] (RoleId, Username, PasswordHash, Email, FullName, PhoneNumber, AvatarUrl, DepartmentId, AccountStatus, CreatedAt) VALUES (6, N'quang.ngo', N'$2a$10$p.RWJeHxArmCbQBg3GNXEew66veoolEXULwkrjzeoof8Me1dAD8PO', N'quang.duc.ngo@gmail.com', N'Ngô Đức Quang', N'0886367620', N'https://ui-avatars.com/api/?name=Ngô+Đức+Quang&background=random', NULL, N'Active', '2026-11-26 18:57:03');
-INSERT INTO Candidate (UserId, DateOfBirth, Gender, Address, LinkedInUrl, PortfolioUrl, CandidateSource, IsPotential, CreatedAt) VALUES (207, '1997-03-12', N'Nữ', N'Số 234 Phạm Văn Đồng, Cổ Nhuế, Bắc Từ Liêm, Hà Nội', N'https://linkedin.com/in/trinh-nguyen', N'https://github.com/trinhnguyen', N'TopCV', 0, '2026-11-26 21:17:46');
-INSERT INTO Candidate (UserId, DateOfBirth, Gender, Address, LinkedInUrl, PortfolioUrl, CandidateSource, IsPotential, CreatedAt) VALUES (208, '2000-08-17', N'Nam', N'Số 120 Kim Mã, Ba Đình, Hà Nội', N'https://linkedin.com/in/nghia-doan', N'https://github.com/nghiadoan', N'LinkedIn', 1, '2026-11-26 21:36:10');
-INSERT INTO Candidate (UserId, DateOfBirth, Gender, Address, LinkedInUrl, PortfolioUrl, CandidateSource, IsPotential, CreatedAt) VALUES (209, '1993-01-08', N'Nữ', N'Số 14 Phố Huế, Hàng Bài, Hoàn Kiếm, Hà Nội', N'https://linkedin.com/in/ha-trinh', N'https://github.com/hatrinh', N'VietnamWorks', 0, '2026-11-26 14:58:09');
-INSERT INTO Candidate (UserId, DateOfBirth, Gender, Address, LinkedInUrl, PortfolioUrl, CandidateSource, IsPotential, CreatedAt) VALUES (210, '1997-02-19', N'Nam', N'Số 35 Lê Văn Lương, Nhân Chính, Thanh Xuân, Hà Nội', N'https://linkedin.com/in/quang-ngo', N'https://github.com/quangngo', N'VietnamWorks', 0, '2026-11-26 18:57:03');
-INSERT INTO Application (CandidateId, JobPostingId, AppliedCvUrl, SubmissionDate, ApplicationStatus, OverallScore, CreatedAt) VALUES (197, 1, N'https://rms-storage.s3.ap-southeast-1.amazonaws.com/cvs/2026/11/cand_207_trinh_20261126.pdf', '2026-11-26 21:17:46', N'HR_Passed', 80.65, '2026-11-26 21:17:46');
-INSERT INTO Application (CandidateId, JobPostingId, AppliedCvUrl, SubmissionDate, ApplicationStatus, OverallScore, CreatedAt) VALUES (198, 1, N'https://rms-storage.s3.ap-southeast-1.amazonaws.com/cvs/2026/11/cand_208_nghia_20261126.pdf', '2026-11-26 21:36:10', N'HM_Passed', 83.40, '2026-11-26 21:36:10');
-INSERT INTO Application (CandidateId, JobPostingId, AppliedCvUrl, SubmissionDate, ApplicationStatus, OverallScore, CreatedAt) VALUES (199, 1, N'https://rms-storage.s3.ap-southeast-1.amazonaws.com/cvs/2026/11/cand_209_ha_20261126.pdf', '2026-11-26 14:58:09', N'HM_Passed', 75.01, '2026-11-26 14:58:09');
-INSERT INTO Application (CandidateId, JobPostingId, AppliedCvUrl, SubmissionDate, ApplicationStatus, OverallScore, CreatedAt) VALUES (200, 1, N'https://rms-storage.s3.ap-southeast-1.amazonaws.com/cvs/2026/11/cand_210_quang_20261126.pdf', '2026-11-26 18:57:03', N'AI_Screened', 57.22, '2026-11-26 18:57:03');
-INSERT INTO AIScreeningResult (ApplicationId, AIMatchScore, ScreenedAt) VALUES (197, 80.65, '2026-11-26 21:26:46');
-INSERT INTO AIScreeningResult (ApplicationId, AIMatchScore, ScreenedAt) VALUES (198, 83.40, '2026-11-26 21:53:10');
-INSERT INTO AIScreeningResult (ApplicationId, AIMatchScore, ScreenedAt) VALUES (199, 75.01, '2026-11-26 15:16:09');
-INSERT INTO AIScreeningResult (ApplicationId, AIMatchScore, ScreenedAt) VALUES (200, 57.22, '2026-11-26 19:12:03');
-INSERT INTO ApplicationReview (ApplicationId, ReviewerId, ReviewerRole, Decision, Comments, ReviewedAt) VALUES (197, 3, N'HR', N'Pass', N'Hồ sơ ứng viên Nguyễn Phương Trinh đáp ứng tốt tiêu chí cơ bản về học vấn và kinh nghiệm, liên hệ xếp lịch phỏng vấn chuyên môn.', '2026-11-28 01:17:46');
-INSERT INTO ApplicationReview (ApplicationId, ReviewerId, ReviewerRole, Decision, Comments, ReviewedAt) VALUES (197, 5, N'HiringManager', N'Pass', N'Đánh giá CV có kinh nghiệm thực chiến phù hợp với yêu cầu vị trí 1, phê duyệt chuyển sang hội đồng phỏng vấn.', '2026-11-29 04:17:46');
-INSERT INTO ApplicationReview (ApplicationId, ReviewerId, ReviewerRole, Decision, Comments, ReviewedAt) VALUES (198, 4, N'HR', N'Pass', N'Hồ sơ ứng viên Đoàn Minh Nghĩa đáp ứng tốt tiêu chí cơ bản về học vấn và kinh nghiệm, liên hệ xếp lịch phỏng vấn chuyên môn.', '2026-11-27 23:36:10');
-INSERT INTO ApplicationReview (ApplicationId, ReviewerId, ReviewerRole, Decision, Comments, ReviewedAt) VALUES (198, 5, N'HiringManager', N'Pass', N'Đánh giá CV có kinh nghiệm thực chiến phù hợp với yêu cầu vị trí 1, phê duyệt chuyển sang hội đồng phỏng vấn.', '2026-11-29 01:36:10');
-INSERT INTO ApplicationReview (ApplicationId, ReviewerId, ReviewerRole, Decision, Comments, ReviewedAt) VALUES (199, 4, N'HR', N'Pass', N'Hồ sơ ứng viên Trịnh Quỳnh Hà đáp ứng tốt tiêu chí cơ bản về học vấn và kinh nghiệm, liên hệ xếp lịch phỏng vấn chuyên môn.', '2026-11-27 17:58:09');
-INSERT INTO ApplicationReview (ApplicationId, ReviewerId, ReviewerRole, Decision, Comments, ReviewedAt) VALUES (199, 5, N'HiringManager', N'Hold', N'Đánh giá CV có kinh nghiệm thực chiến phù hợp với yêu cầu vị trí 1, phê duyệt chuyển sang hội đồng phỏng vấn.', '2026-11-28 20:58:09');
-INSERT INTO InterviewSchedule (ApplicationId, InterviewFormat, StartTime, EndTime, LocationOrLink, InterviewStatus, CreatedBy, CreatedAt) VALUES (198, N'Offline_Office', '2026-11-29 09:00:00', '2026-11-29 10:00:00', N'Phòng họp 802, Tầng 8 Tòa nhà RMS Tower', N'Scheduled', 3, '2026-11-26 21:36:10');
-INSERT INTO InterviewPanel (InterviewId, InterviewerId, RoleInPanel) VALUES (49, 4, N'HR');
-INSERT INTO InterviewPanel (InterviewId, InterviewerId, RoleInPanel) VALUES (49, 5, N'HM');
-INSERT INTO InterviewPanel (InterviewId, InterviewerId, RoleInPanel) VALUES (49, 7, N'Interviewer');
-INSERT INTO InterviewPanel (InterviewId, InterviewerId, RoleInPanel) VALUES (49, 2, N'Director');
+-- CandidateId tương ứng là: 189, 190, 191, 192
+-- ApplicationId tương ứng là: 189, 190, 191, 192
+INSERT INTO Application (CandidateId, JobPostingId, AppliedCvUrl, SubmissionDate, ApplicationStatus, OverallScore, CreatedAt) VALUES (189, 2, N'https://rms-storage.s3.ap-southeast-1.amazonaws.com/cvs/2026/11/cand_199_hoang_20261124.pdf', '2026-11-24 13:23:56', N'AI_Screened', 61.40, '2026-11-24 13:23:56');
+INSERT INTO Application (CandidateId, JobPostingId, AppliedCvUrl, SubmissionDate, ApplicationStatus, OverallScore, CreatedAt) VALUES (190, 1, N'https://rms-storage.s3.ap-southeast-1.amazonaws.com/cvs/2026/11/cand_200_hung_20261124.pdf', '2026-11-24 11:40:47', N'HM_Suggested', 88.50, '2026-11-24 11:40:47');
+INSERT INTO Application (CandidateId, JobPostingId, AppliedCvUrl, SubmissionDate, ApplicationStatus, OverallScore, CreatedAt) VALUES (191, 3, N'https://rms-storage.s3.ap-southeast-1.amazonaws.com/cvs/2026/11/cand_201_hai_20261124.pdf', '2026-11-24 14:15:20', N'Interviewing', 85.20, '2026-11-24 14:15:20');
+INSERT INTO Application (CandidateId, JobPostingId, AppliedCvUrl, SubmissionDate, ApplicationStatus, OverallScore, CreatedAt) VALUES (192, 4, N'https://rms-storage.s3.ap-southeast-1.amazonaws.com/cvs/2026/11/cand_202_linh_20261124.pdf', '2026-11-24 16:30:10', N'Offered', 89.10, '2026-11-24 16:30:10');
 
--- -----------------------------------------------------------------------------
--- DAY 59 / 77: 2026-11-27 (3 Applications)
--- -----------------------------------------------------------------------------
-INSERT INTO [User] (RoleId, Username, PasswordHash, Email, FullName, PhoneNumber, AvatarUrl, DepartmentId, AccountStatus, CreatedAt) VALUES (6, N'tung.ho1', N'$2a$10$p.RWJeHxArmCbQBg3GNXEew66veoolEXULwkrjzeoof8Me1dAD8PO', N'tung.minh.ho@outlook.com', N'Hồ Minh Tùng', N'0986212643', N'https://ui-avatars.com/api/?name=Hồ+Minh+Tùng&background=random', NULL, N'Active', '2026-11-27 11:18:36');
-INSERT INTO [User] (RoleId, Username, PasswordHash, Email, FullName, PhoneNumber, AvatarUrl, DepartmentId, AccountStatus, CreatedAt) VALUES (6, N'khoa.trinh', N'$2a$10$p.RWJeHxArmCbQBg3GNXEew66veoolEXULwkrjzeoof8Me1dAD8PO', N'khoa.huu.trinh@vnu.edu.vn', N'Trịnh Hữu Khoa', N'0395112546', N'https://ui-avatars.com/api/?name=Trịnh+Hữu+Khoa&background=random', NULL, N'Active', '2026-11-27 13:40:53');
-INSERT INTO [User] (RoleId, Username, PasswordHash, Email, FullName, PhoneNumber, AvatarUrl, DepartmentId, AccountStatus, CreatedAt) VALUES (6, N'long.dang', N'$2a$10$p.RWJeHxArmCbQBg3GNXEew66veoolEXULwkrjzeoof8Me1dAD8PO', N'long.minh.dang@hust.edu.vn', N'Đặng Minh Long', N'0978043341', N'https://ui-avatars.com/api/?name=Đặng+Minh+Long&background=random', NULL, N'Active', '2026-11-27 08:58:14');
-INSERT INTO Candidate (UserId, DateOfBirth, Gender, Address, LinkedInUrl, PortfolioUrl, CandidateSource, IsPotential, CreatedAt) VALUES (211, '1998-02-18', N'Nam', N'Số 14 Phố Huế, Hàng Bài, Hoàn Kiếm, Hà Nội', N'https://linkedin.com/in/tung-ho1', NULL, N'LinkedIn', 0, '2026-11-27 11:18:36');
-INSERT INTO Candidate (UserId, DateOfBirth, Gender, Address, LinkedInUrl, PortfolioUrl, CandidateSource, IsPotential, CreatedAt) VALUES (212, '1995-01-14', N'Nam', N'Số 35 Lê Văn Lương, Nhân Chính, Thanh Xuân, Hà Nội', N'https://linkedin.com/in/khoa-trinh', N'https://github.com/khoatrinh', N'TopCV', 1, '2026-11-27 13:40:53');
-INSERT INTO Candidate (UserId, DateOfBirth, Gender, Address, LinkedInUrl, PortfolioUrl, CandidateSource, IsPotential, CreatedAt) VALUES (213, '2000-01-05', N'Nam', N'Số 48 Tố Hữu, Trung Văn, Nam Từ Liêm, Hà Nội', N'https://linkedin.com/in/long-dang', N'https://github.com/longdang', N'Employee Referral', 0, '2026-11-27 08:58:14');
-INSERT INTO Application (CandidateId, JobPostingId, AppliedCvUrl, SubmissionDate, ApplicationStatus, OverallScore, CreatedAt) VALUES (201, 4, N'https://rms-storage.s3.ap-southeast-1.amazonaws.com/cvs/2026/11/cand_211_tung_20261127.pdf', '2026-11-27 11:18:36', N'AI_Screened', 44.22, '2026-11-27 11:18:36');
-INSERT INTO Application (CandidateId, JobPostingId, AppliedCvUrl, SubmissionDate, ApplicationStatus, OverallScore, CreatedAt) VALUES (202, 2, N'https://rms-storage.s3.ap-southeast-1.amazonaws.com/cvs/2026/11/cand_212_khoa_20261127.pdf', '2026-11-27 13:40:53', N'Hired', 93.43, '2026-11-27 13:40:53');
-INSERT INTO Application (CandidateId, JobPostingId, AppliedCvUrl, SubmissionDate, ApplicationStatus, OverallScore, CreatedAt) VALUES (203, 2, N'https://rms-storage.s3.ap-southeast-1.amazonaws.com/cvs/2026/11/cand_213_long_20261127.pdf', '2026-11-27 08:58:14', N'AI_Screened', 67.35, '2026-11-27 08:58:14');
-INSERT INTO AIScreeningResult (ApplicationId, AIMatchScore, ScreenedAt) VALUES (201, 44.22, '2026-11-27 11:28:36');
-INSERT INTO AIScreeningResult (ApplicationId, AIMatchScore, ScreenedAt) VALUES (202, 93.43, '2026-11-27 13:57:53');
-INSERT INTO AIScreeningResult (ApplicationId, AIMatchScore, ScreenedAt) VALUES (203, 67.35, '2026-11-27 09:15:14');
-INSERT INTO ApplicationReview (ApplicationId, ReviewerId, ReviewerRole, Decision, Comments, ReviewedAt) VALUES (202, 3, N'HR', N'Pass', N'Hồ sơ ứng viên Trịnh Hữu Khoa đáp ứng tốt tiêu chí cơ bản về học vấn và kinh nghiệm, liên hệ xếp lịch phỏng vấn chuyên môn.', '2026-11-28 14:40:53');
-INSERT INTO ApplicationReview (ApplicationId, ReviewerId, ReviewerRole, Decision, Comments, ReviewedAt) VALUES (202, 5, N'HiringManager', N'Pass', N'Đánh giá CV có kinh nghiệm thực chiến phù hợp với yêu cầu vị trí 2, phê duyệt chuyển sang hội đồng phỏng vấn.', '2026-11-29 18:40:53');
-INSERT INTO InterviewSchedule (ApplicationId, InterviewFormat, StartTime, EndTime, LocationOrLink, InterviewStatus, CreatedBy, CreatedAt) VALUES (202, N'Online_GoogleMeet', '2026-12-01 10:00:00', '2026-12-01 11:00:00', N'https://meet.google.com/rms-int-0050', N'Scheduled', 3, '2026-11-27 13:40:53');
-INSERT INTO InterviewPanel (InterviewId, InterviewerId, RoleInPanel) VALUES (50, 3, N'HR');
-INSERT INTO InterviewPanel (InterviewId, InterviewerId, RoleInPanel) VALUES (50, 5, N'HM');
-INSERT INTO InterviewPanel (InterviewId, InterviewerId, RoleInPanel) VALUES (50, 8, N'Interviewer');
-INSERT INTO InterviewPanel (InterviewId, InterviewerId, RoleInPanel) VALUES (50, 2, N'Director');
+INSERT INTO AIScreeningResult (ApplicationId, AIMatchScore, ScreenedAt) VALUES (189, 61.40, '2026-11-24 13:35:00');
+INSERT INTO AIScreeningResult (ApplicationId, AIMatchScore, ScreenedAt) VALUES (190, 88.50, '2026-11-24 11:50:00');
+INSERT INTO AIScreeningResult (ApplicationId, AIMatchScore, ScreenedAt) VALUES (191, 85.20, '2026-11-24 14:25:00');
+INSERT INTO AIScreeningResult (ApplicationId, AIMatchScore, ScreenedAt) VALUES (192, 89.10, '2026-11-24 16:40:00');
 
--- -----------------------------------------------------------------------------
--- DAY 60 / 77: 2026-11-28 (3 Applications)
--- -----------------------------------------------------------------------------
-INSERT INTO [User] (RoleId, Username, PasswordHash, Email, FullName, PhoneNumber, AvatarUrl, DepartmentId, AccountStatus, CreatedAt) VALUES (6, N'hai.le', N'$2a$10$p.RWJeHxArmCbQBg3GNXEew66veoolEXULwkrjzeoof8Me1dAD8PO', N'hai.the.le@hust.edu.vn', N'Lê Thế Hải', N'0937616116', N'https://ui-avatars.com/api/?name=Lê+Thế+Hải&background=random', NULL, N'Active', '2026-11-28 10:15:18');
-INSERT INTO [User] (RoleId, Username, PasswordHash, Email, FullName, PhoneNumber, AvatarUrl, DepartmentId, AccountStatus, CreatedAt) VALUES (6, N'tuan.bui2', N'$2a$10$p.RWJeHxArmCbQBg3GNXEew66veoolEXULwkrjzeoof8Me1dAD8PO', N'tuan.quoc.bui@gmail.com', N'Bùi Quốc Tuấn', N'0972253047', N'https://ui-avatars.com/api/?name=Bùi+Quốc+Tuấn&background=random', NULL, N'Active', '2026-11-28 10:06:10');
-INSERT INTO [User] (RoleId, Username, PasswordHash, Email, FullName, PhoneNumber, AvatarUrl, DepartmentId, AccountStatus, CreatedAt) VALUES (6, N'huyen.do', N'$2a$10$p.RWJeHxArmCbQBg3GNXEew66veoolEXULwkrjzeoof8Me1dAD8PO', N'huyen.hai.do@fpt.edu.vn', N'Đỗ Hải Huyền', N'0988773665', N'https://ui-avatars.com/api/?name=Đỗ+Hải+Huyền&background=random', NULL, N'Active', '2026-11-28 12:52:45');
-INSERT INTO Candidate (UserId, DateOfBirth, Gender, Address, LinkedInUrl, PortfolioUrl, CandidateSource, IsPotential, CreatedAt) VALUES (214, '1994-10-19', N'Nam', N'Số 77 Xuân Thủy, Cầu Giấy, Hà Nội', N'https://linkedin.com/in/hai-le', N'https://github.com/haile', N'LinkedIn', 0, '2026-11-28 10:15:18');
-INSERT INTO Candidate (UserId, DateOfBirth, Gender, Address, LinkedInUrl, PortfolioUrl, CandidateSource, IsPotential, CreatedAt) VALUES (215, '1996-03-25', N'Nam', N'Số 45 Nguyễn Thị Minh Khai, Đa Kao, Quận 1, TP. Hồ Chí Minh', N'https://linkedin.com/in/tuan-bui2', N'https://github.com/tuanbui2', N'ITViec', 0, '2026-11-28 10:06:10');
-INSERT INTO Candidate (UserId, DateOfBirth, Gender, Address, LinkedInUrl, PortfolioUrl, CandidateSource, IsPotential, CreatedAt) VALUES (216, '1997-02-03', N'Nữ', N'Số 77 Xuân Thủy, Cầu Giấy, Hà Nội', N'https://linkedin.com/in/huyen-do', N'https://github.com/huyendo', N'Employee Referral', 1, '2026-11-28 12:52:45');
-INSERT INTO Application (CandidateId, JobPostingId, AppliedCvUrl, SubmissionDate, ApplicationStatus, OverallScore, CreatedAt) VALUES (204, 2, N'https://rms-storage.s3.ap-southeast-1.amazonaws.com/cvs/2026/11/cand_214_hai_20261128.pdf', '2026-11-28 10:15:18', N'AI_Screened', 43.33, '2026-11-28 10:15:18');
-INSERT INTO Application (CandidateId, JobPostingId, AppliedCvUrl, SubmissionDate, ApplicationStatus, OverallScore, CreatedAt) VALUES (205, 2, N'https://rms-storage.s3.ap-southeast-1.amazonaws.com/cvs/2026/11/cand_215_tuan_20261128.pdf', '2026-11-28 10:06:10', N'HM_Passed', 78.22, '2026-11-28 10:06:10');
-INSERT INTO Application (CandidateId, JobPostingId, AppliedCvUrl, SubmissionDate, ApplicationStatus, OverallScore, CreatedAt) VALUES (206, 1, N'https://rms-storage.s3.ap-southeast-1.amazonaws.com/cvs/2026/11/cand_216_huyen_20261128.pdf', '2026-11-28 12:52:45', N'Rejected', 78.75, '2026-11-28 12:52:45');
-INSERT INTO AIScreeningResult (ApplicationId, AIMatchScore, ScreenedAt) VALUES (204, 43.33, '2026-11-28 10:25:18');
-INSERT INTO AIScreeningResult (ApplicationId, AIMatchScore, ScreenedAt) VALUES (205, 78.22, '2026-11-28 10:14:10');
-INSERT INTO AIScreeningResult (ApplicationId, AIMatchScore, ScreenedAt) VALUES (206, 78.75, '2026-11-28 13:01:45');
-INSERT INTO ApplicationReview (ApplicationId, ReviewerId, ReviewerRole, Decision, Comments, ReviewedAt) VALUES (205, 3, N'HR', N'Pass', N'Hồ sơ ứng viên Bùi Quốc Tuấn đáp ứng tốt tiêu chí cơ bản về học vấn và kinh nghiệm, liên hệ xếp lịch phỏng vấn chuyên môn.', '2026-11-29 12:06:10');
-INSERT INTO ApplicationReview (ApplicationId, ReviewerId, ReviewerRole, Decision, Comments, ReviewedAt) VALUES (205, 5, N'HiringManager', N'Pass', N'Đánh giá CV có kinh nghiệm thực chiến phù hợp với yêu cầu vị trí 2, phê duyệt chuyển sang hội đồng phỏng vấn.', '2026-11-30 16:06:10');
-INSERT INTO ApplicationReview (ApplicationId, ReviewerId, ReviewerRole, Decision, Comments, ReviewedAt) VALUES (206, 4, N'HR', N'Pass', N'Hồ sơ ứng viên Đỗ Hải Huyền đáp ứng tốt tiêu chí cơ bản về học vấn và kinh nghiệm, liên hệ xếp lịch phỏng vấn chuyên môn.', '2026-11-29 16:52:45');
-INSERT INTO ApplicationReview (ApplicationId, ReviewerId, ReviewerRole, Decision, Comments, ReviewedAt) VALUES (206, 5, N'HiringManager', N'Pass', N'Đánh giá CV có kinh nghiệm thực chiến phù hợp với yêu cầu vị trí 1, phê duyệt chuyển sang hội đồng phỏng vấn.', '2026-11-30 18:52:45');
-INSERT INTO InterviewSchedule (ApplicationId, InterviewFormat, StartTime, EndTime, LocationOrLink, InterviewStatus, CreatedBy, CreatedAt) VALUES (206, N'Offline_Office', '2026-12-04 10:00:00', '2026-12-04 11:00:00', N'Phòng họp 802, Tầng 8 Tòa nhà RMS Tower', N'Scheduled', 3, '2026-11-28 12:52:45');
-INSERT INTO InterviewPanel (InterviewId, InterviewerId, RoleInPanel) VALUES (51, 4, N'HR');
-INSERT INTO InterviewPanel (InterviewId, InterviewerId, RoleInPanel) VALUES (51, 5, N'HM');
-INSERT INTO InterviewPanel (InterviewId, InterviewerId, RoleInPanel) VALUES (51, 7, N'Interviewer');
-INSERT INTO InterviewPanel (InterviewId, InterviewerId, RoleInPanel) VALUES (51, 2, N'Director');
+INSERT INTO ApplicationReview (ApplicationId, ReviewerId, ReviewerRole, Decision, Comments, ReviewedAt) VALUES (190, 3, N'HR', N'Pass', N'Ứng viên tiềm năng cao, kinh nghiệm Backend xuất sắc.', '2026-11-25 09:00:00');
+INSERT INTO ApplicationReview (ApplicationId, ReviewerId, ReviewerRole, Decision, Comments, ReviewedAt) VALUES (190, 5, N'HiringManager', N'Pass', N'HM đề xuất ưu tiên phỏng vấn sớm (HM_Suggested).', '2026-11-25 14:00:00');
+INSERT INTO ApplicationReview (ApplicationId, ReviewerId, ReviewerRole, Decision, Comments, ReviewedAt) VALUES (192, 3, N'HR', N'Pass', N'Kỹ năng giao tiếp và kinh nghiệm Sales B2B rất tốt.', '2026-11-25 10:00:00');
+INSERT INTO ApplicationReview (ApplicationId, ReviewerId, ReviewerRole, Decision, Comments, ReviewedAt) VALUES (192, 6, N'HiringManager', N'Pass', N'Đồng ý chuyển vào vòng phỏng vấn.', '2026-11-25 15:00:00');
+INSERT INTO ApplicationReview (ApplicationId, ReviewerId, ReviewerRole, Decision, Comments, ReviewedAt) VALUES (192, 2, N'Director', N'Pass', N'Giám đốc duyệt đặc cách hồ sơ Key Account B2B.', '2026-11-25 16:30:00');
 
--- -----------------------------------------------------------------------------
--- DAY 61 / 77: 2026-11-29 (3 Applications)
--- -----------------------------------------------------------------------------
-INSERT INTO [User] (RoleId, Username, PasswordHash, Email, FullName, PhoneNumber, AvatarUrl, DepartmentId, AccountStatus, CreatedAt) VALUES (6, N'nam.hoang', N'$2a$10$p.RWJeHxArmCbQBg3GNXEew66veoolEXULwkrjzeoof8Me1dAD8PO', N'nam.minh.hoang@gmail.com', N'Hoàng Minh Nam', N'0889614423', N'https://ui-avatars.com/api/?name=Hoàng+Minh+Nam&background=random', NULL, N'Active', '2026-11-29 08:25:54');
-INSERT INTO [User] (RoleId, Username, PasswordHash, Email, FullName, PhoneNumber, AvatarUrl, DepartmentId, AccountStatus, CreatedAt) VALUES (6, N'han.duong', N'$2a$10$p.RWJeHxArmCbQBg3GNXEew66veoolEXULwkrjzeoof8Me1dAD8PO', N'han.mai.duong@gmail.com', N'Dương Mai Hân', N'0902034637', N'https://ui-avatars.com/api/?name=Dương+Mai+Hân&background=random', NULL, N'Active', '2026-11-29 18:40:41');
-INSERT INTO [User] (RoleId, Username, PasswordHash, Email, FullName, PhoneNumber, AvatarUrl, DepartmentId, AccountStatus, CreatedAt) VALUES (6, N'dat.le', N'$2a$10$p.RWJeHxArmCbQBg3GNXEew66veoolEXULwkrjzeoof8Me1dAD8PO', N'dat.van.le@gmail.com', N'Lê Văn Đạt', N'0383160763', N'https://ui-avatars.com/api/?name=Lê+Văn+Đạt&background=random', NULL, N'Active', '2026-11-29 08:10:59');
-INSERT INTO Candidate (UserId, DateOfBirth, Gender, Address, LinkedInUrl, PortfolioUrl, CandidateSource, IsPotential, CreatedAt) VALUES (217, '1993-11-10', N'Nam', N'Số 102 Nguyễn Trãi, Thanh Xuân, Hà Nội', N'https://linkedin.com/in/nam-hoang', N'https://github.com/namhoang', N'ITViec', 0, '2026-11-29 08:25:54');
-INSERT INTO Candidate (UserId, DateOfBirth, Gender, Address, LinkedInUrl, PortfolioUrl, CandidateSource, IsPotential, CreatedAt) VALUES (218, '1996-03-07', N'Nữ', N'Số 15 Võ Văn Ngân, Linh Chiểu, TP. Thủ Đức, TP. Hồ Chí Minh', N'https://linkedin.com/in/han-duong', N'https://github.com/handuong', N'TopCV', 0, '2026-11-29 18:40:41');
-INSERT INTO Candidate (UserId, DateOfBirth, Gender, Address, LinkedInUrl, PortfolioUrl, CandidateSource, IsPotential, CreatedAt) VALUES (219, '1994-06-04', N'Nam', N'Số 120 Kim Mã, Ba Đình, Hà Nội', N'https://linkedin.com/in/dat-le', N'https://github.com/datle', N'Employee Referral', 0, '2026-11-29 08:10:59');
-INSERT INTO Application (CandidateId, JobPostingId, AppliedCvUrl, SubmissionDate, ApplicationStatus, OverallScore, CreatedAt) VALUES (207, 3, N'https://rms-storage.s3.ap-southeast-1.amazonaws.com/cvs/2026/11/cand_217_nam_20261129.pdf', '2026-11-29 08:25:54', N'AI_Screened', 53.49, '2026-11-29 08:25:54');
-INSERT INTO Application (CandidateId, JobPostingId, AppliedCvUrl, SubmissionDate, ApplicationStatus, OverallScore, CreatedAt) VALUES (208, 3, N'https://rms-storage.s3.ap-southeast-1.amazonaws.com/cvs/2026/11/cand_218_han_20261129.pdf', '2026-11-29 18:40:41', N'HR_Passed', 68.09, '2026-11-29 18:40:41');
-INSERT INTO Application (CandidateId, JobPostingId, AppliedCvUrl, SubmissionDate, ApplicationStatus, OverallScore, CreatedAt) VALUES (209, 2, N'https://rms-storage.s3.ap-southeast-1.amazonaws.com/cvs/2026/11/cand_219_dat_20261129.pdf', '2026-11-29 08:10:59', N'Applied', NULL, '2026-11-29 08:10:59');
-INSERT INTO AIScreeningResult (ApplicationId, AIMatchScore, ScreenedAt) VALUES (207, 53.49, '2026-11-29 08:38:54');
-INSERT INTO AIScreeningResult (ApplicationId, AIMatchScore, ScreenedAt) VALUES (208, 68.09, '2026-11-29 18:51:41');
-INSERT INTO ApplicationReview (ApplicationId, ReviewerId, ReviewerRole, Decision, Comments, ReviewedAt) VALUES (208, 3, N'HR', N'Pass', N'Hồ sơ ứng viên Dương Mai Hân đáp ứng tốt tiêu chí cơ bản về học vấn và kinh nghiệm, liên hệ xếp lịch phỏng vấn chuyên môn.', '2026-11-30 19:40:41');
-INSERT INTO ApplicationReview (ApplicationId, ReviewerId, ReviewerRole, Decision, Comments, ReviewedAt) VALUES (208, 5, N'HiringManager', N'Pass', N'Đánh giá CV có kinh nghiệm thực chiến phù hợp với yêu cầu vị trí 3, phê duyệt chuyển sang hội đồng phỏng vấn.', '2026-12-01 22:40:41');
 
--- -----------------------------------------------------------------------------
--- DAY 62 / 77: 2026-11-30 (3 Applications)
--- -----------------------------------------------------------------------------
-INSERT INTO [User] (RoleId, Username, PasswordHash, Email, FullName, PhoneNumber, AvatarUrl, DepartmentId, AccountStatus, CreatedAt) VALUES (6, N'trung.nguyen', N'$2a$10$p.RWJeHxArmCbQBg3GNXEew66veoolEXULwkrjzeoof8Me1dAD8PO', N'trung.dinh.nguyen@gmail.com', N'Nguyễn Đình Trung', N'0864602338', N'https://ui-avatars.com/api/?name=Nguyễn+Đình+Trung&background=random', NULL, N'Active', '2026-11-30 08:39:39');
-INSERT INTO [User] (RoleId, Username, PasswordHash, Email, FullName, PhoneNumber, AvatarUrl, DepartmentId, AccountStatus, CreatedAt) VALUES (6, N'dung.dinh1', N'$2a$10$p.RWJeHxArmCbQBg3GNXEew66veoolEXULwkrjzeoof8Me1dAD8PO', N'dung.huu.dinh@gmail.com', N'Đinh Hữu Dũng', N'0987425930', N'https://ui-avatars.com/api/?name=Đinh+Hữu+Dũng&background=random', NULL, N'Active', '2026-11-30 16:15:40');
-INSERT INTO [User] (RoleId, Username, PasswordHash, Email, FullName, PhoneNumber, AvatarUrl, DepartmentId, AccountStatus, CreatedAt) VALUES (6, N'vinh.do', N'$2a$10$p.RWJeHxArmCbQBg3GNXEew66veoolEXULwkrjzeoof8Me1dAD8PO', N'vinh.huu.do@gmail.com', N'Đỗ Hữu Vinh', N'0709428760', N'https://ui-avatars.com/api/?name=Đỗ+Hữu+Vinh&background=random', NULL, N'Active', '2026-11-30 17:14:01');
-INSERT INTO Candidate (UserId, DateOfBirth, Gender, Address, LinkedInUrl, PortfolioUrl, CandidateSource, IsPotential, CreatedAt) VALUES (220, '1995-05-09', N'Nam', N'Số 102 Nguyễn Trãi, Thanh Xuân, Hà Nội', N'https://linkedin.com/in/trung-nguyen', N'https://github.com/trungnguyen', N'Employee Referral', 0, '2026-11-30 08:39:39');
-INSERT INTO Candidate (UserId, DateOfBirth, Gender, Address, LinkedInUrl, PortfolioUrl, CandidateSource, IsPotential, CreatedAt) VALUES (221, '1995-07-07', N'Nam', N'Số 234 Phạm Văn Đồng, Cổ Nhuế, Bắc Từ Liêm, Hà Nội', N'https://linkedin.com/in/dung-dinh1', N'https://github.com/dungdinh1', N'Employee Referral', 0, '2026-11-30 16:15:40');
-INSERT INTO Candidate (UserId, DateOfBirth, Gender, Address, LinkedInUrl, PortfolioUrl, CandidateSource, IsPotential, CreatedAt) VALUES (222, '1998-07-09', N'Nam', N'Số 14 Phố Huế, Hàng Bài, Hoàn Kiếm, Hà Nội', N'https://linkedin.com/in/vinh-do', N'https://github.com/vinhdo', N'LinkedIn', 0, '2026-11-30 17:14:01');
-INSERT INTO Application (CandidateId, JobPostingId, AppliedCvUrl, SubmissionDate, ApplicationStatus, OverallScore, CreatedAt) VALUES (210, 1, N'https://rms-storage.s3.ap-southeast-1.amazonaws.com/cvs/2026/11/cand_220_trung_20261130.pdf', '2026-11-30 08:39:39', N'AI_Screened', 45.78, '2026-11-30 08:39:39');
-INSERT INTO Application (CandidateId, JobPostingId, AppliedCvUrl, SubmissionDate, ApplicationStatus, OverallScore, CreatedAt) VALUES (211, 1, N'https://rms-storage.s3.ap-southeast-1.amazonaws.com/cvs/2026/11/cand_221_dung_20261130.pdf', '2026-11-30 16:15:40', N'AI_Screened', 57.03, '2026-11-30 16:15:40');
-INSERT INTO Application (CandidateId, JobPostingId, AppliedCvUrl, SubmissionDate, ApplicationStatus, OverallScore, CreatedAt) VALUES (212, 1, N'https://rms-storage.s3.ap-southeast-1.amazonaws.com/cvs/2026/11/cand_222_vinh_20261130.pdf', '2026-11-30 17:14:01', N'AI_Screened', 50.61, '2026-11-30 17:14:01');
-INSERT INTO AIScreeningResult (ApplicationId, AIMatchScore, ScreenedAt) VALUES (210, 45.78, '2026-11-30 08:46:39');
-INSERT INTO AIScreeningResult (ApplicationId, AIMatchScore, ScreenedAt) VALUES (211, 57.03, '2026-11-30 16:21:40');
-INSERT INTO AIScreeningResult (ApplicationId, AIMatchScore, ScreenedAt) VALUES (212, 50.61, '2026-11-30 17:22:01');
+-- =============================================================================
+-- 11. CẬP NHẬT DECLINE REASON CHO OFFER PROPOSAL (Cột mới trong db.sql)
+-- =============================================================================
+UPDATE OfferProposal 
+SET DeclineReason = N'Ứng viên nhận được offer khác có mức lương cao hơn và làm việc 100% Remote.'
+WHERE OfferId = 5 AND OfferStatus = N'Declined';
 
--- -----------------------------------------------------------------------------
--- DAY 63 / 77: 2026-12-01 (4 Applications)
--- -----------------------------------------------------------------------------
-INSERT INTO [User] (RoleId, Username, PasswordHash, Email, FullName, PhoneNumber, AvatarUrl, DepartmentId, AccountStatus, CreatedAt) VALUES (6, N'minh.do1', N'$2a$10$p.RWJeHxArmCbQBg3GNXEew66veoolEXULwkrjzeoof8Me1dAD8PO', N'minh.tien.do@gmail.com', N'Đỗ Tiến Minh', N'0915158351', N'https://ui-avatars.com/api/?name=Đỗ+Tiến+Minh&background=random', NULL, N'Active', '2026-12-01 20:14:36');
-INSERT INTO [User] (RoleId, Username, PasswordHash, Email, FullName, PhoneNumber, AvatarUrl, DepartmentId, AccountStatus, CreatedAt) VALUES (6, N'nam.huynh1', N'$2a$10$p.RWJeHxArmCbQBg3GNXEew66veoolEXULwkrjzeoof8Me1dAD8PO', N'nam.tuan.huynh@hust.edu.vn', N'Huỳnh Tuấn Nam', N'0867019382', N'https://ui-avatars.com/api/?name=Huỳnh+Tuấn+Nam&background=random', NULL, N'Active', '2026-12-01 17:09:36');
-INSERT INTO [User] (RoleId, Username, PasswordHash, Email, FullName, PhoneNumber, AvatarUrl, DepartmentId, AccountStatus, CreatedAt) VALUES (6, N'diep.tran', N'$2a$10$p.RWJeHxArmCbQBg3GNXEew66veoolEXULwkrjzeoof8Me1dAD8PO', N'diep.mai.tran@gmail.com', N'Trần Mai Diệp', N'0704671004', N'https://ui-avatars.com/api/?name=Trần+Mai+Diệp&background=random', NULL, N'Active', '2026-12-01 11:51:08');
-INSERT INTO [User] (RoleId, Username, PasswordHash, Email, FullName, PhoneNumber, AvatarUrl, DepartmentId, AccountStatus, CreatedAt) VALUES (6, N'binh.bui', N'$2a$10$p.RWJeHxArmCbQBg3GNXEew66veoolEXULwkrjzeoof8Me1dAD8PO', N'binh.van.bui@gmail.com', N'Bùi Văn Bình', N'0703376537', N'https://ui-avatars.com/api/?name=Bùi+Văn+Bình&background=random', NULL, N'Active', '2026-12-01 13:45:42');
-INSERT INTO Candidate (UserId, DateOfBirth, Gender, Address, LinkedInUrl, PortfolioUrl, CandidateSource, IsPotential, CreatedAt) VALUES (223, '1996-05-18', N'Nam', N'Số 12 Lê Thánh Tôn, Bến Nghé, Quận 1, TP. Hồ Chí Minh', N'https://linkedin.com/in/minh-do1', N'https://github.com/minhdo1', N'ITViec', 0, '2026-12-01 20:14:36');
-INSERT INTO Candidate (UserId, DateOfBirth, Gender, Address, LinkedInUrl, PortfolioUrl, CandidateSource, IsPotential, CreatedAt) VALUES (224, '2002-01-23', N'Nam', N'Số 50 Trần Phú, Văn Quán, Hà Đông, Hà Nội', N'https://linkedin.com/in/nam-huynh1', N'https://github.com/namhuynh1', N'VietnamWorks', 0, '2026-12-01 17:09:36');
-INSERT INTO Candidate (UserId, DateOfBirth, Gender, Address, LinkedInUrl, PortfolioUrl, CandidateSource, IsPotential, CreatedAt) VALUES (225, '1993-09-16', N'Nữ', N'Số 50 Trần Phú, Văn Quán, Hà Đông, Hà Nội', N'https://linkedin.com/in/diep-tran', NULL, N'LinkedIn', 1, '2026-12-01 11:51:08');
-INSERT INTO Candidate (UserId, DateOfBirth, Gender, Address, LinkedInUrl, PortfolioUrl, CandidateSource, IsPotential, CreatedAt) VALUES (226, '1994-09-28', N'Nam', N'Số 48 Tố Hữu, Trung Văn, Nam Từ Liêm, Hà Nội', N'https://linkedin.com/in/binh-bui', N'https://github.com/binhbui', N'ITViec', 1, '2026-12-01 13:45:42');
-INSERT INTO Application (CandidateId, JobPostingId, AppliedCvUrl, SubmissionDate, ApplicationStatus, OverallScore, CreatedAt) VALUES (213, 2, N'https://rms-storage.s3.ap-southeast-1.amazonaws.com/cvs/2026/12/cand_223_minh_20261201.pdf', '2026-12-01 20:14:36', N'AI_Screened', 46.63, '2026-12-01 20:14:36');
-INSERT INTO Application (CandidateId, JobPostingId, AppliedCvUrl, SubmissionDate, ApplicationStatus, OverallScore, CreatedAt) VALUES (214, 2, N'https://rms-storage.s3.ap-southeast-1.amazonaws.com/cvs/2026/12/cand_224_nam_20261201.pdf', '2026-12-01 17:09:36', N'HR_Passed', 76.56, '2026-12-01 17:09:36');
-INSERT INTO Application (CandidateId, JobPostingId, AppliedCvUrl, SubmissionDate, ApplicationStatus, OverallScore, CreatedAt) VALUES (215, 4, N'https://rms-storage.s3.ap-southeast-1.amazonaws.com/cvs/2026/12/cand_225_diep_20261201.pdf', '2026-12-01 11:51:08', N'Rejected', 82.73, '2026-12-01 11:51:08');
-INSERT INTO Application (CandidateId, JobPostingId, AppliedCvUrl, SubmissionDate, ApplicationStatus, OverallScore, CreatedAt) VALUES (216, 3, N'https://rms-storage.s3.ap-southeast-1.amazonaws.com/cvs/2026/12/cand_226_binh_20261201.pdf', '2026-12-01 13:45:42', N'Rejected', 77.31, '2026-12-01 13:45:42');
-INSERT INTO AIScreeningResult (ApplicationId, AIMatchScore, ScreenedAt) VALUES (213, 46.63, '2026-12-01 20:33:36');
-INSERT INTO AIScreeningResult (ApplicationId, AIMatchScore, ScreenedAt) VALUES (214, 76.56, '2026-12-01 17:25:36');
-INSERT INTO AIScreeningResult (ApplicationId, AIMatchScore, ScreenedAt) VALUES (215, 82.73, '2026-12-01 11:57:08');
-INSERT INTO AIScreeningResult (ApplicationId, AIMatchScore, ScreenedAt) VALUES (216, 77.31, '2026-12-01 13:52:42');
-INSERT INTO ApplicationReview (ApplicationId, ReviewerId, ReviewerRole, Decision, Comments, ReviewedAt) VALUES (214, 4, N'HR', N'Pass', N'Hồ sơ ứng viên Huỳnh Tuấn Nam đáp ứng tốt tiêu chí cơ bản về học vấn và kinh nghiệm, liên hệ xếp lịch phỏng vấn chuyên môn.', '2026-12-02 20:09:36');
-INSERT INTO ApplicationReview (ApplicationId, ReviewerId, ReviewerRole, Decision, Comments, ReviewedAt) VALUES (214, 5, N'HiringManager', N'Hold', N'Đánh giá CV có kinh nghiệm thực chiến phù hợp với yêu cầu vị trí 2, phê duyệt chuyển sang hội đồng phỏng vấn.', '2026-12-04 00:09:36');
-INSERT INTO ApplicationReview (ApplicationId, ReviewerId, ReviewerRole, Decision, Comments, ReviewedAt) VALUES (215, 4, N'HR', N'Pass', N'Hồ sơ ứng viên Trần Mai Diệp đáp ứng tốt tiêu chí cơ bản về học vấn và kinh nghiệm, liên hệ xếp lịch phỏng vấn chuyên môn.', '2026-12-02 12:51:08');
-INSERT INTO ApplicationReview (ApplicationId, ReviewerId, ReviewerRole, Decision, Comments, ReviewedAt) VALUES (215, 6, N'HiringManager', N'Pass', N'Đánh giá CV có kinh nghiệm thực chiến phù hợp với yêu cầu vị trí 4, phê duyệt chuyển sang hội đồng phỏng vấn.', '2026-12-03 14:51:08');
-INSERT INTO ApplicationReview (ApplicationId, ReviewerId, ReviewerRole, Decision, Comments, ReviewedAt) VALUES (216, 4, N'HR', N'Pass', N'Hồ sơ ứng viên Bùi Văn Bình đáp ứng tốt tiêu chí cơ bản về học vấn và kinh nghiệm, liên hệ xếp lịch phỏng vấn chuyên môn.', '2026-12-02 16:45:42');
-INSERT INTO ApplicationReview (ApplicationId, ReviewerId, ReviewerRole, Decision, Comments, ReviewedAt) VALUES (216, 5, N'HiringManager', N'Pass', N'Đánh giá CV có kinh nghiệm thực chiến phù hợp với yêu cầu vị trí 3, phê duyệt chuyển sang hội đồng phỏng vấn.', '2026-12-03 19:45:42');
-INSERT INTO InterviewSchedule (ApplicationId, InterviewFormat, StartTime, EndTime, LocationOrLink, InterviewStatus, CreatedBy, CreatedAt) VALUES (215, N'Offline_Office', '2026-12-04 14:00:00', '2026-12-04 15:00:00', N'Phòng họp 802, Tầng 8 Tòa nhà RMS Tower', N'Scheduled', 3, '2026-12-01 11:51:08');
-INSERT INTO InterviewPanel (InterviewId, InterviewerId, RoleInPanel) VALUES (52, 4, N'HR');
-INSERT INTO InterviewPanel (InterviewId, InterviewerId, RoleInPanel) VALUES (52, 6, N'HM');
-INSERT INTO InterviewPanel (InterviewId, InterviewerId, RoleInPanel) VALUES (52, 10, N'Interviewer');
-INSERT INTO InterviewPanel (InterviewId, InterviewerId, RoleInPanel) VALUES (52, 2, N'Director');
-INSERT INTO InterviewSchedule (ApplicationId, InterviewFormat, StartTime, EndTime, LocationOrLink, InterviewStatus, CreatedBy, CreatedAt) VALUES (216, N'Online_GoogleMeet', '2026-12-05 10:00:00', '2026-12-05 11:00:00', N'https://meet.google.com/rms-int-0053', N'Scheduled', 3, '2026-12-01 13:45:42');
-INSERT INTO InterviewPanel (InterviewId, InterviewerId, RoleInPanel) VALUES (53, 3, N'HR');
-INSERT INTO InterviewPanel (InterviewId, InterviewerId, RoleInPanel) VALUES (53, 5, N'HM');
-INSERT INTO InterviewPanel (InterviewId, InterviewerId, RoleInPanel) VALUES (53, 9, N'Interviewer');
-INSERT INTO InterviewPanel (InterviewId, InterviewerId, RoleInPanel) VALUES (53, 2, N'Director');
+UPDATE OfferProposal 
+SET DeclineReason = N'Ứng viên quyết định ở lại công ty cũ sau khi được counter-offer.'
+WHERE OfferId = 7 AND OfferStatus = N'Declined';
 
--- -----------------------------------------------------------------------------
--- DAY 64 / 77: 2026-12-02 (4 Applications)
--- -----------------------------------------------------------------------------
-INSERT INTO [User] (RoleId, Username, PasswordHash, Email, FullName, PhoneNumber, AvatarUrl, DepartmentId, AccountStatus, CreatedAt) VALUES (6, N'thao.hoang', N'$2a$10$p.RWJeHxArmCbQBg3GNXEew66veoolEXULwkrjzeoof8Me1dAD8PO', N'thao.phuong.hoang@outlook.com', N'Hoàng Phương Thảo', N'0386323132', N'https://ui-avatars.com/api/?name=Hoàng+Phương+Thảo&background=random', NULL, N'Active', '2026-12-02 20:22:14');
-INSERT INTO [User] (RoleId, Username, PasswordHash, Email, FullName, PhoneNumber, AvatarUrl, DepartmentId, AccountStatus, CreatedAt) VALUES (6, N'khanh.dang1', N'$2a$10$p.RWJeHxArmCbQBg3GNXEew66veoolEXULwkrjzeoof8Me1dAD8PO', N'khanh.tuan.dang@vnu.edu.vn', N'Đặng Tuấn Khánh', N'0907569981', N'https://ui-avatars.com/api/?name=Đặng+Tuấn+Khánh&background=random', NULL, N'Active', '2026-12-02 17:14:40');
-INSERT INTO [User] (RoleId, Username, PasswordHash, Email, FullName, PhoneNumber, AvatarUrl, DepartmentId, AccountStatus, CreatedAt) VALUES (6, N'nhung.le', N'$2a$10$p.RWJeHxArmCbQBg3GNXEew66veoolEXULwkrjzeoof8Me1dAD8PO', N'nhung.ngoc.le@gmail.com', N'Lê Ngọc Nhung', N'0932488575', N'https://ui-avatars.com/api/?name=Lê+Ngọc+Nhung&background=random', NULL, N'Active', '2026-12-02 19:04:22');
-INSERT INTO [User] (RoleId, Username, PasswordHash, Email, FullName, PhoneNumber, AvatarUrl, DepartmentId, AccountStatus, CreatedAt) VALUES (6, N'quynh.duong', N'$2a$10$p.RWJeHxArmCbQBg3GNXEew66veoolEXULwkrjzeoof8Me1dAD8PO', N'quynh.anh.duong@gmail.com', N'Dương Ánh Quỳnh', N'0889272543', N'https://ui-avatars.com/api/?name=Dương+Ánh+Quỳnh&background=random', NULL, N'Active', '2026-12-02 15:50:55');
-INSERT INTO Candidate (UserId, DateOfBirth, Gender, Address, LinkedInUrl, PortfolioUrl, CandidateSource, IsPotential, CreatedAt) VALUES (227, '1995-12-18', N'Nữ', N'Số 50 Trần Phú, Văn Quán, Hà Đông, Hà Nội', N'https://linkedin.com/in/thao-hoang', N'https://github.com/thaohoang', N'Employee Referral', 0, '2026-12-02 20:22:14');
-INSERT INTO Candidate (UserId, DateOfBirth, Gender, Address, LinkedInUrl, PortfolioUrl, CandidateSource, IsPotential, CreatedAt) VALUES (228, '2002-01-06', N'Nam', N'Số 234 Phạm Văn Đồng, Cổ Nhuế, Bắc Từ Liêm, Hà Nội', N'https://linkedin.com/in/khanh-dang1', N'https://github.com/khanhdang1', N'Employee Referral', 0, '2026-12-02 17:14:40');
-INSERT INTO Candidate (UserId, DateOfBirth, Gender, Address, LinkedInUrl, PortfolioUrl, CandidateSource, IsPotential, CreatedAt) VALUES (229, '1998-08-01', N'Nữ', N'Số 25 Vũ Phạm Hàm, Yên Hòa, Cầu Giấy, Hà Nội', N'https://linkedin.com/in/nhung-le', N'https://github.com/nhungle', N'LinkedIn', 0, '2026-12-02 19:04:22');
-INSERT INTO Candidate (UserId, DateOfBirth, Gender, Address, LinkedInUrl, PortfolioUrl, CandidateSource, IsPotential, CreatedAt) VALUES (230, '1999-06-18', N'Nữ', N'Số 16 Đại Cồ Việt, Bách Khoa, Hai Bà Trưng, Hà Nội', N'https://linkedin.com/in/quynh-duong', NULL, N'Employee Referral', 0, '2026-12-02 15:50:55');
-INSERT INTO Application (CandidateId, JobPostingId, AppliedCvUrl, SubmissionDate, ApplicationStatus, OverallScore, CreatedAt) VALUES (217, 1, N'https://rms-storage.s3.ap-southeast-1.amazonaws.com/cvs/2026/12/cand_227_thao_20261202.pdf', '2026-12-02 20:22:14', N'HM_Passed', 81.71, '2026-12-02 20:22:14');
-INSERT INTO Application (CandidateId, JobPostingId, AppliedCvUrl, SubmissionDate, ApplicationStatus, OverallScore, CreatedAt) VALUES (218, 1, N'https://rms-storage.s3.ap-southeast-1.amazonaws.com/cvs/2026/12/cand_228_khanh_20261202.pdf', '2026-12-02 17:14:40', N'AI_Screened', 44.28, '2026-12-02 17:14:40');
-INSERT INTO Application (CandidateId, JobPostingId, AppliedCvUrl, SubmissionDate, ApplicationStatus, OverallScore, CreatedAt) VALUES (219, 1, N'https://rms-storage.s3.ap-southeast-1.amazonaws.com/cvs/2026/12/cand_229_nhung_20261202.pdf', '2026-12-02 19:04:22', N'AI_Screened', 57.72, '2026-12-02 19:04:22');
-INSERT INTO Application (CandidateId, JobPostingId, AppliedCvUrl, SubmissionDate, ApplicationStatus, OverallScore, CreatedAt) VALUES (220, 4, N'https://rms-storage.s3.ap-southeast-1.amazonaws.com/cvs/2026/12/cand_230_quynh_20261202.pdf', '2026-12-02 15:50:55', N'AI_Screened', 60.38, '2026-12-02 15:50:55');
-INSERT INTO AIScreeningResult (ApplicationId, AIMatchScore, ScreenedAt) VALUES (217, 81.71, '2026-12-02 20:40:14');
-INSERT INTO AIScreeningResult (ApplicationId, AIMatchScore, ScreenedAt) VALUES (218, 44.28, '2026-12-02 17:29:40');
-INSERT INTO AIScreeningResult (ApplicationId, AIMatchScore, ScreenedAt) VALUES (219, 57.72, '2026-12-02 19:17:22');
-INSERT INTO AIScreeningResult (ApplicationId, AIMatchScore, ScreenedAt) VALUES (220, 60.38, '2026-12-02 16:06:55');
-INSERT INTO ApplicationReview (ApplicationId, ReviewerId, ReviewerRole, Decision, Comments, ReviewedAt) VALUES (217, 4, N'HR', N'Pass', N'Hồ sơ ứng viên Hoàng Phương Thảo đáp ứng tốt tiêu chí cơ bản về học vấn và kinh nghiệm, liên hệ xếp lịch phỏng vấn chuyên môn.', '2026-12-03 22:22:14');
-INSERT INTO ApplicationReview (ApplicationId, ReviewerId, ReviewerRole, Decision, Comments, ReviewedAt) VALUES (217, 5, N'HiringManager', N'Pass', N'Đánh giá CV có kinh nghiệm thực chiến phù hợp với yêu cầu vị trí 1, phê duyệt chuyển sang hội đồng phỏng vấn.', '2026-12-05 03:22:14');
 
--- -----------------------------------------------------------------------------
--- DAY 65 / 77: 2026-12-03 (4 Applications)
--- -----------------------------------------------------------------------------
-INSERT INTO [User] (RoleId, Username, PasswordHash, Email, FullName, PhoneNumber, AvatarUrl, DepartmentId, AccountStatus, CreatedAt) VALUES (6, N'chi.duong', N'$2a$10$p.RWJeHxArmCbQBg3GNXEew66veoolEXULwkrjzeoof8Me1dAD8PO', N'chi.mai.duong@gmail.com', N'Dương Mai Chi', N'0906347182', N'https://ui-avatars.com/api/?name=Dương+Mai+Chi&background=random', NULL, N'Active', '2026-12-03 10:46:04');
-INSERT INTO [User] (RoleId, Username, PasswordHash, Email, FullName, PhoneNumber, AvatarUrl, DepartmentId, AccountStatus, CreatedAt) VALUES (6, N'binh.ly', N'$2a$10$p.RWJeHxArmCbQBg3GNXEew66veoolEXULwkrjzeoof8Me1dAD8PO', N'binh.duy.ly@fpt.edu.vn', N'Lý Duy Bình', N'0938284673', N'https://ui-avatars.com/api/?name=Lý+Duy+Bình&background=random', NULL, N'Active', '2026-12-03 14:44:35');
-INSERT INTO [User] (RoleId, Username, PasswordHash, Email, FullName, PhoneNumber, AvatarUrl, DepartmentId, AccountStatus, CreatedAt) VALUES (6, N'quyen.pham1', N'$2a$10$p.RWJeHxArmCbQBg3GNXEew66veoolEXULwkrjzeoof8Me1dAD8PO', N'quyen.thi.pham@hust.edu.vn', N'Phạm Thị Quyên', N'0399236745', N'https://ui-avatars.com/api/?name=Phạm+Thị+Quyên&background=random', NULL, N'Active', '2026-12-03 12:52:42');
-INSERT INTO [User] (RoleId, Username, PasswordHash, Email, FullName, PhoneNumber, AvatarUrl, DepartmentId, AccountStatus, CreatedAt) VALUES (6, N'my.huynh', N'$2a$10$p.RWJeHxArmCbQBg3GNXEew66veoolEXULwkrjzeoof8Me1dAD8PO', N'my.quynh.huynh@gmail.com', N'Huỳnh Quỳnh My', N'0382937918', N'https://ui-avatars.com/api/?name=Huỳnh+Quỳnh+My&background=random', NULL, N'Active', '2026-12-03 12:05:41');
-INSERT INTO Candidate (UserId, DateOfBirth, Gender, Address, LinkedInUrl, PortfolioUrl, CandidateSource, IsPotential, CreatedAt) VALUES (231, '1997-02-03', N'Nữ', N'Số 68 Hoàng Quốc Việt, Nghĩa Đô, Cầu Giấy, Hà Nội', N'https://linkedin.com/in/chi-duong', N'https://github.com/chiduong', N'Employee Referral', 0, '2026-12-03 10:46:04');
-INSERT INTO Candidate (UserId, DateOfBirth, Gender, Address, LinkedInUrl, PortfolioUrl, CandidateSource, IsPotential, CreatedAt) VALUES (232, '1995-01-04', N'Nam', N'Số 25 Vũ Phạm Hàm, Yên Hòa, Cầu Giấy, Hà Nội', N'https://linkedin.com/in/binh-ly', N'https://github.com/binhly', N'Employee Referral', 0, '2026-12-03 14:44:35');
-INSERT INTO Candidate (UserId, DateOfBirth, Gender, Address, LinkedInUrl, PortfolioUrl, CandidateSource, IsPotential, CreatedAt) VALUES (233, '1995-01-12', N'Nữ', N'Số 48 Tố Hữu, Trung Văn, Nam Từ Liêm, Hà Nội', N'https://linkedin.com/in/quyen-pham1', N'https://github.com/quyenpham1', N'Employee Referral', 1, '2026-12-03 12:52:42');
-INSERT INTO Candidate (UserId, DateOfBirth, Gender, Address, LinkedInUrl, PortfolioUrl, CandidateSource, IsPotential, CreatedAt) VALUES (234, '1997-07-16', N'Nữ', N'Số 77 Xuân Thủy, Cầu Giấy, Hà Nội', N'https://linkedin.com/in/my-huynh', N'https://github.com/myhuynh', N'Employee Referral', 1, '2026-12-03 12:05:41');
-INSERT INTO Application (CandidateId, JobPostingId, AppliedCvUrl, SubmissionDate, ApplicationStatus, OverallScore, CreatedAt) VALUES (221, 1, N'https://rms-storage.s3.ap-southeast-1.amazonaws.com/cvs/2026/12/cand_231_chi_20261203.pdf', '2026-12-03 10:46:04', N'HM_Passed', 76.53, '2026-12-03 10:46:04');
-INSERT INTO Application (CandidateId, JobPostingId, AppliedCvUrl, SubmissionDate, ApplicationStatus, OverallScore, CreatedAt) VALUES (222, 2, N'https://rms-storage.s3.ap-southeast-1.amazonaws.com/cvs/2026/12/cand_232_binh_20261203.pdf', '2026-12-03 14:44:35', N'AI_Screened', 67.46, '2026-12-03 14:44:35');
-INSERT INTO Application (CandidateId, JobPostingId, AppliedCvUrl, SubmissionDate, ApplicationStatus, OverallScore, CreatedAt) VALUES (223, 2, N'https://rms-storage.s3.ap-southeast-1.amazonaws.com/cvs/2026/12/cand_233_quyen_20261203.pdf', '2026-12-03 12:52:42', N'HM_Passed', 75.31, '2026-12-03 12:52:42');
-INSERT INTO Application (CandidateId, JobPostingId, AppliedCvUrl, SubmissionDate, ApplicationStatus, OverallScore, CreatedAt) VALUES (224, 2, N'https://rms-storage.s3.ap-southeast-1.amazonaws.com/cvs/2026/12/cand_234_my_20261203.pdf', '2026-12-03 12:05:41', N'Rejected', 76.53, '2026-12-03 12:05:41');
-INSERT INTO AIScreeningResult (ApplicationId, AIMatchScore, ScreenedAt) VALUES (221, 76.53, '2026-12-03 10:57:04');
-INSERT INTO AIScreeningResult (ApplicationId, AIMatchScore, ScreenedAt) VALUES (222, 67.46, '2026-12-03 15:02:35');
-INSERT INTO AIScreeningResult (ApplicationId, AIMatchScore, ScreenedAt) VALUES (223, 75.31, '2026-12-03 13:10:42');
-INSERT INTO AIScreeningResult (ApplicationId, AIMatchScore, ScreenedAt) VALUES (224, 76.53, '2026-12-03 12:11:41');
-INSERT INTO ApplicationReview (ApplicationId, ReviewerId, ReviewerRole, Decision, Comments, ReviewedAt) VALUES (221, 4, N'HR', N'Pass', N'Hồ sơ ứng viên Dương Mai Chi đáp ứng tốt tiêu chí cơ bản về học vấn và kinh nghiệm, liên hệ xếp lịch phỏng vấn chuyên môn.', '2026-12-04 13:46:04');
-INSERT INTO ApplicationReview (ApplicationId, ReviewerId, ReviewerRole, Decision, Comments, ReviewedAt) VALUES (221, 5, N'HiringManager', N'Pass', N'Đánh giá CV có kinh nghiệm thực chiến phù hợp với yêu cầu vị trí 1, phê duyệt chuyển sang hội đồng phỏng vấn.', '2026-12-05 16:46:04');
-INSERT INTO ApplicationReview (ApplicationId, ReviewerId, ReviewerRole, Decision, Comments, ReviewedAt) VALUES (223, 4, N'HR', N'Pass', N'Hồ sơ ứng viên Phạm Thị Quyên đáp ứng tốt tiêu chí cơ bản về học vấn và kinh nghiệm, liên hệ xếp lịch phỏng vấn chuyên môn.', '2026-12-04 14:52:42');
-INSERT INTO ApplicationReview (ApplicationId, ReviewerId, ReviewerRole, Decision, Comments, ReviewedAt) VALUES (223, 5, N'HiringManager', N'Pass', N'Đánh giá CV có kinh nghiệm thực chiến phù hợp với yêu cầu vị trí 2, phê duyệt chuyển sang hội đồng phỏng vấn.', '2026-12-05 18:52:42');
-INSERT INTO ApplicationReview (ApplicationId, ReviewerId, ReviewerRole, Decision, Comments, ReviewedAt) VALUES (224, 4, N'HR', N'Pass', N'Hồ sơ ứng viên Huỳnh Quỳnh My đáp ứng tốt tiêu chí cơ bản về học vấn và kinh nghiệm, liên hệ xếp lịch phỏng vấn chuyên môn.', '2026-12-04 13:05:41');
-INSERT INTO ApplicationReview (ApplicationId, ReviewerId, ReviewerRole, Decision, Comments, ReviewedAt) VALUES (224, 5, N'HiringManager', N'Pass', N'Đánh giá CV có kinh nghiệm thực chiến phù hợp với yêu cầu vị trí 2, phê duyệt chuyển sang hội đồng phỏng vấn.', '2026-12-05 17:05:41');
-INSERT INTO InterviewSchedule (ApplicationId, InterviewFormat, StartTime, EndTime, LocationOrLink, InterviewStatus, CreatedBy, CreatedAt) VALUES (223, N'Offline_Office', '2026-12-08 09:00:00', '2026-12-08 10:00:00', N'Phòng họp 802, Tầng 8 Tòa nhà RMS Tower', N'Scheduled', 3, '2026-12-03 12:52:42');
-INSERT INTO InterviewPanel (InterviewId, InterviewerId, RoleInPanel) VALUES (54, 4, N'HR');
-INSERT INTO InterviewPanel (InterviewId, InterviewerId, RoleInPanel) VALUES (54, 5, N'HM');
-INSERT INTO InterviewPanel (InterviewId, InterviewerId, RoleInPanel) VALUES (54, 8, N'Interviewer');
-INSERT INTO InterviewPanel (InterviewId, InterviewerId, RoleInPanel) VALUES (54, 2, N'Director');
-INSERT INTO InterviewSchedule (ApplicationId, InterviewFormat, StartTime, EndTime, LocationOrLink, InterviewStatus, CreatedBy, CreatedAt) VALUES (224, N'Online_GoogleMeet', '2026-12-08 15:00:00', '2026-12-08 16:00:00', N'https://meet.google.com/rms-int-0055', N'Scheduled', 3, '2026-12-03 12:05:41');
-INSERT INTO InterviewPanel (InterviewId, InterviewerId, RoleInPanel) VALUES (55, 3, N'HR');
-INSERT INTO InterviewPanel (InterviewId, InterviewerId, RoleInPanel) VALUES (55, 5, N'HM');
-INSERT INTO InterviewPanel (InterviewId, InterviewerId, RoleInPanel) VALUES (55, 8, N'Interviewer');
-INSERT INTO InterviewPanel (InterviewId, InterviewerId, RoleInPanel) VALUES (55, 2, N'Director');
+-- =============================================================================
+-- 12. TALENT POOL NOTE (Bảng 3.21 trong db.sql - Ghi chú ứng viên tiềm năng)
+-- =============================================================================
+INSERT INTO TalentPoolNote (CandidateId, UserId, NoteContent, CreatedAt) VALUES 
+(1, 3, N'Ứng viên Nguyễn Duy Phong có nền tảng Java tốt, thái độ cầu thị. Lưu vào Talent Pool cho đợt tuyển Q1/2027.', '2026-10-05 09:00:00'),
+(3, 5, N'Phan Hải Ngọc nắm rất chắc Playwright và CI/CD. Rất phù hợp nếu team mở rộng thêm vị trí Senior QA.', '2026-10-06 10:15:00'),
+(12, 5, N'Huỳnh Hoàng Trung đạt điểm phỏng vấn tuyệt đối, kiến thức Microservices sâu rộng.', '2026-10-10 11:00:00'),
+(18, 3, N'Lý Khánh Vân có kỹ năng Automation Test tốt và giao tiếp tiếng Anh trôi chảy.', '2026-10-12 14:20:00'),
+(25, 5, N'Vũ Hoàng Huy có kinh nghiệm xử lý hệ thống tải cao với Redis và RabbitMQ.', '2026-10-13 09:30:00'),
+(31, 4, N'Hoàng Văn Cường rất hợp văn hóa công ty, kỹ năng giải quyết vấn đề nhanh nhạy.', '2026-10-15 16:00:00'),
+(43, 3, N'Lê Thu Thu có chuyên môn ReactJS/TypeScript vững, tuy từ chối offer đợt này nhưng giữ liên hệ cho dự án tới.', '2026-10-18 10:00:00'),
+(55, 5, N'Bùi Trọng Hải code clean, nắm vững tối ưu hóa hiệu năng Frontend.', '2026-10-23 15:45:00'),
+(60, 4, N'Hoàng Hữu Việt rất mạnh về UI/UX và Design System, nên liên hệ lại sau 6 tháng.', '2026-10-24 11:30:00'),
+(190, 5, N'Hoàng Trọng Hùng có CV rất ấn tượng, HM đã gắn cờ HM_Suggested để HR xếp lịch ngay.', '2026-11-25 14:10:00');
 
--- -----------------------------------------------------------------------------
--- DAY 66 / 77: 2026-12-04 (3 Applications)
--- -----------------------------------------------------------------------------
-INSERT INTO [User] (RoleId, Username, PasswordHash, Email, FullName, PhoneNumber, AvatarUrl, DepartmentId, AccountStatus, CreatedAt) VALUES (6, N'tuan.do', N'$2a$10$p.RWJeHxArmCbQBg3GNXEew66veoolEXULwkrjzeoof8Me1dAD8PO', N'tuan.tuan.do@gmail.com', N'Đỗ Tuấn Tuấn', N'0988377620', N'https://ui-avatars.com/api/?name=Đỗ+Tuấn+Tuấn&background=random', NULL, N'Active', '2026-12-04 10:48:44');
-INSERT INTO [User] (RoleId, Username, PasswordHash, Email, FullName, PhoneNumber, AvatarUrl, DepartmentId, AccountStatus, CreatedAt) VALUES (6, N'minh.ngo', N'$2a$10$p.RWJeHxArmCbQBg3GNXEew66veoolEXULwkrjzeoof8Me1dAD8PO', N'minh.tien.ngo@hust.edu.vn', N'Ngô Tiến Minh', N'0907494562', N'https://ui-avatars.com/api/?name=Ngô+Tiến+Minh&background=random', NULL, N'Active', '2026-12-04 17:56:15');
-INSERT INTO [User] (RoleId, Username, PasswordHash, Email, FullName, PhoneNumber, AvatarUrl, DepartmentId, AccountStatus, CreatedAt) VALUES (6, N'hung.tran1', N'$2a$10$p.RWJeHxArmCbQBg3GNXEew66veoolEXULwkrjzeoof8Me1dAD8PO', N'hung.thanh.tran@gmail.com', N'Trần Thành Hùng', N'0383900427', N'https://ui-avatars.com/api/?name=Trần+Thành+Hùng&background=random', NULL, N'Active', '2026-12-04 14:05:43');
-INSERT INTO Candidate (UserId, DateOfBirth, Gender, Address, LinkedInUrl, PortfolioUrl, CandidateSource, IsPotential, CreatedAt) VALUES (235, '2000-05-08', N'Nam', N'Số 12 Lê Thánh Tôn, Bến Nghé, Quận 1, TP. Hồ Chí Minh', N'https://linkedin.com/in/tuan-do', N'https://github.com/tuando', N'TopCV', 0, '2026-12-04 10:48:44');
-INSERT INTO Candidate (UserId, DateOfBirth, Gender, Address, LinkedInUrl, PortfolioUrl, CandidateSource, IsPotential, CreatedAt) VALUES (236, '2001-07-18', N'Nam', N'Số 120 Kim Mã, Ba Đình, Hà Nội', N'https://linkedin.com/in/minh-ngo', N'https://github.com/minhngo', N'ITViec', 1, '2026-12-04 17:56:15');
-INSERT INTO Candidate (UserId, DateOfBirth, Gender, Address, LinkedInUrl, PortfolioUrl, CandidateSource, IsPotential, CreatedAt) VALUES (237, '1995-04-26', N'Nam', N'Số 15 Duy Tân, Dịch Vọng Hậu, Cầu Giấy, Hà Nội', N'https://linkedin.com/in/hung-tran1', N'https://github.com/hungtran1', N'ITViec', 0, '2026-12-04 14:05:43');
-INSERT INTO Application (CandidateId, JobPostingId, AppliedCvUrl, SubmissionDate, ApplicationStatus, OverallScore, CreatedAt) VALUES (225, 1, N'https://rms-storage.s3.ap-southeast-1.amazonaws.com/cvs/2026/12/cand_235_tuan_20261204.pdf', '2026-12-04 10:48:44', N'AI_Screened', 47.04, '2026-12-04 10:48:44');
-INSERT INTO Application (CandidateId, JobPostingId, AppliedCvUrl, SubmissionDate, ApplicationStatus, OverallScore, CreatedAt) VALUES (226, 2, N'https://rms-storage.s3.ap-southeast-1.amazonaws.com/cvs/2026/12/cand_236_minh_20261204.pdf', '2026-12-04 17:56:15', N'Offered', 94.76, '2026-12-04 17:56:15');
-INSERT INTO Application (CandidateId, JobPostingId, AppliedCvUrl, SubmissionDate, ApplicationStatus, OverallScore, CreatedAt) VALUES (227, 1, N'https://rms-storage.s3.ap-southeast-1.amazonaws.com/cvs/2026/12/cand_237_hung_20261204.pdf', '2026-12-04 14:05:43', N'Applied', NULL, '2026-12-04 14:05:43');
-INSERT INTO AIScreeningResult (ApplicationId, AIMatchScore, ScreenedAt) VALUES (225, 47.04, '2026-12-04 11:08:44');
-INSERT INTO AIScreeningResult (ApplicationId, AIMatchScore, ScreenedAt) VALUES (226, 94.76, '2026-12-04 18:16:15');
-INSERT INTO ApplicationReview (ApplicationId, ReviewerId, ReviewerRole, Decision, Comments, ReviewedAt) VALUES (226, 3, N'HR', N'Pass', N'Hồ sơ ứng viên Ngô Tiến Minh đáp ứng tốt tiêu chí cơ bản về học vấn và kinh nghiệm, liên hệ xếp lịch phỏng vấn chuyên môn.', '2026-12-05 18:56:15');
-INSERT INTO ApplicationReview (ApplicationId, ReviewerId, ReviewerRole, Decision, Comments, ReviewedAt) VALUES (226, 5, N'HiringManager', N'Pass', N'Đánh giá CV có kinh nghiệm thực chiến phù hợp với yêu cầu vị trí 2, phê duyệt chuyển sang hội đồng phỏng vấn.', '2026-12-06 23:56:15');
-INSERT INTO InterviewSchedule (ApplicationId, InterviewFormat, StartTime, EndTime, LocationOrLink, InterviewStatus, CreatedBy, CreatedAt) VALUES (226, N'Online_GoogleMeet', '2026-12-08 15:00:00', '2026-12-08 16:00:00', N'https://meet.google.com/rms-int-0056', N'Scheduled', 3, '2026-12-04 17:56:15');
-INSERT INTO InterviewPanel (InterviewId, InterviewerId, RoleInPanel) VALUES (56, 4, N'HR');
-INSERT INTO InterviewPanel (InterviewId, InterviewerId, RoleInPanel) VALUES (56, 5, N'HM');
-INSERT INTO InterviewPanel (InterviewId, InterviewerId, RoleInPanel) VALUES (56, 8, N'Interviewer');
-INSERT INTO InterviewPanel (InterviewId, InterviewerId, RoleInPanel) VALUES (56, 2, N'Director');
 
--- -----------------------------------------------------------------------------
--- DAY 67 / 77: 2026-12-05 (3 Applications)
--- -----------------------------------------------------------------------------
-INSERT INTO [User] (RoleId, Username, PasswordHash, Email, FullName, PhoneNumber, AvatarUrl, DepartmentId, AccountStatus, CreatedAt) VALUES (6, N'dat.vo', N'$2a$10$p.RWJeHxArmCbQBg3GNXEew66veoolEXULwkrjzeoof8Me1dAD8PO', N'dat.quoc.vo@gmail.com', N'Võ Quốc Đạt', N'0887666510', N'https://ui-avatars.com/api/?name=Võ+Quốc+Đạt&background=random', NULL, N'Active', '2026-12-05 21:00:50');
-INSERT INTO [User] (RoleId, Username, PasswordHash, Email, FullName, PhoneNumber, AvatarUrl, DepartmentId, AccountStatus, CreatedAt) VALUES (6, N'hung.ngo', N'$2a$10$p.RWJeHxArmCbQBg3GNXEew66veoolEXULwkrjzeoof8Me1dAD8PO', N'hung.tuan.ngo@hust.edu.vn', N'Ngô Tuấn Hùng', N'0702681144', N'https://ui-avatars.com/api/?name=Ngô+Tuấn+Hùng&background=random', NULL, N'Active', '2026-12-05 21:34:56');
-INSERT INTO [User] (RoleId, Username, PasswordHash, Email, FullName, PhoneNumber, AvatarUrl, DepartmentId, AccountStatus, CreatedAt) VALUES (6, N'viet.trinh1', N'$2a$10$p.RWJeHxArmCbQBg3GNXEew66veoolEXULwkrjzeoof8Me1dAD8PO', N'viet.the.trinh1@gmail.com', N'Trịnh Thế Việt', N'0935620682', N'https://ui-avatars.com/api/?name=Trịnh+Thế+Việt&background=random', NULL, N'Active', '2026-12-05 14:02:25');
-INSERT INTO Candidate (UserId, DateOfBirth, Gender, Address, LinkedInUrl, PortfolioUrl, CandidateSource, IsPotential, CreatedAt) VALUES (238, '2001-06-28', N'Nam', N'Số 120 Kim Mã, Ba Đình, Hà Nội', N'https://linkedin.com/in/dat-vo', N'https://github.com/datvo', N'Employee Referral', 0, '2026-12-05 21:00:50');
-INSERT INTO Candidate (UserId, DateOfBirth, Gender, Address, LinkedInUrl, PortfolioUrl, CandidateSource, IsPotential, CreatedAt) VALUES (239, '1994-10-25', N'Nam', N'Số 88 Láng Hạ, Đống Đa, Hà Nội', N'https://linkedin.com/in/hung-ngo', N'https://github.com/hungngo', N'LinkedIn', 1, '2026-12-05 21:34:56');
-INSERT INTO Candidate (UserId, DateOfBirth, Gender, Address, LinkedInUrl, PortfolioUrl, CandidateSource, IsPotential, CreatedAt) VALUES (240, '1999-03-20', N'Nam', N'Số 91 Chùa Bộc, Quang Trung, Đống Đa, Hà Nội', N'https://linkedin.com/in/viet-trinh1', NULL, N'LinkedIn', 1, '2026-12-05 14:02:25');
-INSERT INTO Application (CandidateId, JobPostingId, AppliedCvUrl, SubmissionDate, ApplicationStatus, OverallScore, CreatedAt) VALUES (228, 3, N'https://rms-storage.s3.ap-southeast-1.amazonaws.com/cvs/2026/12/cand_238_dat_20261205.pdf', '2026-12-05 21:00:50', N'HM_Passed', 79.40, '2026-12-05 21:00:50');
-INSERT INTO Application (CandidateId, JobPostingId, AppliedCvUrl, SubmissionDate, ApplicationStatus, OverallScore, CreatedAt) VALUES (229, 2, N'https://rms-storage.s3.ap-southeast-1.amazonaws.com/cvs/2026/12/cand_239_hung_20261205.pdf', '2026-12-05 21:34:56', N'Rejected', 75.73, '2026-12-05 21:34:56');
-INSERT INTO Application (CandidateId, JobPostingId, AppliedCvUrl, SubmissionDate, ApplicationStatus, OverallScore, CreatedAt) VALUES (230, 4, N'https://rms-storage.s3.ap-southeast-1.amazonaws.com/cvs/2026/12/cand_240_viet_20261205.pdf', '2026-12-05 14:02:25', N'Rejected', 82.34, '2026-12-05 14:02:25');
-INSERT INTO AIScreeningResult (ApplicationId, AIMatchScore, ScreenedAt) VALUES (228, 79.40, '2026-12-05 21:15:50');
-INSERT INTO AIScreeningResult (ApplicationId, AIMatchScore, ScreenedAt) VALUES (229, 75.73, '2026-12-05 21:39:56');
-INSERT INTO AIScreeningResult (ApplicationId, AIMatchScore, ScreenedAt) VALUES (230, 82.34, '2026-12-05 14:13:25');
-INSERT INTO ApplicationReview (ApplicationId, ReviewerId, ReviewerRole, Decision, Comments, ReviewedAt) VALUES (228, 4, N'HR', N'Pass', N'Hồ sơ ứng viên Võ Quốc Đạt đáp ứng tốt tiêu chí cơ bản về học vấn và kinh nghiệm, liên hệ xếp lịch phỏng vấn chuyên môn.', '2026-12-07 00:00:50');
-INSERT INTO ApplicationReview (ApplicationId, ReviewerId, ReviewerRole, Decision, Comments, ReviewedAt) VALUES (228, 5, N'HiringManager', N'Hold', N'Đánh giá CV có kinh nghiệm thực chiến phù hợp với yêu cầu vị trí 3, phê duyệt chuyển sang hội đồng phỏng vấn.', '2026-12-08 02:00:50');
-INSERT INTO ApplicationReview (ApplicationId, ReviewerId, ReviewerRole, Decision, Comments, ReviewedAt) VALUES (229, 3, N'HR', N'Pass', N'Hồ sơ ứng viên Ngô Tuấn Hùng đáp ứng tốt tiêu chí cơ bản về học vấn và kinh nghiệm, liên hệ xếp lịch phỏng vấn chuyên môn.', '2026-12-07 00:34:56');
-INSERT INTO ApplicationReview (ApplicationId, ReviewerId, ReviewerRole, Decision, Comments, ReviewedAt) VALUES (229, 5, N'HiringManager', N'Pass', N'Đánh giá CV có kinh nghiệm thực chiến phù hợp với yêu cầu vị trí 2, phê duyệt chuyển sang hội đồng phỏng vấn.', '2026-12-08 04:34:56');
-INSERT INTO ApplicationReview (ApplicationId, ReviewerId, ReviewerRole, Decision, Comments, ReviewedAt) VALUES (230, 3, N'HR', N'Pass', N'Hồ sơ ứng viên Trịnh Thế Việt đáp ứng tốt tiêu chí cơ bản về học vấn và kinh nghiệm, liên hệ xếp lịch phỏng vấn chuyên môn.', '2026-12-06 18:02:25');
-INSERT INTO ApplicationReview (ApplicationId, ReviewerId, ReviewerRole, Decision, Comments, ReviewedAt) VALUES (230, 6, N'HiringManager', N'Pass', N'Đánh giá CV có kinh nghiệm thực chiến phù hợp với yêu cầu vị trí 4, phê duyệt chuyển sang hội đồng phỏng vấn.', '2026-12-07 23:02:25');
-INSERT INTO InterviewSchedule (ApplicationId, InterviewFormat, StartTime, EndTime, LocationOrLink, InterviewStatus, CreatedBy, CreatedAt) VALUES (229, N'Offline_Office', '2026-12-09 16:00:00', '2026-12-09 17:00:00', N'Phòng họp 802, Tầng 8 Tòa nhà RMS Tower', N'Scheduled', 3, '2026-12-05 21:34:56');
-INSERT INTO InterviewPanel (InterviewId, InterviewerId, RoleInPanel) VALUES (57, 4, N'HR');
-INSERT INTO InterviewPanel (InterviewId, InterviewerId, RoleInPanel) VALUES (57, 5, N'HM');
-INSERT INTO InterviewPanel (InterviewId, InterviewerId, RoleInPanel) VALUES (57, 8, N'Interviewer');
-INSERT INTO InterviewPanel (InterviewId, InterviewerId, RoleInPanel) VALUES (57, 2, N'Director');
-INSERT INTO InterviewSchedule (ApplicationId, InterviewFormat, StartTime, EndTime, LocationOrLink, InterviewStatus, CreatedBy, CreatedAt) VALUES (230, N'Offline_Office', '2026-12-10 09:00:00', '2026-12-10 10:00:00', N'Phòng họp 802, Tầng 8 Tòa nhà RMS Tower', N'Scheduled', 3, '2026-12-05 14:02:25');
-INSERT INTO InterviewPanel (InterviewId, InterviewerId, RoleInPanel) VALUES (58, 3, N'HR');
-INSERT INTO InterviewPanel (InterviewId, InterviewerId, RoleInPanel) VALUES (58, 6, N'HM');
-INSERT INTO InterviewPanel (InterviewId, InterviewerId, RoleInPanel) VALUES (58, 10, N'Interviewer');
-INSERT INTO InterviewPanel (InterviewId, InterviewerId, RoleInPanel) VALUES (58, 2, N'Director');
+-- =============================================================================
+-- 13. NOTIFICATION (Bảng 3.20 trong db.sql - Thông báo nội bộ hệ thống)
+-- =============================================================================
+INSERT INTO [dbo].[Notification] (RecipientId, Title, Content, EventType, ReferenceType, ReferenceId, LinkUrl, IsRead, EventId, CreatedAt) VALUES 
+(2, N'Yêu cầu phê duyệt phiếu tuyển dụng mới', N'Hiring Manager Vũ Anh Tuấn đã gửi phiếu yêu cầu tuyển dụng REQ-2026-0001 (Senior Java Backend Engineer) chờ phê duyệt.', 'REQUISITION_SUBMITTED', 'JobRequisition', '1', N'/director/requisitions/1', 1, 'EVT-REQ-SUBMIT-001', '2026-09-10 09:05:00'),
+(5, N'Phiếu yêu cầu tuyển dụng đã được duyệt', N'Giám đốc Nguyễn Thế Hoàng đã phê duyệt phiếu yêu cầu tuyển dụng REQ-2026-0001.', 'REQUISITION_APPROVED', 'JobRequisition', '1', N'/hm/requisitions/1', 1, 'EVT-REQ-APPROVE-001', '2026-09-15 10:05:00'),
+(3, N'Hồ sơ ứng tuyển mới đạt điểm AI cao', N'Ứng viên Huỳnh Hoàng Trung vừa nộp CV cho vị trí Senior Java Backend Engineer với điểm AI Matching là 95.84%.', 'AI_SCREENING_HIGH_SCORE', 'Application', '12', N'/hr/applications/12', 1, 'EVT-AI-SCORE-012', '2026-10-03 16:45:00'),
+(7, N'Lịch phỏng vấn mới được phân công', N'Bạn được phân công vào hội đồng phỏng vấn ứng viên Huỳnh Hoàng Trung vào lúc 09:00 ngày 09/10/2026.', 'INTERVIEW_SCHEDULED', 'InterviewSchedule', '3', N'/interviewer/schedules/3', 1, 'EVT-INT-SCHED-003', '2026-10-04 08:00:00'),
+(2, N'Đề xuất Offer chờ phê duyệt', N'HR Lê Thị Mai Lan đã trình đề xuất lương (Offer) cho ứng viên Huỳnh Hoàng Trung chờ Giám đốc phê duyệt.', 'OFFER_PENDING_APPROVAL', 'OfferProposal', '1', N'/director/offers/1', 1, 'EVT-OFFER-PEND-001', '2026-10-10 10:05:00'),
+(3, N'Ứng viên đã chấp nhận Offer', N'Ứng viên Bùi Trọng Hải đã chính thức chấp nhận thư mời nhận việc cho vị trí Frontend ReactJS Developer.', 'OFFER_ACCEPTED', 'OfferProposal', '6', N'/hr/offers/6', 0, 'EVT-OFFER-ACCEPT-006', '2026-10-23 09:00:00'),
+(3, N'Ứng viên từ chối Offer', N'Ứng viên Lê Thu Thu đã từ chối thư mời nhận việc vị trí Frontend ReactJS Developer.', 'OFFER_DECLINED', 'OfferProposal', '5', N'/hr/offers/5', 0, 'EVT-OFFER-DECLINE-005', '2026-10-19 14:00:00'),
+(3, N'Hiring Manager đề xuất ứng viên (HM Suggested)', N'Hiring Manager Vũ Anh Tuấn đã đánh dấu đề xuất ưu tiên cho hồ sơ ứng viên Hoàng Trọng Hùng (Application #190).', 'APPLICATION_HM_SUGGESTED', 'Application', '190', N'/hr/applications/190', 0, 'EVT-APP-HMSUGG-190', '2026-11-25 14:05:00');
 
--- -----------------------------------------------------------------------------
--- DAY 68 / 77: 2026-12-06 (3 Applications)
--- -----------------------------------------------------------------------------
-INSERT INTO [User] (RoleId, Username, PasswordHash, Email, FullName, PhoneNumber, AvatarUrl, DepartmentId, AccountStatus, CreatedAt) VALUES (6, N'binh.vo', N'$2a$10$p.RWJeHxArmCbQBg3GNXEew66veoolEXULwkrjzeoof8Me1dAD8PO', N'binh.quoc.vo@gmail.com', N'Võ Quốc Bình', N'0986216863', N'https://ui-avatars.com/api/?name=Võ+Quốc+Bình&background=random', NULL, N'Active', '2026-12-06 21:14:08');
-INSERT INTO [User] (RoleId, Username, PasswordHash, Email, FullName, PhoneNumber, AvatarUrl, DepartmentId, AccountStatus, CreatedAt) VALUES (6, N'toan.vo', N'$2a$10$p.RWJeHxArmCbQBg3GNXEew66veoolEXULwkrjzeoof8Me1dAD8PO', N'toan.duy.vo@hust.edu.vn', N'Võ Duy Toàn', N'0914153037', N'https://ui-avatars.com/api/?name=Võ+Duy+Toàn&background=random', NULL, N'Active', '2026-12-06 20:33:55');
-INSERT INTO [User] (RoleId, Username, PasswordHash, Email, FullName, PhoneNumber, AvatarUrl, DepartmentId, AccountStatus, CreatedAt) VALUES (6, N'uyen.dang', N'$2a$10$p.RWJeHxArmCbQBg3GNXEew66veoolEXULwkrjzeoof8Me1dAD8PO', N'uyen.anh.dang@fpt.edu.vn', N'Đặng Ánh Uyên', N'0939796063', N'https://ui-avatars.com/api/?name=Đặng+Ánh+Uyên&background=random', NULL, N'Active', '2026-12-06 11:53:03');
-INSERT INTO Candidate (UserId, DateOfBirth, Gender, Address, LinkedInUrl, PortfolioUrl, CandidateSource, IsPotential, CreatedAt) VALUES (241, '1997-08-28', N'Nam', N'Số 48 Tố Hữu, Trung Văn, Nam Từ Liêm, Hà Nội', N'https://linkedin.com/in/binh-vo', NULL, N'LinkedIn', 0, '2026-12-06 21:14:08');
-INSERT INTO Candidate (UserId, DateOfBirth, Gender, Address, LinkedInUrl, PortfolioUrl, CandidateSource, IsPotential, CreatedAt) VALUES (242, '2000-04-27', N'Nam', N'Số 120 Kim Mã, Ba Đình, Hà Nội', N'https://linkedin.com/in/toan-vo', N'https://github.com/toanvo', N'LinkedIn', 0, '2026-12-06 20:33:55');
-INSERT INTO Candidate (UserId, DateOfBirth, Gender, Address, LinkedInUrl, PortfolioUrl, CandidateSource, IsPotential, CreatedAt) VALUES (243, '2002-01-06', N'Nữ', N'Số 16 Đại Cồ Việt, Bách Khoa, Hai Bà Trưng, Hà Nội', N'https://linkedin.com/in/uyen-dang', N'https://github.com/uyendang', N'VietnamWorks', 0, '2026-12-06 11:53:03');
-INSERT INTO Application (CandidateId, JobPostingId, AppliedCvUrl, SubmissionDate, ApplicationStatus, OverallScore, CreatedAt) VALUES (231, 4, N'https://rms-storage.s3.ap-southeast-1.amazonaws.com/cvs/2026/12/cand_241_binh_20261206.pdf', '2026-12-06 21:14:08', N'HM_Passed', 71.33, '2026-12-06 21:14:08');
-INSERT INTO Application (CandidateId, JobPostingId, AppliedCvUrl, SubmissionDate, ApplicationStatus, OverallScore, CreatedAt) VALUES (232, 1, N'https://rms-storage.s3.ap-southeast-1.amazonaws.com/cvs/2026/12/cand_242_toan_20261206.pdf', '2026-12-06 20:33:55', N'HM_Passed', 81.31, '2026-12-06 20:33:55');
-INSERT INTO Application (CandidateId, JobPostingId, AppliedCvUrl, SubmissionDate, ApplicationStatus, OverallScore, CreatedAt) VALUES (233, 1, N'https://rms-storage.s3.ap-southeast-1.amazonaws.com/cvs/2026/12/cand_243_uyen_20261206.pdf', '2026-12-06 11:53:03', N'HM_Passed', 72.23, '2026-12-06 11:53:03');
-INSERT INTO AIScreeningResult (ApplicationId, AIMatchScore, ScreenedAt) VALUES (231, 71.33, '2026-12-06 21:22:08');
-INSERT INTO AIScreeningResult (ApplicationId, AIMatchScore, ScreenedAt) VALUES (232, 81.31, '2026-12-06 20:49:55');
-INSERT INTO AIScreeningResult (ApplicationId, AIMatchScore, ScreenedAt) VALUES (233, 72.23, '2026-12-06 11:59:03');
-INSERT INTO ApplicationReview (ApplicationId, ReviewerId, ReviewerRole, Decision, Comments, ReviewedAt) VALUES (231, 3, N'HR', N'Pass', N'Hồ sơ ứng viên Võ Quốc Bình đáp ứng tốt tiêu chí cơ bản về học vấn và kinh nghiệm, liên hệ xếp lịch phỏng vấn chuyên môn.', '2026-12-07 23:14:08');
-INSERT INTO ApplicationReview (ApplicationId, ReviewerId, ReviewerRole, Decision, Comments, ReviewedAt) VALUES (231, 6, N'HiringManager', N'Hold', N'Đánh giá CV có kinh nghiệm thực chiến phù hợp với yêu cầu vị trí 4, phê duyệt chuyển sang hội đồng phỏng vấn.', '2026-12-09 04:14:08');
-INSERT INTO ApplicationReview (ApplicationId, ReviewerId, ReviewerRole, Decision, Comments, ReviewedAt) VALUES (232, 3, N'HR', N'Pass', N'Hồ sơ ứng viên Võ Duy Toàn đáp ứng tốt tiêu chí cơ bản về học vấn và kinh nghiệm, liên hệ xếp lịch phỏng vấn chuyên môn.', '2026-12-08 00:33:55');
-INSERT INTO ApplicationReview (ApplicationId, ReviewerId, ReviewerRole, Decision, Comments, ReviewedAt) VALUES (232, 5, N'HiringManager', N'Pass', N'Đánh giá CV có kinh nghiệm thực chiến phù hợp với yêu cầu vị trí 1, phê duyệt chuyển sang hội đồng phỏng vấn.', '2026-12-09 03:33:55');
-INSERT INTO ApplicationReview (ApplicationId, ReviewerId, ReviewerRole, Decision, Comments, ReviewedAt) VALUES (233, 4, N'HR', N'Pass', N'Hồ sơ ứng viên Đặng Ánh Uyên đáp ứng tốt tiêu chí cơ bản về học vấn và kinh nghiệm, liên hệ xếp lịch phỏng vấn chuyên môn.', '2026-12-07 15:53:03');
-INSERT INTO ApplicationReview (ApplicationId, ReviewerId, ReviewerRole, Decision, Comments, ReviewedAt) VALUES (233, 5, N'HiringManager', N'Pass', N'Đánh giá CV có kinh nghiệm thực chiến phù hợp với yêu cầu vị trí 1, phê duyệt chuyển sang hội đồng phỏng vấn.', '2026-12-08 19:53:03');
-
--- -----------------------------------------------------------------------------
--- DAY 69 / 77: 2026-12-07 (3 Applications)
--- -----------------------------------------------------------------------------
-INSERT INTO [User] (RoleId, Username, PasswordHash, Email, FullName, PhoneNumber, AvatarUrl, DepartmentId, AccountStatus, CreatedAt) VALUES (6, N'thang.phan', N'$2a$10$p.RWJeHxArmCbQBg3GNXEew66veoolEXULwkrjzeoof8Me1dAD8PO', N'thang.hoang.phan@outlook.com', N'Phan Hoàng Thắng', N'0389474614', N'https://ui-avatars.com/api/?name=Phan+Hoàng+Thắng&background=random', NULL, N'Active', '2026-12-07 13:31:38');
-INSERT INTO [User] (RoleId, Username, PasswordHash, Email, FullName, PhoneNumber, AvatarUrl, DepartmentId, AccountStatus, CreatedAt) VALUES (6, N'tai.dinh', N'$2a$10$p.RWJeHxArmCbQBg3GNXEew66veoolEXULwkrjzeoof8Me1dAD8PO', N'tai.quoc.dinh@gmail.com', N'Đinh Quốc Tài', N'0982516524', N'https://ui-avatars.com/api/?name=Đinh+Quốc+Tài&background=random', NULL, N'Active', '2026-12-07 17:49:13');
-INSERT INTO [User] (RoleId, Username, PasswordHash, Email, FullName, PhoneNumber, AvatarUrl, DepartmentId, AccountStatus, CreatedAt) VALUES (6, N'chau.ngo', N'$2a$10$p.RWJeHxArmCbQBg3GNXEew66veoolEXULwkrjzeoof8Me1dAD8PO', N'chau.khanh.ngo@outlook.com', N'Ngô Khánh Châu', N'0908954031', N'https://ui-avatars.com/api/?name=Ngô+Khánh+Châu&background=random', NULL, N'Active', '2026-12-07 11:16:38');
-INSERT INTO Candidate (UserId, DateOfBirth, Gender, Address, LinkedInUrl, PortfolioUrl, CandidateSource, IsPotential, CreatedAt) VALUES (244, '1999-11-04', N'Nam', N'Số 25 Vũ Phạm Hàm, Yên Hòa, Cầu Giấy, Hà Nội', N'https://linkedin.com/in/thang-phan', N'https://github.com/thangphan', N'ITViec', 0, '2026-12-07 13:31:38');
-INSERT INTO Candidate (UserId, DateOfBirth, Gender, Address, LinkedInUrl, PortfolioUrl, CandidateSource, IsPotential, CreatedAt) VALUES (245, '1997-01-13', N'Nam', N'Số 16 Đại Cồ Việt, Bách Khoa, Hai Bà Trưng, Hà Nội', N'https://linkedin.com/in/tai-dinh', NULL, N'VietnamWorks', 1, '2026-12-07 17:49:13');
-INSERT INTO Candidate (UserId, DateOfBirth, Gender, Address, LinkedInUrl, PortfolioUrl, CandidateSource, IsPotential, CreatedAt) VALUES (246, '1995-11-06', N'Nữ', N'Số 15 Duy Tân, Dịch Vọng Hậu, Cầu Giấy, Hà Nội', N'https://linkedin.com/in/chau-ngo', NULL, N'LinkedIn', 0, '2026-12-07 11:16:38');
-INSERT INTO Application (CandidateId, JobPostingId, AppliedCvUrl, SubmissionDate, ApplicationStatus, OverallScore, CreatedAt) VALUES (234, 1, N'https://rms-storage.s3.ap-southeast-1.amazonaws.com/cvs/2026/12/cand_244_thang_20261207.pdf', '2026-12-07 13:31:38', N'Applied', NULL, '2026-12-07 13:31:38');
-INSERT INTO Application (CandidateId, JobPostingId, AppliedCvUrl, SubmissionDate, ApplicationStatus, OverallScore, CreatedAt) VALUES (235, 4, N'https://rms-storage.s3.ap-southeast-1.amazonaws.com/cvs/2026/12/cand_245_tai_20261207.pdf', '2026-12-07 17:49:13', N'Interviewing', 85.69, '2026-12-07 17:49:13');
-INSERT INTO Application (CandidateId, JobPostingId, AppliedCvUrl, SubmissionDate, ApplicationStatus, OverallScore, CreatedAt) VALUES (236, 4, N'https://rms-storage.s3.ap-southeast-1.amazonaws.com/cvs/2026/12/cand_246_chau_20261207.pdf', '2026-12-07 11:16:38', N'Applied', NULL, '2026-12-07 11:16:38');
-INSERT INTO AIScreeningResult (ApplicationId, AIMatchScore, ScreenedAt) VALUES (235, 85.69, '2026-12-07 17:58:13');
-INSERT INTO ApplicationReview (ApplicationId, ReviewerId, ReviewerRole, Decision, Comments, ReviewedAt) VALUES (235, 3, N'HR', N'Pass', N'Hồ sơ ứng viên Đinh Quốc Tài đáp ứng tốt tiêu chí cơ bản về học vấn và kinh nghiệm, liên hệ xếp lịch phỏng vấn chuyên môn.', '2026-12-08 19:49:13');
-INSERT INTO ApplicationReview (ApplicationId, ReviewerId, ReviewerRole, Decision, Comments, ReviewedAt) VALUES (235, 6, N'HiringManager', N'Pass', N'Đánh giá CV có kinh nghiệm thực chiến phù hợp với yêu cầu vị trí 4, phê duyệt chuyển sang hội đồng phỏng vấn.', '2026-12-10 00:49:13');
-INSERT INTO InterviewSchedule (ApplicationId, InterviewFormat, StartTime, EndTime, LocationOrLink, InterviewStatus, CreatedBy, CreatedAt) VALUES (235, N'Offline_Office', '2026-12-13 16:00:00', '2026-12-13 17:00:00', N'Phòng họp 802, Tầng 8 Tòa nhà RMS Tower', N'Scheduled', 3, '2026-12-07 17:49:13');
-INSERT INTO InterviewPanel (InterviewId, InterviewerId, RoleInPanel) VALUES (59, 4, N'HR');
-INSERT INTO InterviewPanel (InterviewId, InterviewerId, RoleInPanel) VALUES (59, 6, N'HM');
-INSERT INTO InterviewPanel (InterviewId, InterviewerId, RoleInPanel) VALUES (59, 10, N'Interviewer');
-INSERT INTO InterviewPanel (InterviewId, InterviewerId, RoleInPanel) VALUES (59, 2, N'Director');
-
--- -----------------------------------------------------------------------------
--- DAY 70 / 77: 2026-12-08 (4 Applications)
--- -----------------------------------------------------------------------------
-INSERT INTO [User] (RoleId, Username, PasswordHash, Email, FullName, PhoneNumber, AvatarUrl, DepartmentId, AccountStatus, CreatedAt) VALUES (6, N'tai.ngo', N'$2a$10$p.RWJeHxArmCbQBg3GNXEew66veoolEXULwkrjzeoof8Me1dAD8PO', N'tai.dinh.ngo@fpt.edu.vn', N'Ngô Đình Tài', N'0984660940', N'https://ui-avatars.com/api/?name=Ngô+Đình+Tài&background=random', NULL, N'Active', '2026-12-08 14:37:06');
-INSERT INTO [User] (RoleId, Username, PasswordHash, Email, FullName, PhoneNumber, AvatarUrl, DepartmentId, AccountStatus, CreatedAt) VALUES (6, N'phuc.do1', N'$2a$10$p.RWJeHxArmCbQBg3GNXEew66veoolEXULwkrjzeoof8Me1dAD8PO', N'phuc.thanh.do@gmail.com', N'Đỗ Thành Phúc', N'0919082229', N'https://ui-avatars.com/api/?name=Đỗ+Thành+Phúc&background=random', NULL, N'Active', '2026-12-08 12:16:41');
-INSERT INTO [User] (RoleId, Username, PasswordHash, Email, FullName, PhoneNumber, AvatarUrl, DepartmentId, AccountStatus, CreatedAt) VALUES (6, N'tien.tran', N'$2a$10$p.RWJeHxArmCbQBg3GNXEew66veoolEXULwkrjzeoof8Me1dAD8PO', N'tien.tien.tran@vnu.edu.vn', N'Trần Tiến Tiến', N'0863347627', N'https://ui-avatars.com/api/?name=Trần+Tiến+Tiến&background=random', NULL, N'Active', '2026-12-08 14:25:24');
-INSERT INTO [User] (RoleId, Username, PasswordHash, Email, FullName, PhoneNumber, AvatarUrl, DepartmentId, AccountStatus, CreatedAt) VALUES (6, N'minh.phan', N'$2a$10$p.RWJeHxArmCbQBg3GNXEew66veoolEXULwkrjzeoof8Me1dAD8PO', N'minh.quoc.phan@vnu.edu.vn', N'Phan Quốc Minh', N'0398981512', N'https://ui-avatars.com/api/?name=Phan+Quốc+Minh&background=random', NULL, N'Active', '2026-12-08 10:18:06');
-INSERT INTO Candidate (UserId, DateOfBirth, Gender, Address, LinkedInUrl, PortfolioUrl, CandidateSource, IsPotential, CreatedAt) VALUES (247, '2000-05-22', N'Nam', N'Số 50 Trần Phú, Văn Quán, Hà Đông, Hà Nội', N'https://linkedin.com/in/tai-ngo', N'https://github.com/taingo', N'TopCV', 0, '2026-12-08 14:37:06');
-INSERT INTO Candidate (UserId, DateOfBirth, Gender, Address, LinkedInUrl, PortfolioUrl, CandidateSource, IsPotential, CreatedAt) VALUES (248, '1994-06-09', N'Nam', N'Số 16 Đại Cồ Việt, Bách Khoa, Hai Bà Trưng, Hà Nội', N'https://linkedin.com/in/phuc-do1', N'https://github.com/phucdo1', N'LinkedIn', 1, '2026-12-08 12:16:41');
-INSERT INTO Candidate (UserId, DateOfBirth, Gender, Address, LinkedInUrl, PortfolioUrl, CandidateSource, IsPotential, CreatedAt) VALUES (249, '1993-11-16', N'Nam', N'Số 30 Quang Trung, Phường 10, Gò Vấp, TP. Hồ Chí Minh', N'https://linkedin.com/in/tien-tran', N'https://github.com/tientran', N'TopCV', 0, '2026-12-08 14:25:24');
-INSERT INTO Candidate (UserId, DateOfBirth, Gender, Address, LinkedInUrl, PortfolioUrl, CandidateSource, IsPotential, CreatedAt) VALUES (250, '1998-09-10', N'Nam', N'Số 72 Ba Tháng Hai, Phường 12, Quận 10, TP. Hồ Chí Minh', N'https://linkedin.com/in/minh-phan', N'https://github.com/minhphan', N'ITViec', 0, '2026-12-08 10:18:06');
-INSERT INTO Application (CandidateId, JobPostingId, AppliedCvUrl, SubmissionDate, ApplicationStatus, OverallScore, CreatedAt) VALUES (237, 3, N'https://rms-storage.s3.ap-southeast-1.amazonaws.com/cvs/2026/12/cand_247_tai_20261208.pdf', '2026-12-08 14:37:06', N'Applied', NULL, '2026-12-08 14:37:06');
-INSERT INTO Application (CandidateId, JobPostingId, AppliedCvUrl, SubmissionDate, ApplicationStatus, OverallScore, CreatedAt) VALUES (238, 1, N'https://rms-storage.s3.ap-southeast-1.amazonaws.com/cvs/2026/12/cand_248_phuc_20261208.pdf', '2026-12-08 12:16:41', N'Interviewing', 83.93, '2026-12-08 12:16:41');
-INSERT INTO Application (CandidateId, JobPostingId, AppliedCvUrl, SubmissionDate, ApplicationStatus, OverallScore, CreatedAt) VALUES (239, 3, N'https://rms-storage.s3.ap-southeast-1.amazonaws.com/cvs/2026/12/cand_249_tien_20261208.pdf', '2026-12-08 14:25:24', N'AI_Screened', 44.26, '2026-12-08 14:25:24');
-INSERT INTO Application (CandidateId, JobPostingId, AppliedCvUrl, SubmissionDate, ApplicationStatus, OverallScore, CreatedAt) VALUES (240, 1, N'https://rms-storage.s3.ap-southeast-1.amazonaws.com/cvs/2026/12/cand_250_minh_20261208.pdf', '2026-12-08 10:18:06', N'AI_Screened', 43.20, '2026-12-08 10:18:06');
-INSERT INTO AIScreeningResult (ApplicationId, AIMatchScore, ScreenedAt) VALUES (238, 83.93, '2026-12-08 12:30:41');
-INSERT INTO AIScreeningResult (ApplicationId, AIMatchScore, ScreenedAt) VALUES (239, 44.26, '2026-12-08 14:30:24');
-INSERT INTO AIScreeningResult (ApplicationId, AIMatchScore, ScreenedAt) VALUES (240, 43.20, '2026-12-08 10:32:06');
-INSERT INTO ApplicationReview (ApplicationId, ReviewerId, ReviewerRole, Decision, Comments, ReviewedAt) VALUES (238, 4, N'HR', N'Pass', N'Hồ sơ ứng viên Đỗ Thành Phúc đáp ứng tốt tiêu chí cơ bản về học vấn và kinh nghiệm, liên hệ xếp lịch phỏng vấn chuyên môn.', '2026-12-09 14:16:41');
-INSERT INTO ApplicationReview (ApplicationId, ReviewerId, ReviewerRole, Decision, Comments, ReviewedAt) VALUES (238, 5, N'HiringManager', N'Pass', N'Đánh giá CV có kinh nghiệm thực chiến phù hợp với yêu cầu vị trí 1, phê duyệt chuyển sang hội đồng phỏng vấn.', '2026-12-10 17:16:41');
-INSERT INTO InterviewSchedule (ApplicationId, InterviewFormat, StartTime, EndTime, LocationOrLink, InterviewStatus, CreatedBy, CreatedAt) VALUES (238, N'Offline_Office', '2026-12-12 14:00:00', '2026-12-12 15:00:00', N'Phòng họp 802, Tầng 8 Tòa nhà RMS Tower', N'Scheduled', 3, '2026-12-08 12:16:41');
-INSERT INTO InterviewPanel (InterviewId, InterviewerId, RoleInPanel) VALUES (60, 4, N'HR');
-INSERT INTO InterviewPanel (InterviewId, InterviewerId, RoleInPanel) VALUES (60, 5, N'HM');
-INSERT INTO InterviewPanel (InterviewId, InterviewerId, RoleInPanel) VALUES (60, 7, N'Interviewer');
-INSERT INTO InterviewPanel (InterviewId, InterviewerId, RoleInPanel) VALUES (60, 2, N'Director');
-
--- -----------------------------------------------------------------------------
--- DAY 71 / 77: 2026-12-09 (4 Applications)
--- -----------------------------------------------------------------------------
-INSERT INTO [User] (RoleId, Username, PasswordHash, Email, FullName, PhoneNumber, AvatarUrl, DepartmentId, AccountStatus, CreatedAt) VALUES (6, N'khanh.dinh', N'$2a$10$p.RWJeHxArmCbQBg3GNXEew66veoolEXULwkrjzeoof8Me1dAD8PO', N'khanh.tien.dinh@vnu.edu.vn', N'Đinh Tiến Khánh', N'0862498202', N'https://ui-avatars.com/api/?name=Đinh+Tiến+Khánh&background=random', NULL, N'Active', '2026-12-09 14:50:56');
-INSERT INTO [User] (RoleId, Username, PasswordHash, Email, FullName, PhoneNumber, AvatarUrl, DepartmentId, AccountStatus, CreatedAt) VALUES (6, N'diep.pham', N'$2a$10$p.RWJeHxArmCbQBg3GNXEew66veoolEXULwkrjzeoof8Me1dAD8PO', N'diep.dieu.pham@outlook.com', N'Phạm Diệu Diệp', N'0702194801', N'https://ui-avatars.com/api/?name=Phạm+Diệu+Diệp&background=random', NULL, N'Active', '2026-12-09 14:33:19');
-INSERT INTO [User] (RoleId, Username, PasswordHash, Email, FullName, PhoneNumber, AvatarUrl, DepartmentId, AccountStatus, CreatedAt) VALUES (6, N'quynh.phan', N'$2a$10$p.RWJeHxArmCbQBg3GNXEew66veoolEXULwkrjzeoof8Me1dAD8PO', N'quynh.thao.phan@hust.edu.vn', N'Phan Thảo Quỳnh', N'0383402902', N'https://ui-avatars.com/api/?name=Phan+Thảo+Quỳnh&background=random', NULL, N'Active', '2026-12-09 13:40:11');
-INSERT INTO [User] (RoleId, Username, PasswordHash, Email, FullName, PhoneNumber, AvatarUrl, DepartmentId, AccountStatus, CreatedAt) VALUES (6, N'huy.phan', N'$2a$10$p.RWJeHxArmCbQBg3GNXEew66veoolEXULwkrjzeoof8Me1dAD8PO', N'huy.tien.phan@hust.edu.vn', N'Phan Tiến Huy', N'0939213740', N'https://ui-avatars.com/api/?name=Phan+Tiến+Huy&background=random', NULL, N'Active', '2026-12-09 14:27:30');
-INSERT INTO Candidate (UserId, DateOfBirth, Gender, Address, LinkedInUrl, PortfolioUrl, CandidateSource, IsPotential, CreatedAt) VALUES (251, '1996-06-08', N'Nam', N'Số 88 Láng Hạ, Đống Đa, Hà Nội', N'https://linkedin.com/in/khanh-dinh', N'https://github.com/khanhdinh', N'LinkedIn', 1, '2026-12-09 14:50:56');
-INSERT INTO Candidate (UserId, DateOfBirth, Gender, Address, LinkedInUrl, PortfolioUrl, CandidateSource, IsPotential, CreatedAt) VALUES (252, '2000-04-17', N'Nữ', N'Số 77 Xuân Thủy, Cầu Giấy, Hà Nội', N'https://linkedin.com/in/diep-pham', N'https://github.com/dieppham', N'ITViec', 0, '2026-12-09 14:33:19');
-INSERT INTO Candidate (UserId, DateOfBirth, Gender, Address, LinkedInUrl, PortfolioUrl, CandidateSource, IsPotential, CreatedAt) VALUES (253, '1998-12-06', N'Nữ', N'Số 56 Hoàng Văn Thụ, Phường 4, Tân Bình, TP. Hồ Chí Minh', N'https://linkedin.com/in/quynh-phan', NULL, N'LinkedIn', 1, '2026-12-09 13:40:11');
-INSERT INTO Candidate (UserId, DateOfBirth, Gender, Address, LinkedInUrl, PortfolioUrl, CandidateSource, IsPotential, CreatedAt) VALUES (254, '1994-03-20', N'Nam', N'Số 68 Hoàng Quốc Việt, Nghĩa Đô, Cầu Giấy, Hà Nội', N'https://linkedin.com/in/huy-phan', N'https://github.com/huyphan', N'ITViec', 1, '2026-12-09 14:27:30');
-INSERT INTO Application (CandidateId, JobPostingId, AppliedCvUrl, SubmissionDate, ApplicationStatus, OverallScore, CreatedAt) VALUES (241, 2, N'https://rms-storage.s3.ap-southeast-1.amazonaws.com/cvs/2026/12/cand_251_khanh_20261209.pdf', '2026-12-09 14:50:56', N'Interviewing', 85.05, '2026-12-09 14:50:56');
-INSERT INTO Application (CandidateId, JobPostingId, AppliedCvUrl, SubmissionDate, ApplicationStatus, OverallScore, CreatedAt) VALUES (242, 1, N'https://rms-storage.s3.ap-southeast-1.amazonaws.com/cvs/2026/12/cand_252_diep_20261209.pdf', '2026-12-09 14:33:19', N'AI_Screened', 49.09, '2026-12-09 14:33:19');
-INSERT INTO Application (CandidateId, JobPostingId, AppliedCvUrl, SubmissionDate, ApplicationStatus, OverallScore, CreatedAt) VALUES (243, 4, N'https://rms-storage.s3.ap-southeast-1.amazonaws.com/cvs/2026/12/cand_253_quynh_20261209.pdf', '2026-12-09 13:40:11', N'Offered', 87.65, '2026-12-09 13:40:11');
-INSERT INTO Application (CandidateId, JobPostingId, AppliedCvUrl, SubmissionDate, ApplicationStatus, OverallScore, CreatedAt) VALUES (244, 1, N'https://rms-storage.s3.ap-southeast-1.amazonaws.com/cvs/2026/12/cand_254_huy_20261209.pdf', '2026-12-09 14:27:30', N'Offered', 87.20, '2026-12-09 14:27:30');
-INSERT INTO AIScreeningResult (ApplicationId, AIMatchScore, ScreenedAt) VALUES (241, 85.05, '2026-12-09 14:58:56');
-INSERT INTO AIScreeningResult (ApplicationId, AIMatchScore, ScreenedAt) VALUES (242, 49.09, '2026-12-09 14:44:19');
-INSERT INTO AIScreeningResult (ApplicationId, AIMatchScore, ScreenedAt) VALUES (243, 87.65, '2026-12-09 13:56:11');
-INSERT INTO AIScreeningResult (ApplicationId, AIMatchScore, ScreenedAt) VALUES (244, 87.20, '2026-12-09 14:42:30');
-INSERT INTO ApplicationReview (ApplicationId, ReviewerId, ReviewerRole, Decision, Comments, ReviewedAt) VALUES (241, 3, N'HR', N'Pass', N'Hồ sơ ứng viên Đinh Tiến Khánh đáp ứng tốt tiêu chí cơ bản về học vấn và kinh nghiệm, liên hệ xếp lịch phỏng vấn chuyên môn.', '2026-12-10 17:50:56');
-INSERT INTO ApplicationReview (ApplicationId, ReviewerId, ReviewerRole, Decision, Comments, ReviewedAt) VALUES (241, 5, N'HiringManager', N'Pass', N'Đánh giá CV có kinh nghiệm thực chiến phù hợp với yêu cầu vị trí 2, phê duyệt chuyển sang hội đồng phỏng vấn.', '2026-12-11 21:50:56');
-INSERT INTO ApplicationReview (ApplicationId, ReviewerId, ReviewerRole, Decision, Comments, ReviewedAt) VALUES (243, 3, N'HR', N'Pass', N'Hồ sơ ứng viên Phan Thảo Quỳnh đáp ứng tốt tiêu chí cơ bản về học vấn và kinh nghiệm, liên hệ xếp lịch phỏng vấn chuyên môn.', '2026-12-10 15:40:11');
-INSERT INTO ApplicationReview (ApplicationId, ReviewerId, ReviewerRole, Decision, Comments, ReviewedAt) VALUES (243, 6, N'HiringManager', N'Pass', N'Đánh giá CV có kinh nghiệm thực chiến phù hợp với yêu cầu vị trí 4, phê duyệt chuyển sang hội đồng phỏng vấn.', '2026-12-11 17:40:11');
-INSERT INTO ApplicationReview (ApplicationId, ReviewerId, ReviewerRole, Decision, Comments, ReviewedAt) VALUES (244, 4, N'HR', N'Pass', N'Hồ sơ ứng viên Phan Tiến Huy đáp ứng tốt tiêu chí cơ bản về học vấn và kinh nghiệm, liên hệ xếp lịch phỏng vấn chuyên môn.', '2026-12-10 17:27:30');
-INSERT INTO ApplicationReview (ApplicationId, ReviewerId, ReviewerRole, Decision, Comments, ReviewedAt) VALUES (244, 5, N'HiringManager', N'Pass', N'Đánh giá CV có kinh nghiệm thực chiến phù hợp với yêu cầu vị trí 1, phê duyệt chuyển sang hội đồng phỏng vấn.', '2026-12-11 22:27:30');
-INSERT INTO InterviewSchedule (ApplicationId, InterviewFormat, StartTime, EndTime, LocationOrLink, InterviewStatus, CreatedBy, CreatedAt) VALUES (241, N'Offline_Office', '2026-12-12 10:00:00', '2026-12-12 11:00:00', N'Phòng họp 802, Tầng 8 Tòa nhà RMS Tower', N'Scheduled', 3, '2026-12-09 14:50:56');
-INSERT INTO InterviewPanel (InterviewId, InterviewerId, RoleInPanel) VALUES (61, 3, N'HR');
-INSERT INTO InterviewPanel (InterviewId, InterviewerId, RoleInPanel) VALUES (61, 5, N'HM');
-INSERT INTO InterviewPanel (InterviewId, InterviewerId, RoleInPanel) VALUES (61, 8, N'Interviewer');
-INSERT INTO InterviewPanel (InterviewId, InterviewerId, RoleInPanel) VALUES (61, 2, N'Director');
-INSERT INTO InterviewSchedule (ApplicationId, InterviewFormat, StartTime, EndTime, LocationOrLink, InterviewStatus, CreatedBy, CreatedAt) VALUES (243, N'Offline_Office', '2026-12-12 15:00:00', '2026-12-12 16:00:00', N'Phòng họp 802, Tầng 8 Tòa nhà RMS Tower', N'Scheduled', 3, '2026-12-09 13:40:11');
-INSERT INTO InterviewPanel (InterviewId, InterviewerId, RoleInPanel) VALUES (62, 4, N'HR');
-INSERT INTO InterviewPanel (InterviewId, InterviewerId, RoleInPanel) VALUES (62, 6, N'HM');
-INSERT INTO InterviewPanel (InterviewId, InterviewerId, RoleInPanel) VALUES (62, 10, N'Interviewer');
-INSERT INTO InterviewPanel (InterviewId, InterviewerId, RoleInPanel) VALUES (62, 2, N'Director');
-INSERT INTO InterviewSchedule (ApplicationId, InterviewFormat, StartTime, EndTime, LocationOrLink, InterviewStatus, CreatedBy, CreatedAt) VALUES (244, N'Online_GoogleMeet', '2026-12-15 10:00:00', '2026-12-15 11:00:00', N'https://meet.google.com/rms-int-0063', N'Scheduled', 3, '2026-12-09 14:27:30');
-INSERT INTO InterviewPanel (InterviewId, InterviewerId, RoleInPanel) VALUES (63, 4, N'HR');
-INSERT INTO InterviewPanel (InterviewId, InterviewerId, RoleInPanel) VALUES (63, 5, N'HM');
-INSERT INTO InterviewPanel (InterviewId, InterviewerId, RoleInPanel) VALUES (63, 7, N'Interviewer');
-INSERT INTO InterviewPanel (InterviewId, InterviewerId, RoleInPanel) VALUES (63, 2, N'Director');
-
--- -----------------------------------------------------------------------------
--- DAY 72 / 77: 2026-12-10 (4 Applications)
--- -----------------------------------------------------------------------------
-INSERT INTO [User] (RoleId, Username, PasswordHash, Email, FullName, PhoneNumber, AvatarUrl, DepartmentId, AccountStatus, CreatedAt) VALUES (6, N'ngan.do', N'$2a$10$p.RWJeHxArmCbQBg3GNXEew66veoolEXULwkrjzeoof8Me1dAD8PO', N'ngan.thi.do@outlook.com', N'Đỗ Thị Ngân', N'0394197346', N'https://ui-avatars.com/api/?name=Đỗ+Thị+Ngân&background=random', NULL, N'Active', '2026-12-10 11:44:56');
-INSERT INTO [User] (RoleId, Username, PasswordHash, Email, FullName, PhoneNumber, AvatarUrl, DepartmentId, AccountStatus, CreatedAt) VALUES (6, N'huy.trinh', N'$2a$10$p.RWJeHxArmCbQBg3GNXEew66veoolEXULwkrjzeoof8Me1dAD8PO', N'huy.hoang.trinh@gmail.com', N'Trịnh Hoàng Huy', N'0906003003', N'https://ui-avatars.com/api/?name=Trịnh+Hoàng+Huy&background=random', NULL, N'Active', '2026-12-10 13:27:56');
-INSERT INTO [User] (RoleId, Username, PasswordHash, Email, FullName, PhoneNumber, AvatarUrl, DepartmentId, AccountStatus, CreatedAt) VALUES (6, N'tien.phan', N'$2a$10$p.RWJeHxArmCbQBg3GNXEew66veoolEXULwkrjzeoof8Me1dAD8PO', N'tien.tuan.phan@gmail.com', N'Phan Tuấn Tiến', N'0974763487', N'https://ui-avatars.com/api/?name=Phan+Tuấn+Tiến&background=random', NULL, N'Active', '2026-12-10 10:07:23');
-INSERT INTO [User] (RoleId, Username, PasswordHash, Email, FullName, PhoneNumber, AvatarUrl, DepartmentId, AccountStatus, CreatedAt) VALUES (6, N'diep.dinh', N'$2a$10$p.RWJeHxArmCbQBg3GNXEew66veoolEXULwkrjzeoof8Me1dAD8PO', N'diep.my.dinh@hust.edu.vn', N'Đinh Mỹ Diệp', N'0902813842', N'https://ui-avatars.com/api/?name=Đinh+Mỹ+Diệp&background=random', NULL, N'Active', '2026-12-10 14:07:35');
-INSERT INTO Candidate (UserId, DateOfBirth, Gender, Address, LinkedInUrl, PortfolioUrl, CandidateSource, IsPotential, CreatedAt) VALUES (255, '1993-11-01', N'Nữ', N'Số 25 Vũ Phạm Hàm, Yên Hòa, Cầu Giấy, Hà Nội', N'https://linkedin.com/in/ngan-do', N'https://github.com/ngando', N'LinkedIn', 1, '2026-12-10 11:44:56');
-INSERT INTO Candidate (UserId, DateOfBirth, Gender, Address, LinkedInUrl, PortfolioUrl, CandidateSource, IsPotential, CreatedAt) VALUES (256, '1997-08-24', N'Nam', N'Số 35 Lê Văn Lương, Nhân Chính, Thanh Xuân, Hà Nội', N'https://linkedin.com/in/huy-trinh', N'https://github.com/huytrinh', N'VietnamWorks', 0, '2026-12-10 13:27:56');
-INSERT INTO Candidate (UserId, DateOfBirth, Gender, Address, LinkedInUrl, PortfolioUrl, CandidateSource, IsPotential, CreatedAt) VALUES (257, '1995-04-24', N'Nam', N'Số 35 Lê Văn Lương, Nhân Chính, Thanh Xuân, Hà Nội', N'https://linkedin.com/in/tien-phan', N'https://github.com/tienphan', N'TopCV', 0, '2026-12-10 10:07:23');
-INSERT INTO Candidate (UserId, DateOfBirth, Gender, Address, LinkedInUrl, PortfolioUrl, CandidateSource, IsPotential, CreatedAt) VALUES (258, '1993-01-23', N'Nữ', N'Số 120 Kim Mã, Ba Đình, Hà Nội', N'https://linkedin.com/in/diep-dinh', N'https://github.com/diepdinh', N'LinkedIn', 0, '2026-12-10 14:07:35');
-INSERT INTO Application (CandidateId, JobPostingId, AppliedCvUrl, SubmissionDate, ApplicationStatus, OverallScore, CreatedAt) VALUES (245, 2, N'https://rms-storage.s3.ap-southeast-1.amazonaws.com/cvs/2026/12/cand_255_ngan_20261210.pdf', '2026-12-10 11:44:56', N'Interviewing', 83.01, '2026-12-10 11:44:56');
-INSERT INTO Application (CandidateId, JobPostingId, AppliedCvUrl, SubmissionDate, ApplicationStatus, OverallScore, CreatedAt) VALUES (246, 2, N'https://rms-storage.s3.ap-southeast-1.amazonaws.com/cvs/2026/12/cand_256_huy_20261210.pdf', '2026-12-10 13:27:56', N'AI_Screened', 63.25, '2026-12-10 13:27:56');
-INSERT INTO Application (CandidateId, JobPostingId, AppliedCvUrl, SubmissionDate, ApplicationStatus, OverallScore, CreatedAt) VALUES (247, 2, N'https://rms-storage.s3.ap-southeast-1.amazonaws.com/cvs/2026/12/cand_257_tien_20261210.pdf', '2026-12-10 10:07:23', N'AI_Screened', 59.44, '2026-12-10 10:07:23');
-INSERT INTO Application (CandidateId, JobPostingId, AppliedCvUrl, SubmissionDate, ApplicationStatus, OverallScore, CreatedAt) VALUES (248, 2, N'https://rms-storage.s3.ap-southeast-1.amazonaws.com/cvs/2026/12/cand_258_diep_20261210.pdf', '2026-12-10 14:07:35', N'AI_Screened', 67.32, '2026-12-10 14:07:35');
-INSERT INTO AIScreeningResult (ApplicationId, AIMatchScore, ScreenedAt) VALUES (245, 83.01, '2026-12-10 12:03:56');
-INSERT INTO AIScreeningResult (ApplicationId, AIMatchScore, ScreenedAt) VALUES (246, 63.25, '2026-12-10 13:36:56');
-INSERT INTO AIScreeningResult (ApplicationId, AIMatchScore, ScreenedAt) VALUES (247, 59.44, '2026-12-10 10:14:23');
-INSERT INTO AIScreeningResult (ApplicationId, AIMatchScore, ScreenedAt) VALUES (248, 67.32, '2026-12-10 14:26:35');
-INSERT INTO ApplicationReview (ApplicationId, ReviewerId, ReviewerRole, Decision, Comments, ReviewedAt) VALUES (245, 4, N'HR', N'Pass', N'Hồ sơ ứng viên Đỗ Thị Ngân đáp ứng tốt tiêu chí cơ bản về học vấn và kinh nghiệm, liên hệ xếp lịch phỏng vấn chuyên môn.', '2026-12-11 12:44:56');
-INSERT INTO ApplicationReview (ApplicationId, ReviewerId, ReviewerRole, Decision, Comments, ReviewedAt) VALUES (245, 5, N'HiringManager', N'Pass', N'Đánh giá CV có kinh nghiệm thực chiến phù hợp với yêu cầu vị trí 2, phê duyệt chuyển sang hội đồng phỏng vấn.', '2026-12-12 16:44:56');
-INSERT INTO InterviewSchedule (ApplicationId, InterviewFormat, StartTime, EndTime, LocationOrLink, InterviewStatus, CreatedBy, CreatedAt) VALUES (245, N'Offline_Office', '2026-12-16 15:00:00', '2026-12-16 16:00:00', N'Phòng họp 802, Tầng 8 Tòa nhà RMS Tower', N'Scheduled', 3, '2026-12-10 11:44:56');
-INSERT INTO InterviewPanel (InterviewId, InterviewerId, RoleInPanel) VALUES (64, 3, N'HR');
-INSERT INTO InterviewPanel (InterviewId, InterviewerId, RoleInPanel) VALUES (64, 5, N'HM');
-INSERT INTO InterviewPanel (InterviewId, InterviewerId, RoleInPanel) VALUES (64, 8, N'Interviewer');
-INSERT INTO InterviewPanel (InterviewId, InterviewerId, RoleInPanel) VALUES (64, 2, N'Director');
-
--- -----------------------------------------------------------------------------
--- DAY 73 / 77: 2026-12-11 (3 Applications)
--- -----------------------------------------------------------------------------
-INSERT INTO [User] (RoleId, Username, PasswordHash, Email, FullName, PhoneNumber, AvatarUrl, DepartmentId, AccountStatus, CreatedAt) VALUES (6, N'quynh.nguyen', N'$2a$10$p.RWJeHxArmCbQBg3GNXEew66veoolEXULwkrjzeoof8Me1dAD8PO', N'quynh.thu.nguyen@vnu.edu.vn', N'Nguyễn Thu Quỳnh', N'0919729340', N'https://ui-avatars.com/api/?name=Nguyễn+Thu+Quỳnh&background=random', NULL, N'Active', '2026-12-11 21:57:06');
-INSERT INTO [User] (RoleId, Username, PasswordHash, Email, FullName, PhoneNumber, AvatarUrl, DepartmentId, AccountStatus, CreatedAt) VALUES (6, N'huong.pham', N'$2a$10$p.RWJeHxArmCbQBg3GNXEew66veoolEXULwkrjzeoof8Me1dAD8PO', N'huong.dieu.pham@hust.edu.vn', N'Phạm Diệu Hương', N'0975412305', N'https://ui-avatars.com/api/?name=Phạm+Diệu+Hương&background=random', NULL, N'Active', '2026-12-11 10:02:35');
-INSERT INTO [User] (RoleId, Username, PasswordHash, Email, FullName, PhoneNumber, AvatarUrl, DepartmentId, AccountStatus, CreatedAt) VALUES (6, N'an.vu', N'$2a$10$p.RWJeHxArmCbQBg3GNXEew66veoolEXULwkrjzeoof8Me1dAD8PO', N'an.van.vu@vnu.edu.vn', N'Vũ Văn An', N'0912852723', N'https://ui-avatars.com/api/?name=Vũ+Văn+An&background=random', NULL, N'Active', '2026-12-11 20:32:04');
-INSERT INTO Candidate (UserId, DateOfBirth, Gender, Address, LinkedInUrl, PortfolioUrl, CandidateSource, IsPotential, CreatedAt) VALUES (259, '1997-10-20', N'Nữ', N'Số 68 Hoàng Quốc Việt, Nghĩa Đô, Cầu Giấy, Hà Nội', N'https://linkedin.com/in/quynh-nguyen', NULL, N'Employee Referral', 0, '2026-12-11 21:57:06');
-INSERT INTO Candidate (UserId, DateOfBirth, Gender, Address, LinkedInUrl, PortfolioUrl, CandidateSource, IsPotential, CreatedAt) VALUES (260, '2001-04-12', N'Nữ', N'Số 88 Láng Hạ, Đống Đa, Hà Nội', N'https://linkedin.com/in/huong-pham', N'https://github.com/huongpham', N'ITViec', 0, '2026-12-11 10:02:35');
-INSERT INTO Candidate (UserId, DateOfBirth, Gender, Address, LinkedInUrl, PortfolioUrl, CandidateSource, IsPotential, CreatedAt) VALUES (261, '2002-11-16', N'Nam', N'Số 48 Tố Hữu, Trung Văn, Nam Từ Liêm, Hà Nội', N'https://linkedin.com/in/an-vu', N'https://github.com/anvu', N'TopCV', 0, '2026-12-11 20:32:04');
-INSERT INTO Application (CandidateId, JobPostingId, AppliedCvUrl, SubmissionDate, ApplicationStatus, OverallScore, CreatedAt) VALUES (249, 4, N'https://rms-storage.s3.ap-southeast-1.amazonaws.com/cvs/2026/12/cand_259_quynh_20261211.pdf', '2026-12-11 21:57:06', N'AI_Screened', 65.29, '2026-12-11 21:57:06');
-INSERT INTO Application (CandidateId, JobPostingId, AppliedCvUrl, SubmissionDate, ApplicationStatus, OverallScore, CreatedAt) VALUES (250, 1, N'https://rms-storage.s3.ap-southeast-1.amazonaws.com/cvs/2026/12/cand_260_huong_20261211.pdf', '2026-12-11 10:02:35', N'AI_Screened', 51.45, '2026-12-11 10:02:35');
-INSERT INTO Application (CandidateId, JobPostingId, AppliedCvUrl, SubmissionDate, ApplicationStatus, OverallScore, CreatedAt) VALUES (251, 2, N'https://rms-storage.s3.ap-southeast-1.amazonaws.com/cvs/2026/12/cand_261_an_20261211.pdf', '2026-12-11 20:32:04', N'AI_Screened', 65.85, '2026-12-11 20:32:04');
-INSERT INTO AIScreeningResult (ApplicationId, AIMatchScore, ScreenedAt) VALUES (249, 65.29, '2026-12-11 22:12:06');
-INSERT INTO AIScreeningResult (ApplicationId, AIMatchScore, ScreenedAt) VALUES (250, 51.45, '2026-12-11 10:17:35');
-INSERT INTO AIScreeningResult (ApplicationId, AIMatchScore, ScreenedAt) VALUES (251, 65.85, '2026-12-11 20:51:04');
-
--- -----------------------------------------------------------------------------
--- DAY 74 / 77: 2026-12-12 (3 Applications)
--- -----------------------------------------------------------------------------
-INSERT INTO [User] (RoleId, Username, PasswordHash, Email, FullName, PhoneNumber, AvatarUrl, DepartmentId, AccountStatus, CreatedAt) VALUES (6, N'tung.dang', N'$2a$10$p.RWJeHxArmCbQBg3GNXEew66veoolEXULwkrjzeoof8Me1dAD8PO', N'tung.hoang.dang@gmail.com', N'Đặng Hoàng Tùng', N'0913931009', N'https://ui-avatars.com/api/?name=Đặng+Hoàng+Tùng&background=random', NULL, N'Active', '2026-12-12 14:47:07');
-INSERT INTO [User] (RoleId, Username, PasswordHash, Email, FullName, PhoneNumber, AvatarUrl, DepartmentId, AccountStatus, CreatedAt) VALUES (6, N'nhung.huynh', N'$2a$10$p.RWJeHxArmCbQBg3GNXEew66veoolEXULwkrjzeoof8Me1dAD8PO', N'nhung.thao.huynh@fpt.edu.vn', N'Huỳnh Thảo Nhung', N'0705501484', N'https://ui-avatars.com/api/?name=Huỳnh+Thảo+Nhung&background=random', NULL, N'Active', '2026-12-12 14:25:29');
-INSERT INTO [User] (RoleId, Username, PasswordHash, Email, FullName, PhoneNumber, AvatarUrl, DepartmentId, AccountStatus, CreatedAt) VALUES (6, N'huy.ngo', N'$2a$10$p.RWJeHxArmCbQBg3GNXEew66veoolEXULwkrjzeoof8Me1dAD8PO', N'huy.trong.ngo@gmail.com', N'Ngô Trọng Huy', N'0931983923', N'https://ui-avatars.com/api/?name=Ngô+Trọng+Huy&background=random', NULL, N'Active', '2026-12-12 20:36:43');
-INSERT INTO Candidate (UserId, DateOfBirth, Gender, Address, LinkedInUrl, PortfolioUrl, CandidateSource, IsPotential, CreatedAt) VALUES (262, '1993-05-12', N'Nam', N'Số 15 Võ Văn Ngân, Linh Chiểu, TP. Thủ Đức, TP. Hồ Chí Minh', N'https://linkedin.com/in/tung-dang', N'https://github.com/tungdang', N'TopCV', 1, '2026-12-12 14:47:07');
-INSERT INTO Candidate (UserId, DateOfBirth, Gender, Address, LinkedInUrl, PortfolioUrl, CandidateSource, IsPotential, CreatedAt) VALUES (263, '1994-06-27', N'Nữ', N'Số 48 Tố Hữu, Trung Văn, Nam Từ Liêm, Hà Nội', N'https://linkedin.com/in/nhung-huynh', N'https://github.com/nhunghuynh', N'LinkedIn', 0, '2026-12-12 14:25:29');
-INSERT INTO Candidate (UserId, DateOfBirth, Gender, Address, LinkedInUrl, PortfolioUrl, CandidateSource, IsPotential, CreatedAt) VALUES (264, '1995-02-14', N'Nam', N'Số 56 Hoàng Văn Thụ, Phường 4, Tân Bình, TP. Hồ Chí Minh', N'https://linkedin.com/in/huy-ngo', N'https://github.com/huyngo', N'ITViec', 0, '2026-12-12 20:36:43');
-INSERT INTO Application (CandidateId, JobPostingId, AppliedCvUrl, SubmissionDate, ApplicationStatus, OverallScore, CreatedAt) VALUES (252, 1, N'https://rms-storage.s3.ap-southeast-1.amazonaws.com/cvs/2026/12/cand_262_tung_20261212.pdf', '2026-12-12 14:47:07', N'Offered', 91.12, '2026-12-12 14:47:07');
-INSERT INTO Application (CandidateId, JobPostingId, AppliedCvUrl, SubmissionDate, ApplicationStatus, OverallScore, CreatedAt) VALUES (253, 2, N'https://rms-storage.s3.ap-southeast-1.amazonaws.com/cvs/2026/12/cand_263_nhung_20261212.pdf', '2026-12-12 14:25:29', N'AI_Screened', 44.94, '2026-12-12 14:25:29');
-INSERT INTO Application (CandidateId, JobPostingId, AppliedCvUrl, SubmissionDate, ApplicationStatus, OverallScore, CreatedAt) VALUES (254, 1, N'https://rms-storage.s3.ap-southeast-1.amazonaws.com/cvs/2026/12/cand_264_huy_20261212.pdf', '2026-12-12 20:36:43', N'AI_Screened', 63.99, '2026-12-12 20:36:43');
-INSERT INTO AIScreeningResult (ApplicationId, AIMatchScore, ScreenedAt) VALUES (252, 91.12, '2026-12-12 15:01:07');
-INSERT INTO AIScreeningResult (ApplicationId, AIMatchScore, ScreenedAt) VALUES (253, 44.94, '2026-12-12 14:41:29');
-INSERT INTO AIScreeningResult (ApplicationId, AIMatchScore, ScreenedAt) VALUES (254, 63.99, '2026-12-12 20:45:43');
-INSERT INTO ApplicationReview (ApplicationId, ReviewerId, ReviewerRole, Decision, Comments, ReviewedAt) VALUES (252, 4, N'HR', N'Pass', N'Hồ sơ ứng viên Đặng Hoàng Tùng đáp ứng tốt tiêu chí cơ bản về học vấn và kinh nghiệm, liên hệ xếp lịch phỏng vấn chuyên môn.', '2026-12-13 15:47:07');
-INSERT INTO ApplicationReview (ApplicationId, ReviewerId, ReviewerRole, Decision, Comments, ReviewedAt) VALUES (252, 5, N'HiringManager', N'Pass', N'Đánh giá CV có kinh nghiệm thực chiến phù hợp với yêu cầu vị trí 1, phê duyệt chuyển sang hội đồng phỏng vấn.', '2026-12-14 17:47:07');
-INSERT INTO InterviewSchedule (ApplicationId, InterviewFormat, StartTime, EndTime, LocationOrLink, InterviewStatus, CreatedBy, CreatedAt) VALUES (252, N'Online_GoogleMeet', '2026-12-17 16:00:00', '2026-12-17 17:00:00', N'https://meet.google.com/rms-int-0065', N'Scheduled', 3, '2026-12-12 14:47:07');
-INSERT INTO InterviewPanel (InterviewId, InterviewerId, RoleInPanel) VALUES (65, 4, N'HR');
-INSERT INTO InterviewPanel (InterviewId, InterviewerId, RoleInPanel) VALUES (65, 5, N'HM');
-INSERT INTO InterviewPanel (InterviewId, InterviewerId, RoleInPanel) VALUES (65, 7, N'Interviewer');
-INSERT INTO InterviewPanel (InterviewId, InterviewerId, RoleInPanel) VALUES (65, 2, N'Director');
-
--- -----------------------------------------------------------------------------
--- DAY 75 / 77: 2026-12-13 (3 Applications)
--- -----------------------------------------------------------------------------
-INSERT INTO [User] (RoleId, Username, PasswordHash, Email, FullName, PhoneNumber, AvatarUrl, DepartmentId, AccountStatus, CreatedAt) VALUES (6, N'hoang.nguyen', N'$2a$10$p.RWJeHxArmCbQBg3GNXEew66veoolEXULwkrjzeoof8Me1dAD8PO', N'hoang.khac.nguyen@fpt.edu.vn', N'Nguyễn Khắc Hoàng', N'0382894776', N'https://ui-avatars.com/api/?name=Nguyễn+Khắc+Hoàng&background=random', NULL, N'Active', '2026-12-13 13:00:45');
-INSERT INTO [User] (RoleId, Username, PasswordHash, Email, FullName, PhoneNumber, AvatarUrl, DepartmentId, AccountStatus, CreatedAt) VALUES (6, N'hai.bui2', N'$2a$10$p.RWJeHxArmCbQBg3GNXEew66veoolEXULwkrjzeoof8Me1dAD8PO', N'hai.thanh.bui@fpt.edu.vn', N'Bùi Thành Hải', N'0979085438', N'https://ui-avatars.com/api/?name=Bùi+Thành+Hải&background=random', NULL, N'Active', '2026-12-13 21:52:35');
-INSERT INTO [User] (RoleId, Username, PasswordHash, Email, FullName, PhoneNumber, AvatarUrl, DepartmentId, AccountStatus, CreatedAt) VALUES (6, N'viet.doan', N'$2a$10$p.RWJeHxArmCbQBg3GNXEew66veoolEXULwkrjzeoof8Me1dAD8PO', N'viet.khac.doan@outlook.com', N'Đoàn Khắc Việt', N'0383775016', N'https://ui-avatars.com/api/?name=Đoàn+Khắc+Việt&background=random', NULL, N'Active', '2026-12-13 08:32:14');
-INSERT INTO Candidate (UserId, DateOfBirth, Gender, Address, LinkedInUrl, PortfolioUrl, CandidateSource, IsPotential, CreatedAt) VALUES (265, '1999-08-02', N'Nam', N'Số 77 Xuân Thủy, Cầu Giấy, Hà Nội', N'https://linkedin.com/in/hoang-nguyen', NULL, N'Employee Referral', 0, '2026-12-13 13:00:45');
-INSERT INTO Candidate (UserId, DateOfBirth, Gender, Address, LinkedInUrl, PortfolioUrl, CandidateSource, IsPotential, CreatedAt) VALUES (266, '1998-11-22', N'Nam', N'Số 102 Nguyễn Trãi, Thanh Xuân, Hà Nội', N'https://linkedin.com/in/hai-bui2', N'https://github.com/haibui2', N'Employee Referral', 1, '2026-12-13 21:52:35');
-INSERT INTO Candidate (UserId, DateOfBirth, Gender, Address, LinkedInUrl, PortfolioUrl, CandidateSource, IsPotential, CreatedAt) VALUES (267, '1994-08-11', N'Nam', N'Số 88 Láng Hạ, Đống Đa, Hà Nội', N'https://linkedin.com/in/viet-doan', NULL, N'Employee Referral', 0, '2026-12-13 08:32:14');
-INSERT INTO Application (CandidateId, JobPostingId, AppliedCvUrl, SubmissionDate, ApplicationStatus, OverallScore, CreatedAt) VALUES (255, 4, N'https://rms-storage.s3.ap-southeast-1.amazonaws.com/cvs/2026/12/cand_265_hoang_20261213.pdf', '2026-12-13 13:00:45', N'HM_Passed', 73.61, '2026-12-13 13:00:45');
-INSERT INTO Application (CandidateId, JobPostingId, AppliedCvUrl, SubmissionDate, ApplicationStatus, OverallScore, CreatedAt) VALUES (256, 1, N'https://rms-storage.s3.ap-southeast-1.amazonaws.com/cvs/2026/12/cand_266_hai_20261213.pdf', '2026-12-13 21:52:35', N'Offered', 90.34, '2026-12-13 21:52:35');
-INSERT INTO Application (CandidateId, JobPostingId, AppliedCvUrl, SubmissionDate, ApplicationStatus, OverallScore, CreatedAt) VALUES (257, 4, N'https://rms-storage.s3.ap-southeast-1.amazonaws.com/cvs/2026/12/cand_267_viet_20261213.pdf', '2026-12-13 08:32:14', N'HR_Passed', 75.67, '2026-12-13 08:32:14');
-INSERT INTO AIScreeningResult (ApplicationId, AIMatchScore, ScreenedAt) VALUES (255, 73.61, '2026-12-13 13:20:45');
-INSERT INTO AIScreeningResult (ApplicationId, AIMatchScore, ScreenedAt) VALUES (256, 90.34, '2026-12-13 22:09:35');
-INSERT INTO AIScreeningResult (ApplicationId, AIMatchScore, ScreenedAt) VALUES (257, 75.67, '2026-12-13 08:39:14');
-INSERT INTO ApplicationReview (ApplicationId, ReviewerId, ReviewerRole, Decision, Comments, ReviewedAt) VALUES (255, 3, N'HR', N'Pass', N'Hồ sơ ứng viên Nguyễn Khắc Hoàng đáp ứng tốt tiêu chí cơ bản về học vấn và kinh nghiệm, liên hệ xếp lịch phỏng vấn chuyên môn.', '2026-12-14 16:00:45');
-INSERT INTO ApplicationReview (ApplicationId, ReviewerId, ReviewerRole, Decision, Comments, ReviewedAt) VALUES (255, 6, N'HiringManager', N'Hold', N'Đánh giá CV có kinh nghiệm thực chiến phù hợp với yêu cầu vị trí 4, phê duyệt chuyển sang hội đồng phỏng vấn.', '2026-12-15 21:00:45');
-INSERT INTO ApplicationReview (ApplicationId, ReviewerId, ReviewerRole, Decision, Comments, ReviewedAt) VALUES (256, 4, N'HR', N'Pass', N'Hồ sơ ứng viên Bùi Thành Hải đáp ứng tốt tiêu chí cơ bản về học vấn và kinh nghiệm, liên hệ xếp lịch phỏng vấn chuyên môn.', '2026-12-15 01:52:35');
-INSERT INTO ApplicationReview (ApplicationId, ReviewerId, ReviewerRole, Decision, Comments, ReviewedAt) VALUES (256, 5, N'HiringManager', N'Pass', N'Đánh giá CV có kinh nghiệm thực chiến phù hợp với yêu cầu vị trí 1, phê duyệt chuyển sang hội đồng phỏng vấn.', '2026-12-16 04:52:35');
-INSERT INTO ApplicationReview (ApplicationId, ReviewerId, ReviewerRole, Decision, Comments, ReviewedAt) VALUES (257, 3, N'HR', N'Pass', N'Hồ sơ ứng viên Đoàn Khắc Việt đáp ứng tốt tiêu chí cơ bản về học vấn và kinh nghiệm, liên hệ xếp lịch phỏng vấn chuyên môn.', '2026-12-14 10:32:14');
-INSERT INTO ApplicationReview (ApplicationId, ReviewerId, ReviewerRole, Decision, Comments, ReviewedAt) VALUES (257, 6, N'HiringManager', N'Pass', N'Đánh giá CV có kinh nghiệm thực chiến phù hợp với yêu cầu vị trí 4, phê duyệt chuyển sang hội đồng phỏng vấn.', '2026-12-15 15:32:14');
-INSERT INTO InterviewSchedule (ApplicationId, InterviewFormat, StartTime, EndTime, LocationOrLink, InterviewStatus, CreatedBy, CreatedAt) VALUES (256, N'Offline_Office', '2026-12-19 14:00:00', '2026-12-19 15:00:00', N'Phòng họp 802, Tầng 8 Tòa nhà RMS Tower', N'Scheduled', 3, '2026-12-13 21:52:35');
-INSERT INTO InterviewPanel (InterviewId, InterviewerId, RoleInPanel) VALUES (66, 4, N'HR');
-INSERT INTO InterviewPanel (InterviewId, InterviewerId, RoleInPanel) VALUES (66, 5, N'HM');
-INSERT INTO InterviewPanel (InterviewId, InterviewerId, RoleInPanel) VALUES (66, 7, N'Interviewer');
-INSERT INTO InterviewPanel (InterviewId, InterviewerId, RoleInPanel) VALUES (66, 2, N'Director');
-
--- -----------------------------------------------------------------------------
--- DAY 76 / 77: 2026-12-14 (3 Applications)
--- -----------------------------------------------------------------------------
-INSERT INTO [User] (RoleId, Username, PasswordHash, Email, FullName, PhoneNumber, AvatarUrl, DepartmentId, AccountStatus, CreatedAt) VALUES (6, N'tuan.le', N'$2a$10$p.RWJeHxArmCbQBg3GNXEew66veoolEXULwkrjzeoof8Me1dAD8PO', N'tuan.huu.le@outlook.com', N'Lê Hữu Tuấn', N'0708517846', N'https://ui-avatars.com/api/?name=Lê+Hữu+Tuấn&background=random', NULL, N'Active', '2026-12-14 19:41:01');
-INSERT INTO [User] (RoleId, Username, PasswordHash, Email, FullName, PhoneNumber, AvatarUrl, DepartmentId, AccountStatus, CreatedAt) VALUES (6, N'duc.nguyen', N'$2a$10$p.RWJeHxArmCbQBg3GNXEew66veoolEXULwkrjzeoof8Me1dAD8PO', N'duc.khac.nguyen@outlook.com', N'Nguyễn Khắc Đức', N'0706110305', N'https://ui-avatars.com/api/?name=Nguyễn+Khắc+Đức&background=random', NULL, N'Active', '2026-12-14 13:23:52');
-INSERT INTO [User] (RoleId, Username, PasswordHash, Email, FullName, PhoneNumber, AvatarUrl, DepartmentId, AccountStatus, CreatedAt) VALUES (6, N'oanh.ly', N'$2a$10$p.RWJeHxArmCbQBg3GNXEew66veoolEXULwkrjzeoof8Me1dAD8PO', N'oanh.anh.ly@vnu.edu.vn', N'Lý Ánh Oanh', N'0382912994', N'https://ui-avatars.com/api/?name=Lý+Ánh+Oanh&background=random', NULL, N'Active', '2026-12-14 21:40:51');
-INSERT INTO Candidate (UserId, DateOfBirth, Gender, Address, LinkedInUrl, PortfolioUrl, CandidateSource, IsPotential, CreatedAt) VALUES (268, '1994-08-15', N'Nam', N'Số 120 Kim Mã, Ba Đình, Hà Nội', N'https://linkedin.com/in/tuan-le', N'https://github.com/tuanle', N'TopCV', 0, '2026-12-14 19:41:01');
-INSERT INTO Candidate (UserId, DateOfBirth, Gender, Address, LinkedInUrl, PortfolioUrl, CandidateSource, IsPotential, CreatedAt) VALUES (269, '2001-09-07', N'Nam', N'Số 120 Kim Mã, Ba Đình, Hà Nội', N'https://linkedin.com/in/duc-nguyen', N'https://github.com/ducnguyen', N'TopCV', 0, '2026-12-14 13:23:52');
-INSERT INTO Candidate (UserId, DateOfBirth, Gender, Address, LinkedInUrl, PortfolioUrl, CandidateSource, IsPotential, CreatedAt) VALUES (270, '1994-11-08', N'Nữ', N'Số 14 Phố Huế, Hàng Bài, Hoàn Kiếm, Hà Nội', N'https://linkedin.com/in/oanh-ly', N'https://github.com/oanhly', N'LinkedIn', 0, '2026-12-14 21:40:51');
-INSERT INTO Application (CandidateId, JobPostingId, AppliedCvUrl, SubmissionDate, ApplicationStatus, OverallScore, CreatedAt) VALUES (258, 2, N'https://rms-storage.s3.ap-southeast-1.amazonaws.com/cvs/2026/12/cand_268_tuan_20261214.pdf', '2026-12-14 19:41:01', N'HM_Passed', 81.38, '2026-12-14 19:41:01');
-INSERT INTO Application (CandidateId, JobPostingId, AppliedCvUrl, SubmissionDate, ApplicationStatus, OverallScore, CreatedAt) VALUES (259, 1, N'https://rms-storage.s3.ap-southeast-1.amazonaws.com/cvs/2026/12/cand_269_duc_20261214.pdf', '2026-12-14 13:23:52', N'AI_Screened', 44.83, '2026-12-14 13:23:52');
-INSERT INTO Application (CandidateId, JobPostingId, AppliedCvUrl, SubmissionDate, ApplicationStatus, OverallScore, CreatedAt) VALUES (260, 3, N'https://rms-storage.s3.ap-southeast-1.amazonaws.com/cvs/2026/12/cand_270_oanh_20261214.pdf', '2026-12-14 21:40:51', N'HR_Passed', 78.80, '2026-12-14 21:40:51');
-INSERT INTO AIScreeningResult (ApplicationId, AIMatchScore, ScreenedAt) VALUES (258, 81.38, '2026-12-14 19:58:01');
-INSERT INTO AIScreeningResult (ApplicationId, AIMatchScore, ScreenedAt) VALUES (259, 44.83, '2026-12-14 13:38:52');
-INSERT INTO AIScreeningResult (ApplicationId, AIMatchScore, ScreenedAt) VALUES (260, 78.80, '2026-12-14 22:00:51');
-INSERT INTO ApplicationReview (ApplicationId, ReviewerId, ReviewerRole, Decision, Comments, ReviewedAt) VALUES (258, 3, N'HR', N'Pass', N'Hồ sơ ứng viên Lê Hữu Tuấn đáp ứng tốt tiêu chí cơ bản về học vấn và kinh nghiệm, liên hệ xếp lịch phỏng vấn chuyên môn.', '2026-12-15 20:41:01');
-INSERT INTO ApplicationReview (ApplicationId, ReviewerId, ReviewerRole, Decision, Comments, ReviewedAt) VALUES (258, 5, N'HiringManager', N'Hold', N'Đánh giá CV có kinh nghiệm thực chiến phù hợp với yêu cầu vị trí 2, phê duyệt chuyển sang hội đồng phỏng vấn.', '2026-12-16 23:41:01');
-INSERT INTO ApplicationReview (ApplicationId, ReviewerId, ReviewerRole, Decision, Comments, ReviewedAt) VALUES (260, 3, N'HR', N'Pass', N'Hồ sơ ứng viên Lý Ánh Oanh đáp ứng tốt tiêu chí cơ bản về học vấn và kinh nghiệm, liên hệ xếp lịch phỏng vấn chuyên môn.', '2026-12-15 22:40:51');
-INSERT INTO ApplicationReview (ApplicationId, ReviewerId, ReviewerRole, Decision, Comments, ReviewedAt) VALUES (260, 5, N'HiringManager', N'Pass', N'Đánh giá CV có kinh nghiệm thực chiến phù hợp với yêu cầu vị trí 3, phê duyệt chuyển sang hội đồng phỏng vấn.', '2026-12-17 01:40:51');
-
--- -----------------------------------------------------------------------------
--- DAY 77 / 77: 2026-12-15 (4 Applications)
--- -----------------------------------------------------------------------------
-INSERT INTO [User] (RoleId, Username, PasswordHash, Email, FullName, PhoneNumber, AvatarUrl, DepartmentId, AccountStatus, CreatedAt) VALUES (6, N'vinh.tran', N'$2a$10$p.RWJeHxArmCbQBg3GNXEew66veoolEXULwkrjzeoof8Me1dAD8PO', N'vinh.tuan.tran@gmail.com', N'Trần Tuấn Vinh', N'0882794516', N'https://ui-avatars.com/api/?name=Trần+Tuấn+Vinh&background=random', NULL, N'Active', '2026-12-15 14:13:29');
-INSERT INTO [User] (RoleId, Username, PasswordHash, Email, FullName, PhoneNumber, AvatarUrl, DepartmentId, AccountStatus, CreatedAt) VALUES (6, N'hieu.tran', N'$2a$10$p.RWJeHxArmCbQBg3GNXEew66veoolEXULwkrjzeoof8Me1dAD8PO', N'hieu.trong.tran@outlook.com', N'Trần Trọng Hiếu', N'0388673695', N'https://ui-avatars.com/api/?name=Trần+Trọng+Hiếu&background=random', NULL, N'Active', '2026-12-15 16:47:03');
-INSERT INTO [User] (RoleId, Username, PasswordHash, Email, FullName, PhoneNumber, AvatarUrl, DepartmentId, AccountStatus, CreatedAt) VALUES (6, N'khanh.doan', N'$2a$10$p.RWJeHxArmCbQBg3GNXEew66veoolEXULwkrjzeoof8Me1dAD8PO', N'khanh.tien.doan@vnu.edu.vn', N'Đoàn Tiến Khánh', N'0703913368', N'https://ui-avatars.com/api/?name=Đoàn+Tiến+Khánh&background=random', NULL, N'Active', '2026-12-15 13:32:56');
-INSERT INTO [User] (RoleId, Username, PasswordHash, Email, FullName, PhoneNumber, AvatarUrl, DepartmentId, AccountStatus, CreatedAt) VALUES (6, N'tien.vu', N'$2a$10$p.RWJeHxArmCbQBg3GNXEew66veoolEXULwkrjzeoof8Me1dAD8PO', N'tien.hoang.vu@gmail.com', N'Vũ Hoàng Tiến', N'0988597490', N'https://ui-avatars.com/api/?name=Vũ+Hoàng+Tiến&background=random', NULL, N'Active', '2026-12-15 16:19:53');
-INSERT INTO Candidate (UserId, DateOfBirth, Gender, Address, LinkedInUrl, PortfolioUrl, CandidateSource, IsPotential, CreatedAt) VALUES (271, '1997-10-07', N'Nam', N'Số 16 Đại Cồ Việt, Bách Khoa, Hai Bà Trưng, Hà Nội', N'https://linkedin.com/in/vinh-tran', NULL, N'VietnamWorks', 0, '2026-12-15 14:13:29');
-INSERT INTO Candidate (UserId, DateOfBirth, Gender, Address, LinkedInUrl, PortfolioUrl, CandidateSource, IsPotential, CreatedAt) VALUES (272, '2002-09-05', N'Nam', N'Số 12 Lê Thánh Tôn, Bến Nghé, Quận 1, TP. Hồ Chí Minh', N'https://linkedin.com/in/hieu-tran', N'https://github.com/hieutran', N'Employee Referral', 0, '2026-12-15 16:47:03');
-INSERT INTO Candidate (UserId, DateOfBirth, Gender, Address, LinkedInUrl, PortfolioUrl, CandidateSource, IsPotential, CreatedAt) VALUES (273, '1995-02-13', N'Nam', N'Số 50 Trần Phú, Văn Quán, Hà Đông, Hà Nội', N'https://linkedin.com/in/khanh-doan', N'https://github.com/khanhdoan', N'ITViec', 0, '2026-12-15 13:32:56');
-INSERT INTO Candidate (UserId, DateOfBirth, Gender, Address, LinkedInUrl, PortfolioUrl, CandidateSource, IsPotential, CreatedAt) VALUES (274, '1995-03-14', N'Nam', N'Số 91 Chùa Bộc, Quang Trung, Đống Đa, Hà Nội', N'https://linkedin.com/in/tien-vu', N'https://github.com/tienvu', N'Employee Referral', 0, '2026-12-15 16:19:53');
-INSERT INTO Application (CandidateId, JobPostingId, AppliedCvUrl, SubmissionDate, ApplicationStatus, OverallScore, CreatedAt) VALUES (261, 4, N'https://rms-storage.s3.ap-southeast-1.amazonaws.com/cvs/2026/12/cand_271_vinh_20261215.pdf', '2026-12-15 14:13:29', N'HM_Passed', 76.62, '2026-12-15 14:13:29');
-INSERT INTO Application (CandidateId, JobPostingId, AppliedCvUrl, SubmissionDate, ApplicationStatus, OverallScore, CreatedAt) VALUES (262, 2, N'https://rms-storage.s3.ap-southeast-1.amazonaws.com/cvs/2026/12/cand_272_hieu_20261215.pdf', '2026-12-15 16:47:03', N'AI_Screened', 47.35, '2026-12-15 16:47:03');
-INSERT INTO Application (CandidateId, JobPostingId, AppliedCvUrl, SubmissionDate, ApplicationStatus, OverallScore, CreatedAt) VALUES (263, 2, N'https://rms-storage.s3.ap-southeast-1.amazonaws.com/cvs/2026/12/cand_273_khanh_20261215.pdf', '2026-12-15 13:32:56', N'Applied', NULL, '2026-12-15 13:32:56');
-INSERT INTO Application (CandidateId, JobPostingId, AppliedCvUrl, SubmissionDate, ApplicationStatus, OverallScore, CreatedAt) VALUES (264, 2, N'https://rms-storage.s3.ap-southeast-1.amazonaws.com/cvs/2026/12/cand_274_tien_20261215.pdf', '2026-12-15 16:19:53', N'AI_Screened', 62.65, '2026-12-15 16:19:53');
-INSERT INTO AIScreeningResult (ApplicationId, AIMatchScore, ScreenedAt) VALUES (261, 76.62, '2026-12-15 14:27:29');
-INSERT INTO AIScreeningResult (ApplicationId, AIMatchScore, ScreenedAt) VALUES (262, 47.35, '2026-12-15 17:05:03');
-INSERT INTO AIScreeningResult (ApplicationId, AIMatchScore, ScreenedAt) VALUES (264, 62.65, '2026-12-15 16:35:53');
-INSERT INTO ApplicationReview (ApplicationId, ReviewerId, ReviewerRole, Decision, Comments, ReviewedAt) VALUES (261, 3, N'HR', N'Pass', N'Hồ sơ ứng viên Trần Tuấn Vinh đáp ứng tốt tiêu chí cơ bản về học vấn và kinh nghiệm, liên hệ xếp lịch phỏng vấn chuyên môn.', '2026-12-16 15:13:29');
-INSERT INTO ApplicationReview (ApplicationId, ReviewerId, ReviewerRole, Decision, Comments, ReviewedAt) VALUES (261, 6, N'HiringManager', N'Hold', N'Đánh giá CV có kinh nghiệm thực chiến phù hợp với yêu cầu vị trí 4, phê duyệt chuyển sang hội đồng phỏng vấn.', '2026-12-17 20:13:29');
 
 COMMIT TRANSACTION;
-PRINT N'>>> DỮ LIỆU ĐÃ ĐƯỢC COMMIT THÀNH CÔNG VÀO CƠ SỞ DỮ LIỆU!';
+PRINT N'=============================================================================';
+PRINT N'SEED DATA INSERTED SUCCESSFULLY FOR ALL 21 TABLES IN RitirementManagement2!';
+PRINT N'=============================================================================';
+
 END TRY
 BEGIN CATCH
     IF @@TRANCOUNT > 0
         ROLLBACK TRANSACTION;
-    DECLARE @ErrMsg NVARCHAR(4000) = ERROR_MESSAGE();
-    DECLARE @ErrSev INT = ERROR_SEVERITY();
-    DECLARE @ErrState INT = ERROR_STATE();
-    RAISERROR(@ErrMsg, @ErrSev, @ErrState);
+
+    DECLARE @ErrorMessage NVARCHAR(4000) = ERROR_MESSAGE();
+    DECLARE @ErrorLine INT = ERROR_LINE();
+    RAISERROR (N'Lỗi khi chạy Seed Data tại dòng %d: %s', 16, 1, @ErrorLine, @ErrorMessage);
 END CATCH;
-GO
-
--- =============================================================================
--- 🔍 KHỐI ĐỐI SOÁT & KIỂM TRA CHẤT LƯỢNG TỰ ĐỘNG (ASSERTION BLOCK)
--- Schema v2: 19 bảng (OfferNegotiation đã bị DROP)
--- =============================================================================
-PRINT N'';
-PRINT N'=============================================================================';
-PRINT N'               BÁO CÁO TỔNG SỐ BẢN GHI THEO TOÀN BỘ 19 BẢNG                   ';
-PRINT N'=============================================================================';
-SELECT 'Role' AS TableName, COUNT(*) AS TotalRecords FROM [Role]
-UNION ALL SELECT 'Department', COUNT(*) FROM Department
-UNION ALL SELECT '[User]', COUNT(*) FROM [User]
-UNION ALL SELECT 'AuditLog', COUNT(*) FROM AuditLog
-UNION ALL SELECT 'SystemConfig', COUNT(*) FROM SystemConfig
-UNION ALL SELECT 'JobRequisition', COUNT(*) FROM JobRequisition
-UNION ALL SELECT 'RequisitionApproval', COUNT(*) FROM RequisitionApproval
-UNION ALL SELECT 'ScreeningCriteria', COUNT(*) FROM ScreeningCriteria
-UNION ALL SELECT 'JobPosting', COUNT(*) FROM JobPosting
-UNION ALL SELECT 'Candidate', COUNT(*) FROM Candidate
-UNION ALL SELECT 'Application', COUNT(*) FROM Application
-UNION ALL SELECT 'ApplicationReview', COUNT(*) FROM ApplicationReview
-UNION ALL SELECT 'AIScreeningResult', COUNT(*) FROM AIScreeningResult
-UNION ALL SELECT 'InterviewSchedule', COUNT(*) FROM InterviewSchedule
-UNION ALL SELECT 'InterviewPanel', COUNT(*) FROM InterviewPanel
-UNION ALL SELECT 'InterviewEvaluation', COUNT(*) FROM InterviewEvaluation
-UNION ALL SELECT 'InterviewFinalResult', COUNT(*) FROM InterviewFinalResult
-UNION ALL SELECT 'OfferProposal', COUNT(*) FROM OfferProposal
-UNION ALL SELECT 'OfferApproval', COUNT(*) FROM OfferApproval;
-GO
-
--- Kiểm tra không có bảng nào trong 19 bảng bị rỗng (COUNT = 0) - Schema v2: đã xóa OfferNegotiation
-BEGIN
-    DECLARE @EmptyTables INT = 0;
-    IF (SELECT COUNT(*) FROM [Role]) = 0 SET @EmptyTables = @EmptyTables + 1;
-    IF (SELECT COUNT(*) FROM Department) = 0 SET @EmptyTables = @EmptyTables + 1;
-    IF (SELECT COUNT(*) FROM [User]) = 0 SET @EmptyTables = @EmptyTables + 1;
-    IF (SELECT COUNT(*) FROM AuditLog) = 0 SET @EmptyTables = @EmptyTables + 1;
-    IF (SELECT COUNT(*) FROM SystemConfig) = 0 SET @EmptyTables = @EmptyTables + 1;
-    IF (SELECT COUNT(*) FROM JobRequisition) = 0 SET @EmptyTables = @EmptyTables + 1;
-    IF (SELECT COUNT(*) FROM RequisitionApproval) = 0 SET @EmptyTables = @EmptyTables + 1;
-    IF (SELECT COUNT(*) FROM ScreeningCriteria) = 0 SET @EmptyTables = @EmptyTables + 1;
-    IF (SELECT COUNT(*) FROM JobPosting) = 0 SET @EmptyTables = @EmptyTables + 1;
-    IF (SELECT COUNT(*) FROM Candidate) = 0 SET @EmptyTables = @EmptyTables + 1;
-    IF (SELECT COUNT(*) FROM Application) = 0 SET @EmptyTables = @EmptyTables + 1;
-    IF (SELECT COUNT(*) FROM ApplicationReview) = 0 SET @EmptyTables = @EmptyTables + 1;
-    IF (SELECT COUNT(*) FROM AIScreeningResult) = 0 SET @EmptyTables = @EmptyTables + 1;
-    IF (SELECT COUNT(*) FROM InterviewSchedule) = 0 SET @EmptyTables = @EmptyTables + 1;
-    IF (SELECT COUNT(*) FROM InterviewPanel) = 0 SET @EmptyTables = @EmptyTables + 1;
-    IF (SELECT COUNT(*) FROM InterviewEvaluation) = 0 SET @EmptyTables = @EmptyTables + 1;
-    IF (SELECT COUNT(*) FROM InterviewFinalResult) = 0 SET @EmptyTables = @EmptyTables + 1;
-    IF (SELECT COUNT(*) FROM OfferProposal) = 0 SET @EmptyTables = @EmptyTables + 1;
-    IF (SELECT COUNT(*) FROM OfferApproval) = 0 SET @EmptyTables = @EmptyTables + 1;
-
-    IF @EmptyTables > 0
-        RAISERROR(N'CẢNH BÁO: Phát hiện có bảng chưa có dữ liệu trong 19 bảng!', 16, 1);
-    ELSE
-        PRINT N'>>> XÁC NHẬN HOÀN TOÀN: ĐỦ 19/19 BẢNG ĐỀU ĐÃ ĐƯỢC NẠP DỮ LIỆU CHUẨN MỰC!';
-END;
-GO
-
--- Kiểm tra số lượng đơn ứng tuyển theo từng ngày (Yêu cầu nghiêm ngặt: không dưới 3 và không quá 4 đơn/ngày)
-PRINT N'=============================================================================';
-PRINT N'   KIỂM TRA DÒNG THỜI GIAN ĐƠN ỨNG TUYỂN (3-4 ĐƠN/NGÀY TỪ 30/09 ĐẾN 15/12)     ';
-PRINT N'=============================================================================';
-SELECT CAST(SubmissionDate AS DATE) AS ApplyDate, COUNT(*) AS TotalApps
-FROM Application
-GROUP BY CAST(SubmissionDate AS DATE)
-HAVING COUNT(*) < 3 OR COUNT(*) > 4;
-GO
-
-PRINT N'>>> KẾT QUẢ: Nếu bảng trên rỗng (0 rows), toàn bộ 77 ngày đều đạt chuẩn 3-4 đơn/ngày!';
-PRINT N'>>> HOÀN TẤT: Script seed_data.sql sẵn sàng khởi chạy trên môi trường thử nghiệm / phát triển!';
 GO

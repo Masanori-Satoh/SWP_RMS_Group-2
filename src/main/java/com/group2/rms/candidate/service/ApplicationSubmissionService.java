@@ -42,14 +42,14 @@ public class ApplicationSubmissionService {
                 .orElseThrow(() -> new ApplicationSubmissionException(null,
                         "Tài khoản chưa có hồ sơ ứng viên. Vui lòng liên hệ quản trị viên."));
 
-        JobPosting job = jobPostings.findById(jobPostingId)
+        JobPosting job = jobPostings.findForUpdate(jobPostingId)
                 .filter(j -> "Published".equals(j.getPostingStatus()))
                 .orElseThrow(() -> new ResourceNotFoundException("Tin tuyển dụng này không còn khả dụng."));
 
         if (job.getApplicationDeadline() != null && job.getApplicationDeadline().isBefore(LocalDateTime.now())) {
             throw new ApplicationSubmissionException(null, "Tin tuyển dụng đã hết hạn nhận hồ sơ.");
         }
-        if (applications.existsByCandidate_CandidateIdAndJobPosting_JobPostingId(
+        if (applications.existsActiveByCandidateAndJobPosting(
                 candidate.getCandidateId(), job.getJobPostingId())) {
             throw new ApplicationSubmissionException(null, "Bạn đã ứng tuyển vị trí này.");
         }
@@ -58,12 +58,18 @@ public class ApplicationSubmissionService {
         StoredFile stored = cvStorage.store(cvFile, candidate.getCandidateId());
         deleteFileUnlessCommitted(stored);
 
-        Application saved = applications.save(Application.builder()
-                .candidate(candidate)
-                .jobPosting(job)
-                .appliedCvUrl(stored.url())
-                .applicationStatus(INITIAL_STATUS)
-                .build());
+        Application draft = applications.findFirstByCandidate_CandidateIdAndJobPosting_JobPostingIdAndApplicationStatus(
+                candidate.getCandidateId(), jobPostingId, "HM_Suggested").orElse(null);
+        Application saved;
+        if (draft != null) {
+            if (applications.submitSuggestionWithNewCv(draft.getApplicationId(), stored.url()) != 1)
+                throw new ApplicationSubmissionException(null, "Đề xuất vừa được xử lý. Vui lòng tải lại trang.");
+            applications.recordSuggestionSubmitted(candidate.getAccount().getUserId(), draft.getApplicationId());
+            saved = draft;
+        } else {
+            saved = applications.save(Application.builder().candidate(candidate).jobPosting(job)
+                    .appliedCvUrl(stored.url()).applicationStatus(INITIAL_STATUS).build());
+        }
         events.publishEvent(new ApplicationSubmittedEvent(saved.getApplicationId()));
         return saved.getApplicationId();
     }
@@ -75,7 +81,7 @@ public class ApplicationSubmissionService {
             return false;
         }
         return candidates.findByAccount_UsernameIgnoreCase(username)
-                .map(c -> applications.existsByCandidate_CandidateIdAndJobPosting_JobPostingId(
+                .map(c -> applications.existsActiveByCandidateAndJobPosting(
                         c.getCandidateId(), jobPostingId))
                 .orElse(false);
     }

@@ -48,6 +48,8 @@ public final class ApplicationStepper {
     static ApplicationStage lastStagePassed(ApplicationProgressStep closedStep) {
         return switch (closedStep) {
             case WITHDRAWN -> ApplicationStage.APPLIED;
+            // Đợt có thể đóng ở bất kỳ vòng nào; chỉ khẳng định hồ sơ đã được nộp.
+            case POSTING_CLOSED -> ApplicationStage.APPLIED;
             case CV_REJECTED -> ApplicationStage.SCREENING;
             case INTERVIEW_FAILED -> ApplicationStage.INTERVIEW;
             case OFFER_DECLINED -> ApplicationStage.OFFER;

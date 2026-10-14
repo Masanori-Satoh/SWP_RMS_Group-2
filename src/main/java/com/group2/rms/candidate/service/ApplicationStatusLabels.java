@@ -10,7 +10,7 @@ public final class ApplicationStatusLabels {
 
     /** Các trạng thái hợp lệ, theo thứ tự luồng tuyển dụng; tham số lọc {@code status} ngoài danh sách này bị bỏ qua. */
     public static final List<String> STATUSES = List.of(
-            "Applied", "AI_Screened", "HR_Passed", "HM_Passed", "Interviewing", "Offered", "Hired", "Rejected");
+            "Applied", "AI_Screened", "HR_Passed", "HM_Suggested", "HM_Passed", "Interviewing", "Offered", "Hired", "Rejected");
 
     private ApplicationStatusLabels() {
     }
@@ -21,6 +21,7 @@ public final class ApplicationStatusLabels {
             case "AI_Screened" -> "Đã sàng lọc";
             case "HR_Passed" -> "Qua vòng nhân sự";
             case "HM_Passed" -> "Qua vòng chuyên môn";
+            case "HM_Suggested" -> "HM đề xuất — chờ HR liên hệ";
             case "Interviewing" -> "Đang phỏng vấn";
             case "Offered" -> "Đã có thư mời";
             case "Hired" -> "Đã nhận việc";
@@ -34,7 +35,7 @@ public final class ApplicationStatusLabels {
 
     public static String badge(String status) {
         return switch (status) {
-            case "HR_Passed", "HM_Passed", "Interviewing" -> "badge--warning";
+            case "HR_Passed", "HM_Passed", "HM_Suggested", "Interviewing" -> "badge--warning";
             case "Offered", "Hired" -> "badge--success";
             case "Rejected" -> "badge--danger";
             default -> "badge--neutral";

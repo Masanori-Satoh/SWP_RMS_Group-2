@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout" layout:decorate="~{layout/internal}">
+<head><title>Ứng viên tiềm năng — Mộc RMS</title><th:block layout:fragment="styles"><link rel="stylesheet" th:href="@{/css/pages/applications.css}"></th:block></head>
+<body><main id="main" layout:fragment="content" class="page-content container app-page" tabindex="-1">
+<div th:if="${successMessage}" class="alert alert--success" role="status" th:text="${successMessage}"></div>
+<div th:if="${errorMessage}" class="alert alert--danger" role="alert" th:text="${errorMessage}"></div>
+
+<nav class="breadcrumbs" aria-label="Điều hướng"><a th:href="@{/dashboard}">Bảng điều khiển</a><span aria-hidden="true"> / </span><span aria-current="page">Ứng viên tiềm năng</span></nav>
+<div class="page-header"><div><h1 class="page-title">Ứng viên tiềm năng</h1><p class="page-subtitle" th:text="${jobTitle != null ? 'Chọn CV để đề xuất cho vị trí: ' + jobTitle : 'Xem hồ sơ và ghi chú đánh giá cho những cơ hội tuyển dụng tiếp theo.'}"></p></div><a th:if="${jobPostingId != null}" class="btn btn--secondary" th:href="@{/internal/job-postings/{id}(id=${jobPostingId})}">Quay lại tin tuyển dụng</a></div>
+<form class="app-filter" method="get" th:action="@{/talent-pool}">
+<input th:if="${jobPostingId != null}" type="hidden" name="jobPostingId" th:value="${jobPostingId}">
+<div class="form-group"><label class="form-label" for="keyword">Ứng viên</label><input class="form-input" type="search" id="keyword" name="keyword" maxlength="100" placeholder="Họ tên hoặc email" th:value="${filter.keyword}"></div>
+<div class="form-group"><label class="form-label" for="markedBy">Người đánh dấu</label><select class="form-select" id="markedBy" name="markedBy"><option value="">Tất cả</option><option th:each="author : ${authors}" th:value="${author.key}" th:text="${author.value}" th:selected="${filter.markedBy == author.key}"></option></select></div>
+<div class="form-group"><label class="form-label" for="sourceJobId">Vị trí từng ứng tuyển</label><select class="form-select" id="sourceJobId" name="sourceJobId"><option value="">Tất cả vị trí</option><option th:each="job : ${sourceJobs}" th:value="${job.key}" th:text="${job.value}" th:selected="${filter.sourceJobId == job.key}"></option></select></div>
+<div class="app-filter__actions"><button class="btn btn--primary" type="submit">Lọc</button><a class="btn btn--secondary" th:href="@{/talent-pool(jobPostingId=${jobPostingId})}">Xóa bộ lọc</a></div></form>
+<p><strong th:text="${page.totalElements}">0</strong> ứng viên tiềm năng</p>
+<div th:if="${page.empty}" class="empty-state"><h2>Chưa có ứng viên phù hợp</h2><p>Thử bỏ bớt bộ lọc hoặc đánh dấu tiềm năng tại trang hồ sơ ứng tuyển.</p><a class="btn btn--secondary" th:href="@{/applications}">Xem hồ sơ ứng tuyển</a></div>
+<form th:unless="${page.empty}" method="post" th:action="@{/talent-pool/jobs/{id}/suggest(id=${jobPostingId ?: 0})}">
+<div class="table-wrapper"><table class="table app-table"><caption class="sr-only">Danh sách ứng viên tiềm năng</caption>
+<thead><tr><th scope="col">STT</th><th scope="col">Ứng viên</th><th scope="col">Email / Điện thoại</th><th scope="col">CV từ đợt trước</th><th scope="col">Thao tác</th></tr></thead>
+<tbody><tr th:each="candidate, stat : ${page.content}"><td th:text="${page.number * page.size + stat.count}"></td><td><strong th:text="${candidate.fullName}"></strong><br><span class="badge badge--success">Tiềm năng</span></td>
+<td><span th:text="${candidate.email}"></span><br><span class="text-muted" th:text="${candidate.phoneNumber ?: 'Chưa có số điện thoại'}"></span></td>
+<td><span th:if="${#lists.isEmpty(candidate.cvs)}">Chưa có CV từ đơn chính thức</span><select th:unless="${#lists.isEmpty(candidate.cvs)}" class="form-select" data-pool-cv th:attr="aria-label=|CV của ${candidate.fullName}|"><option th:each="cv : ${candidate.cvs}" th:value="${cv.applicationId}" th:text="${cv.jobTitle + ' · ' + #temporals.format(cv.submittedAt, 'dd/MM/yyyy')}"></option></select></td>
+<td><a class="btn btn--secondary btn--sm" th:href="@{/talent-pool/{id}(id=${candidate.candidateId},jobPostingId=${jobPostingId})}">Xem hồ sơ</a><label th:if="${jobPostingId != null and viewerRole == 'Hiring Manager' and !#lists.isEmpty(candidate.cvs)}"><input type="checkbox" name="sourceApplicationIds" th:value="${candidate.cvs[0].applicationId}"> Chọn <span class="sr-only" th:text="${candidate.fullName}"></span></label></td>
+</tr></tbody></table></div><p th:if="${jobPostingId != null and viewerRole == 'Hiring Manager'}" class="text-muted">Đề xuất được lưu nội bộ. HR sẽ liên hệ ứng viên trước khi xác nhận ứng tuyển.</p><button th:if="${jobPostingId != null and viewerRole == 'Hiring Manager'}" class="btn btn--primary" type="submit">Đề xuất ứng viên đã chọn</button></form>
+<nav th:replace="~{fragments/ui/pagination :: paged(page=${page})}"></nav>
+</main><th:block layout:fragment="scripts"><script th:src="@{/js/pages/talent-pool.js}" defer></script></th:block></body></html>

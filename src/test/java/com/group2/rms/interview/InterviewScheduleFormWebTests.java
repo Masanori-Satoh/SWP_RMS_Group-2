@@ -39,6 +39,7 @@ class InterviewScheduleFormWebTests {
 
     @Autowired MockMvc mvc;
     @MockitoBean InterviewSchedulingService schedulingService;
+    @MockitoBean com.group2.rms.candidate.service.RecruitmentEmailService recruitmentEmail;
     @MockitoBean ApplicationRepository applications;
     @MockitoBean UserRepository users;
 
@@ -48,7 +49,7 @@ class InterviewScheduleFormWebTests {
                 .role(Role.builder().roleName("HR").build()).build();
         when(users.findByUsernameIgnoreCase("hr_lan")).thenReturn(Optional.of(hr));
         when(users.findAllWithRoleAndDepartment()).thenReturn(List.of());
-        when(applications.findAllWithCandidateAndJobPosting()).thenReturn(List.of(application(120), application(298)));
+        when(applications.findEligibleForInterview()).thenReturn(List.of(application(120), application(298)));
     }
 
     private static Application application(int id) {

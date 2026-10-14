@@ -18,6 +18,8 @@ import java.util.List;
  */
 public record ApplicationDetailResponse(
         Integer applicationId,
+        Integer candidateId,
+        boolean isPotential,
         String fullName,
         String email,
         String phoneNumber,

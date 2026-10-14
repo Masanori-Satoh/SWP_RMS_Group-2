@@ -135,6 +135,18 @@ public class SecurityConfig {
                                                 .requestMatchers("/requisitions", "/requisitions/**")
                                                 .hasAnyAuthority("ROLE_HIRING_MANAGER", "ROLE_DIRECTOR", "ROLE_HR",
                                                                 RoleAuthorities.SYSTEM_ADMIN)
+                                                .requestMatchers("/talent-pool/applications/*/confirm", "/talent-pool/applications/*/decline",
+                                                        "/talent-pool/applications/*/resend-email", "/talent-pool/interviews/*/resend-email",
+                                                        "/talent-pool/jobs/*/close")
+                                                .hasAuthority("ROLE_HR")
+                                                .requestMatchers("/talent-pool/jobs/*/suggest")
+                                                .hasAuthority("ROLE_HIRING_MANAGER")
+                                                .requestMatchers("/talent-pool", "/talent-pool/**")
+                                                .hasAnyAuthority("ROLE_HR", "ROLE_HIRING_MANAGER")
+                                                .requestMatchers("/internal/job-postings/create", "/internal/job-postings/dashboard")
+                                                .hasAnyAuthority("ROLE_HR", RoleAuthorities.SYSTEM_ADMIN)
+                                                .requestMatchers(HttpMethod.GET, "/internal/job-postings", "/internal/job-postings/*")
+                                                .hasAnyAuthority("ROLE_HR", "ROLE_HIRING_MANAGER", RoleAuthorities.SYSTEM_ADMIN)
                                                 .requestMatchers("/internal/job-postings", "/internal/job-postings/**")
                                                 .hasAnyAuthority("ROLE_HR", RoleAuthorities.SYSTEM_ADMIN)
                                                 // application pipeline: HM scope (own department) is checked in ApplicationAccess
