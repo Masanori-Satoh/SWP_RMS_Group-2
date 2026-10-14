@@ -571,6 +571,18 @@ public class OfferServiceImpl implements OfferService {
                     "OFFER_NOT_APPROVED");
         }
 
+        if (offer.getResponsePeriodDays() == null || offer.getResponsePeriodDays() <= 0) {
+            throw new OfferValidationException("Offer chưa có thời gian phản hồi hợp lệ.");
+        }
+
+        LocalDateTime deadline = LocalDateTime.now().plusDays(offer.getResponsePeriodDays());
+
+        if (offer.getExpectedStartDate() != null
+                && !deadline.toLocalDate().isBefore(offer.getExpectedStartDate())) {
+            throw new OfferValidationException("Thời hạn phản hồi phải trước ngày bắt đầu dự kiến.");
+        }
+
+        offer.setResponseDeadline(deadline);
         offer.setOfferStatus("Sent_Candidate");
         OfferProposal saved = offerProposalRepository.save(offer);
 
