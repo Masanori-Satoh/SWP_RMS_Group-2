@@ -1,6 +1,9 @@
 package com.group2.rms.dashboard.dto;
 
 import java.util.List;
+import java.time.LocalDateTime;
+import com.group2.rms.admin.dto.MonitorRowResponse;
+import com.group2.rms.dashboard.DashboardMetricsRepository.RoleCount;
 
 public record AdminDashboardResponse(
         String roleName,
@@ -9,7 +12,24 @@ public record AdminDashboardResponse(
         List<AccountSummary> accountSummaries,
         DepartmentSummary departments,
         List<DashboardBreakdownResponse> breakdowns,
-        List<Shortcut> shortcuts) implements DashboardResponse {
+        List<Shortcut> shortcuts,
+        List<RoleCount> roleCounts,
+        List<MonitorRowResponse> monitorRows,
+        CandidateSummary candidates) implements DashboardResponse {
+
+    public record CandidateSummary(long total, long newLast30Days,
+            LocalDateTime from, LocalDateTime to, String timeZone) {
+    }
+
+    public long internalTotal() {
+        return accountSummaries.stream()
+                .filter(summary -> "/admin/accounts".equals(summary.url()))
+                .mapToLong(AccountSummary::total).sum();
+    }
+
+    public long blockedTotal() {
+        return accountSummaries.stream().mapToLong(AccountSummary::blocked).sum();
+    }
 
     public record AccountSummary(
             String title,

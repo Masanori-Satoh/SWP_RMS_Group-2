@@ -137,7 +137,7 @@
                         </table>
                     </div>
 
-                    <div th:replace="~{fragments/pagination :: paged(${accounts}, '/admin/accounts')}"></div>
+                    <div th:replace="~{fragments/ui/pagination :: paged(page=${accounts})}"></div>
                 </section>
             </div>
         </main>

@@ -58,7 +58,7 @@
                             </tr><tr th:if="${accounts.empty}"><td colspan="8" class="account-empty">Không tìm thấy tài khoản ứng viên phù hợp. Hãy thử thay đổi bộ lọc.</td></tr></tbody>
                         </table>
                     </div>
-                    <div th:replace="~{fragments/pagination :: paged(${accounts}, '/admin/candidate-accounts')}"></div>
+                    <div th:replace="~{fragments/ui/pagination :: paged(page=${accounts})}"></div>
                     <p class="candidate-profile-note">Candidate profiles and recruitment history are managed separately from account access.</p>
                 </section>
             </div>
