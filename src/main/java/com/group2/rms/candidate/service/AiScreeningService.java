@@ -8,6 +8,8 @@ import com.group2.rms.core.exception.ResourceNotFoundException;
 import com.group2.rms.requisition.entity.JobPosting;
 import com.group2.rms.requisition.entity.ScreeningCriteria;
 import com.group2.rms.requisition.repository.ScreeningCriteriaRepository;
+import com.group2.rms.notification.NotificationService;
+import com.group2.rms.notification.constants.NotificationEventType;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -28,6 +30,7 @@ public class AiScreeningService {
     private final AIScreeningResultRepository screeningResults;
     private final ScreeningCriteriaRepository screeningCriteria;
     private final AiScreeningClient aiScreeningClient;
+    private final NotificationService notifications;
 
     @Transactional
     public AiScreeningOutcome screen(Integer applicationId) {
@@ -45,6 +48,10 @@ public class AiScreeningService {
                 .build());
         if (applications.markScreened(applicationId) == 0) {
             log.info("Application {} is no longer 'Applied'; score saved, status unchanged", applicationId);
+        } else if (application.getCandidate() != null) {
+            notifications.publish(application.getCandidate().getAccount(), NotificationEventType.APPLICATION_STATUS_UPDATED,
+                    "Application", applicationId, "/portal/applications",
+                    "APP_STATUS_" + applicationId + "_AI_Screened", false);
         }
         return outcome;
     }

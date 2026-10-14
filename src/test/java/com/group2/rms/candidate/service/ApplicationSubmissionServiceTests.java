@@ -57,7 +57,8 @@ class ApplicationSubmissionServiceTests {
     @BeforeEach
     void setUp() {
         service = new ApplicationSubmissionService(candidates, applications, jobPostings,
-                new CvFileValidator(), cvStorage, events);
+                new CvFileValidator(), cvStorage, events,
+                org.mockito.Mockito.mock(com.group2.rms.notification.NotificationService.class));
         TransactionSynchronizationManager.initSynchronization();
     }
 

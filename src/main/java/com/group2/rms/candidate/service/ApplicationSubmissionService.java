@@ -9,6 +9,8 @@ import com.group2.rms.candidate.validator.CvFileValidator;
 import com.group2.rms.core.exception.ResourceNotFoundException;
 import com.group2.rms.requisition.entity.JobPosting;
 import com.group2.rms.requisition.repository.JobPostingRepository;
+import com.group2.rms.notification.NotificationService;
+import com.group2.rms.notification.constants.NotificationEventType;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
@@ -35,6 +37,7 @@ public class ApplicationSubmissionService {
     private final CvFileValidator cvFileValidator;
     private final CvStorage cvStorage;
     private final ApplicationEventPublisher events;
+    private final NotificationService notifications;
 
     @Transactional
     public Integer apply(String username, Integer jobPostingId, MultipartFile cvFile) {
@@ -71,6 +74,11 @@ public class ApplicationSubmissionService {
                     .appliedCvUrl(stored.url()).applicationStatus(INITIAL_STATUS).build());
         }
         events.publishEvent(new ApplicationSubmittedEvent(saved.getApplicationId()));
+        String eventId = "APP_SUBMIT_" + saved.getApplicationId();
+        notifications.publishToResponsibleHr(job, NotificationEventType.APPLICATION_RECEIVED,
+                "Application", saved.getApplicationId(), "/applications/" + saved.getApplicationId(), eventId);
+        notifications.publish(candidate.getAccount(), NotificationEventType.APPLICATION_SUBMITTED,
+                "Application", saved.getApplicationId(), "/portal/applications", eventId, false);
         return saved.getApplicationId();
     }
 

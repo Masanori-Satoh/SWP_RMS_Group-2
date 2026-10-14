@@ -36,7 +36,8 @@ class ApplicationStatusServiceTests {
             pool = new TalentPoolService(mock(com.group2.rms.candidate.repository.CandidateRepository.class), applications,
                     mock(com.group2.rms.candidate.repository.TalentPoolNoteRepository.class), audit, jobs, current,
                     mock(com.group2.rms.requisition.service.RequisitionAccess.class), mock(ApplicationAccess.class),
-                    mock(com.group2.rms.user.repository.UserRepository.class), mock(CvStorage.class));
+                    mock(com.group2.rms.user.repository.UserRepository.class), mock(CvStorage.class),
+                    mock(com.group2.rms.notification.NotificationService.class));
             suggestion = com.group2.rms.candidate.entity.Application.builder().applicationId(ID)
                     .applicationStatus("HM_Suggested").appliedCvUrl("local:cv/15/existing.pdf")
                     .jobPosting(com.group2.rms.requisition.entity.JobPosting.builder().jobPostingId(12).postingStatus("Published").build()).build();
@@ -83,7 +84,9 @@ class ApplicationStatusServiceTests {
 
     @BeforeEach
     void setUp() {
-        service = new ApplicationStatusService(applications, mock(com.group2.rms.requisition.repository.JobPostingRepository.class));
+        service = new ApplicationStatusService(applications,
+                mock(com.group2.rms.requisition.repository.JobPostingRepository.class),
+                mock(com.group2.rms.notification.NotificationService.class));
     }
 
     @Test

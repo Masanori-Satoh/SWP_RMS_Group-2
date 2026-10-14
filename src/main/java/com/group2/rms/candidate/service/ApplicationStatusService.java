@@ -4,6 +4,8 @@ import com.group2.rms.candidate.exception.TalentPoolException;
 import com.group2.rms.candidate.repository.ApplicationRepository;
 import com.group2.rms.core.exception.ResourceNotFoundException;
 import com.group2.rms.requisition.repository.JobPostingRepository;
+import com.group2.rms.notification.NotificationService;
+import com.group2.rms.notification.constants.NotificationEventType;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -41,6 +43,7 @@ public class ApplicationStatusService {
 
     private final ApplicationRepository applications;
     private final JobPostingRepository jobs;
+    private final NotificationService notifications;
 
     public void requireScheduleable(Integer id) {
         // check if application is exist
@@ -83,6 +86,11 @@ public class ApplicationStatusService {
     private void move(Integer applicationId, Set<String> from, String to) {
         if (applications.transition(applicationId, from, to) == 0) {
             log.debug("Đơn #{} không ở {} nên giữ nguyên trạng thái (không chuyển sang {}).", applicationId, from, to);
+        } else {
+            applications.findDetailById(applicationId).ifPresent(application ->
+                    notifications.publish(application.getCandidate().getAccount(), NotificationEventType.APPLICATION_STATUS_UPDATED,
+                            "Application", applicationId, "/portal/applications",
+                            "APP_STATUS_" + applicationId + "_" + to, false));
         }
     }
 }

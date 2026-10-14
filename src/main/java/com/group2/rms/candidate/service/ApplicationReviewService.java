@@ -8,6 +8,8 @@ import com.group2.rms.candidate.repository.ApplicationRepository;
 import com.group2.rms.candidate.repository.ApplicationReviewRepository;
 import com.group2.rms.core.exception.ResourceNotFoundException;
 import com.group2.rms.user.entity.User;
+import com.group2.rms.notification.NotificationService;
+import com.group2.rms.notification.constants.NotificationEventType;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
@@ -34,6 +36,7 @@ public class ApplicationReviewService {
     private final ApplicationReviewRepository reviews;
     private final ApplicationAccess access;
     private final AiScreeningService aiScreeningService;
+    private final NotificationService notifications;
 
     /** @return thông báo thành công để hiện trên trang chi tiết */
     @Transactional
@@ -70,6 +73,11 @@ public class ApplicationReviewService {
             if (applications.transition(applicationId, from, target) == 0) {
                 throw new ApplicationReviewException(null,
                         "Hồ sơ vừa được người khác xử lý. Vui lòng tải lại trang.");
+            }
+            if (application.getCandidate() != null) {
+                notifications.publish(application.getCandidate().getAccount(), NotificationEventType.APPLICATION_STATUS_UPDATED,
+                        "Application", applicationId, "/portal/applications",
+                        "APP_STATUS_" + applicationId + "_" + target, false);
             }
         }
         return switch (decision) {

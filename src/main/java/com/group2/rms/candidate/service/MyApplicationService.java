@@ -7,6 +7,8 @@ import com.group2.rms.candidate.repository.ApplicationRepository;
 import com.group2.rms.core.exception.ResourceNotFoundException;
 import com.group2.rms.core.security.CurrentUserService;
 import com.group2.rms.user.entity.User;
+import com.group2.rms.notification.NotificationService;
+import com.group2.rms.notification.constants.NotificationEventType;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -28,6 +30,7 @@ public class MyApplicationService {
 
     private final ApplicationRepository applications;
     private final CurrentUserService currentUserService;
+    private final NotificationService notifications;
 
     @Transactional(readOnly = true)
     public List<MyApplicationResponse> list() {
@@ -58,6 +61,9 @@ public class MyApplicationService {
             throw new ApplicationWithdrawalException("Hồ sơ vừa được cập nhật. Vui lòng tải lại trang.");
         }
         applications.recordWithdrawal(user.getUserId(), applicationId, status);
+        notifications.publishToResponsibleHr(application.getJobPosting(), NotificationEventType.APPLICATION_WITHDRAWN,
+                "Application", applicationId, "/applications/" + applicationId,
+                "APP_WITHDRAW_" + applicationId);
         return application.getJobPosting().getPostingTitle();
     }
 

@@ -40,7 +40,8 @@ class MyApplicationServiceTests {
 
     @BeforeEach
     void setUp() {
-        service = new MyApplicationService(applications, currentUserService);
+        service = new MyApplicationService(applications, currentUserService,
+                org.mockito.Mockito.mock(com.group2.rms.notification.NotificationService.class));
         when(currentUserService.requireUser()).thenReturn(User.builder().userId(USER_ID).build());
     }
 

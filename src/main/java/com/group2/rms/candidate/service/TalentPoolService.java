@@ -11,6 +11,8 @@ import com.group2.rms.requisition.repository.JobPostingRepository;
 import com.group2.rms.requisition.service.RequisitionAccess;
 import com.group2.rms.user.entity.User;
 import com.group2.rms.user.repository.UserRepository;
+import com.group2.rms.notification.NotificationService;
+import com.group2.rms.notification.constants.NotificationEventType;
 import lombok.RequiredArgsConstructor;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.data.domain.*;
@@ -34,6 +36,7 @@ public class TalentPoolService {
     private final ApplicationAccess applicationAccess;
     private final UserRepository users;
     private final CvStorage storage;
+    private final NotificationService notifications;
 
     public String viewerRole() { return actor().getRole().getRoleName(); }
 
@@ -155,6 +158,10 @@ public class TalentPoolService {
         if (applications.promoteSuggestionToHmPassed(id) != 1)
             throw new TalentPoolException("Đề xuất đã được xử lý. Vui lòng tải lại trang.");
         audit.record(user.getUserId(), "UPDATE", "Application", id, "HM_Suggested", "TalentPoolActivated");
+        if (application.getCandidate() != null) {
+            notifications.publish(application.getCandidate().getAccount(), NotificationEventType.APPLICATION_STATUS_UPDATED,
+                    "Application", id, "/portal/applications", "APP_STATUS_" + id + "_HM_Passed", false);
+        }
         return id;
     }
     @Transactional
@@ -174,6 +181,10 @@ public class TalentPoolService {
         if ("Closed".equals(posting.getPostingStatus())) return;
         if (audit.hasOpenOffers(id)) throw new TalentPoolException("Còn Offer chưa kết thúc. Hãy xử lý Offer trước khi đóng đợt tuyển.");
         posting.setPostingStatus("Closed");
+        if (posting.getRequisition() != null) {
+            notifications.publish(posting.getRequisition().getHiringManager(), NotificationEventType.JOB_POSTING_CLOSED,
+                    "JobPosting", id, "/internal/job-postings/" + id, "JOB_CLOSE_" + id, false);
+        }
         audit.record(user.getUserId(), "UPDATE", "JobPosting", id, null, "Closed");
         for (Application suggestion : applications.findSuggestionsByJobPostingId(id)) {
             if (applications.transition(suggestion.getApplicationId(), Set.of("HM_Suggested"), "Rejected") == 1)
@@ -183,6 +194,11 @@ public class TalentPoolService {
             if (audit.hasAcceptedOffer(app.getApplicationId())) continue;
             String old = app.getApplicationStatus();
             if (applications.transition(app.getApplicationId(), Set.of(old), "Rejected") == 1) {
+                if (app.getCandidate() != null) {
+                    notifications.publish(app.getCandidate().getAccount(), NotificationEventType.APPLICATION_STATUS_UPDATED,
+                            "Application", app.getApplicationId(), "/portal/applications",
+                            "APP_STATUS_" + app.getApplicationId() + "_Rejected", false);
+                }
                 if (audit.cancelInterviews(app.getApplicationId()) > 0)
                     audit.record(user.getUserId(), "UPDATE", "Application", app.getApplicationId(), null, "InterviewCancelledOnClose");
                 audit.record(user.getUserId(), "UPDATE", "Application", app.getApplicationId(), old, "PostingClosed");

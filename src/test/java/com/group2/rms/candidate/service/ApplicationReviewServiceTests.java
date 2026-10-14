@@ -45,7 +45,8 @@ class ApplicationReviewServiceTests {
 
     @BeforeEach
     void setUp() {
-        service = new ApplicationReviewService(applications, reviews, access, aiScreeningService);
+        service = new ApplicationReviewService(applications, reviews, access, aiScreeningService,
+                mock(com.group2.rms.notification.NotificationService.class));
         when(access.actor()).thenReturn(actor);
     }
 

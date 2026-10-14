@@ -45,7 +45,8 @@ class AiScreeningServiceTests {
 
     @BeforeEach
     void setUp() {
-        service = new AiScreeningService(applications, screeningResults, screeningCriteria, aiScreeningClient);
+        service = new AiScreeningService(applications, screeningResults, screeningCriteria, aiScreeningClient,
+                org.mockito.Mockito.mock(com.group2.rms.notification.NotificationService.class));
         JobPosting job = JobPosting.builder()
                 .postingTitle("Java Developer")
                 .requisition(JobRequisition.builder().requisitionId(REQUISITION_ID).build())
