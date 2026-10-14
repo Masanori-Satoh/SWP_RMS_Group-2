@@ -65,6 +65,14 @@
             Cảm ơn bạn đã dành thời gian và sự quan tâm tới cơ hội làm việc tại Mộc RMS. Chúc bạn luôn gặt hái được nhiều thành công trên chặng đường sự nghiệp tiếp theo!
         </p>
     </div>
+    <div th:if="${offer.statusLabel == 'Đã quá hạn phản hồi' and decisionType == null}" class="alert alert--neutral cof-system-banner" role="status">
+        <div class="cof-system-banner__header">
+            <strong>⏱ Thư mời đã quá hạn phản hồi</strong>
+        </div>
+        <p class="cof-system-banner__guide text-muted">
+            Ngày bắt đầu nhận việc dự kiến (<span th:text="${offer.expectedStartDate != null ? #temporals.format(offer.expectedStartDate, 'dd/MM/yyyy') : 'Chưa xác định'}"></span>) đã qua. Nếu bạn vẫn mong muốn gia nhập đội ngũ Mộc RMS, vui lòng liên hệ với chuyên viên tuyển dụng phụ trách bên cạnh để được hỗ trợ.
+        </p>
+    </div>
     <div th:if="${successMessage != null and decisionType == null}" class="alert alert--success" role="status" th:text="${successMessage}">Cập nhật thành công.</div>
     <div th:if="${errorMessage}" class="alert alert--danger" role="alert" th:text="${errorMessage}">Không thể xử lý yêu cầu.</div>
 
@@ -206,6 +214,9 @@
                         </p>
                         <p th:if="${offer.offerStatus == 'Declined'}" class="text-muted">
                             Bạn đã từ chối thư mời làm việc này. Hồ sơ ứng tuyển của bạn cho vị trí này đã kết thúc.
+                        </p>
+                        <p th:if="${offer.statusLabel == 'Đã quá hạn phản hồi'}" class="text-muted">
+                            Thư mời này đã quá ngày bắt đầu nhận việc dự kiến. Nếu bạn vẫn có nguyện vọng gia nhập công ty, vui lòng liên hệ chuyên viên phụ trách tuyển dụng bên dưới để được hỗ trợ.
                         </p>
                     </div>
                 </div>
