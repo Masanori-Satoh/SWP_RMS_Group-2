@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="vi"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/internal}">
+<head>
+    <title th:text="|Từ chối thư mời nhận việc - ${offer.offeredPositionTitle}|">Từ chối thư mời nhận việc</title>
+    <th:block layout:fragment="styles">
+        <link rel="stylesheet" th:href="@{/css/pages/candidate-offers.css}">
+    </th:block>
+</head>
+<body>
+<main id="main" layout:fragment="content" class="page-content container" tabindex="-1">
+
+    <!-- Điều hướng quay lại màn hình chi tiết -->
+    <nav class="cof-breadcrumb" aria-label="Đường dẫn">
+        <a th:href="@{/portal/offers/{id}(id=${offer.offerId})}" class="cof-back-link">
+            &larr; Quay lại Thư mời nhận việc
+        </a>
+    </nav>
+
+    <!-- Tiêu đề trang -->
+    <div class="cof-header">
+        <div class="cof-header-left">
+            <div class="cof-header-badge-row">
+                <span class="badge badge--warning">Chờ bạn xác nhận</span>
+            </div>
+            <h1 class="page-title">Từ chối Thư mời nhận việc</h1>
+            <p class="page-subtitle" th:text="|Vị trí ứng tuyển: ${offer.offeredPositionTitle} • Phòng ban: ${offer.departmentName}|">Phòng Kỹ thuật</p>
+        </div>
+    </div>
+
+    <!-- Thông báo lỗi nếu có -->
+    <div th:if="${errorMessage}" class="alert alert--danger" role="alert" th:text="${errorMessage}">Không thể xử lý yêu cầu.</div>
+
+    <!-- Thẻ nội dung xác nhận từ chối -->
+    <div class="card cof-decline-card">
+        <div class="card-body">
+
+            <!-- Banner cảnh báo quyết định không thể hoàn tác -->
+            <div class="cof-decline-warning" role="alert">
+                <div class="cof-decline-warning__title">
+                    <strong>Lưu ý quan trọng trước khi từ chối</strong>
+                </div>
+                <p class="cof-decline-warning__desc">
+                    Sau khi bạn xác nhận từ chối, quyết định này sẽ được gửi chính thức tới Ban Tuyển dụng Mộc RMS và không thể thay đổi.
+                    Hồ sơ ứng tuyển của bạn cho vị trí <strong th:text="${offer.offeredPositionTitle}">Vị trí</strong> sẽ dừng lại tại đây.
+                </p>
+            </div>
+
+            <!-- Tóm tắt thông tin thư mời đã nhận -->
+            <section class="cof-decline-summary" aria-label="Tóm tắt thư mời">
+                <h2 class="cof-decline-summary__title">Thông tin thư mời được gửi tới bạn</h2>
+                <div class="cof-meta-grid">
+                    <div class="cof-meta-item">
+                        <span class="cof-meta-label">Vị trí công việc</span>
+                        <span class="cof-meta-val" th:text="${offer.offeredPositionTitle}">Senior Java Developer</span>
+                    </div>
+                    <div class="cof-meta-item">
+                        <span class="cof-meta-label">Phòng ban tiếp nhận</span>
+                        <span class="cof-meta-val" th:text="${offer.departmentName}">Phòng Kỹ thuật</span>
+                    </div>
+                    <div class="cof-meta-item">
+                        <span class="cof-meta-label">Mức lương chính thức (Gross)</span>
+                        <span class="cof-meta-val" th:text="${offer.proposedSalary == null ? 'Thỏa thuận' : #numbers.formatDecimal(offer.proposedSalary, 1, 'POINT', 0, 'COMMA') + ' ₫'}">25.000.000 ₫</span>
+                    </div>
+                    <div class="cof-meta-item">
+                        <span class="cof-meta-label">Ngày bắt đầu dự kiến</span>
+                        <span class="cof-meta-val" th:text="${offer.expectedStartDate == null ? 'Thỏa thuận trực tiếp' : #temporals.format(offer.expectedStartDate, 'dd/MM/yyyy')}">01/11/2026</span>
+                    </div>
+                    <div class="cof-meta-item">
+                        <span class="cof-meta-label">Địa điểm làm việc</span>
+                        <span class="cof-meta-val" th:text="${#strings.isEmpty(offer.workLocation) ? 'Trụ sở chính Mộc RMS' : offer.workLocation}">Hà Nội</span>
+                    </div>
+                    <div class="cof-meta-item">
+                        <span class="cof-meta-label">Người phụ trách tuyển dụng</span>
+                        <span class="cof-meta-val" th:text="|${offer.hrContactName} (${offer.hrContactEmail})|">HR Contact</span>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Biểu mẫu khảo sát lý do & Xác nhận từ chối -->
+            <form th:action="@{/portal/offers/{id}/decline(id=${offer.offerId})}" method="post" class="cof-detail-form cof-decline-form">
+                <input type="hidden" name="fromDetail" value="true">
+
+                <div class="cof-dialog-reason">
+                    <label for="cof-decline-reason-input" class="form-label cof-decline-label">
+                        Lý do từ chối thư mời (tùy chọn):
+                    </label>
+                    <p class="text-muted cof-decline-hint">
+                        Chia sẻ lý do giúp Mộc RMS hiểu rõ hơn nhu cầu của ứng viên để cải thiện chính sách đãi ngộ và môi trường làm việc trong tương lai.
+                    </p>
+
+                    <!-- Các lý do phổ biến (Chip button) -->
+                    <div class="cof-chips" role="group" aria-label="Lý do phổ biến">
+                        <button type="button" class="cof-chip" data-reason="Mức đãi ngộ chưa đạt kỳ vọng">Mức đãi ngộ chưa đạt kỳ vọng</button>
+                        <button type="button" class="cof-chip" data-reason="Đã nhận lời mời từ công ty khác">Đã nhận lời mời từ công ty khác</button>
+                        <button type="button" class="cof-chip" data-reason="Địa điểm hoặc thời gian làm việc chưa phù hợp">Địa điểm / thời gian chưa phù hợp</button>
+                        <button type="button" class="cof-chip" data-reason="Kế hoạch cá nhân thay đổi">Kế hoạch cá nhân thay đổi</button>
+                    </div>
+
+                    <!-- Ô nhập chi tiết -->
+                    <textarea id="cof-decline-reason-input" name="declineReason" class="form-input cof-textarea" rows="4"
+                              placeholder="Vui lòng chia sẻ thêm lý do hoặc gửi gắm phản hồi tới Mộc RMS..."></textarea>
+                </div>
+
+                <!-- Các nút hành động -->
+                <div class="cof-decline-actions">
+                    <a th:href="@{/portal/offers/{id}(id=${offer.offerId})}" class="btn btn--secondary">
+                        Xem lại Thư mời
+                    </a>
+                    <button type="submit" class="btn btn--danger">
+                        Xác nhận từ chối
+                    </button>
+                </div>
+            </form>
+
+        </div>
+    </div>
+
+</main>
+<th:block layout:fragment="scripts">
+    <script defer th:src="@{/js/pages/candidate-offers.js}"></script>
+</th:block>
+</body>
+</html>

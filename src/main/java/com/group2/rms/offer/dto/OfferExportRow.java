@@ -36,5 +36,6 @@ public record OfferExportRow(
         String directorName,
         String directorDecision,
         String directorComments,
-        LocalDateTime approvedAt
+        LocalDateTime approvedAt,
+        String declineReason
 ) {}

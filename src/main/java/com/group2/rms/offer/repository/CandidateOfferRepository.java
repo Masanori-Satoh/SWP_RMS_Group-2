@@ -31,8 +31,13 @@ public interface CandidateOfferRepository extends JpaRepository<OfferProposal, I
     @Query("""
             select o from OfferProposal o
                 join fetch o.application a
-                join fetch a.jobPosting
-            where o.offerId = :id and a.candidate.account.userId = :userId and o.offerStatus in :statuses
+                join fetch a.candidate c
+                join fetch c.account u
+                join fetch a.jobPosting jp
+                left join fetch jp.requisition req
+                left join fetch req.department dept
+                left join fetch o.proposedBy p
+            where o.offerId = :id and u.userId = :userId and o.offerStatus in :statuses
             """)
     Optional<OfferProposal> findVisibleById(@Param("id") Integer offerId, @Param("userId") Integer userId,
                                             @Param("statuses") Collection<String> statuses);
@@ -45,4 +50,9 @@ public interface CandidateOfferRepository extends JpaRepository<OfferProposal, I
     @Query("UPDATE OfferProposal o SET o.offerStatus = :to, o.updatedAt = CURRENT_TIMESTAMP " +
            "WHERE o.offerId = :id AND o.offerStatus = 'Sent_Candidate'")
     int answerIfSent(@Param("id") Integer offerId, @Param("to") String to);
+
+    @Modifying
+    @Query("UPDATE OfferProposal o SET o.offerStatus = :to, o.declineReason = :reason, o.updatedAt = CURRENT_TIMESTAMP " +
+           "WHERE o.offerId = :id AND o.offerStatus = 'Sent_Candidate'")
+    int answerIfSent(@Param("id") Integer offerId, @Param("to") String to, @Param("reason") String reason);
 }

@@ -124,10 +124,9 @@ public class SecurityConfig {
                                                 .hasAuthority("ROLE_HIRING_MANAGER")
                                                 .requestMatchers("/interviews", "/interviews/**")
                                                 .hasAnyAuthority("ROLE_HR", RoleAuthorities.SYSTEM_ADMIN)
-                                                // require authenticaed for SYSTEM_ADMIN, ROLE_HR, ROLE_DIRECTOR
-                                                .requestMatchers("/offers", "/offers/**", "/api/v1/hr/offers",
-                                                                "/api/v1/hr/offers/**")
-                                                .hasAnyAuthority("ROLE_CANDIDATE", "ROLE_HR", "ROLE_DIRECTOR",
+                                                // require authenticated for SYSTEM_ADMIN, ROLE_HR, ROLE_DIRECTOR
+                                                .requestMatchers("/offers", "/offers/**")
+                                                .hasAnyAuthority("ROLE_HR", "ROLE_DIRECTOR",
                                                                 RoleAuthorities.SYSTEM_ADMIN)
                                                 // authenticaed require for dashboard notification
                                                 .requestMatchers("/dashboard", "/dashboard/**", "/notifications",

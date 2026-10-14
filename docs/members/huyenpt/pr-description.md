@@ -30,7 +30,7 @@
 ### 2. Chuẩn hóa Quy tắc Nghiệp vụ `GBR-07` & Lọc Danh sách Offer
 - **Quy tắc Single Active Offer nghiêm ngặt:**
   - Mục tạo đề xuất Offer chỉ chấp nhận tạo mới cho ứng viên **đã đỗ phỏng vấn (`FinalDecision = 'Passed'`) và chưa từng có bất kỳ đề xuất Offer nào trước đó (kể cả bản `Draft`)**.
-  - Tất cả các ứng viên đã có Offer trong hệ thống đều bị loại khỏi danh sách gợi ý trong API `/api/v1/hr/offers/passed-candidates`.
+  - Tất cả các ứng viên đã có Offer trong hệ thống đều bị loại khỏi danh sách gợi ý ứng viên đỗ phỏng vấn (tại `/offers/create`).
 - **Cơ chế Lọc Toàn cục & Loại bỏ Nút "Xóa bộ lọc":**
   - Cả 3 bộ lọc (Từ khóa ứng viên, Trạng thái Offer, Sắp xếp) đều lọc chính xác trên toàn bộ tổng số bản ghi đề xuất hiện có (server-side query).
   - Loại bỏ hoàn toàn nút/tính năng "Xóa bộ lọc" theo yêu cầu trải nghiệm người dùng tinh gọn.

@@ -3,6 +3,7 @@ package com.group2.rms.notification;
 import com.group2.rms.user.entity.User;
 import com.group2.rms.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;
@@ -13,6 +14,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 import java.util.Map;
 
+@Slf4j
 @RestController
 @RequestMapping("/api/notifications")
 @RequiredArgsConstructor
@@ -38,6 +40,7 @@ public class NotificationApiController {
             long count = notificationService.getUnreadCount(user);
             return ResponseEntity.ok(Map.of("unreadCount", count));
         } catch (Exception e) {
+            log.error("Failed to fetch unread notification count: {}", e.getMessage(), e);
             return ResponseEntity.ok(Map.of("unreadCount", 0));
         }
     }
@@ -53,6 +56,7 @@ public class NotificationApiController {
                 "notifications", result.getContent()
             ));
         } catch (Exception e) {
+            log.error("Failed to fetch recent notifications: {}", e.getMessage(), e);
             return ResponseEntity.ok(Map.of("unreadCount", 0, "notifications", List.of()));
         }
     }
