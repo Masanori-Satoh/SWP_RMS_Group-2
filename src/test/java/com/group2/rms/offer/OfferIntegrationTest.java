@@ -393,4 +393,48 @@ class OfferIntegrationTest {
                 .andExpect(jsonPath("$.success").value(true))
                 .andExpect(jsonPath("$.data.offerStatus").value("Director_Rejected"));
     }
+
+    @Test
+    @DisplayName("IT-18 GET /offers: Ứng viên (ROLE_CANDIDATE) bị chặn truy cập danh sách Offer nội bộ trả về HTTP 403 Forbidden")
+    @WithMockUser(username = "cand_user", roles = {"CANDIDATE"})
+    void it18_candidateAccessOffersList_isForbidden() throws Exception {
+        mvc.perform(get("/offers"))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    @DisplayName("IT-19 GET /offers/{id}: Ứng viên (ROLE_CANDIDATE) bị chặn truy cập chi tiết Offer nội bộ trả về HTTP 403 Forbidden")
+    @WithMockUser(username = "cand_user", roles = {"CANDIDATE"})
+    void it19_candidateAccessOfferDetail_isForbidden() throws Exception {
+        mvc.perform(get("/offers/1"))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    @DisplayName("IT-20 POST /offers/create: Ứng viên (ROLE_CANDIDATE) bị chặn tạo Offer trả về HTTP 403 Forbidden")
+    @WithMockUser(username = "cand_user", roles = {"CANDIDATE"})
+    void it20_candidateCreateOffer_isForbidden() throws Exception {
+        mvc.perform(post("/offers/create").with(csrf()))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    @DisplayName("IT-21 POST /offers/create: Nhập sai định dạng ngày hoặc năm ngoài phạm vi (như 20165) trả về thông báo lỗi ngắn gọn tiếng Việt, không chứa ngoại lệ kỹ thuật Java")
+    @WithMockUser(username = "hr_specialist", roles = {"HR"})
+    void it21_createOfferWithInvalidDate_showsShortConciseErrorMessage() throws Exception {
+        mvc.perform(post("/offers/create")
+                        .with(csrf())
+                        .param("applicationId", "1")
+                        .param("offeredPositionTitle", "Java Dev")
+                        .param("proposedSalary", "20000000")
+                        .param("probationSalary", "18000000")
+                        .param("probationDays", "60")
+                        .param("workLocation", "Hà Nội")
+                        .param("expectedStartDate", "20165-07-14"))
+                .andExpect(status().isOk())
+                .andExpect(view().name("offers/form"))
+                .andExpect(model().attributeHasFieldErrors("offerDto", "expectedStartDate"))
+                .andExpect(content().string(org.hamcrest.Matchers.containsString("Ngày bắt đầu dự kiến không hợp lệ.")))
+                .andExpect(content().string(org.hamcrest.Matchers.not(org.hamcrest.Matchers.containsString("Failed to convert property value"))));
+    }
 }

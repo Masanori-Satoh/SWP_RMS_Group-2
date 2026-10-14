@@ -7,6 +7,7 @@
     OFFERS/CANDIDATE-LIST.HTML — Thư mời nhận việc của tôi (/portal/offers, chỉ ứng viên)
     Chỉ hiện offer đã gửi cho ứng viên: vị trí, lương, ngày bắt đầu, địa điểm, quyền lợi, trạng thái.
     Không có người đề xuất, lịch sử duyệt của Director hay ghi chú nội bộ.
+    Mỗi hàng có nút "Xem thư mời" mở màn hình riêng (/portal/offers/{id}).
     Nhận / từ chối: mỗi nút một form POST thường; JS hỏi xác nhận bằng hộp thoại trước khi gửi.
     Dựng bằng catalog: page-header, alert, table-wrapper, table, badge, btn, confirm-dialog.
     CSS riêng: css/pages/candidate-offers.css (cof-).
@@ -27,7 +28,29 @@
         </div>
     </div>
 
-    <div th:if="${successMessage}" class="alert alert--success" role="status" th:text="${successMessage}">Bạn đã nhận offer.</div>
+    <!-- Thông báo phản hồi hệ thống -->
+    <div th:if="${decisionType == 'ACCEPTED'}" class="alert alert--success cof-system-banner" role="status">
+        <div class="cof-system-banner__header">
+            <strong>🎉 Chúc mừng bạn đã đồng ý nhận việc!</strong>
+        </div>
+        <p th:text="${successMessage}">Bạn đã nhận offer.</p>
+        <p class="cof-system-banner__guide text-muted">
+            Bộ phận Tuyển dụng Mộc RMS sẽ liên hệ với bạn trong vòng 24 - 48 giờ làm việc để hướng dẫn các thủ tục Onboarding tiếp theo.
+        </p>
+    </div>
+    <div th:if="${decisionType == 'DECLINED'}" class="alert alert--neutral cof-system-banner" role="status">
+        <div class="cof-system-banner__header">
+            <strong>Đã ghi nhận phản hồi từ chối thư mời</strong>
+        </div>
+        <p th:text="${successMessage}">Bạn đã từ chối offer.</p>
+        <p th:if="${declineReasonDisplay}" class="cof-system-banner__reason">
+            <em>Lý do chia sẻ:</em> <span th:text="${declineReasonDisplay}"></span>
+        </p>
+        <p class="cof-system-banner__guide text-muted">
+            Cảm ơn bạn đã quan tâm và đồng hành cùng Mộc RMS trong suốt quá trình tuyển dụng. Chúc bạn luôn thành công!
+        </p>
+    </div>
+    <div th:if="${successMessage != null and decisionType == null}" class="alert alert--success" role="status" th:text="${successMessage}">Bạn đã nhận offer.</div>
     <div th:if="${errorMessage}" class="alert alert--danger" role="alert" th:text="${errorMessage}">Không thể trả lời thư mời.</div>
 
     <div th:if="${#lists.isEmpty(offers)}" class="card cof-empty">
@@ -35,56 +58,88 @@
         <p class="cof-empty__desc text-muted">Khi nhà tuyển dụng gửi thư mời chính thức, thông tin đãi ngộ sẽ hiện ở đây.</p>
     </div>
 
-    <div th:unless="${#lists.isEmpty(offers)}" class="table-wrapper">
-        <table class="table">
-            <caption class="sr-only">Các thư mời nhận việc dành cho bạn</caption>
-            <thead>
-            <tr>
-                <th scope="col">Vị trí</th>
-                <th scope="col">Lương chính thức / tháng</th>
-                <th scope="col">Lương thử việc / tháng</th>
-                <th scope="col">Ngày bắt đầu dự kiến</th>
-                <th scope="col">Địa điểm</th>
-                <th scope="col">Trạng thái</th>
-                <th scope="col">Thao tác</th>
-            </tr>
-            </thead>
-            <tbody>
-            <tr th:each="offer : ${offers}">
-                <th scope="row">
-                    <span th:text="${offer.postingTitle}">Junior Java Developer</span>
-                    <span th:if="${offer.offeredPositionTitle != offer.postingTitle}" class="cof-sub text-muted"
+    <div th:unless="${#lists.isEmpty(offers)}" class="cof-card-list" role="list">
+        <article th:each="offer : ${offers}" class="card cof-card" role="listitem">
+            <header class="cof-card__header">
+                <div class="cof-card__title-group">
+                    <h2 class="cof-card__title">
+                        <a th:href="@{/portal/offers/{id}(id=${offer.offerId})}"
+                           class="cof-card__title-link"
+                           th:text="${offer.postingTitle}">Senior Java Backend Engineer</a>
+                    </h2>
+                    <span th:if="${offer.offeredPositionTitle != null and offer.offeredPositionTitle != offer.postingTitle}"
+                          class="cof-card__subtitle text-muted"
                           th:text="${offer.offeredPositionTitle}">Java Developer</span>
-                    <details th:unless="${#strings.isEmpty(offer.benefitsPackage)}" class="cof-benefits">
-                        <summary th:attr="aria-label=|Quyền lợi của thư mời vị trí ${offer.postingTitle}|">Xem quyền lợi</summary>
-                        <p class="cof-benefits__text" th:text="${offer.benefitsPackage}">Bảo hiểm, thưởng quý.</p>
-                    </details>
-                </th>
-                <td th:text="${offer.proposedSalary == null ? '—' : #numbers.formatDecimal(offer.proposedSalary, 1, 'POINT', 0, 'COMMA') + ' ₫'}">20.000.000 ₫</td>
-                <td th:text="${offer.probationSalary == null ? '—' : #numbers.formatDecimal(offer.probationSalary, 1, 'POINT', 0, 'COMMA') + ' ₫'}">18.000.000 ₫</td>
-                <td th:text="${offer.expectedStartDate == null ? 'Chưa xác định' : #temporals.format(offer.expectedStartDate, 'dd/MM/yyyy')}">01/11/2026</td>
-                <td th:text="${#strings.isEmpty(offer.workLocation) ? '—' : offer.workLocation}">Hà Nội</td>
-                <td>
-                    <span class="badge" th:classappend="${offer.statusBadge}" th:text="${offer.statusLabel}">Chờ bạn trả lời</span>
-                </td>
-                <td>
-                    <div th:if="${offer.canRespond}" class="cof-actions">
-                        <form th:action="@{/portal/offers/{id}/accept(id=${offer.offerId})}" method="post"
-                              class="cof-form" data-offer-form="accept"
-                              th:attr="data-posting-title=${offer.postingTitle}">
-                            <button type="submit" class="btn btn--primary btn--sm">Nhận offer</button>
-                        </form>
+                </div>
+                <div class="cof-card__badge-wrap">
+                    <span class="badge cof-badge" th:classappend="${offer.statusBadge}" th:text="${offer.statusLabel}">Chờ bạn trả lời</span>
+                </div>
+            </header>
+
+            <div class="cof-card__meta-grid">
+                <div class="cof-card__meta-item">
+                    <span class="cof-card__meta-label">Lương chính thức</span>
+                    <span class="cof-card__meta-val cof-card__meta-val--salary"
+                          th:text="${offer.proposedSalary == null ? '—' : #numbers.formatDecimal(offer.proposedSalary, 1, 'POINT', 0, 'COMMA') + ' ₫'}">36.000.000 ₫</span>
+                </div>
+                <div class="cof-card__meta-item">
+                    <span class="cof-card__meta-label">Lương thử việc</span>
+                    <span class="cof-card__meta-val"
+                          th:text="${offer.probationSalary == null ? '—' : #numbers.formatDecimal(offer.probationSalary, 1, 'POINT', 0, 'COMMA') + ' ₫'}">30.600.000 ₫</span>
+                </div>
+                <div class="cof-card__meta-item">
+                    <span class="cof-card__meta-label">Ngày bắt đầu</span>
+                    <span class="cof-card__meta-val"
+                          th:text="${offer.expectedStartDate == null ? 'Chưa xác định' : #temporals.format(offer.expectedStartDate, 'dd/MM/yyyy')}">14/02/2027</span>
+                </div>
+                <div class="cof-card__meta-item cof-card__meta-item--location">
+                    <span class="cof-card__meta-label">Địa điểm</span>
+                    <span class="cof-card__meta-val cof-card__meta-val--location"
+                          th:title="${offer.workLocation}"
+                          th:text="${#strings.isEmpty(offer.workLocation) ? '—' : offer.workLocation}">Tầng 8, RMS Tower, Phố Duy Tân, Cầu Giấy, Hà Nội</span>
+                </div>
+            </div>
+
+            <div th:unless="${#strings.isEmpty(offer.benefitsPackage)}" class="cof-card__benefits">
+                <details class="cof-benefits">
+                    <summary th:attr="aria-label=|Quyền lợi của thư mời vị trí ${offer.postingTitle}|">Xem quyền lợi & đãi ngộ</summary>
+                    <p class="cof-benefits__text" th:text="${offer.benefitsPackage}">Bảo hiểm, thưởng quý.</p>
+                </details>
+            </div>
+
+            <footer class="cof-card__footer">
+                <div class="cof-card__status-desc">
+                    <span th:if="${offer.statusLabel == 'Đã nhận offer'}" class="cof-status-note cof-status-note--success">
+                        <span aria-hidden="true">✓</span> Bạn đã đồng ý nhận lời mời làm việc này.
+                    </span>
+                    <span th:if="${offer.statusLabel == 'Đã từ chối'}" class="cof-status-note cof-status-note--declined text-muted">
+                        <span aria-hidden="true">✕</span> Bạn đã từ chối thư mời làm việc này.
+                    </span>
+                    <span th:if="${offer.statusLabel == 'Đã quá hạn phản hồi'}" class="cof-status-note text-danger">
+                        <span aria-hidden="true">⏱</span> Thư mời đã quá ngày bắt đầu nhận việc dự kiến.
+                    </span>
+                    <span th:if="${offer.canRespond}" class="cof-status-note text-muted">
+                        Vui lòng phản hồi trước ngày bắt đầu nhận việc.
+                    </span>
+                </div>
+
+                <div class="cof-card__actions">
+                    <th:block th:if="${offer.canRespond}">
                         <form th:action="@{/portal/offers/{id}/decline(id=${offer.offerId})}" method="post"
                               class="cof-form" data-offer-form="decline"
                               th:attr="data-posting-title=${offer.postingTitle}">
-                            <button type="submit" class="btn btn--outline btn--sm">Từ chối offer</button>
+                            <button type="submit" class="btn btn--outline btn--sm cof-btn">Từ chối</button>
                         </form>
-                    </div>
-                    <span th:unless="${offer.canRespond}" class="text-muted">—</span>
-                </td>
-            </tr>
-            </tbody>
-        </table>
+                        <form th:action="@{/portal/offers/{id}/accept(id=${offer.offerId})}" method="post"
+                              class="cof-form" data-offer-form="accept"
+                              th:attr="data-posting-title=${offer.postingTitle}">
+                            <button type="submit" class="btn btn--primary btn--sm cof-btn">Chấp nhận</button>
+                        </form>
+                    </th:block>
+                    <a th:href="@{/portal/offers/{id}(id=${offer.offerId})}" class="btn btn--secondary btn--sm cof-btn">Xem chi tiết</a>
+                </div>
+            </footer>
+        </article>
     </div>
 
     <p th:unless="${#lists.isEmpty(offers)}" class="text-muted cof-note">
@@ -107,6 +162,17 @@
                     <span data-offer-copy="decline" hidden>Bạn sẽ từ chối offer vị trí <strong data-offer-title></strong>.
                         Hồ sơ của bạn sẽ dừng lại và bạn không thể đổi lại.</span>
                 </p>
+                <div data-offer-copy="decline" hidden class="cof-dialog-reason">
+                    <label for="cof-dialog-reason-input" class="form-label">Lý do từ chối (tùy chọn):</label>
+                    <div class="cof-chips" role="group" aria-label="Lý do phổ biến">
+                        <button type="button" class="cof-chip" data-reason="Mức đãi ngộ chưa đạt kỳ vọng">Mức đãi ngộ chưa đạt kỳ vọng</button>
+                        <button type="button" class="cof-chip" data-reason="Đã nhận lời mời từ công ty khác">Đã nhận lời mời từ công ty khác</button>
+                        <button type="button" class="cof-chip" data-reason="Địa điểm hoặc thời gian làm việc chưa phù hợp">Địa điểm / thời gian chưa phù hợp</button>
+                        <button type="button" class="cof-chip" data-reason="Kế hoạch cá nhân thay đổi">Kế hoạch cá nhân thay đổi</button>
+                    </div>
+                    <textarea id="cof-dialog-reason-input" class="form-input cof-textarea" rows="3"
+                              placeholder="Chia sẻ thêm lý do hoặc nguyện vọng của bạn..."></textarea>
+                </div>
             </div>
             <div class="dialog-actions">
                 <button type="button" class="btn btn--secondary btn--sm" data-offer-cancel>Xem lại</button>

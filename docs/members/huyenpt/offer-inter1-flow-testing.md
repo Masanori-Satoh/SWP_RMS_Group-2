@@ -130,18 +130,18 @@ Hệ thống phân loại trạng thái Offer thành 2 nhóm:
 
 | Mã Test | Endpoint / Method | Kịch bản kiểm tra | Kỳ vọng | Kết quả |
 | :---: | :--- | :--- | :--- | :---: |
-| `IT-01` | `GET /api/v1/hr/offers/passed-candidates` | HR lấy danh sách ứng viên đỗ phỏng vấn | Trả về 200 OK + JSON danh sách | **PASS** |
-| `IT-02` | `POST /api/v1/hr/offers` | HR tạo Offer mới hợp lệ | Trả về 201 Created + JSON Offer mới | **PASS** |
-| `IT-03` | `POST /api/v1/hr/offers` | Tạo Offer với lương thử việc $>$ lương chính thức | Trả về 400 Bad Request + Message lỗi | **PASS** |
-| `IT-04` | `POST /api/v1/hr/offers` | Tạo Offer cho đơn đã có Offer Nhóm B | Trả về 400 Bad Request (`OFFER_LOCKED_STATE`) | **PASS** |
-| `IT-05` | `PUT /api/v1/hr/offers/{id}` | Cập nhật Offer hợp lệ ở Nhóm A | Trả về 200 OK + dữ liệu đã sửa | **PASS** |
-| `IT-06` | `POST /api/v1/hr/offers/{id}/send` | HR phát hành Offer Letter cho ứng viên | Trả về 200 OK + trạng thái `Sent_Candidate` | **PASS** |
-| `IT-07` | Security Matcher | Truy cập API khi chưa đăng nhập | Bị chặn (Redirect 302 về Login / 401 Unauthorized) | **PASS** |
-| `IT-08` | `GET /api/v1/hr/offers` | Lấy danh sách Offer có phân trang và lọc theo trạng thái | Trả về 200 OK + JSON Page | **PASS** |
-| `IT-09` | `GET /api/v1/hr/offers/{id}` | Lấy chi tiết Offer đầy đủ (Candidate + Proposal info) | Trả về 200 OK + JSON OfferDetailResponse | **PASS** |
-| `IT-10` | `DELETE /api/v1/hr/offers/{id}` | Xóa bản thảo Offer (Draft) thành công | Trả về 200 OK + Message thành công | **PASS** |
-| `IT-11` | `DELETE /api/v1/hr/offers/{id}` | Cố tình xóa Offer không phải Draft | Trả về 400 Bad Request (`OFFER_NOT_DRAFT`) | **PASS** |
-| `IT-12` | `POST /api/v1/hr/offers/{id}/send` | Gửi Offer chưa được duyệt Director | Trả về 400 Bad Request (`OFFER_NOT_APPROVED`) | **PASS** |
+| `IT-01` | `GET /offers/create` | HR lấy danh sách ứng viên đỗ phỏng vấn | Trả về 200 OK + danh sách ứng viên | **PASS** |
+| `IT-02` | `POST /offers/create` | HR tạo Offer mới hợp lệ | Trả về 200 OK (hoặc 302 Redirect về danh sách) | **PASS** |
+| `IT-03` | `POST /offers/create` | Tạo Offer với lương thử việc $>$ lương chính thức | Trả về 400 Bad Request + Message lỗi | **PASS** |
+| `IT-04` | `POST /offers/create` | Tạo Offer cho đơn đã có Offer Nhóm B | Trả về 400 Bad Request (`ERR_ACTIVE_OFFER`) | **PASS** |
+| `IT-05` | `PUT /offers/{id}` | Cập nhật Offer hợp lệ ở Nhóm A | Trả về 200 OK + dữ liệu đã sửa | **PASS** |
+| `IT-06` | `POST /offers/{id}/send` | HR phát hành Offer Letter cho ứng viên | Trả về 200 OK + trạng thái `Sent_Candidate` | **PASS** |
+| `IT-07` | Security Matcher | Truy cập khi chưa đăng nhập | Bị chặn (Redirect 302 về Login / 401 Unauthorized) | **PASS** |
+| `IT-08` | `GET /offers` | Lấy danh sách Offer có phân trang và lọc theo trạng thái | Trả về 200 OK + danh sách Offer | **PASS** |
+| `IT-09` | `GET /offers/{id}` | Lấy chi tiết Offer đầy đủ (Candidate + Proposal info) | Trả về 200 OK + View/JSON OfferDetailResponse | **PASS** |
+| `IT-10` | `DELETE /offers/{id}` | Xóa bản thảo Offer (Draft) thành công | Trả về 200 OK + Message thành công | **PASS** |
+| `IT-11` | `DELETE /offers/{id}` | Cố tình xóa Offer không phải Draft | Trả về 400 Bad Request (`OFFER_NOT_DRAFT`) | **PASS** |
+| `IT-12` | `POST /offers/{id}/send` | Gửi Offer chưa được duyệt Director | Trả về 400 Bad Request (`OFFER_NOT_APPROVED`) | **PASS** |
 
 ---
 

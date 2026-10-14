@@ -49,8 +49,11 @@ public class OfferController {
                 userRole = "System Admin";
             } else if (auth.getAuthorities().stream().anyMatch(a -> "ROLE_DIRECTOR".equals(a.getAuthority()))) {
                 userRole = "Director";
-            } else {
+            } else if (auth.getAuthorities().stream().anyMatch(a -> "ROLE_HR".equals(a.getAuthority()))) {
                 userRole = "HR";
+            } else {
+                throw new org.springframework.security.access.AccessDeniedException(
+                        "Bạn không có quyền truy cập vào phân hệ Quản lý Đề xuất Offer.");
             }
         }
         model.addAttribute("currentUser", principal != null ? principal.getName() : "HR");

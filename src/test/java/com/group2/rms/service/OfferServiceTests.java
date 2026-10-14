@@ -77,6 +77,9 @@ class OfferServiceTests {
     @Mock
     private NotificationService notificationService;
 
+    @Mock
+    private com.group2.rms.notification.NotificationService systemNotificationService;
+
     @InjectMocks
     private OfferServiceImpl offerService;
 

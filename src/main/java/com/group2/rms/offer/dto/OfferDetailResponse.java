@@ -24,6 +24,7 @@ public class OfferDetailResponse {
     // --- Group B: Thông tin Đãi ngộ & Điều khoản Offer ---
     private Integer offerId;
     private String offerStatus;
+    private String declineReason;
     private String offeredPositionTitle;
     private BigDecimal proposedSalary;
     private BigDecimal probationSalary;

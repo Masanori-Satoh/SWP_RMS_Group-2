@@ -74,6 +74,7 @@ public class OfferExportServiceImpl implements OfferExportService {
         COLUMN_WHITELIST.put("directorDecision", "Quyết định Director");
         COLUMN_WHITELIST.put("directorComments", "Phản hồi Director");
         COLUMN_WHITELIST.put("approvedAt", "Thời điểm duyệt");
+        COLUMN_WHITELIST.put("declineReason", "Lý do ứng viên từ chối");
     }
 
     @Override
@@ -302,6 +303,7 @@ public class OfferExportServiceImpl implements OfferExportService {
                 .directorDecision(directorDecision)
                 .directorComments(directorComments)
                 .approvedAt(approvedAt)
+                .declineReason(offer.getDeclineReason())
                 .build();
     }
 
@@ -585,6 +587,10 @@ public class OfferExportServiceImpl implements OfferExportService {
                 } else {
                     cell.setCellStyle(centerStyle);
                 }
+            }
+            case "declineReason" -> {
+                cell.setCellValue(r.declineReason() != null ? r.declineReason() : "");
+                cell.setCellStyle(wrapStyle);
             }
             default -> {
                 cell.setCellValue("");

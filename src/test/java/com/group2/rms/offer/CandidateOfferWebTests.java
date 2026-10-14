@@ -4,6 +4,7 @@ import com.group2.rms.core.config.SecurityConfig;
 import com.group2.rms.core.exception.ResourceNotFoundException;
 import com.group2.rms.core.security.DatabaseUserDetailsService;
 import com.group2.rms.offer.controller.CandidateOfferController;
+import com.group2.rms.offer.dto.CandidateOfferDetailResponse;
 import com.group2.rms.offer.dto.CandidateOfferResponse;
 import com.group2.rms.offer.exception.OfferResponseException;
 import com.group2.rms.offer.service.CandidateOfferService;
@@ -144,11 +145,95 @@ class CandidateOfferWebTests {
         verifyNoInteractions(candidateOffers);
     }
 
+    @Test
+    void candidateCanViewOfferDetail() throws Exception {
+        when(candidateOffers.getDetail(12)).thenReturn(detailOffer(12, "Sent_Candidate", "Chờ bạn trả lời", "badge--warning", true));
+
+        mvc.perform(get("/portal/offers/12").with(as("an.vo", "Candidate")))
+                .andExpect(status().isOk())
+                .andExpect(view().name("offers/candidate-detail"))
+                .andExpect(model().attribute("activeMenu", "offers"))
+                .andExpect(content().string(containsString("Thư mời nhận việc: Senior Java Developer")))
+                .andExpect(content().string(containsString("Nguyễn Văn A")))
+                .andExpect(content().string(containsString("20.000.000")))
+                .andExpect(content().string(containsString("18.000.000")))
+                .andExpect(content().string(containsString("90% lương chính thức")))
+                .andExpect(content().string(containsString("action=\"/portal/offers/12/accept\"")))
+                .andExpect(content().string(containsString("action=\"/portal/offers/12/decline\"")))
+                .andExpect(content().string(containsString("id=\"cof-accept-dialog\"")))
+                .andExpect(content().string(containsString("id=\"cof-decline-dialog\"")))
+                .andExpect(content().string(not(containsString("style=\""))));
+    }
+
+    @Test
+    void acceptFromDetailRedirectsToDetail() throws Exception {
+        when(candidateOffers.accept(12)).thenReturn("Junior Java Developer");
+
+        mvc.perform(post("/portal/offers/12/accept")
+                        .param("fromDetail", "true")
+                        .with(as("an.vo", "Candidate")).with(csrf()))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrl("/portal/offers/12"))
+                .andExpect(flash().attribute("successMessage", "Bạn đã nhận offer vị trí Junior Java Developer."))
+                .andExpect(flash().attribute("decisionType", "ACCEPTED"));
+    }
+
+    @Test
+    void declineFromDetailWithReasonRedirectsToDetail() throws Exception {
+        when(candidateOffers.decline(12, "Mức đãi ngộ chưa đạt kỳ vọng")).thenReturn("Junior Java Developer");
+
+        mvc.perform(post("/portal/offers/12/decline")
+                        .param("fromDetail", "true")
+                        .param("declineReason", "Mức đãi ngộ chưa đạt kỳ vọng")
+                        .with(as("an.vo", "Candidate")).with(csrf()))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrl("/portal/offers/12"))
+                .andExpect(flash().attribute("successMessage", "Bạn đã từ chối offer vị trí Junior Java Developer."))
+                .andExpect(flash().attribute("decisionType", "DECLINED"))
+                .andExpect(flash().attribute("declineReasonDisplay", "Mức đãi ngộ chưa đạt kỳ vọng"));
+    }
+
+    @Test
+    void candidateCanViewDeclinePage() throws Exception {
+        when(candidateOffers.getDetail(12)).thenReturn(detailOffer(12, "Sent_Candidate", "Chờ bạn trả lời", "badge--warning", true));
+
+        mvc.perform(get("/portal/offers/12/decline").with(as("an.vo", "Candidate")))
+                .andExpect(status().isOk())
+                .andExpect(view().name("offers/candidate-decline"))
+                .andExpect(model().attribute("activeMenu", "offers"))
+                .andExpect(content().string(containsString("Từ chối Thư mời nhận việc")))
+                .andExpect(content().string(containsString("action=\"/portal/offers/12/decline\"")))
+                .andExpect(content().string(containsString("Mức đãi ngộ chưa đạt kỳ vọng")))
+                .andExpect(content().string(not(containsString("style=\""))));
+    }
+
+    @Test
+    void declinePageWhenAlreadyAnsweredRedirectsToDetail() throws Exception {
+        when(candidateOffers.getDetail(12)).thenReturn(detailOffer(12, "Declined", "Đã từ chối", "badge--neutral", false));
+
+        mvc.perform(get("/portal/offers/12/decline").with(as("an.vo", "Candidate")))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrl("/portal/offers/12"))
+                .andExpect(flash().attribute("errorMessage", "Thư mời này đã được trả lời nên không thể thay đổi."));
+    }
+
     private static CandidateOfferResponse offer(int id, String postingTitle, String statusLabel, String badge,
                                                 boolean canRespond) {
         return new CandidateOfferResponse(id, postingTitle, postingTitle, new BigDecimal("20000000"),
                 new BigDecimal("18000000"), LocalDate.of(2026, 11, 1), "Hà Nội", "Bảo hiểm đầy đủ",
                 statusLabel, badge, canRespond);
+    }
+
+    private static CandidateOfferDetailResponse detailOffer(int id, String status, String statusLabel, String badge,
+                                                            boolean canRespond) {
+        return new CandidateOfferDetailResponse(
+                id, "Nguyễn Văn A", "nguyenvana@example.com", "0912345678", "Hà Nội",
+                "Junior Java Developer", "Senior Java Developer", "Phòng Kỹ thuật",
+                new BigDecimal("20000000"), new BigDecimal("18000000"), 90, "60 ngày (2 tháng)",
+                LocalDate.of(2026, 11, 1), "Hà Nội", "Bảo hiểm y tế, thưởng quý",
+                status, statusLabel, badge, canRespond,
+                "Nguyễn Tuyển Dụng", "tuyendung@mocrms.com.vn",
+                null, null);
     }
 
     private RequestPostProcessor as(String username, String roleName) {
