@@ -228,7 +228,21 @@ class ApplicationPipelineWebTests {
                 .andExpect(content().string(containsString("Hợp vị trí")))
                 .andExpect(content().string(containsString("href=\"https://linkedin.com/in/an-vo\"")))
                 .andExpect(content().string(containsString("href=\"/interviews/new?applicationId=298\"")))
-                .andExpect(content().string(containsString("href=\"/offers/create?applicationId=298\"")));
+                .andExpect(content().string(containsString("href=\"/interviews/77/result\"")))
+                .andExpect(content().string(containsString("href=\"/offers/create?applicationId=298\"")))
+                .andExpect(content().string(containsString("aria-current=\"step\"")))
+                .andExpect(content().string(containsString("data-state=\"done\"")));
+    }
+
+    @Test
+    void actionCardIsHiddenWhenViewerHasNothingToDoAndNoInterviewYet() throws Exception {
+        when(pipeline.detail(298)).thenReturn(detail(false, true, null, false, false, null));
+
+        mvc.perform(get("/applications/298").with(as("hr_lan", "HR")))
+                .andExpect(status().isOk())
+                .andExpect(content().string(containsString("aria-label=\"Tiến độ hồ sơ\"")))
+                .andExpect(content().string(not(containsString("app-actions"))))
+                .andExpect(content().string(not(containsString("Xem kết quả phỏng vấn"))));
     }
 
     @Test
@@ -240,8 +254,11 @@ class ApplicationPipelineWebTests {
                 .andExpect(content().string(not(containsString("/internal/job-postings/12"))))
                 .andExpect(content().string(containsString("Tin Digital Marketing Executive")))
                 .andExpect(content().string(not(containsString("href=\"javascript:"))))
-                .andExpect(content().string(containsString("Bước tiếp theo")))
+                .andExpect(content().string(containsString("aria-label=\"Tiến độ hồ sơ\"")))
+                .andExpect(content().string(not(containsString("Bước tiếp theo"))))
+                .andExpect(content().string(containsString("href=\"/interviews/77/result\"")))
                 .andExpect(content().string(not(containsString("Lên lịch phỏng vấn"))))
+                .andExpect(content().string(not(containsString("Tạo offer"))))
                 .andExpect(content().string(not(containsString("app-review"))));
     }
 
@@ -307,8 +324,7 @@ class ApplicationPipelineWebTests {
 
         mvc.perform(get("/applications/298").with(as("hr_lan", "HR")))
                 .andExpect(status().isOk())
-                .andExpect(content().string(containsString("Đang chờ:")))
-                .andExpect(content().string(containsString("HR lên lịch phỏng vấn.")))
+                .andExpect(content().string(containsString("Chờ xếp lịch phỏng vấn · Đang chờ: HR")))
                 .andExpect(content().string(containsString("action=\"/applications/298/review\"")))
                 .andExpect(content().string(containsString("name=\"decision\" value=\"Pass\"")))
                 .andExpect(content().string(containsString("name=\"decision\" value=\"Hold\"")))
@@ -421,12 +437,20 @@ class ApplicationPipelineWebTests {
 
     private static ApplicationDetailResponse detail(boolean nextSteps, boolean openJobPosting, String linkedIn,
                                                     boolean review, boolean rescreen) {
+        return detail(nextSteps, openJobPosting, linkedIn, review, rescreen, 77L);
+    }
+
+    private static ApplicationDetailResponse detail(boolean nextSteps, boolean openJobPosting, String linkedIn,
+                                                    boolean review, boolean rescreen, Long interviewId) {
         return new ApplicationDetailResponse(298, "An Võ", "an.vo@example.com", "0901 234 567", linkedIn, null,
                 7, "REQ-007", 12, "Digital Marketing Executive", "Sales & Marketing", SUBMITTED,
                 "HM_Passed", "Qua vòng chuyên môn", "badge--warning", new BigDecimal("79.34"), SUBMITTED.plusMinutes(1),
                 List.of(new TimelineItem(SUBMITTED.plusDays(1), "HR: Đạt", "Lan HR", "Hợp vị trí", "success"),
                         new TimelineItem(SUBMITTED, "Nộp hồ sơ", "An Võ", null, "neutral")),
-                "HR lên lịch phỏng vấn.",
+                List.of(new StageItem("APPLIED", "Ứng tuyển", null, null, "done", null, false),
+                        new StageItem("INTERVIEW", "Phỏng vấn", null, null, "current",
+                                "Chờ xếp lịch phỏng vấn · Đang chờ: HR", false)),
+                interviewId,
                 new ApplicationDetailResponse.Actions(review, rescreen, nextSteps, nextSteps, openJobPosting),
                 openJobPosting ? "HR" : "Hiring Manager");
     }

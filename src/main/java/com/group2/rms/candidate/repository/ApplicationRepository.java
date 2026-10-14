@@ -200,6 +200,7 @@ public interface ApplicationRepository extends JpaRepository<Application, Intege
                             WHERE l.EntityName = 'Application' AND l.NewValue = 'Withdrawn'
                               AND l.EntityId = CAST(a.ApplicationId AS NVARCHAR(50)))
                         THEN 1 ELSE 0 END AS BIT) AS withdrawn,
+                   s.InterviewId AS interviewId,
                    s.InterviewStatus AS interviewStatus,
                    s.StartTime AS interviewStart,
                    (SELECT COUNT(*) FROM InterviewPanel p WHERE p.InterviewId = s.InterviewId) AS panelCount,
@@ -228,6 +229,8 @@ public interface ApplicationRepository extends JpaRepository<Application, Intege
         String getApplicationStatus();
 
         Boolean getWithdrawn();
+
+        Long getInterviewId();
 
         String getInterviewStatus();
 

@@ -29,23 +29,6 @@ public final class ApplicationStatusLabels {
         };
     }
 
-    /**
-     * Ai đang phải làm gì với hồ sơ ở trạng thái này: cho ô "Bước tiếp theo" trên trang chi tiết,
-     * để người xem biết hồ sơ đang đi về đâu dù chính họ không có thao tác nào.
-     */
-    public static String currentStep(String status, String departmentName) {
-        return switch (status) {
-            case "Applied", "AI_Screened" -> "HR sàng lọc hồ sơ và chuyển cho trưởng bộ phận.";
-            case "HR_Passed" -> "Trưởng bộ phận" + (departmentName == null ? "" : " " + departmentName) + " duyệt hồ sơ.";
-            case "HM_Passed" -> "HR lên lịch phỏng vấn.";
-            case "Interviewing" -> "Phỏng vấn và tổng hợp kết quả; đạt thì tạo offer.";
-            case "Offered" -> "Chờ ứng viên phản hồi thư mời.";
-            case "Hired" -> "Ứng viên đã nhận việc. Quy trình kết thúc.";
-            case "Rejected" -> "Hồ sơ đã dừng. Quy trình kết thúc.";
-            default -> "";
-        };
-    }
-
     /** Đơn {@code Rejected} do ứng viên tự rút (schema không có trạng thái riêng, xem {@code MyApplicationService}). */
     public static final String WITHDRAWN_LABEL = "Đã rút";
 

@@ -7,15 +7,31 @@
      Dữ liệu: List<com.group2.rms.core.web.StageItem>, đúng thứ tự hiển thị.
      Cách gọi:
      <nav th:replace="~{fragments/ui/stages :: stageBar(items=${stageItems}, mode='tabs')}"></nav>
-     mode: hiện chỉ có 'tabs' (danh sách): mỗi ô là link lọc kèm số đếm, ô state='current'
+     mode 'tabs' (danh sách): mỗi ô là link lọc kèm số đếm, ô state='current'
      có aria-current="page". Ô có href = null hiện dạng chữ, không bấm được.
-     CSS: components.css mục O. Màn ≤ 600px: các ô xuống dòng (ô đang lọc luôn nhìn thấy).
+     mode 'stepper' (chi tiết hồ sơ): mỗi ô là một bước, không bấm được; không dùng count, href, offFlow.
+     state 'done' (đã qua, dấu ✓), 'current' (bước hiện tại, aria-current="step", hiện thêm detail),
+     còn lại là chưa tới. Ô có key = 'CLOSED' (hồ sơ đã dừng) tô màu lỗi.
+     CSS: components.css mục O. Màn ≤ 600px: tabs xuống dòng (ô đang lọc luôn nhìn thấy), stepper xếp dọc.
      Lưu ý: mỗi biểu thức chỉ chứa tối đa một "__" (Thymeleaf hiểu cặp __...__ là tiền xử lý),
-     nên ô đang chọn dựa vào [aria-current], vạch ngăn là span riêng.
+     nên ô đang chọn dựa vào [aria-current], trạng thái bước dựa vào [data-state], vạch ngăn là span riêng.
      ============================================================================= -->
 <nav th:fragment="stageBar(items, mode)" class="stage-bar" th:classappend="'stage-bar--' + ${mode}"
-     aria-label="Lọc theo giai đoạn">
-    <ol class="stage-bar__list">
+     aria-label="Lọc theo giai đoạn"
+     th:attr="aria-label=${mode == 'stepper' ? 'Tiến độ hồ sơ' : 'Lọc theo giai đoạn'}">
+    <ol th:if="${mode == 'stepper'}" class="stage-bar__list">
+        <li th:each="item : ${items}" class="stage-bar__item" th:data-state="${item.state}" th:data-key="${item.key}"
+            th:attr="aria-current=${item.state == 'current' ? 'step' : null}">
+            <span class="stage-bar__step">
+                <span class="stage-bar__text">
+                    <span class="stage-bar__label" th:text="${item.label}">Phỏng vấn</span>
+                    <span th:if="${item.detail != null}" class="stage-bar__detail"
+                          th:text="${item.detail}">Chờ xếp lịch phỏng vấn · Đang chờ: HR</span>
+                </span>
+            </span>
+        </li>
+    </ol>
+    <ol th:if="${mode == 'tabs'}" class="stage-bar__list">
         <li th:each="item, it : ${items}" class="stage-bar__item"
             th:classappend="${item.offFlow} ? 'stage-bar__item--off'">
             <span th:if="${!it.first and items[it.index - 1].offFlow != item.offFlow}"

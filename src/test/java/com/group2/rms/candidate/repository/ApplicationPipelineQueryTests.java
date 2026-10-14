@@ -181,6 +181,7 @@ class ApplicationPipelineQueryTests {
                     .filter(event -> !"Cancelled".equals(event.getStatus()))
                     .map(ApplicationRepository.TimelineEventRow::getAt).toList();
             if (activeStarts.isEmpty()) {
+                assertNull(row.getInterviewId(), "không có lịch còn hiệu lực: " + id);
                 assertNull(row.getInterviewStatus(), "không có lịch còn hiệu lực: " + id);
                 assertNull(row.getFinalDecision(), "không có lịch thì không có kết quả: " + id);
                 assertEquals(0, row.getPanelCount());
@@ -188,6 +189,7 @@ class ApplicationPipelineQueryTests {
             } else {
                 assertEquals(Collections.max(activeStarts), row.getInterviewStart(), "lịch mới nhất: " + id);
                 assertNotEquals("Cancelled", row.getInterviewStatus());
+                assertNotNull(row.getInterviewId(), "có lịch thì có id: " + id);
             }
 
             List<ApplicationRepository.TimelineEventRow> offers = applications.findOfferEvents(id);
