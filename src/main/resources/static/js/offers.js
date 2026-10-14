@@ -627,12 +627,14 @@ function renderDetailModalHtml(d) {
             </div>
         </div>
 
+        ${d.approvalHistory && d.approvalHistory.length > 0 ? `
         <div class="detail-section" style="margin-bottom:0;">
             <div class="section-title">
                 <i class="fa-solid fa-stamp"></i> 3. Lịch Sử Phê Duyệt Của Director
             </div>
             ${approvalHtml}
         </div>
+        ` : ''}
     `;
 }
 

@@ -320,8 +320,8 @@
         </div>
     </div>
 
-    <!-- AUDIT LOGS: LỊCH SỬ PHÊ DUYỆT CỦA DIRECTOR -->
-    <div class="card" style="margin-bottom: 20px;">
+    <!-- AUDIT LOGS: LỊCH SỬ PHÊ DUYỆT CỦA DIRECTOR (CHỈ HIỆN KHI ĐÃ CÓ LỊCH SỬ) -->
+    <div th:if="${!#lists.isEmpty(detail.approvalHistory)}" class="card" style="margin-bottom: 20px;">
         <div class="card-header">
             <h2 class="card-title" style="font-size:16px;">
                 <i class="fa-solid fa-clock-rotate-left"></i> 
@@ -329,11 +329,7 @@
             </h2>
         </div>
         <div class="card-body">
-            <div th:if="${#lists.isEmpty(detail.approvalHistory)}" style="color:var(--muted); font-size:13.5px; padding: 12px 0;">
-                <i class="fa-regular fa-clock"></i> Chưa có ghi nhận lịch sử phê duyệt của Giám đốc đối với đề xuất này.
-            </div>
-
-            <div th:unless="${#lists.isEmpty(detail.approvalHistory)}" class="history-timeline">
+            <div class="history-timeline">
                 <div class="timeline-item" th:each="a : ${detail.approvalHistory}">
                     <div class="timeline-dot" th:classappend="${a.status == 'Approved' or a.status == 'Director_Approved' ? 'dot-approved' : 'dot-rejected'}"></div>
                     <div class="timeline-header">
