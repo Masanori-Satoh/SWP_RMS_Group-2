@@ -33,9 +33,11 @@ public class Notification {
     @Column(name = "Content", nullable = false, length = 1000)
     private String content;
 
+    @org.hibernate.annotations.JdbcTypeCode(org.hibernate.type.SqlTypes.VARCHAR)
     @Column(name = "EventType", nullable = false, length = 50)
     private String eventType;
 
+    @org.hibernate.annotations.JdbcTypeCode(org.hibernate.type.SqlTypes.VARCHAR)
     @Column(name = "ReferenceId", length = 50)
     private String referenceId;
 
@@ -46,6 +48,7 @@ public class Notification {
     @Builder.Default
     private Boolean isRead = false;
 
+    @org.hibernate.annotations.JdbcTypeCode(org.hibernate.type.SqlTypes.VARCHAR)
     @Column(name = "EventId", length = 100, unique = true)
     private String eventId;
 
