@@ -132,6 +132,11 @@ public class CandidateOfferServiceImpl implements CandidateOfferService {
             throw new OfferResponseException("Thư mời này đã được trả lời nên không thể thay đổi.");
         }
         if (isExpired(offer)) {
+            if (offer.getResponseDeadline() != null) {
+                String deadlineStr = java.time.format.DateTimeFormatter.ofPattern("HH:mm dd/MM/yyyy")
+                        .format(offer.getResponseDeadline());
+                throw new OfferResponseException("Thư mời này đã quá thời hạn phản hồi (" + deadlineStr + "). Vui lòng liên hệ bộ phận Tuyển dụng để được hỗ trợ.");
+            }
             String dateStr = offer.getExpectedStartDate() != null
                     ? java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy").format(offer.getExpectedStartDate())
                     : "";
@@ -140,8 +145,13 @@ public class CandidateOfferServiceImpl implements CandidateOfferService {
     }
 
     private static boolean isExpired(OfferProposal offer) {
-        return SENT.equals(offer.getOfferStatus())
-                && offer.getExpectedStartDate() != null
+        if (!SENT.equals(offer.getOfferStatus())) {
+            return false;
+        }
+        if (offer.getResponseDeadline() != null) {
+            return java.time.LocalDateTime.now().isAfter(offer.getResponseDeadline());
+        }
+        return offer.getExpectedStartDate() != null
                 && offer.getExpectedStartDate().isBefore(java.time.LocalDate.now());
     }
 
@@ -163,7 +173,9 @@ public class CandidateOfferServiceImpl implements CandidateOfferService {
                 offer.getBenefitsPackage(),
                 label,
                 badge,
-                canRespond);
+                canRespond,
+                offer.getResponsePeriodDays(),
+                offer.getResponseDeadline());
     }
 
     private static String statusLabel(String status) {
@@ -233,6 +245,8 @@ public class CandidateOfferServiceImpl implements CandidateOfferService {
                 proposedBy != null ? proposedBy.getFullName() : "Phòng Tuyển dụng Mộc RMS",
                 proposedBy != null ? proposedBy.getEmail() : "tuyendung@mocrms.com.vn",
                 offer.getDeclineReason(),
+                offer.getResponsePeriodDays(),
+                offer.getResponseDeadline(),
                 offer.getCreatedAt(),
                 offer.getUpdatedAt());
     }

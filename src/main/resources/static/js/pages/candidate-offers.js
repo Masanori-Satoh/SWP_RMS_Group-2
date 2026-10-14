@@ -177,4 +177,48 @@
       confirmButton.disabled = false;
     }
   });
+
+  // 5. Đồng hồ đếm ngược hạn phản hồi thư mời
+  function initCountdowns() {
+    var countdownEls = document.querySelectorAll('.cof-countdown[data-deadline]');
+    if (!countdownEls.length) return;
+
+    function pad(n) {
+      return n < 10 ? '0' + n : n;
+    }
+
+    function update() {
+      var now = new Date().getTime();
+      countdownEls.forEach(function (el) {
+        var deadlineStr = el.dataset.deadline;
+        if (!deadlineStr) return;
+        var deadlineTime = new Date(deadlineStr).getTime();
+        var diff = deadlineTime - now;
+
+        if (isNaN(diff)) return;
+
+        if (diff <= 0) {
+          el.textContent = '⏱ Đã hết hạn phản hồi';
+          el.classList.add('cof-countdown--expired');
+        } else {
+          var days = Math.floor(diff / (1000 * 60 * 60 * 24));
+          var hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+          var minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+          var seconds = Math.floor((diff % (1000 * 60)) / 1000);
+
+          var parts = [];
+          if (days > 0) {
+            parts.push(days + ' ngày');
+          }
+          parts.push(pad(hours) + 'h ' + pad(minutes) + 'm ' + pad(seconds) + 's');
+          el.textContent = '⏱ Còn lại: ' + parts.join(' ');
+        }
+      });
+    }
+
+    update();
+    setInterval(update, 1000);
+  }
+
+  initCountdowns();
 })();

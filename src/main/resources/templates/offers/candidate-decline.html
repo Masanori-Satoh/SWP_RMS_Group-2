@@ -68,6 +68,10 @@
                         <span class="cof-meta-label">Ngày bắt đầu dự kiến</span>
                         <span class="cof-meta-val" th:text="${offer.expectedStartDate == null ? 'Thỏa thuận trực tiếp' : #temporals.format(offer.expectedStartDate, 'dd/MM/yyyy')}">01/11/2026</span>
                     </div>
+                    <div th:if="${offer.responseDeadline != null}" class="cof-meta-item">
+                        <span class="cof-meta-label">Hạn phản hồi</span>
+                        <span class="cof-meta-val cof-meta-val--deadline" th:text="${#temporals.format(offer.responseDeadline, 'HH:mm dd/MM/yyyy')}">17:00 15/10/2026</span>
+                    </div>
                     <div class="cof-meta-item">
                         <span class="cof-meta-label">Địa điểm làm việc</span>
                         <span class="cof-meta-val" th:text="${#strings.isEmpty(offer.workLocation) ? 'Trụ sở chính Mộc RMS' : offer.workLocation}">Hà Nội</span>
