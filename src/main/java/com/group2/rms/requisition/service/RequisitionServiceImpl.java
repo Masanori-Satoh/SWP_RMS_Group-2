@@ -279,6 +279,7 @@ public class RequisitionServiceImpl implements RequisitionService {
 
         if (jobRequisition.getSubmittedAt() != null) {
             recordWorkflowEvent(jobRequisition, currentUser, "Submitted", "Đã gửi vào hàng đợi phê duyệt của Giám đốc.");
+            notificationService.notifyRequisitionSubmitted(jobRequisition);
         }
         createAuditLog(jobRequisition, currentUser, "CREATE", null, "Tạo yêu cầu: " + jobRequisition.getTitle() + " · " + jobRequisition.getApprovalStatus());
 
@@ -317,6 +318,7 @@ public class RequisitionServiceImpl implements RequisitionService {
             jobRequisition.setSubmittedAt(LocalDateTime.now());
             jobRequisition.setDecidedAt(null);
             recordWorkflowEvent(jobRequisition, currentUser, "Submitted", "Đã gửi vào hàng đợi phê duyệt của Giám đốc.");
+            notificationService.notifyRequisitionSubmitted(jobRequisition);
         }
 
         Map<String, String> afterSnapshot = createSnapshot(jobRequisition);
@@ -468,7 +470,9 @@ public class RequisitionServiceImpl implements RequisitionService {
         createAuditLog(jobRequisition, currentUser, "UPDATE", "Status: Pending_Director",
                 "Status: Pending_Director → " + nextStatus + (cleanedComment == null ? "" : "\nÝ kiến Giám đốc: " + cleanedComment));
 
-        if (!approved) {
+        if (approved) {
+            notificationService.notifyRequisitionApproved(jobRequisition);
+        } else {
             notificationService.notifyRequisitionRejected(jobRequisition, currentUser, cleanedComment);
         }
     }
