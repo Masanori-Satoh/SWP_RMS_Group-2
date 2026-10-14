@@ -24,11 +24,12 @@
         <div style="font-size: 14px; font-weight: 500;" th:text="${errorMessage}"></div>
     </div>
 
-    <!-- HEADER SECTION -->
-    <div class="offers-header" style="align-items: center; border-bottom: 1px solid var(--line); padding-bottom: 16px; margin-bottom: 24px;">
-        <div class="offers-title-group">
-            <div style="display:flex; align-items:center; gap:12px; flex-wrap:wrap;">
-                <h1 th:text="'Đề Xuất Offer #' + ${detail.offerId}">Đề Xuất Offer #1</h1>
+    <!-- HEADER SECTION (REDESIGNED ACCORDING TO MOCKUP) -->
+    <div class="offers-detail-header">
+        <div class="offers-detail-header-left">
+            <!-- Title & Status Badge -->
+            <div class="offers-detail-title-row">
+                <h1 class="offers-detail-title" th:text="'Đề Xuất Offer #' + ${detail.offerId}">Đề Xuất Offer #10</h1>
                 
                 <!-- STATUS BADGES -->
                 <span th:if="${detail.offerStatus == 'Draft'}" class="status-badge status-draft">
@@ -53,19 +54,46 @@
                     <i class="fa-solid fa-user-xmark"></i> Ứng viên từ chối
                 </span>
             </div>
-            <p class="offers-subtitle" style="margin-top: 6px; line-height: 1.5;">
-                <span>Vị trí đề xuất: <strong style="color:var(--ink);" th:text="${detail.offeredPositionTitle}">-</strong></span>
-                <span style="color: var(--line); margin: 0 8px;">|</span>
-                <span>Ứng viên: <strong style="color:var(--ink);" th:text="${detail.candidateName}">-</strong></span>
-                <br>
-                <span>Ngày tạo: <span th:text="${detail.createdAt != null ? #temporals.format(detail.createdAt, 'dd/MM/yyyy HH:mm') : '-'}">-</span></span>
-            </p>
+
+            <!-- Row 1: Vị trí đề xuất -->
+            <div class="offers-detail-meta-item" style="margin-top: 14px;">
+                <div class="offers-meta-icon">
+                    <i class="fa-solid fa-briefcase"></i>
+                </div>
+                <div>
+                    <div class="offers-meta-label">Vị trí đề xuất</div>
+                    <div class="offers-meta-value" th:text="${detail.offeredPositionTitle}">QA Automation Engineer (Playwright / Selenium / API)</div>
+                </div>
+            </div>
+
+            <!-- Row 2: Ứng viên & Ngày tạo (2 cột) -->
+            <div class="offers-detail-meta-row" style="margin-top: 12px;">
+                <div class="offers-detail-meta-item">
+                    <div class="offers-meta-icon">
+                        <i class="fa-regular fa-user"></i>
+                    </div>
+                    <div>
+                        <div class="offers-meta-label">Ứng viên</div>
+                        <div class="offers-meta-value" th:text="${detail.candidateName}">Phan Hải Ngọc</div>
+                    </div>
+                </div>
+
+                <div class="offers-detail-meta-item">
+                    <div class="offers-meta-icon">
+                        <i class="fa-regular fa-calendar"></i>
+                    </div>
+                    <div>
+                        <div class="offers-meta-label">Ngày tạo</div>
+                        <div class="offers-meta-value" th:text="${detail.createdAt != null ? #temporals.format(detail.createdAt, 'dd/MM/yyyy HH:mm') : '-'}">14/10/2026 20:09</div>
+                    </div>
+                </div>
+            </div>
         </div>
 
-        <!-- ACTION BUTTONS -->
-        <div style="display: flex; gap: 8px; align-items: center; flex-wrap:wrap;">
+        <!-- Right Side: Vertical divider + Action Buttons -->
+        <div class="offers-detail-header-actions">
             <a th:href="@{/offers}" class="btn btn--secondary">
-                <i class="fa-solid fa-arrow-left" style="margin-right:4px;"></i> Danh sách
+                <i class="fa-solid fa-arrow-left"></i> Danh sách
             </a>
 
             <!-- Actions when Draft -->
@@ -73,18 +101,18 @@
                 <form th:action="@{/offers/{id}/delete(id=${detail.offerId})}" method="post" style="display:inline;"
                       onsubmit="return confirm('Bạn có chắc chắn muốn xóa bản thảo Offer này khỏi hệ thống?');">
                     <button type="submit" class="btn btn--danger">
-                        <i class="fa-solid fa-trash-can" style="margin-right:4px;"></i> Xóa bản thảo
+                        <i class="fa-solid fa-trash-can"></i> Xóa bản thảo
                     </button>
                 </form>
                 <a th:href="@{/offers/{id}/edit(id=${detail.offerId})}" class="btn btn--primary">
-                    <i class="fa-solid fa-pen-to-square" style="margin-right:4px;"></i> Chỉnh sửa
+                    <i class="fa-solid fa-pen-to-square"></i> Chỉnh sửa
                 </a>
             </th:block>
 
             <!-- Action when Pending_Director (Director View) -->
             <th:block th:if="${detail.offerStatus == 'Pending_Director' and (userRole == 'Director' or userRole == 'System Admin')}">
                 <button type="button" onclick="scrollToDirectorDecision()" class="btn btn--primary" style="background:var(--brand-dark); border-color:var(--brand-dark);">
-                    <i class="fa-solid fa-circle-check" style="margin-right:6px;"></i> Ra quyết định
+                    <i class="fa-solid fa-circle-check"></i> Ra quyết định
                 </button>
             </th:block>
 
@@ -93,7 +121,7 @@
                 <form th:action="@{/offers/{id}/send(id=${detail.offerId})}" method="post" style="display:inline;"
                       onsubmit="return confirm('Bạn có chắc chắn muốn phát hành Thư mời làm việc (Offer Letter) tới ứng viên? Trạng thái sẽ được chuyển sang Sent_Candidate.');">
                     <button type="submit" class="btn btn--primary">
-                        <i class="fa-solid fa-paper-plane" style="margin-right:4px;"></i> Phát hành Offer Letter
+                        <i class="fa-solid fa-paper-plane"></i> Phát hành Offer Letter
                     </button>
                 </form>
             </th:block>
@@ -101,7 +129,7 @@
             <!-- Action when Rejected -->
             <th:block th:if="${detail.offerStatus == 'Director_Rejected' or detail.offerStatus == 'Rejected'}">
                 <a th:href="@{/offers/{id}/edit(id=${detail.offerId})}" class="btn btn--primary">
-                    <i class="fa-solid fa-pen-to-square" style="margin-right:4px;"></i> Chỉnh sửa & Trình lại
+                    <i class="fa-solid fa-pen-to-square"></i> Chỉnh sửa & Trình lại
                 </a>
             </th:block>
         </div>

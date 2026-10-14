@@ -1726,6 +1726,43 @@ function scrollToDirectorDecision() {
     }
 }
 
+function showDirectorRejectReasonRequiredAlert(onCloseCallback) {
+    Swal.fire({
+        html: `
+            <div class="reject-warn-icon-wrapper">
+                <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <line x1="12" y1="8" x2="12" y2="12"></line>
+                    <line x1="12" y1="16" x2="12.01" y2="16"></line>
+                </svg>
+            </div>
+            <h3 class="reject-warn-title">Cần nhập lý do từ chối</h3>
+            <p class="reject-warn-desc">Vui lòng nhập lý do từ chối vào ô nhận xét bên dưới trước khi tiếp tục.</p>
+            <div class="reject-warn-divider"></div>
+            <div class="reject-warn-subtext">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#475569" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <line x1="12" y1="16" x2="12" y2="12"></line>
+                    <line x1="12" y1="8" x2="12.01" y2="8"></line>
+                </svg>
+                <span>Thông tin này sẽ được gửi lại để HR xử lý tiếp.</span>
+            </div>
+        `,
+        showConfirmButton: true,
+        confirmButtonText: 'Đã hiểu',
+        showCloseButton: true,
+        buttonsStyling: false,
+        customClass: {
+            popup: 'director-reject-alert-modal',
+            confirmButton: 'btn-director-reject-confirm'
+        }
+    }).then(() => {
+        if (typeof onCloseCallback === 'function') {
+            onCloseCallback();
+        }
+    });
+}
+
 function submitDirectorDecisionFromScreen(offerId, action) {
     if (!offerId) return;
     const commentsEl = document.getElementById('directorDetailComments');
@@ -1733,10 +1770,9 @@ function submitDirectorDecisionFromScreen(offerId, action) {
 
     if (action === 'REJECT') {
         if (!comments) {
-            Swal.fire('Chú ý', 'Vui lòng nhập lý do từ chối vào ô nhận xét bên dưới.', 'warning')
-                .then(() => {
-                    if (commentsEl) commentsEl.focus();
-                });
+            showDirectorRejectReasonRequiredAlert(() => {
+                if (commentsEl) commentsEl.focus();
+            });
             return;
         }
 
@@ -1863,7 +1899,10 @@ function submitDirectorReject() {
     
     const reason = document.getElementById('rejectReasonInput') ? document.getElementById('rejectReasonInput').value.trim() : '';
     if (!reason) {
-        Swal.fire('Chú ý', 'Vui lòng nhập lý do từ chối.', 'warning');
+        showDirectorRejectReasonRequiredAlert(() => {
+            const input = document.getElementById('rejectReasonInput');
+            if (input) input.focus();
+        });
         return;
     }
     
