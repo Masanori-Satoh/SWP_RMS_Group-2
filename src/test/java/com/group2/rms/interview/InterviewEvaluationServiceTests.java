@@ -41,7 +41,8 @@ class InterviewEvaluationServiceTests {
     void setUp() {
         interviewScheduleRepository = mock(InterviewScheduleRepository.class);
         interviewEvaluationRepository = mock(InterviewEvaluationRepository.class);
-        service = new InterviewEvaluationServiceImpl(interviewScheduleRepository, interviewEvaluationRepository);
+        service = new InterviewEvaluationServiceImpl(interviewScheduleRepository, interviewEvaluationRepository,
+                org.mockito.Mockito.mock(com.group2.rms.notification.NotificationService.class));
 
         interviewer = User.builder().userId(11).fullName("Tran Interviewer").accountStatus("Active")
                 .role(Role.builder().roleId(5).roleName("Interviewer").build()).build();

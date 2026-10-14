@@ -52,7 +52,8 @@ class InterviewFinalResultServiceTests {
         applicationStatusService = mock(ApplicationStatusService.class); // dunglt bổ sung
         service = new InterviewFinalResultServiceImpl(
                 interviewScheduleRepository, interviewFinalResultRepository, requisitionAccess,
-                applicationStatusService); // dunglt bổ sung
+                applicationStatusService,
+                mock(com.group2.rms.notification.NotificationService.class)); // dunglt bổ sung
 
         hiringManager = user(40, "Hoa HM", "Hiring Manager");
         requisition = JobRequisition.builder().build();

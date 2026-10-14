@@ -60,7 +60,8 @@ class InterviewSchedulingServiceTests {
                 applicationRepository,
                 userRepository,
                 interviewTimeValidationService,
-                applicationStatusService // dunglt bổ sung
+                applicationStatusService, // dunglt bổ sung
+                mock(com.group2.rms.notification.NotificationService.class)
         );
 
         hrUser = User.builder()

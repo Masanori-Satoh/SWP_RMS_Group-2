@@ -13,6 +13,8 @@ import com.group2.rms.interview.repository.InterviewPanelRepository;
 import com.group2.rms.interview.repository.InterviewScheduleRepository;
 import com.group2.rms.user.entity.User;
 import com.group2.rms.user.repository.UserRepository;
+import com.group2.rms.notification.NotificationService;
+import com.group2.rms.notification.constants.NotificationEventType;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -25,6 +27,8 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.Objects;
+import java.time.LocalDateTime;
 
 /**
  * Service implementation cho nghiệp vụ Lên lịch phỏng vấn (Interview Scheduling).
@@ -48,6 +52,7 @@ public class InterviewSchedulingServiceImpl implements InterviewSchedulingServic
     private final InterviewTimeValidationService interviewTimeValidationService;
     // dunglt bổ sung: đổi trạng thái hồ sơ khi xếp lịch (module candidate, chiều interview → candidate)
     private final ApplicationStatusService applicationStatusService;
+    private final NotificationService notifications;
 
     @Override
     @Transactional
@@ -140,6 +145,8 @@ public class InterviewSchedulingServiceImpl implements InterviewSchedulingServic
         InterviewSchedule fullySavedSchedule = interviewScheduleRepository.save(savedSchedule);
         // dunglt bổ sung: xếp lịch thì hồ sơ HM_Passed → Interviewing (luồng trạng thái hồ sơ)
         applicationStatusService.onInterviewScheduled(application.getApplicationId());
+        notifyParticipants(fullySavedSchedule, NotificationEventType.INTERVIEW_SCHEDULED,
+                "INTERVIEW_SCHEDULE_" + fullySavedSchedule.getInterviewId());
         log.info("Tạo lịch phỏng vấn thành công với Interview ID {}", fullySavedSchedule.getInterviewId());
 
         return InterviewScheduleResponse.fromEntity(fullySavedSchedule);
@@ -152,6 +159,10 @@ public class InterviewSchedulingServiceImpl implements InterviewSchedulingServic
 
         InterviewSchedule schedule = interviewScheduleRepository.findByIdWithDetails(interviewId)
                 .orElseThrow(() -> new EntityNotFoundException("Không tìm thấy lịch phỏng vấn với ID: " + interviewId));
+
+        LocalDateTime previousStart = schedule.getStartTime();
+        LocalDateTime previousEnd = schedule.getEndTime();
+        InterviewStatus previousStatus = schedule.getInterviewStatus();
 
         User updaterUser = userRepository.findById(updaterUserId)
                 .orElseThrow(() -> new EntityNotFoundException("Không tìm thấy tài khoản người dùng với ID: " + updaterUserId));
@@ -238,6 +249,17 @@ public class InterviewSchedulingServiceImpl implements InterviewSchedulingServic
         }
 
         InterviewSchedule updated = interviewScheduleRepository.save(schedule);
+        if (previousStatus != InterviewStatus.Cancelled && updated.getInterviewStatus() == InterviewStatus.Cancelled) {
+            notifyParticipants(updated, NotificationEventType.INTERVIEW_CANCELLED,
+                    "INTERVIEW_CANCEL_" + interviewId);
+        }
+        if (updated.getInterviewStatus() != InterviewStatus.Cancelled
+                && (!Objects.equals(previousStart, updated.getStartTime())
+                || !Objects.equals(previousEnd, updated.getEndTime())
+                || (previousStatus != InterviewStatus.Rescheduled && targetStatus == InterviewStatus.Rescheduled))) {
+            notifyParticipants(updated, NotificationEventType.INTERVIEW_RESCHEDULED,
+                    "INTERVIEW_RESCHEDULE_" + interviewId + "_" + LocalDateTime.now());
+        }
         log.info("Cập nhật lịch phỏng vấn ID {} thành công", interviewId);
 
         return InterviewScheduleResponse.fromEntity(updated);
@@ -277,9 +299,25 @@ public class InterviewSchedulingServiceImpl implements InterviewSchedulingServic
 
         schedule.transitionTo(InterviewStatus.Cancelled);
         InterviewSchedule cancelledSchedule = interviewScheduleRepository.save(schedule);
+        notifyParticipants(cancelledSchedule, NotificationEventType.INTERVIEW_CANCELLED,
+                "INTERVIEW_CANCEL_" + interviewId);
         log.info("Hủy lịch phỏng vấn ID {} thành công", interviewId);
 
         return InterviewScheduleResponse.fromEntity(cancelledSchedule);
+    }
+
+    private void notifyParticipants(InterviewSchedule schedule, NotificationEventType event, String eventId) {
+        if (schedule.getApplication() == null) return;
+        Integer applicationId = schedule.getApplication().getApplicationId();
+        if (schedule.getApplication().getCandidate() != null) {
+            notifications.publish(schedule.getApplication().getCandidate().getAccount(), event,
+                    "InterviewSchedule", schedule.getInterviewId(), "/portal/interviews", eventId, false);
+        }
+        schedule.getInterviewPanels().stream()
+                .map(panel -> panel.getInterviewer())
+                .filter(Objects::nonNull)
+                .forEach(interviewer -> notifications.publish(interviewer, event,
+                        "InterviewSchedule", schedule.getInterviewId(), "/interviews", eventId, false));
     }
 
     @Override

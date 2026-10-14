@@ -10,6 +10,8 @@ import com.group2.rms.interview.exception.InterviewEvaluationException;
 import com.group2.rms.interview.exception.InterviewStatusException;
 import com.group2.rms.interview.repository.InterviewEvaluationRepository;
 import com.group2.rms.interview.repository.InterviewScheduleRepository;
+import com.group2.rms.notification.NotificationService;
+import com.group2.rms.notification.constants.NotificationEventType;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.access.AccessDeniedException;
@@ -31,6 +33,7 @@ public class InterviewEvaluationServiceImpl implements InterviewEvaluationServic
 
     private final InterviewScheduleRepository interviewScheduleRepository;
     private final InterviewEvaluationRepository interviewEvaluationRepository;
+    private final NotificationService notifications;
 
     @Override
     @Transactional
@@ -68,6 +71,16 @@ public class InterviewEvaluationServiceImpl implements InterviewEvaluationServic
                 .comments(blankToNull(request.comments()))
                 .build();
         interviewEvaluationRepository.save(evaluation);
+        var posting = schedule.getApplication() == null ? null : schedule.getApplication().getJobPosting();
+        String eventId = "INTERVIEW_FEEDBACK_" + interviewId + "_" + evaluatorId;
+        if (posting != null) {
+            notifications.publishToResponsibleHr(posting, NotificationEventType.INTERVIEW_FEEDBACK_SUBMITTED,
+                    "InterviewSchedule", interviewId, "/interviews", eventId);
+            if (posting.getRequisition() != null) {
+                notifications.publish(posting.getRequisition().getHiringManager(), NotificationEventType.INTERVIEW_FEEDBACK_SUBMITTED,
+                        "InterviewSchedule", interviewId, "/interviews", eventId, false);
+            }
+        }
 
         // D3': phiếu đầu tiên coi như buổi phỏng vấn đã diễn ra
         InterviewStatus current = schedule.getInterviewStatus();

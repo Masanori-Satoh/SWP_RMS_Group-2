@@ -14,6 +14,8 @@ import com.group2.rms.interview.repository.InterviewFinalResultRepository;
 import com.group2.rms.interview.repository.InterviewScheduleRepository;
 import com.group2.rms.requisition.service.RequisitionAccess;
 import com.group2.rms.user.entity.User;
+import com.group2.rms.notification.NotificationService;
+import com.group2.rms.notification.constants.NotificationEventType;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.access.AccessDeniedException;
@@ -40,6 +42,7 @@ public class InterviewFinalResultServiceImpl implements InterviewFinalResultServ
     private final RequisitionAccess requisitionAccess;
     // dunglt bổ sung: đổi trạng thái hồ sơ theo kết quả (module candidate, chiều interview → candidate)
     private final ApplicationStatusService applicationStatusService;
+    private final NotificationService notifications;
 
     @Override
     @Transactional
@@ -81,6 +84,12 @@ public class InterviewFinalResultServiceImpl implements InterviewFinalResultServ
         // dunglt bổ sung: chốt Failed thì hồ sơ → Rejected; Passed giữ Interviewing để HR lập offer
         applicationStatusService.onInterviewDecided(schedule.getApplication().getApplicationId(),
                 "Passed".equals(request.finalDecision()));
+        var posting = schedule.getApplication().getJobPosting();
+        if (posting != null) {
+            notifications.publishToResponsibleHr(posting, NotificationEventType.INTERVIEW_RESULT_UPDATED,
+                    "InterviewSchedule", interviewId, "/interviews",
+                    "INTERVIEW_RESULT_" + interviewId);
+        }
 
         log.info("Hiring Manager #{} chốt kết quả {} cho lịch phỏng vấn #{}.",
                 hiringManager.getUserId(), request.finalDecision(), interviewId);
