@@ -297,42 +297,45 @@
         </div>
     </div>
 
-    <!-- DIRECTOR DECISION PANEL (INLINE ON SCREEN KHI PENDING_DIRECTOR) -->
+    <!-- 3. QUYẾT ĐỊNH CỦA GIÁM ĐỐC (DIRECTOR DECISION CARD) -->
     <div th:if="${detail.offerStatus == 'Pending_Director' and (userRole == 'Director' or userRole == 'System Admin')}"
          id="directorDecisionSection"
-         class="card director-decision-inline-card" style="margin-bottom: 20px;">
-        <div class="director-decision-bar">
-            <!-- Cột trái: Tiêu đề & chú thích -->
-            <div class="director-decision-left">
-                <div class="director-decision-title">
-                    <i class="fa-solid fa-circle-check"></i> 3. Quyết định của Giám đốc
-                </div>
-                <div class="director-decision-subtitle">
-                    Ý kiến của Giám đốc (bắt buộc nếu từ chối)
-                </div>
+         class="director-decision-card" style="margin-bottom: 20px;">
+        
+        <!-- Header: Tiêu đề + Badge bắt buộc nhập lý do nếu từ chối -->
+        <div class="director-decision-header">
+            <div class="director-decision-title">
+                <span class="director-check-circle"><i class="fa-solid fa-check"></i></span>
+                <span>3. Quyết định của Giám đốc</span>
             </div>
+            <span class="director-decision-badge">Bắt buộc nhập lý do nếu từ chối</span>
+        </div>
 
-            <!-- Cột giữa: Textarea & Ghi chú -->
-            <div class="director-decision-center">
-                <textarea id="directorDetailComments" class="form-textarea director-decision-textarea" rows="2"
-                          placeholder="Nhập ý kiến duyệt hoặc lý do từ chối..."
-                          oninput="updateDirectorDetailCommentCounter(this)"></textarea>
-                <div class="director-decision-hints">
-                    <span>Nếu từ chối đề xuất, vui lòng nhập rõ lý do để HR xử lý tiếp.</span>
-                    <span><strong id="directorDetailCommentCount">0</strong>/500</span>
-                </div>
-            </div>
+        <!-- Label: Ý kiến của Giám đốc -->
+        <label for="directorDetailComments" class="director-decision-label">
+            Ý kiến của Giám đốc
+        </label>
 
-            <!-- Cột phải: 2 Nút tác vụ -->
-            <div class="director-decision-right">
-                <button type="button" class="btn btn--outline-danger" th:onclick="'submitDirectorDecisionFromScreen(' + ${detail.offerId} + ', \'REJECT\')'">
-                    <i class="fa-regular fa-circle-xmark"></i> Từ chối
-                </button>
-                <button type="button" class="btn btn--director-approve"
-                        th:onclick="'submitDirectorDecisionFromScreen(' + ${detail.offerId} + ', \'APPROVE\')'">
-                    <i class="fa-solid fa-check"></i> Phê duyệt
-                </button>
-            </div>
+        <!-- Textarea: Placeholder chuẩn theo mockup -->
+        <textarea id="directorDetailComments" class="form-textarea director-decision-textarea" rows="3"
+                  placeholder="Nhập ý kiến phê duyệt hoặc lý do từ chối..."
+                  oninput="updateDirectorDetailCommentCounter(this)"></textarea>
+
+        <!-- Sub-hint & Character Counter -->
+        <div class="director-decision-hints">
+            <span>Nếu từ chối đề xuất, vui lòng nhập rõ lý do để HR xử lý tiếp.</span>
+            <span><strong id="directorDetailCommentCount">0</strong>/500</span>
+        </div>
+
+        <!-- Action Buttons: Từ chối & Phê duyệt -->
+        <div class="director-decision-actions">
+            <button type="button" class="btn btn--outline-danger" th:onclick="'submitDirectorDecisionFromScreen(' + ${detail.offerId} + ', \'REJECT\')'">
+                <i class="fa-regular fa-circle-xmark"></i> Từ chối
+            </button>
+            <button type="button" class="btn btn--director-approve"
+                    th:onclick="'submitDirectorDecisionFromScreen(' + ${detail.offerId} + ', \'APPROVE\')'">
+                <i class="fa-solid fa-check"></i> Phê duyệt
+            </button>
         </div>
     </div>
 
