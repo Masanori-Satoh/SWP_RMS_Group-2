@@ -1,0 +1,83 @@
+/* INTERNAL-ACCOUNTS.CSS — /admin/accounts only.
+   Page composition and table density; shared shell/components remain unchanged. */
+.rms-app .iac-page { width: 100%; max-width: none; margin-inline: 0; padding-block: var(--s6); container-type: inline-size; container-name: internal-accounts; }
+/* Approved pastel action palette, scoped to this page; shared Mộc tokens stay intact. */
+.iac-page {
+  --iac-edit-bg: #eff6ff;
+  --iac-edit-border: #dbeafe;
+  --iac-edit-color: #2563eb;
+  --iac-edit-hover-bg: #dbeafe;
+  --iac-edit-hover-border: #93c5fd;
+  --iac-edit-hover-color: #1d4ed8;
+  --iac-danger-bg: #fef2f2;
+  --iac-danger-border: #fee2e2;
+  --iac-danger-color: #dc2626;
+  --iac-danger-hover-bg: #fee2e2;
+  --iac-danger-hover-border: #fca5a5;
+  --iac-danger-hover-color: #b91c1c;
+}
+.iac-breadcrumb { display: flex; align-items: center; flex-wrap: wrap; gap: var(--s2); margin-bottom: var(--s3); color: var(--muted); font-size: var(--font-sm); }
+.iac-breadcrumb a { color: var(--brand-dark); text-decoration: none; }
+.iac-breadcrumb a:hover { text-decoration: underline; }
+.iac-heading { align-items: center; margin-bottom: var(--s4); }
+.iac-title { font-family: var(--sans); font-size: 26px; line-height: 1.3; font-weight: 600; letter-spacing: -.02em; }
+.iac-filters { display: grid; grid-template-columns: minmax(310px, 2fr) minmax(128px, .8fr) minmax(152px, .9fr) minmax(158px, .9fr) minmax(116px, .7fr) max-content; align-items: end; gap: var(--s2); margin-bottom: var(--s4); }
+.iac-field { min-width: 0; }
+.iac-control { padding-inline: var(--s2); font-size: var(--font-base); border-radius: var(--radius-md); }
+/* Page modifiers outrank the shared .form-control normal/focus rules without !important. */
+.iac-filters .iac-control { border-color: var(--line); background: var(--surface); }
+.iac-filters .iac-control:hover { border-color: color-mix(in srgb, var(--control-line) 40%, var(--line)); }
+.iac-filters .iac-control:focus { border-color: var(--brand); }
+.iac-filters .iac-control:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
+.iac-search { position: relative; }
+.iac-search svg { position: absolute; left: var(--s3); top: 50%; transform: translateY(-50%); color: var(--muted); pointer-events: none; }
+.iac-search-input { padding-inline-start: var(--s12); }
+.iac-search-input::placeholder { opacity: 1; }
+.iac-filter-actions { display: flex; align-items: center; gap: var(--s2); min-height: var(--input-h); }
+.iac-filter-actions .iac-apply { background: var(--surface); border-color: var(--line); color: var(--ink); box-shadow: var(--shadow-sm); }
+.iac-filter-actions .iac-apply:hover, .iac-filter-actions .iac-apply:focus-visible { background: var(--surface-subtle); border-color: color-mix(in srgb, var(--control-line) 40%, var(--line)); color: var(--brand-dark); }
+.iac-filter-actions .iac-reset { padding-inline: var(--s2); color: var(--muted); font-weight: 500; background: transparent; border-color: transparent; }
+.iac-filter-actions .iac-reset:hover, .iac-filter-actions .iac-reset:focus-visible { background: var(--neutral-soft); color: var(--ink); }
+.iac-card { padding: 0; overflow: hidden; }
+.iac-card .iac-scroll { margin-bottom: 0; border: 0; border-radius: 0; }
+.iac-table { min-width: 980px; }
+.iac-table .iac-cell { padding: var(--s2) var(--s3); vertical-align: middle; }
+.iac-table th.iac-cell { padding-block: var(--s3); background: var(--neutral-soft); font-size: var(--font-sm); color: var(--ink); font-weight: 600; }
+.iac-table tbody tr:hover .iac-cell { background: var(--surface-subtle); }
+.iac-name { font-weight: 600; white-space: nowrap; }
+.iac-login { white-space: nowrap; }
+.iac-table .iac-state-cell { white-space: nowrap; text-align: center; }
+.iac-status { display: inline-flex; align-items: center; gap: var(--s1); border-radius: var(--radius-full); }
+.iac-status::before { content: ''; flex: 0 0 5px; width: 5px; height: 5px; border-radius: var(--radius-full); background: currentColor; }
+.iac-table .iac-actions-cell { width: 1%; text-align: center; white-space: nowrap; }
+.iac-actions { display: flex; align-items: center; justify-content: center; gap: var(--s1); }
+.iac-actions .status-action-form { margin: 0; }
+.iac-icon-button { position: relative; width: var(--s8); height: var(--s8); min-height: var(--s8); padding: 0; background: var(--surface); border-color: var(--line); border-radius: var(--radius-md); transition: background-color 150ms ease, border-color 150ms ease, color 150ms ease; }
+.iac-icon-button::after { content: attr(data-tooltip); position: absolute; right: 0; bottom: calc(100% + var(--s1)); z-index: 3; padding: var(--s1) var(--s2); border-radius: var(--radius-sm); background: var(--ink); color: var(--surface); font-size: var(--font-xs); font-weight: 400; line-height: 1.4; white-space: nowrap; pointer-events: none; opacity: 0; }
+.iac-icon-button:hover::after, .iac-icon-button:focus-visible::after { opacity: 1; }
+.iac-actions .iac-edit { background: var(--iac-edit-bg); border-color: var(--iac-edit-border); color: var(--iac-edit-color); }
+.iac-actions .iac-icon-button--danger { background: var(--iac-danger-bg); border-color: var(--iac-danger-border); color: var(--iac-danger-color); }
+.iac-actions .iac-edit:hover, .iac-actions .iac-edit:focus-visible { background: var(--iac-edit-hover-bg); border-color: var(--iac-edit-hover-border); color: var(--iac-edit-hover-color); }
+.iac-actions .iac-icon-button--danger:hover, .iac-actions .iac-icon-button--danger:focus-visible { background: var(--iac-danger-hover-bg); border-color: var(--iac-danger-hover-border); color: var(--iac-danger-hover-color); }
+.iac-pagination { border-top: 1px solid var(--line); padding: var(--s2) var(--s4); }
+.iac-pagination .pagination-wrapper { margin: 0; padding: 0; }
+.iac-page-arrow svg { display: block; width: 18px; height: 18px; }
+.iac-page-arrow--disabled { opacity: .65; }
+.iac-empty { text-align: center; }
+.iac-table .iac-empty { padding-block: var(--s8); color: var(--muted); }
+@container internal-accounts (max-width: 1050px) {
+  .iac-filters { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .iac-filters > .iac-field:first-child { grid-column: span 2; }
+}
+@media (max-width: 768px) {
+  .iac-filters { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .iac-filters > .iac-field:first-child { grid-column: 1 / -1; }
+  .iac-filter-actions { align-self: end; }
+}
+@media (max-width: 480px) {
+  .iac-filters { grid-template-columns: 1fr; }
+  .iac-page .iac-heading { align-items: start; gap: var(--s3); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .iac-icon-button { transition: none; }
+}
