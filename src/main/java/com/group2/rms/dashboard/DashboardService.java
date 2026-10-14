@@ -29,10 +29,10 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.net.URI;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-
 
 @Service
 public class DashboardService {
@@ -73,12 +73,17 @@ public class DashboardService {
 
         @SuppressWarnings("null")
         private AdminDashboardResponse admin(User user) {
+                // Candidate.CreatedAt is a local DATETIME2 written by BaseEntity in the JVM zone.
+                LocalDateTime to = LocalDateTime.now();
+                LocalDateTime from = to.minusDays(30);
+                var monitorRows = monitoring.rows();
                 Map<String, Long> healthCounts = new LinkedHashMap<>();
-                monitoring.rows().forEach(row -> healthCounts.merge(row.status(), 1L, Long::sum));
+                monitorRows.forEach(row -> healthCounts.merge(row.status(), 1L, Long::sum));
                 List<StatusCount> health = healthCounts.entrySet().stream()
                                 .map(entry -> new StatusCount(entry.getKey(), entry.getValue()))
                                 .toList();
-                return new AdminDashboardResponse(user.getRole().getRoleName(),
+                return new AdminDashboardResponse(
+                                user.getRole().getRoleName(),
                                 user.getFullName(),
                                 "Quản lý tài khoản, phòng ban và tình trạng tích hợp của hệ thống.",
                                 List.of(accountSummary("Tài khoản nội bộ", "/admin/accounts",
@@ -89,7 +94,12 @@ public class DashboardService {
                                 List.of(new DashboardBreakdownResponse("API và dịch vụ tích hợp", health)),
                                 List.of(new Shortcut("Quản lý phòng ban", "/admin/departments"),
                                                 new Shortcut("Giám sát API", "/admin/api-monitoring"),
-                                                new Shortcut("Cấu hình AI (chưa khả dụng)", null)));
+                                                new Shortcut("Cấu hình AI (chưa khả dụng)", null)),
+                                metrics.internalAccountsByRole(),
+                                monitorRows,
+                                new AdminDashboardResponse.CandidateSummary(metrics.candidates(),
+                                                metrics.candidatesCreatedBetween(from, to), from, to,
+                                                ZoneId.systemDefault().getId()));
         }
 
         @SuppressWarnings("null")
@@ -178,128 +188,125 @@ public class DashboardService {
         private RecruitmentDashboardResponse director(User user, LocalDateTime now) {
                 int userId = user.getUserId();
                 return view(user,
-                        "System-wide approval queue; my own activity",
-                        List.of(
-                                                //get requis not approve
+                                "System-wide approval queue; my own activity",
+                                List.of(
+                                                // get requis not approve
                                                 new DashboardMetricResponse("Requisitions Awaiting Approval",
                                                                 metrics.requisitionsAwaitingDirector(),
                                                                 "System-wide Pending_Director records"),
-                                                //get offer not approve
+                                                // get offer not approve
                                                 new DashboardMetricResponse("Offers Awaiting Approval",
                                                                 metrics.offersAwaitingDirector(),
                                                                 "System-wide Pending_Director records"),
                                                 // get interview is assigned
-                                                 new DashboardMetricResponse(
+                                                new DashboardMetricResponse(
                                                                 "Upcoming Assigned Interviews",
                                                                 metrics.upcomingAssignedInterviews(userId, now),
                                                                 "Interviews assigned to me through InterviewPanel"),
-                                                //get candidate is assigned
+                                                // get candidate is assigned
                                                 new DashboardMetricResponse("Assigned Candidates",
-                                                                          metrics.assignedCandidatesForInterviewer(userId),
-                                                                "Distinct candidates linked through InterviewPanel")
-                         ),             
-                List.of(), 
-                 metrics.recentDirectorActivity(userId)
-                );
+                                                                metrics.assignedCandidatesForInterviewer(userId),
+                                                                "Distinct candidates linked through InterviewPanel")),
+                                List.of(),
+                                metrics.recentDirectorActivity(userId));
         }
 
         private RecruitmentDashboardResponse interviewer(User user, LocalDateTime now) {
                 int userId = user.getUserId();
                 return view(user,
-                        "Only interviews assigned to me",
-                        List.of(
-                                new DashboardMetricResponse("Upcoming Interviews",
+                                "Only interviews assigned to me",
+                                List.of(
+                                                new DashboardMetricResponse("Upcoming Interviews",
                                                                 metrics.upcomingAssignedInterviews(userId, now),
                                                                 "Assigned through InterviewPanel"),
-                                new DashboardMetricResponse("Assigned Candidates",
+                                                new DashboardMetricResponse("Assigned Candidates",
                                                                 metrics.assignedCandidatesForInterviewer(userId),
                                                                 "Distinct candidates linked through InterviewPanel"),
                                                 new DashboardMetricResponse("Pending Interview Evaluations",
                                                                 metrics.pendingInterviewEvaluations(userId),
-                                                                "Completed interviews without my evaluation")
-                                ),
-                List.of(), List.of());
+                                                                "Completed interviews without my evaluation")),
+                                List.of(), List.of());
         }
 
         @SuppressWarnings("null")
-private CandidateDashboardResponse candidate(User user, LocalDateTime now) {
-    int userId = user.getUserId();
+        private CandidateDashboardResponse candidate(User user, LocalDateTime now) {
+                int userId = user.getUserId();
 
-    var applicationStatuses = metrics.candidateApplicationStages(userId)
-        .stream()
-        .map(row -> new StatusCount(
-                applicationLabel(row.status()),
-                row.count()))
-        .toList();
+                var applicationStatuses = metrics.candidateApplicationStages(userId)
+                                .stream()
+                                .map(row -> new StatusCount(
+                                                applicationLabel(row.status()),
+                                                row.count()))
+                                .toList();
 
-var offerStatuses = metrics.candidateOfferStatuses(userId)
-        .stream()
-        .map(row -> new StatusCount(
-                offerLabel(row.status()),
-                row.count()))
-        .toList();
+                var offerStatuses = metrics.candidateOfferStatuses(userId)
+                                .stream()
+                                .map(row -> new StatusCount(
+                                                offerLabel(row.status()),
+                                                row.count()))
+                                .toList();
 
-    var applications = metrics.candidateRecentApplications(userId, 20)
-            .stream()
-            .map(row -> new ApplicationItem(
-                    row.jobTitle(),
-                    row.submittedAt().toLocalDate(),
-                    null,
-                    applicationLabel(row.rawStatus())))
-            .toList();
+                var applications = metrics.candidateRecentApplications(userId, 20)
+                                .stream()
+                                .map(row -> new ApplicationItem(
+                                                row.jobTitle(),
+                                                row.submittedAt().toLocalDate(),
+                                                null,
+                                                applicationLabel(row.rawStatus())))
+                                .toList();
 
-    var interviews = metrics.candidateNextInterviews(userId, now, 10)
-        .stream()
-        .map(row -> {
-            boolean online = "Online_GoogleMeet".equals(row.format());
+                var interviews = metrics.candidateNextInterviews(userId, now, 10)
+                                .stream()
+                                .map(row -> {
+                                        boolean online = "Online_GoogleMeet".equals(row.format());
 
-            return new InterviewItem(
-                    row.jobTitle(),
-                    row.startTime(),
-                    row.endTime(),
-                    online ? "Trực tuyến" : "Tại văn phòng",
-                    online ? safeMeetingUrl(row.locationOrLink()) : null,
-                    online ? null : row.locationOrLink()
-            );
-        })
-        .toList();
+                                        return new InterviewItem(
+                                                        row.jobTitle(),
+                                                        row.startTime(),
+                                                        row.endTime(),
+                                                        online ? "Trực tuyến" : "Tại văn phòng",
+                                                        online ? safeMeetingUrl(row.locationOrLink()) : null,
+                                                        online ? null : row.locationOrLink());
+                                })
+                                .toList();
 
-    var offers = metrics.candidateOffers(userId, 20)
-            .stream()
-            .map(row -> new OfferItem(
-                    row.jobTitle(),
-                    row.salary(),
-                    row.startDate(),
-                    offerLabel(row.rawStatus()),
-                    row.probationSalary(),
-                    row.workLocation(),
-                    row.benefits()))
-            .toList();
+                var offers = metrics.candidateOffers(userId, 20)
+                                .stream()
+                                .map(row -> new OfferItem(
+                                                row.jobTitle(),
+                                                row.salary(),
+                                                row.startDate(),
+                                                offerLabel(row.rawStatus()),
+                                                row.probationSalary(),
+                                                row.workLocation(),
+                                                row.benefits()))
+                                .toList();
 
-    return new CandidateDashboardResponse(
-            user.getRole().getRoleName(),
-            user.getFullName(),
-            "Theo dõi hồ sơ, lịch phỏng vấn và thư mời dành cho bạn.",
-            List.of(
-                    new DashboardMetricResponse("Đơn ứng tuyển",
-                            metrics.candidateApplications(userId),
-                            "Tổng số hồ sơ bạn đã nộp"),
-                    new DashboardMetricResponse("Phỏng vấn sắp tới",
-                            metrics.candidateUpcomingInterviews(userId, now),
-                            "Lịch đã được hẹn hoặc đổi lịch"),
-                    new DashboardMetricResponse("Thư mời chờ phản hồi",
-                            metrics.candidateOffersAwaitingResponse(userId),
-                            "Thư mời chính thức đã gửi cho bạn")),
-            applicationStatuses,
-            offerStatuses,
-            applications,
-            interviews,
-            offers,
-            new CandidateProfile(
-                    user.getFullName(),
-                    user.getEmail(),
-                    user.getDepartment() == null ? null : user.getDepartment().getDepartmentName()));
-}
+                return new CandidateDashboardResponse(
+                                user.getRole().getRoleName(),
+                                user.getFullName(),
+                                "Theo dõi hồ sơ, lịch phỏng vấn và thư mời dành cho bạn.",
+                                List.of(
+                                                new DashboardMetricResponse("Đơn ứng tuyển",
+                                                                metrics.candidateApplications(userId),
+                                                                "Tổng số hồ sơ bạn đã nộp"),
+                                                new DashboardMetricResponse("Phỏng vấn sắp tới",
+                                                                metrics.candidateUpcomingInterviews(userId, now),
+                                                                "Lịch đã được hẹn hoặc đổi lịch"),
+                                                new DashboardMetricResponse("Thư mời chờ phản hồi",
+                                                                metrics.candidateOffersAwaitingResponse(userId),
+                                                                "Thư mời chính thức đã gửi cho bạn")),
+                                applicationStatuses,
+                                offerStatuses,
+                                applications,
+                                interviews,
+                                offers,
+                                new CandidateProfile(
+                                                user.getFullName(),
+                                                user.getEmail(),
+                                                user.getDepartment() == null ? null
+                                                                : user.getDepartment().getDepartmentName()));
+        }
 
         // Presentation labels only. These never change persisted statuses or infer a
         // separate stage.
