@@ -381,6 +381,12 @@
   .public-topbar__nav {
     display: none;
   }
+
+  /* Đã đăng nhập: bỏ tên và chữ phụ của logo, giữ avatar */
+  .public-topbar .workspace-user-meta,
+  .public-topbar:has(.topbar-user) .brand-sub {
+    display: none;
+  }
 }
 
 @media (max-width: 640px) {
@@ -393,6 +399,25 @@
   .public-topbar .workspace-user-meta,
   .public-topbar__dashboard {
     display: none;
+  }
+
+  /* Khách: chỉ giữ "Đăng nhập" (trang đăng nhập có link tạo tài khoản) */
+  .public-topbar__actions > .topbar-btn--primary {
+    display: none;
+  }
+
+  /* Đăng xuất chỉ còn icon; chữ ẩn kiểu .sr-only để trình đọc màn hình vẫn đọc tên nút */
+  .public-topbar .workspace-logout-btn {
+    padding: 0 var(--s3, 12px);
+  }
+
+  .public-topbar .workspace-logout-btn span {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
   }
 }
 
