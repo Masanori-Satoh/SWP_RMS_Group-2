@@ -655,6 +655,13 @@
     font-size: 13.5px;
 }
 
+.detail-grid-4 {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px 18px;
+    font-size: 13.5px;
+}
+
 .detail-item-label {
     font-size: 12px;
     color: var(--muted);
@@ -665,6 +672,170 @@
 .detail-item-value {
     color: var(--ink);
     font-weight: 500;
+}
+
+.salary-badge-pct {
+    display: inline-block;
+    padding: 2px 8px;
+    font-size: 11.5px;
+    font-weight: 700;
+    color: #166534;
+    background-color: #dcfce7;
+    border-radius: 9999px;
+    margin-left: 6px;
+    vertical-align: middle;
+}
+
+.section-badge-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 26px;
+    height: 26px;
+    border-radius: 50%;
+    background: #e8f5e9;
+    color: #1e4d38;
+    font-size: 12.5px;
+    margin-right: 8px;
+    vertical-align: middle;
+}
+
+/* Director Inline Decision Bar */
+.director-decision-inline-card {
+    background: #fffdf5;
+    border: 1px solid #fde68a;
+    box-shadow: 0 1px 3px rgba(180, 83, 9, 0.04);
+}
+
+.director-decision-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 20px;
+    padding: 16px 20px;
+}
+
+.director-decision-left {
+    flex: 0 0 240px;
+}
+
+.director-decision-title {
+    font-size: 15px;
+    font-weight: 700;
+    color: #854d0e;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.director-decision-title i {
+    color: #166534;
+    font-size: 15px;
+}
+
+.director-decision-subtitle {
+    font-size: 12px;
+    color: #78350f;
+    margin-top: 4px;
+    line-height: 1.4;
+}
+
+.director-decision-center {
+    flex: 1;
+    min-width: 260px;
+}
+
+.director-decision-textarea {
+    width: 100%;
+    min-height: 52px;
+    height: 52px;
+    padding: 8px 12px;
+    font-size: 13.5px;
+    background: #ffffff;
+    border: 1px solid #cbd5e1;
+    border-radius: 6px;
+    resize: none;
+    box-sizing: border-box;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.director-decision-textarea:focus {
+    outline: none;
+    border-color: #f59e0b;
+    box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.15);
+}
+
+.director-decision-hints {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 4px;
+    font-size: 11.5px;
+    color: #64748b;
+}
+
+.director-decision-right {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-shrink: 0;
+}
+
+.btn--outline-danger {
+    background: #ffffff;
+    border: 1px solid #fca5a5;
+    color: #b91c1c;
+    padding: 8px 14px;
+    border-radius: 6px;
+    font-size: 13.5px;
+    font-weight: 600;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    transition: all 0.15s ease;
+}
+
+.btn--outline-danger:hover {
+    background: #fef2f2;
+    border-color: #ef4444;
+    color: #991b1b;
+}
+
+.btn--director-approve {
+    background: var(--brand-dark);
+    border: 1px solid var(--brand-dark);
+    color: #ffffff;
+    padding: 8px 16px;
+    border-radius: 6px;
+    font-size: 13.5px;
+    font-weight: 600;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    transition: opacity 0.15s ease;
+}
+
+.btn--director-approve:hover {
+    opacity: 0.92;
+}
+
+@media (max-width: 992px) {
+    .director-decision-bar {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 14px;
+    }
+    .director-decision-left {
+        flex: auto;
+    }
+    .director-decision-right {
+        justify-content: flex-end;
+    }
+    .detail-grid-4 {
+        grid-template-columns: repeat(2, 1fr);
+    }
 }
 
 /* History logs & timeline */
@@ -798,6 +969,9 @@
     .search-box input,
     .filter-select {
         width: 100%;
+    }
+    .detail-grid-4 {
+        grid-template-columns: 1fr;
     }
     .detail-grid-3 {
         grid-template-columns: 1fr;

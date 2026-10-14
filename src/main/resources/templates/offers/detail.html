@@ -59,10 +59,12 @@
                     <i class="fa-solid fa-user-xmark"></i> Ứng viên từ chối
                 </span>
             </div>
-            <p class="offers-subtitle" style="margin-top: 4px;">
-                Vị trí đề xuất: <strong style="color:var(--ink);" th:text="${detail.offeredPositionTitle}">-</strong>
-                &bull; Ứng viên: <strong style="color:var(--ink);" th:text="${detail.candidateName}">-</strong>
-                &bull; Ngày tạo: <span th:text="${detail.createdAt != null ? #temporals.format(detail.createdAt, 'dd/MM/yyyy HH:mm') : '-'}">-</span>
+            <p class="offers-subtitle" style="margin-top: 6px; line-height: 1.5;">
+                <span>Vị trí đề xuất: <strong style="color:var(--ink);" th:text="${detail.offeredPositionTitle}">-</strong></span>
+                <span style="color: var(--line); margin: 0 8px;">|</span>
+                <span>Ứng viên: <strong style="color:var(--ink);" th:text="${detail.candidateName}">-</strong></span>
+                <br>
+                <span>Ngày tạo: <span th:text="${detail.createdAt != null ? #temporals.format(detail.createdAt, 'dd/MM/yyyy HH:mm') : '-'}">-</span></span>
             </p>
         </div>
 
@@ -88,7 +90,7 @@
             <!-- Action when Pending_Director (Director View) -->
             <th:block th:if="${detail.offerStatus == 'Pending_Director' and (userRole == 'Director' or userRole == 'System Admin')}">
                 <button type="button" onclick="scrollToDirectorDecision()" class="btn btn--primary" style="background:var(--brand-dark); border-color:var(--brand-dark);">
-                    <i class="fa-solid fa-stamp" style="margin-right:4px;"></i> Phê duyệt / Từ chối
+                    <i class="fa-solid fa-circle-check" style="margin-right:6px;"></i> Ra quyết định
                 </button>
             </th:block>
 
@@ -134,14 +136,15 @@
         </div>
     </div>
 
-    <!-- GROUP A: HỒ SƠ ỨNG VIÊN & PHỎNG VẤN -->
+    <!-- 1. THÔNG TIN ỨNG VIÊN -->
     <div class="card" style="margin-bottom: 20px;">
         <div class="card-header">
-            <h2 class="card-title" style="font-size:16px;">
-                <i class="fa-solid fa-user"></i> 1. Hồ Sơ Ứng Viên & Kết Quả Phỏng Vấn
+            <h2 class="card-title" style="font-size:16px; display:flex; align-items:center;">
+                <span class="section-badge-icon"><i class="fa-solid fa-user"></i></span> 1. Thông tin ứng viên
             </h2>
         </div>
         <div class="card-body">
+            <!-- Row 1 & 2: 3 cột -->
             <div class="detail-grid-3">
                 <div>
                     <div class="detail-item-label">Họ và tên ứng viên</div>
@@ -172,52 +175,56 @@
                     <div class="detail-item-value">
                         <a th:if="${detail.appliedCvUrl != null and !detail.appliedCvUrl.isBlank()}"
                            th:href="${detail.appliedCvUrl}" target="_blank" rel="noopener noreferrer"
-                           style="color:var(--brand-dark); font-weight:600; display:inline-flex; align-items:center; gap:6px;">
-                            <i class="fa-solid fa-arrow-up-right-from-square"></i> Xem CV
+                           style="color:#166534; font-weight:600; display:inline-flex; align-items:center; gap:6px; text-decoration:none;">
+                            <i class="fa-regular fa-file-lines"></i> Xem CV <i class="fa-solid fa-arrow-up-right-from-square" style="font-size:11px;"></i>
                         </a>
                         <span th:unless="${detail.appliedCvUrl != null and !detail.appliedCvUrl.isBlank()}" style="color:var(--muted); font-size:13px;">Chưa đính kèm</span>
                     </div>
                 </div>
             </div>
 
-            <div th:if="${detail.candidateAddress != null and !detail.candidateAddress.isBlank()}"
-                 style="margin-top:12px; padding-top:10px; border-top:1px dashed var(--line); font-size:13.5px;">
-                <span class="detail-item-label">Địa chỉ liên hệ:</span>
-                <span class="detail-item-value" style="margin-left:6px;" th:text="${detail.candidateAddress}">Hà Nội</span>
-            </div>
-
-            <div style="margin-top:16px; padding-top:14px; border-top:1px dashed var(--line);" class="detail-grid">
+            <!-- Row 4: 4 cột theo Mockup -->
+            <div style="margin-top:16px; padding-top:16px; border-top:1px solid #e2e8f0;" class="detail-grid-4">
                 <div>
-                    <div class="detail-item-label">Kết quả Hội đồng phỏng vấn:</div>
-                    <div class="detail-item-value" style="color:var(--brand-dark); font-weight:700;">
+                    <div class="detail-item-label">Địa chỉ liên hệ</div>
+                    <div class="detail-item-value" th:text="${detail.candidateAddress != null and !detail.candidateAddress.isBlank() ? detail.candidateAddress : 'Chưa cập nhật'}">Số 88 Láng Hạ, Đống Đa, Hà Nội</div>
+                </div>
+                <div>
+                    <div class="detail-item-label">Kết quả Hội đồng phỏng vấn</div>
+                    <div class="detail-item-value" style="color:#166534; font-weight:700; display:flex; align-items:center; gap:6px;">
                         <i class="fa-solid fa-circle-check"></i> <span th:text="${detail.finalDecision != null ? detail.finalDecision : 'Passed'}">Passed</span>
-                    </div>
-                    <div style="font-size:13px; color:var(--muted); margin-top:4px;" th:text="${detail.interviewSummaryComments != null and !detail.interviewSummaryComments.isBlank() ? detail.interviewSummaryComments : 'Không có ghi chú thêm.'}">
-                        Ứng viên trả lời tốt các câu hỏi chuyên môn.
                     </div>
                 </div>
                 <div>
-                    <div class="detail-item-label">Lương khuyến nghị từ Hiring Manager:</div>
-                    <div class="detail-item-value" style="color:var(--brand-dark); font-weight:700; font-size:15px;"
-                         th:text="${detail.recommendedSalary != null ? #numbers.formatDecimal(detail.recommendedSalary, 0, 'POINT', 0, 'COMMA') + ' VND' : 'Chưa có gợi ý'}">
-                        25,000,000 VND
+                    <div class="detail-item-label">Tóm tắt kết quả phỏng vấn</div>
+                    <div class="detail-item-value" style="font-size:13.5px; font-weight:400; color:var(--ink);" th:text="${detail.interviewSummaryComments != null and !detail.interviewSummaryComments.isBlank() ? detail.interviewSummaryComments : 'Đạt yêu cầu đầu vào, đề xuất gửi thư mời nhận việc (Offer).'}">
+                        Đạt yêu cầu đầu vào, đề xuất gửi thư mời nhận việc (Offer).
                     </div>
-                    <div style="font-size:13px; color:var(--muted); margin-top:4px;">
-                        Người phụ trách: <span th:text="${detail.hiringManagerName != null ? detail.hiringManagerName : 'N/A'}">Manager</span>
+                </div>
+                <div>
+                    <div class="detail-item-label">Lương khuyến nghị từ Hiring Manager</div>
+                    <div class="detail-item-value" style="color:#166534; font-weight:700; font-size:15px;"
+                         th:text="${detail.recommendedSalary != null ? #numbers.formatDecimal(detail.recommendedSalary, 0, 'POINT', 0, 'COMMA') + ' VND' : 'Chưa có gợi ý'}">
+                        22.000.000 VND
+                    </div>
+                    <div style="font-size:12px; color:var(--muted); margin-top:4px;">
+                        Người phụ trách
+                        <div style="color:var(--ink); font-weight:500; font-size:13px;" th:text="${detail.hiringManagerName != null ? detail.hiringManagerName : 'N/A'}">Vũ Anh Tuấn</div>
                     </div>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- GROUP B: THÔNG TIN ĐÃI NGỘ & ĐIỀU KHOẢN OFFER -->
+    <!-- 2. NỘI DUNG ĐỀ XUẤT OFFER -->
     <div class="card" style="margin-bottom: 20px;">
         <div class="card-header">
-            <h2 class="card-title" style="font-size:16px;">
-                <i class="fa-solid fa-coins"></i> 2. Gói Đãi Ngộ & Điều Khoản Offer
+            <h2 class="card-title" style="font-size:16px; display:flex; align-items:center;">
+                <span class="section-badge-icon"><i class="fa-solid fa-file-lines"></i></span> 2. Nội dung đề xuất offer
             </h2>
         </div>
         <div class="card-body">
+            <!-- Row 1: Chức danh, Lương chính thức, Lương thử việc (3 cột) -->
             <div class="detail-grid-3">
                 <div>
                     <div class="detail-item-label">Chức danh chính thức đề xuất</div>
@@ -225,14 +232,14 @@
                 </div>
                 <div>
                     <div class="detail-item-label">Lương chính thức (Gross/tháng)</div>
-                    <div class="detail-item-value" style="color:var(--ink); font-weight:700; font-size:15px;"
+                    <div class="detail-item-value" style="color:#166534; font-weight:700; font-size:15px;"
                          th:text="${detail.proposedSalary != null ? #numbers.formatDecimal(detail.proposedSalary, 0, 'POINT', 0, 'COMMA') + ' VND' : '-'}">
                         30,000,000 VND
                     </div>
                 </div>
                 <div>
                     <div class="detail-item-label">Lương thử việc (Gross/tháng)</div>
-                    <div class="detail-item-value" style="color:var(--brand-dark); font-weight:700; font-size:15px;">
+                    <div class="detail-item-value" style="color:#166534; font-weight:700; font-size:15px; display:flex; align-items:center; flex-wrap:wrap; gap:4px;">
                         <span th:text="${detail.probationSalary != null ? #numbers.formatDecimal(detail.probationSalary, 0, 'POINT', 0, 'COMMA') + ' VND' : '-'}">25,500,000 VND</span>
                         <span class="salary-badge-pct" th:if="${detail.proposedSalary != null and detail.proposedSalary.compareTo(T(java.math.BigDecimal).ZERO) > 0 and detail.probationSalary != null}"
                               th:text="${#numbers.formatDecimal(detail.probationSalary.multiply(new java.math.BigDecimal(100)).divide(detail.proposedSalary, 0, T(java.math.RoundingMode).HALF_UP), 0, 0)} + '%'">
@@ -240,22 +247,22 @@
                         </span>
                     </div>
                 </div>
+            </div>
+
+            <!-- Row 2: Thời gian thử việc, Ngày bắt đầu, Thời hạn phản hồi, Địa điểm làm việc (4 cột) -->
+            <div class="detail-grid-4" style="margin-top:16px;">
                 <div>
                     <div class="detail-item-label">Thời gian thử việc</div>
-                    <div class="detail-item-value" th:text="${detail.probationDays != null ? detail.probationDays + ' ngày' : '60 ngày'}">60 ngày</div>
+                    <div class="detail-item-value" style="font-weight:600;" th:text="${detail.probationDays != null ? detail.probationDays + ' ngày' : '60 ngày'}">60 ngày</div>
                 </div>
                 <div>
                     <div class="detail-item-label">Ngày bắt đầu dự kiến</div>
-                    <div class="detail-item-value" th:text="${detail.expectedStartDate != null ? #temporals.format(detail.expectedStartDate, 'dd/MM/yyyy') : 'Thỏa thuận'}">01/11/2026</div>
-                </div>
-                <div>
-                    <div class="detail-item-label">Địa điểm làm việc</div>
-                    <div class="detail-item-value" th:text="${detail.workLocation != null ? detail.workLocation : 'Trụ sở chính Mộc RMS'}">Hà Nội</div>
+                    <div class="detail-item-value" style="font-weight:600;" th:text="${detail.expectedStartDate != null ? #temporals.format(detail.expectedStartDate, 'dd/MM/yyyy') : 'Thỏa thuận'}">01/11/2026</div>
                 </div>
                 <div>
                     <div class="detail-item-label">Thời hạn phản hồi offer</div>
                     <div class="detail-item-value">
-                        <span style="font-weight:700; color:var(--brand-dark);" th:text="${detail.responsePeriodDays != null ? detail.responsePeriodDays + ' ngày' : '5 ngày'}">5 ngày</span>
+                        <span style="font-weight:600; color:var(--ink);" th:text="${detail.responsePeriodDays != null ? detail.responsePeriodDays + ' ngày' : '5 ngày'}">5 ngày</span>
                         <th:block th:if="${detail.responseDeadline != null}">
                             <div style="font-size:12px; color:var(--muted); margin-top:2px;">
                                 Hạn chót: <strong style="color:var(--ink);" th:text="${#temporals.format(detail.responseDeadline, 'HH:mm dd/MM/yyyy')}">17:00 20/10/2026</strong>
@@ -263,16 +270,22 @@
                         </th:block>
                     </div>
                 </div>
+                <div>
+                    <div class="detail-item-label">Địa điểm làm việc</div>
+                    <div class="detail-item-value" th:text="${detail.workLocation != null ? detail.workLocation : 'Trụ sở chính Mộc RMS'}">Hà Nội</div>
+                </div>
             </div>
 
+            <!-- Row 3: Chế độ phúc lợi -->
             <div style="margin-top:16px;">
-                <div class="detail-item-label">Chế độ phúc lợi & Đãi ngộ đặc thù:</div>
+                <div class="detail-item-label">Chế độ phúc lợi & Đãi ngộ đặc thù</div>
                 <div class="detail-item-value" style="background:var(--page); padding:10px 14px; border:1px solid var(--line); border-radius:6px; font-size:13.5px; margin-top:4px;"
                      th:text="${detail.benefitsPackage != null and !detail.benefitsPackage.isBlank() ? detail.benefitsPackage : 'Theo quy chế đãi ngộ chung của công ty.'}">
                     Bảo hiểm PVI, thưởng tháng 13, phụ cấp ăn trưa.
                 </div>
             </div>
 
+            <!-- Footer: Người lập & Thời điểm lập -->
             <div style="margin-top:16px; padding-top:12px; border-top:1px dashed var(--line); font-size:13px; color:var(--muted); display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
                 <div>
                     <i class="fa-solid fa-user-pen" style="margin-right:4px;"></i> Người lập đề xuất: <strong style="color:var(--ink);" th:text="${detail.proposedByName != null ? detail.proposedByName : 'HR'}">HR</strong>
@@ -287,34 +300,37 @@
     <!-- DIRECTOR DECISION PANEL (INLINE ON SCREEN KHI PENDING_DIRECTOR) -->
     <div th:if="${detail.offerStatus == 'Pending_Director' and (userRole == 'Director' or userRole == 'System Admin')}"
          id="directorDecisionSection"
-         class="card director-decision-card" style="margin-bottom: 20px; background: #fffcf0; border: 1px solid #fde68a;">
-        <div class="card-header" style="background: transparent; border-bottom: 1px solid #fde68a;">
-            <h2 class="card-title" style="font-size: 16px; color: #92400e;">
-                <i class="fa-solid fa-stamp"></i> 3. Quyết Định Của Giám Đốc (Director Review & Approval)
-            </h2>
-        </div>
-        <div class="card-body">
-            <div class="form-group" style="margin-bottom: 16px;">
-                <label for="directorDetailComments" style="font-size: 13.5px; font-weight: 600; color: var(--ink); margin-bottom: 6px; display: block;">
-                    Ý kiến phản hồi / Nhận xét của Giám đốc <span style="color:var(--danger); font-size:12px;">(Bắt buộc nếu từ chối)</span>
-                </label>
-                <textarea id="directorDetailComments" class="form-textarea" rows="3"
-                          placeholder="Nhập ý kiến duyệt hoặc lý do từ chối (bắt buộc nhập lý do nếu từ chối)..."
-                          oninput="updateDirectorDetailCommentCounter(this)"
-                          style="background: #ffffff; border-color: #cbd5e1;"></textarea>
-                <div style="display:flex; justify-content:space-between; align-items:center; margin-top:4px; font-size:12px; color:var(--muted);">
-                    <span>Lưu ý: Quyết định phê duyệt sẽ chuyển trạng thái Offer sang Director_Approved để HR phát hành Offer Letter.</span>
+         class="card director-decision-inline-card" style="margin-bottom: 20px;">
+        <div class="director-decision-bar">
+            <!-- Cột trái: Tiêu đề & chú thích -->
+            <div class="director-decision-left">
+                <div class="director-decision-title">
+                    <i class="fa-solid fa-circle-check"></i> 3. Quyết định của Giám đốc
+                </div>
+                <div class="director-decision-subtitle">
+                    Ý kiến của Giám đốc (bắt buộc nếu từ chối)
+                </div>
+            </div>
+
+            <!-- Cột giữa: Textarea & Ghi chú -->
+            <div class="director-decision-center">
+                <textarea id="directorDetailComments" class="form-textarea director-decision-textarea" rows="2"
+                          placeholder="Nhập ý kiến duyệt hoặc lý do từ chối..."
+                          oninput="updateDirectorDetailCommentCounter(this)"></textarea>
+                <div class="director-decision-hints">
+                    <span>Nếu từ chối đề xuất, vui lòng nhập rõ lý do để HR xử lý tiếp.</span>
                     <span><strong id="directorDetailCommentCount">0</strong>/500</span>
                 </div>
             </div>
 
-            <div style="display: flex; gap: 12px; justify-content: flex-end; align-items: center; padding-top: 12px; border-top: 1px dashed #fde68a;">
-                <button type="button" class="btn btn--danger" th:onclick="'submitDirectorDecisionFromScreen(' + ${detail.offerId} + ', \'REJECT\')'">
-                    <i class="fa-regular fa-circle-xmark" style="margin-right: 6px;"></i> Từ chối đề xuất
+            <!-- Cột phải: 2 Nút tác vụ -->
+            <div class="director-decision-right">
+                <button type="button" class="btn btn--outline-danger" th:onclick="'submitDirectorDecisionFromScreen(' + ${detail.offerId} + ', \'REJECT\')'">
+                    <i class="fa-regular fa-circle-xmark"></i> Từ chối
                 </button>
-                <button type="button" class="btn btn--primary" style="background: var(--brand-dark); border-color: var(--brand-dark);"
+                <button type="button" class="btn btn--director-approve"
                         th:onclick="'submitDirectorDecisionFromScreen(' + ${detail.offerId} + ', \'APPROVE\')'">
-                    <i class="fa-solid fa-circle-check" style="margin-right: 6px;"></i> Phê duyệt đề xuất
+                    <i class="fa-solid fa-check"></i> Phê duyệt
                 </button>
             </div>
         </div>
