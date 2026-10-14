@@ -123,8 +123,8 @@ public class ApplicationPipelineService {
         List<AIScreeningResult> scores = screeningResults
                 .findByApplication_ApplicationIdOrderByAiScreeningIdDesc(applicationId);
         AIScreeningResult latest = scores.isEmpty() ? null : scores.getFirst();
-        ApplicationProgressResponse progress = progress(applicationId, status,
-                progressFacts(List.of(applicationId)), LocalDateTime.now());
+        ApplicationProgressFacts facts = knownFacts(applicationId, status, progressFacts(List.of(applicationId)));
+        ApplicationProgressResponse progress = ApplicationProgressResolver.resolve(facts, LocalDateTime.now());
 
         return new ApplicationDetailResponse(
                 application.getApplicationId(),
@@ -138,8 +138,8 @@ public class ApplicationPipelineService {
                 latest == null ? null : latest.getAiMatchScore(),
                 latest == null ? null : latest.getScreenedAt(),
                 timeline(application, account, scores),
-                ApplicationStatusLabels.currentStep(status,
-                        requisition.getDepartment() == null ? null : requisition.getDepartment().getDepartmentName()),
+                ApplicationStepper.items(progress),
+                facts.interviewId(),
                 new ApplicationDetailResponse.Actions(
                         access.canReview(actor, application),
                         access.canRescreen(actor, application),
@@ -197,12 +197,10 @@ public class ApplicationPipelineService {
     }
 
     /** Thiếu dữ kiện (không xảy ra với đơn vừa đọc) thì tính theo riêng trạng thái đơn, coi như chưa có lịch, offer. */
-    private static ApplicationProgressResponse progress(Integer applicationId, String status,
-                                                        Map<Integer, ApplicationProgressFacts> facts,
-                                                        LocalDateTime now) {
-        ApplicationProgressFacts known = facts.getOrDefault(applicationId,
+    private static ApplicationProgressFacts knownFacts(Integer applicationId, String status,
+                                                       Map<Integer, ApplicationProgressFacts> facts) {
+        return facts.getOrDefault(applicationId,
                 new ApplicationProgressFacts(applicationId, status, false, null, null, null, 0, 0, null, null));
-        return ApplicationProgressResolver.resolve(known, now);
     }
 
     /** Hành trình của đơn, mới nhất trước: nộp, AI chấm, các lượt duyệt, lịch và kết quả phỏng vấn, offer. */

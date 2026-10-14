@@ -14,6 +14,7 @@ import com.group2.rms.candidate.repository.ApplicationRepository.ProgressFactsRo
 import com.group2.rms.candidate.repository.ApplicationRepository.TimelineEventRow;
 import com.group2.rms.candidate.repository.ApplicationReviewRepository;
 import com.group2.rms.core.exception.ResourceNotFoundException;
+import com.group2.rms.core.web.StageItem;
 import com.group2.rms.core.web.TimelineItem;
 import com.group2.rms.requisition.entity.JobPosting;
 import com.group2.rms.requisition.entity.JobRequisition;
@@ -288,7 +289,10 @@ class ApplicationPipelineServiceTests {
         assertEquals("Sales & Marketing", detail.departmentName());
         assertEquals(new BigDecimal("79.34"), detail.aiMatchScore());
         assertEquals("Chờ HR duyệt CV", detail.statusLabel());
-        assertEquals("HR sàng lọc hồ sơ và chuyển cho trưởng bộ phận.", detail.currentStep());
+        assertEquals(List.of("done", "current", "upcoming", "upcoming", "upcoming"),
+                detail.stepper().stream().map(StageItem::state).toList());
+        assertEquals("Chờ HR duyệt CV · Đang chờ: HR", detail.stepper().get(1).detail());
+        assertNull(detail.interviewId(), "chưa có lịch phỏng vấn");
         assertEquals(new ApplicationDetailResponse.Actions(true, false, false, false, true), detail.actions());
         assertEquals(List.of("Offer: Draft", "Kết quả phỏng vấn: Đạt", "Lịch phỏng vấn: Scheduled", "HR: Đạt",
                         "AI chấm điểm: 79,34", "AI chấm điểm: 60,00", "Nộp hồ sơ"),
@@ -298,6 +302,21 @@ class ApplicationPipelineServiceTests {
         assertEquals("Lan HR", review.actor());
         assertEquals("Hợp vị trí", review.body());
         assertEquals("success", review.tone());
+    }
+
+    /** Đã chốt Đạt, chưa có offer: stepper đứng ở Offer và trang chi tiết biết buổi phỏng vấn để mở kết quả. */
+    @Test
+    void detailStepperFollowsProgressAndExposesLatestInterviewId() {
+        when(applications.findDetailById(ID)).thenReturn(Optional.of(application()));
+        when(screeningResults.findByApplication_ApplicationIdOrderByAiScreeningIdDesc(ID)).thenReturn(List.of());
+        when(applications.findProgressFacts(List.of(ID))).thenReturn(List.of(facts("Interviewing", "Passed")));
+
+        ApplicationDetailResponse detail = service.detail(ID);
+
+        assertEquals(77L, detail.interviewId());
+        assertEquals(List.of("done", "done", "done", "current", "upcoming"),
+                detail.stepper().stream().map(StageItem::state).toList());
+        assertEquals("Đạt phỏng vấn, chờ lập offer · Đang chờ: HR", detail.stepper().get(3).detail());
     }
 
     /** Nghiệm thu PR 1 dòng 2: chốt Không đạt hiện trên timeline màu đỏ. */
