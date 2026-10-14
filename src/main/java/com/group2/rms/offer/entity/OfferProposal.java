@@ -8,6 +8,7 @@ import lombok.*;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 /**
  * 3.19 OfferProposal - Đề xuất offer lương do Hiring Manager / HR tạo.
@@ -66,6 +67,12 @@ public class OfferProposal extends BaseEntity {
 
     @Column(name = "DeclineReason", length = 1000)
     private String declineReason;
+
+    @Column(name = "ResponsePeriodDays")
+    private Integer responsePeriodDays;
+
+    @Column(name = "ResponseDeadline")
+    private LocalDateTime responseDeadline;
 
     @Column(name = "IsDeleted")
     @Builder.Default
