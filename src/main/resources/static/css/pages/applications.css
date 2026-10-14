@@ -211,24 +211,19 @@
   font-size: 13px;
 }
 
-.app-next {
+/* Thẻ thao tác ngay dưới thanh tiến độ: form duyệt CV + link sang trang interview/offer. */
+.app-actions {
+  margin-bottom: var(--s6);
+}
+
+.app-actions__links {
   display: flex;
   flex-wrap: wrap;
   gap: var(--s2);
 }
 
-.app-next__current {
-  margin: 0 0 var(--s4);
-  font-size: 14px;
-  color: var(--ink);
-}
-
-.app-next__label {
-  font-weight: 600;
-  color: var(--muted);
-}
-
 .app-review {
+  max-width: 640px;
   margin-bottom: var(--s4);
 }
 

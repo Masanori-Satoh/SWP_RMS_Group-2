@@ -1126,3 +1126,92 @@ a.stage-bar__link:focus-visible {
     row-gap: var(--s1);
   }
 }
+
+/* Mode stepper (chi tiết hồ sơ): mỗi bước là một ô có chấm đầu dòng. Đã qua ([data-state="done"]) có dấu ✓,
+   bước hiện tại ([aria-current]) nổi màu brand và hiện thêm .stage-bar__detail, ô CLOSED ("Đã dừng") tô màu lỗi.
+   Màn ≤ 600px: các bước xếp dọc, bỏ dấu "›". */
+.stage-bar__step {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--s2);
+  padding: var(--s2) var(--s3);
+  border: 1px solid transparent;
+  border-radius: var(--radius-md);
+  color: var(--muted);
+  font-size: var(--font-sm);
+  font-weight: 600;
+}
+
+.stage-bar__step::before {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  width: var(--s4);
+  height: var(--s4);
+  border: 2px solid var(--control-line);
+  border-radius: var(--radius-full);
+  font-size: var(--font-xs);
+  line-height: 1;
+  content: "";
+}
+
+.stage-bar__text {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s1);
+}
+
+.stage-bar__detail {
+  max-width: 32ch;
+  color: var(--ink);
+  font-size: var(--font-xs);
+  font-weight: 400;
+}
+
+.stage-bar--stepper [data-state="done"] .stage-bar__step {
+  color: var(--ink);
+}
+
+.stage-bar--stepper [data-state="done"] .stage-bar__step::before {
+  border-color: var(--brand);
+  background-color: var(--brand);
+  color: var(--on-brand);
+  content: "✓";
+}
+
+.stage-bar--stepper [aria-current] .stage-bar__step {
+  border-color: var(--brand);
+  background-color: var(--brand-soft);
+  color: var(--brand-dark);
+}
+
+.stage-bar--stepper [aria-current] .stage-bar__step::before {
+  border-color: var(--brand);
+  background-color: var(--brand);
+}
+
+.stage-bar--stepper [data-key="CLOSED"] .stage-bar__step {
+  border-color: var(--error);
+  background-color: var(--error-soft);
+  color: var(--error);
+}
+
+.stage-bar--stepper [data-key="CLOSED"] .stage-bar__step::before {
+  border-color: var(--error);
+  background-color: var(--error);
+  color: var(--surface);
+  content: "✕";
+}
+
+@media (max-width: 600px) {
+  .stage-bar--stepper .stage-bar__list {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .stage-bar--stepper .stage-bar__item:not(.stage-bar__item--off) + .stage-bar__item:not(.stage-bar__item--off)::before {
+    display: none;
+  }
+}
