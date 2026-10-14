@@ -929,41 +929,79 @@ function submitUpdateOffer(isDraft) {
 
 function confirmSendOffer(offerId) {
     if (!offerId) return;
-    if (!confirm('Bạn có chắc chắn muốn phát hành Thư mời làm việc (Offer Letter) tới ứng viên? Trạng thái sẽ được chuyển sang Sent_Candidate.')) {
-        return;
-    }
 
-    const csrf = getCsrfInfo();
-    const headers = {
-        'Accept': 'application/json'
-    };
-    if (csrf.token) {
-        headers[csrf.header] = csrf.token;
-    }
+    showDirectorCustomModal({
+        iconHtml: `
+            <div class="reject-warn-icon-wrapper" style="background:#e8f5e9; border-color:#c8e6c9;">
+                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#166534" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="22" y1="2" x2="11" y2="13"></line>
+                    <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+                </svg>
+            </div>
+        `,
+        title: 'Phát hành Thư mời làm việc?',
+        desc: 'Bạn có chắc chắn muốn phát hành Thư mời làm việc (Offer Letter) tới ứng viên?',
+        subtext: 'Trạng thái đề xuất sẽ được chuyển sang Sent_Candidate.',
+        confirmText: 'Xác nhận phát hành',
+        confirmClass: 'btn-director-reject-confirm',
+        showCancel: true,
+        cancelText: 'Hủy',
+        cancelClass: 'btn-director-modal-cancel',
+        onConfirm: () => {
+            const csrf = getCsrfInfo();
+            const headers = {
+                'Accept': 'application/json'
+            };
+            if (csrf.token) {
+                headers[csrf.header] = csrf.token;
+            }
 
-    fetch(`/offers/${offerId}/send`, {
-        method: 'POST',
-        headers: headers
-    })
-    .then(async res => {
-        const isJson = res.headers.get('content-type')?.includes('application/json');
-        const data = isJson ? await res.json() : null;
-        if (!res.ok) {
-            throw new Error(data?.message || `Lỗi phát hành Offer (${res.status})`);
+            fetch(`/offers/${offerId}/send`, {
+                method: 'POST',
+                headers: headers
+            })
+            .then(async res => {
+                const isJson = res.headers.get('content-type')?.includes('application/json');
+                const data = isJson ? await res.json() : null;
+                if (!res.ok) {
+                    throw new Error(data?.message || `Lỗi phát hành Offer (${res.status})`);
+                }
+                return data;
+            })
+            .then(res => {
+                if (res && res.success) {
+                    if (typeof Swal !== 'undefined') {
+                        Swal.fire({
+                            title: 'Thành công',
+                            text: res.message || 'Phát hành Thư mời làm việc thành công!',
+                            icon: 'success',
+                            timer: 1500,
+                            showConfirmButton: false
+                        }).then(() => {
+                            closeModal('detailOfferModal');
+                            window.location.reload();
+                        });
+                    } else {
+                        showToast(res.message, 'success');
+                        closeModal('detailOfferModal');
+                        setTimeout(() => window.location.reload(), 800);
+                    }
+                } else {
+                    if (typeof Swal !== 'undefined') {
+                        Swal.fire('Lỗi', res?.message || 'Lỗi phát hành Offer.', 'error');
+                    } else {
+                        showToast(res?.message || 'Lỗi phát hành Offer.', 'danger');
+                    }
+                }
+            })
+            .catch(err => {
+                if (typeof Swal !== 'undefined') {
+                    Swal.fire('Lỗi', err.message || 'Không thể phát hành Offer.', 'error');
+                } else {
+                    showToast(err.message, 'danger');
+                }
+            });
         }
-        return data;
-    })
-    .then(res => {
-        if (res && res.success) {
-            showToast(res.message, 'success');
-            closeModal('detailOfferModal');
-            setTimeout(() => window.location.reload(), 800);
-        } else {
-            showToast(res?.message || 'Lỗi phát hành Offer.', 'danger');
-        }
-    })
-    .catch(err => {
-        showToast(err.message, 'danger');
     });
 }
 
@@ -1731,6 +1769,7 @@ function scrollToDirectorDecision() {
 }
 
 function showDirectorCustomModal({
+    iconHtml,
     title,
     desc,
     subtext,
@@ -1742,15 +1781,19 @@ function showDirectorCustomModal({
     onConfirm,
     onClose
 }) {
+    const defaultIcon = `
+        <div class="reject-warn-icon-wrapper">
+            <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="10"></circle>
+                <line x1="12" y1="8" x2="12" y2="12"></line>
+                <line x1="12" y1="16" x2="12.01" y2="16"></line>
+            </svg>
+        </div>
+    `;
+
     Swal.fire({
         html: `
-            <div class="reject-warn-icon-wrapper">
-                <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-                    <circle cx="12" cy="12" r="10"></circle>
-                    <line x1="12" y1="8" x2="12" y2="12"></line>
-                    <line x1="12" y1="16" x2="12.01" y2="16"></line>
-                </svg>
-            </div>
+            ${iconHtml || defaultIcon}
             <h3 class="reject-warn-title">${title}</h3>
             <p class="reject-warn-desc">${desc}</p>
             <div class="reject-warn-divider"></div>
@@ -1887,6 +1930,7 @@ window.scrollToDirectorDecision = scrollToDirectorDecision;
 window.submitDirectorDecisionFromScreen = submitDirectorDecisionFromScreen;
 window.showDirectorRejectReasonRequiredAlert = showDirectorRejectReasonRequiredAlert;
 window.showDirectorRejectConfirmModal = showDirectorRejectConfirmModal;
+window.confirmSendOffer = confirmSendOffer;
 
 function submitDirectorApprove() {
     if (!currentDirectorOfferId) return;

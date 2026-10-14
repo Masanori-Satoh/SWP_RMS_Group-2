@@ -116,12 +116,9 @@
 
             <!-- Action when Director Approved -->
             <th:block th:if="${detail.offerStatus == 'Director_Approved' or detail.offerStatus == 'Approved'}">
-                <form th:action="@{/offers/{id}/send(id=${detail.offerId})}" method="post" style="display:inline;"
-                      onsubmit="return confirm('Bạn có chắc chắn muốn phát hành Thư mời làm việc (Offer Letter) tới ứng viên? Trạng thái sẽ được chuyển sang Sent_Candidate.');">
-                    <button type="submit" class="btn btn--primary">
-                        <i class="fa-solid fa-paper-plane"></i> Phát hành Offer Letter
-                    </button>
-                </form>
+                <button type="button" class="btn btn--primary" th:onclick="'confirmSendOffer(' + ${detail.offerId} + ')'">
+                    <i class="fa-solid fa-paper-plane"></i> Phát hành Offer Letter
+                </button>
             </th:block>
 
             <!-- Action when Rejected -->
