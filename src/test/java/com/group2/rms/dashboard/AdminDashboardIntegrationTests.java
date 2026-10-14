@@ -39,7 +39,7 @@ class AdminDashboardIntegrationTests {
     @MockitoSpyBean DashboardService dashboard;
     @Autowired DashboardMetricsRepository metrics;
     @Autowired UserRepository users;
-    @Autowired AccountListService accounts;
+    @MockitoSpyBean AccountListService accounts;
     @Autowired JdbcTemplate jdbc;
     @Autowired MockMvc mvc;
     private User admin;
@@ -131,6 +131,42 @@ class AdminDashboardIntegrationTests {
                     .andExpect(status().isOk()).andReturn().getResponse().getContentAsString(StandardCharsets.UTF_8);
             assertFalse(html.contains("data-summary="));
             assertFalse(html.contains("/js/pages/admin-dashboard.js"));
+        }
+    }
+
+    @Test
+    void iconActionsPreserveEditAndStatusPostContractsForEveryAccountState() throws Exception {
+        for (String state : List.of("Active", "Inactive", "Blocked")) {
+            boolean inactive = "Inactive".equals(state);
+            String operation = inactive ? "activate" : "deactivate";
+            String label = inactive ? "Kích hoạt lại" : "Vô hiệu hóa";
+            var row = new AccountListService.AccountRow(admin.getUserId(), admin.getFullName(), admin.getEmail(),
+                    admin.getUsername(), admin.getRole().getRoleName(), null, state);
+            doReturn(new org.springframework.data.domain.PageImpl<>(List.of(row),
+                    org.springframework.data.domain.PageRequest.of(0, 10), 1))
+                    .when(accounts).findAccounts("", null, null, "", "name", 0);
+            var result = mvc.perform(get("/admin/accounts").with(user(admin.getUsername())
+                            .authorities(new SimpleGrantedAuthority(RoleAuthorities.SYSTEM_ADMIN))))
+                    .andExpect(status().isOk()).andReturn();
+            String html = result.getResponse().getContentAsString(StandardCharsets.UTF_8);
+            String body = html.substring(html.indexOf("<tbody>"), html.indexOf("</tbody>"));
+            assertTrue(body.contains("href=\"/admin/accounts/" + admin.getUserId() + "/edit\""));
+            var form = java.util.regex.Pattern.compile("<form\\b[^>]*data-status-confirm[^>]*>.*?</form>",
+                    java.util.regex.Pattern.DOTALL).matcher(body);
+            assertTrue(form.find());
+            String action = form.group();
+            assertFalse(form.find(), "Exactly one status action per account");
+            assertTrue(action.contains("action=\"/admin/accounts/" + admin.getUserId() + "/" + operation + "\""));
+            assertTrue(action.contains("method=\"post\""));
+            assertTrue(action.contains("name=\"_csrf\""));
+            assertTrue(action.contains("data-tooltip=\"" + label + "\""));
+            assertTrue(action.contains("data-confirm-label=\"" + label + "\""));
+            assertTrue(action.contains("data-confirm-danger=\"" + !inactive + "\""));
+            assertEquals(2L, java.util.regex.Pattern.compile("<svg\\b").matcher(body).results().count());
+            assertTrue(html.contains("id=\"status-dialog\""));
+            // HTML response fixture only: never writes an account status to SQL Server.
+            Files.writeString(Path.of("target/internal-icons-" + state.toLowerCase(java.util.Locale.ROOT) + ".html"),
+                    html, StandardCharsets.UTF_8);
         }
     }
 
