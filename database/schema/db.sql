@@ -513,7 +513,7 @@ CREATE TABLE OfferProposal (
     WorkLocation NVARCHAR(255) NULL,
     BenefitsPackage NVARCHAR(MAX) NULL,
     OfferStatus NVARCHAR(40) NOT NULL CONSTRAINT DF_OfferProposal_Status DEFAULT N'Draft',
-DeclineReason NVARCHAR(1000) NULL,
+    DeclineReason NVARCHAR(1000) NULL,
     ProposedBy INT NOT NULL,
     CreatedAt DATETIME2 NOT NULL CONSTRAINT DF_OfferProposal_CreatedAt DEFAULT SYSDATETIME(),
     UpdatedAt DATETIME2 NULL,

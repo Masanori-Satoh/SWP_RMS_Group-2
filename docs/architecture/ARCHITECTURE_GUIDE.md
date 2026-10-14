@@ -189,7 +189,9 @@ Phân quyền URL nằm tập trung trong `core/config/SecurityConfig` (chưa d�
 | `/interviews/new`, `/interviews/*/edit`, mọi thao tác ghi `/interviews/**` | `HR`, `SYSTEM_ADMIN` |
 | `GET /interviews/**` | `HR`, `SYSTEM_ADMIN`, `DIRECTOR`, `HIRING_MANAGER`, `INTERVIEWER` |
 | `GET /portal/interviews` | `CANDIDATE` (các method khác: chặn) |
-| `/offers/**`, `/api/v1/hr/offers/**` | `CANDIDATE`, `HR`, `DIRECTOR`, `SYSTEM_ADMIN` |
+| `/portal/applications/**` | `CANDIDATE` |
+| `/portal/offers/**` | `CANDIDATE` |
+| `/offers/**` | `HR`, `DIRECTOR`, `SYSTEM_ADMIN` |
 | `/requisitions/**` | `HIRING_MANAGER`, `DIRECTOR`, `HR`, `SYSTEM_ADMIN` |
 | `/internal/job-postings/**` | `HR`, `SYSTEM_ADMIN` |
 | `/dashboard/**`, `/notifications/**`, mọi URL còn lại | Đã đăng nhập |

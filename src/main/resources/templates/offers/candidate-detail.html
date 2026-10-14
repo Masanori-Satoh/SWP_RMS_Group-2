@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="vi"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/internal}">
+<!--
+    OFFERS/CANDIDATE-DETAIL.HTML — Màn hình Thư mời nhận việc chính thức (Offer Letter)
+    Chỉ dành riêng cho ứng viên (/portal/offers/{id}).
+    Trình bày trang trọng theo hình thức thư mời tuyển dụng chuẩn doanh nghiệp.
+    Ứng viên chỉ có 3 quyền: Xem chi tiết, Đồng ý nhận việc, hoặc Từ chối thư mời (kèm lý do).
+    Không chứa dữ liệu nhạy cảm nội bộ (lịch sử duyệt của Giám đốc, ghi chú HR).
+    CSS riêng: css/pages/candidate-offers.css (cof-).
+-->
+<head>
+    <title th:text="|Thư mời nhận việc - ${offer.offeredPositionTitle}|">Thư mời nhận việc</title>
+    <th:block layout:fragment="styles">
+        <link rel="stylesheet" th:href="@{/css/pages/candidate-offers.css}">
+    </th:block>
+</head>
+<body>
+<main id="main" layout:fragment="content" class="page-content container" tabindex="-1">
+
+    <!-- Điều hướng quay lại -->
+    <nav class="cof-breadcrumb" aria-label="Đường dẫn">
+        <a th:href="@{/portal/offers}" class="cof-back-link">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
+            Quay lại danh sách thư mời
+        </a>
+    </nav>
+
+    <!-- Tiêu đề trang -->
+    <div class="page-header">
+        <div>
+            <div class="cof-header-badge-row">
+                <span class="badge" th:classappend="${offer.statusBadge}" th:text="${offer.statusLabel}">Chờ bạn trả lời</span>
+            </div>
+            <h1 class="page-title" th:text="|Thư mời nhận việc: ${offer.offeredPositionTitle}|">Thư mời nhận việc: Senior Java Developer</h1>
+            <p class="page-subtitle" th:text="|Vị trí tuyển dụng: ${offer.postingTitle} • Phòng ban: ${offer.departmentName}|">Phòng Kỹ thuật</p>
+        </div>
+        <div class="cof-header-actions" th:if="${offer.canRespond}">
+            <button type="button" class="btn btn--primary" data-detail-trigger="accept">Đồng ý nhận việc</button>
+            <a th:href="@{/portal/offers/{id}/decline(id=${offer.offerId})}" class="btn btn--outline">Từ chối thư mời</a>
+        </div>
+    </div>
+
+    <!-- Thông báo phản hồi hệ thống -->
+    <div th:if="${decisionType == 'ACCEPTED'}" class="alert alert--success cof-system-banner" role="status">
+        <div class="cof-system-banner__header">
+            <strong>🎉 Chúc mừng bạn đã đồng ý nhận việc!</strong>
+        </div>
+        <p th:text="${successMessage}">Bạn đã nhận offer.</p>
+        <p class="cof-system-banner__guide text-muted">
+            Bộ phận Tuyển dụng và Nhân sự Mộc RMS sẽ liên hệ với bạn qua email hoặc số điện thoại trong vòng 24 - 48 giờ làm việc để hướng dẫn chi tiết thủ tục Onboarding và chuẩn bị cho ngày làm việc đầu tiên.
+        </p>
+    </div>
+    <div th:if="${decisionType == 'DECLINED'}" class="alert alert--neutral cof-system-banner" role="status">
+        <div class="cof-system-banner__header">
+            <strong>Đã ghi nhận phản hồi từ chối thư mời</strong>
+        </div>
+        <p th:text="${successMessage}">Bạn đã từ chối offer.</p>
+        <p th:if="${declineReasonDisplay}" class="cof-system-banner__reason">
+            <em>Lý do chia sẻ:</em> <span th:text="${declineReasonDisplay}"></span>
+        </p>
+        <p class="cof-system-banner__guide text-muted">
+            Cảm ơn bạn đã dành thời gian và sự quan tâm tới cơ hội làm việc tại Mộc RMS. Chúc bạn luôn gặt hái được nhiều thành công trên chặng đường sự nghiệp tiếp theo!
+        </p>
+    </div>
+    <div th:if="${offer.statusLabel == 'Đã quá hạn phản hồi' and decisionType == null}" class="alert alert--neutral cof-system-banner" role="status">
+        <div class="cof-system-banner__header">
+            <strong>⏱ Thư mời đã quá hạn phản hồi</strong>
+        </div>
+        <p class="cof-system-banner__guide text-muted">
+            Ngày bắt đầu nhận việc dự kiến (<span th:text="${offer.expectedStartDate != null ? #temporals.format(offer.expectedStartDate, 'dd/MM/yyyy') : 'Chưa xác định'}"></span>) đã qua. Nếu bạn vẫn mong muốn gia nhập đội ngũ Mộc RMS, vui lòng liên hệ với chuyên viên tuyển dụng phụ trách bên cạnh để được hỗ trợ.
+        </p>
+    </div>
+    <div th:if="${successMessage != null and decisionType == null}" class="alert alert--success" role="status" th:text="${successMessage}">Cập nhật thành công.</div>
+    <div th:if="${errorMessage}" class="alert alert--danger" role="alert" th:text="${errorMessage}">Không thể xử lý yêu cầu.</div>
+
+    <!-- Bố cục lưới 2 cột -->
+    <div class="cof-detail-grid">
+
+        <!-- Cột chính: Thư mời trang trọng & Chi tiết đãi ngộ -->
+        <div class="cof-detail-main">
+
+            <!-- Thư mời trang trọng (Letterhead) -->
+            <article class="card cof-letter">
+                <header class="cof-letter-head">
+                    <div>
+                        <div class="cof-letter-company">Công ty Cổ phần Công nghệ &amp; Nội thất Mộc RMS</div>
+                        <span class="cof-letter-brand-sub">Hệ thống Quản lý Tuyển dụng &amp; Nhân tài RMS</span>
+                    </div>
+                    <div class="cof-letter-date" th:text="${offer.sentAt != null ? 'Ngày gửi: ' + #temporals.format(offer.sentAt, 'dd/MM/yyyy') : 'Thư mời chính thức'}">
+                        Ngày gửi: 14/10/2026
+                    </div>
+                </header>
+
+                <div class="cof-letter-salutation">
+                    <p class="text-muted">Kính gửi:</p>
+                    <strong th:text="${offer.candidateName}">Nguyễn Văn A</strong>
+                    <div class="text-muted cof-sub" th:if="${offer.candidateEmail != null}">
+                        Email: <span th:text="${offer.candidateEmail}">candidate@example.com</span>
+                        <th:block th:if="${offer.candidatePhone != null}"> • Điện thoại: <span th:text="${offer.candidatePhone}">0901234567</span></th:block>
+                    </div>
+                </div>
+
+                <div class="cof-letter-body">
+                    <p>
+                        Thay mặt Ban Giám đốc và toàn thể đội ngũ Mộc RMS, chúng tôi xin trân trọng chúc mừng và gửi tới Ông/Bà lời mời gia nhập công ty. Dựa trên năng lực, kinh nghiệm cùng sự thể hiện xuất sắc của Ông/Bà trong các vòng phỏng vấn vừa qua, chúng tôi rất vui mừng đề xuất các điều khoản làm việc chính thức như dưới đây:
+                    </p>
+                </div>
+
+                <div class="cof-letter-closing text-muted">
+                    <p>
+                        Chúng tôi tin tưởng rằng với tài năng, sự sáng tạo và nhiệt huyết của mình, Ông/Bà sẽ là một mảnh ghép quan trọng đóng góp vào sự phát triển bền vững của Mộc RMS. Rất mong sớm được chào đón Ông/Bà chính thức gia nhập đội ngũ của chúng tôi!
+                    </p>
+                </div>
+            </article>
+
+            <!-- Phần 1: Vị trí & Thời gian làm việc -->
+            <section class="card">
+                <div class="card-header">
+                    <h2 class="card-title">1. Vị trí &amp; Thời gian làm việc</h2>
+                </div>
+                <div class="card-body">
+                    <div class="cof-meta-grid">
+                        <div class="cof-meta-item">
+                            <span class="cof-meta-label">Vị trí bổ nhiệm</span>
+                            <span class="cof-meta-val" th:text="${offer.offeredPositionTitle}">Senior Java Developer</span>
+                        </div>
+                        <div class="cof-meta-item">
+                            <span class="cof-meta-label">Tin tuyển dụng</span>
+                            <span class="cof-meta-val text-muted" th:text="${offer.postingTitle}">Senior Java Developer</span>
+                        </div>
+                        <div class="cof-meta-item">
+                            <span class="cof-meta-label">Phòng ban công tác</span>
+                            <span class="cof-meta-val" th:text="${offer.departmentName}">Phòng Kỹ thuật</span>
+                        </div>
+                        <div class="cof-meta-item">
+                            <span class="cof-meta-label">Địa điểm làm việc</span>
+                            <span class="cof-meta-val" th:text="${#strings.isEmpty(offer.workLocation) ? 'Trụ sở chính Mộc RMS' : offer.workLocation}">Hà Nội</span>
+                        </div>
+                        <div class="cof-meta-item">
+                            <span class="cof-meta-label">Ngày bắt đầu dự kiến</span>
+                            <span class="cof-meta-val" th:text="${offer.expectedStartDate == null ? 'Thỏa thuận trực tiếp' : #temporals.format(offer.expectedStartDate, 'dd/MM/yyyy')}">01/11/2026</span>
+                        </div>
+                        <div class="cof-meta-item">
+                            <span class="cof-meta-label">Thời gian thử việc</span>
+                            <span class="cof-meta-val" th:text="${offer.probationDuration}">60 ngày (2 tháng)</span>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Phần 2: Chế độ Lương & Đãi ngộ -->
+            <section class="card">
+                <div class="card-header">
+                    <h2 class="card-title">2. Chế độ Lương &amp; Đãi ngộ</h2>
+                </div>
+                <div class="card-body">
+                    <div class="cof-salary-grid">
+                        <div class="cof-salary-item cof-salary-item--highlight">
+                            <span class="cof-meta-label">Lương chính thức / tháng (Gross)</span>
+                            <div class="cof-salary-figure" th:text="${offer.proposedSalary == null ? 'Thỏa thuận' : #numbers.formatDecimal(offer.proposedSalary, 1, 'POINT', 0, 'COMMA') + ' ₫'}">
+                                25.000.000 ₫
+                            </div>
+                            <span class="text-muted cof-sub">Áp dụng sau thời gian thử việc</span>
+                        </div>
+                        <div class="cof-salary-item">
+                            <span class="cof-meta-label">Lương thử việc / tháng (Gross)</span>
+                            <div class="cof-salary-figure--probation" th:text="${offer.probationSalary == null ? 'Thỏa thuận' : #numbers.formatDecimal(offer.probationSalary, 1, 'POINT', 0, 'COMMA') + ' ₫'}">
+                                21.250.000 ₫
+                            </div>
+                            <span th:if="${offer.probationRatePercent != null}" class="cof-salary-rate"
+                                  th:text="|Đạt ${offer.probationRatePercent}% lương chính thức|">Đạt 85% lương chính thức</span>
+                        </div>
+                    </div>
+
+                    <div th:unless="${#strings.isEmpty(offer.benefitsPackage)}" class="cof-benefits-box">
+                        <span class="cof-meta-label">Gói quyền lợi &amp; Phúc lợi kèm theo</span>
+                        <p class="cof-benefits-text" th:text="${offer.benefitsPackage}">Bảo hiểm y tế, khám sức khỏe định kỳ, thưởng hiệu quả công việc theo quý.</p>
+                    </div>
+                </div>
+            </section>
+        </div>
+
+        <!-- Cột phụ: Quyết định & Người liên hệ -->
+        <aside class="cof-detail-sidebar">
+
+            <!-- Thẻ Quyết định của ứng viên -->
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="card-title">Phản hồi của bạn</h2>
+                </div>
+                <div class="card-body">
+                    <div th:if="${offer.canRespond}">
+                        <p class="text-muted">
+                            Thư mời nhận việc đang chờ phản hồi từ bạn. Vui lòng xem xét các điều khoản và gửi quyết định trước ngày bắt đầu làm việc.
+                        </p>
+                        <div class="cof-actions">
+                            <button type="button" class="btn btn--primary" data-detail-trigger="accept">Đồng ý nhận việc</button>
+                            <a th:href="@{/portal/offers/{id}/decline(id=${offer.offerId})}" class="btn btn--outline">Từ chối thư mời</a>
+                        </div>
+                        <p class="cof-note text-muted">
+                            Lưu ý: Sau khi gửi phản hồi, bạn không thể thay đổi lại lựa chọn.
+                        </p>
+                    </div>
+
+                    <div th:unless="${offer.canRespond}">
+                        <div class="cof-header-badge-row">
+                            <span class="badge" th:classappend="${offer.statusBadge}" th:text="${offer.statusLabel}">Đã nhận offer</span>
+                        </div>
+                        <p th:if="${offer.offerStatus == 'Accepted'}" class="text-muted">
+                            Bạn đã đồng ý nhận lời mời làm việc này. Hồ sơ của bạn đã được cập nhật thành công sang trạng thái <strong>Đã nhận việc (Hired)</strong>.
+                        </p>
+                        <p th:if="${offer.offerStatus == 'Declined'}" class="text-muted">
+                            Bạn đã từ chối thư mời làm việc này. Hồ sơ ứng tuyển của bạn cho vị trí này đã kết thúc.
+                        </p>
+                        <p th:if="${offer.statusLabel == 'Đã quá hạn phản hồi'}" class="text-muted">
+                            Thư mời này đã quá ngày bắt đầu nhận việc dự kiến. Nếu bạn vẫn có nguyện vọng gia nhập công ty, vui lòng liên hệ chuyên viên phụ trách tuyển dụng bên dưới để được hỗ trợ.
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Thẻ Người phụ trách tuyển dụng -->
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="card-title">Bộ phận Tuyển dụng</h2>
+                </div>
+                <div class="card-body">
+                    <div class="cof-contact-row">
+                        <div class="cof-contact-item">
+                            <span class="cof-meta-label">Chuyên viên phụ trách</span>
+                            <span class="cof-meta-val" th:text="${offer.hrContactName}">Phòng Tuyển dụng Mộc RMS</span>
+                        </div>
+                        <div class="cof-contact-item">
+                            <span class="cof-meta-label">Email hỗ trợ</span>
+                            <a th:href="|mailto:${offer.hrContactEmail}|" class="cof-link" th:text="${offer.hrContactEmail}">tuyendung@mocrms.com.vn</a>
+                        </div>
+                    </div>
+                    <p class="cof-note text-muted">
+                        Nếu bạn có bất kỳ câu hỏi hoặc cần trao đổi thêm về các điều khoản trong thư mời, vui lòng liên hệ chuyên viên phụ trách qua email trên.
+                    </p>
+                </div>
+            </div>
+        </aside>
+    </div>
+
+    <!-- Hộp thoại Xác nhận Đồng ý nhận việc -->
+    <dialog id="cof-accept-dialog" class="confirm-dialog" aria-labelledby="cof-accept-dialog-title"
+            aria-describedby="cof-accept-dialog-message">
+        <div class="dialog-content">
+            <div class="dialog-header">
+                <h2 id="cof-accept-dialog-title" class="dialog-title">Đồng ý nhận việc?</h2>
+            </div>
+            <div class="dialog-body">
+                <p id="cof-accept-dialog-message">
+                    Bạn xác nhận đồng ý nhận lời mời làm việc cho vị trí <strong th:text="${offer.offeredPositionTitle}">Java Developer</strong> tại Mộc RMS.
+                </p>
+                <p class="text-muted">
+                    Sau khi xác nhận, hồ sơ của bạn sẽ chuyển sang trạng thái "Đã nhận việc" và bạn không thể hoàn tác lại lựa chọn này.
+                </p>
+            </div>
+            <div class="dialog-actions">
+                <button type="button" class="btn btn--secondary btn--sm" data-detail-close="cof-accept-dialog">Xem lại</button>
+                <form th:action="@{/portal/offers/{id}/accept(id=${offer.offerId})}" method="post" class="cof-detail-form">
+                    <input type="hidden" name="fromDetail" value="true">
+                    <button type="submit" class="btn btn--primary btn--sm">Đồng ý nhận việc</button>
+                </form>
+            </div>
+        </div>
+    </dialog>
+
+    <!-- Hộp thoại Xác nhận Từ chối thư mời -->
+    <dialog id="cof-decline-dialog" class="confirm-dialog" aria-labelledby="cof-decline-dialog-title"
+            aria-describedby="cof-decline-dialog-message">
+        <div class="dialog-content">
+            <form th:action="@{/portal/offers/{id}/decline(id=${offer.offerId})}" method="post" class="cof-detail-form">
+                <input type="hidden" name="fromDetail" value="true">
+                <div class="dialog-header">
+                    <h2 id="cof-decline-dialog-title" class="dialog-title">Từ chối thư mời nhận việc?</h2>
+                </div>
+                <div class="dialog-body">
+                    <p id="cof-decline-dialog-message">
+                        Bạn có chắc chắn muốn từ chối thư mời cho vị trí <strong th:text="${offer.offeredPositionTitle}">Java Developer</strong>?
+                        Hồ sơ của bạn sẽ dừng lại và bạn không thể đổi lại sau khi xác nhận.
+                    </p>
+                    <div class="cof-dialog-reason">
+                        <label for="cof-detail-reason-input" class="form-label">Lý do từ chối (tùy chọn):</label>
+                        <div class="cof-chips" role="group" aria-label="Lý do phổ biến">
+                            <button type="button" class="cof-chip" data-reason="Mức đãi ngộ chưa đạt kỳ vọng">Mức đãi ngộ chưa đạt kỳ vọng</button>
+                            <button type="button" class="cof-chip" data-reason="Đã nhận lời mời từ công ty khác">Đã nhận lời mời từ công ty khác</button>
+                            <button type="button" class="cof-chip" data-reason="Địa điểm hoặc thời gian làm việc chưa phù hợp">Địa điểm / thời gian chưa phù hợp</button>
+                            <button type="button" class="cof-chip" data-reason="Kế hoạch cá nhân thay đổi">Kế hoạch cá nhân thay đổi</button>
+                        </div>
+                        <textarea id="cof-detail-reason-input" name="declineReason" class="form-input cof-textarea" rows="3"
+                                  placeholder="Vui lòng chia sẻ thêm lý do hoặc góp ý cho Mộc RMS..."></textarea>
+                    </div>
+                </div>
+                <div class="dialog-actions">
+                    <button type="button" class="btn btn--secondary btn--sm" data-detail-close="cof-decline-dialog">Xem lại</button>
+                    <button type="submit" class="btn btn--danger btn--sm">Xác nhận từ chối</button>
+                </div>
+            </form>
+        </div>
+    </dialog>
+
+</main>
+<th:block layout:fragment="scripts">
+    <script defer th:src="@{/js/pages/candidate-offers.js}"></script>
+</th:block>
+</body>
+</html>

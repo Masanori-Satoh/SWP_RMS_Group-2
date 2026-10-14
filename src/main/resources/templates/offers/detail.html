@@ -111,6 +111,29 @@
         </div>
     </div>
 
+    <!-- CANDIDATE DECLINE CALLOUT (KHI OFFERSTATUS == 'Declined') -->
+    <div th:if="${detail.offerStatus == 'Declined'}"
+         class="card cand-decline-card" style="margin-bottom: 20px;">
+        <div class="card-header" style="background: transparent; border-bottom: 1px solid #fee2e2;">
+            <h2 class="card-title" style="font-size: 16px; color: #991b1b; display: flex; align-items: center; gap: 8px;">
+                <i class="fa-solid fa-user-xmark"></i> Phản Hồi Từ Chối Của Ứng Viên
+            </h2>
+        </div>
+        <div class="card-body">
+            <div style="font-size: 13.5px; color: #7f1d1d; font-weight: 600; margin-bottom: 6px;">
+                Lý do ứng viên không nhận việc:
+            </div>
+            <div class="cand-decline-reason-box"
+                 th:text="${detail.declineReason != null and !#strings.isEmpty(detail.declineReason) ? detail.declineReason : 'Ứng viên không cung cấp lý do chi tiết khi từ chối.'}">
+                Lý do từ chối...
+            </div>
+            <div style="margin-top: 10px; font-size: 12.5px; color: #991b1b; display: flex; align-items: center; gap: 6px;">
+                <i class="fa-regular fa-clock"></i> Thời điểm cập nhật: 
+                <span th:text="${detail.updatedAt != null ? #temporals.format(detail.updatedAt, 'dd/MM/yyyy HH:mm') : '-'}">-</span>
+            </div>
+        </div>
+    </div>
+
     <!-- GROUP A: HỒ SƠ ỨNG VIÊN & PHỎNG VẤN -->
     <div class="card" style="margin-bottom: 20px;">
         <div class="card-header">
