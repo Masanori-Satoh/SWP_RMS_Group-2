@@ -1,5 +1,6 @@
 package com.group2.rms.notification;
 
+import com.group2.rms.offer.entity.OfferProposal;
 import com.group2.rms.requisition.entity.JobPosting;
 import com.group2.rms.requisition.entity.JobRequisition;
 import com.group2.rms.user.entity.User;
@@ -128,6 +129,51 @@ public class NotificationServiceImpl implements NotificationService {
     }
 
     @Override
+    @Transactional
+    public void notifyOfferLetterSent(OfferProposal offer) {
+        if (offer == null || offer.getApplication() == null
+                || offer.getApplication().getCandidate() == null
+                || offer.getApplication().getCandidate().getAccount() == null) {
+            log.warn("Cannot send offer notification: Candidate or User account is null for Offer ID: {}",
+                    offer != null ? offer.getOfferId() : null);
+            return;
+        }
+
+        User recipient = offer.getApplication().getCandidate().getAccount();
+        String eventId = "OFFER_SENT_" + offer.getOfferId();
+
+        if (notificationRepository.existsByEventId(eventId)) {
+            log.info("Notification for eventId {} already exists. Skipping duplicate creation.", eventId);
+            return;
+        }
+
+        String positionTitle = (offer.getOfferedPositionTitle() != null && !offer.getOfferedPositionTitle().isBlank())
+                ? offer.getOfferedPositionTitle()
+                : "Vị trí tuyển dụng";
+
+        String title = "Bạn có thư mời nhận việc mới: " + positionTitle;
+        String content = String.format(
+                "Chúc mừng bạn! Nhà tuyển dụng đã gửi Thư mời nhận việc cho vị trí \"%s\". Vui lòng bấm vào đây để xem chi tiết điều khoản và phản hồi thư mời.",
+                positionTitle
+        );
+
+        Notification notification = Notification.builder()
+                .recipient(recipient)
+                .title(title)
+                .content(content)
+                .eventType("OFFER_LETTER_SENT")
+                .referenceId(String.valueOf(offer.getOfferId()))
+                .linkUrl("/portal/offers/" + offer.getOfferId())
+                .isRead(false)
+                .eventId(eventId)
+                .createdAt(LocalDateTime.now())
+                .build();
+
+        notificationRepository.save(notification);
+        log.info("Sent offer notification to Candidate (User ID: {}) for Offer ID: {}", recipient.getUserId(), offer.getOfferId());
+    }
+
+    @Override
     @Transactional(readOnly = true)
     public Page<NotificationResponse> getNotificationsForUser(User user, int page, int size) {
         if (user == null) {
@@ -172,5 +218,13 @@ public class NotificationServiceImpl implements NotificationService {
             return;
         }
         notificationRepository.markAllAsReadByUserId(user.getUserId());
+    }
+
+    @Override
+    @Transactional
+    public void markOfferNotificationRead(Integer userId, Integer offerId) {
+        if (userId != null && offerId != null) {
+            notificationRepository.markOfferNotificationRead(userId, String.valueOf(offerId));
+        }
     }
 }

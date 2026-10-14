@@ -205,4 +205,47 @@ class NotificationServiceImplTest {
         assertEquals(1, result.getTotalElements());
         assertEquals("Test notif", result.getContent().get(0).title());
     }
+
+    @Test
+    @DisplayName("notifyOfferLetterSent: Lưu thông báo thư mời làm việc cho ứng viên với link chuẩn")
+    void notifyOfferLetterSent_success() {
+        User candidateUser = User.builder().userId(22).username("trung").fullName("Huỳnh Hoàng Trung").build();
+        com.group2.rms.candidate.entity.Candidate candidate = com.group2.rms.candidate.entity.Candidate.builder()
+                .candidateId(5)
+                .account(candidateUser)
+                .build();
+        com.group2.rms.candidate.entity.Application app = com.group2.rms.candidate.entity.Application.builder()
+                .applicationId(10)
+                .candidate(candidate)
+                .build();
+        com.group2.rms.offer.entity.OfferProposal offer = com.group2.rms.offer.entity.OfferProposal.builder()
+                .offerId(1)
+                .offeredPositionTitle("Senior Java Engineer")
+                .application(app)
+                .build();
+
+        when(notificationRepository.existsByEventId("OFFER_SENT_1")).thenReturn(false);
+
+        notificationService.notifyOfferLetterSent(offer);
+
+        ArgumentCaptor<Notification> captor = ArgumentCaptor.forClass(Notification.class);
+        verify(notificationRepository).save(captor.capture());
+
+        Notification saved = captor.getValue();
+        assertEquals(candidateUser, saved.getRecipient());
+        assertEquals("OFFER_LETTER_SENT", saved.getEventType());
+        assertEquals("/portal/offers/1", saved.getLinkUrl());
+        assertEquals("1", saved.getReferenceId());
+        assertFalse(saved.getIsRead());
+        assertTrue(saved.getTitle().contains("Senior Java Engineer"));
+        assertTrue(saved.getContent().contains("Senior Java Engineer"));
+        assertEquals("OFFER_SENT_1", saved.getEventId());
+    }
+
+    @Test
+    @DisplayName("markOfferNotificationRead: Đánh dấu đã đọc thông báo offer theo userId và offerId")
+    void markOfferNotificationRead_success() {
+        notificationService.markOfferNotificationRead(22, 1);
+        verify(notificationRepository).markOfferNotificationRead(22, "1");
+    }
 }

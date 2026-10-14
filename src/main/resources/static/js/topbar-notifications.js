@@ -125,7 +125,7 @@
             const isRead = itemEl.getAttribute('data-read') === 'true';
             if (!isRead && notifId) {
               try {
-                fetch(`/api/notifications/${notifId}/read`, { method: 'POST' });
+                fetch(`/api/notifications/${notifId}/read`, { method: 'POST', keepalive: true });
               } catch (err) {}
             }
           });

@@ -10,11 +10,15 @@ public interface NotificationService {
 
     void notifyJobPostingPublished(com.group2.rms.requisition.entity.JobPosting posting, User hr);
 
+    void notifyOfferLetterSent(com.group2.rms.offer.entity.OfferProposal offer);
+
     Page<NotificationResponse> getNotificationsForUser(User user, int page, int size);
 
     long getUnreadCount(User user);
 
     void markAsRead(Long notificationId, User user);
+
+    void markOfferNotificationRead(Integer userId, Integer offerId);
 
     void markAllAsRead(User user);
 }

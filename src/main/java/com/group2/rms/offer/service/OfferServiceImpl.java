@@ -58,6 +58,7 @@ public class OfferServiceImpl implements OfferService {
     private final InterviewFinalResultRepository interviewFinalResultRepository;
     private final OfferApprovalRepository offerApprovalRepository;
     private final NotificationService notificationService;
+    private final com.group2.rms.notification.NotificationService systemNotificationService;
 
     /**
      * Quy tắc GBR-07:
@@ -562,6 +563,14 @@ public class OfferServiceImpl implements OfferService {
                 notificationService.sendOfferLetterToCandidate(saved);
             } catch (Exception ignored) {
                 // Tiếp tục ngay cả khi gửi mail lỗi ngầm
+            }
+        }
+
+        if (systemNotificationService != null) {
+            try {
+                systemNotificationService.notifyOfferLetterSent(saved);
+            } catch (Exception ignored) {
+                // Tiếp tục ngay cả khi tạo thông báo in-app lỗi ngầm
             }
         }
 

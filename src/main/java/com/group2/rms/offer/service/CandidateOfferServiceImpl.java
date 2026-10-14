@@ -17,7 +17,6 @@ import java.util.List;
 import java.util.Set;
 
 @Service
-@RequiredArgsConstructor
 public class CandidateOfferServiceImpl implements CandidateOfferService {
 
     static final String SENT = "Sent_Candidate";
@@ -30,22 +29,59 @@ public class CandidateOfferServiceImpl implements CandidateOfferService {
     private final CandidateOfferRepository offers;
     private final CurrentUserService currentUserService;
     private final ApplicationStatusService applicationStatusService;
+    private final com.group2.rms.notification.NotificationService systemNotificationService;
+
+    @org.springframework.beans.factory.annotation.Autowired
+    public CandidateOfferServiceImpl(CandidateOfferRepository offers,
+                                    CurrentUserService currentUserService,
+                                    ApplicationStatusService applicationStatusService,
+                                    com.group2.rms.notification.NotificationService systemNotificationService) {
+        this.offers = offers;
+        this.currentUserService = currentUserService;
+        this.applicationStatusService = applicationStatusService;
+        this.systemNotificationService = systemNotificationService;
+    }
+
+    public CandidateOfferServiceImpl(CandidateOfferRepository offers,
+                                    CurrentUserService currentUserService,
+                                    ApplicationStatusService applicationStatusService) {
+        this(offers, currentUserService, applicationStatusService, null);
+    }
 
     @Override
-    @Transactional(readOnly = true)
+    @Transactional
     public List<CandidateOfferResponse> list() {
         Integer userId = currentUserService.requireUser().getUserId();
-        return offers.findVisibleByUserId(userId, CANDIDATE_VISIBLE_STATUSES).stream()
+        List<OfferProposal> visibleOffers = offers.findVisibleByUserId(userId, CANDIDATE_VISIBLE_STATUSES);
+
+        if (systemNotificationService != null) {
+            for (OfferProposal o : visibleOffers) {
+                if (SENT.equals(o.getOfferStatus())) {
+                    try {
+                        systemNotificationService.notifyOfferLetterSent(o);
+                    } catch (Exception ignored) {}
+                }
+            }
+        }
+
+        return visibleOffers.stream()
                 .map(CandidateOfferServiceImpl::toResponse)
                 .toList();
     }
 
     @Override
-    @Transactional(readOnly = true)
+    @Transactional
     public CandidateOfferDetailResponse getDetail(Integer offerId) {
         Integer userId = currentUserService.requireUser().getUserId();
         OfferProposal offer = offers.findVisibleById(offerId, userId, CANDIDATE_VISIBLE_STATUSES)
                 .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy thư mời nhận việc."));
+
+        if (systemNotificationService != null) {
+            try {
+                systemNotificationService.markOfferNotificationRead(userId, offerId);
+            } catch (Exception ignored) {}
+        }
+
         return toDetailResponse(offer);
     }
 
@@ -76,6 +112,11 @@ public class CandidateOfferServiceImpl implements CandidateOfferService {
             throw new OfferResponseException("Thư mời vừa được cập nhật. Vui lòng tải lại trang.");
         }
         applicationStatusService.onOfferAnswered(offer.getApplication().getApplicationId(), accepted);
+        if (systemNotificationService != null) {
+            try {
+                systemNotificationService.markOfferNotificationRead(userId, offerId);
+            } catch (Exception ignored) {}
+        }
         return offer.getApplication().getJobPosting().getPostingTitle();
     }
 
