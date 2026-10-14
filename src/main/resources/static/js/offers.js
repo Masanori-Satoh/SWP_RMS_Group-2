@@ -1561,9 +1561,13 @@ function openDirectorDetailModal(id) {
                 if (cvLink && cvEmpty) {
                     const cvUrl = typeof detail.appliedCvUrl === 'string' ? detail.appliedCvUrl.trim() : '';
                     const isSafeCvUrl = /^(https?:\/\/|\/)/i.test(cvUrl);
-                    cvLink.style.display = isSafeCvUrl ? 'inline-flex' : 'none';
-                    cvLink.href = isSafeCvUrl ? cvUrl : '#';
-                    cvEmpty.style.display = isSafeCvUrl ? 'none' : 'inline';
+                    const appUrl = detail.applicationId ? ('/applications/' + detail.applicationId) : '';
+                    const targetUrl = appUrl || (isSafeCvUrl ? cvUrl : '');
+
+                    cvLink.style.display = targetUrl ? 'inline-flex' : 'none';
+                    cvLink.href = targetUrl || '#';
+                    cvLink.target = '_blank';
+                    cvEmpty.style.display = targetUrl ? 'none' : 'inline';
                 }
 
                 // Section 2: Interview Results

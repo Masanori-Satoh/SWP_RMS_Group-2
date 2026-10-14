@@ -193,12 +193,13 @@
                 <div>
                     <div class="detail-item-label">Hồ sơ CV ứng viên</div>
                     <div class="detail-item-value">
-                        <a th:if="${detail.appliedCvUrl != null and !detail.appliedCvUrl.isBlank()}"
-                           th:href="${detail.appliedCvUrl}" target="_blank" rel="noopener noreferrer"
+                        <a th:if="${detail.applicationId != null or (detail.appliedCvUrl != null and !detail.appliedCvUrl.isBlank())}"
+                           th:href="${detail.applicationId != null ? '/applications/' + detail.applicationId : detail.appliedCvUrl}"
+                           target="_blank" rel="noopener noreferrer"
                            style="color:#166534; font-weight:600; display:inline-flex; align-items:center; gap:6px; text-decoration:none;">
                             <i class="fa-regular fa-file-lines"></i> Xem CV <i class="fa-solid fa-arrow-up-right-from-square" style="font-size:11px;"></i>
                         </a>
-                        <span th:unless="${detail.appliedCvUrl != null and !detail.appliedCvUrl.isBlank()}" style="color:var(--muted); font-size:13px;">Chưa đính kèm</span>
+                        <span th:unless="${detail.applicationId != null or (detail.appliedCvUrl != null and !detail.appliedCvUrl.isBlank())}" style="color:var(--muted); font-size:13px;">Chưa đính kèm</span>
                     </div>
                 </div>
             </div>
