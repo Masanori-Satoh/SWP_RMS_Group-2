@@ -12,6 +12,7 @@ import com.group2.rms.offer.dto.PassedCandidateResponse;
 import com.group2.rms.offer.dto.UpdateOfferRequest;
 import com.group2.rms.offer.entity.OfferApproval;
 import com.group2.rms.offer.entity.OfferProposal;
+import com.group2.rms.notification.constants.NotificationEventType;
 import com.group2.rms.offer.repository.OfferApprovalRepository;
 import com.group2.rms.offer.repository.OfferProposalRepository;
 import com.group2.rms.interview.repository.InterviewFinalResultRepository;
@@ -567,17 +568,19 @@ public class OfferServiceImpl implements OfferService {
         }
 
         if (systemNotificationService != null) {
-            try {
-                systemNotificationService.notifyOfferLetterSent(saved);
-            } catch (Exception ignored) {
-                // Tiếp tục ngay cả khi tạo thông báo in-app lỗi ngầm
-            }
+            systemNotificationService.notifyOfferLetterSent(saved);
         }
 
         if (saved.getApplication() != null) {
             Application application = saved.getApplication();
             application.setApplicationStatus("Offered");
             applicationRepository.save(application);
+            if (systemNotificationService != null && application.getCandidate() != null) {
+                systemNotificationService.publish(application.getCandidate().getAccount(),
+                        NotificationEventType.APPLICATION_STATUS_UPDATED, "Application",
+                        application.getApplicationId(), "/portal/applications",
+                        "APP_STATUS_" + application.getApplicationId() + "_Offered", false);
+            }
         }
 
         return mapToResponse(saved);

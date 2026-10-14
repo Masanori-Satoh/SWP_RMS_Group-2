@@ -54,16 +54,6 @@ public class CandidateOfferServiceImpl implements CandidateOfferService {
         Integer userId = currentUserService.requireUser().getUserId();
         List<OfferProposal> visibleOffers = offers.findVisibleByUserId(userId, CANDIDATE_VISIBLE_STATUSES);
 
-        if (systemNotificationService != null) {
-            for (OfferProposal o : visibleOffers) {
-                if (SENT.equals(o.getOfferStatus())) {
-                    try {
-                        systemNotificationService.notifyOfferLetterSent(o);
-                    } catch (Exception ignored) {}
-                }
-            }
-        }
-
         return visibleOffers.stream()
                 .map(CandidateOfferServiceImpl::toResponse)
                 .toList();
@@ -77,9 +67,7 @@ public class CandidateOfferServiceImpl implements CandidateOfferService {
                 .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy thư mời nhận việc."));
 
         if (systemNotificationService != null) {
-            try {
-                systemNotificationService.markOfferNotificationRead(userId, offerId);
-            } catch (Exception ignored) {}
+            systemNotificationService.markOfferNotificationRead(userId, offerId);
         }
 
         return toDetailResponse(offer);
@@ -113,12 +101,8 @@ public class CandidateOfferServiceImpl implements CandidateOfferService {
         }
         applicationStatusService.onOfferAnswered(offer.getApplication().getApplicationId(), accepted);
         if (systemNotificationService != null) {
-            try {
-                systemNotificationService.markOfferNotificationRead(userId, offerId);
-            } catch (Exception ignored) {}
-            try {
-                systemNotificationService.notifyOfferResponseFromCandidate(offer, accepted, cleanReason);
-            } catch (Exception ignored) {}
+            systemNotificationService.markOfferNotificationRead(userId, offerId);
+            systemNotificationService.notifyOfferResponseFromCandidate(offer, accepted, cleanReason);
         }
         return offer.getApplication().getJobPosting().getPostingTitle();
     }
