@@ -170,7 +170,7 @@
         </div>
       </div>
 
-      <div class="grid-3-col">
+      <div class="grid-2-col">
         <div class="form-group">
           <label class="form-label form-label--required" for="probationDays">Thời gian thử việc (ngày)</label>
           <input type="number" id="probationDays" th:field="*{probationDays}" class="form-input" min="1" max="365" placeholder="60" required>
@@ -178,6 +178,18 @@
              th:text="${#strings.contains(#fields.errors('probationDays')[0], 'Failed to convert') ? 'Thời gian thử việc phải là số ngày hợp lệ.' : #fields.errors('probationDays')[0]}"></p>
         </div>
 
+        <div class="form-group">
+          <label class="form-label form-label--required" for="responsePeriodDays">Thời hạn phản hồi (ngày)</label>
+          <input type="number" id="responsePeriodDays" th:field="*{responsePeriodDays}" class="form-input" min="1" max="60" placeholder="5" required>
+          <div class="form-hint" style="font-size:12px; margin-top:4px; color:var(--muted);">
+            Hạn phản hồi = Thời điểm HR phát hành + số ngày này (mặc định 5 ngày).
+          </div>
+          <p class="form-error" th:if="${#fields.hasErrors('responsePeriodDays')}"
+             th:text="${#strings.contains(#fields.errors('responsePeriodDays')[0], 'Failed to convert') ? 'Thời hạn phản hồi phải là số ngày hợp lệ (1-60 ngày).' : #fields.errors('responsePeriodDays')[0]}"></p>
+        </div>
+      </div>
+
+      <div class="grid-2-col">
         <div class="form-group">
           <label class="form-label form-label--required" for="expectedStartDate">Ngày bắt đầu dự kiến</label>
           <input type="date" id="expectedStartDate" th:field="*{expectedStartDate}" class="form-input" max="2099-12-31" required>

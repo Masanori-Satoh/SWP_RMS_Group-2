@@ -493,11 +493,18 @@
                     </div>
                 </div>
 
-                <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:16px;">
+                <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px;">
                     <div class="form-group">
                         <label>Thời gian thử việc (ngày) <span style="color:var(--error, #ef4444);">*</span></label>
                         <input type="number" id="editProbationDays" class="input-control" min="1" placeholder="VD: 60" required>
                     </div>
+                    <div class="form-group">
+                        <label>Thời hạn phản hồi (ngày) <span style="color:var(--error, #ef4444);">*</span></label>
+                        <input type="number" id="editResponsePeriodDays" class="input-control" min="1" max="60" placeholder="VD: 5" required>
+                    </div>
+                </div>
+
+                <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px;">
                     <div class="form-group">
                         <label>Ngày bắt đầu dự kiến <span style="color:var(--error, #ef4444);">*</span></label>
                         <input type="date" id="editStartDate" class="input-control" required>

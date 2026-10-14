@@ -610,6 +610,13 @@ function renderDetailModalHtml(d) {
                     <div class="detail-item-label">Địa điểm làm việc</div>
                     <div class="detail-item-value">${workLocation}</div>
                 </div>
+                <div>
+                    <div class="detail-item-label">Thời hạn phản hồi offer</div>
+                    <div class="detail-item-value">
+                        <span style="font-weight:700; color:var(--brand-dark);">${d.responsePeriodDays || 5} ngày</span>
+                        ${d.responseDeadline ? `<div style="font-size:12px; color:var(--muted); margin-top:2px;">Hạn chót: <strong style="color:var(--ink);">${formatOfferDateTime(d.responseDeadline)}</strong></div>` : ''}
+                    </div>
+                </div>
             </div>
 
             <div style="margin-top:14px;">
@@ -717,6 +724,7 @@ function openEditOfferModal(offerId) {
             setVal('editProposedSalary', d.proposedSalary);
             setVal('editProbationSalary', d.probationSalary);
             setVal('editProbationDays', d.probationDays || 60);
+            setVal('editResponsePeriodDays', d.responsePeriodDays || 5);
             setVal('editStartDate', d.expectedStartDate);
             setVal('editWorkLocation', d.workLocation);
             setVal('editBenefits', d.benefitsPackage);
@@ -808,6 +816,8 @@ function submitUpdateOffer(isDraft) {
     const probation = probationEl ? parseFloat(probationEl.value) : NaN;
     const probationDaysEl = document.getElementById('editProbationDays');
     const probationDays = probationDaysEl ? parseInt(probationDaysEl.value, 10) : NaN;
+    const responsePeriodEl = document.getElementById('editResponsePeriodDays');
+    const responsePeriodDays = responsePeriodEl ? parseInt(responsePeriodEl.value, 10) : 5;
     const startDateEl = document.getElementById('editStartDate');
     const startDate = startDateEl ? startDateEl.value : '';
     const workLocEl = document.getElementById('editWorkLocation');
@@ -844,6 +854,11 @@ function submitUpdateOffer(isDraft) {
         return;
     }
 
+    if (isNaN(responsePeriodDays) || responsePeriodDays < 1 || responsePeriodDays > 60) {
+        showToast('Thời hạn phản hồi phải là số ngày hợp lệ (từ 1 đến 60 ngày).', 'warning');
+        return;
+    }
+
     if (!startDate) {
         showToast('Ngày bắt đầu dự kiến không được để trống.', 'warning');
         return;
@@ -863,6 +878,7 @@ function submitUpdateOffer(isDraft) {
         proposedSalary: proposed,
         probationSalary: probation,
         probationDays: probationDays,
+        responsePeriodDays: responsePeriodDays,
         expectedStartDate: startDate,
         workLocation: workLocation,
         benefitsPackage: benefits,
