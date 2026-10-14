@@ -15,9 +15,10 @@ import com.group2.rms.core.exception.ResourceNotFoundException;
 import com.group2.rms.core.web.TimelineItem;
 import com.group2.rms.requisition.entity.JobPosting;
 import com.group2.rms.requisition.entity.JobRequisition;
+import com.group2.rms.requisition.repository.JobPostingRepository;
 import com.group2.rms.user.entity.User;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -27,227 +28,229 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.EnumMap;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Objects;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
 /**
- * Đọc dữ liệu cho danh sách hồ sơ (5.1.22) và chi tiết hồ sơ (5.1.23), trong
- * phạm vi người xem được phép.
+ * Đọc dữ liệu cho danh sách hồ sơ (5.1.22) và chi tiết hồ sơ (5.1.23), trong phạm vi người xem được phép.
  */
 @Service
 @RequiredArgsConstructor
 public class ApplicationPipelineService {
 
-        private static final Locale VIETNAMESE = Locale.of("vi", "VN");
+    private static final Locale VIETNAMESE = Locale.of("vi", "VN");
+    private static final int FACTS_BATCH = 2000;
 
-        private final ApplicationRepository applications;
-        private final AIScreeningResultRepository screeningResults;
-        private final ApplicationReviewRepository reviews;
-        private final ApplicationAccess access;
-        private final CvStorage cvStorage;
+    private final ApplicationRepository applications;
+    private final AIScreeningResultRepository screeningResults;
+    private final ApplicationReviewRepository reviews;
+    private final ApplicationAccess access;
+    private final CvStorage cvStorage;
+    private final JobPostingRepository jobPostings;
 
-        /**
-         * Thứ tự do {@code search.sort()} quyết định; sort trong {@code pageable} bị bỏ
-         * qua.
-         */
-        @Transactional(readOnly = true)
-        public ApplicationListResponse list(ApplicationSearch search, Pageable pageable) {
-                User actor = access.actor();
-                ApplicationScope scope = access.scopeOf(actor);
-                ApplicationSearch filter = search.normalized();
+    /**
+     * Một trang danh sách kèm số hồ sơ mỗi giai đoạn. Thứ tự do {@code search.sort()} quyết định; sort trong
+     * {@code pageable} bị bỏ qua.
+     * <p>
+     * Giai đoạn tính bằng {@link ApplicationProgressResolver} (cùng chỗ tính nhãn), không viết lại bằng SQL, để số
+     * đếm và nhãn không bao giờ lệch nhau. Vì vậy mỗi lần mở trang phải đọc dữ kiện của <b>mọi</b> đơn trong phạm vi
+     * và bộ lọc rồi mới đếm, lọc giai đoạn và cắt trang trong Java: ổn với vài nghìn đơn; lớn hơn nhiều thì cần
+     * xem lại (ví dụ lưu sẵn giai đoạn).
+     */
+    @Transactional(readOnly = true)
+    public ApplicationListResponse list(ApplicationSearch search, Pageable pageable) {
+        User actor = access.actor();
+        ApplicationScope scope = access.scopeOf(actor);
+        ApplicationSearch filter = search.normalized();
 
-                Page<ApplicationPipelineResponse> rows = applications.searchPipeline(
-                                scope.allDepartments(), scope.managerUserId(), scope.departmentId(),
-                                scope.forwardedOnly(),
-                                filter.jobPostingId(), filter.status(), filter.keyword(), filter.sort(),
-                                PageRequest.of(pageable.getPageNumber(), pageable.getPageSize()));
-                Map<Integer, ApplicationProgressFacts> facts = progressFacts(
-                                rows.map(ApplicationPipelineResponse::applicationId).getContent());
-                LocalDateTime now = LocalDateTime.now();
-                Page<ApplicationPipelineResponse> page = rows.map(row -> {
-                        ApplicationProgressResponse progress = progress(row.applicationId(), row.applicationStatus(),
-                                        facts, now);
-                        return row.withProgress(progress,
-                                        access.canScheduleInterview(actor, progress),
-                                        access.canCreateOffer(actor, progress));
-                });
+        List<Integer> ids = applications.findPipelineIds(
+                scope.allDepartments(), scope.managerUserId(), scope.departmentId(), scope.forwardedOnly(),
+                filter.jobPostingId(), filter.status(), filter.keyword(), filter.sort());
+        Map<Integer, ApplicationProgressFacts> facts = progressFacts(ids);
+        LocalDateTime now = LocalDateTime.now();
+        Map<Integer, ApplicationProgressResponse> progress = new LinkedHashMap<>();
+        ids.stream().filter(facts::containsKey)
+                .forEach(id -> progress.put(id, progress(facts.get(id), now)));
 
-                return new ApplicationListResponse(page,
-                                applications.findPostingOptions(scope.allDepartments(), scope.managerUserId(),
-                                                scope.departmentId(),
-                                                scope.forwardedOnly()),
-                                filter, scope.forwardedOnly(),
-                                actor.getRole() == null ? null : actor.getRole().getRoleName());
+        Map<ApplicationStage, Long> stageCounts = new EnumMap<>(ApplicationStage.class);
+        for (ApplicationStage stage : ApplicationStage.values()) {
+            stageCounts.put(stage, 0L);
         }
+        progress.values().forEach(p -> stageCounts.merge(p.stage(), 1L, Long::sum));
 
-        @Transactional(readOnly = true)
-        public ApplicationDetailResponse detail(Integer applicationId) {
-                //get information of user 
-                User actor = access.actor();
-                //check if appilication is not exist in db
-                Application application = applications.findDetailById(applicationId)
-                                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy hồ sơ ứng tuyển."));
-                //check if user can view application
-                access.requireView(actor, application);
+        ApplicationStage stage = filter.stageFilter();
+        List<Integer> matching = progress.entrySet().stream()
+                .filter(entry -> stage == null || entry.getValue().stage() == stage)
+                .map(Map.Entry::getKey).toList();
+        Pageable pageRequest = PageRequest.of(pageable.getPageNumber(), pageable.getPageSize());
+        List<Integer> pageIds = matching.stream()
+                .skip(pageRequest.getOffset()).limit(pageRequest.getPageSize()).toList();
+        List<ApplicationPipelineResponse> rows = pageRows(pageIds).stream().map(row -> {
+            ApplicationProgressResponse rowProgress = progress.get(row.applicationId());
+            return row.withProgress(rowProgress,
+                    access.canScheduleInterview(actor, rowProgress), access.canCreateOffer(actor, rowProgress));
+        }).toList();
 
-                Candidate candidate = application.getCandidate();
-                User account = candidate.getAccount();
-                JobPosting job = application.getJobPosting();
-                JobRequisition requisition = job.getRequisition();
-                String status = application.getApplicationStatus();
-                List<AIScreeningResult> scores = screeningResults
-                                .findByApplication_ApplicationIdOrderByAiScreeningIdDesc(applicationId);
-                AIScreeningResult latest = scores.isEmpty() ? null : scores.getFirst();
-                ApplicationProgressResponse progress = progress(applicationId, status,
-                                progressFacts(List.of(applicationId)), LocalDateTime.now());
-                String currentStepLabel;
-                //check if HR recommend
-                if ("HM_Suggested".equalsIgnoreCase(status)) {
-                        currentStepLabel = "HR liên hệ ứng viên để xác nhận nguyện vọng ứng tuyển.";
+        // Lấy thẳng từ bảng tin: tin chưa có hồ sơ nào (mở từ trang tin) không nằm trong danh sách lựa chọn.
+        String postingTitle = filter.jobPostingId() == null ? null
+                : jobPostings.findById(filter.jobPostingId()).map(JobPosting::getPostingTitle).orElse(null);
+        return new ApplicationListResponse(new PageImpl<>(rows, pageRequest, matching.size()), stageCounts,
+                applications.findPostingOptions(scope.allDepartments(), scope.managerUserId(), scope.departmentId(),
+                        scope.forwardedOnly()),
+                filter, postingTitle, access.canOpenJobPosting(actor), scope.forwardedOnly(),
+                actor.getRole() == null ? null : actor.getRole().getRoleName());
+    }
 
-                }
-                //check if job posting is close 
-                else if ("Rejected".equals(status) && applications.countPostingClosure(applicationId) > 0) {
-                        currentStepLabel = "Đóng đợt tuyển dụng";
-                } else {
-                        currentStepLabel = ApplicationStatusLabels.currentStep(status,
-                                        requisition.getDepartment() == null ? null
-                                                        : requisition.getDepartment().getDepartmentName()); //
-                }
+    @Transactional(readOnly = true)
+    public ApplicationDetailResponse detail(Integer applicationId) {
+        User actor = access.actor();
+        Application application = applications.findDetailById(applicationId)
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy hồ sơ ứng tuyển."));
+        access.requireView(actor, application);
 
-                return new ApplicationDetailResponse(
-                                application.getApplicationId(),
-                                candidate.getCandidateId(),
-                                candidate.isPotential(),
-                                account.getFullName(),
-                                account.getEmail(),
-                                account.getPhoneNumber(),
-                                candidate.getLinkedInUrl(),
-                                candidate.getPortfolioUrl(),
-                                requisition.getRequisitionId(),
-                                requisition.getRequisitionCode(),
-                                job.getJobPostingId(),
-                                job.getPostingTitle(),
-                                requisition.getDepartment() == null ? null
-                                                : requisition.getDepartment().getDepartmentName(),
-                                application.getSubmissionDate(),
-                                status,
-                                progress.detailLabel(),
-                                progress.badge(),
-                                latest == null ? null : latest.getAiMatchScore(),
-                                latest == null ? null : latest.getScreenedAt(),
-                                timeline(application, account, scores),
-                                currentStepLabel,
-                                new ApplicationDetailResponse.Actions(
-                                                access.canReview(actor, application),
-                                                access.canRescreen(actor, application),
-                                                access.canScheduleInterview(actor, progress),
-                                                access.canCreateOffer(actor, progress),
-                                                access.canOpenJobPosting(actor)),
-                                actor.getRole() == null ? null : actor.getRole().getRoleName());
+        Candidate candidate = application.getCandidate();
+        User account = candidate.getAccount();
+        JobPosting job = application.getJobPosting();
+        JobRequisition requisition = job.getRequisition();
+        String status = application.getApplicationStatus();
+        List<AIScreeningResult> scores = screeningResults
+                .findByApplication_ApplicationIdOrderByAiScreeningIdDesc(applicationId);
+        AIScreeningResult latest = scores.isEmpty() ? null : scores.getFirst();
+        ApplicationProgressFacts facts = knownFacts(applicationId, status, progressFacts(List.of(applicationId)));
+        ApplicationProgressResponse progress = progress(facts, LocalDateTime.now());
+
+        return new ApplicationDetailResponse(
+                application.getApplicationId(),
+                candidate.getCandidateId(), candidate.isPotential(),
+                account.getFullName(), account.getEmail(), account.getPhoneNumber(),
+                candidate.getLinkedInUrl(), candidate.getPortfolioUrl(),
+                requisition.getRequisitionId(), requisition.getRequisitionCode(),
+                job.getJobPostingId(), job.getPostingTitle(),
+                requisition.getDepartment() == null ? null : requisition.getDepartment().getDepartmentName(),
+                application.getSubmissionDate(),
+                status, progress.detailLabel(), progress.badge(),
+                latest == null ? null : latest.getAiMatchScore(),
+                latest == null ? null : latest.getScreenedAt(),
+                timeline(application, account, scores),
+                ApplicationStepper.items(progress),
+                facts.interviewId(),
+                new ApplicationDetailResponse.Actions(
+                        access.canReview(actor, application),
+                        access.canRescreen(actor, application),
+                        access.canScheduleInterview(actor, progress),
+                        access.canCreateOffer(actor, progress),
+                        access.canOpenJobPosting(actor)),
+                actor.getRole() == null ? null : actor.getRole().getRoleName());
+    }
+
+    @Transactional(readOnly = true)
+    public boolean closedByPosting(Integer id) {
+        Application application = applications.findDetailById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy hồ sơ."));
+        access.requireView(access.actor(), application);
+        return applications.countPostingClosure(id) > 0;
+    }
+
+    /** Phân biệt đóng đợt thật (audit) với hồ sơ bị loại riêng lẻ. */
+    private ApplicationProgressResponse progress(ApplicationProgressFacts facts, LocalDateTime now) {
+        if ("Rejected".equals(facts.applicationStatus()) && applications.countPostingClosure(facts.applicationId()) > 0) {
+            ApplicationProgressStep step = ApplicationProgressStep.POSTING_CLOSED;
+            return new ApplicationProgressResponse(step.stage(), step, step.label(), step.owner(), step.tone());
         }
+        return ApplicationProgressResolver.resolve(facts, now);
+    }
 
-        @Transactional(readOnly = true)
-        public boolean closedByPosting(Integer id) {
-                var app = applications.findDetailById(id).orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy hồ sơ."));
-                access.requireView(access.actor(), app);
-                return applications.countPostingClosure(id) > 0;
+    /**
+     * CV của đơn, cùng quyền với trang chi tiết. {@code AppliedCvUrl} có 3 dạng: {@code local:{key}} (đơn nộp qua web),
+     * {@code /samples/cv/...} (seed), {@code http(s)://...} (dịch vụ lưu file ngoài sau này).
+     */
+    @Transactional(readOnly = true)
+    public ApplicationCv cv(Integer applicationId) {
+        User actor = access.actor();
+        Application application = applications.findDetailById(applicationId)
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy hồ sơ ứng tuyển."));
+        access.requireView(actor, application);
+
+        String url = application.getAppliedCvUrl();
+        if (url != null && url.startsWith(LocalCvStorage.URL_PREFIX)) {
+            return ApplicationCv.file(cvStorage.load(url.substring(LocalCvStorage.URL_PREFIX.length())));
         }
-
-        /**
-         * CV của đơn, cùng quyền với trang chi tiết. {@code AppliedCvUrl} có 3 dạng:
-         * {@code local:{key}} (đơn nộp qua web),
-         * {@code /samples/cv/...} (seed), {@code http(s)://...} (dịch vụ lưu file ngoài
-         * sau này).
-         */
-        @Transactional(readOnly = true)
-        public ApplicationCv cv(Integer applicationId) {
-                User actor = access.actor();
-                Application application = applications.findDetailById(applicationId)
-                                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy hồ sơ ứng tuyển."));
-                access.requireView(actor, application);
-
-                String url = application.getAppliedCvUrl();
-                if (url != null && url.startsWith(LocalCvStorage.URL_PREFIX)) {
-                        return ApplicationCv.file(cvStorage.load(url.substring(LocalCvStorage.URL_PREFIX.length())));
-                }
-                if (url != null && (url.startsWith("/") && !url.startsWith("//")
-                                || url.startsWith("https://") || url.startsWith("http://"))) {
-                        return ApplicationCv.redirect(url);
-                }
-                throw new ResourceNotFoundException("Không tìm thấy CV của hồ sơ này.");
+        if (url != null && (url.startsWith("/") && !url.startsWith("//")
+                || url.startsWith("https://") || url.startsWith("http://"))) {
+            return ApplicationCv.redirect(url);
         }
+        throw new ResourceNotFoundException("Không tìm thấy CV của hồ sơ này.");
+    }
 
-        /** Dữ kiện trạng thái chi tiết theo id đơn, một câu query cho cả trang. */
-        private Map<Integer, ApplicationProgressFacts> progressFacts(List<Integer> applicationIds) {
-                if (applicationIds.isEmpty()) {
-                        return Map.of();
-                }
-                return applications.findProgressFacts(applicationIds).stream()
-                                .map(ApplicationProgressFacts::from)
-                                .collect(Collectors.toMap(ApplicationProgressFacts::applicationId,
-                                                Function.identity()));
+    /**
+     * Dữ kiện trạng thái chi tiết theo id đơn, mỗi lô {@value #FACTS_BATCH} id một câu query (giới hạn ~2100 tham số
+     * của SQL Server). Đơn vừa bị xóa giữa hai câu query thì không có trong kết quả.
+     */
+    private Map<Integer, ApplicationProgressFacts> progressFacts(List<Integer> applicationIds) {
+        Map<Integer, ApplicationProgressFacts> facts = new HashMap<>();
+        for (int from = 0; from < applicationIds.size(); from += FACTS_BATCH) {
+            applications.findProgressFacts(applicationIds.subList(from,
+                            Math.min(from + FACTS_BATCH, applicationIds.size()))).stream()
+                    .map(ApplicationProgressFacts::from)
+                    .forEach(row -> facts.put(row.applicationId(), row));
         }
+        return facts;
+    }
 
-        /**
-         * Thiếu dữ kiện (không xảy ra với đơn vừa đọc) thì tính theo riêng trạng thái
-         * đơn, coi như chưa có lịch, offer.
-         */
-        private ApplicationProgressResponse progress(Integer applicationId, String status,
-                        Map<Integer, ApplicationProgressFacts> facts,
-                        LocalDateTime now) {
-                ApplicationProgressFacts known = facts.getOrDefault(applicationId,
-                                new ApplicationProgressFacts(applicationId, status, false, null, null, 0, 0, null,
-                                                null));
-                if ("Rejected".equals(status) && applications.countPostingClosure(applicationId) > 0) {
-                        var step = ApplicationProgressStep.POSTING_CLOSED;
-                        return new ApplicationProgressResponse(step.stage(), step, step.label(), step.owner(), step.tone());
-                }
-                return ApplicationProgressResolver.resolve(known, now);
+    /** Các dòng của một trang, đúng thứ tự của {@code pageIds}. */
+    private List<ApplicationPipelineResponse> pageRows(List<Integer> pageIds) {
+        if (pageIds.isEmpty()) {
+            return List.of();
         }
+        Map<Integer, ApplicationPipelineResponse> byId = applications.findPipelineRows(pageIds).stream()
+                .collect(Collectors.toMap(ApplicationPipelineResponse::applicationId, Function.identity()));
+        return pageIds.stream().map(byId::get).filter(Objects::nonNull).toList();
+    }
 
-        /**
-         * Hành trình của đơn, mới nhất trước: nộp, AI chấm, các lượt duyệt, lịch và kết
-         * quả phỏng vấn, offer.
-         */
-        private List<TimelineItem> timeline(Application application, User account, List<AIScreeningResult> scores) {
-                Integer id = application.getApplicationId();
-                List<TimelineItem> items = new ArrayList<>();
-                items.add(new TimelineItem(application.getSubmissionDate(), "Nộp hồ sơ", account.getFullName(), null,
-                                "neutral"));
-                scores.forEach(score -> items.add(new TimelineItem(score.getScreenedAt(),
-                                "AI chấm điểm: " + formatScore(score.getAiMatchScore()), "Hệ thống", null, "brand")));
-                reviews.findWithReviewerByApplicationId(id).forEach(review -> items.add(new TimelineItem(
-                                review.getReviewedAt(),
-                                ApplicationStatusLabels.reviewerRoleLabel(review.getReviewerRole()) + ": "
-                                                + ApplicationStatusLabels.decisionLabel(review.getDecision()),
-                                review.getReviewer().getFullName(), review.getComments(),
-                                ApplicationStatusLabels.decisionTone(review.getDecision()))));
-                applications.findInterviewEvents(id).forEach(event -> items.add(new TimelineItem(
-                                event.getAt(), "Lịch phỏng vấn: " + event.getStatus(), null, null, "neutral")));
-                applications.findInterviewResultEvents(id).forEach(event -> items.add(new TimelineItem(
-                                event.getAt(),
-                                "Kết quả phỏng vấn: " + ApplicationStatusLabels.interviewResultLabel(event.getStatus()),
-                                null, null, ApplicationStatusLabels.interviewResultTone(event.getStatus()))));
-                applications.findOfferEvents(id).forEach(event -> items.add(new TimelineItem(
-                                event.getAt(), "Offer: " + event.getStatus(), null, null, "success")));
-                JobPosting job = application.getJobPosting();
-                // check if job posting has exist and status is closed
-                if (job != null && "Closed".equalsIgnoreCase(job.getPostingStatus())
-                                && "Rejected".equalsIgnoreCase(application.getApplicationStatus())) {
-                        LocalDateTime closedAt = job.getUpdatedAt() != null ? job.getUpdatedAt()
-                                        : application.getUpdatedAt();
-                        items.add(new TimelineItem(closedAt, "Đóng đợt tuyển dụng", "Hệ thống",
-                                        "Đợt tuyển dụng đã kết thúc, hồ sơ dừng xử lý", "neutral"));
-                }
-                items.sort(Comparator.comparing(TimelineItem::at, Comparator.nullsLast(Comparator.reverseOrder())));
-                return items;
-        }
+    /** Thiếu dữ kiện (không xảy ra với đơn vừa đọc) thì tính theo riêng trạng thái đơn, coi như chưa có lịch, offer. */
+    private static ApplicationProgressFacts knownFacts(Integer applicationId, String status,
+                                                       Map<Integer, ApplicationProgressFacts> facts) {
+        return facts.getOrDefault(applicationId,
+                new ApplicationProgressFacts(applicationId, status, false, null, null, null, 0, 0, null, null));
+    }
 
-        private static String formatScore(BigDecimal score) {
-                return String.format(VIETNAMESE, "%.2f", score);
+    /** Hành trình của đơn, mới nhất trước: nộp, AI chấm, các lượt duyệt, lịch và kết quả phỏng vấn, offer. */
+    private List<TimelineItem> timeline(Application application, User account, List<AIScreeningResult> scores) {
+        Integer id = application.getApplicationId();
+        List<TimelineItem> items = new ArrayList<>();
+        items.add(new TimelineItem(application.getSubmissionDate(), "Nộp hồ sơ", account.getFullName(), null,
+                "neutral"));
+        scores.forEach(score -> items.add(new TimelineItem(score.getScreenedAt(),
+                "AI chấm điểm: " + formatScore(score.getAiMatchScore()), "Hệ thống", null, "brand")));
+        reviews.findWithReviewerByApplicationId(id).forEach(review -> items.add(new TimelineItem(
+                review.getReviewedAt(),
+                ApplicationStatusLabels.reviewerRoleLabel(review.getReviewerRole()) + ": "
+                        + ApplicationStatusLabels.decisionLabel(review.getDecision()),
+                review.getReviewer().getFullName(), review.getComments(),
+                ApplicationStatusLabels.decisionTone(review.getDecision()))));
+        applications.findInterviewEvents(id).forEach(event -> items.add(new TimelineItem(
+                event.getAt(), "Lịch phỏng vấn: " + event.getStatus(), null, null, "neutral")));
+        applications.findInterviewResultEvents(id).forEach(event -> items.add(new TimelineItem(
+                event.getAt(), "Kết quả phỏng vấn: " + ApplicationStatusLabels.interviewResultLabel(event.getStatus()),
+                null, null, ApplicationStatusLabels.interviewResultTone(event.getStatus()))));
+        applications.findOfferEvents(id).forEach(event -> items.add(new TimelineItem(
+                event.getAt(), "Offer: " + event.getStatus(), null, null, "success")));
+        if ("Rejected".equals(application.getApplicationStatus()) && applications.countPostingClosure(id) > 0) {
+            items.add(new TimelineItem(application.getUpdatedAt(), "Đóng đợt tuyển dụng", "Hệ thống",
+                    "Đợt tuyển dụng đã kết thúc, hồ sơ dừng xử lý", "neutral"));
         }
+        items.sort(Comparator.comparing(TimelineItem::at, Comparator.nullsLast(Comparator.reverseOrder())));
+        return items;
+    }
+
+    private static String formatScore(BigDecimal score) {
+        return String.format(VIETNAMESE, "%.2f", score);
+    }
 }

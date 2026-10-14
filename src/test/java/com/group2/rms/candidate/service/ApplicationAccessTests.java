@@ -164,7 +164,7 @@ class ApplicationAccessTests {
     @Test
     void hiringManagerPassedWithoutScheduleOffersSchedulingOnly() {
         ApplicationProgressResponse progress = ApplicationProgressResolver.resolve(
-                new ApplicationProgressFacts(APPLICATION_ID, "HM_Passed", false, null, null, 0, 0, null, null),
+                new ApplicationProgressFacts(APPLICATION_ID, "HM_Passed", false, null, null, null, 0, 0, null, null),
                 LocalDateTime.now());
 
         assertTrue(access.canScheduleInterview(hr, progress));

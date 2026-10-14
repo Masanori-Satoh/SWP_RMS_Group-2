@@ -25,6 +25,8 @@ import java.util.Set;
  * <pre>
  *   HM_Passed --xếp lịch / chốt Đạt--> Interviewing
  *   HM_Passed, Interviewing --chốt Không đạt--> Rejected
+ *   Offered --ứng viên nhận offer--> Hired
+ *   Offered --ứng viên từ chối offer--> Rejected
  * </pre>
  */
 @Service
@@ -35,6 +37,7 @@ public class ApplicationStatusService {
 
     static final Set<String> BEFORE_INTERVIEW = Set.of("HM_Passed");
     static final Set<String> IN_INTERVIEW = Set.of("HM_Passed", "Interviewing");
+    static final Set<String> OFFERED = Set.of("Offered");
 
     private final ApplicationRepository applications;
     private final JobPostingRepository jobs;
@@ -70,6 +73,11 @@ public class ApplicationStatusService {
         } else {
             move(applicationId, IN_INTERVIEW, ApplicationReviewService.REJECTED);
         }
+    }
+
+    /** Ứng viên trả lời offer đã gửi: nhận thì {@code Hired}, từ chối thì {@code Rejected}. */
+    public void onOfferAnswered(Integer applicationId, boolean accepted) {
+        move(applicationId, OFFERED, accepted ? "Hired" : ApplicationReviewService.REJECTED);
     }
 
     private void move(Integer applicationId, Set<String> from, String to) {

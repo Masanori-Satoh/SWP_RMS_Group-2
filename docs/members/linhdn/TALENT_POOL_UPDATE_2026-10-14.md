@@ -201,3 +201,107 @@ Chuẩn bị HR và HM Active, Candidate có CV PDF thật đã nộp ở Job A,
 - CV /samples hoặc URL ngoài có thể không còn file. Local/static kiểm tra tồn tại; URL ngoài được giữ tương thích nhưng không tự fetch để kiểm tra dịch vụ ngoài.
 - SMTP hoạt động thực tế cần người dùng cấu hình và kiểm tra với hộp thư thử nghiệm; các test dùng mock không chứng minh mail đã tới inbox.
 - Offer.DeclineReason mới không thuộc phần triển khai Talent Pool đợt này.
+
+## Resolve conflict sau khi người dùng pull main — 14/10/2026
+
+### Phạm vi đợt resolve
+
+- Nhánh đang làm: `feature/talent-pool-first-sprint`.
+- HEAD lúc bắt đầu: `92fb06ebc15fe73c5689dd9a74c7e8a4e20fd725`.
+- Phía được pull vào: `d1f1144ddb2bcb5e5bf569215bb34a40526107bf` (`MERGE_HEAD`).
+- Người dùng yêu cầu chỉ fix conflict: không checkout main, không tạo merge commit, không push. Merge đang chờ hoàn tất là trạng thái từ lần pull của người dùng.
+- Không sửa schema, seed, pom, cấu hình ứng dụng hoặc cấu hình VS Code. Các thay đổi UI/CSS/Offer tự merge từ main được giữ nguyên.
+- Snapshot nguyên bản của 7 file có marker được giữ trong `tmp/talent-pool/conflict-backup/` để đối chiếu; đây là dữ liệu kiểm tra, không phải source triển khai.
+
+### 7 file conflict và cách ghép
+
+| File | Giữ từ main | Giữ từ nhánh Talent Pool / lý do |
+|---|---|---|
+| `src/main/java/com/group2/rms/candidate/controller/ApplicationPipelineController.java` | `stageItems()`, `stageHref()`, bộ lọc và URL thanh giai đoạn | `TalentPoolService`, `talentNotes`, `closedByPosting` để màn chi tiết vẫn có ghi chú và gửi lại email |
+| `src/main/java/com/group2/rms/candidate/dto/ApplicationPipelineResponse.java` | `ownerLabel` và `withProgress()` có người xử lý | Bổ sung `isPotential`; projection và `withProgress()` phải giữ cờ này, không reset thành false |
+| `src/main/java/com/group2/rms/candidate/repository/ApplicationRepository.java` | `findPipelineIds()`, `findPipelineRows()`, `LATEST_SCORE_JOIN`, projection `interviewId` | Giữ `FORMAL_FILTER`, scope của đề xuất HM và toàn bộ query Talent Pool; projection dòng danh sách đọc thêm `c.isPotential` |
+| `src/main/java/com/group2/rms/candidate/service/ApplicationPipelineService.java` | Tính số lượng/lọc theo giai đoạn, paging, batch 2.000 ID, `ApplicationStepper`, link kết quả phỏng vấn | Ghép `candidateId`, `isPotential`, `closedByPosting()`, trạng thái/timeline đóng đợt dựa trên audit thật |
+| `src/main/java/com/group2/rms/candidate/service/ApplicationStatusLabels.java` | Main đã thay `currentStep()` bằng stepper; bỏ method cũ sau khi search xác nhận không còn call site | Giữ trạng thái/nhãn/badge `HM_Suggested` để HR biết cần liên hệ ứng viên |
+| `src/main/resources/templates/candidate/application-detail.html` | Thanh tiến độ và khối Thao tác mới, duyệt CV, lập lịch, xem kết quả, tạo Offer, liên hệ và AI | Chỉ bổ sung khối tiềm năng, ghi chú, HR xác nhận/từ chối và Resend. Không khôi phục khối Bước tiếp theo cũ vì sẽ lặp form duyệt và dùng field DTO đã bị main thay thế |
+| `src/test/java/com/group2/rms/candidate/ApplicationPipelineWebTests.java` | Toàn bộ test giai đoạn/stepper/link kết quả mới | Giữ test Talent Pool/quyền/CSRF/thứ tự lưu trước SMTP; fixture dùng đồng thời trường của cả hai phía |
+
+Diff template so với main sau resolve: **31 dòng thêm, 0 dòng xóa**. Không xóa nội dung giao diện mới của đồng đội. `searchPipeline()` cũ được main thay bằng hai query ID/dòng; search lại source không còn call site cũ.
+
+### 4 file cần đồng bộ phụ thuộc sau khi ghép
+
+Đây là lỗi tương thích được test phát hiện khi kết hợp hai phía, không phải refactor module khác.
+
+| File | Sửa gì | Vì sao |
+|---|---|---|
+| `src/main/java/com/group2/rms/candidate/service/ApplicationStepper.java` | Thêm case `POSTING_CLOSED` → điểm tối thiểu `APPLIED` | Enum nhánh này có bước đóng đợt, stepper mới của main chưa xử lý nên ném `IllegalStateException`. Đóng đợt có thể ở bất kỳ vòng nào; không tự khẳng định các vòng sau đã đạt. Timeline vẫn giữ lịch sử chi tiết |
+| `src/test/java/com/group2/rms/candidate/service/ApplicationStepperTests.java` | Giữ test cũ, thêm kiểm tra lý do đóng đợt và hai bước APPLIED/CLOSED | Bảo đảm mọi bước dừng được xử lý, không tái xuất hiện lỗi khi render hồ sơ bị dừng |
+| `src/test/java/com/group2/rms/core/web/SidebarRoleWebTests.java` | Thêm mock `TalentPoolService` | Test từ main khởi tạo `ApplicationPipelineController`; constructor của nhánh có thêm Service. Thiếu mock làm Context của web slice lỗi, không phải thiếu Bean runtime |
+| `src/test/java/com/group2/rms/interview/InterviewScheduleFormWebTests.java` | Thêm mock `RecruitmentEmailService`, đổi fixture sang `findEligibleForInterview()` | Controller của nhánh có gửi mail sau lưu và danh sách đơn đủ điều kiện; giữ toàn bộ assertions của test, không comment/bỏ test |
+
+### Verification sau resolve
+
+1. `mvnw.cmd -o "-Dmaven.repo.local=C:\Users\Administrator\.m2\repository" -DskipTests clean test-compile`: **PASS**. Javac biên dịch lại source Java 21 và 65 file test. Log: `tmp/talent-pool/conflict-compile.log`.
+2. Chạy toàn bộ Maven test với `-Dspring.jpa.hibernate.ddl-auto=validate`: **FAIL** — 731 test, 2 failures, 43 errors ở lượt đầu. Log: `tmp/talent-pool/conflict-tests.log`.
+3. Sửa các lỗi tương thích stepper và fixture đã liệt kê, chạy lại bộ hồi quy liên quan: **PASS — 250 test, 0 failures, 0 errors, 0 skipped**. Log: `tmp/talent-pool/conflict-regression.log`.
+4. Bộ hồi quy gồm: `ApplicationPipelineWebTests`, `ApplicationPipelineServiceTests`, `ApplicationAccessTests`, `ApplicationProgressResolverTests`, `ApplicationStepperTests`, `ApplicationStatusServiceTests`, `ApplicationSubmissionServiceTests`, `SidebarRoleWebTests`, `SidebarMenuTests`, `StageBarFragmentTests`, `InterviewScheduleFormWebTests`, `InterviewSchedulingServiceTests`, `CandidateOfferWebTests`, `CandidateOfferServiceTests`, `JobPostingServiceTest`.
+5. Dùng Byte Buddy agent đã có trong Maven cache và `-DforkCount=0` để tránh lỗi self-attach của môi trường kiểm tra. Không đổi pom/dependency. JaCoCo không có dữ liệu coverage ở lượt này; không tuyên bố coverage.
+6. `git diff --check` cho phần resolve: **PASS**. `git diff --cached --check` trên toàn bộ nội dung pull còn cảnh báo whitespace ở `static/css/topbar.css` và `templates/offers/detail.html` từ main; giữ nguyên vì không thuộc conflict. Search marker trong source: **không còn**. Không comment test, không tạo file source test mới.
+7. Đã `git add` đúng 7 file conflict và 4 file tương thích trong bảng để Git ghi nhận resolved. `git ls-files -u`: **0**. HEAD và ref main giữ nguyên; `MERGE_HEAD` còn vì chưa tạo commit kết thúc lần pull. Tài liệu này để ở working tree cho người dùng xem.
+
+#### Lỗi ngoài phạm vi conflict được giữ nguyên
+
+- **Spring startup / JPA validate: FAIL**. Lỗi thật: `InterviewEvaluation.InterviewId` có kiểu `INT` trong SQL Server nhưng JPA mong `BIGINT`. Entity/khóa lịch phỏng vấn không thay đổi giữa HEAD và phía main đang pull. Không sửa DB để né lỗi; chưa sửa mapping trong đợt chỉ resolve conflict này. Các test query/integration DB bị chặn bởi Context này, không được tính là PASS.
+- **2 failures của CareerFlowTests**: test `publicJobBoardRendersPublishedJobsForGuests` kỳ vọng `candidate/job-board` cho route homepage nhưng nhận `candidate/landing`; test `emptyJobBoardShowsRecoveryState` kỳ vọng nội dung trạng thái rỗng của job board trên trang landing. File test không thay đổi giữa hai phía; không sửa homepage hoặc nới assertion để làm xanh giả.
+- Các lỗi thiếu mock ở 8 web tests và case POSTING_CLOSED đã được khắc phục, kiểm chứng trong lượt hồi quy. Chưa chạy lại toàn bộ suite sau lượt này; không tuyên bố toàn project xanh.
+- Lỗi IDE `Flexible Constructor Bodies` được tái hiện với compiler ECJ/Lombok; clean compile bằng javac Java 21 thành công. Người dùng yêu cầu tiếp tục code và tạm bỏ qua IDE, nên không thay cấu hình/extension. Cache `.class` lỗi đã được build lại; điều này không chứng minh bảng Problems của VS Code hết lỗi.
+
+### Các bước kiểm tra tay việc ghép hai phía
+
+1. HR mở `/applications`: thanh giai đoạn, số lượng, bộ lọc và phân trang theo main; bản ghi tiềm năng vẫn có badge.
+2. Mở hồ sơ: chỉ có một form duyệt; các link lập lịch, xem kết quả và tạo Offer giữ nguyên điều kiện của main.
+3. HR/HM đánh dấu tiềm năng, mở ghi chú: tác giả/thời gian/ghi chú vẫn đọc từ Service, không xuất hiện ở portal Candidate.
+4. HR mở đề xuất HM_Suggested: có xác nhận dùng CV cũ và từ chối; Candidate vẫn không thấy đề xuất chưa xác nhận.
+5. Mở hồ sơ bị dừng do đóng bài: có lý do Đóng đợt và Resend; stepper không lỗi vì enum mới.
+6. Candidate mở My Applications / Offers / Interviews / Notifications: sidebar Candidate từ main giữ đúng vai trò; các link kết quả phỏng vấn của workspace giữ nguyên.
+7. Trước khi người dùng tự commit: xem Git Changes; không chạy `git commit`, `git merge --continue` hay push vào main từ lượt làm việc này.
+
+## Sửa lỗi startup sau pull — 14/10/2026
+
+### Lỗi gốc và phạm vi sửa
+
+Log startup có nhiều `UnsatisfiedDependencyException`, nhưng chúng phát sinh từ hai lỗi gốc dưới đây. Không sửa Controller/Service theo các exception dây chuyền.
+
+| File | Thay đổi | Lý do |
+|---|---|---|
+| `src/main/java/com/group2/rms/candidate/repository/ApplicationRepository.java` | Thêm chuỗi phân cách `" AND "` rõ ràng tại bốn chỗ ghép `FORMAL_FILTER`: `findOwnedByUserId`, `findOwnedById`, `existsActiveByCandidateAndJobPosting`, `findPreviousCvByCandidateId` | Java text block bỏ khoảng trắng cuối dòng, làm JPQL thực tế thành `anda.applicationStatus...`. Spring Data không tạo được `ApplicationRepository`, kéo theo Service và Controller không khởi tạo được |
+| `src/main/java/com/group2/rms/interview/entity/InterviewSchedule.java` | Gắn `@JdbcTypeCode(SqlTypes.INTEGER)` vào `interviewId` | Schema chuẩn dùng SQL Server `INT`; Java vẫn giữ `Long` để không phá API của module Interview. Hibernate không còn cố `ALTER InterviewId BIGINT` |
+| `src/main/java/com/group2/rms/interview/entity/InterviewPanelId.java` | Gắn cùng JDBC type `INTEGER` cho phần `interviewId` của khóa ghép | Đồng bộ `InterviewPanel.InterviewId` với khóa chính `InterviewSchedule.InterviewId`, giữ `@MapsId` và Java `Long` hiện tại |
+
+Không sửa `database/schema/db.sql`, database, entity relationship, Controller, Service, cấu hình hoặc test để né lỗi. Không chạy `git commit`, `merge --continue`, push hay checkout main.
+
+### Verification
+
+1. Clean test-compile:
+   - Lệnh: `mvnw.cmd -o "-Dmaven.repo.local=C:\Users\Administrator\.m2\repository" -DskipTests clean test-compile`.
+   - Kết quả: **PASS — BUILD SUCCESS**; 267 source và 65 source test được biên dịch bằng Java 21.
+2. Spring Context + JPA + repository query trọng điểm:
+   - Nhóm: `RmsApplicationTests`, `ApplicationPipelineQueryTests`, `MyApplicationQueryTests`, `CandidateOfferQueryTests`.
+   - Chạy với `spring.jpa.hibernate.ddl-auto=validate`, không cho Hibernate sửa schema.
+   - Kết quả: **PASS — 18 test, 0 failures, 0 errors, 1 skipped**.
+   - Đã xác nhận kết nối SQL Server, dựng `EntityManagerFactory`, parse/thực thi JPQL và khởi động Spring Context. Không còn `BadJpqlGrammarException`, token `anda`, lỗi đổi `InterviewId` sang `BIGINT` hoặc lỗi bean dây chuyền.
+3. Full suite:
+   - Kết quả: **FAIL — 732 test, 3 failures, 7 errors, 1 skipped**.
+   - Hai lỗi startup trong log người dùng không còn xuất hiện. Các lỗi còn lại thuộc test/module khác:
+     - `RequisitionIntegrationTest`: 6 errors vì fixture lưu `JobRequisition` với `RecruitmentRound = NULL`, trong khi DB quy định cột này `NOT NULL`.
+     - `DepartmentReadOnlyTests`: 1 error do SQL Server chọn transaction test làm deadlock victim lúc Hibernate đọc metadata; không phải schema mismatch.
+     - `CareerFlowTests`: 2 failures do test homepage còn kỳ vọng view `candidate/job-board` và câu trạng thái rỗng của job board, trong khi homepage hiện dùng `candidate/landing`.
+     - `CareerReadOnlyTests`: 1 failure do test còn kỳ vọng chuỗi `Mộc Careers`, trong khi giao diện render thương hiệu tiếng Việt hiện tại.
+
+### Cách kiểm tra tay lỗi startup
+
+1. Dừng instance cũ và chạy lại ứng dụng từ source mới.
+2. Quan sát log khởi động: không được còn các lệnh `alter table ... InterviewId bigint`, `BadJpqlGrammarException`, token `anda` hoặc lỗi tạo bean `applicationRepository`.
+3. Đăng nhập Candidate, mở My Applications; danh sách phải tải được và không hiện đề xuất nội bộ `HM_Suggested`.
+4. Mở một Job Posting rồi thực hiện kiểm tra đã nộp; query không được làm trang trả 500.
+5. HR/HM mở Talent Pool và lấy CV cũ; danh sách CV tải được, vẫn áp dụng `FORMAL_FILTER`.
+6. HR mở Application Pipeline hoặc Candidate Offer để xác nhận Context và các repository liên quan hoạt động bình thường.

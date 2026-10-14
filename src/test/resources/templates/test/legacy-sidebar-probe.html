@@ -1,0 +1,7 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<!-- Chỉ dùng trong test (SidebarRoleWebTests): gọi fragment cũ fragments/sidebar :: sidebar, vốn gán cứng role 'HR'. -->
+<body>
+<aside th:replace="~{fragments/sidebar :: sidebar('dashboard')}"></aside>
+</body>
+</html>

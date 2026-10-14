@@ -1,15 +1,15 @@
 /* =============================================================================
    PAGES/APPLICATIONS.CSS — Hồ sơ ứng tuyển (/applications, candidate/applications.html;
    /applications/{id}, candidate/application-detail.html)
-   Chỉ chứa phần catalog chưa có: bố cục form lọc, thanh kết quả, ô ứng viên, điểm AI,
-   cột thao tác, trạng thái rỗng.
+   Chỉ chứa phần catalog chưa có: bố cục form lọc, thanh kết quả, ô ứng viên, dòng "Đang chờ",
+   điểm AI, cột thao tác, trạng thái rỗng.
    Tiền tố class: app-
    ============================================================================= */
 
 /* --- Danh sách --------------------------------------------------------------- */
 .app-filter {
   display: grid;
-  grid-template-columns: 2fr 2fr 1.5fr 1.5fr auto;
+  grid-template-columns: 2fr 2fr 1.5fr auto;
   gap: var(--s4);
   align-items: end;
   margin-bottom: var(--s6);
@@ -45,6 +45,13 @@
 .app-candidate__email {
   display: block;
   font-size: 13px;
+  color: var(--muted);
+}
+
+.app-owner {
+  display: block;
+  margin-top: var(--s1);
+  font-size: var(--font-xs);
   color: var(--muted);
 }
 
@@ -204,24 +211,19 @@
   font-size: 13px;
 }
 
-.app-next {
+/* Thẻ thao tác ngay dưới thanh tiến độ: form duyệt CV + link sang trang interview/offer. */
+.app-actions {
+  margin-bottom: var(--s6);
+}
+
+.app-actions__links {
   display: flex;
   flex-wrap: wrap;
   gap: var(--s2);
 }
 
-.app-next__current {
-  margin: 0 0 var(--s4);
-  font-size: 14px;
-  color: var(--ink);
-}
-
-.app-next__label {
-  font-weight: 600;
-  color: var(--muted);
-}
-
 .app-review {
+  max-width: 640px;
   margin-bottom: var(--s4);
 }
 

@@ -1016,3 +1016,202 @@ dialog.dialog::backdrop {
   background-color: var(--surface-subtle);
   outline: none;
 }
+
+/* -----------------------------------------------------------------------------
+   O. STAGE BAR (fragment fragments/ui/stages :: stageBar(items, mode))
+   Thanh giai đoạn: các ô trong luồng nối bằng "›"; ô ngoài luồng ("Tất cả", "Đã dừng")
+   tách bằng vạch ngăn (.stage-bar__divider), ô ngoài luồng cuối cùng dạt sang phải. Mode tabs:
+   ô đang lọc ([aria-current]) nổi màu brand. Màn ≤ 600px: các ô xuống dòng.
+   ----------------------------------------------------------------------------- */
+.stage-bar {
+  max-width: 100%;
+  margin-bottom: var(--s6);
+  overflow-x: auto;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  background-color: var(--surface);
+  box-shadow: var(--shadow-sm);
+}
+
+.stage-bar__list {
+  display: flex;
+  align-items: center;
+  width: max-content;
+  min-width: 100%;
+  margin: 0;
+  padding: var(--s2);
+  list-style: none;
+}
+
+.stage-bar__item {
+  display: flex;
+  flex: none;
+  align-items: center;
+}
+
+.stage-bar__item:not(.stage-bar__item--off) + .stage-bar__item:not(.stage-bar__item--off)::before {
+  content: "›";
+  padding: 0 var(--s1);
+  color: var(--muted);
+  font-size: var(--font-md);
+}
+
+.stage-bar__divider {
+  align-self: stretch;
+  width: 1px;
+  margin: 0 var(--s2);
+  background-color: var(--line);
+}
+
+.stage-bar__item--off:last-child {
+  margin-left: auto;
+}
+
+.stage-bar__link {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s2);
+  min-height: var(--btn-sm-h);
+  padding: 0 var(--s3);
+  border: 1px solid transparent;
+  border-radius: var(--radius-md);
+  color: var(--ink);
+  font-size: var(--font-sm);
+  font-weight: 600;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.stage-bar__item--off .stage-bar__link {
+  color: var(--muted);
+}
+
+a.stage-bar__link:hover {
+  background-color: var(--surface-subtle);
+}
+
+a.stage-bar__link:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: -2px;
+}
+
+.stage-bar__count {
+  min-width: var(--s6);
+  padding: 0 var(--s2);
+  border-radius: var(--radius-full);
+  background-color: var(--neutral-soft);
+  color: var(--muted);
+  font-size: var(--font-xs);
+  font-weight: 700;
+  line-height: 1.6;
+  text-align: center;
+}
+
+.stage-bar__link[aria-current] {
+  border-color: var(--brand);
+  background-color: var(--brand-soft);
+  color: var(--brand-dark);
+}
+
+.stage-bar__link[aria-current] .stage-bar__count {
+  background-color: var(--brand);
+  color: var(--on-brand);
+}
+
+/* Màn hẹp: các ô xuống dòng thay vì cuộn ngang, để ô đang lọc luôn nhìn thấy. */
+@media (max-width: 600px) {
+  .stage-bar__list {
+    flex-wrap: wrap;
+    width: auto;
+    row-gap: var(--s1);
+  }
+}
+
+/* Mode stepper (chi tiết hồ sơ): mỗi bước là một ô có chấm đầu dòng. Đã qua ([data-state="done"]) có dấu ✓,
+   bước hiện tại ([aria-current]) nổi màu brand và hiện thêm .stage-bar__detail, ô CLOSED ("Đã dừng") tô màu lỗi.
+   Màn ≤ 600px: các bước xếp dọc, bỏ dấu "›". */
+.stage-bar__step {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--s2);
+  padding: var(--s2) var(--s3);
+  border: 1px solid transparent;
+  border-radius: var(--radius-md);
+  color: var(--muted);
+  font-size: var(--font-sm);
+  font-weight: 600;
+}
+
+.stage-bar__step::before {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  width: var(--s4);
+  height: var(--s4);
+  border: 2px solid var(--control-line);
+  border-radius: var(--radius-full);
+  font-size: var(--font-xs);
+  line-height: 1;
+  content: "";
+}
+
+.stage-bar__text {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s1);
+}
+
+.stage-bar__detail {
+  max-width: 32ch;
+  color: var(--ink);
+  font-size: var(--font-xs);
+  font-weight: 400;
+}
+
+.stage-bar--stepper [data-state="done"] .stage-bar__step {
+  color: var(--ink);
+}
+
+.stage-bar--stepper [data-state="done"] .stage-bar__step::before {
+  border-color: var(--brand);
+  background-color: var(--brand);
+  color: var(--on-brand);
+  content: "✓";
+}
+
+.stage-bar--stepper [aria-current] .stage-bar__step {
+  border-color: var(--brand);
+  background-color: var(--brand-soft);
+  color: var(--brand-dark);
+}
+
+.stage-bar--stepper [aria-current] .stage-bar__step::before {
+  border-color: var(--brand);
+  background-color: var(--brand);
+}
+
+.stage-bar--stepper [data-key="CLOSED"] .stage-bar__step {
+  border-color: var(--error);
+  background-color: var(--error-soft);
+  color: var(--error);
+}
+
+.stage-bar--stepper [data-key="CLOSED"] .stage-bar__step::before {
+  border-color: var(--error);
+  background-color: var(--error);
+  color: var(--surface);
+  content: "✕";
+}
+
+@media (max-width: 600px) {
+  .stage-bar--stepper .stage-bar__list {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .stage-bar--stepper .stage-bar__item:not(.stage-bar__item--off) + .stage-bar__item:not(.stage-bar__item--off)::before {
+    display: none;
+  }
+}

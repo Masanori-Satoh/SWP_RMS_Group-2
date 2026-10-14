@@ -280,21 +280,21 @@ class ApplicationProgressResolverTests {
     }
 
     private static ApplicationProgressFacts status(String status) {
-        return new ApplicationProgressFacts(ID, status, false, null, null, 0, 0, null, null);
+        return new ApplicationProgressFacts(ID, status, false, null, null, null, 0, 0, null, null);
     }
 
     private static ApplicationProgressFacts interview(String status, String interviewStatus, LocalDateTime start,
                                                       int panel, int evaluations, String decision) {
-        return new ApplicationProgressFacts(ID, status, false, interviewStatus, start, panel, evaluations, decision, null);
+        return new ApplicationProgressFacts(ID, status, false, null, interviewStatus, start, panel, evaluations, decision, null);
     }
 
     /** Đã phỏng vấn đạt rồi mới có offer. */
     private static ApplicationProgressFacts offer(String status, String offerStatus) {
-        return new ApplicationProgressFacts(ID, status, false, "Completed", YESTERDAY, 2, 2, "Passed", offerStatus);
+        return new ApplicationProgressFacts(ID, status, false, null, "Completed", YESTERDAY, 2, 2, "Passed", offerStatus);
     }
 
     private static ApplicationProgressFacts rejected(boolean withdrawn, String decision, String offerStatus) {
-        return new ApplicationProgressFacts(ID, "Rejected", withdrawn, decision == null ? null : "Completed",
+        return new ApplicationProgressFacts(ID, "Rejected", withdrawn, null, decision == null ? null : "Completed",
                 decision == null ? null : YESTERDAY, 2, 2, decision, offerStatus);
     }
 }

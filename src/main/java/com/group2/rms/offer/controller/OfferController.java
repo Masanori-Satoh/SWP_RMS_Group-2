@@ -55,6 +55,7 @@ public class OfferController {
         }
         model.addAttribute("currentUser", principal != null ? principal.getName() : "HR");
         model.addAttribute("userRole", userRole);
+        model.addAttribute("activeMenu", "offers");
     }
 
     /**
@@ -141,7 +142,7 @@ public class OfferController {
                         createRequest.setOfferedPositionTitle(c.getAppliedPosition());
                         createRequest.setWorkLocation(c.getWorkLocation() != null ? c.getWorkLocation() : "Trụ sở chính Mộc RMS");
                         if (c.getRecommendedSalary() != null) {
-                            createRequest.setProposedSalary(c.getRecommendedSalary());
+                            createRequest.setProposedSalary(c.getRecommendedSalary().setScale(0, RoundingMode.HALF_UP));
                             createRequest.setProbationSalary(c.getRecommendedSalary().multiply(new BigDecimal("0.85")).setScale(0, RoundingMode.HALF_UP));
                         }
                     });
@@ -193,7 +194,7 @@ public class OfferController {
             flash.addFlashAttribute("successMessage", isDraft
                     ? "Lưu bản thảo Offer (Draft) thành công!"
                     : "Đã nộp trình đề xuất Offer lên Giám đốc (Pending_Director) thành công!");
-            return "redirect:/offers/" + created.getOfferId();
+            return "redirect:/offers";
         } catch (BaseBusinessException e) {
             errors.reject("businessError", e.getMessage());
             model.addAttribute("passedCandidates", offerService.getPassedCandidatesForOffer());
@@ -391,6 +392,40 @@ public class OfferController {
         } catch (BaseBusinessException e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ApiResponse<>(false, e.getMessage()));
         }
+    }
+
+    /**
+     * 9c. DIRECTOR APPROVE (FORM POST): Director duyệt Offer Proposal từ Form POST
+     */
+    @PostMapping("/{id}/approve")
+    public String approveOfferForm(
+            @PathVariable Integer id,
+            @RequestParam(required = false, defaultValue = "Phê duyệt trực tiếp") String comments,
+            RedirectAttributes flash) {
+        try {
+            offerService.approveOfferByDirector(id, comments);
+            flash.addFlashAttribute("successMessage", "Đã phê duyệt đề xuất Offer thành công!");
+        } catch (BaseBusinessException e) {
+            flash.addFlashAttribute("errorMessage", e.getMessage());
+        }
+        return "redirect:/offers";
+    }
+
+    /**
+     * 9d. DIRECTOR REJECT (FORM POST): Director từ chối Offer Proposal từ Form POST
+     */
+    @PostMapping("/{id}/reject")
+    public String rejectOfferForm(
+            @PathVariable Integer id,
+            @RequestParam(required = false) String comments,
+            RedirectAttributes flash) {
+        try {
+            offerService.rejectOfferByDirector(id, comments);
+            flash.addFlashAttribute("successMessage", "Đã từ chối đề xuất Offer thành công!");
+        } catch (BaseBusinessException e) {
+            flash.addFlashAttribute("errorMessage", e.getMessage());
+        }
+        return "redirect:/offers";
     }
 
     /**

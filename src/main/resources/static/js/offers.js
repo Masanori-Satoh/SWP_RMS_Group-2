@@ -197,18 +197,19 @@ function handleSelectPassedCandidate(appId) {
     if (grpA) grpA.style.display = 'block';
 
     // Tự động gợi ý chức danh và mức lương nếu trường đang để trống
-    const titleInput = document.getElementById('createOfferedTitle') || document.getElementById('offeredPositionTitle');
+    const titleInput = document.getElementById('offeredPositionTitle');
     if (titleInput && (!titleInput.value.trim() || titleInput.value.trim() === '')) {
         titleInput.value = opt.getAttribute('data-pos') || '';
     }
 
-    const proposedInput = document.getElementById('createProposedSalary') || document.getElementById('proposedSalary');
+    const proposedInput = document.getElementById('proposedSalary');
     if (proposedInput && recom) {
-        proposedInput.value = recom;
+        const numericVal = Math.round(parseFloat(recom));
+        proposedInput.value = isNaN(numericVal) ? recom : numericVal;
         autoCalculateProbationSalary(true);
     }
 
-    const workLocInput = document.getElementById('createWorkLocation') || document.getElementById('workLocation');
+    const workLocInput = document.getElementById('workLocation');
     if (workLocInput && (!workLocInput.value.trim() || workLocInput.value.trim() === '')) {
         workLocInput.value = defaultWorkLoc;
     }
@@ -218,8 +219,8 @@ function handleSelectPassedCandidate(appId) {
  * Tự động tính toán mức lương thử việc tối thiểu 85% (theo quy định BR-OFF-01)
  */
 function autoCalculateProbationSalary(forceSet = false) {
-    const proposedEl = document.getElementById('createProposedSalary') || document.getElementById('proposedSalary');
-    const probationEl = document.getElementById('createProbationSalary') || document.getElementById('probationSalary');
+    const proposedEl = document.getElementById('proposedSalary');
+    const probationEl = document.getElementById('probationSalary');
     if (!proposedEl || !probationEl) return;
 
     const proposed = parseFloat(proposedEl.value);
@@ -237,8 +238,8 @@ function autoCalculateProbationSalary(forceSet = false) {
  * Kiểm tra và hiển thị phản hồi trực quan về tỷ lệ lương thử việc trên giao diện
  */
 function validateProbationRuleUi() {
-    const proposedEl = document.getElementById('createProposedSalary') || document.getElementById('proposedSalary');
-    const probationEl = document.getElementById('createProbationSalary') || document.getElementById('probationSalary');
+    const proposedEl = document.getElementById('proposedSalary');
+    const probationEl = document.getElementById('probationSalary');
     const notice = document.getElementById('probationRuleNotice');
     if (!proposedEl || !probationEl || !notice) return true;
 
@@ -658,60 +659,7 @@ function renderDetailFooterHtml(d) {
 
 function viewOfferDetail(offerId) {
     if (!offerId) return;
-
-    const titleEl = document.getElementById('detailModalTitle');
-    const bodyEl = document.getElementById('detailModalBody');
-    const footerEl = document.getElementById('detailModalFooter');
-
-    if (titleEl) titleEl.textContent = `Chi Tiết Đề Xuất Offer #${offerId}`;
-    if (bodyEl) {
-        bodyEl.innerHTML = `
-            <div style="text-align:center; padding:40px; color:var(--muted);">
-                <i class="fa-solid fa-spinner fa-spin" style="font-size:24px;"></i>
-                <p style="margin-top:10px;">Đang tải thông tin chi tiết...</p>
-            </div>
-        `;
-    }
-    if (footerEl) {
-        footerEl.innerHTML = `<button type="button" class="btn btn-secondary" onclick="closeModal('detailOfferModal')">Đóng</button>`;
-    }
-
-    openModal('detailOfferModal');
-
-    fetch(`/offers/${offerId}`, {
-        method: 'GET',
-        headers: {
-            'Accept': 'application/json'
-        }
-    })
-    .then(async res => {
-        const isJson = res.headers.get('content-type')?.includes('application/json');
-        const data = isJson ? await res.json() : null;
-        if (!res.ok) {
-            throw new Error(data?.message || `Lỗi tải dữ liệu (${res.status})`);
-        }
-        return data;
-    })
-    .then(res => {
-        if (res && res.success && res.data) {
-            const d = res.data;
-            if (titleEl) titleEl.textContent = `Chi Tiết Đề Xuất Offer #${d.offerId}`;
-            if (bodyEl) bodyEl.innerHTML = renderDetailModalHtml(d);
-            if (footerEl) footerEl.innerHTML = renderDetailFooterHtml(d);
-        } else {
-            throw new Error(res?.message || 'Không thể hiển thị thông tin Offer.');
-        }
-    })
-    .catch(err => {
-        if (bodyEl) {
-            bodyEl.innerHTML = `
-                <div class="modal-alert modal-alert-danger">
-                    <i class="fa-solid fa-circle-exclamation"></i>
-                    <span>${escapeOfferHtml(err.message)}</span>
-                </div>
-            `;
-        }
-    });
+    window.location.href = `/offers/${offerId}`;
 }
 
 // =========================================================================
@@ -1737,9 +1685,114 @@ window.closeDirectorDetailModal = closeDirectorDetailModal;
 window.handleDirectorModalBackdropClick = handleDirectorModalBackdropClick;
 
 function updateRejectReasonCounter(el) {
+    if (!el) return;
     const len = el.value.length;
-    document.getElementById('rejectReasonCount').innerText = len;
+    const cnt = document.getElementById('rejectReasonCount');
+    if (cnt) cnt.innerText = len;
 }
+
+function updateDirectorDetailCommentCounter(el) {
+    if (!el) return;
+    const len = el.value.length;
+    const cnt = document.getElementById('directorDetailCommentCount');
+    if (cnt) cnt.innerText = len;
+}
+
+function scrollToDirectorDecision() {
+    const sec = document.getElementById('directorDecisionSection');
+    if (sec) {
+        sec.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        const comments = document.getElementById('directorDetailComments');
+        if (comments) comments.focus();
+    }
+}
+
+function submitDirectorDecisionFromScreen(offerId, action) {
+    if (!offerId) return;
+    const commentsEl = document.getElementById('directorDetailComments');
+    const comments = commentsEl ? commentsEl.value.trim() : '';
+
+    if (action === 'REJECT') {
+        if (!comments) {
+            Swal.fire('Chú ý', 'Vui lòng nhập lý do từ chối vào ô nhận xét bên dưới.', 'warning')
+                .then(() => {
+                    if (commentsEl) commentsEl.focus();
+                });
+            return;
+        }
+
+        Swal.fire({
+            title: 'Từ chối đề xuất Offer?',
+            text: `Bạn có chắc chắn muốn từ chối đề xuất #${offerId}?`,
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonText: 'Xác nhận từ chối',
+            cancelButtonText: 'Hủy',
+            confirmButtonColor: '#dc2626',
+            reverseButtons: true
+        }).then((result) => {
+            if (result.isConfirmed) {
+                executeDirectorDecisionApi(offerId, `/offers/${offerId}/reject`, comments);
+            }
+        });
+    } else if (action === 'APPROVE') {
+        Swal.fire({
+            title: 'Phê duyệt đề xuất Offer?',
+            text: 'Sau khi phê duyệt, HR sẽ được thông báo để tiếp tục phát hành Offer Letter cho ứng viên.',
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonText: 'Xác nhận phê duyệt',
+            cancelButtonText: 'Hủy',
+            confirmButtonColor: '#166534',
+            reverseButtons: true
+        }).then((result) => {
+            if (result.isConfirmed) {
+                executeDirectorDecisionApi(offerId, `/offers/${offerId}/approve`, comments || 'Phê duyệt trực tiếp');
+            }
+        });
+    }
+}
+
+function executeDirectorDecisionApi(offerId, url, comments) {
+    const csrf = getCsrfInfo();
+    const headers = {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json'
+    };
+    if (csrf.token) {
+        headers[csrf.header] = csrf.token;
+    }
+
+    fetch(url, {
+        method: 'POST',
+        headers: headers,
+        body: JSON.stringify({ comments: comments })
+    })
+    .then(res => res.json())
+    .then(data => {
+        if (data.success) {
+            Swal.fire({
+                title: 'Thành công',
+                text: data.message,
+                icon: 'success',
+                timer: 1500,
+                showConfirmButton: false
+            }).then(() => {
+                window.location.href = '/offers';
+            });
+        } else {
+            Swal.fire('Lỗi', data.message || 'Có lỗi xảy ra.', 'error');
+        }
+    })
+    .catch(err => {
+        console.error(err);
+        Swal.fire('Lỗi', 'Không thể kết nối đến máy chủ.', 'error');
+    });
+}
+
+window.updateDirectorDetailCommentCounter = updateDirectorDetailCommentCounter;
+window.scrollToDirectorDecision = scrollToDirectorDecision;
+window.submitDirectorDecisionFromScreen = submitDirectorDecisionFromScreen;
 
 function submitDirectorApprove() {
     if (!currentDirectorOfferId) return;
@@ -1789,7 +1842,7 @@ function submitDirectorApprove() {
 function submitDirectorReject() {
     if (!currentDirectorOfferId) return;
     
-    const reason = document.getElementById('rejectReasonInput').value.trim();
+    const reason = document.getElementById('rejectReasonInput') ? document.getElementById('rejectReasonInput').value.trim() : '';
     if (!reason) {
         Swal.fire('Chú ý', 'Vui lòng nhập lý do từ chối.', 'warning');
         return;

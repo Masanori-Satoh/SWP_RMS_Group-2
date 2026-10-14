@@ -28,7 +28,8 @@
 
     <!-- 2. Danh sách Menu chính theo Role -->
     <nav class="sidebar-menu-list" aria-label="Menu chức năng">
-        <th:block th:with="userRole=${role ?: (dashboard != null ? dashboard.roleName : (userProfile != null ? userProfile.roleName : (viewerRole != null ? viewerRole : (session.user != null ? session.user.role : null))))}">
+        <!-- Ưu tiên role của người đang đăng nhập (topbarUser, có ở mọi trang); fallback cũ giữ cho trang không đăng nhập / test. Thiếu dòng này các trang /portal/* rơi vào sidebar HR. -->
+        <th:block th:with="userRole=${topbarUser != null and topbarUser.roleName != null ? topbarUser.roleName : (role ?: (dashboard != null ? dashboard.roleName : (userProfile != null ? userProfile.roleName : (viewerRole != null ? viewerRole : (session.user != null ? session.user.role : null)))))}">
             <!-- Nhánh Admin -->
             <th:block th:if="${userRole == 'System Admin' or userRole == 'Admin'}">
                 <th:block th:replace="~{fragments/layout/sidebars/admin :: menu(${activeMenu})}"></th:block>
