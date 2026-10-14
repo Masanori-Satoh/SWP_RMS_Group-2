@@ -23,13 +23,13 @@ public interface NotificationRepository extends JpaRepository<Notification, Long
         return findByNotificationIdAndRecipient_UserId(notificationId, userId);
     }
 
-    boolean existsByEventId(String eventId);
+    boolean existsByRecipient_UserIdAndEventId(Integer userId, String eventId);
 
     @Modifying
     @Query("UPDATE Notification n SET n.isRead = true WHERE n.recipient.userId = :userId AND n.isRead = false")
     int markAllAsReadByUserId(@Param("userId") Integer userId);
 
     @Modifying
-    @Query("UPDATE Notification n SET n.isRead = true WHERE n.recipient.userId = :userId AND n.referenceId = :referenceId AND n.eventType = 'OFFER_LETTER_SENT' AND n.isRead = false")
+    @Query("UPDATE Notification n SET n.isRead = true WHERE n.recipient.userId = :userId AND n.referenceId = :referenceId AND n.eventType = 'OFFER_SENT' AND n.isRead = false")
     int markOfferNotificationRead(@Param("userId") Integer userId, @Param("referenceId") String referenceId);
 }

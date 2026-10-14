@@ -1,327 +1,142 @@
 package com.group2.rms.notification;
 
+import com.group2.rms.notification.constants.NotificationEventType;
+import com.group2.rms.notification.constants.NotificationMessages;
 import com.group2.rms.requisition.entity.JobRequisition;
+import com.group2.rms.requisition.entity.JobPosting;
+import com.group2.rms.candidate.entity.Application;
+import com.group2.rms.offer.entity.OfferProposal;
+import com.group2.rms.user.entity.Role;
 import com.group2.rms.user.entity.User;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.DisplayName;
+import com.group2.rms.user.repository.UserRepository;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class NotificationServiceImplTest {
+    @Mock NotificationRepository repository;
+    @Mock UserRepository users;
+    @InjectMocks NotificationServiceImpl service;
 
-    @Mock
-    private NotificationRepository notificationRepository;
-
-    @InjectMocks
-    private NotificationServiceImpl notificationService;
-
-    private User manager;
-    private User director;
-    private JobRequisition requisition;
-
-    @BeforeEach
-    void setUp() {
-        manager = User.builder().userId(10).username("hm").fullName("Hiring Manager A").build();
-        director = User.builder().userId(20).username("director").fullName("Director B").build();
-        requisition = JobRequisition.builder()
-                .requisitionId(101)
-                .title("Senior Java Engineer")
-                .hiringManager(manager)
-                .decidedAt(LocalDateTime.of(2026, 10, 4, 9, 30, 0, 123456700))
-                .build();
+    private static User user(int id, String role) {
+        return User.builder().userId(id).role(Role.builder().roleName(role).build())
+                .accountStatus("Active").build();
     }
 
     @Test
-    @DisplayName("notifyRequisitionRejected: Lưu thông báo đúng người nhận HM, nội dung và link")
-    void notifyRequisitionRejected_success() {
-        when(notificationRepository.existsByEventId(any())).thenReturn(false);
-
-        notificationService.notifyRequisitionRejected(requisition, director, "Kinh phí dự kiến vượt trần");
-
-        ArgumentCaptor<Notification> captor = ArgumentCaptor.forClass(Notification.class);
-        verify(notificationRepository).save(captor.capture());
-
-        Notification saved = captor.getValue();
-        assertEquals(manager, saved.getRecipient());
-        assertEquals("REQUISITION_REJECTED", saved.getEventType());
-        assertEquals("/requisitions/101", saved.getLinkUrl());
-        assertEquals("101", saved.getReferenceId());
-        assertFalse(saved.getIsRead());
-        assertTrue(saved.getTitle().contains("Senior Java Engineer"));
-        assertTrue(saved.getContent().contains("Kinh phí dự kiến vượt trần"));
-        assertTrue(saved.getContent().contains("Director B"));
-        assertEquals("REQ_REJECT_101_202610040930001234567", saved.getEventId());
+    void everyEventHasVietnameseMessageWithinDatabaseLimits() {
+        for (NotificationEventType event : NotificationEventType.values()) {
+            var message = NotificationMessages.forEvent(event, false);
+            assertFalse(message.title().isBlank(), event.name());
+            assertFalse(message.content().isBlank(), event.name());
+            assertTrue(message.title().length() <= 255, event.name());
+            assertTrue(message.content().length() <= 1000, event.name());
+            assertTrue(event.name().length() <= 50, event.name());
+        }
     }
 
     @Test
-    @DisplayName("notifyRequisitionRejected: Idempotent - Nếu cùng eventId đã tồn tại thì không tạo lại")
-    void notifyRequisitionRejected_idempotent_skipsDuplicate() {
-        when(notificationRepository.existsByEventId("REQ_REJECT_101_202610040930001234567")).thenReturn(true);
-
-        notificationService.notifyRequisitionRejected(requisition, director, "Duplicate test");
-
-        verify(notificationRepository, never()).save(any());
+    void sameEventIsDeliveredToEachRecipientAndDeduplicatedPerRecipient() {
+        User manager = user(10, "Hiring Manager");
+        User hr = user(20, "HR");
+        service.publish(manager, NotificationEventType.REQUISITION_APPROVED, "JobRequisition", 5,
+                "/requisitions/5", "REQ_APPROVE_5", false);
+        service.publish(hr, NotificationEventType.REQUISITION_APPROVED, "JobRequisition", 5,
+                "/requisitions/5", "REQ_APPROVE_5", true);
+        ArgumentCaptor<Notification> saved = ArgumentCaptor.forClass(Notification.class);
+        verify(repository, times(2)).save(saved.capture());
+        assertEquals(manager, saved.getAllValues().get(0).getRecipient());
+        assertEquals(hr, saved.getAllValues().get(1).getRecipient());
+        assertNotEquals(saved.getAllValues().get(0).getTitle(), saved.getAllValues().get(1).getTitle());
+        assertEquals("REQUISITION_APPROVED", saved.getAllValues().get(0).getEventType());
+        assertEquals("JobRequisition", saved.getAllValues().get(0).getReferenceType());
     }
 
     @Test
-    void separateDecisionsWithinOneSecond_haveDifferentEventIds() {
-        notificationService.notifyRequisitionRejected(requisition, director, "First rejection");
-        requisition.setDecidedAt(requisition.getDecidedAt().plusNanos(100));
-        notificationService.notifyRequisitionRejected(requisition, director, "Second rejection");
-        var captor = ArgumentCaptor.forClass(Notification.class);
-        verify(notificationRepository, times(2)).save(captor.capture());
-        assertNotEquals(captor.getAllValues().get(0).getEventId(), captor.getAllValues().get(1).getEventId());
+    void duplicateOrInactiveRecipientIsSkipped() {
+        User manager = user(10, "Hiring Manager");
+        when(repository.existsByRecipient_UserIdAndEventId(10, "event-1")).thenReturn(true);
+        service.publish(manager, NotificationEventType.JOB_POSTING_CLOSED, "JobPosting", 5,
+                "/jobs/5", "event-1", false);
+        service.publish(User.builder().userId(11).accountStatus("Locked").build(),
+                NotificationEventType.JOB_POSTING_CLOSED, "JobPosting", 5, "/jobs/5", "event-2", false);
+        verify(repository, never()).save(any());
     }
 
     @Test
-    @DisplayName("notifyJobPostingPublished: Lưu thông báo khi phát hành tin tuyển dụng tới HM")
-    void notifyJobPostingPublished_success() {
-        com.group2.rms.requisition.entity.JobPosting posting = com.group2.rms.requisition.entity.JobPosting.builder()
-                .jobPostingId(50)
-                .postingTitle("Senior Java Engineer")
-                .requisition(requisition)
-                .postingDate(LocalDateTime.of(2026, 10, 5, 14, 0, 0, 123456700))
-                .applicationDeadline(LocalDateTime.of(2026, 11, 30, 23, 59, 59))
-                .build();
-        User hr = User.builder().userId(30).fullName("HR Nguyen Van C").build();
-
-        when(notificationRepository.existsByEventId(any())).thenReturn(false);
-
-        notificationService.notifyJobPostingPublished(posting, hr);
-
-        ArgumentCaptor<Notification> captor = ArgumentCaptor.forClass(Notification.class);
-        verify(notificationRepository).save(captor.capture());
-
-        Notification saved = captor.getValue();
-        assertEquals(manager, saved.getRecipient());
-        assertEquals("JOB_POSTING_PUBLISHED", saved.getEventType());
-        assertEquals("/internal/job-postings/50", saved.getLinkUrl());
-        assertEquals("50", saved.getReferenceId());
-        assertFalse(saved.getIsRead());
-        assertTrue(saved.getTitle().contains("Tin tuyển dụng đã phát hành: Senior Java Engineer"));
-        assertTrue(saved.getContent().contains("HR Nguyen Van C"));
-        assertTrue(saved.getContent().contains("30/11/2026"));
-        assertEquals("JOB_PUB_50_202610051400001234567", saved.getEventId());
+    void applicationReceivedFallsBackToActiveHrWhenPostingCreatorIsAdmin() {
+        User hr = user(2, "HR");
+        when(users.findAllWithRoleAndDepartment()).thenReturn(List.of(hr, user(3, "Director")));
+        JobPosting posting = JobPosting.builder().createdBy(user(1, "System Admin")).build();
+        service.publishToResponsibleHr(posting, NotificationEventType.APPLICATION_RECEIVED,
+                "Application", 41, "/applications/41", "APP_SUBMIT_41");
+        ArgumentCaptor<Notification> saved = ArgumentCaptor.forClass(Notification.class);
+        verify(repository).save(saved.capture());
+        assertEquals(hr, saved.getValue().getRecipient());
     }
 
     @Test
-    @DisplayName("notifyJobPostingPublished: Idempotent - Nếu cùng eventId đã tồn tại thì bỏ qua")
-    void notifyJobPostingPublished_idempotent_skipsDuplicate() {
-        com.group2.rms.requisition.entity.JobPosting posting = com.group2.rms.requisition.entity.JobPosting.builder()
-                .jobPostingId(50)
-                .postingTitle("Senior Java Engineer")
-                .requisition(requisition)
-                .postingDate(LocalDateTime.of(2026, 10, 5, 14, 0, 0, 123456700))
-                .build();
-        User hr = User.builder().userId(30).fullName("HR Nguyen Van C").build();
-
-        when(notificationRepository.existsByEventId("JOB_PUB_50_202610051400001234567")).thenReturn(true);
-
-        notificationService.notifyJobPostingPublished(posting, hr);
-
-        verify(notificationRepository, never()).save(any());
+    void submittedRequisitionGoesToActiveDirectorsOnly() {
+        User director = user(1, "Director");
+        when(users.findAllWithRoleAndDepartment()).thenReturn(List.of(director, user(2, "HR"),
+                User.builder().userId(3).accountStatus("Locked")
+                        .role(Role.builder().roleName("Director").build()).build()));
+        JobRequisition requisition = JobRequisition.builder().requisitionId(12)
+                .submittedAt(LocalDateTime.of(2026, 10, 14, 10, 0)).build();
+        service.notifyRequisitionSubmitted(requisition);
+        ArgumentCaptor<Notification> saved = ArgumentCaptor.forClass(Notification.class);
+        verify(repository).save(saved.capture());
+        assertEquals(director, saved.getValue().getRecipient());
+        assertEquals("REQUISITION_SUBMITTED", saved.getValue().getEventType());
+        assertEquals("/requisitions/12", saved.getValue().getLinkUrl());
     }
 
     @Test
-    @DisplayName("notifyJobPostingPublished: Không thực hiện nếu posting hoặc hiring manager là null")
-    void notifyJobPostingPublished_nullPostingOrOwner_doesNothing() {
-        notificationService.notifyJobPostingPublished(null, director);
-        com.group2.rms.requisition.entity.JobPosting postingNoReq = com.group2.rms.requisition.entity.JobPosting.builder().jobPostingId(1).build();
-        notificationService.notifyJobPostingPublished(postingNoReq, director);
-
-        verify(notificationRepository, never()).save(any());
+    void approvedRequisitionGoesToManagerAndActiveHrWithDifferentVietnameseTitles() {
+        User manager = user(1, "Hiring Manager");
+        User hr = user(2, "HR");
+        when(users.findAllWithRoleAndDepartment()).thenReturn(List.of(hr, user(3, "Director")));
+        JobRequisition requisition = JobRequisition.builder().requisitionId(12).hiringManager(manager)
+                .decidedAt(LocalDateTime.of(2026, 10, 14, 11, 0)).build();
+        service.notifyRequisitionApproved(requisition);
+        ArgumentCaptor<Notification> saved = ArgumentCaptor.forClass(Notification.class);
+        verify(repository, times(2)).save(saved.capture());
+        assertEquals("Yêu cầu tuyển dụng đã được phê duyệt", saved.getAllValues().get(0).getTitle());
+        assertEquals("Có yêu cầu tuyển dụng mới được phê duyệt", saved.getAllValues().get(1).getTitle());
+        assertEquals(saved.getAllValues().get(0).getEventId(), saved.getAllValues().get(1).getEventId());
     }
 
     @Test
-    @DisplayName("markAsRead: Đánh dấu đã đọc thành công khi thuộc về user")
-    void markAsRead_success() {
-        Notification n = Notification.builder()
-                .notificationId(1L)
-                .recipient(manager)
-                .isRead(false)
-                .build();
-
-        when(notificationRepository.findByNotificationIdAndRecipient_UserId(1L, 10)).thenReturn(Optional.of(n));
-
-        notificationService.markAsRead(1L, manager);
-
-        assertTrue(n.getIsRead());
-        verify(notificationRepository).save(n);
+    void acceptedOfferGoesToHrAndManagerWithAuthorizedDestinations() {
+        User manager = user(1, "Hiring Manager");
+        User hr = user(2, "HR");
+        JobRequisition requisition = JobRequisition.builder().hiringManager(manager).build();
+        JobPosting posting = JobPosting.builder().requisition(requisition).build();
+        Application application = Application.builder().applicationId(41).jobPosting(posting).build();
+        OfferProposal offer = OfferProposal.builder().offerId(9).application(application).proposedBy(hr).build();
+        service.notifyOfferResponseFromCandidate(offer, true, null);
+        ArgumentCaptor<Notification> saved = ArgumentCaptor.forClass(Notification.class);
+        verify(repository, times(2)).save(saved.capture());
+        assertEquals(hr, saved.getAllValues().get(0).getRecipient());
+        assertEquals("/offers/9", saved.getAllValues().get(0).getLinkUrl());
+        assertEquals(manager, saved.getAllValues().get(1).getRecipient());
+        assertEquals("/applications/41", saved.getAllValues().get(1).getLinkUrl());
     }
 
     @Test
-    @DisplayName("markAsRead: Không tìm thấy hoặc khác user -> Ném ResponseStatusException 404")
-    void markAsRead_unauthorizedOrNotFound_throwsException() {
-        when(notificationRepository.findByNotificationIdAndRecipient_UserId(99L, 10)).thenReturn(Optional.empty());
-
-        assertThrows(ResponseStatusException.class, () -> notificationService.markAsRead(99L, manager));
-        verify(notificationRepository, never()).save(any());
-    }
-
-    @Test
-    @DisplayName("getUnreadCount: Trả về số lượng chưa đọc của user")
-    void getUnreadCount_returnsCount() {
-        when(notificationRepository.countByRecipient_UserIdAndIsReadFalse(10)).thenReturn(5L);
-
-        long count = notificationService.getUnreadCount(manager);
-        assertEquals(5L, count);
-    }
-
-    @Test
-    @DisplayName("getNotificationsForUser: Lấy danh sách map sang DTO")
-    void getNotificationsForUser_mapsToDto() {
-        Notification n = Notification.builder()
-                .notificationId(1L)
-                .recipient(manager)
-                .title("Test notif")
-                .content("Test content")
-                .eventType("REQUISITION_REJECTED")
-                .linkUrl("/requisitions/1")
-                .isRead(false)
-                .createdAt(LocalDateTime.now())
-                .build();
-
-        when(notificationRepository.findByRecipient_UserIdOrderByCreatedAtDesc(eq(10), any()))
-                .thenReturn(new PageImpl<>(List.of(n)));
-
-        Page<NotificationResponse> result = notificationService.getNotificationsForUser(manager, 1, 10);
-        assertEquals(1, result.getTotalElements());
-        assertEquals("Test notif", result.getContent().get(0).title());
-    }
-
-    @Test
-    @DisplayName("notifyOfferLetterSent: Lưu thông báo thư mời làm việc cho ứng viên với link chuẩn")
-    void notifyOfferLetterSent_success() {
-        User candidateUser = User.builder().userId(22).username("trung").fullName("Huỳnh Hoàng Trung").build();
-        com.group2.rms.candidate.entity.Candidate candidate = com.group2.rms.candidate.entity.Candidate.builder()
-                .candidateId(5)
-                .account(candidateUser)
-                .build();
-        com.group2.rms.candidate.entity.Application app = com.group2.rms.candidate.entity.Application.builder()
-                .applicationId(10)
-                .candidate(candidate)
-                .build();
-        com.group2.rms.offer.entity.OfferProposal offer = com.group2.rms.offer.entity.OfferProposal.builder()
-                .offerId(1)
-                .offeredPositionTitle("Senior Java Engineer")
-                .application(app)
-                .build();
-
-        when(notificationRepository.existsByEventId("OFFER_SENT_1")).thenReturn(false);
-
-        notificationService.notifyOfferLetterSent(offer);
-
-        ArgumentCaptor<Notification> captor = ArgumentCaptor.forClass(Notification.class);
-        verify(notificationRepository).save(captor.capture());
-
-        Notification saved = captor.getValue();
-        assertEquals(candidateUser, saved.getRecipient());
-        assertEquals("OFFER_LETTER_SENT", saved.getEventType());
-        assertEquals("/portal/offers/1", saved.getLinkUrl());
-        assertEquals("1", saved.getReferenceId());
-        assertFalse(saved.getIsRead());
-        assertTrue(saved.getTitle().contains("Senior Java Engineer"));
-        assertTrue(saved.getContent().contains("Senior Java Engineer"));
-        assertEquals("OFFER_SENT_1", saved.getEventId());
-    }
-
-    @Test
-    @DisplayName("markOfferNotificationRead: Đánh dấu đã đọc thông báo offer theo userId và offerId")
-    void markOfferNotificationRead_success() {
-        notificationService.markOfferNotificationRead(22, 1);
-        verify(notificationRepository).markOfferNotificationRead(22, "1");
-    }
-
-    @Test
-    @DisplayName("notifyOfferResponseFromCandidate: Ứng viên nhận offer -> gửi thông báo OFFER_ACCEPTED tới HR")
-    void notifyOfferResponseFromCandidate_accepted() {
-        User hrUser = User.builder().userId(15).username("hr.user").fullName("Lê Thị HR").build();
-        User candidateUser = User.builder().userId(22).username("trung").fullName("Huỳnh Hoàng Trung").build();
-        com.group2.rms.candidate.entity.Candidate candidate = com.group2.rms.candidate.entity.Candidate.builder()
-                .candidateId(5)
-                .account(candidateUser)
-                .build();
-        com.group2.rms.candidate.entity.Application app = com.group2.rms.candidate.entity.Application.builder()
-                .applicationId(10)
-                .candidate(candidate)
-                .build();
-        com.group2.rms.offer.entity.OfferProposal offer = com.group2.rms.offer.entity.OfferProposal.builder()
-                .offerId(1)
-                .offeredPositionTitle("Senior Java Engineer")
-                .proposedBy(hrUser)
-                .application(app)
-                .build();
-
-        when(notificationRepository.existsByEventId("OFFER_RESP_ACC_1")).thenReturn(false);
-
-        notificationService.notifyOfferResponseFromCandidate(offer, true, null);
-
-        ArgumentCaptor<Notification> captor = ArgumentCaptor.forClass(Notification.class);
-        verify(notificationRepository).save(captor.capture());
-
-        Notification saved = captor.getValue();
-        assertEquals(hrUser, saved.getRecipient());
-        assertEquals("OFFER_ACCEPTED", saved.getEventType());
-        assertEquals("/offers", saved.getLinkUrl());
-        assertEquals("1", saved.getReferenceId());
-        assertFalse(saved.getIsRead());
-        assertTrue(saved.getTitle().contains("Huỳnh Hoàng Trung"));
-        assertTrue(saved.getContent().contains("Đã nhận việc"));
-        assertEquals("OFFER_RESP_ACC_1", saved.getEventId());
-    }
-
-    @Test
-    @DisplayName("notifyOfferResponseFromCandidate: Ứng viên từ chối offer -> gửi thông báo OFFER_DECLINED kèm lý do tới HR")
-    void notifyOfferResponseFromCandidate_declinedWithReason() {
-        User hrUser = User.builder().userId(15).username("hr.user").fullName("Lê Thị HR").build();
-        User candidateUser = User.builder().userId(22).username("trung").fullName("Huỳnh Hoàng Trung").build();
-        com.group2.rms.candidate.entity.Candidate candidate = com.group2.rms.candidate.entity.Candidate.builder()
-                .candidateId(5)
-                .account(candidateUser)
-                .build();
-        com.group2.rms.candidate.entity.Application app = com.group2.rms.candidate.entity.Application.builder()
-                .applicationId(10)
-                .candidate(candidate)
-                .build();
-        com.group2.rms.offer.entity.OfferProposal offer = com.group2.rms.offer.entity.OfferProposal.builder()
-                .offerId(1)
-                .offeredPositionTitle("Senior Java Engineer")
-                .proposedBy(hrUser)
-                .application(app)
-                .build();
-
-        when(notificationRepository.existsByEventId("OFFER_RESP_DEC_1")).thenReturn(false);
-
-        notificationService.notifyOfferResponseFromCandidate(offer, false, "Mức đãi ngộ chưa đạt kỳ vọng");
-
-        ArgumentCaptor<Notification> captor = ArgumentCaptor.forClass(Notification.class);
-        verify(notificationRepository).save(captor.capture());
-
-        Notification saved = captor.getValue();
-        assertEquals(hrUser, saved.getRecipient());
-        assertEquals("OFFER_DECLINED", saved.getEventType());
-        assertEquals("/offers", saved.getLinkUrl());
-        assertEquals("1", saved.getReferenceId());
-        assertFalse(saved.getIsRead());
-        assertTrue(saved.getTitle().contains("Huỳnh Hoàng Trung"));
-        assertTrue(saved.getContent().contains("Mức đãi ngộ chưa đạt kỳ vọng"));
-        assertEquals("OFFER_RESP_DEC_1", saved.getEventId());
+    void offerReadUsesCandidateAndOfferScope() {
+        service.markOfferNotificationRead(8, 25);
+        verify(repository).markOfferNotificationRead(8, "25");
     }
 }

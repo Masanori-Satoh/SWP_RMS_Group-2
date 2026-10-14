@@ -7,10 +7,7 @@ import lombok.*;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "Notification", indexes = {
-    @Index(name = "IX_Notification_Recipient_IsRead", columnList = "RecipientId, IsRead"),
-    @Index(name = "IX_Notification_EventId", columnList = "EventId")
-})
+@Table(name = "Notification")
 @Getter
 @Setter
 @NoArgsConstructor
@@ -38,6 +35,10 @@ public class Notification {
     private String eventType;
 
     @org.hibernate.annotations.JdbcTypeCode(org.hibernate.type.SqlTypes.VARCHAR)
+    @Column(name = "ReferenceType", length = 50)
+    private String referenceType;
+
+    @org.hibernate.annotations.JdbcTypeCode(org.hibernate.type.SqlTypes.VARCHAR)
     @Column(name = "ReferenceId", length = 50)
     private String referenceId;
 
@@ -49,7 +50,7 @@ public class Notification {
     private Boolean isRead = false;
 
     @org.hibernate.annotations.JdbcTypeCode(org.hibernate.type.SqlTypes.VARCHAR)
-    @Column(name = "EventId", length = 100, unique = true)
+    @Column(name = "EventId", length = 100)
     private String eventId;
 
     @Column(name = "CreatedAt", nullable = false)
