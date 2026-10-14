@@ -174,6 +174,75 @@ public class NotificationServiceImpl implements NotificationService {
     }
 
     @Override
+    @Transactional
+    public void notifyOfferResponseFromCandidate(OfferProposal offer, boolean accepted, String declineReason) {
+        if (offer == null || offer.getProposedBy() == null) {
+            log.warn("Cannot send offer response notification: Offer or ProposedBy (HR) is null for Offer ID: {}",
+                    offer != null ? offer.getOfferId() : null);
+            return;
+        }
+
+        User recipient = offer.getProposedBy();
+        String eventId = (accepted ? "OFFER_RESP_ACC_" : "OFFER_RESP_DEC_") + offer.getOfferId();
+
+        if (notificationRepository.existsByEventId(eventId)) {
+            log.info("Notification for eventId {} already exists. Skipping duplicate creation.", eventId);
+            return;
+        }
+
+        String positionTitle = (offer.getOfferedPositionTitle() != null && !offer.getOfferedPositionTitle().isBlank())
+                ? offer.getOfferedPositionTitle()
+                : "Vị trí tuyển dụng";
+
+        String candidateName = "Ứng viên";
+        if (offer.getApplication() != null && offer.getApplication().getCandidate() != null) {
+            if (offer.getApplication().getCandidate().getAccount() != null
+                    && offer.getApplication().getCandidate().getAccount().getFullName() != null) {
+                candidateName = offer.getApplication().getCandidate().getAccount().getFullName();
+            }
+        }
+
+        String title;
+        String content;
+        String eventType;
+
+        if (accepted) {
+            title = String.format("🎉 Ứng viên đã nhận offer: %s (%s)", candidateName, positionTitle);
+            content = String.format(
+                    "Ứng viên %s đã đồng ý nhận lời mời làm việc cho vị trí \"%s\". Trạng thái hồ sơ đã chuyển sang \"Đã nhận việc\" (Hired). Vui lòng chuẩn bị thủ tục tiếp nhận nhân sự.",
+                    candidateName, positionTitle
+            );
+            eventType = "OFFER_ACCEPTED";
+        } else {
+            title = String.format("Ứng viên từ chối offer: %s (%s)", candidateName, positionTitle);
+            String reasonText = (declineReason != null && !declineReason.isBlank())
+                    ? String.format(" Lý do: \"%s\".", declineReason.trim())
+                    : "";
+            content = String.format(
+                    "Ứng viên %s đã từ chối thư mời làm việc cho vị trí \"%s\".%s Trạng thái hồ sơ đã chuyển sang \"Không tiếp tục\" (Rejected).",
+                    candidateName, positionTitle, reasonText
+            );
+            eventType = "OFFER_DECLINED";
+        }
+
+        Notification notification = Notification.builder()
+                .recipient(recipient)
+                .title(title)
+                .content(content)
+                .eventType(eventType)
+                .referenceId(String.valueOf(offer.getOfferId()))
+                .linkUrl("/offers")
+                .isRead(false)
+                .eventId(eventId)
+                .createdAt(LocalDateTime.now())
+                .build();
+
+        notificationRepository.save(notification);
+        log.info("Sent candidate offer response notification ({}) to HR (User ID: {}) for Offer ID: {}",
+                eventType, recipient.getUserId(), offer.getOfferId());
+    }
+
+    @Override
     @Transactional(readOnly = true)
     public Page<NotificationResponse> getNotificationsForUser(User user, int page, int size) {
         if (user == null) {

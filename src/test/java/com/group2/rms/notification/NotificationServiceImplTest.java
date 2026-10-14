@@ -248,4 +248,80 @@ class NotificationServiceImplTest {
         notificationService.markOfferNotificationRead(22, 1);
         verify(notificationRepository).markOfferNotificationRead(22, "1");
     }
+
+    @Test
+    @DisplayName("notifyOfferResponseFromCandidate: Ứng viên nhận offer -> gửi thông báo OFFER_ACCEPTED tới HR")
+    void notifyOfferResponseFromCandidate_accepted() {
+        User hrUser = User.builder().userId(15).username("hr.user").fullName("Lê Thị HR").build();
+        User candidateUser = User.builder().userId(22).username("trung").fullName("Huỳnh Hoàng Trung").build();
+        com.group2.rms.candidate.entity.Candidate candidate = com.group2.rms.candidate.entity.Candidate.builder()
+                .candidateId(5)
+                .account(candidateUser)
+                .build();
+        com.group2.rms.candidate.entity.Application app = com.group2.rms.candidate.entity.Application.builder()
+                .applicationId(10)
+                .candidate(candidate)
+                .build();
+        com.group2.rms.offer.entity.OfferProposal offer = com.group2.rms.offer.entity.OfferProposal.builder()
+                .offerId(1)
+                .offeredPositionTitle("Senior Java Engineer")
+                .proposedBy(hrUser)
+                .application(app)
+                .build();
+
+        when(notificationRepository.existsByEventId("OFFER_RESP_ACC_1")).thenReturn(false);
+
+        notificationService.notifyOfferResponseFromCandidate(offer, true, null);
+
+        ArgumentCaptor<Notification> captor = ArgumentCaptor.forClass(Notification.class);
+        verify(notificationRepository).save(captor.capture());
+
+        Notification saved = captor.getValue();
+        assertEquals(hrUser, saved.getRecipient());
+        assertEquals("OFFER_ACCEPTED", saved.getEventType());
+        assertEquals("/offers", saved.getLinkUrl());
+        assertEquals("1", saved.getReferenceId());
+        assertFalse(saved.getIsRead());
+        assertTrue(saved.getTitle().contains("Huỳnh Hoàng Trung"));
+        assertTrue(saved.getContent().contains("Đã nhận việc"));
+        assertEquals("OFFER_RESP_ACC_1", saved.getEventId());
+    }
+
+    @Test
+    @DisplayName("notifyOfferResponseFromCandidate: Ứng viên từ chối offer -> gửi thông báo OFFER_DECLINED kèm lý do tới HR")
+    void notifyOfferResponseFromCandidate_declinedWithReason() {
+        User hrUser = User.builder().userId(15).username("hr.user").fullName("Lê Thị HR").build();
+        User candidateUser = User.builder().userId(22).username("trung").fullName("Huỳnh Hoàng Trung").build();
+        com.group2.rms.candidate.entity.Candidate candidate = com.group2.rms.candidate.entity.Candidate.builder()
+                .candidateId(5)
+                .account(candidateUser)
+                .build();
+        com.group2.rms.candidate.entity.Application app = com.group2.rms.candidate.entity.Application.builder()
+                .applicationId(10)
+                .candidate(candidate)
+                .build();
+        com.group2.rms.offer.entity.OfferProposal offer = com.group2.rms.offer.entity.OfferProposal.builder()
+                .offerId(1)
+                .offeredPositionTitle("Senior Java Engineer")
+                .proposedBy(hrUser)
+                .application(app)
+                .build();
+
+        when(notificationRepository.existsByEventId("OFFER_RESP_DEC_1")).thenReturn(false);
+
+        notificationService.notifyOfferResponseFromCandidate(offer, false, "Mức đãi ngộ chưa đạt kỳ vọng");
+
+        ArgumentCaptor<Notification> captor = ArgumentCaptor.forClass(Notification.class);
+        verify(notificationRepository).save(captor.capture());
+
+        Notification saved = captor.getValue();
+        assertEquals(hrUser, saved.getRecipient());
+        assertEquals("OFFER_DECLINED", saved.getEventType());
+        assertEquals("/offers", saved.getLinkUrl());
+        assertEquals("1", saved.getReferenceId());
+        assertFalse(saved.getIsRead());
+        assertTrue(saved.getTitle().contains("Huỳnh Hoàng Trung"));
+        assertTrue(saved.getContent().contains("Mức đãi ngộ chưa đạt kỳ vọng"));
+        assertEquals("OFFER_RESP_DEC_1", saved.getEventId());
+    }
 }

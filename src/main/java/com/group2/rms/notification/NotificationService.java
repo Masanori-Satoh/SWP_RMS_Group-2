@@ -12,6 +12,8 @@ public interface NotificationService {
 
     void notifyOfferLetterSent(com.group2.rms.offer.entity.OfferProposal offer);
 
+    void notifyOfferResponseFromCandidate(com.group2.rms.offer.entity.OfferProposal offer, boolean accepted, String declineReason);
+
     Page<NotificationResponse> getNotificationsForUser(User user, int page, int size);
 
     long getUnreadCount(User user);
