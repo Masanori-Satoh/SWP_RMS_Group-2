@@ -12,6 +12,9 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public interface JobPostingRepository extends JpaRepository<JobPosting, Integer>, JpaSpecificationExecutor<JobPosting> {
+    @org.springframework.data.jpa.repository.Lock(jakarta.persistence.LockModeType.PESSIMISTIC_WRITE)
+    @Query("select j from JobPosting j where j.jobPostingId = :id")
+    java.util.Optional<JobPosting> findForUpdate(@Param("id") Integer id);
 
     boolean existsByRequisition_RequisitionId(Integer id);
 

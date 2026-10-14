@@ -39,6 +39,10 @@
             </p>
         </div>
         <div class="iv-header-actions">
+            <form th:if="${canResendRecruitmentEmail and (result.statusBadge != null)}" method="post"
+                  th:action="@{/talent-pool/interviews/{id}/resend-email(id=${result.interviewId})}">
+                <button class="btn btn--secondary btn--sm" type="submit">Gửi lại Email</button>
+            </form>
             <span class="badge" th:classappend="${result.statusBadge}" th:text="${result.statusDisplay}">Đã hoàn thành</span>
             <a th:href="@{/interviews}" class="btn btn--secondary btn--sm">Quay lại</a>
             <button th:if="${result.canEvaluate}" type="button" class="btn btn--primary btn--sm"
@@ -49,6 +53,8 @@
     </div>
 
     <div th:if="${param.evaluated}" class="alert alert--success" role="status">Đã gửi phiếu đánh giá. Cảm ơn bạn!</div>
+    <div th:if="${successMessage}" class="alert alert--success" role="status" th:text="${successMessage}"></div>
+    <div th:if="${errorMessage}" class="alert alert--danger" role="alert" th:text="${errorMessage}"></div>
     <div th:if="${param.finalized}" class="alert alert--success" role="status">Đã chốt kết quả phỏng vấn.</div>
     <div th:if="${result.finalizeBlockedReason != null}" class="alert alert--warning" role="note"
          th:text="${result.finalizeBlockedReason}">Buổi phỏng vấn chưa diễn ra, chưa thể chốt kết quả.</div>

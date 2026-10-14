@@ -12,7 +12,7 @@ public final class ApplicationStatusLabels {
 
     /** Thứ tự theo luồng tuyển dụng, dùng cho ô lọc. */
     public static final List<String> STATUSES = List.of(
-            "Applied", "AI_Screened", "HR_Passed", "HM_Passed", "Interviewing", "Offered", "Hired", "Rejected");
+            "Applied", "AI_Screened", "HR_Passed", "HM_Suggested", "HM_Passed", "Interviewing", "Offered", "Hired", "Rejected");
 
     private ApplicationStatusLabels() {
     }
@@ -30,6 +30,7 @@ public final class ApplicationStatusLabels {
             case "AI_Screened" -> "Đã sàng lọc";
             case "HR_Passed" -> "Qua vòng nhân sự";
             case "HM_Passed" -> "Qua vòng chuyên môn";
+            case "HM_Suggested" -> "HM đề xuất — chờ HR liên hệ";
             case "Interviewing" -> "Đang phỏng vấn";
             case "Offered" -> "Đã có thư mời";
             case "Hired" -> "Đã nhận việc";
@@ -47,6 +48,7 @@ public final class ApplicationStatusLabels {
             case "Applied", "AI_Screened" -> "HR sàng lọc hồ sơ và chuyển cho trưởng bộ phận.";
             case "HR_Passed" -> "Trưởng bộ phận" + (departmentName == null ? "" : " " + departmentName) + " duyệt hồ sơ.";
             case "HM_Passed" -> "HR lên lịch phỏng vấn.";
+            case "HM_Suggested" -> "HR liên hệ ứng viên để xác nhận nguyện vọng ứng tuyển.";
             case "Interviewing" -> "Phỏng vấn và tổng hợp kết quả; đạt thì tạo offer.";
             case "Offered" -> "Chờ ứng viên phản hồi thư mời.";
             case "Hired" -> "Ứng viên đã nhận việc. Quy trình kết thúc.";
@@ -60,7 +62,7 @@ public final class ApplicationStatusLabels {
 
     public static String badge(String status) {
         return switch (status) {
-            case "HR_Passed", "HM_Passed", "Interviewing" -> "badge--warning";
+            case "HR_Passed", "HM_Passed", "HM_Suggested", "Interviewing" -> "badge--warning";
             case "Offered", "Hired" -> "badge--success";
             case "Rejected" -> "badge--danger";
             default -> "badge--neutral";

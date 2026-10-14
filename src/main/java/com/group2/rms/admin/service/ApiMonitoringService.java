@@ -10,9 +10,7 @@ import com.group2.rms.admin.exception.MonitoringSessionRequiredException;
 import java.io.IOException;
 import java.net.URI;
 import java.time.LocalDateTime;
-import java.util.ArrayDeque;
-import java.util.ArrayList;
-import java.util.Deque;
+
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
@@ -103,7 +101,5 @@ public class ApiMonitoringService {
                         null));
     }
 
-    private record Probe(boolean success, Integer httpStatus, long elapsedMs, LocalDateTime checkedAt, String detail) {
-    }
 
 }

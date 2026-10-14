@@ -66,6 +66,7 @@ public class InterviewSchedulingServiceImpl implements InterviewSchedulingServic
                 .orElseThrow(() -> new EntityNotFoundException("Không tìm thấy hồ sơ ứng tuyển với ID: " + request.getApplicationId()));
 
         // 3. Kiểm tra ràng buộc thời gian & trạng thái qua InterviewTimeValidationService
+        applicationStatusService.requireScheduleable(application.getApplicationId());
         interviewTimeValidationService.validateForCreate(request);
 
         // 4. Validate danh sách Hội đồng phỏng vấn (InterviewPanel)

@@ -159,7 +159,7 @@ class ApplicationSubmissionServiceTests {
     @Test
     void unknownJobIsNotFound() {
         givenCandidate();
-        when(jobPostings.findById(JOB_ID)).thenReturn(Optional.empty());
+        when(jobPostings.findForUpdate(JOB_ID)).thenReturn(Optional.empty());
 
         assertThrows(ResourceNotFoundException.class, () -> service.apply(USERNAME, JOB_ID, PDF));
         assertNothingStored();
@@ -192,7 +192,7 @@ class ApplicationSubmissionServiceTests {
     void duplicateApplicationIsRejected() {
         givenCandidate();
         givenJob(job("Published", null));
-        when(applications.existsByCandidate_CandidateIdAndJobPosting_JobPostingId(CANDIDATE_ID, JOB_ID))
+        when(applications.existsActiveByCandidateAndJobPosting(CANDIDATE_ID, JOB_ID))
                 .thenReturn(true);
 
         ApplicationSubmissionException e = assertThrows(ApplicationSubmissionException.class,
@@ -233,20 +233,37 @@ class ApplicationSubmissionServiceTests {
     @Test
     void hasAppliedReflectsExistingApplication() {
         givenCandidate();
-        when(applications.existsByCandidate_CandidateIdAndJobPosting_JobPostingId(CANDIDATE_ID, JOB_ID))
+        when(applications.existsActiveByCandidateAndJobPosting(CANDIDATE_ID, JOB_ID))
                 .thenReturn(true);
 
         assertTrue(service.hasApplied(USERNAME, JOB_ID));
     }
 
     // ------------------------------------------------------------------ helpers
+    @Test
+    void candidateWithSuggestionCanSubmitNewCvThroughNormalAiFlow() {
+        givenCandidate();
+        givenJob(job("Published", LocalDateTime.now().plusDays(7)));
+        candidate.setAccount(com.group2.rms.user.entity.User.builder().userId(15).build());
+        Application suggestion = Application.builder().applicationId(302).candidate(candidate)
+                .applicationStatus("HM_Suggested").appliedCvUrl("local:old.pdf").build();
+        when(cvStorage.store(PDF, CANDIDATE_ID)).thenReturn(STORED);
+        when(applications.findFirstByCandidate_CandidateIdAndJobPosting_JobPostingIdAndApplicationStatus(
+                CANDIDATE_ID, JOB_ID, "HM_Suggested")).thenReturn(Optional.of(suggestion));
+        when(applications.submitSuggestionWithNewCv(302, STORED.url())).thenReturn(1);
+        org.junit.jupiter.api.Assertions.assertEquals(302, service.apply(USERNAME, JOB_ID, PDF));
+        verify(events).publishEvent(new ApplicationSubmittedEvent(302));
+        verify(applications).recordSuggestionSubmitted(15, 302);
+        verify(applications, never()).save(any(Application.class));
+        verify(cvStorage, never()).delete("old.pdf");
+    }
 
     private void givenCandidate() {
         when(candidates.findByAccount_UsernameIgnoreCase(USERNAME)).thenReturn(Optional.of(candidate));
     }
 
     private void givenJob(JobPosting job) {
-        when(jobPostings.findById(JOB_ID)).thenReturn(Optional.of(job));
+        when(jobPostings.findForUpdate(JOB_ID)).thenReturn(Optional.of(job));
     }
 
     private static JobPosting job(String status, LocalDateTime deadline) {

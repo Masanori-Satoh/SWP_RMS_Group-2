@@ -89,7 +89,7 @@ class InterviewSchedulingServiceTests {
 
         application = Application.builder()
                 .applicationId(10)
-                .applicationStatus("Applied")
+                .applicationStatus("HM_Passed")
                 .build();
 
         directorUser = User.builder()
@@ -301,6 +301,7 @@ class InterviewSchedulingServiceTests {
                 .panelMembers(List.of(new PanelMemberRequest(1, RoleInPanel.HR)))
                 .build();
         assertThrows(InterviewStatusException.class, () -> service.createSchedule(selfAssigned, 1));
+        verify(applicationStatusService, times(2)).requireScheduleable(application.getApplicationId());
         verifyNoMoreInteractions(applicationStatusService);
     }
 

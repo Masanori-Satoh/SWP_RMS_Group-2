@@ -72,6 +72,36 @@
         </div>
 
         <aside class="app-detail__side">
+            <section th:if="${detail.viewerRole == 'HR' or detail.viewerRole == 'Hiring Manager'}" class="card mb-4">
+                <h2 class="app-section-title">Ứng viên tiềm năng</h2>
+                <form th:unless="${detail.isPotential}" method="post" th:action="@{/talent-pool/applications/{id}/mark(id=${detail.applicationId})}">
+                    <button type="submit" class="btn btn--secondary">Đánh dấu tiềm năng</button>
+                </form>
+                <th:block th:if="${detail.isPotential}">
+                    <span class="badge badge--success">Đã đánh dấu tiềm năng</span>
+                    <a class="btn btn--secondary btn--sm" th:href="@{/talent-pool/{id}(id=${detail.candidateId})}">Hồ sơ và ghi chú đánh giá</a>
+                    <ul><li th:each="note : ${talentNotes}"><strong th:text="${note.author}"></strong><p th:text="${note.content}"></p><time th:text="${#temporals.format(note.createdAt,'dd/MM/yyyy HH:mm')}"></time></li></ul>
+                </th:block>
+            </section>
+            <section th:if="${detail.viewerRole == 'HR' and detail.applicationStatus == 'HM_Suggested'}" class="card mb-4">
+                <h2 class="app-section-title">Xác nhận sau khi liên hệ</h2>
+                <p>Đề xuất này chưa hiển thị cho ứng viên. Xác nhận khi ứng viên đồng ý dùng CV cũ.</p>
+                <form method="post" th:action="@{/talent-pool/applications/{id}/confirm(id=${detail.applicationId})}">
+                    <label><input type="checkbox" name="consent" value="true" required> Ứng viên đã đồng ý ứng tuyển bằng CV cũ</label>
+                    <button class="btn btn--primary" type="submit">Xác nhận và lên lịch</button>
+                </form>
+                <p>Nếu ứng viên muốn đổi CV, hướng dẫn họ tự nộp tại trang tuyển dụng.</p>
+                <button class="btn btn--danger" type="button" data-dialog-open="talent-decline-dialog">Ứng viên từ chối</button>
+                <dialog id="talent-decline-dialog" class="confirm-dialog" aria-labelledby="talent-decline-title">
+                    <h2 id="talent-decline-title">Kết thúc đề xuất?</h2><p>Đề xuất được giữ trong lịch sử nội bộ và không hiển thị cho ứng viên.</p>
+                    <form method="post" th:action="@{/talent-pool/applications/{id}/decline(id=${detail.applicationId})}">
+                        <button class="btn btn--secondary" type="button" data-dialog-close>Hủy</button><button class="btn btn--danger" type="submit">Kết thúc đề xuất</button>
+                    </form>
+                </dialog>
+            </section>
+            <form th:if="${detail.viewerRole == 'HR' and closedByPosting}" method="post" th:action="@{/talent-pool/applications/{id}/resend-email(id=${detail.applicationId})}" class="mb-4">
+                <button class="btn btn--secondary" type="submit">Gửi lại Email thông báo dừng tuyển</button>
+            </form>
             <!-- Bước tiếp theo: luôn hiện "đang chờ ai", kèm việc của người xem nếu có -->
             <section class="card app-next-card" aria-labelledby="app-next-title">
                 <h2 id="app-next-title" class="app-section-title">Bước tiếp theo</h2>
@@ -158,5 +188,6 @@
         </aside>
     </div>
 </main>
+<th:block layout:fragment="scripts"><script th:src="@{/js/pages/talent-pool.js}" defer></script></th:block>
 </body>
 </html>

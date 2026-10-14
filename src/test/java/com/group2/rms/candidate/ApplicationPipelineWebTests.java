@@ -52,7 +52,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 /**
  * Trang hồ sơ ứng tuyển qua Spring MVC + Spring Security thật; service là mock.
  */
-@WebMvcTest(ApplicationPipelineController.class)
+@WebMvcTest({ApplicationPipelineController.class, com.group2.rms.candidate.controller.TalentPoolController.class})
 @Import({SecurityConfig.class, DatabaseUserDetailsService.class})
 class ApplicationPipelineWebTests {
 
@@ -61,6 +61,8 @@ class ApplicationPipelineWebTests {
     @Autowired MockMvc mvc;
     @MockitoBean ApplicationPipelineService pipeline;
     @MockitoBean ApplicationReviewService reviewService;
+    @MockitoBean com.group2.rms.candidate.service.TalentPoolService talentPool;
+    @MockitoBean com.group2.rms.candidate.service.RecruitmentEmailService recruitmentEmail;
     @MockitoBean UserRepository users;
 
     // ------------------------------------------------------------------ quyền truy cập
@@ -317,6 +319,60 @@ class ApplicationPipelineWebTests {
     }
 
     // ------------------------------------------------------------------ dữ liệu mẫu
+    @Test
+    void talentPoolRendersSelectionAndKeepsCsrf() throws Exception {
+        var cv = new com.group2.rms.candidate.dto.TalentPoolCvResponse(10, "Java Developer", SUBMITTED);
+        var candidate = new com.group2.rms.candidate.dto.TalentPoolCandidateResponse(15, "An Võ", "an@example.com", "0901234567", List.of(cv));
+        when(talentPool.search(any(), any())).thenReturn(new PageImpl<>(List.of(candidate)));
+        when(talentPool.viewerRole()).thenReturn("Hiring Manager");
+        when(talentPool.targetJobTitle(12)).thenReturn("Java Developer");
+        var response = mvc.perform(get("/talent-pool?jobPostingId=12").with(as("hm", "Hiring Manager")))
+                .andExpect(status().isOk())
+                .andExpect(content().string(containsString("sourceApplicationIds")))
+                .andExpect(content().string(containsString("name=\"_csrf\"")))
+                .andExpect(content().string(containsString("STT"))).andReturn();
+        var path = java.nio.file.Path.of("docs/members/linhdn/tmp/talent-pool/list.html");
+        java.nio.file.Files.createDirectories(path.getParent());
+        java.nio.file.Files.writeString(path, response.getResponse().getContentAsString(), java.nio.charset.StandardCharsets.UTF_8);
+    }
+    @Test
+    void talentPoolDetailRendersNotesAndCv() throws Exception {
+        var cv = new com.group2.rms.candidate.dto.TalentPoolCvResponse(10, "Java Developer", SUBMITTED);
+        var c = new com.group2.rms.candidate.dto.TalentPoolCandidateResponse(15, "An Võ", "an@example.com", "0901234567", List.of(cv));
+        when(talentPool.detail(15)).thenReturn(new com.group2.rms.candidate.dto.TalentPoolDetailResponse(c, true,
+                List.of(new com.group2.rms.candidate.dto.TalentPoolNoteResponse(1, "HR Lan", "Giao tiếp tốt", SUBMITTED)), List.of(cv)));
+        when(talentPool.viewerRole()).thenReturn("HR");
+        var response = mvc.perform(get("/talent-pool/15").with(as("hr_lan", "HR")))
+                .andExpect(status().isOk()).andExpect(content().string(containsString("Giao tiếp tốt"))).andReturn();
+        var path = java.nio.file.Path.of("docs/members/linhdn/tmp/talent-pool/detail.html");
+        java.nio.file.Files.createDirectories(path.getParent());
+        java.nio.file.Files.writeString(path, response.getResponse().getContentAsString(), java.nio.charset.StandardCharsets.UTF_8);
+    }
+    @Test
+    void talentPoolCandidateIsDeniedAndMissingCsrfIsDenied() throws Exception {
+        mvc.perform(get("/talent-pool").with(as("candidate", "Candidate"))).andExpect(status().isForbidden());
+        mvc.perform(post("/talent-pool/applications/1/confirm").with(as("hr_lan", "HR")).param("consent", "true"))
+                .andExpect(status().isForbidden());
+        verifyNoInteractions(talentPool);
+    }
+    @Test
+    void hiringManagerCannotConfirmButHrCanConfirmConsent() throws Exception {
+        mvc.perform(post("/talent-pool/applications/1/confirm").with(as("hm", "Hiring Manager")).with(csrf()).param("consent","true"))
+                .andExpect(status().isForbidden());
+        mvc.perform(post("/talent-pool/applications/1/confirm").with(as("hr_lan", "HR")).with(csrf()).param("consent","true"))
+                .andExpect(redirectedUrl("/interviews/new?applicationId=1"));
+        verify(talentPool).confirm(eq(1), argThat(form -> form.consent()));
+    }
+    @Test
+    void savedClosureShowsMailFailureWithoutRepeatingBusinessAction() throws Exception {
+        doThrow(new com.group2.rms.candidate.exception.RecruitmentEmailException()).when(recruitmentEmail).sendJobClosure(12);
+        mvc.perform(post("/talent-pool/jobs/12/close").with(as("hr_lan", "HR")).with(csrf()))
+                .andExpect(redirectedUrl("/internal/job-postings/12"))
+                .andExpect(flash().attribute("errorMessage", containsString("Đã lưu dữ liệu")));
+        var order = inOrder(talentPool, recruitmentEmail);
+        order.verify(talentPool).closeJob(12);
+        order.verify(recruitmentEmail).sendJobClosure(12);
+    }
 
     /** Đăng nhập giả + tài khoản đang hoạt động, để {@code AccountSessionGuardFilter} cho qua. */
     private RequestPostProcessor as(String username, String roleName) {
@@ -344,7 +400,7 @@ class ApplicationPipelineWebTests {
 
     private static ApplicationDetailResponse detail(boolean nextSteps, boolean openJobPosting, String linkedIn,
                                                     boolean review, boolean rescreen) {
-        return new ApplicationDetailResponse(298, "An Võ", "an.vo@example.com", "0901 234 567", linkedIn, null,
+        return new ApplicationDetailResponse(298, 15, false, "An Võ", "an.vo@example.com", "0901 234 567", linkedIn, null,
                 7, "REQ-007", 12, "Digital Marketing Executive", "Sales & Marketing", SUBMITTED,
                 "HM_Passed", "Qua vòng chuyên môn", "badge--warning", new BigDecimal("79.34"), SUBMITTED.plusMinutes(1),
                 List.of(new TimelineItem(SUBMITTED.plusDays(1), "HR: Đạt", "Lan HR", "Hợp vị trí", "success"),
@@ -358,6 +414,6 @@ class ApplicationPipelineWebTests {
                                                    boolean offer) {
         return new ApplicationPipelineResponse(id, "An Võ", "an.vo@example.com", "Digital Marketing Executive",
                 SUBMITTED, status, ApplicationStatusLabels.label(status), ApplicationStatusLabels.badge(status),
-                score == null ? null : new BigDecimal(score), schedule, offer);
+                score == null ? null : new BigDecimal(score), schedule, offer, false);
     }
 }

@@ -10,9 +10,12 @@ import static com.group2.rms.candidate.service.ApplicationProgressStep.*;
 /**
  * Tính trạng thái chi tiết của hồ sơ từ dữ kiện (hàm thuần, không đọc DB).
  * <p>
- * Đơn đang trong vòng phỏng vấn/offer ({@code HM_Passed}, {@code Interviewing}, {@code Offered}) được xét theo
- * việc thật đã xảy ra (offer, lịch, kết quả), không theo con dấu trạng thái: dữ liệu cũ có thể chưa đổi trạng thái
- * (ví dụ đơn {@code HM_Passed} đã có lịch, đã chốt Không đạt). Offer đứng sau phỏng vấn trong luồng nên xét trước.
+ * Đơn đang trong vòng phỏng vấn/offer ({@code HM_Passed}, {@code Interviewing},
+ * {@code Offered}) được xét theo
+ * việc thật đã xảy ra (offer, lịch, kết quả), không theo con dấu trạng thái: dữ
+ * liệu cũ có thể chưa đổi trạng thái
+ * (ví dụ đơn {@code HM_Passed} đã có lịch, đã chốt Không đạt). Offer đứng sau
+ * phỏng vấn trong luồng nên xét trước.
  */
 public final class ApplicationProgressResolver {
 
@@ -26,6 +29,7 @@ public final class ApplicationProgressResolver {
             case "Applied" -> of(AWAITING_AI);
             case "AI_Screened" -> of(AWAITING_HR_REVIEW);
             case "HR_Passed" -> of(AWAITING_HM_REVIEW);
+            case "HM_Suggested" -> of(HM_SUGGESTED);
             case "Hired" -> of(HIRED_DONE);
             case "Rejected" -> of(closedStep(facts));
             default -> inProgress(facts, now);
@@ -64,7 +68,8 @@ public final class ApplicationProgressResolver {
         if ("Passed".equals(facts.finalDecision())) {
             return of(PASSED_AWAITING_OFFER);
         }
-        boolean upcoming = ("Scheduled".equals(facts.interviewStatus()) || "Rescheduled".equals(facts.interviewStatus()))
+        boolean upcoming = ("Scheduled".equals(facts.interviewStatus())
+                || "Rescheduled".equals(facts.interviewStatus()))
                 && facts.interviewStart() != null && facts.interviewStart().isAfter(now);
         if (upcoming) {
             return of(INTERVIEW_SCHEDULED, facts.interviewStart().format(DAY_MONTH));
@@ -75,7 +80,10 @@ public final class ApplicationProgressResolver {
         return of(AWAITING_DECISION);
     }
 
-    /** {@code null} khi chưa có offer (hoặc trạng thái lạ ngoài {@code CK_OfferProposal_Status}). */
+    /**
+     * {@code null} khi chưa có offer (hoặc trạng thái lạ ngoài
+     * {@code CK_OfferProposal_Status}).
+     */
     private static ApplicationProgressStep offerStep(String offerStatus) {
         if (offerStatus == null) {
             return null;

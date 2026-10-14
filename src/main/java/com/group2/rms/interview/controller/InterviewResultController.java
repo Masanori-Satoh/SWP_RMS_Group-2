@@ -27,6 +27,7 @@ public class InterviewResultController {
         User viewer = currentUserService.requireUser();
         model.addAttribute("result", interviewResultService.getResult(id, viewer));
         model.addAttribute("activeMenu", "interviews");
+        model.addAttribute("canResendRecruitmentEmail", com.group2.rms.core.security.CurrentUserService.hasRole(viewer, "HR"));
         return "interview/result";
     }
 }

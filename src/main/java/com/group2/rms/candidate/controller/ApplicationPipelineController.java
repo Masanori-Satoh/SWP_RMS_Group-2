@@ -10,6 +10,8 @@ import com.group2.rms.candidate.service.ApplicationCv;
 import com.group2.rms.candidate.service.ApplicationPipelineService;
 import com.group2.rms.candidate.service.ApplicationReviewService;
 import com.group2.rms.candidate.service.ApplicationStatusLabels;
+import com.group2.rms.candidate.service.TalentPoolService;
+
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.core.io.Resource;
@@ -31,7 +33,9 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import java.net.URI;
+import java.util.List;
 import java.util.Locale;
+import java.util.Set;
 
 /**
  * Hồ sơ ứng tuyển cho người tuyển dụng: danh sách (5.1.22), chi tiết, CV, duyệt và chấm lại AI (5.1.23). Quyền theo vai trò ở {@code SecurityConfig},
@@ -47,6 +51,7 @@ public class ApplicationPipelineController {
 
     private final ApplicationPipelineService pipeline;
     private final ApplicationReviewService reviewService;
+    private final TalentPoolService talentPool;
 
     @GetMapping
     public String list(@ModelAttribute ApplicationSearch search,
@@ -103,6 +108,11 @@ public class ApplicationPipelineController {
     private String renderDetail(Integer id, Model model) {
         ApplicationDetailResponse detail = pipeline.detail(id);
         model.addAttribute("detail", detail);
+        //check if user is potential and user  view is hr or hiring manager
+        model.addAttribute("talentNotes", detail.isPotential()
+                && Set.of("HR", "Hiring Manager").contains(detail.viewerRole())
+                ? talentPool.notesFor(detail.candidateId()) : List.of());
+        model.addAttribute("closedByPosting", pipeline.closedByPosting(id));
         model.addAttribute("activeMenu", "applications");
         model.addAttribute("viewerRole", detail.viewerRole());
         return "candidate/application-detail";

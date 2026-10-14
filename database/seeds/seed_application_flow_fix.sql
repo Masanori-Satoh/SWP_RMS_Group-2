@@ -9,7 +9,7 @@
 -- (ví dụ Hired nhưng chưa có offer, Rejected nhưng đã Đạt phỏng vấn).
 --
 -- Quy tắc (dòng khớp đầu tiên thắng), áp cho hồ sơ đang ở
--- HM_Passed, Interviewing, Offered, Hired hoặc Rejected:
+-- HM_Passed, HM_Suggested, Interviewing, Offered, Hired hoặc Rejected:
 --   1. Offer Accepted                      -> Hired
 --   2. Offer Declined                      -> Rejected
 --   3. Offer Sent_Candidate                -> Offered
@@ -51,7 +51,8 @@ facts AS (
     LEFT JOIN latest l  ON l.ApplicationId = a.ApplicationId AND l.rn = 1
     LEFT JOIN InterviewFinalResult fr ON fr.InterviewId = l.InterviewId
     LEFT JOIN OfferProposal o ON o.ApplicationId = a.ApplicationId
-    WHERE a.ApplicationStatus IN (N'HM_Passed', N'Interviewing', N'Offered', N'Hired', N'Rejected')
+    -- [CẬP NHẬT THEO DB MỚI]: Bổ sung trạng thái mới N'HM_Suggested'
+    WHERE a.ApplicationStatus IN (N'HM_Passed', N'HM_Suggested', N'Interviewing', N'Offered', N'Hired', N'Rejected')
       AND NOT EXISTS (SELECT 1 FROM AuditLog al
                       WHERE al.EntityName = N'Application'
                         AND al.EntityId = CAST(a.ApplicationId AS NVARCHAR(50))

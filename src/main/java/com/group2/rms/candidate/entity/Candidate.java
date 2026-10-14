@@ -45,6 +45,10 @@ public class Candidate extends BaseEntity {
     @Column(name = "PortfolioUrl", length = 500)
     private String portfolioUrl;
 
+    @Builder.Default
+    @Column(name = "IsPotential", nullable = false)
+    private boolean isPotential = false;
+
     /**
      * Website, TopCV, Referral
      */

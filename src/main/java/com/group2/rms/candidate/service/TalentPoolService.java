@@ -1,0 +1,240 @@
+package com.group2.rms.candidate.service;
+
+import com.group2.rms.candidate.dto.*;
+import com.group2.rms.candidate.entity.*;
+import com.group2.rms.candidate.exception.TalentPoolException;
+import com.group2.rms.candidate.repository.*;
+import com.group2.rms.core.exception.ResourceNotFoundException;
+import com.group2.rms.core.security.CurrentUserService;
+import com.group2.rms.requisition.entity.JobPosting;
+import com.group2.rms.requisition.repository.JobPostingRepository;
+import com.group2.rms.requisition.service.RequisitionAccess;
+import com.group2.rms.user.entity.User;
+import com.group2.rms.user.repository.UserRepository;
+import lombok.RequiredArgsConstructor;
+import org.springframework.core.io.ClassPathResource;
+import org.springframework.data.domain.*;
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import java.time.LocalDateTime;
+import java.util.*;
+
+@Service
+@RequiredArgsConstructor
+@Transactional(readOnly = true)
+public class TalentPoolService {
+    private final CandidateRepository candidates;
+    private final ApplicationRepository applications;
+    private final TalentPoolNoteRepository notes;
+    private final TalentPoolAuditRepository audit;
+    private final JobPostingRepository jobs;
+    private final CurrentUserService currentUser;
+    private final RequisitionAccess jobAccess;
+    private final ApplicationAccess applicationAccess;
+    private final UserRepository users;
+    private final CvStorage storage;
+
+    public String viewerRole() { return actor().getRole().getRoleName(); }
+
+    public User actor() {
+        User user = currentUser.requireUser();
+        if (!CurrentUserService.hasRole(user, "HR") && !CurrentUserService.hasRole(user, "Hiring Manager"))
+            throw new AccessDeniedException("Chỉ HR và Hiring Manager được truy cập kho tiềm năng.");
+        return user;
+    }
+    private User hr() {
+        User user = actor();
+        if (!CurrentUserService.hasRole(user, "HR")) throw new AccessDeniedException("Chỉ HR được xác nhận ứng tuyển.");
+        return user;
+    }
+    public Page<TalentPoolCandidateResponse> search(TalentPoolSearch filter, Pageable page) {
+        actor();
+        String keyword = filter.keyword() == null || filter.keyword().isBlank() ? null : filter.keyword().strip();
+        if (keyword != null && keyword.length() > 100) keyword = keyword.substring(0, 100);
+        return candidates.searchPotential(keyword, filter.markedBy(), filter.sourceJobId(),
+                PageRequest.of(Math.max(0, page.getPageNumber()), Math.min(50, page.getPageSize())))
+                .map(this::candidateResponse);
+    }
+    public Map<Integer, String> authors() {
+        actor();
+        Map<Integer, String> result = new LinkedHashMap<>();
+        users.findAllWithRoleAndDepartment().stream()
+            .filter(u -> CurrentUserService.hasRole(u, "HR") || CurrentUserService.hasRole(u, "Hiring Manager"))
+            .forEach(u -> result.put(u.getUserId(), u.getFullName()));
+        return result;
+    }
+    public Map<Integer, String> sourceJobs() {
+        actor();
+        Map<Integer, String> result = new LinkedHashMap<>();
+        jobs.findAll().forEach(j -> result.put(j.getJobPostingId(), j.getPostingTitle()));
+        return result;
+    }
+    public TalentPoolDetailResponse detail(Integer id) {
+        actor();
+        Candidate candidate = candidate(id);
+        if (!candidate.isPotential()) throw new ResourceNotFoundException("Ứng viên chưa nằm trong kho tiềm năng.");
+        return new TalentPoolDetailResponse(candidateResponse(candidate), true,
+                notesFor(id), applications.findPreviousCvByCandidateId(id).stream()
+                .map(a -> new TalentPoolCvResponse(a.getApplicationId(), a.getJobPosting().getPostingTitle(), a.getSubmissionDate())).toList());
+    }
+    public List<TalentPoolNoteResponse> notesFor(Integer id) {
+        actor();
+        return notes.findByCandidate_CandidateIdOrderByCreatedAtDescNoteIdDesc(id).stream()
+                .map(n -> new TalentPoolNoteResponse(n.getNoteId(), n.getAuthor().getFullName(), n.getNoteContent(), n.getCreatedAt())).toList();
+    }
+    @Transactional
+    public void markPotential(Integer applicationId) {
+        User user = actor();
+        Application application = application(applicationId);
+        applicationAccess.requireView(user, application);
+        Candidate candidate = application.getCandidate();
+        if (!candidate.isPotential()) {
+            candidate.setPotential(true);
+            audit.record(user.getUserId(), "UPDATE", "Candidate", candidate.getCandidateId(), "false", "TalentPoolMarked");
+        }
+    }
+    @Transactional
+    public void addNote(Integer candidateId, TalentPoolNoteRequest request) {
+        User user = actor();
+        Candidate candidate = candidate(candidateId);
+        if (!candidate.isPotential()) throw new TalentPoolException("Hãy đánh dấu ứng viên tiềm năng trước khi thêm ghi chú.");
+        notes.save(TalentPoolNote.builder().candidate(candidate).author(user).noteContent(request.content().strip()).build());
+    }
+    public String targetJobTitle(Integer id) {
+        User user = actor();
+        JobPosting job = job(id, false);
+        requireTarget(user, job);
+        return job.getPostingTitle();
+    }
+    public List<TalentPoolSuggestionResponse> suggestions(Integer jobId) {
+        User user = actor();
+        JobPosting job = job(jobId, false);
+        requireTarget(user, job);
+        return applications.findSuggestionsByJobPostingId(jobId).stream().map(a -> {
+            User c = a.getCandidate().getAccount();
+            return new TalentPoolSuggestionResponse(a.getApplicationId(), c.getFullName(), c.getEmail(), c.getPhoneNumber(),
+                    audit.suggestedBy(a.getApplicationId()), a.getCreatedAt());
+        }).toList();
+    }
+    @Transactional
+    public void suggest(Integer jobId, TalentPoolSuggestRequest request) {
+        User user = actor();
+        if (!CurrentUserService.hasRole(user, "Hiring Manager")) throw new AccessDeniedException("Chỉ Hiring Manager tạo đề xuất.");
+        JobPosting target = job(jobId, true);
+        requireTarget(user, target);
+        requireOpen(target);
+        Set<Integer> selected = new HashSet<>();
+        for (Integer sourceId : request.sourceApplicationIds()) {
+            Application source = application(sourceId);
+            Candidate candidate = source.getCandidate();
+            if (!candidate.isPotential()) throw new TalentPoolException("Ứng viên phải được đánh dấu tiềm năng.");
+            if (!selected.add(candidate.getCandidateId())) throw new TalentPoolException("Chỉ chọn một CV cho mỗi ứng viên.");
+            if (source.getJobPosting().getJobPostingId().equals(jobId))
+                throw new TalentPoolException("CV nguồn phải thuộc một đợt tuyển khác.");
+            if (!applications.findPreviousCvByCandidateId(candidate.getCandidateId()).stream()
+                    .anyMatch(a -> a.getApplicationId().equals(sourceId)))
+                throw new TalentPoolException("CV nguồn phải thuộc đơn ứng tuyển chính thức.");
+            requireCv(source.getAppliedCvUrl());
+            if (applications.existsActiveByCandidateAndJobPosting(candidate.getCandidateId(), jobId)
+                    || applications.findFirstByCandidate_CandidateIdAndJobPosting_JobPostingIdAndApplicationStatus(
+                            candidate.getCandidateId(), jobId, "HM_Suggested").isPresent())
+                throw new TalentPoolException("Ứng viên đã có đơn hoặc đề xuất cho vị trí này.");
+            Application saved = applications.saveAndFlush(Application.builder().candidate(candidate).jobPosting(target)
+                    .appliedCvUrl(source.getAppliedCvUrl()).applicationStatus("HM_Suggested").build());
+            audit.record(user.getUserId(), "CREATE", "Application", saved.getApplicationId(), sourceId.toString(), "TalentPoolSuggested");
+        }
+    }
+    @Transactional
+    public Integer confirm(Integer id, TalentPoolConfirmRequest request) {
+        User user = hr();
+        if (!request.consent()) throw new TalentPoolException("Cần xác nhận ứng viên đồng ý dùng CV cũ.");
+        Application application = application(id);
+        requireOpen(job(application.getJobPosting().getJobPostingId(), true));
+        requireCv(application.getAppliedCvUrl());
+        if (applications.promoteSuggestionToHmPassed(id) != 1)
+            throw new TalentPoolException("Đề xuất đã được xử lý. Vui lòng tải lại trang.");
+        audit.record(user.getUserId(), "UPDATE", "Application", id, "HM_Suggested", "TalentPoolActivated");
+        return id;
+    }
+    @Transactional
+    public Integer decline(Integer id) {
+        User user = hr();
+        Application application = application(id);
+        job(application.getJobPosting().getJobPostingId(), true);
+        if (applications.transition(id, Set.of("HM_Suggested"), "Rejected") != 1)
+            throw new TalentPoolException("Đề xuất đã được xử lý.");
+        audit.record(user.getUserId(), "UPDATE", "Application", id, "HM_Suggested", "TalentPoolCancelled");
+        return application.getJobPosting().getJobPostingId();
+    }
+    @Transactional
+    public void closeJob(Integer id) {
+        User user = hr();
+        JobPosting posting = job(id, true);
+        if ("Closed".equals(posting.getPostingStatus())) return;
+        if (audit.hasOpenOffers(id)) throw new TalentPoolException("Còn Offer chưa kết thúc. Hãy xử lý Offer trước khi đóng đợt tuyển.");
+        posting.setPostingStatus("Closed");
+        audit.record(user.getUserId(), "UPDATE", "JobPosting", id, null, "Closed");
+        for (Application suggestion : applications.findSuggestionsByJobPostingId(id)) {
+            if (applications.transition(suggestion.getApplicationId(), Set.of("HM_Suggested"), "Rejected") == 1)
+                audit.record(user.getUserId(), "UPDATE", "Application", suggestion.getApplicationId(), "HM_Suggested", "TalentPoolCancelled");
+        }
+        for (Application app : applications.findPendingApplicationsForClosedJob(id)) {
+            if (audit.hasAcceptedOffer(app.getApplicationId())) continue;
+            String old = app.getApplicationStatus();
+            if (applications.transition(app.getApplicationId(), Set.of(old), "Rejected") == 1) {
+                if (audit.cancelInterviews(app.getApplicationId()) > 0)
+                    audit.record(user.getUserId(), "UPDATE", "Application", app.getApplicationId(), null, "InterviewCancelledOnClose");
+                audit.record(user.getUserId(), "UPDATE", "Application", app.getApplicationId(), old, "PostingClosed");
+            }
+        }
+    }
+    public ApplicationCv cv(Integer candidateId, Integer appId) {
+        actor();
+        Candidate c = candidate(candidateId);
+        Application app = application(appId);
+        if (!c.isPotential() || !app.getCandidate().getCandidateId().equals(candidateId))
+            throw new AccessDeniedException("CV không thuộc ứng viên tiềm năng này.");
+        requireCv(app.getAppliedCvUrl());
+        if (app.getAppliedCvUrl().startsWith(LocalCvStorage.URL_PREFIX))
+            return ApplicationCv.file(storage.load(app.getAppliedCvUrl().substring(LocalCvStorage.URL_PREFIX.length())));
+        return ApplicationCv.redirect(app.getAppliedCvUrl());
+    }
+    private void requireCv(String url) {
+        if (url == null || url.isBlank()) throw new TalentPoolException("Hồ sơ nguồn không có CV.");
+        if (url.startsWith(LocalCvStorage.URL_PREFIX)) {
+            storage.load(url.substring(LocalCvStorage.URL_PREFIX.length()));
+        } else if (url.startsWith("/") && !url.startsWith("//")) {
+            if (!new ClassPathResource("static" + url).exists())
+                throw new TalentPoolException("File CV cũ không còn tồn tại. Ứng viên cần nộp CV mới.");
+        } else if (!url.startsWith("https://") && !url.startsWith("http://")) {
+            throw new TalentPoolException("Đường dẫn CV không hợp lệ.");
+        }
+    }
+    private void requireTarget(User user, JobPosting job) {
+        if (CurrentUserService.hasRole(user, "Hiring Manager") && !jobAccess.inManagedDepartment(user, job.getRequisition()))
+            throw new AccessDeniedException("Job không thuộc phạm vi phòng ban của bạn.");
+    }
+    private void requireOpen(JobPosting job) {
+        if (!"Published".equals(job.getPostingStatus()) || (job.getApplicationDeadline() != null
+                && job.getApplicationDeadline().isBefore(LocalDateTime.now())))
+            throw new TalentPoolException("Tin tuyển dụng không còn nhận hồ sơ.");
+    }
+    private Candidate candidate(Integer id) {
+        return candidates.findById(id).orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy ứng viên."));
+    }
+    private Application application(Integer id) {
+        return applications.findDetailById(id).orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy hồ sơ."));
+    }
+    private JobPosting job(Integer id, boolean lock) {
+        return (lock ? jobs.findForUpdate(id) : jobs.findById(id))
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy tin tuyển dụng."));
+    }
+    private TalentPoolCandidateResponse candidateResponse(Candidate c) {
+        User u = c.getAccount();
+        var cvs = applications.findPreviousCvByCandidateId(c.getCandidateId()).stream()
+                .map(a -> new TalentPoolCvResponse(a.getApplicationId(), a.getJobPosting().getPostingTitle(), a.getSubmissionDate())).toList();
+        return new TalentPoolCandidateResponse(c.getCandidateId(), u.getFullName(), u.getEmail(), u.getPhoneNumber(), cvs);
+    }
+}
+

@@ -22,6 +22,13 @@ class ApplicationProgressResolverTests {
 
     @Nested
     class Table {
+        @Test
+        void suggestionWaitsForHrContactAndCannotBeScheduled() {
+            var progress = resolve(status("HM_Suggested"));
+            assertEquals(HM_SUGGESTED, progress.step());
+            assertEquals(ApplicationStage.SCREENING, progress.stage());
+            assertEquals("HR", progress.ownerLabel());
+        }
 
         @Test
         void applied_awaitsAiScreening() {

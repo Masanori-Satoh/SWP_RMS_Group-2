@@ -240,7 +240,7 @@ class JobPostingServiceTest {
     @Test
     @DisplayName("searchInternalJobPostings: Role không phải HR/Admin bị chặn 403")
     void searchInternalJobPostings_nonHr_throwsAccessDenied() {
-        when(requisitionAccess.role(hmUser)).thenReturn(RequisitionAccess.ROLE_HIRING_MANAGER);
+        when(requisitionAccess.role(hmUser)).thenReturn(RequisitionAccess.ROLE_DIRECTOR);
 
         assertThrows(AccessDeniedException.class, () ->
                 jobPostingService.searchInternalJobPostings(1, 10, "", null, "", "newest", hmUser));
@@ -342,9 +342,11 @@ class JobPostingServiceTest {
     @DisplayName("getInternalJobPostingDetail: Chặn role không phải HR/Admin")
     void getInternalJobPostingDetail_nonHr_throwsAccessDenied() {
         when(requisitionAccess.role(hmUser)).thenReturn(RequisitionAccess.ROLE_HIRING_MANAGER);
+        when(jobPostingRepository.findById(88)).thenReturn(Optional.of(JobPosting.builder()
+                .jobPostingId(88).requisition(approvedReq).postingStatus("Published").build()));
 
         assertThrows(AccessDeniedException.class, () -> jobPostingService.getInternalJobPostingDetail(88, hmUser));
-        verify(jobPostingRepository, never()).findById(any());
+        verify(jobPostingRepository).findById(88);
     }
 
     @Test

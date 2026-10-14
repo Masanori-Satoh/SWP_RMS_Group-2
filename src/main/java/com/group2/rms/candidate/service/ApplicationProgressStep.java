@@ -3,9 +3,12 @@ package com.group2.rms.candidate.service;
 import static com.group2.rms.candidate.service.ApplicationStage.*;
 
 /**
- * Trạng thái chi tiết của hồ sơ: hồ sơ đang nằm trên bàn ai. Mỗi hằng là một dòng của bảng trạng thái
- * (spec luồng trạng thái hồ sơ, mục 2.3); {@link ApplicationProgressResolver} chọn hằng từ dữ kiện.
- * Nhãn có {@code %s}/{@code %d} được điền ở {@link ApplicationProgressResolver}.
+ * Trạng thái chi tiết của hồ sơ: hồ sơ đang nằm trên bàn ai. Mỗi hằng là một
+ * dòng của bảng trạng thái
+ * (spec luồng trạng thái hồ sơ, mục 2.3); {@link ApplicationProgressResolver}
+ * chọn hằng từ dữ kiện.
+ * Nhãn có {@code %s}/{@code %d} được điền ở
+ * {@link ApplicationProgressResolver}.
  *
  * @see ApplicationStage
  */
@@ -13,6 +16,7 @@ public enum ApplicationProgressStep {
     AWAITING_AI(APPLIED, "Chờ AI chấm CV", "Hệ thống", "neutral"),
     AWAITING_HR_REVIEW(SCREENING, "Chờ HR duyệt CV", "HR", "warning"),
     AWAITING_HM_REVIEW(SCREENING, "Chờ trưởng bộ phận duyệt CV", "Trưởng bộ phận", "warning"),
+    HM_SUGGESTED(SCREENING, "HM đề xuất — chờ HR liên hệ", "HR", "warning"),
     AWAITING_SCHEDULE(INTERVIEW, "Chờ xếp lịch phỏng vấn", "HR", "warning"),
     INTERVIEW_SCHEDULED(INTERVIEW, "Đã xếp lịch, phỏng vấn ngày %s", "Hội đồng", "brand"),
     AWAITING_EVALUATIONS(INTERVIEW, "Chờ chấm điểm (%d/%d)", "Người phỏng vấn", "warning"),
@@ -27,7 +31,8 @@ public enum ApplicationProgressStep {
     WITHDRAWN(CLOSED, "Ứng viên đã rút hồ sơ", null, "neutral"),
     OFFER_DECLINED(CLOSED, "Ứng viên từ chối offer", null, "neutral"),
     INTERVIEW_FAILED(CLOSED, "Không đạt phỏng vấn", null, "danger"),
-    CV_REJECTED(CLOSED, "Không qua vòng CV", null, "danger");
+    CV_REJECTED(CLOSED, "Không qua vòng CV", null, "danger"),
+    POSTING_CLOSED(CLOSED, "Dừng do đợt tuyển đóng", null, "neutral");
 
     private final ApplicationStage stage;
     private final String label;
@@ -55,7 +60,10 @@ public enum ApplicationProgressStep {
         return owner;
     }
 
-    /** Màu: {@code neutral}, {@code brand}, {@code success}, {@code warning}, {@code danger} (cùng bộ với timeline). */
+    /**
+     * Màu: {@code neutral}, {@code brand}, {@code success}, {@code warning},
+     * {@code danger} (cùng bộ với timeline).
+     */
     public String tone() {
         return tone;
     }
