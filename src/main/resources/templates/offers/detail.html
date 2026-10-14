@@ -13,12 +13,6 @@
 
 <main id="main" layout:fragment="content" class="page-content container" tabindex="-1" style="max-width: 1040px; margin: 0 auto; padding-bottom: 40px;">
 
-    <!-- BREADCRUMB -->
-    <nav class="breadcrumb" style="margin-bottom: 16px; font-size: 13.5px; color: var(--muted);" aria-label="Điều hướng">
-        <a th:href="@{/dashboard}" style="color: var(--muted); text-decoration: none;">Trang chủ</a> &gt;
-        <a th:href="@{/offers}" style="color: var(--muted); text-decoration: none;">Quản lý Đề xuất</a> &gt;
-        <span style="color: var(--ink); font-weight: 600;" th:text="'Chi tiết Offer #' + ${detail.offerId}">Chi tiết Offer #1</span>
-    </nav>
 
     <!-- FLASH MESSAGES -->
     <div th:if="${successMessage}" class="modal-alert modal-alert-success" style="display:flex; margin-bottom: 20px;">
