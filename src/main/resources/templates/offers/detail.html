@@ -302,22 +302,17 @@
          id="directorDecisionSection"
          class="director-decision-card" style="margin-bottom: 20px;">
         
-        <!-- Header: Tiêu đề + Badge bắt buộc nhập lý do nếu từ chối -->
+        <!-- Header: Tiêu đề -->
         <div class="director-decision-header">
             <div class="director-decision-title">
                 <span class="director-check-circle"><i class="fa-solid fa-check"></i></span>
                 <span>3. Quyết định của Giám đốc</span>
             </div>
-            <span class="director-decision-badge">Bắt buộc nhập lý do nếu từ chối</span>
         </div>
-
-        <!-- Label: Ý kiến của Giám đốc -->
-        <label for="directorDetailComments" class="director-decision-label">
-            Ý kiến của Giám đốc
-        </label>
 
         <!-- Textarea: Placeholder chuẩn theo mockup -->
         <textarea id="directorDetailComments" class="form-textarea director-decision-textarea" rows="3"
+                  aria-label="Ý kiến phê duyệt hoặc lý do từ chối của Giám đốc"
                   placeholder="Nhập ý kiến phê duyệt hoặc lý do từ chối..."
                   oninput="updateDirectorDetailCommentCounter(this)"></textarea>
 
