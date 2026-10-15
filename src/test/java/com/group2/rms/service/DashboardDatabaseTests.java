@@ -9,14 +9,14 @@
 // import com.group2.rms.candidate.entity.Candidate;
 // import com.group2.rms.dashboard.DashboardService;
 // import com.group2.rms.dashboard.DashboardResponse;
-// import com.group2.rms.requisition.entity.JobPosting;
+// import com.group2.rms.jobposting.entity.JobPosting;
 // import com.group2.rms.offer.entity.OfferProposal;
 // import com.group2.rms.candidate.repository.ApplicationRepository;
 // import com.group2.rms.candidate.repository.ApplicationReviewRepository;
 // import com.group2.rms.candidate.repository.CandidateRepository;
 // import com.group2.rms.dashboard.DashboardMetricsRepository;
 // import com.group2.rms.dashboard.DashboardResponse;
-// import com.group2.rms.requisition.repository.JobPostingRepository;
+// import com.group2.rms.jobposting.repository.JobPostingRepository;
 // import com.group2.rms.offer.repository.OfferProposalRepository;
 // import com.group2.rms.user.entity.Role;
 // import com.group2.rms.user.entity.User;

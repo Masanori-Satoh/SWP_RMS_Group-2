@@ -22,7 +22,7 @@ class ApplicationStatusServiceTests {
     @org.junit.jupiter.api.Nested
     class TalentPoolFlows {
         com.group2.rms.candidate.repository.TalentPoolAuditRepository audit = mock(com.group2.rms.candidate.repository.TalentPoolAuditRepository.class);
-        com.group2.rms.requisition.repository.JobPostingRepository jobs = mock(com.group2.rms.requisition.repository.JobPostingRepository.class);
+        com.group2.rms.jobposting.repository.JobPostingRepository jobs = mock(com.group2.rms.jobposting.repository.JobPostingRepository.class);
         com.group2.rms.core.security.CurrentUserService current = mock(com.group2.rms.core.security.CurrentUserService.class);
         TalentPoolService pool;
         com.group2.rms.user.entity.User hr;
@@ -39,7 +39,7 @@ class ApplicationStatusServiceTests {
                     mock(com.group2.rms.user.repository.UserRepository.class), mock(CvStorage.class));
             suggestion = com.group2.rms.candidate.entity.Application.builder().applicationId(ID)
                     .applicationStatus("HM_Suggested").appliedCvUrl("local:cv/15/existing.pdf")
-                    .jobPosting(com.group2.rms.requisition.entity.JobPosting.builder().jobPostingId(12).postingStatus("Published").build()).build();
+                    .jobPosting(com.group2.rms.jobposting.entity.JobPosting.builder().jobPostingId(12).postingStatus("Published").build()).build();
         }
         @Test
         void confirmingOldCvRecordsConsentAndPromotesWithoutAi() {
@@ -83,7 +83,7 @@ class ApplicationStatusServiceTests {
 
     @BeforeEach
     void setUp() {
-        service = new ApplicationStatusService(applications, mock(com.group2.rms.requisition.repository.JobPostingRepository.class));
+        service = new ApplicationStatusService(applications, mock(com.group2.rms.jobposting.repository.JobPostingRepository.class));
     }
 
     @Test

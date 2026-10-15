@@ -8,7 +8,7 @@ public interface NotificationService {
 
     void notifyRequisitionRejected(JobRequisition requisition, User director, String comment);
 
-    void notifyJobPostingPublished(com.group2.rms.requisition.entity.JobPosting posting, User hr);
+    void notifyJobPostingPublished(com.group2.rms.jobposting.entity.JobPosting posting, User hr);
 
     void notifyOfferLetterSent(com.group2.rms.offer.entity.OfferProposal offer);
 

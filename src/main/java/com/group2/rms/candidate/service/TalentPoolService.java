@@ -6,8 +6,8 @@ import com.group2.rms.candidate.exception.TalentPoolException;
 import com.group2.rms.candidate.repository.*;
 import com.group2.rms.core.exception.ResourceNotFoundException;
 import com.group2.rms.core.security.CurrentUserService;
-import com.group2.rms.requisition.entity.JobPosting;
-import com.group2.rms.requisition.repository.JobPostingRepository;
+import com.group2.rms.jobposting.entity.JobPosting;
+import com.group2.rms.jobposting.repository.JobPostingRepository;
 import com.group2.rms.requisition.service.RequisitionAccess;
 import com.group2.rms.user.entity.User;
 import com.group2.rms.user.repository.UserRepository;
@@ -172,6 +172,8 @@ public class TalentPoolService {
         User user = hr();
         JobPosting posting = job(id, true);
         if ("Closed".equals(posting.getPostingStatus())) return;
+        if (!"Published".equals(posting.getPostingStatus()) && !"Paused".equals(posting.getPostingStatus()))
+            throw new TalentPoolException("Chỉ tin đã đăng hoặc đang tạm dừng mới được đóng đợt tuyển.");
         if (audit.hasOpenOffers(id)) throw new TalentPoolException("Còn Offer chưa kết thúc. Hãy xử lý Offer trước khi đóng đợt tuyển.");
         posting.setPostingStatus("Closed");
         audit.record(user.getUserId(), "UPDATE", "JobPosting", id, null, "Closed");

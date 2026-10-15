@@ -1,6 +1,6 @@
-package com.group2.rms.requisition.repository;
+package com.group2.rms.jobposting.repository;
 
-import com.group2.rms.requisition.entity.JobPosting;
+import com.group2.rms.jobposting.entity.JobPosting;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -22,11 +22,14 @@ public interface JobPostingRepository extends JpaRepository<JobPosting, Integer>
 
     boolean existsByRequisition_RequisitionIdAndPostingStatusIn(Integer requisitionId, java.util.Collection<String> statuses);
 
+    boolean existsByRequisition_RequisitionIdAndJobPostingIdNotAndPostingStatusIn(
+            Integer requisitionId, Integer jobPostingId, java.util.Collection<String> statuses);
+
     java.util.List<JobPosting> findByRequisition_RequisitionIdIn(java.util.Collection<Integer> requisitionIds);
 
     @Query("SELECT j FROM JobPosting j " +
            "WHERE j.postingStatus = 'Published' " +
-           "AND j.applicationDeadline >= CURRENT_TIMESTAMP " +
+           "AND (j.applicationDeadline IS NULL OR j.applicationDeadline >= CURRENT_TIMESTAMP) " +
            "AND (:keyword IS NULL OR LOWER(j.postingTitle) LIKE LOWER(CONCAT('%', :keyword, '%'))) " +
            "AND (:departmentId IS NULL OR j.requisition.department.departmentId = :departmentId) " +
            "AND (:employmentType IS NULL OR j.requisition.employmentType = :employmentType)")

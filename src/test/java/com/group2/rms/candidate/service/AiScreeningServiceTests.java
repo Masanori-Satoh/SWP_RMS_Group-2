@@ -5,7 +5,7 @@ import com.group2.rms.candidate.entity.Application;
 import com.group2.rms.candidate.repository.AIScreeningResultRepository;
 import com.group2.rms.candidate.repository.ApplicationRepository;
 import com.group2.rms.core.exception.ResourceNotFoundException;
-import com.group2.rms.requisition.entity.JobPosting;
+import com.group2.rms.jobposting.entity.JobPosting;
 import com.group2.rms.requisition.entity.JobRequisition;
 import com.group2.rms.requisition.entity.ScreeningCriteria;
 import com.group2.rms.requisition.repository.ScreeningCriteriaRepository;

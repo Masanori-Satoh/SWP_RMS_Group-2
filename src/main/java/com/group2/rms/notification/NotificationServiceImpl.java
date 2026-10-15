@@ -1,7 +1,7 @@
 package com.group2.rms.notification;
 
 import com.group2.rms.offer.entity.OfferProposal;
-import com.group2.rms.requisition.entity.JobPosting;
+import com.group2.rms.jobposting.entity.JobPosting;
 import com.group2.rms.requisition.entity.JobRequisition;
 import com.group2.rms.user.entity.User;
 import lombok.RequiredArgsConstructor;

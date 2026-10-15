@@ -1,7 +1,9 @@
-package com.group2.rms.requisition.service;
+package com.group2.rms.jobposting.service;
 
-import com.group2.rms.requisition.dto.InternalJobPostingResponse;
-import com.group2.rms.requisition.dto.JobPostingCreateRequest;
+import com.group2.rms.jobposting.dto.InternalJobPostingDetailResponse;
+import com.group2.rms.jobposting.dto.JobPostingDashboardResponse;
+import com.group2.rms.jobposting.dto.InternalJobPostingResponse;
+import com.group2.rms.jobposting.dto.JobPostingCreateRequest;
 import com.group2.rms.user.entity.User;
 import org.springframework.data.domain.Page;
 
@@ -25,11 +27,23 @@ public interface JobPostingService {
      */
     JobPostingCreateRequest prepareCreateForm(Integer requisitionId, User currentUser);
 
-    /**
-     * Tạo và lưu Job Posting (Draft hoặc Published).
-     * @return ID của Job Posting vừa tạo
-     */
+    JobPostingDashboardResponse getDashboard(User currentUser);
+
+    /** Tạo bản nháp từ Requisition đã duyệt. */
     Integer createJobPosting(JobPostingCreateRequest request, User currentUser);
+
+    /** Tạo và đăng trong cùng một giao dịch khi HR bấm Đăng tin trên form tạo. */
+    Integer createAndPublishJobPosting(JobPostingCreateRequest request, User currentUser);
+
+    void updateJobPosting(Integer id, JobPostingCreateRequest request, User currentUser);
+
+    void updateAndPublishJobPosting(Integer id, JobPostingCreateRequest request, User currentUser);
+
+    void publishJobPosting(Integer id, User currentUser);
+
+    void pauseJobPosting(Integer id, User currentUser);
+
+    void closeJobPosting(Integer id, User currentUser);
 
     /**
      * Chuẩn bị dữ liệu cho form chỉnh sửa tin tuyển dụng.
@@ -44,5 +58,5 @@ public interface JobPostingService {
     /**
      * Lấy thông tin chi tiết nội bộ của một tin tuyển dụng.
      */
-    com.group2.rms.requisition.dto.InternalJobPostingDetailResponse getInternalJobPostingDetail(Integer id, User currentUser);
+    InternalJobPostingDetailResponse getInternalJobPostingDetail(Integer id, User currentUser);
 }
