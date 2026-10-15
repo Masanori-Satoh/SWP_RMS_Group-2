@@ -10,7 +10,7 @@
     </div>
 </th:block>
 <th:block th:fragment="panel(page, kind)">
-    <aside class="aim-inspector" id="account-inspector" aria-labelledby="account-inspector-title" hidden>
+    <aside class="aim-inspector" th:classappend="${kind == 'internal' ? ' aim-inspector--internal' : ''}" id="account-inspector" aria-labelledby="account-inspector-title" hidden>
         <header class="aim-panel-header">
             <h2 class="aim-panel-title" id="account-inspector-title">Tổng quan danh sách</h2>
             <button class="btn btn--secondary btn--sm aim-close" type="button" aria-label="Đóng bảng thông tin" title="Đóng bảng thông tin" hidden>
@@ -42,19 +42,25 @@
     <template th:each="account : ${page.content}" th:id="|account-inspector-template-${account.id}|">
         <div class="aim-identity">
             <span class="aim-avatar" aria-hidden="true" th:text="${#strings.isEmpty(account.fullName) ? '?' : #strings.substring(account.fullName, 0, 1)}"></span>
-            <div><h3 class="aim-name" th:text="${account.fullName}"></h3><p class="aim-username" th:text="${account.username}"></p></div>
+            <div><h3 class="aim-name" th:text="${account.fullName}"></h3><p class="aim-username"><span class="sr-only">Tên đăng nhập: </span><span th:text="${account.username}"></span></p></div>
         </div>
         <span class="badge iac-status" th:classappend="${account.status == 'Active' ? ' badge--success' : (account.status == 'Blocked' ? ' badge--danger' : ' badge--neutral')}"
               th:text="${account.status == 'Active' ? 'Hoạt động' : (account.status == 'Inactive' ? 'Vô hiệu hóa' : 'Bị khóa')}"></span>
-        <h4 class="aim-section-title">Thông tin tài khoản</h4>
-        <dl class="aim-fields">
-            <div><dt>Email</dt><dd th:text="${account.email}"></dd></div>
-            <div><dt>Tên đăng nhập</dt><dd th:text="${account.username}"></dd></div>
-            <div><dt>Số điện thoại</dt><dd th:text="${account.details != null and !#strings.isEmpty(account.details.phoneNumber) ? account.details.phoneNumber : 'Chưa cập nhật'}"></dd></div>
-            <th:block th:if="${kind == 'internal'}">
+        <th:block th:if="${kind == 'internal'}">
+            <h4 class="aim-section-title">Phân quyền &amp; phòng ban</h4>
+            <dl class="aim-fields aim-assignment-fields">
                 <div><dt>Vai trò</dt><dd th:text="${account.roleName == 'System Admin' ? 'Quản trị hệ thống' : (account.roleName == 'HR' ? 'Nhân sự' : (account.roleName == 'Hiring Manager' ? 'Trưởng phòng tuyển dụng' : (account.roleName == 'Director' ? 'Giám đốc' : (account.roleName == 'Interviewer' ? 'Người phỏng vấn' : account.roleName))))}"></dd></div>
                 <div><dt>Phòng ban</dt><dd th:text="${account.departmentName ?: 'Chưa phân công'}"></dd></div>
-            </th:block>
+            </dl>
+        </th:block>
+        <h4 class="aim-section-title" th:text="${kind == 'internal' ? 'Liên hệ' : 'Thông tin tài khoản'}">Thông tin tài khoản</h4>
+        <dl class="aim-fields">
+            <div><dt>Email</dt><dd th:text="${account.email}"></dd></div>
+            <div th:if="${kind == 'candidate'}"><dt>Tên đăng nhập</dt><dd th:text="${account.username}"></dd></div>
+            <div><dt>Số điện thoại</dt><dd th:text="${account.details != null and !#strings.isEmpty(account.details.phoneNumber) ? account.details.phoneNumber : 'Chưa cập nhật'}"></dd></div>
+        </dl>
+        <h4 class="aim-section-title" th:if="${kind == 'internal'}">Thời gian</h4>
+        <dl class="aim-fields aim-time-fields">
             <div><dt>Ngày tạo tài khoản</dt><dd><time th:if="${account.details != null and account.details.createdAt != null}" th:datetime="${account.details.createdAt}" th:text="${#temporals.format(account.details.createdAt, 'dd/MM/yyyy HH:mm')}"></time><span th:unless="${account.details != null and account.details.createdAt != null}">Chưa có dữ liệu</span></dd></div>
             <div><dt>Cập nhật gần nhất</dt><dd><time th:if="${account.details != null and account.details.updatedAt != null}" th:datetime="${account.details.updatedAt}" th:text="${#temporals.format(account.details.updatedAt, 'dd/MM/yyyy HH:mm')}"></time><span th:unless="${account.details != null and account.details.updatedAt != null}">Chưa có dữ liệu</span></dd></div>
         </dl>

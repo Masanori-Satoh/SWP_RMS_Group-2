@@ -17,15 +17,17 @@
     </nav>
     <div class="page-header iac-heading">
         <h1 id="account-list-title" class="iac-title">Tài khoản nội bộ</h1>
+        <div class="aim-heading-actions">
+        <button class="btn btn--secondary btn--sm aim-open-summary" type="button" aria-controls="account-inspector" hidden>Tổng quan danh sách</button>
         <a class="btn btn--primary" th:href="@{/admin/accounts/new}">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
             Tạo tài khoản
         </a>
+        </div>
     </div>
     <div class="alert alert--success" role="status" th:if="${successMessage}" th:text="${successMessage}"></div>
-    <th:block th:replace="~{admin/accounts/inspector :: navigation(kind='internal')}"></th:block>
     <div class="aim-layout"><div class="aim-master">
-    <form class="iac-filters" th:action="@{/admin/accounts}" method="get" aria-label="Bộ lọc tài khoản">
+    <form class="aim-compact-filters" th:action="@{/admin/accounts}" method="get" aria-label="Bộ lọc tài khoản">
         <div class="iac-field iac-field--search">
             <label class="form-label" for="account-search">Tìm kiếm</label>
             <div class="iac-search">
@@ -52,6 +54,12 @@
             </select>
         </div>
 
+        <details class="aim-advanced-filters">
+            <summary class="btn btn--secondary btn--sm aim-filter-toggle" th:with="count=${(selectedDepartmentId != null ? 1 : 0) + (selectedSort != null and selectedSort != 'name' ? 1 : 0)}">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M4 6h16M7 12h10M10 18h4"/></svg>
+                Bộ lọc <span class="aim-filter-count" th:if="${count > 0}"><span class="sr-only">đang áp dụng: </span><span th:text="${count}"></span></span>
+            </summary>
+            <div class="aim-filter-popover">
         <div class="iac-field iac-field--department">
             <label class="form-label" for="account-department">Phòng ban</label>
             <select class="form-control iac-control" id="account-department" name="departmentId">
@@ -70,7 +78,8 @@
                 <option value="newest" th:selected="${selectedSort == 'newest'}">Mới nhất</option>
             </select>
         </div>
-
+            </div>
+        </details>
         <div class="iac-filter-actions">
             <button class="btn btn--secondary btn--sm iac-apply" type="submit">Lọc</button>
             <a class="btn btn--sm iac-reset" th:href="@{/admin/accounts}">Xóa bộ lọc</a>
