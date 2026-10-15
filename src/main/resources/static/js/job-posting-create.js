@@ -92,12 +92,12 @@ document.addEventListener('DOMContentLoaded', function () {
             setError(deadlineInput, deadlineError, 'Vui lòng chọn hạn nộp hồ sơ hoặc tích chọn Tuyển dụng liên tục.');
             return false;
         }
-        const selectedDate = new Date(val);
         const today = new Date();
-        today.setHours(0, 0, 0, 0);
+        const todayText = [today.getFullYear(), String(today.getMonth() + 1).padStart(2, '0'),
+            String(today.getDate()).padStart(2, '0')].join('-');
 
-        if (selectedDate <= today) {
-            setError(deadlineInput, deadlineError, 'Hạn nộp hồ sơ phải sau ngày hiện tại.');
+        if (val < todayText) {
+            setError(deadlineInput, deadlineError, 'Hạn nộp hồ sơ không được trước ngày hiện tại.');
             return false;
         }
         setError(deadlineInput, deadlineError, '');

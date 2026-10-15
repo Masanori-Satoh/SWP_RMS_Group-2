@@ -144,7 +144,7 @@
                                             <div class="hr-req-awaiting-title" th:text="${req.title}">Chuyên viên phát triển kinh doanh</div>
                                             <div class="hr-req-awaiting-meta">
                                                 <span class="hr-req-code-tag" th:text="${req.requisitionCode}">REQ-001</span>
-                                                <span th:text="${req.department != null ? req.department.departmentName : 'Chưa gán phòng'}">Kinh doanh</span>
+                                                <span th:text="${req.departmentName != null ? req.departmentName : 'Chưa gán phòng'}">Kinh doanh</span>
                                                 <span>·</span>
                                                 <span th:text="|Đợt ${req.recruitmentRound}|">Đợt 1</span>
                                             </div>
@@ -185,7 +185,7 @@
                                         <td>
                                             <strong th:text="${post.postingTitle}">Lập trình viên Java Senior</strong>
                                         </td>
-                                        <td th:text="${post.requisition != null and post.requisition.department != null ? post.requisition.department.departmentName : '—'}">
+                                        <td th:text="${post.departmentName != null ? post.departmentName : '—'}">
                                             Kỹ thuật
                                         </td>
                                         <td>
