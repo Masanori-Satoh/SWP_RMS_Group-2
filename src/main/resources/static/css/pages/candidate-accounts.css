@@ -6,9 +6,9 @@
   background: color-mix(in srgb, var(--brand-soft) 45%, var(--page));
 }
 .cac-filters {
-  grid-template-columns: minmax(0, 320px) 168px 200px max-content;
+  /* Bounded, elastic controls keep this shorter toolbar compact on wide desktops. */
+  grid-template-columns: clamp(320px, 34cqw, 480px) clamp(168px, 18cqw, 224px) clamp(190px, 20cqw, 256px) max-content;
   justify-content: start;
-  max-width: 1200px;
   margin-bottom: 0;
   padding: var(--s2) var(--s4);
   background: var(--surface-subtle);
@@ -16,9 +16,8 @@
   border-bottom: 0;
   border-radius: var(--radius-md) var(--radius-md) 0 0;
 }
-.cac-filters > .iac-field:first-child { grid-column: auto; max-width: 320px; }
+.cac-filters > .iac-field:first-child { grid-column: auto; }
 .cac-card {
-  max-width: 1200px;
   border-color: var(--cac-panel-border);
   border-top: 0;
   border-radius: 0 0 var(--radius-md) var(--radius-md);
@@ -27,7 +26,7 @@
 .cac-table { table-layout: fixed; }
 .cac-col-number { width: 52px; }
 .cac-col-name { width: 22%; }
-.cac-col-username { width: 160px; }
+.cac-col-username { width: 18%; }
 .cac-col-status { width: 116px; }
 .cac-col-date { width: 128px; }
 .cac-col-actions { width: 76px; }
@@ -38,6 +37,6 @@
   .cac-filters { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .cac-filters > .iac-field:first-child { grid-column: 1 / -1; }
 }
-@media (max-width: 480px) {
+@container internal-accounts (max-width: 540px) {
   .cac-filters { grid-template-columns: 1fr; }
 }

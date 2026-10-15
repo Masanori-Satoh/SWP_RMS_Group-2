@@ -1,6 +1,6 @@
-/* INTERNAL-ACCOUNTS.CSS — /admin/accounts only.
-   Page composition and table density; shared shell/components remain unchanged. */
-.rms-app .iac-page { width: 100%; max-width: none; margin-inline: 0; padding-block: var(--s6); container-type: inline-size; container-name: internal-accounts; }
+/* INTERNAL-ACCOUNTS.CSS — Internal and Candidate Account page composition.
+   Shared shell/components remain unchanged; Candidate-specific sizing lives in its own stylesheet. */
+.rms-app .iac-page { width: 100%; max-width: none; min-width: 0; box-sizing: border-box; margin-inline: 0; padding-block: var(--s6); padding-inline: clamp(var(--s4), 2vw, var(--s8)); container-type: inline-size; container-name: internal-accounts; }
 /* Approved pastel action palette, scoped to this page; shared Mộc tokens stay intact. */
 .iac-page {
   --iac-edit-bg: #eff6ff;
@@ -21,7 +21,7 @@
 .iac-breadcrumb a:hover { text-decoration: underline; }
 .iac-heading { align-items: center; margin-bottom: var(--s4); }
 .iac-title { font-family: var(--sans); font-size: 26px; line-height: 1.3; font-weight: 600; letter-spacing: -.02em; }
-.iac-filters { display: grid; grid-template-columns: minmax(310px, 2fr) minmax(128px, .8fr) minmax(152px, .9fr) minmax(158px, .9fr) minmax(116px, .7fr) max-content; align-items: end; gap: var(--s2); margin-bottom: var(--s4); }
+.iac-filters { display: grid; grid-template-columns: minmax(330px, 1.8fr) minmax(210px, 1.1fr) minmax(160px, .8fr) minmax(200px, 1fr) minmax(180px, .9fr) max-content; align-items: end; gap: var(--s2); margin-bottom: var(--s4); min-width: 0; }
 .iac-field { min-width: 0; }
 .iac-control { padding-inline: var(--s2); font-size: var(--font-base); border-radius: var(--radius-md); }
 /* Page modifiers outrank the shared .form-control normal/focus rules without !important. */
@@ -33,13 +33,13 @@
 .iac-search svg { position: absolute; left: var(--s3); top: 50%; transform: translateY(-50%); color: var(--muted); pointer-events: none; }
 .iac-search-input { padding-inline-start: var(--s12); }
 .iac-search-input::placeholder { opacity: 1; }
-.iac-filter-actions { display: flex; align-items: center; gap: var(--s2); min-height: var(--input-h); }
+.iac-filter-actions { display: flex; align-items: center; gap: var(--s2); min-height: var(--input-h); justify-self: start; white-space: nowrap; }
 .iac-filter-actions .iac-apply { background: var(--surface); border-color: var(--line); color: var(--ink); box-shadow: var(--shadow-sm); }
 .iac-filter-actions .iac-apply:hover, .iac-filter-actions .iac-apply:focus-visible { background: var(--surface-subtle); border-color: color-mix(in srgb, var(--control-line) 40%, var(--line)); color: var(--brand-dark); }
 .iac-filter-actions .iac-reset { padding-inline: var(--s2); color: var(--muted); font-weight: 500; background: transparent; border-color: transparent; }
 .iac-filter-actions .iac-reset:hover, .iac-filter-actions .iac-reset:focus-visible { background: var(--neutral-soft); color: var(--ink); }
-.iac-card { padding: 0; overflow: hidden; }
-.iac-card .iac-scroll { margin-bottom: 0; border: 0; border-radius: 0; }
+.iac-card { width: 100%; min-width: 0; padding: 0; overflow: hidden; }
+.iac-card .iac-scroll { width: 100%; min-width: 0; margin-bottom: 0; border: 0; border-radius: 0; }
 .iac-table { min-width: 980px; }
 .iac-table .iac-cell { padding: var(--s2) var(--s3); vertical-align: middle; }
 .iac-table th.iac-cell { padding-block: var(--s3); background: var(--neutral-soft); font-size: var(--font-sm); color: var(--ink); font-weight: 600; }
@@ -65,19 +65,41 @@
 .iac-page-arrow--disabled { opacity: .65; }
 .iac-empty { text-align: center; }
 .iac-table .iac-empty { padding-block: var(--s8); color: var(--muted); }
-@container internal-accounts (max-width: 1050px) {
-  .iac-filters { grid-template-columns: repeat(3, minmax(0, 1fr)); }
-  .iac-filters > .iac-field:first-child { grid-column: span 2; }
+/* Adapt to the main content width, including live sidebar expansion. */
+@container internal-accounts (max-width: 1400px) {
+  .iac-filters { grid-template-columns: minmax(330px, 1.5fr) minmax(210px, 1fr) minmax(180px, 1fr); }
 }
-@media (max-width: 768px) {
+@container internal-accounts (max-width: 900px) {
   .iac-filters { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .iac-filters > .iac-field:first-child { grid-column: 1 / -1; }
   .iac-filter-actions { align-self: end; }
 }
-@media (max-width: 480px) {
+@container internal-accounts (max-width: 540px) {
   .iac-filters { grid-template-columns: 1fr; }
+}
+@media (max-width: 480px) {
   .iac-page .iac-heading { align-items: start; gap: var(--s3); }
 }
 @media (prefers-reduced-motion: reduce) {
   .iac-icon-button { transition: none; }
+}
+/* Internal-only surface composition: Candidate Accounts also loads this file. */
+.rms-app .iac-internal-page {
+  --iac-panel-border: color-mix(in srgb, var(--control-line) 22%, var(--line));
+  min-height: calc(100vh - var(--topbar-h));
+  background: color-mix(in srgb, var(--brand-soft) 45%, var(--page));
+}
+.iac-internal-page .iac-filters {
+  margin-bottom: 0;
+  padding: var(--s2) var(--s4);
+  background: var(--surface-subtle);
+  border: 1px solid var(--iac-panel-border);
+  border-bottom: 0;
+  border-radius: var(--radius-md) var(--radius-md) 0 0;
+}
+.iac-internal-page .iac-card {
+  border-color: var(--iac-panel-border);
+  border-top: 0;
+  border-radius: 0 0 var(--radius-md) var(--radius-md);
+  box-shadow: var(--shadow-sm);
 }
