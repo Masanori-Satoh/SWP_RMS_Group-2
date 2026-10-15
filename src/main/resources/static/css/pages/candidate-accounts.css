@@ -6,9 +6,9 @@
   background: color-mix(in srgb, var(--brand-soft) 45%, var(--page));
 }
 .cac-filters {
-  /* Bounded, elastic controls keep this shorter toolbar compact on wide desktops. */
-  grid-template-columns: clamp(320px, 34cqw, 480px) clamp(168px, 18cqw, 224px) clamp(190px, 20cqw, 256px) max-content;
-  justify-content: start;
+  /* Compact fields on the left, paired actions at the right edge of the toolbar. */
+  grid-template-columns: clamp(320px, 34cqw, 560px) clamp(168px, 18cqw, 240px) clamp(190px, 20cqw, 280px) minmax(max-content, 1fr);
+  grid-template-areas: "search status sort actions";
   margin-bottom: 0;
   padding: var(--s2) var(--s4);
   background: var(--surface-subtle);
@@ -16,27 +16,23 @@
   border-bottom: 0;
   border-radius: var(--radius-md) var(--radius-md) 0 0;
 }
-.cac-filters > .iac-field:first-child { grid-column: auto; }
 .cac-card {
   border-color: var(--cac-panel-border);
   border-top: 0;
   border-radius: 0 0 var(--radius-md) var(--radius-md);
   box-shadow: var(--shadow-sm);
 }
-.cac-table { table-layout: fixed; }
+.cac-table { table-layout: auto; min-width: 1020px; }
 .cac-col-number { width: 52px; }
-.cac-col-name { width: 22%; }
-.cac-col-username { width: 18%; }
 .cac-col-status { width: 116px; }
 .cac-col-date { width: 128px; }
 .cac-col-actions { width: 76px; }
-/* Keep full values readable for accounts longer than the current dataset. */
-.cac-table .iac-name, .cac-table .iac-login { white-space: normal; overflow-wrap: anywhere; }
+/* Size the three content columns from their actual values, without forced word breaks. */
+.cac-table .iac-name, .cac-table .iac-login, .cac-table .iac-email { white-space: nowrap; overflow-wrap: normal; }
 .cac-date { white-space: nowrap; }
 @container internal-accounts (max-width: 900px) {
-  .cac-filters { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-  .cac-filters > .iac-field:first-child { grid-column: 1 / -1; }
+  .cac-filters { grid-template-columns: repeat(2, minmax(0, 1fr)); grid-template-areas: "search search" "status sort" "actions actions"; }
 }
 @container internal-accounts (max-width: 540px) {
-  .cac-filters { grid-template-columns: 1fr; }
+  .cac-filters { grid-template-columns: minmax(0, 1fr); grid-template-areas: "search" "status" "sort" "actions"; }
 }

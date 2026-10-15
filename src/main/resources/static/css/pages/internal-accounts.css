@@ -21,8 +21,13 @@
 .iac-breadcrumb a:hover { text-decoration: underline; }
 .iac-heading { align-items: center; margin-bottom: var(--s4); }
 .iac-title { font-family: var(--sans); font-size: 26px; line-height: 1.3; font-weight: 600; letter-spacing: -.02em; }
-.iac-filters { display: grid; grid-template-columns: minmax(330px, 1.8fr) minmax(210px, 1.1fr) minmax(160px, .8fr) minmax(200px, 1fr) minmax(180px, .9fr) max-content; align-items: end; gap: var(--s2); margin-bottom: var(--s4); min-width: 0; }
+.iac-filters { display: grid; align-items: end; gap: var(--s2); margin-bottom: var(--s4); min-width: 0; }
 .iac-field { min-width: 0; }
+.iac-field--search { grid-area: search; }
+.iac-field--role { grid-area: role; }
+.iac-field--status { grid-area: status; }
+.iac-field--department { grid-area: department; }
+.iac-field--sort { grid-area: sort; }
 .iac-control { padding-inline: var(--s2); font-size: var(--font-base); border-radius: var(--radius-md); }
 /* Page modifiers outrank the shared .form-control normal/focus rules without !important. */
 .iac-filters .iac-control { border-color: var(--line); background: var(--surface); }
@@ -33,7 +38,7 @@
 .iac-search svg { position: absolute; left: var(--s3); top: 50%; transform: translateY(-50%); color: var(--muted); pointer-events: none; }
 .iac-search-input { padding-inline-start: var(--s12); }
 .iac-search-input::placeholder { opacity: 1; }
-.iac-filter-actions { display: flex; align-items: center; gap: var(--s2); min-height: var(--input-h); justify-self: start; white-space: nowrap; }
+.iac-filter-actions { grid-area: actions; display: flex; align-items: center; gap: var(--s2); min-height: var(--input-h); justify-self: end; white-space: nowrap; }
 .iac-filter-actions .iac-apply { background: var(--surface); border-color: var(--line); color: var(--ink); box-shadow: var(--shadow-sm); }
 .iac-filter-actions .iac-apply:hover, .iac-filter-actions .iac-apply:focus-visible { background: var(--surface-subtle); border-color: color-mix(in srgb, var(--control-line) 40%, var(--line)); color: var(--brand-dark); }
 .iac-filter-actions .iac-reset { padding-inline: var(--s2); color: var(--muted); font-weight: 500; background: transparent; border-color: transparent; }
@@ -46,6 +51,11 @@
 .iac-table tbody tr:hover .iac-cell { background: var(--surface-subtle); }
 .iac-name { font-weight: 600; white-space: nowrap; }
 .iac-login { white-space: nowrap; }
+.iac-number-cell { width: 1%; white-space: nowrap; }
+.iac-internal-page .iac-table { min-width: 1180px; }
+/* Preserve complete identifiers and department/role labels; scroll the table when needed. */
+.iac-internal-page .iac-email, .iac-internal-page .iac-role, .iac-internal-page .iac-department { white-space: nowrap; overflow-wrap: normal; }
+.iac-internal-page .iac-state-cell { width: 1%; }
 .iac-table .iac-state-cell { white-space: nowrap; text-align: center; }
 .iac-status { display: inline-flex; align-items: center; gap: var(--s1); border-radius: var(--radius-full); }
 .iac-status::before { content: ''; flex: 0 0 5px; width: 5px; height: 5px; border-radius: var(--radius-full); background: currentColor; }
@@ -65,18 +75,6 @@
 .iac-page-arrow--disabled { opacity: .65; }
 .iac-empty { text-align: center; }
 .iac-table .iac-empty { padding-block: var(--s8); color: var(--muted); }
-/* Adapt to the main content width, including live sidebar expansion. */
-@container internal-accounts (max-width: 1400px) {
-  .iac-filters { grid-template-columns: minmax(330px, 1.5fr) minmax(210px, 1fr) minmax(180px, 1fr); }
-}
-@container internal-accounts (max-width: 900px) {
-  .iac-filters { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-  .iac-filters > .iac-field:first-child { grid-column: 1 / -1; }
-  .iac-filter-actions { align-self: end; }
-}
-@container internal-accounts (max-width: 540px) {
-  .iac-filters { grid-template-columns: 1fr; }
-}
 @media (max-width: 480px) {
   .iac-page .iac-heading { align-items: start; gap: var(--s3); }
 }
@@ -90,6 +88,9 @@
   background: color-mix(in srgb, var(--brand-soft) 45%, var(--page));
 }
 .iac-internal-page .iac-filters {
+  grid-template-columns: minmax(300px, 1.8fr) minmax(210px, 1.1fr) minmax(148px, .8fr) minmax(180px, 1fr) minmax(164px, .9fr) max-content;
+  grid-template-areas: "search role status department sort actions";
+  gap: var(--s3);
   margin-bottom: 0;
   padding: var(--s2) var(--s4);
   background: var(--surface-subtle);
@@ -97,9 +98,29 @@
   border-bottom: 0;
   border-radius: var(--radius-md) var(--radius-md) 0 0;
 }
+.iac-internal-page .iac-filter-actions { justify-self: start; align-self: end; }
 .iac-internal-page .iac-card {
   border-color: var(--iac-panel-border);
   border-top: 0;
   border-radius: 0 0 var(--radius-md) var(--radius-md);
   box-shadow: var(--shadow-sm);
+}
+/* Three balanced columns, two explicit rows; search has only a small width advantage. */
+@container internal-accounts (max-width: 1400px) {
+  .iac-internal-page .iac-filters {
+    grid-template-columns: minmax(300px, 1.1fr) repeat(2, minmax(210px, 1fr));
+    grid-template-areas: "search role status" "department sort actions";
+  }
+}
+@container internal-accounts (max-width: 900px) {
+  .iac-internal-page .iac-filters {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-areas: "search search" "role status" "department sort" "actions actions";
+  }
+}
+@container internal-accounts (max-width: 540px) {
+  .iac-internal-page .iac-filters {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-areas: "search" "role" "status" "department" "sort" "actions";
+  }
 }
