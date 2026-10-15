@@ -12,13 +12,12 @@
     const title = inspector.querySelector('.aim-panel-title'), close = inspector.querySelector('.aim-close');
     const openSummary = page.querySelector('.aim-open-summary'), reset = inspector.querySelector('.aim-reset-selection');
     const edit = inspector.querySelector('.aim-inspector-edit'), stateAction = inspector.querySelector('.aim-state-action');
-    const internal = page.classList.contains('iac-internal-page');
     let selected = null, docked = false, panelClosed = false, lastWidth = -1, scheduled = false, returnFocus = null;
 
     const expanded = () => {
         rows.forEach(row => row.querySelector('.aim-select').setAttribute('aria-expanded', String(row === selected && (docked || drawer.open))));
         openSummary.setAttribute('aria-expanded', String(docked || drawer.open));
-        if (internal) openSummary.textContent = selected ? 'Chi tiết tài khoản' : 'Tổng quan danh sách';
+        openSummary.textContent = selected ? 'Chi tiết tài khoản' : 'Tổng quan danh sách';
     };
     const resetSelection = () => {
         selected = null;
@@ -35,7 +34,7 @@
     };
     const setDocked = value => {
         const destination = value ? layout : drawer;
-        inspector.hidden = internal && panelClosed;
+        inspector.hidden = panelClosed;
         if (docked === value && inspector.parentElement === destination) return;
         const wasDocked = docked, wasOpen = drawer.open;
         docked = value;
@@ -43,7 +42,7 @@
         if (drawer.open) drawer.close();
         layout.classList.toggle('aim-docked', value);
         destination.append(inspector);
-        close.hidden = value && !internal; openSummary.hidden = value;
+        close.hidden = false; openSummary.hidden = value;
         if (!value && wasDocked && selected && !panelClosed) showDrawer(selected.querySelector('.aim-select'));
         if (value && wasOpen) { title.tabIndex = -1; title.focus({preventScroll: true}); }
         expanded();
@@ -51,7 +50,7 @@
     const select = (row, trigger) => {
         const template = page.querySelector('#account-inspector-template-' + row.dataset.accountId);
         if (!template) return;
-        if (internal && panelClosed) { panelClosed = false; lastWidth = -1; updateLayout(); }
+        if (panelClosed) { panelClosed = false; lastWidth = -1; updateLayout(); }
         selected = row;
         rows.forEach(item => { item.toggleAttribute('data-selected', item === row); if (item === row) item.dataset.selected = 'true'; item.querySelector('.aim-select').setAttribute('aria-pressed', String(item === row)); });
         detail.replaceChildren(template.content.cloneNode(true)); summary.hidden = true; detail.hidden = false; actions.hidden = false;
@@ -91,8 +90,7 @@
         else if (!event.target.closest('a,button,input,select,form') && !window.getSelection()?.toString()) select(row, row.querySelector('.aim-select'));
     });
     openSummary.addEventListener('click', () => {
-        if (internal) { panelClosed = false; lastWidth = -1; updateLayout(); }
-        else resetSelection();
+        panelClosed = false; lastWidth = -1; updateLayout();
         if (!docked) showDrawer(openSummary);
         else { title.tabIndex = -1; title.focus({preventScroll: true}); }
     });
@@ -101,7 +99,7 @@
         resetSelection(); if (!docked) close.focus(); else origin?.focus();
     });
     close.addEventListener('click', () => {
-        if (internal && docked) {
+        if (docked) {
             panelClosed = true; lastWidth = -1; updateLayout(); openSummary.focus();
         } else drawer.close();
     });

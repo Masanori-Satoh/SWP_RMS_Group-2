@@ -10,7 +10,7 @@
     </div>
 </th:block>
 <th:block th:fragment="panel(page, kind)">
-    <aside class="aim-inspector" th:classappend="${kind == 'internal' ? ' aim-inspector--internal' : ''}" id="account-inspector" aria-labelledby="account-inspector-title" hidden>
+    <aside class="aim-inspector aim-inspector--compact" id="account-inspector" aria-labelledby="account-inspector-title" hidden>
         <header class="aim-panel-header">
             <h2 class="aim-panel-title" id="account-inspector-title">Tổng quan danh sách</h2>
             <button class="btn btn--secondary btn--sm aim-close" type="button" aria-label="Đóng bảng thông tin" title="Đóng bảng thông tin" hidden>
@@ -53,25 +53,24 @@
                 <div><dt>Phòng ban</dt><dd th:text="${account.departmentName ?: 'Chưa phân công'}"></dd></div>
             </dl>
         </th:block>
-        <h4 class="aim-section-title" th:text="${kind == 'internal' ? 'Liên hệ' : 'Thông tin tài khoản'}">Thông tin tài khoản</h4>
+        <h4 class="aim-section-title">Liên hệ</h4>
         <dl class="aim-fields">
             <div><dt>Email</dt><dd th:text="${account.email}"></dd></div>
-            <div th:if="${kind == 'candidate'}"><dt>Tên đăng nhập</dt><dd th:text="${account.username}"></dd></div>
             <div><dt>Số điện thoại</dt><dd th:text="${account.details != null and !#strings.isEmpty(account.details.phoneNumber) ? account.details.phoneNumber : 'Chưa cập nhật'}"></dd></div>
         </dl>
-        <h4 class="aim-section-title" th:if="${kind == 'internal'}">Thời gian</h4>
+        <h4 class="aim-section-title">Thời gian</h4>
         <dl class="aim-fields aim-time-fields">
-            <div><dt>Ngày tạo tài khoản</dt><dd><time th:if="${account.details != null and account.details.createdAt != null}" th:datetime="${account.details.createdAt}" th:text="${#temporals.format(account.details.createdAt, 'dd/MM/yyyy HH:mm')}"></time><span th:unless="${account.details != null and account.details.createdAt != null}">Chưa có dữ liệu</span></dd></div>
+            <div><dt th:text="${kind == 'candidate' ? 'Ngày đăng ký' : 'Ngày tạo tài khoản'}">Ngày tạo tài khoản</dt><dd><time th:if="${account.details != null and account.details.createdAt != null}" th:datetime="${account.details.createdAt}" th:text="${#temporals.format(account.details.createdAt, 'dd/MM/yyyy HH:mm')}"></time><span th:unless="${account.details != null and account.details.createdAt != null}">Chưa có dữ liệu</span></dd></div>
             <div><dt>Cập nhật gần nhất</dt><dd><time th:if="${account.details != null and account.details.updatedAt != null}" th:datetime="${account.details.updatedAt}" th:text="${#temporals.format(account.details.updatedAt, 'dd/MM/yyyy HH:mm')}"></time><span th:unless="${account.details != null and account.details.updatedAt != null}">Chưa có dữ liệu</span></dd></div>
         </dl>
         <th:block th:if="${kind == 'candidate'}">
             <h4 class="aim-section-title">Hồ sơ ứng viên</h4>
             <th:block th:if="${account.details != null and account.details.profile != null}" th:with="profile=${account.details.profile}">
                 <p class="aim-profile-link" th:text="|Đã liên kết · Hồ sơ #${profile.id}|"></p>
-                <dl class="aim-fields">
+                <dl class="aim-fields aim-profile-fields">
                     <div><dt>Ngày sinh</dt><dd th:text="${profile.dateOfBirth != null ? #temporals.format(profile.dateOfBirth, 'dd/MM/yyyy') : 'Chưa cập nhật'}"></dd></div>
                     <div><dt>Giới tính</dt><dd th:text="${profile.gender == 'Male' ? 'Nam' : (profile.gender == 'Female' ? 'Nữ' : (profile.gender == 'Other' ? 'Khác' : (profile.gender ?: 'Chưa cập nhật')))}"></dd></div>
-                    <div><dt>Địa chỉ</dt><dd th:text="${#strings.isEmpty(profile.address) ? 'Chưa cập nhật' : profile.address}"></dd></div>
+                    <div class="aim-field--wide"><dt>Địa chỉ</dt><dd th:text="${#strings.isEmpty(profile.address) ? 'Chưa cập nhật' : profile.address}"></dd></div>
                     <div><dt>Nguồn hồ sơ</dt><dd th:text="${#strings.isEmpty(profile.source) ? 'Chưa cập nhật' : profile.source}"></dd></div>
                     <div><dt>Ngày tạo hồ sơ</dt><dd th:text="${profile.createdAt != null ? #temporals.format(profile.createdAt, 'dd/MM/yyyy HH:mm') : 'Chưa có dữ liệu'}"></dd></div>
                 </dl>

@@ -18,9 +18,11 @@
     </nav>
     <div class="page-header iac-heading">
         <h1 id="candidate-list-title" class="iac-title">Tài khoản ứng viên</h1>
+        <div class="aim-heading-actions">
+            <button class="btn btn--secondary btn--sm aim-open-summary" type="button" aria-controls="account-inspector" hidden>Tổng quan danh sách</button>
+        </div>
     </div>
     <div class="alert alert--success" role="status" th:if="${successMessage}" th:text="${successMessage}"></div>
-    <th:block th:replace="~{admin/accounts/inspector :: navigation(kind='candidate')}"></th:block>
     <div class="aim-layout"><div class="aim-master">
     <form class="iac-filters cac-filters" th:action="@{/admin/candidate-accounts}" method="get" aria-label="Bộ lọc tài khoản ứng viên">
         <div class="iac-field iac-field--search">
