@@ -8,10 +8,11 @@
         <!-- Reuse the approved account presentation without changing shared files. -->
         <link rel="stylesheet" th:href="@{/css/pages/internal-accounts.css}">
         <link rel="stylesheet" th:href="@{/css/pages/candidate-accounts.css}">
+        <link rel="stylesheet" th:href="@{/css/pages/account-inspector.css}">
     </th:block>
 </head>
 <body>
-<main id="main" layout:fragment="content" class="page-content container iac-page cac-page" tabindex="-1">
+<main id="main" layout:fragment="content" class="page-content container iac-page cac-page aim-page" tabindex="-1">
     <nav class="iac-breadcrumb" aria-label="Đường dẫn">
         <a th:href="@{/dashboard}">Tổng quan</a><span aria-hidden="true">/</span><span aria-current="page">Quản lý tài khoản</span>
     </nav>
@@ -19,6 +20,8 @@
         <h1 id="candidate-list-title" class="iac-title">Tài khoản ứng viên</h1>
     </div>
     <div class="alert alert--success" role="status" th:if="${successMessage}" th:text="${successMessage}"></div>
+    <th:block th:replace="~{admin/accounts/inspector :: navigation(kind='candidate')}"></th:block>
+    <div class="aim-layout"><div class="aim-master">
     <form class="iac-filters cac-filters" th:action="@{/admin/candidate-accounts}" method="get" aria-label="Bộ lọc tài khoản ứng viên">
         <div class="iac-field iac-field--search">
             <label class="form-label" for="account-search">Tìm kiếm</label>
@@ -74,9 +77,9 @@
                     <th class="iac-cell iac-actions-cell" scope="col">Thao tác</th>
                 </tr></thead>
                 <tbody>
-                <tr th:each="account, row : ${accounts.content}">
+                <tr class="aim-row" th:each="account, row : ${accounts.content}" th:attr="data-account-id=${account.id}">
                     <td class="iac-cell" th:text="${accounts.number * accounts.size + row.count}"></td>
-                    <td class="iac-cell iac-name" th:text="${account.fullName}">Họ và tên</td>
+                    <td class="iac-cell iac-name"><span class="aim-name-fallback" th:text="${account.fullName}"></span><button class="aim-select" type="button" aria-controls="account-inspector" aria-expanded="false" aria-pressed="false" th:attr="aria-label=|Xem tài khoản ${account.fullName}|" th:text="${account.fullName}" hidden></button></td>
                     <td class="iac-cell iac-email" th:text="${account.email}">Email</td>
                     <td class="iac-cell iac-login" th:text="${account.username}">Tên đăng nhập</td>
                     <td class="iac-cell iac-state-cell">
@@ -88,7 +91,7 @@
                     </td>
                     <td class="iac-cell iac-actions-cell"><div class="iac-actions">
                         <th:block th:if="${account.status != 'Inactive'}">
-                            <form class="status-action-form" th:action="@{/admin/candidate-accounts/{id}/deactivate(id=${account.id})}" method="post" data-status-confirm
+                            <form class="status-action-form" th:id="|account-state-${account.id}|" th:action="@{/admin/candidate-accounts/{id}/deactivate(id=${account.id})}" method="post" data-status-confirm
                                   th:attr="data-confirm-title=|Vô hiệu hóa tài khoản ${account.username}|"
                                   data-confirm-message="Tài khoản sẽ bị vô hiệu hóa và không thể đăng nhập. Hồ sơ ứng viên và lịch sử tuyển dụng được giữ nguyên."
                                   data-confirm-label="Vô hiệu hóa" data-confirm-danger="true">
@@ -99,7 +102,7 @@
                             </form>
                         </th:block>
                         <th:block th:if="${account.status == 'Inactive'}">
-                            <form class="status-action-form" th:action="@{/admin/candidate-accounts/{id}/activate(id=${account.id})}" method="post" data-status-confirm
+                            <form class="status-action-form" th:id="|account-state-${account.id}|" th:action="@{/admin/candidate-accounts/{id}/activate(id=${account.id})}" method="post" data-status-confirm
                                   th:attr="data-confirm-title=|Kích hoạt lại tài khoản ${account.username}|"
                                   data-confirm-message="Tài khoản sẽ hoạt động trở lại và tiếp tục đăng nhập với vai trò ứng viên."
                                   data-confirm-label="Kích hoạt lại" data-confirm-danger="false">
@@ -119,11 +122,13 @@
             <div th:replace="~{fragments/ui/pagination :: paged(page=${accounts})}"></div>
         </div>
     </section>
+    </div><th:block th:replace="~{admin/accounts/inspector :: panel(page=${accounts},kind='candidate')}"></th:block></div>
     <dialog th:replace="~{fragments/status-actions :: confirmation}"></dialog>
 </main>
 <th:block layout:fragment="scripts">
     <script th:src="@{/js/status-confirmation.js}" defer></script>
     <script th:src="@{/js/pages/internal-accounts.js}" defer></script>
+    <script th:src="@{/js/pages/account-inspector.js}" defer></script>
 </th:block>
 </body>
 </html>

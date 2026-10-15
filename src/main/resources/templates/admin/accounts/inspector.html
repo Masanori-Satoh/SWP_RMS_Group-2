@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org"><body>
+<th:block th:fragment="navigation(kind)">
+    <div class="aim-toolbar">
+        <nav class="aim-groups" aria-label="Nhóm tài khoản">
+            <a class="aim-group" th:href="@{/admin/accounts}" th:attr="aria-current=${kind == 'internal' ? 'page' : null}">Tài khoản nội bộ</a>
+            <a class="aim-group" th:href="@{/admin/candidate-accounts}" th:attr="aria-current=${kind == 'candidate' ? 'page' : null}">Tài khoản ứng viên</a>
+        </nav>
+        <button class="btn btn--secondary btn--sm aim-open-summary" type="button" aria-controls="account-inspector" hidden>Tổng quan danh sách</button>
+    </div>
+</th:block>
+<th:block th:fragment="panel(page, kind)">
+    <aside class="aim-inspector" id="account-inspector" aria-labelledby="account-inspector-title" hidden>
+        <header class="aim-panel-header">
+            <h2 class="aim-panel-title" id="account-inspector-title">Tổng quan danh sách</h2>
+            <button class="btn btn--secondary btn--sm aim-close" type="button" aria-label="Đóng bảng thông tin" title="Đóng bảng thông tin" hidden>
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"/></svg>
+            </button>
+        </header>
+        <div class="aim-summary">
+            <div class="aim-total"><strong th:text="${page.totalElements}">0</strong><span>Tài khoản khớp bộ lọc</span></div>
+            <p class="aim-scope">Số liệu theo nhóm tài khoản và bộ lọc đang áp dụng.</p>
+            <dl class="aim-page-meta"><div><dt>Đang hiển thị</dt><dd th:text="|${page.numberOfElements} tài khoản|">0 tài khoản</dd></div><div><dt>Trang</dt><dd th:text="${page.totalPages == 0 ? '0 / 0' : (page.number + 1) + ' / ' + page.totalPages}"></dd></div></dl>
+            <h3 class="aim-section-title">Trạng thái trên trang này</h3>
+            <ul class="aim-status-counts">
+                <li><span class="badge badge--success iac-status">Hoạt động</span><strong th:text="${#lists.size(page.content.?[status == 'Active'])}">0</strong></li>
+                <li><span class="badge badge--neutral iac-status">Vô hiệu hóa</span><strong th:text="${#lists.size(page.content.?[status == 'Inactive'])}">0</strong></li>
+                <li><span class="badge badge--danger iac-status">Bị khóa</span><strong th:text="${#lists.size(page.content.?[status == 'Blocked'])}">0</strong></li>
+            </ul>
+            <p class="aim-guidance">Chọn tên hoặc một dòng tài khoản để xem chi tiết và thao tác.</p>
+        </div>
+        <div class="aim-detail" hidden></div>
+        <div class="aim-detail-actions" hidden>
+            <a class="btn btn--secondary btn--sm aim-inspector-edit" hidden>Sửa tài khoản</a>
+            <!-- Associated with the original row form: its CSRF and confirmation listener stay intact. -->
+            <button class="btn btn--danger btn--sm aim-state-action" type="submit" hidden></button>
+            <button class="btn btn--secondary btn--sm aim-reset-selection" type="button">Bỏ chọn</button>
+        </div>
+    </aside>
+    <dialog class="aim-drawer" aria-labelledby="account-inspector-title"></dialog>
+    <p class="sr-only aim-announcement" role="status" aria-live="polite" aria-atomic="true"></p>
+    <template th:each="account : ${page.content}" th:id="|account-inspector-template-${account.id}|">
+        <div class="aim-identity">
+            <span class="aim-avatar" aria-hidden="true" th:text="${#strings.isEmpty(account.fullName) ? '?' : #strings.substring(account.fullName, 0, 1)}"></span>
+            <div><h3 class="aim-name" th:text="${account.fullName}"></h3><p class="aim-username" th:text="${account.username}"></p></div>
+        </div>
+        <span class="badge iac-status" th:classappend="${account.status == 'Active' ? ' badge--success' : (account.status == 'Blocked' ? ' badge--danger' : ' badge--neutral')}"
+              th:text="${account.status == 'Active' ? 'Hoạt động' : (account.status == 'Inactive' ? 'Vô hiệu hóa' : 'Bị khóa')}"></span>
+        <h4 class="aim-section-title">Thông tin tài khoản</h4>
+        <dl class="aim-fields">
+            <div><dt>Email</dt><dd th:text="${account.email}"></dd></div>
+            <div><dt>Tên đăng nhập</dt><dd th:text="${account.username}"></dd></div>
+            <div><dt>Số điện thoại</dt><dd th:text="${account.details != null and !#strings.isEmpty(account.details.phoneNumber) ? account.details.phoneNumber : 'Chưa cập nhật'}"></dd></div>
+            <th:block th:if="${kind == 'internal'}">
+                <div><dt>Vai trò</dt><dd th:text="${account.roleName == 'System Admin' ? 'Quản trị hệ thống' : (account.roleName == 'HR' ? 'Nhân sự' : (account.roleName == 'Hiring Manager' ? 'Trưởng phòng tuyển dụng' : (account.roleName == 'Director' ? 'Giám đốc' : (account.roleName == 'Interviewer' ? 'Người phỏng vấn' : account.roleName))))}"></dd></div>
+                <div><dt>Phòng ban</dt><dd th:text="${account.departmentName ?: 'Chưa phân công'}"></dd></div>
+            </th:block>
+            <div><dt>Ngày tạo tài khoản</dt><dd><time th:if="${account.details != null and account.details.createdAt != null}" th:datetime="${account.details.createdAt}" th:text="${#temporals.format(account.details.createdAt, 'dd/MM/yyyy HH:mm')}"></time><span th:unless="${account.details != null and account.details.createdAt != null}">Chưa có dữ liệu</span></dd></div>
+            <div><dt>Cập nhật gần nhất</dt><dd><time th:if="${account.details != null and account.details.updatedAt != null}" th:datetime="${account.details.updatedAt}" th:text="${#temporals.format(account.details.updatedAt, 'dd/MM/yyyy HH:mm')}"></time><span th:unless="${account.details != null and account.details.updatedAt != null}">Chưa có dữ liệu</span></dd></div>
+        </dl>
+        <th:block th:if="${kind == 'candidate'}">
+            <h4 class="aim-section-title">Hồ sơ ứng viên</h4>
+            <th:block th:if="${account.details != null and account.details.profile != null}" th:with="profile=${account.details.profile}">
+                <p class="aim-profile-link" th:text="|Đã liên kết · Hồ sơ #${profile.id}|"></p>
+                <dl class="aim-fields">
+                    <div><dt>Ngày sinh</dt><dd th:text="${profile.dateOfBirth != null ? #temporals.format(profile.dateOfBirth, 'dd/MM/yyyy') : 'Chưa cập nhật'}"></dd></div>
+                    <div><dt>Giới tính</dt><dd th:text="${profile.gender == 'Male' ? 'Nam' : (profile.gender == 'Female' ? 'Nữ' : (profile.gender == 'Other' ? 'Khác' : (profile.gender ?: 'Chưa cập nhật')))}"></dd></div>
+                    <div><dt>Địa chỉ</dt><dd th:text="${#strings.isEmpty(profile.address) ? 'Chưa cập nhật' : profile.address}"></dd></div>
+                    <div><dt>Nguồn hồ sơ</dt><dd th:text="${#strings.isEmpty(profile.source) ? 'Chưa cập nhật' : profile.source}"></dd></div>
+                    <div><dt>Ngày tạo hồ sơ</dt><dd th:text="${profile.createdAt != null ? #temporals.format(profile.createdAt, 'dd/MM/yyyy HH:mm') : 'Chưa có dữ liệu'}"></dd></div>
+                </dl>
+            </th:block>
+            <p class="aim-scope" th:unless="${account.details != null and account.details.profile != null}" th:text="${account.profileId != null ? 'Đã liên kết hồ sơ #' + account.profileId + '. Chưa có dữ liệu chi tiết.' : 'Chưa có hồ sơ liên kết với tài khoản này.'}"></p>
+        </th:block>
+    </template>
+</th:block>
+</body></html>

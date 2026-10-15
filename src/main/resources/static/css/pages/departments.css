@@ -1,0 +1,35 @@
+/* DEPARTMENTS.CSS — /admin/departments list only, prefix dm-.
+   Reuse account components; only Department composition and manager metadata differ. */
+.rms-app .dm-page {
+  --dm-panel-border: color-mix(in srgb, var(--control-line) 22%, var(--line));
+  container-name: departments;
+  min-height: calc(100vh - var(--topbar-h));
+  background: color-mix(in srgb, var(--brand-soft) 45%, var(--page));
+}
+.dm-filters {
+  grid-template-columns: clamp(280px, 40cqw, 560px) clamp(180px, 22cqw, 260px) max-content;
+  grid-template-areas: "search status actions";
+  gap: var(--s3);
+  margin-bottom: 0;
+  padding: var(--s2) var(--s4);
+  background: var(--surface-subtle);
+  border: 1px solid var(--dm-panel-border);
+  border-bottom: 0;
+  border-radius: var(--radius-md) var(--radius-md) 0 0;
+}
+.dm-filter-actions { justify-self: start; }
+.dm-card {
+  border-color: var(--dm-panel-border);
+  border-top: 0;
+  border-radius: 0 0 var(--radius-md) var(--radius-md);
+  box-shadow: var(--shadow-sm);
+}
+.dm-table { min-width: 760px; }
+.dm-manager { display: block; font-weight: 500; line-height: 1.35; }
+.dm-manager-login { display: block; color: var(--muted); font-size: var(--font-sm); line-height: 1.35; }
+@container departments (max-width: 700px) {
+  .dm-filters { grid-template-columns: minmax(0, 1fr) max-content; grid-template-areas: "search search" "status actions"; }
+}
+@container departments (max-width: 480px) {
+  .dm-filters { grid-template-columns: minmax(0, 1fr); grid-template-areas: "search" "status" "actions"; }
+}
