@@ -137,7 +137,7 @@ public class SecurityConfig {
                                                                 RoleAuthorities.SYSTEM_ADMIN)
                                                 .requestMatchers("/talent-pool/applications/*/confirm", "/talent-pool/applications/*/decline",
                                                         "/talent-pool/applications/*/resend-email", "/talent-pool/interviews/*/resend-email",
-                                                        "/talent-pool/jobs/*/close")
+                                                        "/talent-pool/jobs/*/close", "/internal/job-postings/*/close")
                                                 .hasAuthority("ROLE_HR")
                                                 .requestMatchers("/talent-pool/jobs/*/suggest")
                                                 .hasAuthority("ROLE_HIRING_MANAGER")
