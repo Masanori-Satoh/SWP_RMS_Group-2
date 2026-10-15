@@ -3,7 +3,7 @@ package com.group2.rms.candidate.service;
 import com.group2.rms.candidate.dto.ApplicationProgressResponse;
 import com.group2.rms.candidate.entity.Application;
 import com.group2.rms.candidate.repository.ApplicationReviewRepository;
-import com.group2.rms.requisition.entity.JobPosting;
+import com.group2.rms.jobposting.entity.JobPosting;
 import com.group2.rms.requisition.entity.JobRequisition;
 import com.group2.rms.requisition.service.RequisitionAccess;
 import com.group2.rms.user.entity.Department;

@@ -3,7 +3,7 @@ package com.group2.rms.candidate.service;
 import com.group2.rms.candidate.exception.TalentPoolException;
 import com.group2.rms.candidate.repository.ApplicationRepository;
 import com.group2.rms.core.exception.ResourceNotFoundException;
-import com.group2.rms.requisition.repository.JobPostingRepository;
+import com.group2.rms.jobposting.repository.JobPostingRepository;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

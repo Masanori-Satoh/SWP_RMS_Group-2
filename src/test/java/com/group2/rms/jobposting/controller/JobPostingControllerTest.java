@@ -1,10 +1,10 @@
-package com.group2.rms.requisition.controller;
+package com.group2.rms.jobposting.controller;
 
 import com.group2.rms.core.config.SecurityConfig;
 import com.group2.rms.core.security.DatabaseUserDetailsService;
-import com.group2.rms.requisition.dto.InternalJobPostingResponse;
-import com.group2.rms.requisition.dto.JobPostingCreateRequest;
-import com.group2.rms.requisition.service.JobPostingService;
+import com.group2.rms.jobposting.dto.InternalJobPostingResponse;
+import com.group2.rms.jobposting.dto.JobPostingCreateRequest;
+import com.group2.rms.jobposting.service.JobPostingService;
 import com.group2.rms.requisition.service.RequisitionAccess;
 import com.group2.rms.user.entity.Department;
 import com.group2.rms.user.entity.Role;
@@ -32,15 +32,18 @@ import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
-@WebMvcTest(controllers = InternalJobPostingController.class)
+@WebMvcTest(controllers = JobPostingController.class)
 @Import({SecurityConfig.class, DatabaseUserDetailsService.class})
-class InternalJobPostingControllerTest {
+class JobPostingControllerTest {
 
     @Autowired
     private MockMvc mvc;
 
     @MockitoBean
     private JobPostingService jobPostingService;
+
+    @MockitoBean
+    private com.group2.rms.candidate.service.RecruitmentEmailService recruitmentEmailService;
 
     @MockitoBean
     private RequisitionAccess requisitionAccess;
@@ -52,7 +55,7 @@ class InternalJobPostingControllerTest {
     private UserRepository userRepository;
 
     @MockitoBean
-    private com.group2.rms.requisition.repository.JobPostingRepository jobPostingRepository;
+    private com.group2.rms.jobposting.repository.JobPostingRepository jobPostingRepository;
 
     @MockitoBean
     private com.group2.rms.requisition.repository.JobRequisitionRepository jobRequisitionRepository;

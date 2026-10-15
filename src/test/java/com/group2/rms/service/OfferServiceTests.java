@@ -18,7 +18,7 @@ import com.group2.rms.interview.repository.InterviewFinalResultRepository;
 import com.group2.rms.interview.entity.InterviewFinalResult;
 import com.group2.rms.interview.entity.InterviewSchedule;
 import com.group2.rms.candidate.entity.Candidate;
-import com.group2.rms.requisition.entity.JobPosting;
+import com.group2.rms.jobposting.entity.JobPosting;
 import com.group2.rms.requisition.entity.JobRequisition;
 import com.group2.rms.user.entity.Department;
 import com.group2.rms.offer.dto.PassedCandidateResponse;

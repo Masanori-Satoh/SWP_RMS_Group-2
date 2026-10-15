@@ -1,4 +1,4 @@
-package com.group2.rms.requisition.dto;
+package com.group2.rms.jobposting.dto;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -16,6 +16,7 @@ import java.time.LocalDate;
 public class JobPostingCreateRequest {
 
     private Integer jobPostingId;
+    private String postingStatus;
 
     @NotNull(message = "Yêu cầu tuyển dụng nguồn không được để trống.")
     private Integer requisitionId;

@@ -1,12 +1,15 @@
-package com.group2.rms.requisition.service;
+package com.group2.rms.jobposting.service;
 
 import com.group2.rms.admin.entity.AuditLog;
 import com.group2.rms.admin.repository.AuditLogRepository;
-import com.group2.rms.requisition.dto.JobPostingCreateRequest;
-import com.group2.rms.requisition.entity.JobPosting;
+import com.group2.rms.jobposting.dto.JobPostingCreateRequest;
+import com.group2.rms.jobposting.entity.JobPosting;
+import com.group2.rms.jobposting.exception.JobPostingValidationException;
+import com.group2.rms.jobposting.validator.JobPostingValidator;
 import com.group2.rms.requisition.entity.JobRequisition;
-import com.group2.rms.requisition.repository.JobPostingRepository;
+import com.group2.rms.jobposting.repository.JobPostingRepository;
 import com.group2.rms.requisition.repository.JobRequisitionRepository;
+import com.group2.rms.requisition.service.RequisitionAccess;
 import com.group2.rms.user.entity.Department;
 import com.group2.rms.user.entity.Role;
 import com.group2.rms.user.entity.User;
@@ -17,6 +20,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
@@ -44,6 +48,9 @@ class JobPostingServiceTest {
     @Mock private AuditLogRepository auditLogRepository;
     @Mock private RequisitionAccess requisitionAccess;
     @Mock private com.group2.rms.notification.NotificationService notificationService;
+    @Mock private com.group2.rms.candidate.service.TalentPoolService talentPoolService;
+    @Mock private com.group2.rms.candidate.repository.ApplicationRepository applicationRepository;
+    @Spy private JobPostingValidator validator = new JobPostingValidator();
 
     @InjectMocks private JobPostingServiceImpl jobPostingService;
 
@@ -112,7 +119,7 @@ class JobPostingServiceTest {
         when(requisitionAccess.role(hrUser)).thenReturn(RequisitionAccess.ROLE_HR);
         when(jobRequisitionRepository.findById(101)).thenReturn(Optional.of(approvedReq));
 
-        assertThrows(ResponseStatusException.class, () -> jobPostingService.prepareCreateForm(101, hrUser));
+        assertThrows(JobPostingValidationException.class, () -> jobPostingService.prepareCreateForm(101, hrUser));
     }
 
     @Test
@@ -129,7 +136,7 @@ class JobPostingServiceTest {
     @DisplayName("createJobPosting: Lưu bản nháp (Draft) thành công")
     void createJobPosting_draft_success() {
         when(requisitionAccess.role(hrUser)).thenReturn(RequisitionAccess.ROLE_HR);
-        when(jobRequisitionRepository.findById(101)).thenReturn(Optional.of(approvedReq));
+        when(jobRequisitionRepository.findForUpdate(101)).thenReturn(Optional.of(approvedReq));
         when(jobPostingRepository.existsByRequisition_RequisitionIdAndPostingStatusIn(eq(101), any())).thenReturn(false);
 
         JobPosting savedEntity = JobPosting.builder().jobPostingId(555).postingTitle("Java Developer").postingStatus("Draft").build();
@@ -161,7 +168,7 @@ class JobPostingServiceTest {
     @DisplayName("createJobPosting: Đăng tin tuyển dụng (Published) thành công")
     void createJobPosting_publish_success() {
         when(requisitionAccess.role(hrUser)).thenReturn(RequisitionAccess.ROLE_HR);
-        when(jobRequisitionRepository.findById(101)).thenReturn(Optional.of(approvedReq));
+        when(jobRequisitionRepository.findForUpdate(101)).thenReturn(Optional.of(approvedReq));
         when(jobPostingRepository.existsByRequisition_RequisitionIdAndPostingStatusIn(eq(101), any())).thenReturn(false);
 
         JobPosting savedEntity = JobPosting.builder().jobPostingId(777).postingTitle("Java Developer").postingStatus("Published").build();
@@ -176,7 +183,7 @@ class JobPostingServiceTest {
                 .action("publish")
                 .build();
 
-        Integer postingId = jobPostingService.createJobPosting(request, hrUser);
+        Integer postingId = jobPostingService.createAndPublishJobPosting(request, hrUser);
 
         assertEquals(777, postingId);
         var captor = ArgumentCaptor.forClass(JobPosting.class);
@@ -192,7 +199,7 @@ class JobPostingServiceTest {
     @DisplayName("createJobPosting: Báo lỗi nếu hạn nộp hồ sơ ở quá khứ")
     void createJobPosting_pastDeadline_throwsException() {
         when(requisitionAccess.role(hrUser)).thenReturn(RequisitionAccess.ROLE_HR);
-        when(jobRequisitionRepository.findById(101)).thenReturn(Optional.of(approvedReq));
+        when(jobRequisitionRepository.findForUpdate(101)).thenReturn(Optional.of(approvedReq));
         when(jobPostingRepository.existsByRequisition_RequisitionIdAndPostingStatusIn(eq(101), any())).thenReturn(false);
 
         JobPostingCreateRequest request = JobPostingCreateRequest.builder()
@@ -204,7 +211,7 @@ class JobPostingServiceTest {
                 .action("publish")
                 .build();
 
-        assertThrows(ResponseStatusException.class, () -> jobPostingService.createJobPosting(request, hrUser));
+        assertThrows(JobPostingValidationException.class, () -> jobPostingService.createAndPublishJobPosting(request, hrUser));
         verify(jobPostingRepository, never()).save(any());
     }
 
@@ -230,7 +237,7 @@ class JobPostingServiceTest {
 
         assertNotNull(result);
         assertEquals(1, result.getTotalElements());
-        var first = (com.group2.rms.requisition.dto.InternalJobPostingResponse) result.getContent().get(0);
+        var first = (com.group2.rms.jobposting.dto.InternalJobPostingResponse) result.getContent().get(0);
         assertEquals(99, first.getJobPostingId());
         assertEquals("Backend Lead", first.getPostingTitle());
         assertEquals("REQ-2026-001", first.getRequisitionCode());
@@ -251,7 +258,7 @@ class JobPostingServiceTest {
     @DisplayName("deleteJobPosting: Xóa tin tuyển dụng thành công và lưu audit log")
     void deleteJobPosting_success() {
         when(requisitionAccess.role(hrUser)).thenReturn(RequisitionAccess.ROLE_HR);
-        JobPosting posting = JobPosting.builder().jobPostingId(99).postingTitle("Test Posting").build();
+        JobPosting posting = JobPosting.builder().jobPostingId(99).postingTitle("Test Posting").postingStatus("Draft").build();
         when(jobPostingRepository.findById(99)).thenReturn(Optional.of(posting));
 
         jobPostingService.deleteJobPosting(99, hrUser);
@@ -279,6 +286,7 @@ class JobPostingServiceTest {
                 .postingTitle("React Dev")
                 .jobDescription("Desc")
                 .jobRequirements("Reqs")
+                .postingStatus("Draft")
                 .salaryDisplay("15 - 20 Triệu")
                 .workLocation("Hà Nội")
                 .build();
@@ -353,10 +361,9 @@ class JobPostingServiceTest {
     @DisplayName("createJobPosting: Cập nhật tin tuyển dụng hiện có thành công")
     void createJobPosting_update_success() {
         when(requisitionAccess.role(hrUser)).thenReturn(RequisitionAccess.ROLE_HR);
-        when(jobRequisitionRepository.findById(101)).thenReturn(Optional.of(approvedReq));
-
-        JobPosting existing = JobPosting.builder().jobPostingId(88).postingTitle("Old Title").postingStatus("Draft").build();
-        when(jobPostingRepository.findById(88)).thenReturn(Optional.of(existing));
+        JobPosting existing = JobPosting.builder().jobPostingId(88).requisition(approvedReq)
+                .postingTitle("Old Title").postingStatus("Draft").build();
+        when(jobPostingRepository.findForUpdate(88)).thenReturn(Optional.of(existing));
         when(jobPostingRepository.save(any(JobPosting.class))).thenReturn(existing);
 
         JobPostingCreateRequest request = JobPostingCreateRequest.builder()
@@ -365,12 +372,12 @@ class JobPostingServiceTest {
                 .postingTitle("Updated Title")
                 .jobDescription("Desc")
                 .jobRequirements("Reqs")
+                .applicationDeadline(LocalDate.now().plusDays(15))
                 .action("publish")
                 .build();
 
-        Integer resultId = jobPostingService.createJobPosting(request, hrUser);
+        jobPostingService.updateAndPublishJobPosting(88, request, hrUser);
 
-        assertEquals(88, resultId);
         verify(jobPostingRepository).save(existing);
         assertEquals("Updated Title", existing.getPostingTitle());
         assertEquals("Published", existing.getPostingStatus());

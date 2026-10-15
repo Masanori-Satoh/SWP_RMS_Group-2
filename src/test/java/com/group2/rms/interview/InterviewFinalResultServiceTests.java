@@ -12,7 +12,7 @@ import com.group2.rms.interview.exception.InterviewFinalResultException;
 import com.group2.rms.interview.repository.InterviewFinalResultRepository;
 import com.group2.rms.interview.repository.InterviewScheduleRepository;
 import com.group2.rms.interview.service.InterviewFinalResultServiceImpl;
-import com.group2.rms.requisition.entity.JobPosting;
+import com.group2.rms.jobposting.entity.JobPosting;
 import com.group2.rms.requisition.entity.JobRequisition;
 import com.group2.rms.requisition.service.RequisitionAccess;
 import com.group2.rms.user.entity.Role;

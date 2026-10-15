@@ -15,7 +15,7 @@ import com.group2.rms.requisition.entity.RequisitionApproval;
 import com.group2.rms.requisition.entity.RequisitionWorkflowEvent;
 import com.group2.rms.requisition.entity.ScreeningCriteria;
 import com.group2.rms.requisition.exception.RequisitionValidationException;
-import com.group2.rms.requisition.repository.JobPostingRepository;
+import com.group2.rms.jobposting.repository.JobPostingRepository;
 import com.group2.rms.requisition.repository.JobRequisitionRepository;
 import com.group2.rms.requisition.repository.RequisitionApprovalRepository;
 import com.group2.rms.requisition.repository.RequisitionWorkflowEventRepository;

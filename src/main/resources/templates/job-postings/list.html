@@ -4,7 +4,7 @@
     JOB-POSTINGS/LIST.HTML
     =============================================================================
     Màn hình Quản lý Danh sách Tin Tuyển dụng Nội bộ (/internal/job-postings)
-    Thiết kế đồng bộ 100% với phân hệ Yêu cầu Tuyển dụng (Mộc RMS Design Language)
+    Dùng chung bố cục danh sách với phân hệ Yêu cầu Tuyển dụng.
     =============================================================================
 -->
 
@@ -24,34 +24,22 @@
             <main id="main" tabindex="-1" class="page-content">
                 <div class="container">
 
-                    <!-- Breadcrumb điều hướng chuẩn như Requisition -->
-                    <nav class="requisition-page-breadcrumb" aria-label="Điều hướng">
-                        <a th:href="@{/dashboard}">Bảng điều khiển</a>
-                        <span aria-hidden="true">/</span>
-                        <span aria-current="page">Tin tuyển dụng</span>
-                    </nav>
 
-                    <!-- Tiêu đề trang & Nút hành động đăng tin -->
+                    <!-- Tiêu đề trang -->
                     <div class="requisition-page-header">
                         <div>
                             <h1>Quản lý tin tuyển dụng</h1>
                             <p>Danh sách tin tuyển dụng nội bộ được tạo và phát hành từ các yêu cầu tuyển dụng đã duyệt.</p>
                         </div>
-                        <a th:if="${viewerRole == 'HR' or viewerRole == 'System Admin'}" th:href="@{/requisitions}" class="btn-create">+ Đăng tin từ yêu cầu đã duyệt</a>
                     </div>
 
                     <!-- Flash Notification Message -->
                     <div th:if="${message != null}" class="alert alert--success" th:text="${message}"></div>
-
-                    <!-- Thẻ danh sách bo tròn chuẩn RMS (.list-container) -->
-                    <section class="list-container" aria-labelledby="posting-list-title">
-                        <div class="requisition-list-heading">
-                            <h2 id="posting-list-title">Danh sách tin tuyển dụng</h2>
-                            <p class="records-count" th:text="|Tổng cộng ${totalElements} tin tuyển dụng|">Tổng cộng 6 tin tuyển dụng</p>
-                        </div>
+                    <div th:if="${errorMessage != null}" class="alert alert--danger" role="alert" th:text="${errorMessage}"></div>
 
                         <!-- Form bộ lọc -->
-                        <form th:action="@{/internal/job-postings}" method="get" id="filterForm">
+                        <form class="list-filter-card" th:action="@{/internal/job-postings}" method="get" id="filterForm"
+                              role="search" aria-label="Lọc tin tuyển dụng">
                             <input type="hidden" name="size" th:value="${pageSize}">
                             <div class="requisition-filter-grid requisition-filter-grid-4">
                                 <div class="filter-field filter-search">
@@ -98,6 +86,8 @@
                                 <a th:href="@{/internal/job-postings}" class="clear-filters">Đặt lại bộ lọc</a>
                             </div>
                         </form>
+                    <section class="list-container" aria-label="Danh sách tin tuyển dụng">
+                        <p class="list-results-count" th:text="|${totalElements} tin tuyển dụng|">0 tin tuyển dụng</p>
 
                         <p class="table-scroll-note" hidden>Cuộn ngang để xem toàn bộ các cột và thao tác.</p>
                         <div class="table-wrapper requisition-table-wrap" role="region"
@@ -162,8 +152,8 @@
                                                 <a th:href="@{/internal/job-postings/{id}(id=${item.jobPostingId})}">Xem chi tiết</a>
                                                 <a th:if="${item.postingStatus == 'Published'}"
                                                     th:href="@{/jobs/{id}(id=${item.jobPostingId})}" target="_blank">Xem trên cổng ứng viên</a>
-                                                <a th:if="${viewerRole == 'HR' or viewerRole == 'System Admin'}" th:href="@{/internal/job-postings/{id}/edit(id=${item.jobPostingId})}">Chỉnh sửa</a>
-                                                <button th:if="${viewerRole == 'HR' or viewerRole == 'System Admin'}" type="button" class="delete-action" data-delete-requisition
+                                                <a th:if="${(viewerRole == 'HR' or viewerRole == 'System Admin') and item.postingStatus != 'Closed'}" th:href="@{/internal/job-postings/{id}/edit(id=${item.jobPostingId})}">Chỉnh sửa</a>
+                                                <button th:if="${(viewerRole == 'HR' or viewerRole == 'System Admin') and item.postingStatus == 'Draft'}" type="button" class="delete-action" data-delete-requisition
                                                     th:data-delete-url="@{/internal/job-postings/delete/{id}(id=${item.jobPostingId})}"
                                                     th:data-title="${item.postingTitle}">Xóa tin</button>
                                             </div>

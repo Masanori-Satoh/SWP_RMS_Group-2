@@ -72,6 +72,8 @@ public interface ApplicationRepository extends JpaRepository<Application, Intege
 
         boolean existsByCandidate_CandidateIdAndJobPosting_JobPostingId(Integer candidateId, Integer jobPostingId);
 
+        boolean existsByJobPosting_JobPostingId(Integer jobPostingId);
+
         /**
          * Chỉ chuyển {@code Applied → AI_Screened}; đơn HR đã xử lý thì giữ nguyên.
          * Câu update viết tay không chạy {@code @PreUpdate} nên phải tự gán

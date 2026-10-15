@@ -26,7 +26,7 @@ src/main/java/com/group2/rms/
 │   ├── validation/        ← @PasswordMatches + validator
 │   └── web/               ← @ControllerAdvice cấp model cho mọi view: TopbarUserAdvice (topbarUser), ViewHelpersAdvice (pageLinks)
 ├── {module_nhỏ}/          ← dashboard, notification: Controller/Service/Repository/DTO nằm phẳng
-├── {module_lớn}/          ← auth, user, requisition, interview, offer, admin, career, candidate
+├── {module_lớn}/          ← auth, user, requisition, jobposting, interview, offer, admin, career, candidate
 │   ├── controller/  service/  repository/  entity/  dto/
 │   └── exception/  validator/   (khi cần)
 └── RmsApplication.java
@@ -39,7 +39,8 @@ src/main/java/com/group2/rms/
 | `career` | Cổng tuyển dụng công khai: landing, Jobs Board, chi tiết tin, nút ứng tuyển | `/`, `/jobs`, `/jobs/{id}`, `/jobs/{id}/apply` (`CareerPortalController`) | `candidate/landing`, `candidate/job-board`, `candidate/job-detail` |
 | `auth` | Đăng nhập, đăng ký ứng viên (OTP email), quên/đặt lại mật khẩu (OTP) | `/login`, `/register/**`, `/forgot-password`, `/reset-password/**` | `auth/*`, `auth/email/*` |
 | `user` | Tài khoản nội bộ, tài khoản ứng viên, phòng ban, hồ sơ cá nhân, đổi mật khẩu | `/admin/accounts/**`, `/admin/candidate-accounts/**`, `/admin/departments/**`, `/profile/**` | `admin/accounts/*`, `admin/departments/*`, `user/profile` |
-| `requisition` | Yêu cầu tuyển dụng + phê duyệt + lịch sử; tin tuyển dụng nội bộ; tiêu chí sàng lọc | `/requisitions/**` (`RequisitionController`), `/internal/job-postings/**` (`InternalJobPostingController`) | `requisitions/*`, `job-postings/*` |
+| `requisition` | Yêu cầu tuyển dụng, phê duyệt, lịch sử và tiêu chí sàng lọc | `/requisitions/**` (`RequisitionController`) | `requisitions/*` |
+| `jobposting` | Tin tuyển dụng nội bộ và vòng đời đăng tuyển | `/internal/job-postings/**` (`JobPostingController`) | `job-postings/*` |
 | `candidate` | **Chỉ tầng dữ liệu:** `Candidate`, `Application`, `ApplicationReview`, `AIScreeningResult` + repository. Chưa có controller | — | — |
 | `interview` | Lập lịch phỏng vấn, hội đồng (panel), kết quả | `/interviews/**` (`InterviewSchedulingController`) | `interview/*` |
 | `offer` | Đề xuất offer, phê duyệt, gửi, xuất Excel | `/offers/**` (`OfferController`, có cả endpoint JSON) | `offers/*` |
@@ -51,8 +52,9 @@ src/main/java/com/group2/rms/
 ### 1.2. Chiều phụ thuộc giữa các module (thực tế)
 
 ```text
-career ──► requisition, user          interview ──► candidate, user
-offer  ──► candidate, interview, user requisition ──► user, admin (AuditLog), notification
+career ──► jobposting, user          interview ──► candidate, user
+offer  ──► candidate, interview, user requisition ──► jobposting, user, admin (AuditLog), notification
+jobposting ──► requisition, candidate (đóng đợt tuyển), user, admin (AuditLog), notification
 auth   ──► user                       dashboard ──► user, interview, admin
 user   ──► candidate                  mọi module ──► core
 ```

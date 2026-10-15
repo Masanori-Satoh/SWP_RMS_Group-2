@@ -1,6 +1,7 @@
-package com.group2.rms.requisition.entity;
+package com.group2.rms.jobposting.entity;
 
 import com.group2.rms.core.base.BaseEntity;
+import com.group2.rms.requisition.entity.JobRequisition;
 import com.group2.rms.user.entity.User;
 import jakarta.persistence.*;
 import lombok.*;
