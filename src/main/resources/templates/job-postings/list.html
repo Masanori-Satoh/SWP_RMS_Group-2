@@ -25,13 +25,12 @@
                 <div class="container">
 
 
-                    <!-- Tiêu đề trang & Nút hành động đăng tin -->
+                    <!-- Tiêu đề trang -->
                     <div class="requisition-page-header">
                         <div>
                             <h1>Quản lý tin tuyển dụng</h1>
                             <p>Danh sách tin tuyển dụng nội bộ được tạo và phát hành từ các yêu cầu tuyển dụng đã duyệt.</p>
                         </div>
-                        <a th:if="${viewerRole == 'HR' or viewerRole == 'System Admin'}" th:href="@{/requisitions}" class="btn-create">+ Đăng tin từ yêu cầu đã duyệt</a>
                     </div>
 
                     <!-- Flash Notification Message -->
