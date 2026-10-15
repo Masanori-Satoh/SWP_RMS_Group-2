@@ -50,20 +50,31 @@ public class AccountListService {
                 .map(user -> new AccountRow(user.getUserId(), user.getFullName(), user.getEmail(),
                         user.getUsername(), user.getRole().getRoleName(),
                         user.getDepartment() == null ? null : user.getDepartment().getDepartmentName(),
-                        user.getAccountStatus()));
+                        user.getAccountStatus(), details(user, null)));
     }
 
     @Transactional(readOnly = true)
     @SuppressWarnings("null")
     public Page<CandidateRow> findCandidateAccounts(String search, String status, String sort, int page) {
         Page<User> result = findUsers(search, null, null, status, sort, page, true);
-        java.util.Map<Integer, Integer> profileIds = new java.util.HashMap<>();
+        java.util.Map<Integer, com.group2.rms.candidate.entity.Candidate> profiles = new java.util.HashMap<>();
         if (!result.isEmpty()) {
             candidates.findAllByAccountUserIdIn(result.stream().map(User::getUserId).toList())
-                    .forEach(profile -> profileIds.put(profile.getAccount().getUserId(), profile.getCandidateId()));
+                    .forEach(profile -> profiles.put(profile.getAccount().getUserId(), profile));
         }
         return result.map(user -> new CandidateRow(user.getUserId(), user.getFullName(), user.getEmail(),
-                user.getUsername(), user.getAccountStatus(), user.getCreatedAt(), profileIds.get(user.getUserId())));
+                user.getUsername(), user.getAccountStatus(), user.getCreatedAt(),
+                profiles.containsKey(user.getUserId()) ? profiles.get(user.getUserId()).getCandidateId() : null,
+                details(user, profiles.get(user.getUserId()))));
+    }
+
+    // Read-only presentation data from the same scoped page and existing batched profile query.
+    // Never expose entities, credentials, or authentication metadata to the inspector.
+    private static InspectorDetails details(User user, com.group2.rms.candidate.entity.Candidate profile) {
+        ProfileDetails linked = profile == null ? null : new ProfileDetails(profile.getCandidateId(),
+                profile.getDateOfBirth(), profile.getGender(), profile.getAddress(),
+                profile.getCandidateSource(), profile.getCreatedAt());
+        return new InspectorDetails(user.getPhoneNumber(), user.getCreatedAt(), user.getUpdatedAt(), linked);
     }
 
     private Page<User> findUsers(String search, Integer roleId, Integer departmentId,
@@ -162,10 +173,24 @@ public class AccountListService {
     }
 
     public record AccountRow(Integer id, String fullName, String email, String username,
-            String roleName, String departmentName, String status) {
+            String roleName, String departmentName, String status, InspectorDetails details) {
+        public AccountRow(Integer id, String fullName, String email, String username,
+                String roleName, String departmentName, String status) {
+            this(id, fullName, email, username, roleName, departmentName, status, null);
+        }
     }
 
     public record CandidateRow(Integer id, String fullName, String email, String username,
-            String status, java.time.LocalDateTime createdAt, Integer profileId) {
+            String status, java.time.LocalDateTime createdAt, Integer profileId, InspectorDetails details) {
+        public CandidateRow(Integer id, String fullName, String email, String username,
+                String status, java.time.LocalDateTime createdAt, Integer profileId) {
+            this(id, fullName, email, username, status, createdAt, profileId, null);
+        }
     }
+
+    public record InspectorDetails(String phoneNumber, java.time.LocalDateTime createdAt,
+            java.time.LocalDateTime updatedAt, ProfileDetails profile) { }
+
+    public record ProfileDetails(Integer id, java.time.LocalDate dateOfBirth, String gender,
+            String address, String source, java.time.LocalDateTime createdAt) { }
 }
