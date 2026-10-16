@@ -77,7 +77,7 @@
 }
 
 .app-table__actions .more-menu {
-  margin-left: var(--s2);
+  margin-left: 0;
   vertical-align: top;
 }
 
@@ -138,7 +138,7 @@
 
 .app-detail {
   display: grid;
-  grid-template-columns: minmax(0, 2fr) minmax(0, 1fr);
+  grid-template-columns: minmax(0, 3fr) minmax(340px, 2fr);
   gap: var(--s6);
   align-items: start;
 }
@@ -150,6 +150,9 @@
   gap: var(--s6);
   min-width: 0;
 }
+
+.app-detail__main { grid-column: 1; grid-row: 1; }
+.app-detail__side { grid-column: 2; grid-row: 1; }
 
 .app-section-head {
   display: flex;
@@ -213,7 +216,7 @@
 
 /* Thẻ thao tác ngay dưới thanh tiến độ: form duyệt CV + link sang trang interview/offer. */
 .app-actions {
-  margin-bottom: var(--s6);
+  margin-bottom: 0;
 }
 
 .app-actions__links {
@@ -241,6 +244,40 @@
   margin-top: var(--s4);
 }
 
+/* Shared bookmarks and preview use the same feature dialogs on list and detail. */
+/* Catalog badge/button display rules otherwise override the native hidden attribute. */
+.app-page [hidden] { display: none !important; }
+.app-row-actions { display: flex; justify-content: flex-end; align-items: center; gap: var(--s2); }
+.app-table { min-width: 1000px; }
+.app-table td:nth-child(2) { min-width: 180px; }
+.app-icon-button { min-width: 44px; min-height: 44px; padding: var(--s2); }
+.app-bookmark-button--saved { color: var(--brand-dark); background: var(--brand-soft); border-color: var(--brand); }
+.app-bookmark-button--saved svg { fill: currentColor; }
+.app-bookmark-button svg { flex-shrink: 0; }
+.app-candidate__email { overflow-wrap: anywhere; }
+.app-table td:nth-child(4) { white-space: nowrap; font-variant-numeric: tabular-nums; }
+.app-note-scope { color: var(--muted); font-size: var(--font-xs); margin: 0 0 var(--s4); }
+.app-notes { list-style: none; margin: 0 0 var(--s4); padding: 0; }
+.app-note + .app-note { margin-top: var(--s4); padding-top: var(--s4); border-top: 1px solid var(--line); }
+.app-note__meta { display: flex; flex-wrap: wrap; align-items: baseline; gap: var(--s1) var(--s3); }
+.app-note__meta time { color: var(--muted); font-size: var(--font-xs); font-variant-numeric: tabular-nums; }
+.app-note__body { white-space: pre-wrap; overflow-wrap: anywhere; margin: var(--s2) 0 0; }
+.app-note__meta strong { overflow-wrap: anywhere; }
+.app-page .app-dialog { padding: var(--s6); max-height: 90dvh; color: var(--ink); }
+.app-page .app-dialog--preview { width: min(1100px, calc(100vw - var(--s8))); max-width: none; }
+.app-page .app-dialog--bookmark { width: min(560px, calc(100vw - var(--s8))); max-width: none; }
+.app-dialog__head { display: flex; align-items: flex-start; justify-content: space-between; gap: var(--s4); margin-bottom: var(--s4); }
+.app-dialog__head > div { min-width: 0; overflow-wrap: anywhere; }
+.app-dialog__head .app-section-title { margin-bottom: var(--s1); }
+.app-dialog__subtitle { color: var(--muted); margin: 0; }
+.app-dialog__footer { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: var(--s2); margin-top: var(--s4); }
+.app-dialog__hint { color: var(--muted); font-size: var(--font-xs); margin: var(--s2) 0 var(--s4); }
+.app-preview__frame { display: block; width: 100%; height: 62dvh; border: 1px solid var(--line); border-radius: var(--radius-sm); background: var(--surface-subtle); }
+.app-bookmark-input { width: 100%; resize: vertical; }
+.app-feedback:empty { display: none; }
+.app-feedback { margin-top: var(--s4); padding: var(--s3); background: var(--brand-soft); color: var(--brand-dark); border-radius: var(--radius-sm); }
+.app-icon-button:focus-visible, .app-bookmark-button:focus-visible { outline: 2px solid var(--brand); outline-offset: 3px; }
+
 /* --- Responsive ---------------------------------------------------------------- */
 @media (max-width: 992px) {
   .app-filter {
@@ -250,6 +287,8 @@
   .app-detail {
     grid-template-columns: 1fr;
   }
+
+  .app-detail__side, .app-detail__main { grid-column: 1; grid-row: auto; }
 
   .app-filter__actions {
     grid-column: 1 / -1;
@@ -270,4 +309,8 @@
     height: 60vh;
     min-height: 360px;
   }
+
+  .app-page .app-dialog { padding: var(--s4); }
+  .app-dialog__head { flex-wrap: wrap; }
+  .app-row-actions { flex-wrap: wrap; min-width: 160px; }
 }
