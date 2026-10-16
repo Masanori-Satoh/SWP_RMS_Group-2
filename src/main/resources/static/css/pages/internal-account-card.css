@@ -10,6 +10,18 @@
 .iacv-count { flex-shrink: 0; font-variant-numeric: tabular-nums; }
 .iacv-table-inset { min-width: 0; padding: var(--s3) var(--s6); }
 .iacv-card .iac-pagination { padding-inline: var(--s6); }
+/* Warm, continuous table surface; reserve the stronger green for the selected account. */
+.iac-internal-page .iacv-table { min-width: 1020px; }
+.iacv-table .iac-cell { background: var(--surface); border-color: var(--line); transition: background-color 150ms ease; }
+.iacv-table th.iac-cell { background: var(--surface-subtle); color: var(--muted); }
+.iacv-table tbody tr:hover .iac-cell, .iacv-table tbody tr:focus-within .iac-cell { background: color-mix(in srgb, var(--brand-soft) 55%, var(--surface)); }
+.iacv-table tbody tr[data-selected="true"] .iac-cell { background: var(--brand-soft); }
+/* Wrap complete values at real word boundaries instead of clipping the last columns. */
+.iacv-card .iacv-table .iac-name, .iacv-card .iacv-table .iac-role, .iacv-card .iacv-table .iac-department { white-space: normal; overflow-wrap: normal; }
+.iacv-card .iacv-table .iac-email, .iacv-card .iacv-table .iac-login { white-space: normal; overflow-wrap: anywhere; }
+@media (prefers-reduced-motion: reduce) {
+  .iacv-table .iac-cell { transition: none; }
+}
 @container (max-width: 600px) {
   .iacv-header { padding: var(--s4); }
   .iacv-table-inset, .iacv-card .iac-pagination { padding-inline: var(--s4); }

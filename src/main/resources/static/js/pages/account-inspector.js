@@ -8,20 +8,28 @@
     const table = master?.querySelector('table'), scroll = master?.querySelector('.iac-scroll');
     if (!layout || !inspector || !drawer || !table || !scroll || !window.ResizeObserver || !drawer.showModal) return;
     const rows = [...table.querySelectorAll('.aim-row')];
+    // Internal Accounts opts into an overview; Candidate keeps its existing details-only behavior.
+    const overview = page.dataset.accountOverview === 'true' ? inspector.querySelector('.aim-summary') : null;
+    const overviewButton = page.querySelector('.aim-open-overview');
     const detail = inspector.querySelector('.aim-detail'), actions = inspector.querySelector('.aim-detail-actions');
     const title = inspector.querySelector('.aim-panel-title'), close = inspector.querySelector('.aim-close');
     const reset = inspector.querySelector('.aim-reset-selection');
     const edit = inspector.querySelector('.aim-inspector-edit'), stateAction = inspector.querySelector('.aim-state-action');
-    let selected = null, docked = false, panelClosed = true, lastWidth = -1, scheduled = false, returnFocus = null;
+    let selected = null, docked = false, panelClosed = !overview, lastWidth = -1, scheduled = false, returnFocus = null;
 
     const expanded = () => {
         rows.forEach(row => row.querySelector('.aim-select').setAttribute('aria-expanded', String(row === selected && (docked || drawer.open))));
+        if (overviewButton) {
+            overviewButton.setAttribute('aria-expanded', String(!panelClosed && (docked || drawer.open)));
+            overviewButton.textContent = selected ? 'Chi tiết tài khoản' : 'Tổng quan tài khoản';
+        }
     };
     const resetSelection = () => {
         selected = null;
         rows.forEach(row => { row.removeAttribute('data-selected'); row.querySelector('.aim-select').setAttribute('aria-pressed', 'false'); });
         detail.hidden = true; detail.replaceChildren(); actions.hidden = true;
         stateAction.hidden = true; stateAction.removeAttribute('form'); edit.hidden = true; edit.removeAttribute('href');
+        if (overview) { overview.hidden = false; title.textContent = 'Tổng quan tài khoản'; }
         expanded();
     };
     const showDrawer = trigger => {
@@ -41,6 +49,7 @@
         layout.classList.toggle('aim-docked', value);
         destination.append(inspector);
         close.hidden = false;
+        if (overviewButton) overviewButton.hidden = value;
         if (!value && wasDocked && selected && !panelClosed) showDrawer(selected.querySelector('.aim-select'));
         if (value && wasOpen) { title.tabIndex = -1; title.focus({preventScroll: true}); }
         expanded();
@@ -52,6 +61,7 @@
         selected = row;
         rows.forEach(item => { item.toggleAttribute('data-selected', item === row); if (item === row) item.dataset.selected = 'true'; item.querySelector('.aim-select').setAttribute('aria-pressed', String(item === row)); });
         detail.replaceChildren(template.content.cloneNode(true)); detail.hidden = false; actions.hidden = false;
+        if (overview) overview.hidden = true;
         title.textContent = 'Chi tiết tài khoản';
         const originalEdit = row.querySelector('.iac-edit'), form = row.querySelector('form[data-status-confirm]');
         edit.hidden = !originalEdit;
@@ -91,11 +101,19 @@
         const origin = selected?.querySelector('.aim-select');
         panelClosed = true; lastWidth = -1;
         if (drawer.open) drawer.close();
-        updateLayout(); expanded(); origin?.focus();
+        updateLayout(); expanded();
+        if (origin) origin.focus(); else overviewButton?.focus();
     };
+    overviewButton?.addEventListener('click', () => {
+        panelClosed = false; lastWidth = -1; updateLayout();
+        if (!docked) showDrawer(overviewButton);
+        else { title.tabIndex = -1; title.focus({preventScroll: true}); }
+    });
     reset.addEventListener('click', () => {
         const origin = selected?.querySelector('.aim-select');
-        resetSelection(); closePanel(); origin?.focus();
+        resetSelection();
+        if (overview) { if (docked) origin?.focus(); else close.focus(); }
+        else { closePanel(); origin?.focus(); }
     });
     close.addEventListener('click', closePanel);
     drawer.addEventListener('close', () => {
