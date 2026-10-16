@@ -98,11 +98,11 @@
             </tr>
             </thead>
             <tbody>
-            <tr th:each="row, stat : ${page.content}">
+            <tr th:each="row, stat : ${page.content}" th:attr="data-app-row=${row.applicationId}">
                 <td th:text="${page.number * page.size + stat.count}"></td>
                 <td>
                     <strong class="app-candidate__name" th:text="${row.fullName}">Nguyễn Văn An</strong>
-                    <span th:if="${row.isPotential}" class="badge badge--success">Tiềm năng</span>
+                    <span class="badge badge--success" data-app-saved-badge th:hidden="${!row.isPotential}" title="Đã lưu vào kho tiềm năng toàn hệ thống">Tiềm năng</span>
                     <span class="app-candidate__email" th:text="${row.email}">an@example.com</span>
                 </td>
                 <td th:text="${row.postingTitle}">Java Developer</td>
@@ -118,7 +118,19 @@
                     <span th:if="${row.ownerLabel != null}" class="app-owner" th:text="|Đang chờ: ${row.ownerLabel}|">Đang chờ: HR</span>
                 </td>
                 <td class="app-table__actions">
-                    <a th:href="@{/applications/{id}(id=${row.applicationId})}" class="btn btn--secondary btn--sm">Xem</a>
+                    <div class="app-row-actions">
+                    <button type="button" class="btn btn--secondary btn--sm app-icon-button" data-app-preview aria-haspopup="dialog" aria-controls="app-preview"
+                            title="Xem nhanh CV" th:attr="aria-label=|Xem nhanh CV của ${row.fullName}|,data-name=${row.fullName},data-job=${row.postingTitle},data-cv-url=@{/applications/{id}/cv(id=${row.applicationId})},data-detail-url=@{/applications/{id}(id=${row.applicationId})}">
+                        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12Z"/><circle cx="12" cy="12" r="3"/></svg>
+                    </button>
+                    <button th:if="${viewerRole == 'HR' or viewerRole == 'Hiring Manager'}" type="button"
+                            class="btn btn--secondary btn--sm app-icon-button app-bookmark-button" data-app-bookmark aria-haspopup="dialog" aria-controls="app-bookmark"
+                            th:classappend="${row.isPotential ? 'app-bookmark-button--saved' : ''}"
+                            th:title="${row.isPotential ? 'Đã lưu vào kho tiềm năng' : 'Lưu vào kho ứng viên tiềm năng'}"
+                            th:attr="aria-label=|${row.isPotential ? 'Xem ghi chú chung của' : 'Lưu ứng viên'} ${row.fullName}|,data-saved=${row.isPotential},data-candidate-key=${row.email},data-name=${row.fullName},data-bookmark-url=@{/talent-pool/applications/{id}/bookmark(id=${row.applicationId})},data-application-id=${row.applicationId}">
+                        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M6 3h12v18l-6-4-6 4V3Z"/></svg>
+                    </button>
+                    <a th:href="@{/applications/{id}(id=${row.applicationId})}" class="btn btn--secondary btn--sm">Xem chi tiết</a>
                     <details class="more-menu">
                         <summary class="more-menu__toggle" title="Thao tác khác"
                                  th:attr="aria-label=|Thao tác khác cho hồ sơ của ${row.fullName}|">⋯</summary>
@@ -131,6 +143,7 @@
                                th:href="@{/offers/create(applicationId=${row.applicationId})}">Tạo offer</a>
                         </div>
                     </details>
+                    </div>
                 </td>
             </tr>
             </tbody>
@@ -138,6 +151,8 @@
     </div>
 
     <nav th:replace="~{fragments/ui/pagination :: paged(page=${page})}"></nav>
+    <th:block th:replace="~{candidate/application-dialogs :: dialogs(canBookmark=${viewerRole == 'HR' or viewerRole == 'Hiring Manager'})}"></th:block>
 </main>
+<th:block layout:fragment="scripts"><script th:src="@{/js/pages/applications.js}" defer></script></th:block>
 </body>
 </html>
