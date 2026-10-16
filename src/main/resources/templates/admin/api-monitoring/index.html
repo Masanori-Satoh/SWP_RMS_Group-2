@@ -74,18 +74,6 @@
             </p>
         </article>
     </section>
-        <details class="apm-help">
-            <summary>
-                <svg class="apm-help-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 5 7 7-7 7"/></svg>
-                Thông tin kiểm tra
-            </summary>
-            <div class="apm-help-content">
-                <p>Phép kiểm tra nội bộ gửi GET tới endpoint chỉ dành cho Quản trị hệ thống, kiểm tra ứng dụng và kết nối SQL Server bằng <code>SELECT 1</code>.</p>
-                <p>HTTP 2xx được xem là thành công. Chuyển hướng, mã lỗi HTTP, yêu cầu bị gián đoạn hoặc không nhận được phản hồi được xem là thất bại.</p>
-                <p>Trạng thái, thời gian phản hồi và thời điểm hiển thị là kết quả lần kiểm tra gần nhất trong lần chạy ứng dụng hiện tại.</p>
-                <p>AI CV Screening và Email Service chưa có đích kiểm tra an toàn đã được xác nhận nên chưa hỗ trợ kiểm tra. “Chưa cấu hình” tại đây thể hiện cấu hình đích kiểm tra giám sát.</p>
-            </div>
-        </details>
 </main>
 <th:block layout:fragment="scripts">
     <script th:src="@{/js/pages/api-monitoring.js}" defer></script>

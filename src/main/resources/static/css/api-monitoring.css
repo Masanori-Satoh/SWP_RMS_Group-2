@@ -23,15 +23,6 @@
 .apm-service-notice svg { flex-shrink: 0; margin-top: 2px; }
 .apm-probe-form { margin: 0; flex-shrink: 0; }
 .apm-probe-button:disabled { cursor: wait; }
-.apm-help { margin-top: var(--s4); padding: var(--s2) 0; border-top: 1px solid var(--line); }
-.apm-help summary { display: flex; align-items: center; gap: var(--s2); width: fit-content; min-height: var(--btn-sm-h); border-radius: var(--radius-sm); color: var(--brand-dark); font-size: var(--font-sm); font-weight: 600; list-style: none; cursor: pointer; }
-.apm-help summary::-webkit-details-marker { display: none; }
-.apm-help summary:hover { color: var(--brand); }
-.apm-help summary:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
-.apm-help-chevron { flex-shrink: 0; }
-.apm-help[open] .apm-help-chevron { transform: rotate(90deg); }
-.apm-help-content { max-width: 85ch; padding-bottom: var(--s2); color: var(--muted); font-size: var(--font-sm); line-height: 1.6; }
-.apm-help-content p + p { margin-top: var(--s2); }
 @media (max-width: 768px) {
   .apm-service-header, .apm-service-body { padding: var(--s4); }
   .apm-service-notice { padding: var(--s3) var(--s4); }
