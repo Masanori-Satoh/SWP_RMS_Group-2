@@ -94,6 +94,26 @@ public class TalentPoolService {
             audit.record(user.getUserId(), "UPDATE", "Candidate", candidate.getCandidateId(), "false", "TalentPoolMarked");
         }
     }
+
+    public TalentPoolBookmarkResponse bookmark(Integer applicationId) {
+        User user = actor();
+        Application application = application(applicationId);
+        applicationAccess.requireView(user, application);
+        Candidate candidate = application.getCandidate();
+        return new TalentPoolBookmarkResponse(candidate.getCandidateId(), candidate.isPotential(),
+                candidate.isPotential() ? notesFor(candidate.getCandidateId()) : List.of());
+    }
+
+    /** One transaction for the shared flag and optional note; no recruitment transition. */
+    @Transactional
+    public TalentPoolBookmarkResponse saveBookmark(Integer applicationId, TalentPoolBookmarkRequest request) {
+        String content = request.content() == null ? "" : request.content().strip();
+        if (content.length() > 1000) throw new TalentPoolException("Ghi chú tối đa 1000 ký tự.");
+        markPotential(applicationId);
+        Candidate candidate = application(applicationId).getCandidate();
+        if (!content.isEmpty()) addNote(candidate.getCandidateId(), new TalentPoolNoteRequest(content));
+        return bookmark(applicationId);
+    }
     @Transactional
     public void addNote(Integer candidateId, TalentPoolNoteRequest request) {
         User user = actor();
