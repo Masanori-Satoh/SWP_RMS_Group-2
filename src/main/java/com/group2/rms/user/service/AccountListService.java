@@ -18,6 +18,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
@@ -68,12 +70,15 @@ public class AccountListService {
                 details(user, profiles.get(user.getUserId()))));
     }
 
-    // Read-only presentation data from the same scoped page and existing batched profile query.
-    // Never expose entities, credentials, or authentication metadata to the inspector.
+    // Read-only presentation data from the same scoped page and existing batched
+    // profile query.
+    // Never expose entities, credentials, or authentication metadata to the
+    // inspector.
     private static InspectorDetails details(User user, com.group2.rms.candidate.entity.Candidate profile) {
-        ProfileDetails linked = profile == null ? null : new ProfileDetails(profile.getCandidateId(),
-                profile.getDateOfBirth(), profile.getGender(), profile.getAddress(),
-                profile.getCandidateSource(), profile.getCreatedAt());
+        ProfileDetails linked = profile == null ? null
+                : new ProfileDetails(profile.getCandidateId(),
+                        profile.getDateOfBirth(), profile.getGender(), profile.getAddress(),
+                        profile.getCandidateSource(), profile.getCreatedAt());
         return new InspectorDetails(user.getPhoneNumber(), user.getCreatedAt(), user.getUpdatedAt(), linked);
     }
 
@@ -134,10 +139,14 @@ public class AccountListService {
     }
 
     @Transactional
-    public void activate(int userId) { activateScoped(userId, false); }
+    public void activate(int userId) {
+        activateScoped(userId, false);
+    }
 
     @Transactional
-    public void activateCandidate(int userId) { activateScoped(userId, true); }
+    public void activateCandidate(int userId) {
+        activateScoped(userId, true);
+    }
 
     private void activateScoped(int userId, boolean candidate) {
         User user = users.findById(userId)
@@ -147,7 +156,8 @@ public class AccountListService {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Tài khoản không thuộc nhóm này.");
         }
         if ("Blocked".equals(user.getAccountStatus())) {
-            throw new ResponseStatusException(HttpStatus.CONFLICT, "Không thể kích hoạt tài khoản đang bị khóa bằng thao tác này.");
+            throw new ResponseStatusException(HttpStatus.CONFLICT,
+                    "Không thể kích hoạt tài khoản đang bị khóa bằng thao tác này.");
         }
         if ("Inactive".equals(user.getAccountStatus())) {
             user.setAccountStatus("Active");
@@ -172,8 +182,9 @@ public class AccountListService {
         return term.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_");
     }
 
-    public record AccountRow(Integer id, String fullName, String email, String username,
-            String roleName, String departmentName, String status, InspectorDetails details) {
+    //
+    public record AccountRow(Integer id, String fullName, String email, String username, String roleName,
+            String departmentName, String status, InspectorDetails details) {
         public AccountRow(Integer id, String fullName, String email, String username,
                 String roleName, String departmentName, String status) {
             this(id, fullName, email, username, roleName, departmentName, status, null);
@@ -188,9 +199,12 @@ public class AccountListService {
         }
     }
 
-    public record InspectorDetails(String phoneNumber, java.time.LocalDateTime createdAt,
-            java.time.LocalDateTime updatedAt, ProfileDetails profile) { }
+    // detail of a account
+    public record InspectorDetails(String phoneNumber, LocalDateTime createdAt, LocalDateTime updatedAt,
+            ProfileDetails profile) {
+    }
 
-    public record ProfileDetails(Integer id, java.time.LocalDate dateOfBirth, String gender,
-            String address, String source, java.time.LocalDateTime createdAt) { }
+    public record ProfileDetails(Integer id, LocalDate dateOfBirth, String gender,
+            String address, String source, java.time.LocalDateTime createdAt) {
+    }
 }
