@@ -19,9 +19,6 @@
     </nav>
     <div class="page-header iac-heading">
         <h1 id="candidate-list-title" class="iac-title">Tài khoản ứng viên</h1>
-        <div class="aim-heading-actions">
-            <button class="btn btn--secondary btn--sm aim-open-summary" type="button" aria-controls="account-inspector" hidden>Tổng quan danh sách</button>
-        </div>
     </div>
     <div class="alert alert--success" role="status" th:if="${successMessage}" th:text="${successMessage}"></div>
     <div class="aim-layout"><div class="aim-master">
@@ -57,14 +54,14 @@
                     </div>
                 </div>
             </details>
-            <nav class="mft-chips" aria-label="Lọc nhanh theo trạng thái">
-                <a class="mft-chip" th:href="@{/admin/candidate-accounts(search=${search},status='',sort=${selectedSort})}"
+            <nav class="amg-status-group" aria-label="Lọc nhanh theo trạng thái">
+                <a class="amg-segment" th:href="@{/admin/candidate-accounts(search=${search},status='',sort=${selectedSort})}"
                    th:attr="aria-current=${#strings.isEmpty(selectedStatus) ? 'page' : null}" title="Tất cả trạng thái">Tất cả</a>
-                <a class="mft-chip" th:href="@{/admin/candidate-accounts(search=${search},status='Active',sort=${selectedSort})}"
+                <a class="amg-segment" th:href="@{/admin/candidate-accounts(search=${search},status='Active',sort=${selectedSort})}"
                    th:attr="aria-current=${selectedStatus == 'Active' ? 'page' : null}" title="Hoạt động">Hoạt động</a>
-                <a class="mft-chip" th:href="@{/admin/candidate-accounts(search=${search},status='Inactive',sort=${selectedSort})}"
+                <a class="amg-segment" th:href="@{/admin/candidate-accounts(search=${search},status='Inactive',sort=${selectedSort})}"
                    th:attr="aria-current=${selectedStatus == 'Inactive' ? 'page' : null}" title="Vô hiệu hóa">Vô hiệu hóa</a>
-                <a class="mft-chip" th:href="@{/admin/candidate-accounts(search=${search},status='Blocked',sort=${selectedSort})}"
+                <a class="amg-segment" th:href="@{/admin/candidate-accounts(search=${search},status='Blocked',sort=${selectedSort})}"
                    th:attr="aria-current=${selectedStatus == 'Blocked' ? 'page' : null}" title="Bị khóa">Bị khóa</a>
             </nav>
         </div>
@@ -76,7 +73,11 @@
             <input class="form-control mft-search-input" id="account-search" type="search" name="search" th:value="${search}" placeholder="Họ tên, email hoặc tên đăng nhập" maxlength="100">
         </div>
     </form>
-    <section class="card iac-card cac-card mft-table-card" aria-labelledby="candidate-list-title">
+    <section class="card iac-card cac-card mft-table-card" aria-labelledby="candidate-table-title">
+        <header class="amg-table-header">
+            <h2 class="amg-table-title" id="candidate-table-title">Danh sách tài khoản</h2>
+            <span class="amg-result-count" th:text="|${accounts.totalElements} kết quả|"></span>
+        </header>
         <p id="candidate-scroll-hint" class="sr-only">Cuộn ngang để xem đầy đủ thông tin và thao tác.</p>
         <div class="table-wrapper iac-scroll" tabindex="0" role="region" aria-labelledby="candidate-list-title" aria-describedby="candidate-scroll-hint">
             <table class="table iac-table cac-table">

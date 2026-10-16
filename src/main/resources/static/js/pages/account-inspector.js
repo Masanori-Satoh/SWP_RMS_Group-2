@@ -7,24 +7,22 @@
     const inspector = page.querySelector('.aim-inspector'), drawer = page.querySelector('.aim-drawer');
     const table = master?.querySelector('table'), scroll = master?.querySelector('.iac-scroll');
     if (!layout || !inspector || !drawer || !table || !scroll || !window.ResizeObserver || !drawer.showModal) return;
-    const rows = [...table.querySelectorAll('.aim-row')], summary = inspector.querySelector('.aim-summary');
+    const rows = [...table.querySelectorAll('.aim-row')];
     const detail = inspector.querySelector('.aim-detail'), actions = inspector.querySelector('.aim-detail-actions');
     const title = inspector.querySelector('.aim-panel-title'), close = inspector.querySelector('.aim-close');
-    const openSummary = page.querySelector('.aim-open-summary'), reset = inspector.querySelector('.aim-reset-selection');
+    const reset = inspector.querySelector('.aim-reset-selection');
     const edit = inspector.querySelector('.aim-inspector-edit'), stateAction = inspector.querySelector('.aim-state-action');
-    let selected = null, docked = false, panelClosed = false, lastWidth = -1, scheduled = false, returnFocus = null;
+    let selected = null, docked = false, panelClosed = true, lastWidth = -1, scheduled = false, returnFocus = null;
 
     const expanded = () => {
         rows.forEach(row => row.querySelector('.aim-select').setAttribute('aria-expanded', String(row === selected && (docked || drawer.open))));
-        openSummary.setAttribute('aria-expanded', String(docked || drawer.open));
-        openSummary.textContent = selected ? 'Chi tiết tài khoản' : 'Tổng quan danh sách';
     };
     const resetSelection = () => {
         selected = null;
         rows.forEach(row => { row.removeAttribute('data-selected'); row.querySelector('.aim-select').setAttribute('aria-pressed', 'false'); });
-        summary.hidden = false; detail.hidden = true; detail.replaceChildren(); actions.hidden = true;
+        detail.hidden = true; detail.replaceChildren(); actions.hidden = true;
         stateAction.hidden = true; stateAction.removeAttribute('form'); edit.hidden = true; edit.removeAttribute('href');
-        title.textContent = 'Tổng quan danh sách'; expanded();
+        expanded();
     };
     const showDrawer = trigger => {
         if (docked) return;
@@ -42,7 +40,7 @@
         if (drawer.open) drawer.close();
         layout.classList.toggle('aim-docked', value);
         destination.append(inspector);
-        close.hidden = false; openSummary.hidden = value;
+        close.hidden = false;
         if (!value && wasDocked && selected && !panelClosed) showDrawer(selected.querySelector('.aim-select'));
         if (value && wasOpen) { title.tabIndex = -1; title.focus({preventScroll: true}); }
         expanded();
@@ -53,7 +51,7 @@
         if (panelClosed) { panelClosed = false; lastWidth = -1; updateLayout(); }
         selected = row;
         rows.forEach(item => { item.toggleAttribute('data-selected', item === row); if (item === row) item.dataset.selected = 'true'; item.querySelector('.aim-select').setAttribute('aria-pressed', String(item === row)); });
-        detail.replaceChildren(template.content.cloneNode(true)); summary.hidden = true; detail.hidden = false; actions.hidden = false;
+        detail.replaceChildren(template.content.cloneNode(true)); detail.hidden = false; actions.hidden = false;
         title.textContent = 'Chi tiết tài khoản';
         const originalEdit = row.querySelector('.iac-edit'), form = row.querySelector('form[data-status-confirm]');
         edit.hidden = !originalEdit;
@@ -89,21 +87,21 @@
         }
         else if (!event.target.closest('a,button,input,select,form') && !window.getSelection()?.toString()) select(row, row.querySelector('.aim-select'));
     });
-    openSummary.addEventListener('click', () => {
-        panelClosed = false; lastWidth = -1; updateLayout();
-        if (!docked) showDrawer(openSummary);
-        else { title.tabIndex = -1; title.focus({preventScroll: true}); }
-    });
+    const closePanel = () => {
+        const origin = selected?.querySelector('.aim-select');
+        panelClosed = true; lastWidth = -1;
+        if (drawer.open) drawer.close();
+        updateLayout(); expanded(); origin?.focus();
+    };
     reset.addEventListener('click', () => {
         const origin = selected?.querySelector('.aim-select');
-        resetSelection(); if (!docked) close.focus(); else origin?.focus();
+        resetSelection(); closePanel(); origin?.focus();
     });
-    close.addEventListener('click', () => {
-        if (docked) {
-            panelClosed = true; lastWidth = -1; updateLayout(); openSummary.focus();
-        } else drawer.close();
+    close.addEventListener('click', closePanel);
+    drawer.addEventListener('close', () => {
+        if (!docked) { panelClosed = true; lastWidth = -1; updateLayout(); }
+        expanded(); if (!docked && returnFocus?.isConnected) returnFocus.focus();
     });
-    drawer.addEventListener('close', () => { expanded(); if (!docked && returnFocus?.isConnected) returnFocus.focus(); });
     drawer.addEventListener('keydown', event => {
         if (event.key !== 'Tab') return;
         const controls = [...drawer.querySelectorAll('button:not([disabled]),a[href],[tabindex="0"]')]
@@ -130,7 +128,7 @@
     }
     const observer = new ResizeObserver(() => { if (!scheduled) { scheduled = true; requestAnimationFrame(updateLayout); } });
     observer.observe(layout);
-    resetSelection(); inspector.hidden = false;
+    resetSelection();
     rows.forEach(row => { row.querySelector('.aim-select').hidden = false; row.querySelector('.aim-name-fallback').hidden = true; });
     page.classList.add('aim-ready'); updateLayout();
 })();

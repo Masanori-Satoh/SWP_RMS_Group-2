@@ -19,7 +19,6 @@
     <div class="page-header iac-heading">
         <h1 id="account-list-title" class="iac-title">Tài khoản nội bộ</h1>
         <div class="aim-heading-actions">
-        <button class="btn btn--secondary btn--sm aim-open-summary" type="button" aria-controls="account-inspector" hidden>Tổng quan danh sách</button>
         <a class="btn btn--primary" th:href="@{/admin/accounts/new}">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
             Tạo tài khoản
@@ -77,14 +76,14 @@
                     </div>
                 </div>
             </details>
-            <nav class="mft-chips" aria-label="Lọc nhanh theo trạng thái">
-                <a class="mft-chip" th:href="@{/admin/accounts(search=${search},status='',roleId=${selectedRoleId},departmentId=${selectedDepartmentId},sort=${selectedSort})}"
+            <nav class="amg-status-group" aria-label="Lọc nhanh theo trạng thái">
+                <a class="amg-segment" th:href="@{/admin/accounts(search=${search},status='',roleId=${selectedRoleId},departmentId=${selectedDepartmentId},sort=${selectedSort})}"
                    th:attr="aria-current=${#strings.isEmpty(selectedStatus) ? 'page' : null}" title="Tất cả trạng thái">Tất cả</a>
-                <a class="mft-chip" th:href="@{/admin/accounts(search=${search},status='Active',roleId=${selectedRoleId},departmentId=${selectedDepartmentId},sort=${selectedSort})}"
+                <a class="amg-segment" th:href="@{/admin/accounts(search=${search},status='Active',roleId=${selectedRoleId},departmentId=${selectedDepartmentId},sort=${selectedSort})}"
                    th:attr="aria-current=${selectedStatus == 'Active' ? 'page' : null}" title="Hoạt động">Hoạt động</a>
-                <a class="mft-chip" th:href="@{/admin/accounts(search=${search},status='Inactive',roleId=${selectedRoleId},departmentId=${selectedDepartmentId},sort=${selectedSort})}"
+                <a class="amg-segment" th:href="@{/admin/accounts(search=${search},status='Inactive',roleId=${selectedRoleId},departmentId=${selectedDepartmentId},sort=${selectedSort})}"
                    th:attr="aria-current=${selectedStatus == 'Inactive' ? 'page' : null}" title="Vô hiệu hóa">Vô hiệu hóa</a>
-                <a class="mft-chip" th:href="@{/admin/accounts(search=${search},status='Blocked',roleId=${selectedRoleId},departmentId=${selectedDepartmentId},sort=${selectedSort})}"
+                <a class="amg-segment" th:href="@{/admin/accounts(search=${search},status='Blocked',roleId=${selectedRoleId},departmentId=${selectedDepartmentId},sort=${selectedSort})}"
                    th:attr="aria-current=${selectedStatus == 'Blocked' ? 'page' : null}" title="Bị khóa">Bị khóa</a>
             </nav>
         </div>
@@ -97,7 +96,11 @@
                    placeholder="Họ tên, email hoặc tên đăng nhập" th:value="${search}" maxlength="100">
         </div>
     </form>
-    <section class="card iac-card mft-table-card" aria-labelledby="account-list-title">
+    <section class="card iac-card mft-table-card" aria-labelledby="account-table-title">
+        <header class="amg-table-header">
+            <h2 class="amg-table-title" id="account-table-title">Danh sách tài khoản</h2>
+            <span class="amg-result-count" th:text="|${accounts.totalElements} kết quả|"></span>
+        </header>
         <div class="table-wrapper iac-scroll" tabindex="0" role="region" aria-labelledby="account-list-title">
         <table class="table iac-table">
             <caption class="sr-only">Tài khoản nội bộ với thao tác sửa và thay đổi trạng thái.</caption>
