@@ -1,0 +1,76 @@
+/* INTERNAL-ACCOUNT-CARD.CSS — /admin/accounts list only, prefix iacv-.
+   Internal-only surface treatment; shared components and other pages stay unchanged. */
+.rms-app .iac-internal-page {
+  padding-inline: var(--s4);
+  background-color: color-mix(in srgb, var(--brand-soft) 50%, var(--page));
+  background-image:
+    radial-gradient(ellipse at 68% 0, color-mix(in srgb, var(--brand) 8%, transparent), transparent 56%),
+    linear-gradient(160deg, color-mix(in srgb, var(--surface) 50%, transparent), transparent 48%);
+}
+.iac-internal-page .iac-heading { position: relative; isolation: isolate; }
+.iac-internal-page .iac-title { color: var(--ink); font-weight: 650; }
+.iacv-botanical {
+  position: absolute; right: clamp(180px, 20%, 360px); bottom: 0;
+  width: 260px; height: 112px; color: var(--brand); opacity: .22;
+  z-index: -1; pointer-events: none;
+}
+.iac-internal-page .mft-toolbar, .iac-internal-page .iacv-card, .iac-internal-page .aim-inspector {
+  border-color: color-mix(in srgb, var(--brand) 10%, var(--line));
+  border-radius: var(--radius-lg);
+}
+/* Role shortcuts reuse the real GET filters; advanced fields remain in the popover. */
+.iac-internal-page .mft-controls { flex: 0 1 auto; }
+.iac-internal-page .mft-search { flex-basis: 340px; }
+.iac-internal-page .mft-search-input { padding: var(--s2) var(--s3) var(--s2) 0; }
+.iacv-role-group { flex-wrap: wrap; gap: var(--s1); overflow: visible; }
+/* Leave more space for the table while keeping a readable inspector on wide screens. */
+.iac-internal-page .aim-docked { grid-template-columns: minmax(0, 1fr) minmax(300px, 340px); }
+.iacv-header { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: var(--s3) var(--s4); padding: var(--s4) var(--s6); border-bottom: 1px solid var(--line); background: var(--surface); }
+.iacv-identity { display: flex; align-items: center; gap: var(--s3); min-width: 0; }
+.iacv-icon { display: grid; place-items: center; flex: 0 0 var(--s8); height: var(--s8); border-radius: var(--radius-md); background: var(--brand-soft); color: var(--brand-dark); }
+.iacv-title { margin: 0; font: 600 var(--font-lg)/1.4 var(--sans); color: var(--ink); overflow-wrap: anywhere; }
+.iacv-count { flex-shrink: 0; font-variant-numeric: tabular-nums; }
+.iacv-table-inset { min-width: 0; padding: var(--s3) var(--s6); }
+.iacv-card .iac-pagination { padding-inline: var(--s6); }
+/* Warm, continuous table surface; reserve the stronger green for the selected account. */
+.iac-internal-page .iacv-table { min-width: 1020px; }
+.iacv-table .iac-cell { background: var(--surface); border-color: var(--line); transition: background-color 150ms ease; }
+.iacv-table th.iac-cell { background: color-mix(in srgb, var(--brand-soft) 38%, var(--surface)); color: var(--muted); border-bottom-color: color-mix(in srgb, var(--brand) 20%, var(--line)); }
+.iacv-table tbody tr:hover .iac-cell, .iacv-table tbody tr:focus-within .iac-cell { background: color-mix(in srgb, var(--brand-soft) 55%, var(--surface)); }
+.iacv-table tbody tr[data-selected="true"] .iac-cell { background: var(--brand-soft); }
+.iacv-table tbody tr[data-selected="true"] .iac-cell:first-child { box-shadow: inset 1px 0 var(--brand); }
+/* Wrap complete values at real word boundaries instead of clipping the last columns. */
+.iacv-card .iacv-table .iac-name, .iacv-card .iacv-table .iac-role, .iacv-card .iacv-table .iac-department { white-space: normal; overflow-wrap: normal; }
+.iacv-card .iacv-table .iac-email, .iacv-card .iacv-table .iac-login { white-space: normal; overflow-wrap: anywhere; }
+/* The same inspector markup is shared with Candidate; all refinements stay Internal-only. */
+.iac-internal-page .aim-panel-header {
+  border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+  background: color-mix(in srgb, var(--brand-soft) 38%, var(--surface));
+}
+.iac-internal-page .aim-panel-title { color: var(--brand-dark); }
+.iac-internal-page .aim-detail, .iac-internal-page .aim-summary { padding: var(--s4); }
+.iac-internal-page .aim-identity { gap: var(--s3); margin-bottom: var(--s3); }
+.iac-internal-page .aim-avatar { flex-basis: var(--s12); width: var(--s12); height: var(--s12); }
+.iac-internal-page .aim-name { font-size: var(--font-xl); }
+.iac-internal-page .aim-section-title { margin-top: var(--s4); padding-top: var(--s3); border-top: 1px solid var(--line); color: var(--brand-dark); }
+.iac-internal-page .aim-fields { gap: var(--s3); }
+.iac-internal-page .aim-fields dd { color: var(--ink); }
+.iac-internal-page .aim-detail-actions { background: var(--surface-subtle); border-radius: 0 0 var(--radius-lg) var(--radius-lg); }
+.iac-internal-page .aim-drawer .aim-inspector, .iac-internal-page .aim-drawer .aim-panel-header { border-radius: 0; }
+@media (prefers-reduced-motion: reduce) {
+  .iacv-table .iac-cell { transition: none; }
+}
+/* A deliberate second row keeps every role visible without squeezing search. */
+@container internal-accounts (max-width: 1240px) {
+  .iac-internal-page .mft-toolbar { display: grid; grid-template-columns: auto minmax(0, 1fr); grid-template-areas: "filter search" "roles roles"; }
+  .iac-internal-page .mft-controls { display: contents; }
+  .iac-internal-page .mft-disclosure { grid-area: filter; }
+  .iacv-role-group { grid-area: roles; justify-self: start; }
+  .iac-internal-page .mft-search { grid-area: search; width: min(400px, 100%); min-width: 0; }
+}
+@container (max-width: 600px) {
+  .iacv-role-group { border-radius: var(--radius-lg); }
+  .iacv-botanical { display: none; }
+  .iacv-header { padding: var(--s4); }
+  .iacv-table-inset, .iacv-card .iac-pagination { padding-inline: var(--s4); }
+}
