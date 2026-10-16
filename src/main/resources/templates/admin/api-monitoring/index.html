@@ -1,116 +1,94 @@
 <!DOCTYPE html>
-<html lang="en" xmlns:th="http://www.thymeleaf.org">
-
-<head th:replace="~{fragments/head :: interfaceHead('API Monitoring', ~{::pageStyles})}">
-    <th:block th:fragment="pageStyles">
+<html lang="vi" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/internal(activeMenu='api-monitoring',role='System Admin')}">
+<head>
+    <title>Giám sát API · Mộc RMS</title>
+    <th:block layout:fragment="styles">
+        <link rel="stylesheet" th:href="@{/css/pages/internal-accounts.css}">
         <link rel="stylesheet" th:href="@{/css/api-monitoring.css}">
     </th:block>
 </head>
-
-<body class="rms-app">
-    <div class="page-wrapper">
-        <aside th:replace="~{fragments/sidebar :: workspace('api-monitoring', 'System Admin')}"></aside>
-
-        <div class="main-content">
-            <header th:replace="~{fragments/workspace-header :: header('System Admin', null)}"></header>
-
-            <main id="main" class="page-content" tabindex="-1">
-                <div class="container">
-                    <div class="account-heading">
-                        <div>
-                            <a class="account-back-link" th:href="@{/dashboard}">Dashboard</a>
-                            <span aria-hidden="true"> / </span><span>API Monitoring</span>
-                            <h1>API Monitoring</h1>
-                            <p>Check real responses from internal endpoints and monitor configured integrations.</p>
-                        </div>
-                    </div>
-
-                    <div class="alert alert-success" role="status" th:if="${successMessage}"
-                        th:text="${successMessage}"></div>
-                    <div class="alert alert-danger" role="alert" th:if="${failureMessage}" th:text="${failureMessage}">
-                    </div>
-
-                    <section class="workspace-section monitoring-card" aria-labelledby="monitoring-table-title">
-                        <div class="monitoring-heading">
-                            <div>
-                                <h2 id="monitoring-table-title">Endpoint Status</h2>
-                                <p>
-                                    Status and response time reflect the latest check
-                                    during the current application run.
-                                </p>
-                            </div>
-                        </div>
-
-                        <p class="table-scroll-note">Scroll the table horizontally to see all response details and
-                            actions.</p>
-                        <div class="table-wrapper" tabindex="0" role="region" aria-labelledby="monitoring-table-title">
-                            <table class="table monitoring-table">
-                                <caption class="sr-only">Current endpoint status and results from real checks.</caption>
-                                <thead>
-                                    <tr>
-                                        <th scope="col">Endpoint / Integration</th>
-                                        <th scope="col">Status</th>
-                                        <th scope="col">Response Time</th>
-                                        <th scope="col">Last Check</th>
-                                        <th scope="col">Check</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    <tr th:each="endpoint : ${endpoints}">
-                                        <td>
-                                            <strong th:text="${endpoint.name}">Integration Name</strong>
-                                            <small th:text="${endpoint.category}">Type</small>
-                                        </td>
-
-                                        <td>
-                                            <span class="badge" th:classappend="${endpoint.status == 'OPERATIONAL'
-              ? 'badge--success'
-              : (endpoint.status == 'FAILED'
-                  ? 'badge--danger'
-                  : 'badge--neutral')}" th:switch="${endpoint.status}">
-
-                                                <span th:case="'OPERATIONAL'">Hoạt động</span>
-                                                <span th:case="'FAILED'">Có lỗi</span>
-                                                <span th:case="'Not check'">Chưa kiểm tra</span>
-                                                <span th:case="'Unconfigured'">Chưa cấu hình</span>
-                                                <span th:case="*" th:text="${endpoint.status}"></span>
-                                            </span>
-                                        </td>
-
-                                        <td th:text="${endpoint.responseTimeMs != null
-        ? endpoint.responseTimeMs + ' ms'
-        : '—'}">—</td>
-
-                                        <td th:text="${endpoint.lastCheckedAt != null
-        ? #temporals.format(endpoint.lastCheckedAt, 'dd/MM/yyyy HH:mm:ss')
-        : '—'}">—</td>
-
-                                        <td>
-                                            <form th:if="${endpoint.id == 'internal'}"
-                                                th:action="@{/admin/api-monitoring/probe/internal}" method="post">
-                                                <button class="btn btn-primary btn-sm" type="submit">Send GET</button>
-                                            </form>
-
-                                            <span class="monitoring-unavailable"
-                                                th:unless="${endpoint.id == 'internal'}">
-                                                No confirmed safe target
-                                            </span>
-                                        </td>
-                                    </tr>
-                                </tbody>
-                            </table>
-                        </div>
-                    </section>
-
-                    <p class="monitoring-note">The internal probe sends GET to an admin-only endpoint and checks the
-                        application and SQL Server using <code>SELECT 1</code>. HTTP 2xx is a success; redirects, HTTP
-                        errors, and missing responses are failures. AI and email probes remain unavailable until their
-                        targets and contracts are confirmed.</p>
-                </div>
-            </main>
-        </div>
+<body>
+<main id="main" layout:fragment="content" class="page-content container iac-page apm-page" tabindex="-1">
+    <nav class="iac-breadcrumb" aria-label="Đường dẫn">
+        <a th:href="@{/dashboard}">Tổng quan</a><span aria-hidden="true">/</span><span aria-current="page">Giám sát API</span>
+    </nav>
+    <div class="page-header iac-heading">
+        <h1 id="monitoring-title" class="iac-title">Giám sát API</h1>
     </div>
 
-</body>
+    <div class="alert alert--success" role="status" th:if="${successMessage}" th:text="${successMessage}"></div>
+    <div class="alert alert--danger" role="alert" th:if="${failureMessage}"
+         th:text="${#strings.replace(#strings.replace(failureMessage, 'The request was interrupted', 'Yêu cầu kiểm tra đã bị gián đoạn'), 'No HTTP response was received', 'Không nhận được phản hồi HTTP')}"></div>
 
+    <section class="apm-services" aria-labelledby="monitoring-title">
+        <article class="card apm-service" th:each="endpoint : ${endpoints}"
+                 th:attr="data-monitor-id=${endpoint.id},aria-labelledby=${'service-' + endpoint.id}">
+            <header class="apm-service-header">
+                <div class="apm-service-identity">
+                    <span class="apm-service-icon" aria-hidden="true" th:switch="${endpoint.id}">
+                        <svg th:case="'internal'" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="7" rx="2"/><rect x="3" y="14" width="18" height="7" rx="2"/><path d="M7 6.5h.01M7 17.5h.01M11 6.5h6M11 17.5h6"/></svg>
+                        <svg th:case="'ai'" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="6" width="12" height="12" rx="2"/><path d="M9 2v4M15 2v4M9 18v4M15 18v4M2 9h4M2 15h4M18 9h4M18 15h4"/><rect x="10" y="10" width="4" height="4" rx=".5"/></svg>
+                        <svg th:case="*" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/></svg>
+                    </span>
+                    <div class="apm-service-heading">
+                        <h2 class="apm-service-name" th:id="${'service-' + endpoint.id}" th:text="${endpoint.id == 'internal' ? 'Ứng dụng và SQL Server' : endpoint.name}"></h2>
+                        <p class="apm-service-type" th:text="${endpoint.category == 'Internal' ? 'Nội bộ' : ((endpoint.category == 'External Integration' or endpoint.category == 'External Intergration') ? 'Tích hợp ngoài' : endpoint.category)}"></p>
+                    </div>
+                </div>
+                        <span class="badge iac-status" th:attr="data-monitor-status=${endpoint.status}"
+                              th:classappend="${endpoint.status == 'OPERATIONAL' ? ' badge--success' : (endpoint.status == 'FAILED' ? ' badge--danger' : (endpoint.status == 'Unconfigured' ? ' badge--warning' : ' badge--neutral'))}"
+                              th:switch="${endpoint.status}">
+                            <span th:case="'OPERATIONAL'">Thành công</span>
+                            <span th:case="'FAILED'">Thất bại</span>
+                            <span th:case="'Not check'">Chưa kiểm tra</span>
+                            <span th:case="'Unconfigured'">Chưa cấu hình</span>
+                            <span th:case="*" th:text="${endpoint.status}"></span>
+                        </span>
+            </header>
+            <div class="apm-service-body" th:if="${endpoint.id == 'internal' or endpoint.responseTimeMs != null or endpoint.lastCheckedAt != null}">
+                <dl class="apm-metrics">
+                    <div class="apm-metric">
+                        <dt>Thời gian phản hồi</dt>
+                        <dd th:classappend="${endpoint.responseTimeMs == null ? ' apm-empty' : ''}"
+                            th:text="${endpoint.responseTimeMs != null ? endpoint.responseTimeMs + ' ms' : '—'}"></dd>
+                    </div>
+                    <div class="apm-metric">
+                        <dt>Lần kiểm tra cuối</dt>
+                        <dd>
+                        <time th:if="${endpoint.lastCheckedAt != null}" th:datetime="${endpoint.lastCheckedAt}"
+                              th:text="${#temporals.format(endpoint.lastCheckedAt, 'dd/MM/yyyy HH:mm:ss')}"></time>
+                        <span class="apm-empty" th:unless="${endpoint.lastCheckedAt != null}">—</span>
+                        </dd>
+                    </div>
+                </dl>
+                        <form class="apm-probe-form" th:if="${endpoint.id == 'internal'}"
+                              th:action="@{/admin/api-monitoring/probe/internal}" method="post">
+                            <button class="btn btn--primary btn--sm apm-probe-button" type="submit"
+                                    aria-label="Kiểm tra ứng dụng và SQL Server">Kiểm tra</button>
+                        </form>
+            </div>
+            <p class="apm-service-notice" th:unless="${endpoint.id == 'internal'}">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 11v6M12 7h.01"/></svg>
+                <span>Chưa có đích kiểm tra an toàn. Chức năng kiểm tra chưa khả dụng.</span>
+            </p>
+        </article>
+    </section>
+        <details class="apm-help">
+            <summary>
+                <svg class="apm-help-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 5 7 7-7 7"/></svg>
+                Thông tin kiểm tra
+            </summary>
+            <div class="apm-help-content">
+                <p>Phép kiểm tra nội bộ gửi GET tới endpoint chỉ dành cho Quản trị hệ thống, kiểm tra ứng dụng và kết nối SQL Server bằng <code>SELECT 1</code>.</p>
+                <p>HTTP 2xx được xem là thành công. Chuyển hướng, mã lỗi HTTP, yêu cầu bị gián đoạn hoặc không nhận được phản hồi được xem là thất bại.</p>
+                <p>Trạng thái, thời gian phản hồi và thời điểm hiển thị là kết quả lần kiểm tra gần nhất trong lần chạy ứng dụng hiện tại.</p>
+                <p>AI CV Screening và Email Service chưa có đích kiểm tra an toàn đã được xác nhận nên chưa hỗ trợ kiểm tra. “Chưa cấu hình” tại đây thể hiện cấu hình đích kiểm tra giám sát.</p>
+            </div>
+        </details>
+</main>
+<th:block layout:fragment="scripts">
+    <script th:src="@{/js/pages/api-monitoring.js}" defer></script>
+</th:block>
+</body>
 </html>
