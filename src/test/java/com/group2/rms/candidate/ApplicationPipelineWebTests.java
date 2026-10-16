@@ -71,6 +71,47 @@ class ApplicationPipelineWebTests {
     @MockitoBean com.group2.rms.candidate.service.RecruitmentEmailService recruitmentEmail;
     @MockitoBean UserRepository users;
 
+    @Test
+    void bookmarkModalPreservesListActionsAndCsrf() throws Exception {
+        when(pipeline.list(any(), any())).thenReturn(listOf(true, "Hiring Manager",
+                row(218, "HM_Passed", "80", true, true)));
+        mvc.perform(get("/applications").with(as("hm_tuan", "Hiring Manager")))
+                .andExpect(status().isOk())
+                .andExpect(content().string(containsString("data-app-preview")))
+                .andExpect(content().string(containsString("data-bookmark-url=\"/talent-pool/applications/218/bookmark\"")))
+                .andExpect(content().string(containsString("Xem chi tiết")))
+                .andExpect(content().string(containsString("/interviews/new?applicationId=218")))
+                .andExpect(content().string(containsString("/offers/create?applicationId=218")))
+                .andExpect(content().string(containsString("Ghi chú chung — HM và HR có quyền truy cập có thể xem")))
+                .andExpect(content().string(containsString("name=\"_csrf\"")));
+    }
+
+    @Test
+    void bookmarkReadAndSaveUseExistingService() throws Exception {
+        var state = new com.group2.rms.candidate.dto.TalentPoolBookmarkResponse(8, true, List.of());
+        when(talentPool.bookmark(218)).thenReturn(state);
+        when(talentPool.saveBookmark(eq(218), any())).thenReturn(state);
+        mvc.perform(get("/talent-pool/applications/218/bookmark").with(as("hm_tuan", "Hiring Manager")))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.saved").value(true));
+        mvc.perform(post("/talent-pool/applications/218/bookmark").with(as("hr_lan", "HR")).with(csrf())
+                        .param("content", "Nhận xét chung"))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.candidateId").value(8));
+        verify(talentPool).saveBookmark(218, new com.group2.rms.candidate.dto.TalentPoolBookmarkRequest("Nhận xét chung"));
+        verifyNoInteractions(reviewService, recruitmentEmail);
+    }
+
+    @Test
+    void bookmarkRequiresRoleCsrfAndValidLength() throws Exception {
+        mvc.perform(get("/talent-pool/applications/218/bookmark").with(as("candidate", "Candidate")))
+                .andExpect(status().isForbidden());
+        mvc.perform(post("/talent-pool/applications/218/bookmark").with(as("hm_tuan", "Hiring Manager")))
+                .andExpect(status().isForbidden());
+        mvc.perform(post("/talent-pool/applications/218/bookmark").with(as("hm_tuan", "Hiring Manager")).with(csrf())
+                        .param("content", "x".repeat(1001)))
+                .andExpect(status().isBadRequest()).andExpect(jsonPath("$.message").exists());
+        verifyNoInteractions(talentPool);
+    }
+
     // ------------------------------------------------------------------ quyền truy cập
 
     @Test
@@ -243,7 +284,7 @@ class ApplicationPipelineWebTests {
         mvc.perform(get("/applications/298").with(as("hr_lan", "HR")))
                 .andExpect(status().isOk())
                 .andExpect(content().string(containsString("aria-label=\"Tiến độ hồ sơ\"")))
-                .andExpect(content().string(not(containsString("app-actions"))))
+                .andExpect(content().string(not(containsString("id=\"app-actions-title\""))))
                 .andExpect(content().string(not(containsString("Xem kết quả phỏng vấn"))));
     }
 
@@ -370,7 +411,7 @@ class ApplicationPipelineWebTests {
                 .andExpect(status().isOk())
                 .andExpect(model().attributeHasFieldErrors("reviewForm", "decision", "comments"))
                 .andExpect(content().string(containsString("Quyết định không hợp lệ.")))
-                .andExpect(content().string(containsString("Nhận xét tối đa 1000 ký tự.")));
+                .andExpect(content().string(containsString("<span class=\"form-error\">Độ dài phải từ 0 đến 1,000 ký tự.</span>")));
         verifyNoInteractions(reviewService);
     }
 
