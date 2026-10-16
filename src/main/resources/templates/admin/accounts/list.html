@@ -8,6 +8,7 @@
         <link rel="stylesheet" th:href="@{/css/account-list.css}">
         <link rel="stylesheet" th:href="@{/css/pages/internal-accounts.css}">
         <link rel="stylesheet" th:href="@{/css/pages/account-inspector.css}">
+        <link rel="stylesheet" th:href="@{/css/pages/management-filters.css}">
     </th:block>
 </head>
 <body>
@@ -27,16 +28,15 @@
     </div>
     <div class="alert alert--success" role="status" th:if="${successMessage}" th:text="${successMessage}"></div>
     <div class="aim-layout"><div class="aim-master">
-    <form class="aim-compact-filters" th:action="@{/admin/accounts}" method="get" aria-label="Bộ lọc tài khoản">
-        <div class="iac-field iac-field--search">
-            <label class="form-label" for="account-search">Tìm kiếm</label>
-            <div class="iac-search">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m16 16 4 4"/></svg>
-            <input class="form-control iac-control iac-search-input" id="account-search" type="search" name="search"
-                   placeholder="Họ tên, email hoặc tên đăng nhập" th:value="${search}" maxlength="100">
-            </div>
-        </div>
-        <div class="iac-field iac-field--role">
+    <form class="card mft-toolbar" th:action="@{/admin/accounts}" method="get" aria-label="Bộ lọc tài khoản nội bộ">
+        <div class="mft-controls">
+            <details class="mft-disclosure">
+                <summary class="mft-toggle" aria-controls="management-filter-fields" th:with="count=${ (!#strings.isEmpty(selectedStatus) ? 1 : 0) + (selectedRoleId != null ? 1 : 0) + (selectedDepartmentId != null ? 1 : 0) + (selectedSort != null and selectedSort != 'name' ? 1 : 0) }">
+                    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 4h18l-7 8v7l-4 2v-9Z"/></svg>
+                    Bộ lọc <span class="mft-count" th:if="${count > 0}"><span class="sr-only">đang áp dụng: </span><span th:text="${count}"></span></span>
+                </summary>
+                <div id="management-filter-fields" class="mft-popover">
+                    <div class="mft-field">
             <label class="form-label" for="account-role">Vai trò</label>
             <select class="form-control iac-control" id="account-role" name="roleId">
                 <option value="">Tất cả vai trò</option>
@@ -44,7 +44,7 @@
                         th:text="${role.roleName == 'System Admin' ? 'Quản trị hệ thống' : (role.roleName == 'HR' ? 'Nhân sự' : (role.roleName == 'Hiring Manager' ? 'Trưởng phòng tuyển dụng' : (role.roleName == 'Director' ? 'Giám đốc' : (role.roleName == 'Interviewer' ? 'Người phỏng vấn' : role.roleName))))}" th:selected="${role.roleId == selectedRoleId}">Vai trò</option>
             </select>
         </div>
-        <div class="iac-field iac-field--status">
+                    <div class="mft-field">
             <label class="form-label" for="account-status">Trạng thái</label>
             <select class="form-control iac-control" id="account-status" name="status">
                 <option value="">Tất cả trạng thái</option>
@@ -53,14 +53,7 @@
                 <option value="Blocked" th:selected="${selectedStatus == 'Blocked'}">Bị khóa</option>
             </select>
         </div>
-
-        <details class="aim-advanced-filters">
-            <summary class="btn btn--secondary btn--sm aim-filter-toggle" th:with="count=${(selectedDepartmentId != null ? 1 : 0) + (selectedSort != null and selectedSort != 'name' ? 1 : 0)}">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M4 6h16M7 12h10M10 18h4"/></svg>
-                Bộ lọc <span class="aim-filter-count" th:if="${count > 0}"><span class="sr-only">đang áp dụng: </span><span th:text="${count}"></span></span>
-            </summary>
-            <div class="aim-filter-popover">
-        <div class="iac-field iac-field--department">
+                    <div class="mft-field">
             <label class="form-label" for="account-department">Phòng ban</label>
             <select class="form-control iac-control" id="account-department" name="departmentId">
                 <option value="">Tất cả phòng ban</option>
@@ -69,7 +62,7 @@
                         th:selected="${department.departmentId == selectedDepartmentId}">Phòng ban</option>
             </select>
         </div>
-        <div class="iac-field iac-field--sort">
+                    <div class="mft-field">
             <label class="form-label" for="account-sort">Sắp xếp</label>
             <select class="form-control iac-control" id="account-sort" name="sort">
                 <option value="name" th:selected="${selectedSort == 'name'}">Họ tên A–Z</option>
@@ -78,14 +71,33 @@
                 <option value="newest" th:selected="${selectedSort == 'newest'}">Mới nhất</option>
             </select>
         </div>
-            </div>
-        </details>
-        <div class="iac-filter-actions">
-            <button class="btn btn--secondary btn--sm iac-apply" type="submit">Lọc</button>
-            <a class="btn btn--sm iac-reset" th:href="@{/admin/accounts}">Xóa bộ lọc</a>
+                    <div class="mft-actions">
+                        <button class="btn btn--primary btn--sm" type="submit">Áp dụng</button>
+                        <a class="btn btn--secondary btn--sm" th:href="@{/admin/accounts}" title="Xóa toàn bộ bộ lọc và từ khóa tìm kiếm">Xóa bộ lọc</a>
+                    </div>
+                </div>
+            </details>
+            <nav class="mft-chips" aria-label="Lọc nhanh theo trạng thái">
+                <a class="mft-chip" th:href="@{/admin/accounts(search=${search},status='',roleId=${selectedRoleId},departmentId=${selectedDepartmentId},sort=${selectedSort})}"
+                   th:attr="aria-current=${#strings.isEmpty(selectedStatus) ? 'page' : null}" title="Tất cả trạng thái">Tất cả</a>
+                <a class="mft-chip" th:href="@{/admin/accounts(search=${search},status='Active',roleId=${selectedRoleId},departmentId=${selectedDepartmentId},sort=${selectedSort})}"
+                   th:attr="aria-current=${selectedStatus == 'Active' ? 'page' : null}" title="Hoạt động">Hoạt động</a>
+                <a class="mft-chip" th:href="@{/admin/accounts(search=${search},status='Inactive',roleId=${selectedRoleId},departmentId=${selectedDepartmentId},sort=${selectedSort})}"
+                   th:attr="aria-current=${selectedStatus == 'Inactive' ? 'page' : null}" title="Vô hiệu hóa">Vô hiệu hóa</a>
+                <a class="mft-chip" th:href="@{/admin/accounts(search=${search},status='Blocked',roleId=${selectedRoleId},departmentId=${selectedDepartmentId},sort=${selectedSort})}"
+                   th:attr="aria-current=${selectedStatus == 'Blocked' ? 'page' : null}" title="Bị khóa">Bị khóa</a>
+            </nav>
+        </div>
+        <div class="mft-search">
+            <label class="sr-only" for="account-search">Tìm kiếm tài khoản nội bộ</label>
+            <button class="mft-search-submit" type="submit" aria-label="Tìm kiếm tài khoản nội bộ" title="Tìm kiếm">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m16 16 4 4"/></svg>
+            </button>
+            <input class="form-control mft-search-input" id="account-search" type="search" name="search"
+                   placeholder="Họ tên, email hoặc tên đăng nhập" th:value="${search}" maxlength="100">
         </div>
     </form>
-    <section class="card iac-card" aria-labelledby="account-list-title">
+    <section class="card iac-card mft-table-card" aria-labelledby="account-list-title">
         <div class="table-wrapper iac-scroll" tabindex="0" role="region" aria-labelledby="account-list-title">
         <table class="table iac-table">
             <caption class="sr-only">Tài khoản nội bộ với thao tác sửa và thay đổi trạng thái.</caption>
@@ -157,6 +169,7 @@
     <dialog th:replace="~{fragments/status-actions :: confirmation}"></dialog>
 </main>
 <th:block layout:fragment="scripts">
+    <script th:src="@{/js/pages/management-filters.js}" defer></script>
     <script th:src="@{/js/status-confirmation.js}" defer></script>
     <script th:src="@{/js/pages/internal-accounts.js}" defer></script>
     <script th:src="@{/js/pages/account-inspector.js}" defer></script>

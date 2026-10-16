@@ -8,6 +8,7 @@
         <!-- Reuse the existing account presentation; do not change shared components. -->
         <link rel="stylesheet" th:href="@{/css/pages/internal-accounts.css}">
         <link rel="stylesheet" th:href="@{/css/pages/departments.css}">
+        <link rel="stylesheet" th:href="@{/css/pages/management-filters.css}">
     </th:block>
 </head>
 <body>
@@ -23,16 +24,15 @@
         </a>
     </div>
     <div class="alert alert--success" role="status" th:if="${successMessage}" th:text="${successMessage}"></div>
-    <section class="card iac-card dm-card" aria-labelledby="departments-title">
-    <form class="iac-filters dm-filters" th:action="@{/admin/departments}" method="get" aria-label="Bộ lọc phòng ban">
-        <div class="iac-field iac-field--search">
-            <label class="form-label" for="department-search">Tìm kiếm</label>
-            <div class="iac-search">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m16 16 4 4"/></svg>
-                <input class="form-control iac-control iac-search-input" id="department-search" type="search" name="search" maxlength="100" th:value="${search}" placeholder="Tên phòng ban">
-            </div>
-        </div>
-        <div class="iac-field iac-field--status">
+    <form class="card mft-toolbar" th:action="@{/admin/departments}" method="get" aria-label="Bộ lọc phòng ban">
+        <div class="mft-controls">
+            <details class="mft-disclosure">
+                <summary class="mft-toggle" aria-controls="management-filter-fields" th:with="count=${ (!#strings.isEmpty(selectedStatus) ? 1 : 0) }">
+                    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 4h18l-7 8v7l-4 2v-9Z"/></svg>
+                    Bộ lọc <span class="mft-count" th:if="${count > 0}"><span class="sr-only">đang áp dụng: </span><span th:text="${count}"></span></span>
+                </summary>
+                <div id="management-filter-fields" class="mft-popover">
+                    <div class="mft-field">
             <label class="form-label" for="department-status">Trạng thái</label>
             <select class="form-control iac-control" id="department-status" name="status">
                 <option value="">Tất cả trạng thái</option>
@@ -40,11 +40,30 @@
                 <option value="Inactive" th:selected="${selectedStatus == 'Inactive'}">Đã vô hiệu hóa</option>
             </select>
         </div>
-        <div class="iac-filter-actions dm-filter-actions">
-            <button class="btn btn--secondary btn--sm iac-apply" type="submit">Lọc</button>
-            <a class="btn btn--sm iac-reset" th:href="@{/admin/departments}">Xóa bộ lọc</a>
+                    <div class="mft-actions">
+                        <button class="btn btn--primary btn--sm" type="submit">Áp dụng</button>
+                        <a class="btn btn--secondary btn--sm" th:href="@{/admin/departments}" title="Xóa toàn bộ bộ lọc và từ khóa tìm kiếm">Xóa bộ lọc</a>
+                    </div>
+                </div>
+            </details>
+            <nav class="mft-chips" aria-label="Lọc nhanh theo trạng thái">
+                <a class="mft-chip" th:href="@{/admin/departments(search=${search},status='')}"
+                   th:attr="aria-current=${#strings.isEmpty(selectedStatus) ? 'page' : null}" title="Tất cả trạng thái">Tất cả</a>
+                <a class="mft-chip" th:href="@{/admin/departments(search=${search},status='Active')}"
+                   th:attr="aria-current=${selectedStatus == 'Active' ? 'page' : null}" title="Hoạt động">Hoạt động</a>
+                <a class="mft-chip" th:href="@{/admin/departments(search=${search},status='Inactive')}"
+                   th:attr="aria-current=${selectedStatus == 'Inactive' ? 'page' : null}" title="Vô hiệu hóa">Vô hiệu hóa</a>
+            </nav>
+        </div>
+        <div class="mft-search">
+            <label class="sr-only" for="department-search">Tìm kiếm phòng ban</label>
+            <button class="mft-search-submit" type="submit" aria-label="Tìm kiếm phòng ban" title="Tìm kiếm">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m16 16 4 4"/></svg>
+            </button>
+            <input class="form-control mft-search-input" id="department-search" type="search" name="search" maxlength="100" th:value="${search}" placeholder="Tên phòng ban">
         </div>
     </form>
+    <section class="card iac-card dm-card mft-table-card" aria-labelledby="departments-title">
         <p id="department-scroll-hint" class="sr-only">Cuộn ngang để xem đầy đủ thông tin và thao tác.</p>
         <div class="table-wrapper iac-scroll" tabindex="0" role="region" aria-labelledby="departments-title" aria-describedby="department-scroll-hint">
             <table class="table iac-table dm-table">
@@ -117,6 +136,7 @@
     <dialog th:replace="~{fragments/status-actions :: confirmation}"></dialog>
 </main>
 <th:block layout:fragment="scripts">
+    <script th:src="@{/js/pages/management-filters.js}" defer></script>
     <script th:src="@{/js/status-confirmation.js}" defer></script>
     <script th:src="@{/js/pages/internal-accounts.js}" defer></script>
 </th:block>
