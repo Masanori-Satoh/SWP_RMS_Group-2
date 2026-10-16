@@ -29,8 +29,8 @@ public class RequisitionResponse {
     private boolean withdrawable;
     private boolean incomplete;
     private String rejectionReason;
-    private java.util.List<RequisitionTimelineResponse> timeline;
     private String departmentName;
+    private String hiringType;
     private String hiringManagerName;
     private Integer numberOfPositions;
     private String employmentType;

@@ -18,62 +18,101 @@
                 <div class="container">
 
                     <div class="requisition-page-header">
-                        <div>
-                            <h1>Yêu cầu tuyển dụng</h1>
-                            <p>Xem và quản lý các yêu cầu tuyển dụng nhân sự từ tất cả các phòng ban.</p>
-                        </div>
-                        <a th:if="${canCreate}" th:href="@{/requisitions/create}" class="btn-create">+ Tạo yêu cầu
-                            mới</a>
+                        <h1>Yêu cầu tuyển dụng</h1>
+                        <a th:if="${canCreate}" th:href="@{/requisitions/create}" class="btn-create">+ Tạo yêu cầu mới</a>
                     </div>
                     <th:block th:replace="~{fragments/requisition :: messages}"></th:block>
-                    <form class="list-filter-card" th:action="@{/requisitions}" method="get" id="filterForm"
-                          role="search" aria-label="Lọc yêu cầu tuyển dụng">
-                            <input type="hidden" name="size" th:value="${pageSize}">
-                            <div class="requisition-filter-grid">
-                                <div class="filter-field filter-search">
-                                    <label for="requisition-search">Tìm kiếm</label>
-                                    <input id="requisition-search" type="search" name="q" th:value="${search}"
-                                        maxlength="120" placeholder="Tên vị trí hoặc phòng ban">
-                                </div>
+                    <!-- Thanh công cụ Toolbar bọc Card quanh Bộ lọc & Ô tìm kiếm (giống mẫu Quản lý phòng ban) -->
+                    <form class="card requisition-toolbar" th:action="@{/requisitions}" method="get" id="filterForm" role="search"
+                        aria-label="Tìm kiếm và lọc yêu cầu tuyển dụng">
+                        <input type="hidden" name="size" th:value="${pageSize}">
+                    
+                        <!-- Cụm bên trái: Nút mở Popover Bộ lọc -->
+                        <div class="filter-popover-anchor">
+                            <button type="button" class="btn-filter-trigger" id="filterToggleBtn" aria-expanded="false"
+                                aria-haspopup="dialog" aria-controls="filterPopover"
+                                th:classappend="${(selectedPosition != null and !selectedPosition.isEmpty()) or (selectedType != null and !selectedType.isEmpty()) or (selectedSort != null and selectedSort != 'newest')} ? ' has-active-filters' : ''">
+                                <svg class="filter-icon" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                    stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                    <path d="M3 4h18l-7 8v7l-4 2v-9Z" />
+                                </svg>
+                                <span>Bộ lọc</span>
+                                <!-- Chấm hiển thị trực quan khi có bộ lọc đang hoạt động -->
+                                <span class="filter-active-dot"
+                                    th:if="${(selectedPosition != null and !selectedPosition.isEmpty()) or (selectedType != null and !selectedType.isEmpty()) or (selectedSort != null and selectedSort != 'newest')}"
+                                    aria-label="Đang có bộ lọc hoạt động"></span>
+                            </button>
 
-                                <div class="filter-field">
-                                    <label for="position-filter">Vị trí tuyển dụng</label>
-                                    <select id="position-filter" name="position">
-                                        <option value="">Tất cả vị trí</option>
-                                        <option th:each="pos : ${positions}" th:value="${pos}"
-                                            th:text="${pos}"
-                                            th:selected="${pos == selectedPosition}"></option>
-                                    </select>
+                            <!-- Popover nổi đè lên trên danh sách (không đẩy giao diện bên dưới) -->
+                            <div class="filter-popover-dropdown" id="filterPopover" role="dialog" aria-label="Bộ lọc yêu cầu tuyển dụng"
+                                hidden>
+                                <div class="popover-header">
+                                    <span class="popover-title">Bộ lọc nâng cao</span>
+                                    <button type="button" class="popover-close-btn" id="filterCloseBtn"
+                                        aria-label="Đóng bộ lọc">&times;</button>
                                 </div>
+                                <div class="popover-body">
+                                    <div class="popover-grid-2col">
+                                        <div class="filter-field">
+                                            <label for="position-filter">Vị trí tuyển dụng</label>
+                                            <select id="position-filter" name="position">
+                                                <option value="">Tất cả vị trí</option>
+                                                <option th:each="pos : ${positions}" th:value="${pos}" th:text="${pos}"
+                                                    th:selected="${pos == selectedPosition}"></option>
+                                            </select>
+                                        </div>
 
-                                <div class="filter-field">
-                                    <label for="type-filter">Hình thức làm việc</label>
-                                    <select id="type-filter" name="type">
-                                        <option value="">Tất cả hình thức</option>
-                                        <option th:each="type : ${employmentTypes}" th:value="${type}"
-                                            th:text="${type == 'Full-time' ? 'Toàn thời gian' : (type == 'Part-time' ? 'Bán thời gian' : (type == 'Internship' ? 'Thực tập' : (type == 'Contract' ? 'Hợp đồng' : type)))}"
-                                            th:selected="${type == selectedType}"></option>
-                                    </select>
+                                        <div class="filter-field">
+                                            <label for="type-filter">Hình thức làm việc</label>
+                                            <select id="type-filter" name="type">
+                                                <option value="">Tất cả hình thức</option>
+                                                <option th:each="type : ${employmentTypes}" th:value="${type}"
+                                                    th:text="${type == 'Full-time' ? 'Toàn thời gian' : (type == 'Part-time' ? 'Bán thời gian' : (type == 'Internship' ? 'Thực tập' : (type == 'Contract' ? 'Hợp đồng' : type)))}"
+                                                    th:selected="${type == selectedType}"></option>
+                                            </select>
+                                        </div>
+                                        
+                                        <div class="filter-field filter-field--full">
+                                            <label for="sort-filter">Sắp xếp theo</label>
+                                            <select id="sort-filter" name="sort">
+                                                <option value="newest" th:selected="${selectedSort == 'newest'}">Mới nhất trước</option>
+                                                <option value="oldest" th:selected="${selectedSort == 'oldest'}">Cũ nhất trước</option>
+                                                <option value="position_asc" th:selected="${selectedSort == 'position_asc'}">Vị trí A–Z
+                                                </option>
+                                                <option value="position_desc" th:selected="${selectedSort == 'position_desc'}">Vị trí Z–A
+                                                </option>
+                                            </select>
+                                        </div>
+                                    </div>
                                 </div>
-
-                                <div class="filter-field">
-                                    <label for="sort-filter">Sắp xếp theo</label>
-                                    <select id="sort-filter" name="sort">
-                                        <option value="newest" th:selected="${selectedSort == 'newest'}">Mới nhất trước
-                                        </option>
-                                        <option value="oldest" th:selected="${selectedSort == 'oldest'}">Cũ nhất trước
-                                        </option>
-                                        <option value="position_asc" th:selected="${selectedSort == 'position_asc'}">Vị
-                                            trí A–Z</option>
-                                        <option value="position_desc" th:selected="${selectedSort == 'position_desc'}">
-                                            Vị trí Z–A</option>
-                                    </select>
+                                <div class="popover-footer">
+                                    <button type="button" class="btn-popover-clear" id="filterResetBtn">Xóa bộ lọc</button>
+                                    <button type="submit" class="btn-popover-apply">Áp dụng</button>
                                 </div>
                             </div>
-                            <div class="filter-actions">
-                                <button type="submit" class="filter-apply">Áp dụng</button>
-                                <a th:href="@{/requisitions}" class="clear-filters">Đặt lại bộ lọc</a>
+                        </div>
+
+                        <!-- Cụm bên phải: Ô tìm kiếm và Nút làm mới ngang hàng phía sau -->
+                        <div class="toolbar-search-group">
+                            <div class="search-input-wrapper">
+                                <button type="submit" class="search-submit-btn" aria-label="Tìm kiếm" title="Tìm kiếm">
+                                    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                        stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                        <circle cx="10.5" cy="10.5" r="6.5" />
+                                        <path d="m16 16 4 4" />
+                                    </svg>
+                                </button>
+                                <input id="requisition-search" type="search" name="q" th:value="${search}" maxlength="120"
+                                    placeholder="Tên vị trí hoặc phòng ban" aria-label="Tìm kiếm theo tên vị trí hoặc phòng ban">
                             </div>
+                            <a th:href="@{/requisitions}" class="btn-reset-toolbar" id="resetBtn" title="Đặt lại tìm kiếm và bộ lọc">
+                                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                    <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/>
+                                    <path d="M3 3v5h5"/>
+                                </svg>
+                                <span>Làm mới</span>
+                            </a>
+                        </div>
                     </form>
                     <section class="list-container" aria-label="Danh sách yêu cầu tuyển dụng">
                         <p class="list-results-count" th:text="|${totalElements} yêu cầu tuyển dụng|">0 yêu cầu tuyển dụng</p>

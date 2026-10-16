@@ -11,7 +11,6 @@ import com.group2.rms.notification.NotificationService;
 import com.group2.rms.requisition.entity.RequisitionApproval;
 import com.group2.rms.requisition.repository.RequisitionApprovalRepository;
 import com.group2.rms.requisition.repository.JobRequisitionRepository;
-import com.group2.rms.requisition.repository.RequisitionWorkflowEventRepository;
 import com.group2.rms.requisition.validator.RequisitionValidator;
 import com.group2.rms.user.entity.Department;
 import com.group2.rms.user.entity.User;
@@ -70,7 +69,6 @@ class JobRequisitionServiceTest {
     @Mock private DepartmentRepository departments;
     @Mock private AuditLogRepository audit;
     @Mock private RequisitionApprovalRepository approvals;
-    @Mock private RequisitionWorkflowEventRepository events;
     @Mock private RequisitionAccess access;
     @Mock private RequisitionValidator validator;
     @Mock private NotificationService notificationService;
@@ -148,9 +146,6 @@ class JobRequisitionServiceTest {
         assertEquals("Java", sc.getCriteriaName());
         assertSame(saved, sc.getRequisition());
 
-        // Side effect: Draft không sinh workflow event
-        verifyNoInteractions(events);
-
         // Audit log CREATE
         var auditCap = ArgumentCaptor.forClass(AuditLog.class);
         verify(audit).save(auditCap.capture());
@@ -181,8 +176,6 @@ class JobRequisitionServiceTest {
         assertNull(saved.getNumberOfPositions());
         assertNull(saved.getSubmittedAt());
         assertTrue(saved.getScreeningCriteria().isEmpty());
-
-        verifyNoInteractions(events);
 
         var auditCap = ArgumentCaptor.forClass(AuditLog.class);
         verify(audit).save(auditCap.capture());
@@ -248,10 +241,12 @@ class JobRequisitionServiceTest {
         service.decide(50, false, "Budget exceeded");
 
         assertEquals("Rejected", req.getApprovalStatus());
-        assertNotNull(req.getDecidedAt());
-        verify(approvals).save(any(RequisitionApproval.class));
+        ArgumentCaptor<RequisitionApproval> decision = ArgumentCaptor.forClass(RequisitionApproval.class);
+        verify(approvals).save(decision.capture());
+        assertEquals("Budget exceeded", decision.getValue().getComments());
+        assertEquals(director, decision.getValue().getDirector());
         verify(requisitions).saveAndFlush(req);
-        verify(notificationService).notifyRequisitionRejected(req, director, "Budget exceeded");
+        verify(notificationService).notifyRequisitionRejected(any());
     }
 
     // =========================================================================

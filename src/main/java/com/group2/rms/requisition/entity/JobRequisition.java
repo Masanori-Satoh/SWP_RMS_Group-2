@@ -9,8 +9,9 @@ import lombok.*;
 import java.math.BigDecimal;
 
 /**
- * 3.7 JobRequisition - Yêu cầu tuyển dụng do Hiring Manager tạo.
- * ApprovalStatus: Draft, Pending_Director, Approved, Rejected
+ * 3.6 JobRequisition - Yêu cầu tuyển dụng do Hiring Manager tạo.
+ * ApprovalStatus: Draft, Pending_Director, Approved, Rejected, Closed, Cancelled
+ * Đợt tuyển: đợt 1 có originalRequisition = null; đợt > 1 trỏ về phiếu đợt 1 (CK_JobRequisition_RoundOrigin).
  * EmploymentType: Full-time, Part-time, Internship, Contract
  */
 @Entity
@@ -41,8 +42,22 @@ public class JobRequisition extends BaseEntity {
     @JoinColumn(name = "HiringManagerId", nullable = false, referencedColumnName = "UserId")
     private User hiringManager;
 
-    @Column(name = "RecruitmentRound")
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "CreatedBy", referencedColumnName = "UserId")
+    private User createdBy;
+
+    @Column(name = "RecruitmentRound", nullable = false)
     private Integer recruitmentRound;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "OriginalRequisitionId", referencedColumnName = "RequisitionId")
+    private JobRequisition originalRequisition;
+
+    /**
+     * New, Replacement (NULL = chưa xác định)
+     */
+    @Column(name = "HiringType", length = 20)
+    private String hiringType;
 
     @Column(name = "NumberOfPositions")
     private Integer numberOfPositions;
@@ -69,7 +84,7 @@ public class JobRequisition extends BaseEntity {
     private String requirementDetails;
 
     /**
-     * Draft, Pending_Director, Approved, Rejected
+     * Draft, Pending_Director, Approved, Rejected, Closed, Cancelled
      */
     @Column(name = "ApprovalStatus", nullable = false, length = 30)
     private String approvalStatus;
@@ -78,16 +93,16 @@ public class JobRequisition extends BaseEntity {
     private String gender;
     @Column(name = "WorkLocation", length = 255)
     private String workLocation;
-    @Column(name = "WorkModel", length = 50)
+    @Column(name = "WorkModel", length = 20)
     private String workModel;
-    @Column(name = "ProbationDuration", length = 255)
+    @Column(name = "ProbationDuration", length = 50)
     private String probationDuration;
     @Column(name = "ExpectedStartDate")
     private java.time.LocalDate expectedStartDate;
     @Column(name = "SubmittedAt")
     private java.time.LocalDateTime submittedAt;
-    @Column(name = "DecidedAt")
-    private java.time.LocalDateTime decidedAt;
+    @Column(name = "ClosedAt")
+    private java.time.LocalDateTime closedAt;
 
     @OneToMany(mappedBy = "requisition", cascade = CascadeType.ALL, orphanRemoval = true)
     private java.util.List<ScreeningCriteria> screeningCriteria;

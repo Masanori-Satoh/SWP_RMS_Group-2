@@ -54,6 +54,7 @@
                         <!-- Trường ẩn giữ thông tin phòng ban & đợt tuyển tự động -->
                         <input type="hidden" th:field="*{departmentId}">
                         <input type="hidden" th:field="*{recruitmentRound}">
+                        <input type="hidden" th:field="*{originalRequisitionId}">
 
                         <!-- Thông báo sao chép biểu mẫu thành công (nếu có) -->
                         <p class="notice" th:if="${copyNotice}" th:text="${copyNotice}"></p>
@@ -99,6 +100,20 @@
                                     </select>
                                     <small id="employmentType-error" class="field-error"
                                         th:text="${#fields.hasErrors('employmentType') ? #strings.listJoin(#fields.errors('employmentType'), '; ') : ''}"></small>
+                                </div>
+
+                                <!-- Loại tuyển dụng (không bắt buộc) -->
+                                <div class="form-group">
+                                    <label for="hiringType">Loại tuyển dụng</label>
+                                    <select class="form-control-custom" th:field="*{hiringType}"
+                                        th:attr="aria-invalid=${#fields.hasErrors('hiringType')}"
+                                        aria-describedby="hiringType-error">
+                                        <option value="">Chưa xác định</option>
+                                        <option value="New">Tuyển mới</option>
+                                        <option value="Replacement">Tuyển thay thế</option>
+                                    </select>
+                                    <small id="hiringType-error" class="field-error"
+                                        th:text="${#fields.hasErrors('hiringType') ? #strings.listJoin(#fields.errors('hiringType'), '; ') : ''}"></small>
                                 </div>
 
                                 <!-- Mô hình làm việc -->

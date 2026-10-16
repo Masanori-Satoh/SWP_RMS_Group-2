@@ -370,11 +370,11 @@ class RequisitionValidatorTests {
     }
 
     @Test void val010_probationDurationAtMaxLengthPasses() {
-        var d = valid(); d.setProbationDuration("x".repeat(255)); expectPass(d);
+        var d = valid(); d.setProbationDuration("x".repeat(RequisitionValidator.PROBATION_CHAR_LIMIT)); expectPass(d);
     }
 
     @Test void val010_probationDurationOverMaxLengthFails() {
-        var d = valid(); d.setProbationDuration("x".repeat(256));
+        var d = valid(); d.setProbationDuration("x".repeat(RequisitionValidator.PROBATION_CHAR_LIMIT + 1));
         assertTrue(expectFail(d).getErrors().containsKey("probationDuration"));
     }
 

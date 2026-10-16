@@ -621,4 +621,92 @@ document.addEventListener('DOMContentLoaded', () => {
         delete target.dataset.submitting;
         target.removeAttribute('aria-busy');
     }));
+
+    /* -------------------------------------------------------------------------
+     * 6. POPOVER BỘ LỌC YÊU CẦU TUYỂN DỤNG (FILTER POPOVER)
+     * ------------------------------------------------------------------------- */
+    const filterToggleBtn = document.getElementById('filterToggleBtn');
+    const filterPopover = document.getElementById('filterPopover');
+    const filterCloseBtn = document.getElementById('filterCloseBtn');
+    const filterResetBtn = document.getElementById('filterResetBtn');
+    const filterForm = document.getElementById('filterForm');
+
+    if (filterToggleBtn && filterPopover) {
+        const openPopover = () => {
+            filterPopover.removeAttribute('hidden');
+            filterToggleBtn.setAttribute('aria-expanded', 'true');
+        };
+
+        const closePopover = () => {
+            if (!filterPopover.hasAttribute('hidden')) {
+                filterPopover.setAttribute('hidden', '');
+                filterToggleBtn.setAttribute('aria-expanded', 'false');
+            }
+        };
+
+        // Bật/tắt popover khi click nút Bộ lọc
+        filterToggleBtn.addEventListener('click', (event) => {
+            event.stopPropagation();
+            if (filterPopover.hasAttribute('hidden')) {
+                openPopover();
+            } else {
+                closePopover();
+            }
+        });
+
+        // Đóng popover khi nhấn nút X
+        filterCloseBtn?.addEventListener('click', (event) => {
+            event.stopPropagation();
+            closePopover();
+            filterToggleBtn.focus();
+        });
+
+        // Không đóng popover khi người dùng thao tác bên trong popover
+        filterPopover.addEventListener('click', (event) => {
+            event.stopPropagation();
+        });
+
+        // Tự động đóng khi click ra ngoài vùng neo popover
+        document.addEventListener('click', (event) => {
+            const anchor = filterToggleBtn.closest('.filter-popover-anchor');
+            if (anchor && !anchor.contains(event.target)) {
+                closePopover();
+            }
+        });
+
+        // Tự động đóng khi nhấn phím Escape
+        document.addEventListener('keydown', (event) => {
+            if (event.key === 'Escape' && !filterPopover.hasAttribute('hidden')) {
+                closePopover();
+                filterToggleBtn.focus();
+            }
+        });
+
+        // Xử lý nút "Xóa bộ lọc": Đặt lại các trường lọc về mặc định và gửi form
+        filterResetBtn?.addEventListener('click', () => {
+            const positionSelect = document.getElementById('position-filter');
+            const typeSelect = document.getElementById('type-filter');
+            const sortSelect = document.getElementById('sort-filter');
+
+            if (positionSelect) positionSelect.value = '';
+            if (typeSelect) typeSelect.value = '';
+            if (sortSelect) sortSelect.value = 'newest';
+
+            // Xóa tham số page (nếu có) để quay lại trang đầu
+            const pageInput = filterForm?.querySelector('input[name="page"]');
+            if (pageInput) pageInput.remove();
+
+            if (filterForm) {
+                filterForm.submit();
+            }
+        });
+
+        // Xử lý nút "Làm mới" trên thanh Toolbar (xóa sạch cả từ khóa tìm kiếm và các bộ lọc)
+        const resetToolbarBtn = document.getElementById('resetBtn');
+        resetToolbarBtn?.addEventListener('click', (event) => {
+            event.preventDefault();
+            window.location.href = '/requisitions';
+        });
+    }
 });
+

@@ -22,6 +22,7 @@ public class RequisitionValidator {
     public static final int TITLE_CHAR_LIMIT = 200;
     public static final int TEXT_FIELD_CHAR_LIMIT = 2000;
     public static final int SHORT_FIELD_CHAR_LIMIT = 255;
+    public static final int PROBATION_CHAR_LIMIT = 50;
     public static final int MAX_CRITERIA_LIMIT = 50;
     public static final BigDecimal REQUIRED_TOTAL_WEIGHT = new BigDecimal("100");
 
@@ -29,6 +30,7 @@ public class RequisitionValidator {
     public static final List<String> CRITERIA_TYPES = List.of("Education", "Experience", "Skill", "Knockout");
     public static final List<String> GENDERS = List.of("Any", "Male", "Female");
     public static final List<String> WORK_MODELS = List.of("On-site", "Remote", "Hybrid");
+    public static final List<String> HIRING_TYPES = List.of("New", "Replacement");
 
     public void validate(RequisitionRequest requisitionRequest) {
         Map<String, String> errors = new LinkedHashMap<>();
@@ -49,6 +51,7 @@ public class RequisitionValidator {
         requisitionRequest.setWorkModel(cleanString(requisitionRequest.getWorkModel()));
         requisitionRequest.setProbationDuration(cleanString(requisitionRequest.getProbationDuration()));
         requisitionRequest.setGender(cleanString(requisitionRequest.getGender()));
+        requisitionRequest.setHiringType(cleanString(requisitionRequest.getHiringType()));
 
         // Rule: Kiểm tra độ dài và trường bắt buộc cho các thông tin văn bản
         validateTextField(errors, "title", requisitionRequest.getTitle(), TITLE_CHAR_LIMIT, isSubmitAction);
@@ -62,12 +65,13 @@ public class RequisitionValidator {
         validateTextField(errors, "jobDescription", requisitionRequest.getJobDescription(), TEXT_FIELD_CHAR_LIMIT, isSubmitAction);
         validateTextField(errors, "requirementDetails", requisitionRequest.getRequirementDetails(), TEXT_FIELD_CHAR_LIMIT, isSubmitAction);
         validateTextField(errors, "workLocation", requisitionRequest.getWorkLocation(), SHORT_FIELD_CHAR_LIMIT, isSubmitAction);
-        validateTextField(errors, "probationDuration", requisitionRequest.getProbationDuration(), SHORT_FIELD_CHAR_LIMIT, false);
+        validateTextField(errors, "probationDuration", requisitionRequest.getProbationDuration(), PROBATION_CHAR_LIMIT, false);
 
         // Rule: Các trường chọn phải nằm trong danh mục hợp lệ
         validateChoiceField(errors, "employmentType", requisitionRequest.getEmploymentType(), EMPLOYMENT_TYPES, isSubmitAction);
         validateChoiceField(errors, "workModel", requisitionRequest.getWorkModel(), WORK_MODELS, isSubmitAction);
         validateChoiceField(errors, "gender", requisitionRequest.getGender(), GENDERS, false);
+        validateChoiceField(errors, "hiringType", requisitionRequest.getHiringType(), HIRING_TYPES, false);
 
         // Rule: Khi nộp duyệt bắt buộc phải chọn phòng ban
         if (isSubmitAction && requisitionRequest.getDepartmentId() == null) {

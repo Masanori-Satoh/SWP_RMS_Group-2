@@ -12,6 +12,10 @@ public class RequisitionRequest {
     private String title;
     private Integer departmentId;
     private Integer recruitmentRound;
+    /** Phiếu nguồn khi sao chép sang đợt mới; server tự quy về phiếu đợt 1 và tính lại số đợt. */
+    private Integer originalRequisitionId;
+    /** New / Replacement, không bắt buộc. */
+    private String hiringType;
     private Integer numberOfPositions;
     private String employmentType;
     private BigDecimal minSalary;

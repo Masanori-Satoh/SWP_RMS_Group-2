@@ -3,22 +3,20 @@ package com.group2.rms.requisition.service;
 import com.group2.rms.admin.dto.ActivityLogResponse;
 import com.group2.rms.admin.entity.AuditLog;
 import com.group2.rms.admin.repository.AuditLogRepository;
+import com.group2.rms.core.exception.ResourceNotFoundException;
 import com.group2.rms.notification.NotificationService;
 import com.group2.rms.requisition.dto.ApprovalResponse;
 import com.group2.rms.requisition.dto.RequisitionRequest;
 import com.group2.rms.requisition.dto.RequisitionResponse;
-import com.group2.rms.requisition.dto.RequisitionTimelineResponse;
 import com.group2.rms.requisition.dto.ScreeningCriteriaRequest;
 import com.group2.rms.requisition.dto.ScreeningCriteriaResponse;
 import com.group2.rms.requisition.entity.JobRequisition;
 import com.group2.rms.requisition.entity.RequisitionApproval;
-import com.group2.rms.requisition.entity.RequisitionWorkflowEvent;
 import com.group2.rms.requisition.entity.ScreeningCriteria;
 import com.group2.rms.requisition.exception.RequisitionValidationException;
 import com.group2.rms.jobposting.repository.JobPostingRepository;
 import com.group2.rms.requisition.repository.JobRequisitionRepository;
 import com.group2.rms.requisition.repository.RequisitionApprovalRepository;
-import com.group2.rms.requisition.repository.RequisitionWorkflowEventRepository;
 import com.group2.rms.requisition.validator.RequisitionValidator;
 import com.group2.rms.user.entity.User;
 import com.group2.rms.user.repository.DepartmentRepository;
@@ -26,11 +24,9 @@ import com.group2.rms.user.repository.DepartmentRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.*;
 import org.springframework.data.jpa.domain.Specification;
-import org.springframework.http.HttpStatus;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.server.ResponseStatusException;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -51,10 +47,12 @@ public class RequisitionServiceImpl implements RequisitionService {
     private final RequisitionApprovalRepository approvals;
     private final JobPostingRepository postings;
     private final AuditLogRepository audit;
-    private final RequisitionWorkflowEventRepository events;
     private final RequisitionAccess access;
     private final RequisitionValidator validator;
     private final NotificationService notificationService;
+
+    private static final Set<String> STATUSES_NOT_COPYABLE =
+            Set.of(RequisitionAccess.STATUS_DRAFT, RequisitionAccess.STATUS_PENDING_DIRECTOR);
 
     /**
      * Rule: Phân quyền phạm vi dữ liệu theo Role người dùng:
@@ -170,7 +168,7 @@ public class RequisitionServiceImpl implements RequisitionService {
         access.requireView(currentUser, jobRequisition);
 
         // Hướng 1: Chặn sao chép đối với các đơn Draft và Pending_Director
-        if ("Draft".equals(jobRequisition.getApprovalStatus()) || "Pending_Director".equals(jobRequisition.getApprovalStatus())) {
+        if (STATUSES_NOT_COPYABLE.contains(jobRequisition.getApprovalStatus())) {
             throw createValidationException("action", "Chỉ có thể sao chép yêu cầu đã hoàn tất phê duyệt hoặc bị từ chối.");
         }
 
@@ -179,15 +177,10 @@ public class RequisitionServiceImpl implements RequisitionService {
         copiedDto.getScreeningCriteria().forEach(criterion -> criterion.setCriteriaId(null));
         copiedDto.setRequisitionCode(null);
 
-        // Tự động gán đợt tuyển tiếp theo
-        int currentRound = jobRequisition.getRecruitmentRound() != null ? jobRequisition.getRecruitmentRound() : 1;
-        Integer deptId = jobRequisition.getDepartment() != null ? jobRequisition.getDepartment().getDepartmentId() : null;
-        if (deptId != null && jobRequisition.getTitle() != null) {
-            int maxRound = requisitions.findMaxRecruitmentRound(jobRequisition.getTitle().trim(), deptId);
-            copiedDto.setRecruitmentRound(Math.max(currentRound, maxRound) + 1);
-        } else {
-            copiedDto.setRecruitmentRound(currentRound + 1);
-        }
+        // Đợt tiếp theo trong chuỗi của phiếu gốc; chỉ để hiển thị, server tính lại khi lưu
+        JobRequisition root = rootOf(jobRequisition);
+        copiedDto.setOriginalRequisitionId(root.getRequisitionId());
+        copiedDto.setRecruitmentRound(requisitions.findMaxRoundInChain(root.getRequisitionId()) + 1);
 
         return copiedDto;
     }
@@ -206,7 +199,8 @@ public class RequisitionServiceImpl implements RequisitionService {
 
         return RequisitionRequest.builder()
                 .requisitionCode(jobRequisition.getRequisitionCode())
-                .recruitmentRound(jobRequisition.getRecruitmentRound() != null ? jobRequisition.getRecruitmentRound() : 1)
+                .recruitmentRound(jobRequisition.getRecruitmentRound())
+                .hiringType(jobRequisition.getHiringType())
                 .title(jobRequisition.getTitle())
                 .departmentId(jobRequisition.getDepartment() == null ? null : jobRequisition.getDepartment().getDepartmentId())
                 .numberOfPositions(jobRequisition.getNumberOfPositions())
@@ -246,14 +240,6 @@ public class RequisitionServiceImpl implements RequisitionService {
             }
         }
 
-        // Tự động tính đợt tuyển dụng nếu chưa có hoặc đợt 1
-        if (requestDto.getDepartmentId() != null && requestDto.getTitle() != null && !requestDto.getTitle().isBlank()) {
-            int maxRound = requisitions.findMaxRecruitmentRound(requestDto.getTitle().trim(), requestDto.getDepartmentId());
-            if (requestDto.getRecruitmentRound() == null || requestDto.getRecruitmentRound() <= 1) {
-                requestDto.setRecruitmentRound(maxRound > 0 ? maxRound + 1 : 1);
-            }
-        }
-
         // Rule: Tiêu chí mới không được chứa ID đã tồn tại
         if (requestDto.getScreeningCriteria().stream().anyMatch(c -> c.getCriteriaId() != null)) {
             throw createValidationException("screeningCriteria", "Tiêu chí mới không được tham chiếu bản ghi có sẵn.");
@@ -261,7 +247,9 @@ public class RequisitionServiceImpl implements RequisitionService {
 
         JobRequisition jobRequisition = new JobRequisition();
         jobRequisition.setHiringManager(currentUser);
+        jobRequisition.setCreatedBy(currentUser);
         jobRequisition.setScreeningCriteria(new ArrayList<>());
+        assignRecruitmentRound(jobRequisition, requestDto.getOriginalRequisitionId(), currentUser);
         applyDataToEntity(jobRequisition, requestDto);
 
         requestDto.getScreeningCriteria().stream()
@@ -277,9 +265,6 @@ public class RequisitionServiceImpl implements RequisitionService {
 
         requisitions.saveAndFlush(jobRequisition);
 
-        if (jobRequisition.getSubmittedAt() != null) {
-            recordWorkflowEvent(jobRequisition, currentUser, "Submitted", "Đã gửi vào hàng đợi phê duyệt của Giám đốc.");
-        }
         createAuditLog(jobRequisition, currentUser, "CREATE", null, "Tạo yêu cầu: " + jobRequisition.getTitle() + " · " + jobRequisition.getApprovalStatus());
 
         return jobRequisition.getRequisitionId();
@@ -315,8 +300,6 @@ public class RequisitionServiceImpl implements RequisitionService {
         jobRequisition.setApprovalStatus(isSubmitted ? "Pending_Director" : "Draft");
         if (isSubmitted) {
             jobRequisition.setSubmittedAt(LocalDateTime.now());
-            jobRequisition.setDecidedAt(null);
-            recordWorkflowEvent(jobRequisition, currentUser, "Submitted", "Đã gửi vào hàng đợi phê duyệt của Giám đốc.");
         }
 
         Map<String, String> afterSnapshot = createSnapshot(jobRequisition);
@@ -376,6 +359,31 @@ public class RequisitionServiceImpl implements RequisitionService {
         }
     }
 
+    /**
+     * Rule: Đợt 1 không có phiếu gốc; đợt sau trỏ về phiếu đợt 1 và lấy số đợt kế tiếp trong chuỗi
+     * (CK_JobRequisition_RoundOrigin, UX_JobRequisition_Original_Round). Số đợt client gửi lên bị bỏ qua.
+     */
+    private void assignRecruitmentRound(JobRequisition jobRequisition, Integer sourceRequisitionId, User currentUser) {
+        if (sourceRequisitionId == null) {
+            jobRequisition.setRecruitmentRound(1);
+            return;
+        }
+        JobRequisition source = requisitions.findById(sourceRequisitionId)
+                .orElseThrow(() -> createValidationException("originalRequisitionId", "Yêu cầu nguồn để sao chép không tồn tại."));
+        access.requireView(currentUser, source);
+        if (STATUSES_NOT_COPYABLE.contains(source.getApprovalStatus())) {
+            throw createValidationException("action", "Chỉ có thể sao chép yêu cầu đã hoàn tất phê duyệt hoặc bị từ chối.");
+        }
+        // Khóa phiếu gốc để hai lần tạo đợt mới đồng thời không lấy trùng số đợt
+        JobRequisition root = findRequisitionById(rootOf(source).getRequisitionId(), true);
+        jobRequisition.setOriginalRequisition(root);
+        jobRequisition.setRecruitmentRound(requisitions.findMaxRoundInChain(root.getRequisitionId()) + 1);
+    }
+
+    private JobRequisition rootOf(JobRequisition jobRequisition) {
+        return jobRequisition.getOriginalRequisition() != null ? jobRequisition.getOriginalRequisition() : jobRequisition;
+    }
+
     private ScreeningCriteria buildCriterionEntity(JobRequisition jobRequisition, ScreeningCriteriaRequest criteriaDto) {
         ScreeningCriteria criterion = new ScreeningCriteria();
         criterion.setRequisition(jobRequisition);
@@ -393,11 +401,7 @@ public class RequisitionServiceImpl implements RequisitionService {
 
     private void applyDataToEntity(JobRequisition jobRequisition, RequisitionRequest requestDto) {
         jobRequisition.setTitle(requestDto.getTitle() == null ? "Untitled requisition" : requestDto.getTitle());
-        if (requestDto.getRecruitmentRound() != null) {
-            jobRequisition.setRecruitmentRound(requestDto.getRecruitmentRound());
-        } else if (jobRequisition.getRecruitmentRound() == null) {
-            jobRequisition.setRecruitmentRound(1);
-        }
+        jobRequisition.setHiringType(requestDto.getHiringType());
         jobRequisition.setDepartment(requestDto.getDepartmentId() == null ? null : departments.findById(requestDto.getDepartmentId()).orElseThrow(() -> createValidationException("departmentId", "Phòng ban không tồn tại.")));
         jobRequisition.setNumberOfPositions(requestDto.getNumberOfPositions());
         jobRequisition.setEmploymentType(requestDto.getEmploymentType());
@@ -426,7 +430,6 @@ public class RequisitionServiceImpl implements RequisitionService {
 
         createAuditLog(jobRequisition, currentUser, "DELETE", null, "Đã xóa yêu cầu: " + jobRequisition.getTitle());
         approvals.deleteAll(approvals.findByRequisition_RequisitionIdOrderByApprovalDateDesc(id));
-        events.deleteByRequisition_RequisitionId(id);
         requisitions.delete(jobRequisition);
         requisitions.flush();
     }
@@ -453,9 +456,8 @@ public class RequisitionServiceImpl implements RequisitionService {
 
         String nextStatus = approved ? "Approved" : "Rejected";
         jobRequisition.setApprovalStatus(nextStatus);
-        jobRequisition.setDecidedAt(LocalDateTime.now());
 
-        approvals.save(RequisitionApproval.builder()
+        RequisitionApproval decision = approvals.save(RequisitionApproval.builder()
                 .requisition(jobRequisition)
                 .director(currentUser)
                 .status(nextStatus)
@@ -463,13 +465,12 @@ public class RequisitionServiceImpl implements RequisitionService {
                 .build());
 
         requisitions.saveAndFlush(jobRequisition);
-        recordWorkflowEvent(jobRequisition, currentUser, nextStatus, cleanedComment);
 
         createAuditLog(jobRequisition, currentUser, "UPDATE", "Status: Pending_Director",
                 "Status: Pending_Director → " + nextStatus + (cleanedComment == null ? "" : "\nÝ kiến Giám đốc: " + cleanedComment));
 
         if (!approved) {
-            notificationService.notifyRequisitionRejected(jobRequisition, currentUser, cleanedComment);
+            notificationService.notifyRequisitionRejected(decision);
         }
     }
 
@@ -487,13 +488,12 @@ public class RequisitionServiceImpl implements RequisitionService {
         // Rule: Chuyển trạng thái từ Pending_Director về Draft
         jobRequisition.setApprovalStatus("Draft");
         requisitions.saveAndFlush(jobRequisition);
-        recordWorkflowEvent(jobRequisition, currentUser, "Withdrawn", "Rút lại để chỉnh sửa.");
         createAuditLog(jobRequisition, currentUser, "UPDATE", "Status: Pending_Director", "Status: Pending_Director → Draft (rút lại)");
     }
 
     private JobRequisition findRequisitionById(Integer id, boolean lockForUpdate) {
         return (lockForUpdate ? requisitions.findForUpdate(id) : requisitions.findById(id))
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Không tìm thấy yêu cầu tuyển dụng."));
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy yêu cầu tuyển dụng."));
     }
 
     private RequisitionValidationException createValidationException(String field, String message) {
@@ -508,16 +508,6 @@ public class RequisitionServiceImpl implements RequisitionService {
                 .entityId(jobRequisition.getRequisitionId().toString())
                 .oldValue(oldValue)
                 .newValue(newValue)
-                .build());
-    }
-
-    private void recordWorkflowEvent(JobRequisition jobRequisition, User currentUser, String eventType, String comment) {
-        events.save(RequisitionWorkflowEvent.builder()
-                .requisition(jobRequisition)
-                .actor(currentUser)
-                .eventType(eventType)
-                .occurredAt(LocalDateTime.now())
-                .comment(comment)
                 .build());
     }
 
@@ -569,7 +559,8 @@ public class RequisitionServiceImpl implements RequisitionService {
                 .numberOfPositions(jobRequisition.getNumberOfPositions())
                 .employmentType(jobRequisition.getEmploymentType())
                 .approvalStatus(jobRequisition.getApprovalStatus())
-                .recruitmentRound(jobRequisition.getRecruitmentRound() != null ? jobRequisition.getRecruitmentRound() : 1)
+                .recruitmentRound(jobRequisition.getRecruitmentRound())
+                .hiringType(jobRequisition.getHiringType())
                 .requisitionCode(jobRequisition.getRequisitionCode() != null ? jobRequisition.getRequisitionCode() : ("REQ-" + jobRequisition.getRequisitionId()))
                 .createdAt(jobRequisition.getCreatedAt())
                 .minSalary(jobRequisition.getMinSalary())
@@ -635,10 +626,6 @@ public class RequisitionServiceImpl implements RequisitionService {
                             .description(log.getNewValue())
                             .timestamp(log.getTimestamp())
                             .build())
-                    .toList());
-
-            responseDto.setTimeline(events.findByRequisition_RequisitionIdOrderByOccurredAtDescEventIdDesc(jobRequisition.getRequisitionId()).stream()
-                    .map(event -> new RequisitionTimelineResponse(event.getEventType(), event.getActor().getFullName(), event.getOccurredAt(), event.getComment()))
                     .toList());
 
             if ("Rejected".equals(jobRequisition.getApprovalStatus()) && !responseDto.getApprovals().isEmpty()) {
