@@ -102,19 +102,10 @@
             </li>
         </ul>
         <p class="adm-help" th:if="${#lists.isEmpty(dashboard.monitorRows)}">Chưa có dữ liệu monitoring. Mở trang giám sát để xem chi tiết.</p>
-        <details class="adm-monitor-note"><summary>Phạm vi kiểm tra</summary><p class="adm-help">Kết quả gần nhất, không tự chạy probe. Internal kiểm tra Application và SQL Server cùng lúc. Trạng thái AI/Email chưa xác minh cấu hình ở các module khác.</p></details>
+
     </section>
 
-    <section class="adm-tools" aria-labelledby="dash-admin-actions-title">
-        <div>
-            <h2 id="dash-admin-actions-title" class="dash-section__title">Công cụ quản trị</h2>
-            <nav class="adm-tools__links" aria-label="Công cụ quản trị hệ thống">
-                <a th:each="summary : ${dashboard.accountSummaries}" class="adm-tool-link" th:href="@{${summary.url}}"><span th:text="${summary.title}"></span><span class="adm-arrow" aria-hidden="true">↗</span></a>
-                <th:block th:each="shortcut : ${dashboard.shortcuts}"><a class="adm-tool-link" th:if="${shortcut.url != null}" th:href="@{${shortcut.url}}"><span th:text="${shortcut.title}"></span><span class="adm-arrow" aria-hidden="true">↗</span></a></th:block>
-            </nav>
-        </div>
-        <div class="adm-ai-note"><div class="adm-ai-note__title"><h3>Cấu hình AI</h3><span class="badge badge--neutral">Chưa khả dụng</span></div><p>Danh mục tham số và quy tắc nhập liệu đang chờ xác nhận.</p></div>
-    </section>
+
 </main>
 <th:block layout:fragment="scripts">
     <script defer th:src="@{/js/vendor/chart.umd.min.js}"></script>

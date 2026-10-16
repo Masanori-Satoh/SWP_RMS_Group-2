@@ -34,6 +34,9 @@
 .iacv-count { flex-shrink: 0; font-variant-numeric: tabular-nums; }
 .iacv-table-inset { min-width: 0; padding: var(--s3) var(--s6); }
 .iacv-card .iac-pagination { padding-inline: var(--s6); }
+/* The Table header already reports the result count; retain only page controls here. */
+.iac-internal-page .iac-pagination .pagination-info { display: none; }
+.iac-internal-page .iac-pagination .pagination-wrapper { justify-content: flex-end; }
 /* Warm, continuous table surface; reserve the stronger green for the selected account. */
 .iac-internal-page .iacv-table { min-width: 1020px; }
 .iacv-table .iac-cell { background: var(--surface); border-color: var(--line); transition: background-color 150ms ease; }
