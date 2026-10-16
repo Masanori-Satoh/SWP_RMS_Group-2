@@ -271,6 +271,7 @@ public class DashboardMetricsRepository {
     private List<StatusCount> statuses(String jpql, Map<String, ?> parameters) {
         var query = entityManager.createQuery(jpql, Object[].class);
         parameters.forEach(query::setParameter);
+        //get list objject
         return query.getResultList().stream()
                 .map(row -> new StatusCount((String) row[0], (Long) row[1]))
                 .toList();

@@ -19,7 +19,7 @@
                     <div>
                         <a class="account-back-link" th:href="@{/admin/accounts}">Tài khoản nội bộ</a>
                         <span aria-hidden="true"> / </span>
-                        <span th:text="${createMode} ? 'Tạo mới' : 'Chỉnh sửa'">Create</span>
+                        <span th:text="${createMode} ? 'Tạo mới' : 'Chỉnh sửa'">Tạo mới</span>
                         <h1 class="ads-title" th:text="${createMode} ? 'Tạo tài khoản nội bộ' : 'Sửa tài khoản nội bộ'">Tạo tài khoản nội bộ</h1>
                         <p th:text="${createMode} ? 'Tài khoản mới sẽ có trạng thái đang hoạt động.' : 'Tên đăng nhập và mật khẩu hiện tại được giữ nguyên.'"></p>
                     </div>
@@ -62,7 +62,7 @@
                                 <select class="form-control ads-form-control" id="role" th:field="*{roleId}" required th:attr="aria-invalid=${#fields.hasErrors('roleId')},aria-describedby=${#fields.hasErrors('roleId') ? 'role-error' : null}">
                                     <option value="">Chọn vai trò</option>
                                     <option th:each="role : ${roles}" th:value="${role.roleId}"
-                                            th:attr="data-role-name=${role.roleName}" th:text="${role.roleName}">Vai trò</option>
+                                            th:attr="data-role-name=${role.roleName}" th:text="${role.roleName == 'System Admin' ? 'Quản trị hệ thống' : (role.roleName == 'HR' ? 'Nhân sự' : (role.roleName == 'Hiring Manager' ? 'Trưởng phòng tuyển dụng' : (role.roleName == 'Director' ? 'Giám đốc' : (role.roleName == 'Interviewer' ? 'Người phỏng vấn' : role.roleName))))}">Vai trò</option>
                                 </select>
                                 <span id="role-error" class="form-error" th:if="${#fields.hasErrors('roleId')}" th:errors="*{roleId}"></span>
                             </div><div class="form-group">

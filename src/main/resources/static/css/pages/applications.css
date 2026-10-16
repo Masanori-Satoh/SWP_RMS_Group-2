@@ -2,7 +2,7 @@
    PAGES/APPLICATIONS.CSS — Hồ sơ ứng tuyển (/applications, candidate/applications.html;
    /applications/{id}, candidate/application-detail.html)
    Chỉ chứa phần catalog chưa có: bố cục form lọc, thanh kết quả, ô ứng viên, dòng "Đang chờ",
-   điểm AI, cột thao tác, trạng thái rỗng.
+   điểm AI, cột thao tác, trạng thái rỗng, modal xem CV và ghi chú ứng viên tiềm năng.
    Tiền tố class: app-
    ============================================================================= */
 
@@ -68,16 +68,16 @@
 }
 
 .app-table__actions-head {
-  text-align: right;
+  text-align: center;
 }
 
 .app-table__actions {
-  text-align: right;
+  text-align: center;
   white-space: nowrap;
 }
 
 .app-table__actions .more-menu {
-  margin-left: var(--s2);
+  margin-left: 0;
   vertical-align: top;
 }
 
@@ -138,7 +138,7 @@
 
 .app-detail {
   display: grid;
-  grid-template-columns: minmax(0, 2fr) minmax(0, 1fr);
+  grid-template-columns: minmax(0, 3fr) minmax(340px, 2fr);
   gap: var(--s6);
   align-items: start;
 }
@@ -150,6 +150,9 @@
   gap: var(--s6);
   min-width: 0;
 }
+
+.app-detail__main { grid-column: 1; grid-row: 1; }
+.app-detail__side { grid-column: 2; grid-row: 1; }
 
 .app-section-head {
   display: flex;
@@ -213,7 +216,7 @@
 
 /* Thẻ thao tác ngay dưới thanh tiến độ: form duyệt CV + link sang trang interview/offer. */
 .app-actions {
-  margin-bottom: var(--s6);
+  margin-bottom: 0;
 }
 
 .app-actions__links {
@@ -241,6 +244,523 @@
   margin-top: var(--s4);
 }
 
+/* Shared bookmarks and preview use the same feature dialogs on list and detail. */
+/* Catalog badge/button display rules otherwise override the native hidden attribute. */
+.app-page [hidden] { display: none !important; }
+
+/* --- Table & Column Harmonization (Cân bằng bố cục bảng, xóa khoảng trống lệch) --- */
+.app-table {
+  width: 100%;
+  min-width: 980px;
+}
+
+.app-col-num,
+.app-table th:nth-child(1),
+.app-table td:nth-child(1) {
+  width: 56px;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+  padding-inline: var(--s2);
+}
+
+.app-col-candidate,
+.app-table th:nth-child(2),
+.app-table td:nth-child(2) {
+  width: 26%;
+  min-width: 190px;
+  text-align: left;
+}
+
+.app-col-job,
+.app-table th:nth-child(3),
+.app-table td:nth-child(3) {
+  width: 22%;
+  min-width: 160px;
+  text-align: left;
+}
+
+.app-col-date,
+.app-table th:nth-child(4),
+.app-table td:nth-child(4) {
+  width: 115px;
+  text-align: center;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+
+.app-col-score,
+.app-table th:nth-child(5),
+.app-table td:nth-child(5) {
+  width: 95px;
+  text-align: center;
+  white-space: nowrap;
+}
+
+.app-col-status,
+.app-table th:nth-child(6),
+.app-table td:nth-child(6) {
+  width: 20%;
+  min-width: 160px;
+  text-align: left;
+}
+
+.app-col-actions,
+.app-table th:nth-child(7),
+.app-table td:nth-child(7),
+.app-table__actions-head,
+.app-table__actions {
+  width: 140px;
+  text-align: center;
+  white-space: nowrap;
+}
+
+.app-row-actions {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--s2);
+}
+
+/* Icon thao tác nhỏ gọn (32px), chuẩn DNA bo góc 8px (var(--radius-md)) */
+.app-icon-button {
+  width: var(--s8);
+  height: var(--s8);
+  min-width: var(--s8);
+  min-height: var(--s8);
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--line);
+  background: var(--surface);
+  color: var(--ink);
+  transition: background-color var(--transition), border-color var(--transition), color var(--transition);
+}
+
+.app-icon-button svg {
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+}
+
+.app-icon-button:hover {
+  background: var(--surface-subtle);
+  border-color: var(--control-line);
+  color: var(--brand-dark);
+}
+
+.app-bookmark-button--saved {
+  color: var(--brand-dark);
+  background: var(--brand-soft);
+  border-color: var(--brand);
+}
+
+.app-bookmark-button--saved svg {
+  fill: currentColor;
+}
+
+.app-bookmark-button--saved:hover {
+  background: var(--brand-soft);
+  border-color: var(--brand-dark);
+}
+
+.app-bookmark-button svg {
+  flex-shrink: 0;
+}
+
+.app-candidate__email {
+  overflow-wrap: anywhere;
+}
+
+.app-note-scope { color: var(--muted); font-size: var(--font-xs); margin: 0 0 var(--s4); }
+
+/* --- Candidate Notes (History) --- */
+.app-notes { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: var(--s3); }
+.app-note {
+  background: var(--surface-subtle);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  padding: var(--s3);
+  transition: border-color var(--transition), box-shadow var(--transition);
+}
+.app-note:hover {
+  border-color: var(--control-line);
+  box-shadow: var(--shadow-sm);
+}
+.app-note__meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s2);
+  margin-bottom: var(--s2);
+}
+.app-note__author-wrap {
+  display: flex;
+  align-items: center;
+  gap: var(--s2);
+  min-width: 0;
+}
+.app-note__author-icon {
+  width: 22px;
+  height: 22px;
+  border-radius: var(--radius-full);
+  background: var(--brand-soft);
+  color: var(--brand-dark);
+  font-size: var(--font-xs);
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.app-note__author-name {
+  font-size: var(--font-sm);
+  color: var(--ink);
+  overflow-wrap: anywhere;
+}
+.app-note__meta time {
+  color: var(--muted);
+  font-size: var(--font-xs);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+.app-note__body {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  margin: 0;
+  font-size: var(--font-sm);
+  line-height: 1.5;
+  color: var(--ink);
+}
+
+/* --- Dialog Base --- */
+.app-page .app-dialog {
+  padding: var(--s6);
+  max-height: 92dvh;
+  color: var(--ink);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-lg);
+}
+
+.app-dialog__head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--s4);
+  margin-bottom: var(--s4);
+}
+.app-dialog__head > div { min-width: 0; overflow-wrap: anywhere; }
+.app-dialog__head .app-section-title { margin-bottom: 0; }
+.app-dialog__subtitle { color: var(--muted); margin: 2px 0 0; font-size: var(--font-sm); }
+.app-dialog__footer { display: flex; flex-wrap: wrap; justify-content: flex-end; align-items: center; gap: var(--s2); margin-top: var(--s4); }
+
+/* --- Candidate Banner in Bookmark Modal --- */
+.app-candidate-banner {
+  display: flex;
+  align-items: center;
+  gap: var(--s4);
+  background: var(--brand-soft);
+  border: 1px solid var(--line);
+  border-left: 4px solid var(--brand);
+  border-radius: var(--radius-md);
+  padding: var(--s3) var(--s4);
+  margin-bottom: var(--s4);
+  box-shadow: var(--shadow-sm);
+}
+
+.app-candidate-banner__avatar {
+  width: 44px;
+  height: 44px;
+  border-radius: var(--radius-full);
+  background: var(--brand-dark);
+  color: var(--on-brand);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: var(--font-base);
+  letter-spacing: 0.5px;
+  flex-shrink: 0;
+  box-shadow: var(--shadow-sm);
+}
+
+.app-candidate-banner__info {
+  flex: 1;
+  min-width: 0;
+}
+
+.app-candidate-banner__title-row {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--s2) var(--s3);
+}
+
+.app-candidate-banner__name {
+  margin: 0;
+  font-size: var(--font-lg);
+  font-weight: 700;
+  color: var(--ink);
+  line-height: 1.3;
+}
+
+.app-candidate-banner__job {
+  margin: var(--s1) 0 0;
+  font-size: var(--font-sm);
+  color: var(--muted);
+  overflow-wrap: anywhere;
+}
+
+/* --- Balanced Bookmark Layout --- */
+.app-page .app-dialog--bookmark {
+  width: min(880px, calc(100vw - var(--s8)));
+  max-width: none;
+}
+
+.app-bookmark-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr);
+  gap: var(--s6);
+  align-items: stretch;
+}
+
+.app-bookmark-col-header {
+  display: flex;
+  align-items: center;
+  gap: var(--s2);
+  margin-bottom: var(--s3);
+  min-height: 28px;
+}
+
+.app-bookmark-col-header svg {
+  color: var(--brand);
+  flex-shrink: 0;
+}
+
+.app-bookmark-col-title {
+  margin: 0;
+  font-size: var(--font-base);
+  font-weight: 600;
+  color: var(--ink);
+  line-height: 1.4;
+}
+
+.app-bookmark-col-title label {
+  cursor: pointer;
+  margin: 0;
+  font-size: inherit;
+  font-weight: inherit;
+  color: inherit;
+}
+
+.app-bookmark-count-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 6px;
+  font-size: var(--font-xs);
+  font-weight: 700;
+  border-radius: var(--radius-full);
+  background: var(--surface);
+  color: var(--brand-dark);
+  border: 1px solid var(--line);
+}
+
+.app-bookmark-history {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.app-bookmark-history .app-notes {
+  max-height: 270px;
+  overflow-y: auto;
+  padding-right: var(--s2);
+  scrollbar-gutter: stable;
+  flex: 1;
+}
+
+#app-bookmark-status {
+  padding: var(--s4);
+  text-align: center;
+  color: var(--muted);
+  font-size: var(--font-sm);
+  background: var(--surface-subtle);
+  border-radius: var(--radius-sm);
+  border: 1px dashed var(--line);
+  margin: 0 0 var(--s3);
+}
+
+.app-bookmark-compose {
+  min-width: 0;
+  padding-left: var(--s6);
+  border-left: 1px solid var(--line);
+  display: flex;
+  flex-direction: column;
+}
+
+.app-bookmark-input {
+  width: 100%;
+  min-height: 160px;
+  border: 1px solid var(--control-line);
+  border-radius: var(--radius-md);
+  padding: var(--s3);
+  font-family: var(--sans);
+  font-size: var(--font-sm);
+  line-height: 1.5;
+  resize: vertical;
+  background: var(--surface);
+  color: var(--ink);
+  transition: border-color var(--transition);
+  box-sizing: border-box;
+}
+
+.app-bookmark-input:focus {
+  outline: 2px solid var(--focus);
+  outline-offset: -1px;
+}
+
+.app-bookmark-input-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: var(--s1);
+  font-size: var(--font-xs);
+  color: var(--muted);
+}
+
+.app-bookmark-compose .app-dialog__footer {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--s2);
+  margin-top: var(--s3);
+}
+
+#app-bookmark-remove {
+  margin-right: auto;
+}
+
+.app-remove-confirm {
+  border-top: 1px solid var(--line);
+  margin-top: var(--s3);
+  padding-top: var(--s3);
+}
+
+.app-remove-confirm p {
+  margin: 0;
+  font-size: var(--font-xs);
+  color: var(--muted);
+}
+
+/* --- CV Preview Dialog --- */
+.app-page .app-dialog--preview {
+  width: min(980px, calc(100vw - var(--s8)));
+  max-width: 980px;
+  height: calc(100dvh - var(--s8));
+  max-height: 94dvh;
+  overflow: hidden;
+  margin: auto;
+  transition: width var(--transition), max-width var(--transition);
+}
+
+.app-page .app-dialog--preview.app-dialog--preview-wide {
+  width: calc(100vw - var(--s6));
+  max-width: 1440px;
+}
+
+.app-dialog--preview[open] {
+  display: flex;
+  flex-direction: column;
+}
+
+.app-dialog--preview .app-dialog__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s4);
+  margin-bottom: var(--s3);
+  flex-shrink: 0;
+}
+
+.app-dialog__head-content {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.app-dialog__badge-row {
+  display: flex;
+  align-items: center;
+  gap: var(--s2);
+}
+
+.app-dialog__head-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--s2);
+  flex-shrink: 0;
+}
+
+.app-preview-expand-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s1);
+  padding: 6px var(--s3);
+  font-size: var(--font-xs);
+}
+
+.app-preview__wrapper {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  justify-content: center;
+  align-items: stretch;
+  background: var(--ink);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+}
+
+.app-preview__frame {
+  display: block;
+  flex: 1;
+  width: 100%;
+  height: 100%;
+  border: none;
+  background: var(--surface);
+}
+
+#app-preview-status {
+  padding: var(--s6) var(--s4);
+  text-align: center;
+  color: var(--muted);
+  font-size: var(--font-base);
+  background: var(--surface-subtle);
+  border-radius: var(--radius-sm);
+  border: 1px dashed var(--line);
+  margin: var(--s4) 0;
+}
+
+.app-dialog--preview .app-dialog__footer {
+  flex-shrink: 0;
+  margin-top: var(--s3);
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--s2);
+}
+
+#app-bookmark-error:empty, #app-bookmark-status:empty, #app-preview-status:empty { display: none; }
+.app-feedback:empty { display: none; }
+.app-feedback { margin-top: var(--s4); padding: var(--s3); background: var(--brand-soft); color: var(--brand-dark); border-radius: var(--radius-sm); }
+.app-icon-button:focus-visible, .app-bookmark-button:focus-visible { outline: 2px solid var(--brand); outline-offset: 3px; }
+
 /* --- Responsive ---------------------------------------------------------------- */
 @media (max-width: 992px) {
   .app-filter {
@@ -250,6 +770,8 @@
   .app-detail {
     grid-template-columns: 1fr;
   }
+
+  .app-detail__side, .app-detail__main { grid-column: 1; grid-row: auto; }
 
   .app-filter__actions {
     grid-column: 1 / -1;
@@ -270,4 +792,14 @@
     height: 60vh;
     min-height: 360px;
   }
+
+  .app-page .app-dialog { padding: var(--s4); }
+  .app-page .app-dialog--preview { width: calc(100vw - var(--s4)); height: calc(100dvh - var(--s4)); max-width: none; }
+  .app-page .app-dialog--bookmark { width: calc(100vw - var(--s4)); max-width: none; }
+  .app-bookmark-layout { grid-template-columns: 1fr; gap: var(--s4); }
+  .app-bookmark-history .app-notes { max-height: 220px; }
+  .app-bookmark-compose { padding: var(--s4) 0 0; border-left: 0; border-top: 1px solid var(--line); }
+  .app-candidate-banner { flex-direction: column; align-items: flex-start; gap: var(--s2); }
+  .app-dialog__head { flex-wrap: wrap; }
+  .app-row-actions { flex-wrap: wrap; min-width: 160px; }
 }

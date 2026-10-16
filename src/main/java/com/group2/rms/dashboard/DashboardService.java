@@ -73,7 +73,7 @@ public class DashboardService {
 
         @SuppressWarnings("null")
         private AdminDashboardResponse admin(User user) {
-                // Candidate.CreatedAt is a local DATETIME2 written by BaseEntity in the JVM zone.
+               
                 LocalDateTime to = LocalDateTime.now();
                 LocalDateTime from = to.minusDays(30);
                 var monitorRows = monitoring.rows();

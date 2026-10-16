@@ -39,8 +39,8 @@
             <label class="form-label" for="account-sort">Sắp xếp</label>
             <select class="form-control iac-control" id="account-sort" name="sort">
                 <option value="name" th:selected="${selectedSort == 'name'}">Họ tên A–Z</option>
-                <option value="name_desc" th:selected="${selectedSort == 'name_desc'}">Họ tên Z–A</option>
-                <option value="username" th:selected="${selectedSort == 'username'}">Tên đăng nhập A–Z</option>
+                <option value="name_desc" th:if="${selectedSort == 'name_desc'}" selected>Họ tên Z–A</option>
+                <option value="username" th:if="${selectedSort == 'username'}" selected>Tên đăng nhập A–Z</option>
                 <option value="newest" th:selected="${selectedSort == 'newest'}">Mới nhất</option>
             </select>
         </div>
@@ -109,7 +109,7 @@
                               th:classappend="${account.status == 'Active' ? ' badge--success' : (account.status == 'Blocked' ? ' badge--danger' : ' badge--neutral')}">Trạng thái</span>
                     </td>
                     <td class="iac-cell cac-date">
-                        <time th:if="${account.createdAt != null}" th:datetime="${account.createdAt}" th:text="${#temporals.format(account.createdAt, 'dd MMM yyyy')}">Ngày tạo</time><span th:unless="${account.createdAt != null}">—</span>
+                        <time th:if="${account.createdAt != null}" th:datetime="${account.createdAt}" th:text="${#temporals.format(account.createdAt, 'dd/MM/yyyy')}">Ngày đăng ký</time><span th:unless="${account.createdAt != null}">—</span>
                     </td>
                     <td class="iac-cell iac-actions-cell"><div class="iac-actions">
                         <th:block th:if="${account.status != 'Inactive'}">
