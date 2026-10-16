@@ -82,8 +82,35 @@ class ApplicationPipelineWebTests {
                 .andExpect(content().string(containsString("Xem chi tiết")))
                 .andExpect(content().string(containsString("/interviews/new?applicationId=218")))
                 .andExpect(content().string(containsString("/offers/create?applicationId=218")))
-                .andExpect(content().string(containsString("Ghi chú chung — HM và HR có quyền truy cập có thể xem")))
+                .andExpect(content().string(containsString("Lịch sử ghi chú")))
+                .andExpect(content().string(containsString("Bỏ lưu tiềm năng")))
+                .andExpect(content().string(not(containsString("more-menu"))))
+                .andExpect(content().string(not(containsString("Tối đa 1.000 ký tự."))))
                 .andExpect(content().string(containsString("name=\"_csrf\"")));
+    }
+
+    @Test
+    void bookmarkRemovalUsesExistingServiceForHrAndHm() throws Exception {
+        when(talentPool.removeBookmark(218)).thenReturn(
+                new com.group2.rms.candidate.dto.TalentPoolBookmarkResponse(8, false, List.of()));
+        for (String role : List.of("HR", "Hiring Manager")) {
+            mvc.perform(post("/talent-pool/applications/218/bookmark/remove").with(as("reviewer", role)).with(csrf()))
+                    .andExpect(status().isOk()).andExpect(jsonPath("$.saved").value(false));
+        }
+        verify(talentPool, times(2)).removeBookmark(218);
+        verifyNoInteractions(reviewService, recruitmentEmail, pipeline);
+    }
+
+    @Test
+    void bookmarkRemovalRequiresCsrfRoleAndApplicationAccess() throws Exception {
+        mvc.perform(post("/talent-pool/applications/218/bookmark/remove").with(as("hm_tuan", "Hiring Manager")))
+                .andExpect(status().isForbidden());
+        mvc.perform(post("/talent-pool/applications/218/bookmark/remove").with(as("candidate", "Candidate")).with(csrf()))
+                .andExpect(status().isForbidden());
+        verifyNoInteractions(talentPool);
+        when(talentPool.removeBookmark(218)).thenThrow(new AccessDeniedException("Forbidden"));
+        mvc.perform(post("/talent-pool/applications/218/bookmark/remove").with(as("hm_other", "Hiring Manager")).with(csrf()))
+                .andExpect(status().isForbidden());
     }
 
     @Test
@@ -146,14 +173,14 @@ class ApplicationPipelineWebTests {
                 .andExpect(content().string(containsString("Danh sách ứng viên")))
                 .andExpect(content().string(not(containsString("Hồ sơ được chuyển"))))
                 .andExpect(content().string(containsString("href=\"/applications/298\"")))
-                .andExpect(content().string(containsString("href=\"/applications/298/cv\"")))
+                .andExpect(content().string(containsString("data-cv-url=\"/applications/298/cv\"")))
                 .andExpect(content().string(containsString(">79<")))
                 .andExpect(content().string(containsString("Chờ AI chấm")))
                 .andExpect(content().string(containsString("badge--warning")))
                 .andExpect(content().string(containsString("href=\"/interviews/new?applicationId=120\"")))
                 .andExpect(content().string(containsString("href=\"/offers/create?applicationId=120\"")))
                 .andExpect(content().string(not(containsString("applicationId=298"))))
-                .andExpect(content().string(containsString("class=\"more-menu\"")))
+                .andExpect(content().string(not(containsString("class=\"more-menu\""))))
                 .andExpect(content().string(containsString("Đang chờ: HR")))
                 .andExpect(content().string(not(containsString("name=\"status\""))));
     }

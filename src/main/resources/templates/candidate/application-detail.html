@@ -67,7 +67,6 @@
                     <h2 class="app-section-title">Ghi chú chung</h2>
                     <span class="badge badge--success" data-app-saved-badge th:hidden="${!detail.isPotential}">Đã lưu tiềm năng</span>
                 </div>
-                <p class="app-note-scope">Ghi chú chung — HM và HR có quyền truy cập có thể xem</p>
                 <ul class="app-notes" id="app-detail-notes">
                     <li th:each="note : ${talentNotes}" class="app-note">
                         <div class="app-note__meta"><strong th:text="${note.author}"></strong><time th:text="${#temporals.format(note.createdAt,'dd/MM/yyyy HH:mm')}"></time></div>
@@ -78,7 +77,7 @@
                 <div class="app-actions__links">
                     <button type="button" class="btn btn--secondary btn--sm app-bookmark-button" data-app-bookmark aria-haspopup="dialog" aria-controls="app-bookmark"
                             th:classappend="${detail.isPotential ? 'app-bookmark-button--saved' : ''}"
-                            th:attr="data-saved=${detail.isPotential},data-name=${detail.fullName},data-candidate-key=${detail.email},data-application-id=${detail.applicationId},data-bookmark-url=@{/talent-pool/applications/{id}/bookmark(id=${detail.applicationId})}">
+                            th:attr="data-saved=${detail.isPotential},data-name=${detail.fullName},data-job=${detail.postingTitle},data-candidate-key=${detail.email},data-application-id=${detail.applicationId},data-bookmark-url=@{/talent-pool/applications/{id}/bookmark(id=${detail.applicationId})}">
                         <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M6 3h12v18l-6-4-6 4V3Z"/></svg>
                         <span data-app-bookmark-label th:text="${detail.isPotential ? 'Thêm ghi chú' : 'Lưu ứng viên'}">Lưu ứng viên</span>
                     </button>

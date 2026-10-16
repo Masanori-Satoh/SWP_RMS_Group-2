@@ -140,9 +140,8 @@ public class ApplicationPipelineController {
     private String renderDetail(Integer id, Model model) {
         ApplicationDetailResponse detail = pipeline.detail(id);
         model.addAttribute("detail", detail);
-        //check if user is potential and user  view is hr or hiring manager
-        model.addAttribute("talentNotes", detail.isPotential()
-                && Set.of("HR", "Hiring Manager").contains(detail.viewerRole())
+        // Keep shared note history available to authorized reviewers after removing a bookmark.
+        model.addAttribute("talentNotes", Set.of("HR", "Hiring Manager").contains(detail.viewerRole())
                 ? talentPool.notesFor(detail.candidateId()) : List.of());
         model.addAttribute("closedByPosting", pipeline.closedByPosting(id));
         model.addAttribute("activeMenu", "applications");

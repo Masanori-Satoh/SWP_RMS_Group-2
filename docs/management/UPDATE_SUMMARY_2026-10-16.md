@@ -7,7 +7,7 @@ Cập nhật chức năng lưu ứng viên tiềm năng, ghi chú chung, xem nha
 - Nền tảng hiện tại: Spring Boot, Thymeleaf, HTML/CSS/JavaScript.
 - Giữ phong cách giao diện mộc. RMS, sử dụng token và component sẵn có.
 - Áp dụng Impeccable và UI UX Pro Max cho phần giao diện ứng viên.
-- Các thay đổi được mô tả dưới đây đang nằm trong working tree tại thời điểm lập tài liệu; chưa được tạo thành 11 commit đã đề xuất.
+- Tài liệu bao gồm đợt triển khai ban đầu và lượt tinh gọn giao diện/bổ sung bỏ lưu theo phản hồi. Kế hoạch 11 commit ở cuối tài liệu thuộc đợt ban đầu; trạng thái commit thực tế cần xem bằng `git status`/`git log`.
 - Không thay đổi schema database, không chạy SQL cập nhật dữ liệu và không commit/push trong quá trình thực hiện.
 
 ## 2. Danh sách hồ sơ ứng tuyển
@@ -18,9 +18,9 @@ Trang `/applications`, bao gồm danh sách được lọc theo Job Posting, đ�
 | --- | --- |
 | Icon mắt | Mở modal xem nhanh CV ngay trên danh sách. |
 | Icon bookmark | Lưu ứng viên vào kho tiềm năng chung hoặc mở ghi chú nếu đã lưu. |
-| Xem chi tiết | Giữ đường dẫn mở trang hồ sơ ứng tuyển. |
+| Icon hồ sơ | Thay nút chữ “Xem chi tiết”; tooltip và nhãn truy cập vẫn mô tả rõ hành động. |
 | Badge Tiềm năng | Tái sử dụng trạng thái `Candidate.IsPotential`; không tạo trạng thái bookmark riêng. |
-| Thao tác khác | Giữ mở CV trong tab mới, lên lịch phỏng vấn và tạo offer theo quyền/trạng thái hiện có. |
+| Thao tác khác | Bỏ menu ba chấm. Phỏng vấn/offer là icon trực tiếp theo quyền; mở CV trong tab mới nằm trong modal xem CV. |
 | Bảng dữ liệu | Giữ tên, email, vị trí, ngày nộp, điểm AI, trạng thái và người đang xử lý. |
 | Điều hướng | Giữ header, sidebar, bộ lọc, thanh giai đoạn và phân trang. |
 
@@ -31,12 +31,14 @@ Trang `/applications`, bao gồm danh sách được lọc theo Job Posting, đ�
 3. **Lưu thành công:** bookmark được tô màu, badge Tiềm năng xuất hiện; trạng thái được lưu bằng backend hiện có.
 4. **Đã lưu:** tooltip “Đã lưu vào kho tiềm năng”; mở lại để xem các ghi chú và bổ sung ghi chú mới.
 5. **Cùng ứng viên xuất hiện nhiều dòng trên trang:** các bookmark tương ứng được cập nhật sau thao tác lưu thành công.
+6. **Bỏ lưu:** bấm “Bỏ lưu tiềm năng” rồi xác nhận trong modal. Bookmark trở về viền, badge được ẩn; ứng viên ra khỏi kho chung nhưng hồ sơ/CV/ghi chú được giữ lại. Có thể lưu lại sau đó.
 
 Trạng thái lưu thuộc kho tiềm năng toàn hệ thống, không phải danh sách riêng của từng HM.
 
 ## 3. Xem nhanh CV
 
 - Modal hiển thị tên ứng viên và vị trí ứng tuyển.
+- Modal gần toàn màn hình, iframe chiếm phần chiều cao còn lại; bỏ dòng hướng dẫn dài dưới CV. Gửi gợi ý vừa chiều ngang/ẩn khung điều hướng cho trình đọc PDF; việc hỗ trợ phụ thuộc trình duyệt.
 - Tải CV bằng endpoint hiện có: `GET /applications/{id}/cv`.
 - Kiểm tra phản hồi và định dạng PDF trước khi hiển thị trong iframe.
 - Có trạng thái đang tải, thông báo lỗi và hướng dẫn khi không hỗ trợ xem trước.
@@ -47,9 +49,7 @@ Trạng thái lưu thuộc kho tiềm năng toàn hệ thống, không phải da
 
 ## 4. Ghi chú chung
 
-Nhãn phạm vi hiển thị:
-
-> Ghi chú chung — HM và HR có quyền truy cập có thể xem
+Modal chia hai cột: lịch sử ghi chú bên trái, ô bổ sung ghi chú bên phải. Trên màn hình nhỏ hai phần xếp dọc. Chỉ giữ tên ứng viên, tác giả, thời gian, nội dung và các thao tác cần thiết; bỏ các đoạn giải thích phạm vi, trạng thái lưu và dòng “Tối đa 1.000 ký tự”. Giới hạn nhập/validation 1.000 ký tự vẫn được giữ ở HTML và backend.
 
 - Tái sử dụng bảng/entity và chức năng ghi chú tiềm năng hiện có.
 - Hiển thị nội dung, tác giả và thời gian của từng ghi chú.
@@ -81,6 +81,7 @@ Mở rộng `TalentPoolController` và `TalentPoolService` hiện có; không t�
 | --- | --- |
 | `GET /talent-pool/applications/{id}/bookmark` | Trả về candidateId, trạng thái đã lưu và danh sách ghi chú được phép xem. |
 | `POST /talent-pool/applications/{id}/bookmark` | Lưu cờ tiềm năng và ghi chú tùy chọn trong cùng transaction. |
+| `POST /talent-pool/applications/{id}/bookmark/remove` | Bỏ cờ tiềm năng chung, giữ nguyên hồ sơ, CV và lịch sử ghi chú. |
 
 - Request sử dụng DTO `TalentPoolBookmarkRequest`; giới hạn nội dung 1.000 ký tự.
 - Response sử dụng DTO `TalentPoolBookmarkResponse`.
@@ -97,7 +98,7 @@ Mở rộng `TalentPoolController` và `TalentPoolService` hiện có; không t�
 - Đề xuất ứng viên vào một Job Posting.
 - Gửi yêu cầu HR liên hệ hoặc gửi email.
 
-Cờ tiềm năng không bị thay đổi bởi thao tác bổ sung ghi chú, kể cả khi hồ sơ đã bị từ chối. Chức năng bỏ lưu chưa được bổ sung vì backend hiện tại chưa có thao tác tương ứng.
+Cờ tiềm năng không bị thay đổi bởi thao tác bổ sung ghi chú, kể cả khi hồ sơ đã bị từ chối. Chức năng bỏ lưu có kiểm tra vai trò, quyền xem Application và CSRF; ghi audit `TalentPoolUnmarked` khi cờ thực sự chuyển về false. Gọi bỏ lưu lại không tạo thêm audit nếu cờ đã false. Lịch sử ghi chú vẫn có thể đọc từ hồ sơ bởi HR/HM có quyền sau khi bỏ lưu.
 
 ## 7. Phần admin do người dùng cập nhật
 
@@ -127,6 +128,7 @@ Các đường dẫn dưới đây tính từ thư mục project `SWP_RMS_Group-
 | `src/main/java/com/group2/rms/candidate/dto/TalentPoolBookmarkResponse.java` | Thêm | DTO trạng thái lưu và danh sách ghi chú. |
 | `src/main/java/com/group2/rms/candidate/service/TalentPoolService.java` | Sửa | Đọc/lưu bookmark, tái sử dụng nghiệp vụ hiện có. |
 | `src/main/java/com/group2/rms/candidate/controller/TalentPoolController.java` | Sửa | Hai endpoint JSON phục vụ modal. |
+| `src/main/java/com/group2/rms/candidate/controller/ApplicationPipelineController.java` | Sửa bổ sung | Giữ lịch sử ghi chú trên trang hồ sơ sau khi bỏ lưu. |
 | `src/main/resources/templates/candidate/application-dialogs.html` | Thêm | Fragment modal CV và ghi chú. |
 | `src/main/resources/static/js/pages/applications.js` | Thêm | Tải CV, xử lý modal, lưu và hiển thị ghi chú. |
 | `src/main/resources/static/css/pages/applications.css` | Sửa | Layout, trạng thái bookmark và responsive. |
@@ -165,7 +167,7 @@ Ngoài ra đã kiểm tra cấu trúc template, ID tĩnh không trùng, không c
 - Đây là test MVC/service dùng mock, không phải kiểm thử lưu dữ liệu trên SQL Server thật.
 - Chưa xác minh tương tác và bố cục desktop/mobile trực tiếp bằng trình duyệt: lượt đầu bị xét duyệt tự động chặn do hạn mức, lượt thử lại gặp `ERR_BLOCKED_BY_CLIENT` khi mở localhost.
 - Chưa kiểm thử riêng luồng admin bằng trình duyệt.
-- Việc lập tài liệu này chỉ đọc lại báo cáo test hiện có, không chạy lại bộ test.
+- Nhóm test được chạy lại khi bổ sung bỏ lưu và tinh gọn giao diện; kết quả cập nhật trong bảng trên.
 
 ## 10. Hướng dẫn kiểm tra thủ công
 
@@ -179,6 +181,7 @@ Ngoài ra đã kiểm tra cấu trúc template, ID tĩnh không trùng, không c
 8. Thử lỗi mạng, CV không tồn tại hoặc tài nguyên không phải PDF; kiểm tra thông báo và đường mở CV/hồ sơ thay thế.
 9. Kiểm tra đóng modal bằng Escape, điều hướng Tab và focus quay lại nút mở. Trong lúc đang lưu, modal chặn đóng để tránh thao tác mơ hồ.
 10. Đăng nhập admin và kiểm tra sidebar chỉ còn các mục đã giữ ở phần 7.
+11. Bấm bookmark của ứng viên đã lưu → “Bỏ lưu tiềm năng” → xác nhận. Tải lại danh sách/kho tiềm năng, kiểm tra ứng viên đã ra khỏi kho và trạng thái hồ sơ không đổi. Lưu lại và kiểm tra lịch sử ghi chú vẫn còn.
 
 Các bước lưu ghi chú hoặc duyệt hồ sơ thực sự có thể ghi dữ liệu; nên thực hiện trên dữ liệu thử nghiệm phù hợp.
 

@@ -94,11 +94,48 @@ class TalentPoolBookmarkTests {
     }
 
     @Test
+    void removingBookmarkPreservesApplicationAndNoteHistory() {
+        allowView();
+        candidate.setPotential(true);
+        var previous = TalentPoolNote.builder().noteId(1).candidate(candidate).author(hm)
+                .noteContent("Ghi chú trước").createdAt(LocalDateTime.of(2026, 10, 16, 17, 0)).build();
+        when(notes.findByCandidate_CandidateIdOrderByCreatedAtDescNoteIdDesc(8)).thenReturn(List.of(previous));
+
+        var result = pool.removeBookmark(218);
+        assertFalse(result.saved());
+        assertFalse(candidate.isPotential());
+        assertEquals("HR_Passed", application.getApplicationStatus());
+        assertEquals("Ghi chú trước", result.notes().getFirst().content());
+        assertEquals("Ghi chú trước", pool.bookmark(218).notes().getFirst().content());
+        verify(audit).record(5, "UPDATE", "Candidate", 8, "true", "TalentPoolUnmarked");
+        verify(applications, times(2)).findDetailById(218);
+        verify(notes, times(2)).findByCandidate_CandidateIdOrderByCreatedAtDescNoteIdDesc(8);
+        verifyNoMoreInteractions(applications, notes);
+        verifyNoInteractions(candidates, jobs, storage);
+    }
+
+    @Test
+    void repeatedRemovalDoesNotWriteAnotherAuditAndCandidateCanBeSavedAgain() {
+        allowView();
+        candidate.setPotential(true);
+        pool.removeBookmark(218);
+        pool.removeBookmark(218);
+        assertFalse(candidate.isPotential());
+        verify(audit, times(1)).record(5, "UPDATE", "Candidate", 8, "true", "TalentPoolUnmarked");
+        assertTrue(pool.saveBookmark(218, new TalentPoolBookmarkRequest(null)).saved());
+        assertEquals("HR_Passed", application.getApplicationStatus());
+        verify(notes, never()).save(any());
+        verify(applications, atLeastOnce()).findDetailById(218);
+        verifyNoMoreInteractions(applications);
+    }
+
+    @Test
     void deniedApplicationCannotReadNotesOrSave() {
         allowView();
         doThrow(new AccessDeniedException("Forbidden")).when(access).requireView(hm, application);
         assertThrows(AccessDeniedException.class, () -> pool.bookmark(218));
         assertThrows(AccessDeniedException.class, () -> pool.saveBookmark(218, new TalentPoolBookmarkRequest("x")));
+        assertThrows(AccessDeniedException.class, () -> pool.removeBookmark(218));
         assertFalse(candidate.isPotential());
         verifyNoInteractions(notes, audit, candidates, jobs);
     }
@@ -108,6 +145,7 @@ class TalentPoolBookmarkTests {
         hm.setRole(Role.builder().roleName("Candidate").build());
         when(currentUser.requireUser()).thenReturn(hm);
         assertThrows(AccessDeniedException.class, () -> pool.bookmark(218));
+        assertThrows(AccessDeniedException.class, () -> pool.removeBookmark(218));
         verifyNoInteractions(applications, notes);
     }
 

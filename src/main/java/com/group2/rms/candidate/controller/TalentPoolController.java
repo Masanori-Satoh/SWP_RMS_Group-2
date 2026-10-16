@@ -109,6 +109,12 @@ public class TalentPoolController {
         }
     }
 
+    @PostMapping(value = "/applications/{id}/bookmark/remove", produces = MediaType.APPLICATION_JSON_VALUE)
+    @ResponseBody
+    public TalentPoolBookmarkResponse removeBookmark(@PathVariable Integer id) {
+        return pool.removeBookmark(id);
+    }
+
     @PostMapping("/jobs/{id}/suggest")
     // suggest a candidate for a job posting
     public String suggest(@PathVariable Integer id, @Valid @ModelAttribute TalentPoolSuggestRequest request,

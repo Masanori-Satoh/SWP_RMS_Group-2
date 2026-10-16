@@ -101,7 +101,21 @@ public class TalentPoolService {
         applicationAccess.requireView(user, application);
         Candidate candidate = application.getCandidate();
         return new TalentPoolBookmarkResponse(candidate.getCandidateId(), candidate.isPotential(),
-                candidate.isPotential() ? notesFor(candidate.getCandidateId()) : List.of());
+                notesFor(candidate.getCandidateId()));
+    }
+
+    /** Remove only the shared bookmark; applications, CVs and note history remain intact. */
+    @Transactional
+    public TalentPoolBookmarkResponse removeBookmark(Integer applicationId) {
+        User user = actor();
+        Application application = application(applicationId);
+        applicationAccess.requireView(user, application);
+        Candidate candidate = application.getCandidate();
+        if (candidate.isPotential()) {
+            candidate.setPotential(false);
+            audit.record(user.getUserId(), "UPDATE", "Candidate", candidate.getCandidateId(), "true", "TalentPoolUnmarked");
+        }
+        return new TalentPoolBookmarkResponse(candidate.getCandidateId(), false, notesFor(candidate.getCandidateId()));
     }
 
     /** One transaction for the shared flag and optional note; no recruitment transition. */

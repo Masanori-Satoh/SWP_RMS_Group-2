@@ -127,22 +127,21 @@
                             class="btn btn--secondary btn--sm app-icon-button app-bookmark-button" data-app-bookmark aria-haspopup="dialog" aria-controls="app-bookmark"
                             th:classappend="${row.isPotential ? 'app-bookmark-button--saved' : ''}"
                             th:title="${row.isPotential ? 'Đã lưu vào kho tiềm năng' : 'Lưu vào kho ứng viên tiềm năng'}"
-                            th:attr="aria-label=|${row.isPotential ? 'Xem ghi chú chung của' : 'Lưu ứng viên'} ${row.fullName}|,data-saved=${row.isPotential},data-candidate-key=${row.email},data-name=${row.fullName},data-bookmark-url=@{/talent-pool/applications/{id}/bookmark(id=${row.applicationId})},data-application-id=${row.applicationId}">
+                            th:attr="aria-label=|${row.isPotential ? 'Xem ghi chú chung của' : 'Lưu ứng viên'} ${row.fullName}|,data-saved=${row.isPotential},data-candidate-key=${row.email},data-name=${row.fullName},data-job=${row.postingTitle},data-bookmark-url=@{/talent-pool/applications/{id}/bookmark(id=${row.applicationId})},data-application-id=${row.applicationId}">
                         <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M6 3h12v18l-6-4-6 4V3Z"/></svg>
                     </button>
-                    <a th:href="@{/applications/{id}(id=${row.applicationId})}" class="btn btn--secondary btn--sm">Xem chi tiết</a>
-                    <details class="more-menu">
-                        <summary class="more-menu__toggle" title="Thao tác khác"
-                                 th:attr="aria-label=|Thao tác khác cho hồ sơ của ${row.fullName}|">⋯</summary>
-                        <div class="more-menu__list">
-                            <a class="more-menu__item" th:href="@{/applications/{id}/cv(id=${row.applicationId})}"
-                               target="_blank" rel="noopener">Mở CV</a>
-                            <a th:if="${row.canScheduleInterview}" class="more-menu__item"
-                               th:href="@{/interviews/new(applicationId=${row.applicationId})}">Lên lịch phỏng vấn</a>
-                            <a th:if="${row.canCreateOffer}" class="more-menu__item"
-                               th:href="@{/offers/create(applicationId=${row.applicationId})}">Tạo offer</a>
-                        </div>
-                    </details>
+                    <a th:href="@{/applications/{id}(id=${row.applicationId})}" class="btn btn--secondary btn--sm app-icon-button"
+                       title="Xem chi tiết" th:attr="aria-label=|Xem chi tiết hồ sơ của ${row.fullName}|">
+                        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M14 3H5v18h14V8Z M14 3v5h5 M8 12h8 M8 16h6"/></svg>
+                    </a>
+                    <a th:if="${row.canScheduleInterview}" class="btn btn--secondary btn--sm app-icon-button" title="Lên lịch phỏng vấn"
+                       th:attr="aria-label=|Lên lịch phỏng vấn cho ${row.fullName}|" th:href="@{/interviews/new(applicationId=${row.applicationId})}">
+                        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M7 3v4 M17 3v4 M3 10h18 M12 13v5 M9.5 15.5h5"/></svg>
+                    </a>
+                    <a th:if="${row.canCreateOffer}" class="btn btn--secondary btn--sm app-icon-button" title="Tạo offer"
+                       th:attr="aria-label=|Tạo offer cho ${row.fullName}|" th:href="@{/offers/create(applicationId=${row.applicationId})}">
+                        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 6 9 7 9-7"/></svg>
+                    </a>
                     </div>
                 </td>
             </tr>
