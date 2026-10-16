@@ -34,21 +34,14 @@
     <div class="alert alert--success" role="status" th:if="${successMessage}" th:text="${successMessage}"></div>
     <div class="aim-layout"><div class="aim-master">
     <form class="card mft-toolbar" th:action="@{/admin/accounts}" method="get" aria-label="Bộ lọc tài khoản nội bộ">
+        <input type="hidden" name="roleId" th:value="${selectedRoleId}">
         <div class="mft-controls">
             <details class="mft-disclosure">
-                <summary class="mft-toggle" aria-controls="management-filter-fields" th:with="count=${ (!#strings.isEmpty(selectedStatus) ? 1 : 0) + (selectedRoleId != null ? 1 : 0) + (selectedDepartmentId != null ? 1 : 0) + (selectedSort != null and selectedSort != 'name' ? 1 : 0) }">
+                <summary class="mft-toggle" aria-controls="management-filter-fields" th:with="count=${ (!#strings.isEmpty(selectedStatus) ? 1 : 0) + (selectedDepartmentId != null ? 1 : 0) + (selectedSort != null and selectedSort != 'name' ? 1 : 0) }">
                     <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 4h18l-7 8v7l-4 2v-9Z"/></svg>
                     Bộ lọc <span class="mft-count" th:if="${count > 0}"><span class="sr-only">đang áp dụng: </span><span th:text="${count}"></span></span>
                 </summary>
                 <div id="management-filter-fields" class="mft-popover">
-                    <div class="mft-field">
-            <label class="form-label" for="account-role">Vai trò</label>
-            <select class="form-control iac-control" id="account-role" name="roleId">
-                <option value="">Tất cả vai trò</option>
-                <option th:each="role : ${roles}" th:value="${role.roleId}"
-                        th:text="${role.roleName == 'System Admin' ? 'Quản trị hệ thống' : (role.roleName == 'HR' ? 'Nhân sự' : (role.roleName == 'Hiring Manager' ? 'Trưởng phòng tuyển dụng' : (role.roleName == 'Director' ? 'Giám đốc' : (role.roleName == 'Interviewer' ? 'Người phỏng vấn' : role.roleName))))}" th:selected="${role.roleId == selectedRoleId}">Vai trò</option>
-            </select>
-        </div>
                     <div class="mft-field">
             <label class="form-label" for="account-status">Trạng thái</label>
             <select class="form-control iac-control" id="account-status" name="status">
@@ -67,7 +60,7 @@
                         th:selected="${department.departmentId == selectedDepartmentId}">Phòng ban</option>
             </select>
         </div>
-                    <div class="mft-field">
+                    <div class="mft-field mft-field--sort">
             <label class="form-label" for="account-sort">Sắp xếp</label>
             <select class="form-control iac-control" id="account-sort" name="sort">
                 <option value="name" th:selected="${selectedSort == 'name'}">Họ tên A–Z</option>

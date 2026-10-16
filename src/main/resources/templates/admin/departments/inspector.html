@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org"><body>
+<th:block th:fragment="panel(page)">
+    <aside class="aim-inspector aim-inspector--compact" id="department-inspector" aria-labelledby="department-inspector-title" hidden>
+        <header class="aim-panel-header">
+            <h2 class="aim-panel-title" id="department-inspector-title">Tổng quan phòng ban</h2>
+            <button class="btn btn--secondary btn--sm aim-close" type="button" aria-label="Đóng bảng thông tin" title="Đóng bảng thông tin" hidden>
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"/></svg>
+            </button>
+        </header>
+        <div class="aim-summary">
+            <div class="aim-total"><strong th:text="${page.totalElements}"></strong><span>Kết quả theo bộ lọc</span></div>
+            <p class="aim-scope">Phòng ban phù hợp với các điều kiện đang chọn.</p>
+            <h3 class="aim-section-title">Trạng thái trên trang này</h3>
+            <ul class="aim-status-counts">
+                <li><span class="badge badge--success iac-status">Hoạt động</span><strong th:text="${#lists.size(page.content.?[status == 'Active'])}"></strong></li>
+                <li><span class="badge badge--neutral iac-status">Vô hiệu hóa</span><strong th:text="${#lists.size(page.content.?[status == 'Inactive'])}"></strong></li>
+            </ul>
+            <p class="aim-scope">Thống kê trạng thái chỉ tính các dòng đang hiển thị.</p>
+            <p class="aim-guidance">Chọn tên hoặc một hàng trong bảng để xem chi tiết phòng ban.</p>
+        </div>
+        <div class="aim-detail" hidden></div>
+        <div class="aim-detail-actions" hidden>
+            <a class="btn btn--secondary btn--sm aim-inspector-edit" hidden>Sửa phòng ban</a>
+            <button class="btn btn--danger btn--sm aim-state-action" type="submit" hidden></button>
+            <button class="btn btn--secondary btn--sm aim-reset-selection" type="button">Bỏ chọn</button>
+        </div>
+    </aside>
+    <dialog class="aim-drawer" aria-labelledby="department-inspector-title"></dialog>
+    <p class="sr-only aim-announcement" role="status" aria-live="polite" aria-atomic="true"></p>
+    <template th:each="department : ${page.content}" th:id="|department-inspector-template-${department.id}|">
+        <div class="aim-identity">
+            <span class="aim-avatar" aria-hidden="true"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="2" width="16" height="20" rx="2"/><path d="M9 2v20M14 7h2M14 12h2M14 17h2"/></svg></span>
+            <div><h3 class="aim-name" th:text="${department.name}"></h3></div>
+        </div>
+        <span class="badge iac-status" th:classappend="${department.status == 'Active' ? ' badge--success' : ' badge--neutral'}" th:text="${department.status == 'Active' ? 'Đang hoạt động' : 'Đã vô hiệu hóa'}"></span>
+        <h4 class="aim-section-title">Trưởng phòng</h4>
+        <dl class="aim-fields" th:if="${department.managerId != null}">
+            <div><dt>Họ và tên</dt><dd th:text="${!#strings.isEmpty(department.managerName) ? department.managerName : 'Chưa cập nhật tên'}"></dd></div>
+            <div><dt>Tên đăng nhập</dt><dd th:text="${!#strings.isEmpty(department.managerUsername) ? department.managerUsername : 'Chưa cập nhật'}"></dd></div>
+        </dl>
+        <p class="aim-scope" th:if="${department.managerId == null}">Chưa phân công trưởng phòng.</p>
+    </template>
+</th:block>
+</body></html>

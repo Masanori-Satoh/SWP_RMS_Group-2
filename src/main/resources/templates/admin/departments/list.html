@@ -8,45 +8,32 @@
         <!-- Reuse the existing account presentation; do not change shared components. -->
         <link rel="stylesheet" th:href="@{/css/pages/internal-accounts.css}">
         <link rel="stylesheet" th:href="@{/css/pages/departments.css}">
+        <link rel="stylesheet" th:href="@{/css/pages/account-inspector.css}">
         <link rel="stylesheet" th:href="@{/css/pages/management-filters.css}">
         <link rel="stylesheet" th:href="@{/css/pages/admin-surfaces.css}">
     </th:block>
 </head>
 <body>
-<main id="main" layout:fragment="content" class="page-content container ads-page iac-page dm-page" tabindex="-1">
+<main id="main" layout:fragment="content" class="page-content container ads-page iac-page dm-page aim-page" data-inspector-kind="department" data-inspector-overview="true" tabindex="-1">
     <nav class="iac-breadcrumb" aria-label="Đường dẫn">
         <a th:href="@{/dashboard}">Tổng quan</a><span aria-hidden="true">/</span><span aria-current="page">Quản lý phòng ban</span>
     </nav>
     <div class="page-header iac-heading ads-heading">
         <h1 id="departments-title" class="iac-title ads-title">Quản lý phòng ban</h1>
+        <div class="aim-heading-actions">
+        <button class="btn btn--secondary btn--sm aim-open-overview" type="button" aria-controls="department-inspector" hidden>Tổng quan phòng ban</button>
         <a class="btn btn--primary" th:href="@{/admin/departments/new}">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
             Tạo phòng ban
         </a>
+        </div>
     </div>
     <div class="alert alert--success" role="status" th:if="${successMessage}" th:text="${successMessage}"></div>
+    <div class="aim-layout"><div class="aim-master">
     <form class="card mft-toolbar" th:action="@{/admin/departments}" method="get" aria-label="Bộ lọc phòng ban">
+        <input type="hidden" name="status" th:value="${selectedStatus ?: ''}">
         <div class="mft-controls">
-            <details class="mft-disclosure">
-                <summary class="mft-toggle" aria-controls="management-filter-fields" th:with="count=${ (!#strings.isEmpty(selectedStatus) ? 1 : 0) }">
-                    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 4h18l-7 8v7l-4 2v-9Z"/></svg>
-                    Bộ lọc <span class="mft-count" th:if="${count > 0}"><span class="sr-only">đang áp dụng: </span><span th:text="${count}"></span></span>
-                </summary>
-                <div id="management-filter-fields" class="mft-popover">
-                    <div class="mft-field">
-            <label class="form-label" for="department-status">Trạng thái</label>
-            <select class="form-control iac-control" id="department-status" name="status">
-                <option value="">Tất cả trạng thái</option>
-                <option value="Active" th:selected="${selectedStatus == 'Active'}">Đang hoạt động</option>
-                <option value="Inactive" th:selected="${selectedStatus == 'Inactive'}">Đã vô hiệu hóa</option>
-            </select>
-        </div>
-                    <div class="mft-actions">
-                        <button class="btn btn--primary btn--sm" type="submit">Áp dụng</button>
-                        <a class="btn btn--secondary btn--sm" th:href="@{/admin/departments}" title="Xóa toàn bộ bộ lọc và từ khóa tìm kiếm">Xóa bộ lọc</a>
-                    </div>
-                </div>
-            </details>
+
             <nav class="ads-status-group" aria-label="Lọc nhanh theo trạng thái">
                 <a class="ads-status-item" th:href="@{/admin/departments(search=${search},status='')}"
                    th:attr="aria-current=${#strings.isEmpty(selectedStatus) ? 'page' : null}" title="Tất cả trạng thái">Tất cả</a>
@@ -55,6 +42,7 @@
                 <a class="ads-status-item" th:href="@{/admin/departments(search=${search},status='Inactive')}"
                    th:attr="aria-current=${selectedStatus == 'Inactive' ? 'page' : null}" title="Vô hiệu hóa">Vô hiệu hóa</a>
             </nav>
+            <a class="ads-filter-reset" th:if="${!#strings.isEmpty(selectedStatus) or !#strings.isEmpty(search)}" th:href="@{/admin/departments}" title="Xóa toàn bộ bộ lọc và từ khóa tìm kiếm">Xóa bộ lọc</a>
         </div>
         <div class="mft-search">
             <label class="sr-only" for="department-search">Tìm kiếm phòng ban</label>
@@ -89,9 +77,9 @@
                     <th class="iac-cell iac-actions-cell" scope="col">Thao tác</th>
                 </tr></thead>
                 <tbody>
-                <tr th:each="department, row : ${departments.content}">
+                <tr class="aim-row" th:each="department, row : ${departments.content}" th:attr="data-inspector-id=${department.id}">
                     <td class="iac-cell iac-number-cell" th:text="${departments.number * departments.size + row.count}"></td>
-                    <td class="iac-cell iac-name dm-name" th:text="${department.name}">Phòng ban</td>
+                    <td class="iac-cell iac-name dm-name"><span class="aim-name-fallback" th:text="${department.name}"></span><button class="aim-select" type="button" aria-controls="department-inspector" aria-expanded="false" aria-pressed="false" th:attr="aria-label=|Xem phòng ban ${department.name}|" th:text="${department.name}" hidden></button></td>
                     <td class="iac-cell">
                         <span class="dm-manager" th:classappend="${department.managerId == null ? ' dm-manager--empty' : ''}"
                               th:text="${department.managerId == null ? 'Chưa phân công' : (!#strings.isEmpty(department.managerName) ? department.managerName : 'Chưa cập nhật tên')}"></span>
@@ -108,7 +96,7 @@
                             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="m16 3 5 5M4 15 15.5 3.5a3.54 3.54 0 0 1 5 5L9 20l-6 1 1-6Z"/></svg>
                         </a>
                         <th:block th:if="${department.status == 'Active'}">
-                            <form class="status-action-form" th:action="@{/admin/departments/{id}/deactivate(id=${department.id})}" method="post" data-status-confirm
+                            <form class="status-action-form" th:id="|department-state-${department.id}|" th:action="@{/admin/departments/{id}/deactivate(id=${department.id})}" method="post" data-status-confirm
                                   th:attr="data-confirm-title=|Vô hiệu hóa phòng ban ${department.name}|"
                                   data-confirm-message="Phòng ban sẽ bị vô hiệu hóa. Tài khoản và yêu cầu tuyển dụng liên quan được giữ nguyên."
                                   data-confirm-label="Vô hiệu hóa" data-confirm-danger="true">
@@ -119,7 +107,7 @@
                             </form>
                         </th:block>
                         <th:block th:if="${department.status == 'Inactive'}">
-                            <form class="status-action-form" th:action="@{/admin/departments/{id}/activate(id=${department.id})}" method="post" data-status-confirm
+                            <form class="status-action-form" th:id="|department-state-${department.id}|" th:action="@{/admin/departments/{id}/activate(id=${department.id})}" method="post" data-status-confirm
                                   th:attr="data-confirm-title=|Kích hoạt lại phòng ban ${department.name}|"
                                   data-confirm-message="Phòng ban sẽ hoạt động trở lại và có thể được chọn khi tạo hoặc chuyển tài khoản nội bộ."
                                   data-confirm-label="Kích hoạt lại" data-confirm-danger="false">
@@ -140,12 +128,14 @@
             <nav th:replace="~{fragments/ui/pagination :: paged(page=${departments})}"></nav>
         </div>
     </section>
+    </div><th:block th:replace="~{admin/departments/inspector :: panel(page=${departments})}"></th:block></div>
     <dialog th:replace="~{fragments/status-actions :: confirmation}"></dialog>
 </main>
 <th:block layout:fragment="scripts">
     <script th:src="@{/js/pages/management-filters.js}" defer></script>
     <script th:src="@{/js/status-confirmation.js}" defer></script>
     <script th:src="@{/js/pages/internal-accounts.js}" defer></script>
+    <script th:src="@{/js/pages/account-inspector.js}" defer></script>
 </th:block>
 </body>
 </html>

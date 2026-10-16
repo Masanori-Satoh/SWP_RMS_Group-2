@@ -20,6 +20,8 @@
 }
 /* Role shortcuts reuse the real GET filters; advanced fields remain in the popover. */
 .iac-internal-page .mft-controls { flex: 0 1 auto; }
+.iac-internal-page .mft-toolbar { padding-block: var(--s4); }
+.iac-internal-page .mft-field--sort { grid-column: 1 / -1; }
 .iac-internal-page .mft-search { flex-basis: 340px; }
 .iac-internal-page .mft-search-input { padding: var(--s2) var(--s3) var(--s2) 0; }
 .iacv-role-group { flex-wrap: wrap; gap: var(--s1); overflow: visible; }
