@@ -1,18 +1,16 @@
 /* INTERNAL-ACCOUNT-CARD.CSS — /admin/accounts list only, prefix iacv-.
-   Card identity and real Page metadata; shared toolbar, table and inspector remain unchanged. */
-.iacv-header { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: var(--s3) var(--s4); padding: var(--s4) var(--s6); }
+   Wider account workspace and inset table; shared components and other pages stay unchanged. */
+.rms-app .iac-internal-page { padding-inline: var(--s4); }
+/* Leave more space for the table while keeping a readable inspector on wide screens. */
+.iac-internal-page .aim-docked { grid-template-columns: minmax(0, 1fr) minmax(300px, 340px); }
+.iacv-header { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: var(--s3) var(--s4); padding: var(--s4) var(--s6); border-bottom: 1px solid var(--line); }
 .iacv-identity { display: flex; align-items: center; gap: var(--s3); min-width: 0; }
 .iacv-icon { display: grid; place-items: center; flex: 0 0 var(--s8); height: var(--s8); border-radius: var(--radius-md); background: var(--brand-soft); color: var(--brand-dark); }
 .iacv-title { margin: 0; font: 600 var(--font-lg)/1.4 var(--sans); color: var(--ink); overflow-wrap: anywhere; }
 .iacv-count { flex-shrink: 0; font-variant-numeric: tabular-nums; }
-.iacv-overview { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--s4) var(--s6); margin: 0; padding: 0 var(--s6) var(--s4); border-bottom: 1px solid var(--line); }
-.iacv-metric { min-width: 0; }
-.iacv-metric dt { display: flex; align-items: center; gap: var(--s2); color: var(--muted); font-size: var(--font-sm); line-height: 1.4; }
-.iacv-metric dt svg { flex-shrink: 0; }
-.iacv-value { margin: var(--s1) 0 0; color: var(--ink); font: 600 var(--font-lg)/1.5 var(--sans); font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
-.iacv-value--text { font-size: var(--font-base); line-height: 1.7; }
+.iacv-table-inset { min-width: 0; padding: var(--s3) var(--s6); }
+.iacv-card .iac-pagination { padding-inline: var(--s6); }
 @container (max-width: 600px) {
   .iacv-header { padding: var(--s4); }
-  .iacv-overview { grid-template-columns: repeat(2, minmax(0, 1fr)); padding-inline: var(--s4); }
-  .iacv-metric:last-child { grid-column: 1 / -1; }
+  .iacv-table-inset, .iacv-card .iac-pagination { padding-inline: var(--s4); }
 }

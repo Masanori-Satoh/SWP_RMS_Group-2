@@ -97,7 +97,7 @@
                    placeholder="Họ tên, email hoặc tên đăng nhập" th:value="${search}" maxlength="100">
         </div>
     </form>
-    <section class="card iac-card mft-table-card" aria-labelledby="account-table-title">
+    <section class="card iac-card mft-table-card iacv-card" aria-labelledby="account-table-title">
         <header class="iacv-header">
             <div class="iacv-identity">
                 <span class="iacv-icon" aria-hidden="true">
@@ -107,29 +107,7 @@
             </div>
             <span class="badge badge--neutral iacv-count" th:text="|${accounts.totalElements} kết quả|"></span>
         </header>
-        <dl class="iacv-overview" aria-label="Thông tin danh sách theo bộ lọc hiện tại">
-            <div class="iacv-metric">
-                <dt>
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" aria-hidden="true"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></svg>
-                    Tài khoản trên trang
-                </dt>
-                <dd class="iacv-value" th:text="${accounts.numberOfElements}"></dd>
-            </div>
-            <div class="iacv-metric">
-                <dt>
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="3" width="14" height="18" rx="2"/><path d="M9 8h6M9 12h6M9 16h3"/></svg>
-                    Trang hiện tại
-                </dt>
-                <dd class="iacv-value" th:text="${accounts.totalPages == 0 ? '0 / 0' : (accounts.number + 1) + ' / ' + accounts.totalPages}"></dd>
-            </div>
-            <div class="iacv-metric">
-                <dt>
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6h12M3 12h9M3 18h6M18 7v13m-4-4 4 4 4-4"/></svg>
-                    Sắp xếp
-                </dt>
-                <dd class="iacv-value iacv-value--text" th:text="${selectedSort == 'name_desc' ? 'Họ tên Z–A' : (selectedSort == 'username' ? 'Tên đăng nhập A–Z' : (selectedSort == 'newest' ? 'Mới nhất' : 'Họ tên A–Z'))}"></dd>
-            </div>
-        </dl>
+        <div class="iacv-table-inset">
         <div class="table-wrapper iac-scroll" tabindex="0" role="region" aria-labelledby="account-list-title">
         <table class="table iac-table">
             <caption class="sr-only">Tài khoản nội bộ với thao tác sửa và thay đổi trạng thái.</caption>
@@ -192,6 +170,7 @@
             </tr>
             </tbody>
         </table>
+        </div>
         </div>
         <div class="iac-pagination">
             <div th:replace="~{fragments/ui/pagination :: paged(page=${accounts})}"></div>
