@@ -23,6 +23,7 @@
         </a>
     </div>
     <div class="alert alert--success" role="status" th:if="${successMessage}" th:text="${successMessage}"></div>
+    <section class="card iac-card dm-card" aria-labelledby="departments-title">
     <form class="iac-filters dm-filters" th:action="@{/admin/departments}" method="get" aria-label="Bộ lọc phòng ban">
         <div class="iac-field iac-field--search">
             <label class="form-label" for="department-search">Tìm kiếm</label>
@@ -44,11 +45,17 @@
             <a class="btn btn--sm iac-reset" th:href="@{/admin/departments}">Xóa bộ lọc</a>
         </div>
     </form>
-    <section class="card iac-card dm-card" aria-labelledby="departments-title">
         <p id="department-scroll-hint" class="sr-only">Cuộn ngang để xem đầy đủ thông tin và thao tác.</p>
         <div class="table-wrapper iac-scroll" tabindex="0" role="region" aria-labelledby="departments-title" aria-describedby="department-scroll-hint">
             <table class="table iac-table dm-table">
                 <caption class="sr-only">Phòng ban, trưởng phòng và trạng thái hoạt động.</caption>
+                <colgroup>
+                    <col class="dm-col-number">
+                    <col class="dm-col-name">
+                    <col>
+                    <col class="dm-col-status">
+                    <col class="dm-col-actions">
+                </colgroup>
                 <thead><tr>
                     <th class="iac-cell iac-number-cell" scope="col">STT</th>
                     <th class="iac-cell" scope="col">Tên phòng ban</th>
@@ -59,10 +66,11 @@
                 <tbody>
                 <tr th:each="department, row : ${departments.content}">
                     <td class="iac-cell iac-number-cell" th:text="${departments.number * departments.size + row.count}"></td>
-                    <td class="iac-cell iac-name" th:text="${department.name}">Phòng ban</td>
+                    <td class="iac-cell iac-name dm-name" th:text="${department.name}">Phòng ban</td>
                     <td class="iac-cell">
-                        <span class="dm-manager" th:text="${department.managerName != null ? department.managerName : 'Chưa phân công'}"></span>
-                        <span class="dm-manager-login" th:if="${department.managerUsername != null}" th:text="${department.managerUsername}"></span>
+                        <span class="dm-manager" th:classappend="${department.managerId == null ? ' dm-manager--empty' : ''}"
+                              th:text="${department.managerId == null ? 'Chưa phân công' : (!#strings.isEmpty(department.managerName) ? department.managerName : 'Chưa cập nhật tên')}"></span>
+                        <span class="dm-manager-login" th:if="${department.managerId != null and !#strings.isEmpty(department.managerUsername)}" th:text="${department.managerUsername}"></span>
                     </td>
                     <td class="iac-cell iac-state-cell">
                         <span class="badge iac-status" th:classappend="${department.status == 'Active' ? ' badge--success' : ' badge--neutral'}"
