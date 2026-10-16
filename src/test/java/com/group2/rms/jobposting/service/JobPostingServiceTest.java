@@ -27,7 +27,6 @@ import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.security.access.AccessDeniedException;
-import org.springframework.web.server.ResponseStatusException;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -129,7 +128,7 @@ class JobPostingServiceTest {
         when(jobRequisitionRepository.findById(101)).thenReturn(Optional.of(approvedReq));
         when(jobPostingRepository.existsByRequisition_RequisitionIdAndPostingStatusIn(eq(101), any())).thenReturn(true);
 
-        assertThrows(ResponseStatusException.class, () -> jobPostingService.prepareCreateForm(101, hrUser));
+        assertThrows(JobPostingValidationException.class, () -> jobPostingService.prepareCreateForm(101, hrUser));
     }
 
     @Test

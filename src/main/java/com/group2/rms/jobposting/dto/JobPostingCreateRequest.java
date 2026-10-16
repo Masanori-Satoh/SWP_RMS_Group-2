@@ -60,6 +60,9 @@ public class JobPostingCreateRequest {
     @Size(max = 100, message = "Hiển thị mức lương không vượt quá 100 ký tự.")
     private String salaryDisplay;
 
+    @Size(max = 50, message = "Số lượng hiển thị không vượt quá 50 ký tự.")
+    private String numberOfPositionsDisplay;
+
     @Size(max = 255, message = "Địa điểm làm việc không vượt quá 255 ký tự.")
     private String workLocation;
 

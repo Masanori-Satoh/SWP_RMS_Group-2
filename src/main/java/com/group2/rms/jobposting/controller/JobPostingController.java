@@ -18,7 +18,6 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.util.List;
@@ -126,9 +125,6 @@ public class JobPostingController {
         } catch (JobPostingValidationException ex) {
             model.addAttribute("errorMessage", ex.getMessage());
             return "job-postings/create";
-        } catch (ResponseStatusException ex) {
-            model.addAttribute("errorMessage", ex.getReason());
-            return "job-postings/create";
         }
     }
 
@@ -149,9 +145,6 @@ public class JobPostingController {
             return "redirect:/internal/job-postings";
         } catch (JobPostingValidationException ex) {
             model.addAttribute("errorMessage", ex.getMessage());
-            return "job-postings/create";
-        } catch (ResponseStatusException ex) {
-            model.addAttribute("errorMessage", ex.getReason());
             return "job-postings/create";
         }
     }

@@ -2,6 +2,7 @@ package com.group2.rms.jobposting.service;
 
 import com.group2.rms.admin.entity.AuditLog;
 import com.group2.rms.admin.repository.AuditLogRepository;
+import com.group2.rms.core.exception.ResourceNotFoundException;
 import com.group2.rms.jobposting.dto.InternalJobPostingDetailResponse;
 import com.group2.rms.jobposting.dto.InternalJobPostingResponse;
 import com.group2.rms.jobposting.dto.JobPostingDashboardResponse;
@@ -16,6 +17,7 @@ import com.group2.rms.requisition.repository.JobRequisitionRepository;
 import com.group2.rms.requisition.service.RequisitionAccess;
 import com.group2.rms.candidate.service.TalentPoolService;
 import com.group2.rms.candidate.repository.ApplicationRepository;
+import com.group2.rms.notification.NotificationService;
 import com.group2.rms.user.entity.User;
 import jakarta.persistence.criteria.JoinType;
 import lombok.RequiredArgsConstructor;
@@ -23,11 +25,9 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
-import org.springframework.http.HttpStatus;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.server.ResponseStatusException;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -48,7 +48,7 @@ public class JobPostingServiceImpl implements JobPostingService {
     private final JobRequisitionRepository jobRequisitionRepository;
     private final AuditLogRepository auditLogRepository;
     private final RequisitionAccess requisitionAccess;
-    private final com.group2.rms.notification.NotificationService notificationService;
+    private final NotificationService notificationService;
     private final JobPostingValidator validator;
     private final TalentPoolService talentPoolService;
     private final ApplicationRepository applicationRepository;
@@ -209,21 +209,16 @@ public class JobPostingServiceImpl implements JobPostingService {
         requireHrOrAdmin(currentUser);
 
         if (requisitionId == null) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Mã yêu cầu tuyển dụng không hợp lệ.");
+            throw new JobPostingValidationException("Mã yêu cầu tuyển dụng không hợp lệ.");
         }
 
         JobRequisition requisition = jobRequisitionRepository.findById(requisitionId)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Không tìm thấy yêu cầu tuyển dụng với mã: " + requisitionId));
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy yêu cầu tuyển dụng với mã: " + requisitionId));
 
         validator.requireApproved(requisition);
 
         if (checkExistingActive) {
-            boolean hasActivePosting = jobPostingRepository.existsByRequisition_RequisitionIdAndPostingStatusIn(
-                    requisitionId, List.of("Draft", "Published", "Paused")
-            );
-            if (hasActivePosting) {
-                throw new ResponseStatusException(HttpStatus.CONFLICT, "Yêu cầu tuyển dụng này đã có tin tuyển dụng đang hoạt động hoặc đang ở bản nháp.");
-            }
+            requireNoOtherOpenPosting(requisitionId, null);
         }
 
         // Tạo chuỗi mức lương gợi ý
@@ -276,6 +271,7 @@ public class JobPostingServiceImpl implements JobPostingService {
                 .jobRequirements(requirements.toString())
                 .workLocation(requisition.getWorkLocation() != null ? requisition.getWorkLocation() : "")
                 .salaryDisplay(salaryDisplay)
+                .numberOfPositionsDisplay(requisition.getNumberOfPositions() == null ? null : String.valueOf(requisition.getNumberOfPositions()))
                 .benefits("")
                 .applicationDeadline(requisition.getExpectedStartDate() != null ? requisition.getExpectedStartDate() : LocalDate.now().plusDays(30))
                 .action("draft")
@@ -300,13 +296,15 @@ public class JobPostingServiceImpl implements JobPostingService {
             throw new JobPostingValidationException("Yêu cầu tạo tin không hợp lệ.");
         }
         JobRequisition requisition = jobRequisitionRepository.findForUpdate(request.getRequisitionId())
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Không tìm thấy yêu cầu tuyển dụng nguồn."));
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy yêu cầu tuyển dụng nguồn."));
         validator.requireApproved(requisition);
         requireNoOtherOpenPosting(requisition.getRequisitionId(), null);
 
         LocalDateTime now = LocalDateTime.now();
         JobPosting posting = new JobPosting();
         posting.setRequisition(requisition);
+        // Requisition đã bị khóa ở trên nên số lần đăng kế tiếp không bị trùng (UQ_JobPosting_Requisition_PostingNo)
+        posting.setPostingNo(jobPostingRepository.findMaxPostingNo(requisition.getRequisitionId()) + 1);
         posting.setCreatedBy(actor);
         applyEditableFields(posting, request, now, publish);
         posting.setPostingStatus(publish ? "Published" : "Draft");
@@ -399,7 +397,13 @@ public class JobPostingServiceImpl implements JobPostingService {
     private JobPosting findForUpdate(Integer id) {
         if (id == null) throw new JobPostingValidationException("Mã tin tuyển dụng không hợp lệ.");
         return jobPostingRepository.findForUpdate(id)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Không tìm thấy tin tuyển dụng."));
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy tin tuyển dụng."));
+    }
+
+    private JobPosting findById(Integer id) {
+        if (id == null) throw new JobPostingValidationException("Mã tin tuyển dụng không hợp lệ.");
+        return jobPostingRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy tin tuyển dụng với mã: " + id));
     }
 
     private void requireNoOtherOpenPosting(Integer requisitionId, Integer currentId) {
@@ -424,6 +428,7 @@ public class JobPostingServiceImpl implements JobPostingService {
         posting.setBenefits(blankToNull(request.getBenefits()));
         posting.setSalaryDisplay(blankToNull(request.getSalaryDisplay()));
         posting.setWorkLocation(blankToNull(request.getWorkLocation()));
+        posting.setNumberOfPositionsDisplay(blankToNull(request.getNumberOfPositionsDisplay()));
         posting.setApplicationDeadline(validator.deadline(request, now, publishing));
     }
 
@@ -444,12 +449,7 @@ public class JobPostingServiceImpl implements JobPostingService {
     public JobPostingCreateRequest prepareEditForm(Integer jobPostingId, User currentUser) {
         requireHrOrAdmin(currentUser);
 
-        if (jobPostingId == null) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Mã tin tuyển dụng không hợp lệ.");
-        }
-
-        JobPosting posting = jobPostingRepository.findById(jobPostingId)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Không tìm thấy tin tuyển dụng với mã: " + jobPostingId));
+        JobPosting posting = findById(jobPostingId);
         validator.requireEditable(posting.getPostingStatus());
 
         JobRequisition req = posting.getRequisition();
@@ -462,6 +462,7 @@ public class JobPostingServiceImpl implements JobPostingService {
         form.setBenefits(posting.getBenefits());
         form.setSalaryDisplay(posting.getSalaryDisplay());
         form.setWorkLocation(posting.getWorkLocation());
+        form.setNumberOfPositionsDisplay(posting.getNumberOfPositionsDisplay());
         form.setApplicationDeadline(posting.getApplicationDeadline() != null ? posting.getApplicationDeadline().toLocalDate() : null);
         form.setIsContinuousRecruitment(posting.getApplicationDeadline() == null);
         form.setAction("draft".equalsIgnoreCase(posting.getPostingStatus()) ? "draft" : "publish");
@@ -474,8 +475,7 @@ public class JobPostingServiceImpl implements JobPostingService {
     public void deleteJobPosting(Integer id, User currentUser) {
         requireHrOrAdmin(currentUser);
 
-        JobPosting posting = jobPostingRepository.findById(id)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Không tìm thấy tin tuyển dụng."));
+        JobPosting posting = findById(id);
 
         if (!"Draft".equals(posting.getPostingStatus()) || applicationRepository.existsByJobPosting_JobPostingId(id)) {
             throw new JobPostingValidationException("Chỉ có thể xóa bản nháp chưa có hồ sơ ứng tuyển.");
@@ -498,12 +498,7 @@ public class JobPostingServiceImpl implements JobPostingService {
     public InternalJobPostingDetailResponse getInternalJobPostingDetail(Integer id, User currentUser) {
         requirePostingReader(currentUser);
 
-        if (id == null) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Mã tin tuyển dụng không hợp lệ.");
-        }
-
-        JobPosting posting = jobPostingRepository.findById(id)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Không tìm thấy tin tuyển dụng với mã: " + id));
+        JobPosting posting = findById(id);
 
         JobRequisition req = posting.getRequisition();
 
@@ -543,6 +538,9 @@ public class JobPostingServiceImpl implements JobPostingService {
                 .workModel(req != null && req.getWorkModel() != null ? req.getWorkModel() : "Tại văn phòng")
                 .workLocation(posting.getWorkLocation() != null ? posting.getWorkLocation() : (req != null ? req.getWorkLocation() : "—"))
                 .salaryDisplay(posting.getSalaryDisplay() != null ? posting.getSalaryDisplay() : "Thoả thuận")
+                .numberOfPositionsDisplay(posting.getNumberOfPositionsDisplay())
+                .postingNo(posting.getPostingNo())
+                .closedAt(posting.getClosedAt())
                 .jobDescription(posting.getJobDescription())
                 .jobRequirements(posting.getJobRequirements())
                 .benefits(posting.getBenefits())

@@ -250,6 +250,18 @@
                 </div>
 
                 <div class="jp-field-group">
+                    <label for="numberOfPositionsDisplay" class="jp-field-label">
+                        Số lượng hiển thị cho ứng viên
+                    </label>
+                    <input type="text" id="numberOfPositionsDisplay" th:field="*{numberOfPositionsDisplay}"
+                           class="jp-input" placeholder="Ví dụ: 3 hoặc Nhiều vị trí"
+                           maxlength="50">
+                    <small class="jp-help-text">Để trống nếu không muốn công khai số lượng cần tuyển.</small>
+                    <small id="numberOfPositionsDisplay-error" class="field-error"
+                           th:text="${#fields.hasErrors('numberOfPositionsDisplay') ? #strings.listJoin(#fields.errors('numberOfPositionsDisplay'), '; ') : ''}"></small>
+                </div>
+
+                <div class="jp-field-group">
                     <label for="workLocation" class="jp-field-label">
                         Địa điểm làm việc hiển thị
                     </label>
