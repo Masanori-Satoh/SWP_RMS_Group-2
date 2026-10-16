@@ -43,12 +43,18 @@
 .ads-page .aim-row[data-selected='true'] .iac-cell:first-child { box-shadow: inset 1px 0 var(--brand); }
 .ads-page .aim-panel-header { border-radius: var(--radius-lg) var(--radius-lg) 0 0; background: color-mix(in srgb, var(--brand-soft) 38%, var(--surface)); }
 .ads-page .aim-panel-title { color: var(--brand-dark); }
+.ads-page .aim-docked { grid-template-columns: minmax(0, 1fr) minmax(300px, 340px); }
 .ads-page .aim-identity { gap: var(--s3); margin-bottom: var(--s3); }
 .ads-page .aim-avatar { flex-basis: var(--s12); width: var(--s12); height: var(--s12); }
+.ads-page .aim-name { font-size: var(--font-xl); }
 .ads-page .aim-section-title { margin-top: var(--s4); padding-top: var(--s3); border-top: 1px solid var(--line); color: var(--brand-dark); }
 .ads-page .aim-fields { gap: var(--s3); }
 .ads-page .aim-detail-actions { background: var(--surface-subtle); border-radius: 0 0 var(--radius-lg) var(--radius-lg); }
 .ads-page .aim-drawer .aim-inspector, .ads-page .aim-drawer .aim-panel-header { border-radius: 0; }
+.cac-page .mft-popover { grid-template-columns: minmax(0, 1fr); width: min(320px, 100%); }
+.ads-filter-reset { display: inline-flex; align-items: center; min-height: var(--btn-sm-h); padding: var(--s2); border-radius: var(--radius-md); color: var(--muted); font-size: var(--font-sm); text-decoration: none; }
+.ads-filter-reset:hover { background: var(--surface-subtle); color: var(--brand-dark); }
+.ads-filter-reset:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
 .ads-page .apm-service-header { background: color-mix(in srgb, var(--brand-soft) 25%, var(--surface)); }
 .ads-page .adm-chart-heading { padding-bottom: var(--s3); border-bottom: 1px solid var(--line); }
 .ads-page .ads-form-card { padding: var(--s6); background: var(--surface); border: 1px solid color-mix(in srgb, var(--brand) 10%, var(--line)); }
@@ -67,6 +73,8 @@
   .ads-page .mft-disclosure { grid-area: filter; }
   .ads-status-group { grid-area: statuses; justify-self: start; }
   .ads-page .mft-search { grid-area: search; width: min(400px, 100%); min-width: 0; }
+  .dm-page .mft-toolbar { grid-template-areas: 'statuses search' 'reset reset'; }
+  .dm-page .ads-filter-reset { grid-area: reset; justify-self: start; }
 }
 @media (max-width: 768px) {
   .ads-heading::before { display: none; }

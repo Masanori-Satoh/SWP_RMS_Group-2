@@ -11,14 +11,14 @@
 <th:block th:fragment="panel(page, kind)">
     <aside class="aim-inspector aim-inspector--compact" id="account-inspector" aria-labelledby="account-inspector-title" hidden>
         <header class="aim-panel-header">
-            <h2 class="aim-panel-title" id="account-inspector-title" th:text="${kind == 'internal' ? 'Tổng quan tài khoản' : 'Chi tiết tài khoản'}">Chi tiết tài khoản</h2>
+            <h2 class="aim-panel-title" id="account-inspector-title">Tổng quan tài khoản</h2>
             <button class="btn btn--secondary btn--sm aim-close" type="button" aria-label="Đóng bảng thông tin" title="Đóng bảng thông tin" hidden>
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"/></svg>
             </button>
         </header>
-        <div class="aim-summary" th:if="${kind == 'internal'}">
+        <div class="aim-summary">
             <div class="aim-total"><strong th:text="${page.totalElements}"></strong><span>Kết quả theo bộ lọc</span></div>
-            <p class="aim-scope">Tài khoản nội bộ phù hợp với các điều kiện đang chọn.</p>
+            <p class="aim-scope" th:text="${kind == 'internal' ? 'Tài khoản nội bộ phù hợp với các điều kiện đang chọn.' : 'Tài khoản ứng viên phù hợp với các điều kiện đang chọn.'}"></p>
             <h3 class="aim-section-title">Trạng thái trên trang này</h3>
             <ul class="aim-status-counts">
                 <li><span class="badge badge--success iac-status">Hoạt động</span><strong th:text="${#lists.size(page.content.?[status == 'Active'])}"></strong></li>

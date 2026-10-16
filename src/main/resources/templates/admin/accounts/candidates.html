@@ -14,32 +14,27 @@
     </th:block>
 </head>
 <body>
-<main id="main" layout:fragment="content" class="page-content container ads-page iac-page cac-page aim-page" tabindex="-1">
+<main id="main" layout:fragment="content" class="page-content container ads-page iac-page cac-page aim-page" data-account-overview="true" tabindex="-1">
     <nav class="iac-breadcrumb" aria-label="Đường dẫn">
         <a th:href="@{/dashboard}">Tổng quan</a><span aria-hidden="true">/</span><span aria-current="page">Quản lý tài khoản</span>
     </nav>
     <div class="page-header iac-heading ads-heading">
         <h1 id="candidate-list-title" class="iac-title ads-title">Tài khoản ứng viên</h1>
+        <div class="aim-heading-actions">
+            <button class="btn btn--secondary btn--sm aim-open-overview" type="button" aria-controls="account-inspector" hidden>Tổng quan tài khoản</button>
+        </div>
     </div>
     <div class="alert alert--success" role="status" th:if="${successMessage}" th:text="${successMessage}"></div>
     <div class="aim-layout"><div class="aim-master">
     <form class="card mft-toolbar" th:action="@{/admin/candidate-accounts}" method="get" aria-label="Bộ lọc tài khoản ứng viên">
+        <input type="hidden" name="status" th:value="${selectedStatus ?: ''}">
         <div class="mft-controls">
             <details class="mft-disclosure">
-                <summary class="mft-toggle" aria-controls="management-filter-fields" th:with="count=${ (!#strings.isEmpty(selectedStatus) ? 1 : 0) + (selectedSort != null and selectedSort != 'name' ? 1 : 0) }">
+                <summary class="mft-toggle" aria-controls="management-filter-fields" th:with="count=${selectedSort != null and selectedSort != 'name' ? 1 : 0}">
                     <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 4h18l-7 8v7l-4 2v-9Z"/></svg>
                     Bộ lọc <span class="mft-count" th:if="${count > 0}"><span class="sr-only">đang áp dụng: </span><span th:text="${count}"></span></span>
                 </summary>
                 <div id="management-filter-fields" class="mft-popover">
-                    <div class="mft-field">
-            <label class="form-label" for="account-status">Trạng thái</label>
-            <select class="form-control iac-control" id="account-status" name="status">
-                <option value="">Tất cả trạng thái</option>
-                <option value="Active" th:selected="${selectedStatus == 'Active'}">Hoạt động</option>
-                <option value="Inactive" th:selected="${selectedStatus == 'Inactive'}">Vô hiệu hóa</option>
-                <option value="Blocked" th:selected="${selectedStatus == 'Blocked'}">Bị khóa</option>
-            </select>
-        </div>
                     <div class="mft-field">
             <label class="form-label" for="account-sort">Sắp xếp</label>
             <select class="form-control iac-control" id="account-sort" name="sort">

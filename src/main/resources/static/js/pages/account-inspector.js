@@ -1,4 +1,4 @@
-/* Progressive enhancement for Internal/Candidate Accounts; no fetch, routing or CRUD replacements. */
+/* List inspectors for Admin accounts and departments; reuse native links and confirmation forms. */
 (() => {
     'use strict';
     const page = document.querySelector('.aim-page');
@@ -8,8 +8,11 @@
     const table = master?.querySelector('table'), scroll = master?.querySelector('.iac-scroll');
     if (!layout || !inspector || !drawer || !table || !scroll || !window.ResizeObserver || !drawer.showModal) return;
     const rows = [...table.querySelectorAll('.aim-row')];
-    // Internal Accounts opts into an overview; Candidate keeps its existing details-only behavior.
-    const overview = page.dataset.accountOverview === 'true' ? inspector.querySelector('.aim-summary') : null;
+    const department = page.dataset.inspectorKind === 'department';
+    const detailTitle = department ? 'Chi tiết phòng ban' : 'Chi tiết tài khoản';
+    const overviewTitle = department ? 'Tổng quan phòng ban' : 'Tổng quan tài khoản';
+    const overview = page.dataset.accountOverview === 'true' || page.dataset.inspectorOverview === 'true'
+        ? inspector.querySelector('.aim-summary') : null;
     const overviewButton = page.querySelector('.aim-open-overview');
     const detail = inspector.querySelector('.aim-detail'), actions = inspector.querySelector('.aim-detail-actions');
     const title = inspector.querySelector('.aim-panel-title'), close = inspector.querySelector('.aim-close');
@@ -21,7 +24,7 @@
         rows.forEach(row => row.querySelector('.aim-select').setAttribute('aria-expanded', String(row === selected && (docked || drawer.open))));
         if (overviewButton) {
             overviewButton.setAttribute('aria-expanded', String(!panelClosed && (docked || drawer.open)));
-            overviewButton.textContent = selected ? 'Chi tiết tài khoản' : 'Tổng quan tài khoản';
+            overviewButton.textContent = selected ? detailTitle : overviewTitle;
         }
     };
     const resetSelection = () => {
@@ -29,7 +32,7 @@
         rows.forEach(row => { row.removeAttribute('data-selected'); row.querySelector('.aim-select').setAttribute('aria-pressed', 'false'); });
         detail.hidden = true; detail.replaceChildren(); actions.hidden = true;
         stateAction.hidden = true; stateAction.removeAttribute('form'); edit.hidden = true; edit.removeAttribute('href');
-        if (overview) { overview.hidden = false; title.textContent = 'Tổng quan tài khoản'; }
+        if (overview) { overview.hidden = false; title.textContent = overviewTitle; }
         expanded();
     };
     const showDrawer = trigger => {
@@ -55,14 +58,16 @@
         expanded();
     };
     const select = (row, trigger) => {
-        const template = page.querySelector('#account-inspector-template-' + row.dataset.accountId);
+        const template = page.querySelector(department
+            ? '#department-inspector-template-' + row.dataset.inspectorId
+            : '#account-inspector-template-' + row.dataset.accountId);
         if (!template) return;
         if (panelClosed) { panelClosed = false; lastWidth = -1; updateLayout(); }
         selected = row;
         rows.forEach(item => { item.toggleAttribute('data-selected', item === row); if (item === row) item.dataset.selected = 'true'; item.querySelector('.aim-select').setAttribute('aria-pressed', String(item === row)); });
         detail.replaceChildren(template.content.cloneNode(true)); detail.hidden = false; actions.hidden = false;
         if (overview) overview.hidden = true;
-        title.textContent = 'Chi tiết tài khoản';
+        title.textContent = detailTitle;
         const originalEdit = row.querySelector('.iac-edit'), form = row.querySelector('form[data-status-confirm]');
         edit.hidden = !originalEdit;
         if (originalEdit) edit.href = originalEdit.href; else edit.removeAttribute('href');
@@ -73,7 +78,7 @@
             stateAction.classList.toggle('btn--danger', form.dataset.confirmDanger === 'true');
             stateAction.classList.toggle('btn--secondary', form.dataset.confirmDanger !== 'true');
         } else stateAction.removeAttribute('form');
-        page.querySelector('.aim-announcement').textContent = 'Đã chọn tài khoản ' + row.querySelector('.aim-select').textContent.trim();
+        page.querySelector('.aim-announcement').textContent = (department ? 'Đã chọn phòng ban ' : 'Đã chọn tài khoản ') + row.querySelector('.aim-select').textContent.trim();
         if (!docked) showDrawer(trigger); else expanded();
     };
     const updateLayout = () => {
