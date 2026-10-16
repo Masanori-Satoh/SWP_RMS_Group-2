@@ -1,6 +1,8 @@
 package com.group2.rms.notification;
 
+import com.group2.rms.core.exception.ResourceNotFoundException;
 import com.group2.rms.requisition.entity.JobRequisition;
+import com.group2.rms.requisition.entity.RequisitionApproval;
 import com.group2.rms.user.entity.User;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -13,7 +15,6 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
-import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -21,6 +22,7 @@ import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -35,6 +37,7 @@ class NotificationServiceImplTest {
     private User manager;
     private User director;
     private JobRequisition requisition;
+    private RequisitionApproval rejection;
 
     @BeforeEach
     void setUp() {
@@ -44,22 +47,34 @@ class NotificationServiceImplTest {
                 .requisitionId(101)
                 .title("Senior Java Engineer")
                 .hiringManager(manager)
-                .decidedAt(LocalDateTime.of(2026, 10, 4, 9, 30, 0, 123456700))
+                .build();
+        rejection = rejection(7, "Kinh phí dự kiến vượt trần");
+    }
+
+    private RequisitionApproval rejection(int approvalId, String comment) {
+        return RequisitionApproval.builder()
+                .approvalId(approvalId)
+                .requisition(requisition)
+                .director(director)
+                .status("Rejected")
+                .comments(comment)
+                .approvalDate(LocalDateTime.of(2026, 10, 4, 9, 30))
                 .build();
     }
 
     @Test
     @DisplayName("notifyRequisitionRejected: Lưu thông báo đúng người nhận HM, nội dung và link")
     void notifyRequisitionRejected_success() {
-        when(notificationRepository.existsByEventId(any())).thenReturn(false);
+        when(notificationRepository.existsByRecipient_UserIdAndEventId(eq(10), any())).thenReturn(false);
 
-        notificationService.notifyRequisitionRejected(requisition, director, "Kinh phí dự kiến vượt trần");
+        notificationService.notifyRequisitionRejected(rejection);
 
         ArgumentCaptor<Notification> captor = ArgumentCaptor.forClass(Notification.class);
         verify(notificationRepository).save(captor.capture());
 
         Notification saved = captor.getValue();
         assertEquals(manager, saved.getRecipient());
+        assertEquals(director, saved.getActor());
         assertEquals("REQUISITION_REJECTED", saved.getEventType());
         assertEquals("/requisitions/101", saved.getLinkUrl());
         assertEquals("101", saved.getReferenceId());
@@ -67,24 +82,24 @@ class NotificationServiceImplTest {
         assertTrue(saved.getTitle().contains("Senior Java Engineer"));
         assertTrue(saved.getContent().contains("Kinh phí dự kiến vượt trần"));
         assertTrue(saved.getContent().contains("Director B"));
-        assertEquals("REQ_REJECT_101_202610040930001234567", saved.getEventId());
+        assertEquals("REQ_REJECT_7", saved.getEventId());
     }
 
     @Test
     @DisplayName("notifyRequisitionRejected: Idempotent - Nếu cùng eventId đã tồn tại thì không tạo lại")
     void notifyRequisitionRejected_idempotent_skipsDuplicate() {
-        when(notificationRepository.existsByEventId("REQ_REJECT_101_202610040930001234567")).thenReturn(true);
+        when(notificationRepository.existsByRecipient_UserIdAndEventId(10, "REQ_REJECT_7")).thenReturn(true);
 
-        notificationService.notifyRequisitionRejected(requisition, director, "Duplicate test");
+        notificationService.notifyRequisitionRejected(rejection);
 
         verify(notificationRepository, never()).save(any());
     }
 
     @Test
-    void separateDecisionsWithinOneSecond_haveDifferentEventIds() {
-        notificationService.notifyRequisitionRejected(requisition, director, "First rejection");
-        requisition.setDecidedAt(requisition.getDecidedAt().plusNanos(100));
-        notificationService.notifyRequisitionRejected(requisition, director, "Second rejection");
+    @DisplayName("notifyRequisitionRejected: Từ chối lại sau khi nộp lại tạo thông báo mới")
+    void separateRejections_haveDifferentEventIds() {
+        notificationService.notifyRequisitionRejected(rejection(7, "First rejection"));
+        notificationService.notifyRequisitionRejected(rejection(8, "Second rejection"));
         var captor = ArgumentCaptor.forClass(Notification.class);
         verify(notificationRepository, times(2)).save(captor.capture());
         assertNotEquals(captor.getAllValues().get(0).getEventId(), captor.getAllValues().get(1).getEventId());
@@ -102,7 +117,7 @@ class NotificationServiceImplTest {
                 .build();
         User hr = User.builder().userId(30).fullName("HR Nguyen Van C").build();
 
-        when(notificationRepository.existsByEventId(any())).thenReturn(false);
+        when(notificationRepository.existsByRecipient_UserIdAndEventId(eq(10), any())).thenReturn(false);
 
         notificationService.notifyJobPostingPublished(posting, hr);
 
@@ -132,7 +147,7 @@ class NotificationServiceImplTest {
                 .build();
         User hr = User.builder().userId(30).fullName("HR Nguyen Van C").build();
 
-        when(notificationRepository.existsByEventId("JOB_PUB_50_202610051400001234567")).thenReturn(true);
+        when(notificationRepository.existsByRecipient_UserIdAndEventId(10, "JOB_PUB_50_202610051400001234567")).thenReturn(true);
 
         notificationService.notifyJobPostingPublished(posting, hr);
 
@@ -160,18 +175,36 @@ class NotificationServiceImplTest {
 
         when(notificationRepository.findByNotificationIdAndRecipient_UserId(1L, 10)).thenReturn(Optional.of(n));
 
-        notificationService.markAsRead(1L, manager);
+        NotificationResponse response = notificationService.markAsRead(1L, manager);
 
         assertTrue(n.getIsRead());
-        verify(notificationRepository).save(n);
+        assertNotNull(n.getReadAt());
+        assertTrue(response.isRead());
     }
 
     @Test
-    @DisplayName("markAsRead: Không tìm thấy hoặc khác user -> Ném ResponseStatusException 404")
+    @DisplayName("markAsRead: Đọc lại giữ nguyên thời điểm đọc đầu tiên")
+    void markAsRead_twice_keepsFirstReadAt() {
+        LocalDateTime firstRead = LocalDateTime.of(2026, 10, 1, 8, 0);
+        Notification n = Notification.builder()
+                .notificationId(1L)
+                .recipient(manager)
+                .isRead(true)
+                .readAt(firstRead)
+                .build();
+        when(notificationRepository.findByNotificationIdAndRecipient_UserId(1L, 10)).thenReturn(Optional.of(n));
+
+        notificationService.markAsRead(1L, manager);
+
+        assertEquals(firstRead, n.getReadAt());
+    }
+
+    @Test
+    @DisplayName("markAsRead: Không tìm thấy hoặc khác user -> Ném ResourceNotFoundException 404")
     void markAsRead_unauthorizedOrNotFound_throwsException() {
         when(notificationRepository.findByNotificationIdAndRecipient_UserId(99L, 10)).thenReturn(Optional.empty());
 
-        assertThrows(ResponseStatusException.class, () -> notificationService.markAsRead(99L, manager));
+        assertThrows(ResourceNotFoundException.class, () -> notificationService.markAsRead(99L, manager));
         verify(notificationRepository, never()).save(any());
     }
 
@@ -224,7 +257,7 @@ class NotificationServiceImplTest {
                 .application(app)
                 .build();
 
-        when(notificationRepository.existsByEventId("OFFER_SENT_1")).thenReturn(false);
+        when(notificationRepository.existsByRecipient_UserIdAndEventId(22, "OFFER_SENT_1")).thenReturn(false);
 
         notificationService.notifyOfferLetterSent(offer);
 
@@ -246,7 +279,7 @@ class NotificationServiceImplTest {
     @DisplayName("markOfferNotificationRead: Đánh dấu đã đọc thông báo offer theo userId và offerId")
     void markOfferNotificationRead_success() {
         notificationService.markOfferNotificationRead(22, 1);
-        verify(notificationRepository).markOfferNotificationRead(22, "1");
+        verify(notificationRepository).markOfferNotificationRead(eq(22), eq("1"), any(LocalDateTime.class));
     }
 
     @Test
@@ -269,7 +302,7 @@ class NotificationServiceImplTest {
                 .application(app)
                 .build();
 
-        when(notificationRepository.existsByEventId("OFFER_RESP_ACC_1")).thenReturn(false);
+        when(notificationRepository.existsByRecipient_UserIdAndEventId(15, "OFFER_RESP_ACC_1")).thenReturn(false);
 
         notificationService.notifyOfferResponseFromCandidate(offer, true, null);
 
@@ -307,7 +340,7 @@ class NotificationServiceImplTest {
                 .application(app)
                 .build();
 
-        when(notificationRepository.existsByEventId("OFFER_RESP_DEC_1")).thenReturn(false);
+        when(notificationRepository.existsByRecipient_UserIdAndEventId(15, "OFFER_RESP_DEC_1")).thenReturn(false);
 
         notificationService.notifyOfferResponseFromCandidate(offer, false, "Mức đãi ngộ chưa đạt kỳ vọng");
 

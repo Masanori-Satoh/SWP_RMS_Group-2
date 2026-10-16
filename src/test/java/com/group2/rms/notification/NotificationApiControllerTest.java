@@ -79,7 +79,8 @@ class NotificationApiControllerTest {
                 "101",
                 "/requisitions/101",
                 false,
-                LocalDateTime.now()
+                LocalDateTime.now(),
+                null
         );
 
         when(notificationService.getNotificationsForUser(eq(testUser), eq(1), eq(5)))
@@ -113,7 +114,7 @@ class NotificationApiControllerTest {
     @Test
     @DisplayName("markAsRead calls notificationService.markAsRead with target ID")
     void markAsRead_success() {
-        doNothing().when(notificationService).markAsRead(eq(15L), eq(testUser));
+        when(notificationService.markAsRead(eq(15L), eq(testUser))).thenReturn(null);
 
         ResponseEntity<Map<String, Object>> response = notificationApiController.markAsRead(15L);
 

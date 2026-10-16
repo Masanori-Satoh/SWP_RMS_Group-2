@@ -8,6 +8,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.time.LocalDateTime;
 import java.util.Optional;
 
 @Repository
@@ -19,17 +20,13 @@ public interface NotificationRepository extends JpaRepository<Notification, Long
 
     Optional<Notification> findByNotificationIdAndRecipient_UserId(Long notificationId, Integer userId);
 
-    default Optional<Notification> findByIdAndRecipient_UserId(Long notificationId, Integer userId) {
-        return findByNotificationIdAndRecipient_UserId(notificationId, userId);
-    }
-
-    boolean existsByEventId(String eventId);
+    boolean existsByRecipient_UserIdAndEventId(Integer recipientId, String eventId);
 
     @Modifying
-    @Query("UPDATE Notification n SET n.isRead = true WHERE n.recipient.userId = :userId AND n.isRead = false")
-    int markAllAsReadByUserId(@Param("userId") Integer userId);
+    @Query("UPDATE Notification n SET n.isRead = true, n.readAt = :readAt WHERE n.recipient.userId = :userId AND n.isRead = false")
+    int markAllAsReadByUserId(@Param("userId") Integer userId, @Param("readAt") LocalDateTime readAt);
 
     @Modifying
-    @Query("UPDATE Notification n SET n.isRead = true WHERE n.recipient.userId = :userId AND n.referenceId = :referenceId AND n.eventType = 'OFFER_LETTER_SENT' AND n.isRead = false")
-    int markOfferNotificationRead(@Param("userId") Integer userId, @Param("referenceId") String referenceId);
+    @Query("UPDATE Notification n SET n.isRead = true, n.readAt = :readAt WHERE n.recipient.userId = :userId AND n.referenceId = :referenceId AND n.eventType = 'OFFER_LETTER_SENT' AND n.isRead = false")
+    int markOfferNotificationRead(@Param("userId") Integer userId, @Param("referenceId") String referenceId, @Param("readAt") LocalDateTime readAt);
 }
