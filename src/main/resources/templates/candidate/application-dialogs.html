@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<body>
+<th:block th:fragment="dialogs(canBookmark)">
+    <p class="app-feedback" id="app-feedback" role="status" aria-live="polite"></p>
+    <dialog id="app-preview" class="dialog app-dialog app-dialog--preview" aria-labelledby="app-preview-title">
+        <div class="app-dialog__head">
+            <div><h2 id="app-preview-title" class="app-section-title">Xem nhanh CV</h2>
+                <p id="app-preview-job" class="app-dialog__subtitle"></p></div>
+            <button type="button" class="btn btn--secondary btn--sm" data-app-close>Đóng</button>
+        </div>
+        <p id="app-preview-status" role="status">Đang tải CV…</p>
+        <iframe id="app-preview-frame" class="app-preview__frame" title="Xem nhanh CV" hidden></iframe>
+        <div class="app-dialog__footer">
+            <a id="app-preview-original" class="btn btn--secondary btn--sm" target="_blank" rel="noopener">Mở CV trong tab mới</a>
+            <a id="app-preview-detail" class="btn btn--primary btn--sm">Xem hồ sơ chi tiết</a>
+        </div>
+        <p class="app-dialog__hint">Nếu trình duyệt không hiển thị PDF, hãy mở CV trong tab mới để xem hoặc tải xuống.</p>
+    </dialog>
+    <dialog th:if="${canBookmark}" id="app-bookmark" class="dialog app-dialog app-dialog--bookmark" aria-labelledby="app-bookmark-title" aria-describedby="app-note-scope">
+        <div class="app-dialog__head">
+            <div><h2 id="app-bookmark-title" class="app-section-title">Lưu ứng viên tiềm năng</h2>
+                <p id="app-bookmark-name" class="app-dialog__subtitle"></p></div>
+            <button type="button" class="btn btn--secondary btn--sm" data-app-close>Đóng</button>
+        </div>
+        <p id="app-note-scope" class="app-note-scope">Ghi chú chung — HM và HR có quyền truy cập có thể xem</p>
+        <p class="app-dialog__hint">Lưu vào kho tiềm năng toàn hệ thống để tham khảo lâu dài. Trạng thái tuyển dụng được giữ nguyên.</p>
+        <p id="app-bookmark-status" role="status"></p>
+        <button id="app-bookmark-retry" type="button" class="btn btn--secondary btn--sm" hidden>Tải lại ghi chú</button>
+        <ul id="app-bookmark-notes" class="app-notes app-notes--dialog" aria-label="Ghi chú chung đã lưu"></ul>
+        <form id="app-bookmark-form" method="post" th:action="@{/talent-pool}">
+            <label class="form-label" for="app-bookmark-content">Ghi chú chung <span id="app-note-optional">(không bắt buộc)</span></label>
+            <textarea id="app-bookmark-content" name="content" class="form-textarea app-bookmark-input" rows="3" maxlength="1000"
+                      placeholder="Nhận xét giúp đồng nghiệp tham khảo ứng viên…" aria-describedby="app-note-limit app-note-scope"></textarea>
+            <p id="app-note-limit" class="app-dialog__hint">Tối đa 1.000 ký tự. Ghi chú không hiển thị cho ứng viên.</p>
+            <p id="app-bookmark-error" class="form-error" role="alert"></p>
+            <div class="app-dialog__footer">
+                <button type="button" class="btn btn--secondary" data-app-close>Hủy</button>
+                <button id="app-bookmark-submit" type="submit" class="btn btn--primary" disabled>Lưu ứng viên</button>
+            </div>
+        </form>
+    </dialog>
+</th:block>
+</body>
+</html>
