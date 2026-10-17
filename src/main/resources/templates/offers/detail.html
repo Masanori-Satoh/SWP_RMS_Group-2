@@ -11,7 +11,7 @@
 </head>
 <body>
 
-<main id="main" layout:fragment="content" class="page-content container" tabindex="-1" style="max-width: 1040px; margin: 0 auto; padding-bottom: 40px;">
+<main id="main" layout:fragment="content" class="page-content container offer-detail-container" tabindex="-1">
     <!-- FLASH MESSAGES -->
     <div class="page-flash-container" id="pageFlashContainer" th:if="${successMessage != null or errorMessage != null}">
         <div th:if="${successMessage}" class="page-flash-alert page-flash-success" id="flashSuccessAlert">
@@ -23,20 +23,6 @@
             <span th:text="${errorMessage}">Lỗi xử lý yêu cầu.</span>
         </div>
     </div>
-    <script th:if="${successMessage != null or errorMessage != null}">
-        (function() {
-            var flash = document.getElementById('pageFlashContainer');
-            if (flash && !flash.dataset.dismissInit) {
-                flash.dataset.dismissInit = 'true';
-                setTimeout(function() {
-                    flash.classList.add('flash-dismissed');
-                    setTimeout(function() {
-                        flash.style.display = 'none';
-                    }, 450);
-                }, 2000);
-            }
-        })();
-    </script>
 
     <!-- HEADER SECTION (REDESIGNED ACCORDING TO MOCKUP) -->
     <div class="offers-detail-header">

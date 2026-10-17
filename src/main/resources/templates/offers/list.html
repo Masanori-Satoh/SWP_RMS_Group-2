@@ -1,54 +1,31 @@
 <!DOCTYPE html>
-<html lang="vi" xmlns:th="http://www.thymeleaf.org">
-<head th:replace="~{fragments/head :: interfaceHead('Quản lý Đề xuất Offer', ~{::pageStyles})}">
-  <th:block th:fragment="pageStyles">
-    <!-- CSRF Meta Tags for AJAX Requests -->
-    <meta name="_csrf" th:content="${_csrf?.token}"/>
-    <meta name="_csrf_header" th:content="${_csrf?.headerName}"/>
+<html lang="vi"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/internal}">
+<head>
+  <title>Quản lý Đề xuất Offer | Mộc RMS</title>
+  <th:block layout:fragment="styles">
     <!-- Font Awesome Icons for specialized actions & icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" th:href="@{/css/offers.css}">
   </th:block>
 </head>
-<body class="rms-app">
+<body>
 
-<div class="page-wrapper">
-    <!-- SIDEBAR: Kế thừa sidebar Recruitment Workspace chuẩn của Mộc RMS -->
-    <aside th:replace="~{fragments/sidebar :: workspace('offers', ${userRole != null ? userRole : 'HR'})}"></aside>
+<main id="main" layout:fragment="content" class="page-content container" tabindex="-1">
 
-    <div class="main-content">
-        <!-- TOPBAR: Kế thừa header chung của hệ thống với logo Mộc và người dùng hiện tại -->
-        <header th:replace="~{fragments/workspace-header :: header(${userRole != null ? (userRole == 'HR' ? 'HR' : userRole) : 'HR Specialist'}, ${currentUser})}"></header>
-
-        <!-- PAGE CONTENT -->
-        <main id="main" class="page-content" tabindex="-1">
-            <div class="container">
-
-                <!-- FLASH MESSAGES -->
-                <div class="page-flash-container" id="pageFlashContainer" th:if="${successMessage != null or errorMessage != null}">
-                    <div th:if="${successMessage}" class="page-flash-alert page-flash-success" id="flashSuccessAlert">
-                        <i class="fa-solid fa-circle-check"></i>
-                        <span th:text="${successMessage}">Đã nộp trình đề xuất Offer lên Giám đốc thành công!</span>
-                    </div>
-                    <div th:if="${errorMessage}" class="page-flash-alert page-flash-danger" id="flashErrorAlert">
-                        <i class="fa-solid fa-triangle-exclamation"></i>
-                        <span th:text="${errorMessage}">Lỗi xử lý yêu cầu.</span>
-                    </div>
-                </div>
-                <script th:if="${successMessage != null or errorMessage != null}">
-                    (function() {
-                        var flash = document.getElementById('pageFlashContainer');
-                        if (flash && !flash.dataset.dismissInit) {
-                            flash.dataset.dismissInit = 'true';
-                            setTimeout(function() {
-                                flash.classList.add('flash-dismissed');
-                                setTimeout(function() {
-                                    flash.style.display = 'none';
-                                }, 450);
-                            }, 2000);
-                        }
-                    })();
-                </script>
+    <!-- FLASH MESSAGES -->
+    <div class="page-flash-container" id="pageFlashContainer" th:if="${successMessage != null or errorMessage != null}">
+        <div th:if="${successMessage}" class="page-flash-alert page-flash-success" id="flashSuccessAlert">
+            <i class="fa-solid fa-circle-check"></i>
+            <span th:text="${successMessage}">Đã nộp trình đề xuất Offer lên Giám đốc thành công!</span>
+        </div>
+        <div th:if="${errorMessage}" class="page-flash-alert page-flash-danger" id="flashErrorAlert">
+            <i class="fa-solid fa-triangle-exclamation"></i>
+            <span th:text="${errorMessage}">Lỗi xử lý yêu cầu.</span>
+        </div>
+    </div>
 
                 <!-- Header Section -->
                 <div class="offers-header">
@@ -291,10 +268,6 @@
                 </div>
                 <!-- Phân trang chuẩn UI catalog -->
                 <nav th:replace="~{fragments/ui/pagination :: paged(page=${offersPage})}"></nav>
-            </div>
-        </main>
-    </div>
-</div>
 
 <!-- Modal Xuất Excel Offer (HR) -->
 <div id="offerExportModal" class="modal-overlay modal-backdrop" style="display: none;" onclick="handleExportModalBackdropClick(event)">
@@ -579,9 +552,13 @@
 <!-- Toast Notification Container -->
 <div class="toast-container" id="toastContainer"></div>
 
-<!-- Scripts bổ trợ bộ lọc và UX -->
-<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-<script th:src="@{/js/offers.js}" defer></script>
+</main>
+
+<th:block layout:fragment="scripts">
+    <!-- Scripts bổ trợ bộ lọc và UX -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script th:src="@{/js/offers.js}" defer></script>
+</th:block>
 
 </body>
 </html>

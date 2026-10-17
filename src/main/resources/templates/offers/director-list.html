@@ -1,26 +1,18 @@
 <!DOCTYPE html>
-<html lang="vi" xmlns:th="http://www.thymeleaf.org">
-<head th:replace="~{fragments/head :: interfaceHead('Quản lý Đề xuất', ~{::pageStyles})}">
-  <th:block th:fragment="pageStyles">
-    <meta name="_csrf" th:content="${_csrf?.token}"/>
-    <meta name="_csrf_header" th:content="${_csrf?.headerName}"/>
+<html lang="vi"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/internal}">
+<head>
+  <title>Quản lý Đề xuất | Mộc RMS</title>
+  <th:block layout:fragment="styles">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" th:href="@{/css/offers.css}">
   </th:block>
 </head>
-<body class="rms-app">
+<body>
 
-<div class="page-wrapper">
-    <!-- SIDEBAR -->
-    <aside th:replace="~{fragments/sidebar :: workspace('offers', 'Director')}"></aside>
-
-    <div class="main-content" id="directorMainContent">
-        <!-- TOPBAR -->
-        <header th:replace="~{fragments/workspace-header :: header('Director', ${currentUser})}"></header>
-
-        <!-- PAGE CONTENT -->
-        <main id="main" class="page-content" tabindex="-1">
-            <div class="container">
+<main id="main" layout:fragment="content" class="page-content container" tabindex="-1">
 
                 <div class="offers-header">
                     <div class="offers-title-group">
@@ -171,13 +163,11 @@
                 </div>
                 <!-- Phân trang chuẩn UI catalog -->
                 <nav th:replace="~{fragments/ui/pagination :: paged(page=${offersPage})}"></nav>
+</main>
 
-            </div>
-        </main>
-    </div>
-</div>
-
-<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-<script th:src="@{/js/offers.js}"></script>
+<th:block layout:fragment="scripts">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script th:src="@{/js/offers.js}" defer></script>
+</th:block>
 </body>
 </html>
