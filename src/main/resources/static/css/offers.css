@@ -2190,3 +2190,103 @@
     padding-bottom: 40px;
 }
 
+/* Helper utility classes for Offer forms, modals & tables */
+.offer-alert-spacing {
+    margin-bottom: var(--s5);
+}
+
+.offer-field-header-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    min-height: 32px;
+    margin-bottom: 4px;
+}
+
+.offer-group-a-box {
+    display: none;
+    background: var(--page);
+    border: 1px dashed var(--line);
+    border-radius: var(--radius-md);
+    padding: var(--s4);
+    margin-top: var(--s3);
+}
+
+.offer-btn-calc-probation {
+    padding: 2px 10px;
+    height: 28px;
+    min-height: 28px;
+    font-size: 12.5px;
+    font-weight: 500;
+    border-radius: var(--radius-sm);
+}
+
+.offer-rule-notice {
+    color: var(--brand-dark);
+    font-size: 12px;
+    margin-top: 4px;
+}
+
+.offer-search-clear-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: var(--muted);
+    padding: 0 4px;
+    display: inline-flex;
+    align-items: center;
+}
+
+.offer-cursor-pointer {
+    cursor: pointer;
+}
+
+.offer-col-w-44 {
+    width: 44px;
+}
+
+.offer-col-w-90 {
+    width: 90px;
+}
+
+.offer-col-w-150 {
+    width: 150px;
+}
+
+.offer-error-list {
+    margin: 4px 0 0 16px;
+    padding: 0;
+}
+
+.offer-hint-inline {
+    color: var(--muted);
+    font-weight: normal;
+}
+
+.offer-mt-1 {
+    margin-top: 4px;
+}
+
+.offer-mt-2 {
+    margin-top: 10px;
+    padding-top: 10px;
+    border-top: 1px dashed var(--line);
+}
+
+.offer-font-bold {
+    font-weight: 700;
+}
+
+.offer-font-italic-muted {
+    font-style: italic;
+    color: var(--muted);
+    margin-top: 2px;
+}
+
+.offer-salary-highlight {
+    color: var(--brand-dark);
+    font-weight: 700;
+}
+
+
+

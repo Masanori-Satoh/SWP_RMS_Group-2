@@ -2036,9 +2036,27 @@ function initOfferFlashAutoDismiss() {
     }, 2000);
 }
 
+function initOfferFormExpectedStartDateMin() {
+    const startDateInput = document.getElementById('expectedStartDate');
+    if (startDateInput) {
+        const tomorrow = new Date();
+        tomorrow.setDate(tomorrow.getDate() + 1);
+        const yyyy = tomorrow.getFullYear();
+        const mm = String(tomorrow.getMonth() + 1).padStart(2, '0');
+        const dd = String(tomorrow.getDate()).padStart(2, '0');
+        startDateInput.min = `${yyyy}-${mm}-${dd}`;
+        startDateInput.max = '2099-12-31';
+    }
+}
+
 if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', initOfferFlashAutoDismiss);
+    document.addEventListener('DOMContentLoaded', () => {
+        initOfferFlashAutoDismiss();
+        initOfferFormExpectedStartDateMin();
+    });
 } else {
     initOfferFlashAutoDismiss();
+    initOfferFormExpectedStartDateMin();
 }
+
 
