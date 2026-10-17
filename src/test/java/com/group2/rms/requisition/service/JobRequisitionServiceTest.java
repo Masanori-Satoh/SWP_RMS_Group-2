@@ -2,6 +2,7 @@ package com.group2.rms.requisition.service;
 
 import com.group2.rms.admin.entity.AuditLog;
 import com.group2.rms.admin.repository.AuditLogRepository;
+import com.group2.rms.jobposting.repository.JobPostingRepository;
 import com.group2.rms.requisition.dto.RequisitionRequest;
 import com.group2.rms.requisition.dto.ScreeningCriteriaRequest;
 import com.group2.rms.requisition.entity.JobRequisition;
@@ -72,15 +73,20 @@ class JobRequisitionServiceTest {
     @Mock private RequisitionAccess access;
     @Mock private RequisitionValidator validator;
     @Mock private NotificationService notificationService;
+    @Mock private JobPostingRepository postings;
 
     @InjectMocks private RequisitionServiceImpl service;
 
     private User manager;
+    private Department itDepartment;
 
     @BeforeEach
     void setUp() {
-        manager = User.builder().userId(10).username("hm").fullName("Nguyen Van A").build();
+        // HM thuộc phòng IT đang hoạt động: yêu cầu tạo ra luôn thuộc phòng ban này
+        itDepartment = Department.builder().departmentId(1).departmentName("IT").departmentStatus("Active").build();
+        manager = User.builder().userId(10).username("hm").fullName("Nguyen Van A").department(itDepartment).build();
         lenient().when(access.actor()).thenReturn(manager);
+        lenient().when(departments.findById(1)).thenReturn(Optional.of(itDepartment));
         lenient().when(requisitions.saveAndFlush(any())).thenAnswer(inv -> {
             JobRequisition r = inv.getArgument(0);
             r.setRequisitionId(101);
@@ -158,28 +164,32 @@ class JobRequisitionServiceTest {
 
     @Test
     @DisplayName("SVC-01: Draft thiếu field -> Gán default title 'Untitled requisition', null các field còn lại")
-    void svc01_createDraft_missingFields_appliesDefaults() {
-        var req = RequisitionRequest.builder().action("draft").build();
+    void svc01_createDraft_missingOptionalFields_savesEmptyTextAndGeneratesCode() {
+        // Validator đã bắt buộc Tên vị trí khi lưu nháp; ở đây chỉ kiểm tra service xử lý các trường tùy chọn bị trống
+        var req = RequisitionRequest.builder().action("draft").title("Kế toán tổng hợp").build();
 
         assertEquals(101, service.createRequisition(req));
-
-        verify(departments, never()).findById(any());
 
         var reqCap = ArgumentCaptor.forClass(JobRequisition.class);
         verify(requisitions).saveAndFlush(reqCap.capture());
         JobRequisition saved = reqCap.getValue();
 
-        assertEquals("Untitled requisition", saved.getTitle());
+        assertEquals("Kế toán tổng hợp", saved.getTitle());
         assertEquals("Draft", saved.getApprovalStatus());
         assertSame(manager, saved.getHiringManager());
-        assertNull(saved.getDepartment());
-        assertNull(saved.getNumberOfPositions());
+        // Form không gửi phòng ban: service lấy phòng ban của người tạo
+        assertSame(itDepartment, saved.getDepartment());
         assertNull(saved.getSubmittedAt());
         assertTrue(saved.getScreeningCriteria().isEmpty());
+        // Rule: JobDescription / RequirementDetails NOT NULL trong DB → nháp để trống thì lưu chuỗi rỗng
+        assertEquals("", saved.getJobDescription());
+        assertEquals("", saved.getRequirementDetails());
+        // Rule: mã yêu cầu sinh từ id sau lần lưu đầu: REQ- + id đệm 4 chữ số
+        assertEquals("REQ-0101", saved.getRequisitionCode());
 
         var auditCap = ArgumentCaptor.forClass(AuditLog.class);
         verify(audit).save(auditCap.capture());
-        assertEquals("Tạo yêu cầu: Untitled requisition · Draft", auditCap.getValue().getNewValue());
+        assertEquals("Tạo yêu cầu: Kế toán tổng hợp · Draft", auditCap.getValue().getNewValue());
     }
 
     @Test
@@ -217,6 +227,67 @@ class JobRequisitionServiceTest {
         verifyNoInteractions(audit);
     }
 
+    @Test
+    @DisplayName("SVC-01: Tài khoản chưa có phòng ban -> Báo lỗi dễ hiểu, không lưu DB")
+    void svc01_create_rejectedWhenCreatorHasNoDepartment() {
+        manager.setDepartment(null);
+        var req = RequisitionRequest.builder().action("draft").title("Kế toán").build();
+
+        var ex = assertThrows(RequisitionValidationException.class, () -> service.createRequisition(req));
+
+        assertEquals("Tài khoản của bạn chưa được gán phòng ban đang hoạt động. Vui lòng liên hệ quản trị viên.",
+                ex.getErrors().get("departmentId"));
+        verify(requisitions, never()).saveAndFlush(any());
+    }
+
+    @Test
+    @DisplayName("SVC-01: Phòng ban của người tạo đã ngừng hoạt động -> Không tạo được")
+    void svc01_create_rejectedWhenDepartmentInactive() {
+        itDepartment.setDepartmentStatus("Inactive");
+        var req = RequisitionRequest.builder().action("draft").title("Kế toán").build();
+
+        var ex = assertThrows(RequisitionValidationException.class, () -> service.createRequisition(req));
+
+        assertTrue(ex.getErrors().containsKey("departmentId"));
+        verify(requisitions, never()).saveAndFlush(any());
+    }
+
+    @Test
+    @DisplayName("SVC-01: Form gửi departmentId khác -> Bị ghi đè bằng phòng ban của người tạo")
+    void svc01_create_ignoresDepartmentFromForm() {
+        var req = RequisitionRequest.builder().action("draft").title("Kế toán").departmentId(99).build();
+
+        service.createRequisition(req);
+
+        assertEquals(1, req.getDepartmentId());
+        verify(departments, never()).findById(99);
+    }
+
+    @Test
+    @DisplayName("SVC-04: Admin sửa phiếu của HM -> Phiếu giữ nguyên phòng ban cũ")
+    void svc04_update_keepsOriginalDepartment() {
+        Department salesDepartment = Department.builder().departmentId(2).departmentName("Sales").departmentStatus("Active").build();
+        User admin = User.builder().userId(1).username("admin").fullName("Admin").department(itDepartment).build();
+        when(access.actor()).thenReturn(admin);
+        when(departments.findById(2)).thenReturn(Optional.of(salesDepartment));
+
+        JobRequisition req = JobRequisition.builder()
+                .requisitionId(70)
+                .title("Sales Executive")
+                .approvalStatus("Draft")
+                .hiringManager(manager)
+                .department(salesDepartment)
+                .screeningCriteria(new ArrayList<>())
+                .build();
+        when(requisitions.findForUpdate(70)).thenReturn(Optional.of(req));
+
+        var dto = RequisitionRequest.builder().action("draft").title("Sales Executive").departmentId(1).build();
+        service.updateRequisition(70, dto);
+
+        assertEquals(2, dto.getDepartmentId());
+        assertSame(salesDepartment, req.getDepartment());
+    }
+
     // =========================================================================
     // [SVC-07] Decide: Reject -> Tạo thông báo riêng cho Hiring Manager
     // =========================================================================
@@ -250,6 +321,53 @@ class JobRequisitionServiceTest {
     }
 
     // =========================================================================
+    // [SVC-10] Delete: chặn khi còn dữ liệu phụ thuộc
+    // =========================================================================
+
+    /** Phiếu bị trả lại của chính HM đang đăng nhập: được phép sửa / xóa. */
+    private JobRequisition rejectedRequisition() {
+        JobRequisition req = JobRequisition.builder()
+                .requisitionId(60)
+                .title("Senior Java")
+                .approvalStatus("Rejected")
+                .hiringManager(manager)
+                .screeningCriteria(new ArrayList<>())
+                .build();
+        when(requisitions.findForUpdate(60)).thenReturn(Optional.of(req));
+        return req;
+    }
+
+    @Test
+    @DisplayName("SVC-10: Phiếu đã có đợt tuyển sau sao chép từ nó -> Không xóa, báo lỗi rõ ràng")
+    void svc10_delete_blockedWhenLaterRoundExists() {
+        rejectedRequisition();
+        when(postings.existsByRequisition_RequisitionId(60)).thenReturn(false);
+        when(requisitions.existsByOriginalRequisition_RequisitionId(60)).thenReturn(true);
+
+        var ex = assertThrows(RequisitionValidationException.class, () -> service.deleteRequisition(60));
+
+        assertEquals("Yêu cầu này đã có đợt tuyển sau được sao chép từ nó và không thể xóa.", ex.getErrors().get("action"));
+        verify(requisitions, never()).delete(any(JobRequisition.class));
+        verifyNoInteractions(audit);
+    }
+
+    @Test
+    @DisplayName("SVC-10: Phiếu không có tin tuyển dụng, không có đợt sau -> Xóa lịch sử duyệt rồi xóa phiếu, ghi audit")
+    void svc10_delete_succeedsWhenNothingDepends() {
+        JobRequisition req = rejectedRequisition();
+        when(postings.existsByRequisition_RequisitionId(60)).thenReturn(false);
+        when(requisitions.existsByOriginalRequisition_RequisitionId(60)).thenReturn(false);
+        when(approvals.findByRequisition_RequisitionIdOrderByApprovalDateDesc(60)).thenReturn(List.of());
+
+        service.deleteRequisition(60);
+
+        verify(access).requireEdit(manager, req);
+        verify(audit).save(any(AuditLog.class));
+        verify(approvals).deleteAll(List.of());
+        verify(requisitions).delete(req);
+    }
+
+    // =========================================================================
     // [SVC-HR] Scope: HR chỉ truy vấn Requisition Approved
     // =========================================================================
 
@@ -263,7 +381,8 @@ class JobRequisitionServiceTest {
         when(requisitions.findAll(any(org.springframework.data.jpa.domain.Specification.class), any(org.springframework.data.domain.Pageable.class)))
                 .thenReturn(new org.springframework.data.domain.PageImpl<>(List.of()));
 
-        service.search(1, 10, "", null, "", "", "newest");
+        service.getListPage(new com.group2.rms.requisition.dto.RequisitionSearchRequest(
+                null, null, null, null, null, null, null, null, null, null));
 
         var filter = ArgumentCaptor.forClass(org.springframework.data.jpa.domain.Specification.class);
         verify(requisitions).findAll(filter.capture(), any(org.springframework.data.domain.Pageable.class));

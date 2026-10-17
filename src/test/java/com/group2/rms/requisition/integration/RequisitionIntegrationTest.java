@@ -145,7 +145,8 @@ class RequisitionIntegrationTest {
         assertEquals("Female", entityManager.createNativeQuery(
                 "SELECT RequiredGender FROM JobRequisition WHERE RequisitionId = :id")
                 .setParameter("id", id).getSingleResult());
-        var page = service.search(1, 10, "Unicode read regression", null, "", "", "newest");
+        var page = service.getListPage(new com.group2.rms.requisition.dto.RequisitionSearchRequest(
+                "Unicode read regression", null, null, null, null, null, null, "newest", 0, 10)).page();
         var row = page.getContent().stream().filter(r -> id.equals(r.getRequisitionId())).findFirst().orElseThrow();
         assertEquals("Female", row.getGender());
         assertEquals("Văn phòng Hà Nội", row.getWorkLocation());

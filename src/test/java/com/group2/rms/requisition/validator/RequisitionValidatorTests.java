@@ -22,7 +22,7 @@ import static org.junit.jupiter.api.Assertions.*;
  * Các nhóm VAL-001..020 bên dưới đã có test; comment không khẳng định chúng đã chạy/pass.
  *
  * CÁCH ĐỌC / LÀM TIẾP:
- * 1. valid() tạo Submit hợp lệ; emptyDraft() tạo Draft chưa đủ dữ liệu.
+ * 1. valid() tạo Submit hợp lệ; minimalDraft() tạo Draft chưa đủ dữ liệu.
  * 2. Mỗi case đổi dữ liệu ở Arrange, gọi validator ở Act, kiểm tra đúng field lỗi ở Assert.
  * 3. Dùng parameterized test cho các giá trị biên cùng quy tắc; không thêm rule ngoài code.
  * 4. Draft bỏ kiểm tra đủ field, nhưng vẫn kiểm tra tính hợp lệ của giá trị đã nhập.
@@ -74,6 +74,31 @@ class RequisitionValidatorTests {
         return d;
     }
 
+    /**
+     * Bản nháp tối thiểu hợp lệ theo quy tắc mới: Tên vị trí, Số lượng, Hình thức, Mô hình làm việc
+     * bắt buộc cả khi lưu nháp (các cột NOT NULL trong DB). Những thứ khác được để trống.
+     */
+    private RequisitionRequest minimalDraft() {
+        RequisitionRequest d = emptyDraft();
+        d.setTitle("Draft Title");
+        d.setNumberOfPositions(1);
+        d.setEmploymentType("Full-time");
+        d.setWorkModel("On-site");
+        return d;
+    }
+
+    /** Một dòng tiêu chí điền đủ trường (CriteriaName, CriteriaType, RequiredValue, Weight đều NOT NULL). */
+    private ScreeningCriteriaRequest criterion(String name, String weight) {
+        return ScreeningCriteriaRequest.builder()
+                .criteriaName(name).criteriaType("Skill").requiredValue("Có kinh nghiệm")
+                .weight(new BigDecimal(weight)).build();
+    }
+
+    private ScreeningCriteriaRequest withId(ScreeningCriteriaRequest c, int id) {
+        c.setCriteriaId(id);
+        return c;
+    }
+
     private RequisitionValidationException expectFail(RequisitionRequest req) {
         return assertThrows(RequisitionValidationException.class, () -> validator.validate(req));
     }
@@ -94,23 +119,45 @@ class RequisitionValidatorTests {
         var d = valid(); d.setWorkModel("Remote"); expectPass(d);
     }
 
-    // VAL-002 — Draft được thiếu dữ liệu
+    // VAL-002 — Draft: chỉ bắt buộc các trường NOT NULL trong DB, còn lại được để trống
 
-    @Test void val002_emptyDraftPassesWithNoFieldsSet() { expectPass(emptyDraft()); }
+    @Test void val002_minimalDraftPasses() { expectPass(minimalDraft()); }
 
-    @Test void val002_draftWithPartialCriteriaAndLowWeightPasses() {
-        var d = emptyDraft();
+    @Test void val002_emptyDraftFails_whenDbRequiredFieldsMissing() {
+        var errors = expectFail(emptyDraft()).getErrors();
+        assertTrue(errors.containsKey("title"));
+        assertTrue(errors.containsKey("numberOfPositions"));
+        assertTrue(errors.containsKey("employmentType"));
+        assertTrue(errors.containsKey("workModel"));
+    }
+
+    @Test void val002_draftWithPartialCriteriaRowFails() {
+        var d = minimalDraft();
         d.setScreeningCriteria(new ArrayList<>(List.of(
                 ScreeningCriteriaRequest.builder().criteriaName("Partial").weight(new BigDecimal("20")).build())));
+        var errors = expectFail(d).getErrors();
+        assertTrue(errors.containsKey("screeningCriteria[0].criteriaType"));
+        assertTrue(errors.containsKey("screeningCriteria[0].requiredValue"));
+    }
+
+    @Test void val002_draftWithCompleteCriteriaAndLowWeightPasses() {
+        var d = minimalDraft();
+        d.setScreeningCriteria(new ArrayList<>(List.of(criterion("Partial", "20"))));
         expectPass(d);
     }
 
+    @Test void val002_draftWithoutGenderDefaultsToAny() {
+        var d = minimalDraft();
+        expectPass(d);
+        assertEquals("Any", d.getGender());
+    }
+
     @Test void val002_draftDoesNotRequireDepartmentOrDate() {
-        var d = emptyDraft(); d.setTitle("Draft Title"); expectPass(d);
+        var d = minimalDraft(); d.setTitle("Draft Title"); expectPass(d);
     }
 
     @Test void val002_submitWithSameDraftDataFails() {
-        var d = emptyDraft();
+        var d = minimalDraft();
         d.setScreeningCriteria(new ArrayList<>(List.of(
                 ScreeningCriteriaRequest.builder().criteriaName("Partial").weight(new BigDecimal("20")).build())));
         d.setAction("submit");
@@ -120,28 +167,39 @@ class RequisitionValidatorTests {
     // VAL-003 — Draft vẫn kiểm tra giá trị đã nhập
 
     @Test void val003_draftWithInvalidWorkModelIsRejected() {
-        var d = emptyDraft(); d.setWorkModel("Flexible");
+        var d = minimalDraft(); d.setWorkModel("Flexible");
         assertTrue(expectFail(d).getErrors().containsKey("workModel"));
     }
 
     @Test void val003_draftWithInvalidEmploymentTypeIsRejected() {
-        var d = emptyDraft(); d.setEmploymentType("Freelance");
+        var d = minimalDraft(); d.setEmploymentType("Freelance");
         assertTrue(expectFail(d).getErrors().containsKey("employmentType"));
     }
 
     @Test void val003_draftWithInvalidGenderIsRejected() {
-        var d = emptyDraft(); d.setGender("Unknown");
+        var d = minimalDraft(); d.setGender("Unknown");
         assertTrue(expectFail(d).getErrors().containsKey("gender"));
     }
 
     @Test void val003_draftWithNegativePositionsIsRejected() {
-        var d = emptyDraft(); d.setNumberOfPositions(-1);
+        var d = minimalDraft(); d.setNumberOfPositions(-1);
         assertTrue(expectFail(d).getErrors().containsKey("numberOfPositions"));
     }
 
     @Test void val003_draftWithZeroPositionsIsRejected() {
-        var d = emptyDraft(); d.setNumberOfPositions(0);
+        var d = minimalDraft(); d.setNumberOfPositions(0);
         assertTrue(expectFail(d).getErrors().containsKey("numberOfPositions"));
+    }
+
+    @Test void val003_positionsAtMaximumIsAccepted() {
+        var d = minimalDraft(); d.setNumberOfPositions(RequisitionValidator.POSITIONS_MAX);
+        assertDoesNotThrow(() -> validator.validate(d));
+    }
+
+    @Test void val003_positionsAboveMaximumIsRejected() {
+        var d = minimalDraft(); d.setNumberOfPositions(RequisitionValidator.POSITIONS_MAX + 1);
+        assertEquals("Số lượng cần tuyển phải từ 1 đến 30 người.",
+                expectFail(d).getErrors().get("numberOfPositions"));
     }
 
     // VAL-004 — Action draft/submit
@@ -204,7 +262,7 @@ class RequisitionValidatorTests {
     }
 
     @Test void val006_placeholderTitleAllowedAsDraft() {
-        var d = emptyDraft(); d.setTitle("Untitled requisition"); expectPass(d);
+        var d = minimalDraft(); d.setTitle("Untitled requisition"); expectPass(d);
     }
 
     // VAL-007 — Department và headcount
@@ -215,7 +273,7 @@ class RequisitionValidatorTests {
     }
 
     @Test void val007_missingDepartmentAllowedAsDraft() {
-        var d = emptyDraft(); d.setDepartmentId(null); expectPass(d);
+        var d = minimalDraft(); d.setDepartmentId(null); expectPass(d);
     }
 
     @Test void val007_missingPositionsRejectedOnSubmit() {
@@ -313,7 +371,7 @@ class RequisitionValidatorTests {
     }
 
     @Test void val009_allMissingTextFieldsAllowedAsDraft() {
-        expectPass(emptyDraft());
+        expectPass(minimalDraft());
     }
 
     // VAL-010 — Giới hạn độ dài
@@ -399,8 +457,9 @@ class RequisitionValidatorTests {
         var d = valid(); d.setMinSalary(null); d.setMaxSalary(new BigDecimal("20000000")); expectPass(d);
     }
 
-    @Test void val011_zeroSalaryIsAccepted() {
-        var d = valid(); d.setMinSalary(BigDecimal.ZERO); d.setMaxSalary(BigDecimal.ZERO); expectPass(d);
+    @Test void val011_zeroSalaryIsRejected() {
+        var d = valid(); d.setMinSalary(BigDecimal.ZERO);
+        assertTrue(expectFail(d).getErrors().containsKey("minSalary"));
     }
 
     @Test void val011_negativeSalaryIsRejected() {
@@ -415,14 +474,14 @@ class RequisitionValidatorTests {
 
     @Test void val011_salaryAtMaxValuePasses() {
         var d = valid();
-        d.setMinSalary(new BigDecimal("9999999999999999.99"));
-        d.setMaxSalary(new BigDecimal("9999999999999999.99"));
+        d.setMinSalary(RequisitionValidator.SALARY_MAX);
+        d.setMaxSalary(RequisitionValidator.SALARY_MAX);
         expectPass(d);
     }
 
     @Test void val011_salaryOverMaxValueRejected() {
-        var d = valid(); d.setMaxSalary(new BigDecimal("10000000000000000.00"));
-        assertTrue(expectFail(d).getErrors().containsKey("maxSalary"));
+        var d = valid(); d.setMaxSalary(new BigDecimal("1000000001"));
+        assertEquals("Mức lương không được vượt quá 1.000.000.000 VND/tháng.", expectFail(d).getErrors().get("maxSalary"));
     }
 
     @Test void val011_salaryWith3DecimalsRejected() {
@@ -453,23 +512,53 @@ class RequisitionValidatorTests {
         var d = valid(); d.setExpectedStartDate(LocalDate.now().plusMonths(3)); expectPass(d);
     }
 
+    @Test void val012_exactlyOneYearAheadAccepted() {
+        var d = valid(); d.setExpectedStartDate(LocalDate.now().plusYears(1)); expectPass(d);
+    }
+
+    @Test void val012_moreThanOneYearAheadRejected_evenAsDraft() {
+        var submit = valid(); submit.setExpectedStartDate(LocalDate.now().plusYears(1).plusDays(1));
+        assertEquals("Ngày bắt đầu dự kiến không được quá 1 năm kể từ hôm nay.",
+                expectFail(submit).getErrors().get("expectedStartDate"));
+
+        // Năm 5 chữ số (gõ nhầm trên ô ngày) cũng bị chặn khi lưu nháp, không để DB báo lỗi
+        var draft = minimalDraft(); draft.setExpectedStartDate(LocalDate.of(20266, 1, 1));
+        assertTrue(expectFail(draft).getErrors().containsKey("expectedStartDate"));
+    }
+
+    // Xuống dòng "\r\n" (trình duyệt gửi lên) được đổi thành "\n" trước khi đếm ký tự
+
+    @Test void multiline_windowsLineBreaksAreNormalized() {
+        var d = valid(); d.setJobDescription("  Dòng 1\r\nDòng 2\r\n  ");
+        expectPass(d);
+        assertEquals("Dòng 1\nDòng 2", d.getJobDescription());
+    }
+
+    @Test void multiline_textAtLimitWithLineBreaksPasses() {
+        // 1000 dòng "a" = 1000 chữ + 999 lần xuống dòng = 1999 ký tự sau khi chuẩn hóa (gửi lên là 2998 ký tự)
+        String text = String.join("\r\n", java.util.Collections.nCopies(1000, "a"));
+        var d = valid(); d.setReasonForHiring(text);
+        expectPass(d);
+        assertEquals(1999, d.getReasonForHiring().length());
+    }
+
     @Test void val012_nullDateRejectedOnSubmit() {
         var d = valid(); d.setExpectedStartDate(null);
         assertTrue(expectFail(d).getErrors().containsKey("expectedStartDate"));
     }
 
     @Test void val012_nullDateAllowedAsDraft() {
-        var d = emptyDraft(); d.setExpectedStartDate(null); expectPass(d);
+        var d = minimalDraft(); d.setExpectedStartDate(null); expectPass(d);
     }
 
     @Test void val012_pastDateAllowedAsDraft() {
-        var d = emptyDraft(); d.setExpectedStartDate(LocalDate.now().minusDays(1)); expectPass(d);
+        var d = minimalDraft(); d.setExpectedStartDate(LocalDate.now().minusDays(1)); expectPass(d);
     }
 
     // VAL-013 — Danh sách tiêu chí và dòng trắng
 
     @Test void val013_nullCriteriaListNormalizedToEmptyAndPassesDraft() {
-        var d = emptyDraft(); d.setScreeningCriteria(null);
+        var d = minimalDraft(); d.setScreeningCriteria(null);
         expectPass(d);
         assertNotNull(d.getScreeningCriteria());
     }
@@ -480,15 +569,15 @@ class RequisitionValidatorTests {
     }
 
     @Test void val013_criteriaAt50Passes() {
-        var d = emptyDraft();
+        var d = minimalDraft();
         var list = new ArrayList<ScreeningCriteriaRequest>();
-        for (int i = 0; i < 50; i++) list.add(ScreeningCriteriaRequest.builder().criteriaName("C" + i).build());
+        for (int i = 0; i < 50; i++) list.add(criterion("C" + i, "1"));
         d.setScreeningCriteria(list);
         expectPass(d);
     }
 
     @Test void val013_criteriaOver50Rejected() {
-        var d = emptyDraft();
+        var d = minimalDraft();
         var list = new ArrayList<ScreeningCriteriaRequest>();
         for (int i = 0; i <= 50; i++) list.add(ScreeningCriteriaRequest.builder().criteriaName("C" + i).build());
         d.setScreeningCriteria(list);
@@ -496,7 +585,7 @@ class RequisitionValidatorTests {
     }
 
     @Test void val013_nullRowInCriteriaRejected() {
-        var d = emptyDraft();
+        var d = minimalDraft();
         var list = new ArrayList<ScreeningCriteriaRequest>();
         list.add(null);
         d.setScreeningCriteria(list);
@@ -504,7 +593,7 @@ class RequisitionValidatorTests {
     }
 
     @Test void val013_blankRowSkippedInDraft() {
-        var d = emptyDraft();
+        var d = minimalDraft();
         d.setScreeningCriteria(new ArrayList<>(List.of(
                 ScreeningCriteriaRequest.builder().criteriaName("  ").criteriaType(null)
                         .requiredValue("").isMandatory(false).build())));
@@ -575,7 +664,7 @@ class RequisitionValidatorTests {
     // VAL-016 — ID tiêu chí trùng
 
     @Test void val016_duplicateCriterionIdsRejected() {
-        var d = emptyDraft();
+        var d = minimalDraft();
         d.setScreeningCriteria(new ArrayList<>(List.of(
                 ScreeningCriteriaRequest.builder().criteriaId(5).criteriaName("Java")
                         .criteriaType("Skill").requiredValue("Two years").weight(new BigDecimal("100")).build(),
@@ -586,10 +675,10 @@ class RequisitionValidatorTests {
     }
 
     @Test void val016_distinctCriterionIdsPass() {
-        var d = emptyDraft();
+        var d = minimalDraft();
         d.setScreeningCriteria(new ArrayList<>(List.of(
-                ScreeningCriteriaRequest.builder().criteriaId(1).criteriaName("Java").build(),
-                ScreeningCriteriaRequest.builder().criteriaId(2).criteriaName("Python").build())));
+                withId(criterion("Java", "50"), 1),
+                withId(criterion("Python", "50"), 2))));
         expectPass(d);
     }
 
@@ -624,24 +713,25 @@ class RequisitionValidatorTests {
     }
 
     @Test void val017_zeroWeightRejectedOnDraft() {
-        var d = emptyDraft();
+        var d = minimalDraft();
         d.setScreeningCriteria(new ArrayList<>(List.of(
                 ScreeningCriteriaRequest.builder().criteriaName("Java").weight(BigDecimal.ZERO).build())));
         assertTrue(expectFail(d).getErrors().containsKey("screeningCriteria[0].weight"));
     }
 
-    @Test void val017_weightUpTo999_99OnDraftPasses() {
-        var d = emptyDraft();
+    @Test void val017_weight100OnDraftPasses() {
+        var d = minimalDraft();
         d.setScreeningCriteria(new ArrayList<>(List.of(
-                ScreeningCriteriaRequest.builder().criteriaName("Java").weight(new BigDecimal("999.99")).build())));
+                criterion("Java", "100"))));
         expectPass(d);
     }
 
-    @Test void val017_weightOver999_99OnDraftRejected() {
-        var d = emptyDraft();
+    @Test void val017_weightOver100OnDraftRejected() {
+        var d = minimalDraft();
         d.setScreeningCriteria(new ArrayList<>(List.of(
-                ScreeningCriteriaRequest.builder().criteriaName("Java").weight(new BigDecimal("1000.00")).build())));
-        assertTrue(expectFail(d).getErrors().containsKey("screeningCriteria[0].weight"));
+                criterion("Java", "100.01"))));
+        assertEquals("Trọng số phải từ 0.01 đến 100 với tối đa hai chữ số thập phân.",
+                expectFail(d).getErrors().get("screeningCriteria[0].weight"));
     }
 
     // VAL-018 — Tổng weight khi Submit
@@ -674,44 +764,44 @@ class RequisitionValidatorTests {
     // VAL-019 — Weight khi Draft
 
     @Test void val019_draftDoesNotRequireTotalWeightOf100() {
-        var d = emptyDraft();
+        var d = minimalDraft();
         d.setScreeningCriteria(new ArrayList<>(List.of(
-                ScreeningCriteriaRequest.builder().criteriaName("Java").weight(new BigDecimal("30")).build())));
+                criterion("Java", "30"))));
         expectPass(d);
     }
 
     @Test void val019_draftAllowsMinimumPositiveWeight() {
-        var d = emptyDraft();
+        var d = minimalDraft();
         d.setScreeningCriteria(new ArrayList<>(List.of(
-                ScreeningCriteriaRequest.builder().criteriaName("Java").weight(new BigDecimal("0.01")).build())));
+                criterion("Java", "0.01"))));
         expectPass(d);
     }
 
-    @Test void val019_submitRejectsAbove100WhileDraftAccepts999_99() {
+    @Test void val019_weightAbove100RejectedOnBothDraftAndSubmit() {
         var submit = valid();
         submit.getScreeningCriteria().get(0).setWeight(new BigDecimal("101"));
-        assertThrows(RequisitionValidationException.class, () -> validator.validate(submit));
+        assertTrue(expectFail(submit).getErrors().containsKey("screeningCriteria[0].weight"));
 
-        var draft = emptyDraft();
+        var draft = minimalDraft();
         draft.setScreeningCriteria(new ArrayList<>(List.of(
-                ScreeningCriteriaRequest.builder().criteriaName("Java").weight(new BigDecimal("999.99")).build())));
-        assertDoesNotThrow(() -> validator.validate(draft));
+                criterion("Java", "101"))));
+        assertTrue(expectFail(draft).getErrors().containsKey("screeningCriteria[0].weight"));
     }
 
     // VAL-020 — Mandatory và nhận diện dòng trắng
 
-    @Test void val020_isMandatoryTruePreventsBlanknessSkip() {
-        var d = emptyDraft();
+    @Test void val020_mandatoryOnlyRowIsNotBlank_andRequiresFieldsEvenInDraft() {
+        var d = minimalDraft();
         d.setScreeningCriteria(new ArrayList<>(List.of(
                 ScreeningCriteriaRequest.builder()
                         .criteriaName(null).criteriaType(null).requiredValue(null)
                         .isMandatory(true).build())));
-        // Not blank (isMandatory=true), but draft → no submit-required rules → passes
-        expectPass(d);
+        // Bật "Bắt buộc" nghĩa là dòng đã được nhập → phải điền đủ (các cột NOT NULL), kể cả khi lưu nháp
+        assertTrue(expectFail(d).getErrors().containsKey("screeningCriteria[0].criteriaName"));
     }
 
     @Test void val020_isMandatoryFalseAllBlankSkippedInDraft() {
-        var d = emptyDraft();
+        var d = minimalDraft();
         d.setScreeningCriteria(new ArrayList<>(List.of(
                 ScreeningCriteriaRequest.builder()
                         .criteriaName("  ").criteriaType(null).requiredValue("  ")
