@@ -117,65 +117,88 @@ GO
 -- =============================================================================
 -- 3.6 JOB REQUISITION (Phiếu yêu cầu tuyển dụng)
 -- =============================================================================
-CREATE TABLE JobRequisition (
-    RequisitionId INT IDENTITY(1,1) PRIMARY KEY,
-    Title NVARCHAR(200) NOT NULL,
-	RequisitionCode NVARCHAR(50) NULL, --add
-    DepartmentId INT NOT NULL,
-    HiringManagerId INT NOT NULL,
-	RecruitmentRound INT NOT NULL CONSTRAINT CK_JobRequisition_RecruitmentRound
-    CHECK (RecruitmentRound > 0), --add
-    NumberOfPositions INT NOT NULL,
-    EmploymentType NVARCHAR(50) NOT NULL,
-    MinSalary DECIMAL(18,2) NULL,
-    MaxSalary DECIMAL(18,2) NULL,
-    ReasonForHiring NVARCHAR(2000) NULL,
-    JobDescription NVARCHAR(MAX) NOT NULL,
-    RequirementDetails NVARCHAR(MAX) NOT NULL,
-    RequiredGender NVARCHAR(20) NOT NULL CONSTRAINT DF_JobRequisition_RequiredGender DEFAULT N'Any',
-    ProbationDays INT NULL,
-    WorkModel NVARCHAR(20) NOT NULL CONSTRAINT DF_JobRequisition_WorkModel DEFAULT N'On-site',
-    WorkLocation NVARCHAR(255) NULL,
-    ExpectedStartDate DATE NULL,
-    ApprovalStatus NVARCHAR(30) NOT NULL CONSTRAINT DF_JobRequisition_ApprovalStatus DEFAULT N'Draft',
-    CreatedAt DATETIME2 NOT NULL CONSTRAINT DF_JobRequisition_CreatedAt DEFAULT SYSDATETIME(),
-    UpdatedAt DATETIME2 NULL,
 
+CREATE TABLE JobRequisition (
+    RequisitionId          INT IDENTITY(1,1) PRIMARY KEY,
+    Title                  NVARCHAR(200) NOT NULL,
+    RequisitionCode        NVARCHAR(50) NULL,
+    DepartmentId           INT NOT NULL,
+    HiringManagerId        INT NOT NULL,
+    CreatedBy              INT NULL,                -- [MỚI] user tạo phiếu
+    RecruitmentRound       INT NOT NULL CONSTRAINT DF_JobRequisition_Round DEFAULT 1,
+    OriginalRequisitionId  INT NULL,                -- [MỚI] NULL = đợt 1
+    HiringType             NVARCHAR(20) NULL,       -- [MỚI] New / Replacement
+    NumberOfPositions      INT NOT NULL,
+    EmploymentType         NVARCHAR(50) NOT NULL,
+    MinSalary              DECIMAL(18,2) NULL,
+    MaxSalary              DECIMAL(18,2) NULL,
+    ReasonForHiring        NVARCHAR(2000) NULL,
+    JobDescription         NVARCHAR(MAX) NOT NULL,
+    RequirementDetails     NVARCHAR(MAX) NOT NULL,
+    RequiredGender         NVARCHAR(20) NOT NULL CONSTRAINT DF_JobRequisition_RequiredGender DEFAULT N'Any',
+    ProbationDays          INT NULL,                -- số ngày thử việc (1..180)
+    WorkModel              NVARCHAR(20) NOT NULL CONSTRAINT DF_JobRequisition_WorkModel DEFAULT N'On-site',
+    WorkLocation           NVARCHAR(255) NULL,
+    ExpectedStartDate      DATE NULL,
+    ApprovalStatus         NVARCHAR(30) NOT NULL CONSTRAINT DF_JobRequisition_ApprovalStatus DEFAULT N'Draft',
+    SubmittedAt            DATETIME2 NULL,          -- [MỚI]
+    ClosedAt               DATETIME2 NULL,          -- [MỚI]
+    CreatedAt              DATETIME2 NOT NULL CONSTRAINT DF_JobRequisition_CreatedAt DEFAULT SYSDATETIME(),
+    UpdatedAt              DATETIME2 NULL,
+ 
     CONSTRAINT FK_JobRequisition_Department
         FOREIGN KEY (DepartmentId) REFERENCES Department(DepartmentId),
-
+ 
     CONSTRAINT FK_JobRequisition_HiringManager
         FOREIGN KEY (HiringManagerId) REFERENCES [User](UserId),
-
+ 
+    CONSTRAINT FK_JobRequisition_CreatedBy
+        FOREIGN KEY (CreatedBy) REFERENCES [User](UserId),
+ 
+    CONSTRAINT FK_JobRequisition_Original
+        FOREIGN KEY (OriginalRequisitionId) REFERENCES JobRequisition(RequisitionId),
+ 
+    CONSTRAINT CK_JobRequisition_RecruitmentRound
+        CHECK (RecruitmentRound > 0),
+ 
+    CONSTRAINT CK_JobRequisition_RoundOrigin CHECK (
+        (RecruitmentRound = 1 AND OriginalRequisitionId IS NULL)
+        OR (RecruitmentRound > 1 AND OriginalRequisitionId IS NOT NULL)
+    ),
+ 
+    CONSTRAINT CK_JobRequisition_HiringType
+        CHECK (HiringType IS NULL OR HiringType IN (N'New', N'Replacement')),
+ 
     CONSTRAINT CK_JobRequisition_NumberOfPositions
         CHECK (NumberOfPositions > 0),
-
+ 
+    CONSTRAINT CK_JobRequisition_ProbationDays
+        CHECK (ProbationDays IS NULL OR ProbationDays BETWEEN 1 AND 180),
+ 
     CONSTRAINT CK_JobRequisition_EmploymentType
         CHECK (EmploymentType IN (N'Full-time', N'Part-time', N'Internship', N'Contract')),
-
+ 
     CONSTRAINT CK_JobRequisition_RequiredGender
         CHECK (RequiredGender IN (N'Male', N'Female', N'Any')),
-
+ 
     CONSTRAINT CK_JobRequisition_WorkModel
         CHECK (WorkModel IN (N'On-site', N'Remote', N'Hybrid')),
-        -- update close andcacelled
+ 
     CONSTRAINT CK_JobRequisition_ApprovalStatus
-        CHECK (ApprovalStatus IN (N'Draft',
-                 N'Pending_Director',
-                 N'Approved', 
-                 N'Rejected',
-                 N'Closed',
+        CHECK (ApprovalStatus IN (
+            N'Draft',
+            N'Pending_Director',
+            N'Approved',
+            N'Rejected',
+            N'Closed',
             N'Cancelled'
-            )),
-
+        )),
+ 
     CONSTRAINT CK_JobRequisition_Salary_Range
         CHECK (MinSalary IS NULL OR MaxSalary IS NULL OR MinSalary <= MaxSalary),
-
+ 
     CONSTRAINT CK_JobRequisition_Salary_NonNegative
-        CHECK ((MinSalary IS NULL OR MinSalary >= 0) AND (MaxSalary IS NULL OR MaxSalary >= 0)),
-
-    CONSTRAINT CK_JobRequisition_ProbationDays
-        CHECK (ProbationDays IS NULL OR ProbationDays BETWEEN 1 AND 180)
+        CHECK ((MinSalary IS NULL OR MinSalary >= 0) AND (MaxSalary IS NULL OR MaxSalary >= 0))
 );
 GO
 
@@ -230,31 +253,41 @@ GO
 -- =============================================================================
 -- 3.9 JOB POSTING (Tin tuyển dụng công khai)
 -- =============================================================================
-CREATE TABLE JobPosting (
-    JobPostingId INT IDENTITY(1,1) PRIMARY KEY,
-    RequisitionId INT NOT NULL,
-    PostingTitle NVARCHAR(200) NOT NULL,
-    JobDescription NVARCHAR(MAX) NOT NULL,
-    JobRequirements NVARCHAR(MAX) NOT NULL,
-    Benefits NVARCHAR(MAX) NULL,
-    SalaryDisplay NVARCHAR(100) NULL,
-    WorkLocation NVARCHAR(255) NULL,
-    PostingDate DATETIME2 NULL,
-    ApplicationDeadline DATETIME2 NULL,
-    PostingStatus NVARCHAR(20) NOT NULL CONSTRAINT DF_JobPosting_PostingStatus DEFAULT N'Draft',
-    CreatedBy INT NOT NULL,
-    CreatedAt DATETIME2 NOT NULL CONSTRAINT DF_JobPosting_CreatedAt DEFAULT SYSDATETIME(),
-    UpdatedAt DATETIME2 NULL,
 
+CREATE TABLE JobPosting (
+    JobPostingId         INT IDENTITY(1,1) PRIMARY KEY,
+    RequisitionId        INT NOT NULL,
+    PostingNo            INT NOT NULL CONSTRAINT DF_JobPosting_PostingNo DEFAULT 1,  -- [MỚI] lần đăng
+    PostingTitle         NVARCHAR(200) NOT NULL,
+    JobDescription       NVARCHAR(MAX) NOT NULL,
+    JobRequirements      NVARCHAR(MAX) NOT NULL,
+    Benefits             NVARCHAR(MAX) NULL,
+    SalaryDisplay        NVARCHAR(100) NULL,
+    NumberOfPositionsDisplay     NVARCHAR(50) NULL,      -- [MỚI] NULL = không hiển thị số lượng
+    WorkLocation         NVARCHAR(255) NULL,
+    PostingDate          DATETIME2 NULL,
+    ApplicationDeadline  DATETIME2 NULL,
+    PostingStatus        NVARCHAR(20) NOT NULL CONSTRAINT DF_JobPosting_PostingStatus DEFAULT N'Draft',
+    ClosedAt             DATETIME2 NULL,         -- [MỚI]
+    CreatedBy            INT NOT NULL,
+    CreatedAt            DATETIME2 NOT NULL CONSTRAINT DF_JobPosting_CreatedAt DEFAULT SYSDATETIME(),
+    UpdatedAt            DATETIME2 NULL,
+ 
     CONSTRAINT FK_JobPosting_Requisition
         FOREIGN KEY (RequisitionId) REFERENCES JobRequisition(RequisitionId),
-
+ 
     CONSTRAINT FK_JobPosting_CreatedBy
         FOREIGN KEY (CreatedBy) REFERENCES [User](UserId),
-
+ 
+    CONSTRAINT UQ_JobPosting_Requisition_PostingNo
+        UNIQUE (RequisitionId, PostingNo),
+ 
+    CONSTRAINT CK_JobPosting_PostingNo
+        CHECK (PostingNo > 0),
+ 
     CONSTRAINT CK_JobPosting_Status
         CHECK (PostingStatus IN (N'Draft', N'Published', N'Paused', N'Closed')),
-
+ 
     CONSTRAINT CK_JobPosting_Deadline
         CHECK (ApplicationDeadline IS NULL OR PostingDate IS NULL OR ApplicationDeadline > PostingDate)
 );
@@ -280,7 +313,7 @@ CREATE TABLE Candidate (
     UpdatedAt DATETIME2 NULL,
 
     CONSTRAINT FK_Candidate_User
-        FOREIGN KEY (UserId) REFERENCES [User](UserId)
+        FOREIGN KEY (UserId) REFERENCES [User](UserId),
 
 );
 GO
@@ -524,6 +557,9 @@ CREATE TABLE OfferProposal (
     ),
     ResponseDeadline DATETIME2 NULL,
     IsDeleted BIT NOT NULL CONSTRAINT DF_OfferProposal_IsDeleted DEFAULT 0,  -- Xóa mềm đề xuất Offer
+    ProposedBy INT NOT NULL,
+    CreatedAt DATETIME2 NOT NULL CONSTRAINT DF_OfferProposal_CreatedAt DEFAULT SYSDATETIME(),
+    UpdatedAt DATETIME2 NULL,
 
     CONSTRAINT FK_OfferProposal_Application
         FOREIGN KEY (ApplicationId) REFERENCES Application(ApplicationId),
@@ -576,9 +612,11 @@ GO
 -- =============================================================================
 -- 3.20 NOTIFICATION (Quản lý thông báo nội bộ hệ thống)
 -- =============================================================================
+
 CREATE TABLE [dbo].[Notification] (
     [NotificationId] BIGINT IDENTITY(1,1) NOT NULL,
     [RecipientId]    INT NOT NULL,
+    [ActorId]        INT NULL,                 -- [MỚI] NULL = hệ thống tự sinh
     [Title]          NVARCHAR(255) NOT NULL,
     [Content]        NVARCHAR(1000) NOT NULL,
     [EventType]      VARCHAR(50) NOT NULL,
@@ -586,28 +624,60 @@ CREATE TABLE [dbo].[Notification] (
     [ReferenceId]    VARCHAR(50) NULL,
     [LinkUrl]        NVARCHAR(255) NULL,
     [IsRead]         BIT NOT NULL CONSTRAINT [DF_Notification_IsRead] DEFAULT (0),
+    [ReadAt]         DATETIME2 NULL,           -- [MỚI]
     [EventId]        VARCHAR(100) NULL,
     [CreatedAt]      DATETIME2 NOT NULL CONSTRAINT [DF_Notification_CreatedAt] DEFAULT (SYSDATETIME()),
-
+ 
     CONSTRAINT [PK_Notification] PRIMARY KEY CLUSTERED ([NotificationId] ASC),
-    CONSTRAINT [FK_Notification_User] FOREIGN KEY ([RecipientId]) REFERENCES [dbo].[User] ([UserId])
+    CONSTRAINT [FK_Notification_User]  FOREIGN KEY ([RecipientId]) REFERENCES [dbo].[User] ([UserId]),
+    CONSTRAINT [FK_Notification_Actor] FOREIGN KEY ([ActorId])     REFERENCES [dbo].[User] ([UserId])
 );
 GO
 
 -- =============================================================================
--- INDEXES FOR PERFORMANCE OPTIMIZATION (Non-Clustered Indexes on Foreign Keys)
+-- INDEXES CHO BẢNG NGƯỜI DÙNG & TỔ CHỨC
 -- =============================================================================
 CREATE NONCLUSTERED INDEX IX_User_RoleId ON [User](RoleId);
 CREATE NONCLUSTERED INDEX IX_User_DepartmentId ON [User](DepartmentId);
 CREATE NONCLUSTERED INDEX IX_Department_ManagerId ON Department(ManagerId);
 CREATE NONCLUSTERED INDEX IX_AuditLog_UserId ON AuditLog(UserId);
+
+-- =============================================================================
+-- INDEXES CHO JOB REQUISITION
+-- =============================================================================
 CREATE NONCLUSTERED INDEX IX_JobRequisition_DepartmentId ON JobRequisition(DepartmentId);
 CREATE NONCLUSTERED INDEX IX_JobRequisition_HiringManagerId ON JobRequisition(HiringManagerId);
+CREATE NONCLUSTERED INDEX IX_JobRequisition_CreatedBy ON JobRequisition(CreatedBy);
+
+-- Chặn tạo trùng "đợt 2" cho cùng một vị trí (Yêu cầu có cột OriginalRequisitionId trong bảng)
+CREATE UNIQUE NONCLUSTERED INDEX UX_JobRequisition_Original_Round
+ON JobRequisition(OriginalRequisitionId, RecruitmentRound)
+WHERE OriginalRequisitionId IS NOT NULL;
+GO
+
+-- =============================================================================
+-- INDEXES CHO JOB POSTING
+-- =============================================================================
+CREATE NONCLUSTERED INDEX IX_JobPosting_RequisitionId ON JobPosting(RequisitionId);
+CREATE NONCLUSTERED INDEX IX_JobPosting_CreatedBy ON JobPosting(CreatedBy);
+
+-- Mỗi requisition chỉ có tối đa 1 tin đang công khai
+CREATE UNIQUE NONCLUSTERED INDEX UX_JobPosting_ActivePerRequisition
+ON JobPosting(RequisitionId)
+WHERE PostingStatus = N'Published';
+
+-- Trang danh sách tin tuyển dụng công khai (Yêu cầu có cột NumberOfPositionsDisplay trong bảng)
+CREATE NONCLUSTERED INDEX IX_JobPosting_Public
+ON JobPosting(PostingStatus, ApplicationDeadline)
+INCLUDE (PostingTitle, WorkLocation, SalaryDisplay, NumberOfPositionsDisplay, PostingDate);
+GO
+
+-- =============================================================================
+-- INDEXES CHO HỒ SƠ & QUY TRÌNH TUYỂN DỤNG
+-- =============================================================================
 CREATE NONCLUSTERED INDEX IX_RequisitionApproval_RequisitionId ON RequisitionApproval(RequisitionId);
 CREATE NONCLUSTERED INDEX IX_RequisitionApproval_DirectorId ON RequisitionApproval(DirectorId);
 CREATE NONCLUSTERED INDEX IX_ScreeningCriteria_RequisitionId ON ScreeningCriteria(RequisitionId);
-CREATE NONCLUSTERED INDEX IX_JobPosting_RequisitionId ON JobPosting(RequisitionId);
-CREATE NONCLUSTERED INDEX IX_JobPosting_CreatedBy ON JobPosting(CreatedBy);
 CREATE NONCLUSTERED INDEX IX_Candidate_IsPotential ON Candidate(IsPotential) WHERE IsPotential = 1;
 CREATE NONCLUSTERED INDEX IX_Application_CandidateId ON Application(CandidateId);
 CREATE NONCLUSTERED INDEX IX_Application_JobPostingId ON Application(JobPostingId);
@@ -629,12 +699,10 @@ CREATE NONCLUSTERED INDEX IX_TalentPoolNote_UserId ON TalentPoolNote(UserId);
 CREATE NONCLUSTERED INDEX [IX_Notification_Recipient_CreatedAt]
 ON [dbo].[Notification] ([RecipientId] ASC, [CreatedAt] DESC)
 INCLUDE ([IsRead], [Title], [EventType], [ReferenceId], [LinkUrl]);
-GO
 
 CREATE NONCLUSTERED INDEX [IX_Notification_Unread_Recipient]
 ON [dbo].[Notification] ([RecipientId])
 WHERE [IsRead] = 0;
-GO
 
 CREATE UNIQUE NONCLUSTERED INDEX [UX_Notification_Recipient_EventId]
 ON [dbo].[Notification] ([RecipientId], [EventId])
