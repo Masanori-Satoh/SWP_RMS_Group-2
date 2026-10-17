@@ -4,6 +4,10 @@ Các báo cáo cập nhật Candidate/Talent Pool và Application ngày 16–17/
 
 ## Trạng thái mới nhất
 
+Nhánh Candidate nộp CV mới cho đề xuất đã được HM duyệt chuyển thẳng `HM_Passed` để HR xếp lịch: [Quyết định nghiệp vụ, phạm vi và kiểm chứng](2026-10-17-new-cv-approved-proposal-interview.md). HR liên hệ bên ngoài; dùng CV cũ vẫn xác nhận theo luồng hiện có. Gợi ý còn chờ HM và tự ứng tuyển thông thường vẫn qua sàng lọc.
+
+Đã tích hợp bookmark tiềm năng và ghi chú chung vào màn hình kết quả phỏng vấn HR/HM: [Báo cáo phạm vi, phân quyền và kiểm thử](2026-10-17-interview-potential-bookmark.md). Component độc lập với Pass/Fail; module Interview chỉ thêm 6 dòng template, dùng lại API Talent Pool, không sửa backend hoặc schema.
+
 Flow C HR → HM được bổ sung tiếp theo: [Báo cáo triển khai và kiểm thử](2026-10-17-hr-hm-recommendations-flow-c.md). Gợi ý chờ HM được tách khỏi danh sách chờ HR liên hệ; HM chấp nhận chưa có nghĩa Candidate đồng ý. Kết quả cuối Flow C/hồi quy: **316 Java passed, 1 skipped, 0 failure/error; 24 JavaScript passed**, trong đó 4 integration test SQL Server thật đã qua.
 
 Đã nối nút xác nhận với backend lưu Application mới ở trạng thái `HM_Suggested`. Candidate và Application nguồn giữ nguyên; đề xuất chờ hoặc đã kết thúc được tách khỏi hồ sơ chính thức. Sau khi HR xác nhận ứng viên đồng ý dùng CV cũ, cùng bản ghi chuyển sang `HM_Passed`, đủ điều kiện đi tiếp bước chờ phỏng vấn. Từ chối dùng `Rejected` kèm audit phân loại đề xuất.
@@ -14,6 +18,8 @@ Không bổ sung bảng/cột/enum hoặc sửa file schema. Tuy nhiên đã có
 
 | Tài liệu | Nội dung |
 | --- | --- |
+| [CV mới cho đề xuất đã duyệt 17/10](2026-10-17-new-cv-approved-proposal-interview.md) | Candidate nộp CV mới đúng tin → cùng đề xuất chuyển `HM_Passed`; HR xếp lịch, không chấm AI lại. |
+| [Bookmark trong kết quả phỏng vấn 17/10](2026-10-17-interview-potential-bookmark.md) | HR/HM lưu tiềm năng, xem/thêm ghi chú chung qua API hiện có; giới hạn tác động module Interview và kiểm chứng. |
 | [Flow C HR → HM 17/10](2026-10-17-hr-hm-recommendations-flow-c.md) | Tái sử dụng Application/Review, HR gửi, HM phản hồi trên list/detail, CV lịch sử và kiểm chứng. |
 | [Tổng kết cập nhật 16/10](UPDATE_SUMMARY_2026-10-16.md) | Bookmark chung, ghi chú HR/HM, bỏ lưu, preview CV, trang Application và phần admin do người dùng sửa; kế hoạch chia commit ban đầu. |
 | [Tinh chỉnh Candidate pipeline 16/10](2026-10-16-candidate-pipeline-ui-refinement.md) | Bố cục bảng, icon, modal ghi chú và mở rộng CV. |

@@ -11,10 +11,15 @@ import com.group2.rms.user.entity.User;
 import com.group2.rms.user.repository.UserRepository;
 import jakarta.persistence.EntityManager;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.core.io.ClassPathResource;
+import org.springframework.mock.web.MockMultipartFile;
+import org.springframework.test.context.event.ApplicationEvents;
+import org.springframework.test.context.event.RecordApplicationEvents;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDateTime;
@@ -28,6 +33,7 @@ import static org.hamcrest.Matchers.containsString;
 /** Real SQL Server, schema validation only; every test rolls back its draft and audit rows. */
 @SpringBootTest(properties = "spring.jpa.hibernate.ddl-auto=validate")
 @AutoConfigureMockMvc
+@RecordApplicationEvents
 @Transactional
 class TalentPoolFlowIntegrationTests {
     @Autowired MockMvc mvc;
@@ -40,6 +46,8 @@ class TalentPoolFlowIntegrationTests {
     @Autowired DashboardMetricsRepository metrics;
     @Autowired EntityManager em;
     @Autowired TalentPoolService pool;
+    @Autowired CvStorage storage;
+    @Autowired ApplicationEvents events;
 
     record Fixture(User hm, User hr, JobPosting target, Application source) { }
     private Fixture fixture() {
@@ -201,5 +209,65 @@ class TalentPoolFlowIntegrationTests {
         mvc.perform(get("/applications/" + id).with(user(f.hr().getUsername()).roles("HR")))
                 .andExpect(status().isOk()).andExpect(content().string(containsString("Đề xuất đã kết thúc")));
         assertThrows(com.group2.rms.candidate.exception.TalentPoolException.class, () -> statusService.requireScheduleable(id));
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings={"HM_ADDED", "HR_ACCEPTED", "HR_PENDING", "NO_PROPOSAL"})
+    void candidateNewCvUsesMatchingApprovedProposalToEnterInterview(String origin) throws Exception {
+        var f=fixture(); int jobId=f.target().getJobPostingId(), cid=f.source().getCandidate().getCandidateId();
+        int sourceId=f.source().getApplicationId();
+        String sourceCv=f.source().getAppliedCvUrl(), sourceStatus=f.source().getApplicationStatus();
+        long appCount=applications.count(), candidateCount=candidates.count();
+        Integer proposalId=null;
+        if ("HM_ADDED".equals(origin)) proposalId=create(f);
+        else if (!"NO_PROPOSAL".equals(origin)) {
+            proposalId=recommend(f);
+            if ("HR_ACCEPTED".equals(origin)) {
+                mvc.perform(post("/talent-pool/recommendations/"+proposalId+"/decision")
+                                .with(user(f.hm().getUsername()).roles("HIRING_MANAGER")).with(csrf()).param("decision","Pass"))
+                        .andExpect(flash().attributeExists("successMessage"));
+            } else {
+                // The database update itself must also prevent bypassing the pending HM decision.
+                assertEquals(0,applications.submitSuggestionWithNewCv(proposalId,sourceCv,"HM_Passed"));
+            }
+        }
+        byte[] pdf=new ClassPathResource("static"+sourceCv).getContentAsByteArray();
+        var file=new MockMultipartFile("cvFile","updated-cv.pdf","application/pdf",pdf);
+        mvc.perform(multipart("/jobs/"+jobId+"/apply").file(file)
+                        .with(user(f.source().getCandidate().getAccount().getUsername()).roles("CANDIDATE")).with(csrf()))
+                .andExpect(redirectedUrl("/jobs/"+jobId)).andExpect(flash().attribute("applySuccess",true));
+        em.flush(); em.clear();
+        var saved=applications.findAllWithCandidateAndJobPosting().stream()
+                .filter(a -> a.getCandidate().getCandidateId().equals(cid) && a.getJobPosting().getJobPostingId().equals(jobId))
+                .findFirst().orElseThrow();
+        int id=saved.getApplicationId();
+        boolean approved=Set.of("HM_ADDED","HR_ACCEPTED").contains(origin);
+        assertEquals(approved?"HM_Passed":"Applied",saved.getApplicationStatus());
+        if (proposalId!=null) assertEquals(proposalId,id,"reuse the same proposal, not a second application");
+        assertTrue(saved.getAppliedCvUrl().startsWith("local:cv/"+cid+"/"));
+        assertNotEquals(sourceCv,saved.getAppliedCvUrl());
+        assertArrayEquals(pdf,storage.load(saved.getAppliedCvUrl().substring("local:".length())).getContentAsByteArray());
+        assertEquals(appCount+1,applications.count()); assertEquals(candidateCount,candidates.count());
+        assertEquals(sourceCv,applications.findById(sourceId).orElseThrow().getAppliedCvUrl());
+        assertEquals(sourceStatus,applications.findById(sourceId).orElseThrow().getApplicationStatus());
+        assertTrue(formalIds().contains(id));
+        assertFalse(applications.findSuggestionsByJobPostingId(jobId).stream().anyMatch(a -> a.getApplicationId().equals(id)));
+        if (approved) {
+            assertEquals(0,events.stream(ApplicationSubmittedEvent.class).count());
+            assertDoesNotThrow(()->statusService.requireScheduleable(id));
+            assertTrue(applications.findEligibleForInterview().stream().anyMatch(a -> a.getApplicationId().equals(id)));
+            mvc.perform(get("/interviews/new").param("applicationId",Integer.toString(id))
+                            .with(user(f.hr().getUsername()).roles("HR")))
+                    .andExpect(status().isOk()).andExpect(content().string(containsString("Lên lịch phỏng vấn")));
+        } else {
+            assertEquals(1,events.stream(ApplicationSubmittedEvent.class).filter(e->e.applicationId().equals(id)).count());
+            assertThrows(com.group2.rms.candidate.exception.TalentPoolException.class,()->statusService.requireScheduleable(id));
+        }
+        // A second upload cannot create another application or replace the confirmed CV.
+        mvc.perform(multipart("/jobs/"+jobId+"/apply").file(file)
+                        .with(user(f.source().getCandidate().getAccount().getUsername()).roles("CANDIDATE")).with(csrf()))
+                .andExpect(status().isOk()).andExpect(content().string(containsString("Bạn đã ứng tuyển vị trí này.")));
+        assertEquals(appCount+1,applications.count());
+        assertEquals(saved.getAppliedCvUrl(),applications.findById(id).orElseThrow().getAppliedCvUrl());
     }
 }

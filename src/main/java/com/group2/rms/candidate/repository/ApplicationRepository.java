@@ -333,18 +333,19 @@ public interface ApplicationRepository extends JpaRepository<Application, Intege
                         """)
         int promoteSuggestionToHmPassed(@Param("id") Integer applicationId);
 
-        // Update status to APPLIED
+        // Candidate uploads a new CV: approved proposal goes straight to interview;
+        // an HR recommendation still awaiting HM follows ordinary application screening.
         @Modifying
         @Query("""
                         UPDATE Application a
-                        SET a.applicationStatus = 'Applied',
+                        SET a.applicationStatus = :status,
                         a.appliedCvUrl = :cv,
                         a.submissionDate = CURRENT_TIMESTAMP,
                         a.updatedAt = CURRENT_TIMESTAMP
                         WHERE a.applicationId = :id
                         AND a.applicationStatus = 'HM_Suggested'
-                        """)
-        int submitSuggestionWithNewCv(@Param("id") Integer id, @Param("cv") String cv);
+                        """ + " AND :status IN ('Applied', 'HM_Passed') AND (:status = 'Applied' OR NOT (" + PENDING_HR_RECOMMENDATION + "))")
+        int submitSuggestionWithNewCv(@Param("id") Integer id, @Param("cv") String cv, @Param("status") String status);
 
         // Update status from HM_Suggested to CANDIDATE_SUBMITTED
         @Modifying

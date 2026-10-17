@@ -1,0 +1,19 @@
+/* Talent Pool action embedded in Interview Result. Feature-scoped; catalog controls remain unchanged. */
+.tp-potential { margin-bottom: var(--s4); }
+.tp-potential [hidden] { display: none !important; }
+.tp-potential__actions, .tp-potential__saved, .tp-potential__form-actions { display: flex; align-items: center; flex-wrap: wrap; gap: var(--s2); }
+.tp-potential__saved { min-height: var(--s8); }
+.tp-potential__feedback { margin: var(--s2) 0 0; font-size: var(--font-sm); }
+.tp-potential__feedback:empty { display: none; }
+.tp-potential__panel { max-width: 720px; margin-top: var(--s3); padding: var(--s4); background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius-md); }
+.tp-potential__title { font-family: var(--sans); font-size: var(--font-base); margin: 0; }
+.tp-potential__name { color: var(--muted); font-size: var(--font-sm); margin: var(--s1) 0 var(--s3); overflow-wrap: anywhere; }
+.tp-potential__empty { margin: 0 0 var(--s3); font-size: var(--font-sm); }
+.tp-potential__notes { list-style: none; padding: 0; margin: 0 0 var(--s3); max-height: 240px; overflow-y: auto; scrollbar-gutter: stable; }
+.tp-potential__note { padding: var(--s3) 0; border-bottom: 1px solid var(--line); }
+.tp-potential__note:first-child { padding-top: 0; }
+.tp-potential__note-meta { display: flex; align-items: baseline; flex-wrap: wrap; gap: var(--s2); font-size: var(--font-sm); }
+.tp-potential__note-meta time { color: var(--muted); font-size: var(--font-xs); }
+.tp-potential__note p { white-space: pre-wrap; overflow-wrap: anywhere; margin: var(--s1) 0 0; }
+.tp-potential__input { width: 100%; resize: vertical; }
+.tp-potential__form-actions { margin-top: var(--s3); justify-content: flex-end; }

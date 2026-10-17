@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<body>
+<!-- Feature-scoped integration: resolves Candidate and authorization through the existing bookmark API. -->
+<section th:fragment="action(applicationId, candidateName)" class="tp-potential" data-tp-potential
+         th:attr="aria-label=|Lưu tiềm năng và ghi chú của ${candidateName}|,data-candidate-name=${candidateName}">
+    <div class="tp-potential__actions">
+        <button class="btn btn--secondary btn--sm" type="button" data-tp-open disabled aria-expanded="false"
+                th:attr="aria-controls=|tp-potential-panel-${applicationId}|">
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M6 3h12v18l-6-4-6 4V3Z"/></svg><span data-tp-open-label>Đang tải trạng thái…</span>
+        </button>
+        <span class="badge badge--success tp-potential__saved" data-tp-saved hidden>
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor" aria-hidden="true"><path d="M6 3h12v18l-6-4-6 4V3Z"/></svg>Đã lưu tiềm năng
+        </span>
+        <button class="btn btn--secondary btn--sm" type="button" data-tp-notes hidden aria-expanded="false"
+                th:attr="aria-controls=|tp-potential-panel-${applicationId}|">Xem / thêm ghi chú</button>
+        <button class="btn btn--secondary btn--sm" type="button" data-tp-retry hidden>Tải lại trạng thái</button>
+    </div>
+    <p class="tp-potential__feedback" data-tp-feedback role="status" aria-live="polite"></p>
+    <p class="form-error tp-potential__feedback" data-tp-error role="alert"></p>
+    <div class="tp-potential__panel" data-tp-panel hidden th:id="|tp-potential-panel-${applicationId}|">
+        <h2 class="tp-potential__title">Ghi chú chung</h2>
+        <p class="tp-potential__name" th:text="${candidateName}"></p>
+        <p class="text-muted tp-potential__empty" data-tp-empty hidden>Chưa có ghi chú chung.</p>
+        <ul class="tp-potential__notes" data-tp-note-list aria-label="Ghi chú HR/HM mới nhất trước"></ul>
+        <form data-tp-form method="post" th:action="@{/talent-pool/applications/{id}/bookmark(id=${applicationId})}">
+            <label class="form-label" th:for="|tp-potential-content-${applicationId}|">Thêm ghi chú <span class="text-muted" data-tp-optional>(không bắt buộc)</span></label>
+            <textarea class="form-textarea tp-potential__input" data-tp-content name="content" rows="3" maxlength="1000"
+                      th:id="|tp-potential-content-${applicationId}|" placeholder="Nhập nhận xét để HR/HM tham khảo…"></textarea>
+            <div class="tp-potential__form-actions"><button class="btn btn--secondary btn--sm" type="button" data-tp-close>Đóng</button><button class="btn btn--primary btn--sm" type="submit" data-tp-submit disabled>Lưu ứng viên</button></div>
+        </form>
+    </div>
+    <noscript><p class="text-muted">Bật JavaScript để xem trạng thái lưu và thêm ghi chú chung.</p></noscript>
+</section>
+</body></html>
