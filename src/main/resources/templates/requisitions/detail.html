@@ -134,7 +134,7 @@
                                     <div class="info-item">
                                         <span class="info-label">Thời gian thử việc</span>
                                         <span class="info-value"
-                                            th:text="${req.probationDuration ?: 'Chưa xác định'}"></span>
+                                            th:text="${req.probationDays != null ? req.probationDays + ' ngày' : 'Chưa xác định'}"></span>
                                     </div>
                                 </div>
                             </section>

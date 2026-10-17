@@ -23,7 +23,7 @@ public class RequisitionRequest {
     private String gender;
     private String workLocation;
     private String workModel;
-    private String probationDuration;
+    private Integer probationDays;
     @DateTimeFormat(iso=DateTimeFormat.ISO.DATE)
     private LocalDate expectedStartDate;
     private String reasonForHiring;

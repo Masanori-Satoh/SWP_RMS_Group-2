@@ -191,12 +191,6 @@ class RequisitionValidatorTests {
         var d = valid(); d.setGender(null); expectPass(d);
     }
 
-    @Test void val005_probationDurationWhitespaceIsNullified() {
-        var d = emptyDraft(); d.setProbationDuration("   ");
-        expectPass(d);
-        assertNull(d.getProbationDuration());
-    }
-
     // VAL-006 — Tiêu đề placeholder của Draft
 
     @Test void val006_placeholderTitleRejectedOnSubmit() {
@@ -369,17 +363,17 @@ class RequisitionValidatorTests {
         assertTrue(expectFail(d).getErrors().containsKey("workLocation"));
     }
 
-    @Test void val010_probationDurationAtMaxLengthPasses() {
-        var d = valid(); d.setProbationDuration("x".repeat(RequisitionValidator.PROBATION_CHAR_LIMIT)); expectPass(d);
+    @Test void val010_probationDaysAtMaxPasses() {
+        var d = valid(); d.setProbationDays(RequisitionValidator.PROBATION_MAX_DAYS); expectPass(d);
     }
 
-    @Test void val010_probationDurationOverMaxLengthFails() {
-        var d = valid(); d.setProbationDuration("x".repeat(RequisitionValidator.PROBATION_CHAR_LIMIT + 1));
-        assertTrue(expectFail(d).getErrors().containsKey("probationDuration"));
+    @Test void val010_probationDaysOverMaxFails() {
+        var d = valid(); d.setProbationDays(RequisitionValidator.PROBATION_MAX_DAYS + 1);
+        assertTrue(expectFail(d).getErrors().containsKey("probationDays"));
     }
 
-    @Test void val010_probationDurationNeverRequiredOnSubmit() {
-        var d = valid(); d.setProbationDuration(null); expectPass(d);
+    @Test void val010_probationDaysNeverRequiredOnSubmit() {
+        var d = valid(); d.setProbationDays(null); expectPass(d);
     }
 
     @Test void val010_criteriaNameAtMaxLengthPasses() {

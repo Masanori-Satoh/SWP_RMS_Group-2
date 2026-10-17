@@ -59,7 +59,7 @@ ReasonForHiring;NULL;New hire / Replacement
 JobDescription;NOT NULL;Job description (JD)
 RequirementDetails;NOT NULL;Candidate requirements
 RequiredGender;NOT NULL, DEFAULT 'Any';Male, Female, Any
-ProbationDuration;NULL;Probation period length
+ProbationDays;NULL, 1..180;Probation period in days
 WorkModel;NOT NULL;On-site, Remote, Hybrid
 WorkLocation;NULL;Work location (nullable for fully remote positions)
 ExpectedStartDate;NULL;Expected start/probation date for the position

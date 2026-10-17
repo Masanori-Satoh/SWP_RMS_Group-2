@@ -137,7 +137,7 @@ class RequisitionIntegrationTest {
         var requisition = requisitions.saveAndFlush(validRequisition()
                 .title("Unicode read regression").hiringManager(hiringManager).department(department)
                 .approvalStatus("Draft").gender("Female").workLocation("Văn phòng Hà Nội")
-                .workModel("Hybrid").probationDuration("2 tháng")
+                .workModel("Hybrid").probationDays(60)
                 .screeningCriteria(new ArrayList<>()).build());
         Integer id = requisition.getRequisitionId();
         entityManager.clear(); // Exercise JDBC extraction, not the persistence-context cache.
@@ -149,7 +149,7 @@ class RequisitionIntegrationTest {
         var row = page.getContent().stream().filter(r -> id.equals(r.getRequisitionId())).findFirst().orElseThrow();
         assertEquals("Female", row.getGender());
         assertEquals("Văn phòng Hà Nội", row.getWorkLocation());
-        assertEquals("2 tháng", row.getProbationDuration());
+        assertEquals(60, row.getProbationDays());
         assertEquals("Hybrid", row.getWorkModel());
         mvc.perform(get("/requisitions")).andExpect(status().isOk()).andExpect(view().name("requisitions/list"));
         mvc.perform(get("/requisitions/{id}", id)).andExpect(status().isOk()).andExpect(view().name("requisitions/detail"));
@@ -240,7 +240,7 @@ class RequisitionIntegrationTest {
                 .title("Original Requisition")
                 .hiringManager(hiringManager)
                 .department(department)
-                .approvalStatus("Draft")
+                .approvalStatus("Approved")
                 .screeningCriteria(new ArrayList<>())
                 .build());
 
@@ -274,6 +274,7 @@ class RequisitionIntegrationTest {
     /** Supply the schema's mandatory fields; each test still controls the workflow under test. */
     private JobRequisition.JobRequisitionBuilder validRequisition() {
         return JobRequisition.builder()
+                .recruitmentRound(1)
                 .numberOfPositions(1)
                 .employmentType("Full-time")
                 .gender("Any")

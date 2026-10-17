@@ -22,7 +22,10 @@ public class RequisitionValidator {
     public static final int TITLE_CHAR_LIMIT = 200;
     public static final int TEXT_FIELD_CHAR_LIMIT = 2000;
     public static final int SHORT_FIELD_CHAR_LIMIT = 255;
-    public static final int PROBATION_CHAR_LIMIT = 50;
+    /** Thời gian thử việc tối thiểu (ngày) khi có nhập. */
+    public static final int PROBATION_MIN_DAYS = 1;
+    /** Thời gian thử việc tối đa (ngày), theo Điều 25 Bộ luật Lao động 2019. */
+    public static final int PROBATION_MAX_DAYS = 180;
     public static final int MAX_CRITERIA_LIMIT = 50;
     public static final BigDecimal REQUIRED_TOTAL_WEIGHT = new BigDecimal("100");
 
@@ -49,7 +52,6 @@ public class RequisitionValidator {
         requisitionRequest.setRequirementDetails(cleanString(requisitionRequest.getRequirementDetails()));
         requisitionRequest.setWorkLocation(cleanString(requisitionRequest.getWorkLocation()));
         requisitionRequest.setWorkModel(cleanString(requisitionRequest.getWorkModel()));
-        requisitionRequest.setProbationDuration(cleanString(requisitionRequest.getProbationDuration()));
         requisitionRequest.setGender(cleanString(requisitionRequest.getGender()));
         requisitionRequest.setHiringType(cleanString(requisitionRequest.getHiringType()));
 
@@ -65,7 +67,12 @@ public class RequisitionValidator {
         validateTextField(errors, "jobDescription", requisitionRequest.getJobDescription(), TEXT_FIELD_CHAR_LIMIT, isSubmitAction);
         validateTextField(errors, "requirementDetails", requisitionRequest.getRequirementDetails(), TEXT_FIELD_CHAR_LIMIT, isSubmitAction);
         validateTextField(errors, "workLocation", requisitionRequest.getWorkLocation(), SHORT_FIELD_CHAR_LIMIT, isSubmitAction);
-        validateTextField(errors, "probationDuration", requisitionRequest.getProbationDuration(), PROBATION_CHAR_LIMIT, false);
+
+        // Rule: Thời gian thử việc không bắt buộc; nếu nhập thì là số ngày từ PROBATION_MIN_DAYS đến PROBATION_MAX_DAYS
+        Integer probationDays = requisitionRequest.getProbationDays();
+        if (probationDays != null && (probationDays < PROBATION_MIN_DAYS || probationDays > PROBATION_MAX_DAYS)) {
+            errors.put("probationDays", "Thời gian thử việc phải từ " + PROBATION_MIN_DAYS + " đến " + PROBATION_MAX_DAYS + " ngày.");
+        }
 
         // Rule: Các trường chọn phải nằm trong danh mục hợp lệ
         validateChoiceField(errors, "employmentType", requisitionRequest.getEmploymentType(), EMPLOYMENT_TYPES, isSubmitAction);

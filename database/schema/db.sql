@@ -136,7 +136,7 @@ CREATE TABLE JobRequisition (
     JobDescription         NVARCHAR(MAX) NOT NULL,
     RequirementDetails     NVARCHAR(MAX) NOT NULL,
     RequiredGender         NVARCHAR(20) NOT NULL CONSTRAINT DF_JobRequisition_RequiredGender DEFAULT N'Any',
-    ProbationDuration      NVARCHAR(50) NULL,
+    ProbationDays          INT NULL,                -- số ngày thử việc (1..180)
     WorkModel              NVARCHAR(20) NOT NULL CONSTRAINT DF_JobRequisition_WorkModel DEFAULT N'On-site',
     WorkLocation           NVARCHAR(255) NULL,
     ExpectedStartDate      DATE NULL,
@@ -171,6 +171,9 @@ CREATE TABLE JobRequisition (
  
     CONSTRAINT CK_JobRequisition_NumberOfPositions
         CHECK (NumberOfPositions > 0),
+ 
+    CONSTRAINT CK_JobRequisition_ProbationDays
+        CHECK (ProbationDays IS NULL OR ProbationDays BETWEEN 1 AND 180),
  
     CONSTRAINT CK_JobRequisition_EmploymentType
         CHECK (EmploymentType IN (N'Full-time', N'Part-time', N'Internship', N'Contract')),

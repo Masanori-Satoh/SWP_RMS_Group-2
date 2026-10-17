@@ -262,7 +262,7 @@ public class JobPostingServiceImpl implements JobPostingService {
                 .reasonForHiring(requisition.getReasonForHiring() != null ? requisition.getReasonForHiring() : "—")
                 .minSalary(requisition.getMinSalary())
                 .maxSalary(requisition.getMaxSalary())
-                .probationDuration(requisition.getProbationDuration())
+                .probationDays(requisition.getProbationDays())
                 .gender(requisition.getGender() != null ? requisition.getGender() : "Any")
                 .expectedStartDate(requisition.getExpectedStartDate())
                 .recruitmentDeadline(requisition.getExpectedStartDate())

@@ -210,7 +210,7 @@ public class RequisitionServiceImpl implements RequisitionService {
                 .gender(jobRequisition.getGender())
                 .workLocation(jobRequisition.getWorkLocation())
                 .workModel(jobRequisition.getWorkModel())
-                .probationDuration(jobRequisition.getProbationDuration())
+                .probationDays(jobRequisition.getProbationDays())
                 .expectedStartDate(jobRequisition.getExpectedStartDate())
                 .reasonForHiring(jobRequisition.getReasonForHiring())
                 .jobDescription(jobRequisition.getJobDescription())
@@ -410,7 +410,7 @@ public class RequisitionServiceImpl implements RequisitionService {
         jobRequisition.setGender(requestDto.getGender());
         jobRequisition.setWorkLocation(requestDto.getWorkLocation());
         jobRequisition.setWorkModel(requestDto.getWorkModel());
-        jobRequisition.setProbationDuration(requestDto.getProbationDuration());
+        jobRequisition.setProbationDays(requestDto.getProbationDays());
         jobRequisition.setExpectedStartDate(requestDto.getExpectedStartDate());
         jobRequisition.setReasonForHiring(requestDto.getReasonForHiring());
         jobRequisition.setJobDescription(requestDto.getJobDescription());
@@ -530,7 +530,7 @@ public class RequisitionServiceImpl implements RequisitionService {
         snapshotMap.put("Yêu cầu giới tính", jobRequisition.getGender());
         snapshotMap.put("Địa điểm làm việc", jobRequisition.getWorkLocation());
         snapshotMap.put("Mô hình làm việc", jobRequisition.getWorkModel());
-        snapshotMap.put("Thời gian thử việc", jobRequisition.getProbationDuration());
+        snapshotMap.put("Thời gian thử việc", jobRequisition.getProbationDays() == null ? null : jobRequisition.getProbationDays() + " ngày");
         snapshotMap.put("Ngày bắt đầu dự kiến", formatDisplayValue(jobRequisition.getExpectedStartDate()));
         snapshotMap.put("Lý do tuyển dụng", jobRequisition.getReasonForHiring());
         snapshotMap.put("Mô tả công việc", jobRequisition.getJobDescription());
@@ -568,7 +568,7 @@ public class RequisitionServiceImpl implements RequisitionService {
                 .gender(jobRequisition.getGender())
                 .workLocation(jobRequisition.getWorkLocation())
                 .workModel(jobRequisition.getWorkModel())
-                .probationDuration(jobRequisition.getProbationDuration())
+                .probationDays(jobRequisition.getProbationDays())
                 .expectedStartDate(jobRequisition.getExpectedStartDate())
                 .reasonForHiring(jobRequisition.getReasonForHiring())
                 .jobDescription(jobRequisition.getJobDescription())

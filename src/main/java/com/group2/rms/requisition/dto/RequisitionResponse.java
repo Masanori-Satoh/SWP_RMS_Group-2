@@ -2,6 +2,8 @@ package com.group2.rms.requisition.dto;
 
 import com.group2.rms.admin.dto.ActivityLogResponse;
 
+import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 import lombok.AllArgsConstructor;
@@ -21,8 +23,8 @@ public class RequisitionResponse {
     private String gender;
     private String workLocation;
     private String workModel;
-    private String probationDuration;
-    private java.time.LocalDate expectedStartDate;
+    private Integer probationDays;
+    private LocalDate expectedStartDate;
     private boolean editable;
     private boolean deletable;
     private boolean decidable;
@@ -42,8 +44,8 @@ public class RequisitionResponse {
     private Integer jobPostingId;
 
     // Các trường phục vụ màn Chi tiết
-    private java.math.BigDecimal minSalary;
-    private java.math.BigDecimal maxSalary;
+    private BigDecimal minSalary;
+    private BigDecimal maxSalary;
     private String reasonForHiring;
     private String jobDescription;
     private String requirementDetails;

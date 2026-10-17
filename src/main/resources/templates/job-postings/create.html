@@ -58,7 +58,7 @@
         <input type="hidden" th:field="*{numberOfPositions}">
         <input type="hidden" th:field="*{minSalary}">
         <input type="hidden" th:field="*{maxSalary}">
-        <input type="hidden" th:field="*{probationDuration}">
+        <input type="hidden" th:field="*{probationDays}">
         <input type="hidden" th:field="*{gender}">
         <input type="hidden" th:field="*{expectedStartDate}">
         <input type="hidden" th:field="*{recruitmentDeadline}">
@@ -145,7 +145,7 @@
                 <div class="jp-field-group">
                     <label class="jp-field-label">Thời gian thử việc</label>
                     <div class="jp-readonly-box"
-                         th:text="*{probationDuration != null ? probationDuration + ' ngày' : 'Chưa xác định'}">
+                         th:text="*{probationDays != null ? probationDays + ' ngày' : 'Chưa xác định'}">
                         60 ngày
                     </div>
                 </div>

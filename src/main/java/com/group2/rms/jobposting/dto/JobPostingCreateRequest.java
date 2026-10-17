@@ -34,7 +34,7 @@ public class JobPostingCreateRequest {
     // Chi tiết bổ sung cho form tạo tin (đồng bộ từ Requisition và có thể tinh chỉnh)
     private java.math.BigDecimal minSalary;
     private java.math.BigDecimal maxSalary;
-    private String probationDuration;
+    private Integer probationDays;
     private String gender;
 
     @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)

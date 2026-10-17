@@ -31,7 +31,7 @@ public class RequisitionController {
         binder.setAutoGrowCollectionLimit(50);
         binder.setAllowedFields("action", "title", "departmentId", "numberOfPositions", "employmentType", "minSalary",
                 "maxSalary",
-                "gender", "workLocation", "workModel", "probationDuration", "expectedStartDate", "reasonForHiring",
+                "gender", "workLocation", "workModel", "probationDays", "expectedStartDate", "reasonForHiring", "hiringType", "originalRequisitionId",
                 "jobDescription", "requirementDetails",
                 "screeningCriteria[*].criteriaId", "screeningCriteria[*].criteriaName",
                 "screeningCriteria[*].criteriaType",
@@ -211,6 +211,9 @@ public class RequisitionController {
         model.addAttribute("employmentTypes", RequisitionValidator.EMPLOYMENT_TYPES);
         model.addAttribute("criteriaTypes", RequisitionValidator.CRITERIA_TYPES);
         model.addAttribute("genders", RequisitionValidator.GENDERS);
+        // Giới hạn thử việc lấy từ hằng số của validator, để form và JS không phải viết lại số 1 / 180
+        model.addAttribute("probationMinDays", RequisitionValidator.PROBATION_MIN_DAYS);
+        model.addAttribute("probationMaxDays", RequisitionValidator.PROBATION_MAX_DAYS);
     }
 
     private void addErrors(BindingResult errors, RequisitionValidationException e) {

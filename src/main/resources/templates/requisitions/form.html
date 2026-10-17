@@ -143,13 +143,13 @@
 
                                 <!-- Thời gian thử việc -->
                                 <div class="form-group">
-                                    <label for="probationDuration">Thời gian thử việc</label>
-                                    <input class="form-control-custom" type="text" th:field="*{probationDuration}"
-                                        th:attr="aria-invalid=${#fields.hasErrors('probationDuration')}"
-                                        aria-describedby="probationDuration-error" maxlength="255"
-                                        placeholder="Ví dụ: 2 tháng hoặc 60 ngày">
-                                    <small id="probationDuration-error" class="field-error"
-                                        th:text="${#fields.hasErrors('probationDuration') ? #strings.listJoin(#fields.errors('probationDuration'), '; ') : ''}"></small>
+                                    <label for="probationDays">Thời gian thử việc (ngày)</label>
+                                    <input class="form-control-custom" type="number" th:field="*{probationDays}"
+                                        th:attr="aria-invalid=${#fields.hasErrors('probationDays')}"
+                                        aria-describedby="probationDays-error" th:min="${probationMinDays}" th:max="${probationMaxDays}" step="1"
+                                        placeholder="Ví dụ: 60">
+                                    <small id="probationDays-error" class="field-error"
+                                        th:text="${#fields.hasErrors('probationDays') ? #strings.listJoin(#fields.errors('probationDays'), '; ') : ''}"></small>
                                 </div>
 
                                 <!-- Số lượng tuyển dụng -->

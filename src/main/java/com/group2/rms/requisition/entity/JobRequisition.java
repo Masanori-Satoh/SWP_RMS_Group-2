@@ -95,8 +95,8 @@ public class JobRequisition extends BaseEntity {
     private String workLocation;
     @Column(name = "WorkModel", length = 20)
     private String workModel;
-    @Column(name = "ProbationDuration", length = 50)
-    private String probationDuration;
+    @Column(name = "ProbationDays")
+    private Integer probationDays;
     @Column(name = "ExpectedStartDate")
     private java.time.LocalDate expectedStartDate;
     @Column(name = "SubmittedAt")

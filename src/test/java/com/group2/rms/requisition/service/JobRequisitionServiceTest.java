@@ -56,7 +56,7 @@ import static org.mockito.Mockito.*;
  *               xóa phụ thuộc cần thiết và giữ audit history.
  * TODO [SVC-11] Criteria thêm/sửa/xóa; chặn ID của request khác hoặc dùng ID cũ khi create;
  *               map đúng mandatory/weight và các field còn lại.
- * TODO [SVC-12] Map request/entity/response: workModel, probationDuration, salary, date,
+ * TODO [SVC-12] Map request/entity/response: workModel, probationDays, salary, date,
  *               gender, location và field tùy chọn.
  * TODO [SVC-13] Update không đổi không ghi audit/save thừa; có đổi chỉ log đúng field thay đổi.
  * TODO [SVC-14] Search chuẩn hóa page/size/sort và Pageable; SQL lọc/sắp xếp thật ở Stage 4.
@@ -109,7 +109,7 @@ class JobRequisitionServiceTest {
                 .gender("Any")
                 .workLocation("Hanoi")
                 .workModel("Hybrid")
-                .probationDuration("2 months")
+                .probationDays(60)
                 .expectedStartDate(LocalDate.now().plusMonths(1))
                 .reasonForHiring("Expansion")
                 .jobDescription("Develop RMS")

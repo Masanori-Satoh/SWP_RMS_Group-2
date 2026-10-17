@@ -134,8 +134,8 @@ document.addEventListener('DOMContentLoaded', () => {
         const startDateInput = document.getElementById('expectedStartDate');
         const startDateError = document.getElementById('expectedStartDate-error');
 
-        const probationInput = document.getElementById('probationDuration');
-        const probationError = document.getElementById('probationDuration-error');
+        const probationInput = document.getElementById('probationDays');
+        const probationError = document.getElementById('probationDays-error');
 
         const positionsInput = document.getElementById('numberOfPositions');
         const positionsError = document.getElementById('numberOfPositions-error');
@@ -247,8 +247,13 @@ document.addEventListener('DOMContentLoaded', () => {
                 setFieldState(probationInput, probationError, '');
                 return true;
             }
-            if (val.length > 255) {
-                setFieldState(probationInput, probationError, 'Thời gian thử việc tối đa 255 ký tự.');
+            // Giới hạn đọc từ thuộc tính min/max của ô input (server đặt từ hằng số trong RequisitionValidator)
+            const minDays = Number(probationInput.min);
+            const maxDays = Number(probationInput.max);
+            const days = Number(val);
+            if (!Number.isInteger(days) || days < minDays || days > maxDays) {
+                setFieldState(probationInput, probationError,
+                    `Thời gian thử việc phải là số nguyên từ ${minDays} đến ${maxDays} ngày.`);
                 return false;
             }
             setFieldState(probationInput, probationError, '');
