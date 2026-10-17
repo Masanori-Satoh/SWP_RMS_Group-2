@@ -84,14 +84,29 @@ class AuthBotanicalWebTests {
                 .andExpect(status().isOk()).andExpect(content().string(containsString("Mã OTP phải gồm đúng 6 chữ số.")));
         verify(registration,never()).verifyAndRegister(anyString(),any());
     }
-    @Test void recoveryScreensRetainTheirOriginalLayoutAndPasswordControls() throws Exception {
+    @Test void recoveryScreensReuseBotanicalLayoutAndKeepTheirFormContracts() throws Exception {
         snapshot("forgot-password",mvc.perform(get("/forgot-password")).andExpect(status().isOk())
-                .andExpect(content().string(not(containsString("auth-botanical-art"))))
+                .andExpect(content().string(containsString("auth-botanical auth-recovery")))
+                .andExpect(content().string(containsString("auth-botanical-art")))
+                .andExpect(content().string(containsString("name=\"email\"")))
                 .andExpect(content().string(containsString("action=\"/forgot-password\""))).andReturn());
+        when(recovery.hasPendingReset(any())).thenReturn(true);
+        snapshot("reset-password-otp",mvc.perform(get("/reset-password/otp")).andExpect(status().isOk())
+                .andExpect(content().string(containsString("auth-botanical auth-recovery")))
+                .andExpect(content().string(containsString("name=\"otp\"")))
+                .andExpect(content().string(containsString("data-otp-digit")))
+                .andExpect(content().string(containsString("15 phút")))
+                .andExpect(content().string(containsString("action=\"/reset-password/otp\"")))
+                .andExpect(content().string(containsString("name=\"_csrf\""))).andReturn());
         when(recovery.canResetPassword(any())).thenReturn(true);
         snapshot("reset-password",mvc.perform(get("/reset-password")).andExpect(status().isOk())
-                .andExpect(content().string(not(containsString("auth-botanical-art"))))
+                .andExpect(content().string(containsString("auth-botanical auth-recovery")))
+                .andExpect(content().string(containsString("auth-botanical-art")))
                 .andExpect(content().string(containsString("data-password-toggle")))
+                .andExpect(content().string(containsString("data-password-toggle-label")))
+                .andExpect(content().string(containsString("action=\"/reset-password\"")))
+                .andExpect(content().string(containsString("name=\"password\"")))
+                .andExpect(content().string(containsString("name=\"confirmPassword\"")))
                 .andExpect(content().string(containsString("name=\"_csrf\""))).andReturn());
     }
     @Test void candidateAndInternalAccountsStillUseSpringSecurityLogin() throws Exception {

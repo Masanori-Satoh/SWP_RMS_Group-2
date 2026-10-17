@@ -4,7 +4,7 @@ Các báo cáo cập nhật Candidate/Talent Pool và Application ngày 16–17/
 
 ## Trạng thái mới nhất
 
-Login / Register / OTP đăng ký được chỉnh theo Botanical Minimalism, Register năm trường gọn hai cột và card Login căn giữa riêng theo phản hồi: [Báo cáo thay đổi, responsive và giới hạn kiểm chứng](2026-10-17-auth-botanical-redesign.md). Giữ backend auth và bố cục Forgot/Reset.
+Login / Register / OTP đăng ký được chỉnh theo Botanical Minimalism, Register năm trường gọn hai cột và card Login căn giữa riêng theo phản hồi. Theo yêu cầu tiếp theo, **Quên mật khẩu / OTP khôi phục / Đặt mật khẩu mới** cũng dùng chung giao diện botanical và căn khung; giữ hợp đồng form/backend: [Báo cáo thay đổi, responsive và giới hạn kiểm chứng](2026-10-17-auth-botanical-redesign.md).
 
 HM cũng dùng một nút **Ứng viên tiềm năng** ở chi tiết tin; bên trong danh sách có **Thêm ứng viên tiềm năng** mở selection cũ. HR giữ nhãn và hành động riêng. Xem phần bổ sung trong [báo cáo Flow C](2026-10-17-hr-hm-recommendations-flow-c.md).
 
