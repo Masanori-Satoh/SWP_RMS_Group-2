@@ -440,19 +440,19 @@ function formatOfferDateTime(dateTimeStr) {
 function getStatusBadgeHtml(status) {
     switch (status) {
         case 'Draft':
-            return '<span class="status-badge status-draft"><i class="fa-regular fa-file"></i> Bản thảo</span>';
+            return '<span class="status-badge status-draft"><i class="fa-regular fa-file"></i> Bản nháp</span>';
         case 'Pending_Director':
-            return '<span class="status-badge status-pending"><i class="fa-regular fa-clock"></i> Chờ duyệt</span>';
+            return '<span class="status-badge status-pending"><i class="fa-regular fa-clock"></i> Chờ Giám đốc duyệt</span>';
         case 'Director_Approved':
         case 'Approved':
-            return '<span class="status-badge status-approved"><i class="fa-solid fa-check"></i> Director đã duyệt</span>';
+            return '<span class="status-badge status-approved"><i class="fa-solid fa-check"></i> Giám đốc đã duyệt</span>';
         case 'Director_Rejected':
         case 'Rejected':
-            return '<span class="status-badge status-rejected"><i class="fa-solid fa-xmark"></i> Bị từ chối</span>';
+            return '<span class="status-badge status-rejected"><i class="fa-solid fa-xmark"></i> Giám đốc từ chối</span>';
         case 'Sent_Candidate':
-            return '<span class="status-badge status-sent"><i class="fa-regular fa-paper-plane"></i> Đã gửi ứng viên</span>';
+            return '<span class="status-badge status-sent"><i class="fa-regular fa-paper-plane"></i> Đã gửi thư mời</span>';
         case 'Accepted':
-            return '<span class="status-badge status-accepted"><i class="fa-solid fa-user-check"></i> Đã nhận việc</span>';
+            return '<span class="status-badge status-accepted"><i class="fa-solid fa-user-check"></i> Ứng viên chấp nhận</span>';
         case 'Declined':
             return '<span class="status-badge status-declined"><i class="fa-solid fa-user-xmark"></i> Ứng viên từ chối</span>';
         default:
@@ -1559,19 +1559,19 @@ function openDirectorDetailModal(id) {
                 // Status badge
                 let statusHtml = '';
                 if (detail.offerStatus === 'Pending_Director') {
-                    statusHtml = '<span class="status-badge status-pending"><i class="fa-solid fa-hourglass-half"></i> Chờ duyệt Director</span>';
+                    statusHtml = '<span class="status-badge status-pending"><i class="fa-solid fa-hourglass-half"></i> Chờ Giám đốc duyệt</span>';
                 } else if (detail.offerStatus === 'Director_Approved' || detail.offerStatus === 'Approved') {
-                    statusHtml = '<span class="status-badge status-approved"><i class="fa-solid fa-check"></i> Đã duyệt</span>';
+                    statusHtml = '<span class="status-badge status-approved"><i class="fa-solid fa-check"></i> Giám đốc đã duyệt</span>';
                 } else if (detail.offerStatus === 'Director_Rejected' || detail.offerStatus === 'Rejected') {
-                    statusHtml = '<span class="status-badge status-rejected"><i class="fa-solid fa-xmark"></i> Bị từ chối</span>';
+                    statusHtml = '<span class="status-badge status-rejected"><i class="fa-solid fa-xmark"></i> Giám đốc từ chối</span>';
                 } else if (detail.offerStatus === 'Sent_Candidate') {
-                    statusHtml = '<span class="status-badge status-sent"><i class="fa-solid fa-paper-plane"></i> Đã gửi ứng viên</span>';
+                    statusHtml = '<span class="status-badge status-sent"><i class="fa-solid fa-paper-plane"></i> Đã gửi thư mời</span>';
                 } else if (detail.offerStatus === 'Accepted') {
-                    statusHtml = '<span class="status-badge status-accepted"><i class="fa-solid fa-circle-check"></i> Ứng viên đồng ý</span>';
+                    statusHtml = '<span class="status-badge status-accepted"><i class="fa-solid fa-circle-check"></i> Ứng viên chấp nhận</span>';
                 } else if (detail.offerStatus === 'Declined') {
                     statusHtml = '<span class="status-badge status-rejected"><i class="fa-solid fa-circle-xmark"></i> Ứng viên từ chối</span>';
                 } else {
-                    statusHtml = `<span class="status-badge status-draft"><i class="fa-solid fa-file-lines"></i> ${detail.offerStatus || 'Không xác định'}</span>`;
+                    statusHtml = `<span class="status-badge status-draft"><i class="fa-solid fa-file-lines"></i> ${detail.offerStatus === 'Draft' ? 'Bản nháp' : (detail.offerStatus || 'Không xác định')}</span>`;
                 }
                 if (statusBadgeEl) statusBadgeEl.innerHTML = statusHtml;
 

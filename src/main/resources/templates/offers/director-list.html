@@ -126,19 +126,19 @@
                                 </td>
                                 <td>
                                     <span th:if="${o.offerStatus == 'Pending_Director'}" class="status-badge status-pending">
-                                        <i class="fa-solid fa-hourglass-half"></i> Chờ duyệt Director
+                                        <i class="fa-solid fa-hourglass-half"></i> Chờ Giám đốc duyệt
                                     </span>
                                     <span th:if="${o.offerStatus == 'Director_Approved' or o.offerStatus == 'Approved'}" class="status-badge status-approved">
-                                        <i class="fa-solid fa-check"></i> Đã duyệt
+                                        <i class="fa-solid fa-check"></i> Giám đốc đã duyệt
                                     </span>
                                     <span th:if="${o.offerStatus == 'Director_Rejected' or o.offerStatus == 'Rejected'}" class="status-badge status-rejected">
-                                        <i class="fa-solid fa-xmark"></i> Bị từ chối
+                                        <i class="fa-solid fa-xmark"></i> Giám đốc từ chối
                                     </span>
                                     <span th:if="${o.offerStatus == 'Sent_Candidate'}" class="status-badge status-sent">
-                                        <i class="fa-solid fa-paper-plane"></i> Đã gửi ứng viên
+                                        <i class="fa-solid fa-paper-plane"></i> Đã gửi thư mời
                                     </span>
                                     <span th:if="${o.offerStatus == 'Accepted'}" class="status-badge status-accepted">
-                                        <i class="fa-solid fa-circle-check"></i> Ứng viên đồng ý
+                                        <i class="fa-solid fa-circle-check"></i> Ứng viên chấp nhận
                                     </span>
                                     <span th:if="${o.offerStatus == 'Declined'}" class="status-badge status-declined">
                                         <i class="fa-solid fa-circle-xmark"></i> Ứng viên từ chối

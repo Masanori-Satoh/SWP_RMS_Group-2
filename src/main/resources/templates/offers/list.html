@@ -56,7 +56,7 @@
                     </div>
 
                     <div class="offer-stat-card">
-                        <div class="stat-label">Chờ duyệt Director</div>
+                        <div class="stat-label">Chờ Giám đốc duyệt</div>
                         <div class="offer-stat-bottom">
                             <div class="offer-stat-icon stat-icon-amber">
                                 <i class="fa-solid fa-hourglass-half"></i>
@@ -66,7 +66,7 @@
                     </div>
 
                     <div class="offer-stat-card">
-                        <div class="stat-label">Director đã duyệt</div>
+                        <div class="stat-label">Giám đốc đã duyệt</div>
                         <div class="offer-stat-bottom">
                             <div class="offer-stat-icon stat-icon-green">
                                 <i class="fa-solid fa-stamp"></i>
@@ -76,7 +76,7 @@
                     </div>
 
                     <div class="offer-stat-card">
-                        <div class="stat-label">Đã gửi ứng viên</div>
+                        <div class="stat-label">Đã gửi thư mời</div>
                         <div class="offer-stat-bottom">
                             <div class="offer-stat-icon stat-icon-blue">
                                 <i class="fa-solid fa-paper-plane"></i>
@@ -86,7 +86,7 @@
                     </div>
 
                     <div class="offer-stat-card">
-                        <div class="stat-label">Đã nhận việc</div>
+                        <div class="stat-label">Ứng viên chấp nhận</div>
                         <div class="offer-stat-bottom">
                             <div class="offer-stat-icon stat-icon-emerald">
                                 <i class="fa-solid fa-user-check"></i>
@@ -112,12 +112,12 @@
 
                         <select id="statusFilter" class="filter-select" onchange="applyOfferFilters()">
                             <option value="ALL" th:selected="${currentStatus == 'ALL'}">-- Tất cả trạng thái --</option>
-                            <option value="Draft" th:selected="${currentStatus == 'Draft'}">Bản thảo</option>
-                            <option value="Pending_Director" th:selected="${currentStatus == 'Pending_Director'}">Chờ Director duyệt</option>
-                            <option value="Director_Approved" th:selected="${currentStatus == 'Director_Approved' or currentStatus == 'Approved'}">Director đã duyệt</option>
-                            <option value="Director_Rejected" th:selected="${currentStatus == 'Director_Rejected' or currentStatus == 'Rejected'}">Director từ chối</option>
-                            <option value="Sent_Candidate" th:selected="${currentStatus == 'Sent_Candidate'}">Đã gửi ứng viên</option>
-                            <option value="Accepted" th:selected="${currentStatus == 'Accepted'}">Ứng viên đồng ý</option>
+                            <option value="Draft" th:selected="${currentStatus == 'Draft'}">Bản nháp</option>
+                            <option value="Pending_Director" th:selected="${currentStatus == 'Pending_Director'}">Chờ Giám đốc duyệt</option>
+                            <option value="Director_Approved" th:selected="${currentStatus == 'Director_Approved' or currentStatus == 'Approved'}">Giám đốc đã duyệt</option>
+                            <option value="Director_Rejected" th:selected="${currentStatus == 'Director_Rejected' or currentStatus == 'Rejected'}">Giám đốc từ chối</option>
+                            <option value="Sent_Candidate" th:selected="${currentStatus == 'Sent_Candidate'}">Đã gửi thư mời</option>
+                            <option value="Accepted" th:selected="${currentStatus == 'Accepted'}">Ứng viên chấp nhận</option>
                             <option value="Declined" th:selected="${currentStatus == 'Declined'}">Ứng viên từ chối</option>
                         </select>
 
@@ -202,25 +202,25 @@
                                 <td>
                                     <!-- Status Badges -->
                                     <span th:if="${o.offerStatus == 'Draft'}" class="status-badge status-draft">
-                                        <i class="fa-regular fa-file"></i> Bản thảo
+                                        <i class="fa-regular fa-file"></i> Bản nháp
                                     </span>
                                     <span th:if="${o.offerStatus == 'Pending_Director'}" class="status-badge status-pending">
-                                        <i class="fa-regular fa-clock"></i> Chờ duyệt
+                                        <i class="fa-regular fa-clock"></i> Chờ Giám đốc duyệt
                                     </span>
                                     <span th:if="${o.offerStatus == 'Director_Approved' or o.offerStatus == 'Approved'}" class="status-badge status-approved">
-                                        <i class="fa-solid fa-check"></i> Đã duyệt
+                                        <i class="fa-solid fa-check"></i> Giám đốc đã duyệt
                                     </span>
                                     <span th:if="${o.offerStatus == 'Director_Rejected' or o.offerStatus == 'Rejected'}" class="status-badge status-rejected">
-                                        <i class="fa-solid fa-xmark"></i> Bị từ chối
+                                        <i class="fa-solid fa-xmark"></i> Giám đốc từ chối
                                     </span>
                                     <span th:if="${o.offerStatus == 'Sent_Candidate'}" class="status-badge status-sent">
-                                        <i class="fa-regular fa-paper-plane"></i> Đã gửi ứng viên
+                                        <i class="fa-regular fa-paper-plane"></i> Đã gửi thư mời
                                     </span>
                                     <span th:if="${o.offerStatus == 'Accepted'}" class="status-badge status-accepted">
-                                        <i class="fa-solid fa-user-check"></i> Đã nhận việc
+                                        <i class="fa-solid fa-user-check"></i> Ứng viên chấp nhận
                                     </span>
                                     <span th:if="${o.offerStatus == 'Declined'}" class="status-badge status-declined">
-                                        <i class="fa-solid fa-user-xmark"></i> Từ chối
+                                        <i class="fa-solid fa-user-xmark"></i> Ứng viên từ chối
                                     </span>
                                 </td>
                                 <td class="offer-date-cell" th:text="${o.createdAt != null ? #temporals.format(o.createdAt, 'dd/MM/yyyy HH:mm') : '-'}">
