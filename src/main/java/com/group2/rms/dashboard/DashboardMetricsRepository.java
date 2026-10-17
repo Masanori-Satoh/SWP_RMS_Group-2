@@ -117,7 +117,7 @@ public class DashboardMetricsRepository {
 
     public long candidatesForOwnRequisitions(int userId) {
         return count("select count(distinct a.candidate.candidateId) from Application a "
-                + "where a.jobPosting.requisition.hiringManager.userId = :userId", Map.of("userId", userId));
+                + "where a.jobPosting.requisition.hiringManager.userId = :userId and " + FORMAL_FILTER, Map.of("userId", userId));
     }
 
     public long upcomingInterviewsForHiringManager(int userId, LocalDateTime now) {

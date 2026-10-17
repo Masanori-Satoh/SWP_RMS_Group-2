@@ -123,6 +123,16 @@
 
    <build>
         <plugins>
+            <!-- Tests validate the existing schema; never inherit local ddl-auto=update. -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <configuration>
+                    <systemPropertyVariables>
+                        <spring.jpa.hibernate.ddl-auto>validate</spring.jpa.hibernate.ddl-auto>
+                    </systemPropertyVariables>
+                </configuration>
+            </plugin>
             <!-- 1. Plugin JaCoCo -->
             <plugin>
                 <groupId>org.jacoco</groupId>

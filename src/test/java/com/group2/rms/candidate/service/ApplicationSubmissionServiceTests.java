@@ -241,7 +241,7 @@ class ApplicationSubmissionServiceTests {
 
     // ------------------------------------------------------------------ helpers
     @Test
-    void candidateWithSuggestionCanSubmitNewCvThroughNormalAiFlow() {
+    void candidateWithHmApprovedSuggestionSubmitsNewCvStraightToInterviewWithoutAi() {
         givenCandidate();
         givenJob(job("Published", LocalDateTime.now().plusDays(7)));
         candidate.setAccount(com.group2.rms.user.entity.User.builder().userId(15).build());
@@ -250,12 +250,49 @@ class ApplicationSubmissionServiceTests {
         when(cvStorage.store(PDF, CANDIDATE_ID)).thenReturn(STORED);
         when(applications.findFirstByCandidate_CandidateIdAndJobPosting_JobPostingIdAndApplicationStatus(
                 CANDIDATE_ID, JOB_ID, "HM_Suggested")).thenReturn(Optional.of(suggestion));
-        when(applications.submitSuggestionWithNewCv(302, STORED.url())).thenReturn(1);
+        when(applications.submitSuggestionWithNewCv(302, STORED.url(), "HM_Passed")).thenReturn(1);
         org.junit.jupiter.api.Assertions.assertEquals(302, service.apply(USERNAME, JOB_ID, PDF));
-        verify(events).publishEvent(new ApplicationSubmittedEvent(302));
+        verifyNoInteractions(events);
         verify(applications).recordSuggestionSubmitted(15, 302);
         verify(applications, never()).save(any(Application.class));
         verify(cvStorage, never()).delete("old.pdf");
+    }
+
+    @Test
+    void candidateWithHrRecommendationStillAwaitingHmFollowsNormalScreening() {
+        givenSuggestion();
+        when(applications.countPendingHrRecommendation(302)).thenReturn(1L);
+        when(applications.submitSuggestionWithNewCv(302, STORED.url(), "Applied")).thenReturn(1);
+
+        assertEquals(302, service.apply(USERNAME, JOB_ID, PDF));
+
+        verify(events).publishEvent(new ApplicationSubmittedEvent(302));
+        verify(applications).recordSuggestionSubmitted(15, 302);
+        verify(applications, never()).submitSuggestionWithNewCv(302, STORED.url(), "HM_Passed");
+        verify(applications, never()).save(any(Application.class));
+    }
+
+    @Test
+    void alreadyProcessedSuggestionFailsWithoutSuccessEventAndNewFileIsCleanedOnRollback() {
+        givenSuggestion();
+
+        assertThrows(ApplicationSubmissionException.class, () -> service.apply(USERNAME, JOB_ID, PDF));
+        completeTransaction(TransactionSynchronization.STATUS_ROLLED_BACK);
+
+        verify(cvStorage).delete(STORED.key());
+        verify(applications, never()).recordSuggestionSubmitted(anyInt(), anyInt());
+        verify(applications, never()).save(any(Application.class));
+        verifyNoInteractions(events);
+    }
+
+    private void givenSuggestion() {
+        givenCandidate();
+        givenJob(job("Published", LocalDateTime.now().plusDays(7)));
+        candidate.setAccount(com.group2.rms.user.entity.User.builder().userId(15).build());
+        when(cvStorage.store(PDF, CANDIDATE_ID)).thenReturn(STORED);
+        when(applications.findFirstByCandidate_CandidateIdAndJobPosting_JobPostingIdAndApplicationStatus(
+                CANDIDATE_ID, JOB_ID, "HM_Suggested")).thenReturn(Optional.of(Application.builder()
+                .applicationId(302).candidate(candidate).applicationStatus("HM_Suggested").build()));
     }
 
     private void givenCandidate() {

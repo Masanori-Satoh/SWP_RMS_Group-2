@@ -125,6 +125,7 @@ public class ApplicationPipelineService {
         AIScreeningResult latest = scores.isEmpty() ? null : scores.getFirst();
         ApplicationProgressFacts facts = knownFacts(applicationId, status, progressFacts(List.of(applicationId)));
         ApplicationProgressResponse progress = progress(facts, LocalDateTime.now());
+        boolean cancelledProposal = applications.countTalentPoolCancellation(applicationId) > 0;
 
         return new ApplicationDetailResponse(
                 application.getApplicationId(),
@@ -135,7 +136,7 @@ public class ApplicationPipelineService {
                 job.getJobPostingId(), job.getPostingTitle(),
                 requisition.getDepartment() == null ? null : requisition.getDepartment().getDepartmentName(),
                 application.getSubmissionDate(),
-                status, progress.detailLabel(), progress.badge(),
+                status, cancelledProposal ? "Đề xuất đã kết thúc" : progress.detailLabel(), cancelledProposal ? "badge--neutral" : progress.badge(),
                 latest == null ? null : latest.getAiMatchScore(),
                 latest == null ? null : latest.getScreenedAt(),
                 timeline(application, account, scores),
@@ -147,7 +148,8 @@ public class ApplicationPipelineService {
                         access.canScheduleInterview(actor, progress),
                         access.canCreateOffer(actor, progress),
                         access.canOpenJobPosting(actor)),
-                actor.getRole() == null ? null : actor.getRole().getRoleName());
+                actor.getRole() == null ? null : actor.getRole().getRoleName(),
+                "HM_Suggested".equals(status) || cancelledProposal);
     }
 
     @Transactional(readOnly = true)
@@ -225,11 +227,36 @@ public class ApplicationPipelineService {
     private List<TimelineItem> timeline(Application application, User account, List<AIScreeningResult> scores) {
         Integer id = application.getApplicationId();
         List<TimelineItem> items = new ArrayList<>();
-        items.add(new TimelineItem(application.getSubmissionDate(), "Nộp hồ sơ", account.getFullName(), null,
-                "neutral"));
+        var poolEvents = applications.findTalentPoolEvents(id);
+        boolean hrRecommendation = poolEvents.stream().anyMatch(event -> "TalentPoolHrRecommended".equals(event.getKind()));
+        for (var event : poolEvents) {
+            String title = switch (event.getKind()) {
+                case "TalentPoolHrRecommended" -> "HR gửi gợi ý cho HM";
+                case "TalentPoolSuggested" -> hrRecommendation ? "HM chấp nhận gợi ý — chờ HR liên hệ" : "HM đề xuất";
+                case "TalentPoolActivated" -> "HR xác nhận ứng viên đồng ý dùng CV cũ";
+                case "TalentPoolCandidateSubmitted" -> "Ứng viên nộp CV mới";
+                default -> "Kết thúc đề xuất";
+            };
+            items.add(new TimelineItem(event.getAt(), title, event.getActor(), null, "neutral"));
+        }
+        if (poolEvents.isEmpty() && "HM_Suggested".equals(application.getApplicationStatus())) {
+            items.add(new TimelineItem(application.getSubmissionDate(), "HM đề xuất", null,
+                    "Chờ HR liên hệ và xác nhận ứng viên đồng ý ứng tuyển.", "neutral"));
+        } else if (poolEvents.isEmpty()) {
+            items.add(new TimelineItem(application.getSubmissionDate(), "Nộp hồ sơ", account.getFullName(), null,
+                    "neutral"));
+        }
         scores.forEach(score -> items.add(new TimelineItem(score.getScreenedAt(),
                 "AI chấm điểm: " + formatScore(score.getAiMatchScore()), "Hệ thống", null, "brand")));
-        reviews.findWithReviewerByApplicationId(id).forEach(review -> items.add(new TimelineItem(
+        var reviewHistory = reviews.findWithReviewerByApplicationId(id);
+        Integer originReviewId = hrRecommendation ? reviewHistory.stream()
+                .filter(r -> "HR".equals(r.getReviewerRole()) && "Hold".equals(r.getDecision()))
+                .map(com.group2.rms.candidate.entity.ApplicationReview::getReviewId).min(Integer::compareTo).orElse(null) : null;
+        Integer hmRecommendationDecisionId = hrRecommendation ? reviewHistory.stream()
+                .filter(r -> "HiringManager".equals(r.getReviewerRole()) && java.util.Set.of("Pass", "Fail").contains(r.getDecision()))
+                .map(com.group2.rms.candidate.entity.ApplicationReview::getReviewId).min(Integer::compareTo).orElse(null) : null;
+        reviewHistory.stream().filter(review -> (originReviewId == null || !originReviewId.equals(review.getReviewId()))
+                && (hmRecommendationDecisionId == null || !hmRecommendationDecisionId.equals(review.getReviewId()))).forEach(review -> items.add(new TimelineItem(
                 review.getReviewedAt(),
                 ApplicationStatusLabels.reviewerRoleLabel(review.getReviewerRole()) + ": "
                         + ApplicationStatusLabels.decisionLabel(review.getDecision()),
