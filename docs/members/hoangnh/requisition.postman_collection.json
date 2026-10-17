@@ -1,0 +1,1336 @@
+{
+  "info": {
+    "name": "RMS - Requisition system test",
+    "description": "System test luồng Yêu cầu tuyển dụng qua HTTP (form + session + CSRF).\nChạy cả collection theo thứ tự bằng Collection Runner. Dữ liệu tạo ra được xóa ở thư mục 4.\nCần app chạy ở {{baseUrl}} với dữ liệu seed (hm_tuan, director, hr_lan).",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "event": [
+    {
+      "listen": "test",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "// Chạy sau MỌI request: trang HTML nào cũng chứa CSRF token",
+          "// (trang đăng nhập: <input name=\"_csrf\" value=...>, trang nội bộ: <meta name=\"_csrf\" content=...>).",
+          "// Lưu lại để các request POST sau gửi kèm _csrf={{csrf}}.",
+          "const m = pm.response.text().match(/name=\"_csrf\" (?:value|content)=\"([^\"]+)\"/);",
+          "if (m) pm.collectionVariables.set('csrf', m[1]);"
+        ]
+      }
+    }
+  ],
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:8088"
+    },
+    {
+      "key": "password",
+      "value": "12345678"
+    },
+    {
+      "key": "csrf",
+      "value": ""
+    },
+    {
+      "key": "reqId",
+      "value": ""
+    },
+    {
+      "key": "startDate",
+      "value": ""
+    }
+  ],
+  "item": [
+    {
+      "name": "0. Chưa đăng nhập",
+      "item": [
+        {
+          "name": "Chưa đăng nhập → chuyển về /login",
+          "protocolProfileBehavior": {
+            "followRedirects": false
+          },
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/requisitions",
+            "description": "Chạy request này trước tiên, khi cookie jar còn trống."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 302\", () => pm.response.to.have.status(302));",
+                  "pm.test(\"Chuyển tới trang đăng nhập\", () => pm.expect(pm.response.headers.get(\"Location\")).to.match(/\\/login$/));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "1. Hiring Manager: tạo và gửi duyệt",
+      "item": [
+        {
+          "name": "Mở trang đăng nhập",
+          "protocolProfileBehavior": {
+            "followRedirects": false
+          },
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/login"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Lấy được CSRF token\", () => pm.expect(pm.collectionVariables.get(\"csrf\")).to.not.be.empty);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Đăng nhập hm_tuan",
+          "protocolProfileBehavior": {
+            "followRedirects": false
+          },
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/x-www-form-urlencoded"
+              }
+            ],
+            "url": "{{baseUrl}}/login",
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                {
+                  "key": "username",
+                  "value": "hm_tuan"
+                },
+                {
+                  "key": "password",
+                  "value": "{{password}}"
+                },
+                {
+                  "key": "_csrf",
+                  "value": "{{csrf}}"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 302\", () => pm.response.to.have.status(302));",
+                  "// Đăng nhập đúng: chuyển tới /dashboard hoặc trang đang định mở trước đó; sai mật khẩu: /login?error",
+                  "pm.test(\"Đăng nhập thành công (không quay về /login)\", () => pm.expect(pm.response.headers.get(\"Location\")).to.not.include(\"/login\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Danh sách yêu cầu",
+          "protocolProfileBehavior": {
+            "followRedirects": false
+          },
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/requisitions"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Đúng màn danh sách\", () => pm.expect(pm.response.text()).to.include(\"req-list-page\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Danh sách có tìm kiếm, lọc, sắp xếp, phân trang",
+          "protocolProfileBehavior": {
+            "followRedirects": false
+          },
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/requisitions?q=java&status=Draft&status=Rejected&sort=title&page=0"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Bộ lọc lạ không làm lỗi trang\", () => pm.expect(pm.response.text()).to.include(\"req-list-page\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "[Âm] Tạo yêu cầu thiếu CSRF token → 403",
+          "protocolProfileBehavior": {
+            "followRedirects": false
+          },
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/x-www-form-urlencoded"
+              }
+            ],
+            "url": "{{baseUrl}}/requisitions/create",
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                {
+                  "key": "action",
+                  "value": "draft"
+                },
+                {
+                  "key": "title",
+                  "value": "Không có CSRF"
+                }
+              ]
+            },
+            "description": "Không gửi _csrf: Spring Security chặn trước khi vào controller."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 403\", () => pm.response.to.have.status(403));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "[Âm] Lưu nháp thiếu tên vị trí → hiện lỗi",
+          "protocolProfileBehavior": {
+            "followRedirects": false
+          },
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/x-www-form-urlencoded"
+              }
+            ],
+            "url": "{{baseUrl}}/requisitions/create",
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                {
+                  "key": "action",
+                  "value": "draft"
+                },
+                {
+                  "key": "title",
+                  "value": ""
+                },
+                {
+                  "key": "numberOfPositions",
+                  "value": "1"
+                },
+                {
+                  "key": "employmentType",
+                  "value": "Full-time"
+                },
+                {
+                  "key": "workModel",
+                  "value": "On-site"
+                },
+                {
+                  "key": "_csrf",
+                  "value": "{{csrf}}"
+                }
+              ]
+            },
+            "description": "Validator trả lỗi, controller render lại form (200), không ghi DB."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Trang có chữ: Tên vị trí không được để trống.\", () => pm.expect(pm.response.text()).to.include(\"Tên vị trí không được để trống.\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "[Âm] Gửi duyệt tổng trọng số 50% → hiện lỗi",
+          "protocolProfileBehavior": {
+            "followRedirects": false
+          },
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/x-www-form-urlencoded"
+              }
+            ],
+            "url": "{{baseUrl}}/requisitions/create",
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                {
+                  "key": "action",
+                  "value": "submit"
+                },
+                {
+                  "key": "title",
+                  "value": "Postman - trọng số sai"
+                },
+                {
+                  "key": "numberOfPositions",
+                  "value": "2"
+                },
+                {
+                  "key": "hiringType",
+                  "value": "New"
+                },
+                {
+                  "key": "employmentType",
+                  "value": "Full-time"
+                },
+                {
+                  "key": "workModel",
+                  "value": "Hybrid"
+                },
+                {
+                  "key": "gender",
+                  "value": "Any"
+                },
+                {
+                  "key": "workLocation",
+                  "value": "Tầng 5, 12 Duy Tân, Cầu Giấy, Hà Nội"
+                },
+                {
+                  "key": "expectedStartDate",
+                  "value": "{{startDate}}"
+                },
+                {
+                  "key": "probationDays",
+                  "value": "60"
+                },
+                {
+                  "key": "minSalary",
+                  "value": "20000000"
+                },
+                {
+                  "key": "maxSalary",
+                  "value": "30000000"
+                },
+                {
+                  "key": "reasonForHiring",
+                  "value": "Mở rộng đội kiểm thử"
+                },
+                {
+                  "key": "jobDescription",
+                  "value": "Kiểm thử API và giao diện"
+                },
+                {
+                  "key": "requirementDetails",
+                  "value": "2 năm kinh nghiệm"
+                },
+                {
+                  "key": "screeningCriteria[0].criteriaName",
+                  "value": "Kinh nghiệm kiểm thử"
+                },
+                {
+                  "key": "screeningCriteria[0].criteriaType",
+                  "value": "Experience"
+                },
+                {
+                  "key": "screeningCriteria[0].requiredValue",
+                  "value": "2 năm"
+                },
+                {
+                  "key": "screeningCriteria[0].weight",
+                  "value": "50"
+                },
+                {
+                  "key": "screeningCriteria[0].isMandatory",
+                  "value": "true"
+                },
+                {
+                  "key": "_csrf",
+                  "value": "{{csrf}}"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Trang có chữ: tổng trọng số đúng bằng 100%\", () => pm.expect(pm.response.text()).to.include(\"tổng trọng số đúng bằng 100%\"));"
+                ]
+              }
+            },
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// Ngày bắt đầu phải từ hôm nay trở đi: luôn lấy hôm nay + 30 ngày để test không bị hỏng theo thời gian",
+                  "const d = new Date(Date.now() + 30 * 24 * 3600 * 1000);",
+                  "pm.collectionVariables.set('startDate', d.toISOString().slice(0, 10));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "[Âm] Số lượng 31 người → hiện lỗi",
+          "protocolProfileBehavior": {
+            "followRedirects": false
+          },
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/x-www-form-urlencoded"
+              }
+            ],
+            "url": "{{baseUrl}}/requisitions/create",
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                {
+                  "key": "action",
+                  "value": "submit"
+                },
+                {
+                  "key": "title",
+                  "value": "Postman - quá số lượng"
+                },
+                {
+                  "key": "numberOfPositions",
+                  "value": "31"
+                },
+                {
+                  "key": "hiringType",
+                  "value": "New"
+                },
+                {
+                  "key": "employmentType",
+                  "value": "Full-time"
+                },
+                {
+                  "key": "workModel",
+                  "value": "Hybrid"
+                },
+                {
+                  "key": "gender",
+                  "value": "Any"
+                },
+                {
+                  "key": "workLocation",
+                  "value": "Tầng 5, 12 Duy Tân, Cầu Giấy, Hà Nội"
+                },
+                {
+                  "key": "expectedStartDate",
+                  "value": "{{startDate}}"
+                },
+                {
+                  "key": "probationDays",
+                  "value": "60"
+                },
+                {
+                  "key": "minSalary",
+                  "value": "20000000"
+                },
+                {
+                  "key": "maxSalary",
+                  "value": "30000000"
+                },
+                {
+                  "key": "reasonForHiring",
+                  "value": "Mở rộng đội kiểm thử"
+                },
+                {
+                  "key": "jobDescription",
+                  "value": "Kiểm thử API và giao diện"
+                },
+                {
+                  "key": "requirementDetails",
+                  "value": "2 năm kinh nghiệm"
+                },
+                {
+                  "key": "screeningCriteria[0].criteriaName",
+                  "value": "Kinh nghiệm kiểm thử"
+                },
+                {
+                  "key": "screeningCriteria[0].criteriaType",
+                  "value": "Experience"
+                },
+                {
+                  "key": "screeningCriteria[0].requiredValue",
+                  "value": "2 năm"
+                },
+                {
+                  "key": "screeningCriteria[0].weight",
+                  "value": "100"
+                },
+                {
+                  "key": "screeningCriteria[0].isMandatory",
+                  "value": "true"
+                },
+                {
+                  "key": "_csrf",
+                  "value": "{{csrf}}"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Trang có chữ: Số lượng cần tuyển phải từ 1 đến 30 người.\", () => pm.expect(pm.response.text()).to.include(\"Số lượng cần tuyển phải từ 1 đến 30 người.\"));"
+                ]
+              }
+            },
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// Ngày bắt đầu phải từ hôm nay trở đi: luôn lấy hôm nay + 30 ngày để test không bị hỏng theo thời gian",
+                  "const d = new Date(Date.now() + 30 * 24 * 3600 * 1000);",
+                  "pm.collectionVariables.set('startDate', d.toISOString().slice(0, 10));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Gửi duyệt hợp lệ → lưu reqId",
+          "protocolProfileBehavior": {
+            "followRedirects": false
+          },
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/x-www-form-urlencoded"
+              }
+            ],
+            "url": "{{baseUrl}}/requisitions/create",
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                {
+                  "key": "action",
+                  "value": "submit"
+                },
+                {
+                  "key": "title",
+                  "value": "Postman - Kiểm thử viên"
+                },
+                {
+                  "key": "numberOfPositions",
+                  "value": "2"
+                },
+                {
+                  "key": "hiringType",
+                  "value": "New"
+                },
+                {
+                  "key": "employmentType",
+                  "value": "Full-time"
+                },
+                {
+                  "key": "workModel",
+                  "value": "Hybrid"
+                },
+                {
+                  "key": "gender",
+                  "value": "Any"
+                },
+                {
+                  "key": "workLocation",
+                  "value": "Tầng 5, 12 Duy Tân, Cầu Giấy, Hà Nội"
+                },
+                {
+                  "key": "expectedStartDate",
+                  "value": "{{startDate}}"
+                },
+                {
+                  "key": "probationDays",
+                  "value": "60"
+                },
+                {
+                  "key": "minSalary",
+                  "value": "20000000"
+                },
+                {
+                  "key": "maxSalary",
+                  "value": "30000000"
+                },
+                {
+                  "key": "reasonForHiring",
+                  "value": "Mở rộng đội kiểm thử"
+                },
+                {
+                  "key": "jobDescription",
+                  "value": "Kiểm thử API và giao diện"
+                },
+                {
+                  "key": "requirementDetails",
+                  "value": "2 năm kinh nghiệm"
+                },
+                {
+                  "key": "screeningCriteria[0].criteriaName",
+                  "value": "Kinh nghiệm kiểm thử"
+                },
+                {
+                  "key": "screeningCriteria[0].criteriaType",
+                  "value": "Experience"
+                },
+                {
+                  "key": "screeningCriteria[0].requiredValue",
+                  "value": "2 năm"
+                },
+                {
+                  "key": "screeningCriteria[0].weight",
+                  "value": "100"
+                },
+                {
+                  "key": "screeningCriteria[0].isMandatory",
+                  "value": "true"
+                },
+                {
+                  "key": "_csrf",
+                  "value": "{{csrf}}"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 302\", () => pm.response.to.have.status(302));",
+                  "pm.test(\"Chuyển tới trang chi tiết\", () => pm.expect(pm.response.headers.get(\"Location\")).to.match(/\\/requisitions\\/\\d+$/));",
+                  "// Lấy id vừa tạo từ header Location để các bước sau dùng",
+                  "const id = pm.response.headers.get('Location').split('/').pop();",
+                  "pm.collectionVariables.set('reqId', id);",
+                  "console.log('Đã tạo yêu cầu id =', id);"
+                ]
+              }
+            },
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// Ngày bắt đầu phải từ hôm nay trở đi: luôn lấy hôm nay + 30 ngày để test không bị hỏng theo thời gian",
+                  "const d = new Date(Date.now() + 30 * 24 * 3600 * 1000);",
+                  "pm.collectionVariables.set('startDate', d.toISOString().slice(0, 10));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Chi tiết: thông báo, mã, trạng thái",
+          "protocolProfileBehavior": {
+            "followRedirects": false
+          },
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/requisitions/{{reqId}}"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Trang có chữ: Yêu cầu đã được gửi lên Giám đốc phê duyệt.\", () => pm.expect(pm.response.text()).to.include(\"Yêu cầu đã được gửi lên Giám đốc phê duyệt.\"));",
+                  "pm.test(\"Có mã yêu cầu\", () => pm.expect(pm.response.text()).to.include(\"REQ-\"));",
+                  "pm.test(\"Lương được định dạng\", () => pm.expect(pm.response.text()).to.include(\"20 – 30 triệu VND/tháng\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "[Âm] HM tự duyệt yêu cầu của mình → 403",
+          "protocolProfileBehavior": {
+            "followRedirects": false
+          },
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/x-www-form-urlencoded"
+              }
+            ],
+            "url": "{{baseUrl}}/requisitions/{{reqId}}/decision",
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                {
+                  "key": "decision",
+                  "value": "approve"
+                },
+                {
+                  "key": "_csrf",
+                  "value": "{{csrf}}"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 403\", () => pm.response.to.have.status(403));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "[Âm] HM sửa khi đang chờ duyệt → 403",
+          "protocolProfileBehavior": {
+            "followRedirects": false
+          },
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/requisitions/edit/{{reqId}}"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 403\", () => pm.response.to.have.status(403));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "2. Director: trả lại yêu cầu",
+      "item": [
+        {
+          "name": "Mở trang đăng nhập",
+          "protocolProfileBehavior": {
+            "followRedirects": false
+          },
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/login"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Lấy được CSRF token\", () => pm.expect(pm.collectionVariables.get(\"csrf\")).to.not.be.empty);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Đăng nhập director",
+          "protocolProfileBehavior": {
+            "followRedirects": false
+          },
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/x-www-form-urlencoded"
+              }
+            ],
+            "url": "{{baseUrl}}/login",
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                {
+                  "key": "username",
+                  "value": "director"
+                },
+                {
+                  "key": "password",
+                  "value": "{{password}}"
+                },
+                {
+                  "key": "_csrf",
+                  "value": "{{csrf}}"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 302\", () => pm.response.to.have.status(302));",
+                  "// Đăng nhập đúng: chuyển tới /dashboard hoặc trang đang định mở trước đó; sai mật khẩu: /login?error",
+                  "pm.test(\"Đăng nhập thành công (không quay về /login)\", () => pm.expect(pm.response.headers.get(\"Location\")).to.not.include(\"/login\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Danh sách mặc định (Chờ duyệt) có yêu cầu vừa gửi",
+          "protocolProfileBehavior": {
+            "followRedirects": false
+          },
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/requisitions"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Có link tới yêu cầu vừa tạo\", () => pm.expect(pm.response.text()).to.include(\"/requisitions/\" + pm.collectionVariables.get(\"reqId\")));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "[Âm] Trả lại không có lý do",
+          "protocolProfileBehavior": {
+            "followRedirects": false
+          },
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/x-www-form-urlencoded"
+              }
+            ],
+            "url": "{{baseUrl}}/requisitions/{{reqId}}/decision",
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                {
+                  "key": "decision",
+                  "value": "reject"
+                },
+                {
+                  "key": "comment",
+                  "value": ""
+                },
+                {
+                  "key": "_csrf",
+                  "value": "{{csrf}}"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 302\", () => pm.response.to.have.status(302));",
+                  "pm.test(\"Quay lại trang chi tiết\", () => pm.expect(pm.response.headers.get(\"Location\")).to.match(/\\/requisitions\\/\\d+$/));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "→ Trang chi tiết báo lỗi thiếu lý do",
+          "protocolProfileBehavior": {
+            "followRedirects": false
+          },
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/requisitions/{{reqId}}",
+            "description": "Thông báo lỗi là flash message: chỉ hiện ở lần GET ngay sau redirect."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Trang có chữ: Vui lòng nhập lý do để Hiring Manager chỉnh sửa.\", () => pm.expect(pm.response.text()).to.include(\"Vui lòng nhập lý do để Hiring Manager chỉnh sửa.\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Trả lại có lý do",
+          "protocolProfileBehavior": {
+            "followRedirects": false
+          },
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/x-www-form-urlencoded"
+              }
+            ],
+            "url": "{{baseUrl}}/requisitions/{{reqId}}/decision",
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                {
+                  "key": "decision",
+                  "value": "reject"
+                },
+                {
+                  "key": "comment",
+                  "value": "Bổ sung mô tả công việc chi tiết hơn"
+                },
+                {
+                  "key": "_csrf",
+                  "value": "{{csrf}}"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 302\", () => pm.response.to.have.status(302));",
+                  "pm.test(\"Quay lại trang chi tiết\", () => pm.expect(pm.response.headers.get(\"Location\")).to.match(/\\/requisitions\\/\\d+$/));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "→ Chi tiết hiện kết quả và lý do",
+          "protocolProfileBehavior": {
+            "followRedirects": false
+          },
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/requisitions/{{reqId}}"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Trang có chữ: Đã lưu quyết định thành công.\", () => pm.expect(pm.response.text()).to.include(\"Đã lưu quyết định thành công.\"));",
+                  "pm.test(\"Hiện lý do trả lại\", () => pm.expect(pm.response.text()).to.include(\"Bổ sung mô tả công việc chi tiết hơn\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "[Âm] Director xóa yêu cầu → 403",
+          "protocolProfileBehavior": {
+            "followRedirects": false
+          },
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/x-www-form-urlencoded"
+              }
+            ],
+            "url": "{{baseUrl}}/requisitions/delete/{{reqId}}",
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                {
+                  "key": "_csrf",
+                  "value": "{{csrf}}"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 403\", () => pm.response.to.have.status(403));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "3. HR: chỉ thấy yêu cầu đã duyệt",
+      "item": [
+        {
+          "name": "Mở trang đăng nhập",
+          "protocolProfileBehavior": {
+            "followRedirects": false
+          },
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/login"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Lấy được CSRF token\", () => pm.expect(pm.collectionVariables.get(\"csrf\")).to.not.be.empty);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Đăng nhập hr_lan",
+          "protocolProfileBehavior": {
+            "followRedirects": false
+          },
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/x-www-form-urlencoded"
+              }
+            ],
+            "url": "{{baseUrl}}/login",
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                {
+                  "key": "username",
+                  "value": "hr_lan"
+                },
+                {
+                  "key": "password",
+                  "value": "{{password}}"
+                },
+                {
+                  "key": "_csrf",
+                  "value": "{{csrf}}"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 302\", () => pm.response.to.have.status(302));",
+                  "// Đăng nhập đúng: chuyển tới /dashboard hoặc trang đang định mở trước đó; sai mật khẩu: /login?error",
+                  "pm.test(\"Đăng nhập thành công (không quay về /login)\", () => pm.expect(pm.response.headers.get(\"Location\")).to.not.include(\"/login\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "[Âm] HR xem yêu cầu bị trả lại → 403",
+          "protocolProfileBehavior": {
+            "followRedirects": false
+          },
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/requisitions/{{reqId}}"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 403\", () => pm.response.to.have.status(403));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "[Âm] HR tạo yêu cầu → 403",
+          "protocolProfileBehavior": {
+            "followRedirects": false
+          },
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/x-www-form-urlencoded"
+              }
+            ],
+            "url": "{{baseUrl}}/requisitions/create",
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                {
+                  "key": "action",
+                  "value": "draft"
+                },
+                {
+                  "key": "title",
+                  "value": "HR tạo"
+                },
+                {
+                  "key": "_csrf",
+                  "value": "{{csrf}}"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 403\", () => pm.response.to.have.status(403));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "4. Dọn dữ liệu test (HM xóa)",
+      "item": [
+        {
+          "name": "Mở trang đăng nhập",
+          "protocolProfileBehavior": {
+            "followRedirects": false
+          },
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/login"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Lấy được CSRF token\", () => pm.expect(pm.collectionVariables.get(\"csrf\")).to.not.be.empty);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Đăng nhập hm_tuan",
+          "protocolProfileBehavior": {
+            "followRedirects": false
+          },
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/x-www-form-urlencoded"
+              }
+            ],
+            "url": "{{baseUrl}}/login",
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                {
+                  "key": "username",
+                  "value": "hm_tuan"
+                },
+                {
+                  "key": "password",
+                  "value": "{{password}}"
+                },
+                {
+                  "key": "_csrf",
+                  "value": "{{csrf}}"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 302\", () => pm.response.to.have.status(302));",
+                  "// Đăng nhập đúng: chuyển tới /dashboard hoặc trang đang định mở trước đó; sai mật khẩu: /login?error",
+                  "pm.test(\"Đăng nhập thành công (không quay về /login)\", () => pm.expect(pm.response.headers.get(\"Location\")).to.not.include(\"/login\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Danh sách (lấy CSRF mới)",
+          "protocolProfileBehavior": {
+            "followRedirects": false
+          },
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/requisitions"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Xóa yêu cầu vừa tạo",
+          "protocolProfileBehavior": {
+            "followRedirects": false
+          },
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/x-www-form-urlencoded"
+              }
+            ],
+            "url": "{{baseUrl}}/requisitions/delete/{{reqId}}",
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                {
+                  "key": "_csrf",
+                  "value": "{{csrf}}"
+                }
+              ]
+            },
+            "description": "Yêu cầu bị trả lại (Rejected), chưa có tin tuyển dụng nên người tạo được xóa."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 302\", () => pm.response.to.have.status(302));",
+                  "pm.test(\"Quay về danh sách\", () => pm.expect(pm.response.headers.get(\"Location\")).to.match(/\\/requisitions$/));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Xem lại sau khi xóa → 404",
+          "protocolProfileBehavior": {
+            "followRedirects": false
+          },
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/requisitions/{{reqId}}"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 404\", () => pm.response.to.have.status(404));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

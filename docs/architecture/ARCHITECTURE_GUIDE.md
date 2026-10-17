@@ -195,7 +195,10 @@ Phân quyền URL nằm tập trung trong `core/config/SecurityConfig` (chưa d�
 | `/portal/offers/**` | `CANDIDATE` |
 | `/offers/**` | `HR`, `DIRECTOR`, `SYSTEM_ADMIN` |
 | `/requisitions/**` | `HIRING_MANAGER`, `DIRECTOR`, `HR`, `SYSTEM_ADMIN` |
-| `/internal/job-postings/**` | `HR`, `SYSTEM_ADMIN` |
+| `/internal/job-postings/*/close` | `HR` |
+| `/internal/job-postings/create`, `/internal/job-postings/dashboard` | `HR`, `SYSTEM_ADMIN` |
+| `GET /internal/job-postings`, `GET /internal/job-postings/*` (danh sách, chi tiết) | `HR`, `HIRING_MANAGER`, `SYSTEM_ADMIN` |
+| Mọi thao tác ghi còn lại `/internal/job-postings/**` | `HR`, `SYSTEM_ADMIN` |
 | `/dashboard/**`, `/notifications/**`, mọi URL còn lại | Đã đăng nhập |
 
 - Đăng nhập: form `/login` → `/dashboard`. Đăng xuất: `POST /logout` → `/login?logout`.

@@ -259,3 +259,44 @@ Nhằm đảm bảo chất lượng code và phòng ngừa lỗi hồi quy (regr
 - [x] **DONE-06:** Migration, DTO, Service, Controller, Views, Test và Checklist cá nhân được cập nhật đầy đủ.
 
 **Nguyên tắc cập nhật:** Chỉ đổi `[ ]` thành `[x]` khi có code và bằng chứng kiểm tra tương ứng. Việc thêm kế hoạch này không đánh dấu Iter1 hoặc Iter2 đã hoàn thành, không triển khai chức năng và không gửi notification/email thật.
+
+---
+
+## VII. HOÀN THIỆN REQUISITION (17/10/2026)
+
+> Quy tắc validate mới nhất xem `validation.md`. Mô tả quy tắc cũ ở mục II.4 và II.6 (nháp bỏ qua bắt buộc, trọng số nháp tới 999.99, tiêu đề mặc định "Untitled requisition") **không còn đúng**.
+
+**Màn hình (theo wireframe GV đã duyệt)**
+- [x] List: bộ lọc theo role + chip bỏ lọc, Director mặc định "Chờ duyệt", phân trang giữ bộ lọc, bỏ cột Người tạo (không cuộn ngang).
+- [x] Form: viết lại theo wireframe (checklist "Sẵn sàng gửi duyệt", hộp xác nhận gửi duyệt, chia đều trọng số).
+- [x] Detail: viết lại (banner theo trạng thái, thanh tiến trình, khối tin tuyển dụng, ý kiến Giám đốc, lịch sử AuditLog).
+- [x] Mã yêu cầu dạng `REQ-0001` (bỏ năm).
+
+**Validate / nghiệp vụ**
+- [x] Lưu nháp bắt buộc Tên vị trí, Số lượng, Hình thức, Mô hình (cột NOT NULL); dòng tiêu chí nhập dở phải điền đủ.
+- [x] Số lượng 1–30 người (`POSITIONS_MAX`).
+- [x] Ngày bắt đầu ≤ hôm nay + 1 năm, kiểm tra cả khi nháp.
+- [x] Lương ≤ 1.000.000.000 VND/tháng (`SALARY_MAX`).
+- [x] Lương hiển thị dấu chấm `123.000` (JS + editor ở controller), giữ vị trí con trỏ khi chèn số; sửa cả mockup form.
+- [x] Ô thử việc có lại nút −/+ (ô trống bấm nút → 60 ngày).
+- [x] Dấu tick ở cột "Sẵn sàng gửi duyệt" vẽ bằng SVG, nằm giữa vòng tròn.
+- [x] Trang chi tiết: thêm nút "← Quay về danh sách" ở nhóm nút đầu trang (mọi vai trò).
+- Lưu ý: lỗi ô lương tự sinh số là do **bộ gõ tiếng Việt** (Unikey/EVKey) đang bật khi gõ số; tắt bộ gõ (hoặc chuyển sang E) khi nhập lương. Giữ cách tự định dạng `123.000`.
+- [x] Trọng số mỗi tiêu chí 0.01–100 cả khi nháp.
+- [x] Đổi `\r\n` → `\n` ở 3 ô nhiều dòng trước khi đếm ký tự.
+- [x] Phòng ban: tạo mới lấy phòng ban (Active) của người tạo, không có thì báo lỗi; sửa giữ phòng ban cũ; bỏ `departmentId` khỏi `@InitBinder`.
+- [x] Chặn xóa phiếu gốc đã có đợt tuyển sau (ẩn nút Xóa).
+- [x] JS: "hôm nay" theo giờ máy người dùng; blur kiểm tra theo luật gửi duyệt; khóa nút khi đang gửi (chống gửi 2 lần).
+- [x] Không viết migration: ràng buộc từ bản review DB kiểm tra ở tầng ứng dụng (`validation.md` mục 8).
+
+**Test & tài liệu**
+- [x] 205/205 test requisition Passed (validator, service, controller, integration).
+- [x] `requisition-review-guide.md`: cẩm nang trả lời GV (nút → luồng chạy, trường → cột DB / cách tính).
+- [x] `validation.md`: viết lại khớp code.
+- [x] `requisition-testing-guide.md`: hướng dẫn viết unit / controller / integration test và system test Postman.
+- [x] `requisition.postman_collection.json`: 30 request, 55 assertion Passed (newman), tự dọn dữ liệu test.
+
+**Còn lại / hạn chế**
+- [ ] Migration `008_requisition_code_without_year.sql` không còn trong `database/migrations/`: cần xác nhận đã chạy chưa.
+- [ ] Seed: yêu cầu Chờ duyệt không có tiêu chí, nhiều yêu cầu thiếu AuditLog.
+- Duyệt (Approve) chưa gửi thông báo; danh sách có N+1 query lấy tin tuyển dụng (chấp nhận với dữ liệu nhỏ).
