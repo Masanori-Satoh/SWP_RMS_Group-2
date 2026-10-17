@@ -4,6 +4,22 @@
   if (!page) return;
   document.title = document.title.replace(' — Mộc Careers', ' — Mộc Tuyển dụng');
   page.querySelector('.auth-header .wordmark')?.setAttribute('aria-label', 'Trang chủ Mộc Tuyển dụng');
+  if (page.classList.contains('auth-botanical')) {
+    const pauseDecoration = () => page.toggleAttribute('data-auth-paused', document.hidden);
+    document.addEventListener('visibilitychange', pauseDecoration);
+    pauseDecoration();
+    page.querySelectorAll('input').forEach(input => {
+      input.addEventListener('input', () => input.setCustomValidity(''));
+      input.addEventListener('invalid', () => {
+        input.setCustomValidity('');
+        if (input.validity.valueMissing) input.setCustomValidity('Vui lòng nhập thông tin này.');
+        else if (input.validity.typeMismatch) input.setCustomValidity('Vui lòng nhập email hợp lệ.');
+        else if (input.validity.tooShort) input.setCustomValidity(`Vui lòng nhập ít nhất ${input.minLength} ký tự.`);
+        else if (input.validity.tooLong) input.setCustomValidity(`Vui lòng nhập tối đa ${input.maxLength} ký tự.`);
+        else if (input.validity.patternMismatch) input.setCustomValidity('Vui lòng nhập mã xác minh gồm 6 chữ số.');
+      });
+    });
+  }
 
   const otpValue = page.querySelector('[data-otp-value]');
   const otpBoxes = page.querySelector('[data-otp-boxes]');
@@ -71,7 +87,9 @@
     button.addEventListener('click', () => {
       const visible = input.type === 'password';
       input.type = visible ? 'text' : 'password';
-      button.textContent = visible ? 'Ẩn' : 'Hiện';
+      const label = button.querySelector('[data-password-toggle-label]');
+      if (label) label.textContent = visible ? 'Ẩn' : 'Hiện';
+      else button.textContent = visible ? 'Ẩn' : 'Hiện';
       button.setAttribute('aria-label', visible ? hideLabel : showLabel);
       button.setAttribute('aria-pressed', String(visible));
     });

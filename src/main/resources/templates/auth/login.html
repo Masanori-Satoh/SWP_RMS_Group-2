@@ -1,12 +1,11 @@
 <!doctype html>
 <html lang="vi" xmlns:th="http://www.thymeleaf.org">
 <head th:replace="~{auth/fragments :: head('Đăng nhập')}"></head>
-<body class="auth-page">
+<body class="auth-page auth-botanical auth-login">
 <header th:replace="~{auth/fragments :: header}"></header>
 <div class="auth-container auth-shell">
-  <aside th:replace="~{auth/fragments :: story}"></aside>
+  <aside th:replace="~{auth/fragments :: story(botanical=true)}"></aside>
   <main id="main" class="auth-card" tabindex="-1">
-    <p class="auth-card-label">Tài khoản Mộc</p>
     <h1>Chào mừng bạn trở lại.</h1>
     <p class="auth-intro">Đăng nhập tài khoản ứng viên hoặc không gian tuyển dụng nội bộ.</p>
     <p class="auth-message auth-error" role="alert" th:if="${param.error}">Thông tin đăng nhập không đúng hoặc tài khoản không hoạt động. Vui lòng thử lại hoặc <a th:href="@{/forgot-password}">đặt lại mật khẩu</a>.</p>
@@ -17,13 +16,14 @@
     <form class="auth-form" th:action="@{/login}" method="post" data-auth-form>
       <div class="auth-field">
         <label for="username">Tên đăng nhập hoặc email</label>
-        <input id="username" name="username" type="text" autocomplete="username" autocapitalize="none" spellcheck="false" required>
+        <div class="auth-input-wrap"><svg th:replace="~{auth/fragments :: icon('user')}"></svg><input id="username" name="username" type="text" placeholder="Nhập tên đăng nhập hoặc email" autocomplete="username" autocapitalize="none" spellcheck="false" required></div>
       </div>
       <div class="auth-field">
         <div class="auth-label-row"><label for="password">Mật khẩu</label><a th:href="@{/forgot-password}">Quên mật khẩu?</a></div>
         <div class="auth-password">
-          <input id="password" name="password" type="password" autocomplete="current-password" required>
-          <button class="auth-password-toggle" type="button" data-password-toggle aria-controls="password" aria-label="Hiện mật khẩu" data-show-label="Hiện mật khẩu" data-hide-label="Ẩn mật khẩu" aria-pressed="false" hidden>Hiện</button>
+          <svg th:replace="~{auth/fragments :: icon('lock')}"></svg>
+          <input id="password" name="password" type="password" placeholder="Nhập mật khẩu" autocomplete="current-password" required>
+          <button class="auth-password-toggle" type="button" data-password-toggle aria-controls="password" aria-label="Hiện mật khẩu" data-show-label="Hiện mật khẩu" data-hide-label="Ẩn mật khẩu" aria-pressed="false" hidden><svg th:replace="~{auth/fragments :: icon('eye')}"></svg><span class="auth-visually-hidden" data-password-toggle-label>Hiện</span></button>
         </div>
       </div>
       <button class="button auth-submit" type="submit" data-auth-submit data-busy-label="Đang đăng nhập…">Đăng nhập</button>

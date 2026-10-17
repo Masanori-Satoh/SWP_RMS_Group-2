@@ -1,37 +1,38 @@
 <!doctype html>
 <html lang="vi" xmlns:th="http://www.thymeleaf.org">
 <head th:replace="~{auth/fragments :: head('Đăng ký ứng viên')}"></head>
-<body class="auth-page">
+<body class="auth-page auth-botanical auth-register">
 <header th:replace="~{auth/fragments :: header}"></header>
 <div class="auth-container auth-shell">
-  <aside th:replace="~{auth/fragments :: story}"></aside>
+  <aside th:replace="~{auth/fragments :: story(botanical=true)}"></aside>
   <main id="main" class="auth-card" tabindex="-1">
     <nav th:replace="~{auth/fragments :: registrationSteps(1)}"></nav>
     <h1>Tạo tài khoản ứng viên.</h1>
     <p class="auth-intro">Điền thông tin để nhận mã xác minh qua email. Tài khoản chỉ được tạo sau khi bạn xác minh mã thành công.</p>
-    <form class="auth-form" th:action="@{/register}" th:object="${form}" method="post" data-auth-form>
+    <form class="auth-form auth-register-grid" th:action="@{/register}" th:object="${form}" method="post" data-auth-form>
       <div th:replace="~{auth/fragments :: errors}"></div>
       <div class="auth-field">
         <label for="full-name">Họ và tên</label>
-        <input id="full-name" type="text" th:field="*{fullName}" maxlength="100" autocomplete="name" required th:attr="aria-invalid=${#fields.hasErrors('fullName')},aria-describedby=${#fields.hasErrors('fullName') ? 'full-name-error' : null}">
+        <div class="auth-input-wrap"><svg th:replace="~{auth/fragments :: icon('user')}"></svg><input id="full-name" type="text" th:field="*{fullName}" placeholder="Nhập họ và tên" maxlength="100" autocomplete="name" required th:attr="aria-invalid=${#fields.hasErrors('fullName')},aria-describedby=${#fields.hasErrors('fullName') ? 'full-name-error' : null}"></div>
         <span id="full-name-error" class="auth-field-error" th:if="${#fields.hasErrors('fullName')}" ><th:block th:replace="~{auth/fragments :: fieldErrors('fullName')}"></th:block></span>
       </div>
       <div class="auth-field">
         <label for="username">Tên đăng nhập</label>
-        <input id="username" type="text" th:field="*{username}" maxlength="50" autocomplete="username" autocapitalize="none" spellcheck="false" required th:attr="aria-invalid=${#fields.hasErrors('username')},aria-describedby=${#fields.hasErrors('username') ? 'username-hint username-error' : 'username-hint'}">
-        <small id="username-hint" class="auth-hint">Tên đăng nhập được giữ cố định sau khi tạo tài khoản.</small>
+        <div class="auth-input-wrap"><svg th:replace="~{auth/fragments :: icon('user')}"></svg><input id="username" type="text" th:field="*{username}" placeholder="Nhập tên đăng nhập" maxlength="50" autocomplete="username" autocapitalize="none" spellcheck="false" required th:attr="aria-invalid=${#fields.hasErrors('username')},aria-describedby=${#fields.hasErrors('username') ? 'username-hint username-error' : 'username-hint'}"></div>
+        <small id="username-hint" class="auth-hint">Tên đăng nhập không thể thay đổi.</small>
         <span id="username-error" class="auth-field-error" th:if="${#fields.hasErrors('username')}" ><th:block th:replace="~{auth/fragments :: fieldErrors('username')}"></th:block></span>
       </div>
-      <div class="auth-field">
+      <div class="auth-field auth-field--wide">
         <label for="email">Email</label>
-        <input id="email" type="email" th:field="*{email}" maxlength="150" autocomplete="email" autocapitalize="none" spellcheck="false" required th:attr="aria-invalid=${#fields.hasErrors('email')},aria-describedby=${#fields.hasErrors('email') ? 'email-error' : null}">
+        <div class="auth-input-wrap"><svg th:replace="~{auth/fragments :: icon('mail')}"></svg><input id="email" type="email" th:field="*{email}" placeholder="Nhập email của bạn" maxlength="150" autocomplete="email" autocapitalize="none" spellcheck="false" required th:attr="aria-invalid=${#fields.hasErrors('email')},aria-describedby=${#fields.hasErrors('email') ? 'email-error' : null}"></div>
         <span id="email-error" class="auth-field-error" th:if="${#fields.hasErrors('email')}" ><th:block th:replace="~{auth/fragments :: fieldErrors('email')}"></th:block></span>
       </div>
       <div class="auth-field">
         <label for="password">Mật khẩu</label>
         <div class="auth-password">
-          <input id="password" type="password" name="password" minlength="8" maxlength="32" autocomplete="new-password" required th:attr="aria-invalid=${#fields.hasErrors('password')},aria-describedby=${#fields.hasErrors('password') ? 'password-hint password-error' : 'password-hint'}">
-          <button class="auth-password-toggle" type="button" data-password-toggle aria-controls="password" aria-label="Hiện mật khẩu" data-show-label="Hiện mật khẩu" data-hide-label="Ẩn mật khẩu" aria-pressed="false" hidden>Hiện</button>
+          <svg th:replace="~{auth/fragments :: icon('lock')}"></svg>
+          <input id="password" type="password" name="password" placeholder="Nhập mật khẩu" minlength="8" maxlength="32" autocomplete="new-password" required th:attr="aria-invalid=${#fields.hasErrors('password')},aria-describedby=${#fields.hasErrors('password') ? 'password-hint password-error' : 'password-hint'}">
+          <button class="auth-password-toggle" type="button" data-password-toggle aria-controls="password" aria-label="Hiện mật khẩu" data-show-label="Hiện mật khẩu" data-hide-label="Ẩn mật khẩu" aria-pressed="false" hidden><svg th:replace="~{auth/fragments :: icon('eye')}"></svg><span class="auth-visually-hidden" data-password-toggle-label>Hiện</span></button>
         </div>
         <small id="password-hint" class="auth-hint">Sử dụng từ 8 đến 32 ký tự.</small>
         <span id="password-error" class="auth-field-error" th:if="${#fields.hasErrors('password')}" ><th:block th:replace="~{auth/fragments :: fieldErrors('password')}"></th:block></span>
@@ -39,8 +40,9 @@
       <div class="auth-field">
         <label for="confirm-password">Xác nhận mật khẩu</label>
         <div class="auth-password">
-          <input id="confirm-password" type="password" name="confirmPassword" minlength="8" maxlength="32" autocomplete="new-password" required th:attr="aria-invalid=${#fields.hasErrors('confirmPassword')},aria-describedby=${#fields.hasErrors('confirmPassword') ? 'confirm-password-error' : null}">
-          <button class="auth-password-toggle" type="button" data-password-toggle aria-controls="confirm-password" aria-label="Hiện mật khẩu xác nhận" data-show-label="Hiện mật khẩu xác nhận" data-hide-label="Ẩn mật khẩu xác nhận" aria-pressed="false" hidden>Hiện</button>
+          <svg th:replace="~{auth/fragments :: icon('lock')}"></svg>
+          <input id="confirm-password" type="password" name="confirmPassword" placeholder="Nhập lại mật khẩu" minlength="8" maxlength="32" autocomplete="new-password" required th:attr="aria-invalid=${#fields.hasErrors('confirmPassword')},aria-describedby=${#fields.hasErrors('confirmPassword') ? 'confirm-password-error' : null}">
+          <button class="auth-password-toggle" type="button" data-password-toggle aria-controls="confirm-password" aria-label="Hiện mật khẩu xác nhận" data-show-label="Hiện mật khẩu xác nhận" data-hide-label="Ẩn mật khẩu xác nhận" aria-pressed="false" hidden><svg th:replace="~{auth/fragments :: icon('eye')}"></svg><span class="auth-visually-hidden" data-password-toggle-label>Hiện</span></button>
         </div>
         <span id="confirm-password-error" class="auth-field-error" th:if="${#fields.hasErrors('confirmPassword')}" ><th:block th:replace="~{auth/fragments :: fieldErrors('confirmPassword')}"></th:block></span>
       </div>
