@@ -31,6 +31,7 @@ public class JobPostingController {
     private final RequisitionAccess requisitionAccess;
     private final DepartmentRepository departmentRepository;
     private final RecruitmentEmailService recruitmentEmailService;
+    private final com.group2.rms.candidate.service.TalentPoolService talentPoolService;
 
     @ModelAttribute
     void populateViewerAttributes(Model model) {
@@ -192,6 +193,8 @@ public class JobPostingController {
         User currentUser = requisitionAccess.actor();
         InternalJobPostingDetailResponse detail = jobPostingService.getInternalJobPostingDetail(id, currentUser);
         model.addAttribute("posting", detail);
+        if (List.of("HR", "Hiring Manager").contains(requisitionAccess.role(currentUser)))
+            model.addAttribute("hrRecommendationCount", talentPoolService.pendingRecommendationCount(id));
         return "job-postings/detail";
     }
 

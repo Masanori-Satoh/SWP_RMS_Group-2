@@ -11,6 +11,7 @@
     let bookmarkRequest;
     let bookmarkSource;
     let saving = false;
+    let bookmarkLoaded = false;
 
     page.querySelectorAll('[data-app-close]').forEach((button) => {
         button.addEventListener('click', () => {
@@ -41,8 +42,9 @@
     };
     preview?.addEventListener('close', releasePreview);
 
-    page.querySelectorAll('[data-app-preview]').forEach((button) => {
-        button.addEventListener('click', async () => {
+    page.addEventListener('click', async (event) => {
+            const button = event.target.closest?.('[data-app-preview]');
+            if (!button || !page.contains(button)) return;
             releasePreview();
             const controller = new AbortController();
             previewRequest = controller;
@@ -55,6 +57,7 @@
             byId('app-preview-job').textContent = button.dataset.job || '';
             byId('app-preview-original').href = button.dataset.cvUrl;
             byId('app-preview-detail').href = button.dataset.detailUrl;
+            byId('app-preview-detail').hidden = button.dataset.hideDetailLink === 'true';
             status.textContent = 'Đang tải CV…';
             preview.showModal();
             try {
@@ -78,7 +81,6 @@
             } finally {
                 clearTimeout(timer);
             }
-        });
     });
 
     if (!bookmark) return;
@@ -140,20 +142,22 @@
         });
     }
 
-    function reflectSaved(data) {
+    function reflectSaved(data, source = bookmarkSource) {
         page.querySelectorAll('[data-app-bookmark]').forEach((button) => {
-            if (button.dataset.candidateKey !== bookmarkSource.dataset.candidateKey) return;
+            if (button.dataset.candidateKey !== source.dataset.candidateKey) return;
             button.dataset.saved = String(data.saved);
             button.classList.toggle('app-bookmark-button--saved', data.saved);
             button.title = data.saved ? 'Đã lưu vào kho tiềm năng' : 'Lưu vào kho ứng viên tiềm năng';
             button.setAttribute('aria-label', `${data.saved ? 'Xem ghi chú chung của' : 'Lưu ứng viên'} ${button.dataset.name}`);
             const label = button.querySelector('[data-app-bookmark-label]');
-            if (label) label.textContent = data.saved ? 'Thêm ghi chú' : 'Lưu ứng viên';
+            if (label) label.textContent = data.saved ? (button.dataset.savedLabel || 'Thêm ghi chú')
+                : (button.dataset.unsavedLabel || 'Lưu ứng viên');
             const scope = button.closest('[data-app-row]') || page;
             scope.querySelectorAll('[data-app-saved-badge], [data-app-pool-link]').forEach((item) => {
                 item.hidden = !data.saved;
             });
         });
+        if (source !== bookmarkSource) return;
         const detailNotes = byId('app-detail-notes');
         if (detailNotes) {
             renderNotes(detailNotes, data.notes);
@@ -169,7 +173,7 @@
     async function readJson(response) {
         const json = response.headers.get('content-type')?.includes('application/json')
             ? await response.json() : null;
-        if (!response.ok || !json) {
+        if (!response.ok || !json || !Number.isInteger(json.candidateId) || typeof json.saved !== 'boolean' || !Array.isArray(json.notes)) {
             throw new Error(json?.message || (response.status === 403
                 ? 'Bạn không có quyền truy cập hoặc phiên đăng nhập đã hết. Hãy tải lại trang.'
                 : 'Không thể tải dữ liệu. Hãy kiểm tra kết nối và thử lại.'));
@@ -178,6 +182,7 @@
     }
 
     async function loadBookmark() {
+        bookmarkLoaded = false;
         bookmarkRequest?.abort();
         const controller = new AbortController();
         bookmarkRequest = controller;
@@ -194,6 +199,7 @@
                 signal: controller.signal, cache: 'no-store', headers: { Accept: 'application/json' }
             }));
             if (controller.signal.aborted || !bookmark.open) return;
+            bookmarkLoaded = true;
             reflectSaved(data);
             renderNotes(byId('app-bookmark-notes'), data.notes);
             byId('app-bookmark-title').textContent = data.saved ? 'Ghi chú ứng viên' : 'Lưu ứng viên tiềm năng';
@@ -204,6 +210,7 @@
             }
             status.textContent = data.notes.length ? '' : 'Chưa có ghi chú nào cho ứng viên này.';
             noteInput.required = data.saved;
+            noteInput.setCustomValidity('');
             noteInput.placeholder = data.saved ? 'Nhập nhận xét…' : 'Nhập nhận xét (không bắt buộc)…';
             submit.textContent = data.saved ? 'Thêm ghi chú' : 'Lưu ứng viên';
             submit.disabled = false;
@@ -238,7 +245,8 @@
             const badge = byId('app-bookmark-badge');
             if (badge) {
                 const isSaved = button.dataset.saved === 'true';
-                badge.textContent = isSaved ? '✓ Đã lưu tiềm năng' : 'Chưa lưu tiềm năng';
+                badge.textContent = button.dataset.saved == null ? 'Đang tải trạng thái…'
+                    : isSaved ? '✓ Đã lưu tiềm năng' : 'Chưa lưu tiềm năng';
                 badge.className = `app-candidate-banner__badge ${isSaved ? 'app-candidate-banner__badge--saved' : 'app-candidate-banner__badge--unsaved'}`;
             }
             const countBadge = byId('app-bookmark-count');
@@ -267,12 +275,13 @@
     removeSubmit.addEventListener('click', () => mutateBookmark(true));
 
     async function mutateBookmark(removing = false) {
-        if (saving || submit.disabled) return;
+        if (saving || !bookmarkLoaded || submit.disabled) return;
         if (!removing && noteInput.required && !noteInput.value.trim()) {
             noteInput.setCustomValidity('Vui lòng nhập ghi chú.');
             noteInput.reportValidity();
             return;
         }
+        if (!removing && !form.reportValidity()) return;
         saving = true;
         retry.hidden = true;
         noteInput.readOnly = true;
@@ -287,25 +296,43 @@
                 method: 'POST', body: new FormData(form), headers: { Accept: 'application/json' },
                 signal: AbortSignal.timeout(30000)
             }));
+            if (data.saved === removing) throw new Error('Máy chủ chưa xác nhận thay đổi trạng thái lưu. Hãy tải lại ghi chú.');
             reflectSaved(data);
             byId('app-feedback').textContent = `${bookmarkSource.dataset.name}: ${removing ? 'đã bỏ lưu tiềm năng.' : noteInput.value.trim() ? 'đã lưu ghi chú chung.' : 'đã lưu vào kho tiềm năng.'}`;
             bookmark.close();
         } catch (error) {
+            bookmarkLoaded = false;
             errorMessage.textContent = `${error.message} Nếu kết nối bị ngắt khi lưu, hãy tải lại ghi chú để kiểm tra trước khi gửi lại.`;
             retry.hidden = false;
         } finally {
             saving = false;
             noteInput.readOnly = false;
-            submit.disabled = false;
+            submit.disabled = !bookmarkLoaded;
             submit.textContent = label;
             removeSubmit.textContent = 'Xác nhận bỏ lưu';
             bookmark.querySelectorAll('[data-app-close], #app-bookmark-remove, #app-bookmark-remove-submit, #app-bookmark-remove-cancel').forEach((button) => { button.disabled = false; });
+            removeButton.disabled = removeSubmit.disabled = !bookmarkLoaded;
         }
     }
 
     form.addEventListener('submit', (event) => {
         event.preventDefault();
         if (!removeConfirm.hidden) return;
-        mutateBookmark();
+        return mutateBookmark();
+    });
+
+    // Optional first-load state for embedded surfaces; the existing modal owns all note/write actions.
+    page.querySelectorAll('[data-app-bookmark][data-bookmark-load]').forEach(async (button) => {
+        button.disabled = true;
+        try {
+            const data = await readJson(await fetch(button.dataset.bookmarkUrl, {
+                headers: {Accept: 'application/json'}, cache: 'no-store', signal: AbortSignal.timeout(20000)
+            }));
+            reflectSaved(data, button);
+        } catch {
+            const label = button.querySelector('[data-app-bookmark-label]');
+            if (label) label.textContent = 'Xem ghi chú ứng viên';
+            byId('app-feedback').textContent = 'Chưa tải được trạng thái. Mở ghi chú để thử lại.';
+        } finally { button.disabled = false; }
     });
 })();

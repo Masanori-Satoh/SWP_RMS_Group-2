@@ -306,6 +306,62 @@ class ApplicationPipelineServiceTests {
 
     /** Đã chốt Đạt, chưa có offer: stepper đứng ở Offer và trang chi tiết biết buổi phỏng vấn để mở kết quả. */
     @Test
+    void pendingHmSuggestionDoesNotClaimTheCandidateSubmittedAnApplication() {
+        Application suggestion = application();
+        suggestion.setApplicationStatus("HM_Suggested");
+        when(applications.findDetailById(ID)).thenReturn(Optional.of(suggestion));
+
+        ApplicationDetailResponse detail = service.detail(ID);
+
+        assertEquals("HM đề xuất — chờ HR liên hệ", detail.statusLabel());
+        assertEquals(1, detail.timeline().size());
+        TimelineItem proposed = detail.timeline().getFirst();
+        assertEquals("HM đề xuất", proposed.title());
+        assertNull(proposed.actor(), "Không gán hành động đề xuất cho ứng viên hoặc bịa tên HM");
+        assertEquals(SUBMITTED, proposed.at());
+        assertTrue(proposed.body().contains("ứng viên đồng ý"));
+        assertTrue(detail.timeline().stream().noneMatch(item -> "Nộp hồ sơ".equals(item.title())));
+        verify(applications, never()).save(any());
+        verify(applications, never()).saveAndFlush(any());
+    }
+
+    @Test
+    void acceptedSuggestionShowsActualHmAndHrEventsInsteadOfInventingCandidateSubmission() {
+        var a = application(); a.setApplicationStatus("HM_Passed");
+        when(applications.findDetailById(ID)).thenReturn(Optional.of(a));
+        var proposed = mock(ApplicationRepository.TalentPoolEventRow.class);
+        when(proposed.getKind()).thenReturn("TalentPoolSuggested");
+        when(proposed.getAt()).thenReturn(SUBMITTED);
+        when(proposed.getActor()).thenReturn("HM Tuấn");
+        var accepted = mock(ApplicationRepository.TalentPoolEventRow.class);
+        when(accepted.getKind()).thenReturn("TalentPoolActivated");
+        when(accepted.getAt()).thenReturn(SUBMITTED.plusDays(1));
+        when(accepted.getActor()).thenReturn("HR Lan");
+        when(applications.findTalentPoolEvents(ID)).thenReturn(List.of(accepted, proposed));
+        var detail = service.detail(ID);
+        assertFalse(detail.proposalOnly());
+        assertEquals(List.of("HR xác nhận ứng viên đồng ý dùng CV cũ", "HM đề xuất"), detail.timeline().stream().map(TimelineItem::title).toList());
+        assertEquals("HR Lan", detail.timeline().getFirst().actor());
+        assertEquals("Chờ xếp lịch phỏng vấn", detail.statusLabel());
+    }
+
+    @Test
+    void cancelledDraftRemainsAProposalRatherThanARejectedOfficialApplication() {
+        var a = application(); a.setApplicationStatus("Rejected");
+        when(applications.findDetailById(ID)).thenReturn(Optional.of(a));
+        when(applications.countTalentPoolCancellation(ID)).thenReturn(1);
+        var ended = mock(ApplicationRepository.TalentPoolEventRow.class);
+        when(ended.getKind()).thenReturn("TalentPoolCancelled");
+        when(ended.getAt()).thenReturn(SUBMITTED);
+        when(ended.getActor()).thenReturn("HR Lan");
+        when(applications.findTalentPoolEvents(ID)).thenReturn(List.of(ended));
+        var detail = service.detail(ID);
+        assertTrue(detail.proposalOnly());
+        assertEquals("Đề xuất đã kết thúc", detail.statusLabel());
+        assertEquals("Kết thúc đề xuất", detail.timeline().getFirst().title());
+    }
+
+    @Test
     void detailStepperFollowsProgressAndExposesLatestInterviewId() {
         when(applications.findDetailById(ID)).thenReturn(Optional.of(application()));
         when(screeningResults.findByApplication_ApplicationIdOrderByAiScreeningIdDesc(ID)).thenReturn(List.of());

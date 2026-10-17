@@ -139,7 +139,9 @@ public class SecurityConfig {
                                                         "/talent-pool/applications/*/resend-email", "/talent-pool/interviews/*/resend-email",
                                                         "/talent-pool/jobs/*/close", "/internal/job-postings/*/close")
                                                 .hasAuthority("ROLE_HR")
-                                                .requestMatchers("/talent-pool/jobs/*/suggest")
+                                                .requestMatchers("/talent-pool/jobs/*/recommend", "/talent-pool/jobs/*/recommendations/*/withdraw")
+                                                .hasAuthority("ROLE_HR")
+                                                .requestMatchers("/talent-pool/recommendations/*/decision", "/talent-pool/jobs/*/suggest")
                                                 .hasAuthority("ROLE_HIRING_MANAGER")
                                                 .requestMatchers("/talent-pool", "/talent-pool/**")
                                                 .hasAnyAuthority("ROLE_HR", "ROLE_HIRING_MANAGER")
