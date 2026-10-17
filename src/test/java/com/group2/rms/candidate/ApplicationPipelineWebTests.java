@@ -471,12 +471,94 @@ class ApplicationPipelineWebTests {
 
     // ------------------------------------------------------------------ dữ liệu mẫu
     @Test
+    void poolSelectionShowsSourcesNotesAndReadOnlyConfirmationWithoutLegacySubmit() throws Exception {
+        var first = new com.group2.rms.candidate.dto.TalentPoolCvResponse(101, "Vị trí nguồn đầy đủ", SUBMITTED);
+        var second = new com.group2.rms.candidate.dto.TalentPoolCvResponse(102, "Vị trí nguồn thứ hai", SUBMITTED);
+        var candidate = new com.group2.rms.candidate.dto.TalentPoolCandidateResponse(15, "An Võ", "an@example.com", null, List.of(first, second));
+        var missing = new com.group2.rms.candidate.dto.TalentPoolCandidateResponse(16, "Chưa có CV", "no-cv@example.com", null, List.of());
+        when(talentPool.search(any(), any())).thenReturn(new PageImpl<>(List.of(candidate, missing), org.springframework.data.domain.PageRequest.of(1, 20), 51));
+        when(talentPool.viewerRole()).thenReturn("Hiring Manager");
+        when(talentPool.selectionScope()).thenReturn(5);
+        when(talentPool.targetJobTitle(8)).thenReturn("Tin đích");
+        mvc.perform(get("/talent-pool?jobPostingId=8&keyword=An&page=1")
+                        .with(as("hm", "Hiring Manager")))
+                .andExpect(status().isOk())
+                .andExpect(content().string(containsString("Chọn ứng viên tiềm năng")))
+                .andExpect(content().string(containsString("data-pool-scope=\"5\"")))
+                .andExpect(content().string(containsString("id=\"tp-select-page\"")))
+                .andExpect(content().string(containsString("Chưa có CV nguồn")))
+                .andExpect(content().string(containsString("data-eligible=\"false\"")))
+                .andExpect(content().string(containsString("/talent-pool/15/cv/101")))
+                .andExpect(content().string(containsString("/talent-pool/15/cv/102")))
+                .andExpect(content().string(containsString("data-notes-url=\"/talent-pool/15/notes\"")))
+                .andExpect(content().string(containsString("/talent-pool/jobs/8/selection-review")))
+                .andExpect(content().string(not(containsString("action=\"/talent-pool/jobs/8/suggest\""))))
+                .andExpect(content().string(containsString("keyword=An")))
+                .andExpect(content().string(containsString("jobPostingId=8")))
+                .andExpect(content().string(containsString("id=\"keyword\"")))
+                .andExpect(content().string(containsString("id=\"markedBy\"")))
+                .andExpect(content().string(containsString("id=\"sourceJobId\"")))
+                .andExpect(content().string(containsString("chưa sẵn sàng")));
+        verify(talentPool, never()).suggest(anyInt(), any());
+    }
+
+    @Test
+    void globalPoolHasNoDestinationSelectionButStillShowsNotesAndCvActions() throws Exception {
+        when(talentPool.search(any(), any())).thenReturn(new PageImpl<>(List.of()));
+        when(talentPool.viewerRole()).thenReturn("HR");
+        mvc.perform(get("/talent-pool").with(as("hr", "HR")))
+                .andExpect(status().isOk())
+                .andExpect(content().string(not(containsString("id=\"tp-selection-bar\""))))
+                .andExpect(content().string(not(containsString("id=\"tp-selection-form\""))))
+                .andExpect(content().string(containsString("id=\"tp-notes\"")));
+    }
+
+    @Test
+    void readOnlySelectionReviewUsesJsonContractAndCsrf() throws Exception {
+        var item = new com.group2.rms.candidate.dto.TalentPoolSelectionReviewResponse.Item(15, 101, "An Võ", "CV nguồn", SUBMITTED, null);
+        when(talentPool.reviewSelection(eq(8), any())).thenReturn(new com.group2.rms.candidate.dto.TalentPoolSelectionReviewResponse(List.of(item), false));
+        mvc.perform(post("/talent-pool/jobs/8/selection-review").with(as("hm", "Hiring Manager")).with(csrf())
+                        .contentType("application/json").content("{\"sourceApplicationIds\":[101]}"))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.data.submissionSupported").value(false))
+                .andExpect(jsonPath("$.data.items[0].candidateId").value(15));
+        verify(talentPool).reviewSelection(8, new com.group2.rms.candidate.dto.TalentPoolSuggestRequest(List.of(101)));
+        verify(talentPool, never()).suggest(anyInt(), any());
+        verifyNoInteractions(recruitmentEmail, reviewService);
+    }
+
+    @Test
+    void reviewRejectsMissingCsrfInvalidSelectionAndCandidateRole() throws Exception {
+        mvc.perform(post("/talent-pool/jobs/8/selection-review").with(as("hm", "Hiring Manager"))
+                        .contentType("application/json").content("{\"sourceApplicationIds\":[101]}"))
+                .andExpect(status().isForbidden());
+        mvc.perform(post("/talent-pool/jobs/8/selection-review").with(as("hm", "Hiring Manager")).with(csrf())
+                        .contentType("application/json").content("{\"sourceApplicationIds\":[]}"))
+                .andExpect(status().isBadRequest()).andExpect(jsonPath("$.success").value(false));
+        mvc.perform(get("/talent-pool/15/notes").with(as("candidate", "Candidate")))
+                .andExpect(status().isForbidden());
+        verifyNoInteractions(talentPool);
+    }
+
+    @Test
+    void sharedNotesReadUsesExistingAuthorizedPoolDetail() throws Exception {
+        var candidate = new com.group2.rms.candidate.dto.TalentPoolCandidateResponse(15, "An Võ", "an@example.com", null, List.of());
+        when(talentPool.detail(15)).thenReturn(new com.group2.rms.candidate.dto.TalentPoolDetailResponse(candidate, true,
+                List.of(new com.group2.rms.candidate.dto.TalentPoolNoteResponse(1, "HM Tuấn", "Nhận xét thật", SUBMITTED)), List.of()));
+        mvc.perform(get("/talent-pool/15/notes").with(as("hm", "Hiring Manager")))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.data[0].author").value("HM Tuấn"))
+                .andExpect(jsonPath("$.data[0].content").value("Nhận xét thật"));
+    }
+
+    @Test
     void talentPoolRendersSelectionAndKeepsCsrf() throws Exception {
         var cv = new com.group2.rms.candidate.dto.TalentPoolCvResponse(10, "Java Developer", SUBMITTED);
         var candidate = new com.group2.rms.candidate.dto.TalentPoolCandidateResponse(15, "An Võ", "an@example.com", "0901234567", List.of(cv));
         when(talentPool.search(any(), any())).thenReturn(new PageImpl<>(List.of(candidate)));
         when(talentPool.viewerRole()).thenReturn("Hiring Manager");
         when(talentPool.targetJobTitle(12)).thenReturn("Java Developer");
+        when(talentPool.selectionScope()).thenReturn(5);
         var response = mvc.perform(get("/talent-pool?jobPostingId=12").with(as("hm", "Hiring Manager")))
                 .andExpect(status().isOk())
                 .andExpect(content().string(containsString("sourceApplicationIds")))
@@ -492,13 +574,68 @@ class ApplicationPipelineWebTests {
         var c = new com.group2.rms.candidate.dto.TalentPoolCandidateResponse(15, "An Võ", "an@example.com", "0901234567", List.of(cv));
         when(talentPool.detail(15)).thenReturn(new com.group2.rms.candidate.dto.TalentPoolDetailResponse(c, true,
                 List.of(new com.group2.rms.candidate.dto.TalentPoolNoteResponse(1, "HR Lan", "Giao tiếp tốt", SUBMITTED)), List.of(cv)));
-        when(talentPool.viewerRole()).thenReturn("HR");
-        var response = mvc.perform(get("/talent-pool/15").with(as("hr_lan", "HR")))
-                .andExpect(status().isOk()).andExpect(content().string(containsString("Giao tiếp tốt"))).andReturn();
+        when(talentPool.viewerRole()).thenReturn("Hiring Manager");
+        when(talentPool.targetJobTitle(12)).thenReturn("Java Developer");
+        var response = mvc.perform(get("/talent-pool/15?jobPostingId=12").with(as("hm", "Hiring Manager")))
+                .andExpect(status().isOk()).andExpect(content().string(containsString("Giao tiếp tốt")))
+                .andExpect(content().string(containsString("Quay lại danh sách")))
+                .andExpect(content().string(containsString("tp-detail-workspace")))
+                .andExpect(content().string(containsString("CV từ các lần ứng tuyển trước")))
+                .andExpect(content().string(containsString("Ghi chú đánh giá nội bộ")))
+                .andExpect(content().string(containsString("data-cv-url=\"/talent-pool/15/cv/10\"")))
+                .andExpect(content().string(containsString("data-hide-detail-link=\"true\"")))
+                .andExpect(content().string(not(containsString("talent-pool-selection.js"))))
+                .andExpect(content().string(not(containsString("data-pool-source"))))
+                .andExpect(content().string(not(containsString("action=\"/talent-pool/jobs/12/suggest\""))))
+                .andReturn();
         var path = java.nio.file.Path.of("docs/members/linhdn/tmp/talent-pool/detail.html");
         java.nio.file.Files.createDirectories(path.getParent());
         java.nio.file.Files.writeString(path, response.getResponse().getContentAsString(), java.nio.charset.StandardCharsets.UTF_8);
     }
+    @Test
+    void talentPoolDetailPreservesTypedContextAndIgnoresExternalReturnUrl() throws Exception {
+        var candidate = new com.group2.rms.candidate.dto.TalentPoolCandidateResponse(15, "An Võ", "an@example.com", null, List.of());
+        when(talentPool.detail(15)).thenReturn(new com.group2.rms.candidate.dto.TalentPoolDetailResponse(candidate, true, List.of(), List.of()));
+        when(talentPool.viewerRole()).thenReturn("Hiring Manager");
+        when(talentPool.targetJobTitle(12)).thenReturn("Java Developer");
+        mvc.perform(get("/talent-pool/15").with(as("hm", "Hiring Manager"))
+                        .param("jobPostingId", "12").param("keyword", "Java Dev").param("markedBy", "5")
+                        .param("sourceJobId", "3").param("page", "1").param("returnUrl", "https://example.org"))
+                .andExpect(status().isOk())
+                .andExpect(model().attribute("backUrl", "/talent-pool?jobPostingId=12&markedBy=5&sourceJobId=3&keyword=Java%20Dev&page=1"))
+                .andExpect(content().string(containsString("keyword=Java%20Dev")))
+                .andExpect(content().string(containsString("Chưa có CV từ lần ứng tuyển trước.")))
+                .andExpect(content().string(containsString("Chưa có ghi chú đánh giá.")))
+                .andExpect(content().string(not(containsString("https://example.org"))));
+        mvc.perform(get("/talent-pool/15").with(as("hm", "Hiring Manager")))
+                .andExpect(status().isOk()).andExpect(model().attribute("backUrl", "/talent-pool"));
+    }
+
+    @Test
+    void talentPoolNoteRedirectKeepsSearchContextOnSuccessAndValidationFailure() throws Exception {
+        String destination = "/talent-pool/15?jobPostingId=12&markedBy=5&sourceJobId=3&keyword=Java%20Dev&page=1";
+        mvc.perform(post("/talent-pool/15/notes").with(as("hm", "Hiring Manager")).with(csrf())
+                        .param("content", "Ghi chú thật").param("jobPostingId", "12").param("keyword", "Java Dev")
+                        .param("markedBy", "5").param("sourceJobId", "3").param("page", "1"))
+                .andExpect(redirectedUrl(destination)).andExpect(flash().attribute("successMessage", "Đã thêm ghi chú."));
+        verify(talentPool).addNote(eq(15), argThat(note -> note.content().equals("Ghi chú thật")));
+        clearInvocations(talentPool);
+        String tooLong = "a".repeat(1001);
+        mvc.perform(post("/talent-pool/15/notes").with(as("hm", "Hiring Manager")).with(csrf())
+                        .param("content", tooLong).param("jobPostingId", "12").param("keyword", "Java Dev")
+                        .param("markedBy", "5").param("sourceJobId", "3").param("page", "1"))
+                .andExpect(redirectedUrl(destination)).andExpect(flash().attributeExists("errorMessage"))
+                .andExpect(flash().attribute("noteDraft", tooLong));
+        verifyNoInteractions(talentPool);
+        doThrow(new com.group2.rms.candidate.exception.TalentPoolException("Không thể lưu ghi chú."))
+                .when(talentPool).addNote(eq(15), any());
+        mvc.perform(post("/talent-pool/15/notes").with(as("hm", "Hiring Manager")).with(csrf())
+                        .param("content", "Giữ lại nội dung"))
+                .andExpect(redirectedUrl("/talent-pool/15"))
+                .andExpect(flash().attribute("noteDraft", "Giữ lại nội dung"))
+                .andExpect(flash().attribute("errorMessage", "Không thể lưu ghi chú."));
+    }
+
     @Test
     void talentPoolCandidateIsDeniedAndMissingCsrfIsDenied() throws Exception {
         mvc.perform(get("/talent-pool").with(as("candidate", "Candidate"))).andExpect(status().isForbidden());

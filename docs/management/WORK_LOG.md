@@ -6,6 +6,7 @@ Tài liệu này là lịch sử tóm tắt các thay đổi quan trọng và b�
 
 | Ngày | Tên công việc / Yêu cầu chính | Người thực hiện | Chi tiết thay đổi |
 | :--- | :--- | :--- | :--- |
+| **2026-10-16** | Tinh chỉnh Giao diện Quản lý Hồ sơ Ứng tuyển & Tuân thủ Kiến trúc Tuyệt đối | Nhóm 2 | [Xem chi tiết](work_logs/2026-10-16-candidate-pipeline-ui-refinement.md) |
 | **2026-10-13** | Chuyển đổi Tạo mới & Xem chi tiết Offer sang Màn hình chuyên biệt | HuyenPT | [Xem chi tiết](work_logs/2026-10-13-convert-popup-to-screen.md) |
 | **2026-10-11** | Kết quả phỏng vấn (5.1.28) & Pop-up phiếu đánh giá (5.1.29) | Đức | [Xem chi tiết](work_logs/2026-10-11-interview-result-evaluation.md) |
 | **2026-10-05** | Hoàn thiện Ràng buộc Lương, Single Active Offer (GBR-07) & Bộ Test Offer | HuyenPT | [Xem chi tiết](work_logs/2026-10-05-offer-flow-testing-and-bugfix.md) |

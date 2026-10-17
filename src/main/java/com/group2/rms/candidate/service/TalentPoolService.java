@@ -36,6 +36,7 @@ public class TalentPoolService {
     private final CvStorage storage;
 
     public String viewerRole() { return actor().getRole().getRoleName(); }
+    public Integer selectionScope() { return actor().getUserId(); }
 
     public User actor() {
         User user = currentUser.requireUser();
@@ -151,6 +152,50 @@ public class TalentPoolService {
                     audit.suggestedBy(a.getApplicationId()), a.getCreatedAt());
         }).toList();
     }
+    /** Validate a draft without invoking the legacy HM_Suggested application-creation flow. */
+    public TalentPoolSelectionReviewResponse reviewSelection(Integer jobId, TalentPoolSuggestRequest request) {
+        User user = actor();
+        if (!CurrentUserService.hasRole(user, "Hiring Manager"))
+            throw new AccessDeniedException("Chỉ Hiring Manager được chọn ứng viên cho tin tuyển dụng.");
+        JobPosting target = job(jobId, false);
+        requireTarget(user, target);
+        requireOpen(target);
+        Set<Integer> selected = new HashSet<>();
+        List<TalentPoolSelectionReviewResponse.Item> result = new ArrayList<>();
+        for (Integer sourceId : request.sourceApplicationIds()) {
+            Integer candidateId = null;
+            String name = "Hồ sơ #" + sourceId;
+            String title = "";
+            LocalDateTime submittedAt = null;
+            String error = null;
+            try {
+                Application source = application(sourceId);
+                Candidate candidate = source.getCandidate();
+                candidateId = candidate.getCandidateId();
+                name = candidate.getAccount().getFullName();
+                title = source.getJobPosting().getPostingTitle();
+                submittedAt = source.getSubmissionDate();
+                if (!candidate.isPotential()) throw new TalentPoolException("Ứng viên không còn trong kho tiềm năng.");
+                if (!selected.add(candidateId)) throw new TalentPoolException("Ứng viên được chọn nhiều lần.");
+                if (source.getJobPosting().getJobPostingId().equals(jobId))
+                    throw new TalentPoolException("Chọn CV từ một tin tuyển dụng khác.");
+                if (applications.findPreviousCvByCandidateId(candidateId).stream()
+                        .noneMatch(a -> a.getApplicationId().equals(sourceId)))
+                    throw new TalentPoolException("CV này không còn đủ điều kiện làm hồ sơ nguồn.");
+                if (applications.existsActiveByCandidateAndJobPosting(candidateId, jobId)
+                        || applications.findFirstByCandidate_CandidateIdAndJobPosting_JobPostingIdAndApplicationStatus(
+                                candidateId, jobId, "HM_Suggested").isPresent())
+                    throw new TalentPoolException("Ứng viên đã có hồ sơ hoặc đề xuất cho tin này.");
+                requireCv(source.getAppliedCvUrl());
+            } catch (TalentPoolException | ResourceNotFoundException e) {
+                error = e.getMessage();
+            }
+            result.add(new TalentPoolSelectionReviewResponse.Item(candidateId, sourceId, name, title, submittedAt, error));
+        }
+        // A separate Candidate–JobPosting suggestion relationship is not available yet.
+        return new TalentPoolSelectionReviewResponse(result, false);
+    }
+
     @Transactional
     public void suggest(Integer jobId, TalentPoolSuggestRequest request) {
         User user = actor();

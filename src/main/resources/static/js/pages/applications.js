@@ -41,8 +41,9 @@
     };
     preview?.addEventListener('close', releasePreview);
 
-    page.querySelectorAll('[data-app-preview]').forEach((button) => {
-        button.addEventListener('click', async () => {
+    page.addEventListener('click', async (event) => {
+            const button = event.target.closest?.('[data-app-preview]');
+            if (!button || !page.contains(button)) return;
             releasePreview();
             const controller = new AbortController();
             previewRequest = controller;
@@ -55,6 +56,7 @@
             byId('app-preview-job').textContent = button.dataset.job || '';
             byId('app-preview-original').href = button.dataset.cvUrl;
             byId('app-preview-detail').href = button.dataset.detailUrl;
+            byId('app-preview-detail').hidden = button.dataset.hideDetailLink === 'true';
             status.textContent = 'Đang tải CV…';
             preview.showModal();
             try {
@@ -78,7 +80,6 @@
             } finally {
                 clearTimeout(timer);
             }
-        });
     });
 
     if (!bookmark) return;

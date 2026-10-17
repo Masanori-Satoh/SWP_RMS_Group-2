@@ -3,10 +3,12 @@ package com.group2.rms.candidate.controller;
 import com.group2.rms.candidate.dto.*;
 import com.group2.rms.candidate.exception.*;
 import com.group2.rms.candidate.service.*;
+import com.group2.rms.core.dto.ApiResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
 import java.net.URI;
+import java.util.Optional;
 
 import org.springframework.core.io.Resource;
 import org.springframework.data.domain.*;
@@ -17,6 +19,7 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+import org.springframework.web.util.UriComponentsBuilder;
 
 @Controller
 @RequestMapping("/talent-pool")
@@ -48,17 +51,22 @@ public class TalentPoolController {
         model.addAttribute("jobTitle", jobPostingId == null ? null : pool.targetJobTitle(jobPostingId));
         model.addAttribute("viewerRole", pool.viewerRole());
         model.addAttribute("activeMenu", "talent-pool");
+        model.addAttribute("selectionScope", pool.selectionScope());
         return "talent-pool/list";
     }
 
     @GetMapping("/{id}")
     // detail for a potential candidate
-    public String detail(@PathVariable Integer id, @RequestParam(required = false) Integer jobPostingId, Model model) {
+    public String detail(@PathVariable Integer id, @RequestParam(required = false) Integer jobPostingId,
+            @ModelAttribute("filter") TalentPoolSearch filter,
+            @RequestParam(defaultValue = "0") int page, Model model) {
         model.addAttribute("detail", pool.detail(id));
         model.addAttribute("jobPostingId", jobPostingId);
         model.addAttribute("jobTitle", jobPostingId == null ? null : pool.targetJobTitle(jobPostingId));
         model.addAttribute("viewerRole", pool.viewerRole());
         model.addAttribute("activeMenu", "talent-pool");
+        model.addAttribute("sourcePage", Math.max(0, page));
+        model.addAttribute("backUrl", poolUrl(null, jobPostingId, filter, page));
         return "talent-pool/detail";
     }
 
@@ -70,10 +78,31 @@ public class TalentPoolController {
         return "redirect:/applications/" + id;
     }
 
+    @GetMapping(value = "/{id}/notes", produces = MediaType.APPLICATION_JSON_VALUE)
+    @ResponseBody
+    public ApiResponse<java.util.List<TalentPoolNoteResponse>> sharedNotes(@PathVariable Integer id) {
+        return new ApiResponse<>(true, "Đã tải ghi chú chung.", pool.detail(id).notes());
+    }
+
+    @PostMapping(value = "/jobs/{id}/selection-review", produces = MediaType.APPLICATION_JSON_VALUE)
+    @ResponseBody
+    public ResponseEntity<ApiResponse<TalentPoolSelectionReviewResponse>> reviewSelection(@PathVariable Integer id,
+            @Valid @RequestBody TalentPoolSuggestRequest request, BindingResult errors) {
+        if (errors.hasErrors()) return ResponseEntity.badRequest().body(new ApiResponse<>(false,
+                errors.getAllErrors().getFirst().getDefaultMessage()));
+        try {
+            return ResponseEntity.ok(new ApiResponse<>(true, "Đã kiểm tra danh sách.", pool.reviewSelection(id, request)));
+        } catch (TalentPoolException e) {
+            return ResponseEntity.badRequest().body(new ApiResponse<>(false, e.getMessage()));
+        }
+    }
+
     @PostMapping("/{id}/notes")
     // add note for a potential candidate
     public String note(@PathVariable Integer id, @Valid @ModelAttribute TalentPoolNoteRequest request,
-            BindingResult errors, RedirectAttributes flash) {
+            BindingResult errors, @RequestParam(required = false) Integer jobPostingId,
+            @ModelAttribute("filter") TalentPoolSearch filter,
+            @RequestParam(defaultValue = "0") int page, RedirectAttributes flash) {
         if (errors.hasErrors()) {
             flash.addFlashAttribute("errorMessage", errors.getAllErrors().getFirst().getDefaultMessage());
             flash.addFlashAttribute("noteDraft", request.content());
@@ -83,9 +112,21 @@ public class TalentPoolController {
                 flash.addFlashAttribute("successMessage", "Đã thêm ghi chú.");
             } catch (TalentPoolException e) {
                 flash.addFlashAttribute("errorMessage", e.getMessage());
+                flash.addFlashAttribute("noteDraft", request.content());
             }
         }
-        return "redirect:/talent-pool/" + id;
+        return "redirect:" + poolUrl(id, jobPostingId, filter, page);
+    }
+
+    /** Only typed search context is accepted; the destination path cannot be supplied by the client. */
+    private static String poolUrl(Integer candidateId, Integer jobPostingId, TalentPoolSearch filter, int page) {
+        var url = UriComponentsBuilder.fromPath(candidateId == null ? "/talent-pool" : "/talent-pool/" + candidateId)
+                .queryParamIfPresent("jobPostingId", Optional.ofNullable(jobPostingId))
+                .queryParamIfPresent("markedBy", Optional.ofNullable(filter.markedBy()))
+                .queryParamIfPresent("sourceJobId", Optional.ofNullable(filter.sourceJobId()));
+        if (filter.keyword() != null && !filter.keyword().isBlank()) url.queryParam("keyword", filter.keyword());
+        if (page > 0) url.queryParam("page", page);
+        return url.build().encode().toUriString();
     }
 
     @GetMapping(value = "/applications/{id}/bookmark", produces = MediaType.APPLICATION_JSON_VALUE)
