@@ -217,21 +217,21 @@
     width: 100%;
     border-collapse: collapse;
     text-align: left;
-    font-size: 14.5px;
+    font-size: 14px;
 }
 
 .offers-table th {
     background: var(--page);
     color: var(--ink);
     font-weight: 600;
-    padding: var(--s3) var(--s4);
+    padding: 10px 10px;
     border-bottom: 1px solid var(--line);
     white-space: nowrap;
-    font-size: 13.5px;
+    font-size: 13px;
 }
 
 .offers-table td {
-    padding: 14px 16px;
+    padding: 10px 10px;
     border-bottom: 1px solid var(--line);
     vertical-align: middle;
 }
@@ -299,10 +299,10 @@
 .status-badge {
     display: inline-flex;
     align-items: center;
-    gap: 6px;
-    padding: 4px 10px;
+    gap: 4px;
+    padding: 3px 8px;
     border-radius: 4px;
-    font-size: 12px;
+    font-size: 11.5px;
     font-weight: 600;
     white-space: nowrap;
 }
@@ -2247,6 +2247,10 @@
 
 .offer-col-w-44 {
     width: 44px;
+}
+
+.offer-col-w-70 {
+    width: 70px;
 }
 
 .offer-col-w-90 {
