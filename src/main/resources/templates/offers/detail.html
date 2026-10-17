@@ -217,7 +217,9 @@
             <h2 class="card-title" style="font-size:15px; display:flex; align-items:center; text-transform: uppercase; font-weight:700;">
                 <span class="card-title-icon"><i class="fa-solid fa-file-lines"></i></span> 2. NỘI DUNG ĐỀ XUẤT OFFER
             </h2>
-            <span class="detail-header-subtext">Đơn vị tiền tệ: VND (Gross)</span>
+            <div class="interview-eval-manager" style="font-size:13.5px;">
+                Người phụ trách: <strong th:text="${detail.hiringManagerName != null ? detail.hiringManagerName : 'N/A'}">Đỗ Thu Hương</strong>
+            </div>
         </div>
         <div class="card-body">
             <!-- 2.1: Kết quả hội đồng phỏng vấn (Hộp tóm tắt đánh giá & Lương khuyến nghị của HM) -->
@@ -228,9 +230,6 @@
                         <span class="interview-eval-badge-passed">
                             <i class="fa-solid fa-check"></i> <span th:text="${detail.finalDecision != null ? detail.finalDecision : 'Passed'}">Passed</span>
                         </span>
-                    </div>
-                    <div class="interview-eval-manager">
-                        Người phụ trách: <strong th:text="${detail.hiringManagerName != null ? detail.hiringManagerName : 'N/A'}">Đỗ Thu Hương</strong>
                     </div>
                 </div>
                 <div class="interview-eval-comment">
