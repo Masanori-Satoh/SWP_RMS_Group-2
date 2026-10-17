@@ -100,12 +100,12 @@
                 <div class="offers-toolbar">
                     <div class="toolbar-left">
                         <div class="search-box">
-                            <i class="fa-solid fa-magnifying-glass" onclick="applyOfferFilters()" style="cursor: pointer;" title="Bấm để tìm kiếm"></i>
+                            <i class="fa-solid fa-magnifying-glass offer-cursor-pointer" onclick="applyOfferFilters()" title="Bấm để tìm kiếm"></i>
                             <input type="text" id="searchInput" placeholder="Tìm theo tên ứng viên, vị trí..."
                                    th:value="${search}"
                                    onkeydown="if(event.key==='Enter'){ applyOfferFilters(); }">
                             <button type="button" th:if="${search != null and search != ''}" onclick="clearSearchInput()"
-                                    style="background:none; border:none; cursor:pointer; color:var(--muted); padding:0 4px; display:inline-flex; align-items:center;" title="Xóa từ khóa">
+                                    class="offer-search-clear-btn" title="Xóa từ khóa">
                                 <i class="fa-solid fa-xmark"></i>
                             </button>
                         </div>
@@ -131,7 +131,7 @@
                 </div>
 
                 <!-- Selection Toolbar (HR chọn 1 hoặc nhiều Offer) -->
-                <div id="selectionToolbar" class="selection-toolbar" style="display: none;">
+                <div id="selectionToolbar" class="selection-toolbar">
                     <div class="selection-toolbar-left">
                         <i class="fa-solid fa-circle-check"></i>
                         <span>Đã chọn <strong id="selectedOffersCount">0</strong> đề xuất</span>
@@ -151,41 +151,41 @@
                     <table class="offers-table" id="offersTable">
                         <thead>
                             <tr>
-                                <th style="width: 44px; text-align: center;">
+                                <th class="offer-col-w-44 offer-text-center">
                                     <input type="checkbox" id="selectAllOffers" class="offer-checkbox" onchange="toggleSelectAllOffers(this.checked)" title="Chọn tất cả trên trang này">
                                 </th>
-                                <th style="width: 90px;">Mã Offer</th>
+                                <th class="offer-col-w-90">Mã Offer</th>
                                 <th>Ứng viên</th>
                                 <th>Vị trí đề xuất</th>
                                 <th>Lương chính thức</th>
                                 <th>Lương thử việc</th>
                                 <th>Trạng thái</th>
                                 <th>Ngày lập</th>
-                                <th style="text-align: right; width: 150px;">Thao tác</th>
+                                <th class="offer-col-w-150 offer-text-right">Thao tác</th>
                             </tr>
                         </thead>
                         <tbody id="offersTableBody">
                             <tr th:if="${#lists.isEmpty(offers)}">
-                                <td colspan="9" style="text-align:center; padding:48px 24px; color:var(--muted);">
-                                    <i class="fa-solid fa-inbox" style="font-size:32px; margin-bottom:12px; display:block; color:var(--control-line);"></i>
+                                <td colspan="9" class="offer-empty-state-cell">
+                                    <i class="fa-solid fa-inbox offer-empty-state-icon"></i>
                                     Không tìm thấy đề xuất Offer nào phù hợp với bộ lọc.
                                 </td>
                             </tr>
                             <tr th:each="o : ${offers}" th:attr="data-id=${o.offerId}, data-status=${o.offerStatus}">
-                                <td style="text-align: center;">
+                                <td class="offer-text-center">
                                     <input type="checkbox" class="offer-checkbox offer-row-checkbox" th:value="${o.offerId}" onchange="handleOfferRowSelectionChange()">
                                 </td>
                                 <td>
                                     <a th:href="@{/offers/{id}(id=${o.offerId})}" class="offer-id-link" th:text="${o.offerId}">1</a>
                                 </td>
                                 <td>
-                                    <a th:href="@{/offers/{id}(id=${o.offerId})}" style="text-decoration:none; color:inherit;">
+                                    <a th:href="@{/offers/{id}(id=${o.offerId})}" class="offer-row-link">
                                         <div class="cand-name-cell" th:text="${o.candidateName != null ? o.candidateName : 'Ứng viên'}">Nguyễn Văn A</div>
                                     </a>
                                     <div class="cand-email-sub" th:text="${o.candidateEmail != null ? o.candidateEmail : 'N/A'}">a.nguyen@email.com</div>
                                 </td>
                                 <td>
-                                    <span style="font-weight:600; color:var(--ink);" th:text="${o.offeredPositionTitle}">Senior Java Developer</span>
+                                    <span class="offer-position-title" th:text="${o.offeredPositionTitle}">Senior Java Developer</span>
                                 </td>
                                 <td>
                                     <div class="salary-main" th:text="${#numbers.formatDecimal(o.proposedSalary, 0, 'POINT', 0, 'COMMA')} + ' VND'">25,000,000 VND</div>
@@ -223,11 +223,11 @@
                                         <i class="fa-solid fa-user-xmark"></i> Từ chối
                                     </span>
                                 </td>
-                                <td style="color:var(--muted); font-size:13.5px;" th:text="${o.createdAt != null ? #temporals.format(o.createdAt, 'dd/MM/yyyy HH:mm') : '-'}">
+                                <td class="offer-date-cell" th:text="${o.createdAt != null ? #temporals.format(o.createdAt, 'dd/MM/yyyy HH:mm') : '-'}">
                                     01/10/2026
                                 </td>
-                                <td style="text-align: right;">
-                                    <div class="action-buttons" style="justify-content: flex-end;">
+                                <td class="offer-text-right">
+                                    <div class="action-buttons offer-justify-end">
                                         <!-- Xem chi tiết màn hình (Screen 32) -->
                                         <a th:href="@{/offers/{id}(id=${o.offerId})}" class="btn-icon btn-icon-primary" title="Xem chi tiết">
                                             <i class="fa-solid fa-eye"></i>

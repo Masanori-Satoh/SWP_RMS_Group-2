@@ -1,4 +1,4 @@
-package com.group2.rms;
+package com.group2.rms.offer.controller;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -14,7 +14,7 @@ import org.mockito.Mockito;
 
 @SpringBootTest
 @AutoConfigureMockMvc
-public class OfferControllerBugTest {
+public class OfferControllerBugTests {
 
     @Autowired
     private MockMvc mockMvc;

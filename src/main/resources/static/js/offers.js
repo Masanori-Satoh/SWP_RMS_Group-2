@@ -1144,6 +1144,7 @@ function updateSelectionToolbar() {
     if (modalScopeCount) modalScopeCount.textContent = count;
 
     if (toolbar) {
+        toolbar.classList.toggle('active', count > 0);
         toolbar.style.display = (count > 0) ? 'flex' : 'none';
     }
 
