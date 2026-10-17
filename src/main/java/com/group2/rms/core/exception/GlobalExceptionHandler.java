@@ -174,12 +174,12 @@ public class GlobalExceptionHandler {
         return view;
     }
 
-    // 400 bad request
+    // 400 bad request: lỗi nghiệp vụ mà Controller không bắt để render lại form
     @ExceptionHandler(BaseBusinessException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public ModelAndView handleBusinessException(BaseBusinessException ex, HttpServletRequest request) {
         log.warn("Business exception [{}] at [{}]: {}", ex.getErrorCode(), request.getRequestURL(), ex.getMessage());
-        ModelAndView mav = new ModelAndView("error/500");
+        ModelAndView mav = new ModelAndView("error/400");
         mav.setStatus(HttpStatus.BAD_REQUEST);
         mav.addObject("message", ex.getMessage());
         mav.addObject("errorCode", ex.getErrorCode());
@@ -215,7 +215,7 @@ public class GlobalExceptionHandler {
                     .body(new com.group2.rms.core.dto.ApiResponse<>(false, errorMsg));
         }
 
-        ModelAndView mav = new ModelAndView("error/500");
+        ModelAndView mav = new ModelAndView("error/400");
         mav.setStatus(HttpStatus.BAD_REQUEST);
         mav.addObject("message", errorMsg);
         mav.addObject("url", request.getRequestURL());
@@ -233,7 +233,7 @@ public class GlobalExceptionHandler {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                     .body(new com.group2.rms.core.dto.ApiResponse<>(false, errorMsg));
         }
-        ModelAndView mav = new ModelAndView("error/500");
+        ModelAndView mav = new ModelAndView("error/400");
         mav.setStatus(HttpStatus.BAD_REQUEST);
         mav.addObject("message", errorMsg);
         mav.addObject("url", request.getRequestURL());
@@ -307,7 +307,8 @@ public class GlobalExceptionHandler {
 
         String viewName = status == HttpStatus.NOT_FOUND ? "error/404"
                 : status == HttpStatus.FORBIDDEN ? "error/403"
-                        : "error/500";
+                        : status.is4xxClientError() ? "error/400"
+                                : "error/500";
 
         ModelAndView mav = new ModelAndView(viewName);
         mav.setStatus(status);

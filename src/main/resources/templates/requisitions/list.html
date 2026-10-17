@@ -1,82 +1,142 @@
 <!DOCTYPE html>
-<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<!-- Kế thừa khung nội bộ (sidebar + topbar) từ layout/internal; trang này chỉ chứa phần nội dung -->
+<html lang="vi" xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/internal}">
 
-<head th:replace="~{fragments/head :: interfaceHead('Yêu cầu tuyển dụng', ~{::pageStyles})}">
-    <th:block th:fragment="pageStyles">
+<head>
+    <title>Yêu cầu tuyển dụng</title>
+    <th:block layout:fragment="styles">
         <link rel="stylesheet" th:href="@{/css/requisition-shared.css}">
+        <!-- Nạp SAU requisition-shared.css: rule chung ".req-app :where(input, select)" có cùng độ ưu tiên,
+             file nạp sau sẽ thắng, nên đặt mft- ở đây để ô tìm kiếm không bị thêm viền -->
+        <link rel="stylesheet" th:href="@{/css/pages/management-filters.css}">
         <link rel="stylesheet" th:href="@{/css/requisition-list.css}">
-        <script th:src="@{/js/requisitions.js}" defer></script>
     </th:block>
 </head>
 
-<body class="rms-app req-app req-list-page">
-    <div class="page-wrapper">
-        <aside th:replace="~{fragments/sidebar :: workspace('requisitions', ${viewerRole})}"></aside>
-        <div class="main-content">
-            <header th:replace="~{fragments/workspace-header :: header(${viewerRole}, ${viewerName})}"></header>
-            <main id="main" tabindex="-1" class="page-content">
-                <div class="container">
+<body>
+            <main id="main" layout:fragment="content" class="page-content container" tabindex="-1">
 
                     <div class="requisition-page-header">
-                        <div>
-                            <h1>Yêu cầu tuyển dụng</h1>
-                            <p>Xem và quản lý các yêu cầu tuyển dụng nhân sự từ tất cả các phòng ban.</p>
-                        </div>
-                        <a th:if="${canCreate}" th:href="@{/requisitions/create}" class="btn-create">+ Tạo yêu cầu
-                            mới</a>
+                        <h1>Yêu cầu tuyển dụng</h1>
+                        <a th:if="${canCreate}" th:href="@{/requisitions/create}" class="btn btn--primary btn-create">+ Tạo yêu cầu mới</a>
                     </div>
                     <th:block th:replace="~{fragments/requisition :: messages}"></th:block>
-                    <form class="list-filter-card" th:action="@{/requisitions}" method="get" id="filterForm"
-                          role="search" aria-label="Lọc yêu cầu tuyển dụng">
-                            <input type="hidden" name="size" th:value="${pageSize}">
-                            <div class="requisition-filter-grid">
-                                <div class="filter-field filter-search">
-                                    <label for="requisition-search">Tìm kiếm</label>
-                                    <input id="requisition-search" type="search" name="q" th:value="${search}"
-                                        maxlength="120" placeholder="Tên vị trí hoặc phòng ban">
-                                </div>
+                    <!--
+                        Thanh công cụ: ô tìm kiếm (trái) + nút "Bộ lọc" (phải).
+                        Dùng lại bộ class mft- của pages/management-filters.css (trang Tài khoản, Phòng ban cũng dùng).
+                        Đây là form GET: bấm "Áp dụng" hoặc Enter thì trình duyệt tự ghép các ô thành ?q=...&status=...
+                        Ô nào hiện là do service quyết định theo role (list.options.show...).
+                    -->
+                    <form class="card mft-toolbar req-toolbar" th:action="@{/requisitions}" method="get" role="search"
+                        aria-label="Tìm kiếm và lọc yêu cầu tuyển dụng">
+                        <!-- Luôn gửi tham số status (kể cả rỗng) để server phân biệt
+                             "lần vào đầu" với "người dùng đã bỏ chọn hết trạng thái" -->
+                        <input type="hidden" name="status" value="" th:if="${list.options.showStatus}">
 
-                                <div class="filter-field">
-                                    <label for="position-filter">Vị trí tuyển dụng</label>
-                                    <select id="position-filter" name="position">
-                                        <option value="">Tất cả vị trí</option>
-                                        <option th:each="pos : ${positions}" th:value="${pos}"
-                                            th:text="${pos}"
-                                            th:selected="${pos == selectedPosition}"></option>
-                                    </select>
-                                </div>
+                        <div class="mft-search">
+                            <label class="sr-only" for="requisition-search">Tìm kiếm yêu cầu tuyển dụng</label>
+                            <button class="mft-search-submit" type="submit" aria-label="Tìm kiếm" title="Tìm kiếm">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"
+                                    stroke-linecap="round" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m16 16 4 4"/></svg>
+                            </button>
+                            <input class="form-control mft-search-input" id="requisition-search" type="search" name="q"
+                                th:value="${list.filter.q}" maxlength="120" placeholder="Tìm theo tên vị trí hoặc phòng ban">
+                        </div>
 
-                                <div class="filter-field">
-                                    <label for="type-filter">Hình thức làm việc</label>
-                                    <select id="type-filter" name="type">
-                                        <option value="">Tất cả hình thức</option>
-                                        <option th:each="type : ${employmentTypes}" th:value="${type}"
-                                            th:text="${type == 'Full-time' ? 'Toàn thời gian' : (type == 'Part-time' ? 'Bán thời gian' : (type == 'Internship' ? 'Thực tập' : (type == 'Contract' ? 'Hợp đồng' : type)))}"
-                                            th:selected="${type == selectedType}"></option>
-                                    </select>
-                                </div>
+                        <div class="mft-controls">
+                            <!-- <details> tự mở/đóng khi bấm <summary>, không cần JS -->
+                            <details class="mft-disclosure">
+                                <summary class="mft-toggle" aria-controls="requisition-filter-fields">
+                                    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"
+                                        stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 4h18l-7 8v7l-4 2v-9Z"/></svg>
+                                    Bộ lọc
+                                    <span class="mft-count" th:if="${list.filter.activeFilterCount() > 0}"><span class="sr-only">đang áp dụng: </span><span
+                                        th:text="${list.filter.activeFilterCount()}">1</span></span>
+                                </summary>
 
-                                <div class="filter-field">
-                                    <label for="sort-filter">Sắp xếp theo</label>
-                                    <select id="sort-filter" name="sort">
-                                        <option value="newest" th:selected="${selectedSort == 'newest'}">Mới nhất trước
-                                        </option>
-                                        <option value="oldest" th:selected="${selectedSort == 'oldest'}">Cũ nhất trước
-                                        </option>
-                                        <option value="position_asc" th:selected="${selectedSort == 'position_asc'}">Vị
-                                            trí A–Z</option>
-                                        <option value="position_desc" th:selected="${selectedSort == 'position_desc'}">
-                                            Vị trí Z–A</option>
-                                    </select>
+                                <div id="requisition-filter-fields" class="mft-popover">
+                                    <fieldset class="mft-field req-filter-full" th:if="${list.options.showStatus}">
+                                        <legend class="form-label">Trạng thái</legend>
+                                        <div class="req-status-options">
+                                            <label class="req-status-option" th:each="option : ${list.options.statuses}">
+                                                <input type="checkbox" name="status" th:value="${option.value}"
+                                                    th:checked="${list.filter.hasStatus(option.value)}">
+                                                <span th:text="${option.label}">Chờ duyệt</span>
+                                            </label>
+                                        </div>
+                                    </fieldset>
+
+                                    <div class="mft-field" th:if="${list.options.showPosting}">
+                                        <label class="form-label" for="filter-posting">Tin tuyển dụng</label>
+                                        <select class="form-select" id="filter-posting" name="posting">
+                                            <option value="">Tất cả</option>
+                                            <option th:each="option : ${list.options.postings}" th:value="${option.value}"
+                                                th:text="${option.label}" th:selected="${option.value == list.filter.posting}">Chưa có tin</option>
+                                        </select>
+                                    </div>
+
+                                    <div class="mft-field" th:if="${list.options.showDepartment}">
+                                        <label class="form-label" for="filter-department">Phòng ban</label>
+                                        <select class="form-select" id="filter-department" name="departmentId">
+                                            <option value="">Tất cả phòng ban</option>
+                                            <option th:each="option : ${list.options.departments}" th:value="${option.value}"
+                                                th:text="${option.label}"
+                                                th:selected="${option.value == #strings.toString(list.filter.departmentId)}">Engineering</option>
+                                        </select>
+                                    </div>
+
+                                    <div class="mft-field" th:if="${list.options.showCreator}">
+                                        <label class="form-label" for="filter-creator">Người tạo yêu cầu</label>
+                                        <select class="form-select" id="filter-creator" name="creatorId">
+                                            <option value="">Tất cả người tạo</option>
+                                            <option th:each="option : ${list.options.creators}" th:value="${option.value}"
+                                                th:text="${option.label}"
+                                                th:selected="${option.value == #strings.toString(list.filter.creatorId)}">Vũ Anh Tuấn</option>
+                                        </select>
+                                    </div>
+
+                                    <div class="mft-field">
+                                        <label class="form-label" for="filter-sort">Sắp xếp theo</label>
+                                        <select class="form-select" id="filter-sort" name="sort">
+                                            <option th:each="option : ${list.options.sorts}" th:value="${option.value}"
+                                                th:text="${option.label}" th:selected="${option.value == list.filter.sort}">Mới nhất trước</option>
+                                        </select>
+                                    </div>
+
+                                    <fieldset class="mft-field req-filter-full" th:if="${list.options.showCreatedDate}">
+                                        <legend class="form-label">Ngày tạo</legend>
+                                        <div class="req-date-range">
+                                            <input class="form-input" type="date" name="createdFrom" aria-label="Ngày tạo từ"
+                                                th:value="${list.filter.createdFrom}">
+                                            <span aria-hidden="true">–</span>
+                                            <input class="form-input" type="date" name="createdTo" aria-label="Ngày tạo đến"
+                                                th:value="${list.filter.createdTo}">
+                                        </div>
+                                    </fieldset>
+
+                                    <div class="mft-actions">
+                                        <button class="btn btn--primary btn--sm" type="submit">Áp dụng</button>
+                                        <!-- status rỗng = xem tất cả trạng thái (Director không bị tự lọc "Chờ duyệt" lại) -->
+                                        <a class="btn btn--secondary btn--sm" th:href="@{/requisitions(status='')}">Xóa bộ lọc</a>
+                                    </div>
                                 </div>
-                            </div>
-                            <div class="filter-actions">
-                                <button type="submit" class="filter-apply">Áp dụng</button>
-                                <a th:href="@{/requisitions}" class="clear-filters">Đặt lại bộ lọc</a>
-                            </div>
+                            </details>
+                        </div>
                     </form>
+
+                    <!-- Mỗi bộ lọc đang bật là một chip; bấm vào chip để bỏ riêng bộ lọc đó -->
+                    <div class="mft-chips req-chips" th:if="${!#lists.isEmpty(list.chips)}">
+                        <a class="mft-chip" th:each="chip : ${list.chips}" th:href="${filterLinks.without(chip.params)}"
+                            th:title="|Bỏ bộ lọc ${chip.label}|">
+                            <span th:text="${chip.label}">Trạng thái: Chờ duyệt</span>&nbsp;<span aria-hidden="true">✕</span>
+                        </a>
+                        <a class="req-chips-reset" th:href="@{/requisitions}">Đặt lại mặc định</a>
+                    </div>
+
                     <section class="list-container" aria-label="Danh sách yêu cầu tuyển dụng">
-                        <p class="list-results-count" th:text="|${totalElements} yêu cầu tuyển dụng|">0 yêu cầu tuyển dụng</p>
+                        <p class="list-results-count" th:text="|${list.page.totalElements} yêu cầu tuyển dụng|">0 yêu cầu tuyển dụng</p>
                         <p class="table-scroll-note" hidden>Cuộn ngang để xem toàn bộ các cột và thao tác.</p>
                         <div class="table-wrapper requisition-table-wrap" role="region"
                             aria-label="Danh sách yêu cầu tuyển dụng" tabindex="0">
@@ -86,7 +146,6 @@
                                     <col class="col-position">
                                     <col class="col-department">
                                     <col class="col-round">
-                                    <col class="col-creator">
                                     <col class="col-quantity">
                                     <col class="col-type">
                                     <col class="col-status">
@@ -100,7 +159,6 @@
                                         <th scope="col">Vị trí tuyển dụng</th>
                                         <th scope="col">Phòng ban</th>
                                         <th scope="col">Đợt tuyển dụng</th>
-                                        <th scope="col">Người tạo yêu cầu</th>
                                         <th scope="col">Số lượng</th>
                                         <th scope="col">Hình thức</th>
                                         <th scope="col">Trạng thái</th>
@@ -110,131 +168,76 @@
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    <tr th:each="req,row : ${requisitions}">
-                                        <td th:text="${(currentPage - 1) * pageSize + row.count}"></td>
+                                    <tr th:each="req,row : ${list.page.content}">
+                                        <!-- STT nối tiếp giữa các trang: trang 2 (number = 1), 10 dòng/trang → bắt đầu từ 11 -->
+                                        <td th:text="${list.page.number * list.page.size + row.count}"></td>
                                         <td><a class="position-title"
                                                 th:href="@{/requisitions/{id}(id=${req.requisitionId})}"
                                                 th:text="${req.title}"></a></td>
                                         <td th:text="${req.departmentName}"></td>
-                                        <td><span class="round-badge" th:text="|Đợt ${req.recruitmentRound ?: 1}|">Đợt
-                                                1</span></td>
-                                        <td th:text="${req.hiringManagerName ?: '—'}"></td>
+                                        <td><span class="badge badge--neutral" th:text="|Đợt ${req.recruitmentRound ?: 1}|">Đợt 1</span></td>
                                         <td th:text="${req.numberOfPositions ?: '—'}"></td>
-                                        <td
-                                            th:text="${req.employmentType == 'Full-time' ? 'Toàn thời gian' : (req.employmentType == 'Part-time' ? 'Bán thời gian' : (req.employmentType == 'Internship' ? 'Thực tập' : (req.employmentType == 'Contract' ? 'Hợp đồng' : (req.employmentType ?: '—'))))}">
+                                        <!-- Nhãn tiếng Việt do service tính sẵn (RequisitionLabels), template không tự dịch -->
+                                        <td th:text="${req.employmentTypeLabel}">Toàn thời gian</td>
+                                        <td>
+                                            <!-- statusTone = success / warning / danger / neutral → class badge--... của catalog -->
+                                            <span class="badge" th:classappend="|badge--${req.statusTone}|"
+                                                th:text="${req.statusLabel}">Đã duyệt</span>
                                         </td>
                                         <td>
-                                            <span th:if="${req.approvalStatus == 'Approved'}"
-                                                class="jp-status-pill jp-status-approved"><span class="dot"></span> Đã
-                                                duyệt</span>
-                                            <span th:if="${req.approvalStatus == 'Pending_Director'}"
-                                                class="jp-status-pill jp-status-pending"><span class="dot"></span> Chờ
-                                                duyệt</span>
-                                            <span th:if="${req.approvalStatus == 'Draft'}"
-                                                class="jp-status-pill jp-status-draft"><span class="dot"></span> Bản
-                                                nháp</span>
-                                            <span th:if="${req.approvalStatus == 'Rejected'}"
-                                                class="jp-status-pill jp-status-rejected"><span class="dot"></span> Từ
-                                                chối</span>
-                                        </td>
-                                        <td>
-                                            <a th:if="${req.jobPostingId != null and req.postingStatus == 'Published'}"
+                                            <!-- Chỉ thành link khi người xem vào được trang tin tuyển dụng (Director thì không) -->
+                                            <a th:if="${req.postingViewable}" class="badge" th:classappend="|badge--${req.postingTone}|"
                                                 th:href="@{/internal/job-postings/{id}(id=${req.jobPostingId})}"
-                                                class="jp-status-pill jp-status-published">
-                                                <span class="dot"></span> Đã đăng tin
-                                            </a>
-                                            <span
-                                                th:if="${req.jobPostingId == null and req.postingStatus == 'Published'}"
-                                                class="jp-status-pill jp-status-published">
-                                                <span class="dot"></span> Đã đăng tin
-                                            </span>
-                                            <a th:if="${req.jobPostingId != null and req.postingStatus == 'Draft'}"
-                                                th:href="@{/internal/job-postings/{id}(id=${req.jobPostingId})}"
-                                                class="jp-status-pill jp-status-draft">
-                                                <span class="dot"></span> Bản nháp
-                                            </a>
-                                            <span th:if="${req.jobPostingId == null and req.postingStatus == 'Draft'}"
-                                                class="jp-status-pill jp-status-draft">
-                                                <span class="dot"></span> Bản nháp
-                                            </span>
-                                            <a th:if="${req.jobPostingId != null and req.postingStatus == 'Paused'}"
-                                                th:href="@{/internal/job-postings/{id}(id=${req.jobPostingId})}"
-                                                class="jp-status-pill jp-status-paused">
-                                                <span class="dot"></span> Tạm dừng
-                                            </a>
-                                            <a th:if="${req.jobPostingId != null and req.postingStatus == 'Closed'}"
-                                                th:href="@{/internal/job-postings/{id}(id=${req.jobPostingId})}"
-                                                class="jp-status-pill jp-status-closed">
-                                                <span class="dot"></span> Đã đóng
-                                            </a>
-                                            <span th:if="${req.postingStatus == null or req.postingStatus == 'None'}"
-                                                class="jp-status-pill jp-status-none">
-                                                <span class="dot"></span> Chưa tạo tin
-                                            </span>
+                                                th:text="${req.postingLabel}">Đang đăng</a>
+                                            <span th:unless="${req.postingViewable}" class="badge" th:classappend="|badge--${req.postingTone}|"
+                                                th:text="${req.postingLabel}">Chưa có tin</span>
                                         </td>
                                         <td class="nowrap" th:text="${#temporals.format(req.createdAt,'dd/MM/yyyy')}">
                                         </td>
                                         <td class="action-cell">
-                                            <button type="button" class="btn-action-outline" data-action-menu
-                                                th:popovertarget="|actions-${req.requisitionId}|"
-                                                th:aria-label="|Thao tác cho ${req.title}|">⋯</button>
-                                            <div class="action-popover" popover="auto"
-                                                th:id="|actions-${req.requisitionId}|">
-                                                <a th:href="@{/requisitions/{id}(id=${req.requisitionId})}">Xem chi
-                                                    tiết</a>
-                                                <a th:if="${req.editable and viewerRole != 'HR'}"
-                                                    th:href="@{/requisitions/edit/{id}(id=${req.requisitionId})}">Chỉnh
-                                                    sửa</a>
-                                                <a th:if="${canCreate and req.approvalStatus != 'Draft' and req.approvalStatus != 'Pending_Director'}"
-                                                    th:href="@{/requisitions/copy/{id}(id=${req.requisitionId})}">Sao
-                                                    chép mẫu</a>
-                                                <a th:if="${req.approvalStatus == 'Approved' and (viewerRole == 'HR' or viewerRole == 'System Admin') and req.jobPostingId == null}"
-                                                    th:href="@{/internal/job-postings/create(requisitionId=${req.requisitionId})}">Tạo
-                                                    tin tuyển dụng</a>
-                                                <a th:if="${req.jobPostingId != null}"
-                                                    th:href="@{/internal/job-postings/{id}(id=${req.jobPostingId})}">Xem
-                                                    tin tuyển dụng</a>
-                                                <button th:if="${req.deletable}" type="button" class="delete-action"
-                                                    data-delete-requisition
-                                                    th:data-delete-url="@{/requisitions/delete/{id}(id=${req.requisitionId})}"
-                                                    th:data-title="${req.title}">Xóa yêu cầu</button>
-                                            </div>
+                                            <!-- Menu ⋯ của catalog: <details> tự mở/đóng, không cần JS.
+                                                 Mục nào hiện là do cờ quyền service tính sẵn (editable, copyable, postable...) -->
+                                            <details class="more-menu">
+                                                <summary class="more-menu__toggle" th:aria-label="|Thao tác khác cho ${req.title}|"
+                                                    title="Thao tác khác">⋯</summary>
+                                                <div class="more-menu__list">
+                                                    <a class="more-menu__item" th:href="@{/requisitions/{id}(id=${req.requisitionId})}">Xem chi tiết</a>
+                                                    <a class="more-menu__item" th:if="${req.editable}"
+                                                        th:href="@{/requisitions/edit/{id}(id=${req.requisitionId})}">Chỉnh sửa</a>
+                                                    <a class="more-menu__item" th:if="${req.copyable}"
+                                                        th:href="@{/requisitions/copy/{id}(id=${req.requisitionId})}">Sao chép mẫu</a>
+                                                    <a class="more-menu__item" th:if="${req.postable}"
+                                                        th:href="@{/internal/job-postings/create(requisitionId=${req.requisitionId})}">Tạo tin tuyển dụng</a>
+                                                    <a class="more-menu__item" th:if="${req.postingViewable}"
+                                                        th:href="@{/internal/job-postings/{id}(id=${req.jobPostingId})}">Xem tin tuyển dụng</a>
+                                                    <button class="more-menu__item req-menu-danger" th:if="${req.deletable}" type="button"
+                                                        data-delete-requisition
+                                                        th:data-delete-url="@{/requisitions/delete/{id}(id=${req.requisitionId})}"
+                                                        th:data-title="${req.title}">Xóa yêu cầu</button>
+                                                </div>
+                                            </details>
                                         </td>
                                     </tr>
-                                    <tr th:if="${#lists.isEmpty(requisitions)}">
-                                        <td colspan="11" class="empty-state">Không tìm thấy yêu cầu tuyển dụng nào. Hãy
+                                    <tr th:if="${list.page.empty}">
+                                        <td colspan="10" class="empty-state">Không tìm thấy yêu cầu tuyển dụng nào. Hãy
                                             thử thay đổi hoặc đặt lại bộ lọc.</td>
                                     </tr>
                                 </tbody>
                             </table>
                         </div>
-                        <nav class="list-pagination-footer" aria-label="Phân trang yêu cầu tuyển dụng">
-                            <div
-                                th:replace="~{fragments/pagination :: pager(${currentPage - 1}, ${totalPages}, ${totalElements}, '/requisitions')}">
-                            </div>
-                            <script>
-                                window.rmsGoToPage = function (zeroBasedPage) {
-                                    const form = document.getElementById('filterForm');
-                                    if (form) {
-                                        let pageInput = form.querySelector('input[name="page"]');
-                                        if (!pageInput) {
-                                            pageInput = document.createElement('input');
-                                            pageInput.type = 'hidden';
-                                            pageInput.name = 'page';
-                                            form.appendChild(pageInput);
-                                        }
-                                        pageInput.value = zeroBasedPage + 1;
-                                        form.submit();
-                                    }
-                                };
-                            </script>
-                        </nav>
+                        <!-- Fragment phân trang chuẩn của catalog: tự giữ mọi tham số đang có trên URL, chỉ đổi ?page= -->
+                        <nav th:replace="~{fragments/ui/pagination :: paged(page=${list.page})}"></nav>
                     </section>
-                </div>
+
+                    <!-- Hộp thoại xác nhận xóa phải nằm TRONG fragment "content", nằm ngoài sẽ bị layout bỏ đi -->
+                    <dialog th:replace="~{fragments/requisition :: deleteDialog}"></dialog>
             </main>
-        </div>
-    </div>
-    <dialog th:replace="~{fragments/requisition :: deleteDialog}"></dialog>
+
+    <th:block layout:fragment="scripts">
+        <script th:src="@{/js/requisitions.js}" defer></script>
+        <!-- Đóng popover "Bộ lọc" khi bấm ra ngoài hoặc nhấn Esc (dùng chung với trang Tài khoản, Phòng ban) -->
+        <script th:src="@{/js/pages/management-filters.js}" defer></script>
+    </th:block>
 </body>
 
 </html>

@@ -177,9 +177,9 @@ for k, v, desc, u_at in configs:
     lines.append(f"INSERT INTO SystemConfig (ConfigKey, ConfigValue, [Description], UpdatedAt) VALUES (N'{k}', N'{v}', N'{desc}', '{u_at}');")
 lines.append("")
 
-# 5. AUDIT LOG (15 logs before Sep 30, 2026)
+# 5. AUDIT LOG (18 logs before Sep 30, 2026)
 lines.append("-- =============================================================================")
-lines.append("-- 5. AUDIT LOG (15 SME System Activity Logs Prior to 2026-09-30)")
+lines.append("-- 5. AUDIT LOG (18 SME System Activity Logs Prior to 2026-09-30)")
 lines.append("-- =============================================================================")
 audit_logs = [
     (1, "LOGIN", "User", "1", None, "User logged in successfully", "192.168.1.10", "2026-08-01 08:05:00"),
@@ -190,11 +190,14 @@ audit_logs = [
     (2, "LOGIN", "User", "2", None, "Director initial login", "192.168.1.15", "2026-08-02 09:00:00"),
     (1, "CREATE", "SystemConfig", "AI_SCREENING_ENDPOINT", None, "Initialized AI endpoint", "192.168.1.10", "2026-09-01 08:05:00"),
     (1, "CREATE", "SystemConfig", "AI_SCORE_THRESHOLD", None, "Set threshold 70.00", "192.168.1.10", "2026-09-01 08:10:00"),
-    (5, "CREATE", "JobRequisition", "1", None, "Drafted Senior Java Engineer requisition", "192.168.1.25", "2026-09-10 09:15:00"),
-    (5, "CREATE", "JobRequisition", "2", None, "Drafted Frontend React requisition", "192.168.1.25", "2026-09-11 10:20:00"),
-    (5, "CREATE", "JobRequisition", "3", None, "Drafted QA Automation requisition", "192.168.1.25", "2026-09-12 08:45:00"),
-    (6, "CREATE", "JobRequisition", "4", None, "Drafted B2B Sales requisition", "192.168.1.30", "2026-09-15 14:10:00"),
-    (2, "UPDATE", "JobRequisition", "1", "Pending_Director", "Approved by Director", "192.168.1.15", "2026-09-15 10:00:00"),
+    (5, "CREATE", "JobRequisition", "1", None, "Tạo yêu cầu: Senior Java Backend Engineer · Pending_Director", "192.168.1.25", "2026-09-10 09:00:00"),
+    (2, "UPDATE", "JobRequisition", "1", "Pending_Director", "Status: Pending_Director → Approved\\nÝ kiến Giám đốc: Đã rà soát ngân sách quý 4/2026. Đồng ý phê duyệt tuyển 2 kỹ sư Java Backend.", "192.168.1.15", "2026-09-15 10:00:00"),
+    (5, "CREATE", "JobRequisition", "2", None, "Tạo yêu cầu: Frontend ReactJS Developer · Pending_Director", "192.168.1.25", "2026-09-11 10:00:00"),
+    (2, "UPDATE", "JobRequisition", "2", "Pending_Director", "Status: Pending_Director → Approved\\nÝ kiến Giám đốc: Phê duyệt tuyển 2 vị trí Frontend ReactJS phục vụ kế hoạch ra mắt Portal mới.", "192.168.1.15", "2026-09-16 11:00:00"),
+    (5, "CREATE", "JobRequisition", "3", None, "Tạo yêu cầu: QA Automation Engineer · Pending_Director", "192.168.1.25", "2026-09-12 08:30:00"),
+    (2, "UPDATE", "JobRequisition", "3", "Pending_Director", "Status: Pending_Director → Approved\\nÝ kiến Giám đốc: Đồng ý tuyển 1 kỹ sư QA Automation để củng cố quy trình kiểm thử CI/CD.", "192.168.1.15", "2026-09-17 14:00:00"),
+    (6, "CREATE", "JobRequisition", "4", None, "Tạo yêu cầu: Business Development Executive (B2B) · Pending_Director", "192.168.1.30", "2026-09-15 14:00:00"),
+    (2, "UPDATE", "JobRequisition", "4", "Pending_Director", "Status: Pending_Director → Approved\\nÝ kiến Giám đốc: Phê duyệt mở 2 vị trí Business Development mở rộng tệp khách hàng B2B.", "192.168.1.15", "2026-09-18 09:30:00"),
     (3, "CREATE", "JobPosting", "1", None, "Published Senior Java Engineer posting", "192.168.1.20", "2026-09-25 08:05:00"),
     (3, "CREATE", "JobPosting", "2", None, "Published Frontend React posting", "192.168.1.20", "2026-09-25 08:35:00")
 ]
@@ -248,7 +251,7 @@ requisitions = [
 
 # Schema mới yêu cầu RequisitionCode và RecruitmentRound (NOT NULL, > 0)
 for idx, (title, d_id, hm_id, num_pos, emp_type, min_sal, max_sal, reason, jd, req_det, req_gender, prob_duration, work_model, work_loc, exp_start, app_status, cr_at, up_at) in enumerate(requisitions, start=1):
-    req_code = f"REQ-2026-{idx:04d}"
+    req_code = f"REQ-{idx:04d}"
     rec_round = 1  # Vòng tuyển dụng đầu tiên
     lines.append(
         f"INSERT INTO JobRequisition (Title, RequisitionCode, RecruitmentRound, DepartmentId, HiringManagerId, NumberOfPositions, EmploymentType, MinSalary, MaxSalary, ReasonForHiring, JobDescription, RequirementDetails, RequiredGender, ProbationDuration, WorkModel, WorkLocation, ExpectedStartDate, ApprovalStatus, CreatedAt, UpdatedAt) "

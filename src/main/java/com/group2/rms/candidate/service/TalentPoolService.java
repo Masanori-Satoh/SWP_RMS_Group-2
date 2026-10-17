@@ -407,6 +407,7 @@ public class TalentPoolService {
             throw new TalentPoolException("Chỉ tin đã đăng hoặc đang tạm dừng mới được đóng đợt tuyển.");
         if (audit.hasOpenOffers(id)) throw new TalentPoolException("Còn Offer chưa kết thúc. Hãy xử lý Offer trước khi đóng đợt tuyển.");
         posting.setPostingStatus("Closed");
+        posting.setClosedAt(java.time.LocalDateTime.now());
         audit.record(user.getUserId(), "UPDATE", "JobPosting", id, null, "Closed");
         for (Application suggestion : applications.findAllDraftsByJobPostingId(id)) {
             if (applications.transition(suggestion.getApplicationId(), Set.of("HM_Suggested"), "Rejected") == 1)

@@ -1,76 +1,67 @@
 package com.group2.rms.notification;
 
-import com.group2.rms.offer.entity.OfferProposal;
+import com.group2.rms.core.exception.ResourceNotFoundException;
 import com.group2.rms.jobposting.entity.JobPosting;
+import com.group2.rms.offer.entity.OfferProposal;
 import com.group2.rms.requisition.entity.JobRequisition;
+import com.group2.rms.requisition.entity.RequisitionApproval;
 import com.group2.rms.user.entity.User;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
-import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 
+/**
+ * Thông báo in-app. Mọi phương thức notify* chạy trong transaction của nghiệp vụ gọi tới
+ * (không REQUIRES_NEW) để nghiệp vụ rollback thì thông báo cũng không được ghi.
+ * Chống trùng bằng EventId ổn định theo sự kiện, unique cùng RecipientId (UX_Notification_Recipient_EventId).
+ */
 @Service("systemNotificationService")
 @RequiredArgsConstructor
 @Slf4j
 public class NotificationServiceImpl implements NotificationService {
 
+    private static final DateTimeFormatter DISPLAY_TIME = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
+    private static final DateTimeFormatter DISPLAY_DATE = DateTimeFormatter.ofPattern("dd/MM/yyyy");
+    private static final DateTimeFormatter EVENT_TIME = DateTimeFormatter.ofPattern("yyyyMMddHHmmssSSSSSSS");
+
     private final NotificationRepository notificationRepository;
 
     @Override
     @Transactional
-    public void notifyRequisitionRejected(JobRequisition requisition, User director, String comment) {
+    public void notifyRequisitionRejected(RequisitionApproval rejection) {
+        JobRequisition requisition = rejection == null ? null : rejection.getRequisition();
         if (requisition == null || requisition.getHiringManager() == null) {
             log.warn("Cannot send rejection notification: Requisition or Hiring Manager is null");
             return;
         }
 
-        User recipient = requisition.getHiringManager();
-        String decidedTime = requisition.getDecidedAt() != null
-            ? requisition.getDecidedAt().format(DateTimeFormatter.ofPattern("yyyyMMddHHmmssSSSSSSS"))
-            : LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMddHHmmssSSSSSSS"));
-        String eventId = "REQ_REJECT_" + requisition.getRequisitionId() + "_" + decidedTime;
-
-        // Idempotency: Kiểm tra chống trùng lặp nếu retry cùng sự kiện
-        if (notificationRepository.existsByEventId(eventId)) {
-            log.info("Notification for eventId {} already exists. Skipping duplicate creation.", eventId);
-            return;
-        }
-
+        User director = rejection.getDirector();
         String directorName = director != null ? director.getFullName() : "Giám đốc";
-        String timeStr = LocalDateTime.now().format(DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm"));
-        String cleanComment = (comment != null && !comment.isBlank()) ? comment.trim() : "Không có lý do cụ thể";
+        LocalDateTime decidedAt = rejection.getApprovalDate() != null ? rejection.getApprovalDate() : LocalDateTime.now();
+        String reason = rejection.getComments() != null && !rejection.getComments().isBlank()
+                ? rejection.getComments().trim() : "Không có lý do cụ thể";
 
-        String title = "Yêu cầu tuyển dụng đã bị từ chối: " + requisition.getTitle();
         String content = String.format(
-            "Yêu cầu tuyển dụng \"%s\" (Mã: REQ-%d) đã bị Giám đốc %s từ chối vào lúc %s.\nLý do: %s.\nVui lòng chỉnh sửa lại thông tin và nộp duyệt lại.",
-            requisition.getTitle(),
-            requisition.getRequisitionId(),
-            directorName,
-            timeStr,
-            cleanComment
-        );
+                "Yêu cầu tuyển dụng \"%s\" (Mã: %s) đã bị Giám đốc %s từ chối vào lúc %s.\nLý do: %s.\nVui lòng chỉnh sửa lại thông tin và nộp duyệt lại.",
+                requisition.getTitle(), requisitionCode(requisition), directorName, decidedAt.format(DISPLAY_TIME), reason);
 
-        Notification notification = Notification.builder()
-            .recipient(recipient)
-            .title(title)
-            .content(content)
-            .eventType("REQUISITION_REJECTED")
-            .referenceId(String.valueOf(requisition.getRequisitionId()))
-            .linkUrl("/requisitions/" + requisition.getRequisitionId())
-            .isRead(false)
-            .eventId(eventId)
-            .createdAt(LocalDateTime.now())
-            .build();
-
-        notificationRepository.save(notification);
-        log.info("Sent rejection notification to Hiring Manager (User ID: {}) for Requisition ID: {}", recipient.getUserId(), requisition.getRequisitionId());
+        // Mỗi lần từ chối có một bản ghi RequisitionApproval riêng, nên ID của nó là khóa sự kiện ổn định.
+        send(Notification.builder()
+                .recipient(requisition.getHiringManager())
+                .actor(director)
+                .title("Yêu cầu tuyển dụng đã bị từ chối: " + requisition.getTitle())
+                .content(content)
+                .eventType("REQUISITION_REJECTED")
+                .referenceId(String.valueOf(requisition.getRequisitionId()))
+                .linkUrl("/requisitions/" + requisition.getRequisitionId())
+                .eventId("REQ_REJECT_" + rejection.getApprovalId())
+                .build());
     }
 
     @Override
@@ -81,51 +72,27 @@ public class NotificationServiceImpl implements NotificationService {
             return;
         }
 
-        User recipient = posting.getRequisition().getHiringManager();
-        String postingTimeStr = posting.getPostingDate() != null
-                ? posting.getPostingDate().format(DateTimeFormatter.ofPattern("yyyyMMddHHmmssSSSSSSS"))
-                : LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMddHHmmssSSSSSSS"));
-        String eventId = "JOB_PUB_" + posting.getJobPostingId() + "_" + postingTimeStr;
-
-        if (notificationRepository.existsByEventId(eventId)) {
-            log.info("Notification for eventId {} already exists. Skipping duplicate creation.", eventId);
-            return;
-        }
-
+        LocalDateTime postingDate = posting.getPostingDate() != null ? posting.getPostingDate() : LocalDateTime.now();
         String hrName = hr != null ? hr.getFullName() : "Nhân sự (HR)";
-        String timeDisplay = LocalDateTime.now().format(DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm"));
-        String deadlineDisplay = posting.getApplicationDeadline() != null
-                ? posting.getApplicationDeadline().format(DateTimeFormatter.ofPattern("dd/MM/yyyy"))
-                : "Không giới hạn";
+        String deadline = posting.getApplicationDeadline() != null
+                ? posting.getApplicationDeadline().format(DISPLAY_DATE) : "Không giới hạn";
 
-        String reqCode = posting.getRequisition().getRequisitionCode() != null
-                ? posting.getRequisition().getRequisitionCode()
-                : ("REQ-" + posting.getRequisition().getRequisitionId());
-
-        String title = "Tin tuyển dụng đã phát hành: " + posting.getPostingTitle();
         String content = String.format(
                 "Tin tuyển dụng \"%s\" (thuộc yêu cầu %s) đã được nhân sự %s phát hành lên cổng việc làm công khai vào lúc %s.\nHạn nộp hồ sơ: %s.\nỨng viên hiện đã có thể xem chi tiết và nộp hồ sơ trực tuyến.",
-                posting.getPostingTitle(),
-                reqCode,
-                hrName,
-                timeDisplay,
-                deadlineDisplay
-        );
+                posting.getPostingTitle(), requisitionCode(posting.getRequisition()), hrName,
+                postingDate.format(DISPLAY_TIME), deadline);
 
-        Notification notification = Notification.builder()
-                .recipient(recipient)
-                .title(title)
+        // PostingDate chỉ đổi khi tin thực sự được đăng (lần đầu hoặc đăng lại sau tạm dừng), không đổi khi sửa nội dung.
+        send(Notification.builder()
+                .recipient(posting.getRequisition().getHiringManager())
+                .actor(hr)
+                .title("Tin tuyển dụng đã phát hành: " + posting.getPostingTitle())
                 .content(content)
                 .eventType("JOB_POSTING_PUBLISHED")
                 .referenceId(String.valueOf(posting.getJobPostingId()))
                 .linkUrl("/internal/job-postings/" + posting.getJobPostingId())
-                .isRead(false)
-                .eventId(eventId)
-                .createdAt(LocalDateTime.now())
-                .build();
-
-        notificationRepository.save(notification);
-        log.info("Sent job posting published notification to Hiring Manager (User ID: {}) for Job Posting ID: {}", recipient.getUserId(), posting.getJobPostingId());
+                .eventId("JOB_PUB_" + posting.getJobPostingId() + "_" + postingDate.format(EVENT_TIME))
+                .build());
     }
 
     @Override
@@ -139,38 +106,19 @@ public class NotificationServiceImpl implements NotificationService {
             return;
         }
 
-        User recipient = offer.getApplication().getCandidate().getAccount();
-        String eventId = "OFFER_SENT_" + offer.getOfferId();
-
-        if (notificationRepository.existsByEventId(eventId)) {
-            log.info("Notification for eventId {} already exists. Skipping duplicate creation.", eventId);
-            return;
-        }
-
-        String positionTitle = (offer.getOfferedPositionTitle() != null && !offer.getOfferedPositionTitle().isBlank())
-                ? offer.getOfferedPositionTitle()
-                : "Vị trí tuyển dụng";
-
-        String title = "Bạn có thư mời nhận việc mới: " + positionTitle;
-        String content = String.format(
-                "Chúc mừng bạn! Nhà tuyển dụng đã gửi Thư mời nhận việc cho vị trí \"%s\". Vui lòng bấm vào đây để xem chi tiết điều khoản và phản hồi thư mời.",
-                positionTitle
-        );
-
-        Notification notification = Notification.builder()
-                .recipient(recipient)
-                .title(title)
-                .content(content)
+        String positionTitle = positionTitle(offer);
+        send(Notification.builder()
+                .recipient(offer.getApplication().getCandidate().getAccount())
+                .actor(offer.getProposedBy())
+                .title("Bạn có thư mời nhận việc mới: " + positionTitle)
+                .content(String.format(
+                        "Chúc mừng bạn! Nhà tuyển dụng đã gửi Thư mời nhận việc cho vị trí \"%s\". Vui lòng bấm vào đây để xem chi tiết điều khoản và phản hồi thư mời.",
+                        positionTitle))
                 .eventType("OFFER_LETTER_SENT")
                 .referenceId(String.valueOf(offer.getOfferId()))
                 .linkUrl("/portal/offers/" + offer.getOfferId())
-                .isRead(false)
-                .eventId(eventId)
-                .createdAt(LocalDateTime.now())
-                .build();
-
-        notificationRepository.save(notification);
-        log.info("Sent offer notification to Candidate (User ID: {}) for Offer ID: {}", recipient.getUserId(), offer.getOfferId());
+                .eventId("OFFER_SENT_" + offer.getOfferId())
+                .build());
     }
 
     @Override
@@ -182,64 +130,38 @@ public class NotificationServiceImpl implements NotificationService {
             return;
         }
 
-        User recipient = offer.getProposedBy();
-        String eventId = (accepted ? "OFFER_RESP_ACC_" : "OFFER_RESP_DEC_") + offer.getOfferId();
+        String positionTitle = positionTitle(offer);
+        User candidateAccount = offer.getApplication() != null && offer.getApplication().getCandidate() != null
+                ? offer.getApplication().getCandidate().getAccount() : null;
+        String candidateName = candidateAccount != null && candidateAccount.getFullName() != null
+                ? candidateAccount.getFullName() : "Ứng viên";
 
-        if (notificationRepository.existsByEventId(eventId)) {
-            log.info("Notification for eventId {} already exists. Skipping duplicate creation.", eventId);
-            return;
-        }
-
-        String positionTitle = (offer.getOfferedPositionTitle() != null && !offer.getOfferedPositionTitle().isBlank())
-                ? offer.getOfferedPositionTitle()
-                : "Vị trí tuyển dụng";
-
-        String candidateName = "Ứng viên";
-        if (offer.getApplication() != null && offer.getApplication().getCandidate() != null) {
-            if (offer.getApplication().getCandidate().getAccount() != null
-                    && offer.getApplication().getCandidate().getAccount().getFullName() != null) {
-                candidateName = offer.getApplication().getCandidate().getAccount().getFullName();
-            }
-        }
-
-        String title;
-        String content;
-        String eventType;
+        Notification.NotificationBuilder notification = Notification.builder()
+                .recipient(offer.getProposedBy())
+                .actor(candidateAccount)
+                .referenceId(String.valueOf(offer.getOfferId()))
+                .linkUrl("/offers");
 
         if (accepted) {
-            title = String.format("🎉 Ứng viên đã nhận offer: %s (%s)", candidateName, positionTitle);
-            content = String.format(
-                    "Ứng viên %s đã đồng ý nhận lời mời làm việc cho vị trí \"%s\". Trạng thái hồ sơ đã chuyển sang \"Đã nhận việc\" (Hired). Vui lòng chuẩn bị thủ tục tiếp nhận nhân sự.",
-                    candidateName, positionTitle
-            );
-            eventType = "OFFER_ACCEPTED";
+            notification
+                    .title(String.format("🎉 Ứng viên đã nhận offer: %s (%s)", candidateName, positionTitle))
+                    .content(String.format(
+                            "Ứng viên %s đã đồng ý nhận lời mời làm việc cho vị trí \"%s\". Trạng thái hồ sơ đã chuyển sang \"Đã nhận việc\" (Hired). Vui lòng chuẩn bị thủ tục tiếp nhận nhân sự.",
+                            candidateName, positionTitle))
+                    .eventType("OFFER_ACCEPTED")
+                    .eventId("OFFER_RESP_ACC_" + offer.getOfferId());
         } else {
-            title = String.format("Ứng viên từ chối offer: %s (%s)", candidateName, positionTitle);
-            String reasonText = (declineReason != null && !declineReason.isBlank())
-                    ? String.format(" Lý do: \"%s\".", declineReason.trim())
-                    : "";
-            content = String.format(
-                    "Ứng viên %s đã từ chối thư mời làm việc cho vị trí \"%s\".%s Trạng thái hồ sơ đã chuyển sang \"Không tiếp tục\" (Rejected).",
-                    candidateName, positionTitle, reasonText
-            );
-            eventType = "OFFER_DECLINED";
+            String reasonText = declineReason != null && !declineReason.isBlank()
+                    ? String.format(" Lý do: \"%s\".", declineReason.trim()) : "";
+            notification
+                    .title(String.format("Ứng viên từ chối offer: %s (%s)", candidateName, positionTitle))
+                    .content(String.format(
+                            "Ứng viên %s đã từ chối thư mời làm việc cho vị trí \"%s\".%s Trạng thái hồ sơ đã chuyển sang \"Không tiếp tục\" (Rejected).",
+                            candidateName, positionTitle, reasonText))
+                    .eventType("OFFER_DECLINED")
+                    .eventId("OFFER_RESP_DEC_" + offer.getOfferId());
         }
-
-        Notification notification = Notification.builder()
-                .recipient(recipient)
-                .title(title)
-                .content(content)
-                .eventType(eventType)
-                .referenceId(String.valueOf(offer.getOfferId()))
-                .linkUrl("/offers")
-                .isRead(false)
-                .eventId(eventId)
-                .createdAt(LocalDateTime.now())
-                .build();
-
-        notificationRepository.save(notification);
-        log.info("Sent candidate offer response notification ({}) to HR (User ID: {}) for Offer ID: {}",
-                eventType, recipient.getUserId(), offer.getOfferId());
+        send(notification.build());
     }
 
     @Override
@@ -250,11 +172,8 @@ public class NotificationServiceImpl implements NotificationService {
         }
         int validPage = Math.max(0, page - 1);
         int validSize = Math.max(1, Math.min(size, 50));
-        String roleName = user.getRole() != null ? user.getRole().getRoleName() : "";
-        boolean isHrOrAdmin = "HR".equalsIgnoreCase(roleName) || "System Admin".equalsIgnoreCase(roleName);
-
         return notificationRepository.findByRecipient_UserIdOrderByCreatedAtDesc(user.getUserId(), PageRequest.of(validPage, validSize))
-            .map(n -> NotificationResponse.from(n, isHrOrAdmin));
+                .map(NotificationResponse::from);
     }
 
     @Override
@@ -268,16 +187,14 @@ public class NotificationServiceImpl implements NotificationService {
 
     @Override
     @Transactional
-    public void markAsRead(Long notificationId, User user) {
+    public NotificationResponse markAsRead(Long notificationId, User user) {
         if (notificationId == null || user == null) {
-            return;
+            throw new ResourceNotFoundException("Thông báo không tồn tại hoặc không thuộc về bạn.");
         }
         Notification notification = notificationRepository.findByNotificationIdAndRecipient_UserId(notificationId, user.getUserId())
-            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Thông báo không tồn tại hoặc không thuộc về bạn."));
-        if (!Boolean.TRUE.equals(notification.getIsRead())) {
-            notification.setIsRead(true);
-            notificationRepository.save(notification);
-        }
+                .orElseThrow(() -> new ResourceNotFoundException("Thông báo không tồn tại hoặc không thuộc về bạn."));
+        notification.markRead(LocalDateTime.now());
+        return NotificationResponse.from(notification);
     }
 
     @Override
@@ -286,14 +203,35 @@ public class NotificationServiceImpl implements NotificationService {
         if (user == null) {
             return;
         }
-        notificationRepository.markAllAsReadByUserId(user.getUserId());
+        notificationRepository.markAllAsReadByUserId(user.getUserId(), LocalDateTime.now());
     }
 
     @Override
     @Transactional
     public void markOfferNotificationRead(Integer userId, Integer offerId) {
         if (userId != null && offerId != null) {
-            notificationRepository.markOfferNotificationRead(userId, String.valueOf(offerId));
+            notificationRepository.markOfferNotificationRead(userId, String.valueOf(offerId), LocalDateTime.now());
         }
+    }
+
+    private void send(Notification notification) {
+        Integer recipientId = notification.getRecipient().getUserId();
+        if (notificationRepository.existsByRecipient_UserIdAndEventId(recipientId, notification.getEventId())) {
+            log.info("Notification for eventId {} already exists. Skipping duplicate creation.", notification.getEventId());
+            return;
+        }
+        notificationRepository.save(notification);
+        log.info("Sent {} notification to User ID {} (reference {})",
+                notification.getEventType(), recipientId, notification.getReferenceId());
+    }
+
+    private static String requisitionCode(JobRequisition requisition) {
+        return requisition.getRequisitionCode() != null
+                ? requisition.getRequisitionCode() : "REQ-" + requisition.getRequisitionId();
+    }
+
+    private static String positionTitle(OfferProposal offer) {
+        return offer.getOfferedPositionTitle() != null && !offer.getOfferedPositionTitle().isBlank()
+                ? offer.getOfferedPositionTitle() : "Vị trí tuyển dụng";
     }
 }

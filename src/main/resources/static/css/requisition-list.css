@@ -1,104 +1,37 @@
-/* Quiet, scannable list with the same controls as the account workspace. */
+/* REQUISITION-LIST.CSS — Danh sách yêu cầu tuyển dụng (/requisitions). Badge và menu ⋯ dùng class catalog (.badge--*, .more-menu). */
 .req-list-page .btn-create { flex-shrink:0; }
-.req-list-page .requisition-page-header { align-items:flex-start; }
-.req-list-page .list-filter-card { padding:var(--s6); border:1px solid var(--line); border-radius:8px; background:var(--surface); }
+.req-list-page .requisition-page-header { align-items:center; margin-bottom:var(--s5, 20px); }
+.req-list-page .requisition-page-header h1 { margin:0; font-size:26px; }
 .req-list-page .list-container { margin-top:var(--s6); }
 .req-list-page .list-results-count { margin:0 0 var(--s4); color:var(--muted); font-size:14px; }
-.req-list-page .requisition-filter-grid,
-.req-list-page .requisition-filter-grid-4 { display:grid; grid-template-columns:minmax(200px,1.5fr) repeat(3,minmax(130px,1fr)); gap:var(--s4); }
-.req-list-page .filter-field { min-width:0; }
-.req-list-page .filter-field label { display:block; margin-bottom:var(--s2); font-size:14px; font-weight:600; }
-.req-list-page .filter-actions { display:flex; gap:var(--s2); flex-wrap:wrap; margin-top:var(--s4); }
-.req-list-page .requisition-list-table { min-width:1050px; }
 .req-list-page .requisition-list-table td { padding-block:var(--s2); }
 .req-list-page .requisition-list-table th { white-space:nowrap; }
 .req-list-page .requisition-list-table tbody tr:hover { background:var(--page); }
 .req-list-page .requisition-list-table td:first-child { color:var(--muted); }
-.req-list-page .round-badge { display:inline-flex; align-items:center; padding:2px 8px; border-radius:var(--radius-full); font-size:12px; font-weight:600; background:var(--brand-soft); color:var(--brand-dark); border:1px solid rgba(62,113,87,0.25); white-space:nowrap; }
-
-/* Nhãn viên thuốc trạng thái (Status Pills) */
-.req-list-page .jp-status-pill {
-    display: inline-flex;
-    align-items: center;
-    gap: 5px;
-    padding: 3px 8px;
-    border-radius: var(--radius-full);
-    font-size: 11.5px;
-    font-weight: 500;
-    white-space: nowrap;
-    text-decoration: none;
-}
-.req-list-page .jp-status-pill .dot {
-    width: 6px;
-    height: 6px;
-    border-radius: 50%;
-}
-.req-list-page .jp-status-published,
-.req-list-page .jp-status-approved {
-    background: var(--brand-soft);
-    color: var(--brand-dark);
-    border: 1px solid rgba(62, 113, 87, 0.25);
-}
-.req-list-page .jp-status-published .dot,
-.req-list-page .jp-status-approved .dot {
-    background: var(--brand);
-}
-.req-list-page .jp-status-draft {
-    background: var(--neutral-soft);
-    color: var(--neutral);
-    border: 1px solid var(--line);
-}
-.req-list-page .jp-status-draft .dot {
-    background: var(--muted);
-}
-.req-list-page .jp-status-paused,
-.req-list-page .jp-status-pending {
-    background: var(--warning-soft);
-    color: var(--warning);
-    border: 1px solid rgba(160, 99, 37, 0.25);
-}
-.req-list-page .jp-status-paused .dot,
-.req-list-page .jp-status-pending .dot {
-    background: var(--warning);
-}
-.req-list-page .jp-status-closed,
-.req-list-page .jp-status-rejected {
-    background: var(--error-soft);
-    color: var(--error);
-    border: 1px solid rgba(135, 55, 47, 0.25);
-}
-.req-list-page .jp-status-closed .dot,
-.req-list-page .jp-status-rejected .dot {
-    background: var(--error);
-}
-.req-list-page .jp-status-none {
-    background: var(--surface-subtle);
-    color: var(--muted);
-    border: 1px dashed var(--line);
-}
-.req-list-page .jp-status-none .dot {
-    background: var(--muted);
-}
 .req-list-page .position-title { display:flex; align-items:center; min-height:44px; min-width:160px; max-width:320px; font-weight:600; text-decoration:none; overflow-wrap:anywhere; }
 .req-list-page .position-title:hover { text-decoration:underline; }
-.req-list-page .btn-action-outline { min-width:44px; padding:var(--s2); font-size:20px; }
-.req-list-page .action-popover { position:fixed; inset:auto; margin:0; padding:var(--s1); min-width:176px; max-width:calc(100vw - 16px); border:1px solid var(--control-line); border-radius:4px; background:var(--surface); color:var(--ink); box-shadow:0 4px 12px rgb(37 41 35 / .1); }
-.req-list-page .action-popover :is(a,button) { display:flex; width:100%; align-items:center; min-height:44px; padding:var(--s2) var(--s3); background:transparent; border:0; border-radius:2px; text-align:left; text-decoration:none; font-size:15px; }
-.req-list-page .action-popover :is(a,button):hover { background:var(--brand-soft); }
-.req-list-page .action-popover .delete-action:hover { background:var(--error-soft); }
-.req-list-page .list-pagination-footer { display:flex; justify-content:flex-end; margin-top:var(--s4); padding-top:var(--s4); border-top:1px solid var(--line); }
-.req-list-page .pagination { display:flex; flex-wrap:wrap; gap:var(--s1); }
-.req-list-page .page-link { min-width:44px; padding:var(--s2); font-size:14px; }
-.req-list-page .page-link.active { color:var(--surface); background:var(--brand-dark); border-color:var(--brand-dark); }
-.req-list-page .page-link.disabled { cursor:default; color:var(--muted); background:var(--page); border-color:var(--line); }
-.req-list-page a.page-link:not(.active):hover { background:var(--brand-soft); }
-@media (max-width:1100px) {
-  .req-list-page :is(.requisition-filter-grid, .requisition-filter-grid-4) { grid-template-columns:repeat(2,minmax(0,1fr)); }
-  .req-list-page .filter-search { grid-column:1 / -1; }
-}
-@media (max-width:480px) {
-  .req-list-page :is(.requisition-filter-grid, .requisition-filter-grid-4) { grid-template-columns:minmax(0,1fr); }
-  .req-list-page .list-filter-card { padding:var(--s4); }
-  .req-list-page .filter-search { grid-column:auto; }
-  .req-list-page .list-pagination-footer { justify-content:center; }
-}
+
+
+/* =============================================================================
+   THANH CÔNG CỤ: dùng lại bộ mft- của pages/management-filters.css
+   Wireframe đã duyệt: ô tìm kiếm dài bên trái, nút "Bộ lọc" bên phải,
+   popover mở ngay dưới nút (căn mép phải), hàng chip bộ lọc đang bật ở dưới thanh.
+   ============================================================================= */
+.req-list-page .req-toolbar .mft-search { order:-1; flex:1 1 320px; max-width:none; margin-left:0; }
+.req-list-page .req-toolbar .mft-controls { flex:0 0 auto; }
+.req-list-page .req-toolbar .mft-popover { left:auto; right:var(--s4); }
+
+/* Ô "Trạng thái" và "Ngày tạo" chiếm cả hàng trong popover 2 cột */
+.req-list-page .req-filter-full { grid-column:1 / -1; min-width:0; margin:0; padding:0; border:0; }
+.req-list-page .req-status-options { display:flex; flex-wrap:wrap; gap:var(--s2) var(--s4); }
+.req-list-page .req-status-option { display:inline-flex; align-items:center; gap:var(--s2); font-size:var(--font-sm); cursor:pointer; }
+.req-list-page .req-date-range { display:flex; align-items:center; gap:var(--s2); }
+.req-list-page .req-date-range .form-input { min-width:0; }
+
+/* Hàng chip bộ lọc đang bật */
+.req-list-page .req-chips { margin:0 0 var(--s4); }
+.req-list-page .req-chips-reset { font-size:var(--font-sm); color:var(--muted); }
+
+/* Mục "Xóa yêu cầu" trong menu ⋯ (.more-menu__item của catalog) tô màu nguy hiểm */
+.req-list-page .more-menu__item.req-menu-danger { color:var(--error); }
+.req-list-page .more-menu__item.req-menu-danger:hover { background:var(--error-soft); }

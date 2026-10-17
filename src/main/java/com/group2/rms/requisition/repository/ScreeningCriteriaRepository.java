@@ -7,5 +7,4 @@ import org.springframework.stereotype.Repository;
 @Repository
 public interface ScreeningCriteriaRepository extends JpaRepository<ScreeningCriteria, Integer> {
     java.util.List<ScreeningCriteria> findByRequisition_RequisitionId(Integer requisitionId);
-    void deleteByRequisition_RequisitionId(Integer requisitionId);
 }

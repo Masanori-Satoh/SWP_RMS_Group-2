@@ -3,11 +3,9 @@ package com.group2.rms.requisition.integration;
 import com.group2.rms.requisition.dto.RequisitionRequest;
 import com.group2.rms.requisition.dto.ScreeningCriteriaRequest;
 import com.group2.rms.requisition.entity.JobRequisition;
-import com.group2.rms.requisition.entity.RequisitionWorkflowEvent;
 import jakarta.persistence.EntityManager;
 import com.group2.rms.requisition.repository.JobRequisitionRepository;
 import com.group2.rms.requisition.repository.RequisitionApprovalRepository;
-import com.group2.rms.requisition.repository.RequisitionWorkflowEventRepository;
 import com.group2.rms.requisition.service.RequisitionService;
 import com.group2.rms.user.entity.Department;
 import com.group2.rms.user.entity.Role;
@@ -47,7 +45,6 @@ class RequisitionIntegrationTest {
     @Autowired private RequisitionService service;
     @Autowired private JobRequisitionRepository requisitions;
     @Autowired private RequisitionApprovalRepository approvals;
-    @Autowired private RequisitionWorkflowEventRepository events;
     @Autowired private DepartmentRepository departments;
     @Autowired private UserRepository users;
     @Autowired private RoleRepository roles;
@@ -140,24 +137,21 @@ class RequisitionIntegrationTest {
         var requisition = requisitions.saveAndFlush(validRequisition()
                 .title("Unicode read regression").hiringManager(hiringManager).department(department)
                 .approvalStatus("Draft").gender("Female").workLocation("Văn phòng Hà Nội")
-                .workModel("Hybrid").probationDuration("2 tháng")
+                .workModel("Hybrid").probationDays(60)
                 .screeningCriteria(new ArrayList<>()).build());
         Integer id = requisition.getRequisitionId();
-        events.saveAndFlush(RequisitionWorkflowEvent.builder()
-                .requisition(requisition).actor(hiringManager).eventType("Withdrawn")
-                .occurredAt(java.time.LocalDateTime.now()).comment("Bổ sung yêu cầu tuyển dụng").build());
         entityManager.clear(); // Exercise JDBC extraction, not the persistence-context cache.
 
         assertEquals("Female", entityManager.createNativeQuery(
                 "SELECT RequiredGender FROM JobRequisition WHERE RequisitionId = :id")
                 .setParameter("id", id).getSingleResult());
-        var page = service.search(1, 10, "Unicode read regression", null, "", "", "newest");
+        var page = service.getListPage(new com.group2.rms.requisition.dto.RequisitionSearchRequest(
+                "Unicode read regression", null, null, null, null, null, null, "newest", 0, 10)).page();
         var row = page.getContent().stream().filter(r -> id.equals(r.getRequisitionId())).findFirst().orElseThrow();
         assertEquals("Female", row.getGender());
         assertEquals("Văn phòng Hà Nội", row.getWorkLocation());
-        assertEquals("2 tháng", row.getProbationDuration());
+        assertEquals(60, row.getProbationDays());
         assertEquals("Hybrid", row.getWorkModel());
-        assertEquals("Bổ sung yêu cầu tuyển dụng", service.getById(id).getTimeline().getFirst().description());
         mvc.perform(get("/requisitions")).andExpect(status().isOk()).andExpect(view().name("requisitions/list"));
         mvc.perform(get("/requisitions/{id}", id)).andExpect(status().isOk()).andExpect(view().name("requisitions/detail"));
     }
@@ -168,7 +162,7 @@ class RequisitionIntegrationTest {
 
     @Test
     @WithMockUser(username = "it_dir", roles = "DIRECTOR")
-    @DisplayName("IT-04: Director Approve -> Cập nhật Approved, tạo approval record và workflow event")
+    @DisplayName("IT-04: Director Approve -> Cập nhật Approved, tạo approval record")
     void it04_directorApprove_createsApprovalAndEvent() {
         JobRequisition req = requisitions.save(validRequisition()
                 .title("Pending Dev")
@@ -182,7 +176,6 @@ class RequisitionIntegrationTest {
 
         JobRequisition updated = requisitions.findById(req.getRequisitionId()).orElseThrow();
         assertEquals("Approved", updated.getApprovalStatus());
-        assertNotNull(updated.getDecidedAt());
 
         // Kiểm tra approval record
         var appList = approvals.findByRequisition_RequisitionIdOrderByApprovalDateDesc(req.getRequisitionId());
@@ -248,7 +241,7 @@ class RequisitionIntegrationTest {
                 .title("Original Requisition")
                 .hiringManager(hiringManager)
                 .department(department)
-                .approvalStatus("Draft")
+                .approvalStatus("Approved")
                 .screeningCriteria(new ArrayList<>())
                 .build());
 
@@ -282,6 +275,7 @@ class RequisitionIntegrationTest {
     /** Supply the schema's mandatory fields; each test still controls the workflow under test. */
     private JobRequisition.JobRequisitionBuilder validRequisition() {
         return JobRequisition.builder()
+                .recruitmentRound(1)
                 .numberOfPositions(1)
                 .employmentType("Full-time")
                 .gender("Any")

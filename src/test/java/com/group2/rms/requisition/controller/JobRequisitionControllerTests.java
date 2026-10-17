@@ -27,6 +27,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
@@ -85,17 +86,51 @@ class JobRequisitionControllerTests {
     @WithMockUser(username = "hm", roles = "HIRING_MANAGER")
     @DisplayName("GET /requisitions -> Trả về view list và model phân trang")
     void list_returnsListViewAndModel() throws Exception {
-        when(service.search(anyInt(), anyInt(), anyString(), any(), anyString(), anyString(), anyString()))
-                .thenReturn(new PageImpl<>(List.of(RequisitionResponse.builder()
-                        .requisitionId(1).title("Backend Engineer")
-                        .approvalStatus("Draft").createdAt(java.time.LocalDateTime.now())
-                        .editable(true).deletable(true).build())));
-        when(service.countVisible()).thenReturn(1L);
+        var row = RequisitionResponse.builder()
+                .requisitionId(1).title("Backend Engineer")
+                .approvalStatus("Draft").createdAt(java.time.LocalDateTime.now())
+                .editable(true).deletable(true).build();
+        // Bộ lọc đã làm sạch, đúng như service trả về cho Hiring Manager
+        var filter = new com.group2.rms.requisition.dto.RequisitionSearchRequest(
+                "", List.of(), null, null, null, null, null, "newest", 0, 10);
+        var options = new com.group2.rms.requisition.dto.RequisitionFilterOptions(true, true, false, false, true,
+                List.of(new com.group2.rms.requisition.dto.FilterOption("Draft", "Bản nháp")),
+                List.of(new com.group2.rms.requisition.dto.FilterOption("none", "Chưa có tin")),
+                List.of(), List.of(),
+                List.of(new com.group2.rms.requisition.dto.FilterOption("newest", "Mới nhất trước")));
+        when(service.getListPage(any())).thenReturn(new com.group2.rms.requisition.dto.RequisitionListResponse(
+                new PageImpl<>(List.of(row)), filter, options, List.of()));
 
         mvc.perform(get("/requisitions"))
                 .andExpect(status().isOk())
                 .andExpect(view().name("requisitions/list"))
-                .andExpect(model().attributeExists("requisitions", "currentPage", "totalPages", "search"));
+                .andExpect(model().attributeExists("list", "filterLinks"))
+                .andExpect(model().attribute("activeMenu", "requisitions"));
+    }
+
+    @Test
+    @WithMockUser(username = "director", roles = "DIRECTOR")
+    @DisplayName("GET /requisitions -> Director thấy badge tin tuyển dụng nhưng không có link vào trang tin (tránh 403)")
+    void list_shouldNotLinkToInternalPosting_whenPostingIsNotViewable() throws Exception {
+        var row = RequisitionResponse.builder()
+                .requisitionId(5).title("Data Engineer")
+                .approvalStatus("Approved").statusLabel("Đã duyệt").statusTone("success")
+                .jobPostingId(16).postingStatus("Paused").postingLabel("Tạm dừng").postingTone("warning")
+                .postingViewable(false)
+                .createdAt(java.time.LocalDateTime.now()).build();
+        var filter = new com.group2.rms.requisition.dto.RequisitionSearchRequest(
+                "", List.of(), null, null, null, null, null, "newest", 0, 10);
+        var options = new com.group2.rms.requisition.dto.RequisitionFilterOptions(true, false, true, true, false,
+                List.of(), List.of(), List.of(), List.of(),
+                List.of(new com.group2.rms.requisition.dto.FilterOption("newest", "Mới nhất trước")));
+        when(service.getListPage(any())).thenReturn(new com.group2.rms.requisition.dto.RequisitionListResponse(
+                new PageImpl<>(List.of(row)), filter, options, List.of()));
+
+        mvc.perform(get("/requisitions"))
+                .andExpect(status().isOk())
+                .andExpect(content().string(org.hamcrest.Matchers.containsString("Tạm dừng")))
+                .andExpect(content().string(org.hamcrest.Matchers.not(
+                        org.hamcrest.Matchers.containsString("/internal/job-postings/16"))));
     }
 
     @Test
@@ -150,6 +185,26 @@ class JobRequisitionControllerTests {
                 .andExpect(flash().attribute("successMessage", "Đã lưu bản nháp thành công."));
 
         verify(service).createRequisition(any(RequisitionRequest.class));
+    }
+
+    @Test
+    @WithMockUser(username = "hm", roles = "HIRING_MANAGER")
+    @DisplayName("POST /requisitions/create -> Lương '20.000.000' (dấu chấm hàng nghìn) và '30000000' đều đọc đúng")
+    void create_salaryWithDotSeparators_isParsed() throws Exception {
+        when(service.createRequisition(any(RequisitionRequest.class))).thenReturn(10);
+
+        mvc.perform(post("/requisitions/create")
+                        .with(csrf())
+                        .param("action", "draft")
+                        .param("title", "New Dev")
+                        .param("minSalary", "20.000.000")
+                        .param("maxSalary", "30000000"))
+                .andExpect(status().is3xxRedirection());
+
+        var captor = org.mockito.ArgumentCaptor.forClass(RequisitionRequest.class);
+        verify(service).createRequisition(captor.capture());
+        assertEquals(0, new java.math.BigDecimal("20000000").compareTo(captor.getValue().getMinSalary()));
+        assertEquals(0, new java.math.BigDecimal("30000000").compareTo(captor.getValue().getMaxSalary()));
     }
 
     @Test
