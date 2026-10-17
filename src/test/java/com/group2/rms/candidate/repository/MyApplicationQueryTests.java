@@ -17,7 +17,7 @@ import static org.junit.jupiter.api.Assumptions.assumeTrue;
 /**
  * Các query My Applications và dấu rút đơn chạy trên DB local. Mỗi test rollback nên DB không đổi.
  */
-@SpringBootTest
+@SpringBootTest(properties = "spring.jpa.hibernate.ddl-auto=validate")
 @Transactional
 class MyApplicationQueryTests {
 

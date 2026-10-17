@@ -30,6 +30,12 @@ public class JobPosting extends BaseEntity {
     @JoinColumn(name = "RequisitionId", nullable = false, referencedColumnName = "RequisitionId")
     private JobRequisition requisition;
 
+    /**
+     * Lần đăng thứ mấy của requisition nguồn (UQ_JobPosting_Requisition_PostingNo).
+     */
+    @Column(name = "PostingNo", nullable = false)
+    private Integer postingNo;
+
     @Column(name = "PostingTitle", nullable = false, length = 200)
     private String postingTitle;
 
@@ -45,6 +51,12 @@ public class JobPosting extends BaseEntity {
     @Column(name = "SalaryDisplay", length = 100)
     private String salaryDisplay;
 
+    /**
+     * Số lượng hiển thị trên tin công khai; NULL = không hiển thị.
+     */
+    @Column(name = "NumberOfPositionsDisplay", length = 50)
+    private String numberOfPositionsDisplay;
+
     @Column(name = "WorkLocation", length = 255)
     private String workLocation;
 
@@ -59,6 +71,9 @@ public class JobPosting extends BaseEntity {
      */
     @Column(name = "PostingStatus", nullable = false, length = 20)
     private String postingStatus;
+
+    @Column(name = "ClosedAt")
+    private LocalDateTime closedAt;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "CreatedBy", nullable = false, referencedColumnName = "UserId")

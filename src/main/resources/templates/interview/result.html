@@ -16,6 +16,7 @@
     <th:block layout:fragment="styles">
         <link rel="stylesheet" th:href="@{/css/pages/interview-common.css}">
         <link rel="stylesheet" th:href="@{/css/pages/interview-result.css}">
+        <link th:if="${topbarUser != null and (topbarUser.roleName == 'HR' or topbarUser.roleName == 'Hiring Manager')}" rel="stylesheet" th:href="@{/css/pages/applications.css}">
     </th:block>
 </head>
 <body>
@@ -51,6 +52,10 @@
                     data-dialog-open="ifr-dialog" aria-haspopup="dialog" aria-controls="ifr-dialog">Chốt kết quả</button>
         </div>
     </div>
+
+    <th:block th:if="${result.applicationId != null and topbarUser != null and (topbarUser.roleName == 'HR' or topbarUser.roleName == 'Hiring Manager')}">
+        <section th:replace="~{talent-pool/potential-candidate-action :: action(applicationId=${result.applicationId}, candidateName=${result.candidateName})}"></section>
+    </th:block>
 
     <div th:if="${param.evaluated}" class="alert alert--success" role="status">Đã gửi phiếu đánh giá. Cảm ơn bạn!</div>
     <div th:if="${successMessage}" class="alert alert--success" role="status" th:text="${successMessage}"></div>
@@ -260,6 +265,7 @@
 </main>
 <th:block layout:fragment="scripts">
     <script th:if="${result.canEvaluate or result.canFinalize}" defer th:src="@{/js/pages/interview-result.js}"></script>
+    <script th:if="${result.applicationId != null and topbarUser != null and (topbarUser.roleName == 'HR' or topbarUser.roleName == 'Hiring Manager')}" defer th:src="@{/js/pages/applications.js}"></script>
 </th:block>
 </body>
 </html>

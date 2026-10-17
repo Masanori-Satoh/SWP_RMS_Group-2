@@ -40,7 +40,8 @@ public record ApplicationDetailResponse(
         List<StageItem> stepper,
         Long interviewId,
         Actions actions,
-        String viewerRole) {
+        String viewerRole,
+        boolean proposalOnly) {
 
     /** Thao tác người xem được làm trên hồ sơ này. */
     public record Actions(boolean review, boolean rescreen, boolean scheduleInterview, boolean createOffer,

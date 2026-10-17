@@ -1,7 +1,6 @@
-package com.group2.rms.offer.service.impl;
+package com.group2.rms.notification;
 
 import com.group2.rms.offer.entity.OfferProposal;
-import com.group2.rms.offer.service.NotificationService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.beans.factory.annotation.Value;
@@ -9,20 +8,24 @@ import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.stereotype.Service;
 
+/**
+ * Gửi email cho luồng Offer: thư mời nhận việc cho ứng viên, yêu cầu duyệt cho Giám đốc,
+ * kết quả duyệt cho HR. Không có cấu hình SMTP thì chỉ ghi log (mock).
+ * Thông báo in-app nằm ở {@link NotificationService}.
+ */
 @Slf4j
 @Service
-public class NotificationServiceImpl implements NotificationService {
+public class OfferMailSender {
 
     private final ObjectProvider<JavaMailSender> mailSender;
     private final String from;
 
-    public NotificationServiceImpl(ObjectProvider<JavaMailSender> mailSender,
+    public OfferMailSender(ObjectProvider<JavaMailSender> mailSender,
                                    @Value("${APP_MAIL_FROM:noreply@rms.group2.com}") String from) {
         this.mailSender = mailSender;
         this.from = from;
     }
 
-    @Override
     public void sendOfferLetterToCandidate(OfferProposal offer) {
         String candidateEmail = null;
         String candidateName = "Ứng viên";
@@ -72,7 +75,6 @@ public class NotificationServiceImpl implements NotificationService {
         }
     }
 
-    @Override
     public void notifyDirectorNewPendingOffer(OfferProposal offer) {
         // Trong thực tế, có thể dùng UserRepository để lấy danh sách email của tất cả Director.
         // Ở đây giả lập gửi tới danh sách Ban Giám đốc.
@@ -106,7 +108,6 @@ public class NotificationServiceImpl implements NotificationService {
         }
     }
 
-    @Override
     public void notifyHrOfDirectorDecision(OfferProposal offer, String decision, String comments) {
         String hrEmail = null;
         String hrName = "Chuyên viên HR";

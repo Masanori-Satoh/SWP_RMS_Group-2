@@ -7,10 +7,7 @@ import lombok.*;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "Notification", indexes = {
-    @Index(name = "IX_Notification_Recipient_IsRead", columnList = "RecipientId, IsRead"),
-    @Index(name = "IX_Notification_EventId", columnList = "EventId")
-})
+@Table(name = "Notification")
 @Getter
 @Setter
 @NoArgsConstructor
@@ -26,6 +23,13 @@ public class Notification {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "RecipientId", nullable = false, referencedColumnName = "UserId")
     private User recipient;
+
+    /**
+     * Người gây ra sự kiện; NULL = hệ thống tự sinh.
+     */
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "ActorId", referencedColumnName = "UserId")
+    private User actor;
 
     @Column(name = "Title", nullable = false, length = 255)
     private String title;
@@ -48,12 +52,23 @@ public class Notification {
     @Builder.Default
     private Boolean isRead = false;
 
+    @Column(name = "ReadAt")
+    private LocalDateTime readAt;
+
     @org.hibernate.annotations.JdbcTypeCode(org.hibernate.type.SqlTypes.VARCHAR)
-    @Column(name = "EventId", length = 100, unique = true)
+    @Column(name = "EventId", length = 100)
     private String eventId;
 
     @Column(name = "CreatedAt", nullable = false)
     private LocalDateTime createdAt;
+
+    /** Đánh dấu đã đọc, giữ nguyên thời điểm đọc đầu tiên. */
+    public void markRead(LocalDateTime now) {
+        if (!Boolean.TRUE.equals(isRead)) {
+            isRead = true;
+            readAt = now;
+        }
+    }
 
     @PrePersist
     protected void onCreate() {

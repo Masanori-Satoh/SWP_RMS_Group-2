@@ -18,7 +18,6 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.util.List;
@@ -32,6 +31,7 @@ public class JobPostingController {
     private final RequisitionAccess requisitionAccess;
     private final DepartmentRepository departmentRepository;
     private final RecruitmentEmailService recruitmentEmailService;
+    private final com.group2.rms.candidate.service.TalentPoolService talentPoolService;
 
     @ModelAttribute
     void populateViewerAttributes(Model model) {
@@ -126,9 +126,6 @@ public class JobPostingController {
         } catch (JobPostingValidationException ex) {
             model.addAttribute("errorMessage", ex.getMessage());
             return "job-postings/create";
-        } catch (ResponseStatusException ex) {
-            model.addAttribute("errorMessage", ex.getReason());
-            return "job-postings/create";
         }
     }
 
@@ -149,9 +146,6 @@ public class JobPostingController {
             return "redirect:/internal/job-postings";
         } catch (JobPostingValidationException ex) {
             model.addAttribute("errorMessage", ex.getMessage());
-            return "job-postings/create";
-        } catch (ResponseStatusException ex) {
-            model.addAttribute("errorMessage", ex.getReason());
             return "job-postings/create";
         }
     }
@@ -199,6 +193,8 @@ public class JobPostingController {
         User currentUser = requisitionAccess.actor();
         InternalJobPostingDetailResponse detail = jobPostingService.getInternalJobPostingDetail(id, currentUser);
         model.addAttribute("posting", detail);
+        if (List.of("HR", "Hiring Manager").contains(requisitionAccess.role(currentUser)))
+            model.addAttribute("hrRecommendationCount", talentPoolService.pendingRecommendationCount(id));
         return "job-postings/detail";
     }
 

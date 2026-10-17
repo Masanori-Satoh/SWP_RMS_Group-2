@@ -218,8 +218,8 @@ public class CandidateOfferServiceImpl implements CandidateOfferService {
                     .intValue();
         }
 
-        String probDuration = (requisition != null && requisition.getProbationDuration() != null && !requisition.getProbationDuration().isBlank())
-                ? requisition.getProbationDuration()
+        String probDuration = (requisition != null && requisition.getProbationDays() != null)
+                ? requisition.getProbationDays() + " ngày"
                 : "60 ngày (2 tháng)";
 
         return new CandidateOfferDetailResponse(

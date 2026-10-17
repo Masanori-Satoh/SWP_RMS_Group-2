@@ -125,7 +125,7 @@ Không `catch (Exception e)`, không nuốt lỗi rồi trả về như thành c
 |---|---|
 | `ResourceNotFoundException`, `NoResourceFoundException` | `error/404` |
 | `AccessDeniedException` (ném từ controller/service) | `error/403` |
-| `BaseBusinessException` không được Controller bắt | `error/500` với HTTP 400 |
+| `BaseBusinessException` không được Controller bắt | `error/400` với HTTP 400 |
 | `Exception` (còn lại) | `error/500` + log |
 
 - **Không thêm handler riêng của module vào Global.** Lỗi cần quay lại form thì bắt ở Controller như mẫu trên.
@@ -169,7 +169,7 @@ Endpoint JSON trả `core.dto.ApiResponse<T>` gồm `success`, `message`, `data`
 ## 4. Truy xuất Dữ liệu (Database & JPA)
 
 - **Nguồn chân lý của schema:** `database/schema/db.sql`. Script khác: `database/migrations/`, `database/seeds/`. Tài liệu ERD: `docs/database/model.md`.
-- **Không dựa vào Hibernate để đổi schema.** Mọi thay đổi bảng/cột phải viết vào `db.sql` (và migration). Lưu ý cấu hình hiện tại là `ddl-auto=update` (mục 8).
+- **Không dựa vào Hibernate để đổi schema.** Mọi thay đổi bảng/cột phải viết vào `db.sql` (và migration). Cấu hình hiện tại là `ddl-auto=validate`: entity lệch `db.sql` thì app không khởi động.
 - **`spring.jpa.open-in-view=false`** → session đóng khi ra khỏi Service. Vì vậy **bắt buộc** gắn `@Transactional(readOnly = true)` cho Service/method đọc dữ liệu và **map Entity → DTO ngay trong Service**; không trả Entity LAZY ra Controller/View (sẽ gặp `LazyInitializationException`).
 - Method ghi dữ liệu: `@Transactional`.
 
@@ -195,7 +195,10 @@ Phân quyền URL nằm tập trung trong `core/config/SecurityConfig` (chưa d�
 | `/portal/offers/**` | `CANDIDATE` |
 | `/offers/**` | `HR`, `DIRECTOR`, `SYSTEM_ADMIN` |
 | `/requisitions/**` | `HIRING_MANAGER`, `DIRECTOR`, `HR`, `SYSTEM_ADMIN` |
-| `/internal/job-postings/**` | `HR`, `SYSTEM_ADMIN` |
+| `/internal/job-postings/*/close` | `HR` |
+| `/internal/job-postings/create`, `/internal/job-postings/dashboard` | `HR`, `SYSTEM_ADMIN` |
+| `GET /internal/job-postings`, `GET /internal/job-postings/*` (danh sách, chi tiết) | `HR`, `HIRING_MANAGER`, `SYSTEM_ADMIN` |
+| Mọi thao tác ghi còn lại `/internal/job-postings/**` | `HR`, `SYSTEM_ADMIN` |
 | `/dashboard/**`, `/notifications/**`, mọi URL còn lại | Đã đăng nhập |
 
 - Đăng nhập: form `/login` → `/dashboard`. Đăng xuất: `POST /logout` → `/login?logout`.
@@ -255,10 +258,8 @@ Code cũ chạy được, **chưa cần sửa ngay**. Khi viết code mới thì
 | 1 | `GlobalExceptionHandler` đang chứa handler riêng của `auth` (đăng ký, khôi phục mật khẩu), `user` (phòng ban), `admin` (health check) và import DTO của các module này; đây là file hay bị conflict | Chuyển dần về Controller/module theo mục 2.3 |
 | 2 | `interview` ném `IllegalArgumentException`, `EntityNotFoundException` (không tìm thấy dữ liệu đang ra trang 500); `requisition` dùng `ResponseStatusException`; `offer` ném `BaseBusinessException` trần | Đổi sang kiểu ở mục 2.3 |
 | 3 | `offer` có cả endpoint form lẫn JSON cho cùng thao tác tạo/sửa | Giữ một cách (mục 2.1) |
-| 4 | `BaseBusinessException` không được bắt đang hiện bằng `error/500` | Thêm `error/400.html` |
 | 5 | `core/exception/FormErrorViewHelper` (rỗng), `user/exception/AccountConflictException` không ai dùng | Xóa |
 | 6 | Hai `NotificationService` trùng tên (`notification` và `offer.service`) | Gộp về module `notification` |
-| 7 | `spring.jpa.hibernate.ddl-auto=update` | Chuyển `validate` khi `db.sql` khớp entity |
 | 8 | Package `demo` (`/test-db`, `/test-web`, `hello.html`), `templates/careers/*` không còn dùng | Xóa (xem `UI/UI_LEGACY_CLEANUP.md`) |
 | 9 | ~21 trang nội bộ còn dựng khung cũ (`interfaceHead` + `fragments/sidebar`) | Migrate theo `UI/UI_MIGRATION.md`. Menu đã về **một nguồn**: `fragments/sidebar :: workspace` chuyển tiếp sang `sidebar-shell`, thêm menu chỉ sửa `fragments/layout/sidebars/*.html` |
 | 10 | Module `candidate` chưa có controller/service; bước ứng tuyển dừng ở `ITERATION_2_PENDING` | Iteration 2 |

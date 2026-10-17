@@ -9,9 +9,12 @@ import lombok.*;
 import java.math.BigDecimal;
 
 /**
- * 3.7 JobRequisition - Yêu cầu tuyển dụng do Hiring Manager tạo.
- * ApprovalStatus: Draft, Pending_Director, Approved, Rejected
+ * 3.6 JobRequisition - Yêu cầu tuyển dụng do Hiring Manager tạo.
+ * ApprovalStatus: Draft, Pending_Director, Approved, Rejected, Closed, Cancelled
+ * Đợt tuyển: đợt 1 có originalRequisition = null; đợt > 1 trỏ về phiếu đợt 1 (CK_JobRequisition_RoundOrigin).
  * EmploymentType: Full-time, Part-time, Internship, Contract
+ * Mã yêu cầu (RequisitionCode) do service sinh sau lần lưu đầu: REQ-0025 = "REQ-" + RequisitionId đệm 4 chữ số.
+ * nullable = false khớp các cột NOT NULL trong database/schema/db.sql (chỉ là mô tả, DB mới là nơi ràng buộc thật).
  */
 @Entity
 @Table(name = "JobRequisition")
@@ -34,23 +37,37 @@ public class JobRequisition extends BaseEntity {
     private String title;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "DepartmentId", referencedColumnName = "DepartmentId")
+    @JoinColumn(name = "DepartmentId", nullable = false, referencedColumnName = "DepartmentId")
     private Department department;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "HiringManagerId", nullable = false, referencedColumnName = "UserId")
     private User hiringManager;
 
-    @Column(name = "RecruitmentRound")
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "CreatedBy", referencedColumnName = "UserId")
+    private User createdBy;
+
+    @Column(name = "RecruitmentRound", nullable = false)
     private Integer recruitmentRound;
 
-    @Column(name = "NumberOfPositions")
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "OriginalRequisitionId", referencedColumnName = "RequisitionId")
+    private JobRequisition originalRequisition;
+
+    /**
+     * New, Replacement (NULL = chưa xác định)
+     */
+    @Column(name = "HiringType", length = 20)
+    private String hiringType;
+
+    @Column(name = "NumberOfPositions", nullable = false)
     private Integer numberOfPositions;
 
     /**
      * Full-time, Part-time, Internship, Contract
      */
-    @Column(name = "EmploymentType", length = 50)
+    @Column(name = "EmploymentType", nullable = false, length = 50)
     private String employmentType;
 
     @Column(name = "MinSalary", precision = 18, scale = 2)
@@ -62,32 +79,32 @@ public class JobRequisition extends BaseEntity {
     @Column(name = "ReasonForHiring", length = 2000, columnDefinition = "NVARCHAR(2000)")
     private String reasonForHiring;
 
-    @Column(name = "JobDescription", columnDefinition = "NVARCHAR(MAX)")
+    @Column(name = "JobDescription", nullable = false, columnDefinition = "NVARCHAR(MAX)")
     private String jobDescription;
 
-    @Column(name = "RequirementDetails", columnDefinition = "NVARCHAR(MAX)")
+    @Column(name = "RequirementDetails", nullable = false, columnDefinition = "NVARCHAR(MAX)")
     private String requirementDetails;
 
     /**
-     * Draft, Pending_Director, Approved, Rejected
+     * Draft, Pending_Director, Approved, Rejected, Closed, Cancelled
      */
     @Column(name = "ApprovalStatus", nullable = false, length = 30)
     private String approvalStatus;
 
-    @Column(name = "RequiredGender", length = 20)
+    @Column(name = "RequiredGender", nullable = false, length = 20)
     private String gender;
     @Column(name = "WorkLocation", length = 255)
     private String workLocation;
-    @Column(name = "WorkModel", length = 50)
+    @Column(name = "WorkModel", nullable = false, length = 20)
     private String workModel;
-    @Column(name = "ProbationDuration", length = 255)
-    private String probationDuration;
+    @Column(name = "ProbationDays")
+    private Integer probationDays;
     @Column(name = "ExpectedStartDate")
     private java.time.LocalDate expectedStartDate;
     @Column(name = "SubmittedAt")
     private java.time.LocalDateTime submittedAt;
-    @Column(name = "DecidedAt")
-    private java.time.LocalDateTime decidedAt;
+    @Column(name = "ClosedAt")
+    private java.time.LocalDateTime closedAt;
 
     @OneToMany(mappedBy = "requisition", cascade = CascadeType.ALL, orphanRemoval = true)
     private java.util.List<ScreeningCriteria> screeningCriteria;

@@ -133,7 +133,7 @@ CREATE TABLE JobRequisition (
     JobDescription NVARCHAR(MAX) NOT NULL,
     RequirementDetails NVARCHAR(MAX) NOT NULL,
     RequiredGender NVARCHAR(20) NOT NULL CONSTRAINT DF_JobRequisition_RequiredGender DEFAULT N'Any',
-    ProbationDuration NVARCHAR(50) NULL,
+    ProbationDays INT NULL,
     WorkModel NVARCHAR(20) NOT NULL CONSTRAINT DF_JobRequisition_WorkModel DEFAULT N'On-site',
     WorkLocation NVARCHAR(255) NULL,
     ExpectedStartDate DATE NULL,
@@ -172,7 +172,10 @@ CREATE TABLE JobRequisition (
         CHECK (MinSalary IS NULL OR MaxSalary IS NULL OR MinSalary <= MaxSalary),
 
     CONSTRAINT CK_JobRequisition_Salary_NonNegative
-        CHECK ((MinSalary IS NULL OR MinSalary >= 0) AND (MaxSalary IS NULL OR MaxSalary >= 0))
+        CHECK ((MinSalary IS NULL OR MinSalary >= 0) AND (MaxSalary IS NULL OR MaxSalary >= 0)),
+
+    CONSTRAINT CK_JobRequisition_ProbationDays
+        CHECK (ProbationDays IS NULL OR ProbationDays BETWEEN 1 AND 180)
 );
 GO
 
@@ -520,9 +523,7 @@ CREATE TABLE OfferProposal (
         OR ResponsePeriodDays > 0
     ),
     ResponseDeadline DATETIME2 NULL,
-    ProposedBy INT NOT NULL,
-    CreatedAt DATETIME2 NOT NULL CONSTRAINT DF_OfferProposal_CreatedAt DEFAULT SYSDATETIME(),
-    UpdatedAt DATETIME2 NULL,
+    IsDeleted BIT NOT NULL CONSTRAINT DF_OfferProposal_IsDeleted DEFAULT 0,  -- Xóa mềm đề xuất Offer
 
     CONSTRAINT FK_OfferProposal_Application
         FOREIGN KEY (ApplicationId) REFERENCES Application(ApplicationId),

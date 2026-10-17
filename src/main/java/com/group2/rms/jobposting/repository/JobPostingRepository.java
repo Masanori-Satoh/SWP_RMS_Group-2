@@ -18,14 +18,15 @@ public interface JobPostingRepository extends JpaRepository<JobPosting, Integer>
 
     boolean existsByRequisition_RequisitionId(Integer id);
 
+    @Query("SELECT COALESCE(MAX(j.postingNo), 0) FROM JobPosting j WHERE j.requisition.requisitionId = :requisitionId")
+    int findMaxPostingNo(@Param("requisitionId") Integer requisitionId);
+
     java.util.Optional<JobPosting> findTopByRequisition_RequisitionIdOrderByJobPostingIdDesc(Integer requisitionId);
 
     boolean existsByRequisition_RequisitionIdAndPostingStatusIn(Integer requisitionId, java.util.Collection<String> statuses);
 
     boolean existsByRequisition_RequisitionIdAndJobPostingIdNotAndPostingStatusIn(
             Integer requisitionId, Integer jobPostingId, java.util.Collection<String> statuses);
-
-    java.util.List<JobPosting> findByRequisition_RequisitionIdIn(java.util.Collection<Integer> requisitionIds);
 
     @Query("SELECT j FROM JobPosting j " +
            "WHERE j.postingStatus = 'Published' " +
@@ -42,9 +43,4 @@ public interface JobPostingRepository extends JpaRepository<JobPosting, Integer>
          + "AND (j.applicationDeadline IS NULL OR j.applicationDeadline >= :now) "
          + "ORDER BY j.postingDate DESC")
     java.util.List<JobPosting> findOpenPostings(@Param("now") java.time.LocalDateTime now);
-
-    @Query("SELECT j FROM JobPosting j WHERE j.jobPostingId = :id "
-         + "AND j.postingStatus = 'Published' "
-         + "AND (j.applicationDeadline IS NULL OR j.applicationDeadline >= :now)")
-    java.util.Optional<JobPosting> findOpenPosting(@Param("id") int id, @Param("now") java.time.LocalDateTime now);
 }

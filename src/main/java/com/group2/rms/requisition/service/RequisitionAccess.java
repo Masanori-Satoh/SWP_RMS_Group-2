@@ -80,6 +80,19 @@ public class RequisitionAccess {
         return Set.of(ROLE_HIRING_MANAGER, ROLE_DIRECTOR, ROLE_SYSTEM_ADMIN).contains(userRole);
     }
 
+    // Security: Tạo tin tuyển dụng chỉ dành cho HR và Admin (khớp rule /internal/job-postings/create trong SecurityConfig)
+    public boolean canCreatePosting(User user) {
+        String userRole = role(user);
+        return ROLE_HR.equals(userRole) || ROLE_SYSTEM_ADMIN.equals(userRole);
+    }
+
+    // Security: Xem tin tuyển dụng nội bộ dành cho HR, HM và Admin
+    // (khớp rule GET /internal/job-postings/* trong SecurityConfig; Director không vào được nên không hiện link)
+    public boolean canViewPosting(User user) {
+        String userRole = role(user);
+        return ROLE_HR.equals(userRole) || ROLE_HIRING_MANAGER.equals(userRole) || ROLE_SYSTEM_ADMIN.equals(userRole);
+    }
+
     // Security: Chỉ người tạo hoặc Admin mới được sửa Requisition khi ở trạng thái Draft hoặc Rejected
     public boolean canEdit(User user, JobRequisition requisition) {
         if (requisition == null) {

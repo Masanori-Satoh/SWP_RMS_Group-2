@@ -18,6 +18,7 @@ import com.group2.rms.interview.repository.InterviewFinalResultRepository;
 import com.group2.rms.offer.exception.OfferValidationException;
 import com.group2.rms.user.entity.User;
 import com.group2.rms.user.repository.UserRepository;
+import com.group2.rms.notification.OfferMailSender;
 import lombok.RequiredArgsConstructor;
 import com.group2.rms.candidate.entity.Candidate;
 import jakarta.persistence.criteria.Join;
@@ -57,7 +58,7 @@ public class OfferServiceImpl implements OfferService {
     private final UserRepository userRepository;
     private final InterviewFinalResultRepository interviewFinalResultRepository;
     private final OfferApprovalRepository offerApprovalRepository;
-    private final NotificationService notificationService;
+    private final OfferMailSender offerMailSender;
     private final com.group2.rms.notification.NotificationService systemNotificationService;
 
     /**
@@ -265,9 +266,9 @@ public class OfferServiceImpl implements OfferService {
 
         OfferProposal saved = offerProposalRepository.save(offerToSave);
 
-        if ("Pending_Director".equals(status) && notificationService != null) {
+        if ("Pending_Director".equals(status) && offerMailSender != null) {
             try {
-                notificationService.notifyDirectorNewPendingOffer(saved);
+                offerMailSender.notifyDirectorNewPendingOffer(saved);
             } catch (Exception ignored) {
                 // Tiếp tục ngay cả khi gửi mail lỗi ngầm
             }
@@ -501,9 +502,9 @@ public class OfferServiceImpl implements OfferService {
 
         OfferProposal saved = offerProposalRepository.save(offer);
 
-        if ("Pending_Director".equals(offer.getOfferStatus()) && notificationService != null) {
+        if ("Pending_Director".equals(offer.getOfferStatus()) && offerMailSender != null) {
             try {
-                notificationService.notifyDirectorNewPendingOffer(saved);
+                offerMailSender.notifyDirectorNewPendingOffer(saved);
             } catch (Exception ignored) {
             }
         }
@@ -586,9 +587,9 @@ public class OfferServiceImpl implements OfferService {
         offer.setOfferStatus("Sent_Candidate");
         OfferProposal saved = offerProposalRepository.save(offer);
 
-        if (notificationService != null) {
+        if (offerMailSender != null) {
             try {
-                notificationService.sendOfferLetterToCandidate(saved);
+                offerMailSender.sendOfferLetterToCandidate(saved);
             } catch (Exception ignored) {
                 // Tiếp tục ngay cả khi gửi mail lỗi ngầm
             }
@@ -780,9 +781,9 @@ public class OfferServiceImpl implements OfferService {
                 .build();
         offerApprovalRepository.save(approval);
 
-        if (notificationService != null) {
+        if (offerMailSender != null) {
             try {
-                notificationService.notifyHrOfDirectorDecision(saved, "Approved", comments);
+                offerMailSender.notifyHrOfDirectorDecision(saved, "Approved", comments);
             } catch (Exception ignored) {
             }
         }
@@ -819,9 +820,9 @@ public class OfferServiceImpl implements OfferService {
                 .build();
         offerApprovalRepository.save(approval);
 
-        if (notificationService != null) {
+        if (offerMailSender != null) {
             try {
-                notificationService.notifyHrOfDirectorDecision(saved, "Rejected", comments);
+                offerMailSender.notifyHrOfDirectorDecision(saved, "Rejected", comments);
             } catch (Exception ignored) {
             }
         }

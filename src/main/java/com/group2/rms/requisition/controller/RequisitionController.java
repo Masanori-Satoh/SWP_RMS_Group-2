@@ -1,6 +1,7 @@
 package com.group2.rms.requisition.controller;
 
 import com.group2.rms.requisition.dto.RequisitionRequest;
+import com.group2.rms.requisition.dto.RequisitionSearchRequest;
 import com.group2.rms.requisition.dto.ScreeningCriteriaRequest;
 import com.group2.rms.requisition.exception.RequisitionValidationException;
 import com.group2.rms.requisition.service.RequisitionAccess;
@@ -8,6 +9,7 @@ import com.group2.rms.requisition.service.RequisitionService;
 import com.group2.rms.requisition.validator.RequisitionValidator;
 import com.group2.rms.user.repository.DepartmentRepository;
 
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Controller;
@@ -17,6 +19,7 @@ import org.springframework.web.bind.WebDataBinder;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import java.math.BigDecimal;
+import java.time.LocalDate;
 
 @Controller
 @RequestMapping("/requisitions")
@@ -29,14 +32,49 @@ public class RequisitionController {
     @InitBinder("requisitionDto")
     void binder(WebDataBinder binder) {
         binder.setAutoGrowCollectionLimit(50);
-        binder.setAllowedFields("action", "title", "departmentId", "numberOfPositions", "employmentType", "minSalary",
+        // Không có departmentId: phòng ban luôn do service gán (phòng ban của người tạo), không nhận từ form
+        binder.setAllowedFields("action", "title", "numberOfPositions", "employmentType", "minSalary",
                 "maxSalary",
-                "gender", "workLocation", "workModel", "probationDuration", "expectedStartDate", "reasonForHiring",
+                "gender", "workLocation", "workModel", "probationDays", "expectedStartDate", "reasonForHiring", "hiringType", "originalRequisitionId",
                 "jobDescription", "requirementDetails",
                 "screeningCriteria[*].criteriaId", "screeningCriteria[*].criteriaName",
                 "screeningCriteria[*].criteriaType",
                 "screeningCriteria[*].requiredValue", "screeningCriteria[*].weight",
                 "screeningCriteria[*].isMandatory");
+
+        // Ô lương hiển thị kiểu Việt Nam "20.000.000" (dấu chấm ngăn cách hàng nghìn).
+        // Đọc: "20.000.000" → 20000000; số viết liền ("20000000", ví dụ gửi từ Postman) vẫn đọc bình thường.
+        // Ghi (khi render lại form): 20000000 → "20.000.000".
+        java.beans.PropertyEditorSupport salaryEditor = new java.beans.PropertyEditorSupport() {
+            @Override
+            public void setAsText(String text) {
+                if (text == null || text.isBlank()) {
+                    setValue(null);
+                    return;
+                }
+                String normalized = text.trim();
+                if (normalized.matches("\\d{1,3}(\\.\\d{3})+")) {
+                    normalized = normalized.replace(".", "");
+                }
+                try {
+                    setValue(new BigDecimal(normalized));
+                } catch (NumberFormatException e) {
+                    throw new IllegalArgumentException("Mức lương không hợp lệ.");
+                }
+            }
+
+            @Override
+            public String getAsText() {
+                BigDecimal value = (BigDecimal) getValue();
+                if (value == null) return "";
+                if (value.stripTrailingZeros().scale() <= 0) {
+                    return String.format(java.util.Locale.US, "%,d", value.toBigInteger()).replace(',', '.');
+                }
+                return value.toPlainString();
+            }
+        };
+        binder.registerCustomEditor(BigDecimal.class, "minSalary", salaryEditor);
+        binder.registerCustomEditor(BigDecimal.class, "maxSalary", salaryEditor);
     }
 
     @ModelAttribute
@@ -47,33 +85,23 @@ public class RequisitionController {
         model.addAttribute("canCreate", access.canCreate(actor));
     }
 
+    /**
+     * Màn danh sách. Mọi tham số trên URL (?q=...&status=...&page=...) được Spring gom vào RequisitionSearchRequest.
+     * Controller không xử lý gì thêm: service lo phân quyền, làm sạch bộ lọc và truy vấn.
+     *
+     * BindingResult được khai báo để giá trị sai định dạng (ví dụ ?page=abc) chỉ bị bỏ qua (thành null)
+     * thay vì làm lỗi cả trang.
+     */
     @GetMapping
-    public String list(@RequestParam(defaultValue = "1") int page, @RequestParam(defaultValue = "10") int size,
-            @RequestParam(defaultValue = "") String q, @RequestParam(required = false) Integer departmentId,
-            @RequestParam(defaultValue = "") String position,
-            @RequestParam(defaultValue = "") String type, @RequestParam(defaultValue = "") String status,
-            @RequestParam(defaultValue = "newest") String sort, Model model) {
-        if (!java.util.Set.of("newest", "oldest", "position_asc", "position_desc").contains(sort))
-            sort = "newest";
-        var result = (position != null && !position.isBlank())
-                ? service.search(page, size, q, departmentId, position, type, status, sort)
-                : service.search(page, size, q, departmentId, type, status, sort);
-        model.addAttribute("requisitions", result.getContent());
-        model.addAttribute("currentPage", result.getNumber() + 1);
-        model.addAttribute("totalPages", Math.max(1, result.getTotalPages()));
-        model.addAttribute("pageSize", result.getSize());
-        model.addAttribute("startPage", Math.max(1, result.getNumber() - 1));
-        model.addAttribute("endPage", Math.min(Math.max(1, result.getTotalPages()), result.getNumber() + 3));
-        model.addAttribute("totalElements", result.getTotalElements());
-        model.addAttribute("totalVisible", service.countVisible());
-        model.addAttribute("search", q);
-        model.addAttribute("selectedDepartment", departmentId);
-        model.addAttribute("selectedPosition", position);
-        model.addAttribute("positions", service.getAvailablePositions());
-        model.addAttribute("selectedType", type);
-        model.addAttribute("selectedStatus", status);
-        model.addAttribute("selectedSort", sort);
-        options(model);
+    public String list(@ModelAttribute("searchRequest") RequisitionSearchRequest searchRequest,
+            BindingResult invalidParams, HttpServletRequest request, Model model) {
+        model.addAttribute("list", service.getListPage(searchRequest));
+        // Tạo link "bỏ một bộ lọc" cho các chip, giữ nguyên các tham số khác đang có trên URL
+        model.addAttribute("filterLinks", new RequisitionListLinks(request.getRequestURI(), request.getQueryString()));
+        // Trang đã dùng layout/internal: activeMenu làm sáng mục menu ở sidebar,
+        // bodyClass gắn lên <body> để CSS cũ của trang (.req-app, .req-list-page) vẫn áp dụng
+        model.addAttribute("activeMenu", "requisitions");
+        model.addAttribute("bodyClass", "req-app req-list-page");
         return "requisitions/list";
     }
 
@@ -84,9 +112,12 @@ public class RequisitionController {
         access.requireCreate(currentUser);
 
         RequisitionRequest requisitionRequest = new RequisitionRequest();
+        // Giá trị chọn sẵn cho form tạo mới (đúng wireframe). Các cột này NOT NULL trong DB nên luôn cần có giá trị.
         requisitionRequest.setNumberOfPositions(1);
         requisitionRequest.setRecruitmentRound(1);
-        requisitionRequest.setGender("Any");
+        requisitionRequest.setEmploymentType("Full-time");
+        requisitionRequest.setWorkModel("On-site");
+        requisitionRequest.setGender(RequisitionValidator.GENDER_ANY);
         if (currentUser.getDepartment() != null) {
             requisitionRequest.setDepartmentId(currentUser.getDepartment().getDepartmentId());
         }
@@ -195,14 +226,21 @@ public class RequisitionController {
 
     @GetMapping("/{id}")
     public String detail(@PathVariable Integer id, Model model) {
+        // getById kiểm tra quyền xem (RequisitionAccess.requireView) và tính sẵn mọi nhãn / cờ quyền
         model.addAttribute("req", service.getById(id));
+        model.addAttribute("activeMenu", "requisitions");
+        model.addAttribute("bodyClass", "req-app req-detail-page");
         return "requisitions/detail";
     }
 
+    /** Mọi đường hiển thị form (tạo, sửa, sao chép, render lại khi có lỗi) đều đi qua hàm này. */
     private String form(Model model, boolean edit, Integer id) {
         model.addAttribute("isEdit", edit);
         model.addAttribute("requisitionId", id);
         options(model);
+        // Trang dùng layout/internal: làm sáng menu + gắn class để CSS của trang áp dụng
+        model.addAttribute("activeMenu", "requisitions");
+        model.addAttribute("bodyClass", "req-app req-form-page");
         return "requisitions/form";
     }
 
@@ -211,6 +249,15 @@ public class RequisitionController {
         model.addAttribute("employmentTypes", RequisitionValidator.EMPLOYMENT_TYPES);
         model.addAttribute("criteriaTypes", RequisitionValidator.CRITERIA_TYPES);
         model.addAttribute("genders", RequisitionValidator.GENDERS);
+        // Giới hạn thử việc lấy từ hằng số của validator, để form và JS không phải viết lại số 1 / 180
+        model.addAttribute("probationMinDays", RequisitionValidator.PROBATION_MIN_DAYS);
+        model.addAttribute("probationMaxDays", RequisitionValidator.PROBATION_MAX_DAYS);
+        // Giới hạn số lượng cần tuyển, dùng cho min/max của ô số lượng và nút −/+
+        model.addAttribute("positionsMin", RequisitionValidator.POSITIONS_MIN);
+        model.addAttribute("positionsMax", RequisitionValidator.POSITIONS_MAX);
+        // Khoảng ngày bắt đầu được chọn: từ hôm nay tới hôm nay + START_DATE_MAX_YEARS năm
+        model.addAttribute("startDateMin", LocalDate.now());
+        model.addAttribute("startDateMax", LocalDate.now().plusYears(RequisitionValidator.START_DATE_MAX_YEARS));
     }
 
     private void addErrors(BindingResult errors, RequisitionValidationException e) {

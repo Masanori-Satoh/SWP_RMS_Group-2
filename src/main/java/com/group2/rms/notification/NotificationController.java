@@ -1,53 +1,39 @@
 package com.group2.rms.notification;
 
+import com.group2.rms.core.security.CurrentUserService;
 import com.group2.rms.user.entity.User;
-import com.group2.rms.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
-import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.AccessDeniedException;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
-import java.util.Map;
-
+/**
+ * Trang thông báo của người dùng hiện tại. Endpoint JSON cho chuông thông báo nằm ở {@link NotificationApiController}.
+ */
 @Controller
 @RequestMapping("/notifications")
 @RequiredArgsConstructor
 public class NotificationController {
 
     private final NotificationService notificationService;
-    private final UserRepository userRepository;
-
-    private User currentUser() {
-        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        if (auth == null || !auth.isAuthenticated()) {
-            throw new AccessDeniedException("Vui lòng đăng nhập để tiếp tục.");
-        }
-        return userRepository.findByUsernameIgnoreCase(auth.getName())
-            .filter(u -> "Active".equals(u.getAccountStatus()))
-            .orElseThrow(() -> new AccessDeniedException("Tài khoản không hợp lệ hoặc đã bị khóa."));
-    }
+    private final CurrentUserService currentUserService;
 
     @GetMapping
     public String list(
             @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "10") int size,
             Model model) {
-        User user = currentUser();
+        User user = currentUserService.requireUser();
         Page<NotificationResponse> result = notificationService.getNotificationsForUser(user, page, size);
-        long unreadCount = notificationService.getUnreadCount(user);
 
         model.addAttribute("notifications", result.getContent());
         model.addAttribute("currentPage", result.getNumber() + 1);
         model.addAttribute("totalPages", Math.max(1, result.getTotalPages()));
         model.addAttribute("pageSize", result.getSize());
         model.addAttribute("totalElements", result.getTotalElements());
-        model.addAttribute("unreadCount", unreadCount);
+        model.addAttribute("unreadCount", notificationService.getUnreadCount(user));
         model.addAttribute("activeMenu", "notifications");
         model.addAttribute("viewerName", user.getFullName());
         model.addAttribute("viewerRole", user.getRole() != null ? user.getRole().getRoleName() : "");
@@ -55,60 +41,28 @@ public class NotificationController {
         return "notifications/list";
     }
 
+    /**
+     * Đánh dấu đã đọc. Khi {@code open=true} chuyển tới liên kết lưu trong thông báo (do server tạo),
+     * không nhận URL chuyển hướng từ client.
+     */
     @PostMapping("/{id}/read")
     public String markAsRead(
             @PathVariable Long id,
-            @RequestParam(defaultValue = "") String redirectUrl,
+            @RequestParam(defaultValue = "false") boolean open,
             RedirectAttributes flash) {
-        User user = currentUser();
-        notificationService.markAsRead(id, user);
-        flash.addFlashAttribute("successMessage", "Đã đánh dấu thông báo là đã đọc.");
-
-        if (redirectUrl != null && !redirectUrl.isBlank() && redirectUrl.startsWith("/")) {
-            String target = redirectUrl;
-            String roleName = user.getRole() != null ? user.getRole().getRoleName() : "";
-            boolean isHrOrAdmin = "HR".equalsIgnoreCase(roleName) || "System Admin".equalsIgnoreCase(roleName);
-            if (!isHrOrAdmin && target.startsWith("/internal/job-postings/")) {
-                target = target.replace("/internal/job-postings/", "/jobs/");
-            }
-            return "redirect:" + target;
+        NotificationResponse notification = notificationService.markAsRead(id, currentUserService.requireUser());
+        if (open && notification.linkUrl() != null && notification.linkUrl().startsWith("/")
+                && !notification.linkUrl().startsWith("//")) {
+            return "redirect:" + notification.linkUrl();
         }
+        flash.addFlashAttribute("successMessage", "Đã đánh dấu thông báo là đã đọc.");
         return "redirect:/notifications";
     }
 
     @PostMapping("/read-all")
     public String markAllAsRead(RedirectAttributes flash) {
-        User user = currentUser();
-        notificationService.markAllAsRead(user);
+        notificationService.markAllAsRead(currentUserService.requireUser());
         flash.addFlashAttribute("successMessage", "Đã đánh dấu tất cả thông báo là đã đọc.");
         return "redirect:/notifications";
-    }
-
-    @GetMapping("/unread-count")
-    @ResponseBody
-    public ResponseEntity<Map<String, Object>> getUnreadCount() {
-        try {
-            User user = currentUser();
-            long count = notificationService.getUnreadCount(user);
-            return ResponseEntity.ok(Map.of("unreadCount", count));
-        } catch (Exception e) {
-            return ResponseEntity.ok(Map.of("unreadCount", 0));
-        }
-    }
-
-    @GetMapping("/recent")
-    @ResponseBody
-    public ResponseEntity<Map<String, Object>> getRecentNotifications() {
-        try {
-            User user = currentUser();
-            Page<NotificationResponse> result = notificationService.getNotificationsForUser(user, 1, 5);
-            long unreadCount = notificationService.getUnreadCount(user);
-            return ResponseEntity.ok(Map.of(
-                "unreadCount", unreadCount,
-                "notifications", result.getContent()
-            ));
-        } catch (Exception e) {
-            return ResponseEntity.ok(Map.of("unreadCount", 0, "notifications", java.util.List.of()));
-        }
     }
 }

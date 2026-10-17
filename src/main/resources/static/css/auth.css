@@ -122,3 +122,115 @@ html:has(> body.auth-page) { scrollbar-color:var(--control-line) var(--page); }
   html:has(> body.auth-page) { scroll-behavior:auto; }
   .auth-page .button { transition:none; }
 }
+
+/* Botanical auth screens reuse the same background, illustration and form controls. */
+body.auth-botanical {
+  --brand:inherit;
+  --brand-dark:inherit;
+  --brand-soft:inherit;
+  --ink:inherit;
+  --muted:inherit;
+  --sans:'Source Sans 3','Segoe UI',sans-serif;
+  position:relative;
+  isolation:isolate;
+  background:var(--page);
+}
+.auth-botanical::before {
+  content:"";
+  position:fixed;
+  inset:-12px;
+  z-index:-1;
+  pointer-events:none;
+  background:radial-gradient(ellipse at 12% 40%,var(--surface) 10%,transparent 65%),radial-gradient(ellipse at 72% 66%,var(--brand-soft),transparent 72%),linear-gradient(150deg,var(--surface),var(--page));
+}
+.auth-botanical .auth-container { width:min(calc(100% - 80px),1280px); }
+.auth-botanical .auth-header { background:color-mix(in srgb,var(--surface) 92%,var(--page)); }
+.auth-botanical .auth-header-inner { min-height:72px; }
+.auth-botanical .auth-shell { grid-template-columns:minmax(0,1fr) minmax(0,560px); align-items:start; gap:clamp(40px,6vw,88px); padding-block:var(--s8); }
+.auth-botanical .auth-story { position:relative; padding:var(--s4) 0 0; }
+.auth-botanical .auth-brand-badge { margin-bottom:var(--s4); border-color:var(--line); font-size:13px; }
+.auth-botanical .auth-brand-badge > span { background:var(--brand); box-shadow:none; }
+.auth-botanical .auth-statement { font-size:clamp(36px,3.15vw,48px); line-height:1.22; text-wrap:pretty; }
+.auth-botanical .auth-story-copy { max-width:50ch; margin-top:var(--s4); font-size:17px; }
+.auth-botanical .auth-story-link { gap:var(--s3); margin-top:var(--s6); font-size:16px; text-decoration:none; }
+.auth-botanical .auth-story-link::after,.auth-botanical .auth-home::after { content:"→"; margin-left:var(--s2); }
+.auth-botanical .auth-highlights { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:var(--s4); margin:var(--s8) 0 0; padding:0; list-style:none; max-width:470px; }
+.auth-botanical .auth-highlights li { display:grid; justify-items:center; gap:var(--s2); text-align:center; font-size:15px; line-height:1.35; color:var(--muted); }
+.auth-botanical .auth-highlights .auth-icon { width:26px; height:26px; color:var(--brand-dark); }
+.auth-botanical .auth-botanical-art { position:relative; width:100%; height:220px; margin:var(--s4) 0 0; pointer-events:none; }
+.auth-botanical .auth-botanical-art::before { content:""; position:absolute; inset:8% 1% 0 18%; border-radius:55% 40% 45% 35%; background:radial-gradient(ellipse,var(--brand-soft),transparent 70%); }
+.auth-botanical .auth-botanical-art img { position:absolute; width:88%; height:auto; max-height:100%; object-fit:contain; object-position:left bottom; bottom:0; left:-2%; mix-blend-mode:multiply; }
+.auth-botanical .auth-botanical-art figcaption { position:absolute; right:0; bottom:var(--s6); font:600 23px/1.25 var(--serif); color:var(--brand-dark); }
+.auth-botanical .auth-botanical-art em { display:block; color:var(--brand); font-weight:400; }
+.auth-botanical .auth-floating-leaf { position:absolute; color:var(--brand); width:24px; height:32px; opacity:.5; }
+.auth-botanical .auth-floating-leaf svg { width:100%; height:100%; }
+.auth-botanical .auth-floating-leaf--one { right:4%; top:8%; transform:rotate(24deg); }
+.auth-botanical .auth-floating-leaf--two { left:56%; top:65%; transform:rotate(-25deg); }
+.auth-botanical .auth-card { padding:var(--s8); border-radius:20px; box-shadow:0 16px 40px color-mix(in srgb,var(--brand-dark) 8%,transparent); }
+.auth-login .auth-card,.auth-recovery .auth-card { align-self:center; }
+.auth-botanical .auth-card h1 { font-size:clamp(28px,2.4vw,34px); text-wrap:pretty; }
+.auth-botanical .auth-intro { font-size:16px; margin-bottom:var(--s6); }
+.auth-botanical .auth-register-grid { grid-template-columns:repeat(2,minmax(0,1fr)); align-items:start; gap:var(--s4) var(--s4); }
+.auth-botanical .auth-register-grid > .auth-field--wide,
+.auth-botanical .auth-register-grid > .auth-error-summary,
+.auth-botanical .auth-register-grid > .auth-cooldown,
+.auth-botanical .auth-register-grid > .auth-submit { grid-column:1 / -1; }
+.auth-botanical .auth-field label { font-size:15px; }
+.auth-botanical .auth-field input { height:48px; padding-block:var(--s3); border-color:var(--control-line); }
+.auth-botanical .auth-field input:hover { border-color:var(--control-line); }
+.auth-botanical .auth-field input[aria-invalid="true"] { border-color:var(--auth-error); }
+.auth-botanical .auth-input-wrap { position:relative; }
+.auth-botanical .auth-input-wrap > .auth-icon,.auth-botanical .auth-password > .auth-icon { position:absolute; left:var(--s3); top:14px; color:var(--muted); pointer-events:none; }
+.auth-botanical .auth-input-wrap > input,.auth-botanical .auth-password > input { padding-left:40px; }
+.auth-botanical .auth-password:has(.auth-password-toggle:not([hidden])) input { padding-right:44px; }
+.auth-botanical .auth-password-toggle { display:grid; place-items:center; min-width:40px; width:40px; padding:var(--s2); }
+.auth-botanical .auth-eye-slash { display:none; }
+.auth-botanical .auth-password-toggle[aria-pressed="true"] .auth-eye-slash { display:block; }
+.auth-botanical .auth-hint { font-size:13px; line-height:1.4; }
+.auth-botanical .auth-submit { font-family:var(--sans); font-size:17px; font-weight:600; }
+.auth-botanical .auth-submit:hover:not(:disabled) { background:var(--brand); border-color:var(--brand); }
+.auth-botanical .auth-divider { margin-top:var(--s6); padding-top:var(--s3); }
+.auth-botanical .auth-links { justify-content:center; }
+.auth-botanical .auth-steps li { border:0; position:relative; padding-bottom:0; gap:var(--s2); font-size:15px; }
+.auth-botanical .auth-step-number { display:grid; place-items:center; width:32px; height:32px; border-radius:50%; background:var(--line); color:var(--muted); position:relative; z-index:1; }
+.auth-botanical .auth-steps li[aria-current="step"] .auth-step-number { color:var(--surface); background:var(--brand-dark); }
+.auth-botanical .auth-steps li::before { content:""; position:absolute; top:16px; left:32px; right:0; height:1px; background:var(--line); }
+.auth-botanical .auth-steps li[aria-current="step"]::before { background:var(--brand); }
+.auth-botanical .auth-footer { background:color-mix(in srgb,var(--surface) 55%,transparent); }
+.auth-botanical[data-auth-paused]::before,.auth-botanical[data-auth-paused] .auth-floating-leaf { animation-play-state:paused; }
+@media (min-width:993px) and (prefers-reduced-motion:no-preference) and (update:fast) {
+  .auth-botanical::before { animation:auth-ambient 18s ease-in-out infinite alternate; }
+  .auth-botanical .auth-floating-leaf--one { animation:auth-leaf-one 16s ease-in-out infinite alternate; }
+  .auth-botanical .auth-floating-leaf--two { animation:auth-leaf-two 20s ease-in-out infinite alternate; }
+}
+@keyframes auth-ambient { to { transform:translate3d(5px,-4px,0); opacity:.8; } }
+@keyframes auth-leaf-one { to { transform:translateY(-4px) rotate(28deg); } }
+@keyframes auth-leaf-two { to { transform:translateY(3px) rotate(-21deg); } }
+@media (max-width:1100px) {
+  .auth-botanical .auth-container { width:calc(100% - 48px); }
+  .auth-botanical .auth-shell { gap:var(--s8); grid-template-columns:minmax(0,1fr) minmax(0,1.1fr); }
+  .auth-botanical .auth-statement { font-size:36px; }
+  .auth-botanical .auth-card { padding:var(--s6); }
+  .auth-botanical .auth-register-grid { grid-template-columns:minmax(0,1fr); }
+  .auth-botanical .auth-botanical-art { height:180px; }
+}
+@media (max-width:768px) {
+  .auth-botanical .auth-container { width:min(calc(100% - 32px),560px); }
+  .auth-botanical .auth-shell { grid-template-columns:minmax(0,1fr); gap:var(--s6); padding-block:var(--s6); }
+  .auth-botanical .auth-story { padding:0; }
+  .auth-login .auth-card,.auth-recovery .auth-card { align-self:start; }
+  .auth-botanical .auth-brand-badge { margin-bottom:var(--s2); }
+  .auth-botanical .auth-statement { font-size:30px; }
+  .auth-botanical .auth-highlights,.auth-botanical .auth-botanical-art { display:none; }
+  .auth-botanical .auth-header-inner { gap:var(--s2); }
+}
+@media (max-width:480px) {
+  .auth-botanical .auth-card { padding:var(--s6) var(--s4); border-radius:16px; }
+  .auth-botanical .auth-home { font-size:13px; }
+  .auth-botanical .auth-home::after { display:none; }
+  .auth-botanical .auth-card h1 { font-size:28px; }
+  .auth-botanical .auth-steps li { font-size:14px; }
+}
+@media (prefers-reduced-motion:reduce) {
+  .auth-botanical::before,.auth-botanical .auth-floating-leaf { animation:none; transform:none; }
+}
