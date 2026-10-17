@@ -74,12 +74,12 @@ class TalentPoolSelectionReviewTests {
     }
 
     @Test
-    void validSelectionIsCheckedWithoutCreatingApplicationsAndReportsMissingSubmissionSupport() {
+    void validSelectionIsCheckedReadOnlyAndEnablesSubmission() {
         allowTarget();
         var source = source(101, 11);
         when(applications.findPreviousCvByCandidateId(11)).thenReturn(List.of(source));
         var result = pool.reviewSelection(8, new TalentPoolSuggestRequest(List.of(101)));
-        assertFalse(result.submissionSupported());
+        assertTrue(result.submissionSupported());
         assertEquals(source.getSubmissionDate(), result.items().getFirst().submittedAt());
         assertNull(result.items().getFirst().error());
         assertEquals(11, result.items().getFirst().candidateId());
@@ -150,10 +150,13 @@ class TalentPoolSelectionReviewTests {
     }
 
     @Test
-    void hrCannotReviewASelectionForHm() {
+    void hrCanPreflightItsRecommendationWithoutWriting() {
         hm.setRole(Role.builder().roleName("HR").build());
         when(current.requireUser()).thenReturn(hm);
-        assertThrows(AccessDeniedException.class, () -> pool.reviewSelection(8, new TalentPoolSuggestRequest(List.of(101))));
-        verifyNoInteractions(applications, jobs, storage);
+        when(jobs.findById(8)).thenReturn(Optional.of(target));
+        var first = source(101, 11);
+        when(applications.findPreviousCvByCandidateId(11)).thenReturn(List.of(first));
+        assertNull(pool.reviewSelection(8, new TalentPoolSuggestRequest(List.of(101))).items().getFirst().error());
+        verifyNoInteractions(jobAccess);
     }
 }

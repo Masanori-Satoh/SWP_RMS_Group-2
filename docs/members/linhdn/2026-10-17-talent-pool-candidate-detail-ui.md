@@ -1,5 +1,7 @@
 # Talent Pool — Chi tiết ứng viên và popup tổng kết, 17/10/2026
 
+> Cập nhật tiếp theo: đã chốt dùng Application/HM_Suggested mà không đổi schema; xem `2026-10-17-hm-suggestions-functional.md`. Các đoạn “chưa bật xác nhận” bên dưới ghi lại phạm vi UI trước quyết định mới.
+
 ## Phạm vi
 
 Triển khai yêu cầu mới trên danh sách `/talent-pool?jobPostingId=...`, popup tổng kết và trang `/talent-pool/{id}`. Tiếp nối báo cáo `2026-10-17-talent-pool-selection-ui.md`; các mô tả dưới đây thay thế phần hướng dẫn mở rộng tên CV và layout chi tiết cũ trong báo cáo đó.
@@ -77,3 +79,18 @@ Nút xác nhận cuối vẫn bị vô hiệu hóa, có thông báo chưa sẵn 
 7. Mở trực tiếp `/talent-pool/{id}`: Back về kho chung. Thử thêm query `returnUrl=https://example.org`: không chuyển ra ngoài.
 8. Kiểm tra job khác không trộn lựa chọn; Candidate không được xem trang/ghi chú nội bộ; HR chỉ dùng chức năng đúng quyền.
 9. Kiểm tra desktop và viewport dưới 992px: hai cột co thành một, popup không tràn, nút đóng/quay lại và focus bàn phím hoạt động.
+
+## Bổ sung: tăng độ nổi bật và phân biệt đề xuất chưa đồng ý
+
+- Popup tổng kết tăng tên ứng viên lên token 17px, vị trí CV 15px, ngày/lỗi 13,5px; tăng khoảng cách giữa các dòng và vùng bấm icon lên tối thiểu 40×40px. Thay đổi trong `talent-pool.css` và `talent-pool.js`, tiếp tục dùng token/catalog cũ.
+- Trang `candidate/application-detail.html` phân biệt trạng thái `HM_Suggested`: breadcrumb “Ứng viên HM đề xuất” dẫn về danh sách đề xuất của tin, nhãn ngày “HM đề xuất”, mã “Đề xuất #...”, thông báo chờ ứng viên đồng ý; không hiển thị thanh tiến độ của đơn chính thức cho trạng thái này.
+- `ApplicationPipelineService.timeline()` đổi sự kiện đầu của đề xuất đang chờ thành “HM đề xuất”, không gán hành động này cho ứng viên và không tự bịa người đề xuất. Đơn chính thức vẫn giữ sự kiện nộp và tiến trình cũ.
+- Kiểm thử mới xác minh render cảnh báo/ẩn stepper và timeline không ghi nhận ứng viên đã nộp. Lượt kiểm tra này qua **78 test Java** (40 MVC, 24 pipeline service, 7 selection review, 7 bookmark) và **17 test JavaScript**. Cú pháp JS và `git diff --check` qua. Chưa có kiểm chứng trực quan trên trình duyệt cho lượt này.
+
+### Kết luận đối chiếu nghiệp vụ hiện tại
+
+`TalentPoolService.suggest()` vẫn tạo bản ghi `Application` trạng thái `HM_Suggested` trước khi có sự đồng ý; schema hiện có chấp nhận trạng thái này. `ApplicationProgressStep.HM_SUGGESTED` vẫn ánh xạ vào `SCREENING`, nên danh sách/số đếm cũ còn gộp các đề xuất được trả về bởi query. Lượt sửa này làm rõ màn chi tiết, **chưa tách dữ liệu hoặc số đếm pipeline**.
+
+Code cũ có hai đường xác nhận: HR xác nhận đồng ý dùng CV cũ thì `confirm()` chuyển cùng bản ghi sang `HM_Passed`; ứng viên tự nộp CV mới thì `ApplicationSubmissionService.submit()` chuyển bản ghi sang `Applied` và phát sự kiện chấm AI. Nhãn “Nộp hồ sơ” trước đây được dựng mặc định cho mọi bản ghi, không phải bằng chứng ứng viên đã đồng ý.
+
+Nút xác nhận của popup mới vẫn chưa bật. Để đáp ứng yêu cầu chỉ tạo Application sau khi đồng ý, cần quan hệ đề xuất Candidate–Job Posting riêng, lưu CV nguồn/người đề xuất/trạng thái liên hệ và xác nhận đồng ý; chỉ sau xác nhận mới tạo hoặc liên kết đơn chính thức theo workflow đã thống nhất. Cần điều chỉnh các nơi đọc đề xuất/đếm hồ sơ/chống trùng và kế hoạch xử lý dữ liệu legacy. Chưa triển khai schema hoặc đổi workflow vì phạm vi đã yêu cầu giữ nguyên hai phần này; không thao tác dữ liệu thật, commit hoặc push.

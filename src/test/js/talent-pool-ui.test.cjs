@@ -29,7 +29,7 @@ function element() {
     };
 }
 
-function fixture({missingSecondCv = false, brokenStorage = false, prior = []} = {}) {
+function fixture({missingSecondCv = false, brokenStorage = false, prior = [], submitFailure = false, invalidSource = false, hrMode = false} = {}) {
     const key = 'rms:talent-selection:v1:5:8';
     const data = new Map([[key, JSON.stringify(prior)]]);
     const storage = {getItem: key => data.get(key) || null, setItem: (key, value) => {
@@ -64,7 +64,7 @@ function fixture({missingSecondCv = false, brokenStorage = false, prior = []} = 
     const nextPage = element();
     const profileLink = element();
     const page = {
-        dataset: {poolScope: '5', poolJob: '8'},
+        dataset: {poolScope: '5', poolJob: '8', poolFlow: hrMode ? 'hr' : 'hm'},
         querySelector: selector => selector === '.tp-filter' ? filter : null,
         querySelectorAll: selector => selector === '[data-pool-candidate]' ? rows.map(item => item.row)
             : selector === '.pagination-wrapper a, .tp-filter a, [data-pool-detail], #tp-notes-detail, #app-preview-detail'
@@ -78,24 +78,33 @@ function fixture({missingSecondCv = false, brokenStorage = false, prior = []} = 
         createElement: () => element(),
         createElementNS: () => element(),
     };
-    byId('tp-selection-form').action = '/talent-pool/jobs/8/selection-review';
+    byId('tp-selection-form').action = hrMode ? '/talent-pool/jobs/8/recommend' : '/talent-pool/jobs/8/suggest';
+    byId('tp-selection-form').dataset = {reviewUrl: '/talent-pool/jobs/8/selection-review', suggestionsUrl: hrMode ? '/talent-pool/jobs/8/recommendations' : '/talent-pool/jobs/8/suggestions'};
     let lastRequest;
+    const requests = [];
     runInNewContext(readFileSync(resolve(__dirname, '../../main/resources/static/js/pages/talent-pool.js'), 'utf8'), {
         document, window: {sessionStorage: storage, location: {search: '?jobPostingId=8&keyword=Java&page=1'}}, TalentPoolSelection: Selection,
         setTimeout, clearTimeout, AbortController, URLSearchParams,
         fetch: async (url, options) => {
             lastRequest = {url, ...options};
+            requests.push(lastRequest);
+            if (url.endsWith('/suggest') || url.endsWith('/recommend')) {
+                return {ok: !submitFailure, status: submitFailure ? 400 : 200,
+                    headers: {get: () => 'application/json'},
+                    json: async () => submitFailure ? {success: false, message: 'Ứng viên đã có đề xuất.'}
+                        : {success: true, data: {jobPostingId: 8, addedCount: JSON.parse(options.body).sourceApplicationIds.length}}};
+            }
             return {ok: true, headers: {get: () => 'application/json'}, json: async () => ({success: true, data: {
-                submissionSupported: false,
+                submissionSupported: true,
                 items: JSON.parse(options.body).sourceApplicationIds.map(sourceId => ({
                     candidateId: Math.floor(sourceId / 100), sourceApplicationId: sourceId,
                     candidateName: `Ứng viên ${Math.floor(sourceId / 100)}`, cvTitle: `Vị trí của CV ${sourceId}`,
-                    submittedAt: '2026-10-17T08:30:00', error: null,
+                    submittedAt: '2026-10-17T08:30:00', error: invalidSource ? 'CV không hợp lệ.' : null,
                 })),
             }})};
         },
     });
-    return {rows, byId, filter, nextPage, profileLink, saved: () => JSON.parse(data.get(key)), request: () => lastRequest};
+    return {rows, byId, filter, nextPage, profileLink, saved: () => JSON.parse(data.get(key)), request: () => lastRequest, requests};
 }
 
 test('row selection and changing the CV update both persisted mapping and preview URL', () => {
@@ -161,11 +170,64 @@ test('review hydrates ID-only drafts and previews the exact selected CV with a s
     assert.equal(preview.dataset.cvUrl, '/talent-pool/99/cv/9901');
     assert.equal(preview.dataset.detailUrl, '/talent-pool/99?jobPostingId=8&keyword=Java&page=1');
     assert.equal(preview.disabled, false);
-    assert.equal(ui.byId('tp-confirm-submit').disabled, true);
+    assert.equal(ui.byId('tp-confirm-submit').disabled, false);
     assert.equal(ui.request().headers['X-CSRF-TOKEN'], 'csrf-token');
     assert.equal(ui.request().url, '/talent-pool/jobs/8/selection-review');
     items[1].children[1].children[1].fire('click');
     await new Promise(setImmediate);
     assert.deepEqual(JSON.parse(ui.request().body).sourceApplicationIds, [102]);
     assert.equal(ui.byId('tp-confirm-title').focused, true);
+});
+
+test('confirmation saves the exact sources once with CSRF, then clears the draft only after success', async () => {
+    const ui = fixture({prior: [{candidateId: 1, sourceId: 102}, {candidateId: 99, sourceId: 9901}]});
+    ui.byId('tp-review-selection').fire('click'); await new Promise(setImmediate);
+    ui.byId('tp-selection-form').fire('submit');
+    ui.byId('tp-selection-form').fire('submit');
+    assert.equal(ui.byId('tp-confirm').fire('cancel').prevented, true);
+    await new Promise(setImmediate);
+    const writes = ui.requests.filter(r => r.url.endsWith('/suggest'));
+    assert.equal(writes.length, 1);
+    assert.deepEqual(JSON.parse(writes[0].body), {sourceApplicationIds: [102, 9901]});
+    assert.equal(writes[0].headers['X-CSRF-TOKEN'], 'csrf-token');
+    assert.deepEqual(ui.saved(), []);
+    assert.equal(ui.byId('tp-confirm').open, false);
+    assert.match(ui.byId('tp-feedback').textContent, /Đã thêm 2 ứng viên/);
+    assert.equal(ui.byId('tp-feedback').children[0].href, '/talent-pool/jobs/8/suggestions');
+});
+
+test('server rejection preserves draft and exposes retry instead of reporting success', async () => {
+    const ui = fixture({prior: [{candidateId: 1, sourceId: 102}], submitFailure: true});
+    ui.byId('tp-review-selection').fire('click'); await new Promise(setImmediate);
+    ui.byId('tp-selection-form').fire('submit'); await new Promise(setImmediate);
+    assert.deepEqual(ui.saved(), [{candidateId: 1, sourceId: 102}]);
+    assert.equal(ui.byId('tp-confirm').open, true);
+    assert.equal(ui.byId('tp-confirm-submit').disabled, true);
+    assert.equal(ui.byId('tp-recheck').hidden, false);
+    assert.equal(ui.byId('tp-review-status').children.at(-1).textContent, 'Ứng viên đã có đề xuất.');
+    assert.equal(ui.byId('tp-feedback').textContent, '');
+});
+
+test('invalid preflight cannot submit and retains all selected sources', async () => {
+    const ui = fixture({prior: [{candidateId: 1, sourceId: 102}], invalidSource: true});
+    ui.byId('tp-review-selection').fire('click'); await new Promise(setImmediate);
+    assert.equal(ui.byId('tp-confirm-submit').disabled, true);
+    ui.byId('tp-selection-form').fire('submit'); await new Promise(setImmediate);
+    assert.equal(ui.requests.filter(r => r.url.endsWith('/suggest')).length, 0);
+    assert.deepEqual(ui.saved(), [{candidateId: 1, sourceId: 102}]);
+});
+
+test('HR selection submits recommendations with its own copy and destination without calling HM suggest', async () => {
+    const ui = fixture({hrMode: true, prior: [{candidateId: 1, sourceId: 102}]});
+    assert.equal(ui.byId('tp-review-selection').textContent, 'Gửi 1 gợi ý cho HM');
+    ui.byId('tp-review-selection').fire('click'); await new Promise(setImmediate);
+    assert.equal(ui.byId('tp-confirm-submit').textContent, 'Gửi 1 gợi ý cho HM');
+    ui.byId('tp-selection-form').fire('submit'); await new Promise(setImmediate);
+    const writes = ui.requests.filter(r => r.url.endsWith('/recommend'));
+    assert.equal(writes.length, 1); assert.equal(writes[0].headers['X-CSRF-TOKEN'], 'csrf-token');
+    assert.deepEqual(JSON.parse(writes[0].body), {sourceApplicationIds: [102]});
+    assert.equal(ui.requests.filter(r => r.url.endsWith('/suggest')).length, 0);
+    assert.match(ui.byId('tp-feedback').textContent, /Đã gửi 1 gợi ý cho HM/);
+    assert.equal(ui.byId('tp-feedback').children[0].href, '/talent-pool/jobs/8/recommendations');
+    assert.deepEqual(ui.saved(), []);
 });

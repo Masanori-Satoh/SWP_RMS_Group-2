@@ -16,6 +16,17 @@ import java.util.Optional;
 
 @Repository
 public interface ApplicationRepository extends JpaRepository<Application, Integer> {
+        // Source is audit metadata; decisions are structured ApplicationReview rows, never note text.
+        String HR_RECOMMENDATION = """
+                exists (select l.auditLogId from AuditLog l where l.entityName = 'Application'
+                    and l.entityId = cast(a.applicationId as string) and l.newValue = 'TalentPoolHrRecommended')
+                """;
+        String PENDING_HR_RECOMMENDATION = HR_RECOMMENDATION + """
+                and exists (select rv.reviewId from ApplicationReview rv where rv.application = a
+                    and rv.reviewerRole = 'HR' and rv.decision = 'Hold')
+                and not exists (select rv.reviewId from ApplicationReview rv where rv.application = a
+                    and rv.reviewerRole = 'HiringManager' and rv.decision in ('Pass','Fail'))
+                """;
         /** Đề xuất chưa được Candidate đồng ý không phải đơn ứng tuyển chính thức. */
         String FORMAL_FILTER = """
                         a.applicationStatus <> 'HM_Suggested'
@@ -56,6 +67,8 @@ public interface ApplicationRepository extends JpaRepository<Application, Intege
          * Bộ lọc của người dùng ({@code ApplicationSearch}); đặt sau
          * {@link #SCOPE_FILTER}.
          */
+        String FORMAL_SCOPE_FILTER = SCOPE_FILTER + " and " + FORMAL_FILTER + " ";
+
         String SEARCH_FILTER = """
                           and (:jobPostingId is null or jp.jobPostingId = :jobPostingId)
                           and (:status is null or a.applicationStatus = :status)
@@ -111,7 +124,7 @@ public interface ApplicationRepository extends JpaRepository<Application, Intege
      * {@code sort = 'score'}: điểm AI cao trước, chưa có điểm xếp cuối; {@code 'newest'}: chỉ theo ngày nộp.
      * Chỉ lấy id: giai đoạn của đơn tính ở Service (xem {@link #findProgressFacts}), rồi mới lọc và cắt trang.
      */
-    @Query("select a.applicationId " + PIPELINE_JOINS + LATEST_SCORE_JOIN + SCOPE_FILTER + SEARCH_FILTER + """
+    @Query("select a.applicationId " + PIPELINE_JOINS + LATEST_SCORE_JOIN + FORMAL_SCOPE_FILTER + SEARCH_FILTER + """
             order by case when :sort = 'score' then ai.aiMatchScore end desc nulls last,
                      a.submissionDate desc, a.applicationId desc
             """)
@@ -137,7 +150,7 @@ public interface ApplicationRepository extends JpaRepository<Application, Intege
 
         /** Các tin có đơn trong phạm vi người xem, cho ô lọc "Vị trí". */
         @Query("select distinct new com.group2.rms.candidate.dto.JobPostingOption(jp.jobPostingId, jp.postingTitle) "
-                        + PIPELINE_JOINS + SCOPE_FILTER + "order by jp.postingTitle")
+                        + PIPELINE_JOINS + FORMAL_SCOPE_FILTER + "order by jp.postingTitle")
         List<JobPostingOption> findPostingOptions(@Param("allDepartments") boolean allDepartments,
                         @Param("managerUserId") Integer managerUserId,
                         @Param("departmentId") Integer departmentId,
@@ -281,9 +294,21 @@ public interface ApplicationRepository extends JpaRepository<Application, Intege
                             JOIN FETCH c.account
                         WHERE a.jobPosting.jobPostingId = :jobPostingId
                           AND a.applicationStatus = 'HM_Suggested'
-                        ORDER BY a.submissionDate DESC, a.applicationId DESC
-                        """)
+                        """ + " and not (" + PENDING_HR_RECOMMENDATION + ") order by a.submissionDate desc, a.applicationId desc")
         List<Application> findSuggestionsByJobPostingId(@Param("jobPostingId") Integer jobPostingId);
+
+        @Query("select a from Application a where a.jobPosting.jobPostingId = :id and a.applicationStatus = 'HM_Suggested'")
+        List<Application> findAllDraftsByJobPostingId(@Param("id") Integer jobPostingId);
+
+        @Query("select a from Application a join fetch a.candidate c join fetch c.account where a.jobPosting.jobPostingId = :id and "
+                + HR_RECOMMENDATION + " order by a.createdAt desc, a.applicationId desc")
+        List<Application> findHrRecommendations(@Param("id") Integer jobPostingId);
+
+        @Query("select count(a) from Application a where a.applicationId = :id and a.applicationStatus = 'HM_Suggested' and " + PENDING_HR_RECOMMENDATION)
+        long countPendingHrRecommendation(@Param("id") Integer applicationId);
+
+        @Query("select count(a) from Application a where a.jobPosting.jobPostingId = :id and a.applicationStatus = 'HM_Suggested' and " + PENDING_HR_RECOMMENDATION)
+        long countPendingHrRecommendationsForJob(@Param("id") Integer jobPostingId);
 
         // query get candidate CV
         @Query("""
@@ -342,6 +367,24 @@ public interface ApplicationRepository extends JpaRepository<Application, Intege
 
         @Query(value = "select count(*) from AuditLog where EntityName = 'Application' and EntityId = cast(:id as nvarchar(50)) and NewValue = 'TalentPoolSuggested'", nativeQuery = true)
         int countTalentPoolOrigin(@Param("id") Integer applicationId);
+
+        @Query(value = "select count(*) from AuditLog where EntityName = 'Application' and EntityId = cast(:id as nvarchar(50)) and NewValue = 'TalentPoolCancelled'", nativeQuery = true)
+        int countTalentPoolCancellation(@Param("id") Integer applicationId);
+
+        @Query(value = """
+                select l.[Timestamp] as at, l.NewValue as kind, u.FullName as actor
+                from AuditLog l join [User] u on u.UserId = l.UserId
+                where l.EntityName = 'Application' and l.EntityId = cast(:id as nvarchar(50))
+                  and l.NewValue in ('TalentPoolSuggested','TalentPoolHrRecommended','TalentPoolActivated','TalentPoolCandidateSubmitted','TalentPoolCancelled')
+                order by l.[Timestamp] desc, l.AuditLogId desc
+                """, nativeQuery = true)
+        List<TalentPoolEventRow> findTalentPoolEvents(@Param("id") Integer applicationId);
+
+        interface TalentPoolEventRow {
+                LocalDateTime getAt();
+                String getKind();
+                String getActor();
+        }
 
         @Query(value = "select count(*) from AuditLog where EntityName = 'Application' and EntityId = cast(:id as nvarchar(50)) and NewValue = 'PostingClosed'", nativeQuery = true)
         int countPostingClosure(@Param("id") Integer applicationId);

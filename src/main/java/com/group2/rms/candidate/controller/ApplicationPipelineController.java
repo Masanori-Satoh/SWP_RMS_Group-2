@@ -98,6 +98,8 @@ public class ApplicationPipelineController {
 
     @GetMapping("/{id}")
     public String detail(@PathVariable Integer id, Model model) {
+        String recommendationUrl = talentPool.pendingRecommendationUrl(id);
+        if (recommendationUrl != null) return "redirect:" + recommendationUrl;
         if (!model.containsAttribute("reviewForm")) {
             model.addAttribute("reviewForm", new ApplicationReviewRequest(null, null));
         }

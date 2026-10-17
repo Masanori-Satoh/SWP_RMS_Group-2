@@ -41,6 +41,8 @@ class JobPostingControllerTest {
 
     @MockitoBean
     private JobPostingService jobPostingService;
+    @MockitoBean
+    private com.group2.rms.candidate.service.TalentPoolService talentPoolService;
 
     @MockitoBean
     private com.group2.rms.candidate.service.RecruitmentEmailService recruitmentEmailService;

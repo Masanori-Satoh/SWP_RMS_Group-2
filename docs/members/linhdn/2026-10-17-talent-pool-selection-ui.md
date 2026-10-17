@@ -1,5 +1,7 @@
 # Talent Pool Selection UI — 17/10/2026
 
+> Cập nhật tiếp theo: phương án đã chốt giữ schema, dùng Application/HM_Suggested và bật lưu thật. Xem `2026-10-17-hm-suggestions-functional.md`; thông tin khóa nút bên dưới là lịch sử của lượt UI trước.
+
 ## Phạm vi và quy tắc
 
 Tinh gọn luồng HM mở Job Posting → kho tiềm năng → chọn ứng viên/CV nguồn → kiểm tra danh sách. Áp dụng `docs/architecture/ARCHITECTURE_GUIDE.md`, bộ `docs/architecture/UI/` và giao diện mộc. RMS hiện có; tham khảo Impeccable/UI UX Pro Max.

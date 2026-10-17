@@ -9,8 +9,8 @@
 </head>
 <body>
 <main id="main" layout:fragment="content" class="page-content container app-page tp-page" tabindex="-1"
-      th:with="selectionMode=${jobPostingId != null and viewerRole == 'Hiring Manager'}"
-      th:attr="data-pool-job=${jobPostingId},data-pool-scope=${selectionScope},data-pool-base=@{/talent-pool}">
+      th:with="hrMode=${jobPostingId != null and viewerRole == 'HR'},selectionMode=${jobPostingId != null and (viewerRole == 'Hiring Manager' or viewerRole == 'HR')}"
+      th:attr="data-pool-job=${jobPostingId},data-pool-scope=${selectionScope},data-pool-base=@{/talent-pool},data-pool-flow=${hrMode ? 'hr' : 'hm'}">
     <div th:if="${successMessage}" class="alert alert--success" role="status" th:text="${successMessage}"></div>
     <div th:if="${errorMessage}" class="alert alert--danger" role="alert" th:text="${errorMessage}"></div>
     <nav class="app-breadcrumb" aria-label="Điều hướng">
@@ -18,14 +18,13 @@
     </nav>
     <div class="page-header">
         <div><h1 class="page-title" th:text="${selectionMode ? 'Chọn ứng viên tiềm năng' : 'Ứng viên tiềm năng'}"></h1>
-            <p class="page-subtitle" th:text="${selectionMode ? 'Chọn ứng viên từ kho chung để đề xuất cho tin tuyển dụng.' : 'Xem CV đã nộp và ghi chú của HR, HM trong kho chung.'}"></p></div>
+            <p class="page-subtitle" th:text="${hrMode ? 'Chọn ứng viên và CV cũ để gửi gợi ý cho HM phụ trách tin tuyển dụng.' : (selectionMode ? 'Chọn ứng viên từ kho chung để đề xuất cho tin tuyển dụng.' : 'Xem CV đã nộp và ghi chú của HR, HM trong kho chung.')}"></p></div>
         <a th:if="${jobPostingId != null}" class="btn btn--secondary" th:href="@{/internal/job-postings/{id}(id=${jobPostingId})}">Quay lại tin tuyển dụng</a>
     </div>
     <section th:if="${jobTitle != null}" class="card tp-destination" aria-labelledby="tp-destination-title">
-        <div><p class="tp-destination__label">Đang thêm vào</p><h2 id="tp-destination-title" class="tp-destination__title" th:text="${jobTitle}"></h2></div>
-        <a class="btn btn--secondary btn--sm" th:href="@{/talent-pool/jobs/{id}/suggestions(id=${jobPostingId})}">Xem danh sách đã đề xuất</a>
+        <div><p class="tp-destination__label" th:text="${hrMode ? 'Gợi ý ứng viên cho vị trí' : 'Đang thêm vào'}"></p><h2 id="tp-destination-title" class="tp-destination__title" th:text="${jobTitle}"></h2><p th:if="${hrMode and receivingManager != null}" class="text-muted" th:text="|HM phụ trách: ${receivingManager}|"></p></div>
+        <a class="btn btn--secondary btn--sm" th:href="${hrMode ? '/talent-pool/jobs/' + jobPostingId + '/recommendations' : '/talent-pool/jobs/' + jobPostingId + '/suggestions'}" th:text="${hrMode ? 'Xem gợi ý đã gửi' : 'Xem danh sách đã đề xuất'}"></a>
     </section>
-    <p th:if="${selectionMode}" class="alert alert--warning tp-availability" role="note">Bạn có thể chuẩn bị và kiểm tra danh sách. Chức năng xác nhận thêm vào tin tuyển dụng chưa sẵn sàng.</p>
     <form class="card tp-filter" method="get" th:action="@{/talent-pool}" role="search" aria-label="Lọc kho ứng viên">
         <input th:if="${jobPostingId != null}" type="hidden" name="jobPostingId" th:value="${jobPostingId}">
         <div class="form-group"><label class="form-label" for="keyword">Ứng viên</label><input class="form-input" type="search" id="keyword" name="keyword" maxlength="100" placeholder="Họ tên hoặc email" th:value="${filter.keyword}"></div>
@@ -80,16 +79,17 @@
     <div th:if="${selectionMode}" id="tp-selection-slot" class="tp-selection-slot" hidden>
         <section id="tp-selection-bar" class="tp-selection-bar" aria-label="Danh sách đang chọn" hidden>
             <div><strong id="tp-selection-count" role="status" aria-live="polite">Đã chọn 0 ứng viên</strong><p class="tp-selection-destination" th:text="${jobTitle}"></p></div>
-            <div class="tp-selection-actions"><button id="tp-clear-selection" class="btn btn--secondary btn--sm" type="button">Bỏ chọn tất cả</button><button id="tp-review-selection" class="btn btn--primary" type="button" aria-haspopup="dialog" aria-controls="tp-confirm">Thêm ứng viên</button></div>
+            <div class="tp-selection-actions"><button id="tp-clear-selection" class="btn btn--secondary btn--sm" type="button">Bỏ chọn tất cả</button><button id="tp-review-selection" class="btn btn--primary" type="button" aria-haspopup="dialog" aria-controls="tp-confirm" th:text="${hrMode ? 'Gửi gợi ý cho HM' : 'Thêm ứng viên'}"></button></div>
         </section>
     </div>
     <dialog th:if="${selectionMode}" id="tp-confirm" class="dialog tp-dialog tp-confirm" aria-labelledby="tp-confirm-title">
         <div class="tp-dialog-head"><h2 id="tp-confirm-title" class="app-section-title" tabindex="-1">Xác nhận thêm ứng viên</h2><button type="button" class="btn btn--secondary btn--sm app-icon-button" data-pool-close aria-label="Đóng"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="m6 6 12 12 M6 18 18 6"/></svg></button></div>
-        <p id="tp-confirm-summary" class="tp-confirm-subtitle">Thêm ứng viên tiềm năng vào tin tuyển dụng</p><p class="tp-confirm-job" th:text="${jobTitle}"></p><p id="tp-review-status" class="tp-confirm-status" role="status"></p>
+        <p id="tp-confirm-summary" class="tp-confirm-subtitle" th:text="${hrMode ? 'Gửi gợi ý cho HM xem xét' : 'Thêm ứng viên tiềm năng vào tin tuyển dụng'}"></p><p class="tp-confirm-job" th:text="${jobTitle}"></p><p th:if="${hrMode and receivingManager != null}" class="tp-confirm-subtitle" th:text="|HM phụ trách: ${receivingManager}|"></p><p id="tp-review-status" class="tp-confirm-status" role="status"></p>
         <ul id="tp-confirm-list" class="tp-confirm-list" aria-label="Ứng viên và CV nguồn đang chọn"></ul>
-        <p class="tp-confirm-unavailable">Chức năng xác nhận thêm chưa sẵn sàng.</p>
-        <form id="tp-selection-form" method="post" th:action="@{/talent-pool/jobs/{id}/selection-review(id=${jobPostingId})}">
-            <div class="tp-dialog-footer"><button id="tp-recheck" type="button" class="btn btn--secondary btn--sm">Kiểm tra lại</button><button type="button" class="btn btn--secondary btn--sm" data-pool-close>Quay lại</button><button id="tp-confirm-submit" type="submit" class="btn btn--primary btn--sm" disabled>Xác nhận thêm</button></div>
+        <p class="tp-confirm-subtitle" th:text="${hrMode ? 'HM sẽ xem xét gợi ý. Chỉ sau khi HM chấp nhận, HR mới liên hệ xác nhận ứng viên đồng ý.' : 'Đề xuất được lưu nội bộ. HR sẽ liên hệ trước khi xác nhận ứng tuyển.'}"></p>
+        <form id="tp-selection-form" method="post" th:action="${hrMode ? '/talent-pool/jobs/' + jobPostingId + '/recommend' : '/talent-pool/jobs/' + jobPostingId + '/suggest'}"
+              th:attr="data-review-url=@{/talent-pool/jobs/{id}/selection-review(id=${jobPostingId})},data-suggestions-url=${hrMode ? '/talent-pool/jobs/' + jobPostingId + '/recommendations' : '/talent-pool/jobs/' + jobPostingId + '/suggestions'}">
+            <div class="tp-dialog-footer"><button id="tp-recheck" type="button" class="btn btn--secondary btn--sm" hidden>Kiểm tra lại</button><button type="button" class="btn btn--secondary btn--sm" data-pool-close>Quay lại</button><button id="tp-confirm-submit" type="submit" class="btn btn--primary btn--sm" disabled>Xác nhận thêm</button></div>
         </form>
     </dialog>
     <dialog id="tp-notes" class="dialog tp-dialog" aria-labelledby="tp-notes-title tp-notes-name">

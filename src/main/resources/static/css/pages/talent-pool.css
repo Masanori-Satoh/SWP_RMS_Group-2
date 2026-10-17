@@ -7,7 +7,6 @@
 .tp-destination { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--s4); background: var(--brand-soft); padding: var(--s4) var(--s6); margin-bottom: var(--s4); }
 .tp-destination__label { margin: 0 0 var(--s1); color: var(--muted); font-size: var(--font-xs); }
 .tp-destination__title { margin: 0; font-size: var(--font-lg); font-family: var(--sans); color: var(--brand-dark); overflow-wrap: anywhere; }
-.tp-availability { margin: 0 0 var(--s6); }
 .tp-filter { display: grid; grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr) minmax(0, 1.1fr) auto; gap: var(--s4); align-items: end; margin-bottom: var(--s6); }
 .tp-filter .form-group { margin: 0; }
 .tp-filter__actions, .tp-results { display: flex; flex-wrap: wrap; align-items: center; gap: var(--s2); }
@@ -49,7 +48,10 @@
 .tp-confirm-list { list-style: none; padding: 0; margin: var(--s3) 0; max-height: 48dvh; min-height: 0; overflow-y: auto; flex: 1 1 auto; scrollbar-gutter: stable; }
 .tp-confirm-item { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: var(--s2) var(--s4); padding: var(--s6) 0; border-bottom: 1px solid var(--line); }
 .tp-confirm-item:first-child { padding-top: var(--s3); }
-.tp-confirm-item p { margin: var(--s1) 0 0; color: var(--muted); font-size: var(--font-xs); overflow-wrap: anywhere; }
+.tp-confirm-name { display: block; color: var(--ink); font-size: var(--font-lg); font-weight: 600; line-height: 1.5; overflow-wrap: anywhere; }
+.tp-confirm-item p { margin: var(--s2) 0 0; color: var(--muted); font-size: var(--font-sm); line-height: 1.6; overflow-wrap: anywhere; }
+.tp-confirm-item .tp-confirm-source { color: var(--ink); font-size: var(--font-base); }
+.tp-confirm-action { min-width: 40px; min-height: 40px; }
 .tp-confirm-item .tp-review-error { color: var(--error); }
 .tp-confirm-job { margin: var(--s2) 0 var(--s4); font-weight: 600; font-size: var(--font-lg); overflow-wrap: anywhere; }
 .tp-confirm-subtitle { margin: 0; color: var(--muted); font-size: var(--font-sm); }
@@ -59,7 +61,6 @@
 .tp-confirm-status { margin: 0 0 var(--s2); flex-shrink: 0; }
 .tp-confirm-status:empty { display: none; }
 .tp-confirm-status svg { flex-shrink: 0; }
-.tp-confirm-unavailable { color: var(--muted); font-size: var(--font-xs); margin: var(--s2) 0 0; flex-shrink: 0; }
 .tp-dialog-footer { margin-top: var(--s4); }
 
 /* Candidate profile: read-only CV history and the existing shared-note form. */
@@ -95,6 +96,24 @@
 .tp-note-form { border-top: 1px solid var(--line); margin-top: var(--s4); padding-top: var(--s4); }
 .tp-note-input { width: 100%; resize: vertical; }
 .tp-note-actions { display: flex; justify-content: flex-end; margin-top: var(--s3); }
+.tp-detail-sidebar { display: grid; gap: var(--s4); min-width: 0; }
+.tp-recommendation-context { margin-top: var(--s6); padding-top: var(--s4); border-top: 1px solid var(--line); }
+.tp-recommendation-context p { margin: 0; }
+.tp-recommendation-context h2 { margin-top: var(--s3); }
+.tp-contact-facts { margin: 0; font-size: var(--font-sm); }
+.tp-contact-facts dt { color: var(--muted); margin-top: var(--s3); }
+.tp-contact-facts dd { margin: var(--s1) 0 0; overflow-wrap: anywhere; }
+.tp-recommendation-tools, .tp-recommendation-head, .tp-decision { display: flex; justify-content: space-between; align-items: center; gap: var(--s4); flex-wrap: wrap; }
+.tp-recommendation-tools { margin-bottom: var(--s6); }
+.tp-recommendation-search { display: flex; gap: var(--s2); }
+.tp-recommendation-list { display: grid; gap: var(--s4); margin-bottom: var(--s6); }
+.tp-recommendation-head { align-items: start; flex-wrap: nowrap; }
+.tp-recommendation-head > div { min-width: 0; }
+.tp-recommendation-name { font-size: var(--font-lg); font-family: var(--sans); margin: 0 0 var(--s2); overflow-wrap: anywhere; }
+.tp-recommendation-head p, .tp-decision p { margin: var(--s2) 0 0; font-size: var(--font-sm); }
+.tp-recommendation-identity, .tp-recommendation-actions { display: flex; align-items: center; justify-content: flex-end; gap: var(--s2); flex-wrap: wrap; }
+.tp-recommendation-hint { margin: var(--s4) 0; color: var(--muted); font-size: var(--font-sm); }
+.tp-decision { margin-top: var(--s4); }
 @media (max-width: 992px) {
   .tp-filter { grid-template-columns: 1fr 1fr; }
   .tp-filter__actions { align-self: end; }

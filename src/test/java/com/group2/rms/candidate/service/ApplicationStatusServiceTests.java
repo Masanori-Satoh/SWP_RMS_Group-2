@@ -36,8 +36,10 @@ class ApplicationStatusServiceTests {
             pool = new TalentPoolService(mock(com.group2.rms.candidate.repository.CandidateRepository.class), applications,
                     mock(com.group2.rms.candidate.repository.TalentPoolNoteRepository.class), audit, jobs, current,
                     mock(com.group2.rms.requisition.service.RequisitionAccess.class), mock(ApplicationAccess.class),
-                    mock(com.group2.rms.user.repository.UserRepository.class), mock(CvStorage.class));
+                    mock(com.group2.rms.user.repository.UserRepository.class), mock(CvStorage.class),
+                    mock(com.group2.rms.candidate.repository.ApplicationReviewRepository.class));
             suggestion = com.group2.rms.candidate.entity.Application.builder().applicationId(ID)
+                    .candidate(com.group2.rms.candidate.entity.Candidate.builder().candidateId(15).build())
                     .applicationStatus("HM_Suggested").appliedCvUrl("local:cv/15/existing.pdf")
                     .jobPosting(com.group2.rms.jobposting.entity.JobPosting.builder().jobPostingId(12).postingStatus("Published").build()).build();
         }
@@ -49,6 +51,25 @@ class ApplicationStatusServiceTests {
             pool.confirm(ID, new com.group2.rms.candidate.dto.TalentPoolConfirmRequest(true));
             verify(audit).record(9, "UPDATE", "Application", ID, "HM_Suggested", "TalentPoolActivated");
             verify(applications, never()).markScreened(anyInt());
+        }
+        @Test
+        void staleConsentCannotCreateASecondActivationEvent() {
+            when(applications.findDetailById(ID)).thenReturn(java.util.Optional.of(suggestion));
+            when(jobs.findForUpdate(12)).thenReturn(java.util.Optional.of(suggestion.getJobPosting()));
+            when(applications.promoteSuggestionToHmPassed(ID)).thenReturn(0);
+            org.junit.jupiter.api.Assertions.assertThrows(com.group2.rms.candidate.exception.TalentPoolException.class,
+                    () -> pool.confirm(ID, new com.group2.rms.candidate.dto.TalentPoolConfirmRequest(true)));
+            verifyNoInteractions(audit);
+        }
+        @Test
+        void consentCannotActivateWhenCandidateAlreadyHasAnOfficialApplication() {
+            when(applications.findDetailById(ID)).thenReturn(java.util.Optional.of(suggestion));
+            when(jobs.findForUpdate(12)).thenReturn(java.util.Optional.of(suggestion.getJobPosting()));
+            when(applications.existsActiveByCandidateAndJobPosting(15, 12)).thenReturn(true);
+            org.junit.jupiter.api.Assertions.assertThrows(com.group2.rms.candidate.exception.TalentPoolException.class,
+                    () -> pool.confirm(ID, new com.group2.rms.candidate.dto.TalentPoolConfirmRequest(true)));
+            verify(applications, never()).promoteSuggestionToHmPassed(anyInt());
+            verifyNoInteractions(audit);
         }
         @Test
         void confirmingWithoutConsentIsRejectedBeforeAnyWrite() {

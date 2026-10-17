@@ -19,15 +19,18 @@ document.querySelectorAll('[data-pool-cv]').forEach(select => {
     let storage;
     try { storage = window.sessionStorage; } catch { storage = null; }
     const scope = page.dataset.poolScope;
+    const hrMode = page.dataset.poolFlow === 'hr';
     const key = scope && page.dataset.poolJob
         ? `rms:talent-selection:v1:${encodeURIComponent(scope)}:${page.dataset.poolJob}` : null;
     const state = form ? new globalThis.TalentPoolSelection(storage, key) : null;
     let reviewRequest;
     let notesRequest;
     let notesButton;
+    let saving = false;
+    let readyToSubmit = false;
 
     page.querySelectorAll('[data-pool-close]').forEach(button => {
-        button.addEventListener('click', () => button.closest('dialog').close());
+        button.addEventListener('click', () => { if (!saving) button.closest('dialog').close(); });
     });
 
     function currentItem(row) {
@@ -70,7 +73,7 @@ document.querySelectorAll('[data-pool-cv]').forEach(select => {
         byId('tp-selection-bar').hidden = state.size === 0;
         byId('tp-selection-slot').hidden = state.size === 0;
         byId('tp-selection-count').textContent = `Đã chọn ${state.size} ứng viên`;
-        byId('tp-review-selection').textContent = `Thêm ${state.size} ứng viên`;
+        byId('tp-review-selection').textContent = hrMode ? `Gửi ${state.size} gợi ý cho HM` : `Thêm ${state.size} ứng viên`;
         if (!state.persistenceAvailable && state.size > 0) {
             feedback.textContent = 'Trình duyệt không cho lưu lựa chọn qua trang. Hãy kiểm tra hoặc bỏ chọn trước khi chuyển trang/lọc.';
         }
@@ -92,6 +95,8 @@ document.querySelectorAll('[data-pool-cv]').forEach(select => {
                 }
             }
             checkbox.addEventListener('change', () => {
+                feedback.className = 'tp-feedback';
+                feedback.textContent = '';
                 try {
                     if (checkbox.checked) state.set(currentItem(row));
                     else state.remove(Number(row.dataset.poolCandidate));
@@ -217,6 +222,7 @@ document.querySelectorAll('[data-pool-cv]').forEach(select => {
             item.className = 'tp-confirm-item';
             const content = document.createElement('div');
             const name = document.createElement('strong');
+            name.className = 'tp-confirm-name';
             name.textContent = result?.candidateName || selected.name || `Ứng viên #${selected.candidateId}`;
             const cv = document.createElement('p');
             cv.className = 'tp-confirm-source';
@@ -248,7 +254,7 @@ document.querySelectorAll('[data-pool-cv]').forEach(select => {
             actions.className = 'tp-confirm-actions';
             const preview = document.createElement('button');
             preview.type = 'button';
-            preview.className = 'btn btn--secondary btn--sm app-icon-button';
+            preview.className = 'btn btn--secondary btn--sm app-icon-button tp-confirm-action';
             preview.setAttribute('data-app-preview', '');
             preview.disabled = !result || result.candidateId !== selected.candidateId;
             preview.title = 'Xem CV nguồn';
@@ -262,11 +268,12 @@ document.querySelectorAll('[data-pool-cv]').forEach(select => {
             preview.append(svgIcon('M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12Z M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0'));
             const remove = document.createElement('button');
             remove.type = 'button';
-            remove.className = 'btn btn--secondary btn--sm app-icon-button';
+            remove.className = 'btn btn--secondary btn--sm app-icon-button tp-confirm-action';
             remove.title = 'Bỏ chọn';
             remove.append(svgIcon('m6 6 12 12 M6 18 18 6'));
             remove.setAttribute('aria-label', `Bỏ chọn ${name.textContent}`);
             remove.addEventListener('click', () => {
+                if (saving) return;
                 state.remove(selected.candidateId);
                 updateSelection();
                 if (!state.size) confirm.close();
@@ -279,22 +286,25 @@ document.querySelectorAll('[data-pool-cv]').forEach(select => {
             item.append(content, actions);
             list.append(item);
         });
-        byId('tp-confirm-title').textContent = `Xác nhận thêm ${state.size} ứng viên`;
-        byId('tp-confirm-submit').textContent = `Xác nhận thêm ${state.size} ứng viên`;
+        byId('tp-confirm-title').textContent = hrMode ? `Gửi ${state.size} gợi ý cho HM` : `Xác nhận thêm ${state.size} ứng viên`;
+        byId('tp-confirm-submit').textContent = hrMode ? `Gửi ${state.size} gợi ý cho HM` : `Xác nhận thêm ${state.size} ứng viên`;
     }
 
     async function requestReview() {
+        if (saving) return;
+        readyToSubmit = false;
         reviewRequest?.abort();
         const controller = new AbortController();
         reviewRequest = controller;
         const timer = setTimeout(() => controller.abort(), 20000);
         byId('tp-confirm-submit').disabled = true;
         byId('tp-recheck').disabled = true;
+        byId('tp-recheck').hidden = true;
         reviewStatus('Đang kiểm tra CV và hồ sơ trùng…');
         renderReview();
         const body = JSON.stringify({sourceApplicationIds: state.values().map(item => item.sourceId)});
         try {
-            const result = await json(await fetch(form.action, {
+            const result = await json(await fetch(form.dataset.reviewUrl, {
                 method: 'POST', body, signal: controller.signal, headers: ajaxHeaders(true)
             }));
             if (controller.signal.aborted || !confirm.open) return;
@@ -310,11 +320,13 @@ document.querySelectorAll('[data-pool-cv]').forEach(select => {
             }).length;
             reviewStatus(hasErrors ? `${validCount}/${state.size} ứng viên có CV nguồn hợp lệ. Xem lý do dưới từng hồ sơ.`
                 : `${state.size} ứng viên có CV nguồn hợp lệ`, hasErrors ? 'warning' : 'success');
-            // Intentionally disabled: legacy /suggest creates Applications, contrary to this flow's contract.
-            byId('tp-confirm-submit').disabled = true;
+            readyToSubmit = !hasErrors && result.submissionSupported === true;
+            byId('tp-confirm-submit').disabled = !readyToSubmit;
+            byId('tp-recheck').hidden = !hasErrors;
         } catch (error) {
             if (reviewRequest !== controller || !confirm.open) return;
             reviewStatus(controller.signal.aborted ? 'Kiểm tra quá lâu. Hãy thử lại.' : error.message, 'warning');
+            byId('tp-recheck').hidden = false;
         } finally {
             clearTimeout(timer);
             if (reviewRequest === controller) byId('tp-recheck').disabled = false;
@@ -327,16 +339,56 @@ document.querySelectorAll('[data-pool-cv]').forEach(select => {
     });
     byId('tp-recheck').addEventListener('click', requestReview);
     confirm.addEventListener('close', () => reviewRequest?.abort());
-    form.addEventListener('submit', event => {
+    confirm.addEventListener('cancel', event => { if (saving) event.preventDefault(); });
+    form.addEventListener('submit', async event => {
         event.preventDefault();
-        reviewStatus('Chức năng xác nhận thêm chưa sẵn sàng.', 'warning');
+        if (saving || !readyToSubmit || !state.size) return;
+        saving = true;
+        readyToSubmit = false;
+        byId('tp-confirm-submit').disabled = true;
+        byId('tp-confirm-submit').textContent = 'Đang lưu đề xuất…';
+        byId('tp-recheck').disabled = true;
+        reviewStatus('Đang lưu đề xuất…');
+        const controller = new AbortController();
+        const timer = setTimeout(() => controller.abort(), 30000);
+        try {
+            const result = await json(await fetch(form.action, {method: 'POST',
+                body: JSON.stringify({sourceApplicationIds: state.values().map(item => item.sourceId)}),
+                headers: ajaxHeaders(true), signal: controller.signal}));
+            state.clear();
+            updateSelection();
+            feedback.className = 'alert alert--success';
+            feedback.textContent = hrMode ? `Đã gửi ${result.addedCount} gợi ý cho HM. Đang chờ HM phản hồi. `
+                : `Đã thêm ${result.addedCount} ứng viên vào danh sách HM đề xuất. HR sẽ liên hệ xác nhận. `;
+            const link = document.createElement('a');
+            link.href = form.dataset.suggestionsUrl;
+            link.textContent = hrMode ? 'Xem gợi ý đã gửi' : 'Xem danh sách HM đề xuất';
+            feedback.append(link);
+            saving = false;
+            confirm.close();
+            feedback.setAttribute('tabindex', '-1');
+            feedback.focus();
+        } catch (error) {
+            reviewStatus(controller.signal.aborted
+                ? 'Chưa nhận được kết quả lưu. Hãy xem danh sách đã đề xuất và kiểm tra lại trước khi thử tiếp.'
+                : error.message, 'warning');
+            byId('tp-recheck').hidden = false;
+        } finally {
+            saving = false;
+            clearTimeout(timer);
+            byId('tp-recheck').disabled = false;
+            byId('tp-confirm-submit').textContent = `Xác nhận thêm ${state.size} ứng viên`;
+        }
     });
     byId('tp-clear-selection').addEventListener('click', () => {
         state.clear();
+        feedback.className = 'tp-feedback';
         feedback.textContent = '';
         updateSelection();
     });
     byId('tp-select-page')?.addEventListener('change', event => {
+        feedback.className = 'tp-feedback';
+        feedback.textContent = '';
         rows.forEach(row => {
             const checkbox = row.querySelector('[data-pool-select]');
             if (!checkbox || checkbox.disabled) return;

@@ -31,7 +31,7 @@ import static org.junit.jupiter.api.Assertions.*;
  * Các query của danh sách hồ sơ chạy trên DB local (chỉ đọc). Không khẳng định số lượng cụ thể vì dữ liệu
  * thay đổi khi thử tay; chỉ khẳng định tính chất: mỗi đơn một dòng, đúng thứ tự, đúng phạm vi.
  */
-@SpringBootTest
+@SpringBootTest(properties = "spring.jpa.hibernate.ddl-auto=validate")
 @Transactional(readOnly = true)
 class ApplicationPipelineQueryTests {
 
@@ -45,7 +45,9 @@ class ApplicationPipelineQueryTests {
         List<Integer> ids = ids(ApplicationScope.ALL, null, null, ApplicationSearch.SORT_SCORE);
         List<ApplicationPipelineResponse> rows = search(ApplicationScope.ALL, null, null, ApplicationSearch.SORT_SCORE);
 
-        assertEquals(applications.count(), ids.size());
+        long formalCount = applications.findAll().stream().filter(a -> !"HM_Suggested".equals(a.getApplicationStatus()))
+                .filter(a -> applications.countTalentPoolCancellation(a.getApplicationId()) == 0).count();
+        assertEquals(formalCount, ids.size());
         assertEquals(ids.size(), new HashSet<>(ids).size(), "mỗi đơn đúng một dòng dù có nhiều lần AI chấm");
         int firstUnscored = rows.stream().map(ApplicationPipelineResponse::aiMatchScore).toList().indexOf(null);
         if (firstUnscored >= 0) {
@@ -85,7 +87,8 @@ class ApplicationPipelineQueryTests {
             assertTrue(managesIt || Objects.equals(department.getDepartmentId(), ownDepartmentId),
                     "đúng phòng ban: " + row.applicationId());
             assertTrue(reviews.existsByApplication_ApplicationIdAndReviewerRoleAndDecision(
-                    row.applicationId(), "HR", "Pass"), "đã được HR chuyển: " + row.applicationId());
+                    row.applicationId(), "HR", "Pass") || applications.countTalentPoolOrigin(row.applicationId()) > 0,
+                    "đã được HR chuyển hoặc đã xác nhận từ đề xuất HM: " + row.applicationId());
         }
         assertTrue(rows.size() < applications.count());
     }
