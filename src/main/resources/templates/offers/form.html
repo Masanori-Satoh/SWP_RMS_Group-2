@@ -14,14 +14,30 @@
 <main id="main" layout:fragment="content" class="page-content container" tabindex="1">
 
   <!-- FLASH MESSAGES -->
-  <div th:if="${successMessage}" class="alert alert--success" style="margin-bottom: 16px;">
-    <i class="fa-solid fa-circle-check"></i>
-    <span th:text="${successMessage}">Thành công</span>
+  <div class="page-flash-container" id="pageFlashContainer" th:if="${successMessage != null or errorMessage != null}">
+    <div th:if="${successMessage}" class="page-flash-alert page-flash-success" id="flashSuccessAlert">
+      <i class="fa-solid fa-circle-check"></i>
+      <span th:text="${successMessage}">Thành công</span>
+    </div>
+    <div th:if="${errorMessage}" class="page-flash-alert page-flash-danger" id="flashErrorAlert">
+      <i class="fa-solid fa-triangle-exclamation"></i>
+      <span th:text="${errorMessage}">Lỗi</span>
+    </div>
   </div>
-  <div th:if="${errorMessage}" class="alert alert--danger" style="margin-bottom: 16px;">
-    <i class="fa-solid fa-triangle-exclamation"></i>
-    <span th:text="${errorMessage}">Lỗi</span>
-  </div>
+  <script th:if="${successMessage != null or errorMessage != null}">
+    (function() {
+      var flash = document.getElementById('pageFlashContainer');
+      if (flash && !flash.dataset.dismissInit) {
+        flash.dataset.dismissInit = 'true';
+        setTimeout(function() {
+          flash.classList.add('flash-dismissed');
+          setTimeout(function() {
+            flash.style.display = 'none';
+          }, 450);
+        }, 2000);
+      }
+    })();
+  </script>
 
   <!-- PAGE HEADER -->
   <div class="page-header">
@@ -170,7 +186,7 @@
         </div>
       </div>
 
-      <div class="grid-3-col">
+      <div class="grid-2-col">
         <div class="form-group">
           <label class="form-label form-label--required" for="probationDays">Thời gian thử việc (ngày)</label>
           <input type="number" id="probationDays" th:field="*{probationDays}" class="form-input" min="1" max="365" placeholder="60" required>
@@ -178,6 +194,18 @@
              th:text="${#strings.contains(#fields.errors('probationDays')[0], 'Failed to convert') ? 'Thời gian thử việc phải là số ngày hợp lệ.' : #fields.errors('probationDays')[0]}"></p>
         </div>
 
+        <div class="form-group">
+          <label class="form-label form-label--required" for="responsePeriodDays">Thời hạn phản hồi (ngày)</label>
+          <input type="number" id="responsePeriodDays" th:field="*{responsePeriodDays}" class="form-input" min="1" max="60" placeholder="5" required>
+          <div class="form-hint" style="font-size:12px; margin-top:4px; color:var(--muted);">
+            Hạn phản hồi = Thời điểm HR phát hành + số ngày này (mặc định 5 ngày).
+          </div>
+          <p class="form-error" th:if="${#fields.hasErrors('responsePeriodDays')}"
+             th:text="${#strings.contains(#fields.errors('responsePeriodDays')[0], 'Failed to convert') ? 'Thời hạn phản hồi phải là số ngày hợp lệ (1-60 ngày).' : #fields.errors('responsePeriodDays')[0]}"></p>
+        </div>
+      </div>
+
+      <div class="grid-2-col">
         <div class="form-group">
           <label class="form-label form-label--required" for="expectedStartDate">Ngày bắt đầu dự kiến</label>
           <input type="date" id="expectedStartDate" th:field="*{expectedStartDate}" class="form-input" max="2099-12-31" required>

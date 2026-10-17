@@ -105,6 +105,8 @@ public class OfferServiceImpl implements OfferService {
 
         deactivateExistingActiveOffers(application.getApplicationId());
 
+        Integer responsePeriodDays = request.getResponsePeriodDays() != null ? request.getResponsePeriodDays() : 5;
+
         OfferProposal newOffer = OfferProposal.builder()
                 .application(application)
                 .offeredPositionTitle(request.getOfferedPositionTitle())
@@ -113,6 +115,8 @@ public class OfferServiceImpl implements OfferService {
                 .expectedStartDate(request.getExpectedStartDate())
                 .workLocation(request.getWorkLocation())
                 .benefitsPackage(request.getBenefitsPackage())
+                .responsePeriodDays(responsePeriodDays)
+                .responseDeadline(null)
                 .proposedBy(proposedBy)
                 .offerStatus("Pending_Director")
                 .build();
@@ -217,7 +221,8 @@ public class OfferServiceImpl implements OfferService {
                 dto.getProbationDays(),
                 dto.getExpectedStartDate(),
                 dto.getWorkLocation(),
-                dto.getOfferedPositionTitle());
+                dto.getOfferedPositionTitle(),
+                dto.getResponsePeriodDays());
 
         Application application = applicationRepository.findById(dto.getApplicationId())
                 .orElseThrow(() -> new ResourceNotFoundException(
@@ -242,6 +247,8 @@ public class OfferServiceImpl implements OfferService {
                     "OFFER_LOCKED_STATE");
         }
 
+        Integer responsePeriodDays = dto.getResponsePeriodDays() != null ? dto.getResponsePeriodDays() : 5;
+
         OfferProposal offerToSave = OfferProposal.builder()
                 .application(application)
                 .offeredPositionTitle(dto.getOfferedPositionTitle())
@@ -250,6 +257,8 @@ public class OfferServiceImpl implements OfferService {
                 .expectedStartDate(dto.getExpectedStartDate())
                 .workLocation(dto.getWorkLocation())
                 .benefitsPackage(dto.getBenefitsPackage())
+                .responsePeriodDays(responsePeriodDays)
+                .responseDeadline(null)
                 .proposedBy(proposedBy)
                 .offerStatus(status)
                 .isDeleted(false)
@@ -423,6 +432,8 @@ public class OfferServiceImpl implements OfferService {
                 .expectedStartDate(offer.getExpectedStartDate())
                 .workLocation(offer.getWorkLocation())
                 .benefitsPackage(offer.getBenefitsPackage())
+                .responsePeriodDays(offer.getResponsePeriodDays())
+                .responseDeadline(offer.getResponseDeadline())
                 .proposedById(proposedById)
                 .proposedByName(proposedByName)
                 .createdAt(offer.getCreatedAt())
@@ -468,7 +479,8 @@ public class OfferServiceImpl implements OfferService {
                 dto.getProbationDays(),
                 dto.getExpectedStartDate(),
                 dto.getWorkLocation(),
-                dto.getOfferedPositionTitle());
+                dto.getOfferedPositionTitle(),
+                dto.getResponsePeriodDays());
 
         if (dto.getOfferedPositionTitle() != null && !dto.getOfferedPositionTitle().isBlank()) {
             offer.setOfferedPositionTitle(dto.getOfferedPositionTitle());
@@ -478,6 +490,9 @@ public class OfferServiceImpl implements OfferService {
         offer.setExpectedStartDate(dto.getExpectedStartDate());
         offer.setWorkLocation(dto.getWorkLocation());
         offer.setBenefitsPackage(dto.getBenefitsPackage());
+        if (dto.getResponsePeriodDays() != null) {
+            offer.setResponsePeriodDays(dto.getResponsePeriodDays());
+        }
 
         if (Boolean.TRUE.equals(dto.getIsDraft())) {
             offer.setOfferStatus("Draft");
@@ -519,6 +534,7 @@ public class OfferServiceImpl implements OfferService {
                 .expectedStartDate(offer.getExpectedStartDate())
                 .workLocation(offer.getWorkLocation())
                 .benefitsPackage(offer.getBenefitsPackage())
+                .responsePeriodDays(offer.getResponsePeriodDays() != null ? offer.getResponsePeriodDays() : 5)
                 .isDraft(true)
                 .build();
     }
@@ -556,6 +572,18 @@ public class OfferServiceImpl implements OfferService {
                     "OFFER_NOT_APPROVED");
         }
 
+        if (offer.getResponsePeriodDays() == null || offer.getResponsePeriodDays() <= 0) {
+            throw new OfferValidationException("Offer chưa có thời gian phản hồi hợp lệ.");
+        }
+
+        LocalDateTime deadline = LocalDateTime.now().plusDays(offer.getResponsePeriodDays());
+
+        if (offer.getExpectedStartDate() != null
+                && !deadline.toLocalDate().isBefore(offer.getExpectedStartDate())) {
+            throw new OfferValidationException("Thời hạn phản hồi phải trước ngày bắt đầu dự kiến.");
+        }
+
+        offer.setResponseDeadline(deadline);
         offer.setOfferStatus("Sent_Candidate");
         OfferProposal saved = offerProposalRepository.save(offer);
 
@@ -612,7 +640,8 @@ public class OfferServiceImpl implements OfferService {
             Integer probationDays,
             LocalDate expectedStartDate,
             String workLocation,
-            String offeredPositionTitle) {
+            String offeredPositionTitle,
+            Integer responsePeriodDays) {
 
         if (offeredPositionTitle == null || offeredPositionTitle.isBlank()) {
             throw new OfferValidationException("Vị trí chức danh đề xuất không được để trống.");
@@ -643,6 +672,9 @@ public class OfferServiceImpl implements OfferService {
         }
         if (workLocation == null || workLocation.isBlank()) {
             throw new OfferValidationException("Địa điểm làm việc không được để trống.");
+        }
+        if (responsePeriodDays == null || responsePeriodDays <= 0) {
+            throw new OfferValidationException("Thời gian phản hồi phải lớn hơn 0 ngày.");
         }
     }
 
@@ -709,6 +741,8 @@ public class OfferServiceImpl implements OfferService {
                 .expectedStartDate(entity.getExpectedStartDate())
                 .workLocation(entity.getWorkLocation())
                 .benefitsPackage(entity.getBenefitsPackage())
+                .responsePeriodDays(entity.getResponsePeriodDays())
+                .responseDeadline(entity.getResponseDeadline())
                 .proposedById(proposedById)
                 .proposedByName(proposedByName)
                 .offerStatus(entity.getOfferStatus())

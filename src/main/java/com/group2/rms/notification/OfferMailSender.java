@@ -50,13 +50,17 @@ public class OfferMailSender {
                 message.setFrom(from);
                 message.setTo(candidateEmail);
                 message.setSubject("Thư mời nhận việc (Job Offer Letter) - " + offer.getOfferedPositionTitle());
+                String deadlineInfo = offer.getResponseDeadline() != null
+                        ? "Hạn phản hồi: " + offer.getResponseDeadline().format(java.time.format.DateTimeFormatter.ofPattern("HH:mm dd/MM/yyyy")) + "\n\n"
+                        : "\n";
                 message.setText(
                         "Xin chào " + candidateName + ",\n\n"
                         + "Chúng tôi rất vui mừng thông báo bạn đã vượt qua các vòng phỏng vấn và trân trọng gửi tới bạn Thư mời nhận việc cho vị trí: "
                         + offer.getOfferedPositionTitle() + ".\n"
                         + "Mức lương chính thức: " + offer.getProposedSalary() + " VND/tháng\n"
                         + "Mức lương thử việc: " + offer.getProbationSalary() + " VND/tháng\n"
-                        + "Địa điểm làm việc: " + (offer.getWorkLocation() != null ? offer.getWorkLocation() : "Văn phòng công ty") + "\n\n"
+                        + "Địa điểm làm việc: " + (offer.getWorkLocation() != null ? offer.getWorkLocation() : "Văn phòng công ty") + "\n"
+                        + deadlineInfo
                         + "Vui lòng đăng nhập vào hệ thống RMS để xem chi tiết và phản hồi thư mời làm việc.\n\n"
                         + "Trân trọng,\nPhòng Nhân sự RMS"
                 );

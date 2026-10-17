@@ -3,6 +3,7 @@ package com.group2.rms.offer.dto;
 import jakarta.validation.constraints.AssertTrue;
 import jakarta.validation.constraints.Future;
 import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
@@ -42,6 +43,13 @@ public class UpdateOfferRequest {
     @Positive(message = "Thời gian thử việc phải lớn hơn 0.")
     @Max(value = 365, message = "Thời gian thử việc không được vượt quá 365 ngày.")
     private Integer probationDays;
+
+    @NotNull(message = "Thời gian phản hồi không được để trống.")
+    @Positive(message = "Thời gian phản hồi phải lớn hơn 0.")
+    @Min(value = 1, message = "Thời gian phản hồi phải tối thiểu 1 ngày.")
+    @Max(value = 60, message = "Thời gian phản hồi không được vượt quá 60 ngày.")
+    @Builder.Default
+    private Integer responsePeriodDays = 5;
 
     @NotNull(message = "Ngày bắt đầu dự kiến không được để trống.")
     @Future(message = "Ngày bắt đầu dự kiến phải lớn hơn ngày hiện tại.")

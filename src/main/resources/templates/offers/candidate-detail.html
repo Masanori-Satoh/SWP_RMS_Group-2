@@ -147,6 +147,10 @@
                             <span class="cof-meta-label">Thời gian thử việc</span>
                             <span class="cof-meta-val" th:text="${offer.probationDuration}">60 ngày (2 tháng)</span>
                         </div>
+                        <div th:if="${offer.responseDeadline != null}" class="cof-meta-item">
+                            <span class="cof-meta-label">Hạn phản hồi thư mời</span>
+                            <span class="cof-meta-val cof-meta-val--deadline" th:text="${#temporals.format(offer.responseDeadline, 'HH:mm dd/MM/yyyy')}">17:00 15/10/2026</span>
+                        </div>
                     </div>
                 </div>
             </section>
@@ -193,8 +197,20 @@
                 </div>
                 <div class="card-body">
                     <div th:if="${offer.canRespond}">
-                        <p class="text-muted">
+                        <div th:if="${offer.responseDeadline != null}" class="cof-deadline-box">
+                            <div class="cof-deadline-box__title">
+                                <span aria-hidden="true">⏱</span> Hạn chót phản hồi
+                            </div>
+                            <div class="cof-deadline-box__val" th:text="${#temporals.format(offer.responseDeadline, 'HH:mm - dd/MM/yyyy')}">
+                                17:00 - 15/10/2026
+                            </div>
+                            <span class="cof-countdown" th:attr="data-deadline=${#temporals.format(offer.responseDeadline, 'yyyy-MM-dd''T''HH:mm:ss')}"></span>
+                        </div>
+                        <p class="text-muted" th:unless="${offer.responseDeadline != null}">
                             Thư mời nhận việc đang chờ phản hồi từ bạn. Vui lòng xem xét các điều khoản và gửi quyết định trước ngày bắt đầu làm việc.
+                        </p>
+                        <p class="text-muted" th:if="${offer.responseDeadline != null}">
+                            Vui lòng xem xét các điều khoản và gửi quyết định trước thời hạn nêu trên.
                         </p>
                         <div class="cof-actions">
                             <button type="button" class="btn btn--primary" data-detail-trigger="accept">Đồng ý nhận việc</button>
@@ -216,7 +232,12 @@
                             Bạn đã từ chối thư mời làm việc này. Hồ sơ ứng tuyển của bạn cho vị trí này đã kết thúc.
                         </p>
                         <p th:if="${offer.statusLabel == 'Đã quá hạn phản hồi'}" class="text-muted">
-                            Thư mời này đã quá ngày bắt đầu nhận việc dự kiến. Nếu bạn vẫn có nguyện vọng gia nhập công ty, vui lòng liên hệ chuyên viên phụ trách tuyển dụng bên dưới để được hỗ trợ.
+                            <th:block th:if="${offer.responseDeadline != null}">
+                                Thư mời này đã quá thời hạn phản hồi (<span th:text="${#temporals.format(offer.responseDeadline, 'HH:mm dd/MM/yyyy')}">17:00 15/10/2026</span>). Nếu bạn vẫn có nguyện vọng gia nhập công ty, vui lòng liên hệ chuyên viên phụ trách tuyển dụng bên dưới để được hỗ trợ.
+                            </th:block>
+                            <th:block th:unless="${offer.responseDeadline != null}">
+                                Thư mời này đã quá ngày bắt đầu nhận việc dự kiến. Nếu bạn vẫn có nguyện vọng gia nhập công ty, vui lòng liên hệ chuyên viên phụ trách tuyển dụng bên dưới để được hỗ trợ.
+                            </th:block>
                         </p>
                     </div>
                 </div>

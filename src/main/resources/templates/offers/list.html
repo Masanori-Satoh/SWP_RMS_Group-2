@@ -25,14 +25,30 @@
             <div class="container">
 
                 <!-- FLASH MESSAGES -->
-                <div th:if="${successMessage}" class="modal-alert modal-alert-success" style="display:flex; margin-bottom: 20px;">
-                    <i class="fa-solid fa-circle-check" style="font-size:18px;"></i>
-                    <div style="font-size: 14px; font-weight: 500;" th:text="${successMessage}"></div>
+                <div class="page-flash-container" id="pageFlashContainer" th:if="${successMessage != null or errorMessage != null}">
+                    <div th:if="${successMessage}" class="page-flash-alert page-flash-success" id="flashSuccessAlert">
+                        <i class="fa-solid fa-circle-check"></i>
+                        <span th:text="${successMessage}">Đã nộp trình đề xuất Offer lên Giám đốc thành công!</span>
+                    </div>
+                    <div th:if="${errorMessage}" class="page-flash-alert page-flash-danger" id="flashErrorAlert">
+                        <i class="fa-solid fa-triangle-exclamation"></i>
+                        <span th:text="${errorMessage}">Lỗi xử lý yêu cầu.</span>
+                    </div>
                 </div>
-                <div th:if="${errorMessage}" class="modal-alert modal-alert-danger" style="display:flex; margin-bottom: 20px;">
-                    <i class="fa-solid fa-triangle-exclamation" style="font-size:18px;"></i>
-                    <div style="font-size: 14px; font-weight: 500;" th:text="${errorMessage}"></div>
-                </div>
+                <script th:if="${successMessage != null or errorMessage != null}">
+                    (function() {
+                        var flash = document.getElementById('pageFlashContainer');
+                        if (flash && !flash.dataset.dismissInit) {
+                            flash.dataset.dismissInit = 'true';
+                            setTimeout(function() {
+                                flash.classList.add('flash-dismissed');
+                                setTimeout(function() {
+                                    flash.style.display = 'none';
+                                }, 450);
+                            }, 2000);
+                        }
+                    })();
+                </script>
 
                 <!-- Header Section -->
                 <div class="offers-header">
@@ -493,11 +509,18 @@
                     </div>
                 </div>
 
-                <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:16px;">
+                <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px;">
                     <div class="form-group">
                         <label>Thời gian thử việc (ngày) <span style="color:var(--error, #ef4444);">*</span></label>
                         <input type="number" id="editProbationDays" class="input-control" min="1" placeholder="VD: 60" required>
                     </div>
+                    <div class="form-group">
+                        <label>Thời hạn phản hồi (ngày) <span style="color:var(--error, #ef4444);">*</span></label>
+                        <input type="number" id="editResponsePeriodDays" class="input-control" min="1" max="60" placeholder="VD: 5" required>
+                    </div>
+                </div>
+
+                <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px;">
                     <div class="form-group">
                         <label>Ngày bắt đầu dự kiến <span style="color:var(--error, #ef4444);">*</span></label>
                         <input type="date" id="editStartDate" class="input-control" required>
@@ -557,6 +580,7 @@
 <div class="toast-container" id="toastContainer"></div>
 
 <!-- Scripts bổ trợ bộ lọc và UX -->
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script th:src="@{/js/offers.js}" defer></script>
 
 </body>
