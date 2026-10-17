@@ -264,6 +264,14 @@ public class TalentPoolService {
         return manager == null ? null : manager.getFullName();
     }
 
+    public boolean canSuggest(Integer jobId) {
+        User user = actor();
+        JobPosting target = job(jobId, false);
+        requireTarget(user, target);
+        return CurrentUserService.hasRole(user, "Hiring Manager") && "Published".equals(target.getPostingStatus())
+                && (target.getApplicationDeadline() == null || !target.getApplicationDeadline().isBefore(LocalDateTime.now()));
+    }
+
     public boolean canRecommend(Integer jobId) {
         User user = actor();
         JobPosting target = job(jobId, false);

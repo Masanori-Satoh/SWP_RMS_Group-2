@@ -1,12 +1,12 @@
 <!DOCTYPE html>
 <html lang="vi" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout" layout:decorate="~{layout/internal}">
-<head><title>Ứng viên tiềm năng — Mộc RMS</title><th:block layout:fragment="styles"><link rel="stylesheet" th:href="@{/css/pages/applications.css}"></th:block></head>
+<head><title>Ứng viên tiềm năng — Mộc RMS</title><th:block layout:fragment="styles"><link rel="stylesheet" th:href="@{/css/pages/applications.css}"><link rel="stylesheet" th:href="@{/css/pages/talent-pool.css}"></th:block></head>
 <body><main id="main" layout:fragment="content" class="page-content container app-page" tabindex="-1">
 <div th:if="${successMessage}" class="alert alert--success" role="status" th:text="${successMessage}"></div>
 <div th:if="${errorMessage}" class="alert alert--danger" role="alert" th:text="${errorMessage}"></div>
 
 <nav class="breadcrumbs" aria-label="Điều hướng"><a th:href="@{/internal/job-postings/{id}(id=${jobPostingId})}">Tin tuyển dụng</a><span aria-hidden="true"> / </span><span aria-current="page">Đề xuất ứng viên</span></nav>
-<div class="page-header"><div><h1 class="page-title">Ứng viên được HM đề xuất</h1><p class="page-subtitle" th:text="${jobTitle}"></p></div><a class="btn btn--secondary" th:href="@{/internal/job-postings/{id}(id=${jobPostingId})}">Quay lại tin tuyển dụng</a></div>
+<div class="page-header"><div><h1 class="page-title" th:text="${viewerRole == 'Hiring Manager' ? 'Ứng viên tiềm năng' : 'Ứng viên được HM đề xuất'}">Ứng viên tiềm năng</h1><p class="page-subtitle" th:text="${jobTitle}"></p></div><div class="tp-recommendation-actions"><a th:if="${viewerRole == 'Hiring Manager' and canSuggest}" class="btn btn--primary" th:href="@{/talent-pool(jobPostingId=${jobPostingId})}">Thêm ứng viên tiềm năng</a><a class="btn btn--secondary" th:href="@{/internal/job-postings/{id}(id=${jobPostingId})}">Quay lại tin tuyển dụng</a></div></div>
 <p class="text-muted">Đề xuất nội bộ, chưa phải hồ sơ ứng tuyển chính thức. HR liên hệ qua điện thoại hoặc email trước khi xác nhận ứng viên đồng ý dùng CV cũ.</p>
 <p th:if="${#lists.isEmpty(suggestions)}" class="empty-state">Không có đề xuất đang chờ liên hệ.</p>
 <div th:unless="${#lists.isEmpty(suggestions)}" class="table-wrapper"><table class="table"><thead><tr><th scope="col">STT</th><th scope="col">Ứng viên</th><th scope="col">Liên hệ</th><th scope="col">Người đề xuất</th><th scope="col">Ngày đề xuất</th><th scope="col">Thao tác</th></tr></thead>

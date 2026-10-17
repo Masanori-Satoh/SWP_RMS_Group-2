@@ -178,10 +178,8 @@
                     <form th:if="${(viewerRole == 'HR' or viewerRole == 'System Admin') and posting.postingStatus == 'Published'}" method="post" th:action="@{/internal/job-postings/{id}/pause(id=${posting.jobPostingId})}">
                         <button class="btn btn--secondary btn-full-width" type="submit">Tạm dừng tin</button>
                     </form>
-                    <a th:if="${viewerRole == 'Hiring Manager' and posting.isPublished()}" class="btn btn--secondary btn-full-width"
-                       th:href="@{/talent-pool(jobPostingId=${posting.jobPostingId})}">Thêm ứng viên tiềm năng</a>
                     <a th:if="${viewerRole == 'HR' or viewerRole == 'Hiring Manager'}" class="btn btn--secondary btn-full-width"
-                       th:href="@{/talent-pool/jobs/{id}/suggestions(id=${posting.jobPostingId})}">Ứng viên được HM đề xuất</a>
+                       th:href="@{/talent-pool/jobs/{id}/suggestions(id=${posting.jobPostingId})}" th:text="${viewerRole == 'Hiring Manager' ? 'Ứng viên tiềm năng' : 'Ứng viên được HM đề xuất'}">Ứng viên tiềm năng</a>
                     <a th:if="${viewerRole == 'HR' or viewerRole == 'Hiring Manager'}" class="btn btn--secondary btn-full-width"
                        th:href="@{/talent-pool/jobs/{id}/recommendations(id=${posting.jobPostingId})}"><span th:text="${viewerRole == 'HR' ? 'Gợi ý đã gửi cho HM' : 'Gợi ý từ HR'}"></span><span th:if="${hrRecommendationCount != null and hrRecommendationCount > 0}" class="badge badge--warning" th:text="${hrRecommendationCount}"></span></a>
                     <button th:if="${viewerRole == 'HR' and (posting.postingStatus == 'Published' or posting.postingStatus == 'Paused')}" class="btn btn--danger btn-full-width" type="button" data-dialog-open="talent-close-job">Đóng đợt tuyển</button>

@@ -755,7 +755,16 @@ class ApplicationPipelineWebTests {
         mvc.perform(get("/talent-pool/jobs/8/suggestions").with(as("hr", "HR")))
                 .andExpect(status().isOk()).andExpect(content().string(containsString("Ứng viên thật")))
                 .andExpect(content().string(containsString("href=\"/applications/219\"")))
-                .andExpect(content().string(containsString("chưa phải hồ sơ ứng tuyển chính thức")));
+                .andExpect(content().string(containsString("chưa phải hồ sơ ứng tuyển chính thức")))
+                .andExpect(content().string(not(containsString("Thêm ứng viên tiềm năng"))));
+        when(talentPool.viewerRole()).thenReturn("Hiring Manager"); when(talentPool.canSuggest(8)).thenReturn(true);
+        mvc.perform(get("/talent-pool/jobs/8/suggestions").with(as("hm", "Hiring Manager")))
+                .andExpect(status().isOk()).andExpect(content().string(containsString("Thêm ứng viên tiềm năng")))
+                .andExpect(content().string(containsString("href=\"/talent-pool?jobPostingId=8\"")))
+                .andExpect(content().string(containsString("class=\"page-title\">Ứng viên tiềm năng</h1>")));
+        when(talentPool.canSuggest(8)).thenReturn(false);
+        mvc.perform(get("/talent-pool/jobs/8/suggestions").with(as("hm", "Hiring Manager")))
+                .andExpect(status().isOk()).andExpect(content().string(not(containsString("Thêm ứng viên tiềm năng"))));
     }
 
     @Test

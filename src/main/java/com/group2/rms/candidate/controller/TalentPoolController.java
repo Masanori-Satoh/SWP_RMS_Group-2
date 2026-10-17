@@ -34,6 +34,7 @@ public class TalentPoolController {
         model.addAttribute("jobPostingId", id);
         model.addAttribute("jobTitle", pool.targetJobTitle(id));
         model.addAttribute("suggestions", pool.suggestions(id));
+        model.addAttribute("canSuggest", pool.canSuggest(id));
         model.addAttribute("viewerRole", pool.viewerRole());
         model.addAttribute("activeMenu", "talent-pool");
         return "talent-pool/suggestions";
