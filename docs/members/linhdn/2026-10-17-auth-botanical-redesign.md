@@ -45,3 +45,13 @@ Không đổi Java production/controller/service/repository, database hoặc dep
 - Viewport được mô phỏng bằng iframe có kích thước CSS thật, sau đó thu nhỏ để chụp trong cửa sổ kiểm tra: 1440×900, 1366×768, 1920×1080, 390×844. Register hai cột ở desktop, một cột ở 390; scrollWidth đo được lần lượt 1425, 1351, 1920, 375px (đã trừ scrollbar), không tràn ngang. 1440×900 thấy đủ form và submit; 1366×768 cần cuộn để xem phần dưới; mobile cuộn trang tự nhiên.
 - Đã xem Login/OTP ở 1440×900, kiểm tra nút mắt đổi aria-pressed và nhãn “Ẩn mật khẩu”; xác nhận lại card Login căn giữa sau phản hồi. Chưa có kiểm chứng SMTP/OTP email thật, thiết bị vật lý, hoặc benchmark thiết bị yếu. Reduced-motion được cấu hình trong CSS; chưa đổi tùy chọn hệ điều hành để kiểm thử thực tế.
 - Preview/harness, HTML render và log nằm dưới `target/`, không đưa vào Git. Kết quả lượt cuối được ghi trong log `target/auth-botanical-tests-confirmed.log`.
+
+## Bổ sung theo yêu cầu: đồng bộ Forgot / Reset
+
+Phần này mở rộng phạm vi sau lượt Login/Register ở trên: `forgot-password.html`, `reset-password-otp.html`, `reset-password.html` dùng lớp `auth-botanical auth-recovery` và gọi lại `story(botanical=true)`. Dùng nguyên minh họa, nền, highlights, typography, header/footer và step indicator hiện có. Form khôi phục căn giữa theo chiều dọc như Login trên desktop, trở về đầu hàng ở màn hình hẹp.
+
+Email thêm placeholder và icon thư; hai trường mật khẩu mới thêm icon khóa, nút mắt dùng fragment/JS đã có. OTP sáu ô và chức năng gửi lại/thời gian chờ giữ nguyên. Không thêm file production, tài nguyên trang trí, dependency hoặc sửa Java/backend; thay đổi có sẵn của người dùng trong `PasswordRecoveryService.java` được giữ nguyên.
+
+Mở rộng test MVC auth hiện có để render cả ba màn, kiểm tra action/name/CSRF, sáu ô OTP, thời hạn hiển thị và nút mắt. Không gửi email thật hay đổi mật khẩu tài khoản. Log riêng của lượt này: `target/auth-recovery-botanical-tests.log`; bản render phục vụ kiểm tra browser tiếp tục chỉ đọc, chặn mọi POST.
+
+Kết quả lượt bổ sung: **6 test passed, 0 failure/error/skipped**, `git diff --check` qua. Đã xem cả ba màn trên browser với viewport iframe 1440×900; form được căn giữa, dùng chung minh họa. Đã xem Reset và OTP ở 390×844, scrollWidth 375px, không tràn ngang; các bước và sáu ô OTP vẫn đủ, trang cuộn dọc tự nhiên. Toggle mật khẩu mới đổi đúng nhãn “Ẩn mật khẩu mới” và aria-pressed. Chưa gửi SMTP/đổi mật khẩu tài khoản thật; các kiểm tra này không thay thế nghiệm thu nghiệp vụ backend.
