@@ -21,34 +21,34 @@
                     </div>
                 </div>
 
-                <!-- 3 Stat Cards -->
-                <div class="offers-stats-grid director-stats-grid">
-                    <div class="offer-stat-card">
-                        <div class="stat-label">CHỜ DUYỆT</div>
-                        <div class="offer-stat-bottom">
+                <!-- 3 Stat Cards (Compact Horizontal Mockup) -->
+                <div class="director-stats-grid">
+                    <div class="director-stat-card">
+                        <div class="director-stat-left">
                             <div class="offer-stat-icon stat-icon-amber">
                                 <i class="fa-solid fa-hourglass-half"></i>
                             </div>
-                            <div class="stat-value" th:text="${statPending}">0</div>
+                            <span class="stat-label">Chờ duyệt</span>
                         </div>
+                        <div class="stat-value" th:text="${statPending}">0</div>
                     </div>
-                    <div class="offer-stat-card">
-                        <div class="stat-label">ĐÃ DUYỆT</div>
-                        <div class="offer-stat-bottom">
+                    <div class="director-stat-card">
+                        <div class="director-stat-left">
                             <div class="offer-stat-icon stat-icon-green">
                                 <i class="fa-solid fa-user-check"></i>
                             </div>
-                            <div class="stat-value" th:text="${statApproved}">0</div>
+                            <span class="stat-label">Đã duyệt</span>
                         </div>
+                        <div class="stat-value" th:text="${statApproved}">0</div>
                     </div>
-                    <div class="offer-stat-card">
-                        <div class="stat-label">ĐÃ TỪ CHỐI</div>
-                        <div class="offer-stat-bottom">
+                    <div class="director-stat-card">
+                        <div class="director-stat-left">
                             <div class="offer-stat-icon stat-icon-danger">
                                 <i class="fa-solid fa-ban"></i>
                             </div>
-                            <div class="stat-value" th:text="${statRejected}">0</div>
+                            <span class="stat-label">Đã từ chối</span>
                         </div>
+                        <div class="stat-value" th:text="${statRejected}">0</div>
                     </div>
                 </div>
 
