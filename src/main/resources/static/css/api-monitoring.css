@@ -1,14 +1,30 @@
-.monitoring-heading { margin-bottom:var(--s6); }
-.monitoring-heading h2 { margin-bottom:var(--s1); }
-.monitoring-heading p,.monitoring-note { color:var(--muted); font-size:14px; max-width:75ch; }
-.monitoring-table { min-width: 950px; }
-.monitoring-table td { vertical-align: middle; }
-.monitoring-table td:first-child { min-width: 255px; }
-.monitoring-table strong, .monitoring-table small, .monitoring-table code { display: block; }
-.monitoring-table small { color:var(--muted); font-size:14px; margin-top:var(--s1); }
-.monitoring-table code { color:var(--ink); font-size:13px; margin-top:var(--s2); overflow-wrap:anywhere; }
-.monitoring-table form { margin: 0; }
-.monitoring-unavailable { color:var(--muted); font-size:14px; }
-.monitoring-note { margin-top:var(--s6); line-height:1.6; }
-.monitoring-table td:not(:first-child) { font-variant-numeric:tabular-nums; }
-.monitoring-table .badge { white-space:nowrap; }
+/* API-MONITORING.CSS — /admin/api-monitoring only, prefix apm-.
+   Reuse the Admin header and catalog card/badge/button; service composition only. */
+.rms-app .apm-page {
+  --apm-panel-border: color-mix(in srgb, var(--control-line) 22%, var(--line));
+  min-height: calc(100vh - var(--topbar-h));
+  background: color-mix(in srgb, var(--brand-soft) 45%, var(--page));
+}
+.apm-services { display: grid; gap: var(--s4); min-width: 0; }
+.apm-service { min-width: 0; padding: 0; border-color: var(--apm-panel-border); overflow: hidden; }
+.apm-service-header { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: var(--s3); padding: var(--s4) var(--s6); }
+.apm-service-identity { display: flex; align-items: center; gap: var(--s3); min-width: 0; }
+.apm-service-icon { display: grid; place-items: center; flex: 0 0 var(--btn-sm-h); height: var(--btn-sm-h); border-radius: var(--radius-md); color: var(--brand-dark); background: var(--brand-soft); }
+.apm-service-heading { min-width: 0; }
+.apm-service-name { margin: 0; font-family: var(--sans); font-size: var(--font-lg); font-weight: 600; line-height: 1.4; overflow-wrap: anywhere; }
+.apm-service-type { margin: var(--s1) 0 0; color: var(--muted); font-size: var(--font-sm); line-height: 1.35; }
+.apm-service-body { display: flex; align-items: end; flex-wrap: wrap; gap: var(--s4) var(--s6); padding: var(--s4) var(--s6); border-top: 1px solid var(--line); }
+.apm-metrics { display: flex; flex: 1 1 auto; flex-wrap: wrap; gap: var(--s4) var(--s12); margin: 0; min-width: 0; }
+.apm-metric { min-width: 0; }
+.apm-metric dt { color: var(--muted); font-size: var(--font-sm); line-height: 1.4; }
+.apm-metric dd { margin: var(--s1) 0 0; color: var(--ink); font-size: var(--font-base); font-weight: 600; line-height: 1.5; font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
+.apm-metric .apm-empty { color: var(--muted); }
+.apm-service-notice { display: flex; align-items: start; gap: var(--s2); margin: 0; padding: var(--s3) var(--s6); border-top: 1px solid var(--line); background: var(--surface-subtle); color: var(--muted); font-size: var(--font-sm); line-height: 1.5; }
+.apm-service-notice svg { flex-shrink: 0; margin-top: 2px; }
+.apm-probe-form { margin: 0; flex-shrink: 0; }
+.apm-probe-button:disabled { cursor: wait; }
+@media (max-width: 768px) {
+  .apm-service-header, .apm-service-body { padding: var(--s4); }
+  .apm-service-notice { padding: var(--s3) var(--s4); }
+  .apm-metrics { gap: var(--s4) var(--s6); }
+}

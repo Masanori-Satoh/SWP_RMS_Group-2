@@ -88,6 +88,33 @@ public class TalentPoolController {
         return "redirect:/talent-pool/" + id;
     }
 
+    @GetMapping(value = "/applications/{id}/bookmark", produces = MediaType.APPLICATION_JSON_VALUE)
+    @ResponseBody
+    public TalentPoolBookmarkResponse bookmark(@PathVariable Integer id) {
+        return pool.bookmark(id);
+    }
+
+    @PostMapping(value = "/applications/{id}/bookmark", produces = MediaType.APPLICATION_JSON_VALUE)
+    @ResponseBody
+    public ResponseEntity<?> saveBookmark(@PathVariable Integer id,
+            @Valid @ModelAttribute TalentPoolBookmarkRequest request, BindingResult errors) {
+        if (errors.hasErrors()) {
+            return ResponseEntity.badRequest().body(java.util.Map.of("message",
+                    errors.getAllErrors().getFirst().getDefaultMessage()));
+        }
+        try {
+            return ResponseEntity.ok(pool.saveBookmark(id, request));
+        } catch (TalentPoolException e) {
+            return ResponseEntity.badRequest().body(java.util.Map.of("message", e.getMessage()));
+        }
+    }
+
+    @PostMapping(value = "/applications/{id}/bookmark/remove", produces = MediaType.APPLICATION_JSON_VALUE)
+    @ResponseBody
+    public TalentPoolBookmarkResponse removeBookmark(@PathVariable Integer id) {
+        return pool.removeBookmark(id);
+    }
+
     @PostMapping("/jobs/{id}/suggest")
     // suggest a candidate for a job posting
     public String suggest(@PathVariable Integer id, @Valid @ModelAttribute TalentPoolSuggestRequest request,

@@ -104,13 +104,14 @@ class SidebarMenuTests {
         }
     }
 
-    /** /internal/job-postings/** chỉ cho HR và Admin (SecurityConfig): vai trò khác không được thấy link dẫn tới 403. */
+    /** /internal/job-postings/** cho HR, HM và Admin (SecurityConfig): vai trò khác không được thấy link dẫn tới 403. */
     @Test
     void jobPostingsEntryOnlyForRolesAllowedToOpenIt() throws Exception {
         String jobPostings = "href=\"/internal/job-postings\"";
         assertTrue(shell("HR", "dashboard").contains(jobPostings));
+        assertTrue(shell("Hiring Manager", "dashboard").contains(jobPostings));
         assertTrue(shell("System Admin", "dashboard").contains(jobPostings));
-        for (String role : List.of("Hiring Manager", "Director", "Interviewer", "Candidate")) {
+        for (String role : List.of("Director", "Interviewer", "Candidate")) {
             assertFalse(shell(role, "dashboard").contains(jobPostings), role);
             assertFalse(legacy(role, "dashboard").contains(jobPostings), role);
         }

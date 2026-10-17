@@ -16,11 +16,7 @@
             <header th:replace="~{fragments/workspace-header :: header(${viewerRole}, ${viewerName})}"></header>
             <main id="main" tabindex="-1" class="page-content">
                 <div class="container">
-                    <nav class="requisition-page-breadcrumb" aria-label="Điều hướng">
-                        <a th:href="@{/dashboard}">Bảng điều khiển</a>
-                        <span aria-hidden="true">/</span>
-                        <span aria-current="page">Yêu cầu tuyển dụng</span>
-                    </nav>
+
                     <div class="requisition-page-header">
                         <div>
                             <h1>Yêu cầu tuyển dụng</h1>
@@ -30,12 +26,8 @@
                             mới</a>
                     </div>
                     <th:block th:replace="~{fragments/requisition :: messages}"></th:block>
-                    <section class="list-container" aria-labelledby="requisition-list-title">
-                        <div class="requisition-list-heading">
-                            <h2 id="requisition-list-title">Danh sách yêu cầu</h2>
-                            <p class="records-count" th:text="|Tổng cộng ${totalElements} yêu cầu phù hợp|"></p>
-                        </div>
-                        <form th:action="@{/requisitions}" method="get" id="filterForm">
+                    <form class="list-filter-card" th:action="@{/requisitions}" method="get" id="filterForm"
+                          role="search" aria-label="Lọc yêu cầu tuyển dụng">
                             <input type="hidden" name="size" th:value="${pageSize}">
                             <div class="requisition-filter-grid">
                                 <div class="filter-field filter-search">
@@ -63,18 +55,7 @@
                                             th:selected="${type == selectedType}"></option>
                                     </select>
                                 </div>
-                                <div class="filter-field">
-                                    <label for="status-filter">Trạng thái</label>
-                                    <select id="status-filter" name="status">
-                                        <option th:if="${viewerRole != 'HR'}" value="">Tất cả trạng thái</option>
-                                        <option
-                                            th:each="state : ${viewerRole == 'HR' ? {'Approved'} : {'Draft','Pending_Director','Approved','Rejected'} }"
-                                            th:value="${state}"
-                                            th:text="${state == 'Draft' ? 'Bản nháp' : (state == 'Pending_Director' ? 'Chờ Giám đốc duyệt' : (state == 'Approved' ? 'Đã duyệt' : (state == 'Rejected' ? 'Từ chối' : state)))}"
-                                            th:selected="${state == selectedStatus || (viewerRole == 'HR' and (selectedStatus == '' or selectedStatus == null))}">
-                                        </option>
-                                    </select>
-                                </div>
+
                                 <div class="filter-field">
                                     <label for="sort-filter">Sắp xếp theo</label>
                                     <select id="sort-filter" name="sort">
@@ -93,7 +74,9 @@
                                 <button type="submit" class="filter-apply">Áp dụng</button>
                                 <a th:href="@{/requisitions}" class="clear-filters">Đặt lại bộ lọc</a>
                             </div>
-                        </form>
+                    </form>
+                    <section class="list-container" aria-label="Danh sách yêu cầu tuyển dụng">
+                        <p class="list-results-count" th:text="|${totalElements} yêu cầu tuyển dụng|">0 yêu cầu tuyển dụng</p>
                         <p class="table-scroll-note" hidden>Cuộn ngang để xem toàn bộ các cột và thao tác.</p>
                         <div class="table-wrapper requisition-table-wrap" role="region"
                             aria-label="Danh sách yêu cầu tuyển dụng" tabindex="0">

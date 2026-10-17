@@ -6,7 +6,7 @@ import com.group2.rms.candidate.exception.ApplicationWithdrawalException;
 import com.group2.rms.candidate.repository.ApplicationRepository;
 import com.group2.rms.core.exception.ResourceNotFoundException;
 import com.group2.rms.core.security.CurrentUserService;
-import com.group2.rms.requisition.entity.JobPosting;
+import com.group2.rms.jobposting.entity.JobPosting;
 import com.group2.rms.user.entity.User;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;

@@ -35,6 +35,17 @@ public class DashboardMetricsRepository {
         return count("select count(u) from User u", Map.of());
     }
 
+    /** Candidate profiles, independent of account status and number of applications. */
+    public long candidates() {
+        return count("select count(c) from Candidate c", Map.of());
+    }
+
+    /** Inclusive rolling window; the upper bound excludes future-dated imported profiles. */
+    public long candidatesCreatedBetween(LocalDateTime from, LocalDateTime to) {
+        return count("select count(c) from Candidate c where c.createdAt >= :from and c.createdAt <= :to",
+                Map.of("from", from, "to", to));
+    }
+
     public List<StatusCount> departmentStatuses() {
         return statuses("select d.departmentStatus, count(d) from Department d group by d.departmentStatus", Map.of());
     }
@@ -51,6 +62,17 @@ public class DashboardMetricsRepository {
     public List<StatusCount> candidateAccountStatuses() {
         return statuses("select u.accountStatus, count(u) from User u where u.role.roleName = 'Candidate' "
                 + "group by u.accountStatus", Map.of());
+    }
+
+    /** All stored internal roles, including roles with no accounts. IDs come from Role. */
+    public List<RoleCount> internalAccountsByRole() {
+        return entityManager.createQuery("select r.roleId, r.roleName, count(u.userId) from Role r "
+                + "left join User u on u.role = r where r.roleName in :roles "
+                + "group by r.roleId, r.roleName order by r.roleName", Object[].class)
+                .setParameter("roles", RoleAuthorities.INTERNAL_ROLE_NAMES)
+                .getResultList().stream()
+                .map(row -> new RoleCount((Integer) row[0], (String) row[1], (Long) row[2]))
+                .toList();
     }
 
     public long activeJobPostings(LocalDateTime now) {
@@ -249,6 +271,7 @@ public class DashboardMetricsRepository {
     private List<StatusCount> statuses(String jpql, Map<String, ?> parameters) {
         var query = entityManager.createQuery(jpql, Object[].class);
         parameters.forEach(query::setParameter);
+        //get list objject
         return query.getResultList().stream()
                 .map(row -> new StatusCount((String) row[0], (Long) row[1]))
                 .toList();
@@ -256,6 +279,9 @@ public class DashboardMetricsRepository {
 
     //key-value
     public record StatusCount(String status, long count) {
+    }
+
+    public record RoleCount(Integer roleId, String roleName, long count) {
     }
 
     public record ApprovalActivity(String type, String title, String status, LocalDateTime at) {

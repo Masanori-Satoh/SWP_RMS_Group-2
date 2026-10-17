@@ -44,9 +44,10 @@
     </div>
 
     <!-- Biểu mẫu chính (Form) -->
-    <form th:action="@{/internal/job-postings/create}" th:object="${postingDto}" method="post" id="jobPostingForm">
+    <form th:action="${postingDto.jobPostingId != null} ? @{/internal/job-postings/{id}/edit(id=${postingDto.jobPostingId})} : @{/internal/job-postings/create}" th:object="${postingDto}" method="post" id="jobPostingForm">
         <!-- Hidden inputs bảo toàn dữ liệu nghiệp vụ -->
         <input type="hidden" th:field="*{jobPostingId}">
+        <input type="hidden" th:field="*{postingStatus}">
         <input type="hidden" th:field="*{requisitionId}">
         <input type="hidden" th:field="*{requisitionCode}">
         <input type="hidden" th:field="*{departmentName}">
@@ -62,7 +63,7 @@
         <input type="hidden" th:field="*{expectedStartDate}">
         <input type="hidden" th:field="*{recruitmentDeadline}">
         <input type="hidden" th:field="*{reasonForHiring}">
-        <input type="hidden" id="formActionInput" name="action" th:value="*{action ?: 'publish'}">
+        <input type="hidden" id="formActionInput" name="action" th:value="*{action ?: 'draft'}">
 
         <!-- ============================================================== -->
         <!-- SECTION A: THÔNG TIN YÊU CẦU TUYỂN DỤNG NGUỒN (CHỈ ĐỌC)          -->
@@ -293,9 +294,9 @@
 
             <div class="jp-actions-right">
                 <button type="button" class="btn btn--secondary" id="btnSaveDraft">
-                    Lưu bản nháp
+                    <span th:text="${postingDto.jobPostingId == null or postingDto.postingStatus == 'Draft' ? 'Lưu bản nháp' : 'Lưu thay đổi'}">Lưu bản nháp</span>
                 </button>
-                <button type="button" class="btn btn--primary" id="btnPublish">
+                <button th:if="${postingDto.postingStatus != 'Published'}" type="button" class="btn btn--primary" id="btnPublish">
                     Đăng tin tuyển dụng
                 </button>
             </div>

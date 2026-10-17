@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+
+<body>
+    <th:block th:fragment="dialogs(canBookmark)">
+        <p class="app-feedback" id="app-feedback" role="status" aria-live="polite"></p>
+
+        <!-- Modal Xem nhanh CV -->
+        <dialog id="app-preview" class="dialog app-dialog app-dialog--preview" aria-labelledby="app-preview-title">
+            <div class="app-dialog__head">
+                <div class="app-dialog__head-content">
+                    <div class="app-dialog__badge-row">
+                        <span class="app-dialog__pill">Xem nhanh CV</span>
+                    </div>
+                    <h2 id="app-preview-title" class="app-section-title">Xem nhanh CV</h2>
+                    <p id="app-preview-job" class="app-dialog__subtitle"></p>
+                </div>
+                <div class="app-dialog__head-actions">
+                    <button id="app-preview-expand" type="button"
+                        class="btn btn--secondary btn--sm app-preview-expand-btn" title="Mở rộng / Thu nhỏ">
+                        <svg class="app-preview-expand-icon" viewBox="0 0 24 24" width="16" height="16" fill="none"
+                            stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+                            <path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7" />
+                        </svg>
+                        <span class="app-preview-expand-text">Mở rộng</span>
+                    </button>
+                    <button type="button" class="btn btn--secondary btn--sm" data-app-close>Đóng</button>
+                </div>
+            </div>
+            <p id="app-preview-status" role="status">Đang tải CV…</p>
+            <div class="app-preview__wrapper">
+                <iframe id="app-preview-frame" class="app-preview__frame" title="Xem nhanh CV" hidden></iframe>
+            </div>
+            <div class="app-dialog__footer">
+                <a id="app-preview-original" class="btn btn--secondary btn--sm" target="_blank" rel="noopener">Mở CV trong tab mới</a>
+                <a id="app-preview-detail" class="btn btn--primary btn--sm">Xem hồ sơ chi tiết</a>
+            </div>
+        </dialog>
+
+        <!-- Modal Lưu / Ghi chú ứng viên tiềm năng -->
+        <dialog th:if="${canBookmark}" id="app-bookmark" class="dialog app-dialog app-dialog--bookmark"
+            aria-labelledby="app-bookmark-title app-bookmark-name">
+            <div class="app-dialog__head">
+                <div>
+                    <h2 id="app-bookmark-title" class="app-section-title">Ghi chú ứng viên</h2>
+                </div>
+                <button type="button" class="btn btn--secondary btn--sm" data-app-close>Đóng</button>
+            </div>
+
+            <!-- Banner ứng viên nổi bật -->
+            <div class="app-candidate-banner">
+                <div class="app-candidate-banner__avatar" id="app-bookmark-avatar" aria-hidden="true">UV</div>
+                <div class="app-candidate-banner__info">
+                    <div class="app-candidate-banner__title-row">
+                        <h3 id="app-bookmark-name" class="app-candidate-banner__name"></h3>
+                        <span id="app-bookmark-badge" class="badge badge--neutral">Kho tiềm năng</span>
+                    </div>
+                    <p id="app-bookmark-job" class="app-candidate-banner__job"></p>
+                </div>
+            </div>
+
+            <div class="app-bookmark-layout">
+                <!-- Cột trái: Lịch sử ghi chú -->
+                <section class="app-bookmark-history" aria-labelledby="app-history-title">
+                    <div class="app-bookmark-col-header">
+                        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor"
+                            stroke-width="1.8" aria-hidden="true">
+                            <circle cx="12" cy="12" r="9" />
+                            <path d="M12 7v5l3 2" />
+                        </svg>
+                        <h3 id="app-history-title" class="app-bookmark-col-title">Lịch sử ghi chú</h3>
+                        <span id="app-bookmark-count" class="app-bookmark-count-badge" hidden>0</span>
+                    </div>
+                    <p id="app-bookmark-status" role="status"></p>
+                    <button id="app-bookmark-retry" type="button" class="btn btn--secondary btn--sm" hidden>Tải lại ghi chú</button>
+                    <ul id="app-bookmark-notes" class="app-notes" aria-label="Ghi chú của HR và HM"></ul>
+                </section>
+
+                <!-- Cột phải: Thêm ghi chú mới -->
+                <form id="app-bookmark-form" class="app-bookmark-compose" method="post" th:action="@{/talent-pool}">
+                    <div class="app-bookmark-col-header">
+                        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor"
+                            stroke-width="1.8" aria-hidden="true">
+                            <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+                            <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+                        </svg>
+                        <h3 class="app-bookmark-col-title"><label for="app-bookmark-content">Thêm ghi chú</label></h3>
+                    </div>
+                    <textarea id="app-bookmark-content" name="content" class="form-textarea app-bookmark-input" rows="5"
+                        maxlength="1000" placeholder="Nhập nhận xét…"></textarea>
+                    <div class="app-bookmark-input-meta">
+                        <span class="app-bookmark-hint">Tối đa 1.000 ký tự</span>
+                        <span id="app-bookmark-char-count" class="app-bookmark-char-count">0/1000</span>
+                    </div>
+                    <p id="app-bookmark-error" class="form-error" role="alert"></p>
+                    <div class="app-dialog__footer">
+                        <button id="app-bookmark-remove" type="button" class="btn btn--danger btn--sm" hidden>Bỏ lưu tiềm năng</button>
+                        <button id="app-bookmark-submit" type="submit" class="btn btn--primary btn--sm" disabled>Lưu ứng viên</button>
+                    </div>
+                    <div id="app-bookmark-remove-confirm" class="app-remove-confirm" hidden>
+                        <p>Bỏ khỏi kho tiềm năng chung? Hồ sơ và ghi chú vẫn được giữ lại.</p>
+                        <div class="app-dialog__footer">
+                            <button id="app-bookmark-remove-cancel" type="button"
+                                class="btn btn--secondary btn--sm">Hủy</button>
+                            <button id="app-bookmark-remove-submit" type="button" class="btn btn--danger btn--sm">Xác nhận bỏ lưu</button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </dialog>
+    </th:block>
+</body>
+
+</html>

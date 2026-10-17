@@ -1,4 +1,4 @@
-package com.group2.rms.requisition.dto;
+package com.group2.rms.jobposting.dto;
 
 import lombok.*;
 

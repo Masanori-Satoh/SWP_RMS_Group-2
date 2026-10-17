@@ -93,7 +93,7 @@ class NotificationServiceImplTest {
     @Test
     @DisplayName("notifyJobPostingPublished: Lưu thông báo khi phát hành tin tuyển dụng tới HM")
     void notifyJobPostingPublished_success() {
-        com.group2.rms.requisition.entity.JobPosting posting = com.group2.rms.requisition.entity.JobPosting.builder()
+        com.group2.rms.jobposting.entity.JobPosting posting = com.group2.rms.jobposting.entity.JobPosting.builder()
                 .jobPostingId(50)
                 .postingTitle("Senior Java Engineer")
                 .requisition(requisition)
@@ -124,7 +124,7 @@ class NotificationServiceImplTest {
     @Test
     @DisplayName("notifyJobPostingPublished: Idempotent - Nếu cùng eventId đã tồn tại thì bỏ qua")
     void notifyJobPostingPublished_idempotent_skipsDuplicate() {
-        com.group2.rms.requisition.entity.JobPosting posting = com.group2.rms.requisition.entity.JobPosting.builder()
+        com.group2.rms.jobposting.entity.JobPosting posting = com.group2.rms.jobposting.entity.JobPosting.builder()
                 .jobPostingId(50)
                 .postingTitle("Senior Java Engineer")
                 .requisition(requisition)
@@ -143,7 +143,7 @@ class NotificationServiceImplTest {
     @DisplayName("notifyJobPostingPublished: Không thực hiện nếu posting hoặc hiring manager là null")
     void notifyJobPostingPublished_nullPostingOrOwner_doesNothing() {
         notificationService.notifyJobPostingPublished(null, director);
-        com.group2.rms.requisition.entity.JobPosting postingNoReq = com.group2.rms.requisition.entity.JobPosting.builder().jobPostingId(1).build();
+        com.group2.rms.jobposting.entity.JobPosting postingNoReq = com.group2.rms.jobposting.entity.JobPosting.builder().jobPostingId(1).build();
         notificationService.notifyJobPostingPublished(postingNoReq, director);
 
         verify(notificationRepository, never()).save(any());

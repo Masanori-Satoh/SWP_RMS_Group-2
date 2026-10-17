@@ -1,0 +1,40 @@
+/* CANDIDATE-ACCOUNTS.CSS — /admin/candidate-accounts only.
+   Reuse Internal Accounts styling; only page surfaces, horizontal density and date cells differ. */
+.rms-app .cac-page {
+  --cac-panel-border: color-mix(in srgb, var(--control-line) 22%, var(--line));
+  min-height: calc(100vh - var(--topbar-h));
+  background: color-mix(in srgb, var(--brand-soft) 45%, var(--page));
+}
+.cac-filters {
+  /* Three fields fit directly on the main bar; keep the action pair beside them. */
+  grid-template-columns: minmax(280px, 560px) minmax(168px, 240px) minmax(190px, 280px) max-content;
+  grid-template-areas: "search status sort actions";
+  gap: var(--s3);
+  margin-bottom: 0;
+  padding: var(--s2) var(--s4);
+  background: var(--surface-subtle);
+  border: 1px solid var(--cac-panel-border);
+  border-bottom: 0;
+  border-radius: var(--radius-md) var(--radius-md) 0 0;
+}
+.cac-filters .iac-filter-actions { justify-self: start; }
+.cac-card {
+  border-color: var(--cac-panel-border);
+  border-top: 0;
+  border-radius: 0 0 var(--radius-md) var(--radius-md);
+  box-shadow: var(--shadow-sm);
+}
+.cac-table { table-layout: auto; min-width: 1020px; }
+.cac-col-number { width: 52px; }
+.cac-col-status { width: 116px; }
+.cac-col-date { width: 128px; }
+.cac-col-actions { width: 76px; }
+/* Size the three content columns from their actual values, without forced word breaks. */
+.cac-table .iac-name, .cac-table .iac-login, .cac-table .iac-email { white-space: nowrap; overflow-wrap: normal; }
+.cac-date { white-space: nowrap; }
+@container internal-accounts (max-width: 880px) {
+  .cac-filters { grid-template-columns: repeat(2, minmax(0, 1fr)); grid-template-areas: "search search" "status sort" "actions actions"; }
+}
+@container internal-accounts (max-width: 540px) {
+  .cac-filters { grid-template-columns: minmax(0, 1fr); grid-template-areas: "search" "status" "sort" "actions"; }
+}

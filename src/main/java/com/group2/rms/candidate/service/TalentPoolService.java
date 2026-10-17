@@ -6,8 +6,8 @@ import com.group2.rms.candidate.exception.TalentPoolException;
 import com.group2.rms.candidate.repository.*;
 import com.group2.rms.core.exception.ResourceNotFoundException;
 import com.group2.rms.core.security.CurrentUserService;
-import com.group2.rms.requisition.entity.JobPosting;
-import com.group2.rms.requisition.repository.JobPostingRepository;
+import com.group2.rms.jobposting.entity.JobPosting;
+import com.group2.rms.jobposting.repository.JobPostingRepository;
 import com.group2.rms.requisition.service.RequisitionAccess;
 import com.group2.rms.user.entity.User;
 import com.group2.rms.user.repository.UserRepository;
@@ -94,6 +94,40 @@ public class TalentPoolService {
             audit.record(user.getUserId(), "UPDATE", "Candidate", candidate.getCandidateId(), "false", "TalentPoolMarked");
         }
     }
+
+    public TalentPoolBookmarkResponse bookmark(Integer applicationId) {
+        User user = actor();
+        Application application = application(applicationId);
+        applicationAccess.requireView(user, application);
+        Candidate candidate = application.getCandidate();
+        return new TalentPoolBookmarkResponse(candidate.getCandidateId(), candidate.isPotential(),
+                notesFor(candidate.getCandidateId()));
+    }
+
+    /** Remove only the shared bookmark; applications, CVs and note history remain intact. */
+    @Transactional
+    public TalentPoolBookmarkResponse removeBookmark(Integer applicationId) {
+        User user = actor();
+        Application application = application(applicationId);
+        applicationAccess.requireView(user, application);
+        Candidate candidate = application.getCandidate();
+        if (candidate.isPotential()) {
+            candidate.setPotential(false);
+            audit.record(user.getUserId(), "UPDATE", "Candidate", candidate.getCandidateId(), "true", "TalentPoolUnmarked");
+        }
+        return new TalentPoolBookmarkResponse(candidate.getCandidateId(), false, notesFor(candidate.getCandidateId()));
+    }
+
+    /** One transaction for the shared flag and optional note; no recruitment transition. */
+    @Transactional
+    public TalentPoolBookmarkResponse saveBookmark(Integer applicationId, TalentPoolBookmarkRequest request) {
+        String content = request.content() == null ? "" : request.content().strip();
+        if (content.length() > 1000) throw new TalentPoolException("Ghi chú tối đa 1000 ký tự.");
+        markPotential(applicationId);
+        Candidate candidate = application(applicationId).getCandidate();
+        if (!content.isEmpty()) addNote(candidate.getCandidateId(), new TalentPoolNoteRequest(content));
+        return bookmark(applicationId);
+    }
     @Transactional
     public void addNote(Integer candidateId, TalentPoolNoteRequest request) {
         User user = actor();
@@ -172,6 +206,8 @@ public class TalentPoolService {
         User user = hr();
         JobPosting posting = job(id, true);
         if ("Closed".equals(posting.getPostingStatus())) return;
+        if (!"Published".equals(posting.getPostingStatus()) && !"Paused".equals(posting.getPostingStatus()))
+            throw new TalentPoolException("Chỉ tin đã đăng hoặc đang tạm dừng mới được đóng đợt tuyển.");
         if (audit.hasOpenOffers(id)) throw new TalentPoolException("Còn Offer chưa kết thúc. Hãy xử lý Offer trước khi đóng đợt tuyển.");
         posting.setPostingStatus("Closed");
         audit.record(user.getUserId(), "UPDATE", "JobPosting", id, null, "Closed");

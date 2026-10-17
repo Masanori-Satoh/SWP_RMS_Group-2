@@ -1,0 +1,38 @@
+/* MANAGEMENT-FILTERS.CSS — Internal/Candidate Accounts and Departments lists only.
+   Prefix mft-; compose the existing GET form and catalog controls, without shared shell edits. */
+.mft-toolbar { position: relative; display: flex; flex-wrap: wrap; align-items: center; gap: var(--s3) var(--s4); min-width: 0; margin: 0 0 var(--s4); padding: var(--s3) var(--s4); }
+.mft-controls { display: flex; align-items: center; flex-wrap: wrap; gap: var(--s3); flex: 1 1 460px; min-width: 0; }
+.mft-disclosure { flex-shrink: 0; }
+.mft-toggle { display: inline-flex; align-items: center; gap: var(--s2); min-height: var(--btn-sm-h); padding: var(--s2) var(--s3); border: 1px solid var(--line); border-radius: var(--radius-full); background: var(--surface); color: var(--ink); font-size: var(--font-sm); font-weight: 600; line-height: 1.4; list-style: none; cursor: pointer; }
+.mft-toggle::-webkit-details-marker { display: none; }
+.mft-toggle:hover, .mft-disclosure[open] > .mft-toggle { background: var(--brand-soft); border-color: var(--brand); color: var(--brand-dark); }
+.mft-count { display: inline-grid; place-items: center; min-width: 20px; height: 20px; padding-inline: var(--s1); border-radius: var(--radius-full); background: var(--brand-soft); color: var(--brand-dark); font-size: var(--font-xs); font-variant-numeric: tabular-nums; }
+.mft-chips { display: flex; align-items: center; flex-wrap: wrap; gap: var(--s1); min-width: 0; }
+.mft-chip { display: inline-flex; align-items: center; justify-content: center; min-height: 36px; padding: var(--s2) var(--s3); border: 1px solid var(--line); border-radius: var(--radius-full); background: var(--surface-subtle); color: var(--muted); font-size: var(--font-sm); font-weight: 500; line-height: 1.35; text-decoration: none; white-space: nowrap; }
+.mft-chip:hover { border-color: var(--control-line); background: var(--neutral-soft); color: var(--ink); }
+.mft-chip[aria-current="page"] { background: var(--brand-soft); border-color: var(--brand); color: var(--brand-dark); font-weight: 600; }
+.mft-popover { position: absolute; top: calc(100% + var(--s2)); left: 0; z-index: 5; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--s4); width: min(440px, 100%); box-sizing: border-box; padding: var(--s4); border: 1px solid var(--line); border-radius: var(--radius-md); background: var(--surface); box-shadow: var(--shadow-sm); }
+.mft-field { min-width: 0; }
+.mft-field .iac-control { border-color: var(--line); font-size: var(--font-sm); }
+.mft-field .iac-control:hover { border-color: var(--control-line); }
+.mft-field .iac-control:focus { border-color: var(--brand); }
+.mft-actions { grid-column: 1 / -1; display: flex; align-items: center; flex-wrap: wrap; gap: var(--s2); padding-top: var(--s3); border-top: 1px solid var(--line); }
+.mft-search { display: flex; align-items: center; flex: 0 1 360px; min-width: min(100%, 300px); margin-left: auto; border: 1px solid var(--line); border-radius: var(--radius-full); background: var(--surface-subtle); }
+.mft-search:focus-within { border-color: var(--brand); }
+.mft-search-submit { display: grid; place-items: center; flex: 0 0 var(--btn-sm-h); width: var(--btn-sm-h); height: var(--btn-sm-h); padding: 0; border: 0; border-radius: var(--radius-full); color: var(--muted); background: transparent; cursor: pointer; }
+.mft-search-submit:hover { background: var(--brand-soft); color: var(--brand-dark); }
+.mft-search-input { flex: 1 1 auto; width: 0; min-width: 0; min-height: var(--btn-sm-h); height: var(--btn-sm-h); padding: var(--s2) var(--s3) var(--s2) var(--s2) 0; border: 0; border-radius: 0 var(--radius-full) var(--radius-full) 0; background: transparent; font-size: var(--font-sm); }
+.mft-search-input::placeholder { color: var(--muted); opacity: 1; }
+.mft-toggle:focus-visible, .mft-chip:focus-visible, .mft-search-submit:focus-visible, .mft-field .iac-control:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
+.mft-search-input:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
+/* Restore all four Card corners: older page variants joined the filter and table borders. */
+.iac-page .mft-table-card { border-top: 1px solid var(--line); border-radius: var(--radius-md); }
+.dm-page .mft-popover { grid-template-columns: minmax(0, 1fr); width: min(320px, 100%); }
+@container (max-width: 880px) {
+  .mft-controls { flex-basis: 100%; }
+  .mft-search { flex-basis: 100%; }
+}
+@container (max-width: 480px) {
+  .mft-popover { grid-template-columns: minmax(0, 1fr); }
+  .mft-toolbar { padding: var(--s3); }
+}
