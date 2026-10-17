@@ -86,6 +86,15 @@ class InterviewPotentialIntegrationTests {
                 .andExpect(jsonPath("$.notes[0].content").value("Potential after "+decision));
         mvc.perform(get("/talent-pool").param("keyword",a.getCandidate().getAccount().getEmail()).with(user(staff.getUsername()).roles("HR")))
                 .andExpect(status().isOk()).andExpect(content().string(containsString(a.getCandidate().getAccount().getFullName())));
+        var notesBeforeRemoval=jdbc.queryForList("SELECT * FROM TalentPoolNote WHERE CandidateId=? ORDER BY NoteId",candidateId);
+        mvc.perform(post("/talent-pool/applications/"+appId+"/bookmark/remove")
+                        .with(user(hm.getUsername()).roles("HIRING_MANAGER")).with(csrf()))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.saved").value(false))
+                .andExpect(jsonPath("$.notes[0].content").value("Potential after "+decision));
+        em.flush();
+        assertFalse(candidates.findById(candidateId).orElseThrow().isPotential());
+        assertEquals(notesBeforeRemoval,jdbc.queryForList("SELECT * FROM TalentPoolNote WHERE CandidateId=? ORDER BY NoteId",candidateId));
+        assertEquals(before,snapshot(f)); assertEquals(candidateCount,candidates.count()); assertEquals(appCount,applications.count());
     }
 
     @Test void hrCanAppendSharedNotesWithoutRepeatedMarkingOrAnyWorkflowMutation() throws Exception {
@@ -105,6 +114,11 @@ class InterviewPotentialIntegrationTests {
         assertEquals(originalNotes.size()+1,currentNotes.size()); assertTrue(currentNotes.containsAll(originalNotes));
         mvc.perform(post("/talent-pool/applications/"+id+"/bookmark").with(user(staff.getUsername()).roles("HR")).with(csrf()).param("content","x".repeat(1001)))
                 .andExpect(status().isBadRequest());
+        assertEquals(currentNotes,jdbc.queryForList("SELECT * FROM TalentPoolNote WHERE CandidateId=? ORDER BY NoteId",cid));
+        assertEquals(before,snapshot(f));
+        mvc.perform(post("/talent-pool/applications/"+id+"/bookmark/remove").with(user(staff.getUsername()).roles("HR")).with(csrf()))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.saved").value(false));
+        em.flush();
         assertEquals(currentNotes,jdbc.queryForList("SELECT * FROM TalentPoolNote WHERE CandidateId=? ORDER BY NoteId",cid));
         assertEquals(before,snapshot(f));
     }

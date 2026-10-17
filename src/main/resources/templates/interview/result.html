@@ -16,7 +16,7 @@
     <th:block layout:fragment="styles">
         <link rel="stylesheet" th:href="@{/css/pages/interview-common.css}">
         <link rel="stylesheet" th:href="@{/css/pages/interview-result.css}">
-        <link th:if="${topbarUser != null and (topbarUser.roleName == 'HR' or topbarUser.roleName == 'Hiring Manager')}" rel="stylesheet" th:href="@{/css/pages/talent-pool-potential-action.css}">
+        <link th:if="${topbarUser != null and (topbarUser.roleName == 'HR' or topbarUser.roleName == 'Hiring Manager')}" rel="stylesheet" th:href="@{/css/pages/applications.css}">
     </th:block>
 </head>
 <body>
@@ -265,7 +265,7 @@
 </main>
 <th:block layout:fragment="scripts">
     <script th:if="${result.canEvaluate or result.canFinalize}" defer th:src="@{/js/pages/interview-result.js}"></script>
-    <script th:if="${result.applicationId != null and topbarUser != null and (topbarUser.roleName == 'HR' or topbarUser.roleName == 'Hiring Manager')}" defer th:src="@{/js/pages/talent-pool-potential-action.js}"></script>
+    <script th:if="${result.applicationId != null and topbarUser != null and (topbarUser.roleName == 'HR' or topbarUser.roleName == 'Hiring Manager')}" defer th:src="@{/js/pages/applications.js}"></script>
 </th:block>
 </body>
 </html>

@@ -182,8 +182,6 @@
                        th:href="@{/talent-pool(jobPostingId=${posting.jobPostingId})}">Thêm ứng viên tiềm năng</a>
                     <a th:if="${viewerRole == 'HR' or viewerRole == 'Hiring Manager'}" class="btn btn--secondary btn-full-width"
                        th:href="@{/talent-pool/jobs/{id}/suggestions(id=${posting.jobPostingId})}">Ứng viên được HM đề xuất</a>
-                    <a th:if="${viewerRole == 'HR' and posting.isPublished()}" class="btn btn--secondary btn-full-width"
-                       th:href="@{/talent-pool(jobPostingId=${posting.jobPostingId})}">Gợi ý ứng viên cho HM</a>
                     <a th:if="${viewerRole == 'HR' or viewerRole == 'Hiring Manager'}" class="btn btn--secondary btn-full-width"
                        th:href="@{/talent-pool/jobs/{id}/recommendations(id=${posting.jobPostingId})}"><span th:text="${viewerRole == 'HR' ? 'Gợi ý đã gửi cho HM' : 'Gợi ý từ HR'}"></span><span th:if="${hrRecommendationCount != null and hrRecommendationCount > 0}" class="badge badge--warning" th:text="${hrRecommendationCount}"></span></a>
                     <button th:if="${viewerRole == 'HR' and (posting.postingStatus == 'Published' or posting.postingStatus == 'Paused')}" class="btn btn--danger btn-full-width" type="button" data-dialog-open="talent-close-job">Đóng đợt tuyển</button>

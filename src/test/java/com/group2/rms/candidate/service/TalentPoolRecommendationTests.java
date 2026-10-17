@@ -162,4 +162,62 @@ class TalentPoolRecommendationTests {
         var response=pool.recommendation(219,11);
         assertEquals("HM đã chấp nhận",response.statusLabel()); assertFalse(response.pending()); assertFalse(response.canDecide());
     }
+
+    void pendingForHr() {
+        targetFor(hr);
+        when(applications.findDetailById(219)).thenReturn(Optional.of(draft));
+        when(audit.has("Application",219,"TalentPoolHrRecommended")).thenReturn(true);
+    }
+    @Test void hrWithdrawalCancelsOnlyUnansweredDraftUnderTheSameJobLock() {
+        pendingForHr(); target.setPostingStatus("Paused");
+        when(applications.countPendingHrRecommendation(219)).thenReturn(1L);
+        when(applications.transition(219,Set.of("HM_Suggested"),"Rejected")).thenReturn(1);
+        pool.withdrawRecommendation(8,219);
+        var order=inOrder(jobs,applications,audit);
+        order.verify(jobs).findForUpdate(8);
+        order.verify(applications).countPendingHrRecommendation(219);
+        order.verify(applications).transition(219,Set.of("HM_Suggested"),"Rejected");
+        order.verify(audit).record(4,"UPDATE","Application",219,"HM_Suggested","TalentPoolCancelled");
+        order.verify(audit).record(4,"UPDATE","Application",219,"HM_Suggested","TalentPoolHrWithdrawn");
+        verifyNoInteractions(candidates,notes,reviews,storage);
+    }
+    @Test void processedRecommendationCannotBeWithdrawn() {
+        pendingForHr(); when(applications.countPendingHrRecommendation(219)).thenReturn(0L);
+        assertThrows(TalentPoolException.class,()->pool.withdrawRecommendation(8,219));
+        verify(applications,never()).transition(anyInt(),anyCollection(),anyString());
+        verify(audit,never()).record(any(),any(),any(),any(),any(),any());
+    }
+    @Test void lostTransitionCannotReportWithdrawalOrWriteAudit() {
+        pendingForHr(); when(applications.countPendingHrRecommendation(219)).thenReturn(1L);
+        assertThrows(TalentPoolException.class,()->pool.withdrawRecommendation(8,219));
+        verify(audit,never()).record(any(),any(),any(),any(),any(),any());
+    }
+    @Test void wrongPostingAndHmOriginDraftCannotBeWithdrawn() {
+        targetFor(hr); draft.setJobPosting(JobPosting.builder().jobPostingId(9).build());
+        when(applications.findDetailById(219)).thenReturn(Optional.of(draft));
+        assertThrows(com.group2.rms.core.exception.ResourceNotFoundException.class,()->pool.withdrawRecommendation(8,219));
+        draft.setJobPosting(target);
+        assertThrows(com.group2.rms.core.exception.ResourceNotFoundException.class,()->pool.withdrawRecommendation(8,219));
+        verify(applications,never()).transition(anyInt(),anyCollection(),anyString());
+    }
+    @Test void hmCannotWithdrawHrRecommendation() {
+        when(current.requireUser()).thenReturn(hm);
+        assertThrows(AccessDeniedException.class,()->pool.withdrawRecommendation(8,219));
+        verifyNoInteractions(applications,jobs,reviews,audit);
+    }
+    @Test void withdrawnRecommendationCannotBeOpenedFromStaleLink() {
+        when(current.requireUser()).thenReturn(hr); when(applications.findDetailById(219)).thenReturn(Optional.of(draft));
+        when(audit.has("Application",219,"TalentPoolHrRecommended")).thenReturn(true);
+        when(audit.has("Application",219,"TalentPoolHrWithdrawn")).thenReturn(true);
+        assertThrows(com.group2.rms.core.exception.ResourceNotFoundException.class,()->pool.recommendation(219,11));
+        verifyNoInteractions(reviews);
+    }
+    @Test void recommendLinkRequiresAnOpenPostingWithReceivingHm() {
+        when(current.requireUser()).thenReturn(hr); when(jobs.findById(8)).thenReturn(Optional.of(target));
+        assertTrue(pool.canRecommend(8));
+        target.setPostingStatus("Paused"); assertFalse(pool.canRecommend(8));
+        target.setPostingStatus("Published"); target.setApplicationDeadline(java.time.LocalDateTime.now().minusDays(1));
+        assertFalse(pool.canRecommend(8)); target.setApplicationDeadline(null);
+        target.getRequisition().setHiringManager(null); assertFalse(pool.canRecommend(8));
+    }
 }

@@ -40,7 +40,7 @@
         </dialog>
 
         <!-- Modal Lưu / Ghi chú ứng viên tiềm năng -->
-        <dialog th:if="${canBookmark}" id="app-bookmark" class="dialog app-dialog app-dialog--bookmark"
+        <dialog th:fragment="bookmark(canBookmark)" th:if="${canBookmark}" id="app-bookmark" class="dialog app-dialog app-dialog--bookmark"
             aria-labelledby="app-bookmark-title app-bookmark-name">
             <div class="app-dialog__head">
                 <div>

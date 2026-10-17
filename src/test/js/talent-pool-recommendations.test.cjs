@@ -15,7 +15,7 @@ function fixture() {
         append: input => { children.push(input); },
         querySelector: () => children[0] || null,
     };
-    const document = {querySelectorAll: () => [form], createElement: () => ({dataset: {}, remove() { children.splice(children.indexOf(this), 1); }})};
+    const document = {getElementById: () => null, querySelectorAll: selector => selector === '[data-pool-withdraw-dialog]' ? [] : [form], createElement: () => ({dataset: {}, remove() { children.splice(children.indexOf(this), 1); }})};
     runInNewContext(readFileSync(resolve(__dirname, '../../main/resources/static/js/pages/talent-pool-recommendations.js'), 'utf8'),
         {document, window: {addEventListener: (name, handler) => pageHandlers.set(name, handler)}});
     return {buttons, children, form, pageHandlers, submit(button) {
@@ -42,4 +42,24 @@ test('double submit is blocked and a browser history return restores a usable fo
 test('an invalid or missing submitter cannot send an accidental acceptance', () => {
     const ui = fixture(); assert.equal(ui.submit(undefined).prevented, true);
     assert.equal(ui.submit({value:'Invalid'}).prevented, true); assert.equal(ui.children.length,0);
+});
+
+test('withdraw names the candidate, cancels without a write and submits the original CSRF form once', () => {
+    const handlers = {}, dialogHandlers = {}, confirmHandlers = {}, cancelHandlers = {};
+    let opened = 0, focused = 0, submitted = 0;
+    const form = {requestSubmit: () => submitted++};
+    const button = {dataset: {name:'An Võ'}, addEventListener: (name, cb) => handlers[name] = cb,
+        focus: () => focused++, closest: selector => { assert.equal(selector,'form'); return form; }};
+    const confirm = {disabled:false, addEventListener: (name, cb) => confirmHandlers[name] = cb};
+    const cancel = {addEventListener: (name, cb) => cancelHandlers[name] = cb};
+    const description = {};
+    const dialog = {showModal: () => opened++, addEventListener: (name, cb) => dialogHandlers[name] = cb,
+        close: () => dialogHandlers.close(), querySelector: selector => selector === '[data-pool-withdraw-confirm]' ? confirm
+            : selector === '[data-pool-withdraw-cancel]' ? cancel : description};
+    const document = {querySelectorAll: selector => selector === '[data-pool-withdraw-dialog]' ? [button] : [], getElementById: () => dialog};
+    runInNewContext(readFileSync(resolve(__dirname, '../../main/resources/static/js/pages/talent-pool-recommendations.js'), 'utf8'), {document});
+    assert.equal(opened,0); handlers.click(); assert.equal(opened,1); assert.match(description.textContent,/An Võ/);
+    cancelHandlers.click(); assert.equal(submitted,0); assert.equal(focused,1);
+    handlers.click(); confirmHandlers.click(); confirmHandlers.click();
+    assert.equal(submitted,1); assert.equal(focused,2); assert.equal(confirm.disabled,true);
 });

@@ -4,6 +4,10 @@ Các báo cáo cập nhật Candidate/Talent Pool và Application ngày 16–17/
 
 ## Trạng thái mới nhất
 
+HR dùng một lối vào **Gợi ý đã gửi cho HM** từ chi tiết tin. Trong trang có nút mở lại selection hiện có và hành động **Xóa gợi ý** trước khi HM phản hồi: [Cập nhật Flow C](2026-10-17-hr-hm-recommendations-flow-c.md#bổ-sung-trang-quản-lý-gợi-ý-và-thu-hồi-1710). Thu hồi dùng trạng thái/audit hiện có, giữ CV, Candidate và ghi chú; không sửa schema.
+
+Bookmark trong phỏng vấn đã gộp thành **một nút mở popup ghi chú dùng chung với Application**, theo yêu cầu cuối: [Báo cáo tái sử dụng và kiểm thử](2026-10-17-interview-bookmark-toggle.md). Popup có lịch sử, thêm ghi chú và bỏ lưu; gỡ CSS/JS riêng để tránh duy trì hai bản.
+
 Nhánh Candidate nộp CV mới cho đề xuất đã được HM duyệt chuyển thẳng `HM_Passed` để HR xếp lịch: [Quyết định nghiệp vụ, phạm vi và kiểm chứng](2026-10-17-new-cv-approved-proposal-interview.md). HR liên hệ bên ngoài; dùng CV cũ vẫn xác nhận theo luồng hiện có. Gợi ý còn chờ HM và tự ứng tuyển thông thường vẫn qua sàng lọc.
 
 Đã tích hợp bookmark tiềm năng và ghi chú chung vào màn hình kết quả phỏng vấn HR/HM: [Báo cáo phạm vi, phân quyền và kiểm thử](2026-10-17-interview-potential-bookmark.md). Component độc lập với Pass/Fail; module Interview chỉ thêm 6 dòng template, dùng lại API Talent Pool, không sửa backend hoặc schema.
@@ -18,6 +22,7 @@ Không bổ sung bảng/cột/enum hoặc sửa file schema. Tuy nhiên đã có
 
 | Tài liệu | Nội dung |
 | --- | --- |
+| [Popup bookmark trong phỏng vấn 17/10](2026-10-17-interview-bookmark-toggle.md) | Một nút mở popup Application cũ, giữ ghi chú/trạng thái tuyển dụng; 108 Java + 39 JavaScript test qua. |
 | [CV mới cho đề xuất đã duyệt 17/10](2026-10-17-new-cv-approved-proposal-interview.md) | Candidate nộp CV mới đúng tin → cùng đề xuất chuyển `HM_Passed`; HR xếp lịch, không chấm AI lại. |
 | [Bookmark trong kết quả phỏng vấn 17/10](2026-10-17-interview-potential-bookmark.md) | HR/HM lưu tiềm năng, xem/thêm ghi chú chung qua API hiện có; giới hạn tác động module Interview và kiểm chứng. |
 | [Flow C HR → HM 17/10](2026-10-17-hr-hm-recommendations-flow-c.md) | Tái sử dụng Application/Review, HR gửi, HM phản hồi trên list/detail, CV lịch sử và kiểm chứng. |

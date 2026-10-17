@@ -77,6 +77,51 @@ class ApplicationPipelineWebTests {
                 pending ? "Chờ phản hồi" : "HM đã chấp nhận",pending,decide);
     }
 
+    @Test void hrRecommendationHubLinksToExistingSelectionAndConfirmsWithdrawal() throws Exception {
+        when(talentPool.recommendations(8)).thenReturn(List.of(recommendation(true,false)));
+        when(talentPool.viewerRole()).thenReturn("HR"); when(talentPool.canRecommend(8)).thenReturn(true);
+        mvc.perform(get("/talent-pool/jobs/8/recommendations").with(as("hr","HR")))
+                .andExpect(status().isOk()).andExpect(content().string(containsString("Gợi ý ứng viên cho HM")))
+                .andExpect(content().string(containsString("href=\"/talent-pool?jobPostingId=8\"")))
+                .andExpect(content().string(containsString("data-pool-withdraw-dialog=\"tp-withdraw-dialog\"")))
+                .andExpect(content().string(containsString("id=\"tp-withdraw-dialog\"")))
+                .andExpect(content().string(containsString("/talent-pool/jobs/8/recommendations/219/withdraw")))
+                .andExpect(content().string(containsString("name=\"_csrf\"")));
+        when(talentPool.canRecommend(8)).thenReturn(false);
+        when(talentPool.recommendations(8)).thenReturn(List.of(recommendation(false,false)));
+        mvc.perform(get("/talent-pool/jobs/8/recommendations").with(as("hr","HR")))
+                .andExpect(status().isOk()).andExpect(content().string(not(containsString("Gợi ý ứng viên cho HM"))))
+                .andExpect(content().string(not(containsString("data-pool-withdraw-dialog"))));
+        when(talentPool.viewerRole()).thenReturn("Hiring Manager");
+        when(talentPool.recommendations(8)).thenReturn(List.of(recommendation(true,true)));
+        mvc.perform(get("/talent-pool/jobs/8/recommendations").with(as("hm","Hiring Manager")))
+                .andExpect(status().isOk()).andExpect(content().string(not(containsString("data-pool-withdraw-dialog"))))
+                .andExpect(content().string(containsString("data-pool-decision")));
+    }
+
+    @Test void withdrawalEnforcesHrAndCsrfBeforeCallingService() throws Exception {
+        for(String role: List.of("Hiring Manager","Candidate","Director","System Admin"))
+            mvc.perform(post("/talent-pool/jobs/8/recommendations/219/withdraw").with(as("other",role)).with(csrf()))
+                    .andExpect(status().isForbidden());
+        mvc.perform(post("/talent-pool/jobs/8/recommendations/219/withdraw").with(as("hr","HR")))
+                .andExpect(status().isForbidden());
+        verifyNoInteractions(talentPool);
+    }
+
+    @Test void withdrawalPreservesSearchContextAndReportsRaceFailure() throws Exception {
+        mvc.perform(post("/talent-pool/jobs/8/recommendations/219/withdraw?keyword=An&page=2&returnUrl=https://example.org")
+                        .with(as("hr","HR")).with(csrf()))
+                .andExpect(redirectedUrl("/talent-pool/jobs/8/recommendations?keyword=An&page=2"))
+                .andExpect(flash().attributeExists("successMessage"));
+        verify(talentPool).withdrawRecommendation(8,219);
+        doThrow(new com.group2.rms.candidate.exception.TalentPoolException("Gợi ý đã được xử lý."))
+                .when(talentPool).withdrawRecommendation(8,219);
+        mvc.perform(post("/talent-pool/jobs/8/recommendations/219/withdraw").with(as("hr","HR")).with(csrf()))
+                .andExpect(redirectedUrl("/talent-pool/jobs/8/recommendations?page=0"))
+                .andExpect(flash().attribute("errorMessage","Gợi ý đã được xử lý."))
+                .andExpect(flash().attributeCount(1));
+    }
+
     @Test void hrReusesSelectionWithItsOwnEndpointAndManagerContext() throws Exception {
         when(talentPool.search(any(),any())).thenReturn(new PageImpl<>(List.of()));
         when(talentPool.viewerRole()).thenReturn("HR"); when(talentPool.targetJobTitle(8)).thenReturn("Tin đích");

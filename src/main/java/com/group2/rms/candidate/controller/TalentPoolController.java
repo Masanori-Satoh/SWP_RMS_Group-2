@@ -140,11 +140,25 @@ public class TalentPoolController {
         model.addAttribute("page", new PageImpl<>(filtered.subList(current * 20, Math.min(filtered.size(), (current + 1) * 20)), PageRequest.of(current, 20), filtered.size()));
         model.addAttribute("keyword", keyword.length() > 100 ? keyword.substring(0, 100) : keyword);
         model.addAttribute("pendingCount", all.stream().filter(TalentPoolRecommendationResponse::pending).count());
+        model.addAttribute("canRecommend", pool.canRecommend(id));
         model.addAttribute("jobPostingId", id);
         model.addAttribute("jobTitle", pool.targetJobTitle(id));
         model.addAttribute("viewerRole", pool.viewerRole());
         model.addAttribute("activeMenu", "talent-pool");
         return "talent-pool/recommendations";
+    }
+
+    @PostMapping("/jobs/{jobId}/recommendations/{id}/withdraw")
+    public String withdrawRecommendation(@PathVariable Integer jobId, @PathVariable Integer id,
+            @RequestParam(defaultValue = "") String keyword, @RequestParam(defaultValue = "0") int page,
+            RedirectAttributes flash) {
+        try {
+            pool.withdrawRecommendation(jobId, id);
+            flash.addFlashAttribute("successMessage", "Đã xóa gợi ý gửi cho HM. CV và ghi chú của ứng viên được giữ nguyên.");
+        } catch (TalentPoolException e) {
+            flash.addFlashAttribute("errorMessage", e.getMessage());
+        }
+        return "redirect:" + recommendationListUrl(jobId, keyword, page);
     }
 
     private static String recommendationListUrl(Integer jobId, String keyword, int page) {

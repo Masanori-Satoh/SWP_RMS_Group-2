@@ -264,6 +264,16 @@ public class TalentPoolService {
         return manager == null ? null : manager.getFullName();
     }
 
+    public boolean canRecommend(Integer jobId) {
+        User user = actor();
+        JobPosting target = job(jobId, false);
+        requireTarget(user, target);
+        return CurrentUserService.hasRole(user, "HR") && "Published".equals(target.getPostingStatus())
+                && (target.getApplicationDeadline() == null || !target.getApplicationDeadline().isBefore(LocalDateTime.now()))
+                && target.getRequisition() != null && target.getRequisition().getHiringManager() != null
+                && CurrentUserService.hasRole(target.getRequisition().getHiringManager(), "Hiring Manager");
+    }
+
     public long pendingRecommendationCount(Integer jobId) {
         requireTarget(actor(), job(jobId, false));
         return applications.countPendingHrRecommendationsForJob(jobId);
@@ -281,7 +291,8 @@ public class TalentPoolService {
         Application a = application(id);
         requireTarget(user, a.getJobPosting());
         if (!a.getCandidate().getCandidateId().equals(candidateId)
-                || !audit.has("Application", id, "TalentPoolHrRecommended"))
+                || !audit.has("Application", id, "TalentPoolHrRecommended")
+                || audit.has("Application", id, "TalentPoolHrWithdrawn"))
             throw new ResourceNotFoundException("Không tìm thấy gợi ý cho ứng viên này.");
         return recommendationResponse(a, user);
     }
@@ -332,6 +343,23 @@ public class TalentPoolService {
                 .decision(accept ? "Pass" : "Fail").build());
         audit.record(user.getUserId(), "UPDATE", "Application", id, "HM_Suggested", accept ? "TalentPoolSuggested" : "TalentPoolCancelled");
         return target.getJobPostingId();
+    }
+
+    /** Withdraw only an unanswered HR draft, serialized with HM decisions and activation. */
+    @Transactional
+    public void withdrawRecommendation(Integer jobId, Integer id) {
+        User user = hr();
+        JobPosting target = job(jobId, true);
+        Application draft = application(id);
+        if (!target.getJobPostingId().equals(draft.getJobPosting().getJobPostingId())
+                || !audit.has("Application", id, "TalentPoolHrRecommended"))
+            throw new ResourceNotFoundException("Không tìm thấy gợi ý gửi cho HM trong tin này.");
+        if (applications.countPendingHrRecommendation(id) != 1
+                || applications.transition(id, Set.of("HM_Suggested"), "Rejected") != 1)
+            throw new TalentPoolException("Gợi ý đã được xử lý, không thể xóa. Vui lòng tải lại trang.");
+        // Existing cancellation metadata keeps this Rejected draft out of every formal application query.
+        audit.record(user.getUserId(), "UPDATE", "Application", id, "HM_Suggested", "TalentPoolCancelled");
+        audit.record(user.getUserId(), "UPDATE", "Application", id, "HM_Suggested", "TalentPoolHrWithdrawn");
     }
     @Transactional
     public Integer confirm(Integer id, TalentPoolConfirmRequest request) {

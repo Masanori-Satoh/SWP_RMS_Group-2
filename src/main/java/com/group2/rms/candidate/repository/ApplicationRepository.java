@@ -301,7 +301,11 @@ public interface ApplicationRepository extends JpaRepository<Application, Intege
         List<Application> findAllDraftsByJobPostingId(@Param("id") Integer jobPostingId);
 
         @Query("select a from Application a join fetch a.candidate c join fetch c.account where a.jobPosting.jobPostingId = :id and "
-                + HR_RECOMMENDATION + " order by a.createdAt desc, a.applicationId desc")
+                + HR_RECOMMENDATION + """
+                  and not exists (select l.auditLogId from AuditLog l where l.entityName = 'Application'
+                    and l.entityId = cast(a.applicationId as string) and l.newValue = 'TalentPoolHrWithdrawn')
+                  order by a.createdAt desc, a.applicationId desc
+                """)
         List<Application> findHrRecommendations(@Param("id") Integer jobPostingId);
 
         @Query("select count(a) from Application a where a.applicationId = :id and a.applicationStatus = 'HM_Suggested' and " + PENDING_HR_RECOMMENDATION)

@@ -1,6 +1,27 @@
 (() => {
     'use strict';
-    const forms = document.querySelectorAll('[data-pool-decision], [data-pool-note]');
+    const dialog = document.getElementById('tp-withdraw-dialog');
+    if (dialog) {
+        let source;
+        const confirm = dialog.querySelector('[data-pool-withdraw-confirm]');
+        document.querySelectorAll('[data-pool-withdraw-dialog]').forEach(button => {
+            button.addEventListener('click', () => {
+                source = button;
+                dialog.querySelector('#tp-withdraw-description').textContent = `Thu hồi gợi ý ${button.dataset.name} trước khi HM phản hồi. CV và ghi chú của ứng viên vẫn được giữ nguyên.`;
+                confirm.disabled = false;
+                dialog.showModal();
+            });
+        });
+        dialog.querySelector('[data-pool-withdraw-cancel]').addEventListener('click', () => dialog.close());
+        dialog.addEventListener('close', () => { source?.focus(); source = null; });
+        confirm.addEventListener('click', () => {
+            if (!source || confirm.disabled) return;
+            confirm.disabled = true;
+            source.closest('form').requestSubmit();
+            dialog.close();
+        });
+    }
+    const forms = document.querySelectorAll('[data-pool-decision], [data-pool-note], [data-pool-withdraw]');
     forms.forEach(form => {
         const buttons = [...form.querySelectorAll('button[type="submit"]')];
         const labels = buttons.map(button => button.textContent);

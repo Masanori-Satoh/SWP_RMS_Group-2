@@ -107,7 +107,7 @@ Chưa coi đây là nghiệm thu đầy đủ mọi thao tác trên browser ho�
 
 ## Kịch bản nghiệm thu thủ công
 
-1. HR mở job Published, chọn Gợi ý ứng viên cho HM; lọc/sang trang, chọn hai Candidate chưa có hồ sơ cho job, đổi CV nguồn và mở preview/ghi chú.
+1. HR mở job Published → Gợi ý đã gửi cho HM → Gợi ý ứng viên cho HM; lọc/sang trang, chọn hai Candidate chưa có hồ sơ cho job, đổi CV nguồn và mở preview/ghi chú.
 2. Mở tổng kết, đối chiếu tin/HM/Candidate/CV, gửi. Chỉ sau response thành công mới có thông báo và xóa draft; mở danh sách gợi ý đã gửi.
 3. HM đúng phòng ban mở job → Gợi ý từ HR. Mở `file-user`, đối chiếu toàn bộ CV cũ và ghi chú; thêm ghi chú, kiểm tra Back về đúng keyword/page.
 4. Chấp nhận một người từ danh sách, một người từ detail: số chờ giảm, người đó vào danh sách HM đề xuất; vẫn chưa xuất hiện trong Application chính thức/chờ phỏng vấn.
@@ -115,3 +115,17 @@ Chưa coi đây là nghiệm thu đầy đủ mọi thao tác trên browser ho�
 6. Từ chối một gợi ý ở mỗi vị trí: refresh không hiện nút quyết định nữa, Candidate/CV/notes vẫn còn và không vào pipeline chính thức.
 7. Thử hai phiên HM cùng xử lý một gợi ý; phiên sau phải báo đã xử lý. Thử HR giả quyết định HM, HM sai phòng ban, thiếu CSRF, nguồn CV thiếu hoặc chọn trùng.
 8. Kiểm tra lại Flow B: HM tự thêm vẫn vào danh sách chờ HR ngay, không cần bước phản hồi HR → HM.
+
+## Bổ sung trang quản lý gợi ý và thu hồi 17/10
+
+- Chi tiết tin phía HR giữ một nút **Gợi ý đã gửi cho HM**. Nút **Gợi ý ứng viên cho HM** chuyển vào header của trang danh sách này, mở đúng `/talent-pool?jobPostingId=...` và dùng selection/CV/modal/backend cũ. Nút gửi mới chỉ hiện khi tin còn nhận hồ sơ và có HM hợp lệ.
+- Mỗi gợi ý đang chờ HM có **Xóa gợi ý**, mở một dialog dùng class catalog hiện có, hiển thị tên ứng viên. Không tạo thêm file template/CSS/JS production. Fragment `fragments/ui/dialogs :: confirm` cũ không dùng được do Thymeleaf chặn nội suy chuỗi vào `onclick`; giữ nguyên file chung, dùng JS của trang và `requestSubmit()` trên form gốc. Người dùng xác nhận mới POST; form giữ CSRF, keyword và trang tìm kiếm. Hủy/ESC không ghi dữ liệu; khóa xác nhận lặp. Lỗi nghiệp vụ trả thông báo và quay lại đúng danh sách, không nhận return URL từ client.
+- Backend HR-only: `POST /talent-pool/jobs/{jobId}/recommendations/{id}/withdraw`. Service kiểm tra role, đúng tin, nguồn HR và trạng thái chưa có HM quyết định; khóa JobPosting giống luồng HM phản hồi. Transition có điều kiện `HM_Suggested → Rejected`; nếu đã xử lý thì báo lỗi, không ghi audit thành công.
+- Đây là thu hồi mềm: ghi `TalentPoolCancelled` để giữ bản nháp ngoài pipeline/số đếm Application chính thức; thêm metadata audit `TalentPoolHrWithdrawn` để ẩn khỏi danh sách gợi ý của HR và HM. Metadata là chuỗi trong AuditLog sẵn có, không thêm enum/constraint/bảng/cột. Link detail gợi ý đã thu hồi trả 404. Candidate, CV nguồn và ghi chú giữ nguyên; có thể gửi gợi ý mới sau khi thu hồi.
+- Gợi ý HM đã chấp nhận/từ chối hoặc đã thành Application chính thức không được thu hồi bằng hành động này. Việc HR liên hệ và xác nhận Candidate đồng ý tiếp tục dùng luồng trước.
+
+Kiểm thử cuối của lượt bổ sung: **86 Java passed, 0 failure/error/skipped**, gồm `TalentPoolRecommendationTests` (20), `ApplicationPipelineWebTests` (56) và `TalentPoolFlowIntegrationTests` (10). Integration chạy SQL Server thật với `ddl-auto=validate`, transaction rollback; kiểm tra thu hồi, ẩn khỏi query HR/HM và số đếm chính thức, giữ nguyên Candidate/CV/ghi chú, gửi lại sau thu hồi, chặn link cũ và chặn thu hồi khi HM đã chấp nhận. Test web kiểm tra role/CSRF, success/error flash, search context, HR/HM action và render dialog. **40 JavaScript passed**, trong đó test xác nhận/hủy nêu đúng tên ứng viên, dùng form gốc và không submit lặp. `node --check` và `git diff --check` qua. Không commit/push. Các số liệu phía trên thuộc lượt triển khai Flow C trước đó, không cộng dồn.
+
+Log lượt cuối: `target/hr-recommendation-withdraw-tests-final2.log` và `target/hr-recommendation-js-tests.log` (file build tạm, không đưa vào Git).
+
+Giới hạn browser của lượt này: đã thử khởi động preview riêng cổng 8082, `ddl-auto=validate`; Tomcat không mở được do Windows báo `Unable to establish loopback connection` / `Invalid argument: connect`, kể cả bật IPv4 cho tiến trình preview. Vì vậy chưa có xác nhận hình ảnh desktop/mobile cho giao diện mới. Tiến trình preview đã tự kết thúc; không dừng/restart ứng dụng IDE của người dùng. Bằng chứng end-to-end hiện có là các request MockMvc qua controller/security/service/repository đến SQL Server thật, không phải thao tác lưu dữ liệu qua browser.

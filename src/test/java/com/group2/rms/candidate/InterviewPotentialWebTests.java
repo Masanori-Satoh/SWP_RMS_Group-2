@@ -62,7 +62,11 @@ class InterviewPotentialWebTests {
                 .andExpect(content().string(containsString("Kết quả cuối")))
                 .andExpect(content().string(containsString("Nhận xét chuyên môn")))
                 .andExpect(content().string(containsString("Đang tải trạng thái…")))
-                .andExpect(content().string(not(containsString("/bookmark/remove"))));
+                .andExpect(content().string(containsString("aria-controls=\"app-bookmark\"")))
+                .andExpect(content().string(containsString("id=\"app-bookmark\"")))
+                .andExpect(content().string(containsString("Lịch sử ghi chú")))
+                .andExpect(content().string(not(containsString("data-tp-notes"))))
+                .andExpect(content().string(not(containsString("id=\"app-preview\""))));
         verifyNoInteractions(pool,email);
     }
     @Test void hrHasSameActionBeforeFinalDecisionAndHmFinalizeDialogIsPreserved() throws Exception {
@@ -75,14 +79,15 @@ class InterviewPotentialWebTests {
                 .andExpect(status().isOk()).andExpect(content().string(containsString("data-action=\"/interviews/7/final-result\"")))
                 .andExpect(content().string(containsString("Chốt kết quả")))
                 .andExpect(content().string(containsString("/js/pages/interview-result.js")))
-                .andExpect(content().string(containsString("/js/pages/talent-pool-potential-action.js")));
+                .andExpect(content().string(containsString("/js/pages/applications.js")));
     }
     @ParameterizedTest @ValueSource(strings={"Interviewer","Director","System Admin"})
     void otherResultViewersDoNotReceivePotentialUiOrItsScript(String role) throws Exception {
         when(resultService.getResult(eq(7L),any())).thenReturn(result("Passed",false));
         mvc.perform(get("/interviews/7/result").with(as(role))).andExpect(status().isOk())
                 .andExpect(content().string(not(containsString("data-tp-potential"))))
-                .andExpect(content().string(not(containsString("talent-pool-potential-action"))));
+                .andExpect(content().string(not(containsString("/js/pages/applications.js"))))
+                .andExpect(content().string(not(containsString("id=\"app-bookmark\""))));
         verifyNoInteractions(pool);
     }
     @Test void existingReadApiReturnsSavedStateAndSharedNotes() throws Exception {
@@ -110,14 +115,29 @@ class InterviewPotentialWebTests {
         mvc.perform(post("/talent-pool/applications/218/bookmark").with(as("HR")).with(csrf()).param("content","Ghi chú"))
                 .andExpect(status().isBadRequest()).andExpect(jsonPath("$.message").value("Không thể lưu ghi chú."));
     }
+    @ParameterizedTest @ValueSource(strings={"HR","Hiring Manager"})
+    void toggleCanUseExistingRemoveApiWithoutInterviewMutation(String role) throws Exception {
+        when(pool.removeBookmark(218)).thenReturn(new TalentPoolBookmarkResponse(8,false,List.of(
+                new TalentPoolNoteResponse(1,"HR Lan","Giữ ghi chú",LocalDateTime.now()))));
+        mvc.perform(post("/talent-pool/applications/218/bookmark/remove").with(as(role)).with(csrf()))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.saved").value(false))
+                .andExpect(jsonPath("$.notes[0].content").value("Giữ ghi chú"));
+        verify(pool).removeBookmark(218);
+        verifyNoInteractions(resultService,email);
+    }
     @Test void csrfRolesAndApplicationScopeStayProtected() throws Exception {
         mvc.perform(post("/talent-pool/applications/218/bookmark").with(as("HR"))).andExpect(status().isForbidden());
+        mvc.perform(post("/talent-pool/applications/218/bookmark/remove").with(as("HR"))).andExpect(status().isForbidden());
         for(String role:List.of("Candidate","Interviewer")) {
             mvc.perform(get("/talent-pool/applications/218/bookmark").with(as(role))).andExpect(status().isForbidden());
             mvc.perform(post("/talent-pool/applications/218/bookmark").with(as(role)).with(csrf())).andExpect(status().isForbidden());
+            mvc.perform(post("/talent-pool/applications/218/bookmark/remove").with(as(role)).with(csrf())).andExpect(status().isForbidden());
         }
         verifyNoInteractions(pool);
         when(pool.bookmark(218)).thenThrow(new AccessDeniedException("Wrong application scope"));
         mvc.perform(get("/talent-pool/applications/218/bookmark").with(as("Hiring Manager"))).andExpect(status().isForbidden());
+        when(pool.removeBookmark(218)).thenThrow(new AccessDeniedException("Wrong application scope"));
+        mvc.perform(post("/talent-pool/applications/218/bookmark/remove").with(as("Hiring Manager")).with(csrf()))
+                .andExpect(status().isForbidden());
     }
 }

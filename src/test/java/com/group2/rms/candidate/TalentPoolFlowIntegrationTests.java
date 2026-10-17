@@ -94,6 +94,53 @@ class TalentPoolFlowIntegrationTests {
                 f.source().getCandidate().getCandidateId(),f.target().getJobPostingId(),"HM_Suggested").orElseThrow().getApplicationId();
     }
 
+    @Test void realHrWithdrawalHidesDraftPreservesFormalCountsAndAllowsSendingAgain() throws Exception {
+        var f=fixture(); int jobId=f.target().getJobPostingId(), cid=f.source().getCandidate().getCandidateId();
+        long formal=metrics.applications(), candidateCount=candidates.count();
+        String sourceCv=f.source().getAppliedCvUrl(), sourceStatus=f.source().getApplicationStatus();
+        var oldNotes=poolNotesCount(cid);
+        int id=recommend(f);
+        mvc.perform(get("/internal/job-postings/"+jobId).with(user(f.hr().getUsername()).roles("HR")))
+                .andExpect(status().isOk()).andExpect(content().string(containsString("Gợi ý đã gửi cho HM")))
+                .andExpect(content().string(org.hamcrest.Matchers.not(containsString("Gợi ý ứng viên cho HM"))));
+        mvc.perform(post("/talent-pool/jobs/"+jobId+"/recommendations/"+id+"/withdraw")
+                        .with(user(f.hr().getUsername()).roles("HR")).with(csrf()))
+                .andExpect(flash().attributeExists("successMessage"));
+        em.flush(); em.clear();
+        assertEquals("Rejected",applications.findById(id).orElseThrow().getApplicationStatus());
+        assertEquals(0,applications.countPendingHrRecommendation(id));
+        assertEquals(1,applications.countTalentPoolCancellation(id));
+        assertFalse(applications.findHrRecommendations(jobId).stream().anyMatch(a->a.getApplicationId().equals(id)));
+        assertFalse(formalIds().contains(id)); assertEquals(formal,metrics.applications());
+        assertEquals(candidateCount,candidates.count()); assertTrue(candidates.findById(cid).orElseThrow().isPotential());
+        assertEquals(sourceCv,applications.findById(f.source().getApplicationId()).orElseThrow().getAppliedCvUrl());
+        assertEquals(sourceStatus,applications.findById(f.source().getApplicationId()).orElseThrow().getApplicationStatus());
+        assertEquals(oldNotes,poolNotesCount(cid));
+        mvc.perform(post("/talent-pool/recommendations/"+id+"/decision").with(user(f.hm().getUsername()).roles("HIRING_MANAGER"))
+                        .with(csrf()).param("decision","Pass")).andExpect(status().isNotFound());
+        mvc.perform(get("/talent-pool/"+cid+"?recommendationId="+id).with(user(f.hm().getUsername()).roles("HIRING_MANAGER")))
+                .andExpect(status().isNotFound());
+        int replacement=recommend(f); assertNotEquals(id,replacement);
+        assertEquals(1,applications.countPendingHrRecommendation(replacement));
+    }
+    private long poolNotesCount(int cid) {
+        return em.createQuery("select count(n) from TalentPoolNote n where n.candidate.candidateId = :id",Long.class)
+                .setParameter("id",cid).getSingleResult();
+    }
+    @Test void realAcceptedRecommendationCannotBeWithdrawnByHr() throws Exception {
+        var f=fixture(); int id=recommend(f), jobId=f.target().getJobPostingId();
+        mvc.perform(post("/talent-pool/recommendations/"+id+"/decision").with(user(f.hm().getUsername()).roles("HIRING_MANAGER"))
+                        .with(csrf()).param("decision","Pass")).andExpect(flash().attributeExists("successMessage"));
+        mvc.perform(post("/talent-pool/jobs/"+jobId+"/recommendations/"+id+"/withdraw")
+                        .with(user(f.hr().getUsername()).roles("HR")).with(csrf()))
+                .andExpect(flash().attributeExists("errorMessage"));
+        em.flush(); em.clear();
+        assertEquals("HM_Suggested",applications.findById(id).orElseThrow().getApplicationStatus());
+        assertEquals(0,applications.countTalentPoolCancellation(id));
+        assertTrue(applications.findHrRecommendations(jobId).stream().anyMatch(a->a.getApplicationId().equals(id)));
+        assertTrue(applications.findSuggestionsByJobPostingId(jobId).stream().anyMatch(a->a.getApplicationId().equals(id)));
+    }
+
     @Test void realHrRecommendationHmReviewAllCvsAndNotesThenConsentUseOneDraft() throws Exception {
         var f = fixture(); int jobId=f.target().getJobPostingId(), cid=f.source().getCandidate().getCandidateId();
         long appCount=applications.count(), candidateCount=candidates.count(), formalCount=metrics.applications();
