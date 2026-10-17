@@ -28,11 +28,11 @@ Hệ thống được xây dựng theo kiến trúc phân tầng chuẩn của *
 - **`JobRequisition.java`**: Thực thể chính lưu trữ thông tin yêu cầu tuyển dụng (Tiêu đề, Phòng ban, Số lượng tuyển, Hình thức làm việc, Mức lương min/max, Địa điểm, Mô hình on-site/hybrid/remote, Hạn thử việc, Ngày bắt đầu dự kiến, Lý do tuyển, Mô tả công việc, Yêu cầu ứng viên, Trạng thái phê duyệt).
 - **`ScreeningCriteria.java`**: Quan hệ 1-N với `JobRequisition`, đại diện cho tiêu chí sàng lọc hồ sơ tự động của AI (Tên tiêu chí, Loại tiêu chí: Skill/Education/Experience/Knockout, Giá trị yêu cầu, Trọng số điểm Weight, Cờ bắt buộc isMandatory).
 - **`RequisitionApproval.java`**: Lưu trữ lịch sử duyệt/từ chối của Giám đốc (Director) kèm ý kiến nhận xét (Feedback/Comments).
-- **`RequisitionWorkflowEvent.java`**: Lưu trữ dòng thời gian (Timeline) các sự kiện luân chuyển trạng thái (Submitted, Approved, Rejected, Withdrawn).
+- Dòng thời gian (Timeline) của yêu cầu được ghép từ `RequisitionApproval` (duyệt/từ chối) và `AuditLog` (tạo, gửi duyệt, rút lại, chỉnh sửa). Không có bảng riêng cho sự kiện luân chuyển.
 
 ### 2. Tầng Truy cập Dữ liệu (Repository Layer)
 - **`JobRequisitionRepository.java`**: Kế thừa `JpaRepository` và `JpaSpecificationExecutor`, hỗ trợ truy vấn lọc động, tìm kiếm toàn văn theo từ khóa, lọc theo phòng ban, hình thức, trạng thái và phân trang/sắp xếp linh hoạt.
-- **`RequisitionApprovalRepository.java`**, **`RequisitionWorkflowEventRepository.java`**, **`JobPostingRepository.java`**.
+- **`RequisitionApprovalRepository.java`**, **`JobPostingRepository.java`**.
 
 ### 3. Tầng Dữ liệu Truyền tải (DTO Layer)
 - **Request DTOs**:
@@ -143,7 +143,7 @@ Nhằm đảm bảo chất lượng code và phòng ngừa lỗi hồi quy (regr
 ### 5. Stage 4 — Integration Test (`RequisitionIntegrationTest.java`)
 - Kiểm thử tích hợp thật giữa Service, Repositories và Database với `@SpringBootTest` và `@Transactional`:
   - **`it01_createDraft_persistsRelationships`**: Kiểm tra lưu Draft thật vào database, đảm bảo tính toàn vẹn quan hệ giữa Requisition, Hiring Manager, Department và ScreeningCriteria.
-  - **`it04_directorApprove_createsApprovalAndEvent`**: Kiểm tra luồng Director duyệt đơn, chuyển trạng thái `Approved`, lưu bản ghi `RequisitionApproval` và ghi nhận `RequisitionWorkflowEvent`.
+  - **`it04_directorApprove_createsApprovalAndEvent`**: Kiểm tra luồng Director duyệt đơn, chuyển trạng thái `Approved`, lưu bản ghi `RequisitionApproval` và ghi `AuditLog`.
   - **`it05_directorReject_recordsFeedback`**: Kiểm tra luồng Director từ chối đơn kèm lưu nhận xét lý do từ chối.
   - **`it06_withdraw_revertsToDraft`**: Kiểm tra Hiring Manager rút đơn `Pending_Director` về lại `Draft`.
   - **`it08_copy_clearsIdentifiers`**: Kiểm tra sao chép đơn trả về DTO sạch (xóa criteriaId).
@@ -153,7 +153,7 @@ Nhằm đảm bảo chất lượng code và phòng ngừa lỗi hồi quy (regr
 
 ## V. CHECKLIST TỔNG KẾT ĐẦU MỤC CÔNG VIỆC
 
-- [x] **Entity & Database**: Thiết kế bảng `JobRequisition`, `ScreeningCriteria`, `RequisitionApproval`, `RequisitionWorkflowEvent`.
+- [x] **Entity & Database**: Thiết kế bảng `JobRequisition`, `ScreeningCriteria`, `RequisitionApproval` (lịch sử thao tác dùng `AuditLog` có sẵn).
 - [x] **Repository Layer**: Viết các Repository với Specification tìm kiếm động.
 - [x] **DTO & Validator**: Tạo DTO Request/Response và hoàn thiện quy tắc validate (Draft vs Submit).
 - [x] **Service Layer**: Cài đặt trọn vẹn CRUD, luồng duyệt/từ chối, rút đơn, sao chép, phân quyền và ghi Audit Log.
@@ -205,7 +205,7 @@ Nhằm đảm bảo chất lượng code và phòng ngừa lỗi hồi quy (regr
 
 - [x] **I2-NOTI-01 — Tái sử dụng thiết kế chung:** Kiểm tra thành phần Notification hiện có của dự án trước khi tạo mới. Xây dựng module dùng chung `com.group2.rms.notification` phẳng (< 10 files) theo `ARCHITECTURE_GUIDE.md`, tránh phụ thuộc vòng.
 - [x] **I2-NOTI-02 — Dữ liệu thông báo:** Lưu người nhận, loại sự kiện, ID requisition/posting liên quan, nội dung, thời gian tạo, trạng thái đọc và định danh sự kiện để chống tạo trùng. Có migration SQL `005_notification.sql` tương ứng.
-- [x] **I2-NOTI-03 — Phát sinh sau reject hợp lệ:** Khi Director từ chối Pending với feedback hợp lệ, lưu Rejected, approval, workflow event và thông báo cho đúng HM sở hữu requisition trong cùng giao dịch database. Không tạo thông báo khi validation/quyền/trạng thái thất bại hoặc giao dịch rollback.
+- [x] **I2-NOTI-03 — Phát sinh sau reject hợp lệ:** Khi Director từ chối Pending với feedback hợp lệ, lưu Rejected, approval, audit log và thông báo cho đúng HM sở hữu requisition trong cùng giao dịch database. Không tạo thông báo khi validation/quyền/trạng thái thất bại hoặc giao dịch rollback.
 - [x] **I2-NOTI-04 — Nội dung:** Thông báo nêu requisition nào bị từ chối, ai từ chối, thời điểm và lý do. Có liên kết về đúng trang chi tiết để HM sửa và gửi lại.
 - [x] **I2-NOTI-05 — Giao diện nhận:** HM có danh sách/badge thông báo chưa đọc tại `/notifications`, mở được thông báo và đánh dấu đã đọc. Mỗi người chỉ xem/đánh dấu thông báo của chính mình; kiểm tra quyền ở server và khi mở liên kết đích.
 - [x] **I2-NOTI-06 — Chống trùng:** Gửi lại cùng request hoặc retry cùng sự kiện không tạo thông báo trùng qua `eventId`. Một lần reject mới sau khi HM resubmit tạo thông báo mới và vẫn giữ lịch sử cũ.
