@@ -1,15 +1,13 @@
 package com.group2.rms.requisition.service;
 
+import com.group2.rms.requisition.dto.RequisitionListResponse;
 import com.group2.rms.requisition.dto.RequisitionRequest;
 import com.group2.rms.requisition.dto.RequisitionResponse;
+import com.group2.rms.requisition.dto.RequisitionSearchRequest;
 
-import org.springframework.data.domain.Page;
 public interface RequisitionService {
- Page<RequisitionResponse> search(int page,int size,String query,Integer department,String type,String status);
- Page<RequisitionResponse> search(int page,int size,String query,Integer department,String type,String status,String sort);
- Page<RequisitionResponse> search(int page,int size,String query,Integer department,String position,String type,String status,String sort);
- java.util.List<String> getAvailablePositions();
- long countVisible();
+ /** Dữ liệu cho màn danh sách: kết quả trang hiện tại, bộ lọc đã làm sạch, ô lọc theo role và các chip. */
+ RequisitionListResponse getListPage(RequisitionSearchRequest filter);
  RequisitionResponse getById(Integer id);
  RequisitionRequest getRequestDtoById(Integer id);
  RequisitionRequest copy(Integer id);

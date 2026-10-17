@@ -25,6 +25,9 @@ public class InternalJobPostingDetailResponse {
     private String workModel;
     private String workLocation;
     private String salaryDisplay;
+    private String numberOfPositionsDisplay;
+    private Integer postingNo;
+    private LocalDateTime closedAt;
     private String jobDescription;
     private String jobRequirements;
     private String benefits;

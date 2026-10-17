@@ -13,17 +13,6 @@
 <body>
 <main id="main" layout:fragment="content" class="page-content container" tabindex="-1">
 
-    <!-- Breadcrumb / Quay lại danh sách tin tuyển dụng -->
-    <nav class="mb-4" aria-label="Điều hướng quay lại">
-        <a th:href="@{/internal/job-postings}" class="job-detail-back-link">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                <line x1="19" y1="12" x2="5" y2="12"></line>
-                <polyline points="12 19 5 12 12 5"></polyline>
-            </svg>
-            <span>Tất cả tin tuyển dụng</span>
-        </a>
-    </nav>
-
     <!-- Tiêu đề trang & Lời dẫn -->
     <div class="page-header">
         <div>
@@ -58,7 +47,7 @@
         <input type="hidden" th:field="*{numberOfPositions}">
         <input type="hidden" th:field="*{minSalary}">
         <input type="hidden" th:field="*{maxSalary}">
-        <input type="hidden" th:field="*{probationDuration}">
+        <input type="hidden" th:field="*{probationDays}">
         <input type="hidden" th:field="*{gender}">
         <input type="hidden" th:field="*{expectedStartDate}">
         <input type="hidden" th:field="*{recruitmentDeadline}">
@@ -145,7 +134,7 @@
                 <div class="jp-field-group">
                     <label class="jp-field-label">Thời gian thử việc</label>
                     <div class="jp-readonly-box"
-                         th:text="*{probationDuration != null ? probationDuration + ' ngày' : 'Chưa xác định'}">
+                         th:text="*{probationDays != null ? probationDays + ' ngày' : 'Chưa xác định'}">
                         60 ngày
                     </div>
                 </div>
@@ -247,6 +236,18 @@
                     <small class="jp-help-text">Gợi ý từ yêu cầu gốc hoặc nhập "Thỏa thuận", "Cạnh tranh".</small>
                     <small id="salaryDisplay-error" class="field-error"
                            th:text="${#fields.hasErrors('salaryDisplay') ? #strings.listJoin(#fields.errors('salaryDisplay'), '; ') : ''}"></small>
+                </div>
+
+                <div class="jp-field-group">
+                    <label for="numberOfPositionsDisplay" class="jp-field-label">
+                        Số lượng hiển thị cho ứng viên
+                    </label>
+                    <input type="text" id="numberOfPositionsDisplay" th:field="*{numberOfPositionsDisplay}"
+                           class="jp-input" placeholder="Ví dụ: 3 hoặc Nhiều vị trí"
+                           maxlength="50">
+                    <small class="jp-help-text">Để trống nếu không muốn công khai số lượng cần tuyển.</small>
+                    <small id="numberOfPositionsDisplay-error" class="field-error"
+                           th:text="${#fields.hasErrors('numberOfPositionsDisplay') ? #strings.listJoin(#fields.errors('numberOfPositionsDisplay'), '; ') : ''}"></small>
                 </div>
 
                 <div class="jp-field-group">

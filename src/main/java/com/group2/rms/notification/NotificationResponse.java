@@ -10,26 +10,20 @@ public record NotificationResponse(
     String referenceId,
     String linkUrl,
     boolean isRead,
-    LocalDateTime createdAt
+    LocalDateTime createdAt,
+    LocalDateTime readAt
 ) {
     public static NotificationResponse from(Notification n) {
-        return from(n, true);
-    }
-
-    public static NotificationResponse from(Notification n, boolean isHrOrAdmin) {
-        String resolvedLink = n.getLinkUrl();
-        if (!isHrOrAdmin && resolvedLink != null && resolvedLink.startsWith("/internal/job-postings/")) {
-            resolvedLink = resolvedLink.replace("/internal/job-postings/", "/jobs/");
-        }
         return new NotificationResponse(
             n.getNotificationId(),
             n.getTitle(),
             n.getContent(),
             n.getEventType(),
             n.getReferenceId(),
-            resolvedLink,
+            n.getLinkUrl(),
             Boolean.TRUE.equals(n.getIsRead()),
-            n.getCreatedAt()
+            n.getCreatedAt(),
+            n.getReadAt()
         );
     }
 }

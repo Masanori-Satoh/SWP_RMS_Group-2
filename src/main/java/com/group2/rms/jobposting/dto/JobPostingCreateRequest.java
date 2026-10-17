@@ -34,7 +34,7 @@ public class JobPostingCreateRequest {
     // Chi tiết bổ sung cho form tạo tin (đồng bộ từ Requisition và có thể tinh chỉnh)
     private java.math.BigDecimal minSalary;
     private java.math.BigDecimal maxSalary;
-    private String probationDuration;
+    private Integer probationDays;
     private String gender;
 
     @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
@@ -59,6 +59,9 @@ public class JobPostingCreateRequest {
 
     @Size(max = 100, message = "Hiển thị mức lương không vượt quá 100 ký tự.")
     private String salaryDisplay;
+
+    @Size(max = 50, message = "Số lượng hiển thị không vượt quá 50 ký tự.")
+    private String numberOfPositionsDisplay;
 
     @Size(max = 255, message = "Địa điểm làm việc không vượt quá 255 ký tự.")
     private String workLocation;

@@ -22,7 +22,7 @@ import com.group2.rms.jobposting.entity.JobPosting;
 import com.group2.rms.requisition.entity.JobRequisition;
 import com.group2.rms.user.entity.Department;
 import com.group2.rms.offer.dto.PassedCandidateResponse;
-import com.group2.rms.offer.service.NotificationService;
+import com.group2.rms.notification.OfferMailSender;
 import com.group2.rms.user.entity.User;
 import com.group2.rms.user.entity.Role;
 import com.group2.rms.user.repository.UserRepository;
@@ -75,7 +75,7 @@ class OfferServiceTests {
     private OfferApprovalRepository offerApprovalRepository;
 
     @Mock
-    private NotificationService notificationService;
+    private OfferMailSender offerMailSender;
 
     @Mock
     private com.group2.rms.notification.NotificationService systemNotificationService;
@@ -931,7 +931,7 @@ class OfferServiceTests {
         assertEquals("Sent_Candidate", response.getOfferStatus());
         assertEquals("Offered", app.getApplicationStatus());
         verify(applicationRepository).save(app);
-        verify(notificationService).sendOfferLetterToCandidate(offer);
+        verify(offerMailSender).sendOfferLetterToCandidate(offer);
     }
 
     @Test

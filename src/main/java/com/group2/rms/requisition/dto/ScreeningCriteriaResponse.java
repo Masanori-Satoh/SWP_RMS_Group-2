@@ -17,4 +17,5 @@ public class ScreeningCriteriaResponse {
     private String requiredValue;
     private BigDecimal weight;
     private Boolean isMandatory;
+    private String criteriaTypeLabel;   // "Kỹ năng", "Học vấn"... (RequisitionLabels.criteriaType)
 }

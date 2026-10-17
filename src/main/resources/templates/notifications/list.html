@@ -52,7 +52,7 @@
                     <button type="submit" class="btn btn--outline btn--sm btn-mark-read">Đánh dấu đã đọc</button>
                 </form>
                 <form th:if="${n.linkUrl != null}" th:action="@{'/notifications/' + ${n.notificationId} + '/read'}" method="post">
-                    <input type="hidden" name="redirectUrl" th:value="${n.linkUrl}">
+                    <input type="hidden" name="open" value="true">
                     <button type="submit" class="btn btn--primary btn--sm btn-open-target">
                         Xem chi tiết &rarr;
                     </button>
