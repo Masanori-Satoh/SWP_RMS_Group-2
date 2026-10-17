@@ -14,14 +14,30 @@
 <main id="main" layout:fragment="content" class="page-content container" tabindex="1">
 
   <!-- FLASH MESSAGES -->
-  <div th:if="${successMessage}" class="alert alert--success" style="margin-bottom: 16px;">
-    <i class="fa-solid fa-circle-check"></i>
-    <span th:text="${successMessage}">Thành công</span>
+  <div class="page-flash-container" id="pageFlashContainer" th:if="${successMessage != null or errorMessage != null}">
+    <div th:if="${successMessage}" class="page-flash-alert page-flash-success" id="flashSuccessAlert">
+      <i class="fa-solid fa-circle-check"></i>
+      <span th:text="${successMessage}">Thành công</span>
+    </div>
+    <div th:if="${errorMessage}" class="page-flash-alert page-flash-danger" id="flashErrorAlert">
+      <i class="fa-solid fa-triangle-exclamation"></i>
+      <span th:text="${errorMessage}">Lỗi</span>
+    </div>
   </div>
-  <div th:if="${errorMessage}" class="alert alert--danger" style="margin-bottom: 16px;">
-    <i class="fa-solid fa-triangle-exclamation"></i>
-    <span th:text="${errorMessage}">Lỗi</span>
-  </div>
+  <script th:if="${successMessage != null or errorMessage != null}">
+    (function() {
+      var flash = document.getElementById('pageFlashContainer');
+      if (flash && !flash.dataset.dismissInit) {
+        flash.dataset.dismissInit = 'true';
+        setTimeout(function() {
+          flash.classList.add('flash-dismissed');
+          setTimeout(function() {
+            flash.style.display = 'none';
+          }, 450);
+        }, 2000);
+      }
+    })();
+  </script>
 
   <!-- PAGE HEADER -->
   <div class="page-header">

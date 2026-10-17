@@ -2019,3 +2019,26 @@ function submitDirectorReject() {
             });
     });
 }
+
+// =========================================================================
+// AUTO DISMISS FLASH MESSAGES (Hiển thị 2s sau đó tự động biến mất theo mockup)
+// =========================================================================
+function initOfferFlashAutoDismiss() {
+    const flashContainer = document.getElementById('pageFlashContainer') || document.querySelector('.page-flash-container');
+    if (!flashContainer || flashContainer.dataset.dismissInit) return;
+    flashContainer.dataset.dismissInit = 'true';
+
+    setTimeout(() => {
+        flashContainer.classList.add('flash-dismissed');
+        setTimeout(() => {
+            flashContainer.style.display = 'none';
+        }, 450);
+    }, 2000);
+}
+
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initOfferFlashAutoDismiss);
+} else {
+    initOfferFlashAutoDismiss();
+}
+
