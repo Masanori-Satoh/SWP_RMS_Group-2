@@ -20,6 +20,8 @@
 }
 /* Role shortcuts reuse the real GET filters; advanced fields remain in the popover. */
 .iac-internal-page .mft-controls { flex: 0 1 auto; }
+.iac-internal-page .mft-toolbar { padding-block: var(--s4); }
+.iac-internal-page .mft-field--sort { grid-column: 1 / -1; }
 .iac-internal-page .mft-search { flex-basis: 340px; }
 .iac-internal-page .mft-search-input { padding: var(--s2) var(--s3) var(--s2) 0; }
 .iacv-role-group { flex-wrap: wrap; gap: var(--s1); overflow: visible; }
@@ -32,6 +34,9 @@
 .iacv-count { flex-shrink: 0; font-variant-numeric: tabular-nums; }
 .iacv-table-inset { min-width: 0; padding: var(--s3) var(--s6); }
 .iacv-card .iac-pagination { padding-inline: var(--s6); }
+/* The Table header already reports the result count; retain only page controls here. */
+.iac-internal-page .iac-pagination .pagination-info { display: none; }
+.iac-internal-page .iac-pagination .pagination-wrapper { justify-content: flex-end; }
 /* Warm, continuous table surface; reserve the stronger green for the selected account. */
 .iac-internal-page .iacv-table { min-width: 1020px; }
 .iacv-table .iac-cell { background: var(--surface); border-color: var(--line); transition: background-color 150ms ease; }

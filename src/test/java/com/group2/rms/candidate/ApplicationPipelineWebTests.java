@@ -71,6 +71,74 @@ class ApplicationPipelineWebTests {
     @MockitoBean com.group2.rms.candidate.service.RecruitmentEmailService recruitmentEmail;
     @MockitoBean UserRepository users;
 
+    @Test
+    void bookmarkModalPreservesListActionsAndCsrf() throws Exception {
+        when(pipeline.list(any(), any())).thenReturn(listOf(true, "Hiring Manager",
+                row(218, "HM_Passed", "80", true, true)));
+        mvc.perform(get("/applications").with(as("hm_tuan", "Hiring Manager")))
+                .andExpect(status().isOk())
+                .andExpect(content().string(containsString("data-app-preview")))
+                .andExpect(content().string(containsString("data-bookmark-url=\"/talent-pool/applications/218/bookmark\"")))
+                .andExpect(content().string(containsString("Xem chi tiết")))
+                .andExpect(content().string(containsString("/interviews/new?applicationId=218")))
+                .andExpect(content().string(containsString("/offers/create?applicationId=218")))
+                .andExpect(content().string(containsString("Lịch sử ghi chú")))
+                .andExpect(content().string(containsString("Bỏ lưu tiềm năng")))
+                .andExpect(content().string(not(containsString("more-menu"))))
+                .andExpect(content().string(not(containsString("Tối đa 1.000 ký tự."))))
+                .andExpect(content().string(containsString("name=\"_csrf\"")));
+    }
+
+    @Test
+    void bookmarkRemovalUsesExistingServiceForHrAndHm() throws Exception {
+        when(talentPool.removeBookmark(218)).thenReturn(
+                new com.group2.rms.candidate.dto.TalentPoolBookmarkResponse(8, false, List.of()));
+        for (String role : List.of("HR", "Hiring Manager")) {
+            mvc.perform(post("/talent-pool/applications/218/bookmark/remove").with(as("reviewer", role)).with(csrf()))
+                    .andExpect(status().isOk()).andExpect(jsonPath("$.saved").value(false));
+        }
+        verify(talentPool, times(2)).removeBookmark(218);
+        verifyNoInteractions(reviewService, recruitmentEmail, pipeline);
+    }
+
+    @Test
+    void bookmarkRemovalRequiresCsrfRoleAndApplicationAccess() throws Exception {
+        mvc.perform(post("/talent-pool/applications/218/bookmark/remove").with(as("hm_tuan", "Hiring Manager")))
+                .andExpect(status().isForbidden());
+        mvc.perform(post("/talent-pool/applications/218/bookmark/remove").with(as("candidate", "Candidate")).with(csrf()))
+                .andExpect(status().isForbidden());
+        verifyNoInteractions(talentPool);
+        when(talentPool.removeBookmark(218)).thenThrow(new AccessDeniedException("Forbidden"));
+        mvc.perform(post("/talent-pool/applications/218/bookmark/remove").with(as("hm_other", "Hiring Manager")).with(csrf()))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    void bookmarkReadAndSaveUseExistingService() throws Exception {
+        var state = new com.group2.rms.candidate.dto.TalentPoolBookmarkResponse(8, true, List.of());
+        when(talentPool.bookmark(218)).thenReturn(state);
+        when(talentPool.saveBookmark(eq(218), any())).thenReturn(state);
+        mvc.perform(get("/talent-pool/applications/218/bookmark").with(as("hm_tuan", "Hiring Manager")))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.saved").value(true));
+        mvc.perform(post("/talent-pool/applications/218/bookmark").with(as("hr_lan", "HR")).with(csrf())
+                        .param("content", "Nhận xét chung"))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.candidateId").value(8));
+        verify(talentPool).saveBookmark(218, new com.group2.rms.candidate.dto.TalentPoolBookmarkRequest("Nhận xét chung"));
+        verifyNoInteractions(reviewService, recruitmentEmail);
+    }
+
+    @Test
+    void bookmarkRequiresRoleCsrfAndValidLength() throws Exception {
+        mvc.perform(get("/talent-pool/applications/218/bookmark").with(as("candidate", "Candidate")))
+                .andExpect(status().isForbidden());
+        mvc.perform(post("/talent-pool/applications/218/bookmark").with(as("hm_tuan", "Hiring Manager")))
+                .andExpect(status().isForbidden());
+        mvc.perform(post("/talent-pool/applications/218/bookmark").with(as("hm_tuan", "Hiring Manager")).with(csrf())
+                        .param("content", "x".repeat(1001)))
+                .andExpect(status().isBadRequest()).andExpect(jsonPath("$.message").exists());
+        verifyNoInteractions(talentPool);
+    }
+
     // ------------------------------------------------------------------ quyền truy cập
 
     @Test
@@ -105,14 +173,14 @@ class ApplicationPipelineWebTests {
                 .andExpect(content().string(containsString("Danh sách ứng viên")))
                 .andExpect(content().string(not(containsString("Hồ sơ được chuyển"))))
                 .andExpect(content().string(containsString("href=\"/applications/298\"")))
-                .andExpect(content().string(containsString("href=\"/applications/298/cv\"")))
+                .andExpect(content().string(containsString("data-cv-url=\"/applications/298/cv\"")))
                 .andExpect(content().string(containsString(">79<")))
                 .andExpect(content().string(containsString("Chờ AI chấm")))
                 .andExpect(content().string(containsString("badge--warning")))
                 .andExpect(content().string(containsString("href=\"/interviews/new?applicationId=120\"")))
                 .andExpect(content().string(containsString("href=\"/offers/create?applicationId=120\"")))
                 .andExpect(content().string(not(containsString("applicationId=298"))))
-                .andExpect(content().string(containsString("class=\"more-menu\"")))
+                .andExpect(content().string(not(containsString("class=\"more-menu\""))))
                 .andExpect(content().string(containsString("Đang chờ: HR")))
                 .andExpect(content().string(not(containsString("name=\"status\""))));
     }
@@ -243,7 +311,7 @@ class ApplicationPipelineWebTests {
         mvc.perform(get("/applications/298").with(as("hr_lan", "HR")))
                 .andExpect(status().isOk())
                 .andExpect(content().string(containsString("aria-label=\"Tiến độ hồ sơ\"")))
-                .andExpect(content().string(not(containsString("app-actions"))))
+                .andExpect(content().string(not(containsString("id=\"app-actions-title\""))))
                 .andExpect(content().string(not(containsString("Xem kết quả phỏng vấn"))));
     }
 
@@ -370,7 +438,7 @@ class ApplicationPipelineWebTests {
                 .andExpect(status().isOk())
                 .andExpect(model().attributeHasFieldErrors("reviewForm", "decision", "comments"))
                 .andExpect(content().string(containsString("Quyết định không hợp lệ.")))
-                .andExpect(content().string(containsString("Nhận xét tối đa 1000 ký tự.")));
+                .andExpect(content().string(containsString("<span class=\"form-error\">Độ dài phải từ 0 đến 1,000 ký tự.</span>")));
         verifyNoInteractions(reviewService);
     }
 

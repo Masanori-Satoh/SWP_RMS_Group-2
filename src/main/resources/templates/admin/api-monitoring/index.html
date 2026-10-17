@@ -33,14 +33,14 @@
                         <svg th:case="*" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/></svg>
                     </span>
                     <div class="apm-service-heading">
-                        <h2 class="apm-service-name" th:id="${'service-' + endpoint.id}" th:text="${endpoint.id == 'internal' ? 'Ứng dụng và SQL Server' : endpoint.name}"></h2>
+                        <h2 class="apm-service-name" th:id="${'service-' + endpoint.id}" th:text="${endpoint.id == 'internal' ? 'Ứng dụng và SQL Server' : (endpoint.id == 'ai' ? 'Sàng lọc hồ sơ bằng AI' : (endpoint.id == 'email' ? 'Dịch vụ email' : endpoint.name))}"></h2>
                         <p class="apm-service-type" th:text="${endpoint.category == 'Internal' ? 'Nội bộ' : ((endpoint.category == 'External Integration' or endpoint.category == 'External Intergration') ? 'Tích hợp ngoài' : endpoint.category)}"></p>
                     </div>
                 </div>
                         <span class="badge iac-status" th:attr="data-monitor-status=${endpoint.status}"
                               th:classappend="${endpoint.status == 'OPERATIONAL' ? ' badge--success' : (endpoint.status == 'FAILED' ? ' badge--danger' : (endpoint.status == 'Unconfigured' ? ' badge--warning' : ' badge--neutral'))}"
                               th:switch="${endpoint.status}">
-                            <span th:case="'OPERATIONAL'">Thành công</span>
+                            <span th:case="'OPERATIONAL'">Hoạt động tốt</span>
                             <span th:case="'FAILED'">Thất bại</span>
                             <span th:case="'Not check'">Chưa kiểm tra</span>
                             <span th:case="'Unconfigured'">Chưa cấu hình</span>

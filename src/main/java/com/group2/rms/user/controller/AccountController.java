@@ -39,8 +39,7 @@ public class AccountController {
                        @RequestParam(defaultValue = "name") String sort,
                        @RequestParam(defaultValue = "0") int page,
                        Model model) {
-        Page<AccountListService.AccountRow> accountPage = accounts.findAccounts(
-                search, roleId, departmentId, status, sort, page);
+        Page<AccountListService.AccountRow> accountPage = accounts.findAccounts(search, roleId, departmentId, status, sort, page);
         model.addAttribute("accounts", accountPage);
         model.addAttribute("roles", accounts.findRoles());
         model.addAttribute("departments", accounts.findDepartments());

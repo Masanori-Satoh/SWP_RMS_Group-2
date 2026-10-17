@@ -21,6 +21,7 @@
   border-color: color-mix(in srgb, var(--brand) 10%, var(--line)); border-radius: var(--radius-lg);
 }
 .ads-page .mft-controls { flex: 0 1 auto; }
+.ads-page .mft-toolbar { padding-block: var(--s4); }
 .ads-page .mft-search { flex-basis: 340px; }
 .ads-page .mft-search-input { padding: var(--s2) var(--s3) var(--s2) 0; }
 /* One segmented group; each anchor still submits the existing status query via its URL. */
@@ -36,6 +37,9 @@
 .ads-table-count { flex-shrink: 0; font-variant-numeric: tabular-nums; }
 .ads-table-inset { min-width: 0; padding: var(--s3) var(--s6); }
 .ads-page .iac-pagination { padding-inline: var(--s6); }
+/* Candidate/Department lists already report their result count in the Table header. */
+.ads-page .iac-pagination .pagination-info { display: none; }
+.ads-page .iac-pagination .pagination-wrapper { justify-content: flex-end; }
 .ads-page .iac-table .iac-cell { background: var(--surface); border-color: var(--line); transition: background-color 150ms ease; }
 .ads-page .iac-table th.iac-cell { background: color-mix(in srgb, var(--brand-soft) 38%, var(--surface)); color: var(--muted); border-bottom-color: color-mix(in srgb, var(--brand) 20%, var(--line)); }
 .ads-page .iac-table tbody tr:hover .iac-cell, .ads-page .iac-table tbody tr:focus-within .iac-cell { background: color-mix(in srgb, var(--brand-soft) 55%, var(--surface)); }
@@ -73,8 +77,13 @@
   .ads-page .mft-disclosure { grid-area: filter; }
   .ads-status-group { grid-area: statuses; justify-self: start; }
   .ads-page .mft-search { grid-area: search; width: min(400px, 100%); min-width: 0; }
-  .dm-page .mft-toolbar { grid-template-areas: 'statuses search' 'reset reset'; }
-  .dm-page .ads-filter-reset { grid-area: reset; justify-self: start; }
+  .dm-page .mft-toolbar { grid-template-areas: 'statuses search'; }
+  .dm-page .ads-filter-reset { grid-column: 1 / -1; grid-row: 2; justify-self: start; }
+}
+@container (max-width: 600px) {
+  .dm-page .mft-toolbar { grid-template-columns: minmax(0, 1fr); grid-template-areas: 'statuses' 'search'; }
+  .dm-page .ads-filter-reset { grid-row: 3; }
+  .dm-page .mft-search { width: 100%; }
 }
 @media (max-width: 768px) {
   .ads-heading::before { display: none; }
