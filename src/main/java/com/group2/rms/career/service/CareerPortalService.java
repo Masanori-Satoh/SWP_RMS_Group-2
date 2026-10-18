@@ -77,7 +77,8 @@ public class CareerPortalService {
         JobPosting job = jobPostingRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy tin tuyển dụng"));
 
-        if (!"Published".equals(job.getPostingStatus())) {
+        // Tin hẹn đăng chưa tới giờ đăng cũng coi như chưa có (JobPosting#isVisibleToCandidates)
+        if (!job.isVisibleToCandidates(LocalDateTime.now())) {
             throw new ResourceNotFoundException("Tin tuyển dụng này không còn khả dụng.");
         }
 
@@ -109,7 +110,7 @@ public class CareerPortalService {
 
     public void validateJobForApplication(Integer id) {
         jobPostingRepository.findById(id)
-                .filter(j -> "Published".equals(j.getPostingStatus()))
+                .filter(j -> j.isVisibleToCandidates(LocalDateTime.now()))
                 .filter(j -> j.getApplicationDeadline() == null
                         || !j.getApplicationDeadline().isBefore(LocalDateTime.now()))
                 .orElseThrow(() -> new ResourceNotFoundException(

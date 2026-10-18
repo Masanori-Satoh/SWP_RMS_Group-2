@@ -33,7 +33,8 @@
 
 - Mọi quy tắc trong tài liệu này đều có trong `RequisitionValidator`. JS chỉ để người dùng thấy lỗi sớm.
 - Form **không gửi được** các trường sau (không có trong `@InitBinder`, server tự gán):
-  `departmentId`, `hiringManagerId`, `recruitmentRound`, `approvalStatus`, `requisitionCode`.
+  `hiringManagerId`, `recruitmentRound`, `approvalStatus`, `requisitionCode`.
+  `departmentId` có trong `@InitBinder` nhưng chỉ dùng cho Giám đốc; vai trò khác bị service ghi đè.
 - Mọi chuỗi đều được **trim**; chuỗi chỉ có khoảng trắng coi như để trống (`cleanString`).
 - Ô nhiều dòng (Lý do / Mô tả / Yêu cầu): đổi `\r\n` thành `\n` trước khi đếm độ dài (`cleanMultiline`).
   Trình duyệt đếm mỗi lần xuống dòng là 1 ký tự nhưng gửi lên 2 ký tự.
@@ -55,8 +56,9 @@
 
 | Field | Bắt buộc | Quy tắc | Thông báo lỗi |
 | :--- | :---: | :--- | :--- |
-| Tên vị trí | ✔ (cả nháp) | Trim, 1–200 ký tự (`maxlength="200"`) | "Tên vị trí không được để trống." / "Tối đa 200 ký tự." |
+| Tên vị trí | ✔ (cả nháp) | Trim, 1–200 ký tự (`maxlength="200"`) | "Tên vị trí không được để trống." / "Nội dung quá 200 ký tự" |
 | Phòng ban | — | Chỉ đọc. Tạo mới: phòng ban của tài khoản đang đăng nhập, phải đang `Active`. Sửa: giữ phòng ban đã lưu của phiếu | "Tài khoản của bạn chưa được gán phòng ban đang hoạt động. Vui lòng liên hệ quản trị viên." |
+| Phòng ban (Giám đốc) | Nháp + Gửi | Giám đốc tự chọn trong danh sách phòng ban đang `Active` (tạo và sửa bản nháp của mình) | "Vui lòng chọn phòng ban đang hoạt động." |
 | Đợt tuyển dụng | — | Chỉ đọc. Tạo mới = 1; sao chép = đợt lớn nhất trong chuỗi + 1 (mục 8.2) | — |
 | Số lượng cần tuyển | ✔ (cả nháp) | Số nguyên 1–30 (`POSITIONS_MIN` / `POSITIONS_MAX`; công ty khoảng 200 nhân sự). Nút −/+ dừng ở 1 và 30 | "Vui lòng nhập số lượng cần tuyển." / "Số lượng cần tuyển phải từ 1 đến 30 người." |
 | Loại tuyển dụng | — | `New` / `Replacement`; "Chưa xác định" lưu `NULL`. Không bắt buộc kể cả khi gửi duyệt | "Vui lòng chọn một tùy chọn hợp lệ." |
@@ -73,7 +75,7 @@ Ngoài ra (service): không được có **2 bản nháp cùng tên vị trí tr
 | Hình thức làm việc | ✔ (cả nháp) | `Full-time` / `Part-time` / `Internship` / `Contract`. Mặc định Toàn thời gian | "Vui lòng chọn một tùy chọn hợp lệ." |
 | Mô hình làm việc | ✔ (cả nháp) | `On-site` / `Remote` / `Hybrid`. Mặc định Tại văn phòng | "Vui lòng chọn một tùy chọn hợp lệ." |
 | Yêu cầu giới tính | — | `Any` / `Male` / `Female`. Để trống → `Any` (giống DEFAULT của cột) | "Vui lòng chọn một tùy chọn hợp lệ." |
-| Địa điểm làm việc | ✔ | Trim, tối đa 255 ký tự | "Địa điểm làm việc không được để trống." / "Tối đa 255 ký tự." |
+| Địa điểm làm việc | ✔ | Trim, tối đa 255 ký tự | "Địa điểm làm việc không được để trống." / "Nội dung quá 255 ký tự" |
 | Ngày bắt đầu dự kiến | ✔ | Gửi duyệt: ≥ hôm nay. Luôn luôn: ≤ hôm nay + 1 năm (`START_DATE_MAX_YEARS`; chặn cả năm gõ nhầm như `20266`). Ô ngày có `min` / `max` | "Ngày bắt đầu dự kiến phải từ hôm nay trở đi." / "Ngày bắt đầu dự kiến không được quá 1 năm kể từ hôm nay." |
 | Thời gian thử việc | — | Để trống = không thử việc, hoặc số nguyên 1–180 ngày (Điều 25 BLLĐ 2019). Nút −/+ (ô trống bấm nút thì bắt đầu từ 60). Lưu số nguyên vào cột `ProbationDays INT` | "Thời gian thử việc phải từ 1 đến 180 ngày." |
 | Lương tối thiểu / tối đa | — | Xem 3.1 | — |
@@ -98,9 +100,9 @@ Ngoài ra (service): không được có **2 bản nháp cùng tên vị trí tr
 
 | Field | Bắt buộc | Giới hạn | Bộ đếm | Thông báo lỗi |
 | :--- | :---: | :---: | :---: | :--- |
-| Lý do tuyển dụng | ✔ | 2000 ký tự (cột `NVARCHAR(2000)`) | `/2000` | "Vui lòng nhập trường này." / "Tối đa 2000 ký tự." |
-| Mô tả công việc | ✔ | 2000 ký tự | `/2000` | "Vui lòng nhập trường này." / "Tối đa 2000 ký tự." |
-| Yêu cầu ứng viên | ✔ | 2000 ký tự | `/2000` | "Vui lòng nhập trường này." / "Tối đa 2000 ký tự." |
+| Lý do tuyển dụng | ✔ | 2000 ký tự (cột `NVARCHAR(2000)`) | `/2000` | "Vui lòng nhập trường này." / "Nội dung quá 2000 ký tự" |
+| Mô tả công việc | ✔ | 2000 ký tự | `/2000` | "Vui lòng nhập trường này." / "Nội dung quá 2000 ký tự" |
+| Yêu cầu ứng viên | ✔ | 2000 ký tự | `/2000` | "Vui lòng nhập trường này." / "Nội dung quá 2000 ký tự" |
 
 - Trim; nội dung chỉ có khoảng trắng coi như để trống. `maxlength="2000"` trên textarea.
 - Mô tả / Yêu cầu là `NVARCHAR(MAX) NOT NULL`: bản nháp để trống thì lưu chuỗi rỗng.
@@ -167,6 +169,7 @@ Dòng "trống hoàn toàn" = không có tên, loại, giá trị và không b�
 - [ ] Có lỗi khi gửi duyệt → dữ liệu và các dòng tiêu chí được giữ nguyên
 - [ ] Dán chuỗi 500 ký tự không có khoảng trắng → form, trang danh sách và trang chi tiết không vỡ layout
 - [ ] Tài khoản chưa có phòng ban tạo yêu cầu → báo lỗi dễ hiểu
+- [ ] Giám đốc tạo yêu cầu: chưa chọn phòng ban → báo lỗi; bấm "Phê duyệt trực tiếp" → phiếu `Approved`, HR tạo tin được ngay
 - [ ] Xóa phiếu đợt 1 đã được sao chép sang đợt 2 → báo lỗi, nút Xóa bị ẩn
 
 ---
