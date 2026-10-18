@@ -8,12 +8,13 @@ import org.springframework.format.annotation.DateTimeFormat;
 @Data @Builder @NoArgsConstructor @AllArgsConstructor
 public class RequisitionRequest {
     private String action;
-    private String requisitionCode;
     private String title;
     private Integer departmentId;
     private Integer recruitmentRound;
     /** Phiếu nguồn khi sao chép sang đợt mới; server tự quy về phiếu đợt 1 và tính lại số đợt. */
     private Integer originalRequisitionId;
+    /** Tên vị trí của phiếu đợt 1, chỉ để form đổi số đợt hiển thị khi người dùng sửa tên; server không dùng giá trị này. */
+    private String originalTitle;
     /** New / Replacement, không bắt buộc. */
     private String hiringType;
     private Integer numberOfPositions;

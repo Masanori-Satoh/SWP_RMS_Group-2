@@ -1,10 +1,10 @@
 <!doctype html>
 <html lang="vi" xmlns:th="http://www.thymeleaf.org">
 <head th:replace="~{auth/fragments :: head('Xác minh email đăng ký')}"></head>
-<body class="auth-page">
+<body class="auth-page auth-botanical auth-registration-otp">
 <header th:replace="~{auth/fragments :: header}"></header>
 <div class="auth-container auth-shell">
-  <aside th:replace="~{auth/fragments :: story}"></aside>
+  <aside th:replace="~{auth/fragments :: story(botanical=true)}"></aside>
   <main id="main" class="auth-card" tabindex="-1">
     <nav th:replace="~{auth/fragments :: registrationSteps(2)}"></nav>
     <h1>Xác minh email của bạn.</h1>

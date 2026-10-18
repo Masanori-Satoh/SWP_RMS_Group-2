@@ -15,8 +15,16 @@ public final class RequisitionLabels {
     public static final String POSTING_PAUSED = "Paused";
     public static final String POSTING_CLOSED = "Closed";
 
+    /** Định dạng mã yêu cầu: REQ-0001, REQ-0025... (không kèm năm, theo quyết định của nhóm). */
+    private static final String REQUISITION_CODE_FORMAT = "REQ-%04d";
+
     private RequisitionLabels() {
         // Chỉ chứa hàm static, không tạo đối tượng
+    }
+
+    /** Mã yêu cầu dạng REQ-0025: "REQ-" + RequisitionId, đệm cho đủ 4 chữ số. */
+    public static String requisitionCode(Integer requisitionId) {
+        return String.format(REQUISITION_CODE_FORMAT, requisitionId);
     }
 
     /** Trạng thái duyệt của yêu cầu (JobRequisition.ApprovalStatus). */

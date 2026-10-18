@@ -1,5 +1,7 @@
 package com.group2.rms.requisition.dto;
 
+import com.group2.rms.core.dto.FilterOption;
+
 import java.util.List;
 
 /**

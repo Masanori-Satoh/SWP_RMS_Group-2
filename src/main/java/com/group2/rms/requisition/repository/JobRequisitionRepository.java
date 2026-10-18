@@ -1,38 +1,92 @@
+
 package com.group2.rms.requisition.repository;
 
+import java.util.Collection;
 import java.util.List;
+import java.util.Optional;
+
+import jakarta.persistence.LockModeType;
 
 import com.group2.rms.requisition.entity.JobRequisition;
-import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.stereotype.Repository;
+import com.group2.rms.user.entity.User;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
+import org.springframework.data.jpa.repository.EntityGraph;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
+import org.springframework.data.jpa.repository.Lock;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
+import org.springframework.stereotype.Repository;
 
-@Repository 
-public interface JobRequisitionRepository extends JpaRepository<JobRequisition, Integer>, org.springframework.data.jpa.repository.JpaSpecificationExecutor<JobRequisition> {
-    
-    @org.springframework.data.jpa.repository.Lock(jakarta.persistence.LockModeType.PESSIMISTIC_WRITE)
-    @org.springframework.data.jpa.repository.Query("select r from JobRequisition r where r.requisitionId = :id")
-    java.util.Optional<JobRequisition> findForUpdate(@org.springframework.data.repository.query.Param("id") Integer id);
+@Repository
+public interface JobRequisitionRepository
+        extends JpaRepository<JobRequisition, Integer>,
+        JpaSpecificationExecutor<JobRequisition> {
 
-    //Loc theo 1 trang thai
-    List<JobRequisition> findByApprovalStatusOrderByCreatedAtDesc(String approvalStatus);
+    // Tìm kiếm yêu cầu tuyển dụng theo ID và áp dụng khóa ghi để cập nhật an toàn
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("SELECT r FROM JobRequisition r WHERE r.requisitionId = :id")
+    Optional<JobRequisition> findForUpdate(@Param("id") Integer id);
 
-    //Lay tat ca req theo thu tu moi nhat, co phan trang
-    Page<JobRequisition> findAllByOrderByCreatedAtDesc(Pageable pageable);
+    // Lọc danh sách yêu cầu tuyển dụng theo trạng thái phê duyệt, sắp xếp giảm dần theo ngày tạo
+    List<JobRequisition> findByApprovalStatusOrderByCreatedAtDesc(
+            String approvalStatus
+    );
 
-    // Có đợt tuyển nào được sao chép từ phiếu này không (phiếu này là OriginalRequisitionId của phiếu khác)
+    // Kiểm tra xem có đợt tuyển dụng nào khác được sao chép/tạo từ yêu cầu tuyển dụng này hay không
     boolean existsByOriginalRequisition_RequisitionId(Integer requisitionId);
 
-    // Đợt lớn nhất trong chuỗi tuyển của phiếu gốc (gồm chính phiếu gốc và các đợt trỏ về nó)
-    @org.springframework.data.jpa.repository.Query("SELECT COALESCE(MAX(r.recruitmentRound), 1) FROM JobRequisition r LEFT JOIN r.originalRequisition o WHERE r.requisitionId = :rootId OR o.requisitionId = :rootId")
-    int findMaxRoundInChain(@org.springframework.data.repository.query.Param("rootId") Integer rootId);
+    // Trong các id cho trước, id nào đã có đợt tuyển sau sao chép từ nó (1 câu cho cả trang, tránh N+1)
+    @Query("""
+        SELECT DISTINCT r.originalRequisition.requisitionId
+        FROM JobRequisition r
+        WHERE r.originalRequisition.requisitionId IN :ids
+        """)
+    List<Integer> findIdsWithLaterRounds(@Param("ids") Collection<Integer> ids);
 
-    @org.springframework.data.jpa.repository.Query("SELECT COUNT(r) > 0 FROM JobRequisition r WHERE LOWER(TRIM(r.title)) = LOWER(TRIM(:title)) AND r.department.departmentId = :departmentId AND r.approvalStatus = 'Draft' AND (:excludeId IS NULL OR r.requisitionId <> :excludeId)")
-    boolean existsDraftByTitleAndDepartment(@org.springframework.data.repository.query.Param("title") String title, @org.springframework.data.repository.query.Param("departmentId") Integer departmentId, @org.springframework.data.repository.query.Param("excludeId") Integer excludeId);
+    // Màn danh sách: lấy luôn phòng ban + người tạo trong cùng câu SELECT,
+    // để mỗi dòng không phải chạy thêm 2 câu lấy tên phòng ban / tên người tạo
+    @Override
+    @EntityGraph(attributePaths = {"department", "hiringManager"})
+    Page<JobRequisition> findAll(Specification<JobRequisition> spec, Pageable pageable);
 
-    // Danh sách Hiring Manager đã tạo yêu cầu ở các trạng thái cho trước (dùng cho ô lọc "Người tạo yêu cầu")
-    @org.springframework.data.jpa.repository.Query("SELECT DISTINCT u FROM JobRequisition r JOIN r.hiringManager u WHERE r.approvalStatus IN :statuses ORDER BY u.fullName ASC")
-    List<com.group2.rms.user.entity.User> findCreatorsWithStatusIn(@org.springframework.data.repository.query.Param("statuses") java.util.Collection<String> statuses);
+    // Tìm số vòng/đợt tuyển dụng lớn nhất trong chuỗi liên kết các yêu cầu tuyển dụng
+    @Query("""
+        SELECT COALESCE(MAX(r.recruitmentRound), 1)
+        FROM JobRequisition r
+        LEFT JOIN r.originalRequisition o
+        WHERE r.requisitionId = :rootId
+           OR o.requisitionId = :rootId
+        """)
+    int findMaxRoundInChain(@Param("rootId") Integer rootId);
+
+    // Kiểm tra đã tồn tại bản nháp trùng tiêu đề và phòng ban hay chưa
+    @Query("""
+        SELECT COUNT(r) > 0
+        FROM JobRequisition r
+        WHERE LOWER(TRIM(r.title)) = LOWER(TRIM(:title))
+          AND r.department.departmentId = :departmentId
+          AND r.approvalStatus = 'Draft'
+          AND (:excludeId IS NULL OR r.requisitionId <> :excludeId)
+        """)
+    boolean existsDraftByTitleAndDepartment(
+            @Param("title") String title,
+            @Param("departmentId") Integer departmentId,
+            @Param("excludeId") Integer excludeId
+    );
+
+    // Lấy danh sách người tạo duy nhất thuộc các trạng thái chỉ định, sắp xếp theo tên
+    @Query("""
+        SELECT DISTINCT u
+        FROM JobRequisition r
+        JOIN r.hiringManager u
+        WHERE r.approvalStatus IN :statuses
+        ORDER BY u.fullName ASC
+        """)
+    List<User> findCreatorsWithStatusIn(
+            @Param("statuses") Collection<String> statuses
+    );
 }

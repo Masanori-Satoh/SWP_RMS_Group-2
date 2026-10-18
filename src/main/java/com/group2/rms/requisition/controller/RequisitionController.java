@@ -1,10 +1,12 @@
 package com.group2.rms.requisition.controller;
 
+import com.group2.rms.core.util.FilterLinks;
 import com.group2.rms.requisition.dto.RequisitionRequest;
 import com.group2.rms.requisition.dto.RequisitionSearchRequest;
 import com.group2.rms.requisition.dto.ScreeningCriteriaRequest;
 import com.group2.rms.requisition.exception.RequisitionValidationException;
 import com.group2.rms.requisition.service.RequisitionAccess;
+import com.group2.rms.requisition.service.RequisitionListService;
 import com.group2.rms.requisition.service.RequisitionService;
 import com.group2.rms.requisition.validator.RequisitionValidator;
 import com.group2.rms.user.repository.DepartmentRepository;
@@ -18,22 +20,32 @@ import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.WebDataBinder;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+
+import java.beans.PropertyEditorSupport;
 import java.math.BigDecimal;
-import java.time.LocalDate;
+import java.util.Locale;
 
 @Controller
 @RequestMapping("/requisitions")
 @RequiredArgsConstructor
 public class RequisitionController {
+    private static final String DECISION_APPROVE = "approve";
+    private static final String DECISION_REJECT = "reject";
+    private static final String STORAGE_ERROR =
+            "Không thể lưu dữ liệu. Vui lòng kiểm tra lại tính trùng lặp tiêu chí và giá trị các trường.";
+
     private final RequisitionService service;
+    private final RequisitionListService listService;
     private final RequisitionAccess access;
+    private final RequisitionValidator validator;
     private final DepartmentRepository departments;
 
     @InitBinder("requisitionDto")
     void binder(WebDataBinder binder) {
         binder.setAutoGrowCollectionLimit(50);
-        // Không có departmentId: phòng ban luôn do service gán (phòng ban của người tạo), không nhận từ form
-        binder.setAllowedFields("action", "title", "numberOfPositions", "employmentType", "minSalary",
+        // departmentId chỉ có tác dụng với Giám đốc (service ghi đè cho vai trò khác);
+        // originalTitle chỉ để form hiển thị số đợt, service không dùng
+        binder.setAllowedFields("action", "title", "departmentId", "originalTitle", "numberOfPositions", "employmentType", "minSalary",
                 "maxSalary",
                 "gender", "workLocation", "workModel", "probationDays", "expectedStartDate", "reasonForHiring", "hiringType", "originalRequisitionId",
                 "jobDescription", "requirementDetails",
@@ -42,10 +54,8 @@ public class RequisitionController {
                 "screeningCriteria[*].requiredValue", "screeningCriteria[*].weight",
                 "screeningCriteria[*].isMandatory");
 
-        // Ô lương hiển thị kiểu Việt Nam "20.000.000" (dấu chấm ngăn cách hàng nghìn).
-        // Đọc: "20.000.000" → 20000000; số viết liền ("20000000", ví dụ gửi từ Postman) vẫn đọc bình thường.
-        // Ghi (khi render lại form): 20000000 → "20.000.000".
-        java.beans.PropertyEditorSupport salaryEditor = new java.beans.PropertyEditorSupport() {
+        // Ô lương hiển thị kiểu Việt Nam "20.000.000"
+        PropertyEditorSupport salaryEditor = new PropertyEditorSupport() {
             @Override
             public void setAsText(String text) {
                 if (text == null || text.isBlank()) {
@@ -68,7 +78,7 @@ public class RequisitionController {
                 BigDecimal value = (BigDecimal) getValue();
                 if (value == null) return "";
                 if (value.stripTrailingZeros().scale() <= 0) {
-                    return String.format(java.util.Locale.US, "%,d", value.toBigInteger()).replace(',', '.');
+                    return String.format(Locale.US, "%,d", value.toBigInteger()).replace(',', '.');
                 }
                 return value.toPlainString();
             }
@@ -85,19 +95,13 @@ public class RequisitionController {
         model.addAttribute("canCreate", access.canCreate(actor));
     }
 
-    /**
-     * Màn danh sách. Mọi tham số trên URL (?q=...&status=...&page=...) được Spring gom vào RequisitionSearchRequest.
-     * Controller không xử lý gì thêm: service lo phân quyền, làm sạch bộ lọc và truy vấn.
-     *
-     * BindingResult được khai báo để giá trị sai định dạng (ví dụ ?page=abc) chỉ bị bỏ qua (thành null)
-     * thay vì làm lỗi cả trang.
-     */
+    //màn danh sách
     @GetMapping
     public String list(@ModelAttribute("searchRequest") RequisitionSearchRequest searchRequest,
             BindingResult invalidParams, HttpServletRequest request, Model model) {
-        model.addAttribute("list", service.getListPage(searchRequest));
+        model.addAttribute("list", listService.getListPage(searchRequest));
         // Tạo link "bỏ một bộ lọc" cho các chip, giữ nguyên các tham số khác đang có trên URL
-        model.addAttribute("filterLinks", new RequisitionListLinks(request.getRequestURI(), request.getQueryString()));
+        model.addAttribute("filterLinks", new FilterLinks(request.getRequestURI(), request.getQueryString()));
         // Trang đã dùng layout/internal: activeMenu làm sáng mục menu ở sidebar,
         // bodyClass gắn lên <body> để CSS cũ của trang (.req-app, .req-list-page) vẫn áp dụng
         model.addAttribute("activeMenu", "requisitions");
@@ -105,20 +109,23 @@ public class RequisitionController {
         return "requisitions/list";
     }
 
+    // tạo requisition
     @GetMapping("/create")
     public String createForm(Model model) {
         var currentUser = access.actor();
-        // Rule: Chỉ người dùng có quyền (Hiring Manager / Admin) mới được tạo yêu cầu
+        // Rule: Chỉ Hiring Manager / Director / Admin mới được tạo yêu cầu
         access.requireCreate(currentUser);
 
         RequisitionRequest requisitionRequest = new RequisitionRequest();
-        // Giá trị chọn sẵn cho form tạo mới (đúng wireframe). Các cột này NOT NULL trong DB nên luôn cần có giá trị.
+
+        // các trường bắt buộc trong db
         requisitionRequest.setNumberOfPositions(1);
         requisitionRequest.setRecruitmentRound(1);
         requisitionRequest.setEmploymentType("Full-time");
         requisitionRequest.setWorkModel("On-site");
         requisitionRequest.setGender(RequisitionValidator.GENDER_ANY);
-        if (currentUser.getDepartment() != null) {
+        // Giám đốc tự chọn phòng ban trên form nên không điền sẵn
+        if (currentUser.getDepartment() != null && !access.isDirector(currentUser)) {
             requisitionRequest.setDepartmentId(currentUser.getDepartment().getDepartmentId());
         }
         requisitionRequest.getScreeningCriteria()
@@ -131,8 +138,8 @@ public class RequisitionController {
     @GetMapping("/copy/{id}")
     public String copy(@PathVariable Integer id, Model model) {
         model.addAttribute("requisitionDto", service.copy(id));
-        model.addAttribute("copyNotice",
-                "Đã sao chép vào biểu mẫu mới. Biểu mẫu chưa được lưu cho đến khi bạn chọn Lưu bản nháp hoặc Gửi Giám đốc duyệt.");
+        model.addAttribute("copyNotice", "Đã sao chép vào biểu mẫu mới. Biểu mẫu chưa được lưu cho đến khi bạn chọn Lưu bản nháp hoặc "
+                + (access.isDirector(access.actor()) ? "Phê duyệt trực tiếp." : "Gửi Giám đốc duyệt."));
         return form(model, false, null);
     }
 
@@ -150,15 +157,12 @@ public class RequisitionController {
         if (!errors.hasErrors()) {
             try {
                 Integer requisitionId = service.createRequisition(requisitionRequest);
-                // Rule: Phân biệt thông báo khi lưu bản nháp hoặc nộp phê duyệt
-                boolean isSubmitted = "submit".equals(requisitionRequest.getAction());
-                flash.addFlashAttribute("successMessage",
-                        isSubmitted ? "Yêu cầu đã được gửi lên Giám đốc phê duyệt." : "Đã lưu bản nháp thành công.");
+                flash.addFlashAttribute("successMessage", savedMessage(requisitionRequest.getAction()));
                 return "redirect:/requisitions/" + requisitionId;
             } catch (RequisitionValidationException e) {
                 addErrors(errors, e);
             } catch (DataIntegrityViolationException e) {
-                errors.reject("storage", "Không thể lưu dữ liệu. Vui lòng kiểm tra lại tính trùng lặp tiêu chí và giá trị các trường.");
+                errors.reject("storage", STORAGE_ERROR);
             }
         }
         return form(model, false, null);
@@ -170,14 +174,12 @@ public class RequisitionController {
         if (!errors.hasErrors()) {
             try {
                 service.updateRequisition(id, requisitionRequest);
-                boolean isSubmitted = "submit".equals(requisitionRequest.getAction());
-                flash.addFlashAttribute("successMessage",
-                        isSubmitted ? "Yêu cầu đã được gửi lên Giám đốc phê duyệt." : "Đã lưu bản nháp thành công.");
+                flash.addFlashAttribute("successMessage", savedMessage(requisitionRequest.getAction()));
                 return "redirect:/requisitions/" + id;
             } catch (RequisitionValidationException e) {
                 addErrors(errors, e);
             } catch (DataIntegrityViolationException e) {
-                errors.reject("storage", "Không thể lưu dữ liệu. Vui lòng kiểm tra lại tính trùng lặp tiêu chí và giá trị các trường.");
+                errors.reject("storage", STORAGE_ERROR);
             }
         }
         return form(model, true, id);
@@ -200,16 +202,21 @@ public class RequisitionController {
     @PostMapping("/{id}/decision")
     public String decide(@PathVariable Integer id, @RequestParam String decision,
             @RequestParam(defaultValue = "") String comment, RedirectAttributes flash) {
-        if (!"approve".equals(decision) && !"reject".equals(decision))
+        // Rule: Hai nút trên trang chi tiết gửi decision=approve hoặc decision=reject, giá trị khác thì bỏ qua
+        boolean isApprove = DECISION_APPROVE.equals(decision);
+        boolean isReject = DECISION_REJECT.equals(decision);
+        if (!isApprove && !isReject) {
             flash.addFlashAttribute("failureMessage", "Vui lòng chọn quyết định phê duyệt.");
-        else
-            try {
-                service.decide(id, "approve".equals(decision), comment);
-                flash.addFlashAttribute("successMessage", "Đã lưu quyết định thành công.");
-            } catch (RequisitionValidationException e) {
-                flash.addFlashAttribute("failureMessage", e.getMessage());
-                flash.addFlashAttribute("decisionComment", comment);
-            }
+            return "redirect:/requisitions/" + id;
+        }
+        try {
+            service.decide(id, isApprove, comment);
+            flash.addFlashAttribute("successMessage", "Đã lưu quyết định thành công.");
+        } catch (RequisitionValidationException e) {
+            flash.addFlashAttribute("failureMessage", e.getMessage());
+            // Giữ lại ý kiến đã gõ để người dùng không phải gõ lại
+            flash.addFlashAttribute("decisionComment", comment);
+        }
         return "redirect:/requisitions/" + id;
     }
 
@@ -233,10 +240,22 @@ public class RequisitionController {
         return "requisitions/detail";
     }
 
+    // Rule: Phân biệt thông báo khi lưu bản nháp, gửi duyệt, hoặc Giám đốc phê duyệt trực tiếp
+    private String savedMessage(String action) {
+        if (!RequisitionValidator.isSubmit(action)) {
+            return "Đã lưu bản nháp thành công.";
+        }
+        return access.isDirector(access.actor())
+                ? "Yêu cầu đã được phê duyệt. HR có thể tạo tin tuyển dụng ngay."
+                : "Yêu cầu đã được gửi lên Giám đốc phê duyệt.";
+    }
+
     /** Mọi đường hiển thị form (tạo, sửa, sao chép, render lại khi có lỗi) đều đi qua hàm này. */
     private String form(Model model, boolean edit, Integer id) {
         model.addAttribute("isEdit", edit);
         model.addAttribute("requisitionId", id);
+        // Giám đốc: tự chọn phòng ban và nút gửi là "Phê duyệt trực tiếp"
+        model.addAttribute("directApprove", access.isDirector(access.actor()));
         options(model);
         // Trang dùng layout/internal: làm sáng menu + gắn class để CSS của trang áp dụng
         model.addAttribute("activeMenu", "requisitions");
@@ -249,15 +268,14 @@ public class RequisitionController {
         model.addAttribute("employmentTypes", RequisitionValidator.EMPLOYMENT_TYPES);
         model.addAttribute("criteriaTypes", RequisitionValidator.CRITERIA_TYPES);
         model.addAttribute("genders", RequisitionValidator.GENDERS);
-        // Giới hạn thử việc lấy từ hằng số của validator, để form và JS không phải viết lại số 1 / 180
         model.addAttribute("probationMinDays", RequisitionValidator.PROBATION_MIN_DAYS);
         model.addAttribute("probationMaxDays", RequisitionValidator.PROBATION_MAX_DAYS);
         // Giới hạn số lượng cần tuyển, dùng cho min/max của ô số lượng và nút −/+
         model.addAttribute("positionsMin", RequisitionValidator.POSITIONS_MIN);
         model.addAttribute("positionsMax", RequisitionValidator.POSITIONS_MAX);
         // Khoảng ngày bắt đầu được chọn: từ hôm nay tới hôm nay + START_DATE_MAX_YEARS năm
-        model.addAttribute("startDateMin", LocalDate.now());
-        model.addAttribute("startDateMax", LocalDate.now().plusYears(RequisitionValidator.START_DATE_MAX_YEARS));
+        model.addAttribute("startDateMin", validator.earliestStartDate());
+        model.addAttribute("startDateMax", validator.latestStartDate());
     }
 
     private void addErrors(BindingResult errors, RequisitionValidationException e) {

@@ -8,7 +8,6 @@ import lombok.*;
 @NoArgsConstructor
 @AllArgsConstructor
 public class ApprovalResponse {
-    private Integer stepNumber;
     private String approverName;
     private String status;
     private LocalDateTime approvalDate;

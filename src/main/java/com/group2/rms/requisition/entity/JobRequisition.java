@@ -10,7 +10,7 @@ import java.math.BigDecimal;
 
 /**
  * 3.6 JobRequisition - Yêu cầu tuyển dụng do Hiring Manager tạo.
- * ApprovalStatus: Draft, Pending_Director, Approved, Rejected, Closed, Cancelled
+ * ApprovalStatus: Draft, Pending_Director, Approved, Rejected (luồng hiện tại không dùng Closed / Cancelled)
  * Đợt tuyển: đợt 1 có originalRequisition = null; đợt > 1 trỏ về phiếu đợt 1 (CK_JobRequisition_RoundOrigin).
  * EmploymentType: Full-time, Part-time, Internship, Contract
  * Mã yêu cầu (RequisitionCode) do service sinh sau lần lưu đầu: REQ-0025 = "REQ-" + RequisitionId đệm 4 chữ số.
@@ -86,7 +86,7 @@ public class JobRequisition extends BaseEntity {
     private String requirementDetails;
 
     /**
-     * Draft, Pending_Director, Approved, Rejected, Closed, Cancelled
+     * Draft, Pending_Director, Approved, Rejected
      */
     @Column(name = "ApprovalStatus", nullable = false, length = 30)
     private String approvalStatus;
@@ -103,6 +103,7 @@ public class JobRequisition extends BaseEntity {
     private java.time.LocalDate expectedStartDate;
     @Column(name = "SubmittedAt")
     private java.time.LocalDateTime submittedAt;
+    // Cột có trong DB nhưng luồng requisition hiện chưa ghi (không có trạng thái đóng yêu cầu)
     @Column(name = "ClosedAt")
     private java.time.LocalDateTime closedAt;
 
