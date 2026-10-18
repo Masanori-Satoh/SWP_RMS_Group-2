@@ -38,10 +38,11 @@
     <form id="requisition-form" class="rqf-layout" th:object="${requisitionDto}" method="post"
           th:action="${isEdit} ? @{/requisitions/edit/{id}(id=${requisitionId})} : @{/requisitions/create}">
 
-        <!-- Phòng ban và đợt tuyển dụng do server tự xác định, form chỉ giữ lại để gửi kèm -->
-        <input type="hidden" th:field="*{departmentId}">
+        <!-- Phòng ban (trừ Giám đốc) và đợt tuyển dụng do server tự xác định, form chỉ giữ lại để gửi kèm -->
+        <input type="hidden" th:field="*{departmentId}" th:unless="${directApprove}">
         <input type="hidden" th:field="*{recruitmentRound}">
         <input type="hidden" th:field="*{originalRequisitionId}">
+        <input type="hidden" th:field="*{originalTitle}">
 
         <div class="rqf-main">
             <!-- Lỗi từ server (RequisitionValidator) hiện thành danh sách ở đầu form.
@@ -67,7 +68,20 @@
                             <small id="title-error" class="field-error" th:text="${#fields.hasErrors('title')} ? ${#strings.listJoin(#fields.errors('title'), '; ')} : ''"></small>
                         </div>
 
-                        <div class="rqf-field">
+                        <!-- Giám đốc không thuộc phòng ban nào: tự chọn phòng ban (chỉ phòng ban đang hoạt động; server kiểm tra lại) -->
+                        <div class="rqf-field" th:if="${directApprove}">
+                            <label class="form-label" for="departmentId">Phòng ban <span class="required-asterisk">*</span></label>
+                            <select class="form-select" th:field="*{departmentId}" aria-describedby="departmentId-error"
+                                    th:attr="aria-invalid=${#fields.hasErrors('departmentId')}">
+                                <option value="">Chọn phòng ban</option>
+                                <option th:each="department : ${departments}"
+                                        th:if="${department.departmentStatus == 'Active'}"
+                                        th:value="${department.departmentId}"
+                                        th:text="${department.departmentName}">Engineering</option>
+                            </select>
+                            <small id="departmentId-error" class="field-error" th:text="${#fields.hasErrors('departmentId')} ? ${#strings.listJoin(#fields.errors('departmentId'), '; ')} : ''"></small>
+                        </div>
+                        <div class="rqf-field" th:unless="${directApprove}">
                             <span class="form-label">Phòng ban</span>
                             <!-- Lấy theo phòng ban của tài khoản đang đăng nhập (service ghi đè departmentId khi lưu) -->
                             <div class="rqf-readonly">
@@ -80,9 +94,11 @@
                         </div>
                         <div class="rqf-field">
                             <span class="form-label">Đợt tuyển dụng</span>
-                            <!-- Đợt 1 khi tạo mới; sao chép thì server tính lại đợt kế tiếp khi lưu -->
+                            <!-- Đợt 1 khi tạo mới; sao chép thì server tính lại đợt kế tiếp khi lưu.
+                                 Đổi tên vị trí khác tên gốc thì JS hiện lại "Đợt 1" (requisition-form.js) -->
                             <div class="rqf-readonly">
-                                <span th:text="|Đợt *{recruitmentRound ?: 1}|">Đợt 1</span>
+                                <span id="rqf-round" th:data-round="*{recruitmentRound ?: 1}"
+                                      th:text="|Đợt *{recruitmentRound ?: 1}|">Đợt 1</span>
                                 <span class="rqf-hint">hệ thống tự đánh số</span>
                             </div>
                         </div>
@@ -343,17 +359,26 @@
 
             <section class="card rqf-rail-card rqf-actions">
                 <div id="rqf-buttons" class="rqf-buttons">
-                    <!-- Bấm "Gửi Giám đốc duyệt" chỉ mở bước xác nhận; nút gửi thật nằm trong bước xác nhận -->
-                    <button type="button" class="btn btn--primary" id="rqf-open-confirm">Gửi Giám đốc duyệt</button>
+                    <!-- Bấm "Gửi Giám đốc duyệt" chỉ mở bước xác nhận; nút gửi thật nằm trong bước xác nhận.
+                         Giám đốc gửi thì phê duyệt luôn (service đặt Approved), nên nút đổi thành "Phê duyệt trực tiếp" -->
+                    <button type="button" class="btn btn--primary" id="rqf-open-confirm"
+                            th:text="${directApprove} ? 'Phê duyệt trực tiếp' : 'Gửi Giám đốc duyệt'">Gửi Giám đốc duyệt</button>
                     <button type="submit" name="action" value="draft" class="btn btn--secondary" formnovalidate>Lưu bản nháp</button>
                     <a class="btn btn--secondary rqf-cancel"
                        th:href="${isEdit} ? @{/requisitions/{id}(id=${requisitionId})} : @{/requisitions}">Hủy</a>
                 </div>
                 <div id="rqf-confirm" class="rqf-confirm" role="alertdialog" aria-labelledby="rqf-confirm-title" hidden>
-                    <p id="rqf-confirm-title"><strong>Gửi cho Giám đốc duyệt?</strong></p>
-                    <p>Sau khi gửi, bạn không sửa được nữa trừ khi rút lại yêu cầu hoặc bị Giám đốc trả lại.</p>
+                    <th:block th:unless="${directApprove}">
+                        <p id="rqf-confirm-title"><strong>Gửi cho Giám đốc duyệt?</strong></p>
+                        <p>Sau khi gửi, bạn không sửa được nữa trừ khi rút lại yêu cầu hoặc bị Giám đốc trả lại.</p>
+                    </th:block>
+                    <th:block th:if="${directApprove}">
+                        <p id="rqf-confirm-title"><strong>Phê duyệt yêu cầu này?</strong></p>
+                        <p>HR có thể tạo tin tuyển dụng ngay và yêu cầu không sửa được nữa.</p>
+                    </th:block>
                     <div class="rqf-buttons">
-                        <button type="submit" name="action" value="submit" class="btn btn--primary">Gửi duyệt</button>
+                        <button type="submit" name="action" value="submit" class="btn btn--primary"
+                                th:text="${directApprove} ? 'Phê duyệt' : 'Gửi duyệt'">Gửi duyệt</button>
                         <button type="button" class="btn btn--secondary" id="rqf-cancel-confirm">Quay lại</button>
                     </div>
                 </div>
@@ -363,6 +388,8 @@
 </main>
 
 <th:block layout:fragment="scripts">
+    <!-- text-limit.js: báo lỗi đỏ "Nội dung quá N ký tự" khi gõ / dán vượt maxlength -->
+    <script th:src="@{/js/text-limit.js}" defer></script>
     <!-- requisitions.js: chống bấm gửi 2 lần (dùng chung các trang requisition) -->
     <script th:src="@{/js/requisitions.js}" defer></script>
     <!-- requisition-form.js: kiểm tra nhập liệu, bảng tiêu chí, checklist, bước xác nhận -->

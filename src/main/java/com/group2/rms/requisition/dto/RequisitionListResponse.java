@@ -1,5 +1,6 @@
 package com.group2.rms.requisition.dto;
 
+import com.group2.rms.core.dto.FilterChip;
 import org.springframework.data.domain.Page;
 
 import java.util.List;
@@ -17,5 +18,5 @@ public record RequisitionListResponse(
         Page<RequisitionResponse> page,
         RequisitionSearchRequest filter,
         RequisitionFilterOptions options,
-        List<RequisitionFilterChip> chips) {
+        List<FilterChip> chips) {
 }

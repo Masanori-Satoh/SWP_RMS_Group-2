@@ -20,10 +20,7 @@ import lombok.Setter;
 public class RequisitionResponse {
     private Integer requisitionId;
     private String title;
-    private String gender;
     private String workLocation;
-    private String workModel;
-    private Integer probationDays;
     private LocalDate expectedStartDate;
     private boolean editable;
     private boolean deletable;
@@ -32,10 +29,8 @@ public class RequisitionResponse {
     private boolean incomplete;
     private String rejectionReason;
     private String departmentName;
-    private String hiringType;
     private String hiringManagerName;
     private Integer numberOfPositions;
-    private String employmentType;
     private String approvalStatus;
     private LocalDateTime createdAt;
     private Integer recruitmentRound;
@@ -71,13 +66,6 @@ public class RequisitionResponse {
     private Integer postingNo;                  // JobPosting.PostingNo của tin mới nhất (lần đăng thứ mấy)
     private LocalDateTime postingDate;          // JobPosting.PostingDate
     private LocalDateTime postingDeadline;      // JobPosting.ApplicationDeadline
-
-    // Các trường phục vụ màn Chi tiết
-    private BigDecimal minSalary;
-    private BigDecimal maxSalary;
-    private String reasonForHiring;
-    private String jobDescription;
-    private String requirementDetails;
 
     private java.util.List<ScreeningCriteriaResponse> screeningCriteria;
     private java.util.List<ApprovalResponse> approvals;
