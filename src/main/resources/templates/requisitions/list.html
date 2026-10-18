@@ -12,6 +12,7 @@
              file nạp sau sẽ thắng, nên đặt mft- ở đây để ô tìm kiếm không bị thêm viền -->
         <link rel="stylesheet" th:href="@{/css/pages/management-filters.css}">
         <link rel="stylesheet" th:href="@{/css/requisition-list.css}">
+        <link rel="stylesheet" th:href="@{/css/pages/flash-toast.css}">
     </th:block>
 </head>
 
@@ -31,10 +32,6 @@
                     -->
                     <form class="card mft-toolbar req-toolbar" th:action="@{/requisitions}" method="get" role="search"
                         aria-label="Tìm kiếm và lọc yêu cầu tuyển dụng">
-                        <!-- Luôn gửi tham số status (kể cả rỗng) để server phân biệt
-                             "lần vào đầu" với "người dùng đã bỏ chọn hết trạng thái" -->
-                        <input type="hidden" name="status" value="" th:if="${list.options.showStatus}">
-
                         <div class="mft-search">
                             <label class="sr-only" for="requisition-search">Tìm kiếm yêu cầu tuyển dụng</label>
                             <button class="mft-search-submit" type="submit" aria-label="Tìm kiếm" title="Tìm kiếm">
@@ -118,8 +115,7 @@
 
                                     <div class="mft-actions">
                                         <button class="btn btn--primary btn--sm" type="submit">Áp dụng</button>
-                                        <!-- status rỗng = xem tất cả trạng thái (Director không bị tự lọc "Chờ duyệt" lại) -->
-                                        <a class="btn btn--secondary btn--sm" th:href="@{/requisitions(status='')}">Xóa bộ lọc</a>
+                                        <a class="btn btn--secondary btn--sm" th:href="@{/requisitions}">Xóa bộ lọc</a>
                                     </div>
                                 </div>
                             </details>
@@ -197,7 +193,7 @@
                                         <td class="action-cell">
                                             <!-- Menu ⋯ của catalog: <details> tự mở/đóng, không cần JS.
                                                  Mục nào hiện là do cờ quyền service tính sẵn (editable, copyable, postable...) -->
-                                            <details class="more-menu">
+                                            <details class="more-menu more-menu--floating">
                                                 <summary class="more-menu__toggle" th:aria-label="|Thao tác khác cho ${req.title}|"
                                                     title="Thao tác khác">⋯</summary>
                                                 <div class="more-menu__list">
@@ -235,8 +231,12 @@
 
     <th:block layout:fragment="scripts">
         <script th:src="@{/js/requisitions.js}" defer></script>
+        <!-- flash-toast.js: thông báo sau thao tác tự tắt sau 3 giây -->
+        <script th:src="@{/js/pages/flash-toast.js}" defer></script>
         <!-- Đóng popover "Bộ lọc" khi bấm ra ngoài hoặc nhấn Esc (dùng chung với trang Tài khoản, Phòng ban) -->
         <script th:src="@{/js/pages/management-filters.js}" defer></script>
+        <!-- Menu ⋯ nổi đè lên bảng, không làm xô lệch cột (dùng chung với danh sách tin tuyển dụng) -->
+        <script th:src="@{/js/pages/row-menu.js}" defer></script>
     </th:block>
 </body>
 

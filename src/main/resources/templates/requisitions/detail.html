@@ -16,6 +16,7 @@
     <th:block layout:fragment="styles">
         <link rel="stylesheet" th:href="@{/css/requisition-shared.css}">
         <link rel="stylesheet" th:href="@{/css/requisition-detail.css}">
+        <link rel="stylesheet" th:href="@{/css/pages/flash-toast.css}">
     </th:block>
 </head>
 
@@ -268,8 +269,12 @@
 </main>
 
 <th:block layout:fragment="scripts">
+    <!-- text-limit.js: báo lỗi đỏ "Nội dung quá N ký tự" khi gõ / dán vượt maxlength -->
+    <script th:src="@{/js/text-limit.js}" defer></script>
     <!-- requisitions.js: hộp thoại xóa, bắt buộc lý do khi Trả lại, chống bấm gửi 2 lần -->
     <script th:src="@{/js/requisitions.js}" defer></script>
+    <!-- flash-toast.js: thông báo sau thao tác tự tắt sau 3 giây -->
+    <script th:src="@{/js/pages/flash-toast.js}" defer></script>
 </th:block>
 </body>
 </html>

@@ -186,11 +186,8 @@
                                             Kỹ thuật
                                         </td>
                                         <td>
-                                            <span th:if="${post.postingStatus == 'Published'}" class="hr-badge hr-badge-published">Đang đăng</span>
-                                            <span th:if="${post.postingStatus == 'Draft'}" class="hr-badge hr-badge-draft">Bản nháp</span>
-                                            <span th:if="${post.postingStatus == 'Closed'}" class="hr-badge hr-badge-closed">Đã đóng</span>
-                                            <span th:if="${post.postingStatus != 'Published' and post.postingStatus != 'Draft' and post.postingStatus != 'Closed'}"
-                                                  class="hr-badge hr-badge-closed" th:text="${post.postingStatus}">Khác</span>
+                                            <!-- Nhãn và class badge do JobPostingLabels tính sẵn (template không tự dịch trạng thái) -->
+                                            <span class="hr-badge" th:classappend="${post.badgeClass}" th:text="${post.statusLabel}">Đang đăng</span>
                                         </td>
                                         <td>
                                             <span th:if="${post.applicationDeadline != null}"
@@ -204,7 +201,7 @@
                                         </td>
                                         <td style="text-align: right;">
                                             <a th:href="@{/internal/job-postings/{id}(id=${post.jobPostingId})}" class="hr-btn-table-action">Chi tiết</a>
-                                            <a th:if="${post.postingStatus == 'Draft'}" th:href="@{/internal/job-postings/{id}/edit(id=${post.jobPostingId})}" class="hr-btn-table-action">Sửa</a>
+                                            <a th:if="${post.editable}" th:href="@{/internal/job-postings/{id}/edit(id=${post.jobPostingId})}" class="hr-btn-table-action">Sửa</a>
                                         </td>
                                     </tr>
                                     <tr th:if="${#lists.isEmpty(recentPostings)}">

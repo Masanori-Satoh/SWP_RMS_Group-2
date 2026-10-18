@@ -1,21 +1,17 @@
 package com.group2.rms.requisition.dto;
 
 import java.math.BigDecimal;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
 
-@Data
+import lombok.Builder;
+
+/** Một tiêu chí sàng lọc ở màn chi tiết yêu cầu. */
 @Builder
-@NoArgsConstructor
-@AllArgsConstructor
-public class ScreeningCriteriaResponse {
-    private Integer criteriaId;
-    private String criteriaName;
-    private String criteriaType;
-    private String requiredValue;
-    private BigDecimal weight;
-    private Boolean isMandatory;
-    private String criteriaTypeLabel;   // "Kỹ năng", "Học vấn"... (RequisitionLabels.criteriaType)
+public record ScreeningCriteriaResponse(
+        Integer criteriaId,
+        String criteriaName,
+        String criteriaType,
+        String requiredValue,
+        BigDecimal weight,
+        Boolean isMandatory,
+        String criteriaTypeLabel) {   // "Kỹ năng", "Học vấn"... (RequisitionLabels.criteriaType)
 }

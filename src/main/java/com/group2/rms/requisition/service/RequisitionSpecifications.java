@@ -1,5 +1,6 @@
 package com.group2.rms.requisition.service;
 
+import com.group2.rms.core.util.ListFilters;
 import com.group2.rms.jobposting.entity.JobPosting;
 import com.group2.rms.requisition.entity.JobRequisition;
 
@@ -10,7 +11,6 @@ import org.springframework.data.jpa.domain.Specification;
 
 import java.time.LocalDate;
 import java.util.List;
-import java.util.Locale;
 
 /**
  * Các điều kiện WHERE dùng cho màn danh sách yêu cầu tuyển dụng.
@@ -23,16 +23,13 @@ import java.util.Locale;
  */
 public final class RequisitionSpecifications {
 
-    /** Từ khóa dài hơn thế này bị cắt bớt, tránh câu LIKE quá dài. */
-    public static final int MAX_KEYWORD_LENGTH = 120;
-
     private RequisitionSpecifications() {
         // Chỉ chứa hàm static, không tạo đối tượng
     }
 
     /** Tên vị trí HOẶC tên phòng ban có chứa từ khóa (không phân biệt hoa thường). */
     public static Specification<JobRequisition> titleOrDepartmentContains(String keyword) {
-        String pattern = "%" + escapeLike(keyword.toLowerCase(Locale.ROOT)) + "%";
+        String pattern = ListFilters.containsPattern(keyword);
         return (root, query, cb) -> cb.or(
                 cb.like(cb.lower(root.get("title")), pattern, '\\'),
                 cb.like(cb.lower(root.join("department", JoinType.LEFT).get("departmentName")), pattern, '\\'));
@@ -93,16 +90,5 @@ public final class RequisitionSpecifications {
                             cb.equal(p.get("postingStatus"), postingStatus));
             return cb.exists(match);
         };
-    }
-
-    /**
-     * Trong lệnh LIKE của SQL Server, các ký tự % _ [ có nghĩa đặc biệt.
-     * Thêm dấu \ phía trước để chúng được hiểu đúng là chữ người dùng gõ (ví dụ tìm "50%").
-     */
-    private static String escapeLike(String text) {
-        return text.replace("\\", "\\\\")
-                .replace("%", "\\%")
-                .replace("_", "\\_")
-                .replace("[", "\\[");
     }
 }

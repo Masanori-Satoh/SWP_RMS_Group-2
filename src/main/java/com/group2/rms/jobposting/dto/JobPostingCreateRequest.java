@@ -1,13 +1,29 @@
 package com.group2.rms.jobposting.dto;
 
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
+import com.group2.rms.jobposting.validator.JobPostingValidator;
 import jakarta.validation.constraints.Size;
-import lombok.*;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 import org.springframework.format.annotation.DateTimeFormat;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 
+/**
+ * Dữ liệu form Tạo / Sửa tin tuyển dụng (job-postings/create.html).
+ *
+ * Chỉ các trường trong whitelist của JobPostingController#formBinder được nhận từ form
+ * (requisitionId, nội dung tin, cách hiển thị lương / số lượng, hạn nộp, cách đăng, action).
+ * Các trường còn lại là thông tin yêu cầu nguồn và trạng thái form để HIỂN THỊ, luôn do service điền lại từ DB
+ * (người dùng sửa trên trình duyệt cũng không có tác dụng).
+ *
+ * Annotation là tầng 2 (Bean Validation, AG §2.4): chỉ chặn ô một dòng quá dài. Bắt buộc / lựa chọn / ngày
+ * do JobPostingValidator kiểm tra (phân biệt lưu nháp và đăng tin). Ô nhiều dòng không đặt @Size vì trình duyệt
+ * gửi xuống dòng là \r\n (2 ký tự), validator đếm sau khi đổi về \n.
+ */
 @Getter
 @Setter
 @NoArgsConstructor
@@ -15,62 +31,83 @@ import java.time.LocalDate;
 @Builder
 public class JobPostingCreateRequest {
 
-    private Integer jobPostingId;
-    private String postingStatus;
+    // Lựa chọn "Mức lương hiển thị"
+    public static final String SALARY_RANGE = "range";
+    public static final String SALARY_NEGOTIABLE = "nego";
+    public static final String SALARY_CUSTOM = "custom";
+    // Lựa chọn "Ngày đăng"
+    public static final String PUBLISH_NOW = "now";
+    public static final String PUBLISH_LATER = "later";
 
-    @NotNull(message = "Yêu cầu tuyển dụng nguồn không được để trống.")
+    private Integer jobPostingId;
     private Integer requisitionId;
 
-    // Các thông tin tóm tắt từ Requisition nguồn (chỉ hiển thị)
+    // ----- Thông tin yêu cầu nguồn (chỉ hiển thị, service điền từ DB; server không dùng giá trị gửi lên) -----
     private String requisitionCode;
+    private String requisitionTitle;
     private String departmentName;
     private Integer recruitmentRound;
+    /** Nhãn tiếng Việt, ví dụ "Toàn thời gian". */
     private String employmentType;
+    /** Nhãn tiếng Việt, ví dụ "Kết hợp". */
     private String workModel;
     private Integer numberOfPositions;
     private String hiringManagerName;
+    /** Thông tin nội bộ: chỉ HR xem, không đưa vào nội dung tin công khai (CLAUDE.md §22). */
     private String reasonForHiring;
-
-    // Chi tiết bổ sung cho form tạo tin (đồng bộ từ Requisition và có thể tinh chỉnh)
-    private java.math.BigDecimal minSalary;
-    private java.math.BigDecimal maxSalary;
     private Integer probationDays;
+    /** Nhãn tiếng Việt, ví dụ "Không yêu cầu". */
     private String gender;
-
     @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
     private LocalDate expectedStartDate;
+    /** Tin này là lần đăng thứ mấy của yêu cầu. */
+    private Integer postingNo;
+    /** Mức lương theo yêu cầu, ví dụ "20 – 30 triệu VND/tháng" (lựa chọn "Theo yêu cầu"). */
+    private String salaryRangeLabel;
+    // Giá trị gốc từ yêu cầu, cho nút "Khôi phục bản gốc"
+    private String sourceWorkLocation;
+    private String sourceJobDescription;
+    private String sourceRequirements;
 
-    private Boolean isContinuousRecruitment;
+    // ----- Trạng thái form (service tính, template chỉ đọc; server không dùng giá trị gửi lên) -----
+    /** Tạo mới hoặc đang sửa bản nháp: có nút "Lưu nháp" + "Đăng tin". */
+    private boolean draftOrNew;
+    /** Đang sửa tin tạm dừng: có nút "Lưu thay đổi" + "Lưu và mở lại". */
+    private boolean paused;
+    /** Đang sửa tin hẹn đăng: "Đăng ngay" nghĩa là đăng khi lưu. */
+    private boolean scheduled;
+    /** Tin đã lên trang tuyển dụng (đang đăng hoặc tạm dừng): không đổi được ngày đăng nữa. */
+    private boolean live;
 
-    @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
-    private LocalDate recruitmentDeadline;
-
-    @NotBlank(message = "Tiêu đề tin tuyển dụng không được để trống.")
-    @Size(max = 200, message = "Tiêu đề tin tuyển dụng không vượt quá 200 ký tự.")
+    // ----- Nội dung tin (HR nhập) -----
+    @Size(max = JobPostingValidator.TITLE_LIMIT, message = JobPostingValidator.TITLE_TOO_LONG)
     private String postingTitle;
-
-    @NotBlank(message = "Mô tả công việc không được để trống.")
     private String jobDescription;
-
-    @NotBlank(message = "Yêu cầu ứng viên không được để trống.")
     private String jobRequirements;
-
     private String benefits;
-
-    @Size(max = 100, message = "Hiển thị mức lương không vượt quá 100 ký tự.")
-    private String salaryDisplay;
-
-    @Size(max = 50, message = "Số lượng hiển thị không vượt quá 50 ký tự.")
-    private String numberOfPositionsDisplay;
-
-    @Size(max = 255, message = "Địa điểm làm việc không vượt quá 255 ký tự.")
+    @Size(max = JobPostingValidator.LOCATION_LIMIT, message = JobPostingValidator.LOCATION_TOO_LONG)
     private String workLocation;
+
+    /** "range" (theo yêu cầu), "nego" (thỏa thuận) hoặc "custom" (tự nhập). */
+    private String salaryMode;
+    /** Mức lương tự nhập khi salaryMode = custom. */
+    @Size(max = JobPostingValidator.SALARY_TEXT_LIMIT, message = JobPostingValidator.SALARY_TEXT_TOO_LONG)
+    private String salaryCustom;
+
+    /** Có công khai số lượng tuyển không; tắt thì lưu NumberOfPositionsDisplay = NULL. */
+    private Boolean showPositions;
+    @Size(max = JobPostingValidator.POSITIONS_TEXT_LIMIT, message = JobPostingValidator.POSITIONS_TEXT_TOO_LONG)
+    private String numberOfPositionsDisplay;
 
     @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
     private LocalDate applicationDeadline;
 
-    /**
-     * "draft" hoặc "publish"
-     */
+    /** "now" (đăng ngay) hoặc "later" (hẹn ngày đăng). */
+    private String publishMode;
+    /** Thời điểm hẹn đăng (ô datetime-local gửi dạng 2026-10-20T08:00). */
+    @DateTimeFormat(pattern = "yyyy-MM-dd'T'HH:mm")
+    private LocalDateTime scheduledAt;
+
+    /** JobPostingValidator.ACTION_DRAFT (lưu nháp / lưu thay đổi) hoặc ACTION_PUBLISH (đăng tin / lên lịch đăng). */
     private String action;
 }

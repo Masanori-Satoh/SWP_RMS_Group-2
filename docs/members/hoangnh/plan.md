@@ -24,7 +24,7 @@ Theo bảng phân công SRS và tài liệu `docs/members/hoangnh/checklist.md`:
 
 ## II. FULL LUỒNG CODE CHI TIẾT (ARCHITECTURE & CODE FLOW)
 
-Toàn bộ code được viết theo kiến trúc **Package-by-Feature**, tuân thủ nghiêm ngặt quy tắc tại [rule_code_nhh.md](file:///d:/FA%2026/SWP391/SWP-iter1/SWP_RMS_Group-2/docs/members/hoangnh/rule_code_nhh.md).
+Toàn bộ code được viết theo kiến trúc **Package-by-Feature**, tuân thủ nghiêm ngặt quy tắc tại [CLAUDE.md](CLAUDE.md).
 
 ```mermaid
 sequenceDiagram

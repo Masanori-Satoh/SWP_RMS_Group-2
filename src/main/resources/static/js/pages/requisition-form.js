@@ -64,6 +64,12 @@
         { id: 'requirementDetails', label: 'Yêu cầu ứng viên', section: 'rqf-content', requiredForSubmit: true }
     ];
 
+    // Ô chọn phòng ban chỉ có trên form của Giám đốc (vai trò khác là ô ẩn).
+    // Khớp RequisitionServiceImpl.requireActiveDepartment: bắt buộc cả khi lưu nháp
+    if (document.getElementById('departmentId')?.tagName === 'SELECT') {
+        FIELD_RULES.splice(1, 0, { id: 'departmentId', label: 'Phòng ban', section: 'rqf-position', requiredForDraft: true });
+    }
+
     /** Lấy giá trị một trường; với nhóm radio thì lấy ô đang được chọn. */
     function valueOf(rule) {
         if (rule.radio) {
@@ -96,6 +102,8 @@
         if (required && !value) {
             if (rule.id === 'title') {
                 message = 'Tên vị trí không được để trống.';
+            } else if (rule.id === 'departmentId') {
+                message = 'Vui lòng chọn phòng ban đang hoạt động.';
             } else if (rule.id === 'workLocation') {
                 message = 'Địa điểm làm việc không được để trống.';
             } else if (rule.id === 'numberOfPositions') {
@@ -231,6 +239,20 @@
 
     document.getElementById('probationDays')?.addEventListener('input', validateNumbers);
 
+    // Sao chép sang đợt mới: tên vị trí khác tên gốc thì là yêu cầu mới, hiện "Đợt 1".
+    // Khớp RequisitionServiceImpl.isSameTitle (bỏ khoảng trắng đầu/cuối, không phân biệt hoa/thường)
+    const titleInput = document.getElementById('title');
+    const roundLabel = document.getElementById('rqf-round');
+    const originalTitle = document.getElementById('originalTitle')?.value.trim().toLowerCase();
+    if (titleInput && roundLabel && originalTitle) {
+        const updateRound = () => {
+            const sameTitle = titleInput.value.trim().toLowerCase() === originalTitle;
+            roundLabel.textContent = `Đợt ${sameTitle ? roundLabel.dataset.round : 1}`;
+        };
+        titleInput.addEventListener('input', updateRound);
+        updateRound();
+    }
+
     // Loại tuyển dụng không bắt buộc: chưa chọn gì thì chọn sẵn "Chưa xác định"
     if (!form.querySelector('input[name="hiringType"]:checked')) {
         const notSet = form.querySelector('input[name="hiringType"][value=""]');
@@ -257,6 +279,7 @@
         input.dispatchEvent(new Event('input', { bubbles: true }));
     }));
 
+    // Báo lỗi "Nội dung quá N ký tự" do js/text-limit.js lo; ở đây chỉ cập nhật bộ đếm
     form.querySelectorAll('textarea[maxlength]').forEach(textarea => {
         const counter = document.getElementById(textarea.id + '-count');
         if (!counter) return;

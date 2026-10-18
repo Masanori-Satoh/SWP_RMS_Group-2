@@ -1,0 +1,10 @@
+/* =============================================================================
+   JOB-POSTING-SHARED.CSS — Phần dùng chung của màn danh sách và chi tiết tin tuyển dụng
+   Hiện có: hộp xác nhận thao tác (job-postings/fragments :: confirmDialog, dialog.confirm-dialog của catalog).
+   ============================================================================= */
+.jp-confirm { max-width:min(520px, calc(100vw - 32px)); }
+.jp-confirm form { padding:var(--s5, 20px) var(--s6, 24px); }
+.jp-confirm h2 { margin:0 0 var(--s2); font-size:var(--font-lg); }
+.jp-confirm p { margin:0 0 var(--s2); overflow-wrap:anywhere; }
+.jp-confirm .jp-confirm-message { color:var(--muted); font-size:var(--font-sm); }
+.jp-confirm .dialog-actions { display:flex; justify-content:flex-end; gap:var(--s2); margin-top:var(--s4); }

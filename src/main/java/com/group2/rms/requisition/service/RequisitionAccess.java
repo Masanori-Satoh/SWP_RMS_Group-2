@@ -14,7 +14,7 @@ import java.util.Set;
 
 /**
  * Phân quyền và kiểm tra phạm vi truy cập cho Job Requisition.
- * Tuân thủ quy định tại docs/members/hoangnh/rule_code_nhh.md
+ * Tuân thủ quy định tại docs/members/hoangnh/CLAUDE.md §11
  */
 @Component
 @RequiredArgsConstructor
@@ -74,23 +74,28 @@ public class RequisitionAccess {
         return Objects.equals(user.getUserId(), requisition.getHiringManager().getUserId());
     }
 
+    // Giám đốc tạo yêu cầu thì tự chọn phòng ban và gửi là phê duyệt luôn (không cần ai duyệt nữa)
+    public boolean isDirector(User user) {
+        return ROLE_DIRECTOR.equals(role(user));
+    }
+
     // Security: Hiring Manager, Director và System Admin có quyền tạo Requisition
     public boolean canCreate(User user) {
         String userRole = role(user);
         return Set.of(ROLE_HIRING_MANAGER, ROLE_DIRECTOR, ROLE_SYSTEM_ADMIN).contains(userRole);
     }
 
-    // Security: Tạo tin tuyển dụng chỉ dành cho HR và Admin (khớp rule /internal/job-postings/create trong SecurityConfig)
+    // Security: Tạo tin tuyển dụng chỉ dành cho HR và Admin
     public boolean canCreatePosting(User user) {
         String userRole = role(user);
         return ROLE_HR.equals(userRole) || ROLE_SYSTEM_ADMIN.equals(userRole);
     }
 
-    // Security: Xem tin tuyển dụng nội bộ dành cho HR, HM và Admin
-    // (khớp rule GET /internal/job-postings/* trong SecurityConfig; Director không vào được nên không hiện link)
+    // Security: Xem tin tuyển dụng nội bộ dành cho HR, HM, Director và Admin
     public boolean canViewPosting(User user) {
         String userRole = role(user);
-        return ROLE_HR.equals(userRole) || ROLE_HIRING_MANAGER.equals(userRole) || ROLE_SYSTEM_ADMIN.equals(userRole);
+        return ROLE_HR.equals(userRole) || ROLE_HIRING_MANAGER.equals(userRole) || ROLE_DIRECTOR.equals(userRole)
+                || ROLE_SYSTEM_ADMIN.equals(userRole);
     }
 
     // Security: Chỉ người tạo hoặc Admin mới được sửa Requisition khi ở trạng thái Draft hoặc Rejected
@@ -103,7 +108,63 @@ public class RequisitionAccess {
         return isOwnerOrAdmin && isEditableStatus;
     }
 
-    // Security: Chỉ Director (không phải người tạo) mới được phê duyệt/từ chối khi trạng thái Pending_Director
+    /**
+     * Yêu cầu đã "xong" vòng duyệt (Approved hoặc Rejected).
+     * Chỉ yêu cầu đã xong mới được sao chép sang đợt mới; Draft / Pending_Director thì chưa.
+     */
+    public static boolean isFinishedStatus(String approvalStatus) {
+        return STATUS_APPROVED.equals(approvalStatus) || STATUS_REJECTED.equals(approvalStatus);
+    }
+
+    // Rule: Chỉ người tạo được rút lại yêu cầu đang chờ Giám đốc duyệt
+    public boolean canWithdraw(User user, JobRequisition requisition) {
+        if (requisition == null) {
+            return false;
+        }
+        return owns(user, requisition) && STATUS_PENDING_DIRECTOR.equals(requisition.getApprovalStatus());
+    }
+
+    /**
+     * Rule: Xóa được khi sửa được (canEdit), chưa có tin tuyển dụng và chưa có đợt tuyển sau sao chép từ nó.
+     * Hai thông tin cuối cần truy vấn DB nên service tra trước rồi truyền vào.
+     */
+    public boolean canDelete(User user, JobRequisition requisition, boolean hasPosting, boolean hasLaterRound) {
+        return canEdit(user, requisition) && !hasPosting && !hasLaterRound;
+    }
+
+    // Rule: Sao chép được khi có quyền tạo yêu cầu và yêu cầu đã xong vòng duyệt
+    public boolean canCopy(User user, JobRequisition requisition) {
+        if (requisition == null) {
+            return false;
+        }
+        return canCreate(user) && isFinishedStatus(requisition.getApprovalStatus());
+    }
+
+    // Rule: Tin tuyển dụng chỉ tạo từ yêu cầu Đã duyệt, chưa có tin, và người tạo là HR / Admin
+    public boolean canCreatePostingFrom(User user, JobRequisition requisition, boolean hasPosting) {
+        if (requisition == null || hasPosting) {
+            return false;
+        }
+        return STATUS_APPROVED.equals(requisition.getApprovalStatus()) && canCreatePosting(user);
+    }
+
+    /**
+     * Rule: Có hiện link mở tin tuyển dụng mới nhất không.
+     * HM và Director không xem được tin nháp (trang tin trả 403), nên tin nháp chỉ có link với HR / Admin.
+     *
+     * @param latestPostingStatus trạng thái tin mới nhất, null = yêu cầu chưa có tin
+     */
+    public boolean canOpenPosting(User user, String latestPostingStatus) {
+        if (latestPostingStatus == null || !canViewPosting(user)) {
+            return false;
+        }
+        if (RequisitionLabels.POSTING_DRAFT.equals(latestPostingStatus)) {
+            return canCreatePosting(user);
+        }
+        return true;
+    }
+
+    // Security: Chỉ Director mới được phê duyệt/từ chối khi trạng thái Pending_Director
     public boolean canDecide(User user, JobRequisition requisition) {
         if (requisition == null) {
             return false;

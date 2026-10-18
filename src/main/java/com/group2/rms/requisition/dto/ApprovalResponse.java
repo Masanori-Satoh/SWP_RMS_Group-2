@@ -1,16 +1,14 @@
 package com.group2.rms.requisition.dto;
 
 import java.time.LocalDateTime;
-import lombok.*;
 
-@Data
+import lombok.Builder;
+
+/** Một lần Giám đốc duyệt / trả lại yêu cầu, hiện ở mục "Lịch sử phê duyệt" của màn chi tiết. */
 @Builder
-@NoArgsConstructor
-@AllArgsConstructor
-public class ApprovalResponse {
-    private Integer stepNumber;
-    private String approverName;
-    private String status;
-    private LocalDateTime approvalDate;
-    private String comments;
+public record ApprovalResponse(
+        String approverName,
+        String status,
+        LocalDateTime approvalDate,
+        String comments) {
 }
