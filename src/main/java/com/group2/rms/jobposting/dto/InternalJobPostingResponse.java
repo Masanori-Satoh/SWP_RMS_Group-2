@@ -1,69 +1,51 @@
 package com.group2.rms.jobposting.dto;
 
-import lombok.*;
+import lombok.Builder;
 
 import java.time.LocalDateTime;
 
 /**
  * Một dòng của màn danh sách tin tuyển dụng.
- * Nhãn, màu, số ngày và cờ thao tác đều do service tính sẵn (JobPostingServiceImpl#toListRow);
+ * Nhãn, màu, số ngày và cờ thao tác đều do JobPostingMapper#toListRow tính sẵn;
  * template chỉ đọc, không tự so sánh trạng thái hay vai trò.
+ *
+ * @param postingNo            lần đăng thứ mấy của yêu cầu nguồn (PostingNo)
+ * @param viewStatus           trạng thái hiển thị: Draft, Scheduled (hẹn đăng), Published, Paused, Closed
+ * @param statusTone           màu badge: success, warning, neutral
+ * @param applicationCount     tổng số hồ sơ đã nộp vào tin
+ * @param newApplicationCount  số hồ sơ chưa ai xử lý (ApplicationStatus = Applied)
+ * @param daysUntilPosting     tin hẹn đăng: còn bao nhiêu ngày nữa thì đăng
+ * @param daysUntilDeadline    số ngày còn lại tới hạn nộp (âm = đã quá hạn); null nếu không có hạn nộp
+ * @param deadlineState        "open", "soon" (≤ 7 ngày) hoặc "past" để tô màu cột hạn nộp; null nếu tin đã đóng / không có hạn
+ * @param publishable          đăng tin nháp
+ * @param reopenable           mở lại tin đang tạm dừng
+ * @param closable             đóng tin: chỉ HR (quyết định D7)
+ * @param deletable            xóa: chỉ tin nháp chưa có hồ sơ
+ * @param applicationsViewable có link "Xem ứng viên"
  */
-@Getter
-@Setter
-@NoArgsConstructor
-@AllArgsConstructor
 @Builder
-public class InternalJobPostingResponse {
-
-    private Integer jobPostingId;
-    private String postingTitle;
-    private Integer requisitionId;
-    private String requisitionCode;
-    private Integer departmentId;
-    private String departmentName;
-    private Integer recruitmentRound;
-    private String employmentType;
-    private String postingStatus;
-    private LocalDateTime applicationDeadline;
-    private LocalDateTime postingDate;
-    private LocalDateTime createdAt;
-    private String createdByName;
-
-    // ----- Hiển thị (tính ở service) -----
-    /** Lần đăng thứ mấy của yêu cầu nguồn (PostingNo). */
-    private Integer postingNo;
-    /** Trạng thái hiển thị: Draft, Scheduled (hẹn đăng), Published, Paused, Closed. */
-    private String viewStatus;
-    private String statusLabel;
-    /** Màu badge: success, warning, neutral. */
-    private String statusTone;
-    /** Tổng số hồ sơ đã nộp vào tin. */
-    private long applicationCount;
-    /** Số hồ sơ chưa ai xử lý (ApplicationStatus = Applied). */
-    private long newApplicationCount;
-    /** Tin hẹn đăng: còn bao nhiêu ngày nữa thì đăng. */
-    private Long daysUntilPosting;
-    /** Số ngày còn lại tới hạn nộp (âm = đã quá hạn); null nếu không có hạn nộp. */
-    private Long daysUntilDeadline;
-    /** "open", "soon" (≤ 7 ngày) hoặc "past" để tô màu cột hạn nộp; null nếu tin đã đóng hoặc không có hạn nộp. */
-    private String deadlineState;
-
-    // ----- Cờ thao tác (menu ⋯) -----
-    /** Đăng tin nháp. */
-    private boolean publishable;
-    /** Mở lại tin đang tạm dừng. */
-    private boolean reopenable;
-    private boolean editable;
-    private boolean pausable;
-    /** Đóng tin: chỉ HR (quyết định D7). */
-    private boolean closable;
-    /** Xóa: chỉ tin nháp chưa có hồ sơ. */
-    private boolean deletable;
-    /** Có link "Xem ứng viên". */
-    private boolean applicationsViewable;
-
-    public boolean isExpired() {
-        return applicationDeadline != null && applicationDeadline.isBefore(LocalDateTime.now());
-    }
+public record InternalJobPostingResponse(
+        Integer jobPostingId,
+        String postingTitle,
+        String departmentName,
+        String employmentType,
+        LocalDateTime applicationDeadline,
+        LocalDateTime postingDate,
+        String createdByName,
+        Integer postingNo,
+        String viewStatus,
+        String statusLabel,
+        String statusTone,
+        long applicationCount,
+        long newApplicationCount,
+        Long daysUntilPosting,
+        Long daysUntilDeadline,
+        String deadlineState,
+        boolean publishable,
+        boolean reopenable,
+        boolean editable,
+        boolean pausable,
+        boolean closable,
+        boolean deletable,
+        boolean applicationsViewable) {
 }

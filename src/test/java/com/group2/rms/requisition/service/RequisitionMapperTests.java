@@ -78,14 +78,14 @@ class RequisitionMapperTests {
         RequisitionResponse row = mapper.toListRow(requisition(RequisitionAccess.STATUS_DRAFT), manager, null, false);
 
         // Assert
-        assertTrue(row.isEditable());
-        assertTrue(row.isDeletable());
-        assertFalse(row.isCopyable());
-        assertFalse(row.isPostable());
-        assertFalse(row.isPostingViewable());
-        assertEquals("Bản nháp", row.getStatusLabel());
-        assertEquals("Chưa có tin", row.getPostingLabel());
-        assertEquals("Toàn thời gian", row.getEmploymentTypeLabel());
+        assertTrue(row.editable());
+        assertTrue(row.deletable());
+        assertFalse(row.copyable());
+        assertFalse(row.postable());
+        assertFalse(row.postingViewable());
+        assertEquals("Bản nháp", row.statusLabel());
+        assertEquals("Chưa có tin", row.postingLabel());
+        assertEquals("Toàn thời gian", row.employmentTypeLabel());
     }
 
     @Test
@@ -93,8 +93,8 @@ class RequisitionMapperTests {
     void toListRow_shouldNotBeDeletable_whenLaterRoundExists() {
         RequisitionResponse row = mapper.toListRow(requisition(RequisitionAccess.STATUS_DRAFT), manager, null, true);
 
-        assertTrue(row.isEditable());
-        assertFalse(row.isDeletable());
+        assertTrue(row.editable());
+        assertFalse(row.deletable());
     }
 
     @Test
@@ -102,8 +102,8 @@ class RequisitionMapperTests {
     void toListRow_shouldBePostable_whenHrViewsApprovedWithoutPosting() {
         RequisitionResponse row = mapper.toListRow(requisition(RequisitionAccess.STATUS_APPROVED), hr, null, false);
 
-        assertTrue(row.isPostable());
-        assertFalse(row.isEditable());
+        assertTrue(row.postable());
+        assertFalse(row.editable());
     }
 
     @Test
@@ -119,11 +119,11 @@ class RequisitionMapperTests {
         RequisitionResponse forManager = mapper.toListRow(approved, manager, draftPosting, false);
 
         // Assert
-        assertEquals(9, forHr.getJobPostingId());
-        assertEquals("Tin nháp", forHr.getPostingLabel());
-        assertTrue(forHr.isPostingViewable());
-        assertFalse(forHr.isPostable(), "Đã có tin thì không tạo thêm tin từ màn yêu cầu");
-        assertFalse(forManager.isPostingViewable());
+        assertEquals(9, forHr.jobPostingId());
+        assertEquals("Tin nháp", forHr.postingLabel());
+        assertTrue(forHr.postingViewable());
+        assertFalse(forHr.postable(), "Đã có tin thì không tạo thêm tin từ màn yêu cầu");
+        assertFalse(forManager.postingViewable());
     }
 
     @Test
@@ -131,7 +131,7 @@ class RequisitionMapperTests {
     void toListRow_shouldGenerateCode_whenRequisitionCodeIsMissing() {
         RequisitionResponse row = mapper.toListRow(requisition(RequisitionAccess.STATUS_DRAFT), manager, null, false);
 
-        assertEquals("REQ-0025", row.getRequisitionCode());
+        assertEquals("REQ-0025", row.requisitionCode());
     }
 
     // ----- Trang chi tiết -----
@@ -142,7 +142,7 @@ class RequisitionMapperTests {
         RequisitionResponse detail = mapper.toDetail(requisition(RequisitionAccess.STATUS_DRAFT), manager, null, false,
                 List.of(), List.of());
 
-        assertTrue(detail.isIncomplete());
+        assertTrue(detail.incomplete());
     }
 
     @Test
@@ -162,9 +162,9 @@ class RequisitionMapperTests {
         RequisitionResponse detail = mapper.toDetail(draft, manager, null, false, List.of(), List.of());
 
         // Assert
-        assertFalse(detail.isIncomplete());
-        assertEquals(new BigDecimal("1E+2"), detail.getCriteriaTotalWeight());
-        assertEquals("Kỹ năng", detail.getScreeningCriteria().get(0).getCriteriaTypeLabel());
+        assertFalse(detail.incomplete());
+        assertEquals(new BigDecimal("1E+2"), detail.criteriaTotalWeight());
+        assertEquals("Kỹ năng", detail.screeningCriteria().get(0).criteriaTypeLabel());
     }
 
     @Test
@@ -179,9 +179,9 @@ class RequisitionMapperTests {
         RequisitionResponse detail = mapper.toDetail(pending, manager, null, false, List.of(), List.of());
 
         // Assert
-        assertEquals(3L, detail.getWaitingDays());
-        assertEquals(10L, detail.getDaysUntilStart());
-        assertTrue(detail.isWithdrawable());
+        assertEquals(3L, detail.waitingDays());
+        assertEquals(10L, detail.daysUntilStart());
+        assertTrue(detail.withdrawable());
     }
 
     @Test
@@ -198,8 +198,8 @@ class RequisitionMapperTests {
                 history, List.of());
 
         // Assert
-        assertEquals("Thiếu ngân sách", detail.getRejectionReason());
-        assertEquals(2, detail.getApprovals().size());
+        assertEquals("Thiếu ngân sách", detail.rejectionReason());
+        assertEquals(2, detail.approvals().size());
     }
 
     @Test
@@ -213,7 +213,7 @@ class RequisitionMapperTests {
         RequisitionResponse detail = mapper.toDetail(requisition, manager, null, false, List.of(), List.of());
 
         // Assert
-        assertEquals("&lt;script&gt;alert(1)&lt;/script&gt;<br/>Line 2", detail.getJobDescriptionHtml());
+        assertEquals("&lt;script&gt;alert(1)&lt;/script&gt;<br/>Line 2", detail.jobDescriptionHtml());
     }
 
     @Test
@@ -227,8 +227,8 @@ class RequisitionMapperTests {
                 List.of(), List.of(log));
 
         // Assert
-        assertEquals("Nguyễn Văn A", detail.getActivityLog().get(0).getPerformedBy());
-        assertEquals("Tạo yêu cầu", detail.getActivityLog().get(0).getDescription());
+        assertEquals("Nguyễn Văn A", detail.activityLog().get(0).getPerformedBy());
+        assertEquals("Tạo yêu cầu", detail.activityLog().get(0).getDescription());
     }
 
     // ----- Form -----

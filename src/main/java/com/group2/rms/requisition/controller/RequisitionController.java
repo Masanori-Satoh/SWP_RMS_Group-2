@@ -12,13 +12,20 @@ import com.group2.rms.requisition.validator.RequisitionValidator;
 import com.group2.rms.user.repository.DepartmentRepository;
 
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.WebDataBinder;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.InitBinder;
+import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.beans.PropertyEditorSupport;
@@ -150,7 +157,7 @@ public class RequisitionController {
     }
 
     @PostMapping("/create")
-    public String create(@ModelAttribute("requisitionDto") RequisitionRequest requisitionRequest, BindingResult errors, Model model,
+    public String create(@Valid @ModelAttribute("requisitionDto") RequisitionRequest requisitionRequest, BindingResult errors, Model model,
             RedirectAttributes flash) {
         // Rule: Xác thực quyền tạo trước khi xử lý nghiệp vụ
         access.requireCreate(access.actor());
@@ -169,7 +176,7 @@ public class RequisitionController {
     }
 
     @PostMapping("/edit/{id}")
-    public String update(@PathVariable Integer id, @ModelAttribute("requisitionDto") RequisitionRequest requisitionRequest,
+    public String update(@PathVariable Integer id, @Valid @ModelAttribute("requisitionDto") RequisitionRequest requisitionRequest,
             BindingResult errors, Model model, RedirectAttributes flash) {
         if (!errors.hasErrors()) {
             try {

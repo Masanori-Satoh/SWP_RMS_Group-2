@@ -10,7 +10,7 @@ import java.util.List;
  * Ví dụ: /internal/job-postings?q=java&status=Published&status=Paused&deadline=soon&sort=apps&page=1
  *
  * Giá trị chưa được kiểm tra: service "làm sạch" lại theo quyền của người xem
- * (xem JobPostingServiceImpl#normalizeFilter).
+ * (xem JobPostingListService#normalizeFilter).
  *
  * @param q            từ khóa tìm theo tiêu đề tin hoặc tên phòng ban
  * @param status       các trạng thái hiển thị được chọn (Draft, Scheduled, Published, Paused, Closed)

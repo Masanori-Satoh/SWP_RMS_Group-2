@@ -10,19 +10,23 @@
 
 ```
 Trình duyệt ──► SecurityConfig (lớp 1: vai trò có được vào URL không?)
-            ──► JobPostingController (nhận tham số, whitelist trường form, chọn view)
-            ──► JobPostingServiceImpl (nghiệp vụ, lớp 2: phạm vi dữ liệu theo vai trò, transaction, khóa dòng)
-                  ├─ JobPostingValidator      : quy tắc form (lỗi theo từng ô)
-                  ├─ JobPostingLabels         : trạng thái hiển thị ("Hẹn đăng"), nhãn, màu, số ngày
+            ──► JobPostingController (nhận tham số, @Valid + whitelist trường form, chọn view)
+            ──► JobPostingListService (màn danh sách: phạm vi theo vai trò, bộ lọc, chip, phân trang)
+                JobPostingServiceImpl (một tin: tạo / sửa / chuyển trạng thái / xóa / chi tiết; transaction, khóa dòng)
+                  ├─ JobPostingAccess         : lớp 2 — ai được làm gì (canX / requireX), giá trị trạng thái, "Hẹn đăng"
+                  ├─ JobPostingValidator      : quy tắc form (lỗi theo từng ô), hôm nay theo Clock
+                  ├─ JobPostingMapper         : entity → DTO, gắn cờ thao tác / dải thông báo (không truy vấn DB)
+                  ├─ JobPostingAuditLogger    : ghi audit, snapshot trước / sau (FieldChanges)
+                  ├─ JobPostingLabels         : nhãn tiếng Việt, màu badge, nhóm hạn nộp, tên hoạt động
                   ├─ JobPostingSpecifications : điều kiện WHERE màn danh sách
                   ├─ JobPostingSort           : các cách sắp xếp (whitelist)
-                  └─ JobPostingRepository     : truy vấn, đếm hồ sơ gộp
-            ──► Template Thymeleaf (chỉ hiển thị; nút hiện / ẩn theo cờ service tính sẵn)
+                  └─ JobPostingRepository     : truy vấn, đếm hồ sơ gộp, @EntityGraph chống N+1
+            ──► Template Thymeleaf (chỉ hiển thị; nút / dải thông báo hiện theo cờ có sẵn trong DTO)
 ```
 
 | URL | Controller | Service | Bảng bị ghi |
 |---|---|---|---|
-| `GET /internal/job-postings` | `listJobPostings` | `getListPage` | (chỉ đọc) |
+| `GET /internal/job-postings` | `listJobPostings` | `JobPostingListService#getListPage` | (chỉ đọc) |
 | `GET /internal/job-postings/create[?requisitionId=…]` | `showCreateForm` | `prepareCreateForm` | (chỉ đọc) |
 | `GET /internal/job-postings/create?fromPostingId=…` | `showCreateForm` | `prepareRepostForm` ("Đăng lại") | (chỉ đọc) |
 | `POST /internal/job-postings/create` | `createJobPosting` | `createJobPosting` / `createAndPublishJobPosting` | `JobPosting`, `AuditLog`, `Notification` (khi đăng) |
@@ -52,7 +56,7 @@ Mọi `POST` cần CSRF token (thiếu → 403). Thao tác ghi trên danh sách 
 | `/internal/job-postings/{id}/close` | chỉ HR |
 | Mọi thao tác ghi khác | HR, System Admin |
 
-**Lớp 2, dữ liệu** (`JobPostingServiceImpl#scope`, `#getInternalJobPostingDetail`):
+**Lớp 2, dữ liệu** (`JobPostingAccess#canView` / `requireView`; danh sách lọc cùng phạm vi ở `JobPostingListService#scope`):
 
 | Vai trò | Thấy tin nào | Thao tác |
 |---|---|---|
@@ -113,7 +117,7 @@ Giá trị lạ trên URL (vai trò không có ô đó, giá trị ngoài danh s
 | Hạn nộp | `ApplicationDeadline`; "còn N ngày" / "quá hạn N ngày"; vàng khi ≤ 7 ngày, đỏ khi quá hạn; tin đã đóng không tô màu |
 | Trạng thái | `JobPostingLabels#statusLabel` / `#statusTone` |
 | Người tạo | `JobPosting.CreatedBy` (chỉ HR, Admin thấy) |
-| Menu ⋯ | Theo cờ do service tính (`toListRow`): Đăng tin, Mở lại, Xem ứng viên, Xem chi tiết, Chỉnh sửa, Tạm dừng, Đóng tin (HR), Xóa bản nháp (nháp chưa có hồ sơ) |
+| Menu ⋯ | Theo cờ do `JobPostingMapper#toListRow` tính (luật ở `JobPostingAccess`): Đăng tin, Mở lại, Xem ứng viên, Xem chi tiết, Chỉnh sửa, Tạm dừng, Đóng tin (HR), Xóa bản nháp (nháp chưa có hồ sơ) |
 
 ---
 
@@ -130,7 +134,7 @@ whitelist (`JobPostingController#formBinder`); gửi thêm `postingStatus`, `min
 
 ### 4.2 Các trường
 
-| Trường | Cột DB | Quy tắc (`JobPostingValidator#validateForm`) |
+| Trường | Cột DB | Quy tắc (`JobPostingValidator#normalizeAndValidate`) |
 |---|---|---|
 | Tiêu đề tin * | `PostingTitle` NVARCHAR(200) NOT NULL | Bắt buộc cả khi nháp, ≤ 200. Có "Lấy từ yêu cầu / Khôi phục bản gốc" |
 | Địa điểm | `WorkLocation` NVARCHAR(255) | ≤ 255. Bản đồ Google Maps nhúng + link "Mở Google Maps" (D3) |

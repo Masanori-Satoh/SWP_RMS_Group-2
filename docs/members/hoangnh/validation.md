@@ -183,7 +183,7 @@ Dòng "trống hoàn toàn" = không có tên, loại, giá trị và không b�
 
 | Ràng buộc | Nơi kiểm tra trong code | Trạng thái |
 | :--- | :--- | :---: |
-| Mỗi yêu cầu chỉ có 1 tin đang mở (Draft / Published / Paused) | `JobPostingServiceImpl#requireNoOtherOpenPosting` | ✅ Có sẵn |
+| Mỗi yêu cầu chỉ có 1 tin đang mở (Draft / Published / Paused) | `JobPostingServiceImpl#requireNoOtherOpenPosting` (dùng `JobPostingAccess.OPEN_STATUSES`) | ✅ Có sẵn |
 | Lương > 0 | `RequisitionValidator#validateMoneyField` | ✅ Có sẵn |
 | Phiếu nào cũng có người tạo (`CreatedBy`) | `RequisitionServiceImpl#createRequisition` luôn gán người đang đăng nhập | ✅ Có sẵn |
 | Trọng số mỗi tiêu chí 0.01–100, tối đa 2 chữ số thập phân | `RequisitionValidator#validate`, áp dụng **cả khi lưu nháp** (trước đây nháp cho tới 999.99) | ✅ Đã sửa |

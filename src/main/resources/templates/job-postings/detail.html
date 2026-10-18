@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <!-- Chi tiết tin tuyển dụng nội bộ (/internal/job-postings/{id}), theo mockup đã được GV duyệt.
-     Mọi nhãn, số liệu và cờ thao tác do service tính sẵn (JobPostingServiceImpl#getInternalJobPostingDetail);
+     Mọi nhãn, số liệu và cờ (thao tác, dải thông báo) do JobPostingMapper#toDetail tính sẵn;
      template chỉ đọc, không tự so sánh vai trò hay trạng thái. -->
 <html lang="vi" xmlns:th="http://www.thymeleaf.org"
       xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
@@ -76,29 +76,29 @@
     </header>
 
     <!-- ===== 2. DẢI THÔNG BÁO THEO TRẠNG THÁI ===== -->
-    <div class="jpd-banner jpd-banner--muted" th:if="${p.viewStatus == 'Draft'}" role="status">
+    <div class="jpd-banner jpd-banner--muted" th:if="${p.draftBanner}" role="status">
         <p><strong>Bản nháp, ứng viên chưa nhìn thấy.</strong> Kiểm tra nội dung rồi bấm "Đăng tin".</p>
     </div>
-    <div class="jpd-banner jpd-banner--info" th:if="${p.viewStatus == 'Scheduled'}" role="status">
+    <div class="jpd-banner jpd-banner--info" th:if="${p.scheduledBanner}" role="status">
         <p><strong th:text="|Tin sẽ tự đăng lúc ${#temporals.format(p.postingDate, 'HH:mm')} ngày ${#temporals.format(p.postingDate, 'dd/MM/yyyy')}.|">Tin sẽ tự đăng lúc 08:00 ngày 20/10/2026.</strong>
             Trước thời điểm đó ứng viên chưa thấy tin trên trang tuyển dụng.</p>
     </div>
-    <div class="jpd-banner jpd-banner--warning" th:if="${p.viewStatus == 'Paused'}" role="status">
+    <div class="jpd-banner jpd-banner--warning" th:if="${p.pausedBanner}" role="status">
         <p><strong>Đang tạm dừng nhận hồ sơ.</strong> Tin bị ẩn khỏi trang tuyển dụng. Hồ sơ đã nộp vẫn được xử lý bình thường.</p>
     </div>
-    <div class="jpd-banner jpd-banner--muted" th:if="${p.viewStatus == 'Closed'}" role="status">
+    <div class="jpd-banner jpd-banner--muted" th:if="${p.closedBanner}" role="status">
         <p><strong th:text="|Tin đã đóng ngày ${#temporals.format(p.closedAt != null ? p.closedAt : p.applicationDeadline, 'dd/MM/yyyy')}.|">Tin đã đóng ngày 24/10/2026.</strong>
             Không nhận thêm hồ sơ.
             <span th:if="${p.repostable}">Nếu chưa tuyển đủ, bấm "Đăng lại" để tạo tin lần mới từ cùng yêu cầu.</span></p>
     </div>
     <div class="jpd-banner jpd-banner--warning" role="status"
-         th:if="${p.viewStatus == 'Published' and p.daysUntilDeadline != null and p.daysUntilDeadline >= 0 and p.daysUntilDeadline <= 7}">
+         th:if="${p.deadlineSoonBanner}">
         <p><strong th:text="|Còn ${p.daysUntilDeadline} ngày là hết hạn nộp hồ sơ.|">Còn 7 ngày là hết hạn nộp hồ sơ.</strong>
             <span th:if="${p.numberOfPositions != null}" th:text="|Đã tuyển ${p.hiredApplications}/${p.numberOfPositions} vị trí.|">Đã tuyển 0/1 vị trí.</span>
             <span th:if="${p.canManage}">Cân nhắc gia hạn bằng cách sửa hạn nộp.</span></p>
     </div>
     <div class="jpd-banner jpd-banner--danger" role="status"
-         th:if="${p.viewStatus == 'Published' and p.daysUntilDeadline != null and p.daysUntilDeadline < 0}">
+         th:if="${p.deadlinePassedBanner}">
         <p><strong>Đã quá hạn nộp hồ sơ.</strong> Ứng viên không nộp thêm được.
             <span th:if="${p.canManage}">Sửa hạn nộp để nhận thêm hồ sơ, hoặc đóng tin.</span></p>
     </div>
@@ -207,8 +207,8 @@
                         <span th:if="${p.applicationDeadline == null}">Chưa có</span>
                         <th:block th:if="${p.applicationDeadline != null}">
                             <span th:text="${#temporals.format(p.applicationDeadline, 'dd/MM/yyyy')}">24/10/2026</span>
-                            <span th:if="${p.viewStatus != 'Closed' and p.daysUntilDeadline >= 0}" class="jpd-muted" th:text="|· còn ${p.daysUntilDeadline} ngày|">· còn 7 ngày</span>
-                            <span th:if="${p.viewStatus != 'Closed' and p.daysUntilDeadline < 0}" class="jpd-over">· quá hạn</span>
+                            <span th:if="${p.deadlineCountdown}" class="jpd-muted" th:text="|· còn ${p.daysUntilDeadline} ngày|">· còn 7 ngày</span>
+                            <span th:if="${p.deadlineOverdue}" class="jpd-over">· quá hạn</span>
                         </th:block></dd></div>
                     <div><dt>Người tạo</dt><dd th:text="${p.createdByName}">Lê Thị Mai Lan</dd></div>
                     <div><dt>Tạo lúc</dt><dd th:text="${p.createdAt != null ? #temporals.format(p.createdAt, 'dd/MM/yyyy HH:mm') : '—'}">30/09/2026</dd></div>
@@ -228,14 +228,14 @@
                 <a class="jpd-link" th:if="${p.requisitionId != null}" th:href="@{/requisitions/{id}(id=${p.requisitionId})}">Xem yêu cầu gốc →</a>
             </section>
 
-            <!-- Ứng viên tiềm năng / gợi ý (module talent pool của nhóm), giữ nguyên quyền như trước -->
-            <section class="card jpd-sec" th:if="${viewerRole == 'HR' or viewerRole == 'Hiring Manager'}">
+            <!-- Ứng viên tiềm năng / gợi ý (module talent pool của nhóm): HR và HM (cờ talentPoolVisible) -->
+            <section class="card jpd-sec" th:if="${p.talentPoolVisible}">
                 <h3>Ứng viên tiềm năng</h3>
                 <div class="jpd-links">
                     <a class="btn btn--secondary btn--sm" th:href="@{/talent-pool/jobs/{id}/suggestions(id=${p.jobPostingId})}"
-                       th:text="${viewerRole == 'Hiring Manager' ? 'Ứng viên tiềm năng' : 'Ứng viên được HM đề xuất'}">Ứng viên tiềm năng</a>
+                       th:text="${p.suggestionsLinkLabel}">Ứng viên tiềm năng</a>
                     <a class="btn btn--secondary btn--sm" th:href="@{/talent-pool/jobs/{id}/recommendations(id=${p.jobPostingId})}">
-                        <span th:text="${viewerRole == 'HR' ? 'Gợi ý đã gửi cho HM' : 'Gợi ý từ HR'}">Gợi ý từ HR</span>
+                        <span th:text="${p.recommendationsLinkLabel}">Gợi ý từ HR</span>
                         <span th:if="${hrRecommendationCount != null and hrRecommendationCount > 0}" class="badge badge--warning"
                               th:text="${hrRecommendationCount}">2</span></a>
                 </div>

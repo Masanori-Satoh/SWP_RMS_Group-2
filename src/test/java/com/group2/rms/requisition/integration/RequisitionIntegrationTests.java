@@ -179,17 +179,17 @@ class RequisitionIntegrationTests {
 
                 // Act
                 RequisitionResponse row = searchByKeyword("Unicode read regression").stream()
-                                .filter(r -> id.equals(r.getRequisitionId())).findFirst().orElseThrow();
+                                .filter(r -> id.equals(r.requisitionId())).findFirst().orElseThrow();
                 RequisitionResponse detail = service.getById(id);
 
                 // Assert
                 assertEquals("Female", entityManager.createNativeQuery(
                                 "SELECT RequiredGender FROM JobRequisition WHERE RequisitionId = :id")
                                 .setParameter("id", id).getSingleResult());
-                assertEquals("Văn phòng Hà Nội", row.getWorkLocation());
-                assertEquals("Nữ", detail.getGenderLabel());
-                assertEquals("60 ngày", detail.getProbationLabel());
-                assertEquals("Kết hợp", detail.getWorkModelLabel());
+                assertEquals("Văn phòng Hà Nội", row.workLocation());
+                assertEquals("Nữ", detail.genderLabel());
+                assertEquals("60 ngày", detail.probationLabel());
+                assertEquals("Kết hợp", detail.workModelLabel());
                 mvc.perform(get("/requisitions")).andExpect(status().isOk()).andExpect(view().name("requisitions/list"));
                 mvc.perform(get("/requisitions/{id}", id)).andExpect(status().isOk())
                                 .andExpect(view().name("requisitions/detail"));
@@ -210,7 +210,7 @@ class RequisitionIntegrationTests {
                 List<RequisitionResponse> rows = searchByKeyword("Scope test");
 
                 // Assert
-                assertEquals(List.of(sameDepartmentId), rows.stream().map(RequisitionResponse::getRequisitionId).toList());
+                assertEquals(List.of(sameDepartmentId), rows.stream().map(RequisitionResponse::requisitionId).toList());
         }
 
         @Test
@@ -229,14 +229,14 @@ class RequisitionIntegrationTests {
                 List<RequisitionResponse> rows = searchByKeyword("Latest posting check");
 
                 // Assert
-                RequisitionResponse rowA = rows.stream().filter(r -> r.getTitle().endsWith("A")).findFirst().orElseThrow();
-                RequisitionResponse rowB = rows.stream().filter(r -> r.getTitle().endsWith("B")).findFirst().orElseThrow();
-                assertEquals(latest.getJobPostingId(), rowA.getJobPostingId());
-                assertEquals("Đang đăng", rowA.getPostingLabel());
-                assertFalse(rowA.isDeletable());
-                assertNull(rowB.getJobPostingId());
-                assertEquals("Chưa có tin", rowB.getPostingLabel());
-                assertEquals("HM Tester", rowB.getHiringManagerName());
+                RequisitionResponse rowA = rows.stream().filter(r -> r.title().endsWith("A")).findFirst().orElseThrow();
+                RequisitionResponse rowB = rows.stream().filter(r -> r.title().endsWith("B")).findFirst().orElseThrow();
+                assertEquals(latest.getJobPostingId(), rowA.jobPostingId());
+                assertEquals("Đang đăng", rowA.postingLabel());
+                assertFalse(rowA.deletable());
+                assertNull(rowB.jobPostingId());
+                assertEquals("Chưa có tin", rowB.postingLabel());
+                assertEquals("HM Tester", rowB.hiringManagerName());
         }
 
         // ----- Chuyển trạng thái -----

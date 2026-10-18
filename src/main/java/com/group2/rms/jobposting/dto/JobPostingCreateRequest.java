@@ -1,6 +1,12 @@
 package com.group2.rms.jobposting.dto;
 
-import lombok.*;
+import com.group2.rms.jobposting.validator.JobPostingValidator;
+import jakarta.validation.constraints.Size;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 import org.springframework.format.annotation.DateTimeFormat;
 
 import java.time.LocalDate;
@@ -9,11 +15,14 @@ import java.time.LocalDateTime;
 /**
  * Dữ liệu form Tạo / Sửa tin tuyển dụng (job-postings/create.html).
  *
- * Chỉ các trường trong whitelist của JobPostingController#binder được nhận từ form
+ * Chỉ các trường trong whitelist của JobPostingController#formBinder được nhận từ form
  * (requisitionId, nội dung tin, cách hiển thị lương / số lượng, hạn nộp, cách đăng, action).
- * Các trường còn lại là thông tin yêu cầu nguồn để HIỂN THỊ, luôn do service điền lại từ DB
+ * Các trường còn lại là thông tin yêu cầu nguồn và trạng thái form để HIỂN THỊ, luôn do service điền lại từ DB
  * (người dùng sửa trên trình duyệt cũng không có tác dụng).
- * Mọi quy tắc kiểm tra nằm ở JobPostingValidator#validateForm.
+ *
+ * Annotation là tầng 2 (Bean Validation, AG §2.4): chỉ chặn ô một dòng quá dài. Bắt buộc / lựa chọn / ngày
+ * do JobPostingValidator kiểm tra (phân biệt lưu nháp và đăng tin). Ô nhiều dòng không đặt @Size vì trình duyệt
+ * gửi xuống dòng là \r\n (2 ký tự), validator đếm sau khi đổi về \n.
  */
 @Getter
 @Setter
@@ -31,10 +40,9 @@ public class JobPostingCreateRequest {
     public static final String PUBLISH_LATER = "later";
 
     private Integer jobPostingId;
-    private String postingStatus;
     private Integer requisitionId;
 
-    // ----- Thông tin yêu cầu nguồn (chỉ hiển thị, service điền từ DB) -----
+    // ----- Thông tin yêu cầu nguồn (chỉ hiển thị, service điền từ DB; server không dùng giá trị gửi lên) -----
     private String requisitionCode;
     private String requisitionTitle;
     private String departmentName;
@@ -45,11 +53,10 @@ public class JobPostingCreateRequest {
     private String workModel;
     private Integer numberOfPositions;
     private String hiringManagerName;
-    /** Thông tin nội bộ: chỉ HR xem, không đưa vào nội dung tin công khai (rule §24.2). */
+    /** Thông tin nội bộ: chỉ HR xem, không đưa vào nội dung tin công khai (CLAUDE.md §22). */
     private String reasonForHiring;
-    private java.math.BigDecimal minSalary;
-    private java.math.BigDecimal maxSalary;
     private Integer probationDays;
+    /** Nhãn tiếng Việt, ví dụ "Không yêu cầu". */
     private String gender;
     @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
     private LocalDate expectedStartDate;
@@ -61,25 +68,35 @@ public class JobPostingCreateRequest {
     private String sourceWorkLocation;
     private String sourceJobDescription;
     private String sourceRequirements;
+
+    // ----- Trạng thái form (service tính, template chỉ đọc; server không dùng giá trị gửi lên) -----
+    /** Tạo mới hoặc đang sửa bản nháp: có nút "Lưu nháp" + "Đăng tin". */
+    private boolean draftOrNew;
+    /** Đang sửa tin tạm dừng: có nút "Lưu thay đổi" + "Lưu và mở lại". */
+    private boolean paused;
+    /** Đang sửa tin hẹn đăng: "Đăng ngay" nghĩa là đăng khi lưu. */
+    private boolean scheduled;
     /** Tin đã lên trang tuyển dụng (đang đăng hoặc tạm dừng): không đổi được ngày đăng nữa. */
     private boolean live;
 
     // ----- Nội dung tin (HR nhập) -----
+    @Size(max = JobPostingValidator.TITLE_LIMIT, message = JobPostingValidator.TITLE_TOO_LONG)
     private String postingTitle;
     private String jobDescription;
     private String jobRequirements;
     private String benefits;
+    @Size(max = JobPostingValidator.LOCATION_LIMIT, message = JobPostingValidator.LOCATION_TOO_LONG)
     private String workLocation;
 
     /** "range" (theo yêu cầu), "nego" (thỏa thuận) hoặc "custom" (tự nhập). */
     private String salaryMode;
-    /** Mức lương tự nhập khi salaryMode = custom, tối đa 100 ký tự. */
+    /** Mức lương tự nhập khi salaryMode = custom. */
+    @Size(max = JobPostingValidator.SALARY_TEXT_LIMIT, message = JobPostingValidator.SALARY_TEXT_TOO_LONG)
     private String salaryCustom;
-    /** Chuỗi lương được lưu vào cột SalaryDisplay (service tính từ salaryMode). */
-    private String salaryDisplay;
 
     /** Có công khai số lượng tuyển không; tắt thì lưu NumberOfPositionsDisplay = NULL. */
     private Boolean showPositions;
+    @Size(max = JobPostingValidator.POSITIONS_TEXT_LIMIT, message = JobPostingValidator.POSITIONS_TEXT_TOO_LONG)
     private String numberOfPositionsDisplay;
 
     @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
@@ -91,6 +108,6 @@ public class JobPostingCreateRequest {
     @DateTimeFormat(pattern = "yyyy-MM-dd'T'HH:mm")
     private LocalDateTime scheduledAt;
 
-    /** "draft" (lưu nháp / lưu thay đổi) hoặc "publish" (đăng tin / lên lịch đăng). */
+    /** JobPostingValidator.ACTION_DRAFT (lưu nháp / lưu thay đổi) hoặc ACTION_PUBLISH (đăng tin / lên lịch đăng). */
     private String action;
 }

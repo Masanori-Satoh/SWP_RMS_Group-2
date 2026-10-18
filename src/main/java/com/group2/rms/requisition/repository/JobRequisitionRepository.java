@@ -36,6 +36,10 @@ public interface JobRequisitionRepository
             String approvalStatus
     );
 
+    // Như trên nhưng lấy luôn phòng ban trong cùng câu SELECT (màn tin tuyển dụng hiện tên phòng ban từng dòng, chống N+1)
+    @EntityGraph(attributePaths = "department")
+    List<JobRequisition> findWithDepartmentByApprovalStatusOrderByCreatedAtDesc(String approvalStatus);
+
     // Kiểm tra xem có đợt tuyển dụng nào khác được sao chép/tạo từ yêu cầu tuyển dụng này hay không
     boolean existsByOriginalRequisition_RequisitionId(Integer requisitionId);
 

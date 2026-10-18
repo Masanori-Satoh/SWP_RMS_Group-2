@@ -114,7 +114,7 @@ public class RequisitionMapper {
             requisitionCode = RequisitionLabels.requisitionCode(jobRequisition.getRequisitionId());
         }
 
-        RequisitionResponse response = RequisitionResponse.builder()
+        RequisitionResponse.RequisitionResponseBuilder row = RequisitionResponse.builder()
                 .requisitionId(jobRequisition.getRequisitionId())
                 .title(jobRequisition.getTitle())
                 .departmentName(departmentName)
@@ -125,34 +125,35 @@ public class RequisitionMapper {
                 .requisitionCode(requisitionCode)
                 .createdAt(jobRequisition.getCreatedAt())
                 .workLocation(jobRequisition.getWorkLocation())
-                .expectedStartDate(jobRequisition.getExpectedStartDate())
-                .build();
+                .expectedStartDate(jobRequisition.getExpectedStartDate());
 
         // Tin tuyển dụng mới nhất (nếu có)
+        String postingStatus = null;
         if (hasPosting) {
-            response.setPostingStatus(latestPosting.getPostingStatus());
-            response.setJobPostingId(latestPosting.getJobPostingId());
-            response.setPostingNo(latestPosting.getPostingNo());
-            response.setPostingDate(latestPosting.getPostingDate());
-            response.setPostingDeadline(latestPosting.getApplicationDeadline());
+            postingStatus = latestPosting.getPostingStatus();
+            row.postingStatus(postingStatus)
+                    .jobPostingId(latestPosting.getJobPostingId())
+                    .postingNo(latestPosting.getPostingNo())
+                    .postingDate(latestPosting.getPostingDate())
+                    .postingDeadline(latestPosting.getApplicationDeadline());
         }
 
-        // Nhãn tiếng Việt + tông màu badge (dịch ở một chỗ duy nhất: RequisitionLabels)
-        response.setStatusLabel(RequisitionLabels.approvalStatus(approvalStatus));
-        response.setStatusTone(RequisitionLabels.approvalTone(approvalStatus));
-        response.setPostingLabel(RequisitionLabels.postingStatus(response.getPostingStatus()));
-        response.setPostingTone(RequisitionLabels.postingTone(response.getPostingStatus()));
-        response.setEmploymentTypeLabel(RequisitionLabels.employmentType(jobRequisition.getEmploymentType()));
-
-        // Cờ quyền cho nút / menu ⋯ (luật nằm ở RequisitionAccess, template chỉ đọc cờ)
-        response.setEditable(access.canEdit(viewer, jobRequisition));
-        response.setDeletable(access.canDelete(viewer, jobRequisition, hasPosting, hasLaterRound));
-        response.setDecidable(access.canDecide(viewer, jobRequisition));
-        response.setWithdrawable(access.canWithdraw(viewer, jobRequisition));
-        response.setCopyable(access.canCopy(viewer, jobRequisition));
-        response.setPostable(access.canCreatePostingFrom(viewer, jobRequisition, hasPosting));
-        response.setPostingViewable(access.canOpenPosting(viewer, response.getPostingStatus()));
-        return response;
+        return row
+                // Nhãn tiếng Việt + tông màu badge (dịch ở một chỗ duy nhất: RequisitionLabels)
+                .statusLabel(RequisitionLabels.approvalStatus(approvalStatus))
+                .statusTone(RequisitionLabels.approvalTone(approvalStatus))
+                .postingLabel(RequisitionLabels.postingStatus(postingStatus))
+                .postingTone(RequisitionLabels.postingTone(postingStatus))
+                .employmentTypeLabel(RequisitionLabels.employmentType(jobRequisition.getEmploymentType()))
+                // Cờ quyền cho nút / menu ⋯ (luật nằm ở RequisitionAccess, template chỉ đọc cờ)
+                .editable(access.canEdit(viewer, jobRequisition))
+                .deletable(access.canDelete(viewer, jobRequisition, hasPosting, hasLaterRound))
+                .decidable(access.canDecide(viewer, jobRequisition))
+                .withdrawable(access.canWithdraw(viewer, jobRequisition))
+                .copyable(access.canCopy(viewer, jobRequisition))
+                .postable(access.canCreatePostingFrom(viewer, jobRequisition, hasPosting))
+                .postingViewable(access.canOpenPosting(viewer, postingStatus))
+                .build();
     }
 
     // ===================================================================================
@@ -165,47 +166,53 @@ public class RequisitionMapper {
      */
     public RequisitionResponse toDetail(JobRequisition jobRequisition, User viewer, JobPosting latestPosting,
             boolean hasLaterRound, List<RequisitionApproval> approvalHistory, List<AuditLog> activityLogs) {
-        RequisitionResponse response = toListRow(jobRequisition, viewer, latestPosting, hasLaterRound);
         String approvalStatus = jobRequisition.getApprovalStatus();
 
         // Bản nháp: đã điền đủ thông tin để gửi duyệt chưa
+        boolean incomplete = false;
         if (RequisitionAccess.STATUS_DRAFT.equals(approvalStatus)) {
-            response.setIncomplete(!isReadyToSubmit(jobRequisition));
+            incomplete = !isReadyToSubmit(jobRequisition);
         }
 
-        response.setScreeningCriteria(toCriteriaResponses(jobRequisition.getScreeningCriteria()));
-        response.setCriteriaTotalWeight(totalWeight(jobRequisition.getScreeningCriteria()));
-
-        // Nhãn tiếng Việt cho các trường thông tin cơ bản
-        response.setSalaryLabel(RequisitionLabels.salary(jobRequisition.getMinSalary(), jobRequisition.getMaxSalary()));
-        response.setProbationLabel(RequisitionLabels.probation(jobRequisition.getProbationDays()));
-        response.setGenderLabel(RequisitionLabels.gender(jobRequisition.getGender()));
-        response.setWorkModelLabel(RequisitionLabels.workModel(jobRequisition.getWorkModel()));
-        response.setHiringTypeLabel(RequisitionLabels.hiringType(jobRequisition.getHiringType()));
-
-        // Văn bản nhiều dòng: escape HTML rồi đổi xuống dòng thành <br/> (AG §6.3)
-        response.setReasonForHiringHtml(RequisitionLabels.multilineHtml(jobRequisition.getReasonForHiring()));
-        response.setJobDescriptionHtml(RequisitionLabels.multilineHtml(jobRequisition.getJobDescription()));
-        response.setRequirementDetailsHtml(RequisitionLabels.multilineHtml(jobRequisition.getRequirementDetails()));
-
-        // Mốc thời gian: lúc gửi duyệt, số ngày đã chờ duyệt, còn bao nhiêu ngày tới ngày bắt đầu
+        // Mốc thời gian: số ngày đã chờ duyệt, còn bao nhiêu ngày tới ngày bắt đầu
         LocalDate today = LocalDate.now(clock);
-        response.setSubmittedAt(jobRequisition.getSubmittedAt());
+        Long waitingDays = null;
         if (RequisitionAccess.STATUS_PENDING_DIRECTOR.equals(approvalStatus) && jobRequisition.getSubmittedAt() != null) {
-            response.setWaitingDays(ChronoUnit.DAYS.between(jobRequisition.getSubmittedAt().toLocalDate(), today));
+            waitingDays = ChronoUnit.DAYS.between(jobRequisition.getSubmittedAt().toLocalDate(), today);
         }
+        Long daysUntilStart = null;
         if (jobRequisition.getExpectedStartDate() != null) {
-            response.setDaysUntilStart(ChronoUnit.DAYS.between(today, jobRequisition.getExpectedStartDate()));
+            daysUntilStart = ChronoUnit.DAYS.between(today, jobRequisition.getExpectedStartDate());
         }
-
-        response.setApprovals(toApprovalResponses(approvalHistory));
-        response.setActivityLog(toActivityResponses(activityLogs));
 
         // Bị trả lại: lý do là ý kiến của lần duyệt mới nhất
-        if (RequisitionAccess.STATUS_REJECTED.equals(approvalStatus) && !response.getApprovals().isEmpty()) {
-            response.setRejectionReason(response.getApprovals().getFirst().getComments());
+        List<ApprovalResponse> approvals = toApprovalResponses(approvalHistory);
+        String rejectionReason = null;
+        if (RequisitionAccess.STATUS_REJECTED.equals(approvalStatus) && !approvals.isEmpty()) {
+            rejectionReason = approvals.getFirst().comments();
         }
-        return response;
+
+        return toListRow(jobRequisition, viewer, latestPosting, hasLaterRound).toBuilder()
+                .incomplete(incomplete)
+                .screeningCriteria(toCriteriaResponses(jobRequisition.getScreeningCriteria()))
+                .criteriaTotalWeight(totalWeight(jobRequisition.getScreeningCriteria()))
+                // Nhãn tiếng Việt cho các trường thông tin cơ bản
+                .salaryLabel(RequisitionLabels.salary(jobRequisition.getMinSalary(), jobRequisition.getMaxSalary()))
+                .probationLabel(RequisitionLabels.probation(jobRequisition.getProbationDays()))
+                .genderLabel(RequisitionLabels.gender(jobRequisition.getGender()))
+                .workModelLabel(RequisitionLabels.workModel(jobRequisition.getWorkModel()))
+                .hiringTypeLabel(RequisitionLabels.hiringType(jobRequisition.getHiringType()))
+                // Văn bản nhiều dòng: escape HTML rồi đổi xuống dòng thành <br/> (AG §6.3)
+                .reasonForHiringHtml(RequisitionLabels.multilineHtml(jobRequisition.getReasonForHiring()))
+                .jobDescriptionHtml(RequisitionLabels.multilineHtml(jobRequisition.getJobDescription()))
+                .requirementDetailsHtml(RequisitionLabels.multilineHtml(jobRequisition.getRequirementDetails()))
+                .submittedAt(jobRequisition.getSubmittedAt())
+                .waitingDays(waitingDays)
+                .daysUntilStart(daysUntilStart)
+                .approvals(approvals)
+                .activityLog(toActivityResponses(activityLogs))
+                .rejectionReason(rejectionReason)
+                .build();
     }
 
     // ----- Các hàm nhỏ cho màn chi tiết -----
@@ -225,15 +232,15 @@ public class RequisitionMapper {
     private List<ScreeningCriteriaResponse> toCriteriaResponses(List<ScreeningCriteria> criteria) {
         List<ScreeningCriteriaResponse> responses = new ArrayList<>();
         for (ScreeningCriteria criterion : criteria) {
-            ScreeningCriteriaResponse criterionResponse = new ScreeningCriteriaResponse();
-            criterionResponse.setCriteriaId(criterion.getCriteriaId());
-            criterionResponse.setCriteriaName(criterion.getCriteriaName());
-            criterionResponse.setCriteriaType(criterion.getCriteriaType());
-            criterionResponse.setCriteriaTypeLabel(RequisitionLabels.criteriaType(criterion.getCriteriaType()));
-            criterionResponse.setRequiredValue(criterion.getRequiredValue());
-            criterionResponse.setWeight(criterion.getWeight());
-            criterionResponse.setIsMandatory(criterion.getIsMandatory());
-            responses.add(criterionResponse);
+            responses.add(ScreeningCriteriaResponse.builder()
+                    .criteriaId(criterion.getCriteriaId())
+                    .criteriaName(criterion.getCriteriaName())
+                    .criteriaType(criterion.getCriteriaType())
+                    .criteriaTypeLabel(RequisitionLabels.criteriaType(criterion.getCriteriaType()))
+                    .requiredValue(criterion.getRequiredValue())
+                    .weight(criterion.getWeight())
+                    .isMandatory(criterion.getIsMandatory())
+                    .build());
         }
         return responses;
     }

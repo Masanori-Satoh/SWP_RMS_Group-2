@@ -14,7 +14,6 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Locale;
 
 /**
  * Các điều kiện WHERE của màn danh sách tin tuyển dụng.
@@ -23,8 +22,8 @@ import java.util.Locale;
  */
 public final class JobPostingSpecifications {
 
-    /** Từ khóa dài hơn thì bị cắt bớt (giống màn yêu cầu tuyển dụng). */
-    public static final int MAX_KEYWORD_LENGTH = ListFilters.MAX_KEYWORD_LENGTH;
+    /** Id không tồn tại, dùng khi HM chưa được gán phòng ban. */
+    private static final Integer NO_DEPARTMENT_ID = -1;
 
     private JobPostingSpecifications() {
         // Chỉ chứa hàm static
@@ -44,11 +43,11 @@ public final class JobPostingSpecifications {
         return (root, query, cb) -> {
             List<Predicate> anyOf = new ArrayList<>();
             for (String viewStatus : viewStatuses) {
-                if (JobPostingLabels.STATUS_SCHEDULED.equals(viewStatus)) {
-                    anyOf.add(cb.and(cb.equal(root.get("postingStatus"), JobPostingLabels.STATUS_PUBLISHED),
+                if (JobPostingAccess.STATUS_SCHEDULED.equals(viewStatus)) {
+                    anyOf.add(cb.and(cb.equal(root.get("postingStatus"), JobPostingAccess.STATUS_PUBLISHED),
                             cb.greaterThan(root.get("postingDate"), now)));
-                } else if (JobPostingLabels.STATUS_PUBLISHED.equals(viewStatus)) {
-                    anyOf.add(cb.and(cb.equal(root.get("postingStatus"), JobPostingLabels.STATUS_PUBLISHED),
+                } else if (JobPostingAccess.STATUS_PUBLISHED.equals(viewStatus)) {
+                    anyOf.add(cb.and(cb.equal(root.get("postingStatus"), JobPostingAccess.STATUS_PUBLISHED),
                             cb.or(cb.isNull(root.get("postingDate")), cb.lessThanOrEqualTo(root.get("postingDate"), now))));
                 } else {
                     anyOf.add(cb.equal(root.get("postingStatus"), viewStatus));
@@ -60,12 +59,17 @@ public final class JobPostingSpecifications {
 
     /** Bỏ tin nháp (HM và Director không xem tin nháp). */
     public static Specification<JobPosting> notDraft() {
-        return (root, query, cb) -> cb.notEqual(root.get("postingStatus"), JobPostingLabels.STATUS_DRAFT);
+        return (root, query, cb) -> cb.notEqual(root.get("postingStatus"), JobPostingAccess.STATUS_DRAFT);
     }
 
     /** Tin thuộc phòng ban của HM: phòng ban HM đang làm, hoặc phòng ban HM là trưởng phòng. */
     public static Specification<JobPosting> inDepartmentOf(User hiringManager) {
-        Integer ownDepartmentId = hiringManager.getDepartment() == null ? -1 : hiringManager.getDepartment().getDepartmentId();
+        // HM chưa có phòng ban: không khớp phòng nào (id -1), chỉ còn điều kiện "là trưởng phòng"
+        Integer departmentId = NO_DEPARTMENT_ID;
+        if (hiringManager.getDepartment() != null) {
+            departmentId = hiringManager.getDepartment().getDepartmentId();
+        }
+        Integer ownDepartmentId = departmentId;
         return (root, query, cb) -> {
             var department = root.join("requisition").join("department");
             var manager = department.join("manager", JoinType.LEFT);

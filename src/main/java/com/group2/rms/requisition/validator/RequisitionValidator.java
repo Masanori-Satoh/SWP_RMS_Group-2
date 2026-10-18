@@ -46,10 +46,25 @@ public class RequisitionValidator {
     public static final int POSITIONS_MAX = 30;
     /** Ngày bắt đầu dự kiến tối đa bao nhiêu năm kể từ hôm nay. */
     public static final int START_DATE_MAX_YEARS = 1;
-    /** Mức lương tối đa (VND/tháng) được nhập, chặn gõ thừa số 0. */
-    public static final BigDecimal SALARY_MAX = new BigDecimal("1000000000");
+    /** Mức lương tối đa (VND/tháng) được nhập, chặn gõ thừa số 0. Dạng chuỗi để dùng trong @DecimalMax của DTO. */
+    public static final String SALARY_MAX_TEXT = "1000000000";
+    public static final BigDecimal SALARY_MAX = new BigDecimal(SALARY_MAX_TEXT);
     public static final int MAX_CRITERIA_LIMIT = 50;
-    public static final BigDecimal REQUIRED_TOTAL_WEIGHT = new BigDecimal("100");
+    /** Trọng số tối đa của một tiêu chí và tổng trọng số khi gửi duyệt (%). */
+    public static final String WEIGHT_MAX_TEXT = "100";
+    public static final BigDecimal REQUIRED_TOTAL_WEIGHT = new BigDecimal(WEIGHT_MAX_TEXT);
+
+    // Câu lỗi dùng chung giữa annotation trên DTO (Bean Validation) và validate() bên dưới
+    public static final String TITLE_TOO_LONG = "Nội dung quá " + TITLE_CHAR_LIMIT + " ký tự";
+    public static final String SHORT_FIELD_TOO_LONG = "Nội dung quá " + SHORT_FIELD_CHAR_LIMIT + " ký tự";
+    public static final String CRITERIA_NAME_TOO_LONG = "Nội dung quá " + CRITERIA_NAME_CHAR_LIMIT + " ký tự";
+    public static final String PROBATION_RANGE_MESSAGE =
+            "Thời gian thử việc phải từ " + PROBATION_MIN_DAYS + " đến " + PROBATION_MAX_DAYS + " ngày.";
+    public static final String POSITIONS_RANGE_MESSAGE =
+            "Số lượng cần tuyển phải từ " + POSITIONS_MIN + " đến " + POSITIONS_MAX + " người.";
+    public static final String SALARY_FORMAT_MESSAGE = "Mức lương phải lớn hơn 0 với tối đa 2 chữ số thập phân.";
+    public static final String SALARY_MAX_MESSAGE = "Mức lương không được vượt quá 1.000.000.000 VND/tháng.";
+    public static final String WEIGHT_MESSAGE = "Trọng số phải từ 0.01 đến 100 với tối đa hai chữ số thập phân.";
 
     public static final List<String> EMPLOYMENT_TYPES = List.of("Full-time", "Part-time", "Internship", "Contract");
     public static final List<String> CRITERIA_TYPES = List.of("Education", "Experience", "Skill", "Knockout");
@@ -123,8 +138,7 @@ public class RequisitionValidator {
         // PROBATION_MIN_DAYS đến PROBATION_MAX_DAYS
         Integer probationDays = requisitionRequest.getProbationDays();
         if (probationDays != null && (probationDays < PROBATION_MIN_DAYS || probationDays > PROBATION_MAX_DAYS)) {
-            errors.put("probationDays",
-                    "Thời gian thử việc phải từ " + PROBATION_MIN_DAYS + " đến " + PROBATION_MAX_DAYS + " ngày.");
+            errors.put("probationDays", PROBATION_RANGE_MESSAGE);
         }
 
         // Rule: Các trường chọn phải nằm trong danh mục hợp lệ.
@@ -138,8 +152,7 @@ public class RequisitionValidator {
         if (numberOfPositions == null) {
             errors.put("numberOfPositions", "Vui lòng nhập số lượng cần tuyển.");
         } else if (numberOfPositions < POSITIONS_MIN || numberOfPositions > POSITIONS_MAX) {
-            errors.put("numberOfPositions",
-                    "Số lượng cần tuyển phải từ " + POSITIONS_MIN + " đến " + POSITIONS_MAX + " người.");
+            errors.put("numberOfPositions", POSITIONS_RANGE_MESSAGE);
         }
 
         // Rule: Ngày dự kiến bắt đầu làm việc phải từ ngày hôm nay trở đi
@@ -217,8 +230,7 @@ public class RequisitionValidator {
             } else {
                 if (weight.signum() <= 0 || weight.compareTo(REQUIRED_TOTAL_WEIGHT) > 0
                         || weight.stripTrailingZeros().scale() > 2) {
-                    errors.put(fieldPrefix + "weight",
-                            "Trọng số phải từ 0.01 đến 100 với tối đa hai chữ số thập phân.");
+                    errors.put(fieldPrefix + "weight", WEIGHT_MESSAGE);
                 }
                 totalWeight = totalWeight.add(weight);
             }
@@ -284,9 +296,9 @@ public class RequisitionValidator {
             return;
         }
         if (amount.signum() <= 0 || amount.stripTrailingZeros().scale() > 2) {
-            errorsMap.put(fieldKey, "Mức lương phải lớn hơn 0 với tối đa 2 chữ số thập phân.");
+            errorsMap.put(fieldKey, SALARY_FORMAT_MESSAGE);
         } else if (amount.compareTo(SALARY_MAX) > 0) {
-            errorsMap.put(fieldKey, "Mức lương không được vượt quá 1.000.000.000 VND/tháng.");
+            errorsMap.put(fieldKey, SALARY_MAX_MESSAGE);
         }
     }
 }

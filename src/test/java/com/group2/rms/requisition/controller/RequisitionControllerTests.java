@@ -9,6 +9,7 @@ import com.group2.rms.requisition.dto.RequisitionListResponse;
 import com.group2.rms.requisition.dto.RequisitionRequest;
 import com.group2.rms.requisition.dto.RequisitionResponse;
 import com.group2.rms.requisition.dto.RequisitionSearchRequest;
+import com.group2.rms.requisition.dto.ScreeningCriteriaResponse;
 import com.group2.rms.requisition.exception.RequisitionValidationException;
 import com.group2.rms.requisition.service.RequisitionAccess;
 import com.group2.rms.requisition.service.RequisitionListService;
@@ -181,19 +182,24 @@ class RequisitionControllerTests {
 
         @Test
         @WithMockUser(username = "hm", roles = "HIRING_MANAGER")
-        @DisplayName("GET /requisitions/{id} -> View chi tiết với model req")
+        @DisplayName("GET /requisitions/{id} -> View chi tiết với model req, đọc được trường của record (tiêu chí bắt buộc)")
         void detail_shouldRenderDetailView_whenRequisitionExists() throws Exception {
                 // Arrange
+                ScreeningCriteriaResponse mandatory = ScreeningCriteriaResponse.builder().criteriaId(1)
+                                .criteriaName("Java").criteriaTypeLabel("Kỹ năng").requiredValue("2 năm")
+                                .weight(new BigDecimal("100")).isMandatory(true).build();
                 RequisitionResponse detail = RequisitionResponse.builder().requisitionId(1).requisitionCode("REQ-0001")
                                 .recruitmentRound(1).title("Backend Engineer").approvalStatus(RequisitionAccess.STATUS_DRAFT)
-                                .screeningCriteria(List.of()).approvals(List.of()).activityLog(List.of()).build();
+                                .screeningCriteria(List.of(mandatory)).criteriaTotalWeight(new BigDecimal("100"))
+                                .approvals(List.of()).activityLog(List.of()).build();
                 when(service.getById(1)).thenReturn(detail);
 
                 // Act + Assert
                 mvc.perform(get("/requisitions/1"))
                                 .andExpect(status().isOk())
                                 .andExpect(view().name("requisitions/detail"))
-                                .andExpect(model().attributeExists("req"));
+                                .andExpect(model().attributeExists("req"))
+                                .andExpect(content().string(containsString("Bắt buộc")));
         }
 
         @Test
@@ -258,6 +264,67 @@ class RequisitionControllerTests {
                                 .andExpect(view().name("requisitions/form"))
                                 .andExpect(model().attributeHasFieldErrors("requisitionDto", "minSalary"));
                 verify(service, never()).createRequisition(any());
+        }
+
+        // ----- Bean Validation (@Valid, AG §2.4): chặn trước khi gọi service -----
+
+        @Test
+        @WithMockUser(username = "hm", roles = "HIRING_MANAGER")
+        @DisplayName("POST /requisitions/create -> Tên vị trí dài TITLE_CHAR_LIMIT + 1 thì báo lỗi ở ô tên, không gọi service")
+        void create_shouldShowFieldError_whenTitleIsTooLong() throws Exception {
+                mvc.perform(post("/requisitions/create").with(csrf())
+                                .param("action", RequisitionValidator.ACTION_DRAFT)
+                                .param("title", "a".repeat(RequisitionValidator.TITLE_CHAR_LIMIT + 1)))
+                                .andExpect(status().isOk())
+                                .andExpect(view().name("requisitions/form"))
+                                .andExpect(model().attributeHasFieldErrorCode("requisitionDto", "title", "Size"));
+                verify(service, never()).createRequisition(any());
+        }
+
+        @Test
+        @WithMockUser(username = "hm", roles = "HIRING_MANAGER")
+        @DisplayName("POST /requisitions/create -> Số lượng POSITIONS_MAX + 1, lương quá 1 tỷ, trọng số 150 -> Lỗi đúng từng ô, không gọi service")
+        void create_shouldShowFieldErrors_whenNumbersAreOutOfRange() throws Exception {
+                mvc.perform(post("/requisitions/create").with(csrf())
+                                .param("action", RequisitionValidator.ACTION_DRAFT).param("title", "New Dev")
+                                .param("numberOfPositions", String.valueOf(RequisitionValidator.POSITIONS_MAX + 1))
+                                .param("maxSalary", "1000000001")
+                                .param("screeningCriteria[0].criteriaName", "Java")
+                                .param("screeningCriteria[0].weight", "150"))
+                                .andExpect(status().isOk())
+                                .andExpect(view().name("requisitions/form"))
+                                .andExpect(model().attributeHasFieldErrors("requisitionDto",
+                                                "numberOfPositions", "maxSalary", "screeningCriteria[0].weight"));
+                verify(service, never()).createRequisition(any());
+        }
+
+        @Test
+        @WithMockUser(username = "hm", roles = "HIRING_MANAGER")
+        @DisplayName("POST /requisitions/create -> Mô tả nhiều dòng (\\r\\n) đủ giới hạn sau khi chuẩn hóa -> Không bị chặn oan, vẫn gọi service")
+        void create_shouldNotRejectMultilineText_whenLimitIsReachedOnlyBecauseOfCrLf() throws Exception {
+                // Arrange: gửi lên 2.998 ký tự, sau khi đổi \r\n -> \n chỉ còn 1.999 (< TEXT_FIELD_CHAR_LIMIT)
+                when(service.createRequisition(any(RequisitionRequest.class))).thenReturn(10);
+                String description = "a\r\n".repeat(999) + "a";
+
+                // Act + Assert
+                mvc.perform(post("/requisitions/create").with(csrf())
+                                .param("action", RequisitionValidator.ACTION_DRAFT).param("title", "New Dev")
+                                .param("jobDescription", description))
+                                .andExpect(status().is3xxRedirection());
+                verify(service).createRequisition(any(RequisitionRequest.class));
+        }
+
+        @Test
+        @WithMockUser(username = "hm", roles = "HIRING_MANAGER")
+        @DisplayName("POST /requisitions/edit/{id} -> Thời gian thử việc PROBATION_MAX_DAYS + 1 thì báo lỗi ở ô thử việc, không gọi service")
+        void update_shouldShowFieldError_whenProbationIsOutOfRange() throws Exception {
+                mvc.perform(post("/requisitions/edit/10").with(csrf())
+                                .param("action", RequisitionValidator.ACTION_DRAFT).param("title", "Updated Title")
+                                .param("probationDays", String.valueOf(RequisitionValidator.PROBATION_MAX_DAYS + 1)))
+                                .andExpect(status().isOk())
+                                .andExpect(view().name("requisitions/form"))
+                                .andExpect(model().attributeHasFieldErrors("requisitionDto", "probationDays"));
+                verify(service, never()).updateRequisition(any(), any());
         }
 
         @Test

@@ -386,9 +386,9 @@ class RequisitionListServiceTests {
         verify(postings, never()).existsByRequisition_RequisitionId(any());
         verify(requisitions, never()).existsByOriginalRequisition_RequisitionId(any());
 
-        assertNull(rows.get(0).getJobPostingId());
-        assertEquals(77, rows.get(1).getJobPostingId());
-        assertEquals("Đang đăng", rows.get(1).getPostingLabel());
+        assertNull(rows.get(0).jobPostingId());
+        assertEquals(77, rows.get(1).jobPostingId());
+        assertEquals("Đang đăng", rows.get(1).postingLabel());
     }
 
     @Test

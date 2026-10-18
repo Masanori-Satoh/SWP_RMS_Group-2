@@ -5,69 +5,67 @@ import com.group2.rms.admin.dto.ActivityLogResponse;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.List;
 
-import lombok.AllArgsConstructor;
 import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
 
-@Getter
-@Setter
-@NoArgsConstructor
-@AllArgsConstructor
-@Builder
-public class RequisitionResponse {
-    private Integer requisitionId;
-    private String title;
-    private String workLocation;
-    private LocalDate expectedStartDate;
-    private boolean editable;
-    private boolean deletable;
-    private boolean decidable;
-    private boolean withdrawable;
-    private boolean incomplete;
-    private String rejectionReason;
-    private String departmentName;
-    private String hiringManagerName;
-    private Integer numberOfPositions;
-    private String approvalStatus;
-    private LocalDateTime createdAt;
-    private Integer recruitmentRound;
-    private String requisitionCode;
-    private String postingStatus;
-    private Integer jobPostingId;
+/**
+ * Một yêu cầu tuyển dụng đã dựng sẵn cho màn danh sách (một dòng) và màn chi tiết.
+ * Mọi giá trị (nhãn, cờ quyền, mốc thời gian) do RequisitionMapper tính một lần; template chỉ đọc.
+ * Màn chi tiết dùng toBuilder() từ dòng danh sách rồi thêm các trường "chỉ có ở màn Chi tiết".
+ */
+@Builder(toBuilder = true)
+public record RequisitionResponse(
+        Integer requisitionId,
+        String title,
+        String workLocation,
+        LocalDate expectedStartDate,
+        boolean editable,
+        boolean deletable,
+        boolean decidable,
+        boolean withdrawable,
+        boolean incomplete,
+        String rejectionReason,
+        String departmentName,
+        String hiringManagerName,
+        Integer numberOfPositions,
+        String approvalStatus,
+        LocalDateTime createdAt,
+        Integer recruitmentRound,
+        String requisitionCode,
+        String postingStatus,
+        Integer jobPostingId,
 
-    // Nhãn tiếng Việt và tông màu badge, service tính sẵn từ RequisitionLabels (template không tự dịch)
-    private String statusLabel;
-    private String statusTone;
-    private String postingLabel;
-    private String postingTone;
-    private String employmentTypeLabel;
+        // Nhãn tiếng Việt và tông màu badge, tính sẵn từ RequisitionLabels (template không tự dịch)
+        String statusLabel,
+        String statusTone,
+        String postingLabel,
+        String postingTone,
+        String employmentTypeLabel,
 
-    // Cờ quyền cho menu ⋯ của từng dòng, service tính từ RequisitionAccess (template không tự so sánh role)
-    private boolean copyable;
-    private boolean postable;
-    private boolean postingViewable;
+        // Cờ quyền cho menu ⋯ của từng dòng, tính từ RequisitionAccess (template không tự so sánh role)
+        boolean copyable,
+        boolean postable,
+        boolean postingViewable,
 
-    // ----- Chỉ có ở màn Chi tiết (service tính sẵn, template chỉ hiển thị) -----
-    private LocalDateTime submittedAt;          // JobRequisition.SubmittedAt: lúc gửi duyệt gần nhất
-    private Long waitingDays;                   // số ngày đã chờ Giám đốc duyệt (chỉ khi Pending_Director)
-    private Long daysUntilStart;                // còn bao nhiêu ngày tới ExpectedStartDate (âm = đã qua)
-    private String salaryLabel;                 // "20 – 30 triệu VND/tháng" hoặc "Thỏa thuận"
-    private String probationLabel;              // "60 ngày" hoặc "Không thử việc"
-    private String genderLabel;
-    private String workModelLabel;
-    private String hiringTypeLabel;
-    private String reasonForHiringHtml;         // nội dung nhiều dòng đã escape + <br/> (hiển thị bằng th:utext)
-    private String jobDescriptionHtml;
-    private String requirementDetailsHtml;
-    private BigDecimal criteriaTotalWeight;     // tổng trọng số tiêu chí
-    private Integer postingNo;                  // JobPosting.PostingNo của tin mới nhất (lần đăng thứ mấy)
-    private LocalDateTime postingDate;          // JobPosting.PostingDate
-    private LocalDateTime postingDeadline;      // JobPosting.ApplicationDeadline
+        // ----- Chỉ có ở màn Chi tiết -----
+        LocalDateTime submittedAt,          // JobRequisition.SubmittedAt: lúc gửi duyệt gần nhất
+        Long waitingDays,                   // số ngày đã chờ Giám đốc duyệt (chỉ khi Pending_Director)
+        Long daysUntilStart,                // còn bao nhiêu ngày tới ExpectedStartDate (âm = đã qua)
+        String salaryLabel,                 // "20 – 30 triệu VND/tháng" hoặc "Thỏa thuận"
+        String probationLabel,              // "60 ngày" hoặc "Không thử việc"
+        String genderLabel,
+        String workModelLabel,
+        String hiringTypeLabel,
+        String reasonForHiringHtml,         // nội dung nhiều dòng đã escape + <br/> (hiển thị bằng th:utext)
+        String jobDescriptionHtml,
+        String requirementDetailsHtml,
+        BigDecimal criteriaTotalWeight,     // tổng trọng số tiêu chí
+        Integer postingNo,                  // JobPosting.PostingNo của tin mới nhất (lần đăng thứ mấy)
+        LocalDateTime postingDate,          // JobPosting.PostingDate
+        LocalDateTime postingDeadline,      // JobPosting.ApplicationDeadline
 
-    private java.util.List<ScreeningCriteriaResponse> screeningCriteria;
-    private java.util.List<ApprovalResponse> approvals;
-    private java.util.List<ActivityLogResponse> activityLog;
+        List<ScreeningCriteriaResponse> screeningCriteria,
+        List<ApprovalResponse> approvals,
+        List<ActivityLogResponse> activityLog) {
 }

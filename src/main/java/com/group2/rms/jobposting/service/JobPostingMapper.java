@@ -1,0 +1,472 @@
+package com.group2.rms.jobposting.service;
+
+import com.group2.rms.admin.entity.AuditLog;
+import com.group2.rms.jobposting.dto.InternalJobPostingDetailResponse;
+import com.group2.rms.jobposting.dto.InternalJobPostingDetailResponse.ActivityHistoryItem;
+import com.group2.rms.jobposting.dto.InternalJobPostingDetailResponse.ApplicationStats;
+import com.group2.rms.jobposting.dto.InternalJobPostingDetailResponse.PostingRound;
+import com.group2.rms.jobposting.dto.InternalJobPostingResponse;
+import com.group2.rms.jobposting.dto.JobPostingCreateRequest;
+import com.group2.rms.jobposting.dto.JobPostingDashboardResponse;
+import com.group2.rms.jobposting.entity.JobPosting;
+import com.group2.rms.jobposting.validator.JobPostingValidator;
+import com.group2.rms.requisition.entity.JobRequisition;
+import com.group2.rms.requisition.entity.ScreeningCriteria;
+import com.group2.rms.requisition.service.RequisitionLabels;
+import com.group2.rms.user.entity.User;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Component;
+
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.List;
+import java.util.Objects;
+
+/**
+ * Chuyển entity tin tuyển dụng sang DTO cho màn danh sách, trang chi tiết, form tạo / sửa và bảng điều khiển.
+ *
+ * Mapper KHÔNG truy vấn DB: số hồ sơ, lịch sử audit, các lần đăng... do service tra trước rồi truyền vào
+ * (màn danh sách tra 1 lần cho cả trang, test mapper không cần mock repository).
+ * Cờ quyền (editable, closable...) đều hỏi JobPostingAccess; nhãn tiếng Việt lấy từ JobPostingLabels / RequisitionLabels.
+ */
+@Component
+@RequiredArgsConstructor
+public class JobPostingMapper {
+
+    /** Số người hiển thị mặc định khi tạo tin, ví dụ "2 người". */
+    private static final String PEOPLE_SUFFIX = " người";
+
+    private final JobPostingAccess access;
+    private final JobPostingValidator validator;
+
+    // ===================================================================================
+    // MÀN DANH SÁCH
+    // ===================================================================================
+
+    /**
+     * Một dòng của bảng: nhãn, số ngày, cờ thao tác đều tính ở đây để template chỉ việc đọc.
+     *
+     * @param totalApplications tổng số hồ sơ của tin
+     * @param newApplications   số hồ sơ chưa ai xử lý
+     */
+    public InternalJobPostingResponse toListRow(JobPosting posting, User viewer, long totalApplications,
+            long newApplications, LocalDateTime now) {
+        String viewStatus = JobPostingAccess.viewStatus(posting, now);
+        LocalDate today = now.toLocalDate();
+
+        Long daysUntilDeadline = null;
+        if (posting.getApplicationDeadline() != null) {
+            daysUntilDeadline = JobPostingLabels.daysFromToday(posting.getApplicationDeadline(), today);
+        }
+        Long daysUntilPosting = null;
+        if (JobPostingAccess.STATUS_SCHEDULED.equals(viewStatus)) {
+            daysUntilPosting = JobPostingLabels.daysFromToday(posting.getPostingDate(), today);
+        }
+        boolean hasApplications = totalApplications > 0;
+
+        return InternalJobPostingResponse.builder()
+                .jobPostingId(posting.getJobPostingId())
+                .postingTitle(posting.getPostingTitle())
+                .departmentName(departmentName(posting.getRequisition()))
+                .employmentType(employmentType(posting.getRequisition()))
+                .applicationDeadline(posting.getApplicationDeadline())
+                .postingDate(posting.getPostingDate())
+                .createdByName(fullName(posting.getCreatedBy()))
+                .postingNo(posting.getPostingNo())
+                .viewStatus(viewStatus)
+                .statusLabel(JobPostingLabels.statusLabel(viewStatus))
+                .statusTone(JobPostingLabels.statusTone(viewStatus))
+                .applicationCount(totalApplications)
+                .newApplicationCount(newApplications)
+                .daysUntilPosting(daysUntilPosting)
+                .daysUntilDeadline(daysUntilDeadline)
+                .deadlineState(JobPostingLabels.deadlineState(viewStatus, posting.getApplicationDeadline(), now))
+                // Cờ thao tác (luật nằm ở JobPostingAccess, template chỉ đọc cờ)
+                .publishable(access.canPublish(viewer, viewStatus))
+                .reopenable(access.canReopen(viewer, viewStatus))
+                .editable(access.canEdit(viewer, viewStatus))
+                .pausable(access.canPause(viewer, viewStatus))
+                .closable(access.canClose(viewer, viewStatus))
+                .deletable(access.canDelete(viewer, viewStatus, hasApplications))
+                .applicationsViewable(hasApplications)
+                .build();
+    }
+
+    // ===================================================================================
+    // TRANG CHI TIẾT
+    // ===================================================================================
+
+    /**
+     * @param hasApplications tin đã có hồ sơ ứng tuyển (chặn xóa)
+     * @param hasOpenPosting  yêu cầu nguồn đang có tin Draft / Published / Paused (quyết định nút "Đăng lại")
+     * @param stats           số liệu hồ sơ (rỗng nếu tin chưa lên trang tuyển dụng)
+     * @param rounds          các lần đăng của cùng yêu cầu
+     * @param activityLogs    audit log của tin, mới nhất trước
+     */
+    public InternalJobPostingDetailResponse toDetail(JobPosting posting, User viewer, LocalDateTime now,
+            boolean hasApplications, boolean hasOpenPosting, ApplicationStats stats, List<PostingRound> rounds,
+            List<AuditLog> activityLogs) {
+        JobRequisition requisition = posting.getRequisition();
+        String viewStatus = JobPostingAccess.viewStatus(posting, now);
+        boolean published = JobPostingAccess.STATUS_PUBLISHED.equals(viewStatus);
+        boolean closed = JobPostingAccess.STATUS_CLOSED.equals(viewStatus);
+        boolean viewerIsHiringManager = access.isHiringManager(viewer);
+
+        Long daysUntilDeadline = null;
+        if (posting.getApplicationDeadline() != null) {
+            daysUntilDeadline = JobPostingLabels.daysFromToday(posting.getApplicationDeadline(), now.toLocalDate());
+        }
+        boolean deadlineNotPassed = daysUntilDeadline != null && daysUntilDeadline >= 0;
+        boolean deadlinePassed = daysUntilDeadline != null && daysUntilDeadline < 0;
+        boolean deadlineSoon = deadlineNotPassed && daysUntilDeadline <= JobPostingLabels.DEADLINE_SOON_DAYS;
+
+        String salaryDisplay = posting.getSalaryDisplay();
+        if (salaryDisplay == null) {
+            salaryDisplay = JobPostingLabels.SALARY_NEGOTIABLE;
+        }
+
+        InternalJobPostingDetailResponse.InternalJobPostingDetailResponseBuilder detail =
+                InternalJobPostingDetailResponse.builder()
+                        .jobPostingId(posting.getJobPostingId())
+                        .postingTitle(posting.getPostingTitle())
+                        .departmentName(departmentName(requisition))
+                        .employmentType(employmentType(requisition))
+                        .workLocation(posting.getWorkLocation())
+                        .salaryDisplay(salaryDisplay)
+                        .numberOfPositionsDisplay(posting.getNumberOfPositionsDisplay())
+                        .postingNo(posting.getPostingNo())
+                        .closedAt(posting.getClosedAt())
+                        .jobDescription(posting.getJobDescription())
+                        .jobRequirements(posting.getJobRequirements())
+                        .benefits(posting.getBenefits())
+                        .postingStatus(posting.getPostingStatus())
+                        .viewStatus(viewStatus)
+                        .postingStatusLabel(JobPostingLabels.statusLabel(viewStatus))
+                        .statusTone(JobPostingLabels.statusTone(viewStatus))
+                        .postingDate(posting.getPostingDate())
+                        .applicationDeadline(posting.getApplicationDeadline())
+                        .daysUntilDeadline(daysUntilDeadline)
+                        .createdAt(posting.getCreatedAt())
+                        .updatedAt(posting.getUpdatedAt())
+                        .createdByName(fullName(posting.getCreatedBy()))
+                        .activityHistory(toActivityHistory(posting, activityLogs))
+                        // Dải thông báo theo trạng thái
+                        .draftBanner(JobPostingAccess.STATUS_DRAFT.equals(viewStatus))
+                        .scheduledBanner(JobPostingAccess.STATUS_SCHEDULED.equals(viewStatus))
+                        .pausedBanner(JobPostingAccess.STATUS_PAUSED.equals(viewStatus))
+                        .closedBanner(closed)
+                        .deadlineSoonBanner(published && deadlineSoon)
+                        .deadlinePassedBanner(published && deadlinePassed)
+                        .deadlineCountdown(!closed && deadlineNotPassed)
+                        .deadlineOverdue(!closed && deadlinePassed)
+                        .live(JobPostingAccess.hasBeenPublished(viewStatus))
+                        .canManage(access.canManage(viewer))
+                        // Cờ thao tác (luật nằm ở JobPostingAccess)
+                        .publishable(access.canPublish(viewer, viewStatus))
+                        .publishNowable(access.canChangeSchedule(viewer, viewStatus))
+                        .unschedulable(access.canChangeSchedule(viewer, viewStatus))
+                        .editable(access.canEdit(viewer, viewStatus))
+                        .pausable(access.canPause(viewer, viewStatus))
+                        .reopenable(access.canReopen(viewer, viewStatus))
+                        .closable(access.canClose(viewer, viewStatus))
+                        .deletable(access.canDelete(viewer, viewStatus, hasApplications))
+                        .repostable(access.canRepost(viewer, viewStatus, requisition, hasOpenPosting))
+                        .publicViewable(posting.isVisibleToCandidates(now))
+                        // Khối "Ứng viên tiềm năng"
+                        .talentPoolVisible(access.canSeeTalentPool(viewer))
+                        .suggestionsLinkLabel(JobPostingLabels.suggestionsLinkLabel(viewerIsHiringManager))
+                        .recommendationsLinkLabel(JobPostingLabels.recommendationsLinkLabel(viewerIsHiringManager))
+                        // Số liệu hồ sơ
+                        .totalApplications(stats.total())
+                        .applicationsLast7Days(stats.last7Days())
+                        .pendingApplications(stats.pending())
+                        .aiPassedApplications(stats.aiPassed())
+                        .aiThreshold(stats.aiThreshold())
+                        .interviewingApplications(stats.interviewing())
+                        .hiredApplications(stats.hired())
+                        .recentApplications(stats.recent())
+                        .rounds(rounds);
+
+        if (requisition != null) {
+            detail.requisitionId(requisition.getRequisitionId())
+                    .requisitionCode(requisition.getRequisitionCode())
+                    .requisitionTitle(requisition.getTitle())
+                    .numberOfPositions(requisition.getNumberOfPositions())
+                    .workModelLabel(RequisitionLabels.workModel(requisition.getWorkModel()))
+                    .expectedStartDate(requisition.getExpectedStartDate())
+                    .hiringManagerName(fullName(requisition.getHiringManager()));
+        } else {
+            detail.requisitionCode(JobPostingLabels.MISSING)
+                    .requisitionTitle(JobPostingLabels.MISSING)
+                    .workModelLabel(JobPostingLabels.MISSING)
+                    .hiringManagerName(JobPostingLabels.MISSING);
+        }
+        return detail.build();
+    }
+
+    /** Một lần đăng của yêu cầu, hiện ở mục "Các lần đăng". */
+    public PostingRound toPostingRound(JobPosting round, Integer currentId, long applications, long hired,
+            LocalDateTime now) {
+        String viewStatus = JobPostingAccess.viewStatus(round, now);
+        return new PostingRound(round.getJobPostingId(), round.getPostingNo(), round.getPostingDate(),
+                round.getApplicationDeadline(), JobPostingLabels.statusLabel(viewStatus),
+                JobPostingLabels.statusTone(viewStatus), applications, hired,
+                round.getJobPostingId().equals(currentId));
+    }
+
+    /**
+     * Mục "Lịch sử": audit log theo thứ tự thời gian. Tin cũ (seed) chưa có audit log thì dựng tạm
+     * từ CreatedAt / UpdatedAt / PostingDate để mục này không trống.
+     */
+    public List<ActivityHistoryItem> toActivityHistory(JobPosting posting, List<AuditLog> logs) {
+        List<ActivityHistoryItem> history = new ArrayList<>();
+        if (logs != null && !logs.isEmpty()) {
+            List<AuditLog> chronological = new ArrayList<>(logs);
+            chronological.sort(Comparator.comparing(AuditLog::getTimestamp));
+            int index = 1;
+            for (AuditLog log : chronological) {
+                history.add(new ActivityHistoryItem(index, JobPostingLabels.activityLabel(log),
+                        fullNameOrSystem(log.getUser()), log.getTimestamp()));
+                index++;
+            }
+            return history;
+        }
+
+        String author = fullNameOrSystem(posting.getCreatedBy());
+        if (posting.getCreatedAt() != null) {
+            history.add(new ActivityHistoryItem(history.size() + 1, "Tạo mới", author, posting.getCreatedAt()));
+        }
+        if (posting.getUpdatedAt() != null && !posting.getUpdatedAt().equals(posting.getCreatedAt())) {
+            history.add(new ActivityHistoryItem(history.size() + 1, "Cập nhật", author, posting.getUpdatedAt()));
+        }
+        if (JobPostingAccess.STATUS_PUBLISHED.equals(posting.getPostingStatus()) && posting.getPostingDate() != null) {
+            history.add(new ActivityHistoryItem(history.size() + 1, "Đăng tin", author, posting.getPostingDate()));
+        }
+        return history;
+    }
+
+    // ===================================================================================
+    // FORM TẠO / SỬA
+    // ===================================================================================
+
+    /**
+     * Form tạo tin mới từ yêu cầu đã duyệt: thông tin yêu cầu (chỉ đọc) + giá trị điền sẵn
+     * (HR sửa lại cho hấp dẫn ứng viên).
+     *
+     * @param postingNo lần đăng của tin mới (= số lần đăng lớn nhất + 1)
+     */
+    public JobPostingCreateRequest toCreateForm(JobRequisition requisition, int postingNo) {
+        JobPostingCreateRequest form = new JobPostingCreateRequest();
+        fillSourceInfo(form, requisition);
+        form.setPostingNo(postingNo);
+        form.setDraftOrNew(true);
+
+        form.setPostingTitle(requisition.getTitle());
+        form.setJobDescription(form.getSourceJobDescription());
+        form.setJobRequirements(form.getSourceRequirements());
+        form.setWorkLocation(form.getSourceWorkLocation());
+        form.setBenefits("");
+        boolean hasSalary = requisition.getMinSalary() != null || requisition.getMaxSalary() != null;
+        if (hasSalary) {
+            form.setSalaryMode(JobPostingCreateRequest.SALARY_RANGE);
+        } else {
+            form.setSalaryMode(JobPostingCreateRequest.SALARY_NEGOTIABLE);
+        }
+        form.setShowPositions(true);
+        String positions = "";
+        if (requisition.getNumberOfPositions() != null) {
+            positions = requisition.getNumberOfPositions() + PEOPLE_SUFFIX;
+        }
+        form.setNumberOfPositionsDisplay(positions);
+        form.setApplicationDeadline(validator.defaultDeadline());
+        form.setPublishMode(JobPostingCreateRequest.PUBLISH_NOW);
+        form.setAction(JobPostingValidator.ACTION_DRAFT);
+        return form;
+    }
+
+    /** Form sửa một tin có sẵn: nội dung tin, cách đăng hiện tại và trạng thái form. */
+    public JobPostingCreateRequest toEditForm(JobPosting posting, LocalDateTime now) {
+        JobPostingCreateRequest form = toCreateForm(posting.getRequisition(), posting.getPostingNo());
+        form.setJobPostingId(posting.getJobPostingId());
+        fillFormState(form, posting, now);
+        copyPostingContent(form, posting);
+        LocalDate deadline = null;
+        if (posting.getApplicationDeadline() != null) {
+            deadline = posting.getApplicationDeadline().toLocalDate();
+        }
+        form.setApplicationDeadline(deadline);
+
+        if (form.isScheduled()) {
+            form.setPublishMode(JobPostingCreateRequest.PUBLISH_LATER);
+            form.setScheduledAt(posting.getPostingDate());
+        } else {
+            form.setPublishMode(JobPostingCreateRequest.PUBLISH_NOW);
+            form.setScheduledAt(null);
+        }
+        return form;
+    }
+
+    /** Trạng thái form (nút nào hiện, có đổi ngày đăng được không) theo trạng thái hiện tại của tin. */
+    public void fillFormState(JobPostingCreateRequest form, JobPosting posting, LocalDateTime now) {
+        String viewStatus = JobPostingAccess.viewStatus(posting, now);
+        form.setPostingNo(posting.getPostingNo());
+        form.setDraftOrNew(JobPostingAccess.STATUS_DRAFT.equals(viewStatus));
+        form.setPaused(JobPostingAccess.STATUS_PAUSED.equals(viewStatus));
+        form.setScheduled(JobPostingAccess.STATUS_SCHEDULED.equals(viewStatus));
+        form.setLive(JobPostingAccess.isLive(viewStatus));
+    }
+
+    /** Trạng thái form khi tạo tin mới (hoặc hiện lại form tạo bị lỗi). */
+    public void fillNewFormState(JobPostingCreateRequest form, int postingNo) {
+        form.setPostingNo(postingNo);
+        form.setDraftOrNew(true);
+        form.setPaused(false);
+        form.setScheduled(false);
+        form.setLive(false);
+    }
+
+    /** Thông tin yêu cầu nguồn (chỉ hiển thị) và các giá trị gốc cho nút "Khôi phục bản gốc". Luôn nạp lại từ DB. */
+    public void fillSourceInfo(JobPostingCreateRequest form, JobRequisition requisition) {
+        form.setRequisitionId(requisition.getRequisitionId());
+        form.setRequisitionCode(requisition.getRequisitionCode());
+        form.setRequisitionTitle(requisition.getTitle());
+        form.setDepartmentName(departmentName(requisition));
+        form.setRecruitmentRound(recruitmentRound(requisition));
+        form.setEmploymentType(RequisitionLabels.employmentType(requisition.getEmploymentType()));
+        form.setWorkModel(RequisitionLabels.workModel(requisition.getWorkModel()));
+        form.setNumberOfPositions(requisition.getNumberOfPositions());
+        form.setHiringManagerName(fullName(requisition.getHiringManager()));
+        form.setReasonForHiring(requisition.getReasonForHiring());
+        form.setProbationDays(requisition.getProbationDays());
+        form.setGender(RequisitionLabels.gender(requisition.getGender()));
+        form.setExpectedStartDate(requisition.getExpectedStartDate());
+        form.setSalaryRangeLabel(RequisitionLabels.salary(requisition.getMinSalary(), requisition.getMaxSalary()));
+        form.setSourceWorkLocation(Objects.toString(requisition.getWorkLocation(), ""));
+        form.setSourceJobDescription(Objects.toString(requisition.getJobDescription(), ""));
+        form.setSourceRequirements(requirementsFromRequisition(requisition));
+    }
+
+    /** Chép nội dung một tin có sẵn vào form (dùng cho "Chỉnh sửa" và "Đăng lại"). */
+    public void copyPostingContent(JobPostingCreateRequest form, JobPosting posting) {
+        form.setPostingTitle(posting.getPostingTitle());
+        form.setJobDescription(posting.getJobDescription());
+        form.setJobRequirements(posting.getJobRequirements());
+        form.setBenefits(posting.getBenefits());
+        form.setWorkLocation(posting.getWorkLocation());
+
+        // Nhận lại lựa chọn lương từ chuỗi đã lưu
+        String salary = posting.getSalaryDisplay();
+        if (salary != null && salary.equals(form.getSalaryRangeLabel())) {
+            form.setSalaryMode(JobPostingCreateRequest.SALARY_RANGE);
+        } else if (salary == null || JobPostingLabels.SALARY_NEGOTIABLE.equalsIgnoreCase(salary)
+                || JobPostingLabels.SALARY_NEGOTIABLE_OLD_SPELLING.equalsIgnoreCase(salary)) {
+            form.setSalaryMode(JobPostingCreateRequest.SALARY_NEGOTIABLE);
+        } else {
+            form.setSalaryMode(JobPostingCreateRequest.SALARY_CUSTOM);
+            form.setSalaryCustom(salary);
+        }
+
+        boolean showPositions = posting.getNumberOfPositionsDisplay() != null;
+        form.setShowPositions(showPositions);
+        if (showPositions) {
+            form.setNumberOfPositionsDisplay(posting.getNumberOfPositionsDisplay());
+        }
+    }
+
+    // ===================================================================================
+    // BẢNG ĐIỀU KHIỂN HR
+    // ===================================================================================
+
+    public JobPostingDashboardResponse.RecentPosting toRecentPosting(JobPosting posting, LocalDateTime now) {
+        String viewStatus = JobPostingAccess.viewStatus(posting, now);
+        String departmentName = null;
+        if (posting.getRequisition() != null && posting.getRequisition().getDepartment() != null) {
+            departmentName = posting.getRequisition().getDepartment().getDepartmentName();
+        }
+        return new JobPostingDashboardResponse.RecentPosting(posting.getJobPostingId(), posting.getPostingTitle(),
+                departmentName, JobPostingLabels.statusLabel(viewStatus), JobPostingLabels.dashboardBadge(viewStatus),
+                JobPostingAccess.STATUS_DRAFT.equals(posting.getPostingStatus()),
+                posting.getApplicationDeadline(), posting.getPostingDate());
+    }
+
+    public JobPostingDashboardResponse.AwaitingRequisition toAwaitingRequisition(JobRequisition requisition) {
+        String departmentName = null;
+        if (requisition.getDepartment() != null) {
+            departmentName = requisition.getDepartment().getDepartmentName();
+        }
+        return new JobPostingDashboardResponse.AwaitingRequisition(requisition.getRequisitionId(),
+                requisition.getTitle(), requisition.getRequisitionCode(), departmentName,
+                requisition.getRecruitmentRound());
+    }
+
+    // ----- Các hàm nhỏ -----
+
+    /** Yêu cầu ứng viên điền sẵn: chi tiết yêu cầu + danh sách tiêu chí bắt buộc. */
+    private String requirementsFromRequisition(JobRequisition requisition) {
+        StringBuilder requirements = new StringBuilder();
+        if (requisition.getRequirementDetails() != null && !requisition.getRequirementDetails().isBlank()) {
+            requirements.append(requisition.getRequirementDetails().trim());
+        }
+        List<ScreeningCriteria> mandatory = new ArrayList<>();
+        if (requisition.getScreeningCriteria() != null) {
+            for (ScreeningCriteria criteria : requisition.getScreeningCriteria()) {
+                if (Boolean.TRUE.equals(criteria.getIsMandatory())) {
+                    mandatory.add(criteria);
+                }
+            }
+        }
+        if (mandatory.isEmpty()) {
+            return requirements.toString().trim();
+        }
+        if (!requirements.isEmpty()) {
+            requirements.append("\n\n");
+        }
+        requirements.append("Tiêu chí bắt buộc:\n");
+        for (ScreeningCriteria criteria : mandatory) {
+            requirements.append("- ").append(criteria.getCriteriaName());
+            if (criteria.getRequiredValue() != null && !criteria.getRequiredValue().isBlank()) {
+                requirements.append(": ").append(criteria.getRequiredValue());
+            }
+            requirements.append("\n");
+        }
+        return requirements.toString().trim();
+    }
+
+    private static String departmentName(JobRequisition requisition) {
+        if (requisition == null || requisition.getDepartment() == null) {
+            return JobPostingLabels.DEPARTMENT_MISSING;
+        }
+        return requisition.getDepartment().getDepartmentName();
+    }
+
+    private static String employmentType(JobRequisition requisition) {
+        if (requisition == null || requisition.getEmploymentType() == null) {
+            return JobPostingLabels.MISSING;
+        }
+        return RequisitionLabels.employmentType(requisition.getEmploymentType());
+    }
+
+    /** Yêu cầu cũ chưa có số đợt thì coi là đợt 1. */
+    private static Integer recruitmentRound(JobRequisition requisition) {
+        if (requisition.getRecruitmentRound() == null) {
+            return 1;
+        }
+        return requisition.getRecruitmentRound();
+    }
+
+    private static String fullName(User user) {
+        if (user == null) {
+            return JobPostingLabels.MISSING;
+        }
+        return user.getFullName();
+    }
+
+    private static String fullNameOrSystem(User user) {
+        if (user == null) {
+            return JobPostingLabels.SYSTEM_ACTOR;
+        }
+        return user.getFullName();
+    }
+}

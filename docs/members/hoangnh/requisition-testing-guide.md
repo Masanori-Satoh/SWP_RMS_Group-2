@@ -23,7 +23,10 @@
 
 ```bash
 # Toàn bộ test của module requisition (khoảng 1 phút, gồm cả integration nên cần SQL Server đang chạy)
-./mvnw -o clean test -Dtest='com.group2.rms.requisition.**'
+./mvnw -o clean test -Dtest='Requisition*'
+
+# Máy thiếu RAM (lỗi "The forked VM terminated" / "insufficient memory"): giảm heap, tắt jacoco
+./mvnw -o test -Dtest='Requisition*' '-DargLine=-Xmx384m -XX:+UseSerialGC' -Djacoco.skip=true
 
 # Một class
 ./mvnw -o test -Dtest=RequisitionValidatorTests
@@ -226,6 +229,11 @@ void create_shouldRedirectToDetail_whenDraftIsSaved() throws Exception {
 | Thiếu CSRF | bỏ `.with(csrf())` → `status().isForbidden()` |
 | Lỗi validate trả lại form | `doThrow(new RequisitionValidationException(Map.of("title", "..."))).when(service).createRequisition(any())` → `status().isOk()`, `view().name("requisitions/form")`, `model().attributeHasFieldErrors("requisitionDto", "title")` |
 | Form không bind được trường cấm | gửi `.param("approvalStatus", "Approved")`, dùng `ArgumentCaptor` kiểm tra DTO nhận được không có giá trị đó |
+| Bean Validation (`@Valid`) chặn trước service | gửi `"a".repeat(TITLE_CHAR_LIMIT + 1)` → `model().attributeHasFieldErrorCode("requisitionDto", "title", "Size")` + `verify(service, never())...`; số ngoài khoảng (`POSITIONS_MAX + 1`, lương `1000000001`, `screeningCriteria[0].weight=150`) → `attributeHasFieldErrors(...)` |
+| Ô nhiều dòng không bị chặn oan vì `\r\n` | `"a\r\n".repeat(999) + "a"` (2.998 ký tự gửi lên, 1.999 sau chuẩn hóa) → vẫn redirect, service được gọi |
+| Template đọc được record | dựng `RequisitionResponse.builder()...` có tiêu chí `isMandatory(true)` → `content().string(containsString("Bắt buộc"))` |
+
+> So nội dung tiếng Việt trong HTML bằng `content().string(...)` có thể lệch bảng mã; với lỗi theo ô nên kiểm `attributeHasFieldErrorCode` thay vì so câu.
 
 **Lỗi hay gặp:** `roles = "HIRING_MANAGER"` phải khớp tên role trong `RoleAuthorities` / `SecurityConfig`;
 `userRepository.findByUsernameIgnoreCase("hm")` phải được stub, nếu không session guard coi tài khoản không tồn tại và chuyển về `/login`.
@@ -348,7 +356,7 @@ pm.test("Báo lỗi số lượng", () =>
 
 ## 6. Trước khi báo "xong"
 
-- [ ] `./mvnw -o clean test -Dtest='com.group2.rms.requisition.**'` → 0 failures.
+- [ ] `./mvnw -o clean test -Dtest='Requisition*'` → 0 failures.
 - [ ] Chạy collection Postman → mọi test xanh, dữ liệu đã được dọn.
 - [ ] Quy tắc mới trong code đã có trong `validation.md` và có ít nhất 1 test biên.
 - [ ] Ghi ngắn gọn vào `checklist.md`.

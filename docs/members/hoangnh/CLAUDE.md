@@ -4,7 +4,7 @@
 > Dùng cho: viết code mới, sửa module cũ, review, và làm hướng dẫn cho AI.
 > Mục tiêu: **người mới đọc hiểu được nghiệp vụ mà không cần hỏi người viết; GV yêu cầu sửa trực tiếp thì biết sửa ở đúng một chỗ.**
 
-Mẫu tham chiếu trong code: module `requisition/` (đã làm theo đúng file này). Khi không chắc, mở file tương ứng trong `requisition/` ra xem.
+Mẫu tham chiếu trong code: module `requisition/` và `jobposting/` (đã làm theo đúng file này, 18/10/2026). Khi không chắc, mở file tương ứng trong hai module này ra xem. Còn lệch đã biết: `RequisitionAccess.actor()` tự đọc `SecurityContextHolder` thay vì `CurrentUserService` (mục 10).
 
 ---
 
@@ -66,7 +66,8 @@ Spring Boot 3.5, Java 21, Spring Security, Spring Data JPA trên **SQL Server**,
 ```bash
 ./mvnw -o clean compile spring-boot:run                                # chạy app (Windows: .\mvnw.cmd)
 ./mvnw -o clean test                                                   # toàn bộ test
-./mvnw -o test -Dtest='com.group2.rms.requisition.**'                  # test một module
+./mvnw -o test -Dtest='Requisition*'                                   # test một module (theo tiền tố tên class)
+./mvnw -o test -Dtest='JobPosting*' '-DargLine=-Xmx384m -XX:+UseSerialGC' -Djacoco.skip=true   # máy thiếu RAM ("forked VM terminated")
 ./mvnw -o test -Dtest=RequisitionValidatorTests                        # một class
 ./mvnw -o test -Dtest='RequisitionServiceTests*#deleteRequisition_shouldReject_whenLaterRoundExists'  # một hàm (class có @Nested thì thêm *)
 ```
@@ -95,7 +96,8 @@ com.group2.rms/
 
 - Không tạo thêm sub-package ngoài danh sách trên (ví dụ `mapper/`, `util/` trong module): Mapper, Labels, Sort, Specifications, Access đặt trong `service/`.
 - `user` và `candidate` là module nền: đổi entity ở đây phải rà các module phụ thuộc.
-- Gọi chéo module: ưu tiên gọi **Service** của module kia; được dùng Repository khi chỉ cần một câu truy vấn đơn giản. **Cấm phụ thuộc vòng** (A → B → A).
+- Gọi chéo module (AG §7): ưu tiên gọi **Service** của module kia; được dùng Repository khi chỉ cần một câu truy vấn đơn giản. **Cấm phụ thuộc vòng** (A → B → A).
+- Không import DTO nội bộ của module khác nếu không thật cần. Nghiệp vụ đan chéo từ 3 module trở lên → cân nhắc một service điều phối riêng.
 
 ### 3.2. Đưa gì vào `core`
 
@@ -216,7 +218,7 @@ Mọi giá trị cố định có ý nghĩa nghiệp vụ phải là hằng số
 
 | Loại giá trị | Đặt ở | Ví dụ (Requisition) |
 |---|---|---|
-| Trạng thái lưu DB | `public static final` trong `{X}Access` (hoặc enum nếu module mới chưa dính DB cũ) | `RequisitionAccess.STATUS_PENDING_DIRECTOR` |
+| Trạng thái lưu DB | `public static final` trong `{X}Access` (hoặc enum nếu module mới chưa dính DB cũ) | `RequisitionAccess.STATUS_PENDING_DIRECTOR`, `JobPostingAccess.STATUS_PUBLISHED` |
 | Tên role | `{X}Access` | `RequisitionAccess.ROLE_HR` |
 | Giá trị nút / action của form | `{X}Validator` | `ACTION_DRAFT`, `ACTION_SUBMIT`, `isSubmit(action)` |
 | Giới hạn độ dài, min / max, số ngày | `{X}Validator` (`public` để controller, template và test dùng chung) | `TITLE_CHAR_LIMIT`, `POSITIONS_MAX`, `COMMENT_CHAR_LIMIT` |
@@ -241,7 +243,7 @@ Giá trị trạng thái phải **đúng như trong DB** (`Draft`, `Pending_Dire
 - Bean `Clock` ở `core/config/ClockConfig`. Class cần "bây giờ" tiêm `private final Clock clock;` rồi gọi `LocalDate.now(clock)` / `LocalDateTime.now(clock)`.
 - Lý do: test truyền `Clock.fixed(...)` → "hôm nay" cố định → test biên ngày (hôm qua / hôm nay / +1 năm) không lỗi khi chạy qua nửa đêm, và kiểm tra được giá trị chính xác (`submittedAt == NOW`).
 - Rule ngày nằm ở **một chỗ** và các nơi khác hỏi chỗ đó: form lấy `min` / `max` bằng `validator.earliestStartDate()` / `latestStartDate()`, không tự tính `LocalDate.now().plusYears(1)` trong controller.
-- Ngoại lệ được phép: `BaseEntity` `@PrePersist` / `@PreUpdate` (createdAt / updatedAt). Code cũ (job posting) còn `LocalDateTime.now()` — sửa dần theo mục 27.
+- Ngoại lệ được phép: `BaseEntity` / `AuditLog` `@PrePersist` (createdAt / updatedAt / timestamp mặc định). Requisition và Job Posting đã dùng `Clock` toàn bộ.
 
 ```java
 private static final Clock CLOCK = Clock.fixed(Instant.parse("2026-10-18T03:00:00Z"), ZoneId.of("Asia/Ho_Chi_Minh"));
@@ -257,7 +259,7 @@ Controller chỉ làm: **nhận request → bind DTO → gọi service → trả
 
   ```java
   @PostMapping("/create")
-  public String create(@ModelAttribute("requisitionDto") RequisitionRequest request, BindingResult errors,
+  public String create(@Valid @ModelAttribute("requisitionDto") RequisitionRequest request, BindingResult errors,
           Model model, RedirectAttributes flash) {
       if (!errors.hasErrors()) {
           try {
@@ -274,6 +276,7 @@ Controller chỉ làm: **nhận request → bind DTO → gọi service → trả
   }
   ```
 
+- Form nhận DTO bằng **`@Valid`** để lỗi Bean Validation (mục 12) tự vào `BindingResult` trước khi gọi service (AG §2.1).
 - **Whitelist trường form** bằng `@InitBinder("tênDto")` + `setAllowedFields(...)`: trường hệ thống (`approvalStatus`, `createdBy`, `recruitmentRound`...) gửi lên bị bỏ qua.
 - Mọi đường hiển thị form (tạo, sửa, sao chép, render lại khi lỗi) đi qua **một hàm** `form(model, ...)` để không quên thuộc tính nào.
 - Trang dùng layout: đặt `activeMenu` (sáng menu) và `bodyClass` nếu trang có CSS riêng.
@@ -288,7 +291,7 @@ Controller chỉ làm: **nhận request → bind DTO → gọi service → trả
 - Luồng chuẩn của một method ghi (đọc từ trên xuống là hiểu nghiệp vụ):
 
   ```text
-  1. currentUser = access.actor()                  ← người dùng lấy từ phiên, không từ form
+  1. currentUser = access.actor()                  ← người dùng lấy từ phiên, không từ form (AG §5: nguồn chuẩn là CurrentUserService; RequisitionAccess.actor() hiện tự đọc SecurityContextHolder — nên chuyển sang gọi CurrentUserService)
   2. entity = findXById(id, lockForUpdate)        ← không có → ResourceNotFoundException
   3. access.requireX(currentUser, entity)          ← không đủ quyền → AccessDeniedException
   4. ghi đè trường server tự quyết (phòng ban, người tạo...)
@@ -330,6 +333,12 @@ HTML (required, maxlength, min, max, type) — chỉ hỗ trợ UX
 → Validator nghiệp vụ ({module}/validator/, service gọi) — ném {X}ValidationException
 ```
 
+- **Tầng 2 là bắt buộc** (AG §2.4, §9): DTO form có annotation cho từng ô (`@Size(max = ...)`, `@Min` / `@Max`, `@DecimalMin` / `@DecimalMax` / `@Digits`, `@Email`, `@Pattern`), controller nhận bằng `@Valid`, danh sách lồng nhau gắn `@Valid`. Validator nghiệp vụ chỉ lo phần cần DB / so nhiều ô / phân biệt nháp và gửi duyệt, nhưng vẫn kiểm tra lại toàn bộ (service không tin controller). Mẫu: `RequisitionRequest`.
+  - Giới hạn và câu lỗi trong annotation lấy **hằng số của Validator** (`message = RequisitionValidator.TITLE_TOO_LONG`) để hai tầng báo cùng một câu.
+  - Form có "Lưu nháp" thì **không** đặt `@NotBlank` / `@NotNull` (nháp được để trống); `null` tự qua các annotation khác.
+  - Ô **nhiều dòng không đặt `@Size`**: Bean Validation chạy trước `cleanMultiline`, trình duyệt gửi `\r\n` (2 ký tự) nên sẽ chặn oan đoạn văn gần giới hạn. Validator đếm sau khi chuẩn hóa.
+  - `@Digits(integer = ...)` lấy theo độ chính xác cột DB, để vượt max chỉ báo một câu (của `@DecimalMax`).
+  - Kiểm tra nhiều ô dùng chung thì viết annotation cho cả class (`core/validation/`, mẫu `@PasswordMatches`).
 - **Độ dài khớp 3 nơi:** `HTML maxlength = DTO / Validator limit = cột DB`. Không để dữ liệu vượt độ dài rồi mới lỗi SQL.
 - Hằng số giới hạn đặt `public` trong Validator; controller đưa vào model cho template (`th:attr="maxlength=${...}"`), test dùng `LIMIT + 1`.
 - **Làm sạch chuỗi trước khi kiểm tra:** `cleanString` (trim, chuỗi chỉ khoảng trắng → `null`), `cleanMultiline` (`\r\n` → `\n`, đếm độ dài sau khi chuẩn hóa).
@@ -457,7 +466,8 @@ Rule khác:
 
 ## 17. DTO
 
-- `*Response`: ưu tiên `record`; dùng `class` + Lombok khi DTO được gán dần nhiều nhãn / cờ (ví dụ `RequisitionResponse`).
+- `*Response`: **`record`** (AG §2.5, §3). DTO nhiều trường thì dựng một lần trong Mapper rồi trả record, không gán dần.
+  Record có nhiều trường: `@Builder(toBuilder = true)`; Mapper tính đủ giá trị rồi `build()` một lần, màn chi tiết dùng `toListRow(...).toBuilder()...build()` (mẫu `RequisitionMapper`). Test gọi `row.editable()` thay cho `row.isEditable()`; template vẫn viết `${req.editable}`.
 - `*Request`: `record` nếu đơn giản; `class` (`@Getter @Setter @NoArgsConstructor` hoặc `@Data @Builder`) khi form cần giá trị mặc định hoặc có danh sách lồng nhau (AG §2.5).
 - Không bind entity trực tiếp từ form.
 - Không nhận từ frontend các trường server tự xác định: `approvalStatus`, `postingStatus`, `createdBy`, `createdAt`, `postingDate` (trừ "hẹn ngày đăng" có kiểm tra), `requesterId`, `recruitmentRound`.
@@ -475,7 +485,7 @@ Rule khác:
 
 - Dịch giá trị DB → tiếng Việt **chỉ ở `{X}Labels`**; template không tự dịch, không `th:switch` theo giá trị DB.
 - Tông màu badge: Labels trả ý nghĩa (`success` / `warning` / `danger` / `neutral`), template ghép class `badge--...`.
-- Văn bản nhiều dòng người dùng nhập: `HtmlUtils.htmlEscape` **trước**, rồi mới đổi `\n` → `<br/>`, hiển thị bằng `th:utext` (AG §6.3). Escape sau là lỗ hổng XSS.
+- Văn bản nhiều dòng người dùng nhập: `HtmlUtils.htmlEscape` **trước**, rồi mới đổi `\n` → `<br/>`, hiển thị bằng `th:utext` (AG §6.3). Escape sau là lỗ hổng XSS. AG §6.3 chưa ghi bước escape → đã đề xuất Lead bổ sung; trong lúc chờ, làm theo dòng này.
 - Message lỗi / thành công tiếng Việt, thống nhất giữa HTML, validator và test (test so sánh nguyên câu hoặc dùng hằng số).
 
 ## 20. Giao diện (Thymeleaf)
@@ -488,6 +498,8 @@ Rule khác:
 - Một chức năng cho nhiều role = **một màn** + dữ liệu theo role + nút theo cờ quyền. Không tạo `hm/detail.html`, `director/detail.html`.
 - Tạo và sửa cùng cấu trúc = **một template form** (`requisitions/form.html`).
 - Textarea full width; ô chỉ đọc nhìn khác ô sửa được; lỗi nằm cạnh ô; xóa phải có hộp xác nhận.
+- Form sửa quan trọng (AG §6.3): nút Lưu chỉ bật khi có thay đổi (dirty check), luôn có nút Hủy; xóa / cập nhật lớn qua hộp thoại xác nhận.
+- Tách fragment mới theo **Rule of 3** (AG §6.2): chỉ khi một khối markup có cấu trúc và tham số lặp lại ở ≥ 3 nơi. Không tách `div` bọc đơn thuần. Fragment khung ở `fragments/layout/`, linh kiện nội dung ở `fragments/ui/`.
 - Điều hướng bằng menu / nút / link của hệ thống, không phụ thuộc gõ URL tay.
 
 ---
@@ -675,7 +687,8 @@ verify(postings, never()).findTopByRequisition_RequisitionIdOrderByJobPostingIdD
 [ ] Không System.out, import thừa, code chết, code cũ trong comment, biến vô nghĩa
 [ ] Không hard-code trạng thái / role / giới hạn / message lặp (mục 7)
 [ ] Không gọi LocalDate.now() / LocalDateTime.now() trực tiếp trong code mới (mục 8)
-[ ] Validation blank / space / độ dài; maxlength = validator = DB
+[ ] Validation blank / space / độ dài; maxlength = validator = DB; DTO form có Bean Validation + controller @Valid
+[ ] *Response mới là record; form sửa có dirty check + nút Hủy
 [ ] Phân quyền backend: SecurityConfig có rule cho route mới + {X}Access cho từng bản ghi
 [ ] Chuyển trạng thái hợp lệ (mục 14)
 [ ] Màn danh sách: search / filter / sort / paging server-side, không N+1
@@ -714,7 +727,9 @@ verify(postings, never()).findTopByRequisition_RequisitionIdOrderByJobPostingIdD
 | 6 | Chuyển helper lặp giữa module vào `core/util` | Cùng hàm private ở 2 module |
 | 7 | Viết lại / bổ sung test theo Phần E; cập nhật testing guide + checklist | Tên test `xxx_001`, thiếu case mục 23.5 |
 
-Việc còn để sau (biết trước để trả lời GV): tách `validate()` thành `normalize()` + `validate()`; tách `PropertyEditor` ô lương thành class riêng có test; chuyển job posting sang `Clock` và `FieldChanges`.
+Đã áp dụng cho Job Posting (2026-10-18): `JobPostingAccess`, `JobPostingListService`, `JobPostingMapper`, `JobPostingAuditLogger` (+ `FieldChanges`), `Clock`, `@EntityGraph`, record DTO, test theo Phần E (xem `posting-testing-guide.md`).
+
+Việc còn để sau (biết trước để trả lời GV): `RequisitionValidator.validate()` vẫn vừa làm sạch vừa kiểm tra (Job Posting đã đặt tên `normalizeAndValidate`); tách `PropertyEditor` ô lương thành class riêng có test; `job-postings/dashboard.html` còn khung cũ + `style` inline (chuyển sang `layout/internal` cần Lead duyệt).
 
 ## 28. Nguyên tắc quan trọng nhất
 
@@ -745,4 +760,7 @@ Việc còn để sau (biết trước để trả lời GV): tách `validate()`
 | `ddl-auto` | `none` | `validate` | Khớp `application.properties` |
 | Commit | Chia nhỏ theo tầng (4 commit) | Một commit cho một feature hoàn chỉnh | Thống nhất 17/10/2026 |
 | Tên test | `val003_...`, `svc10_...` trong testing guide | `hàm_should..._when...` + `@DisplayName` | Theo §26 cũ, áp dụng đồng bộ |
+| `*Response` | (file này bản đầu) cho phép `class` + Lombok | `record` + `@Builder(toBuilder = true)`; Requisition đã chuyển | Khớp AG §2.5 |
+| Bean Validation | Ví dụ controller không có `@Valid` | Bắt buộc annotation trên DTO + `@Valid` | Khớp AG §2.4, §9 |
+| Dirty check, Rule of 3, gọi chéo module | Chưa có | Thêm vào mục 20, 3.1 | Lấy từ AG §6.2, §6.3, §7 |
 | **Mới** | — | `Clock`; cờ quyền ở Access; Mapper không truy vấn DB; chống N+1; `ListService` 4 bước; helper `core/util`; `core/web` chỉ Lead; AuditLogger + `FieldChanges`; rule test chi tiết (Phần E); cách làm sạch module cũ (mục 27) | Rút ra khi làm sạch Requisition |

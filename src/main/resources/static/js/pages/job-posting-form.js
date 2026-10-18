@@ -1,7 +1,7 @@
 /* =============================================================================
    JOB-POSTING-FORM.JS — Form Tạo / Sửa tin tuyển dụng (job-postings/create.html)
 
-   JS chỉ giúp người dùng thấy lỗi SỚM và xem trước tin. Server (JobPostingValidator#validateForm)
+   JS chỉ giúp người dùng thấy lỗi SỚM và xem trước tin. Server (JobPostingValidator#normalizeAndValidate)
    luôn kiểm tra lại, nên quy tắc ở đây phải GIỐNG server, không thêm quy tắc riêng.
 
    Các phần:
@@ -212,7 +212,7 @@
     }));
 
     /* ---------------------------------------------------------------------
-     * 7. KIỂM TRA TRƯỚC KHI GỬI (giống JobPostingValidator#validateForm) + KHÓA NÚT
+     * 7. KIỂM TRA TRƯỚC KHI GỬI (giống JobPostingValidator#normalizeAndValidate) + KHÓA NÚT
      * --------------------------------------------------------------------- */
     function showError(field, message) {
         const slot = $(field + '-error');

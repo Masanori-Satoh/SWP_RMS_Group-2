@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <!-- Màn danh sách tin tuyển dụng nội bộ (/internal/job-postings), theo mockup đã được GV duyệt.
      Kế thừa khung nội bộ (sidebar + topbar) từ layout/internal; trang này chỉ chứa phần nội dung.
-     Mọi nhãn, số ngày, số hồ sơ và cờ thao tác do service tính sẵn (JobPostingServiceImpl#getListPage). -->
+     Mọi nhãn, số ngày, số hồ sơ và cờ thao tác do JobPostingListService + JobPostingMapper tính sẵn. -->
 <html lang="vi" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
     layout:decorate="~{layout/internal}">
 

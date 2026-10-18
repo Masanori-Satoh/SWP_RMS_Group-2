@@ -1,10 +1,23 @@
 package com.group2.rms.jobposting.entity;
 
 import com.group2.rms.core.base.BaseEntity;
+import com.group2.rms.jobposting.service.JobPostingAccess;
 import com.group2.rms.requisition.entity.JobRequisition;
 import com.group2.rms.user.entity.User;
-import jakarta.persistence.*;
-import lombok.*;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.Table;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 import java.time.LocalDateTime;
 
@@ -84,6 +97,6 @@ public class JobPosting extends BaseEntity {
      * Tin hẹn đăng (PostingDate ở tương lai) chưa hiện trên trang tuyển dụng, chưa nộp hồ sơ được.
      */
     public boolean isVisibleToCandidates(LocalDateTime now) {
-        return "Published".equals(postingStatus) && (postingDate == null || !postingDate.isAfter(now));
+        return JobPostingAccess.STATUS_PUBLISHED.equals(postingStatus) && (postingDate == null || !postingDate.isAfter(now));
     }
 }
