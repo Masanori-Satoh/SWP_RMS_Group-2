@@ -47,7 +47,7 @@
                             <span th:case="*" th:text="${endpoint.status}"></span>
                         </span>
             </header>
-            <div class="apm-service-body" th:if="${endpoint.id == 'internal' or endpoint.responseTimeMs != null or endpoint.lastCheckedAt != null}">
+            <div class="apm-service-body" th:if="${endpoint.id == 'internal' or (endpoint.id == 'email' and endpoint.status != 'Unconfigured') or endpoint.responseTimeMs != null or endpoint.lastCheckedAt != null}">
                 <dl class="apm-metrics">
                     <div class="apm-metric">
                         <dt>Thời gian phản hồi</dt>
@@ -63,15 +63,20 @@
                         </dd>
                     </div>
                 </dl>
-                        <form class="apm-probe-form" th:if="${endpoint.id == 'internal'}"
-                              th:action="@{/admin/api-monitoring/probe/internal}" method="post">
+                        <form class="apm-probe-form" th:if="${endpoint.id == 'internal' or (endpoint.id == 'email' and endpoint.status != 'Unconfigured')}"
+                              th:action="${endpoint.id == 'email'} ? @{/admin/api-monitoring/probe/email} : @{/admin/api-monitoring/probe/internal}" method="post">
                             <button class="btn btn--primary btn--sm apm-probe-button" type="submit"
-                                    aria-label="Kiểm tra ứng dụng và SQL Server">Kiểm tra</button>
+                                    th:attr="aria-label=${endpoint.id == 'email' ? 'Kiểm tra kết nối SMTP, không gửi email' : 'Kiểm tra ứng dụng và SQL Server'}"
+                                    th:text="${endpoint.id == 'email' ? 'Kiểm tra SMTP' : 'Kiểm tra'}">Kiểm tra</button>
                         </form>
             </div>
-            <p class="apm-service-notice" th:unless="${endpoint.id == 'internal'}">
+            <p class="apm-service-notice" th:if="${endpoint.id != 'internal' and endpoint.id != 'email'}">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 11v6M12 7h.01"/></svg>
                 <span>Chưa có đích kiểm tra an toàn. Chức năng kiểm tra chưa khả dụng.</span>
+            </p>
+            <p class="apm-service-notice" th:if="${endpoint.id == 'email'}">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 11v6M12 7h.01"/></svg>
+                <span th:text="${endpoint.status == 'Unconfigured' ? 'Chưa có cấu hình SMTP và địa chỉ gửi hợp lệ.' : 'Kiểm tra kết nối và xác thực SMTP theo cấu hình hiện có. Không gửi email thử; kết quả không xác nhận thư đã đến người nhận.'}"></span>
             </p>
         </article>
     </section>

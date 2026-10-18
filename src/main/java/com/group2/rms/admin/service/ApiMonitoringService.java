@@ -21,11 +21,13 @@ public class ApiMonitoringService {
     private static final String INTERNAL_HEALTH_PATH = "/admin/api-monitoring/internal/health";
     // send request
     private final HttpProbeTransport transport;
+    private final EmailMonitoringService emailMonitoring;
 
     private final AtomicReference<MonitorRowResponse> lastInternalProbe = new AtomicReference<>();
 
-    public ApiMonitoringService(HttpProbeTransport transport) {
+    public ApiMonitoringService(HttpProbeTransport transport, EmailMonitoringService emailMonitoring) {
         this.transport = transport;
+        this.emailMonitoring = emailMonitoring;
     }
 
     public ProbeOutcomeResponse probeInternal(HttpServletRequest request) {
@@ -92,13 +94,12 @@ public class ApiMonitoringService {
                         "Unconfigured",
                         null,
                         null),
-                new MonitorRowResponse(
-                        "email",
-                        "Email Service",
-                        "External Integration",
-                        "Unconfigured",
-                        null,
-                        null));
+                emailMonitoring.row());
+    }
+
+    public ProbeOutcomeResponse probeEmail(HttpServletRequest request) {
+        if (request.getSession(false) == null) throw new MonitoringSessionRequiredException();
+        return emailMonitoring.probe();
     }
 
 
