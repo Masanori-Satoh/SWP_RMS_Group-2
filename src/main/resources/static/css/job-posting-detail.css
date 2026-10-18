@@ -1,92 +1,109 @@
 /* =============================================================================
    JOB-POSTING-DETAIL.CSS — Chi tiết tin tuyển dụng nội bộ (/internal/job-postings/{id})
-   Kế thừa thiết kế từ Cổng thông tin ứng viên (candidate/job-detail.html) & job-detail.css.
-   100% tuân thủ UI_RULES.md và UI_CSS_GUIDE.md: dùng design tokens, không hardcode hex.
+   Tiền tố riêng của trang: jpd-. Badge, nút, card dùng class catalog. Chỉ dùng token trong tokens.css.
    ============================================================================= */
 
-/* Multiline text formatting */
-.jp-multiline-text {
-  white-space: pre-wrap;
-  word-break: break-word;
-  line-height: 1.7;
-}
+/* ----- 1. Đầu trang ----- */
+.jp-detail-page .jpd-crumbs { margin:var(--s2) 0 var(--s3); color:var(--muted); font-size:var(--font-sm); overflow-wrap:anywhere; }
+.jp-detail-page .jpd-crumbs a { color:inherit; }
+.jp-detail-page .jpd-head { display:flex; flex-wrap:wrap; justify-content:space-between; align-items:flex-start; gap:var(--s3) var(--s6); margin-bottom:var(--s4); }
+.jp-detail-page .jpd-title { min-width:0; flex:1 1 360px; }
+.jp-detail-page .jpd-title h1 { margin:0; font-size:26px; overflow-wrap:anywhere; }
+.jp-detail-page .jpd-meta { display:flex; flex-wrap:wrap; align-items:center; gap:var(--s2) var(--s3); margin-top:var(--s2); color:var(--muted); font-size:var(--font-sm); }
+.jp-detail-page .jpd-pno { color:var(--brand-dark); font-weight:700; }
+.jp-detail-page .jpd-actions { display:flex; flex-wrap:wrap; gap:var(--s2); }
 
-/* Criteria List (Tiêu chí sàng lọc nguồn) */
-.jp-criteria-list {
-  display: flex;
-  flex-direction: column;
-  gap: var(--s3);
-  margin-top: var(--s2);
-}
+/* ----- 2. Dải thông báo ----- */
+.jp-detail-page .jpd-banner { margin-bottom:var(--s4); padding:var(--s3) var(--s4); border:1px solid var(--line); border-left-width:4px; border-radius:var(--radius-md); background:var(--surface); }
+.jp-detail-page .jpd-banner p { margin:0; }
+.jp-detail-page .jpd-banner--muted { border-left-color:var(--neutral); }
+.jp-detail-page .jpd-banner--info { border-left-color:var(--brand); background:var(--brand-soft); }
+.jp-detail-page .jpd-banner--warning { border-left-color:var(--warning); background:var(--warning-soft); }
+.jp-detail-page .jpd-banner--danger { border-left-color:var(--error); background:var(--error-soft); }
 
-.jp-criteria-item {
-  display: flex;
-  align-items: flex-start;
-  gap: var(--s3);
-  font-size: 15px;
-  color: var(--ink);
-  line-height: 1.5;
-}
+/* ----- 3. Số liệu + tiến trình hồ sơ ----- */
+.jp-detail-page .jpd-kpis { display:grid; grid-template-columns:repeat(5, minmax(0,1fr)); gap:var(--s3); margin-bottom:var(--s4); }
+.jp-detail-page .jpd-kpi { display:grid; gap:2px; padding:var(--s3) var(--s4); }
+.jp-detail-page .jpd-kpi span { color:var(--muted); font-size:var(--font-xs); font-weight:700; }
+.jp-detail-page .jpd-kpi b { font-size:24px; font-variant-numeric:tabular-nums; }
+.jp-detail-page .jpd-kpi small { color:var(--muted); font-size:var(--font-xs); }
+.jp-detail-page .jpd-kpi--goal { border-color:var(--brand); background:var(--brand-soft); }
 
-.jp-criteria-icon {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 20px;
-  height: 20px;
-  border-radius: var(--radius-full);
-  background-color: var(--brand-soft);
-  color: var(--brand-dark);
-  font-size: 12px;
-  font-weight: 700;
-  flex-shrink: 0;
-  margin-top: 1px;
-}
+/* ----- 4. Bố cục 2 cột ----- */
+.jp-detail-page .jpd-layout { display:grid; grid-template-columns:minmax(0,1fr) 320px; gap:var(--s4); align-items:start; }
+.jp-detail-page .jpd-main { padding:0; overflow:hidden; }
+.jp-detail-page .jpd-rail { display:grid; gap:var(--s4); min-width:0; }
+.jp-detail-page .jpd-sec { display:grid; gap:var(--s2); padding:var(--s4) var(--s5, 20px); min-width:0; }
+.jp-detail-page .jpd-main .jpd-sec + .jpd-sec { border-top:1px solid var(--line); }
+.jp-detail-page .jpd-sec h2 { margin:0; font:600 var(--font-lg)/1.3 var(--serif); }
+.jp-detail-page .jpd-sec h3 { margin:0; font-size:var(--font-base); }
+.jp-detail-page .jpd-sec-head { display:flex; flex-wrap:wrap; justify-content:space-between; align-items:baseline; gap:var(--s2); }
+.jp-detail-page .jpd-muted { color:var(--muted); font-size:var(--font-sm); }
+.jp-detail-page .jpd-empty { margin:0; color:var(--muted); font-style:italic; }
+.jp-detail-page .jpd-link { color:var(--brand-dark); font-size:var(--font-sm); font-weight:700; }
+.jp-detail-page .jpd-over { color:var(--error); font-weight:700; }
+.jp-detail-page .nowrap { white-space:nowrap; }
 
-/* Sidebar summary cards spacing */
-.job-sidebar .summary-card + .summary-card {
-  margin-top: var(--s6);
-}
+/* Tab */
+.jp-detail-page .jpd-tabs { display:flex; gap:var(--s1); padding:0 var(--s4); border-bottom:1px solid var(--line); background:var(--surface-subtle); }
+.jp-detail-page .jpd-tabs button { padding:var(--s3) var(--s3); border:0; border-bottom:3px solid transparent; background:none; color:var(--muted); font-weight:700; cursor:pointer; }
+.jp-detail-page .jpd-tabs button[aria-selected="true"] { border-bottom-color:var(--brand); color:var(--ink); }
+.jp-detail-page .jpd-count { display:inline-block; margin-left:var(--s1); padding:0 var(--s2); border-radius:var(--radius-full); background:var(--line); font-size:var(--font-xs); }
 
-/* Action wrap inside summary card */
-.job-sidebar .job-action-wrap {
-  display: flex;
-  flex-direction: column;
-  gap: var(--s3);
-  margin-top: var(--s5);
-  padding-top: var(--s4);
-  border-top: 1px solid var(--line);
-}
+/* Nội dung tin */
+.jp-detail-page .jpd-facts { display:grid; grid-template-columns:repeat(4, minmax(0,1fr)); gap:var(--s3) var(--s4); margin:0; }
+.jp-detail-page .jpd-facts dt { color:var(--muted); font-size:var(--font-xs); font-weight:700; }
+.jp-detail-page .jpd-facts dd { margin:0; font-weight:600; overflow-wrap:anywhere; }
+.jp-detail-page .jpd-prose { margin:0; max-width:75ch; white-space:pre-line; overflow-wrap:anywhere; line-height:1.65; }
+/* Địa điểm: địa chỉ dạng chữ + nút "Xem bản đồ" bung khung bản đồ (thu gọn mặc định) */
+.jp-detail-page .jpd-loc { display:grid; min-width:0; overflow-wrap:anywhere; }
+.jp-detail-page .jpd-map-summary { display:inline-flex; align-items:center; gap:var(--s1); margin-top:var(--s2); color:var(--brand-dark);
+    font-size:var(--font-sm); font-weight:700; list-style:none; cursor:pointer; }
+.jp-detail-page .jpd-map-summary::-webkit-details-marker { display:none; }
+.jp-detail-page .jpd-map-summary:hover { text-decoration:underline; }
+.jp-detail-page .jpd-map-summary:focus-visible { outline:2px solid var(--focus); outline-offset:2px; border-radius:var(--radius-sm); }
+.jp-detail-page .jpd-map-toggle .jpd-map-hide,
+.jp-detail-page .jpd-map-toggle[open] .jpd-map-show { display:none; }
+.jp-detail-page .jpd-map-toggle[open] .jpd-map-hide { display:inline; }
+.jp-detail-page .jpd-map { position:relative; overflow:hidden; margin-top:var(--s2); border:1px solid var(--line); border-radius:var(--radius-md); background:var(--surface-subtle); }
+.jp-detail-page .jpd-map iframe { display:block; width:100%; height:240px; border:0; }
+.jp-detail-page .jpd-map-link { position:absolute; right:var(--s2); bottom:var(--s2); padding:var(--s1) var(--s3); border-radius:var(--radius-md);
+    background:var(--surface); box-shadow:var(--shadow-sm); color:var(--brand-dark); font-size:var(--font-sm); font-weight:700; text-decoration:none; }
 
-/* Link in department subline */
-.job-department-name a {
-  color: var(--brand);
-  font-weight: 600;
-  text-decoration: none;
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  transition: var(--transition);
-}
+/* Bảng hồ sơ gần đây */
+.jp-detail-page .jpd-apps { width:100%; border-collapse:collapse; }
+.jp-detail-page .jpd-apps th { padding:var(--s2); border-bottom:1px solid var(--line); color:var(--muted); font-size:var(--font-xs); text-align:left; }
+.jp-detail-page .jpd-apps td { padding:var(--s2); border-bottom:1px solid var(--line); }
+.jp-detail-page .jpd-score { font-weight:700; color:var(--brand-dark); font-variant-numeric:tabular-nums; }
+.jp-detail-page .jpd-score--low { color:var(--muted); }
 
-.job-department-name a:hover {
-  color: var(--brand-dark);
-  text-decoration: underline;
-}
+/* Cột phải */
+.jp-detail-page .jpd-kv { display:grid; gap:var(--s2); margin:0; font-size:var(--font-sm); }
+.jp-detail-page .jpd-kv > div { display:flex; justify-content:space-between; gap:var(--s3); }
+.jp-detail-page .jpd-kv dt { color:var(--muted); flex:none; }
+.jp-detail-page .jpd-kv dd { margin:0; font-weight:600; text-align:right; overflow-wrap:anywhere; }
+.jp-detail-page .jpd-code { font-family:ui-monospace, Consolas, monospace; font-size:var(--font-xs); }
+.jp-detail-page .jpd-links { display:grid; gap:var(--s2); }
+.jp-detail-page .jpd-links .btn { justify-content:space-between; }
+.jp-detail-page .jpd-rounds { display:grid; gap:var(--s2); margin:0; padding:0; list-style:none; font-size:var(--font-sm); }
+.jp-detail-page .jpd-rounds li { display:grid; grid-template-columns:auto minmax(0,1fr) auto; align-items:center; gap:var(--s2);
+    padding:var(--s2); border-radius:var(--radius-md); }
+.jp-detail-page .jpd-rounds li.is-current { background:var(--brand-soft); }
+.jp-detail-page .jpd-round-no { color:var(--brand-dark); font-weight:700; }
+.jp-detail-page .jpd-round-main { display:grid; min-width:0; }
+.jp-detail-page .jpd-timeline { display:grid; gap:var(--s3); margin:0; padding:0 0 0 var(--s4); list-style:none; border-left:2px solid var(--line); font-size:var(--font-sm); }
+.jp-detail-page .jpd-timeline li { position:relative; }
+.jp-detail-page .jpd-timeline li::before { content:""; position:absolute; left:calc(-1 * var(--s4) - 6px); top:4px; width:10px; height:10px; border-radius:50%; background:var(--brand); }
+.jp-detail-page .jpd-what { font-weight:600; }
 
-/* Table styling adjustments for activity history */
-.job-section-card .table-wrapper {
-  margin-top: var(--s2);
+/* ----- Màn hình hẹp ----- */
+@media (max-width:1100px) {
+    .jp-detail-page .jpd-kpis { grid-template-columns:repeat(3, minmax(0,1fr)); }
 }
-
-.job-section-card .table th {
-  font-weight: 600;
-  font-size: 13.5px;
-  color: var(--muted);
-  background-color: var(--surface-subtle);
+@media (max-width:1024px) {
+    .jp-detail-page .jpd-layout { grid-template-columns:minmax(0,1fr); }
 }
-
-.job-section-card .table td {
-  font-size: 14px;
-  vertical-align: middle;
+@media (max-width:720px) {
+    .jp-detail-page .jpd-kpis, .jp-detail-page .jpd-facts { grid-template-columns:repeat(2, minmax(0,1fr)); }
+    .jp-detail-page .jpd-sec { padding:var(--s4); }
 }

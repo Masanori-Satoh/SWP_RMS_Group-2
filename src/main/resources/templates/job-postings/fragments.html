@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<body>
+
+<!-- Hộp xác nhận dùng chung cho mọi thao tác ghi trên tin tuyển dụng (màn danh sách + chi tiết).
+     JS (pages/job-posting-actions.js) điền tiêu đề, nội dung, chữ trên nút và đường dẫn POST theo nút được bấm.
+     th:action để Thymeleaf tự chèn CSRF token; JS đổi action sang URL của thao tác được chọn.
+     Cách gọi (phải nằm TRONG fragment "content" của trang):
+       <dialog th:replace="~{job-postings/fragments :: confirmDialog}"></dialog> -->
+<dialog th:fragment="confirmDialog" id="jp-confirm" class="confirm-dialog jp-confirm" aria-labelledby="jp-confirm-heading">
+    <form method="post" id="jp-confirm-form" th:action="@{/internal/job-postings}">
+        <h2 id="jp-confirm-heading">Xác nhận</h2>
+        <p><strong id="jp-confirm-title"></strong></p>
+        <p id="jp-confirm-message" class="jp-confirm-message"></p>
+        <div class="dialog-actions">
+            <button class="btn btn--secondary" type="button" data-jp-cancel>Hủy</button>
+            <button class="btn btn--primary" type="submit" id="jp-confirm-submit">Xác nhận</button>
+        </div>
+    </form>
+</dialog>
+
+</body>
+</html>

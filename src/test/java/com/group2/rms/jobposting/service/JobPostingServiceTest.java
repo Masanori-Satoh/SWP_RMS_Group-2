@@ -97,8 +97,16 @@ class JobPostingServiceTest {
         assertEquals("Java Developer", result.getPostingTitle());
         assertEquals("Phòng Công Nghệ", result.getDepartmentName());
         assertEquals("Toàn thời gian", result.getEmploymentType());
-        assertEquals("15.000.000 - 25.000.000 VNĐ", result.getSalaryDisplay());
+        // Mặc định theo mockup: lương "Theo yêu cầu", hiện số lượng, hạn nộp hôm nay + 30 ngày, đăng ngay
+        assertEquals(JobPostingCreateRequest.SALARY_RANGE, result.getSalaryMode());
+        assertEquals("15 – 25 triệu VND/tháng", result.getSalaryRangeLabel());
+        assertEquals(Boolean.TRUE, result.getShowPositions());
+        assertEquals("2 người", result.getNumberOfPositionsDisplay());
+        assertEquals(LocalDate.now().plusDays(30), result.getApplicationDeadline());
+        assertEquals(JobPostingCreateRequest.PUBLISH_NOW, result.getPublishMode());
+        assertEquals(1, result.getPostingNo());
         assertEquals("Hà Nội", result.getWorkLocation());
+        assertEquals("Hà Nội", result.getSourceWorkLocation(), "Giá trị gốc cho nút Khôi phục bản gốc");
         assertEquals("draft", result.getAction());
     }
 
@@ -146,6 +154,8 @@ class JobPostingServiceTest {
                 .postingTitle("Java Developer")
                 .jobDescription("Mô tả công việc")
                 .jobRequirements("Yêu cầu công việc")
+                .salaryMode(JobPostingCreateRequest.SALARY_RANGE)
+                .showPositions(false)
                 .applicationDeadline(LocalDate.now().plusDays(15))
                 .action("draft")
                 .build();
@@ -178,6 +188,8 @@ class JobPostingServiceTest {
                 .postingTitle("Java Developer")
                 .jobDescription("Mô tả công việc")
                 .jobRequirements("Yêu cầu công việc")
+                .salaryMode(JobPostingCreateRequest.SALARY_RANGE)
+                .showPositions(false)
                 .applicationDeadline(LocalDate.now().plusDays(15))
                 .action("publish")
                 .build();
@@ -206,6 +218,8 @@ class JobPostingServiceTest {
                 .postingTitle("Java Developer")
                 .jobDescription("Mô tả công việc")
                 .jobRequirements("Yêu cầu công việc")
+                .salaryMode(JobPostingCreateRequest.SALARY_RANGE)
+                .showPositions(false)
                 .applicationDeadline(LocalDate.now().minusDays(1))
                 .action("publish")
                 .build();
@@ -214,44 +228,7 @@ class JobPostingServiceTest {
         verify(jobPostingRepository, never()).save(any());
     }
 
-    @Test
-    @DisplayName("searchInternalJobPostings: HR tìm kiếm thành công và map đúng DTO")
-    void searchInternalJobPostings_asHr_success() {
-        when(requisitionAccess.role(hrUser)).thenReturn(RequisitionAccess.ROLE_HR);
-
-        JobPosting posting = JobPosting.builder()
-                .jobPostingId(99)
-                .postingTitle("Backend Lead")
-                .postingStatus("Published")
-                .requisition(approvedReq)
-                .applicationDeadline(LocalDateTime.now().plusDays(20))
-                .postingDate(LocalDateTime.now().minusDays(1))
-                .createdBy(hrUser)
-                .build();
-
-        Page<JobPosting> page = new PageImpl<>(List.of(posting));
-        when(jobPostingRepository.findAll(any(Specification.class), any(Pageable.class))).thenReturn(page);
-
-        Page<?> result = jobPostingService.searchInternalJobPostings(1, 10, "Backend", 10, "Published", "newest", hrUser);
-
-        assertNotNull(result);
-        assertEquals(1, result.getTotalElements());
-        var first = (com.group2.rms.jobposting.dto.InternalJobPostingResponse) result.getContent().get(0);
-        assertEquals(99, first.getJobPostingId());
-        assertEquals("Backend Lead", first.getPostingTitle());
-        assertEquals("REQ-2026-001", first.getRequisitionCode());
-        assertEquals("Phòng Công Nghệ", first.getDepartmentName());
-    }
-
-    @Test
-    @DisplayName("searchInternalJobPostings: Role không phải HR/Admin bị chặn 403")
-    void searchInternalJobPostings_nonHr_throwsAccessDenied() {
-        when(requisitionAccess.role(hmUser)).thenReturn(RequisitionAccess.ROLE_DIRECTOR);
-
-        assertThrows(AccessDeniedException.class, () ->
-                jobPostingService.searchInternalJobPostings(1, 10, "", null, "", "newest", hmUser));
-        verify(jobPostingRepository, never()).findAll(any(Specification.class), any(Pageable.class));
-    }
+    // Màn danh sách (getListPage): xem JobPostingListTests
 
     @Test
     @DisplayName("deleteJobPosting: Xóa tin tuyển dụng thành công và lưu audit log")
@@ -371,6 +348,8 @@ class JobPostingServiceTest {
                 .postingTitle("Updated Title")
                 .jobDescription("Desc")
                 .jobRequirements("Reqs")
+                .salaryMode(JobPostingCreateRequest.SALARY_NEGOTIABLE)
+                .showPositions(false)
                 .applicationDeadline(LocalDate.now().plusDays(15))
                 .action("publish")
                 .build();

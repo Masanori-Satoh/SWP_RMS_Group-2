@@ -78,4 +78,12 @@ public class JobPosting extends BaseEntity {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "CreatedBy", nullable = false, referencedColumnName = "UserId")
     private User createdBy;
+
+    /**
+     * Ứng viên thấy được tin này chưa: đang đăng (Published) VÀ đã tới giờ đăng.
+     * Tin hẹn đăng (PostingDate ở tương lai) chưa hiện trên trang tuyển dụng, chưa nộp hồ sơ được.
+     */
+    public boolean isVisibleToCandidates(LocalDateTime now) {
+        return "Published".equals(postingStatus) && (postingDate == null || !postingDate.isAfter(now));
+    }
 }
