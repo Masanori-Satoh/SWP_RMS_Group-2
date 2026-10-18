@@ -233,7 +233,7 @@ CREATE TABLE ScreeningCriteria (
     CriteriaName NVARCHAR(150) NOT NULL,
     CriteriaType NVARCHAR(30) NOT NULL,
     RequiredValue NVARCHAR(255) NOT NULL,
-    [Weight] DECIMAL(5,2) NOT NULL CONSTRAINT DF_ScreeningCriteria_Weight DEFAULT 1.00,
+    [Weight] DECIMAL(5,2) NOT NULL CONSTRAINT DF_ScreeningCriteria_Weight DEFAULT 100.00,
     IsMandatory BIT NOT NULL CONSTRAINT DF_ScreeningCriteria_IsMandatory DEFAULT 0,
 
     CONSTRAINT FK_ScreeningCriteria_Requisition
@@ -550,11 +550,9 @@ CREATE TABLE OfferProposal (
     BenefitsPackage NVARCHAR(MAX) NULL,
     OfferStatus NVARCHAR(40) NOT NULL CONSTRAINT DF_OfferProposal_Status DEFAULT N'Draft',
     DeclineReason NVARCHAR(1000) NULL,
+    -- Hạn ứng viên phản hồi Offer (PR #70 của huyenpt): số ngày được trả lời và thời điểm hết hạn
     ResponsePeriodDays INT NULL CONSTRAINT CK_OfferProposal_ResponsePeriodDays
-    CHECK (
-        ResponsePeriodDays IS NULL
-        OR ResponsePeriodDays > 0
-    ),
+        CHECK (ResponsePeriodDays IS NULL OR ResponsePeriodDays > 0),
     ResponseDeadline DATETIME2 NULL,
     IsDeleted BIT NOT NULL CONSTRAINT DF_OfferProposal_IsDeleted DEFAULT 0,  -- Xóa mềm đề xuất Offer
     ProposedBy INT NOT NULL,

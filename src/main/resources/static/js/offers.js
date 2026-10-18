@@ -2060,4 +2060,3 @@ if (document.readyState === 'loading') {
     initOfferFormExpectedStartDateMin();
 }
 
-

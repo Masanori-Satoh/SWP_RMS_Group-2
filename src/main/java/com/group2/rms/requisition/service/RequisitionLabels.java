@@ -1,5 +1,10 @@
 package com.group2.rms.requisition.service;
 
+import org.springframework.web.util.HtmlUtils;
+
+import java.math.BigDecimal;
+import java.math.RoundingMode;
+
 /**
  * Nơi DUY NHẤT dịch các giá trị lưu trong DB (tiếng Anh) sang chữ tiếng Việt cho màn hình Requisition.
  * Muốn đổi cách gọi một trạng thái thì chỉ sửa ở đây, không sửa trong template.
@@ -15,8 +20,16 @@ public final class RequisitionLabels {
     public static final String POSTING_PAUSED = "Paused";
     public static final String POSTING_CLOSED = "Closed";
 
+    /** Định dạng mã yêu cầu: REQ-0001, REQ-0025... (không kèm năm, theo quyết định của nhóm). */
+    private static final String REQUISITION_CODE_FORMAT = "REQ-%04d";
+
     private RequisitionLabels() {
         // Chỉ chứa hàm static, không tạo đối tượng
+    }
+
+    /** Mã yêu cầu dạng REQ-0025: "REQ-" + RequisitionId, đệm cho đủ 4 chữ số. */
+    public static String requisitionCode(Integer requisitionId) {
+        return String.format(REQUISITION_CODE_FORMAT, requisitionId);
     }
 
     /** Trạng thái duyệt của yêu cầu (JobRequisition.ApprovalStatus). */
@@ -139,7 +152,7 @@ public final class RequisitionLabels {
      * Mức lương từ MinSalary / MaxSalary, đổi sang đơn vị triệu cho dễ đọc.
      * Ví dụ: 20000000 và 30000000 → "20 – 30 triệu VND/tháng"; không nhập gì → "Thỏa thuận".
      */
-    public static String salary(java.math.BigDecimal min, java.math.BigDecimal max) {
+    public static String salary(BigDecimal min, BigDecimal max) {
         if (min == null && max == null) {
             return "Thỏa thuận";
         }
@@ -152,8 +165,8 @@ public final class RequisitionLabels {
         return "Đến " + millions(max) + " triệu VND/tháng";
     }
 
-    private static String millions(java.math.BigDecimal amount) {
-        java.math.BigDecimal value = amount.divide(java.math.BigDecimal.valueOf(1_000_000), 2, java.math.RoundingMode.HALF_UP);
+    private static String millions(BigDecimal amount) {
+        BigDecimal value = amount.divide(BigDecimal.valueOf(1_000_000), 2, RoundingMode.HALF_UP);
         return value.stripTrailingZeros().toPlainString().replace('.', ',');
     }
 
@@ -171,7 +184,7 @@ public final class RequisitionLabels {
         if (text == null || text.isBlank()) {
             return null;
         }
-        return org.springframework.web.util.HtmlUtils.htmlEscape(text).replace("\r\n", "\n").replace("\n", "<br/>");
+        return HtmlUtils.htmlEscape(text).replace("\r\n", "\n").replace("\n", "<br/>");
     }
 
     /** Trạng thái tin tuyển dụng mới nhất của yêu cầu; null hoặc POSTING_NONE nghĩa là chưa có tin. */

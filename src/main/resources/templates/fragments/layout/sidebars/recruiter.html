@@ -38,8 +38,8 @@
         <span class="nav-label-text">Yêu cầu tuyển dụng</span>
     </a>
 
-    <!-- Tin tuyển dụng: HR, Hiring Manager (khớp SecurityConfig /internal/job-postings/**; Admin dùng admin.html) -->
-    <a th:if="${userRole == 'HR' or userRole == 'HR Specialist' or userRole == 'Hiring Manager' or (userRole != null and (#strings.contains(userRole, 'HR') or #strings.contains(userRole, 'Hiring Manager')))}"
+    <!-- Tin tuyển dụng: HR, Hiring Manager, Director (Director chỉ xem; khớp SecurityConfig GET /internal/job-postings; Admin dùng admin.html) -->
+    <a th:if="${userRole == 'HR' or userRole == 'HR Specialist' or userRole == 'Hiring Manager' or userRole == 'Director' or (userRole != null and (#strings.contains(userRole, 'HR') or #strings.contains(userRole, 'Hiring Manager')))}"
        th:href="@{/internal/job-postings}" class="sidebar-nav-link"
        th:classappend="${activeMenu == 'job-postings' ? 'active' : ''}"
        th:attr="aria-current=${activeMenu == 'job-postings' ? 'page' : null}"

@@ -43,7 +43,7 @@ public class ApplicationSubmissionService {
                         "Tài khoản chưa có hồ sơ ứng viên. Vui lòng liên hệ quản trị viên."));
 
         JobPosting job = jobPostings.findForUpdate(jobPostingId)
-                .filter(j -> "Published".equals(j.getPostingStatus()))
+                .filter(j -> j.isVisibleToCandidates(LocalDateTime.now()))
                 .orElseThrow(() -> new ResourceNotFoundException("Tin tuyển dụng này không còn khả dụng."));
 
         if (job.getApplicationDeadline() != null && job.getApplicationDeadline().isBefore(LocalDateTime.now())) {

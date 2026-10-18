@@ -24,6 +24,20 @@
       <span th:text="${errorMessage}">Lỗi</span>
     </div>
   </div>
+  <script th:if="${successMessage != null or errorMessage != null}">
+    (function() {
+      var flash = document.getElementById('pageFlashContainer');
+      if (flash && !flash.dataset.dismissInit) {
+        flash.dataset.dismissInit = 'true';
+        setTimeout(function() {
+          flash.classList.add('flash-dismissed');
+          setTimeout(function() {
+            flash.style.display = 'none';
+          }, 450);
+        }, 2000);
+      }
+    })();
+  </script>
 
   <!-- PAGE HEADER -->
   <div class="page-header">

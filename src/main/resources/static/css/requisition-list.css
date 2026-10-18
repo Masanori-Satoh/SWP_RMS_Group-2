@@ -32,6 +32,9 @@
 .req-list-page .req-chips { margin:0 0 var(--s4); }
 .req-list-page .req-chips-reset { font-size:var(--font-sm); color:var(--muted); }
 
+/* Menu ⋯ nổi đè lên bảng (vị trí do js/pages/row-menu.js tính) nên mở menu không làm cột rộng ra, dòng cao lên */
+.req-list-page .more-menu--floating .more-menu__list { position:fixed; z-index:20; margin-top:0; }
+
 /* Mục "Xóa yêu cầu" trong menu ⋯ (.more-menu__item của catalog) tô màu nguy hiểm */
 .req-list-page .more-menu__item.req-menu-danger { color:var(--error); }
 .req-list-page .more-menu__item.req-menu-danger:hover { background:var(--error-soft); }
