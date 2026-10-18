@@ -29,8 +29,10 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * Controller MVC cho phân hệ Offer Proposal tuân thủ ARCHITECTURE_GUIDE.md ({Feature}Controller).
- * Điều hướng và xử lý toàn bộ các màn hình Screen 30 (List & Create) và Screen 32 (Detail & Update).
+ * Controller MVC cho phân hệ Offer Proposal tuân thủ ARCHITECTURE_GUIDE.md
+ * ({Feature}Controller).
+ * Điều hướng và xử lý toàn bộ các màn hình Screen 30 (List & Create) và Screen
+ * 32 (Detail & Update).
  */
 @Controller
 @RequestMapping("/offers")
@@ -77,7 +79,7 @@ public class OfferController {
         int validPage = Math.max(0, page);
         if ("Director".equals(userRole)) {
             String currentTab = status != null && status.equalsIgnoreCase("HISTORY") ? "HISTORY" : "PENDING";
-            
+
             if ("HISTORY".equals(currentTab)) {
                 Page<OfferResponse> historyData = offerService.getDirectorOfferHistory(PageRequest.of(validPage, size));
                 model.addAttribute("offersPage", historyData);
@@ -85,7 +87,8 @@ public class OfferController {
                 model.addAttribute("totalPages", Math.max(1, historyData.getTotalPages()));
                 model.addAttribute("totalElements", historyData.getTotalElements());
             } else {
-                Page<OfferResponse> pendingData = offerService.getAllOffersForHr(search, "Pending_Director", timeSort, PageRequest.of(validPage, size));
+                Page<OfferResponse> pendingData = offerService.getAllOffersForHr(search, "Pending_Director", timeSort,
+                        PageRequest.of(validPage, size));
                 model.addAttribute("offersPage", pendingData);
                 model.addAttribute("offers", pendingData.getContent());
                 model.addAttribute("totalPages", Math.max(1, pendingData.getTotalPages()));
@@ -99,12 +102,14 @@ public class OfferController {
             model.addAttribute("currentTab", currentTab);
             model.addAttribute("currentPage", validPage);
             model.addAttribute("search", search != null ? search.trim() : "");
-            model.addAttribute("currentTimeSort", timeSort != null && !timeSort.isBlank() ? timeSort.trim() : "DEFAULT");
+            model.addAttribute("currentTimeSort",
+                    timeSort != null && !timeSort.isBlank() ? timeSort.trim() : "DEFAULT");
 
             return "offers/director-list";
         }
 
-        Page<OfferResponse> pagedData = offerService.getAllOffersForHr(search, status, timeSort, PageRequest.of(validPage, size));
+        Page<OfferResponse> pagedData = offerService.getAllOffersForHr(search, status, timeSort,
+                PageRequest.of(validPage, size));
         List<PassedCandidateResponse> passedCandidates = offerService.getPassedCandidatesForOffer();
 
         Map<String, Long> stats = offerService.getOfferStats();
@@ -143,10 +148,12 @@ public class OfferController {
                     .findFirst()
                     .ifPresent(c -> {
                         createRequest.setOfferedPositionTitle(c.getAppliedPosition());
-                        createRequest.setWorkLocation(c.getWorkLocation() != null ? c.getWorkLocation() : "Trụ sở chính Mộc RMS");
+                        createRequest.setWorkLocation(
+                                c.getWorkLocation() != null ? c.getWorkLocation() : "Trụ sở chính Mộc RMS");
                         if (c.getRecommendedSalary() != null) {
                             createRequest.setProposedSalary(c.getRecommendedSalary().setScale(0, RoundingMode.HALF_UP));
-                            createRequest.setProbationSalary(c.getRecommendedSalary().multiply(new BigDecimal("0.85")).setScale(0, RoundingMode.HALF_UP));
+                            createRequest.setProbationSalary(c.getRecommendedSalary().multiply(new BigDecimal("0.85"))
+                                    .setScale(0, RoundingMode.HALF_UP));
                         }
                     });
         }
@@ -157,7 +164,8 @@ public class OfferController {
     }
 
     /**
-     * 3a. SUBMIT CREATE VIA AJAX (JSON): Tiếp nhận request từ pop-up Modal trên trang danh sách
+     * 3a. SUBMIT CREATE VIA AJAX (JSON): Tiếp nhận request từ pop-up Modal trên
+     * trang danh sách
      */
     @PostMapping(value = "/create", consumes = MediaType.APPLICATION_JSON_VALUE)
     @ResponseBody
@@ -168,7 +176,7 @@ public class OfferController {
             boolean isDraft = Boolean.TRUE.equals(createRequest.getIsDraft());
             String msg = isDraft
                     ? "Lưu bản thảo Offer (Draft) thành công!"
-                    : "Đã nộp trình đề xuất Offer lên Giám đốc (Pending_Director) thành công!";
+                    : "Đã nộp trình đề xuất Offer lên Giám đốc thành công!";
             return ResponseEntity.status(HttpStatus.CREATED).body(new ApiResponse<>(true, msg, created));
         } catch (BaseBusinessException e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ApiResponse<>(false, e.getMessage()));
@@ -176,7 +184,8 @@ public class OfferController {
     }
 
     /**
-     * 3b. SUBMIT CREATE: Tiếp nhận form tạo mới Offer (Save Draft hoặc Submit Director)
+     * 3b. SUBMIT CREATE: Tiếp nhận form tạo mới Offer (Save Draft hoặc Submit
+     * Director)
      */
     @PostMapping("/create")
     public String createOffer(
@@ -196,7 +205,7 @@ public class OfferController {
             boolean isDraft = Boolean.TRUE.equals(createRequest.getIsDraft());
             flash.addFlashAttribute("successMessage", isDraft
                     ? "Lưu bản thảo Offer (Draft) thành công!"
-                    : "Đã nộp trình đề xuất Offer lên Giám đốc (Pending_Director) thành công!");
+                    : "Đã nộp trình đề xuất Offer lên Giám đốc thành công!");
             return "redirect:/offers";
         } catch (BaseBusinessException e) {
             errors.reject("businessError", e.getMessage());
@@ -207,7 +216,8 @@ public class OfferController {
     }
 
     /**
-     * 4a. VIEW DETAIL VIA AJAX (JSON): Trả về chi tiết Offer cho pop-up Modal trên trang danh sách
+     * 4a. VIEW DETAIL VIA AJAX (JSON): Trả về chi tiết Offer cho pop-up Modal trên
+     * trang danh sách
      */
     @GetMapping(value = "/{id}", produces = MediaType.APPLICATION_JSON_VALUE)
     @ResponseBody
@@ -338,27 +348,31 @@ public class OfferController {
     }
 
     /**
-     * 8a. SEND OFFER VIA AJAX (JSON): Phát hành Offer Letter tới ứng viên từ pop-up Modal
+     * 8a. SEND OFFER VIA AJAX (JSON): Phát hành Offer Letter tới ứng viên từ pop-up
+     * Modal
      */
     @PostMapping(value = "/{id}/send", produces = MediaType.APPLICATION_JSON_VALUE)
     @ResponseBody
     public ResponseEntity<ApiResponse<OfferResponse>> sendOfferToCandidateJson(@PathVariable Integer id) {
         try {
             OfferResponse sentOffer = offerService.sendOfferToCandidate(id);
-            return ResponseEntity.ok(new ApiResponse<>(true, "Đã phát hành và gửi thư mời nhận việc (Offer Letter) tới ứng viên thành công!", sentOffer));
+            return ResponseEntity.ok(new ApiResponse<>(true,
+                    "Đã phát hành và gửi thư mời nhận việc (Offer Letter) tới ứng viên thành công!", sentOffer));
         } catch (BaseBusinessException e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ApiResponse<>(false, e.getMessage()));
         }
     }
 
     /**
-     * 8b. SEND OFFER: HR phát hành thư mời làm việc cho Candidate (Khi Status == Director_Approved)
+     * 8b. SEND OFFER: HR phát hành thư mời làm việc cho Candidate (Khi Status ==
+     * Director_Approved)
      */
     @PostMapping("/{id}/send")
     public String sendOfferToCandidate(@PathVariable Integer id, RedirectAttributes flash) {
         try {
             offerService.sendOfferToCandidate(id);
-            flash.addFlashAttribute("successMessage", "Đã phát hành và gửi thư mời nhận việc (Offer Letter) tới ứng viên thành công!");
+            flash.addFlashAttribute("successMessage",
+                    "Đã phát hành và gửi thư mời nhận việc (Offer Letter) tới ứng viên thành công!");
         } catch (BaseBusinessException e) {
             flash.addFlashAttribute("errorMessage", e.getMessage());
         }
@@ -432,19 +446,20 @@ public class OfferController {
     }
 
     /**
-     * 10. EXPORT EXCEL: Xuất dữ liệu Offer theo phạm vi và bộ cột được chọn (Screen 30)
+     * 10. EXPORT EXCEL: Xuất dữ liệu Offer theo phạm vi và bộ cột được chọn (Screen
+     * 30)
      */
     @PostMapping("/export")
     public org.springframework.http.ResponseEntity<byte[]> exportOffers(
             @Valid @RequestBody com.group2.rms.offer.dto.OfferExportRequest request,
             Principal principal) {
         if (principal instanceof org.springframework.security.core.Authentication auth) {
-            boolean isAuthorized = auth.getAuthorities().stream().anyMatch(a ->
-                    "ROLE_HR".equals(a.getAuthority())
-                            || "ROLE_DIRECTOR".equals(a.getAuthority())
-                            || com.group2.rms.core.security.RoleAuthorities.SYSTEM_ADMIN.equals(a.getAuthority()));
+            boolean isAuthorized = auth.getAuthorities().stream().anyMatch(a -> "ROLE_HR".equals(a.getAuthority())
+                    || "ROLE_DIRECTOR".equals(a.getAuthority())
+                    || com.group2.rms.core.security.RoleAuthorities.SYSTEM_ADMIN.equals(a.getAuthority()));
             if (!isAuthorized) {
-                return org.springframework.http.ResponseEntity.status(org.springframework.http.HttpStatus.FORBIDDEN).build();
+                return org.springframework.http.ResponseEntity.status(org.springframework.http.HttpStatus.FORBIDDEN)
+                        .build();
             }
         }
         String exportedBy = principal != null ? principal.getName() : "HR";
@@ -452,8 +467,10 @@ public class OfferController {
         String filename = offerExportService.generateExportFilename(request);
 
         return org.springframework.http.ResponseEntity.ok()
-                .header(org.springframework.http.HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + filename + "\"")
-                .header(org.springframework.http.HttpHeaders.CONTENT_TYPE, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
+                .header(org.springframework.http.HttpHeaders.CONTENT_DISPOSITION,
+                        "attachment; filename=\"" + filename + "\"")
+                .header(org.springframework.http.HttpHeaders.CONTENT_TYPE,
+                        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
                 .body(excelBytes);
     }
 }

@@ -913,13 +913,15 @@ class OfferServiceTests {
     }
 
     @Test
-    @DisplayName("sendOfferToCandidate: HR gửi Offer đã duyệt cho ứng viên thành công, đổi trạng thái Application sang Offered")
+    @DisplayName("sendOfferToCandidate: HR gửi Offer đã duyệt cho ứng viên thành công, tính deadline và đổi trạng thái Application sang Offered")
     void testSendOfferToCandidate_approvedStatus_success() {
         Application app = Application.builder().applicationId(10).applicationStatus("Interview_Passed").build();
         OfferProposal offer = OfferProposal.builder()
                 .offerId(1)
                 .application(app)
                 .offerStatus("Approved")
+                .responsePeriodDays(5)
+                .expectedStartDate(LocalDate.now().plusDays(10))
                 .build();
 
         when(offerProposalRepository.findById(1)).thenReturn(Optional.of(offer));
@@ -930,6 +932,8 @@ class OfferServiceTests {
         assertNotNull(response);
         assertEquals("Sent_Candidate", response.getOfferStatus());
         assertEquals("Offered", app.getApplicationStatus());
+        assertEquals(5, response.getResponsePeriodDays());
+        assertNotNull(response.getResponseDeadline());
         verify(applicationRepository).save(app);
         verify(offerMailSender).sendOfferLetterToCandidate(offer);
     }
@@ -950,6 +954,43 @@ class OfferServiceTests {
 
         assertEquals("OFFER_NOT_APPROVED", ex.getErrorCode());
         assertTrue(ex.getMessage().contains("Chỉ được gửi thư mời nhận việc khi Offer đã được Director phê duyệt"));
+    }
+
+    @Test
+    @DisplayName("sendOfferToCandidate: Offer thiếu responsePeriodDays ném OfferValidationException")
+    void testSendOfferToCandidate_missingResponsePeriodDays_throwsOfferValidationException() {
+        OfferProposal offer = OfferProposal.builder()
+                .offerId(1)
+                .offerStatus("Director_Approved")
+                .responsePeriodDays(null)
+                .build();
+
+        when(offerProposalRepository.findById(1)).thenReturn(Optional.of(offer));
+
+        OfferValidationException ex = assertThrows(OfferValidationException.class, () -> {
+            offerService.sendOfferToCandidate(1);
+        });
+
+        assertTrue(ex.getMessage().contains("thời gian phản hồi"));
+    }
+
+    @Test
+    @DisplayName("sendOfferToCandidate: Thời hạn phản hồi rơi vào hoặc sau ngày bắt đầu dự kiến ném OfferValidationException")
+    void testSendOfferToCandidate_deadlineNotBeforeExpectedStartDate_throwsOfferValidationException() {
+        OfferProposal offer = OfferProposal.builder()
+                .offerId(1)
+                .offerStatus("Director_Approved")
+                .responsePeriodDays(5)
+                .expectedStartDate(LocalDate.now().plusDays(3)) // 5 ngày phản hồi > 3 ngày bắt đầu
+                .build();
+
+        when(offerProposalRepository.findById(1)).thenReturn(Optional.of(offer));
+
+        OfferValidationException ex = assertThrows(OfferValidationException.class, () -> {
+            offerService.sendOfferToCandidate(1);
+        });
+
+        assertTrue(ex.getMessage().contains("trước ngày bắt đầu dự kiến"));
     }
     @Test
     @DisplayName("approveOfferByDirector: Director phê duyệt Offer thành công")

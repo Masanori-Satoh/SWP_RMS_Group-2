@@ -724,13 +724,17 @@ for day_idx in range(num_days):
                     offer_created_dt = (int_end_dt + datetime.timedelta(days=1)).strftime("%Y-%m-%d %H:%M:%S")
                     
                     off_status = random.choice(["Accepted", "Accepted", "Director_Approved", "Sent_Candidate", "Declined"])
+                    off_app_dt_obj = datetime.datetime.strptime(offer_created_dt, "%Y-%m-%d %H:%M:%S") + datetime.timedelta(hours=6)
+                    off_app_dt = off_app_dt_obj.strftime("%Y-%m-%d %H:%M:%S")
+                    resp_period_days = 5
+                    off_deadline_dt = (off_app_dt_obj + datetime.timedelta(days=resp_period_days)).strftime("%Y-%m-%d %H:%M:%S")
+
                     lines.append(
-                        f"INSERT INTO OfferProposal (ApplicationId, OfferedPositionTitle, ProposedSalary, ProbationSalary, ExpectedStartDate, WorkLocation, BenefitsPackage, OfferStatus, ProposedBy, CreatedAt) "
-                        f"VALUES ({c['app_id']}, N'{off_title}', {prop_sal:.2f}, {prob_sal:.2f}, '{exp_start_date}', N'Tầng 8, Tòa nhà RMS Tower, Duy Tân, Cầu Giấy, Hà Nội', N'Bảo hiểm PVI, 14 ngày phép năm, thưởng dự án, xét lương 2 lần/năm', N'{off_status}', 3, '{offer_created_dt}');"
+                        f"INSERT INTO OfferProposal (ApplicationId, OfferedPositionTitle, ProposedSalary, ProbationSalary, ExpectedStartDate, WorkLocation, BenefitsPackage, OfferStatus, ResponsePeriodDays, ResponseDeadline, ProposedBy, CreatedAt) "
+                        f"VALUES ({c['app_id']}, N'{off_title}', {prop_sal:.2f}, {prob_sal:.2f}, '{exp_start_date}', N'Tầng 8, Tòa nhà RMS Tower, Duy Tân, Cầu Giấy, Hà Nội', N'Bảo hiểm PVI, 14 ngày phép năm, thưởng dự án, xét lương 2 lần/năm', N'{off_status}', {resp_period_days}, '{off_deadline_dt}', 3, '{offer_created_dt}');"
                     )
                     
                     # OfferApproval (DirectorId = 2)
-                    off_app_dt = (datetime.datetime.strptime(offer_created_dt, "%Y-%m-%d %H:%M:%S") + datetime.timedelta(hours=6)).strftime("%Y-%m-%d %H:%M:%S")
                     lines.append(
                         f"INSERT INTO OfferApproval (OfferId, DirectorId, [Status], DirectorComments, ApprovedAt) "
                         f"VALUES ({off_id}, 2, N'Approved', N'Phê duyệt mức đãi ngộ theo đề xuất của HR và HM.', '{off_app_dt}');"

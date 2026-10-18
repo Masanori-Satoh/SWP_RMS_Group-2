@@ -45,7 +45,10 @@ public class CandidateOfferController {
     public String declinePage(@PathVariable Integer id, Model model, RedirectAttributes redirect) {
         CandidateOfferDetailResponse offer = candidateOffers.getDetail(id);
         if (!offer.canRespond()) {
-            redirect.addFlashAttribute("errorMessage", "Thư mời này đã được trả lời nên không thể thay đổi.");
+            String msg = "Đã quá hạn phản hồi".equals(offer.statusLabel())
+                    ? "Thư mời này đã quá ngày bắt đầu nhận việc dự kiến, không thể phản hồi nữa."
+                    : "Thư mời này đã được trả lời nên không thể thay đổi.";
+            redirect.addFlashAttribute("errorMessage", msg);
             return "redirect:/portal/offers/" + id;
         }
         model.addAttribute("offer", offer);

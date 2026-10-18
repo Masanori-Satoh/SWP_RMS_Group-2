@@ -5,7 +5,7 @@ Tài liệu này là lịch sử tóm tắt các thay đổi quan trọng và b�
 ## Lịch sử Thay đổi
 
 | Ngày | Tên công việc / Yêu cầu chính | Người thực hiện | Chi tiết thay đổi |
-| :--- | :--- | :--- | :--- |
+| **2026-10-17** | Hạn phản hồi Offer, tái thiết kế chi tiết duyệt Director & chuẩn hóa Flash Toast 2s | HuyenPT | [Xem chi tiết](../members/huyenpt/pr-description.md) |
 | **2026-10-17** | Hoàn thiện đề xuất HM bằng Application/HM_Suggested, UI và kiểm thử tích hợp | LinhDN | [Tổng hợp tài liệu](../members/linhdn/README.md) · [Chức năng và kiểm chứng](../members/linhdn/2026-10-17-hm-suggestions-functional.md) |
 | **2026-10-16** | Tinh chỉnh Giao diện Quản lý Hồ sơ Ứng tuyển & Tuân thủ Kiến trúc Tuyệt đối | Nhóm 2 | [Xem chi tiết](../members/linhdn/2026-10-16-candidate-pipeline-ui-refinement.md) |
 | **2026-10-13** | Chuyển đổi Tạo mới & Xem chi tiết Offer sang Màn hình chuyên biệt | HuyenPT | [Xem chi tiết](work_logs/2026-10-13-convert-popup-to-screen.md) |
