@@ -23,7 +23,7 @@ public class PasswordRecoveryService {
     private static final String RESET_STATE = PasswordRecoveryService.class.getName() + ".RESET_STATE";
 
     private static final Duration OTP_LIFETIME = Duration.ofMinutes(15);
-    private static final Duration RESEND_DELAY = Duration.ofMinutes(5);
+    private static final Duration RESEND_DELAY = Duration.ofMinutes(20);
     private static final int MAX_FAILED_ATTEMPTS = 5;
 
     private final PasswordResetService resetService;
@@ -54,10 +54,10 @@ public class PasswordRecoveryService {
         if (!emailSender.isConfigured()) {
             throw new PasswordRecoveryUnavailableException();
         }
-        AccountSnapshotResponse  account = resetService.findActiveAccount(email);
+        AccountSnapshotResponse account = resetService.findActiveAccount(email);
         // get time now
         Instant now = clock.instant();
-        //revmove if time reset is expired
+        // revmove if time reset is expired
         sendCooldowns.values().removeIf(time -> !now.isBefore(time));
         // get time next allowed
         Instant nextAllowed = sendCooldowns.get(account.userId());
@@ -175,7 +175,7 @@ public class PasswordRecoveryService {
         }
 
         Instant nextAllowed = sendCooldowns.get(state.account.userId());
-        //check if not send otp
+        // check if not send otp
         if (nextAllowed == null) {
             return 0;
         }
@@ -203,7 +203,8 @@ public class PasswordRecoveryService {
         ResetState state = liveState(session);
         // check if account is change or state is changed
         if (state == null) {
-            throw new PasswordRecoveryFlowException(Step.FORGOT,null,"RESET_REQUEST_INVALID", "Your reset request is invalid or expired. Request a new code.");
+            throw new PasswordRecoveryFlowException(Step.FORGOT, null, "RESET_REQUEST_INVALID",
+                    "Your reset request is invalid or expired. Request a new code.");
         }
 
         return state;
@@ -216,7 +217,7 @@ public class PasswordRecoveryService {
 
     private static final class ResetState {
 
-        private final AccountSnapshotResponse  account;
+        private final AccountSnapshotResponse account;
         private final Instant expiresAt;
 
         private String otpHash;
@@ -224,7 +225,7 @@ public class PasswordRecoveryService {
         private boolean verified;
 
         private ResetState(
-                AccountSnapshotResponse  account,
+                AccountSnapshotResponse account,
                 String otpHash,
                 Instant expiresAt) {
 
