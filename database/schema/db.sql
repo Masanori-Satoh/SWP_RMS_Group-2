@@ -139,7 +139,6 @@ CREATE TABLE JobRequisition (
     ProbationDays          INT NULL,                -- số ngày thử việc (1..180)
     WorkModel              NVARCHAR(20) NOT NULL CONSTRAINT DF_JobRequisition_WorkModel DEFAULT N'On-site',
     WorkLocation           NVARCHAR(255) NULL,
-    ExpectedStartDate      DATE NULL,
     ApprovalStatus         NVARCHAR(30) NOT NULL CONSTRAINT DF_JobRequisition_ApprovalStatus DEFAULT N'Draft',
     SubmittedAt            DATETIME2 NULL,          -- [MỚI]
     ClosedAt               DATETIME2 NULL,          -- [MỚI]
