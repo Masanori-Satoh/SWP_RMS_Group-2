@@ -656,12 +656,6 @@ function renderDetailFooterHtml(d) {
                 <i class="fa-solid fa-paper-plane" style="margin-right:4px;"></i> Phát hành Offer Letter
             </button>
         `;
-    } else if (d.offerStatus === 'Director_Rejected' || d.offerStatus === 'Rejected') {
-        btns += `
-            <button type="button" class="btn btn-primary" onclick="openEditOfferModal(${d.offerId})">
-                <i class="fa-solid fa-pen-to-square" style="margin-right:4px;"></i> Chỉnh sửa & Trình lại
-            </button>
-        `;
     }
 
     return btns;
@@ -695,9 +689,6 @@ function openEditOfferModal(offerId) {
         startDateInput.min = getTomorrowDateString();
     }
 
-    const rejectBanner = document.getElementById('editRejectBanner');
-    if (rejectBanner) rejectBanner.style.display = 'none';
-
     openModal('editOfferModal');
 
     fetch(`/offers/${offerId}`, {
@@ -717,6 +708,13 @@ function openEditOfferModal(offerId) {
         .then(res => {
             if (res && res.success && res.data) {
                 const d = res.data;
+
+                if (d.offerStatus !== 'Draft') {
+                    closeModal('editOfferModal');
+                    showToast(`Chỉ được phép chỉnh sửa đề xuất khi ở trạng thái Bản thảo (Draft). Trạng thái hiện tại: ${d.offerStatus}`, 'warning');
+                    return;
+                }
+
                 const setVal = (id, val) => {
                     const el = document.getElementById(id);
                     if (el) el.value = val != null ? val : '';
@@ -730,21 +728,6 @@ function openEditOfferModal(offerId) {
                 setVal('editStartDate', d.expectedStartDate);
                 setVal('editWorkLocation', d.workLocation);
                 setVal('editBenefits', d.benefitsPackage);
-
-                if (d.offerStatus === 'Director_Rejected' || d.offerStatus === 'Rejected') {
-                    let rejectComment = 'Không có ghi chú thêm.';
-                    if (d.approvalHistory && d.approvalHistory.length > 0) {
-                        const lastReject = d.approvalHistory
-                            .filter(a => a.status === 'Rejected' || a.status === 'Director_Rejected')
-                            .pop();
-                        if (lastReject && lastReject.directorComments) {
-                            rejectComment = lastReject.directorComments;
-                        }
-                    }
-                    const commentEl = document.getElementById('editRejectComment');
-                    if (commentEl) commentEl.textContent = rejectComment;
-                    if (rejectBanner) rejectBanner.style.display = 'flex';
-                }
 
                 editValidateProbation();
             } else {

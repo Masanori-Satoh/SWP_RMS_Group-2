@@ -437,4 +437,46 @@ class OfferIntegrationTests {
                 .andExpect(content().string(org.hamcrest.Matchers.containsString("Ngày bắt đầu dự kiến không hợp lệ.")))
                 .andExpect(content().string(org.hamcrest.Matchers.not(org.hamcrest.Matchers.containsString("Failed to convert property value"))));
     }
+
+    // =========================================================================
+    // EXTENDED INTEGRATION TESTS (English)
+    // =========================================================================
+
+    @Test
+    @DisplayName("IT-22 POST /offers/{id}/approve: Candidate role calling director approve endpoint is forbidden (HTTP 403)")
+    @WithMockUser(username = "cand_user", roles = {"CANDIDATE"})
+    void it22_candidateApproveOffer_isForbidden() throws Exception {
+        DirectorDecisionRequest req = new DirectorDecisionRequest("Approve");
+        mvc.perform(post("/offers/1/approve")
+                        .with(csrf())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(req)))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    @DisplayName("IT-23 POST /offers/{id}/reject: Candidate role calling director reject endpoint is forbidden (HTTP 403)")
+    @WithMockUser(username = "cand_user", roles = {"CANDIDATE"})
+    void it23_candidateRejectOffer_isForbidden() throws Exception {
+        DirectorDecisionRequest req = new DirectorDecisionRequest("Reject");
+        mvc.perform(post("/offers/1/reject")
+                        .with(csrf())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(req)))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    @DisplayName("IT-24 GET /offers with negative page number: Normalizes page number to 0 and returns OK")
+    @WithMockUser(username = "hr_specialist", roles = {"HR"})
+    void it24_listOffers_negativePageNumber_normalizesToPageZero() throws Exception {
+        when(offerService.getAllOffersForHr(any(), any(), any(), any()))
+                .thenReturn(new PageImpl<>(Collections.emptyList()));
+        when(offerService.getPassedCandidatesForOffer()).thenReturn(Collections.emptyList());
+
+        mvc.perform(get("/offers").param("page", "-5"))
+                .andExpect(status().isOk())
+                .andExpect(model().attribute("currentPage", 0));
+    }
 }
+
