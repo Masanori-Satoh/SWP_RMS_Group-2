@@ -705,6 +705,47 @@ class OfferServiceTests {
     }
 
     @Test
+    @DisplayName("getUpdateOfferRequestById: When offer is in Draft status, returns UpdateOfferRequest successfully")
+    void testGetUpdateOfferRequestById_draftStatus_returnsRequest() {
+        OfferProposal offer = OfferProposal.builder()
+                .offerId(1)
+                .offeredPositionTitle("Senior Java Engineer")
+                .proposedSalary(new BigDecimal("30000000"))
+                .probationSalary(new BigDecimal("25500000"))
+                .offerStatus("Draft")
+                .expectedStartDate(LocalDate.now().plusDays(10))
+                .workLocation("HQ Office")
+                .build();
+
+        when(offerProposalRepository.findById(1)).thenReturn(Optional.of(offer));
+
+        UpdateOfferRequest req = offerService.getUpdateOfferRequestById(1);
+
+        assertNotNull(req);
+        assertEquals("Senior Java Engineer", req.getOfferedPositionTitle());
+        assertEquals(new BigDecimal("30000000"), req.getProposedSalary());
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"Director_Rejected", "Rejected", "Pending_Director", "Director_Approved", "Sent_Candidate"})
+    @DisplayName("getUpdateOfferRequestById: When offer is not Draft (e.g. Director_Rejected), throws OfferValidationException")
+    void testGetUpdateOfferRequestById_nonDraftStatus_throwsException(String status) {
+        OfferProposal offer = OfferProposal.builder()
+                .offerId(1)
+                .offerStatus(status)
+                .build();
+
+        when(offerProposalRepository.findById(1)).thenReturn(Optional.of(offer));
+
+        OfferValidationException ex = assertThrows(OfferValidationException.class, () -> {
+            offerService.getUpdateOfferRequestById(1);
+        });
+
+        assertEquals("OFFER_STATUS_INVALID", ex.getErrorCode());
+        assertTrue(ex.getMessage().contains("Draft"));
+    }
+
+    @Test
     @DisplayName("getOfferById: Tìm thấy Offer thành công trả về OfferResponse")
     void testGetOfferById_found_returnsOfferResponse() {
         OfferProposal offer = OfferProposal.builder()
@@ -1120,4 +1161,390 @@ class OfferServiceTests {
         // Trạng thái hiển thị phải là Accepted (trạng thái vòng đời thực tế), KHÔNG bị đè thành "Approved"
         assertEquals("Accepted", history.getContent().get(0).getOfferStatus());
     }
+
+    // =========================================================================
+    // EXTENDED UNIT TESTS (English)
+    // =========================================================================
+
+    @ParameterizedTest
+    @ValueSource(strings = {"", "   "})
+    @DisplayName("rejectOfferByDirector: Accepts blank or whitespace comments and sets status to Director_Rejected")
+    void rejectOfferByDirector_blankComments_succeeds(String comments) {
+        OfferProposal offer = OfferProposal.builder()
+                .offerId(1)
+                .offerStatus("Pending_Director")
+                .build();
+
+        when(offerProposalRepository.findById(1)).thenReturn(Optional.of(offer));
+        when(offerProposalRepository.save(any(OfferProposal.class))).thenAnswer(i -> i.getArgument(0));
+
+        Role role = Role.builder().roleId(1).roleName("Director").build();
+        User mockUser = User.builder().userId(5).username("director1").role(role).build();
+        when(userRepository.findByUsernameIgnoreCase(any())).thenReturn(Optional.of(mockUser));
+
+        org.springframework.security.core.context.SecurityContextHolder.getContext().setAuthentication(
+                new org.springframework.security.authentication.UsernamePasswordAuthenticationToken(
+                        "director1", "password", Collections.emptyList()));
+
+        OfferResponse response = offerService.rejectOfferByDirector(1, comments);
+
+        assertNotNull(response);
+        assertEquals("Director_Rejected", response.getOfferStatus());
+        verify(offerApprovalRepository).save(any(OfferApproval.class));
+    }
+
+    @Test
+    @DisplayName("rejectOfferByDirector: Accepts null comments and sets status to Director_Rejected")
+    void rejectOfferByDirector_nullComments_succeeds() {
+        OfferProposal offer = OfferProposal.builder()
+                .offerId(1)
+                .offerStatus("Pending_Director")
+                .build();
+
+        when(offerProposalRepository.findById(1)).thenReturn(Optional.of(offer));
+        when(offerProposalRepository.save(any(OfferProposal.class))).thenAnswer(i -> i.getArgument(0));
+
+        Role role = Role.builder().roleId(1).roleName("Director").build();
+        User mockUser = User.builder().userId(5).username("director1").role(role).build();
+        when(userRepository.findByUsernameIgnoreCase(any())).thenReturn(Optional.of(mockUser));
+
+        org.springframework.security.core.context.SecurityContextHolder.getContext().setAuthentication(
+                new org.springframework.security.authentication.UsernamePasswordAuthenticationToken(
+                        "director1", "password", Collections.emptyList()));
+
+        OfferResponse response = offerService.rejectOfferByDirector(1, null);
+
+        assertNotNull(response);
+        assertEquals("Director_Rejected", response.getOfferStatus());
+        verify(offerApprovalRepository).save(any(OfferApproval.class));
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"Draft", "Director_Approved", "Director_Rejected", "Sent_Candidate", "Accepted", "Declined"})
+    @DisplayName("rejectOfferByDirector: When offer is not in Pending_Director, throws OfferValidationException")
+    void rejectOfferByDirector_whenNotPendingDirector_throwsException(String invalidStatus) {
+        OfferProposal offer = OfferProposal.builder()
+                .offerId(1)
+                .offerStatus(invalidStatus)
+                .build();
+
+        when(offerProposalRepository.findById(1)).thenReturn(Optional.of(offer));
+
+        OfferValidationException ex = assertThrows(OfferValidationException.class, () ->
+                offerService.rejectOfferByDirector(1, "Reject reason"));
+
+        assertEquals("OFFER_STATUS_INVALID", ex.getErrorCode());
+        verify(offerProposalRepository, never()).save(any());
+        verify(offerApprovalRepository, never()).save(any());
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"Draft", "Director_Approved", "Director_Rejected", "Sent_Candidate", "Accepted", "Declined"})
+    @DisplayName("approveOfferByDirector: When offer is not in Pending_Director, throws OfferValidationException")
+    void approveOfferByDirector_whenNotPendingDirector_throwsException(String invalidStatus) {
+        OfferProposal offer = OfferProposal.builder()
+                .offerId(1)
+                .offerStatus(invalidStatus)
+                .build();
+
+        when(offerProposalRepository.findById(1)).thenReturn(Optional.of(offer));
+
+        OfferValidationException ex = assertThrows(OfferValidationException.class, () ->
+                offerService.approveOfferByDirector(1, "Approve reason"));
+
+        assertEquals("OFFER_STATUS_INVALID", ex.getErrorCode());
+        verify(offerProposalRepository, never()).save(any());
+        verify(offerApprovalRepository, never()).save(any());
+    }
+
+    @ParameterizedTest
+    @ValueSource(ints = {0, -1, -5})
+    @DisplayName("createOfferByHr: Non-positive responsePeriodDays throws OfferValidationException")
+    void createOfferByHr_nonPositiveResponsePeriodDays_throwsException(int days) {
+        CreateOfferRequest request = CreateOfferRequest.builder()
+                .applicationId(1)
+                .offeredPositionTitle("Engineer")
+                .proposedSalary(new BigDecimal("20000000"))
+                .probationSalary(new BigDecimal("17000000"))
+                .probationDays(60)
+                .expectedStartDate(LocalDate.now().plusDays(10))
+                .workLocation("Hanoi Office")
+                .responsePeriodDays(days)
+                .build();
+
+        OfferValidationException ex = assertThrows(OfferValidationException.class, () ->
+                offerService.createOfferByHr(request));
+
+        assertTrue(ex.getMessage().contains("Thời gian phản hồi phải lớn hơn 0"));
+        verify(offerProposalRepository, never()).save(any());
+    }
+
+    @ParameterizedTest
+    @CsvSource({
+            "1, true",
+            "60, true",
+            "0, false",
+            "-1, false",
+            "61, false"
+    })
+    @DisplayName("CreateOfferRequest: Bean validation boundary check for responsePeriodDays [1..60]")
+    void createOfferRequest_responsePeriodDaysBoundaries(int days, boolean expectedValid) {
+        Validator validator = Validation.buildDefaultValidatorFactory().getValidator();
+
+        CreateOfferRequest request = CreateOfferRequest.builder()
+                .applicationId(10)
+                .offeredPositionTitle("Java Engineer")
+                .proposedSalary(new BigDecimal("20000000"))
+                .probationSalary(new BigDecimal("17000000"))
+                .probationDays(60)
+                .expectedStartDate(LocalDate.now().plusDays(15))
+                .workLocation("Hanoi")
+                .responsePeriodDays(days)
+                .build();
+
+        var violations = validator.validate(request);
+        boolean hasViolation = violations.stream()
+                .anyMatch(v -> v.getPropertyPath().toString().equals("responsePeriodDays"));
+
+        assertEquals(!expectedValid, hasViolation, "Validation status for responsePeriodDays=" + days);
+    }
+
+    @ParameterizedTest
+    @CsvSource({
+            "1, true",
+            "60, true",
+            "0, false",
+            "-1, false",
+            "61, false"
+    })
+    @DisplayName("UpdateOfferRequest: Bean validation boundary check for responsePeriodDays [1..60]")
+    void updateOfferRequest_responsePeriodDaysBoundaries(int days, boolean expectedValid) {
+        Validator validator = Validation.buildDefaultValidatorFactory().getValidator();
+
+        UpdateOfferRequest request = UpdateOfferRequest.builder()
+                .offeredPositionTitle("Java Engineer")
+                .proposedSalary(new BigDecimal("20000000"))
+                .probationSalary(new BigDecimal("17000000"))
+                .probationDays(60)
+                .expectedStartDate(LocalDate.now().plusDays(15))
+                .workLocation("Hanoi")
+                .responsePeriodDays(days)
+                .build();
+
+        var violations = validator.validate(request);
+        boolean hasViolation = violations.stream()
+                .anyMatch(v -> v.getPropertyPath().toString().equals("responsePeriodDays"));
+
+        assertEquals(!expectedValid, hasViolation, "Validation status for responsePeriodDays=" + days);
+    }
+
+    @Test
+    @DisplayName("sendOfferToCandidate: When calculated deadline equals expectedStartDate, throws OfferValidationException")
+    void sendOfferToCandidate_calculatedDeadlineEqualsExpectedStartDate_throwsValidationException() {
+        int days = 5;
+        LocalDate expectedStartDate = LocalDate.now().plusDays(days);
+        OfferProposal offer = OfferProposal.builder()
+                .offerId(1)
+                .offerStatus("Director_Approved")
+                .responsePeriodDays(days)
+                .expectedStartDate(expectedStartDate)
+                .build();
+
+        when(offerProposalRepository.findById(1)).thenReturn(Optional.of(offer));
+
+        OfferValidationException ex = assertThrows(OfferValidationException.class, () ->
+                offerService.sendOfferToCandidate(1));
+
+        assertTrue(ex.getMessage().contains("trước ngày bắt đầu dự kiến"));
+        verify(offerProposalRepository, never()).save(any());
+    }
+
+    @Test
+    @DisplayName("sendOfferToCandidate: When calculated deadline is strictly before expectedStartDate, issue succeeds")
+    void sendOfferToCandidate_calculatedDeadlineBeforeExpectedStartDate_succeeds() {
+        int days = 3;
+        LocalDate expectedStartDate = LocalDate.now().plusDays(7);
+        Application app = Application.builder().applicationId(20).applicationStatus("Interview_Passed").build();
+        OfferProposal offer = OfferProposal.builder()
+                .offerId(1)
+                .application(app)
+                .offerStatus("Director_Approved")
+                .responsePeriodDays(days)
+                .expectedStartDate(expectedStartDate)
+                .build();
+
+        when(offerProposalRepository.findById(1)).thenReturn(Optional.of(offer));
+        when(offerProposalRepository.save(any(OfferProposal.class))).thenAnswer(i -> i.getArgument(0));
+
+        OfferResponse response = offerService.sendOfferToCandidate(1);
+
+        assertNotNull(response);
+        assertEquals("Sent_Candidate", response.getOfferStatus());
+        assertEquals("Offered", app.getApplicationStatus());
+        assertNotNull(response.getResponseDeadline());
+        verify(applicationRepository).save(app);
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"Draft", "Pending_Director", "Director_Rejected", "Sent_Candidate", "Accepted", "Declined"})
+    @DisplayName("sendOfferToCandidate: From non-approved status throws OfferValidationException and leaves repository untouched")
+    void sendOfferToCandidate_fromNonApprovedStatus_throwsValidationException(String invalidStatus) {
+        OfferProposal offer = OfferProposal.builder()
+                .offerId(1)
+                .offerStatus(invalidStatus)
+                .responsePeriodDays(5)
+                .expectedStartDate(LocalDate.now().plusDays(10))
+                .build();
+
+        when(offerProposalRepository.findById(1)).thenReturn(Optional.of(offer));
+
+        OfferValidationException ex = assertThrows(OfferValidationException.class, () ->
+                offerService.sendOfferToCandidate(1));
+
+        assertEquals("OFFER_NOT_APPROVED", ex.getErrorCode());
+        verify(offerProposalRepository, never()).save(any());
+        verify(applicationRepository, never()).save(any());
+        verifyNoInteractions(offerMailSender);
+    }
+
+    @Test
+    @DisplayName("sendOfferToCandidate: When mail sender throws exception, transaction succeeds and Offer remains Sent_Candidate")
+    void sendOfferToCandidate_whenMailSenderThrowsException_transactionSucceedsAndStatusRemainsSent() {
+        Application app = Application.builder().applicationId(15).applicationStatus("Interview_Passed").build();
+        OfferProposal offer = OfferProposal.builder()
+                .offerId(1)
+                .application(app)
+                .offerStatus("Director_Approved")
+                .responsePeriodDays(5)
+                .expectedStartDate(LocalDate.now().plusDays(10))
+                .build();
+
+        when(offerProposalRepository.findById(1)).thenReturn(Optional.of(offer));
+        when(offerProposalRepository.save(any(OfferProposal.class))).thenAnswer(i -> i.getArgument(0));
+        doThrow(new RuntimeException("SMTP mail service unreachable"))
+                .when(offerMailSender).sendOfferLetterToCandidate(any(OfferProposal.class));
+
+        OfferResponse response = offerService.sendOfferToCandidate(1);
+
+        assertNotNull(response);
+        assertEquals("Sent_Candidate", response.getOfferStatus());
+        assertEquals("Offered", app.getApplicationStatus());
+        verify(applicationRepository).save(app);
+    }
+
+    @Test
+    @DisplayName("approveOfferByDirector: When notification service throws exception, approval still completes successfully")
+    void approveOfferByDirector_whenNotificationThrows_stillCompletesApproval() {
+        OfferProposal offer = OfferProposal.builder()
+                .offerId(1)
+                .offerStatus("Pending_Director")
+                .build();
+
+        when(offerProposalRepository.findById(1)).thenReturn(Optional.of(offer));
+        when(offerProposalRepository.save(any(OfferProposal.class))).thenAnswer(i -> i.getArgument(0));
+
+        Role role = Role.builder().roleId(1).roleName("Director").build();
+        User mockDirector = User.builder().userId(5).username("director1").role(role).build();
+        when(userRepository.findByUsernameIgnoreCase(any())).thenReturn(Optional.of(mockDirector));
+
+        org.springframework.security.core.context.SecurityContextHolder.getContext().setAuthentication(
+                new org.springframework.security.authentication.UsernamePasswordAuthenticationToken(
+                        "director1", "password", Collections.emptyList()));
+
+        doThrow(new RuntimeException("In-app notification system down"))
+                .when(systemNotificationService).notifyDirectorDecisionOnOffer(any(), any(), eq(true), any());
+
+        OfferResponse response = offerService.approveOfferByDirector(1, "Approved with notification down");
+
+        assertNotNull(response);
+        assertEquals("Director_Approved", response.getOfferStatus());
+        verify(offerApprovalRepository).save(any(OfferApproval.class));
+    }
+
+    @Test
+    @DisplayName("rejectOfferByDirector: When notification service throws exception, rejection still completes successfully")
+    void rejectOfferByDirector_whenNotificationThrows_stillCompletesRejection() {
+        OfferProposal offer = OfferProposal.builder()
+                .offerId(1)
+                .offerStatus("Pending_Director")
+                .build();
+
+        when(offerProposalRepository.findById(1)).thenReturn(Optional.of(offer));
+        when(offerProposalRepository.save(any(OfferProposal.class))).thenAnswer(i -> i.getArgument(0));
+
+        Role role = Role.builder().roleId(1).roleName("Director").build();
+        User mockDirector = User.builder().userId(5).username("director1").role(role).build();
+        when(userRepository.findByUsernameIgnoreCase(any())).thenReturn(Optional.of(mockDirector));
+
+        org.springframework.security.core.context.SecurityContextHolder.getContext().setAuthentication(
+                new org.springframework.security.authentication.UsernamePasswordAuthenticationToken(
+                        "director1", "password", Collections.emptyList()));
+
+        doThrow(new RuntimeException("In-app notification system down"))
+                .when(systemNotificationService).notifyDirectorDecisionOnOffer(any(), any(), eq(false), any());
+
+        OfferResponse response = offerService.rejectOfferByDirector(1, "Rejected with notification down");
+
+        assertNotNull(response);
+        assertEquals("Director_Rejected", response.getOfferStatus());
+        verify(offerApprovalRepository).save(any(OfferApproval.class));
+    }
+
+    @Test
+    @DisplayName("sendOfferToCandidate: When offer save throws exception, propagates and never updates Application")
+    void sendOfferToCandidate_whenOfferSaveThrowsException_propagatesAndNeverUpdatesApplication() {
+        Application app = Application.builder().applicationId(15).applicationStatus("Interview_Passed").build();
+        OfferProposal offer = OfferProposal.builder()
+                .offerId(1)
+                .application(app)
+                .offerStatus("Director_Approved")
+                .responsePeriodDays(5)
+                .expectedStartDate(LocalDate.now().plusDays(10))
+                .build();
+
+        when(offerProposalRepository.findById(1)).thenReturn(Optional.of(offer));
+        when(offerProposalRepository.save(any(OfferProposal.class))).thenThrow(new RuntimeException("Database timeout on save"));
+
+        assertThrows(RuntimeException.class, () -> offerService.sendOfferToCandidate(1));
+        verify(applicationRepository, never()).save(any());
+        verifyNoInteractions(offerMailSender);
+    }
+
+    @Test
+    @DisplayName("approveOfferByDirector: When approval history save throws exception, propagates exception")
+    void approveOfferByDirector_whenApprovalSaveThrowsException_propagatesException() {
+        OfferProposal offer = OfferProposal.builder()
+                .offerId(1)
+                .offerStatus("Pending_Director")
+                .build();
+
+        when(offerProposalRepository.findById(1)).thenReturn(Optional.of(offer));
+        when(offerProposalRepository.save(any(OfferProposal.class))).thenAnswer(i -> i.getArgument(0));
+
+        Role role = Role.builder().roleId(1).roleName("Director").build();
+        User mockDirector = User.builder().userId(5).username("director1").role(role).build();
+        when(userRepository.findByUsernameIgnoreCase(any())).thenReturn(Optional.of(mockDirector));
+
+        org.springframework.security.core.context.SecurityContextHolder.getContext().setAuthentication(
+                new org.springframework.security.authentication.UsernamePasswordAuthenticationToken(
+                        "director1", "password", Collections.emptyList()));
+
+        when(offerApprovalRepository.save(any(OfferApproval.class)))
+                .thenThrow(new RuntimeException("DB foreign key error on approval"));
+
+        assertThrows(RuntimeException.class, () -> offerService.approveOfferByDirector(1, "Approved"));
+    }
+
+    @Test
+    @DisplayName("getAllOffersForHr: Blank search string with default status queries active offers via fast-path")
+    void getAllOffersForHr_blankSearch_queriesActiveFastPath() {
+        when(offerProposalRepository.findAllActiveByOrderByOfferIdAsc(any(Pageable.class)))
+                .thenReturn(Page.empty());
+
+        Page<OfferResponse> result = offerService.getAllOffersForHr("   ", "ALL", "DEFAULT", PageRequest.of(0, 10));
+
+        assertNotNull(result);
+        verify(offerProposalRepository).findAllActiveByOrderByOfferIdAsc(any(Pageable.class));
+    }
 }
+

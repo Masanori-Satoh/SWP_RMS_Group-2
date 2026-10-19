@@ -249,7 +249,7 @@ public class OfferController {
     }
 
     /**
-     * 5. EDIT FORM: Màn hình chỉnh sửa Offer (Chỉ cho phép khi Draft hoặc Rejected)
+     * 5. EDIT FORM: Màn hình chỉnh sửa Offer (Chỉ cho phép khi Draft)
      */
     @GetMapping("/{id}/edit")
     public String editOfferForm(@PathVariable Integer id, Model model, RedirectAttributes flash) {
