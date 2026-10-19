@@ -322,6 +322,138 @@ class RegistrationVerificationServiceTests {
         verify(emailSender, times(0)).sendOtp(anyString(), anyString());
     }
 
+    @Test
+    @DisplayName("AUTH-REGISTER-16 | OTP null: báo REGISTER_OTP_INVALID, không so hash hoặc tạo account")
+    void verifyAndRegister_nullCode_rejectsBeforeHashComparison() {
+        // Given
+        requestCode();
+
+        // When
+        RegistrationFlowException error = assertThrows(RegistrationFlowException.class,
+                () -> service.verifyAndRegister(null, session));
+
+        // Then
+        assertEquals("REGISTER_OTP_INVALID", error.getErrorCode());
+        assertEquals(Step.OTP, error.getStep());
+        assertEquals(EMAIL, service.getPendingRegistrationEmail(session));
+        verify(encoder, times(0)).matches(org.mockito.ArgumentMatchers.isNull(), anyString());
+        verify(accounts, times(0)).createCandidateWithPasswordHash(anyString(), anyString(), anyString(), anyString());
+    }
+
+    @Test
+    @DisplayName("AUTH-REGISTER-17 | OTP blank: giữ yêu cầu chờ OTP và không tạo account")
+    void verifyAndRegister_blankCode_doesNotCreateAccount() {
+        // Given
+        requestCode();
+
+        // When
+        RegistrationFlowException error = assertThrows(RegistrationFlowException.class,
+                () -> service.verifyAndRegister("   ", session));
+
+        // Then
+        assertEquals("REGISTER_OTP_INVALID", error.getErrorCode());
+        assertEquals(EMAIL, service.getPendingRegistrationEmail(session));
+        verify(encoder, times(0)).matches(anyString(), anyString());
+        verify(accounts, times(0)).createCandidateWithPasswordHash(anyString(), anyString(), anyString(), anyString());
+    }
+
+    @Test
+    @DisplayName("AUTH-REGISTER-18 | Vừa gửi OTP: UI nhận thời gian cooldown lớn hơn 0 và không quá 300 giây")
+    void getResendRemainingSeconds_pendingRegistration_returnsPositiveCooldown() {
+        // Given: Service dùng Instant.now trực tiếp; kiểm tra khoảng thay vì giá trị phụ thuộc mili giây chạy test.
+        requestCode();
+
+        // When
+        long result = service.getResendRemainingSeconds(session);
+
+        // Then
+        assertEquals(true, result > 0 && result <= 300);
+        verify(emailSender, times(1)).sendOtp(eq(EMAIL), anyString());
+        verify(accounts, times(0)).createCandidateWithPasswordHash(anyString(), anyString(), anyString(), anyString());
+    }
+
+    @Test
+    @DisplayName("AUTH-REGISTER-19 | Hibernate báo UQ_User_Username: chuyển thành conflict và xóa yêu cầu")
+    void verifyAndRegister_hibernateUsernameConstraint_returnsConflictError() {
+        // Given: Tên constraint do Hibernate cung cấp, message không chứa tên username/email.
+        requestCode();
+        when(encoder.matches("123456", HASH)).thenReturn(true);
+        var constraint = new org.hibernate.exception.ConstraintViolationException(
+                "constraint violation", new java.sql.SQLException("duplicate"), "UQ_User_Username");
+        when(accounts.createCandidateWithPasswordHash("Candidate Seven", "candidate7", EMAIL, HASH))
+                .thenThrow(new DataIntegrityViolationException("could not execute statement", constraint));
+
+        // When
+        RegistrationFlowException error = assertThrows(RegistrationFlowException.class,
+                () -> service.verifyAndRegister("123456", session));
+
+        // Then
+        assertEquals("REGISTER_ACCOUNT_CONFLICT", error.getErrorCode());
+        assertEquals(Step.REGISTER, error.getStep());
+        assertThrows(RegistrationFlowException.class, () -> service.getPendingRegistrationEmail(session));
+        verify(accounts, times(1)).createCandidateWithPasswordHash("Candidate Seven", "candidate7", EMAIL, HASH);
+    }
+
+    @Test
+    @DisplayName("AUTH-REGISTER-20 | UQ_User_Email nằm trong cause: vẫn nhận diện conflict và xóa pending")
+    void verifyAndRegister_nestedEmailConstraint_returnsConflictError() {
+        // Given
+        requestCode();
+        when(encoder.matches("123456", HASH)).thenReturn(true);
+        when(accounts.createCandidateWithPasswordHash("Candidate Seven", "candidate7", EMAIL, HASH))
+                .thenThrow(new DataIntegrityViolationException("could not execute statement",
+                        new java.sql.SQLException("UQ_User_Email")));
+
+        // When
+        RegistrationFlowException error = assertThrows(RegistrationFlowException.class,
+                () -> service.verifyAndRegister("123456", session));
+
+        // Then
+        assertEquals("REGISTER_ACCOUNT_CONFLICT", error.getErrorCode());
+        assertThrows(RegistrationFlowException.class, () -> service.getPendingRegistrationEmail(session));
+        verify(accounts, times(1)).createCandidateWithPasswordHash("Candidate Seven", "candidate7", EMAIL, HASH);
+    }
+
+    @Test
+    @DisplayName("AUTH-REGISTER-21 | Hibernate không có tên constraint: giữ lỗi DB, không gán nhầm lỗi trùng account")
+    void verifyAndRegister_unnamedConstraint_preservesDatabaseError() {
+        // Given
+        requestCode();
+        when(encoder.matches("123456", HASH)).thenReturn(true);
+        var constraint = new org.hibernate.exception.ConstraintViolationException(
+                "constraint violation", new java.sql.SQLException("foreign key violation"), null);
+        DataIntegrityViolationException databaseError = new DataIntegrityViolationException("write failed", constraint);
+        when(accounts.createCandidateWithPasswordHash("Candidate Seven", "candidate7", EMAIL, HASH))
+                .thenThrow(databaseError);
+
+        // When
+        DataIntegrityViolationException error = assertThrows(DataIntegrityViolationException.class,
+                () -> service.verifyAndRegister("123456", session));
+
+        // Then
+        assertEquals(databaseError, error);
+        assertEquals(EMAIL, service.getPendingRegistrationEmail(session));
+        verify(accounts, times(1)).createCandidateWithPasswordHash("Candidate Seven", "candidate7", EMAIL, HASH);
+    }
+
+    @Test
+    @DisplayName("AUTH-REGISTER-22 | Lần gửi mail đầu lỗi: cho gửi lại ngay, không để cooldown giả chặn đăng ký")
+    void requestRegistration_deliveryFailure_allowsImmediateRetry() {
+        // Given
+        when(encoder.encode(anyString())).thenReturn(HASH);
+        doThrow(new RegistrationFlowException(Step.REGISTER, null, "REGISTER_EMAIL_DELIVERY_FAILED", "Mail failed."))
+                .doNothing().when(emailSender).sendOtp(eq(EMAIL), anyString());
+        assertThrows(RegistrationFlowException.class, () -> service.requestRegistration(form, session));
+
+        // When
+        service.requestRegistration(form, session);
+
+        // Then
+        assertEquals(EMAIL, service.getPendingRegistrationEmail(session));
+        verify(emailSender, times(2)).sendOtp(eq(EMAIL), anyString());
+        verify(accounts, times(0)).createCandidateWithPasswordHash(anyString(), anyString(), anyString(), anyString());
+    }
+
     // Chỉ tạo yêu cầu OTP trong bộ nhớ. Hai dependency đã được mock.
     private void requestCode() {
         when(encoder.encode(anyString())).thenReturn(HASH);

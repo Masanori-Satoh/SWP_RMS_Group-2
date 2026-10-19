@@ -369,4 +369,104 @@ class PasswordResetServiceTests {
         verify(users, times(0)).saveAndFlush(any(User.class));
         verify(encoder, times(0)).encode(anyString());
     }
+    @Test
+    @DisplayName("AUTH-RESET-23 | Password null: báo PASSWORD_INVALID, không tìm tài khoản hoặc lưu")
+    void changePassword_nullPassword_rejectsBeforeLookup() {
+        // Given: Snapshot và thời hạn hợp lệ, chỉ password bị thiếu.
+        // When
+        PasswordRecoveryFlowException error = assertThrows(PasswordRecoveryFlowException.class,
+                () -> service.changePassword(snapshot, null, EXPIRES_AT));
+
+        // Then
+        assertEquals("PASSWORD_INVALID", error.getErrorCode());
+        assertEquals("password", error.getField());
+        verify(users, times(0)).findByIdForUpdate(any());
+        verify(users, times(0)).saveAndFlush(any(User.class));
+        verify(encoder, times(0)).encode(any());
+    }
+
+    @Test
+    @DisplayName("AUTH-RESET-24 | Password gồm 8 dấu cách: vẫn từ chối dù đủ độ dài tối thiểu")
+    void changePassword_blankPassword_rejectsBeforeLookup() {
+        // Given: Đủ 8 ký tự nhưng tất cả đều là khoảng trắng.
+        // When
+        PasswordRecoveryFlowException error = assertThrows(PasswordRecoveryFlowException.class,
+                () -> service.changePassword(snapshot, "        ", EXPIRES_AT));
+
+        // Then
+        assertEquals("PASSWORD_INVALID", error.getErrorCode());
+        verify(users, times(0)).findByIdForUpdate(any());
+        verify(users, times(0)).saveAndFlush(any(User.class));
+        verify(encoder, times(0)).encode(anyString());
+    }
+
+    @Test
+    @DisplayName("AUTH-RESET-25 | Password đúng 8 ký tự: chấp nhận, mã hóa và lưu một lần")
+    void changePassword_exactlyEightCharacters_savesPassword() {
+        // Given
+        when(users.findByIdForUpdate(7)).thenReturn(Optional.of(account));
+        when(encoder.encode("Abc123!x")).thenReturn("minimum-hash");
+
+        // When
+        service.changePassword(snapshot, "Abc123!x", EXPIRES_AT);
+
+        // Then
+        assertEquals("minimum-hash", account.getPasswordHash());
+        verify(encoder, times(1)).encode("Abc123!x");
+        verify(users, times(1)).saveAndFlush(account);
+    }
+
+    @Test
+    @DisplayName("AUTH-RESET-26 | Password đúng 32 ký tự: chấp nhận tại biên độ dài tối đa")
+    void changePassword_exactlyThirtyTwoCharacters_savesPassword() {
+        // Given
+        String password = "a".repeat(32);
+        when(users.findByIdForUpdate(7)).thenReturn(Optional.of(account));
+        when(encoder.encode(password)).thenReturn("maximum-hash");
+
+        // When
+        service.changePassword(snapshot, password, EXPIRES_AT);
+
+        // Then
+        assertEquals("maximum-hash", account.getPasswordHash());
+        verify(encoder, times(1)).encode(password);
+        verify(users, times(1)).saveAndFlush(account);
+    }
+
+    @Test
+    @DisplayName("AUTH-RESET-27 | Email đổi ngay trước khi lưu: kiểm tra lại snapshot và không đổi password")
+    void changePassword_emailChangedBeforeSave_rejectsStaleSnapshot() {
+        // Given: Tài khoản đọc dưới khóa đã có email mới.
+        account.setEmail("changed@example.test");
+        when(users.findByIdForUpdate(7)).thenReturn(Optional.of(account));
+
+        // When
+        PasswordRecoveryFlowException error = assertThrows(PasswordRecoveryFlowException.class,
+                () -> service.changePassword(snapshot, "NewPass123!", EXPIRES_AT));
+
+        // Then
+        assertEquals("RESET_REQUEST_INVALID", error.getErrorCode());
+        assertEquals("changed@example.test", account.getEmail());
+        assertEquals("old-hash", account.getPasswordHash());
+        verify(encoder, times(0)).encode(anyString());
+        verify(users, times(0)).saveAndFlush(any(User.class));
+    }
+
+    @Test
+    @DisplayName("AUTH-RESET-28 | Account bị Blocked ngay trước khi lưu: giữ hash cũ và không lưu")
+    void changePassword_accountBlockedBeforeSave_doesNotSave() {
+        // Given
+        account.setAccountStatus("Blocked");
+        when(users.findByIdForUpdate(7)).thenReturn(Optional.of(account));
+
+        // When
+        PasswordRecoveryFlowException error = assertThrows(PasswordRecoveryFlowException.class,
+                () -> service.changePassword(snapshot, "NewPass123!", EXPIRES_AT));
+
+        // Then
+        assertEquals("RESET_REQUEST_INVALID", error.getErrorCode());
+        assertEquals("old-hash", account.getPasswordHash());
+        verify(encoder, times(0)).encode(anyString());
+        verify(users, times(0)).saveAndFlush(any(User.class));
+    }
 }

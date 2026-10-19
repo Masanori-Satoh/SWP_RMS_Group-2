@@ -358,6 +358,130 @@ class PasswordRecoveryServiceTests {
         verify(encoder, times(1)).matches("123456", OTP_HASH);
     }
 
+    @Test
+    @DisplayName("AUTH-RECOVERY-19 | OTP null: báo OTP_INVALID, không so hash hoặc đổi mật khẩu")
+    void verifyOtp_nullCode_rejectsBeforeHashComparison() {
+        // Given
+        requestCode();
+        when(resetService.isCurrent(account)).thenReturn(true);
+
+        // When
+        PasswordRecoveryFlowException error = assertThrows(PasswordRecoveryFlowException.class,
+                () -> service.verifyOtp(null, session));
+
+        // Then
+        assertEquals("OTP_INVALID", error.getErrorCode());
+        assertEquals(Step.OTP, error.getStep());
+        assertEquals(false, service.canResetPassword(session));
+        verify(encoder, times(0)).matches(any(), anyString());
+        verify(resetService, times(0)).changePassword(any(), anyString(), any());
+    }
+
+    @Test
+    @DisplayName("AUTH-RECOVERY-20 | OTP blank: giữ trạng thái chờ mã, không so hash")
+    void verifyOtp_blankCode_keepsPendingRequest() {
+        // Given
+        requestCode();
+        when(resetService.isCurrent(account)).thenReturn(true);
+
+        // When
+        PasswordRecoveryFlowException error = assertThrows(PasswordRecoveryFlowException.class,
+                () -> service.verifyOtp("   ", session));
+
+        // Then
+        assertEquals("OTP_INVALID", error.getErrorCode());
+        assertEquals(true, service.hasPendingReset(session));
+        assertEquals(false, service.canResetPassword(session));
+        verify(encoder, times(0)).matches(anyString(), anyString());
+        verify(resetService, times(0)).changePassword(any(), anyString(), any());
+    }
+
+    @Test
+    @DisplayName("AUTH-RECOVERY-21 | Còn 1199,5 giây cooldown: làm tròn lên 1200 giây để UI chưa cho gửi sớm")
+    void getResendRemainingSeconds_fractionalSecond_roundsUp() {
+        // Given
+        requestCode();
+        when(clock.instant()).thenReturn(NOW.plusMillis(500));
+
+        // When
+        long result = service.getResendRemainingSeconds(session);
+
+        // Then
+        assertEquals(1200L, result);
+        verify(emailSender, times(1)).sendOtp(eq(EMAIL), anyString());
+    }
+
+    @Test
+    @DisplayName("AUTH-RECOVERY-22 | Đúng hạn cooldown 20 phút: thời gian chờ bằng 0")
+    void getResendRemainingSeconds_atCooldownBoundary_returnsZero() {
+        // Given
+        requestCode();
+        when(clock.instant()).thenReturn(NOW.plusSeconds(1200));
+
+        // When
+        long result = service.getResendRemainingSeconds(session);
+
+        // Then
+        assertEquals(0L, result);
+        verify(emailSender, times(1)).sendOtp(eq(EMAIL), anyString());
+    }
+
+    @Test
+    @DisplayName("AUTH-RECOVERY-23 | Gửi lại đúng phút 20: gửi email thứ hai và tạo OTP mới còn hạn")
+    void requestReset_atCooldownBoundary_sendsNewCode() {
+        // Given
+        requestCode();
+        when(clock.instant()).thenReturn(NOW.plusSeconds(1200));
+        when(resetService.isCurrent(account)).thenReturn(true);
+
+        // When
+        service.requestReset(EMAIL, session);
+
+        // Then
+        verify(emailSender, times(2)).sendOtp(eq(EMAIL), anyString());
+        assertEquals(true, service.hasPendingReset(session));
+        assertEquals(false, service.canResetPassword(session));
+        assertEquals(EMAIL, service.getPendingResetEmail(session));
+        assertEquals(1200L, service.getResendRemainingSeconds(session));
+    }
+
+    @Test
+    @DisplayName("AUTH-RECOVERY-24 | Ghi nhận vấn đề: OTP hết hạn phút 15 nhưng vẫn phải chờ 300 giây để yêu cầu mã mới")
+    void requestReset_otpExpiredButCooldownActive_documentsFiveMinuteGap() {
+        // Given: Đây là test ghi nhận hành vi hiện tại để báo bug, không khẳng định hành vi đúng nghiệp vụ.
+        requestCode();
+        when(clock.instant()).thenReturn(NOW.plusSeconds(900));
+        assertEquals(false, service.hasPendingReset(session));
+
+        // When
+        PasswordRecoveryFlowException error = assertThrows(PasswordRecoveryFlowException.class,
+                () -> service.requestReset(EMAIL, session));
+
+        // Then: Mã cũ không còn dùng được, nhưng yêu cầu mới vẫn bị chặn thêm 5 phút.
+        assertEquals("RESET_EMAIL_COOLDOWN", error.getErrorCode());
+        assertEquals(300L, error.getRetryAfterSeconds());
+        verify(emailSender, times(1)).sendOtp(eq(EMAIL), anyString());
+        verify(resetService, times(0)).changePassword(any(), anyString(), any());
+    }
+
+    @Test
+    @DisplayName("AUTH-RECOVERY-25 | Trước hạn OTP 1 nano giây: vẫn cho xác minh mã đúng")
+    void verifyOtp_justBeforeExpiry_acceptsCorrectCode() {
+        // Given
+        requestCode();
+        when(clock.instant()).thenReturn(NOW.plusSeconds(900).minusNanos(1));
+        when(resetService.isCurrent(account)).thenReturn(true);
+        when(encoder.matches("123456", OTP_HASH)).thenReturn(true);
+
+        // When
+        service.verifyOtp("123456", session);
+
+        // Then
+        assertEquals(true, service.canResetPassword(session));
+        verify(encoder, times(1)).matches("123456", OTP_HASH);
+        verify(resetService, times(0)).changePassword(any(), anyString(), any());
+    }
+
     private void prepareRequest() {
         when(emailSender.isConfigured()).thenReturn(true);
         when(resetService.findActiveAccount(EMAIL)).thenReturn(account);
