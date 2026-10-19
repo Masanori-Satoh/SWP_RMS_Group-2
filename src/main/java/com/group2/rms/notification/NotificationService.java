@@ -15,6 +15,12 @@ public interface NotificationService {
 
     void notifyOfferLetterSent(OfferProposal offer);
 
+    /** Báo cho Giám đốc khi HR gửi đề xuất Offer để phê duyệt (Pending_Director). */
+    void notifyOfferPendingDirector(OfferProposal offer, User hrActor);
+
+    /** Báo cho HR đề xuất khi Giám đốc phê duyệt hoặc từ chối Offer. */
+    void notifyDirectorDecisionOnOffer(OfferProposal offer, User director, boolean approved, String comments);
+
     void notifyOfferResponseFromCandidate(OfferProposal offer, boolean accepted, String declineReason);
 
     Page<NotificationResponse> getNotificationsForUser(User user, int page, int size);

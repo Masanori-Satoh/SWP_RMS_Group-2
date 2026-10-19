@@ -52,4 +52,13 @@ public interface OfferProposalRepository extends JpaRepository<OfferProposal, In
 
     @Query("SELECT COUNT(o) FROM OfferProposal o WHERE (o.isDeleted IS NULL OR o.isDeleted = false) AND LOWER(o.offerStatus) = 'accepted'")
     long countAccepted();
+
+    @Query("SELECT COUNT(o) FROM OfferProposal o WHERE (o.isDeleted IS NULL OR o.isDeleted = false) AND LOWER(o.offerStatus) = 'declined'")
+    long countDeclined();
+
+    @Query("SELECT COUNT(o) FROM OfferProposal o WHERE (o.isDeleted IS NULL OR o.isDeleted = false) AND LOWER(o.offerStatus) IN ('director_rejected', 'rejected')")
+    long countDirectorRejected();
+
+    @Query("SELECT COUNT(o) FROM OfferProposal o WHERE (o.isDeleted IS NULL OR o.isDeleted = false) AND LOWER(o.offerStatus) != 'draft'")
+    long countAllNonDraft();
 }

@@ -78,28 +78,40 @@ public class OfferController {
 
         int validPage = Math.max(0, page);
         if ("Director".equals(userRole)) {
-            String currentTab = status != null && status.equalsIgnoreCase("HISTORY") ? "HISTORY" : "PENDING";
+            Map<String, Long> statusCounts = offerService.getDirectorStatusCounts();
+            Map<String, Long> directorStats = offerService.getDirectorOfferStats();
 
-            if ("HISTORY".equals(currentTab)) {
-                Page<OfferResponse> historyData = offerService.getDirectorOfferHistory(PageRequest.of(validPage, size));
-                model.addAttribute("offersPage", historyData);
-                model.addAttribute("offers", historyData.getContent());
-                model.addAttribute("totalPages", Math.max(1, historyData.getTotalPages()));
-                model.addAttribute("totalElements", historyData.getTotalElements());
+            String currentTab;
+            String currentStatus;
+
+            if ("HISTORY".equalsIgnoreCase(status)) {
+                currentTab = "HISTORY";
+                currentStatus = "HISTORY";
+            } else if ("PENDING".equalsIgnoreCase(status)) {
+                currentTab = "PENDING";
+                currentStatus = "Pending_Director";
+            } else if (status != null && !status.isBlank()) {
+                currentStatus = status.trim();
+                currentTab = "Pending_Director".equalsIgnoreCase(currentStatus) ? "PENDING" : "HISTORY";
             } else {
-                Page<OfferResponse> pendingData = offerService.getAllOffersForHr(search, "Pending_Director", timeSort,
-                        PageRequest.of(validPage, size));
-                model.addAttribute("offersPage", pendingData);
-                model.addAttribute("offers", pendingData.getContent());
-                model.addAttribute("totalPages", Math.max(1, pendingData.getTotalPages()));
-                model.addAttribute("totalElements", pendingData.getTotalElements());
+                currentTab = "PENDING";
+                currentStatus = "Pending_Director";
             }
 
-            Map<String, Long> directorStats = offerService.getDirectorOfferStats();
+            Page<OfferResponse> directorOffers = offerService.getDirectorOffers(search, currentStatus, timeSort,
+                    PageRequest.of(validPage, size));
+
+            model.addAttribute("offersPage", directorOffers);
+            model.addAttribute("offers", directorOffers.getContent());
+            model.addAttribute("totalPages", Math.max(1, directorOffers.getTotalPages()));
+            model.addAttribute("totalElements", directorOffers.getTotalElements());
+
+            model.addAttribute("statusCounts", statusCounts);
             model.addAttribute("statPending", directorStats.getOrDefault("statPending", 0L));
             model.addAttribute("statApproved", directorStats.getOrDefault("statApproved", 0L));
             model.addAttribute("statRejected", directorStats.getOrDefault("statRejected", 0L));
             model.addAttribute("currentTab", currentTab);
+            model.addAttribute("currentStatus", currentStatus);
             model.addAttribute("currentPage", validPage);
             model.addAttribute("search", search != null ? search.trim() : "");
             model.addAttribute("currentTimeSort",

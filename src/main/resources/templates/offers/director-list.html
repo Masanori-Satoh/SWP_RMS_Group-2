@@ -54,8 +54,12 @@
 
                 <!-- 2 Tabs -->
                 <div class="director-tabs">
-                    <a th:href="@{/offers(status='PENDING')}" th:classappend="${currentTab == 'PENDING'} ? 'active' : ''" class="director-tab">Chờ duyệt</a>
-                    <a th:href="@{/offers(status='HISTORY')}" th:classappend="${currentTab == 'HISTORY'} ? 'active' : ''" class="director-tab">Lịch sử quyết định</a>
+                    <a th:href="@{/offers(status='Pending_Director')}" th:classappend="${currentTab == 'PENDING'} ? 'active' : ''" class="director-tab">
+                        Chờ duyệt (<span th:text="${statusCounts != null ? (statusCounts['Pending_Director'] ?: 0) : statPending}">0</span>)
+                    </a>
+                    <a th:href="@{/offers(status='HISTORY')}" th:classappend="${currentTab == 'HISTORY'} ? 'active' : ''" class="director-tab">
+                        Lịch sử quyết định
+                    </a>
                 </div>
 
                 <!-- Filter Toolbar -->
@@ -71,11 +75,30 @@
                                 <i class="fa-solid fa-xmark"></i>
                             </button>
                         </div>
-                        <!-- Sort by time -->
+
+                        <!-- Lọc theo trạng thái kèm số lượng ứng viên -->
+                        <select id="statusFilter" class="filter-select" onchange="applyDirectorFilters()">
+                            <option value="ALL" th:selected="${currentStatus == 'ALL' or currentStatus == 'HISTORY'}"
+                                    th:text="'-- Tất cả trạng thái -- (' + ${statusCounts != null ? (statusCounts['ALL'] ?: 0) : 0} + ')'">-- Tất cả trạng thái -- (0)</option>
+                            <option value="Pending_Director" th:selected="${currentStatus == 'Pending_Director'}"
+                                    th:text="'Chờ Giám đốc duyệt (' + ${statusCounts != null ? (statusCounts['Pending_Director'] ?: 0) : 0} + ')'">Chờ Giám đốc duyệt (0)</option>
+                            <option value="Director_Approved" th:selected="${currentStatus == 'Director_Approved' or currentStatus == 'Approved'}"
+                                    th:text="'Giám đốc đã duyệt (' + ${statusCounts != null ? (statusCounts['Director_Approved'] ?: 0) : 0} + ')'">Giám đốc đã duyệt (0)</option>
+                            <option value="Sent_Candidate" th:selected="${currentStatus == 'Sent_Candidate'}"
+                                    th:text="'Đã gửi thư mời (' + ${statusCounts != null ? (statusCounts['Sent_Candidate'] ?: 0) : 0} + ')'">Đã gửi thư mời (0)</option>
+                            <option value="Accepted" th:selected="${currentStatus == 'Accepted'}"
+                                    th:text="'Ứng viên chấp nhận (' + ${statusCounts != null ? (statusCounts['Accepted'] ?: 0) : 0} + ')'">Ứng viên chấp nhận (0)</option>
+                            <option value="Declined" th:selected="${currentStatus == 'Declined'}"
+                                    th:text="'Ứng viên từ chối (' + ${statusCounts != null ? (statusCounts['Declined'] ?: 0) : 0} + ')'">Ứng viên từ chối (0)</option>
+                            <option value="Director_Rejected" th:selected="${currentStatus == 'Director_Rejected' or currentStatus == 'Rejected'}"
+                                    th:text="'Giám đốc từ chối (' + ${statusCounts != null ? (statusCounts['Director_Rejected'] ?: 0) : 0} + ')'">Giám đốc từ chối (0)</option>
+                        </select>
+
+                        <!-- Sắp xếp theo thời gian -->
                         <select id="timeSortFilter" class="filter-select" onchange="applyDirectorFilters()">
                             <option value="DEFAULT" th:selected="${currentTimeSort == 'DEFAULT'}">-- Sắp xếp theo thời gian --</option>
-                            <option value="EARLIEST" th:selected="${currentTimeSort == 'EARLIEST'}">Mới nhất</option>
-                            <option value="LATEST" th:selected="${currentTimeSort == 'LATEST'}">Cũ nhất</option>
+                            <option value="LATEST" th:selected="${currentTimeSort == 'LATEST'}">Mới nhất</option>
+                            <option value="EARLIEST" th:selected="${currentTimeSort == 'EARLIEST'}">Cũ nhất</option>
                         </select>
                     </div>
                 </div>
