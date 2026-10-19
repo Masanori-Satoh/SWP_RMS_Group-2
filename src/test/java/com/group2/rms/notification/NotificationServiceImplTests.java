@@ -8,6 +8,7 @@ import com.group2.rms.offer.entity.OfferProposal;
 import com.group2.rms.requisition.entity.JobRequisition;
 import com.group2.rms.requisition.entity.RequisitionApproval;
 import com.group2.rms.user.entity.User;
+import com.group2.rms.user.repository.UserRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -24,6 +25,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 
+import java.math.BigDecimal;
 import java.time.Clock;
 import java.time.Instant;
 import java.time.LocalDateTime;
@@ -54,9 +56,14 @@ class NotificationServiceImplTests {
     private static final ZoneId ZONE = ZoneId.of("Asia/Ho_Chi_Minh");
     private static final Clock CLOCK = Clock.fixed(Instant.parse("2026-10-18T03:00:00Z"), ZONE);
     private static final LocalDateTime NOW = LocalDateTime.now(CLOCK);
+    /** Phần thời gian trong eventId của offer khi lấy giờ hiện tại (định dạng EVENT_TIME của service). */
+    private static final String NOW_KEY = "202610181000000000000";
 
     @Mock
     private NotificationRepository notifications;
+
+    @Mock
+    private UserRepository users;
 
     private NotificationServiceImpl service;
 
@@ -67,7 +74,7 @@ class NotificationServiceImplTests {
 
     @BeforeEach
     void setUp() {
-        service = new NotificationServiceImpl(notifications, CLOCK);
+        service = new NotificationServiceImpl(notifications, users, CLOCK);
         manager = User.builder().userId(10).username("hm").fullName("Trần Thị Quản Lý").build();
         director = User.builder().userId(20).username("director").fullName("Nguyễn Văn Giám Đốc").build();
         hr = User.builder().userId(30).username("hr").fullName("Lê Thị Nhân Sự").build();
@@ -475,7 +482,7 @@ class NotificationServiceImplTests {
             assertEquals("OFFER_LETTER_SENT", saved.getEventType());
             assertEquals("1", saved.getReferenceId());
             assertEquals("/portal/offers/1", saved.getLinkUrl());
-            assertEquals("OFFER_SENT_1", saved.getEventId());
+            assertEquals("OFFER_SENT_1_" + NOW_KEY, saved.getEventId());
             assertEquals("Bạn có thư mời nhận việc mới: Senior Java Engineer", saved.getTitle());
         }
 
@@ -511,7 +518,7 @@ class NotificationServiceImplTests {
         @DisplayName("Cùng thư mời gửi lại (eventId đã có) -> Không tạo thông báo trùng")
         void notifyOfferLetterSent_shouldSkip_whenEventIdAlreadyExists() {
             // Arrange
-            when(notifications.existsByRecipient_UserIdAndEventId(22, "OFFER_SENT_1")).thenReturn(true);
+            when(notifications.existsByRecipient_UserIdAndEventId(22, "OFFER_SENT_1_" + NOW_KEY)).thenReturn(true);
 
             // Act
             service.notifyOfferLetterSent(offer(candidateAccount(), hr, "Java"));
@@ -543,7 +550,7 @@ class NotificationServiceImplTests {
             assertEquals(hr, saved.getRecipient());
             assertEquals(candidate, saved.getActor());
             assertEquals("OFFER_ACCEPTED", saved.getEventType());
-            assertEquals("OFFER_RESP_ACC_1", saved.getEventId());
+            assertEquals("OFFER_RESP_ACC_1_" + NOW_KEY, saved.getEventId());
             assertEquals("/offers", saved.getLinkUrl());
             assertTrue(saved.getTitle().contains("Huỳnh Hoàng Trung (Senior Java Engineer)"));
             assertTrue(saved.getContent().contains("Đã nhận việc"));
@@ -558,7 +565,7 @@ class NotificationServiceImplTests {
             // Assert
             Notification saved = savedNotification();
             assertEquals("OFFER_DECLINED", saved.getEventType());
-            assertEquals("OFFER_RESP_DEC_1", saved.getEventId());
+            assertEquals("OFFER_RESP_DEC_1_" + NOW_KEY, saved.getEventId());
             assertTrue(saved.getContent().contains("Lý do: \"Lương thấp\"."));
         }
 
@@ -601,13 +608,106 @@ class NotificationServiceImplTests {
         @DisplayName("Nhận rồi lại gửi phản hồi nhận (eventId đã có) -> Không tạo thông báo trùng")
         void notifyOfferResponseFromCandidate_shouldSkip_whenEventIdAlreadyExists() {
             // Arrange
-            when(notifications.existsByRecipient_UserIdAndEventId(30, "OFFER_RESP_ACC_1")).thenReturn(true);
+            when(notifications.existsByRecipient_UserIdAndEventId(30, "OFFER_RESP_ACC_1_" + NOW_KEY)).thenReturn(true);
 
             // Act
             service.notifyOfferResponseFromCandidate(offer(candidateAccount(), hr, "Java"), true, null);
 
             // Assert
             verify(notifications, never()).save(any());
+        }
+    }
+
+    // =========================================================================
+    // notifyOfferPendingDirector / notifyDirectorDecisionOnOffer
+    // =========================================================================
+
+    @Nested
+    @DisplayName("notifyOfferPendingDirector")
+    class NotifyOfferPendingDirector {
+
+        @Test
+        @DisplayName("HR gửi duyệt offer -> Báo OFFER_PENDING_DIRECTOR cho từng Giám đốc đang hoạt động, có tên ứng viên")
+        void notifyOfferPendingDirector_shouldSaveForEachActiveDirector_whenDirectorsExist() {
+            // Arrange
+            OfferProposal offer = offer(candidateAccount(), hr, "Senior Java Engineer");
+            offer.setProposedSalary(new BigDecimal("25000000"));
+            when(users.findAllActiveDirectors()).thenReturn(List.of(director));
+
+            // Act
+            service.notifyOfferPendingDirector(offer, hr);
+
+            // Assert
+            Notification saved = savedNotification();
+            assertEquals(director, saved.getRecipient());
+            assertEquals(hr, saved.getActor());
+            assertEquals("OFFER_PENDING_DIRECTOR", saved.getEventType());
+            assertEquals("/offers/1", saved.getLinkUrl());
+            assertEquals("1", saved.getReferenceId());
+            assertEquals("OFFER_PENDING_DIR_1_20_" + NOW_KEY, saved.getEventId());
+            assertTrue(saved.getTitle().contains("Yêu cầu phê duyệt Đề xuất Offer"));
+            assertTrue(saved.getContent().contains("Huỳnh Hoàng Trung"));
+        }
+
+        @Test
+        @DisplayName("Không có Giám đốc đang hoạt động / offer null -> Không lưu")
+        void notifyOfferPendingDirector_shouldDoNothing_whenNoActiveDirector() {
+            // Arrange
+            when(users.findAllActiveDirectors()).thenReturn(List.of());
+
+            // Act
+            service.notifyOfferPendingDirector(null, hr);
+            service.notifyOfferPendingDirector(offer(candidateAccount(), hr, "Java"), hr);
+
+            // Assert
+            verifyNoInteractions(notifications);
+        }
+    }
+
+    @Nested
+    @DisplayName("notifyDirectorDecisionOnOffer")
+    class NotifyDirectorDecisionOnOffer {
+
+        @Test
+        @DisplayName("Giám đốc duyệt offer -> Báo OFFER_DIRECTOR_APPROVED cho HR đề xuất, có ý kiến")
+        void notifyDirectorDecisionOnOffer_shouldSaveApproved_whenDirectorApproves() {
+            // Act
+            service.notifyDirectorDecisionOnOffer(offer(candidateAccount(), hr, "Java"), director, true, "Đồng ý mức đãi ngộ");
+
+            // Assert
+            Notification saved = savedNotification();
+            assertEquals(hr, saved.getRecipient());
+            assertEquals(director, saved.getActor());
+            assertEquals("OFFER_DIRECTOR_APPROVED", saved.getEventType());
+            assertEquals("/offers/1", saved.getLinkUrl());
+            assertEquals("OFFER_DEC_APPV_1_" + NOW_KEY, saved.getEventId());
+            assertTrue(saved.getTitle().contains("Đề xuất Offer đã được Giám đốc phê duyệt"));
+            assertTrue(saved.getContent().contains("Đồng ý mức đãi ngộ"));
+        }
+
+        @Test
+        @DisplayName("Giám đốc từ chối offer -> Báo OFFER_DIRECTOR_REJECTED cho HR đề xuất, kèm lý do")
+        void notifyDirectorDecisionOnOffer_shouldSaveRejected_whenDirectorRejects() {
+            // Act
+            service.notifyDirectorDecisionOnOffer(offer(candidateAccount(), hr, "Java"), director, false, "Lương vượt ngân sách");
+
+            // Assert
+            Notification saved = savedNotification();
+            assertEquals("OFFER_DIRECTOR_REJECTED", saved.getEventType());
+            assertEquals("OFFER_DEC_REJ_1_" + NOW_KEY, saved.getEventId());
+            assertTrue(saved.getTitle().contains("Đề xuất Offer bị Giám đốc từ chối"));
+            assertTrue(saved.getContent().contains("Lương vượt ngân sách"));
+        }
+
+        @Test
+        @DisplayName("Offer null / không rõ HR đề xuất -> Không lưu")
+        void notifyDirectorDecisionOnOffer_shouldDoNothing_whenProposerIsMissing() {
+            // Act
+            service.notifyDirectorDecisionOnOffer(null, director, true, null);
+            service.notifyDirectorDecisionOnOffer(offer(candidateAccount(), null, "Java"), director, false, "Lý do");
+
+            // Assert
+            verifyNoInteractions(notifications);
         }
     }
 

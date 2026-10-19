@@ -411,12 +411,12 @@ class JobPostingControllerTests {
         when(service.getInternalJobPostingDetail(eq(30), any(User.class))).thenReturn(publishedDetail().build());
 
         mvc.perform(get(BASE + "/30")
-                        .flashAttr("successMessage", "Đã tạm dừng tin tuyển dụng.")
+                        .flashAttr("successMessage", "Đã đóng đợt tuyển và xử lý các hồ sơ còn lại.")
                         .flashAttr("errorMessage", "Chỉ có thể xóa bản nháp chưa có hồ sơ ứng tuyển."))
                 .andExpect(status().isOk())
                 .andExpect(content().string(allOf(
                         containsString("alert alert--success"),
-                        containsString("Đã tạm dừng tin tuyển dụng."),
+                        containsString("Đã đóng đợt tuyển và xử lý các hồ sơ còn lại."),
                         containsString("alert alert--danger"),
                         containsString("Chỉ có thể xóa bản nháp chưa có hồ sơ ứng tuyển."))));
     }
@@ -512,5 +512,20 @@ class JobPostingControllerTests {
         mvc.perform(post(BASE + "/26/pause").with(csrf())).andExpect(redirectedUrl(BASE + "/26"));
 
         verify(service).pauseJobPosting(26, hrUser);
+    }
+
+    @Test
+    @WithMockUser(username = "hr_officer", roles = "HR")
+    @DisplayName("POST tạm dừng / hủy lịch thành công -> Không gửi flash thành công (dải trạng thái ở trang chi tiết đã báo)")
+    void pauseAndUnschedule_shouldNotFlashSuccess_whenSucceeded() throws Exception {
+        mvc.perform(post(BASE + "/26/pause").with(csrf()))
+                .andExpect(redirectedUrl(BASE + "/26"))
+                .andExpect(flash().attributeCount(0));
+        mvc.perform(post(BASE + "/27/unschedule").with(csrf()))
+                .andExpect(redirectedUrl(BASE + "/27"))
+                .andExpect(flash().attributeCount(0));
+
+        verify(service).pauseJobPosting(26, hrUser);
+        verify(service).unschedule(27, hrUser);
     }
 }

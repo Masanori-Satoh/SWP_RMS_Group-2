@@ -212,23 +212,22 @@ public class JobPostingController {
         return redirectToDetail(id);
     }
 
-    /** Tin đang hẹn đăng: hủy lịch, trở về bản nháp. */
+    /** Tin đang hẹn đăng: hủy lịch, trở về bản nháp. Không gửi câu thành công: dải "Bản nháp" ở trang chi tiết đã báo. */
     @PostMapping("/{id}/unschedule")
     public String unschedule(@PathVariable Integer id, RedirectAttributes flash) {
         try {
             jobPostingService.unschedule(id, access.actor());
-            flash.addFlashAttribute("successMessage", "Đã hủy lịch đăng. Tin trở về bản nháp.");
         } catch (JobPostingValidationException e) {
             flash.addFlashAttribute("errorMessage", e.getMessage());
         }
         return redirectToDetail(id);
     }
 
+    /** Không gửi câu thành công: dải "Đang tạm dừng nhận hồ sơ" ở trang chi tiết đã báo. */
     @PostMapping("/{id}/pause")
     public String pauseJobPosting(@PathVariable Integer id, RedirectAttributes flash) {
         try {
             jobPostingService.pauseJobPosting(id, access.actor());
-            flash.addFlashAttribute("successMessage", "Đã tạm dừng tin tuyển dụng.");
         } catch (JobPostingValidationException e) {
             flash.addFlashAttribute("errorMessage", e.getMessage());
         }

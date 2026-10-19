@@ -190,8 +190,8 @@
 | 121 | MSG121 | Confirmation dialog | Đóng tin (menu ⋯ danh sách). | **Đóng tin tuyển dụng?** Hồ sơ đang xử lý sẽ dừng, lịch chưa diễn ra được hủy. Hệ thống chặn đóng nếu còn Offer chưa kết thúc. | `job-postings/list.html` |
 | 122 | MSG122 | Confirmation dialog | Xóa tin nháp. | **Xóa bản nháp?** Bản nháp sẽ bị xóa và không thể hoàn tác. | `job-postings/detail.html`, `list.html` |
 | 123 | MSG123 | Flash (thành công) | Đăng tin nháp / mở lại tin tạm dừng. | Đã đăng tin tuyển dụng. | `JobPostingController.publishJobPosting` |
-| 124 | MSG124 | Flash (thành công) | Hủy lịch đăng. | Đã hủy lịch đăng. Tin trở về bản nháp. | `JobPostingController.unschedule` |
-| 125 | MSG125 | Flash (thành công) | Tạm dừng tin. | Đã tạm dừng tin tuyển dụng. | `JobPostingController.pauseJobPosting` |
+| 124 | MSG124 | Flash (thành công) | Hủy lịch đăng. | ~~Đã hủy lịch đăng. Tin trở về bản nháp.~~ Đã bỏ (19/10/2026): trùng dải "Bản nháp" ở trang chi tiết. | `JobPostingController.unschedule` |
+| 125 | MSG125 | Flash (thành công) | Tạm dừng tin. | ~~Đã tạm dừng tin tuyển dụng.~~ Đã bỏ (19/10/2026): trùng dải "Đang tạm dừng nhận hồ sơ" ở trang chi tiết. | `JobPostingController.pauseJobPosting` |
 | 126 | MSG126 | Flash (thành công) | Đóng tin. | Đã đóng đợt tuyển và xử lý các hồ sơ còn lại. | `JobPostingController.closeJobPosting` |
 | 127 | MSG127 | Flash (thành công) | Xóa tin nháp. | Đã xóa tin tuyển dụng thành công. | `JobPostingController.deleteJobPosting` |
 | 128 | MSG128 | Flash (lỗi) | Đăng tin không ở trạng thái Nháp / Tạm dừng. | Chỉ tin nháp hoặc đang tạm dừng mới được đăng. | `JobPostingServiceImpl` |
