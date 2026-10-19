@@ -109,38 +109,71 @@
   flex-shrink: 0;
 }
 
-.summary-list {
-  list-style: none;
-  padding: 0;
-  margin: 0;
+.job-apply-card__deadline {
   display: flex;
-  flex-direction: column;
-  gap: 16px;
-  font-size: 14px;
-}
-
-.summary-label {
+  justify-content: space-between;
+  gap: var(--s3);
+  margin: 0;
+  font-size: var(--font-sm);
   color: var(--muted);
-  display: block;
-  font-size: 12px;
-  text-transform: uppercase;
-  letter-spacing: .06em;
-  font-weight: 700;
-  margin-bottom: 4px;
 }
 
-.summary-value {
-  font-weight: 600;
+.job-apply-card__deadline strong {
   color: var(--ink);
-  font-size: 15px;
 }
 
 @media (max-width: 1024px) {
   .job-detail-layout {
     grid-template-columns: 1fr;
+    gap: 0; /* một cột: các thẻ đã có margin-bottom riêng */
   }
   .job-sidebar {
     position: static;
+  }
+
+  /* Khách và ứng viên: thẻ ứng tuyển thành thanh bám đáy màn hình (hạn nộp bên trái, nút bên phải). */
+  .job-apply-card--bar {
+    position: fixed;
+    inset-inline: 0;
+    bottom: 0;
+    z-index: 50;
+    display: flex;
+    align-items: center;
+    gap: var(--s4);
+    padding: var(--s3) var(--s4) calc(var(--s3) + env(safe-area-inset-bottom));
+    border-width: 1px 0 0;
+    border-radius: 0;
+    box-shadow: var(--shadow-md);
+  }
+
+  .job-apply-card--bar h3 {
+    display: none;
+  }
+
+  .job-apply-card--bar .job-apply-card__deadline {
+    flex-direction: column;
+    gap: 0;
+    font-size: var(--font-xs);
+    line-height: 1.4;
+  }
+
+  .job-apply-card--bar .job-apply-card__deadline strong {
+    font-size: var(--font-sm);
+  }
+
+  .job-apply-card--bar .job-action-wrap {
+    flex: 1;
+    max-width: 280px;
+    margin: 0 0 0 auto;
+  }
+
+  .job-sidebar:has(.job-apply-card--bar) .support-card {
+    margin-top: 0;
+  }
+
+  /* Chừa chỗ để thanh bám đáy không che phần cuối trang (chân trang nằm ngoài main). */
+  body:has(.job-apply-card--bar) {
+    padding-bottom: calc(var(--btn-h) + var(--s3) * 2 + 1px + env(safe-area-inset-bottom));
   }
 }
 
@@ -235,25 +268,42 @@
   gap: 8px;
 }
 
-.job-meta-row {
-  display: flex;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 20px;
-  padding-top: 16px;
+/* Thông tin nhanh: 4 cột, ≤ 768px thành lưới 2x2. */
+.job-facts {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: var(--s4);
+  margin: 0;
+  padding-top: var(--s4);
   border-top: 1px solid var(--line);
+}
+
+.job-facts__item {
+  min-width: 0;
+}
+
+.job-facts dt {
+  margin-bottom: var(--s1);
+  font-size: var(--font-xs);
+  font-weight: 700;
+  letter-spacing: .06em;
+  text-transform: uppercase;
   color: var(--muted);
-  font-size: 13.5px;
 }
 
-.job-meta-item {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
+.job-facts dd {
+  margin: 0;
+  font-size: var(--font-base);
+  font-weight: 600;
+  line-height: 1.4;
+  color: var(--ink);
+  overflow-wrap: anywhere;
 }
 
-.job-meta-item svg {
-  color: var(--brand);
+.job-posted {
+  margin: var(--s4) 0 0;
+  font-size: var(--font-sm);
+  color: var(--muted);
 }
 
 .job-section-card {
@@ -341,6 +391,46 @@
   padding-top: var(--s2);
   padding-bottom: var(--s2);
   cursor: pointer;
+}
+
+/* Điện thoại: lề thẻ 16px (padding 32px cố định ép chữ còn khoảng 277px trên màn 375px), bớt khoảng trống đầu trang. */
+@media (max-width: 768px) {
+  .job-detail-page {
+    padding-block: var(--s4);
+  }
+
+  .job-detail-back-link {
+    margin-bottom: 0;
+  }
+
+  .job-detail-layout {
+    margin-top: var(--s4);
+  }
+
+  .job-header-card,
+  .job-section-card,
+  .support-card {
+    padding: var(--s4);
+    margin-bottom: var(--s4);
+  }
+
+  .job-detail-title {
+    font-size: 24px;
+  }
+
+  .job-facts {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--s3) var(--s4);
+  }
+
+  .section-title {
+    font-size: var(--font-lg);
+    margin-bottom: var(--s3);
+  }
+
+  .rich-text {
+    font-size: var(--font-base);
+  }
 }
 
 @media (max-width: 480px) {

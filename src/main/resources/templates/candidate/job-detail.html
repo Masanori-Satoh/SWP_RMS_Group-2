@@ -10,7 +10,7 @@
     </th:block>
 </head>
 <body>
-<main id="main" layout:fragment="content" class="section">
+<main id="main" layout:fragment="content" class="section job-detail-page">
     <div class="container">
 
         <!-- Breadcrumb / Quay lại danh sách việc làm -->
@@ -40,34 +40,37 @@
                 <!-- Header Card của Job -->
                 <div class="job-header-card">
                     <div class="job-header-badges">
-                        <span class="badge badge--neutral" th:text="${job.departmentName}">Phòng Engineering</span>
-                        <span class="badge badge--neutral" th:text="${job.employmentType}">Full-time</span>
-                        <span class="badge badge--neutral" th:text="${job.workLocation}">Hà Nội</span>
                         <span th:if="${job.isAcceptingApplications}" class="badge badge--success">Đang nhận hồ sơ</span>
                         <span th:unless="${job.isAcceptingApplications}" class="badge badge--danger">Đã đóng tuyển dụng</span>
+                        <span class="badge badge--neutral" th:text="${job.employmentType}">Full-time</span>
                     </div>
 
                     <h1 class="job-detail-title" th:text="${job.postingTitle}">Senior Java Developer</h1>
                     <div class="job-department-name" th:text="${job.departmentName}">Phòng Engineering</div>
 
-                    <div class="job-meta-row">
-                        <div class="job-meta-item">
-                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                                <circle cx="12" cy="12" r="10"></circle>
-                                <polyline points="12 6 12 12 16 14"></polyline>
-                            </svg>
-                            <span>Ngày đăng: <time th:if="${job.postingDate != null}" th:datetime="${job.postingDate}" th:text="${#temporals.format(job.postingDate, 'dd/MM/yyyy')}">25/09/2026</time><span th:if="${job.postingDate == null}">Mới đăng</span></span>
+                    <!-- Thông tin nhanh: 4 cột trên desktop, lưới 2x2 trên điện thoại -->
+                    <dl class="job-facts">
+                        <div class="job-facts__item">
+                            <dt>Mức lương</dt>
+                            <dd th:text="${job.salaryDisplay != null ? job.salaryDisplay : 'Thỏa thuận'}">Thỏa thuận</dd>
                         </div>
-                        <div class="job-meta-item" th:if="${job.applicationDeadline != null}">
-                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                                <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
-                                <line x1="16" y1="2" x2="16" y2="6"></line>
-                                <line x1="8" y1="2" x2="8" y2="6"></line>
-                                <line x1="3" y1="10" x2="21" y2="10"></line>
-                            </svg>
-                            <span>Hạn nộp: <strong th:text="${#temporals.format(job.applicationDeadline, 'dd/MM/yyyy')}">31/12/2026</strong></span>
+                        <div class="job-facts__item" th:if="${job.applicationDeadline != null}">
+                            <dt>Hạn nộp</dt>
+                            <dd th:text="${#temporals.format(job.applicationDeadline, 'dd/MM/yyyy')}">31/12/2026</dd>
                         </div>
-                    </div>
+                        <div class="job-facts__item">
+                            <dt>Hình thức</dt>
+                            <dd th:text="${job.employmentType}">Full-time</dd>
+                        </div>
+                        <div class="job-facts__item">
+                            <dt>Địa điểm</dt>
+                            <dd th:text="${job.workLocation}">Hà Nội</dd>
+                        </div>
+                    </dl>
+
+                    <p class="job-posted">
+                        Ngày đăng: <time th:if="${job.postingDate != null}" th:datetime="${job.postingDate}" th:text="${#temporals.format(job.postingDate, 'dd/MM/yyyy')}">25/09/2026</time><span th:if="${job.postingDate == null}">Mới đăng</span>
+                    </p>
                 </div>
 
                 <!-- Mục 1: Mô tả công việc -->
@@ -89,29 +92,16 @@
                 </div>
             </div>
 
-            <!-- Cột tóm tắt vị trí tuyển dụng -->
+            <!-- Cột ứng tuyển. Khách và ứng viên: trên màn ≤ 1024px thẻ này thành thanh bám đáy màn hình
+                 (job-apply-card--bar) để nút luôn trong tầm tay; tài khoản nội bộ giữ thẻ thường. -->
             <aside class="job-sidebar">
-                <div class="base-card summary-card card">
-                    <h3>Tóm tắt vị trí</h3>
-                    <ul class="summary-list">
-                        <li>
-                            <span class="summary-label">Địa điểm:</span>
-                            <span class="summary-value" th:text="${job.workLocation}">Hà Nội</span>
-                        </li>
-                        <li>
-                            <span class="summary-label">Hình thức:</span>
-                            <span class="summary-value" th:text="${job.employmentType}">Full-time</span>
-                        </li>
-                        <li th:if="${job.salaryDisplay != null}">
-                            <span class="summary-label">Mức lương:</span>
-                            <span class="summary-value" th:text="${job.salaryDisplay}">Thỏa thuận</span>
-                        </li>
-                        <li th:if="${job.applicationDeadline != null}">
-                            <span class="summary-label">Hạn nộp:</span>
-                            <span class="summary-value"
-                                  th:text="${#temporals.format(job.applicationDeadline, 'dd/MM/yyyy')}">31/12/2026</span>
-                        </li>
-                    </ul>
+                <div class="base-card summary-card card job-apply-card"
+                     th:classappend="${currentUser == null or currentUser.roleName == 'Candidate'} ? 'job-apply-card--bar'">
+                    <h3>Ứng tuyển</h3>
+                    <p class="job-apply-card__deadline" th:if="${job.applicationDeadline != null}">
+                        <span>Hạn nộp</span>
+                        <strong th:text="${#temporals.format(job.applicationDeadline, 'dd/MM/yyyy')}">31/12/2026</strong>
+                    </p>
 
                     <div class="action-wrap job-action-wrap">
                         <!-- Tài khoản nội bộ: không nộp hồ sơ. HR, Admin có link sang tin nội bộ
