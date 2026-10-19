@@ -1493,22 +1493,34 @@ function submitDirectorDecision() {
    ============================================================================= */
 
 function applyDirectorFilters() {
-    const search = document.getElementById('searchInput').value;
-    const timeSort = document.getElementById('timeSortFilter').value;
+    const searchEl = document.getElementById('searchInput');
+    const timeSortEl = document.getElementById('timeSortFilter');
+    const statusEl = document.getElementById('statusFilter');
+
+    const search = searchEl ? searchEl.value.trim() : '';
+    const timeSort = timeSortEl ? timeSortEl.value : 'DEFAULT';
+    const statusVal = statusEl ? statusEl.value : '';
+
     const urlParams = new URLSearchParams(window.location.search);
+    let targetStatus = statusVal;
+    if (!targetStatus || targetStatus === '') {
+        targetStatus = urlParams.get('status') === 'HISTORY' ? 'HISTORY' : 'Pending_Director';
+    }
 
-    // Maintain current tab
-    const currentTab = urlParams.get('status') === 'HISTORY' ? 'HISTORY' : 'PENDING';
-
-    let url = '/offers?status=' + currentTab;
-    if (search && search.trim() !== '') url += '&search=' + encodeURIComponent(search.trim());
-    if (timeSort && timeSort !== 'DEFAULT') url += '&timeSort=' + encodeURIComponent(timeSort);
+    let url = '/offers?status=' + encodeURIComponent(targetStatus);
+    if (search !== '') {
+        url += '&search=' + encodeURIComponent(search);
+    }
+    if (timeSort && timeSort !== 'DEFAULT') {
+        url += '&timeSort=' + encodeURIComponent(timeSort);
+    }
 
     window.location.href = url;
 }
 
 function clearDirectorSearch() {
-    document.getElementById('searchInput').value = '';
+    const searchEl = document.getElementById('searchInput');
+    if (searchEl) searchEl.value = '';
     applyDirectorFilters();
 }
 

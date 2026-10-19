@@ -968,7 +968,9 @@ public class OfferServiceImpl implements OfferService {
             // 4. Lọc theo trạng thái
             if (hasStatus) {
                 String s = status.trim();
-                if ("Director_Approved".equalsIgnoreCase(s) || "Approved".equalsIgnoreCase(s)) {
+                if ("HISTORY".equalsIgnoreCase(s) || "HISTORY_ALL".equalsIgnoreCase(s)) {
+                    predicates.add(builder.notEqual(builder.lower(root.get("offerStatus")), "pending_director"));
+                } else if ("Director_Approved".equalsIgnoreCase(s) || "Approved".equalsIgnoreCase(s)) {
                     predicates.add(builder.or(
                             builder.equal(builder.lower(root.get("offerStatus")), "director_approved"),
                             builder.equal(builder.lower(root.get("offerStatus")), "approved")
