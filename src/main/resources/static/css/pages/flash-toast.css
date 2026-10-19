@@ -1,0 +1,151 @@
+/* =============================================================================
+   FLASH-TOAST.CSS — Thông báo sau thao tác (fragment fragments/requisition :: flashToast)
+   Dùng ở: requisitions/list, requisitions/detail, job-postings/list, job-postings/detail.
+
+   Khung nổi góc trên bên phải. Viền màu chạy quanh khung là đồng hồ đếm ngược 3 giây
+   (SVG <rect pathLength="100">: nét viền ngắn dần từ 100 về 0). Hết giờ thì JS
+   (js/pages/flash-toast.js) cho khung mờ dần rồi gỡ khỏi trang. Rê chuột vào thì tạm dừng.
+   ============================================================================= */
+.flash-toasts {
+    position: fixed;
+    top: calc(var(--topbar-h, 74px) + 16px);
+    right: 16px;
+    z-index: 1100;
+    /* trên sidebar / topbar (tối đa 1050) */
+    display: grid;
+    gap: 12px;
+    width: min(380px, calc(100vw - 32px));
+    pointer-events: none;
+    /* chỗ trống giữa các khung không chặn bấm vào trang */
+}
+
+.flash-toast {
+    --toast-color: var(--success);
+    --toast-soft: var(--success-soft);
+    position: relative;
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 14px 14px 14px 18px;
+    border-radius: var(--radius-md, 8px);
+    background: var(--surface);
+    box-shadow: var(--shadow-lg);
+    color: var(--ink);
+    pointer-events: auto;
+    animation: flash-toast-in 0.1 ease-out;
+    transition: opacity 0.1 ease, transform 0.3s ease;
+}
+
+.flash-toast--error {
+    --toast-color: var(--error);
+    --toast-soft: var(--error-soft);
+}
+
+/* Nền nhạt + viền mờ cố định, viền đậm (đếm ngược) vẽ đè lên bằng SVG */
+.flash-toast::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    border: 2px solid var(--toast-soft);
+    background: linear-gradient(var(--toast-soft), var(--toast-soft)) left / 4px 100% no-repeat;
+    pointer-events: none;
+}
+
+.flash-toast-timer {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    overflow: visible;
+    pointer-events: none;
+}
+
+.flash-toast-timer rect {
+    x: 1px;
+    y: 1px;
+    width: calc(100% - 2px);
+    height: calc(100% - 2px);
+    rx: 8px;
+    fill: none;
+    stroke: var(--toast-color);
+    stroke-width: 2px;
+    stroke-dasharray: 100;
+    stroke-dashoffset: 0;
+    animation: flash-toast-countdown 3s linear forwards;
+}
+
+.flash-toast:hover .flash-toast-timer rect,
+.flash-toast:focus-within .flash-toast-timer rect {
+    animation-play-state: paused;
+}
+
+.flash-toast-text {
+    position: relative;
+    flex: 1;
+    margin: 0;
+    font-size: var(--font-sm, 13.5px);
+    line-height: 1.5;
+    overflow-wrap: anywhere;
+}
+
+.flash-toast-close {
+    position: relative;
+    flex: none;
+    width: 24px;
+    height: 24px;
+    margin: -2px -2px 0 0;
+    border: 0;
+    border-radius: var(--radius-sm, 4px);
+    background: transparent;
+    color: var(--muted);
+    font-size: 18px;
+    line-height: 1;
+    cursor: pointer;
+}
+
+.flash-toast-close:hover {
+    background: var(--toast-soft);
+    color: var(--ink);
+}
+
+.flash-toast-close:focus-visible {
+    outline: 2px solid var(--focus);
+    outline-offset: 1px;
+}
+
+/* JS gắn class này khi hết giờ / bấm ×: mờ dần và trượt sang phải */
+.flash-toast.is-leaving {
+    opacity: 0;
+    transform: translateX(24px);
+}
+
+@keyframes flash-toast-in {
+    from {
+        opacity: 0;
+        transform: translateX(24px);
+    }
+
+    to {
+        opacity: 1;
+        transform: none;
+    }
+}
+
+@keyframes flash-toast-countdown {
+    to {
+        stroke-dashoffset: 100;
+    }
+}
+
+/* Người dùng tắt hiệu ứng chuyển động: không trượt, viền vẫn đếm ngược để biết khi nào tắt */
+@media (prefers-reduced-motion: reduce) {
+    .flash-toast {
+        animation: none;
+        transition: opacity 0.2s;
+    }
+
+    .flash-toast.is-leaving {
+        transform: none;
+    }
+}

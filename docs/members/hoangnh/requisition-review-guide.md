@@ -92,8 +92,8 @@ Mọi `POST` đều cần CSRF token (Spring Security tự chèn `_csrf` vào fo
 | **Ngày tạo từ – đến** | `CreatedAt >= từ 00:00` và `CreatedAt < (đến + 1 ngày) 00:00`, nên tính trọn cả ngày "đến" |
 | **Sắp xếp** | Enum `RequisitionSort` (whitelist): Mới nhất, Cũ nhất, Ngày bắt đầu gần nhất, Tên A–Z. Giá trị lạ → Mới nhất |
 | **Ô ẩn `status=`** | Luôn gửi kèm để phân biệt "lần vào đầu" (không có tham số) với "đã bỏ chọn hết" |
-| **Director vào lần đầu** | URL không có `status` → `normalizeFilter` tự đặt `status = [Pending_Director]` |
-| **Chip ✕** | Link do `RequisitionListLinks#without` tạo: giữ các tham số khác, bỏ tham số của chip, bỏ `page`. Bỏ chip Trạng thái thì vẫn gửi `status=` rỗng để Director không bị tự lọc lại |
+| **Director vào trang** | Không lọc sẵn: thấy tất cả phiếu được phép xem (mọi trạng thái trừ bản nháp của người khác). Muốn xem phiếu chờ duyệt thì chọn trạng thái "Chờ duyệt" |
+| **Chip ✕** | Link do `RequisitionListLinks#without` tạo: giữ các tham số khác, bỏ tham số của chip, bỏ `page`. Không role nào bị lọc sẵn trạng thái (Director vào trang cũng thấy tất cả) |
 | **"Xóa bộ lọc"** | `/requisitions?status=` → xem tất cả |
 | **"Đặt lại mặc định"** | `/requisitions` → về mặc định của role (Director lại thấy Chờ duyệt) |
 | **"+ Tạo yêu cầu mới"** | Chỉ hiện khi `canCreate` (HM, Director, Admin) → `GET /requisitions/create` |

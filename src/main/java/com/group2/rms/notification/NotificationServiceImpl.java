@@ -77,16 +77,23 @@ public class NotificationServiceImpl implements NotificationService {
         String deadline = posting.getApplicationDeadline() != null
                 ? posting.getApplicationDeadline().format(DISPLAY_DATE) : "Không giới hạn";
 
-        String content = String.format(
-                "Tin tuyển dụng \"%s\" (thuộc yêu cầu %s) đã được nhân sự %s phát hành lên cổng việc làm công khai vào lúc %s.\nHạn nộp hồ sơ: %s.\nỨng viên hiện đã có thể xem chi tiết và nộp hồ sơ trực tuyến.",
-                posting.getPostingTitle(), requisitionCode(posting.getRequisition()), hrName,
-                postingDate.format(DISPLAY_TIME), deadline);
+        // Tin hẹn đăng (PostingDate ở tương lai): báo "sẽ đăng lúc ...", ứng viên chưa thấy tin
+        boolean scheduled = postingDate.isAfter(LocalDateTime.now());
+        String content = scheduled
+                ? String.format(
+                        "Tin tuyển dụng \"%s\" (thuộc yêu cầu %s) đã được nhân sự %s hẹn đăng lên cổng việc làm công khai vào lúc %s.\nHạn nộp hồ sơ: %s.\nTrước thời điểm đó ứng viên chưa thấy tin.",
+                        posting.getPostingTitle(), requisitionCode(posting.getRequisition()), hrName,
+                        postingDate.format(DISPLAY_TIME), deadline)
+                : String.format(
+                        "Tin tuyển dụng \"%s\" (thuộc yêu cầu %s) đã được nhân sự %s phát hành lên cổng việc làm công khai vào lúc %s.\nHạn nộp hồ sơ: %s.\nỨng viên hiện đã có thể xem chi tiết và nộp hồ sơ trực tuyến.",
+                        posting.getPostingTitle(), requisitionCode(posting.getRequisition()), hrName,
+                        postingDate.format(DISPLAY_TIME), deadline);
 
-        // PostingDate chỉ đổi khi tin thực sự được đăng (lần đầu hoặc đăng lại sau tạm dừng), không đổi khi sửa nội dung.
+        // PostingDate chỉ đổi khi tin thực sự được đăng / hẹn đăng (lần đầu, đổi lịch hoặc mở lại), không đổi khi sửa nội dung.
         send(Notification.builder()
                 .recipient(posting.getRequisition().getHiringManager())
                 .actor(hr)
-                .title("Tin tuyển dụng đã phát hành: " + posting.getPostingTitle())
+                .title((scheduled ? "Tin tuyển dụng hẹn đăng: " : "Tin tuyển dụng đã phát hành: ") + posting.getPostingTitle())
                 .content(content)
                 .eventType("JOB_POSTING_PUBLISHED")
                 .referenceId(String.valueOf(posting.getJobPostingId()))

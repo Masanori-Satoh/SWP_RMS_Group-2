@@ -19,11 +19,12 @@ Mã nguồn đóng gói theo **nghiệp vụ**, không theo tầng. Quy tắc **
 src/main/java/com/group2/rms/
 ├── core/                  ← Dùng chung toàn hệ thống (KHÔNG chứa nghiệp vụ)
 │   ├── base/              ← BaseEntity
-│   ├── config/            ← SecurityConfig, SchemaNamingConfig
-│   ├── dto/               ← ApiResponse<T>
+│   ├── config/            ← SecurityConfig, SchemaNamingConfig, ClockConfig (bean Clock: dùng LocalDate.now(clock) để test cố định ngày)
+│   ├── dto/               ← ApiResponse<T>, FilterOption, FilterChip (ô lọc / chip của màn danh sách)
 │   ├── exception/         ← BaseBusinessException, ResourceNotFoundException, GlobalExceptionHandler, FormErrorViewHelper
 │   ├── security/          ← DatabaseUserDetailsService, CurrentUserService, RoleAuthorities, AccountSessionGuardFilter
 │   ├── validation/        ← @PasswordMatches + validator
+│   ├── util/              ← ListFilters (làm sạch bộ lọc URL, escape LIKE), FilterLinks (link bỏ chip), FieldChanges (so sánh snapshot cho audit)
 │   └── web/               ← @ControllerAdvice cấp model cho mọi view: TopbarUserAdvice (topbarUser), ViewHelpersAdvice (pageLinks)
 ├── {module_nhỏ}/          ← dashboard, notification: Controller/Service/Repository/DTO nằm phẳng
 ├── {module_lớn}/          ← auth, user, requisition, jobposting, interview, offer, admin, career, candidate
@@ -197,7 +198,7 @@ Phân quyền URL nằm tập trung trong `core/config/SecurityConfig` (chưa d�
 | `/requisitions/**` | `HIRING_MANAGER`, `DIRECTOR`, `HR`, `SYSTEM_ADMIN` |
 | `/internal/job-postings/*/close` | `HR` |
 | `/internal/job-postings/create`, `/internal/job-postings/dashboard` | `HR`, `SYSTEM_ADMIN` |
-| `GET /internal/job-postings`, `GET /internal/job-postings/*` (danh sách, chi tiết) | `HR`, `HIRING_MANAGER`, `SYSTEM_ADMIN` |
+| `GET /internal/job-postings`, `GET /internal/job-postings/*` (danh sách, chi tiết) | `HR`, `HIRING_MANAGER`, `DIRECTOR`, `SYSTEM_ADMIN` (HM, Director không xem tin nháp; kiểm tra ở `JobPostingServiceImpl`) |
 | Mọi thao tác ghi còn lại `/internal/job-postings/**` | `HR`, `SYSTEM_ADMIN` |
 | `/dashboard/**`, `/notifications/**`, mọi URL còn lại | Đã đăng nhập |
 
@@ -256,7 +257,7 @@ Code cũ chạy được, **chưa cần sửa ngay**. Khi viết code mới thì
 | # | Hiện trạng | Hướng xử lý sau |
 |---|---|---|
 | 1 | `GlobalExceptionHandler` đang chứa handler riêng của `auth` (đăng ký, khôi phục mật khẩu), `user` (phòng ban), `admin` (health check) và import DTO của các module này; đây là file hay bị conflict | Chuyển dần về Controller/module theo mục 2.3 |
-| 2 | `interview` ném `IllegalArgumentException`, `EntityNotFoundException` (không tìm thấy dữ liệu đang ra trang 500); `requisition` dùng `ResponseStatusException`; `offer` ném `BaseBusinessException` trần | Đổi sang kiểu ở mục 2.3 |
+| 2 | `interview` ném `IllegalArgumentException`, `EntityNotFoundException` (không tìm thấy dữ liệu đang ra trang 500); `requisition` dùng `ResponseStatusException` (`offer` đã chuẩn hóa sang `OfferValidationException`) | Đổi sang kiểu ở mục 2.3 |
 | 3 | `offer` có cả endpoint form lẫn JSON cho cùng thao tác tạo/sửa | Giữ một cách (mục 2.1) |
 | 5 | `core/exception/FormErrorViewHelper` (rỗng), `user/exception/AccountConflictException` không ai dùng | Xóa |
 | 6 | Hai `NotificationService` trùng tên (`notification` và `offer.service`) | Gộp về module `notification` |

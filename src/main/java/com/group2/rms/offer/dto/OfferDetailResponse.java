@@ -32,6 +32,8 @@ public class OfferDetailResponse {
     private LocalDate expectedStartDate;
     private String workLocation;
     private String benefitsPackage;
+    private Integer responsePeriodDays;
+    private LocalDateTime responseDeadline;
     private Integer proposedById;
     private String proposedByName;
     private LocalDateTime createdAt;

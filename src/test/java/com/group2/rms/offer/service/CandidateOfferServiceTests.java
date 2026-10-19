@@ -242,6 +242,70 @@ class CandidateOfferServiceTests {
         verify(offers, never()).answerIfSent(anyInt(), anyString(), anyString());
     }
 
+    @Test
+    void acceptExpiredOfferWithResponseDeadlineThrowsOfferResponseException() {
+        OfferProposal expiredOffer = offer(OFFER_ID, "Sent_Candidate");
+        expiredOffer.setResponseDeadline(java.time.LocalDateTime.now().minusHours(2));
+
+        when(offers.findVisibleById(eq(OFFER_ID), eq(USER_ID), anyCollection()))
+                .thenReturn(Optional.of(expiredOffer));
+
+        var ex = assertThrows(OfferResponseException.class, () -> service.accept(OFFER_ID));
+        assertTrue(ex.getMessage().contains("đã quá thời hạn phản hồi"));
+        verify(offers, never()).answerIfSent(anyInt(), anyString());
+    }
+
+    @Test
+    void declineExpiredOfferWithResponseDeadlineThrowsOfferResponseException() {
+        OfferProposal expiredOffer = offer(OFFER_ID, "Sent_Candidate");
+        expiredOffer.setResponseDeadline(java.time.LocalDateTime.now().minusHours(2));
+
+        when(offers.findVisibleById(eq(OFFER_ID), eq(USER_ID), anyCollection()))
+                .thenReturn(Optional.of(expiredOffer));
+
+        var ex = assertThrows(OfferResponseException.class, () -> service.decline(OFFER_ID, "Lý do"));
+        assertTrue(ex.getMessage().contains("đã quá thời hạn phản hồi"));
+        verify(offers, never()).answerIfSent(anyInt(), anyString(), anyString());
+    }
+
+    @Test
+    void acceptOfferWithFutureResponseDeadlineSucceeds() {
+        OfferProposal validOffer = offer(OFFER_ID, "Sent_Candidate");
+        validOffer.setResponsePeriodDays(5);
+        validOffer.setResponseDeadline(java.time.LocalDateTime.now().plusDays(3));
+
+        when(offers.findVisibleById(eq(OFFER_ID), eq(USER_ID), anyCollection()))
+                .thenReturn(Optional.of(validOffer));
+        when(offers.answerIfSent(OFFER_ID, "Accepted")).thenReturn(1);
+
+        String title = service.accept(OFFER_ID);
+
+        assertEquals("Junior Java Developer", title);
+        verify(applicationStatusService).onOfferAnswered(APPLICATION_ID, true);
+    }
+
+    @Test
+    void listAndDetailMapResponseDeadlineProperly() {
+        java.time.LocalDateTime deadline = java.time.LocalDateTime.now().plusDays(4);
+        OfferProposal validOffer = offer(OFFER_ID, "Sent_Candidate");
+        validOffer.setResponsePeriodDays(7);
+        validOffer.setResponseDeadline(deadline);
+
+        when(offers.findVisibleByUserId(USER_ID, CandidateOfferServiceImpl.CANDIDATE_VISIBLE_STATUSES))
+                .thenReturn(List.of(validOffer));
+        when(offers.findVisibleById(eq(OFFER_ID), eq(USER_ID), anyCollection()))
+                .thenReturn(Optional.of(validOffer));
+
+        List<CandidateOfferResponse> list = service.list();
+        assertEquals(1, list.size());
+        assertEquals(7, list.get(0).responsePeriodDays());
+        assertEquals(deadline, list.get(0).responseDeadline());
+
+        var detail = service.getDetail(OFFER_ID);
+        assertEquals(7, detail.responsePeriodDays());
+        assertEquals(deadline, detail.responseDeadline());
+    }
+
     private static OfferProposal offer(int id, String status) {
         return OfferProposal.builder()
                 .offerId(id)

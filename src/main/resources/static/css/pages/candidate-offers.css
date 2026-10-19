@@ -137,10 +137,10 @@
   white-space: nowrap;
 }
 
-/* 2. Body Grid: 4 ô thông tin */
+/* 2. Body Grid: 4-5 ô thông tin */
 .cof-card__meta-grid {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
   gap: 24px;
   padding: 20px 0;
   border-top: 1px solid var(--line);
@@ -190,6 +190,12 @@
   font-size: 20px;
   font-weight: 700;
   color: var(--brand-dark);
+}
+
+.cof-card__meta-val--deadline {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--warning);
 }
 
 .cof-card__meta-item--location .cof-card__meta-val--location {
@@ -453,6 +459,51 @@
   font-size: var(--font-base);
   color: var(--ink);
   font-weight: 500;
+}
+
+.cof-meta-val--deadline {
+  color: var(--warning);
+  font-weight: 700;
+}
+
+/* Hộp thời hạn phản hồi & Đếm ngược */
+.cof-deadline-box {
+  margin-bottom: var(--s4);
+  padding: var(--s3) var(--s4);
+  background: var(--warning-soft);
+  border: 1px solid var(--warning);
+  border-left: 4px solid var(--warning);
+  border-radius: var(--radius-md);
+}
+
+.cof-deadline-box__title {
+  font-size: var(--font-xs);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--warning);
+  margin-bottom: var(--s1);
+  display: flex;
+  align-items: center;
+  gap: var(--s1);
+}
+
+.cof-deadline-box__val {
+  font-size: var(--font-base);
+  font-weight: 700;
+  color: var(--ink);
+}
+
+.cof-countdown {
+  display: inline-block;
+  margin-top: var(--s1);
+  font-size: var(--font-xs);
+  font-weight: 600;
+  color: var(--warning);
+}
+
+.cof-countdown--expired {
+  color: var(--error);
 }
 
 /* Chế độ đãi ngộ & Lương */

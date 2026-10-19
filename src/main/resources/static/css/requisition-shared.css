@@ -47,3 +47,6 @@
   .req-app :is(.list-container,.form-card,.detail-layout .card) { padding:var(--s4); }
   .req-app #delete-dialog { padding:var(--s6); }
 }
+
+/* Ô nhập quá số ký tự cho phép (js/text-limit.js gắn class is-too-long) */
+:is(input, textarea).is-too-long, :is(input, textarea).is-too-long:focus { border-color:var(--error); }

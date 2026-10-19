@@ -48,7 +48,7 @@ Phần backend (Controller, Service, DTO…) vẫn theo `docs/architecture/ARCHI
 
 ### Cách A — AI tự đọc hướng dẫn (khuyến khích)
 
-Nếu repo có file `AGENTS.md` và `../../members/hoangnh/rule_code_s.md` ở **thư mục gốc**, các AI agent phổ biến sẽ tự đọc chúng mỗi lần làm việc và tự biết phải đọc tài liệu UI nào. Bạn chỉ cần nói việc cần làm và dặn thêm một câu "làm theo tài liệu UI". Nếu chưa thấy hai file đó ở thư mục gốc, dùng Cách B.
+Nếu repo có file `AGENTS.md` và `CLAUDE.md` ở **thư mục gốc**, các AI agent phổ biến sẽ tự đọc chúng mỗi lần làm việc và tự biết phải đọc tài liệu UI nào. Bạn chỉ cần nói việc cần làm và dặn thêm một câu "làm theo tài liệu UI". Nếu chưa thấy hai file đó ở thư mục gốc, dùng Cách B.
 
 ### Cách B — Dán prompt có đường dẫn cụ thể
 

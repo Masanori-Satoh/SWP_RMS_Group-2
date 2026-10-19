@@ -1,83 +1,111 @@
 package com.group2.rms.jobposting.controller;
 
-import com.group2.rms.jobposting.dto.InternalJobPostingDetailResponse;
-import com.group2.rms.jobposting.dto.InternalJobPostingResponse;
-import com.group2.rms.jobposting.dto.JobPostingCreateRequest;
-import com.group2.rms.jobposting.service.JobPostingService;
-import com.group2.rms.jobposting.exception.JobPostingValidationException;
-import com.group2.rms.candidate.service.RecruitmentEmailService;
 import com.group2.rms.candidate.exception.RecruitmentEmailException;
 import com.group2.rms.candidate.exception.TalentPoolException;
-import com.group2.rms.requisition.service.RequisitionAccess;
+import com.group2.rms.candidate.service.RecruitmentEmailService;
+import com.group2.rms.candidate.service.TalentPoolService;
+import com.group2.rms.core.util.FilterLinks;
+import com.group2.rms.jobposting.dto.InternalJobPostingDetailResponse;
+import com.group2.rms.jobposting.dto.JobPostingCreateRequest;
+import com.group2.rms.jobposting.dto.JobPostingDashboardResponse;
+import com.group2.rms.jobposting.dto.JobPostingSearchRequest;
+import com.group2.rms.jobposting.exception.JobPostingValidationException;
+import com.group2.rms.jobposting.service.JobPostingAccess;
+import com.group2.rms.jobposting.service.JobPostingListService;
+import com.group2.rms.jobposting.service.JobPostingService;
+import com.group2.rms.jobposting.validator.JobPostingValidator;
 import com.group2.rms.user.entity.User;
-import com.group2.rms.user.repository.DepartmentRepository;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.WebDataBinder;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.InitBinder;
+import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
+import java.time.format.DateTimeFormatter;
 import java.util.List;
+import java.util.Set;
 
+/**
+ * Màn tin tuyển dụng nội bộ (/internal/job-postings): danh sách, bảng điều khiển HR, form tạo / sửa,
+ * trang chi tiết và các nút chuyển trạng thái.
+ *
+ * Chỉ nhận request → gọi service → chọn view / redirect / flash. Không so sánh role, không tự đổi trạng thái:
+ * quyền ở JobPostingAccess (service gọi), cờ hiển thị có sẵn trong DTO. Chỉ bắt JobPostingValidationException
+ * (và lỗi của module talent pool khi đóng tin); không tìm thấy / không có quyền để GlobalExceptionHandler trả 404 / 403.
+ */
 @Controller
 @RequestMapping("/internal/job-postings")
 @RequiredArgsConstructor
 public class JobPostingController {
 
-    private final JobPostingService jobPostingService;
-    private final RequisitionAccess requisitionAccess;
-    private final DepartmentRepository departmentRepository;
-    private final RecruitmentEmailService recruitmentEmailService;
-    private final com.group2.rms.candidate.service.TalentPoolService talentPoolService;
+    private static final String LIST_URL = "/internal/job-postings";
+    private static final String FORM_VIEW = "job-postings/create";
+    private static final String PUBLISHED_NOW_MESSAGE = "Đã đăng tin. Ứng viên có thể nộp hồ sơ ngay.";
+    private static final DateTimeFormatter SCHEDULE_FORMAT = DateTimeFormatter.ofPattern("HH:mm 'ngày' dd/MM/yyyy");
+    /** Các ô có trên form (lỗi của ô khác, ví dụ "action", hiện ở đầu form). */
+    private static final Set<String> FORM_FIELDS = Set.of("postingTitle", "jobDescription", "jobRequirements",
+            "benefits", "workLocation", "salaryMode", "salaryCustom", "numberOfPositionsDisplay",
+            "applicationDeadline", "publishMode", "scheduledAt");
+    /** Gợi ý quyền lợi trên form (nút thêm nhanh), theo mockup. */
+    private static final List<String> BENEFIT_SUGGESTIONS = List.of("Lương tháng 13", "Thưởng theo hiệu quả công việc",
+            "Đóng BHXH, BHYT, BHTN đầy đủ", "Bảo hiểm sức khỏe", "Review lương 2 lần/năm", "12 ngày phép năm",
+            "Cấp laptop làm việc", "Du lịch công ty hằng năm");
 
+    private final JobPostingService jobPostingService;
+    private final JobPostingListService listService;
+    private final JobPostingAccess access;
+    private final JobPostingValidator validator;
+    private final RecruitmentEmailService recruitmentEmailService;
+    private final TalentPoolService talentPoolService;
+
+    /** Thông tin người xem cho trang dashboard (khung cũ tự dựng sidebar) và menu đang sáng. */
     @ModelAttribute
     void populateViewerAttributes(Model model) {
-        User currentUser = requisitionAccess.actor();
-        model.addAttribute("viewerRole", requisitionAccess.role(currentUser));
+        User currentUser = access.actor();
+        model.addAttribute("viewerRole", access.role(currentUser));
         model.addAttribute("viewerName", currentUser.getFullName());
         model.addAttribute("activeMenu", "job-postings");
     }
 
+    /**
+     * Chỉ nhận từ form các trường HR được nhập (CLAUDE.md §22). Thông tin yêu cầu nguồn, trạng thái, ngày đăng,
+     * người tạo... không bao giờ lấy từ form: service điền lại từ DB.
+     */
+    @InitBinder("postingDto")
+    void formBinder(WebDataBinder binder) {
+        binder.setAllowedFields("jobPostingId", "requisitionId", "postingTitle", "jobDescription", "jobRequirements",
+                "benefits", "workLocation", "salaryMode", "salaryCustom", "showPositions", "numberOfPositionsDisplay",
+                "applicationDeadline", "publishMode", "scheduledAt", "action");
+    }
+
+    /**
+     * Màn danh sách. Mọi tham số trên URL (?q=...&status=...&page=...) được Spring gom vào JobPostingSearchRequest;
+     * list service lo phân quyền, làm sạch bộ lọc, truy vấn và đếm hồ sơ.
+     * BindingResult để giá trị sai định dạng (ví dụ ?page=abc) chỉ bị bỏ qua thay vì làm lỗi cả trang.
+     */
     @GetMapping
-    public String listJobPostings(
-            @RequestParam(defaultValue = "1") int page,
-            @RequestParam(defaultValue = "10") int size,
-            @RequestParam(defaultValue = "") String q,
-            @RequestParam(required = false) Integer departmentId,
-            @RequestParam(defaultValue = "") String status,
-            @RequestParam(defaultValue = "newest") String sort,
-            Model model) {
-
-        User currentUser = requisitionAccess.actor();
-        Page<InternalJobPostingResponse> postingPage = jobPostingService.searchInternalJobPostings(
-                page, size, q, departmentId, status, sort, currentUser
-        );
-
-        model.addAttribute("postings", postingPage.getContent());
-        model.addAttribute("currentPage", postingPage.getNumber() + 1);
-        model.addAttribute("totalPages", Math.max(1, postingPage.getTotalPages()));
-        model.addAttribute("pageSize", postingPage.getSize());
-        model.addAttribute("startPage", Math.max(1, postingPage.getNumber() - 1));
-        model.addAttribute("endPage", Math.min(Math.max(1, postingPage.getTotalPages()), postingPage.getNumber() + 3));
-        model.addAttribute("totalElements", postingPage.getTotalElements());
-
-        model.addAttribute("search", q);
-        model.addAttribute("selectedDepartment", departmentId);
-        model.addAttribute("selectedStatus", status);
-        model.addAttribute("selectedSort", sort);
-
-        model.addAttribute("departments", departmentRepository.findAll());
-        model.addAttribute("statuses", List.of("Draft", "Published", "Closed", "Paused"));
-
+    public String listJobPostings(@ModelAttribute("searchRequest") JobPostingSearchRequest searchRequest,
+            BindingResult invalidParams, HttpServletRequest request, Model model) {
+        model.addAttribute("list", listService.getListPage(searchRequest, access.actor()));
+        // Link "bỏ một bộ lọc" cho các chip: giữ nguyên các tham số khác trên URL (dùng chung với màn yêu cầu)
+        model.addAttribute("filterLinks", new FilterLinks(request.getRequestURI(), request.getQueryString()));
+        model.addAttribute("bodyClass", "jp-list-page");
         return "job-postings/list";
     }
 
     @GetMapping("/dashboard")
     public String hrDashboard(Model model) {
-        var dashboard = jobPostingService.getDashboard(requisitionAccess.actor());
+        JobPostingDashboardResponse dashboard = jobPostingService.getDashboard(access.actor());
         model.addAttribute("activePostingsCount", dashboard.activeCount());
         model.addAttribute("draftPostingsCount", dashboard.draftCount());
         model.addAttribute("pendingReqsCount", dashboard.requisitionsAwaitingPosting().size());
@@ -85,136 +113,230 @@ public class JobPostingController {
         model.addAttribute("deptStats", dashboard.departmentStats());
         model.addAttribute("reqsAwaitingPosting", dashboard.requisitionsAwaitingPosting());
         model.addAttribute("recentPostings", dashboard.recentPostings());
-
         return "job-postings/dashboard";
     }
 
+    /**
+     * Form tạo tin, luôn mở từ một yêu cầu đã duyệt (requisitionId). Ô "Đổi yêu cầu" gọi lại URL này với
+     * requisitionId khác. fromPostingId: "Đăng lại" một tin đã đóng (nội dung lấy từ tin đó).
+     */
     @GetMapping("/create")
-    public String showCreateForm(@RequestParam("requisitionId") Integer requisitionId, Model model) {
-        User currentUser = requisitionAccess.actor();
-        JobPostingCreateRequest formDto = jobPostingService.prepareCreateForm(requisitionId, currentUser);
-        model.addAttribute("postingDto", formDto);
-        return "job-postings/create";
-    }
-
-    @PostMapping("/create")
-    public String createJobPosting(
-            @Valid @ModelAttribute("postingDto") JobPostingCreateRequest request,
-            BindingResult bindingResult,
-            Model model,
-            RedirectAttributes redirectAttributes) {
-
-        User currentUser = requisitionAccess.actor();
-
-        if (bindingResult.hasErrors()) {
-            return "job-postings/create";
-        }
-
+    public String showCreateForm(@RequestParam(value = "requisitionId", required = false) Integer requisitionId,
+            @RequestParam(value = "fromPostingId", required = false) Integer fromPostingId,
+            Model model, RedirectAttributes flash) {
+        User currentUser = access.actor();
         try {
-            if (request.getJobPostingId() != null) {
-                throw new JobPostingValidationException("Không thể cập nhật tin qua đường dẫn tạo mới.");
+            JobPostingCreateRequest dto;
+            if (fromPostingId != null) {
+                dto = jobPostingService.prepareRepostForm(fromPostingId, currentUser);
+            } else {
+                dto = jobPostingService.prepareCreateForm(requisitionId, currentUser);
             }
-            boolean publish = "publish".equalsIgnoreCase(request.getAction());
-            if (!publish && !"draft".equalsIgnoreCase(request.getAction())) {
-                throw new JobPostingValidationException("Thao tác lưu tin không hợp lệ.");
+            return form(model, dto, currentUser);
+        } catch (JobPostingValidationException e) {
+            flash.addFlashAttribute("errorMessage", e.getMessage());
+            if (fromPostingId != null) {
+                return redirectToDetail(fromPostingId);
             }
-            if (publish) jobPostingService.createAndPublishJobPosting(request, currentUser);
-            else jobPostingService.createJobPosting(request, currentUser);
-            redirectAttributes.addFlashAttribute("message", publish
-                    ? "Đã đăng tin tuyển dụng thành công." : "Đã lưu bản nháp tin tuyển dụng.");
-            return "redirect:/internal/job-postings";
-        } catch (JobPostingValidationException ex) {
-            model.addAttribute("errorMessage", ex.getMessage());
-            return "job-postings/create";
+            return "redirect:" + LIST_URL;
         }
     }
 
+    @GetMapping("/{id}/edit")
+    public String showEditForm(@PathVariable("id") Integer id, Model model) {
+        User currentUser = access.actor();
+        return form(model, jobPostingService.prepareEditForm(id, currentUser), currentUser);
+    }
+
+    /** Lưu nháp (action=draft) hoặc đăng / lên lịch đăng (action=publish) tin mới. */
+    @PostMapping("/create")
+    public String createJobPosting(@Valid @ModelAttribute("postingDto") JobPostingCreateRequest request,
+            BindingResult errors, Model model, RedirectAttributes flash) {
+        User currentUser = access.actor();
+        if (!errors.hasErrors()) {
+            try {
+                boolean isPublish = JobPostingValidator.isPublish(request.getAction());
+                Integer id;
+                if (isPublish) {
+                    id = jobPostingService.createAndPublishJobPosting(request, currentUser);
+                } else {
+                    id = jobPostingService.createJobPosting(request, currentUser);
+                }
+                flash.addFlashAttribute("successMessage", savedMessage(request, isPublish, true));
+                return redirectToDetail(id);
+            } catch (JobPostingValidationException e) {
+                addErrors(errors, e);
+            }
+        }
+        return form(model, jobPostingService.restoreSourceInfo(request, currentUser), currentUser);
+    }
+
+    /** Lưu thay đổi (action=draft) hoặc đăng / lên lịch đăng / mở lại (action=publish) tin đã có. */
     @PostMapping("/{id}/edit")
     public String updateJobPosting(@PathVariable Integer id,
             @Valid @ModelAttribute("postingDto") JobPostingCreateRequest request,
             BindingResult errors, Model model, RedirectAttributes flash) {
-        User actor = requisitionAccess.actor();
-        if (errors.hasErrors()) return "job-postings/create";
-        try {
-            boolean publish = "publish".equalsIgnoreCase(request.getAction());
-            if (!publish && !"draft".equalsIgnoreCase(request.getAction())) {
-                throw new JobPostingValidationException("Thao tác lưu tin không hợp lệ.");
+        User currentUser = access.actor();
+        if (!errors.hasErrors()) {
+            try {
+                boolean isPublish = JobPostingValidator.isPublish(request.getAction());
+                if (isPublish) {
+                    jobPostingService.updateAndPublishJobPosting(id, request, currentUser);
+                } else {
+                    jobPostingService.updateJobPosting(id, request, currentUser);
+                }
+                flash.addFlashAttribute("successMessage", savedMessage(request, isPublish, false));
+                return redirectToDetail(id);
+            } catch (JobPostingValidationException e) {
+                addErrors(errors, e);
             }
-            if (publish) jobPostingService.updateAndPublishJobPosting(id, request, actor);
-            else jobPostingService.updateJobPosting(id, request, actor);
-            flash.addFlashAttribute("message", publish ? "Đã cập nhật và đăng tin." : "Đã cập nhật tin tuyển dụng.");
-            return "redirect:/internal/job-postings";
-        } catch (JobPostingValidationException ex) {
-            model.addAttribute("errorMessage", ex.getMessage());
-            return "job-postings/create";
         }
+        return form(model, jobPostingService.restoreSourceInfo(request, currentUser), currentUser);
     }
 
     @PostMapping("/{id}/publish")
     public String publishJobPosting(@PathVariable Integer id, RedirectAttributes flash) {
         try {
-            jobPostingService.publishJobPosting(id, requisitionAccess.actor());
+            jobPostingService.publishJobPosting(id, access.actor());
             flash.addFlashAttribute("successMessage", "Đã đăng tin tuyển dụng.");
-        } catch (JobPostingValidationException ex) {
-            flash.addFlashAttribute("errorMessage", ex.getMessage());
+        } catch (JobPostingValidationException e) {
+            flash.addFlashAttribute("errorMessage", e.getMessage());
         }
-        return "redirect:/internal/job-postings/" + id;
+        return redirectToDetail(id);
+    }
+
+    /** Tin đang hẹn đăng: đăng ngay bây giờ. */
+    @PostMapping("/{id}/publish-now")
+    public String publishNow(@PathVariable Integer id, RedirectAttributes flash) {
+        try {
+            jobPostingService.publishNow(id, access.actor());
+            flash.addFlashAttribute("successMessage", PUBLISHED_NOW_MESSAGE);
+        } catch (JobPostingValidationException e) {
+            flash.addFlashAttribute("errorMessage", e.getMessage());
+        }
+        return redirectToDetail(id);
+    }
+
+    /** Tin đang hẹn đăng: hủy lịch, trở về bản nháp. */
+    @PostMapping("/{id}/unschedule")
+    public String unschedule(@PathVariable Integer id, RedirectAttributes flash) {
+        try {
+            jobPostingService.unschedule(id, access.actor());
+            flash.addFlashAttribute("successMessage", "Đã hủy lịch đăng. Tin trở về bản nháp.");
+        } catch (JobPostingValidationException e) {
+            flash.addFlashAttribute("errorMessage", e.getMessage());
+        }
+        return redirectToDetail(id);
     }
 
     @PostMapping("/{id}/pause")
     public String pauseJobPosting(@PathVariable Integer id, RedirectAttributes flash) {
         try {
-            jobPostingService.pauseJobPosting(id, requisitionAccess.actor());
+            jobPostingService.pauseJobPosting(id, access.actor());
             flash.addFlashAttribute("successMessage", "Đã tạm dừng tin tuyển dụng.");
-        } catch (JobPostingValidationException ex) {
-            flash.addFlashAttribute("errorMessage", ex.getMessage());
+        } catch (JobPostingValidationException e) {
+            flash.addFlashAttribute("errorMessage", e.getMessage());
         }
-        return "redirect:/internal/job-postings/" + id;
+        return redirectToDetail(id);
     }
 
+    /** Đóng tin (chỉ HR), rồi gửi email báo kết quả cho ứng viên; gửi mail lỗi thì vẫn đóng, chỉ báo lỗi. */
     @PostMapping("/{id}/close")
     public String closeJobPosting(@PathVariable Integer id, RedirectAttributes flash) {
         try {
-            jobPostingService.closeJobPosting(id, requisitionAccess.actor());
+            jobPostingService.closeJobPosting(id, access.actor());
             flash.addFlashAttribute("successMessage", "Đã đóng đợt tuyển và xử lý các hồ sơ còn lại.");
-            try {
-                recruitmentEmailService.sendJobClosure(id);
-            } catch (RecruitmentEmailException ex) {
-                flash.addFlashAttribute("errorMessage", ex.getMessage());
-            }
-        } catch (TalentPoolException | JobPostingValidationException ex) {
-            flash.addFlashAttribute("errorMessage", ex.getMessage());
+        } catch (TalentPoolException | JobPostingValidationException e) {
+            flash.addFlashAttribute("errorMessage", e.getMessage());
+            return redirectToDetail(id);
         }
-        return "redirect:/internal/job-postings/" + id;
+        try {
+            recruitmentEmailService.sendJobClosure(id);
+        } catch (RecruitmentEmailException e) {
+            flash.addFlashAttribute("errorMessage", e.getMessage());
+        }
+        return redirectToDetail(id);
     }
 
     @GetMapping("/{id}")
     public String showJobPostingDetail(@PathVariable("id") Integer id, Model model) {
-        User currentUser = requisitionAccess.actor();
-        InternalJobPostingDetailResponse detail = jobPostingService.getInternalJobPostingDetail(id, currentUser);
+        InternalJobPostingDetailResponse detail = jobPostingService.getInternalJobPostingDetail(id, access.actor());
         model.addAttribute("posting", detail);
-        if (List.of("HR", "Hiring Manager").contains(requisitionAccess.role(currentUser)))
+        model.addAttribute("bodyClass", "jp-detail-page");
+        if (detail.talentPoolVisible()) {
             model.addAttribute("hrRecommendationCount", talentPoolService.pendingRecommendationCount(id));
+        }
         return "job-postings/detail";
     }
 
-    @GetMapping("/{id}/edit")
-    public String showEditForm(@PathVariable("id") Integer id, Model model) {
-        User currentUser = requisitionAccess.actor();
-        JobPostingCreateRequest formDto = jobPostingService.prepareEditForm(id, currentUser);
-        model.addAttribute("postingDto", formDto);
-        return "job-postings/create";
+    @PostMapping("/delete/{id}")
+    public String deleteJobPosting(@PathVariable("id") Integer id, RedirectAttributes flash) {
+        try {
+            jobPostingService.deleteJobPosting(id, access.actor());
+            flash.addFlashAttribute("successMessage", "Đã xóa tin tuyển dụng thành công.");
+        } catch (JobPostingValidationException e) {
+            flash.addFlashAttribute("errorMessage", e.getMessage());
+        }
+        return "redirect:" + LIST_URL;
     }
 
-    @PostMapping("/delete/{id}")
-    public String deleteJobPosting(@PathVariable("id") Integer id, RedirectAttributes redirectAttributes) {
-        User currentUser = requisitionAccess.actor();
-        try {
-            jobPostingService.deleteJobPosting(id, currentUser);
-            redirectAttributes.addFlashAttribute("message", "Đã xóa tin tuyển dụng thành công.");
-        } catch (JobPostingValidationException ex) {
-            redirectAttributes.addFlashAttribute("errorMessage", ex.getMessage());
+    // ----- Các hàm nhỏ -----
+
+    /** Mọi đường hiển thị form (tạo, sửa, đăng lại, hiện lại khi lỗi) đều đi qua đây. */
+    private String form(Model model, JobPostingCreateRequest dto, User currentUser) {
+        boolean isEdit = dto.getJobPostingId() != null;
+        model.addAttribute("postingDto", dto);
+        model.addAttribute("isEdit", isEdit);
+        // Ô "Đổi yêu cầu" chỉ có khi tạo mới (tin đã tạo không đổi được yêu cầu nguồn, CLAUDE.md §22)
+        if (isEdit) {
+            model.addAttribute("requisitionChoices", List.of());
+        } else {
+            model.addAttribute("requisitionChoices", jobPostingService.requisitionChoices(currentUser));
         }
-        return "redirect:/internal/job-postings";
+        model.addAttribute("benefitSuggestions", BENEFIT_SUGGESTIONS);
+        // Rule ngày nằm ở validator: hạn nộp sớm nhất là hôm nay
+        model.addAttribute("today", validator.today());
+        model.addAttribute("maxScheduleDays", JobPostingValidator.MAX_SCHEDULE_DAYS);
+        // Giới hạn độ dài khớp 3 nơi: maxlength trên form = validator = cột DB
+        model.addAttribute("titleLimit", JobPostingValidator.TITLE_LIMIT);
+        model.addAttribute("textLimit", JobPostingValidator.TEXT_LIMIT);
+        model.addAttribute("salaryTextLimit", JobPostingValidator.SALARY_TEXT_LIMIT);
+        model.addAttribute("positionsTextLimit", JobPostingValidator.POSITIONS_TEXT_LIMIT);
+        model.addAttribute("locationLimit", JobPostingValidator.LOCATION_LIMIT);
+        model.addAttribute("bodyClass", "jp-form-page");
+        return FORM_VIEW;
+    }
+
+    /** Đưa lỗi theo ô về cạnh từng ô; lỗi chung hiện ở đầu form. */
+    private void addErrors(BindingResult errors, JobPostingValidationException e) {
+        if (e.getFieldErrors().isEmpty()) {
+            errors.reject("business", e.getMessage());
+            return;
+        }
+        e.getFieldErrors().forEach((field, message) -> {
+            if (FORM_FIELDS.contains(field)) {
+                errors.rejectValue(field, "invalid", message);
+            } else {
+                errors.reject(field, message);
+            }
+        });
+    }
+
+    private String savedMessage(JobPostingCreateRequest request, boolean isPublish, boolean isCreated) {
+        if (!isPublish && isCreated) {
+            return "Đã lưu bản nháp tin tuyển dụng.";
+        }
+        if (!isPublish) {
+            return "Đã lưu thay đổi.";
+        }
+        boolean isLater = JobPostingCreateRequest.PUBLISH_LATER.equals(request.getPublishMode());
+        if (isLater && request.getScheduledAt() != null) {
+            return "Đã lên lịch đăng tin lúc " + request.getScheduledAt().format(SCHEDULE_FORMAT) + ".";
+        }
+        return PUBLISHED_NOW_MESSAGE;
+    }
+
+    private static String redirectToDetail(Integer id) {
+        return "redirect:" + LIST_URL + "/" + id;
     }
 }

@@ -1,282 +1,202 @@
 package com.group2.rms.jobposting.service;
 
-import com.group2.rms.admin.entity.AuditLog;
-import com.group2.rms.admin.repository.AuditLogRepository;
+import com.group2.rms.candidate.repository.ApplicationRepository;
+import com.group2.rms.candidate.service.ApplicationStatusLabels;
+import com.group2.rms.candidate.service.TalentPoolService;
+import com.group2.rms.core.dto.FilterOption;
 import com.group2.rms.core.exception.ResourceNotFoundException;
+import com.group2.rms.core.util.FieldChanges;
 import com.group2.rms.jobposting.dto.InternalJobPostingDetailResponse;
-import com.group2.rms.jobposting.dto.InternalJobPostingResponse;
-import com.group2.rms.jobposting.dto.JobPostingDashboardResponse;
+import com.group2.rms.jobposting.dto.InternalJobPostingDetailResponse.ApplicationStats;
+import com.group2.rms.jobposting.dto.InternalJobPostingDetailResponse.PostingRound;
+import com.group2.rms.jobposting.dto.InternalJobPostingDetailResponse.RecentApplication;
 import com.group2.rms.jobposting.dto.JobPostingCreateRequest;
+import com.group2.rms.jobposting.dto.JobPostingDashboardResponse;
 import com.group2.rms.jobposting.entity.JobPosting;
 import com.group2.rms.jobposting.exception.JobPostingValidationException;
-import com.group2.rms.jobposting.validator.JobPostingValidator;
-import com.group2.rms.requisition.entity.JobRequisition;
-import com.group2.rms.requisition.entity.ScreeningCriteria;
 import com.group2.rms.jobposting.repository.JobPostingRepository;
+import com.group2.rms.jobposting.validator.JobPostingValidator;
+import com.group2.rms.notification.NotificationService;
+import com.group2.rms.requisition.entity.JobRequisition;
 import com.group2.rms.requisition.repository.JobRequisitionRepository;
 import com.group2.rms.requisition.service.RequisitionAccess;
-import com.group2.rms.candidate.service.TalentPoolService;
-import com.group2.rms.candidate.repository.ApplicationRepository;
-import com.group2.rms.notification.NotificationService;
+import com.group2.rms.requisition.service.RequisitionLabels;
 import com.group2.rms.user.entity.User;
-import jakarta.persistence.criteria.JoinType;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Sort;
-import org.springframework.data.jpa.domain.Specification;
-import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
-import java.time.LocalDate;
+import java.time.Clock;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
-import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
-import java.util.Objects;
 import java.util.Map;
 import java.util.Set;
-import java.util.stream.Collectors;
 
+/**
+ * Luồng nghiệp vụ của một tin tuyển dụng (tạo, sửa, chuyển trạng thái, xóa, xem chi tiết) và bảng điều khiển HR.
+ *
+ * Đọc từ trên xuống là thấy nghiệp vụ: lấy tin → kiểm quyền (JobPostingAccess) → kiểm dữ liệu (JobPostingValidator)
+ * → áp dữ liệu / đổi trạng thái → lưu → audit (JobPostingAuditLogger) → thông báo HM.
+ * Không lo: màn danh sách (JobPostingListService), dựng DTO (JobPostingMapper), chữ hiển thị (JobPostingLabels).
+ */
 @Service
 @RequiredArgsConstructor
 public class JobPostingServiceImpl implements JobPostingService {
 
-    private final JobPostingRepository jobPostingRepository;
-    private final JobRequisitionRepository jobRequisitionRepository;
-    private final AuditLogRepository auditLogRepository;
-    private final RequisitionAccess requisitionAccess;
-    private final NotificationService notificationService;
+    // Trạng thái hồ sơ (cột Application.ApplicationStatus) dùng cho số liệu trang chi tiết
+    private static final String APPLICATION_APPLIED = "Applied";
+    private static final String APPLICATION_AI_SCREENED = "AI_Screened";
+    private static final String APPLICATION_INTERVIEWING = "Interviewing";
+    private static final String APPLICATION_HIRED = "Hired";
+
+    /** Khóa cấu hình ngưỡng điểm AI "đạt" trong bảng SystemConfig, và giá trị dùng khi chưa cấu hình. */
+    private static final String AI_THRESHOLD_CONFIG_KEY = "AI_SCORE_THRESHOLD";
+    private static final BigDecimal DEFAULT_AI_THRESHOLD = new BigDecimal("70");
+    /** Số hồ sơ gần đây hiện ở tab "Ứng viên" trang chi tiết tin. */
+    private static final int RECENT_APPLICATIONS = 7;
+    /** Ô "+N trong 7 ngày" ở trang chi tiết. */
+    private static final int RECENT_WINDOW_DAYS = 7;
+    /** Số tin mới nhất ở bảng điều khiển HR. */
+    private static final int DASHBOARD_RECENT_POSTINGS = 5;
+    private static final int PERCENT = 100;
+
+    private final JobPostingRepository postings;
+    private final JobRequisitionRepository requisitions;
+    private final ApplicationRepository applications;
+    private final JobPostingAccess access;
     private final JobPostingValidator validator;
+    private final JobPostingMapper mapper;
+    private final JobPostingAuditLogger auditLogger;
+    private final NotificationService notificationService;
     private final TalentPoolService talentPoolService;
-    private final ApplicationRepository applicationRepository;
+    private final Clock clock;
 
-    private void requireHrOrAdmin(User currentUser) {
-        String role = requisitionAccess.role(currentUser);
-        if (!RequisitionAccess.ROLE_HR.equals(role) && !RequisitionAccess.ROLE_SYSTEM_ADMIN.equals(role)) {
-            throw new AccessDeniedException("Chỉ HR hoặc Quản trị viên hệ thống mới có quyền quản lý tin tuyển dụng.");
-        }
-    }
-
-    private void requirePostingReader(User user) {
-        if (!RequisitionAccess.ROLE_HIRING_MANAGER.equals(requisitionAccess.role(user))) requireHrOrAdmin(user);
-    }
+    // ===================================================================================
+    // BẢNG ĐIỀU KHIỂN HR
+    // ===================================================================================
 
     @Override
     @Transactional(readOnly = true)
     public JobPostingDashboardResponse getDashboard(User currentUser) {
-        requireHrOrAdmin(currentUser);
-        List<JobPosting> postings = jobPostingRepository.findAll();
-        LocalDateTime now = LocalDateTime.now();
-        long active = postings.stream().filter(p -> "Published".equals(p.getPostingStatus())
-                && (p.getApplicationDeadline() == null || p.getApplicationDeadline().isAfter(now))).count();
-        long drafts = postings.stream().filter(p -> "Draft".equals(p.getPostingStatus())).count();
-        long closed = postings.stream().filter(p -> "Closed".equals(p.getPostingStatus())
-                || ("Published".equals(p.getPostingStatus()) && p.getApplicationDeadline() != null
-                    && !p.getApplicationDeadline().isAfter(now))).count();
+        access.requireManage(currentUser);
+        LocalDateTime now = LocalDateTime.now(clock);
 
-        Set<Integer> occupiedRequisitions = postings.stream()
-                .filter(p -> List.of("Draft", "Published", "Paused").contains(p.getPostingStatus()))
-                .map(p -> p.getRequisition().getRequisitionId())
-                .collect(Collectors.toSet());
-        List<JobPostingDashboardResponse.AwaitingRequisition> awaiting = jobRequisitionRepository
-                .findByApprovalStatusOrderByCreatedAtDesc("Approved").stream()
-                .filter(r -> !occupiedRequisitions.contains(r.getRequisitionId()))
-                .map(r -> new JobPostingDashboardResponse.AwaitingRequisition(
-                        r.getRequisitionId(), r.getTitle(), r.getRequisitionCode(),
-                        r.getDepartment() == null ? null : r.getDepartment().getDepartmentName(),
-                        r.getRecruitmentRound()))
-                .toList();
+        long active = postings.countWithOpenDeadline(JobPostingAccess.STATUS_PUBLISHED, now);
+        long drafts = postings.countByPostingStatus(JobPostingAccess.STATUS_DRAFT);
+        // Tin đang đăng nhưng đã quá hạn nộp cũng tính là đã đóng (ứng viên không nộp thêm được)
+        long closed = postings.countByPostingStatus(JobPostingAccess.STATUS_CLOSED)
+                + postings.countWithPassedDeadline(JobPostingAccess.STATUS_PUBLISHED, now);
 
-        Map<String, Long> byDepartment = postings.stream()
-                .filter(p -> p.getRequisition() != null && p.getRequisition().getDepartment() != null)
-                .collect(Collectors.groupingBy(p -> p.getRequisition().getDepartment().getDepartmentName(),
-                        Collectors.counting()));
-        List<JobPostingDashboardResponse.DeptStat> departments = byDepartment.entrySet().stream()
-                .sorted(Map.Entry.<String, Long>comparingByValue().reversed())
-                .map(e -> new JobPostingDashboardResponse.DeptStat(e.getKey(), e.getValue(),
-                        postings.isEmpty() ? 0 : (int) Math.round(e.getValue() * 100.0 / postings.size())))
-                .toList();
-        List<JobPostingDashboardResponse.RecentPosting> recent = postings.stream().sorted(Comparator.comparing(
-                (JobPosting p) -> p.getPostingDate() != null ? p.getPostingDate() : p.getCreatedAt(),
-                Comparator.nullsFirst(Comparator.naturalOrder())).reversed()).limit(5)
-                .map(p -> new JobPostingDashboardResponse.RecentPosting(
-                        p.getJobPostingId(), p.getPostingTitle(),
-                        p.getRequisition() == null || p.getRequisition().getDepartment() == null
-                                ? null : p.getRequisition().getDepartment().getDepartmentName(),
-                        p.getPostingStatus(), p.getApplicationDeadline(), p.getPostingDate()))
-                .toList();
-        return new JobPostingDashboardResponse(active, drafts, closed, awaiting, departments, recent);
+        long total = postings.count();
+        List<JobPostingDashboardResponse.DeptStat> departmentStats = new ArrayList<>();
+        for (Object[] row : postings.countByDepartment()) {
+            long count = ((Number) row[1]).longValue();
+            int percentage = 0;
+            if (total > 0) {
+                percentage = (int) Math.round(count * (double) PERCENT / total);
+            }
+            departmentStats.add(new JobPostingDashboardResponse.DeptStat((String) row[0], count, percentage));
+        }
+
+        List<JobPostingDashboardResponse.RecentPosting> recent = new ArrayList<>();
+        for (JobPosting posting : postings.findRecent(PageRequest.of(0, DASHBOARD_RECENT_POSTINGS))) {
+            recent.add(mapper.toRecentPosting(posting, now));
+        }
+
+        List<JobPostingDashboardResponse.AwaitingRequisition> awaiting = new ArrayList<>();
+        for (JobRequisition requisition : requisitionsAwaitingPosting()) {
+            awaiting.add(mapper.toAwaitingRequisition(requisition));
+        }
+        return new JobPostingDashboardResponse(active, drafts, closed, awaiting, departmentStats, recent);
     }
 
     @Override
     @Transactional(readOnly = true)
-    public Page<InternalJobPostingResponse> searchInternalJobPostings(
-            int page,
-            int size,
-            String q,
-            Integer departmentId,
-            String status,
-            String sortOrder,
-            User currentUser) {
+    public List<FilterOption> requisitionChoices(User currentUser) {
+        access.requireManage(currentUser);
+        List<JobRequisition> awaiting = requisitionsAwaitingPosting();
+        Map<Integer, Integer> postedTimes = maxPostingNoOf(awaiting);
 
-        requirePostingReader(currentUser);
-
-        Specification<JobPosting> spec = Specification.unrestricted();
-        if (RequisitionAccess.ROLE_HIRING_MANAGER.equals(requisitionAccess.role(currentUser))) {
-            Integer ownDepartment = currentUser.getDepartment() == null ? -1 : currentUser.getDepartment().getDepartmentId();
-            spec = spec.and((root, query, cb) -> {
-                var department = root.join("requisition").join("department");
-                var manager = department.join("manager", JoinType.LEFT);
-                return cb.or(cb.equal(department.get("departmentId"), ownDepartment),
-                        cb.equal(manager.get("userId"), currentUser.getUserId()));
-            });
+        List<FilterOption> choices = new ArrayList<>();
+        for (JobRequisition requisition : awaiting) {
+            String label = requisition.getTitle() + " · " + requisition.getRequisitionCode();
+            int posted = postedTimes.getOrDefault(requisition.getRequisitionId(), 0);
+            if (posted > 0) {
+                label = label + " (đã đăng " + posted + " lần)";
+            }
+            choices.add(new FilterOption(String.valueOf(requisition.getRequisitionId()), label));
         }
-
-        if (q != null && !q.isBlank()) {
-            String trimmed = q.trim();
-            spec = spec.and((root, query, cb) -> {
-                String pattern = "%" + trimmed.toLowerCase() + "%";
-                return cb.or(
-                        cb.like(cb.lower(root.get("postingTitle")), pattern),
-                        cb.like(cb.lower(root.join("requisition", JoinType.LEFT).get("requisitionCode")), pattern)
-                );
-            });
-        }
-
-        if (departmentId != null) {
-            spec = spec.and((root, query, cb) ->
-                    cb.equal(root.join("requisition", JoinType.LEFT).join("department", JoinType.LEFT).get("departmentId"), departmentId));
-        }
-
-        if (status != null && !status.isBlank()) {
-            spec = spec.and((root, query, cb) ->
-                    cb.equal(root.get("postingStatus"), status.trim()));
-        }
-
-        int pageSize = Math.clamp(size, 1, 50);
-        Sort sort = switch (Objects.toString(sortOrder, "newest")) {
-            case "oldest" -> Sort.by(Sort.Order.asc("createdAt"), Sort.Order.asc("jobPostingId"));
-            case "title_asc" -> Sort.by(Sort.Order.asc("postingTitle"), Sort.Order.desc("jobPostingId"));
-            case "title_desc" -> Sort.by(Sort.Order.desc("postingTitle"), Sort.Order.desc("jobPostingId"));
-            case "deadline_asc" -> Sort.by(Sort.Order.asc("applicationDeadline"), Sort.Order.desc("jobPostingId"));
-            default -> Sort.by(Sort.Order.desc("createdAt"), Sort.Order.desc("jobPostingId"));
-        };
-
-        Page<JobPosting> pageResult = jobPostingRepository.findAll(
-                spec,
-                PageRequest.of(Math.max(0, page - 1), pageSize, sort)
-        );
-
-        if (pageResult.getTotalPages() > 0 && pageResult.getNumber() >= pageResult.getTotalPages()) {
-            pageResult = jobPostingRepository.findAll(
-                    spec,
-                    PageRequest.of(pageResult.getTotalPages() - 1, pageSize, sort)
-            );
-        }
-
-        return pageResult.map(this::toInternalResponse);
+        return choices;
     }
 
-    private InternalJobPostingResponse toInternalResponse(JobPosting posting) {
-        JobRequisition req = posting.getRequisition();
-        return InternalJobPostingResponse.builder()
-                .jobPostingId(posting.getJobPostingId())
-                .postingTitle(posting.getPostingTitle())
-                .requisitionId(req != null ? req.getRequisitionId() : null)
-                .requisitionCode(req != null ? req.getRequisitionCode() : "—")
-                .departmentId(req != null && req.getDepartment() != null ? req.getDepartment().getDepartmentId() : null)
-                .departmentName(req != null && req.getDepartment() != null ? req.getDepartment().getDepartmentName() : "Chưa xác định")
-                .recruitmentRound(req != null && req.getRecruitmentRound() != null ? req.getRecruitmentRound() : 1)
-                .employmentType(req != null ? formatEmploymentType(req.getEmploymentType()) : "—")
-                .postingStatus(posting.getPostingStatus())
-                .applicationDeadline(posting.getApplicationDeadline())
-                .postingDate(posting.getPostingDate())
-                .createdAt(posting.getCreatedAt())
-                .createdByName(posting.getCreatedBy() != null ? posting.getCreatedBy().getFullName() : "—")
-                .build();
-    }
+    // ===================================================================================
+    // MỞ FORM
+    // ===================================================================================
 
     @Override
     @Transactional(readOnly = true)
     public JobPostingCreateRequest prepareCreateForm(Integer requisitionId, User currentUser) {
-        return prepareCreateFormInternal(requisitionId, currentUser, true);
-    }
-
-    private JobPostingCreateRequest prepareCreateFormInternal(Integer requisitionId, User currentUser, boolean checkExistingActive) {
-        requireHrOrAdmin(currentUser);
-
+        access.requireManage(currentUser);
+        // Rule: tin chỉ được tạo từ một yêu cầu cụ thể đã duyệt, và mỗi yêu cầu chỉ có 1 tin đang mở
         if (requisitionId == null) {
             throw new JobPostingValidationException("Mã yêu cầu tuyển dụng không hợp lệ.");
         }
-
-        JobRequisition requisition = jobRequisitionRepository.findById(requisitionId)
-                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy yêu cầu tuyển dụng với mã: " + requisitionId));
-
+        JobRequisition requisition = findRequisition(requisitionId);
         validator.requireApproved(requisition);
-
-        if (checkExistingActive) {
-            requireNoOtherOpenPosting(requisitionId, null);
-        }
-
-        // Tạo chuỗi mức lương gợi ý
-        String salaryDisplay = formatSalary(requisition.getMinSalary(), requisition.getMaxSalary());
-
-        // Tổng hợp yêu cầu ứng viên từ requirementDetails và tiêu chí sàng lọc bắt buộc
-        StringBuilder requirements = new StringBuilder();
-        if (requisition.getRequirementDetails() != null && !requisition.getRequirementDetails().isBlank()) {
-            requirements.append(requisition.getRequirementDetails().trim());
-        }
-        if (requisition.getScreeningCriteria() != null && !requisition.getScreeningCriteria().isEmpty()) {
-            List<ScreeningCriteria> mandatory = requisition.getScreeningCriteria().stream()
-                    .filter(c -> Boolean.TRUE.equals(c.getIsMandatory()))
-                    .toList();
-            if (!mandatory.isEmpty()) {
-                if (!requirements.isEmpty()) {
-                    requirements.append("\n\nTiêu chí bắt buộc:\n");
-                } else {
-                    requirements.append("Tiêu chí bắt buộc:\n");
-                }
-                for (ScreeningCriteria c : mandatory) {
-                    requirements.append("- ").append(c.getCriteriaName());
-                    if (c.getRequiredValue() != null && !c.getRequiredValue().isBlank()) {
-                        requirements.append(": ").append(c.getRequiredValue());
-                    }
-                    requirements.append("\n");
-                }
-            }
-        }
-
-        return JobPostingCreateRequest.builder()
-                .requisitionId(requisition.getRequisitionId())
-                .requisitionCode(requisition.getRequisitionCode())
-                .postingTitle(requisition.getTitle())
-                .departmentName(requisition.getDepartment() != null ? requisition.getDepartment().getDepartmentName() : "Chưa xác định")
-                .recruitmentRound(requisition.getRecruitmentRound() != null ? requisition.getRecruitmentRound() : 1)
-                .employmentType(formatEmploymentType(requisition.getEmploymentType()))
-                .workModel(requisition.getWorkModel() != null ? requisition.getWorkModel() : "Tại văn phòng")
-                .numberOfPositions(requisition.getNumberOfPositions())
-                .hiringManagerName(requisition.getHiringManager() != null ? requisition.getHiringManager().getFullName() : "—")
-                .reasonForHiring(requisition.getReasonForHiring() != null ? requisition.getReasonForHiring() : "—")
-                .minSalary(requisition.getMinSalary())
-                .maxSalary(requisition.getMaxSalary())
-                .probationDays(requisition.getProbationDays())
-                .gender(requisition.getGender() != null ? requisition.getGender() : "Any")
-                .expectedStartDate(requisition.getExpectedStartDate())
-                .recruitmentDeadline(requisition.getExpectedStartDate())
-                .isContinuousRecruitment(false)
-                .jobDescription(requisition.getJobDescription())
-                .jobRequirements(requirements.toString())
-                .workLocation(requisition.getWorkLocation() != null ? requisition.getWorkLocation() : "")
-                .salaryDisplay(salaryDisplay)
-                .numberOfPositionsDisplay(requisition.getNumberOfPositions() == null ? null : String.valueOf(requisition.getNumberOfPositions()))
-                .benefits("")
-                .applicationDeadline(requisition.getExpectedStartDate() != null ? requisition.getExpectedStartDate() : LocalDate.now().plusDays(30))
-                .action("draft")
-                .build();
+        requireNoOtherOpenPosting(requisitionId, null);
+        return mapper.toCreateForm(requisition, nextPostingNo(requisitionId));
     }
+
+    @Override
+    @Transactional(readOnly = true)
+    public JobPostingCreateRequest prepareRepostForm(Integer closedPostingId, User currentUser) {
+        access.requireManage(currentUser);
+        JobPosting closed = findById(closedPostingId);
+        // Rule (D10): "Đăng lại" = tạo tin MỚI cùng yêu cầu (PostingNo + 1), nội dung lấy từ tin vừa đóng
+        if (!JobPostingAccess.STATUS_CLOSED.equals(closed.getPostingStatus())) {
+            throw new JobPostingValidationException("Chỉ tin đã đóng mới đăng lại được.");
+        }
+        JobPostingCreateRequest form = prepareCreateForm(closed.getRequisition().getRequisitionId(), currentUser);
+        mapper.copyPostingContent(form, closed);
+        return form;
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public JobPostingCreateRequest prepareEditForm(Integer jobPostingId, User currentUser) {
+        access.requireManage(currentUser);
+        JobPosting posting = findById(jobPostingId);
+        validator.requireEditable(posting.getPostingStatus());
+        validator.requireApproved(posting.getRequisition());
+        return mapper.toEditForm(posting, LocalDateTime.now(clock));
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public JobPostingCreateRequest restoreSourceInfo(JobPostingCreateRequest edited, User currentUser) {
+        access.requireManage(currentUser);
+        if (edited.getJobPostingId() != null) {
+            JobPosting posting = findById(edited.getJobPostingId());
+            mapper.fillSourceInfo(edited, posting.getRequisition());
+            mapper.fillFormState(edited, posting, LocalDateTime.now(clock));
+            return edited;
+        }
+        if (edited.getRequisitionId() == null) {
+            throw new ResourceNotFoundException("Không tìm thấy yêu cầu tuyển dụng nguồn.");
+        }
+        JobRequisition requisition = findRequisition(edited.getRequisitionId());
+        mapper.fillSourceInfo(edited, requisition);
+        mapper.fillNewFormState(edited, nextPostingNo(requisition.getRequisitionId()));
+        return edited;
+    }
+
+    // ===================================================================================
+    // TẠO / SỬA
+    // ===================================================================================
 
     @Override
     @Transactional
@@ -291,359 +211,450 @@ public class JobPostingServiceImpl implements JobPostingService {
     }
 
     private Integer create(JobPostingCreateRequest request, User actor, boolean publish) {
-        requireHrOrAdmin(actor);
+        access.requireManage(actor);
         if (request.getJobPostingId() != null || request.getRequisitionId() == null) {
             throw new JobPostingValidationException("Yêu cầu tạo tin không hợp lệ.");
         }
-        JobRequisition requisition = jobRequisitionRepository.findForUpdate(request.getRequisitionId())
+        // Khóa yêu cầu nguồn: số lần đăng kế tiếp không bị trùng (UQ_JobPosting_Requisition_PostingNo)
+        JobRequisition requisition = requisitions.findForUpdate(request.getRequisitionId())
                 .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy yêu cầu tuyển dụng nguồn."));
         validator.requireApproved(requisition);
         requireNoOtherOpenPosting(requisition.getRequisitionId(), null);
+        validator.normalizeAndValidate(request, publish, true);
 
-        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime now = LocalDateTime.now(clock);
         JobPosting posting = new JobPosting();
         posting.setRequisition(requisition);
-        // Requisition đã bị khóa ở trên nên số lần đăng kế tiếp không bị trùng (UQ_JobPosting_Requisition_PostingNo)
-        posting.setPostingNo(jobPostingRepository.findMaxPostingNo(requisition.getRequisitionId()) + 1);
+        posting.setPostingNo(nextPostingNo(requisition.getRequisitionId()));
         posting.setCreatedBy(actor);
-        applyEditableFields(posting, request, now, publish);
-        posting.setPostingStatus(publish ? "Published" : "Draft");
-        if (publish) posting.setPostingDate(now);
+        applyEditableFields(posting, request, requisition);
+        if (publish) {
+            posting.setPostingStatus(JobPostingAccess.STATUS_PUBLISHED);
+            // Rule (D1): hẹn đăng = Published + PostingDate ở tương lai; ứng viên chỉ thấy tin từ thời điểm đó
+            posting.setPostingDate(validator.chosenPostingTime(request, now));
+        } else {
+            // Rule: tin nháp không có ngày đăng, không giữ lịch hẹn
+            posting.setPostingStatus(JobPostingAccess.STATUS_DRAFT);
+        }
 
-        JobPosting saved = jobPostingRepository.save(posting);
-        audit(saved, actor, "CREATE", "Tạo tin tuyển dụng: " + saved.getPostingStatus());
-        if (publish) notificationService.notifyJobPostingPublished(saved, actor);
+        JobPosting saved = postings.save(posting);
+        auditLogger.log(saved, actor, JobPostingAuditLogger.ACTION_CREATE,
+                JobPostingLabels.LOG_CREATE + ": " + saved.getPostingStatus());
+        if (publish) {
+            notificationService.notifyJobPostingPublished(saved, actor);
+        }
         return saved.getJobPostingId();
     }
 
     @Override
     @Transactional
-    public void updateJobPosting(Integer id, JobPostingCreateRequest request, User actor) {
-        update(id, request, actor, false);
+    public void updateJobPosting(Integer id, JobPostingCreateRequest request, User currentUser) {
+        update(id, request, currentUser, false);
     }
 
     @Override
     @Transactional
-    public void updateAndPublishJobPosting(Integer id, JobPostingCreateRequest request, User actor) {
-        update(id, request, actor, true);
+    public void updateAndPublishJobPosting(Integer id, JobPostingCreateRequest request, User currentUser) {
+        update(id, request, currentUser, true);
     }
 
+    /**
+     * Sửa tin. Trạng thái sau khi lưu:
+     * - Nháp: "Lưu nháp" giữ nháp; "Đăng tin" → đăng ngay hoặc hẹn đăng
+     * - Hẹn đăng: lưu lại thời điểm đăng mới (chọn "Đăng ngay" thì đăng luôn)
+     * - Đang đăng: giữ nguyên ngày đăng, chỉ đổi nội dung
+     * - Tạm dừng: "Lưu thay đổi" giữ tạm dừng; "Lưu và mở lại" → Published, ngày đăng = bây giờ
+     * Không đổi gì thì không lưu, không ghi audit, không thông báo.
+     */
     private void update(Integer id, JobPostingCreateRequest request, User actor, boolean publish) {
-        requireHrOrAdmin(actor);
+        access.requireManage(actor);
         JobPosting posting = findForUpdate(id);
         validator.requireEditable(posting.getPostingStatus());
-        if (request.getJobPostingId() == null || !id.equals(request.getJobPostingId())
-                || !posting.getRequisition().getRequisitionId().equals(request.getRequisitionId())) {
-            throw new JobPostingValidationException("Không thể đổi tin hoặc yêu cầu tuyển dụng nguồn.");
-        }
+        requireSameSource(id, request, posting);
         validator.requireApproved(posting.getRequisition());
-        if (publish && "Paused".equals(posting.getPostingStatus())) {
+
+        LocalDateTime now = LocalDateTime.now(clock);
+        String viewStatus = JobPostingAccess.viewStatus(posting, now);
+        boolean isDraft = JobPostingAccess.STATUS_DRAFT.equals(viewStatus);
+        boolean isPaused = JobPostingAccess.STATUS_PAUSED.equals(viewStatus);
+        boolean isScheduled = JobPostingAccess.STATUS_SCHEDULED.equals(viewStatus);
+        if (publish && isPaused) {
             requireNoOtherOpenPosting(posting.getRequisition().getRequisitionId(), id);
         }
-        boolean newPublication = publish && !"Published".equals(posting.getPostingStatus());
-        LocalDateTime now = LocalDateTime.now();
-        applyEditableFields(posting, request, now, publish || "Published".equals(posting.getPostingStatus()));
-        if (publish) {
-            posting.setPostingStatus("Published");
-            if (newPublication) posting.setPostingDate(now);
+        // Tin đã / sẽ hiển thị cho ứng viên thì bắt buộc hạn nộp; chỉ nháp và hẹn đăng mới đổi được ngày đăng
+        validator.normalizeAndValidate(request, publish || !isDraft, isDraft || isScheduled);
+
+        Map<String, String> before = auditLogger.snapshot(posting);
+        LocalDateTime oldPostingDate = posting.getPostingDate();
+        applyEditableFields(posting, request, posting.getRequisition());
+        if ((isDraft && publish) || isScheduled) {
+            posting.setPostingStatus(JobPostingAccess.STATUS_PUBLISHED);
+            posting.setPostingDate(validator.chosenPostingTime(request, now));
+        } else if (isPaused && publish) {
+            posting.setPostingStatus(JobPostingAccess.STATUS_PUBLISHED);
+            posting.setPostingDate(now);
         }
-        jobPostingRepository.save(posting);
-        audit(posting, actor, "UPDATE", newPublication ? "Đăng tin tuyển dụng" : "Cập nhật tin tuyển dụng");
-        if (newPublication) notificationService.notifyJobPostingPublished(posting, actor);
+        Map<String, String> after = auditLogger.snapshot(posting);
+        List<String> changedKeys = FieldChanges.changedKeys(before, after);
+        if (changedKeys.isEmpty()) {
+            return;
+        }
+
+        boolean isNewPublication = posting.getPostingDate() != null && !posting.getPostingDate().equals(oldPostingDate);
+        String description = JobPostingLabels.LOG_UPDATE;
+        if (isNewPublication && posting.getPostingDate().isAfter(now)) {
+            description = JobPostingLabels.LOG_SCHEDULE;
+        } else if (isNewPublication) {
+            description = JobPostingLabels.LOG_PUBLISH;
+        }
+        postings.save(posting);
+        auditLogger.logChanges(posting, actor, description, changedKeys, before, after);
+        if (isNewPublication) {
+            notificationService.notifyJobPostingPublished(posting, actor);
+        }
     }
+
+    // ===================================================================================
+    // CHUYỂN TRẠNG THÁI (nút trên trang chi tiết / danh sách)
+    // ===================================================================================
 
     @Override
     @Transactional
-    public void publishJobPosting(Integer id, User actor) {
-        requireHrOrAdmin(actor);
+    public void publishJobPosting(Integer id, User currentUser) {
+        access.requireManage(currentUser);
         JobPosting posting = findForUpdate(id);
-        if (!"Draft".equals(posting.getPostingStatus()) && !"Paused".equals(posting.getPostingStatus())) {
+        String status = posting.getPostingStatus();
+        if (!JobPostingAccess.STATUS_DRAFT.equals(status) && !JobPostingAccess.STATUS_PAUSED.equals(status)) {
             throw new JobPostingValidationException("Chỉ tin nháp hoặc đang tạm dừng mới được đăng.");
         }
+        LocalDateTime now = LocalDateTime.now(clock);
+        // Rule: kiểm lại khi đăng — yêu cầu nguồn vẫn Approved, tin đủ nội dung và còn hạn nộp
         validator.requireApproved(posting.getRequisition());
-        validator.requirePublishableContent(posting);
+        validator.requirePublishableContent(posting, now);
         requireNoOtherOpenPosting(posting.getRequisition().getRequisitionId(), id);
-        if (posting.getApplicationDeadline() != null && !posting.getApplicationDeadline().isAfter(LocalDateTime.now())) {
-            throw new JobPostingValidationException("Hạn nộp đã qua. Hãy cập nhật tin trước khi đăng.");
-        }
-        posting.setPostingStatus("Published");
-        posting.setPostingDate(LocalDateTime.now());
-        jobPostingRepository.save(posting);
-        audit(posting, actor, "UPDATE", "Đăng tin tuyển dụng");
-        notificationService.notifyJobPostingPublished(posting, actor);
+
+        posting.setPostingStatus(JobPostingAccess.STATUS_PUBLISHED);
+        posting.setPostingDate(now);
+        postings.save(posting);
+        auditLogger.log(posting, currentUser, JobPostingAuditLogger.ACTION_UPDATE, JobPostingLabels.LOG_PUBLISH);
+        notificationService.notifyJobPostingPublished(posting, currentUser);
     }
 
     @Override
     @Transactional
-    public void pauseJobPosting(Integer id, User actor) {
-        requireHrOrAdmin(actor);
+    public void publishNow(Integer id, User currentUser) {
+        access.requireManage(currentUser);
         JobPosting posting = findForUpdate(id);
-        if (!"Published".equals(posting.getPostingStatus())) {
+        LocalDateTime now = LocalDateTime.now(clock);
+        requireScheduled(posting, now, "Chỉ tin đang hẹn đăng mới đăng ngay được.");
+        validator.requireApproved(posting.getRequisition());
+
+        posting.setPostingDate(now);
+        postings.save(posting);
+        auditLogger.log(posting, currentUser, JobPostingAuditLogger.ACTION_UPDATE, JobPostingLabels.LOG_PUBLISH);
+        notificationService.notifyJobPostingPublished(posting, currentUser);
+    }
+
+    /** Rule: hủy lịch đăng → tin trở về bản nháp, PostingDate = NULL (tin nháp không có ngày đăng). */
+    @Override
+    @Transactional
+    public void unschedule(Integer id, User currentUser) {
+        access.requireManage(currentUser);
+        JobPosting posting = findForUpdate(id);
+        requireScheduled(posting, LocalDateTime.now(clock), "Chỉ tin đang hẹn đăng mới hủy lịch được.");
+
+        posting.setPostingStatus(JobPostingAccess.STATUS_DRAFT);
+        posting.setPostingDate(null);
+        postings.save(posting);
+        auditLogger.log(posting, currentUser, JobPostingAuditLogger.ACTION_UPDATE, JobPostingLabels.LOG_UNSCHEDULE);
+    }
+
+    @Override
+    @Transactional
+    public void pauseJobPosting(Integer id, User currentUser) {
+        access.requireManage(currentUser);
+        JobPosting posting = findForUpdate(id);
+        if (!JobPostingAccess.STATUS_PUBLISHED.equals(posting.getPostingStatus())) {
             throw new JobPostingValidationException("Chỉ tin đang đăng mới được tạm dừng.");
         }
-        posting.setPostingStatus("Paused");
-        jobPostingRepository.save(posting);
-        audit(posting, actor, "UPDATE", "Tạm dừng tin tuyển dụng");
+        posting.setPostingStatus(JobPostingAccess.STATUS_PAUSED);
+        postings.save(posting);
+        auditLogger.log(posting, currentUser, JobPostingAuditLogger.ACTION_UPDATE, JobPostingLabels.LOG_PAUSE);
     }
 
     @Override
-    public void closeJobPosting(Integer id, User actor) {
-        if (!RequisitionAccess.ROLE_HR.equals(requisitionAccess.role(actor))) {
-            throw new AccessDeniedException("Chỉ HR được đóng đợt tuyển dụng.");
-        }
+    @Transactional
+    public void closeJobPosting(Integer id, User currentUser) {
+        access.requireCloseAny(currentUser);
         talentPoolService.closeJob(id);
-    }
-
-    private JobPosting findForUpdate(Integer id) {
-        if (id == null) throw new JobPostingValidationException("Mã tin tuyển dụng không hợp lệ.");
-        return jobPostingRepository.findForUpdate(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy tin tuyển dụng."));
-    }
-
-    private JobPosting findById(Integer id) {
-        if (id == null) throw new JobPostingValidationException("Mã tin tuyển dụng không hợp lệ.");
-        return jobPostingRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy tin tuyển dụng với mã: " + id));
-    }
-
-    private void requireNoOtherOpenPosting(Integer requisitionId, Integer currentId) {
-        boolean exists = currentId == null
-                ? jobPostingRepository.existsByRequisition_RequisitionIdAndPostingStatusIn(
-                        requisitionId, List.of("Draft", "Published", "Paused"))
-                : jobPostingRepository.existsByRequisition_RequisitionIdAndJobPostingIdNotAndPostingStatusIn(
-                        requisitionId, currentId, List.of("Draft", "Published", "Paused"));
-        if (exists) throw new JobPostingValidationException("Yêu cầu này đã có tin nháp hoặc tin đang hoạt động.");
-    }
-
-    private void applyEditableFields(JobPosting posting, JobPostingCreateRequest request,
-            LocalDateTime now, boolean publishing) {
-        if (request.getPostingTitle() == null || request.getPostingTitle().isBlank()
-                || request.getJobDescription() == null || request.getJobDescription().isBlank()
-                || request.getJobRequirements() == null || request.getJobRequirements().isBlank()) {
-            throw new JobPostingValidationException("Tiêu đề, mô tả và yêu cầu ứng viên không được để trống.");
-        }
-        posting.setPostingTitle(request.getPostingTitle().trim());
-        posting.setJobDescription(request.getJobDescription().trim());
-        posting.setJobRequirements(request.getJobRequirements().trim());
-        posting.setBenefits(blankToNull(request.getBenefits()));
-        posting.setSalaryDisplay(blankToNull(request.getSalaryDisplay()));
-        posting.setWorkLocation(blankToNull(request.getWorkLocation()));
-        posting.setNumberOfPositionsDisplay(blankToNull(request.getNumberOfPositionsDisplay()));
-        posting.setApplicationDeadline(validator.deadline(request, now, publishing));
-    }
-
-    private String blankToNull(String value) {
-        return value == null || value.isBlank() ? null : value.trim();
-    }
-
-    private void audit(JobPosting posting, User actor, String action, String detail) {
-        auditLogRepository.save(AuditLog.builder()
-                .user(actor).action(action).entityName("JobPosting")
-                .entityId(String.valueOf(posting.getJobPostingId()))
-                .newValue(detail + ": " + posting.getPostingTitle())
-                .timestamp(LocalDateTime.now()).build());
-    }
-
-    @Override
-    @Transactional(readOnly = true)
-    public JobPostingCreateRequest prepareEditForm(Integer jobPostingId, User currentUser) {
-        requireHrOrAdmin(currentUser);
-
-        JobPosting posting = findById(jobPostingId);
-        validator.requireEditable(posting.getPostingStatus());
-
-        JobRequisition req = posting.getRequisition();
-        JobPostingCreateRequest form = prepareCreateFormInternal(req.getRequisitionId(), currentUser, false);
-        form.setJobPostingId(posting.getJobPostingId());
-        form.setPostingStatus(posting.getPostingStatus());
-        form.setPostingTitle(posting.getPostingTitle());
-        form.setJobDescription(posting.getJobDescription());
-        form.setJobRequirements(posting.getJobRequirements());
-        form.setBenefits(posting.getBenefits());
-        form.setSalaryDisplay(posting.getSalaryDisplay());
-        form.setWorkLocation(posting.getWorkLocation());
-        form.setNumberOfPositionsDisplay(posting.getNumberOfPositionsDisplay());
-        form.setApplicationDeadline(posting.getApplicationDeadline() != null ? posting.getApplicationDeadline().toLocalDate() : null);
-        form.setIsContinuousRecruitment(posting.getApplicationDeadline() == null);
-        form.setAction("draft".equalsIgnoreCase(posting.getPostingStatus()) ? "draft" : "publish");
-
-        return form;
     }
 
     @Override
     @Transactional
     public void deleteJobPosting(Integer id, User currentUser) {
-        requireHrOrAdmin(currentUser);
-
-        JobPosting posting = findById(id);
-
-        if (!"Draft".equals(posting.getPostingStatus()) || applicationRepository.existsByJobPosting_JobPostingId(id)) {
+        access.requireManage(currentUser);
+        JobPosting posting = findForUpdate(id);
+        // Rule: chỉ xóa bản nháp chưa có hồ sơ ứng tuyển
+        if (!JobPostingAccess.STATUS_DRAFT.equals(posting.getPostingStatus())
+                || applications.existsByJobPosting_JobPostingId(id)) {
             throw new JobPostingValidationException("Chỉ có thể xóa bản nháp chưa có hồ sơ ứng tuyển.");
         }
-
-        jobPostingRepository.delete(posting);
-
-        auditLogRepository.save(AuditLog.builder()
-                .user(currentUser)
-                .action("DELETE")
-                .entityName("JobPosting")
-                .entityId(String.valueOf(id))
-                .newValue(String.format("Xóa tin tuyển dụng: %s", posting.getPostingTitle()))
-                .timestamp(LocalDateTime.now())
-                .build());
+        // Ghi audit trước khi xóa để vẫn còn tiêu đề tin trong lịch sử
+        auditLogger.log(posting, currentUser, JobPostingAuditLogger.ACTION_DELETE, JobPostingLabels.LOG_DELETE);
+        postings.delete(posting);
     }
+
+    // ===================================================================================
+    // TRANG CHI TIẾT
+    // ===================================================================================
 
     @Override
     @Transactional(readOnly = true)
     public InternalJobPostingDetailResponse getInternalJobPostingDetail(Integer id, User currentUser) {
-        requirePostingReader(currentUser);
-
+        access.requireRead(currentUser);
         JobPosting posting = findById(id);
+        access.requireView(currentUser, posting);
 
-        JobRequisition req = posting.getRequisition();
+        LocalDateTime now = LocalDateTime.now(clock);
+        String viewStatus = JobPostingAccess.viewStatus(posting, now);
+        JobRequisition requisition = posting.getRequisition();
 
-        if (RequisitionAccess.ROLE_HIRING_MANAGER.equals(requisitionAccess.role(currentUser))
-                && !requisitionAccess.inManagedDepartment(currentUser, req))
-            throw new AccessDeniedException("Tin tuyển dụng không thuộc phòng ban của bạn.");
+        // Số liệu hồ sơ chỉ có khi tin đã lên trang tuyển dụng
+        BigDecimal threshold = aiScoreThreshold();
+        ApplicationStats stats = ApplicationStats.empty(threshold);
+        if (JobPostingAccess.hasBeenPublished(viewStatus)) {
+            stats = applicationStats(id, threshold, now);
+        }
+        boolean hasApplications = stats.total() > 0;
+        if (JobPostingAccess.STATUS_DRAFT.equals(viewStatus)) {
+            hasApplications = applications.existsByJobPosting_JobPostingId(id);
+        }
+        boolean hasOpenPosting = false;
+        if (JobPostingAccess.STATUS_CLOSED.equals(viewStatus) && requisition != null) {
+            hasOpenPosting = postings.existsByRequisition_RequisitionIdAndPostingStatusIn(
+                    requisition.getRequisitionId(), JobPostingAccess.OPEN_STATUSES);
+        }
+        List<PostingRound> rounds = List.of();
+        if (requisition != null) {
+            rounds = postingRounds(requisition.getRequisitionId(), id, now);
+        }
+        return mapper.toDetail(posting, currentUser, now, hasApplications, hasOpenPosting, stats, rounds,
+                auditLogger.history(id));
+    }
 
-        String statusLabel = switch (posting.getPostingStatus()) {
-            case "Published" -> "Đang đăng tuyển";
-            case "Draft" -> "Bản nháp";
-            case "Paused" -> "Tạm dừng";
-            case "Closed" -> "Đã đóng";
-            default -> posting.getPostingStatus();
-        };
-
-        List<String> criteriaList = (req != null && req.getScreeningCriteria() != null)
-                ? req.getScreeningCriteria().stream()
-                        .map(c -> c.getCriteriaName() + " (Trọng số: " + c.getWeight() + "%)")
-                        .collect(Collectors.toList())
-                : List.of();
-
-        // Rule: gather audit history logs or synthesize for job posting
-        List<InternalJobPostingDetailResponse.ActivityHistoryItem> history = buildActivityHistory(posting);
-
-        return InternalJobPostingDetailResponse.builder()
-                .jobPostingId(posting.getJobPostingId())
-                .postingTitle(posting.getPostingTitle())
-                .requisitionId(req != null ? req.getRequisitionId() : null)
-                .requisitionCode(req != null ? req.getRequisitionCode() : "—")
-                .requisitionTitle(req != null ? req.getTitle() : "—")
-                .requisitionApprovalStatus(req != null ? req.getApprovalStatus() : "—")
-                .departmentId(req != null && req.getDepartment() != null ? req.getDepartment().getDepartmentId() : null)
-                .departmentName(req != null && req.getDepartment() != null ? req.getDepartment().getDepartmentName() : "Chưa xác định")
-                .recruitmentRound(req != null && req.getRecruitmentRound() != null ? req.getRecruitmentRound() : 1)
-                .numberOfPositions(req != null ? req.getNumberOfPositions() : 1)
-                .employmentType(req != null ? formatEmploymentType(req.getEmploymentType()) : "—")
-                .workModel(req != null && req.getWorkModel() != null ? req.getWorkModel() : "Tại văn phòng")
-                .workLocation(posting.getWorkLocation() != null ? posting.getWorkLocation() : (req != null ? req.getWorkLocation() : "—"))
-                .salaryDisplay(posting.getSalaryDisplay() != null ? posting.getSalaryDisplay() : "Thoả thuận")
-                .numberOfPositionsDisplay(posting.getNumberOfPositionsDisplay())
-                .postingNo(posting.getPostingNo())
-                .closedAt(posting.getClosedAt())
-                .jobDescription(posting.getJobDescription())
-                .jobRequirements(posting.getJobRequirements())
-                .benefits(posting.getBenefits())
-                .postingStatus(posting.getPostingStatus())
-                .postingStatusLabel(statusLabel)
-                .postingDate(posting.getPostingDate())
-                .applicationDeadline(posting.getApplicationDeadline())
-                .createdAt(posting.getCreatedAt())
-                .updatedAt(posting.getUpdatedAt())
-                .createdByName(posting.getCreatedBy() != null ? posting.getCreatedBy().getFullName() : "—")
-                .createdByEmail(posting.getCreatedBy() != null ? posting.getCreatedBy().getEmail() : null)
-                .hiringManagerName(req != null && req.getHiringManager() != null ? req.getHiringManager().getFullName() : "—")
-                .hiringManagerEmail(req != null && req.getHiringManager() != null ? req.getHiringManager().getEmail() : null)
-                .screeningCriteria(criteriaList)
-                .activityHistory(history)
+    /** Số liệu hồ sơ của tin: đếm theo trạng thái (1 câu) + vài câu đếm riêng. */
+    private ApplicationStats applicationStats(Integer postingId, BigDecimal threshold, LocalDateTime now) {
+        Map<String, Long> byStatus = new HashMap<>();
+        long total = 0;
+        for (Object[] row : postings.countApplicationsByStatus(postingId)) {
+            long count = ((Number) row[1]).longValue();
+            byStatus.put((String) row[0], count);
+            total += count;
+        }
+        return ApplicationStats.builder()
+                .total(total)
+                .last7Days(postings.countApplicationsSince(postingId, now.minusDays(RECENT_WINDOW_DAYS)))
+                .pending(byStatus.getOrDefault(APPLICATION_APPLIED, 0L)
+                        + byStatus.getOrDefault(APPLICATION_AI_SCREENED, 0L))
+                .aiPassed(postings.countApplicationsWithAiScoreAtLeast(postingId, threshold))
+                .aiThreshold(threshold)
+                .interviewing(byStatus.getOrDefault(APPLICATION_INTERVIEWING, 0L))
+                .hired(byStatus.getOrDefault(APPLICATION_HIRED, 0L))
+                .recent(recentApplications(postingId, threshold))
                 .build();
     }
 
-    // Rule: build structured audit history for job posting detail view
-    private List<InternalJobPostingDetailResponse.ActivityHistoryItem> buildActivityHistory(JobPosting posting) {
-        List<AuditLog> logs = auditLogRepository.findByEntityNameAndEntityIdOrderByTimestampDesc(
-                "JobPosting", String.valueOf(posting.getJobPostingId())
-        );
+    /** Các hồ sơ mới nhất kèm điểm AI lần chấm gần nhất (null = chưa chấm). Điểm AI tra gộp 1 câu. */
+    private List<RecentApplication> recentApplications(Integer postingId, BigDecimal threshold) {
+        List<Object[]> rows = postings.findRecentApplications(postingId, PageRequest.of(0, RECENT_APPLICATIONS));
+        if (rows.isEmpty()) {
+            return List.of();
+        }
+        List<Integer> ids = new ArrayList<>();
+        for (Object[] row : rows) {
+            ids.add((Integer) row[0]);
+        }
+        Map<Integer, BigDecimal> scores = new HashMap<>();
+        for (Object[] row : postings.findLatestAiScores(ids)) {
+            scores.put((Integer) row[0], (BigDecimal) row[1]);
+        }
 
-        List<InternalJobPostingDetailResponse.ActivityHistoryItem> history = new ArrayList<>();
-        if (logs != null && !logs.isEmpty()) {
-            List<AuditLog> chronological = new ArrayList<>(logs);
-            chronological.sort(Comparator.comparing(AuditLog::getTimestamp));
-            int index = 1;
-            for (AuditLog log : chronological) {
-                history.add(InternalJobPostingDetailResponse.ActivityHistoryItem.builder()
-                        .no(index++)
-                        .action(activityAction(log))
-                        .performedBy(log.getUser() != null ? log.getUser().getFullName() : "Hệ thống")
-                        .timestamp(log.getTimestamp())
-                        .build());
+        List<RecentApplication> result = new ArrayList<>();
+        for (Object[] row : rows) {
+            Integer applicationId = (Integer) row[0];
+            String status = (String) row[2];
+            BigDecimal score = scores.get(applicationId);
+            boolean isAiPassed = score != null && score.compareTo(threshold) >= 0;
+            result.add(new RecentApplication(applicationId, (String) row[1], score, isAiPassed,
+                    ApplicationStatusLabels.label(status), ApplicationStatusLabels.badge(status),
+                    (LocalDateTime) row[3]));
+        }
+        return result;
+    }
+
+    /** Các lần đăng của cùng yêu cầu, kèm số hồ sơ và số đã tuyển (2 câu đếm gộp). */
+    private List<PostingRound> postingRounds(Integer requisitionId, Integer currentId, LocalDateTime now) {
+        List<JobPosting> all = postings.findByRequisition_RequisitionIdOrderByPostingNoAsc(requisitionId);
+        if (all.isEmpty()) {
+            return List.of();
+        }
+        List<Integer> ids = new ArrayList<>();
+        for (JobPosting round : all) {
+            ids.add(round.getJobPostingId());
+        }
+        Map<Integer, Long> applicationCounts = countByPosting(
+                postings.countApplicationsByPosting(ids, JobPostingListService.NEW_APPLICATION_STATUS));
+        Map<Integer, Long> hiredCounts = countByPosting(
+                postings.countApplicationsInStatusByPosting(ids, APPLICATION_HIRED));
+
+        List<PostingRound> rounds = new ArrayList<>();
+        for (JobPosting round : all) {
+            rounds.add(mapper.toPostingRound(round, currentId,
+                    applicationCounts.getOrDefault(round.getJobPostingId(), 0L),
+                    hiredCounts.getOrDefault(round.getJobPostingId(), 0L), now));
+        }
+        return rounds;
+    }
+
+    /** Ngưỡng điểm AI "đạt" (SystemConfig.AI_SCORE_THRESHOLD); thiếu hoặc sai định dạng thì dùng 70. */
+    private BigDecimal aiScoreThreshold() {
+        String configured = postings.findConfigValue(AI_THRESHOLD_CONFIG_KEY).orElse(null);
+        if (configured == null) {
+            return DEFAULT_AI_THRESHOLD;
+        }
+        try {
+            // Cấu hình lưu "70.00" thì hiển thị "70" (setScale(0) để 70 không thành 7E+1)
+            BigDecimal trimmed = new BigDecimal(configured.trim()).stripTrailingZeros();
+            if (trimmed.scale() < 0) {
+                return trimmed.setScale(0);
             }
+            return trimmed;
+        } catch (NumberFormatException invalidConfig) {
+            return DEFAULT_AI_THRESHOLD;
+        }
+    }
+
+    // ===================================================================================
+    // CÁC HÀM KIỂM TRA / TRA CỨU DÙNG CHUNG
+    // ===================================================================================
+
+    private JobPosting findForUpdate(Integer id) {
+        if (id == null) {
+            throw new JobPostingValidationException("Mã tin tuyển dụng không hợp lệ.");
+        }
+        return postings.findForUpdate(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy tin tuyển dụng."));
+    }
+
+    private JobPosting findById(Integer id) {
+        if (id == null) {
+            throw new JobPostingValidationException("Mã tin tuyển dụng không hợp lệ.");
+        }
+        return postings.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy tin tuyển dụng với mã: " + id));
+    }
+
+    private JobRequisition findRequisition(Integer requisitionId) {
+        return requisitions.findById(requisitionId)
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "Không tìm thấy yêu cầu tuyển dụng với mã: " + requisitionId));
+    }
+
+    /** Rule: mỗi yêu cầu chỉ có 1 tin nháp / đang đăng / tạm dừng. currentId = tin đang sửa (bỏ qua chính nó). */
+    private void requireNoOtherOpenPosting(Integer requisitionId, Integer currentId) {
+        boolean exists;
+        if (currentId == null) {
+            exists = postings.existsByRequisition_RequisitionIdAndPostingStatusIn(
+                    requisitionId, JobPostingAccess.OPEN_STATUSES);
         } else {
-            // NOTE: Fallback synthesis when older records do not yet have audit log entries
-            String author = posting.getCreatedBy() != null ? posting.getCreatedBy().getFullName() : "Hệ thống";
-            int index = 1;
-            if (posting.getCreatedAt() != null) {
-                history.add(InternalJobPostingDetailResponse.ActivityHistoryItem.builder()
-                        .no(index++)
-                        .action("Tạo mới")
-                        .performedBy(author)
-                        .timestamp(posting.getCreatedAt())
-                        .build());
-            }
-            if (posting.getUpdatedAt() != null && !posting.getUpdatedAt().equals(posting.getCreatedAt())) {
-                history.add(InternalJobPostingDetailResponse.ActivityHistoryItem.builder()
-                        .no(index++)
-                        .action("Cập nhật")
-                        .performedBy(author)
-                        .timestamp(posting.getUpdatedAt())
-                        .build());
-            }
-            if ("Published".equalsIgnoreCase(posting.getPostingStatus()) && posting.getPostingDate() != null) {
-                history.add(InternalJobPostingDetailResponse.ActivityHistoryItem.builder()
-                        .no(index)
-                        .action("Đăng tin")
-                        .performedBy(author)
-                        .timestamp(posting.getPostingDate())
-                        .build());
-            }
+            exists = postings.existsByRequisition_RequisitionIdAndJobPostingIdNotAndPostingStatusIn(
+                    requisitionId, currentId, JobPostingAccess.OPEN_STATUSES);
         }
-        return history;
+        if (exists) {
+            throw new JobPostingValidationException("Yêu cầu này đã có tin nháp hoặc tin đang hoạt động.");
+        }
     }
 
-    private String activityAction(AuditLog log) {
-        String detail = Objects.toString(log.getNewValue(), "");
-        if ("UPDATE".equalsIgnoreCase(log.getAction())) {
-            if (detail.startsWith("Đăng tin tuyển dụng") || detail.contains("Published")) return "Đăng tin";
-            if (detail.startsWith("Tạm dừng tin tuyển dụng")) return "Tạm dừng";
-            if (detail.equals("Closed")) return "Đóng tin";
-            return "Cập nhật";
+    /** Rule: sửa tin không đổi được tin khác hay yêu cầu nguồn (id gửi từ form phải khớp với tin trong DB). */
+    private void requireSameSource(Integer id, JobPostingCreateRequest request, JobPosting posting) {
+        boolean isSamePosting = id.equals(request.getJobPostingId());
+        boolean isSameRequisition = posting.getRequisition().getRequisitionId().equals(request.getRequisitionId());
+        if (!isSamePosting || !isSameRequisition) {
+            throw new JobPostingValidationException("Không thể đổi tin hoặc yêu cầu tuyển dụng nguồn.");
         }
-        if ("CREATE".equalsIgnoreCase(log.getAction())) {
-            return detail.startsWith("Tạo tin tuyển dụng: Published") ? "Tạo và đăng tin" : "Tạo mới";
-        }
-        if ("DELETE".equalsIgnoreCase(log.getAction())) return "Xóa";
-        return "Tạo mới";
     }
 
-    private String formatSalary(BigDecimal min, BigDecimal max) {
-        if (min != null && max != null) {
-            return String.format("%,d - %,d VNĐ", min.longValue(), max.longValue()).replace(',', '.');
-        } else if (min != null) {
-            return String.format("Từ %,d VNĐ", min.longValue()).replace(',', '.');
-        } else if (max != null) {
-            return String.format("Lên đến %,d VNĐ", max.longValue()).replace(',', '.');
+    private void requireScheduled(JobPosting posting, LocalDateTime now, String message) {
+        if (!JobPostingAccess.STATUS_SCHEDULED.equals(JobPostingAccess.viewStatus(posting, now))) {
+            throw new JobPostingValidationException(message);
         }
-        return "Thoả thuận";
     }
 
-    private String formatEmploymentType(String type) {
-        if (type == null) return "—";
-        return switch (type) {
-            case "Full-time" -> "Toàn thời gian";
-            case "Part-time" -> "Bán thời gian";
-            case "Internship" -> "Thực tập";
-            case "Contract" -> "Hợp đồng";
-            default -> type;
+    /** Yêu cầu đã duyệt nhưng chưa có tin nháp / đang đăng / tạm dừng: HR cần tạo tin cho chúng. */
+    private List<JobRequisition> requisitionsAwaitingPosting() {
+        Set<Integer> occupied = postings.findRequisitionIdsWithPostingStatusIn(JobPostingAccess.OPEN_STATUSES);
+        List<JobRequisition> awaiting = new ArrayList<>();
+        for (JobRequisition requisition
+                : requisitions.findWithDepartmentByApprovalStatusOrderByCreatedAtDesc(RequisitionAccess.STATUS_APPROVED)) {
+            if (!occupied.contains(requisition.getRequisitionId())) {
+                awaiting.add(requisition);
+            }
+        }
+        return awaiting;
+    }
+
+    /** Số lần đăng lớn nhất của các yêu cầu (1 câu cho cả danh sách, tránh N+1). */
+    private Map<Integer, Integer> maxPostingNoOf(List<JobRequisition> requisitionList) {
+        Map<Integer, Integer> result = new HashMap<>();
+        if (requisitionList.isEmpty()) {
+            return result;
+        }
+        List<Integer> ids = new ArrayList<>();
+        for (JobRequisition requisition : requisitionList) {
+            ids.add(requisition.getRequisitionId());
+        }
+        for (Object[] row : postings.findMaxPostingNoByRequisitionIds(ids)) {
+            result.put((Integer) row[0], ((Number) row[1]).intValue());
+        }
+        return result;
+    }
+
+    private int nextPostingNo(Integer requisitionId) {
+        return postings.findMaxPostingNo(requisitionId) + 1;
+    }
+
+    private static Map<Integer, Long> countByPosting(List<Object[]> rows) {
+        Map<Integer, Long> counts = new HashMap<>();
+        for (Object[] row : rows) {
+            counts.put((Integer) row[0], ((Number) row[1]).longValue());
+        }
+        return counts;
+    }
+
+    /** Ghi các trường HR được sửa (CLAUDE.md §22). Chuỗi đã được validator trim / làm sạch. */
+    private void applyEditableFields(JobPosting posting, JobPostingCreateRequest request, JobRequisition requisition) {
+        posting.setPostingTitle(request.getPostingTitle());
+        posting.setJobDescription(request.getJobDescription());
+        posting.setJobRequirements(request.getJobRequirements());
+        posting.setBenefits(request.getBenefits());
+        posting.setWorkLocation(request.getWorkLocation());
+        posting.setSalaryDisplay(salaryDisplayOf(request, requisition));
+        // Rule: tắt "Hiển thị số lượng tuyển" thì lưu NULL (trang công khai không hiện số lượng)
+        String positions = null;
+        if (Boolean.TRUE.equals(request.getShowPositions())) {
+            positions = request.getNumberOfPositionsDisplay();
+        }
+        posting.setNumberOfPositionsDisplay(positions);
+        posting.setApplicationDeadline(validator.deadlineOf(request));
+    }
+
+    /** Chuỗi lương lưu vào SalaryDisplay: theo yêu cầu (lấy từ DB, không tin số gửi lên), thỏa thuận, hoặc tự nhập. */
+    private String salaryDisplayOf(JobPostingCreateRequest request, JobRequisition requisition) {
+        return switch (request.getSalaryMode()) {
+            case JobPostingCreateRequest.SALARY_RANGE ->
+                    RequisitionLabels.salary(requisition.getMinSalary(), requisition.getMaxSalary());
+            case JobPostingCreateRequest.SALARY_CUSTOM -> request.getSalaryCustom();
+            default -> JobPostingLabels.SALARY_NEGOTIABLE;
         };
     }
 }

@@ -9,10 +9,10 @@
 
 | Tầng | Kiểm tra cái gì | Cần Spring? Cần DB? | Tốc độ | File trong dự án |
 |---|---|---|---|---|
-| **Unit: Validator** | Một quy tắc nhập liệu (số lượng 1–30, trọng số 100%...) | Không / Không | Rất nhanh | `requisition/validator/RequisitionValidatorTests.java` |
-| **Unit: Service** | Nghiệp vụ một hàm service (tạo, xóa, duyệt...), phụ thuộc được giả lập bằng Mockito | Không / Không | Nhanh | `requisition/service/JobRequisitionServiceTest.java`, `RequisitionListFilterTests.java`, `RequisitionAccessTest.java` |
-| **Controller (MVC)** | URL → controller → view / redirect / flash, bảo mật (403, CSRF); service được giả lập | Một phần (web) / Không | Trung bình | `requisition/controller/JobRequisitionControllerTests.java` |
-| **Integration** | Service + Repository + **SQL Server thật**, rollback sau mỗi test | Đầy đủ / **Có** | Chậm | `requisition/integration/RequisitionIntegrationTest.java` |
+| **Unit: Validator** | Một quy tắc nhập liệu (số lượng 1–30, trọng số 100%...) | Không / Không | Rất nhanh | `requisition/validator/RequisitionValidatorTests.java`, `core/util/ListFiltersTests.java`, `FieldChangesTests.java` |
+| **Unit: Service** | Nghiệp vụ một hàm service (tạo, xóa, duyệt...), phụ thuộc được giả lập bằng Mockito | Không / Không | Nhanh | `requisition/service/RequisitionServiceTests.java`, `RequisitionListServiceTests.java`, `RequisitionAccessTests.java`, `RequisitionMapperTests.java` |
+| **Controller (MVC)** | URL → controller → view / redirect / flash, bảo mật (403, CSRF); service được giả lập | Một phần (web) / Không | Trung bình | `requisition/controller/RequisitionControllerTests.java` |
+| **Integration** | Service + Repository + **SQL Server thật**, rollback sau mỗi test | Đầy đủ / **Có** | Chậm | `requisition/integration/RequisitionIntegrationTests.java` |
 | **System (Postman)** | Cả ứng dụng đang chạy, qua HTTP như trình duyệt (đăng nhập, CSRF, session) | App đang chạy / **Có** | Chậm nhất | `docs/members/hoangnh/requisition.postman_collection.json` |
 
 **Quy tắc chọn tầng:** quy tắc nhập liệu → test validator; "ai được làm gì", "ghi bảng nào" → test service;
@@ -23,13 +23,16 @@
 
 ```bash
 # Toàn bộ test của module requisition (khoảng 1 phút, gồm cả integration nên cần SQL Server đang chạy)
-./mvnw -o clean test -Dtest='com.group2.rms.requisition.**'
+./mvnw -o clean test -Dtest='Requisition*'
+
+# Máy thiếu RAM (lỗi "The forked VM terminated" / "insufficient memory"): giảm heap, tắt jacoco
+./mvnw -o test -Dtest='Requisition*' '-DargLine=-Xmx384m -XX:+UseSerialGC' -Djacoco.skip=true
 
 # Một class
 ./mvnw -o test -Dtest=RequisitionValidatorTests
 
 # Một hàm test
-./mvnw -o test -Dtest='JobRequisitionServiceTest#svc10_delete_blockedWhenLaterRoundExists'
+./mvnw -o test -Dtest='RequisitionServiceTests*#deleteRequisition_shouldReject_whenLaterRoundExists'
 ```
 
 Kết quả nằm ở `target/surefire-reports/*.txt`. Luôn dùng `clean` khi thấy lỗi lạ kiểu "Unresolved compilation problems":
@@ -39,8 +42,8 @@ VS Code cũng biên dịch vào `target/` và có thể để lại class cũ.
 
 ```java
 @Test
-@DisplayName("SVC-10: Phiếu đã có đợt sau -> Không xóa, báo lỗi rõ ràng")   // câu tiếng Việt: điều kiện -> kết quả
-void svc10_delete_blockedWhenLaterRoundExists() {                          // mã_hàm_điềuKiện
+@DisplayName("Đã có đợt tuyển sau sao chép từ nó -> Không xóa, báo lỗi rõ ràng")   // câu tiếng Việt: điều kiện -> kết quả
+void deleteRequisition_shouldReject_whenLaterRoundExists() {                         // hàm_shouldKếtQuả_whenĐiềuKiện (CLAUDE.md §23)
     // Arrange: chuẩn bị dữ liệu và giả lập
     // Act:     gọi đúng 1 hàm cần test
     // Assert:  kiểm tra kết quả + kiểm tra những gì KHÔNG được xảy ra
@@ -102,25 +105,35 @@ void val003_positionsOutOfRangeRejected(int positions) {
 - chỉ định chúng trả gì (`when(...).thenReturn(...)`);
 - kiểm tra service có gọi chúng đúng không (`verify(...)`).
 
-**Khung lớp test** (đã có trong `JobRequisitionServiceTest`):
+**Khung lớp test** (đã có trong `RequisitionServiceTests`): service được **tạo bằng tay** trong `setUp()`
+để thấy rõ nó cần gì; mapper và audit logger là bản thật, `Clock` cố định ngày.
 
 ```java
 @ExtendWith(MockitoExtension.class)
-class JobRequisitionServiceTest {
-    @Mock private JobRequisitionRepository requisitions;   // mỗi phụ thuộc của service là 1 @Mock
+class RequisitionServiceTests {
+    private static final Clock CLOCK = Clock.fixed(Instant.parse("2026-10-18T03:00:00Z"), ZoneId.of("Asia/Ho_Chi_Minh"));
+
+    @Mock private JobRequisitionRepository requisitions;   // mỗi repository / quyền / thông báo là 1 @Mock
     @Mock private JobPostingRepository postings;
     @Mock private AuditLogRepository audit;
     @Mock private RequisitionAccess access;
     // ...
-    @InjectMocks private RequisitionServiceImpl service;   // service thật, nhận các mock ở trên
+    private RequisitionServiceImpl service;
 
     @BeforeEach
     void setUp() {
+        RequisitionMapper mapper = new RequisitionMapper(access, validator, CLOCK);     // thật
+        RequisitionAuditLogger auditLogger = new RequisitionAuditLogger(audit);         // thật, ghi qua mock audit
+        service = new RequisitionServiceImpl(requisitions, departments, approvals, postings, access, validator,
+                mapper, auditLogger, notificationService, CLOCK);
         // lenient(): stub dùng chung, test nào không dùng cũng không bị Mockito báo "unnecessary stubbing"
         lenient().when(access.actor()).thenReturn(manager);
     }
 }
 ```
+
+**Thời gian:** code không gọi `LocalDate.now()` mà gọi `LocalDate.now(clock)` (bean `Clock` ở `core/config/ClockConfig`).
+Test truyền `Clock.fixed(...)` nên "hôm nay" luôn là 18/10/2026: test biên ngày không lỗi khi chạy qua nửa đêm.
 
 > Thiếu `@Mock` cho một phụ thuộc → service nhận `null` → `NullPointerException` khi chạy. Ví dụ test xóa cần `@Mock JobPostingRepository postings`.
 
@@ -128,11 +141,10 @@ class JobRequisitionServiceTest {
 
 ```java
 @Test
-@DisplayName("SVC-10: Phiếu đã có đợt tuyển sau sao chép từ nó -> Không xóa, báo lỗi rõ ràng")
-void svc10_delete_blockedWhenLaterRoundExists() {
+@DisplayName("Đã có đợt tuyển sau sao chép từ nó -> Không xóa, báo lỗi rõ ràng")
+void deleteRequisition_shouldReject_whenLaterRoundExists() {
     // Arrange
-    rejectedRequisition();                                                     // findForUpdate(60) trả phiếu Rejected
-    when(postings.existsByRequisition_RequisitionId(60)).thenReturn(false);    // chưa có tin
+    requisitionWithStatus(60, RequisitionAccess.STATUS_REJECTED);              // findForUpdate(60) trả phiếu Rejected
     when(requisitions.existsByOriginalRequisition_RequisitionId(60)).thenReturn(true); // đã có đợt 2
 
     // Act
@@ -159,12 +171,16 @@ assertSame(itDepartment, saved.getDepartment());
 
 | Hàm | Trường hợp |
 |---|---|
-| `createRequisition` | ✅ nháp đủ trường; ✅ nháp tối thiểu sinh mã `REQ-0101`; ✅ lọc dòng tiêu chí trống; ✅ chặn `criteriaId` cũ; ✅ không có phòng ban; ✅ phòng ban ngừng hoạt động; ✅ bỏ qua `departmentId` từ form; ☐ trùng tên bản nháp cùng phòng ban; ☐ gửi duyệt có `SubmittedAt` |
-| `updateRequisition` | ✅ giữ phòng ban cũ; ☐ không ai khác ngoài chủ / Admin sửa được; ☐ chỉ ghi audit các trường thay đổi |
-| `deleteRequisition` | ✅ chặn khi có đợt sau; ✅ xóa thành công; ☐ chặn khi đã có tin tuyển dụng |
-| `decide` | ✅ trả lại → Rejected + thông báo cho HM; ☐ trả lại thiếu lý do; ☐ lý do > 1000 ký tự; ☐ duyệt → Approved, không thông báo |
-| `withdraw` | ☐ chỉ chủ phiếu, chỉ khi Pending_Director |
-| `getListPage` | ✅ 9 test bộ lọc theo role trong `RequisitionListFilterTests`; ✅ HR chỉ Approved |
+| `createRequisition` | ✅ nháp đủ trường; ✅ nháp tối thiểu sinh mã `REQ-0101`; ✅ bỏ dòng tiêu chí chỉ có khoảng trắng; ✅ chặn `criteriaId` giả; ✅ trùng tên bản nháp cùng phòng ban; ✅ không có phòng ban; ✅ phòng ban ngừng hoạt động; ✅ bỏ qua `departmentId` từ form; ✅ gửi duyệt có `SubmittedAt` = giờ Clock; ✅ Giám đốc gửi → Approved; ✅ không có quyền tạo |
+| `createRequisition` (sao chép) | ✅ giữ tên → đợt max + 1; ✅ đổi tên → đợt 1; ✅ nguồn Draft / Pending bị chặn; ✅ nguồn không tồn tại |
+| `updateRequisition` | ✅ giữ phòng ban cũ; ✅ Giám đốc phê duyệt trực tiếp; ✅ đổi tên bản đợt 2 → đợt 1; ✅ không đổi gì thì không lưu / không audit; ✅ `criteriaId` của yêu cầu khác; ✅ không có quyền sửa; ✅ id không tồn tại |
+| `copy`, `getById` | ✅ bỏ `criteriaId`, gợi ý đợt sau; ✅ nguồn chưa xong vòng duyệt; ✅ id không tồn tại; ✅ không có quyền xem |
+| `decide` | ✅ duyệt → Approved, không thông báo; ✅ duyệt không cần ý kiến; ✅ trả lại → Rejected + thông báo cho HM; ✅ lý do null / rỗng / chỉ khoảng trắng; ✅ lý do đúng 1000 ký tự; ✅ 1001 ký tự; ✅ người không được duyệt |
+| `withdraw` | ✅ chủ phiếu rút lại → Draft; ✅ người khác / sai trạng thái |
+| `deleteRequisition` | ✅ xóa thành công; ✅ chặn khi có tin tuyển dụng; ✅ chặn khi có đợt sau |
+| `RequisitionListService.getListPage` | ✅ bộ lọc theo role (HR, Director, HM, Admin); ✅ HR chỉ Approved; ✅ trạng thái trùng; ✅ từ khóa khoảng trắng / biên 120; ✅ size = 0; ✅ trang vượt tổng; ✅ tra tin 1 câu cho cả trang (không N+1) |
+| `RequisitionAccess` | ✅ bảng `requireView` 5 người xem × 4 trạng thái; ✅ các cờ `canEdit`, `canDelete`, `canWithdraw`, `canDecide`, `canCopy`, `canCreatePostingFrom`, `canOpenPosting` |
+| `RequisitionMapper` | ✅ cờ quyền dòng danh sách; ✅ `incomplete`; ✅ số ngày chờ / còn lại theo Clock; ✅ lý do trả lại; ✅ escape HTML (XSS) |
 
 ---
 
@@ -176,10 +192,12 @@ status, tên view, redirect, flash message, model attribute, và bảo mật (ro
 ```java
 @WebMvcTest(controllers = RequisitionController.class)
 @Import({SecurityConfig.class, DatabaseUserDetailsService.class})   // dùng cấu hình bảo mật THẬT
-class JobRequisitionControllerTests {
+class RequisitionControllerTests {
     @Autowired private MockMvc mvc;
     @MockitoBean private RequisitionService service;
+    @MockitoBean private RequisitionListService listService;   // màn danh sách
     @MockitoBean private RequisitionAccess access;
+    @MockitoBean private RequisitionValidator validator;       // controller hỏi khoảng ngày bắt đầu (min / max)
     @MockitoBean private DepartmentRepository departments;
     @MockitoBean private UserRepository userRepository;   // AccountSessionGuardFilter cần đọc user
 }
@@ -190,7 +208,7 @@ class JobRequisitionControllerTests {
 ```java
 @Test
 @WithMockUser(username = "hm", roles = "HIRING_MANAGER")       // giả lập đã đăng nhập với role HM
-void create_saveDraft_success() throws Exception {
+void create_shouldRedirectToDetail_whenDraftIsSaved() throws Exception {
     when(service.createRequisition(any(RequisitionRequest.class))).thenReturn(10);
 
     mvc.perform(post("/requisitions/create")
@@ -211,6 +229,11 @@ void create_saveDraft_success() throws Exception {
 | Thiếu CSRF | bỏ `.with(csrf())` → `status().isForbidden()` |
 | Lỗi validate trả lại form | `doThrow(new RequisitionValidationException(Map.of("title", "..."))).when(service).createRequisition(any())` → `status().isOk()`, `view().name("requisitions/form")`, `model().attributeHasFieldErrors("requisitionDto", "title")` |
 | Form không bind được trường cấm | gửi `.param("approvalStatus", "Approved")`, dùng `ArgumentCaptor` kiểm tra DTO nhận được không có giá trị đó |
+| Bean Validation (`@Valid`) chặn trước service | gửi `"a".repeat(TITLE_CHAR_LIMIT + 1)` → `model().attributeHasFieldErrorCode("requisitionDto", "title", "Size")` + `verify(service, never())...`; số ngoài khoảng (`POSITIONS_MAX + 1`, lương `1000000001`, `screeningCriteria[0].weight=150`) → `attributeHasFieldErrors(...)` |
+| Ô nhiều dòng không bị chặn oan vì `\r\n` | `"a\r\n".repeat(999) + "a"` (2.998 ký tự gửi lên, 1.999 sau chuẩn hóa) → vẫn redirect, service được gọi |
+| Template đọc được record | dựng `RequisitionResponse.builder()...` có tiêu chí `isMandatory(true)` → `content().string(containsString("Bắt buộc"))` |
+
+> So nội dung tiếng Việt trong HTML bằng `content().string(...)` có thể lệch bảng mã; với lỗi theo ô nên kiểm `attributeHasFieldErrorCode` thay vì so câu.
 
 **Lỗi hay gặp:** `roles = "HIRING_MANAGER"` phải khớp tên role trong `RoleAuthorities` / `SecurityConfig`;
 `userRepository.findByUsernameIgnoreCase("hm")` phải được stub, nếu không session guard coi tài khoản không tồn tại và chuyển về `/login`.
@@ -226,7 +249,7 @@ ràng buộc DB (NOT NULL, CHECK, UNIQUE), cascade xóa.
 @SpringBootTest(properties = "spring.jpa.hibernate.ddl-auto=validate")
 @AutoConfigureMockMvc
 @Transactional          // mỗi test chạy trong 1 transaction và ROLLBACK khi xong → DB không bị thay đổi
-class RequisitionIntegrationTest { ... }
+class RequisitionIntegrationTests { ... }
 ```
 
 > ⚠️ Test chạy trên **database thật** trong `application.properties` (`RitirementManagement2`). Nhờ `@Transactional` dữ liệu được rollback,
@@ -286,11 +309,11 @@ npx newman run docs/members/hoangnh/requisition.postman_collection.json
 npx newman run docs/members/hoangnh/requisition.postman_collection.json --env-var baseUrl=http://localhost:8089
 ```
 
-Kết quả lần chạy 17/10/2026: **30 request, 55 assertion, 0 failed** (dữ liệu tự dọn).
+Kết quả lần chạy 17/10/2026: **42 request, 81 assertion, 0 failed** (dữ liệu tự dọn).
 
 Biến của collection (tab **Variables**): `baseUrl` (mặc định `http://localhost:8088`), `password`; `csrf`, `reqId`, `startDate` do script tự điền.
 
-### 5.3 Collection kiểm tra những gì (30 request, tự dọn dữ liệu)
+### 5.3 Collection kiểm tra những gì (42 request, tự dọn dữ liệu)
 
 | Thư mục | Người dùng | Các bước | Kỳ vọng |
 |---|---|---|---|
@@ -299,6 +322,9 @@ Biến của collection (tab **Variables**): `baseUrl` (mặc định `http://lo
 | 2. Director | `director` | Danh sách mặc định có phiếu vừa gửi; **[Âm]** trả lại không lý do; **trả lại có lý do**; **[Âm]** xóa | Câu lỗi "Vui lòng nhập lý do..."; "Đã lưu quyết định thành công."; xóa bị 403 |
 | 3. HR | `hr_lan` | **[Âm]** xem phiếu bị trả lại; **[Âm]** tạo yêu cầu | 403, 403 |
 | 4. Dọn dữ liệu | `hm_tuan` | Xóa phiếu vừa tạo; xem lại | 302 → `/requisitions`; 404 |
+| 5. Tin tuyển dụng | `hr_lan` | Danh sách tin; mở form tạo (lấy yêu cầu nguồn); **[Âm]** đăng thiếu hạn nộp; **lên lịch đăng sáng mai**; xem chi tiết; ứng viên mở tin; hủy lịch; xóa | Lỗi "Vui lòng chọn hạn nộp hồ sơ."; chi tiết "Hẹn đăng" + nút Đăng ngay / Hủy lịch đăng; `/jobs/{id}` → 404; về "Bản nháp"; xóa xong 404 |
+
+> Thư mục 5 tạo **1 thông báo thật** cho HM của yêu cầu ("Tin tuyển dụng hẹn đăng: …") mỗi lần chạy; tin thử thì được xóa.
 
 Chạy xong DB trở về như cũ (chỉ còn dòng `AuditLog` của phiếu đã xóa và identity tăng thêm 1).
 Nếu chạy dở giữa chừng (ví dụ dừng ở thư mục 2), vào app bằng `hm_tuan` xóa tay phiếu "Postman - Kiểm thử viên".
@@ -330,7 +356,7 @@ pm.test("Báo lỗi số lượng", () =>
 
 ## 6. Trước khi báo "xong"
 
-- [ ] `./mvnw -o clean test -Dtest='com.group2.rms.requisition.**'` → 0 failures.
+- [ ] `./mvnw -o clean test -Dtest='Requisition*'` → 0 failures.
 - [ ] Chạy collection Postman → mọi test xanh, dữ liệu đã được dọn.
 - [ ] Quy tắc mới trong code đã có trong `validation.md` và có ít nhất 1 test biên.
 - [ ] Ghi ngắn gọn vào `checklist.md`.

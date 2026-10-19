@@ -51,19 +51,19 @@
         <span class="nav-label-text">Lịch phỏng vấn</span>
     </a>
 
-    <!-- Đề nghị tuyển dụng (dunglt bổ sung: trỏ trang /portal/offers thay cho khối #offers trên dashboard) -->
+    <!-- Thư mời nhận việc (trỏ trang /portal/offers) -->
     <a th:href="@{/portal/offers}" class="sidebar-nav-link"
        th:classappend="${activeMenu == 'offers' ? 'active' : ''}"
        th:attr="aria-current=${activeMenu == 'offers' ? 'page' : null}"
-       title="Đề nghị tuyển dụng"
-       data-tooltip="Đề nghị tuyển dụng">
+       title="Thư mời nhận việc"
+       data-tooltip="Thư mời nhận việc">
         <span class="nav-icon-wrapper">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                 <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
                 <polyline points="22 4 12 14.01 9 11.01"/>
             </svg>
         </span>
-        <span class="nav-label-text">Đề nghị tuyển dụng</span>
+        <span class="nav-label-text">Thư mời nhận việc</span>
     </a>
 
     <!-- Vị trí đang tuyển -->

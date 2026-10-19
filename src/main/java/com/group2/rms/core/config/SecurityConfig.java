@@ -147,8 +147,9 @@ public class SecurityConfig {
                                                 .hasAnyAuthority("ROLE_HR", "ROLE_HIRING_MANAGER")
                                                 .requestMatchers("/internal/job-postings/create", "/internal/job-postings/dashboard")
                                                 .hasAnyAuthority("ROLE_HR", RoleAuthorities.SYSTEM_ADMIN)
+                                                // Xem danh sách / chi tiết tin: thêm Director (chỉ xem, không thao tác); service ẩn tin nháp với HM, Director
                                                 .requestMatchers(HttpMethod.GET, "/internal/job-postings", "/internal/job-postings/*")
-                                                .hasAnyAuthority("ROLE_HR", "ROLE_HIRING_MANAGER", RoleAuthorities.SYSTEM_ADMIN)
+                                                .hasAnyAuthority("ROLE_HR", "ROLE_HIRING_MANAGER", "ROLE_DIRECTOR", RoleAuthorities.SYSTEM_ADMIN)
                                                 .requestMatchers("/internal/job-postings", "/internal/job-postings/**")
                                                 .hasAnyAuthority("ROLE_HR", RoleAuthorities.SYSTEM_ADMIN)
                                                 // application pipeline: HM scope (own department) is checked in ApplicationAccess

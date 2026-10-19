@@ -1,38 +1,32 @@
 <!DOCTYPE html>
-<html lang="vi" xmlns:th="http://www.thymeleaf.org">
-<head th:replace="~{fragments/head :: interfaceHead('Quản lý Đề xuất Offer', ~{::pageStyles})}">
-  <th:block th:fragment="pageStyles">
-    <!-- CSRF Meta Tags for AJAX Requests -->
-    <meta name="_csrf" th:content="${_csrf?.token}"/>
-    <meta name="_csrf_header" th:content="${_csrf?.headerName}"/>
+<html lang="vi"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/internal}">
+<head>
+  <title>Quản lý Đề xuất Offer | Mộc RMS</title>
+  <th:block layout:fragment="styles">
     <!-- Font Awesome Icons for specialized actions & icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" th:href="@{/css/offers.css}">
   </th:block>
 </head>
-<body class="rms-app">
+<body>
 
-<div class="page-wrapper">
-    <!-- SIDEBAR: Kế thừa sidebar Recruitment Workspace chuẩn của Mộc RMS -->
-    <aside th:replace="~{fragments/sidebar :: workspace('offers', ${userRole != null ? userRole : 'HR'})}"></aside>
+<main id="main" layout:fragment="content" class="page-content container" tabindex="-1">
 
-    <div class="main-content">
-        <!-- TOPBAR: Kế thừa header chung của hệ thống với logo Mộc và người dùng hiện tại -->
-        <header th:replace="~{fragments/workspace-header :: header(${userRole != null ? (userRole == 'HR' ? 'HR' : userRole) : 'HR Specialist'}, ${currentUser})}"></header>
+    <!-- FLASH MESSAGES -->
+    <div class="page-flash-container" id="pageFlashContainer" th:if="${successMessage != null or errorMessage != null}">
+        <div th:if="${successMessage}" class="page-flash-alert page-flash-success" id="flashSuccessAlert">
+            <i class="fa-solid fa-circle-check"></i>
+            <span th:text="${successMessage}">Đã nộp trình đề xuất Offer lên Giám đốc thành công!</span>
+        </div>
+        <div th:if="${errorMessage}" class="page-flash-alert page-flash-danger" id="flashErrorAlert">
+            <i class="fa-solid fa-triangle-exclamation"></i>
+            <span th:text="${errorMessage}">Lỗi xử lý yêu cầu.</span>
+        </div>
+    </div>
 
-        <!-- PAGE CONTENT -->
-        <main id="main" class="page-content" tabindex="-1">
-            <div class="container">
-
-                <!-- FLASH MESSAGES -->
-                <div th:if="${successMessage}" class="modal-alert modal-alert-success" style="display:flex; margin-bottom: 20px;">
-                    <i class="fa-solid fa-circle-check" style="font-size:18px;"></i>
-                    <div style="font-size: 14px; font-weight: 500;" th:text="${successMessage}"></div>
-                </div>
-                <div th:if="${errorMessage}" class="modal-alert modal-alert-danger" style="display:flex; margin-bottom: 20px;">
-                    <i class="fa-solid fa-triangle-exclamation" style="font-size:18px;"></i>
-                    <div style="font-size: 14px; font-weight: 500;" th:text="${errorMessage}"></div>
-                </div>
 
                 <!-- Header Section -->
                 <div class="offers-header">
@@ -63,7 +57,7 @@
                     </div>
 
                     <div class="offer-stat-card">
-                        <div class="stat-label">Chờ duyệt Director</div>
+                        <div class="stat-label">Chờ Giám đốc duyệt</div>
                         <div class="offer-stat-bottom">
                             <div class="offer-stat-icon stat-icon-amber">
                                 <i class="fa-solid fa-hourglass-half"></i>
@@ -73,7 +67,7 @@
                     </div>
 
                     <div class="offer-stat-card">
-                        <div class="stat-label">Director đã duyệt</div>
+                        <div class="stat-label">Giám đốc đã duyệt</div>
                         <div class="offer-stat-bottom">
                             <div class="offer-stat-icon stat-icon-green">
                                 <i class="fa-solid fa-stamp"></i>
@@ -83,7 +77,7 @@
                     </div>
 
                     <div class="offer-stat-card">
-                        <div class="stat-label">Đã gửi ứng viên</div>
+                        <div class="stat-label">Đã gửi thư mời</div>
                         <div class="offer-stat-bottom">
                             <div class="offer-stat-icon stat-icon-blue">
                                 <i class="fa-solid fa-paper-plane"></i>
@@ -93,7 +87,7 @@
                     </div>
 
                     <div class="offer-stat-card">
-                        <div class="stat-label">Đã nhận việc</div>
+                        <div class="stat-label">Ứng viên chấp nhận</div>
                         <div class="offer-stat-bottom">
                             <div class="offer-stat-icon stat-icon-emerald">
                                 <i class="fa-solid fa-user-check"></i>
@@ -107,24 +101,24 @@
                 <div class="offers-toolbar">
                     <div class="toolbar-left">
                         <div class="search-box">
-                            <i class="fa-solid fa-magnifying-glass" onclick="applyOfferFilters()" style="cursor: pointer;" title="Bấm để tìm kiếm"></i>
+                            <i class="fa-solid fa-magnifying-glass offer-cursor-pointer" onclick="applyOfferFilters()" title="Bấm để tìm kiếm"></i>
                             <input type="text" id="searchInput" placeholder="Tìm theo tên ứng viên, vị trí..."
                                    th:value="${search}"
                                    onkeydown="if(event.key==='Enter'){ applyOfferFilters(); }">
                             <button type="button" th:if="${search != null and search != ''}" onclick="clearSearchInput()"
-                                    style="background:none; border:none; cursor:pointer; color:var(--muted); padding:0 4px; display:inline-flex; align-items:center;" title="Xóa từ khóa">
+                                    class="offer-search-clear-btn" title="Xóa từ khóa">
                                 <i class="fa-solid fa-xmark"></i>
                             </button>
                         </div>
 
                         <select id="statusFilter" class="filter-select" onchange="applyOfferFilters()">
                             <option value="ALL" th:selected="${currentStatus == 'ALL'}">-- Tất cả trạng thái --</option>
-                            <option value="Draft" th:selected="${currentStatus == 'Draft'}">Bản thảo</option>
-                            <option value="Pending_Director" th:selected="${currentStatus == 'Pending_Director'}">Chờ Director duyệt</option>
-                            <option value="Director_Approved" th:selected="${currentStatus == 'Director_Approved' or currentStatus == 'Approved'}">Director đã duyệt</option>
-                            <option value="Director_Rejected" th:selected="${currentStatus == 'Director_Rejected' or currentStatus == 'Rejected'}">Director từ chối</option>
-                            <option value="Sent_Candidate" th:selected="${currentStatus == 'Sent_Candidate'}">Đã gửi ứng viên</option>
-                            <option value="Accepted" th:selected="${currentStatus == 'Accepted'}">Ứng viên đồng ý</option>
+                            <option value="Draft" th:selected="${currentStatus == 'Draft'}">Bản nháp</option>
+                            <option value="Pending_Director" th:selected="${currentStatus == 'Pending_Director'}">Chờ Giám đốc duyệt</option>
+                            <option value="Director_Approved" th:selected="${currentStatus == 'Director_Approved' or currentStatus == 'Approved'}">Giám đốc đã duyệt</option>
+                            <option value="Director_Rejected" th:selected="${currentStatus == 'Director_Rejected' or currentStatus == 'Rejected'}">Giám đốc từ chối</option>
+                            <option value="Sent_Candidate" th:selected="${currentStatus == 'Sent_Candidate'}">Đã gửi thư mời</option>
+                            <option value="Accepted" th:selected="${currentStatus == 'Accepted'}">Ứng viên chấp nhận</option>
                             <option value="Declined" th:selected="${currentStatus == 'Declined'}">Ứng viên từ chối</option>
                         </select>
 
@@ -138,7 +132,7 @@
                 </div>
 
                 <!-- Selection Toolbar (HR chọn 1 hoặc nhiều Offer) -->
-                <div id="selectionToolbar" class="selection-toolbar" style="display: none;">
+                <div id="selectionToolbar" class="selection-toolbar">
                     <div class="selection-toolbar-left">
                         <i class="fa-solid fa-circle-check"></i>
                         <span>Đã chọn <strong id="selectedOffersCount">0</strong> đề xuất</span>
@@ -158,41 +152,41 @@
                     <table class="offers-table" id="offersTable">
                         <thead>
                             <tr>
-                                <th style="width: 44px; text-align: center;">
+                                <th class="offer-col-w-44 offer-text-center">
                                     <input type="checkbox" id="selectAllOffers" class="offer-checkbox" onchange="toggleSelectAllOffers(this.checked)" title="Chọn tất cả trên trang này">
                                 </th>
-                                <th style="width: 90px;">Mã Offer</th>
+                                <th class="offer-col-w-70">Mã Offer</th>
                                 <th>Ứng viên</th>
                                 <th>Vị trí đề xuất</th>
                                 <th>Lương chính thức</th>
                                 <th>Lương thử việc</th>
                                 <th>Trạng thái</th>
                                 <th>Ngày lập</th>
-                                <th style="text-align: right; width: 150px;">Thao tác</th>
+                                <th class="offer-col-w-150 offer-text-right">Thao tác</th>
                             </tr>
                         </thead>
                         <tbody id="offersTableBody">
                             <tr th:if="${#lists.isEmpty(offers)}">
-                                <td colspan="9" style="text-align:center; padding:48px 24px; color:var(--muted);">
-                                    <i class="fa-solid fa-inbox" style="font-size:32px; margin-bottom:12px; display:block; color:var(--control-line);"></i>
+                                <td colspan="9" class="offer-empty-state-cell">
+                                    <i class="fa-solid fa-inbox offer-empty-state-icon"></i>
                                     Không tìm thấy đề xuất Offer nào phù hợp với bộ lọc.
                                 </td>
                             </tr>
                             <tr th:each="o : ${offers}" th:attr="data-id=${o.offerId}, data-status=${o.offerStatus}">
-                                <td style="text-align: center;">
+                                <td class="offer-text-center">
                                     <input type="checkbox" class="offer-checkbox offer-row-checkbox" th:value="${o.offerId}" onchange="handleOfferRowSelectionChange()">
                                 </td>
                                 <td>
                                     <a th:href="@{/offers/{id}(id=${o.offerId})}" class="offer-id-link" th:text="${o.offerId}">1</a>
                                 </td>
                                 <td>
-                                    <a th:href="@{/offers/{id}(id=${o.offerId})}" style="text-decoration:none; color:inherit;">
+                                    <a th:href="@{/offers/{id}(id=${o.offerId})}" class="offer-row-link">
                                         <div class="cand-name-cell" th:text="${o.candidateName != null ? o.candidateName : 'Ứng viên'}">Nguyễn Văn A</div>
                                     </a>
                                     <div class="cand-email-sub" th:text="${o.candidateEmail != null ? o.candidateEmail : 'N/A'}">a.nguyen@email.com</div>
                                 </td>
                                 <td>
-                                    <span style="font-weight:600; color:var(--ink);" th:text="${o.offeredPositionTitle}">Senior Java Developer</span>
+                                    <span class="offer-position-title" th:text="${o.offeredPositionTitle}">Senior Java Developer</span>
                                 </td>
                                 <td>
                                     <div class="salary-main" th:text="${#numbers.formatDecimal(o.proposedSalary, 0, 'POINT', 0, 'COMMA')} + ' VND'">25,000,000 VND</div>
@@ -209,32 +203,32 @@
                                 <td>
                                     <!-- Status Badges -->
                                     <span th:if="${o.offerStatus == 'Draft'}" class="status-badge status-draft">
-                                        <i class="fa-regular fa-file"></i> Bản thảo
+                                        <i class="fa-regular fa-file"></i> Bản nháp
                                     </span>
                                     <span th:if="${o.offerStatus == 'Pending_Director'}" class="status-badge status-pending">
-                                        <i class="fa-regular fa-clock"></i> Chờ duyệt
+                                        <i class="fa-regular fa-clock"></i> Chờ Giám đốc duyệt
                                     </span>
                                     <span th:if="${o.offerStatus == 'Director_Approved' or o.offerStatus == 'Approved'}" class="status-badge status-approved">
-                                        <i class="fa-solid fa-check"></i> Đã duyệt
+                                        <i class="fa-solid fa-check"></i> Giám đốc đã duyệt
                                     </span>
                                     <span th:if="${o.offerStatus == 'Director_Rejected' or o.offerStatus == 'Rejected'}" class="status-badge status-rejected">
-                                        <i class="fa-solid fa-xmark"></i> Bị từ chối
+                                        <i class="fa-solid fa-xmark"></i> Giám đốc từ chối
                                     </span>
                                     <span th:if="${o.offerStatus == 'Sent_Candidate'}" class="status-badge status-sent">
-                                        <i class="fa-regular fa-paper-plane"></i> Đã gửi ứng viên
+                                        <i class="fa-regular fa-paper-plane"></i> Đã gửi thư mời
                                     </span>
                                     <span th:if="${o.offerStatus == 'Accepted'}" class="status-badge status-accepted">
-                                        <i class="fa-solid fa-user-check"></i> Đã nhận việc
+                                        <i class="fa-solid fa-user-check"></i> Ứng viên chấp nhận
                                     </span>
                                     <span th:if="${o.offerStatus == 'Declined'}" class="status-badge status-declined">
-                                        <i class="fa-solid fa-user-xmark"></i> Từ chối
+                                        <i class="fa-solid fa-user-xmark"></i> Ứng viên từ chối
                                     </span>
                                 </td>
-                                <td style="color:var(--muted); font-size:13.5px;" th:text="${o.createdAt != null ? #temporals.format(o.createdAt, 'dd/MM/yyyy HH:mm') : '-'}">
+                                <td class="offer-date-cell" th:text="${o.createdAt != null ? #temporals.format(o.createdAt, 'dd/MM/yyyy HH:mm') : '-'}">
                                     01/10/2026
                                 </td>
-                                <td style="text-align: right;">
-                                    <div class="action-buttons" style="justify-content: flex-end;">
+                                <td class="offer-text-right">
+                                    <div class="action-buttons offer-justify-end">
                                         <!-- Xem chi tiết màn hình (Screen 32) -->
                                         <a th:href="@{/offers/{id}(id=${o.offerId})}" class="btn-icon btn-icon-primary" title="Xem chi tiết">
                                             <i class="fa-solid fa-eye"></i>
@@ -275,10 +269,6 @@
                 </div>
                 <!-- Phân trang chuẩn UI catalog -->
                 <nav th:replace="~{fragments/ui/pagination :: paged(page=${offersPage})}"></nav>
-            </div>
-        </main>
-    </div>
-</div>
 
 <!-- Modal Xuất Excel Offer (HR) -->
 <div id="offerExportModal" class="modal-overlay modal-backdrop" style="display: none;" onclick="handleExportModalBackdropClick(event)">
@@ -493,11 +483,18 @@
                     </div>
                 </div>
 
-                <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:16px;">
+                <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px;">
                     <div class="form-group">
                         <label>Thời gian thử việc (ngày) <span style="color:var(--error, #ef4444);">*</span></label>
                         <input type="number" id="editProbationDays" class="input-control" min="1" placeholder="VD: 60" required>
                     </div>
+                    <div class="form-group">
+                        <label>Thời hạn phản hồi (ngày) <span style="color:var(--error, #ef4444);">*</span></label>
+                        <input type="number" id="editResponsePeriodDays" class="input-control" min="1" max="60" placeholder="VD: 5" required>
+                    </div>
+                </div>
+
+                <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px;">
                     <div class="form-group">
                         <label>Ngày bắt đầu dự kiến <span style="color:var(--error, #ef4444);">*</span></label>
                         <input type="date" id="editStartDate" class="input-control" required>
@@ -556,8 +553,13 @@
 <!-- Toast Notification Container -->
 <div class="toast-container" id="toastContainer"></div>
 
-<!-- Scripts bổ trợ bộ lọc và UX -->
-<script th:src="@{/js/offers.js}" defer></script>
+</main>
+
+<th:block layout:fragment="scripts">
+    <!-- Scripts bổ trợ bộ lọc và UX -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script th:src="@{/js/offers.js}" defer></script>
+</th:block>
 
 </body>
 </html>

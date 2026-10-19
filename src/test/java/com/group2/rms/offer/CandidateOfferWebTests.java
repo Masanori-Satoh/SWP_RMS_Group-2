@@ -217,6 +217,47 @@ class CandidateOfferWebTests {
                 .andExpect(flash().attribute("errorMessage", "Thư mời này đã được trả lời nên không thể thay đổi."));
     }
 
+    @Test
+    void candidateViewsOfferWithDeadlineAndCountdown() throws Exception {
+        java.time.LocalDateTime deadline = java.time.LocalDateTime.of(2026, 10, 20, 17, 0);
+        CandidateOfferResponse offerWithDeadline = new CandidateOfferResponse(
+                15, "DevOps Engineer", "DevOps Engineer", new BigDecimal("25000000"),
+                new BigDecimal("21250000"), LocalDate.of(2026, 11, 1), "Hà Nội", "Bảo hiểm",
+                "Chờ bạn trả lời", "badge--warning", true, 5, deadline);
+
+        when(candidateOffers.list()).thenReturn(List.of(offerWithDeadline));
+
+        mvc.perform(get("/portal/offers").with(as("an.vo", "Candidate")))
+                .andExpect(status().isOk())
+                .andExpect(content().string(containsString("Hạn phản hồi")))
+                .andExpect(content().string(containsString("17:00 20/10/2026")))
+                .andExpect(content().string(containsString("cof-countdown")))
+                .andExpect(content().string(containsString("data-deadline=\"2026-10-20T17:00:00\"")))
+                .andExpect(content().string(not(containsString("style=\""))));
+    }
+
+    @Test
+    void candidateViewsOfferDetailWithDeadlineAndCountdown() throws Exception {
+        java.time.LocalDateTime deadline = java.time.LocalDateTime.of(2026, 10, 20, 17, 0);
+        CandidateOfferDetailResponse detailWithDeadline = new CandidateOfferDetailResponse(
+                15, "Nguyễn Văn A", "nguyenvana@example.com", "0912345678", "Hà Nội",
+                "DevOps Engineer", "DevOps Engineer", "Phòng Kỹ thuật",
+                new BigDecimal("25000000"), new BigDecimal("21250000"), 85, "60 ngày (2 tháng)",
+                LocalDate.of(2026, 11, 1), "Hà Nội", "Bảo hiểm",
+                "Sent_Candidate", "Chờ bạn trả lời", "badge--warning", true,
+                "Nguyễn Tuyển Dụng", "tuyendung@mocrms.com.vn", null, 5, deadline,
+                java.time.LocalDateTime.of(2026, 10, 15, 17, 0), null);
+
+        when(candidateOffers.getDetail(15)).thenReturn(detailWithDeadline);
+
+        mvc.perform(get("/portal/offers/15").with(as("an.vo", "Candidate")))
+                .andExpect(status().isOk())
+                .andExpect(content().string(containsString("cof-deadline-box")))
+                .andExpect(content().string(containsString("17:00 - 20/10/2026")))
+                .andExpect(content().string(containsString("data-deadline=\"2026-10-20T17:00:00\"")))
+                .andExpect(content().string(not(containsString("style=\""))));
+    }
+
     private static CandidateOfferResponse offer(int id, String postingTitle, String statusLabel, String badge,
                                                 boolean canRespond) {
         return new CandidateOfferResponse(id, postingTitle, postingTitle, new BigDecimal("20000000"),

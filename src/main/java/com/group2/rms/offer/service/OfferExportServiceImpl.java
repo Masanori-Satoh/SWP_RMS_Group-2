@@ -3,6 +3,7 @@ package com.group2.rms.offer.service;
 import com.group2.rms.candidate.entity.Application;
 import com.group2.rms.candidate.entity.Candidate;
 import com.group2.rms.core.exception.BaseBusinessException;
+import com.group2.rms.offer.exception.OfferValidationException;
 import com.group2.rms.offer.dto.OfferExportFilterRequest;
 import com.group2.rms.offer.dto.OfferExportRequest;
 import com.group2.rms.offer.dto.OfferExportRow;
@@ -85,7 +86,7 @@ public class OfferExportServiceImpl implements OfferExportService {
         // 1. Lấy danh sách entities theo Scope & Filters
         List<OfferProposal> entities = fetchOffersByScope(request);
         if (entities.isEmpty()) {
-            throw new BaseBusinessException("Không có dữ liệu đề xuất Offer phù hợp để xuất Excel.", "EMPTY_EXPORT_DATA");
+            throw new OfferValidationException("Không có dữ liệu đề xuất Offer phù hợp để xuất Excel.", "EMPTY_EXPORT_DATA");
         }
 
         // 2. Chuyển đổi entities sang DTO phẳng (OfferExportRow)
@@ -108,7 +109,7 @@ public class OfferExportServiceImpl implements OfferExportService {
             return out.toByteArray();
         } catch (IOException e) {
             log.error("Lỗi khi ghi file Excel xuất Offer: ", e);
-            throw new BaseBusinessException("Đã xảy ra lỗi khi tạo tệp Excel. Vui lòng thử lại sau.", "EXCEL_GENERATION_FAILED");
+            throw new OfferValidationException("Đã xảy ra lỗi khi tạo tệp Excel. Vui lòng thử lại sau.", "EXCEL_GENERATION_FAILED");
         }
     }
 
@@ -133,23 +134,23 @@ public class OfferExportServiceImpl implements OfferExportService {
 
     private void validateExportRequest(OfferExportRequest request) {
         if (request == null || request.scope() == null) {
-            throw new BaseBusinessException("Phạm vi xuất dữ liệu không được để trống.", "INVALID_EXPORT_REQUEST");
+            throw new OfferValidationException("Phạm vi xuất dữ liệu không được để trống.", "INVALID_EXPORT_REQUEST");
         }
 
         if (request.scope() == OfferExportScope.SELECTED) {
             if (request.offerIds() == null || request.offerIds().isEmpty()) {
-                throw new BaseBusinessException("Vui lòng chọn ít nhất một đề xuất để xuất dữ liệu.", "EMPTY_SELECTED_OFFERS");
+                throw new OfferValidationException("Vui lòng chọn ít nhất một đề xuất để xuất dữ liệu.", "EMPTY_SELECTED_OFFERS");
             }
         }
 
         if (request.columns() == null || request.columns().isEmpty()) {
-            throw new BaseBusinessException("Vui lòng chọn ít nhất một cột dữ liệu để xuất.", "EMPTY_COLUMNS");
+            throw new OfferValidationException("Vui lòng chọn ít nhất một cột dữ liệu để xuất.", "EMPTY_COLUMNS");
         }
 
         // Kiểm tra whitelist các cột được chọn
         for (String col : request.columns()) {
             if (!COLUMN_WHITELIST.containsKey(col)) {
-                throw new BaseBusinessException("Cột dữ liệu yêu cầu không hợp lệ hoặc không được phép xuất: " + col, "INVALID_EXPORT_COLUMN");
+                throw new OfferValidationException("Cột dữ liệu yêu cầu không hợp lệ hoặc không được phép xuất: " + col, "INVALID_EXPORT_COLUMN");
             }
         }
     }

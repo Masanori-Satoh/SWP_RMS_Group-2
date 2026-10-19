@@ -191,13 +191,13 @@ audit_logs = [
     (1, "CREATE", "SystemConfig", "AI_SCREENING_ENDPOINT", None, "Initialized AI endpoint", "192.168.1.10", "2026-09-01 08:05:00"),
     (1, "CREATE", "SystemConfig", "AI_SCORE_THRESHOLD", None, "Set threshold 70.00", "192.168.1.10", "2026-09-01 08:10:00"),
     (5, "CREATE", "JobRequisition", "1", None, "Tạo yêu cầu: Senior Java Backend Engineer · Pending_Director", "192.168.1.25", "2026-09-10 09:00:00"),
-    (2, "UPDATE", "JobRequisition", "1", "Pending_Director", "Status: Pending_Director → Approved\\nÝ kiến Giám đốc: Đã rà soát ngân sách quý 4/2026. Đồng ý phê duyệt tuyển 2 kỹ sư Java Backend.", "192.168.1.15", "2026-09-15 10:00:00"),
+    (2, "UPDATE", "JobRequisition", "1", "Pending_Director", "Status: Pending_Director → Approved\nÝ kiến Giám đốc: Đã rà soát ngân sách quý 4/2026. Đồng ý phê duyệt tuyển 2 kỹ sư Java Backend.", "192.168.1.15", "2026-09-15 10:00:00"),
     (5, "CREATE", "JobRequisition", "2", None, "Tạo yêu cầu: Frontend ReactJS Developer · Pending_Director", "192.168.1.25", "2026-09-11 10:00:00"),
-    (2, "UPDATE", "JobRequisition", "2", "Pending_Director", "Status: Pending_Director → Approved\\nÝ kiến Giám đốc: Phê duyệt tuyển 2 vị trí Frontend ReactJS phục vụ kế hoạch ra mắt Portal mới.", "192.168.1.15", "2026-09-16 11:00:00"),
+    (2, "UPDATE", "JobRequisition", "2", "Pending_Director", "Status: Pending_Director → Approved\nÝ kiến Giám đốc: Phê duyệt tuyển 2 vị trí Frontend ReactJS phục vụ kế hoạch ra mắt Portal mới.", "192.168.1.15", "2026-09-16 11:00:00"),
     (5, "CREATE", "JobRequisition", "3", None, "Tạo yêu cầu: QA Automation Engineer · Pending_Director", "192.168.1.25", "2026-09-12 08:30:00"),
-    (2, "UPDATE", "JobRequisition", "3", "Pending_Director", "Status: Pending_Director → Approved\\nÝ kiến Giám đốc: Đồng ý tuyển 1 kỹ sư QA Automation để củng cố quy trình kiểm thử CI/CD.", "192.168.1.15", "2026-09-17 14:00:00"),
+    (2, "UPDATE", "JobRequisition", "3", "Pending_Director", "Status: Pending_Director → Approved\nÝ kiến Giám đốc: Đồng ý tuyển 1 kỹ sư QA Automation để củng cố quy trình kiểm thử CI/CD.", "192.168.1.15", "2026-09-17 14:00:00"),
     (6, "CREATE", "JobRequisition", "4", None, "Tạo yêu cầu: Business Development Executive (B2B) · Pending_Director", "192.168.1.30", "2026-09-15 14:00:00"),
-    (2, "UPDATE", "JobRequisition", "4", "Pending_Director", "Status: Pending_Director → Approved\\nÝ kiến Giám đốc: Phê duyệt mở 2 vị trí Business Development mở rộng tệp khách hàng B2B.", "192.168.1.15", "2026-09-18 09:30:00"),
+    (2, "UPDATE", "JobRequisition", "4", "Pending_Director", "Status: Pending_Director → Approved\nÝ kiến Giám đốc: Phê duyệt mở 2 vị trí Business Development mở rộng tệp khách hàng B2B.", "192.168.1.15", "2026-09-18 09:30:00"),
     (3, "CREATE", "JobPosting", "1", None, "Published Senior Java Engineer posting", "192.168.1.20", "2026-09-25 08:05:00"),
     (3, "CREATE", "JobPosting", "2", None, "Published Frontend React posting", "192.168.1.20", "2026-09-25 08:35:00")
 ]
@@ -315,32 +315,32 @@ job_postings = [
     (
         1, "Senior Java Backend Engineer (Spring Boot / Microservices)",
         "Chúng tôi tìm kiếm Senior Java Engineer tham gia xây dựng nền tảng quản trị tuyển dụng và nhân sự RMS hiệu năng cao.",
-        "- Tối thiểu 3 năm làm việc với Java, Spring Boot, Hibernate\\n- Thành thạo SQL Server, Redis Cache\\n- Có tư duy thiết kế hệ thống Microservices sạch sẽ.",
-        "- Mức lương cạnh tranh từ 30 - 45 triệu\\n- Thưởng dự án và tháng lương 13\\n- Bảo hiểm sức khỏe PVI cao cấp\\n- Môi trường làm việc trẻ trung, trang thiết bị Macbook Pro.",
+        "- Tối thiểu 3 năm làm việc với Java, Spring Boot, Hibernate\n- Thành thạo SQL Server, Redis Cache\n- Có tư duy thiết kế hệ thống Microservices sạch sẽ.",
+        "- Mức lương cạnh tranh từ 30 - 45 triệu\n- Thưởng dự án và tháng lương 13\n- Bảo hiểm sức khỏe PVI cao cấp\n- Môi trường làm việc trẻ trung, trang thiết bị Macbook Pro.",
         "30,000,000 - 45,000,000 VND", "Tầng 8, Tòa nhà RMS Tower, Phố Duy Tân, Cầu Giấy, Hà Nội",
         "2026-09-25 08:00:00", "2026-12-31 23:59:59", "Published", 3, "2026-09-25 08:00:00"
     ),
     (
         2, "Frontend ReactJS Developer (TypeScript / Next.js)",
         "Gia nhập đội ngũ Frontend để phát triển cổng thông tin quản trị và trải nghiệm ứng viên mượt mà, chuẩn UI/UX.",
-        "- Tối thiểu 2 năm kinh nghiệm ReactJS, TypeScript\\n- Khả năng xây dựng Responsive Web và Design System hiện đại\\n- Thành thạo Redux Toolkit hoặc Zustand.",
-        "- Thu nhập 20 - 32 triệu\\n- Review lương 2 lần/năm\\n- Du lịch công ty hằng năm\\n- Hỗ trợ chi phí chứng chỉ chuyên môn quốc tế.",
+        "- Tối thiểu 2 năm kinh nghiệm ReactJS, TypeScript\n- Khả năng xây dựng Responsive Web và Design System hiện đại\n- Thành thạo Redux Toolkit hoặc Zustand.",
+        "- Thu nhập 20 - 32 triệu\n- Review lương 2 lần/năm\n- Du lịch công ty hằng năm\n- Hỗ trợ chi phí chứng chỉ chuyên môn quốc tế.",
         "20,000,000 - 32,000,000 VND", "Tầng 8, Tòa nhà RMS Tower, Phố Duy Tân, Cầu Giấy, Hà Nội",
         "2026-09-25 08:30:00", "2026-12-31 23:59:59", "Published", 3, "2026-09-25 08:30:00"
     ),
     (
         3, "QA Automation Engineer (Playwright / Selenium / API)",
         "Đảm bảo chất lượng các bản phát hành phần mềm bằng hệ thống kiểm thử tự động toàn diện và liên tục.",
-        "- Tối thiểu 2 năm kinh nghiệm Automation Test web và API\\n- Nắm vững Playwright hoặc Selenium\\n- Kinh nghiệm CI/CD với GitLab/GitHub Actions.",
-        "- Thu nhập 18 - 28 triệu\\n- Phụ cấp ăn trưa, gửi xe\\n- Tham gia các khóa đào tạo nâng cao kỹ năng kiểm thử và bảo mật.",
+        "- Tối thiểu 2 năm kinh nghiệm Automation Test web và API\n- Nắm vững Playwright hoặc Selenium\n- Kinh nghiệm CI/CD với GitLab/GitHub Actions.",
+        "- Thu nhập 18 - 28 triệu\n- Phụ cấp ăn trưa, gửi xe\n- Tham gia các khóa đào tạo nâng cao kỹ năng kiểm thử và bảo mật.",
         "18,000,000 - 28,000,000 VND", "Tầng 8, Tòa nhà RMS Tower, Phố Duy Tân, Cầu Giấy, Hà Nội",
         "2026-09-25 09:00:00", "2026-12-31 23:59:59", "Published", 3, "2026-09-25 09:00:00"
     ),
     (
         4, "Chuyên Viên Phát Triển Kinh Doanh B2B (Software Solutions)",
         "Tìm kiếm và phát triển mạng lưới khách hàng doanh nghiệp sử dụng hệ thống phần mềm quản trị RMS.",
-        "- Tối thiểu 1 năm kinh nghiệm kinh doanh B2B ngành CNTT / SaaS\\n- Khả năng giao tiếp, thương lượng và chốt deal xuất sắc\\n- Tinh thần chủ động, trách nhiệm cao.",
-        "- Lương cứng 15 - 25 triệu + Hoa hồng doanh số hấp dẫn\\n- Thu nhập trung bình 30 - 45 triệu/tháng\\n- Lộ trình thăng tiến rõ ràng lên Trưởng nhóm kinh doanh.",
+        "- Tối thiểu 1 năm kinh nghiệm kinh doanh B2B ngành CNTT / SaaS\n- Khả năng giao tiếp, thương lượng và chốt deal xuất sắc\n- Tinh thần chủ động, trách nhiệm cao.",
+        "- Lương cứng 15 - 25 triệu + Hoa hồng doanh số hấp dẫn\n- Thu nhập trung bình 30 - 45 triệu/tháng\n- Lộ trình thăng tiến rõ ràng lên Trưởng nhóm kinh doanh.",
         "15,000,000 - 25,000,000 VND + Hoa hồng", "Quận 1, TP. Hồ Chí Minh & Cầu Giấy, Hà Nội",
         "2026-09-25 09:30:00", "2026-12-31 23:59:59", "Published", 3, "2026-09-25 09:30:00"
     )
@@ -724,13 +724,17 @@ for day_idx in range(num_days):
                     offer_created_dt = (int_end_dt + datetime.timedelta(days=1)).strftime("%Y-%m-%d %H:%M:%S")
                     
                     off_status = random.choice(["Accepted", "Accepted", "Director_Approved", "Sent_Candidate", "Declined"])
+                    off_app_dt_obj = datetime.datetime.strptime(offer_created_dt, "%Y-%m-%d %H:%M:%S") + datetime.timedelta(hours=6)
+                    off_app_dt = off_app_dt_obj.strftime("%Y-%m-%d %H:%M:%S")
+                    resp_period_days = 5
+                    off_deadline_dt = (off_app_dt_obj + datetime.timedelta(days=resp_period_days)).strftime("%Y-%m-%d %H:%M:%S")
+
                     lines.append(
-                        f"INSERT INTO OfferProposal (ApplicationId, OfferedPositionTitle, ProposedSalary, ProbationSalary, ExpectedStartDate, WorkLocation, BenefitsPackage, OfferStatus, ProposedBy, CreatedAt) "
-                        f"VALUES ({c['app_id']}, N'{off_title}', {prop_sal:.2f}, {prob_sal:.2f}, '{exp_start_date}', N'Tầng 8, Tòa nhà RMS Tower, Duy Tân, Cầu Giấy, Hà Nội', N'Bảo hiểm PVI, 14 ngày phép năm, thưởng dự án, xét lương 2 lần/năm', N'{off_status}', 3, '{offer_created_dt}');"
+                        f"INSERT INTO OfferProposal (ApplicationId, OfferedPositionTitle, ProposedSalary, ProbationSalary, ExpectedStartDate, WorkLocation, BenefitsPackage, OfferStatus, ResponsePeriodDays, ResponseDeadline, ProposedBy, CreatedAt) "
+                        f"VALUES ({c['app_id']}, N'{off_title}', {prop_sal:.2f}, {prob_sal:.2f}, '{exp_start_date}', N'Tầng 8, Tòa nhà RMS Tower, Duy Tân, Cầu Giấy, Hà Nội', N'Bảo hiểm PVI, 14 ngày phép năm, thưởng dự án, xét lương 2 lần/năm', N'{off_status}', {resp_period_days}, '{off_deadline_dt}', 3, '{offer_created_dt}');"
                     )
                     
                     # OfferApproval (DirectorId = 2)
-                    off_app_dt = (datetime.datetime.strptime(offer_created_dt, "%Y-%m-%d %H:%M:%S") + datetime.timedelta(hours=6)).strftime("%Y-%m-%d %H:%M:%S")
                     lines.append(
                         f"INSERT INTO OfferApproval (OfferId, DirectorId, [Status], DirectorComments, ApprovedAt) "
                         f"VALUES ({off_id}, 2, N'Approved', N'Phê duyệt mức đãi ngộ theo đề xuất của HR và HM.', '{off_app_dt}');"
