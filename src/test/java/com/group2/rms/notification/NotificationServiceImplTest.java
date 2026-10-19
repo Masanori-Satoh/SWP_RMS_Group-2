@@ -31,6 +31,9 @@ class NotificationServiceImplTest {
     @Mock
     private NotificationRepository notificationRepository;
 
+    @Mock
+    private com.group2.rms.user.repository.UserRepository userRepository;
+
     @InjectMocks
     private NotificationServiceImpl notificationService;
 
@@ -257,7 +260,7 @@ class NotificationServiceImplTest {
                 .application(app)
                 .build();
 
-        when(notificationRepository.existsByRecipient_UserIdAndEventId(22, "OFFER_SENT_1")).thenReturn(false);
+        when(notificationRepository.existsByRecipient_UserIdAndEventId(eq(22), any())).thenReturn(false);
 
         notificationService.notifyOfferLetterSent(offer);
 
@@ -272,7 +275,7 @@ class NotificationServiceImplTest {
         assertFalse(saved.getIsRead());
         assertTrue(saved.getTitle().contains("Senior Java Engineer"));
         assertTrue(saved.getContent().contains("Senior Java Engineer"));
-        assertEquals("OFFER_SENT_1", saved.getEventId());
+        assertTrue(saved.getEventId().startsWith("OFFER_SENT_1_"));
     }
 
     @Test
@@ -302,7 +305,7 @@ class NotificationServiceImplTest {
                 .application(app)
                 .build();
 
-        when(notificationRepository.existsByRecipient_UserIdAndEventId(15, "OFFER_RESP_ACC_1")).thenReturn(false);
+        when(notificationRepository.existsByRecipient_UserIdAndEventId(eq(15), any())).thenReturn(false);
 
         notificationService.notifyOfferResponseFromCandidate(offer, true, null);
 
@@ -317,7 +320,7 @@ class NotificationServiceImplTest {
         assertFalse(saved.getIsRead());
         assertTrue(saved.getTitle().contains("Huỳnh Hoàng Trung"));
         assertTrue(saved.getContent().contains("Đã nhận việc"));
-        assertEquals("OFFER_RESP_ACC_1", saved.getEventId());
+        assertTrue(saved.getEventId().startsWith("OFFER_RESP_ACC_1_"));
     }
 
     @Test
@@ -340,7 +343,7 @@ class NotificationServiceImplTest {
                 .application(app)
                 .build();
 
-        when(notificationRepository.existsByRecipient_UserIdAndEventId(15, "OFFER_RESP_DEC_1")).thenReturn(false);
+        when(notificationRepository.existsByRecipient_UserIdAndEventId(eq(15), any())).thenReturn(false);
 
         notificationService.notifyOfferResponseFromCandidate(offer, false, "Mức đãi ngộ chưa đạt kỳ vọng");
 
@@ -355,6 +358,123 @@ class NotificationServiceImplTest {
         assertFalse(saved.getIsRead());
         assertTrue(saved.getTitle().contains("Huỳnh Hoàng Trung"));
         assertTrue(saved.getContent().contains("Mức đãi ngộ chưa đạt kỳ vọng"));
-        assertEquals("OFFER_RESP_DEC_1", saved.getEventId());
+        assertTrue(saved.getEventId().startsWith("OFFER_RESP_DEC_1_"));
+    }
+
+    @Test
+    @DisplayName("notifyOfferPendingDirector: Gửi thông báo yêu cầu duyệt offer tới tất cả active Directors")
+    void notifyOfferPendingDirector_success() {
+        User hrUser = User.builder().userId(15).username("hr.user").fullName("Lê Thị HR").build();
+        User candidateUser = User.builder().userId(22).username("trung").fullName("Huỳnh Hoàng Trung").build();
+        com.group2.rms.candidate.entity.Candidate candidate = com.group2.rms.candidate.entity.Candidate.builder()
+                .candidateId(5)
+                .account(candidateUser)
+                .build();
+        com.group2.rms.candidate.entity.Application app = com.group2.rms.candidate.entity.Application.builder()
+                .applicationId(10)
+                .candidate(candidate)
+                .build();
+        com.group2.rms.offer.entity.OfferProposal offer = com.group2.rms.offer.entity.OfferProposal.builder()
+                .offerId(1)
+                .offeredPositionTitle("Senior Java Engineer")
+                .proposedSalary(new java.math.BigDecimal("25000000"))
+                .proposedBy(hrUser)
+                .application(app)
+                .build();
+
+        User directorUser = User.builder().userId(20).username("dir").fullName("Nguyen Van Director").build();
+        when(userRepository.findAllActiveDirectors()).thenReturn(List.of(directorUser));
+        when(notificationRepository.existsByRecipient_UserIdAndEventId(eq(20), any())).thenReturn(false);
+
+        notificationService.notifyOfferPendingDirector(offer, hrUser);
+
+        ArgumentCaptor<Notification> captor = ArgumentCaptor.forClass(Notification.class);
+        verify(notificationRepository).save(captor.capture());
+
+        Notification saved = captor.getValue();
+        assertEquals(directorUser, saved.getRecipient());
+        assertEquals(hrUser, saved.getActor());
+        assertEquals("OFFER_PENDING_DIRECTOR", saved.getEventType());
+        assertEquals("/offers/1", saved.getLinkUrl());
+        assertEquals("1", saved.getReferenceId());
+        assertTrue(saved.getTitle().contains("Yêu cầu phê duyệt Đề xuất Offer"));
+        assertTrue(saved.getContent().contains("Huỳnh Hoàng Trung"));
+        assertTrue(saved.getEventId().startsWith("OFFER_PENDING_DIR_1_20_"));
+    }
+
+    @Test
+    @DisplayName("notifyDirectorDecisionOnOffer: Giám đốc duyệt offer -> Gửi thông báo OFFER_DIRECTOR_APPROVED tới HR")
+    void notifyDirectorDecisionOnOffer_approved() {
+        User hrUser = User.builder().userId(15).username("hr.user").fullName("Lê Thị HR").build();
+        User candidateUser = User.builder().userId(22).username("trung").fullName("Huỳnh Hoàng Trung").build();
+        com.group2.rms.candidate.entity.Candidate candidate = com.group2.rms.candidate.entity.Candidate.builder()
+                .candidateId(5)
+                .account(candidateUser)
+                .build();
+        com.group2.rms.candidate.entity.Application app = com.group2.rms.candidate.entity.Application.builder()
+                .applicationId(10)
+                .candidate(candidate)
+                .build();
+        com.group2.rms.offer.entity.OfferProposal offer = com.group2.rms.offer.entity.OfferProposal.builder()
+                .offerId(1)
+                .offeredPositionTitle("Senior Java Engineer")
+                .proposedBy(hrUser)
+                .application(app)
+                .build();
+
+        User directorUser = User.builder().userId(20).username("dir").fullName("Nguyen Van Director").build();
+        when(notificationRepository.existsByRecipient_UserIdAndEventId(eq(15), any())).thenReturn(false);
+
+        notificationService.notifyDirectorDecisionOnOffer(offer, directorUser, true, "Đồng ý mức đãi ngộ");
+
+        ArgumentCaptor<Notification> captor = ArgumentCaptor.forClass(Notification.class);
+        verify(notificationRepository).save(captor.capture());
+
+        Notification saved = captor.getValue();
+        assertEquals(hrUser, saved.getRecipient());
+        assertEquals(directorUser, saved.getActor());
+        assertEquals("OFFER_DIRECTOR_APPROVED", saved.getEventType());
+        assertEquals("/offers/1", saved.getLinkUrl());
+        assertTrue(saved.getTitle().contains("Đề xuất Offer đã được Giám đốc phê duyệt"));
+        assertTrue(saved.getContent().contains("Đồng ý mức đãi ngộ"));
+        assertTrue(saved.getEventId().startsWith("OFFER_DEC_APPV_1_"));
+    }
+
+    @Test
+    @DisplayName("notifyDirectorDecisionOnOffer: Giám đốc từ chối offer -> Gửi thông báo OFFER_DIRECTOR_REJECTED kèm lý do tới HR")
+    void notifyDirectorDecisionOnOffer_rejected() {
+        User hrUser = User.builder().userId(15).username("hr.user").fullName("Lê Thị HR").build();
+        User candidateUser = User.builder().userId(22).username("trung").fullName("Huỳnh Hoàng Trung").build();
+        com.group2.rms.candidate.entity.Candidate candidate = com.group2.rms.candidate.entity.Candidate.builder()
+                .candidateId(5)
+                .account(candidateUser)
+                .build();
+        com.group2.rms.candidate.entity.Application app = com.group2.rms.candidate.entity.Application.builder()
+                .applicationId(10)
+                .candidate(candidate)
+                .build();
+        com.group2.rms.offer.entity.OfferProposal offer = com.group2.rms.offer.entity.OfferProposal.builder()
+                .offerId(1)
+                .offeredPositionTitle("Senior Java Engineer")
+                .proposedBy(hrUser)
+                .application(app)
+                .build();
+
+        User directorUser = User.builder().userId(20).username("dir").fullName("Nguyen Van Director").build();
+        when(notificationRepository.existsByRecipient_UserIdAndEventId(eq(15), any())).thenReturn(false);
+
+        notificationService.notifyDirectorDecisionOnOffer(offer, directorUser, false, "Lương vượt ngân sách");
+
+        ArgumentCaptor<Notification> captor = ArgumentCaptor.forClass(Notification.class);
+        verify(notificationRepository).save(captor.capture());
+
+        Notification saved = captor.getValue();
+        assertEquals(hrUser, saved.getRecipient());
+        assertEquals(directorUser, saved.getActor());
+        assertEquals("OFFER_DIRECTOR_REJECTED", saved.getEventType());
+        assertEquals("/offers/1", saved.getLinkUrl());
+        assertTrue(saved.getTitle().contains("Đề xuất Offer bị Giám đốc từ chối"));
+        assertTrue(saved.getContent().contains("Lương vượt ngân sách"));
+        assertTrue(saved.getEventId().startsWith("OFFER_DEC_REJ_1_"));
     }
 }

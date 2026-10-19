@@ -20,6 +20,7 @@ import com.group2.rms.user.entity.User;
 import com.group2.rms.user.repository.UserRepository;
 import com.group2.rms.notification.OfferMailSender;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import com.group2.rms.candidate.entity.Candidate;
 import jakarta.persistence.criteria.Join;
 import jakarta.persistence.criteria.JoinType;
@@ -48,6 +49,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 @Transactional
@@ -266,11 +268,20 @@ public class OfferServiceImpl implements OfferService {
 
         OfferProposal saved = offerProposalRepository.save(offerToSave);
 
-        if ("Pending_Director".equals(status) && offerMailSender != null) {
-            try {
-                offerMailSender.notifyDirectorNewPendingOffer(saved);
-            } catch (Exception ignored) {
-                // Tiếp tục ngay cả khi gửi mail lỗi ngầm
+        if ("Pending_Director".equals(status)) {
+            if (offerMailSender != null) {
+                try {
+                    offerMailSender.notifyDirectorNewPendingOffer(saved);
+                } catch (Exception e) {
+                    log.warn("Lỗi khi gửi email thông báo Director về Offer mới ID {}: {}", saved.getOfferId(), e.getMessage());
+                }
+            }
+            if (systemNotificationService != null) {
+                try {
+                    systemNotificationService.notifyOfferPendingDirector(saved, proposedBy);
+                } catch (Exception e) {
+                    log.warn("Lỗi khi gửi in-app notification Director về Offer mới ID {}: {}", saved.getOfferId(), e.getMessage());
+                }
             }
         }
 
@@ -502,10 +513,21 @@ public class OfferServiceImpl implements OfferService {
 
         OfferProposal saved = offerProposalRepository.save(offer);
 
-        if ("Pending_Director".equals(offer.getOfferStatus()) && offerMailSender != null) {
-            try {
-                offerMailSender.notifyDirectorNewPendingOffer(saved);
-            } catch (Exception ignored) {
+        if ("Pending_Director".equals(offer.getOfferStatus())) {
+            if (offerMailSender != null) {
+                try {
+                    offerMailSender.notifyDirectorNewPendingOffer(saved);
+                } catch (Exception e) {
+                    log.warn("Lỗi khi gửi email thông báo Director về Offer cập nhật ID {}: {}", saved.getOfferId(), e.getMessage());
+                }
+            }
+            if (systemNotificationService != null) {
+                try {
+                    User currentHr = resolveProposedBy(null);
+                    systemNotificationService.notifyOfferPendingDirector(saved, currentHr != null ? currentHr : saved.getProposedBy());
+                } catch (Exception e) {
+                    log.warn("Lỗi khi gửi in-app notification Director về Offer cập nhật ID {}: {}", saved.getOfferId(), e.getMessage());
+                }
             }
         }
 
@@ -590,16 +612,16 @@ public class OfferServiceImpl implements OfferService {
         if (offerMailSender != null) {
             try {
                 offerMailSender.sendOfferLetterToCandidate(saved);
-            } catch (Exception ignored) {
-                // Tiếp tục ngay cả khi gửi mail lỗi ngầm
+            } catch (Exception e) {
+                log.warn("Lỗi khi gửi email thư mời nhận việc cho ứng viên Offer ID {}: {}", saved.getOfferId(), e.getMessage());
             }
         }
 
         if (systemNotificationService != null) {
             try {
                 systemNotificationService.notifyOfferLetterSent(saved);
-            } catch (Exception ignored) {
-                // Tiếp tục ngay cả khi tạo thông báo in-app lỗi ngầm
+            } catch (Exception e) {
+                log.warn("Lỗi khi gửi in-app notification thư mời nhận việc cho ứng viên Offer ID {}: {}", saved.getOfferId(), e.getMessage());
             }
         }
 
@@ -784,7 +806,16 @@ public class OfferServiceImpl implements OfferService {
         if (offerMailSender != null) {
             try {
                 offerMailSender.notifyHrOfDirectorDecision(saved, "Approved", comments);
-            } catch (Exception ignored) {
+            } catch (Exception e) {
+                log.warn("Lỗi khi gửi email thông báo HR duyệt Offer ID {}: {}", saved.getOfferId(), e.getMessage());
+            }
+        }
+
+        if (systemNotificationService != null) {
+            try {
+                systemNotificationService.notifyDirectorDecisionOnOffer(saved, director, true, comments);
+            } catch (Exception e) {
+                log.warn("Lỗi khi gửi in-app notification duyệt Offer ID {}: {}", saved.getOfferId(), e.getMessage());
             }
         }
 
@@ -823,7 +854,16 @@ public class OfferServiceImpl implements OfferService {
         if (offerMailSender != null) {
             try {
                 offerMailSender.notifyHrOfDirectorDecision(saved, "Rejected", comments);
-            } catch (Exception ignored) {
+            } catch (Exception e) {
+                log.warn("Lỗi khi gửi email thông báo HR từ chối Offer ID {}: {}", saved.getOfferId(), e.getMessage());
+            }
+        }
+
+        if (systemNotificationService != null) {
+            try {
+                systemNotificationService.notifyDirectorDecisionOnOffer(saved, director, false, comments);
+            } catch (Exception e) {
+                log.warn("Lỗi khi gửi in-app notification từ chối Offer ID {}: {}", saved.getOfferId(), e.getMessage());
             }
         }
 

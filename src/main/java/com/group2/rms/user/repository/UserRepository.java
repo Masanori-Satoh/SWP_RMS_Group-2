@@ -38,4 +38,7 @@ public interface UserRepository extends JpaRepository<User, Integer>, JpaSpecifi
 
     @Query("SELECT u FROM User u LEFT JOIN FETCH u.role LEFT JOIN FETCH u.department")
     java.util.List<User> findAllWithRoleAndDepartment();
+
+    @Query("SELECT u FROM User u WHERE LOWER(u.role.roleName) = 'director' AND u.accountStatus = 'Active'")
+    List<User> findAllActiveDirectors();
 }
