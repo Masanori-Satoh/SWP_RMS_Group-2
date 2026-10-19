@@ -61,6 +61,16 @@ public interface OfferService {
     java.util.Map<String, Long> getDirectorOfferStats();
 
     /**
+     * Lấy số lượng đề xuất theo từng trạng thái cụ thể cho Director.
+     */
+    java.util.Map<String, Long> getDirectorStatusCounts();
+
+    /**
+     * Lấy danh sách Offer cho Director có tìm kiếm, lọc trạng thái vòng đời thực tế và sắp xếp thời gian.
+     */
+    Page<OfferResponse> getDirectorOffers(String search, String status, String timeSort, Pageable pageable);
+
+    /**
      * Lấy lịch sử quyết định của Director hiện tại
      */
     Page<OfferResponse> getDirectorOfferHistory(Pageable pageable);

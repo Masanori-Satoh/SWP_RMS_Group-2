@@ -1043,4 +1043,81 @@ class OfferServiceTests {
         assertEquals("Director_Rejected", response.getOfferStatus());
         verify(offerApprovalRepository).save(any(com.group2.rms.offer.entity.OfferApproval.class));
     }
+
+    @Test
+    @DisplayName("getDirectorStatusCounts: Trả về đầy đủ số lượng cho các nhóm trạng thái của Director")
+    void testGetDirectorStatusCounts() {
+        when(offerProposalRepository.countAllNonDraft()).thenReturn(15L);
+        when(offerProposalRepository.countPendingDirector()).thenReturn(3L);
+        when(offerProposalRepository.countDirectorApproved()).thenReturn(5L);
+        when(offerProposalRepository.countSentCandidate()).thenReturn(2L);
+        when(offerProposalRepository.countAccepted()).thenReturn(3L);
+        when(offerProposalRepository.countDeclined()).thenReturn(1L);
+        when(offerProposalRepository.countDirectorRejected()).thenReturn(1L);
+
+        Map<String, Long> counts = offerService.getDirectorStatusCounts();
+
+        assertNotNull(counts);
+        assertEquals(15L, counts.get("ALL"));
+        assertEquals(3L, counts.get("Pending_Director"));
+        assertEquals(5L, counts.get("Director_Approved"));
+        assertEquals(2L, counts.get("Sent_Candidate"));
+        assertEquals(3L, counts.get("Accepted"));
+        assertEquals(1L, counts.get("Declined"));
+        assertEquals(1L, counts.get("Director_Rejected"));
+    }
+
+    @Test
+    @DisplayName("getDirectorOffers: Tìm kiếm và lọc trạng thái cho Director")
+    void testGetDirectorOffers() {
+        OfferProposal offer = OfferProposal.builder()
+                .offerId(10)
+                .offerStatus("Accepted")
+                .offeredPositionTitle("Backend Engineer")
+                .build();
+        Page<OfferProposal> pageResult = new PageImpl<>(List.of(offer));
+        when(offerProposalRepository.findAll(any(org.springframework.data.jpa.domain.Specification.class), any(Pageable.class)))
+                .thenReturn(pageResult);
+
+        Page<OfferResponse> result = offerService.getDirectorOffers("Backend", "Accepted", "LATEST", PageRequest.of(0, 10));
+
+        assertNotNull(result);
+        assertEquals(1, result.getTotalElements());
+        assertEquals("Accepted", result.getContent().get(0).getOfferStatus());
+    }
+
+    @Test
+    @DisplayName("getDirectorOfferHistory: Giữ nguyên trạng thái vòng đời thực tế thay vì bị ghi đè")
+    void testGetDirectorOfferHistory_preservesRealtimeStatus() {
+        Role role = Role.builder().roleId(1).roleName("Director").build();
+        User mockDirector = User.builder().userId(5).username("director1").role(role).build();
+        when(userRepository.findByUsernameIgnoreCase(any())).thenReturn(Optional.of(mockDirector));
+        org.springframework.security.core.context.SecurityContextHolder.getContext().setAuthentication(
+                new org.springframework.security.authentication.UsernamePasswordAuthenticationToken(
+                        "director1", "password", Collections.emptyList()));
+
+        OfferProposal offer = OfferProposal.builder()
+                .offerId(20)
+                .offerStatus("Accepted") // Trạng thái thực tế: ứng viên đã chấp nhận
+                .offeredPositionTitle("Product Manager")
+                .build();
+
+        OfferApproval approval = OfferApproval.builder()
+                .offerApprovalId(1)
+                .director(mockDirector)
+                .offerProposal(offer)
+                .status("Approved") // Quyết định phê duyệt trong quá khứ của Director
+                .build();
+
+        Page<OfferApproval> approvalPage = new PageImpl<>(List.of(approval));
+        when(offerApprovalRepository.findByDirector_UserIdOrderByApprovedAtDesc(eq(5), any(Pageable.class)))
+                .thenReturn(approvalPage);
+
+        Page<OfferResponse> history = offerService.getDirectorOfferHistory(PageRequest.of(0, 10));
+
+        assertNotNull(history);
+        assertEquals(1, history.getTotalElements());
+        // Trạng thái hiển thị phải là Accepted (trạng thái vòng đời thực tế), KHÔNG bị đè thành "Approved"
+        assertEquals("Accepted", history.getContent().get(0).getOfferStatus());
+    }
 }
