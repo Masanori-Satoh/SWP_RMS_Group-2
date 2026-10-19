@@ -23,10 +23,6 @@ import static org.junit.jupiter.api.Assertions.*;
 
 /*
  * UNIT TEST: RequisitionAccess (luật "ai được làm gì" với một yêu cầu tuyển dụng).
- * Các hàm can...() là hàm thuần: chỉ đọc role, người tạo, trạng thái → không cần DB.
- * Cờ quyền trên màn danh sách / chi tiết (editable, deletable, copyable...) đều lấy từ đây.
- *
- * Quy ước (docs/members/hoangnh/CLAUDE.md §23): hàm_shouldKếtQuả_whenĐiềuKiện; bảng nhiều trường hợp dùng @ParameterizedTest.
  */
 @ExtendWith(MockitoExtension.class)
 class RequisitionAccessTests {

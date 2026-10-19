@@ -24,10 +24,6 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /*
  * UNIT TEST: JobPostingAccess (luật "ai được làm gì" với tin tuyển dụng).
- * Các hàm can...() là hàm thuần: chỉ đọc role, phòng ban, trạng thái → không cần DB, không cần mock.
- * RequisitionAccess thật với UserRepository = null (chỉ dùng role() và inManagedDepartment(), không gọi actor()).
- *
- * Quy ước (docs/members/hoangnh/CLAUDE.md §23): hàm_shouldKếtQuả_whenĐiềuKiện; bảng role × trạng thái dùng @CsvSource.
  */
 class JobPostingAccessTests {
 

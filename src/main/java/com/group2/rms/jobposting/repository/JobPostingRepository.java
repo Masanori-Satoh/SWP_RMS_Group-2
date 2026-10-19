@@ -23,12 +23,12 @@ import java.util.Set;
 
 /**
  * Truy cập bảng JobPosting (và các câu đếm hồ sơ của tin).
- * Không chứa business rule: giá trị trạng thái truyền vào bằng tham số (JobPostingAccess.STATUS_*).
- * Các hàm findForUpdate, existsByRequisition_RequisitionId, findTopBy..., findLatestByRequisitionIds,
- * findPublishedJobs, findOpenPostings còn được module requisition / candidate / career gọi: đổi chữ ký phải báo nhóm.
  */
 @Repository
 public interface JobPostingRepository extends JpaRepository<JobPosting, Integer>, JpaSpecificationExecutor<JobPosting> {
+
+    // findForUpdate, existsByRequisition_RequisitionId, findTopBy..., findLatestByRequisitionIds, findPublishedJobs,
+    // findOpenPostings còn được module requisition / candidate / career gọi: đổi chữ ký phải báo nhóm
 
     // Khóa ghi khi sửa / chuyển trạng thái, tránh hai người thao tác cùng lúc
     @Lock(LockModeType.PESSIMISTIC_WRITE)

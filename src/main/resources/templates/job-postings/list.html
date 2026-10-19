@@ -11,7 +11,6 @@
         <link rel="stylesheet" th:href="@{/css/pages/management-filters.css}">
         <link rel="stylesheet" th:href="@{/css/job-posting-shared.css}">
         <link rel="stylesheet" th:href="@{/css/job-posting-list.css}">
-        <link rel="stylesheet" th:href="@{/css/pages/flash-toast.css}">
     </th:block>
 </head>
 
@@ -22,9 +21,10 @@
             <h1>Tin tuyển dụng</h1>
             <!-- Không có nút tạo tin ở đây: tin chỉ được tạo từ một yêu cầu đã duyệt (màn Yêu cầu tuyển dụng / dashboard HR) -->
         </div>
+        <!-- Thông báo sau thao tác (flash từ controller): chỉ hiện một lần sau khi chuyển trang -->
+        <div th:if="${successMessage}" class="alert alert--success" role="status" th:text="${successMessage}"></div>
+        <div th:if="${errorMessage}" class="alert alert--danger" role="alert" th:text="${errorMessage}"></div>
 
-        <!-- Thông báo sau thao tác: khung nổi góc phải, tự tắt sau 3 giây (dùng chung với màn Yêu cầu) -->
-        <th:block th:replace="~{fragments/requisition :: flashToast(${successMessage ?: message}, ${errorMessage})}"></th:block>
 
         <!-- Thanh công cụ: ô tìm kiếm (trái) + nút "Bộ lọc" (phải). Form GET: trình duyệt tự ghép các ô thành ?q=...&status=...
          Ô nào hiện là do service quyết định theo vai trò (list.options.show...). -->
@@ -155,7 +155,7 @@
                             <th scope="col">Hạn nộp</th>
                             <th scope="col">Trạng thái</th>
                             <th scope="col" th:if="${showCreator}">Người tạo</th>
-                            <th scope="col"><span class="sr-only">Thao tác</span></th>
+                            <th scope="col" class="action-cell">Thao tác</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -165,15 +165,10 @@
                             <td class="jp-title">
                                 <a th:href="@{/internal/job-postings/{id}(id=${post.jobPostingId})}"
                                     th:text="${post.postingTitle}">Senior Java Backend Engineer</a>
-                                <div class="jp-sub" th:text="|Lần ${post.postingNo} · ${post.employmentType}|">Lần 1 ·
-                                    Toàn thời gian</div>
                             </td>
                             <td th:if="${showDept}" th:text="${post.departmentName}">Engineering</td>
                             <td class="num">
                                 <strong th:text="${post.applicationCount}">18</strong>
-                                <!-- "mới" = hồ sơ chưa ai xử lý (Applied) -->
-                                <span class="jp-new" th:if="${post.newApplicationCount > 0}"
-                                    th:text="|+${post.newApplicationCount} mới|">+3 mới</span>
                             </td>
                             <td class="nowrap">
                                 <th:block th:if="${post.postingDate != null}">
@@ -189,9 +184,6 @@
                                     <!-- deadlineState: open / soon / past; tin đã đóng thì null (không cần nhắc còn / quá hạn) -->
                                     <span th:classappend="${post.deadlineState != null} ? |jp-dl-${post.deadlineState}|"
                                         th:text="${#temporals.format(post.applicationDeadline, 'dd/MM/yyyy')}">31/12/2026</span>
-                                    <div class="jp-sub" th:if="${post.deadlineState != null}"
-                                        th:text="${post.daysUntilDeadline < 0} ? |quá hạn ${-post.daysUntilDeadline} ngày| : |còn ${post.daysUntilDeadline} ngày|">
-                                        còn 75 ngày</div>
                                 </th:block>
                                 <span class="jp-sub" th:if="${post.applicationDeadline == null}">Không thời hạn</span>
                             </td>
@@ -249,8 +241,8 @@
                             </td>
                         </tr>
                         <tr th:if="${list.page.empty}">
-                            <td th:colspan="${columns}" class="empty-state">Không có tin nào khớp bộ lọc.
-                                <a th:href="@{/internal/job-postings}">Đặt lại mặc định</a>
+                            <td th:colspan="${columns}" class="empty-state">Không tìm thấy tin tuyển dụng nào. Hãy thử thay đổi hoặc
+                                <a th:href="@{/internal/job-postings}">đặt lại bộ lọc</a>.
                             </td>
                         </tr>
                     </tbody>
@@ -270,8 +262,6 @@
         <script th:src="@{/js/pages/job-posting-actions.js}" defer></script>
         <!-- Menu ⋯ nổi đè lên bảng, không làm xô lệch cột (dùng chung với danh sách yêu cầu) -->
         <script th:src="@{/js/pages/row-menu.js}" defer></script>
-        <!-- flash-toast.js: thông báo sau thao tác tự tắt sau 3 giây -->
-        <script th:src="@{/js/pages/flash-toast.js}" defer></script>
     </th:block>
 </body>
 

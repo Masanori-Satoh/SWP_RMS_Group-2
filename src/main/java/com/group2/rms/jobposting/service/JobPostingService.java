@@ -10,7 +10,6 @@ import java.util.List;
 
 /**
  * Nghiệp vụ một tin tuyển dụng: mở form, tạo, sửa, chuyển trạng thái, xóa, xem chi tiết, bảng điều khiển HR.
- * Màn danh sách nằm ở JobPostingListService. Người thao tác luôn truyền từ phiên (JobPostingAccess#actor).
  */
 public interface JobPostingService {
 

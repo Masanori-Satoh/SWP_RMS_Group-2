@@ -46,16 +46,6 @@ import static org.mockito.Mockito.*;
 
 /*
  * UNIT TEST SERVICE: RequisitionServiceImpl (tạo, sửa, xóa, duyệt, rút lại, sao chép, xem chi tiết).
- * Không Spring context, không SQL Server: repository, quyền, thông báo là mock (Mockito).
- *
- * Service được tạo bằng tay trong setUp() để thấy rõ nó cần những gì:
- * - mock: repository, RequisitionAccess, RequisitionValidator, NotificationService
- * - thật: RequisitionMapper, RequisitionAuditLogger (ghi qua AuditLogRepository mock → verify được audit.save)
- * - Clock cố định: "bây giờ" luôn là 18/10/2026 10:00, test không phụ thuộc ngày chạy.
- *
- * Quy ước (docs/members/hoangnh/CLAUDE.md §23): tên test = hàm_shouldKếtQuả_whenĐiềuKiện, mỗi test theo Arrange / Act / Assert,
- * kiểm tra cả những gì KHÔNG được xảy ra (không lưu DB, không ghi audit...).
- * Màn danh sách: RequisitionListServiceTests. Cờ quyền trên DTO: RequisitionMapperTests.
  */
 @ExtendWith(MockitoExtension.class)
 class RequisitionServiceTests {
@@ -703,16 +693,18 @@ class RequisitionServiceTests {
         }
 
         @Test
-        @DisplayName("Giám đốc duyệt -> Approved, lưu bản ghi duyệt, audit, KHÔNG gửi thông báo trả lại")
-        void decide_shouldApproveAndNotNotify_whenDirectorApproves() {
+        @DisplayName("Giám đốc duyệt -> Approved, lưu bản ghi duyệt, audit, gửi thông báo duyệt cho HM")
+        void decide_shouldApproveAndNotifyManager_whenDirectorApproves() {
             // Act
             service.decide(50, true, "Looks good");
 
             // Assert
             assertEquals(RequisitionAccess.STATUS_APPROVED, pending.getApprovalStatus());
-            verify(approvals).save(any(RequisitionApproval.class));
+            ArgumentCaptor<RequisitionApproval> decision = ArgumentCaptor.forClass(RequisitionApproval.class);
+            verify(approvals).save(decision.capture());
             assertEquals("Status: Pending_Director → Approved\nÝ kiến Giám đốc: Looks good", savedAudit().getNewValue());
-            verifyNoInteractions(notificationService);
+            verify(notificationService).notifyRequisitionApproved(decision.getValue());
+            verify(notificationService, never()).notifyRequisitionRejected(any());
         }
 
         @Test

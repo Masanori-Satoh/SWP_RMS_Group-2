@@ -5,65 +5,251 @@
    ============================================================================= */
 
 /* ----- 1. Đầu trang ----- */
-.jp-list-page .jp-head { display:flex; flex-wrap:wrap; justify-content:space-between; align-items:center; gap:var(--s3); margin-bottom:var(--s4); }
-.jp-list-page .jp-head h1 { margin:0; font-size:26px; }
+.jp-list-page .jp-head {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    align-items: center;
+    gap: var(--s3);
+    margin-bottom: var(--s4);
+}
+
+.jp-list-page .jp-head h1 {
+    margin: 0;
+    font-size: 26px;
+}
 
 /* Dải "N yêu cầu đã duyệt chưa có tin" (HR, Admin) */
-.jp-list-page .jp-await { display:flex; flex-wrap:wrap; align-items:center; gap:var(--s2) var(--s4); margin-bottom:var(--s4);
-    padding:var(--s3) var(--s4); border:1px solid var(--line); border-left:4px solid var(--warning); border-radius:var(--radius-md); background:var(--warning-soft); }
-.jp-list-page .jp-await p { margin:0; }
-.jp-list-page .jp-await ul { display:flex; flex-wrap:wrap; gap:var(--s2); margin:0; padding:0; list-style:none; }
-.jp-list-page .jp-await a { display:inline-flex; padding:var(--s1) var(--s3); border:1px dashed var(--brand); border-radius:var(--radius-md);
-    background:var(--surface); color:var(--brand-dark); font-size:var(--font-sm); font-weight:600; text-decoration:none; }
-.jp-list-page .jp-await a:hover { background:var(--brand-soft); }
+.jp-list-page .jp-await {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--s2) var(--s4);
+    margin-bottom: var(--s4);
+    padding: var(--s3) var(--s4);
+    border: 1px solid var(--line);
+    border-left: 4px solid var(--warning);
+    border-radius: var(--radius-md);
+    background: var(--warning-soft);
+}
+
+.jp-list-page .jp-await p {
+    margin: 0;
+}
+
+.jp-list-page .jp-await ul {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--s2);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.jp-list-page .jp-await a {
+    display: inline-flex;
+    padding: var(--s1) var(--s3);
+    border: 1px dashed var(--brand);
+    border-radius: var(--radius-md);
+    background: var(--surface);
+    color: var(--brand-dark);
+    font-size: var(--font-sm);
+    font-weight: 600;
+    text-decoration: none;
+}
+
+.jp-list-page .jp-await a:hover {
+    background: var(--brand-soft);
+}
 
 /* ----- 2. Thanh công cụ: ô tìm kiếm dài bên trái, nút "Bộ lọc" bên phải ----- */
-.jp-list-page .jp-toolbar .mft-search { order:-1; flex:1 1 320px; max-width:none; margin-left:0; }
-.jp-list-page .jp-toolbar .mft-controls { flex:0 0 auto; }
-.jp-list-page .jp-toolbar .mft-popover { left:auto; right:var(--s4); }
-.jp-list-page .jp-filter-full { grid-column:1 / -1; min-width:0; margin:0; padding:0; border:0; }
-.jp-list-page .jp-status-options { display:flex; flex-wrap:wrap; gap:var(--s2) var(--s4); }
-.jp-list-page .jp-status-option { display:inline-flex; align-items:center; gap:var(--s2); font-size:var(--font-sm); cursor:pointer; }
-.jp-list-page .jp-date-range { display:flex; align-items:center; gap:var(--s2); }
-.jp-list-page .jp-date-range .form-input { min-width:0; }
-.jp-list-page .jp-chips { margin:var(--s3) 0 0; }
-.jp-list-page .jp-chips-reset { font-size:var(--font-sm); color:var(--muted); }
+.jp-list-page .jp-toolbar .mft-search {
+    order: -1;
+    flex: 1 1 320px;
+    max-width: none;
+    margin-left: 0;
+}
+
+.jp-list-page .jp-toolbar .mft-controls {
+    flex: 0 0 auto;
+}
+
+.jp-list-page .jp-toolbar .mft-popover {
+    left: auto;
+    right: var(--s4);
+}
+
+.jp-list-page .jp-filter-full {
+    grid-column: 1 / -1;
+    min-width: 0;
+    margin: 0;
+    padding: 0;
+    border: 0;
+}
+
+.jp-list-page .jp-status-options {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--s2) var(--s4);
+}
+
+.jp-list-page .jp-status-option {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--s2);
+    font-size: var(--font-sm);
+    cursor: pointer;
+}
+
+.jp-list-page .jp-date-range {
+    display: flex;
+    align-items: center;
+    gap: var(--s2);
+}
+
+.jp-list-page .jp-date-range .form-input {
+    min-width: 0;
+}
+
+.jp-list-page .jp-chips {
+    margin: var(--s3) 0 0;
+}
+
+.jp-list-page .jp-chips-reset {
+    font-size: var(--font-sm);
+    color: var(--muted);
+}
 
 /* ----- 3. Bảng ----- */
-.jp-list-page .jp-list { margin-top:var(--s5, 20px); }
-.jp-list-page .jp-total { margin:0 0 var(--s3); color:var(--muted); font-size:var(--font-sm); }
-.jp-list-page .jp-table { width:100%; border-collapse:collapse; background:var(--surface); }
-.jp-list-page .jp-table th { padding:var(--s3) var(--s2); border-bottom:1px solid var(--line); background:var(--surface-subtle);
-    color:var(--muted); font-size:var(--font-xs); font-weight:700; text-align:left; white-space:nowrap; }
-.jp-list-page .jp-table td { padding:var(--s3) var(--s2); border-bottom:1px solid var(--line); text-align:left; vertical-align:middle; }
-.jp-list-page .jp-table tbody tr:last-child td { border-bottom:0; }
-.jp-list-page .jp-table tbody tr:hover { background:var(--page); }
-.jp-list-page .jp-table .num { text-align:right; font-variant-numeric:tabular-nums; }
-.jp-list-page .jp-title { min-width:150px; max-width:360px; }
-.jp-list-page .jp-title a { font-weight:600; text-decoration:none; overflow-wrap:anywhere; }
-.jp-list-page .jp-title a:hover { text-decoration:underline; }
-.jp-list-page .jp-sub, .jp-list-page .jp-muted { color:var(--muted); font-size:var(--font-xs); }
-.jp-list-page .nowrap { white-space:nowrap; }
+.jp-list-page .jp-list {
+    margin-top: var(--s5, 20px);
+}
+
+.jp-list-page .jp-total {
+    margin: 0 0 var(--s3);
+    color: var(--muted);
+    font-size: var(--font-sm);
+}
+
+.jp-list-page .jp-table {
+    width: 100%;
+    border-collapse: collapse;
+    background: var(--surface);
+}
+
+.jp-list-page .jp-table th {
+    padding: var(--s3) var(--s2);
+    border-bottom: 1px solid var(--line);
+    background: var(--surface-subtle);
+    color: var(--muted);
+    font-size: var(--font-xs);
+    font-weight: 700;
+    text-align: left;
+    white-space: nowrap;
+}
+
+.jp-list-page .jp-table td {
+    padding: var(--s3) var(--s2);
+    border-bottom: 1px solid var(--line);
+    text-align: left;
+    vertical-align: middle;
+}
+
+.jp-list-page .jp-table tbody tr:last-child td {
+    border-bottom: 0;
+}
+
+.jp-list-page .jp-table tbody tr:hover {
+    background: var(--page);
+}
+
+.jp-list-page .jp-table .num {
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+}
+
+.jp-list-page .jp-title {
+    min-width: 150px;
+    max-width: 360px;
+}
+
+.jp-list-page .jp-title a {
+    font-weight: 600;
+    text-decoration: none;
+    overflow-wrap: anywhere;
+}
+
+.jp-list-page .jp-title a:hover {
+    text-decoration: underline;
+}
+
+.jp-list-page .jp-sub,
+.jp-list-page .jp-muted {
+    color: var(--muted);
+    font-size: var(--font-xs);
+}
+
+.jp-list-page .nowrap {
+    white-space: nowrap;
+}
 
 /* "+N mới" cạnh số hồ sơ */
-.jp-list-page .jp-new { display:inline-block; margin-left:var(--s1); padding:0 var(--s2); border-radius:var(--radius-full);
-    background:var(--brand-soft); color:var(--brand-dark); font-size:var(--font-xs); font-weight:700; white-space:nowrap; }
-.jp-list-page .jp-table td.num { white-space:nowrap; }
-.jp-list-page .jp-table .action-cell { width:48px; text-align:right; }
+.jp-list-page .jp-new {
+    display: inline-block;
+    margin-left: var(--s1);
+    padding: 0 var(--s2);
+    border-radius: var(--radius-full);
+    background: var(--brand-soft);
+    color: var(--brand-dark);
+    font-size: var(--font-xs);
+    font-weight: 700;
+    white-space: nowrap;
+}
+
+.jp-list-page .jp-table td.num {
+    white-space: nowrap;
+}
+
+/* Cột "Thao tác": căn trái, rộng theo nội dung (giống danh sách yêu cầu) */
+.jp-list-page .jp-table .action-cell {
+    white-space: nowrap;
+}
 
 /* Hạn nộp sắp hết / đã quá */
-.jp-list-page .jp-dl-soon { color:var(--warning); font-weight:700; }
-.jp-list-page .jp-dl-past { color:var(--error); font-weight:700; }
+.jp-list-page .jp-dl-soon {
+    color: var(--warning);
+    font-weight: 700;
+}
+
+.jp-list-page .jp-dl-past {
+    color: var(--error);
+    font-weight: 700;
+}
 
 /* Menu ⋯ nổi đè lên bảng (vị trí do js/pages/row-menu.js tính) nên mở menu không làm cột rộng ra, dòng cao lên */
-.jp-list-page .more-menu--floating .more-menu__list { position:fixed; z-index:20; margin-top:0; }
+.jp-list-page .more-menu--floating .more-menu__list {
+    position: fixed;
+    z-index: 20;
+    margin-top: 0;
+}
 
 /* Mục trong menu ⋯ */
-.jp-list-page .more-menu__item.jp-menu-primary { color:var(--brand-dark); font-weight:700; }
-.jp-list-page .more-menu__item.jp-menu-danger { color:var(--error); }
-.jp-list-page .more-menu__item.jp-menu-danger:hover { background:var(--error-soft); }
+.jp-list-page .more-menu__item.jp-menu-primary {
+    color: var(--brand-dark);
+    font-weight: 700;
+}
+
+.jp-list-page .more-menu__item.jp-menu-danger {
+    color: var(--error);
+}
+
+.jp-list-page .more-menu__item.jp-menu-danger:hover {
+    background: var(--error-soft);
+}
 
 /* ----- Màn hình hẹp ----- */
 @media (max-width:720px) {
-    .jp-list-page .jp-toolbar .mft-popover { right:0; }
+    .jp-list-page .jp-toolbar .mft-popover {
+        right: 0;
+    }
 }

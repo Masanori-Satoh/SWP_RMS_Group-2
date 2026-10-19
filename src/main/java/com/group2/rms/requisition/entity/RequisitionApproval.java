@@ -8,7 +8,6 @@ import java.time.LocalDateTime;
 
 /**
  * 3.8 RequisitionApproval - Bản ghi phê duyệt JD bởi Director.
- * Status: Approved / Rejected
  */
 @Entity
 @Table(name = "RequisitionApproval")

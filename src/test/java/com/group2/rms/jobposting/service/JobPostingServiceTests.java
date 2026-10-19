@@ -62,12 +62,6 @@ import static org.mockito.Mockito.when;
 
 /*
  * UNIT TEST (Mockito): JobPostingServiceImpl (tạo, sửa, chuyển trạng thái, xóa, chi tiết, bảng điều khiển).
- * Service được tạo bằng tay để thấy rõ nó cần gì: repository / access / notification / talent pool là @Mock;
- * Validator, Mapper, AuditLogger dùng bản THẬT (truyền mock repository) → kiểm tra được dữ liệu lưu và audit thật.
- * Access là mock: mặc định requireX không ném (được phép); test quyền thì doThrow.
- *
- * Quy ước (docs/members/hoangnh/CLAUDE.md §23): hàm_shouldKếtQuả_whenĐiềuKiện, Clock cố định,
- * test chặn luôn kiểm tra thêm: không lưu, không audit, không thông báo, trạng thái giữ nguyên.
  */
 @ExtendWith(MockitoExtension.class)
 class JobPostingServiceTests {

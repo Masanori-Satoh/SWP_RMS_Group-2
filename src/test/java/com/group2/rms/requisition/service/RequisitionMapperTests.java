@@ -28,11 +28,6 @@ import static org.junit.jupiter.api.Assertions.*;
 
 /*
  * UNIT TEST: RequisitionMapper (entity → DTO cho form, dòng danh sách, trang chi tiết).
- * Dùng RequisitionAccess và RequisitionValidator THẬT để kiểm tra cờ quyền và cờ "bản nháp còn thiếu"
- * đúng như người dùng thấy. Không cần mock: mapper không truy vấn DB (dữ liệu liên quan được truyền vào).
- * Clock cố định: hôm nay là 18/10/2026.
- *
- * Quy ước (docs/members/hoangnh/CLAUDE.md §23): hàm_shouldKếtQuả_whenĐiềuKiện, Arrange / Act / Assert.
  */
 class RequisitionMapperTests {
 

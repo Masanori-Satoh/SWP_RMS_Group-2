@@ -16,7 +16,6 @@
     <th:block layout:fragment="styles">
         <link rel="stylesheet" th:href="@{/css/requisition-shared.css}">
         <link rel="stylesheet" th:href="@{/css/requisition-detail.css}">
-        <link rel="stylesheet" th:href="@{/css/pages/flash-toast.css}">
     </th:block>
 </head>
 
@@ -60,8 +59,10 @@
                     th:data-title="${req.title}">Xóa</button>
         </div>
     </header>
+    <!-- Thông báo sau thao tác (flash từ controller): chỉ hiện một lần sau khi chuyển trang -->
+    <div th:if="${successMessage}" class="alert alert--success" role="status" th:text="${successMessage}"></div>
+    <div th:if="${errorMessage}" class="alert alert--danger" role="alert" th:text="${errorMessage}"></div>
 
-    <th:block th:replace="~{fragments/requisition :: messages}"></th:block>
 
     <!-- ===== 2. DẢI THÔNG BÁO THEO NGỮ CẢNH (trạng thái + vai trò) ===== -->
     <div class="rqd-banner rqd-banner--info" th:if="${isDraft}" role="status">
@@ -265,7 +266,17 @@
     </div>
 
     <!-- Hộp thoại xác nhận xóa: phải nằm TRONG fragment "content" -->
-    <dialog th:replace="~{fragments/requisition :: deleteDialog}"></dialog>
+    <dialog id="delete-dialog" aria-labelledby="delete-title">
+        <form id="delete-form" method="post" th:action="@{/requisitions}">
+            <div class="delete-symbol" aria-hidden="true">!</div>
+            <h2 id="delete-title">Xóa yêu cầu tuyển dụng</h2>
+            <p>Bạn có chắc chắn muốn xóa “<strong id="delete-name"></strong>” cùng toàn bộ tiêu chí và lịch sử phê duyệt
+                liên quan?</p>
+            <p class="muted">Hành động này không thể hoàn tác. Lịch sử nhật ký hệ thống vẫn sẽ được lưu trữ.</p>
+            <div class="dialog-actions"><button type="button" class="btn-outline" data-close-dialog>Hủy</button><button
+                    class="btn-danger" type="submit">Xác nhận xóa</button></div>
+        </form>
+    </dialog>
 </main>
 
 <th:block layout:fragment="scripts">
@@ -273,8 +284,6 @@
     <script th:src="@{/js/text-limit.js}" defer></script>
     <!-- requisitions.js: hộp thoại xóa, bắt buộc lý do khi Trả lại, chống bấm gửi 2 lần -->
     <script th:src="@{/js/requisitions.js}" defer></script>
-    <!-- flash-toast.js: thông báo sau thao tác tự tắt sau 3 giây -->
-    <script th:src="@{/js/pages/flash-toast.js}" defer></script>
 </th:block>
 </body>
 </html>

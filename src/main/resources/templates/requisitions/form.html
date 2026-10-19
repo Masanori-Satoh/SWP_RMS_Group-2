@@ -48,7 +48,7 @@
             <!-- Lỗi từ server (RequisitionValidator) hiện thành danh sách ở đầu form.
                  Mỗi ô còn có <small id="<trường>-error"> luôn được render (dùng th:text, không dùng th:errors
                  vì th:errors bỏ hẳn thẻ khi không có lỗi) để JS cũng ghi lỗi vào được. -->
-            <section th:if="${#fields.hasAnyErrors()}" id="validation-summary" class="alert alert-danger" role="alert" tabindex="-1">
+            <section th:if="${#fields.hasAnyErrors()}" id="validation-summary" class="alert alert--danger" role="alert" tabindex="-1">
                 <p>Vui lòng kiểm tra lại các thông tin sau:</p>
                 <ul>
                     <li th:each="error : ${#fields.allErrors()}" th:text="${error}"></li>

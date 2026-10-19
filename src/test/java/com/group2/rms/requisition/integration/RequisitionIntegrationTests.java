@@ -41,11 +41,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 /*
  * INTEGRATION TEST: Service + Repository + SQL Server THẬT (cần SQL Server đang chạy).
- * Mỗi test chạy trong một transaction và rollback ở cuối (@Transactional), nên không để lại dữ liệu.
- * Kiểm tra những gì unit test không thấy được: câu JPQL / Specification chạy đúng trên SQL Server,
- * ràng buộc khóa ngoại, cột NVARCHAR tiếng Việt, và cả trang render qua bộ lọc bảo mật thật.
- *
- * Quy ước (docs/members/hoangnh/CLAUDE.md §23): hàm_shouldKếtQuả_whenĐiềuKiện, Arrange / Act / Assert.
  */
 @SpringBootTest(properties = "spring.jpa.hibernate.ddl-auto=validate")
 @AutoConfigureMockMvc

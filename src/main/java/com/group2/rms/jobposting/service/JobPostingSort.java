@@ -4,14 +4,13 @@ import org.springframework.data.domain.Sort;
 
 /**
  * Các cách sắp xếp màn danh sách tin tuyển dụng (whitelist: giá trị lạ trên URL quay về NEWEST).
- * MOST_APPLICATIONS không sắp được bằng cột của bảng JobPosting, nên toSort() trả unsorted
- * và service dùng JobPostingSpecifications#orderByApplicationCount thay thế.
  */
 public enum JobPostingSort {
     NEWEST("newest", "Mới đăng nhất",
             Sort.by(Sort.Order.desc("postingDate"), Sort.Order.desc("createdAt"), Sort.Order.desc("jobPostingId"))),
     DEADLINE("deadline", "Hạn nộp gần nhất",
             Sort.by(Sort.Order.asc("applicationDeadline"), Sort.Order.desc("jobPostingId"))),
+    // Không sắp được bằng cột của JobPosting: toSort() trả unsorted, service dùng JobPostingSpecifications#orderByApplicationCount
     MOST_APPLICATIONS("apps", "Nhiều hồ sơ nhất", Sort.unsorted()),
     TITLE("title", "Tiêu đề A–Z",
             Sort.by(Sort.Order.asc("postingTitle"), Sort.Order.desc("jobPostingId")));

@@ -5,7 +5,6 @@ import com.group2.rms.requisition.dto.RequisitionResponse;
 
 /**
  * Nghiệp vụ một Yêu cầu tuyển dụng: xem chi tiết, form, tạo, sửa, xóa, duyệt, rút lại.
- * Màn danh sách (lọc, tìm kiếm, phân trang) nằm ở RequisitionListService.
  */
 public interface RequisitionService {
     RequisitionResponse getById(Integer id);

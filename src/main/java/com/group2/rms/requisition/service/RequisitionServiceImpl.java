@@ -37,12 +37,6 @@ import java.util.UUID;
 
 /**
  * Service xử lý nghiệp vụ Yêu cầu tuyển dụng (Job Requisition): tạo, sửa, xóa, duyệt, rút lại, sao chép, xem chi tiết.
- *
- * Các phần phụ đã tách ra file riêng để file này chỉ còn luồng nghiệp vụ:
- * - màn danh sách (lọc, tìm kiếm, phân trang): RequisitionListService
- * - entity → DTO và cờ quyền cho template: RequisitionMapper
- * - ghi / đọc audit log: RequisitionAuditLogger
- * - luật phân quyền: RequisitionAccess; luật dữ liệu form: RequisitionValidator
  */
 @Service
 @Transactional
@@ -299,7 +293,10 @@ public class RequisitionServiceImpl implements RequisitionService {
         }
         auditLogger.log(jobRequisition, currentUser, RequisitionAuditLogger.ACTION_UPDATE, oldStatus, description);
 
-        if (!approved) {
+        // Rule: Duyệt hay trả lại đều báo cho HM tạo yêu cầu (Notifications View trong screen flow BF-01)
+        if (approved) {
+            notificationService.notifyRequisitionApproved(decision);
+        } else {
             notificationService.notifyRequisitionRejected(decision);
         }
     }

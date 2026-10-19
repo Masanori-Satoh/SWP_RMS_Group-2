@@ -42,10 +42,6 @@ import static org.mockito.Mockito.*;
 
 /*
  * UNIT TEST SERVICE: RequisitionListService (màn danh sách yêu cầu tuyển dụng).
- * Kiểm tra bộ lọc theo role, việc "làm sạch" tham số từ URL, phân trang và số câu truy vấn (không N+1).
- * Không cần Spring context hay SQL Server; câu SQL thật được kiểm ở RequisitionIntegrationTests.
- *
- * Quy ước (docs/members/hoangnh/CLAUDE.md §23): getListPage_shouldKếtQuả_whenĐiềuKiện, Arrange / Act / Assert.
  */
 @ExtendWith(MockitoExtension.class)
 class RequisitionListServiceTests {

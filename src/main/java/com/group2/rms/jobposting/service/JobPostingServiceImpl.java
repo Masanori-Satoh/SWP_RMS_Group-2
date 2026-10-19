@@ -38,10 +38,6 @@ import java.util.Set;
 
 /**
  * Luồng nghiệp vụ của một tin tuyển dụng (tạo, sửa, chuyển trạng thái, xóa, xem chi tiết) và bảng điều khiển HR.
- *
- * Đọc từ trên xuống là thấy nghiệp vụ: lấy tin → kiểm quyền (JobPostingAccess) → kiểm dữ liệu (JobPostingValidator)
- * → áp dữ liệu / đổi trạng thái → lưu → audit (JobPostingAuditLogger) → thông báo HM.
- * Không lo: màn danh sách (JobPostingListService), dựng DTO (JobPostingMapper), chữ hiển thị (JobPostingLabels).
  */
 @Service
 @RequiredArgsConstructor
@@ -551,13 +547,12 @@ public class JobPostingServiceImpl implements JobPostingService {
             throw new JobPostingValidationException("Mã tin tuyển dụng không hợp lệ.");
         }
         return postings.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy tin tuyển dụng với mã: " + id));
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy tin tuyển dụng."));
     }
 
     private JobRequisition findRequisition(Integer requisitionId) {
         return requisitions.findById(requisitionId)
-                .orElseThrow(() -> new ResourceNotFoundException(
-                        "Không tìm thấy yêu cầu tuyển dụng với mã: " + requisitionId));
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy yêu cầu tuyển dụng."));
     }
 
     /** Rule: mỗi yêu cầu chỉ có 1 tin nháp / đang đăng / tạm dừng. currentId = tin đang sửa (bỏ qua chính nó). */
@@ -631,7 +626,7 @@ public class JobPostingServiceImpl implements JobPostingService {
         return counts;
     }
 
-    /** Ghi các trường HR được sửa (CLAUDE.md §22). Chuỗi đã được validator trim / làm sạch. */
+    /** Ghi các trường HR được sửa. Chuỗi đã được validator trim / làm sạch. */
     private void applyEditableFields(JobPosting posting, JobPostingCreateRequest request, JobRequisition requisition) {
         posting.setPostingTitle(request.getPostingTitle());
         posting.setJobDescription(request.getJobDescription());

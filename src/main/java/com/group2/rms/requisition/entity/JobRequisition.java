@@ -10,11 +10,6 @@ import java.math.BigDecimal;
 
 /**
  * 3.6 JobRequisition - Yêu cầu tuyển dụng do Hiring Manager tạo.
- * ApprovalStatus: Draft, Pending_Director, Approved, Rejected (luồng hiện tại không dùng Closed / Cancelled)
- * Đợt tuyển: đợt 1 có originalRequisition = null; đợt > 1 trỏ về phiếu đợt 1 (CK_JobRequisition_RoundOrigin).
- * EmploymentType: Full-time, Part-time, Internship, Contract
- * Mã yêu cầu (RequisitionCode) do service sinh sau lần lưu đầu: REQ-0025 = "REQ-" + RequisitionId đệm 4 chữ số.
- * nullable = false khớp các cột NOT NULL trong database/schema/db.sql (chỉ là mô tả, DB mới là nơi ràng buộc thật).
  */
 @Entity
 @Table(name = "JobRequisition")
@@ -30,6 +25,7 @@ public class JobRequisition extends BaseEntity {
     @Column(name = "RequisitionId")
     private Integer requisitionId;
 
+    // Service sinh sau lần lưu đầu: REQ-0025 = "REQ-" + RequisitionId đệm 4 chữ số
     @Column(name = "RequisitionCode", length = 50)
     private String requisitionCode;
 
@@ -48,6 +44,7 @@ public class JobRequisition extends BaseEntity {
     @JoinColumn(name = "CreatedBy", referencedColumnName = "UserId")
     private User createdBy;
 
+    // Đợt 1: originalRequisition = null; đợt > 1 trỏ về phiếu đợt 1 (CK_JobRequisition_RoundOrigin)
     @Column(name = "RecruitmentRound", nullable = false)
     private Integer recruitmentRound;
 
@@ -86,7 +83,7 @@ public class JobRequisition extends BaseEntity {
     private String requirementDetails;
 
     /**
-     * Draft, Pending_Director, Approved, Rejected
+     * Draft, Pending_Director, Approved, Rejected (luồng hiện tại không dùng Closed / Cancelled)
      */
     @Column(name = "ApprovalStatus", nullable = false, length = 30)
     private String approvalStatus;

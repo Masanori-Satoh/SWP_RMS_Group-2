@@ -20,9 +20,7 @@ import java.util.Map;
 import java.util.Set;
 
 /**
- * Quy tắc kiểm tra dữ liệu của tin tuyển dụng (tầng 3, AG §2.4). JS ở form (pages/job-posting-form.js) viết GIỐNG
- * các quy tắc này để người dùng thấy lỗi sớm, nhưng server mới là nơi quyết định.
- * Không kiểm tra quyền (JobPostingAccess). Giới hạn / câu lỗi để public để DTO, controller, template và test dùng chung.
+ * Quy tắc kiểm tra dữ liệu của tin tuyển dụng (tầng 3, AG §2.4).
  */
 @Component
 @RequiredArgsConstructor

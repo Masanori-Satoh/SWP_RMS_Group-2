@@ -7,7 +7,6 @@ import java.math.RoundingMode;
 
 /**
  * Nơi DUY NHẤT dịch các giá trị lưu trong DB (tiếng Anh) sang chữ tiếng Việt cho màn hình Requisition.
- * Muốn đổi cách gọi một trạng thái thì chỉ sửa ở đây, không sửa trong template.
  */
 public final class RequisitionLabels {
 

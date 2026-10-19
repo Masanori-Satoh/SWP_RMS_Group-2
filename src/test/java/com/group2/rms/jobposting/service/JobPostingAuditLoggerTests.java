@@ -25,9 +25,6 @@ import static org.mockito.Mockito.verify;
 
 /*
  * UNIT TEST: JobPostingAuditLogger (ghi audit log và "ảnh chụp" trước / sau khi sửa tin).
- * AuditLogRepository là mock; Clock cố định để kiểm tra đúng thời điểm ghi.
- *
- * Quy ước (docs/members/hoangnh/CLAUDE.md §23): hàm_shouldKếtQuả_whenĐiềuKiện.
  */
 @ExtendWith(MockitoExtension.class)
 class JobPostingAuditLoggerTests {

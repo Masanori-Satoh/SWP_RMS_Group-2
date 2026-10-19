@@ -34,10 +34,6 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /*
  * UNIT TEST: JobPostingMapper (entity → DTO: dòng danh sách, trang chi tiết, form tạo / sửa).
- * Dùng JobPostingAccess và JobPostingValidator THẬT (hàm thuần) → kiểm tra luôn cờ quyền, nhãn, mốc thời gian.
- * Mapper không truy vấn DB nên không cần mock repository.
- *
- * Quy ước (docs/members/hoangnh/CLAUDE.md §23): hàm_shouldKếtQuả_whenĐiềuKiện, Clock cố định.
  */
 class JobPostingMapperTests {
 

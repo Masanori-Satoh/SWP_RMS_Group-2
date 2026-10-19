@@ -64,7 +64,7 @@ public class RequisitionValidator {
             "Số lượng cần tuyển phải từ " + POSITIONS_MIN + " đến " + POSITIONS_MAX + " người.";
     public static final String SALARY_FORMAT_MESSAGE = "Mức lương phải lớn hơn 0 với tối đa 2 chữ số thập phân.";
     public static final String SALARY_MAX_MESSAGE = "Mức lương không được vượt quá 1.000.000.000 VND/tháng.";
-    public static final String WEIGHT_MESSAGE = "Trọng số phải từ 0.01 đến 100 với tối đa hai chữ số thập phân.";
+    public static final String WEIGHT_MESSAGE = "Trọng số phải từ 0.01 đến 100 với tối đa 2 chữ số thập phân.";
 
     public static final List<String> EMPLOYMENT_TYPES = List.of("Full-time", "Part-time", "Internship", "Contract");
     public static final List<String> CRITERIA_TYPES = List.of("Education", "Experience", "Skill", "Knockout");
@@ -268,9 +268,9 @@ public class RequisitionValidator {
             boolean isRequired) {
         if (isRequired && textValue == null) {
             if ("title".equals(fieldKey)) {
-                errorsMap.put(fieldKey, "Tên vị trí không được để trống.");
+                errorsMap.put(fieldKey, "Vui lòng nhập tên vị trí.");
             } else if ("workLocation".equals(fieldKey)) {
-                errorsMap.put(fieldKey, "Địa điểm làm việc không được để trống.");
+                errorsMap.put(fieldKey, "Vui lòng nhập địa điểm làm việc.");
             } else {
                 errorsMap.put(fieldKey, "Vui lòng nhập trường này.");
             }

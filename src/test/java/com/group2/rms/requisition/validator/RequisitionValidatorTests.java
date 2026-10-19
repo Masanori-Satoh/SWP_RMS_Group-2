@@ -21,18 +21,6 @@ import static org.junit.jupiter.api.Assertions.*;
 
 /*
  * UNIT TEST VALIDATOR: RequisitionValidator.validate(RequisitionRequest).
- * Không Spring context, không database. "Hôm nay" cố định bằng Clock (18/10/2026).
- *
- * Quy ước (docs/members/hoangnh/CLAUDE.md §12, §23):
- * - Tên test: hàm_shouldKếtQuả_whenĐiềuKiện; @DisplayName tiếng Việt "điều kiện -> kết quả".
- * - Mỗi quy tắc có test hợp lệ + sai, nhất là ở biên (đúng giới hạn / giới hạn + 1),
- *   null, rỗng, chỉ khoảng trắng, giá trị ngoài danh mục, trùng, ID giả.
- * - Dùng hằng số của validator (POSITIONS_MAX + 1) thay vì gõ số, đổi giới hạn thì test vẫn đúng ý.
- * - Kiểm tra đúng key lỗi ("numberOfPositions", "screeningCriteria[0].weight"): key quyết định lỗi hiện ở ô nào.
- *
- * Hàm hỗ trợ: valid() = gửi duyệt hợp lệ đủ trường; minimalDraft() = nháp chỉ có 4 trường NOT NULL;
- * criterion(name, weight) = một dòng tiêu chí đủ trường; expectPass / expectFail.
- * Phòng ban, quyền người dùng, criteriaId của yêu cầu khác: kiểm ở RequisitionServiceTests.
  */
 class RequisitionValidatorTests {
 
@@ -1120,7 +1108,7 @@ class RequisitionValidatorTests {
         var d = minimalDraft();
         d.setScreeningCriteria(new ArrayList<>(List.of(
                 criterion("Java", "100.01"))));
-        assertEquals("Trọng số phải từ 0.01 đến 100 với tối đa hai chữ số thập phân.",
+        assertEquals("Trọng số phải từ 0.01 đến 100 với tối đa 2 chữ số thập phân.",
                 expectFail(d).getErrors().get("screeningCriteria[0].weight"));
     }
 

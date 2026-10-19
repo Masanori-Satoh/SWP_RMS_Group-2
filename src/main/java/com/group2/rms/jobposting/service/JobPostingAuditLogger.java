@@ -17,9 +17,6 @@ import java.util.Map;
 
 /**
  * Ghi và đọc audit log (bảng AuditLog) của tin tuyển dụng.
- *
- * Gom về một chỗ để: tên entity "JobPosting" chỉ viết một lần, và cách mô tả thay đổi
- * ("Tiêu đề tin: A → B") giống nhau ở mọi thao tác. Không quyết định nghiệp vụ (đó là việc của service).
  */
 @Component
 @RequiredArgsConstructor

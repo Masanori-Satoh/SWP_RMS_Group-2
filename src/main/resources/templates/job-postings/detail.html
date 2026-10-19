@@ -10,7 +10,6 @@
     <th:block layout:fragment="styles">
         <link rel="stylesheet" th:href="@{/css/job-posting-shared.css}">
         <link rel="stylesheet" th:href="@{/css/job-posting-detail.css}">
-        <link rel="stylesheet" th:href="@{/css/pages/flash-toast.css}">
     </th:block>
 </head>
 <body>
@@ -20,8 +19,6 @@
     <nav class="jpd-crumbs" aria-label="Đường dẫn">
         <a th:href="@{/internal/job-postings}">Tin tuyển dụng</a> / <span th:text="${p.postingTitle}">Product Owner</span>
     </nav>
-    <!-- Thông báo sau thao tác: khung nổi góc phải, tự tắt sau 3 giây (dùng chung với màn Yêu cầu) -->
-    <th:block th:replace="~{fragments/requisition :: flashToast(${successMessage ?: message}, ${errorMessage})}"></th:block>
 
     <!-- ===== 1. ĐẦU TRANG: tiêu đề + nút theo trạng thái ===== -->
     <header class="jpd-head">
@@ -74,6 +71,9 @@
                     data-confirm="Xóa bản nháp">Xóa bản nháp</button>
         </div>
     </header>
+    <!-- Thông báo sau thao tác (flash từ controller): chỉ hiện một lần sau khi chuyển trang -->
+    <div th:if="${successMessage}" class="alert alert--success" role="status" th:text="${successMessage}"></div>
+    <div th:if="${errorMessage}" class="alert alert--danger" role="alert" th:text="${errorMessage}"></div>
 
     <!-- ===== 2. DẢI THÔNG BÁO THEO TRẠNG THÁI ===== -->
     <div class="jpd-banner jpd-banner--muted" th:if="${p.draftBanner}" role="status">
@@ -278,8 +278,6 @@
 <th:block layout:fragment="scripts">
     <script th:src="@{/js/pages/job-posting-actions.js}" defer></script>
     <script th:src="@{/js/pages/job-posting-detail.js}" defer></script>
-    <!-- flash-toast.js: thông báo sau thao tác tự tắt sau 3 giây -->
-    <script th:src="@{/js/pages/flash-toast.js}" defer></script>
 </th:block>
 </body>
 </html>

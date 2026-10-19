@@ -28,9 +28,6 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /*
  * UNIT TEST: JobPostingValidator (làm sạch + kiểm tra form tạo / sửa tin, kiểm tra trước khi đăng).
- * Clock cố định 18/10/2026 10:00 (giờ VN) để test biên ngày không lỗi khi chạy qua nửa đêm.
- *
- * Quy ước (docs/members/hoangnh/CLAUDE.md §23): hàm_shouldKếtQuả_whenĐiềuKiện; dùng hằng số production (TITLE_LIMIT + 1...).
  */
 class JobPostingValidatorTests {
 

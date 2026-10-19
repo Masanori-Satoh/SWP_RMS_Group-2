@@ -7,7 +7,6 @@ import java.math.BigDecimal;
 
 /**
  * 3.9 ScreeningCriteria - Tiêu chí sàng lọc CV tự động bởi AI.
- * CriteriaType: Education, Experience, Skill, Knockout
  */
 @Entity
 @Table(name = "ScreeningCriteria")

@@ -14,12 +14,6 @@ import java.util.Set;
 
 /**
  * Luật "ai được làm gì" với tin tuyển dụng, và các giá trị trạng thái tin (CK_JobPosting_Status).
- *
- * - canX(...) là hàm thuần: chỉ đọc role, phòng ban, trạng thái → test không cần DB.
- *   Thông tin cần truy vấn (tin đã có hồ sơ chưa, yêu cầu còn tin đang mở không) do service tra trước rồi truyền vào.
- * - requireX(...) gọi canX và ném AccessDeniedException (trang 403).
- * - Cờ quyền cho giao diện (editable, closable...) do JobPostingMapper gắn vào DTO bằng các hàm canX ở đây.
- * Không lo: chữ hiển thị (JobPostingLabels), kiểm tra dữ liệu form (JobPostingValidator).
  */
 @Component
 @RequiredArgsConstructor

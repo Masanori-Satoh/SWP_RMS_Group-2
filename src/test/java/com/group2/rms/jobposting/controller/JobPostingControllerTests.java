@@ -73,10 +73,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 /*
  * CONTROLLER TEST (@WebMvcTest): JobPostingController với cấu hình bảo mật THẬT (SecurityConfig).
- * Service / list service / access / validator là mock; template được render thật (Thymeleaf).
- * Kiểm tra: URL → view / redirect / flash, lỗi theo ô, Bean Validation (@Valid), 403 / 404, CSRF, whitelist form.
- *
- * Quy ước (docs/members/hoangnh/CLAUDE.md §23): hàm_shouldKếtQuả_whenĐiềuKiện; POST luôn .with(csrf()) trừ test thiếu CSRF.
  */
 @WebMvcTest(controllers = JobPostingController.class)
 @Import({SecurityConfig.class, DatabaseUserDetailsService.class})
@@ -406,6 +402,36 @@ class JobPostingControllerTests {
                         containsString("Xem tất cả 14 hồ sơ"),
                         containsString("Tin đang xem"),
                         containsString("Gợi ý đã gửi cho HM"))));
+    }
+
+    @Test
+    @WithMockUser(username = "hr_officer", roles = "HR")
+    @DisplayName("GET chi tiết sau redirect có flash -> Hiện khung thông báo thành công và lỗi ở đầu trang")
+    void showJobPostingDetail_shouldShowFlashMessages_whenRedirectedWithFlash() throws Exception {
+        when(service.getInternalJobPostingDetail(eq(30), any(User.class))).thenReturn(publishedDetail().build());
+
+        mvc.perform(get(BASE + "/30")
+                        .flashAttr("successMessage", "Đã tạm dừng tin tuyển dụng.")
+                        .flashAttr("errorMessage", "Chỉ có thể xóa bản nháp chưa có hồ sơ ứng tuyển."))
+                .andExpect(status().isOk())
+                .andExpect(content().string(allOf(
+                        containsString("alert alert--success"),
+                        containsString("Đã tạm dừng tin tuyển dụng."),
+                        containsString("alert alert--danger"),
+                        containsString("Chỉ có thể xóa bản nháp chưa có hồ sơ ứng tuyển."))));
+    }
+
+    @Test
+    @WithMockUser(username = "hr_officer", roles = "HR")
+    @DisplayName("GET danh sách sau redirect có flash lỗi (xóa tin) -> Hiện khung lỗi ở đầu trang")
+    void listJobPostings_shouldShowErrorFlash_whenRedirectedWithFlash() throws Exception {
+        when(listService.getListPage(any(JobPostingSearchRequest.class), eq(hrUser))).thenReturn(listOf(publishedRow(), true));
+
+        mvc.perform(get(BASE).flashAttr("errorMessage", "Chỉ có thể xóa bản nháp chưa có hồ sơ ứng tuyển."))
+                .andExpect(status().isOk())
+                .andExpect(content().string(allOf(
+                        containsString("alert alert--danger"),
+                        containsString("Chỉ có thể xóa bản nháp chưa có hồ sơ ứng tuyển."))));
     }
 
     @Test

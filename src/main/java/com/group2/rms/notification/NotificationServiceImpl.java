@@ -13,13 +13,12 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.Clock;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 
 /**
- * Thông báo in-app. Mọi phương thức notify* chạy trong transaction của nghiệp vụ gọi tới
- * (không REQUIRES_NEW) để nghiệp vụ rollback thì thông báo cũng không được ghi.
- * Chống trùng bằng EventId ổn định theo sự kiện, unique cùng RecipientId (UX_Notification_Recipient_EventId).
+ * Thông báo in-app: tạo thông báo theo sự kiện nghiệp vụ, đọc danh sách, đánh dấu đã đọc.
  */
 @Service("systemNotificationService")
 @RequiredArgsConstructor
@@ -30,7 +29,11 @@ public class NotificationServiceImpl implements NotificationService {
     private static final DateTimeFormatter DISPLAY_DATE = DateTimeFormatter.ofPattern("dd/MM/yyyy");
     private static final DateTimeFormatter EVENT_TIME = DateTimeFormatter.ofPattern("yyyyMMddHHmmssSSSSSSS");
 
+    /** Số thông báo tối đa trên một trang (chặn ?size= quá lớn). */
+    public static final int MAX_PAGE_SIZE = 50;
+
     private final NotificationRepository notificationRepository;
+    private final Clock clock;
 
     @Override
     @Transactional
@@ -42,13 +45,13 @@ public class NotificationServiceImpl implements NotificationService {
         }
 
         User director = rejection.getDirector();
-        String directorName = director != null ? director.getFullName() : "Giám đốc";
-        LocalDateTime decidedAt = rejection.getApprovalDate() != null ? rejection.getApprovalDate() : LocalDateTime.now();
+        String directorName = director != null ? "Giám đốc " + director.getFullName() : "Giám đốc";
+        LocalDateTime decidedAt = rejection.getApprovalDate() != null ? rejection.getApprovalDate() : LocalDateTime.now(clock);
         String reason = rejection.getComments() != null && !rejection.getComments().isBlank()
                 ? rejection.getComments().trim() : "Không có lý do cụ thể";
 
         String content = String.format(
-                "Yêu cầu tuyển dụng \"%s\" (Mã: %s) đã bị Giám đốc %s từ chối vào lúc %s.\nLý do: %s.\nVui lòng chỉnh sửa lại thông tin và nộp duyệt lại.",
+                "Yêu cầu tuyển dụng \"%s\" (Mã: %s) đã bị %s từ chối vào lúc %s.\nLý do: %s.\nVui lòng chỉnh sửa lại thông tin và nộp duyệt lại.",
                 requisition.getTitle(), requisitionCode(requisition), directorName, decidedAt.format(DISPLAY_TIME), reason);
 
         // Mỗi lần từ chối có một bản ghi RequisitionApproval riêng, nên ID của nó là khóa sự kiện ổn định.
@@ -66,19 +69,54 @@ public class NotificationServiceImpl implements NotificationService {
 
     @Override
     @Transactional
+    public void notifyRequisitionApproved(RequisitionApproval approval) {
+        JobRequisition requisition = approval == null ? null : approval.getRequisition();
+        if (requisition == null || requisition.getHiringManager() == null) {
+            log.warn("Cannot send approval notification: Requisition or Hiring Manager is null");
+            return;
+        }
+
+        User director = approval.getDirector();
+        String directorName = director != null ? "Giám đốc " + director.getFullName() : "Giám đốc";
+        LocalDateTime decidedAt = approval.getApprovalDate() != null ? approval.getApprovalDate() : LocalDateTime.now(clock);
+        // Ý kiến khi duyệt là tùy chọn: chỉ thêm dòng "Ý kiến" khi Giám đốc có ghi
+        String comment = "";
+        if (approval.getComments() != null && !approval.getComments().isBlank()) {
+            comment = "\nÝ kiến: " + approval.getComments().trim() + ".";
+        }
+
+        String content = String.format(
+                "Yêu cầu tuyển dụng \"%s\" (Mã: %s) đã được %s phê duyệt vào lúc %s.%s\nHR có thể tạo tin tuyển dụng cho yêu cầu này.",
+                requisition.getTitle(), requisitionCode(requisition), directorName, decidedAt.format(DISPLAY_TIME), comment);
+
+        // Mỗi lần duyệt có một bản ghi RequisitionApproval riêng, nên ID của nó là khóa sự kiện ổn định.
+        send(Notification.builder()
+                .recipient(requisition.getHiringManager())
+                .actor(director)
+                .title("Yêu cầu tuyển dụng đã được phê duyệt: " + requisition.getTitle())
+                .content(content)
+                .eventType("REQUISITION_APPROVED")
+                .referenceId(String.valueOf(requisition.getRequisitionId()))
+                .linkUrl("/requisitions/" + requisition.getRequisitionId())
+                .eventId("REQ_APPROVE_" + approval.getApprovalId())
+                .build());
+    }
+
+    @Override
+    @Transactional
     public void notifyJobPostingPublished(JobPosting posting, User hr) {
         if (posting == null || posting.getRequisition() == null || posting.getRequisition().getHiringManager() == null) {
             log.warn("Cannot send job posting published notification: Posting or Requisition owner is null");
             return;
         }
 
-        LocalDateTime postingDate = posting.getPostingDate() != null ? posting.getPostingDate() : LocalDateTime.now();
+        LocalDateTime postingDate = posting.getPostingDate() != null ? posting.getPostingDate() : LocalDateTime.now(clock);
         String hrName = hr != null ? hr.getFullName() : "Nhân sự (HR)";
         String deadline = posting.getApplicationDeadline() != null
                 ? posting.getApplicationDeadline().format(DISPLAY_DATE) : "Không giới hạn";
 
         // Tin hẹn đăng (PostingDate ở tương lai): báo "sẽ đăng lúc ...", ứng viên chưa thấy tin
-        boolean scheduled = postingDate.isAfter(LocalDateTime.now());
+        boolean scheduled = postingDate.isAfter(LocalDateTime.now(clock));
         String content = scheduled
                 ? String.format(
                         "Tin tuyển dụng \"%s\" (thuộc yêu cầu %s) đã được nhân sự %s hẹn đăng lên cổng việc làm công khai vào lúc %s.\nHạn nộp hồ sơ: %s.\nTrước thời điểm đó ứng viên chưa thấy tin.",
@@ -178,7 +216,7 @@ public class NotificationServiceImpl implements NotificationService {
             return Page.empty();
         }
         int validPage = Math.max(0, page - 1);
-        int validSize = Math.max(1, Math.min(size, 50));
+        int validSize = Math.max(1, Math.min(size, MAX_PAGE_SIZE));
         return notificationRepository.findByRecipient_UserIdOrderByCreatedAtDesc(user.getUserId(), PageRequest.of(validPage, validSize))
                 .map(NotificationResponse::from);
     }
@@ -200,7 +238,7 @@ public class NotificationServiceImpl implements NotificationService {
         }
         Notification notification = notificationRepository.findByNotificationIdAndRecipient_UserId(notificationId, user.getUserId())
                 .orElseThrow(() -> new ResourceNotFoundException("Thông báo không tồn tại hoặc không thuộc về bạn."));
-        notification.markRead(LocalDateTime.now());
+        notification.markRead(LocalDateTime.now(clock));
         return NotificationResponse.from(notification);
     }
 
@@ -210,17 +248,19 @@ public class NotificationServiceImpl implements NotificationService {
         if (user == null) {
             return;
         }
-        notificationRepository.markAllAsReadByUserId(user.getUserId(), LocalDateTime.now());
+        notificationRepository.markAllAsReadByUserId(user.getUserId(), LocalDateTime.now(clock));
     }
 
     @Override
     @Transactional
     public void markOfferNotificationRead(Integer userId, Integer offerId) {
         if (userId != null && offerId != null) {
-            notificationRepository.markOfferNotificationRead(userId, String.valueOf(offerId), LocalDateTime.now());
+            notificationRepository.markOfferNotificationRead(userId, String.valueOf(offerId), LocalDateTime.now(clock));
         }
     }
 
+    // Chạy trong transaction của nghiệp vụ gọi tới (không REQUIRES_NEW): nghiệp vụ rollback thì thông báo cũng không được ghi.
+    // Chống trùng bằng EventId ổn định theo sự kiện, unique cùng RecipientId (UX_Notification_Recipient_EventId).
     private void send(Notification notification) {
         Integer recipientId = notification.getRecipient().getUserId();
         if (notificationRepository.existsByRecipient_UserIdAndEventId(recipientId, notification.getEventId())) {

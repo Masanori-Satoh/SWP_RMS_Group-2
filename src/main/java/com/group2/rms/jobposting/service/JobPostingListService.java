@@ -31,14 +31,7 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * Màn danh sách tin tuyển dụng (/internal/job-postings): phạm vi theo vai trò, làm sạch bộ lọc, tìm kiếm,
- * sắp xếp, phân trang, chip. Chỉ đọc dữ liệu, không ghi.
- *
- * getListPage luôn theo 4 bước (giống RequisitionListService):
- * 1. buildFilterOptions — vai trò này thấy ô lọc nào, mỗi ô có lựa chọn gì
- * 2. normalizeFilter    — không tin URL: giá trị vai trò không được dùng / ngoài danh sách thì bỏ qua
- * 3. search             — phạm vi theo vai trò AND từng bộ lọc → 1 trang; số hồ sơ đếm gộp cho cả trang (chống N+1)
- * 4. describeActiveFilters — mỗi bộ lọc đang bật thành một chip có nút ✕
+ * Màn danh sách tin tuyển dụng (/internal/job-postings): phạm vi theo vai trò, làm sạch bộ lọc, tìm kiếm, sắp xếp, phân trang, chip.
  */
 @Service
 @RequiredArgsConstructor

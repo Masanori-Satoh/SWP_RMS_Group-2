@@ -36,12 +36,7 @@ import java.util.List;
 import java.util.Set;
 
 /**
- * Màn tin tuyển dụng nội bộ (/internal/job-postings): danh sách, bảng điều khiển HR, form tạo / sửa,
- * trang chi tiết và các nút chuyển trạng thái.
- *
- * Chỉ nhận request → gọi service → chọn view / redirect / flash. Không so sánh role, không tự đổi trạng thái:
- * quyền ở JobPostingAccess (service gọi), cờ hiển thị có sẵn trong DTO. Chỉ bắt JobPostingValidationException
- * (và lỗi của module talent pool khi đóng tin); không tìm thấy / không có quyền để GlobalExceptionHandler trả 404 / 403.
+ * Màn tin tuyển dụng nội bộ (/internal/job-postings): danh sách, bảng điều khiển HR, form tạo / sửa, trang chi tiết và các nút chuyển trạng thái.
  */
 @Controller
 @RequestMapping("/internal/job-postings")
@@ -78,7 +73,7 @@ public class JobPostingController {
     }
 
     /**
-     * Chỉ nhận từ form các trường HR được nhập (CLAUDE.md §22). Thông tin yêu cầu nguồn, trạng thái, ngày đăng,
+     * Chỉ nhận từ form các trường HR được nhập. Thông tin yêu cầu nguồn, trạng thái, ngày đăng,
      * người tạo... không bao giờ lấy từ form: service điền lại từ DB.
      */
     @InitBinder("postingDto")
@@ -287,7 +282,7 @@ public class JobPostingController {
         boolean isEdit = dto.getJobPostingId() != null;
         model.addAttribute("postingDto", dto);
         model.addAttribute("isEdit", isEdit);
-        // Ô "Đổi yêu cầu" chỉ có khi tạo mới (tin đã tạo không đổi được yêu cầu nguồn, CLAUDE.md §22)
+        // Ô "Đổi yêu cầu" chỉ có khi tạo mới (tin đã tạo không đổi được yêu cầu nguồn)
         if (isEdit) {
             model.addAttribute("requisitionChoices", List.of());
         } else {

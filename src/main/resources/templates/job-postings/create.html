@@ -127,8 +127,7 @@
                             </div>
                             <input class="form-input" th:field="*{postingTitle}" th:maxlength="${titleLimit}"
                                 aria-describedby="postingTitle-help postingTitle-error">
-                            <small id="postingTitle-help" class="jpf-help">Thêm điểm nổi bật để ứng viên dễ tìm, VD:
-                                "Key Account Manager (B2B SaaS)".</small>
+
                             <small id="postingTitle-error" class="field-error"
                                 th:text="${#fields.hasErrors('postingTitle')} ? ${#fields.errors('postingTitle')[0]} : ''"></small>
                         </div>
@@ -155,8 +154,6 @@
                                 </summary>
                                 <div class="jpf-map" id="jpf-map"></div>
                             </details>
-                            <small id="workLocation-help" class="jpf-help">Bấm "Xem bản đồ" để kiểm tra vị trí. Ứng viên
-                                bấm vào địa chỉ sẽ mở Google Maps để xem đường đi.</small>
                             <small id="workLocation-error" class="field-error"
                                 th:text="${#fields.hasErrors('workLocation')} ? ${#fields.errors('workLocation')[0]} : ''"></small>
                         </div>
@@ -172,7 +169,8 @@
                                             số</span></span></label>
                                 <label><input type="radio" th:field="*{salaryMode}" value="custom">
                                     <span><b>Tự nhập</b>
-                                        <input class="form-input" th:field="*{salaryCustom}" th:maxlength="${salaryTextLimit}"
+                                        <input class="form-input" th:field="*{salaryCustom}"
+                                            th:maxlength="${salaryTextLimit}"
                                             placeholder="VD: Lên đến 30 triệu + hoa hồng"
                                             aria-label="Mức lương tự nhập"></span></label>
                             </div>
@@ -185,8 +183,8 @@
                         <div class="jpf-field">
                             <label class="jpf-toggle"><input type="checkbox" th:field="*{showPositions}"><i
                                     aria-hidden="true"></i>Hiển thị số lượng tuyển</label>
-                            <input class="form-input jpf-short" th:field="*{numberOfPositionsDisplay}" th:maxlength="${positionsTextLimit}"
-                                aria-label="Số lượng hiển thị"
+                            <input class="form-input jpf-short" th:field="*{numberOfPositionsDisplay}"
+                                th:maxlength="${positionsTextLimit}" aria-label="Số lượng hiển thị"
                                 aria-describedby="numberOfPositionsDisplay-help numberOfPositionsDisplay-error">
                             <small id="numberOfPositionsDisplay-help" class="jpf-help">Tắt nếu không muốn công khai số
                                 lượng.</small>
@@ -204,8 +202,8 @@
                                 <span class="jpf-from" data-from="jobDescription"
                                     th:data-source="*{sourceJobDescription}"></span>
                             </div>
-                            <textarea class="form-textarea" th:field="*{jobDescription}" rows="7" th:maxlength="${textLimit}"
-                                aria-describedby="jobDescription-error"></textarea>
+                            <textarea class="form-textarea" th:field="*{jobDescription}" rows="7"
+                                th:maxlength="${textLimit}" aria-describedby="jobDescription-error"></textarea>
                             <small id="jobDescription-error" class="field-error"
                                 th:text="${#fields.hasErrors('jobDescription')} ? ${#fields.errors('jobDescription')[0]} : ''"></small>
                         </div>
@@ -215,8 +213,8 @@
                                 <span class="jpf-from" data-from="jobRequirements"
                                     th:data-source="*{sourceRequirements}"></span>
                             </div>
-                            <textarea class="form-textarea" th:field="*{jobRequirements}" rows="6" th:maxlength="${textLimit}"
-                                aria-describedby="jobRequirements-error"></textarea>
+                            <textarea class="form-textarea" th:field="*{jobRequirements}" rows="6"
+                                th:maxlength="${textLimit}" aria-describedby="jobRequirements-error"></textarea>
                             <small id="jobRequirements-error" class="field-error"
                                 th:text="${#fields.hasErrors('jobRequirements')} ? ${#fields.errors('jobRequirements')[0]} : ''"></small>
                         </div>

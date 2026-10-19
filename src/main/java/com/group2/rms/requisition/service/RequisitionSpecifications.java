@@ -14,12 +14,6 @@ import java.util.List;
 
 /**
  * Các điều kiện WHERE dùng cho màn danh sách yêu cầu tuyển dụng.
- *
- * Mỗi hàm trả về một Specification = một mẩu điều kiện WHERE viết bằng Java.
- * Service ghép chúng lại bằng .and(...), ví dụ:
- *   scope.and(titleOrDepartmentContains("java")).and(statusIn(List.of("Approved")))
- * sinh ra SQL dạng:
- *   WHERE (...phạm vi theo role...) AND (Title LIKE '%java%' OR DepartmentName LIKE '%java%') AND ApprovalStatus IN ('Approved')
  */
 public final class RequisitionSpecifications {
 

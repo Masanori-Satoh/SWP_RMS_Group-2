@@ -5,13 +5,6 @@ import java.util.List;
 
 /**
  * Bảng điều khiển HR của màn tin tuyển dụng (job-postings/dashboard.html).
- *
- * @param activeCount                 tin đang đăng còn hạn nộp
- * @param draftCount                  tin nháp
- * @param closedCount                 tin đã đóng hoặc đang đăng nhưng đã quá hạn
- * @param requisitionsAwaitingPosting yêu cầu đã duyệt chưa có tin đang mở
- * @param departmentStats             số tin theo phòng ban, nhiều nhất trước
- * @param recentPostings              5 tin mới đăng / mới tạo gần nhất
  */
 public record JobPostingDashboardResponse(
         long activeCount,

@@ -12,7 +12,6 @@
              file nạp sau sẽ thắng, nên đặt mft- ở đây để ô tìm kiếm không bị thêm viền -->
         <link rel="stylesheet" th:href="@{/css/pages/management-filters.css}">
         <link rel="stylesheet" th:href="@{/css/requisition-list.css}">
-        <link rel="stylesheet" th:href="@{/css/pages/flash-toast.css}">
     </th:block>
 </head>
 
@@ -23,7 +22,9 @@
                         <h1>Yêu cầu tuyển dụng</h1>
                         <a th:if="${canCreate}" th:href="@{/requisitions/create}" class="btn btn--primary btn-create">+ Tạo yêu cầu mới</a>
                     </div>
-                    <th:block th:replace="~{fragments/requisition :: messages}"></th:block>
+                    <!-- Thông báo sau thao tác (flash từ controller): chỉ hiện một lần sau khi chuyển trang -->
+                    <div th:if="${successMessage}" class="alert alert--success" role="status" th:text="${successMessage}"></div>
+                    <div th:if="${errorMessage}" class="alert alert--danger" role="alert" th:text="${errorMessage}"></div>
                     <!--
                         Thanh công cụ: ô tìm kiếm (trái) + nút "Bộ lọc" (phải).
                         Dùng lại bộ class mft- của pages/management-filters.css (trang Tài khoản, Phòng ban cũng dùng).
@@ -226,13 +227,21 @@
                     </section>
 
                     <!-- Hộp thoại xác nhận xóa phải nằm TRONG fragment "content", nằm ngoài sẽ bị layout bỏ đi -->
-                    <dialog th:replace="~{fragments/requisition :: deleteDialog}"></dialog>
+                    <dialog id="delete-dialog" aria-labelledby="delete-title">
+                        <form id="delete-form" method="post" th:action="@{/requisitions}">
+                            <div class="delete-symbol" aria-hidden="true">!</div>
+                            <h2 id="delete-title">Xóa yêu cầu tuyển dụng</h2>
+                            <p>Bạn có chắc chắn muốn xóa “<strong id="delete-name"></strong>” cùng toàn bộ tiêu chí và lịch sử phê duyệt
+                                liên quan?</p>
+                            <p class="muted">Hành động này không thể hoàn tác. Lịch sử nhật ký hệ thống vẫn sẽ được lưu trữ.</p>
+                            <div class="dialog-actions"><button type="button" class="btn-outline" data-close-dialog>Hủy</button><button
+                                    class="btn-danger" type="submit">Xác nhận xóa</button></div>
+                        </form>
+                    </dialog>
             </main>
 
     <th:block layout:fragment="scripts">
         <script th:src="@{/js/requisitions.js}" defer></script>
-        <!-- flash-toast.js: thông báo sau thao tác tự tắt sau 3 giây -->
-        <script th:src="@{/js/pages/flash-toast.js}" defer></script>
         <!-- Đóng popover "Bộ lọc" khi bấm ra ngoài hoặc nhấn Esc (dùng chung với trang Tài khoản, Phòng ban) -->
         <script th:src="@{/js/pages/management-filters.js}" defer></script>
         <!-- Menu ⋯ nổi đè lên bảng, không làm xô lệch cột (dùng chung với danh sách tin tuyển dụng) -->

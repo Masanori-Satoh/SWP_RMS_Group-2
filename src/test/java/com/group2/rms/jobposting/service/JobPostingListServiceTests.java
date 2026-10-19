@@ -50,11 +50,6 @@ import static org.mockito.Mockito.when;
 
 /*
  * UNIT TEST (Mockito): JobPostingListService (màn danh sách tin tuyển dụng).
- * Kiểm tra: ô lọc theo vai trò, làm sạch tham số URL, chip, phân trang, đếm hồ sơ gộp (chống N+1).
- * Repository là mock; Access / Mapper / Validator dùng bản thật (hàm thuần).
- * Điều kiện SQL (Specification) được kiểm tra thật ở JobPostingIntegrationTests.
- *
- * Quy ước (docs/members/hoangnh/CLAUDE.md §23): hàm_shouldKếtQuả_whenĐiềuKiện, Clock cố định.
  */
 @ExtendWith(MockitoExtension.class)
 class JobPostingListServiceTests {

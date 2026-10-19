@@ -37,9 +37,6 @@ import java.util.Set;
 
 /**
  * Màn "Danh sách yêu cầu tuyển dụng": phạm vi dữ liệu theo role, bộ lọc, tìm kiếm, phân trang.
- *
- * Tách riêng khỏi RequisitionServiceImpl (thêm / sửa / duyệt) để mỗi file chỉ lo một màn.
- * Màn danh sách khác (ví dụ tin tuyển dụng) có thể làm theo đúng 4 bước của getListPage.
  */
 @Service
 @Transactional(readOnly = true)

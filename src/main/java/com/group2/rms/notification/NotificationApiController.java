@@ -30,7 +30,7 @@ public class NotificationApiController {
         }
         return userRepository.findByUsernameIgnoreCase(auth.getName())
             .filter(u -> "Active".equals(u.getAccountStatus()))
-            .orElseThrow(() -> new AccessDeniedException("Tài khoản không hợp lệ hoặc đã bị khóa."));
+            .orElseThrow(() -> new AccessDeniedException("Tài khoản không hoạt động hoặc không tồn tại."));
     }
 
     @GetMapping("/unread-count")

@@ -27,12 +27,6 @@ import java.util.List;
 
 /**
  * Chuyển entity Yêu cầu tuyển dụng sang DTO cho form, màn danh sách và màn chi tiết.
- *
- * Mapper KHÔNG truy vấn DB: dữ liệu liên quan (tin mới nhất, lịch sử duyệt, audit log...)
- * do service tra trước rồi truyền vào. Nhờ vậy:
- * - màn danh sách tra 1 lần cho cả trang (không N+1),
- * - test mapper chỉ cần tạo entity bằng builder, không cần mock repository.
- * Cờ quyền (editable, deletable...) đều hỏi RequisitionAccess, mapper không tự so sánh role.
  */
 @Component
 @RequiredArgsConstructor

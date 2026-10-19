@@ -2,7 +2,8 @@
 .req-list-page .btn-create { flex-shrink:0; }
 .req-list-page .requisition-page-header { align-items:center; margin-bottom:var(--s5, 20px); }
 .req-list-page .requisition-page-header h1 { margin:0; font-size:26px; }
-.req-list-page .list-container { margin-top:var(--s6); }
+/* Không bọc khung: bảng có viền riêng, phân trang nằm tách bên dưới (giống danh sách tin tuyển dụng) */
+.req-list-page .list-container { min-width:0; margin-top:var(--s6); }
 .req-list-page .list-results-count { margin:0 0 var(--s4); color:var(--muted); font-size:14px; }
 .req-list-page .requisition-list-table td { padding-block:var(--s2); }
 .req-list-page .requisition-list-table th { white-space:nowrap; }

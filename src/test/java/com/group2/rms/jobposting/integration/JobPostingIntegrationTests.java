@@ -44,13 +44,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 /*
  * INTEGRATION TEST: JobPostingListService + JobPostingRepository + SQL Server THẬT (cần SQL Server đang chạy).
- * Mỗi test chạy trong một transaction và rollback ở cuối (@Transactional), nên không để lại dữ liệu.
- * Kiểm tra những gì unit test không thấy: Specification (Hẹn đăng, nhóm hạn nộp, phạm vi HM, tìm tiếng Việt,
- * sắp theo số hồ sơ), các câu JPQL mới của bảng điều khiển / ô chọn yêu cầu, và render trang qua bảo mật thật.
- * Dữ liệu tạo trong một phòng ban riêng, tiêu đề riêng để không đụng dữ liệu seed.
- *
- * Quy ước (docs/members/hoangnh/CLAUDE.md §23): hàm_shouldKếtQuả_whenĐiềuKiện, Arrange / Act / Assert;
- * "bây giờ" lấy từ bean Clock của ứng dụng, không gọi LocalDateTime.now().
  */
 @SpringBootTest(properties = "spring.jpa.hibernate.ddl-auto=validate")
 @AutoConfigureMockMvc

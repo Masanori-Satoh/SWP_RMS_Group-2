@@ -17,8 +17,6 @@ import java.util.List;
 
 /**
  * Các điều kiện WHERE của màn danh sách tin tuyển dụng.
- * Mỗi hàm trả về một Specification nhỏ; service ghép chúng bằng .and(...).
- * Các hàm phụ thuộc thời gian nhận "now" làm tham số để test được (không gọi LocalDateTime.now() bên trong).
  */
 public final class JobPostingSpecifications {
 
@@ -37,6 +35,8 @@ public final class JobPostingSpecifications {
                 cb.like(cb.lower(root.join("requisition", JoinType.LEFT).join("department", JoinType.LEFT)
                         .get("departmentName")), pattern, '\\'));
     }
+
+    // Hàm phụ thuộc thời gian nhận "now" làm tham số để test được (không gọi LocalDateTime.now() bên trong)
 
     /** Trạng thái hiển thị nằm trong danh sách đã chọn (có tính "Hẹn đăng", xem JobPostingLabels#viewStatus). */
     public static Specification<JobPosting> viewStatusIn(List<String> viewStatuses, LocalDateTime now) {

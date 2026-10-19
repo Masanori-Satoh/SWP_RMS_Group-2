@@ -12,14 +12,14 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 /**
- * Một dòng tiêu chí sàng lọc trên form yêu cầu. Annotation chỉ chặn giá trị quá giới hạn;
- * dòng trống / bắt buộc / trùng tên / tổng 100% do RequisitionValidator kiểm tra.
+ * Một dòng tiêu chí sàng lọc trên form yêu cầu.
  */
 @Data
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
 public class ScreeningCriteriaRequest {
+    // Annotation chỉ chặn giá trị quá giới hạn; dòng trống / bắt buộc / trùng tên / tổng 100% do RequisitionValidator kiểm tra
     private Integer criteriaId;
 
     @Size(max = RequisitionValidator.CRITERIA_NAME_CHAR_LIMIT, message = RequisitionValidator.CRITERIA_NAME_TOO_LONG)

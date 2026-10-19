@@ -14,7 +14,6 @@ import java.util.Set;
 
 /**
  * Phân quyền và kiểm tra phạm vi truy cập cho Job Requisition.
- * Tuân thủ quy định tại docs/members/hoangnh/CLAUDE.md §11
  */
 @Component
 @RequiredArgsConstructor
@@ -54,7 +53,7 @@ public class RequisitionAccess {
 
         String userRole = role(currentUser);
         if (!ALLOWED_ROLES.contains(userRole)) {
-            throw new AccessDeniedException("Vai trò hiện tại không có quyền truy cập Requisition.");
+            throw new AccessDeniedException("Vai trò hiện tại không có quyền truy cập Yêu cầu tuyển dụng.");
         }
 
         return currentUser;
@@ -178,7 +177,7 @@ public class RequisitionAccess {
     // Security: Yêu cầu quyền tạo Requisition, ném ngoại lệ nếu không đủ thẩm quyền
     public void requireCreate(User user) {
         if (!canCreate(user)) {
-            throw new AccessDeniedException("Chỉ Hiring Manager, Director và Quản trị viên mới có quyền tạo yêu cầu tuyển dụng.");
+            throw new AccessDeniedException("Chỉ Hiring Manager, Giám đốc và Quản trị viên mới có quyền tạo yêu cầu tuyển dụng.");
         }
     }
 
@@ -213,7 +212,7 @@ public class RequisitionAccess {
     // Security: Phân quyền xem chi tiết requisition theo phạm vi vai trò
     public void requireView(User user, JobRequisition requisition) {
         if (requisition == null) {
-            throw new AccessDeniedException("Yêu cầu tuyển dụng không tồn tại.");
+            throw new AccessDeniedException("Không tìm thấy yêu cầu tuyển dụng.");
         }
         String userRole = role(user);
         if (ROLE_SYSTEM_ADMIN.equals(userRole)) {

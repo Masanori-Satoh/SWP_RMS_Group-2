@@ -101,11 +101,11 @@
 
         if (required && !value) {
             if (rule.id === 'title') {
-                message = 'Tên vị trí không được để trống.';
+                message = 'Vui lòng nhập tên vị trí.';
             } else if (rule.id === 'departmentId') {
                 message = 'Vui lòng chọn phòng ban đang hoạt động.';
             } else if (rule.id === 'workLocation') {
-                message = 'Địa điểm làm việc không được để trống.';
+                message = 'Vui lòng nhập địa điểm làm việc.';
             } else if (rule.id === 'numberOfPositions') {
                 message = 'Vui lòng nhập số lượng cần tuyển.';
             } else if (rule.id === 'expectedStartDate') {
@@ -192,7 +192,7 @@
         // Khớp RequisitionValidator.SALARY_MAX
         const SALARY_MAX = 1000000000;
         const salaryMessage = value => value === null ? ''
-            : value <= 0 ? 'Mức lương phải lớn hơn 0.'
+            : value <= 0 ? 'Mức lương phải lớn hơn 0 với tối đa 2 chữ số thập phân.'
             : value > SALARY_MAX ? 'Mức lương không được vượt quá 1.000.000.000 VND/tháng.' : '';
         minSalaryMessage = salaryMessage(minVal);
         maxSalaryMessage = salaryMessage(maxVal);

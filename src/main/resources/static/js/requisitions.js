@@ -117,7 +117,7 @@ document.addEventListener('DOMContentLoaded', () => {
     decision?.addEventListener('submit', event => {
         if (event.submitter?.value === 'reject' && feedback && !feedback.value.trim()) {
             event.preventDefault();
-            feedback.setCustomValidity('Vui lòng nêu rõ lý do từ chối để người tạo yêu cầu chỉnh sửa.');
+            feedback.setCustomValidity('Vui lòng nhập lý do để Hiring Manager chỉnh sửa.');
             feedback.reportValidity();
         }
     });

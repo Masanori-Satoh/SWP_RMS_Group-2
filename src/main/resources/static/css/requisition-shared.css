@@ -21,7 +21,7 @@
 .req-app [data-status="Approved"] { background:var(--brand-soft); color:var(--brand-dark); }
 .req-app [data-status="Pending_Director"] { background:#f7efcf; color:#775817; }
 .req-app [data-status="Rejected"] { background:var(--error-soft); color:var(--error); }
-.req-app :is(.list-container,.form-card,.detail-layout .card) { min-width:0; padding:var(--s6); border:1px solid var(--line); border-radius:8px; background:var(--surface); }
+.req-app :is(.form-card,.detail-layout .card) { min-width:0; padding:var(--s6); border:1px solid var(--line); border-radius:8px; background:var(--surface); }
 .req-app :where(input:not([type="checkbox"]):not([type="hidden"]),select,textarea) { width:100%; min-width:0; min-height:48px; padding:var(--s2) var(--s3); border:1px solid var(--control-line); border-radius:4px; background:var(--surface); font-size:16px; }
 .req-app textarea { resize:vertical; line-height:1.6; }
 .req-app :is(input,select,textarea)[aria-invalid="true"] { border-color:var(--error); }
@@ -44,7 +44,7 @@
 @media (max-width:768px) {
   .req-app .requisition-page-header,.req-app .requisition-detail-heading { align-items:flex-start; flex-direction:column; gap:var(--s4); }
   .req-app .requisition-page-header,.req-app .requisition-page-intro { margin-bottom:var(--s6); }
-  .req-app :is(.list-container,.form-card,.detail-layout .card) { padding:var(--s4); }
+  .req-app :is(.form-card,.detail-layout .card) { padding:var(--s4); }
   .req-app #delete-dialog { padding:var(--s6); }
 }
 

@@ -56,7 +56,7 @@
 
 | Field | Bắt buộc | Quy tắc | Thông báo lỗi |
 | :--- | :---: | :--- | :--- |
-| Tên vị trí | ✔ (cả nháp) | Trim, 1–200 ký tự (`maxlength="200"`) | "Tên vị trí không được để trống." / "Nội dung quá 200 ký tự" |
+| Tên vị trí | ✔ (cả nháp) | Trim, 1–200 ký tự (`maxlength="200"`) | "Vui lòng nhập tên vị trí." / "Nội dung quá 200 ký tự" |
 | Phòng ban | — | Chỉ đọc. Tạo mới: phòng ban của tài khoản đang đăng nhập, phải đang `Active`. Sửa: giữ phòng ban đã lưu của phiếu | "Tài khoản của bạn chưa được gán phòng ban đang hoạt động. Vui lòng liên hệ quản trị viên." |
 | Phòng ban (Giám đốc) | Nháp + Gửi | Giám đốc tự chọn trong danh sách phòng ban đang `Active` (tạo và sửa bản nháp của mình) | "Vui lòng chọn phòng ban đang hoạt động." |
 | Đợt tuyển dụng | — | Chỉ đọc. Tạo mới = 1; sao chép = đợt lớn nhất trong chuỗi + 1 (mục 8.2) | — |
@@ -75,7 +75,7 @@ Ngoài ra (service): không được có **2 bản nháp cùng tên vị trí tr
 | Hình thức làm việc | ✔ (cả nháp) | `Full-time` / `Part-time` / `Internship` / `Contract`. Mặc định Toàn thời gian | "Vui lòng chọn một tùy chọn hợp lệ." |
 | Mô hình làm việc | ✔ (cả nháp) | `On-site` / `Remote` / `Hybrid`. Mặc định Tại văn phòng | "Vui lòng chọn một tùy chọn hợp lệ." |
 | Yêu cầu giới tính | — | `Any` / `Male` / `Female`. Để trống → `Any` (giống DEFAULT của cột) | "Vui lòng chọn một tùy chọn hợp lệ." |
-| Địa điểm làm việc | ✔ | Trim, tối đa 255 ký tự | "Địa điểm làm việc không được để trống." / "Nội dung quá 255 ký tự" |
+| Địa điểm làm việc | ✔ | Trim, tối đa 255 ký tự | "Vui lòng nhập địa điểm làm việc." / "Nội dung quá 255 ký tự" |
 | Ngày bắt đầu dự kiến | ✔ | Gửi duyệt: ≥ hôm nay. Luôn luôn: ≤ hôm nay + 1 năm (`START_DATE_MAX_YEARS`; chặn cả năm gõ nhầm như `20266`). Ô ngày có `min` / `max` | "Ngày bắt đầu dự kiến phải từ hôm nay trở đi." / "Ngày bắt đầu dự kiến không được quá 1 năm kể từ hôm nay." |
 | Thời gian thử việc | — | Để trống = không thử việc, hoặc số nguyên 1–180 ngày (Điều 25 BLLĐ 2019). Nút −/+ (ô trống bấm nút thì bắt đầu từ 60). Lưu số nguyên vào cột `ProbationDays INT` | "Thời gian thử việc phải từ 1 đến 180 ngày." |
 | Lương tối thiểu / tối đa | — | Xem 3.1 | — |
@@ -119,7 +119,7 @@ Ngoài ra (service): không được có **2 bản nháp cùng tên vị trí tr
 | Tiêu chí | ✔ | Trim, tối đa 150 ký tự. Không trùng tên trong cùng yêu cầu, so sánh **không phân biệt hoa thường** (khớp collation CI của `UQ_ScreeningCriteria_Requisition_Name`) | "Vui lòng nhập trường này." / "Tên các tiêu chí không được trùng nhau." |
 | Loại | ✔ | `Education` / `Experience` / `Skill` / `Knockout` | "Vui lòng chọn một tùy chọn hợp lệ." |
 | Giá trị yêu cầu | ✔ | Trim, tối đa 255 ký tự | "Vui lòng nhập trường này." |
-| Trọng số (%) | ✔ | 0.01–100, tối đa 2 chữ số thập phân (`DECIMAL(5,2)`), **cả khi lưu nháp** | "Vui lòng nhập trọng số." / "Trọng số phải từ 0.01 đến 100 với tối đa hai chữ số thập phân." |
+| Trọng số (%) | ✔ | 0.01–100, tối đa 2 chữ số thập phân (`DECIMAL(5,2)`), **cả khi lưu nháp** | "Vui lòng nhập trọng số." / "Trọng số phải từ 0.01 đến 100 với tối đa 2 chữ số thập phân." |
 | Bắt buộc | — | Có / không | — |
 
 Dòng "trống hoàn toàn" = không có tên, loại, giá trị và không bật Bắt buộc (không xét trọng số). Dòng trống bị bỏ qua, không lưu.

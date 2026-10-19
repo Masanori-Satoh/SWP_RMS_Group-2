@@ -14,15 +14,6 @@ import java.time.LocalDateTime;
 
 /**
  * Dữ liệu form Tạo / Sửa tin tuyển dụng (job-postings/create.html).
- *
- * Chỉ các trường trong whitelist của JobPostingController#formBinder được nhận từ form
- * (requisitionId, nội dung tin, cách hiển thị lương / số lượng, hạn nộp, cách đăng, action).
- * Các trường còn lại là thông tin yêu cầu nguồn và trạng thái form để HIỂN THỊ, luôn do service điền lại từ DB
- * (người dùng sửa trên trình duyệt cũng không có tác dụng).
- *
- * Annotation là tầng 2 (Bean Validation, AG §2.4): chỉ chặn ô một dòng quá dài. Bắt buộc / lựa chọn / ngày
- * do JobPostingValidator kiểm tra (phân biệt lưu nháp và đăng tin). Ô nhiều dòng không đặt @Size vì trình duyệt
- * gửi xuống dòng là \r\n (2 ký tự), validator đếm sau khi đổi về \n.
  */
 @Getter
 @Setter
@@ -39,6 +30,7 @@ public class JobPostingCreateRequest {
     public static final String PUBLISH_NOW = "now";
     public static final String PUBLISH_LATER = "later";
 
+    // Chỉ các trường trong whitelist JobPostingController#formBinder được nhận từ form; còn lại service điền từ DB
     private Integer jobPostingId;
     private Integer requisitionId;
 
@@ -53,7 +45,7 @@ public class JobPostingCreateRequest {
     private String workModel;
     private Integer numberOfPositions;
     private String hiringManagerName;
-    /** Thông tin nội bộ: chỉ HR xem, không đưa vào nội dung tin công khai (CLAUDE.md §22). */
+    /** Thông tin nội bộ: chỉ HR xem, không đưa vào nội dung tin công khai. */
     private String reasonForHiring;
     private Integer probationDays;
     /** Nhãn tiếng Việt, ví dụ "Không yêu cầu". */
@@ -80,6 +72,7 @@ public class JobPostingCreateRequest {
     private boolean live;
 
     // ----- Nội dung tin (HR nhập) -----
+    // Ô nhiều dòng không đặt @Size: trình duyệt gửi xuống dòng là \r\n (2 ký tự), validator đếm sau khi đổi về \n
     @Size(max = JobPostingValidator.TITLE_LIMIT, message = JobPostingValidator.TITLE_TOO_LONG)
     private String postingTitle;
     private String jobDescription;

@@ -23,7 +23,6 @@ import java.time.LocalDateTime;
 
 /**
  * 3.10 JobPosting - Tin tuyển dụng công khai (từ JobRequisition đã được duyệt).
- * PostingStatus: Draft, Published, Paused, Closed
  */
 @Entity
 @Table(name = "JobPosting")

@@ -13,8 +13,6 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 
 /*
  * UNIT TEST: JobPostingLabels (nơi duy nhất đổi giá trị DB → chữ tiếng Việt / màu badge / tên hoạt động).
- *
- * Quy ước (docs/members/hoangnh/CLAUDE.md §23): hàm_shouldKếtQuả_whenĐiềuKiện; bảng giá trị dùng @CsvSource.
  */
 class JobPostingLabelsTests {
 

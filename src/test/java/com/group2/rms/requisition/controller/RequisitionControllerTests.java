@@ -53,11 +53,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 /*
  * CONTROLLER TEST (@WebMvcTest + MockMvc): RequisitionController.
- * Kiểm tra URL → view / redirect / flash message, cách hiện lỗi theo ô, bảo mật (403, CSRF, phiên hết hạn).
- * Service, quyền, validator đều là mock: nghiệp vụ đã được kiểm ở RequisitionServiceTests.
- * SecurityConfig và bộ lọc phiên (AccountSessionGuardFilter) là THẬT, nên cần UserRepository trả tài khoản.
- *
- * Quy ước (docs/members/hoangnh/CLAUDE.md §23): hàm_shouldKếtQuả_whenĐiềuKiện, Arrange / Act / Assert.
  */
 @WebMvcTest(controllers = RequisitionController.class)
 @Import({ SecurityConfig.class, DatabaseUserDetailsService.class })
@@ -200,6 +195,44 @@ class RequisitionControllerTests {
                                 .andExpect(view().name("requisitions/detail"))
                                 .andExpect(model().attributeExists("req"))
                                 .andExpect(content().string(containsString("Bắt buộc")));
+        }
+
+        @Test
+        @WithMockUser(username = "hm", roles = "HIRING_MANAGER")
+        @DisplayName("GET /requisitions/{id} sau redirect có flash -> Hiện khung thông báo thành công và lỗi ở đầu trang")
+        void detail_shouldShowFlashMessages_whenRedirectedWithFlash() throws Exception {
+                // Arrange
+                RequisitionResponse detail = RequisitionResponse.builder().requisitionId(1).requisitionCode("REQ-0001")
+                                .recruitmentRound(1).title("Backend Engineer").approvalStatus(RequisitionAccess.STATUS_DRAFT)
+                                .screeningCriteria(List.of()).approvals(List.of()).activityLog(List.of()).build();
+                when(service.getById(1)).thenReturn(detail);
+
+                // Act + Assert
+                mvc.perform(get("/requisitions/1")
+                                .flashAttr("successMessage", "Đã lưu bản nháp thành công.")
+                                .flashAttr("errorMessage", "Yêu cầu này đã được liên kết với tin đăng tuyển và không thể xóa."))
+                                .andExpect(status().isOk())
+                                .andExpect(content().string(containsString("alert alert--success")))
+                                .andExpect(content().string(containsString("Đã lưu bản nháp thành công.")))
+                                .andExpect(content().string(containsString("alert alert--danger")))
+                                .andExpect(content().string(containsString(
+                                                "Yêu cầu này đã được liên kết với tin đăng tuyển và không thể xóa.")));
+        }
+
+        @Test
+        @WithMockUser(username = "hm", roles = "HIRING_MANAGER")
+        @DisplayName("GET /requisitions/{id} không có flash -> Không hiện khung thông báo nào")
+        void detail_shouldNotShowAlert_whenNoFlash() throws Exception {
+                // Arrange
+                RequisitionResponse detail = RequisitionResponse.builder().requisitionId(1).requisitionCode("REQ-0001")
+                                .recruitmentRound(1).title("Backend Engineer").approvalStatus(RequisitionAccess.STATUS_DRAFT)
+                                .screeningCriteria(List.of()).approvals(List.of()).activityLog(List.of()).build();
+                when(service.getById(1)).thenReturn(detail);
+
+                // Act + Assert
+                mvc.perform(get("/requisitions/1"))
+                                .andExpect(status().isOk())
+                                .andExpect(content().string(not(containsString("alert alert--"))));
         }
 
         @Test
@@ -349,7 +382,7 @@ class RequisitionControllerTests {
         @DisplayName("POST /requisitions/create -> Lỗi nghiệp vụ thì trả lại form và hiện lỗi đúng ô")
         void create_shouldReturnFormWithFieldError_whenServiceRejectsData() throws Exception {
                 // Arrange
-                doThrow(new RequisitionValidationException(Map.of("title", "Tên vị trí không được để trống.")))
+                doThrow(new RequisitionValidationException(Map.of("title", "Vui lòng nhập tên vị trí.")))
                                 .when(service).createRequisition(any());
 
                 // Act + Assert
@@ -408,7 +441,7 @@ class RequisitionControllerTests {
                 // Act + Assert
                 mvc.perform(post("/requisitions/delete/10").with(csrf()))
                                 .andExpect(redirectedUrl("/requisitions/10"))
-                                .andExpect(flash().attributeExists("failureMessage"));
+                                .andExpect(flash().attributeExists("errorMessage"));
         }
 
         // =========================================================================
@@ -433,7 +466,7 @@ class RequisitionControllerTests {
         void decide_shouldNotCallService_whenDecisionValueIsUnknown() throws Exception {
                 mvc.perform(post("/requisitions/10/decision").with(csrf()).param("decision", "maybe"))
                                 .andExpect(redirectedUrl("/requisitions/10"))
-                                .andExpect(flash().attribute("failureMessage", "Vui lòng chọn quyết định phê duyệt."));
+                                .andExpect(flash().attribute("errorMessage", "Vui lòng chọn quyết định phê duyệt."));
                 verifyNoInteractions(service);
         }
 
@@ -449,7 +482,7 @@ class RequisitionControllerTests {
                 mvc.perform(post("/requisitions/10/decision").with(csrf())
                                 .param("decision", "reject").param("comment", "   "))
                                 .andExpect(redirectedUrl("/requisitions/10"))
-                                .andExpect(flash().attributeExists("failureMessage"))
+                                .andExpect(flash().attributeExists("errorMessage"))
                                 .andExpect(flash().attribute("decisionComment", "   "));
         }
 

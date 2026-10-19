@@ -21,12 +21,6 @@ import java.util.List;
 
 /**
  * Dữ liệu form Tạo / Sửa yêu cầu tuyển dụng (requisitions/form.html).
- *
- * Annotation ở đây là tầng 2 (Bean Validation, AG §2.4): chặn sớm giá trị sai định dạng / quá giới hạn,
- * lỗi tự vào BindingResult khi controller nhận bằng @Valid. Giới hạn và câu lỗi lấy từ RequisitionValidator
- * nên chỉ sửa một chỗ.
- * Không đặt @NotBlank: "Lưu bản nháp" được để trống, phần bắt buộc do RequisitionValidator kiểm tra
- * (phân biệt nháp / gửi duyệt). RequisitionValidator vẫn kiểm tra lại toàn bộ vì service không tin controller.
  */
 @Data
 @Builder
@@ -35,6 +29,7 @@ import java.util.List;
 public class RequisitionRequest {
     private String action;
 
+    // Không đặt @NotBlank: "Lưu bản nháp" được để trống, phần bắt buộc do RequisitionValidator kiểm tra
     @Size(max = RequisitionValidator.TITLE_CHAR_LIMIT, message = RequisitionValidator.TITLE_TOO_LONG)
     private String title;
     private Integer departmentId;

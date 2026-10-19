@@ -17,9 +17,6 @@ import java.util.Map;
 
 /**
  * Ghi và đọc audit log (bảng AuditLog) của Yêu cầu tuyển dụng.
- *
- * Gom về một chỗ để: tên entity "JobRequisition" chỉ viết một lần, và cách mô tả thay đổi
- * ("Số lượng cần tuyển: 2 → 3") giống nhau ở mọi thao tác.
  */
 @Component
 @RequiredArgsConstructor

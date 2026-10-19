@@ -11,6 +11,9 @@ public interface NotificationService {
     /** Báo cho chủ requisition khi Giám đốc từ chối; {@code rejection} là bản ghi phê duyệt vừa lưu. */
     void notifyRequisitionRejected(RequisitionApproval rejection);
 
+    /** Báo cho chủ requisition khi Giám đốc duyệt; {@code approval} là bản ghi phê duyệt vừa lưu. */
+    void notifyRequisitionApproved(RequisitionApproval approval);
+
     void notifyJobPostingPublished(JobPosting posting, User hr);
 
     void notifyOfferLetterSent(OfferProposal offer);

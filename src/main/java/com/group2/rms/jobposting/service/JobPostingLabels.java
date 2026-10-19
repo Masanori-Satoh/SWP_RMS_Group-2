@@ -9,9 +9,7 @@ import java.util.List;
 import java.util.Objects;
 
 /**
- * Nơi duy nhất đổi giá trị của tin tuyển dụng (trạng thái, nhóm hạn nộp, dòng audit log) sang chữ tiếng Việt
- * và tông màu badge. Template chỉ đọc kết quả đã tính sẵn, không tự so sánh chuỗi trạng thái.
- * Giá trị trạng thái nằm ở JobPostingAccess (STATUS_*); trạng thái "Hẹn đăng" xem JobPostingAccess#viewStatus.
+ * Nơi duy nhất đổi giá trị của tin tuyển dụng (trạng thái, nhóm hạn nộp, dòng audit log) sang chữ tiếng Việt và tông màu badge.
  */
 public final class JobPostingLabels {
 

@@ -26,10 +26,6 @@ import java.util.Objects;
 
 /**
  * Chuyển entity tin tuyển dụng sang DTO cho màn danh sách, trang chi tiết, form tạo / sửa và bảng điều khiển.
- *
- * Mapper KHÔNG truy vấn DB: số hồ sơ, lịch sử audit, các lần đăng... do service tra trước rồi truyền vào
- * (màn danh sách tra 1 lần cho cả trang, test mapper không cần mock repository).
- * Cờ quyền (editable, closable...) đều hỏi JobPostingAccess; nhãn tiếng Việt lấy từ JobPostingLabels / RequisitionLabels.
  */
 @Component
 @RequiredArgsConstructor

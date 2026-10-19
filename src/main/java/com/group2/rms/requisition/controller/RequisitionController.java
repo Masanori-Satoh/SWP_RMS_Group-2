@@ -199,9 +199,9 @@ public class RequisitionController {
             flash.addFlashAttribute("successMessage", "Đã xóa yêu cầu tuyển dụng thành công.");
             return "redirect:/requisitions";
         } catch (RequisitionValidationException e) {
-            flash.addFlashAttribute("failureMessage", e.getMessage());
+            flash.addFlashAttribute("errorMessage", e.getMessage());
         } catch (DataIntegrityViolationException e) {
-            flash.addFlashAttribute("failureMessage", "Yêu cầu này đã được liên kết với dữ liệu khác và không thể xóa.");
+            flash.addFlashAttribute("errorMessage", "Yêu cầu này đã được liên kết với dữ liệu khác và không thể xóa.");
         }
         return "redirect:/requisitions/" + id;
     }
@@ -213,14 +213,14 @@ public class RequisitionController {
         boolean isApprove = DECISION_APPROVE.equals(decision);
         boolean isReject = DECISION_REJECT.equals(decision);
         if (!isApprove && !isReject) {
-            flash.addFlashAttribute("failureMessage", "Vui lòng chọn quyết định phê duyệt.");
+            flash.addFlashAttribute("errorMessage", "Vui lòng chọn quyết định phê duyệt.");
             return "redirect:/requisitions/" + id;
         }
         try {
             service.decide(id, isApprove, comment);
             flash.addFlashAttribute("successMessage", "Đã lưu quyết định thành công.");
         } catch (RequisitionValidationException e) {
-            flash.addFlashAttribute("failureMessage", e.getMessage());
+            flash.addFlashAttribute("errorMessage", e.getMessage());
             // Giữ lại ý kiến đã gõ để người dùng không phải gõ lại
             flash.addFlashAttribute("decisionComment", comment);
         }
@@ -233,7 +233,7 @@ public class RequisitionController {
             service.withdraw(id);
             flash.addFlashAttribute("successMessage", "Đã rút lại yêu cầu thành công. Bạn có thể chỉnh sửa lại bản nháp.");
         } catch (RequisitionValidationException e) {
-            flash.addFlashAttribute("failureMessage", e.getMessage());
+            flash.addFlashAttribute("errorMessage", e.getMessage());
         }
         return "redirect:/requisitions/" + id;
     }
