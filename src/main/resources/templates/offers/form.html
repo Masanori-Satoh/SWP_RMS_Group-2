@@ -50,18 +50,6 @@
     </div>
   </div>
 
-  <!-- DIRECTOR REJECTION NOTE (IF EDIT & REJECTED) -->
-  <div th:if="${isEdit and detail != null and (detail.offerStatus == 'Director_Rejected' or detail.offerStatus == 'Rejected')}"
-       class="alert alert--danger offer-alert-spacing">
-    <i class="fa-solid fa-circle-exclamation"></i>
-    <div>
-      <strong>Lý do từ chối từ Giám đốc:</strong>
-      <div class="offer-mt-1"
-           th:text="${#lists.isEmpty(detail.approvalHistory) ? 'Vui lòng điều chỉnh lại mức lương/định biên theo yêu cầu.' : detail.approvalHistory[0].directorComments}">
-        Cần điều chỉnh lại lương.
-      </div>
-    </div>
-  </div>
 
                 <!-- MAIN FORM -->
                 <form id="offerForm" th:object="${offerDto}"

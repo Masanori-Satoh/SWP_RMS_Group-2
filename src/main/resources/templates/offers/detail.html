@@ -124,12 +124,6 @@
                 </button>
             </th:block>
 
-            <!-- Action when Rejected -->
-            <th:block th:if="${detail.offerStatus == 'Director_Rejected' or detail.offerStatus == 'Rejected'}">
-                <a th:href="@{/offers/{id}/edit(id=${detail.offerId})}" class="btn btn--primary">
-                    <i class="fa-solid fa-pen-to-square"></i> Chỉnh sửa & Trình lại
-                </a>
-            </th:block>
         </div>
     </div>
 

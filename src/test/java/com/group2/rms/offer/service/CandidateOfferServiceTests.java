@@ -306,6 +306,184 @@ class CandidateOfferServiceTests {
         assertEquals(deadline, detail.responseDeadline());
     }
 
+    // =========================================================================
+    // EXTENDED UNIT TESTS (English)
+    // =========================================================================
+
+    @Test
+    @org.junit.jupiter.api.DisplayName("isExpired: When current time is immediately past response deadline, response is blocked")
+    void acceptOffer_immediatelyPastResponseDeadline_throwsException() {
+        OfferProposal offer = offer(OFFER_ID, "Sent_Candidate");
+        offer.setResponseDeadline(java.time.LocalDateTime.now().minusSeconds(1));
+
+        when(offers.findVisibleById(eq(OFFER_ID), eq(USER_ID), anyCollection()))
+                .thenReturn(Optional.of(offer));
+
+        OfferResponseException ex = assertThrows(OfferResponseException.class, () -> service.accept(OFFER_ID));
+        assertTrue(ex.getMessage().contains("quá thời hạn phản hồi"));
+        verify(offers, never()).answerIfSent(anyInt(), anyString());
+    }
+
+    @Test
+    @org.junit.jupiter.api.DisplayName("isExpired: When responseDeadline is null and expectedStartDate is today, response is allowed")
+    void acceptOffer_whenResponseDeadlineIsNullAndExpectedStartDateIsToday_succeeds() {
+        OfferProposal offer = offer(OFFER_ID, "Sent_Candidate");
+        offer.setResponseDeadline(null);
+        offer.setExpectedStartDate(java.time.LocalDate.now());
+
+        when(offers.findVisibleById(eq(OFFER_ID), eq(USER_ID), anyCollection()))
+                .thenReturn(Optional.of(offer));
+        when(offers.answerIfSent(OFFER_ID, "Accepted")).thenReturn(1);
+
+        String title = service.accept(OFFER_ID);
+
+        assertEquals("Junior Java Developer", title);
+        verify(applicationStatusService).onOfferAnswered(APPLICATION_ID, true);
+    }
+
+    @Test
+    @org.junit.jupiter.api.DisplayName("isExpired: When responseDeadline is null and expectedStartDate is in future, response is allowed")
+    void acceptOffer_whenResponseDeadlineIsNullAndExpectedStartDateInFuture_succeeds() {
+        OfferProposal offer = offer(OFFER_ID, "Sent_Candidate");
+        offer.setResponseDeadline(null);
+        offer.setExpectedStartDate(java.time.LocalDate.now().plusDays(2));
+
+        when(offers.findVisibleById(eq(OFFER_ID), eq(USER_ID), anyCollection()))
+                .thenReturn(Optional.of(offer));
+        when(offers.answerIfSent(OFFER_ID, "Accepted")).thenReturn(1);
+
+        String title = service.accept(OFFER_ID);
+
+        assertEquals("Junior Java Developer", title);
+        verify(applicationStatusService).onOfferAnswered(APPLICATION_ID, true);
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"", "   "})
+    @org.junit.jupiter.api.DisplayName("decline: Blank or whitespace declineReason is normalized to null and accepted")
+    void declineOffer_blankReason_treatedAsNullAndSucceeds(String blankReason) {
+        OfferProposal testOffer = offer(OFFER_ID, "Sent_Candidate");
+        when(offers.findVisibleById(eq(OFFER_ID), eq(USER_ID), anyCollection()))
+                .thenReturn(Optional.of(testOffer));
+        when(offers.answerIfSent(OFFER_ID, "Declined")).thenReturn(1);
+
+        String title = service.decline(OFFER_ID, blankReason);
+
+        assertEquals("Junior Java Developer", title);
+        verify(offers).answerIfSent(OFFER_ID, "Declined");
+        verify(applicationStatusService).onOfferAnswered(APPLICATION_ID, false);
+    }
+
+    @Test
+    @org.junit.jupiter.api.DisplayName("decline: Null declineReason succeeds and calls 2-arg answerIfSent")
+    void declineOffer_nullReason_succeeds() {
+        OfferProposal testOffer = offer(OFFER_ID, "Sent_Candidate");
+        when(offers.findVisibleById(eq(OFFER_ID), eq(USER_ID), anyCollection()))
+                .thenReturn(Optional.of(testOffer));
+        when(offers.answerIfSent(OFFER_ID, "Declined")).thenReturn(1);
+
+        String title = service.decline(OFFER_ID, null);
+
+        assertEquals("Junior Java Developer", title);
+        verify(offers).answerIfSent(OFFER_ID, "Declined");
+    }
+
+    @Test
+    @org.junit.jupiter.api.DisplayName("decline: Exactly 1000 characters declineReason is accepted and passed to repository")
+    void declineOffer_exactly1000CharactersReason_succeeds() {
+        String longReason = "a".repeat(1000);
+        OfferProposal testOffer = offer(OFFER_ID, "Sent_Candidate");
+        when(offers.findVisibleById(eq(OFFER_ID), eq(USER_ID), anyCollection()))
+                .thenReturn(Optional.of(testOffer));
+        when(offers.answerIfSent(OFFER_ID, "Declined", longReason)).thenReturn(1);
+
+        String title = service.decline(OFFER_ID, longReason);
+
+        assertEquals("Junior Java Developer", title);
+        verify(offers).answerIfSent(OFFER_ID, "Declined", longReason);
+    }
+
+    @Test
+    @org.junit.jupiter.api.DisplayName("accept: Attempting to accept an already declined offer is refused")
+    void acceptOffer_afterDeclining_throwsOfferResponseException() {
+        OfferProposal testOffer = offer(OFFER_ID, "Declined");
+        when(offers.findVisibleById(eq(OFFER_ID), eq(USER_ID), anyCollection()))
+                .thenReturn(Optional.of(testOffer));
+
+        OfferResponseException ex = assertThrows(OfferResponseException.class, () -> service.accept(OFFER_ID));
+        assertTrue(ex.getMessage().contains("đã được trả lời"));
+        verify(offers, never()).answerIfSent(anyInt(), anyString());
+        verifyNoInteractions(applicationStatusService);
+    }
+
+    @Test
+    @org.junit.jupiter.api.DisplayName("decline: Attempting to decline an already accepted offer is refused")
+    void declineOffer_afterAccepting_throwsOfferResponseException() {
+        OfferProposal testOffer = offer(OFFER_ID, "Accepted");
+        when(offers.findVisibleById(eq(OFFER_ID), eq(USER_ID), anyCollection()))
+                .thenReturn(Optional.of(testOffer));
+
+        OfferResponseException ex = assertThrows(OfferResponseException.class, () -> service.decline(OFFER_ID, "Change mind"));
+        assertTrue(ex.getMessage().contains("đã được trả lời"));
+        verify(offers, never()).answerIfSent(anyInt(), anyString(), anyString());
+        verifyNoInteractions(applicationStatusService);
+    }
+
+    @Test
+    @org.junit.jupiter.api.DisplayName("getDetail: Throws ResourceNotFoundException when candidate accesses offer of another user")
+    void candidateCannotAccessOfferOwnedByAnotherUser_getDetail() {
+        when(offers.findVisibleById(eq(999), eq(USER_ID), anyCollection())).thenReturn(Optional.empty());
+
+        assertThrows(ResourceNotFoundException.class, () -> service.getDetail(999));
+    }
+
+    @Test
+    @org.junit.jupiter.api.DisplayName("accept: When notification service throws exception, accept still succeeds")
+    void acceptOffer_whenNotificationThrows_stillCompletesAcceptance() {
+        OfferProposal testOffer = offer(OFFER_ID, "Sent_Candidate");
+        when(offers.findVisibleById(eq(OFFER_ID), eq(USER_ID), anyCollection()))
+                .thenReturn(Optional.of(testOffer));
+        when(offers.answerIfSent(OFFER_ID, "Accepted")).thenReturn(1);
+        doThrow(new RuntimeException("Notification service failure"))
+                .when(systemNotificationService).notifyOfferResponseFromCandidate(any(), eq(true), any());
+
+        String title = service.accept(OFFER_ID);
+
+        assertEquals("Junior Java Developer", title);
+        verify(applicationStatusService).onOfferAnswered(APPLICATION_ID, true);
+    }
+
+    @Test
+    @org.junit.jupiter.api.DisplayName("decline: When notification service throws exception, decline still succeeds")
+    void declineOffer_whenNotificationThrows_stillCompletesDecline() {
+        OfferProposal testOffer = offer(OFFER_ID, "Sent_Candidate");
+        when(offers.findVisibleById(eq(OFFER_ID), eq(USER_ID), anyCollection()))
+                .thenReturn(Optional.of(testOffer));
+        when(offers.answerIfSent(OFFER_ID, "Declined")).thenReturn(1);
+        doThrow(new RuntimeException("Notification service failure"))
+                .when(systemNotificationService).notifyOfferResponseFromCandidate(any(), eq(false), any());
+
+        String title = service.decline(OFFER_ID);
+
+        assertEquals("Junior Java Developer", title);
+        verify(applicationStatusService).onOfferAnswered(APPLICATION_ID, false);
+    }
+
+    @Test
+    @org.junit.jupiter.api.DisplayName("decline: When offer was concurrently answered between read and update, throws exception and leaves application untouched")
+    void declineOffer_failsWhenOfferWasAnsweredBetweenReadAndUpdate() {
+        OfferProposal testOffer = offer(OFFER_ID, "Sent_Candidate");
+        when(offers.findVisibleById(eq(OFFER_ID), eq(USER_ID), anyCollection()))
+                .thenReturn(Optional.of(testOffer));
+        when(offers.answerIfSent(OFFER_ID, "Declined", "reason")).thenReturn(0);
+
+        OfferResponseException ex = assertThrows(OfferResponseException.class, () ->
+                service.decline(OFFER_ID, "reason"));
+
+        assertEquals("Thư mời vừa được cập nhật. Vui lòng tải lại trang.", ex.getMessage());
+        verifyNoInteractions(applicationStatusService);
+    }
+
     private static OfferProposal offer(int id, String status) {
         return OfferProposal.builder()
                 .offerId(id)
@@ -320,3 +498,4 @@ class CandidateOfferServiceTests {
                 .build();
     }
 }
+

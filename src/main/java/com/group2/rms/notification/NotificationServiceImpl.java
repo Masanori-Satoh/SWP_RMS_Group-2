@@ -15,6 +15,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.List;
 
 /**
  * Thông báo in-app. Mọi phương thức notify* chạy trong transaction của nghiệp vụ gọi tới
@@ -31,6 +32,7 @@ public class NotificationServiceImpl implements NotificationService {
     private static final DateTimeFormatter EVENT_TIME = DateTimeFormatter.ofPattern("yyyyMMddHHmmssSSSSSSS");
 
     private final NotificationRepository notificationRepository;
+    private final com.group2.rms.user.repository.UserRepository userRepository;
 
     @Override
     @Transactional
@@ -77,15 +79,13 @@ public class NotificationServiceImpl implements NotificationService {
         String deadline = posting.getApplicationDeadline() != null
                 ? posting.getApplicationDeadline().format(DISPLAY_DATE) : "Không giới hạn";
 
-        // Tin hẹn đăng (PostingDate ở tương lai): báo "sẽ đăng lúc ...", ứng viên chưa thấy tin
+        // Tin hẹn đăng (PostingDate ở tương lai): báo "sẽ đăng lúc ...", ứng viên chưa thấy tin; tin đăng ngay: báo "đã phát hành lúc ...".
         boolean scheduled = postingDate.isAfter(LocalDateTime.now());
         String content = scheduled
-                ? String.format(
-                        "Tin tuyển dụng \"%s\" (thuộc yêu cầu %s) đã được nhân sự %s hẹn đăng lên cổng việc làm công khai vào lúc %s.\nHạn nộp hồ sơ: %s.\nTrước thời điểm đó ứng viên chưa thấy tin.",
+                ? String.format("Tin tuyển dụng \"%s\" (cho %s) đã được %s lên lịch đăng vào lúc %s (Hạn nộp hồ sơ: %s).",
                         posting.getPostingTitle(), requisitionCode(posting.getRequisition()), hrName,
                         postingDate.format(DISPLAY_TIME), deadline)
-                : String.format(
-                        "Tin tuyển dụng \"%s\" (thuộc yêu cầu %s) đã được nhân sự %s phát hành lên cổng việc làm công khai vào lúc %s.\nHạn nộp hồ sơ: %s.\nỨng viên hiện đã có thể xem chi tiết và nộp hồ sơ trực tuyến.",
+                : String.format("Tin tuyển dụng \"%s\" (cho %s) đã được %s phát hành vào lúc %s (Hạn nộp hồ sơ: %s). Ứng viên hiện đã có thể xem và nộp hồ sơ.",
                         posting.getPostingTitle(), requisitionCode(posting.getRequisition()), hrName,
                         postingDate.format(DISPLAY_TIME), deadline);
 
@@ -104,6 +104,94 @@ public class NotificationServiceImpl implements NotificationService {
 
     @Override
     @Transactional
+    public void notifyOfferPendingDirector(OfferProposal offer, User hrActor) {
+        if (offer == null) {
+            log.warn("Cannot send offer pending director notification: Offer is null");
+            return;
+        }
+
+        List<User> directors = userRepository.findAllActiveDirectors();
+        if (directors == null || directors.isEmpty()) {
+            log.warn("No active directors found to notify for pending Offer ID: {}", offer.getOfferId());
+            return;
+        }
+
+        String positionTitle = positionTitle(offer);
+        String candidateName = (offer.getApplication() != null && offer.getApplication().getCandidate() != null
+                && offer.getApplication().getCandidate().getAccount() != null)
+                ? offer.getApplication().getCandidate().getAccount().getFullName() : "Ứng viên";
+        String hrName = hrActor != null ? hrActor.getFullName()
+                : (offer.getProposedBy() != null ? offer.getProposedBy().getFullName() : "Chuyên viên HR");
+        String salary = offer.getProposedSalary() != null
+                ? String.format("%,d ₫", offer.getProposedSalary().longValue()) : "Thỏa thuận";
+
+        String title = "Yêu cầu phê duyệt Đề xuất Offer: " + positionTitle;
+        String content = String.format(
+                "Chuyên viên HR %s đã nộp đề xuất Offer cho ứng viên %s (Vị trí: %s, Lương chính thức: %s). Vui lòng xem xét và thực hiện phê duyệt.",
+                hrName, candidateName, positionTitle, salary);
+        String timeKey = offer.getUpdatedAt() != null ? offer.getUpdatedAt().format(EVENT_TIME) : LocalDateTime.now().format(EVENT_TIME);
+
+        for (User director : directors) {
+            send(Notification.builder()
+                    .recipient(director)
+                    .actor(hrActor != null ? hrActor : offer.getProposedBy())
+                    .title(title)
+                    .content(content)
+                    .eventType("OFFER_PENDING_DIRECTOR")
+                    .referenceId(String.valueOf(offer.getOfferId()))
+                    .linkUrl("/offers/" + offer.getOfferId())
+                    .eventId("OFFER_PENDING_DIR_" + offer.getOfferId() + "_" + director.getUserId() + "_" + timeKey)
+                    .build());
+        }
+    }
+
+    @Override
+    @Transactional
+    public void notifyDirectorDecisionOnOffer(OfferProposal offer, User director, boolean approved, String comments) {
+        if (offer == null || offer.getProposedBy() == null) {
+            log.warn("Cannot send director decision notification: Offer or ProposedBy (HR) is null for Offer ID: {}",
+                    offer != null ? offer.getOfferId() : null);
+            return;
+        }
+
+        String positionTitle = positionTitle(offer);
+        String candidateName = (offer.getApplication() != null && offer.getApplication().getCandidate() != null
+                && offer.getApplication().getCandidate().getAccount() != null)
+                ? offer.getApplication().getCandidate().getAccount().getFullName() : "Ứng viên";
+        String directorName = director != null ? director.getFullName() : "Giám đốc";
+        String timeKey = LocalDateTime.now().format(EVENT_TIME);
+
+        Notification.NotificationBuilder notification = Notification.builder()
+                .recipient(offer.getProposedBy())
+                .actor(director)
+                .referenceId(String.valueOf(offer.getOfferId()))
+                .linkUrl("/offers/" + offer.getOfferId());
+
+        if (approved) {
+            String noteText = comments != null && !comments.isBlank() ? " Ghi chú: \"" + comments.trim() + "\"." : "";
+            notification
+                    .title("Đề xuất Offer đã được Giám đốc phê duyệt: " + positionTitle)
+                    .content(String.format(
+                            "Giám đốc %s đã phê duyệt đề xuất Offer cho ứng viên %s (Vị trí: %s).%s Bạn có thể tiến hành phát hành Thư mời làm việc cho ứng viên.",
+                            directorName, candidateName, positionTitle, noteText))
+                    .eventType("OFFER_DIRECTOR_APPROVED")
+                    .eventId("OFFER_DEC_APPV_" + offer.getOfferId() + "_" + timeKey);
+        } else {
+            String reasonText = comments != null && !comments.isBlank() ? comments.trim() : "Không có lý do cụ thể";
+            notification
+                    .title("Đề xuất Offer bị Giám đốc từ chối: " + positionTitle)
+                    .content(String.format(
+                            "Giám đốc %s đã từ chối đề xuất Offer cho ứng viên %s (Vị trí: %s). Lý do: \"%s\". Vui lòng kiểm tra lại điều khoản và chỉnh sửa bản thảo nếu cần.",
+                            directorName, candidateName, positionTitle, reasonText))
+                    .eventType("OFFER_DIRECTOR_REJECTED")
+                    .eventId("OFFER_DEC_REJ_" + offer.getOfferId() + "_" + timeKey);
+        }
+
+        send(notification.build());
+    }
+
+    @Override
+    @Transactional
     public void notifyOfferLetterSent(OfferProposal offer) {
         if (offer == null || offer.getApplication() == null
                 || offer.getApplication().getCandidate() == null
@@ -114,6 +202,7 @@ public class NotificationServiceImpl implements NotificationService {
         }
 
         String positionTitle = positionTitle(offer);
+        String timeKey = offer.getUpdatedAt() != null ? offer.getUpdatedAt().format(EVENT_TIME) : LocalDateTime.now().format(EVENT_TIME);
         send(Notification.builder()
                 .recipient(offer.getApplication().getCandidate().getAccount())
                 .actor(offer.getProposedBy())
@@ -124,7 +213,7 @@ public class NotificationServiceImpl implements NotificationService {
                 .eventType("OFFER_LETTER_SENT")
                 .referenceId(String.valueOf(offer.getOfferId()))
                 .linkUrl("/portal/offers/" + offer.getOfferId())
-                .eventId("OFFER_SENT_" + offer.getOfferId())
+                .eventId("OFFER_SENT_" + offer.getOfferId() + "_" + timeKey)
                 .build());
     }
 
@@ -142,33 +231,69 @@ public class NotificationServiceImpl implements NotificationService {
                 ? offer.getApplication().getCandidate().getAccount() : null;
         String candidateName = candidateAccount != null && candidateAccount.getFullName() != null
                 ? candidateAccount.getFullName() : "Ứng viên";
+        String timeKey = LocalDateTime.now().format(EVENT_TIME);
 
-        Notification.NotificationBuilder notification = Notification.builder()
+        Notification.NotificationBuilder hrNotification = Notification.builder()
                 .recipient(offer.getProposedBy())
                 .actor(candidateAccount)
                 .referenceId(String.valueOf(offer.getOfferId()))
                 .linkUrl("/offers");
 
         if (accepted) {
-            notification
+            hrNotification
                     .title(String.format("🎉 Ứng viên đã nhận offer: %s (%s)", candidateName, positionTitle))
                     .content(String.format(
                             "Ứng viên %s đã đồng ý nhận lời mời làm việc cho vị trí \"%s\". Trạng thái hồ sơ đã chuyển sang \"Đã nhận việc\" (Hired). Vui lòng chuẩn bị thủ tục tiếp nhận nhân sự.",
                             candidateName, positionTitle))
                     .eventType("OFFER_ACCEPTED")
-                    .eventId("OFFER_RESP_ACC_" + offer.getOfferId());
+                    .eventId("OFFER_RESP_ACC_" + offer.getOfferId() + "_" + timeKey);
         } else {
             String reasonText = declineReason != null && !declineReason.isBlank()
                     ? String.format(" Lý do: \"%s\".", declineReason.trim()) : "";
-            notification
+            hrNotification
                     .title(String.format("Ứng viên từ chối offer: %s (%s)", candidateName, positionTitle))
                     .content(String.format(
                             "Ứng viên %s đã từ chối thư mời làm việc cho vị trí \"%s\".%s Trạng thái hồ sơ đã chuyển sang \"Không tiếp tục\" (Rejected).",
                             candidateName, positionTitle, reasonText))
                     .eventType("OFFER_DECLINED")
-                    .eventId("OFFER_RESP_DEC_" + offer.getOfferId());
+                    .eventId("OFFER_RESP_DEC_" + offer.getOfferId() + "_" + timeKey);
         }
-        send(notification.build());
+        send(hrNotification.build());
+
+        // Bổ sung: Gửi thông báo cho Hiring Manager phụ trách Requisition (nếu có và khác HR)
+        User hiringManager = (offer.getApplication() != null
+                && offer.getApplication().getJobPosting() != null
+                && offer.getApplication().getJobPosting().getRequisition() != null)
+                ? offer.getApplication().getJobPosting().getRequisition().getHiringManager() : null;
+
+        if (hiringManager != null && !hiringManager.getUserId().equals(offer.getProposedBy().getUserId())) {
+            Notification.NotificationBuilder hmNotification = Notification.builder()
+                    .recipient(hiringManager)
+                    .actor(candidateAccount)
+                    .referenceId(String.valueOf(offer.getOfferId()))
+                    .linkUrl("/offers");
+
+            if (accepted) {
+                hmNotification
+                        .title(String.format("🎉 Ứng viên nhận offer: %s (%s)", candidateName, positionTitle))
+                        .content(String.format(
+                                "Ứng viên %s đã đồng ý nhận việc cho vị trí \"%s\". Bộ phận Nhân sự đang chuẩn bị thủ tục Onboarding tiếp theo.",
+                                candidateName, positionTitle))
+                        .eventType("OFFER_ACCEPTED")
+                        .eventId("OFFER_RESP_HM_ACC_" + offer.getOfferId() + "_" + timeKey);
+            } else {
+                String reasonText = declineReason != null && !declineReason.isBlank()
+                        ? String.format(" Lý do: \"%s\".", declineReason.trim()) : "";
+                hmNotification
+                        .title(String.format("Ứng viên từ chối offer: %s (%s)", candidateName, positionTitle))
+                        .content(String.format(
+                                "Ứng viên %s đã từ chối thư mời làm việc cho vị trí \"%s\".%s",
+                                candidateName, positionTitle, reasonText))
+                        .eventType("OFFER_DECLINED")
+                        .eventId("OFFER_RESP_HM_DEC_" + offer.getOfferId() + "_" + timeKey);
+            }
+            send(hmNotification.build());
+        }
     }
 
     @Override

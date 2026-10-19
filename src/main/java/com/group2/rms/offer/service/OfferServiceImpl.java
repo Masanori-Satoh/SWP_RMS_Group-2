@@ -20,6 +20,7 @@ import com.group2.rms.user.entity.User;
 import com.group2.rms.user.repository.UserRepository;
 import com.group2.rms.notification.OfferMailSender;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import com.group2.rms.candidate.entity.Candidate;
 import jakarta.persistence.criteria.Join;
 import jakarta.persistence.criteria.JoinType;
@@ -48,6 +49,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 @Transactional
@@ -122,6 +124,24 @@ public class OfferServiceImpl implements OfferService {
                 .build();
 
         OfferProposal savedOffer = offerProposalRepository.save(newOffer);
+
+        if ("Pending_Director".equals(savedOffer.getOfferStatus())) {
+            if (offerMailSender != null) {
+                try {
+                    offerMailSender.notifyDirectorNewPendingOffer(savedOffer);
+                } catch (Exception e) {
+                    log.warn("Lỗi khi gửi email thông báo Director về Offer mới ID {}: {}", savedOffer.getOfferId(), e.getMessage());
+                }
+            }
+            if (systemNotificationService != null) {
+                try {
+                    systemNotificationService.notifyOfferPendingDirector(savedOffer, proposedBy);
+                } catch (Exception e) {
+                    log.warn("Lỗi khi gửi in-app notification Director về Offer mới ID {}: {}", savedOffer.getOfferId(), e.getMessage());
+                }
+            }
+        }
+
         return mapToResponse(savedOffer);
     }
 
@@ -266,11 +286,20 @@ public class OfferServiceImpl implements OfferService {
 
         OfferProposal saved = offerProposalRepository.save(offerToSave);
 
-        if ("Pending_Director".equals(status) && offerMailSender != null) {
-            try {
-                offerMailSender.notifyDirectorNewPendingOffer(saved);
-            } catch (Exception ignored) {
-                // Tiếp tục ngay cả khi gửi mail lỗi ngầm
+        if ("Pending_Director".equals(status)) {
+            if (offerMailSender != null) {
+                try {
+                    offerMailSender.notifyDirectorNewPendingOffer(saved);
+                } catch (Exception e) {
+                    log.warn("Lỗi khi gửi email thông báo Director về Offer mới ID {}: {}", saved.getOfferId(), e.getMessage());
+                }
+            }
+            if (systemNotificationService != null) {
+                try {
+                    systemNotificationService.notifyOfferPendingDirector(saved, proposedBy);
+                } catch (Exception e) {
+                    log.warn("Lỗi khi gửi in-app notification Director về Offer mới ID {}: {}", saved.getOfferId(), e.getMessage());
+                }
             }
         }
 
@@ -502,10 +531,21 @@ public class OfferServiceImpl implements OfferService {
 
         OfferProposal saved = offerProposalRepository.save(offer);
 
-        if ("Pending_Director".equals(offer.getOfferStatus()) && offerMailSender != null) {
-            try {
-                offerMailSender.notifyDirectorNewPendingOffer(saved);
-            } catch (Exception ignored) {
+        if ("Pending_Director".equals(offer.getOfferStatus())) {
+            if (offerMailSender != null) {
+                try {
+                    offerMailSender.notifyDirectorNewPendingOffer(saved);
+                } catch (Exception e) {
+                    log.warn("Lỗi khi gửi email thông báo Director về Offer cập nhật ID {}: {}", saved.getOfferId(), e.getMessage());
+                }
+            }
+            if (systemNotificationService != null) {
+                try {
+                    User currentHr = resolveProposedBy(null);
+                    systemNotificationService.notifyOfferPendingDirector(saved, currentHr != null ? currentHr : saved.getProposedBy());
+                } catch (Exception e) {
+                    log.warn("Lỗi khi gửi in-app notification Director về Offer cập nhật ID {}: {}", saved.getOfferId(), e.getMessage());
+                }
             }
         }
 
@@ -590,16 +630,16 @@ public class OfferServiceImpl implements OfferService {
         if (offerMailSender != null) {
             try {
                 offerMailSender.sendOfferLetterToCandidate(saved);
-            } catch (Exception ignored) {
-                // Tiếp tục ngay cả khi gửi mail lỗi ngầm
+            } catch (Exception e) {
+                log.warn("Lỗi khi gửi email thư mời nhận việc cho ứng viên Offer ID {}: {}", saved.getOfferId(), e.getMessage());
             }
         }
 
         if (systemNotificationService != null) {
             try {
                 systemNotificationService.notifyOfferLetterSent(saved);
-            } catch (Exception ignored) {
-                // Tiếp tục ngay cả khi tạo thông báo in-app lỗi ngầm
+            } catch (Exception e) {
+                log.warn("Lỗi khi gửi in-app notification thư mời nhận việc cho ứng viên Offer ID {}: {}", saved.getOfferId(), e.getMessage());
             }
         }
 
@@ -784,7 +824,16 @@ public class OfferServiceImpl implements OfferService {
         if (offerMailSender != null) {
             try {
                 offerMailSender.notifyHrOfDirectorDecision(saved, "Approved", comments);
-            } catch (Exception ignored) {
+            } catch (Exception e) {
+                log.warn("Lỗi khi gửi email thông báo HR duyệt Offer ID {}: {}", saved.getOfferId(), e.getMessage());
+            }
+        }
+
+        if (systemNotificationService != null) {
+            try {
+                systemNotificationService.notifyDirectorDecisionOnOffer(saved, director, true, comments);
+            } catch (Exception e) {
+                log.warn("Lỗi khi gửi in-app notification duyệt Offer ID {}: {}", saved.getOfferId(), e.getMessage());
             }
         }
 
@@ -823,7 +872,16 @@ public class OfferServiceImpl implements OfferService {
         if (offerMailSender != null) {
             try {
                 offerMailSender.notifyHrOfDirectorDecision(saved, "Rejected", comments);
-            } catch (Exception ignored) {
+            } catch (Exception e) {
+                log.warn("Lỗi khi gửi email thông báo HR từ chối Offer ID {}: {}", saved.getOfferId(), e.getMessage());
+            }
+        }
+
+        if (systemNotificationService != null) {
+            try {
+                systemNotificationService.notifyDirectorDecisionOnOffer(saved, director, false, comments);
+            } catch (Exception e) {
+                log.warn("Lỗi khi gửi in-app notification từ chối Offer ID {}: {}", saved.getOfferId(), e.getMessage());
             }
         }
 
@@ -844,6 +902,98 @@ public class OfferServiceImpl implements OfferService {
 
     @Override
     @Transactional(readOnly = true)
+    public Map<String, Long> getDirectorStatusCounts() {
+        Map<String, Long> counts = new HashMap<>();
+        counts.put("ALL", offerProposalRepository.countAllNonDraft());
+        counts.put("Pending_Director", offerProposalRepository.countPendingDirector());
+        counts.put("Director_Approved", offerProposalRepository.countDirectorApproved());
+        counts.put("Sent_Candidate", offerProposalRepository.countSentCandidate());
+        counts.put("Accepted", offerProposalRepository.countAccepted());
+        counts.put("Declined", offerProposalRepository.countDeclined());
+        counts.put("Director_Rejected", offerProposalRepository.countDirectorRejected());
+        return counts;
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Page<OfferResponse> getDirectorOffers(String search, String status, String timeSort, Pageable pageable) {
+        boolean hasSearch = search != null && !search.trim().isEmpty();
+        boolean hasStatus = status != null && !status.trim().isEmpty() && !"ALL".equalsIgnoreCase(status.trim());
+
+        Sort sort;
+        if ("EARLIEST".equalsIgnoreCase(timeSort)) {
+            sort = Sort.by(Sort.Order.asc("createdAt"), Sort.Order.asc("offerId"));
+        } else if ("LATEST".equalsIgnoreCase(timeSort)) {
+            sort = Sort.by(Sort.Order.desc("createdAt"), Sort.Order.desc("offerId"));
+        } else {
+            sort = Sort.by(Sort.Order.desc("offerId"));
+        }
+
+        Pageable sortedPageable = PageRequest.of(pageable.getPageNumber(), pageable.getPageSize(), sort);
+
+        Specification<OfferProposal> spec = (root, query, builder) -> {
+            List<Predicate> predicates = new ArrayList<>();
+
+            // 1. Chỉ lấy các bản ghi chưa bị xóa mềm
+            predicates.add(builder.or(
+                    builder.isNull(root.get("isDeleted")),
+                    builder.isFalse(root.get("isDeleted"))
+            ));
+
+            // 2. Không hiển thị bản nháp cho Director (chỉ các đề xuất đã được HR trình lên)
+            predicates.add(builder.notEqual(builder.lower(root.get("offerStatus")), "draft"));
+
+            // 3. Tìm kiếm theo tên ứng viên, vị trí tuyển dụng, hoặc mã Offer ID
+            if (hasSearch) {
+                String term = search.trim();
+                String pattern = "%" + term.toLowerCase(Locale.ROOT) + "%";
+                Join<OfferProposal, Application> appJoin = root.join("application", JoinType.LEFT);
+                Join<Application, Candidate> candJoin = appJoin.join("candidate", JoinType.LEFT);
+                Join<Candidate, User> userJoin = candJoin.join("account", JoinType.LEFT);
+
+                List<Predicate> searchPredicates = new ArrayList<>();
+                searchPredicates.add(builder.like(builder.lower(root.get("offeredPositionTitle")), pattern));
+                searchPredicates.add(builder.like(builder.lower(userJoin.get("fullName")), pattern));
+
+                try {
+                    Integer searchId = Integer.parseInt(term);
+                    searchPredicates.add(builder.equal(root.get("offerId"), searchId));
+                } catch (NumberFormatException ignored) {
+                    // Không phải số thì bỏ qua tìm kiếm theo ID
+                }
+
+                predicates.add(builder.or(searchPredicates.toArray(new Predicate[0])));
+            }
+
+            // 4. Lọc theo trạng thái
+            if (hasStatus) {
+                String s = status.trim();
+                if ("HISTORY".equalsIgnoreCase(s) || "HISTORY_ALL".equalsIgnoreCase(s)) {
+                    predicates.add(builder.notEqual(builder.lower(root.get("offerStatus")), "pending_director"));
+                } else if ("Director_Approved".equalsIgnoreCase(s) || "Approved".equalsIgnoreCase(s)) {
+                    predicates.add(builder.or(
+                            builder.equal(builder.lower(root.get("offerStatus")), "director_approved"),
+                            builder.equal(builder.lower(root.get("offerStatus")), "approved")
+                    ));
+                } else if ("Director_Rejected".equalsIgnoreCase(s) || "Rejected".equalsIgnoreCase(s)) {
+                    predicates.add(builder.or(
+                            builder.equal(builder.lower(root.get("offerStatus")), "director_rejected"),
+                            builder.equal(builder.lower(root.get("offerStatus")), "rejected")
+                    ));
+                } else {
+                    predicates.add(builder.equal(builder.lower(root.get("offerStatus")), s.toLowerCase(Locale.ROOT)));
+                }
+            }
+
+            return builder.and(predicates.toArray(new Predicate[0]));
+        };
+
+        Page<OfferProposal> pagedEntities = offerProposalRepository.findAll(spec, sortedPageable);
+        return pagedEntities.map(this::mapToResponse);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
     public Page<OfferResponse> getDirectorOfferHistory(Pageable pageable) {
         User director = resolveProposedBy(null);
         Integer directorId = director != null ? director.getUserId() : 0;
@@ -851,11 +1001,7 @@ public class OfferServiceImpl implements OfferService {
         Page<OfferApproval> approvals = offerApprovalRepository.findByDirector_UserIdOrderByApprovedAtDesc(directorId, pageable);
         return approvals.map(approval -> {
             OfferProposal offer = approval.getOfferProposal();
-            OfferResponse response = mapToResponse(offer);
-            if (approval.getStatus() != null && !approval.getStatus().isBlank()) {
-                response.setOfferStatus(approval.getStatus());
-            }
-            return response;
+            return mapToResponse(offer);
         });
     }
 }

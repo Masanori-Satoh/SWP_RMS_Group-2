@@ -240,8 +240,8 @@
                                             <i class="fa-solid fa-paper-plane"></i>
                                         </button>
 
-                                        <!-- Sửa Offer pop-up (Chỉ khi Draft hoặc Rejected) -->
-                                        <button type="button" th:if="${o.offerStatus == 'Draft' or o.offerStatus == 'Director_Rejected' or o.offerStatus == 'Rejected'}"
+                                        <!-- Sửa Offer pop-up (Chỉ khi Draft) -->
+                                        <button type="button" th:if="${o.offerStatus == 'Draft'}"
                                                 th:onclick="'openEditOfferModal(' + ${o.offerId} + ')'" class="btn-icon" title="Chỉnh sửa đề xuất">
                                             <i class="fa-solid fa-pen-to-square"></i>
                                         </button>
@@ -450,14 +450,7 @@
         <div class="modal-body">
             <form id="editOfferForm" onsubmit="event.preventDefault(); submitUpdateOffer(false);">
                 <input type="hidden" id="editOfferId">
-                
-                <div id="editRejectBanner" class="modal-alert modal-alert-danger" style="display:none; margin-bottom:16px;">
-                    <i class="fa-solid fa-triangle-exclamation" style="font-size:16px;"></i>
-                    <div>
-                        <strong>Ghi chú từ chối của Giám đốc:</strong>
-                        <div id="editRejectComment" style="margin-top:2px;">-</div>
-                    </div>
-                </div>
+
 
                 <div class="form-group">
                     <label>Vị trí chức danh đề xuất <span style="color:var(--error, #ef4444);">*</span></label>

@@ -93,27 +93,41 @@ Tiếp nối Phase 1 (Cải thiện UI/UX và Xuất Excel), Phase 2 tập trung
 
 ---
 
-### 3. Tích hợp Hệ thống Thông báo Tự động (Notification Integration)
+---
 
-- Bổ sung 2 phương thức nghiệp vụ trong `NotificationService` tích hợp gửi Email tự động:
-  - `notifyDirectorNewPendingOffer`: Gửi email thông báo cho Giám đốc khi chuyên viên HR tạo mới hoặc đệ trình một đề xuất Offer lên cấp phê duyệt.
-  - `notifyHrOfDirectorDecision`: Gửi email phản hồi kết quả phê duyệt hoặc từ chối kèm theo nhận xét/lý do của Giám đốc về cho chuyên viên HR đã tạo Offer.
+### 5. Nâng cấp Bộ lọc Trạng thái & Hiển thị Trạng thái Vòng đời Thực tế (Director Offer Enhancements)
+
+- **Thanh công cụ lọc trạng thái hiển thị số lượng theo thời gian thực (Live Counts Dropdown):**
+  - Bổ sung dropdown `<select id="statusFilter">` trên thanh công cụ của Giám đốc tương tự bảng HR, tích hợp số lượng ứng viên theo từng trạng thái hiển thị trong ngoặc đơn:
+    - `-- Tất cả trạng thái -- (x)`
+    - `Chờ Giám đốc duyệt (x)`
+    - `Giám đốc đã duyệt (x)`
+    - `Đã gửi thư mời (x)`
+    - `Ứng viên chấp nhận (x)`
+    - `Ứng viên từ chối (x)`
+    - `Giám đốc từ chối (x)`
+  - Dữ liệu số lượng được cung cấp bởi `offerProposalRepository` qua phương thức `offerService.getDirectorStatusCounts()`.
+  - Tự động đồng bộ với 2 Tab ("Chờ duyệt" và "Lịch sử quyết định") và hỗ trợ tìm kiếm từ khóa (tên ứng viên, vị trí, ID offer) kết hợp sắp xếp thời gian (`offers.js`: `applyDirectorFilters`).
+
+- **Chuẩn hóa Hiển thị Trạng thái Vòng đời Thực tế (Real-time Offer Lifecycle Status):**
+  - Khắc phục triệt để lỗi ghi đè trạng thái trong `getDirectorOfferHistory`: Loại bỏ việc gán cứng trạng thái quyết định quá khứ của Director (`approval.getStatus()`), bảo toàn trạng thái vòng đời thực tế của `OfferProposal` (`offer.getOfferStatus()`).
+  - Cột **Trạng thái** trong bảng `offers/director-list.html` luôn hiển thị chính xác kết quả mới nhất: ví dụ đề xuất sau khi Director duyệt đã được HR gửi đi (`Đã gửi thư mời`) và ứng viên phản hồi (`Ứng viên chấp nhận` hoặc `Ứng viên từ chối`).
 
 ---
 
-### 4. Kiểm thử & Đảm bảo Chất lượng (Testing & QA)
+### 6. Kiểm thử & Đảm bảo Chất lượng (Testing & QA)
 
 - **Unit & Integration Tests:**
-  - `OfferIntegrationTest` (17/17 test cases passed): Kiểm thử toàn bộ luồng phê duyệt từ Director, kiểm tra chuyển đổi trạng thái, phân quyền truy cập và dữ liệu xuất ra.
-  - `OfferServiceTests` (59/59 test cases passed): Kiểm tra toàn diện các ràng buộc lương và quy tắc trạng thái.
-  - Tổng số test cases đạt **76/76 PASS (100%)**.
-- **Manual & Browser Testing (E2E):**
-  - Đã thực hiện kiểm thử thực tế trên trình duyệt bằng tài khoản `director`.
-  - Kiểm tra giao diện `/offers`: Bộ lọc tab hoạt động chính xác, click vào bản ghi chuyển hướng mượt mà sang `/offers/{id}`, hiển thị đầy đủ thông tin ứng viên, mức lương, link CV và Card ra quyết định.
-  - Khi phê duyệt hoặc từ chối từ trang chi tiết, hệ thống ghi nhận thành công và chuyển hướng về danh sách với thông báo trạng thái.
+  - `OfferServiceTests` (64/64 test cases passed): Bổ sung kiểm thử cho `getDirectorStatusCounts`, `getDirectorOffers`, và kiểm thử bảo toàn trạng thái vòng đời thực tế trong `getDirectorOfferHistory`.
+  - `OfferControllerBugTests` (2/2 test cases passed): Xác thực controller trả về HTTP 200, đúng view `offers/director-list`, đầy đủ model attributes (`statusCounts`, `currentStatus`, `currentTab`).
+- **Browser Subagent E2E Verification:**
+  - Đã tự động kiểm thử toàn trình trên trình duyệt bằng tài khoản `director` tại `http://localhost:8080/offers`.
+  - Xác nhận dropdown hiển thị đầy đủ 7 nhóm trạng thái kèm số lượng chính xác: `-- Tất cả trạng thái -- (17)`, `Chờ Giám đốc duyệt (3)`, `Giám đốc đã duyệt (1)`, `Đã gửi thư mời (2)`, `Ứng viên chấp nhận (9)`, `Ứng viên từ chối (1)`, `Giám đốc từ chối (1)`.
+  - Bảng dữ liệu hiển thị đúng các huy hiệu trạng thái vòng đời thực tế.
 
 ---
 
 ## III. KẾT LUẬN
 
-Phân hệ Quản lý Đề xuất Offer của Director đã hoàn thiện toàn diện với luồng màn hình chuyên biệt (Dedicated Screen) thay thế cho Pop-up modal ban đầu. Kiến trúc mới không chỉ giúp trải nghiệm người dùng thoáng đãng, đồng bộ tuyệt đối với phân hệ của HR, mà còn gia tăng thêm giá trị màn hình độc lập (Level 7 - 240 LOC) phục vụ báo cáo và bảo vệ đồ án SWP391.
+Phân hệ Quản lý Đề xuất Offer của Director đã hoàn thiện toàn diện: từ luồng phê duyệt, trang chi tiết chuyên biệt (Dedicated Screen), đến bộ lọc đa tiêu chí kèm số lượng thời gian thực và hiển thị trạng thái vòng đời thực tế của Offer. Toàn bộ mã nguồn tuân thủ nghiêm ngặt Hướng dẫn kiến trúc dự án RMS (`docs/architecture/ARCHITECTURE_GUIDE.md`) và đã sẵn sàng đưa vào vận hành.
+
