@@ -124,6 +124,24 @@ public class OfferServiceImpl implements OfferService {
                 .build();
 
         OfferProposal savedOffer = offerProposalRepository.save(newOffer);
+
+        if ("Pending_Director".equals(savedOffer.getOfferStatus())) {
+            if (offerMailSender != null) {
+                try {
+                    offerMailSender.notifyDirectorNewPendingOffer(savedOffer);
+                } catch (Exception e) {
+                    log.warn("Lỗi khi gửi email thông báo Director về Offer mới ID {}: {}", savedOffer.getOfferId(), e.getMessage());
+                }
+            }
+            if (systemNotificationService != null) {
+                try {
+                    systemNotificationService.notifyOfferPendingDirector(savedOffer, proposedBy);
+                } catch (Exception e) {
+                    log.warn("Lỗi khi gửi in-app notification Director về Offer mới ID {}: {}", savedOffer.getOfferId(), e.getMessage());
+                }
+            }
+        }
+
         return mapToResponse(savedOffer);
     }
 
