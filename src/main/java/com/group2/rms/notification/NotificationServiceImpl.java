@@ -36,6 +36,88 @@ public class NotificationServiceImpl implements NotificationService {
 
     @Override
     @Transactional
+    public void notifyRequisitionPendingDirector(JobRequisition requisition, User actor) {
+        if (requisition == null) {
+            log.warn("Cannot send requisition pending director notification: Requisition is null");
+            return;
+        }
+
+        List<User> directors = userRepository.findAllActiveDirectors();
+        if (directors == null || directors.isEmpty()) {
+            log.warn("No active directors found to notify for pending Requisition ID: {}", requisition.getRequisitionId());
+            return;
+        }
+
+        String hmName = actor != null ? actor.getFullName()
+                : (requisition.getHiringManager() != null ? requisition.getHiringManager().getFullName() : "Hiring Manager");
+        String deptName = requisition.getDepartment() != null ? requisition.getDepartment().getDepartmentName() : "Chưa xác định";
+        String timeKey = requisition.getSubmittedAt() != null
+                ? requisition.getSubmittedAt().format(EVENT_TIME)
+                : LocalDateTime.now().format(EVENT_TIME);
+
+        String title = "Yêu cầu phê duyệt tuyển dụng: " + requisition.getTitle();
+        String content = String.format(
+                "Hiring Manager %s đã gửi yêu cầu tuyển dụng \"%s\" (Mã: %s, Phòng ban: %s) để chờ phê duyệt. Vui lòng xem xét và thực hiện phê duyệt.",
+                hmName, requisition.getTitle(), requisitionCode(requisition), deptName);
+
+        for (User director : directors) {
+            if (actor != null && director.getUserId().equals(actor.getUserId())) {
+                continue;
+            }
+            send(Notification.builder()
+                    .recipient(director)
+                    .actor(actor != null ? actor : requisition.getHiringManager())
+                    .title(title)
+                    .content(content)
+                    .eventType("REQUISITION_PENDING_DIRECTOR")
+                    .referenceId(String.valueOf(requisition.getRequisitionId()))
+                    .linkUrl("/requisitions/" + requisition.getRequisitionId())
+                    .eventId("REQ_PENDING_DIR_" + requisition.getRequisitionId() + "_" + director.getUserId() + "_" + timeKey)
+                    .build());
+        }
+    }
+
+    @Override
+    @Transactional
+    public void notifyRequisitionApproved(RequisitionApproval approval) {
+        JobRequisition requisition = approval == null ? null : approval.getRequisition();
+        if (requisition == null || requisition.getHiringManager() == null) {
+            log.warn("Cannot send requisition approved notification: Requisition or Hiring Manager is null");
+            return;
+        }
+
+        User director = approval.getDirector();
+        if (director != null && director.getUserId().equals(requisition.getHiringManager().getUserId())) {
+            return;
+        }
+
+        String directorName = director != null ? director.getFullName() : "Giám đốc";
+        LocalDateTime decidedAt = approval.getApprovalDate() != null ? approval.getApprovalDate() : LocalDateTime.now();
+        String commentText = approval.getComments() != null && !approval.getComments().isBlank()
+                ? " Ý kiến: \"" + approval.getComments().trim() + "\"." : "";
+
+        String content = String.format(
+                "Yêu cầu tuyển dụng \"%s\" (Mã: %s) đã được Giám đốc %s phê duyệt vào lúc %s.%s Bộ phận Nhân sự (HR) có thể tiến hành tạo tin tuyển dụng.",
+                requisition.getTitle(), requisitionCode(requisition), directorName, decidedAt.format(DISPLAY_TIME), commentText);
+
+        String eventId = approval.getApprovalId() != null
+                ? "REQ_APPROVE_" + approval.getApprovalId()
+                : "REQ_APPROVE_" + requisition.getRequisitionId() + "_" + decidedAt.format(EVENT_TIME);
+
+        send(Notification.builder()
+                .recipient(requisition.getHiringManager())
+                .actor(director)
+                .title("Yêu cầu tuyển dụng đã được phê duyệt: " + requisition.getTitle())
+                .content(content)
+                .eventType("REQUISITION_APPROVED")
+                .referenceId(String.valueOf(requisition.getRequisitionId()))
+                .linkUrl("/requisitions/" + requisition.getRequisitionId())
+                .eventId(eventId)
+                .build());
+    }
+
+    @Override
+    @Transactional
     public void notifyRequisitionRejected(RequisitionApproval rejection) {
         JobRequisition requisition = rejection == null ? null : rejection.getRequisition();
         if (requisition == null || requisition.getHiringManager() == null) {

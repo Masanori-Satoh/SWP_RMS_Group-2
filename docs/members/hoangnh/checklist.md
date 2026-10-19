@@ -299,7 +299,7 @@ Nhằm đảm bảo chất lượng code và phòng ngừa lỗi hồi quy (regr
 **Còn lại / hạn chế**
 - [ ] Migration `008_requisition_code_without_year.sql` không còn trong `database/migrations/`: cần xác nhận đã chạy chưa.
 - [ ] Seed: yêu cầu Chờ duyệt không có tiêu chí, nhiều yêu cầu thiếu AuditLog.
-- Duyệt (Approve) chưa gửi thông báo; danh sách có N+1 query lấy tin tuyển dụng (chấp nhận với dữ liệu nhỏ).
+- Duyệt (Approve) và Nộp duyệt (Pending_Director) đã gửi thông báo tự động (19/10/2026); danh sách có N+1 query lấy tin tuyển dụng (chấp nhận với dữ liệu nhỏ).
 
 ---
 
@@ -363,3 +363,10 @@ Nhằm đảm bảo chất lượng code và phòng ngừa lỗi hồi quy (regr
 - [x] Bỏ selector Requisition không còn được dùng, thay màu backdrop viết cứng bằng token; cập nhật mô tả `management-filters` và mục `flashToast` trong UI_CATALOG. Test chi tiết Job Posting được chỉnh theo màn hiện tại (không còn khối Các lần đăng).
 - [x] Kiểm tra: 50/50 controller test Requisition + Job Posting, 42/42 Node JS test, 7 file JS qua `node --check`, tham chiếu CSS/JS trên 8 trang đều tồn tại, `git diff --check` sạch.
 - [ ] Kiểm tra trực tiếp trình duyệt khi app chạy (hiện không có cổng 8080/8081/8090 đang lắng nghe): form nhập sai rồi gửi lại; xóa/từ chối; toast và bộ lọc trên Requisition, Job Posting, Admin ở desktop/mobile.
+
+## Hoàn thiện thông báo Requisition (2026-10-19)
+
+- [x] **Thông báo nộp duyệt (Pending_Director):** Khi HM gửi duyệt yêu cầu tuyển dụng (tạo mới hoặc chỉnh sửa bản nháp/bị từ chối), hệ thống tự động bắn thông báo `REQUISITION_PENDING_DIRECTOR` tới tất cả Giám đốc đang hoạt động (`userRepository.findAllActiveDirectors()`). Bỏ qua nếu người nộp chính là Giám đốc. Chống trùng lặp theo `EventId = REQ_PENDING_DIR_{reqId}_{directorId}_{timeKey}`.
+- [x] **Thông báo phê duyệt (Approved):** Khi Giám đốc đồng ý/phê duyệt yêu cầu tuyển dụng, hệ thống tự động bắn thông báo `REQUISITION_APPROVED` tới Hiring Manager sở hữu yêu cầu. Nếu Giám đốc tự tạo và tự duyệt yêu cầu của mình thì bỏ qua tự gửi cho bản thân. Chống trùng lặp theo `EventId = REQ_APPROVE_{approvalId}`.
+- [x] **Giao diện & UI Thông báo:** Bổ sung badge hiển thị "Chờ phê duyệt" (`event-pending`, `badge--warning`) và "Yêu cầu đã được duyệt" (`event-approved`, `badge--success`) trên trang danh sách thông báo `/notifications` (`notifications/list.html` và `notifications.css`).
+- [x] **Kiểm thử đầy đủ:** Unit test (`NotificationServiceImplTest` 27/27 test, `RequisitionServiceTests` 48/48 test) và Integration test (`RequisitionIntegrationTests` 10/10 test) đều PASS 100%.

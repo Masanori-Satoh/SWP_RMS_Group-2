@@ -477,4 +477,184 @@ class NotificationServiceImplTest {
         assertTrue(saved.getContent().contains("Lương vượt ngân sách"));
         assertTrue(saved.getEventId().startsWith("OFFER_DEC_REJ_1_"));
     }
+
+    // =========================================================================
+    // notifyRequisitionPendingDirector
+    // =========================================================================
+
+    @Test
+    @DisplayName("notifyRequisitionPendingDirector: Gửi thông báo REQUISITION_PENDING_DIRECTOR tới các Giám đốc đang hoạt động")
+    void notifyRequisitionPendingDirector_success() {
+        requisition.setRequisitionCode("REQ-0101");
+        requisition.setSubmittedAt(LocalDateTime.of(2026, 10, 19, 10, 0));
+        com.group2.rms.user.entity.Department dept = com.group2.rms.user.entity.Department.builder()
+                .departmentId(1).departmentName("Phòng Công Nghệ").build();
+        requisition.setDepartment(dept);
+
+        User director1 = User.builder().userId(20).fullName("Giám đốc A").build();
+        User director2 = User.builder().userId(21).fullName("Giám đốc B").build();
+        when(userRepository.findAllActiveDirectors()).thenReturn(List.of(director1, director2));
+        when(notificationRepository.existsByRecipient_UserIdAndEventId(any(), any())).thenReturn(false);
+
+        notificationService.notifyRequisitionPendingDirector(requisition, manager);
+
+        ArgumentCaptor<Notification> captor = ArgumentCaptor.forClass(Notification.class);
+        verify(notificationRepository, times(2)).save(captor.capture());
+
+        List<Notification> savedList = captor.getAllValues();
+        assertEquals(director1, savedList.get(0).getRecipient());
+        assertEquals(director2, savedList.get(1).getRecipient());
+        assertEquals(manager, savedList.get(0).getActor());
+        assertEquals("REQUISITION_PENDING_DIRECTOR", savedList.get(0).getEventType());
+        assertEquals("/requisitions/101", savedList.get(0).getLinkUrl());
+        assertEquals("101", savedList.get(0).getReferenceId());
+        assertTrue(savedList.get(0).getTitle().contains("Senior Java Engineer"));
+        assertTrue(savedList.get(0).getContent().contains("Hiring Manager A"));
+        assertTrue(savedList.get(0).getContent().contains("REQ-0101"));
+        assertTrue(savedList.get(0).getContent().contains("Phòng Công Nghệ"));
+        assertTrue(savedList.get(0).getEventId().startsWith("REQ_PENDING_DIR_101_20_"));
+        assertTrue(savedList.get(1).getEventId().startsWith("REQ_PENDING_DIR_101_21_"));
+    }
+
+    @Test
+    @DisplayName("notifyRequisitionPendingDirector: Bỏ qua Giám đốc nếu chính Giám đốc đó là người gửi")
+    void notifyRequisitionPendingDirector_skipsSelfWhenDirectorIsActor() {
+        requisition.setSubmittedAt(LocalDateTime.of(2026, 10, 19, 10, 0));
+        User director1 = User.builder().userId(20).fullName("Giám đốc A").build();
+        User director2 = User.builder().userId(21).fullName("Giám đốc B").build();
+        when(userRepository.findAllActiveDirectors()).thenReturn(List.of(director1, director2));
+        when(notificationRepository.existsByRecipient_UserIdAndEventId(eq(21), any())).thenReturn(false);
+
+        // Director1 là người nộp
+        notificationService.notifyRequisitionPendingDirector(requisition, director1);
+
+        ArgumentCaptor<Notification> captor = ArgumentCaptor.forClass(Notification.class);
+        verify(notificationRepository, times(1)).save(captor.capture());
+        assertEquals(director2, captor.getValue().getRecipient());
+    }
+
+    @Test
+    @DisplayName("notifyRequisitionPendingDirector: Idempotent - Nếu cùng eventId đã tồn tại thì bỏ qua")
+    void notifyRequisitionPendingDirector_idempotent() {
+        requisition.setSubmittedAt(LocalDateTime.of(2026, 10, 19, 10, 0));
+        when(userRepository.findAllActiveDirectors()).thenReturn(List.of(director));
+        when(notificationRepository.existsByRecipient_UserIdAndEventId(eq(20), any())).thenReturn(true);
+
+        notificationService.notifyRequisitionPendingDirector(requisition, manager);
+
+        verify(notificationRepository, never()).save(any());
+    }
+
+    @Test
+    @DisplayName("notifyRequisitionPendingDirector: requisition null hoặc không có Giám đốc hoạt động -> Không lưu")
+    void notifyRequisitionPendingDirector_nullOrNoDirectors_doesNothing() {
+        notificationService.notifyRequisitionPendingDirector(null, manager);
+
+        when(userRepository.findAllActiveDirectors()).thenReturn(List.of());
+        notificationService.notifyRequisitionPendingDirector(requisition, manager);
+
+        verify(notificationRepository, never()).save(any());
+    }
+
+    // =========================================================================
+    // notifyRequisitionApproved
+    // =========================================================================
+
+    @Test
+    @DisplayName("notifyRequisitionApproved: Giám đốc duyệt -> Gửi thông báo REQUISITION_APPROVED tới Hiring Manager")
+    void notifyRequisitionApproved_success() {
+        RequisitionApproval approval = RequisitionApproval.builder()
+                .approvalId(12)
+                .requisition(requisition)
+                .director(director)
+                .status("Approved")
+                .comments("Đồng ý tuyển dụng")
+                .approvalDate(LocalDateTime.of(2026, 10, 19, 14, 0))
+                .build();
+
+        when(notificationRepository.existsByRecipient_UserIdAndEventId(eq(10), any())).thenReturn(false);
+
+        notificationService.notifyRequisitionApproved(approval);
+
+        ArgumentCaptor<Notification> captor = ArgumentCaptor.forClass(Notification.class);
+        verify(notificationRepository).save(captor.capture());
+
+        Notification saved = captor.getValue();
+        assertEquals(manager, saved.getRecipient());
+        assertEquals(director, saved.getActor());
+        assertEquals("REQUISITION_APPROVED", saved.getEventType());
+        assertEquals("/requisitions/101", saved.getLinkUrl());
+        assertEquals("101", saved.getReferenceId());
+        assertTrue(saved.getTitle().contains("Yêu cầu tuyển dụng đã được phê duyệt"));
+        assertTrue(saved.getContent().contains("Director B"));
+        assertTrue(saved.getContent().contains("Đồng ý tuyển dụng"));
+        assertEquals("REQ_APPROVE_12", saved.getEventId());
+    }
+
+    @Test
+    @DisplayName("notifyRequisitionApproved: Giám đốc duyệt không kèm ý kiến -> Thông báo vẫn đầy đủ nội dung chuẩn")
+    void notifyRequisitionApproved_withoutComment() {
+        RequisitionApproval approval = RequisitionApproval.builder()
+                .approvalId(13)
+                .requisition(requisition)
+                .director(director)
+                .status("Approved")
+                .comments(null)
+                .approvalDate(LocalDateTime.of(2026, 10, 19, 14, 0))
+                .build();
+
+        when(notificationRepository.existsByRecipient_UserIdAndEventId(eq(10), any())).thenReturn(false);
+
+        notificationService.notifyRequisitionApproved(approval);
+
+        ArgumentCaptor<Notification> captor = ArgumentCaptor.forClass(Notification.class);
+        verify(notificationRepository).save(captor.capture());
+
+        Notification saved = captor.getValue();
+        assertTrue(saved.getContent().contains("Bộ phận Nhân sự (HR) có thể tiến hành tạo tin tuyển dụng"));
+        assertFalse(saved.getContent().contains("Ý kiến:"));
+        assertEquals("REQ_APPROVE_13", saved.getEventId());
+    }
+
+    @Test
+    @DisplayName("notifyRequisitionApproved: Giám đốc tự duyệt yêu cầu của mình -> Không gửi thông báo cho chính mình")
+    void notifyRequisitionApproved_skipsSelfApproval() {
+        requisition.setHiringManager(director);
+        RequisitionApproval approval = RequisitionApproval.builder()
+                .approvalId(14)
+                .requisition(requisition)
+                .director(director)
+                .status("Approved")
+                .build();
+
+        notificationService.notifyRequisitionApproved(approval);
+
+        verify(notificationRepository, never()).save(any());
+    }
+
+    @Test
+    @DisplayName("notifyRequisitionApproved: Idempotent - Nếu cùng eventId đã tồn tại thì bỏ qua")
+    void notifyRequisitionApproved_idempotent() {
+        RequisitionApproval approval = RequisitionApproval.builder()
+                .approvalId(15)
+                .requisition(requisition)
+                .director(director)
+                .status("Approved")
+                .build();
+
+        when(notificationRepository.existsByRecipient_UserIdAndEventId(10, "REQ_APPROVE_15")).thenReturn(true);
+
+        notificationService.notifyRequisitionApproved(approval);
+
+        verify(notificationRepository, never()).save(any());
+    }
+
+    @Test
+    @DisplayName("notifyRequisitionApproved: null approval hoặc requisition null -> Không làm gì")
+    void notifyRequisitionApproved_null_doesNothing() {
+        notificationService.notifyRequisitionApproved(null);
+        notificationService.notifyRequisitionApproved(RequisitionApproval.builder().build());
+
+        verify(notificationRepository, never()).save(any());
+    }
 }

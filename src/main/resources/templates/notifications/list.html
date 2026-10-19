@@ -11,12 +11,6 @@
 </head>
 <body>
 <main id="main" layout:fragment="content" class="container notif-container" tabindex="-1">
-    <nav class="requisition-breadcrumb" aria-label="Breadcrumb">
-        <a th:href="@{/dashboard}">Bảng điều khiển</a>
-        <span aria-hidden="true">/</span>
-        <span aria-current="page">Thông báo</span>
-    </nav>
-
     <div class="notif-page-header">
         <div>
             <h1>Thông báo</h1>
@@ -38,6 +32,8 @@
             <div class="notif-card-header">
                 <div class="notif-badge-group">
                     <span class="badge" th:classappend="${n.isRead ? 'badge--neutral status-read' : 'badge--warning status-unread'}" th:text="${n.isRead ? 'Đã đọc' : 'Mới'}"></span>
+                    <span th:if="${n.eventType == 'REQUISITION_PENDING_DIRECTOR'}" class="badge badge--warning event-pending">Chờ phê duyệt</span>
+                    <span th:if="${n.eventType == 'REQUISITION_APPROVED'}" class="badge badge--success event-approved">Yêu cầu đã được duyệt</span>
                     <span th:if="${n.eventType == 'REQUISITION_REJECTED'}" class="badge badge--danger event-rejected">Yêu cầu bị từ chối</span>
                     <span th:if="${n.eventType == 'JOB_POSTING_PUBLISHED'}" class="badge badge--success event-published">Tin tuyển dụng đã phát hành</span>
                 </div>

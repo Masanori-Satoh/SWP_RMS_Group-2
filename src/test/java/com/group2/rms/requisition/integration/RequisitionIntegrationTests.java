@@ -69,6 +69,8 @@ class RequisitionIntegrationTests {
         @Autowired
         private RoleRepository roles;
         @Autowired
+        private com.group2.rms.notification.NotificationRepository notifications;
+        @Autowired
         private EntityManager entityManager;
         @Autowired
         private MockMvc mvc;
@@ -242,8 +244,43 @@ class RequisitionIntegrationTests {
         // ----- Chuyển trạng thái -----
 
         @Test
+        @WithMockUser(username = "it_hm", roles = "HIRING_MANAGER")
+        @DisplayName("HM gửi duyệt đơn mới -> Pending_Director, tạo thông báo cho Giám đốc")
+        void createRequisition_shouldNotifyDirector_whenManagerSubmits() {
+                // Arrange
+                RequisitionRequest request = RequisitionRequest.builder()
+                                .action(RequisitionValidator.ACTION_SUBMIT)
+                                .title("DevOps Engineer")
+                                .numberOfPositions(2)
+                                .employmentType("Full-time")
+                                .gender("Any")
+                                .workLocation("Hà Nội")
+                                .workModel("On-site")
+                                .jobDescription("DevOps responsibilities")
+                                .requirementDetails("DevOps requirements")
+                                .reasonForHiring("Dự án mở rộng cần thêm DevOps")
+                                .screeningCriteria(new ArrayList<>(List.of(ScreeningCriteriaRequest.builder()
+                                                .criteriaName("Docker").criteriaType("Skill").requiredValue("2 years")
+                                                .weight(new BigDecimal("100.00")).isMandatory(true).build())))
+                                .build();
+
+                // Act
+                Integer id = service.createRequisition(request);
+
+                // Assert
+                JobRequisition saved = requisitions.findById(id).orElseThrow();
+                assertEquals(RequisitionAccess.STATUS_PENDING_DIRECTOR, saved.getApprovalStatus());
+
+                var notifs = notifications.findByRecipient_UserIdOrderByCreatedAtDesc(director.getUserId(),
+                                org.springframework.data.domain.PageRequest.of(0, 10));
+                assertFalse(notifs.isEmpty());
+                assertEquals("REQUISITION_PENDING_DIRECTOR", notifs.getContent().get(0).getEventType());
+                assertTrue(notifs.getContent().get(0).getContent().contains("DevOps Engineer"));
+        }
+
+        @Test
         @WithMockUser(username = "it_dir", roles = "DIRECTOR")
-        @DisplayName("Giám đốc duyệt -> Approved, có 1 bản ghi duyệt kèm ý kiến")
+        @DisplayName("Giám đốc duyệt -> Approved, có 1 bản ghi duyệt kèm ý kiến, tạo thông báo cho HM")
         void decide_shouldApproveAndSaveApproval_whenDirectorApproves() {
                 // Arrange
                 JobRequisition requisition = saveRequisition("Pending Dev", hiringManager, department,
@@ -259,6 +296,12 @@ class RequisitionIntegrationTests {
                 assertEquals(1, history.size());
                 assertEquals(RequisitionAccess.STATUS_APPROVED, history.get(0).getStatus());
                 assertEquals("Approved for hiring", history.get(0).getComments());
+
+                var notifs = notifications.findByRecipient_UserIdOrderByCreatedAtDesc(hiringManager.getUserId(),
+                                org.springframework.data.domain.PageRequest.of(0, 10));
+                assertFalse(notifs.isEmpty());
+                assertEquals("REQUISITION_APPROVED", notifs.getContent().get(0).getEventType());
+                assertTrue(notifs.getContent().get(0).getContent().contains("Approved for hiring"));
         }
 
         @Test
