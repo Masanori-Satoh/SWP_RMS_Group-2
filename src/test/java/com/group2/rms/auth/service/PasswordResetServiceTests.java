@@ -273,10 +273,11 @@ class PasswordResetServiceTests {
         when(users.findByIdForUpdate(7)).thenReturn(Optional.of(account));
 
         // When
-        assertThrows(PasswordRecoveryFlowException.class,
+        PasswordRecoveryFlowException error = assertThrows(PasswordRecoveryFlowException.class,
                 () -> service.changePassword(snapshot, "NewPass123!", NOW));
 
         // Then
+        assertEquals("RESET_REQUEST_INVALID", error.getErrorCode());
         verify(encoder, times(0)).encode(anyString());
         verify(users, times(0)).saveAndFlush(any(User.class));
     }
@@ -305,10 +306,12 @@ class PasswordResetServiceTests {
         when(users.findByIdForUpdate(7)).thenReturn(Optional.empty());
 
         // When
-        assertThrows(PasswordRecoveryFlowException.class,
+        PasswordRecoveryFlowException error = assertThrows(PasswordRecoveryFlowException.class,
                 () -> service.changePassword(snapshot, "NewPass123!", EXPIRES_AT));
 
         // Then
+        assertEquals("RESET_REQUEST_INVALID", error.getErrorCode());
+        verify(encoder, times(0)).encode(anyString());
         verify(users, times(0)).saveAndFlush(any(User.class));
     }
 
@@ -329,10 +332,14 @@ class PasswordResetServiceTests {
     @DisplayName("AUTH-RESET-20 | Mật khẩu dài hơn 32 ký tự: từ chối và không lưu")
     void changePassword_passwordOver32Characters_doesNotSave() {
         // When
-        assertThrows(PasswordRecoveryFlowException.class,
+        PasswordRecoveryFlowException error = assertThrows(PasswordRecoveryFlowException.class,
                 () -> service.changePassword(snapshot, "a".repeat(33), EXPIRES_AT));
 
         // Then
+        assertEquals("PASSWORD_INVALID", error.getErrorCode());
+        assertEquals("password", error.getField());
+        verify(users, times(0)).findByIdForUpdate(any());
+        verify(encoder, times(0)).encode(anyString());
         verify(users, times(0)).saveAndFlush(any(User.class));
     }
 

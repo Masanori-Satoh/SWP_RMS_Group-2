@@ -51,7 +51,7 @@ class PasswordResetEmailSenderTests {
                 () -> service.sendOtp(TO, "123456"));
 
         // Then
-        assertNotNull(error);
+        assertEquals("MAIL_UNAVAILABLE", error.getErrorCode());
         verify(sender, times(0)).createMimeMessage();
         verify(sender, times(0)).send(any(MimeMessage.class));
     }
@@ -69,7 +69,7 @@ class PasswordResetEmailSenderTests {
                 () -> service.sendOtp(TO, "123456"));
 
         // Then
-        assertNotNull(error);
+        assertEquals("MAIL_UNAVAILABLE", error.getErrorCode());
         verify(sender, times(0)).createMimeMessage();
         verify(sender, times(0)).send(any(MimeMessage.class));
     }
@@ -87,7 +87,7 @@ class PasswordResetEmailSenderTests {
                 () -> service.sendOtp(TO, "123456"));
 
         // Then
-        assertNotNull(error);
+        assertEquals("MAIL_UNAVAILABLE", error.getErrorCode());
         verify(sender, times(0)).createMimeMessage();
         verify(sender, times(0)).send(any(MimeMessage.class));
     }
@@ -136,7 +136,7 @@ class PasswordResetEmailSenderTests {
                 () -> service.sendOtp(TO, "123456"));
 
         // Then
-        assertNotNull(error);
+        assertEquals("MAIL_DELIVERY_FAILED", error.getErrorCode());
         verify(sender, times(1)).send(message);
     }
 
@@ -154,7 +154,7 @@ class PasswordResetEmailSenderTests {
                 () -> service.sendOtp("invalid@@example.test", "123456"));
 
         // Then
-        assertNotNull(error);
+        assertEquals("MAIL_DELIVERY_FAILED", error.getErrorCode());
         verify(sender, times(0)).send(any(MimeMessage.class));
     }
 

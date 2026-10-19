@@ -11,10 +11,16 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.MockedStatic;
+import org.mockito.MockMakers;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.mock.web.MockHttpSession;
 import org.springframework.security.crypto.password.PasswordEncoder;
+
+import java.time.Clock;
+import java.time.Instant;
+import java.time.ZoneOffset;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -22,9 +28,12 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.CALLS_REAL_METHODS;
+import static org.mockito.Mockito.mockStatic;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.withSettings;
 
 @ExtendWith(MockitoExtension.class)
 class RegistrationVerificationServiceTests {
@@ -32,6 +41,9 @@ class RegistrationVerificationServiceTests {
     private static final String EMAIL = "candidate7@example.test";
     private static final String PASSWORD = "TestPass123!";
     private static final String HASH = "mock-encoded-value";
+    private static final String NEW_OTP_HASH = "new-otp-hash";
+    private static final Instant NOW = Instant.parse("2026-10-19T02:00:00Z");
+    private static final String REGISTER_STATE = RegistrationVerificationService.class.getName() + ".REGISTER_STATE";
 
     @Mock
     private AccountManagementService accounts;
@@ -452,6 +464,283 @@ class RegistrationVerificationServiceTests {
         assertEquals(EMAIL, service.getPendingRegistrationEmail(session));
         verify(emailSender, times(2)).sendOtp(eq(EMAIL), anyString());
         verify(accounts, times(0)).createCandidateWithPasswordHash(anyString(), anyString(), anyString(), anyString());
+    }
+
+    @Test
+    @DisplayName("AUTH-REGISTER-23 | Resend đúng giây 300: thay hash OTP, gia hạn OTP và giữ hash password đã chuẩn bị")
+    void resendOtp_atCooldownBoundary_replacesOtpAndExtendsExpiry() {
+        // Given
+        try (MockedStatic<Instant> time = fixedTime()) {
+            requestCode();
+            setTime(time, NOW.plusSeconds(300));
+            when(encoder.encode(anyString())).thenReturn(NEW_OTP_HASH);
+
+            // When
+            service.resendOtp(session);
+
+            // Then: Mã mới còn hạn tại phút 15, dù mã ban đầu đã hết hạn.
+            assertEquals(300L, service.getResendRemainingSeconds(session));
+            verify(emailSender, times(2)).sendOtp(eq(EMAIL), anyString());
+            verify(accounts, times(0)).createCandidateWithPasswordHash(anyString(), anyString(), anyString(), anyString());
+            setTime(time, NOW.plusSeconds(900));
+            when(encoder.matches("123456", NEW_OTP_HASH)).thenReturn(true);
+            when(accounts.createCandidateWithPasswordHash("Candidate Seven", "candidate7", EMAIL, HASH)).thenReturn(7);
+            assertEquals(7, service.verifyAndRegister("123456", session));
+            verify(encoder, times(1)).matches("123456", NEW_OTP_HASH);
+            verify(accounts, times(1)).createCandidateWithPasswordHash("Candidate Seven", "candidate7", EMAIL, HASH);
+            assertEquals(null, session.getAttribute(REGISTER_STATE));
+        }
+    }
+
+    @Test
+    @DisplayName("AUTH-REGISTER-24 | Resend trước hạn 1 giây: retryAfter=1, không sinh hash mới hoặc gửi mail thứ hai")
+    void resendOtp_oneSecondBeforeCooldown_rejectsWithoutChangingState() {
+        // Given
+        try (MockedStatic<Instant> time = fixedTime()) {
+            requestCode();
+            Object pending = session.getAttribute(REGISTER_STATE);
+            setTime(time, NOW.plusSeconds(299));
+
+            // When
+            RegistrationFlowException error = assertThrows(RegistrationFlowException.class,
+                    () -> service.resendOtp(session));
+
+            // Then
+            assertEquals("REGISTER_EMAIL_COOLDOWN", error.getErrorCode());
+            assertEquals(Step.OTP, error.getStep());
+            assertEquals(null, error.getField());
+            assertEquals(1L, error.getRetryAfterSeconds());
+            assertEquals(pending, session.getAttribute(REGISTER_STATE));
+            verify(encoder, times(2)).encode(anyString());
+            verify(emailSender, times(1)).sendOtp(eq(EMAIL), anyString());
+            verify(accounts, times(0)).createCandidateWithPasswordHash(anyString(), anyString(), anyString(), anyString());
+        }
+    }
+
+    @Test
+    @DisplayName("AUTH-REGISTER-25 | Resend sau cooldown bị lỗi mail: giữ pending và hash OTP cũ để tiếp tục xác minh")
+    void resendOtp_deliveryFailure_preservesPreviousOtp() {
+        // Given
+        try (MockedStatic<Instant> time = fixedTime()) {
+            requestCode();
+            Object pending = session.getAttribute(REGISTER_STATE);
+            setTime(time, NOW.plusSeconds(301));
+            when(encoder.encode(anyString())).thenReturn(NEW_OTP_HASH);
+            doThrow(new RegistrationFlowException(Step.REGISTER, null, "REGISTER_EMAIL_DELIVERY_FAILED", "Mail failed."))
+                    .when(emailSender).sendOtp(eq(EMAIL), anyString());
+
+            // When
+            RegistrationFlowException error = assertThrows(RegistrationFlowException.class,
+                    () -> service.resendOtp(session));
+
+            // Then: Lỗi phải giữ context OTP và thông tin form an toàn.
+            assertEquals("REGISTER_EMAIL_DELIVERY_FAILED", error.getErrorCode());
+            assertEquals(Step.OTP, error.getStep());
+            assertEquals(EMAIL, error.getDetails().email());
+            assertEquals(pending, session.getAttribute(REGISTER_STATE));
+            assertEquals(0L, service.getResendRemainingSeconds(session));
+            verify(emailSender, times(2)).sendOtp(eq(EMAIL), anyString());
+            verify(accounts, times(0)).createCandidateWithPasswordHash(anyString(), anyString(), anyString(), anyString());
+            when(encoder.matches("123456", HASH)).thenReturn(true);
+            when(accounts.createCandidateWithPasswordHash("Candidate Seven", "candidate7", EMAIL, HASH)).thenReturn(7);
+            assertEquals(7, service.verifyAndRegister("123456", session));
+            verify(encoder, times(1)).matches("123456", HASH);
+        }
+    }
+
+    @Test
+    @DisplayName("AUTH-REGISTER-26 | Resend lỗi mail rồi thử lại ngay: không bị cooldown giả, dùng hash của lần gửi thành công")
+    void resendOtp_deliveryFailure_allowsImmediateRetry() {
+        // Given
+        try (MockedStatic<Instant> time = fixedTime()) {
+            requestCode();
+            setTime(time, NOW.plusSeconds(301));
+            when(encoder.encode(anyString())).thenReturn(NEW_OTP_HASH);
+            doThrow(new RegistrationFlowException(Step.REGISTER, null, "REGISTER_EMAIL_DELIVERY_FAILED", "Mail failed."))
+                    .doNothing().when(emailSender).sendOtp(eq(EMAIL), anyString());
+            RegistrationFlowException error = assertThrows(RegistrationFlowException.class,
+                    () -> service.resendOtp(session));
+            assertEquals("REGISTER_EMAIL_DELIVERY_FAILED", error.getErrorCode());
+
+            // When
+            service.resendOtp(session);
+
+            // Then
+            assertEquals(300L, service.getResendRemainingSeconds(session));
+            assertEquals(EMAIL, service.getPendingRegistrationEmail(session));
+            verify(emailSender, times(3)).sendOtp(eq(EMAIL), anyString());
+            when(encoder.matches("123456", NEW_OTP_HASH)).thenReturn(true);
+            when(accounts.createCandidateWithPasswordHash("Candidate Seven", "candidate7", EMAIL, HASH)).thenReturn(7);
+            assertEquals(7, service.verifyAndRegister("123456", session));
+            verify(accounts, times(1)).createCandidateWithPasswordHash("Candidate Seven", "candidate7", EMAIL, HASH);
+        }
+    }
+
+    @Test
+    @DisplayName("AUTH-REGISTER-27 | Session chứa pending sai kiểu: báo request invalid, không mã hóa/gửi mail/tạo account")
+    void resendOtp_invalidSessionState_rejectsBeforeSideEffects() {
+        // Given: Mô phỏng attribute không phải PendingRegistration qua API session công khai.
+        session.setAttribute(REGISTER_STATE, "invalid-state");
+
+        // When
+        RegistrationFlowException error = assertThrows(RegistrationFlowException.class,
+                () -> service.resendOtp(session));
+
+        // Then
+        assertEquals("REGISTER_REQUEST_INVALID", error.getErrorCode());
+        assertEquals(Step.REGISTER, error.getStep());
+        verify(encoder, times(0)).encode(anyString());
+        verify(emailSender, times(0)).sendOtp(anyString(), anyString());
+        verify(accounts, times(0)).createCandidateWithPasswordHash(anyString(), anyString(), anyString(), anyString());
+    }
+
+    @Test
+    @DisplayName("AUTH-REGISTER-28 | Resend đúng hạn OTP 900 giây: xóa pending và không gửi mã mới")
+    void resendOtp_atOtpExpiry_clearsPendingAndRejectsRequest() {
+        // Given
+        try (MockedStatic<Instant> time = fixedTime()) {
+            requestCode();
+            setTime(time, NOW.plusSeconds(900));
+
+            // When
+            RegistrationFlowException error = assertThrows(RegistrationFlowException.class,
+                    () -> service.resendOtp(session));
+
+            // Then
+            assertEquals("REGISTER_REQUEST_INVALID", error.getErrorCode());
+            assertEquals(Step.REGISTER, error.getStep());
+            assertEquals(EMAIL, error.getDetails().email());
+            assertEquals(null, session.getAttribute(REGISTER_STATE));
+            verify(emailSender, times(1)).sendOtp(eq(EMAIL), anyString());
+            verify(accounts, times(0)).createCandidateWithPasswordHash(anyString(), anyString(), anyString(), anyString());
+        }
+    }
+
+    @Test
+    @DisplayName("AUTH-REGISTER-29 | Xác minh sau hạn OTP 1 giây: xóa pending, không so hash hoặc tạo account")
+    void verifyAndRegister_oneSecondAfterExpiry_clearsPending() {
+        // Given
+        try (MockedStatic<Instant> time = fixedTime()) {
+            requestCode();
+            setTime(time, NOW.plusSeconds(901));
+
+            // When
+            RegistrationFlowException error = assertThrows(RegistrationFlowException.class,
+                    () -> service.verifyAndRegister("123456", session));
+
+            // Then
+            assertEquals("REGISTER_REQUEST_INVALID", error.getErrorCode());
+            assertEquals(Step.REGISTER, error.getStep());
+            assertEquals(null, session.getAttribute(REGISTER_STATE));
+            verify(encoder, times(0)).matches(anyString(), anyString());
+            verify(accounts, times(0)).createCandidateWithPasswordHash(anyString(), anyString(), anyString(), anyString());
+        }
+    }
+
+    @Test
+    @DisplayName("AUTH-REGISTER-30 | Xác minh trước hạn OTP 1 giây: chấp nhận mã đúng, tạo account một lần")
+    void verifyAndRegister_oneSecondBeforeExpiry_createsAccount() {
+        // Given
+        try (MockedStatic<Instant> time = fixedTime()) {
+            requestCode();
+            setTime(time, NOW.plusSeconds(899));
+            when(encoder.matches("123456", HASH)).thenReturn(true);
+            when(accounts.createCandidateWithPasswordHash("Candidate Seven", "candidate7", EMAIL, HASH)).thenReturn(7);
+
+            // When
+            int result = service.verifyAndRegister("123456", session);
+
+            // Then
+            assertEquals(7, result);
+            assertEquals(null, session.getAttribute(REGISTER_STATE));
+            verify(accounts, times(1)).createCandidateWithPasswordHash("Candidate Seven", "candidate7", EMAIL, HASH);
+        }
+    }
+
+    @Test
+    @DisplayName("AUTH-REGISTER-31 | Countdown: làm tròn 999ms thành 1 giây, đúng/sau hạn trả 0")
+    void getResendRemainingSeconds_nearAndPastDeadline_returnsRoundedCountdown() {
+        // Given
+        try (MockedStatic<Instant> time = fixedTime()) {
+            requestCode();
+
+            // When / Then: Chỉ đọc countdown, không gọi gửi lại để tránh thay deadline.
+            setTime(time, NOW.plusMillis(299001));
+            assertEquals(1L, service.getResendRemainingSeconds(session));
+            setTime(time, NOW.plusSeconds(300));
+            assertEquals(0L, service.getResendRemainingSeconds(session));
+            setTime(time, NOW.plusSeconds(301));
+            assertEquals(0L, service.getResendRemainingSeconds(session));
+            assertEquals(EMAIL, service.getPendingRegistrationEmail(session));
+            verify(emailSender, times(1)).sendOtp(eq(EMAIL), anyString());
+        }
+    }
+
+    @Test
+    @DisplayName("AUTH-REGISTER-32 | Request email khác dọn cooldown cũ: countdown session cũ bằng 0, pending vẫn còn hạn")
+    void getResendRemainingSeconds_expiredEntryCleanedByAnotherRequest_returnsZero() {
+        // Given: Đi qua public flow, không sửa trực tiếp map cooldown.
+        try (MockedStatic<Instant> time = fixedTime()) {
+            requestCode();
+            setTime(time, NOW.plusSeconds(301));
+            form.setUsername("candidate8");
+            form.setEmail("candidate8@example.test");
+            service.requestRegistration(form, new MockHttpSession());
+
+            // When
+            long result = service.getResendRemainingSeconds(session);
+
+            // Then
+            assertEquals(0L, result);
+            assertEquals(EMAIL, service.getPendingRegistrationEmail(session));
+            verify(emailSender, times(1)).sendOtp(eq(EMAIL), anyString());
+            verify(emailSender, times(1)).sendOtp(eq("candidate8@example.test"), anyString());
+            verify(accounts, times(0)).createCandidateWithPasswordHash(anyString(), anyString(), anyString(), anyString());
+        }
+    }
+
+    @Test
+    @DisplayName("AUTH-REGISTER-33 | Resend thành công sau 4 lần sai: mã mới có lại đủ giới hạn nhập sai")
+    void resendOtp_afterFourWrongAttempts_resetsAttemptCounter() {
+        // Given
+        try (MockedStatic<Instant> time = fixedTime()) {
+            requestCode();
+            when(encoder.matches("111111", HASH)).thenReturn(false);
+            for (int attempt = 1; attempt <= 4; attempt++) {
+                RegistrationFlowException error = assertThrows(RegistrationFlowException.class,
+                        () -> service.verifyAndRegister("111111", session));
+                assertEquals("REGISTER_OTP_INVALID", error.getErrorCode());
+            }
+            setTime(time, NOW.plusSeconds(300));
+            when(encoder.encode(anyString())).thenReturn(NEW_OTP_HASH);
+            service.resendOtp(session);
+            when(encoder.matches("111111", NEW_OTP_HASH)).thenReturn(false);
+
+            // When: Lần sai đầu tiên của OTP mới, dù tổng hai vòng đã sai 5 lần.
+            RegistrationFlowException error = assertThrows(RegistrationFlowException.class,
+                    () -> service.verifyAndRegister("111111", session));
+
+            // Then
+            assertEquals("REGISTER_OTP_INVALID", error.getErrorCode());
+            assertEquals(EMAIL, service.getPendingRegistrationEmail(session));
+            verify(emailSender, times(2)).sendOtp(eq(EMAIL), anyString());
+            verify(accounts, times(0)).createCandidateWithPasswordHash(anyString(), anyString(), anyString(), anyString());
+        }
+    }
+
+    // Tính Instant xong trước khi bắt đầu stub để không lồng hai lời gọi static Mockito.
+    private void setTime(MockedStatic<Instant> time, Instant currentTime) {
+        time.when(Instant::now).thenReturn(currentTime);
+    }
+
+    // Production không nhận Clock: chỉ cố định Instant.now trong scope test.
+    // Chọn inline cho mock thời gian này; các dependency khác vẫn dùng subclass như cấu hình project.
+    private MockedStatic<Instant> fixedTime() {
+        Clock clock = Clock.fixed(NOW, ZoneOffset.UTC);
+        MockedStatic<Instant> time = mockStatic(Instant.class,
+                withSettings().mockMaker(MockMakers.INLINE).defaultAnswer(CALLS_REAL_METHODS));
+        time.when(Instant::now).thenReturn(clock.instant());
+        return time;
     }
 
     // Chỉ tạo yêu cầu OTP trong bộ nhớ. Hai dependency đã được mock.
