@@ -16,6 +16,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.time.Clock;
 import java.time.Instant;
+import java.time.ZoneOffset;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -34,6 +35,7 @@ class PasswordRecoveryServiceTests {
     private static final String EMAIL = "candidate7@example.test";
     private static final String OTP_HASH = "mock-otp-hash";
     private static final String NEW_PASSWORD = "NewPass123!";
+    private static final String RESET_STATE = PasswordRecoveryService.class.getName() + ".RESET_STATE";
 
     @Mock
     private PasswordResetService resetService;
@@ -83,10 +85,11 @@ class PasswordRecoveryServiceTests {
         when(emailSender.isConfigured()).thenReturn(false);
 
         // When
-        assertThrows(PasswordRecoveryUnavailableException.class,
+        PasswordRecoveryUnavailableException error = assertThrows(PasswordRecoveryUnavailableException.class,
                 () -> service.requestReset(EMAIL, session));
 
         // Then
+        assertEquals("MAIL_UNAVAILABLE", error.getErrorCode());
         verify(resetService, times(0)).findActiveAccount(anyString());
         verify(emailSender, times(0)).sendOtp(anyString(), anyString());
     }
@@ -122,7 +125,7 @@ class PasswordRecoveryServiceTests {
         // Then
         assertEquals("RESET_EMAIL_COOLDOWN", error.getErrorCode());
         assertEquals("email", error.getField());
-        assertEquals(true, error.getRetryAfterSeconds() > 0);
+        assertEquals(1200L, error.getRetryAfterSeconds());
         verify(emailSender, times(1)).sendOtp(eq(EMAIL), anyString());
     }
 
@@ -134,7 +137,9 @@ class PasswordRecoveryServiceTests {
         when(resetService.isCurrent(account)).thenReturn(true);
         doThrow(new PasswordResetDeliveryException()).doNothing()
                 .when(emailSender).sendOtp(eq(EMAIL), anyString());
-        assertThrows(PasswordResetDeliveryException.class, () -> service.requestReset(EMAIL, session));
+        PasswordResetDeliveryException error = assertThrows(PasswordResetDeliveryException.class,
+                () -> service.requestReset(EMAIL, session));
+        assertEquals("MAIL_DELIVERY_FAILED", error.getErrorCode());
         assertEquals(false, service.hasPendingReset(session));
 
         // When: Thử lại ngay sau lần gửi thất bại.
@@ -356,6 +361,301 @@ class PasswordRecoveryServiceTests {
         // Then
         assertEquals(true, service.canResetPassword(session));
         verify(encoder, times(1)).matches("123456", OTP_HASH);
+    }
+
+    @Test
+    @DisplayName("AUTH-RECOVERY-19 | OTP null: báo OTP_INVALID, không so hash hoặc đổi mật khẩu")
+    void verifyOtp_nullCode_rejectsBeforeHashComparison() {
+        // Given
+        requestCode();
+        when(resetService.isCurrent(account)).thenReturn(true);
+
+        // When
+        PasswordRecoveryFlowException error = assertThrows(PasswordRecoveryFlowException.class,
+                () -> service.verifyOtp(null, session));
+
+        // Then
+        assertEquals("OTP_INVALID", error.getErrorCode());
+        assertEquals(Step.OTP, error.getStep());
+        assertEquals(false, service.canResetPassword(session));
+        verify(encoder, times(0)).matches(any(), anyString());
+        verify(resetService, times(0)).changePassword(any(), anyString(), any());
+    }
+
+    @Test
+    @DisplayName("AUTH-RECOVERY-20 | OTP blank: giữ trạng thái chờ mã, không so hash")
+    void verifyOtp_blankCode_keepsPendingRequest() {
+        // Given
+        requestCode();
+        when(resetService.isCurrent(account)).thenReturn(true);
+
+        // When
+        PasswordRecoveryFlowException error = assertThrows(PasswordRecoveryFlowException.class,
+                () -> service.verifyOtp("   ", session));
+
+        // Then
+        assertEquals("OTP_INVALID", error.getErrorCode());
+        assertEquals(true, service.hasPendingReset(session));
+        assertEquals(false, service.canResetPassword(session));
+        verify(encoder, times(0)).matches(anyString(), anyString());
+        verify(resetService, times(0)).changePassword(any(), anyString(), any());
+    }
+
+    @Test
+    @DisplayName("AUTH-RECOVERY-21 | Còn 1199,5 giây cooldown: làm tròn lên 1200 giây để UI chưa cho gửi sớm")
+    void getResendRemainingSeconds_fractionalSecond_roundsUp() {
+        // Given
+        requestCode();
+        when(clock.instant()).thenReturn(NOW.plusMillis(500));
+
+        // When
+        long result = service.getResendRemainingSeconds(session);
+
+        // Then
+        assertEquals(1200L, result);
+        verify(emailSender, times(1)).sendOtp(eq(EMAIL), anyString());
+    }
+
+    @Test
+    @DisplayName("AUTH-RECOVERY-22 | Đúng hạn cooldown 20 phút: thời gian chờ bằng 0")
+    void getResendRemainingSeconds_atCooldownBoundary_returnsZero() {
+        // Given
+        requestCode();
+        when(clock.instant()).thenReturn(NOW.plusSeconds(1200));
+
+        // When
+        long result = service.getResendRemainingSeconds(session);
+
+        // Then
+        assertEquals(0L, result);
+        verify(emailSender, times(1)).sendOtp(eq(EMAIL), anyString());
+    }
+
+    @Test
+    @DisplayName("AUTH-RECOVERY-23 | Gửi lại đúng phút 20: gửi email thứ hai và tạo OTP mới còn hạn")
+    void requestReset_atCooldownBoundary_sendsNewCode() {
+        // Given
+        requestCode();
+        when(clock.instant()).thenReturn(NOW.plusSeconds(1200));
+        when(resetService.isCurrent(account)).thenReturn(true);
+
+        // When
+        service.requestReset(EMAIL, session);
+
+        // Then
+        verify(emailSender, times(2)).sendOtp(eq(EMAIL), anyString());
+        assertEquals(true, service.hasPendingReset(session));
+        assertEquals(false, service.canResetPassword(session));
+        assertEquals(EMAIL, service.getPendingResetEmail(session));
+        assertEquals(1200L, service.getResendRemainingSeconds(session));
+    }
+
+    @Test
+    @DisplayName("AUTH-RECOVERY-24 | Ghi nhận vấn đề: OTP hết hạn phút 15 nhưng vẫn phải chờ 300 giây để yêu cầu mã mới")
+    void requestReset_otpExpiredButCooldownActive_documentsFiveMinuteGap() {
+        // Given: Đây là test ghi nhận hành vi hiện tại để báo bug, không khẳng định hành vi đúng nghiệp vụ.
+        requestCode();
+        when(clock.instant()).thenReturn(NOW.plusSeconds(900));
+        assertEquals(false, service.hasPendingReset(session));
+
+        // When
+        PasswordRecoveryFlowException error = assertThrows(PasswordRecoveryFlowException.class,
+                () -> service.requestReset(EMAIL, session));
+
+        // Then: Mã cũ không còn dùng được, nhưng yêu cầu mới vẫn bị chặn thêm 5 phút.
+        assertEquals("RESET_EMAIL_COOLDOWN", error.getErrorCode());
+        assertEquals(300L, error.getRetryAfterSeconds());
+        verify(emailSender, times(1)).sendOtp(eq(EMAIL), anyString());
+        verify(resetService, times(0)).changePassword(any(), anyString(), any());
+    }
+
+    @Test
+    @DisplayName("AUTH-RECOVERY-25 | Trước hạn OTP 1 nano giây: vẫn cho xác minh mã đúng")
+    void verifyOtp_justBeforeExpiry_acceptsCorrectCode() {
+        // Given
+        requestCode();
+        when(clock.instant()).thenReturn(NOW.plusSeconds(900).minusNanos(1));
+        when(resetService.isCurrent(account)).thenReturn(true);
+        when(encoder.matches("123456", OTP_HASH)).thenReturn(true);
+
+        // When
+        service.verifyOtp("123456", session);
+
+        // Then
+        assertEquals(true, service.canResetPassword(session));
+        verify(encoder, times(1)).matches("123456", OTP_HASH);
+        verify(resetService, times(0)).changePassword(any(), anyString(), any());
+    }
+
+    @Test
+    @DisplayName("AUTH-RECOVERY-26 | Session sai kiểu: countdown bằng 0, không cho xác minh hoặc đổi mật khẩu")
+    void verifyOtp_invalidSessionState_rejectsBeforeSideEffects() {
+        // Given
+        session.setAttribute(RESET_STATE, "invalid-state");
+        assertEquals(0L, service.getResendRemainingSeconds(session));
+
+        // When
+        PasswordRecoveryFlowException error = assertThrows(PasswordRecoveryFlowException.class,
+                () -> service.verifyOtp("123456", session));
+
+        // Then
+        assertEquals("RESET_REQUEST_INVALID", error.getErrorCode());
+        assertEquals(Step.FORGOT, error.getStep());
+        assertEquals(false, service.canResetPassword(session));
+        verify(encoder, times(0)).matches(anyString(), anyString());
+        verify(emailSender, times(0)).sendOtp(anyString(), anyString());
+        verify(resetService, times(0)).changePassword(any(), anyString(), any());
+    }
+
+    @Test
+    @DisplayName("AUTH-RECOVERY-27 | Instance service mới đọc session còn hạn: countdown bằng 0 khi chưa có cooldown trong instance")
+    void getResendRemainingSeconds_newServiceWithExistingSession_returnsZero() {
+        // Given: Session tồn tại nhưng map cooldown của instance mới chưa có dữ liệu.
+        requestCode();
+        when(resetService.isCurrent(account)).thenReturn(true);
+        PasswordRecoveryService newInstance = new PasswordRecoveryService(
+                resetService, emailSender, encoder, Clock.fixed(NOW, ZoneOffset.UTC));
+
+        // When
+        long result = newInstance.getResendRemainingSeconds(session);
+
+        // Then
+        assertEquals(0L, result);
+        assertEquals(true, newInstance.hasPendingReset(session));
+        assertEquals(EMAIL, newInstance.getPendingResetEmail(session));
+        verify(emailSender, times(1)).sendOtp(eq(EMAIL), anyString());
+        verify(resetService, times(0)).changePassword(any(), anyString(), any());
+    }
+
+    @Test
+    @DisplayName("AUTH-RECOVERY-28 | Xin mã trước hạn cooldown 1 giây: retryAfter=1 và không gửi thêm email")
+    void requestReset_oneSecondBeforeCooldown_rejectsDuplicateSend() {
+        // Given
+        requestCode();
+        when(clock.instant()).thenReturn(NOW.plusSeconds(1199));
+
+        // When
+        PasswordRecoveryFlowException error = assertThrows(PasswordRecoveryFlowException.class,
+                () -> service.requestReset(EMAIL, session));
+
+        // Then
+        assertEquals("RESET_EMAIL_COOLDOWN", error.getErrorCode());
+        assertEquals(Step.FORGOT, error.getStep());
+        assertEquals("email", error.getField());
+        assertEquals(1L, error.getRetryAfterSeconds());
+        verify(emailSender, times(1)).sendOtp(eq(EMAIL), anyString());
+        verify(resetService, times(0)).changePassword(any(), anyString(), any());
+    }
+
+    @Test
+    @DisplayName("AUTH-RECOVERY-29 | Xin mã sau cooldown 1 giây: tạo pending mới và bắt đầu lại 1200 giây chờ")
+    void requestReset_oneSecondAfterCooldown_createsNewPendingRequest() {
+        // Given
+        requestCode();
+        when(clock.instant()).thenReturn(NOW.plusSeconds(1201));
+        when(resetService.isCurrent(account)).thenReturn(true);
+
+        // When
+        service.requestReset(EMAIL, session);
+
+        // Then
+        assertEquals(true, service.hasPendingReset(session));
+        assertEquals(false, service.canResetPassword(session));
+        assertEquals(1200L, service.getResendRemainingSeconds(session));
+        verify(emailSender, times(2)).sendOtp(eq(EMAIL), anyString());
+        verify(resetService, times(0)).changePassword(any(), anyString(), any());
+    }
+
+    @Test
+    @DisplayName("AUTH-RECOVERY-30 | Session khác xin mã cùng account: dùng chung cooldown, không tạo pending ở session thứ hai")
+    void requestReset_sameAccountInAnotherSession_rejectsDuplicateSend() {
+        // Given
+        requestCode();
+        when(resetService.isCurrent(account)).thenReturn(true);
+        MockHttpSession anotherSession = new MockHttpSession();
+
+        // When
+        PasswordRecoveryFlowException error = assertThrows(PasswordRecoveryFlowException.class,
+                () -> service.requestReset(EMAIL, anotherSession));
+
+        // Then
+        assertEquals("RESET_EMAIL_COOLDOWN", error.getErrorCode());
+        assertEquals(1200L, error.getRetryAfterSeconds());
+        assertEquals(true, service.hasPendingReset(session));
+        assertEquals(false, service.hasPendingReset(anotherSession));
+        assertEquals(null, anotherSession.getAttribute(RESET_STATE));
+        verify(emailSender, times(1)).sendOtp(eq(EMAIL), anyString());
+        verify(resetService, times(0)).changePassword(any(), anyString(), any());
+    }
+
+    @Test
+    @DisplayName("AUTH-RECOVERY-31 | Đổi email yêu cầu nhưng gửi mail lỗi: giữ snapshot và OTP của yêu cầu trước còn hạn")
+    void requestReset_otherAccountDeliveryFails_preservesPreviousOtp() {
+        // Given: Yêu cầu A còn hạn; yêu cầu B chưa có cooldown nên được thử gửi.
+        requestCode();
+        AccountSnapshotResponse anotherAccount = new AccountSnapshotResponse(8, "candidate8@example.test", "hash-8");
+        when(resetService.findActiveAccount(anotherAccount.email())).thenReturn(anotherAccount);
+        when(clock.instant()).thenReturn(NOW.plusSeconds(1));
+        when(resetService.isCurrent(account)).thenReturn(true);
+        when(encoder.encode(anyString())).thenReturn("failed-new-otp-hash");
+        doThrow(new PasswordResetDeliveryException()).when(emailSender)
+                .sendOtp(eq(anotherAccount.email()), anyString());
+        Object previousState = session.getAttribute(RESET_STATE);
+
+        // When
+        PasswordResetDeliveryException error = assertThrows(PasswordResetDeliveryException.class,
+                () -> service.requestReset(anotherAccount.email(), session));
+
+        // Then: Mã/snapshot mới chưa gửi thành công không được ghi đè yêu cầu A.
+        assertEquals("MAIL_DELIVERY_FAILED", error.getErrorCode());
+        assertEquals(previousState, session.getAttribute(RESET_STATE));
+        assertEquals(EMAIL, service.getPendingResetEmail(session));
+        when(encoder.matches("123456", OTP_HASH)).thenReturn(true);
+        service.verifyOtp("123456", session);
+        assertEquals(true, service.canResetPassword(session));
+        verify(encoder, times(1)).matches("123456", OTP_HASH);
+        verify(emailSender, times(1)).sendOtp(eq(EMAIL), anyString());
+        verify(emailSender, times(1)).sendOtp(eq(anotherAccount.email()), anyString());
+        verify(resetService, times(0)).changePassword(any(), anyString(), any());
+    }
+
+    @Test
+    @DisplayName("AUTH-RECOVERY-32 | Xác minh sau hạn OTP 1 giây: xóa state và không so hash")
+    void verifyOtp_oneSecondAfterExpiry_clearsState() {
+        // Given
+        requestCode();
+        when(clock.instant()).thenReturn(NOW.plusSeconds(901));
+
+        // When
+        PasswordRecoveryFlowException error = assertThrows(PasswordRecoveryFlowException.class,
+                () -> service.verifyOtp("123456", session));
+
+        // Then
+        assertEquals("RESET_REQUEST_INVALID", error.getErrorCode());
+        assertEquals(Step.FORGOT, error.getStep());
+        assertEquals(null, session.getAttribute(RESET_STATE));
+        verify(encoder, times(0)).matches(anyString(), anyString());
+        verify(resetService, times(0)).isCurrent(any());
+        verify(resetService, times(0)).changePassword(any(), anyString(), any());
+    }
+
+    @Test
+    @DisplayName("AUTH-RECOVERY-33 | Snapshot đổi sau khi đã xác minh OTP: chặn lưu mật khẩu và xóa state")
+    void completeReset_snapshotChangedAfterVerification_doesNotChangePassword() {
+        // Given
+        verifyCode();
+        when(resetService.isCurrent(account)).thenReturn(false);
+
+        // When
+        PasswordRecoveryFlowException error = assertThrows(PasswordRecoveryFlowException.class,
+                () -> service.completeReset(NEW_PASSWORD, session));
+
+        // Then
+        assertEquals("RESET_REQUEST_INVALID", error.getErrorCode());
+        assertEquals(Step.FORGOT, error.getStep());
+        assertEquals(null, session.getAttribute(RESET_STATE));
+        assertEquals(false, service.canResetPassword(session));
+        verify(resetService, times(0)).changePassword(any(), anyString(), any());
     }
 
     private void prepareRequest() {

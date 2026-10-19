@@ -1,0 +1,180 @@
+<mxfile host="Electron" agent="RMS source-based architecture documentation">
+  <diagram id="overview" name="RMS Authentication — Layered Package Diagram">
+    <mxGraphModel dx="1625" dy="860" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1740" pageHeight="1610" background="#7ECBE9" math="0" shadow="0">
+      <root>
+        <mxCell id="overview_root" />
+        <mxCell id="overview_layer" parent="overview_root" />
+        <mxCell id="overview_title" parent="overview_layer" style="text;html=0;strokeColor=none;fillColor=none;whiteSpace=wrap;align=left;verticalAlign=middle;fontFamily=Arial;fontSize=28;fontColor=#142C38;fontStyle=1;" value="RMS Authentication — Layered Package Diagram" vertex="1">
+          <mxGeometry height="43" width="1690" x="25" y="20" as="geometry" />
+        </mxCell>
+        <mxCell id="overview_subtitle" parent="overview_layer" style="text;html=0;strokeColor=none;fillColor=none;whiteSpace=wrap;align=left;verticalAlign=middle;fontFamily=Arial;fontSize=17;fontColor=#142C38;fontStyle=0;" value="Authentication first • Spring Boot monolith • Java names relative to com.group2.rms" vertex="1">
+          <mxGeometry height="45" width="1690" x="25" y="68" as="geometry" />
+        </mxCell>
+        <mxCell id="overview_legend" parent="overview_layer" style="text;html=0;strokeColor=none;fillColor=none;whiteSpace=wrap;align=left;verticalAlign=middle;fontFamily=Arial;fontSize=16;fontColor=#142C38;fontStyle=0;" value="Dashed open arrow: A depends on B.&#xa;E##: source evidence index.&#xa;Nesting: logical architectural grouping.&#xa;External actors are context only.&#xa;This is not a runtime sequence diagram." vertex="1">
+          <mxGeometry height="160" width="430" x="25" y="1260" as="geometry" />
+        </mxCell>
+        <mxCell id="overview_note" parent="overview_layer" style="text;html=0;strokeColor=none;fillColor=none;whiteSpace=wrap;align=left;verticalAlign=middle;fontFamily=Arial;fontSize=14;fontColor=#142C38;fontStyle=0;" value="Logical layers group real packages. This is a dependency view, not a request sequence. Contracts and the exception cycle are expanded on detailed page 04." vertex="1">
+          <mxGeometry height="35" width="1690" x="25" y="1570" as="geometry" />
+        </mxCell>
+        <mxCell id="overview_presentation" parent="overview_layer" style="shape=folder;tabWidth=70;tabHeight=20;html=1;whiteSpace=wrap;rounded=0;strokeColor=#142C38;strokeWidth=1.2;fillColor=#86CEE9;fontColor=#142C38;fontFamily=Arial;fontSize=16;align=center;verticalAlign=top;spacingTop=27;spacingLeft=9;spacingRight=9;container=1;collapsible=0;recursiveResize=0;" value="&lt;b&gt;Presentation Layer  «logical»&lt;/b&gt;" vertex="1">
+          <mxGeometry height="300" width="940" x="245" y="135" as="geometry" />
+        </mxCell>
+        <mxCell id="overview_controller" parent="overview_presentation" style="shape=folder;tabWidth=70;tabHeight=20;html=1;whiteSpace=wrap;rounded=0;strokeColor=#142C38;strokeWidth=1.2;fillColor=#9AD8EF;fontColor=#142C38;fontFamily=Arial;fontSize=16;align=center;verticalAlign=top;spacingTop=27;spacingLeft=9;spacingRight=9;container=0;collapsible=0;recursiveResize=0;" value="&lt;b&gt;auth.controller&lt;/b&gt;&lt;br&gt;&lt;br&gt;Auth / Registration / Recovery&lt;br&gt;MVC controllers (scope slice)" vertex="1">
+          <mxGeometry height="110" width="350" x="30" y="60" as="geometry" />
+        </mxCell>
+        <mxCell id="overview_views" parent="overview_presentation" style="shape=folder;tabWidth=70;tabHeight=20;html=1;whiteSpace=wrap;rounded=0;strokeColor=#142C38;strokeWidth=1.2;fillColor=#9AD8EF;fontColor=#142C38;fontFamily=Arial;fontSize=16;align=center;verticalAlign=top;spacingTop=27;spacingLeft=9;spacingRight=9;container=0;collapsible=0;recursiveResize=0;" value="&lt;b&gt;templates/auth/&lt;/b&gt;&lt;br&gt;&lt;br&gt;«resource folder»&lt;br&gt;Forms + email/ templates" vertex="1">
+          <mxGeometry height="110" width="350" x="560" y="60" as="geometry" />
+        </mxCell>
+        <mxCell id="overview_advice" parent="overview_presentation" style="shape=folder;tabWidth=70;tabHeight=20;html=1;whiteSpace=wrap;rounded=0;strokeColor=#142C38;strokeWidth=1.2;fillColor=#9AD8EF;fontColor=#142C38;fontFamily=Arial;fontSize=16;align=center;verticalAlign=top;spacingTop=27;spacingLeft=9;spacingRight=9;container=0;collapsible=0;recursiveResize=0;" value="&lt;b&gt;auth&lt;/b&gt;&lt;br&gt;&lt;br&gt;NavigationAdvice (root package)" vertex="1">
+          <mxGeometry height="90" width="350" x="560" y="210" as="geometry" />
+        </mxCell>
+        <mxCell id="overview_business" parent="overview_layer" style="shape=folder;tabWidth=70;tabHeight=20;html=1;whiteSpace=wrap;rounded=0;strokeColor=#142C38;strokeWidth=1.2;fillColor=#86CEE9;fontColor=#142C38;fontFamily=Arial;fontSize=16;align=center;verticalAlign=top;spacingTop=27;spacingLeft=9;spacingRight=9;container=1;collapsible=0;recursiveResize=0;" value="&lt;b&gt;Business Layer  «logical»&lt;/b&gt;" vertex="1">
+          <mxGeometry height="390" width="940" x="245" y="465" as="geometry" />
+        </mxCell>
+        <mxCell id="overview_service" parent="overview_business" style="shape=folder;tabWidth=70;tabHeight=20;html=1;whiteSpace=wrap;rounded=0;strokeColor=#142C38;strokeWidth=1.2;fillColor=#9AD8EF;fontColor=#142C38;fontFamily=Arial;fontSize=16;align=center;verticalAlign=top;spacingTop=27;spacingLeft=9;spacingRight=9;container=0;collapsible=0;recursiveResize=0;" value="&lt;b&gt;auth.service&lt;/b&gt;&lt;br&gt;&lt;br&gt;RegistrationVerificationService&lt;br&gt;PasswordRecoveryService / PasswordResetService&lt;br&gt;RegistrationEmailSender / PasswordResetEmailSender" vertex="1">
+          <mxGeometry height="165" width="420" x="30" y="60" as="geometry" />
+        </mxCell>
+        <mxCell id="overview_accounts" parent="overview_business" style="shape=folder;tabWidth=70;tabHeight=20;html=1;whiteSpace=wrap;rounded=0;strokeColor=#142C38;strokeWidth=1.2;fillColor=#9AD8EF;fontColor=#142C38;fontFamily=Arial;fontSize=16;align=center;verticalAlign=top;spacingTop=27;spacingLeft=9;spacingRight=9;container=0;collapsible=0;recursiveResize=0;" value="&lt;b&gt;user.service&lt;/b&gt;&lt;br&gt;&lt;br&gt;AccountManagementService&lt;br&gt;Candidate registration methods only" vertex="1">
+          <mxGeometry height="145" width="350" x="560" y="60" as="geometry" />
+        </mxCell>
+        <mxCell id="overview_user_entity" parent="overview_business" style="shape=folder;tabWidth=70;tabHeight=20;html=1;whiteSpace=wrap;rounded=0;strokeColor=#142C38;strokeWidth=1.2;fillColor=#9AD8EF;fontColor=#142C38;fontFamily=Arial;fontSize=16;align=center;verticalAlign=top;spacingTop=27;spacingLeft=9;spacingRight=9;container=0;collapsible=0;recursiveResize=0;" value="&lt;b&gt;user.entity&lt;/b&gt;&lt;br&gt;&lt;br&gt;User / Role&lt;br&gt;Account / authority data" vertex="1">
+          <mxGeometry height="100" width="350" x="30" y="260" as="geometry" />
+        </mxCell>
+        <mxCell id="overview_candidate_entity" parent="overview_business" style="shape=folder;tabWidth=70;tabHeight=20;html=1;whiteSpace=wrap;rounded=0;strokeColor=#142C38;strokeWidth=1.2;fillColor=#9AD8EF;fontColor=#142C38;fontFamily=Arial;fontSize=16;align=center;verticalAlign=top;spacingTop=27;spacingLeft=9;spacingRight=9;container=0;collapsible=0;recursiveResize=0;" value="&lt;b&gt;candidate.entity&lt;/b&gt;&lt;br&gt;&lt;br&gt;Candidate → linked User" vertex="1">
+          <mxGeometry height="100" width="350" x="560" y="260" as="geometry" />
+        </mxCell>
+        <mxCell id="overview_data" parent="overview_layer" style="shape=folder;tabWidth=70;tabHeight=20;html=1;whiteSpace=wrap;rounded=0;strokeColor=#142C38;strokeWidth=1.2;fillColor=#86CEE9;fontColor=#142C38;fontFamily=Arial;fontSize=16;align=center;verticalAlign=top;spacingTop=27;spacingLeft=9;spacingRight=9;container=1;collapsible=0;recursiveResize=0;" value="&lt;b&gt;Data Layer  «logical»&lt;/b&gt;" vertex="1">
+          <mxGeometry height="200" width="940" x="245" y="970" as="geometry" />
+        </mxCell>
+        <mxCell id="overview_users" parent="overview_data" style="shape=folder;tabWidth=70;tabHeight=20;html=1;whiteSpace=wrap;rounded=0;strokeColor=#142C38;strokeWidth=1.2;fillColor=#9AD8EF;fontColor=#142C38;fontFamily=Arial;fontSize=16;align=center;verticalAlign=top;spacingTop=27;spacingLeft=9;spacingRight=9;container=0;collapsible=0;recursiveResize=0;" value="&lt;b&gt;user.repository&lt;/b&gt;&lt;br&gt;&lt;br&gt;UserRepository / RoleRepository" vertex="1">
+          <mxGeometry height="110" width="350" x="30" y="60" as="geometry" />
+        </mxCell>
+        <mxCell id="overview_candidates" parent="overview_data" style="shape=folder;tabWidth=70;tabHeight=20;html=1;whiteSpace=wrap;rounded=0;strokeColor=#142C38;strokeWidth=1.2;fillColor=#9AD8EF;fontColor=#142C38;fontFamily=Arial;fontSize=16;align=center;verticalAlign=top;spacingTop=27;spacingLeft=9;spacingRight=9;container=0;collapsible=0;recursiveResize=0;" value="&lt;b&gt;candidate.repository&lt;/b&gt;&lt;br&gt;&lt;br&gt;CandidateRepository" vertex="1">
+          <mxGeometry height="110" width="350" x="560" y="60" as="geometry" />
+        </mxCell>
+        <mxCell id="overview_cross" parent="overview_layer" style="shape=folder;tabWidth=70;tabHeight=20;html=1;whiteSpace=wrap;rounded=0;strokeColor=#142C38;strokeWidth=1.2;fillColor=#86CEE9;fontColor=#142C38;fontFamily=Arial;fontSize=16;align=center;verticalAlign=top;spacingTop=27;spacingLeft=9;spacingRight=9;container=1;collapsible=0;recursiveResize=0;" value="&lt;b&gt;Cross-Cutting / Frameworks  «logical»&lt;/b&gt;" vertex="1">
+          <mxGeometry height="1035" width="420" x="1250" y="135" as="geometry" />
+        </mxCell>
+        <mxCell id="overview_config" parent="overview_cross" style="shape=folder;tabWidth=70;tabHeight=20;html=1;whiteSpace=wrap;rounded=0;strokeColor=#142C38;strokeWidth=1.2;fillColor=#9AD8EF;fontColor=#142C38;fontFamily=Arial;fontSize=16;align=center;verticalAlign=top;spacingTop=27;spacingLeft=9;spacingRight=9;container=0;collapsible=0;recursiveResize=0;" value="&lt;b&gt;core.config&lt;/b&gt;&lt;br&gt;&lt;br&gt;SecurityConfig&lt;br&gt;Filter chain / BCrypt bean" vertex="1">
+          <mxGeometry height="110" width="360" x="30" y="60" as="geometry" />
+        </mxCell>
+        <mxCell id="overview_security" parent="overview_cross" style="shape=folder;tabWidth=70;tabHeight=20;html=1;whiteSpace=wrap;rounded=0;strokeColor=#142C38;strokeWidth=1.2;fillColor=#9AD8EF;fontColor=#142C38;fontFamily=Arial;fontSize=16;align=center;verticalAlign=top;spacingTop=27;spacingLeft=9;spacingRight=9;container=0;collapsible=0;recursiveResize=0;" value="&lt;b&gt;core.security&lt;/b&gt;&lt;br&gt;&lt;br&gt;DatabaseUserDetailsService&lt;br&gt;AccountSessionGuardFilter / RoleAuthorities" vertex="1">
+          <mxGeometry height="130" width="360" x="30" y="255" as="geometry" />
+        </mxCell>
+        <mxCell id="overview_contracts" parent="overview_cross" style="shape=folder;tabWidth=70;tabHeight=20;html=1;whiteSpace=wrap;rounded=0;strokeColor=#142C38;strokeWidth=1.2;fillColor=#9AD8EF;fontColor=#142C38;fontFamily=Arial;fontSize=16;align=center;verticalAlign=top;spacingTop=27;spacingLeft=9;spacingRight=9;container=0;collapsible=0;recursiveResize=0;" value="&lt;b&gt;Contracts &amp;amp; Validation&lt;/b&gt;&lt;br&gt;&lt;br&gt;«logical group»&lt;br&gt;auth.dto / core.validation" vertex="1">
+          <mxGeometry height="110" width="360" x="30" y="475" as="geometry" />
+        </mxCell>
+        <mxCell id="overview_exceptions" parent="overview_cross" style="shape=folder;tabWidth=70;tabHeight=20;html=1;whiteSpace=wrap;rounded=0;strokeColor=#142C38;strokeWidth=1.2;fillColor=#9AD8EF;fontColor=#142C38;fontFamily=Arial;fontSize=16;align=center;verticalAlign=top;spacingTop=27;spacingLeft=9;spacingRight=9;container=0;collapsible=0;recursiveResize=0;" value="&lt;b&gt;Exception Handling&lt;/b&gt;&lt;br&gt;&lt;br&gt;«logical group»&lt;br&gt;auth.exception ↔ core.exception&lt;br&gt;user.exception / core.base" vertex="1">
+          <mxGeometry height="140" width="360" x="30" y="685" as="geometry" />
+        </mxCell>
+        <mxCell id="overview_mail" parent="overview_cross" style="shape=folder;tabWidth=70;tabHeight=20;html=1;whiteSpace=wrap;rounded=0;strokeColor=#142C38;strokeWidth=1.2;fillColor=#9AD8EF;fontColor=#142C38;fontFamily=Arial;fontSize=16;align=center;verticalAlign=top;spacingTop=27;spacingLeft=9;spacingRight=9;container=0;collapsible=0;recursiveResize=0;" value="&lt;b&gt;Spring Mail&lt;/b&gt;&lt;br&gt;&lt;br&gt;«framework group»&lt;br&gt;JavaMailSender → SMTP adapter" vertex="1">
+          <mxGeometry height="110" width="360" x="30" y="895" as="geometry" />
+        </mxCell>
+        <mxCell id="overview_actors" parent="overview_layer" style="shape=folder;tabWidth=70;tabHeight=20;html=1;whiteSpace=wrap;rounded=0;strokeColor=#142C38;strokeWidth=1.2;fillColor=#9AD8EF;fontColor=#142C38;fontFamily=Arial;fontSize=16;align=center;verticalAlign=top;spacingTop=27;spacingLeft=9;spacingRight=9;container=0;collapsible=0;recursiveResize=0;" value="&lt;b&gt;Users / Browser&lt;/b&gt;&lt;br&gt;&lt;br&gt;«external context»&lt;br&gt;Candidates&lt;br&gt;Internal users&lt;br&gt;HTTP forms + session" vertex="1">
+          <mxGeometry height="200" width="185" x="25" y="195" as="geometry" />
+        </mxCell>
+        <mxCell id="overview_smtp" parent="overview_layer" style="shape=folder;tabWidth=70;tabHeight=20;html=1;whiteSpace=wrap;rounded=0;strokeColor=#142C38;strokeWidth=1.2;fillColor=#9AD8EF;fontColor=#142C38;fontFamily=Arial;fontSize=16;align=center;verticalAlign=top;spacingTop=27;spacingLeft=9;spacingRight=9;container=0;collapsible=0;recursiveResize=0;" value="&lt;b&gt;SMTP Server&lt;/b&gt;&lt;br&gt;&lt;br&gt;«external system»&lt;br&gt;Configured email delivery" vertex="1">
+          <mxGeometry height="100" width="360" x="1280" y="1450" as="geometry" />
+        </mxCell>
+        <mxCell id="overview_jpa" parent="overview_layer" style="shape=folder;tabWidth=70;tabHeight=20;html=1;whiteSpace=wrap;rounded=0;strokeColor=#142C38;strokeWidth=1.2;fillColor=#9AD8EF;fontColor=#142C38;fontFamily=Arial;fontSize=16;align=center;verticalAlign=top;spacingTop=27;spacingLeft=9;spacingRight=9;container=0;collapsible=0;recursiveResize=0;" value="&lt;b&gt;Spring Data JPA / JDBC&lt;/b&gt;&lt;br&gt;&lt;br&gt;«framework group»&lt;br&gt;JpaRepository + SQL Server driver" vertex="1">
+          <mxGeometry height="110" width="520" x="495" y="1260" as="geometry" />
+        </mxCell>
+        <mxCell id="overview_db" parent="overview_layer" style="shape=folder;tabWidth=70;tabHeight=20;html=1;whiteSpace=wrap;rounded=0;strokeColor=#142C38;strokeWidth=1.2;fillColor=#9AD8EF;fontColor=#142C38;fontFamily=Arial;fontSize=16;align=center;verticalAlign=top;spacingTop=27;spacingLeft=9;spacingRight=9;container=0;collapsible=0;recursiveResize=0;" value="&lt;b&gt;SQL Server Database&lt;/b&gt;&lt;br&gt;&lt;br&gt;«external system»&lt;br&gt;Configured data source" vertex="1">
+          <mxGeometry height="100" width="520" x="495" y="1450" as="geometry" />
+        </mxCell>
+        <mxCell id="overview_edge_1" edge="1" parent="overview_layer" source="overview_controller" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=0;endArrow=open;endFill=0;dashed=1;dashPattern=6 5;strokeColor=#142C38;strokeWidth=1.3;fontFamily=Arial;fontSize=13;fontColor=#142C38;labelBackgroundColor=#7ECBE9;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" target="overview_views" value="E02">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="overview_edge_2" edge="1" parent="overview_layer" source="overview_controller" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=0;endArrow=open;endFill=0;dashed=1;dashPattern=6 5;strokeColor=#142C38;strokeWidth=1.3;fontFamily=Arial;fontSize=13;fontColor=#142C38;labelBackgroundColor=#7ECBE9;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.42;entryY=0;entryDx=0;entryDy=0;" target="overview_service" value="E01">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="overview_edge_3" edge="1" parent="overview_layer" source="overview_service" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=0;endArrow=open;endFill=0;dashed=1;dashPattern=6 5;strokeColor=#142C38;strokeWidth=1.3;fontFamily=Arial;fontSize=13;fontColor=#142C38;labelBackgroundColor=#7ECBE9;exitX=1;exitY=0.35;exitDx=0;exitDy=0;entryX=0;entryY=0.35;entryDx=0;entryDy=0;" target="overview_accounts" value="E03">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="overview_edge_4" edge="1" parent="overview_layer" source="overview_service" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=0;endArrow=open;endFill=0;dashed=1;dashPattern=6 5;strokeColor=#142C38;strokeWidth=1.3;fontFamily=Arial;fontSize=13;fontColor=#142C38;labelBackgroundColor=#7ECBE9;exitX=1;exitY=0.75;exitDx=0;exitDy=0;entryX=0.7;entryY=0;entryDx=0;entryDy=0;" target="overview_users" value="E04">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="735" y="634" />
+              <mxPoint x="735" y="940" />
+              <mxPoint x="520" y="940" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="overview_edge_5" edge="1" parent="overview_layer" source="overview_accounts" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=0;endArrow=open;endFill=0;dashed=1;dashPattern=6 5;strokeColor=#142C38;strokeWidth=1.3;fontFamily=Arial;fontSize=13;fontColor=#142C38;labelBackgroundColor=#7ECBE9;exitX=0.15;exitY=1;exitDx=0;exitDy=0;entryX=0.25;entryY=0;entryDx=0;entryDy=0;" target="overview_users" value="E05">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="857" y="695" />
+              <mxPoint x="700" y="695" />
+              <mxPoint x="700" y="915" />
+              <mxPoint x="362.5" y="915" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="overview_edge_6" edge="1" parent="overview_layer" source="overview_accounts" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=0;endArrow=open;endFill=0;dashed=1;dashPattern=6 5;strokeColor=#142C38;strokeWidth=1.3;fontFamily=Arial;fontSize=13;fontColor=#142C38;labelBackgroundColor=#7ECBE9;exitX=1;exitY=0.6;exitDx=0;exitDy=0;entryX=1;entryY=0.5;entryDx=0;entryDy=0;" target="overview_candidates" value="E06">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1215" y="612" />
+              <mxPoint x="1215" y="1085" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="overview_edge_7" edge="1" parent="overview_layer" source="overview_accounts" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=0;endArrow=open;endFill=0;dashed=1;dashPattern=6 5;strokeColor=#142C38;strokeWidth=1.3;fontFamily=Arial;fontSize=13;fontColor=#142C38;labelBackgroundColor=#7ECBE9;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" target="overview_candidate_entity" value="E31">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="overview_edge_8" edge="1" parent="overview_layer" source="overview_users" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=0;endArrow=open;endFill=0;dashed=1;dashPattern=6 5;strokeColor=#142C38;strokeWidth=1.3;fontFamily=Arial;fontSize=13;fontColor=#142C38;labelBackgroundColor=#7ECBE9;exitX=0.5;exitY=0;exitDx=0;exitDy=0;entryX=0.5;entryY=1;entryDx=0;entryDy=0;" target="overview_user_entity" value="E07">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="overview_edge_9" edge="1" parent="overview_layer" source="overview_candidates" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=0;endArrow=open;endFill=0;dashed=1;dashPattern=6 5;strokeColor=#142C38;strokeWidth=1.3;fontFamily=Arial;fontSize=13;fontColor=#142C38;labelBackgroundColor=#7ECBE9;exitX=0.5;exitY=0;exitDx=0;exitDy=0;entryX=0.5;entryY=1;entryDx=0;entryDy=0;" target="overview_candidate_entity" value="E08">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="overview_edge_10" edge="1" parent="overview_layer" source="overview_candidate_entity" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=0;endArrow=open;endFill=0;dashed=1;dashPattern=6 5;strokeColor=#142C38;strokeWidth=1.3;fontFamily=Arial;fontSize=13;fontColor=#142C38;labelBackgroundColor=#7ECBE9;exitX=0;exitY=0.5;exitDx=0;exitDy=0;entryX=1;entryY=0.5;entryDx=0;entryDy=0;" target="overview_user_entity" value="E09">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="overview_edge_11" edge="1" parent="overview_layer" source="overview_config" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=0;endArrow=open;endFill=0;dashed=1;dashPattern=6 5;strokeColor=#142C38;strokeWidth=1.3;fontFamily=Arial;fontSize=13;fontColor=#142C38;labelBackgroundColor=#7ECBE9;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" target="overview_security" value="E10">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="overview_edge_12" edge="1" parent="overview_layer" source="overview_security" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=0;endArrow=open;endFill=0;dashed=1;dashPattern=6 5;strokeColor=#142C38;strokeWidth=1.3;fontFamily=Arial;fontSize=13;fontColor=#142C38;labelBackgroundColor=#7ECBE9;exitX=0;exitY=0.5;exitDx=0;exitDy=0;entryX=0.85;entryY=0;entryDx=0;entryDy=0;" target="overview_users" value="E11">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1230" y="455" />
+              <mxPoint x="1230" y="895" />
+              <mxPoint x="572.5" y="895" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="overview_edge_13" edge="1" parent="overview_layer" source="overview_service" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=0;endArrow=open;endFill=0;dashed=1;dashPattern=6 5;strokeColor=#142C38;strokeWidth=1.3;fontFamily=Arial;fontSize=13;fontColor=#142C38;labelBackgroundColor=#7ECBE9;exitX=1;exitY=0.95;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" target="overview_mail" value="E17">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="755" y="662.75" />
+              <mxPoint x="755" y="945" />
+              <mxPoint x="1235" y="945" />
+              <mxPoint x="1235" y="1085" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="overview_edge_14" edge="1" parent="overview_layer" source="overview_mail" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=0;endArrow=open;endFill=0;dashed=1;dashPattern=6 5;strokeColor=#142C38;strokeWidth=1.3;fontFamily=Arial;fontSize=13;fontColor=#142C38;labelBackgroundColor=#7ECBE9;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" target="overview_smtp" value="E18">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="overview_edge_15" edge="1" parent="overview_layer" source="overview_users" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=0;endArrow=open;endFill=0;dashed=1;dashPattern=6 5;strokeColor=#142C38;strokeWidth=1.3;fontFamily=Arial;fontSize=13;fontColor=#142C38;labelBackgroundColor=#7ECBE9;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.25;entryY=0;entryDx=0;entryDy=0;" target="overview_jpa" value="E19">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="450" y="1210" />
+              <mxPoint x="625" y="1210" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="overview_edge_16" edge="1" parent="overview_layer" source="overview_candidates" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=0;endArrow=open;endFill=0;dashed=1;dashPattern=6 5;strokeColor=#142C38;strokeWidth=1.3;fontFamily=Arial;fontSize=13;fontColor=#142C38;labelBackgroundColor=#7ECBE9;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.8;entryY=0;entryDx=0;entryDy=0;" target="overview_jpa" value="E19">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="980" y="1210" />
+              <mxPoint x="911" y="1210" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="overview_edge_17" edge="1" parent="overview_layer" source="overview_jpa" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=0;endArrow=open;endFill=0;dashed=1;dashPattern=6 5;strokeColor=#142C38;strokeWidth=1.3;fontFamily=Arial;fontSize=13;fontColor=#142C38;labelBackgroundColor=#7ECBE9;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" target="overview_db" value="E20">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

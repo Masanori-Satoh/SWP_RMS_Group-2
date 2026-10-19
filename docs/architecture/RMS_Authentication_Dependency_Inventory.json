@@ -1,0 +1,5089 @@
+{
+  "scope": "Authentication only; static source analysis",
+  "java_prefix": "com.group2.rms",
+  "evidence_paths_relative_to": "src/main/java/com/group2/rms unless a root-relative path is specified",
+  "proofs": {
+    "E01": "auth/controller/RegistrationController.java:3,20-23; auth/controller/PasswordRecoveryController.java:4,18-21",
+    "E02": "auth/controller/AuthController.java:9-11; auth/controller/RegistrationController.java:26-72; auth/controller/PasswordRecoveryController.java:25-125",
+    "E03": "auth/service/RegistrationVerificationService.java:7,30,36-40,50,104-108",
+    "E04": "auth/service/PasswordResetService.java:6-7,31-44,58,85,107,115-116",
+    "E05": "user/service/AccountManagementService.java:27-28,94-130",
+    "E06": "user/service/AccountManagementService.java:30,128-130,224-225",
+    "E07": "user/repository/UserRepository.java:3,24; user/repository/RoleRepository.java:3,14",
+    "E08": "candidate/repository/CandidateRepository.java:3,16",
+    "E09": "candidate/entity/Candidate.java:4,29-31",
+    "E10": "core/config/SecurityConfig.java:4-6,50-56,174-175",
+    "E11": "core/security/DatabaseUserDetailsService.java:3-4,17-20,32-33; core/security/AccountSessionGuardFilter.java:3-4,19-23,34",
+    "E12": "core/config/SecurityConfig.java:3,50-56,174",
+    "E13": "core/config/SecurityConfig.java:11-25,45-46,162-175",
+    "E14": "core/security/DatabaseUserDetailsService.java:5-7,15,51-55; core/security/AccountSessionGuardFilter.java:9-13,17,30-52",
+    "E15": "auth/service/RegistrationVerificationService.java:36-40; auth/service/PasswordRecoveryService.java:39-49; auth/service/PasswordResetService.java:11,31-44",
+    "E16": "auth/service/RegistrationVerificationService.java:155-173; auth/service/PasswordRecoveryService.java:91,136,161,187-210",
+    "E17": "auth/service/RegistrationEmailSender.java:12-13,22-25,33-45; auth/service/PasswordResetEmailSender.java:7-8,28-33,47-62",
+    "E18": "Spring Mail adapter + src/main/resources/application.properties:50-55; configuration evidence, not a live SMTP test",
+    "E19": "user/repository/UserRepository.java:24; user/repository/RoleRepository.java:14; candidate/repository/CandidateRepository.java:16",
+    "E20": "pom.xml:49,62; src/main/resources/application.properties:15; configured JPA/JDBC integration, not direct repository SQL calls",
+    "E21": "auth/controller/RegistrationController.java:4-5; auth/controller/PasswordRecoveryController.java:3,5-6",
+    "E22": "auth/service/RegistrationVerificationService.java:3-10; auth/service/PasswordRecoveryService.java:14-17; auth/service/PasswordResetService.java:2-5",
+    "E23": "auth/dto/RegisterAccountRequest.java:8,12; auth/dto/ResetPasswordRequest.java:3,11",
+    "E24": "auth/exception/RegistrationFlowException.java:3,5; auth/exception/PasswordRecoveryFlowException.java:3,5; auth/exception/PasswordRecoveryUnavailableException.java:3,5; auth/exception/PasswordResetDeliveryException.java:3,5",
+    "E25": "core/exception/GlobalExceptionHandler.java:9,11-13,46,144-148,243",
+    "E26": "core/exception/GlobalExceptionHandler.java:5-10,51-60,151,254-263",
+    "E27": "user/service/AccountManagementService.java:200-213",
+    "E28": "user/exception/AccountFieldException.java:3,6",
+    "E29": "user/entity/User.java:3,20; candidate/entity/Candidate.java:3,22",
+    "E30": "auth/NavigationAdvice.java:3,7-9",
+    "E31": "user/service/AccountManagementService.java:107,117-126,224-225",
+    "E32": "auth/service/RegistrationEmailSender.java:51-54; auth/service/PasswordResetEmailSender.java:68-71",
+    "E33": "auth/service/RegistrationVerificationService.java:8,51-53,109-112"
+  },
+  "source_inventory": [
+    {
+      "file": "src/main/java/com/group2/rms/auth/NavigationAdvice.java",
+      "package": "com.group2.rms.auth",
+      "imports": [
+        {
+          "import": "org.springframework.security.core.Authentication",
+          "line": 3
+        },
+        {
+          "import": "org.springframework.web.bind.annotation.*",
+          "line": 4
+        }
+      ]
+    },
+    {
+      "file": "src/main/java/com/group2/rms/user/entity/Department.java",
+      "package": "com.group2.rms.user.entity",
+      "imports": [
+        {
+          "import": "jakarta.persistence.*",
+          "line": 3
+        },
+        {
+          "import": "lombok.*",
+          "line": 4
+        }
+      ]
+    },
+    {
+      "file": "src/main/java/com/group2/rms/user/entity/Role.java",
+      "package": "com.group2.rms.user.entity",
+      "imports": [
+        {
+          "import": "jakarta.persistence.*",
+          "line": 3
+        },
+        {
+          "import": "lombok.*",
+          "line": 4
+        }
+      ]
+    },
+    {
+      "file": "src/main/java/com/group2/rms/user/entity/User.java",
+      "package": "com.group2.rms.user.entity",
+      "imports": [
+        {
+          "import": "com.group2.rms.core.base.BaseEntity",
+          "line": 3
+        },
+        {
+          "import": "jakarta.persistence.*",
+          "line": 4
+        },
+        {
+          "import": "lombok.*",
+          "line": 5
+        },
+        {
+          "import": "org.hibernate.annotations.DynamicUpdate",
+          "line": 6
+        }
+      ]
+    },
+    {
+      "file": "src/main/java/com/group2/rms/user/exception/AccountConflictException.java",
+      "package": "com.group2.rms.user.exception",
+      "imports": [
+        {
+          "import": "com.group2.rms.core.exception.BaseBusinessException",
+          "line": 3
+        }
+      ]
+    },
+    {
+      "file": "src/main/java/com/group2/rms/user/exception/AccountFieldException.java",
+      "package": "com.group2.rms.user.exception",
+      "imports": [
+        {
+          "import": "com.group2.rms.core.exception.BaseBusinessException",
+          "line": 3
+        }
+      ]
+    },
+    {
+      "file": "src/main/java/com/group2/rms/user/exception/DepartmentFieldException.java",
+      "package": "com.group2.rms.user.exception",
+      "imports": [
+        {
+          "import": "com.group2.rms.core.exception.BaseBusinessException",
+          "line": 3
+        },
+        {
+          "import": "com.group2.rms.user.dto.DepartmentRequest",
+          "line": 4
+        }
+      ]
+    },
+    {
+      "file": "src/main/java/com/group2/rms/user/repository/DepartmentRepository.java",
+      "package": "com.group2.rms.user.repository",
+      "imports": [
+        {
+          "import": "com.group2.rms.user.entity.Department",
+          "line": 3
+        },
+        {
+          "import": "org.springframework.data.jpa.repository.JpaRepository",
+          "line": 4
+        },
+        {
+          "import": "org.springframework.stereotype.Repository",
+          "line": 5
+        },
+        {
+          "import": "org.springframework.data.jpa.repository.JpaSpecificationExecutor",
+          "line": 6
+        },
+        {
+          "import": "org.springframework.data.jpa.repository.EntityGraph",
+          "line": 7
+        },
+        {
+          "import": "org.springframework.data.jpa.domain.Specification",
+          "line": 8
+        },
+        {
+          "import": "org.springframework.data.domain.Page",
+          "line": 9
+        },
+        {
+          "import": "org.springframework.data.domain.Pageable",
+          "line": 10
+        }
+      ]
+    },
+    {
+      "file": "src/main/java/com/group2/rms/user/repository/RoleRepository.java",
+      "package": "com.group2.rms.user.repository",
+      "imports": [
+        {
+          "import": "com.group2.rms.user.entity.Role",
+          "line": 3
+        },
+        {
+          "import": "org.springframework.data.jpa.repository.JpaRepository",
+          "line": 4
+        },
+        {
+          "import": "org.springframework.stereotype.Repository",
+          "line": 5
+        },
+        {
+          "import": "java.util.Optional",
+          "line": 7
+        }
+      ]
+    },
+    {
+      "file": "src/main/java/com/group2/rms/user/repository/UserRepository.java",
+      "package": "com.group2.rms.user.repository",
+      "imports": [
+        {
+          "import": "com.group2.rms.user.entity.User",
+          "line": 3
+        },
+        {
+          "import": "jakarta.persistence.LockModeType",
+          "line": 4
+        },
+        {
+          "import": "org.springframework.data.domain.Page",
+          "line": 5
+        },
+        {
+          "import": "org.springframework.data.domain.Pageable",
+          "line": 6
+        },
+        {
+          "import": "org.springframework.data.jpa.domain.Specification",
+          "line": 7
+        },
+        {
+          "import": "org.springframework.data.jpa.repository.EntityGraph",
+          "line": 8
+        },
+        {
+          "import": "org.springframework.data.jpa.repository.JpaRepository",
+          "line": 9
+        },
+        {
+          "import": "org.springframework.data.jpa.repository.JpaSpecificationExecutor",
+          "line": 10
+        },
+        {
+          "import": "org.springframework.data.jpa.repository.Lock",
+          "line": 11
+        },
+        {
+          "import": "org.springframework.data.jpa.repository.Query",
+          "line": 12
+        },
+        {
+          "import": "org.springframework.data.repository.query.Param",
+          "line": 13
+        },
+        {
+          "import": "org.springframework.stereotype.Repository",
+          "line": 14
+        },
+        {
+          "import": "java.util.Optional",
+          "line": 16
+        },
+        {
+          "import": "java.util.List",
+          "line": 17
+        }
+      ]
+    },
+    {
+      "file": "src/main/java/com/group2/rms/user/service/AccountListService.java",
+      "package": "com.group2.rms.user.service",
+      "imports": [
+        {
+          "import": "com.group2.rms.candidate.repository.CandidateRepository",
+          "line": 3
+        },
+        {
+          "import": "com.group2.rms.core.security.RoleAuthorities",
+          "line": 4
+        },
+        {
+          "import": "com.group2.rms.user.entity.Department",
+          "line": 5
+        },
+        {
+          "import": "com.group2.rms.user.entity.Role",
+          "line": 6
+        },
+        {
+          "import": "com.group2.rms.user.entity.User",
+          "line": 7
+        },
+        {
+          "import": "com.group2.rms.user.repository.DepartmentRepository",
+          "line": 8
+        },
+        {
+          "import": "com.group2.rms.user.repository.RoleRepository",
+          "line": 9
+        },
+        {
+          "import": "com.group2.rms.user.repository.UserRepository",
+          "line": 10
+        },
+        {
+          "import": "jakarta.persistence.criteria.Predicate",
+          "line": 11
+        },
+        {
+          "import": "org.springframework.data.domain.Page",
+          "line": 12
+        },
+        {
+          "import": "org.springframework.data.domain.PageRequest",
+          "line": 13
+        },
+        {
+          "import": "org.springframework.data.domain.Sort",
+          "line": 14
+        },
+        {
+          "import": "org.springframework.data.jpa.domain.Specification",
+          "line": 15
+        },
+        {
+          "import": "org.springframework.http.HttpStatus",
+          "line": 16
+        },
+        {
+          "import": "org.springframework.stereotype.Service",
+          "line": 17
+        },
+        {
+          "import": "org.springframework.transaction.annotation.Transactional",
+          "line": 18
+        },
+        {
+          "import": "org.springframework.web.server.ResponseStatusException",
+          "line": 19
+        },
+        {
+          "import": "java.time.LocalDate",
+          "line": 21
+        },
+        {
+          "import": "java.time.LocalDateTime",
+          "line": 22
+        },
+        {
+          "import": "java.util.ArrayList",
+          "line": 23
+        },
+        {
+          "import": "java.util.List",
+          "line": 24
+        },
+        {
+          "import": "java.util.Locale",
+          "line": 25
+        },
+        {
+          "import": "java.util.Set",
+          "line": 26
+        }
+      ]
+    },
+    {
+      "file": "src/main/java/com/group2/rms/user/service/AccountManagementService.java",
+      "package": "com.group2.rms.user.service",
+      "imports": [
+        {
+          "import": "com.group2.rms.candidate.entity.Candidate",
+          "line": 3
+        },
+        {
+          "import": "com.group2.rms.candidate.repository.CandidateRepository",
+          "line": 4
+        },
+        {
+          "import": "com.group2.rms.core.security.RoleAuthorities",
+          "line": 5
+        },
+        {
+          "import": "com.group2.rms.user.entity.Department",
+          "line": 6
+        },
+        {
+          "import": "com.group2.rms.user.entity.Role",
+          "line": 7
+        },
+        {
+          "import": "com.group2.rms.user.entity.User",
+          "line": 8
+        },
+        {
+          "import": "com.group2.rms.user.exception.AccountFieldException",
+          "line": 9
+        },
+        {
+          "import": "com.group2.rms.user.repository.DepartmentRepository",
+          "line": 10
+        },
+        {
+          "import": "com.group2.rms.user.repository.RoleRepository",
+          "line": 11
+        },
+        {
+          "import": "com.group2.rms.user.repository.UserRepository",
+          "line": 12
+        },
+        {
+          "import": "org.springframework.http.HttpStatus",
+          "line": 13
+        },
+        {
+          "import": "org.springframework.security.crypto.password.PasswordEncoder",
+          "line": 14
+        },
+        {
+          "import": "org.springframework.stereotype.Service",
+          "line": 15
+        },
+        {
+          "import": "org.springframework.transaction.annotation.Transactional",
+          "line": 16
+        },
+        {
+          "import": "org.springframework.web.server.ResponseStatusException",
+          "line": 17
+        },
+        {
+          "import": "java.util.Optional",
+          "line": 19
+        },
+        {
+          "import": "java.util.Set",
+          "line": 20
+        }
+      ]
+    },
+    {
+      "file": "src/main/java/com/group2/rms/user/service/DepartmentService.java",
+      "package": "com.group2.rms.user.service",
+      "imports": [
+        {
+          "import": "com.group2.rms.core.exception.ResourceNotFoundException",
+          "line": 3
+        },
+        {
+          "import": "com.group2.rms.core.security.RoleAuthorities",
+          "line": 4
+        },
+        {
+          "import": "com.group2.rms.user.dto.*",
+          "line": 5
+        },
+        {
+          "import": "com.group2.rms.user.entity.Department",
+          "line": 6
+        },
+        {
+          "import": "com.group2.rms.user.entity.User",
+          "line": 7
+        },
+        {
+          "import": "com.group2.rms.user.exception.DepartmentFieldException",
+          "line": 8
+        },
+        {
+          "import": "com.group2.rms.user.repository.DepartmentRepository",
+          "line": 9
+        },
+        {
+          "import": "com.group2.rms.user.repository.UserRepository",
+          "line": 10
+        },
+        {
+          "import": "org.springframework.dao.DataIntegrityViolationException",
+          "line": 11
+        },
+        {
+          "import": "org.springframework.data.domain.Page",
+          "line": 12
+        },
+        {
+          "import": "org.springframework.data.domain.PageRequest",
+          "line": 13
+        },
+        {
+          "import": "org.springframework.data.domain.Sort",
+          "line": 14
+        },
+        {
+          "import": "org.springframework.data.jpa.domain.Specification",
+          "line": 15
+        },
+        {
+          "import": "org.springframework.stereotype.Service",
+          "line": 16
+        },
+        {
+          "import": "org.springframework.transaction.annotation.Transactional",
+          "line": 17
+        },
+        {
+          "import": "java.sql.SQLException",
+          "line": 19
+        },
+        {
+          "import": "java.util.List",
+          "line": 20
+        },
+        {
+          "import": "java.util.Locale",
+          "line": 21
+        }
+      ]
+    },
+    {
+      "file": "src/main/java/com/group2/rms/user/service/UserProfileService.java",
+      "package": "com.group2.rms.user.service",
+      "imports": [
+        {
+          "import": "com.group2.rms.core.exception.ResourceNotFoundException",
+          "line": 3
+        },
+        {
+          "import": "com.group2.rms.user.dto.ChangePasswordRequest",
+          "line": 4
+        },
+        {
+          "import": "com.group2.rms.user.dto.UpdateProfileRequest",
+          "line": 5
+        },
+        {
+          "import": "com.group2.rms.user.dto.UserProfileResponse",
+          "line": 6
+        },
+        {
+          "import": "com.group2.rms.user.entity.User",
+          "line": 7
+        },
+        {
+          "import": "com.group2.rms.user.repository.UserRepository",
+          "line": 8
+        },
+        {
+          "import": "org.springframework.security.crypto.password.PasswordEncoder",
+          "line": 9
+        },
+        {
+          "import": "org.springframework.stereotype.Service",
+          "line": 10
+        },
+        {
+          "import": "org.springframework.transaction.annotation.Transactional",
+          "line": 11
+        }
+      ]
+    },
+    {
+      "file": "src/main/java/com/group2/rms/core/base/BaseEntity.java",
+      "package": "com.group2.rms.core.base",
+      "imports": [
+        {
+          "import": "jakarta.persistence.*",
+          "line": 3
+        },
+        {
+          "import": "lombok.*",
+          "line": 4
+        },
+        {
+          "import": "java.time.LocalDateTime",
+          "line": 5
+        }
+      ]
+    },
+    {
+      "file": "src/main/java/com/group2/rms/core/config/ClockConfig.java",
+      "package": "com.group2.rms.core.config",
+      "imports": [
+        {
+          "import": "org.springframework.context.annotation.Bean",
+          "line": 3
+        },
+        {
+          "import": "org.springframework.context.annotation.Configuration",
+          "line": 4
+        },
+        {
+          "import": "java.time.Clock",
+          "line": 6
+        }
+      ]
+    },
+    {
+      "file": "src/main/java/com/group2/rms/core/config/SchemaNamingConfig.java",
+      "package": "com.group2.rms.core.config",
+      "imports": [
+        {
+          "import": "org.hibernate.boot.model.naming.PhysicalNamingStrategyStandardImpl",
+          "line": 3
+        },
+        {
+          "import": "org.hibernate.cfg.AvailableSettings",
+          "line": 4
+        },
+        {
+          "import": "org.springframework.boot.autoconfigure.orm.jpa.HibernatePropertiesCustomizer",
+          "line": 5
+        },
+        {
+          "import": "org.springframework.context.annotation.Bean",
+          "line": 6
+        },
+        {
+          "import": "org.springframework.context.annotation.Configuration",
+          "line": 7
+        }
+      ]
+    },
+    {
+      "file": "src/main/java/com/group2/rms/core/config/SecurityConfig.java",
+      "package": "com.group2.rms.core.config",
+      "imports": [
+        {
+          "import": "com.group2.rms.user.repository.UserRepository",
+          "line": 3
+        },
+        {
+          "import": "com.group2.rms.core.security.AccountSessionGuardFilter",
+          "line": 4
+        },
+        {
+          "import": "com.group2.rms.core.security.DatabaseUserDetailsService",
+          "line": 5
+        },
+        {
+          "import": "com.group2.rms.core.security.RoleAuthorities",
+          "line": 6
+        },
+        {
+          "import": "org.springframework.boot.autoconfigure.security.servlet.PathRequest",
+          "line": 7
+        },
+        {
+          "import": "org.springframework.context.annotation.Bean",
+          "line": 8
+        },
+        {
+          "import": "org.springframework.context.annotation.Configuration",
+          "line": 9
+        },
+        {
+          "import": "org.springframework.http.HttpMethod",
+          "line": 10
+        },
+        {
+          "import": "org.springframework.security.authentication.dao.DaoAuthenticationProvider",
+          "line": 11
+        },
+        {
+          "import": "org.springframework.security.config.annotation.web.builders.HttpSecurity",
+          "line": 12
+        },
+        {
+          "import": "org.springframework.security.config.annotation.web.configuration.EnableWebSecurity",
+          "line": 13
+        },
+        {
+          "import": "org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder",
+          "line": 14
+        },
+        {
+          "import": "org.springframework.security.crypto.password.PasswordEncoder",
+          "line": 15
+        },
+        {
+          "import": "org.springframework.security.web.SecurityFilterChain",
+          "line": 16
+        },
+        {
+          "import": "org.springframework.security.web.access.intercept.AuthorizationFilter",
+          "line": 17
+        },
+        {
+          "import": "org.springframework.security.web.header.writers.DelegatingRequestMatcherHeaderWriter",
+          "line": 18
+        },
+        {
+          "import": "org.springframework.security.web.header.writers.frameoptions.XFrameOptionsHeaderWriter",
+          "line": 19
+        },
+        {
+          "import": "org.springframework.security.web.header.writers.frameoptions.XFrameOptionsHeaderWriter.XFrameOptionsMode",
+          "line": 20
+        },
+        {
+          "import": "org.springframework.security.web.savedrequest.HttpSessionRequestCache",
+          "line": 21
+        },
+        {
+          "import": "org.springframework.security.web.servlet.util.matcher.PathPatternRequestMatcher",
+          "line": 22
+        },
+        {
+          "import": "org.springframework.security.web.util.matcher.NegatedRequestMatcher",
+          "line": 23
+        },
+        {
+          "import": "org.springframework.security.web.util.matcher.OrRequestMatcher",
+          "line": 24
+        },
+        {
+          "import": "org.springframework.security.web.util.matcher.RequestMatcher",
+          "line": 25
+        }
+      ]
+    },
+    {
+      "file": "src/main/java/com/group2/rms/core/exception/BaseBusinessException.java",
+      "package": "com.group2.rms.core.exception",
+      "imports": [
+        {
+          "import": "org.springframework.http.HttpStatus",
+          "line": 3
+        },
+        {
+          "import": "org.springframework.web.bind.annotation.ResponseStatus",
+          "line": 4
+        }
+      ]
+    },
+    {
+      "file": "src/main/java/com/group2/rms/core/exception/FormErrorViewHelper.java",
+      "package": "com.group2.rms.core.exception",
+      "imports": [
+        {
+          "import": "org.springframework.http.HttpStatus",
+          "line": 3
+        },
+        {
+          "import": "org.springframework.validation.BindingResult",
+          "line": 4
+        },
+        {
+          "import": "org.springframework.web.servlet.ModelAndView",
+          "line": 5
+        },
+        {
+          "import": "jakarta.servlet.http.HttpServletRequest",
+          "line": 7
+        },
+        {
+          "import": "jakarta.servlet.http.HttpServletResponse",
+          "line": 8
+        }
+      ]
+    },
+    {
+      "file": "src/main/java/com/group2/rms/core/exception/GlobalExceptionHandler.java",
+      "package": "com.group2.rms.core.exception",
+      "imports": [
+        {
+          "import": "com.group2.rms.admin.dto.HealthResponse",
+          "line": 3
+        },
+        {
+          "import": "com.group2.rms.admin.exception.DatabaseHealthException",
+          "line": 4
+        },
+        {
+          "import": "com.group2.rms.auth.dto.ForgotPasswordRequest",
+          "line": 5
+        },
+        {
+          "import": "com.group2.rms.auth.dto.ResetPasswordRequest",
+          "line": 6
+        },
+        {
+          "import": "com.group2.rms.auth.dto.RegisterAccountRequest",
+          "line": 7
+        },
+        {
+          "import": "com.group2.rms.auth.dto.VerifyRegistrationOtpRequest",
+          "line": 8
+        },
+        {
+          "import": "com.group2.rms.auth.exception.RegistrationFlowException",
+          "line": 9
+        },
+        {
+          "import": "com.group2.rms.auth.dto.VerifyPasswordResetOtpRequest",
+          "line": 10
+        },
+        {
+          "import": "com.group2.rms.auth.exception.PasswordRecoveryFlowException",
+          "line": 11
+        },
+        {
+          "import": "com.group2.rms.auth.exception.PasswordRecoveryUnavailableException",
+          "line": 12
+        },
+        {
+          "import": "com.group2.rms.auth.exception.PasswordResetDeliveryException",
+          "line": 13
+        },
+        {
+          "import": "com.group2.rms.user.exception.DepartmentFieldException",
+          "line": 14
+        },
+        {
+          "import": "jakarta.servlet.http.HttpServletResponse",
+          "line": 15
+        },
+        {
+          "import": "org.springframework.validation.BeanPropertyBindingResult",
+          "line": 16
+        },
+        {
+          "import": "org.springframework.validation.BindingResult",
+          "line": 17
+        },
+        {
+          "import": "org.springframework.web.servlet.support.RequestContextUtils",
+          "line": 18
+        },
+        {
+          "import": "jakarta.servlet.http.HttpServletRequest",
+          "line": 20
+        },
+        {
+          "import": "org.slf4j.Logger",
+          "line": 21
+        },
+        {
+          "import": "org.slf4j.LoggerFactory",
+          "line": 22
+        },
+        {
+          "import": "org.springframework.http.CacheControl",
+          "line": 23
+        },
+        {
+          "import": "org.springframework.http.HttpStatus",
+          "line": 24
+        },
+        {
+          "import": "org.springframework.http.MediaType",
+          "line": 25
+        },
+        {
+          "import": "org.springframework.http.ResponseEntity",
+          "line": 26
+        },
+        {
+          "import": "org.springframework.security.access.AccessDeniedException",
+          "line": 27
+        },
+        {
+          "import": "org.springframework.web.bind.annotation.ControllerAdvice",
+          "line": 28
+        },
+        {
+          "import": "org.springframework.web.bind.annotation.ExceptionHandler",
+          "line": 29
+        },
+        {
+          "import": "org.springframework.web.bind.annotation.ResponseStatus",
+          "line": 30
+        },
+        {
+          "import": "org.springframework.web.server.ResponseStatusException",
+          "line": 31
+        },
+        {
+          "import": "org.springframework.web.servlet.ModelAndView",
+          "line": 32
+        },
+        {
+          "import": "org.springframework.web.servlet.mvc.support.RedirectAttributes",
+          "line": 33
+        },
+        {
+          "import": "org.springframework.web.servlet.resource.NoResourceFoundException",
+          "line": 34
+        }
+      ]
+    },
+    {
+      "file": "src/main/java/com/group2/rms/core/exception/ResourceNotFoundException.java",
+      "package": "com.group2.rms.core.exception",
+      "imports": [
+        {
+          "import": "org.springframework.http.HttpStatus",
+          "line": 3
+        },
+        {
+          "import": "org.springframework.web.bind.annotation.ResponseStatus",
+          "line": 4
+        }
+      ]
+    },
+    {
+      "file": "src/main/java/com/group2/rms/core/security/AccountSessionGuardFilter.java",
+      "package": "com.group2.rms.core.security",
+      "imports": [
+        {
+          "import": "com.group2.rms.user.entity.User",
+          "line": 3
+        },
+        {
+          "import": "com.group2.rms.user.repository.UserRepository",
+          "line": 4
+        },
+        {
+          "import": "jakarta.servlet.FilterChain",
+          "line": 5
+        },
+        {
+          "import": "jakarta.servlet.ServletException",
+          "line": 6
+        },
+        {
+          "import": "jakarta.servlet.http.HttpServletRequest",
+          "line": 7
+        },
+        {
+          "import": "jakarta.servlet.http.HttpServletResponse",
+          "line": 8
+        },
+        {
+          "import": "org.springframework.security.authentication.AnonymousAuthenticationToken",
+          "line": 9
+        },
+        {
+          "import": "org.springframework.security.core.Authentication",
+          "line": 10
+        },
+        {
+          "import": "org.springframework.security.core.context.SecurityContextHolder",
+          "line": 11
+        },
+        {
+          "import": "org.springframework.security.web.authentication.logout.SecurityContextLogoutHandler",
+          "line": 12
+        },
+        {
+          "import": "org.springframework.web.filter.OncePerRequestFilter",
+          "line": 13
+        },
+        {
+          "import": "java.io.IOException",
+          "line": 15
+        }
+      ]
+    },
+    {
+      "file": "src/main/java/com/group2/rms/core/security/CurrentUserService.java",
+      "package": "com.group2.rms.core.security",
+      "imports": [
+        {
+          "import": "com.group2.rms.user.entity.User",
+          "line": 3
+        },
+        {
+          "import": "com.group2.rms.user.repository.UserRepository",
+          "line": 4
+        },
+        {
+          "import": "lombok.RequiredArgsConstructor",
+          "line": 5
+        },
+        {
+          "import": "org.springframework.security.access.AccessDeniedException",
+          "line": 6
+        },
+        {
+          "import": "org.springframework.security.core.context.SecurityContextHolder",
+          "line": 7
+        },
+        {
+          "import": "org.springframework.stereotype.Service",
+          "line": 8
+        },
+        {
+          "import": "org.springframework.transaction.annotation.Transactional",
+          "line": 9
+        }
+      ]
+    },
+    {
+      "file": "src/main/java/com/group2/rms/core/security/DatabaseUserDetailsService.java",
+      "package": "com.group2.rms.core.security",
+      "imports": [
+        {
+          "import": "com.group2.rms.user.entity.User",
+          "line": 3
+        },
+        {
+          "import": "com.group2.rms.user.repository.UserRepository",
+          "line": 4
+        },
+        {
+          "import": "org.springframework.security.core.userdetails.UserDetails",
+          "line": 5
+        },
+        {
+          "import": "org.springframework.security.core.userdetails.UserDetailsService",
+          "line": 6
+        },
+        {
+          "import": "org.springframework.security.core.userdetails.UsernameNotFoundException",
+          "line": 7
+        },
+        {
+          "import": "org.springframework.stereotype.Service",
+          "line": 8
+        },
+        {
+          "import": "org.springframework.transaction.annotation.Transactional",
+          "line": 9
+        },
+        {
+          "import": "java.util.Objects",
+          "line": 11
+        },
+        {
+          "import": "java.util.Optional",
+          "line": 12
+        }
+      ]
+    },
+    {
+      "file": "src/main/java/com/group2/rms/core/security/RoleAuthorities.java",
+      "package": "com.group2.rms.core.security",
+      "imports": []
+    },
+    {
+      "file": "src/main/java/com/group2/rms/core/validation/PasswordMatches.java",
+      "package": "com.group2.rms.core.validation",
+      "imports": [
+        {
+          "import": "java.lang.annotation.ElementType",
+          "line": 3
+        },
+        {
+          "import": "java.lang.annotation.Retention",
+          "line": 4
+        },
+        {
+          "import": "java.lang.annotation.RetentionPolicy",
+          "line": 5
+        },
+        {
+          "import": "java.lang.annotation.Target",
+          "line": 6
+        },
+        {
+          "import": "jakarta.validation.Constraint",
+          "line": 8
+        },
+        {
+          "import": "jakarta.validation.Payload",
+          "line": 9
+        }
+      ]
+    },
+    {
+      "file": "src/main/java/com/group2/rms/core/validation/PasswordMatchesValidator.java",
+      "package": "com.group2.rms.core.validation",
+      "imports": [
+        {
+          "import": "org.springframework.beans.BeanWrapperImpl",
+          "line": 3
+        },
+        {
+          "import": "jakarta.validation.ConstraintDeclarationException",
+          "line": 5
+        },
+        {
+          "import": "jakarta.validation.ConstraintValidator",
+          "line": 6
+        },
+        {
+          "import": "jakarta.validation.ConstraintValidatorContext",
+          "line": 7
+        }
+      ]
+    },
+    {
+      "file": "src/main/java/com/group2/rms/candidate/entity/AIScreeningResult.java",
+      "package": "com.group2.rms.candidate.entity",
+      "imports": [
+        {
+          "import": "jakarta.persistence.*",
+          "line": 3
+        },
+        {
+          "import": "lombok.*",
+          "line": 4
+        },
+        {
+          "import": "java.math.BigDecimal",
+          "line": 6
+        },
+        {
+          "import": "java.time.LocalDateTime",
+          "line": 7
+        }
+      ]
+    },
+    {
+      "file": "src/main/java/com/group2/rms/candidate/entity/Application.java",
+      "package": "com.group2.rms.candidate.entity",
+      "imports": [
+        {
+          "import": "com.group2.rms.core.base.BaseEntity",
+          "line": 3
+        },
+        {
+          "import": "com.group2.rms.jobposting.entity.JobPosting",
+          "line": 4
+        },
+        {
+          "import": "jakarta.persistence.*",
+          "line": 5
+        },
+        {
+          "import": "lombok.*",
+          "line": 6
+        },
+        {
+          "import": "java.math.BigDecimal",
+          "line": 8
+        },
+        {
+          "import": "java.time.LocalDateTime",
+          "line": 9
+        }
+      ]
+    },
+    {
+      "file": "src/main/java/com/group2/rms/candidate/entity/ApplicationReview.java",
+      "package": "com.group2.rms.candidate.entity",
+      "imports": [
+        {
+          "import": "com.group2.rms.user.entity.User",
+          "line": 3
+        },
+        {
+          "import": "jakarta.persistence.*",
+          "line": 4
+        },
+        {
+          "import": "lombok.*",
+          "line": 5
+        },
+        {
+          "import": "java.time.LocalDateTime",
+          "line": 7
+        }
+      ]
+    },
+    {
+      "file": "src/main/java/com/group2/rms/candidate/entity/Candidate.java",
+      "package": "com.group2.rms.candidate.entity",
+      "imports": [
+        {
+          "import": "com.group2.rms.core.base.BaseEntity",
+          "line": 3
+        },
+        {
+          "import": "com.group2.rms.user.entity.User",
+          "line": 4
+        },
+        {
+          "import": "jakarta.persistence.*",
+          "line": 5
+        },
+        {
+          "import": "lombok.*",
+          "line": 6
+        },
+        {
+          "import": "java.time.LocalDate",
+          "line": 8
+        }
+      ]
+    },
+    {
+      "file": "src/main/java/com/group2/rms/candidate/entity/TalentPoolNote.java",
+      "package": "com.group2.rms.candidate.entity",
+      "imports": [
+        {
+          "import": "com.group2.rms.user.entity.User",
+          "line": 3
+        },
+        {
+          "import": "jakarta.persistence.*",
+          "line": 4
+        },
+        {
+          "import": "lombok.*",
+          "line": 5
+        },
+        {
+          "import": "java.time.LocalDateTime",
+          "line": 6
+        }
+      ]
+    },
+    {
+      "file": "src/main/java/com/group2/rms/candidate/repository/AIScreeningResultRepository.java",
+      "package": "com.group2.rms.candidate.repository",
+      "imports": [
+        {
+          "import": "com.group2.rms.candidate.entity.AIScreeningResult",
+          "line": 3
+        },
+        {
+          "import": "org.springframework.data.jpa.repository.JpaRepository",
+          "line": 4
+        },
+        {
+          "import": "org.springframework.stereotype.Repository",
+          "line": 5
+        },
+        {
+          "import": "java.util.List",
+          "line": 7
+        }
+      ]
+    },
+    {
+      "file": "src/main/java/com/group2/rms/candidate/repository/ApplicationRepository.java",
+      "package": "com.group2.rms.candidate.repository",
+      "imports": [
+        {
+          "import": "com.group2.rms.candidate.dto.ApplicationPipelineResponse",
+          "line": 3
+        },
+        {
+          "import": "com.group2.rms.candidate.dto.JobPostingOption",
+          "line": 4
+        },
+        {
+          "import": "com.group2.rms.candidate.entity.Application",
+          "line": 5
+        },
+        {
+          "import": "org.springframework.data.jpa.repository.JpaRepository",
+          "line": 6
+        },
+        {
+          "import": "org.springframework.data.jpa.repository.Modifying",
+          "line": 7
+        },
+        {
+          "import": "org.springframework.data.jpa.repository.Query",
+          "line": 8
+        },
+        {
+          "import": "org.springframework.data.repository.query.Param",
+          "line": 9
+        },
+        {
+          "import": "org.springframework.stereotype.Repository",
+          "line": 10
+        },
+        {
+          "import": "java.time.LocalDateTime",
+          "line": 12
+        },
+        {
+          "import": "java.util.Collection",
+          "line": 13
+        },
+        {
+          "import": "java.util.List",
+          "line": 14
+        },
+        {
+          "import": "java.util.Optional",
+          "line": 15
+        }
+      ]
+    },
+    {
+      "file": "src/main/java/com/group2/rms/candidate/repository/ApplicationReviewRepository.java",
+      "package": "com.group2.rms.candidate.repository",
+      "imports": [
+        {
+          "import": "com.group2.rms.candidate.entity.ApplicationReview",
+          "line": 3
+        },
+        {
+          "import": "org.springframework.data.jpa.repository.JpaRepository",
+          "line": 4
+        },
+        {
+          "import": "org.springframework.data.jpa.repository.Query",
+          "line": 5
+        },
+        {
+          "import": "org.springframework.data.repository.query.Param",
+          "line": 6
+        },
+        {
+          "import": "org.springframework.stereotype.Repository",
+          "line": 7
+        },
+        {
+          "import": "java.util.List",
+          "line": 9
+        }
+      ]
+    },
+    {
+      "file": "src/main/java/com/group2/rms/candidate/repository/CandidateRepository.java",
+      "package": "com.group2.rms.candidate.repository",
+      "imports": [
+        {
+          "import": "com.group2.rms.candidate.entity.Candidate",
+          "line": 3
+        },
+        {
+          "import": "org.springframework.data.jpa.repository.JpaRepository",
+          "line": 4
+        },
+        {
+          "import": "org.springframework.data.jpa.repository.JpaSpecificationExecutor",
+          "line": 5
+        },
+        {
+          "import": "org.springframework.stereotype.Repository",
+          "line": 6
+        },
+        {
+          "import": "org.springframework.data.domain.Page",
+          "line": 7
+        },
+        {
+          "import": "org.springframework.data.domain.Pageable",
+          "line": 8
+        },
+        {
+          "import": "org.springframework.data.jpa.repository.Query",
+          "line": 9
+        },
+        {
+          "import": "org.springframework.data.repository.query.Param",
+          "line": 10
+        },
+        {
+          "import": "java.util.Optional",
+          "line": 12
+        }
+      ]
+    },
+    {
+      "file": "src/main/java/com/group2/rms/candidate/repository/TalentPoolAuditRepository.java",
+      "package": "com.group2.rms.candidate.repository",
+      "imports": [
+        {
+          "import": "lombok.RequiredArgsConstructor",
+          "line": 3
+        },
+        {
+          "import": "org.springframework.jdbc.core.JdbcTemplate",
+          "line": 4
+        },
+        {
+          "import": "org.springframework.stereotype.Repository",
+          "line": 5
+        },
+        {
+          "import": "org.springframework.transaction.annotation.*",
+          "line": 6
+        },
+        {
+          "import": "java.util.List",
+          "line": 7
+        }
+      ]
+    },
+    {
+      "file": "src/main/java/com/group2/rms/candidate/repository/TalentPoolNoteRepository.java",
+      "package": "com.group2.rms.candidate.repository",
+      "imports": [
+        {
+          "import": "com.group2.rms.candidate.entity.TalentPoolNote",
+          "line": 3
+        },
+        {
+          "import": "org.springframework.data.jpa.repository.*",
+          "line": 4
+        },
+        {
+          "import": "java.util.List",
+          "line": 5
+        }
+      ]
+    },
+    {
+      "file": "src/main/java/com/group2/rms/auth/controller/AuthController.java",
+      "package": "com.group2.rms.auth.controller",
+      "imports": [
+        {
+          "import": "org.springframework.stereotype.Controller",
+          "line": 3
+        },
+        {
+          "import": "org.springframework.web.bind.annotation.GetMapping",
+          "line": 4
+        }
+      ]
+    },
+    {
+      "file": "src/main/java/com/group2/rms/auth/controller/PasswordRecoveryController.java",
+      "package": "com.group2.rms.auth.controller",
+      "imports": [
+        {
+          "import": "com.group2.rms.auth.dto.ForgotPasswordRequest",
+          "line": 3
+        },
+        {
+          "import": "com.group2.rms.auth.service.PasswordRecoveryService",
+          "line": 4
+        },
+        {
+          "import": "com.group2.rms.auth.dto.ResetPasswordRequest",
+          "line": 5
+        },
+        {
+          "import": "com.group2.rms.auth.dto.VerifyPasswordResetOtpRequest",
+          "line": 6
+        },
+        {
+          "import": "jakarta.servlet.http.HttpSession",
+          "line": 7
+        },
+        {
+          "import": "jakarta.validation.Valid",
+          "line": 8
+        },
+        {
+          "import": "org.springframework.stereotype.Controller",
+          "line": 9
+        },
+        {
+          "import": "org.springframework.ui.Model",
+          "line": 10
+        },
+        {
+          "import": "org.springframework.validation.BindingResult",
+          "line": 11
+        },
+        {
+          "import": "org.springframework.web.bind.annotation.GetMapping",
+          "line": 12
+        },
+        {
+          "import": "org.springframework.web.bind.annotation.ModelAttribute",
+          "line": 13
+        },
+        {
+          "import": "org.springframework.web.bind.annotation.PostMapping",
+          "line": 14
+        }
+      ]
+    },
+    {
+      "file": "src/main/java/com/group2/rms/auth/controller/RegistrationController.java",
+      "package": "com.group2.rms.auth.controller",
+      "imports": [
+        {
+          "import": "com.group2.rms.auth.service.RegistrationVerificationService",
+          "line": 3
+        },
+        {
+          "import": "com.group2.rms.auth.dto.RegisterAccountRequest",
+          "line": 4
+        },
+        {
+          "import": "com.group2.rms.auth.dto.VerifyRegistrationOtpRequest",
+          "line": 5
+        },
+        {
+          "import": "jakarta.servlet.http.HttpSession",
+          "line": 6
+        },
+        {
+          "import": "jakarta.validation.Valid",
+          "line": 7
+        },
+        {
+          "import": "org.springframework.stereotype.Controller",
+          "line": 8
+        },
+        {
+          "import": "org.springframework.ui.Model",
+          "line": 9
+        },
+        {
+          "import": "org.springframework.validation.BindingResult",
+          "line": 10
+        },
+        {
+          "import": "org.springframework.web.bind.annotation.GetMapping",
+          "line": 11
+        },
+        {
+          "import": "org.springframework.web.bind.annotation.ModelAttribute",
+          "line": 12
+        },
+        {
+          "import": "org.springframework.web.bind.annotation.PostMapping",
+          "line": 13
+        },
+        {
+          "import": "org.springframework.web.bind.annotation.RequestMapping",
+          "line": 14
+        }
+      ]
+    },
+    {
+      "file": "src/main/java/com/group2/rms/auth/dto/AccountSnapshotResponse.java",
+      "package": "com.group2.rms.auth.dto",
+      "imports": []
+    },
+    {
+      "file": "src/main/java/com/group2/rms/auth/dto/ForgotPasswordRequest.java",
+      "package": "com.group2.rms.auth.dto",
+      "imports": [
+        {
+          "import": "jakarta.validation.constraints.Email",
+          "line": 3
+        },
+        {
+          "import": "jakarta.validation.constraints.NotBlank",
+          "line": 4
+        },
+        {
+          "import": "jakarta.validation.constraints.Size",
+          "line": 5
+        },
+        {
+          "import": "lombok.Getter",
+          "line": 6
+        },
+        {
+          "import": "lombok.Setter",
+          "line": 7
+        }
+      ]
+    },
+    {
+      "file": "src/main/java/com/group2/rms/auth/dto/PreparedRegistrationResponse.java",
+      "package": "com.group2.rms.auth.dto",
+      "imports": []
+    },
+    {
+      "file": "src/main/java/com/group2/rms/auth/dto/RegisterAccountRequest.java",
+      "package": "com.group2.rms.auth.dto",
+      "imports": [
+        {
+          "import": "jakarta.validation.constraints.Email",
+          "line": 3
+        },
+        {
+          "import": "jakarta.validation.constraints.NotBlank",
+          "line": 4
+        },
+        {
+          "import": "jakarta.validation.constraints.Size",
+          "line": 5
+        },
+        {
+          "import": "lombok.Getter",
+          "line": 6
+        },
+        {
+          "import": "lombok.Setter",
+          "line": 7
+        },
+        {
+          "import": "com.group2.rms.core.validation.PasswordMatches",
+          "line": 8
+        }
+      ]
+    },
+    {
+      "file": "src/main/java/com/group2/rms/auth/dto/ResetPasswordRequest.java",
+      "package": "com.group2.rms.auth.dto",
+      "imports": [
+        {
+          "import": "com.group2.rms.core.validation.PasswordMatches",
+          "line": 3
+        },
+        {
+          "import": "jakarta.validation.constraints.NotBlank",
+          "line": 4
+        },
+        {
+          "import": "jakarta.validation.constraints.Size",
+          "line": 5
+        },
+        {
+          "import": "lombok.Getter",
+          "line": 6
+        },
+        {
+          "import": "lombok.Setter",
+          "line": 7
+        }
+      ]
+    },
+    {
+      "file": "src/main/java/com/group2/rms/auth/dto/VerifyPasswordResetOtpRequest.java",
+      "package": "com.group2.rms.auth.dto",
+      "imports": [
+        {
+          "import": "jakarta.validation.constraints.NotBlank",
+          "line": 3
+        },
+        {
+          "import": "jakarta.validation.constraints.Pattern",
+          "line": 5
+        },
+        {
+          "import": "lombok.Getter",
+          "line": 6
+        },
+        {
+          "import": "lombok.Setter",
+          "line": 7
+        }
+      ]
+    },
+    {
+      "file": "src/main/java/com/group2/rms/auth/dto/VerifyRegistrationOtpRequest.java",
+      "package": "com.group2.rms.auth.dto",
+      "imports": [
+        {
+          "import": "jakarta.validation.constraints.NotBlank",
+          "line": 3
+        },
+        {
+          "import": "jakarta.validation.constraints.Pattern",
+          "line": 4
+        },
+        {
+          "import": "lombok.Getter",
+          "line": 5
+        },
+        {
+          "import": "lombok.Setter",
+          "line": 6
+        }
+      ]
+    },
+    {
+      "file": "src/main/java/com/group2/rms/auth/exception/PasswordRecoveryFlowException.java",
+      "package": "com.group2.rms.auth.exception",
+      "imports": [
+        {
+          "import": "com.group2.rms.core.exception.BaseBusinessException",
+          "line": 3
+        }
+      ]
+    },
+    {
+      "file": "src/main/java/com/group2/rms/auth/exception/PasswordRecoveryUnavailableException.java",
+      "package": "com.group2.rms.auth.exception",
+      "imports": [
+        {
+          "import": "com.group2.rms.core.exception.BaseBusinessException",
+          "line": 3
+        }
+      ]
+    },
+    {
+      "file": "src/main/java/com/group2/rms/auth/exception/PasswordResetDeliveryException.java",
+      "package": "com.group2.rms.auth.exception",
+      "imports": [
+        {
+          "import": "com.group2.rms.core.exception.BaseBusinessException",
+          "line": 3
+        }
+      ]
+    },
+    {
+      "file": "src/main/java/com/group2/rms/auth/exception/RegistrationFlowException.java",
+      "package": "com.group2.rms.auth.exception",
+      "imports": [
+        {
+          "import": "com.group2.rms.core.exception.BaseBusinessException",
+          "line": 3
+        }
+      ]
+    },
+    {
+      "file": "src/main/java/com/group2/rms/auth/service/PasswordRecoveryService.java",
+      "package": "com.group2.rms.auth.service",
+      "imports": [
+        {
+          "import": "java.security.SecureRandom",
+          "line": 3
+        },
+        {
+          "import": "java.time.Clock",
+          "line": 4
+        },
+        {
+          "import": "java.time.Duration",
+          "line": 5
+        },
+        {
+          "import": "java.time.Instant",
+          "line": 6
+        },
+        {
+          "import": "java.util.concurrent.ConcurrentHashMap",
+          "line": 7
+        },
+        {
+          "import": "java.util.Map",
+          "line": 9
+        },
+        {
+          "import": "org.springframework.beans.factory.annotation.Autowired",
+          "line": 10
+        },
+        {
+          "import": "org.springframework.security.crypto.password.PasswordEncoder",
+          "line": 11
+        },
+        {
+          "import": "org.springframework.stereotype.Service",
+          "line": 12
+        },
+        {
+          "import": "com.group2.rms.auth.exception.PasswordRecoveryFlowException",
+          "line": 14
+        },
+        {
+          "import": "com.group2.rms.auth.exception.PasswordRecoveryFlowException.Step",
+          "line": 15
+        },
+        {
+          "import": "com.group2.rms.auth.exception.PasswordRecoveryUnavailableException",
+          "line": 16
+        },
+        {
+          "import": "com.group2.rms.auth.dto.AccountSnapshotResponse",
+          "line": 17
+        },
+        {
+          "import": "jakarta.servlet.http.HttpSession",
+          "line": 19
+        }
+      ]
+    },
+    {
+      "file": "src/main/java/com/group2/rms/auth/service/PasswordResetEmailSender.java",
+      "package": "com.group2.rms.auth.service",
+      "imports": [
+        {
+          "import": "org.springframework.beans.factory.ObjectProvider",
+          "line": 3
+        },
+        {
+          "import": "org.springframework.beans.factory.annotation.Value",
+          "line": 4
+        },
+        {
+          "import": "org.springframework.core.io.ClassPathResource",
+          "line": 5
+        },
+        {
+          "import": "org.springframework.mail.MailException",
+          "line": 6
+        },
+        {
+          "import": "org.springframework.mail.javamail.JavaMailSender",
+          "line": 7
+        },
+        {
+          "import": "org.springframework.mail.javamail.MimeMessageHelper",
+          "line": 8
+        },
+        {
+          "import": "org.springframework.stereotype.Component",
+          "line": 9
+        },
+        {
+          "import": "org.springframework.web.util.HtmlUtils",
+          "line": 10
+        },
+        {
+          "import": "jakarta.mail.MessagingException",
+          "line": 12
+        },
+        {
+          "import": "jakarta.mail.internet.MimeMessage",
+          "line": 13
+        },
+        {
+          "import": "java.io.IOException",
+          "line": 15
+        },
+        {
+          "import": "java.io.InputStream",
+          "line": 16
+        },
+        {
+          "import": "java.nio.charset.StandardCharsets",
+          "line": 17
+        },
+        {
+          "import": "com.group2.rms.auth.exception.PasswordRecoveryUnavailableException",
+          "line": 19
+        },
+        {
+          "import": "com.group2.rms.auth.exception.PasswordResetDeliveryException",
+          "line": 20
+        }
+      ]
+    },
+    {
+      "file": "src/main/java/com/group2/rms/auth/service/PasswordResetService.java",
+      "package": "com.group2.rms.auth.service",
+      "imports": [
+        {
+          "import": "com.group2.rms.auth.dto.AccountSnapshotResponse",
+          "line": 2
+        },
+        {
+          "import": "com.group2.rms.auth.exception.PasswordRecoveryFlowException",
+          "line": 4
+        },
+        {
+          "import": "com.group2.rms.auth.exception.PasswordRecoveryFlowException.Step",
+          "line": 5
+        },
+        {
+          "import": "com.group2.rms.user.entity.User",
+          "line": 6
+        },
+        {
+          "import": "com.group2.rms.user.repository.UserRepository",
+          "line": 7
+        },
+        {
+          "import": "org.springframework.beans.factory.annotation.Autowired",
+          "line": 9
+        },
+        {
+          "import": "org.springframework.security.crypto.password.PasswordEncoder",
+          "line": 11
+        },
+        {
+          "import": "org.springframework.stereotype.Service",
+          "line": 12
+        },
+        {
+          "import": "org.springframework.transaction.annotation.Transactional",
+          "line": 13
+        },
+        {
+          "import": "java.time.Clock",
+          "line": 15
+        },
+        {
+          "import": "java.time.Instant",
+          "line": 16
+        },
+        {
+          "import": "java.util.Objects",
+          "line": 18
+        }
+      ]
+    },
+    {
+      "file": "src/main/java/com/group2/rms/auth/service/RegistrationEmailSender.java",
+      "package": "com.group2.rms.auth.service",
+      "imports": [
+        {
+          "import": "com.group2.rms.auth.exception.RegistrationFlowException",
+          "line": 3
+        },
+        {
+          "import": "com.group2.rms.auth.exception.RegistrationFlowException.Step",
+          "line": 4
+        },
+        {
+          "import": "jakarta.mail.MessagingException",
+          "line": 5
+        },
+        {
+          "import": "java.io.IOException",
+          "line": 6
+        },
+        {
+          "import": "java.nio.charset.StandardCharsets",
+          "line": 7
+        },
+        {
+          "import": "org.springframework.beans.factory.ObjectProvider",
+          "line": 8
+        },
+        {
+          "import": "org.springframework.beans.factory.annotation.Value",
+          "line": 9
+        },
+        {
+          "import": "org.springframework.core.io.ClassPathResource",
+          "line": 10
+        },
+        {
+          "import": "org.springframework.mail.MailException",
+          "line": 11
+        },
+        {
+          "import": "org.springframework.mail.javamail.JavaMailSender",
+          "line": 12
+        },
+        {
+          "import": "org.springframework.mail.javamail.MimeMessageHelper",
+          "line": 13
+        },
+        {
+          "import": "org.springframework.stereotype.Component",
+          "line": 14
+        },
+        {
+          "import": "org.springframework.web.util.HtmlUtils",
+          "line": 15
+        }
+      ]
+    },
+    {
+      "file": "src/main/java/com/group2/rms/auth/service/RegistrationVerificationService.java",
+      "package": "com.group2.rms.auth.service",
+      "imports": [
+        {
+          "import": "com.group2.rms.auth.exception.RegistrationFlowException",
+          "line": 3
+        },
+        {
+          "import": "com.group2.rms.auth.exception.RegistrationFlowException.RegistrationDetails",
+          "line": 4
+        },
+        {
+          "import": "com.group2.rms.auth.exception.RegistrationFlowException.Step",
+          "line": 5
+        },
+        {
+          "import": "com.group2.rms.auth.dto.RegisterAccountRequest",
+          "line": 6
+        },
+        {
+          "import": "com.group2.rms.user.service.AccountManagementService",
+          "line": 7
+        },
+        {
+          "import": "com.group2.rms.user.exception.AccountFieldException",
+          "line": 8
+        },
+        {
+          "import": "jakarta.servlet.http.HttpSession",
+          "line": 9
+        },
+        {
+          "import": "com.group2.rms.auth.dto.PreparedRegistrationResponse",
+          "line": 10
+        },
+        {
+          "import": "java.security.SecureRandom",
+          "line": 12
+        },
+        {
+          "import": "java.time.Duration",
+          "line": 14
+        },
+        {
+          "import": "java.time.Instant",
+          "line": 15
+        },
+        {
+          "import": "java.util.Locale",
+          "line": 16
+        },
+        {
+          "import": "java.util.concurrent.ConcurrentHashMap",
+          "line": 17
+        },
+        {
+          "import": "java.util.Map",
+          "line": 18
+        },
+        {
+          "import": "org.springframework.dao.DataIntegrityViolationException",
+          "line": 19
+        },
+        {
+          "import": "org.springframework.security.crypto.password.PasswordEncoder",
+          "line": 20
+        },
+        {
+          "import": "org.springframework.stereotype.Service",
+          "line": 21
+        }
+      ]
+    }
+  ],
+  "inventory_note": "All imports of selected packages are listed; a class may also support non-authentication operations. Diagram arrows are the authentication scope selection.",
+  "pages": [
+    {
+      "key": "overview",
+      "title": "RMS Authentication — Layered Package Diagram",
+      "nodes": [
+        {
+          "id": "presentation",
+          "title": "Presentation Layer  «logical»",
+          "lines": [],
+          "x": 245,
+          "y": 135,
+          "w": 940,
+          "h": 300,
+          "parent": null,
+          "kind": "group",
+          "actual": null
+        },
+        {
+          "id": "business",
+          "title": "Business Layer  «logical»",
+          "lines": [],
+          "x": 245,
+          "y": 465,
+          "w": 940,
+          "h": 390,
+          "parent": null,
+          "kind": "group",
+          "actual": null
+        },
+        {
+          "id": "data",
+          "title": "Data Layer  «logical»",
+          "lines": [],
+          "x": 245,
+          "y": 970,
+          "w": 940,
+          "h": 200,
+          "parent": null,
+          "kind": "group",
+          "actual": null
+        },
+        {
+          "id": "cross",
+          "title": "Cross-Cutting / Frameworks  «logical»",
+          "lines": [],
+          "x": 1250,
+          "y": 135,
+          "w": 420,
+          "h": 1035,
+          "parent": null,
+          "kind": "group",
+          "actual": null
+        },
+        {
+          "id": "actors",
+          "title": "Users / Browser",
+          "lines": [
+            "«external context»",
+            "Candidates",
+            "Internal users",
+            "HTTP forms + session"
+          ],
+          "x": 25,
+          "y": 195,
+          "w": 185,
+          "h": 200,
+          "parent": null,
+          "kind": "context",
+          "actual": null
+        },
+        {
+          "id": "controller",
+          "title": "auth.controller",
+          "lines": [
+            "Auth / Registration / Recovery",
+            "MVC controllers (scope slice)"
+          ],
+          "x": 275,
+          "y": 195,
+          "w": 350,
+          "h": 110,
+          "parent": "presentation",
+          "kind": "package",
+          "actual": "auth.controller"
+        },
+        {
+          "id": "views",
+          "title": "templates/auth/",
+          "lines": [
+            "«resource folder»",
+            "Forms + email/ templates"
+          ],
+          "x": 805,
+          "y": 195,
+          "w": 350,
+          "h": 110,
+          "parent": "presentation",
+          "kind": "resource",
+          "actual": null
+        },
+        {
+          "id": "advice",
+          "title": "auth",
+          "lines": [
+            "NavigationAdvice (root package)"
+          ],
+          "x": 805,
+          "y": 345,
+          "w": 350,
+          "h": 90,
+          "parent": "presentation",
+          "kind": "package",
+          "actual": "auth"
+        },
+        {
+          "id": "service",
+          "title": "auth.service",
+          "lines": [
+            "RegistrationVerificationService",
+            "PasswordRecoveryService / PasswordResetService",
+            "RegistrationEmailSender / PasswordResetEmailSender"
+          ],
+          "x": 275,
+          "y": 525,
+          "w": 420,
+          "h": 165,
+          "parent": "business",
+          "kind": "package",
+          "actual": "auth.service"
+        },
+        {
+          "id": "accounts",
+          "title": "user.service",
+          "lines": [
+            "AccountManagementService",
+            "Candidate registration methods only"
+          ],
+          "x": 805,
+          "y": 525,
+          "w": 350,
+          "h": 145,
+          "parent": "business",
+          "kind": "package",
+          "actual": "user.service"
+        },
+        {
+          "id": "user_entity",
+          "title": "user.entity",
+          "lines": [
+            "User / Role",
+            "Account / authority data"
+          ],
+          "x": 275,
+          "y": 725,
+          "w": 350,
+          "h": 100,
+          "parent": "business",
+          "kind": "package",
+          "actual": "user.entity"
+        },
+        {
+          "id": "candidate_entity",
+          "title": "candidate.entity",
+          "lines": [
+            "Candidate → linked User"
+          ],
+          "x": 805,
+          "y": 725,
+          "w": 350,
+          "h": 100,
+          "parent": "business",
+          "kind": "package",
+          "actual": "candidate.entity"
+        },
+        {
+          "id": "users",
+          "title": "user.repository",
+          "lines": [
+            "UserRepository / RoleRepository"
+          ],
+          "x": 275,
+          "y": 1030,
+          "w": 350,
+          "h": 110,
+          "parent": "data",
+          "kind": "package",
+          "actual": "user.repository"
+        },
+        {
+          "id": "candidates",
+          "title": "candidate.repository",
+          "lines": [
+            "CandidateRepository"
+          ],
+          "x": 805,
+          "y": 1030,
+          "w": 350,
+          "h": 110,
+          "parent": "data",
+          "kind": "package",
+          "actual": "candidate.repository"
+        },
+        {
+          "id": "config",
+          "title": "core.config",
+          "lines": [
+            "SecurityConfig",
+            "Filter chain / BCrypt bean"
+          ],
+          "x": 1280,
+          "y": 195,
+          "w": 360,
+          "h": 110,
+          "parent": "cross",
+          "kind": "package",
+          "actual": "core.config"
+        },
+        {
+          "id": "security",
+          "title": "core.security",
+          "lines": [
+            "DatabaseUserDetailsService",
+            "AccountSessionGuardFilter / RoleAuthorities"
+          ],
+          "x": 1280,
+          "y": 390,
+          "w": 360,
+          "h": 130,
+          "parent": "cross",
+          "kind": "package",
+          "actual": "core.security"
+        },
+        {
+          "id": "contracts",
+          "title": "Contracts & Validation",
+          "lines": [
+            "«logical group»",
+            "auth.dto / core.validation"
+          ],
+          "x": 1280,
+          "y": 610,
+          "w": 360,
+          "h": 110,
+          "parent": "cross",
+          "kind": "logical",
+          "actual": null
+        },
+        {
+          "id": "exceptions",
+          "title": "Exception Handling",
+          "lines": [
+            "«logical group»",
+            "auth.exception ↔ core.exception",
+            "user.exception / core.base"
+          ],
+          "x": 1280,
+          "y": 820,
+          "w": 360,
+          "h": 140,
+          "parent": "cross",
+          "kind": "logical",
+          "actual": null
+        },
+        {
+          "id": "mail",
+          "title": "Spring Mail",
+          "lines": [
+            "«framework group»",
+            "JavaMailSender → SMTP adapter"
+          ],
+          "x": 1280,
+          "y": 1030,
+          "w": 360,
+          "h": 110,
+          "parent": "cross",
+          "kind": "framework",
+          "actual": null
+        },
+        {
+          "id": "smtp",
+          "title": "SMTP Server",
+          "lines": [
+            "«external system»",
+            "Configured email delivery"
+          ],
+          "x": 1280,
+          "y": 1450,
+          "w": 360,
+          "h": 100,
+          "parent": null,
+          "kind": "external",
+          "actual": null
+        },
+        {
+          "id": "jpa",
+          "title": "Spring Data JPA / JDBC",
+          "lines": [
+            "«framework group»",
+            "JpaRepository + SQL Server driver"
+          ],
+          "x": 495,
+          "y": 1260,
+          "w": 520,
+          "h": 110,
+          "parent": null,
+          "kind": "framework",
+          "actual": null
+        },
+        {
+          "id": "db",
+          "title": "SQL Server Database",
+          "lines": [
+            "«external system»",
+            "Configured data source"
+          ],
+          "x": 495,
+          "y": 1450,
+          "w": 520,
+          "h": 100,
+          "parent": null,
+          "kind": "external",
+          "actual": null
+        }
+      ],
+      "edges": [
+        {
+          "id": "overview_edge_1",
+          "source": "controller",
+          "target": "views",
+          "proof": "E02",
+          "label": "view names",
+          "exit": [
+            1,
+            0.5
+          ],
+          "entry": [
+            0,
+            0.5
+          ],
+          "points": [],
+          "kind": "dependency"
+        },
+        {
+          "id": "overview_edge_2",
+          "source": "controller",
+          "target": "service",
+          "proof": "E01",
+          "label": "injects service",
+          "exit": [
+            0.5,
+            1
+          ],
+          "entry": [
+            0.42,
+            0
+          ],
+          "points": [],
+          "kind": "dependency"
+        },
+        {
+          "id": "overview_edge_3",
+          "source": "service",
+          "target": "accounts",
+          "proof": "E03",
+          "label": "candidate registration",
+          "exit": [
+            1,
+            0.35
+          ],
+          "entry": [
+            0,
+            0.35
+          ],
+          "points": [],
+          "kind": "dependency"
+        },
+        {
+          "id": "overview_edge_4",
+          "source": "service",
+          "target": "users",
+          "proof": "E04",
+          "label": "password reset persistence",
+          "exit": [
+            1,
+            0.75
+          ],
+          "entry": [
+            0.7,
+            0
+          ],
+          "points": [
+            [
+              735,
+              634
+            ],
+            [
+              735,
+              940
+            ],
+            [
+              520,
+              940
+            ]
+          ],
+          "kind": "dependency"
+        },
+        {
+          "id": "overview_edge_5",
+          "source": "accounts",
+          "target": "users",
+          "proof": "E05",
+          "label": "account / role access",
+          "exit": [
+            0.15,
+            1
+          ],
+          "entry": [
+            0.25,
+            0
+          ],
+          "points": [
+            [
+              857,
+              695
+            ],
+            [
+              700,
+              695
+            ],
+            [
+              700,
+              915
+            ],
+            [
+              362.5,
+              915
+            ]
+          ],
+          "kind": "dependency"
+        },
+        {
+          "id": "overview_edge_6",
+          "source": "accounts",
+          "target": "candidates",
+          "proof": "E06",
+          "label": "creates candidate profile",
+          "exit": [
+            1,
+            0.6
+          ],
+          "entry": [
+            1,
+            0.5
+          ],
+          "points": [
+            [
+              1215,
+              612
+            ],
+            [
+              1215,
+              1085
+            ]
+          ],
+          "kind": "dependency"
+        },
+        {
+          "id": "overview_edge_7",
+          "source": "accounts",
+          "target": "candidate_entity",
+          "proof": "E31",
+          "label": "constructs",
+          "exit": [
+            0.5,
+            1
+          ],
+          "entry": [
+            0.5,
+            0
+          ],
+          "points": [],
+          "kind": "dependency"
+        },
+        {
+          "id": "overview_edge_8",
+          "source": "users",
+          "target": "user_entity",
+          "proof": "E07",
+          "label": "entity type",
+          "exit": [
+            0.5,
+            0
+          ],
+          "entry": [
+            0.5,
+            1
+          ],
+          "points": [],
+          "kind": "dependency"
+        },
+        {
+          "id": "overview_edge_9",
+          "source": "candidates",
+          "target": "candidate_entity",
+          "proof": "E08",
+          "label": "entity type",
+          "exit": [
+            0.5,
+            0
+          ],
+          "entry": [
+            0.5,
+            1
+          ],
+          "points": [],
+          "kind": "dependency"
+        },
+        {
+          "id": "overview_edge_10",
+          "source": "candidate_entity",
+          "target": "user_entity",
+          "proof": "E09",
+          "label": "account type",
+          "exit": [
+            0,
+            0.5
+          ],
+          "entry": [
+            1,
+            0.5
+          ],
+          "points": [],
+          "kind": "dependency"
+        },
+        {
+          "id": "overview_edge_11",
+          "source": "config",
+          "target": "security",
+          "proof": "E10",
+          "label": "wires",
+          "exit": [
+            0.5,
+            1
+          ],
+          "entry": [
+            0.5,
+            0
+          ],
+          "points": [],
+          "kind": "dependency"
+        },
+        {
+          "id": "overview_edge_12",
+          "source": "security",
+          "target": "users",
+          "proof": "E11",
+          "label": "reloads account",
+          "exit": [
+            0,
+            0.5
+          ],
+          "entry": [
+            0.85,
+            0
+          ],
+          "points": [
+            [
+              1230,
+              455
+            ],
+            [
+              1230,
+              895
+            ],
+            [
+              572.5,
+              895
+            ]
+          ],
+          "kind": "dependency"
+        },
+        {
+          "id": "overview_edge_13",
+          "source": "service",
+          "target": "mail",
+          "proof": "E17",
+          "label": "uses JavaMailSender",
+          "exit": [
+            1,
+            0.95
+          ],
+          "entry": [
+            0,
+            0.5
+          ],
+          "points": [
+            [
+              755,
+              662.75
+            ],
+            [
+              755,
+              945
+            ],
+            [
+              1235,
+              945
+            ],
+            [
+              1235,
+              1085
+            ]
+          ],
+          "kind": "dependency"
+        },
+        {
+          "id": "overview_edge_14",
+          "source": "mail",
+          "target": "smtp",
+          "proof": "E18",
+          "label": "«configured SMTP integration»",
+          "exit": [
+            0.5,
+            1
+          ],
+          "entry": [
+            0.5,
+            0
+          ],
+          "points": [],
+          "kind": "integration"
+        },
+        {
+          "id": "overview_edge_15",
+          "source": "users",
+          "target": "jpa",
+          "proof": "E19",
+          "label": "JpaRepository",
+          "exit": [
+            0.5,
+            1
+          ],
+          "entry": [
+            0.25,
+            0
+          ],
+          "points": [
+            [
+              450,
+              1210
+            ],
+            [
+              625,
+              1210
+            ]
+          ],
+          "kind": "dependency"
+        },
+        {
+          "id": "overview_edge_16",
+          "source": "candidates",
+          "target": "jpa",
+          "proof": "E19",
+          "label": "JpaRepository",
+          "exit": [
+            0.5,
+            1
+          ],
+          "entry": [
+            0.8,
+            0
+          ],
+          "points": [
+            [
+              980,
+              1210
+            ],
+            [
+              911,
+              1210
+            ]
+          ],
+          "kind": "dependency"
+        },
+        {
+          "id": "overview_edge_17",
+          "source": "jpa",
+          "target": "db",
+          "proof": "E20",
+          "label": "«configured integration»",
+          "exit": [
+            0.5,
+            1
+          ],
+          "entry": [
+            0.5,
+            0
+          ],
+          "points": [],
+          "kind": "dependency"
+        }
+      ]
+    },
+    {
+      "key": "login",
+      "title": "01 — Login, Logout & Session Guard",
+      "nodes": [
+        {
+          "id": "presentation",
+          "title": "Presentation Layer  «logical»",
+          "lines": [],
+          "x": 245,
+          "y": 135,
+          "w": 940,
+          "h": 300,
+          "parent": null,
+          "kind": "group",
+          "actual": null
+        },
+        {
+          "id": "business",
+          "title": "Business Layer  «logical»",
+          "lines": [],
+          "x": 245,
+          "y": 535,
+          "w": 940,
+          "h": 200,
+          "parent": null,
+          "kind": "group",
+          "actual": null
+        },
+        {
+          "id": "data",
+          "title": "Data Layer  «logical»",
+          "lines": [],
+          "x": 245,
+          "y": 970,
+          "w": 940,
+          "h": 200,
+          "parent": null,
+          "kind": "group",
+          "actual": null
+        },
+        {
+          "id": "cross",
+          "title": "Cross-Cutting / Frameworks  «logical»",
+          "lines": [],
+          "x": 1250,
+          "y": 135,
+          "w": 420,
+          "h": 1035,
+          "parent": null,
+          "kind": "group",
+          "actual": null
+        },
+        {
+          "id": "actors",
+          "title": "Users / Browser",
+          "lines": [
+            "«external context»",
+            "Candidates",
+            "Internal users",
+            "HTTP forms + session"
+          ],
+          "x": 25,
+          "y": 195,
+          "w": 185,
+          "h": 200,
+          "parent": null,
+          "kind": "context",
+          "actual": null
+        },
+        {
+          "id": "controller",
+          "title": "auth.controller",
+          "lines": [
+            "AuthController",
+            "GET /login → auth/login"
+          ],
+          "x": 275,
+          "y": 195,
+          "w": 350,
+          "h": 110,
+          "parent": "presentation",
+          "kind": "package",
+          "actual": "auth.controller"
+        },
+        {
+          "id": "views",
+          "title": "templates/auth/",
+          "lines": [
+            "«resource folder»",
+            "Forms + email/ templates"
+          ],
+          "x": 805,
+          "y": 195,
+          "w": 350,
+          "h": 110,
+          "parent": "presentation",
+          "kind": "resource",
+          "actual": null
+        },
+        {
+          "id": "advice",
+          "title": "auth",
+          "lines": [
+            "NavigationAdvice"
+          ],
+          "x": 275,
+          "y": 345,
+          "w": 350,
+          "h": 90,
+          "parent": "presentation",
+          "kind": "package",
+          "actual": "auth"
+        },
+        {
+          "id": "user_entity",
+          "title": "user.entity",
+          "lines": [
+            "User / Role"
+          ],
+          "x": 605,
+          "y": 595,
+          "w": 390,
+          "h": 100,
+          "parent": "business",
+          "kind": "package",
+          "actual": "user.entity"
+        },
+        {
+          "id": "users",
+          "title": "user.repository",
+          "lines": [
+            "UserRepository",
+            "Username / email lookup"
+          ],
+          "x": 805,
+          "y": 1030,
+          "w": 350,
+          "h": 110,
+          "parent": "data",
+          "kind": "package",
+          "actual": "user.repository"
+        },
+        {
+          "id": "config",
+          "title": "core.config",
+          "lines": [
+            "SecurityConfig",
+            "formLogin / logout / request cache",
+            "BCryptPasswordEncoder bean"
+          ],
+          "x": 1280,
+          "y": 195,
+          "w": 360,
+          "h": 150,
+          "parent": "cross",
+          "kind": "package",
+          "actual": "core.config"
+        },
+        {
+          "id": "security",
+          "title": "core.security",
+          "lines": [
+            "DatabaseUserDetailsService",
+            "AccountSessionGuardFilter",
+            "RoleAuthorities",
+            "UserDetailsService implementation"
+          ],
+          "x": 1280,
+          "y": 455,
+          "w": 360,
+          "h": 180,
+          "parent": "cross",
+          "kind": "package",
+          "actual": "core.security"
+        },
+        {
+          "id": "framework_security",
+          "title": "Spring Security",
+          "lines": [
+            "«framework group»",
+            "org.springframework.security.*",
+            "DaoAuthenticationProvider",
+            "SecurityFilterChain / PasswordEncoder"
+          ],
+          "x": 1280,
+          "y": 800,
+          "w": 360,
+          "h": 205,
+          "parent": "cross",
+          "kind": "framework",
+          "actual": null
+        },
+        {
+          "id": "jpa",
+          "title": "Spring Data JPA / JDBC",
+          "lines": [
+            "«framework group»",
+            "JpaRepository + SQL Server driver"
+          ],
+          "x": 495,
+          "y": 1260,
+          "w": 520,
+          "h": 110,
+          "parent": null,
+          "kind": "framework",
+          "actual": null
+        },
+        {
+          "id": "db",
+          "title": "SQL Server Database",
+          "lines": [
+            "«external system»",
+            "Configured data source"
+          ],
+          "x": 495,
+          "y": 1450,
+          "w": 520,
+          "h": 100,
+          "parent": null,
+          "kind": "external",
+          "actual": null
+        }
+      ],
+      "edges": [
+        {
+          "id": "login_edge_1",
+          "source": "controller",
+          "target": "views",
+          "proof": "E02",
+          "label": "view names",
+          "exit": [
+            1,
+            0.5
+          ],
+          "entry": [
+            0,
+            0.5
+          ],
+          "points": [],
+          "kind": "dependency"
+        },
+        {
+          "id": "login_edge_2",
+          "source": "config",
+          "target": "security",
+          "proof": "E10",
+          "label": "injects / constructs",
+          "exit": [
+            0.5,
+            1
+          ],
+          "entry": [
+            0.5,
+            0
+          ],
+          "points": [],
+          "kind": "dependency"
+        },
+        {
+          "id": "login_edge_3",
+          "source": "config",
+          "target": "users",
+          "proof": "E12",
+          "label": "injects repository",
+          "exit": [
+            1,
+            0.4
+          ],
+          "entry": [
+            1,
+            0.8
+          ],
+          "points": [
+            [
+              1700,
+              255
+            ],
+            [
+              1700,
+              1195
+            ],
+            [
+              1210,
+              1195
+            ],
+            [
+              1210,
+              1118
+            ]
+          ],
+          "kind": "dependency"
+        },
+        {
+          "id": "login_edge_4",
+          "source": "config",
+          "target": "framework_security",
+          "proof": "E13",
+          "label": "configures filter chain",
+          "exit": [
+            1,
+            0.8
+          ],
+          "entry": [
+            1,
+            0.2
+          ],
+          "points": [
+            [
+              1675,
+              315
+            ],
+            [
+              1675,
+              841
+            ]
+          ],
+          "kind": "dependency"
+        },
+        {
+          "id": "login_edge_5",
+          "source": "security",
+          "target": "users",
+          "proof": "E11",
+          "label": "injects / queries",
+          "exit": [
+            0,
+            0.5
+          ],
+          "entry": [
+            0.5,
+            0
+          ],
+          "points": [
+            [
+              1225,
+              545
+            ],
+            [
+              1225,
+              935
+            ],
+            [
+              980,
+              935
+            ]
+          ],
+          "kind": "dependency"
+        },
+        {
+          "id": "login_edge_6",
+          "source": "security",
+          "target": "user_entity",
+          "proof": "E11",
+          "label": "uses domain type",
+          "exit": [
+            0,
+            0.2
+          ],
+          "entry": [
+            1,
+            0.5
+          ],
+          "points": [
+            [
+              1205,
+              491
+            ],
+            [
+              1205,
+              645
+            ]
+          ],
+          "kind": "dependency"
+        },
+        {
+          "id": "login_edge_7",
+          "source": "security",
+          "target": "framework_security",
+          "proof": "E14",
+          "label": "implements / extends",
+          "exit": [
+            0.5,
+            1
+          ],
+          "entry": [
+            0.5,
+            0
+          ],
+          "points": [],
+          "kind": "dependency"
+        },
+        {
+          "id": "login_edge_8",
+          "source": "users",
+          "target": "user_entity",
+          "proof": "E07",
+          "label": "entity type",
+          "exit": [
+            0.25,
+            0
+          ],
+          "entry": [
+            0.75,
+            1
+          ],
+          "points": [
+            [
+              892.5,
+              850
+            ],
+            [
+              897.5,
+              850
+            ]
+          ],
+          "kind": "dependency"
+        },
+        {
+          "id": "login_edge_9",
+          "source": "advice",
+          "target": "framework_security",
+          "proof": "E30",
+          "label": "Authentication API",
+          "exit": [
+            1,
+            0.5
+          ],
+          "entry": [
+            0,
+            0.75
+          ],
+          "points": [
+            [
+              1190,
+              380
+            ],
+            [
+              1190,
+              953.75
+            ]
+          ],
+          "kind": "dependency"
+        },
+        {
+          "id": "login_edge_10",
+          "source": "users",
+          "target": "jpa",
+          "proof": "E19",
+          "label": "JpaRepository",
+          "exit": [
+            0.5,
+            1
+          ],
+          "entry": [
+            0.25,
+            0
+          ],
+          "points": [
+            [
+              980,
+              1210
+            ],
+            [
+              625,
+              1210
+            ]
+          ],
+          "kind": "dependency"
+        },
+        {
+          "id": "login_edge_11",
+          "source": "jpa",
+          "target": "db",
+          "proof": "E20",
+          "label": "«configured integration»",
+          "exit": [
+            0.5,
+            1
+          ],
+          "entry": [
+            0.5,
+            0
+          ],
+          "points": [],
+          "kind": "dependency"
+        }
+      ]
+    },
+    {
+      "key": "registration",
+      "title": "02 — Candidate Registration OTP",
+      "nodes": [
+        {
+          "id": "presentation",
+          "title": "Presentation Layer  «logical»",
+          "lines": [],
+          "x": 245,
+          "y": 135,
+          "w": 940,
+          "h": 220,
+          "parent": null,
+          "kind": "group",
+          "actual": null
+        },
+        {
+          "id": "business",
+          "title": "Business Layer  «logical»",
+          "lines": [],
+          "x": 245,
+          "y": 465,
+          "w": 940,
+          "h": 390,
+          "parent": null,
+          "kind": "group",
+          "actual": null
+        },
+        {
+          "id": "data",
+          "title": "Data Layer  «logical»",
+          "lines": [],
+          "x": 245,
+          "y": 970,
+          "w": 940,
+          "h": 200,
+          "parent": null,
+          "kind": "group",
+          "actual": null
+        },
+        {
+          "id": "cross",
+          "title": "Cross-Cutting / Frameworks  «logical»",
+          "lines": [],
+          "x": 1250,
+          "y": 135,
+          "w": 420,
+          "h": 1035,
+          "parent": null,
+          "kind": "group",
+          "actual": null
+        },
+        {
+          "id": "actors",
+          "title": "Users / Browser",
+          "lines": [
+            "«external context»",
+            "Candidates",
+            "Internal users",
+            "HTTP forms + session"
+          ],
+          "x": 25,
+          "y": 195,
+          "w": 185,
+          "h": 200,
+          "parent": null,
+          "kind": "context",
+          "actual": null
+        },
+        {
+          "id": "controller",
+          "title": "auth.controller",
+          "lines": [
+            "RegistrationController",
+            "/register / /register/otp/**"
+          ],
+          "x": 275,
+          "y": 195,
+          "w": 350,
+          "h": 110,
+          "parent": "presentation",
+          "kind": "package",
+          "actual": "auth.controller"
+        },
+        {
+          "id": "views",
+          "title": "templates/auth/",
+          "lines": [
+            "«resource folder»",
+            "Forms + email/ templates"
+          ],
+          "x": 805,
+          "y": 195,
+          "w": 350,
+          "h": 110,
+          "parent": "presentation",
+          "kind": "resource",
+          "actual": null
+        },
+        {
+          "id": "service",
+          "title": "auth.service",
+          "lines": [
+            "RegistrationVerificationService",
+            "RegistrationEmailSender"
+          ],
+          "x": 275,
+          "y": 525,
+          "w": 350,
+          "h": 145,
+          "parent": "business",
+          "kind": "package",
+          "actual": "auth.service"
+        },
+        {
+          "id": "user_entity",
+          "title": "user.entity",
+          "lines": [
+            "User / Role"
+          ],
+          "x": 275,
+          "y": 725,
+          "w": 350,
+          "h": 100,
+          "parent": "business",
+          "kind": "package",
+          "actual": "user.entity"
+        },
+        {
+          "id": "users",
+          "title": "user.repository",
+          "lines": [
+            "UserRepository / RoleRepository"
+          ],
+          "x": 275,
+          "y": 1030,
+          "w": 350,
+          "h": 110,
+          "parent": "data",
+          "kind": "package",
+          "actual": "user.repository"
+        },
+        {
+          "id": "framework_security",
+          "title": "Spring Security",
+          "lines": [
+            "«framework group»",
+            "PasswordEncoder"
+          ],
+          "x": 1280,
+          "y": 405,
+          "w": 360,
+          "h": 130,
+          "parent": "cross",
+          "kind": "framework",
+          "actual": null
+        },
+        {
+          "id": "session",
+          "title": "Jakarta Servlet",
+          "lines": [
+            "«framework package»",
+            "jakarta.servlet.http.HttpSession",
+            "OTP / pending state"
+          ],
+          "x": 1280,
+          "y": 625,
+          "w": 360,
+          "h": 120,
+          "parent": "cross",
+          "kind": "framework",
+          "actual": null
+        },
+        {
+          "id": "mail",
+          "title": "Spring Mail",
+          "lines": [
+            "«framework group»",
+            "JavaMailSender / MimeMessageHelper"
+          ],
+          "x": 1280,
+          "y": 825,
+          "w": 360,
+          "h": 110,
+          "parent": "cross",
+          "kind": "framework",
+          "actual": null
+        },
+        {
+          "id": "smtp",
+          "title": "SMTP Server",
+          "lines": [
+            "«external system»",
+            "Configured OTP email delivery"
+          ],
+          "x": 1280,
+          "y": 1450,
+          "w": 360,
+          "h": 100,
+          "parent": null,
+          "kind": "external",
+          "actual": null
+        },
+        {
+          "id": "contracts_note",
+          "title": "Shared contracts",
+          "lines": [
+            "«navigation note»",
+            "See page 04: DTO validation",
+            "and auth/core exception cycle"
+          ],
+          "x": 1280,
+          "y": 195,
+          "w": 360,
+          "h": 120,
+          "parent": "cross",
+          "kind": "note",
+          "actual": null
+        },
+        {
+          "id": "accounts",
+          "title": "user.service",
+          "lines": [
+            "AccountManagementService",
+            "Registration methods only"
+          ],
+          "x": 805,
+          "y": 525,
+          "w": 350,
+          "h": 145,
+          "parent": "business",
+          "kind": "package",
+          "actual": "user.service"
+        },
+        {
+          "id": "candidate_entity",
+          "title": "candidate.entity",
+          "lines": [
+            "Candidate"
+          ],
+          "x": 805,
+          "y": 725,
+          "w": 350,
+          "h": 100,
+          "parent": "business",
+          "kind": "package",
+          "actual": "candidate.entity"
+        },
+        {
+          "id": "candidates",
+          "title": "candidate.repository",
+          "lines": [
+            "CandidateRepository"
+          ],
+          "x": 805,
+          "y": 1030,
+          "w": 350,
+          "h": 110,
+          "parent": "data",
+          "kind": "package",
+          "actual": "candidate.repository"
+        },
+        {
+          "id": "jpa",
+          "title": "Spring Data JPA / JDBC",
+          "lines": [
+            "«framework group»",
+            "JpaRepository + SQL Server driver"
+          ],
+          "x": 495,
+          "y": 1260,
+          "w": 520,
+          "h": 110,
+          "parent": null,
+          "kind": "framework",
+          "actual": null
+        },
+        {
+          "id": "db",
+          "title": "SQL Server Database",
+          "lines": [
+            "«external system»",
+            "Configured data source"
+          ],
+          "x": 495,
+          "y": 1450,
+          "w": 520,
+          "h": 100,
+          "parent": null,
+          "kind": "external",
+          "actual": null
+        }
+      ],
+      "edges": [
+        {
+          "id": "registration_edge_1",
+          "source": "controller",
+          "target": "views",
+          "proof": "E02",
+          "label": "view names",
+          "exit": [
+            1,
+            0.5
+          ],
+          "entry": [
+            0,
+            0.5
+          ],
+          "points": [],
+          "kind": "dependency"
+        },
+        {
+          "id": "registration_edge_2",
+          "source": "controller",
+          "target": "service",
+          "proof": "E01",
+          "label": "injects",
+          "exit": [
+            0.5,
+            1
+          ],
+          "entry": [
+            0.5,
+            0
+          ],
+          "points": [],
+          "kind": "dependency"
+        },
+        {
+          "id": "registration_edge_3",
+          "source": "service",
+          "target": "framework_security",
+          "proof": "E15",
+          "label": "PasswordEncoder",
+          "exit": [
+            0.75,
+            0
+          ],
+          "entry": [
+            0,
+            0.5
+          ],
+          "points": [
+            [
+              537.5,
+              430
+            ],
+            [
+              1225,
+              430
+            ],
+            [
+              1225,
+              470
+            ]
+          ],
+          "kind": "dependency"
+        },
+        {
+          "id": "registration_edge_4",
+          "source": "service",
+          "target": "session",
+          "proof": "E16",
+          "label": "session state API",
+          "exit": [
+            1,
+            0.85
+          ],
+          "entry": [
+            0,
+            0.5
+          ],
+          "points": [
+            [
+              750,
+              648.25
+            ],
+            [
+              750,
+              685
+            ],
+            [
+              1240,
+              685
+            ],
+            [
+              1240,
+              680
+            ]
+          ],
+          "kind": "dependency"
+        },
+        {
+          "id": "registration_edge_5",
+          "source": "service",
+          "target": "mail",
+          "proof": "E17",
+          "label": "mail API",
+          "exit": [
+            1,
+            0.65
+          ],
+          "entry": [
+            0,
+            0.5
+          ],
+          "points": [
+            [
+              730,
+              619.25
+            ],
+            [
+              730,
+              900
+            ],
+            [
+              1255,
+              900
+            ],
+            [
+              1255,
+              880
+            ]
+          ],
+          "kind": "dependency"
+        },
+        {
+          "id": "registration_edge_6",
+          "source": "service",
+          "target": "views",
+          "proof": "E32",
+          "label": "loads email resources",
+          "exit": [
+            0.9,
+            0
+          ],
+          "entry": [
+            0.6,
+            1
+          ],
+          "points": [
+            [
+              590,
+              390
+            ],
+            [
+              1015,
+              390
+            ]
+          ],
+          "kind": "dependency"
+        },
+        {
+          "id": "registration_edge_7",
+          "source": "mail",
+          "target": "smtp",
+          "proof": "E18",
+          "label": "«configured SMTP integration»",
+          "exit": [
+            0.5,
+            1
+          ],
+          "entry": [
+            0.5,
+            0
+          ],
+          "points": [],
+          "kind": "integration"
+        },
+        {
+          "id": "registration_edge_8",
+          "source": "service",
+          "target": "accounts",
+          "proof": "E03",
+          "label": "checks / creates",
+          "exit": [
+            1,
+            0.3
+          ],
+          "entry": [
+            0,
+            0.3
+          ],
+          "points": [],
+          "kind": "dependency"
+        },
+        {
+          "id": "registration_edge_9",
+          "source": "accounts",
+          "target": "users",
+          "proof": "E05",
+          "label": "User / Role access",
+          "exit": [
+            0.15,
+            1
+          ],
+          "entry": [
+            0.2,
+            0
+          ],
+          "points": [
+            [
+              857.5,
+              700
+            ],
+            [
+              700,
+              700
+            ],
+            [
+              700,
+              945
+            ],
+            [
+              345,
+              945
+            ]
+          ],
+          "kind": "dependency"
+        },
+        {
+          "id": "registration_edge_10",
+          "source": "accounts",
+          "target": "candidates",
+          "proof": "E06",
+          "label": "persists profile",
+          "exit": [
+            1,
+            0.6
+          ],
+          "entry": [
+            1,
+            0.5
+          ],
+          "points": [
+            [
+              1215,
+              612
+            ],
+            [
+              1215,
+              1085
+            ]
+          ],
+          "kind": "dependency"
+        },
+        {
+          "id": "registration_edge_11",
+          "source": "accounts",
+          "target": "candidate_entity",
+          "proof": "E31",
+          "label": "constructs",
+          "exit": [
+            0.5,
+            1
+          ],
+          "entry": [
+            0.5,
+            0
+          ],
+          "points": [],
+          "kind": "dependency"
+        },
+        {
+          "id": "registration_edge_12",
+          "source": "accounts",
+          "target": "user_entity",
+          "proof": "E31",
+          "label": "constructs",
+          "exit": [
+            0,
+            0.7
+          ],
+          "entry": [
+            0.5,
+            0
+          ],
+          "points": [
+            [
+              780,
+              626.5
+            ],
+            [
+              780,
+              710
+            ],
+            [
+              450,
+              710
+            ]
+          ],
+          "kind": "dependency"
+        },
+        {
+          "id": "registration_edge_13",
+          "source": "candidates",
+          "target": "candidate_entity",
+          "proof": "E08",
+          "label": "entity type",
+          "exit": [
+            0.5,
+            0
+          ],
+          "entry": [
+            0.5,
+            1
+          ],
+          "points": [],
+          "kind": "dependency"
+        },
+        {
+          "id": "registration_edge_14",
+          "source": "candidate_entity",
+          "target": "user_entity",
+          "proof": "E09",
+          "label": "User account type",
+          "exit": [
+            0,
+            0.5
+          ],
+          "entry": [
+            1,
+            0.5
+          ],
+          "points": [],
+          "kind": "dependency"
+        },
+        {
+          "id": "registration_edge_15",
+          "source": "users",
+          "target": "user_entity",
+          "proof": "E07",
+          "label": "entity type",
+          "exit": [
+            0.5,
+            0
+          ],
+          "entry": [
+            0.5,
+            1
+          ],
+          "points": [],
+          "kind": "dependency"
+        },
+        {
+          "id": "registration_edge_16",
+          "source": "users",
+          "target": "jpa",
+          "proof": "E19",
+          "label": "JpaRepository",
+          "exit": [
+            0.5,
+            1
+          ],
+          "entry": [
+            0.25,
+            0
+          ],
+          "points": [
+            [
+              450,
+              1210
+            ],
+            [
+              625,
+              1210
+            ]
+          ],
+          "kind": "dependency"
+        },
+        {
+          "id": "registration_edge_17",
+          "source": "candidates",
+          "target": "jpa",
+          "proof": "E19",
+          "label": "JpaRepository",
+          "exit": [
+            0.5,
+            1
+          ],
+          "entry": [
+            0.8,
+            0
+          ],
+          "points": [
+            [
+              980,
+              1210
+            ],
+            [
+              911,
+              1210
+            ]
+          ],
+          "kind": "dependency"
+        },
+        {
+          "id": "registration_edge_18",
+          "source": "jpa",
+          "target": "db",
+          "proof": "E20",
+          "label": "«configured integration»",
+          "exit": [
+            0.5,
+            1
+          ],
+          "entry": [
+            0.5,
+            0
+          ],
+          "points": [],
+          "kind": "dependency"
+        }
+      ]
+    },
+    {
+      "key": "recovery",
+      "title": "03 — Password Recovery OTP",
+      "nodes": [
+        {
+          "id": "presentation",
+          "title": "Presentation Layer  «logical»",
+          "lines": [],
+          "x": 245,
+          "y": 135,
+          "w": 940,
+          "h": 220,
+          "parent": null,
+          "kind": "group",
+          "actual": null
+        },
+        {
+          "id": "business",
+          "title": "Business Layer  «logical»",
+          "lines": [],
+          "x": 245,
+          "y": 465,
+          "w": 940,
+          "h": 390,
+          "parent": null,
+          "kind": "group",
+          "actual": null
+        },
+        {
+          "id": "data",
+          "title": "Data Layer  «logical»",
+          "lines": [],
+          "x": 245,
+          "y": 970,
+          "w": 940,
+          "h": 200,
+          "parent": null,
+          "kind": "group",
+          "actual": null
+        },
+        {
+          "id": "cross",
+          "title": "Cross-Cutting / Frameworks  «logical»",
+          "lines": [],
+          "x": 1250,
+          "y": 135,
+          "w": 420,
+          "h": 1035,
+          "parent": null,
+          "kind": "group",
+          "actual": null
+        },
+        {
+          "id": "actors",
+          "title": "Users / Browser",
+          "lines": [
+            "«external context»",
+            "Candidates",
+            "Internal users",
+            "HTTP forms + session"
+          ],
+          "x": 25,
+          "y": 195,
+          "w": 185,
+          "h": 200,
+          "parent": null,
+          "kind": "context",
+          "actual": null
+        },
+        {
+          "id": "controller",
+          "title": "auth.controller",
+          "lines": [
+            "PasswordRecoveryController",
+            "/forgot-password / /reset-password/**"
+          ],
+          "x": 275,
+          "y": 195,
+          "w": 350,
+          "h": 110,
+          "parent": "presentation",
+          "kind": "package",
+          "actual": "auth.controller"
+        },
+        {
+          "id": "views",
+          "title": "templates/auth/",
+          "lines": [
+            "«resource folder»",
+            "Forms + email/ templates"
+          ],
+          "x": 805,
+          "y": 195,
+          "w": 350,
+          "h": 110,
+          "parent": "presentation",
+          "kind": "resource",
+          "actual": null
+        },
+        {
+          "id": "service",
+          "title": "auth.service",
+          "lines": [
+            "PasswordRecoveryService",
+            "PasswordResetService",
+            "PasswordResetEmailSender"
+          ],
+          "x": 275,
+          "y": 525,
+          "w": 550,
+          "h": 145,
+          "parent": "business",
+          "kind": "package",
+          "actual": "auth.service"
+        },
+        {
+          "id": "user_entity",
+          "title": "user.entity",
+          "lines": [
+            "User"
+          ],
+          "x": 805,
+          "y": 725,
+          "w": 350,
+          "h": 100,
+          "parent": "business",
+          "kind": "package",
+          "actual": "user.entity"
+        },
+        {
+          "id": "users",
+          "title": "user.repository",
+          "lines": [
+            "UserRepository"
+          ],
+          "x": 805,
+          "y": 1030,
+          "w": 350,
+          "h": 110,
+          "parent": "data",
+          "kind": "package",
+          "actual": "user.repository"
+        },
+        {
+          "id": "framework_security",
+          "title": "Spring Security",
+          "lines": [
+            "«framework group»",
+            "PasswordEncoder"
+          ],
+          "x": 1280,
+          "y": 405,
+          "w": 360,
+          "h": 130,
+          "parent": "cross",
+          "kind": "framework",
+          "actual": null
+        },
+        {
+          "id": "session",
+          "title": "Jakarta Servlet",
+          "lines": [
+            "«framework package»",
+            "jakarta.servlet.http.HttpSession",
+            "OTP / pending state"
+          ],
+          "x": 1280,
+          "y": 625,
+          "w": 360,
+          "h": 120,
+          "parent": "cross",
+          "kind": "framework",
+          "actual": null
+        },
+        {
+          "id": "mail",
+          "title": "Spring Mail",
+          "lines": [
+            "«framework group»",
+            "JavaMailSender / MimeMessageHelper"
+          ],
+          "x": 1280,
+          "y": 825,
+          "w": 360,
+          "h": 110,
+          "parent": "cross",
+          "kind": "framework",
+          "actual": null
+        },
+        {
+          "id": "smtp",
+          "title": "SMTP Server",
+          "lines": [
+            "«external system»",
+            "Configured OTP email delivery"
+          ],
+          "x": 1280,
+          "y": 1450,
+          "w": 360,
+          "h": 100,
+          "parent": null,
+          "kind": "external",
+          "actual": null
+        },
+        {
+          "id": "contracts_note",
+          "title": "Shared contracts",
+          "lines": [
+            "«navigation note»",
+            "See page 04: DTO validation",
+            "and auth/core exception cycle"
+          ],
+          "x": 1280,
+          "y": 195,
+          "w": 360,
+          "h": 120,
+          "parent": "cross",
+          "kind": "note",
+          "actual": null
+        },
+        {
+          "id": "jpa",
+          "title": "Spring Data JPA / JDBC",
+          "lines": [
+            "«framework group»",
+            "JpaRepository + SQL Server driver"
+          ],
+          "x": 495,
+          "y": 1260,
+          "w": 520,
+          "h": 110,
+          "parent": null,
+          "kind": "framework",
+          "actual": null
+        },
+        {
+          "id": "db",
+          "title": "SQL Server Database",
+          "lines": [
+            "«external system»",
+            "Configured data source"
+          ],
+          "x": 495,
+          "y": 1450,
+          "w": 520,
+          "h": 100,
+          "parent": null,
+          "kind": "external",
+          "actual": null
+        }
+      ],
+      "edges": [
+        {
+          "id": "recovery_edge_1",
+          "source": "controller",
+          "target": "views",
+          "proof": "E02",
+          "label": "view names",
+          "exit": [
+            1,
+            0.5
+          ],
+          "entry": [
+            0,
+            0.5
+          ],
+          "points": [],
+          "kind": "dependency"
+        },
+        {
+          "id": "recovery_edge_2",
+          "source": "controller",
+          "target": "service",
+          "proof": "E01",
+          "label": "injects",
+          "exit": [
+            0.5,
+            1
+          ],
+          "entry": [
+            0.32,
+            0
+          ],
+          "points": [],
+          "kind": "dependency"
+        },
+        {
+          "id": "recovery_edge_3",
+          "source": "service",
+          "target": "framework_security",
+          "proof": "E15",
+          "label": "PasswordEncoder",
+          "exit": [
+            0.05,
+            0
+          ],
+          "entry": [
+            0,
+            0.5
+          ],
+          "points": [
+            [
+              302.5,
+              430
+            ],
+            [
+              1225,
+              430
+            ],
+            [
+              1225,
+              470
+            ]
+          ],
+          "kind": "dependency"
+        },
+        {
+          "id": "recovery_edge_4",
+          "source": "service",
+          "target": "session",
+          "proof": "E16",
+          "label": "session state API",
+          "exit": [
+            1,
+            0.85
+          ],
+          "entry": [
+            0,
+            0.5
+          ],
+          "points": [
+            [
+              1190,
+              648.25
+            ],
+            [
+              1190,
+              685
+            ],
+            [
+              1240,
+              685
+            ],
+            [
+              1240,
+              680
+            ]
+          ],
+          "kind": "dependency"
+        },
+        {
+          "id": "recovery_edge_5",
+          "source": "service",
+          "target": "mail",
+          "proof": "E17",
+          "label": "mail API",
+          "exit": [
+            1,
+            0.65
+          ],
+          "entry": [
+            0,
+            0.5
+          ],
+          "points": [
+            [
+              1210,
+              619.25
+            ],
+            [
+              1210,
+              900
+            ],
+            [
+              1255,
+              900
+            ],
+            [
+              1255,
+              880
+            ]
+          ],
+          "kind": "dependency"
+        },
+        {
+          "id": "recovery_edge_6",
+          "source": "service",
+          "target": "views",
+          "proof": "E32",
+          "label": "loads email resources",
+          "exit": [
+            0.2,
+            0
+          ],
+          "entry": [
+            0.6,
+            1
+          ],
+          "points": [
+            [
+              385,
+              390
+            ],
+            [
+              1015,
+              390
+            ]
+          ],
+          "kind": "dependency"
+        },
+        {
+          "id": "recovery_edge_7",
+          "source": "mail",
+          "target": "smtp",
+          "proof": "E18",
+          "label": "«configured SMTP integration»",
+          "exit": [
+            0.5,
+            1
+          ],
+          "entry": [
+            0.5,
+            0
+          ],
+          "points": [],
+          "kind": "integration"
+        },
+        {
+          "id": "recovery_edge_8",
+          "source": "service",
+          "target": "users",
+          "proof": "E04",
+          "label": "queries / updates",
+          "exit": [
+            1,
+            0.2
+          ],
+          "entry": [
+            1,
+            0.5
+          ],
+          "points": [
+            [
+              1195,
+              554
+            ],
+            [
+              1195,
+              1085
+            ]
+          ],
+          "kind": "dependency"
+        },
+        {
+          "id": "recovery_edge_9",
+          "source": "service",
+          "target": "user_entity",
+          "proof": "E04",
+          "label": "uses User type",
+          "exit": [
+            0.5,
+            1
+          ],
+          "entry": [
+            0,
+            0.5
+          ],
+          "points": [
+            [
+              550,
+              775
+            ]
+          ],
+          "kind": "dependency"
+        },
+        {
+          "id": "recovery_edge_10",
+          "source": "users",
+          "target": "user_entity",
+          "proof": "E07",
+          "label": "entity type",
+          "exit": [
+            0.5,
+            0
+          ],
+          "entry": [
+            0.5,
+            1
+          ],
+          "points": [],
+          "kind": "dependency"
+        },
+        {
+          "id": "recovery_edge_11",
+          "source": "users",
+          "target": "jpa",
+          "proof": "E19",
+          "label": "JpaRepository",
+          "exit": [
+            0.5,
+            1
+          ],
+          "entry": [
+            0.25,
+            0
+          ],
+          "points": [
+            [
+              980,
+              1210
+            ],
+            [
+              625,
+              1210
+            ]
+          ],
+          "kind": "dependency"
+        },
+        {
+          "id": "recovery_edge_12",
+          "source": "jpa",
+          "target": "db",
+          "proof": "E20",
+          "label": "«configured integration»",
+          "exit": [
+            0.5,
+            1
+          ],
+          "entry": [
+            0.5,
+            0
+          ],
+          "points": [],
+          "kind": "dependency"
+        }
+      ]
+    },
+    {
+      "key": "contracts",
+      "title": "04 — Contracts, Validation & Exception Dependencies",
+      "nodes": [
+        {
+          "id": "presentation",
+          "title": "Presentation & Contracts  «logical»",
+          "lines": [],
+          "x": 245,
+          "y": 135,
+          "w": 940,
+          "h": 220,
+          "parent": null,
+          "kind": "group",
+          "actual": null
+        },
+        {
+          "id": "business",
+          "title": "Business Layer  «logical»",
+          "lines": [],
+          "x": 245,
+          "y": 480,
+          "w": 940,
+          "h": 210,
+          "parent": null,
+          "kind": "group",
+          "actual": null
+        },
+        {
+          "id": "domain",
+          "title": "Business Entities  «logical»",
+          "lines": [],
+          "x": 1250,
+          "y": 135,
+          "w": 420,
+          "h": 555,
+          "parent": null,
+          "kind": "group",
+          "actual": null
+        },
+        {
+          "id": "cross",
+          "title": "Cross-Cutting Concerns  «logical»",
+          "lines": [],
+          "x": 245,
+          "y": 825,
+          "w": 1425,
+          "h": 430,
+          "parent": null,
+          "kind": "group",
+          "actual": null
+        },
+        {
+          "id": "controller",
+          "title": "auth.controller",
+          "lines": [
+            "RegistrationController",
+            "PasswordRecoveryController"
+          ],
+          "x": 275,
+          "y": 195,
+          "w": 350,
+          "h": 110,
+          "parent": "presentation",
+          "kind": "package",
+          "actual": "auth.controller"
+        },
+        {
+          "id": "dto",
+          "title": "auth.dto",
+          "lines": [
+            "Request DTOs + internal state records",
+            "PreparedRegistrationResponse",
+            "AccountSnapshotResponse"
+          ],
+          "x": 805,
+          "y": 195,
+          "w": 350,
+          "h": 130,
+          "parent": "presentation",
+          "kind": "package",
+          "actual": "auth.dto"
+        },
+        {
+          "id": "service",
+          "title": "auth.service",
+          "lines": [
+            "Registration / Password recovery"
+          ],
+          "x": 275,
+          "y": 540,
+          "w": 350,
+          "h": 110,
+          "parent": "business",
+          "kind": "package",
+          "actual": "auth.service"
+        },
+        {
+          "id": "accounts",
+          "title": "user.service",
+          "lines": [
+            "AccountManagementService"
+          ],
+          "x": 805,
+          "y": 540,
+          "w": 350,
+          "h": 110,
+          "parent": "business",
+          "kind": "package",
+          "actual": "user.service"
+        },
+        {
+          "id": "user_entity",
+          "title": "user.entity",
+          "lines": [
+            "User / Role"
+          ],
+          "x": 1280,
+          "y": 195,
+          "w": 360,
+          "h": 110,
+          "parent": "domain",
+          "kind": "package",
+          "actual": "user.entity"
+        },
+        {
+          "id": "candidate_entity",
+          "title": "candidate.entity",
+          "lines": [
+            "Candidate"
+          ],
+          "x": 1280,
+          "y": 475,
+          "w": 360,
+          "h": 110,
+          "parent": "domain",
+          "kind": "package",
+          "actual": "candidate.entity"
+        },
+        {
+          "id": "auth_exception",
+          "title": "auth.exception",
+          "lines": [
+            "RegistrationFlowException",
+            "PasswordRecoveryFlowException",
+            "Delivery / unavailable exceptions"
+          ],
+          "x": 275,
+          "y": 900,
+          "w": 350,
+          "h": 150,
+          "parent": "cross",
+          "kind": "package",
+          "actual": "auth.exception"
+        },
+        {
+          "id": "core_exception",
+          "title": "core.exception",
+          "lines": [
+            "BaseBusinessException",
+            "GlobalExceptionHandler",
+            "Imports auth DTOs + exceptions"
+          ],
+          "x": 805,
+          "y": 900,
+          "w": 350,
+          "h": 150,
+          "parent": "cross",
+          "kind": "package",
+          "actual": "core.exception"
+        },
+        {
+          "id": "validation",
+          "title": "core.validation",
+          "lines": [
+            "PasswordMatches",
+            "PasswordMatchesValidator"
+          ],
+          "x": 1280,
+          "y": 900,
+          "w": 360,
+          "h": 120,
+          "parent": "cross",
+          "kind": "package",
+          "actual": "core.validation"
+        },
+        {
+          "id": "user_exception",
+          "title": "user.exception",
+          "lines": [
+            "AccountFieldException"
+          ],
+          "x": 805,
+          "y": 1130,
+          "w": 350,
+          "h": 90,
+          "parent": "cross",
+          "kind": "package",
+          "actual": "user.exception"
+        },
+        {
+          "id": "base",
+          "title": "core.base",
+          "lines": [
+            "BaseEntity"
+          ],
+          "x": 1280,
+          "y": 1130,
+          "w": 360,
+          "h": 90,
+          "parent": "cross",
+          "kind": "package",
+          "actual": "core.base"
+        },
+        {
+          "id": "cycle_note",
+          "title": "Confirmed package cycle",
+          "lines": [
+            "auth.exception ↔ core.exception",
+            "Inheritance dependency →",
+            "← Handler imports / catches"
+          ],
+          "x": 25,
+          "y": 900,
+          "w": 190,
+          "h": 220,
+          "parent": null,
+          "kind": "note",
+          "actual": null
+        }
+      ],
+      "edges": [
+        {
+          "id": "contracts_edge_1",
+          "source": "controller",
+          "target": "dto",
+          "proof": "E21",
+          "label": "form contracts",
+          "exit": [
+            1,
+            0.5
+          ],
+          "entry": [
+            0,
+            0.5
+          ],
+          "points": [],
+          "kind": "dependency"
+        },
+        {
+          "id": "contracts_edge_2",
+          "source": "controller",
+          "target": "service",
+          "proof": "E01",
+          "label": "injects",
+          "exit": [
+            0.5,
+            1
+          ],
+          "entry": [
+            0.5,
+            0
+          ],
+          "points": [],
+          "kind": "dependency"
+        },
+        {
+          "id": "contracts_edge_3",
+          "source": "service",
+          "target": "accounts",
+          "proof": "E03",
+          "label": "registration methods",
+          "exit": [
+            1,
+            0.5
+          ],
+          "entry": [
+            0,
+            0.5
+          ],
+          "points": [],
+          "kind": "dependency"
+        },
+        {
+          "id": "contracts_edge_4",
+          "source": "service",
+          "target": "dto",
+          "proof": "E22",
+          "label": "uses records",
+          "exit": [
+            0,
+            0.2
+          ],
+          "entry": [
+            0,
+            0.8
+          ],
+          "points": [
+            [
+              225,
+              562
+            ],
+            [
+              225,
+              385
+            ],
+            [
+              750,
+              385
+            ],
+            [
+              750,
+              299
+            ]
+          ],
+          "kind": "dependency"
+        },
+        {
+          "id": "contracts_edge_5",
+          "source": "service",
+          "target": "auth_exception",
+          "proof": "E22",
+          "label": "throws",
+          "exit": [
+            0.5,
+            1
+          ],
+          "entry": [
+            0.5,
+            0
+          ],
+          "points": [],
+          "kind": "dependency"
+        },
+        {
+          "id": "contracts_edge_6",
+          "source": "auth_exception",
+          "target": "core_exception",
+          "proof": "E24",
+          "label": "base type",
+          "exit": [
+            1,
+            0.25
+          ],
+          "entry": [
+            0,
+            0.25
+          ],
+          "points": [],
+          "kind": "dependency"
+        },
+        {
+          "id": "contracts_edge_7",
+          "source": "core_exception",
+          "target": "auth_exception",
+          "proof": "E25",
+          "label": "handler imports",
+          "exit": [
+            0,
+            0.8
+          ],
+          "entry": [
+            1,
+            0.8
+          ],
+          "points": [],
+          "kind": "dependency"
+        },
+        {
+          "id": "contracts_edge_8",
+          "source": "core_exception",
+          "target": "dto",
+          "proof": "E26",
+          "label": "rebuilds form DTOs",
+          "exit": [
+            1,
+            0.2
+          ],
+          "entry": [
+            0.5,
+            1
+          ],
+          "points": [
+            [
+              1180,
+              930
+            ],
+            [
+              1180,
+              780
+            ],
+            [
+              1200,
+              780
+            ],
+            [
+              1200,
+              385
+            ],
+            [
+              980,
+              385
+            ]
+          ],
+          "kind": "dependency"
+        },
+        {
+          "id": "contracts_edge_9",
+          "source": "dto",
+          "target": "validation",
+          "proof": "E23",
+          "label": "@PasswordMatches",
+          "exit": [
+            1,
+            0.5
+          ],
+          "entry": [
+            0.5,
+            0
+          ],
+          "points": [
+            [
+              1230,
+              250
+            ],
+            [
+              1230,
+              855
+            ],
+            [
+              1460,
+              855
+            ]
+          ],
+          "kind": "dependency"
+        },
+        {
+          "id": "contracts_edge_10",
+          "source": "accounts",
+          "target": "user_exception",
+          "proof": "E27",
+          "label": "identifier conflict",
+          "exit": [
+            1,
+            0.5
+          ],
+          "entry": [
+            1,
+            0.5
+          ],
+          "points": [
+            [
+              1215,
+              595
+            ],
+            [
+              1215,
+              1175
+            ]
+          ],
+          "kind": "dependency"
+        },
+        {
+          "id": "contracts_edge_11",
+          "source": "user_exception",
+          "target": "core_exception",
+          "proof": "E28",
+          "label": "base type",
+          "exit": [
+            0.5,
+            0
+          ],
+          "entry": [
+            0.5,
+            1
+          ],
+          "points": [],
+          "kind": "dependency"
+        },
+        {
+          "id": "contracts_edge_12",
+          "source": "service",
+          "target": "user_exception",
+          "proof": "E33",
+          "label": "catches / translates",
+          "exit": [
+            0.8,
+            1
+          ],
+          "entry": [
+            0,
+            0.5
+          ],
+          "points": [
+            [
+              555,
+              735
+            ],
+            [
+              710,
+              735
+            ],
+            [
+              710,
+              1175
+            ]
+          ],
+          "kind": "dependency"
+        },
+        {
+          "id": "contracts_edge_13",
+          "source": "candidate_entity",
+          "target": "user_entity",
+          "proof": "E09",
+          "label": "User account type",
+          "exit": [
+            0.5,
+            0
+          ],
+          "entry": [
+            0.5,
+            1
+          ],
+          "points": [],
+          "kind": "dependency"
+        },
+        {
+          "id": "contracts_edge_14",
+          "source": "user_entity",
+          "target": "base",
+          "proof": "E29",
+          "label": "base type",
+          "exit": [
+            1,
+            0.5
+          ],
+          "entry": [
+            1,
+            0.3
+          ],
+          "points": [
+            [
+              1700,
+              250
+            ],
+            [
+              1700,
+              1157
+            ]
+          ],
+          "kind": "dependency"
+        },
+        {
+          "id": "contracts_edge_15",
+          "source": "candidate_entity",
+          "target": "base",
+          "proof": "E29",
+          "label": "base type",
+          "exit": [
+            1,
+            0.5
+          ],
+          "entry": [
+            1,
+            0.8
+          ],
+          "points": [
+            [
+              1675,
+              530
+            ],
+            [
+              1675,
+              1202
+            ]
+          ],
+          "kind": "dependency"
+        }
+      ]
+    }
+  ],
+  "verification": {
+    "xml": {
+      "RMS_Package_Diagram.drawio": [
+        {
+          "page": "RMS Authentication — Layered Package Diagram",
+          "cells": 45,
+          "edges": 17
+        }
+      ],
+      "RMS_Detailed_Package_Diagram.drawio": [
+        {
+          "page": "01 — Login, Logout & Session Guard",
+          "cells": 32,
+          "edges": 11
+        },
+        {
+          "page": "02 — Candidate Registration OTP",
+          "cells": 44,
+          "edges": 18
+        },
+        {
+          "page": "03 — Password Recovery OTP",
+          "cells": 35,
+          "edges": 12
+        },
+        {
+          "page": "04 — Contracts, Validation & Exception Dependencies",
+          "cells": 37,
+          "edges": 15
+        }
+      ]
+    },
+    "source_snapshot_before": {
+      "file_count": 613,
+      "sha256": "ef75c1ad45bf4d2edc064637679fb40b2bd14d0d704c235e13a792c83bb683ef"
+    },
+    "source_snapshot_after": {
+      "file_count": 613,
+      "sha256": "ef75c1ad45bf4d2edc064637679fb40b2bd14d0d704c235e13a792c83bb683ef"
+    },
+    "node_bounds_and_sibling_overlap": "passed",
+    "actual_java_packages": "passed",
+    "preview_connector_text_intersections": "passed",
+    "native_diagrams_net_open": "not verified: browser ERR_BLOCKED_BY_CLIENT",
+    "preview_renderer": "Pillow rendering from saved mxGraph XML; not native diagrams.net",
+    "previews": [
+      "RMS_Authentication_overview.png",
+      "RMS_Authentication_login.png",
+      "RMS_Authentication_registration.png",
+      "RMS_Authentication_recovery.png",
+      "RMS_Authentication_contracts.png"
+    ]
+  }
+}
