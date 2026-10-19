@@ -52,11 +52,11 @@
 
   <!-- DIRECTOR REJECTION NOTE (IF EDIT & REJECTED) -->
   <div th:if="${isEdit and detail != null and (detail.offerStatus == 'Director_Rejected' or detail.offerStatus == 'Rejected')}"
-       class="alert alert--danger" style="margin-bottom: 20px;">
+       class="alert alert--danger offer-alert-spacing">
     <i class="fa-solid fa-circle-exclamation"></i>
     <div>
       <strong>Lý do từ chối từ Giám đốc:</strong>
-      <div style="margin-top:4px;"
+      <div class="offer-mt-1"
            th:text="${#lists.isEmpty(detail.approvalHistory) ? 'Vui lòng điều chỉnh lại mức lương/định biên theo yêu cầu.' : detail.approvalHistory[0].directorComments}">
         Cần điều chỉnh lại lương.
       </div>
@@ -69,11 +69,11 @@
                       method="post">
 
   <!-- VALIDATION SUMMARY ALERT -->
-  <div th:if="${#fields.hasAnyErrors()}" class="alert alert--danger" style="margin-bottom: 20px;">
+  <div th:if="${#fields.hasAnyErrors()}" class="alert alert--danger offer-alert-spacing">
     <i class="fa-solid fa-triangle-exclamation"></i>
     <div>
       <strong>Dữ liệu nhập chưa hợp lệ. Vui lòng kiểm tra lại:</strong>
-      <ul style="margin: 4px 0 0 16px; padding: 0;">
+      <ul class="offer-error-list">
         <li th:each="err : ${#fields.allErrors()}"
             th:text="${#strings.contains(err, 'Failed to convert') or #strings.contains(err, 'typeMismatch') ? (#strings.contains(err, 'expectedStartDate') ? 'Ngày bắt đầu dự kiến không hợp lệ.' : (#strings.contains(err, 'proposedSalary') ? 'Mức lương chính thức phải là số hợp lệ.' : (#strings.contains(err, 'probationSalary') ? 'Mức lương thử việc phải là số hợp lệ.' : (#strings.contains(err, 'probationDays') ? 'Thời gian thử việc phải là số ngày hợp lệ.' : 'Dữ liệu nhập vào không đúng định dạng.')))) : err}"></li>
       </ul>
@@ -104,21 +104,21 @@
         </div>
 
         <!-- Khung xem trước thông tin Group A (Tự động cập nhật qua JS khi chọn dropdown) -->
-        <div id="groupASection" style="display:none; background:var(--page); border:1px dashed var(--line); border-radius:var(--radius-md); padding:var(--s4); margin-top:var(--s3);">
+        <div id="groupASection" class="offer-group-a-box">
                                 <div class="detail-grid-3">
                                     <div><div class="detail-item-label">Mã Ứng viên</div><div class="detail-item-value" id="dispCandId">-</div></div>
-                                    <div><div class="detail-item-label">Họ và tên</div><div class="detail-item-value" style="font-weight:700;" id="dispCandName">-</div></div>
+                                    <div><div class="detail-item-label">Họ và tên</div><div class="detail-item-value offer-font-bold" id="dispCandName">-</div></div>
                                     <div><div class="detail-item-label">Email</div><div class="detail-item-value" id="dispCandEmail">-</div></div>
                                     <div><div class="detail-item-label">Số điện thoại</div><div class="detail-item-value" id="dispCandPhone">-</div></div>
                                     <div><div class="detail-item-label">Vị trí ứng tuyển</div><div class="detail-item-value" id="dispPosition">-</div></div>
                                     <div><div class="detail-item-label">Phòng ban</div><div class="detail-item-value" id="dispDept">-</div></div>
                                     <div><div class="detail-item-label">Mã Requisition</div><div class="detail-item-value" id="dispReqId">-</div></div>
-                                    <div><div class="detail-item-label">Lương đề xuất Hiring Manager</div><div class="detail-item-value" style="color:var(--brand-dark); font-weight:700;" id="dispRecomSalary">-</div></div>
+                                    <div><div class="detail-item-label">Lương đề xuất Hiring Manager</div><div class="detail-item-value offer-salary-highlight" id="dispRecomSalary">-</div></div>
                                     <div><div class="detail-item-label">Hiring Manager</div><div class="detail-item-value" id="dispHm">-</div></div>
                                 </div>
-                                <div style="margin-top:10px; padding-top:10px; border-top:1px dashed var(--line);">
+                                <div class="offer-mt-2">
                                     <div class="detail-item-label">Đánh giá Hội đồng phỏng vấn:</div>
-                                    <div class="detail-item-value" id="dispInterviewComments" style="font-style:italic; color:var(--muted); margin-top:2px;">-</div>
+                                    <div class="detail-item-value offer-font-italic-muted" id="dispInterviewComments">-</div>
                                 </div>
                             </div>
                         </div>
@@ -126,7 +126,7 @@
       <!-- Trường hợp CHỈNH SỬA: Hiển thị thông tin ứng viên cố định (Read-only) -->
       <div th:if="${isEdit and detail != null}">
         <div class="detail-grid-3">
-          <div><div class="detail-item-label">Họ và tên ứng viên</div><div class="detail-item-value" style="font-weight:700;" th:text="${detail.candidateName}">-</div></div>
+          <div><div class="detail-item-label">Họ và tên ứng viên</div><div class="detail-item-value offer-font-bold" th:text="${detail.candidateName}">-</div></div>
           <div><div class="detail-item-label">Email</div><div class="detail-item-value" th:text="${detail.candidateEmail}">-</div></div>
           <div><div class="detail-item-label">Số điện thoại</div><div class="detail-item-value" th:text="${detail.candidatePhone}">-</div></div>
           <div><div class="detail-item-label">Vị trí ứng tuyển</div><div class="detail-item-value" th:text="${detail.appliedPosition}">-</div></div>
@@ -152,8 +152,8 @@
 
       <div class="grid-2-col">
         <div class="form-group">
-          <div style="display: flex; align-items: center; justify-content: space-between; min-height: 32px; margin-bottom: 4px;">
-            <label class="form-label form-label--required" for="proposedSalary" style="margin-bottom: 0;">
+          <div class="offer-field-header-row">
+            <label class="form-label form-label--required" for="proposedSalary">
               Lương chính thức (VND/tháng)
             </label>
           </div>
@@ -165,20 +165,19 @@
         </div>
 
         <div class="form-group">
-          <div style="display: flex; align-items: center; justify-content: space-between; min-height: 32px; margin-bottom: 4px;">
-            <label class="form-label form-label--required" for="probationSalary" style="margin-bottom: 0;">
+          <div class="offer-field-header-row">
+            <label class="form-label form-label--required" for="probationSalary">
               Lương thử việc (VND/tháng)
             </label>
-            <button type="button" class="btn btn--sm" onclick="autoCalculateProbationSalary(true)"
-                    title="Gợi ý mức sàn 85% theo quy định BR-OFF-01"
-                    style="padding: 2px 10px; height: 28px; min-height: 28px; font-size: 12.5px; font-weight: 500; border-radius: var(--radius-sm);">
-              <i class="fa-solid fa-wand-magic-sparkles" style="margin-right: 4px;"></i> Gợi ý 85%
+            <button type="button" class="btn btn--sm offer-btn-calc-probation" onclick="autoCalculateProbationSalary(true)"
+                    title="Gợi ý mức sàn 85% theo quy định BR-OFF-01">
+              <i class="fa-solid fa-wand-magic-sparkles"></i> Gợi ý 85%
             </button>
           </div>
           <input type="number" id="probationSalary" th:field="*{probationSalary}" class="form-input"
                  placeholder="Tối thiểu 85% lương chính thức" min="0" step="any"
                  oninput="validateProbationRuleUi()" required>
-          <div id="probationRuleNotice" class="form-hint" style="color:var(--brand-dark); font-size:12px; margin-top:4px;">
+          <div id="probationRuleNotice" class="form-hint offer-rule-notice">
             <i class="fa-solid fa-circle-check"></i> Tuân thủ quy định tối thiểu 85% lương chính thức.
           </div>
           <p class="form-error" th:if="${#fields.hasErrors('probationSalary')}"
@@ -197,7 +196,7 @@
         <div class="form-group">
           <label class="form-label form-label--required" for="responsePeriodDays">Thời hạn phản hồi (ngày)</label>
           <input type="number" id="responsePeriodDays" th:field="*{responsePeriodDays}" class="form-input" min="1" max="60" placeholder="5" required>
-          <div class="form-hint" style="font-size:12px; margin-top:4px; color:var(--muted);">
+          <div class="form-hint">
             Hạn phản hồi = Thời điểm HR phát hành + số ngày này (mặc định 5 ngày).
           </div>
           <p class="form-error" th:if="${#fields.hasErrors('responsePeriodDays')}"
@@ -221,7 +220,7 @@
       </div>
 
       <div class="form-group">
-        <label class="form-label" for="benefitsPackage">Gói phúc lợi & Chế độ đãi ngộ <span style="color:var(--muted); font-weight:normal;">(Không bắt buộc)</span></label>
+        <label class="form-label" for="benefitsPackage">Gói phúc lợi & Chế độ đãi ngộ <span class="offer-hint-inline">(Không bắt buộc)</span></label>
         <textarea id="benefitsPackage" th:field="*{benefitsPackage}" class="form-textarea" rows="4"
                   placeholder="Bảo hiểm sức khỏe, phụ cấp ăn trưa, thưởng tháng 13..."></textarea>
       </div>
@@ -233,32 +232,17 @@
     <a th:href="${isEdit ? '/offers/' + offerId : '/offers'}" class="btn btn--secondary">Hủy bỏ</a>
     <!-- Submit as Draft -->
     <button type="submit" name="isDraft" value="true" class="btn btn--secondary">
-      <i class="fa-regular fa-floppy-disk" style="margin-right:6px;"></i> Lưu Bản Thảo (Draft)
+      <i class="fa-regular fa-floppy-disk"></i> Lưu Bản Thảo (Draft)
     </button>
     <!-- Submit to Director -->
     <button type="submit" name="isDraft" value="false" class="btn btn--primary">
-      <i class="fa-solid fa-paper-plane" style="margin-right:6px;"></i> Trình Giám Đốc
+      <i class="fa-solid fa-paper-plane"></i> Trình Giám Đốc
     </button>
   </div>
 </form>
 
 <th:block layout:fragment="scripts">
   <script th:src="@{/js/offers.js}" defer></script>
-  <script>
-    // Set min date for expectedStartDate to tomorrow
-    document.addEventListener('DOMContentLoaded', function() {
-      const startDateInput = document.getElementById('expectedStartDate');
-      if (startDateInput) {
-        const tomorrow = new Date();
-        tomorrow.setDate(tomorrow.getDate() + 1);
-        const yyyy = tomorrow.getFullYear();
-        const mm = String(tomorrow.getMonth() + 1).padStart(2, '0');
-        const dd = String(tomorrow.getDate()).padStart(2, '0');
-        startDateInput.min = `${yyyy}-${mm}-${dd}`;
-        startDateInput.max = '2099-12-31';
-      }
-    });
-  </script>
 </th:block>
 </body>
 </html>

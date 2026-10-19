@@ -257,7 +257,7 @@ Code cũ chạy được, **chưa cần sửa ngay**. Khi viết code mới thì
 | # | Hiện trạng | Hướng xử lý sau |
 |---|---|---|
 | 1 | `GlobalExceptionHandler` đang chứa handler riêng của `auth` (đăng ký, khôi phục mật khẩu), `user` (phòng ban), `admin` (health check) và import DTO của các module này; đây là file hay bị conflict | Chuyển dần về Controller/module theo mục 2.3 |
-| 2 | `interview` ném `IllegalArgumentException`, `EntityNotFoundException` (không tìm thấy dữ liệu đang ra trang 500); `requisition` dùng `ResponseStatusException`; `offer` ném `BaseBusinessException` trần | Đổi sang kiểu ở mục 2.3 |
+| 2 | `interview` ném `IllegalArgumentException`, `EntityNotFoundException` (không tìm thấy dữ liệu đang ra trang 500); `requisition` dùng `ResponseStatusException` (`offer` đã chuẩn hóa sang `OfferValidationException`) | Đổi sang kiểu ở mục 2.3 |
 | 3 | `offer` có cả endpoint form lẫn JSON cho cùng thao tác tạo/sửa | Giữ một cách (mục 2.1) |
 | 5 | `core/exception/FormErrorViewHelper` (rỗng), `user/exception/AccountConflictException` không ai dùng | Xóa |
 | 6 | Hai `NotificationService` trùng tên (`notification` và `offer.service`) | Gộp về module `notification` |

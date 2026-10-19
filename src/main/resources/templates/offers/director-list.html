@@ -1,26 +1,18 @@
 <!DOCTYPE html>
-<html lang="vi" xmlns:th="http://www.thymeleaf.org">
-<head th:replace="~{fragments/head :: interfaceHead('Quản lý Đề xuất', ~{::pageStyles})}">
-  <th:block th:fragment="pageStyles">
-    <meta name="_csrf" th:content="${_csrf?.token}"/>
-    <meta name="_csrf_header" th:content="${_csrf?.headerName}"/>
+<html lang="vi"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/internal}">
+<head>
+  <title>Quản lý Đề xuất | Mộc RMS</title>
+  <th:block layout:fragment="styles">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" th:href="@{/css/offers.css}">
   </th:block>
 </head>
-<body class="rms-app">
+<body>
 
-<div class="page-wrapper">
-    <!-- SIDEBAR -->
-    <aside th:replace="~{fragments/sidebar :: workspace('offers', 'Director')}"></aside>
-
-    <div class="main-content" id="directorMainContent">
-        <!-- TOPBAR -->
-        <header th:replace="~{fragments/workspace-header :: header('Director', ${currentUser})}"></header>
-
-        <!-- PAGE CONTENT -->
-        <main id="main" class="page-content" tabindex="-1">
-            <div class="container">
+<main id="main" layout:fragment="content" class="page-content container" tabindex="-1">
 
                 <div class="offers-header">
                     <div class="offers-title-group">
@@ -29,34 +21,34 @@
                     </div>
                 </div>
 
-                <!-- 3 Stat Cards -->
-                <div class="offers-stats-grid director-stats-grid">
-                    <div class="offer-stat-card">
-                        <div class="stat-label">CHỜ DUYỆT</div>
-                        <div class="offer-stat-bottom">
+                <!-- 3 Stat Cards (Compact Horizontal Mockup) -->
+                <div class="director-stats-grid">
+                    <div class="director-stat-card">
+                        <div class="director-stat-left">
                             <div class="offer-stat-icon stat-icon-amber">
                                 <i class="fa-solid fa-hourglass-half"></i>
                             </div>
-                            <div class="stat-value" th:text="${statPending}">0</div>
+                            <span class="stat-label">Chờ duyệt</span>
                         </div>
+                        <div class="stat-value" th:text="${statPending}">0</div>
                     </div>
-                    <div class="offer-stat-card">
-                        <div class="stat-label">ĐÃ DUYỆT</div>
-                        <div class="offer-stat-bottom">
+                    <div class="director-stat-card">
+                        <div class="director-stat-left">
                             <div class="offer-stat-icon stat-icon-green">
                                 <i class="fa-solid fa-user-check"></i>
                             </div>
-                            <div class="stat-value" th:text="${statApproved}">0</div>
+                            <span class="stat-label">Đã duyệt</span>
                         </div>
+                        <div class="stat-value" th:text="${statApproved}">0</div>
                     </div>
-                    <div class="offer-stat-card">
-                        <div class="stat-label">ĐÃ TỪ CHỐI</div>
-                        <div class="offer-stat-bottom">
+                    <div class="director-stat-card">
+                        <div class="director-stat-left">
                             <div class="offer-stat-icon stat-icon-danger">
                                 <i class="fa-solid fa-ban"></i>
                             </div>
-                            <div class="stat-value" th:text="${statRejected}">0</div>
+                            <span class="stat-label">Đã từ chối</span>
                         </div>
+                        <div class="stat-value" th:text="${statRejected}">0</div>
                     </div>
                 </div>
 
@@ -93,7 +85,7 @@
                     <table class="offers-table">
                         <thead>
                             <tr>
-                                <th style="width: 90px;">Mã Offer</th>
+                                <th style="width: 70px;">Mã Offer</th>
                                 <th>Ứng viên</th>
                                 <th>Vị trí đề xuất</th>
                                 <th>Lương chính thức</th>
@@ -101,7 +93,7 @@
                                 <th>Trạng thái</th>
                                 <th>Ngày lập</th>
                                 <th>Người đề xuất</th>
-                                <th style="text-align: right; width: 60px;">Hành động</th>
+                                <th style="text-align: right; width: 50px;">Hành động</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -134,19 +126,19 @@
                                 </td>
                                 <td>
                                     <span th:if="${o.offerStatus == 'Pending_Director'}" class="status-badge status-pending">
-                                        <i class="fa-solid fa-hourglass-half"></i> Chờ duyệt Director
+                                        <i class="fa-solid fa-hourglass-half"></i> Chờ Giám đốc duyệt
                                     </span>
                                     <span th:if="${o.offerStatus == 'Director_Approved' or o.offerStatus == 'Approved'}" class="status-badge status-approved">
-                                        <i class="fa-solid fa-check"></i> Đã duyệt
+                                        <i class="fa-solid fa-check"></i> Giám đốc đã duyệt
                                     </span>
                                     <span th:if="${o.offerStatus == 'Director_Rejected' or o.offerStatus == 'Rejected'}" class="status-badge status-rejected">
-                                        <i class="fa-solid fa-xmark"></i> Bị từ chối
+                                        <i class="fa-solid fa-xmark"></i> Giám đốc từ chối
                                     </span>
                                     <span th:if="${o.offerStatus == 'Sent_Candidate'}" class="status-badge status-sent">
-                                        <i class="fa-solid fa-paper-plane"></i> Đã gửi ứng viên
+                                        <i class="fa-solid fa-paper-plane"></i> Đã gửi thư mời
                                     </span>
                                     <span th:if="${o.offerStatus == 'Accepted'}" class="status-badge status-accepted">
-                                        <i class="fa-solid fa-circle-check"></i> Ứng viên đồng ý
+                                        <i class="fa-solid fa-circle-check"></i> Ứng viên chấp nhận
                                     </span>
                                     <span th:if="${o.offerStatus == 'Declined'}" class="status-badge status-declined">
                                         <i class="fa-solid fa-circle-xmark"></i> Ứng viên từ chối
@@ -171,13 +163,11 @@
                 </div>
                 <!-- Phân trang chuẩn UI catalog -->
                 <nav th:replace="~{fragments/ui/pagination :: paged(page=${offersPage})}"></nav>
+</main>
 
-            </div>
-        </main>
-    </div>
-</div>
-
-<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-<script th:src="@{/js/offers.js}"></script>
+<th:block layout:fragment="scripts">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script th:src="@{/js/offers.js}" defer></script>
+</th:block>
 </body>
 </html>

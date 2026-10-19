@@ -241,7 +241,7 @@ public class OfferServiceImpl implements OfferService {
 
         if (existingOfferOpt.isPresent() && !Boolean.TRUE.equals(existingOfferOpt.get().getIsDeleted())) {
             String currentStatus = existingOfferOpt.get().getOfferStatus();
-            throw new BaseBusinessException(
+            throw new OfferValidationException(
                     "Theo quy tắc GBR-07, không thể tạo mới Offer Proposal vì đơn ứng tuyển đang có gói Offer ở trạng thái ["
                             + currentStatus + "]. Vui lòng chỉnh sửa trực tiếp trên danh sách Offer thay vì tạo mới.",
                     "OFFER_LOCKED_STATE");
@@ -467,7 +467,7 @@ public class OfferServiceImpl implements OfferService {
         boolean canEdit = "Draft".equalsIgnoreCase(currentStatus);
 
         if (!canEdit) {
-            throw new BaseBusinessException(
+            throw new OfferValidationException(
                     "Theo quy tắc GBR-07, chỉ được phép cập nhật Offer khi ở trạng thái thuộc Nhóm A (Draft). Trạng thái hiện tại: "
                             + currentStatus,
                     "OFFER_STATUS_INVALID");
@@ -520,7 +520,7 @@ public class OfferServiceImpl implements OfferService {
 
         String currentStatus = offer.getOfferStatus();
         if (!"Draft".equalsIgnoreCase(currentStatus)) {
-            throw new BaseBusinessException(
+            throw new OfferValidationException(
                     "Theo quy tắc GBR-07, chỉ được phép chỉnh sửa Offer khi ở trạng thái Bản thảo (Draft). Trạng thái hiện tại: "
                             + currentStatus,
                     "OFFER_STATUS_INVALID");
@@ -545,7 +545,7 @@ public class OfferServiceImpl implements OfferService {
                 .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy OfferProposal với ID: " + id));
 
         if (!"Draft".equalsIgnoreCase(offer.getOfferStatus())) {
-            throw new BaseBusinessException(
+            throw new OfferValidationException(
                     "Chỉ được phép xóa bản thảo Offer (Draft). Trạng thái hiện tại: " + offer.getOfferStatus(),
                     "OFFER_NOT_DRAFT");
         }
@@ -566,7 +566,7 @@ public class OfferServiceImpl implements OfferService {
                 || "Director_Approved".equalsIgnoreCase(currentStatus);
 
         if (!isApproved) {
-            throw new BaseBusinessException(
+            throw new OfferValidationException(
                     "Chỉ được gửi thư mời nhận việc khi Offer đã được Director phê duyệt. Trạng thái hiện tại: "
                             + currentStatus,
                     "OFFER_NOT_APPROVED");
@@ -614,23 +614,23 @@ public class OfferServiceImpl implements OfferService {
 
     private void validateProbationSalaryRule(BigDecimal proposedSalary, BigDecimal probationSalary) {
         if (proposedSalary == null || probationSalary == null) {
-            throw new IllegalArgumentException("Mức lương đề xuất và lương thử việc không được để trống.");
+            throw new OfferValidationException("Mức lương đề xuất và lương thử việc không được để trống.");
         }
 
         if (proposedSalary.compareTo(BigDecimal.ZERO) <= 0 || probationSalary.compareTo(BigDecimal.ZERO) <= 0) {
-            throw new IllegalArgumentException("Mức lương đề xuất và lương thử việc phải lớn hơn 0.");
+            throw new OfferValidationException("Mức lương đề xuất và lương thử việc phải lớn hơn 0.");
         }
 
         BigDecimal minProbationSalary = proposedSalary.multiply(new BigDecimal("0.85"));
 
         if (probationSalary.compareTo(minProbationSalary) < 0) {
-            throw new IllegalArgumentException(
+            throw new OfferValidationException(
                     "Lương thử việc (" + probationSalary + " VND) phải đạt tối thiểu 85% lương chính thức ("
                             + minProbationSalary + " VND) theo quy định Luật Lao động .");
         }
 
         if (probationSalary.compareTo(proposedSalary) > 0) {
-            throw new IllegalArgumentException("Lương thử việc không được vượt quá lương chính thức.");
+            throw new OfferValidationException("Lương thử việc không được vượt quá lương chính thức.");
         }
     }
 
@@ -758,7 +758,7 @@ public class OfferServiceImpl implements OfferService {
                 .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy OfferProposal với ID: " + id));
 
         if (!"Pending_Director".equalsIgnoreCase(offer.getOfferStatus())) {
-            throw new BaseBusinessException(
+            throw new OfferValidationException(
                     "Chỉ được phê duyệt đề xuất Offer khi ở trạng thái chờ duyệt (Pending_Director). Trạng thái hiện tại: "
                             + offer.getOfferStatus(),
                     "OFFER_STATUS_INVALID");
@@ -766,7 +766,7 @@ public class OfferServiceImpl implements OfferService {
 
         User director = resolveProposedBy(null); // Resolve current logged in user (Director)
         if (director == null) {
-            throw new BaseBusinessException("Không xác định được danh tính Director để thực hiện phê duyệt.", "USER_NOT_FOUND");
+            throw new OfferValidationException("Không xác định được danh tính Director để thực hiện phê duyệt.", "USER_NOT_FOUND");
         }
 
         offer.setOfferStatus("Director_Approved");
@@ -797,7 +797,7 @@ public class OfferServiceImpl implements OfferService {
                 .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy OfferProposal với ID: " + id));
 
         if (!"Pending_Director".equalsIgnoreCase(offer.getOfferStatus())) {
-            throw new BaseBusinessException(
+            throw new OfferValidationException(
                     "Chỉ được từ chối đề xuất Offer khi ở trạng thái chờ duyệt (Pending_Director). Trạng thái hiện tại: "
                             + offer.getOfferStatus(),
                     "OFFER_STATUS_INVALID");
@@ -805,7 +805,7 @@ public class OfferServiceImpl implements OfferService {
 
         User director = resolveProposedBy(null); // Resolve current logged in user (Director)
         if (director == null) {
-            throw new BaseBusinessException("Không xác định được danh tính Director để thực hiện từ chối.", "USER_NOT_FOUND");
+            throw new OfferValidationException("Không xác định được danh tính Director để thực hiện từ chối.", "USER_NOT_FOUND");
         }
 
         offer.setOfferStatus("Director_Rejected");

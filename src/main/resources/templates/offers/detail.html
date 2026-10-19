@@ -11,7 +11,7 @@
 </head>
 <body>
 
-<main id="main" layout:fragment="content" class="page-content container" tabindex="-1" style="max-width: 1040px; margin: 0 auto; padding-bottom: 40px;">
+<main id="main" layout:fragment="content" class="page-content container offer-detail-container" tabindex="-1">
     <!-- FLASH MESSAGES -->
     <div class="page-flash-container" id="pageFlashContainer" th:if="${successMessage != null or errorMessage != null}">
         <div th:if="${successMessage}" class="page-flash-alert page-flash-success" id="flashSuccessAlert">
@@ -47,22 +47,22 @@
                 
                 <!-- STATUS BADGES -->
                 <span th:if="${detail.offerStatus == 'Draft'}" class="status-badge status-draft">
-                    <i class="fa-regular fa-file"></i> Bản thảo
+                    <i class="fa-regular fa-file"></i> Bản nháp
                 </span>
                 <span th:if="${detail.offerStatus == 'Pending_Director'}" class="status-badge status-pending">
-                    <i class="fa-regular fa-clock"></i> Chờ duyệt
+                    <i class="fa-regular fa-clock"></i> Chờ Giám đốc duyệt
                 </span>
                 <span th:if="${detail.offerStatus == 'Director_Approved' or detail.offerStatus == 'Approved'}" class="status-badge status-approved">
-                    <i class="fa-solid fa-check"></i> Director đã duyệt
+                    <i class="fa-solid fa-check"></i> Giám đốc đã duyệt
                 </span>
                 <span th:if="${detail.offerStatus == 'Director_Rejected' or detail.offerStatus == 'Rejected'}" class="status-badge status-rejected">
-                    <i class="fa-solid fa-xmark"></i> Bị từ chối
+                    <i class="fa-solid fa-xmark"></i> Giám đốc từ chối
                 </span>
                 <span th:if="${detail.offerStatus == 'Sent_Candidate'}" class="status-badge status-sent">
-                    <i class="fa-regular fa-paper-plane"></i> Đã gửi ứng viên
+                    <i class="fa-regular fa-paper-plane"></i> Đã gửi thư mời
                 </span>
                 <span th:if="${detail.offerStatus == 'Accepted'}" class="status-badge status-accepted">
-                    <i class="fa-solid fa-user-check"></i> Đã nhận việc
+                    <i class="fa-solid fa-user-check"></i> Ứng viên chấp nhận
                 </span>
                 <span th:if="${detail.offerStatus == 'Declined'}" class="status-badge status-declined">
                     <i class="fa-solid fa-user-xmark"></i> Ứng viên từ chối
