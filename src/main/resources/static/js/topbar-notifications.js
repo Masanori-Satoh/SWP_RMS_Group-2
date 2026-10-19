@@ -41,6 +41,16 @@
     }
   }
 
+  function getCsrfHeaders() {
+    const token = document.querySelector('meta[name="_csrf"]')?.getAttribute('content');
+    const header = document.querySelector('meta[name="_csrf_header"]')?.getAttribute('content') || 'X-CSRF-TOKEN';
+    const headers = { 'Accept': 'application/json' };
+    if (token) {
+      headers[header] = token;
+    }
+    return headers;
+  }
+
   function initNotificationWidget(widget) {
     const trigger = widget.querySelector('.topbar-notification-btn');
     const dropdown = widget.querySelector('.topbar-notif-dropdown');
@@ -125,7 +135,11 @@
             const isRead = itemEl.getAttribute('data-read') === 'true';
             if (!isRead && notifId) {
               try {
-                fetch(`/api/notifications/${notifId}/read`, { method: 'POST', keepalive: true });
+                fetch(`/api/notifications/${notifId}/read`, {
+                  method: 'POST',
+                  headers: getCsrfHeaders(),
+                  keepalive: true
+                });
               } catch (err) {}
             }
           });
@@ -166,7 +180,10 @@
         e.stopPropagation();
         e.preventDefault();
         try {
-          const res = await fetch('/api/notifications/read-all', { method: 'POST' });
+          const res = await fetch('/api/notifications/read-all', {
+            method: 'POST',
+            headers: getCsrfHeaders()
+          });
           if (res.ok) {
             updateBadge(0);
             if (list) {
@@ -194,7 +211,18 @@
       }
     });
 
-    // Check count on load
+    // Auto-refresh when tab/window is focused or becomes visible
+    window.addEventListener('focus', fetchUnreadCount);
+    document.addEventListener('visibilitychange', () => {
+      if (!document.hidden) {
+        fetchUnreadCount();
+      }
+    });
+
+    // Background polling every 45s
+    setInterval(fetchUnreadCount, 45000);
+
+    // Initial check on load
     fetchUnreadCount();
   }
 

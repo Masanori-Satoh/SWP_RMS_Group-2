@@ -43,7 +43,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  */
 @WebMvcTest(OfferController.class)
 @Import({SecurityConfig.class, DatabaseUserDetailsService.class})
-class OfferIntegrationTest {
+class OfferIntegrationTests {
 
     @Autowired
     private MockMvc mvc;

@@ -127,6 +127,76 @@
     line-height: 1;
 }
 
+.stat-icon-danger {
+    background: #fef2f2;
+    color: #dc2626;
+    border: 1px solid #fecaca;
+}
+
+/* Director Compact Stat Cards (Horizontal Mockup Alignment) */
+.director-stats-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: var(--s4);
+    margin-bottom: var(--s5);
+}
+
+.director-stat-card {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 12px 20px;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+    box-sizing: border-box;
+}
+
+.director-stat-card:hover {
+    border-color: var(--control-line);
+    box-shadow: 0 4px 12px rgba(37, 41, 35, 0.05);
+}
+
+.director-stat-left {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+}
+
+.director-stat-card .offer-stat-icon {
+    width: 38px;
+    height: 38px;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 15px;
+    flex-shrink: 0;
+}
+
+.director-stat-card .stat-label {
+    font-size: 14.5px;
+    font-weight: 500;
+    color: var(--ink);
+    text-transform: none;
+    letter-spacing: normal;
+    text-align: left;
+    min-height: auto;
+    width: auto;
+    display: inline-block;
+    line-height: 1.4;
+}
+
+.director-stat-card .stat-value {
+    font-size: 22px;
+    font-weight: 700;
+    color: var(--ink);
+    font-variant-numeric: tabular-nums;
+    line-height: 1;
+}
+
 /* Toolbar & Filters */
 .offers-toolbar {
     background: var(--surface);
@@ -217,21 +287,21 @@
     width: 100%;
     border-collapse: collapse;
     text-align: left;
-    font-size: 14.5px;
+    font-size: 14px;
 }
 
 .offers-table th {
     background: var(--page);
     color: var(--ink);
     font-weight: 600;
-    padding: var(--s3) var(--s4);
+    padding: 10px 10px;
     border-bottom: 1px solid var(--line);
     white-space: nowrap;
-    font-size: 13.5px;
+    font-size: 13px;
 }
 
 .offers-table td {
-    padding: 14px 16px;
+    padding: 10px 10px;
     border-bottom: 1px solid var(--line);
     vertical-align: middle;
 }
@@ -299,10 +369,10 @@
 .status-badge {
     display: inline-flex;
     align-items: center;
-    gap: 6px;
-    padding: 4px 10px;
+    gap: 4px;
+    padding: 3px 8px;
     border-radius: 4px;
-    font-size: 12px;
+    font-size: 11.5px;
     font-weight: 600;
     white-space: nowrap;
 }
@@ -1299,7 +1369,7 @@
 }
 
 .selection-toolbar {
-    display: flex;
+    display: none;
     align-items: center;
     justify-content: space-between;
     padding: 10px 16px;
@@ -1308,6 +1378,10 @@
     border: 1px solid #bbf7d0;
     border-radius: 6px;
     animation: toolbarFadeIn 0.2s ease;
+}
+
+.selection-toolbar.active {
+    display: flex;
 }
 
 @keyframes toolbarFadeIn {
@@ -2182,5 +2256,186 @@
 .btn-director-approve:hover {
     background: #14532d !important;
     border-color: #14532d !important;
+}
+
+.offer-detail-container {
+    max-width: 1040px;
+    margin: 0 auto;
+    padding-bottom: 40px;
+}
+
+/* Helper utility classes for Offer forms, modals & tables */
+.offer-alert-spacing {
+    margin-bottom: var(--s5);
+}
+
+.offer-field-header-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    min-height: 32px;
+    margin-bottom: 4px;
+}
+
+.offer-group-a-box {
+    display: none;
+    background: var(--page);
+    border: 1px dashed var(--line);
+    border-radius: var(--radius-md);
+    padding: var(--s4);
+    margin-top: var(--s3);
+}
+
+.offer-btn-calc-probation {
+    padding: 2px 10px;
+    height: 28px;
+    min-height: 28px;
+    font-size: 12.5px;
+    font-weight: 500;
+    border-radius: var(--radius-sm);
+}
+
+.offer-rule-notice {
+    color: var(--brand-dark);
+    font-size: 12px;
+    margin-top: 4px;
+}
+
+.offer-search-clear-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: var(--muted);
+    padding: 0 4px;
+    display: inline-flex;
+    align-items: center;
+}
+
+.offer-cursor-pointer {
+    cursor: pointer;
+}
+
+.offer-col-w-44 {
+    width: 44px;
+}
+
+.offer-col-w-70 {
+    width: 70px;
+}
+
+.offer-col-w-90 {
+    width: 90px;
+}
+
+.offer-col-w-150 {
+    width: 150px;
+}
+
+.offer-error-list {
+    margin: 4px 0 0 16px;
+    padding: 0;
+}
+
+.offer-hint-inline {
+    color: var(--muted);
+    font-weight: normal;
+}
+
+.offer-mt-1 {
+    margin-top: 4px;
+}
+
+.offer-mt-2 {
+    margin-top: 10px;
+    padding-top: 10px;
+    border-top: 1px dashed var(--line);
+}
+
+.offer-font-bold {
+    font-weight: 700;
+}
+
+.offer-font-italic-muted {
+    font-style: italic;
+    color: var(--muted);
+    margin-top: 2px;
+}
+
+.offer-salary-highlight {
+    color: var(--brand-dark);
+    font-weight: 700;
+}
+
+.offer-text-center {
+    text-align: center;
+}
+
+.offer-text-right {
+    text-align: right;
+}
+
+.offer-justify-end {
+    justify-content: flex-end;
+}
+
+.offer-row-link {
+    text-decoration: none;
+    color: inherit;
+}
+
+.offer-position-title {
+    font-weight: 600;
+    color: var(--ink);
+}
+
+.offer-empty-state-cell {
+    text-align: center;
+    padding: 48px 24px;
+    color: var(--muted);
+}
+
+.offer-empty-state-icon {
+    font-size: 32px;
+    margin-bottom: 12px;
+    display: block;
+    color: var(--control-line);
+}
+
+.offer-date-cell {
+    color: var(--muted);
+    font-size: 13.5px;
+}
+
+.offer-export-icon-box {
+    width: 36px;
+    height: 36px;
+    font-size: 16px;
+    border-radius: 6px;
+}
+
+.offer-export-title {
+    font-size: 17px;
+    font-weight: 700;
+    color: var(--ink);
+}
+
+.offer-export-desc {
+    font-size: 12.5px;
+    color: var(--muted);
+    font-family: var(--sans);
+    font-weight: normal;
+    margin-top: 2px;
+}
+
+.offer-modal-max-500 {
+    max-width: 500px;
+}
+
+.offer-textarea-h76 {
+    height: 76px;
+}
+
+.offer-required-star {
+    color: var(--error);
 }
 

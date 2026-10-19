@@ -283,6 +283,7 @@
 
 /* Thông báo phản hồi hệ thống (System Notification Banner) */
 .cof-system-banner {
+  display: block;
   padding: var(--s4);
   border-radius: var(--radius-md);
   margin-bottom: var(--s6);
@@ -697,4 +698,111 @@
   padding-top: var(--s4);
   border-top: 1px solid var(--line);
 }
+
+/* =============================================================================
+   Modal Chấp nhận thư mời thành công (Candidate Accept Offer Success Modal)
+   Theo đúng Mockup thiết kế
+   ============================================================================= */
+.cof-accept-success-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.55);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1050;
+  padding: 20px;
+  animation: cofFadeIn 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.cof-accept-success-modal {
+  position: relative;
+  background: #ffffff;
+  width: 100%;
+  max-width: 440px;
+  border-radius: 16px;
+  padding: 36px 32px 32px;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15), 0 2px 6px rgba(0, 0, 0, 0.06);
+  text-align: center;
+  box-sizing: border-box;
+  animation: cofScaleUp 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.cof-accept-success-close {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  width: 32px;
+  height: 32px;
+  background: transparent;
+  border: none;
+  border-radius: 8px;
+  color: #64748b;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s ease;
+  padding: 0;
+}
+
+.cof-accept-success-close:hover {
+  background: #f1f5f9;
+  color: #0f172a;
+}
+
+.cof-accept-success-badge {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 18px;
+}
+
+.cof-accept-success-badge svg {
+  display: block;
+}
+
+.cof-accept-success-title {
+  font-family: var(--font-serif, "Playfair Display", Georgia, serif);
+  font-size: 24px;
+  font-weight: 700;
+  color: #0f3822;
+  margin: 0 0 10px;
+  line-height: 1.3;
+  letter-spacing: -0.01em;
+}
+
+.cof-accept-success-desc {
+  font-family: var(--font-sans, "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif);
+  font-size: 14.5px;
+  color: #475569;
+  line-height: 1.55;
+  margin: 0;
+}
+
+.cof-accept-success-position {
+  display: block;
+  margin-top: 4px;
+  font-weight: 600;
+  color: #1e293b;
+}
+
+@keyframes cofFadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes cofScaleUp {
+  from {
+    opacity: 0;
+    transform: scale(0.92) translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
 

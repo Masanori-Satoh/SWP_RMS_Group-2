@@ -130,7 +130,7 @@ public class SecurityConfig {
                                                                 RoleAuthorities.SYSTEM_ADMIN)
                                                 // authenticaed require for dashboard notification
                                                 .requestMatchers("/dashboard", "/dashboard/**", "/notifications",
-                                                                "/notifications/**")
+                                                                "/notifications/**", "/api/notifications", "/api/notifications/**")
                                                 .authenticated()
                                                 .requestMatchers("/requisitions", "/requisitions/**")
                                                 .hasAnyAuthority("ROLE_HIRING_MANAGER", "ROLE_DIRECTOR", "ROLE_HR",

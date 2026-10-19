@@ -93,7 +93,7 @@ Chúng **vẫn hiển thị đúng** (topbar, logo, góc phải, nút ghim, hộ
 | Nội bộ | `job-postings/{list,detail,create,dashboard}.html` | ⏳ Cũ |
 | Nội bộ | `interview/{list,form}.html` | ✅ `layout/internal` (2026-10-11; CSS/JS phẳng `interview-list.*`, `interview-form.*` + dùng chung `pages/interview-common.css`) |
 | Nội bộ | `interview/{result,candidate-list}.html` | ✅ `layout/internal` (trang mới iter2/3) |
-| Nội bộ | `offers/{list,detail,form}.html` | ⏳ Cũ |
+| Nội bộ | `offers/{list,detail,form,director-list}.html` | ✅ `layout/internal` (2026-10-18 HuyenPT migrate toàn bộ phân hệ Offer) |
 | Nội bộ | `admin/accounts/{list,form,candidates}.html`, `admin/departments/{list,form}.html`, `admin/api-monitoring/index.html` | ⏳ Cũ |
 | Auth | `auth/*.html` | ⚪ Giữ `auth/fragments` (chưa chuyển sang `layout/auth`) |
 

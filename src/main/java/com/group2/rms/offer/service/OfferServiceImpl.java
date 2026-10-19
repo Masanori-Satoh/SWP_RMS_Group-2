@@ -20,6 +20,7 @@ import com.group2.rms.user.entity.User;
 import com.group2.rms.user.repository.UserRepository;
 import com.group2.rms.notification.OfferMailSender;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import com.group2.rms.candidate.entity.Candidate;
 import jakarta.persistence.criteria.Join;
 import jakarta.persistence.criteria.JoinType;
@@ -48,6 +49,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 @Transactional
@@ -122,6 +124,24 @@ public class OfferServiceImpl implements OfferService {
                 .build();
 
         OfferProposal savedOffer = offerProposalRepository.save(newOffer);
+
+        if ("Pending_Director".equals(savedOffer.getOfferStatus())) {
+            if (offerMailSender != null) {
+                try {
+                    offerMailSender.notifyDirectorNewPendingOffer(savedOffer);
+                } catch (Exception e) {
+                    log.warn("Lỗi khi gửi email thông báo Director về Offer mới ID {}: {}", savedOffer.getOfferId(), e.getMessage());
+                }
+            }
+            if (systemNotificationService != null) {
+                try {
+                    systemNotificationService.notifyOfferPendingDirector(savedOffer, proposedBy);
+                } catch (Exception e) {
+                    log.warn("Lỗi khi gửi in-app notification Director về Offer mới ID {}: {}", savedOffer.getOfferId(), e.getMessage());
+                }
+            }
+        }
+
         return mapToResponse(savedOffer);
     }
 
@@ -241,7 +261,7 @@ public class OfferServiceImpl implements OfferService {
 
         if (existingOfferOpt.isPresent() && !Boolean.TRUE.equals(existingOfferOpt.get().getIsDeleted())) {
             String currentStatus = existingOfferOpt.get().getOfferStatus();
-            throw new BaseBusinessException(
+            throw new OfferValidationException(
                     "Theo quy tắc GBR-07, không thể tạo mới Offer Proposal vì đơn ứng tuyển đang có gói Offer ở trạng thái ["
                             + currentStatus + "]. Vui lòng chỉnh sửa trực tiếp trên danh sách Offer thay vì tạo mới.",
                     "OFFER_LOCKED_STATE");
@@ -266,11 +286,20 @@ public class OfferServiceImpl implements OfferService {
 
         OfferProposal saved = offerProposalRepository.save(offerToSave);
 
-        if ("Pending_Director".equals(status) && offerMailSender != null) {
-            try {
-                offerMailSender.notifyDirectorNewPendingOffer(saved);
-            } catch (Exception ignored) {
-                // Tiếp tục ngay cả khi gửi mail lỗi ngầm
+        if ("Pending_Director".equals(status)) {
+            if (offerMailSender != null) {
+                try {
+                    offerMailSender.notifyDirectorNewPendingOffer(saved);
+                } catch (Exception e) {
+                    log.warn("Lỗi khi gửi email thông báo Director về Offer mới ID {}: {}", saved.getOfferId(), e.getMessage());
+                }
+            }
+            if (systemNotificationService != null) {
+                try {
+                    systemNotificationService.notifyOfferPendingDirector(saved, proposedBy);
+                } catch (Exception e) {
+                    log.warn("Lỗi khi gửi in-app notification Director về Offer mới ID {}: {}", saved.getOfferId(), e.getMessage());
+                }
             }
         }
 
@@ -467,7 +496,7 @@ public class OfferServiceImpl implements OfferService {
         boolean canEdit = "Draft".equalsIgnoreCase(currentStatus);
 
         if (!canEdit) {
-            throw new BaseBusinessException(
+            throw new OfferValidationException(
                     "Theo quy tắc GBR-07, chỉ được phép cập nhật Offer khi ở trạng thái thuộc Nhóm A (Draft). Trạng thái hiện tại: "
                             + currentStatus,
                     "OFFER_STATUS_INVALID");
@@ -502,10 +531,21 @@ public class OfferServiceImpl implements OfferService {
 
         OfferProposal saved = offerProposalRepository.save(offer);
 
-        if ("Pending_Director".equals(offer.getOfferStatus()) && offerMailSender != null) {
-            try {
-                offerMailSender.notifyDirectorNewPendingOffer(saved);
-            } catch (Exception ignored) {
+        if ("Pending_Director".equals(offer.getOfferStatus())) {
+            if (offerMailSender != null) {
+                try {
+                    offerMailSender.notifyDirectorNewPendingOffer(saved);
+                } catch (Exception e) {
+                    log.warn("Lỗi khi gửi email thông báo Director về Offer cập nhật ID {}: {}", saved.getOfferId(), e.getMessage());
+                }
+            }
+            if (systemNotificationService != null) {
+                try {
+                    User currentHr = resolveProposedBy(null);
+                    systemNotificationService.notifyOfferPendingDirector(saved, currentHr != null ? currentHr : saved.getProposedBy());
+                } catch (Exception e) {
+                    log.warn("Lỗi khi gửi in-app notification Director về Offer cập nhật ID {}: {}", saved.getOfferId(), e.getMessage());
+                }
             }
         }
 
@@ -520,7 +560,7 @@ public class OfferServiceImpl implements OfferService {
 
         String currentStatus = offer.getOfferStatus();
         if (!"Draft".equalsIgnoreCase(currentStatus)) {
-            throw new BaseBusinessException(
+            throw new OfferValidationException(
                     "Theo quy tắc GBR-07, chỉ được phép chỉnh sửa Offer khi ở trạng thái Bản thảo (Draft). Trạng thái hiện tại: "
                             + currentStatus,
                     "OFFER_STATUS_INVALID");
@@ -545,7 +585,7 @@ public class OfferServiceImpl implements OfferService {
                 .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy OfferProposal với ID: " + id));
 
         if (!"Draft".equalsIgnoreCase(offer.getOfferStatus())) {
-            throw new BaseBusinessException(
+            throw new OfferValidationException(
                     "Chỉ được phép xóa bản thảo Offer (Draft). Trạng thái hiện tại: " + offer.getOfferStatus(),
                     "OFFER_NOT_DRAFT");
         }
@@ -566,7 +606,7 @@ public class OfferServiceImpl implements OfferService {
                 || "Director_Approved".equalsIgnoreCase(currentStatus);
 
         if (!isApproved) {
-            throw new BaseBusinessException(
+            throw new OfferValidationException(
                     "Chỉ được gửi thư mời nhận việc khi Offer đã được Director phê duyệt. Trạng thái hiện tại: "
                             + currentStatus,
                     "OFFER_NOT_APPROVED");
@@ -590,16 +630,16 @@ public class OfferServiceImpl implements OfferService {
         if (offerMailSender != null) {
             try {
                 offerMailSender.sendOfferLetterToCandidate(saved);
-            } catch (Exception ignored) {
-                // Tiếp tục ngay cả khi gửi mail lỗi ngầm
+            } catch (Exception e) {
+                log.warn("Lỗi khi gửi email thư mời nhận việc cho ứng viên Offer ID {}: {}", saved.getOfferId(), e.getMessage());
             }
         }
 
         if (systemNotificationService != null) {
             try {
                 systemNotificationService.notifyOfferLetterSent(saved);
-            } catch (Exception ignored) {
-                // Tiếp tục ngay cả khi tạo thông báo in-app lỗi ngầm
+            } catch (Exception e) {
+                log.warn("Lỗi khi gửi in-app notification thư mời nhận việc cho ứng viên Offer ID {}: {}", saved.getOfferId(), e.getMessage());
             }
         }
 
@@ -614,23 +654,23 @@ public class OfferServiceImpl implements OfferService {
 
     private void validateProbationSalaryRule(BigDecimal proposedSalary, BigDecimal probationSalary) {
         if (proposedSalary == null || probationSalary == null) {
-            throw new IllegalArgumentException("Mức lương đề xuất và lương thử việc không được để trống.");
+            throw new OfferValidationException("Mức lương đề xuất và lương thử việc không được để trống.");
         }
 
         if (proposedSalary.compareTo(BigDecimal.ZERO) <= 0 || probationSalary.compareTo(BigDecimal.ZERO) <= 0) {
-            throw new IllegalArgumentException("Mức lương đề xuất và lương thử việc phải lớn hơn 0.");
+            throw new OfferValidationException("Mức lương đề xuất và lương thử việc phải lớn hơn 0.");
         }
 
         BigDecimal minProbationSalary = proposedSalary.multiply(new BigDecimal("0.85"));
 
         if (probationSalary.compareTo(minProbationSalary) < 0) {
-            throw new IllegalArgumentException(
+            throw new OfferValidationException(
                     "Lương thử việc (" + probationSalary + " VND) phải đạt tối thiểu 85% lương chính thức ("
                             + minProbationSalary + " VND) theo quy định Luật Lao động .");
         }
 
         if (probationSalary.compareTo(proposedSalary) > 0) {
-            throw new IllegalArgumentException("Lương thử việc không được vượt quá lương chính thức.");
+            throw new OfferValidationException("Lương thử việc không được vượt quá lương chính thức.");
         }
     }
 
@@ -758,7 +798,7 @@ public class OfferServiceImpl implements OfferService {
                 .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy OfferProposal với ID: " + id));
 
         if (!"Pending_Director".equalsIgnoreCase(offer.getOfferStatus())) {
-            throw new BaseBusinessException(
+            throw new OfferValidationException(
                     "Chỉ được phê duyệt đề xuất Offer khi ở trạng thái chờ duyệt (Pending_Director). Trạng thái hiện tại: "
                             + offer.getOfferStatus(),
                     "OFFER_STATUS_INVALID");
@@ -766,7 +806,7 @@ public class OfferServiceImpl implements OfferService {
 
         User director = resolveProposedBy(null); // Resolve current logged in user (Director)
         if (director == null) {
-            throw new BaseBusinessException("Không xác định được danh tính Director để thực hiện phê duyệt.", "USER_NOT_FOUND");
+            throw new OfferValidationException("Không xác định được danh tính Director để thực hiện phê duyệt.", "USER_NOT_FOUND");
         }
 
         offer.setOfferStatus("Director_Approved");
@@ -784,7 +824,16 @@ public class OfferServiceImpl implements OfferService {
         if (offerMailSender != null) {
             try {
                 offerMailSender.notifyHrOfDirectorDecision(saved, "Approved", comments);
-            } catch (Exception ignored) {
+            } catch (Exception e) {
+                log.warn("Lỗi khi gửi email thông báo HR duyệt Offer ID {}: {}", saved.getOfferId(), e.getMessage());
+            }
+        }
+
+        if (systemNotificationService != null) {
+            try {
+                systemNotificationService.notifyDirectorDecisionOnOffer(saved, director, true, comments);
+            } catch (Exception e) {
+                log.warn("Lỗi khi gửi in-app notification duyệt Offer ID {}: {}", saved.getOfferId(), e.getMessage());
             }
         }
 
@@ -797,7 +846,7 @@ public class OfferServiceImpl implements OfferService {
                 .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy OfferProposal với ID: " + id));
 
         if (!"Pending_Director".equalsIgnoreCase(offer.getOfferStatus())) {
-            throw new BaseBusinessException(
+            throw new OfferValidationException(
                     "Chỉ được từ chối đề xuất Offer khi ở trạng thái chờ duyệt (Pending_Director). Trạng thái hiện tại: "
                             + offer.getOfferStatus(),
                     "OFFER_STATUS_INVALID");
@@ -805,7 +854,7 @@ public class OfferServiceImpl implements OfferService {
 
         User director = resolveProposedBy(null); // Resolve current logged in user (Director)
         if (director == null) {
-            throw new BaseBusinessException("Không xác định được danh tính Director để thực hiện từ chối.", "USER_NOT_FOUND");
+            throw new OfferValidationException("Không xác định được danh tính Director để thực hiện từ chối.", "USER_NOT_FOUND");
         }
 
         offer.setOfferStatus("Director_Rejected");
@@ -823,7 +872,16 @@ public class OfferServiceImpl implements OfferService {
         if (offerMailSender != null) {
             try {
                 offerMailSender.notifyHrOfDirectorDecision(saved, "Rejected", comments);
-            } catch (Exception ignored) {
+            } catch (Exception e) {
+                log.warn("Lỗi khi gửi email thông báo HR từ chối Offer ID {}: {}", saved.getOfferId(), e.getMessage());
+            }
+        }
+
+        if (systemNotificationService != null) {
+            try {
+                systemNotificationService.notifyDirectorDecisionOnOffer(saved, director, false, comments);
+            } catch (Exception e) {
+                log.warn("Lỗi khi gửi in-app notification từ chối Offer ID {}: {}", saved.getOfferId(), e.getMessage());
             }
         }
 
@@ -844,6 +902,98 @@ public class OfferServiceImpl implements OfferService {
 
     @Override
     @Transactional(readOnly = true)
+    public Map<String, Long> getDirectorStatusCounts() {
+        Map<String, Long> counts = new HashMap<>();
+        counts.put("ALL", offerProposalRepository.countAllNonDraft());
+        counts.put("Pending_Director", offerProposalRepository.countPendingDirector());
+        counts.put("Director_Approved", offerProposalRepository.countDirectorApproved());
+        counts.put("Sent_Candidate", offerProposalRepository.countSentCandidate());
+        counts.put("Accepted", offerProposalRepository.countAccepted());
+        counts.put("Declined", offerProposalRepository.countDeclined());
+        counts.put("Director_Rejected", offerProposalRepository.countDirectorRejected());
+        return counts;
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Page<OfferResponse> getDirectorOffers(String search, String status, String timeSort, Pageable pageable) {
+        boolean hasSearch = search != null && !search.trim().isEmpty();
+        boolean hasStatus = status != null && !status.trim().isEmpty() && !"ALL".equalsIgnoreCase(status.trim());
+
+        Sort sort;
+        if ("EARLIEST".equalsIgnoreCase(timeSort)) {
+            sort = Sort.by(Sort.Order.asc("createdAt"), Sort.Order.asc("offerId"));
+        } else if ("LATEST".equalsIgnoreCase(timeSort)) {
+            sort = Sort.by(Sort.Order.desc("createdAt"), Sort.Order.desc("offerId"));
+        } else {
+            sort = Sort.by(Sort.Order.desc("offerId"));
+        }
+
+        Pageable sortedPageable = PageRequest.of(pageable.getPageNumber(), pageable.getPageSize(), sort);
+
+        Specification<OfferProposal> spec = (root, query, builder) -> {
+            List<Predicate> predicates = new ArrayList<>();
+
+            // 1. Chỉ lấy các bản ghi chưa bị xóa mềm
+            predicates.add(builder.or(
+                    builder.isNull(root.get("isDeleted")),
+                    builder.isFalse(root.get("isDeleted"))
+            ));
+
+            // 2. Không hiển thị bản nháp cho Director (chỉ các đề xuất đã được HR trình lên)
+            predicates.add(builder.notEqual(builder.lower(root.get("offerStatus")), "draft"));
+
+            // 3. Tìm kiếm theo tên ứng viên, vị trí tuyển dụng, hoặc mã Offer ID
+            if (hasSearch) {
+                String term = search.trim();
+                String pattern = "%" + term.toLowerCase(Locale.ROOT) + "%";
+                Join<OfferProposal, Application> appJoin = root.join("application", JoinType.LEFT);
+                Join<Application, Candidate> candJoin = appJoin.join("candidate", JoinType.LEFT);
+                Join<Candidate, User> userJoin = candJoin.join("account", JoinType.LEFT);
+
+                List<Predicate> searchPredicates = new ArrayList<>();
+                searchPredicates.add(builder.like(builder.lower(root.get("offeredPositionTitle")), pattern));
+                searchPredicates.add(builder.like(builder.lower(userJoin.get("fullName")), pattern));
+
+                try {
+                    Integer searchId = Integer.parseInt(term);
+                    searchPredicates.add(builder.equal(root.get("offerId"), searchId));
+                } catch (NumberFormatException ignored) {
+                    // Không phải số thì bỏ qua tìm kiếm theo ID
+                }
+
+                predicates.add(builder.or(searchPredicates.toArray(new Predicate[0])));
+            }
+
+            // 4. Lọc theo trạng thái
+            if (hasStatus) {
+                String s = status.trim();
+                if ("HISTORY".equalsIgnoreCase(s) || "HISTORY_ALL".equalsIgnoreCase(s)) {
+                    predicates.add(builder.notEqual(builder.lower(root.get("offerStatus")), "pending_director"));
+                } else if ("Director_Approved".equalsIgnoreCase(s) || "Approved".equalsIgnoreCase(s)) {
+                    predicates.add(builder.or(
+                            builder.equal(builder.lower(root.get("offerStatus")), "director_approved"),
+                            builder.equal(builder.lower(root.get("offerStatus")), "approved")
+                    ));
+                } else if ("Director_Rejected".equalsIgnoreCase(s) || "Rejected".equalsIgnoreCase(s)) {
+                    predicates.add(builder.or(
+                            builder.equal(builder.lower(root.get("offerStatus")), "director_rejected"),
+                            builder.equal(builder.lower(root.get("offerStatus")), "rejected")
+                    ));
+                } else {
+                    predicates.add(builder.equal(builder.lower(root.get("offerStatus")), s.toLowerCase(Locale.ROOT)));
+                }
+            }
+
+            return builder.and(predicates.toArray(new Predicate[0]));
+        };
+
+        Page<OfferProposal> pagedEntities = offerProposalRepository.findAll(spec, sortedPageable);
+        return pagedEntities.map(this::mapToResponse);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
     public Page<OfferResponse> getDirectorOfferHistory(Pageable pageable) {
         User director = resolveProposedBy(null);
         Integer directorId = director != null ? director.getUserId() : 0;
@@ -851,11 +1001,7 @@ public class OfferServiceImpl implements OfferService {
         Page<OfferApproval> approvals = offerApprovalRepository.findByDirector_UserIdOrderByApprovedAtDesc(directorId, pageable);
         return approvals.map(approval -> {
             OfferProposal offer = approval.getOfferProposal();
-            OfferResponse response = mapToResponse(offer);
-            if (approval.getStatus() != null && !approval.getStatus().isBlank()) {
-                response.setOfferStatus(approval.getStatus());
-            }
-            return response;
+            return mapToResponse(offer);
         });
     }
 }

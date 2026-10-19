@@ -1,26 +1,18 @@
 <!DOCTYPE html>
-<html lang="vi" xmlns:th="http://www.thymeleaf.org">
-<head th:replace="~{fragments/head :: interfaceHead('Quản lý Đề xuất', ~{::pageStyles})}">
-  <th:block th:fragment="pageStyles">
-    <meta name="_csrf" th:content="${_csrf?.token}"/>
-    <meta name="_csrf_header" th:content="${_csrf?.headerName}"/>
+<html lang="vi"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/internal}">
+<head>
+  <title>Quản lý Đề xuất | Mộc RMS</title>
+  <th:block layout:fragment="styles">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" th:href="@{/css/offers.css}">
   </th:block>
 </head>
-<body class="rms-app">
+<body>
 
-<div class="page-wrapper">
-    <!-- SIDEBAR -->
-    <aside th:replace="~{fragments/sidebar :: workspace('offers', 'Director')}"></aside>
-
-    <div class="main-content" id="directorMainContent">
-        <!-- TOPBAR -->
-        <header th:replace="~{fragments/workspace-header :: header('Director', ${currentUser})}"></header>
-
-        <!-- PAGE CONTENT -->
-        <main id="main" class="page-content" tabindex="-1">
-            <div class="container">
+<main id="main" layout:fragment="content" class="page-content container" tabindex="-1">
 
                 <div class="offers-header">
                     <div class="offers-title-group">
@@ -29,41 +21,45 @@
                     </div>
                 </div>
 
-                <!-- 3 Stat Cards -->
-                <div class="offers-stats-grid director-stats-grid">
-                    <div class="offer-stat-card">
-                        <div class="stat-label">CHỜ DUYỆT</div>
-                        <div class="offer-stat-bottom">
+                <!-- 3 Stat Cards (Compact Horizontal Mockup) -->
+                <div class="director-stats-grid">
+                    <div class="director-stat-card">
+                        <div class="director-stat-left">
                             <div class="offer-stat-icon stat-icon-amber">
                                 <i class="fa-solid fa-hourglass-half"></i>
                             </div>
-                            <div class="stat-value" th:text="${statPending}">0</div>
+                            <span class="stat-label">Chờ duyệt</span>
                         </div>
+                        <div class="stat-value" th:text="${statPending}">0</div>
                     </div>
-                    <div class="offer-stat-card">
-                        <div class="stat-label">ĐÃ DUYỆT</div>
-                        <div class="offer-stat-bottom">
+                    <div class="director-stat-card">
+                        <div class="director-stat-left">
                             <div class="offer-stat-icon stat-icon-green">
                                 <i class="fa-solid fa-user-check"></i>
                             </div>
-                            <div class="stat-value" th:text="${statApproved}">0</div>
+                            <span class="stat-label">Đã duyệt</span>
                         </div>
+                        <div class="stat-value" th:text="${statApproved}">0</div>
                     </div>
-                    <div class="offer-stat-card">
-                        <div class="stat-label">ĐÃ TỪ CHỐI</div>
-                        <div class="offer-stat-bottom">
+                    <div class="director-stat-card">
+                        <div class="director-stat-left">
                             <div class="offer-stat-icon stat-icon-danger">
                                 <i class="fa-solid fa-ban"></i>
                             </div>
-                            <div class="stat-value" th:text="${statRejected}">0</div>
+                            <span class="stat-label">Đã từ chối</span>
                         </div>
+                        <div class="stat-value" th:text="${statRejected}">0</div>
                     </div>
                 </div>
 
                 <!-- 2 Tabs -->
                 <div class="director-tabs">
-                    <a th:href="@{/offers(status='PENDING')}" th:classappend="${currentTab == 'PENDING'} ? 'active' : ''" class="director-tab">Chờ duyệt</a>
-                    <a th:href="@{/offers(status='HISTORY')}" th:classappend="${currentTab == 'HISTORY'} ? 'active' : ''" class="director-tab">Lịch sử quyết định</a>
+                    <a th:href="@{/offers(status='Pending_Director')}" th:classappend="${currentTab == 'PENDING'} ? 'active' : ''" class="director-tab">
+                        Chờ duyệt (<span th:text="${statusCounts != null ? (statusCounts['Pending_Director'] ?: 0) : statPending}">0</span>)
+                    </a>
+                    <a th:href="@{/offers(status='HISTORY')}" th:classappend="${currentTab == 'HISTORY'} ? 'active' : ''" class="director-tab">
+                        Lịch sử quyết định
+                    </a>
                 </div>
 
                 <!-- Filter Toolbar -->
@@ -79,11 +75,30 @@
                                 <i class="fa-solid fa-xmark"></i>
                             </button>
                         </div>
-                        <!-- Sort by time -->
+
+                        <!-- Lọc theo trạng thái kèm số lượng ứng viên -->
+                        <select id="statusFilter" class="filter-select" onchange="applyDirectorFilters()">
+                            <option value="ALL" th:selected="${currentStatus == 'ALL' or currentStatus == 'HISTORY'}"
+                                    th:text="'-- Tất cả trạng thái -- (' + ${statusCounts != null ? (statusCounts['ALL'] ?: 0) : 0} + ')'">-- Tất cả trạng thái -- (0)</option>
+                            <option value="Pending_Director" th:selected="${currentStatus == 'Pending_Director'}"
+                                    th:text="'Chờ Giám đốc duyệt (' + ${statusCounts != null ? (statusCounts['Pending_Director'] ?: 0) : 0} + ')'">Chờ Giám đốc duyệt (0)</option>
+                            <option value="Director_Approved" th:selected="${currentStatus == 'Director_Approved' or currentStatus == 'Approved'}"
+                                    th:text="'Giám đốc đã duyệt (' + ${statusCounts != null ? (statusCounts['Director_Approved'] ?: 0) : 0} + ')'">Giám đốc đã duyệt (0)</option>
+                            <option value="Sent_Candidate" th:selected="${currentStatus == 'Sent_Candidate'}"
+                                    th:text="'Đã gửi thư mời (' + ${statusCounts != null ? (statusCounts['Sent_Candidate'] ?: 0) : 0} + ')'">Đã gửi thư mời (0)</option>
+                            <option value="Accepted" th:selected="${currentStatus == 'Accepted'}"
+                                    th:text="'Ứng viên chấp nhận (' + ${statusCounts != null ? (statusCounts['Accepted'] ?: 0) : 0} + ')'">Ứng viên chấp nhận (0)</option>
+                            <option value="Declined" th:selected="${currentStatus == 'Declined'}"
+                                    th:text="'Ứng viên từ chối (' + ${statusCounts != null ? (statusCounts['Declined'] ?: 0) : 0} + ')'">Ứng viên từ chối (0)</option>
+                            <option value="Director_Rejected" th:selected="${currentStatus == 'Director_Rejected' or currentStatus == 'Rejected'}"
+                                    th:text="'Giám đốc từ chối (' + ${statusCounts != null ? (statusCounts['Director_Rejected'] ?: 0) : 0} + ')'">Giám đốc từ chối (0)</option>
+                        </select>
+
+                        <!-- Sắp xếp theo thời gian -->
                         <select id="timeSortFilter" class="filter-select" onchange="applyDirectorFilters()">
                             <option value="DEFAULT" th:selected="${currentTimeSort == 'DEFAULT'}">-- Sắp xếp theo thời gian --</option>
-                            <option value="EARLIEST" th:selected="${currentTimeSort == 'EARLIEST'}">Mới nhất</option>
-                            <option value="LATEST" th:selected="${currentTimeSort == 'LATEST'}">Cũ nhất</option>
+                            <option value="LATEST" th:selected="${currentTimeSort == 'LATEST'}">Mới nhất</option>
+                            <option value="EARLIEST" th:selected="${currentTimeSort == 'EARLIEST'}">Cũ nhất</option>
                         </select>
                     </div>
                 </div>
@@ -93,7 +108,7 @@
                     <table class="offers-table">
                         <thead>
                             <tr>
-                                <th style="width: 90px;">Mã Offer</th>
+                                <th style="width: 70px;">Mã Offer</th>
                                 <th>Ứng viên</th>
                                 <th>Vị trí đề xuất</th>
                                 <th>Lương chính thức</th>
@@ -101,7 +116,7 @@
                                 <th>Trạng thái</th>
                                 <th>Ngày lập</th>
                                 <th>Người đề xuất</th>
-                                <th style="text-align: right; width: 60px;">Hành động</th>
+                                <th style="text-align: right; width: 50px;">Hành động</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -134,19 +149,19 @@
                                 </td>
                                 <td>
                                     <span th:if="${o.offerStatus == 'Pending_Director'}" class="status-badge status-pending">
-                                        <i class="fa-solid fa-hourglass-half"></i> Chờ duyệt Director
+                                        <i class="fa-solid fa-hourglass-half"></i> Chờ Giám đốc duyệt
                                     </span>
                                     <span th:if="${o.offerStatus == 'Director_Approved' or o.offerStatus == 'Approved'}" class="status-badge status-approved">
-                                        <i class="fa-solid fa-check"></i> Đã duyệt
+                                        <i class="fa-solid fa-check"></i> Giám đốc đã duyệt
                                     </span>
                                     <span th:if="${o.offerStatus == 'Director_Rejected' or o.offerStatus == 'Rejected'}" class="status-badge status-rejected">
-                                        <i class="fa-solid fa-xmark"></i> Bị từ chối
+                                        <i class="fa-solid fa-xmark"></i> Giám đốc từ chối
                                     </span>
                                     <span th:if="${o.offerStatus == 'Sent_Candidate'}" class="status-badge status-sent">
-                                        <i class="fa-solid fa-paper-plane"></i> Đã gửi ứng viên
+                                        <i class="fa-solid fa-paper-plane"></i> Đã gửi thư mời
                                     </span>
                                     <span th:if="${o.offerStatus == 'Accepted'}" class="status-badge status-accepted">
-                                        <i class="fa-solid fa-circle-check"></i> Ứng viên đồng ý
+                                        <i class="fa-solid fa-circle-check"></i> Ứng viên chấp nhận
                                     </span>
                                     <span th:if="${o.offerStatus == 'Declined'}" class="status-badge status-declined">
                                         <i class="fa-solid fa-circle-xmark"></i> Ứng viên từ chối
@@ -171,13 +186,11 @@
                 </div>
                 <!-- Phân trang chuẩn UI catalog -->
                 <nav th:replace="~{fragments/ui/pagination :: paged(page=${offersPage})}"></nav>
+</main>
 
-            </div>
-        </main>
-    </div>
-</div>
-
-<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-<script th:src="@{/js/offers.js}"></script>
+<th:block layout:fragment="scripts">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script th:src="@{/js/offers.js}" defer></script>
+</th:block>
 </body>
 </html>
