@@ -1,0 +1,627 @@
+<?xml version='1.0' encoding='utf-8'?>
+<mxfile host="app.diagrams.net" agent="RMS source-based architecture documentation" version="24.7.17" type="device">
+  <diagram id="login" name="01 — Login, Logout &amp; Session Guard">
+    <mxGraphModel dx="1740" dy="1610" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1740" pageHeight="1610" background="#7ECBE9" math="0" shadow="0">
+      <root>
+        <mxCell id="login_root" />
+        <mxCell id="login_layer" parent="login_root" />
+        <mxCell id="login_title" value="01 — Login, Logout &amp; Session Guard" vertex="1" parent="login_layer" style="text;html=0;strokeColor=none;fillColor=none;whiteSpace=wrap;align=left;verticalAlign=middle;fontFamily=Arial;fontSize=28;fontColor=#142C38;fontStyle=1;">
+          <mxGeometry as="geometry" x="25" y="20" width="1690" height="43" />
+        </mxCell>
+        <mxCell id="login_subtitle" value="Package dependencies • Spring Security processes POST /login and /logout • GET /login returns the view" vertex="1" parent="login_layer" style="text;html=0;strokeColor=none;fillColor=none;whiteSpace=wrap;align=left;verticalAlign=middle;fontFamily=Arial;fontSize=17;fontColor=#142C38;fontStyle=0;">
+          <mxGeometry as="geometry" x="25" y="68" width="1690" height="45" />
+        </mxCell>
+        <mxCell id="login_legend" value="Dashed open arrow: A depends on B.&#10;E##: source evidence index.&#10;Nesting: logical architectural grouping.&#10;External actors are context only.&#10;This is not a runtime sequence diagram." vertex="1" parent="login_layer" style="text;html=0;strokeColor=none;fillColor=none;whiteSpace=wrap;align=left;verticalAlign=middle;fontFamily=Arial;fontSize=16;fontColor=#142C38;fontStyle=0;">
+          <mxGeometry as="geometry" x="25" y="1260" width="430" height="160" />
+        </mxCell>
+        <mxCell id="login_note" value="AuthController does not authenticate credentials. SecurityConfig wires DaoAuthenticationProvider, BCrypt and AccountSessionGuardFilter; security packages depend on repository/entity types." vertex="1" parent="login_layer" style="text;html=0;strokeColor=none;fillColor=none;whiteSpace=wrap;align=left;verticalAlign=middle;fontFamily=Arial;fontSize=14;fontColor=#142C38;fontStyle=0;">
+          <mxGeometry as="geometry" x="25" y="1570" width="1690" height="35" />
+        </mxCell>
+        <mxCell id="login_presentation" value="&lt;b&gt;Presentation Layer  «logical»&lt;/b&gt;" style="shape=folder;tabWidth=70;tabHeight=20;html=1;whiteSpace=wrap;rounded=0;strokeColor=#142C38;strokeWidth=1.2;fillColor=#86CEE9;fontColor=#142C38;fontFamily=Arial;fontSize=16;align=center;verticalAlign=top;spacingTop=27;spacingLeft=9;spacingRight=9;container=1;collapsible=0;recursiveResize=0;" vertex="1" parent="login_layer">
+          <mxGeometry as="geometry" x="245" y="135" width="940" height="300" />
+        </mxCell>
+        <mxCell id="login_business" value="&lt;b&gt;Business Layer  «logical»&lt;/b&gt;" style="shape=folder;tabWidth=70;tabHeight=20;html=1;whiteSpace=wrap;rounded=0;strokeColor=#142C38;strokeWidth=1.2;fillColor=#86CEE9;fontColor=#142C38;fontFamily=Arial;fontSize=16;align=center;verticalAlign=top;spacingTop=27;spacingLeft=9;spacingRight=9;container=1;collapsible=0;recursiveResize=0;" vertex="1" parent="login_layer">
+          <mxGeometry as="geometry" x="245" y="535" width="940" height="200" />
+        </mxCell>
+        <mxCell id="login_data" value="&lt;b&gt;Data Layer  «logical»&lt;/b&gt;" style="shape=folder;tabWidth=70;tabHeight=20;html=1;whiteSpace=wrap;rounded=0;strokeColor=#142C38;strokeWidth=1.2;fillColor=#86CEE9;fontColor=#142C38;fontFamily=Arial;fontSize=16;align=center;verticalAlign=top;spacingTop=27;spacingLeft=9;spacingRight=9;container=1;collapsible=0;recursiveResize=0;" vertex="1" parent="login_layer">
+          <mxGeometry as="geometry" x="245" y="970" width="940" height="200" />
+        </mxCell>
+        <mxCell id="login_cross" value="&lt;b&gt;Cross-Cutting / Frameworks  «logical»&lt;/b&gt;" style="shape=folder;tabWidth=70;tabHeight=20;html=1;whiteSpace=wrap;rounded=0;strokeColor=#142C38;strokeWidth=1.2;fillColor=#86CEE9;fontColor=#142C38;fontFamily=Arial;fontSize=16;align=center;verticalAlign=top;spacingTop=27;spacingLeft=9;spacingRight=9;container=1;collapsible=0;recursiveResize=0;" vertex="1" parent="login_layer">
+          <mxGeometry as="geometry" x="1250" y="135" width="420" height="1035" />
+        </mxCell>
+        <mxCell id="login_actors" value="&lt;b&gt;Users / Browser&lt;/b&gt;&lt;br&gt;&lt;br&gt;«external context»&lt;br&gt;Candidates&lt;br&gt;Internal users&lt;br&gt;HTTP forms + session" style="shape=folder;tabWidth=70;tabHeight=20;html=1;whiteSpace=wrap;rounded=0;strokeColor=#142C38;strokeWidth=1.2;fillColor=#9AD8EF;fontColor=#142C38;fontFamily=Arial;fontSize=16;align=center;verticalAlign=top;spacingTop=27;spacingLeft=9;spacingRight=9;container=0;collapsible=0;recursiveResize=0;" vertex="1" parent="login_layer">
+          <mxGeometry as="geometry" x="25" y="195" width="185" height="200" />
+        </mxCell>
+        <mxCell id="login_controller" value="&lt;b&gt;auth.controller&lt;/b&gt;&lt;br&gt;&lt;br&gt;AuthController&lt;br&gt;GET /login → auth/login" style="shape=folder;tabWidth=70;tabHeight=20;html=1;whiteSpace=wrap;rounded=0;strokeColor=#142C38;strokeWidth=1.2;fillColor=#9AD8EF;fontColor=#142C38;fontFamily=Arial;fontSize=16;align=center;verticalAlign=top;spacingTop=27;spacingLeft=9;spacingRight=9;container=0;collapsible=0;recursiveResize=0;" vertex="1" parent="login_presentation">
+          <mxGeometry as="geometry" x="30" y="60" width="350" height="110" />
+        </mxCell>
+        <mxCell id="login_views" value="&lt;b&gt;templates/auth/&lt;/b&gt;&lt;br&gt;&lt;br&gt;«resource folder»&lt;br&gt;Forms + email/ templates" style="shape=folder;tabWidth=70;tabHeight=20;html=1;whiteSpace=wrap;rounded=0;strokeColor=#142C38;strokeWidth=1.2;fillColor=#9AD8EF;fontColor=#142C38;fontFamily=Arial;fontSize=16;align=center;verticalAlign=top;spacingTop=27;spacingLeft=9;spacingRight=9;container=0;collapsible=0;recursiveResize=0;" vertex="1" parent="login_presentation">
+          <mxGeometry as="geometry" x="560" y="60" width="350" height="110" />
+        </mxCell>
+        <mxCell id="login_advice" value="&lt;b&gt;auth&lt;/b&gt;&lt;br&gt;&lt;br&gt;NavigationAdvice" style="shape=folder;tabWidth=70;tabHeight=20;html=1;whiteSpace=wrap;rounded=0;strokeColor=#142C38;strokeWidth=1.2;fillColor=#9AD8EF;fontColor=#142C38;fontFamily=Arial;fontSize=16;align=center;verticalAlign=top;spacingTop=27;spacingLeft=9;spacingRight=9;container=0;collapsible=0;recursiveResize=0;" vertex="1" parent="login_presentation">
+          <mxGeometry as="geometry" x="30" y="210" width="350" height="90" />
+        </mxCell>
+        <mxCell id="login_user_entity" value="&lt;b&gt;user.entity&lt;/b&gt;&lt;br&gt;&lt;br&gt;User / Role" style="shape=folder;tabWidth=70;tabHeight=20;html=1;whiteSpace=wrap;rounded=0;strokeColor=#142C38;strokeWidth=1.2;fillColor=#9AD8EF;fontColor=#142C38;fontFamily=Arial;fontSize=16;align=center;verticalAlign=top;spacingTop=27;spacingLeft=9;spacingRight=9;container=0;collapsible=0;recursiveResize=0;" vertex="1" parent="login_business">
+          <mxGeometry as="geometry" x="360" y="60" width="390" height="100" />
+        </mxCell>
+        <mxCell id="login_users" value="&lt;b&gt;user.repository&lt;/b&gt;&lt;br&gt;&lt;br&gt;UserRepository&lt;br&gt;Username / email lookup" style="shape=folder;tabWidth=70;tabHeight=20;html=1;whiteSpace=wrap;rounded=0;strokeColor=#142C38;strokeWidth=1.2;fillColor=#9AD8EF;fontColor=#142C38;fontFamily=Arial;fontSize=16;align=center;verticalAlign=top;spacingTop=27;spacingLeft=9;spacingRight=9;container=0;collapsible=0;recursiveResize=0;" vertex="1" parent="login_data">
+          <mxGeometry as="geometry" x="560" y="60" width="350" height="110" />
+        </mxCell>
+        <mxCell id="login_config" value="&lt;b&gt;core.config&lt;/b&gt;&lt;br&gt;&lt;br&gt;SecurityConfig&lt;br&gt;formLogin / logout / request cache&lt;br&gt;BCryptPasswordEncoder bean" style="shape=folder;tabWidth=70;tabHeight=20;html=1;whiteSpace=wrap;rounded=0;strokeColor=#142C38;strokeWidth=1.2;fillColor=#9AD8EF;fontColor=#142C38;fontFamily=Arial;fontSize=16;align=center;verticalAlign=top;spacingTop=27;spacingLeft=9;spacingRight=9;container=0;collapsible=0;recursiveResize=0;" vertex="1" parent="login_cross">
+          <mxGeometry as="geometry" x="30" y="60" width="360" height="150" />
+        </mxCell>
+        <mxCell id="login_security" value="&lt;b&gt;core.security&lt;/b&gt;&lt;br&gt;&lt;br&gt;DatabaseUserDetailsService&lt;br&gt;AccountSessionGuardFilter&lt;br&gt;RoleAuthorities&lt;br&gt;UserDetailsService implementation" style="shape=folder;tabWidth=70;tabHeight=20;html=1;whiteSpace=wrap;rounded=0;strokeColor=#142C38;strokeWidth=1.2;fillColor=#9AD8EF;fontColor=#142C38;fontFamily=Arial;fontSize=16;align=center;verticalAlign=top;spacingTop=27;spacingLeft=9;spacingRight=9;container=0;collapsible=0;recursiveResize=0;" vertex="1" parent="login_cross">
+          <mxGeometry as="geometry" x="30" y="320" width="360" height="180" />
+        </mxCell>
+        <mxCell id="login_framework_security" value="&lt;b&gt;Spring Security&lt;/b&gt;&lt;br&gt;&lt;br&gt;«framework group»&lt;br&gt;org.springframework.security.*&lt;br&gt;DaoAuthenticationProvider&lt;br&gt;SecurityFilterChain / PasswordEncoder" style="shape=folder;tabWidth=70;tabHeight=20;html=1;whiteSpace=wrap;rounded=0;strokeColor=#142C38;strokeWidth=1.2;fillColor=#9AD8EF;fontColor=#142C38;fontFamily=Arial;fontSize=16;align=center;verticalAlign=top;spacingTop=27;spacingLeft=9;spacingRight=9;container=0;collapsible=0;recursiveResize=0;" vertex="1" parent="login_cross">
+          <mxGeometry as="geometry" x="30" y="665" width="360" height="205" />
+        </mxCell>
+        <mxCell id="login_jpa" value="&lt;b&gt;Spring Data JPA / JDBC&lt;/b&gt;&lt;br&gt;&lt;br&gt;«framework group»&lt;br&gt;JpaRepository + SQL Server driver" style="shape=folder;tabWidth=70;tabHeight=20;html=1;whiteSpace=wrap;rounded=0;strokeColor=#142C38;strokeWidth=1.2;fillColor=#9AD8EF;fontColor=#142C38;fontFamily=Arial;fontSize=16;align=center;verticalAlign=top;spacingTop=27;spacingLeft=9;spacingRight=9;container=0;collapsible=0;recursiveResize=0;" vertex="1" parent="login_layer">
+          <mxGeometry as="geometry" x="495" y="1260" width="520" height="110" />
+        </mxCell>
+        <mxCell id="login_db" value="&lt;b&gt;SQL Server Database&lt;/b&gt;&lt;br&gt;&lt;br&gt;«external system»&lt;br&gt;Configured data source" style="shape=folder;tabWidth=70;tabHeight=20;html=1;whiteSpace=wrap;rounded=0;strokeColor=#142C38;strokeWidth=1.2;fillColor=#9AD8EF;fontColor=#142C38;fontFamily=Arial;fontSize=16;align=center;verticalAlign=top;spacingTop=27;spacingLeft=9;spacingRight=9;container=0;collapsible=0;recursiveResize=0;" vertex="1" parent="login_layer">
+          <mxGeometry as="geometry" x="495" y="1450" width="520" height="100" />
+        </mxCell>
+        <mxCell id="login_edge_1" value="E02" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=0;endArrow=open;endFill=0;dashed=1;dashPattern=6 5;strokeColor=#142C38;strokeWidth=1.3;fontFamily=Arial;fontSize=13;fontColor=#142C38;labelBackgroundColor=#7ECBE9;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" source="login_controller" target="login_views" parent="login_layer">
+          <mxGeometry as="geometry" relative="1" />
+        </mxCell>
+        <mxCell id="login_edge_2" value="E10" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=0;endArrow=open;endFill=0;dashed=1;dashPattern=6 5;strokeColor=#142C38;strokeWidth=1.3;fontFamily=Arial;fontSize=13;fontColor=#142C38;labelBackgroundColor=#7ECBE9;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" source="login_config" target="login_security" parent="login_layer">
+          <mxGeometry as="geometry" relative="1" />
+        </mxCell>
+        <mxCell id="login_edge_3" value="E12" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=0;endArrow=open;endFill=0;dashed=1;dashPattern=6 5;strokeColor=#142C38;strokeWidth=1.3;fontFamily=Arial;fontSize=13;fontColor=#142C38;labelBackgroundColor=#7ECBE9;exitX=1;exitY=0.4;exitDx=0;exitDy=0;entryX=1;entryY=0.8;entryDx=0;entryDy=0;" edge="1" source="login_config" target="login_users" parent="login_layer">
+          <mxGeometry as="geometry" relative="1">
+            <Array as="points">
+              <mxPoint x="1700" y="255" />
+              <mxPoint x="1700" y="1195" />
+              <mxPoint x="1210" y="1195" />
+              <mxPoint x="1210" y="1118" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="login_edge_4" value="E13" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=0;endArrow=open;endFill=0;dashed=1;dashPattern=6 5;strokeColor=#142C38;strokeWidth=1.3;fontFamily=Arial;fontSize=13;fontColor=#142C38;labelBackgroundColor=#7ECBE9;exitX=1;exitY=0.8;exitDx=0;exitDy=0;entryX=1;entryY=0.2;entryDx=0;entryDy=0;" edge="1" source="login_config" target="login_framework_security" parent="login_layer">
+          <mxGeometry as="geometry" relative="1">
+            <Array as="points">
+              <mxPoint x="1675" y="315" />
+              <mxPoint x="1675" y="841" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="login_edge_5" value="E11" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=0;endArrow=open;endFill=0;dashed=1;dashPattern=6 5;strokeColor=#142C38;strokeWidth=1.3;fontFamily=Arial;fontSize=13;fontColor=#142C38;labelBackgroundColor=#7ECBE9;exitX=0;exitY=0.5;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" source="login_security" target="login_users" parent="login_layer">
+          <mxGeometry as="geometry" relative="1">
+            <Array as="points">
+              <mxPoint x="1225" y="545" />
+              <mxPoint x="1225" y="935" />
+              <mxPoint x="980" y="935" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="login_edge_6" value="E11" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=0;endArrow=open;endFill=0;dashed=1;dashPattern=6 5;strokeColor=#142C38;strokeWidth=1.3;fontFamily=Arial;fontSize=13;fontColor=#142C38;labelBackgroundColor=#7ECBE9;exitX=0;exitY=0.2;exitDx=0;exitDy=0;entryX=1;entryY=0.5;entryDx=0;entryDy=0;" edge="1" source="login_security" target="login_user_entity" parent="login_layer">
+          <mxGeometry as="geometry" relative="1">
+            <Array as="points">
+              <mxPoint x="1205" y="491" />
+              <mxPoint x="1205" y="645" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="login_edge_7" value="E14" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=0;endArrow=open;endFill=0;dashed=1;dashPattern=6 5;strokeColor=#142C38;strokeWidth=1.3;fontFamily=Arial;fontSize=13;fontColor=#142C38;labelBackgroundColor=#7ECBE9;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" source="login_security" target="login_framework_security" parent="login_layer">
+          <mxGeometry as="geometry" relative="1" />
+        </mxCell>
+        <mxCell id="login_edge_8" value="E07" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=0;endArrow=open;endFill=0;dashed=1;dashPattern=6 5;strokeColor=#142C38;strokeWidth=1.3;fontFamily=Arial;fontSize=13;fontColor=#142C38;labelBackgroundColor=#7ECBE9;exitX=0.25;exitY=0;exitDx=0;exitDy=0;entryX=0.75;entryY=1;entryDx=0;entryDy=0;" edge="1" source="login_users" target="login_user_entity" parent="login_layer">
+          <mxGeometry as="geometry" relative="1">
+            <Array as="points">
+              <mxPoint x="892.5" y="850" />
+              <mxPoint x="897.5" y="850" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="login_edge_9" value="E30" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=0;endArrow=open;endFill=0;dashed=1;dashPattern=6 5;strokeColor=#142C38;strokeWidth=1.3;fontFamily=Arial;fontSize=13;fontColor=#142C38;labelBackgroundColor=#7ECBE9;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.75;entryDx=0;entryDy=0;" edge="1" source="login_advice" target="login_framework_security" parent="login_layer">
+          <mxGeometry as="geometry" relative="1">
+            <Array as="points">
+              <mxPoint x="1190" y="380" />
+              <mxPoint x="1190" y="953.75" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="login_edge_10" value="E19" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=0;endArrow=open;endFill=0;dashed=1;dashPattern=6 5;strokeColor=#142C38;strokeWidth=1.3;fontFamily=Arial;fontSize=13;fontColor=#142C38;labelBackgroundColor=#7ECBE9;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.25;entryY=0;entryDx=0;entryDy=0;" edge="1" source="login_users" target="login_jpa" parent="login_layer">
+          <mxGeometry as="geometry" relative="1">
+            <Array as="points">
+              <mxPoint x="980" y="1210" />
+              <mxPoint x="625" y="1210" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="login_edge_11" value="E20" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=0;endArrow=open;endFill=0;dashed=1;dashPattern=6 5;strokeColor=#142C38;strokeWidth=1.3;fontFamily=Arial;fontSize=13;fontColor=#142C38;labelBackgroundColor=#7ECBE9;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" source="login_jpa" target="login_db" parent="login_layer">
+          <mxGeometry as="geometry" relative="1" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+  <diagram id="registration" name="02 — Candidate Registration OTP">
+    <mxGraphModel dx="1740" dy="1610" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1740" pageHeight="1610" background="#7ECBE9" math="0" shadow="0">
+      <root>
+        <mxCell id="registration_root" />
+        <mxCell id="registration_layer" parent="registration_root" />
+        <mxCell id="registration_title" value="02 — Candidate Registration OTP" vertex="1" parent="registration_layer" style="text;html=0;strokeColor=none;fillColor=none;whiteSpace=wrap;align=left;verticalAlign=middle;fontFamily=Arial;fontSize=28;fontColor=#142C38;fontStyle=1;">
+          <mxGeometry as="geometry" x="25" y="20" width="1690" height="43" />
+        </mxCell>
+        <mxCell id="registration_subtitle" value="Package dependencies • Internal service calls remain inside auth.service • DTO/exception dependencies are on page 04" vertex="1" parent="registration_layer" style="text;html=0;strokeColor=none;fillColor=none;whiteSpace=wrap;align=left;verticalAlign=middle;fontFamily=Arial;fontSize=17;fontColor=#142C38;fontStyle=0;">
+          <mxGeometry as="geometry" x="25" y="68" width="1690" height="45" />
+        </mxCell>
+        <mxCell id="registration_legend" value="Dashed open arrow: A depends on B.&#10;E##: source evidence index.&#10;Nesting: logical architectural grouping.&#10;External actors are context only.&#10;This is not a runtime sequence diagram." vertex="1" parent="registration_layer" style="text;html=0;strokeColor=none;fillColor=none;whiteSpace=wrap;align=left;verticalAlign=middle;fontFamily=Arial;fontSize=16;fontColor=#142C38;fontStyle=0;">
+          <mxGeometry as="geometry" x="25" y="1260" width="430" height="160" />
+        </mxCell>
+        <mxCell id="registration_note" value="Registration checks identifiers, verifies the emailed OTP, then delegates User + Candidate creation to AccountManagementService. Department administration is outside this path." vertex="1" parent="registration_layer" style="text;html=0;strokeColor=none;fillColor=none;whiteSpace=wrap;align=left;verticalAlign=middle;fontFamily=Arial;fontSize=14;fontColor=#142C38;fontStyle=0;">
+          <mxGeometry as="geometry" x="25" y="1570" width="1690" height="35" />
+        </mxCell>
+        <mxCell id="registration_presentation" value="&lt;b&gt;Presentation Layer  «logical»&lt;/b&gt;" style="shape=folder;tabWidth=70;tabHeight=20;html=1;whiteSpace=wrap;rounded=0;strokeColor=#142C38;strokeWidth=1.2;fillColor=#86CEE9;fontColor=#142C38;fontFamily=Arial;fontSize=16;align=center;verticalAlign=top;spacingTop=27;spacingLeft=9;spacingRight=9;container=1;collapsible=0;recursiveResize=0;" vertex="1" parent="registration_layer">
+          <mxGeometry as="geometry" x="245" y="135" width="940" height="220" />
+        </mxCell>
+        <mxCell id="registration_business" value="&lt;b&gt;Business Layer  «logical»&lt;/b&gt;" style="shape=folder;tabWidth=70;tabHeight=20;html=1;whiteSpace=wrap;rounded=0;strokeColor=#142C38;strokeWidth=1.2;fillColor=#86CEE9;fontColor=#142C38;fontFamily=Arial;fontSize=16;align=center;verticalAlign=top;spacingTop=27;spacingLeft=9;spacingRight=9;container=1;collapsible=0;recursiveResize=0;" vertex="1" parent="registration_layer">
+          <mxGeometry as="geometry" x="245" y="465" width="940" height="390" />
+        </mxCell>
+        <mxCell id="registration_data" value="&lt;b&gt;Data Layer  «logical»&lt;/b&gt;" style="shape=folder;tabWidth=70;tabHeight=20;html=1;whiteSpace=wrap;rounded=0;strokeColor=#142C38;strokeWidth=1.2;fillColor=#86CEE9;fontColor=#142C38;fontFamily=Arial;fontSize=16;align=center;verticalAlign=top;spacingTop=27;spacingLeft=9;spacingRight=9;container=1;collapsible=0;recursiveResize=0;" vertex="1" parent="registration_layer">
+          <mxGeometry as="geometry" x="245" y="970" width="940" height="200" />
+        </mxCell>
+        <mxCell id="registration_cross" value="&lt;b&gt;Cross-Cutting / Frameworks  «logical»&lt;/b&gt;" style="shape=folder;tabWidth=70;tabHeight=20;html=1;whiteSpace=wrap;rounded=0;strokeColor=#142C38;strokeWidth=1.2;fillColor=#86CEE9;fontColor=#142C38;fontFamily=Arial;fontSize=16;align=center;verticalAlign=top;spacingTop=27;spacingLeft=9;spacingRight=9;container=1;collapsible=0;recursiveResize=0;" vertex="1" parent="registration_layer">
+          <mxGeometry as="geometry" x="1250" y="135" width="420" height="1035" />
+        </mxCell>
+        <mxCell id="registration_actors" value="&lt;b&gt;Users / Browser&lt;/b&gt;&lt;br&gt;&lt;br&gt;«external context»&lt;br&gt;Candidates&lt;br&gt;Internal users&lt;br&gt;HTTP forms + session" style="shape=folder;tabWidth=70;tabHeight=20;html=1;whiteSpace=wrap;rounded=0;strokeColor=#142C38;strokeWidth=1.2;fillColor=#9AD8EF;fontColor=#142C38;fontFamily=Arial;fontSize=16;align=center;verticalAlign=top;spacingTop=27;spacingLeft=9;spacingRight=9;container=0;collapsible=0;recursiveResize=0;" vertex="1" parent="registration_layer">
+          <mxGeometry as="geometry" x="25" y="195" width="185" height="200" />
+        </mxCell>
+        <mxCell id="registration_controller" value="&lt;b&gt;auth.controller&lt;/b&gt;&lt;br&gt;&lt;br&gt;RegistrationController&lt;br&gt;/register / /register/otp/**" style="shape=folder;tabWidth=70;tabHeight=20;html=1;whiteSpace=wrap;rounded=0;strokeColor=#142C38;strokeWidth=1.2;fillColor=#9AD8EF;fontColor=#142C38;fontFamily=Arial;fontSize=16;align=center;verticalAlign=top;spacingTop=27;spacingLeft=9;spacingRight=9;container=0;collapsible=0;recursiveResize=0;" vertex="1" parent="registration_presentation">
+          <mxGeometry as="geometry" x="30" y="60" width="350" height="110" />
+        </mxCell>
+        <mxCell id="registration_views" value="&lt;b&gt;templates/auth/&lt;/b&gt;&lt;br&gt;&lt;br&gt;«resource folder»&lt;br&gt;Forms + email/ templates" style="shape=folder;tabWidth=70;tabHeight=20;html=1;whiteSpace=wrap;rounded=0;strokeColor=#142C38;strokeWidth=1.2;fillColor=#9AD8EF;fontColor=#142C38;fontFamily=Arial;fontSize=16;align=center;verticalAlign=top;spacingTop=27;spacingLeft=9;spacingRight=9;container=0;collapsible=0;recursiveResize=0;" vertex="1" parent="registration_presentation">
+          <mxGeometry as="geometry" x="560" y="60" width="350" height="110" />
+        </mxCell>
+        <mxCell id="registration_service" value="&lt;b&gt;auth.service&lt;/b&gt;&lt;br&gt;&lt;br&gt;RegistrationVerificationService&lt;br&gt;RegistrationEmailSender" style="shape=folder;tabWidth=70;tabHeight=20;html=1;whiteSpace=wrap;rounded=0;strokeColor=#142C38;strokeWidth=1.2;fillColor=#9AD8EF;fontColor=#142C38;fontFamily=Arial;fontSize=16;align=center;verticalAlign=top;spacingTop=27;spacingLeft=9;spacingRight=9;container=0;collapsible=0;recursiveResize=0;" vertex="1" parent="registration_business">
+          <mxGeometry as="geometry" x="30" y="60" width="350" height="145" />
+        </mxCell>
+        <mxCell id="registration_user_entity" value="&lt;b&gt;user.entity&lt;/b&gt;&lt;br&gt;&lt;br&gt;User / Role" style="shape=folder;tabWidth=70;tabHeight=20;html=1;whiteSpace=wrap;rounded=0;strokeColor=#142C38;strokeWidth=1.2;fillColor=#9AD8EF;fontColor=#142C38;fontFamily=Arial;fontSize=16;align=center;verticalAlign=top;spacingTop=27;spacingLeft=9;spacingRight=9;container=0;collapsible=0;recursiveResize=0;" vertex="1" parent="registration_business">
+          <mxGeometry as="geometry" x="30" y="260" width="350" height="100" />
+        </mxCell>
+        <mxCell id="registration_users" value="&lt;b&gt;user.repository&lt;/b&gt;&lt;br&gt;&lt;br&gt;UserRepository / RoleRepository" style="shape=folder;tabWidth=70;tabHeight=20;html=1;whiteSpace=wrap;rounded=0;strokeColor=#142C38;strokeWidth=1.2;fillColor=#9AD8EF;fontColor=#142C38;fontFamily=Arial;fontSize=16;align=center;verticalAlign=top;spacingTop=27;spacingLeft=9;spacingRight=9;container=0;collapsible=0;recursiveResize=0;" vertex="1" parent="registration_data">
+          <mxGeometry as="geometry" x="30" y="60" width="350" height="110" />
+        </mxCell>
+        <mxCell id="registration_framework_security" value="&lt;b&gt;Spring Security&lt;/b&gt;&lt;br&gt;&lt;br&gt;«framework group»&lt;br&gt;PasswordEncoder" style="shape=folder;tabWidth=70;tabHeight=20;html=1;whiteSpace=wrap;rounded=0;strokeColor=#142C38;strokeWidth=1.2;fillColor=#9AD8EF;fontColor=#142C38;fontFamily=Arial;fontSize=16;align=center;verticalAlign=top;spacingTop=27;spacingLeft=9;spacingRight=9;container=0;collapsible=0;recursiveResize=0;" vertex="1" parent="registration_cross">
+          <mxGeometry as="geometry" x="30" y="270" width="360" height="130" />
+        </mxCell>
+        <mxCell id="registration_session" value="&lt;b&gt;Jakarta Servlet&lt;/b&gt;&lt;br&gt;&lt;br&gt;«framework package»&lt;br&gt;jakarta.servlet.http.HttpSession&lt;br&gt;OTP / pending state" style="shape=folder;tabWidth=70;tabHeight=20;html=1;whiteSpace=wrap;rounded=0;strokeColor=#142C38;strokeWidth=1.2;fillColor=#9AD8EF;fontColor=#142C38;fontFamily=Arial;fontSize=16;align=center;verticalAlign=top;spacingTop=27;spacingLeft=9;spacingRight=9;container=0;collapsible=0;recursiveResize=0;" vertex="1" parent="registration_cross">
+          <mxGeometry as="geometry" x="30" y="490" width="360" height="120" />
+        </mxCell>
+        <mxCell id="registration_mail" value="&lt;b&gt;Spring Mail&lt;/b&gt;&lt;br&gt;&lt;br&gt;«framework group»&lt;br&gt;JavaMailSender / MimeMessageHelper" style="shape=folder;tabWidth=70;tabHeight=20;html=1;whiteSpace=wrap;rounded=0;strokeColor=#142C38;strokeWidth=1.2;fillColor=#9AD8EF;fontColor=#142C38;fontFamily=Arial;fontSize=16;align=center;verticalAlign=top;spacingTop=27;spacingLeft=9;spacingRight=9;container=0;collapsible=0;recursiveResize=0;" vertex="1" parent="registration_cross">
+          <mxGeometry as="geometry" x="30" y="690" width="360" height="110" />
+        </mxCell>
+        <mxCell id="registration_smtp" value="&lt;b&gt;SMTP Server&lt;/b&gt;&lt;br&gt;&lt;br&gt;«external system»&lt;br&gt;Configured OTP email delivery" style="shape=folder;tabWidth=70;tabHeight=20;html=1;whiteSpace=wrap;rounded=0;strokeColor=#142C38;strokeWidth=1.2;fillColor=#9AD8EF;fontColor=#142C38;fontFamily=Arial;fontSize=16;align=center;verticalAlign=top;spacingTop=27;spacingLeft=9;spacingRight=9;container=0;collapsible=0;recursiveResize=0;" vertex="1" parent="registration_layer">
+          <mxGeometry as="geometry" x="1280" y="1450" width="360" height="100" />
+        </mxCell>
+        <mxCell id="registration_contracts_note" value="&lt;b&gt;Shared contracts&lt;/b&gt;&lt;br&gt;&lt;br&gt;«navigation note»&lt;br&gt;See page 04: DTO validation&lt;br&gt;and auth/core exception cycle" style="shape=folder;tabWidth=70;tabHeight=20;html=1;whiteSpace=wrap;rounded=0;strokeColor=#142C38;strokeWidth=1.2;fillColor=#9AD8EF;fontColor=#142C38;fontFamily=Arial;fontSize=16;align=center;verticalAlign=top;spacingTop=27;spacingLeft=9;spacingRight=9;container=0;collapsible=0;recursiveResize=0;" vertex="1" parent="registration_cross">
+          <mxGeometry as="geometry" x="30" y="60" width="360" height="120" />
+        </mxCell>
+        <mxCell id="registration_accounts" value="&lt;b&gt;user.service&lt;/b&gt;&lt;br&gt;&lt;br&gt;AccountManagementService&lt;br&gt;Registration methods only" style="shape=folder;tabWidth=70;tabHeight=20;html=1;whiteSpace=wrap;rounded=0;strokeColor=#142C38;strokeWidth=1.2;fillColor=#9AD8EF;fontColor=#142C38;fontFamily=Arial;fontSize=16;align=center;verticalAlign=top;spacingTop=27;spacingLeft=9;spacingRight=9;container=0;collapsible=0;recursiveResize=0;" vertex="1" parent="registration_business">
+          <mxGeometry as="geometry" x="560" y="60" width="350" height="145" />
+        </mxCell>
+        <mxCell id="registration_candidate_entity" value="&lt;b&gt;candidate.entity&lt;/b&gt;&lt;br&gt;&lt;br&gt;Candidate" style="shape=folder;tabWidth=70;tabHeight=20;html=1;whiteSpace=wrap;rounded=0;strokeColor=#142C38;strokeWidth=1.2;fillColor=#9AD8EF;fontColor=#142C38;fontFamily=Arial;fontSize=16;align=center;verticalAlign=top;spacingTop=27;spacingLeft=9;spacingRight=9;container=0;collapsible=0;recursiveResize=0;" vertex="1" parent="registration_business">
+          <mxGeometry as="geometry" x="560" y="260" width="350" height="100" />
+        </mxCell>
+        <mxCell id="registration_candidates" value="&lt;b&gt;candidate.repository&lt;/b&gt;&lt;br&gt;&lt;br&gt;CandidateRepository" style="shape=folder;tabWidth=70;tabHeight=20;html=1;whiteSpace=wrap;rounded=0;strokeColor=#142C38;strokeWidth=1.2;fillColor=#9AD8EF;fontColor=#142C38;fontFamily=Arial;fontSize=16;align=center;verticalAlign=top;spacingTop=27;spacingLeft=9;spacingRight=9;container=0;collapsible=0;recursiveResize=0;" vertex="1" parent="registration_data">
+          <mxGeometry as="geometry" x="560" y="60" width="350" height="110" />
+        </mxCell>
+        <mxCell id="registration_jpa" value="&lt;b&gt;Spring Data JPA / JDBC&lt;/b&gt;&lt;br&gt;&lt;br&gt;«framework group»&lt;br&gt;JpaRepository + SQL Server driver" style="shape=folder;tabWidth=70;tabHeight=20;html=1;whiteSpace=wrap;rounded=0;strokeColor=#142C38;strokeWidth=1.2;fillColor=#9AD8EF;fontColor=#142C38;fontFamily=Arial;fontSize=16;align=center;verticalAlign=top;spacingTop=27;spacingLeft=9;spacingRight=9;container=0;collapsible=0;recursiveResize=0;" vertex="1" parent="registration_layer">
+          <mxGeometry as="geometry" x="495" y="1260" width="520" height="110" />
+        </mxCell>
+        <mxCell id="registration_db" value="&lt;b&gt;SQL Server Database&lt;/b&gt;&lt;br&gt;&lt;br&gt;«external system»&lt;br&gt;Configured data source" style="shape=folder;tabWidth=70;tabHeight=20;html=1;whiteSpace=wrap;rounded=0;strokeColor=#142C38;strokeWidth=1.2;fillColor=#9AD8EF;fontColor=#142C38;fontFamily=Arial;fontSize=16;align=center;verticalAlign=top;spacingTop=27;spacingLeft=9;spacingRight=9;container=0;collapsible=0;recursiveResize=0;" vertex="1" parent="registration_layer">
+          <mxGeometry as="geometry" x="495" y="1450" width="520" height="100" />
+        </mxCell>
+        <mxCell id="registration_edge_1" value="E02" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=0;endArrow=open;endFill=0;dashed=1;dashPattern=6 5;strokeColor=#142C38;strokeWidth=1.3;fontFamily=Arial;fontSize=13;fontColor=#142C38;labelBackgroundColor=#7ECBE9;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" source="registration_controller" target="registration_views" parent="registration_layer">
+          <mxGeometry as="geometry" relative="1" />
+        </mxCell>
+        <mxCell id="registration_edge_2" value="E01" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=0;endArrow=open;endFill=0;dashed=1;dashPattern=6 5;strokeColor=#142C38;strokeWidth=1.3;fontFamily=Arial;fontSize=13;fontColor=#142C38;labelBackgroundColor=#7ECBE9;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" source="registration_controller" target="registration_service" parent="registration_layer">
+          <mxGeometry as="geometry" relative="1" />
+        </mxCell>
+        <mxCell id="registration_edge_3" value="E15" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=0;endArrow=open;endFill=0;dashed=1;dashPattern=6 5;strokeColor=#142C38;strokeWidth=1.3;fontFamily=Arial;fontSize=13;fontColor=#142C38;labelBackgroundColor=#7ECBE9;exitX=0.75;exitY=0;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" source="registration_service" target="registration_framework_security" parent="registration_layer">
+          <mxGeometry as="geometry" relative="1">
+            <Array as="points">
+              <mxPoint x="537.5" y="430" />
+              <mxPoint x="1225" y="430" />
+              <mxPoint x="1225" y="470" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="registration_edge_4" value="E16" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=0;endArrow=open;endFill=0;dashed=1;dashPattern=6 5;strokeColor=#142C38;strokeWidth=1.3;fontFamily=Arial;fontSize=13;fontColor=#142C38;labelBackgroundColor=#7ECBE9;exitX=1;exitY=0.85;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" source="registration_service" target="registration_session" parent="registration_layer">
+          <mxGeometry as="geometry" relative="1">
+            <Array as="points">
+              <mxPoint x="750" y="648.25" />
+              <mxPoint x="750" y="685" />
+              <mxPoint x="1240" y="685" />
+              <mxPoint x="1240" y="680" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="registration_edge_5" value="E17" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=0;endArrow=open;endFill=0;dashed=1;dashPattern=6 5;strokeColor=#142C38;strokeWidth=1.3;fontFamily=Arial;fontSize=13;fontColor=#142C38;labelBackgroundColor=#7ECBE9;exitX=1;exitY=0.65;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" source="registration_service" target="registration_mail" parent="registration_layer">
+          <mxGeometry as="geometry" relative="1">
+            <Array as="points">
+              <mxPoint x="730" y="619.25" />
+              <mxPoint x="730" y="900" />
+              <mxPoint x="1255" y="900" />
+              <mxPoint x="1255" y="880" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="registration_edge_6" value="E32" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=0;endArrow=open;endFill=0;dashed=1;dashPattern=6 5;strokeColor=#142C38;strokeWidth=1.3;fontFamily=Arial;fontSize=13;fontColor=#142C38;labelBackgroundColor=#7ECBE9;exitX=0.9;exitY=0;exitDx=0;exitDy=0;entryX=0.6;entryY=1;entryDx=0;entryDy=0;" edge="1" source="registration_service" target="registration_views" parent="registration_layer">
+          <mxGeometry as="geometry" relative="1">
+            <Array as="points">
+              <mxPoint x="590" y="390" />
+              <mxPoint x="1015" y="390" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="registration_edge_7" value="E18" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=0;endArrow=open;endFill=0;dashed=1;dashPattern=6 5;strokeColor=#142C38;strokeWidth=1.3;fontFamily=Arial;fontSize=13;fontColor=#142C38;labelBackgroundColor=#7ECBE9;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" source="registration_mail" target="registration_smtp" parent="registration_layer">
+          <mxGeometry as="geometry" relative="1" />
+        </mxCell>
+        <mxCell id="registration_edge_8" value="E03" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=0;endArrow=open;endFill=0;dashed=1;dashPattern=6 5;strokeColor=#142C38;strokeWidth=1.3;fontFamily=Arial;fontSize=13;fontColor=#142C38;labelBackgroundColor=#7ECBE9;exitX=1;exitY=0.3;exitDx=0;exitDy=0;entryX=0;entryY=0.3;entryDx=0;entryDy=0;" edge="1" source="registration_service" target="registration_accounts" parent="registration_layer">
+          <mxGeometry as="geometry" relative="1" />
+        </mxCell>
+        <mxCell id="registration_edge_9" value="E05" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=0;endArrow=open;endFill=0;dashed=1;dashPattern=6 5;strokeColor=#142C38;strokeWidth=1.3;fontFamily=Arial;fontSize=13;fontColor=#142C38;labelBackgroundColor=#7ECBE9;exitX=0.15;exitY=1;exitDx=0;exitDy=0;entryX=0.2;entryY=0;entryDx=0;entryDy=0;" edge="1" source="registration_accounts" target="registration_users" parent="registration_layer">
+          <mxGeometry as="geometry" relative="1">
+            <Array as="points">
+              <mxPoint x="857.5" y="700" />
+              <mxPoint x="700" y="700" />
+              <mxPoint x="700" y="945" />
+              <mxPoint x="345" y="945" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="registration_edge_10" value="E06" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=0;endArrow=open;endFill=0;dashed=1;dashPattern=6 5;strokeColor=#142C38;strokeWidth=1.3;fontFamily=Arial;fontSize=13;fontColor=#142C38;labelBackgroundColor=#7ECBE9;exitX=1;exitY=0.6;exitDx=0;exitDy=0;entryX=1;entryY=0.5;entryDx=0;entryDy=0;" edge="1" source="registration_accounts" target="registration_candidates" parent="registration_layer">
+          <mxGeometry as="geometry" relative="1">
+            <Array as="points">
+              <mxPoint x="1215" y="612" />
+              <mxPoint x="1215" y="1085" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="registration_edge_11" value="E31" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=0;endArrow=open;endFill=0;dashed=1;dashPattern=6 5;strokeColor=#142C38;strokeWidth=1.3;fontFamily=Arial;fontSize=13;fontColor=#142C38;labelBackgroundColor=#7ECBE9;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" source="registration_accounts" target="registration_candidate_entity" parent="registration_layer">
+          <mxGeometry as="geometry" relative="1" />
+        </mxCell>
+        <mxCell id="registration_edge_12" value="E31" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=0;endArrow=open;endFill=0;dashed=1;dashPattern=6 5;strokeColor=#142C38;strokeWidth=1.3;fontFamily=Arial;fontSize=13;fontColor=#142C38;labelBackgroundColor=#7ECBE9;exitX=0;exitY=0.7;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" source="registration_accounts" target="registration_user_entity" parent="registration_layer">
+          <mxGeometry as="geometry" relative="1">
+            <Array as="points">
+              <mxPoint x="780" y="626.5" />
+              <mxPoint x="780" y="710" />
+              <mxPoint x="450" y="710" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="registration_edge_13" value="E08" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=0;endArrow=open;endFill=0;dashed=1;dashPattern=6 5;strokeColor=#142C38;strokeWidth=1.3;fontFamily=Arial;fontSize=13;fontColor=#142C38;labelBackgroundColor=#7ECBE9;exitX=0.5;exitY=0;exitDx=0;exitDy=0;entryX=0.5;entryY=1;entryDx=0;entryDy=0;" edge="1" source="registration_candidates" target="registration_candidate_entity" parent="registration_layer">
+          <mxGeometry as="geometry" relative="1" />
+        </mxCell>
+        <mxCell id="registration_edge_14" value="E09" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=0;endArrow=open;endFill=0;dashed=1;dashPattern=6 5;strokeColor=#142C38;strokeWidth=1.3;fontFamily=Arial;fontSize=13;fontColor=#142C38;labelBackgroundColor=#7ECBE9;exitX=0;exitY=0.5;exitDx=0;exitDy=0;entryX=1;entryY=0.5;entryDx=0;entryDy=0;" edge="1" source="registration_candidate_entity" target="registration_user_entity" parent="registration_layer">
+          <mxGeometry as="geometry" relative="1" />
+        </mxCell>
+        <mxCell id="registration_edge_15" value="E07" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=0;endArrow=open;endFill=0;dashed=1;dashPattern=6 5;strokeColor=#142C38;strokeWidth=1.3;fontFamily=Arial;fontSize=13;fontColor=#142C38;labelBackgroundColor=#7ECBE9;exitX=0.5;exitY=0;exitDx=0;exitDy=0;entryX=0.5;entryY=1;entryDx=0;entryDy=0;" edge="1" source="registration_users" target="registration_user_entity" parent="registration_layer">
+          <mxGeometry as="geometry" relative="1" />
+        </mxCell>
+        <mxCell id="registration_edge_16" value="E19" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=0;endArrow=open;endFill=0;dashed=1;dashPattern=6 5;strokeColor=#142C38;strokeWidth=1.3;fontFamily=Arial;fontSize=13;fontColor=#142C38;labelBackgroundColor=#7ECBE9;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.25;entryY=0;entryDx=0;entryDy=0;" edge="1" source="registration_users" target="registration_jpa" parent="registration_layer">
+          <mxGeometry as="geometry" relative="1">
+            <Array as="points">
+              <mxPoint x="450" y="1210" />
+              <mxPoint x="625" y="1210" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="registration_edge_17" value="E19" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=0;endArrow=open;endFill=0;dashed=1;dashPattern=6 5;strokeColor=#142C38;strokeWidth=1.3;fontFamily=Arial;fontSize=13;fontColor=#142C38;labelBackgroundColor=#7ECBE9;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.8;entryY=0;entryDx=0;entryDy=0;" edge="1" source="registration_candidates" target="registration_jpa" parent="registration_layer">
+          <mxGeometry as="geometry" relative="1">
+            <Array as="points">
+              <mxPoint x="980" y="1210" />
+              <mxPoint x="911" y="1210" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="registration_edge_18" value="E20" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=0;endArrow=open;endFill=0;dashed=1;dashPattern=6 5;strokeColor=#142C38;strokeWidth=1.3;fontFamily=Arial;fontSize=13;fontColor=#142C38;labelBackgroundColor=#7ECBE9;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" source="registration_jpa" target="registration_db" parent="registration_layer">
+          <mxGeometry as="geometry" relative="1" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+  <diagram id="recovery" name="03 — Password Recovery OTP">
+    <mxGraphModel dx="1740" dy="1610" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1740" pageHeight="1610" background="#7ECBE9" math="0" shadow="0">
+      <root>
+        <mxCell id="recovery_root" />
+        <mxCell id="recovery_layer" parent="recovery_root" />
+        <mxCell id="recovery_title" value="03 — Password Recovery OTP" vertex="1" parent="recovery_layer" style="text;html=0;strokeColor=none;fillColor=none;whiteSpace=wrap;align=left;verticalAlign=middle;fontFamily=Arial;fontSize=28;fontColor=#142C38;fontStyle=1;">
+          <mxGeometry as="geometry" x="25" y="20" width="1690" height="43" />
+        </mxCell>
+        <mxCell id="recovery_subtitle" value="Package dependencies • Internal service calls remain inside auth.service • DTO/exception dependencies are on page 04" vertex="1" parent="recovery_layer" style="text;html=0;strokeColor=none;fillColor=none;whiteSpace=wrap;align=left;verticalAlign=middle;fontFamily=Arial;fontSize=17;fontColor=#142C38;fontStyle=0;">
+          <mxGeometry as="geometry" x="25" y="68" width="1690" height="45" />
+        </mxCell>
+        <mxCell id="recovery_legend" value="Dashed open arrow: A depends on B.&#10;E##: source evidence index.&#10;Nesting: logical architectural grouping.&#10;External actors are context only.&#10;This is not a runtime sequence diagram." vertex="1" parent="recovery_layer" style="text;html=0;strokeColor=none;fillColor=none;whiteSpace=wrap;align=left;verticalAlign=middle;fontFamily=Arial;fontSize=16;fontColor=#142C38;fontStyle=0;">
+          <mxGeometry as="geometry" x="25" y="1260" width="430" height="160" />
+        </mxCell>
+        <mxCell id="recovery_note" value="OTP state is stored in HttpSession. PasswordResetService is active. No JWT, token repository or recovery entity is introduced." vertex="1" parent="recovery_layer" style="text;html=0;strokeColor=none;fillColor=none;whiteSpace=wrap;align=left;verticalAlign=middle;fontFamily=Arial;fontSize=14;fontColor=#142C38;fontStyle=0;">
+          <mxGeometry as="geometry" x="25" y="1570" width="1690" height="35" />
+        </mxCell>
+        <mxCell id="recovery_presentation" value="&lt;b&gt;Presentation Layer  «logical»&lt;/b&gt;" style="shape=folder;tabWidth=70;tabHeight=20;html=1;whiteSpace=wrap;rounded=0;strokeColor=#142C38;strokeWidth=1.2;fillColor=#86CEE9;fontColor=#142C38;fontFamily=Arial;fontSize=16;align=center;verticalAlign=top;spacingTop=27;spacingLeft=9;spacingRight=9;container=1;collapsible=0;recursiveResize=0;" vertex="1" parent="recovery_layer">
+          <mxGeometry as="geometry" x="245" y="135" width="940" height="220" />
+        </mxCell>
+        <mxCell id="recovery_business" value="&lt;b&gt;Business Layer  «logical»&lt;/b&gt;" style="shape=folder;tabWidth=70;tabHeight=20;html=1;whiteSpace=wrap;rounded=0;strokeColor=#142C38;strokeWidth=1.2;fillColor=#86CEE9;fontColor=#142C38;fontFamily=Arial;fontSize=16;align=center;verticalAlign=top;spacingTop=27;spacingLeft=9;spacingRight=9;container=1;collapsible=0;recursiveResize=0;" vertex="1" parent="recovery_layer">
+          <mxGeometry as="geometry" x="245" y="465" width="940" height="390" />
+        </mxCell>
+        <mxCell id="recovery_data" value="&lt;b&gt;Data Layer  «logical»&lt;/b&gt;" style="shape=folder;tabWidth=70;tabHeight=20;html=1;whiteSpace=wrap;rounded=0;strokeColor=#142C38;strokeWidth=1.2;fillColor=#86CEE9;fontColor=#142C38;fontFamily=Arial;fontSize=16;align=center;verticalAlign=top;spacingTop=27;spacingLeft=9;spacingRight=9;container=1;collapsible=0;recursiveResize=0;" vertex="1" parent="recovery_layer">
+          <mxGeometry as="geometry" x="245" y="970" width="940" height="200" />
+        </mxCell>
+        <mxCell id="recovery_cross" value="&lt;b&gt;Cross-Cutting / Frameworks  «logical»&lt;/b&gt;" style="shape=folder;tabWidth=70;tabHeight=20;html=1;whiteSpace=wrap;rounded=0;strokeColor=#142C38;strokeWidth=1.2;fillColor=#86CEE9;fontColor=#142C38;fontFamily=Arial;fontSize=16;align=center;verticalAlign=top;spacingTop=27;spacingLeft=9;spacingRight=9;container=1;collapsible=0;recursiveResize=0;" vertex="1" parent="recovery_layer">
+          <mxGeometry as="geometry" x="1250" y="135" width="420" height="1035" />
+        </mxCell>
+        <mxCell id="recovery_actors" value="&lt;b&gt;Users / Browser&lt;/b&gt;&lt;br&gt;&lt;br&gt;«external context»&lt;br&gt;Candidates&lt;br&gt;Internal users&lt;br&gt;HTTP forms + session" style="shape=folder;tabWidth=70;tabHeight=20;html=1;whiteSpace=wrap;rounded=0;strokeColor=#142C38;strokeWidth=1.2;fillColor=#9AD8EF;fontColor=#142C38;fontFamily=Arial;fontSize=16;align=center;verticalAlign=top;spacingTop=27;spacingLeft=9;spacingRight=9;container=0;collapsible=0;recursiveResize=0;" vertex="1" parent="recovery_layer">
+          <mxGeometry as="geometry" x="25" y="195" width="185" height="200" />
+        </mxCell>
+        <mxCell id="recovery_controller" value="&lt;b&gt;auth.controller&lt;/b&gt;&lt;br&gt;&lt;br&gt;PasswordRecoveryController&lt;br&gt;/forgot-password / /reset-password/**" style="shape=folder;tabWidth=70;tabHeight=20;html=1;whiteSpace=wrap;rounded=0;strokeColor=#142C38;strokeWidth=1.2;fillColor=#9AD8EF;fontColor=#142C38;fontFamily=Arial;fontSize=16;align=center;verticalAlign=top;spacingTop=27;spacingLeft=9;spacingRight=9;container=0;collapsible=0;recursiveResize=0;" vertex="1" parent="recovery_presentation">
+          <mxGeometry as="geometry" x="30" y="60" width="350" height="110" />
+        </mxCell>
+        <mxCell id="recovery_views" value="&lt;b&gt;templates/auth/&lt;/b&gt;&lt;br&gt;&lt;br&gt;«resource folder»&lt;br&gt;Forms + email/ templates" style="shape=folder;tabWidth=70;tabHeight=20;html=1;whiteSpace=wrap;rounded=0;strokeColor=#142C38;strokeWidth=1.2;fillColor=#9AD8EF;fontColor=#142C38;fontFamily=Arial;fontSize=16;align=center;verticalAlign=top;spacingTop=27;spacingLeft=9;spacingRight=9;container=0;collapsible=0;recursiveResize=0;" vertex="1" parent="recovery_presentation">
+          <mxGeometry as="geometry" x="560" y="60" width="350" height="110" />
+        </mxCell>
+        <mxCell id="recovery_service" value="&lt;b&gt;auth.service&lt;/b&gt;&lt;br&gt;&lt;br&gt;PasswordRecoveryService&lt;br&gt;PasswordResetService&lt;br&gt;PasswordResetEmailSender" style="shape=folder;tabWidth=70;tabHeight=20;html=1;whiteSpace=wrap;rounded=0;strokeColor=#142C38;strokeWidth=1.2;fillColor=#9AD8EF;fontColor=#142C38;fontFamily=Arial;fontSize=16;align=center;verticalAlign=top;spacingTop=27;spacingLeft=9;spacingRight=9;container=0;collapsible=0;recursiveResize=0;" vertex="1" parent="recovery_business">
+          <mxGeometry as="geometry" x="30" y="60" width="550" height="145" />
+        </mxCell>
+        <mxCell id="recovery_user_entity" value="&lt;b&gt;user.entity&lt;/b&gt;&lt;br&gt;&lt;br&gt;User" style="shape=folder;tabWidth=70;tabHeight=20;html=1;whiteSpace=wrap;rounded=0;strokeColor=#142C38;strokeWidth=1.2;fillColor=#9AD8EF;fontColor=#142C38;fontFamily=Arial;fontSize=16;align=center;verticalAlign=top;spacingTop=27;spacingLeft=9;spacingRight=9;container=0;collapsible=0;recursiveResize=0;" vertex="1" parent="recovery_business">
+          <mxGeometry as="geometry" x="560" y="260" width="350" height="100" />
+        </mxCell>
+        <mxCell id="recovery_users" value="&lt;b&gt;user.repository&lt;/b&gt;&lt;br&gt;&lt;br&gt;UserRepository" style="shape=folder;tabWidth=70;tabHeight=20;html=1;whiteSpace=wrap;rounded=0;strokeColor=#142C38;strokeWidth=1.2;fillColor=#9AD8EF;fontColor=#142C38;fontFamily=Arial;fontSize=16;align=center;verticalAlign=top;spacingTop=27;spacingLeft=9;spacingRight=9;container=0;collapsible=0;recursiveResize=0;" vertex="1" parent="recovery_data">
+          <mxGeometry as="geometry" x="560" y="60" width="350" height="110" />
+        </mxCell>
+        <mxCell id="recovery_framework_security" value="&lt;b&gt;Spring Security&lt;/b&gt;&lt;br&gt;&lt;br&gt;«framework group»&lt;br&gt;PasswordEncoder" style="shape=folder;tabWidth=70;tabHeight=20;html=1;whiteSpace=wrap;rounded=0;strokeColor=#142C38;strokeWidth=1.2;fillColor=#9AD8EF;fontColor=#142C38;fontFamily=Arial;fontSize=16;align=center;verticalAlign=top;spacingTop=27;spacingLeft=9;spacingRight=9;container=0;collapsible=0;recursiveResize=0;" vertex="1" parent="recovery_cross">
+          <mxGeometry as="geometry" x="30" y="270" width="360" height="130" />
+        </mxCell>
+        <mxCell id="recovery_session" value="&lt;b&gt;Jakarta Servlet&lt;/b&gt;&lt;br&gt;&lt;br&gt;«framework package»&lt;br&gt;jakarta.servlet.http.HttpSession&lt;br&gt;OTP / pending state" style="shape=folder;tabWidth=70;tabHeight=20;html=1;whiteSpace=wrap;rounded=0;strokeColor=#142C38;strokeWidth=1.2;fillColor=#9AD8EF;fontColor=#142C38;fontFamily=Arial;fontSize=16;align=center;verticalAlign=top;spacingTop=27;spacingLeft=9;spacingRight=9;container=0;collapsible=0;recursiveResize=0;" vertex="1" parent="recovery_cross">
+          <mxGeometry as="geometry" x="30" y="490" width="360" height="120" />
+        </mxCell>
+        <mxCell id="recovery_mail" value="&lt;b&gt;Spring Mail&lt;/b&gt;&lt;br&gt;&lt;br&gt;«framework group»&lt;br&gt;JavaMailSender / MimeMessageHelper" style="shape=folder;tabWidth=70;tabHeight=20;html=1;whiteSpace=wrap;rounded=0;strokeColor=#142C38;strokeWidth=1.2;fillColor=#9AD8EF;fontColor=#142C38;fontFamily=Arial;fontSize=16;align=center;verticalAlign=top;spacingTop=27;spacingLeft=9;spacingRight=9;container=0;collapsible=0;recursiveResize=0;" vertex="1" parent="recovery_cross">
+          <mxGeometry as="geometry" x="30" y="690" width="360" height="110" />
+        </mxCell>
+        <mxCell id="recovery_smtp" value="&lt;b&gt;SMTP Server&lt;/b&gt;&lt;br&gt;&lt;br&gt;«external system»&lt;br&gt;Configured OTP email delivery" style="shape=folder;tabWidth=70;tabHeight=20;html=1;whiteSpace=wrap;rounded=0;strokeColor=#142C38;strokeWidth=1.2;fillColor=#9AD8EF;fontColor=#142C38;fontFamily=Arial;fontSize=16;align=center;verticalAlign=top;spacingTop=27;spacingLeft=9;spacingRight=9;container=0;collapsible=0;recursiveResize=0;" vertex="1" parent="recovery_layer">
+          <mxGeometry as="geometry" x="1280" y="1450" width="360" height="100" />
+        </mxCell>
+        <mxCell id="recovery_contracts_note" value="&lt;b&gt;Shared contracts&lt;/b&gt;&lt;br&gt;&lt;br&gt;«navigation note»&lt;br&gt;See page 04: DTO validation&lt;br&gt;and auth/core exception cycle" style="shape=folder;tabWidth=70;tabHeight=20;html=1;whiteSpace=wrap;rounded=0;strokeColor=#142C38;strokeWidth=1.2;fillColor=#9AD8EF;fontColor=#142C38;fontFamily=Arial;fontSize=16;align=center;verticalAlign=top;spacingTop=27;spacingLeft=9;spacingRight=9;container=0;collapsible=0;recursiveResize=0;" vertex="1" parent="recovery_cross">
+          <mxGeometry as="geometry" x="30" y="60" width="360" height="120" />
+        </mxCell>
+        <mxCell id="recovery_jpa" value="&lt;b&gt;Spring Data JPA / JDBC&lt;/b&gt;&lt;br&gt;&lt;br&gt;«framework group»&lt;br&gt;JpaRepository + SQL Server driver" style="shape=folder;tabWidth=70;tabHeight=20;html=1;whiteSpace=wrap;rounded=0;strokeColor=#142C38;strokeWidth=1.2;fillColor=#9AD8EF;fontColor=#142C38;fontFamily=Arial;fontSize=16;align=center;verticalAlign=top;spacingTop=27;spacingLeft=9;spacingRight=9;container=0;collapsible=0;recursiveResize=0;" vertex="1" parent="recovery_layer">
+          <mxGeometry as="geometry" x="495" y="1260" width="520" height="110" />
+        </mxCell>
+        <mxCell id="recovery_db" value="&lt;b&gt;SQL Server Database&lt;/b&gt;&lt;br&gt;&lt;br&gt;«external system»&lt;br&gt;Configured data source" style="shape=folder;tabWidth=70;tabHeight=20;html=1;whiteSpace=wrap;rounded=0;strokeColor=#142C38;strokeWidth=1.2;fillColor=#9AD8EF;fontColor=#142C38;fontFamily=Arial;fontSize=16;align=center;verticalAlign=top;spacingTop=27;spacingLeft=9;spacingRight=9;container=0;collapsible=0;recursiveResize=0;" vertex="1" parent="recovery_layer">
+          <mxGeometry as="geometry" x="495" y="1450" width="520" height="100" />
+        </mxCell>
+        <mxCell id="recovery_edge_1" value="E02" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=0;endArrow=open;endFill=0;dashed=1;dashPattern=6 5;strokeColor=#142C38;strokeWidth=1.3;fontFamily=Arial;fontSize=13;fontColor=#142C38;labelBackgroundColor=#7ECBE9;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" source="recovery_controller" target="recovery_views" parent="recovery_layer">
+          <mxGeometry as="geometry" relative="1" />
+        </mxCell>
+        <mxCell id="recovery_edge_2" value="E01" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=0;endArrow=open;endFill=0;dashed=1;dashPattern=6 5;strokeColor=#142C38;strokeWidth=1.3;fontFamily=Arial;fontSize=13;fontColor=#142C38;labelBackgroundColor=#7ECBE9;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.32;entryY=0;entryDx=0;entryDy=0;" edge="1" source="recovery_controller" target="recovery_service" parent="recovery_layer">
+          <mxGeometry as="geometry" relative="1" />
+        </mxCell>
+        <mxCell id="recovery_edge_3" value="E15" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=0;endArrow=open;endFill=0;dashed=1;dashPattern=6 5;strokeColor=#142C38;strokeWidth=1.3;fontFamily=Arial;fontSize=13;fontColor=#142C38;labelBackgroundColor=#7ECBE9;exitX=0.05;exitY=0;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" source="recovery_service" target="recovery_framework_security" parent="recovery_layer">
+          <mxGeometry as="geometry" relative="1">
+            <Array as="points">
+              <mxPoint x="302.5" y="430" />
+              <mxPoint x="1225" y="430" />
+              <mxPoint x="1225" y="470" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="recovery_edge_4" value="E16" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=0;endArrow=open;endFill=0;dashed=1;dashPattern=6 5;strokeColor=#142C38;strokeWidth=1.3;fontFamily=Arial;fontSize=13;fontColor=#142C38;labelBackgroundColor=#7ECBE9;exitX=1;exitY=0.85;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" source="recovery_service" target="recovery_session" parent="recovery_layer">
+          <mxGeometry as="geometry" relative="1">
+            <Array as="points">
+              <mxPoint x="1190" y="648.25" />
+              <mxPoint x="1190" y="685" />
+              <mxPoint x="1240" y="685" />
+              <mxPoint x="1240" y="680" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="recovery_edge_5" value="E17" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=0;endArrow=open;endFill=0;dashed=1;dashPattern=6 5;strokeColor=#142C38;strokeWidth=1.3;fontFamily=Arial;fontSize=13;fontColor=#142C38;labelBackgroundColor=#7ECBE9;exitX=1;exitY=0.65;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" source="recovery_service" target="recovery_mail" parent="recovery_layer">
+          <mxGeometry as="geometry" relative="1">
+            <Array as="points">
+              <mxPoint x="1210" y="619.25" />
+              <mxPoint x="1210" y="900" />
+              <mxPoint x="1255" y="900" />
+              <mxPoint x="1255" y="880" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="recovery_edge_6" value="E32" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=0;endArrow=open;endFill=0;dashed=1;dashPattern=6 5;strokeColor=#142C38;strokeWidth=1.3;fontFamily=Arial;fontSize=13;fontColor=#142C38;labelBackgroundColor=#7ECBE9;exitX=0.2;exitY=0;exitDx=0;exitDy=0;entryX=0.6;entryY=1;entryDx=0;entryDy=0;" edge="1" source="recovery_service" target="recovery_views" parent="recovery_layer">
+          <mxGeometry as="geometry" relative="1">
+            <Array as="points">
+              <mxPoint x="385" y="390" />
+              <mxPoint x="1015" y="390" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="recovery_edge_7" value="E18" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=0;endArrow=open;endFill=0;dashed=1;dashPattern=6 5;strokeColor=#142C38;strokeWidth=1.3;fontFamily=Arial;fontSize=13;fontColor=#142C38;labelBackgroundColor=#7ECBE9;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" source="recovery_mail" target="recovery_smtp" parent="recovery_layer">
+          <mxGeometry as="geometry" relative="1" />
+        </mxCell>
+        <mxCell id="recovery_edge_8" value="E04" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=0;endArrow=open;endFill=0;dashed=1;dashPattern=6 5;strokeColor=#142C38;strokeWidth=1.3;fontFamily=Arial;fontSize=13;fontColor=#142C38;labelBackgroundColor=#7ECBE9;exitX=1;exitY=0.2;exitDx=0;exitDy=0;entryX=1;entryY=0.5;entryDx=0;entryDy=0;" edge="1" source="recovery_service" target="recovery_users" parent="recovery_layer">
+          <mxGeometry as="geometry" relative="1">
+            <Array as="points">
+              <mxPoint x="1195" y="554" />
+              <mxPoint x="1195" y="1085" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="recovery_edge_9" value="E04" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=0;endArrow=open;endFill=0;dashed=1;dashPattern=6 5;strokeColor=#142C38;strokeWidth=1.3;fontFamily=Arial;fontSize=13;fontColor=#142C38;labelBackgroundColor=#7ECBE9;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" source="recovery_service" target="recovery_user_entity" parent="recovery_layer">
+          <mxGeometry as="geometry" relative="1">
+            <Array as="points">
+              <mxPoint x="550" y="775" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="recovery_edge_10" value="E07" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=0;endArrow=open;endFill=0;dashed=1;dashPattern=6 5;strokeColor=#142C38;strokeWidth=1.3;fontFamily=Arial;fontSize=13;fontColor=#142C38;labelBackgroundColor=#7ECBE9;exitX=0.5;exitY=0;exitDx=0;exitDy=0;entryX=0.5;entryY=1;entryDx=0;entryDy=0;" edge="1" source="recovery_users" target="recovery_user_entity" parent="recovery_layer">
+          <mxGeometry as="geometry" relative="1" />
+        </mxCell>
+        <mxCell id="recovery_edge_11" value="E19" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=0;endArrow=open;endFill=0;dashed=1;dashPattern=6 5;strokeColor=#142C38;strokeWidth=1.3;fontFamily=Arial;fontSize=13;fontColor=#142C38;labelBackgroundColor=#7ECBE9;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.25;entryY=0;entryDx=0;entryDy=0;" edge="1" source="recovery_users" target="recovery_jpa" parent="recovery_layer">
+          <mxGeometry as="geometry" relative="1">
+            <Array as="points">
+              <mxPoint x="980" y="1210" />
+              <mxPoint x="625" y="1210" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="recovery_edge_12" value="E20" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=0;endArrow=open;endFill=0;dashed=1;dashPattern=6 5;strokeColor=#142C38;strokeWidth=1.3;fontFamily=Arial;fontSize=13;fontColor=#142C38;labelBackgroundColor=#7ECBE9;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" source="recovery_jpa" target="recovery_db" parent="recovery_layer">
+          <mxGeometry as="geometry" relative="1" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+  <diagram id="contracts" name="04 — Contracts, Validation &amp; Exception Dependencies">
+    <mxGraphModel dx="1740" dy="1610" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1740" pageHeight="1610" background="#7ECBE9" math="0" shadow="0">
+      <root>
+        <mxCell id="contracts_root" />
+        <mxCell id="contracts_layer" parent="contracts_root" />
+        <mxCell id="contracts_title" value="04 — Contracts, Validation &amp; Exception Dependencies" vertex="1" parent="contracts_layer" style="text;html=0;strokeColor=none;fillColor=none;whiteSpace=wrap;align=left;verticalAlign=middle;fontFamily=Arial;fontSize=28;fontColor=#142C38;fontStyle=1;">
+          <mxGeometry as="geometry" x="25" y="20" width="1690" height="43" />
+        </mxCell>
+        <mxCell id="contracts_subtitle" value="Actual Java package relationships • The two opposite exception arrows represent a confirmed source-level cycle" vertex="1" parent="contracts_layer" style="text;html=0;strokeColor=none;fillColor=none;whiteSpace=wrap;align=left;verticalAlign=middle;fontFamily=Arial;fontSize=17;fontColor=#142C38;fontStyle=0;">
+          <mxGeometry as="geometry" x="25" y="68" width="1690" height="45" />
+        </mxCell>
+        <mxCell id="contracts_legend" value="Dashed open arrow: A depends on B.&#10;E##: source evidence index.&#10;Nesting: logical architectural grouping.&#10;External actors are context only.&#10;This is not a runtime sequence diagram." vertex="1" parent="contracts_layer" style="text;html=0;strokeColor=none;fillColor=none;whiteSpace=wrap;align=left;verticalAlign=middle;fontFamily=Arial;fontSize=16;fontColor=#142C38;fontStyle=0;">
+          <mxGeometry as="geometry" x="25" y="1260" width="430" height="160" />
+        </mxCell>
+        <mxCell id="contracts_note" value="A package can contain classes with different roles. Core GlobalExceptionHandler imports auth contracts; auth exceptions inherit the core base. No refactoring is applied." vertex="1" parent="contracts_layer" style="text;html=0;strokeColor=none;fillColor=none;whiteSpace=wrap;align=left;verticalAlign=middle;fontFamily=Arial;fontSize=14;fontColor=#142C38;fontStyle=0;">
+          <mxGeometry as="geometry" x="25" y="1570" width="1690" height="35" />
+        </mxCell>
+        <mxCell id="contracts_presentation" value="&lt;b&gt;Presentation &amp;amp; Contracts  «logical»&lt;/b&gt;" style="shape=folder;tabWidth=70;tabHeight=20;html=1;whiteSpace=wrap;rounded=0;strokeColor=#142C38;strokeWidth=1.2;fillColor=#86CEE9;fontColor=#142C38;fontFamily=Arial;fontSize=16;align=center;verticalAlign=top;spacingTop=27;spacingLeft=9;spacingRight=9;container=1;collapsible=0;recursiveResize=0;" vertex="1" parent="contracts_layer">
+          <mxGeometry as="geometry" x="245" y="135" width="940" height="220" />
+        </mxCell>
+        <mxCell id="contracts_business" value="&lt;b&gt;Business Layer  «logical»&lt;/b&gt;" style="shape=folder;tabWidth=70;tabHeight=20;html=1;whiteSpace=wrap;rounded=0;strokeColor=#142C38;strokeWidth=1.2;fillColor=#86CEE9;fontColor=#142C38;fontFamily=Arial;fontSize=16;align=center;verticalAlign=top;spacingTop=27;spacingLeft=9;spacingRight=9;container=1;collapsible=0;recursiveResize=0;" vertex="1" parent="contracts_layer">
+          <mxGeometry as="geometry" x="245" y="480" width="940" height="210" />
+        </mxCell>
+        <mxCell id="contracts_domain" value="&lt;b&gt;Business Entities  «logical»&lt;/b&gt;" style="shape=folder;tabWidth=70;tabHeight=20;html=1;whiteSpace=wrap;rounded=0;strokeColor=#142C38;strokeWidth=1.2;fillColor=#86CEE9;fontColor=#142C38;fontFamily=Arial;fontSize=16;align=center;verticalAlign=top;spacingTop=27;spacingLeft=9;spacingRight=9;container=1;collapsible=0;recursiveResize=0;" vertex="1" parent="contracts_layer">
+          <mxGeometry as="geometry" x="1250" y="135" width="420" height="555" />
+        </mxCell>
+        <mxCell id="contracts_cross" value="&lt;b&gt;Cross-Cutting Concerns  «logical»&lt;/b&gt;" style="shape=folder;tabWidth=70;tabHeight=20;html=1;whiteSpace=wrap;rounded=0;strokeColor=#142C38;strokeWidth=1.2;fillColor=#86CEE9;fontColor=#142C38;fontFamily=Arial;fontSize=16;align=center;verticalAlign=top;spacingTop=27;spacingLeft=9;spacingRight=9;container=1;collapsible=0;recursiveResize=0;" vertex="1" parent="contracts_layer">
+          <mxGeometry as="geometry" x="245" y="825" width="1425" height="430" />
+        </mxCell>
+        <mxCell id="contracts_controller" value="&lt;b&gt;auth.controller&lt;/b&gt;&lt;br&gt;&lt;br&gt;RegistrationController&lt;br&gt;PasswordRecoveryController" style="shape=folder;tabWidth=70;tabHeight=20;html=1;whiteSpace=wrap;rounded=0;strokeColor=#142C38;strokeWidth=1.2;fillColor=#9AD8EF;fontColor=#142C38;fontFamily=Arial;fontSize=16;align=center;verticalAlign=top;spacingTop=27;spacingLeft=9;spacingRight=9;container=0;collapsible=0;recursiveResize=0;" vertex="1" parent="contracts_presentation">
+          <mxGeometry as="geometry" x="30" y="60" width="350" height="110" />
+        </mxCell>
+        <mxCell id="contracts_dto" value="&lt;b&gt;auth.dto&lt;/b&gt;&lt;br&gt;&lt;br&gt;Request DTOs + internal state records&lt;br&gt;PreparedRegistrationResponse&lt;br&gt;AccountSnapshotResponse" style="shape=folder;tabWidth=70;tabHeight=20;html=1;whiteSpace=wrap;rounded=0;strokeColor=#142C38;strokeWidth=1.2;fillColor=#9AD8EF;fontColor=#142C38;fontFamily=Arial;fontSize=16;align=center;verticalAlign=top;spacingTop=27;spacingLeft=9;spacingRight=9;container=0;collapsible=0;recursiveResize=0;" vertex="1" parent="contracts_presentation">
+          <mxGeometry as="geometry" x="560" y="60" width="350" height="130" />
+        </mxCell>
+        <mxCell id="contracts_service" value="&lt;b&gt;auth.service&lt;/b&gt;&lt;br&gt;&lt;br&gt;Registration / Password recovery" style="shape=folder;tabWidth=70;tabHeight=20;html=1;whiteSpace=wrap;rounded=0;strokeColor=#142C38;strokeWidth=1.2;fillColor=#9AD8EF;fontColor=#142C38;fontFamily=Arial;fontSize=16;align=center;verticalAlign=top;spacingTop=27;spacingLeft=9;spacingRight=9;container=0;collapsible=0;recursiveResize=0;" vertex="1" parent="contracts_business">
+          <mxGeometry as="geometry" x="30" y="60" width="350" height="110" />
+        </mxCell>
+        <mxCell id="contracts_accounts" value="&lt;b&gt;user.service&lt;/b&gt;&lt;br&gt;&lt;br&gt;AccountManagementService" style="shape=folder;tabWidth=70;tabHeight=20;html=1;whiteSpace=wrap;rounded=0;strokeColor=#142C38;strokeWidth=1.2;fillColor=#9AD8EF;fontColor=#142C38;fontFamily=Arial;fontSize=16;align=center;verticalAlign=top;spacingTop=27;spacingLeft=9;spacingRight=9;container=0;collapsible=0;recursiveResize=0;" vertex="1" parent="contracts_business">
+          <mxGeometry as="geometry" x="560" y="60" width="350" height="110" />
+        </mxCell>
+        <mxCell id="contracts_user_entity" value="&lt;b&gt;user.entity&lt;/b&gt;&lt;br&gt;&lt;br&gt;User / Role" style="shape=folder;tabWidth=70;tabHeight=20;html=1;whiteSpace=wrap;rounded=0;strokeColor=#142C38;strokeWidth=1.2;fillColor=#9AD8EF;fontColor=#142C38;fontFamily=Arial;fontSize=16;align=center;verticalAlign=top;spacingTop=27;spacingLeft=9;spacingRight=9;container=0;collapsible=0;recursiveResize=0;" vertex="1" parent="contracts_domain">
+          <mxGeometry as="geometry" x="30" y="60" width="360" height="110" />
+        </mxCell>
+        <mxCell id="contracts_candidate_entity" value="&lt;b&gt;candidate.entity&lt;/b&gt;&lt;br&gt;&lt;br&gt;Candidate" style="shape=folder;tabWidth=70;tabHeight=20;html=1;whiteSpace=wrap;rounded=0;strokeColor=#142C38;strokeWidth=1.2;fillColor=#9AD8EF;fontColor=#142C38;fontFamily=Arial;fontSize=16;align=center;verticalAlign=top;spacingTop=27;spacingLeft=9;spacingRight=9;container=0;collapsible=0;recursiveResize=0;" vertex="1" parent="contracts_domain">
+          <mxGeometry as="geometry" x="30" y="340" width="360" height="110" />
+        </mxCell>
+        <mxCell id="contracts_auth_exception" value="&lt;b&gt;auth.exception&lt;/b&gt;&lt;br&gt;&lt;br&gt;RegistrationFlowException&lt;br&gt;PasswordRecoveryFlowException&lt;br&gt;Delivery / unavailable exceptions" style="shape=folder;tabWidth=70;tabHeight=20;html=1;whiteSpace=wrap;rounded=0;strokeColor=#142C38;strokeWidth=1.2;fillColor=#9AD8EF;fontColor=#142C38;fontFamily=Arial;fontSize=16;align=center;verticalAlign=top;spacingTop=27;spacingLeft=9;spacingRight=9;container=0;collapsible=0;recursiveResize=0;" vertex="1" parent="contracts_cross">
+          <mxGeometry as="geometry" x="30" y="75" width="350" height="150" />
+        </mxCell>
+        <mxCell id="contracts_core_exception" value="&lt;b&gt;core.exception&lt;/b&gt;&lt;br&gt;&lt;br&gt;BaseBusinessException&lt;br&gt;GlobalExceptionHandler&lt;br&gt;Imports auth DTOs + exceptions" style="shape=folder;tabWidth=70;tabHeight=20;html=1;whiteSpace=wrap;rounded=0;strokeColor=#142C38;strokeWidth=1.2;fillColor=#9AD8EF;fontColor=#142C38;fontFamily=Arial;fontSize=16;align=center;verticalAlign=top;spacingTop=27;spacingLeft=9;spacingRight=9;container=0;collapsible=0;recursiveResize=0;" vertex="1" parent="contracts_cross">
+          <mxGeometry as="geometry" x="560" y="75" width="350" height="150" />
+        </mxCell>
+        <mxCell id="contracts_validation" value="&lt;b&gt;core.validation&lt;/b&gt;&lt;br&gt;&lt;br&gt;PasswordMatches&lt;br&gt;PasswordMatchesValidator" style="shape=folder;tabWidth=70;tabHeight=20;html=1;whiteSpace=wrap;rounded=0;strokeColor=#142C38;strokeWidth=1.2;fillColor=#9AD8EF;fontColor=#142C38;fontFamily=Arial;fontSize=16;align=center;verticalAlign=top;spacingTop=27;spacingLeft=9;spacingRight=9;container=0;collapsible=0;recursiveResize=0;" vertex="1" parent="contracts_cross">
+          <mxGeometry as="geometry" x="1035" y="75" width="360" height="120" />
+        </mxCell>
+        <mxCell id="contracts_user_exception" value="&lt;b&gt;user.exception&lt;/b&gt;&lt;br&gt;&lt;br&gt;AccountFieldException" style="shape=folder;tabWidth=70;tabHeight=20;html=1;whiteSpace=wrap;rounded=0;strokeColor=#142C38;strokeWidth=1.2;fillColor=#9AD8EF;fontColor=#142C38;fontFamily=Arial;fontSize=16;align=center;verticalAlign=top;spacingTop=27;spacingLeft=9;spacingRight=9;container=0;collapsible=0;recursiveResize=0;" vertex="1" parent="contracts_cross">
+          <mxGeometry as="geometry" x="560" y="305" width="350" height="90" />
+        </mxCell>
+        <mxCell id="contracts_base" value="&lt;b&gt;core.base&lt;/b&gt;&lt;br&gt;&lt;br&gt;BaseEntity" style="shape=folder;tabWidth=70;tabHeight=20;html=1;whiteSpace=wrap;rounded=0;strokeColor=#142C38;strokeWidth=1.2;fillColor=#9AD8EF;fontColor=#142C38;fontFamily=Arial;fontSize=16;align=center;verticalAlign=top;spacingTop=27;spacingLeft=9;spacingRight=9;container=0;collapsible=0;recursiveResize=0;" vertex="1" parent="contracts_cross">
+          <mxGeometry as="geometry" x="1035" y="305" width="360" height="90" />
+        </mxCell>
+        <mxCell id="contracts_cycle_note" value="&lt;b&gt;Confirmed package cycle&lt;/b&gt;&lt;br&gt;&lt;br&gt;auth.exception ↔ core.exception&lt;br&gt;Inheritance dependency →&lt;br&gt;← Handler imports / catches" style="shape=folder;tabWidth=70;tabHeight=20;html=1;whiteSpace=wrap;rounded=0;strokeColor=#142C38;strokeWidth=1.2;fillColor=#9AD8EF;fontColor=#142C38;fontFamily=Arial;fontSize=16;align=center;verticalAlign=top;spacingTop=27;spacingLeft=9;spacingRight=9;container=0;collapsible=0;recursiveResize=0;" vertex="1" parent="contracts_layer">
+          <mxGeometry as="geometry" x="25" y="900" width="190" height="220" />
+        </mxCell>
+        <mxCell id="contracts_edge_1" value="E21" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=0;endArrow=open;endFill=0;dashed=1;dashPattern=6 5;strokeColor=#142C38;strokeWidth=1.3;fontFamily=Arial;fontSize=13;fontColor=#142C38;labelBackgroundColor=#7ECBE9;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" source="contracts_controller" target="contracts_dto" parent="contracts_layer">
+          <mxGeometry as="geometry" relative="1" />
+        </mxCell>
+        <mxCell id="contracts_edge_2" value="E01" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=0;endArrow=open;endFill=0;dashed=1;dashPattern=6 5;strokeColor=#142C38;strokeWidth=1.3;fontFamily=Arial;fontSize=13;fontColor=#142C38;labelBackgroundColor=#7ECBE9;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" source="contracts_controller" target="contracts_service" parent="contracts_layer">
+          <mxGeometry as="geometry" relative="1" />
+        </mxCell>
+        <mxCell id="contracts_edge_3" value="E03" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=0;endArrow=open;endFill=0;dashed=1;dashPattern=6 5;strokeColor=#142C38;strokeWidth=1.3;fontFamily=Arial;fontSize=13;fontColor=#142C38;labelBackgroundColor=#7ECBE9;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" source="contracts_service" target="contracts_accounts" parent="contracts_layer">
+          <mxGeometry as="geometry" relative="1" />
+        </mxCell>
+        <mxCell id="contracts_edge_4" value="E22" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=0;endArrow=open;endFill=0;dashed=1;dashPattern=6 5;strokeColor=#142C38;strokeWidth=1.3;fontFamily=Arial;fontSize=13;fontColor=#142C38;labelBackgroundColor=#7ECBE9;exitX=0;exitY=0.2;exitDx=0;exitDy=0;entryX=0;entryY=0.8;entryDx=0;entryDy=0;" edge="1" source="contracts_service" target="contracts_dto" parent="contracts_layer">
+          <mxGeometry as="geometry" relative="1">
+            <Array as="points">
+              <mxPoint x="225" y="562" />
+              <mxPoint x="225" y="385" />
+              <mxPoint x="750" y="385" />
+              <mxPoint x="750" y="299" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="contracts_edge_5" value="E22" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=0;endArrow=open;endFill=0;dashed=1;dashPattern=6 5;strokeColor=#142C38;strokeWidth=1.3;fontFamily=Arial;fontSize=13;fontColor=#142C38;labelBackgroundColor=#7ECBE9;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" source="contracts_service" target="contracts_auth_exception" parent="contracts_layer">
+          <mxGeometry as="geometry" relative="1" />
+        </mxCell>
+        <mxCell id="contracts_edge_6" value="E24" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=0;endArrow=open;endFill=0;dashed=1;dashPattern=6 5;strokeColor=#142C38;strokeWidth=1.3;fontFamily=Arial;fontSize=13;fontColor=#142C38;labelBackgroundColor=#7ECBE9;exitX=1;exitY=0.25;exitDx=0;exitDy=0;entryX=0;entryY=0.25;entryDx=0;entryDy=0;" edge="1" source="contracts_auth_exception" target="contracts_core_exception" parent="contracts_layer">
+          <mxGeometry as="geometry" relative="1" />
+        </mxCell>
+        <mxCell id="contracts_edge_7" value="E25" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=0;endArrow=open;endFill=0;dashed=1;dashPattern=6 5;strokeColor=#142C38;strokeWidth=1.3;fontFamily=Arial;fontSize=13;fontColor=#142C38;labelBackgroundColor=#7ECBE9;exitX=0;exitY=0.8;exitDx=0;exitDy=0;entryX=1;entryY=0.8;entryDx=0;entryDy=0;" edge="1" source="contracts_core_exception" target="contracts_auth_exception" parent="contracts_layer">
+          <mxGeometry as="geometry" relative="1" />
+        </mxCell>
+        <mxCell id="contracts_edge_8" value="E26" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=0;endArrow=open;endFill=0;dashed=1;dashPattern=6 5;strokeColor=#142C38;strokeWidth=1.3;fontFamily=Arial;fontSize=13;fontColor=#142C38;labelBackgroundColor=#7ECBE9;exitX=1;exitY=0.2;exitDx=0;exitDy=0;entryX=0.5;entryY=1;entryDx=0;entryDy=0;" edge="1" source="contracts_core_exception" target="contracts_dto" parent="contracts_layer">
+          <mxGeometry as="geometry" relative="1">
+            <Array as="points">
+              <mxPoint x="1180" y="930" />
+              <mxPoint x="1180" y="780" />
+              <mxPoint x="1200" y="780" />
+              <mxPoint x="1200" y="385" />
+              <mxPoint x="980" y="385" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="contracts_edge_9" value="E23" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=0;endArrow=open;endFill=0;dashed=1;dashPattern=6 5;strokeColor=#142C38;strokeWidth=1.3;fontFamily=Arial;fontSize=13;fontColor=#142C38;labelBackgroundColor=#7ECBE9;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" source="contracts_dto" target="contracts_validation" parent="contracts_layer">
+          <mxGeometry as="geometry" relative="1">
+            <Array as="points">
+              <mxPoint x="1230" y="250" />
+              <mxPoint x="1230" y="855" />
+              <mxPoint x="1460" y="855" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="contracts_edge_10" value="E27" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=0;endArrow=open;endFill=0;dashed=1;dashPattern=6 5;strokeColor=#142C38;strokeWidth=1.3;fontFamily=Arial;fontSize=13;fontColor=#142C38;labelBackgroundColor=#7ECBE9;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=1;entryY=0.5;entryDx=0;entryDy=0;" edge="1" source="contracts_accounts" target="contracts_user_exception" parent="contracts_layer">
+          <mxGeometry as="geometry" relative="1">
+            <Array as="points">
+              <mxPoint x="1215" y="595" />
+              <mxPoint x="1215" y="1175" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="contracts_edge_11" value="E28" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=0;endArrow=open;endFill=0;dashed=1;dashPattern=6 5;strokeColor=#142C38;strokeWidth=1.3;fontFamily=Arial;fontSize=13;fontColor=#142C38;labelBackgroundColor=#7ECBE9;exitX=0.5;exitY=0;exitDx=0;exitDy=0;entryX=0.5;entryY=1;entryDx=0;entryDy=0;" edge="1" source="contracts_user_exception" target="contracts_core_exception" parent="contracts_layer">
+          <mxGeometry as="geometry" relative="1" />
+        </mxCell>
+        <mxCell id="contracts_edge_12" value="E33" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=0;endArrow=open;endFill=0;dashed=1;dashPattern=6 5;strokeColor=#142C38;strokeWidth=1.3;fontFamily=Arial;fontSize=13;fontColor=#142C38;labelBackgroundColor=#7ECBE9;exitX=0.8;exitY=1;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" source="contracts_service" target="contracts_user_exception" parent="contracts_layer">
+          <mxGeometry as="geometry" relative="1">
+            <Array as="points">
+              <mxPoint x="555" y="735" />
+              <mxPoint x="710" y="735" />
+              <mxPoint x="710" y="1175" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="contracts_edge_13" value="E09" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=0;endArrow=open;endFill=0;dashed=1;dashPattern=6 5;strokeColor=#142C38;strokeWidth=1.3;fontFamily=Arial;fontSize=13;fontColor=#142C38;labelBackgroundColor=#7ECBE9;exitX=0.5;exitY=0;exitDx=0;exitDy=0;entryX=0.5;entryY=1;entryDx=0;entryDy=0;" edge="1" source="contracts_candidate_entity" target="contracts_user_entity" parent="contracts_layer">
+          <mxGeometry as="geometry" relative="1" />
+        </mxCell>
+        <mxCell id="contracts_edge_14" value="E29" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=0;endArrow=open;endFill=0;dashed=1;dashPattern=6 5;strokeColor=#142C38;strokeWidth=1.3;fontFamily=Arial;fontSize=13;fontColor=#142C38;labelBackgroundColor=#7ECBE9;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=1;entryY=0.3;entryDx=0;entryDy=0;" edge="1" source="contracts_user_entity" target="contracts_base" parent="contracts_layer">
+          <mxGeometry as="geometry" relative="1">
+            <Array as="points">
+              <mxPoint x="1700" y="250" />
+              <mxPoint x="1700" y="1157" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="contracts_edge_15" value="E29" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=0;endArrow=open;endFill=0;dashed=1;dashPattern=6 5;strokeColor=#142C38;strokeWidth=1.3;fontFamily=Arial;fontSize=13;fontColor=#142C38;labelBackgroundColor=#7ECBE9;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=1;entryY=0.8;entryDx=0;entryDy=0;" edge="1" source="contracts_candidate_entity" target="contracts_base" parent="contracts_layer">
+          <mxGeometry as="geometry" relative="1">
+            <Array as="points">
+              <mxPoint x="1675" y="530" />
+              <mxPoint x="1675" y="1202" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
