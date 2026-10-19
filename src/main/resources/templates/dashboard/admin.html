@@ -97,7 +97,7 @@
                 <div class="adm-monitor-result">
                     <time th:if="${row.lastCheckedAt != null}" th:datetime="${row.lastCheckedAt}" th:text="${#temporals.format(row.lastCheckedAt, 'dd/MM/yyyy HH:mm:ss')}"></time>
                     <span th:if="${row.responseTimeMs != null}" th:text="|${row.responseTimeMs} ms|"></span>
-                    <span th:if="${row.lastCheckedAt == null}" th:text="${row.status == 'Unconfigured' ? 'Chưa có phép kiểm tra tích hợp' : 'Chưa có kết quả kiểm tra'}"></span>
+                    <span th:if="${row.lastCheckedAt == null}" th:text="${row.status == 'Unconfigured' ? (row.id == 'email' ? 'Chưa cấu hình SMTP' : 'Chưa có phép kiểm tra tích hợp') : 'Chưa có kết quả kiểm tra'}"></span>
                 </div>
             </li>
         </ul>

@@ -34,4 +34,12 @@ public class ApiMonitoringController {
         redirectAttributes.addFlashAttribute(outcome.success() ? "successMessage" : "failureMessage", message);
         return "redirect:/admin/api-monitoring";
     }
+
+    @PostMapping("/probe/email")
+    public String probeEmail(HttpServletRequest request, RedirectAttributes redirectAttributes) {
+        ProbeOutcomeResponse outcome = monitoring.probeEmail(request);
+        String message = outcome.detail() + " • " + outcome.elapsedMs() + " ms";
+        redirectAttributes.addFlashAttribute(outcome.success() ? "successMessage" : "failureMessage", message);
+        return "redirect:/admin/api-monitoring";
+    }
 }
