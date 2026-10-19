@@ -43,16 +43,36 @@
         </div>
     </div>
 
-    <!-- Thông báo phản hồi hệ thống -->
-    <div th:if="${decisionType == 'ACCEPTED'}" class="alert alert--success cof-system-banner" role="status">
-        <div class="cof-system-banner__header">
-            <strong>🎉 Chúc mừng bạn đã đồng ý nhận việc!</strong>
+    <!-- Modal Chấp nhận thư mời thành công (Mockup) -->
+    <div th:if="${decisionType == 'ACCEPTED'}" id="cof-accept-success-modal" class="cof-accept-success-backdrop" role="dialog" aria-modal="true" aria-labelledby="cof-success-modal-title">
+        <div class="cof-accept-success-modal">
+            <button type="button" class="cof-accept-success-close" aria-label="Đóng" onclick="closeAcceptSuccessModal()">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="18" y1="6" x2="6" y2="18"></line>
+                    <line x1="6" y1="6" x2="18" y2="18"></line>
+                </svg>
+            </button>
+            <div class="cof-accept-success-badge">
+                <svg width="84" height="84" viewBox="0 0 84 84" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <line x1="42" y1="5" x2="42" y2="11" stroke="#15803d" stroke-width="2.5" stroke-linecap="round"/>
+                    <line x1="56" y1="11" x2="52" y2="16" stroke="#15803d" stroke-width="2.5" stroke-linecap="round"/>
+                    <line x1="68" y1="21" x2="62" y2="24" stroke="#15803d" stroke-width="2.5" stroke-linecap="round"/>
+                    <line x1="74" y1="35" x2="68" y2="35" stroke="#15803d" stroke-width="2.5" stroke-linecap="round"/>
+                    <circle cx="42" cy="46" r="32" fill="#e8f5e9"/>
+                    <circle cx="42" cy="46" r="20" fill="#1e7e48"/>
+                    <path d="M35 46.5L39.5 51L49 41.5" stroke="#ffffff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+            </div>
+            <h2 id="cof-success-modal-title" class="cof-accept-success-title">Chấp nhận thư mời thành công</h2>
+            <p class="cof-accept-success-desc">
+                Bạn đã xác nhận đồng ý với thư mời làm việc cho vị trí
+                <span class="cof-accept-success-position" th:text="${offer.offeredPositionTitle != null ? offer.offeredPositionTitle + '.' : (congratsTitle != null ? congratsTitle + '.' : '')}">Senior Java Backend Engineer.</span>
+            </p>
         </div>
-        <p th:text="${successMessage}">Bạn đã nhận offer.</p>
-        <p class="cof-system-banner__guide text-muted">
-            Bộ phận Tuyển dụng và Nhân sự Mộc RMS sẽ liên hệ với bạn qua email hoặc số điện thoại trong vòng 24 - 48 giờ làm việc để hướng dẫn chi tiết thủ tục Onboarding và chuẩn bị cho ngày làm việc đầu tiên.
-        </p>
     </div>
+
+    <!-- Thông báo phản hồi hệ thống -->
+
     <div th:if="${decisionType == 'DECLINED'}" class="alert alert--neutral cof-system-banner" role="status">
         <div class="cof-system-banner__header">
             <strong>Đã ghi nhận phản hồi từ chối thư mời</strong>
