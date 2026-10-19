@@ -1,7 +1,4 @@
 /* Requisition UI extends the shared Mộc workspace and design tokens. */
-.req-app .requisition-breadcrumb,.req-app .requisition-page-breadcrumb { display:flex; align-items:center; flex-wrap:wrap; gap:var(--s2); font-size:14px; color:var(--muted); margin-bottom:var(--s3); }
-.req-app .requisition-breadcrumb a,.req-app .requisition-page-breadcrumb a { display:inline-flex; align-items:center; min-height:32px; text-decoration:none; }
-.req-app .requisition-breadcrumb a:hover,.req-app .requisition-page-breadcrumb a:hover { text-decoration:underline; }
 .req-app .requisition-page-header,.req-app .requisition-detail-heading { display:flex; align-items:flex-end; justify-content:space-between; gap:var(--s6); }
 .req-app .requisition-page-header,.req-app .requisition-page-intro { margin-bottom:var(--s8); }
 .req-app .requisition-page-header p,.req-app .requisition-page-description { color:var(--muted); margin-top:var(--s2); max-width:72ch; }
@@ -17,10 +14,6 @@
 .req-app .btn-danger { border-color:var(--error); }
 .req-app :is(.btn-danger,.btn-trash):hover { background:var(--error-soft); }
 .req-app button:disabled { color:var(--muted); background:var(--page); border-color:var(--line); cursor:not-allowed; }
-.req-app :is(.list-status,.requisition-status) { display:inline-flex; align-items:center; width:max-content; max-width:100%; padding:4px 10px; border-radius:24px; background:#eeede7; color:#55594f; font-size:13px; font-weight:600; white-space:nowrap; }
-.req-app [data-status="Approved"] { background:var(--brand-soft); color:var(--brand-dark); }
-.req-app [data-status="Pending_Director"] { background:#f7efcf; color:#775817; }
-.req-app [data-status="Rejected"] { background:var(--error-soft); color:var(--error); }
 .req-app :is(.list-container,.form-card,.detail-layout .card) { min-width:0; padding:var(--s6); border:1px solid var(--line); border-radius:8px; background:var(--surface); }
 .req-app :where(input:not([type="checkbox"]):not([type="hidden"]),select,textarea) { width:100%; min-width:0; min-height:48px; padding:var(--s2) var(--s3); border:1px solid var(--control-line); border-radius:4px; background:var(--surface); font-size:16px; }
 .req-app textarea { resize:vertical; line-height:1.6; }
@@ -37,7 +30,7 @@
 .req-app .nowrap { white-space:nowrap; }
 .req-app .criteria-scroll { max-width:100%; overflow-x:auto; }
 .req-app #delete-dialog { width:min(480px,calc(100% - 32px)); max-height:calc(100svh - 32px); overflow-y:auto; padding:var(--s8); border:1px solid var(--line); border-radius:8px; color:var(--ink); background:var(--surface); }
-.req-app #delete-dialog::backdrop { background:rgb(37 41 35 / .45); }
+.req-app #delete-dialog::backdrop { background:color-mix(in srgb, var(--ink) 45%, transparent); }
 .req-app #delete-dialog p { margin-top:var(--s3); overflow-wrap:anywhere; }
 .req-app .delete-symbol { display:grid; place-items:center; width:40px; height:40px; margin-bottom:var(--s4); border:1px solid var(--error); border-radius:50%; color:var(--error); font-weight:600; }
 .req-app .dialog-actions { display:flex; justify-content:flex-end; gap:var(--s3); flex-wrap:wrap; margin-top:var(--s6); }

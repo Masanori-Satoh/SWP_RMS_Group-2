@@ -172,7 +172,6 @@ class RequisitionServiceTests {
                     .workLocation("Hanoi")
                     .workModel("Hybrid")
                     .probationDays(60)
-                    .expectedStartDate(LocalDate.now(CLOCK).plusMonths(1))
                     .reasonForHiring("Expansion")
                     .jobDescription("Develop RMS")
                     .requirementDetails("Spring Boot, SQL")

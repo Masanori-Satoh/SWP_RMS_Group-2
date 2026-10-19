@@ -83,7 +83,6 @@ public class RequisitionAuditLogger {
             probation = jobRequisition.getProbationDays() + " ngày";
         }
         snapshot.put("Thời gian thử việc", probation);
-        snapshot.put("Ngày bắt đầu dự kiến", FieldChanges.display(jobRequisition.getExpectedStartDate()));
         snapshot.put("Lý do tuyển dụng", jobRequisition.getReasonForHiring());
         snapshot.put("Mô tả công việc", jobRequisition.getJobDescription());
         snapshot.put("Yêu cầu ứng viên", jobRequisition.getRequirementDetails());

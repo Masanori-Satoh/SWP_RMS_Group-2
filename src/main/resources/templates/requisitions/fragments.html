@@ -1,0 +1,7 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<body>
+<!-- Hộp thoại xóa yêu cầu tuyển dụng, dùng ở trang danh sách và chi tiết. -->
+<dialog th:fragment="deleteDialog" id="delete-dialog" aria-labelledby="delete-title"><form id="delete-form" method="post" th:action="@{/requisitions}"><div class="delete-symbol" aria-hidden="true">!</div><h2 id="delete-title">Xóa yêu cầu tuyển dụng</h2><p>Bạn có chắc chắn muốn xóa “<strong id="delete-name"></strong>” cùng toàn bộ tiêu chí và lịch sử phê duyệt liên quan?</p><p class="muted">Hành động này không thể hoàn tác. Lịch sử nhật ký hệ thống vẫn sẽ được lưu trữ.</p><div class="dialog-actions"><button type="button" class="btn-outline" data-close-dialog>Hủy</button><button class="btn-danger" type="submit">Xác nhận xóa</button></div></form></dialog>
+</body>
+</html>

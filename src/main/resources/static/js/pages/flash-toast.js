@@ -1,9 +1,9 @@
 /* =============================================================================
-   FLASH-TOAST.JS — Tự tắt thông báo sau thao tác (fragment fragments/requisition :: flashToast)
+   FLASH-TOAST.JS — Tự tắt thông báo sau thao tác (fragment fragments/ui/flash-toast :: flashToast)
 
-   Thời gian 3 giây nằm ở CSS (animation của viền, css/pages/flash-toast.css).
-   JS chỉ chờ viền chạy hết (animationend) rồi cho khung mờ dần và gỡ khỏi trang,
-   nên rê chuột vào (CSS tạm dừng viền) cũng là tạm dừng đếm ngược.
+   Thời gian 3 giây nằm ở CSS (animation của thanh ngang, css/pages/flash-toast.css).
+   JS chỉ chờ thanh chạy hết (animationend) rồi cho khung mờ dần và gỡ khỏi trang,
+   nên rê chuột vào (CSS tạm dừng thanh) cũng là tạm dừng đếm ngược.
    ============================================================================= */
 (() => {
     'use strict';
@@ -21,11 +21,11 @@
             }
         };
         toast.addEventListener('transitionend', remove, { once: true });
-        setTimeout(remove, 10);
+        setTimeout(remove, 350);
     }
 
     document.querySelectorAll('[data-flash-toast]').forEach(toast => {
-        toast.querySelector('.flash-toast-timer rect')
+        toast.querySelector('.flash-toast-progress')
             ?.addEventListener('animationend', () => dismiss(toast));
         toast.querySelector('[data-flash-close]')
             ?.addEventListener('click', () => dismiss(toast));

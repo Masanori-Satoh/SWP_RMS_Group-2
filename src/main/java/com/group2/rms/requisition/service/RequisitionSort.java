@@ -15,8 +15,6 @@ public enum RequisitionSort {
             Sort.by(Sort.Order.desc("createdAt"), Sort.Order.desc("requisitionId"))),
     OLDEST("oldest", "Cũ nhất trước",
             Sort.by(Sort.Order.asc("createdAt"), Sort.Order.asc("requisitionId"))),
-    START_DATE("start_date", "Ngày bắt đầu gần nhất",
-            Sort.by(Sort.Order.asc("expectedStartDate"), Sort.Order.desc("requisitionId"))),
     TITLE("title", "Tên vị trí A–Z",
             Sort.by(Sort.Order.asc("title"), Sort.Order.desc("requisitionId")));
 

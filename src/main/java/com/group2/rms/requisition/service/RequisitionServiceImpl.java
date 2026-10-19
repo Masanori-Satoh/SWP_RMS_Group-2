@@ -513,7 +513,6 @@ public class RequisitionServiceImpl implements RequisitionService {
         jobRequisition.setWorkLocation(requestDto.getWorkLocation());
         jobRequisition.setWorkModel(requestDto.getWorkModel());
         jobRequisition.setProbationDays(requestDto.getProbationDays());
-        jobRequisition.setExpectedStartDate(requestDto.getExpectedStartDate());
         jobRequisition.setReasonForHiring(requestDto.getReasonForHiring());
         // Rule: Bản nháp được phép để trống mô tả / yêu cầu, nhưng 2 cột này NOT NULL trong DB
         // nên lưu chuỗi rỗng thay cho null (khi gửi duyệt, validator đã bắt buộc nhập)

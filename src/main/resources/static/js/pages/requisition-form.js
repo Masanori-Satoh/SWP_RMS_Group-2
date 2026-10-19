@@ -50,15 +50,6 @@
         { id: 'employmentType', label: 'Hình thức làm việc', section: 'rqf-work', requiredForDraft: true, radio: true },
         { id: 'workModel', label: 'Mô hình làm việc', section: 'rqf-work', requiredForDraft: true, radio: true },
         { id: 'workLocation', label: 'Địa điểm làm việc', section: 'rqf-work', requiredForSubmit: true },
-        {
-            id: 'expectedStartDate', label: 'Ngày bắt đầu', section: 'rqf-work', requiredForSubmit: true,
-            // Giới hạn trên đọc từ max của ô ngày (server truyền xuống từ RequisitionValidator.START_DATE_MAX_YEARS)
-            check: value => {
-                const max = document.getElementById('expectedStartDate').max;
-                return max && value > max ? 'Ngày bắt đầu dự kiến không được quá 1 năm kể từ hôm nay.' : '';
-            },
-            checkOnSubmit: value => value < today() ? 'Ngày bắt đầu dự kiến phải từ hôm nay trở đi.' : ''
-        },
         { id: 'reasonForHiring', label: 'Lý do tuyển dụng', section: 'rqf-content', requiredForSubmit: true },
         { id: 'jobDescription', label: 'Mô tả công việc', section: 'rqf-content', requiredForSubmit: true },
         { id: 'requirementDetails', label: 'Yêu cầu ứng viên', section: 'rqf-content', requiredForSubmit: true }
@@ -108,8 +99,6 @@
                 message = 'Địa điểm làm việc không được để trống.';
             } else if (rule.id === 'numberOfPositions') {
                 message = 'Vui lòng nhập số lượng cần tuyển.';
-            } else if (rule.id === 'expectedStartDate') {
-                message = 'Ngày bắt đầu dự kiến phải từ hôm nay trở đi.';
             } else {
                 message = 'Vui lòng nhập trường này.';
             }
@@ -217,9 +206,6 @@
         const target = rule.radio ? document.getElementById(rule.id + '-group') : document.getElementById(rule.id);
         target?.addEventListener('change', () => validateField(rule, 'draft'));
         target?.addEventListener('blur', () => validateField(rule, 'submit'), true);
-        if (rule.id === 'expectedStartDate') {
-            target?.addEventListener('input', () => validateField(rule, 'draft'));
-        }
     });
 
     // Xử lý ô lương: định dạng hàng nghìn kiểu 20.000.000 khi gõ và kiểm tra > 0, ≤ 1 tỷ, tối đa ≥ tối thiểu

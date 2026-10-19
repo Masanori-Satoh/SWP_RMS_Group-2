@@ -1,9 +1,9 @@
 /* =============================================================================
-   FLASH-TOAST.CSS — Thông báo sau thao tác (fragment fragments/requisition :: flashToast)
+   FLASH-TOAST.CSS — Thông báo sau thao tác (fragment fragments/ui/flash-toast :: flashToast)
    Dùng ở: requisitions/list, requisitions/detail, job-postings/list, job-postings/detail.
 
-   Khung nổi góc trên bên phải. Viền màu chạy quanh khung là đồng hồ đếm ngược 3 giây
-   (SVG <rect pathLength="100">: nét viền ngắn dần từ 100 về 0). Hết giờ thì JS
+   Khung nổi góc trên bên phải. Thanh ngang phía dưới đếm ngược 3 giây.
+   Hết giờ thì JS
    (js/pages/flash-toast.js) cho khung mờ dần rồi gỡ khỏi trang. Rê chuột vào thì tạm dừng.
    ============================================================================= */
 .flash-toasts {
@@ -14,7 +14,7 @@
     /* trên sidebar / topbar (tối đa 1050) */
     display: grid;
     gap: 12px;
-    width: min(380px, calc(100vw - 32px));
+    width: min(300px, calc(100vw - 32px));
     pointer-events: none;
     /* chỗ trống giữa các khung không chặn bấm vào trang */
 }
@@ -25,14 +25,15 @@
     position: relative;
     display: flex;
     align-items: flex-start;
-    gap: 12px;
-    padding: 14px 14px 14px 18px;
+    gap: 8px;
+    padding: 12px 12px 12px 14px;
+    border: 1px solid var(--toast-soft);
     border-radius: var(--radius-md, 8px);
     background: var(--surface);
     box-shadow: var(--shadow-lg);
     color: var(--ink);
     pointer-events: auto;
-    animation: flash-toast-in 0.1 ease-out;
+    animation: flash-toast-in 0.18s ease-out;
     transition: opacity 0.1 ease, transform 0.3s ease;
 }
 
@@ -41,45 +42,24 @@
     --toast-soft: var(--error-soft);
 }
 
-/* Nền nhạt + viền mờ cố định, viền đậm (đếm ngược) vẽ đè lên bằng SVG */
-.flash-toast::before {
-    content: "";
+/* Thanh đếm ngược chỉ chạy ngang dưới mép khung. */
+.flash-toast-progress {
     position: absolute;
-    inset: 0;
-    border-radius: inherit;
-    border: 2px solid var(--toast-soft);
-    background: linear-gradient(var(--toast-soft), var(--toast-soft)) left / 4px 100% no-repeat;
-    pointer-events: none;
-}
-
-.flash-toast-timer {
-    position: absolute;
-    inset: 0;
-    width: 100%;
-    height: 100%;
-    overflow: visible;
-    pointer-events: none;
-}
-
-.flash-toast-timer rect {
-    x: 1px;
-    y: 1px;
-    width: calc(100% - 2px);
-    height: calc(100% - 2px);
-    rx: 8px;
-    fill: none;
-    stroke: var(--toast-color);
-    stroke-width: 2px;
-    stroke-dasharray: 100;
-    stroke-dashoffset: 0;
+    bottom: -1px;
+    left: -1px;
+    right: -1px;
+    height: 3px;
+    border-radius: 0 0 8px 8px;
+    background: var(--toast-color);
+    transform-origin: left center;
     animation: flash-toast-countdown 3s linear forwards;
+    pointer-events: none;
 }
 
-.flash-toast:hover .flash-toast-timer rect,
-.flash-toast:focus-within .flash-toast-timer rect {
+.flash-toast:hover .flash-toast-progress,
+.flash-toast:focus-within .flash-toast-progress {
     animation-play-state: paused;
 }
-
 .flash-toast-text {
     position: relative;
     flex: 1;
@@ -134,11 +114,11 @@
 
 @keyframes flash-toast-countdown {
     to {
-        stroke-dashoffset: 100;
+        transform: scaleX(0);
     }
 }
 
-/* Người dùng tắt hiệu ứng chuyển động: không trượt, viền vẫn đếm ngược để biết khi nào tắt */
+/* Người dùng tắt hiệu ứng chuyển động: không trượt, thanh vẫn đếm ngược để biết khi nào tắt */
 @media (prefers-reduced-motion: reduce) {
     .flash-toast {
         animation: none;

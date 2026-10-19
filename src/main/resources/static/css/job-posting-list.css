@@ -5,8 +5,9 @@
    ============================================================================= */
 
 /* ----- 1. Đầu trang ----- */
+.rms-app.jp-list-page .page-content { width:100%; max-width:none; box-sizing:border-box; margin-inline:0; padding-block:var(--s6); padding-inline:clamp(var(--s4), 2vw, var(--s8)); background:color-mix(in srgb, var(--brand-soft) 50%, var(--page)); }
 .jp-list-page .jp-head { display:flex; flex-wrap:wrap; justify-content:space-between; align-items:center; gap:var(--s3); margin-bottom:var(--s4); }
-.jp-list-page .jp-head h1 { margin:0; font-size:26px; }
+.jp-list-page .jp-head h1 { margin:0; font:600 26px/1.3 var(--sans); letter-spacing:-.02em; }
 
 /* Dải "N yêu cầu đã duyệt chưa có tin" (HR, Admin) */
 .jp-list-page .jp-await { display:flex; flex-wrap:wrap; align-items:center; gap:var(--s2) var(--s4); margin-bottom:var(--s4);
@@ -17,28 +18,44 @@
     background:var(--surface); color:var(--brand-dark); font-size:var(--font-sm); font-weight:600; text-decoration:none; }
 .jp-list-page .jp-await a:hover { background:var(--brand-soft); }
 
-/* ----- 2. Thanh công cụ: ô tìm kiếm dài bên trái, nút "Bộ lọc" bên phải ----- */
-.jp-list-page .jp-toolbar .mft-search { order:-1; flex:1 1 320px; max-width:none; margin-left:0; }
-.jp-list-page .jp-toolbar .mft-controls { flex:0 0 auto; }
-.jp-list-page .jp-toolbar .mft-popover { left:auto; right:var(--s4); }
+/* ----- 2. Thanh công cụ: Bộ lọc → Trạng thái → Tìm kiếm ----- */
+.jp-list-page .jp-toolbar .mft-controls { order:0; flex:0 0 auto; }
+.jp-list-page .jp-toolbar .mft-status-tabs { order:1; }
+.jp-list-page .jp-toolbar .mft-search { order:2; flex:0 1 300px; min-width:min(100%, 230px); max-width:320px; margin-left:auto; }
+.jp-list-page .jp-toolbar .mft-popover { left:var(--s4); right:auto; }
+@media (max-width:760px) {
+    .jp-list-page .jp-toolbar .mft-status-tabs { order:1; flex:1 1 100%; flex-wrap:wrap; white-space:normal; border-radius:var(--radius-lg); }
+    .jp-list-page .jp-toolbar .mft-search { order:2; flex-basis:100%; max-width:none; }
+}
 .jp-list-page .jp-filter-full { grid-column:1 / -1; min-width:0; margin:0; padding:0; border:0; }
-.jp-list-page .jp-status-options { display:flex; flex-wrap:wrap; gap:var(--s2) var(--s4); }
-.jp-list-page .jp-status-option { display:inline-flex; align-items:center; gap:var(--s2); font-size:var(--font-sm); cursor:pointer; }
 .jp-list-page .jp-date-range { display:flex; align-items:center; gap:var(--s2); }
 .jp-list-page .jp-date-range .form-input { min-width:0; }
-.jp-list-page .jp-chips { margin:var(--s3) 0 0; }
+.jp-list-page .jp-chips { margin:0 0 var(--s4); }
 .jp-list-page .jp-chips-reset { font-size:var(--font-sm); color:var(--muted); }
 
 /* ----- 3. Bảng ----- */
-.jp-list-page .jp-list { margin-top:var(--s5, 20px); }
-.jp-list-page .jp-total { margin:0 0 var(--s3); color:var(--muted); font-size:var(--font-sm); }
+.jp-list-page .jp-list { margin-top:0; border:1px solid var(--line); border-radius:var(--radius-lg); background:var(--surface); overflow:hidden; }
+.jp-list-page .jp-list-header { display:flex; align-items:center; gap:var(--s3); flex-wrap:wrap; padding:var(--s4) var(--s6); border-bottom:1px solid var(--line); }
+.jp-list-page .jp-list-icon { display:grid; place-items:center; flex:none; width:38px; height:38px; border-radius:var(--radius-md); background:var(--brand-soft); color:var(--brand-dark); }
+.jp-list-page .jp-list-header h2 { flex:1 1 auto; min-width:0; margin:0; font:600 var(--font-lg)/1.35 var(--sans); }
+.jp-list-page .jp-list-count { margin-left:auto; white-space:nowrap; }
+.jp-list-page .jp-list-body { padding:var(--s3) var(--s6); }
+.jp-list-page .jp-list-body .table-wrapper { margin-bottom:0; }
+.jp-list-page .jp-list-pagination .pagination-info > span:last-child { display:none; }
+@media (max-width:600px) {
+    .jp-list-page .jp-list-header { padding:var(--s4); }
+    .jp-list-page .jp-list-body { padding:var(--s3) var(--s4); }
+}
 .jp-list-page .jp-table { width:100%; border-collapse:collapse; background:var(--surface); }
 .jp-list-page .jp-table th { padding:var(--s3) var(--s2); border-bottom:1px solid var(--line); background:var(--surface-subtle);
     color:var(--muted); font-size:var(--font-xs); font-weight:700; text-align:left; white-space:nowrap; }
 .jp-list-page .jp-table td { padding:var(--s3) var(--s2); border-bottom:1px solid var(--line); text-align:left; vertical-align:middle; }
+.jp-list-page .jp-table :is(th,td):first-child { width:56px; padding-left:var(--s4); font-variant-numeric:tabular-nums; }
+.jp-list-page .jp-table :is(th,td):last-child { width:88px; padding-right:var(--s4); text-align:right; }
 .jp-list-page .jp-table tbody tr:last-child td { border-bottom:0; }
 .jp-list-page .jp-table tbody tr:hover { background:var(--page); }
-.jp-list-page .jp-table .num { text-align:right; font-variant-numeric:tabular-nums; }
+.jp-list-page .jp-table .num { width:96px; padding-right:var(--s5); text-align:right; font-variant-numeric:tabular-nums; }
+.jp-list-page .jp-table :is(th,td):nth-child(5) { padding-left:var(--s4); }
 .jp-list-page .jp-title { min-width:150px; max-width:360px; }
 .jp-list-page .jp-title a { font-weight:600; text-decoration:none; overflow-wrap:anywhere; }
 .jp-list-page .jp-title a:hover { text-decoration:underline; }
@@ -49,7 +66,7 @@
 .jp-list-page .jp-new { display:inline-block; margin-left:var(--s1); padding:0 var(--s2); border-radius:var(--radius-full);
     background:var(--brand-soft); color:var(--brand-dark); font-size:var(--font-xs); font-weight:700; white-space:nowrap; }
 .jp-list-page .jp-table td.num { white-space:nowrap; }
-.jp-list-page .jp-table .action-cell { width:48px; text-align:right; }
+.jp-list-page .jp-table .action-cell { width:88px; text-align:right; }
 
 /* Hạn nộp sắp hết / đã quá */
 .jp-list-page .jp-dl-soon { color:var(--warning); font-weight:700; }

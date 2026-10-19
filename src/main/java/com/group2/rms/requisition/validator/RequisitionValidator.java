@@ -44,8 +44,6 @@ public class RequisitionValidator {
     /** Số lượng cần tuyển tối thiểu của một yêu cầu. */
     public static final int POSITIONS_MIN = 1;
     public static final int POSITIONS_MAX = 30;
-    /** Ngày bắt đầu dự kiến tối đa bao nhiêu năm kể từ hôm nay. */
-    public static final int START_DATE_MAX_YEARS = 1;
     /** Mức lương tối đa (VND/tháng) được nhập, chặn gõ thừa số 0. Dạng chuỗi để dùng trong @DecimalMax của DTO. */
     public static final String SALARY_MAX_TEXT = "1000000000";
     public static final BigDecimal SALARY_MAX = new BigDecimal(SALARY_MAX_TEXT);
@@ -79,16 +77,6 @@ public class RequisitionValidator {
     /** Người dùng bấm "Gửi duyệt" (không phải "Lưu bản nháp"). */
     public static boolean isSubmit(String action) {
         return ACTION_SUBMIT.equals(action);
-    }
-
-    /** Ngày bắt đầu dự kiến sớm nhất được chọn: hôm nay. Form dùng làm thuộc tính min của ô ngày. */
-    public LocalDate earliestStartDate() {
-        return LocalDate.now(clock);
-    }
-
-    /** Ngày bắt đầu dự kiến muộn nhất được chọn: hôm nay + START_DATE_MAX_YEARS năm. */
-    public LocalDate latestStartDate() {
-        return earliestStartDate().plusYears(START_DATE_MAX_YEARS);
     }
 
     public void validate(RequisitionRequest requisitionRequest) {
@@ -153,15 +141,6 @@ public class RequisitionValidator {
             errors.put("numberOfPositions", "Vui lòng nhập số lượng cần tuyển.");
         } else if (numberOfPositions < POSITIONS_MIN || numberOfPositions > POSITIONS_MAX) {
             errors.put("numberOfPositions", POSITIONS_RANGE_MESSAGE);
-        }
-
-        // Rule: Ngày dự kiến bắt đầu làm việc phải từ ngày hôm nay trở đi
-        LocalDate startDate = requisitionRequest.getExpectedStartDate();
-        if (isSubmitAction && (startDate == null || startDate.isBefore(earliestStartDate()))) {
-            errors.put("expectedStartDate", "Ngày bắt đầu dự kiến phải từ hôm nay trở đi.");
-        } else if (startDate != null && startDate.isAfter(latestStartDate())) {
-            errors.put("expectedStartDate",
-                    "Ngày bắt đầu dự kiến không được quá " + START_DATE_MAX_YEARS + " năm kể từ hôm nay.");
         }
 
         // Rule: Mức lương phải lớn hơn 0 và lương tối đa >= lương tối thiểu

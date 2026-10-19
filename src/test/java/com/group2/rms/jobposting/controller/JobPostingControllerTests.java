@@ -388,7 +388,7 @@ class JobPostingControllerTests {
 
     @Test
     @WithMockUser(username = "hr_officer", roles = "HR")
-    @DisplayName("GET chi tiết -> Dựng đủ phần (dải hạn nộp, nút, hồ sơ, các lần đăng); có talent pool thì đếm đề xuất")
+    @DisplayName("GET chi tiết -> Dựng đủ phần (dải hạn nộp, nút, hồ sơ, lịch sử); có talent pool thì đếm đề xuất")
     void showJobPostingDetail_shouldRenderAllSections() throws Exception {
         when(service.getInternalJobPostingDetail(eq(30), any(User.class)))
                 .thenReturn(publishedDetail().talentPoolVisible(true).suggestionsLinkLabel("Ứng viên được HM đề xuất")
@@ -404,7 +404,7 @@ class JobPostingControllerTests {
                         containsString("Tạm dừng nhận hồ sơ"),
                         containsString("Trần Quốc Bảo"),
                         containsString("Xem tất cả 14 hồ sơ"),
-                        containsString("Tin đang xem"),
+                        containsString("Lịch sử"),
                         containsString("Gợi ý đã gửi cho HM"))));
     }
 

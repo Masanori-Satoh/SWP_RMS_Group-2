@@ -116,7 +116,7 @@ public class JobPostingListService {
     /** Bước 2: giá trị nào vai trò không được dùng, hoặc không có trong danh sách lựa chọn, thì bỏ qua. */
     private JobPostingSearchRequest normalizeFilter(JobPostingSearchRequest raw, JobPostingFilterOptions options) {
         String keyword = ListFilters.cleanKeyword(raw.q());
-        List<String> statuses = ListFilters.keepAllowedValues(raw.status(), options.statuses());
+        List<String> statuses = ListFilters.keepAllowedValues(raw.status(), options.statuses()).stream().limit(1).toList();
 
         Integer departmentId = null;
         if (options.showDepartment() && ListFilters.isAllowedValue(raw.departmentId(), options.departments())) {

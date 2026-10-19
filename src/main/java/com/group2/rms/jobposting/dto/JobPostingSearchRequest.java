@@ -7,13 +7,13 @@ import java.util.List;
 
 /**
  * Mọi điều kiện tìm kiếm của màn "Tin tuyển dụng", lấy từ URL.
- * Ví dụ: /internal/job-postings?q=java&status=Published&status=Paused&deadline=soon&sort=apps&page=1
+ * Ví dụ: /internal/job-postings?q=java&status=Published&deadline=soon&sort=apps&page=1
  *
  * Giá trị chưa được kiểm tra: service "làm sạch" lại theo quyền của người xem
  * (xem JobPostingListService#normalizeFilter).
  *
  * @param q            từ khóa tìm theo tiêu đề tin hoặc tên phòng ban
- * @param status       các trạng thái hiển thị được chọn (Draft, Scheduled, Published, Paused, Closed)
+ * @param status       trạng thái hiển thị được chọn (Spring nhận dạng danh sách, service chỉ giữ một giá trị)
  * @param departmentId lọc theo phòng ban
  * @param creatorId    lọc theo người tạo tin
  * @param deadline     nhóm hạn nộp: open, soon, past
@@ -56,7 +56,7 @@ public record JobPostingSearchRequest(
         return count;
     }
 
-    /** Ô checkbox trạng thái có đang được chọn không (dùng trong template). */
+    /** Trạng thái này có đang được chọn không (dùng trong template). */
     public boolean hasStatus(String value) {
         return status != null && status.contains(value);
     }

@@ -91,8 +91,6 @@ class RequisitionControllerTests {
                 lenient().when(access.actor()).thenReturn(hiringManager);
                 lenient().when(access.canCreate(any())).thenReturn(true);
                 lenient().when(departments.findAll()).thenReturn(List.of(department));
-                lenient().when(validator.earliestStartDate()).thenReturn(LocalDate.of(2026, 10, 18));
-                lenient().when(validator.latestStartDate()).thenReturn(LocalDate.of(2027, 10, 18));
                 // Bộ lọc phiên thật kiểm tra tài khoản còn Active và đúng role ở mỗi request
                 when(userRepository.findByUsernameIgnoreCase("hm")).thenReturn(Optional.of(hiringManager));
                 when(userRepository.findByUsernameIgnoreCase("director")).thenReturn(Optional.of(User.builder()
@@ -137,6 +135,29 @@ class RequisitionControllerTests {
         }
 
         @Test
+        @WithMockUser(username = "hr", roles = "HR")
+        @DisplayName("GET /requisitions với HR -> Không hiện bộ lọc trạng thái, vẫn có bộ lọc tin tuyển dụng")
+        void list_shouldHideStatusFilter_whenHrOpensPage() throws Exception {
+                User hr = User.builder().userId(40).username("hr").fullName("HR").accountStatus("Active")
+                                .role(Role.builder().roleName(RequisitionAccess.ROLE_HR).build()).build();
+                when(userRepository.findByUsernameIgnoreCase("hr")).thenReturn(Optional.of(hr));
+                when(access.actor()).thenReturn(hr);
+                when(access.canCreate(hr)).thenReturn(false);
+                RequisitionResponse row = RequisitionResponse.builder().requisitionId(6).title("Backend Engineer")
+                                .approvalStatus(RequisitionAccess.STATUS_APPROVED).statusLabel("Đã duyệt")
+                                .createdAt(LocalDateTime.now()).build();
+                RequisitionFilterOptions options = new RequisitionFilterOptions(false, true, true, true, false,
+                                List.of(), List.of(new FilterOption("none", "Chưa có tin")), List.of(), List.of(),
+                                List.of(new FilterOption("newest", "Mới nhất trước")));
+                when(listService.getListPage(any())).thenReturn(listWith(row, options));
+
+                mvc.perform(get("/requisitions"))
+                                .andExpect(status().isOk())
+                                .andExpect(content().string(not(containsString("mft-status-tabs"))))
+                                .andExpect(content().string(not(containsString("name=\"status\""))))
+                                .andExpect(content().string(containsString("id=\"filter-posting\"")));
+        }
+        @Test
         @WithMockUser(username = "director", roles = "DIRECTOR")
         @DisplayName("GET /requisitions -> Tin không xem được: hiện badge nhưng không có link vào trang tin (tránh 403)")
         void list_shouldNotLinkToPosting_whenPostingIsNotViewable() throws Exception {
@@ -164,8 +185,6 @@ class RequisitionControllerTests {
                                 .andExpect(status().isOk())
                                 .andExpect(view().name("requisitions/form"))
                                 .andExpect(model().attribute("isEdit", false))
-                                .andExpect(model().attribute("startDateMin", LocalDate.of(2026, 10, 18)))
-                                .andExpect(model().attribute("startDateMax", LocalDate.of(2027, 10, 18)))
                                 .andExpect(model().attributeExists("requisitionDto"));
         }
 

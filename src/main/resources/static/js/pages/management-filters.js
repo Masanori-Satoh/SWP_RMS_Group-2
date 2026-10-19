@@ -1,4 +1,4 @@
-/* Only the three management GET toolbars. Native details/form/links also work without JS. */
+/* Shared management GET toolbars across Admin, Requisition and Job Posting. Native details/form/links also work without JS. */
 (() => {
     'use strict';
     const form = document.querySelector('.mft-toolbar');
@@ -19,5 +19,8 @@
         const updateTitle = () => { control.title = control.selectedOptions[0]?.textContent || ''; };
         control.addEventListener('change', updateTitle);
         updateTitle();
+    });
+    form.querySelectorAll('.mft-status-tabs input[name="status"]').forEach(control => {
+        control.addEventListener('change', () => form.requestSubmit());
     });
 })();

@@ -20,28 +20,20 @@
             <main id="main" layout:fragment="content" class="page-content container" tabindex="-1">
 
                     <div class="requisition-page-header">
-                        <h1>Yêu cầu tuyển dụng</h1>
-                        <a th:if="${canCreate}" th:href="@{/requisitions/create}" class="btn btn--primary btn-create">+ Tạo yêu cầu mới</a>
+                        <h1 class="page-title">Yêu cầu tuyển dụng</h1>
+                        <div class="requisition-page-actions" th:if="${canCreate}">
+                            <a th:href="@{/requisitions/create}" class="btn btn--primary btn-create">+ Tạo yêu cầu mới</a>
+                        </div>
                     </div>
-                    <th:block th:replace="~{fragments/requisition :: messages}"></th:block>
+                    <th:block th:replace="~{fragments/ui/flash-toast :: flashToast(${successMessage}, ${failureMessage})}"></th:block>
                     <!--
-                        Thanh công cụ: ô tìm kiếm (trái) + nút "Bộ lọc" (phải).
+                        Thanh công cụ: Bộ lọc → Trạng thái → Tìm kiếm.
                         Dùng lại bộ class mft- của pages/management-filters.css (trang Tài khoản, Phòng ban cũng dùng).
                         Đây là form GET: bấm "Áp dụng" hoặc Enter thì trình duyệt tự ghép các ô thành ?q=...&status=...
                         Ô nào hiện là do service quyết định theo role (list.options.show...).
                     -->
                     <form class="card mft-toolbar req-toolbar" th:action="@{/requisitions}" method="get" role="search"
                         aria-label="Tìm kiếm và lọc yêu cầu tuyển dụng">
-                        <div class="mft-search">
-                            <label class="sr-only" for="requisition-search">Tìm kiếm yêu cầu tuyển dụng</label>
-                            <button class="mft-search-submit" type="submit" aria-label="Tìm kiếm" title="Tìm kiếm">
-                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"
-                                    stroke-linecap="round" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m16 16 4 4"/></svg>
-                            </button>
-                            <input class="form-control mft-search-input" id="requisition-search" type="search" name="q"
-                                th:value="${list.filter.q}" maxlength="120" placeholder="Tìm theo tên vị trí hoặc phòng ban">
-                        </div>
-
                         <div class="mft-controls">
                             <!-- <details> tự mở/đóng khi bấm <summary>, không cần JS -->
                             <details class="mft-disclosure">
@@ -54,17 +46,6 @@
                                 </summary>
 
                                 <div id="requisition-filter-fields" class="mft-popover">
-                                    <fieldset class="mft-field req-filter-full" th:if="${list.options.showStatus}">
-                                        <legend class="form-label">Trạng thái</legend>
-                                        <div class="req-status-options">
-                                            <label class="req-status-option" th:each="option : ${list.options.statuses}">
-                                                <input type="checkbox" name="status" th:value="${option.value}"
-                                                    th:checked="${list.filter.hasStatus(option.value)}">
-                                                <span th:text="${option.label}">Chờ duyệt</span>
-                                            </label>
-                                        </div>
-                                    </fieldset>
-
                                     <div class="mft-field" th:if="${list.options.showPosting}">
                                         <label class="form-label" for="filter-posting">Tin tuyển dụng</label>
                                         <select class="form-select" id="filter-posting" name="posting">
@@ -120,6 +101,28 @@
                                 </div>
                             </details>
                         </div>
+                        <div class="mft-status-tabs" role="radiogroup" aria-label="Lọc theo trạng thái yêu cầu"
+                            th:if="${list.options.showStatus}">
+                            <label class="mft-status-option">
+                                <input type="radio" name="status" value=""
+                                    th:checked="${#lists.isEmpty(list.filter.status)}">
+                                <span>Tất cả</span>
+                            </label>
+                            <label class="mft-status-option" th:each="option : ${list.options.statuses}">
+                                <input type="radio" name="status" th:value="${option.value}"
+                                    th:checked="${list.filter.hasStatus(option.value)}">
+                                <span th:text="${option.label}">Chờ duyệt</span>
+                            </label>
+                        </div>
+                        <div class="mft-search">
+                            <label class="sr-only" for="requisition-search">Tìm kiếm yêu cầu tuyển dụng</label>
+                            <button class="mft-search-submit" type="submit" aria-label="Tìm kiếm" title="Tìm kiếm">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"
+                                    stroke-linecap="round" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m16 16 4 4"/></svg>
+                            </button>
+                            <input class="form-control mft-search-input" id="requisition-search" type="search" name="q"
+                                th:value="${list.filter.q}" maxlength="120" placeholder="Tìm theo tên vị trí hoặc phòng ban">
+                        </div>
                     </form>
 
                     <!-- Mỗi bộ lọc đang bật là một chip; bấm vào chip để bỏ riêng bộ lọc đó -->
@@ -131,8 +134,15 @@
                         <a class="req-chips-reset" th:href="@{/requisitions}">Đặt lại mặc định</a>
                     </div>
 
-                    <section class="list-container" aria-label="Danh sách yêu cầu tuyển dụng">
-                        <p class="list-results-count" th:text="|${list.page.totalElements} yêu cầu tuyển dụng|">0 yêu cầu tuyển dụng</p>
+                    <section class="list-container" aria-labelledby="requisition-list-title">
+                        <header class="req-list-header">
+                            <span class="req-list-icon" aria-hidden="true">
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3h8l4 4v14H4V3h4Z"/><path d="M16 3v5h4M8 12h8M8 16h8"/></svg>
+                            </span>
+                            <h2 id="requisition-list-title">Danh sách yêu cầu tuyển dụng</h2>
+                            <span class="badge badge--neutral req-list-count" th:text="|${list.page.totalElements} yêu cầu|">0 yêu cầu</span>
+                        </header>
+                        <div class="req-list-body">
                         <p class="table-scroll-note" hidden>Cuộn ngang để xem toàn bộ các cột và thao tác.</p>
                         <div class="table-wrapper requisition-table-wrap" role="region"
                             aria-label="Danh sách yêu cầu tuyển dụng" tabindex="0">
@@ -221,16 +231,19 @@
                                 </tbody>
                             </table>
                         </div>
-                        <!-- Fragment phân trang chuẩn của catalog: tự giữ mọi tham số đang có trên URL, chỉ đổi ?page= -->
-                        <nav th:replace="~{fragments/ui/pagination :: paged(page=${list.page})}"></nav>
+                        </div>
                     </section>
+                    <!-- Phân trang nằm ngoài khung danh sách; tổng kết quả đã ở đầu khung. -->
+                    <div class="req-list-pagination">
+                        <nav th:replace="~{fragments/ui/pagination :: paged(page=${list.page})}"></nav>
+                    </div>
 
                     <!-- Hộp thoại xác nhận xóa phải nằm TRONG fragment "content", nằm ngoài sẽ bị layout bỏ đi -->
-                    <dialog th:replace="~{fragments/requisition :: deleteDialog}"></dialog>
+                    <dialog th:replace="~{requisitions/fragments :: deleteDialog}"></dialog>
             </main>
 
     <th:block layout:fragment="scripts">
-        <script th:src="@{/js/requisitions.js}" defer></script>
+        <script th:src="@{/js/pages/requisition-actions.js}" defer></script>
         <!-- flash-toast.js: thông báo sau thao tác tự tắt sau 3 giây -->
         <script th:src="@{/js/pages/flash-toast.js}" defer></script>
         <!-- Đóng popover "Bộ lọc" khi bấm ra ngoài hoặc nhấn Esc (dùng chung với trang Tài khoản, Phòng ban) -->

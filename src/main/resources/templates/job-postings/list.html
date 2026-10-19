@@ -24,25 +24,13 @@
         </div>
 
         <!-- Thông báo sau thao tác: khung nổi góc phải, tự tắt sau 3 giây (dùng chung với màn Yêu cầu) -->
-        <th:block th:replace="~{fragments/requisition :: flashToast(${successMessage ?: message}, ${errorMessage})}"></th:block>
+        <th:block th:replace="~{fragments/ui/flash-toast :: flashToast(${successMessage ?: message}, ${errorMessage})}">
+        </th:block>
 
-        <!-- Thanh công cụ: ô tìm kiếm (trái) + nút "Bộ lọc" (phải). Form GET: trình duyệt tự ghép các ô thành ?q=...&status=...
+        <!-- Thanh công cụ: Bộ lọc → Trạng thái → Tìm kiếm. Form GET ghép các ô thành ?q=...&status=...
          Ô nào hiện là do service quyết định theo vai trò (list.options.show...). -->
         <form class="card mft-toolbar jp-toolbar" th:action="@{/internal/job-postings}" method="get" role="search"
             aria-label="Tìm kiếm và lọc tin tuyển dụng">
-            <div class="mft-search">
-                <label class="sr-only" for="posting-search">Tìm kiếm tin tuyển dụng</label>
-                <button class="mft-search-submit" type="submit" aria-label="Tìm kiếm" title="Tìm kiếm">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"
-                        stroke-linecap="round" aria-hidden="true">
-                        <circle cx="10.5" cy="10.5" r="6.5" />
-                        <path d="m16 16 4 4" />
-                    </svg>
-                </button>
-                <input class="form-control mft-search-input" id="posting-search" type="search" name="q"
-                    th:value="${list.filter.q}" maxlength="120" placeholder="Tìm theo tiêu đề tin hoặc phòng ban">
-            </div>
-
             <div class="mft-controls">
                 <!-- <details> tự mở/đóng khi bấm <summary>, không cần JS -->
                 <details class="mft-disclosure">
@@ -58,17 +46,6 @@
                     </summary>
 
                     <div id="posting-filter-fields" class="mft-popover">
-                        <fieldset class="mft-field jp-filter-full">
-                            <legend class="form-label">Trạng thái</legend>
-                            <div class="jp-status-options">
-                                <label class="jp-status-option" th:each="option : ${list.options.statuses}">
-                                    <input type="checkbox" name="status" th:value="${option.value}"
-                                        th:checked="${list.filter.hasStatus(option.value)}">
-                                    <span th:text="${option.label}">Đang đăng</span>
-                                </label>
-                            </div>
-                        </fieldset>
-
                         <div class="mft-field" th:if="${list.options.showDepartment}">
                             <label class="form-label" for="filter-department">Phòng ban</label>
                             <select class="form-select" id="filter-department" name="departmentId">
@@ -129,6 +106,30 @@
                     </div>
                 </details>
             </div>
+            <div class="mft-status-tabs" role="radiogroup" aria-label="Lọc theo trạng thái tin tuyển dụng">
+                <label class="mft-status-option">
+                    <input type="radio" name="status" value=""
+                        th:checked="${#lists.isEmpty(list.filter.status)}">
+                    <span>Tất cả</span>
+                </label>
+                <label class="mft-status-option" th:each="option : ${list.options.statuses}">
+                    <input type="radio" name="status" th:value="${option.value}"
+                        th:checked="${list.filter.hasStatus(option.value)}">
+                    <span th:text="${option.label}">Đang đăng</span>
+                </label>
+            </div>
+            <div class="mft-search">
+                <label class="sr-only" for="posting-search">Tìm kiếm tin tuyển dụng</label>
+                <button class="mft-search-submit" type="submit" aria-label="Tìm kiếm" title="Tìm kiếm">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"
+                        stroke-linecap="round" aria-hidden="true">
+                        <circle cx="10.5" cy="10.5" r="6.5" />
+                        <path d="m16 16 4 4" />
+                    </svg>
+                </button>
+                <input class="form-control mft-search-input" id="posting-search" type="search" name="q"
+                    th:value="${list.filter.q}" maxlength="120" placeholder="Tìm theo tiêu đề tin hoặc phòng ban">
+            </div>
         </form>
 
         <!-- Mỗi bộ lọc đang bật là một chip; bấm để bỏ riêng bộ lọc đó -->
@@ -140,22 +141,29 @@
             <a class="jp-chips-reset" th:href="@{/internal/job-postings}">Đặt lại mặc định</a>
         </div>
 
-        <section class="jp-list" aria-label="Danh sách tin tuyển dụng" th:with="showDept=${list.options.showDepartment}, showCreator=${list.canManage},
-                      columns=${7 + (showDept ? 1 : 0) + (showCreator ? 1 : 0)}">
-            <p class="jp-total" th:text="|${list.page.totalElements} tin tuyển dụng|">9 tin tuyển dụng</p>
+        <section class="jp-list" aria-labelledby="job-posting-list-title" th:with="showCreator=${list.canManage},
+                      columns=${8 + (showCreator ? 1 : 0)}">
+            <header class="jp-list-header">
+                <span class="jp-list-icon" aria-hidden="true">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M8 5V3m8 2V3M3 10h18M8 14h8m-8 4h5"/></svg>
+                </span>
+                <h2 id="job-posting-list-title">Danh sách tin tuyển dụng</h2>
+                <span class="badge badge--neutral jp-list-count" th:text="|${list.page.totalElements} tin|">0 tin</span>
+            </header>
+            <div class="jp-list-body">
             <div class="table-wrapper" role="region" aria-label="Danh sách tin tuyển dụng" tabindex="0">
                 <table class="jp-table">
                     <thead>
                         <tr>
                             <th scope="col">STT</th>
                             <th scope="col">Tiêu đề tin</th>
-                            <th scope="col" th:if="${showDept}">Phòng ban</th>
+                            <th scope="col">Phòng ban</th>
                             <th scope="col" class="num">Hồ sơ</th>
                             <th scope="col">Ngày đăng</th>
                             <th scope="col">Hạn nộp</th>
                             <th scope="col">Trạng thái</th>
                             <th scope="col" th:if="${showCreator}">Người tạo</th>
-                            <th scope="col"><span class="sr-only">Thao tác</span></th>
+                            <th scope="col">Thao tác</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -165,15 +173,10 @@
                             <td class="jp-title">
                                 <a th:href="@{/internal/job-postings/{id}(id=${post.jobPostingId})}"
                                     th:text="${post.postingTitle}">Senior Java Backend Engineer</a>
-                                <div class="jp-sub" th:text="|Lần ${post.postingNo} · ${post.employmentType}|">Lần 1 ·
-                                    Toàn thời gian</div>
                             </td>
-                            <td th:if="${showDept}" th:text="${post.departmentName}">Engineering</td>
+                            <td th:text="${post.departmentName}">Engineering</td>
                             <td class="num">
                                 <strong th:text="${post.applicationCount}">18</strong>
-                                <!-- "mới" = hồ sơ chưa ai xử lý (Applied) -->
-                                <span class="jp-new" th:if="${post.newApplicationCount > 0}"
-                                    th:text="|+${post.newApplicationCount} mới|">+3 mới</span>
                             </td>
                             <td class="nowrap">
                                 <th:block th:if="${post.postingDate != null}">
@@ -256,9 +259,12 @@
                     </tbody>
                 </table>
             </div>
-            <!-- Fragment phân trang của catalog: giữ mọi tham số trên URL, chỉ đổi ?page= (đếm từ 0) -->
-            <nav th:replace="~{fragments/ui/pagination :: paged(page=${list.page})}"></nav>
+            </div>
         </section>
+        <!-- Phân trang nằm ngoài khung danh sách; tổng kết quả đã ở đầu khung. -->
+        <div class="jp-list-pagination">
+            <nav th:replace="~{fragments/ui/pagination :: paged(page=${list.page})}"></nav>
+        </div>
 
         <!-- Hộp xác nhận dùng chung cho mọi thao tác ghi (phải nằm TRONG fragment "content") -->
         <dialog th:replace="~{job-postings/fragments :: confirmDialog}"></dialog>
