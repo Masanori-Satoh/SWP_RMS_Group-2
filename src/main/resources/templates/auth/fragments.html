@@ -30,16 +30,17 @@
     <a class="btn btn--outline auth-story-link" th:href="@{/#roles}">Khám phá vị trí đang tuyển<svg th:replace="~{auth/fragments :: icon('arrow')}"></svg></a>
     <th:block th:if="${botanical == true}">
       <ul class="auth-highlights" aria-label="Cùng Mộc phát triển">
-        <li><svg th:replace="~{auth/fragments :: icon('opportunity')}"></svg><span>Khám phá<br>cơ hội</span></li>
-        <li><svg th:replace="~{auth/fragments :: icon('people')}"></svg><span>Kết nối<br>tài năng</span></li>
-        <li><svg th:replace="~{auth/fragments :: icon('leaf')}"></svg><span>Cùng tạo<br>giá trị</span></li>
+        <li><svg th:replace="~{auth/fragments :: icon('people')}"></svg><span>Môi trường<br>cởi mở, học hỏi</span></li>
+        <li><svg th:replace="~{auth/fragments :: icon('opportunity')}"></svg><span>Dự án thực tế,<br>tạo giá trị thật</span></li>
+        <li><svg th:replace="~{auth/fragments :: icon('leaf')}"></svg><span>Phát triển<br>cùng đội ngũ trẻ</span></li>
       </ul>
     </th:block>
+  </aside>
+  <div class="auth-scene" th:fragment="scene" aria-hidden="true">
     <figure class="auth-botanical-art" aria-hidden="true">
       <img th:src="@{/images/auth-register-scene.png}" width="900" height="339" alt="" decoding="async">
     </figure>
-  </aside>
-  <div class="auth-scene" th:fragment="scene" aria-hidden="true">
+
     <span class="auth-floating-leaf auth-floating-leaf--one"><svg th:replace="~{auth/fragments :: icon('leaf')}"></svg></span>
     <span class="auth-floating-leaf auth-floating-leaf--two"><svg th:replace="~{auth/fragments :: icon('leaf')}"></svg></span>
     <span class="auth-floating-leaf auth-floating-leaf--three"><svg th:replace="~{auth/fragments :: icon('leaf')}"></svg></span>

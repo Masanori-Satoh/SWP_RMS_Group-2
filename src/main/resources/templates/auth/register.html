@@ -2,14 +2,15 @@
 <html lang="vi" xmlns:th="http://www.thymeleaf.org">
 <head th:replace="~{auth/fragments :: head('Đăng ký ứng viên')}"></head>
 <body class="auth-page auth-botanical auth-register">
-<div th:replace="~{auth/fragments :: scene}"></div>
 <header th:replace="~{auth/fragments :: header}"></header>
+<div class="auth-stage">
+<div th:replace="~{auth/fragments :: scene}"></div>
 <div class="auth-container auth-shell">
   <aside th:replace="~{auth/fragments :: story(botanical=true)}"></aside>
   <main id="main" class="card auth-card" tabindex="-1">
     <nav th:replace="~{auth/fragments :: registrationSteps(1)}"></nav>
     <h1>Tạo tài khoản ứng viên.</h1>
-    <p class="auth-intro">Điền thông tin để nhận mã xác minh qua email. Tài khoản chỉ được tạo sau khi bạn xác minh mã thành công.</p>
+    <p class="auth-intro">Điền thông tin để nhận mã xác minh qua email.<br>Tài khoản chỉ được tạo sau khi bạn xác minh mã thành công.</p>
     <form class="auth-form auth-register-grid" th:action="@{/register}" th:object="${form}" method="post" data-auth-form>
       <div th:replace="~{auth/fragments :: errors}"></div>
       <div class="auth-field">
@@ -20,7 +21,7 @@
       <div class="auth-field">
         <label class="form-label" for="username">Tên đăng nhập</label>
         <div class="auth-input-wrap"><svg th:replace="~{auth/fragments :: icon('user')}"></svg><input class="form-input" id="username" type="text" th:field="*{username}" placeholder="Nhập tên đăng nhập" maxlength="50" autocomplete="username" autocapitalize="none" spellcheck="false" required th:attr="aria-invalid=${#fields.hasErrors('username')},aria-describedby=${#fields.hasErrors('username') ? 'username-hint username-error' : 'username-hint'}"></div>
-        <small id="username-hint" class="form-hint auth-hint">Tên đăng nhập không thể thay đổi.</small>
+        <small id="username-hint" class="form-hint auth-hint auth-visually-hidden">Tên đăng nhập không thể thay đổi.</small>
         <span id="username-error" class="form-error auth-field-error" th:if="${#fields.hasErrors('username')}" ><th:block th:replace="~{auth/fragments :: fieldErrors('username')}"></th:block></span>
       </div>
       <div class="auth-field auth-field--wide">
@@ -52,6 +53,7 @@
     </form>
     <nav class="auth-links auth-divider" aria-label="Tài khoản đã có"><span>Bạn đã có tài khoản?</span><a th:href="@{/login}">Đăng nhập</a></nav>
   </main>
+</div>
 </div>
 <footer th:replace="~{auth/fragments :: footer}"></footer>
 </body>

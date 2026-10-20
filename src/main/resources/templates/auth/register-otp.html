@@ -2,8 +2,9 @@
 <html lang="vi" xmlns:th="http://www.thymeleaf.org">
 <head th:replace="~{auth/fragments :: head('Xác minh email đăng ký')}"></head>
 <body class="auth-page auth-botanical auth-registration-otp">
-<div th:replace="~{auth/fragments :: scene}"></div>
 <header th:replace="~{auth/fragments :: header}"></header>
+<div class="auth-stage">
+<div th:replace="~{auth/fragments :: scene}"></div>
 <div class="auth-container auth-shell">
   <aside th:replace="~{auth/fragments :: story(botanical=true)}"></aside>
   <main id="main" class="card auth-card" tabindex="-1">
@@ -37,6 +38,7 @@
     <noscript><p class="form-hint auth-hint">Để cập nhật thời gian gửi lại, hãy <a th:href="@{/register/otp}">tải lại trang</a>.</p></noscript>
     <nav class="auth-links auth-divider" aria-label="Đăng ký tài khoản"><a th:href="@{/register}">Sửa thông tin đăng ký</a><a th:href="@{/login}">Về trang đăng nhập</a></nav>
   </main>
+</div>
 </div>
 <footer th:replace="~{auth/fragments :: footer}"></footer>
 </body>

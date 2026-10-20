@@ -69,3 +69,31 @@ Phản hồi screenshot phát hiện điểm mà ma trận kiểm tra trước c
 Kết quả: BUILD SUCCESS, 6 test auth đạt. Chrome kiểm tra 108 trường hợp reflow của sáu màn theo vùng CSS tương đương zoom 75/90/100/110/125/150/175/200% trên màn 1366×768 và 1920×900, cộng mobile 390/320px; ảnh hiển thị luôn nằm dưới highlights, không tràn ngang và navbar hiện nền trắng/sticky. Có thêm ba kiểm tra phóng đại CSS và kiểm tra các href navbar. Chưa tự động hóa zoom native bằng menu trình duyệt; không đồng nhất phép mô phỏng này với kiểm thử native zoom.
 
 Browser dùng HTML Thymeleaf đã render, preview chặn POST; riêng loader chat được chặn trong bài kiểm tra bố cục vì ngoài phạm vi auth, không sửa chat trong ứng dụng. Ảnh `../.codex-tmp/auth-navbar-zoom-fixed.png`, kết quả `auth-zoom-fix-results.json`, log `auth-zoom-fix-tests.log`.
+
+## Gắn minh họa với form thành một khung (20/10/2026)
+
+Theo phản hồi về cảm giác ảnh rời rạc, sáu template auth đặt `.card` trên `.auth-shell`, bỏ card con ở `main.auth-card`. CSS dùng Grid không có khoảng hở giữa hai cột; cột giới thiệu nền nhẹ, vùng form nền trắng cùng một viền ngoài và bo góc. Hai cột kéo giãn cùng chiều cao, form căn giữa theo nội dung.
+
+Cột trái dùng Flexbox; ảnh vẫn ở luồng bố cục, có khoảng cách tối thiểu 32px sau highlights và tự bám đáy khi cột form cao hơn. Ảnh tràn phần padding nội bộ để chạm mép cột trái và mép form, được cắt theo góc của khung ngoài. Không dùng ảnh absolute, chiều cao cố định hoặc transform để giữ vị trí. Khi về một cột, ảnh trang trí ẩn và hai vùng nội dung vẫn nối liền.
+
+File của lượt này: `static/css/auth.css` và sáu template `auth/{login,register,register-otp,forgot-password,reset-password-otp,reset-password}.html`. Giữ nguyên navbar chuẩn, form bindings, JavaScript và backend.
+
+BUILD SUCCESS, 6 test đạt. Browser đã kiểm tra 108 trường hợp reflow tương đương 75–200%/mobile và ba mức CSS zoom. Có thêm assertion ảnh chạm đáy/cạnh form, hai cột cùng đáy, vùng mobile nối nhau và không có card lồng. Không phát hiện ảnh đè nội dung hoặc overflow cấp trang trong ma trận reflow. Chưa tự động hóa zoom native của trình duyệt; preview Thymeleaf chỉ đọc, không gửi email/đổi mật khẩu thật.
+
+Ảnh: `../.codex-tmp/auth-unified-panel.png`; kết quả browser: `auth-unified-results.json`; log build/test: `auth-unified-tests.log`. Chưa commit/push.
+
+## Quyết định cuối: bỏ khung bao lớn
+
+Theo phản hồi tiếp theo, **không giữ thiết kế một card bao hai cột**. Bỏ `.card` khỏi `.auth-shell`, bỏ viền/ngăn cột/nền riêng ở vùng giới thiệu; chỉ giữ `.card` cho form, với chiều cao tự nhiên. Giữ ảnh ở luồng bố cục an toàn và navbar công khai chuẩn. Đây là trạng thái thay thế mục “Gắn minh họa với form thành một khung” phía trên.
+
+Kiểm chứng cuối: `auth-open-layout-tests.log` BUILD SUCCESS, 6 test đạt; `auth-open-layout-results.json` có 108 trường hợp reflow và ba kiểm tra CSS zoom đạt. Có assertion riêng xác nhận shell không có border/nền Card và chỉ form dùng Card. Ảnh cuối: `../.codex-tmp/auth-open-layout.png`. Chưa kiểm thử zoom native và E2E gửi email/đổi mật khẩu thật. Không commit/push.
+
+## Hòa mép ảnh với nền
+
+Mép chữ nhật của PNG gốc còn lộ trên nền trang. Lượt này chỉ bổ sung CSS mask trên `.auth-botanical-art img` để làm mềm bốn mép, giữ phần chữ và minh họa trung tâm; không crop/chỉnh bitmap, không thêm khung hoặc đổi bố cục. Chrome xác nhận mask hoạt động, 108 trường hợp reflow và ba kiểm tra CSS zoom đạt. Ảnh: `../.codex-tmp/auth-soft-edges.png`; kết quả: `auth-soft-edges-results.json`. Không chạy lại Maven cho thay đổi thuần CSS này; lần build/test gần nhất vẫn là sáu test đạt ở lượt bỏ khung. Chưa kiểm thử native browser zoom.
+
+## Căn lại lề ảnh
+
+Sửa tiếp phần kích thước ảnh còn sót từ bố cục full-bleed: bỏ `width: calc(100% + var(--s16))` và margin ngang âm 32px. Ảnh hiện rộng 100% phần nội dung cột trái, lề ngang bằng 0; giữ mask hòa mép, bố cục mở và navbar. Chỉ đổi một rule trong `auth.css`.
+
+Browser đo 14 trường hợp Login/Register ở 1440, 1920, 1536, 1280, 960, 390 và 320px: mép ảnh khớp phần nội dung cột trong sai số dưới 1px khi hiển thị, không margin âm/tràn ngang. Ảnh `../.codex-tmp/auth-aligned-login.png`, số đo `auth-art-alignment-results.json`. Không chạy lại Maven cho thay đổi thuần CSS; không thay backend và không commit/push.

@@ -2,8 +2,9 @@
 <html lang="vi" xmlns:th="http://www.thymeleaf.org">
 <head th:replace="~{auth/fragments :: head('Đăng nhập')}"></head>
 <body class="auth-page auth-botanical auth-login">
-<div th:replace="~{auth/fragments :: scene}"></div>
 <header th:replace="~{auth/fragments :: header}"></header>
+<div class="auth-stage">
+<div th:replace="~{auth/fragments :: scene}"></div>
 <div class="auth-container auth-shell">
   <aside th:replace="~{auth/fragments :: story(botanical=true)}"></aside>
   <main id="main" class="card auth-card" tabindex="-1">
@@ -31,6 +32,7 @@
     </form>
     <nav class="auth-links auth-divider" aria-label="Tạo tài khoản"><span>Bạn chưa có tài khoản?</span><a th:href="@{/register}">Đăng ký ứng viên</a></nav>
   </main>
+</div>
 </div>
 <footer th:replace="~{auth/fragments :: footer}"></footer>
 </body>
