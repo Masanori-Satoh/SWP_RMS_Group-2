@@ -5,6 +5,8 @@ import org.springframework.stereotype.Repository;
 import com.group2.rms.core.security.RoleAuthorities;
 import com.group2.rms.interview.entity.InterviewFormat;
 import static com.group2.rms.candidate.repository.ApplicationRepository.FORMAL_FILTER;
+import static com.group2.rms.candidate.repository.ApplicationRepository.FORMAL_SCOPE_FILTER;
+import static com.group2.rms.candidate.repository.ApplicationRepository.PIPELINE_JOINS;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -89,6 +91,100 @@ public class DashboardMetricsRepository {
                 + "where " + FORMAL_FILTER + " group by a.applicationStatus order by a.applicationStatus", Map.of());
     }
 
+    /** Same formal application set as the recruiter pipeline; counts applications, not distinct people. */
+    public List<StatusCount> formalApplicationStatuses() {
+        return statuses("select a.applicationStatus, count(a) from Application a where " + FORMAL_FILTER
+                + " group by a.applicationStatus", Map.of());
+    }
+
+    /** Uses the exact scope and HR-forwarding predicate of the Hiring Manager pipeline. */
+    public List<StatusCount> hiringManagerApplicationStatuses(int userId, Integer departmentId) {
+        var query = entityManager.createQuery("select a.applicationStatus, count(a) " + PIPELINE_JOINS
+                + FORMAL_SCOPE_FILTER + "group by a.applicationStatus", Object[].class);
+        query.setParameter("allDepartments", false);
+        query.setParameter("managerUserId", userId);
+        query.setParameter("departmentId", departmentId);
+        query.setParameter("forwardedOnly", true);
+        return query.getResultList().stream()
+                .map(row -> new StatusCount((String) row[0], (Long) row[1])).toList();
+    }
+
+    public long visibleCandidatesForHiringManager(int userId, Integer departmentId) {
+        var query = entityManager.createQuery("select count(distinct c.candidateId) " + PIPELINE_JOINS
+                + FORMAL_SCOPE_FILTER, Long.class);
+        query.setParameter("allDepartments", false);
+        query.setParameter("managerUserId", userId);
+        query.setParameter("departmentId", departmentId);
+        query.setParameter("forwardedOnly", true);
+        return query.getSingleResult();
+    }
+
+    /** Matches the requisition list's HM visibility rule, including managed departments. */
+    public List<StatusCount> hiringManagerRequisitionStatuses(int userId, Integer departmentId) {
+        var query = entityManager.createQuery("select r.approvalStatus, count(r) from JobRequisition r "
+                + "left join r.department d left join d.manager m "
+                + "where r.hiringManager.userId = :userId or m.userId = :userId or d.departmentId = :departmentId "
+                + "group by r.approvalStatus", Object[].class);
+        query.setParameter("userId", userId);
+        query.setParameter("departmentId", departmentId);
+        return query.getResultList().stream()
+                .map(row -> new StatusCount((String) row[0], (Long) row[1])).toList();
+    }
+
+    /** Matches the list's display statuses, where future Published postings appear as Scheduled. */
+    public List<StatusCount> jobPostingViewStatuses(LocalDateTime now) {
+        return List.of(
+                new StatusCount("Draft", count("select count(j) from JobPosting j where j.postingStatus = 'Draft'", Map.of())),
+                new StatusCount("Published", count("select count(j) from JobPosting j where j.postingStatus = 'Published' "
+                        + "and (j.postingDate is null or j.postingDate <= :now)", Map.of("now", now))),
+                new StatusCount("Scheduled", count("select count(j) from JobPosting j where j.postingStatus = 'Published' "
+                        + "and j.postingDate > :now", Map.of("now", now))),
+                new StatusCount("Paused", count("select count(j) from JobPosting j where j.postingStatus = 'Paused'", Map.of())),
+                new StatusCount("Closed", count("select count(j) from JobPosting j where j.postingStatus = 'Closed'", Map.of())));
+    }
+
+    public List<LocalDateTime> recentApplicationDates(LocalDateTime from, LocalDateTime to) {
+        return entityManager.createQuery("select a.submissionDate from Application a where " + FORMAL_FILTER
+                + " and a.submissionDate >= :from and a.submissionDate < :to", LocalDateTime.class)
+                .setParameter("from", from).setParameter("to", to).getResultList();
+    }
+
+    public List<LocalDateTime> upcomingDepartmentInterviewDates(Integer departmentId, LocalDateTime from,
+            LocalDateTime to) {
+        if (departmentId == null) {
+            return List.of();
+        }
+        return entityManager.createQuery("select i.startTime from InterviewSchedule i "
+                + "where i.application.jobPosting.requisition.department.departmentId = :departmentId "
+                + "and i.startTime >= :from and i.startTime < :to "
+                + "and i.interviewStatus in ('Scheduled', 'Rescheduled')", LocalDateTime.class)
+                .setParameter("departmentId", departmentId).setParameter("from", from).setParameter("to", to)
+                .getResultList();
+    }
+
+    public long upcomingInterviewsForDepartment(Integer departmentId, LocalDateTime now) {
+        if (departmentId == null) {
+            return 0;
+        }
+        return count("select count(i) from InterviewSchedule i "
+                + "where i.application.jobPosting.requisition.department.departmentId = :departmentId "
+                + "and i.startTime >= :now and i.interviewStatus in ('Scheduled', 'Rescheduled')",
+                Map.of("departmentId", departmentId, "now", now));
+    }
+
+    public List<DecisionRow> directorDecisions(int userId, LocalDateTime from, LocalDateTime to) {
+        List<DecisionRow> decisions = new ArrayList<>();
+        entityManager.createQuery("select a.status, a.approvalDate from RequisitionApproval a "
+                + "where a.director.userId = :userId and a.approvalDate >= :from and a.approvalDate < :to",
+                Object[].class).setParameter("userId", userId).setParameter("from", from).setParameter("to", to)
+                .getResultList().forEach(row -> decisions.add(new DecisionRow((String) row[0], (LocalDateTime) row[1])));
+        entityManager.createQuery("select a.status, a.approvedAt from OfferApproval a "
+                + "where a.director.userId = :userId and a.approvedAt >= :from and a.approvedAt < :to",
+                Object[].class).setParameter("userId", userId).setParameter("from", from).setParameter("to", to)
+                .getResultList().forEach(row -> decisions.add(new DecisionRow((String) row[0], (LocalDateTime) row[1])));
+        return decisions;
+    }
+
     public long upcomingInterviews(LocalDateTime now) {
         return count("select count(i) from InterviewSchedule i where i.startTime >= :now "
                 + "and i.interviewStatus in ('Scheduled', 'Rescheduled')", Map.of("now", now));
@@ -97,7 +193,7 @@ public class DashboardMetricsRepository {
     public long newApplicationsAwaitingHrReview() {
         return count("select count(a) from Application a where a.applicationStatus = 'Applied' "
                 + "and not exists (select r.reviewId from ApplicationReview r "
-                + "where r.application = a and r.reviewerRole = 'HR')", Map.of());
+                + "where r.application = a and r.reviewerRole = 'HR') and " + FORMAL_FILTER, Map.of());
     }
 
     public long ownRequisitions(int userId) {
@@ -113,23 +209,6 @@ public class DashboardMetricsRepository {
     public long ownPendingRequisitions(int userId) {
         return count("select count(r) from JobRequisition r where r.hiringManager.userId = :userId "
                 + "and r.approvalStatus = 'Pending_Director'", Map.of("userId", userId));
-    }
-
-    public long candidatesForOwnRequisitions(int userId) {
-        return count("select count(distinct a.candidate.candidateId) from Application a "
-                + "where a.jobPosting.requisition.hiringManager.userId = :userId and " + FORMAL_FILTER, Map.of("userId", userId));
-    }
-
-    public long upcomingInterviewsForHiringManager(int userId, LocalDateTime now) {
-        return count("select count(i) from InterviewSchedule i "
-                + "where i.application.jobPosting.requisition.hiringManager.userId = :userId "
-                + "and i.startTime >= :now and i.interviewStatus in ('Scheduled', 'Rescheduled')",
-                Map.of("userId", userId, "now", now));
-    }
-
-    public long offersNeedingHiringManagerAction(int userId) {
-        return count("select count(o) from OfferProposal o where o.proposedBy.userId = :userId "
-                + "and o.offerStatus in ('Draft', 'Approved')", Map.of("userId", userId));
     }
 
     public long requisitionsAwaitingDirector() {
@@ -176,6 +255,31 @@ public class DashboardMetricsRepository {
     public long pendingInterviewEvaluations(int userId) {
         return count("select count(p) from InterviewPanel p where p.interviewer.userId = :userId "
                 + "and p.interviewSchedule.interviewStatus = 'Completed' and not exists "
+                + "(select e.evaluationId from InterviewEvaluation e "
+                + "where e.interviewSchedule = p.interviewSchedule and e.interviewer.userId = :userId)",
+                Map.of("userId", userId));
+    }
+
+    /** Interviewer sees only schedules where they are a member of InterviewPanel. */
+    public List<StatusCount> assignedInterviewStatuses(int userId) {
+        return entityManager.createQuery("select p.interviewSchedule.interviewStatus, count(p) "
+                + "from InterviewPanel p where p.interviewer.userId = :userId "
+                + "group by p.interviewSchedule.interviewStatus", Object[].class)
+                .setParameter("userId", userId).getResultList().stream()
+                .map(row -> new StatusCount(row[0].toString(), (Long) row[1])).toList();
+    }
+
+    public List<LocalDateTime> upcomingAssignedInterviewDates(int userId, LocalDateTime from, LocalDateTime to) {
+        return entityManager.createQuery("select p.interviewSchedule.startTime from InterviewPanel p "
+                + "where p.interviewer.userId = :userId and p.interviewSchedule.startTime >= :from "
+                + "and p.interviewSchedule.startTime < :to "
+                + "and p.interviewSchedule.interviewStatus in ('Scheduled', 'Rescheduled')", LocalDateTime.class)
+                .setParameter("userId", userId).setParameter("from", from).setParameter("to", to).getResultList();
+    }
+
+    public long completedInterviewsEvaluatedBy(int userId) {
+        return count("select count(p) from InterviewPanel p where p.interviewer.userId = :userId "
+                + "and p.interviewSchedule.interviewStatus = 'Completed' and exists "
                 + "(select e.evaluationId from InterviewEvaluation e "
                 + "where e.interviewSchedule = p.interviewSchedule and e.interviewer.userId = :userId)",
                 Map.of("userId", userId));
@@ -285,6 +389,9 @@ public class DashboardMetricsRepository {
     }
 
     public record ApprovalActivity(String type, String title, String status, LocalDateTime at) {
+    }
+
+    public record DecisionRow(String status, LocalDateTime at) {
     }
 
     public record CandidateApplicationRow(int applicationId, String jobTitle, LocalDateTime submittedAt,
