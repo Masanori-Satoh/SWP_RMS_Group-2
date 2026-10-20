@@ -12,9 +12,11 @@ import com.group2.rms.dashboard.dto.DashboardResponse;
 public class DashboardController {
 
     private final DashboardService dashboardService;
+    private final DashboardChartService chartService;
 
-    public DashboardController(DashboardService dashboardService) {
+    public DashboardController(DashboardService dashboardService, DashboardChartService chartService) {
         this.dashboardService = dashboardService;
+        this.chartService = chartService;
     }
 
     @GetMapping("/")
@@ -26,6 +28,10 @@ public class DashboardController {
     public String dashboard(Authentication authentication, Model model) {
         DashboardResponse dashboard = dashboardService.forUsername(authentication.getName());
         model.addAttribute("dashboard", dashboard);
+        if ("HR".equals(dashboard.roleName()) || "Hiring Manager".equals(dashboard.roleName())
+                || "Director".equals(dashboard.roleName()) || "Interviewer".equals(dashboard.roleName())) {
+            model.addAttribute("dashboardCharts", chartService.forUsername(authentication.getName(), dashboard.roleName()));
+        }
         model.addAttribute("activeMenu", "dashboard");
         model.addAttribute("pageLang", "vi");
         return switch (dashboard.roleName()) {
