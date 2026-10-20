@@ -1,9 +1,215 @@
 /* =============================================================================
    PAGES/MY-APPLICATIONS.CSS — Hồ sơ đã ứng tuyển của ứng viên
    (/portal/applications, candidate/my-applications.html)
-   Chỉ chứa phần catalog chưa có: trạng thái rỗng, form rút đơn nằm trong ô bảng, ghi chú cuối bảng.
+   Chỉ chứa phần catalog chưa có: dải quy trình 4 vòng, thẻ đơn, thanh 4 chấm, khung hành trình,
+   trạng thái rỗng, ghi chú cuối trang.
+   Thanh 4 chấm khác stageBar (mode stepper) của catalog: vẫn nằm ngang trên điện thoại và tô được
+   "dừng ở vòng X" ngay tại vòng đó, nên để riêng trang. Trạng thái chấm dựa vào [data-state].
    Tiền tố class: myapp-
    ============================================================================= */
+
+/* ---- Dải quy trình đầu trang ---- */
+
+.myapp-process {
+  margin-bottom: var(--s6);
+}
+
+.myapp-process__list {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: var(--s3);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.myapp-process__item {
+  padding: var(--s4);
+  background-color: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md);
+}
+
+.myapp-process__num {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: var(--radius-full);
+  background-color: var(--brand-soft);
+  color: var(--brand-dark);
+  font-size: var(--font-sm);
+  font-weight: 600;
+}
+
+.myapp-process__title {
+  margin: var(--s2) 0 var(--s1);
+  font-size: var(--font-md);
+}
+
+.myapp-process__desc {
+  margin: 0;
+  color: var(--muted);
+  font-size: var(--font-sm);
+}
+
+/* ---- Thẻ đơn ---- */
+
+.myapp-list {
+  display: grid;
+  gap: var(--s4);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.myapp-card__head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--s4);
+}
+
+.myapp-card__job {
+  min-width: 0;
+}
+
+.myapp-card__title {
+  margin: 0;
+  font-size: var(--font-lg);
+  overflow-wrap: anywhere;
+}
+
+.myapp-card__meta {
+  margin: var(--s1) 0 0;
+  color: var(--muted);
+  font-size: var(--font-sm);
+}
+
+.myapp-card__status {
+  flex-shrink: 0;
+  max-width: 45%;
+  text-align: right;
+}
+
+.myapp-card__note {
+  margin: var(--s1) 0 0;
+  color: var(--muted);
+  font-size: var(--font-sm);
+}
+
+.myapp-card__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s2);
+  margin-bottom: var(--s4);
+}
+
+.myapp-withdraw-form {
+  margin: 0;
+}
+
+/* ---- Thanh 4 chấm: đường nối nằm ở ::before của mỗi vòng (trừ vòng đầu) ---- */
+
+.myapp-steps {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  margin: var(--s4) 0;
+  padding: 0;
+  list-style: none;
+}
+
+.myapp-steps__item {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--s1);
+  color: var(--muted);
+  font-size: var(--font-sm);
+  text-align: center;
+}
+
+.myapp-steps__item::before {
+  content: "";
+  position: absolute;
+  top: 6px;
+  left: -50%;
+  width: 100%;
+  height: 2px;
+  background-color: var(--line);
+}
+
+.myapp-steps__item:first-child::before {
+  display: none;
+}
+
+.myapp-steps__dot {
+  position: relative;
+  z-index: 1;
+  width: 14px;
+  height: 14px;
+  border: 2px solid var(--line);
+  border-radius: var(--radius-full);
+  background-color: var(--surface);
+}
+
+.myapp-steps__item[data-state="done"]::before,
+.myapp-steps__item[data-state="current"]::before,
+.myapp-steps__item[data-state="closed"]::before {
+  background-color: var(--brand);
+}
+
+.myapp-steps__item[data-state="done"] .myapp-steps__dot {
+  border-color: var(--brand);
+  background-color: var(--brand);
+}
+
+.myapp-steps__item[data-state="current"] {
+  color: var(--ink);
+  font-weight: 600;
+}
+
+.myapp-steps__item[data-state="current"] .myapp-steps__dot {
+  border-color: var(--brand);
+  box-shadow: 0 0 0 4px var(--brand-soft);
+}
+
+.myapp-steps__item[data-state="closed"] {
+  color: var(--error);
+  font-weight: 600;
+}
+
+.myapp-steps__item[data-state="closed"] .myapp-steps__dot {
+  border-color: var(--error);
+  background-color: var(--error);
+}
+
+/* ---- Hành trình (<details>, mở/đóng không cần JS) ---- */
+
+.myapp-journey {
+  padding-top: var(--s3);
+  border-top: 1px solid var(--line);
+}
+
+.myapp-journey__toggle {
+  color: var(--brand);
+  font-size: var(--font-sm);
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.myapp-journey__toggle:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
+}
+
+.myapp-journey__body {
+  margin-top: var(--s3);
+}
+
+/* ---- Trạng thái rỗng, ghi chú ---- */
 
 .myapp-empty {
   text-align: center;
@@ -18,11 +224,57 @@
   margin: 0;
 }
 
-.myapp-withdraw-form {
-  margin: 0;
-}
-
 .myapp-note {
   margin-top: var(--s4);
   font-size: 14px;
+}
+
+/* ---- Màn hẹp ---- */
+
+@media (max-width: 900px) {
+  .myapp-process__list {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 600px) {
+  .myapp-process__list {
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--s2);
+  }
+
+  /* Số và tên vòng cùng một dòng để dải quy trình không đẩy thẻ đơn xuống quá xa. */
+  .myapp-process__item {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    column-gap: var(--s3);
+    align-items: center;
+    padding: var(--s3);
+  }
+
+  .myapp-process__title {
+    margin: 0;
+  }
+
+  .myapp-process__desc {
+    grid-column: 2;
+  }
+
+  .myapp-card.card {
+    padding: var(--s4);
+  }
+
+  .myapp-card__head {
+    flex-direction: column;
+    gap: var(--s2);
+  }
+
+  .myapp-card__status {
+    max-width: none;
+    text-align: left;
+  }
+
+  .myapp-steps__item {
+    font-size: var(--font-xs);
+  }
 }

@@ -5,10 +5,12 @@
       layout:decorate="~{layout/internal}">
 <!--
     CANDIDATE/MY-APPLICATIONS.HTML — Hồ sơ đã ứng tuyển (/portal/applications, chỉ ứng viên; 5.1.38)
-    Chỉ hiện điều ứng viên cần biết: vị trí, ngày nộp, trạng thái. Không có điểm AI, nhận xét nội bộ (GBR-02).
-    Rút đơn: mỗi dòng một form POST thường; JS hỏi xác nhận bằng hộp thoại trước khi gửi.
-    Dựng bằng catalog: page-header, alert, table-wrapper, table, badge, btn, confirm-dialog.
-    CSS riêng: css/pages/my-applications.css (myapp-).
+    Đầu trang: dải quy trình 4 vòng (tĩnh). Mỗi đơn một thẻ: vị trí, ngày nộp, Status (badge + một dòng giải thích),
+    thanh 4 chấm (Stage), nút việc tiếp theo, hành trình trong <details> (mở/đóng không cần JS).
+    Chỉ hiện điều ứng viên được biết; không có điểm AI, nhận xét, người duyệt, offer nội bộ (GBR-02).
+    Rút đơn: mỗi thẻ một form POST thường; JS hỏi xác nhận bằng hộp thoại trước khi gửi.
+    Dựng bằng catalog: page-header, alert, card, badge, btn, timeline, confirm-dialog.
+    CSS riêng: css/pages/my-applications.css (myapp-). Trạng thái chấm dựa vào [data-state] (bẫy "__" của Thymeleaf).
 -->
 <head>
     <title>Hồ sơ đã ứng tuyển</title>
@@ -22,10 +24,36 @@
     <div class="page-header">
         <div>
             <h1 class="page-title">Hồ sơ đã ứng tuyển</h1>
-            <p class="page-subtitle">Theo dõi trạng thái các hồ sơ bạn đã nộp</p>
+            <p class="page-subtitle">Theo dõi từng hồ sơ đang ở vòng nào và việc bạn cần làm tiếp theo</p>
         </div>
         <a th:href="@{/jobs}" class="btn btn--outline">Xem vị trí đang tuyển</a>
     </div>
+
+    <section class="myapp-process" aria-labelledby="myapp-process-title">
+        <h2 id="myapp-process-title" class="sr-only">Quy trình tuyển dụng</h2>
+        <ol class="myapp-process__list">
+            <li class="myapp-process__item">
+                <span class="myapp-process__num" aria-hidden="true">1</span>
+                <h3 class="myapp-process__title">Nộp CV</h3>
+                <p class="myapp-process__desc">Bạn chọn vị trí phù hợp và nộp CV (PDF).</p>
+            </li>
+            <li class="myapp-process__item">
+                <span class="myapp-process__num" aria-hidden="true">2</span>
+                <h3 class="myapp-process__title">Xét CV</h3>
+                <p class="myapp-process__desc">Bộ phận tuyển dụng, rồi bộ phận chuyên môn xem CV. Bạn có thể rút đơn khi bộ phận tuyển dụng chưa duyệt.</p>
+            </li>
+            <li class="myapp-process__item">
+                <span class="myapp-process__num" aria-hidden="true">3</span>
+                <h3 class="myapp-process__title">Phỏng vấn</h3>
+                <p class="myapp-process__desc">Bạn nhận lịch hẹn tại "Lịch phỏng vấn".</p>
+            </li>
+            <li class="myapp-process__item">
+                <span class="myapp-process__num" aria-hidden="true">4</span>
+                <h3 class="myapp-process__title">Thư mời</h3>
+                <p class="myapp-process__desc">Bạn nhận thư mời nhận việc và trả lời trước hạn.</p>
+            </li>
+        </ol>
+    </section>
 
     <div th:if="${successMessage}" class="alert alert--success" role="status" th:text="${successMessage}">Đã rút hồ sơ.</div>
     <div th:if="${errorMessage}" class="alert alert--danger" role="alert" th:text="${errorMessage}">Không thể rút hồ sơ.</div>
@@ -35,41 +63,59 @@
         <p class="myapp-empty__desc text-muted">Hồ sơ bạn nộp sẽ hiện ở đây cùng trạng thái xử lý.</p>
     </div>
 
-    <div th:unless="${#lists.isEmpty(applications)}" class="table-wrapper">
-        <table class="table">
-            <caption class="sr-only">Các hồ sơ ứng tuyển của bạn</caption>
-            <thead>
-            <tr>
-                <th scope="col">Vị trí</th>
-                <th scope="col">Ngày nộp</th>
-                <th scope="col">Trạng thái</th>
-                <th scope="col">Thao tác</th>
-            </tr>
-            </thead>
-            <tbody>
-            <tr th:each="item : ${applications}">
-                <th scope="row">
-                    <a th:href="@{/jobs/{id}(id=${item.jobPostingId})}" th:text="${item.postingTitle}">Junior Java Developer</a>
-                </th>
-                <td>
-                    <time th:datetime="${#temporals.formatISO(item.submissionDate)}"
-                          th:text="${#temporals.format(item.submissionDate, 'dd/MM/yyyy')}">05/10/2026</time>
-                </td>
-                <td>
-                    <span class="badge" th:classappend="${'badge--' + item.statusTone}" th:text="${item.statusLabel}">Đã nộp hồ sơ</span>
-                </td>
-                <td>
+    <ul th:unless="${#lists.isEmpty(applications)}" class="myapp-list" aria-label="Các hồ sơ ứng tuyển của bạn">
+        <li th:each="item : ${applications}">
+            <article class="card myapp-card" th:attr="aria-labelledby=${'myapp-card-' + item.applicationId}">
+                <div class="myapp-card__head">
+                    <div class="myapp-card__job">
+                        <h2 class="myapp-card__title" th:id="${'myapp-card-' + item.applicationId}">
+                            <a th:href="@{/jobs/{id}(id=${item.jobPostingId})}" th:text="${item.postingTitle}">Junior Java Developer</a>
+                        </h2>
+                        <p class="myapp-card__meta">
+                            Nộp ngày
+                            <time th:datetime="${#temporals.formatISO(item.submissionDate)}"
+                                  th:text="${#temporals.format(item.submissionDate, 'dd/MM/yyyy')}">05/10/2026</time>
+                        </p>
+                    </div>
+                    <div class="myapp-card__status">
+                        <span class="badge" th:classappend="${'badge--' + item.statusTone}" th:text="${item.statusLabel}">Chờ xét CV</span>
+                        <p th:if="${item.statusNote != null}" class="myapp-card__note" th:text="${item.statusNote}">
+                            Bộ phận tuyển dụng đang xem CV của bạn.
+                        </p>
+                    </div>
+                </div>
+
+                <ol class="myapp-steps" aria-label="Vòng tuyển dụng của hồ sơ">
+                    <li th:each="step : ${item.steps}" class="myapp-steps__item" th:data-state="${step.state}"
+                        th:attr="aria-current=${step.state == 'current' or step.state == 'closed' ? 'step' : null}">
+                        <span class="myapp-steps__dot" aria-hidden="true"></span>
+                        <span class="myapp-steps__label" th:text="${step.label}">Xét CV</span>
+                        <span class="sr-only" th:text="${step.state == 'done' ? '(đã xong)'
+                                : step.state == 'current' ? '(đang ở vòng này)'
+                                : step.state == 'closed' ? '(dừng ở vòng này)' : '(chưa tới)'}">(đang ở vòng này)</span>
+                    </li>
+                </ol>
+
+                <div th:if="${item.canWithdraw or item.actionHref != null}" class="myapp-card__actions">
+                    <a th:if="${item.actionHref != null}" th:href="@{${item.actionHref}}" class="btn btn--sm"
+                       th:classappend="${item.statusTone == 'warning' ? 'btn--primary' : 'btn--outline'}"
+                       th:text="${item.actionLabel}">Xem lịch phỏng vấn</a>
                     <form th:if="${item.canWithdraw}" th:action="@{/portal/applications/{id}/withdraw(id=${item.applicationId})}"
                           method="post" class="myapp-withdraw-form" data-withdraw-form
                           th:attr="data-posting-title=${item.postingTitle}">
                         <button type="submit" class="btn btn--outline btn--sm">Rút đơn</button>
                     </form>
-                    <span th:unless="${item.canWithdraw}" class="text-muted">—</span>
-                </td>
-            </tr>
-            </tbody>
-        </table>
-    </div>
+                </div>
+
+                <details class="myapp-journey">
+                    <summary class="myapp-journey__toggle">Xem hành trình</summary>
+                    <div class="myapp-journey__body">
+                        <th:block th:replace="~{fragments/ui/timeline :: timeline(items=${item.journey})}"></th:block>
+                    </div>
+                </details>
+            </article>
+        </li>
+    </ul>
 
     <p th:unless="${#lists.isEmpty(applications)}" class="text-muted myapp-note">
         Bạn chỉ rút được hồ sơ khi bộ phận tuyển dụng chưa duyệt. Hồ sơ đã rút không nộp lại được cho cùng vị trí.
