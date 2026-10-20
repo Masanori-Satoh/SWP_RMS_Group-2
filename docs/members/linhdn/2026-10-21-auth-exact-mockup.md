@@ -64,3 +64,21 @@ Chỉ sửa `src/main/resources/static/css/auth.css` trong lượt này:
 Chạy lại native Chrome zoom 67–200%: **126 trường hợp auth + 21 trường hợp tham khảo đạt**, không tràn ngang, control không vượt Card, không lỗi JavaScript. Kiểm tra riêng phần lettering trong ảnh nằm dưới highlights và ảnh không bị tụt thấp ở zoom 100%. Cuộn tới submit ở 200% vẫn đạt. Kết quả `../.codex-tmp/auth-art-height-results.json`, ảnh `auth-art-height-*.png`.
 
 Đối chiếu 50 phần tử form và điều kiện Thymeleaf vẫn đạt; `git diff --check` đạt. Không chạy lại Maven cho lượt thay đổi thuần CSS này; sáu test auth đạt ở lần chạy trước. Không thay navbar, form, JavaScript, backend; không commit/push. Browser vẫn là preview Thymeleaf chỉ đọc như giới hạn đã nêu.
+
+## Sửa điểm neo khi zoom 67–100% (21/10/2026, quyết định hiện tại)
+
+Phần này thay thế cách chừa chiều cao ảnh và dịch ảnh 64px ở trên. Screenshot mới cho thấy hai lỗi mà các kiểm tra overflow trước chưa phản ánh: ảnh bám mép viewport nhưng form bám container căn giữa; form đăng nhập ngắn lại căn đầu giống form đăng ký dài, khiến toàn bộ ảnh nằm dưới form.
+
+Lượt này chỉ thay đổi frontend tại `static/css/auth.css`, `templates/auth/fragments.html` và cập nhật báo cáo này:
+
+- `.auth-stage` làm lưới bố cục chung; giữ kích thước cột và khoảng cách của mẫu. `.auth-shell` là wrapper `display: contents`, không thêm Card hoặc khung.
+- `.auth-story` dùng subgrid để phần chữ vẫn ở cột cũ, còn minh họa nối từ mép trái trang đến đúng ranh giới cột form. `.auth-story-content` chứa nội dung giới thiệu hiện có.
+- Fragment `artwork` nằm sau nội dung trong `story`, thay vì nằm absolute trong `scene`. Ảnh đi theo luồng nội dung, chiều cao tự nhiên; không dùng width theo viewport, cap 900px hoặc padding giả để cố định điểm rơi của ảnh. Giữ nguyên bitmap.
+- `.auth-card` căn giữa theo chiều cao cột trái cho các form ngắn; `.auth-register .auth-card` tiếp tục căn đầu. Mobile vẫn chuyển thành một cột, ảnh trang trí mờ như trước.
+- Giữ navbar chuẩn, token, form, validation, OTP, CSRF và toàn bộ backend. Không thêm thư viện hoặc script xử lý layout.
+
+Chrome native zoom được kiểm tra ở 67%, 75%, 80%, 90%, 100%, 125%, 150%, 200% tại 1280/1440/1920px, cộng mobile 390/320px: tổng 156 tổ hợp / 6 màn. Có ảnh khi cuộn tới nhãn field như screenshot phản hồi. Các assertion mới đo: mép trái ảnh bằng mép trang; mép phải ảnh bằng mép trái form; đầu ảnh nối ngay sau highlights; form đăng nhập có phần giao theo chiều dọc với ảnh; form dài hoặc lỗi validation không đẩy ảnh; đổi chiều cao cửa sổ 900 xuống 700px không làm ảnh đổi điểm neo.
+
+Kết quả và ảnh cuối ở `../.codex-tmp/auth-grid-anchor-results.json`, `auth-grid-*.png`. Test Thymeleaf/auth chạy lại: BUILD SUCCESS, 6 test đạt (`auth-grid-anchor-tests.log`); lần đổi căn giữa cuối chỉ là CSS. Đối chiếu 50 phần tử form và điều kiện Thymeleaf giữ nguyên. Browser dùng preview Thymeleaf chỉ đọc; chưa xác minh E2E với email/database thật. Không commit/push hoặc thay đổi staging của người dùng.
+
+Nghiệm thu cuối: 156 tổ hợp đạt; sai lệch mép phải ảnh với mép trái form đo được là 0px trên toàn bộ bố cục hai cột. Mép trái ảnh bằng 0px; đầu ảnh khớp đáy highlights trong sai số 0,000031px. Không lỗi JS hoặc tràn ngang. Đã xem ảnh chụp thực ở 67% và 100% sau thay đổi căn giữa form ngắn. Giới hạn bằng chứng: đây là native Chrome trên preview HTML Thymeleaf, chưa kiểm chứng trên phiên ứng dụng đang chạy của người dùng.

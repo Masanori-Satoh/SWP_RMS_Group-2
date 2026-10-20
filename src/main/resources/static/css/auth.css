@@ -14,9 +14,10 @@ body.auth-page {
   font-family: var(--sans);
 }
 .auth-container { width: min(calc(100% - var(--s16)), 1180px); margin-inline: auto; }
-.auth-stage { position: relative; isolation: isolate; overflow: clip; }
-.auth-shell { width: 1167px; max-width: calc(100% - var(--s12)); display: grid; grid-template-columns: minmax(0, 520px) minmax(0, 575px); gap: 72px; align-items: start; margin-inline: auto; padding-top: 77px; transform: translateX(26px); }
-.auth-story { min-width: 0; padding: 0 0 calc(min(339px, 19.605vw) - var(--s8)) var(--s8); margin-top: -9px; }
+.auth-stage { position: relative; isolation: isolate; overflow: clip; display: grid; grid-template-columns: minmax(24px, 1fr) 52px minmax(0, 520px) 72px 575px minmax(24px, 1fr); align-content: start; padding-top: 77px; }
+.auth-shell { display: contents; }
+.auth-story { grid-column: 1 / 5; grid-row: 1; align-self: start; min-width: 0; display: grid; grid-template-columns: subgrid; }
+.auth-story-content { grid-column: 3; min-width: 0; padding-left: var(--s8); margin-top: -9px; }
 .auth-brand-badge { align-self: flex-start; display: inline-flex; align-items: center; gap: var(--s3); padding: var(--s2) var(--s4); border: 1px solid var(--line); border-radius: var(--radius-full); color: var(--brand-dark); background: color-mix(in srgb, var(--brand-soft) 55%, var(--surface)); font-size: var(--font-sm); }
 .auth-brand-badge > span { width: 8px; height: 8px; border-radius: var(--radius-full); background: var(--brand); }
 .auth-statement { margin-block: var(--s8) var(--s6); font: 700 clamp(36px, 3.45vw, 50px)/1.14 var(--sans); letter-spacing: -.035em; text-wrap: balance; }
@@ -28,8 +29,8 @@ body.auth-page {
 .auth-highlights li { min-width: 0; display: grid; justify-items: center; align-content: start; gap: var(--s2); min-height: 83px; padding-inline: var(--s2); color: var(--muted); text-align: center; font-size: 14px; line-height: 1.35; }
 .auth-highlights li + li { border-left: 1px solid var(--line); }
 .auth-highlights .auth-icon { width: 29px; height: 29px; color: var(--brand); }
-.auth-card { min-width: 0; padding: 26px 38px 31px; border-radius: var(--radius-lg); }
-.auth-register .auth-card { min-height: 760px; }
+.auth-card { grid-column: 5; grid-row: 1; align-self: center; min-width: 0; padding: 26px 38px 31px; border-radius: var(--radius-lg); }
+.auth-register .auth-card { align-self: start; min-height: 760px; }
 .auth-card h1 { margin-bottom: var(--s3); font: 700 clamp(28px, 2.45vw, 35px)/1.25 var(--sans); letter-spacing: -.025em; text-wrap: balance; }
 .auth-intro { margin-bottom: var(--s8); color: var(--muted); line-height: 1.7; text-wrap: pretty; }
 .auth-form { display: grid; gap: 23px 17px; }
@@ -90,12 +91,12 @@ body.auth-page {
 .auth-page button, .auth-page a { touch-action: manipulation; }
 .auth-page a, .auth-page p, .auth-page li { overflow-wrap: anywhere; }
 .auth-visually-hidden { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; border: 0; }
-/* Anchor the artwork to content height instead of a fixed-height stage.
-   Its existing faded top edge may meet the highlights; the image lettering stays below them. */
+/* The artwork shares the form's grid boundary and follows the story row.
+   It can extend into the outer gutter without drifting away from the form at zoom. */
 .auth-scene { position: absolute; inset: 0; z-index: -1; overflow: hidden; pointer-events: none; background: radial-gradient(ellipse 59% 54% at 49% 26%, color-mix(in srgb, var(--brand-soft) 55%, var(--surface)), transparent 86%), radial-gradient(ellipse 60% 62% at 93% 78%, var(--brand-soft), transparent); }
 .auth-scene::before { content: ""; position: absolute; left: -15%; right: -15%; bottom: -207px; height: 400px; border-radius: 53% 63% 0 0 / 75% 85% 0 0; transform: rotate(-5deg); background: linear-gradient(105deg, color-mix(in srgb, var(--brand-soft) 30%, transparent), color-mix(in srgb, var(--brand-soft) 80%, transparent)); }
 .auth-scene::after { content: ""; position: absolute; right: -12%; bottom: -120px; width: 72%; height: 355px; border-radius: 64% 42% 0 0 / 72% 58% 0 0; transform: rotate(-6deg); background: color-mix(in srgb, var(--brand-soft) 65%, transparent); }
-.auth-botanical-art { position: absolute; left: 0; bottom: 0; width: min(900px, 52.05vw); margin: 0; z-index: 1; }
+.auth-botanical-art { grid-column: 1 / -1; grid-row: 2; align-self: start; width: 100%; min-width: 0; margin: 0; z-index: -1; pointer-events: none; }
 .auth-botanical-art img { display: block; width: 100%; height: auto; }
 .auth-floating-leaf { position: absolute; color: var(--brand); opacity: .25; width: 28px; }
 .auth-floating-leaf .auth-icon { width: 100%; height: auto; }
@@ -103,28 +104,27 @@ body.auth-page {
 .auth-floating-leaf--two { left: 49.6%; top: 47%; transform: rotate(18deg); }
 .auth-floating-leaf--three { right: 1.6%; top: 54%; transform: rotate(13deg); }
 @media (max-width: 1350px) {
-  .auth-shell { width: min(1080px, calc(100% - var(--s16))); max-width: none; grid-template-columns: minmax(0, 1fr) minmax(0, 535px); gap: 35px; transform: none; }
-  .auth-story { padding-left: 0; padding-bottom: calc(min(308.87px, 24.107vw) - var(--s8)); }
+  .auth-stage { grid-template-columns: minmax(32px, 1fr) 0px minmax(0, 510px) 35px 535px minmax(32px, 1fr); }
+  .auth-story-content { padding-left: 0; }
   .auth-statement { font-size: 43px; }
   .auth-register .auth-card { min-height: auto; }
-  .auth-botanical-art { width: min(64vw, 820px); }
 }
 @media (max-width: 1050px) {
-  .auth-shell { width: calc(100% - var(--s12)); grid-template-columns: minmax(0, 1fr) minmax(0, 480px); gap: 25px; padding-top: 42px; }
-  .auth-story { padding-bottom: calc(21.847vw - var(--s8)); }
+  .auth-stage { grid-template-columns: 24px 0px minmax(0, 1fr) 25px 480px 24px; padding-top: 42px; }
   .auth-statement { font-size: 37px; }
   .auth-story-copy { font-size: 14px; }
   .auth-card { padding: 27px; }
   .auth-card h1 { font-size: 30px; }
-  .auth-botanical-art { width: 58vw; }
 }
 @media (max-width: 800px) {
-  .auth-shell { width: min(610px, calc(100% - var(--s8))); grid-template-columns: minmax(0, 1fr); gap: 28px; padding-block: 34px 42px; }
-  .auth-story { padding: 0; margin: 0; }
+  .auth-stage { grid-template-columns: minmax(16px, 1fr) minmax(0, 610px) minmax(16px, 1fr); grid-template-rows: auto auto; row-gap: 28px; padding-block: 34px 42px; }
+  .auth-story { grid-column: 2; }
+  .auth-story-content { grid-column: 1; padding: 0; margin: 0; }
+  .auth-card { grid-column: 2; grid-row: 2; }
   .auth-statement { font-size: 40px; margin-block: 22px 17px; }
   .auth-highlights { margin-top: 22px; }
   .auth-highlights li { font-size: var(--font-xs); }
-  .auth-botanical-art { width: 100%; opacity: .22; }
+  .auth-botanical-art { position: absolute; left: 0; bottom: 0; width: 100%; opacity: .22; }
   .auth-floating-leaf { opacity: .15; }
 }
 @media (max-width: 470px) {

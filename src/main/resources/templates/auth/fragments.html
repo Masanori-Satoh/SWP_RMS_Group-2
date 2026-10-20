@@ -23,6 +23,7 @@
     <header th:replace="~{fragments/layout/public-topbar :: topbar('', false)}"></header>
   </th:block>
   <aside class="auth-story" th:fragment="story" aria-label="Làm việc tại Mộc">
+    <div class="auth-story-content">
     <p class="auth-brand-badge"><span aria-hidden="true"></span>Cơ hội nghề nghiệp tại Mộc</p>
     <p class="auth-statement">Làm việc cùng Mộc.<br><span>Kết nối tài năng,<br>kiến tạo giá trị thật.</span></p>
     <p class="auth-story-copy">Mộc phát triển phần mềm quản trị tuyển dụng minh bạch và tinh gọn. Cùng chúng tôi xây
@@ -35,16 +36,17 @@
         <li><svg th:replace="~{auth/fragments :: icon('leaf')}"></svg><span>Phát triển<br>cùng đội ngũ trẻ</span></li>
       </ul>
     </th:block>
+    </div>
+    <figure th:replace="~{auth/fragments :: artwork}"></figure>
   </aside>
   <div class="auth-scene" th:fragment="scene" aria-hidden="true">
-    <figure class="auth-botanical-art" aria-hidden="true">
-      <img th:src="@{/images/auth-register-scene.png}" width="900" height="339" alt="" decoding="async">
-    </figure>
-
     <span class="auth-floating-leaf auth-floating-leaf--one"><svg th:replace="~{auth/fragments :: icon('leaf')}"></svg></span>
     <span class="auth-floating-leaf auth-floating-leaf--two"><svg th:replace="~{auth/fragments :: icon('leaf')}"></svg></span>
     <span class="auth-floating-leaf auth-floating-leaf--three"><svg th:replace="~{auth/fragments :: icon('leaf')}"></svg></span>
   </div>
+  <figure class="auth-botanical-art" th:fragment="artwork" aria-hidden="true">
+    <img th:src="@{/images/auth-register-scene.png}" width="900" height="339" alt="" decoding="async">
+  </figure>
   <svg th:fragment="icon(name)" class="auth-icon" width="20" height="20" viewBox="0 0 24 24" fill="none"
     stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"
     focusable="false">
