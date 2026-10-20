@@ -17,7 +17,14 @@
   margin-left: 0;
 }
 
-/* ---- Topbar ứng viên: logo | menu 2 mục | góc người dùng ---- */
+/* ---- Topbar ứng viên: logo | menu | góc người dùng ---- */
+/* Avatar chữ cái: nền xanh nhạt, chữ xanh đậm vừa, viền xanh nhẹ (chỉ topbar ứng viên; topbar.css không đổi). */
+.candidate-topbar .workspace-avatar-fallback {
+  border-color: color-mix(in srgb, var(--brand) 30%, var(--surface));
+  background: var(--brand-soft);
+  color: var(--brand-dark);
+  font-weight: 600;
+}
 .candidate-topbar__nav {
   display: flex;
   flex: 1;

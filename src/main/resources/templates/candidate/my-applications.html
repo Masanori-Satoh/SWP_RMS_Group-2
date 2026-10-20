@@ -24,7 +24,7 @@
     </th:block>
 </head>
 <body>
-<main id="main" layout:fragment="content" class="page-content container" tabindex="-1">
+<main id="main" layout:fragment="content" class="page-content container myapp-page" tabindex="-1">
 
     <div class="page-header">
         <div>
@@ -34,13 +34,22 @@
 
     </div>
 
+    <!-- data-phase: current (đang có hồ sơ ở bước này: viền + nền xanh thương hiệu), done (đã qua: viền xám, dấu tích),
+         todo (chưa tới: chữ và viền nhạt). Bước 1 "đã qua" khi đã nộp ít nhất một đơn, chưa nộp đơn nào thì là việc cần làm ngay. -->
     <section class="myapp-guide" aria-labelledby="myapp-guide-title">
         <h2 id="myapp-guide-title" class="sr-only">Các bước tuyển dụng</h2>
         <ol class="myapp-guide__list">
             <li class="myapp-guide__item">
-                <a class="myapp-guide__step" th:href="@{/jobs}" title="Tìm vị trí để nộp CV">
-                    <span class="myapp-guide__icon"><svg th:replace="~{candidate/my-application-icons :: icon('step-1')}"></svg></span>
-                    <span class="myapp-guide__num">Bước 1</span>
+                <a class="myapp-guide__step" th:href="@{/jobs}" title="Tìm vị trí để nộp CV"
+                   th:data-phase="${totalApplications > 0 ? 'done' : 'current'}">
+                    <span class="myapp-guide__head">
+                        <span class="myapp-guide__icon"><svg th:replace="~{candidate/my-application-icons :: icon('step-1')}"></svg></span>
+                        <span class="myapp-guide__num">Bước 1</span>
+                        <span th:if="${totalApplications > 0}" class="myapp-guide__done" title="Đã qua">
+                            <svg th:replace="~{candidate/my-application-icons :: icon('check')}"></svg>
+                            <span class="sr-only">(đã qua)</span>
+                        </span>
+                    </span>
                     <h3 class="myapp-guide__title">Nộp CV</h3>
                     <p class="myapp-guide__desc">Chọn vị trí và nộp CV (PDF).</p>
                     <span class="myapp-guide__cta">Tìm vị trí tại đây &rarr;</span>
@@ -48,41 +57,48 @@
             </li>
             <li class="myapp-guide__item">
                 <a class="myapp-guide__step" th:href="${selectedStep == 2} ? @{/portal/applications} : @{/portal/applications(step=2)}"
-                   th:data-count="${stepCounts[2]}"
+                   th:data-count="${stepCounts[2]}" th:data-phase="${stepCounts[2] > 0 ? 'current' : 'todo'}"
                    th:attr="aria-current=${selectedStep == 2 ? 'true' : null}"
                    th:title="${selectedStep == 2 ? 'Bỏ lọc' : 'Xem hồ sơ ở bước này'}">
-                    <span class="myapp-guide__icon"><svg th:replace="~{candidate/my-application-icons :: icon('step-2')}"></svg></span>
-                    <span class="myapp-guide__count" th:text="${stepCounts[2] + ' hồ sơ'}">1 hồ sơ</span>
-                    <span class="myapp-guide__num">Bước 2</span>
+                    <span class="myapp-guide__head">
+                        <span class="myapp-guide__icon"><svg th:replace="~{candidate/my-application-icons :: icon('step-2')}"></svg></span>
+                        <span class="myapp-guide__num">Bước 2</span>
+                        <span class="myapp-guide__count" th:text="${stepCounts[2] + ' hồ sơ'}">1 hồ sơ</span>
+                    </span>
                     <h3 class="myapp-guide__title">Xét CV</h3>
                     <p class="myapp-guide__desc">HR và Trưởng phòng tuyển dụng sẽ xem xét CV. Bạn có thể rút đơn khi hồ sơ chưa được duyệt.</p>
                 </a>
             </li>
             <li class="myapp-guide__item">
                 <a class="myapp-guide__step" th:href="${selectedStep == 3} ? @{/portal/applications} : @{/portal/applications(step=3)}"
-                   th:data-count="${stepCounts[3]}"
+                   th:data-count="${stepCounts[3]}" th:data-phase="${stepCounts[3] > 0 ? 'current' : 'todo'}"
                    th:attr="aria-current=${selectedStep == 3 ? 'true' : null}"
                    th:title="${selectedStep == 3 ? 'Bỏ lọc' : 'Xem hồ sơ ở bước này'}">
-                    <span class="myapp-guide__icon"><svg th:replace="~{candidate/my-application-icons :: icon('step-3')}"></svg></span>
-                    <span class="myapp-guide__count" th:text="${stepCounts[3] + ' hồ sơ'}">1 hồ sơ</span>
-                    <span class="myapp-guide__num">Bước 3</span>
+                    <span class="myapp-guide__head">
+                        <span class="myapp-guide__icon"><svg th:replace="~{candidate/my-application-icons :: icon('step-3')}"></svg></span>
+                        <span class="myapp-guide__num">Bước 3</span>
+                        <span class="myapp-guide__count" th:text="${stepCounts[3] + ' hồ sơ'}">1 hồ sơ</span>
+                    </span>
                     <h3 class="myapp-guide__title">Phỏng vấn</h3>
                     <p class="myapp-guide__desc">Nhận lịch hẹn, giờ và địa điểm ngay trên thẻ đơn.</p>
                 </a>
             </li>
             <li class="myapp-guide__item">
                 <a class="myapp-guide__step" th:href="${selectedStep == 4} ? @{/portal/applications} : @{/portal/applications(step=4)}"
-                   th:data-count="${stepCounts[4]}"
+                   th:data-count="${stepCounts[4]}" th:data-phase="${stepCounts[4] > 0 ? 'current' : 'todo'}"
                    th:attr="aria-current=${selectedStep == 4 ? 'true' : null}"
                    th:title="${selectedStep == 4 ? 'Bỏ lọc' : 'Xem hồ sơ ở bước này'}">
-                    <span class="myapp-guide__icon"><svg th:replace="~{candidate/my-application-icons :: icon('step-4')}"></svg></span>
-                    <span class="myapp-guide__count" th:text="${stepCounts[4] + ' hồ sơ'}">1 hồ sơ</span>
-                    <span class="myapp-guide__num">Bước 4</span>
+                    <span class="myapp-guide__head">
+                        <span class="myapp-guide__icon"><svg th:replace="~{candidate/my-application-icons :: icon('step-4')}"></svg></span>
+                        <span class="myapp-guide__num">Bước 4</span>
+                        <span class="myapp-guide__count" th:text="${stepCounts[4] + ' hồ sơ'}">1 hồ sơ</span>
+                    </span>
                     <h3 class="myapp-guide__title">Thư mời</h3>
                     <p class="myapp-guide__desc">Nhận thư mời và trả lời trước hạn.</p>
                 </a>
             </li>
         </ol>
+
     </section>
 
     <div th:if="${successMessage}" class="alert alert--success" role="status" th:text="${successMessage}">Đã rút hồ sơ.</div>
@@ -95,13 +111,12 @@
 
     <th:block th:if="${totalApplications > 0}">
         <div class="myapp-list-head">
-            <h2 class="myapp-list-heading" th:if="${selectedStep == null}">
-                Hồ sơ của bạn <span class="myapp-list-heading__count" th:text="${totalApplications}">4</span>
-            </h2>
-            <h2 class="myapp-list-heading" th:if="${selectedStep != null}">
-                <span th:text="${'Hồ sơ ở Bước ' + selectedStep + ' · '
+            <h2 class="myapp-list-heading">
+                <span th:if="${selectedStep == null}">Hồ sơ của bạn</span>
+                <span th:if="${selectedStep != null}" th:text="${'Hồ sơ ở Bước ' + selectedStep + ' · '
                         + (selectedStep == 2 ? 'Xét CV' : selectedStep == 3 ? 'Phỏng vấn' : 'Thư mời')}">Hồ sơ ở Bước 3 · Phỏng vấn</span>
-                <span class="myapp-list-heading__count" th:text="${#lists.size(applications)}">1</span>
+                <span class="myapp-list-heading__count"
+                      th:text="${(selectedStep == null ? totalApplications : #lists.size(applications)) + ' hồ sơ'}">4 hồ sơ</span>
             </h2>
             <a th:if="${selectedStep != null}" th:href="@{/portal/applications}" class="myapp-clear-filter">
                 <svg th:replace="~{candidate/my-application-icons :: icon('close')}"></svg>
@@ -153,7 +168,12 @@
 
                     <div class="myapp-card__side">
                         <div class="myapp-card__status" th:data-tone="${item.statusTone}">
-                            <p class="myapp-card__status-label" th:text="${item.statusLabel}">Phỏng vấn 10:00 24/11</p>
+                            <!-- Đơn tự rút: nhãn bo tròn xám để tách khỏi đơn đang chạy (chữ lấy từ MyApplicationJourney) -->
+                            <p class="myapp-card__status-label">
+                                <span th:if="${item.statusLabel == 'Đã tự rút hồ sơ'}" class="badge myapp-badge-withdrawn"
+                                      th:text="${item.statusLabel}">Đã tự rút hồ sơ</span>
+                                <th:block th:unless="${item.statusLabel == 'Đã tự rút hồ sơ'}" th:text="${item.statusLabel}">Phỏng vấn 10:00 24/11</th:block>
+                            </p>
                             <p th:if="${item.statusNote != null}" class="myapp-card__note" th:text="${item.statusNote}">
                                 Tại văn phòng. Xem chi tiết ở Lịch phỏng vấn.
                             </p>

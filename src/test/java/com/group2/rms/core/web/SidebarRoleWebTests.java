@@ -68,7 +68,7 @@ class SidebarRoleWebTests {
     @MockitoBean ApplicationReviewService reviewService;
     @MockitoBean com.group2.rms.candidate.service.TalentPoolService talentPool;
 
-    /** Ứng viên không có sidebar: menu nằm trên topbar ứng viên (dunglt chốt 2026-10-20), không lộ link của HR. */
+    /** Ứng viên không có sidebar mà dùng topbar ứng viên (dunglt chốt 2026-10-20; menu topbar để trống), không lộ link của HR. */
     @Test
     void candidatePagesDrawCandidateTopbarInsteadOfSidebar() throws Exception {
         User candidate = account("an.vo", "Candidate");
@@ -81,8 +81,7 @@ class SidebarRoleWebTests {
             String html = render(page, as(candidate));
             assertFalse(html.contains("<nav class=\"sidebar-menu-list\""), page + ": ứng viên không còn sidebar");
             String nav = cut(html, "<nav class=\"candidate-topbar__nav\"", page + ": không có menu ứng viên trên topbar");
-            assertTrue(nav.contains("href=\"/jobs\""), page);
-            assertTrue(nav.contains("href=\"/portal/applications\""), page);
+
             assertFalse(nav.contains("href=\"/applications\""), page + ": lộ menu HR /applications");
             assertFalse(nav.contains("href=\"/offers\""), page + ": lộ menu HR /offers");
         }
