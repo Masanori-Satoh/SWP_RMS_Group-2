@@ -164,7 +164,7 @@ public class RequisitionListService {
         // Trạng thái duyệt: không lọc sẵn cho role nào (Director vào trang cũng thấy tất cả)
         List<String> statuses = null;
         if (options.showStatus()) {
-            statuses = ListFilters.keepAllowedValues(raw.status(), options.statuses());
+            statuses = ListFilters.keepAllowedValues(raw.status(), options.statuses()).stream().limit(1).toList();
         }
 
         // Các ô lọc một giá trị: chỉ giữ khi role có ô đó và giá trị nằm trong danh sách lựa chọn

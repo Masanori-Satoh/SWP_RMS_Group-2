@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<body>
+<!-- Thông báo sau khi thao tác (flash): khung nổi góc phải, thanh ngang phía dưới đếm ngược 3 giây rồi tự tắt.
+     Dùng chung cho Yêu cầu tuyển dụng và Tin tuyển dụng. Cần kèm css/pages/flash-toast.css + js/pages/flash-toast.js.
+     Không có JS thì thông báo vẫn hiện, chỉ không tự tắt. -->
+<div th:fragment="flashToast(success, error)" class="flash-toasts" th:if="${success != null or error != null}">
+    <div class="flash-toast flash-toast--success" role="status" th:if="${success}" data-flash-toast>
+        <span class="flash-toast-progress" aria-hidden="true"></span>
+        <p class="flash-toast-text" th:text="${success}">Đã lưu thành công.</p>
+        <button type="button" class="flash-toast-close" aria-label="Đóng thông báo" data-flash-close>&times;</button>
+    </div>
+    <div class="flash-toast flash-toast--error" role="alert" th:if="${error}" data-flash-toast>
+        <span class="flash-toast-progress" aria-hidden="true"></span>
+        <p class="flash-toast-text" th:text="${error}">Không thể lưu.</p>
+        <button type="button" class="flash-toast-close" aria-label="Đóng thông báo" data-flash-close>&times;</button>
+    </div>
+</div>
+</body>
+</html>

@@ -33,9 +33,6 @@
                     <span class="jpf-code" th:text="*{requisitionCode}">REQ-0020</span>
                     <span th:text="*{departmentName}">Sales &amp; Marketing</span>
                     <span th:if="*{numberOfPositions != null}" th:text="|*{numberOfPositions} người|">2 người</span>
-                    <span th:if="*{expectedStartDate != null}"
-                        th:text="|Bắt đầu ${#temporals.format(postingDto.expectedStartDate, 'dd/MM/yyyy')}|">Bắt đầu
-                        20/11/2026</span>
                     <span class="jpf-pno" th:text="|Tin lần *{postingNo}|">Tin lần 1</span>
                 </div>
                 <!-- Thông tin còn lại của yêu cầu, gồm Lý do tuyển dụng (nội bộ, không đưa vào tin công khai) -->
@@ -90,7 +87,7 @@
 
         <form id="posting-form" class="jpf-form" method="post" th:object="${postingDto}" novalidate
             th:action="${isEdit} ? @{/internal/job-postings/{id}/edit(id=*{jobPostingId})} : @{/internal/job-postings/create}"
-            th:data-today="${today}" th:data-start="*{expectedStartDate}" th:data-salary-range="*{salaryRangeLabel}"
+            th:data-today="${today}" th:data-salary-range="*{salaryRangeLabel}"
             th:data-employment="*{employmentType}" th:data-work-model="*{workModel}"
             th:data-department="*{departmentName}" th:data-max-schedule-days="${maxScheduleDays}"
             th:data-draft="${draftOrNew}">

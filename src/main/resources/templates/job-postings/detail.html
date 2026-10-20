@@ -17,11 +17,8 @@
 <main id="main" layout:fragment="content" class="page-content container" tabindex="-1"
       th:with="p=${posting}, applicationsUrl=@{/applications(jobPostingId=${posting.jobPostingId})}">
 
-    <nav class="jpd-crumbs" aria-label="Đường dẫn">
-        <a th:href="@{/internal/job-postings}">Tin tuyển dụng</a> / <span th:text="${p.postingTitle}">Product Owner</span>
-    </nav>
     <!-- Thông báo sau thao tác: khung nổi góc phải, tự tắt sau 3 giây (dùng chung với màn Yêu cầu) -->
-    <th:block th:replace="~{fragments/requisition :: flashToast(${successMessage ?: message}, ${errorMessage})}"></th:block>
+    <th:block th:replace="~{fragments/ui/flash-toast :: flashToast(${successMessage ?: message}, ${errorMessage})}"></th:block>
 
     <!-- ===== 1. ĐẦU TRANG: tiêu đề + nút theo trạng thái ===== -->
     <header class="jpd-head">
@@ -85,11 +82,6 @@
     </div>
     <div class="jpd-banner jpd-banner--warning" th:if="${p.pausedBanner}" role="status">
         <p><strong>Đang tạm dừng nhận hồ sơ.</strong> Tin bị ẩn khỏi trang tuyển dụng. Hồ sơ đã nộp vẫn được xử lý bình thường.</p>
-    </div>
-    <div class="jpd-banner jpd-banner--muted" th:if="${p.closedBanner}" role="status">
-        <p><strong th:text="|Tin đã đóng ngày ${#temporals.format(p.closedAt != null ? p.closedAt : p.applicationDeadline, 'dd/MM/yyyy')}.|">Tin đã đóng ngày 24/10/2026.</strong>
-            Không nhận thêm hồ sơ.
-            <span th:if="${p.repostable}">Nếu chưa tuyển đủ, bấm "Đăng lại" để tạo tin lần mới từ cùng yêu cầu.</span></p>
     </div>
     <div class="jpd-banner jpd-banner--warning" role="status"
          th:if="${p.deadlineSoonBanner}">
@@ -200,30 +192,12 @@
         <!-- ===== 5. CỘT PHẢI ===== -->
         <aside class="jpd-rail" aria-label="Thông tin bổ sung">
             <section class="card jpd-sec">
-                <h3>Thông tin tin</h3>
-                <dl class="jpd-kv">
-                    <div><dt>Ngày đăng</dt><dd th:text="${p.postingDate != null ? #temporals.format(p.postingDate, 'dd/MM/yyyy HH:mm') : 'Chưa đăng'}">01/10/2026</dd></div>
-                    <div><dt>Hạn nộp</dt><dd>
-                        <span th:if="${p.applicationDeadline == null}">Chưa có</span>
-                        <th:block th:if="${p.applicationDeadline != null}">
-                            <span th:text="${#temporals.format(p.applicationDeadline, 'dd/MM/yyyy')}">24/10/2026</span>
-                            <span th:if="${p.deadlineCountdown}" class="jpd-muted" th:text="|· còn ${p.daysUntilDeadline} ngày|">· còn 7 ngày</span>
-                            <span th:if="${p.deadlineOverdue}" class="jpd-over">· quá hạn</span>
-                        </th:block></dd></div>
-                    <div><dt>Người tạo</dt><dd th:text="${p.createdByName}">Lê Thị Mai Lan</dd></div>
-                    <div><dt>Tạo lúc</dt><dd th:text="${p.createdAt != null ? #temporals.format(p.createdAt, 'dd/MM/yyyy HH:mm') : '—'}">30/09/2026</dd></div>
-                    <div><dt>Cập nhật</dt><dd th:text="${p.updatedAt != null ? #temporals.format(p.updatedAt, 'dd/MM/yyyy HH:mm') : '—'}">02/10/2026</dd></div>
-                </dl>
-            </section>
-
-            <section class="card jpd-sec">
                 <h3>Yêu cầu tuyển dụng</h3>
                 <dl class="jpd-kv">
                     <div><dt>Mã</dt><dd class="jpd-code" th:text="${p.requisitionCode}">REQ-0016</dd></div>
                     <div><dt>Vị trí</dt><dd th:text="${p.requisitionTitle}">Product Owner</dd></div>
                     <div><dt>Số lượng cần</dt><dd th:text="${p.numberOfPositions != null ? p.numberOfPositions + ' người' : '—'}">1 người</dd></div>
                     <div><dt>Hiring Manager</dt><dd th:text="${p.hiringManagerName}">Lê Thu Trang</dd></div>
-                    <div><dt>Bắt đầu dự kiến</dt><dd th:text="${p.expectedStartDate != null ? #temporals.format(p.expectedStartDate, 'dd/MM/yyyy') : '—'}">15/11/2026</dd></div>
                 </dl>
                 <a class="jpd-link" th:if="${p.requisitionId != null}" th:href="@{/requisitions/{id}(id=${p.requisitionId})}">Xem yêu cầu gốc →</a>
             </section>
@@ -239,23 +213,6 @@
                         <span th:if="${hrRecommendationCount != null and hrRecommendationCount > 0}" class="badge badge--warning"
                               th:text="${hrRecommendationCount}">2</span></a>
                 </div>
-            </section>
-
-            <section class="card jpd-sec" th:if="${!#lists.isEmpty(p.rounds)}">
-                <h3>Các lần đăng</h3>
-                <ul class="jpd-rounds">
-                    <li th:each="round : ${p.rounds}" th:classappend="${round.current} ? 'is-current'">
-                        <span class="jpd-round-no" th:text="|#${round.postingNo}|">#1</span>
-                        <span class="jpd-round-main">
-                            <a th:unless="${round.current}" th:href="@{/internal/job-postings/{id}(id=${round.jobPostingId})}"
-                               th:text="${round.postingDate != null ? #temporals.format(round.postingDate, 'dd/MM/yyyy') : 'Chưa đăng'} + ' – ' + ${round.deadline != null ? #temporals.format(round.deadline, 'dd/MM/yyyy') : '…'}">20/08/2026 – 30/09/2026</a>
-                            <span th:if="${round.current}"
-                                  th:text="${round.postingDate != null ? #temporals.format(round.postingDate, 'dd/MM/yyyy') : 'Chưa đăng'} + ' – ' + ${round.deadline != null ? #temporals.format(round.deadline, 'dd/MM/yyyy') : '…'}">01/10/2026 – 24/10/2026</span>
-                            <small class="jpd-muted" th:text="${round.current} ? 'Tin đang xem' : |${round.applications} hồ sơ · tuyển ${round.hired}|">23 hồ sơ · tuyển 0</small>
-                        </span>
-                        <span class="badge" th:classappend="|badge--${round.statusTone}|" th:text="${round.statusLabel}">Đã đóng</span>
-                    </li>
-                </ul>
             </section>
 
             <section class="card jpd-sec">

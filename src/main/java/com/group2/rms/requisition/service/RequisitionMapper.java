@@ -82,7 +82,6 @@ public class RequisitionMapper {
                 .workLocation(jobRequisition.getWorkLocation())
                 .workModel(jobRequisition.getWorkModel())
                 .probationDays(jobRequisition.getProbationDays())
-                .expectedStartDate(jobRequisition.getExpectedStartDate())
                 .reasonForHiring(jobRequisition.getReasonForHiring())
                 .jobDescription(jobRequisition.getJobDescription())
                 .requirementDetails(jobRequisition.getRequirementDetails())
@@ -124,8 +123,7 @@ public class RequisitionMapper {
                 .recruitmentRound(jobRequisition.getRecruitmentRound())
                 .requisitionCode(requisitionCode)
                 .createdAt(jobRequisition.getCreatedAt())
-                .workLocation(jobRequisition.getWorkLocation())
-                .expectedStartDate(jobRequisition.getExpectedStartDate());
+                .workLocation(jobRequisition.getWorkLocation());
 
         // Tin tuyển dụng mới nhất (nếu có)
         String postingStatus = null;
@@ -180,10 +178,6 @@ public class RequisitionMapper {
         if (RequisitionAccess.STATUS_PENDING_DIRECTOR.equals(approvalStatus) && jobRequisition.getSubmittedAt() != null) {
             waitingDays = ChronoUnit.DAYS.between(jobRequisition.getSubmittedAt().toLocalDate(), today);
         }
-        Long daysUntilStart = null;
-        if (jobRequisition.getExpectedStartDate() != null) {
-            daysUntilStart = ChronoUnit.DAYS.between(today, jobRequisition.getExpectedStartDate());
-        }
 
         // Bị trả lại: lý do là ý kiến của lần duyệt mới nhất
         List<ApprovalResponse> approvals = toApprovalResponses(approvalHistory);
@@ -208,7 +202,6 @@ public class RequisitionMapper {
                 .requirementDetailsHtml(RequisitionLabels.multilineHtml(jobRequisition.getRequirementDetails()))
                 .submittedAt(jobRequisition.getSubmittedAt())
                 .waitingDays(waitingDays)
-                .daysUntilStart(daysUntilStart)
                 .approvals(approvals)
                 .activityLog(toActivityResponses(activityLogs))
                 .rejectionReason(rejectionReason)

@@ -24,13 +24,13 @@ Trình duyệt ──► SecurityConfig (lớp 1: có được vào URL không?)
 |---|---|---|---|
 | `GET /requisitions` | `list` | `getListPage` | (chỉ đọc) |
 | `GET /requisitions/create` | `createForm` | (không) | |
-| `POST /requisitions/create` | `create` | `createRequisition` | `JobRequisition`, `ScreeningCriteria`, `AuditLog` |
+| `POST /requisitions/create` | `create` | `createRequisition` | `JobRequisition`, `ScreeningCriteria`, `AuditLog`, `Notification` (khi gửi duyệt) |
 | `GET /requisitions/{id}` | `detail` | `getById` | (chỉ đọc) |
 | `GET /requisitions/edit/{id}` | `edit` | `getRequestDtoById` | |
-| `POST /requisitions/edit/{id}` | `update` | `updateRequisition` | `JobRequisition`, `ScreeningCriteria`, `AuditLog` |
+| `POST /requisitions/edit/{id}` | `update` | `updateRequisition` | `JobRequisition`, `ScreeningCriteria`, `AuditLog`, `Notification` (khi gửi duyệt) |
 | `GET /requisitions/copy/{id}` | `copy` | `copy` | (không ghi gì, chỉ điền sẵn form) |
 | `POST /requisitions/{id}/withdraw` | `withdraw` | `withdraw` | `JobRequisition`, `AuditLog` |
-| `POST /requisitions/{id}/decision` | `decide` | `decide` | `JobRequisition`, `RequisitionApproval`, `AuditLog`, `Notification` (khi trả lại) |
+| `POST /requisitions/{id}/decision` | `decide` | `decide` | `JobRequisition`, `RequisitionApproval`, `AuditLog`, `Notification` (khi duyệt hoặc trả lại) |
 | `POST /requisitions/delete/{id}` | `delete` | `deleteRequisition` | xóa `JobRequisition` (+ tiêu chí, lịch sử duyệt), ghi `AuditLog` |
 
 Mọi `POST` đều cần CSRF token (Spring Security tự chèn `_csrf` vào form Thymeleaf). Thiếu token thì bị 403.
@@ -237,7 +237,7 @@ Form được thiết kế với cơ chế phòng ngừa vỡ layout toàn diệ
 | **Sao chép thành đợt mới** | `copyable`: có quyền tạo, trạng thái Approved / Rejected | `GET /copy/{id}` (xem mục 4.4) |
 | **Tạo tin tuyển dụng** | `postable`: HR / Admin, Approved, chưa có tin | `GET /internal/job-postings/create?requisitionId=...` (module Tin tuyển dụng) |
 | **Xem tin tuyển dụng** | `postingViewable`: đã có tin, role HR / HM / Admin | `GET /internal/job-postings/{id}` |
-| **Phê duyệt / Trả lại** | `decidable`: Director, không phải người tạo, Pending_Director | `POST /{id}/decision` → `decide`: khóa dòng; **Trả lại bắt buộc có ý kiến** (cả JS lẫn server), tối đa 1000 ký tự; đổi trạng thái; thêm bản ghi `RequisitionApproval` (Director, kết quả, ý kiến, thời điểm); ghi `AuditLog`; **Trả lại thì tạo `Notification` cho HM** |
+| **Phê duyệt / Trả lại** | `decidable`: Director, không phải người tạo, Pending_Director | `POST /{id}/decision` → `decide`: khóa dòng; **Trả lại bắt buộc có ý kiến** (cả JS lẫn server), tối đa 1000 ký tự; đổi trạng thái; thêm bản ghi `RequisitionApproval` (Director, kết quả, ý kiến, thời điểm); ghi `AuditLog`; **Phê duyệt hoặc Trả lại đều tạo `Notification` cho HM** |
 
 ---
 

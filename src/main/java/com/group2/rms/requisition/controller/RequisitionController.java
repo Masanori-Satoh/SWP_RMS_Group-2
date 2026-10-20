@@ -54,7 +54,7 @@ public class RequisitionController {
         // originalTitle chỉ để form hiển thị số đợt, service không dùng
         binder.setAllowedFields("action", "title", "departmentId", "originalTitle", "numberOfPositions", "employmentType", "minSalary",
                 "maxSalary",
-                "gender", "workLocation", "workModel", "probationDays", "expectedStartDate", "reasonForHiring", "hiringType", "originalRequisitionId",
+                "gender", "workLocation", "workModel", "probationDays", "reasonForHiring", "hiringType", "originalRequisitionId",
                 "jobDescription", "requirementDetails",
                 "screeningCriteria[*].criteriaId", "screeningCriteria[*].criteriaName",
                 "screeningCriteria[*].criteriaType",
@@ -280,9 +280,6 @@ public class RequisitionController {
         // Giới hạn số lượng cần tuyển, dùng cho min/max của ô số lượng và nút −/+
         model.addAttribute("positionsMin", RequisitionValidator.POSITIONS_MIN);
         model.addAttribute("positionsMax", RequisitionValidator.POSITIONS_MAX);
-        // Khoảng ngày bắt đầu được chọn: từ hôm nay tới hôm nay + START_DATE_MAX_YEARS năm
-        model.addAttribute("startDateMin", validator.earliestStartDate());
-        model.addAttribute("startDateMax", validator.latestStartDate());
     }
 
     private void addErrors(BindingResult errors, RequisitionValidationException e) {

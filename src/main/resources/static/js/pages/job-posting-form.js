@@ -167,10 +167,6 @@
         const days = value ? daysBetween(postingDay(), value) : null;
         $('deadline-help').textContent = days !== null && days > 0
             ? `Nhận hồ sơ trong ${days} ngày, đến hết ${viDate(value)}.` : '';
-        // Chỉ cảnh báo (không chặn): hạn nộp sau ngày bắt đầu dự kiến của yêu cầu thì có thể không kịp tuyển
-        const start = form.dataset.start;
-        $('deadline-warn').textContent = value && start && value > start
-            ? `Hạn nộp sau ngày bắt đầu dự kiến của yêu cầu (${viDate(start)}). Có thể không kịp tuyển.` : '';
         if (publishButton) {
             publishButton.textContent = later() ? 'Lên lịch đăng' : 'Đăng tin';
         }

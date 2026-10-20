@@ -7,9 +7,8 @@
       - cờ quyền cho nút: editable, withdrawable, deletable, decidable, copyable, postable, postingViewable
     Bố cục theo wireframe: đầu trang + nút → dải thông báo → thanh tiến trình → nội dung (trái) + cột phải.
 -->
-<html lang="vi" xmlns:th="http://www.thymeleaf.org"
-      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
-      layout:decorate="~{layout/internal}">
+<html lang="vi" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+    layout:decorate="~{layout/internal}">
 
 <head>
     <title th:text="${req.title}">Chi tiết yêu cầu tuyển dụng</title>
@@ -21,260 +20,296 @@
 </head>
 
 <body>
-<main id="main" layout:fragment="content" class="page-content container" tabindex="-1"
-      th:with="isDraft=${req.approvalStatus == 'Draft'}, isPending=${req.approvalStatus == 'Pending_Director'},
+    <main id="main" layout:fragment="content" class="page-content container" tabindex="-1" th:with="isDraft=${req.approvalStatus == 'Draft'}, isPending=${req.approvalStatus == 'Pending_Director'},
                isApproved=${req.approvalStatus == 'Approved'}, isRejected=${req.approvalStatus == 'Rejected'},
                lastDecision=${#lists.isEmpty(req.approvals) ? null : req.approvals[0]}">
 
-    <!-- ===== 1. ĐẦU TRANG: tên, trạng thái, mã, phòng ban, đợt + các nút thao tác ===== -->
-    <header class="rqd-head">
-        <div class="rqd-title">
-            <h1 th:text="${req.title}">Key Account Manager</h1>
-            <div class="rqd-meta">
-                <span class="badge" th:classappend="|badge--${req.statusTone}|" th:text="${req.statusLabel}">Chờ duyệt</span>
-                <span class="rqd-code" th:text="${req.requisitionCode}">REQ-0020</span>
-                <span th:text="${req.departmentName}">Sales &amp; Marketing</span>
-                <span aria-hidden="true">·</span>
-                <span th:text="|Đợt ${req.recruitmentRound ?: 1}|">Đợt 1</span>
+        <!-- ===== 1. ĐẦU TRANG: tên, trạng thái, mã, phòng ban, đợt + các nút thao tác ===== -->
+        <header class="rqd-head">
+            <div class="rqd-title">
+                <h1 th:text="${req.title}">Key Account Manager</h1>
+                <div class="rqd-meta">
+                    <span class="badge" th:classappend="|badge--${req.statusTone}|" th:text="${req.statusLabel}">Chờ
+                        duyệt</span>
+                    <span class="rqd-code" th:text="${req.requisitionCode}">REQ-0020</span>
+                    <span th:text="${req.departmentName}">Sales &amp; Marketing</span>
+                    <span aria-hidden="true">·</span>
+                    <span th:text="|Đợt ${req.recruitmentRound ?: 1}|">Đợt 1</span>
+                </div>
             </div>
-        </div>
-        <!-- Mỗi nút chỉ hiện khi service bật cờ quyền tương ứng; server vẫn kiểm tra lại khi bấm -->
-        <div class="rqd-actions" role="group" aria-label="Thao tác với yêu cầu">
-            <!-- Luôn hiện với mọi vai trò: quay về màn danh sách yêu cầu -->
-            <a class="btn btn--outline" th:href="@{/requisitions}">← Quay về danh sách</a>
-            <a class="btn btn--primary" th:if="${req.postable}"
-               th:href="@{/internal/job-postings/create(requisitionId=${req.requisitionId})}">Tạo tin tuyển dụng</a>
-            <a class="btn btn--primary" th:if="${req.editable}"
-               th:href="@{/requisitions/edit/{id}(id=${req.requisitionId})}"
-               th:text="${isRejected ? 'Sửa &amp; gửi lại' : 'Chỉnh sửa'}">Chỉnh sửa</a>
-            <form class="withdraw-form" th:if="${req.withdrawable}" method="post"
-                  th:action="@{/requisitions/{id}/withdraw(id=${req.requisitionId})}">
-                <button type="submit" class="btn btn--secondary">Rút lại để chỉnh sửa</button>
-            </form>
-            <a class="btn btn--secondary" th:if="${req.postingViewable}"
-               th:href="@{/internal/job-postings/{id}(id=${req.jobPostingId})}">Xem tin tuyển dụng</a>
-            <a class="btn btn--secondary" th:if="${req.copyable}"
-               th:href="@{/requisitions/copy/{id}(id=${req.requisitionId})}">Sao chép thành đợt mới</a>
-            <button type="button" class="btn btn--danger" th:if="${req.deletable}" data-delete-requisition
+            <!-- Mỗi nút chỉ hiện khi service bật cờ quyền tương ứng; server vẫn kiểm tra lại khi bấm -->
+            <div class="rqd-actions" role="group" aria-label="Thao tác với yêu cầu">
+                <!-- Luôn hiện với mọi vai trò: quay về màn danh sách yêu cầu -->
+                <a class="btn btn--outline" th:href="@{/requisitions}">← Quay về danh sách</a>
+                <a class="btn btn--primary" th:if="${req.postable}"
+                    th:href="@{/internal/job-postings/create(requisitionId=${req.requisitionId})}">Tạo tin tuyển
+                    dụng</a>
+                <a class="btn btn--primary" th:if="${req.editable}"
+                    th:href="@{/requisitions/edit/{id}(id=${req.requisitionId})}"
+                    th:text="${isRejected ? 'Sửa &amp; gửi lại' : 'Chỉnh sửa'}">Chỉnh sửa</a>
+                <form class="withdraw-form" th:if="${req.withdrawable}" method="post"
+                    th:action="@{/requisitions/{id}/withdraw(id=${req.requisitionId})}">
+                    <button type="submit" class="btn btn--secondary">Rút lại để chỉnh sửa</button>
+                </form>
+                <a class="btn btn--secondary" th:if="${req.postingViewable}"
+                    th:href="@{/internal/job-postings/{id}(id=${req.jobPostingId})}">Xem tin tuyển dụng</a>
+                <a class="btn btn--secondary" th:if="${req.copyable}"
+                    th:href="@{/requisitions/copy/{id}(id=${req.requisitionId})}">Sao chép thành đợt mới</a>
+                <button type="button" class="btn btn--danger" th:if="${req.deletable}" data-delete-requisition
                     th:data-delete-url="@{/requisitions/delete/{id}(id=${req.requisitionId})}"
                     th:data-title="${req.title}">Xóa</button>
-        </div>
-    </header>
+            </div>
+        </header>
 
-    <th:block th:replace="~{fragments/requisition :: messages}"></th:block>
+        <th:block th:replace="~{fragments/ui/flash-toast :: flashToast(${successMessage}, ${failureMessage})}">
+        </th:block>
 
-    <!-- ===== 2. DẢI THÔNG BÁO THEO NGỮ CẢNH (trạng thái + vai trò) ===== -->
-    <div class="rqd-banner rqd-banner--info" th:if="${isDraft}" role="status">
-        <p><strong>Bản nháp, chưa gửi duyệt.</strong>
-            Chỉ người tạo và Admin nhìn thấy yêu cầu này.
-            <span th:if="${req.incomplete}">Còn thiếu thông tin bắt buộc, cần bổ sung trước khi gửi Giám đốc duyệt.</span>
-            <span th:unless="${req.incomplete}">Thông tin đã đủ, có thể gửi Giám đốc duyệt.</span></p>
-    </div>
-    <div class="rqd-banner rqd-banner--warning" th:if="${isPending}" role="status">
-        <p th:if="${req.decidable}"><strong>Yêu cầu đang chờ bạn duyệt.</strong>
-            Gửi lúc <span th:text="${req.submittedAt != null ? #temporals.format(req.submittedAt, 'HH:mm dd/MM/yyyy') : '—'}">16:40 03/10/2026</span>,
-            đã chờ <span th:text="${req.waitingDays ?: 0}">14</span> ngày. Xem nội dung rồi quyết định ở cột bên phải.</p>
-        <p th:unless="${req.decidable}"><strong>Đang chờ Giám đốc duyệt.</strong>
-            Gửi lúc <span th:text="${req.submittedAt != null ? #temporals.format(req.submittedAt, 'HH:mm dd/MM/yyyy') : '—'}">16:40 03/10/2026</span>,
-            đã chờ <span th:text="${req.waitingDays ?: 0}">14</span> ngày.
-            <span th:if="${req.withdrawable}">Muốn sửa nội dung, hãy rút lại yêu cầu.</span></p>
-    </div>
-    <div class="rqd-banner rqd-banner--danger" th:if="${isRejected}" role="status">
-        <p><strong>Giám đốc đã trả lại yêu cầu<span th:if="${lastDecision != null}"
-                th:text="| ngày ${#temporals.format(lastDecision.approvalDate, 'dd/MM/yyyy')}|"></span>.</strong></p>
-        <p class="rqd-quote" th:if="${req.rejectionReason != null}" th:text="|“${req.rejectionReason}”|">Lý do</p>
-        <p th:if="${req.editable}">Sửa theo góp ý rồi gửi lại.</p>
-    </div>
-    <div class="rqd-banner rqd-banner--success" th:if="${isApproved}" role="status">
-        <p><strong>Đã được duyệt<span th:if="${lastDecision != null}"
-                th:text="| ngày ${#temporals.format(lastDecision.approvalDate, 'dd/MM/yyyy')}|"></span>.</strong>
-            <span th:if="${req.jobPostingId == null}">Chưa có tin tuyển dụng<span th:if="${req.postable}">, bấm "Tạo tin tuyển dụng" để bắt đầu nhận hồ sơ</span>.</span>
-            <span th:if="${req.jobPostingId != null}" th:text="|Tin tuyển dụng: ${req.postingLabel}.|">Tin tuyển dụng: Đang đăng.</span></p>
-    </div>
+        <!-- ===== THANH TIẾN TRÌNH: Tạo nháp → Gửi duyệt → Giám đốc duyệt → Đăng tin ===== -->
+        <ol class="card rqd-steps" aria-label="Tiến trình yêu cầu">
+            <li class="is-done">
+                <strong>Tạo bản nháp</strong>
+                <span th:text="${#temporals.format(req.createdAt, 'dd/MM/yyyy')}">03/10/2026</span>
+            </li>
+            <li th:classappend="${isDraft ? '' : 'is-done'}">
+                <strong>Gửi duyệt</strong>
+                <span
+                    th:text="${req.submittedAt != null and !isDraft ? #temporals.format(req.submittedAt, 'dd/MM/yyyy') : '—'}">03/10/2026</span>
+            </li>
+            <li
+                th:classappend="${isApproved ? 'is-done' : (isRejected ? 'is-failed' : (isPending ? 'is-current' : ''))}">
+                <strong th:text="${isRejected ? 'Bị trả lại' : 'Giám đốc duyệt'}">Giám đốc duyệt</strong>
+                <span
+                    th:text="${(isApproved or isRejected) and lastDecision != null ? #temporals.format(lastDecision.approvalDate, 'dd/MM/yyyy') : (isPending ? 'Đang chờ' : '—')}">Đang
+                    chờ</span>
+            </li>
+            <li th:classappend="${req.postingDate != null ? 'is-done' : (isApproved ? 'is-current' : '')}">
+                <strong>Đăng tin</strong>
+                <span
+                    th:text="${req.postingDate != null ? #temporals.format(req.postingDate, 'dd/MM/yyyy') : '—'}">—</span>
+            </li>
+        </ol>
 
-    <!-- ===== 3. THANH TIẾN TRÌNH: Tạo nháp → Gửi duyệt → Giám đốc duyệt → Đăng tin ===== -->
-    <ol class="card rqd-steps" aria-label="Tiến trình yêu cầu">
-        <li class="is-done">
-            <strong>Tạo bản nháp</strong>
-            <span th:text="${#temporals.format(req.createdAt, 'dd/MM/yyyy')}">03/10/2026</span>
-        </li>
-        <li th:classappend="${isDraft ? '' : 'is-done'}">
-            <strong>Gửi duyệt</strong>
-            <span th:text="${req.submittedAt != null and !isDraft ? #temporals.format(req.submittedAt, 'dd/MM/yyyy') : '—'}">03/10/2026</span>
-        </li>
-        <li th:classappend="${isApproved ? 'is-done' : (isRejected ? 'is-failed' : (isPending ? 'is-current' : ''))}">
-            <strong th:text="${isRejected ? 'Bị trả lại' : 'Giám đốc duyệt'}">Giám đốc duyệt</strong>
-            <span th:text="${(isApproved or isRejected) and lastDecision != null ? #temporals.format(lastDecision.approvalDate, 'dd/MM/yyyy') : (isPending ? 'Đang chờ' : '—')}">Đang chờ</span>
-        </li>
-        <li th:classappend="${req.postingDate != null ? 'is-done' : (isApproved ? 'is-current' : '')}">
-            <strong>Đăng tin</strong>
-            <span th:text="${req.postingDate != null ? #temporals.format(req.postingDate, 'dd/MM/yyyy') : '—'}">—</span>
-        </li>
-    </ol>
+        <div class="rqd-layout">
+            <!-- ===== 4. NỘI DUNG (cột trái) ===== -->
+            <div class="rqd-main">
+                <section class="card rqd-section" aria-labelledby="rqd-h-basic">
+                    <h2 id="rqd-h-basic">Thông tin cơ bản</h2>
+                    <!-- Thứ tự ô theo yêu cầu của nhóm: Địa điểm ở cuối và chiếm 2 cột -->
+                    <dl class="rqd-facts">
+                        <div>
+                            <dt>Số lượng cần tuyển</dt>
+                            <dd th:text="|${req.numberOfPositions} người|">2 người</dd>
+                        </div>
+                        <div>
+                            <dt>Loại tuyển dụng</dt>
+                            <dd th:text="${req.hiringTypeLabel}">Tuyển mới</dd>
+                        </div>
+                        <div>
+                            <dt>Người tạo yêu cầu</dt>
+                            <dd th:text="${req.hiringManagerName}">Đỗ Thu Hương</dd>
+                        </div>
+                        <div>
+                            <dt>Hình thức</dt>
+                            <dd th:text="${req.employmentTypeLabel}">Toàn thời gian</dd>
+                        </div>
+                        <div>
+                            <dt>Mô hình</dt>
+                            <dd th:text="${req.workModelLabel}">Kết hợp</dd>
+                        </div>
+                        <div>
+                            <dt>Yêu cầu giới tính</dt>
+                            <dd th:text="${req.genderLabel}">Không yêu cầu</dd>
+                        </div>
+                        <div>
+                            <dt>Thời gian thử việc</dt>
+                            <dd th:text="${req.probationLabel}">60 ngày</dd>
+                        </div>
+                        <div>
+                            <dt>Mức lương</dt>
+                            <dd th:text="${req.salaryLabel}">20 – 30 triệu VND/tháng</dd>
+                        </div>
+                        <div>
+                            <dt>Ngày tạo</dt>
+                            <dd th:text="${#temporals.format(req.createdAt, 'HH:mm dd/MM/yyyy')}">09:12 03/10/2026</dd>
+                        </div>
+                        <div class="rqd-wide">
+                            <dt>Địa điểm làm việc</dt>
+                            <dd th:text="${req.workLocation ?: 'Chưa xác định'}">Tầng 5, RMS Tower</dd>
+                        </div>
+                    </dl>
+                </section>
 
-    <div class="rqd-layout">
-        <!-- ===== 4. NỘI DUNG (cột trái) ===== -->
-        <div class="rqd-main">
-            <section class="card rqd-section" aria-labelledby="rqd-h-basic">
-                <h2 id="rqd-h-basic">Thông tin cơ bản</h2>
-                <!-- Thứ tự ô theo yêu cầu của nhóm: Địa điểm ở cuối và chiếm 2 cột -->
-                <dl class="rqd-facts">
-                    <div><dt>Số lượng cần tuyển</dt><dd th:text="|${req.numberOfPositions} người|">2 người</dd></div>
-                    <div><dt>Loại tuyển dụng</dt><dd th:text="${req.hiringTypeLabel}">Tuyển mới</dd></div>
-                    <div><dt>Người tạo yêu cầu</dt><dd th:text="${req.hiringManagerName}">Đỗ Thu Hương</dd></div>
-                    <div><dt>Hình thức</dt><dd th:text="${req.employmentTypeLabel}">Toàn thời gian</dd></div>
-                    <div><dt>Mô hình</dt><dd th:text="${req.workModelLabel}">Kết hợp</dd></div>
-                    <div><dt>Yêu cầu giới tính</dt><dd th:text="${req.genderLabel}">Không yêu cầu</dd></div>
-                    <div>
-                        <dt>Ngày bắt đầu dự kiến</dt>
-                        <dd>
-                            <span th:text="${req.expectedStartDate != null ? #temporals.format(req.expectedStartDate, 'dd/MM/yyyy') : 'Chưa xác định'}">20/11/2026</span>
-                            <!-- Chỉ nhắc "còn X ngày" khi yêu cầu còn đang xử lý (chưa bị trả lại) -->
-                            <small class="rqd-sub" th:if="${req.daysUntilStart != null and !isRejected}"
-                                   th:classappend="${req.daysUntilStart <= 30 ? 'is-soon' : ''}"
-                                   th:text="${req.daysUntilStart >= 0 ? 'còn ' + req.daysUntilStart + ' ngày' : 'đã qua ' + (-req.daysUntilStart) + ' ngày'}">còn 34 ngày</small>
-                        </dd>
+                <section class="card rqd-section" aria-label="Nội dung tuyển dụng">
+                    <!-- Nội dung nhiều dòng: service đã escape HTML rồi đổi xuống dòng thành <br/>, nên dùng th:utext an toàn -->
+                    <div class="rqd-text">
+                        <h2>Lý do tuyển dụng</h2>
+                        <p th:if="${req.reasonForHiringHtml != null}" th:utext="${req.reasonForHiringHtml}">Lý do</p>
+                        <p class="rqd-empty" th:unless="${req.reasonForHiringHtml != null}">Chưa nhập.</p>
                     </div>
-                    <div><dt>Thời gian thử việc</dt><dd th:text="${req.probationLabel}">60 ngày</dd></div>
-                    <div><dt>Mức lương</dt><dd th:text="${req.salaryLabel}">20 – 30 triệu VND/tháng</dd></div>
-                    <div><dt>Ngày tạo</dt><dd th:text="${#temporals.format(req.createdAt, 'HH:mm dd/MM/yyyy')}">09:12 03/10/2026</dd></div>
-                    <div class="rqd-wide"><dt>Địa điểm làm việc</dt><dd th:text="${req.workLocation ?: 'Chưa xác định'}">Tầng 5, RMS Tower</dd></div>
-                </dl>
-            </section>
+                    <div class="rqd-text">
+                        <h2>Mô tả công việc</h2>
+                        <p th:if="${req.jobDescriptionHtml != null}" th:utext="${req.jobDescriptionHtml}">Mô tả</p>
+                        <p class="rqd-empty" th:unless="${req.jobDescriptionHtml != null}">Chưa nhập.</p>
+                    </div>
+                    <div class="rqd-text">
+                        <h2>Yêu cầu ứng viên</h2>
+                        <p th:if="${req.requirementDetailsHtml != null}" th:utext="${req.requirementDetailsHtml}">Yêu
+                            cầu</p>
+                        <p class="rqd-empty" th:unless="${req.requirementDetailsHtml != null}">Chưa nhập.</p>
+                    </div>
+                </section>
 
-            <section class="card rqd-section" aria-label="Nội dung tuyển dụng">
-                <!-- Nội dung nhiều dòng: service đã escape HTML rồi đổi xuống dòng thành <br/>, nên dùng th:utext an toàn -->
-                <div class="rqd-text">
-                    <h2>Lý do tuyển dụng</h2>
-                    <p th:if="${req.reasonForHiringHtml != null}" th:utext="${req.reasonForHiringHtml}">Lý do</p>
-                    <p class="rqd-empty" th:unless="${req.reasonForHiringHtml != null}">Chưa nhập.</p>
-                </div>
-                <div class="rqd-text">
-                    <h2>Mô tả công việc</h2>
-                    <p th:if="${req.jobDescriptionHtml != null}" th:utext="${req.jobDescriptionHtml}">Mô tả</p>
-                    <p class="rqd-empty" th:unless="${req.jobDescriptionHtml != null}">Chưa nhập.</p>
-                </div>
-                <div class="rqd-text">
-                    <h2>Yêu cầu ứng viên</h2>
-                    <p th:if="${req.requirementDetailsHtml != null}" th:utext="${req.requirementDetailsHtml}">Yêu cầu</p>
-                    <p class="rqd-empty" th:unless="${req.requirementDetailsHtml != null}">Chưa nhập.</p>
-                </div>
-            </section>
+                <section class="card rqd-section" aria-labelledby="rqd-h-criteria">
+                    <div class="rqd-section-head">
+                        <h2 id="rqd-h-criteria">Tiêu chí sàng lọc hồ sơ</h2>
+                        <span class="rqd-sub" th:text="|${#lists.size(req.screeningCriteria)} tiêu chí|">4 tiêu
+                            chí</span>
+                    </div>
+                    <div class="table-wrapper" role="region" aria-label="Tiêu chí sàng lọc" tabindex="0">
+                        <table class="rqd-criteria">
+                            <thead>
+                                <tr>
+                                    <th scope="col">Tiêu chí</th>
+                                    <th scope="col">Giá trị yêu cầu</th>
+                                    <th scope="col">Trọng số</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr th:each="criterion : ${req.screeningCriteria}">
+                                    <td>
+                                        <strong th:text="${criterion.criteriaName}">Kinh nghiệm Sales B2B</strong>
+                                        <div class="rqd-sub">
+                                            <span th:text="${criterion.criteriaTypeLabel}">Kinh nghiệm</span>
+                                            <span class="badge badge--danger" th:if="${criterion.isMandatory}">Bắt
+                                                buộc</span>
+                                        </div>
+                                    </td>
+                                    <td th:text="${criterion.requiredValue}">≥ 2 năm</td>
+                                    <td>
+                                        <span class="rqd-weight">
+                                            <progress max="100" th:value="${criterion.weight}"
+                                                aria-hidden="true"></progress>
+                                            <span
+                                                th:text="|${criterion.weight.stripTrailingZeros().toPlainString()}%|">40%</span>
+                                        </span>
+                                    </td>
+                                </tr>
+                                <tr th:if="${#lists.isEmpty(req.screeningCriteria)}">
+                                    <td colspan="3" class="rqd-empty">Chưa có tiêu chí sàng lọc nào.</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <p class="rqd-sub" th:unless="${#lists.isEmpty(req.screeningCriteria)}"
+                        th:text="|Tổng trọng số: ${req.criteriaTotalWeight.toPlainString()}%. Hồ sơ trượt tiêu chí bắt buộc sẽ bị AI đánh dấu không đạt.|">
+                        Tổng trọng số: 100%.</p>
+                </section>
+            </div>
 
-            <section class="card rqd-section" aria-labelledby="rqd-h-criteria">
-                <div class="rqd-section-head">
-                    <h2 id="rqd-h-criteria">Tiêu chí sàng lọc hồ sơ</h2>
-                    <span class="rqd-sub" th:text="|${#lists.size(req.screeningCriteria)} tiêu chí|">4 tiêu chí</span>
-                </div>
-                <div class="table-wrapper" role="region" aria-label="Tiêu chí sàng lọc" tabindex="0">
-                    <table class="rqd-criteria">
-                        <thead>
-                        <tr>
-                            <th scope="col">Tiêu chí</th>
-                            <th scope="col">Giá trị yêu cầu</th>
-                            <th scope="col">Trọng số</th>
-                        </tr>
-                        </thead>
-                        <tbody>
-                        <tr th:each="criterion : ${req.screeningCriteria}">
-                            <td>
-                                <strong th:text="${criterion.criteriaName}">Kinh nghiệm Sales B2B</strong>
-                                <div class="rqd-sub">
-                                    <span th:text="${criterion.criteriaTypeLabel}">Kinh nghiệm</span>
-                                    <span class="badge badge--danger" th:if="${criterion.isMandatory}">Bắt buộc</span>
-                                </div>
-                            </td>
-                            <td th:text="${criterion.requiredValue}">≥ 2 năm</td>
-                            <td>
-                                <span class="rqd-weight">
-                                    <progress max="100" th:value="${criterion.weight}" aria-hidden="true"></progress>
-                                    <span th:text="|${criterion.weight.stripTrailingZeros().toPlainString()}%|">40%</span>
-                                </span>
-                            </td>
-                        </tr>
-                        <tr th:if="${#lists.isEmpty(req.screeningCriteria)}">
-                            <td colspan="3" class="rqd-empty">Chưa có tiêu chí sàng lọc nào.</td>
-                        </tr>
-                        </tbody>
-                    </table>
-                </div>
-                <p class="rqd-sub" th:unless="${#lists.isEmpty(req.screeningCriteria)}"
-                   th:text="|Tổng trọng số: ${req.criteriaTotalWeight.toPlainString()}%. Hồ sơ trượt tiêu chí bắt buộc sẽ bị AI đánh dấu không đạt.|">Tổng trọng số: 100%.</p>
-            </section>
+            <!-- ===== 5. CỘT PHẢI: quyết định của Giám đốc, tin tuyển dụng, ý kiến, lịch sử ===== -->
+            <aside class="rqd-rail" aria-label="Duyệt và lịch sử">
+                <!-- Chỉ Director (không phải người tạo) khi yêu cầu đang Chờ duyệt -->
+                <section class="card rqd-section rqd-decision" th:if="${req.decidable}"
+                    aria-labelledby="rqd-h-decision">
+                    <h2 id="rqd-h-decision">Quyết định của bạn</h2>
+                    <form id="decision-form" method="post"
+                        th:action="@{/requisitions/{id}/decision(id=${req.requisitionId})}">
+                        <label class="form-label" for="decision-comment">Ý kiến gửi Hiring Manager
+                            <span class="rqd-sub">(bắt buộc khi trả lại)</span></label>
+                        <textarea class="form-textarea" id="decision-comment" name="comment" rows="4" maxlength="1000"
+                            th:text="${decisionComment}"
+                            placeholder="VD: Đồng ý, ưu tiên ứng viên có tệp khách hàng phía Nam."></textarea>
+                        <div class="rqd-decision-buttons">
+                            <button type="submit" name="decision" value="reject" class="btn btn--danger">Trả
+                                lại</button>
+                            <button type="submit" name="decision" value="approve" class="btn btn--primary">Phê
+                                duyệt</button>
+                        </div>
+                    </form>
+                </section>
+
+                <!-- Tin tuyển dụng (bản đơn giản): chỉ khi yêu cầu đã duyệt -->
+                <section class="card rqd-section" th:if="${isApproved}" aria-labelledby="rqd-h-posting">
+                    <h2 id="rqd-h-posting">Tin tuyển dụng</h2>
+                    <dl class="rqd-kv" th:if="${req.jobPostingId != null}">
+                        <div>
+                            <dt>Trạng thái</dt>
+                            <dd><span class="badge" th:classappend="|badge--${req.postingTone}|"
+                                    th:text="${req.postingLabel}">Đang đăng</span></dd>
+                        </div>
+                        <div>
+                            <dt>Lần đăng</dt>
+                            <dd th:text="|Lần ${req.postingNo}|">Lần 1</dd>
+                        </div>
+                        <div>
+                            <dt>Ngày đăng</dt>
+                            <dd
+                                th:text="${req.postingDate != null ? #temporals.format(req.postingDate, 'dd/MM/yyyy') : 'Chưa đăng'}">
+                                08/10/2026</dd>
+                        </div>
+                        <div>
+                            <dt>Hạn nộp hồ sơ</dt>
+                            <dd
+                                th:text="${req.postingDeadline != null ? #temporals.format(req.postingDeadline, 'dd/MM/yyyy') : '—'}">
+                                15/11/2026</dd>
+                        </div>
+                    </dl>
+                    <a class="rqd-link" th:if="${req.postingViewable}"
+                        th:href="@{/internal/job-postings/{id}(id=${req.jobPostingId})}">Xem tin tuyển dụng →</a>
+                    <p class="rqd-empty" th:if="${req.jobPostingId == null}">Chưa có tin nào cho yêu cầu này.</p>
+                </section>
+
+                <!-- Ý kiến của Giám đốc: bảng RequisitionApproval, mới nhất trước -->
+                <section class="card rqd-section" th:unless="${#lists.isEmpty(req.approvals)}"
+                    aria-labelledby="rqd-h-approvals">
+                    <h2 id="rqd-h-approvals">Ý kiến của Giám đốc</h2>
+                    <article class="rqd-approval" th:each="approval : ${req.approvals}">
+                        <p class="rqd-approval-head">
+                            <span class="badge"
+                                th:classappend="${approval.status == 'Approved' ? 'badge--success' : 'badge--danger'}"
+                                th:text="${approval.status == 'Approved' ? 'Phê duyệt' : 'Trả lại'}">Phê duyệt</span>
+                            <span class="rqd-sub"
+                                th:text="|${approval.approverName} · ${#temporals.format(approval.approvalDate, 'HH:mm dd/MM/yyyy')}|">Nguyễn
+                                Thế Hoàng · 10:05 06/10/2026</span>
+                        </p>
+                        <p th:text="${approval.comments ?: 'Không có ý kiến.'}">Ý kiến</p>
+                    </article>
+                </section>
+
+                <!-- Lịch sử thao tác: bảng AuditLog (EntityName = 'JobRequisition'), mới nhất trước -->
+                <section class="card rqd-section" aria-labelledby="rqd-h-history">
+                    <h2 id="rqd-h-history">Lịch sử</h2>
+                    <ol class="rqd-timeline" th:unless="${#lists.isEmpty(req.activityLog)}">
+                        <li th:each="log : ${req.activityLog}">
+                            <strong
+                                th:text="${log.action == 'CREATE' ? 'Tạo yêu cầu' : (log.action == 'UPDATE' ? 'Cập nhật' : (log.action == 'DELETE' ? 'Xóa' : log.action))}">Tạo
+                                yêu cầu</strong>
+                            <span class="rqd-sub"
+                                th:text="|${log.performedBy} · ${#temporals.format(log.timestamp, 'HH:mm dd/MM/yyyy')}|">Đỗ
+                                Thu Hương · 09:12 03/10/2026</span>
+                            <details th:if="${log.description != null}">
+                                <summary>Xem chi tiết</summary>
+                                <pre th:text="${log.description}">Nội dung thay đổi</pre>
+                            </details>
+                        </li>
+                    </ol>
+                    <p class="rqd-empty" th:if="${#lists.isEmpty(req.activityLog)}">Chưa có hoạt động nào.</p>
+                </section>
+            </aside>
         </div>
 
-        <!-- ===== 5. CỘT PHẢI: quyết định của Giám đốc, tin tuyển dụng, ý kiến, lịch sử ===== -->
-        <aside class="rqd-rail" aria-label="Duyệt và lịch sử">
-            <!-- Chỉ Director (không phải người tạo) khi yêu cầu đang Chờ duyệt -->
-            <section class="card rqd-section rqd-decision" th:if="${req.decidable}" aria-labelledby="rqd-h-decision">
-                <h2 id="rqd-h-decision">Quyết định của bạn</h2>
-                <form id="decision-form" method="post" th:action="@{/requisitions/{id}/decision(id=${req.requisitionId})}">
-                    <label class="form-label" for="decision-comment">Ý kiến gửi Hiring Manager
-                        <span class="rqd-sub">(bắt buộc khi trả lại)</span></label>
-                    <textarea class="form-textarea" id="decision-comment" name="comment" rows="4" maxlength="1000"
-                              th:text="${decisionComment}" placeholder="VD: Đồng ý, ưu tiên ứng viên có tệp khách hàng phía Nam."></textarea>
-                    <div class="rqd-decision-buttons">
-                        <button type="submit" name="decision" value="reject" class="btn btn--danger">Trả lại</button>
-                        <button type="submit" name="decision" value="approve" class="btn btn--primary">Phê duyệt</button>
-                    </div>
-                </form>
-            </section>
+        <!-- Hộp thoại xác nhận xóa: phải nằm TRONG fragment "content" -->
+        <dialog th:replace="~{requisitions/fragments :: deleteDialog}"></dialog>
+    </main>
 
-            <!-- Tin tuyển dụng (bản đơn giản): chỉ khi yêu cầu đã duyệt -->
-            <section class="card rqd-section" th:if="${isApproved}" aria-labelledby="rqd-h-posting">
-                <h2 id="rqd-h-posting">Tin tuyển dụng</h2>
-                <dl class="rqd-kv" th:if="${req.jobPostingId != null}">
-                    <div><dt>Trạng thái</dt><dd><span class="badge" th:classappend="|badge--${req.postingTone}|" th:text="${req.postingLabel}">Đang đăng</span></dd></div>
-                    <div><dt>Lần đăng</dt><dd th:text="|Lần ${req.postingNo}|">Lần 1</dd></div>
-                    <div><dt>Ngày đăng</dt><dd th:text="${req.postingDate != null ? #temporals.format(req.postingDate, 'dd/MM/yyyy') : 'Chưa đăng'}">08/10/2026</dd></div>
-                    <div><dt>Hạn nộp hồ sơ</dt><dd th:text="${req.postingDeadline != null ? #temporals.format(req.postingDeadline, 'dd/MM/yyyy') : '—'}">15/11/2026</dd></div>
-                </dl>
-                <a class="rqd-link" th:if="${req.postingViewable}" th:href="@{/internal/job-postings/{id}(id=${req.jobPostingId})}">Xem tin tuyển dụng →</a>
-                <p class="rqd-empty" th:if="${req.jobPostingId == null}">Chưa có tin nào cho yêu cầu này.</p>
-            </section>
-
-            <!-- Ý kiến của Giám đốc: bảng RequisitionApproval, mới nhất trước -->
-            <section class="card rqd-section" th:unless="${#lists.isEmpty(req.approvals)}" aria-labelledby="rqd-h-approvals">
-                <h2 id="rqd-h-approvals">Ý kiến của Giám đốc</h2>
-                <article class="rqd-approval" th:each="approval : ${req.approvals}">
-                    <p class="rqd-approval-head">
-                        <span class="badge" th:classappend="${approval.status == 'Approved' ? 'badge--success' : 'badge--danger'}"
-                              th:text="${approval.status == 'Approved' ? 'Phê duyệt' : 'Trả lại'}">Phê duyệt</span>
-                        <span class="rqd-sub" th:text="|${approval.approverName} · ${#temporals.format(approval.approvalDate, 'HH:mm dd/MM/yyyy')}|">Nguyễn Thế Hoàng · 10:05 06/10/2026</span>
-                    </p>
-                    <p th:text="${approval.comments ?: 'Không có ý kiến.'}">Ý kiến</p>
-                </article>
-            </section>
-
-            <!-- Lịch sử thao tác: bảng AuditLog (EntityName = 'JobRequisition'), mới nhất trước -->
-            <section class="card rqd-section" aria-labelledby="rqd-h-history">
-                <h2 id="rqd-h-history">Lịch sử</h2>
-                <ol class="rqd-timeline" th:unless="${#lists.isEmpty(req.activityLog)}">
-                    <li th:each="log : ${req.activityLog}">
-                        <strong th:text="${log.action == 'CREATE' ? 'Tạo yêu cầu' : (log.action == 'UPDATE' ? 'Cập nhật' : (log.action == 'DELETE' ? 'Xóa' : log.action))}">Tạo yêu cầu</strong>
-                        <span class="rqd-sub" th:text="|${log.performedBy} · ${#temporals.format(log.timestamp, 'HH:mm dd/MM/yyyy')}|">Đỗ Thu Hương · 09:12 03/10/2026</span>
-                        <details th:if="${log.description != null}">
-                            <summary>Xem chi tiết</summary>
-                            <pre th:text="${log.description}">Nội dung thay đổi</pre>
-                        </details>
-                    </li>
-                </ol>
-                <p class="rqd-empty" th:if="${#lists.isEmpty(req.activityLog)}">Chưa có hoạt động nào.</p>
-            </section>
-        </aside>
-    </div>
-
-    <!-- Hộp thoại xác nhận xóa: phải nằm TRONG fragment "content" -->
-    <dialog th:replace="~{fragments/requisition :: deleteDialog}"></dialog>
-</main>
-
-<th:block layout:fragment="scripts">
-    <!-- text-limit.js: báo lỗi đỏ "Nội dung quá N ký tự" khi gõ / dán vượt maxlength -->
-    <script th:src="@{/js/text-limit.js}" defer></script>
-    <!-- requisitions.js: hộp thoại xóa, bắt buộc lý do khi Trả lại, chống bấm gửi 2 lần -->
-    <script th:src="@{/js/requisitions.js}" defer></script>
-    <!-- flash-toast.js: thông báo sau thao tác tự tắt sau 3 giây -->
-    <script th:src="@{/js/pages/flash-toast.js}" defer></script>
-</th:block>
+    <th:block layout:fragment="scripts">
+        <!-- text-limit.js: báo lỗi đỏ "Nội dung quá N ký tự" khi gõ / dán vượt maxlength -->
+        <script th:src="@{/js/text-limit.js}" defer></script>
+        <!-- requisition-actions.js: hộp thoại xóa, lý do từ chối, chống gửi lặp -->
+        <script th:src="@{/js/pages/requisition-actions.js}" defer></script>
+        <!-- flash-toast.js: thông báo sau thao tác tự tắt sau 3 giây -->
+        <script th:src="@{/js/pages/flash-toast.js}" defer></script>
+    </th:block>
 </body>
+
 </html>

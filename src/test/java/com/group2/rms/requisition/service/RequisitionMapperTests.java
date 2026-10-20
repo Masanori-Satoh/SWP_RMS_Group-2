@@ -154,7 +154,6 @@ class RequisitionMapperTests {
         draft.setReasonForHiring("Mở rộng");
         draft.setJobDescription("Phát triển RMS");
         draft.setRequirementDetails("Spring Boot");
-        draft.setExpectedStartDate(TODAY.plusDays(30));
         draft.getScreeningCriteria().add(ScreeningCriteria.builder().criteriaName("Java").criteriaType("Skill")
                 .requiredValue("2 năm").weight(new BigDecimal("100")).isMandatory(true).build());
 
@@ -168,19 +167,17 @@ class RequisitionMapperTests {
     }
 
     @Test
-    @DisplayName("Đang chờ duyệt từ 15/10, bắt đầu 28/10 -> Chờ 3 ngày, còn 10 ngày tới ngày bắt đầu")
+    @DisplayName("Đang chờ duyệt từ 15/10 -> Chờ 3 ngày")
     void toDetail_shouldCountDaysFromClock_whenRequisitionIsPending() {
         // Arrange
         JobRequisition pending = requisition(RequisitionAccess.STATUS_PENDING_DIRECTOR);
         pending.setSubmittedAt(LocalDateTime.of(2026, 10, 15, 9, 0));
-        pending.setExpectedStartDate(TODAY.plusDays(10));
 
         // Act
         RequisitionResponse detail = mapper.toDetail(pending, manager, null, false, List.of(), List.of());
 
         // Assert
         assertEquals(3L, detail.waitingDays());
-        assertEquals(10L, detail.daysUntilStart());
         assertTrue(detail.withdrawable());
     }
 

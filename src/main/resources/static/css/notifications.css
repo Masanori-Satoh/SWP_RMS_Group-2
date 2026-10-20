@@ -112,9 +112,19 @@
     color: #64748b;
 }
 
-.notif-badge.event-rejected {
+.notif-badge.event-pending {
     background-color: #fef3c7;
     color: #92400e;
+}
+
+.notif-badge.event-approved {
+    background-color: var(--brand-soft, #e7f0e8);
+    color: var(--brand-dark, #2e5a45);
+}
+
+.notif-badge.event-rejected {
+    background-color: #fee2e2;
+    color: #991b1b;
 }
 
 .notif-badge.event-published {

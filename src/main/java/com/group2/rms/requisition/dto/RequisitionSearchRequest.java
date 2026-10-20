@@ -7,14 +7,14 @@ import java.util.List;
 
 /**
  * Mọi điều kiện tìm kiếm của màn "Yêu cầu tuyển dụng", lấy từ URL.
- * Ví dụ: /requisitions?q=java&status=Approved&status=Rejected&sort=oldest&page=1
+ * Ví dụ: /requisitions?q=java&status=Approved&sort=oldest&page=1
  *
  * Spring tự tạo record này từ query string (controller dùng @ModelAttribute).
  * Giá trị chưa được kiểm tra: service sẽ "làm sạch" lại theo quyền của người xem
  * (xem RequisitionServiceImpl#normalizeFilter).
  *
  * @param q            từ khóa tìm theo tên vị trí hoặc phòng ban
- * @param status       các trạng thái duyệt được chọn (chọn được nhiều).
+ * @param status       trạng thái duyệt được chọn (Spring nhận dạng danh sách, service chỉ giữ một giá trị).
  *                     null = URL không có tham số status (lần vào đầu);
  *                     danh sách rỗng = người dùng chủ động bỏ hết trạng thái
  * @param posting      trạng thái tin tuyển dụng mới nhất: "none", "Published", "Paused", "Closed"
@@ -59,7 +59,7 @@ public record RequisitionSearchRequest(
         return count;
     }
 
-    /** Ô checkbox trạng thái có đang được chọn không (dùng trong template). */
+    /** Trạng thái này có đang được chọn không (dùng trong template). */
     public boolean hasStatus(String value) {
         return status != null && status.contains(value);
     }

@@ -1,4 +1,4 @@
-/* MANAGEMENT-FILTERS.CSS — Internal/Candidate Accounts and Departments lists only.
+/* MANAGEMENT-FILTERS.CSS — Shared GET toolbar: accounts, departments, requisitions and job postings.
    Prefix mft-; compose the existing GET form and catalog controls, without shared shell edits. */
 .mft-toolbar { position: relative; display: flex; flex-wrap: wrap; align-items: center; gap: var(--s3) var(--s4); min-width: 0; margin: 0 0 var(--s4); padding: var(--s3) var(--s4); }
 .mft-controls { display: flex; align-items: center; flex-wrap: wrap; gap: var(--s3); flex: 1 1 460px; min-width: 0; }
@@ -7,6 +7,13 @@
 .mft-toggle::-webkit-details-marker { display: none; }
 .mft-toggle:hover, .mft-disclosure[open] > .mft-toggle { background: var(--brand-soft); border-color: var(--brand); color: var(--brand-dark); }
 .mft-count { display: inline-grid; place-items: center; min-width: 20px; height: 20px; padding-inline: var(--s1); border-radius: var(--radius-full); background: var(--brand-soft); color: var(--brand-dark); font-size: var(--font-xs); font-variant-numeric: tabular-nums; }
+.mft-status-tabs { display: inline-flex; align-items: center; flex: 0 0 auto; box-sizing: border-box; min-width: 0; max-width: 100%; padding: 3px; border: 1px solid var(--line); border-radius: var(--radius-full); background: var(--surface-subtle); white-space: nowrap; }
+.mft-status-option span, .mft-status-static { display: inline-flex; align-items: center; justify-content: center; min-height: 38px; padding: var(--s2) var(--s3); border: 0; border-radius: var(--radius-full); background: transparent; color: var(--muted); font: inherit; font-size: var(--font-sm); font-weight: 500; }
+.mft-status-option { position: relative; flex: none; cursor: pointer; }
+.mft-status-option input[type="radio"] { position: absolute; inset: 0; box-sizing: border-box; width: 100%; height: 100%; min-height: 0; margin: 0; padding: 0; border: 0; opacity: 0; cursor: pointer; }
+.mft-status-option:hover span { color: var(--ink); background: var(--neutral-soft); }
+.mft-status-option input:checked + span, .mft-status-static { color: var(--surface); background: var(--brand-dark); font-weight: 700; }
+.mft-status-option input:focus-visible + span { outline: 3px solid var(--focus); outline-offset: 2px; }
 .mft-chips { display: flex; align-items: center; flex-wrap: wrap; gap: var(--s1); min-width: 0; }
 .mft-chip { display: inline-flex; align-items: center; justify-content: center; min-height: 36px; padding: var(--s2) var(--s3); border: 1px solid var(--line); border-radius: var(--radius-full); background: var(--surface-subtle); color: var(--muted); font-size: var(--font-sm); font-weight: 500; line-height: 1.35; text-decoration: none; white-space: nowrap; }
 .mft-chip:hover { border-color: var(--control-line); background: var(--neutral-soft); color: var(--ink); }

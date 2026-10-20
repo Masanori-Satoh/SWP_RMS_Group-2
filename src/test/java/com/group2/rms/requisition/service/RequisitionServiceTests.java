@@ -172,7 +172,6 @@ class RequisitionServiceTests {
                     .workLocation("Hanoi")
                     .workModel("Hybrid")
                     .probationDays(60)
-                    .expectedStartDate(LocalDate.now(CLOCK).plusMonths(1))
                     .reasonForHiring("Expansion")
                     .jobDescription("Develop RMS")
                     .requirementDetails("Spring Boot, SQL")
@@ -323,7 +322,7 @@ class RequisitionServiceTests {
         }
 
         @Test
-        @DisplayName("HM gửi duyệt -> Pending_Director, submittedAt = giờ hiện tại, không có bản ghi duyệt")
+        @DisplayName("HM gửi duyệt -> Pending_Director, submittedAt = giờ hiện tại, thông báo cho Giám đốc")
         void createRequisition_shouldBePendingDirector_whenManagerSubmits() {
             // Act
             service.createRequisition(submit("Java Engineer"));
@@ -333,6 +332,7 @@ class RequisitionServiceTests {
             assertEquals(RequisitionAccess.STATUS_PENDING_DIRECTOR, saved.getApprovalStatus());
             assertEquals(NOW, saved.getSubmittedAt());
             verifyNoInteractions(approvals);
+            verify(notificationService).notifyRequisitionPendingDirector(saved, manager);
         }
 
         @Test
@@ -545,6 +545,22 @@ class RequisitionServiceTests {
             assertEquals(RequisitionAccess.STATUS_APPROVED, requisition.getApprovalStatus());
             assertSame(sales, requisition.getDepartment());
             verify(approvals).save(any(RequisitionApproval.class));
+            verify(notificationService, never()).notifyRequisitionPendingDirector(any(), any());
+        }
+
+        @Test
+        @DisplayName("HM nộp lại bản nháp để duyệt -> Pending_Director, gửi thông báo cho Giám đốc")
+        void updateRequisition_shouldNotifyDirector_whenManagerSubmits() {
+            // Arrange
+            JobRequisition requisition = requisitionWithStatus(91, RequisitionAccess.STATUS_DRAFT);
+            RequisitionRequest request = submit("Senior Java");
+
+            // Act
+            service.updateRequisition(91, request);
+
+            // Assert
+            assertEquals(RequisitionAccess.STATUS_PENDING_DIRECTOR, requisition.getApprovalStatus());
+            verify(notificationService).notifyRequisitionPendingDirector(requisition, manager);
         }
 
         @Test
@@ -703,16 +719,18 @@ class RequisitionServiceTests {
         }
 
         @Test
-        @DisplayName("Giám đốc duyệt -> Approved, lưu bản ghi duyệt, audit, KHÔNG gửi thông báo trả lại")
-        void decide_shouldApproveAndNotNotify_whenDirectorApproves() {
+        @DisplayName("Giám đốc duyệt -> Approved, lưu bản ghi duyệt, audit, gửi thông báo phê duyệt cho HM")
+        void decide_shouldApproveAndNotifyManager_whenDirectorApproves() {
             // Act
             service.decide(50, true, "Looks good");
 
             // Assert
             assertEquals(RequisitionAccess.STATUS_APPROVED, pending.getApprovalStatus());
-            verify(approvals).save(any(RequisitionApproval.class));
+            ArgumentCaptor<RequisitionApproval> decision = ArgumentCaptor.forClass(RequisitionApproval.class);
+            verify(approvals).save(decision.capture());
             assertEquals("Status: Pending_Director → Approved\nÝ kiến Giám đốc: Looks good", savedAudit().getNewValue());
-            verifyNoInteractions(notificationService);
+            verify(notificationService).notifyRequisitionApproved(decision.getValue());
+            verify(notificationService, never()).notifyRequisitionRejected(any());
         }
 
         @Test

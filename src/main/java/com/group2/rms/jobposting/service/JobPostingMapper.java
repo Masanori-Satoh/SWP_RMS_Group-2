@@ -195,7 +195,6 @@ public class JobPostingMapper {
                     .requisitionTitle(requisition.getTitle())
                     .numberOfPositions(requisition.getNumberOfPositions())
                     .workModelLabel(RequisitionLabels.workModel(requisition.getWorkModel()))
-                    .expectedStartDate(requisition.getExpectedStartDate())
                     .hiringManagerName(fullName(requisition.getHiringManager()));
         } else {
             detail.requisitionCode(JobPostingLabels.MISSING)
@@ -341,7 +340,6 @@ public class JobPostingMapper {
         form.setReasonForHiring(requisition.getReasonForHiring());
         form.setProbationDays(requisition.getProbationDays());
         form.setGender(RequisitionLabels.gender(requisition.getGender()));
-        form.setExpectedStartDate(requisition.getExpectedStartDate());
         form.setSalaryRangeLabel(RequisitionLabels.salary(requisition.getMinSalary(), requisition.getMaxSalary()));
         form.setSourceWorkLocation(Objects.toString(requisition.getWorkLocation(), ""));
         form.setSourceJobDescription(Objects.toString(requisition.getJobDescription(), ""));

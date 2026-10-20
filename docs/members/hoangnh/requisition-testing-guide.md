@@ -360,3 +360,9 @@ pm.test("Báo lỗi số lượng", () =>
 - [ ] Chạy collection Postman → mọi test xanh, dữ liệu đã được dọn.
 - [ ] Quy tắc mới trong code đã có trong `validation.md` và có ít nhất 1 test biên.
 - [ ] Ghi ngắn gọn vào `checklist.md`.
+
+## 7. Kiểm tra JS thao tác Requisition
+
+Sau khi đổi `pages/requisition-actions.js`, chạy `node --test src/test/js/requisition-actions.test.cjs`. Test kiểm tra hộp thoại xóa dùng đúng yêu cầu và trả focus, từ chối thiếu lý do bị chặn, quyết định hợp lệ chỉ gửi một lần và trạng thái được mở lại khi quay về trang.
+
+Khi app đang chạy, kiểm tra thêm trên trình duyệt: form lưu nháp/gửi duyệt sau một lần nhập sai, thao tác xóa ở danh sách/chi tiết, toast thành công/lỗi, và bộ lọc của Requisition/Job Posting/Admin ở màn hình hẹp.

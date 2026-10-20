@@ -99,8 +99,6 @@ public class JobRequisition extends BaseEntity {
     private String workModel;
     @Column(name = "ProbationDays")
     private Integer probationDays;
-    @Column(name = "ExpectedStartDate")
-    private java.time.LocalDate expectedStartDate;
     @Column(name = "SubmittedAt")
     private java.time.LocalDateTime submittedAt;
     // Cột có trong DB nhưng luồng requisition hiện chưa ghi (không có trạng thái đóng yêu cầu)

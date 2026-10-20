@@ -1,11 +1,33 @@
 /* REQUISITION-LIST.CSS — Danh sách yêu cầu tuyển dụng (/requisitions). Badge và menu ⋯ dùng class catalog (.badge--*, .more-menu). */
-.req-list-page .btn-create { flex-shrink:0; }
-.req-list-page .requisition-page-header { align-items:center; margin-bottom:var(--s5, 20px); }
-.req-list-page .requisition-page-header h1 { margin:0; font-size:26px; }
-.req-list-page .list-container { margin-top:var(--s6); }
-.req-list-page .list-results-count { margin:0 0 var(--s4); color:var(--muted); font-size:14px; }
+.rms-app.req-list-page .page-content { width:100%; max-width:none; box-sizing:border-box; margin-inline:0; padding-block:var(--s6); padding-inline:clamp(var(--s4), 2vw, var(--s8)); background:color-mix(in srgb, var(--brand-soft) 50%, var(--page)); }
+.req-list-page .requisition-page-header { align-items:center; margin-bottom:var(--s4); }
+.req-list-page .requisition-page-header .page-title { margin:0; font:600 26px/1.3 var(--sans); letter-spacing:-.02em; }
+.req-list-page .requisition-page-actions { display:flex; justify-content:flex-end; }
+.req-list-page .requisition-page-actions .btn-create { white-space:nowrap; }
+@media (max-width:768px) {
+    .req-list-page .requisition-page-header { align-items:flex-start; }
+}
+@media (max-width:600px) {
+    .req-list-page .requisition-page-actions { width:100%; }
+    .req-list-page .requisition-page-actions .btn-create { width:100%; }
+}
+.req-app.req-list-page .list-container { margin-top:0; padding:0; border-radius:var(--radius-lg); overflow:hidden; }
+.req-list-page .req-list-header { display:flex; align-items:center; gap:var(--s3); flex-wrap:wrap; padding:var(--s4) var(--s6); border-bottom:1px solid var(--line); }
+.req-list-page .req-list-icon { display:grid; place-items:center; flex:none; width:38px; height:38px; border-radius:var(--radius-md); background:var(--brand-soft); color:var(--brand-dark); }
+.req-list-page .req-list-header h2 { flex:1 1 auto; min-width:0; margin:0; font:600 var(--font-lg)/1.35 var(--sans); }
+.req-list-page .req-list-count { margin-left:auto; white-space:nowrap; }
+.req-list-page .req-list-body { padding:var(--s3) var(--s6); }
+.req-list-page .requisition-table-wrap { margin-bottom:0; }
+.req-list-page .req-list-pagination .pagination-info > span:last-child { display:none; }
+@media (max-width:600px) {
+    .req-list-page .req-list-header { padding:var(--s4); }
+    .req-list-page .req-list-body { padding:var(--s3) var(--s4); }
+}
 .req-list-page .requisition-list-table td { padding-block:var(--s2); }
 .req-list-page .requisition-list-table th { white-space:nowrap; }
+.req-list-page .requisition-list-table :is(th,td):first-child { width:56px; padding-left:var(--s4); font-variant-numeric:tabular-nums; }
+.req-list-page .requisition-list-table :is(th,td):last-child { width:88px; padding-right:var(--s4); text-align:right; }
+.req-list-page .requisition-list-table :is(th,td):nth-child(5) { padding-right:var(--s4); text-align:right; font-variant-numeric:tabular-nums; }
 .req-list-page .requisition-list-table tbody tr:hover { background:var(--page); }
 .req-list-page .requisition-list-table td:first-child { color:var(--muted); }
 .req-list-page .position-title { display:flex; align-items:center; min-height:44px; min-width:160px; max-width:320px; font-weight:600; text-decoration:none; overflow-wrap:anywhere; }
@@ -14,17 +36,19 @@
 
 /* =============================================================================
    THANH CÔNG CỤ: dùng lại bộ mft- của pages/management-filters.css
-   Wireframe đã duyệt: ô tìm kiếm dài bên trái, nút "Bộ lọc" bên phải,
-   popover mở ngay dưới nút (căn mép phải), hàng chip bộ lọc đang bật ở dưới thanh.
+   Bộ lọc bên trái, trạng thái ở giữa, ô tìm kiếm gọn bên phải.
    ============================================================================= */
-.req-list-page .req-toolbar .mft-search { order:-1; flex:1 1 320px; max-width:none; margin-left:0; }
-.req-list-page .req-toolbar .mft-controls { flex:0 0 auto; }
-.req-list-page .req-toolbar .mft-popover { left:auto; right:var(--s4); }
+.req-list-page .req-toolbar .mft-controls { order:0; flex:0 0 auto; }
+.req-list-page .req-toolbar .mft-status-tabs { order:1; }
+.req-list-page .req-toolbar .mft-search { order:2; flex:0 1 300px; min-width:min(100%, 230px); max-width:320px; margin-left:auto; }
+.req-list-page .req-toolbar .mft-popover { left:var(--s4); right:auto; }
+@media (max-width:760px) {
+    .req-list-page .req-toolbar .mft-status-tabs { order:1; flex:1 1 100%; flex-wrap:wrap; white-space:normal; border-radius:var(--radius-lg); }
+    .req-list-page .req-toolbar .mft-search { order:2; flex-basis:100%; max-width:none; }
+}
 
-/* Ô "Trạng thái" và "Ngày tạo" chiếm cả hàng trong popover 2 cột */
+/* Ô "Ngày tạo" chiếm cả hàng trong popover 2 cột */
 .req-list-page .req-filter-full { grid-column:1 / -1; min-width:0; margin:0; padding:0; border:0; }
-.req-list-page .req-status-options { display:flex; flex-wrap:wrap; gap:var(--s2) var(--s4); }
-.req-list-page .req-status-option { display:inline-flex; align-items:center; gap:var(--s2); font-size:var(--font-sm); cursor:pointer; }
 .req-list-page .req-date-range { display:flex; align-items:center; gap:var(--s2); }
 .req-list-page .req-date-range .form-input { min-width:0; }
 

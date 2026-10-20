@@ -71,8 +71,6 @@ public class RequisitionRequest {
     @Min(value = RequisitionValidator.PROBATION_MIN_DAYS, message = RequisitionValidator.PROBATION_RANGE_MESSAGE)
     @Max(value = RequisitionValidator.PROBATION_MAX_DAYS, message = RequisitionValidator.PROBATION_RANGE_MESSAGE)
     private Integer probationDays;
-    @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
-    private LocalDate expectedStartDate;
 
     // NOTE: 3 ô nhiều dòng không đặt @Size: trình duyệt gửi xuống dòng là \r\n (2 ký tự), Bean Validation
     // chạy trước khi RequisitionValidator.cleanMultiline đổi về \n, nên đếm ở đây sẽ chặn oan đoạn văn gần giới hạn.

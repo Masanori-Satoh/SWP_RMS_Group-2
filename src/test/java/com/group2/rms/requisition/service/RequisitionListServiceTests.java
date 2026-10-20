@@ -325,23 +325,6 @@ class RequisitionListServiceTests {
     }
 
     @Test
-    @DisplayName("Sắp xếp 'start_date' -> Dùng cột expectedStartDate tăng dần")
-    void getListPage_shouldSortByExpectedStartDate_whenSortIsStartDate() {
-        // Arrange
-        loginAs(RequisitionAccess.ROLE_HIRING_MANAGER);
-
-        // Act
-        service.getListPage(new RequisitionSearchRequest(null, null, null, null, null, null, null, "start_date", null, null));
-
-        // Assert
-        ArgumentCaptor<Pageable> pageable = ArgumentCaptor.forClass(Pageable.class);
-        verify(requisitions).findAll(any(Specification.class), pageable.capture());
-        Sort.Order firstOrder = pageable.getValue().getSort().iterator().next();
-        assertEquals("expectedStartDate", firstOrder.getProperty());
-        assertTrue(firstOrder.isAscending());
-    }
-
-    @Test
     @DisplayName("Gõ số trang vượt quá tổng số trang -> Tự lùi về trang cuối thay vì bảng trống")
     void getListPage_shouldFallBackToLastPage_whenPageIsBeyondTotal() {
         // Arrange

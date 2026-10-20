@@ -52,7 +52,6 @@ class RequisitionValidatorTests {
                 .numberOfPositions(1)
                 .employmentType("Full-time")
                 .workModel("On-site")
-                .expectedStartDate(TODAY.plusDays(1))
                 .workLocation("Office")
                 .reasonForHiring("Expansion")
                 .jobDescription("Develop software")
@@ -665,21 +664,6 @@ class RequisitionValidatorTests {
                 expectFail(d).getErrors().get("screeningCriteria[0].requiredValue"));
     }
 
-    @Test
-    @DisplayName("Gửi duyệt ngày bắt đầu đúng 1 năm + 1 ngày (biên) -> Báo lỗi")
-    void validate_shouldReject_whenStartDateIsOneYearAndOneDayAhead() {
-        var d = valid();
-        d.setExpectedStartDate(TODAY.plusYears(1).plusDays(1));
-        assertTrue(expectFail(d).getErrors().containsKey("expectedStartDate"));
-    }
-
-    @Test
-    @DisplayName("Ngày bắt đầu sớm / muộn nhất được chọn -> Hôm nay và hôm nay + 1 năm (form dùng làm min / max)")
-    void earliestAndLatestStartDate_shouldFollowClock_whenAskedByForm() {
-        assertEquals(TODAY, validator.earliestStartDate());
-        assertEquals(TODAY.plusYears(RequisitionValidator.START_DATE_MAX_YEARS), validator.latestStartDate());
-    }
-
     // VAL-011 — Salary và độ chính xác thập phân
 
     @Test
@@ -778,55 +762,6 @@ class RequisitionValidatorTests {
         expectPass(d);
     }
 
-    // VAL-012 — Ngày bắt đầu dự kiến
-
-    @Test
-    @DisplayName("Gửi duyệt với ngày bắt đầu hôm qua -> Báo lỗi")
-    void validate_shouldReject_whenSubmitStartDateIsYesterday() {
-        var d = valid();
-        d.setExpectedStartDate(TODAY.minusDays(1));
-        assertTrue(expectFail(d).getErrors().containsKey("expectedStartDate"));
-    }
-
-    @Test
-    @DisplayName("Gửi duyệt với ngày bắt đầu hôm nay (biên) -> Hợp lệ")
-    void validate_shouldPass_whenSubmitStartDateIsToday() {
-        var d = valid();
-        d.setExpectedStartDate(TODAY);
-        expectPass(d);
-    }
-
-    @Test
-    @DisplayName("Ngày bắt đầu 3 tháng tới -> Hợp lệ")
-    void validate_shouldPass_whenSubmitStartDateIsInFuture() {
-        var d = valid();
-        d.setExpectedStartDate(TODAY.plusMonths(3));
-        expectPass(d);
-    }
-
-    @Test
-    @DisplayName("Ngày bắt đầu đúng 1 năm sau (biên) -> Hợp lệ")
-    void validate_shouldPass_whenStartDateIsExactlyOneYearAhead() {
-        var d = valid();
-        d.setExpectedStartDate(TODAY.plusYears(1));
-        expectPass(d);
-    }
-
-    @Test
-    @DisplayName("Ngày bắt đầu quá 1 năm (kể cả nháp, năm 5 chữ số) -> Báo lỗi")
-    void validate_shouldReject_whenStartDateIsMoreThanOneYearAhead() {
-        var submit = valid();
-        submit.setExpectedStartDate(TODAY.plusYears(1).plusDays(1));
-        assertEquals("Ngày bắt đầu dự kiến không được quá 1 năm kể từ hôm nay.",
-                expectFail(submit).getErrors().get("expectedStartDate"));
-
-        // Năm 5 chữ số (gõ nhầm trên ô ngày) cũng bị chặn khi lưu nháp, không để DB báo
-        // lỗi
-        var draft = minimalDraft();
-        draft.setExpectedStartDate(LocalDate.of(20266, 1, 1));
-        assertTrue(expectFail(draft).getErrors().containsKey("expectedStartDate"));
-    }
-
     // Xuống dòng "\r\n" (trình duyệt gửi lên) được đổi thành "\n" trước khi đếm ký
     // tự
 
@@ -847,31 +782,6 @@ class RequisitionValidatorTests {
         String text = String.join("\r\n", java.util.Collections.nCopies(1000, "a"));
         var d = valid();
         d.setReasonForHiring(text);
-        expectPass(d);
-        assertEquals(1999, d.getReasonForHiring().length());
-    }
-
-    @Test
-    @DisplayName("Gửi duyệt thiếu ngày bắt đầu -> Báo lỗi")
-    void validate_shouldReject_whenSubmitStartDateIsNull() {
-        var d = valid();
-        d.setExpectedStartDate(null);
-        assertTrue(expectFail(d).getErrors().containsKey("expectedStartDate"));
-    }
-
-    @Test
-    @DisplayName("Nháp thiếu ngày bắt đầu -> Hợp lệ")
-    void validate_shouldPass_whenDraftStartDateIsNull() {
-        var d = minimalDraft();
-        d.setExpectedStartDate(null);
-        expectPass(d);
-    }
-
-    @Test
-    @DisplayName("Nháp với ngày đã qua -> Hợp lệ (chỉ chặn khi gửi duyệt)")
-    void validate_shouldPass_whenDraftStartDateIsInPast() {
-        var d = minimalDraft();
-        d.setExpectedStartDate(TODAY.minusDays(1));
         expectPass(d);
     }
 
@@ -1235,13 +1145,11 @@ class RequisitionValidatorTests {
         d.setTitle("  ");
         d.setEmploymentType("Bad");
         d.setWorkModel("Bad");
-        d.setExpectedStartDate(TODAY.minusDays(1));
         d.setNumberOfPositions(null);
         var keys = expectFail(d).getErrors().keySet();
         assertTrue(keys.contains("title"));
         assertTrue(keys.contains("employmentType"));
         assertTrue(keys.contains("workModel"));
-        assertTrue(keys.contains("expectedStartDate"));
         assertTrue(keys.contains("numberOfPositions"));
     }
 

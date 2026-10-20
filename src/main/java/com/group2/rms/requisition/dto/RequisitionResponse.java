@@ -19,7 +19,6 @@ public record RequisitionResponse(
         Integer requisitionId,
         String title,
         String workLocation,
-        LocalDate expectedStartDate,
         boolean editable,
         boolean deletable,
         boolean decidable,
@@ -51,7 +50,6 @@ public record RequisitionResponse(
         // ----- Chỉ có ở màn Chi tiết -----
         LocalDateTime submittedAt,          // JobRequisition.SubmittedAt: lúc gửi duyệt gần nhất
         Long waitingDays,                   // số ngày đã chờ Giám đốc duyệt (chỉ khi Pending_Director)
-        Long daysUntilStart,                // còn bao nhiêu ngày tới ExpectedStartDate (âm = đã qua)
         String salaryLabel,                 // "20 – 30 triệu VND/tháng" hoặc "Thỏa thuận"
         String probationLabel,              // "60 ngày" hoặc "Không thử việc"
         String genderLabel,

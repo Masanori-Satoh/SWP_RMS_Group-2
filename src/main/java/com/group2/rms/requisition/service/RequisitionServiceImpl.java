@@ -183,6 +183,10 @@ public class RequisitionServiceImpl implements RequisitionService {
         }
         auditLogger.log(jobRequisition, currentUser, RequisitionAuditLogger.ACTION_CREATE, null, description);
 
+        if (RequisitionAccess.STATUS_PENDING_DIRECTOR.equals(jobRequisition.getApprovalStatus())) {
+            notificationService.notifyRequisitionPendingDirector(jobRequisition, currentUser);
+        }
+
         return jobRequisition.getRequisitionId();
     }
 
@@ -228,6 +232,10 @@ public class RequisitionServiceImpl implements RequisitionService {
             auditLogger.logChanges(jobRequisition, currentUser, changedKeys, before, after);
         }
         recordDirectApprovalIfNeeded(jobRequisition, currentUser);
+
+        if (RequisitionAccess.STATUS_PENDING_DIRECTOR.equals(jobRequisition.getApprovalStatus())) {
+            notificationService.notifyRequisitionPendingDirector(jobRequisition, currentUser);
+        }
     }
 
     @Override
@@ -301,6 +309,8 @@ public class RequisitionServiceImpl implements RequisitionService {
 
         if (!approved) {
             notificationService.notifyRequisitionRejected(decision);
+        } else {
+            notificationService.notifyRequisitionApproved(decision);
         }
     }
 
@@ -513,7 +523,6 @@ public class RequisitionServiceImpl implements RequisitionService {
         jobRequisition.setWorkLocation(requestDto.getWorkLocation());
         jobRequisition.setWorkModel(requestDto.getWorkModel());
         jobRequisition.setProbationDays(requestDto.getProbationDays());
-        jobRequisition.setExpectedStartDate(requestDto.getExpectedStartDate());
         jobRequisition.setReasonForHiring(requestDto.getReasonForHiring());
         // Rule: Bản nháp được phép để trống mô tả / yêu cầu, nhưng 2 cột này NOT NULL trong DB
         // nên lưu chuỗi rỗng thay cho null (khi gửi duyệt, validator đã bắt buộc nhập)

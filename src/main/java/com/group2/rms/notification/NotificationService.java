@@ -2,11 +2,18 @@ package com.group2.rms.notification;
 
 import com.group2.rms.jobposting.entity.JobPosting;
 import com.group2.rms.offer.entity.OfferProposal;
+import com.group2.rms.requisition.entity.JobRequisition;
 import com.group2.rms.requisition.entity.RequisitionApproval;
 import com.group2.rms.user.entity.User;
 import org.springframework.data.domain.Page;
 
 public interface NotificationService {
+
+    /** Báo cho Giám đốc khi HM gửi yêu cầu tuyển dụng để phê duyệt (Pending_Director). */
+    void notifyRequisitionPendingDirector(JobRequisition requisition, User actor);
+
+    /** Báo cho chủ requisition khi Giám đốc phê duyệt; {@code approval} là bản ghi phê duyệt vừa lưu. */
+    void notifyRequisitionApproved(RequisitionApproval approval);
 
     /** Báo cho chủ requisition khi Giám đốc từ chối; {@code rejection} là bản ghi phê duyệt vừa lưu. */
     void notifyRequisitionRejected(RequisitionApproval rejection);
