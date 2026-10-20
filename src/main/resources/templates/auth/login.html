@@ -2,31 +2,32 @@
 <html lang="vi" xmlns:th="http://www.thymeleaf.org">
 <head th:replace="~{auth/fragments :: head('Đăng nhập')}"></head>
 <body class="auth-page auth-botanical auth-login">
+<div th:replace="~{auth/fragments :: scene}"></div>
 <header th:replace="~{auth/fragments :: header}"></header>
 <div class="auth-container auth-shell">
   <aside th:replace="~{auth/fragments :: story(botanical=true)}"></aside>
-  <main id="main" class="auth-card" tabindex="-1">
+  <main id="main" class="card auth-card" tabindex="-1">
     <h1>Chào mừng bạn trở lại.</h1>
     <p class="auth-intro">Đăng nhập tài khoản ứng viên hoặc không gian tuyển dụng nội bộ.</p>
-    <p class="auth-message auth-error" role="alert" th:if="${param.error}">Thông tin đăng nhập không đúng hoặc tài khoản không hoạt động. Vui lòng thử lại hoặc <a th:href="@{/forgot-password}">đặt lại mật khẩu</a>.</p>
-    <p class="auth-message" role="status" th:if="${param.logout}">Bạn đã đăng xuất.</p>
-    <p class="auth-message" role="status" th:if="${param.registered}"><strong>Tạo tài khoản thành công.</strong>Đăng nhập để tiếp tục.</p>
-    <p class="auth-message" role="status" th:if="${param.reset}"><strong>Đặt lại mật khẩu thành công.</strong>Đăng nhập bằng mật khẩu mới.</p>
-    <p class="auth-message auth-error" role="alert" th:if="${param['session-expired']}">Phiên làm việc đã hết hạn. Vui lòng đăng nhập lại.</p>
+    <p class="alert alert--danger auth-message auth-error" role="alert" th:if="${param.error}">Thông tin đăng nhập không đúng hoặc tài khoản không hoạt động. Vui lòng thử lại hoặc <a th:href="@{/forgot-password}">đặt lại mật khẩu</a>.</p>
+    <p class="alert alert--success auth-message" role="status" th:if="${param.logout}">Bạn đã đăng xuất.</p>
+    <p class="alert alert--success auth-message" role="status" th:if="${param.registered}"><strong>Tạo tài khoản thành công.</strong>Đăng nhập để tiếp tục.</p>
+    <p class="alert alert--success auth-message" role="status" th:if="${param.reset}"><strong>Đặt lại mật khẩu thành công.</strong>Đăng nhập bằng mật khẩu mới.</p>
+    <p class="alert alert--danger auth-message auth-error" role="alert" th:if="${param['session-expired']}">Phiên làm việc đã hết hạn. Vui lòng đăng nhập lại.</p>
     <form class="auth-form" th:action="@{/login}" method="post" data-auth-form>
       <div class="auth-field">
-        <label for="username">Tên đăng nhập hoặc email</label>
-        <div class="auth-input-wrap"><svg th:replace="~{auth/fragments :: icon('user')}"></svg><input id="username" name="username" type="text" placeholder="Nhập tên đăng nhập hoặc email" autocomplete="username" autocapitalize="none" spellcheck="false" required></div>
+        <label class="form-label" for="username">Tên đăng nhập hoặc email</label>
+        <div class="auth-input-wrap"><svg th:replace="~{auth/fragments :: icon('user')}"></svg><input class="form-input" id="username" name="username" type="text" placeholder="Nhập tên đăng nhập hoặc email" autocomplete="username" autocapitalize="none" spellcheck="false" required></div>
       </div>
       <div class="auth-field">
-        <div class="auth-label-row"><label for="password">Mật khẩu</label><a th:href="@{/forgot-password}">Quên mật khẩu?</a></div>
+        <div class="auth-label-row"><label class="form-label" for="password">Mật khẩu</label><a th:href="@{/forgot-password}">Quên mật khẩu?</a></div>
         <div class="auth-password">
           <svg th:replace="~{auth/fragments :: icon('lock')}"></svg>
-          <input id="password" name="password" type="password" placeholder="Nhập mật khẩu" autocomplete="current-password" required>
+          <input class="form-input" id="password" name="password" type="password" placeholder="Nhập mật khẩu" autocomplete="current-password" required>
           <button class="auth-password-toggle" type="button" data-password-toggle aria-controls="password" aria-label="Hiện mật khẩu" data-show-label="Hiện mật khẩu" data-hide-label="Ẩn mật khẩu" aria-pressed="false" hidden><svg th:replace="~{auth/fragments :: icon('eye')}"></svg><span class="auth-visually-hidden" data-password-toggle-label>Hiện</span></button>
         </div>
       </div>
-      <button class="button auth-submit" type="submit" data-auth-submit data-busy-label="Đang đăng nhập…">Đăng nhập</button>
+      <button class="btn btn--primary auth-submit" type="submit" data-auth-submit data-busy-label="Đang đăng nhập…"><span data-auth-submit-label>Đăng nhập</span><svg th:replace="~{auth/fragments :: icon('arrow')}"></svg></button>
     </form>
     <nav class="auth-links auth-divider" aria-label="Tạo tài khoản"><span>Bạn chưa có tài khoản?</span><a th:href="@{/register}">Đăng ký ứng viên</a></nav>
   </main>

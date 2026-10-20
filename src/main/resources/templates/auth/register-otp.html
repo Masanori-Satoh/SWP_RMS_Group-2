@@ -2,10 +2,11 @@
 <html lang="vi" xmlns:th="http://www.thymeleaf.org">
 <head th:replace="~{auth/fragments :: head('Xác minh email đăng ký')}"></head>
 <body class="auth-page auth-botanical auth-registration-otp">
+<div th:replace="~{auth/fragments :: scene}"></div>
 <header th:replace="~{auth/fragments :: header}"></header>
 <div class="auth-container auth-shell">
   <aside th:replace="~{auth/fragments :: story(botanical=true)}"></aside>
-  <main id="main" class="auth-card" tabindex="-1">
+  <main id="main" class="card auth-card" tabindex="-1">
     <nav th:replace="~{auth/fragments :: registrationSteps(2)}"></nav>
     <h1>Xác minh email của bạn.</h1>
     <p class="auth-intro">Nhập mã gồm 6 chữ số đã gửi đến <strong th:text="${pendingRegistrationEmail}"></strong>. Mã có hiệu lực trong 15 phút kể từ khi gửi.</p>
@@ -13,17 +14,17 @@
       <div th:replace="~{auth/fragments :: errors}"></div>
       <div class="auth-field">
         <label id="otp-label" for="otp">Mã xác minh</label>
-        <input id="otp" class="auth-otp" type="text" name="otp" data-otp-value minlength="6" maxlength="6" pattern="[0-9]{6}" inputmode="numeric" autocomplete="one-time-code" autocapitalize="none" spellcheck="false" required th:attr="aria-invalid=${#fields.hasErrors('otp')},aria-describedby=${#fields.hasErrors('otp') ? 'otp-hint otp-error' : 'otp-hint'}">
+        <input id="otp" class="form-input auth-otp" type="text" name="otp" data-otp-value minlength="6" maxlength="6" pattern="[0-9]{6}" inputmode="numeric" autocomplete="one-time-code" autocapitalize="none" spellcheck="false" required th:attr="aria-invalid=${#fields.hasErrors('otp')},aria-describedby=${#fields.hasErrors('otp') ? 'otp-hint otp-error' : 'otp-hint'}">
         <div class="auth-otp-boxes" data-otp-boxes role="group" aria-labelledby="otp-label" hidden th:attr="aria-describedby=${#fields.hasErrors('otp') ? 'otp-hint otp-error' : 'otp-hint'}">
           <div class="auth-otp-cell" th:each="digit : ${#numbers.sequence(1, 6)}">
             <label class="auth-visually-hidden" th:for="${'otp-digit-' + digit}" th:text="${'Chữ số ' + digit + ' trên 6'}"></label>
-            <input class="auth-otp-digit" type="text" data-otp-digit inputmode="numeric" pattern="[0-9]" autocapitalize="none" spellcheck="false" th:id="${'otp-digit-' + digit}" th:attr="maxlength=${digit == 1 ? 6 : 1},autocomplete=${digit == 1 ? 'one-time-code' : 'off'},aria-invalid=${#fields.hasErrors('otp')},aria-describedby=${#fields.hasErrors('otp') ? 'otp-hint otp-error' : 'otp-hint'}">
+            <input class="form-input auth-otp-digit" type="text" data-otp-digit inputmode="numeric" pattern="[0-9]" autocapitalize="none" spellcheck="false" th:id="${'otp-digit-' + digit}" th:attr="maxlength=${digit == 1 ? 6 : 1},autocomplete=${digit == 1 ? 'one-time-code' : 'off'},aria-invalid=${#fields.hasErrors('otp')},aria-describedby=${#fields.hasErrors('otp') ? 'otp-hint otp-error' : 'otp-hint'}">
           </div>
         </div>
-        <small id="otp-hint" class="auth-hint">Nhập hoặc dán đầy đủ 6 chữ số. Tài khoản được tạo khi mã được xác minh.</small>
-        <span id="otp-error" class="auth-field-error" th:if="${#fields.hasErrors('otp')}"><th:block th:replace="~{auth/fragments :: fieldErrors('otp')}"></th:block></span>
+        <small id="otp-hint" class="form-hint auth-hint">Nhập hoặc dán đầy đủ 6 chữ số. Tài khoản được tạo khi mã được xác minh.</small>
+        <span id="otp-error" class="form-error auth-field-error" th:if="${#fields.hasErrors('otp')}"><th:block th:replace="~{auth/fragments :: fieldErrors('otp')}"></th:block></span>
       </div>
-      <button class="button auth-submit" type="submit" data-auth-submit data-busy-label="Đang xác minh…">Xác minh và tạo tài khoản</button>
+      <button class="btn btn--primary auth-submit" type="submit" data-auth-submit data-busy-label="Đang xác minh…"><span data-auth-submit-label>Xác minh và tạo tài khoản</span><svg th:replace="~{auth/fragments :: icon('arrow')}"></svg></button>
     </form>
     <div class="auth-support">
       <p>Nếu chưa nhận được email, hãy kiểm tra thư rác.</p>
@@ -33,7 +34,7 @@
         <button class="auth-resend-button" type="submit" data-auth-submit data-resend-submit data-busy-label="Đang gửi lại…" th:disabled="${retryAfterSeconds > 0}">Gửi lại mã xác minh</button>
       </form>
     </div>
-    <noscript><p class="auth-hint">Để cập nhật thời gian gửi lại, hãy <a th:href="@{/register/otp}">tải lại trang</a>.</p></noscript>
+    <noscript><p class="form-hint auth-hint">Để cập nhật thời gian gửi lại, hãy <a th:href="@{/register/otp}">tải lại trang</a>.</p></noscript>
     <nav class="auth-links auth-divider" aria-label="Đăng ký tài khoản"><a th:href="@{/register}">Sửa thông tin đăng ký</a><a th:href="@{/login}">Về trang đăng nhập</a></nav>
   </main>
 </div>

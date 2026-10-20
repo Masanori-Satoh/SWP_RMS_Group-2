@@ -102,7 +102,8 @@
   forms.forEach(form => {
     const button = form.querySelector('[data-auth-submit]');
     if (!button) return;
-    button.dataset.idleLabel = button.textContent;
+    const label = button.querySelector('[data-auth-submit-label]') || button;
+    button.dataset.idleLabel = label.textContent;
     form.addEventListener('submit', event => {
       if (form.dataset.submitting === 'true') {
         event.preventDefault();
@@ -111,7 +112,7 @@
       form.dataset.submitting = 'true';
       form.setAttribute('aria-busy', 'true');
       button.disabled = true;
-      button.textContent = button.dataset.busyLabel;
+      label.textContent = button.dataset.busyLabel;
     });
   });
 
@@ -153,7 +154,8 @@
       form.removeAttribute('aria-busy');
       const button = form.querySelector('[data-auth-submit]');
       button.disabled = false;
-      button.textContent = button.dataset.idleLabel;
+      const label = button.querySelector('[data-auth-submit-label]') || button;
+      label.textContent = button.dataset.idleLabel;
     });
   });
 })();
