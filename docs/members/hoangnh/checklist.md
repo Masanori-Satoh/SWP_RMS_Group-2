@@ -370,3 +370,7 @@ Nhằm đảm bảo chất lượng code và phòng ngừa lỗi hồi quy (regr
 - [x] **Thông báo phê duyệt (Approved):** Khi Giám đốc đồng ý/phê duyệt yêu cầu tuyển dụng, hệ thống tự động bắn thông báo `REQUISITION_APPROVED` tới Hiring Manager sở hữu yêu cầu. Nếu Giám đốc tự tạo và tự duyệt yêu cầu của mình thì bỏ qua tự gửi cho bản thân. Chống trùng lặp theo `EventId = REQ_APPROVE_{approvalId}`.
 - [x] **Giao diện & UI Thông báo:** Bổ sung badge hiển thị "Chờ phê duyệt" (`event-pending`, `badge--warning`) và "Yêu cầu đã được duyệt" (`event-approved`, `badge--success`) trên trang danh sách thông báo `/notifications` (`notifications/list.html` và `notifications.css`).
 - [x] **Kiểm thử đầy đủ:** Unit test (`NotificationServiceImplTest` 27/27 test, `RequisitionServiceTests` 48/48 test) và Integration test (`RequisitionIntegrationTests` 10/10 test) đều PASS 100%.
+
+## Kế hoạch Chatbot (2026-10-20)
+
+- [x] Tạo `chatbot_plan.md`: 3 giai đoạn (luật, không thêm bảng → thêm `ChatSession`/`ChatMessage` → tích hợp LLM), bảng phủ 11 use case, ước lượng thời gian và chỗ cắt nếu thiếu thời gian. Chưa code.
