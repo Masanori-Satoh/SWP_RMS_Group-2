@@ -2,6 +2,7 @@
    Dashboard-only layout (dash-); controls, cards and metrics come from the UI catalog.
    No shared shell or component overrides. */
 .dash-page { padding-bottom: var(--s12); }
+.rms-app .dash-page--recruitment { width: 100%; max-width: none; margin-inline: 0; }
 .dash-section { margin-top: var(--s8); padding-top: var(--s6); border-top: 1px solid var(--line); scroll-margin-top: calc(var(--topbar-h) + var(--s6)); min-width: 0; }
 .dash-section--first { margin-top: 0; padding-top: 0; border-top: 0; }
 .dash-section__heading { display: flex; align-items: baseline; justify-content: space-between; flex-wrap: wrap; gap: var(--s3) var(--s6); margin-bottom: var(--s4); }
@@ -37,6 +38,24 @@
 .dash-profile dt { color: var(--muted); }
 .dash-profile dd { margin: 0; overflow-wrap: anywhere; }
 .dash-preserve { white-space: pre-wrap; }
+
+/* Recruitment dashboards: charts retain their server-rendered values and links. */
+.dash-chart-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--s4); }
+.dash-chart-panel { min-width: 0; padding: var(--s4) var(--s6); }
+.dash-chart-panel:last-child:nth-child(odd) { grid-column: 1 / -1; }
+.dash-chart-title { font-family: var(--sans); font-size: var(--font-lg); font-weight: 600; margin: 0; }
+.dash-chart-description { color: var(--muted); font-size: var(--font-sm); margin: var(--s2) 0 var(--s4); }
+.dash-chart-canvas { position: relative; height: 250px; margin-bottom: var(--s4); }
+.dash-chart-canvas[hidden] { display: none; }
+.dash-chart-canvas canvas { display: block; }
+.dash-chart-canvas canvas.dash-chart-interactive { cursor: pointer; }
+.dash-chart-empty { padding: var(--s4); color: var(--muted); background: var(--surface-subtle); border-radius: var(--radius-md); }
+.dash-chart-points { display: flex; flex-wrap: wrap; gap: var(--s2); list-style: none; padding: 0; margin: 0; }
+.dash-chart-points li { min-width: 0; }
+.dash-chart-points a, .dash-chart-points li > span { display: inline-flex; align-items: center; gap: var(--s2); min-height: 36px; padding: var(--s1) var(--s2); border-radius: var(--radius-sm); background: var(--surface-subtle); color: var(--ink); font-size: var(--font-sm); }
+.dash-chart-points a { color: var(--brand-dark); text-decoration: none; }
+.dash-chart-points a:hover, .dash-chart-points a:focus-visible { background: var(--brand-soft); outline-color: var(--focus); }
+.dash-chart-points strong { font-variant-numeric: tabular-nums; }
 
 /* System Admin only (adm-). Shared components, tokens and other role styles are unchanged. */
 .rms-app .adm-page { width: 100%; max-width: none; margin-inline: 0; }
@@ -102,6 +121,9 @@
   .adm-summaries { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
 @media (max-width: 768px) {
+  .dash-chart-grid { grid-template-columns: 1fr; }
+  .dash-chart-panel:last-child:nth-child(odd) { grid-column: auto; }
+  .dash-chart-panel { padding: var(--s4); }
   .adm-summaries { grid-template-columns: 1fr; }
   .dash-section__heading { align-items: flex-start; }
   .dash-section__heading > div { flex-basis: 100%; }

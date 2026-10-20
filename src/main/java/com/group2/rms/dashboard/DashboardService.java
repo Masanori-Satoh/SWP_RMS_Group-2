@@ -142,8 +142,8 @@ public class DashboardService {
                                                                 metrics.newApplicationsAwaitingHrReview(),
                                                                 "Applied and not yet reviewed")),
                                 // get number of candidate
-                                List.of(new DashboardBreakdownResponse("Candidates by Recruitment Stage",
-                                                metrics.applicationStages())),
+                                List.of(new DashboardBreakdownResponse("Applications by Status",
+                                                metrics.formalApplicationStatuses())),
                                 List.of());
         }
 
@@ -170,17 +170,13 @@ public class DashboardService {
                                                                 metrics.ownPendingRequisitions(userId),
                                                                 "My requisitions with Pending_Director status"),
                                                 // get candidate for req
-                                                new DashboardMetricResponse("Candidates for My Requisitions",
-                                                                metrics.candidatesForOwnRequisitions(userId),
-                                                                "Distinct candidates who have applied"),
+                                                new DashboardMetricResponse("Candidates Forwarded to My Department",
+                                                                metrics.visibleCandidatesForHiringManager(userId, departmentId),
+                                                                "Distinct candidates in the HR-forwarded pipeline"),
                                                 // get upcoming inter
                                                 new DashboardMetricResponse("Upcoming Interviews",
-                                                                metrics.upcomingInterviewsForHiringManager(userId, now),
-                                                                "Within my requisitions"),
-                                                // get offer need hiring accept
-                                                new DashboardMetricResponse("My Offers Requiring Action",
-                                                                metrics.offersNeedingHiringManagerAction(userId),
-                                                                "Draft or Approved offers proposed by me")),
+                                                                metrics.upcomingInterviewsForDepartment(departmentId, now),
+                                                                "Within my department")),
                                 List.of(),
                                 List.of());
         }

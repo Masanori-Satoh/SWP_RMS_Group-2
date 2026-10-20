@@ -4,6 +4,7 @@ import com.group2.rms.candidate.controller.ApplicationPipelineController;
 import com.group2.rms.candidate.controller.MyApplicationController;
 import com.group2.rms.candidate.dto.ApplicationListResponse;
 import com.group2.rms.candidate.dto.ApplicationSearch;
+import com.group2.rms.candidate.dto.MyApplicationListResponse;
 import com.group2.rms.candidate.service.ApplicationPipelineService;
 import com.group2.rms.candidate.service.ApplicationReviewService;
 import com.group2.rms.candidate.service.ApplicationStage;
@@ -67,17 +68,22 @@ class SidebarRoleWebTests {
     @MockitoBean ApplicationReviewService reviewService;
     @MockitoBean com.group2.rms.candidate.service.TalentPoolService talentPool;
 
+    /** Ứng viên không có sidebar mà dùng topbar ứng viên (dunglt chốt 2026-10-20; menu topbar để trống), không lộ link của HR. */
     @Test
-    void candidatePagesDrawCandidateSidebar() throws Exception {
+    void candidatePagesDrawCandidateTopbarInsteadOfSidebar() throws Exception {
         User candidate = account("an.vo", "Candidate");
         when(currentUser.requireUser()).thenReturn(candidate);
         when(notifications.getNotificationsForUser(any(), anyInt(), anyInt())).thenReturn(Page.empty());
+        when(myApplications.list(any())).thenReturn(new MyApplicationListResponse(
+                List.of(), Map.of(1, 0L, 2, 0L, 3, 0L, 4, 0L), null, 0));
 
         for (String page : List.of("/portal/applications", "/portal/offers", "/portal/interviews", "/notifications")) {
-            String sidebar = sidebar(page, as(candidate));
-            assertTrue(sidebar.contains("href=\"/portal/offers\""), page + ": thiếu menu ứng viên");
-            assertFalse(sidebar.contains("href=\"/applications\""), page + ": lộ menu HR /applications");
-            assertFalse(sidebar.contains("href=\"/offers\""), page + ": lộ menu HR /offers");
+            String html = render(page, as(candidate));
+            assertFalse(html.contains("<nav class=\"sidebar-menu-list\""), page + ": ứng viên không còn sidebar");
+            String nav = cut(html, "<nav class=\"candidate-topbar__nav\"", page + ": không có menu ứng viên trên topbar");
+
+            assertFalse(nav.contains("href=\"/applications\""), page + ": lộ menu HR /applications");
+            assertFalse(nav.contains("href=\"/offers\""), page + ": lộ menu HR /offers");
         }
     }
 
@@ -103,11 +109,19 @@ class SidebarRoleWebTests {
     }
 
     private String sidebar(String page, RequestPostProcessor viewer) throws Exception {
-        String html = mvc.perform(get(page).with(viewer))
+        return cut(render(page, viewer), "<nav class=\"sidebar-menu-list\"", page + ": không có sidebar");
+    }
+
+    private String render(String page, RequestPostProcessor viewer) throws Exception {
+        return mvc.perform(get(page).with(viewer))
                 .andExpect(status().isOk())
                 .andReturn().getResponse().getContentAsString();
-        int start = html.indexOf("<nav class=\"sidebar-menu-list\"");
-        assertTrue(start >= 0, page + ": không có sidebar");
+    }
+
+    /** Đoạn {@code <nav ...>...</nav>} bắt đầu bằng {@code navStart}. */
+    private static String cut(String html, String navStart, String missing) {
+        int start = html.indexOf(navStart);
+        assertTrue(start >= 0, missing);
         return html.substring(start, html.indexOf("</nav>", start));
     }
 

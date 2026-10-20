@@ -68,39 +68,27 @@ class SidebarMenuTests {
         assertFalse(legacy(role, "dashboard").contains(MENU), role);
     }
 
-    /** Ứng viên có mục riêng "Hồ sơ đã ứng tuyển" (/portal/applications/** chỉ cho ứng viên), tách khỏi Bảng điều khiển. */
+    /** Ứng viên chỉ có 4 mục, đúng thứ tự, không có Bảng điều khiển (dunglt chốt 2026-10-20). */
     @Test
-    void candidateSeesOwnApplicationsEntryHighlightedOnItsPage() throws Exception {
-        String myApplications = "href=\"/portal/applications\"";
-        List<String> entries = links(shell("Candidate", "dashboard"));
-        assertTrue(entries.indexOf("/dashboard") < entries.indexOf("/portal/applications"), entries.toString());
-
-        String shell = shell("Candidate", "applications");
-        int link = shell.indexOf(myApplications);
-        String tag = shell.substring(shell.lastIndexOf("<a", link), shell.indexOf('>', link));
-        assertTrue(tag.contains("active"), tag);
-        assertTrue(tag.contains("aria-current=\"page\""), tag);
-
-        for (String role : List.of("HR", "Hiring Manager", "Director", "System Admin", "Interviewer")) {
-            assertFalse(shell(role, "dashboard").contains(myApplications), role);
-        }
+    void candidateMenuIsHomeJobsMyApplicationsProfile() throws Exception {
+        assertEquals(List.of("/", "/jobs", "/portal/applications", "/profile"), links(shell("Candidate", "applications")));
     }
 
-    /** Mục "Đề nghị tuyển dụng" của ứng viên dẫn tới /portal/offers (chỉ ứng viên), không còn là neo trên dashboard. */
-    @Test
-    void candidateOffersEntryOpensOffersPageAndIsHighlightedThere() throws Exception {
-        String offers = "href=\"/portal/offers\"";
-        assertTrue(links(shell("Candidate", "dashboard")).contains("/portal/offers"));
-        assertFalse(shell("Candidate", "dashboard").contains("/dashboard#offers"));
-
-        String shell = shell("Candidate", "offers");
-        int link = shell.indexOf(offers);
+    /** Lịch phỏng vấn và thư mời là trang con của đơn: vẫn sáng mục "Đơn ứng tuyển của tôi". */
+    @ParameterizedTest
+    @ValueSource(strings = {"applications", "interviews", "offers"})
+    void myApplicationsEntryIsHighlightedOnApplicationPages(String activeMenu) throws Exception {
+        String shell = shell("Candidate", activeMenu);
+        int link = shell.indexOf("href=\"/portal/applications\"");
         String tag = shell.substring(shell.lastIndexOf("<a", link), shell.indexOf('>', link));
         assertTrue(tag.contains("active"), tag);
         assertTrue(tag.contains("aria-current=\"page\""), tag);
+    }
 
+    @Test
+    void onlyCandidatesSeeMyApplications() throws Exception {
         for (String role : List.of("HR", "Hiring Manager", "Director", "System Admin", "Interviewer")) {
-            assertFalse(shell(role, "dashboard").contains(offers), role);
+            assertFalse(shell(role, "dashboard").contains("href=\"/portal/applications\""), role);
         }
     }
 
