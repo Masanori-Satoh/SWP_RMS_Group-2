@@ -5,52 +5,62 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title th:text="${title} + ' — Mộc Tuyển dụng'">Mộc Tuyển dụng</title>
+  <link rel="stylesheet" th:href="@{/css/tokens.css}">
   <link rel="stylesheet" th:href="@{/css/global.css}">
+  <link rel="stylesheet" th:href="@{/css/components.css}">
   <th:block th:replace="~{auth/fragments :: assets}"></th:block>
 </head>
 
 <body>
   <th:block th:fragment="assets">
     <meta name="referrer" content="no-referrer">
-    <link rel="stylesheet"
-      href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&amp;display=swap">
-    <link rel="stylesheet" th:href="@{/css/design-tokens.css}">
+    <link rel="stylesheet" th:href="@{/css/topbar.css}">
     <link rel="stylesheet" th:href="@{/css/auth.css}">
     <script defer th:src="@{/js/auth.js}"></script>
   </th:block>
-  <header class="auth-header" th:fragment="header">
+  <th:block th:fragment="header">
     <a class="skip-link" href="#main">Đến nội dung chính</a>
-    <div class="auth-container auth-header-inner">
-      <a th:replace="~{fragments/brand :: wordmark('TUYỂN DỤNG')}"></a>
-      <a class="auth-home" th:href="@{/}">Về trang tuyển dụng</a>
-    </div>
-  </header>
+    <header th:replace="~{fragments/layout/public-topbar :: topbar('', false)}"></header>
+  </th:block>
   <aside class="auth-story" th:fragment="story" aria-label="Làm việc tại Mộc">
+    <div class="auth-story-content">
     <p class="auth-brand-badge"><span aria-hidden="true"></span>Cơ hội nghề nghiệp tại Mộc</p>
-    <p class="auth-statement">Làm việc cùng Mộc.<br><span>Kết nối tài năng, kiến tạo giá trị thật.</span></p>
+    <p class="auth-statement">Làm việc cùng Mộc.<br><span>Kết nối tài năng,<br>kiến tạo giá trị thật.</span></p>
     <p class="auth-story-copy">Mộc phát triển phần mềm quản trị tuyển dụng minh bạch và tinh gọn. Cùng chúng tôi xây
       dựng những sản phẩm hữu ích mỗi ngày.</p>
-    <a class="auth-story-link" th:href="@{/#roles}">Khám phá vị trí đang tuyển</a>
+    <a class="btn btn--outline auth-story-link" th:href="@{/#roles}">Khám phá vị trí đang tuyển<svg th:replace="~{auth/fragments :: icon('arrow')}"></svg></a>
     <th:block th:if="${botanical == true}">
       <ul class="auth-highlights" aria-label="Cùng Mộc phát triển">
-        <li><svg th:replace="~{auth/fragments :: icon('opportunity')}"></svg><span>Khám phá<br>cơ hội</span></li>
-        <li><svg th:replace="~{auth/fragments :: icon('people')}"></svg><span>Kết nối<br>tài năng</span></li>
-        <li><svg th:replace="~{auth/fragments :: icon('leaf')}"></svg><span>Cùng tạo<br>giá trị</span></li>
+        <li><svg th:replace="~{auth/fragments :: icon('people')}"></svg><span>Môi trường<br>cởi mở, học hỏi</span></li>
+        <li><svg th:replace="~{auth/fragments :: icon('opportunity')}"></svg><span>Dự án thực tế,<br>tạo giá trị thật</span></li>
+        <li><svg th:replace="~{auth/fragments :: icon('leaf')}"></svg><span>Phát triển<br>cùng đội ngũ trẻ</span></li>
       </ul>
-      <figure class="auth-botanical-art" aria-hidden="true">
-        <img th:src="@{/images/auth-botanical-branch.png}" width="1000" height="561" alt="" decoding="async">
-        <span class="auth-floating-leaf auth-floating-leaf--one"><svg
-            th:replace="~{auth/fragments :: icon('leaf')}"></svg></span>
-        <span class="auth-floating-leaf auth-floating-leaf--two"><svg
-            th:replace="~{auth/fragments :: icon('leaf')}"></svg></span>
-        <figcaption>Con người<br>tạo nên <em>giá trị.</em></figcaption>
-      </figure>
     </th:block>
+    </div>
+    <figure th:replace="~{auth/fragments :: artwork}"></figure>
   </aside>
+  <div class="auth-scene" th:fragment="scene" aria-hidden="true">
+    <div class="auth-scene-leaves">
+    <span class="auth-floating-leaf auth-floating-leaf--one"><svg th:replace="~{auth/fragments :: decorativeLeaf}"></svg></span>
+    <span class="auth-floating-leaf auth-floating-leaf--two"><svg th:replace="~{auth/fragments :: decorativeLeaf}"></svg></span>
+    <span class="auth-floating-leaf auth-floating-leaf--three"><svg th:replace="~{auth/fragments :: decorativeLeaf}"></svg></span>
+    <span class="auth-floating-leaf auth-floating-leaf--four"><svg th:replace="~{auth/fragments :: decorativeLeaf}"></svg></span>
+    <span class="auth-floating-leaf auth-floating-leaf--five"><svg th:replace="~{auth/fragments :: decorativeLeaf}"></svg></span>
+    </div>
+  </div>
+  <svg th:fragment="decorativeLeaf" class="auth-leaf-silhouette" viewBox="0 0 40 64" aria-hidden="true" focusable="false">
+    <path d="M23 3C-2 20-6 42 17 60 42 45 43 17 23 3Z" />
+  </svg>
+  <figure class="auth-botanical-art" th:fragment="artwork" aria-hidden="true">
+    <img th:src="@{/images/auth-register-scene.png}" width="900" height="339" alt="" decoding="async">
+  </figure>
   <svg th:fragment="icon(name)" class="auth-icon" width="20" height="20" viewBox="0 0 24 24" fill="none"
     stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"
     focusable="false">
     <th:block th:switch="${name}">
+      <th:block th:case="'arrow'">
+        <path d="M5 12h14m-6-6 6 6-6 6" />
+      </th:block>
       <th:block th:case="'user'">
         <circle cx="12" cy="8" r="4" />
         <path d="M4 21v-2a8 8 0 0 1 16 0v2Z" />
@@ -80,7 +90,7 @@
       </th:block>
     </th:block>
   </svg>
-  <nav class="auth-steps" th:fragment="resetSteps(step)" aria-label="Các bước khôi phục mật khẩu">
+  <nav class="auth-steps" th:fragment="resetSteps(step)" th:attr="data-auth-step=${step}" aria-label="Các bước khôi phục mật khẩu">
     <ol>
       <li th:attr="aria-current=${step == 1 ? 'step' : null}"><span class="auth-step-number"
           aria-hidden="true">1</span><span>Email</span></li>
@@ -90,7 +100,7 @@
           aria-hidden="true">3</span><span>Mật khẩu mới</span></li>
     </ol>
   </nav>
-  <nav class="auth-steps" th:fragment="registrationSteps(step)" data-registration-steps
+  <nav class="auth-steps" th:fragment="registrationSteps(step)" data-registration-steps th:attr="data-auth-step=${step}"
     aria-label="Các bước đăng ký tài khoản">
     <ol>
       <li th:attr="aria-current=${step == 1 ? 'step' : null}"><span class="auth-step-number"
@@ -99,7 +109,7 @@
           aria-hidden="true">2</span><span>Xác minh email</span></li>
     </ol>
   </nav>
-  <div th:fragment="errors" class="auth-error-summary" data-auth-errors role="alert" tabindex="-1"
+  <div th:fragment="errors" class="alert alert--danger auth-error-summary" data-auth-errors role="alert" tabindex="-1"
     aria-labelledby="auth-error-title" th:if="${#fields.hasAnyErrors()}">
     <h2 id="auth-error-title">Kiểm tra lại thông tin</h2>
     <ul>
