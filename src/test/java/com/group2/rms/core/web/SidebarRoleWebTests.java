@@ -78,7 +78,7 @@ class SidebarRoleWebTests {
 
         for (String page : List.of("/portal/applications", "/portal/offers", "/portal/interviews", "/notifications")) {
             String sidebar = sidebar(page, as(candidate));
-            assertTrue(sidebar.contains("href=\"/portal/offers\""), page + ": thiếu menu ứng viên");
+            assertTrue(sidebar.contains("href=\"/portal/applications\""), page + ": thiếu menu ứng viên");
             assertFalse(sidebar.contains("href=\"/applications\""), page + ": lộ menu HR /applications");
             assertFalse(sidebar.contains("href=\"/offers\""), page + ": lộ menu HR /offers");
         }

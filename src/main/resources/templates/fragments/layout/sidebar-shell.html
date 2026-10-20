@@ -27,9 +27,10 @@
     </div>
 
     <!-- 2. Danh sách Menu chính theo Role -->
-    <nav class="sidebar-menu-list" aria-label="Menu chức năng">
+    <nav class="sidebar-menu-list" aria-label="Menu chức năng" th:with="userRole=${topbarUser != null and topbarUser.roleName != null ? topbarUser.roleName : (role ?: (dashboard != null ? dashboard.roleName : (userProfile != null ? userProfile.roleName : (viewerRole != null ? viewerRole : (session.user != null ? session.user.role : null)))))}">
         <!-- Ưu tiên role của người đang đăng nhập (topbarUser, có ở mọi trang); fallback cũ giữ cho trang không đăng nhập / test. Thiếu dòng này các trang /portal/* rơi vào sidebar HR. -->
-        <th:block th:with="userRole=${topbarUser != null and topbarUser.roleName != null ? topbarUser.roleName : (role ?: (dashboard != null ? dashboard.roleName : (userProfile != null ? userProfile.roleName : (viewerRole != null ? viewerRole : (session.user != null ? session.user.role : null)))))}">
+        <!-- userRole khai báo trên <nav> để cả link "Về trang Tuyển dụng" bên dưới cũng dùng được -->
+        <th:block>
             <!-- Nhánh Admin -->
             <th:block th:if="${userRole == 'System Admin' or userRole == 'Admin'}">
                 <th:block th:replace="~{fragments/layout/sidebars/admin :: menu(${activeMenu})}"></th:block>
@@ -68,7 +69,8 @@
             <span class="nav-label-text">Hồ sơ cá nhân</span>
         </a>
 
-        <!-- Về trang Tuyển dụng công khai -->
+        <!-- Về trang Tuyển dụng công khai (ứng viên đã có mục "Trang chủ" trong menu riêng) -->
+        <th:block th:unless="${userRole == 'Candidate'}">
         <a th:href="@{/}" class="sidebar-nav-link"
            title="Về trang Tuyển dụng"
            data-tooltip="Về trang Tuyển dụng">
@@ -81,6 +83,7 @@
             </span>
             <span class="nav-label-text">Về trang Tuyển dụng</span>
         </a>
+        </th:block>
     </nav>
 </aside>
 </body>
