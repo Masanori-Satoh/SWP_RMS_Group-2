@@ -6,6 +6,7 @@ import com.group2.rms.career.dto.PublicJobDetailResponse;
 import com.group2.rms.career.dto.PublicJobListResponse;
 import com.group2.rms.career.dto.DepartmentFilterResponse;
 import com.group2.rms.career.dto.ViewerProfileResponse;
+import com.group2.rms.career.repository.PublicJobSearch;
 import com.group2.rms.jobposting.entity.JobPosting;
 import com.group2.rms.jobposting.repository.JobPostingRepository;
 import com.group2.rms.user.repository.DepartmentRepository;
@@ -39,9 +40,17 @@ public class CareerPortalService {
 
     private final ApplicationSubmissionService applicationSubmissionService;
 
+    /**
+     * Tin đang mở, lọc theo phòng ban / hình thức và từ khóa ({@link PublicJobSearch}: một từ khớp là lấy, xếp theo
+     * điểm khớp). Không có từ khóa thì giữ thứ tự của {@code pageable} (mặc định mới đăng trước).
+     */
     public Page<PublicJobListResponse> getPublishedJobs(String keyword, Integer departmentId, String employmentType,
             Pageable pageable) {
-        Page<JobPosting> jobs = jobPostingRepository.findPublishedJobs(keyword, departmentId, employmentType, pageable);
+        List<String> terms = PublicJobSearch.terms(keyword);
+        // Có từ khóa: bỏ sort của pageable để thứ tự theo điểm khớp (đặt trong Specification) không bị đè.
+        Pageable page = terms.isEmpty() ? pageable : PageRequest.of(pageable.getPageNumber(), pageable.getPageSize());
+        Page<JobPosting> jobs = jobPostingRepository.findAll(
+                PublicJobSearch.openJobs(terms, departmentId, employmentType), page);
         return jobs.map(job -> new PublicJobListResponse(
                 job.getJobPostingId(),
                 job.getPostingTitle(),
