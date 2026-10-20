@@ -1,0 +1,46 @@
+/* =============================================================================
+   CANDIDATE-SHELL.CSS — khung trang của ứng viên trong layout/internal
+   (/portal/applications, /portal/interviews, /portal/offers, /profile, /notifications khi người xem là Candidate)
+   - Không sidebar: nội dung chiếm hết chiều ngang, menu nằm trên topbar (fragments/layout/candidate-topbar.html).
+   - Chữ sans là Plus Jakarta Sans, cùng font với landing (landing.css --font-sans); tiêu đề vẫn serif Lora.
+     Topbar giữ font riêng của .public-topbar (topbar.css) để giống hệt topbar ở landing, /jobs.
+   Tiền tố class: candidate-shell, candidate-topbar
+   ============================================================================= */
+
+.page-wrapper--candidate {
+  --sans: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-family: var(--sans);
+}
+
+/* Không có sidebar: bỏ lề trái dành cho sidebar (kể cả khi người dùng từng ghim sidebar). */
+.rms-app .page-wrapper--candidate .main-content {
+  margin-left: 0;
+}
+
+/* ---- Topbar ứng viên: logo | menu 2 mục | góc người dùng ---- */
+.candidate-topbar__nav {
+  display: flex;
+  flex: 1;
+  align-items: center;
+  gap: 4px;
+  min-width: 0;
+}
+
+/* Màn hẹp: menu xuống hàng thứ hai, hai mục chia đều, không cần nút ☰. */
+@media (max-width: 900px) {
+  .candidate-topbar__inner {
+    flex-wrap: wrap;
+    row-gap: 0;
+  }
+
+  .candidate-topbar__nav {
+    order: 3;
+    flex-basis: 100%;
+    padding-bottom: 8px;
+  }
+
+  .candidate-topbar__nav .public-topbar__link {
+    flex: 1;
+    justify-content: center;
+  }
+}

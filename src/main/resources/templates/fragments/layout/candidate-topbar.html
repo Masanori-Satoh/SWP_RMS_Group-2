@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<body>
+<!--
+    FRAGMENTS/LAYOUT/CANDIDATE-TOPBAR.HTML
+    =============================================================================
+    Topbar của ứng viên trong layout/internal (dunglt chốt 2026-10-20): ứng viên không có sidebar, menu nằm trên topbar.
+      Logo (về /) | Việc làm đang tuyển · Đơn ứng tuyển của tôi | chuông + avatar (về /profile) + Đăng xuất
+    Dùng lại khung .public-topbar (cùng dáng với landing, /jobs) nhưng menu là .candidate-topbar__nav: chỉ 2 mục nên
+    không bị ẩn ở màn hẹp như .public-topbar__nav; dưới 900px menu xuống hàng thứ hai.
+    Lịch phỏng vấn (/portal/interviews) và thư mời (/portal/offers) là trang con của đơn: sáng mục "Đơn ứng tuyển của tôi".
+    CSS: static/css/candidate-shell.css (+ topbar.css qua workspace.css). Người dùng lấy từ topbarUser (TopbarUserAdvice).
+    =============================================================================
+-->
+<header th:fragment="topbar(activeMenu)" class="public-topbar candidate-topbar"
+        th:with="viewer=${topbarUser}">
+  <div class="public-topbar__inner candidate-topbar__inner">
+    <a th:replace="~{fragments/brand :: wordmark('TUYỂN DỤNG')}"></a>
+
+    <nav class="candidate-topbar__nav" aria-label="Điều hướng ứng viên">
+      <a class="public-topbar__link" th:href="@{/jobs}"
+         th:classappend="${activeMenu == 'jobs'} ? 'active'"
+         th:attr="aria-current=${activeMenu == 'jobs' ? 'page' : null}">Việc làm đang tuyển</a>
+      <a class="public-topbar__link" th:href="@{/portal/applications}"
+         th:with="onMyApplications=${activeMenu == 'applications' or activeMenu == 'interviews' or activeMenu == 'offers'}"
+         th:classappend="${onMyApplications} ? 'active'"
+         th:attr="aria-current=${onMyApplications ? 'page' : null}">Đơn ứng tuyển của tôi</a>
+    </nav>
+
+    <div class="public-topbar__actions">
+      <div th:replace="~{fragments/layout/topbar-user :: actions(${viewer.fullName}, ${viewer.email}, ${viewer.roleName}, ${viewer.avatarUrl}, 'workspace')}"></div>
+    </div>
+  </div>
+</header>
+</body>
+</html>

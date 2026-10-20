@@ -68,11 +68,10 @@ class SidebarMenuTests {
         assertFalse(legacy(role, "dashboard").contains(MENU), role);
     }
 
-    /** Ứng viên chỉ có 4 mục, đúng thứ tự (dunglt chốt 2026-10-20). */
+    /** Ứng viên chỉ có 4 mục, đúng thứ tự, không có Bảng điều khiển (dunglt chốt 2026-10-20). */
     @Test
     void candidateMenuIsHomeJobsMyApplicationsProfile() throws Exception {
         assertEquals(List.of("/", "/jobs", "/portal/applications", "/profile"), links(shell("Candidate", "applications")));
-        assertFalse(shell("Candidate", "applications").contains("href=\"/dashboard\""), "ứng viên không còn dashboard");
     }
 
     /** Lịch phỏng vấn và thư mời là trang con của đơn: vẫn sáng mục "Đơn ứng tuyển của tôi". */
