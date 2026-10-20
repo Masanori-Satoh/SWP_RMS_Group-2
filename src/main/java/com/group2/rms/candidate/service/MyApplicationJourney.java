@@ -83,6 +83,22 @@ public final class MyApplicationJourney {
      */
     public record View(List<MyApplicationStep> steps, String statusLabel, String statusNote, String tone,
                        String actionLabel, String actionHref, List<TimelineItem> journey) {
+
+        /** Số thứ tự (1–4) của bước đơn đang đứng hoặc dừng; xong cả 4 vòng thì là bước cuối. */
+        public int stepNumber() {
+            for (int i = 0; i < steps.size(); i++) {
+                String state = steps.get(i).state();
+                if ("current".equals(state) || "closed".equals(state)) {
+                    return i + 1;
+                }
+            }
+            return steps.size();
+        }
+
+        /** Bước ứng với {@link #stepNumber()}: nhãn và trạng thái cho tag trên thẻ. */
+        public MyApplicationStep step() {
+            return steps.get(stepNumber() - 1);
+        }
     }
 
     public static View resolve(Facts facts, LocalDateTime now) {

@@ -208,6 +208,33 @@ class MyApplicationJourneyTests {
     }
 
     @Nested
+    class StepTag {
+        @Test
+        void inFlowApplicationPointsToItsCurrentStep() {
+            View view = resolve(facts("Interviewing").interviews(completed()));
+
+            assertEquals(3, view.stepNumber());
+            assertEquals(new MyApplicationStep("Phỏng vấn", "current"), view.step());
+        }
+
+        @Test
+        void stoppedApplicationPointsToTheStepWhereItStopped() {
+            View view = resolve(facts("Rejected").marks(mark("Withdrawn", "Applied", PAST)));
+
+            assertEquals(2, view.stepNumber());
+            assertEquals(new MyApplicationStep("Xét CV", "closed"), view.step());
+        }
+
+        @Test
+        void hiredApplicationPointsToTheLastStepAsDone() {
+            View view = resolve(facts("Hired").offer(offer(8, "Accepted")));
+
+            assertEquals(4, view.stepNumber());
+            assertEquals(new MyApplicationStep("Thư mời", "done"), view.step());
+        }
+    }
+
+    @Nested
     class ClosedPosting {
         @Test
         void closedWhileWaitingForInterview_stopsAtInterviewThoughTheScheduleWasCancelled() {

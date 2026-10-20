@@ -67,6 +67,10 @@ class MyApplicationServiceTests {
                 rows.stream().map(MyApplicationResponse::statusLabel).toList());
         assertEquals(List.of(true, false, false, false, false),
                 rows.stream().map(MyApplicationResponse::canWithdraw).toList());
+        assertEquals(List.of(2, 2, 2, 3, 4), rows.stream().map(MyApplicationResponse::stepNumber).toList());
+        assertEquals(List.of("current", "closed", "closed", "current", "done"),
+                rows.stream().map(MyApplicationResponse::stepState).toList());
+        assertEquals("Phỏng vấn", rows.get(3).stepLabel());
         assertEquals("/portal/interviews", rows.get(3).actionHref());
         assertEquals("/portal/offers/8", rows.get(4).actionHref());
         assertEquals(List.of("Đã nộp hồ sơ", "Đã phỏng vấn", "Bạn đã nhận lời"),
