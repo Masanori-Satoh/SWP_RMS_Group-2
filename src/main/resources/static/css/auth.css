@@ -107,10 +107,18 @@ body.auth-page {
 .auth-floating-leaf--three { left: 49.6%; top: 47%; width: 32px; transform: rotate(18deg); }
 .auth-floating-leaf--four { right: 1.6%; top: 54%; width: 37px; transform: rotate(13deg); }
 .auth-floating-leaf--five { right: 5.9%; bottom: 17.4%; width: 28px; opacity: .56; transform: rotate(-26deg); }
+/* Login keeps a short, content-sized form; the scene fills the remaining page. */
+.auth-login .auth-stage { flex: 1 0 auto; }
+.auth-login .auth-card { align-self: start; min-height: 0; margin-block-start: var(--s8); }
+/* Suppress the current-page action without changing the shared public header. */
+.auth-login .public-topbar__actions > a[href$="/login"] { display: none; }
+.auth-login .public-topbar__actions > a[href$="/register"] { display: inline-flex; max-width: 50vw; white-space: normal; text-align: center; }
 @media (min-width: 801px) {
   /* Let the PNG's transparent edge overlap the form column on shorter auth screens. */
   .auth-botanical:not(.auth-register) .auth-botanical-art { margin-top: calc(0px - var(--s6)); }
   .auth-botanical:not(.auth-register) .auth-botanical-art img { margin-left: -12%; }
+  /* Keep Login's illustration in the brand flow without the short-form overlap offset. */
+  .auth-login.auth-botanical .auth-botanical-art { margin-top: 0; }
 }
 @media (max-width: 1350px) {
   .auth-stage { grid-template-columns: minmax(32px, 1fr) 0px minmax(0, 510px) 35px 535px minmax(32px, 1fr); }
@@ -130,6 +138,7 @@ body.auth-page {
   .auth-story { grid-column: 2; }
   .auth-story-content { grid-column: 1; padding: 0; margin: 0; }
   .auth-card { grid-column: 2; grid-row: 2; }
+  .auth-login .auth-card { margin-block-start: 0; }
   .auth-statement { font-size: 40px; margin-block: 22px 17px; }
   .auth-highlights { margin-top: 22px; }
   .auth-highlights li { font-size: var(--font-xs); }
