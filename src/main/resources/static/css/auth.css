@@ -29,7 +29,7 @@ body.auth-page {
 .auth-highlights li { min-width: 0; display: grid; justify-items: center; align-content: start; gap: var(--s2); min-height: 83px; padding-inline: var(--s2); color: var(--muted); text-align: center; font-size: 14px; line-height: 1.35; }
 .auth-highlights li + li { border-left: 1px solid var(--line); }
 .auth-highlights .auth-icon { width: 29px; height: 29px; color: var(--brand); }
-.auth-card { grid-column: 5; grid-row: 1; align-self: center; min-width: 0; padding: 26px 38px 31px; border-radius: var(--radius-lg); }
+.auth-card { grid-column: 5; grid-row: 1; align-self: start; min-width: 0; padding: 26px 38px 31px; border-radius: var(--radius-lg); }
 .auth-register .auth-card { align-self: start; min-height: 760px; }
 .auth-card h1 { margin-bottom: var(--s3); font: 700 clamp(28px, 2.45vw, 35px)/1.25 var(--sans); letter-spacing: -.025em; text-wrap: balance; }
 .auth-intro { margin-bottom: var(--s8); color: var(--muted); line-height: 1.7; text-wrap: pretty; }
@@ -50,8 +50,8 @@ body.auth-page {
 .auth-eye-slash { display: none; }
 .auth-password-toggle[aria-pressed="true"] .auth-eye-slash { display: block; }
 .auth-hint, .auth-field-error { display: block; margin-top: var(--s2); }
-.auth-label-row { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; column-gap: var(--s3); }
-.auth-label-row a { min-height: 32px; color: var(--brand-dark); font-size: var(--font-sm); text-underline-offset: 4px; }
+.auth-label-row { display: flex; flex-wrap: wrap; align-items: flex-start; justify-content: space-between; column-gap: var(--s3); }
+.auth-label-row a { min-height: var(--s6); color: var(--brand-dark); font-size: var(--font-sm); text-underline-offset: 4px; }
 .auth-submit { width: 100%; margin-top: var(--s2); white-space: normal; text-align: center; }
 .auth-divider { margin-top: var(--s6); padding-top: var(--s4); border-top: 1px solid var(--line); }
 .auth-links { display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: var(--s1) var(--s3); color: var(--muted); font-size: var(--font-sm); }
@@ -64,13 +64,13 @@ body.auth-page {
 .auth-error-summary li + li { margin-top: var(--s1); }
 .auth-error-summary a, .auth-message a { text-decoration: underline; text-underline-offset: 4px; }
 .auth-form > .auth-error-summary { margin-bottom: 0; }
-/* Match the supplied mockup: a rail beside each number and an underline below each label. */
+/* One horizontal rail beside each step number; labels stay unlined. */
 .auth-steps { margin-bottom: var(--s8); }
 .auth-steps ol { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--s4); margin: 0; padding: 0; list-style: none; }
 .auth-steps[data-registration-steps] ol { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-.auth-steps li { min-width: 0; position: relative; display: grid; justify-items: start; gap: var(--s2); padding-bottom: 10px; border-bottom: 2px solid var(--line); color: var(--muted); font-size: 13px; line-height: 1.4; }
+.auth-steps li { min-width: 0; position: relative; display: grid; justify-items: start; gap: var(--s2); padding-bottom: 10px; color: var(--muted); font-size: 13px; line-height: 1.4; }
 .auth-steps li::before { content: ""; position: absolute; top: 18px; left: 37px; right: 0; height: 2px; background: var(--line); }
-.auth-steps li[aria-current="step"] { border-color: var(--brand); color: var(--brand-dark); font-weight: 600; }
+.auth-steps li[aria-current="step"] { color: var(--brand-dark); font-weight: 600; }
 .auth-steps li[aria-current="step"]::before { background: var(--brand); }
 .auth-step-number { position: relative; width: 37px; height: 37px; display: grid; place-items: center; border-radius: var(--radius-full); color: var(--muted); background: var(--surface-subtle); font-size: var(--font-base); font-weight: 600; font-variant-numeric: tabular-nums; }
 .auth-steps li[aria-current="step"] .auth-step-number { color: var(--on-brand); background: var(--brand-dark); }
@@ -107,6 +107,11 @@ body.auth-page {
 .auth-floating-leaf--three { left: 49.6%; top: 47%; width: 32px; transform: rotate(18deg); }
 .auth-floating-leaf--four { right: 1.6%; top: 54%; width: 37px; transform: rotate(13deg); }
 .auth-floating-leaf--five { right: 5.9%; bottom: 17.4%; width: 28px; opacity: .56; transform: rotate(-26deg); }
+@media (min-width: 801px) {
+  /* Let the PNG's transparent edge overlap the form column on shorter auth screens. */
+  .auth-botanical:not(.auth-register) .auth-botanical-art { margin-top: calc(0px - var(--s6)); }
+  .auth-botanical:not(.auth-register) .auth-botanical-art img { margin-left: -12%; }
+}
 @media (max-width: 1350px) {
   .auth-stage { grid-template-columns: minmax(32px, 1fr) 0px minmax(0, 510px) 35px 535px minmax(32px, 1fr); }
   .auth-story-content { padding-left: 0; }
