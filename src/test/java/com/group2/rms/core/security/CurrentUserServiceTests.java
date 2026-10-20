@@ -11,7 +11,9 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.access.AccessDeniedException;
 import java.util.List;
 import java.util.Optional;
-import static org.junit.jupiter.api.Assertions.*;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.*;
 
 class CurrentUserServiceTests {
@@ -38,7 +40,7 @@ class CurrentUserServiceTests {
     void requireUser_unauthenticatedToken_rejectsBeforeLookup() {
         // Given: Token chưa được xác thực.
         SecurityContextHolder.getContext().setAuthentication(
-                UsernamePasswordAuthenticationToken.unauthenticated("employee", "secret"));
+            UsernamePasswordAuthenticationToken.unauthenticated("employee", "secret"));
         // When: Gọi requireUser bằng token chưa xác thực.
         assertThrows(AccessDeniedException.class, service::requireUser);
         // Then: Từ chối và không truy vấn tài khoản.
@@ -51,7 +53,7 @@ class CurrentUserServiceTests {
         // Given: Token đã xác thực và account Active tồn tại.
         User account = User.builder().userId(7).accountStatus("Active").build();
         SecurityContextHolder.getContext().setAuthentication(
-                UsernamePasswordAuthenticationToken.authenticated("employee", "unused", List.of()));
+            UsernamePasswordAuthenticationToken.authenticated("employee", "unused", List.of()));
         when(users.findByUsernameIgnoreCase("employee")).thenReturn(Optional.of(account));
         // When: Lấy user hiện tại.
         User result = service.requireUser();
@@ -66,9 +68,9 @@ class CurrentUserServiceTests {
     void requireUser_nonActiveAccount_rejectsWithoutSaving_nullStatus() {
         // Given: Token đã xác thực nhưng trạng thái account là null.
         SecurityContextHolder.getContext().setAuthentication(
-                UsernamePasswordAuthenticationToken.authenticated("employee", "unused", List.of()));
+            UsernamePasswordAuthenticationToken.authenticated("employee", "unused", List.of()));
         when(users.findByUsernameIgnoreCase("employee"))
-                .thenReturn(Optional.of(User.builder().accountStatus(null).build()));
+            .thenReturn(Optional.of(User.builder().accountStatus(null).build()));
         // When: Gọi requireUser.
         AccessDeniedException error = assertThrows(AccessDeniedException.class, service::requireUser);
         // Then: Ném lỗi account không Active và không lưu.
@@ -81,9 +83,9 @@ class CurrentUserServiceTests {
     void requireUser_nonActiveAccount_rejectsWithoutSaving_emptyStatus() {
         // Given: Token đã xác thực nhưng trạng thái account là "".
         SecurityContextHolder.getContext().setAuthentication(
-                UsernamePasswordAuthenticationToken.authenticated("employee", "unused", List.of()));
+            UsernamePasswordAuthenticationToken.authenticated("employee", "unused", List.of()));
         when(users.findByUsernameIgnoreCase("employee"))
-                .thenReturn(Optional.of(User.builder().accountStatus("").build()));
+            .thenReturn(Optional.of(User.builder().accountStatus("").build()));
         // When: Gọi requireUser.
         AccessDeniedException error = assertThrows(AccessDeniedException.class, service::requireUser);
         // Then: Ném lỗi account không Active và không lưu.
@@ -96,9 +98,9 @@ class CurrentUserServiceTests {
     void requireUser_nonActiveAccount_rejectsWithoutSaving_inactive() {
         // Given: Token đã xác thực nhưng trạng thái account là "Inactive".
         SecurityContextHolder.getContext().setAuthentication(
-                UsernamePasswordAuthenticationToken.authenticated("employee", "unused", List.of()));
+            UsernamePasswordAuthenticationToken.authenticated("employee", "unused", List.of()));
         when(users.findByUsernameIgnoreCase("employee"))
-                .thenReturn(Optional.of(User.builder().accountStatus("Inactive").build()));
+            .thenReturn(Optional.of(User.builder().accountStatus("Inactive").build()));
         // When: Gọi requireUser.
         AccessDeniedException error = assertThrows(AccessDeniedException.class, service::requireUser);
         // Then: Ném lỗi account không Active và không lưu.
@@ -111,9 +113,9 @@ class CurrentUserServiceTests {
     void requireUser_nonActiveAccount_rejectsWithoutSaving_blocked() {
         // Given: Token đã xác thực nhưng trạng thái account là "Blocked".
         SecurityContextHolder.getContext().setAuthentication(
-                UsernamePasswordAuthenticationToken.authenticated("employee", "unused", List.of()));
+            UsernamePasswordAuthenticationToken.authenticated("employee", "unused", List.of()));
         when(users.findByUsernameIgnoreCase("employee"))
-                .thenReturn(Optional.of(User.builder().accountStatus("Blocked").build()));
+            .thenReturn(Optional.of(User.builder().accountStatus("Blocked").build()));
         // When: Gọi requireUser.
         AccessDeniedException error = assertThrows(AccessDeniedException.class, service::requireUser);
         // Then: Ném lỗi account không Active và không lưu.
@@ -126,7 +128,7 @@ class CurrentUserServiceTests {
     void requireUser_removedAccount_rejectsWithoutSaving() {
         // Given: Token hợp lệ nhưng account đã bị xóa.
         SecurityContextHolder.getContext().setAuthentication(
-                UsernamePasswordAuthenticationToken.authenticated("employee", "unused", List.of()));
+            UsernamePasswordAuthenticationToken.authenticated("employee", "unused", List.of()));
         when(users.findByUsernameIgnoreCase("employee")).thenReturn(Optional.empty());
         // When: Lấy user hiện tại.
         assertThrows(AccessDeniedException.class, service::requireUser);

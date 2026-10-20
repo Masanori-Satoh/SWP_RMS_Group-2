@@ -14,12 +14,11 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.mail.MailSendException;
 import org.springframework.mail.javamail.JavaMailSender;
-
 import java.util.Properties;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.times;
@@ -41,16 +40,16 @@ class PasswordResetEmailSenderTests {
     @Test
     @DisplayName("AUTH-RESET-MAIL-01 | Không có JavaMailSender: chưa cấu hình và từ chối gửi")
     void sendOtp_missingSender_rejectsUnavailableConfiguration() {
-        // Given
+        // Given: Không có JavaMailSender.
         when(provider.getIfAvailable()).thenReturn(null);
         PasswordResetEmailSender service = new PasswordResetEmailSender(provider, FROM);
 
-        // When
+        // When: Gọi service.isConfigured với dữ liệu đã chuẩn bị.
         assertEquals(false, service.isConfigured());
         PasswordRecoveryUnavailableException error = assertThrows(PasswordRecoveryUnavailableException.class,
-                () -> service.sendOtp(TO, "123456"));
+            () -> service.sendOtp(TO, "123456"));
 
-        // Then
+        // Then: chưa cấu hình và từ chối gửi.
         assertEquals("MAIL_UNAVAILABLE", error.getErrorCode());
         verify(sender, times(0)).createMimeMessage();
         verify(sender, times(0)).send(any(MimeMessage.class));
@@ -59,16 +58,16 @@ class PasswordResetEmailSenderTests {
     @Test
     @DisplayName("AUTH-RESET-MAIL-02 | Địa chỉ from null: chưa cấu hình và không tạo email")
     void sendOtp_nullFrom_rejectsBeforeCreatingMessage() {
-        // Given
+        // Given: Địa chỉ from null.
         when(provider.getIfAvailable()).thenReturn(sender);
         PasswordResetEmailSender service = new PasswordResetEmailSender(provider, null);
 
-        // When
+        // When: Gọi service.isConfigured với dữ liệu đã chuẩn bị.
         assertEquals(false, service.isConfigured());
         PasswordRecoveryUnavailableException error = assertThrows(PasswordRecoveryUnavailableException.class,
-                () -> service.sendOtp(TO, "123456"));
+            () -> service.sendOtp(TO, "123456"));
 
-        // Then
+        // Then: chưa cấu hình và không tạo email.
         assertEquals("MAIL_UNAVAILABLE", error.getErrorCode());
         verify(sender, times(0)).createMimeMessage();
         verify(sender, times(0)).send(any(MimeMessage.class));
@@ -77,16 +76,16 @@ class PasswordResetEmailSenderTests {
     @Test
     @DisplayName("AUTH-RESET-MAIL-03 | Địa chỉ from blank: từ chối gửi trước khi tạo email")
     void sendOtp_blankFrom_rejectsBeforeCreatingMessage() {
-        // Given
+        // Given: Địa chỉ from blank.
         when(provider.getIfAvailable()).thenReturn(sender);
         PasswordResetEmailSender service = new PasswordResetEmailSender(provider, "   ");
 
-        // When
+        // When: Gọi service.isConfigured với dữ liệu đã chuẩn bị.
         assertEquals(false, service.isConfigured());
         PasswordRecoveryUnavailableException error = assertThrows(PasswordRecoveryUnavailableException.class,
-                () -> service.sendOtp(TO, "123456"));
+            () -> service.sendOtp(TO, "123456"));
 
-        // Then
+        // Then: từ chối gửi trước khi tạo email.
         assertEquals("MAIL_UNAVAILABLE", error.getErrorCode());
         verify(sender, times(0)).createMimeMessage();
         verify(sender, times(0)).send(any(MimeMessage.class));
@@ -101,12 +100,12 @@ class PasswordResetEmailSenderTests {
         when(sender.createMimeMessage()).thenReturn(message);
         PasswordResetEmailSender service = new PasswordResetEmailSender(provider, FROM);
 
-        // When
+        // When: Gọi service.isConfigured với dữ liệu đã chuẩn bị.
         assertEquals(true, service.isConfigured());
         service.sendOtp(TO, "123456");
         message.saveChanges(); // Hoàn tất header MIME trước khi đọc email trong bộ nhớ.
 
-        // Then
+        // Then: đúng người gửi, người nhận, tiêu đề và OTP trong cả text/HTML.
         assertEquals(FROM, message.getFrom()[0].toString());
         assertEquals(TO, message.getAllRecipients()[0].toString());
         assertEquals("Mã xác minh đặt lại mật khẩu Mộc", message.getSubject());
@@ -124,18 +123,18 @@ class PasswordResetEmailSenderTests {
     @Test
     @DisplayName("AUTH-RESET-MAIL-05 | JavaMailSender báo lỗi gửi: chuyển thành exception của luồng Authentication")
     void sendOtp_mailFailure_returnsDeliveryError() {
-        // Given
+        // Given: JavaMailSender báo lỗi gửi.
         when(provider.getIfAvailable()).thenReturn(sender);
         MimeMessage message = new MimeMessage(Session.getInstance(new Properties()));
         when(sender.createMimeMessage()).thenReturn(message);
         doThrow(new MailSendException("SMTP unavailable")).when(sender).send(message);
         PasswordResetEmailSender service = new PasswordResetEmailSender(provider, FROM);
 
-        // When
+        // When: Gọi service.sendOtp với dữ liệu đã chuẩn bị.
         PasswordResetDeliveryException error = assertThrows(PasswordResetDeliveryException.class,
-                () -> service.sendOtp(TO, "123456"));
+            () -> service.sendOtp(TO, "123456"));
 
-        // Then
+        // Then: chuyển thành exception của luồng Authentication.
         assertEquals("MAIL_DELIVERY_FAILED", error.getErrorCode());
         verify(sender, times(1)).send(message);
     }
@@ -143,17 +142,17 @@ class PasswordResetEmailSenderTests {
     @Test
     @DisplayName("AUTH-RESET-MAIL-06 | Địa chỉ người nhận sai cú pháp: báo lỗi delivery và không gọi send")
     void sendOtp_invalidRecipient_doesNotSendMessage() {
-        // Given
+        // Given: Địa chỉ người nhận sai cú pháp.
         when(provider.getIfAvailable()).thenReturn(sender);
         MimeMessage message = new MimeMessage(Session.getInstance(new Properties()));
         when(sender.createMimeMessage()).thenReturn(message);
         PasswordResetEmailSender service = new PasswordResetEmailSender(provider, FROM);
 
-        // When
+        // When: Gọi service.sendOtp với dữ liệu đã chuẩn bị.
         PasswordResetDeliveryException error = assertThrows(PasswordResetDeliveryException.class,
-                () -> service.sendOtp("invalid@@example.test", "123456"));
+            () -> service.sendOtp("invalid@@example.test", "123456"));
 
-        // Then
+        // Then: báo lỗi delivery và không gọi send.
         assertEquals("MAIL_DELIVERY_FAILED", error.getErrorCode());
         verify(sender, times(0)).send(any(MimeMessage.class));
     }

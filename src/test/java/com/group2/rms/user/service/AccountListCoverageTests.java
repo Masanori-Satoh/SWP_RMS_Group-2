@@ -9,13 +9,11 @@ import org.springframework.web.server.ResponseStatusException;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.DisplayName;
 import java.util.*;
+
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.*;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 class AccountListCoverageTests {
     private final UserRepository users = mock(UserRepository.class);
@@ -128,7 +126,7 @@ class AccountListCoverageTests {
         assertEquals(7, result.getContent().getFirst().id());
         assertEquals(null, result.getContent().getFirst().departmentName());
         verify(users, times(1)).findAll(any(Specification.class), eq(PageRequest.of(0, 10,
-                Sort.by(Sort.Order.desc("createdAt"), Sort.Order.desc("userId")))));
+            Sort.by(Sort.Order.desc("createdAt"), Sort.Order.desc("userId")))));
         verify(users, times(0)).save(any(User.class));
     }
 

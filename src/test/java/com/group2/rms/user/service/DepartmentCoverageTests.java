@@ -11,13 +11,11 @@ import java.sql.SQLException;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.DisplayName;
 import java.util.*;
+
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.*;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 class DepartmentCoverageTests {
     private final DepartmentRepository departments = mock(DepartmentRepository.class);
@@ -115,6 +113,8 @@ class DepartmentCoverageTests {
         assertEquals(null, result.managerId());
         assertEquals(null, result.managerName());
         assertEquals(null, result.managerUsername());
+        // Trạng thái hiển thị phải được map từ department, không bị mất thành null.
+        assertEquals("Active", result.status());
         verify(departments, times(0)).saveAndFlush(any(Department.class));
     }
 
@@ -134,6 +134,7 @@ class DepartmentCoverageTests {
         assertEquals(Integer.valueOf(9), result.managerId());
         assertEquals("Manager", result.managerName());
         assertEquals("manager9", result.managerUsername());
+        assertEquals("Active", result.status());
         verify(departments, times(0)).saveAndFlush(any(Department.class));
     }
 
@@ -142,7 +143,7 @@ class DepartmentCoverageTests {
     void update_activeAdminInSameDepartment_assignsManager() {
         // Given: Manager role System Admin Active và cùng phòng ban: được gán, role giữ nguyên.
         User manager = User.builder().userId(9).role(Role.builder().roleName("System Admin").build())
-                .accountStatus("Active").department(department).build();
+            .accountStatus("Active").department(department).build();
         when(departments.findById(7)).thenReturn(Optional.of(department));
         when(users.findById(9)).thenReturn(Optional.of(manager));
 
@@ -162,7 +163,7 @@ class DepartmentCoverageTests {
     void update_activeHRInSameDepartment_assignsManager() {
         // Given: Manager role HR Active và cùng phòng ban: được gán, role giữ nguyên.
         User manager = User.builder().userId(9).role(Role.builder().roleName("HR").build())
-                .accountStatus("Active").department(department).build();
+            .accountStatus("Active").department(department).build();
         when(departments.findById(7)).thenReturn(Optional.of(department));
         when(users.findById(9)).thenReturn(Optional.of(manager));
 
@@ -182,7 +183,7 @@ class DepartmentCoverageTests {
     void update_activeHMInSameDepartment_assignsManager() {
         // Given: Manager role Hiring Manager Active và cùng phòng ban: được gán, role giữ nguyên.
         User manager = User.builder().userId(9).role(Role.builder().roleName("Hiring Manager").build())
-                .accountStatus("Active").department(department).build();
+            .accountStatus("Active").department(department).build();
         when(departments.findById(7)).thenReturn(Optional.of(department));
         when(users.findById(9)).thenReturn(Optional.of(manager));
 
@@ -202,7 +203,7 @@ class DepartmentCoverageTests {
     void update_activeDirectorInSameDepartment_assignsManager() {
         // Given: Manager role Director Active và cùng phòng ban: được gán, role giữ nguyên.
         User manager = User.builder().userId(9).role(Role.builder().roleName("Director").build())
-                .accountStatus("Active").department(department).build();
+            .accountStatus("Active").department(department).build();
         when(departments.findById(7)).thenReturn(Optional.of(department));
         when(users.findById(9)).thenReturn(Optional.of(manager));
 
@@ -222,7 +223,7 @@ class DepartmentCoverageTests {
     void update_activeInterviewerInSameDepartment_assignsManager() {
         // Given: Manager role Interviewer Active và cùng phòng ban: được gán, role giữ nguyên.
         User manager = User.builder().userId(9).role(Role.builder().roleName("Interviewer").build())
-                .accountStatus("Active").department(department).build();
+            .accountStatus("Active").department(department).build();
         when(departments.findById(7)).thenReturn(Optional.of(department));
         when(users.findById(9)).thenReturn(Optional.of(manager));
 
@@ -247,7 +248,7 @@ class DepartmentCoverageTests {
 
         // When: Gọi service với dữ liệu đã chuẩn bị.
         DepartmentFieldException error = assertThrows(DepartmentFieldException.class,
-                () -> service.update(7, new DepartmentRequest("Changed", 9)));
+            () -> service.update(7, new DepartmentRequest("Changed", 9)));
 
         // Then: Kiểm tra dữ liệu thực tế và số lần gọi dependency.
         assertEquals("managerId", error.getField());
@@ -265,7 +266,7 @@ class DepartmentCoverageTests {
 
         // When: Gọi service với dữ liệu đã chuẩn bị.
         DepartmentFieldException error = assertThrows(DepartmentFieldException.class,
-                () -> service.update(7, new DepartmentRequest("Taken", null)));
+            () -> service.update(7, new DepartmentRequest("Taken", null)));
 
         // Then: Kiểm tra dữ liệu thực tế và số lần gọi dependency.
         assertEquals("departmentName", error.getField());
@@ -278,11 +279,11 @@ class DepartmentCoverageTests {
     void create_sqlDuplicate2601_returnsNameFieldError() {
         // Given: SQL duplicate 2601: chuyển thành lỗi field tên phòng ban.
         when(departments.saveAndFlush(any(Department.class))).thenThrow(
-                new DataIntegrityViolationException("write", new SQLException("duplicate", "23000", 2601)));
+            new DataIntegrityViolationException("write", new SQLException("duplicate", "23000", 2601)));
 
         // When: Gọi service với dữ liệu đã chuẩn bị.
         DepartmentFieldException error = assertThrows(DepartmentFieldException.class,
-                () -> service.create(new DepartmentRequest("Name", null)));
+            () -> service.create(new DepartmentRequest("Name", null)));
 
         // Then: Kiểm tra dữ liệu thực tế và số lần gọi dependency.
         assertEquals("departmentName", error.getField());
@@ -293,14 +294,35 @@ class DepartmentCoverageTests {
     void create_sqlDuplicate2627_returnsNameFieldError() {
         // Given: SQL duplicate 2627: chuyển thành lỗi field tên phòng ban.
         when(departments.saveAndFlush(any(Department.class))).thenThrow(
-                new DataIntegrityViolationException("write", new SQLException("duplicate", "23000", 2627)));
+            new DataIntegrityViolationException("write", new SQLException("duplicate", "23000", 2627)));
 
         // When: Gọi service với dữ liệu đã chuẩn bị.
         DepartmentFieldException error = assertThrows(DepartmentFieldException.class,
-                () -> service.create(new DepartmentRequest("Name", null)));
+            () -> service.create(new DepartmentRequest("Name", null)));
 
         // Then: Kiểm tra dữ liệu thực tế và số lần gọi dependency.
         assertEquals("departmentName", error.getField());
+    }
+
+    @Test
+    @DisplayName("DEPARTMENT-PIT-01 | Sửa phòng gặp duplicate: lỗi giữ ID và form để hiển thị lại")
+    void update_sqlDuplicate_preservesDepartmentIdAndSubmittedForm() {
+        // Given: Phòng 7 tồn tại; repository mock báo duplicate khi lưu form sửa phòng.
+        DepartmentRequest input = new DepartmentRequest("New name", null);
+        when(departments.findById(7)).thenReturn(Optional.of(department));
+        when(departments.saveAndFlush(department)).thenThrow(
+                new DataIntegrityViolationException("write", new SQLException("duplicate", "23000", 2627)));
+
+        // When: Sửa phòng, chỉ mô phỏng exception của repository; không chạy SQL/database.
+        DepartmentFieldException error = assertThrows(DepartmentFieldException.class,
+                () -> service.update(7, input));
+
+        // Then: Thông tin lỗi giữ đúng field, ID phòng và form đã nhập để người dùng sửa lại.
+        assertEquals("departmentName", error.getField());
+        assertEquals(7, error.getDepartmentId());
+        assertEquals(input, error.getForm());
+        verify(departments, times(1)).saveAndFlush(department);
+        verify(users, times(0)).save(any(User.class));
     }
 
     @Test
@@ -312,7 +334,7 @@ class DepartmentCoverageTests {
 
         // When: Gọi service với dữ liệu đã chuẩn bị.
         DataIntegrityViolationException error = assertThrows(DataIntegrityViolationException.class,
-                () -> service.create(new DepartmentRequest("Name", null)));
+            () -> service.create(new DepartmentRequest("Name", null)));
 
         // Then: Kiểm tra dữ liệu thực tế và số lần gọi dependency.
         assertEquals(failure, error);
@@ -323,7 +345,7 @@ class DepartmentCoverageTests {
     void findDepartments_negativePage_returnsRowsWithoutSaving() {
         // Given: List phòng ban với page âm: vẫn trả dữ liệu, không ghi DB.
         when(departments.findAll(any(Specification.class), any(Pageable.class)))
-                .thenReturn(new PageImpl<>(List.of(department)));
+            .thenReturn(new PageImpl<>(List.of(department)));
 
         // When: Gọi service với dữ liệu đã chuẩn bị.
         Page<DepartmentResponse> result = service.findDepartments(" Engineering ", "Active", -1);
@@ -348,7 +370,6 @@ class DepartmentCoverageTests {
         assertEquals(true, result.isEmpty());
         verify(departments, times(0)).saveAndFlush(any(Department.class));
     }
-
 
     @Test
     @DisplayName("DEPARTMENT-UNIT-20 | Ghi nhận hiện trạng: đổi manager không đồng bộ role cũ và mới")
