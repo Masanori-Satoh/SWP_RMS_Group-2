@@ -2,10 +2,12 @@ package com.group2.rms.candidate;
 
 import com.group2.rms.candidate.controller.MyApplicationController;
 import com.group2.rms.candidate.dto.MyApplicationResponse;
+import com.group2.rms.candidate.dto.MyApplicationStep;
 import com.group2.rms.candidate.exception.ApplicationWithdrawalException;
 import com.group2.rms.candidate.service.MyApplicationService;
 import com.group2.rms.core.config.SecurityConfig;
 import com.group2.rms.core.security.DatabaseUserDetailsService;
+import com.group2.rms.core.web.TimelineItem;
 import com.group2.rms.user.entity.Role;
 import com.group2.rms.user.entity.User;
 import com.group2.rms.user.repository.UserRepository;
@@ -81,13 +83,64 @@ class MyApplicationWebTests {
     }
 
     @Test
+    void cardShowsProcessStripStepsStatusNextActionAndJourney() throws Exception {
+        List<MyApplicationStep> steps = List.of(new MyApplicationStep("Nộp CV", "done"),
+                new MyApplicationStep("Xét CV", "done"), new MyApplicationStep("Phỏng vấn", "done"),
+                new MyApplicationStep("Thư mời", "current"));
+        List<TimelineItem> journey = List.of(
+                new TimelineItem(SUBMITTED, "Đã nộp hồ sơ", null, null, "brand"),
+                new TimelineItem(LocalDateTime.of(2026, 10, 12, 9, 0), "Nhận thư mời nhận việc", null, null, "warning"));
+        when(myApplications.list()).thenReturn(List.of(new MyApplicationResponse(25, 4, "Senior Java Backend",
+                SUBMITTED, steps, "Có thư mời", "Vui lòng trả lời trước 17/10.", "warning",
+                "Trả lời thư mời", "/portal/offers/3", false, journey)));
+
+        mvc.perform(get("/portal/applications").with(as("huy.vu", "Candidate")))
+                .andExpect(status().isOk())
+                // Dải quy trình đầu trang
+                .andExpect(content().string(containsString("Quy trình tuyển dụng")))
+                .andExpect(content().string(containsString("Bạn nhận thư mời nhận việc và trả lời trước hạn.")))
+                // Status + Stage
+                .andExpect(content().string(containsString("class=\"badge badge--warning\">Có thư mời")))
+                .andExpect(content().string(containsString("Vui lòng trả lời trước 17/10.")))
+                .andExpect(content().string(containsString("data-state=\"current\" aria-current=\"step\"")))
+                .andExpect(content().string(containsString("(đang ở vòng này)")))
+                // Việc tiếp theo: nút chính vì cần ứng viên trả lời
+                .andExpect(content().string(containsString("href=\"/portal/offers/3\"")))
+                .andExpect(content().string(containsString("btn--primary")))
+                .andExpect(content().string(containsString("Trả lời thư mời")))
+                .andExpect(content().string(not(containsString("/portal/applications/25/withdraw"))))
+                // Hành trình trong <details>, không cần JS
+                .andExpect(content().string(containsString("<summary class=\"myapp-journey__toggle\">Xem hành trình")))
+                .andExpect(content().string(containsString("Nhận thư mời nhận việc")))
+                .andExpect(content().string(containsString("12/10/2026 09:00")))
+                .andExpect(content().string(not(containsString("style=\""))));
+    }
+
+    @Test
+    void stoppedStepIsMarkedClosed() throws Exception {
+        List<MyApplicationStep> steps = List.of(new MyApplicationStep("Nộp CV", "done"),
+                new MyApplicationStep("Xét CV", "closed"), new MyApplicationStep("Phỏng vấn", "upcoming"),
+                new MyApplicationStep("Thư mời", "upcoming"));
+        when(myApplications.list()).thenReturn(List.of(new MyApplicationResponse(216, 9, "DevOps Engineer",
+                SUBMITTED, steps, "Đã tự rút hồ sơ", "Bạn đã rút hồ sơ ngày 20/10.", "neutral",
+                null, null, false, List.of())));
+
+        mvc.perform(get("/portal/applications").with(as("an.vo", "Candidate")))
+                .andExpect(status().isOk())
+                .andExpect(content().string(containsString("data-state=\"closed\" aria-current=\"step\"")))
+                .andExpect(content().string(containsString("(dừng ở vòng này)")))
+                .andExpect(content().string(containsString("Bạn đã rút hồ sơ ngày 20/10.")))
+                .andExpect(content().string(not(containsString("myapp-card__actions"))));
+    }
+
+    @Test
     void candidateWithoutApplicationsSeesEmptyState() throws Exception {
         when(myApplications.list()).thenReturn(List.of());
 
         mvc.perform(get("/portal/applications").with(as("new.candidate", "Candidate")))
                 .andExpect(status().isOk())
                 .andExpect(content().string(containsString("Bạn chưa ứng tuyển vị trí nào")))
-                .andExpect(content().string(not(containsString("<table"))));
+                .andExpect(content().string(not(containsString("class=\"myapp-list\""))));
     }
 
     @Test
