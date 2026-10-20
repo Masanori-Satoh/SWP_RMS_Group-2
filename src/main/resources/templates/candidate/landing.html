@@ -431,8 +431,9 @@
             </p>
             <div class="cta-banner-buttons">
               <a th:href="@{/register}" class="cta-btn-white" th:if="${currentUser == null}">Tạo tài khoản ứng viên</a>
-              <a th:href="@{/dashboard}" class="cta-btn-white" th:if="${currentUser != null}">Truy cập Bảng điều
-                khiển</a>
+              <a th:href="${currentUser.roleName == 'Candidate'} ? @{/portal/applications} : @{/dashboard}"
+                 class="cta-btn-white" th:if="${currentUser != null}"
+                 th:text="${currentUser.roleName == 'Candidate' ? 'Xem đơn ứng tuyển của tôi' : 'Truy cập Bảng điều khiển'}">Truy cập Bảng điều khiển</a>
               <a th:href="@{/jobs}" class="cta-btn-ghost">Khám phá vị trí đang mở</a>
             </div>
           </div>

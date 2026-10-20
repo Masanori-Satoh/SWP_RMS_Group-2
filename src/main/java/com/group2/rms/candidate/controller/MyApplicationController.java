@@ -1,5 +1,6 @@
 package com.group2.rms.candidate.controller;
 
+import com.group2.rms.candidate.dto.MyApplicationListResponse;
 import com.group2.rms.candidate.exception.ApplicationWithdrawalException;
 import com.group2.rms.candidate.service.MyApplicationService;
 import lombok.RequiredArgsConstructor;
@@ -9,6 +10,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 /**
@@ -22,9 +24,18 @@ public class MyApplicationController {
 
     private final MyApplicationService myApplications;
 
+    /**
+     * Danh sách đơn; {@code step} (1–4) lọc theo bước khi ứng viên bấm một thẻ trên dải hướng dẫn. Giá trị khác
+     * (gõ tay trên URL) thì xem tất cả, không báo lỗi.
+     */
     @GetMapping
-    public String list(Model model) {
-        model.addAttribute("applications", myApplications.list());
+    public String list(@RequestParam(required = false) String step, Model model) {
+        Integer selected = step != null && step.matches("[1-4]") ? Integer.valueOf(step) : null;
+        MyApplicationListResponse page = myApplications.list(selected);
+        model.addAttribute("applications", page.applications());
+        model.addAttribute("stepCounts", page.stepCounts());
+        model.addAttribute("selectedStep", page.selectedStep());
+        model.addAttribute("totalApplications", page.total());
         model.addAttribute("activeMenu", "applications");
         return "candidate/my-applications";
     }

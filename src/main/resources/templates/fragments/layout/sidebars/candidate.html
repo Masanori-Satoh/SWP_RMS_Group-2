@@ -1,83 +1,52 @@
 <!DOCTYPE html>
 <html lang="vi" xmlns:th="http://www.thymeleaf.org">
 <body>
+<!-- Menu ứng viên (dunglt chốt 2026-10-20): Trang chủ, Việc làm đang tuyển, Đơn ứng tuyển của tôi; "Hồ sơ cá nhân" do
+     sidebar-shell thêm chung. Không có dashboard riêng (/dashboard chuyển sang /portal/applications).
+     Lịch phỏng vấn (/portal/interviews) và thư mời (/portal/offers) là trang con của đơn: vào từ nút trên thẻ đơn,
+     và khi đang ở đó thì sáng mục "Đơn ứng tuyển của tôi". Mục menu phải khớp quyền URL trong SecurityConfig. -->
 <th:block th:fragment="menu(activeMenu)">
-    <!-- Bảng điều khiển -->
-    <a th:href="@{/dashboard}" class="sidebar-nav-link"
-       th:classappend="${activeMenu == 'dashboard' ? 'active' : ''}"
-       th:attr="aria-current=${activeMenu == 'dashboard' ? 'page' : null}"
-       title="Bảng điều khiển"
-       data-tooltip="Bảng điều khiển">
+    <!-- Trang chủ (landing công khai) -->
+    <a th:href="@{/}" class="sidebar-nav-link"
+       title="Trang chủ"
+       data-tooltip="Trang chủ">
         <span class="nav-icon-wrapper">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                <rect x="3" y="3" width="7" height="7"/>
-                <rect x="14" y="3" width="7" height="7"/>
-                <rect x="14" y="14" width="7" height="7"/>
-                <rect x="3" y="14" width="7" height="7"/>
+                <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
+                <polyline points="9 22 9 12 15 12 15 22"/>
             </svg>
         </span>
-        <span class="nav-label-text">Bảng điều khiển</span>
+        <span class="nav-label-text">Trang chủ</span>
     </a>
 
-    <!-- Hồ sơ đã ứng tuyển (5.1.38, khớp SecurityConfig /portal/applications/** chỉ cho ứng viên) -->
-    <a th:href="@{/portal/applications}" class="sidebar-nav-link"
-       th:classappend="${activeMenu == 'applications' ? 'active' : ''}"
-       th:attr="aria-current=${activeMenu == 'applications' ? 'page' : null}"
-       title="Hồ sơ đã ứng tuyển"
-       data-tooltip="Hồ sơ đã ứng tuyển">
-        <span class="nav-icon-wrapper">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
-                <polyline points="14 2 14 8 20 8"/>
-            </svg>
-        </span>
-        <span class="nav-label-text">Hồ sơ đã ứng tuyển</span>
-    </a>
-
-    <!-- Lịch phỏng vấn -->
-    <a th:href="@{/portal/interviews}" class="sidebar-nav-link"
-       th:classappend="${activeMenu == 'interviews' ? 'active' : ''}"
-       th:attr="aria-current=${activeMenu == 'interviews' ? 'page' : null}"
-       title="Lịch phỏng vấn của tôi"
-       data-tooltip="Lịch phỏng vấn của tôi">
-        <span class="nav-icon-wrapper">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
-                <line x1="16" y1="2" x2="16" y2="6"/>
-                <line x1="8" y1="2" x2="8" y2="6"/>
-                <line x1="3" y1="10" x2="21" y2="10"/>
-            </svg>
-        </span>
-        <span class="nav-label-text">Lịch phỏng vấn</span>
-    </a>
-
-    <!-- Thư mời nhận việc (trỏ trang /portal/offers) -->
-    <a th:href="@{/portal/offers}" class="sidebar-nav-link"
-       th:classappend="${activeMenu == 'offers' ? 'active' : ''}"
-       th:attr="aria-current=${activeMenu == 'offers' ? 'page' : null}"
-       title="Thư mời nhận việc"
-       data-tooltip="Thư mời nhận việc">
-        <span class="nav-icon-wrapper">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
-                <polyline points="22 4 12 14.01 9 11.01"/>
-            </svg>
-        </span>
-        <span class="nav-label-text">Thư mời nhận việc</span>
-    </a>
-
-    <!-- Vị trí đang tuyển -->
+    <!-- Việc làm đang tuyển -->
     <a th:href="@{/jobs}" class="sidebar-nav-link"
        th:classappend="${activeMenu == 'jobs' ? 'active' : ''}"
-       title="Vị trí đang tuyển"
-       data-tooltip="Vị trí đang tuyển">
+       title="Việc làm đang tuyển"
+       data-tooltip="Việc làm đang tuyển">
         <span class="nav-icon-wrapper">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                 <circle cx="11" cy="11" r="8"/>
                 <line x1="21" y1="21" x2="16.65" y2="16.65"/>
             </svg>
         </span>
-        <span class="nav-label-text">Vị trí đang tuyển</span>
+        <span class="nav-label-text">Việc làm đang tuyển</span>
+    </a>
+
+    <!-- Đơn ứng tuyển của tôi (5.1.38, /portal/applications/** chỉ cho ứng viên); sáng cả ở trang lịch phỏng vấn, thư mời -->
+    <a th:href="@{/portal/applications}" class="sidebar-nav-link"
+       th:with="onMyApplications=${activeMenu == 'applications' or activeMenu == 'interviews' or activeMenu == 'offers'}"
+       th:classappend="${onMyApplications ? 'active' : ''}"
+       th:attr="aria-current=${onMyApplications ? 'page' : null}"
+       title="Đơn ứng tuyển của tôi"
+       data-tooltip="Đơn ứng tuyển của tôi">
+        <span class="nav-icon-wrapper">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                <polyline points="14 2 14 8 20 8"/>
+            </svg>
+        </span>
+        <span class="nav-label-text">Đơn ứng tuyển của tôi</span>
     </a>
 </th:block>
 </body>

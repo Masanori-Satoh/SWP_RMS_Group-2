@@ -304,6 +304,7 @@ body {
    Search & Filter Section (#roles)
    ============================================================ */
 .roles-anchor-section {
+  margin-top: 64px;
   padding-top: 56px;
 }
 
