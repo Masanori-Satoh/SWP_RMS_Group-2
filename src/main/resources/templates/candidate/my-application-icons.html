@@ -6,7 +6,7 @@
     Cùng kiểu với sidebar và jobCard: viewBox 24, stroke 2, màu theo chữ (currentColor). Cỡ do CSS (.myapp-icon).
     Cách gọi: <svg th:replace="~{candidate/my-application-icons :: icon('step-3')}"></svg>
     Tên: step-1 (Nộp CV), step-2 (Xét CV), step-3 (Phỏng vấn), step-4 (Thư mời), calendar, mail, search, withdraw,
-    check, chevron. Bước trên dải quy trình và tag trên thẻ dùng chung icon step-n để ứng viên tự đối chiếu.
+    check, chevron, close. Bước trên dải quy trình và tag trên thẻ dùng chung icon step-n để ứng viên tự đối chiếu.
 -->
 <svg th:fragment="icon(name)" class="myapp-icon" width="20" height="20" viewBox="0 0 24 24" fill="none"
      stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"
@@ -57,6 +57,10 @@
         </th:block>
         <th:block th:case="'chevron'">
             <polyline points="6 9 12 15 18 9"/>
+        </th:block>
+        <th:block th:case="'close'">
+            <line x1="18" y1="6" x2="6" y2="18"/>
+            <line x1="6" y1="6" x2="18" y2="18"/>
         </th:block>
     </th:block>
 </svg>

@@ -1,6 +1,7 @@
 package com.group2.rms.candidate;
 
 import com.group2.rms.candidate.controller.MyApplicationController;
+import com.group2.rms.candidate.dto.MyApplicationListResponse;
 import com.group2.rms.candidate.dto.MyApplicationResponse;
 import com.group2.rms.candidate.exception.ApplicationWithdrawalException;
 import com.group2.rms.candidate.service.MyApplicationService;
@@ -20,6 +21,8 @@ import org.springframework.test.web.servlet.request.RequestPostProcessor;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
+import java.util.TreeMap;
 import java.util.Optional;
 
 import static org.hamcrest.Matchers.*;
@@ -61,7 +64,7 @@ class MyApplicationWebTests {
 
     @Test
     void candidateSeesOwnApplicationsWithWithdrawOnlyWhereAllowed() throws Exception {
-        when(myApplications.list()).thenReturn(List.of(
+        when(myApplications.list(null)).thenReturn(page(null,
                 card(301, 7, "Junior Java Developer", "Đã nộp CV", "neutral", true),
                 card(120, 3, "UI/UX Designer", "Chờ xét CV", "neutral", false),
                 card(90, 2, "Kế toán tổng hợp", "Đã tự rút hồ sơ", "neutral", false)));
@@ -86,8 +89,8 @@ class MyApplicationWebTests {
         List<TimelineItem> journey = List.of(
                 new TimelineItem(SUBMITTED, "Đã nộp hồ sơ", null, null, "brand"),
                 new TimelineItem(LocalDateTime.of(2026, 10, 12, 9, 0), "Nhận thư mời nhận việc", null, null, "warning"));
-        when(myApplications.list()).thenReturn(List.of(new MyApplicationResponse(25, 4, "Senior Java Backend",
-                SUBMITTED, 4, "Thư mời", "current", "Có thư mời", "Vui lòng trả lời trước 17/10.", "warning",
+        when(myApplications.list(null)).thenReturn(page(null, new MyApplicationResponse(25, 4, "Senior Java Backend",
+                SUBMITTED, SUBMITTED, 4, "Thư mời", "current", "Có thư mời", "Vui lòng trả lời trước 17/10.", "warning",
                 "Trả lời thư mời", "/portal/offers/3", false, journey)));
 
         mvc.perform(get("/portal/applications").with(as("huy.vu", "Candidate")))
@@ -117,8 +120,8 @@ class MyApplicationWebTests {
 
     @Test
     void stoppedApplicationTagShowsWhereItStopped() throws Exception {
-        when(myApplications.list()).thenReturn(List.of(new MyApplicationResponse(216, 9, "DevOps Engineer",
-                SUBMITTED, 2, "Xét CV", "closed", "Đã tự rút hồ sơ", "Bạn đã rút hồ sơ ngày 20/10.", "neutral",
+        when(myApplications.list(null)).thenReturn(page(null, new MyApplicationResponse(216, 9, "DevOps Engineer",
+                SUBMITTED, SUBMITTED, 2, "Xét CV", "closed", "Đã tự rút hồ sơ", "Bạn đã rút hồ sơ ngày 20/10.", "neutral",
                 null, null, false, List.of())));
 
         mvc.perform(get("/portal/applications").with(as("an.vo", "Candidate")))
@@ -132,7 +135,7 @@ class MyApplicationWebTests {
 
     @Test
     void withdrawIsAnIconButtonWithAccessibleName() throws Exception {
-        when(myApplications.list()).thenReturn(List.of(
+        when(myApplications.list(null)).thenReturn(page(null,
                 card(301, 7, "Junior Java Developer", "Đã nộp CV", "neutral", true)));
 
         mvc.perform(get("/portal/applications").with(as("an.vo", "Candidate")))
@@ -143,8 +146,66 @@ class MyApplicationWebTests {
     }
 
     @Test
+    void guideStepsAreFiltersWithCountsAndSelectedStepCanBeCleared() throws Exception {
+        when(myApplications.list(3)).thenReturn(new MyApplicationListResponse(
+                List.of(card(179, 5, "QA Automation Engineer", "Chờ kết quả", "neutral", false)),
+                Map.of(1, 0L, 2, 2L, 3, 1L, 4, 1L), 3, 4));
+
+        mvc.perform(get("/portal/applications").param("step", "3").with(as("an.vo", "Candidate")))
+                .andExpect(status().isOk())
+                .andExpect(model().attribute("selectedStep", 3))
+                // Bước 1 dẫn tới /jobs, bước 2–4 là bộ lọc có số đếm
+                .andExpect(content().string(containsString("Tìm vị trí")))
+                .andExpect(content().string(containsString("href=\"/portal/applications?step=2\"")))
+                .andExpect(content().string(containsString("2 hồ sơ")))
+                .andExpect(content().string(containsString("href=\"/portal/applications?step=4\"")))
+                // Bước đang lọc: aria-current, bấm lại thì bỏ lọc
+                .andExpect(content().string(containsString("aria-current=\"true\"")))
+                .andExpect(content().string(not(containsString("href=\"/portal/applications?step=3\""))))
+                .andExpect(content().string(containsString("Hồ sơ ở Bước 3 · Phỏng vấn")))
+                .andExpect(content().string(containsString("Xem tất cả (4)")))
+                .andExpect(content().string(containsString("QA Automation Engineer")));
+    }
+
+    @Test
+    void filterWithoutMatchesSaysSoAndOffersToClearIt() throws Exception {
+        when(myApplications.list(4)).thenReturn(new MyApplicationListResponse(
+                List.of(), Map.of(1, 0L, 2, 1L, 3, 0L, 4, 0L), 4, 1));
+
+        mvc.perform(get("/portal/applications").param("step", "4").with(as("an.vo", "Candidate")))
+                .andExpect(status().isOk())
+                .andExpect(content().string(containsString("Không có hồ sơ nào ở bước này.")))
+                .andExpect(content().string(containsString("Xem tất cả (1)")))
+                .andExpect(content().string(not(containsString("Bạn chưa ứng tuyển vị trí nào"))));
+    }
+
+    @Test
+    void stepTypedByHandOutsideOneToFourShowsEverything() throws Exception {
+        when(myApplications.list(null)).thenReturn(page(null));
+
+        mvc.perform(get("/portal/applications").param("step", "abc").with(as("an.vo", "Candidate")))
+                .andExpect(status().isOk());
+        mvc.perform(get("/portal/applications").param("step", "7").with(as("an.vo", "Candidate")))
+                .andExpect(status().isOk());
+        verify(myApplications, times(2)).list(null);
+    }
+
+    @Test
+    void cardShowsLastUpdateAndSortHint() throws Exception {
+        when(myApplications.list(null)).thenReturn(page(null, new MyApplicationResponse(25, 4, "Senior Java Backend",
+                SUBMITTED, LocalDateTime.of(2026, 10, 12, 9, 0), 4, "Thư mời", "current", "Có thư mời", null,
+                "warning", "Trả lời thư mời", "/portal/offers/3", false, List.of())));
+
+        mvc.perform(get("/portal/applications").with(as("huy.vu", "Candidate")))
+                .andExpect(status().isOk())
+                .andExpect(content().string(containsString("Mới cập nhật ở trên")))
+                .andExpect(content().string(containsString("Cập nhật")))
+                .andExpect(content().string(containsString("12/10/2026")));
+    }
+
+    @Test
     void candidateWithoutApplicationsSeesEmptyState() throws Exception {
-        when(myApplications.list()).thenReturn(List.of());
+        when(myApplications.list(null)).thenReturn(page(null));
 
         mvc.perform(get("/portal/applications").with(as("new.candidate", "Candidate")))
                 .andExpect(status().isOk())
@@ -181,9 +242,18 @@ class MyApplicationWebTests {
         verifyNoInteractions(myApplications);
     }
 
+    /** Trang xem tất cả gồm các thẻ cho sẵn; số đếm tính theo stepNumber của thẻ. */
+    private static MyApplicationListResponse page(Integer selectedStep, MyApplicationResponse... cards) {
+        Map<Integer, Long> counts = new TreeMap<>(Map.of(1, 0L, 2, 0L, 3, 0L, 4, 0L));
+        for (MyApplicationResponse card : cards) {
+            counts.merge(card.stepNumber(), 1L, Long::sum);
+        }
+        return new MyApplicationListResponse(List.of(cards), counts, selectedStep, cards.length);
+    }
+
     private static MyApplicationResponse card(int id, int jobPostingId, String title, String statusLabel,
                                               String tone, boolean canWithdraw) {
-        return new MyApplicationResponse(id, jobPostingId, title, SUBMITTED, 2, "Xét CV", "current", statusLabel,
+        return new MyApplicationResponse(id, jobPostingId, title, SUBMITTED, SUBMITTED, 2, "Xét CV", "current", statusLabel,
                 null, tone, null, null, canWithdraw, List.of());
     }
 

@@ -1,5 +1,6 @@
 package com.group2.rms.candidate.service;
 
+import com.group2.rms.candidate.dto.MyApplicationListResponse;
 import com.group2.rms.candidate.dto.MyApplicationResponse;
 import com.group2.rms.candidate.entity.Application;
 import com.group2.rms.candidate.exception.ApplicationWithdrawalException;
@@ -20,7 +21,9 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.*;
@@ -60,30 +63,68 @@ class MyApplicationServiceTests {
         when(applications.findMyApplicationMarks(USER_ID)).thenReturn(List.of(
                 new MarkRow(2, "Withdrawn", "Applied", LocalDateTime.of(2026, 10, 6, 9, 0))));
 
-        List<MyApplicationResponse> rows = service.list();
+        MyApplicationListResponse page = service.list(null);
+        // Mới cập nhật nhất trước: #5 nhận lời 20/10, #2 rút 06/10, còn lại cùng 05/10 thì id lớn trước
+        // (lịch phỏng vấn tháng sau của #4 chưa xảy ra nên chưa tính).
+        assertEquals(List.of(5, 2, 4, 3, 1), page.applications().stream().map(MyApplicationResponse::applicationId).toList());
+        Map<Integer, MyApplicationResponse> rows = page.applications().stream()
+                .collect(Collectors.toMap(MyApplicationResponse::applicationId, row -> row));
 
-        assertEquals(List.of("Đã nộp CV", "Đã tự rút hồ sơ", "Không đạt vòng CV", "Phỏng vấn 10:00 "
-                        + nextMonth.format(DateTimeFormatter.ofPattern("dd/MM")), "Đã nhận việc"),
-                rows.stream().map(MyApplicationResponse::statusLabel).toList());
-        assertEquals(List.of(true, false, false, false, false),
-                rows.stream().map(MyApplicationResponse::canWithdraw).toList());
-        assertEquals(List.of(2, 2, 2, 3, 4), rows.stream().map(MyApplicationResponse::stepNumber).toList());
+        assertEquals("Đã nộp CV", rows.get(1).statusLabel());
+        assertEquals("Đã tự rút hồ sơ", rows.get(2).statusLabel());
+        assertEquals("Không đạt vòng CV", rows.get(3).statusLabel());
+        assertEquals("Phỏng vấn 10:00 " + nextMonth.format(DateTimeFormatter.ofPattern("dd/MM")), rows.get(4).statusLabel());
+        assertEquals("Đã nhận việc", rows.get(5).statusLabel());
+        assertTrue(rows.get(1).canWithdraw());
+        assertFalse(rows.get(2).canWithdraw());
+        assertEquals(List.of(2, 2, 2, 3, 4), List.of(1, 2, 3, 4, 5).stream().map(id -> rows.get(id).stepNumber()).toList());
         assertEquals(List.of("current", "closed", "closed", "current", "done"),
-                rows.stream().map(MyApplicationResponse::stepState).toList());
-        assertEquals("Phỏng vấn", rows.get(3).stepLabel());
-        assertEquals("/portal/interviews", rows.get(3).actionHref());
-        assertEquals("/portal/offers/8", rows.get(4).actionHref());
+                List.of(1, 2, 3, 4, 5).stream().map(id -> rows.get(id).stepState()).toList());
+        assertEquals("Phỏng vấn", rows.get(4).stepLabel());
+        assertEquals("/portal/interviews", rows.get(4).actionHref());
+        assertEquals("/portal/offers/8", rows.get(5).actionHref());
         assertEquals(List.of("Đã nộp hồ sơ", "Đã phỏng vấn", "Bạn đã nhận lời"),
-                rows.get(4).journey().stream().map(TimelineItem::title).toList());
-        assertEquals("danger", rows.get(2).statusTone());
+                rows.get(5).journey().stream().map(TimelineItem::title).toList());
+        assertEquals(LocalDateTime.of(2026, 10, 20, 9, 0), rows.get(5).lastActivityAt());
+        assertEquals("danger", rows.get(3).statusTone());
+        assertEquals(Map.of(1, 0L, 2, 3L, 3, 1L, 4, 1L), page.stepCounts());
+        assertNull(page.selectedStep());
+        assertEquals(5, page.total());
+    }
+
+    @Test
+    void stepFilterKeepsCountsOfAllApplications() {
+        when(applications.findOwnedByUserId(USER_ID)).thenReturn(List.of(
+                application(1, "Applied"), application(2, "HR_Passed"), application(3, "HM_Passed")));
+
+        MyApplicationListResponse page = service.list(2);
+
+        assertEquals(List.of(2, 1), page.applications().stream().map(MyApplicationResponse::applicationId).toList());
+        assertEquals(2, page.selectedStep());
+        assertEquals(Map.of(1, 0L, 2, 2L, 3, 1L, 4, 0L), page.stepCounts());
+        assertEquals(3, page.total());
+    }
+
+    @ParameterizedTest
+    @ValueSource(ints = {0, 5, -1})
+    void stepOutsideTheFourStepsShowsEverything(int step) {
+        when(applications.findOwnedByUserId(USER_ID)).thenReturn(List.of(application(1, "Applied")));
+
+        MyApplicationListResponse page = service.list(step);
+
+        assertNull(page.selectedStep());
+        assertEquals(1, page.applications().size());
     }
 
     @Test
     void listWithoutApplicationsSkipsFactQueries() {
         when(applications.findOwnedByUserId(USER_ID)).thenReturn(List.of());
 
-        assertTrue(service.list().isEmpty());
+        MyApplicationListResponse page = service.list(null);
 
+        assertTrue(page.applications().isEmpty());
+        assertEquals(0, page.total());
+        assertEquals(Map.of(1, 0L, 2, 0L, 3, 0L, 4, 0L), page.stepCounts());
         verify(applications, never()).findMyInterviews(anyInt());
         verify(applications, never()).findMyVisibleOffers(anyInt());
         verify(applications, never()).findMyApplicationMarks(anyInt());

@@ -4,6 +4,7 @@ import com.group2.rms.candidate.controller.ApplicationPipelineController;
 import com.group2.rms.candidate.controller.MyApplicationController;
 import com.group2.rms.candidate.dto.ApplicationListResponse;
 import com.group2.rms.candidate.dto.ApplicationSearch;
+import com.group2.rms.candidate.dto.MyApplicationListResponse;
 import com.group2.rms.candidate.service.ApplicationPipelineService;
 import com.group2.rms.candidate.service.ApplicationReviewService;
 import com.group2.rms.candidate.service.ApplicationStage;
@@ -72,6 +73,8 @@ class SidebarRoleWebTests {
         User candidate = account("an.vo", "Candidate");
         when(currentUser.requireUser()).thenReturn(candidate);
         when(notifications.getNotificationsForUser(any(), anyInt(), anyInt())).thenReturn(Page.empty());
+        when(myApplications.list(any())).thenReturn(new MyApplicationListResponse(
+                List.of(), Map.of(1, 0L, 2, 0L, 3, 0L, 4, 0L), null, 0));
 
         for (String page : List.of("/portal/applications", "/portal/offers", "/portal/interviews", "/notifications")) {
             String sidebar = sidebar(page, as(candidate));

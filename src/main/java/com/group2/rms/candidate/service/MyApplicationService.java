@@ -1,5 +1,6 @@
 package com.group2.rms.candidate.service;
 
+import com.group2.rms.candidate.dto.MyApplicationListResponse;
 import com.group2.rms.candidate.dto.MyApplicationResponse;
 import com.group2.rms.candidate.entity.Application;
 import com.group2.rms.candidate.exception.ApplicationWithdrawalException;
@@ -19,9 +20,11 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.TreeMap;
 import java.util.stream.Collectors;
 
 /**
@@ -39,14 +42,41 @@ public class MyApplicationService {
     private final ApplicationRepository applications;
     private final CurrentUserService currentUserService;
 
+    /** Số bước trên dải hướng dẫn (Nộp CV → Xét CV → Phỏng vấn → Thư mời). */
+    static final int STEP_COUNT = 4;
+
+    /** Mới cập nhật nhất trước; cùng lúc thì đơn nộp sau, rồi id lớn hơn trước (thứ tự ổn định cho phân trang sau này). */
+    static final Comparator<MyApplicationResponse> NEWEST_ACTIVITY_FIRST =
+            Comparator.comparing(MyApplicationResponse::lastActivityAt, Comparator.nullsLast(Comparator.reverseOrder()))
+                    .thenComparing(MyApplicationResponse::submissionDate, Comparator.nullsLast(Comparator.reverseOrder()))
+                    .thenComparing(MyApplicationResponse::applicationId, Comparator.reverseOrder());
+
     /**
-     * Mọi đơn của ứng viên đang đăng nhập, mới nhất trước. Dữ kiện lịch, offer, dấu dừng đọc theo {@code userId}
-     * (mỗi loại một câu cho cả trang, không một câu cho từng đơn), gom theo id đơn rồi quy đổi bằng
-     * {@link MyApplicationJourney}.
+     * Trang My Applications của ứng viên đang đăng nhập: thẻ đơn mới cập nhật nhất trước, lọc theo bước nếu có, kèm
+     * số đơn ở từng bước cho dải hướng dẫn.
+     *
+     * @param step bước cần lọc (1–4); {@code null} hoặc ngoài khoảng thì xem tất cả
      */
     @Transactional(readOnly = true)
-    public List<MyApplicationResponse> list() {
-        Integer userId = currentUserService.requireUser().getUserId();
+    public MyApplicationListResponse list(Integer step) {
+        List<MyApplicationResponse> all = cards(currentUserService.requireUser().getUserId());
+        Map<Integer, Long> counts = new TreeMap<>();
+        for (int i = 1; i <= STEP_COUNT; i++) {
+            counts.put(i, 0L);
+        }
+        all.forEach(card -> counts.merge(card.stepNumber(), 1L, Long::sum));
+        Integer selected = step != null && step >= 1 && step <= STEP_COUNT ? step : null;
+        List<MyApplicationResponse> shown = selected == null ? all
+                : all.stream().filter(card -> card.stepNumber() == selected).toList();
+        return new MyApplicationListResponse(shown, counts, selected, all.size());
+    }
+
+    /**
+     * Mọi thẻ đơn của ứng viên {@code userId}, mới cập nhật nhất trước. Dữ kiện lịch, offer, dấu dừng đọc theo
+     * {@code userId} (mỗi loại một câu cho cả trang, không một câu cho từng đơn), gom theo id đơn rồi quy đổi bằng
+     * {@link MyApplicationJourney}.
+     */
+    private List<MyApplicationResponse> cards(Integer userId) {
         List<Application> owned = applications.findOwnedByUserId(userId);
         if (owned.isEmpty()) {
             return List.of();
@@ -71,6 +101,7 @@ public class MyApplicationService {
                             interviews.getOrDefault(id, List.of()), offers.get(id), marks.getOrDefault(id, List.of()));
                     return toResponse(application, MyApplicationJourney.resolve(facts, now));
                 })
+                .sorted(NEWEST_ACTIVITY_FIRST)
                 .toList();
     }
 
@@ -103,6 +134,7 @@ public class MyApplicationService {
                 application.getJobPosting().getJobPostingId(),
                 application.getJobPosting().getPostingTitle(),
                 application.getSubmissionDate(),
+                view.lastActivityAt(),
                 view.stepNumber(),
                 view.step().label(),
                 view.step().state(),

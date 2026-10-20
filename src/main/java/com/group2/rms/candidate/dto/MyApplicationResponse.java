@@ -19,12 +19,14 @@ import java.util.List;
  * @param actionHref  đường dẫn trong ứng dụng của nút việc tiếp theo
  * @param canWithdraw đơn còn ở vòng đầu (HR chưa duyệt) nên hiện nút "Rút đơn"
  * @param journey     các mốc đơn đã đi qua, cũ nhất trước
+ * @param lastActivityAt lần cập nhật gần nhất ứng viên thấy được; danh sách xếp theo trường này, mới nhất trước
  */
 public record MyApplicationResponse(
         Integer applicationId,
         Integer jobPostingId,
         String postingTitle,
         LocalDateTime submissionDate,
+        LocalDateTime lastActivityAt,
         int stepNumber,
         String stepLabel,
         String stepState,

@@ -80,9 +80,11 @@ public final class MyApplicationJourney {
      * @param statusNote  dòng giải thích dưới badge; {@code null} nếu không có
      * @param actionLabel nút việc tiếp theo; {@code null} nếu không có (nút Rút đơn do Service quyết định riêng)
      * @param journey     các mốc ứng viên được biết, cũ nhất trước
+     * @param lastActivityAt mốc mới nhất đã xảy ra (không tính lịch hẹn ở tương lai): thứ tự mặc định của danh sách
      */
     public record View(List<MyApplicationStep> steps, String statusLabel, String statusNote, String tone,
-                       String actionLabel, String actionHref, List<TimelineItem> journey) {
+                       String actionLabel, String actionHref, List<TimelineItem> journey,
+                       LocalDateTime lastActivityAt) {
 
         /** Số thứ tự (1–4) của bước đơn đang đứng hoặc dừng; xong cả 4 vòng thì là bước cuối. */
         public int stepNumber() {
@@ -103,8 +105,21 @@ public final class MyApplicationJourney {
 
     public static View resolve(Facts facts, LocalDateTime now) {
         Status status = status(facts, now);
+        List<TimelineItem> journey = journey(facts);
         return new View(steps(status.round(), status.mode()), status.label(), status.note(), status.tone(),
-                status.actionLabel(), status.actionHref(), journey(facts));
+                status.actionLabel(), status.actionHref(), journey, lastActivityAt(journey, facts.submittedAt(), now));
+    }
+
+    /**
+     * Lần cập nhật gần nhất ứng viên thấy được: mốc mới nhất trên hành trình đã xảy ra. Không dùng
+     * {@code Application.UpdatedAt} vì nó đổi cả khi HR/HM duyệt nội bộ (thẻ sẽ nhảy lên mà ứng viên không thấy gì mới).
+     */
+    static LocalDateTime lastActivityAt(List<TimelineItem> journey, LocalDateTime submittedAt, LocalDateTime now) {
+        return journey.stream()
+                .map(TimelineItem::at)
+                .filter(at -> at != null && !at.isAfter(now))
+                .max(Comparator.naturalOrder())
+                .orElse(submittedAt);
     }
 
     /** Đơn đang đi ({@code IN_FLOW}), đã dừng ở một vòng ({@code STOPPED}), hay đã xong cả 4 vòng ({@code FINISHED}). */

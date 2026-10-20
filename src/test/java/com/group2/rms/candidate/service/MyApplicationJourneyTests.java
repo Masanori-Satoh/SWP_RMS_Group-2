@@ -296,6 +296,20 @@ class MyApplicationJourneyTests {
         }
 
         @Test
+        void lastActivityIsTheNewestMilestoneThatAlreadyHappened() {
+            View view = resolve(facts("Offered").interviews(completed()).offer(offer(3, "Sent_Candidate")));
+
+            assertEquals(LocalDateTime.of(2026, 10, 12, 9, 0), view.lastActivityAt());
+        }
+
+        @Test
+        void futureInterviewDoesNotCountAsActivityYet() {
+            View view = resolve(facts("Interviewing").interviews(new Interview(FUTURE, "Offline_Office", "Scheduled")));
+
+            assertEquals(SUBMITTED, view.lastActivityAt());
+        }
+
+        @Test
         void milestonesNameNoInternalActorOrComment() {
             View view = resolve(facts("Hired").interviews(completed()).offer(offer(8, "Accepted")));
 
