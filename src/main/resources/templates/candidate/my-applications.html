@@ -5,7 +5,10 @@
       layout:decorate="~{layout/internal}">
 <!--
     CANDIDATE/MY-APPLICATIONS.HTML — Hồ sơ đã ứng tuyển (/portal/applications, chỉ ứng viên; 5.1.38)
-    Đầu trang: dải hướng dẫn 4 bước (tĩnh, cùng DNA với section "Quy trình" của landing: số bước + icon + mũi tên).
+    Đầu trang: dải hướng dẫn 4 bước (cùng DNA với section "Quy trình" của landing: số bước + icon + mũi tên).
+    Bước 2–4 là bộ lọc (?step=n, lọc phía server để sau này thêm phân trang vẫn đúng), bấm lại bước đang lọc thì bỏ
+    lọc; Bước 1 dẫn tới /jobs. Danh sách xếp mới cập nhật ở trên (lần cập nhật gần nhất ứng viên thấy được).
+    Font: chỉ tiêu đề trang (h1) dùng serif như mọi trang; còn lại sans (tên vị trí là h3).
     Mỗi đơn một thẻ: tag "Bước n · vòng" dùng cùng icon/số với dải trên để ứng viên tự đối chiếu (Stage), tình trạng
     + một dòng giải thích (Status), nút việc tiếp theo (icon + chữ), nút icon rút đơn, hành trình trong <details>
     (mở/đóng không cần JS). Chỉ hiện điều ứng viên được biết; không có điểm AI, nhận xét, người duyệt, offer nội bộ (GBR-02).
@@ -25,15 +28,13 @@
     <div class="page-header">
         <div>
             <h1 class="page-title">Hồ sơ đã ứng tuyển</h1>
-            <p class="page-subtitle">Theo dõi từng hồ sơ đang ở bước nào và việc bạn cần làm tiếp theo</p>
+            <p class="page-subtitle">Bấm một bước để xem hồ sơ ở bước đó</p>
         </div>
         <a th:href="@{/jobs}" class="btn btn--outline">Xem vị trí đang tuyển</a>
     </div>
 
     <section class="myapp-guide" aria-labelledby="myapp-guide-title">
-        <p class="myapp-guide__eyebrow">Quy trình</p>
-        <h2 id="myapp-guide-title" class="myapp-guide__heading">Hồ sơ của bạn đi qua 4 bước</h2>
-        <p class="myapp-guide__hint">Bấm vào một bước để xem các hồ sơ đang ở bước đó.</p>
+        <h2 id="myapp-guide-title" class="sr-only">Các bước tuyển dụng</h2>
         <ol class="myapp-guide__list">
             <li class="myapp-guide__item">
                 <a class="myapp-guide__step" th:href="@{/jobs}" title="Tìm vị trí để nộp CV">
@@ -41,7 +42,7 @@
                     <span class="myapp-guide__count myapp-guide__count--link">Tìm vị trí &rarr;</span>
                     <span class="myapp-guide__num">Bước 1</span>
                     <h3 class="myapp-guide__title">Nộp CV</h3>
-                    <p class="myapp-guide__desc">Bạn chọn vị trí phù hợp và nộp CV (PDF).</p>
+                    <p class="myapp-guide__desc">Chọn vị trí và nộp CV (PDF).</p>
                 </a>
             </li>
             <li class="myapp-guide__item">
@@ -53,7 +54,7 @@
                     <span class="myapp-guide__count" th:text="${stepCounts[2] + ' hồ sơ'}">1 hồ sơ</span>
                     <span class="myapp-guide__num">Bước 2</span>
                     <h3 class="myapp-guide__title">Xét CV</h3>
-                    <p class="myapp-guide__desc">Bộ phận tuyển dụng, rồi bộ phận chuyên môn xem CV. Bạn có thể rút đơn khi bộ phận tuyển dụng chưa duyệt.</p>
+                    <p class="myapp-guide__desc">Tuyển dụng rồi chuyên môn xem CV. Rút đơn được khi chưa duyệt.</p>
                 </a>
             </li>
             <li class="myapp-guide__item">
@@ -65,7 +66,7 @@
                     <span class="myapp-guide__count" th:text="${stepCounts[3] + ' hồ sơ'}">1 hồ sơ</span>
                     <span class="myapp-guide__num">Bước 3</span>
                     <h3 class="myapp-guide__title">Phỏng vấn</h3>
-                    <p class="myapp-guide__desc">Bạn nhận lịch hẹn tại "Lịch phỏng vấn".</p>
+                    <p class="myapp-guide__desc">Nhận lịch hẹn tại Lịch phỏng vấn.</p>
                 </a>
             </li>
             <li class="myapp-guide__item">
@@ -77,7 +78,7 @@
                     <span class="myapp-guide__count" th:text="${stepCounts[4] + ' hồ sơ'}">1 hồ sơ</span>
                     <span class="myapp-guide__num">Bước 4</span>
                     <h3 class="myapp-guide__title">Thư mời</h3>
-                    <p class="myapp-guide__desc">Bạn nhận thư mời nhận việc và trả lời trước hạn.</p>
+                    <p class="myapp-guide__desc">Nhận thư mời và trả lời trước hạn.</p>
                 </a>
             </li>
         </ol>
@@ -105,7 +106,6 @@
                 <svg th:replace="~{candidate/my-application-icons :: icon('close')}"></svg>
                 <span th:text="${'Xem tất cả (' + totalApplications + ')'}">Xem tất cả (4)</span>
             </a>
-            <p class="myapp-list-sort">Mới cập nhật ở trên</p>
         </div>
         <div th:if="${#lists.isEmpty(applications)}" class="card myapp-empty myapp-empty--filtered">
             <p class="myapp-empty__desc text-muted">Không có hồ sơ nào ở bước này.</p>
@@ -123,12 +123,12 @@
                                 : item.stepState == 'closed' ? '(hồ sơ dừng ở bước này)' : '(hồ sơ đang ở bước này)'}">(hồ sơ đang ở bước này)</span>
                     </span>
 
-                    <h2 class="myapp-card__title" th:id="${'myapp-card-' + item.applicationId}">
+                    <h3 class="myapp-card__title" th:id="${'myapp-card-' + item.applicationId}">
                         <a th:href="@{/jobs/{id}(id=${item.jobPostingId})}" th:text="${item.postingTitle}">Junior Java Developer</a>
-                    </h2>
+                    </h3>
                     <p class="myapp-card__meta">
                         <svg th:replace="~{candidate/my-application-icons :: icon('calendar')}"></svg>
-                        <span>Nộp ngày
+                        <span>Nộp
                             <time th:datetime="${#temporals.formatISO(item.submissionDate)}"
                                   th:text="${#temporals.format(item.submissionDate, 'dd/MM/yyyy')}">05/10/2026</time></span>
                         <span th:if="${item.lastActivityAt != null}" class="myapp-card__updated">· Cập nhật
@@ -164,7 +164,7 @@
 
                     <details class="myapp-journey">
                         <summary class="myapp-journey__toggle">
-                            <span>Hành trình hồ sơ</span>
+                            <span>Hành trình</span>
                             <svg th:replace="~{candidate/my-application-icons :: icon('chevron')}"></svg>
                         </summary>
                         <div class="myapp-journey__body">
@@ -174,9 +174,6 @@
                 </article>
             </li>
         </ul>
-        <p class="text-muted myapp-note">
-            Bạn chỉ rút được hồ sơ khi bộ phận tuyển dụng chưa duyệt. Hồ sơ đã rút không nộp lại được cho cùng vị trí.
-        </p>
     </th:block>
 
     <dialog id="myapp-withdraw-dialog" class="confirm-dialog" aria-labelledby="myapp-withdraw-title"

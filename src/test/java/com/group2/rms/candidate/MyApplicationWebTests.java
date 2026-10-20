@@ -96,9 +96,9 @@ class MyApplicationWebTests {
         mvc.perform(get("/portal/applications").with(as("huy.vu", "Candidate")))
                 .andExpect(status().isOk())
                 // Dải hướng dẫn 4 bước đầu trang
-                .andExpect(content().string(containsString("Hồ sơ của bạn đi qua 4 bước")))
+                .andExpect(content().string(containsString("Bấm một bước để xem hồ sơ ở bước đó")))
                 .andExpect(content().string(containsString("Bước 4")))
-                .andExpect(content().string(containsString("Bạn nhận thư mời nhận việc và trả lời trước hạn.")))
+                .andExpect(content().string(containsString("Nhận thư mời và trả lời trước hạn.")))
                 // Tag bước (cùng số với dải trên) + tình trạng
                 .andExpect(content().string(containsString("data-state=\"current\" data-tone=\"warning\"")))
                 .andExpect(content().string(containsString("Bước 4 · Thư mời")))
@@ -112,7 +112,7 @@ class MyApplicationWebTests {
                 .andExpect(content().string(not(containsString("/portal/applications/25/withdraw"))))
                 // Hành trình trong <details>, không cần JS
                 .andExpect(content().string(containsString("<summary class=\"myapp-journey__toggle\">")))
-                .andExpect(content().string(containsString("Hành trình hồ sơ")))
+                .andExpect(content().string(containsString("Hành trình")))
                 .andExpect(content().string(containsString("Nhận thư mời nhận việc")))
                 .andExpect(content().string(containsString("12/10/2026 09:00")))
                 .andExpect(content().string(not(containsString("style=\""))));
@@ -198,7 +198,7 @@ class MyApplicationWebTests {
 
         mvc.perform(get("/portal/applications").with(as("huy.vu", "Candidate")))
                 .andExpect(status().isOk())
-                .andExpect(content().string(containsString("Mới cập nhật ở trên")))
+                .andExpect(content().string(not(containsString("Mới cập nhật ở trên"))))
                 .andExpect(content().string(containsString("Cập nhật")))
                 .andExpect(content().string(containsString("12/10/2026")));
     }

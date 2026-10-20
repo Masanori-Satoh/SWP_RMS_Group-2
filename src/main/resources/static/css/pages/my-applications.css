@@ -4,6 +4,8 @@
    Chỉ chứa phần catalog chưa có: dải hướng dẫn 4 bước (cùng DNA với "Quy trình" của landing), thẻ đơn,
    tag bước, nút icon, khung hành trình, trạng thái rỗng, ghi chú cuối trang.
    Tag bước dùng cùng icon và số với dải hướng dẫn để ứng viên tự đối chiếu. Màu dựa vào [data-state]/[data-tone].
+   Thang chữ (tất cả sans, chỉ tiêu đề trang serif): tên bước / tên vị trí / tiêu đề danh sách font-md 600,
+   tình trạng font-base 600, mô tả / ngày / ghi chú font-sm, tag / số đếm font-xs.
    Tiền tố class: myapp-
    ============================================================================= */
 
@@ -17,27 +19,6 @@
 
 .myapp-guide {
   margin-bottom: var(--s8);
-}
-
-.myapp-guide__eyebrow {
-  margin: 0 0 var(--s1);
-  color: var(--brand);
-  font-size: var(--font-xs);
-  font-weight: 700;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-}
-
-.myapp-guide__heading {
-  margin: 0;
-  font-family: var(--serif);
-  font-size: var(--font-xl);
-}
-
-.myapp-guide__hint {
-  margin: var(--s1) 0 var(--s4);
-  color: var(--muted);
-  font-size: var(--font-sm);
 }
 
 .myapp-guide__list {
@@ -238,7 +219,10 @@
   align-items: center;
   gap: var(--s2);
   margin: 0;
-  font-size: var(--font-lg);
+  font-family: var(--sans);
+  font-size: var(--font-md);
+  font-weight: 600;
+  letter-spacing: 0;
 }
 
 .myapp-list-heading__count {
@@ -273,12 +257,6 @@
   border-color: var(--error);
   background-color: var(--error-soft);
   color: var(--error);
-}
-
-.myapp-list-sort {
-  margin: 0 0 0 auto;
-  color: var(--muted);
-  font-size: var(--font-sm);
 }
 
 .myapp-list {
@@ -419,7 +397,7 @@
 
 .myapp-card__title {
   margin: var(--s1) 0 0;
-  font-size: var(--font-lg);
+  font-size: var(--font-md);
   overflow-wrap: anywhere;
 }
 
@@ -473,6 +451,7 @@
 .myapp-card__status-label {
   margin: 0;
   color: var(--ink);
+  font-size: var(--font-base);
   font-weight: 600;
 }
 
@@ -609,11 +588,6 @@
   margin: 0;
 }
 
-.myapp-note {
-  margin-top: var(--s4);
-  font-size: var(--font-sm);
-}
-
 /* ---- Màn hẹp ---- */
 
 @media (max-width: 1024px) {
@@ -681,10 +655,6 @@
   .myapp-card__status {
     max-width: none;
     text-align: left;
-  }
-
-  .myapp-list-sort {
-    margin-left: 0;
   }
 
   .myapp-card__actions {
