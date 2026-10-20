@@ -19,7 +19,10 @@ import org.springframework.data.domain.*;
 import org.springframework.security.access.AccessDeniedException;
 import java.time.LocalDateTime;
 import java.util.*;
-import static org.junit.jupiter.api.Assertions.*;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.Mockito.*;
 
 class TalentPoolDecisionUnitTests {
@@ -699,7 +702,7 @@ class TalentPoolDecisionUnitTests {
         when(currentUser.requireUser()).thenReturn(hr);
         when(jobs.findForUpdate(20)).thenReturn(Optional.of(job));
         Application source = Application.builder().applicationId(100).candidate(candidate)
-                .jobPosting(JobPosting.builder().jobPostingId(10).build()).appliedCvUrl("https://example.test/cv.pdf").build();
+            .jobPosting(JobPosting.builder().jobPostingId(10).build()).appliedCvUrl("https://example.test/cv.pdf").build();
         when(applications.findDetailById(100)).thenReturn(Optional.of(source));
         when(applications.findPreviousCvByCandidateId(8)).thenReturn(List.of(Application.builder().applicationId(101).build()));
         // When: HR chọn CV đã mất điều kiện làm nguồn.

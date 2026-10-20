@@ -1,0 +1,13 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<body>
+<th:block th:fragment="chat"
+          th:if="${@environment.getProperty('rms.chat.enabled', 'true') == 'true'}"
+          th:with="chatWebhookUrl=${@environment.getProperty('rms.chat.webhook-url', 'http://localhost:5678/webhook/6ddb94d7-27d2-4550-88a2-f7a01a1bb645/chat')},chatLocalOllama=${@environment.getProperty('rms.chat.local-ollama', 'false')}">
+  <link rel="stylesheet" th:href="@{/js/vendor/n8n-chat/1.42.6/style.css}">
+  <link rel="stylesheet" th:href="@{/css/rms-chat.css}">
+  <script type="module" th:src="@{/js/rms-chat.js}" data-rms-chat-loader
+          th:attr="data-webhook-url=${chatWebhookUrl},data-local-ollama=${chatLocalOllama}"></script>
+</th:block>
+</body>
+</html>

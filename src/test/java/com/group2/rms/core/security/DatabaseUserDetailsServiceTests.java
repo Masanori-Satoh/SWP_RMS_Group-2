@@ -12,12 +12,11 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
-
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -49,13 +48,13 @@ class DatabaseUserDetailsServiceTests {
     @Test
     @DisplayName("AUTH-LOGIN-01 | Username tồn tại: trả đúng username, hash, quyền Candidate và trạng thái được đăng nhập")
     void loadUserByUsername_existingUsername_returnsLoginDetails() {
-        // Given
+        // Given: Username tồn tại.
         when(users.findByUsernameIgnoreCase("candidate7")).thenReturn(Optional.of(account));
 
-        // When
+        // When: Gọi service.loadUserByUsername với dữ liệu đã chuẩn bị.
         UserDetails result = service.loadUserByUsername("candidate7");
 
-        // Then
+        // Then: trả đúng username, hash, quyền Candidate và trạng thái được đăng nhập.
         assertNotNull(result);
         assertEquals("candidate7", result.getUsername());
         assertEquals("stored-password-hash", result.getPassword());
@@ -68,13 +67,13 @@ class DatabaseUserDetailsServiceTests {
     @Test
     @DisplayName("AUTH-LOGIN-02 | Đăng nhập bằng email: trả username gốc của đúng tài khoản")
     void loadUserByUsername_existingEmail_returnsCanonicalUsername() {
-        // Given
+        // Given: Đăng nhập bằng email.
         when(users.findByEmailIgnoreCase("candidate7@example.test")).thenReturn(Optional.of(account));
 
-        // When
+        // When: Gọi service.loadUserByUsername với dữ liệu đã chuẩn bị.
         UserDetails result = service.loadUserByUsername("candidate7@example.test");
 
-        // Then
+        // Then: trả username gốc của đúng tài khoản.
         assertEquals("candidate7", result.getUsername());
         verify(users, times(1)).findByEmailIgnoreCase("candidate7@example.test");
     }
@@ -82,13 +81,13 @@ class DatabaseUserDetailsServiceTests {
     @Test
     @DisplayName("AUTH-LOGIN-03 | Identifier có khoảng trắng đầu/cuối: bỏ khoảng trắng trước khi tìm tài khoản")
     void loadUserByUsername_identifierHasSpaces_trimsBeforeLookup() {
-        // Given
+        // Given: Identifier có khoảng trắng đầu/cuối.
         when(users.findByUsernameIgnoreCase("candidate7")).thenReturn(Optional.of(account));
 
-        // When
+        // When: Gọi service.loadUserByUsername với dữ liệu đã chuẩn bị.
         UserDetails result = service.loadUserByUsername("  candidate7  ");
 
-        // Then
+        // Then: bỏ khoảng trắng trước khi tìm tài khoản.
         assertEquals("candidate7", result.getUsername());
         verify(users, times(1)).findByUsernameIgnoreCase("candidate7");
         verify(users, times(1)).findByEmailIgnoreCase("candidate7");
@@ -97,15 +96,15 @@ class DatabaseUserDetailsServiceTests {
     @Test
     @DisplayName("AUTH-LOGIN-04 | Không tìm thấy username hoặc email: báo thông tin đăng nhập không hợp lệ")
     void loadUserByUsername_missingAccount_throwsException() {
-        // Given
+        // Given: Không tìm thấy username hoặc email.
         when(users.findByUsernameIgnoreCase("missing")).thenReturn(Optional.empty());
         when(users.findByEmailIgnoreCase("missing")).thenReturn(Optional.empty());
 
-        // When
+        // When: Gọi service.loadUserByUsername với dữ liệu đã chuẩn bị.
         UsernameNotFoundException error = assertThrows(UsernameNotFoundException.class,
-                () -> service.loadUserByUsername("missing"));
+            () -> service.loadUserByUsername("missing"));
 
-        // Then
+        // Then: báo thông tin đăng nhập không hợp lệ.
         assertEquals("Invalid credentials", error.getMessage());
         verify(users, times(1)).findByUsernameIgnoreCase("missing");
     }
@@ -113,30 +112,30 @@ class DatabaseUserDetailsServiceTests {
     @Test
     @DisplayName("AUTH-LOGIN-05 | Identifier trùng username và email của hai tài khoản khác nhau: từ chối đăng nhập")
     void loadUserByUsername_identifierBelongsToTwoAccounts_rejectsAmbiguousLogin() {
-        // Given
+        // Given: Identifier trùng username và email của hai tài khoản khác nhau.
         User another = User.builder().userId(8).build();
         when(users.findByUsernameIgnoreCase("shared@example.test")).thenReturn(Optional.of(account));
         when(users.findByEmailIgnoreCase("shared@example.test")).thenReturn(Optional.of(another));
 
-        // When
+        // When: Gọi service.loadUserByUsername với dữ liệu đã chuẩn bị.
         UsernameNotFoundException error = assertThrows(UsernameNotFoundException.class,
-                () -> service.loadUserByUsername("shared@example.test"));
+            () -> service.loadUserByUsername("shared@example.test"));
 
-        // Then
+        // Then: từ chối đăng nhập.
         assertEquals("Invalid credentials", error.getMessage());
     }
 
     @Test
     @DisplayName("AUTH-LOGIN-06 | Username và email cùng trỏ một tài khoản: không từ chối nhầm vì trùng identifier")
     void loadUserByUsername_bothLookupsReturnSameAccount_allowsLogin() {
-        // Given
+        // Given: Username và email cùng trỏ một tài khoản.
         when(users.findByUsernameIgnoreCase("candidate7")).thenReturn(Optional.of(account));
         when(users.findByEmailIgnoreCase("candidate7")).thenReturn(Optional.of(account));
 
-        // When
+        // When: Gọi service.loadUserByUsername với dữ liệu đã chuẩn bị.
         UserDetails result = service.loadUserByUsername("candidate7");
 
-        // Then
+        // Then: không từ chối nhầm vì trùng identifier.
         assertEquals("candidate7", result.getUsername());
         assertEquals(true, result.isEnabled());
     }
@@ -144,58 +143,58 @@ class DatabaseUserDetailsServiceTests {
     @Test
     @DisplayName("AUTH-LOGIN-07 | Tài khoản Inactive: trả UserDetails bị vô hiệu hóa để Security chặn đăng nhập")
     void loadUserByUsername_inactiveAccount_returnsDisabledDetails() {
-        // Given
+        // Given: Tài khoản Inactive.
         account.setAccountStatus("Inactive");
         when(users.findByUsernameIgnoreCase("candidate7")).thenReturn(Optional.of(account));
 
-        // When
+        // When: Gọi service.loadUserByUsername với dữ liệu đã chuẩn bị.
         UserDetails result = service.loadUserByUsername("candidate7");
 
-        // Then
+        // Then: trả UserDetails bị vô hiệu hóa để Security chặn đăng nhập.
         assertEquals(false, result.isEnabled());
     }
 
     @Test
     @DisplayName("AUTH-LOGIN-08 | Tài khoản Blocked: trả UserDetails bị vô hiệu hóa để Security chặn đăng nhập")
     void loadUserByUsername_blockedAccount_returnsDisabledDetails() {
-        // Given
+        // Given: Tài khoản Blocked.
         account.setAccountStatus("Blocked");
         when(users.findByUsernameIgnoreCase("candidate7")).thenReturn(Optional.of(account));
 
-        // When
+        // When: Gọi service.loadUserByUsername với dữ liệu đã chuẩn bị.
         UserDetails result = service.loadUserByUsername("candidate7");
 
-        // Then
+        // Then: trả UserDetails bị vô hiệu hóa để Security chặn đăng nhập.
         assertEquals(false, result.isEnabled());
     }
 
     @Test
     @DisplayName("AUTH-LOGIN-09 | Role không được hỗ trợ: từ chối tạo thông tin đăng nhập")
     void loadUserByUsername_unknownRole_throwsException() {
-        // Given
+        // Given: Role không được hỗ trợ.
         account.setRole(Role.builder().roleName("Unsupported").build());
         when(users.findByUsernameIgnoreCase("candidate7")).thenReturn(Optional.of(account));
 
-        // When
+        // When: Gọi service.loadUserByUsername với dữ liệu đã chuẩn bị.
         UsernameNotFoundException error = assertThrows(UsernameNotFoundException.class,
-                () -> service.loadUserByUsername("candidate7"));
+            () -> service.loadUserByUsername("candidate7"));
 
-        // Then
+        // Then: từ chối tạo thông tin đăng nhập.
         assertEquals("Invalid credentials", error.getMessage());
     }
 
     @Test
     @DisplayName("AUTH-LOGIN-10 | Tài khoản thiếu role: từ chối tạo thông tin đăng nhập")
     void loadUserByUsername_missingRole_throwsException() {
-        // Given
+        // Given: Tài khoản thiếu role.
         account.setRole(null);
         when(users.findByUsernameIgnoreCase("candidate7")).thenReturn(Optional.of(account));
 
-        // When
+        // When: Gọi service.loadUserByUsername với dữ liệu đã chuẩn bị.
         UsernameNotFoundException error = assertThrows(UsernameNotFoundException.class,
-                () -> service.loadUserByUsername("candidate7"));
+            () -> service.loadUserByUsername("candidate7"));
 
-        // Then
+        // Then: từ chối tạo thông tin đăng nhập.
         assertEquals("Invalid credentials", error.getMessage());
     }
 
@@ -214,10 +213,10 @@ class DatabaseUserDetailsServiceTests {
     @Test
     @DisplayName("AUTH-LOGIN-12 | Identifier chỉ chứa khoảng trắng: ném lỗi, không gọi repository")
     void loadUserByUsername_blankIdentifier_doesNotQueryRepository() {
-        // When
+        // Given: Identifier chỉ chứa khoảng trắng.
+        // When: Gọi service.loadUserByUsername với dữ liệu đã chuẩn bị.
         assertThrows(UsernameNotFoundException.class, () -> service.loadUserByUsername("   "));
-
-        // Then
+        // Then: ném lỗi, không gọi repository.
         verify(users, times(0)).findByUsernameIgnoreCase(anyString());
         verify(users, times(0)).findByEmailIgnoreCase(anyString());
     }

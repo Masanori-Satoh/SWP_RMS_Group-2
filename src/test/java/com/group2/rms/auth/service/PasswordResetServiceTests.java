@@ -11,15 +11,14 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.crypto.password.PasswordEncoder;
-
 import java.time.Clock;
 import java.time.Instant;
 import java.time.ZoneOffset;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.times;
@@ -55,13 +54,13 @@ class PasswordResetServiceTests {
     @Test
     @DisplayName("AUTH-RESET-01 | Email Active tồn tại: tạo snapshot chứa đúng ID, email và hash hiện tại")
     void findActiveAccount_existingEmail_returnsSnapshot() {
-        // Given
+        // Given: Email Active tồn tại.
         when(users.findByEmailIgnoreCase(EMAIL)).thenReturn(Optional.of(account));
 
-        // When
+        // When: Gọi service.findActiveAccount với dữ liệu đã chuẩn bị.
         AccountSnapshotResponse result = service.findActiveAccount(EMAIL);
 
-        // Then
+        // Then: tạo snapshot chứa đúng ID, email và hash hiện tại.
         assertNotNull(result);
         assertEquals(7, result.userId());
         assertEquals(EMAIL, result.email());
@@ -72,13 +71,13 @@ class PasswordResetServiceTests {
     @Test
     @DisplayName("AUTH-RESET-02 | Email có khoảng trắng đầu/cuối: tìm bằng email đã trim")
     void findActiveAccount_emailHasSpaces_trimsBeforeLookup() {
-        // Given
+        // Given: Email có khoảng trắng đầu/cuối.
         when(users.findByEmailIgnoreCase(EMAIL)).thenReturn(Optional.of(account));
 
-        // When
+        // When: Gọi service.findActiveAccount với dữ liệu đã chuẩn bị.
         AccountSnapshotResponse result = service.findActiveAccount("  " + EMAIL + "  ");
 
-        // Then
+        // Then: tìm bằng email đã trim.
         assertEquals(EMAIL, result.email());
         verify(users, times(1)).findByEmailIgnoreCase(EMAIL);
     }
@@ -86,11 +85,11 @@ class PasswordResetServiceTests {
     @Test
     @DisplayName("AUTH-RESET-03 | Email null: báo EMAIL_REQUIRED, không truy vấn tài khoản")
     void findActiveAccount_nullEmail_throwsRequiredError() {
-        // When
+        // Given: Email null.
+        // When: Gọi service.findActiveAccount với dữ liệu đã chuẩn bị.
         PasswordRecoveryFlowException error = assertThrows(PasswordRecoveryFlowException.class,
-                () -> service.findActiveAccount(null));
-
-        // Then
+            () -> service.findActiveAccount(null));
+        // Then: báo EMAIL_REQUIRED, không truy vấn tài khoản.
         assertEquals("EMAIL_REQUIRED", error.getErrorCode());
         verify(users, times(0)).findByEmailIgnoreCase(anyString());
     }
@@ -98,25 +97,25 @@ class PasswordResetServiceTests {
     @Test
     @DisplayName("AUTH-RESET-04 | Email chỉ chứa khoảng trắng: báo EMAIL_REQUIRED")
     void findActiveAccount_blankEmail_throwsRequiredError() {
-        // When
+        // Given: Email chỉ chứa khoảng trắng.
+        // When: Gọi service.findActiveAccount với dữ liệu đã chuẩn bị.
         PasswordRecoveryFlowException error = assertThrows(PasswordRecoveryFlowException.class,
-                () -> service.findActiveAccount("   "));
-
-        // Then
+            () -> service.findActiveAccount("   "));
+        // Then: báo EMAIL_REQUIRED.
         assertEquals("EMAIL_REQUIRED", error.getErrorCode());
     }
 
     @Test
     @DisplayName("AUTH-RESET-05 | Email không tồn tại: báo EMAIL_NOT_FOUND tại field email")
     void findActiveAccount_missingEmail_throwsNotFoundError() {
-        // Given
+        // Given: Email không tồn tại.
         when(users.findByEmailIgnoreCase(EMAIL)).thenReturn(Optional.empty());
 
-        // When
+        // When: Gọi service.findActiveAccount với dữ liệu đã chuẩn bị.
         PasswordRecoveryFlowException error = assertThrows(PasswordRecoveryFlowException.class,
-                () -> service.findActiveAccount(EMAIL));
+            () -> service.findActiveAccount(EMAIL));
 
-        // Then
+        // Then: báo EMAIL_NOT_FOUND tại field email.
         assertEquals("EMAIL_NOT_FOUND", error.getErrorCode());
         assertEquals("email", error.getField());
     }
@@ -124,43 +123,43 @@ class PasswordResetServiceTests {
     @Test
     @DisplayName("AUTH-RESET-06 | Email thuộc tài khoản Inactive: không cho khởi tạo reset")
     void findActiveAccount_inactiveAccount_throwsInactiveError() {
-        // Given
+        // Given: Email thuộc tài khoản Inactive.
         account.setAccountStatus("Inactive");
         when(users.findByEmailIgnoreCase(EMAIL)).thenReturn(Optional.of(account));
 
-        // When
+        // When: Gọi service.findActiveAccount với dữ liệu đã chuẩn bị.
         PasswordRecoveryFlowException error = assertThrows(PasswordRecoveryFlowException.class,
-                () -> service.findActiveAccount(EMAIL));
+            () -> service.findActiveAccount(EMAIL));
 
-        // Then
+        // Then: không cho khởi tạo reset.
         assertEquals("ACCOUNT_NOT_ACTIVE", error.getErrorCode());
     }
 
     @Test
     @DisplayName("AUTH-RESET-07 | Email thuộc tài khoản Blocked: không cho khởi tạo reset")
     void findActiveAccount_blockedAccount_throwsInactiveError() {
-        // Given
+        // Given: Email thuộc tài khoản Blocked.
         account.setAccountStatus("Blocked");
         when(users.findByEmailIgnoreCase(EMAIL)).thenReturn(Optional.of(account));
 
-        // When
+        // When: Gọi service.findActiveAccount với dữ liệu đã chuẩn bị.
         PasswordRecoveryFlowException error = assertThrows(PasswordRecoveryFlowException.class,
-                () -> service.findActiveAccount(EMAIL));
+            () -> service.findActiveAccount(EMAIL));
 
-        // Then
+        // Then: không cho khởi tạo reset.
         assertEquals("ACCOUNT_NOT_ACTIVE", error.getErrorCode());
     }
 
     @Test
     @DisplayName("AUTH-RESET-08 | Snapshot khớp tài khoản Active: xác nhận yêu cầu reset còn hợp lệ")
     void isCurrent_unchangedAccount_returnsTrue() {
-        // Given
+        // Given: Snapshot khớp tài khoản Active.
         when(users.findById(7)).thenReturn(Optional.of(account));
 
-        // When
+        // When: Gọi service.isCurrent với dữ liệu đã chuẩn bị.
         boolean result = service.isCurrent(snapshot);
 
-        // Then
+        // Then: xác nhận yêu cầu reset còn hợp lệ.
         assertEquals(true, result);
         verify(users, times(1)).findById(7);
     }
@@ -168,10 +167,10 @@ class PasswordResetServiceTests {
     @Test
     @DisplayName("AUTH-RESET-09 | Kiểm tra snapshot null: trả false và không truy vấn tài khoản")
     void isCurrent_nullSnapshot_returnsFalse() {
-        // When
+        // Given: Kiểm tra snapshot null.
+        // When: Gọi service.isCurrent với dữ liệu đã chuẩn bị.
         boolean result = service.isCurrent(null);
-
-        // Then
+        // Then: trả false và không truy vấn tài khoản.
         assertEquals(false, result);
         verify(users, times(0)).findById(any());
     }
@@ -179,69 +178,69 @@ class PasswordResetServiceTests {
     @Test
     @DisplayName("AUTH-RESET-10 | Tài khoản trong snapshot đã bị xóa: yêu cầu reset không còn hợp lệ")
     void isCurrent_removedAccount_returnsFalse() {
-        // Given
+        // Given: Tài khoản trong snapshot đã bị xóa.
         when(users.findById(7)).thenReturn(Optional.empty());
 
-        // When
+        // When: Gọi service.isCurrent với dữ liệu đã chuẩn bị.
         boolean result = service.isCurrent(snapshot);
 
-        // Then
+        // Then: yêu cầu reset không còn hợp lệ.
         assertEquals(false, result);
     }
 
     @Test
     @DisplayName("AUTH-RESET-11 | Email tài khoản đã đổi sau khi tạo snapshot: trả false")
     void isCurrent_emailChanged_returnsFalse() {
-        // Given
+        // Given: Email tài khoản đã đổi sau khi tạo snapshot.
         account.setEmail("changed@example.test");
         when(users.findById(7)).thenReturn(Optional.of(account));
 
-        // When
+        // When: Gọi service.isCurrent với dữ liệu đã chuẩn bị.
         boolean result = service.isCurrent(snapshot);
 
-        // Then
+        // Then: trả false.
         assertEquals(false, result);
     }
 
     @Test
     @DisplayName("AUTH-RESET-12 | Hash mật khẩu đã đổi sau khi tạo snapshot: trả false")
     void isCurrent_passwordChanged_returnsFalse() {
-        // Given
+        // Given: Hash mật khẩu đã đổi sau khi tạo snapshot.
         account.setPasswordHash("different-hash");
         when(users.findById(7)).thenReturn(Optional.of(account));
 
-        // When
+        // When: Gọi service.isCurrent với dữ liệu đã chuẩn bị.
         boolean result = service.isCurrent(snapshot);
 
-        // Then
+        // Then: trả false.
         assertEquals(false, result);
     }
 
     @Test
     @DisplayName("AUTH-RESET-13 | Tài khoản bị vô hiệu hóa sau khi tạo snapshot: trả false")
     void isCurrent_accountDeactivated_returnsFalse() {
-        // Given
+        // Given: Tài khoản bị vô hiệu hóa sau khi tạo snapshot.
         account.setAccountStatus("Inactive");
         when(users.findById(7)).thenReturn(Optional.of(account));
 
-        // When
+        // When: Gọi service.isCurrent với dữ liệu đã chuẩn bị.
         boolean result = service.isCurrent(snapshot);
 
-        // Then
+        // Then: trả false.
         assertEquals(false, result);
     }
 
     @Test
     @DisplayName("AUTH-RESET-14 | Snapshot hợp lệ và còn hạn: mã hóa mật khẩu mới, lưu đúng tài khoản một lần")
     void changePassword_validSnapshot_encodesAndSavesPassword() {
-        // Given
+        // Given: Snapshot hợp lệ và còn hạn.
         when(users.findByIdForUpdate(7)).thenReturn(Optional.of(account));
         when(encoder.encode("NewPass123!")).thenReturn("new-hash");
 
-        // When
+        // When: Gọi service.changePassword với dữ liệu đã chuẩn bị.
         service.changePassword(snapshot, "NewPass123!", EXPIRES_AT);
 
-        // Then
+        // Then: mã hóa mật khẩu mới, lưu đúng tài khoản một lần.
         assertEquals("new-hash", account.getPasswordHash());
         assertEquals(EMAIL, account.getEmail());
         assertEquals("Active", account.getAccountStatus());
@@ -253,14 +252,14 @@ class PasswordResetServiceTests {
     @Test
     @DisplayName("AUTH-RESET-15 | Yêu cầu đã quá hạn: ném lỗi, giữ hash cũ và không lưu")
     void changePassword_expiredRequest_doesNotSave() {
-        // Given
+        // Given: Yêu cầu đã quá hạn.
         when(users.findByIdForUpdate(7)).thenReturn(Optional.of(account));
 
-        // When
+        // When: Gọi service.changePassword với dữ liệu đã chuẩn bị.
         PasswordRecoveryFlowException error = assertThrows(PasswordRecoveryFlowException.class,
-                () -> service.changePassword(snapshot, "NewPass123!", NOW.minusSeconds(1)));
+            () -> service.changePassword(snapshot, "NewPass123!", NOW.minusSeconds(1)));
 
-        // Then
+        // Then: ném lỗi, giữ hash cũ và không lưu.
         assertEquals("RESET_REQUEST_INVALID", error.getErrorCode());
         assertEquals("old-hash", account.getPasswordHash());
         verify(users, times(0)).saveAndFlush(any(User.class));
@@ -269,14 +268,14 @@ class PasswordResetServiceTests {
     @Test
     @DisplayName("AUTH-RESET-16 | Thời gian hiện tại đúng bằng hạn reset: coi là hết hạn và không lưu")
     void changePassword_atExpiryBoundary_doesNotSave() {
-        // Given
+        // Given: Thời gian hiện tại đúng bằng hạn reset.
         when(users.findByIdForUpdate(7)).thenReturn(Optional.of(account));
 
-        // When
+        // When: Gọi service.changePassword với dữ liệu đã chuẩn bị.
         PasswordRecoveryFlowException error = assertThrows(PasswordRecoveryFlowException.class,
-                () -> service.changePassword(snapshot, "NewPass123!", NOW));
+            () -> service.changePassword(snapshot, "NewPass123!", NOW));
 
-        // Then
+        // Then: coi là hết hạn và không lưu.
         assertEquals("RESET_REQUEST_INVALID", error.getErrorCode());
         verify(encoder, times(0)).encode(anyString());
         verify(users, times(0)).saveAndFlush(any(User.class));
@@ -285,15 +284,15 @@ class PasswordResetServiceTests {
     @Test
     @DisplayName("AUTH-RESET-17 | Mật khẩu đã được đổi bởi yêu cầu khác: không ghi đè bằng snapshot cũ")
     void changePassword_stalePasswordSnapshot_doesNotOverwriteNewerPassword() {
-        // Given
+        // Given: Mật khẩu đã được đổi bởi yêu cầu khác.
         account.setPasswordHash("changed-by-another-request");
         when(users.findByIdForUpdate(7)).thenReturn(Optional.of(account));
 
-        // When
+        // When: Gọi service.changePassword với dữ liệu đã chuẩn bị.
         PasswordRecoveryFlowException error = assertThrows(PasswordRecoveryFlowException.class,
-                () -> service.changePassword(snapshot, "NewPass123!", EXPIRES_AT));
+            () -> service.changePassword(snapshot, "NewPass123!", EXPIRES_AT));
 
-        // Then
+        // Then: không ghi đè bằng snapshot cũ.
         assertEquals("RESET_REQUEST_INVALID", error.getErrorCode());
         assertEquals("changed-by-another-request", account.getPasswordHash());
         verify(users, times(0)).saveAndFlush(any(User.class));
@@ -302,14 +301,14 @@ class PasswordResetServiceTests {
     @Test
     @DisplayName("AUTH-RESET-18 | Tài khoản không còn tồn tại khi lưu: ném lỗi và không ghi mật khẩu")
     void changePassword_missingAccount_doesNotSave() {
-        // Given
+        // Given: Tài khoản không còn tồn tại khi lưu.
         when(users.findByIdForUpdate(7)).thenReturn(Optional.empty());
 
-        // When
+        // When: Gọi service.changePassword với dữ liệu đã chuẩn bị.
         PasswordRecoveryFlowException error = assertThrows(PasswordRecoveryFlowException.class,
-                () -> service.changePassword(snapshot, "NewPass123!", EXPIRES_AT));
+            () -> service.changePassword(snapshot, "NewPass123!", EXPIRES_AT));
 
-        // Then
+        // Then: ném lỗi và không ghi mật khẩu.
         assertEquals("RESET_REQUEST_INVALID", error.getErrorCode());
         verify(encoder, times(0)).encode(anyString());
         verify(users, times(0)).saveAndFlush(any(User.class));
@@ -318,11 +317,11 @@ class PasswordResetServiceTests {
     @Test
     @DisplayName("AUTH-RESET-19 | Mật khẩu ngắn hơn 8 ký tự: báo PASSWORD_INVALID trước khi truy vấn DB")
     void changePassword_shortPassword_returnsPasswordFieldError() {
-        // When
+        // Given: Mật khẩu ngắn hơn 8 ký tự.
+        // When: Gọi service.changePassword với dữ liệu đã chuẩn bị.
         PasswordRecoveryFlowException error = assertThrows(PasswordRecoveryFlowException.class,
-                () -> service.changePassword(snapshot, "short", EXPIRES_AT));
-
-        // Then
+            () -> service.changePassword(snapshot, "short", EXPIRES_AT));
+        // Then: báo PASSWORD_INVALID trước khi truy vấn DB.
         assertEquals("PASSWORD_INVALID", error.getErrorCode());
         assertEquals("password", error.getField());
         verify(users, times(0)).findByIdForUpdate(any());
@@ -331,11 +330,11 @@ class PasswordResetServiceTests {
     @Test
     @DisplayName("AUTH-RESET-20 | Mật khẩu dài hơn 32 ký tự: từ chối và không lưu")
     void changePassword_passwordOver32Characters_doesNotSave() {
-        // When
+        // Given: Mật khẩu dài hơn 32 ký tự.
+        // When: Gọi service.changePassword với dữ liệu đã chuẩn bị.
         PasswordRecoveryFlowException error = assertThrows(PasswordRecoveryFlowException.class,
-                () -> service.changePassword(snapshot, "a".repeat(33), EXPIRES_AT));
-
-        // Then
+            () -> service.changePassword(snapshot, "a".repeat(33), EXPIRES_AT));
+        // Then: từ chối và không lưu.
         assertEquals("PASSWORD_INVALID", error.getErrorCode());
         assertEquals("password", error.getField());
         verify(users, times(0)).findByIdForUpdate(any());
@@ -351,7 +350,7 @@ class PasswordResetServiceTests {
 
         // When: Gọi đổi mật khẩu mà không có snapshot.
         PasswordRecoveryFlowException error = assertThrows(PasswordRecoveryFlowException.class,
-                () -> service.changePassword(null, "NewPass123!", EXPIRES_AT));
+            () -> service.changePassword(null, "NewPass123!", EXPIRES_AT));
 
         // Then: Từ chối yêu cầu; không tìm/khóa tài khoản và không lưu mật khẩu.
         assertEquals("RESET_REQUEST_INVALID", error.getErrorCode());
@@ -368,7 +367,7 @@ class PasswordResetServiceTests {
 
         // When: Gọi đổi mật khẩu mà không truyền thời hạn.
         PasswordRecoveryFlowException error = assertThrows(PasswordRecoveryFlowException.class,
-                () -> service.changePassword(snapshot, "NewPass123!", null));
+            () -> service.changePassword(snapshot, "NewPass123!", null));
 
         // Then: Từ chối yêu cầu trước khi tìm/khóa tài khoản hoặc thay đổi mật khẩu.
         assertEquals("RESET_REQUEST_INVALID", error.getErrorCode());
@@ -376,15 +375,16 @@ class PasswordResetServiceTests {
         verify(users, times(0)).saveAndFlush(any(User.class));
         verify(encoder, times(0)).encode(anyString());
     }
+
     @Test
     @DisplayName("AUTH-RESET-23 | Password null: báo PASSWORD_INVALID, không tìm tài khoản hoặc lưu")
     void changePassword_nullPassword_rejectsBeforeLookup() {
         // Given: Snapshot và thời hạn hợp lệ, chỉ password bị thiếu.
-        // When
+        // When: Gọi service.changePassword với dữ liệu đã chuẩn bị.
         PasswordRecoveryFlowException error = assertThrows(PasswordRecoveryFlowException.class,
-                () -> service.changePassword(snapshot, null, EXPIRES_AT));
+            () -> service.changePassword(snapshot, null, EXPIRES_AT));
 
-        // Then
+        // Then: báo PASSWORD_INVALID, không tìm tài khoản hoặc lưu.
         assertEquals("PASSWORD_INVALID", error.getErrorCode());
         assertEquals("password", error.getField());
         verify(users, times(0)).findByIdForUpdate(any());
@@ -396,11 +396,11 @@ class PasswordResetServiceTests {
     @DisplayName("AUTH-RESET-24 | Password gồm 8 dấu cách: vẫn từ chối dù đủ độ dài tối thiểu")
     void changePassword_blankPassword_rejectsBeforeLookup() {
         // Given: Đủ 8 ký tự nhưng tất cả đều là khoảng trắng.
-        // When
+        // When: Gọi service.changePassword với dữ liệu đã chuẩn bị.
         PasswordRecoveryFlowException error = assertThrows(PasswordRecoveryFlowException.class,
-                () -> service.changePassword(snapshot, "        ", EXPIRES_AT));
+            () -> service.changePassword(snapshot, "        ", EXPIRES_AT));
 
-        // Then
+        // Then: vẫn từ chối dù đủ độ dài tối thiểu.
         assertEquals("PASSWORD_INVALID", error.getErrorCode());
         verify(users, times(0)).findByIdForUpdate(any());
         verify(users, times(0)).saveAndFlush(any(User.class));
@@ -410,14 +410,14 @@ class PasswordResetServiceTests {
     @Test
     @DisplayName("AUTH-RESET-25 | Password đúng 8 ký tự: chấp nhận, mã hóa và lưu một lần")
     void changePassword_exactlyEightCharacters_savesPassword() {
-        // Given
+        // Given: Password đúng 8 ký tự.
         when(users.findByIdForUpdate(7)).thenReturn(Optional.of(account));
         when(encoder.encode("Abc123!x")).thenReturn("minimum-hash");
 
-        // When
+        // When: Gọi service.changePassword với dữ liệu đã chuẩn bị.
         service.changePassword(snapshot, "Abc123!x", EXPIRES_AT);
 
-        // Then
+        // Then: chấp nhận, mã hóa và lưu một lần.
         assertEquals("minimum-hash", account.getPasswordHash());
         verify(encoder, times(1)).encode("Abc123!x");
         verify(users, times(1)).saveAndFlush(account);
@@ -426,15 +426,15 @@ class PasswordResetServiceTests {
     @Test
     @DisplayName("AUTH-RESET-26 | Password đúng 32 ký tự: chấp nhận tại biên độ dài tối đa")
     void changePassword_exactlyThirtyTwoCharacters_savesPassword() {
-        // Given
+        // Given: Password đúng 32 ký tự.
         String password = "a".repeat(32);
         when(users.findByIdForUpdate(7)).thenReturn(Optional.of(account));
         when(encoder.encode(password)).thenReturn("maximum-hash");
 
-        // When
+        // When: Gọi service.changePassword với dữ liệu đã chuẩn bị.
         service.changePassword(snapshot, password, EXPIRES_AT);
 
-        // Then
+        // Then: chấp nhận tại biên độ dài tối đa.
         assertEquals("maximum-hash", account.getPasswordHash());
         verify(encoder, times(1)).encode(password);
         verify(users, times(1)).saveAndFlush(account);
@@ -447,11 +447,11 @@ class PasswordResetServiceTests {
         account.setEmail("changed@example.test");
         when(users.findByIdForUpdate(7)).thenReturn(Optional.of(account));
 
-        // When
+        // When: Gọi service.changePassword với dữ liệu đã chuẩn bị.
         PasswordRecoveryFlowException error = assertThrows(PasswordRecoveryFlowException.class,
-                () -> service.changePassword(snapshot, "NewPass123!", EXPIRES_AT));
+            () -> service.changePassword(snapshot, "NewPass123!", EXPIRES_AT));
 
-        // Then
+        // Then: kiểm tra lại snapshot và không đổi password.
         assertEquals("RESET_REQUEST_INVALID", error.getErrorCode());
         assertEquals("changed@example.test", account.getEmail());
         assertEquals("old-hash", account.getPasswordHash());
@@ -462,15 +462,15 @@ class PasswordResetServiceTests {
     @Test
     @DisplayName("AUTH-RESET-28 | Account bị Blocked ngay trước khi lưu: giữ hash cũ và không lưu")
     void changePassword_accountBlockedBeforeSave_doesNotSave() {
-        // Given
+        // Given: Account bị Blocked ngay trước khi lưu.
         account.setAccountStatus("Blocked");
         when(users.findByIdForUpdate(7)).thenReturn(Optional.of(account));
 
-        // When
+        // When: Gọi service.changePassword với dữ liệu đã chuẩn bị.
         PasswordRecoveryFlowException error = assertThrows(PasswordRecoveryFlowException.class,
-                () -> service.changePassword(snapshot, "NewPass123!", EXPIRES_AT));
+            () -> service.changePassword(snapshot, "NewPass123!", EXPIRES_AT));
 
-        // Then
+        // Then: giữ hash cũ và không lưu.
         assertEquals("RESET_REQUEST_INVALID", error.getErrorCode());
         assertEquals("old-hash", account.getPasswordHash());
         verify(encoder, times(0)).encode(anyString());

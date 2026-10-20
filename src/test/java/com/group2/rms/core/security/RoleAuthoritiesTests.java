@@ -2,6 +2,7 @@ package com.group2.rms.core.security;
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
@@ -91,7 +92,7 @@ class RoleAuthoritiesTests {
 
         // When: Ánh xạ role không hợp lệ.
         IllegalArgumentException error = assertThrows(IllegalArgumentException.class,
-                () -> RoleAuthorities.fromRoleName(null));
+            () -> RoleAuthorities.fromRoleName(null));
 
         // Then: Kiểm tra đúng exception và thông báo.
         assertEquals("Role is missing", error.getMessage());
@@ -104,7 +105,7 @@ class RoleAuthoritiesTests {
 
         // When: Ánh xạ role không hợp lệ.
         IllegalArgumentException error = assertThrows(IllegalArgumentException.class,
-                () -> RoleAuthorities.fromRoleName(""));
+            () -> RoleAuthorities.fromRoleName(""));
 
         // Then: Kiểm tra đúng exception và thông báo.
         assertEquals("Unsupported role", error.getMessage());
@@ -117,7 +118,7 @@ class RoleAuthoritiesTests {
 
         // When: Ánh xạ role không hợp lệ.
         IllegalArgumentException error = assertThrows(IllegalArgumentException.class,
-                () -> RoleAuthorities.fromRoleName(" "));
+            () -> RoleAuthorities.fromRoleName(" "));
 
         // Then: Kiểm tra đúng exception và thông báo.
         assertEquals("Unsupported role", error.getMessage());
@@ -130,7 +131,7 @@ class RoleAuthoritiesTests {
 
         // When: Ánh xạ role không hợp lệ.
         IllegalArgumentException error = assertThrows(IllegalArgumentException.class,
-                () -> RoleAuthorities.fromRoleName("Unknown"));
+            () -> RoleAuthorities.fromRoleName("Unknown"));
 
         // Then: Kiểm tra đúng exception và thông báo.
         assertEquals("Unsupported role", error.getMessage());
@@ -143,7 +144,7 @@ class RoleAuthoritiesTests {
 
         // When: Ánh xạ role không hợp lệ.
         IllegalArgumentException error = assertThrows(IllegalArgumentException.class,
-                () -> RoleAuthorities.fromRoleName("hr"));
+            () -> RoleAuthorities.fromRoleName("hr"));
 
         // Then: Kiểm tra đúng exception và thông báo.
         assertEquals("Unsupported role", error.getMessage());

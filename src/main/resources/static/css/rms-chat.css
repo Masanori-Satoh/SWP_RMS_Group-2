@@ -1,0 +1,134 @@
+/* Only RMS chat overrides. Upstream @n8n/chat styling is kept unchanged. */
+#rms-recruitment-chat {
+  --chat--color--primary: #3e7157;
+  --chat--color--primary-shade-50: #2e5a45;
+  --chat--color--primary--shade-100: #244a38;
+  --chat--color--secondary: #3e7157;
+  --chat--color-secondary-shade-50: #2e5a45;
+  --chat--color-dark: #243b2d;
+  --chat--color-light: #f5f8f5;
+  --chat--font-family: Inter, "Source Sans 3", "Segoe UI", sans-serif;
+  --chat--window--width: min(400px, calc(100vw - 32px));
+  --chat--window--height: min(600px, calc(100dvh - 112px));
+  --chat--window--bottom: max(16px, env(safe-area-inset-bottom));
+  --chat--window--right: max(16px, env(safe-area-inset-right));
+  --chat--window--z-index: 1100;
+  --chat--window--border-radius: 16px;
+  --chat--window--margin-bottom: 12px;
+  --chat--header--background: #2e5a45;
+  --chat--header--color: #ffffff;
+  --chat--header--padding: 20px;
+  --chat--heading--font-size: 1.25rem;
+  --chat--subtitle--font-size: 0.875rem;
+  --chat--subtitle--line-height: 1.5;
+  --chat--message--font-size: 0.9375rem;
+  --chat--message--padding: 12px;
+  --chat--message--border-radius: 12px;
+  --chat--message--bot--background: #ffffff;
+  --chat--message--bot--color: #243b2d;
+  --chat--message--user--background: #3e7157;
+  --chat--body--background: #e7f0e8;
+  --chat--toggle--size: 56px;
+  --chat--toggle--width: 56px;
+  --chat--toggle--height: 56px;
+  --chat--toggle--background: #3e7157;
+  --chat--toggle--hover--background: #2e5a45;
+  --chat--toggle--active--background: #244a38;
+  --chat--input--text-color: #243b2d;
+  --chat--input--send--button--color: #3e7157;
+  --chat--input--send--button--background-hover: #e7f0e8;
+  --chat--input--send--button--color-hover: #2e5a45;
+  --chat--input--file--button--background-hover: #e7f0e8;
+  --chat--input--file--button--color: #3e7157;
+  --chat--input--file--button--color-hover: #2e5a45;
+  --chat--input--font-size: 1rem;
+  --chat--textarea--max-height: 120px;
+  --chat--footer--color: #2e5a45;
+  --chat--footer--background: #ffffff;
+  --chat--close--button--color-hover: #ffffff;
+  color: #243b2d;
+  font-family: var(--chat--font-family);
+}
+
+#rms-recruitment-chat,
+#rms-recruitment-chat *,
+#rms-recruitment-chat *::before,
+#rms-recruitment-chat *::after {
+  box-sizing: border-box;
+}
+
+/* The native widget uses <main>; protect it from the page's main styles. */
+#rms-recruitment-chat .chat-layout {
+  margin: 0;
+  padding: 0;
+  max-width: none;
+  min-width: 0;
+  min-height: 0;
+}
+
+#rms-recruitment-chat .chat-header h1,
+#rms-recruitment-chat .chat-header p {
+  margin: 0;
+}
+
+#rms-recruitment-chat .chat-header {
+  gap: 8px;
+}
+
+#rms-recruitment-chat .chat-window {
+  box-shadow: 0 12px 32px rgb(36 59 45 / 18%);
+}
+
+#rms-recruitment-chat .chat-window-toggle:is(:hover, :focus) {
+  transform: none;
+}
+
+#rms-recruitment-chat :is(button, a, textarea, [role="button"]):focus-visible {
+  outline: 3px solid #3e7157;
+  outline-offset: 3px;
+}
+
+#rms-recruitment-chat .chat-close-button:focus-visible {
+  outline-color: #ffffff;
+}
+
+#rms-recruitment-chat .chat-close-button {
+  color: #ffffff;
+}
+
+#rms-recruitment-chat textarea::placeholder {
+  color: #506558;
+  opacity: 1;
+}
+
+#rms-recruitment-chat textarea {
+  caret-color: #2e5a45;
+}
+
+#rms-recruitment-chat ::selection {
+  color: #ffffff;
+  background: #2e5a45;
+}
+
+@media (max-width: 480px) {
+  #rms-recruitment-chat {
+    --chat--toggle--size: 52px;
+    --chat--toggle--width: 52px;
+    --chat--toggle--height: 52px;
+    --chat--window--right: max(12px, env(safe-area-inset-right));
+    --chat--window--bottom: max(12px, env(safe-area-inset-bottom));
+    --chat--window--width: calc(100vw - 24px);
+    --chat--window--height: min(560px, calc(100dvh - 100px));
+    --chat--header--padding: 16px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  #rms-recruitment-chat {
+    --chat--transition-duration: 0s;
+  }
+
+  #rms-recruitment-chat .chat-message-typing-circle {
+    animation: none;
+  }
+}

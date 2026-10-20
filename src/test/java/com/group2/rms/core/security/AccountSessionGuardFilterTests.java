@@ -16,7 +16,10 @@ import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import java.util.List;
 import java.util.Optional;
-import static org.junit.jupiter.api.Assertions.*;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.Mockito.*;
 
 class AccountSessionGuardFilterTests {
@@ -53,7 +56,7 @@ class AccountSessionGuardFilterTests {
     void doFilter_unauthenticatedToken_continuesWithoutLookup() throws Exception {
         // Given: Request có token chưa xác thực.
         SecurityContextHolder.getContext().setAuthentication(
-                UsernamePasswordAuthenticationToken.unauthenticated("manager", "unused"));
+            UsernamePasswordAuthenticationToken.unauthenticated("manager", "unused"));
         // When: Chạy filter.
         filter.doFilter(request, response, chain);
         // Then: Cho đi tiếp đúng một lần và không lookup.
@@ -66,7 +69,7 @@ class AccountSessionGuardFilterTests {
     void doFilter_anonymousToken_continuesWithoutLookup() throws Exception {
         // Given: Request dùng AnonymousAuthenticationToken.
         SecurityContextHolder.getContext().setAuthentication(new AnonymousAuthenticationToken(
-                "key", "anonymousUser", List.of(new SimpleGrantedAuthority("ROLE_ANONYMOUS"))));
+            "key", "anonymousUser", List.of(new SimpleGrantedAuthority("ROLE_ANONYMOUS"))));
         // When: Chạy filter.
         filter.doFilter(request, response, chain);
         // Then: Cho đi tiếp và không lookup tài khoản anonymous.
@@ -82,7 +85,7 @@ class AccountSessionGuardFilterTests {
         MockHttpSession session = new MockHttpSession();
         request.setSession(session);
         User account = User.builder().accountStatus("Active")
-                .role(Role.builder().roleName("Hiring Manager").build()).build();
+            .role(Role.builder().roleName("Hiring Manager").build()).build();
         when(users.findByUsernameIgnoreCase("manager")).thenReturn(Optional.of(account));
         // When: Chạy filter.
         filter.doFilter(request, response, chain);
@@ -102,7 +105,7 @@ class AccountSessionGuardFilterTests {
         request.setSession(session);
         request.setContextPath("/rms");
         User account = User.builder().accountStatus("Active")
-                .role(Role.builder().roleName("Hiring Manager").build()).build();
+            .role(Role.builder().roleName("Hiring Manager").build()).build();
         account.getRole().setRoleName("HR");
         when(users.findByUsernameIgnoreCase("manager")).thenReturn(Optional.of(account));
         // When: Request đi qua filter.
@@ -124,7 +127,7 @@ class AccountSessionGuardFilterTests {
         request.setSession(session);
         request.setContextPath("/rms");
         User account = User.builder().accountStatus("Active")
-                .role(Role.builder().roleName("Hiring Manager").build()).build();
+            .role(Role.builder().roleName("Hiring Manager").build()).build();
         account.getRole().setRoleName("Director");
         when(users.findByUsernameIgnoreCase("manager")).thenReturn(Optional.of(account));
         // When: Request đi qua filter.
@@ -146,7 +149,7 @@ class AccountSessionGuardFilterTests {
         request.setSession(session);
         request.setContextPath("/rms");
         User account = User.builder().accountStatus("Active")
-                .role(Role.builder().roleName("Hiring Manager").build()).build();
+            .role(Role.builder().roleName("Hiring Manager").build()).build();
         account.getRole().setRoleName("Unknown");
         when(users.findByUsernameIgnoreCase("manager")).thenReturn(Optional.of(account));
         // When: Request đi qua filter.
@@ -168,7 +171,7 @@ class AccountSessionGuardFilterTests {
         request.setSession(session);
         request.setContextPath("/rms");
         User account = User.builder().accountStatus("Active")
-                .role(Role.builder().roleName("Hiring Manager").build()).build();
+            .role(Role.builder().roleName("Hiring Manager").build()).build();
         account.setRole(null);
         when(users.findByUsernameIgnoreCase("manager")).thenReturn(Optional.of(account));
         // When: Request đi qua filter.
@@ -190,7 +193,7 @@ class AccountSessionGuardFilterTests {
         request.setSession(session);
         request.setContextPath("/rms");
         User account = User.builder().accountStatus("Active")
-                .role(Role.builder().roleName("Hiring Manager").build()).build();
+            .role(Role.builder().roleName("Hiring Manager").build()).build();
         account.getRole().setRoleName(null);
         when(users.findByUsernameIgnoreCase("manager")).thenReturn(Optional.of(account));
         // When: Request đi qua filter.
@@ -212,7 +215,7 @@ class AccountSessionGuardFilterTests {
         request.setSession(session);
         request.setContextPath("/rms");
         User account = User.builder().accountStatus("Active")
-                .role(Role.builder().roleName("Hiring Manager").build()).build();
+            .role(Role.builder().roleName("Hiring Manager").build()).build();
         account.setAccountStatus("Inactive");
         when(users.findByUsernameIgnoreCase("manager")).thenReturn(Optional.of(account));
         // When: Request đi qua filter.
@@ -234,7 +237,7 @@ class AccountSessionGuardFilterTests {
         request.setSession(session);
         request.setContextPath("/rms");
         User account = User.builder().accountStatus("Active")
-                .role(Role.builder().roleName("Hiring Manager").build()).build();
+            .role(Role.builder().roleName("Hiring Manager").build()).build();
         account.setAccountStatus("Blocked");
         when(users.findByUsernameIgnoreCase("manager")).thenReturn(Optional.of(account));
         // When: Request đi qua filter.
@@ -256,7 +259,7 @@ class AccountSessionGuardFilterTests {
         request.setSession(session);
         request.setContextPath("/rms");
         User account = User.builder().accountStatus("Active")
-                .role(Role.builder().roleName("Hiring Manager").build()).build();
+            .role(Role.builder().roleName("Hiring Manager").build()).build();
         account.getRole().setRoleName("REMOVED");
         when(users.findByUsernameIgnoreCase("manager")).thenReturn(Optional.empty());
         // When: Request đi qua filter.

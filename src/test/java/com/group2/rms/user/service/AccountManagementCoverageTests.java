@@ -10,13 +10,11 @@ import org.junit.jupiter.api.Test;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.server.ResponseStatusException;
 import java.util.Optional;
+
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 class AccountManagementCoverageTests {
     private final UserRepository users = mock(UserRepository.class);
@@ -34,7 +32,7 @@ class AccountManagementCoverageTests {
     void create_fullNameNull_rejectsBeforeSaving() {
         // Given: fullName Null: từ chối trước khi lưu.
         AccountManagementService.CreateCommand input = new AccountManagementService.CreateCommand(
-                null, "employee", "employee@example.test", null, 2, 3, "ValidPass123!");
+            null, "employee", "employee@example.test", null, 2, 3, "ValidPass123!");
 
         // When: Thực hiện thao tác cần kiểm tra.
         AccountFieldException error = assertThrows(AccountFieldException.class, () -> service.create(input));
@@ -51,7 +49,7 @@ class AccountManagementCoverageTests {
     void create_fullNameEmpty_rejectsBeforeSaving() {
         // Given: fullName Empty: từ chối trước khi lưu.
         AccountManagementService.CreateCommand input = new AccountManagementService.CreateCommand(
-                "", "employee", "employee@example.test", null, 2, 3, "ValidPass123!");
+            "", "employee", "employee@example.test", null, 2, 3, "ValidPass123!");
 
         // When: Thực hiện thao tác cần kiểm tra.
         AccountFieldException error = assertThrows(AccountFieldException.class, () -> service.create(input));
@@ -68,7 +66,7 @@ class AccountManagementCoverageTests {
     void create_fullNameBlank_rejectsBeforeSaving() {
         // Given: fullName Blank: từ chối trước khi lưu.
         AccountManagementService.CreateCommand input = new AccountManagementService.CreateCommand(
-                "  ", "employee", "employee@example.test", null, 2, 3, "ValidPass123!");
+            "  ", "employee", "employee@example.test", null, 2, 3, "ValidPass123!");
 
         // When: Thực hiện thao tác cần kiểm tra.
         AccountFieldException error = assertThrows(AccountFieldException.class, () -> service.create(input));
@@ -85,7 +83,7 @@ class AccountManagementCoverageTests {
     void create_usernameNull_rejectsBeforeSaving() {
         // Given: username Null: từ chối trước khi lưu.
         AccountManagementService.CreateCommand input = new AccountManagementService.CreateCommand(
-                "Name", null, "employee@example.test", null, 2, 3, "ValidPass123!");
+            "Name", null, "employee@example.test", null, 2, 3, "ValidPass123!");
 
         // When: Thực hiện thao tác cần kiểm tra.
         AccountFieldException error = assertThrows(AccountFieldException.class, () -> service.create(input));
@@ -102,7 +100,7 @@ class AccountManagementCoverageTests {
     void create_usernameEmpty_rejectsBeforeSaving() {
         // Given: username Empty: từ chối trước khi lưu.
         AccountManagementService.CreateCommand input = new AccountManagementService.CreateCommand(
-                "Name", "", "employee@example.test", null, 2, 3, "ValidPass123!");
+            "Name", "", "employee@example.test", null, 2, 3, "ValidPass123!");
 
         // When: Thực hiện thao tác cần kiểm tra.
         AccountFieldException error = assertThrows(AccountFieldException.class, () -> service.create(input));
@@ -119,7 +117,7 @@ class AccountManagementCoverageTests {
     void create_usernameBlank_rejectsBeforeSaving() {
         // Given: username Blank: từ chối trước khi lưu.
         AccountManagementService.CreateCommand input = new AccountManagementService.CreateCommand(
-                "Name", "  ", "employee@example.test", null, 2, 3, "ValidPass123!");
+            "Name", "  ", "employee@example.test", null, 2, 3, "ValidPass123!");
 
         // When: Thực hiện thao tác cần kiểm tra.
         AccountFieldException error = assertThrows(AccountFieldException.class, () -> service.create(input));
@@ -136,7 +134,7 @@ class AccountManagementCoverageTests {
     void create_emailNull_rejectsBeforeSaving() {
         // Given: email Null: từ chối trước khi lưu.
         AccountManagementService.CreateCommand input = new AccountManagementService.CreateCommand(
-                "Name", "employee", null, null, 2, 3, "ValidPass123!");
+            "Name", "employee", null, null, 2, 3, "ValidPass123!");
 
         // When: Thực hiện thao tác cần kiểm tra.
         AccountFieldException error = assertThrows(AccountFieldException.class, () -> service.create(input));
@@ -153,7 +151,7 @@ class AccountManagementCoverageTests {
     void create_emailEmpty_rejectsBeforeSaving() {
         // Given: email Empty: từ chối trước khi lưu.
         AccountManagementService.CreateCommand input = new AccountManagementService.CreateCommand(
-                "Name", "employee", "", null, 2, 3, "ValidPass123!");
+            "Name", "employee", "", null, 2, 3, "ValidPass123!");
 
         // When: Thực hiện thao tác cần kiểm tra.
         AccountFieldException error = assertThrows(AccountFieldException.class, () -> service.create(input));
@@ -170,7 +168,7 @@ class AccountManagementCoverageTests {
     void create_emailBlank_rejectsBeforeSaving() {
         // Given: email Blank: từ chối trước khi lưu.
         AccountManagementService.CreateCommand input = new AccountManagementService.CreateCommand(
-                "Name", "employee", "  ", null, 2, 3, "ValidPass123!");
+            "Name", "employee", "  ", null, 2, 3, "ValidPass123!");
 
         // When: Thực hiện thao tác cần kiểm tra.
         AccountFieldException error = assertThrows(AccountFieldException.class, () -> service.create(input));
@@ -187,7 +185,7 @@ class AccountManagementCoverageTests {
     void create_passwordNull_rejectsBeforeRoleLookup() {
         // Given: Password Null: không tìm role, mã hóa hoặc lưu.
         AccountManagementService.CreateCommand input = new AccountManagementService.CreateCommand(
-                "Name", "employee", "employee@example.test", null, 2, 3, null);
+            "Name", "employee", "employee@example.test", null, 2, 3, null);
 
         // When: Thực hiện thao tác cần kiểm tra.
         AccountFieldException error = assertThrows(AccountFieldException.class, () -> service.create(input));
@@ -205,7 +203,7 @@ class AccountManagementCoverageTests {
     void create_passwordEmpty_rejectsBeforeRoleLookup() {
         // Given: Password Empty: không tìm role, mã hóa hoặc lưu.
         AccountManagementService.CreateCommand input = new AccountManagementService.CreateCommand(
-                "Name", "employee", "employee@example.test", null, 2, 3, "");
+            "Name", "employee", "employee@example.test", null, 2, 3, "");
 
         // When: Thực hiện thao tác cần kiểm tra.
         AccountFieldException error = assertThrows(AccountFieldException.class, () -> service.create(input));
@@ -223,7 +221,7 @@ class AccountManagementCoverageTests {
     void create_passwordBlank_rejectsBeforeRoleLookup() {
         // Given: Password Blank: không tìm role, mã hóa hoặc lưu.
         AccountManagementService.CreateCommand input = new AccountManagementService.CreateCommand(
-                "Name", "employee", "employee@example.test", null, 2, 3, " ");
+            "Name", "employee", "employee@example.test", null, 2, 3, " ");
 
         // When: Thực hiện thao tác cần kiểm tra.
         AccountFieldException error = assertThrows(AccountFieldException.class, () -> service.create(input));
@@ -241,7 +239,7 @@ class AccountManagementCoverageTests {
     void create_passwordTooShort_rejectsBeforeRoleLookup() {
         // Given: Password TooShort: không tìm role, mã hóa hoặc lưu.
         AccountManagementService.CreateCommand input = new AccountManagementService.CreateCommand(
-                "Name", "employee", "employee@example.test", null, 2, 3, "short");
+            "Name", "employee", "employee@example.test", null, 2, 3, "short");
 
         // When: Thực hiện thao tác cần kiểm tra.
         AccountFieldException error = assertThrows(AccountFieldException.class, () -> service.create(input));
@@ -259,7 +257,7 @@ class AccountManagementCoverageTests {
     void create_passwordTooLong_rejectsBeforeRoleLookup() {
         // Given: Password TooLong: không tìm role, mã hóa hoặc lưu.
         AccountManagementService.CreateCommand input = new AccountManagementService.CreateCommand(
-                "Name", "employee", "employee@example.test", null, 2, 3, "a".repeat(33));
+            "Name", "employee", "employee@example.test", null, 2, 3, "a".repeat(33));
 
         // When: Thực hiện thao tác cần kiểm tra.
         AccountFieldException error = assertThrows(AccountFieldException.class, () -> service.create(input));
@@ -282,7 +280,7 @@ class AccountManagementCoverageTests {
         User saved = User.builder().userId(7).build();
         when(users.saveAndFlush(any(User.class))).thenReturn(saved);
         AccountManagementService.CreateCommand input = new AccountManagementService.CreateCommand(
-                " Name ", " employee ", " employee@example.test ", null, 2, 3, "a".repeat(8));
+            " Name ", " employee ", " employee@example.test ", null, 2, 3, "a".repeat(8));
 
         // When: Thực hiện thao tác cần kiểm tra.
         int result = service.createInternal(input);
@@ -306,7 +304,7 @@ class AccountManagementCoverageTests {
         User saved = User.builder().userId(7).build();
         when(users.saveAndFlush(any(User.class))).thenReturn(saved);
         AccountManagementService.CreateCommand input = new AccountManagementService.CreateCommand(
-                " Name ", " employee ", " employee@example.test ", null, 2, 3, "a".repeat(32));
+            " Name ", " employee ", " employee@example.test ", null, 2, 3, "a".repeat(32));
 
         // When: Thực hiện thao tác cần kiểm tra.
         int result = service.createInternal(input);
@@ -325,7 +323,7 @@ class AccountManagementCoverageTests {
     void create_roleNull_rejectsBeforeSaving() {
         // Given: Role Null: trả lỗi roleId và không lưu.
         AccountManagementService.CreateCommand input = new AccountManagementService.CreateCommand(
-                "Name", "employee", "employee@example.test", null, null, 3, "ValidPass123!");
+            "Name", "employee", "employee@example.test", null, null, 3, "ValidPass123!");
 
         // When: Thực hiện thao tác cần kiểm tra.
         AccountFieldException error = assertThrows(AccountFieldException.class, () -> service.create(input));
@@ -342,7 +340,7 @@ class AccountManagementCoverageTests {
     void create_roleMissing_rejectsBeforeSaving() {
         // Given: Role Missing: trả lỗi roleId và không lưu.
         AccountManagementService.CreateCommand input = new AccountManagementService.CreateCommand(
-                "Name", "employee", "employee@example.test", null, 77, 3, "ValidPass123!");
+            "Name", "employee", "employee@example.test", null, 77, 3, "ValidPass123!");
 
         // When: Thực hiện thao tác cần kiểm tra.
         AccountFieldException error = assertThrows(AccountFieldException.class, () -> service.create(input));
@@ -360,7 +358,7 @@ class AccountManagementCoverageTests {
         // Given: Role Unsupported: trả lỗi roleId và không lưu.
         when(roles.findById(8)).thenReturn(Optional.of(Role.builder().roleName("Unknown").build()));
         AccountManagementService.CreateCommand input = new AccountManagementService.CreateCommand(
-                "Name", "employee", "employee@example.test", null, 8, 3, "ValidPass123!");
+            "Name", "employee", "employee@example.test", null, 8, 3, "ValidPass123!");
 
         // When: Thực hiện thao tác cần kiểm tra.
         AccountFieldException error = assertThrows(AccountFieldException.class, () -> service.create(input));
@@ -377,14 +375,14 @@ class AccountManagementCoverageTests {
     void update_statusNull_preservesAccount() {
         // Given: Trạng thái Null: giữ thông tin cũ và không lưu.
         User account = User.builder().userId(7).username("employee").email("employee@example.test")
-                .fullName("Original").passwordHash("old-hash").role(hr).department(department).accountStatus("Active").build();
+            .fullName("Original").passwordHash("old-hash").role(hr).department(department).accountStatus("Active").build();
         when(users.findById(7)).thenReturn(Optional.of(account));
         when(roles.findById(2)).thenReturn(Optional.of(hr));
         when(departments.findById(3)).thenReturn(Optional.of(department));
 
         // When: Thực hiện thao tác cần kiểm tra.
         AccountFieldException error = assertThrows(AccountFieldException.class, () -> service.update(7,
-                new AccountManagementService.UpdateCommand("Changed", "changed@example.test", null, 2, 3, null)));
+            new AccountManagementService.UpdateCommand("Changed", "changed@example.test", null, 2, 3, null)));
 
         // Then: Kiểm tra kết quả nghiệp vụ và số lần gọi dependency.
         assertEquals("accountStatus", error.getField());
@@ -401,14 +399,14 @@ class AccountManagementCoverageTests {
     void update_statusEmpty_preservesAccount() {
         // Given: Trạng thái Empty: giữ thông tin cũ và không lưu.
         User account = User.builder().userId(7).username("employee").email("employee@example.test")
-                .fullName("Original").passwordHash("old-hash").role(hr).department(department).accountStatus("Active").build();
+            .fullName("Original").passwordHash("old-hash").role(hr).department(department).accountStatus("Active").build();
         when(users.findById(7)).thenReturn(Optional.of(account));
         when(roles.findById(2)).thenReturn(Optional.of(hr));
         when(departments.findById(3)).thenReturn(Optional.of(department));
 
         // When: Thực hiện thao tác cần kiểm tra.
         AccountFieldException error = assertThrows(AccountFieldException.class, () -> service.update(7,
-                new AccountManagementService.UpdateCommand("Changed", "changed@example.test", null, 2, 3, "")));
+            new AccountManagementService.UpdateCommand("Changed", "changed@example.test", null, 2, 3, "")));
 
         // Then: Kiểm tra kết quả nghiệp vụ và số lần gọi dependency.
         assertEquals("accountStatus", error.getField());
@@ -425,14 +423,14 @@ class AccountManagementCoverageTests {
     void update_statusUnsupported_preservesAccount() {
         // Given: Trạng thái Unsupported: giữ thông tin cũ và không lưu.
         User account = User.builder().userId(7).username("employee").email("employee@example.test")
-                .fullName("Original").passwordHash("old-hash").role(hr).department(department).accountStatus("Active").build();
+            .fullName("Original").passwordHash("old-hash").role(hr).department(department).accountStatus("Active").build();
         when(users.findById(7)).thenReturn(Optional.of(account));
         when(roles.findById(2)).thenReturn(Optional.of(hr));
         when(departments.findById(3)).thenReturn(Optional.of(department));
 
         // When: Thực hiện thao tác cần kiểm tra.
         AccountFieldException error = assertThrows(AccountFieldException.class, () -> service.update(7,
-                new AccountManagementService.UpdateCommand("Changed", "changed@example.test", null, 2, 3, "Deleted")));
+            new AccountManagementService.UpdateCommand("Changed", "changed@example.test", null, 2, 3, "Deleted")));
 
         // Then: Kiểm tra kết quả nghiệp vụ và số lần gọi dependency.
         assertEquals("accountStatus", error.getField());
@@ -449,7 +447,7 @@ class AccountManagementCoverageTests {
     void updateInternal_missingCurrentDepartment_assignsActiveDepartment() {
         // Given: Account chưa có phòng ban: cho gán phòng Active, giữ username và password.
         User account = User.builder().userId(7).username("employee").email("employee@example.test")
-                .fullName("Original").passwordHash("old-hash").role(hr).department(department).accountStatus("Active").build();
+            .fullName("Original").passwordHash("old-hash").role(hr).department(department).accountStatus("Active").build();
         when(users.findById(7)).thenReturn(Optional.of(account));
         account.setDepartment(null);
         when(roles.findById(2)).thenReturn(Optional.of(hr));
@@ -470,7 +468,7 @@ class AccountManagementCoverageTests {
     void findForEdit_withoutDepartment_mapsCurrentAccount() {
         // Given: Đọc account không có phòng ban: trả đúng dữ liệu hiện tại.
         User account = User.builder().userId(7).username("employee").email("employee@example.test")
-                .fullName("Original").passwordHash("old-hash").role(hr).department(department).accountStatus("Active").build();
+            .fullName("Original").passwordHash("old-hash").role(hr).department(department).accountStatus("Active").build();
         when(users.findById(7)).thenReturn(Optional.of(account));
         account.setDepartment(null);
 
@@ -489,7 +487,7 @@ class AccountManagementCoverageTests {
     void findForEdit_withDepartment_mapsCurrentAccount() {
         // Given: Đọc account có phòng ban: trả đúng dữ liệu hiện tại.
         User account = User.builder().userId(7).username("employee").email("employee@example.test")
-                .fullName("Original").passwordHash("old-hash").role(hr).department(department).accountStatus("Active").build();
+            .fullName("Original").passwordHash("old-hash").role(hr).department(department).accountStatus("Active").build();
         when(users.findById(7)).thenReturn(Optional.of(account));
 
         // When: Thực hiện thao tác cần kiểm tra.
@@ -562,7 +560,7 @@ class AccountManagementCoverageTests {
 
         // When: Thực hiện thao tác cần kiểm tra.
         AccountFieldException error = assertThrows(AccountFieldException.class,
-                () -> service.assertLoginIdentifiersAvailable("employee", "employee@example.test"));
+            () -> service.assertLoginIdentifiersAvailable("employee", "employee@example.test"));
 
         // Then: Kiểm tra kết quả nghiệp vụ và số lần gọi dependency.
         assertEquals("username", error.getField());
@@ -580,7 +578,7 @@ class AccountManagementCoverageTests {
 
         // When: Thực hiện thao tác cần kiểm tra.
         AccountFieldException error = assertThrows(AccountFieldException.class,
-                () -> service.assertLoginIdentifiersAvailable("employee", "employee@example.test"));
+            () -> service.assertLoginIdentifiersAvailable("employee", "employee@example.test"));
 
         // Then: Kiểm tra kết quả nghiệp vụ và số lần gọi dependency.
         assertEquals("email", error.getField());
@@ -616,7 +614,7 @@ class AccountManagementCoverageTests {
 
         // When: Thực hiện thao tác cần kiểm tra.
         IllegalStateException error = assertThrows(IllegalStateException.class,
-                () -> service.createCandidateWithPasswordHash("Name", "candidate", "candidate@example.test", "prepared-hash"));
+            () -> service.createCandidateWithPasswordHash("Name", "candidate", "candidate@example.test", "prepared-hash"));
 
         // Then: Kiểm tra kết quả nghiệp vụ và số lần gọi dependency.
         assertEquals("Candidate role is not configured", error.getMessage());
@@ -633,7 +631,7 @@ class AccountManagementCoverageTests {
 
         // When: Thực hiện thao tác cần kiểm tra.
         AccountFieldException error = assertThrows(AccountFieldException.class, () -> service.create(
-                new AccountManagementService.CreateCommand("Name", "employee", "employee@example.test", null, 2, 77, "ValidPass123!")));
+            new AccountManagementService.CreateCommand("Name", "employee", "employee@example.test", null, 2, 77, "ValidPass123!")));
 
         // Then: Kiểm tra kết quả nghiệp vụ và số lần gọi dependency.
         assertEquals("departmentId", error.getField());
@@ -652,27 +650,26 @@ class AccountManagementCoverageTests {
 
         // When: Thực hiện thao tác cần kiểm tra.
         IllegalStateException error = assertThrows(IllegalStateException.class,
-                () -> service.createCandidateWithPasswordHash("Name", "candidate", "candidate@example.test", "prepared-hash"));
+            () -> service.createCandidateWithPasswordHash("Name", "candidate", "candidate@example.test", "prepared-hash"));
 
         // Then: Kiểm tra kết quả nghiệp vụ và số lần gọi dependency.
         assertEquals(failure, error);
         verify(candidates, times(0)).save(any(Candidate.class));
     }
 
-
     @Test
     @DisplayName("ACCOUNT-UNIT-35 | Cập nhật nội bộ đổi thông tin và role nhưng giữ username/hash")
     void updateInternal_validChanges_updatesAllMutableFields() {
         // Given: Account HR đang Active, role mới HM và phòng ban hợp lệ.
         User account = User.builder().userId(7).username("employee").passwordHash("old-hash")
-                .fullName("Old Name").phoneNumber("old-phone").role(hr).department(department).accountStatus("Active").build();
+            .fullName("Old Name").phoneNumber("old-phone").role(hr).department(department).accountStatus("Active").build();
         Role hm = Role.builder().roleId(4).roleName("Hiring Manager").build();
         when(users.findById(7)).thenReturn(Optional.of(account));
         when(roles.findById(4)).thenReturn(Optional.of(hm));
         when(departments.findById(3)).thenReturn(Optional.of(department));
         // When: Cập nhật tên, email, phone, role và trạng thái.
         service.updateInternal(7, new AccountManagementService.UpdateCommand(
-                "  New Name  ", "  new@example.test  ", "  0901234567  ", 4, 3, "Inactive"));
+            "  New Name  ", "  new@example.test  ", "  0901234567  ", 4, 3, "Inactive"));
         // Then: Mọi trường được phép đổi đều đúng; username/hash được giữ, lưu một lần.
         assertEquals("New Name", account.getFullName());
         assertEquals("new@example.test", account.getEmail());
@@ -695,7 +692,7 @@ class AccountManagementCoverageTests {
         when(roles.findById(1)).thenReturn(Optional.of(candidateRole));
         // When: Cập nhật qua nghiệp vụ dành riêng tài khoản nội bộ.
         AccountFieldException error = assertThrows(AccountFieldException.class, () -> service.updateInternal(7,
-                new AccountManagementService.UpdateCommand("Name", "a@example.test", null, 1, null, "Active")));
+            new AccountManagementService.UpdateCommand("Name", "a@example.test", null, 1, null, "Active")));
         // Then: Chặn ở guard nội bộ trước khi chạy logic update hoặc lưu dữ liệu.
         assertEquals("roleId", error.getField());
         assertEquals("Select an internal role. Candidate accounts have a separate lifecycle.", error.getMessage());

@@ -17,14 +17,13 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.mock.web.MockHttpSession;
 import org.springframework.security.crypto.password.PasswordEncoder;
-
 import java.time.Clock;
 import java.time.Instant;
 import java.time.ZoneOffset;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doThrow;
@@ -77,10 +76,10 @@ class RegistrationVerificationServiceTests {
         // Given: Dependency mã hóa được mock; không gọi BCrypt hoặc SMTP thật.
         when(encoder.encode(anyString())).thenReturn(HASH);
 
-        // When
+        // When: Gọi service.requestRegistration với dữ liệu đã chuẩn bị.
         service.requestRegistration(form, session);
 
-        // Then
+        // Then: trim thông tin, mã hóa password và gửi OTP, chưa tạo account.
         assertEquals(EMAIL, service.getPendingRegistrationEmail(session));
         verify(accounts, times(1)).assertLoginIdentifiersAvailable("candidate7", EMAIL);
         verify(encoder, times(1)).encode(PASSWORD);
@@ -93,11 +92,11 @@ class RegistrationVerificationServiceTests {
     void getPendingRegistrationEmail_missingSessionState_rejectsRequest() {
         // Given: Session mới, chưa gửi form đăng ký.
 
-        // When
+        // When: Gọi service.getPendingRegistrationEmail với dữ liệu đã chuẩn bị.
         RegistrationFlowException error = assertThrows(RegistrationFlowException.class,
-                () -> service.getPendingRegistrationEmail(session));
+            () -> service.getPendingRegistrationEmail(session));
 
-        // Then
+        // Then: đọc email OTP phải báo REGISTER_REQUEST_INVALID.
         assertEquals("REGISTER_REQUEST_INVALID", error.getErrorCode());
         assertEquals(Step.REGISTER, error.getStep());
     }
@@ -105,15 +104,15 @@ class RegistrationVerificationServiceTests {
     @Test
     @DisplayName("AUTH-REGISTER-03 | Username đã dùng: trả lỗi field username, không mã hóa hoặc gửi OTP")
     void requestRegistration_duplicateUsername_doesNotSendCode() {
-        // Given
+        // Given: Username đã dùng.
         doThrow(new AccountFieldException("username", "Username already used."))
-                .when(accounts).assertLoginIdentifiersAvailable("candidate7", EMAIL);
+            .when(accounts).assertLoginIdentifiersAvailable("candidate7", EMAIL);
 
-        // When
+        // When: Gọi service.requestRegistration với dữ liệu đã chuẩn bị.
         RegistrationFlowException error = assertThrows(RegistrationFlowException.class,
-                () -> service.requestRegistration(form, session));
+            () -> service.requestRegistration(form, session));
 
-        // Then
+        // Then: trả lỗi field username, không mã hóa hoặc gửi OTP.
         assertEquals("REGISTER_FIELD_INVALID", error.getErrorCode());
         assertEquals("username", error.getField());
         assertNotNull(error.getDetails());
@@ -129,11 +128,11 @@ class RegistrationVerificationServiceTests {
         requestCode();
         when(encoder.matches("123456", HASH)).thenReturn(false);
 
-        // When
+        // When: Gọi service.verifyAndRegister với dữ liệu đã chuẩn bị.
         RegistrationFlowException error = assertThrows(RegistrationFlowException.class,
-                () -> service.verifyAndRegister("123456", session));
+            () -> service.verifyAndRegister("123456", session));
 
-        // Then
+        // Then: báo REGISTER_OTP_INVALID và chưa tạo account.
         assertEquals("REGISTER_OTP_INVALID", error.getErrorCode());
         assertEquals(Step.OTP, error.getStep());
         assertEquals(EMAIL, service.getPendingRegistrationEmail(session));
@@ -143,14 +142,14 @@ class RegistrationVerificationServiceTests {
     @Test
     @DisplayName("AUTH-REGISTER-05 | OTP sai định dạng: từ chối trước khi so khớp hash")
     void verifyAndRegister_malformedCode_doesNotCompareHash() {
-        // Given
+        // Given: OTP sai định dạng.
         requestCode();
 
-        // When
+        // When: Gọi service.verifyAndRegister với dữ liệu đã chuẩn bị.
         RegistrationFlowException error = assertThrows(RegistrationFlowException.class,
-                () -> service.verifyAndRegister("abc", session));
+            () -> service.verifyAndRegister("abc", session));
 
-        // Then
+        // Then: từ chối trước khi so khớp hash.
         assertEquals("REGISTER_OTP_INVALID", error.getErrorCode());
         verify(encoder, times(0)).matches(anyString(), anyString());
     }
@@ -163,15 +162,15 @@ class RegistrationVerificationServiceTests {
         when(encoder.matches("123456", HASH)).thenReturn(false);
         for (int attempt = 1; attempt <= 4; attempt++) {
             RegistrationFlowException error = assertThrows(RegistrationFlowException.class,
-                    () -> service.verifyAndRegister("123456", session));
+                () -> service.verifyAndRegister("123456", session));
             assertEquals("REGISTER_OTP_INVALID", error.getErrorCode());
         }
 
         // When: Lần sai thứ 5.
         RegistrationFlowException error = assertThrows(RegistrationFlowException.class,
-                () -> service.verifyAndRegister("123456", session));
+            () -> service.verifyAndRegister("123456", session));
 
-        // Then
+        // Then: xóa yêu cầu đăng ký và không tạo account.
         assertEquals("REGISTER_OTP_ATTEMPTS_EXCEEDED", error.getErrorCode());
         assertEquals(Step.REGISTER, error.getStep());
         assertThrows(RegistrationFlowException.class, () -> service.getPendingRegistrationEmail(session));
@@ -181,15 +180,15 @@ class RegistrationVerificationServiceTests {
     @Test
     @DisplayName("AUTH-REGISTER-07 | OTP đúng: tạo Candidate một lần bằng thông tin đã trim và hash đã chuẩn bị")
     void verifyAndRegister_correctCode_createsCandidateOnce() {
-        // Given
+        // Given: OTP đúng.
         requestCode();
         when(encoder.matches("123456", HASH)).thenReturn(true);
         when(accounts.createCandidateWithPasswordHash("Candidate Seven", "candidate7", EMAIL, HASH)).thenReturn(7);
 
-        // When
+        // When: Gọi service.verifyAndRegister với dữ liệu đã chuẩn bị.
         int result = service.verifyAndRegister("123456", session);
 
-        // Then
+        // Then: tạo Candidate một lần bằng thông tin đã trim và hash đã chuẩn bị.
         assertEquals(7, result);
         verify(accounts, times(1)).createCandidateWithPasswordHash("Candidate Seven", "candidate7", EMAIL, HASH);
         assertThrows(RegistrationFlowException.class, () -> service.getPendingRegistrationEmail(session));
@@ -206,9 +205,9 @@ class RegistrationVerificationServiceTests {
 
         // When: Gửi lại mã bằng session đã hoàn tất đăng ký.
         RegistrationFlowException error = assertThrows(RegistrationFlowException.class,
-                () -> service.verifyAndRegister("123456", session));
+            () -> service.verifyAndRegister("123456", session));
 
-        // Then
+        // Then: không tạo thêm tài khoản.
         assertEquals("REGISTER_REQUEST_INVALID", error.getErrorCode());
         verify(accounts, times(1)).createCandidateWithPasswordHash("Candidate Seven", "candidate7", EMAIL, HASH);
     }
@@ -216,14 +215,14 @@ class RegistrationVerificationServiceTests {
     @Test
     @DisplayName("AUTH-REGISTER-09 | Bấm gửi lại OTP ngay: báo cooldown và chỉ gửi một email")
     void resendOtp_beforeCooldownEnds_doesNotSendSecondCode() {
-        // Given
+        // Given: Bấm gửi lại OTP ngay.
         requestCode();
 
-        // When
+        // When: Gọi service.resendOtp với dữ liệu đã chuẩn bị.
         RegistrationFlowException error = assertThrows(RegistrationFlowException.class,
-                () -> service.resendOtp(session));
+            () -> service.resendOtp(session));
 
-        // Then
+        // Then: báo cooldown và chỉ gửi một email.
         assertEquals("REGISTER_EMAIL_COOLDOWN", error.getErrorCode());
         assertEquals(Step.OTP, error.getStep());
         assertEquals(true, error.getRetryAfterSeconds() > 0);
@@ -233,15 +232,15 @@ class RegistrationVerificationServiceTests {
     @Test
     @DisplayName("AUTH-REGISTER-10 | Gửi lại form cùng email ở session khác: vẫn áp dụng cooldown theo email")
     void requestRegistration_sameEmailInAnotherSession_rejectsSecondSend() {
-        // Given
+        // Given: Gửi lại form cùng email ở session khác.
         requestCode();
         MockHttpSession anotherSession = new MockHttpSession();
 
-        // When
+        // When: Gọi service.requestRegistration với dữ liệu đã chuẩn bị.
         RegistrationFlowException error = assertThrows(RegistrationFlowException.class,
-                () -> service.requestRegistration(form, anotherSession));
+            () -> service.requestRegistration(form, anotherSession));
 
-        // Then
+        // Then: vẫn áp dụng cooldown theo email.
         assertEquals("REGISTER_EMAIL_COOLDOWN", error.getErrorCode());
         assertEquals("email", error.getField());
         verify(emailSender, times(1)).sendOtp(eq(EMAIL), anyString());
@@ -250,17 +249,17 @@ class RegistrationVerificationServiceTests {
     @Test
     @DisplayName("AUTH-REGISTER-11 | Username bị lấy trước lúc xác minh: trả lỗi field và xóa pending registration")
     void verifyAndRegister_identifierTakenBeforeCommit_clearsPendingRegistration() {
-        // Given
+        // Given: Username bị lấy trước lúc xác minh.
         requestCode();
         when(encoder.matches("123456", HASH)).thenReturn(true);
         when(accounts.createCandidateWithPasswordHash("Candidate Seven", "candidate7", EMAIL, HASH))
-                .thenThrow(new AccountFieldException("username", "Username already used."));
+            .thenThrow(new AccountFieldException("username", "Username already used."));
 
-        // When
+        // When: Gọi service.verifyAndRegister với dữ liệu đã chuẩn bị.
         RegistrationFlowException error = assertThrows(RegistrationFlowException.class,
-                () -> service.verifyAndRegister("123456", session));
+            () -> service.verifyAndRegister("123456", session));
 
-        // Then
+        // Then: trả lỗi field và xóa pending registration.
         assertEquals("REGISTER_FIELD_INVALID", error.getErrorCode());
         assertEquals("username", error.getField());
         assertThrows(RegistrationFlowException.class, () -> service.getPendingRegistrationEmail(session));
@@ -269,17 +268,17 @@ class RegistrationVerificationServiceTests {
     @Test
     @DisplayName("AUTH-REGISTER-12 | DB báo trùng UQ_User_Email: chuyển thành lỗi đăng ký trùng, không lộ lỗi DB")
     void verifyAndRegister_uniqueEmailConstraint_returnsConflictError() {
-        // Given
+        // Given: DB báo trùng UQ_User_Email.
         requestCode();
         when(encoder.matches("123456", HASH)).thenReturn(true);
         when(accounts.createCandidateWithPasswordHash("Candidate Seven", "candidate7", EMAIL, HASH))
-                .thenThrow(new DataIntegrityViolationException("UQ_User_Email"));
+            .thenThrow(new DataIntegrityViolationException("UQ_User_Email"));
 
-        // When
+        // When: Gọi service.verifyAndRegister với dữ liệu đã chuẩn bị.
         RegistrationFlowException error = assertThrows(RegistrationFlowException.class,
-                () -> service.verifyAndRegister("123456", session));
+            () -> service.verifyAndRegister("123456", session));
 
-        // Then
+        // Then: chuyển thành lỗi đăng ký trùng, không lộ lỗi DB.
         assertEquals("REGISTER_ACCOUNT_CONFLICT", error.getErrorCode());
         assertThrows(RegistrationFlowException.class, () -> service.getPendingRegistrationEmail(session));
     }
@@ -287,15 +286,15 @@ class RegistrationVerificationServiceTests {
     @Test
     @DisplayName("AUTH-REGISTER-13 | Lỗi DB không phải trùng identifier: không đổi nhầm thành lỗi username/email")
     void verifyAndRegister_unrelatedDatabaseFailure_preservesOriginalError() {
-        // Given
+        // Given: Lỗi DB không phải trùng identifier.
         requestCode();
         when(encoder.matches("123456", HASH)).thenReturn(true);
         when(accounts.createCandidateWithPasswordHash("Candidate Seven", "candidate7", EMAIL, HASH))
-                .thenThrow(new DataIntegrityViolationException("FK_Candidate_UserId"));
+            .thenThrow(new DataIntegrityViolationException("FK_Candidate_UserId"));
 
-        // When
+        // When: Gọi service.verifyAndRegister với dữ liệu đã chuẩn bị.
         DataIntegrityViolationException error = assertThrows(DataIntegrityViolationException.class,
-                () -> service.verifyAndRegister("123456", session));
+            () -> service.verifyAndRegister("123456", session));
 
         // Then: Người dùng chưa bị mất pending registration chỉ vì lỗi lưu tạm thời.
         assertEquals("FK_Candidate_UserId", error.getMessage());
@@ -308,13 +307,13 @@ class RegistrationVerificationServiceTests {
         // Given: doThrow dùng cho sendOtp vì đây là method void.
         when(encoder.encode(anyString())).thenReturn(HASH);
         doThrow(new RegistrationFlowException(Step.REGISTER, null, "REGISTER_EMAIL_DELIVERY_FAILED", "Mail failed."))
-                .when(emailSender).sendOtp(eq(EMAIL), anyString());
+            .when(emailSender).sendOtp(eq(EMAIL), anyString());
 
-        // When
+        // When: Gọi service.requestRegistration với dữ liệu đã chuẩn bị.
         RegistrationFlowException error = assertThrows(RegistrationFlowException.class,
-                () -> service.requestRegistration(form, session));
+            () -> service.requestRegistration(form, session));
 
-        // Then
+        // Then: không tạo pending registration hoặc tạo account.
         assertEquals("REGISTER_EMAIL_DELIVERY_FAILED", error.getErrorCode());
         assertThrows(RegistrationFlowException.class, () -> service.getPendingRegistrationEmail(session));
         verify(accounts, times(0)).createCandidateWithPasswordHash(anyString(), anyString(), anyString(), anyString());
@@ -325,11 +324,11 @@ class RegistrationVerificationServiceTests {
     void resendOtp_withoutRegistration_doesNotSendEmail() {
         // Given: Session mới chưa từng đăng ký.
 
-        // When
+        // When: Gọi service.resendOtp với dữ liệu đã chuẩn bị.
         RegistrationFlowException error = assertThrows(RegistrationFlowException.class,
-                () -> service.resendOtp(session));
+            () -> service.resendOtp(session));
 
-        // Then
+        // Then: không cho gọi gửi lại OTP.
         assertEquals("REGISTER_REQUEST_INVALID", error.getErrorCode());
         verify(emailSender, times(0)).sendOtp(anyString(), anyString());
     }
@@ -337,14 +336,14 @@ class RegistrationVerificationServiceTests {
     @Test
     @DisplayName("AUTH-REGISTER-16 | OTP null: báo REGISTER_OTP_INVALID, không so hash hoặc tạo account")
     void verifyAndRegister_nullCode_rejectsBeforeHashComparison() {
-        // Given
+        // Given: OTP null.
         requestCode();
 
-        // When
+        // When: Gọi service.verifyAndRegister với dữ liệu đã chuẩn bị.
         RegistrationFlowException error = assertThrows(RegistrationFlowException.class,
-                () -> service.verifyAndRegister(null, session));
+            () -> service.verifyAndRegister(null, session));
 
-        // Then
+        // Then: báo REGISTER_OTP_INVALID, không so hash hoặc tạo account.
         assertEquals("REGISTER_OTP_INVALID", error.getErrorCode());
         assertEquals(Step.OTP, error.getStep());
         assertEquals(EMAIL, service.getPendingRegistrationEmail(session));
@@ -355,14 +354,14 @@ class RegistrationVerificationServiceTests {
     @Test
     @DisplayName("AUTH-REGISTER-17 | OTP blank: giữ yêu cầu chờ OTP và không tạo account")
     void verifyAndRegister_blankCode_doesNotCreateAccount() {
-        // Given
+        // Given: OTP blank.
         requestCode();
 
-        // When
+        // When: Gọi service.verifyAndRegister với dữ liệu đã chuẩn bị.
         RegistrationFlowException error = assertThrows(RegistrationFlowException.class,
-                () -> service.verifyAndRegister("   ", session));
+            () -> service.verifyAndRegister("   ", session));
 
-        // Then
+        // Then: giữ yêu cầu chờ OTP và không tạo account.
         assertEquals("REGISTER_OTP_INVALID", error.getErrorCode());
         assertEquals(EMAIL, service.getPendingRegistrationEmail(session));
         verify(encoder, times(0)).matches(anyString(), anyString());
@@ -375,10 +374,10 @@ class RegistrationVerificationServiceTests {
         // Given: Service dùng Instant.now trực tiếp; kiểm tra khoảng thay vì giá trị phụ thuộc mili giây chạy test.
         requestCode();
 
-        // When
+        // When: Gọi service.getResendRemainingSeconds với dữ liệu đã chuẩn bị.
         long result = service.getResendRemainingSeconds(session);
 
-        // Then
+        // Then: UI nhận thời gian cooldown lớn hơn 0 và không quá 300 giây.
         assertEquals(true, result > 0 && result <= 300);
         verify(emailSender, times(1)).sendOtp(eq(EMAIL), anyString());
         verify(accounts, times(0)).createCandidateWithPasswordHash(anyString(), anyString(), anyString(), anyString());
@@ -391,15 +390,15 @@ class RegistrationVerificationServiceTests {
         requestCode();
         when(encoder.matches("123456", HASH)).thenReturn(true);
         var constraint = new org.hibernate.exception.ConstraintViolationException(
-                "constraint violation", new java.sql.SQLException("duplicate"), "UQ_User_Username");
+            "constraint violation", new java.sql.SQLException("duplicate"), "UQ_User_Username");
         when(accounts.createCandidateWithPasswordHash("Candidate Seven", "candidate7", EMAIL, HASH))
-                .thenThrow(new DataIntegrityViolationException("could not execute statement", constraint));
+            .thenThrow(new DataIntegrityViolationException("could not execute statement", constraint));
 
-        // When
+        // When: Gọi service.verifyAndRegister với dữ liệu đã chuẩn bị.
         RegistrationFlowException error = assertThrows(RegistrationFlowException.class,
-                () -> service.verifyAndRegister("123456", session));
+            () -> service.verifyAndRegister("123456", session));
 
-        // Then
+        // Then: chuyển thành conflict và xóa yêu cầu.
         assertEquals("REGISTER_ACCOUNT_CONFLICT", error.getErrorCode());
         assertEquals(Step.REGISTER, error.getStep());
         assertThrows(RegistrationFlowException.class, () -> service.getPendingRegistrationEmail(session));
@@ -409,18 +408,18 @@ class RegistrationVerificationServiceTests {
     @Test
     @DisplayName("AUTH-REGISTER-20 | UQ_User_Email nằm trong cause: vẫn nhận diện conflict và xóa pending")
     void verifyAndRegister_nestedEmailConstraint_returnsConflictError() {
-        // Given
+        // Given: UQ_User_Email nằm trong cause.
         requestCode();
         when(encoder.matches("123456", HASH)).thenReturn(true);
         when(accounts.createCandidateWithPasswordHash("Candidate Seven", "candidate7", EMAIL, HASH))
-                .thenThrow(new DataIntegrityViolationException("could not execute statement",
-                        new java.sql.SQLException("UQ_User_Email")));
+            .thenThrow(new DataIntegrityViolationException("could not execute statement",
+            new java.sql.SQLException("UQ_User_Email")));
 
-        // When
+        // When: Gọi service.verifyAndRegister với dữ liệu đã chuẩn bị.
         RegistrationFlowException error = assertThrows(RegistrationFlowException.class,
-                () -> service.verifyAndRegister("123456", session));
+            () -> service.verifyAndRegister("123456", session));
 
-        // Then
+        // Then: vẫn nhận diện conflict và xóa pending.
         assertEquals("REGISTER_ACCOUNT_CONFLICT", error.getErrorCode());
         assertThrows(RegistrationFlowException.class, () -> service.getPendingRegistrationEmail(session));
         verify(accounts, times(1)).createCandidateWithPasswordHash("Candidate Seven", "candidate7", EMAIL, HASH);
@@ -429,20 +428,20 @@ class RegistrationVerificationServiceTests {
     @Test
     @DisplayName("AUTH-REGISTER-21 | Hibernate không có tên constraint: giữ lỗi DB, không gán nhầm lỗi trùng account")
     void verifyAndRegister_unnamedConstraint_preservesDatabaseError() {
-        // Given
+        // Given: Hibernate không có tên constraint.
         requestCode();
         when(encoder.matches("123456", HASH)).thenReturn(true);
         var constraint = new org.hibernate.exception.ConstraintViolationException(
-                "constraint violation", new java.sql.SQLException("foreign key violation"), null);
+            "constraint violation", new java.sql.SQLException("foreign key violation"), null);
         DataIntegrityViolationException databaseError = new DataIntegrityViolationException("write failed", constraint);
         when(accounts.createCandidateWithPasswordHash("Candidate Seven", "candidate7", EMAIL, HASH))
-                .thenThrow(databaseError);
+            .thenThrow(databaseError);
 
-        // When
+        // When: Gọi service.verifyAndRegister với dữ liệu đã chuẩn bị.
         DataIntegrityViolationException error = assertThrows(DataIntegrityViolationException.class,
-                () -> service.verifyAndRegister("123456", session));
+            () -> service.verifyAndRegister("123456", session));
 
-        // Then
+        // Then: giữ lỗi DB, không gán nhầm lỗi trùng account.
         assertEquals(databaseError, error);
         assertEquals(EMAIL, service.getPendingRegistrationEmail(session));
         verify(accounts, times(1)).createCandidateWithPasswordHash("Candidate Seven", "candidate7", EMAIL, HASH);
@@ -451,16 +450,16 @@ class RegistrationVerificationServiceTests {
     @Test
     @DisplayName("AUTH-REGISTER-22 | Lần gửi mail đầu lỗi: cho gửi lại ngay, không để cooldown giả chặn đăng ký")
     void requestRegistration_deliveryFailure_allowsImmediateRetry() {
-        // Given
+        // Given: Lần gửi mail đầu lỗi.
         when(encoder.encode(anyString())).thenReturn(HASH);
         doThrow(new RegistrationFlowException(Step.REGISTER, null, "REGISTER_EMAIL_DELIVERY_FAILED", "Mail failed."))
-                .doNothing().when(emailSender).sendOtp(eq(EMAIL), anyString());
+            .doNothing().when(emailSender).sendOtp(eq(EMAIL), anyString());
         assertThrows(RegistrationFlowException.class, () -> service.requestRegistration(form, session));
 
-        // When
+        // When: Gọi service.requestRegistration với dữ liệu đã chuẩn bị.
         service.requestRegistration(form, session);
 
-        // Then
+        // Then: cho gửi lại ngay, không để cooldown giả chặn đăng ký.
         assertEquals(EMAIL, service.getPendingRegistrationEmail(session));
         verify(emailSender, times(2)).sendOtp(eq(EMAIL), anyString());
         verify(accounts, times(0)).createCandidateWithPasswordHash(anyString(), anyString(), anyString(), anyString());
@@ -469,13 +468,13 @@ class RegistrationVerificationServiceTests {
     @Test
     @DisplayName("AUTH-REGISTER-23 | Resend đúng giây 300: thay hash OTP, gia hạn OTP và giữ hash password đã chuẩn bị")
     void resendOtp_atCooldownBoundary_replacesOtpAndExtendsExpiry() {
-        // Given
+        // Given: Resend đúng giây 300.
         try (MockedStatic<Instant> time = fixedTime()) {
             requestCode();
             setTime(time, NOW.plusSeconds(300));
             when(encoder.encode(anyString())).thenReturn(NEW_OTP_HASH);
 
-            // When
+            // When: Gọi service.resendOtp với dữ liệu đã chuẩn bị.
             service.resendOtp(session);
 
             // Then: Mã mới còn hạn tại phút 15, dù mã ban đầu đã hết hạn.
@@ -495,17 +494,17 @@ class RegistrationVerificationServiceTests {
     @Test
     @DisplayName("AUTH-REGISTER-24 | Resend trước hạn 1 giây: retryAfter=1, không sinh hash mới hoặc gửi mail thứ hai")
     void resendOtp_oneSecondBeforeCooldown_rejectsWithoutChangingState() {
-        // Given
+        // Given: Resend trước hạn 1 giây.
         try (MockedStatic<Instant> time = fixedTime()) {
             requestCode();
             Object pending = session.getAttribute(REGISTER_STATE);
             setTime(time, NOW.plusSeconds(299));
 
-            // When
+            // When: Gọi service.resendOtp với dữ liệu đã chuẩn bị.
             RegistrationFlowException error = assertThrows(RegistrationFlowException.class,
-                    () -> service.resendOtp(session));
+                () -> service.resendOtp(session));
 
-            // Then
+            // Then: retryAfter=1, không sinh hash mới hoặc gửi mail thứ hai.
             assertEquals("REGISTER_EMAIL_COOLDOWN", error.getErrorCode());
             assertEquals(Step.OTP, error.getStep());
             assertEquals(null, error.getField());
@@ -520,18 +519,18 @@ class RegistrationVerificationServiceTests {
     @Test
     @DisplayName("AUTH-REGISTER-25 | Resend sau cooldown bị lỗi mail: giữ pending và hash OTP cũ để tiếp tục xác minh")
     void resendOtp_deliveryFailure_preservesPreviousOtp() {
-        // Given
+        // Given: Resend sau cooldown bị lỗi mail.
         try (MockedStatic<Instant> time = fixedTime()) {
             requestCode();
             Object pending = session.getAttribute(REGISTER_STATE);
             setTime(time, NOW.plusSeconds(301));
             when(encoder.encode(anyString())).thenReturn(NEW_OTP_HASH);
             doThrow(new RegistrationFlowException(Step.REGISTER, null, "REGISTER_EMAIL_DELIVERY_FAILED", "Mail failed."))
-                    .when(emailSender).sendOtp(eq(EMAIL), anyString());
+                .when(emailSender).sendOtp(eq(EMAIL), anyString());
 
-            // When
+            // When: Gọi service.resendOtp với dữ liệu đã chuẩn bị.
             RegistrationFlowException error = assertThrows(RegistrationFlowException.class,
-                    () -> service.resendOtp(session));
+                () -> service.resendOtp(session));
 
             // Then: Lỗi phải giữ context OTP và thông tin form an toàn.
             assertEquals("REGISTER_EMAIL_DELIVERY_FAILED", error.getErrorCode());
@@ -551,21 +550,21 @@ class RegistrationVerificationServiceTests {
     @Test
     @DisplayName("AUTH-REGISTER-26 | Resend lỗi mail rồi thử lại ngay: không bị cooldown giả, dùng hash của lần gửi thành công")
     void resendOtp_deliveryFailure_allowsImmediateRetry() {
-        // Given
+        // Given: Resend lỗi mail rồi thử lại ngay.
         try (MockedStatic<Instant> time = fixedTime()) {
             requestCode();
             setTime(time, NOW.plusSeconds(301));
             when(encoder.encode(anyString())).thenReturn(NEW_OTP_HASH);
             doThrow(new RegistrationFlowException(Step.REGISTER, null, "REGISTER_EMAIL_DELIVERY_FAILED", "Mail failed."))
-                    .doNothing().when(emailSender).sendOtp(eq(EMAIL), anyString());
+                .doNothing().when(emailSender).sendOtp(eq(EMAIL), anyString());
             RegistrationFlowException error = assertThrows(RegistrationFlowException.class,
-                    () -> service.resendOtp(session));
+                () -> service.resendOtp(session));
             assertEquals("REGISTER_EMAIL_DELIVERY_FAILED", error.getErrorCode());
 
-            // When
+            // When: Gọi service.resendOtp với dữ liệu đã chuẩn bị.
             service.resendOtp(session);
 
-            // Then
+            // Then: không bị cooldown giả, dùng hash của lần gửi thành công.
             assertEquals(300L, service.getResendRemainingSeconds(session));
             assertEquals(EMAIL, service.getPendingRegistrationEmail(session));
             verify(emailSender, times(3)).sendOtp(eq(EMAIL), anyString());
@@ -582,11 +581,11 @@ class RegistrationVerificationServiceTests {
         // Given: Mô phỏng attribute không phải PendingRegistration qua API session công khai.
         session.setAttribute(REGISTER_STATE, "invalid-state");
 
-        // When
+        // When: Gọi service.resendOtp với dữ liệu đã chuẩn bị.
         RegistrationFlowException error = assertThrows(RegistrationFlowException.class,
-                () -> service.resendOtp(session));
+            () -> service.resendOtp(session));
 
-        // Then
+        // Then: báo request invalid, không mã hóa/gửi mail/tạo account.
         assertEquals("REGISTER_REQUEST_INVALID", error.getErrorCode());
         assertEquals(Step.REGISTER, error.getStep());
         verify(encoder, times(0)).encode(anyString());
@@ -597,16 +596,16 @@ class RegistrationVerificationServiceTests {
     @Test
     @DisplayName("AUTH-REGISTER-28 | Resend đúng hạn OTP 900 giây: xóa pending và không gửi mã mới")
     void resendOtp_atOtpExpiry_clearsPendingAndRejectsRequest() {
-        // Given
+        // Given: Resend đúng hạn OTP 900 giây.
         try (MockedStatic<Instant> time = fixedTime()) {
             requestCode();
             setTime(time, NOW.plusSeconds(900));
 
-            // When
+            // When: Gọi service.resendOtp với dữ liệu đã chuẩn bị.
             RegistrationFlowException error = assertThrows(RegistrationFlowException.class,
-                    () -> service.resendOtp(session));
+                () -> service.resendOtp(session));
 
-            // Then
+            // Then: xóa pending và không gửi mã mới.
             assertEquals("REGISTER_REQUEST_INVALID", error.getErrorCode());
             assertEquals(Step.REGISTER, error.getStep());
             assertEquals(EMAIL, error.getDetails().email());
@@ -619,16 +618,16 @@ class RegistrationVerificationServiceTests {
     @Test
     @DisplayName("AUTH-REGISTER-29 | Xác minh sau hạn OTP 1 giây: xóa pending, không so hash hoặc tạo account")
     void verifyAndRegister_oneSecondAfterExpiry_clearsPending() {
-        // Given
+        // Given: Xác minh sau hạn OTP 1 giây.
         try (MockedStatic<Instant> time = fixedTime()) {
             requestCode();
             setTime(time, NOW.plusSeconds(901));
 
-            // When
+            // When: Gọi service.verifyAndRegister với dữ liệu đã chuẩn bị.
             RegistrationFlowException error = assertThrows(RegistrationFlowException.class,
-                    () -> service.verifyAndRegister("123456", session));
+                () -> service.verifyAndRegister("123456", session));
 
-            // Then
+            // Then: xóa pending, không so hash hoặc tạo account.
             assertEquals("REGISTER_REQUEST_INVALID", error.getErrorCode());
             assertEquals(Step.REGISTER, error.getStep());
             assertEquals(null, session.getAttribute(REGISTER_STATE));
@@ -640,17 +639,17 @@ class RegistrationVerificationServiceTests {
     @Test
     @DisplayName("AUTH-REGISTER-30 | Xác minh trước hạn OTP 1 giây: chấp nhận mã đúng, tạo account một lần")
     void verifyAndRegister_oneSecondBeforeExpiry_createsAccount() {
-        // Given
+        // Given: Xác minh trước hạn OTP 1 giây.
         try (MockedStatic<Instant> time = fixedTime()) {
             requestCode();
             setTime(time, NOW.plusSeconds(899));
             when(encoder.matches("123456", HASH)).thenReturn(true);
             when(accounts.createCandidateWithPasswordHash("Candidate Seven", "candidate7", EMAIL, HASH)).thenReturn(7);
 
-            // When
+            // When: Gọi service.verifyAndRegister với dữ liệu đã chuẩn bị.
             int result = service.verifyAndRegister("123456", session);
 
-            // Then
+            // Then: chấp nhận mã đúng, tạo account một lần.
             assertEquals(7, result);
             assertEquals(null, session.getAttribute(REGISTER_STATE));
             verify(accounts, times(1)).createCandidateWithPasswordHash("Candidate Seven", "candidate7", EMAIL, HASH);
@@ -660,12 +659,12 @@ class RegistrationVerificationServiceTests {
     @Test
     @DisplayName("AUTH-REGISTER-31 | Countdown: làm tròn 999ms thành 1 giây, đúng/sau hạn trả 0")
     void getResendRemainingSeconds_nearAndPastDeadline_returnsRoundedCountdown() {
-        // Given
+        // Given: Countdown.
         try (MockedStatic<Instant> time = fixedTime()) {
             requestCode();
-
             // When / Then: Chỉ đọc countdown, không gọi gửi lại để tránh thay deadline.
             setTime(time, NOW.plusMillis(299001));
+            // Then: làm tròn 999ms thành 1 giây, đúng/sau hạn trả 0.
             assertEquals(1L, service.getResendRemainingSeconds(session));
             setTime(time, NOW.plusSeconds(300));
             assertEquals(0L, service.getResendRemainingSeconds(session));
@@ -687,10 +686,10 @@ class RegistrationVerificationServiceTests {
             form.setEmail("candidate8@example.test");
             service.requestRegistration(form, new MockHttpSession());
 
-            // When
+            // When: Gọi service.getResendRemainingSeconds với dữ liệu đã chuẩn bị.
             long result = service.getResendRemainingSeconds(session);
 
-            // Then
+            // Then: countdown session cũ bằng 0, pending vẫn còn hạn.
             assertEquals(0L, result);
             assertEquals(EMAIL, service.getPendingRegistrationEmail(session));
             verify(emailSender, times(1)).sendOtp(eq(EMAIL), anyString());
@@ -702,13 +701,13 @@ class RegistrationVerificationServiceTests {
     @Test
     @DisplayName("AUTH-REGISTER-33 | Resend thành công sau 4 lần sai: mã mới có lại đủ giới hạn nhập sai")
     void resendOtp_afterFourWrongAttempts_resetsAttemptCounter() {
-        // Given
+        // Given: Resend thành công sau 4 lần sai.
         try (MockedStatic<Instant> time = fixedTime()) {
             requestCode();
             when(encoder.matches("111111", HASH)).thenReturn(false);
             for (int attempt = 1; attempt <= 4; attempt++) {
                 RegistrationFlowException error = assertThrows(RegistrationFlowException.class,
-                        () -> service.verifyAndRegister("111111", session));
+                    () -> service.verifyAndRegister("111111", session));
                 assertEquals("REGISTER_OTP_INVALID", error.getErrorCode());
             }
             setTime(time, NOW.plusSeconds(300));
@@ -718,9 +717,9 @@ class RegistrationVerificationServiceTests {
 
             // When: Lần sai đầu tiên của OTP mới, dù tổng hai vòng đã sai 5 lần.
             RegistrationFlowException error = assertThrows(RegistrationFlowException.class,
-                    () -> service.verifyAndRegister("111111", session));
+                () -> service.verifyAndRegister("111111", session));
 
-            // Then
+            // Then: mã mới có lại đủ giới hạn nhập sai.
             assertEquals("REGISTER_OTP_INVALID", error.getErrorCode());
             assertEquals(EMAIL, service.getPendingRegistrationEmail(session));
             verify(emailSender, times(2)).sendOtp(eq(EMAIL), anyString());

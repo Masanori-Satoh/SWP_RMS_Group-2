@@ -8,7 +8,9 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.DisplayName;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import java.util.Optional;
-import static org.junit.jupiter.api.Assertions.*;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.*;
 
 class UserProfileServiceTests {
@@ -156,7 +158,7 @@ class UserProfileServiceTests {
         when(encoder.encode("NewPass123!")).thenThrow(failure);
         // When: Yêu cầu đổi mật khẩu.
         var error = assertThrows(IllegalArgumentException.class, () -> service.changePassword("employee",
-                new ChangePasswordRequest("OldPass123!", "NewPass123!", "NewPass123!")));
+            new ChangePasswordRequest("OldPass123!", "NewPass123!", "NewPass123!")));
         // Then: Giữ nguyên exception và hash cũ; không lưu.
         assertEquals(failure, error);
         assertEquals("old-hash", user.getPasswordHash());
