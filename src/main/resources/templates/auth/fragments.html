@@ -40,10 +40,17 @@
     <figure th:replace="~{auth/fragments :: artwork}"></figure>
   </aside>
   <div class="auth-scene" th:fragment="scene" aria-hidden="true">
-    <span class="auth-floating-leaf auth-floating-leaf--one"><svg th:replace="~{auth/fragments :: icon('leaf')}"></svg></span>
-    <span class="auth-floating-leaf auth-floating-leaf--two"><svg th:replace="~{auth/fragments :: icon('leaf')}"></svg></span>
-    <span class="auth-floating-leaf auth-floating-leaf--three"><svg th:replace="~{auth/fragments :: icon('leaf')}"></svg></span>
+    <div class="auth-scene-leaves">
+    <span class="auth-floating-leaf auth-floating-leaf--one"><svg th:replace="~{auth/fragments :: decorativeLeaf}"></svg></span>
+    <span class="auth-floating-leaf auth-floating-leaf--two"><svg th:replace="~{auth/fragments :: decorativeLeaf}"></svg></span>
+    <span class="auth-floating-leaf auth-floating-leaf--three"><svg th:replace="~{auth/fragments :: decorativeLeaf}"></svg></span>
+    <span class="auth-floating-leaf auth-floating-leaf--four"><svg th:replace="~{auth/fragments :: decorativeLeaf}"></svg></span>
+    <span class="auth-floating-leaf auth-floating-leaf--five"><svg th:replace="~{auth/fragments :: decorativeLeaf}"></svg></span>
+    </div>
   </div>
+  <svg th:fragment="decorativeLeaf" class="auth-leaf-silhouette" viewBox="0 0 40 64" aria-hidden="true" focusable="false">
+    <path d="M23 3C-2 20-6 42 17 60 42 45 43 17 23 3Z" />
+  </svg>
   <figure class="auth-botanical-art" th:fragment="artwork" aria-hidden="true">
     <img th:src="@{/images/auth-register-scene.png}" width="900" height="339" alt="" decoding="async">
   </figure>
