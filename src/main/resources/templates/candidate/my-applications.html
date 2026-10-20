@@ -4,7 +4,7 @@
       xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
       layout:decorate="~{layout/internal}">
 <!--
-    CANDIDATE/MY-APPLICATIONS.HTML — Hồ sơ đã ứng tuyển (/portal/applications, chỉ ứng viên; 5.1.38)
+    CANDIDATE/MY-APPLICATIONS.HTML — Đơn ứng tuyển của tôi (/portal/applications, chỉ ứng viên; 5.1.38)
     Đầu trang: dải hướng dẫn 4 bước (cùng DNA với section "Quy trình" của landing: số bước + icon + mũi tên).
     Bước 2–4 là bộ lọc (?step=n, lọc phía server để sau này thêm phân trang vẫn đúng), bấm lại bước đang lọc thì bỏ
     lọc; Bước 1 dẫn tới /jobs. Danh sách xếp mới cập nhật ở trên (lần cập nhật gần nhất ứng viên thấy được).
@@ -17,7 +17,7 @@
     CSS riêng: css/pages/my-applications.css (myapp-). Trạng thái dựa vào [data-state]/[data-tone] (bẫy "__" của Thymeleaf).
 -->
 <head>
-    <title>Hồ sơ đã ứng tuyển</title>
+    <title>Đơn ứng tuyển của tôi</title>
     <th:block layout:fragment="styles">
         <link rel="stylesheet" th:href="@{/css/pages/my-applications.css}">
     </th:block>
@@ -27,7 +27,7 @@
 
     <div class="page-header">
         <div>
-            <h1 class="page-title">Hồ sơ đã ứng tuyển</h1>
+            <h1 class="page-title">Đơn ứng tuyển của tôi</h1>
             <p class="page-subtitle">Bấm một bước để xem hồ sơ ở bước đó</p>
         </div>
         <a th:href="@{/jobs}" class="btn btn--outline">Xem vị trí đang tuyển</a>

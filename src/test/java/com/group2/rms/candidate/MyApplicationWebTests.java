@@ -73,7 +73,7 @@ class MyApplicationWebTests {
                 .andExpect(status().isOk())
                 .andExpect(view().name("candidate/my-applications"))
                 .andExpect(model().attribute("activeMenu", "applications"))
-                .andExpect(content().string(containsString("Hồ sơ đã ứng tuyển")))
+                .andExpect(content().string(containsString("Đơn ứng tuyển của tôi")))
                 .andExpect(content().string(containsString("href=\"/jobs/7\"")))
                 .andExpect(content().string(containsString("05/10/2026")))
                 .andExpect(content().string(containsString("Đã tự rút hồ sơ")))

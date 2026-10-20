@@ -47,7 +47,10 @@
 
       <!-- Đã đăng nhập: góc phải dùng chung với topbar nội bộ (fragments/layout/topbar-user) -->
       <th:block th:if="${viewer != null}">
-        <a th:href="@{/dashboard}" class="topbar-btn topbar-btn--primary public-topbar__dashboard">Bảng điều khiển &rarr;</a>
+        <!-- Ứng viên không có dashboard riêng: nút dẫn thẳng tới đơn của mình -->
+        <a th:href="${viewer.roleName == 'Candidate'} ? @{/portal/applications} : @{/dashboard}"
+           class="topbar-btn topbar-btn--primary public-topbar__dashboard"><span
+           th:text="${viewer.roleName == 'Candidate' ? 'Đơn ứng tuyển của tôi' : 'Bảng điều khiển'}">Bảng điều khiển</span> &rarr;</a>
         <div th:replace="~{fragments/layout/topbar-user :: actions(${viewer.fullName}, ${viewer.email}, ${viewer.roleName}, ${viewer.avatarUrl}, 'public')}"></div>
       </th:block>
     </div>
