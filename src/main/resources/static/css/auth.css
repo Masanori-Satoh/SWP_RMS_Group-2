@@ -13,9 +13,6 @@ body.auth-page {
   font-family: var(--sans);
 }
 .auth-container { width: min(calc(100% - var(--s16)), 1180px); margin-inline: auto; }
-.auth-header-inner { min-height: var(--topbar-h); display: flex; align-items: center; justify-content: space-between; gap: var(--s4); }
-.auth-home { display: inline-flex; align-items: center; min-height: 44px; color: var(--muted); font-size: var(--font-sm); text-underline-offset: 4px; }
-.auth-home:hover { color: var(--brand-dark); }
 .auth-shell { flex: 1; display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 575px); gap: clamp(32px, 4.5vw, 72px); align-items: start; padding-block: var(--s8) var(--s12); }
 .auth-story { min-width: 0; padding-top: var(--s2); }
 .auth-brand-badge { display: inline-flex; align-items: center; gap: var(--s3); padding: var(--s2) var(--s4); border: 1px solid var(--line); border-radius: var(--radius-full); color: var(--brand-dark); background: color-mix(in srgb, var(--brand-soft) 55%, var(--surface)); font-size: var(--font-sm); }
@@ -100,7 +97,7 @@ body.auth-page {
 .auth-scene { position: absolute; inset: 0; z-index: -1; overflow: hidden; pointer-events: none; background: radial-gradient(ellipse at 50% 25%, color-mix(in srgb, var(--brand-soft) 50%, transparent), transparent 70%), radial-gradient(ellipse at 95% 85%, var(--brand-soft), transparent 60%); }
 .auth-scene::before, .auth-scene::after { content: ""; position: absolute; bottom: -150px; left: -10%; width: 125%; height: 340px; border-radius: 55% 65% 0 0; transform: rotate(-5deg); background: color-mix(in srgb, var(--brand-soft) 70%, transparent); }
 .auth-scene::after { bottom: -200px; left: 40%; opacity: .7; transform: rotate(-9deg); }
-.auth-botanical-art { position: absolute; left: 0; bottom: 0; width: min(900px, 54vw); margin: 0; }
+.auth-botanical-art { width: 100%; margin: var(--s8) 0 0; }
 .auth-botanical-art img { display: block; width: 100%; height: auto; }
 .auth-floating-leaf { position: absolute; color: var(--brand); opacity: .25; width: 28px; }
 .auth-floating-leaf .auth-icon { width: 100%; height: auto; }
@@ -126,9 +123,8 @@ body.auth-page {
   .auth-story-copy { font-size: var(--font-sm); }
   .auth-highlights { margin-top: var(--s6); }
   .auth-login .auth-card, .auth-recovery .auth-card { align-self: start; }
-  .auth-botanical-art { width: 100%; opacity: .18; }
+  .auth-botanical-art { display: none; }
   .auth-floating-leaf { display: none; }
-  .auth-home { font-size: var(--font-xs); }
 }
 @media (max-width: 470px) {
   .auth-card { padding: var(--s6) var(--s4); }

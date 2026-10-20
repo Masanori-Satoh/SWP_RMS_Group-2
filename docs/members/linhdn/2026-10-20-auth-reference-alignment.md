@@ -56,3 +56,16 @@ mvn.cmd '-Dmaven.repo.local=C:\Users\Administrator\.m2\repository' '-DforkCount=
 Đây là kiểm chứng UI và hợp đồng auth qua MockMvc, không phải E2E với tài khoản/email/database thật. Chưa gửi OTP thật, tạo tài khoản thật hoặc đổi mật khẩu thật trong đợt này. Không thay đổi Controller, Service, DTO, Security, schema, database hoặc dependency.
 
 Các thay đổi đã có trước trong `docs/prototype-reference/` được giữ nguyên. Không commit, push, merge hoặc deploy.
+
+## Sửa regression theo phản hồi về zoom và navbar (20/10/2026)
+
+Phản hồi screenshot phát hiện điểm mà ma trận kiểm tra trước chưa bao phủ: ảnh PNG có chữ được đặt absolute ở đáy toàn trang nên có thể chồng lên CTA/highlights trên màn thấp hoặc sau zoom. Header rút gọn cũng thiếu navbar công khai chuẩn.
+
+- `auth/fragments.html`: đưa minh họa vào cuối `aside.auth-story`, sau cụm highlights; thay header rút gọn bằng lời gọi fragment `fragments/layout/public-topbar :: topbar('', false)`. Không sửa fragment/navbar dùng chung.
+- `auth.css`: bỏ định vị absolute/bottom của ảnh, dùng chiều rộng cột và margin-top 32px trong luồng bố cục. Trên mobile ẩn ảnh trang trí. Bỏ các selector của header rút gọn đã hết dùng.
+- `auth.js`: cập nhật selector logo sang navbar chuẩn, giữ nhãn trợ năng tiếng Việt.
+- Không đổi nội dung form, backend, CSRF, routing, token hoặc stylesheet/layout dùng chung.
+
+Kết quả: BUILD SUCCESS, 6 test auth đạt. Chrome kiểm tra 108 trường hợp reflow của sáu màn theo vùng CSS tương đương zoom 75/90/100/110/125/150/175/200% trên màn 1366×768 và 1920×900, cộng mobile 390/320px; ảnh hiển thị luôn nằm dưới highlights, không tràn ngang và navbar hiện nền trắng/sticky. Có thêm ba kiểm tra phóng đại CSS và kiểm tra các href navbar. Chưa tự động hóa zoom native bằng menu trình duyệt; không đồng nhất phép mô phỏng này với kiểm thử native zoom.
+
+Browser dùng HTML Thymeleaf đã render, preview chặn POST; riêng loader chat được chặn trong bài kiểm tra bố cục vì ngoài phạm vi auth, không sửa chat trong ứng dụng. Ảnh `../.codex-tmp/auth-navbar-zoom-fixed.png`, kết quả `auth-zoom-fix-results.json`, log `auth-zoom-fix-tests.log`.

@@ -3,7 +3,7 @@
   const page = document.querySelector('body.auth-page');
   if (!page) return;
   document.title = document.title.replace(' — Mộc Careers', ' — Mộc Tuyển dụng');
-  page.querySelector('.auth-header .wordmark')?.setAttribute('aria-label', 'Trang chủ Mộc Tuyển dụng');
+  page.querySelector('.public-topbar .wordmark')?.setAttribute('aria-label', 'Trang chủ Mộc Tuyển dụng');
   if (page.classList.contains('auth-botanical')) {
     const pauseDecoration = () => page.toggleAttribute('data-auth-paused', document.hidden);
     document.addEventListener('visibilitychange', pauseDecoration);

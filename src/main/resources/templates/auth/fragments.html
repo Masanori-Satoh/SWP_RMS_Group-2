@@ -18,13 +18,10 @@
     <link rel="stylesheet" th:href="@{/css/auth.css}">
     <script defer th:src="@{/js/auth.js}"></script>
   </th:block>
-  <header class="auth-header" th:fragment="header">
+  <th:block th:fragment="header">
     <a class="skip-link" href="#main">Đến nội dung chính</a>
-    <div class="auth-container auth-header-inner">
-      <a th:replace="~{fragments/brand :: wordmark('TUYỂN DỤNG')}"></a>
-      <a class="auth-home" th:href="@{/}">Về trang tuyển dụng</a>
-    </div>
-  </header>
+    <header th:replace="~{fragments/layout/public-topbar :: topbar('', false)}"></header>
+  </th:block>
   <aside class="auth-story" th:fragment="story" aria-label="Làm việc tại Mộc">
     <p class="auth-brand-badge"><span aria-hidden="true"></span>Cơ hội nghề nghiệp tại Mộc</p>
     <p class="auth-statement">Làm việc cùng Mộc.<br><span>Kết nối tài năng,<br>kiến tạo giá trị thật.</span></p>
@@ -38,11 +35,11 @@
         <li><svg th:replace="~{auth/fragments :: icon('leaf')}"></svg><span>Cùng tạo<br>giá trị</span></li>
       </ul>
     </th:block>
-  </aside>
-  <div class="auth-scene" th:fragment="scene" aria-hidden="true">
-    <figure class="auth-botanical-art">
+    <figure class="auth-botanical-art" aria-hidden="true">
       <img th:src="@{/images/auth-register-scene.png}" width="900" height="339" alt="" decoding="async">
     </figure>
+  </aside>
+  <div class="auth-scene" th:fragment="scene" aria-hidden="true">
     <span class="auth-floating-leaf auth-floating-leaf--one"><svg th:replace="~{auth/fragments :: icon('leaf')}"></svg></span>
     <span class="auth-floating-leaf auth-floating-leaf--two"><svg th:replace="~{auth/fragments :: icon('leaf')}"></svg></span>
     <span class="auth-floating-leaf auth-floating-leaf--three"><svg th:replace="~{auth/fragments :: icon('leaf')}"></svg></span>
