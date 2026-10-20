@@ -4,6 +4,13 @@ import com.group2.rms.candidate.dto.MyApplicationResponse;
 import com.group2.rms.candidate.entity.Application;
 import com.group2.rms.candidate.exception.ApplicationWithdrawalException;
 import com.group2.rms.candidate.repository.ApplicationRepository;
+import com.group2.rms.candidate.repository.ApplicationRepository.MyApplicationMarkRow;
+import com.group2.rms.candidate.repository.ApplicationRepository.MyInterviewRow;
+import com.group2.rms.candidate.repository.ApplicationRepository.MyOfferRow;
+import com.group2.rms.candidate.service.MyApplicationJourney.Facts;
+import com.group2.rms.candidate.service.MyApplicationJourney.Interview;
+import com.group2.rms.candidate.service.MyApplicationJourney.Mark;
+import com.group2.rms.candidate.service.MyApplicationJourney.Offer;
 import com.group2.rms.core.exception.ResourceNotFoundException;
 import com.group2.rms.core.security.CurrentUserService;
 import com.group2.rms.user.entity.User;
@@ -11,8 +18,11 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 /**
  * Đơn của chính ứng viên đang đăng nhập (5.1.38 My Applications) và rút đơn (UC 39).
@@ -29,12 +39,38 @@ public class MyApplicationService {
     private final ApplicationRepository applications;
     private final CurrentUserService currentUserService;
 
+    /**
+     * Mọi đơn của ứng viên đang đăng nhập, mới nhất trước. Dữ kiện lịch, offer, dấu dừng đọc theo {@code userId}
+     * (mỗi loại một câu cho cả trang, không một câu cho từng đơn), gom theo id đơn rồi quy đổi bằng
+     * {@link MyApplicationJourney}.
+     */
     @Transactional(readOnly = true)
     public List<MyApplicationResponse> list() {
         Integer userId = currentUserService.requireUser().getUserId();
-        Set<Integer> withdrawnIds = Set.copyOf(applications.findWithdrawnApplicationIds(userId));
-        return applications.findOwnedByUserId(userId).stream()
-                .map(application -> toResponse(application, withdrawnIds))
+        List<Application> owned = applications.findOwnedByUserId(userId);
+        if (owned.isEmpty()) {
+            return List.of();
+        }
+        Map<Integer, List<Interview>> interviews = applications.findMyInterviews(userId).stream()
+                .collect(Collectors.groupingBy(MyInterviewRow::getApplicationId, Collectors.mapping(
+                        row -> new Interview(row.getStartTime(), row.getFormat(), row.getStatus()),
+                        Collectors.toList())));
+        Map<Integer, Offer> offers = applications.findMyVisibleOffers(userId).stream()
+                .collect(Collectors.toMap(MyOfferRow::getApplicationId,
+                        row -> new Offer(row.getOfferId(), row.getStatus(), row.getResponseDeadline(), row.getAt()),
+                        (first, second) -> first));
+        Map<Integer, List<Mark>> marks = applications.findMyApplicationMarks(userId).stream()
+                .collect(Collectors.groupingBy(MyApplicationMarkRow::getApplicationId, Collectors.mapping(
+                        row -> new Mark(row.getKind(), row.getOldStatus(), row.getAt()),
+                        Collectors.toList())));
+        LocalDateTime now = LocalDateTime.now();
+        return owned.stream()
+                .map(application -> {
+                    Integer id = application.getApplicationId();
+                    Facts facts = new Facts(application.getApplicationStatus(), application.getSubmissionDate(),
+                            interviews.getOrDefault(id, List.of()), offers.get(id), marks.getOrDefault(id, List.of()));
+                    return toResponse(application, MyApplicationJourney.resolve(facts, now));
+                })
                 .toList();
     }
 
@@ -61,17 +97,19 @@ public class MyApplicationService {
         return application.getJobPosting().getPostingTitle();
     }
 
-    private static MyApplicationResponse toResponse(Application application, Set<Integer> withdrawnIds) {
-        String status = application.getApplicationStatus();
-        boolean withdrawn = ApplicationReviewService.REJECTED.equals(status)
-                && withdrawnIds.contains(application.getApplicationId());
+    private static MyApplicationResponse toResponse(Application application, MyApplicationJourney.View view) {
         return new MyApplicationResponse(
                 application.getApplicationId(),
                 application.getJobPosting().getJobPostingId(),
                 application.getJobPosting().getPostingTitle(),
                 application.getSubmissionDate(),
-                withdrawn ? ApplicationStatusLabels.WITHDRAWN_LABEL : ApplicationStatusLabels.label(status),
-                withdrawn ? "badge--neutral" : ApplicationStatusLabels.badge(status),
-                WITHDRAWABLE_STATUSES.contains(status));
+                view.steps(),
+                view.statusLabel(),
+                view.statusNote(),
+                view.tone(),
+                view.actionLabel(),
+                view.actionHref(),
+                WITHDRAWABLE_STATUSES.contains(application.getApplicationStatus()),
+                view.journey());
     }
 }

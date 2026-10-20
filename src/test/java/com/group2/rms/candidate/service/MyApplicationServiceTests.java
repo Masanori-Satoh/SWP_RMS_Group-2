@@ -6,6 +6,7 @@ import com.group2.rms.candidate.exception.ApplicationWithdrawalException;
 import com.group2.rms.candidate.repository.ApplicationRepository;
 import com.group2.rms.core.exception.ResourceNotFoundException;
 import com.group2.rms.core.security.CurrentUserService;
+import com.group2.rms.core.web.TimelineItem;
 import com.group2.rms.jobposting.entity.JobPosting;
 import com.group2.rms.user.entity.User;
 import org.junit.jupiter.api.BeforeEach;
@@ -17,6 +18,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Optional;
 
@@ -45,20 +47,42 @@ class MyApplicationServiceTests {
     }
 
     @Test
-    void listShowsWithdrawnLabelOnlyForWithdrawnRejectedApplications() {
+    void listGroupsFactsByApplicationAndShowsCandidateStatus() {
+        LocalDateTime nextMonth = LocalDateTime.now().plusMonths(1).withHour(10).withMinute(0);
         when(applications.findOwnedByUserId(USER_ID)).thenReturn(List.of(
                 application(1, "Applied"), application(2, "Rejected"), application(3, "Rejected"),
-                application(4, "HR_Passed")));
-        when(applications.findWithdrawnApplicationIds(USER_ID)).thenReturn(List.of(2));
+                application(4, "Interviewing"), application(5, "Hired")));
+        when(applications.findMyInterviews(USER_ID)).thenReturn(List.of(
+                new InterviewRow(4, nextMonth, "Online_GoogleMeet", "Scheduled"),
+                new InterviewRow(5, LocalDateTime.of(2026, 10, 19, 9, 0), "Offline_Office", "Completed")));
+        when(applications.findMyVisibleOffers(USER_ID)).thenReturn(List.of(
+                new OfferRow(5, 8, "Accepted", null, LocalDateTime.of(2026, 10, 20, 9, 0))));
+        when(applications.findMyApplicationMarks(USER_ID)).thenReturn(List.of(
+                new MarkRow(2, "Withdrawn", "Applied", LocalDateTime.of(2026, 10, 6, 9, 0))));
 
         List<MyApplicationResponse> rows = service.list();
 
-        assertEquals(List.of("Đã nộp hồ sơ", "Đã rút", "Không tiếp tục", "Qua vòng nhân sự"),
+        assertEquals(List.of("Đã nộp CV", "Đã tự rút hồ sơ", "Không đạt vòng CV", "Phỏng vấn 10:00 "
+                        + nextMonth.format(DateTimeFormatter.ofPattern("dd/MM")), "Đã nhận việc"),
                 rows.stream().map(MyApplicationResponse::statusLabel).toList());
-        assertEquals(List.of(true, false, false, false),
+        assertEquals(List.of(true, false, false, false, false),
                 rows.stream().map(MyApplicationResponse::canWithdraw).toList());
-        assertEquals("badge--neutral", rows.get(1).statusBadge());
-        assertEquals("badge--danger", rows.get(2).statusBadge());
+        assertEquals("/portal/interviews", rows.get(3).actionHref());
+        assertEquals("/portal/offers/8", rows.get(4).actionHref());
+        assertEquals(List.of("Đã nộp hồ sơ", "Đã phỏng vấn", "Bạn đã nhận lời"),
+                rows.get(4).journey().stream().map(TimelineItem::title).toList());
+        assertEquals("danger", rows.get(2).statusTone());
+    }
+
+    @Test
+    void listWithoutApplicationsSkipsFactQueries() {
+        when(applications.findOwnedByUserId(USER_ID)).thenReturn(List.of());
+
+        assertTrue(service.list().isEmpty());
+
+        verify(applications, never()).findMyInterviews(anyInt());
+        verify(applications, never()).findMyVisibleOffers(anyInt());
+        verify(applications, never()).findMyApplicationMarks(anyInt());
     }
 
     @ParameterizedTest
@@ -112,5 +136,19 @@ class MyApplicationServiceTests {
                 .submissionDate(LocalDateTime.of(2026, 10, 5, 9, 0))
                 .jobPosting(JobPosting.builder().jobPostingId(7).postingTitle("Junior Java Developer").build())
                 .build();
+    }
+
+    // Dòng kết quả giả của 3 câu dữ kiện (tên thành phần trùng tên getter của interface).
+    private record InterviewRow(Integer getApplicationId, LocalDateTime getStartTime, String getFormat,
+                                String getStatus) implements ApplicationRepository.MyInterviewRow {
+    }
+
+    private record OfferRow(Integer getApplicationId, Integer getOfferId, String getStatus,
+                            LocalDateTime getResponseDeadline, LocalDateTime getAt)
+            implements ApplicationRepository.MyOfferRow {
+    }
+
+    private record MarkRow(Integer getApplicationId, String getKind, String getOldStatus, LocalDateTime getAt)
+            implements ApplicationRepository.MyApplicationMarkRow {
     }
 }

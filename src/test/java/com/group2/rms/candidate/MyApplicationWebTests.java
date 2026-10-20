@@ -61,12 +61,9 @@ class MyApplicationWebTests {
     @Test
     void candidateSeesOwnApplicationsWithWithdrawOnlyWhereAllowed() throws Exception {
         when(myApplications.list()).thenReturn(List.of(
-                new MyApplicationResponse(301, 7, "Junior Java Developer", SUBMITTED, "Đã nộp hồ sơ",
-                        "badge--neutral", true),
-                new MyApplicationResponse(120, 3, "UI/UX Designer", SUBMITTED, "Qua vòng nhân sự",
-                        "badge--warning", false),
-                new MyApplicationResponse(90, 2, "Kế toán tổng hợp", SUBMITTED, "Đã rút",
-                        "badge--neutral", false)));
+                card(301, 7, "Junior Java Developer", "Đã nộp CV", "neutral", true),
+                card(120, 3, "UI/UX Designer", "Chờ xét CV", "neutral", false),
+                card(90, 2, "Kế toán tổng hợp", "Đã tự rút hồ sơ", "neutral", false)));
 
         mvc.perform(get("/portal/applications").with(as("an.vo", "Candidate")))
                 .andExpect(status().isOk())
@@ -75,7 +72,7 @@ class MyApplicationWebTests {
                 .andExpect(content().string(containsString("Hồ sơ đã ứng tuyển")))
                 .andExpect(content().string(containsString("href=\"/jobs/7\"")))
                 .andExpect(content().string(containsString("05/10/2026")))
-                .andExpect(content().string(containsString("Đã rút")))
+                .andExpect(content().string(containsString("Đã tự rút hồ sơ")))
                 .andExpect(content().string(containsString("action=\"/portal/applications/301/withdraw\"")))
                 .andExpect(content().string(not(containsString("/portal/applications/120/withdraw"))))
                 .andExpect(content().string(not(containsString("/portal/applications/90/withdraw"))))
@@ -120,6 +117,12 @@ class MyApplicationWebTests {
         mvc.perform(post("/portal/applications/301/withdraw").with(as("an.vo", "Candidate")))
                 .andExpect(status().isForbidden());
         verifyNoInteractions(myApplications);
+    }
+
+    private static MyApplicationResponse card(int id, int jobPostingId, String title, String statusLabel,
+                                              String tone, boolean canWithdraw) {
+        return new MyApplicationResponse(id, jobPostingId, title, SUBMITTED, List.of(), statusLabel, null, tone,
+                null, null, canWithdraw, List.of());
     }
 
     private RequestPostProcessor as(String username, String roleName) {

@@ -30,9 +30,6 @@ public final class ApplicationStatusLabels {
         };
     }
 
-    /** Đơn {@code Rejected} do ứng viên tự rút (schema không có trạng thái riêng, xem {@code MyApplicationService}). */
-    public static final String WITHDRAWN_LABEL = "Đã rút";
-
     public static String badge(String status) {
         return switch (status) {
             case "HR_Passed", "HM_Passed", "HM_Suggested", "Interviewing" -> "badge--warning";

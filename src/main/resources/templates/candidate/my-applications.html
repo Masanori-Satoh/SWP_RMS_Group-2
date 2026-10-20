@@ -56,7 +56,7 @@
                           th:text="${#temporals.format(item.submissionDate, 'dd/MM/yyyy')}">05/10/2026</time>
                 </td>
                 <td>
-                    <span class="badge" th:classappend="${item.statusBadge}" th:text="${item.statusLabel}">Đã nộp hồ sơ</span>
+                    <span class="badge" th:classappend="${'badge--' + item.statusTone}" th:text="${item.statusLabel}">Đã nộp hồ sơ</span>
                 </td>
                 <td>
                     <form th:if="${item.canWithdraw}" th:action="@{/portal/applications/{id}/withdraw(id=${item.applicationId})}"
