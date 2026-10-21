@@ -328,13 +328,19 @@ function submitCreateOffer(isDraft) {
         return;
     }
 
-    // 7. Ngày bắt đầu dự kiến bắt buộc và phải > ngày hiện tại
+    // 7. Ngày bắt đầu dự kiến bắt buộc và phải > hôm nay + thời hạn phản hồi
     if (!startDate) {
         showToast('Ngày bắt đầu dự kiến không được để trống.', 'warning');
         return;
     }
-    if (startDate <= getTodayDateString()) {
-        showToast('Ngày bắt đầu dự kiến phải lớn hơn ngày hiện tại.', 'danger');
+    const respDaysEl = document.getElementById('createResponsePeriodDays') || document.getElementById('responsePeriodDays');
+    const respDays = respDaysEl ? parseInt(respDaysEl.value, 10) : 5;
+    const validRespDays = (!isNaN(respDays) && respDays > 0) ? respDays : 5;
+    const minStart = new Date();
+    minStart.setDate(minStart.getDate() + validRespDays);
+    const minStartStr = `${minStart.getFullYear()}-${String(minStart.getMonth() + 1).padStart(2, '0')}-${String(minStart.getDate()).padStart(2, '0')}`;
+    if (startDate <= minStartStr) {
+        showToast(`Ngày bắt đầu dự kiến phải sau hôm nay cộng thời hạn phản hồi (${validRespDays} ngày).`, 'danger');
         return;
     }
 
@@ -2032,16 +2038,29 @@ function initOfferFlashAutoDismiss() {
     }, 2000);
 }
 
+function updateMinExpectedStartDate() {
+    const periodInput = document.getElementById('responsePeriodDays') || document.getElementById('createResponsePeriodDays');
+    const startDateInput = document.getElementById('expectedStartDate') || document.getElementById('createStartDate');
+    if (!startDateInput) return;
+
+    const days = periodInput ? parseInt(periodInput.value, 10) : 5;
+    const validDays = (!isNaN(days) && days > 0) ? days : 5;
+
+    const minDate = new Date();
+    minDate.setDate(minDate.getDate() + validDays + 1);
+    const yyyy = minDate.getFullYear();
+    const mm = String(minDate.getMonth() + 1).padStart(2, '0');
+    const dd = String(minDate.getDate()).padStart(2, '0');
+    startDateInput.min = `${yyyy}-${mm}-${dd}`;
+    startDateInput.max = '2099-12-31';
+}
+
 function initOfferFormExpectedStartDateMin() {
-    const startDateInput = document.getElementById('expectedStartDate');
-    if (startDateInput) {
-        const tomorrow = new Date();
-        tomorrow.setDate(tomorrow.getDate() + 1);
-        const yyyy = tomorrow.getFullYear();
-        const mm = String(tomorrow.getMonth() + 1).padStart(2, '0');
-        const dd = String(tomorrow.getDate()).padStart(2, '0');
-        startDateInput.min = `${yyyy}-${mm}-${dd}`;
-        startDateInput.max = '2099-12-31';
+    updateMinExpectedStartDate();
+    const periodInput = document.getElementById('responsePeriodDays') || document.getElementById('createResponsePeriodDays');
+    if (periodInput) {
+        periodInput.addEventListener('input', updateMinExpectedStartDate);
+        periodInput.addEventListener('change', updateMinExpectedStartDate);
     }
 }
 

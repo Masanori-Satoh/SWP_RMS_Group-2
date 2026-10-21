@@ -176,8 +176,10 @@
                                     <div class="cand-email-sub">(HR)</div>
                                 </td>
                                 <td style="text-align: right;">
-                                    <a th:href="@{/offers/{id}(id=${o.offerId})}" class="btn-icon btn-icon-primary" title="Xem chi tiết & Phê duyệt">
-                                        <i class="fa-solid fa-eye"></i>
+                                    <a th:href="@{/offers/{id}(id=${o.offerId})}"
+                                       class="btn-icon btn-icon-primary"
+                                       th:title="${o.offerStatus == 'Pending_Director' ? 'Xem xét & ra quyết định' : 'Xem chi tiết'}">
+                                        <i th:class="${o.offerStatus == 'Pending_Director' ? 'fa-solid fa-clipboard-check' : 'fa-solid fa-eye'}"></i>
                                     </a>
                                 </td>
                             </tr>

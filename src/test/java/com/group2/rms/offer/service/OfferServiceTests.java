@@ -263,7 +263,7 @@ class OfferServiceTests {
                 .proposedSalary(new BigDecimal("25000000"))
                 .probationSalary(new BigDecimal("21250000")) // 85%
                 .probationDays(60)
-                .expectedStartDate(LocalDate.now().plusDays(1)) // Ngày mai (> ngày hiện tại)
+                .expectedStartDate(LocalDate.now().plusDays(10)) // Sau hôm nay + responsePeriodDays (5 ngày)
                 .workLocation("Văn phòng Mộc RMS Hà Nội")
                 .benefitsPackage(null) // Để trống phúc lợi -> vẫn hợp lệ
                 .isDraft(false)
@@ -302,6 +302,54 @@ class OfferServiceTests {
         });
 
         assertTrue(ex.getMessage().contains("Ngày bắt đầu dự kiến phải lớn hơn ngày hiện tại"));
+    }
+
+    @Test
+    @DisplayName("Validation: Tạo Offer với ngày bắt đầu <= hôm nay + responsePeriodDays phải bị chặn")
+    void testCreateOfferByHr_startDateNotAfterResponsePeriod_throwsException() {
+        CreateOfferRequest request = CreateOfferRequest.builder()
+                .applicationId(1)
+                .offeredPositionTitle("Backend Developer")
+                .proposedSalary(new BigDecimal("20000000"))
+                .probationSalary(new BigDecimal("17000000"))
+                .probationDays(60)
+                .responsePeriodDays(3)
+                .expectedStartDate(LocalDate.now().plusDays(3))
+                .workLocation("Trụ sở")
+                .build();
+
+        OfferValidationException ex = assertThrows(OfferValidationException.class, () -> {
+            offerService.createOfferByHr(request);
+        });
+
+        assertTrue(ex.getMessage().contains("thời hạn phản hồi"));
+    }
+
+    @Test
+    @DisplayName("Validation: Cập nhật Offer với ngày bắt đầu <= hôm nay + responsePeriodDays phải bị chặn")
+    void testUpdateOfferByHr_startDateNotAfterResponsePeriod_throwsException() {
+        OfferProposal existing = OfferProposal.builder()
+                .offerId(10)
+                .offerStatus("Draft")
+                .build();
+
+        when(offerProposalRepository.findById(10)).thenReturn(Optional.of(existing));
+
+        UpdateOfferRequest request = UpdateOfferRequest.builder()
+                .offeredPositionTitle("Senior Java Engineer")
+                .proposedSalary(new BigDecimal("20000000"))
+                .probationSalary(new BigDecimal("17000000"))
+                .probationDays(60)
+                .responsePeriodDays(5)
+                .expectedStartDate(LocalDate.now().plusDays(4))
+                .workLocation("Trụ sở")
+                .build();
+
+        OfferValidationException ex = assertThrows(OfferValidationException.class, () -> {
+            offerService.updateOfferByHr(10, request);
+        });
+
+        assertTrue(ex.getMessage().contains("thời hạn phản hồi"));
     }
 
     @Test
@@ -594,7 +642,7 @@ class OfferServiceTests {
                 .proposedSalary(new BigDecimal("20000000"))
                 .probationSalary(new BigDecimal("17000000"))
                 .probationDays(60)
-                .expectedStartDate(LocalDate.now().plusDays(5))
+                .expectedStartDate(LocalDate.now().plusDays(10))
                 .workLocation("Trụ sở chính")
                 .isDraft(false)
                 .build();
@@ -628,7 +676,7 @@ class OfferServiceTests {
                 .proposedSalary(new BigDecimal("25000000"))
                 .probationSalary(new BigDecimal("21500000"))
                 .probationDays(60)
-                .expectedStartDate(LocalDate.now().plusDays(5))
+                .expectedStartDate(LocalDate.now().plusDays(10))
                 .workLocation("Văn phòng mới")
                 .isDraft(false)
                 .build();

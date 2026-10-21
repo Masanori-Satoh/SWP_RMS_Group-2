@@ -131,15 +131,14 @@ public class CandidateOfferServiceImpl implements CandidateOfferService {
         if (!SENT.equals(offer.getOfferStatus())) {
             throw new OfferResponseException("Thư mời này đã được trả lời nên không thể thay đổi.");
         }
-        if (isExpired(offer)) {
-            if (offer.getResponseDeadline() != null) {
-                String deadlineStr = java.time.format.DateTimeFormatter.ofPattern("HH:mm dd/MM/yyyy")
-                        .format(offer.getResponseDeadline());
-                throw new OfferResponseException("Thư mời này đã quá thời hạn phản hồi (" + deadlineStr + "). Vui lòng liên hệ bộ phận Tuyển dụng để được hỗ trợ.");
-            }
-            String dateStr = offer.getExpectedStartDate() != null
-                    ? java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy").format(offer.getExpectedStartDate())
-                    : "";
+        java.time.LocalDateTime now = java.time.LocalDateTime.now();
+        if (offer.getResponseDeadline() != null && now.isAfter(offer.getResponseDeadline())) {
+            String deadlineStr = java.time.format.DateTimeFormatter.ofPattern("HH:mm dd/MM/yyyy")
+                    .format(offer.getResponseDeadline());
+            throw new OfferResponseException("Thư mời này đã quá thời hạn phản hồi (" + deadlineStr + "). Vui lòng liên hệ bộ phận Tuyển dụng để được hỗ trợ.");
+        }
+        if (offer.getExpectedStartDate() != null && offer.getExpectedStartDate().isBefore(now.toLocalDate())) {
+            String dateStr = java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy").format(offer.getExpectedStartDate());
             throw new OfferResponseException("Thư mời này đã quá ngày bắt đầu nhận việc dự kiến (" + dateStr + "). Vui lòng liên hệ bộ phận Tuyển dụng để được hỗ trợ.");
         }
     }
@@ -148,11 +147,12 @@ public class CandidateOfferServiceImpl implements CandidateOfferService {
         if (!SENT.equals(offer.getOfferStatus())) {
             return false;
         }
-        if (offer.getResponseDeadline() != null) {
-            return java.time.LocalDateTime.now().isAfter(offer.getResponseDeadline());
-        }
-        return offer.getExpectedStartDate() != null
-                && offer.getExpectedStartDate().isBefore(java.time.LocalDate.now());
+        java.time.LocalDateTime now = java.time.LocalDateTime.now();
+        boolean deadlinePassed = offer.getResponseDeadline() != null
+                && now.isAfter(offer.getResponseDeadline());
+        boolean startDatePassed = offer.getExpectedStartDate() != null
+                && offer.getExpectedStartDate().isBefore(now.toLocalDate());
+        return deadlinePassed || startDatePassed;
     }
 
     private static CandidateOfferResponse toResponse(OfferProposal offer) {

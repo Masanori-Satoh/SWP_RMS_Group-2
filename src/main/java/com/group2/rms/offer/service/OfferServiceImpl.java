@@ -39,6 +39,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -715,6 +716,13 @@ public class OfferServiceImpl implements OfferService {
         }
         if (responsePeriodDays == null || responsePeriodDays <= 0) {
             throw new OfferValidationException("Thời gian phản hồi phải lớn hơn 0 ngày.");
+        }
+        if (!expectedStartDate.isAfter(LocalDate.now().plusDays(responsePeriodDays))) {
+            LocalDate minStartDate = LocalDate.now().plusDays(responsePeriodDays + 1);
+            throw new OfferValidationException(
+                    "Ngày bắt đầu dự kiến phải sau ngày hiện tại cộng với thời hạn phản hồi ("
+                            + responsePeriodDays + " ngày). Vui lòng chọn ngày bắt đầu từ ngày "
+                            + minStartDate.format(DateTimeFormatter.ofPattern("dd/MM/yyyy")) + " trở đi.");
         }
     }
 

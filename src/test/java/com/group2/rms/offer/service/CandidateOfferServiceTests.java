@@ -358,6 +358,36 @@ class CandidateOfferServiceTests {
         verify(applicationStatusService).onOfferAnswered(APPLICATION_ID, true);
     }
 
+    @Test
+    @org.junit.jupiter.api.DisplayName("isExpired: When responseDeadline is in future but expectedStartDate is in past, response is blocked")
+    void acceptOffer_whenExpectedStartDatePassedEvenIfDeadlineInFuture_throwsException() {
+        OfferProposal offer = offer(OFFER_ID, "Sent_Candidate");
+        offer.setResponseDeadline(java.time.LocalDateTime.now().plusDays(2));
+        offer.setExpectedStartDate(java.time.LocalDate.now().minusDays(1));
+
+        when(offers.findVisibleById(eq(OFFER_ID), eq(USER_ID), anyCollection()))
+                .thenReturn(Optional.of(offer));
+
+        OfferResponseException ex = assertThrows(OfferResponseException.class, () -> service.accept(OFFER_ID));
+        assertTrue(ex.getMessage().contains("quá ngày bắt đầu nhận việc dự kiến"));
+        verify(offers, never()).answerIfSent(anyInt(), anyString());
+    }
+
+    @Test
+    @org.junit.jupiter.api.DisplayName("isExpired: When responseDeadline is null and expectedStartDate is in past, decline is blocked")
+    void declineOffer_whenExpectedStartDatePassedAndDeadlineNull_throwsException() {
+        OfferProposal offer = offer(OFFER_ID, "Sent_Candidate");
+        offer.setResponseDeadline(null);
+        offer.setExpectedStartDate(java.time.LocalDate.now().minusDays(2));
+
+        when(offers.findVisibleById(eq(OFFER_ID), eq(USER_ID), anyCollection()))
+                .thenReturn(Optional.of(offer));
+
+        OfferResponseException ex = assertThrows(OfferResponseException.class, () -> service.decline(OFFER_ID, "Lý do"));
+        assertTrue(ex.getMessage().contains("quá ngày bắt đầu nhận việc dự kiến"));
+        verify(offers, never()).answerIfSent(anyInt(), anyString(), anyString());
+    }
+
     @ParameterizedTest
     @ValueSource(strings = {"", "   "})
     @org.junit.jupiter.api.DisplayName("decline: Blank or whitespace declineReason is normalized to null and accepted")
