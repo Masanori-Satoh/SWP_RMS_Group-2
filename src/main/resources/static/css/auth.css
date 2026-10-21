@@ -109,10 +109,20 @@ body.auth-page {
   background-size: cover;
   background-repeat: no-repeat;
 }
+/* Login-only breathing room; control tokens remain local to this card. */
+.auth-login .auth-card { --input-h: 54px; --btn-h: 56px; }
+.auth-login .auth-card h1 { margin-bottom: var(--s4); }
+.auth-login .auth-intro { margin-bottom: calc(var(--s8) + var(--s1)); }
+.auth-login .auth-form { row-gap: calc(var(--s6) + var(--s1)); }
+.auth-login .auth-submit { margin-top: var(--s1); }
+.auth-login .auth-divider { margin-top: calc(var(--s6) + var(--s1)); padding-top: var(--s6); padding-bottom: var(--s2); }
 /* Hide the current-page action while retaining the canonical public header. */
 .auth-login .public-topbar__actions > a[href$="/login"],
 .auth-register .public-topbar__actions > a[href$="/register"] { display: none; }
 .auth-login .public-topbar__actions > a[href$="/register"] { display: inline-flex; max-width: 50vw; white-space: normal; text-align: center; }
+@media (min-width: 1201px) {
+  .auth-login .auth-card { padding-block: calc(var(--s12) + var(--s1)); }
+}
 @media (max-width: 1200px) {
   .auth-shell { gap: var(--s8); }
   .auth-card { padding: var(--s8); }
