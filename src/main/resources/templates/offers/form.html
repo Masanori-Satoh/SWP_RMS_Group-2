@@ -183,7 +183,7 @@
 
         <div class="form-group">
           <label class="form-label form-label--required" for="responsePeriodDays">Thời hạn phản hồi (ngày)</label>
-          <input type="number" id="responsePeriodDays" th:field="*{responsePeriodDays}" class="form-input" min="1" max="60" placeholder="5" required>
+          <input type="number" id="responsePeriodDays" th:field="*{responsePeriodDays}" class="form-input" min="1" max="60" placeholder="5" oninput="updateMinExpectedStartDate()" required>
           <div class="form-hint">
             Hạn phản hồi = Thời điểm HR phát hành + số ngày này (mặc định 5 ngày).
           </div>

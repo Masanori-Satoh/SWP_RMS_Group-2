@@ -443,54 +443,7 @@
   </main>
 
   <!-- Site Footer -->
-  <footer class="site-footer">
-    <div class="container">
-      <div class="footer-top-grid">
-        <div class="footer-brand-col">
-          <a th:replace="~{fragments/brand :: wordmark('TUYỂN DỤNG')}"></a>
-          <p>Mộc RMS — Nền tảng quản lý quy trình tuyển dụng thông minh, kết nối doanh nghiệp và nhân tài đích thực.</p>
-          <div class="footer-contact-info">
-            <span>Email tuyển dụng: <strong>careers@moc.com</strong></span>
-          </div>
-        </div>
-
-        <div class="footer-nav-col">
-          <h4>Khám phá</h4>
-          <ul class="footer-nav-links">
-            <li><a th:href="@{/jobs}">Vị trí tuyển dụng</a></li>
-            <li><a href="#process">Quy trình ứng tuyển</a></li>
-            <li><a href="#culture">Văn hóa Mộc</a></li>
-            <li><a href="#perks">Chế độ đãi ngộ</a></li>
-          </ul>
-        </div>
-
-        <div class="footer-nav-col">
-          <h4>Dành cho ứng viên</h4>
-          <ul class="footer-nav-links">
-            <li><a href="/login">Đăng nhập tài khoản</a></li>
-            <li><a href="/register">Đăng ký ứng viên</a></li>
-            <li><a th:href="@{/jobs}">Tìm kiếm việc làm</a></li>
-          </ul>
-        </div>
-
-        <div class="footer-nav-col">
-          <h4>Hệ thống RMS</h4>
-          <ul class="footer-nav-links">
-            <li><a href="/login">Cổng nội bộ nhân viên</a></li>
-            <li><a href="/privacy-policy" th:href="@{/privacy-policy}">Chính sách bảo mật</a></li>
-            <li><a href="/terms" th:href="@{/terms}">Điều khoản sử dụng</a></li>
-          </ul>
-        </div>
-      </div>
-
-      <div class="footer-bottom-bar">
-        <span>© 2026 Mộc RMS (Group 2). Bản quyền được bảo lưu.</span>
-        <div class="footer-legal-links">
-          <a href="#main">Về đầu trang ↑</a>
-        </div>
-      </div>
-    </div>
-  </footer>
+  <footer th:replace="~{fragments/layout/public-footer :: footer}"></footer>
 
   <script th:src="@{/js/global.js}" src="/js/global.js"></script>
 </body>
