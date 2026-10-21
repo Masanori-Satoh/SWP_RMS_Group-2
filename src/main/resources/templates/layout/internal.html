@@ -37,7 +37,7 @@
             <header th:replace="~{fragments/workspace-header :: header(${shellRole}, ${shellName})}">
             </header>
             </th:block>
-            <!-- Ứng viên: logo, Việc làm đang tuyển, Đơn ứng tuyển của tôi, góc người dùng -->
+            <!-- Ứng viên: logo (về trang chủ), chuông, avatar, đăng xuất; không có menu -->
             <th:block th:if="${candidateShell}">
             <header th:replace="~{fragments/layout/candidate-topbar :: topbar(${activeMenu})}"></header>
             </th:block>
@@ -45,6 +45,11 @@
             <main id="main" layout:fragment="content" class="page-content container">
                 <!-- Ruột trang con đặt tại đây -->
             </main>
+            <!-- 3. Chân trang Mộc chỉ cho ứng viên (nhân sự làm việc trong workspace, không cần footer công khai).
+                 th:block vì th:replace chạy trước th:if. -->
+            <th:block th:if="${candidateShell}">
+                <footer th:replace="~{fragments/layout/public-footer :: footer}"></footer>
+            </th:block>
         </div>
         </th:block>
     </div>
