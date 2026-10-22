@@ -1,5 +1,7 @@
 # Kế hoạch Chatbot Tuyển dụng (HoangNH)
 
+> **Quyết định tích hợp 2026-10-22:** Widget công khai hiện dùng `fragments/rms-chat.html` và gọi thẳng `POST /api/chatbot/message`; không qua n8n. Nội dung hội thoại tồn tại trong trang đang mở và mất khi tải lại; phần `sessionStorage` bên dưới là phương án thiết kế ban đầu, chưa triển khai.
+
 Chia 3 giai đoạn. **Mỗi giai đoạn tự chạy được và demo được**, thiếu thời gian thì dừng ở giai đoạn nào cũng không vỡ.
 
 | Giai đoạn | Nội dung | Thêm bảng DB? | Cần API key? | Ước lượng |
@@ -119,7 +121,7 @@ static/js/pages/chatbot-widget.js         gọi API + lưu lịch sử vào sess
 
 ## GĐ 2 — Lưu lịch sử chat (thêm 2 bảng)
 
-### Schema (`database/migrations/010_chatbot_history.sql` + cập nhật `db.sql`)
+### Schema (`database/migrations/011_chatbot_history.sql` + cập nhật `db.sql`)
 
 ```sql
 CREATE TABLE ChatSession (
@@ -145,13 +147,14 @@ CREATE TABLE ChatMessage (
 ```
 
 - Chỉ lưu lịch sử cho **Candidate** (`CandidateId NOT NULL`). Guest vẫn dùng `sessionStorage` như GĐ 1.
-- Ghi vào `schema-migration-impact.md`, **báo nhóm chạy migration 010** sau khi pull.
+- Ghi vào `schema-migration-impact.md`, **báo nhóm chạy migration 011** sau khi pull.
 
 ### API mới
 
 | Method | URL | Việc |
 |---|---|---|
-| GET | `/api/chatbot/history` | Lấy tin nhắn của session gần nhất (giới hạn 50 tin) |
+| GET | `/api/chatbot/sessions` | Danh sách cuộc trò chuyện của ứng viên, nhóm theo ngày (màn C3 trong wireframe) |
+| GET | `/api/chatbot/sessions/{id}` | Tin nhắn của một cuộc trò chuyện (kiểm tra session thuộc ứng viên đang đăng nhập) |
 | DELETE | `/api/chatbot/history` | Xóa toàn bộ lịch sử của **chính** ứng viên đang đăng nhập |
 
 ### File dự kiến
