@@ -60,6 +60,7 @@ INSERT INTO SystemConfig (ConfigKey, ConfigValue, [Description], UpdatedAt) VALU
 INSERT INTO SystemConfig (ConfigKey, ConfigValue, [Description], UpdatedAt) VALUES (N'AI_SCORE_THRESHOLD', N'70.00', N'Ngưỡng điểm AI tối thiểu để hệ thống gợi ý PASS vòng sơ loại hồ sơ', '2026-09-01 08:00:00');
 INSERT INTO SystemConfig (ConfigKey, ConfigValue, [Description], UpdatedAt) VALUES (N'SMTP_HOST', N'smtp.office365.com', N'Máy chủ mail gateway gửi email tự động cho ứng viên', '2026-09-01 08:00:00');
 INSERT INTO SystemConfig (ConfigKey, ConfigValue, [Description], UpdatedAt) VALUES (N'SME_COMPANY_NAME', N'RMS Technology Solutions Vietnam', N'Tên doanh nghiệp công nghệ SME triển khai hệ thống RMS', '2026-09-01 08:00:00');
+-- Cấu hình chatbot (CHATBOT_ENABLED, CHATBOT_FAQ, HR_CONTACT_EMAIL): chạy database/migrations/010_chatbot_config.sql sau seed.
 
 -- =============================================================================
 -- 5. AUDIT LOG (18 SME System Activity Logs Prior to 2026-09-30)
