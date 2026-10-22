@@ -72,9 +72,11 @@ public final class ChatbotLabels {
     public static final Link LINK_ALL_JOBS = new Link("Xem tất cả vị trí", "/jobs", false);
     public static final Link LINK_MY_APPLICATIONS = new Link("Mở trang Hồ sơ của tôi", "/portal/applications", false);
 
+    /** Lớp chỉ chứa nhãn và hàm dựng link, không tạo đối tượng. */
     private ChatbotLabels() {
     }
 
+    /** Dựng đường dẫn nội bộ tới trang công khai của một tin tuyển dụng. */
     public static String jobDetailHref(Integer jobPostingId) {
         return "/jobs/" + jobPostingId;
     }
@@ -84,10 +86,12 @@ public final class ChatbotLabels {
         return new Link("Ứng tuyển ngay", jobDetailHref(jobPostingId) + "#apply", true);
     }
 
+    /** Tạo nút điều hướng từ khung chat sang trang chi tiết tin. */
     public static Link jobDetailLink(Integer jobPostingId) {
         return new Link("Xem trang chi tiết", jobDetailHref(jobPostingId), false);
     }
 
+    /** Định dạng hạn nộp để hiển thị; không có hạn thì dùng nhãn mặc định. */
     public static String deadline(LocalDateTime applicationDeadline) {
         if (applicationDeadline == null) {
             return NO_DEADLINE;
@@ -95,6 +99,7 @@ public final class ChatbotLabels {
         return applicationDeadline.format(DATE);
     }
 
+    /** Tạo nút gợi ý mang câu hỏi sẽ gửi lại API khi người dùng bấm. */
     private static QuickReply ask(String label, String message) {
         return new QuickReply(label, message, null);
     }

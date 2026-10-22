@@ -28,6 +28,8 @@ public class ChatbotIntentResolver {
     }
 
     /**
+     * Phân loại câu hỏi theo thứ tự ưu tiên của chatbot và chọn FAQ phù hợp nếu có.
+     *
      * @param message câu hỏi đã làm sạch (không null)
      * @param faqs    danh sách FAQ hiện có, từ khóa đã normalize
      */
@@ -71,6 +73,7 @@ public class ChatbotIntentResolver {
         return best;
     }
 
+    /** Kiểm tra câu đã chuẩn hóa có chứa ít nhất một cụm từ của nhóm ý định. */
     private static boolean containsAny(String text, List<String> phrases) {
         for (String phrase : phrases) {
             if (ChatbotText.containsPhrase(text, phrase)) {

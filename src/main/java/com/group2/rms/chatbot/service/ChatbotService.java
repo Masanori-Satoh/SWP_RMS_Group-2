@@ -73,6 +73,7 @@ public class ChatbotService {
         };
     }
 
+    /** Tạo lời chào và menu theo quyền của người đang xem. */
     private ChatResponse welcome(User viewer, List<QuickReply> menu) {
         String reply = ChatbotLabels.WELCOME;
         if (access.canUsePersonalFeatures(viewer)) {
@@ -81,6 +82,7 @@ public class ChatbotService {
         return answer(ChatbotIntent.WELCOME, reply, menu).build();
     }
 
+    /** Tìm tin công khai theo câu hỏi và trả tối đa số thẻ mà khung chat hiển thị. */
     private ChatResponse searchJobs(String message, List<QuickReply> menu) {
         ChatbotJobService.SearchResult result = jobs.search(message);
         boolean hasTerms = jobs.hasSearchTerms(message);
@@ -103,6 +105,7 @@ public class ChatbotService {
                 .build();
     }
 
+    /** Lấy chi tiết tin còn công khai và chỉ thêm link ứng tuyển khi được phép. */
     private ChatResponse jobDetail(Integer jobPostingId, User viewer, List<QuickReply> menu) {
         String username = null;
         if (viewer != null) {
@@ -125,6 +128,7 @@ public class ChatbotService {
                 .build();
     }
 
+    /** Kiểm tra quyền rồi trả các hồ sơ ứng tuyển của chính Candidate đang đăng nhập. */
     private ChatResponse applicationStatus(User viewer, List<QuickReply> menu) {
         Optional<ChatResponse> blocked = personalFeatureBlocked(ChatbotIntent.CHECK_STATUS, viewer, menu);
         if (blocked.isPresent()) {
@@ -150,6 +154,7 @@ public class ChatbotService {
                 .build();
     }
 
+    /** Gợi ý tin chưa nộp từ lịch sử của Candidate, hoặc tin mới nhất khi chưa có lịch sử. */
     private ChatResponse recommendation(User viewer, List<QuickReply> menu) {
         Optional<ChatResponse> blocked = personalFeatureBlocked(ChatbotIntent.RECOMMEND, viewer, menu);
         if (blocked.isPresent()) {
@@ -173,6 +178,7 @@ public class ChatbotService {
                 .build();
     }
 
+    /** Gắn thông tin liên hệ HR từ cấu hình; báo thiếu nếu người dùng hỏi trực tiếp mà chưa cấu hình. */
     private ChatResponse contactHr(ChatbotIntent intent, String reply, List<QuickReply> menu) {
         Contact contact = config.loadHrContact();
         if (contact == null && intent == ChatbotIntent.CONTACT_HR) {
@@ -206,6 +212,7 @@ public class ChatbotService {
         return Optional.of(answer(intent, ChatbotLabels.CANDIDATE_ONLY, menu).build());
     }
 
+    /** Chọn các nút gợi ý công khai hoặc dành riêng cho Candidate. */
     private List<QuickReply> menuFor(User viewer) {
         if (access.canUsePersonalFeatures(viewer)) {
             return ChatbotLabels.CANDIDATE_MENU;
@@ -213,6 +220,7 @@ public class ChatbotService {
         return ChatbotLabels.MAIN_MENU;
     }
 
+    /** Tạo phần chung của response trước khi mỗi nhánh thêm thẻ hoặc link riêng. */
     private static ChatResponse.ChatResponseBuilder answer(ChatbotIntent intent, String reply,
             List<QuickReply> quickReplies) {
         return ChatResponse.builder().intent(intent.name()).reply(reply).quickReplies(quickReplies);

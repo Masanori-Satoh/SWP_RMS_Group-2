@@ -28,6 +28,7 @@ public record ChatResponse(
         List<Link> links,
         List<QuickReply> quickReplies) {
 
+    /** Chuẩn hóa các danh sách để frontend luôn nhận mảng rỗng thay vì null. */
     public ChatResponse {
         jobs = jobs == null ? List.of() : jobs;
         applications = applications == null ? List.of() : applications;

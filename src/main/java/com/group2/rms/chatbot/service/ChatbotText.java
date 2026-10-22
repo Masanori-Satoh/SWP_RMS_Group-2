@@ -21,6 +21,7 @@ public final class ChatbotText {
             "hn", "ha noi",
             "dn", "da nang");
 
+    /** Lớp chỉ chứa hàm xử lý chữ, không tạo đối tượng. */
     private ChatbotText() {
     }
 

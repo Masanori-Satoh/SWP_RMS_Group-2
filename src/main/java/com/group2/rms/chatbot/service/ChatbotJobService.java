@@ -148,10 +148,12 @@ public class ChatbotJobService {
         return new RecommendResult(true, cards);
     }
 
+    /** Chỉ đọc tin Published đã đến ngày đăng và còn hạn nhận hồ sơ. */
     private List<JobPosting> openPostings() {
         return postings.findOpenWithDepartment(JobPostingAccess.STATUS_PUBLISHED, LocalDateTime.now(clock));
     }
 
+    /** Chuyển tối đa MAX_JOB_CARDS tin thành thẻ gợi ý mới đăng. */
     private static List<JobCard> latestCards(List<JobPosting> jobs) {
         List<JobCard> cards = new ArrayList<>();
         for (JobPosting job : firstN(jobs)) {
@@ -171,6 +173,7 @@ public class ChatbotJobService {
         return terms;
     }
 
+    /** So khớp mọi từ có nghĩa với tiêu đề, địa điểm, phòng ban và hình thức làm việc. */
     private static boolean matchesAll(JobPosting job, List<String> terms) {
         String haystack = ChatbotText.normalize(String.join(" ", job.getPostingTitle(), nullToEmpty(job.getWorkLocation()),
                 nullToEmpty(departmentNameOf(job)), nullToEmpty(employmentTypeOf(job))));
@@ -182,16 +185,19 @@ public class ChatbotJobService {
         return true;
     }
 
+    /** Chỉ đưa các trường công khai của tin vào DTO dùng trong khung chat. */
     private static JobCard toCard(JobPosting job, String reason) {
         return new JobCard(job.getJobPostingId(), job.getPostingTitle(), departmentNameOf(job), job.getWorkLocation(),
                 blankToNull(job.getSalaryDisplay()), ChatbotLabels.deadline(job.getApplicationDeadline()),
                 ChatbotLabels.jobDetailHref(job.getJobPostingId()), reason);
     }
 
+    /** Cắt danh sách tin theo giới hạn số thẻ của khung chat. */
     private static List<JobPosting> firstN(List<JobPosting> jobs) {
         return jobs.subList(0, Math.min(MAX_JOB_CARDS, jobs.size()));
     }
 
+    /** Giới hạn số dòng yêu cầu hoặc quyền lợi trong phần chi tiết. */
     private static List<String> firstLines(List<String> lines) {
         if (lines == null) {
             return List.of();
@@ -199,6 +205,7 @@ public class ChatbotJobService {
         return lines.subList(0, Math.min(MAX_DETAIL_LINES, lines.size()));
     }
 
+    /** Lấy ID phòng ban qua Requisition; trả null khi quan hệ chưa có. */
     private static Integer departmentIdOf(JobPosting job) {
         if (job.getRequisition() == null || job.getRequisition().getDepartment() == null) {
             return null;
@@ -206,6 +213,7 @@ public class ChatbotJobService {
         return job.getRequisition().getDepartment().getDepartmentId();
     }
 
+    /** Lấy tên phòng ban để hiện trên thẻ tin; quan hệ thiếu thì trả null. */
     private static String departmentNameOf(JobPosting job) {
         if (job.getRequisition() == null || job.getRequisition().getDepartment() == null) {
             return null;
@@ -213,6 +221,7 @@ public class ChatbotJobService {
         return job.getRequisition().getDepartment().getDepartmentName();
     }
 
+    /** Lấy hình thức làm việc từ Requisition để phục vụ tìm kiếm. */
     private static String employmentTypeOf(JobPosting job) {
         if (job.getRequisition() == null) {
             return null;
@@ -220,6 +229,7 @@ public class ChatbotJobService {
         return job.getRequisition().getEmploymentType();
     }
 
+    /** Đổi null thành chuỗi rỗng trước khi ghép văn bản tìm kiếm. */
     private static String nullToEmpty(String value) {
         if (value == null) {
             return "";
@@ -227,6 +237,7 @@ public class ChatbotJobService {
         return value;
     }
 
+    /** Bỏ giá trị lương trống để frontend không vẽ thông tin rỗng. */
     private static String blankToNull(String value) {
         if (value == null || value.isBlank()) {
             return null;

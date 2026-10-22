@@ -80,6 +80,7 @@ public class ChatbotConfigService {
         return new ChatResponse.Contact(email, phone, hours);
     }
 
+    /** Kiểm tra một dòng FAQ từ JSON và chuẩn hóa từ khóa để so khớp câu hỏi. */
     private static ChatbotFaq toFaq(FaqRow row) {
         if (row == null || isBlank(row.question()) || isBlank(row.answer()) || row.keywords() == null) {
             return null;
@@ -97,7 +98,7 @@ public class ChatbotConfigService {
         return new ChatbotFaq(keywords, row.question().trim(), row.answer().trim());
     }
 
-    /** Giá trị đã trim của một khóa; không có khóa hoặc giá trị trống → null. */
+    /** Đọc giá trị SystemConfig theo key; trả null nếu thiếu hoặc chỉ có khoảng trắng. */
     private String valueOf(String key) {
         String value = configs.findById(key).map(SystemConfig::getConfigValue).orElse(null);
         if (isBlank(value)) {
@@ -106,6 +107,7 @@ public class ChatbotConfigService {
         return value.trim();
     }
 
+    /** Dùng chung điều kiện kiểm tra chuỗi null hoặc rỗng cho cấu hình. */
     private static boolean isBlank(String value) {
         return value == null || value.isBlank();
     }

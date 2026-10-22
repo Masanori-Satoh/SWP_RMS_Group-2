@@ -18,6 +18,7 @@ if (root) {
   let hideTimer;
   let openFrame;
 
+  /** Tạo phần tử DOM; nội dung chữ luôn dùng textContent để tránh chèn HTML. */
   function node(tag, className, content) {
     const element = document.createElement(tag);
     if (className) element.className = className;
@@ -25,6 +26,7 @@ if (root) {
     return element;
   }
 
+  /** Thêm một lượt chat của người dùng hoặc trợ lý và cuộn xuống cuối. */
   function appendMessage(kind, content) {
     const article = node('div', 'chatbot__message' + (kind === 'user' ? ' chatbot__message--user' : ''));
     if (content) article.append(node('p', '', content));
@@ -33,11 +35,13 @@ if (root) {
     return article;
   }
 
+  /** Ghép các thông tin phụ còn giá trị thành một dòng của thẻ. */
   function addMeta(card, values) {
     const visible = values.filter(Boolean);
     if (visible.length) card.append(node('small', '', visible.join(' · ')));
   }
 
+  /** Hiện danh sách yêu cầu hoặc quyền lợi khi backend có dữ liệu. */
   function addLines(card, title, values) {
     if (!Array.isArray(values) || !values.length) return;
     card.append(node('strong', '', title));
@@ -46,10 +50,12 @@ if (root) {
     card.append(list);
   }
 
+  /** Chỉ nhận đường dẫn nội bộ; bỏ qua URL ngoài do response cung cấp. */
   function safeHref(href) {
     return typeof href === 'string' && /^\/(?!\/)/.test(href) ? href : null;
   }
 
+  /** Vẽ ChatResponse vào khung chat theo thứ tự lời đáp, thẻ dữ liệu và nút thao tác. */
   function renderAnswer(answer) {
     const article = appendMessage('assistant', answer.reply || 'Mình chưa có câu trả lời cho câu hỏi này.');
     for (const job of answer.jobs || []) {
@@ -62,6 +68,7 @@ if (root) {
         const detail = node('button', '', 'Xem chi tiết');
         detail.type = 'button';
         detail.dataset.chatbotQuick = '';
+        // Nút chi tiết gửi ID của tin vừa nhận từ backend, không đọc ID từ ô nhập.
         detail.addEventListener('click', () => send({ jobPostingId: job.id }, 'Xem chi tiết: ' + job.title));
         actions.append(detail);
         card.append(actions);
@@ -103,6 +110,7 @@ if (root) {
       const button = node('button', '', quick.label);
       button.type = 'button';
       button.dataset.chatbotQuick = '';
+      // Nút gợi ý gửi lại message hoặc jobPostingId mà backend đã cung cấp.
       button.addEventListener('click', () => {
         const payload = quick.jobPostingId ? { jobPostingId: quick.jobPostingId } : { message: quick.message };
         send(payload, quick.label);
@@ -113,6 +121,7 @@ if (root) {
     messages.scrollTop = messages.scrollHeight;
   }
 
+  /** Khóa thao tác gửi trong khi chờ API và hiện trạng thái đang trả lời. */
   function setBusy(value) {
     busy = value;
     sendButton.disabled = value;
@@ -122,6 +131,7 @@ if (root) {
     status.textContent = value ? 'Đang trả lời…' : '';
   }
 
+  /** Gửi message hoặc jobPostingId tới API; chỉ hiển thị kết quả của request còn hiệu lực. */
   async function send(payload, label) {
     if (busy) return;
     if (label) appendMessage('user', label);
@@ -148,6 +158,7 @@ if (root) {
         const actions = node('div', 'chatbot__actions');
         const retry = node('button', '', 'Thử lại');
         retry.type = 'button';
+        // Gửi lại cùng payload sau lỗi, tránh hiển thị trùng câu hỏi của người dùng.
         retry.addEventListener('click', () => { article.remove(); send(payload, null); });
         actions.append(retry);
         article.append(actions);
@@ -160,6 +171,7 @@ if (root) {
     }
   }
 
+  /** Đồng bộ trạng thái, focus và hiệu ứng mở/đóng của khung chat. */
   function setOpen(open) {
     window.clearTimeout(hideTimer);
     if (openFrame) window.cancelAnimationFrame(openFrame);
@@ -168,6 +180,7 @@ if (root) {
     if (open) {
       panel.hidden = false;
       panel.inert = false;
+      // Chờ panel xuất hiện trong DOM rồi thêm class để trình duyệt chạy transition.
       openFrame = window.requestAnimationFrame(() => {
         panel.classList.add('is-open');
         openFrame = null;
@@ -189,11 +202,14 @@ if (root) {
     }
   }
 
+  // Nút nổi đổi giữa trạng thái mở và đóng; nút trong header luôn đóng.
   launcher.addEventListener('click', () => setOpen(launcher.getAttribute('aria-expanded') !== 'true'));
   closeButton.addEventListener('click', () => setOpen(false));
+  // Escape đóng chat khi panel đang mở.
   document.addEventListener('keydown', event => {
     if (event.key === 'Escape' && launcher.getAttribute('aria-expanded') === 'true') setOpen(false);
   });
+  // Xóa nội dung trong trang, hủy request cũ và tải lại lời chào.
   clearButton.addEventListener('click', () => {
     requestVersion++;
     pendingRequest?.abort();
@@ -204,6 +220,7 @@ if (root) {
     input.focus();
     send({ message: null }, null);
   });
+  // Lấy message từ ô nhập, bỏ khoảng trắng đầu/cuối rồi gửi JSON cho backend.
   form.addEventListener('submit', event => {
     event.preventDefault();
     const message = input.value.trim();
