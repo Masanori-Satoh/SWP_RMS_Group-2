@@ -1,13 +1,38 @@
 <!DOCTYPE html>
-<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
 <body>
-<th:block th:fragment="chat"
-          th:if="${@environment.getProperty('rms.chat.enabled', 'true') == 'true'}"
-          th:with="chatWebhookUrl=${@environment.getProperty('rms.chat.webhook-url', 'http://localhost:5678/webhook/6ddb94d7-27d2-4550-88a2-f7a01a1bb645/chat')},chatLocalOllama=${@environment.getProperty('rms.chat.local-ollama', 'false')}">
-  <link rel="stylesheet" th:href="@{/js/vendor/n8n-chat/1.42.6/style.css}">
+<th:block th:fragment="chat" th:if="${@environment.getProperty('rms.chat.enabled', 'true') == 'true'}">
   <link rel="stylesheet" th:href="@{/css/rms-chat.css}">
-  <script type="module" th:src="@{/js/rms-chat.js}" data-rms-chat-loader
-          th:attr="data-webhook-url=${chatWebhookUrl},data-local-ollama=${chatLocalOllama}"></script>
+  <div id="rms-recruitment-chat" class="chatbot" th:attr="data-api-url=@{/api/chatbot/message}">
+    <button class="chatbot__launcher" type="button" aria-expanded="false" aria-controls="rms-chat-panel"
+            aria-label="Mở trợ lý tuyển dụng" data-chatbot-open>
+      <span aria-hidden="true">✦</span><span>Hỏi về việc làm</span>
+    </button>
+    <section id="rms-chat-panel" class="chatbot__panel" role="dialog" aria-labelledby="rms-chat-title" hidden>
+      <div class="chatbot__header">
+        <div>
+          <h2 id="rms-chat-title">Trợ lý tuyển dụng</h2>
+          <p>Hỏi về vị trí tuyển dụng và hồ sơ của bạn</p>
+        </div>
+        <button type="button" class="chatbot__close" aria-label="Đóng trợ lý tuyển dụng" data-chatbot-close>×</button>
+      </div>
+      <div class="chatbot__messages" role="log" aria-live="polite" aria-relevant="additions" data-chatbot-messages></div>
+      <p class="chatbot__status" role="status" data-chatbot-status hidden></p>
+      <form class="chatbot__form" data-chatbot-form>
+        <label for="rms-chat-input">Câu hỏi của bạn</label>
+        <div class="chatbot__input-row">
+          <input id="rms-chat-input" name="message" type="text" maxlength="500"
+                 placeholder="Ví dụ: Tìm việc Java ở Hà Nội" autocomplete="off" data-chatbot-input>
+          <button type="submit" data-chatbot-send>Gửi</button>
+        </div>
+      </form>
+      <div class="chatbot__footer">
+        <span>Thông tin chỉ mang tính tham khảo.</span>
+        <button type="button" data-chatbot-clear>Xóa hội thoại</button>
+      </div>
+    </section>
+  </div>
+  <script defer th:src="@{/js/rms-chat.js}"></script>
 </th:block>
 </body>
 </html>
