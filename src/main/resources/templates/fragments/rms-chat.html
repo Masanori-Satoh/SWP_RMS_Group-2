@@ -6,13 +6,27 @@
   <div id="rms-recruitment-chat" class="chatbot" th:attr="data-api-url=@{/api/chatbot/message}">
     <button class="chatbot__launcher" type="button" aria-expanded="false" aria-controls="rms-chat-panel"
             aria-label="Mở trợ lý tuyển dụng" data-chatbot-open>
-      <span aria-hidden="true">✦</span><span>Hỏi về việc làm</span>
+      <svg class="chatbot__launcher-icon chatbot__launcher-icon--chat" viewBox="0 0 32 32" fill="none" aria-hidden="true">
+        <path d="M26.5 15.4a10.5 10.5 0 0 1-10.8 10.5 11.7 11.7 0 0 1-4.1-.8L5.5 27l1.9-5.8a10.5 10.5 0 1 1 19.1-5.8Z" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"/>
+        <path d="M11.5 15.5h9M11.5 19.5h5.5" stroke="currentColor" stroke-width="2.3" stroke-linecap="round"/>
+      </svg>
+      <svg class="chatbot__launcher-icon chatbot__launcher-icon--close" viewBox="0 0 32 32" fill="none" aria-hidden="true">
+        <path d="m10 10 12 12M22 10 10 22" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/>
+      </svg>
     </button>
     <section id="rms-chat-panel" class="chatbot__panel" role="dialog" aria-labelledby="rms-chat-title" hidden>
       <div class="chatbot__header">
-        <div>
-          <h2 id="rms-chat-title">Trợ lý tuyển dụng</h2>
-          <p>Hỏi về vị trí tuyển dụng và hồ sơ của bạn</p>
+        <div class="chatbot__heading">
+          <span class="chatbot__heading-icon" aria-hidden="true">
+            <svg viewBox="0 0 32 32" fill="none">
+              <path d="M26.5 15.4a10.5 10.5 0 0 1-10.8 10.5 11.7 11.7 0 0 1-4.1-.8L5.5 27l1.9-5.8a10.5 10.5 0 1 1 19.1-5.8Z" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"/>
+              <path d="M11.5 15.5h9M11.5 19.5h5.5" stroke="currentColor" stroke-width="2.3" stroke-linecap="round"/>
+            </svg>
+          </span>
+          <div>
+            <h2 id="rms-chat-title">Trợ lý tuyển dụng</h2>
+            <p>Hỏi về vị trí tuyển dụng và hồ sơ của bạn</p>
+          </div>
         </div>
         <button type="button" class="chatbot__close" aria-label="Đóng trợ lý tuyển dụng" data-chatbot-close>×</button>
       </div>

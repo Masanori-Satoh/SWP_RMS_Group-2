@@ -15,6 +15,8 @@ if (root) {
   let busy = false;
   let requestVersion = 0;
   let pendingRequest;
+  let hideTimer;
+  let openFrame;
 
   function node(tag, className, content) {
     const element = document.createElement(tag);
@@ -159,24 +161,38 @@ if (root) {
   }
 
   function setOpen(open) {
-    panel.hidden = !open;
+    window.clearTimeout(hideTimer);
+    if (openFrame) window.cancelAnimationFrame(openFrame);
     launcher.setAttribute('aria-expanded', String(open));
     launcher.setAttribute('aria-label', open ? 'Đóng trợ lý tuyển dụng' : 'Mở trợ lý tuyển dụng');
     if (open) {
+      panel.hidden = false;
+      panel.inert = false;
+      openFrame = window.requestAnimationFrame(() => {
+        panel.classList.add('is-open');
+        openFrame = null;
+      });
       input.focus();
       if (!started) {
         started = true;
         send({ message: null }, null);
       }
     } else {
+      panel.inert = true;
+      panel.classList.remove('is-open');
+      if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+        panel.hidden = true;
+      } else {
+        hideTimer = window.setTimeout(() => { panel.hidden = true; }, 240);
+      }
       launcher.focus();
     }
   }
 
-  launcher.addEventListener('click', () => setOpen(panel.hidden));
+  launcher.addEventListener('click', () => setOpen(launcher.getAttribute('aria-expanded') !== 'true'));
   closeButton.addEventListener('click', () => setOpen(false));
   document.addEventListener('keydown', event => {
-    if (event.key === 'Escape' && !panel.hidden) setOpen(false);
+    if (event.key === 'Escape' && launcher.getAttribute('aria-expanded') === 'true') setOpen(false);
   });
   clearButton.addEventListener('click', () => {
     requestVersion++;
