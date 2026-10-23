@@ -8,6 +8,7 @@
 <div class="auth-container auth-shell">
   <aside th:replace="~{auth/fragments :: story(botanical=true)}"></aside>
   <main id="main" class="card auth-card" tabindex="-1">
+    <nav th:replace="~{auth/fragments :: tabs('register')}"></nav>
     <nav th:replace="~{auth/fragments :: registrationSteps(2)}"></nav>
     <h1>Xác minh email của bạn.</h1>
     <p class="auth-intro">Nhập mã gồm 6 chữ số đã gửi đến <strong th:text="${pendingRegistrationEmail}"></strong>. Mã có hiệu lực trong 15 phút kể từ khi gửi.</p>

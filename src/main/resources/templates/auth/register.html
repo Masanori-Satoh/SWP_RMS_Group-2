@@ -8,9 +8,10 @@
 <div class="auth-container auth-shell">
   <aside th:replace="~{auth/fragments :: story(botanical=true)}"></aside>
   <main id="main" class="card auth-card" tabindex="-1">
-    <nav th:replace="~{auth/fragments :: registrationSteps(1)}"></nav>
+    <nav th:replace="~{auth/fragments :: tabs('register')}"></nav>
+    <div class="auth-visually-hidden"><nav th:replace="~{auth/fragments :: registrationSteps(1)}"></nav></div>
     <h1>Tạo tài khoản ứng viên.</h1>
-    <p class="auth-intro">Điền thông tin để nhận mã xác minh qua email.<br>Tài khoản chỉ được tạo sau khi bạn xác minh mã thành công.</p>
+    <p class="auth-intro">Đăng ký tài khoản để theo dõi hồ sơ ứng tuyển tại Mộc. Xác minh email trước khi hoàn tất.</p>
     <form class="auth-form auth-register-grid" th:action="@{/register}" th:object="${form}" method="post" data-auth-form>
       <div th:replace="~{auth/fragments :: errors}"></div>
       <div class="auth-field">

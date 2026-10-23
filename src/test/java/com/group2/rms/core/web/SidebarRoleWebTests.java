@@ -99,6 +99,29 @@ class SidebarRoleWebTests {
         assertFalse(sidebar.contains("href=\"/portal/offers\""));
     }
 
+    /** Footer Mộc (fragments/layout/public-footer) chỉ có ở trang ứng viên trong layout nội bộ, kèm lối tắt portal. */
+    @Test
+    void candidatePagesHavePublicFooterWithPortalLinksStaffPagesDoNot() throws Exception {
+        User candidate = account("an.vo", "Candidate");
+        when(currentUser.requireUser()).thenReturn(candidate);
+        when(notifications.getNotificationsForUser(any(), anyInt(), anyInt())).thenReturn(Page.empty());
+        when(myApplications.list(any())).thenReturn(new MyApplicationListResponse(
+                List.of(), Map.of(1, 0L, 2, 0L, 3, 0L, 4, 0L), null, 0));
+        for (String page : List.of("/portal/applications", "/portal/offers", "/portal/interviews", "/notifications")) {
+            String html = render(page, as(candidate));
+            assertTrue(html.contains("class=\"site-footer\""), page + ": thiếu footer");
+            assertTrue(html.contains(">Đơn ứng tuyển của tôi</a></li>"), page + ": footer thiếu lối tắt tới đơn");
+            assertFalse(html.contains("href=\"/portal/offers\">Thư mời"), page + ": footer không còn mục thư mời riêng");
+            assertFalse(html.contains("Đăng ký ứng viên"), page + ": ứng viên đã đăng nhập không cần Đăng ký");
+        }
+
+        when(pipeline.list(any(), any())).thenReturn(new ApplicationListResponse(
+                new PageImpl<>(List.of(), Pageable.ofSize(20), 0), zeroCounts(), List.of(),
+                new ApplicationSearch(null, null, null, "score", null).normalized(), null, true, false, "HR"));
+        assertFalse(render("/applications", as(account("hr_lan", "HR"))).contains("class=\"site-footer\""),
+                "trang nhân sự không có footer công khai");
+    }
+
     /** {@code fragments/sidebar :: sidebar} gán cứng 'HR': vai trò thật của người đăng nhập phải thắng. */
     @Test
     void legacySidebarFragmentFollowsSignedInRole() throws Exception {

@@ -25,9 +25,13 @@ import java.util.Optional;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.matchesPattern;
 import static org.hamcrest.Matchers.not;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 /**
@@ -134,6 +138,52 @@ class InterviewScheduleFormWebTests {
                 .andExpect(content().string(containsString("Quang HR")))
                 .andExpect(content().string(not(containsString("Lan HR ("))))
                 .andExpect(content().string(not(containsString("<option value=\"1\""))));
+    }
+
+    @Test
+    void directorCanOpenCreateFormAndSeesSelfInPanelList() throws Exception {
+        // SRS UC 62 + footnote 13: Director tạo lịch được và được tự vào hội đồng (khác HR)
+        User director = User.builder().userId(13).username("director").fullName("Hoang Director").accountStatus("Active")
+                .role(Role.builder().roleName("Director").build()).build();
+        when(users.findByUsernameIgnoreCase("director")).thenReturn(Optional.of(director));
+        when(users.findAllWithRoleAndDepartment()).thenReturn(List.of(director));
+
+        mvc.perform(get("/interviews/new").with(user("director").authorities(() -> "ROLE_DIRECTOR")))
+                .andExpect(status().isOk())
+                .andExpect(view().name("interview/form"))
+                .andExpect(content().string(containsString("<option value=\"13\"")));
+    }
+
+    @Test
+    void directorCanCancelSchedule() throws Exception {
+        User director = User.builder().userId(13).username("director").fullName("Hoang Director").accountStatus("Active")
+                .role(Role.builder().roleName("Director").build()).build();
+        when(users.findByUsernameIgnoreCase("director")).thenReturn(Optional.of(director));
+
+        mvc.perform(post("/interviews/7/cancel").param("cancelReason", "Ứng viên xin dời")
+                        .with(user("director").authorities(() -> "ROLE_DIRECTOR")).with(csrf()))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrl("/interviews"))
+                .andExpect(flash().attribute("successMessage", "Hủy lịch phỏng vấn thành công!"));
+
+        verify(schedulingService).cancelSchedule(7L, "Ứng viên xin dời", 13);
+    }
+
+    @Test
+    void hiringManagerAndInterviewerStillCannotManageSchedules() throws Exception {
+        // AccountSessionGuardFilter đá người không có trong DB về /login, nên phải có tài khoản thật
+        when(users.findByUsernameIgnoreCase("hm_tuan")).thenReturn(Optional.of(User.builder().userId(5)
+                .username("hm_tuan").accountStatus("Active").role(Role.builder().roleName("Hiring Manager").build()).build()));
+        when(users.findByUsernameIgnoreCase("interviewer_nam")).thenReturn(Optional.of(User.builder().userId(7)
+                .username("interviewer_nam").accountStatus("Active").role(Role.builder().roleName("Interviewer").build()).build()));
+
+        mvc.perform(get("/interviews/new").with(user("hm_tuan").authorities(() -> "ROLE_HIRING_MANAGER")))
+                .andExpect(status().isForbidden());
+        mvc.perform(post("/interviews/7/cancel")
+                        .with(user("interviewer_nam").authorities(() -> "ROLE_INTERVIEWER")).with(csrf()))
+                .andExpect(status().isForbidden());
+
+        verifyNoInteractions(schedulingService);
     }
 
     @Test

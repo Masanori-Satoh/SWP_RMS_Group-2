@@ -22,44 +22,38 @@
     <a class="skip-link" href="#main">Đến nội dung chính</a>
     <header th:replace="~{fragments/layout/public-topbar :: topbar('', false)}"></header>
   </th:block>
+  <nav th:fragment="tabs(active)" class="auth-tabs" aria-label="Tài khoản Mộc">
+    <a class="auth-tab" th:href="@{/login}" th:attr="aria-current=${active == 'login' ? 'page' : null}">Đăng nhập</a>
+    <a class="auth-tab" th:href="@{/register}" th:attr="aria-current=${active == 'register' ? 'page' : null}">Đăng ký</a>
+  </nav>
   <aside class="auth-story" th:fragment="story" aria-label="Làm việc tại Mộc">
     <div class="auth-story-content">
-    <p class="auth-brand-badge"><span aria-hidden="true"></span>Cơ hội nghề nghiệp tại Mộc</p>
-    <p class="auth-statement">Làm việc cùng Mộc.<br><span>Kết nối tài năng,<br>kiến tạo giá trị thật.</span></p>
-    <p class="auth-story-copy">Mộc phát triển phần mềm quản trị tuyển dụng minh bạch và tinh gọn. Cùng chúng tôi xây
-      dựng những sản phẩm hữu ích mỗi ngày.</p>
-    <a class="btn btn--outline auth-story-link" th:href="@{/#roles}">Khám phá vị trí đang tuyển<svg th:replace="~{auth/fragments :: icon('arrow')}"></svg></a>
+    <p class="auth-eyebrow">Cơ hội nghề nghiệp tại Mộc</p>
+    <p class="auth-statement">Nơi tài năng<br> được tạo ra<br> <span>những giá trị thật.</span></p>
+    <p class="auth-story-copy">Khám phá các vị trí phù hợp, theo dõi hồ sơ<br class="auth-wide-only"> và bắt đầu hành trình mới cùng chúng tôi.</p>
     <th:block th:if="${botanical == true}">
       <ul class="auth-highlights" aria-label="Cùng Mộc phát triển">
-        <li><svg th:replace="~{auth/fragments :: icon('people')}"></svg><span>Môi trường<br>cởi mở, học hỏi</span></li>
-        <li><svg th:replace="~{auth/fragments :: icon('opportunity')}"></svg><span>Dự án thực tế,<br>tạo giá trị thật</span></li>
-        <li><svg th:replace="~{auth/fragments :: icon('leaf')}"></svg><span>Phát triển<br>cùng đội ngũ trẻ</span></li>
+        <li><svg th:replace="~{auth/fragments :: icon('document')}"></svg><strong>Ứng tuyển dễ dàng</strong><span>Chỉ vài bước, nộp hồ sơ<br>ở bất cứ đâu.</span></li>
+        <li><svg th:replace="~{auth/fragments :: icon('bell')}"></svg><strong>Cập nhật liên tục</strong><span>Theo dõi trạng thái hồ sơ<br>theo thời gian thực.</span></li>
+        <li><svg th:replace="~{auth/fragments :: icon('opportunity')}"></svg><strong>Trải nghiệm minh bạch</strong><span>Mọi thông tin tuyển dụng<br>được công khai, rõ ràng.</span></li>
       </ul>
     </th:block>
+    <a class="auth-story-link" th:href="@{/jobs}">Khám phá vị trí đang tuyển<svg th:replace="~{auth/fragments :: icon('arrow')}"></svg></a>
     </div>
-    <figure th:replace="~{auth/fragments :: artwork}"></figure>
   </aside>
-  <div class="auth-scene" th:fragment="scene" aria-hidden="true">
-    <div class="auth-scene-leaves">
-    <span class="auth-floating-leaf auth-floating-leaf--one"><svg th:replace="~{auth/fragments :: decorativeLeaf}"></svg></span>
-    <span class="auth-floating-leaf auth-floating-leaf--two"><svg th:replace="~{auth/fragments :: decorativeLeaf}"></svg></span>
-    <span class="auth-floating-leaf auth-floating-leaf--three"><svg th:replace="~{auth/fragments :: decorativeLeaf}"></svg></span>
-    <span class="auth-floating-leaf auth-floating-leaf--four"><svg th:replace="~{auth/fragments :: decorativeLeaf}"></svg></span>
-    <span class="auth-floating-leaf auth-floating-leaf--five"><svg th:replace="~{auth/fragments :: decorativeLeaf}"></svg></span>
-    </div>
-  </div>
-  <svg th:fragment="decorativeLeaf" class="auth-leaf-silhouette" viewBox="0 0 40 64" aria-hidden="true" focusable="false">
-    <path d="M23 3C-2 20-6 42 17 60 42 45 43 17 23 3Z" />
-  </svg>
-  <figure class="auth-botanical-art" th:fragment="artwork" aria-hidden="true">
-    <img th:src="@{/images/auth-register-scene.png}" width="900" height="339" alt="" decoding="async">
-  </figure>
+  <div class="auth-scene auth-botanical-art" th:fragment="scene" aria-hidden="true"></div>
   <svg th:fragment="icon(name)" class="auth-icon" width="20" height="20" viewBox="0 0 24 24" fill="none"
     stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"
     focusable="false">
     <th:block th:switch="${name}">
       <th:block th:case="'arrow'">
         <path d="M5 12h14m-6-6 6 6-6 6" />
+      </th:block>
+      <th:block th:case="'document'">
+        <path d="M14 3H5v18h14V8Zm0 0v5h5M8 12h8m-8 4h5" />
+      </th:block>
+      <th:block th:case="'bell'">
+        <path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9M9 21h6M12 2V1" />
       </th:block>
       <th:block th:case="'user'">
         <circle cx="12" cy="8" r="4" />
