@@ -47,7 +47,24 @@
         </div>
 
         <!-- 1. Hồ sơ ứng tuyển -->
-        <div class="form-group">
+        <!-- Mở từ danh sách / chi tiết hồ sơ (?applicationId=): cố định hồ sơ, không cho đổi ứng viên -->
+        <div class="form-group" th:if="${lockedApplication != null}">
+            <span class="form-label form-label--required">Hồ sơ ứng tuyển</span>
+            <div class="card if-locked-app" aria-live="polite">
+                <strong th:text="|Hồ sơ #${lockedApplication.applicationId}|">Hồ sơ #1</strong>
+                <span th:text="${lockedApplication.candidate != null and lockedApplication.candidate.account != null ? lockedApplication.candidate.account.fullName : 'Ứng viên'}">Nguyễn Văn A</span>
+                <span class="text-muted" th:if="${lockedApplication.candidate != null and lockedApplication.candidate.account != null and lockedApplication.candidate.account.email != null}"
+                      th:text="${lockedApplication.candidate.account.email}">a.nguyen@example.com</span>
+                <span class="text-muted" th:text="${lockedApplication.jobPosting != null ? lockedApplication.jobPosting.postingTitle : 'Chưa gắn tin'}">Kỹ sư phần mềm Java</span>
+            </div>
+            <input type="hidden" name="applicationId" th:value="${lockedApplication.applicationId}">
+            <input type="hidden" name="lockApplication" value="true">
+            <p class="form-hint">Lịch được tạo cho đúng hồ sơ bạn đã chọn.
+                <a th:href="@{/interviews/new}">Chọn hồ sơ khác</a></p>
+            <p class="form-error" th:if="${#fields.hasErrors('applicationId')}" th:errors="*{applicationId}">Vui lòng chọn hồ sơ.</p>
+        </div>
+
+        <div class="form-group" th:unless="${lockedApplication != null}">
             <label class="form-label form-label--required" for="applicationId">Hồ sơ ứng tuyển</label>
             <div class="if-search">
                 <input type="text" id="applicationSearchBox" class="form-input"

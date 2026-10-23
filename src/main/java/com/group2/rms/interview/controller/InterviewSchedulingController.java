@@ -48,6 +48,7 @@ public class InterviewSchedulingController {
     private final com.group2.rms.candidate.service.RecruitmentEmailService recruitmentEmail;
 
     private final InterviewSchedulingService interviewSchedulingService;
+    private final com.group2.rms.interview.service.InterviewResultService interviewResultService;
     private final ApplicationRepository applicationRepository;
     private final UserRepository userRepository;
 
@@ -96,6 +97,10 @@ public class InterviewSchedulingController {
         boolean isCandidateView = isCandidate;
 
         model.addAttribute("schedules", schedules);
+        // Nhãn kết quả (Chờ chốt / Đang cân nhắc / Quá hạn...) và trạng thái chấm điểm của người xem; ẩn với ứng viên
+        model.addAttribute("decisionStates", isCandidate ? java.util.Map.of() : interviewResultService.decisionStates(schedules));
+        model.addAttribute("evaluationStates", isCandidate ? java.util.Map.of()
+                : interviewResultService.evaluationStates(schedules, currentUser.getUserId()));
         model.addAttribute("isHr", isHr);
         model.addAttribute("isDirector", isDirector);
         model.addAttribute("canCreate", canCreate);
@@ -134,6 +139,12 @@ public class InterviewSchedulingController {
                 .build();
 
         prepareFormModel(model, false, null, currentUser);
+        // Mở từ hồ sơ: cố định ứng viên; hồ sơ không đủ điều kiện thì quay lại trang hồ sơ kèm lý do
+        if (applicationId != null && !lockApplication(model, applicationId)) {
+            redirectAttributes.addFlashAttribute("errorMessage", "Hồ sơ #" + applicationId
+                    + " chưa đủ điều kiện xếp lịch phỏng vấn (cần đã qua trưởng bộ phận và tin tuyển dụng đang mở).");
+            return "redirect:/applications/" + applicationId;
+        }
         model.addAttribute("scheduleRequest", request);
         return "interview/form";
     }
@@ -145,6 +156,7 @@ public class InterviewSchedulingController {
     public String createSchedule(
             @Valid @ModelAttribute("scheduleRequest") InterviewScheduleRequest request,
             BindingResult bindingResult,
+            @RequestParam(value = "lockApplication", defaultValue = "false") boolean lockApplication,
             Authentication authentication,
             Model model,
             RedirectAttributes redirectAttributes) {
@@ -159,6 +171,7 @@ public class InterviewSchedulingController {
         if (bindingResult.hasErrors()) {
             log.warn("Tạo lịch phỏng vấn thất bại do dữ liệu không hợp lệ: {} lỗi", bindingResult.getErrorCount());
             prepareFormModel(model, false, null, currentUser);
+            keepLock(model, lockApplication, request.getApplicationId());
             return "interview/form";
         }
 
@@ -178,6 +191,7 @@ public class InterviewSchedulingController {
             log.warn("Ngoại lệ nghiệp vụ khi tạo lịch phỏng vấn: {}", ex.getMessage());
             bindingResult.reject("businessError", ex.getMessage());
             prepareFormModel(model, false, null, currentUser);
+            keepLock(model, lockApplication, request.getApplicationId());
             return "interview/form";
         }
     }
@@ -333,6 +347,32 @@ public class InterviewSchedulingController {
             model.addAttribute("interviewStatuses", List.of(InterviewStatus.Scheduled, InterviewStatus.Completed));
         } else {
             model.addAttribute("interviewStatuses", InterviewStatus.values());
+        }
+    }
+
+    /**
+     * Cố định hồ sơ trên form khi mở từ danh sách / chi tiết hồ sơ.
+     * Chỉ khóa khi hồ sơ nằm trong danh sách đủ điều kiện xếp lịch đã nạp ở prepareFormModel.
+     *
+     * @return false nếu hồ sơ không đủ điều kiện
+     */
+    @SuppressWarnings("unchecked")
+    private boolean lockApplication(Model model, Integer applicationId) {
+        List<Application> applications = (List<Application>) model.getAttribute("applications");
+        Application locked = applications == null ? null : applications.stream()
+                .filter(a -> applicationId.equals(a.getApplicationId()))
+                .findFirst().orElse(null);
+        if (locked == null) {
+            return false;
+        }
+        model.addAttribute("lockedApplication", locked);
+        return true;
+    }
+
+    /** Form bị trả lại do lỗi: giữ nguyên trạng thái khóa hồ sơ như lúc mở. */
+    private void keepLock(Model model, boolean lockApplication, Integer applicationId) {
+        if (lockApplication && applicationId != null) {
+            lockApplication(model, applicationId);
         }
     }
 

@@ -4,24 +4,26 @@
     INTERVIEW/FINAL-RESULT-DIALOG.HTML — Pop-up Hiring Manager chốt kết quả phỏng vấn (InterviewFinalResult)
     Cách gọi (chỉ khi người xem được chốt; th:if ở thẻ ngoài, th:replace ở thẻ trong):
       <th:block th:if="${result.canFinalize}">
-          <dialog th:replace="~{interview/final-result-dialog :: dialog(interviewId=${result.interviewId}, submittedCount=${result.submittedCount}, panelSize=${#lists.size(result.panel)})}"></dialog>
+          <dialog th:replace="~{interview/final-result-dialog :: dialog(interviewId=${result.interviewId}, submittedCount=${result.submittedCount}, panelSize=${#lists.size(result.panel)}, current=${result.finalResult})}"></dialog>
       </th:block>
+    current = kết quả hiện có (chỉ có khi đang "Cân nhắc"), dùng để điền sẵn form khi chốt lại.
     Gửi JSON tới POST /interviews/{id}/final-result bằng js/pages/interview-result.js (kèm X-CSRF-TOKEN).
     Tên ô (name) khớp SubmitFinalResultRequest. Dùng chung class iev- (thang chọn, lỗi, thân dialog) của interview-result.css.
 -->
 <body>
-<dialog th:fragment="dialog(interviewId, submittedCount, panelSize)" id="ifr-dialog"
+<dialog th:fragment="dialog(interviewId, submittedCount, panelSize, current)" id="ifr-dialog"
         class="confirm-dialog iev-dialog" aria-labelledby="ifr-title">
     <form id="ifr-form" class="dialog-content" novalidate data-ajax-form data-success-param="finalized"
           data-number-fields="recommendedSalary"
           th:attr="data-action=@{/interviews/{id}/final-result(id=${interviewId})}">
         <div class="dialog-header">
             <h2 id="ifr-title" class="dialog-title">Chốt kết quả phỏng vấn</h2>
-            <p class="form-hint">Kết quả đã chốt không sửa được. Ứng viên “Đạt” sẽ xuất hiện trong danh sách tạo offer của HR.</p>
+            <p class="form-hint">“Đạt” và “Không đạt” là kết quả cuối, không sửa được. Chọn “Cân nhắc” nếu muốn xem lại cuối đợt tuyển
+                (nên chốt lại trong 7 ngày). Ứng viên “Đạt” sẽ xuất hiện trong danh sách tạo offer của HR.</p>
         </div>
 
         <div th:if="${submittedCount < panelSize}" class="alert alert--warning" role="note"
-             th:text="|Hội đồng mới nộp ${submittedCount}/${panelSize} phiếu. Bạn vẫn có thể chốt; phiếu nộp sau vẫn được lưu.|">
+             th:text="|Hội đồng mới nộp ${submittedCount}/${panelSize} phiếu. Đã quá hạn chấm điểm 24h nên bạn vẫn có thể chốt; phiếu nộp sau được đánh dấu nộp trễ.|">
             Hội đồng mới nộp 1/2 phiếu.
         </div>
         <div class="alert alert--danger iev-alert" role="alert" data-form-alert hidden></div>
@@ -40,6 +42,12 @@
                                data-required-message="Vui lòng chọn kết quả.">
                         <span>Không đạt</span>
                     </label>
+                    <label class="iev-scale__option">
+                        <input type="radio" name="finalDecision" value="Considering" required
+                               th:checked="${current != null and current.considering}"
+                               data-required-message="Vui lòng chọn kết quả.">
+                        <span>Cân nhắc</span>
+                    </label>
                 </div>
                 <p class="form-error iev-error" data-error-for="finalDecision" hidden></p>
             </fieldset>
@@ -47,14 +55,16 @@
             <div class="form-group">
                 <label class="form-label" for="ifr-salary">Mức lương đề xuất (VNĐ)</label>
                 <input id="ifr-salary" type="number" name="recommendedSalary" class="form-input" min="0" step="100000"
-                       inputmode="numeric" placeholder="VD: 25000000">
+                       inputmode="numeric" placeholder="VD: 25000000"
+                       th:value="${current != null and current.recommendedSalary != null ? current.recommendedSalary.stripTrailingZeros().toPlainString() : ''}">
                 <p class="form-hint">Không bắt buộc. Nên nhập khi kết quả là Đạt để HR làm offer.</p>
                 <p class="form-error iev-error" data-error-for="recommendedSalary" hidden></p>
             </div>
 
             <div class="form-group">
                 <label class="form-label" for="ifr-summary">Nhận xét tổng hợp</label>
-                <textarea id="ifr-summary" name="finalSummaryComments" class="form-textarea" rows="4" maxlength="4000"></textarea>
+                <textarea id="ifr-summary" name="finalSummaryComments" class="form-textarea" rows="4" maxlength="4000"
+                          th:text="${current != null ? current.summaryText : ''}"></textarea>
                 <p class="form-error iev-error" data-error-for="finalSummaryComments" hidden></p>
             </div>
         </div>

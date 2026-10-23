@@ -503,13 +503,19 @@ CREATE TABLE InterviewEvaluation (
         CHECK (CulturalFitScore IS NULL OR (CulturalFitScore >= 1 AND CulturalFitScore <= 5)),
 
     CONSTRAINT CK_InterviewEvaluation_Recommendation
-        CHECK (Recommendation IN (N'Hire', N'No_Hire', N'Consider'))
+        CHECK (Recommendation IN (N'Hire', N'No_Hire', N'Consider')),
+
+    -- Mỗi người phỏng vấn chỉ nộp 1 phiếu cho 1 buổi (BR-INT-01)
+    CONSTRAINT UQ_InterviewEvaluation_Interview_Interviewer
+        UNIQUE (InterviewId, InterviewerId)
 );
 GO
 
 -- =============================================================================
 -- 3.17 INTERVIEW FINAL RESULT (Quyết định kết quả phỏng vấn cuối cùng)
 -- Quan hệ 1-1 với InterviewSchedule
+-- FinalDecision: Passed / Failed / Considering (HM cân nhắc, chốt lại Passed/Failed sau)
+-- ConsideredAt: lúc HM chọn Considering lần đầu (giữ nguyên khi chốt lại); NULL nếu chốt thẳng
 -- =============================================================================
 CREATE TABLE InterviewFinalResult (
     FinalResultId INT IDENTITY(1,1) PRIMARY KEY,
@@ -519,6 +525,7 @@ CREATE TABLE InterviewFinalResult (
     RecommendedSalary DECIMAL(18,2) NULL,
     FinalSummaryComments NVARCHAR(MAX) NULL,
     ApprovedAt DATETIME2 NOT NULL CONSTRAINT DF_InterviewFinalResult_ApprovedAt DEFAULT SYSDATETIME(),
+    ConsideredAt DATETIME2 NULL,
 
     CONSTRAINT FK_InterviewFinalResult_Interview
         FOREIGN KEY (InterviewId) REFERENCES InterviewSchedule(InterviewId),
@@ -527,7 +534,10 @@ CREATE TABLE InterviewFinalResult (
         FOREIGN KEY (HiringManagerId) REFERENCES [User](UserId),
 
     CONSTRAINT CK_InterviewFinalResult_FinalDecision
-        CHECK (FinalDecision IN (N'Passed', N'Failed')),
+        CHECK (FinalDecision IN (N'Passed', N'Failed', N'Considering')),
+
+    CONSTRAINT CK_InterviewFinalResult_ConsideredAt
+        CHECK (FinalDecision <> N'Considering' OR ConsideredAt IS NOT NULL),
 
     CONSTRAINT CK_InterviewFinalResult_RecommendedSalary
         CHECK (RecommendedSalary IS NULL OR RecommendedSalary >= 0)

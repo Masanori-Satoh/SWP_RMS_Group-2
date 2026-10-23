@@ -93,6 +93,16 @@ class ApplicationProgressResolverTests {
         }
 
         @Test
+        void consideringIsShownAsAwaitingDecision() {
+            // HM đang cân nhắc: ứng viên chỉ thấy "Chờ chốt kết quả", không lộ quyết định nội bộ (GBR-02)
+            ApplicationProgressResponse progress = resolve(
+                    interview("Interviewing", "Completed", YESTERDAY, 3, 3, "Considering"));
+
+            assertProgress(progress, ApplicationStage.INTERVIEW, AWAITING_DECISION,
+                    "Chờ chốt kết quả phỏng vấn", "Trưởng bộ phận", "warning");
+        }
+
+        @Test
         void passedWithoutOffer_awaitsOffer() {
             ApplicationProgressResponse progress = resolve(
                     interview("Interviewing", "Completed", YESTERDAY, 3, 3, "Passed"));

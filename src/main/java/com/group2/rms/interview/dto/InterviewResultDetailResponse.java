@@ -9,6 +9,7 @@ import java.util.List;
  *
  * canSeeAll = false: người xem là Interviewer và chưa có Final Result (GBR-05), nên
  * evaluations chỉ chứa phiếu của chính họ, averages = null, recommendations rỗng.
+ * Các hạn (evaluationDeadline, decisionDeadline, considerDeadline) chỉ để cảnh báo, xem InterviewDeadlines.
  */
 public record InterviewResultDetailResponse(
         Long interviewId,
@@ -32,16 +33,21 @@ public record InterviewResultDetailResponse(
         boolean canEvaluate,
         String evaluateBlockedReason,
         boolean canFinalize,
-        String finalizeBlockedReason
+        String finalizeBlockedReason,
+        LocalDateTime evaluationDeadline,
+        LocalDateTime decisionDeadline,
+        boolean decisionOverdue
 ) {
 
-    /** Một thành viên hội đồng và cờ đã nộp phiếu hay chưa. */
+    /** Một thành viên hội đồng, cờ đã nộp phiếu và trạng thái chấm điểm (Chờ / Đã nộp / Nộp trễ / Quá hạn). */
     public record PanelMemberStatus(
             Integer interviewerId,
             String fullName,
             String roleInPanelDisplay,
             boolean submitted,
-            boolean me
+            boolean me,
+            String progressDisplay,
+            String progressBadge
     ) {
     }
 
@@ -63,7 +69,10 @@ public record InterviewResultDetailResponse(
     ) {
     }
 
-    /** Quyết định cuối của Hiring Manager (bảng InterviewFinalResult), chỉ có khi đã được ghi. */
+    /**
+     * Quyết định của Hiring Manager (bảng InterviewFinalResult), chỉ có khi đã được ghi.
+     * considering = true: quyết định tạm, còn chốt lại được; summaryText là bản gốc để điền lại form.
+     */
     public record FinalResult(
             String decision,
             String decisionDisplay,
@@ -71,7 +80,12 @@ public record InterviewResultDetailResponse(
             String hiringManagerName,
             BigDecimal recommendedSalary,
             String summaryHtml,
-            LocalDateTime approvedAt
+            LocalDateTime approvedAt,
+            boolean considering,
+            LocalDateTime consideredAt,
+            LocalDateTime considerDeadline,
+            boolean considerOverdue,
+            String summaryText
     ) {
     }
 }

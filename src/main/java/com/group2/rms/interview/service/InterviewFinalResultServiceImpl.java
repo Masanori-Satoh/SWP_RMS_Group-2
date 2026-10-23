@@ -10,6 +10,7 @@ import com.group2.rms.interview.entity.InterviewSchedule;
 import com.group2.rms.interview.entity.InterviewStatus;
 import com.group2.rms.interview.exception.InterviewFinalResultException;
 import com.group2.rms.interview.exception.InterviewStatusException;
+import com.group2.rms.interview.repository.InterviewEvaluationRepository;
 import com.group2.rms.interview.repository.InterviewFinalResultRepository;
 import com.group2.rms.interview.repository.InterviewScheduleRepository;
 import com.group2.rms.requisition.service.RequisitionAccess;
@@ -20,15 +21,19 @@ import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.Clock;
 import java.time.LocalDateTime;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 /**
  * Chốt kết quả phỏng vấn:
  * - Chỉ Hiring Manager quản lý phòng ban của yêu cầu tuyển dụng (cùng quy tắc bước duyệt hồ sơ).
- * - Mỗi lịch một kết quả (UQ_InterviewFinalResult_Interview), chốt xong không sửa.
- * - Không cần đủ phiếu đánh giá; phiếu nộp muộn vẫn được nhận.
+ * - Mỗi lịch một kết quả (UQ_InterviewFinalResult_Interview). Passed/Failed là cuối cùng;
+ *   Considering được chốt lại sau, giữ nguyên ConsideredAt.
+ * - Trong 24h sau giờ kết thúc phải đủ phiếu của hội đồng; sau 24h chốt tự do. Các hạn khác chỉ cảnh báo.
  * - Trạng thái Application do module candidate đổi qua ApplicationStatusService (dunglt bổ sung):
- *   Failed → Rejected; Passed → giữ Interviewing để HR lập offer.
+ *   Failed → Rejected; Passed / Considering → giữ Interviewing.
  */
 @Service
 @RequiredArgsConstructor
@@ -40,6 +45,8 @@ public class InterviewFinalResultServiceImpl implements InterviewFinalResultServ
     private final RequisitionAccess requisitionAccess;
     // dunglt bổ sung: đổi trạng thái hồ sơ theo kết quả (module candidate, chiều interview → candidate)
     private final ApplicationStatusService applicationStatusService;
+    private final InterviewEvaluationRepository interviewEvaluationRepository;
+    private final Clock clock;
 
     @Override
     @Transactional
@@ -51,22 +58,37 @@ public class InterviewFinalResultServiceImpl implements InterviewFinalResultServ
             throw new AccessDeniedException("Chỉ Hiring Manager phụ trách phòng ban của vị trí này mới được chốt kết quả.");
         }
 
-        String blockedReason = InterviewFinalResultService.blockedReason(schedule, LocalDateTime.now());
-        if (blockedReason != null) {
-            throw new InterviewFinalResultException(blockedReason);
-        }
-
-        if (interviewFinalResultRepository.findByScheduleId(interviewId).isPresent()) {
+        LocalDateTime now = LocalDateTime.now(clock);
+        String decision = request.finalDecision();
+        InterviewFinalResult existing = interviewFinalResultRepository.findByScheduleId(interviewId).orElse(null);
+        if (existing != null && !existing.isConsidering()) {
             throw new InterviewFinalResultException("Buổi phỏng vấn này đã được chốt kết quả, không thể chốt lại.");
         }
 
-        interviewFinalResultRepository.save(InterviewFinalResult.builder()
-                .interviewSchedule(schedule)
-                .hiringManager(hiringManager)
-                .finalDecision(request.finalDecision())
-                .recommendedSalary(request.recommendedSalary())
-                .finalSummaryComments(blankToNull(request.finalSummaryComments()))
-                .build());
+        if (existing == null) {
+            String blockedReason = InterviewFinalResultService.blockedReason(schedule,
+                    submittedPanelCount(schedule), schedule.getInterviewPanels().size(), now);
+            if (blockedReason != null) {
+                throw new InterviewFinalResultException(blockedReason);
+            }
+            interviewFinalResultRepository.save(InterviewFinalResult.builder()
+                    .interviewSchedule(schedule)
+                    .hiringManager(hiringManager)
+                    .finalDecision(decision)
+                    .recommendedSalary(request.recommendedSalary())
+                    .finalSummaryComments(blankToNull(request.finalSummaryComments()))
+                    .approvedAt(now)
+                    .consideredAt(InterviewFinalResult.CONSIDERING.equals(decision) ? now : null)
+                    .build());
+        } else {
+            // Chốt lại từ Considering: giữ ConsideredAt để biết đã cân nhắc bao lâu
+            existing.setHiringManager(hiringManager);
+            existing.setFinalDecision(decision);
+            existing.setRecommendedSalary(request.recommendedSalary());
+            existing.setFinalSummaryComments(blankToNull(request.finalSummaryComments()));
+            existing.setApprovedAt(now);
+            interviewFinalResultRepository.save(existing);
+        }
 
         InterviewStatus current = schedule.getInterviewStatus();
         if (current == InterviewStatus.Scheduled || current == InterviewStatus.Rescheduled) {
@@ -78,9 +100,14 @@ public class InterviewFinalResultServiceImpl implements InterviewFinalResultServ
             interviewScheduleRepository.save(schedule);
         }
 
-        // dunglt bổ sung: chốt Failed thì hồ sơ → Rejected; Passed giữ Interviewing để HR lập offer
-        applicationStatusService.onInterviewDecided(schedule.getApplication().getApplicationId(),
-                "Passed".equals(request.finalDecision()));
+        // dunglt bổ sung: chốt Failed thì hồ sơ → Rejected; Passed giữ Interviewing để HR lập offer.
+        // Considering chưa phải quyết định cuối: chỉ đưa hồ sơ cũ (HM_Passed) sang Interviewing.
+        Integer applicationId = schedule.getApplication().getApplicationId();
+        if (InterviewFinalResult.CONSIDERING.equals(decision)) {
+            applicationStatusService.onInterviewScheduled(applicationId);
+        } else {
+            applicationStatusService.onInterviewDecided(applicationId, InterviewFinalResult.PASSED.equals(decision));
+        }
 
         log.info("Hiring Manager #{} chốt kết quả {} cho lịch phỏng vấn #{}.",
                 hiringManager.getUserId(), request.finalDecision(), interviewId);
@@ -96,6 +123,19 @@ public class InterviewFinalResultServiceImpl implements InterviewFinalResultServ
             return false;
         }
         return requisitionAccess.inManagedDepartment(user, application.getJobPosting().getRequisition());
+    }
+
+    /** Số thành viên hội đồng đã nộp phiếu (phiếu của người ngoài hội đồng không tính). */
+    private int submittedPanelCount(InterviewSchedule schedule) {
+        Set<Integer> panelIds = schedule.getInterviewPanels().stream()
+                .filter(panel -> panel.getInterviewer() != null)
+                .map(panel -> panel.getInterviewer().getUserId())
+                .collect(Collectors.toSet());
+        return (int) interviewEvaluationRepository.findByScheduleIdWithInterviewer(schedule.getInterviewId()).stream()
+                .map(evaluation -> evaluation.getInterviewer().getUserId())
+                .filter(panelIds::contains)
+                .distinct()
+                .count();
     }
 
     private static String blankToNull(String value) {

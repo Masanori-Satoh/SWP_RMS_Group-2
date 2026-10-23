@@ -10,7 +10,8 @@ import java.time.LocalDateTime;
 /**
  * 3.18 InterviewFinalResult - Quyết định cuối cùng sau phỏng vấn bởi Hiring Manager.
  * Quan hệ 1-1 với InterviewSchedule (UNIQUE constraint trên InterviewId).
- * FinalDecision: Passed / Failed
+ * FinalDecision: Passed / Failed / Considering.
+ * Considering là quyết định tạm: HM chốt lại thành Passed/Failed sau; Passed/Failed là cuối cùng.
  */
 @Entity
 @Table(name = "InterviewFinalResult")
@@ -20,6 +21,10 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 @Builder
 public class InterviewFinalResult {
+
+    public static final String PASSED = "Passed";
+    public static final String FAILED = "Failed";
+    public static final String CONSIDERING = "Considering";
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -35,7 +40,7 @@ public class InterviewFinalResult {
     private User hiringManager;
 
     /**
-     * Passed / Failed
+     * Passed / Failed / Considering
      */
     @Column(name = "FinalDecision", nullable = false, length = 20)
     private String finalDecision;
@@ -46,8 +51,17 @@ public class InterviewFinalResult {
     @Column(name = "FinalSummaryComments", columnDefinition = "NVARCHAR(MAX)")
     private String finalSummaryComments;
 
+    /** Thời điểm quyết định hiện tại (cập nhật lại khi chốt từ Considering sang Passed/Failed). */
     @Column(name = "ApprovedAt", nullable = false)
     private LocalDateTime approvedAt;
+
+    /** Lúc HM chọn Considering lần đầu; giữ nguyên khi chốt lại, NULL nếu chốt thẳng. */
+    @Column(name = "ConsideredAt")
+    private LocalDateTime consideredAt;
+
+    public boolean isConsidering() {
+        return CONSIDERING.equals(finalDecision);
+    }
 
     @PrePersist
     protected void onPersist() {
