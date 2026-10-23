@@ -165,16 +165,18 @@ Strengths;NULL;Candidate's strengths
 Weaknesses;NULL;Candidate's weaknesses
 Recommendation;NOT NULL;Hire, No_Hire, Consider
 Comments;NULL;Detailed remarks
-EvaluatedAt;NOT NULL, DEFAULT SYSDATETIME();Submission time
+EvaluatedAt;NOT NULL, DEFAULT SYSDATETIME();Submission time. Submitted later than EndTime + 24h = late (derived, not stored)
+(table);UNIQUE (InterviewId, InterviewerId);One evaluation per interviewer per interview (BR-INT-01)
 3.17 InterviewFinalResult
 Column;Constraints;Notes
 FinalResultId;PRIMARY KEY, IDENTITY(1,1);Final decision identifier
 InterviewId;NOT NULL, UNIQUE, FOREIGN KEY -> InterviewSchedule.InterviewId;1-1 with the interview session
 HiringManagerId;NOT NULL, FOREIGN KEY -> User.UserId;Hiring Manager who made the decision
-FinalDecision;NOT NULL;Passed / Failed
+FinalDecision;NOT NULL, CHECK IN (Passed, Failed, Considering);Considering is temporary: HM re-decides Passed/Failed later. Passed/Failed are final
 RecommendedSalary;NULL;Recommended salary after negotiation with the candidate
 FinalSummaryComments;NULL;Overall interview summary
-ApprovedAt;NOT NULL, DEFAULT SYSDATETIME();Decision timestamp
+ApprovedAt;NOT NULL, DEFAULT SYSDATETIME();Time of the current decision (updated when re-deciding from Considering)
+ConsideredAt;NULL, required when FinalDecision = Considering;Time HM first chose Considering; kept when re-deciding. Warning after 7 days
 3.18 OfferProposal
 Column;Constraints;Notes
 OfferId;PRIMARY KEY, IDENTITY(1,1);Offer proposal identifier

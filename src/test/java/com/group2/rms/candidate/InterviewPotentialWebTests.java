@@ -48,10 +48,11 @@ class InterviewPotentialWebTests {
     private InterviewResultDetailResponse result(String decision,boolean canFinalize) {
         var time=LocalDateTime.of(2026,10,16,10,0);
         var finalResult=decision==null?null:new InterviewResultDetailResponse.FinalResult(decision,
-                "Failed".equals(decision)?"Không đạt":"Đạt","badge--neutral","HM Tuấn",null,"Nhận xét chuyên môn",time);
+                "Failed".equals(decision)?"Không đạt":"Đạt","badge--neutral","HM Tuấn",null,"Nhận xét chuyên môn",time,
+                false,null,null,false,"Nhận xét chuyên môn");
         return new InterviewResultDetailResponse(7L,218,"Ứng viên An","an@example.com","Backend",time,time.plusHours(1),
                 "Trực tuyến","Phòng 1","Đã hoàn thành","badge--success",List.of(),0,List.of(),null,List.of(),finalResult,
-                true,false,null,canFinalize,null);
+                true,false,null,canFinalize,null,time.plusHours(25),time.plusHours(73),false);
     }
     @ParameterizedTest @ValueSource(strings={"Passed","Failed"})
     void hmFinalPassOrFailHasIndependentPotentialActionAndUnchangedFinalResult(String decision) throws Exception {

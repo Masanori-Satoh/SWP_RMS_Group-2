@@ -49,7 +49,8 @@
             <button th:if="${result.canEvaluate}" type="button" class="btn btn--primary btn--sm"
                     data-dialog-open="iev-dialog" aria-haspopup="dialog" aria-controls="iev-dialog">Đánh giá</button>
             <button th:if="${result.canFinalize}" type="button" class="btn btn--primary btn--sm"
-                    data-dialog-open="ifr-dialog" aria-haspopup="dialog" aria-controls="ifr-dialog">Chốt kết quả</button>
+                    data-dialog-open="ifr-dialog" aria-haspopup="dialog" aria-controls="ifr-dialog"
+                    th:text="${result.finalResult != null and result.finalResult.considering ? 'Chốt lại kết quả' : 'Chốt kết quả'}">Chốt kết quả</button>
         </div>
     </div>
 
@@ -65,6 +66,12 @@
          th:text="${result.finalizeBlockedReason}">Buổi phỏng vấn chưa diễn ra, chưa thể chốt kết quả.</div>
     <div th:if="${result.evaluateBlockedReason != null}" class="alert alert--warning" role="note"
          th:text="${result.evaluateBlockedReason}">Chưa đến giờ phỏng vấn.</div>
+    <div th:if="${result.decisionOverdue}" class="alert alert--warning" role="note"
+         th:text="|Quá hạn chốt kết quả (hạn ${#temporals.format(result.decisionDeadline, 'HH:mm dd/MM/yyyy')}). Hiring Manager vẫn có thể chốt.|">
+        Quá hạn chốt kết quả.</div>
+    <div th:if="${result.finalResult != null and result.finalResult.considerOverdue}" class="alert alert--warning" role="note"
+         th:text="|Ứng viên đã ở trạng thái Cân nhắc quá 7 ngày (hạn ${#temporals.format(result.finalResult.considerDeadline, 'HH:mm dd/MM/yyyy')}). Vui lòng chốt Đạt hoặc Không đạt.|">
+        Cân nhắc quá 7 ngày.</div>
 
     <div class="ir-layout">
         <div class="ir-main">
@@ -104,6 +111,14 @@
                         <dd th:unless="${result.locationOrLink != null and #strings.startsWith(result.locationOrLink, 'http')}"
                             th:text="${result.locationOrLink ?: '—'}">Phòng họp 3</dd>
                     </div>
+                    <div class="ir-facts__item" th:if="${result.evaluationDeadline != null}">
+                        <dt>Hạn chấm điểm</dt>
+                        <dd th:text="${#temporals.format(result.evaluationDeadline, 'dd/MM/yyyy HH:mm')}">11/10/2026 10:00</dd>
+                    </div>
+                    <div class="ir-facts__item" th:if="${result.decisionDeadline != null}">
+                        <dt>Hạn chốt kết quả</dt>
+                        <dd th:text="${#temporals.format(result.decisionDeadline, 'dd/MM/yyyy HH:mm')}">13/10/2026 10:00</dd>
+                    </div>
                     <div class="ir-facts__item">
                         <dt>Mã hồ sơ</dt>
                         <dd th:text="${result.applicationId != null ? '#' + result.applicationId : '—'}">#298</dd>
@@ -129,6 +144,7 @@
                             <strong th:text="${evaluation.interviewerName}">Trần Minh</strong>
                             <span class="text-muted" th:text="${evaluation.roleInPanelDisplay}">Interviewer</span>
                             <span th:if="${evaluation.mine}" class="badge badge--neutral">Phiếu của bạn</span>
+                            <span th:if="${evaluation.late}" class="badge badge--warning">Nộp trễ</span>
                         </div>
                         <span class="badge" th:classappend="${evaluation.recommendationBadge}"
                               th:text="${evaluation.recommendationDisplay}">Nên tuyển</span>
@@ -222,8 +238,8 @@
                             <span class="ir-panel__name" th:text="${member.me ? member.fullName + ' (bạn)' : member.fullName}">Trần Minh</span>
                             <span class="ir-panel__role text-muted" th:text="${member.roleInPanelDisplay}">Interviewer</span>
                         </div>
-                        <span class="badge" th:classappend="${member.submitted ? 'badge--success' : 'badge--warning'}"
-                              th:text="${member.submitted ? 'Đã nộp' : 'Chưa nộp'}">Đã nộp</span>
+                        <span class="badge" th:classappend="${member.progressBadge}"
+                              th:text="${member.progressDisplay}">Đã nộp</span>
                     </li>
                 </ul>
             </section>
@@ -243,6 +259,14 @@
                         <dt>Mức lương đề xuất</dt>
                         <dd th:text="|${#numbers.formatDecimal(result.finalResult.recommendedSalary, 0, 'POINT', 0, 'COMMA')} ₫|">25.000.000 ₫</dd>
                     </div>
+                    <div class="ir-facts__item" th:if="${result.finalResult.consideredAt != null}">
+                        <dt>Cân nhắc từ</dt>
+                        <dd th:text="${#temporals.format(result.finalResult.consideredAt, 'dd/MM/yyyy HH:mm')}">11/10/2026 08:30</dd>
+                    </div>
+                    <div class="ir-facts__item" th:if="${result.finalResult.considerDeadline != null}">
+                        <dt>Nên chốt trước</dt>
+                        <dd th:text="${#temporals.format(result.finalResult.considerDeadline, 'dd/MM/yyyy HH:mm')}">18/10/2026 08:30</dd>
+                    </div>
                     <div class="ir-facts__item" th:if="${result.finalResult.approvedAt != null}">
                         <dt>Ngày quyết định</dt>
                         <dd th:text="${#temporals.format(result.finalResult.approvedAt, 'dd/MM/yyyy HH:mm')}">11/10/2026 08:30</dd>
@@ -260,7 +284,7 @@
         <dialog th:replace="~{interview/evaluation-dialog :: dialog(interviewId=${result.interviewId})}"></dialog>
     </th:block>
     <th:block th:if="${result.canFinalize}">
-        <dialog th:replace="~{interview/final-result-dialog :: dialog(interviewId=${result.interviewId}, submittedCount=${result.submittedCount}, panelSize=${#lists.size(result.panel)})}"></dialog>
+        <dialog th:replace="~{interview/final-result-dialog :: dialog(interviewId=${result.interviewId}, submittedCount=${result.submittedCount}, panelSize=${#lists.size(result.panel)}, current=${result.finalResult})}"></dialog>
     </th:block>
 </main>
 <th:block layout:fragment="scripts">

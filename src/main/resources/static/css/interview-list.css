@@ -320,6 +320,14 @@
   text-decoration: underline;
 }
 
+/* Nhãn kết quả / chấm điểm phía trên tên ứng viên */
+.il-card__states {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s2);
+  margin: 0 0 var(--s2);
+}
+
 .il-card__name {
   margin: 0 0 var(--s1);
   font-family: var(--serif);

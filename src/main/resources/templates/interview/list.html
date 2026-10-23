@@ -98,6 +98,18 @@
                         </select>
                     </div>
                     <div class="form-group" th:if="${!isCandidateView}">
+                        <label class="form-label" for="filter-result">Kết quả</label>
+                        <select id="filter-result" class="form-select">
+                            <option value="">Tất cả kết quả</option>
+                            <option value="AWAITING_DECISION">Chờ chốt kết quả</option>
+                            <option value="DECISION_OVERDUE">Quá hạn chốt kết quả</option>
+                            <option value="CONSIDERING">Đang cân nhắc</option>
+                            <option value="CONSIDER_OVERDUE">Cân nhắc quá 7 ngày</option>
+                            <option value="PASSED">Đạt</option>
+                            <option value="FAILED">Không đạt</option>
+                        </select>
+                    </div>
+                    <div class="form-group" th:if="${!isCandidateView}">
                         <label class="form-label" for="filter-interviewer">Người phỏng vấn</label>
                         <select id="filter-interviewer" class="form-select">
                             <option value="">Tất cả người phỏng vấn</option>
@@ -128,6 +140,7 @@
                  th:data-candidate-email="${s.candidateEmail != null ? s.candidateEmail : ''}"
                  th:data-app-id="${s.applicationId}"
                  th:data-status="${s.interviewStatus != null ? s.interviewStatus.name() : ''}"
+                 th:data-result="${decisionStates[s.interviewId] != null ? decisionStates[s.interviewId].code() : ''}"
                  th:data-format="${s.interviewFormat != null ? s.interviewFormat.name() : ''}">
 
             <div class="il-card__top">
@@ -137,6 +150,15 @@
                         th:title="${s.jobPostingTitle != null ? 'Lọc theo vị trí ' + s.jobPostingTitle : ''}">Vị trí</button>
                 <span class="badge" th:classappend="${s.timeStatusBadge}" th:text="${s.timeStatusDisplay}">Sắp tới</span>
             </div>
+
+            <p class="il-card__states" th:if="${decisionStates[s.interviewId] != null or evaluationStates[s.interviewId] != null}">
+                <span th:if="${decisionStates[s.interviewId] != null}" class="badge"
+                      th:classappend="${decisionStates[s.interviewId].badge()}"
+                      th:text="${decisionStates[s.interviewId].display()}">Đang cân nhắc</span>
+                <span th:if="${evaluationStates[s.interviewId] != null}" class="badge"
+                      th:classappend="${evaluationStates[s.interviewId].badge()}"
+                      th:text="${evaluationStates[s.interviewId].display()}">Chờ đánh giá · còn 5h</span>
+            </p>
 
             <h2 class="il-card__name"
                 th:text="${s.candidateFullName != null ? s.candidateFullName : 'Ứng viên #' + s.applicationId}">Ứng viên</h2>

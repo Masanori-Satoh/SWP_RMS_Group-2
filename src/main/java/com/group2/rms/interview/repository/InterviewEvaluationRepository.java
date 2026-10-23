@@ -30,4 +30,8 @@ public interface InterviewEvaluationRepository extends JpaRepository<InterviewEv
            "WHERE e.interviewSchedule.interviewId = :interviewId " +
            "ORDER BY e.evaluatedAt ASC")
     List<InterviewEvaluation> findByScheduleIdWithInterviewer(@Param("interviewId") Long interviewId);
+
+    /** Phiếu của một người trên nhiều lịch (danh sách lịch: trạng thái chấm điểm của người xem). */
+    List<InterviewEvaluation> findByInterviewer_UserIdAndInterviewSchedule_InterviewIdIn(
+            Integer interviewerId, java.util.Collection<Long> interviewIds);
 }

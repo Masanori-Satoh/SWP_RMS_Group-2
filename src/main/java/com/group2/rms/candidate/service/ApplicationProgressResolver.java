@@ -68,6 +68,10 @@ public final class ApplicationProgressResolver {
         if ("Passed".equals(facts.finalDecision())) {
             return of(PASSED_AWAITING_OFFER);
         }
+        // HM đang cân nhắc: ứng viên chỉ thấy "chờ chốt kết quả", không lộ quyết định nội bộ (GBR-02)
+        if ("Considering".equals(facts.finalDecision())) {
+            return of(AWAITING_DECISION);
+        }
         boolean upcoming = ("Scheduled".equals(facts.interviewStatus())
                 || "Rescheduled".equals(facts.interviewStatus()))
                 && facts.interviewStart() != null && facts.interviewStart().isAfter(now);

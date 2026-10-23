@@ -370,19 +370,20 @@ class InterviewResultWebTests {
         LocalDateTime start = LocalDateTime.of(2026, 10, 9, 9, 0);
         InterviewEvaluationResponse evaluation = new InterviewEvaluationResponse(
                 1, 21, "An Interviewer", "Interviewer", 4, 4, 5, 4.3, "Hire", "Nên tuyển", "badge--success",
-                "Giỏi &lt;b&gt;Java&lt;/b&gt;<br/>Chủ động", null, null, start.plusHours(2), false);
+                "Giỏi &lt;b&gt;Java&lt;/b&gt;<br/>Chủ động", null, null, start.plusHours(2), false, false);
         return new InterviewResultDetailResponse(
                 7L, 100, "Chi Candidate", "chi@example.com", "Java Developer",
                 start, start.plusHours(1), "Trực tiếp tại văn phòng", "Phòng họp 3",
                 "Đã hoàn thành", "badge--success",
-                List.of(new PanelMemberStatus(21, "An Interviewer", "Interviewer", true, false),
-                        new PanelMemberStatus(11, "iv_minh", "Interviewer", false, true)),
+                List.of(new PanelMemberStatus(21, "An Interviewer", "Interviewer", true, false, "Đã nộp", "badge--success"),
+                        new PanelMemberStatus(11, "iv_minh", "Interviewer", false, true, "Chờ đánh giá", "badge--warning")),
                 1,
                 canSeeAll ? List.of(evaluation) : List.of(),
                 canSeeAll ? new Averages(4.0, 4.0, 5.0, 4.3) : null,
                 canSeeAll ? List.of(new RecommendationCount("Hire", "Nên tuyển", "badge--success", 1)) : List.of(),
                 withFinalResult ? new FinalResult("Passed", "Đạt", "badge--success", "Hoa HM",
-                        new BigDecimal("25000000"), null, start.plusDays(1)) : null,
-                canSeeAll, canEvaluate, blockedReason, canFinalize, null);
+                        new BigDecimal("25000000"), null, start.plusDays(1), false, null, null, false, null) : null,
+                canSeeAll, canEvaluate, blockedReason, canFinalize, null,
+                start.plusHours(25), start.plusHours(73), false);
     }
 }
