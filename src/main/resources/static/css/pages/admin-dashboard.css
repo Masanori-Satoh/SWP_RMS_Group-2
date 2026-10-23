@@ -55,14 +55,22 @@
   color: var(--brand);
 }
 .adm-dashboard .adm-analytics { gap: var(--s4); }
-.adm-dashboard .adm-chart-panel { padding: var(--s6); }
+.adm-dashboard .adm-chart-panel { padding: var(--s6); container-type: inline-size; }
 .adm-dashboard .adm-panel-title { font-size: var(--font-lg); }
 .adm-dashboard .adm-chart-heading {
   min-height: 0;
   margin-bottom: var(--s4);
 }
 .adm-dashboard .adm-help { font-size: var(--font-sm); }
-.adm-dashboard .adm-scope-control { margin-bottom: var(--s3); gap: var(--s2); }
+.adm-dashboard .adm-chart-heading--filter {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 190px;
+  align-items: start;
+  gap: var(--s3) var(--s4);
+}
+.adm-dashboard .adm-chart-heading--filter:has(.adm-scope-control[hidden]) { grid-template-columns: minmax(0, 1fr); }
+.adm-dashboard .adm-scope-control { margin: 0; gap: var(--s2); }
+.adm-dashboard .adm-scope-control > select { width: 100%; }
 .adm-dashboard .adm-chart-shell { height: 180px; margin-bottom: var(--s3); }
 .adm-dashboard .adm-chart-panel--roles .adm-chart-shell { height: 220px; }
 .adm-dashboard .adm-group-heading h3 { font-size: var(--font-sm); color: var(--muted); }
@@ -126,6 +134,27 @@
 .adm-dashboard .adm-service-name { font-size: var(--font-base); }
 .adm-dashboard .adm-service-measure { font-size: var(--font-sm); color: var(--muted); font-variant-numeric: tabular-nums; }
 .adm-dashboard .adm-service-table-wrapper:focus-visible { outline: 2px solid var(--focus); outline-offset: 3px; }
+/* Page-owned decoration occupies the spare lower sidebar area; shell/menu stay canonical. */
+.adm-dashboard .adm-sidebar-brand {
+  display: none;
+  position: fixed;
+  left: var(--s4);
+  bottom: var(--s4);
+  width: calc(var(--sidebar-expanded-w) - var(--s8));
+  height: min(480px, calc(100dvh - 520px));
+  object-fit: contain;
+  object-position: center bottom;
+  z-index: 101;
+  pointer-events: none;
+}
+@container (max-width: 460px) {
+  .adm-dashboard .adm-chart-heading--filter { grid-template-columns: minmax(0, 1fr); }
+  .adm-dashboard .adm-scope-control { width: min(100%, 240px); justify-self: start; }
+}
+@media (min-width: 993px) and (min-height: 840px) {
+  .sidebar-pinned .adm-dashboard .adm-sidebar-brand,
+  body:has(#workspace-navigation:hover) .adm-dashboard .adm-sidebar-brand { display: block; }
+}
 @media (max-width: 1200px) {
   .adm-dashboard .adm-summary-card { padding: var(--s4); column-gap: var(--s3); }
   .adm-dashboard .adm-summary-action { top: var(--s4); right: var(--s3); }

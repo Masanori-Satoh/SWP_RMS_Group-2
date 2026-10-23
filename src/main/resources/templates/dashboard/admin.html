@@ -9,6 +9,7 @@
 </head>
 <body>
 <main id="main" layout:fragment="content" class="page-content container dash-page adm-page ads-page adm-dashboard" tabindex="-1">
+    <img class="adm-sidebar-brand" th:src="@{/images/admin-sidebar-office.webp}" width="193" height="547" alt="" aria-hidden="true" decoding="async">
     <div class="page-header ads-heading">
         <div><h1 class="page-title ads-title">Tổng quan hệ thống</h1><p class="page-subtitle" th:text="${dashboard.scope}"></p></div>
         <a class="btn btn--primary" th:href="@{/admin/accounts/new}">
@@ -51,12 +52,14 @@
 
     <div class="grid-2-col adm-analytics">
         <section class="card adm-chart-panel" id="adm-status-panel" aria-labelledby="dash-accounts-title">
-            <div class="adm-chart-heading"><h2 id="dash-accounts-title" class="adm-panel-title">Trạng thái tài khoản</h2><p id="adm-table-hint" class="adm-help">Chọn cột hoặc trạng thái để mở danh sách đã lọc.</p></div>
-            <div class="adm-scope-control" hidden>
-                <label class="form-label" for="adm-account-scope">Nhóm tài khoản</label>
-                <select id="adm-account-scope" class="form-select">
-                    <option th:each="summary, iteration : ${dashboard.accountSummaries}" th:value="|adm-status-group-${iteration.index}|" th:text="${summary.title}"></option>
-                </select>
+            <div class="adm-chart-heading adm-chart-heading--filter">
+                <div class="adm-chart-intro"><h2 id="dash-accounts-title" class="adm-panel-title">Trạng thái tài khoản</h2><p id="adm-table-hint" class="adm-help">Chọn cột hoặc trạng thái để mở danh sách đã lọc.</p></div>
+                <div class="adm-scope-control" hidden>
+                    <label class="sr-only" for="adm-account-scope">Nhóm tài khoản</label>
+                    <select id="adm-account-scope" class="form-select">
+                        <option th:each="summary, iteration : ${dashboard.accountSummaries}" th:value="|adm-status-group-${iteration.index}|" th:text="${summary.title}"></option>
+                    </select>
+                </div>
             </div>
             <div class="adm-chart-shell" hidden><canvas id="adm-status-chart" class="adm-chart-canvas" role="img" aria-labelledby="dash-accounts-title" aria-describedby="adm-table-hint"></canvas></div>
             <p class="adm-help" data-chart-fallback>Đọc số liệu và mở danh sách bằng các liên kết bên dưới.</p>
