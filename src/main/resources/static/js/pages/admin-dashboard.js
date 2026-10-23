@@ -25,7 +25,7 @@
                 datasets: [{ label: 'Tài khoản', data: points.map((point) => point.count),
                     backgroundColor: colors, hoverBackgroundColor: colors,
                     hoverBorderColor: token('--brand-dark'), hoverBorderWidth: 1, borderRadius: 4,
-                    maxBarThickness: horizontal ? 28 : 64, categoryPercentage: .72, barPercentage: .8 }]
+                    maxBarThickness: horizontal ? 20 : 64, categoryPercentage: .72, barPercentage: .8 }]
             },
             options: {
                 indexAxis: horizontal ? 'y' : 'x',
@@ -62,7 +62,24 @@
                 },
                 onHover: (_event, hits) => canvas.classList.toggle('adm-chart-canvas--interactive',
                     hits.length === 1 && getPoints()[hits[0].index]?.count > 0 && Boolean(getPoints()[hits[0].index]?.href))
-            }
+            },
+            plugins: [{
+                id: 'adminCountLabels',
+                afterDatasetsDraw(chart) {
+                    const { ctx } = chart;
+                    ctx.save();
+                    ctx.font = '600 13px ' + token('--sans');
+                    ctx.fillStyle = token('--ink');
+                    ctx.textAlign = horizontal ? 'left' : 'center';
+                    ctx.textBaseline = horizontal ? 'middle' : 'bottom';
+                    chart.getDatasetMeta(0).data.forEach((bar, index) => {
+                        const count = chart.data.datasets[0].data[index];
+                        ctx.fillText(String(count), horizontal ? bar.x + 8 : bar.x,
+                            horizontal ? bar.y : bar.y - 6);
+                    });
+                    ctx.restore();
+                }
+            }]
         });
         canvas.addEventListener('mouseleave', () => canvas.classList.remove('adm-chart-canvas--interactive'));
         canvas.addEventListener('click', (event) => {
@@ -130,6 +147,7 @@
         try {
             createChart(panel.querySelector('canvas'), () => points, true);
             panel.querySelector('[data-chart-fallback]').hidden = true;
+            panel.querySelector('.adm-role-data').open = false;
             panel.querySelector('canvas').setAttribute('aria-label',
                 points.map((point) => point.label + ' ' + point.count).join(', '));
         } catch (_error) {

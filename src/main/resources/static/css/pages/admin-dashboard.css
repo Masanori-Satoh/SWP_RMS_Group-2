@@ -1,0 +1,151 @@
+/* Dashboard-only composition. Shared shell, components and other roles keep their DNA. */
+.adm-dashboard .adm-summaries {
+  gap: var(--s4);
+  margin-bottom: var(--s4);
+}
+.adm-dashboard .adm-summary-card {
+  position: relative;
+  display: grid;
+  grid-template-columns: var(--s12) minmax(0, 1fr);
+  column-gap: var(--s4);
+  row-gap: var(--s1);
+  align-content: start;
+  padding: var(--s6);
+}
+.adm-dashboard .adm-summary-heading { display: contents; }
+.adm-dashboard .adm-summary-icon {
+  grid-column: 1;
+  grid-row: 1 / 4;
+  align-self: start;
+  box-sizing: content-box;
+  padding: var(--s3);
+  border-radius: var(--radius-lg);
+  background: var(--brand-soft);
+  color: var(--brand-dark);
+}
+.adm-dashboard .adm-summary-label {
+  grid-column: 2;
+  padding-right: var(--s4);
+  font-size: var(--font-base);
+  line-height: 1.4;
+}
+.adm-dashboard .adm-summary-value {
+  grid-column: 2;
+  margin: 0;
+  font-size: 32px;
+  line-height: 1.15;
+}
+.adm-dashboard .adm-summary-detail {
+  grid-column: 2;
+  margin: 0;
+  font-size: var(--font-sm);
+  overflow-wrap: anywhere;
+}
+.adm-dashboard .adm-summary-caveat {
+  grid-column: 2;
+  margin: 0;
+  color: var(--muted);
+  font-size: var(--font-xs);
+}
+.adm-dashboard .adm-summary-action {
+  position: absolute;
+  top: var(--s6);
+  right: var(--s4);
+  min-height: 0;
+  color: var(--brand);
+}
+.adm-dashboard .adm-analytics { gap: var(--s4); }
+.adm-dashboard .adm-chart-panel { padding: var(--s6); }
+.adm-dashboard .adm-panel-title { font-size: var(--font-lg); }
+.adm-dashboard .adm-chart-heading {
+  min-height: 0;
+  margin-bottom: var(--s4);
+}
+.adm-dashboard .adm-help { font-size: var(--font-sm); }
+.adm-dashboard .adm-scope-control { margin-bottom: var(--s3); gap: var(--s2); }
+.adm-dashboard .adm-chart-shell { height: 180px; margin-bottom: var(--s3); }
+.adm-dashboard .adm-chart-panel--roles .adm-chart-shell { height: 220px; }
+.adm-dashboard .adm-group-heading h3 { font-size: var(--font-sm); color: var(--muted); }
+.adm-dashboard .adm-status-links { gap: var(--s2); }
+.adm-dashboard .adm-data-link {
+  gap: var(--s2);
+  padding: var(--s2) var(--s3);
+  border-radius: var(--radius-md);
+}
+.adm-dashboard .adm-data-link::after { content: none; }
+.adm-dashboard .adm-status-links .adm-data-link[data-key='Inactive'] { background: var(--neutral-soft); }
+.adm-dashboard .adm-status-links .adm-data-link[data-key='Blocked'] { background: var(--error-soft); }
+.adm-dashboard .adm-role-links {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--s1) var(--s3);
+}
+.adm-dashboard .adm-role-links .adm-data-link {
+  background: transparent;
+  padding-inline: var(--s2);
+  border-bottom-color: var(--line);
+  border-radius: 0;
+}
+.adm-dashboard .adm-role-links .adm-data-link:hover { background: var(--brand-soft); }
+.adm-dashboard .adm-role-links strong { color: var(--ink); }
+.adm-dashboard .adm-role-data { margin-top: auto; }
+.adm-dashboard .adm-role-data summary {
+  width: fit-content;
+  min-height: var(--btn-sm-h);
+  padding-block: var(--s2);
+  color: var(--brand-dark);
+  font-size: var(--font-sm);
+  font-weight: 600;
+  cursor: pointer;
+}
+.adm-dashboard .adm-role-data summary:hover { text-decoration: underline; text-underline-offset: var(--s1); }
+.adm-dashboard .adm-role-data summary:focus-visible { outline: 2px solid var(--focus); outline-offset: 3px; }
+.adm-dashboard .adm-monitor { margin-top: var(--s4); padding: var(--s6); }
+.adm-dashboard .adm-monitor-heading { margin: 0; }
+.adm-dashboard .adm-monitor-caption {
+  margin: var(--s1) 0 var(--s4);
+  color: var(--muted);
+  font-size: var(--font-sm);
+}
+.adm-dashboard .adm-service-table-wrapper { margin-bottom: 0; }
+.adm-dashboard .adm-service-table { min-width: 680px; margin: 0; }
+.adm-dashboard .adm-service-table :is(th, td) { padding: var(--s4); }
+.adm-dashboard .adm-service-table thead th {
+  background: var(--surface-subtle);
+  color: var(--muted);
+  font-size: var(--font-sm);
+}
+.adm-dashboard .adm-service-table tbody th { font-weight: 600; background: var(--surface); color: var(--ink); white-space: normal; }
+.adm-dashboard .adm-service-identity { display: flex; align-items: center; gap: var(--s3); }
+.adm-dashboard .adm-service-icon {
+  display: grid;
+  place-items: center;
+  flex: 0 0 var(--s8);
+  color: var(--brand);
+}
+.adm-dashboard .adm-service-name { font-size: var(--font-base); }
+.adm-dashboard .adm-service-measure { font-size: var(--font-sm); color: var(--muted); font-variant-numeric: tabular-nums; }
+.adm-dashboard .adm-service-table-wrapper:focus-visible { outline: 2px solid var(--focus); outline-offset: 3px; }
+@media (max-width: 1200px) {
+  .adm-dashboard .adm-summary-card { padding: var(--s4); column-gap: var(--s3); }
+  .adm-dashboard .adm-summary-action { top: var(--s4); right: var(--s3); }
+  .adm-dashboard .adm-status-links { grid-template-columns: 1fr; }
+}
+@media (max-width: 992px) {
+  .adm-dashboard .adm-summaries { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .adm-dashboard .adm-summary-card { grid-template-columns: minmax(0, 1fr); }
+  .adm-dashboard .adm-summary-icon { grid-column: 1; grid-row: auto; margin-bottom: var(--s2); }
+  .adm-dashboard :is(.adm-summary-label, .adm-summary-value, .adm-summary-detail, .adm-summary-caveat) { grid-column: 1; }
+  .adm-dashboard .adm-analytics { grid-template-columns: 1fr; }
+  .adm-dashboard .adm-status-links { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
+@media (max-width: 768px) {
+  .adm-dashboard .adm-summaries { grid-template-columns: 1fr; }
+  .adm-dashboard .adm-summary-card { grid-template-columns: var(--s12) minmax(0, 1fr); }
+  .adm-dashboard .adm-summary-icon { grid-column: 1; grid-row: 1 / 4; margin: 0; }
+  .adm-dashboard :is(.adm-summary-label, .adm-summary-value, .adm-summary-detail, .adm-summary-caveat) { grid-column: 2; }
+  .adm-dashboard :is(.adm-chart-panel, .adm-monitor) { padding: var(--s4); }
+  .adm-dashboard .adm-status-links { grid-template-columns: 1fr; }
+  .adm-dashboard .adm-role-links { grid-template-columns: 1fr; }
+  .adm-dashboard .adm-chart-panel--roles .adm-chart-shell { height: 240px; }
+}
