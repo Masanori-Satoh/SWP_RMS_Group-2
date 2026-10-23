@@ -1,6 +1,12 @@
 /* Admin dashboard: progressive enhancement of server-rendered counts and links. */
 (() => {
     'use strict';
+    const sidebar = document.getElementById('workspace-navigation');
+    const sidebarBrand = document.querySelector('[data-admin-sidebar-brand]');
+    if (sidebar && sidebarBrand) {
+        sidebar.append(sidebarBrand);
+        sidebarBrand.dataset.mounted = 'true';
+    }
     if (typeof window.Chart !== 'function') return;
 
     const styles = getComputedStyle(document.documentElement);

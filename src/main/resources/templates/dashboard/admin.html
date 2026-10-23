@@ -9,7 +9,15 @@
 </head>
 <body>
 <main id="main" layout:fragment="content" class="page-content container dash-page adm-page ads-page adm-dashboard" tabindex="-1">
-    <img class="adm-sidebar-brand" th:src="@{/images/admin-sidebar-office.webp}" width="193" height="547" alt="" aria-hidden="true" decoding="async">
+    <figure class="adm-sidebar-brand" data-admin-sidebar-brand>
+        <figcaption class="adm-sidebar-identity">
+            <a th:replace="~{fragments/brand :: wordmarkLink('RMS', '/dashboard')}"></a>
+            <p class="adm-sidebar-caption">Hệ thống quản trị<br>nhân sự &amp; tuyển dụng</p>
+        </figcaption>
+        <div class="adm-sidebar-scene" aria-hidden="true">
+            <img class="adm-sidebar-photo" th:src="@{/images/admin-sidebar-office.webp}" width="193" height="547" alt="" decoding="async">
+        </div>
+    </figure>
     <div class="page-header ads-heading">
         <div><h1 class="page-title ads-title">Tổng quan hệ thống</h1><p class="page-subtitle" th:text="${dashboard.scope}"></p></div>
         <a class="btn btn--primary" th:href="@{/admin/accounts/new}">
