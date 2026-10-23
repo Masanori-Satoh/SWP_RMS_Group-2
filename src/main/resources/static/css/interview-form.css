@@ -116,3 +116,11 @@
     align-items: stretch;
   }
 }
+
+/* Hồ sơ cố định khi mở form từ danh sách / chi tiết hồ sơ */
+.if-locked-app {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s1);
+  padding: var(--s3) var(--s4);
+}

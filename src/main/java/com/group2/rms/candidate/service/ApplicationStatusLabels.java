@@ -63,6 +63,7 @@ public final class ApplicationStatusLabels {
         return switch (finalDecision) {
             case "Passed" -> "Đạt";
             case "Failed" -> "Không đạt";
+            case "Considering" -> "Đang cân nhắc";
             default -> finalDecision;
         };
     }
@@ -71,6 +72,7 @@ public final class ApplicationStatusLabels {
         return switch (finalDecision) {
             case "Passed" -> "success";
             case "Failed" -> "danger";
+            case "Considering" -> "warning";
             default -> "neutral";
         };
     }
