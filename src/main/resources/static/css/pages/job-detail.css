@@ -343,6 +343,38 @@
   cursor: pointer;
 }
 
+.job-apply-warning {
+  align-items: flex-start;
+  margin: 0 0 var(--s3);
+  line-height: 1.5;
+}
+
+.job-apply-confirm {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--s2);
+  margin: 0 0 var(--s4);
+  font-size: var(--font-sm);
+  font-weight: 600;
+  color: var(--ink);
+  line-height: 1.5;
+  cursor: pointer;
+}
+
+.job-apply-confirm__input {
+  flex: 0 0 auto;
+  width: 18px;
+  height: 18px;
+  margin: 2px 0 0;
+  accent-color: var(--brand);
+  cursor: pointer;
+}
+
+.job-apply-confirm__input:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
+}
+
 @media (max-width: 480px) {
   .job-apply-dialog .dialog-content {
     padding: var(--s4);
