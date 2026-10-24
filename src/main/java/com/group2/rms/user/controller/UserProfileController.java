@@ -36,8 +36,12 @@ public class UserProfileController {
         this.profileService = profileService;
     }
 
+    /** Ứng viên có trang riêng {@code /portal/profile} (Q7.1-L1): gõ {@code /profile} thì chuyển sang đó, không báo 403. */
     @GetMapping
     public String viewProfile(Authentication authentication, Model model) {
+        if (authentication.getAuthorities().stream().anyMatch(a -> "ROLE_CANDIDATE".equals(a.getAuthority()))) {
+            return "redirect:/portal/profile";
+        }
         UserProfileResponse profile = profileService.getProfile(authentication.getName());
         model.addAttribute("userProfile", profile);
         if (!model.containsAttribute("updateRequest")) {

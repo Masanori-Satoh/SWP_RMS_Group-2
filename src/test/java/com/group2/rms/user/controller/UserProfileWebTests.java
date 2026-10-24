@@ -54,6 +54,8 @@ class UserProfileWebTests {
 
     @BeforeEach
     void setUp() {
+        when(userRepository.findByUsernameIgnoreCase("an.vo")).thenReturn(Optional.of(User.builder()
+                .userId(54).username("an.vo").accountStatus("Active").role(Role.builder().roleName("Candidate").build()).build()));
         // Setup mock user for SecurityConfig's AccountSessionGuardFilter
         User mockUser = User.builder()
                 .userId(1)
@@ -196,5 +198,14 @@ class UserProfileWebTests {
                 .andExpect(redirectedUrl("/profile"))
                 .andExpect(flash().attribute("avatarError", "Chỉ nhận ảnh JPEG, PNG hoặc WebP."))
                 .andExpect(flash().attributeCount(1));
+    }
+
+    @Test
+    @WithMockUser(username = "an.vo", authorities = "ROLE_CANDIDATE")
+    void viewProfile_Candidate_RedirectsToPortalProfile() throws Exception {
+        mvc.perform(get("/profile"))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrl("/portal/profile"));
+        org.mockito.Mockito.verify(profileService, org.mockito.Mockito.never()).getProfile(any());
     }
 }

@@ -19,6 +19,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const passwordAlertBox = document.getElementById('changePasswordAlert');
     const btnSubmitPassword = document.getElementById('btnSubmitPassword');
     const toastContainer = document.getElementById('toastContainer');
+    // Chữ của nút lấy từ trang (trang ứng viên viết tiếng Việt); data-busy-label là chữ lúc đang gửi
+    const submitPasswordLabel = btnSubmitPassword ? btnSubmitPassword.textContent : '';
 
     // -------------------------------------------------------------
     // 2. Elements & Variables: Profile Form & Confirmation
@@ -33,6 +35,14 @@ document.addEventListener('DOMContentLoaded', () => {
     const btnConfirmSave = document.getElementById('btnConfirmSave');
 
     let isSubmittingProfile = false;
+
+    // Ẩn/hiện bằng cả thuộc tính hidden (trang mới không dùng style nội tuyến; global.css: [hidden] !important)
+    // lẫn style.display (trang /profile cũ khởi tạo bằng style="display: none")
+    function setVisible(el, visible, display = 'block') {
+        if (!el) return;
+        el.hidden = !visible;
+        el.style.display = visible ? display : 'none';
+    }
 
     // Snapshot of initial values (trimmed for reliable comparison)
     const initialProfileValues = new Map(profileFields.map(field => [field, field.value.trim()]));
@@ -49,7 +59,7 @@ document.addEventListener('DOMContentLoaded', () => {
             btnSaveProfile.disabled = !dirty;
         }
         if (btnDiscardProfile) {
-            btnDiscardProfile.style.display = dirty ? 'inline-block' : 'none';
+            setVisible(btnDiscardProfile, dirty, 'inline-block');
         }
     }
 
@@ -86,7 +96,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const fullNameErr = document.getElementById('full-name-error');
             if (fullNameErr) {
                 fullNameErr.textContent = '';
-                fullNameErr.style.display = 'none';
+                setVisible(fullNameErr, false);
             }
             if (fullNameInput) fullNameInput.classList.remove('is-invalid');
 
@@ -96,7 +106,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (!val) {
                 if (fullNameErr) {
                     fullNameErr.textContent = 'Full name is required.';
-                    fullNameErr.style.display = 'block';
+                    setVisible(fullNameErr, true);
                 }
                 if (fullNameInput) {
                     fullNameInput.classList.add('is-invalid');
@@ -108,7 +118,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (!namePattern.test(val)) {
                 if (fullNameErr) {
                     fullNameErr.textContent = 'Full name must start with a letter and can only contain letters, spaces, hyphens, and apostrophes.';
-                    fullNameErr.style.display = 'block';
+                    setVisible(fullNameErr, true);
                 }
                 if (fullNameInput) {
                     fullNameInput.classList.add('is-invalid');
@@ -156,7 +166,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // -------------------------------------------------------------
     function clearPasswordErrors() {
         if (passwordAlertBox) {
-            passwordAlertBox.style.display = 'none';
+            setVisible(passwordAlertBox, false);
             passwordAlertBox.textContent = '';
         }
         ['currentPassword', 'newPassword', 'confirmPassword'].forEach(fieldId => {
@@ -167,7 +177,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 input.removeAttribute('aria-invalid');
             }
             if (errSpan) {
-                errSpan.style.display = 'none';
+                setVisible(errSpan, false);
                 errSpan.textContent = '';
             }
         });
@@ -182,14 +192,14 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         if (errSpan) {
             errSpan.textContent = message;
-            errSpan.style.display = 'block';
+            setVisible(errSpan, true);
         }
     }
 
     function showPasswordAlert(message) {
         if (passwordAlertBox) {
             passwordAlertBox.textContent = message;
-            passwordAlertBox.style.display = 'block';
+            setVisible(passwordAlertBox, true);
         }
     }
 
@@ -325,7 +335,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             if (btnSubmitPassword) {
                 btnSubmitPassword.disabled = true;
-                btnSubmitPassword.textContent = 'Updating...';
+                btnSubmitPassword.textContent = btnSubmitPassword.dataset.busyLabel || 'Updating...';
             }
 
             try {
@@ -356,7 +366,7 @@ document.addEventListener('DOMContentLoaded', () => {
             } finally {
                 if (btnSubmitPassword) {
                     btnSubmitPassword.disabled = false;
-                    btnSubmitPassword.textContent = 'Update Password';
+                    btnSubmitPassword.textContent = submitPasswordLabel;
                 }
             }
         });

@@ -18,6 +18,10 @@
 .profile-avatar-upload { display:flex; flex-wrap:wrap; align-items:center; gap:var(--s3); }
 .profile-avatar-upload .form-control { flex:1 1 220px; min-width:0; }
 .profile-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:var(--s6); }
+/* Trang ứng viên: form chia nhóm (Tài khoản / Thông tin ứng viên), mỗi nhóm một lưới */
+.profile-grid + .profile-grid { margin-top:var(--s6); }
+.profile-section-title { margin:var(--s8) 0 var(--s4); font:600 16px/1.4 var(--sans); color:var(--muted); }
+.profile-section-title:first-child { margin-top:0; }
 .profile-field-full { grid-column:1 / -1; }
 .profile-readonly { background:var(--page); color:var(--muted); cursor:not-allowed; }
 .profile-actions { display:flex; justify-content:flex-end; gap:var(--s4); padding-top:var(--s6); margin-top:var(--s6); border-top:1px solid var(--line); }

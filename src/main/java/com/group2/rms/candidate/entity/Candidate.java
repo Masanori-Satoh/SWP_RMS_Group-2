@@ -10,7 +10,7 @@ import java.time.LocalDate;
 /**
  * 3.11 Candidate - Hồ sơ ứng viên.
  * CandidateSource: Website, TopCV, Referral
- * Gender: Male, Female, Other (hoặc theo quy ước của nhóm)
+ * Gender: Nam, Nữ, Khác (đúng chữ trong seed; ứng viên chọn ở /portal/profile)
  */
 @Entity
 @Table(name = "Candidate")
