@@ -14,6 +14,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.web.util.HtmlUtils;
 
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -47,7 +48,8 @@ class CareerReadOnlyTests {
             assertThat(html).contains("/jobs/" + job.id());
             String detail = mvc.perform(get("/jobs/" + job.id())).andExpect(status().isOk())
                     .andReturn().getResponse().getContentAsString(StandardCharsets.UTF_8);
-            assertThat(detail).contains(job.postingTitle());
+            // UTF-8: chỉ escape & < > " ' như Thymeleaf, giữ nguyên chữ có dấu
+            assertThat(detail).contains(HtmlUtils.htmlEscape(job.postingTitle(), StandardCharsets.UTF_8.name()));
             snapshot("jobs/" + job.id() + "/index.html", detail);
         }
     }
