@@ -1,5 +1,8 @@
 package com.group2.rms.candidate.service;
 
+import com.group2.rms.candidate.cv.ApplicationCv;
+import com.group2.rms.candidate.cv.CvStorage;
+import com.group2.rms.candidate.cv.LocalCvStorage;
 import com.group2.rms.candidate.dto.ApplicationDetailResponse;
 import com.group2.rms.candidate.dto.ApplicationListResponse;
 import com.group2.rms.candidate.dto.ApplicationPipelineResponse;

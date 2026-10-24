@@ -6,6 +6,8 @@ import com.group2.rms.candidate.entity.ApplicationReview;
 import com.group2.rms.candidate.exception.ApplicationReviewException;
 import com.group2.rms.candidate.repository.ApplicationRepository;
 import com.group2.rms.candidate.repository.ApplicationReviewRepository;
+import com.group2.rms.candidate.screening.AiScreeningOutcome;
+import com.group2.rms.candidate.screening.AiScreeningService;
 import com.group2.rms.core.exception.ResourceNotFoundException;
 import com.group2.rms.user.entity.User;
 import org.junit.jupiter.api.BeforeEach;

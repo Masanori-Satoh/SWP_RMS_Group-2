@@ -1,8 +1,8 @@
 package com.group2.rms.career.controller;
 
-import com.group2.rms.candidate.dto.ApplyJobRequest;
-import com.group2.rms.candidate.exception.ApplicationSubmissionException;
-import com.group2.rms.candidate.service.ApplicationSubmissionService;
+import com.group2.rms.candidate.submission.ApplyJobRequest;
+import com.group2.rms.candidate.submission.ApplicationSubmissionException;
+import com.group2.rms.candidate.submission.ApplicationSubmissionService;
 import com.group2.rms.career.dto.PublicJobDetailResponse;
 import com.group2.rms.career.dto.PublicJobListResponse;
 import com.group2.rms.career.dto.ViewerProfileResponse;

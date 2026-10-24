@@ -1,5 +1,6 @@
 package com.group2.rms.candidate.service;
 
+import com.group2.rms.candidate.cv.CvStorage;
 import com.group2.rms.candidate.dto.*;
 import com.group2.rms.candidate.entity.*;
 import com.group2.rms.candidate.exception.TalentPoolException;
@@ -14,8 +15,6 @@ import com.group2.rms.user.entity.*;
 import com.group2.rms.user.repository.UserRepository;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.springframework.core.io.ByteArrayResource;
-import org.springframework.data.domain.*;
 import org.springframework.security.access.AccessDeniedException;
 import java.time.LocalDateTime;
 import java.util.*;

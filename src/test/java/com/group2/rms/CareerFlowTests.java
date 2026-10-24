@@ -1,8 +1,8 @@
 package com.group2.rms;
 
 import com.group2.rms.auth.controller.AuthController;
-import com.group2.rms.candidate.exception.ApplicationSubmissionException;
-import com.group2.rms.candidate.service.ApplicationSubmissionService;
+import com.group2.rms.candidate.submission.ApplicationSubmissionException;
+import com.group2.rms.candidate.submission.ApplicationSubmissionService;
 import com.group2.rms.career.controller.CareerPortalController;
 import com.group2.rms.career.dto.DepartmentFilterResponse;
 import com.group2.rms.career.dto.PublicJobDetailResponse;

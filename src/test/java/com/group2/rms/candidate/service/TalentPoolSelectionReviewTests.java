@@ -1,5 +1,6 @@
 package com.group2.rms.candidate.service;
 
+import com.group2.rms.candidate.cv.CvStorage;
 import com.group2.rms.candidate.dto.TalentPoolSuggestRequest;
 import com.group2.rms.candidate.entity.Application;
 import com.group2.rms.candidate.entity.Candidate;

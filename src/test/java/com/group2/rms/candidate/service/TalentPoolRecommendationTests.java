@@ -1,5 +1,6 @@
 package com.group2.rms.candidate.service;
 
+import com.group2.rms.candidate.cv.CvStorage;
 import com.group2.rms.candidate.dto.*;
 import com.group2.rms.candidate.entity.*;
 import com.group2.rms.candidate.exception.TalentPoolException;
@@ -21,7 +22,6 @@ import java.util.*;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.*;
-import static org.mockito.ArgumentMatchers.*;
 
 @ExtendWith(MockitoExtension.class)
 class TalentPoolRecommendationTests {

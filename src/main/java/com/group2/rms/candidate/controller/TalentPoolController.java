@@ -1,5 +1,6 @@
 package com.group2.rms.candidate.controller;
 
+import com.group2.rms.candidate.cv.ApplicationCv;
 import com.group2.rms.candidate.dto.*;
 import com.group2.rms.candidate.exception.*;
 import com.group2.rms.candidate.service.*;
