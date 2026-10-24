@@ -14,8 +14,8 @@ import java.util.Map;
  * @param postingTitle      tên tin đang lọc ({@code search.jobPostingId}); {@code null} nếu không lọc theo tin
  *                          hoặc tin không tồn tại
  * @param canOpenJobPosting người xem mở được trang tin nội bộ (hiện link quay lại tin)
- * @param forwardedView     {@code true} khi người xem là Hiring Manager: chỉ thấy hồ sơ HR đã chuyển
- *                          (SRS "View CV List")
+ * @param departmentView    {@code true} khi người xem là Hiring Manager: thấy mọi hồ sơ của phòng ban mình,
+ *                          chỉ duyệt hồ sơ HR đã chuyển
  * @param viewerRole        tên vai trò người xem, để layout nội bộ chọn đúng sidebar
  */
 public record ApplicationListResponse(
@@ -25,7 +25,7 @@ public record ApplicationListResponse(
         ApplicationSearch search,
         String postingTitle,
         boolean canOpenJobPosting,
-        boolean forwardedView,
+        boolean departmentView,
         String viewerRole) {
 
     /** Tổng số hồ sơ mọi giai đoạn (ô "Tất cả"). */

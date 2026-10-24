@@ -50,17 +50,11 @@ public interface ApplicationRepository extends JpaRepository<Application, Intege
                         """;
 
         /**
-         * Phạm vi người xem ({@code ApplicationScope}): HM chỉ thấy phòng ban mình quản
-         * lý và đơn HR đã chuyển.
+         * Phạm vi người xem ({@code ApplicationScope}): HM thấy mọi đơn của phòng ban
+         * mình quản lý hoặc trực thuộc, kể cả đơn HR chưa chuyển.
          */
         String SCOPE_FILTER = """
                         where (:allDepartments = true or m.userId = :managerUserId or d.departmentId = :departmentId)
-                          and (:forwardedOnly = false or exists (
-                                select 1 from ApplicationReview rv
-                                where rv.application = a and rv.reviewerRole = 'HR' and rv.decision = 'Pass')
-                              or exists (select l.auditLogId from AuditLog l
-                                where l.entityName = 'Application' and l.entityId = cast(a.applicationId as string)
-                                  and l.newValue = 'TalentPoolSuggested'))
                         """;
 
         /**
@@ -131,7 +125,6 @@ public interface ApplicationRepository extends JpaRepository<Application, Intege
     List<Integer> findPipelineIds(@Param("allDepartments") boolean allDepartments,
                                   @Param("managerUserId") Integer managerUserId,
                                   @Param("departmentId") Integer departmentId,
-                                  @Param("forwardedOnly") boolean forwardedOnly,
                                   @Param("jobPostingId") Integer jobPostingId,
                                   @Param("status") String status,
                                   @Param("keyword") String keyword,
@@ -153,8 +146,7 @@ public interface ApplicationRepository extends JpaRepository<Application, Intege
                         + PIPELINE_JOINS + FORMAL_SCOPE_FILTER + "order by jp.postingTitle")
         List<JobPostingOption> findPostingOptions(@Param("allDepartments") boolean allDepartments,
                         @Param("managerUserId") Integer managerUserId,
-                        @Param("departmentId") Integer departmentId,
-                        @Param("forwardedOnly") boolean forwardedOnly);
+                        @Param("departmentId") Integer departmentId);
 
         /**
          * Đơn kèm mọi thứ trang chi tiết và kiểm quyền cần (ứng viên, tin, requisition,
@@ -369,9 +361,6 @@ public interface ApplicationRepository extends JpaRepository<Application, Intege
 
         @Query("select a from Application a join fetch a.candidate c join fetch c.account join fetch a.jobPosting jp where a.applicationStatus in ('HM_Passed','Interviewing') and jp.postingStatus = 'Published'")
         List<Application> findEligibleForInterview();
-
-        @Query(value = "select count(*) from AuditLog where EntityName = 'Application' and EntityId = cast(:id as nvarchar(50)) and NewValue = 'TalentPoolSuggested'", nativeQuery = true)
-        int countTalentPoolOrigin(@Param("id") Integer applicationId);
 
         @Query(value = "select count(*) from AuditLog where EntityName = 'Application' and EntityId = cast(:id as nvarchar(50)) and NewValue = 'TalentPoolCancelled'", nativeQuery = true)
         int countTalentPoolCancellation(@Param("id") Integer applicationId);

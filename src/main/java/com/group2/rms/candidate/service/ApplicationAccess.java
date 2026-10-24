@@ -2,8 +2,6 @@ package com.group2.rms.candidate.service;
 
 import com.group2.rms.candidate.dto.ApplicationProgressResponse;
 import com.group2.rms.candidate.entity.Application;
-import com.group2.rms.candidate.repository.ApplicationReviewRepository;
-import com.group2.rms.candidate.repository.ApplicationRepository;
 import com.group2.rms.requisition.service.RequisitionAccess;
 import com.group2.rms.user.entity.User;
 import lombok.RequiredArgsConstructor;
@@ -16,8 +14,8 @@ import static com.group2.rms.requisition.service.RequisitionAccess.*;
 
 /**
  * Ai xem được đơn nào và làm được gì trên đơn (5.1.22, 5.1.23).
- * HR, Director, Admin xem mọi đơn; Hiring Manager chỉ xem đơn phòng ban mình đã
- * được HR chuyển (SRS UC 43).
+ * HR, Director, Admin xem mọi đơn; Hiring Manager xem mọi đơn phòng ban mình, kể cả
+ * đơn HR chưa chuyển (Q1.4).
  * Chỉ HR và Hiring Manager được duyệt; Director, Admin chỉ xem.
  */
 @Component
@@ -30,8 +28,6 @@ public class ApplicationAccess {
     private static final Set<String> VIEW_ALL_ROLES = Set.of(ROLE_HR, ROLE_DIRECTOR, ROLE_SYSTEM_ADMIN);
 
     private final RequisitionAccess requisitionAccess;
-    private final ApplicationReviewRepository reviews;
-    private final ApplicationRepository applications;
 
     /**
      * Người đang đăng nhập; tài khoản khóa hoặc vai trò ngoài nhóm tuyển dụng thì
@@ -53,10 +49,8 @@ public class ApplicationAccess {
         if (VIEW_ALL_ROLES.contains(role(user))) {
             return true;
         }
-        // check if user is in talent pool and user is HM , cv belong to department
-        return isHiringManager(user) && inManagedDepartment(user, application)
-                && (forwardedByHr(application)
-                        || applications.countTalentPoolOrigin(application.getApplicationId()) > 0);
+        // dunglt bổ sung: Q1.4 HM xem mọi đơn phòng mình; điều kiện "HR đã chuyển / nguồn talent pool" không còn cần
+        return isHiringManager(user) && inManagedDepartment(user, application);
     }
 
     public void requireView(User user, Application application) {
@@ -128,10 +122,5 @@ public class ApplicationAccess {
 
     private boolean inManagedDepartment(User user, Application application) {
         return requisitionAccess.inManagedDepartment(user, application.getJobPosting().getRequisition());
-    }
-
-    private boolean forwardedByHr(Application application) {
-        return reviews.existsByApplication_ApplicationIdAndReviewerRoleAndDecision(
-                application.getApplicationId(), "HR", "Pass");
     }
 }

@@ -1,8 +1,6 @@
 package com.group2.rms.candidate.service;
 
 import com.group2.rms.candidate.entity.Application;
-import com.group2.rms.candidate.repository.ApplicationRepository;
-import com.group2.rms.candidate.repository.ApplicationReviewRepository;
 import com.group2.rms.jobposting.entity.JobPosting;
 import com.group2.rms.requisition.entity.JobRequisition;
 import com.group2.rms.requisition.service.RequisitionAccess;
@@ -17,9 +15,7 @@ import static org.mockito.Mockito.*;
 
 class ApplicationAccessCoverageTests {
     private final RequisitionAccess requisitionAccess = mock(RequisitionAccess.class);
-    private final ApplicationReviewRepository reviews = mock(ApplicationReviewRepository.class);
-    private final ApplicationRepository applications = mock(ApplicationRepository.class);
-    private final ApplicationAccess service = new ApplicationAccess(requisitionAccess, reviews, applications);
+    private final ApplicationAccess service = new ApplicationAccess(requisitionAccess);
     private final User user = User.builder().userId(7).build();
     private final JobRequisition requisition = JobRequisition.builder().build();
     private final Application application = Application.builder().applicationId(100)
@@ -44,9 +40,8 @@ class ApplicationAccessCoverageTests {
         when(requisitionAccess.role(user)).thenReturn("Candidate");
         // When: Yêu cầu quyền xem hồ sơ nội bộ.
         assertThrows(AccessDeniedException.class, () -> service.requireView(user, application));
-        // Then: Không đọc lịch sử HR hoặc nguồn talent pool khi vai trò không hợp lệ.
-        verify(reviews, times(0)).existsByApplication_ApplicationIdAndReviewerRoleAndDecision(any(), any(), any());
-        verify(applications, times(0)).countTalentPoolOrigin(any());
+        // Then: Không kiểm phạm vi phòng ban khi vai trò không hợp lệ.
+        verify(requisitionAccess, times(0)).inManagedDepartment(any(), any());
     }
 
     @Test
@@ -62,16 +57,26 @@ class ApplicationAccessCoverageTests {
     }
 
     @Test
-    @DisplayName("AUTHZ-APP-04 | HM xem hồ sơ từ talent pool trong phòng ban mình")
-    void canView_hmTalentPoolOrigin_allowsWithoutHrPass() {
-        // Given: HM đúng phòng ban, hồ sơ chưa có HR Pass nhưng có nguồn talent pool.
+    @DisplayName("AUTHZ-APP-04 | HM xem hồ sơ phòng ban mình, kể cả chưa có HR Pass (Q1.4)")
+    void canView_hmOwnDepartment_allowsWithoutHrPass() {
+        // dunglt bổ sung: bản cũ cần nguồn talent pool; Q1.4 cho HM xem mọi hồ sơ phòng mình
+        // Given: HM đúng phòng ban, hồ sơ chưa có HR Pass.
         when(requisitionAccess.role(user)).thenReturn("Hiring Manager");
         when(requisitionAccess.inManagedDepartment(user, requisition)).thenReturn(true);
-        when(applications.countTalentPoolOrigin(100)).thenReturn(1);
         // When: Kiểm tra quyền xem hồ sơ.
         boolean result = service.canView(user, application);
-        // Then: HM được xem hồ sơ đúng phạm vi có nguồn talent pool.
+        // Then: HM được xem hồ sơ đúng phạm vi.
         assertEquals(true, result);
-        verify(applications, times(1)).countTalentPoolOrigin(100);
+    }
+
+    @Test
+    @DisplayName("AUTHZ-APP-05 | HM phòng khác bị từ chối xem hồ sơ")
+    void canView_hmOtherDepartment_denies() {
+        // Given: HM không quản lý phòng ban của hồ sơ.
+        when(requisitionAccess.role(user)).thenReturn("Hiring Manager");
+        when(requisitionAccess.inManagedDepartment(user, requisition)).thenReturn(false);
+        // When / Then: Bị từ chối.
+        assertEquals(false, service.canView(user, application));
+        assertThrows(AccessDeniedException.class, () -> service.requireView(user, application));
     }
 }

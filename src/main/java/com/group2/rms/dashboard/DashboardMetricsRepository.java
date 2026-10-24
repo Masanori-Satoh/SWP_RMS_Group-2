@@ -97,14 +97,14 @@ public class DashboardMetricsRepository {
                 + " group by a.applicationStatus", Map.of());
     }
 
-    /** Uses the exact scope and HR-forwarding predicate of the Hiring Manager pipeline. */
+    /** Uses the exact scope of the Hiring Manager pipeline. */
+    // dunglt bổ sung: Q1.4 HM thấy mọi đơn phòng mình (bỏ cờ forwardedOnly), dashboard đếm khớp /applications
     public List<StatusCount> hiringManagerApplicationStatuses(int userId, Integer departmentId) {
         var query = entityManager.createQuery("select a.applicationStatus, count(a) " + PIPELINE_JOINS
                 + FORMAL_SCOPE_FILTER + "group by a.applicationStatus", Object[].class);
         query.setParameter("allDepartments", false);
         query.setParameter("managerUserId", userId);
         query.setParameter("departmentId", departmentId);
-        query.setParameter("forwardedOnly", true);
         return query.getResultList().stream()
                 .map(row -> new StatusCount((String) row[0], (Long) row[1])).toList();
     }
@@ -115,7 +115,6 @@ public class DashboardMetricsRepository {
         query.setParameter("allDepartments", false);
         query.setParameter("managerUserId", userId);
         query.setParameter("departmentId", departmentId);
-        query.setParameter("forwardedOnly", true);
         return query.getSingleResult();
     }
 

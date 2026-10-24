@@ -316,7 +316,7 @@ class ApplicationPipelineWebTests {
                 .andExpect(model().attribute("activeMenu", "applications"))
                 .andExpect(model().attribute("viewerRole", "HR"))
                 .andExpect(content().string(containsString("Danh sách ứng viên")))
-                .andExpect(content().string(not(containsString("Hồ sơ được chuyển"))))
+                .andExpect(content().string(not(containsString("Hồ sơ của phòng ban bạn"))))
                 .andExpect(content().string(containsString("href=\"/applications/298\"")))
                 .andExpect(content().string(containsString("data-cv-url=\"/applications/298/cv\"")))
                 .andExpect(content().string(containsString(">79<")))
@@ -364,14 +364,16 @@ class ApplicationPipelineWebTests {
     }
 
     @Test
-    void hiringManagerSeesForwardedTitleAndEmptyState() throws Exception {
+    void hiringManagerSeesDepartmentTitleAndEmptyState() throws Exception {
         when(pipeline.list(any(), any())).thenReturn(listOf(true, "Hiring Manager"));
 
         mvc.perform(get("/applications").with(as("hm_khanh", "Hiring Manager")))
                 .andExpect(status().isOk())
                 .andExpect(model().attribute("viewerRole", "Hiring Manager"))
-                .andExpect(content().string(containsString("Hồ sơ được chuyển")))
-                .andExpect(content().string(containsString("khi HR chuyển cho phòng ban của bạn")))
+                .andExpect(content().string(containsString("Hồ sơ của phòng ban bạn")))
+                .andExpect(content().string(containsString("bạn duyệt hồ sơ HR đã chuyển")))
+                .andExpect(content().string(containsString("Chưa có hồ sơ nào nộp vào phòng ban của bạn.")))
+                .andExpect(content().string(not(containsString("Hồ sơ được chuyển"))))
                 .andExpect(content().string(not(containsString("<table"))));
     }
 
@@ -396,7 +398,7 @@ class ApplicationPipelineWebTests {
         mvc.perform(get("/applications").with(as("hm_tuan", "Hiring Manager")).param("jobPostingId", "6"))
                 .andExpect(status().isOk())
                 .andExpect(content().string(containsString("Hồ sơ cho tin: Digital Marketing Executive")))
-                .andExpect(content().string(containsString("chỉ của tin này")))
+                .andExpect(content().string(containsString("Mọi hồ sơ nộp vào tin này; bạn duyệt hồ sơ HR đã chuyển.")))
                 .andExpect(content().string(not(containsString("/internal/job-postings/6"))));
     }
 
@@ -929,12 +931,12 @@ class ApplicationPipelineWebTests {
         return user(username).authorities(() -> authority);
     }
 
-    private static ApplicationListResponse listOf(boolean forwardedView, String viewerRole,
+    private static ApplicationListResponse listOf(boolean departmentView, String viewerRole,
                                                   ApplicationPipelineResponse... rows) {
         Page<ApplicationPipelineResponse> page = new PageImpl<>(List.of(rows), Pageable.ofSize(20), rows.length);
         return new ApplicationListResponse(page, zeroCounts(),
                 List.of(new JobPostingOption(6, "Digital Marketing Executive")),
-                new ApplicationSearch(null, null, null, "score", null).normalized(), null, true, forwardedView,
+                new ApplicationSearch(null, null, null, "score", null).normalized(), null, true, departmentView,
                 viewerRole);
     }
 
