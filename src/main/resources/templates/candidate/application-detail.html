@@ -98,10 +98,14 @@
         </div>
         <aside class="app-detail__side" aria-label="Thông tin liên hệ, ghi chú và hoạt động">
             <section class="card app-contact" aria-labelledby="app-contact-title"
-                     th:with="hasEmail=${!#strings.isEmpty(#strings.trim(detail.email))},hasPhone=${!#strings.isEmpty(#strings.trim(detail.phoneNumber))},hasLinkedIn=${!#strings.isEmpty(#strings.trim(detail.linkedInUrl))},hasPortfolio=${!#strings.isEmpty(#strings.trim(detail.portfolioUrl))}">
-                <div class="card-header"><h2 id="app-contact-title" class="card-title app-workspace-title">Thông tin liên hệ</h2></div>
-                <p th:if="${!hasEmail and !hasPhone and !hasLinkedIn and !hasPortfolio}" class="text-muted">Chưa có thông tin liên hệ.</p>
+                     th:with="hasEmail=${!#strings.isEmpty(#strings.trim(detail.email))},hasPhone=${!#strings.isEmpty(#strings.trim(detail.phoneNumber))},hasLinkedIn=${!#strings.isEmpty(#strings.trim(detail.linkedInUrl))},hasPortfolio=${!#strings.isEmpty(#strings.trim(detail.portfolioUrl))},hasBirth=${detail.dateOfBirth != null},hasGender=${!#strings.isEmpty(#strings.trim(detail.gender))},hasAddress=${!#strings.isEmpty(#strings.trim(detail.address))}">
+                <div class="card-header"><h2 id="app-contact-title" class="card-title app-workspace-title">Thông tin ứng viên</h2></div>
+                <p th:if="${!hasEmail and !hasPhone and !hasLinkedIn and !hasPortfolio and !hasBirth and !hasGender and !hasAddress}" class="text-muted">Chưa có thông tin ứng viên.</p>
                 <dl class="app-contact-facts">
+                    <!-- Q7.5: ứng viên tự khai ở hồ sơ cá nhân; trống thì không hiện dòng -->
+                    <th:block th:if="${hasBirth}"><dt>Ngày sinh</dt><dd th:text="${#temporals.format(detail.dateOfBirth, 'dd/MM/yyyy')}">09/03/1993</dd></th:block>
+                    <th:block th:if="${hasGender}"><dt>Giới tính</dt><dd th:text="${detail.gender}">Nữ</dd></th:block>
+                    <th:block th:if="${hasAddress}"><dt>Địa chỉ</dt><dd th:text="${detail.address}">Số 91 Chùa Bộc, Đống Đa, Hà Nội</dd></th:block>
                     <th:block th:if="${hasEmail}"><dt>Email</dt><dd><a th:href="|mailto:${detail.email}|" th:text="${detail.email}"></a></dd></th:block>
                     <th:block th:if="${hasPhone}"><dt>Điện thoại</dt><dd><a th:href="|tel:${detail.phoneNumber}|" th:text="${detail.phoneNumber}"></a></dd></th:block>
                     <th:block th:if="${hasLinkedIn}" th:with="url=${detail.linkedInUrl},lower=${#strings.toLowerCase(detail.linkedInUrl)},web=${#strings.startsWith(lower, 'https://') or #strings.startsWith(lower, 'http://')}">
@@ -145,7 +149,7 @@
         <h2 id="app-actions-title" class="app-section-title">Đánh giá hồ sơ</h2>
 
         <form th:if="${detail.actions.review}" th:action="@{/applications/{id}/review(id=${detail.applicationId})}"
-              th:object="${reviewForm}" method="post" class="app-review" novalidate>
+              th:object="${reviewForm}" method="post" class="app-review" id="app-review-form" novalidate>
             <div th:if="${#fields.hasGlobalErrors() or #fields.hasErrors('decision')}" class="alert alert--danger" role="alert">
                 <span th:each="message : ${#fields.globalErrors()}" th:text="${message}">Hồ sơ vừa được người khác xử lý.</span>
                 <span th:each="message : ${#fields.errors('decision')}" th:text="${message}">Quyết định không hợp lệ.</span>
@@ -157,13 +161,38 @@
                           th:text="*{comments}" th:attr="aria-invalid=${#fields.hasErrors('comments')}"></textarea>
                 <span th:if="${#fields.hasErrors('comments')}" th:errors="*{comments}" class="form-error">Nhận xét tối đa 1000 ký tự.</span>
             </div>
+            <p th:if="${detail.viewerRole == 'Director'}" class="text-muted">Bạn đang duyệt thay trưởng bộ phận; lịch sử sẽ ghi "Giám đốc".</p>
             <div class="app-review__actions">
                 <button type="submit" name="decision" value="Pass" class="btn btn--primary btn--sm"
                         th:text="${detail.applicationStatus == 'HR_Passed' ? 'Đạt' : 'Đạt, chuyển trưởng bộ phận'}">Đạt</button>
                 <button type="submit" name="decision" value="Hold" class="btn btn--secondary btn--sm">Tạm giữ</button>
-                <button type="submit" name="decision" value="Fail" class="btn btn--danger btn--sm">Không đạt</button>
+                <!-- Có JS: mở hộp xác nhận (js/pages/application-review.js). Không JS: gửi thẳng như cũ -->
+                <button type="submit" name="decision" value="Fail" class="btn btn--danger btn--sm"
+                        data-review-fail aria-haspopup="dialog" aria-controls="app-reject-dialog">Không đạt</button>
             </div>
         </form>
+
+        <!-- Q2.1: loại ứng viên phải xác nhận. Markup catalog confirm-dialog; không dùng fragments/ui/dialogs :: confirm
+             (không render trên Thymeleaf 3.1). Nút đỏ gửi form duyệt qua thuộc tính form= (kèm nhận xét đã nhập). -->
+        <dialog th:if="${detail.actions.review}" id="app-reject-dialog" class="confirm-dialog"
+                aria-labelledby="app-reject-title" aria-describedby="app-reject-message">
+            <div class="dialog-content">
+                <div class="dialog-header">
+                    <h2 id="app-reject-title" class="dialog-title">Loại ứng viên <span th:text="${detail.fullName}">Nguyễn Văn An</span>?</h2>
+                </div>
+                <div class="dialog-body">
+                    <p id="app-reject-message">
+                        Hồ sơ chuyển sang Không đạt và không hoàn tác được.
+                        Nhận xét nội bộ bạn đã nhập sẽ được lưu cùng quyết định.
+                    </p>
+                </div>
+                <div class="dialog-actions">
+                    <button type="button" class="btn btn--secondary btn--sm" data-review-cancel>Hủy</button>
+                    <button type="submit" form="app-review-form" name="decision" value="Fail"
+                            class="btn btn--danger btn--sm" data-review-confirm>Xác nhận loại ứng viên</button>
+                </div>
+            </div>
+        </dialog>
 
         <!-- Chỉ là link sang trang của module khác (interview, offer), không gọi Service của họ -->
         <div th:if="${detail.actions.scheduleInterview or detail.actions.createOffer or detail.interviewId != null}"
@@ -202,6 +231,6 @@
     </div>
     <th:block th:replace="~{candidate/application-dialogs :: dialogs(canBookmark=${detail.viewerRole == 'HR' or detail.viewerRole == 'Hiring Manager'})}"></th:block>
 </main>
-<th:block layout:fragment="scripts"><script th:src="@{/js/pages/talent-pool.js}" defer></script><script th:src="@{/js/pages/applications.js}" defer></script></th:block>
+<th:block layout:fragment="scripts"><script th:src="@{/js/pages/talent-pool.js}" defer></script><script th:src="@{/js/pages/applications.js}" defer></script><script th:src="@{/js/pages/application-review.js}" defer></script></th:block>
 </body>
 </html>

@@ -316,7 +316,7 @@ class ApplicationPipelineWebTests {
                 .andExpect(model().attribute("activeMenu", "applications"))
                 .andExpect(model().attribute("viewerRole", "HR"))
                 .andExpect(content().string(containsString("Danh sách ứng viên")))
-                .andExpect(content().string(not(containsString("Hồ sơ được chuyển"))))
+                .andExpect(content().string(not(containsString("Hồ sơ của phòng ban bạn"))))
                 .andExpect(content().string(containsString("href=\"/applications/298\"")))
                 .andExpect(content().string(containsString("data-cv-url=\"/applications/298/cv\"")))
                 .andExpect(content().string(containsString(">79<")))
@@ -364,14 +364,16 @@ class ApplicationPipelineWebTests {
     }
 
     @Test
-    void hiringManagerSeesForwardedTitleAndEmptyState() throws Exception {
+    void hiringManagerSeesDepartmentTitleAndEmptyState() throws Exception {
         when(pipeline.list(any(), any())).thenReturn(listOf(true, "Hiring Manager"));
 
         mvc.perform(get("/applications").with(as("hm_khanh", "Hiring Manager")))
                 .andExpect(status().isOk())
                 .andExpect(model().attribute("viewerRole", "Hiring Manager"))
-                .andExpect(content().string(containsString("Hồ sơ được chuyển")))
-                .andExpect(content().string(containsString("khi HR chuyển cho phòng ban của bạn")))
+                .andExpect(content().string(containsString("Hồ sơ của phòng ban bạn")))
+                .andExpect(content().string(containsString("bạn duyệt hồ sơ HR đã chuyển")))
+                .andExpect(content().string(containsString("Chưa có hồ sơ nào nộp vào phòng ban của bạn.")))
+                .andExpect(content().string(not(containsString("Hồ sơ được chuyển"))))
                 .andExpect(content().string(not(containsString("<table"))));
     }
 
@@ -396,7 +398,7 @@ class ApplicationPipelineWebTests {
         mvc.perform(get("/applications").with(as("hm_tuan", "Hiring Manager")).param("jobPostingId", "6"))
                 .andExpect(status().isOk())
                 .andExpect(content().string(containsString("Hồ sơ cho tin: Digital Marketing Executive")))
-                .andExpect(content().string(containsString("chỉ của tin này")))
+                .andExpect(content().string(containsString("Mọi hồ sơ nộp vào tin này; bạn duyệt hồ sơ HR đã chuyển.")))
                 .andExpect(content().string(not(containsString("/internal/job-postings/6"))));
     }
 
@@ -599,6 +601,73 @@ class ApplicationPipelineWebTests {
                 .andExpect(content().string(containsString("name=\"_csrf\"")));
     }
 
+    /** Q2.1: "Không đạt" mở hộp xác nhận nút đỏ; không JS thì nút vẫn là submit decision=Fail của form duyệt. */
+    @Test
+    void rejectAsksForConfirmationButStillSubmitsWithoutJavaScript() throws Exception {
+        when(pipeline.detail(298)).thenReturn(detail(false, true, null, true, false));
+
+        String html = mvc.perform(get("/applications/298").with(as("hr_lan", "HR")))
+                .andExpect(status().isOk())
+                .andExpect(content().string(containsString("id=\"app-review-form\"")))
+                .andExpect(content().string(containsString("data-review-fail")))
+                .andExpect(content().string(containsString("id=\"app-reject-dialog\" class=\"confirm-dialog\"")))
+                .andExpect(content().string(containsString("Loại ứng viên <span>An Võ</span>?")))
+                .andExpect(content().string(containsString(
+                        "form=\"app-review-form\" name=\"decision\" value=\"Fail\"")))
+                .andExpect(content().string(containsString("Xác nhận loại ứng viên")))
+                .andExpect(content().string(containsString("/js/pages/application-review.js")))
+                .andReturn().getResponse().getContentAsString();
+        // Nút "Không đạt" nằm trong form duyệt (submit thật), hộp xác nhận nằm ngoài form.
+        int formStart = html.indexOf("id=\"app-review-form\"");
+        int failButton = html.indexOf("data-review-fail");
+        int formEnd = html.indexOf("</form>", formStart);
+        int dialog = html.indexOf("id=\"app-reject-dialog\"");
+        assertTrue(formStart < failButton && failButton < formEnd && formEnd < dialog);
+        assertTrue(html.substring(html.lastIndexOf("<button", failButton), failButton)
+                .contains("type=\"submit\" name=\"decision\" value=\"Fail\""));
+
+        // Không JS: gửi thẳng decision=Fail vẫn được xử lý như cũ.
+        when(reviewService.review(eq(298), argThat(f -> "Fail".equals(f.decision()))))
+                .thenReturn("Đã đánh dấu hồ sơ không đạt.");
+        mvc.perform(post("/applications/298/review").with(as("hr_lan", "HR")).with(csrf())
+                        .param("decision", "Fail").param("comments", "Thiếu kinh nghiệm"))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrl("/applications/298"))
+                .andExpect(flash().attribute("successMessage", "Đã đánh dấu hồ sơ không đạt."));
+    }
+
+    /** Q7.5: người tuyển dụng thấy ngày sinh, giới tính, địa chỉ; trống thì không hiện dòng. */
+    @Test
+    void detailShowsDateOfBirthGenderAndAddressWhenKnown() throws Exception {
+        when(pipeline.detail(298)).thenReturn(detail(false, false, null, false, false, null, "AI_Screened", null,
+                "Hiring Manager", true));
+        mvc.perform(get("/applications/298").with(as("hm_tuan", "Hiring Manager")))
+                .andExpect(status().isOk())
+                .andExpect(content().string(containsString("Thông tin ứng viên")))
+                .andExpect(content().string(containsString("<dt>Ngày sinh</dt><dd>17/08/1995</dd>")))
+                .andExpect(content().string(containsString("<dt>Giới tính</dt><dd>Nữ</dd>")))
+                .andExpect(content().string(containsString("<dt>Địa chỉ</dt><dd>Số 88 Láng Hạ, Đống Đa, Hà Nội</dd>")));
+
+        when(pipeline.detail(298)).thenReturn(detail(false, false, null, false, false, null, "AI_Screened", null,
+                "Hiring Manager", false));
+        mvc.perform(get("/applications/298").with(as("hm_tuan", "Hiring Manager")))
+                .andExpect(status().isOk())
+                .andExpect(content().string(not(containsString("<dt>Ngày sinh</dt>"))))
+                .andExpect(content().string(not(containsString("<dt>Giới tính</dt>"))))
+                .andExpect(content().string(not(containsString("<dt>Địa chỉ</dt>"))))
+                .andExpect(content().string(containsString("<dt>Email</dt>")));
+    }
+
+    @Test
+    void readOnlyViewerGetsNoRejectDialog() throws Exception {
+        when(pipeline.detail(298)).thenReturn(detail(false, true, null, false, false));
+
+        mvc.perform(get("/applications/298").with(as("hr_lan", "HR")))
+                .andExpect(status().isOk())
+                .andExpect(content().string(not(containsString("app-reject-dialog"))))
+                .andExpect(content().string(not(containsString("Xác nhận loại ứng viên"))));
+    }
+
     @Test
     void reviewSuccessRedirectsBackWithMessage() throws Exception {
         when(reviewService.review(298, new ApplicationReviewRequest("Pass", "Hợp vị trí")))
@@ -642,13 +711,41 @@ class ApplicationPipelineWebTests {
     void reviewNeedsCsrfAndAReviewerRole() throws Exception {
         mvc.perform(post("/applications/298/review").with(as("hr_lan", "HR")).param("decision", "Pass"))
                 .andExpect(status().isForbidden());
+        // Admin qua được rule URL nhưng Service từ chối (Director nay là người duyệt thay, xem test dưới).
         when(reviewService.review(eq(298), any())).thenThrow(new AccessDeniedException("no"));
-        mvc.perform(post("/applications/298/review").with(as("director", "Director")).with(csrf())
+        mvc.perform(post("/applications/298/review").with(as("admin", "System Admin")).with(csrf())
                         .param("decision", "Pass"))
                 .andExpect(status().isForbidden());
         mvc.perform(post("/applications/298/review").with(as("phong.nguyen", "Candidate")).with(csrf())
                         .param("decision", "Pass"))
                 .andExpect(status().isForbidden());
+    }
+
+    /** Q2.3: Director thấy form duyệt ở HR_Passed kèm dòng nhắc "duyệt thay"; HR, HM không thấy dòng này. */
+    @Test
+    void directorReviewsOnBehalfOfHiringManager() throws Exception {
+        when(pipeline.detail(298)).thenReturn(
+                detail(false, false, null, true, false, null, "HR_Passed", null, "Director"));
+        mvc.perform(get("/applications/298").with(as("director", "Director")))
+                .andExpect(status().isOk())
+                .andExpect(content().string(containsString("Bạn đang duyệt thay trưởng bộ phận")))
+                .andExpect(content().string(containsString("name=\"decision\" value=\"Pass\"")))
+                .andExpect(content().string(containsString("name=\"decision\" value=\"Fail\"")));
+
+        when(pipeline.detail(298)).thenReturn(
+                detail(false, false, null, true, false, null, "HR_Passed", null, "Hiring Manager"));
+        mvc.perform(get("/applications/298").with(as("hm_tuan", "Hiring Manager")))
+                .andExpect(status().isOk())
+                .andExpect(content().string(not(containsString("Bạn đang duyệt thay trưởng bộ phận"))));
+
+        when(reviewService.review(eq(298), any()))
+                .thenReturn("Đã duyệt thay trưởng bộ phận. HR có thể lên lịch phỏng vấn.");
+        mvc.perform(post("/applications/298/review").with(as("director", "Director")).with(csrf())
+                        .param("decision", "Pass"))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrl("/applications/298"))
+                .andExpect(flash().attribute("successMessage",
+                        "Đã duyệt thay trưởng bộ phận. HR có thể lên lịch phỏng vấn."));
     }
 
     @Test
@@ -929,12 +1026,12 @@ class ApplicationPipelineWebTests {
         return user(username).authorities(() -> authority);
     }
 
-    private static ApplicationListResponse listOf(boolean forwardedView, String viewerRole,
+    private static ApplicationListResponse listOf(boolean departmentView, String viewerRole,
                                                   ApplicationPipelineResponse... rows) {
         Page<ApplicationPipelineResponse> page = new PageImpl<>(List.of(rows), Pageable.ofSize(20), rows.length);
         return new ApplicationListResponse(page, zeroCounts(),
                 List.of(new JobPostingOption(6, "Digital Marketing Executive")),
-                new ApplicationSearch(null, null, null, "score", null).normalized(), null, true, forwardedView,
+                new ApplicationSearch(null, null, null, "score", null).normalized(), null, true, departmentView,
                 viewerRole);
     }
 
@@ -968,7 +1065,24 @@ class ApplicationPipelineWebTests {
 
     private static ApplicationDetailResponse detail(boolean nextSteps, boolean openJobPosting, String linkedIn,
                                                     boolean review, boolean rescreen, Long interviewId, String status, BigDecimal aiMatchScore) {
+        return detail(nextSteps, openJobPosting, linkedIn, review, rescreen, interviewId, status, aiMatchScore,
+                openJobPosting ? "HR" : "Hiring Manager");
+    }
+
+    private static ApplicationDetailResponse detail(boolean nextSteps, boolean openJobPosting, String linkedIn,
+                                                    boolean review, boolean rescreen, Long interviewId, String status,
+                                                    BigDecimal aiMatchScore, String viewerRole) {
+        return detail(nextSteps, openJobPosting, linkedIn, review, rescreen, interviewId, status, aiMatchScore,
+                viewerRole, true);
+    }
+
+    /** {@code personalFacts}: có ngày sinh, giới tính, địa chỉ (Q7.5) hay để trống. */
+    private static ApplicationDetailResponse detail(boolean nextSteps, boolean openJobPosting, String linkedIn,
+                                                    boolean review, boolean rescreen, Long interviewId, String status,
+                                                    BigDecimal aiMatchScore, String viewerRole, boolean personalFacts) {
         return new ApplicationDetailResponse(298, 15, false, "An Võ", "an.vo@example.com", "0901 234 567", linkedIn, null,
+                personalFacts ? java.time.LocalDate.of(1995, 8, 17) : null, personalFacts ? "Nữ" : null,
+                personalFacts ? "Số 88 Láng Hạ, Đống Đa, Hà Nội" : "  ",
                 7, "REQ-007", 12, "Digital Marketing Executive", "Sales & Marketing", SUBMITTED,
                 status, "Qua vòng chuyên môn", "badge--warning", aiMatchScore, aiMatchScore == null ? null : SUBMITTED.plusMinutes(1),
                 List.of(new TimelineItem(SUBMITTED.plusDays(1), "HR: Đạt", "Lan HR", "Hợp vị trí", "success"),
@@ -978,7 +1092,7 @@ class ApplicationPipelineWebTests {
                                 "Chờ xếp lịch phỏng vấn · Đang chờ: HR", false)),
                 interviewId,
                 new ApplicationDetailResponse.Actions(review, rescreen, nextSteps, nextSteps, openJobPosting),
-                openJobPosting ? "HR" : "Hiring Manager", "HM_Suggested".equals(status));
+                viewerRole, "HM_Suggested".equals(status));
     }
 
     private static ApplicationPipelineResponse row(int id, String status, String score, boolean schedule,

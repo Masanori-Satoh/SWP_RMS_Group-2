@@ -77,6 +77,32 @@ class ApplicationReviewServiceTests {
         assertEquals("Đã duyệt hồ sơ. HR có thể lên lịch phỏng vấn.", message);
     }
 
+    /** Q2.3: HM vắng thì Director duyệt thay ở bước HM; lượt duyệt ghi vai trò Director (lịch sử hiện "Giám đốc"). */
+    @Test
+    void directorPassOnBehalfOfHiringManagerIsRecordedAsDirector() {
+        reviewable("HR_Passed");
+        when(access.isDirector(actor)).thenReturn(true);
+        when(applications.transition(ID, Set.of("HR_Passed"), "HM_Passed")).thenReturn(1);
+
+        String message = service.review(ID, new ApplicationReviewRequest("Pass", "HM nghỉ phép"));
+
+        assertEquals("Director", savedReview().getReviewerRole());
+        assertEquals("HM nghỉ phép", savedReview().getComments());
+        assertEquals("Đã duyệt thay trưởng bộ phận. HR có thể lên lịch phỏng vấn.", message);
+    }
+
+    @Test
+    void directorFailOnBehalfOfHiringManagerRejects() {
+        reviewable("HR_Passed");
+        when(access.isDirector(actor)).thenReturn(true);
+        when(applications.transition(ID, Set.of("HR_Passed"), "Rejected")).thenReturn(1);
+
+        assertEquals("Đã đánh dấu hồ sơ không đạt.", service.review(ID, new ApplicationReviewRequest("Fail", null)));
+
+        assertEquals("Director", savedReview().getReviewerRole());
+        assertEquals("Fail", savedReview().getDecision());
+    }
+
     @Test
     void failRejectsWithOptionalComment() {
         reviewable("HR_Passed");
@@ -111,7 +137,7 @@ class ApplicationReviewServiceTests {
     }
 
     @Test
-    void directorAndAdminCannotReview() {
+    void adminAndOtherRolesCannotReview() {
         Application application = application("AI_Screened");
         when(applications.findDetailById(ID)).thenReturn(Optional.of(application));
         when(access.isReviewer(actor)).thenReturn(false);

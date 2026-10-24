@@ -71,7 +71,7 @@ public class ApplicationPipelineService {
         ApplicationSearch filter = search.normalized();
 
         List<Integer> ids = applications.findPipelineIds(
-                scope.allDepartments(), scope.managerUserId(), scope.departmentId(), scope.forwardedOnly(),
+                scope.allDepartments(), scope.managerUserId(), scope.departmentId(),
                 filter.jobPostingId(), filter.status(), filter.keyword(), filter.sort());
         Map<Integer, ApplicationProgressFacts> facts = progressFacts(ids);
         LocalDateTime now = LocalDateTime.now();
@@ -102,9 +102,8 @@ public class ApplicationPipelineService {
         String postingTitle = filter.jobPostingId() == null ? null
                 : jobPostings.findById(filter.jobPostingId()).map(JobPosting::getPostingTitle).orElse(null);
         return new ApplicationListResponse(new PageImpl<>(rows, pageRequest, matching.size()), stageCounts,
-                applications.findPostingOptions(scope.allDepartments(), scope.managerUserId(), scope.departmentId(),
-                        scope.forwardedOnly()),
-                filter, postingTitle, access.canOpenJobPosting(actor), scope.forwardedOnly(),
+                applications.findPostingOptions(scope.allDepartments(), scope.managerUserId(), scope.departmentId()),
+                filter, postingTitle, access.canOpenJobPosting(actor), !scope.allDepartments(),
                 actor.getRole() == null ? null : actor.getRole().getRoleName());
     }
 
@@ -132,6 +131,7 @@ public class ApplicationPipelineService {
                 candidate.getCandidateId(), candidate.isPotential(),
                 account.getFullName(), account.getEmail(), account.getPhoneNumber(),
                 candidate.getLinkedInUrl(), candidate.getPortfolioUrl(),
+                candidate.getDateOfBirth(), candidate.getGender(), candidate.getAddress(),
                 requisition.getRequisitionId(), requisition.getRequisitionCode(),
                 job.getJobPostingId(), job.getPostingTitle(),
                 requisition.getDepartment() == null ? null : requisition.getDepartment().getDepartmentName(),

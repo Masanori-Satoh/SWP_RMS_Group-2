@@ -2,7 +2,6 @@ package com.group2.rms.candidate.service;
 
 import com.group2.rms.candidate.dto.ApplicationProgressResponse;
 import com.group2.rms.candidate.entity.Application;
-import com.group2.rms.candidate.repository.ApplicationReviewRepository;
 import com.group2.rms.jobposting.entity.JobPosting;
 import com.group2.rms.requisition.entity.JobRequisition;
 import com.group2.rms.requisition.service.RequisitionAccess;
@@ -35,8 +34,6 @@ class ApplicationAccessTests {
     private static final int APPLICATION_ID = 298;
 
     @Mock UserRepository userRepository;
-    @Mock ApplicationReviewRepository reviews;
-    @Mock com.group2.rms.candidate.repository.ApplicationRepository applications;
 
     private ApplicationAccess access;
 
@@ -54,7 +51,7 @@ class ApplicationAccessTests {
     void setUp() {
         engineering.setManager(engineeringHead);
         sales.setManager(salesHead);
-        access = new ApplicationAccess(new RequisitionAccess(userRepository), reviews, applications);
+        access = new ApplicationAccess(new RequisitionAccess(userRepository));
     }
 
     @Test
@@ -68,28 +65,23 @@ class ApplicationAccessTests {
             assertEquals(ApplicationScope.ALL, access.scopeOf(user));
             assertEquals(true, access.canView(user, application));
         }
-        verify(reviews, times(0)).saveAndFlush(any());
-        verify(reviews, times(0)).findWithReviewerByApplicationId(any());
-        verify(reviews, times(0)).existsByApplication_ApplicationIdAndReviewerRoleAndDecision(any(), any(), any());
     }
 
     @Test
-    @DisplayName("Scope HM theo user ID, phòng ban hiện tại và yêu cầu hồ sơ đã chuyển")
-    void hiringManagerScopeIsManagedOrOwnDepartmentAndForwardedOnly() {
-        // Given: Scope HM theo user ID, phòng ban hiện tại và yêu cầu hồ sơ đã chuyển.
+    @DisplayName("Scope HM theo user ID và phòng ban hiện tại, không yêu cầu hồ sơ đã chuyển (Q1.4)")
+    void hiringManagerScopeIsManagedOrOwnDepartment() {
+        // Given: Scope HM theo user ID và phòng ban hiện tại (Q1.4: không còn cờ "chỉ đơn HR đã chuyển").
         // When: Gọi access.scopeOf với dữ liệu đã chuẩn bị.
-        // Then: Scope HM theo user ID, phòng ban hiện tại và yêu cầu hồ sơ đã chuyển.
-        assertEquals(new ApplicationScope(false, 5, null, true), access.scopeOf(engineeringHead));
-        assertEquals(new ApplicationScope(false, 6, 10, true), access.scopeOf(engineeringMember));
+        // Then: Scope chỉ giới hạn phòng ban.
+        assertEquals(new ApplicationScope(false, 5, null), access.scopeOf(engineeringHead));
+        assertEquals(new ApplicationScope(false, 6, 10), access.scopeOf(engineeringMember));
     }
 
     @Test
     @DisplayName("HM quản lý/cùng phòng được xem hồ sơ HR đã chuyển; HM phòng khác bị chặn")
-    void hiringManagerSeesOnlyForwardedApplicationsOfOwnDepartment() {
+    void hiringManagerSeesForwardedApplicationsOfOwnDepartmentOnly() {
         // Given: HM quản lý/cùng phòng được xem hồ sơ HR đã chuyển; HM phòng khác bị chặn.
         Application application = application(engineering, "HR_Passed");
-        when(reviews.existsByApplication_ApplicationIdAndReviewerRoleAndDecision(APPLICATION_ID, "HR", "Pass"))
-            .thenReturn(true);
         // When: Gọi access.canView với dữ liệu đã chuẩn bị.
         // Then: HM quản lý/cùng phòng được xem hồ sơ HR đã chuyển; HM phòng khác bị chặn.
         assertEquals(true, access.canView(engineeringHead, application));
@@ -98,16 +90,20 @@ class ApplicationAccessTests {
     }
 
     @Test
-    @DisplayName("HM không xem hồ sơ chưa được HR chuyển và không có nguồn talent pool")
-    void hiringManagerCannotSeeApplicationNotYetForwarded() {
-        // Given: HM không xem hồ sơ chưa được HR chuyển và không có nguồn talent pool.
-        Application application = application(engineering, "AI_Screened");
-        when(reviews.existsByApplication_ApplicationIdAndReviewerRoleAndDecision(anyInt(), anyString(), anyString()))
-            .thenReturn(false);
-        // When: Gọi access.canView với dữ liệu đã chuẩn bị.
-        // Then: HM không xem hồ sơ chưa được HR chuyển và không có nguồn talent pool.
-        assertEquals(false, access.canView(engineeringHead, application));
-        assertThrows(AccessDeniedException.class, () -> access.requireView(engineeringHead, application));
+    @DisplayName("Q1.4: HM xem được hồ sơ phòng mình HR chưa chuyển (không duyệt); HM phòng khác vẫn bị chặn")
+    void hiringManagerSeesApplicationNotYetForwardedOfOwnDepartment() {
+        for (String status : List.of("Applied", "AI_Screened")) {
+            // Given: Hồ sơ phòng Engineering mới nộp / AI vừa chấm, HR chưa duyệt.
+            Application application = application(engineering, status);
+            // When: Gọi access.canView / requireView / canReview.
+            // Then: HM quản lý/cùng phòng xem được nhưng không duyệt; HM phòng Sales bị chặn.
+            assertEquals(true, access.canView(engineeringHead, application));
+            assertEquals(true, access.canView(engineeringMember, application));
+            access.requireView(engineeringHead, application);
+            assertEquals(false, access.canReview(engineeringHead, application));
+            assertEquals(false, access.canView(salesHead, application));
+            assertThrows(AccessDeniedException.class, () -> access.requireView(salesHead, application));
+        }
     }
 
     @Test
@@ -182,14 +178,17 @@ class ApplicationAccessTests {
     }
 
     @Test
-    @DisplayName("Director/Admin không được review hồ sơ trạng thái HR_Passed")
-    void directorAndAdminNeverReview_HR_Passed() {
-        // Given: Director/Admin không được review hồ sơ trạng thái HR_Passed.
-        Application application = application(engineering, "HR_Passed");
-        // When: Gọi access.canReview với dữ liệu đã chuẩn bị.
-        // Then: Director/Admin không được review hồ sơ trạng thái HR_Passed.
-        assertEquals(false, access.canReview(director, application));
-        assertEquals(false, access.canReview(admin, application));
+    @DisplayName("Q2.3: Director duyệt thay HM hồ sơ HR_Passed của mọi phòng; Admin không")
+    void directorReviewsHrPassedOfAnyDepartmentButAdminDoesNot() {
+        for (Department department : List.of(engineering, sales)) {
+            // Given: Hồ sơ HR đã chuyển, ở phòng Engineering hoặc Sales (Director không thuộc phòng nào).
+            Application application = application(department, "HR_Passed");
+            // When: Gọi access.canReview.
+            // Then: Director được duyệt thay (không kiểm phòng ban); Admin không; Director không chấm lại AI.
+            assertEquals(true, access.canReview(director, application));
+            assertEquals(false, access.canReview(admin, application));
+            assertEquals(false, access.canRescreen(director, application));
+        }
     }
 
     @Test
@@ -751,14 +750,16 @@ class ApplicationAccessTests {
     }
 
     @Test
-    @DisplayName("Chỉ HR/HM là reviewer; Director/Admin/Interviewer không phải reviewer")
-    void onlyHrAndHiringManagersAreReviewers() {
-        // Given: Chỉ HR/HM là reviewer; Director/Admin/Interviewer không phải reviewer.
-        // When: Gọi access.isReviewer với dữ liệu đã chuẩn bị.
-        // Then: Chỉ HR/HM là reviewer; Director/Admin/Interviewer không phải reviewer.
+    @DisplayName("HR/HM/Director là reviewer (Director duyệt thay bước HM); Admin/Interviewer không")
+    void hrHiringManagersAndDirectorAreReviewers() {
+        // Given: Các vai trò nội bộ.
+        // When: Gọi access.isReviewer / isDirector.
+        // Then: HR, HM, Director là reviewer; Admin, Interviewer không.
         assertEquals(true, access.isReviewer(hr));
         assertEquals(true, access.isReviewer(engineeringHead));
-        assertEquals(false, access.isReviewer(director));
+        assertEquals(true, access.isReviewer(director));
+        assertEquals(true, access.isDirector(director));
+        assertEquals(false, access.isDirector(engineeringHead));
         assertEquals(false, access.isReviewer(admin));
         assertEquals(false, access.isReviewer(interviewer));
         assertEquals(true, access.isHr(hr));

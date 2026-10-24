@@ -172,7 +172,7 @@ public class DashboardService {
                                                 // get candidate for req
                                                 new DashboardMetricResponse("Candidates Forwarded to My Department",
                                                                 metrics.visibleCandidatesForHiringManager(userId, departmentId),
-                                                                "Distinct candidates in the HR-forwarded pipeline"),
+                                                                "Distinct candidates in the department pipeline"), // dunglt bổ sung: Q1.4, không còn lọc "HR đã chuyển"
                                                 // get upcoming inter
                                                 new DashboardMetricResponse("Upcoming Interviews",
                                                                 metrics.upcomingInterviewsForDepartment(departmentId, now),

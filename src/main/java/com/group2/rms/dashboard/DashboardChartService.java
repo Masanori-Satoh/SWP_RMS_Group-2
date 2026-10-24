@@ -82,7 +82,8 @@ public class DashboardChartService {
                 new DashboardChartResponse("Yêu cầu trong phạm vi của tôi",
                         "Yêu cầu do bạn tạo hoặc thuộc phòng ban bạn quản lý; chọn trạng thái để mở danh sách.",
                         "bar", requisitions),
-                new DashboardChartResponse("Hồ sơ HR đã chuyển",
+                // dunglt bổ sung: Q1.4 HM thấy mọi đơn phòng mình (kể cả HR chưa chuyển)
+                new DashboardChartResponse("Hồ sơ của phòng ban",
                         "Hồ sơ chính thức trong phạm vi phòng ban của bạn, theo trạng thái hiện tại.",
                         "bar", applications),
                 new DashboardChartResponse("Lịch phỏng vấn 7 ngày tới",

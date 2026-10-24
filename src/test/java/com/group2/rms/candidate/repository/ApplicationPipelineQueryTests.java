@@ -70,27 +70,28 @@ class ApplicationPipelineQueryTests {
         }
     }
 
+    /** Q1.4: HM thấy mọi đơn chính thức của phòng mình, kể cả đơn HR chưa chuyển; không thấy phòng khác. */
     @Test
-    void hiringManagerSeesOnlyForwardedApplicationsOfManagedDepartment() {
+    void hiringManagerSeesEveryApplicationOfManagedDepartment() {
         User manager = users.findByUsernameIgnoreCase("hm_tuan").orElseThrow();
         Integer ownDepartmentId = manager.getDepartment() == null ? null : manager.getDepartment().getDepartmentId();
         ApplicationScope scope = ApplicationScope.hiringManager(manager.getUserId(), ownDepartmentId);
 
-        List<ApplicationPipelineResponse> rows = search(scope, null, null, ApplicationSearch.SORT_SCORE);
+        List<Integer> mine = ids(scope, null, null, ApplicationSearch.SORT_SCORE);
+        List<Integer> expected = ids(ApplicationScope.ALL, null, null, ApplicationSearch.SORT_SCORE).stream()
+                .filter(id -> {
+                    var department = applications.findDetailById(id).orElseThrow()
+                            .getJobPosting().getRequisition().getDepartment();
+                    return department != null && (Objects.equals(department.getDepartmentId(), ownDepartmentId)
+                            || department.getManager() != null
+                            && Objects.equals(department.getManager().getUserId(), manager.getUserId()));
+                }).toList();
 
-        assertFalse(rows.isEmpty());
-        for (ApplicationPipelineResponse row : rows) {
-            Application application = applications.findDetailById(row.applicationId()).orElseThrow();
-            var department = application.getJobPosting().getRequisition().getDepartment();
-            boolean managesIt = department.getManager() != null
-                    && Objects.equals(department.getManager().getUserId(), manager.getUserId());
-            assertTrue(managesIt || Objects.equals(department.getDepartmentId(), ownDepartmentId),
-                    "đúng phòng ban: " + row.applicationId());
-            assertTrue(reviews.existsByApplication_ApplicationIdAndReviewerRoleAndDecision(
-                    row.applicationId(), "HR", "Pass") || applications.countTalentPoolOrigin(row.applicationId()) > 0,
-                    "đã được HR chuyển hoặc đã xác nhận từ đề xuất HM: " + row.applicationId());
-        }
-        assertTrue(rows.size() < applications.count());
+        assertFalse(mine.isEmpty());
+        assertEquals(expected, mine, "đúng mọi đơn chính thức của phòng ban, cùng thứ tự");
+        assertTrue(mine.stream().anyMatch(id -> !reviews.existsByApplication_ApplicationIdAndReviewerRoleAndDecision(
+                id, "HR", "Pass")), "có đơn HR chưa chuyển");
+        assertTrue(mine.size() < applications.count());
     }
 
     @Test
@@ -110,9 +111,9 @@ class ApplicationPipelineQueryTests {
 
     @Test
     void jobPostingFilterKeepsOnlyApplicationsOfThatPosting() {
-        JobPostingOption posting = applications.findPostingOptions(true, null, null, false).getFirst();
+        JobPostingOption posting = applications.findPostingOptions(true, null, null).getFirst();
 
-        List<Integer> ids = applications.findPipelineIds(true, null, null, false, posting.jobPostingId(), null, null,
+        List<Integer> ids = applications.findPipelineIds(true, null, null, posting.jobPostingId(), null, null,
                 ApplicationSearch.SORT_SCORE);
 
         assertFalse(ids.isEmpty());
@@ -122,7 +123,7 @@ class ApplicationPipelineQueryTests {
 
     @Test
     void postingOptionsAreDistinctAndSorted() {
-        List<JobPostingOption> options = applications.findPostingOptions(true, null, null, false);
+        List<JobPostingOption> options = applications.findPostingOptions(true, null, null);
 
         assertFalse(options.isEmpty());
         assertEquals(options.size(), new HashSet<>(options).size());
@@ -233,7 +234,7 @@ class ApplicationPipelineQueryTests {
 
     private List<Integer> ids(ApplicationScope scope, String keyword, String status, String sort) {
         return applications.findPipelineIds(scope.allDepartments(), scope.managerUserId(), scope.departmentId(),
-                scope.forwardedOnly(), null, status, keyword, sort);
+                null, status, keyword, sort);
     }
 
     /** Các dòng đúng thứ tự của {@link #ids}, tối đa 2000 đơn đầu (giới hạn tham số của SQL Server). */

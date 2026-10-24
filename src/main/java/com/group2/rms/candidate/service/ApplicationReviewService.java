@@ -16,11 +16,12 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.Set;
 
 /**
- * HR và trưởng bộ phận duyệt hồ sơ (SRS UC 42, 46), và HR chấm lại AI.
+ * HR và trưởng bộ phận duyệt hồ sơ (SRS UC 42, 46), và HR chấm lại AI. HM vắng thì Director duyệt thay ở bước HM
+ * (Q2.3); lượt duyệt ghi vai trò {@code Director} để lịch sử hiện "Giám đốc".
  * Mỗi lượt duyệt = 1 dòng {@code ApplicationReview} + (nếu Đạt / Không đạt) đổi trạng thái, trong cùng một transaction.
  * Trạng thái chỉ đi tiến (SRS GBR-01):
  * <pre>
- *   Applied, AI_Screened --HR Đạt--> HR_Passed --HM Đạt--> HM_Passed
+ *   Applied, AI_Screened --HR Đạt--> HR_Passed --HM (hoặc Director) Đạt--> HM_Passed
  *   bất kỳ bước nào ở trên --Không đạt--> Rejected;  Tạm giữ: giữ nguyên
  * </pre>
  */
@@ -42,7 +43,7 @@ public class ApplicationReviewService {
         Application application = load(applicationId);
         access.requireView(actor, application);
         if (!access.isReviewer(actor)) {
-            throw new AccessDeniedException("Chỉ HR và trưởng bộ phận được duyệt hồ sơ.");
+            throw new AccessDeniedException("Chỉ HR, trưởng bộ phận hoặc Giám đốc (duyệt thay) được duyệt hồ sơ.");
         }
         if (!access.canReview(actor, application)) {
             throw new ApplicationReviewException(null, "Hồ sơ đang ở bước \""
@@ -51,11 +52,12 @@ public class ApplicationReviewService {
         }
 
         boolean hrStep = ApplicationAccess.HR_REVIEW_STATUSES.contains(application.getApplicationStatus());
+        boolean onBehalf = !hrStep && access.isDirector(actor);
         String decision = request.decision();
         reviews.save(ApplicationReview.builder()
                 .application(application)
                 .reviewer(actor)
-                .reviewerRole(hrStep ? "HR" : "HiringManager")
+                .reviewerRole(hrStep ? "HR" : onBehalf ? "Director" : "HiringManager")
                 .decision(decision)
                 .comments(request.comments() == null || request.comments().isBlank() ? null : request.comments().strip())
                 .build());
@@ -73,7 +75,9 @@ public class ApplicationReviewService {
             }
         }
         return switch (decision) {
-            case "Pass" -> hrStep ? "Đã chuyển hồ sơ cho trưởng bộ phận." : "Đã duyệt hồ sơ. HR có thể lên lịch phỏng vấn.";
+            case "Pass" -> hrStep ? "Đã chuyển hồ sơ cho trưởng bộ phận."
+                    : onBehalf ? "Đã duyệt thay trưởng bộ phận. HR có thể lên lịch phỏng vấn."
+                    : "Đã duyệt hồ sơ. HR có thể lên lịch phỏng vấn.";
             case "Fail" -> "Đã đánh dấu hồ sơ không đạt.";
             default -> "Đã tạm giữ hồ sơ.";
         };

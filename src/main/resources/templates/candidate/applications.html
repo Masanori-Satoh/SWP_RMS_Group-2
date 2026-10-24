@@ -5,7 +5,7 @@
       layout:decorate="~{layout/internal}">
 <!--
     CANDIDATE/APPLICATIONS.HTML — Danh sách hồ sơ ứng tuyển (/applications, SRS 5.1.22)
-    HR, Director, Admin: "Danh sách ứng viên" (mọi đơn). Hiring Manager: "Hồ sơ được chuyển" (đơn HR đã chuyển).
+    HR, Director, Admin: "Danh sách ứng viên" (mọi đơn). Hiring Manager: "Hồ sơ của phòng ban bạn" (mọi đơn phòng mình, duyệt đơn HR đã chuyển).
     Dựng bằng catalog: page-header, card, form-*, btn, badge, table-wrapper/table, more-menu,
     fragments/ui/stages :: stageBar (lọc theo giai đoạn), fragments/ui/pagination :: paged.
     CSS riêng: static/css/pages/applications.css (tiền tố app-).
@@ -23,15 +23,15 @@
     <div class="page-header">
         <div th:if="${result.postingTitle != null}">
             <h1 class="page-title" th:text="|Hồ sơ cho tin: ${result.postingTitle}|">Hồ sơ cho tin: Java Developer</h1>
-            <p class="page-subtitle" th:text="${result.forwardedView}
-                    ? 'Hồ sơ HR đã chuyển cho phòng ban của bạn, chỉ của tin này.'
+            <p class="page-subtitle" th:text="${result.departmentView}
+                    ? 'Mọi hồ sơ nộp vào tin này; bạn duyệt hồ sơ HR đã chuyển.'
                     : 'Số đếm và danh sách chỉ tính hồ sơ của tin này.'">Số đếm và danh sách chỉ tính hồ sơ của tin này.</p>
         </div>
-        <div th:if="${result.postingTitle == null and result.forwardedView}">
-            <h1 class="page-title">Hồ sơ được chuyển</h1>
-            <p class="page-subtitle">Hồ sơ HR đã chuyển cho phòng ban của bạn.</p>
+        <div th:if="${result.postingTitle == null and result.departmentView}">
+            <h1 class="page-title">Hồ sơ của phòng ban bạn</h1>
+            <p class="page-subtitle">Mọi hồ sơ nộp vào phòng ban của bạn; bạn duyệt hồ sơ HR đã chuyển.</p>
         </div>
-        <div th:if="${result.postingTitle == null and !result.forwardedView}">
+        <div th:if="${result.postingTitle == null and !result.departmentView}">
             <h1 class="page-title">Danh sách ứng viên</h1>
             <p class="page-subtitle">Xếp theo điểm AI; chọn hồ sơ đạt để chuyển cho trưởng bộ phận.</p>
         </div>
@@ -80,8 +80,8 @@
 
     <div th:if="${page.isEmpty()}" class="card app-empty">
         <h2 class="app-empty__title">Chưa có hồ sơ phù hợp</h2>
-        <p class="app-empty__desc text-muted" th:if="${result.forwardedView}">Hồ sơ sẽ xuất hiện ở đây khi HR chuyển cho phòng ban của bạn.</p>
-        <p class="app-empty__desc text-muted" th:unless="${result.forwardedView}">Hãy thử bỏ bớt điều kiện lọc.</p>
+        <p class="app-empty__desc text-muted" th:if="${result.departmentView}">Chưa có hồ sơ nào nộp vào phòng ban của bạn.</p>
+        <p class="app-empty__desc text-muted" th:unless="${result.departmentView}">Hãy thử bỏ bớt điều kiện lọc.</p>
     </div>
 
     <div th:unless="${page.isEmpty()}" class="table-wrapper">

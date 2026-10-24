@@ -2,8 +2,6 @@ package com.group2.rms.candidate.service;
 
 import com.group2.rms.candidate.dto.ApplicationProgressResponse;
 import com.group2.rms.candidate.entity.Application;
-import com.group2.rms.candidate.repository.ApplicationReviewRepository;
-import com.group2.rms.candidate.repository.ApplicationRepository;
 import com.group2.rms.requisition.service.RequisitionAccess;
 import com.group2.rms.user.entity.User;
 import lombok.RequiredArgsConstructor;
@@ -16,9 +14,10 @@ import static com.group2.rms.requisition.service.RequisitionAccess.*;
 
 /**
  * Ai xem được đơn nào và làm được gì trên đơn (5.1.22, 5.1.23).
- * HR, Director, Admin xem mọi đơn; Hiring Manager chỉ xem đơn phòng ban mình đã
- * được HR chuyển (SRS UC 43).
- * Chỉ HR và Hiring Manager được duyệt; Director, Admin chỉ xem.
+ * HR, Director, Admin xem mọi đơn; Hiring Manager xem mọi đơn phòng ban mình, kể cả
+ * đơn HR chưa chuyển (Q1.4).
+ * HR duyệt bước HR; Hiring Manager duyệt bước HM của phòng mình; Director duyệt thay ở bước HM (mọi phòng, khi HM
+ * vắng — Q2.3), không duyệt bước HR; Admin chỉ xem.
  */
 @Component
 @RequiredArgsConstructor
@@ -30,8 +29,6 @@ public class ApplicationAccess {
     private static final Set<String> VIEW_ALL_ROLES = Set.of(ROLE_HR, ROLE_DIRECTOR, ROLE_SYSTEM_ADMIN);
 
     private final RequisitionAccess requisitionAccess;
-    private final ApplicationReviewRepository reviews;
-    private final ApplicationRepository applications;
 
     /**
      * Người đang đăng nhập; tài khoản khóa hoặc vai trò ngoài nhóm tuyển dụng thì
@@ -53,10 +50,8 @@ public class ApplicationAccess {
         if (VIEW_ALL_ROLES.contains(role(user))) {
             return true;
         }
-        // check if user is in talent pool and user is HM , cv belong to department
-        return isHiringManager(user) && inManagedDepartment(user, application)
-                && (forwardedByHr(application)
-                        || applications.countTalentPoolOrigin(application.getApplicationId()) > 0);
+        // dunglt bổ sung: Q1.4 HM xem mọi đơn phòng mình; điều kiện "HR đã chuyển / nguồn talent pool" không còn cần
+        return isHiringManager(user) && inManagedDepartment(user, application);
     }
 
     public void requireView(User user, Application application) {
@@ -67,12 +62,15 @@ public class ApplicationAccess {
 
     /**
      * HR duyệt đơn chưa qua vòng nhân sự; HM duyệt đơn HR đã chuyển, đúng phòng
-     * ban.
+     * ban; Director duyệt thay HM đơn HR đã chuyển, không kiểm phòng ban.
      */
     public boolean canReview(User user, Application application) {
         String status = application.getApplicationStatus();
         if (ROLE_HR.equals(role(user))) {
             return HR_REVIEW_STATUSES.contains(status);
+        }
+        if (isDirector(user)) {
+            return HM_REVIEW_STATUS.equals(status);
         }
         return isHiringManager(user) && HM_REVIEW_STATUS.equals(status) && inManagedDepartment(user, application);
     }
@@ -109,13 +107,17 @@ public class ApplicationAccess {
         return Set.of(ROLE_HR, ROLE_HIRING_MANAGER, ROLE_SYSTEM_ADMIN).contains(role(user));
     }
 
-    /** HR hoặc Hiring Manager: hai vai trò duy nhất có bước duyệt hồ sơ. */
+    /** HR, Hiring Manager, hoặc Director (duyệt thay bước HM): các vai trò có bước duyệt hồ sơ. */
     public boolean isReviewer(User user) {
-        return isHr(user) || isHiringManager(user);
+        return isHr(user) || isHiringManager(user) || isDirector(user);
     }
 
     public boolean isHr(User user) {
         return ROLE_HR.equals(role(user));
+    }
+
+    public boolean isDirector(User user) {
+        return ROLE_DIRECTOR.equals(role(user));
     }
 
     private boolean isHiringManager(User user) {
@@ -128,10 +130,5 @@ public class ApplicationAccess {
 
     private boolean inManagedDepartment(User user, Application application) {
         return requisitionAccess.inManagedDepartment(user, application.getJobPosting().getRequisition());
-    }
-
-    private boolean forwardedByHr(Application application) {
-        return reviews.existsByApplication_ApplicationIdAndReviewerRoleAndDecision(
-                application.getApplicationId(), "HR", "Pass");
     }
 }

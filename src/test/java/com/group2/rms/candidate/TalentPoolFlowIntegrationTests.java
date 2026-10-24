@@ -83,7 +83,7 @@ class TalentPoolFlowIntegrationTests {
         return applications.findFirstByCandidate_CandidateIdAndJobPosting_JobPostingIdAndApplicationStatus(
                 f.source().getCandidate().getCandidateId(), f.target().getJobPostingId(), "HM_Suggested").orElseThrow().getApplicationId();
     }
-    private List<Integer> formalIds() { return applications.findPipelineIds(true, null, null, false, null, null, null, "newest"); }
+    private List<Integer> formalIds() { return applications.findPipelineIds(true, null, null, null, null, null, "newest"); }
 
     private int recommend(Fixture f) throws Exception {
         mvc.perform(post("/talent-pool/jobs/" + f.target().getJobPostingId() + "/recommend")
