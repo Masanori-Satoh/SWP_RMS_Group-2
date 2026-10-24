@@ -7,6 +7,7 @@ import jakarta.validation.constraints.Size;
 /**
  * Editable profile fields.
  * Includes strict validation against invalid characters, code injection, and enforces real-name format.
+ * Ảnh đại diện không nằm ở đây: chỉ đổi bằng file tải lên ({@code UserProfileService.changeAvatar}).
  */
 public record UpdateProfileRequest(
         @NotBlank(message = "Full name is required.")
@@ -19,9 +20,5 @@ public record UpdateProfileRequest(
 
         @Size(max = 15, message = "Phone number cannot exceed 15 characters.")
         @Pattern(regexp = "^$|^[0-9+\\s()-]+$", message = "Phone number can only contain digits, spaces, hyphens, and plus signs.")
-        String phoneNumber,
-
-        @Size(max = 500, message = "Avatar URL cannot exceed 500 characters.")
-        @Pattern(regexp = "^$|^https?://[^\\s<>\"]+$", message = "Avatar URL must be a valid URL starting with http:// or https://.")
-        String avatarUrl) {
+        String phoneNumber) {
 }

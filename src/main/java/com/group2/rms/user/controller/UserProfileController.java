@@ -3,6 +3,7 @@ package com.group2.rms.user.controller;
 import com.group2.rms.user.dto.ChangePasswordRequest;
 import com.group2.rms.user.dto.UpdateProfileRequest;
 import com.group2.rms.user.dto.UserProfileResponse;
+import com.group2.rms.user.exception.AvatarUploadException;
 import com.group2.rms.user.service.UserProfileService;
 import jakarta.validation.Valid;
 import org.springframework.http.MediaType;
@@ -13,6 +14,7 @@ import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.util.HashMap;
@@ -40,7 +42,7 @@ public class UserProfileController {
         model.addAttribute("userProfile", profile);
         if (!model.containsAttribute("updateRequest")) {
             model.addAttribute("updateRequest",
-                    new UpdateProfileRequest(profile.fullName(), profile.phoneNumber(), profile.avatarUrl()));
+                    new UpdateProfileRequest(profile.fullName(), profile.phoneNumber()));
         }
         if (!model.containsAttribute("passwordRequest")) {
             model.addAttribute("passwordRequest", new ChangePasswordRequest("", "", ""));
@@ -60,6 +62,20 @@ public class UserProfileController {
         }
         profileService.updateProfile(authentication.getName(), request);
         redirectAttributes.addFlashAttribute("successMessage", "Profile updated successfully.");
+        return "redirect:/profile";
+    }
+
+    /** Tải ảnh đại diện mới (form multipart thường); lỗi file hiện ngay dưới ô chọn ảnh. */
+    @PostMapping("/avatar")
+    public String changeAvatar(Authentication authentication,
+                               @RequestParam(name = "avatarFile", required = false) MultipartFile avatarFile,
+                               RedirectAttributes redirectAttributes) {
+        try {
+            profileService.changeAvatar(authentication.getName(), avatarFile);
+            redirectAttributes.addFlashAttribute("successMessage", "Đã cập nhật ảnh đại diện.");
+        } catch (AvatarUploadException e) {
+            redirectAttributes.addFlashAttribute("avatarError", e.getMessage());
+        }
         return "redirect:/profile";
     }
 

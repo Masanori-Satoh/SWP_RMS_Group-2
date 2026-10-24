@@ -8,6 +8,7 @@ import com.group2.rms.user.dto.UpdateProfileRequest;
 import com.group2.rms.user.dto.UserProfileResponse;
 import com.group2.rms.user.entity.Role;
 import com.group2.rms.user.entity.User;
+import com.group2.rms.user.exception.AvatarUploadException;
 import com.group2.rms.user.repository.UserRepository;
 import com.group2.rms.user.service.UserProfileService;
 import org.junit.jupiter.api.BeforeEach;
@@ -16,6 +17,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
+import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
@@ -25,9 +27,12 @@ import java.util.Optional;
 import static org.hamcrest.Matchers.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
@@ -54,16 +59,16 @@ class UserProfileWebTests {
                 .userId(1)
                 .username("testuser")
                 .accountStatus("Active")
-                .role(Role.builder().roleName("Candidate").build())
+                .role(Role.builder().roleName("HR").build())
                 .build();
         when(userRepository.findByUsernameIgnoreCase("testuser")).thenReturn(Optional.of(mockUser));
     }
 
     @Test
-    @WithMockUser(username = "testuser", authorities = "ROLE_CANDIDATE")
+    @WithMockUser(username = "testuser", authorities = "ROLE_HR")
     void viewProfile_ReturnsProfilePage_WithCorrectAttributes() throws Exception {
         UserProfileResponse mockProfile = new UserProfileResponse(
-                1, "testuser", "test@example.com", "Test User", "0123456789", null, "Candidate", "Engineering"
+                1, "testuser", "test@example.com", "Test User", "0123456789", null, "HR", "Engineering"
         );
         when(profileService.getProfile("testuser")).thenReturn(mockProfile);
 
@@ -83,7 +88,7 @@ class UserProfileWebTests {
     }
 
     @Test
-    @WithMockUser(username = "testuser", authorities = "ROLE_CANDIDATE")
+    @WithMockUser(username = "testuser", authorities = "ROLE_HR")
     void updateProfile_ValidRequest_RedirectsWithSuccess() throws Exception {
         mvc.perform(post("/profile/update")
                 .with(csrf())
@@ -96,7 +101,7 @@ class UserProfileWebTests {
     }
 
     @Test
-    @WithMockUser(username = "testuser", authorities = "ROLE_CANDIDATE")
+    @WithMockUser(username = "testuser", authorities = "ROLE_HR")
     void updateProfile_InvalidRequest_RedirectsWithErrors() throws Exception {
         // Test with blank full name (assuming @NotBlank on fullName)
         mvc.perform(post("/profile/update")
@@ -111,7 +116,7 @@ class UserProfileWebTests {
     }
 
     @Test
-    @WithMockUser(username = "testuser", authorities = "ROLE_CANDIDATE")
+    @WithMockUser(username = "testuser", authorities = "ROLE_HR")
     void changePasswordJson_ValidRequest_ReturnsOk() throws Exception {
         ChangePasswordRequest request = new ChangePasswordRequest("oldPass", "newPass123", "newPass123");
         when(profileService.changePassword(eq("testuser"), any(ChangePasswordRequest.class))).thenReturn(true);
@@ -126,7 +131,7 @@ class UserProfileWebTests {
     }
 
     @Test
-    @WithMockUser(username = "testuser", authorities = "ROLE_CANDIDATE")
+    @WithMockUser(username = "testuser", authorities = "ROLE_HR")
     void changePasswordJson_PasswordMismatch_ReturnsBadRequest() throws Exception {
         ChangePasswordRequest request = new ChangePasswordRequest("oldPass", "newPass123", "differentPass");
 
@@ -140,7 +145,7 @@ class UserProfileWebTests {
     }
 
     @Test
-    @WithMockUser(username = "testuser", authorities = "ROLE_CANDIDATE")
+    @WithMockUser(username = "testuser", authorities = "ROLE_HR")
     void changePasswordJson_IncorrectOldPassword_ReturnsBadRequest() throws Exception {
         ChangePasswordRequest request = new ChangePasswordRequest("wrongOldPass", "newPass123", "newPass123");
         when(profileService.changePassword(eq("testuser"), any(ChangePasswordRequest.class))).thenReturn(false);
@@ -152,5 +157,44 @@ class UserProfileWebTests {
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.success", is(false)))
                 .andExpect(jsonPath("$.errors.currentPassword", containsString("Incorrect current password")));
+    }
+
+    @Test
+    @WithMockUser(username = "testuser", authorities = "ROLE_HR")
+    void viewProfile_HasAvatarUploadFormAndNoAvatarUrlField() throws Exception {
+        when(profileService.getProfile("testuser")).thenReturn(new UserProfileResponse(
+                1, "testuser", "test@example.com", "Test User", null, null, "HR", "Engineering"));
+
+        mvc.perform(get("/profile"))
+                .andExpect(status().isOk())
+                .andExpect(content().string(containsString("name=\"avatarFile\"")))
+                .andExpect(content().string(containsString("enctype=\"multipart/form-data\"")))
+                .andExpect(content().string(not(containsString("avatar-url"))));
+    }
+
+    @Test
+    @WithMockUser(username = "testuser", authorities = "ROLE_HR")
+    void changeAvatar_ValidFile_RedirectsWithSuccess() throws Exception {
+        MockMultipartFile file = new MockMultipartFile("avatarFile", "me.png", "image/png", new byte[]{1, 2, 3});
+
+        mvc.perform(multipart("/profile/avatar").file(file).with(csrf()))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrl("/profile"))
+                .andExpect(flash().attributeExists("successMessage"));
+        verify(profileService).changeAvatar(eq("testuser"), any());
+    }
+
+    @Test
+    @WithMockUser(username = "testuser", authorities = "ROLE_HR")
+    void changeAvatar_InvalidFile_RedirectsWithAvatarError() throws Exception {
+        doThrow(new AvatarUploadException("Chỉ nhận ảnh JPEG, PNG hoặc WebP."))
+                .when(profileService).changeAvatar(eq("testuser"), any());
+        MockMultipartFile file = new MockMultipartFile("avatarFile", "x.svg", "image/svg+xml", "<svg/>".getBytes());
+
+        mvc.perform(multipart("/profile/avatar").file(file).with(csrf()))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrl("/profile"))
+                .andExpect(flash().attribute("avatarError", "Chỉ nhận ảnh JPEG, PNG hoặc WebP."))
+                .andExpect(flash().attributeCount(1));
     }
 }

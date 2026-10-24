@@ -25,8 +25,8 @@ document.addEventListener('DOMContentLoaded', () => {
     // -------------------------------------------------------------
     const profileForm = document.getElementById('profileForm');
     const fullNameInput = document.getElementById('full-name');
-    const phoneInput = document.getElementById('phone-number');
-    const avatarInput = document.getElementById('avatar-url');
+    // Mọi ô được theo dõi thay đổi có data-profile-field (/profile và /portal/profile dùng chung file này)
+    const profileFields = profileForm ? Array.from(profileForm.querySelectorAll('[data-profile-field]')) : [];
     const btnSaveProfile = document.getElementById('btnSaveProfile');
     const btnDiscardProfile = document.getElementById('btnDiscardProfile');
     const confirmSaveModal = document.getElementById('confirmSaveModal');
@@ -35,22 +35,11 @@ document.addEventListener('DOMContentLoaded', () => {
     let isSubmittingProfile = false;
 
     // Snapshot of initial values (trimmed for reliable comparison)
-    const initialProfileValues = {
-        fullName: fullNameInput ? fullNameInput.value.trim() : '',
-        phoneNumber: phoneInput ? phoneInput.value.trim() : '',
-        avatarUrl: avatarInput ? avatarInput.value.trim() : ''
-    };
+    const initialProfileValues = new Map(profileFields.map(field => [field, field.value.trim()]));
 
     // Helper: Determine if profile has real changes compared to initial state
     function isProfileDirty() {
-        if (!fullNameInput) return false;
-        const currentFullName = fullNameInput.value.trim();
-        const currentPhone = phoneInput ? phoneInput.value.trim() : '';
-        const currentAvatar = avatarInput ? avatarInput.value.trim() : '';
-
-        return (currentFullName !== initialProfileValues.fullName)
-            || (currentPhone !== initialProfileValues.phoneNumber)
-            || (currentAvatar !== initialProfileValues.avatarUrl);
+        return profileFields.some(field => field.value.trim() !== initialProfileValues.get(field));
     }
 
     // Update UI state based on dirty status
@@ -65,21 +54,14 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // Attach dirty-checking listeners to profile inputs
-    [fullNameInput, phoneInput, avatarInput].forEach(input => {
-        if (!input) return;
+    profileFields.forEach(input => {
         input.addEventListener('input', updateProfileFormState);
         input.addEventListener('change', updateProfileFormState);
 
         // When leaving input (blur), auto-clean accidental whitespace if value equals initial
         input.addEventListener('blur', () => {
-            if (input === fullNameInput && input.value.trim() === initialProfileValues.fullName) {
-                input.value = initialProfileValues.fullName;
-            }
-            if (input === phoneInput && input.value.trim() === initialProfileValues.phoneNumber) {
-                input.value = initialProfileValues.phoneNumber;
-            }
-            if (input === avatarInput && input.value.trim() === initialProfileValues.avatarUrl) {
-                input.value = initialProfileValues.avatarUrl;
+            if (input.value.trim() === initialProfileValues.get(input)) {
+                input.value = initialProfileValues.get(input);
             }
             updateProfileFormState();
         });
@@ -88,9 +70,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // Discard changes button
     if (btnDiscardProfile) {
         btnDiscardProfile.addEventListener('click', () => {
-            if (fullNameInput) fullNameInput.value = initialProfileValues.fullName;
-            if (phoneInput) phoneInput.value = initialProfileValues.phoneNumber;
-            if (avatarInput) avatarInput.value = initialProfileValues.avatarUrl;
+            profileFields.forEach(field => { field.value = initialProfileValues.get(field); });
             updateProfileFormState();
             showToast('Changes discarded. Profile restored to original values.');
         });
@@ -157,9 +137,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (confirmSaveModal) confirmSaveModal.close();
 
             // Clean values before submit
-            if (fullNameInput) fullNameInput.value = fullNameInput.value.trim();
-            if (phoneInput) phoneInput.value = phoneInput.value.trim();
-            if (avatarInput) avatarInput.value = avatarInput.value.trim();
+            profileFields.forEach(field => { field.value = field.value.trim(); });
 
             profileForm.submit();
         });
@@ -380,6 +358,37 @@ document.addEventListener('DOMContentLoaded', () => {
                     btnSubmitPassword.disabled = false;
                     btnSubmitPassword.textContent = 'Update Password';
                 }
+            }
+        });
+    }
+
+    // -------------------------------------------------------------
+    // 4. Avatar upload: kiểm trước ở trình duyệt; máy chủ vẫn kiểm lại byte đầu của file
+    // -------------------------------------------------------------
+    const avatarForm = document.querySelector('[data-avatar-form]');
+    if (avatarForm) {
+        const avatarInput = avatarForm.querySelector('input[type="file"]');
+        const avatarError = avatarForm.querySelector('.form-error');
+        const allowedTypes = ['image/jpeg', 'image/png', 'image/webp'];
+        const maxBytes = 2 * 1024 * 1024;
+
+        avatarForm.addEventListener('submit', (e) => {
+            const file = avatarInput && avatarInput.files ? avatarInput.files[0] : null;
+            let message = '';
+            if (!file) {
+                message = 'Vui lòng chọn ảnh.';
+            } else if (!allowedTypes.includes(file.type)) {
+                message = 'Chỉ nhận ảnh JPEG, PNG hoặc WebP.';
+            } else if (file.size > maxBytes) {
+                message = 'Ảnh tối đa 2 MB.';
+            }
+            if (message) {
+                e.preventDefault();
+                if (avatarError) {
+                    avatarError.textContent = message;
+                    avatarError.hidden = false;
+                }
+                if (avatarInput) avatarInput.setAttribute('aria-invalid', 'true');
             }
         });
     }

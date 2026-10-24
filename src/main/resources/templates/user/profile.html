@@ -28,14 +28,28 @@
                     <h2 id="general-title">General Information</h2>
 
                     <div class="profile-identity">
-                        <img class="profile-avatar" th:if="${userProfile.avatarUrl != null and !userProfile.avatarUrl.isBlank()}"
-                             th:src="${userProfile.avatarUrl}" alt="Profile picture" referrerpolicy="no-referrer">
-                        <div class="profile-avatar profile-avatar-fallback" th:unless="${userProfile.avatarUrl != null and !userProfile.avatarUrl.isBlank()}"
+                        <img class="profile-avatar" th:if="${userProfile.avatarUrl != null}"
+                             th:src="${userProfile.avatarUrl}" alt="Ảnh đại diện">
+                        <div class="profile-avatar profile-avatar-fallback" th:unless="${userProfile.avatarUrl != null}"
                              aria-hidden="true" th:text="${#strings.toUpperCase(#strings.substring(userProfile.fullName, 0, 1))}">A</div>
                         <div>
                             <p class="profile-identity-name" th:text="${userProfile.fullName}">Full Name</p>
                             <p class="profile-identity-meta" th:text="${userProfile.roleName}">Role</p>
                         </div>
+                        <!-- Ảnh chỉ tải file lên (JPEG/PNG/WebP ≤ 2 MB); form riêng, không lồng trong form thông tin -->
+                        <form class="profile-avatar-form" th:action="@{/profile/avatar}" method="post"
+                              enctype="multipart/form-data" data-avatar-form>
+                            <label class="form-label" for="avatar-file">Ảnh đại diện</label>
+                            <div class="profile-avatar-upload">
+                                <input class="form-control" id="avatar-file" name="avatarFile" type="file"
+                                       accept="image/jpeg,image/png,image/webp" required
+                                       th:attr="aria-invalid=${avatarError != null}" aria-describedby="avatar-file-hint avatar-file-error">
+                                <button class="btn btn-secondary" type="submit">Tải ảnh lên</button>
+                            </div>
+                            <small id="avatar-file-hint" class="account-field-hint">JPEG, PNG hoặc WebP, tối đa 2 MB.</small>
+                            <span id="avatar-file-error" class="form-error" role="alert"
+                                  th:text="${avatarError}" th:hidden="${avatarError == null}"></span>
+                        </form>
                     </div>
 
                     <form id="profileForm" th:action="@{/profile/update}" th:object="${updateRequest}" method="post">
@@ -65,7 +79,7 @@
 
                             <div class="form-group profile-field-full">
                                 <label class="form-label" for="full-name">Full Name <span aria-hidden="true">*</span></label>
-                                <input class="form-control" id="full-name" type="text" th:field="*{fullName}"
+                                <input class="form-control" id="full-name" type="text" th:field="*{fullName}" data-profile-field
                                        minlength="2" maxlength="100" autocomplete="name" required
                                        pattern="^[\p{L}][\p{L}\s.'-]*$"
                                        title="Full name must start with a letter and can only contain letters, spaces, hyphens, and apostrophes."
@@ -74,23 +88,13 @@
                             </div>
                             <div class="form-group">
                                 <label class="form-label" for="phone-number">Phone Number</label>
-                                <input class="form-control" id="phone-number" type="tel" th:field="*{phoneNumber}"
+                                <input class="form-control" id="phone-number" type="tel" th:field="*{phoneNumber}" data-profile-field
                                        maxlength="15" autocomplete="tel"
                                        pattern="^[0-9+\s()-]*$"
                                        title="Phone number can only contain digits, spaces, hyphens, and plus signs."
                                        th:attr="aria-invalid=${#fields.hasErrors('phoneNumber')},aria-describedby=${#fields.hasErrors('phoneNumber') ? 'phone-number-error' : 'phone-number-hint'}">
                                 <small id="phone-number-hint" class="account-field-hint">Max 15 characters (digits, spaces, hyphens, plus sign).</small>
                                 <span id="phone-number-error" class="form-error" th:if="${#fields.hasErrors('phoneNumber')}" th:errors="*{phoneNumber}"></span>
-                            </div>
-                            <div class="form-group">
-                                <label class="form-label" for="avatar-url">Avatar URL</label>
-                                <input class="form-control" id="avatar-url" type="text" th:field="*{avatarUrl}"
-                                       maxlength="500" placeholder="https://"
-                                       pattern="^$|^https?://[^\s<>]+$"
-                                       title="Must be a valid URL starting with http:// or https:// and cannot contain spaces."
-                                       th:attr="aria-invalid=${#fields.hasErrors('avatarUrl')},aria-describedby=${#fields.hasErrors('avatarUrl') ? 'avatar-url-error' : 'avatar-url-hint'}">
-                                <small id="avatar-url-hint" class="account-field-hint">Optional, must start with http:// or https://.</small>
-                                <span id="avatar-url-error" class="form-error" th:if="${#fields.hasErrors('avatarUrl')}" th:errors="*{avatarUrl}"></span>
                             </div>
                         </div>
 
