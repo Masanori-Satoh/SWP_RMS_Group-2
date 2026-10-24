@@ -22,6 +22,8 @@ import org.springframework.web.multipart.MultipartFile;
 @Service
 public class UserProfileService {
 
+    static final String NO_DEPARTMENT = "Chưa thuộc phòng ban";
+
     private final UserRepository users;
     private final PasswordEncoder passwordEncoder;
     private final LocalAvatarStorage avatarStorage;
@@ -46,7 +48,8 @@ public class UserProfileService {
                 user.getPhoneNumber(),
                 avatarSrc(user),
                 user.getRole().getRoleName(),
-                user.getDepartment() == null ? "N/A" : user.getDepartment().getDepartmentName());
+                roleLabel(user.getRole().getRoleName()),
+                user.getDepartment() == null ? NO_DEPARTMENT : user.getDepartment().getDepartmentName());
     }
 
     @Transactional
@@ -122,7 +125,27 @@ public class UserProfileService {
 
     private User findByUsername(String username) {
         return users.findByUsernameIgnoreCase(username)
-                .orElseThrow(() -> new ResourceNotFoundException("Account not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy tài khoản."));
+    }
+
+    /**
+     * Tên vai trò tiếng Việt. Cùng bảng tên với {@code fragments/layout/topbar-user.html} (topbar tự dịch bằng th:with);
+     * đổi tên ở đây thì đổi cả ở đó.
+     */
+    static String roleLabel(String roleName) {
+        if (roleName == null) {
+            return null;
+        }
+        return switch (roleName) {
+            case "Hiring Manager" -> "Trưởng phòng tuyển dụng";
+            case "HR" -> "Nhân sự";
+            case "HR Specialist" -> "Chuyên viên Nhân sự";
+            case "Director" -> "Giám đốc";
+            case "System Admin" -> "Quản trị hệ thống";
+            case "Interviewer" -> "Người phỏng vấn";
+            case "Candidate" -> "Ứng viên";
+            default -> roleName;
+        };
     }
 
     private static String blankToNull(String value) {

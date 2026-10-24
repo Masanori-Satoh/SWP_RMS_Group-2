@@ -58,13 +58,14 @@ class UserProfileServiceTests {
 
     @Test
     @DisplayName("PROFILE-UNIT-01 | Account HR tồn tại nhưng chưa có phòng ban")
-    void getProfile_withoutDepartment_returnsNAAndNoCredentials() {
+    void getProfile_withoutDepartment_returnsNoDepartmentLabelAndNoCredentials() {
         // Given: Account HR tồn tại nhưng chưa có phòng ban.
         when(users.findByUsernameIgnoreCase("employee")).thenReturn(Optional.of(user));
         // When: Đọc thông tin profile của employee.
         UserProfileResponse result = service.getProfile("employee");
-        // Then: departmentName=N/A, đúng ID/role và không trả hash hoặc lưu account.
-        assertEquals("N/A", result.departmentName());
+        // Then: departmentName="Chưa thuộc phòng ban", đúng ID/role (kèm tên tiếng Việt) và không trả hash hoặc lưu account.
+        assertEquals("Chưa thuộc phòng ban", result.departmentName());
+        assertEquals("Nhân sự", result.roleLabel());
         assertEquals(7, result.userId());
         assertEquals("employee", result.username());
         assertEquals("HR", result.roleName());

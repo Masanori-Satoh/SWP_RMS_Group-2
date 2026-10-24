@@ -29,7 +29,7 @@ class CandidateProfileServiceTests {
     @Test
     void getCombinesAccountPartAndCandidateFields() {
         when(candidates.findByAccount_UsernameIgnoreCase("an.vo")).thenReturn(Optional.of(candidate));
-        UserProfileResponse account = new UserProfileResponse(54, "an.vo", "a@x.test", "Võ Thành An", null, null, "Candidate", "N/A");
+        UserProfileResponse account = new UserProfileResponse(54, "an.vo", "a@x.test", "Võ Thành An", null, null, "Candidate", "Ứng viên", "Chưa thuộc phòng ban");
         when(userProfiles.getProfile("an.vo")).thenReturn(account);
 
         var result = service.get("an.vo");

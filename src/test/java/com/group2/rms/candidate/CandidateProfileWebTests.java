@@ -179,7 +179,7 @@ class CandidateProfileWebTests {
 
     private static CandidateProfileResponse profile() {
         return new CandidateProfileResponse(
-                new UserProfileResponse(54, "an.vo", "an.vo@example.test", "Võ Thành An", "0901234567", null, "Candidate", "N/A"),
+                new UserProfileResponse(54, "an.vo", "an.vo@example.test", "Võ Thành An", "0901234567", null, "Candidate", "Ứng viên", "Chưa thuộc phòng ban"),
                 LocalDate.of(1999, 4, 12), "Nam", "Số 1 Lê Lợi", "https://linkedin.com/in/an", null);
     }
 

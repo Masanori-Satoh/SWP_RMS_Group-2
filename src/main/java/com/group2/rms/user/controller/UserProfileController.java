@@ -44,6 +44,7 @@ public class UserProfileController {
         }
         UserProfileResponse profile = profileService.getProfile(authentication.getName());
         model.addAttribute("userProfile", profile);
+        model.addAttribute("vietnameseUi", true);
         if (!model.containsAttribute("updateRequest")) {
             model.addAttribute("updateRequest",
                     new UpdateProfileRequest(profile.fullName(), profile.phoneNumber()));
@@ -65,7 +66,7 @@ public class UserProfileController {
             return "redirect:/profile";
         }
         profileService.updateProfile(authentication.getName(), request);
-        redirectAttributes.addFlashAttribute("successMessage", "Profile updated successfully.");
+        redirectAttributes.addFlashAttribute("successMessage", "Đã lưu hồ sơ.");
         return "redirect:/profile";
     }
 
@@ -98,18 +99,18 @@ public class UserProfileController {
 
         if (request.newPassword() != null && request.confirmPassword() != null
                 && !request.newPassword().equals(request.confirmPassword())) {
-            bindingResult.addError(new FieldError("changePasswordRequest", "confirmPassword", "Passwords do not match."));
+            bindingResult.addError(new FieldError("changePasswordRequest", "confirmPassword", "Mật khẩu nhập lại không khớp."));
         }
 
         if (!bindingResult.hasErrors()
                 && !profileService.changePassword(authentication.getName(), request)) {
             bindingResult.addError(new FieldError("changePasswordRequest", "currentPassword",
-                    "Incorrect current password. Please check again."));
+                    "Mật khẩu hiện tại không đúng."));
         }
 
         if (bindingResult.hasErrors()) {
             response.put("success", false);
-            response.put("message", "Unable to update password. Please check the errors below.");
+            response.put("message", "Chưa đổi được mật khẩu. Vui lòng xem lỗi bên dưới.");
             Map<String, String> fieldErrors = new HashMap<>();
             for (FieldError error : bindingResult.getFieldErrors()) {
                 fieldErrors.putIfAbsent(error.getField(), error.getDefaultMessage());
@@ -119,7 +120,7 @@ public class UserProfileController {
         }
 
         response.put("success", true);
-        response.put("message", "Password changed successfully.");
+        response.put("message", "Đã đổi mật khẩu.");
         return ResponseEntity.ok(response);
     }
 
@@ -135,12 +136,12 @@ public class UserProfileController {
 
         if (request.newPassword() != null && request.confirmPassword() != null
                 && !request.newPassword().equals(request.confirmPassword())) {
-            bindingResult.addError(new FieldError("passwordRequest", "confirmPassword", "Passwords do not match."));
+            bindingResult.addError(new FieldError("passwordRequest", "confirmPassword", "Mật khẩu nhập lại không khớp."));
         }
         if (!bindingResult.hasErrors()
                 && !profileService.changePassword(authentication.getName(), request)) {
             bindingResult.addError(new FieldError("passwordRequest", "currentPassword",
-                    "Incorrect current password. Please check again."));
+                    "Mật khẩu hiện tại không đúng."));
         }
         if (bindingResult.hasErrors()) {
             redirectAttributes.addFlashAttribute("openPasswordModal", true);
@@ -148,7 +149,7 @@ public class UserProfileController {
             redirectAttributes.addFlashAttribute("passwordRequest", new ChangePasswordRequest("", "", ""));
             return "redirect:/profile";
         }
-        redirectAttributes.addFlashAttribute("successMessage", "Password changed successfully.");
+        redirectAttributes.addFlashAttribute("successMessage", "Đã đổi mật khẩu.");
         return "redirect:/profile";
     }
 }
