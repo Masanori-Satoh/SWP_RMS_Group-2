@@ -16,18 +16,19 @@ import java.util.Optional;
 
 @Repository
 public interface ApplicationRepository extends JpaRepository<Application, Integer> {
-        // Source is audit metadata; decisions are structured ApplicationReview rows, never note text.
+        // check hr recommend
         String HR_RECOMMENDATION = """
                 exists (select l.auditLogId from AuditLog l where l.entityName = 'Application'
                     and l.entityId = cast(a.applicationId as string) and l.newValue = 'TalentPoolHrRecommended')
                 """;
+        //check if review from HR with hold and HM not review before
         String PENDING_HR_RECOMMENDATION = HR_RECOMMENDATION + """
                 and exists (select rv.reviewId from ApplicationReview rv where rv.application = a
                     and rv.reviewerRole = 'HR' and rv.decision = 'Hold')
                 and not exists (select rv.reviewId from ApplicationReview rv where rv.application = a
                     and rv.reviewerRole = 'HiringManager' and rv.decision in ('Pass','Fail'))
                 """;
-        /** Đề xuất chưa được Candidate đồng ý không phải đơn ứng tuyển chính thức. */
+        //check if not HM_suggest and not talent pool cancelled
         String FORMAL_FILTER = """
                         a.applicationStatus <> 'HM_Suggested'
                         and not exists (select l.auditLogId from AuditLog l
@@ -149,8 +150,7 @@ public interface ApplicationRepository extends JpaRepository<Application, Intege
                         @Param("departmentId") Integer departmentId);
 
         /**
-         * Đơn kèm mọi thứ trang chi tiết và kiểm quyền cần (ứng viên, tin, requisition,
-         * phòng ban, trưởng phòng).
+         * Đơn kèm mọi thứ trang chi tiết và kiểm quyền cần (ứng viên, tin, requisition, phòng ban, trưởng phòng).
          */
         @Query("""
                         select a from Application a
@@ -279,7 +279,7 @@ public interface ApplicationRepository extends JpaRepository<Application, Intege
         boolean existsActiveByCandidateAndJobPosting(@Param("candidateId") Integer candidateId,
                         @Param("jobPostingId") Integer jobPostingId);
 
-        // query get list candidate recommend
+        // query get list candidate recommend by HM
         @Query("""
                         SELECT a FROM Application a
                             JOIN FETCH a.candidate c

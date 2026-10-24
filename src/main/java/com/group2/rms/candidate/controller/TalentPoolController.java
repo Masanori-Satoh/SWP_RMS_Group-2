@@ -43,13 +43,20 @@ public class TalentPoolController {
     @GetMapping
     // list all potential candidate
     public String list(@ModelAttribute("filter") TalentPoolSearch filter,
-            @RequestParam(defaultValue = "0") int page, @RequestParam(required = false) Integer jobPostingId,
+            @RequestParam(defaultValue = "0") int page, 
+            @RequestParam(required = false) Integer jobPostingId,
             Model model) {
+        //get match potential candidate
         model.addAttribute("page", pool.search(filter, PageRequest.of(Math.max(0, page), 20)));
+        //get authors
         model.addAttribute("authors", pool.authors());
+        //get source jobs
         model.addAttribute("sourceJobs", pool.sourceJobs());
+        //get job posting id
         model.addAttribute("jobPostingId", jobPostingId);
+        //get  job title
         model.addAttribute("jobTitle", jobPostingId == null ? null : pool.targetJobTitle(jobPostingId));
+        //get current user role
         model.addAttribute("viewerRole", pool.viewerRole());
         model.addAttribute("activeMenu", "talent-pool");
         model.addAttribute("selectionScope", pool.selectionScope());
