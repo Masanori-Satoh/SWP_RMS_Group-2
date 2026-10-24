@@ -14,6 +14,7 @@ Mã nguồn đóng gói theo **nghiệp vụ**, không theo tầng. Quy tắc **
 
 - **Module nhỏ (< 10 file):** mọi class nằm phẳng trong package của module (hiện tại: `dashboard`, `notification`).
 - **Module lớn (≥ 10 file):** bắt buộc chia sub-package `controller/`, `service/`, `repository/`, `entity/`, `dto/`, và khi cần `exception/`, `validator/`.
+- **Gói con (module rất lớn, ví dụ `candidate`):** được tách một nhóm màn **theo người dùng** (ví dụ màn của ứng viên) hoặc **theo chức năng** thành gói con, áp lại đúng quy tắc trên: gói con < 10 file thì phẳng, ≥ 10 file (hoặc biết chắc sắp vượt) thì chia tầng như module. DTO đi theo gói con của nó. Phần module khác gọi vào (entity, repository) giữ ở tầng gốc. Ví dụ: `candidate/portal/` (màn của ứng viên, `/portal/**`); `candidate/cv/` (lưu, đọc file CV), `candidate/screening/` (gọi AI chấm): dịch vụ hệ thống tách khỏi nghiệp vụ.
 
 ```text
 src/main/java/com/group2/rms/
@@ -29,7 +30,8 @@ src/main/java/com/group2/rms/
 ├── {module_nhỏ}/          ← dashboard, notification: Controller/Service/Repository/DTO nằm phẳng
 ├── {module_lớn}/          ← auth, user, requisition, jobposting, interview, offer, admin, career, candidate
 │   ├── controller/  service/  repository/  entity/  dto/
-│   └── exception/  validator/   (khi cần)
+│   ├── exception/  validator/   (khi cần)
+│   └── {gói_con}/         ← chỉ ở module rất lớn, ví dụ candidate/portal/ (màn của ứng viên): controller/ service/ dto/ exception/
 └── RmsApplication.java
 ```
 
