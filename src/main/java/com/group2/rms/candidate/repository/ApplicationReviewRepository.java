@@ -11,8 +11,7 @@ import java.util.List;
 @Repository
 public interface ApplicationReviewRepository extends JpaRepository<ApplicationReview, Integer> {
 
-    boolean existsByApplication_ApplicationIdAndReviewerRoleAndDecision(Integer applicationId, String reviewerRole,
-                                                                         String decision);
+    boolean existsByApplication_ApplicationIdAndReviewerRoleAndDecision(Integer applicationId, String reviewerRole, String decision);
 
     @Query("select rv from ApplicationReview rv join fetch rv.reviewer where rv.application.applicationId = :id")
     List<ApplicationReview> findWithReviewerByApplicationId(@Param("id") Integer applicationId);

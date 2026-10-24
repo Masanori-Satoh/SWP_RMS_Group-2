@@ -24,6 +24,7 @@ public class TalentPoolAuditRepository {
         return jdbc.queryForObject("SELECT COUNT(*) FROM AuditLog WHERE EntityName=? AND EntityId=? AND NewValue=?",
                 Integer.class, entity, id.toString(), value) > 0;
     }
+    //get infor user recommend
     public String suggestedBy(Integer id) {
         return jdbc.query("SELECT TOP 1 u.FullName FROM AuditLog l JOIN [User] u ON u.UserId=l.UserId " +
                 "WHERE l.EntityName='Application' AND l.EntityId=? AND l.NewValue='TalentPoolSuggested' ORDER BY l.AuditLogId",

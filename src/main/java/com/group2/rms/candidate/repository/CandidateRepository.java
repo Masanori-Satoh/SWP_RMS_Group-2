@@ -9,6 +9,8 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import java.util.Collection;
+import java.util.List;
 import java.util.Optional;
 
 @Repository
@@ -18,8 +20,8 @@ public interface CandidateRepository extends JpaRepository<Candidate, Integer>, 
 
     Optional<Candidate> findByAccount_UsernameIgnoreCase(String username);
 
-    java.util.List<Candidate> findAllByAccountUserIdIn(java.util.Collection<Integer> userIds);
-
+    List<Candidate> findAllByAccountUserIdIn(Collection<Integer> userIds);
+    //filter potential candidate based on  filter
     String POTENTIAL_FILTER = """
         FROM Candidate c JOIN [User] u ON u.UserId = c.UserId
         WHERE c.IsPotential = 1
