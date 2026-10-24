@@ -157,6 +157,7 @@
                           th:text="*{comments}" th:attr="aria-invalid=${#fields.hasErrors('comments')}"></textarea>
                 <span th:if="${#fields.hasErrors('comments')}" th:errors="*{comments}" class="form-error">Nhận xét tối đa 1000 ký tự.</span>
             </div>
+            <p th:if="${detail.viewerRole == 'Director'}" class="text-muted">Bạn đang duyệt thay trưởng bộ phận; lịch sử sẽ ghi "Giám đốc".</p>
             <div class="app-review__actions">
                 <button type="submit" name="decision" value="Pass" class="btn btn--primary btn--sm"
                         th:text="${detail.applicationStatus == 'HR_Passed' ? 'Đạt' : 'Đạt, chuyển trưởng bộ phận'}">Đạt</button>

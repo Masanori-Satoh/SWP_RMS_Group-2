@@ -178,14 +178,17 @@ class ApplicationAccessTests {
     }
 
     @Test
-    @DisplayName("Director/Admin không được review hồ sơ trạng thái HR_Passed")
-    void directorAndAdminNeverReview_HR_Passed() {
-        // Given: Director/Admin không được review hồ sơ trạng thái HR_Passed.
-        Application application = application(engineering, "HR_Passed");
-        // When: Gọi access.canReview với dữ liệu đã chuẩn bị.
-        // Then: Director/Admin không được review hồ sơ trạng thái HR_Passed.
-        assertEquals(false, access.canReview(director, application));
-        assertEquals(false, access.canReview(admin, application));
+    @DisplayName("Q2.3: Director duyệt thay HM hồ sơ HR_Passed của mọi phòng; Admin không")
+    void directorReviewsHrPassedOfAnyDepartmentButAdminDoesNot() {
+        for (Department department : List.of(engineering, sales)) {
+            // Given: Hồ sơ HR đã chuyển, ở phòng Engineering hoặc Sales (Director không thuộc phòng nào).
+            Application application = application(department, "HR_Passed");
+            // When: Gọi access.canReview.
+            // Then: Director được duyệt thay (không kiểm phòng ban); Admin không; Director không chấm lại AI.
+            assertEquals(true, access.canReview(director, application));
+            assertEquals(false, access.canReview(admin, application));
+            assertEquals(false, access.canRescreen(director, application));
+        }
     }
 
     @Test
@@ -747,14 +750,16 @@ class ApplicationAccessTests {
     }
 
     @Test
-    @DisplayName("Chỉ HR/HM là reviewer; Director/Admin/Interviewer không phải reviewer")
-    void onlyHrAndHiringManagersAreReviewers() {
-        // Given: Chỉ HR/HM là reviewer; Director/Admin/Interviewer không phải reviewer.
-        // When: Gọi access.isReviewer với dữ liệu đã chuẩn bị.
-        // Then: Chỉ HR/HM là reviewer; Director/Admin/Interviewer không phải reviewer.
+    @DisplayName("HR/HM/Director là reviewer (Director duyệt thay bước HM); Admin/Interviewer không")
+    void hrHiringManagersAndDirectorAreReviewers() {
+        // Given: Các vai trò nội bộ.
+        // When: Gọi access.isReviewer / isDirector.
+        // Then: HR, HM, Director là reviewer; Admin, Interviewer không.
         assertEquals(true, access.isReviewer(hr));
         assertEquals(true, access.isReviewer(engineeringHead));
-        assertEquals(false, access.isReviewer(director));
+        assertEquals(true, access.isReviewer(director));
+        assertEquals(true, access.isDirector(director));
+        assertEquals(false, access.isDirector(engineeringHead));
         assertEquals(false, access.isReviewer(admin));
         assertEquals(false, access.isReviewer(interviewer));
         assertEquals(true, access.isHr(hr));

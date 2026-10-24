@@ -644,13 +644,41 @@ class ApplicationPipelineWebTests {
     void reviewNeedsCsrfAndAReviewerRole() throws Exception {
         mvc.perform(post("/applications/298/review").with(as("hr_lan", "HR")).param("decision", "Pass"))
                 .andExpect(status().isForbidden());
+        // Admin qua được rule URL nhưng Service từ chối (Director nay là người duyệt thay, xem test dưới).
         when(reviewService.review(eq(298), any())).thenThrow(new AccessDeniedException("no"));
-        mvc.perform(post("/applications/298/review").with(as("director", "Director")).with(csrf())
+        mvc.perform(post("/applications/298/review").with(as("admin", "System Admin")).with(csrf())
                         .param("decision", "Pass"))
                 .andExpect(status().isForbidden());
         mvc.perform(post("/applications/298/review").with(as("phong.nguyen", "Candidate")).with(csrf())
                         .param("decision", "Pass"))
                 .andExpect(status().isForbidden());
+    }
+
+    /** Q2.3: Director thấy form duyệt ở HR_Passed kèm dòng nhắc "duyệt thay"; HR, HM không thấy dòng này. */
+    @Test
+    void directorReviewsOnBehalfOfHiringManager() throws Exception {
+        when(pipeline.detail(298)).thenReturn(
+                detail(false, false, null, true, false, null, "HR_Passed", null, "Director"));
+        mvc.perform(get("/applications/298").with(as("director", "Director")))
+                .andExpect(status().isOk())
+                .andExpect(content().string(containsString("Bạn đang duyệt thay trưởng bộ phận")))
+                .andExpect(content().string(containsString("name=\"decision\" value=\"Pass\"")))
+                .andExpect(content().string(containsString("name=\"decision\" value=\"Fail\"")));
+
+        when(pipeline.detail(298)).thenReturn(
+                detail(false, false, null, true, false, null, "HR_Passed", null, "Hiring Manager"));
+        mvc.perform(get("/applications/298").with(as("hm_tuan", "Hiring Manager")))
+                .andExpect(status().isOk())
+                .andExpect(content().string(not(containsString("Bạn đang duyệt thay trưởng bộ phận"))));
+
+        when(reviewService.review(eq(298), any()))
+                .thenReturn("Đã duyệt thay trưởng bộ phận. HR có thể lên lịch phỏng vấn.");
+        mvc.perform(post("/applications/298/review").with(as("director", "Director")).with(csrf())
+                        .param("decision", "Pass"))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrl("/applications/298"))
+                .andExpect(flash().attribute("successMessage",
+                        "Đã duyệt thay trưởng bộ phận. HR có thể lên lịch phỏng vấn."));
     }
 
     @Test
@@ -970,6 +998,13 @@ class ApplicationPipelineWebTests {
 
     private static ApplicationDetailResponse detail(boolean nextSteps, boolean openJobPosting, String linkedIn,
                                                     boolean review, boolean rescreen, Long interviewId, String status, BigDecimal aiMatchScore) {
+        return detail(nextSteps, openJobPosting, linkedIn, review, rescreen, interviewId, status, aiMatchScore,
+                openJobPosting ? "HR" : "Hiring Manager");
+    }
+
+    private static ApplicationDetailResponse detail(boolean nextSteps, boolean openJobPosting, String linkedIn,
+                                                    boolean review, boolean rescreen, Long interviewId, String status,
+                                                    BigDecimal aiMatchScore, String viewerRole) {
         return new ApplicationDetailResponse(298, 15, false, "An Võ", "an.vo@example.com", "0901 234 567", linkedIn, null,
                 7, "REQ-007", 12, "Digital Marketing Executive", "Sales & Marketing", SUBMITTED,
                 status, "Qua vòng chuyên môn", "badge--warning", aiMatchScore, aiMatchScore == null ? null : SUBMITTED.plusMinutes(1),
@@ -980,7 +1015,7 @@ class ApplicationPipelineWebTests {
                                 "Chờ xếp lịch phỏng vấn · Đang chờ: HR", false)),
                 interviewId,
                 new ApplicationDetailResponse.Actions(review, rescreen, nextSteps, nextSteps, openJobPosting),
-                openJobPosting ? "HR" : "Hiring Manager", "HM_Suggested".equals(status));
+                viewerRole, "HM_Suggested".equals(status));
     }
 
     private static ApplicationPipelineResponse row(int id, String status, String score, boolean schedule,

@@ -16,7 +16,8 @@ import static com.group2.rms.requisition.service.RequisitionAccess.*;
  * Ai xem được đơn nào và làm được gì trên đơn (5.1.22, 5.1.23).
  * HR, Director, Admin xem mọi đơn; Hiring Manager xem mọi đơn phòng ban mình, kể cả
  * đơn HR chưa chuyển (Q1.4).
- * Chỉ HR và Hiring Manager được duyệt; Director, Admin chỉ xem.
+ * HR duyệt bước HR; Hiring Manager duyệt bước HM của phòng mình; Director duyệt thay ở bước HM (mọi phòng, khi HM
+ * vắng — Q2.3), không duyệt bước HR; Admin chỉ xem.
  */
 @Component
 @RequiredArgsConstructor
@@ -61,12 +62,15 @@ public class ApplicationAccess {
 
     /**
      * HR duyệt đơn chưa qua vòng nhân sự; HM duyệt đơn HR đã chuyển, đúng phòng
-     * ban.
+     * ban; Director duyệt thay HM đơn HR đã chuyển, không kiểm phòng ban.
      */
     public boolean canReview(User user, Application application) {
         String status = application.getApplicationStatus();
         if (ROLE_HR.equals(role(user))) {
             return HR_REVIEW_STATUSES.contains(status);
+        }
+        if (isDirector(user)) {
+            return HM_REVIEW_STATUS.equals(status);
         }
         return isHiringManager(user) && HM_REVIEW_STATUS.equals(status) && inManagedDepartment(user, application);
     }
@@ -103,13 +107,17 @@ public class ApplicationAccess {
         return Set.of(ROLE_HR, ROLE_HIRING_MANAGER, ROLE_SYSTEM_ADMIN).contains(role(user));
     }
 
-    /** HR hoặc Hiring Manager: hai vai trò duy nhất có bước duyệt hồ sơ. */
+    /** HR, Hiring Manager, hoặc Director (duyệt thay bước HM): các vai trò có bước duyệt hồ sơ. */
     public boolean isReviewer(User user) {
-        return isHr(user) || isHiringManager(user);
+        return isHr(user) || isHiringManager(user) || isDirector(user);
     }
 
     public boolean isHr(User user) {
         return ROLE_HR.equals(role(user));
+    }
+
+    public boolean isDirector(User user) {
+        return ROLE_DIRECTOR.equals(role(user));
     }
 
     private boolean isHiringManager(User user) {
