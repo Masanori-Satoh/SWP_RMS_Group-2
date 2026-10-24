@@ -285,6 +285,9 @@ class ApplicationPipelineServiceTests {
         ApplicationDetailResponse detail = service.detail(ID);
 
         assertEquals("An Võ", detail.fullName());
+        assertEquals(java.time.LocalDate.of(1995, 8, 17), detail.dateOfBirth());
+        assertEquals("Nữ", detail.gender());
+        assertEquals("Số 88 Láng Hạ, Đống Đa, Hà Nội", detail.address());
         assertEquals("REQ-007", detail.requisitionCode());
         assertEquals("Sales & Marketing", detail.departmentName());
         assertEquals(new BigDecimal("79.34"), detail.aiMatchScore());
@@ -463,7 +466,9 @@ class ApplicationPipelineServiceTests {
                 .build();
         return Application.builder()
                 .applicationId(ID)
-                .candidate(Candidate.builder().account(User.builder().fullName("An Võ").build()).build())
+                .candidate(Candidate.builder().account(User.builder().fullName("An Võ").build())
+                        .dateOfBirth(java.time.LocalDate.of(1995, 8, 17)).gender("Nữ")
+                        .address("Số 88 Láng Hạ, Đống Đa, Hà Nội").build())
                 .jobPosting(JobPosting.builder().jobPostingId(12).postingTitle("Digital Marketing Executive")
                         .requisition(requisition).build())
                 .submissionDate(SUBMITTED)

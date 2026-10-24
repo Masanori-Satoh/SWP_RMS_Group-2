@@ -98,10 +98,14 @@
         </div>
         <aside class="app-detail__side" aria-label="Thông tin liên hệ, ghi chú và hoạt động">
             <section class="card app-contact" aria-labelledby="app-contact-title"
-                     th:with="hasEmail=${!#strings.isEmpty(#strings.trim(detail.email))},hasPhone=${!#strings.isEmpty(#strings.trim(detail.phoneNumber))},hasLinkedIn=${!#strings.isEmpty(#strings.trim(detail.linkedInUrl))},hasPortfolio=${!#strings.isEmpty(#strings.trim(detail.portfolioUrl))}">
-                <div class="card-header"><h2 id="app-contact-title" class="card-title app-workspace-title">Thông tin liên hệ</h2></div>
-                <p th:if="${!hasEmail and !hasPhone and !hasLinkedIn and !hasPortfolio}" class="text-muted">Chưa có thông tin liên hệ.</p>
+                     th:with="hasEmail=${!#strings.isEmpty(#strings.trim(detail.email))},hasPhone=${!#strings.isEmpty(#strings.trim(detail.phoneNumber))},hasLinkedIn=${!#strings.isEmpty(#strings.trim(detail.linkedInUrl))},hasPortfolio=${!#strings.isEmpty(#strings.trim(detail.portfolioUrl))},hasBirth=${detail.dateOfBirth != null},hasGender=${!#strings.isEmpty(#strings.trim(detail.gender))},hasAddress=${!#strings.isEmpty(#strings.trim(detail.address))}">
+                <div class="card-header"><h2 id="app-contact-title" class="card-title app-workspace-title">Thông tin ứng viên</h2></div>
+                <p th:if="${!hasEmail and !hasPhone and !hasLinkedIn and !hasPortfolio and !hasBirth and !hasGender and !hasAddress}" class="text-muted">Chưa có thông tin ứng viên.</p>
                 <dl class="app-contact-facts">
+                    <!-- Q7.5: ứng viên tự khai ở hồ sơ cá nhân; trống thì không hiện dòng -->
+                    <th:block th:if="${hasBirth}"><dt>Ngày sinh</dt><dd th:text="${#temporals.format(detail.dateOfBirth, 'dd/MM/yyyy')}">09/03/1993</dd></th:block>
+                    <th:block th:if="${hasGender}"><dt>Giới tính</dt><dd th:text="${detail.gender}">Nữ</dd></th:block>
+                    <th:block th:if="${hasAddress}"><dt>Địa chỉ</dt><dd th:text="${detail.address}">Số 91 Chùa Bộc, Đống Đa, Hà Nội</dd></th:block>
                     <th:block th:if="${hasEmail}"><dt>Email</dt><dd><a th:href="|mailto:${detail.email}|" th:text="${detail.email}"></a></dd></th:block>
                     <th:block th:if="${hasPhone}"><dt>Điện thoại</dt><dd><a th:href="|tel:${detail.phoneNumber}|" th:text="${detail.phoneNumber}"></a></dd></th:block>
                     <th:block th:if="${hasLinkedIn}" th:with="url=${detail.linkedInUrl},lower=${#strings.toLowerCase(detail.linkedInUrl)},web=${#strings.startsWith(lower, 'https://') or #strings.startsWith(lower, 'http://')}">

@@ -636,6 +636,28 @@ class ApplicationPipelineWebTests {
                 .andExpect(flash().attribute("successMessage", "Đã đánh dấu hồ sơ không đạt."));
     }
 
+    /** Q7.5: người tuyển dụng thấy ngày sinh, giới tính, địa chỉ; trống thì không hiện dòng. */
+    @Test
+    void detailShowsDateOfBirthGenderAndAddressWhenKnown() throws Exception {
+        when(pipeline.detail(298)).thenReturn(detail(false, false, null, false, false, null, "AI_Screened", null,
+                "Hiring Manager", true));
+        mvc.perform(get("/applications/298").with(as("hm_tuan", "Hiring Manager")))
+                .andExpect(status().isOk())
+                .andExpect(content().string(containsString("Thông tin ứng viên")))
+                .andExpect(content().string(containsString("<dt>Ngày sinh</dt><dd>17/08/1995</dd>")))
+                .andExpect(content().string(containsString("<dt>Giới tính</dt><dd>Nữ</dd>")))
+                .andExpect(content().string(containsString("<dt>Địa chỉ</dt><dd>Số 88 Láng Hạ, Đống Đa, Hà Nội</dd>")));
+
+        when(pipeline.detail(298)).thenReturn(detail(false, false, null, false, false, null, "AI_Screened", null,
+                "Hiring Manager", false));
+        mvc.perform(get("/applications/298").with(as("hm_tuan", "Hiring Manager")))
+                .andExpect(status().isOk())
+                .andExpect(content().string(not(containsString("<dt>Ngày sinh</dt>"))))
+                .andExpect(content().string(not(containsString("<dt>Giới tính</dt>"))))
+                .andExpect(content().string(not(containsString("<dt>Địa chỉ</dt>"))))
+                .andExpect(content().string(containsString("<dt>Email</dt>")));
+    }
+
     @Test
     void readOnlyViewerGetsNoRejectDialog() throws Exception {
         when(pipeline.detail(298)).thenReturn(detail(false, true, null, false, false));
@@ -1050,7 +1072,17 @@ class ApplicationPipelineWebTests {
     private static ApplicationDetailResponse detail(boolean nextSteps, boolean openJobPosting, String linkedIn,
                                                     boolean review, boolean rescreen, Long interviewId, String status,
                                                     BigDecimal aiMatchScore, String viewerRole) {
+        return detail(nextSteps, openJobPosting, linkedIn, review, rescreen, interviewId, status, aiMatchScore,
+                viewerRole, true);
+    }
+
+    /** {@code personalFacts}: có ngày sinh, giới tính, địa chỉ (Q7.5) hay để trống. */
+    private static ApplicationDetailResponse detail(boolean nextSteps, boolean openJobPosting, String linkedIn,
+                                                    boolean review, boolean rescreen, Long interviewId, String status,
+                                                    BigDecimal aiMatchScore, String viewerRole, boolean personalFacts) {
         return new ApplicationDetailResponse(298, 15, false, "An Võ", "an.vo@example.com", "0901 234 567", linkedIn, null,
+                personalFacts ? java.time.LocalDate.of(1995, 8, 17) : null, personalFacts ? "Nữ" : null,
+                personalFacts ? "Số 88 Láng Hạ, Đống Đa, Hà Nội" : "  ",
                 7, "REQ-007", 12, "Digital Marketing Executive", "Sales & Marketing", SUBMITTED,
                 status, "Qua vòng chuyên môn", "badge--warning", aiMatchScore, aiMatchScore == null ? null : SUBMITTED.plusMinutes(1),
                 List.of(new TimelineItem(SUBMITTED.plusDays(1), "HR: Đạt", "Lan HR", "Hợp vị trí", "success"),
