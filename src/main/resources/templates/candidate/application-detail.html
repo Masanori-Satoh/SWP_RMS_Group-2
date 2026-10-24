@@ -145,7 +145,7 @@
         <h2 id="app-actions-title" class="app-section-title">Đánh giá hồ sơ</h2>
 
         <form th:if="${detail.actions.review}" th:action="@{/applications/{id}/review(id=${detail.applicationId})}"
-              th:object="${reviewForm}" method="post" class="app-review" novalidate>
+              th:object="${reviewForm}" method="post" class="app-review" id="app-review-form" novalidate>
             <div th:if="${#fields.hasGlobalErrors() or #fields.hasErrors('decision')}" class="alert alert--danger" role="alert">
                 <span th:each="message : ${#fields.globalErrors()}" th:text="${message}">Hồ sơ vừa được người khác xử lý.</span>
                 <span th:each="message : ${#fields.errors('decision')}" th:text="${message}">Quyết định không hợp lệ.</span>
@@ -162,9 +162,33 @@
                 <button type="submit" name="decision" value="Pass" class="btn btn--primary btn--sm"
                         th:text="${detail.applicationStatus == 'HR_Passed' ? 'Đạt' : 'Đạt, chuyển trưởng bộ phận'}">Đạt</button>
                 <button type="submit" name="decision" value="Hold" class="btn btn--secondary btn--sm">Tạm giữ</button>
-                <button type="submit" name="decision" value="Fail" class="btn btn--danger btn--sm">Không đạt</button>
+                <!-- Có JS: mở hộp xác nhận (js/pages/application-review.js). Không JS: gửi thẳng như cũ -->
+                <button type="submit" name="decision" value="Fail" class="btn btn--danger btn--sm"
+                        data-review-fail aria-haspopup="dialog" aria-controls="app-reject-dialog">Không đạt</button>
             </div>
         </form>
+
+        <!-- Q2.1: loại ứng viên phải xác nhận. Markup catalog confirm-dialog; không dùng fragments/ui/dialogs :: confirm
+             (không render trên Thymeleaf 3.1). Nút đỏ gửi form duyệt qua thuộc tính form= (kèm nhận xét đã nhập). -->
+        <dialog th:if="${detail.actions.review}" id="app-reject-dialog" class="confirm-dialog"
+                aria-labelledby="app-reject-title" aria-describedby="app-reject-message">
+            <div class="dialog-content">
+                <div class="dialog-header">
+                    <h2 id="app-reject-title" class="dialog-title">Loại ứng viên <span th:text="${detail.fullName}">Nguyễn Văn An</span>?</h2>
+                </div>
+                <div class="dialog-body">
+                    <p id="app-reject-message">
+                        Hồ sơ chuyển sang Không đạt và không hoàn tác được.
+                        Nhận xét nội bộ bạn đã nhập sẽ được lưu cùng quyết định.
+                    </p>
+                </div>
+                <div class="dialog-actions">
+                    <button type="button" class="btn btn--secondary btn--sm" data-review-cancel>Hủy</button>
+                    <button type="submit" form="app-review-form" name="decision" value="Fail"
+                            class="btn btn--danger btn--sm" data-review-confirm>Xác nhận loại ứng viên</button>
+                </div>
+            </div>
+        </dialog>
 
         <!-- Chỉ là link sang trang của module khác (interview, offer), không gọi Service của họ -->
         <div th:if="${detail.actions.scheduleInterview or detail.actions.createOffer or detail.interviewId != null}"
@@ -203,6 +227,6 @@
     </div>
     <th:block th:replace="~{candidate/application-dialogs :: dialogs(canBookmark=${detail.viewerRole == 'HR' or detail.viewerRole == 'Hiring Manager'})}"></th:block>
 </main>
-<th:block layout:fragment="scripts"><script th:src="@{/js/pages/talent-pool.js}" defer></script><script th:src="@{/js/pages/applications.js}" defer></script></th:block>
+<th:block layout:fragment="scripts"><script th:src="@{/js/pages/talent-pool.js}" defer></script><script th:src="@{/js/pages/applications.js}" defer></script><script th:src="@{/js/pages/application-review.js}" defer></script></th:block>
 </body>
 </html>

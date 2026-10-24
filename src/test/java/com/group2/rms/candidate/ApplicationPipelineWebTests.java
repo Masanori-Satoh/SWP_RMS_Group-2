@@ -601,6 +601,51 @@ class ApplicationPipelineWebTests {
                 .andExpect(content().string(containsString("name=\"_csrf\"")));
     }
 
+    /** Q2.1: "Không đạt" mở hộp xác nhận nút đỏ; không JS thì nút vẫn là submit decision=Fail của form duyệt. */
+    @Test
+    void rejectAsksForConfirmationButStillSubmitsWithoutJavaScript() throws Exception {
+        when(pipeline.detail(298)).thenReturn(detail(false, true, null, true, false));
+
+        String html = mvc.perform(get("/applications/298").with(as("hr_lan", "HR")))
+                .andExpect(status().isOk())
+                .andExpect(content().string(containsString("id=\"app-review-form\"")))
+                .andExpect(content().string(containsString("data-review-fail")))
+                .andExpect(content().string(containsString("id=\"app-reject-dialog\" class=\"confirm-dialog\"")))
+                .andExpect(content().string(containsString("Loại ứng viên <span>An Võ</span>?")))
+                .andExpect(content().string(containsString(
+                        "form=\"app-review-form\" name=\"decision\" value=\"Fail\"")))
+                .andExpect(content().string(containsString("Xác nhận loại ứng viên")))
+                .andExpect(content().string(containsString("/js/pages/application-review.js")))
+                .andReturn().getResponse().getContentAsString();
+        // Nút "Không đạt" nằm trong form duyệt (submit thật), hộp xác nhận nằm ngoài form.
+        int formStart = html.indexOf("id=\"app-review-form\"");
+        int failButton = html.indexOf("data-review-fail");
+        int formEnd = html.indexOf("</form>", formStart);
+        int dialog = html.indexOf("id=\"app-reject-dialog\"");
+        assertTrue(formStart < failButton && failButton < formEnd && formEnd < dialog);
+        assertTrue(html.substring(html.lastIndexOf("<button", failButton), failButton)
+                .contains("type=\"submit\" name=\"decision\" value=\"Fail\""));
+
+        // Không JS: gửi thẳng decision=Fail vẫn được xử lý như cũ.
+        when(reviewService.review(eq(298), argThat(f -> "Fail".equals(f.decision()))))
+                .thenReturn("Đã đánh dấu hồ sơ không đạt.");
+        mvc.perform(post("/applications/298/review").with(as("hr_lan", "HR")).with(csrf())
+                        .param("decision", "Fail").param("comments", "Thiếu kinh nghiệm"))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrl("/applications/298"))
+                .andExpect(flash().attribute("successMessage", "Đã đánh dấu hồ sơ không đạt."));
+    }
+
+    @Test
+    void readOnlyViewerGetsNoRejectDialog() throws Exception {
+        when(pipeline.detail(298)).thenReturn(detail(false, true, null, false, false));
+
+        mvc.perform(get("/applications/298").with(as("hr_lan", "HR")))
+                .andExpect(status().isOk())
+                .andExpect(content().string(not(containsString("app-reject-dialog"))))
+                .andExpect(content().string(not(containsString("Xác nhận loại ứng viên"))));
+    }
+
     @Test
     void reviewSuccessRedirectsBackWithMessage() throws Exception {
         when(reviewService.review(298, new ApplicationReviewRequest("Pass", "Hợp vị trí")))
