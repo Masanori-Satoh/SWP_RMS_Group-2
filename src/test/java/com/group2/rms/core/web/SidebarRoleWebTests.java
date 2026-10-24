@@ -1,14 +1,14 @@
 package com.group2.rms.core.web;
 
 import com.group2.rms.candidate.controller.ApplicationPipelineController;
-import com.group2.rms.candidate.controller.MyApplicationController;
+import com.group2.rms.candidate.portal.controller.MyApplicationController;
 import com.group2.rms.candidate.dto.ApplicationListResponse;
 import com.group2.rms.candidate.dto.ApplicationSearch;
-import com.group2.rms.candidate.dto.MyApplicationListResponse;
+import com.group2.rms.candidate.portal.dto.MyApplicationListResponse;
 import com.group2.rms.candidate.service.ApplicationPipelineService;
 import com.group2.rms.candidate.service.ApplicationReviewService;
 import com.group2.rms.candidate.service.ApplicationStage;
-import com.group2.rms.candidate.service.MyApplicationService;
+import com.group2.rms.candidate.portal.service.MyApplicationService;
 import com.group2.rms.core.config.SecurityConfig;
 import com.group2.rms.core.security.CurrentUserService;
 import com.group2.rms.core.security.DatabaseUserDetailsService;

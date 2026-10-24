@@ -1,4 +1,4 @@
-package com.group2.rms.candidate.dto;
+package com.group2.rms.candidate.portal.dto;
 
 /**
  * Một vòng trên thanh 4 chấm của My Applications (Nộp CV → Xét CV → Phỏng vấn → Thư mời).

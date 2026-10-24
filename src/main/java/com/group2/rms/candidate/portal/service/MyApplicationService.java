@@ -1,17 +1,18 @@
-package com.group2.rms.candidate.service;
+package com.group2.rms.candidate.portal.service;
 
-import com.group2.rms.candidate.dto.MyApplicationListResponse;
-import com.group2.rms.candidate.dto.MyApplicationResponse;
+import com.group2.rms.candidate.portal.dto.MyApplicationListResponse;
+import com.group2.rms.candidate.portal.dto.MyApplicationResponse;
 import com.group2.rms.candidate.entity.Application;
-import com.group2.rms.candidate.exception.ApplicationWithdrawalException;
+import com.group2.rms.candidate.portal.exception.ApplicationWithdrawalException;
 import com.group2.rms.candidate.repository.ApplicationRepository;
 import com.group2.rms.candidate.repository.ApplicationRepository.MyApplicationMarkRow;
 import com.group2.rms.candidate.repository.ApplicationRepository.MyInterviewRow;
 import com.group2.rms.candidate.repository.ApplicationRepository.MyOfferRow;
-import com.group2.rms.candidate.service.MyApplicationJourney.Facts;
-import com.group2.rms.candidate.service.MyApplicationJourney.Interview;
-import com.group2.rms.candidate.service.MyApplicationJourney.Mark;
-import com.group2.rms.candidate.service.MyApplicationJourney.Offer;
+import com.group2.rms.candidate.portal.service.MyApplicationJourney.Facts;
+import com.group2.rms.candidate.portal.service.MyApplicationJourney.Interview;
+import com.group2.rms.candidate.portal.service.MyApplicationJourney.Mark;
+import com.group2.rms.candidate.portal.service.MyApplicationJourney.Offer;
+import com.group2.rms.candidate.service.ApplicationReviewService;
 import com.group2.rms.core.exception.ResourceNotFoundException;
 import com.group2.rms.core.security.CurrentUserService;
 import com.group2.rms.user.entity.User;

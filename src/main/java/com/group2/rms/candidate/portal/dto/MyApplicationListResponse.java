@@ -1,4 +1,4 @@
-package com.group2.rms.candidate.dto;
+package com.group2.rms.candidate.portal.dto;
 
 import java.util.List;
 import java.util.Map;

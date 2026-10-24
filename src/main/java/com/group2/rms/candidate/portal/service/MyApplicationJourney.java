@@ -1,6 +1,7 @@
-package com.group2.rms.candidate.service;
+package com.group2.rms.candidate.portal.service;
 
-import com.group2.rms.candidate.dto.MyApplicationStep;
+import com.group2.rms.candidate.portal.dto.MyApplicationStep;
+import com.group2.rms.candidate.service.ApplicationProgressResolver;
 import com.group2.rms.core.web.TimelineItem;
 
 import java.time.LocalDateTime;

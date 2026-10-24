@@ -1,4 +1,4 @@
-package com.group2.rms.candidate.dto;
+package com.group2.rms.candidate.portal.dto;
 
 import com.group2.rms.core.web.TimelineItem;
 

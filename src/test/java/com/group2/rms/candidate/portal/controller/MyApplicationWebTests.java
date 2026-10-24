@@ -1,10 +1,9 @@
-package com.group2.rms.candidate;
+package com.group2.rms.candidate.portal.controller;
 
-import com.group2.rms.candidate.controller.MyApplicationController;
-import com.group2.rms.candidate.dto.MyApplicationListResponse;
-import com.group2.rms.candidate.dto.MyApplicationResponse;
-import com.group2.rms.candidate.exception.ApplicationWithdrawalException;
-import com.group2.rms.candidate.service.MyApplicationService;
+import com.group2.rms.candidate.portal.dto.MyApplicationListResponse;
+import com.group2.rms.candidate.portal.dto.MyApplicationResponse;
+import com.group2.rms.candidate.portal.exception.ApplicationWithdrawalException;
+import com.group2.rms.candidate.portal.service.MyApplicationService;
 import com.group2.rms.core.config.SecurityConfig;
 import com.group2.rms.core.security.DatabaseUserDetailsService;
 import com.group2.rms.core.web.TimelineItem;

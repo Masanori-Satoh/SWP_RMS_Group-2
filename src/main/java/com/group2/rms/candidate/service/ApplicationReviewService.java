@@ -29,7 +29,7 @@ import java.util.Set;
 @RequiredArgsConstructor
 public class ApplicationReviewService {
 
-    static final String REJECTED = "Rejected";
+    public static final String REJECTED = "Rejected";
 
     private final ApplicationRepository applications;
     private final ApplicationReviewRepository reviews;

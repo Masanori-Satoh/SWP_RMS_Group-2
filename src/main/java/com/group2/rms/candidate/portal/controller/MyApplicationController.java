@@ -1,8 +1,8 @@
-package com.group2.rms.candidate.controller;
+package com.group2.rms.candidate.portal.controller;
 
-import com.group2.rms.candidate.dto.MyApplicationListResponse;
-import com.group2.rms.candidate.exception.ApplicationWithdrawalException;
-import com.group2.rms.candidate.service.MyApplicationService;
+import com.group2.rms.candidate.portal.dto.MyApplicationListResponse;
+import com.group2.rms.candidate.portal.exception.ApplicationWithdrawalException;
+import com.group2.rms.candidate.portal.service.MyApplicationService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
