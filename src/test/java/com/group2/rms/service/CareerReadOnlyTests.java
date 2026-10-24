@@ -41,7 +41,7 @@ class CareerReadOnlyTests {
     void actualDatabaseJobsRenderThroughControllerAndThymeleaf() throws Exception {
         String html = mvc.perform(get("/jobs").param("size", "1000")).andExpect(status().isOk())
                 .andReturn().getResponse().getContentAsString(StandardCharsets.UTF_8);
-        assertThat(html).contains("Mộc Careers");
+        assertThat(html).contains("Mộc Tuyển dụng");
         snapshot("index.html", html);
         for (PublicJobListResponse job : careers.getPublishedJobs(null, null, null, ALL)) {
             assertThat(html).contains("/jobs/" + job.id());
