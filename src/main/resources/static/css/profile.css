@@ -9,10 +9,19 @@
 .profile-card h2 { font:600 20px/1.4 var(--sans); margin:0 0 var(--s6); }
 .profile-identity { display:flex; align-items:center; gap:var(--s6); margin-bottom:var(--s8); }
 .profile-avatar { width:88px; height:88px; border-radius:50%; object-fit:cover; background:var(--brand-soft); border:1px solid var(--line); flex:none; }
-.profile-avatar-fallback { display:flex; align-items:center; justify-content:center; color:var(--brand-dark); font:600 32px/1 var(--serif); }
+.profile-avatar-fallback { display:flex; align-items:center; justify-content:center; background:var(--avatar-bg); color:var(--avatar-fg); font:600 32px/1 var(--serif); }
 .profile-identity-name { margin:0; font:600 20px/1.3 var(--sans); }
 .profile-identity-meta { margin:var(--s1) 0 0; color:var(--muted); }
+/* Tải ảnh đại diện: form riêng, nằm bên phải khối định danh */
+.profile-avatar-form { display:grid; gap:var(--s2); margin-left:auto; min-width:0; }
+.profile-avatar-form .form-label { margin:0; }
+.profile-avatar-upload { display:flex; flex-wrap:wrap; align-items:center; gap:var(--s3); }
+.profile-avatar-upload .form-control { flex:1 1 220px; min-width:0; }
 .profile-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:var(--s6); }
+/* Trang ứng viên: form chia nhóm (Tài khoản / Thông tin ứng viên), mỗi nhóm một lưới */
+.profile-grid + .profile-grid { margin-top:var(--s6); }
+.profile-section-title { margin:var(--s8) 0 var(--s4); font:600 16px/1.4 var(--sans); color:var(--muted); }
+.profile-section-title:first-child { margin-top:0; }
 .profile-field-full { grid-column:1 / -1; }
 .profile-readonly { background:var(--page); color:var(--muted); cursor:not-allowed; }
 .profile-actions { display:flex; justify-content:flex-end; gap:var(--s4); padding-top:var(--s6); margin-top:var(--s6); border-top:1px solid var(--line); }
@@ -117,6 +126,7 @@
     .profile-grid { grid-template-columns:1fr; }
     .profile-field-full { grid-column:auto; }
     .profile-identity { flex-direction:column; align-items:flex-start; }
+    .profile-avatar-form { margin-left:0; width:100%; }
     .toast-container { left: 16px; right: 16px; top: 16px; }
     .toast-message { min-width: auto; width: 100%; }
 }

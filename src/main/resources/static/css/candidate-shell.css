@@ -1,6 +1,6 @@
 /* =============================================================================
    CANDIDATE-SHELL.CSS — khung trang của ứng viên trong layout/internal
-   (/portal/applications, /portal/interviews, /portal/offers, /profile, /notifications khi người xem là Candidate)
+   (/portal/applications, /portal/interviews, /portal/offers, /portal/profile, /notifications khi người xem là Candidate)
    - Không sidebar: nội dung chiếm hết chiều ngang, menu nằm trên topbar (fragments/layout/candidate-topbar.html).
    - Chữ sans là Plus Jakarta Sans, cùng font với landing (landing.css --font-sans); tiêu đề vẫn serif Lora.
      Topbar giữ font riêng của .public-topbar (topbar.css) để giống hệt topbar ở landing, /jobs.
@@ -18,11 +18,9 @@
 }
 
 /* ---- Topbar ứng viên: logo | menu | góc người dùng ---- */
-/* Avatar chữ cái: nền xanh nhạt, chữ xanh đậm vừa, viền xanh nhẹ (chỉ topbar ứng viên; topbar.css không đổi). */
+/* Avatar chữ cái: màu nền/chữ dùng chung token --avatar-bg/--avatar-fg (topbar.css); ở đây chỉ viền xanh nhẹ, chữ mảnh hơn. */
 .candidate-topbar .workspace-avatar-fallback {
   border-color: color-mix(in srgb, var(--brand) 30%, var(--surface));
-  background: var(--brand-soft);
-  color: var(--brand-dark);
   font-weight: 600;
 }
 .candidate-topbar__nav {
