@@ -160,7 +160,14 @@ class CareerFlowTests {
                                 .andExpect(content().string(containsString("name=\"cvFile\"")))
                                 .andExpect(content().string(containsString("taylor@example.test")))
                                 .andExpect(content().string(containsString("/js/pages/job-detail.js")))
-                                .andExpect(content().string(not(containsString("href=\"/jobs/41/apply\""))));
+                                .andExpect(content().string(not(containsString("href=\"/jobs/41/apply\""))))
+                                // C1 (L6): cảnh báo + ô tick; ô tick không gửi lên server, nút không khóa sẵn trong HTML
+                                .andExpect(content().string(containsString(
+                                                "Mỗi vị trí chỉ nộp hồ sơ 01 lần, kể cả khi bạn rút hồ sơ sau đó.")))
+                                .andExpect(content().string(containsString("id=\"cvConfirmed\"")))
+                                .andExpect(content().string(containsString("Tôi đã kiểm tra CV")))
+                                .andExpect(content().string(not(containsString("name=\"cvConfirmed\""))))
+                                .andExpect(content().string(containsString("data-apply-submit>Nộp hồ sơ</button>")));
         }
 
         @Test
@@ -263,7 +270,10 @@ class CareerFlowTests {
                                 .andExpect(model().attributeExists("job"))
                                 .andExpect(content().string(containsString("data-open-on-load=\"true\"")))
                                 .andExpect(content().string(containsString("aria-invalid=\"true\"")))
-                                .andExpect(content().string(containsString("Chỉ nhận file PDF.")));
+                                .andExpect(content().string(containsString("Chỉ nhận file PDF.")))
+                                // Render lại sau lỗi: ô tick trống, ứng viên tick lại
+                                .andExpect(content().string(containsString(
+                                                "id=\"cvConfirmed\" class=\"job-apply-confirm__input\" data-apply-confirm>")));
         }
 
         @Test
@@ -281,7 +291,8 @@ class CareerFlowTests {
                                 .andExpect(content().string(containsString("id=\"job-apply-dialog\"")))
                                 .andExpect(content().string(containsString("Bạn đã ứng tuyển vị trí này.")))
                                 .andExpect(content().string(containsString("Đã ứng tuyển")))
-                                .andExpect(content().string(not(containsString("name=\"cvFile\""))));
+                                .andExpect(content().string(not(containsString("name=\"cvFile\""))))
+                                .andExpect(content().string(not(containsString("cvConfirmed"))));
         }
 
         @Test
