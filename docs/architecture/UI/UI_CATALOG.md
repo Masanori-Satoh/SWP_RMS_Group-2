@@ -346,6 +346,7 @@ Mọi trang HTML con kế thừa thông qua: `layout:decorate="~{layout/[tên-la
 - **Trạng thái thu gọn (68px):** Tối ưu không gian làm việc, hiển thị icon kèm Tooltip nổi giải thích tính năng khi hover.
 - **Trạng thái mở rộng (250px):** Mở ra khi rê chuột hoặc bấm nút ghim (`#sidebar-pin-toggle`).
 - **Nút ghim (icon đinh ghim):** chưa ghim = đinh ghim viền xám; đã ghim = đinh ghim tô xanh trên nền `var(--sidebar-brand-soft)`; đã ghim + rê chuột = icon "bỏ ghim" (đinh ghim gạch chéo). Trạng thái lưu ở `localStorage` (`rms_sidebar_pinned`), `aria-pressed` do `interface.js` cập nhật.
+- **Chân sidebar (`sidebar-footer.html`):** logo, caption và ảnh văn phòng, dùng chung mọi role nội bộ, gọi một lần trong `sidebar-shell.html`. Chỉ hiện khi sidebar mở rộng (≥ 769px), mờ dần cùng nhãn menu. Rộng cố định bằng sidebar mở rộng để ảnh không reflow khi sidebar co/giãn. CSS: `workspace.css` (`.sidebar-footer*`).
 - **Phân nhánh Menu theo Role:** Tự động nạp menu tương ứng (`admin.html`, `candidate.html`, `interviewer.html`, `recruiter.html`).
 
 ---
