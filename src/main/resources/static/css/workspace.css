@@ -586,3 +586,84 @@ body:not(.sidebar-pinned) .workspace-sidebar:not(:hover) .sidebar-nav-link[data-
     display: none;
   }
 }
+
+/* Chân sidebar dùng chung (fragments/layout/sidebar-footer.html).
+   Giữ chiều rộng sidebar mở rộng và bị sidebar cắt bớt khi thu gọn nên ảnh không reflow lúc width chuyển động;
+   chỉ opacity chạy cùng nhịp với nhãn menu. Ẩn trên mobile. */
+.sidebar-footer {
+  display: none;
+  flex: 0 0 auto;
+  width: var(--sidebar-expanded-w);
+  box-sizing: border-box;
+  margin: auto 0 0;
+  padding-top: 24px;
+  background: var(--sidebar-bg);
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transition: opacity 0.2s ease, visibility 0s linear 0.2s;
+}
+
+.sidebar-footer-identity {
+  position: relative;
+  isolation: isolate;
+  padding: 12px 24px 0;
+}
+
+.sidebar-footer-identity::before {
+  content: '';
+  position: absolute;
+  inset: 0 0 auto auto;
+  width: 160px;
+  height: 120px;
+  z-index: -1;
+  opacity: 0.18;
+  background: var(--brand);
+  mask: url('../images/admin-leaf.svg') right top / contain no-repeat;
+  pointer-events: none;
+}
+
+.sidebar-footer-caption {
+  margin: 4px 0 0;
+  color: var(--sidebar-text-muted);
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.sidebar-footer-scene {
+  position: relative;
+  width: 100%;
+  height: clamp(192px, calc(100dvh - 620px), 260px);
+  overflow: hidden;
+  margin-top: 8px;
+  mask-image: linear-gradient(to bottom, transparent, #000 48px);
+}
+
+.sidebar-footer-photo {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+@media (min-width: 769px) {
+  .sidebar-footer {
+    display: block;
+  }
+
+  .sidebar-pinned .sidebar-footer,
+  :root:not(.sidebar-pinned) body:not(.sidebar-pinned) .workspace-sidebar:hover .sidebar-footer {
+    opacity: 1;
+    visibility: visible;
+    pointer-events: auto;
+    transition: opacity 0.2s ease 0.08s, visibility 0s;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sidebar-footer {
+    transition: none !important;
+  }
+}

@@ -134,61 +134,9 @@
 .adm-dashboard .adm-service-name { font-size: var(--font-base); }
 .adm-dashboard .adm-service-measure { font-size: var(--font-sm); color: var(--muted); font-variant-numeric: tabular-nums; }
 .adm-dashboard .adm-service-table-wrapper:focus-visible { outline: 2px solid var(--focus); outline-offset: 3px; }
-/* Dashboard-owned footer mounts after the canonical menu and follows sidebar scrolling. */
-.adm-sidebar-brand {
-  display: none;
-  flex: 0 0 auto;
-  width: 100%;
-  margin: auto 0 0;
-  padding-top: var(--s6);
-  background: var(--sidebar-bg);
-}
-.adm-sidebar-identity {
-  position: relative;
-  isolation: isolate;
-  padding: var(--s3) var(--s6) 0;
-}
-.adm-sidebar-identity::before {
-  content: '';
-  position: absolute;
-  inset: 0 0 auto auto;
-  width: 160px;
-  height: 120px;
-  z-index: -1;
-  opacity: .18;
-  background: var(--brand);
-  mask: url('../../images/admin-leaf.svg') right top / contain no-repeat;
-  pointer-events: none;
-}
-.adm-sidebar-caption {
-  margin: var(--s1) 0 0;
-  color: var(--muted);
-  font-size: var(--font-sm);
-  line-height: 1.5;
-}
-.adm-sidebar-scene {
-  position: relative;
-  width: 100%;
-  height: clamp(192px, calc(100dvh - 620px), 260px);
-  overflow: hidden;
-  margin-top: var(--s2);
-  mask-image: linear-gradient(to bottom, transparent, var(--ink) var(--s12));
-}
-.adm-sidebar-photo {
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  display: block;
-  width: 100%;
-  height: auto;
-}
 @container (max-width: 460px) {
   .adm-dashboard .adm-chart-heading--filter { grid-template-columns: minmax(0, 1fr); }
   .adm-dashboard .adm-scope-control { width: min(100%, 240px); justify-self: start; }
-}
-@media (min-width: 769px) {
-  .sidebar-pinned .adm-sidebar-brand[data-mounted='true'],
-  #workspace-navigation:hover .adm-sidebar-brand[data-mounted='true'] { display: block; }
 }
 @media (max-width: 1200px) {
   .adm-dashboard .adm-summary-card { padding: var(--s4); column-gap: var(--s3); }
