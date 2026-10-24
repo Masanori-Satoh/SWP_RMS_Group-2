@@ -28,6 +28,10 @@
   /* Viền & Đường kẻ */
   --line: #d9ded7;
   --control-line: #7b8b7d;
+
+  /* Ảnh đại diện chưa có ảnh: chữ cái đầu trên một màu chung cho mọi vai trò */
+  --avatar-bg: var(--brand-soft);
+  --avatar-fg: var(--brand-dark);
   --focus: #a06325;
 
   /* Màu ngữ nghĩa (Semantic Status) */
