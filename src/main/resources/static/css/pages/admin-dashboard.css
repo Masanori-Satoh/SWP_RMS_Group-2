@@ -172,7 +172,6 @@
 .adm-dashboard .adm-service-name { font-size: var(--font-base); }
 .adm-dashboard .adm-service-measure { font-size: var(--font-sm); color: var(--muted); font-variant-numeric: tabular-nums; }
 .adm-dashboard .adm-service-table-wrapper:focus-visible { outline: 2px solid var(--focus); outline-offset: 3px; }
-
 @container (max-width: 460px) {
   .adm-dashboard .adm-chart-heading--filter { grid-template-columns: minmax(0, 1fr); }
   .adm-dashboard .adm-scope-control { width: min(100%, 240px); justify-self: start; }
