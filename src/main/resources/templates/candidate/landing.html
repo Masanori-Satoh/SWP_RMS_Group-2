@@ -77,7 +77,7 @@
             <div class="lp-highlight">
               <div class="lp-highlight-icon"><svg class="lp-icon" aria-hidden="true"><use href="#i-bell"/></svg></div>
               <strong>Cập nhật liên tục</strong>
-              <span>Theo dõi trạng thái hồ sơ theo thời gian thực.</span>
+              <span>Theo dõi hồ sơ trong mục Đơn ứng tuyển của tôi.</span>
             </div>
             <div class="lp-highlight">
               <div class="lp-highlight-icon"><svg class="lp-icon" aria-hidden="true"><use href="#i-chart"/></svg></div>
@@ -175,13 +175,13 @@
             <div class="lp-process-icon"><svg class="lp-icon" aria-hidden="true"><use href="#i-doc"/></svg></div>
             <span class="lp-step">01</span>
             <h3>Ứng tuyển trực tuyến</h3>
-            <p>Chọn vị trí phù hợp và gửi hồ sơ CV trong vài phút. Không yêu cầu các thủ tục rườm rà.</p>
+            <p>Chọn vị trí phù hợp và gửi CV trong vài phút. Không yêu cầu các thủ tục rườm rà.</p>
           </article>
           <article class="lp-process-card">
             <div class="lp-process-icon"><svg class="lp-icon" aria-hidden="true"><use href="#i-search"/></svg></div>
             <span class="lp-step">02</span>
-            <h3>Sàng lọc &amp; Phản hồi</h3>
-            <p>Đội ngũ tuyển dụng đối chiếu hồ sơ và gửi thông báo kết quả trong vòng 24 đến 48 giờ làm việc.</p>
+            <h3>Sàng lọc &amp; Đánh giá</h3>
+            <p>Đội ngũ tuyển dụng và trưởng bộ phận lần lượt xem xét hồ sơ của bạn.</p>
           </article>
           <article class="lp-process-card">
             <div class="lp-process-icon"><svg class="lp-icon" aria-hidden="true"><use href="#i-users"/></svg></div>
@@ -311,10 +311,7 @@
           </div>
           <div class="lp-cta-copy">
             <h2 class="lp-cta-title" id="cta-heading">Chưa tìm thấy cơ hội phù hợp hôm nay?</h2>
-            <p class="lp-cta-desc">
-              Tạo tài khoản ứng viên tại Mộc RMS để lưu hồ sơ của bạn. Chúng tôi sẽ chủ động liên hệ ngay khi có cơ hội
-              việc làm mới mở ra đúng với kỳ vọng của bạn.
-            </p>
+            <p class="lp-cta-desc">Tạo tài khoản ứng viên để ứng tuyển nhanh và theo dõi mọi hồ sơ ở một nơi.</p>
             <div class="lp-cta-buttons">
               <a th:href="@{/register}" class="lp-btn lp-cta-btn-white" th:if="${currentUser == null}">Tạo tài khoản ứng viên</a>
               <a th:href="${currentUser.roleName == 'Candidate'} ? @{/portal/applications} : @{/dashboard}"
