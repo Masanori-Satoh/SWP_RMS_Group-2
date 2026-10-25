@@ -128,7 +128,8 @@ class SidebarRoleWebTests {
         String sidebar = sidebar("/test/legacy-sidebar-probe", as(account("director", "Director")));
         assertTrue(sidebar.contains("href=\"/requisitions\""));
         assertTrue(sidebar.contains("href=\"/offers\""));
-        assertFalse(sidebar.contains("href=\"/internal/job-postings\""), "Director không có mục chỉ HR thấy");
+        assertTrue(sidebar.contains("href=\"/internal/job-postings\""), "Director được xem tin tuyển dụng");
+        assertFalse(sidebar.contains("href=\"/talent-pool\""), "Director không có mục chỉ HR, HM thấy");
     }
 
     private String sidebar(String page, RequestPostProcessor viewer) throws Exception {

@@ -53,12 +53,13 @@ class SidebarMenuTests {
         }
     }
 
+    /** Sidebar Admin (admin.html) bỏ các lối tắt tuyển dụng (Linh, 6984d87): chỉ còn mục quản trị. */
     @Test
-    void adminSeesApplicationsInBothSidebars() throws Exception {
-        String shell = shell("System Admin", "dashboard");
-        assertTrue(shell.contains(MENU));
-        assertTrue(shell.contains("href=\"/admin/accounts\""), "mục quản trị vẫn còn");
-        assertTrue(legacy("System Admin", "dashboard").contains(MENU));
+    void adminSidebarKeepsAdminEntriesWithoutApplications() throws Exception {
+        for (String sidebar : List.of(shell("System Admin", "dashboard"), legacy("System Admin", "dashboard"))) {
+            assertFalse(sidebar.contains(MENU), "Admin không còn mục Hồ sơ ứng tuyển");
+            assertTrue(sidebar.contains("href=\"/admin/accounts\""), "mục quản trị vẫn còn");
+        }
     }
 
     @ParameterizedTest
