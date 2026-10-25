@@ -33,15 +33,8 @@ body.auth-page {
 .auth-eyebrow::before { content: ""; width: var(--s6); height: 2px; background: var(--brand-dark); }
 .auth-statement { margin: 0 0 var(--s6); font: 750 clamp(40px, 3.7vw, 62px)/1.04 var(--sans); letter-spacing: -.035em; }
 .auth-statement > span { color: var(--brand-dark); }
-.auth-story-copy { max-width: 46ch; margin: 0; color: var(--muted); font-size: clamp(17px, 1.2vw, 20px); line-height: 1.5; }
 .auth-story-link { display: inline-flex; align-items: center; gap: var(--s3); max-width: 100%; min-height: 44px; margin-top: var(--s6); color: var(--brand-dark); font-size: var(--font-sm); font-weight: 650; text-underline-offset: 4px; }
 .auth-icon { flex-shrink: 0; }
-.auth-highlights { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); max-width: 620px; margin: var(--s8) 0 0; padding: 0; list-style: none; }
-.auth-highlights li { min-width: 0; display: grid; justify-items: start; align-content: start; gap: var(--s2); padding-inline: var(--s4); color: var(--muted); font-size: var(--font-xs); line-height: 1.5; }
-.auth-highlights li:first-child { padding-left: 0; }
-.auth-highlights strong { color: var(--ink); font-size: var(--font-sm); line-height: 1.4; }
-.auth-highlights li + li { border-left: 1px solid var(--line); }
-.auth-highlights .auth-icon { box-sizing: content-box; width: 27px; height: 27px; padding: var(--s3); margin-bottom: var(--s1); border-radius: var(--radius-lg); color: var(--brand-dark); background: var(--brand-soft); }
 .auth-card { align-self: start; min-width: 0; padding: var(--s8) 42px; border-radius: 17px; box-shadow: var(--shadow-lg); }
 .auth-tabs { display: grid; grid-template-columns: 1fr 1fr; gap: var(--s2); margin-bottom: var(--s8); border-bottom: 1px solid var(--line); }
 .auth-tab { position: relative; display: flex; align-items: center; justify-content: center; min-height: 44px; padding-bottom: var(--s3); color: var(--ink); font-size: var(--font-md); text-decoration: none; }
@@ -126,6 +119,13 @@ body.auth-page {
 /* Control dimensions are scoped to auth; catalog and global tokens stay intact. */
 .auth-card { --input-h: 53px; --btn-h: 53px; --font-sm: 14px; --font-base: 14px; }
 .auth-login .auth-submit { margin-top: 0; }
+/* Shared auth story: one clear job-discovery action directly below the headline. */
+.auth-page .auth-story-link--button {
+  min-height: var(--btn-h);
+  margin-top: 0;
+  color: var(--brand-dark);
+  font-size: var(--font-md);
+}
 .auth-register .auth-card { --input-h: 49px; --btn-h: 51px; }
 .auth-register .auth-tabs { margin-bottom: var(--s6); }
 .auth-register .auth-intro { font-size: var(--font-sm); }
@@ -141,9 +141,7 @@ body.auth-page {
   .auth-shell { gap: var(--s8); }
   .auth-card { padding: var(--s8); }
   .auth-statement { font-size: clamp(36px, 4vw, 44px); }
-  .auth-highlights { gap: var(--s2); }
-  .auth-highlights li { padding-inline: var(--s2); }
-  .auth-highlights br, .auth-wide-only { display: none; }
+  .auth-wide-only { display: none; }
 }
 @media (max-width: 992px) {
   .auth-container { width: min(calc(100% - var(--s8)), 650px); }
@@ -155,9 +153,7 @@ body.auth-page {
   .auth-statement { margin-bottom: var(--s3); color: var(--on-brand); font-size: 28px; line-height: 1.15; }
   .auth-statement br { display: none; }
   .auth-statement > span { color: var(--brand-caption); }
-  .auth-story-copy { font-size: var(--font-md); }
-  .auth-story-copy, .auth-story-link { color: var(--on-brand); }
-  .auth-highlights { display: none; }
+  .auth-story-link { color: var(--on-brand); }
   .auth-story-link { margin-top: var(--s2); }
   .auth-card { align-self: start; }
   .auth-scene { background-image: linear-gradient(180deg, color-mix(in srgb, var(--surface) 70%, transparent), color-mix(in srgb, var(--brand-soft) 94%, transparent) 65%), url('../images/auth-office-scene.png'); }
@@ -169,7 +165,6 @@ body.auth-page {
   .auth-steps li { font-size: var(--font-xs); }
   .auth-tabs { margin-bottom: var(--s6); }
   .auth-story { padding: var(--s4) var(--s6); }
-  .auth-story-copy { font-size: var(--font-sm); }
   .auth-statement { font-size: 25px; }
   .auth-otp-boxes { gap: 6px; }
 }
