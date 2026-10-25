@@ -22,6 +22,7 @@ import java.util.Set;
 @Service
 public class AccountManagementService {
 
+    private static final String HIRING_MANAGER = "Hiring Manager";
     private static final Set<String> STATUSES = Set.of("Active", "Inactive", "Blocked");
 
     private final UserRepository users;
@@ -87,8 +88,30 @@ public class AccountManagementService {
         Department department = findDepartment(command.departmentId(), role, null);
         checkUsernameAvailable(username, null);
         checkEmailAvailable(email, null);
-        return persistAccount(fullName, username, email, phone, role, department,
+        checkSingleHiringManager(role, department, "Active", 0);
+        int id = persistAccount(fullName, username, email, phone, role, department,
                 passwordEncoder.encode(command.password()));
+        if (isHiringManager(role) && department != null && department.getManager() == null) {
+            department.setManager(users.getReferenceById(id));
+            departments.save(department);
+        }
+        return id;
+    }
+
+    private static boolean isHiringManager(Role role) {
+        return role != null && HIRING_MANAGER.equals(role.getRoleName());
+    }
+
+    /** A department has at most one active Hiring Manager (its manager). */
+    private void checkSingleHiringManager(Role role, Department department, String status, int userId) {
+        if (!isHiringManager(role) || department == null || (status != null && !"Active".equals(status))) {
+            return;
+        }
+        if (users.existsByDepartmentDepartmentIdAndRoleRoleNameAndAccountStatusAndUserIdNot(
+                department.getDepartmentId(), HIRING_MANAGER, "Active", userId)) {
+            throw new AccountFieldException("roleId",
+                    "This department already has a Hiring Manager. Change the department manager first.");
+        }
     }
 
     @Transactional(readOnly = true)
@@ -148,6 +171,21 @@ public class AccountManagementService {
             throw new AccountFieldException("accountStatus", "Invalid account status.");
         }
         checkEmailAvailable(email, userId);
+        checkSingleHiringManager(role, department, command.accountStatus(), userId);
+
+        // Keep Department.ManagerId consistent when this account stops being the manager.
+        Department previous = user.getDepartment();
+        if (previous != null && previous.getManager() != null && userId == previous.getManager().getUserId()
+                && (!isHiringManager(role) || department == null
+                    || !previous.getDepartmentId().equals(department.getDepartmentId()))) {
+            previous.setManager(null);
+            departments.save(previous);
+        }
+        if (isHiringManager(role) && department != null && department.getManager() == null
+                && "Active".equals(command.accountStatus())) {
+            department.setManager(user);
+            departments.save(department);
+        }
 
         user.setFullName(fullName);
         user.setEmail(email);

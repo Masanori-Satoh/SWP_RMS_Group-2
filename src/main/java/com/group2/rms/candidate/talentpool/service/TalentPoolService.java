@@ -310,8 +310,7 @@ public class TalentPoolService {
         // check job posting is avaiable
         requireOpen(target);
         //check if Hr is recommend and not have HM manage
-        if (fromHr && (target.getRequisition() == null || target.getRequisition().getHiringManager() == null
-                || !CurrentUserService.hasRole(target.getRequisition().getHiringManager(), "Hiring Manager")))
+        if (fromHr && receivingHiringManager(target) == null)
             throw new TalentPoolException("Tin chưa có Hiring Manager phụ trách hợp lệ để nhận gợi ý.");
         Set<Integer> selected = new HashSet<>();
         List<Application> sources = new ArrayList<>();
@@ -366,8 +365,21 @@ public class TalentPoolService {
         // check permisson
         requireTarget(user, target);
         // get hiring manager of job posting
-        User manager = target.getRequisition() == null ? null : target.getRequisition().getHiringManager();
+        User manager = receivingHiringManager(target);
         return manager == null ? null : manager.getFullName();
+    }
+
+    private User receivingHiringManager(JobPosting target) {
+        var requisition = target == null ? null : target.getRequisition();
+        if (requisition == null)
+            return null;
+        User assigned = requisition.getHiringManager();
+        if (assigned != null && CurrentUserService.hasRole(assigned, "Hiring Manager"))
+            return assigned;
+        // A manager change must not rewrite the original requisition owner.
+        User replacement = requisition.getDepartment() == null ? null : requisition.getDepartment().getManager();
+        return replacement != null && CurrentUserService.hasRole(replacement, "Hiring Manager")
+                && "Active".equals(replacement.getAccountStatus()) ? replacement : null;
     }
 
     public boolean canSuggest(Integer jobId) {
@@ -390,8 +402,7 @@ public class TalentPoolService {
         return CurrentUserService.hasRole(user, "HR") && "Published".equals(target.getPostingStatus())
                 && (target.getApplicationDeadline() == null
                         || !target.getApplicationDeadline().isBefore(LocalDateTime.now()))
-                && target.getRequisition() != null && target.getRequisition().getHiringManager() != null
-                && CurrentUserService.hasRole(target.getRequisition().getHiringManager(), "Hiring Manager");
+                && receivingHiringManager(target) != null;
     }
 
     public long pendingRecommendationCount(Integer jobId) {

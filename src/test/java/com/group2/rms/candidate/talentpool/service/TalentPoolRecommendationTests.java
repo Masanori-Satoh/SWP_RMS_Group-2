@@ -29,6 +29,8 @@ import org.springframework.security.access.AccessDeniedException;
 import java.util.*;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.*;
 
@@ -305,6 +307,103 @@ class TalentPoolRecommendationTests {
         verify(reviews, times(0)).findWithReviewerByApplicationId(any());
         verify(reviews, times(0)).existsByApplication_ApplicationIdAndReviewerRoleAndDecision(any(), any(), any());
         verify(audit, times(0)).record(any(), any(), any(), any(), any(), any());
+    }
+
+    @Test
+    @DisplayName("Đổi trưởng phòng: HR gửi gợi ý cho HM mới, giữ nguyên người tạo requisition cũ")
+    void transferredDepartmentManagerReceivesRecommendationWithoutRewritingRequisitionOwner() {
+        targetFor(hr);
+        when(jobs.findById(8)).thenReturn(Optional.of(target));
+        hm.setRole(Role.builder().roleName("Interviewer").build());
+        User replacement = User.builder().userId(6).fullName("HM Mới")
+                .role(Role.builder().roleName("Hiring Manager").build()).accountStatus("Active").build();
+        target.getRequisition().setDepartment(Department.builder().departmentId(2).manager(replacement).build());
+        Application original = source(101, 11);
+        when(applications.saveAndFlush(any(Application.class))).thenReturn(draft);
+
+        assertEquals(true, pool.canRecommend(8));
+        assertEquals("HM Mới", pool.receivingManager(8));
+        pool.recommend(8, new TalentPoolSuggestRequest(List.of(101)));
+
+        assertSame(hm, target.getRequisition().getHiringManager());
+        assertSame(replacement, target.getRequisition().getDepartment().getManager());
+        assertEquals("Interviewer", hm.getRole().getRoleName());
+        assertEquals("Rejected", original.getApplicationStatus());
+        verify(applications).saveAndFlush(any(Application.class));
+        verify(reviews).saveAndFlush(any(ApplicationReview.class));
+        verify(audit).record(4, "CREATE", "Application", 219, "101", "TalentPoolHrRecommended");
+        verify(users, never()).save(any());
+    }
+
+    @Test
+    @DisplayName("HM phòng ban thay thế đã khóa: không hiển thị người nhận hoặc tạo gợi ý")
+    void inactiveReplacementManagerCannotReceiveRecommendations() {
+        targetFor(hr);
+        when(jobs.findById(8)).thenReturn(Optional.of(target));
+        hm.setRole(Role.builder().roleName("Interviewer").build());
+        User replacement = User.builder().userId(6).role(Role.builder().roleName("Hiring Manager").build())
+                .accountStatus("Inactive").build();
+        target.getRequisition().setDepartment(Department.builder().departmentId(2).manager(replacement).build());
+
+        assertEquals(false, pool.canRecommend(8));
+        assertNull(pool.receivingManager(8));
+        assertThrows(TalentPoolException.class,
+                () -> pool.recommend(8, new TalentPoolSuggestRequest(List.of(101))));
+        assertSame(hm, target.getRequisition().getHiringManager());
+        verifyNoInteractions(applications, reviews, audit);
+    }
+
+    @Test
+    @DisplayName("Người thay thế chưa có role HM: HR không được tạo gợi ý")
+    void replacementWithoutHiringManagerRoleCannotReceiveRecommendations() {
+        targetFor(hr);
+        when(jobs.findById(8)).thenReturn(Optional.of(target));
+        hm.setRole(Role.builder().roleName("Interviewer").build());
+        User replacement = User.builder().userId(6).role(Role.builder().roleName("Interviewer").build())
+                .accountStatus("Active").build();
+        target.getRequisition().setDepartment(Department.builder().departmentId(2).manager(replacement).build());
+
+        assertEquals(false, pool.canRecommend(8));
+        assertNull(pool.receivingManager(8));
+        assertThrows(TalentPoolException.class,
+                () -> pool.recommend(8, new TalentPoolSuggestRequest(List.of(101))));
+        assertSame(hm, target.getRequisition().getHiringManager());
+        verifyNoInteractions(applications, reviews, audit);
+    }
+
+    @Test
+    @DisplayName("HM được gán còn role hợp lệ: giữ ưu tiên và điều kiện tài khoản của luồng cũ")
+    void assignedHiringManagerKeepsPriorityAndLegacyAccountStatusBehavior() {
+        targetFor(hr);
+        when(jobs.findById(8)).thenReturn(Optional.of(target));
+        hm.setAccountStatus("Inactive");
+        User replacement = User.builder().userId(6).fullName("HM Mới")
+                .role(Role.builder().roleName("Hiring Manager").build()).accountStatus("Active").build();
+        target.getRequisition().setDepartment(Department.builder().departmentId(2).manager(replacement).build());
+        source(101, 11);
+        when(applications.saveAndFlush(any(Application.class))).thenReturn(draft);
+
+        assertEquals(true, pool.canRecommend(8));
+        assertEquals("HM Tuấn", pool.receivingManager(8));
+        pool.recommend(8, new TalentPoolSuggestRequest(List.of(101)));
+
+        assertSame(hm, target.getRequisition().getHiringManager());
+        verify(applications).saveAndFlush(any(Application.class));
+        verify(audit).record(4, "CREATE", "Application", 219, "101", "TalentPoolHrRecommended");
+    }
+
+    @Test
+    @DisplayName("Tin thiếu requisition: không có HM nhận và không ghi gợi ý")
+    void missingRequisitionHasNoReceivingManagerAndRejectsRecommendation() {
+        targetFor(hr);
+        when(jobs.findById(8)).thenReturn(Optional.of(target));
+        target.setRequisition(null);
+
+        assertEquals(false, pool.canRecommend(8));
+        assertNull(pool.receivingManager(8));
+        assertThrows(TalentPoolException.class,
+                () -> pool.recommend(8, new TalentPoolSuggestRequest(List.of(101))));
+        verifyNoInteractions(applications, reviews, audit);
     }
 
     @Test
