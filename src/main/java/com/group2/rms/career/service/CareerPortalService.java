@@ -1,6 +1,6 @@
 package com.group2.rms.career.service;
 
-import com.group2.rms.candidate.service.ApplicationSubmissionService;
+import com.group2.rms.candidate.application.submission.ApplicationSubmissionService;
 import com.group2.rms.core.exception.ResourceNotFoundException;
 import com.group2.rms.career.dto.PublicJobDetailResponse;
 import com.group2.rms.career.dto.PublicJobListResponse;

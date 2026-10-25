@@ -1,6 +1,7 @@
 package com.group2.rms.user.service;
 
-import com.group2.rms.candidate.repository.CandidateRepository;
+import com.group2.rms.candidate.domain.entity.Candidate;
+import com.group2.rms.candidate.domain.repository.CandidateRepository;
 import com.group2.rms.core.security.RoleAuthorities;
 import com.group2.rms.user.entity.Department;
 import com.group2.rms.user.entity.Role;
@@ -59,7 +60,7 @@ public class AccountListService {
     @SuppressWarnings("null")
     public Page<CandidateRow> findCandidateAccounts(String search, String status, String sort, int page) {
         Page<User> result = findUsers(search, null, null, status, sort, page, true);
-        java.util.Map<Integer, com.group2.rms.candidate.entity.Candidate> profiles = new java.util.HashMap<>();
+        java.util.Map<Integer, Candidate> profiles = new java.util.HashMap<>();
         if (!result.isEmpty()) {
             candidates.findAllByAccountUserIdIn(result.stream().map(User::getUserId).toList())
                     .forEach(profile -> profiles.put(profile.getAccount().getUserId(), profile));
@@ -74,7 +75,7 @@ public class AccountListService {
     // profile query.
     // Never expose entities, credentials, or authentication metadata to the
     // inspector.
-    private static InspectorDetails details(User user, com.group2.rms.candidate.entity.Candidate profile) {
+    private static InspectorDetails details(User user, Candidate profile) {
         ProfileDetails linked = profile == null ? null
                 : new ProfileDetails(profile.getCandidateId(),
                         profile.getDateOfBirth(), profile.getGender(), profile.getAddress(),

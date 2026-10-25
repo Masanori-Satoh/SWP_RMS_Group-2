@@ -1,7 +1,7 @@
 package com.group2.rms.interview;
 
-import com.group2.rms.candidate.entity.Application;
-import com.group2.rms.candidate.service.ApplicationStatusService;
+import com.group2.rms.candidate.domain.entity.Application;
+import com.group2.rms.candidate.domain.rule.ApplicationStatusService;
 import com.group2.rms.core.exception.ResourceNotFoundException;
 import com.group2.rms.interview.dto.SubmitFinalResultRequest;
 import com.group2.rms.interview.entity.InterviewEvaluation;
