@@ -14,6 +14,7 @@ import com.group2.rms.candidate.domain.entity.Application;
 import com.group2.rms.candidate.domain.entity.Candidate;
 import com.group2.rms.candidate.domain.repository.AIScreeningResultRepository;
 import com.group2.rms.candidate.domain.repository.ApplicationRepository;
+import com.group2.rms.candidate.application.pipeline.repository.ApplicationPipelineRepository;
 import com.group2.rms.candidate.domain.repository.ApplicationReviewRepository;
 import com.group2.rms.core.exception.ResourceNotFoundException;
 import com.group2.rms.core.web.TimelineItem;
@@ -53,6 +54,7 @@ public class ApplicationPipelineService {
     private static final int FACTS_BATCH = 2000;
 
     private final ApplicationRepository applications;
+    private final ApplicationPipelineRepository pipelineQueries;
     private final AIScreeningResultRepository screeningResults;
     private final ApplicationReviewRepository reviews;
     private final ApplicationAccess access;
@@ -74,7 +76,7 @@ public class ApplicationPipelineService {
         ApplicationScope scope = access.scopeOf(actor);
         ApplicationSearch filter = search.normalized();
 
-        List<Integer> ids = applications.findPipelineIds(
+        List<Integer> ids = pipelineQueries.findPipelineIds(
                 scope.allDepartments(), scope.managerUserId(), scope.departmentId(),
                 filter.jobPostingId(), filter.status(), filter.keyword(), filter.sort());
         Map<Integer, ApplicationProgressFacts> facts = progressFacts(ids);
@@ -106,7 +108,7 @@ public class ApplicationPipelineService {
         String postingTitle = filter.jobPostingId() == null ? null
                 : jobPostings.findById(filter.jobPostingId()).map(JobPosting::getPostingTitle).orElse(null);
         return new ApplicationListResponse(new PageImpl<>(rows, pageRequest, matching.size()), stageCounts,
-                applications.findPostingOptions(scope.allDepartments(), scope.managerUserId(), scope.departmentId()),
+                pipelineQueries.findPostingOptions(scope.allDepartments(), scope.managerUserId(), scope.departmentId()),
                 filter, postingTitle, access.canOpenJobPosting(actor), !scope.allDepartments(),
                 actor.getRole() == null ? null : actor.getRole().getRoleName());
     }
@@ -128,7 +130,7 @@ public class ApplicationPipelineService {
         AIScreeningResult latest = scores.isEmpty() ? null : scores.getFirst();
         ApplicationProgressFacts facts = knownFacts(applicationId, status, progressFacts(List.of(applicationId)));
         ApplicationProgressResponse progress = progress(facts, LocalDateTime.now());
-        boolean cancelledProposal = applications.countTalentPoolCancellation(applicationId) > 0;
+        boolean cancelledProposal = pipelineQueries.countTalentPoolCancellation(applicationId) > 0;
 
         return new ApplicationDetailResponse(
                 application.getApplicationId(),
@@ -161,12 +163,12 @@ public class ApplicationPipelineService {
         Application application = applications.findDetailById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy hồ sơ."));
         access.requireView(access.actor(), application);
-        return applications.countPostingClosure(id) > 0;
+        return pipelineQueries.countPostingClosure(id) > 0;
     }
 
     /** Phân biệt đóng đợt thật (audit) với hồ sơ bị loại riêng lẻ. */
     private ApplicationProgressResponse progress(ApplicationProgressFacts facts, LocalDateTime now) {
-        if ("Rejected".equals(facts.applicationStatus()) && applications.countPostingClosure(facts.applicationId()) > 0) {
+        if ("Rejected".equals(facts.applicationStatus()) && pipelineQueries.countPostingClosure(facts.applicationId()) > 0) {
             ApplicationProgressStep step = ApplicationProgressStep.POSTING_CLOSED;
             return new ApplicationProgressResponse(step.stage(), step, step.label(), step.owner(), step.tone());
         }
@@ -215,7 +217,7 @@ public class ApplicationPipelineService {
         if (pageIds.isEmpty()) {
             return List.of();
         }
-        Map<Integer, ApplicationPipelineResponse> byId = applications.findPipelineRows(pageIds).stream()
+        Map<Integer, ApplicationPipelineResponse> byId = pipelineQueries.findPipelineRows(pageIds).stream()
                 .collect(Collectors.toMap(ApplicationPipelineResponse::applicationId, Function.identity()));
         return pageIds.stream().map(byId::get).filter(Objects::nonNull).toList();
     }
@@ -231,7 +233,7 @@ public class ApplicationPipelineService {
     private List<TimelineItem> timeline(Application application, User account, List<AIScreeningResult> scores) {
         Integer id = application.getApplicationId();
         List<TimelineItem> items = new ArrayList<>();
-        var poolEvents = applications.findTalentPoolEvents(id);
+        var poolEvents = pipelineQueries.findTalentPoolEvents(id);
         boolean hrRecommendation = poolEvents.stream().anyMatch(event -> "TalentPoolHrRecommended".equals(event.getKind()));
         for (var event : poolEvents) {
             String title = switch (event.getKind()) {
@@ -266,14 +268,14 @@ public class ApplicationPipelineService {
                         + ApplicationStatusLabels.decisionLabel(review.getDecision()),
                 review.getReviewer().getFullName(), review.getComments(),
                 ApplicationStatusLabels.decisionTone(review.getDecision()))));
-        applications.findInterviewEvents(id).forEach(event -> items.add(new TimelineItem(
+        pipelineQueries.findInterviewEvents(id).forEach(event -> items.add(new TimelineItem(
                 event.getAt(), "Lịch phỏng vấn: " + event.getStatus(), null, null, "neutral")));
-        applications.findInterviewResultEvents(id).forEach(event -> items.add(new TimelineItem(
+        pipelineQueries.findInterviewResultEvents(id).forEach(event -> items.add(new TimelineItem(
                 event.getAt(), "Kết quả phỏng vấn: " + ApplicationStatusLabels.interviewResultLabel(event.getStatus()),
                 null, null, ApplicationStatusLabels.interviewResultTone(event.getStatus()))));
-        applications.findOfferEvents(id).forEach(event -> items.add(new TimelineItem(
+        pipelineQueries.findOfferEvents(id).forEach(event -> items.add(new TimelineItem(
                 event.getAt(), "Offer: " + event.getStatus(), null, null, "success")));
-        if ("Rejected".equals(application.getApplicationStatus()) && applications.countPostingClosure(id) > 0) {
+        if ("Rejected".equals(application.getApplicationStatus()) && pipelineQueries.countPostingClosure(id) > 0) {
             items.add(new TimelineItem(application.getUpdatedAt(), "Đóng đợt tuyển dụng", "Hệ thống",
                     "Đợt tuyển dụng đã kết thúc, hồ sơ dừng xử lý", "neutral"));
         }

@@ -5,9 +5,10 @@ import com.group2.rms.candidate.application.portal.dto.MyApplicationResponse;
 import com.group2.rms.candidate.domain.entity.Application;
 import com.group2.rms.candidate.application.portal.exception.ApplicationWithdrawalException;
 import com.group2.rms.candidate.domain.repository.ApplicationRepository;
-import com.group2.rms.candidate.domain.repository.ApplicationRepository.MyApplicationMarkRow;
-import com.group2.rms.candidate.domain.repository.ApplicationRepository.MyInterviewRow;
-import com.group2.rms.candidate.domain.repository.ApplicationRepository.MyOfferRow;
+import com.group2.rms.candidate.application.portal.repository.MyApplicationRepository;
+import com.group2.rms.candidate.application.portal.repository.MyApplicationRepository.MyApplicationMarkRow;
+import com.group2.rms.candidate.application.portal.repository.MyApplicationRepository.MyInterviewRow;
+import com.group2.rms.candidate.application.portal.repository.MyApplicationRepository.MyOfferRow;
 import com.group2.rms.candidate.application.portal.service.MyApplicationJourney.Facts;
 import com.group2.rms.candidate.application.portal.service.MyApplicationJourney.Interview;
 import com.group2.rms.candidate.application.portal.service.MyApplicationJourney.Mark;
@@ -41,6 +42,7 @@ public class MyApplicationService {
     static final Set<String> WITHDRAWABLE_STATUSES = Set.of("Applied", "AI_Screened");
 
     private final ApplicationRepository applications;
+    private final MyApplicationRepository myApplications;
     private final CurrentUserService currentUserService;
 
     /** Số bước trên dải hướng dẫn (Nộp CV → Xét CV → Phỏng vấn → Thư mời). */
@@ -78,19 +80,19 @@ public class MyApplicationService {
      * {@link MyApplicationJourney}.
      */
     private List<MyApplicationResponse> cards(Integer userId) {
-        List<Application> owned = applications.findOwnedByUserId(userId);
+        List<Application> owned = myApplications.findOwnedByUserId(userId);
         if (owned.isEmpty()) {
             return List.of();
         }
-        Map<Integer, List<Interview>> interviews = applications.findMyInterviews(userId).stream()
+        Map<Integer, List<Interview>> interviews = myApplications.findMyInterviews(userId).stream()
                 .collect(Collectors.groupingBy(MyInterviewRow::getApplicationId, Collectors.mapping(
                         row -> new Interview(row.getStartTime(), row.getFormat(), row.getStatus()),
                         Collectors.toList())));
-        Map<Integer, Offer> offers = applications.findMyVisibleOffers(userId).stream()
+        Map<Integer, Offer> offers = myApplications.findMyVisibleOffers(userId).stream()
                 .collect(Collectors.toMap(MyOfferRow::getApplicationId,
                         row -> new Offer(row.getOfferId(), row.getStatus(), row.getResponseDeadline(), row.getAt()),
                         (first, second) -> first));
-        Map<Integer, List<Mark>> marks = applications.findMyApplicationMarks(userId).stream()
+        Map<Integer, List<Mark>> marks = myApplications.findMyApplicationMarks(userId).stream()
                 .collect(Collectors.groupingBy(MyApplicationMarkRow::getApplicationId, Collectors.mapping(
                         row -> new Mark(row.getKind(), row.getOldStatus(), row.getAt()),
                         Collectors.toList())));
@@ -114,7 +116,7 @@ public class MyApplicationService {
     @Transactional
     public String withdraw(Integer applicationId) {
         User user = currentUserService.requireUser();
-        Application application = applications.findOwnedById(applicationId, user.getUserId())
+        Application application = myApplications.findOwnedById(applicationId, user.getUserId())
                 .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy hồ sơ ứng tuyển."));
 
         String status = application.getApplicationStatus();

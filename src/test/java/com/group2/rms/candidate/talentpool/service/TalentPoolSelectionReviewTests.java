@@ -4,6 +4,7 @@ import com.group2.rms.candidate.domain.rule.ApplicationAccess;
 import com.group2.rms.candidate.infra.cv.CvStorage;
 import com.group2.rms.candidate.domain.repository.ApplicationRepository;
 import com.group2.rms.candidate.domain.repository.CandidateRepository;
+import com.group2.rms.candidate.talentpool.repository.TalentPoolApplicationRepository;
 import com.group2.rms.candidate.talentpool.dto.TalentPoolSuggestRequest;
 import com.group2.rms.candidate.domain.entity.Application;
 import com.group2.rms.candidate.domain.entity.Candidate;
@@ -34,6 +35,7 @@ import static org.mockito.Mockito.*;
 class TalentPoolSelectionReviewTests {
     @Mock CandidateRepository candidates;
     @Mock ApplicationRepository applications;
+    @Mock TalentPoolApplicationRepository poolApplications;
     @Mock TalentPoolNoteRepository notes;
     @Mock TalentPoolAuditRepository audit;
     @Mock JobPostingRepository jobs;
@@ -94,7 +96,7 @@ class TalentPoolSelectionReviewTests {
         // Given: Preflight CV nguồn hợp lệ.
         allowTarget();
         var source = source(101, 11);
-        when(applications.findPreviousCvByCandidateId(11)).thenReturn(List.of(source));
+        when(poolApplications.findPreviousCvByCandidateId(11)).thenReturn(List.of(source));
         // When: Gọi pool.reviewSelection với dữ liệu đã chuẩn bị.
         var result = pool.reviewSelection(8, new TalentPoolSuggestRequest(List.of(101)));
         // Then: trả candidate, CV, ngày nộp, không lỗi và không ghi dữ liệu.
@@ -114,7 +116,7 @@ class TalentPoolSelectionReviewTests {
         allowTarget();
         var first = source(101, 11);
         var duplicate = source(102, 11);
-        when(applications.findPreviousCvByCandidateId(11)).thenReturn(List.of(first, duplicate));
+        when(poolApplications.findPreviousCvByCandidateId(11)).thenReturn(List.of(first, duplicate));
         // When: Gọi pool.reviewSelection với dữ liệu đã chuẩn bị.
         var result = pool.reviewSelection(8, new TalentPoolSuggestRequest(List.of(101, 102, 999)));
         // Then: Preflight trả lỗi riêng cho Candidate chọn trùng và application không tồn tại.
@@ -131,8 +133,8 @@ class TalentPoolSelectionReviewTests {
         allowTarget();
         var first = source(101, 11);
         var second = source(102, 12);
-        when(applications.findPreviousCvByCandidateId(11)).thenReturn(List.of(first));
-        when(applications.findPreviousCvByCandidateId(12)).thenReturn(List.of(second));
+        when(poolApplications.findPreviousCvByCandidateId(11)).thenReturn(List.of(first));
+        when(poolApplications.findPreviousCvByCandidateId(12)).thenReturn(List.of(second));
         when(applications.existsActiveByCandidateAndJobPosting(11, 8)).thenReturn(true);
         when(applications.findFirstByCandidate_CandidateIdAndJobPosting_JobPostingIdAndApplicationStatus(12, 8, "HM_Suggested"))
             .thenReturn(Optional.of(second));
@@ -167,7 +169,7 @@ class TalentPoolSelectionReviewTests {
         allowTarget();
         var first = source(101, 11);
         source(102, 12);
-        when(applications.findPreviousCvByCandidateId(11)).thenReturn(List.of(first));
+        when(poolApplications.findPreviousCvByCandidateId(11)).thenReturn(List.of(first));
         when(storage.load("cv/11/existing.pdf")).thenThrow(new ResourceNotFoundException("Không tìm thấy file CV."));
         // When: Gọi pool.reviewSelection với dữ liệu đã chuẩn bị.
         var result = pool.reviewSelection(8, new TalentPoolSuggestRequest(List.of(101, 102)));
@@ -200,7 +202,7 @@ class TalentPoolSelectionReviewTests {
         when(current.requireUser()).thenReturn(hm);
         when(jobs.findById(8)).thenReturn(Optional.of(target));
         var first = source(101, 11);
-        when(applications.findPreviousCvByCandidateId(11)).thenReturn(List.of(first));
+        when(poolApplications.findPreviousCvByCandidateId(11)).thenReturn(List.of(first));
         // When: Gọi pool.reviewSelection với dữ liệu đã chuẩn bị.
         // Then: HR được preflight toàn tin mà không cần check phòng HM và không ghi dữ liệu.
         assertEquals(null, pool.reviewSelection(8, new TalentPoolSuggestRequest(List.of(101))).items().getFirst().error());

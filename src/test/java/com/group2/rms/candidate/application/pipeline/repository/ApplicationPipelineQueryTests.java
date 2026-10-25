@@ -1,9 +1,11 @@
-package com.group2.rms.candidate.domain.repository;
+package com.group2.rms.candidate.application.pipeline.repository;
 
 import com.group2.rms.candidate.application.pipeline.dto.ApplicationPipelineResponse;
 import com.group2.rms.candidate.application.pipeline.dto.ApplicationSearch;
 import com.group2.rms.candidate.application.pipeline.dto.JobPostingOption;
 import com.group2.rms.candidate.domain.entity.Application;
+import com.group2.rms.candidate.domain.repository.ApplicationRepository;
+import com.group2.rms.candidate.domain.repository.ApplicationReviewRepository;
 import com.group2.rms.candidate.domain.rule.ApplicationProgressFacts;
 import com.group2.rms.candidate.domain.rule.ApplicationProgressResolver;
 import com.group2.rms.candidate.application.pipeline.service.ApplicationScope;
@@ -36,6 +38,7 @@ import static org.junit.jupiter.api.Assertions.*;
 class ApplicationPipelineQueryTests {
 
     @Autowired ApplicationRepository applications;
+    @Autowired ApplicationPipelineRepository pipelineQueries;
     @Autowired ApplicationReviewRepository reviews;
     @Autowired UserRepository users;
     @Autowired EntityManager entityManager;
@@ -46,7 +49,7 @@ class ApplicationPipelineQueryTests {
         List<ApplicationPipelineResponse> rows = search(ApplicationScope.ALL, null, null, ApplicationSearch.SORT_SCORE);
 
         long formalCount = applications.findAll().stream().filter(a -> !"HM_Suggested".equals(a.getApplicationStatus()))
-                .filter(a -> applications.countTalentPoolCancellation(a.getApplicationId()) == 0).count();
+                .filter(a -> pipelineQueries.countTalentPoolCancellation(a.getApplicationId()) == 0).count();
         assertEquals(formalCount, ids.size());
         assertEquals(ids.size(), new HashSet<>(ids).size(), "mỗi đơn đúng một dòng dù có nhiều lần AI chấm");
         int firstUnscored = rows.stream().map(ApplicationPipelineResponse::aiMatchScore).toList().indexOf(null);
@@ -111,9 +114,9 @@ class ApplicationPipelineQueryTests {
 
     @Test
     void jobPostingFilterKeepsOnlyApplicationsOfThatPosting() {
-        JobPostingOption posting = applications.findPostingOptions(true, null, null).getFirst();
+        JobPostingOption posting = pipelineQueries.findPostingOptions(true, null, null).getFirst();
 
-        List<Integer> ids = applications.findPipelineIds(true, null, null, posting.jobPostingId(), null, null,
+        List<Integer> ids = pipelineQueries.findPipelineIds(true, null, null, posting.jobPostingId(), null, null,
                 ApplicationSearch.SORT_SCORE);
 
         assertFalse(ids.isEmpty());
@@ -123,7 +126,7 @@ class ApplicationPipelineQueryTests {
 
     @Test
     void postingOptionsAreDistinctAndSorted() {
-        List<JobPostingOption> options = applications.findPostingOptions(true, null, null);
+        List<JobPostingOption> options = pipelineQueries.findPostingOptions(true, null, null);
 
         assertFalse(options.isEmpty());
         assertEquals(options.size(), new HashSet<>(options).size());
@@ -134,11 +137,11 @@ class ApplicationPipelineQueryTests {
     void timelineQueriesReadInterviewAndOfferTables() {
         Integer withOffer = search(ApplicationScope.ALL, null, "Hired", ApplicationSearch.SORT_SCORE).stream()
                 .map(ApplicationPipelineResponse::applicationId)
-                .filter(id -> !applications.findOfferEvents(id).isEmpty())
+                .filter(id -> !pipelineQueries.findOfferEvents(id).isEmpty())
                 .findFirst().orElseThrow(() -> new AssertionError("DB local không có đơn Hired nào có offer"));
 
-        ApplicationRepository.TimelineEventRow offer = applications.findOfferEvents(withOffer).getFirst();
-        List<ApplicationRepository.TimelineEventRow> interviews = applications.findInterviewEvents(withOffer);
+        ApplicationPipelineRepository.TimelineEventRow offer = pipelineQueries.findOfferEvents(withOffer).getFirst();
+        List<ApplicationPipelineRepository.TimelineEventRow> interviews = pipelineQueries.findInterviewEvents(withOffer);
 
         assertNotNull(offer.getAt());
         assertNotNull(offer.getStatus());
@@ -156,7 +159,7 @@ class ApplicationPipelineQueryTests {
         Assumptions.assumeFalse(decided.isEmpty(), "DB local chưa có kết quả phỏng vấn nào");
         Integer id = ((Number) decided.getFirst()).intValue();
 
-        List<ApplicationRepository.TimelineEventRow> results = applications.findInterviewResultEvents(id);
+        List<ApplicationPipelineRepository.TimelineEventRow> results = pipelineQueries.findInterviewResultEvents(id);
 
         assertFalse(results.isEmpty());
         results.forEach(event -> {
@@ -181,9 +184,9 @@ class ApplicationPipelineQueryTests {
             Integer id = row.getApplicationId();
             assertEquals(statusById.get(id), row.getApplicationStatus());
 
-            List<LocalDateTime> activeStarts = applications.findInterviewEvents(id).stream()
+            List<LocalDateTime> activeStarts = pipelineQueries.findInterviewEvents(id).stream()
                     .filter(event -> !"Cancelled".equals(event.getStatus()))
-                    .map(ApplicationRepository.TimelineEventRow::getAt).toList();
+                    .map(ApplicationPipelineRepository.TimelineEventRow::getAt).toList();
             if (activeStarts.isEmpty()) {
                 assertNull(row.getInterviewId(), "không có lịch còn hiệu lực: " + id);
                 assertNull(row.getInterviewStatus(), "không có lịch còn hiệu lực: " + id);
@@ -196,7 +199,7 @@ class ApplicationPipelineQueryTests {
                 assertNotNull(row.getInterviewId(), "có lịch thì có id: " + id);
             }
 
-            List<ApplicationRepository.TimelineEventRow> offers = applications.findOfferEvents(id);
+            List<ApplicationPipelineRepository.TimelineEventRow> offers = pipelineQueries.findOfferEvents(id);
             assertEquals(offers.isEmpty() ? null : offers.getFirst().getStatus(), row.getOfferStatus(), "offer: " + id);
 
             ApplicationProgressFacts facts = ApplicationProgressFacts.from(row);
@@ -233,7 +236,7 @@ class ApplicationPipelineQueryTests {
     }
 
     private List<Integer> ids(ApplicationScope scope, String keyword, String status, String sort) {
-        return applications.findPipelineIds(scope.allDepartments(), scope.managerUserId(), scope.departmentId(),
+        return pipelineQueries.findPipelineIds(scope.allDepartments(), scope.managerUserId(), scope.departmentId(),
                 null, status, keyword, sort);
     }
 
@@ -244,7 +247,7 @@ class ApplicationPipelineQueryTests {
         if (first.isEmpty()) {
             return List.of();
         }
-        Map<Integer, ApplicationPipelineResponse> byId = applications.findPipelineRows(first).stream()
+        Map<Integer, ApplicationPipelineResponse> byId = pipelineQueries.findPipelineRows(first).stream()
                 .collect(Collectors.toMap(ApplicationPipelineResponse::applicationId, row -> row));
         assertEquals(first.size(), byId.size(), "mỗi id đúng một dòng");
         return first.stream().map(byId::get).toList();

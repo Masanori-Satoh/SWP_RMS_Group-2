@@ -5,6 +5,7 @@ import com.group2.rms.candidate.application.portal.dto.MyApplicationResponse;
 import com.group2.rms.candidate.domain.entity.Application;
 import com.group2.rms.candidate.application.portal.exception.ApplicationWithdrawalException;
 import com.group2.rms.candidate.domain.repository.ApplicationRepository;
+import com.group2.rms.candidate.application.portal.repository.MyApplicationRepository;
 import com.group2.rms.core.exception.ResourceNotFoundException;
 import com.group2.rms.core.security.CurrentUserService;
 import com.group2.rms.core.web.TimelineItem;
@@ -39,28 +40,29 @@ class MyApplicationServiceTests {
     private static final int ID = 300;
 
     @Mock ApplicationRepository applications;
+    @Mock MyApplicationRepository myApplications;
     @Mock CurrentUserService currentUserService;
 
     private MyApplicationService service;
 
     @BeforeEach
     void setUp() {
-        service = new MyApplicationService(applications, currentUserService);
+        service = new MyApplicationService(applications, myApplications, currentUserService);
         when(currentUserService.requireUser()).thenReturn(User.builder().userId(USER_ID).build());
     }
 
     @Test
     void listGroupsFactsByApplicationAndShowsCandidateStatus() {
         LocalDateTime nextMonth = LocalDateTime.now().plusMonths(1).withHour(10).withMinute(0);
-        when(applications.findOwnedByUserId(USER_ID)).thenReturn(List.of(
+        when(myApplications.findOwnedByUserId(USER_ID)).thenReturn(List.of(
                 application(1, "Applied"), application(2, "Rejected"), application(3, "Rejected"),
                 application(4, "Interviewing"), application(5, "Hired")));
-        when(applications.findMyInterviews(USER_ID)).thenReturn(List.of(
+        when(myApplications.findMyInterviews(USER_ID)).thenReturn(List.of(
                 new InterviewRow(4, nextMonth, "Online_GoogleMeet", "Scheduled"),
                 new InterviewRow(5, LocalDateTime.of(2026, 10, 19, 9, 0), "Offline_Office", "Completed")));
-        when(applications.findMyVisibleOffers(USER_ID)).thenReturn(List.of(
+        when(myApplications.findMyVisibleOffers(USER_ID)).thenReturn(List.of(
                 new OfferRow(5, 8, "Accepted", null, LocalDateTime.of(2026, 10, 20, 9, 0))));
-        when(applications.findMyApplicationMarks(USER_ID)).thenReturn(List.of(
+        when(myApplications.findMyApplicationMarks(USER_ID)).thenReturn(List.of(
                 new MarkRow(2, "Withdrawn", "Applied", LocalDateTime.of(2026, 10, 6, 9, 0))));
 
         MyApplicationListResponse page = service.list(null);
@@ -94,7 +96,7 @@ class MyApplicationServiceTests {
 
     @Test
     void stepFilterKeepsCountsOfAllApplications() {
-        when(applications.findOwnedByUserId(USER_ID)).thenReturn(List.of(
+        when(myApplications.findOwnedByUserId(USER_ID)).thenReturn(List.of(
                 application(1, "Applied"), application(2, "HR_Passed"), application(3, "HM_Passed")));
 
         MyApplicationListResponse page = service.list(2);
@@ -108,7 +110,7 @@ class MyApplicationServiceTests {
     @ParameterizedTest
     @ValueSource(ints = {0, 5, -1})
     void stepOutsideTheFourStepsShowsEverything(int step) {
-        when(applications.findOwnedByUserId(USER_ID)).thenReturn(List.of(application(1, "Applied")));
+        when(myApplications.findOwnedByUserId(USER_ID)).thenReturn(List.of(application(1, "Applied")));
 
         MyApplicationListResponse page = service.list(step);
 
@@ -118,22 +120,22 @@ class MyApplicationServiceTests {
 
     @Test
     void listWithoutApplicationsSkipsFactQueries() {
-        when(applications.findOwnedByUserId(USER_ID)).thenReturn(List.of());
+        when(myApplications.findOwnedByUserId(USER_ID)).thenReturn(List.of());
 
         MyApplicationListResponse page = service.list(null);
 
         assertTrue(page.applications().isEmpty());
         assertEquals(0, page.total());
         assertEquals(Map.of(1, 0L, 2, 0L, 3, 0L, 4, 0L), page.stepCounts());
-        verify(applications, never()).findMyInterviews(anyInt());
-        verify(applications, never()).findMyVisibleOffers(anyInt());
-        verify(applications, never()).findMyApplicationMarks(anyInt());
+        verify(myApplications, never()).findMyInterviews(anyInt());
+        verify(myApplications, never()).findMyVisibleOffers(anyInt());
+        verify(myApplications, never()).findMyApplicationMarks(anyInt());
     }
 
     @ParameterizedTest
     @ValueSource(strings = {"Applied", "AI_Screened"})
     void withdrawRejectsEarlyApplicationAndRecordsWithdrawal(String status) {
-        when(applications.findOwnedById(ID, USER_ID)).thenReturn(Optional.of(application(ID, status)));
+        when(myApplications.findOwnedById(ID, USER_ID)).thenReturn(Optional.of(application(ID, status)));
         when(applications.transition(ID, MyApplicationService.WITHDRAWABLE_STATUSES, "Rejected")).thenReturn(1);
 
         String title = service.withdraw(ID);
@@ -145,7 +147,7 @@ class MyApplicationServiceTests {
     @ParameterizedTest
     @ValueSource(strings = {"HR_Passed", "HM_Passed", "Interviewing", "Offered", "Hired", "Rejected"})
     void withdrawIsRefusedAfterScreening(String status) {
-        when(applications.findOwnedById(ID, USER_ID)).thenReturn(Optional.of(application(ID, status)));
+        when(myApplications.findOwnedById(ID, USER_ID)).thenReturn(Optional.of(application(ID, status)));
 
         assertThrows(ApplicationWithdrawalException.class, () -> service.withdraw(ID));
 
@@ -155,7 +157,7 @@ class MyApplicationServiceTests {
 
     @Test
     void withdrawFailsWhenHrActedFirst() {
-        when(applications.findOwnedById(ID, USER_ID)).thenReturn(Optional.of(application(ID, "Applied")));
+        when(myApplications.findOwnedById(ID, USER_ID)).thenReturn(Optional.of(application(ID, "Applied")));
         when(applications.transition(ID, MyApplicationService.WITHDRAWABLE_STATUSES, "Rejected")).thenReturn(0);
 
         ApplicationWithdrawalException error = assertThrows(ApplicationWithdrawalException.class,
@@ -167,7 +169,7 @@ class MyApplicationServiceTests {
 
     @Test
     void withdrawOfSomeoneElsesApplicationIsNotFound() {
-        when(applications.findOwnedById(ID, USER_ID)).thenReturn(Optional.empty());
+        when(myApplications.findOwnedById(ID, USER_ID)).thenReturn(Optional.empty());
 
         assertThrows(ResourceNotFoundException.class, () -> service.withdraw(ID));
 
@@ -185,15 +187,15 @@ class MyApplicationServiceTests {
 
     // Dòng kết quả giả của 3 câu dữ kiện (tên thành phần trùng tên getter của interface).
     private record InterviewRow(Integer getApplicationId, LocalDateTime getStartTime, String getFormat,
-                                String getStatus) implements ApplicationRepository.MyInterviewRow {
+                                String getStatus) implements MyApplicationRepository.MyInterviewRow {
     }
 
     private record OfferRow(Integer getApplicationId, Integer getOfferId, String getStatus,
                             LocalDateTime getResponseDeadline, LocalDateTime getAt)
-            implements ApplicationRepository.MyOfferRow {
+            implements MyApplicationRepository.MyOfferRow {
     }
 
     private record MarkRow(Integer getApplicationId, String getKind, String getOldStatus, LocalDateTime getAt)
-            implements ApplicationRepository.MyApplicationMarkRow {
+            implements MyApplicationRepository.MyApplicationMarkRow {
     }
 }

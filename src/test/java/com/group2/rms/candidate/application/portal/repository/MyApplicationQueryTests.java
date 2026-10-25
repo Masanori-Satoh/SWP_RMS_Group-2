@@ -1,4 +1,4 @@
-package com.group2.rms.candidate.domain.repository;
+package com.group2.rms.candidate.application.portal.repository;
 
 import com.group2.rms.candidate.domain.repository.ApplicationRepository;
 import com.group2.rms.candidate.domain.entity.Application;
@@ -23,6 +23,7 @@ import static org.junit.jupiter.api.Assumptions.assumeTrue;
 class MyApplicationQueryTests {
 
     @Autowired ApplicationRepository applications;
+    @Autowired MyApplicationRepository myApplications;
     @Autowired EntityManager entityManager;
 
     private Application early;
@@ -43,24 +44,24 @@ class MyApplicationQueryTests {
 
     @Test
     void ownedQueriesReturnOnlyTheCandidatesApplications() {
-        List<Application> owned = applications.findOwnedByUserId(ownerUserId);
+        List<Application> owned = myApplications.findOwnedByUserId(ownerUserId);
 
         assertTrue(owned.stream().anyMatch(a -> a.getApplicationId().equals(early.getApplicationId())));
         assertTrue(owned.stream().allMatch(a -> a.getCandidate().getAccount().getUserId().equals(ownerUserId)));
-        assertTrue(applications.findOwnedById(early.getApplicationId(), ownerUserId).isPresent());
-        assertTrue(applications.findOwnedById(early.getApplicationId(), -1).isEmpty());
+        assertTrue(myApplications.findOwnedById(early.getApplicationId(), ownerUserId).isPresent());
+        assertTrue(myApplications.findOwnedById(early.getApplicationId(), -1).isEmpty());
     }
 
     @Test
     void withdrawalIsRecordedAndReadBack() {
         Integer id = early.getApplicationId();
-        assertFalse(applications.findWithdrawnApplicationIds(ownerUserId).contains(id));
+        assertFalse(myApplications.findWithdrawnApplicationIds(ownerUserId).contains(id));
 
         assertEquals(1, applications.transition(id, Set.of("Applied", "AI_Screened"), "Rejected"));
         applications.recordWithdrawal(ownerUserId, id, early.getApplicationStatus());
 
-        assertTrue(applications.findWithdrawnApplicationIds(ownerUserId).contains(id));
-        assertFalse(applications.findWithdrawnApplicationIds(-1).contains(id));
+        assertTrue(myApplications.findWithdrawnApplicationIds(ownerUserId).contains(id));
+        assertFalse(myApplications.findWithdrawnApplicationIds(-1).contains(id));
     }
 
     @Test
@@ -69,13 +70,13 @@ class MyApplicationQueryTests {
         applications.transition(id, Set.of("Applied", "AI_Screened"), "Rejected");
         applications.recordWithdrawal(ownerUserId, id, early.getApplicationStatus());
 
-        ApplicationRepository.MyApplicationMarkRow mark = applications.findMyApplicationMarks(ownerUserId).stream()
+        MyApplicationRepository.MyApplicationMarkRow mark = myApplications.findMyApplicationMarks(ownerUserId).stream()
                 .filter(row -> row.getApplicationId().equals(id))
                 .findFirst().orElseThrow();
         assertEquals("Withdrawn", mark.getKind());
         assertEquals(early.getApplicationStatus(), mark.getOldStatus());
         assertNotNull(mark.getAt());
-        assertTrue(applications.findMyApplicationMarks(-1).isEmpty());
+        assertTrue(myApplications.findMyApplicationMarks(-1).isEmpty());
     }
 
     @Test
@@ -90,7 +91,7 @@ class MyApplicationQueryTests {
                 .setParameter("staff", staffUserId).setParameter("id", id)
                 .setParameter("old", early.getApplicationStatus()).executeUpdate();
 
-        assertTrue(applications.findMyApplicationMarks(ownerUserId).stream().anyMatch(row ->
+        assertTrue(myApplications.findMyApplicationMarks(ownerUserId).stream().anyMatch(row ->
                 row.getApplicationId().equals(id) && "PostingClosed".equals(row.getKind())
                         && early.getApplicationStatus().equals(row.getOldStatus())));
     }
@@ -129,15 +130,15 @@ class MyApplicationQueryTests {
                         SELECT a.ApplicationId FROM Application a JOIN Candidate c ON c.CandidateId = a.CandidateId
                         WHERE c.UserId = :userId""").setParameter("userId", userId).getResultList();
 
-        List<ApplicationRepository.MyInterviewRow> rows = applications.findMyInterviews(userId);
+        List<MyApplicationRepository.MyInterviewRow> rows = myApplications.findMyInterviews(userId);
         assertFalse(rows.isEmpty());
         assertTrue(rows.stream().allMatch(r -> ownIds.contains(r.getApplicationId())
                 && r.getStartTime() != null && r.getFormat() != null && r.getStatus() != null));
     }
 
     private List<Integer> visibleOfferIds(Integer userId) {
-        return applications.findMyVisibleOffers(userId).stream()
-                .map(ApplicationRepository.MyOfferRow::getOfferId).toList();
+        return myApplications.findMyVisibleOffers(userId).stream()
+                .map(MyApplicationRepository.MyOfferRow::getOfferId).toList();
     }
 
     private void setOffer(Integer offerId, String assignments) {

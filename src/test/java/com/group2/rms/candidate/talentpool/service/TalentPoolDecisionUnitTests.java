@@ -8,6 +8,8 @@ import com.group2.rms.candidate.infra.cv.CvStorage;
 import com.group2.rms.candidate.domain.repository.ApplicationRepository;
 import com.group2.rms.candidate.domain.repository.ApplicationReviewRepository;
 import com.group2.rms.candidate.domain.repository.CandidateRepository;
+import com.group2.rms.candidate.talentpool.repository.TalentPoolApplicationRepository;
+import com.group2.rms.candidate.talentpool.repository.TalentPoolCandidateRepository;
 import com.group2.rms.candidate.talentpool.exception.TalentPoolException;
 import com.group2.rms.candidate.talentpool.dto.TalentPoolConfirmRequest;
 import com.group2.rms.candidate.talentpool.dto.TalentPoolSuggestRequest;
@@ -35,6 +37,8 @@ import static org.mockito.Mockito.*;
 class TalentPoolDecisionUnitTests {
     private final CandidateRepository candidates = mock(CandidateRepository.class);
     private final ApplicationRepository applications = mock(ApplicationRepository.class);
+    private final TalentPoolApplicationRepository poolApplications = mock(TalentPoolApplicationRepository.class);
+    private final TalentPoolCandidateRepository poolCandidates = mock(TalentPoolCandidateRepository.class);
     private final TalentPoolNoteRepository notes = mock(TalentPoolNoteRepository.class);
     private final TalentPoolAuditRepository audit = mock(TalentPoolAuditRepository.class);
     private final JobPostingRepository jobs = mock(JobPostingRepository.class);
@@ -44,7 +48,7 @@ class TalentPoolDecisionUnitTests {
     private final UserRepository users = mock(UserRepository.class);
     private final CvStorage storage = mock(CvStorage.class);
     private final ApplicationReviewRepository reviews = mock(ApplicationReviewRepository.class);
-    private final TalentPoolService service = new TalentPoolService(candidates, applications, notes, audit,
+    private final TalentPoolService service = new TalentPoolService(candidates, applications, poolApplications, poolCandidates, notes, audit,
             jobs, currentUser, jobAccess, applicationAccess, users, storage, reviews);
     private final User hr = User.builder().userId(5).fullName("HR Linh")
             .role(Role.builder().roleName("HR").build()).build();
@@ -242,7 +246,7 @@ class TalentPoolDecisionUnitTests {
         // Then: Kiểm tra kết quả và số lần gọi repository theo đúng ca này.
         assertEquals("Closed", job.getPostingStatus());
         verify(audit, times(0)).record(any(), any(), any(), any(), any(), any());
-        verify(applications, times(0)).findAllDraftsByJobPostingId(any());
+        verify(poolApplications, times(0)).findAllDraftsByJobPostingId(any());
     }
 
     @Test
@@ -301,7 +305,7 @@ class TalentPoolDecisionUnitTests {
         // Then: Kiểm tra kết quả và số lần gọi repository theo đúng ca này.
         assertEquals("Published", job.getPostingStatus());
         assertEquals(null, job.getClosedAt());
-        verify(applications, times(0)).findAllDraftsByJobPostingId(any());
+        verify(poolApplications, times(0)).findAllDraftsByJobPostingId(any());
     }
 
     @Test
@@ -311,7 +315,7 @@ class TalentPoolDecisionUnitTests {
         when(currentUser.requireUser()).thenReturn(hr);
         when(jobs.findForUpdate(20)).thenReturn(Optional.of(job));
         Application moved = Application.builder().applicationId(101).build();
-        when(applications.findAllDraftsByJobPostingId(20)).thenReturn(List.of(application, moved));
+        when(poolApplications.findAllDraftsByJobPostingId(20)).thenReturn(List.of(application, moved));
         when(applications.transition(100, Set.of("HM_Suggested"), "Rejected")).thenReturn(1);
         // When: Gọi nghiệp vụ cần kiểm tra với dữ liệu đã chuẩn bị.
         service.closeJob(20);
@@ -327,7 +331,7 @@ class TalentPoolDecisionUnitTests {
         when(currentUser.requireUser()).thenReturn(hr);
         when(jobs.findForUpdate(20)).thenReturn(Optional.of(job));
         application.setApplicationStatus("Interviewing");
-        when(applications.findPendingApplicationsForClosedJob(20)).thenReturn(List.of(application));
+        when(poolApplications.findPendingApplicationsForClosedJob(20)).thenReturn(List.of(application));
         when(audit.hasAcceptedOffer(100)).thenReturn(true);
         // When: Gọi nghiệp vụ cần kiểm tra với dữ liệu đã chuẩn bị.
         service.closeJob(20);
@@ -345,7 +349,7 @@ class TalentPoolDecisionUnitTests {
         when(currentUser.requireUser()).thenReturn(hr);
         when(jobs.findForUpdate(20)).thenReturn(Optional.of(job));
         application.setApplicationStatus("Interviewing");
-        when(applications.findPendingApplicationsForClosedJob(20)).thenReturn(List.of(application));
+        when(poolApplications.findPendingApplicationsForClosedJob(20)).thenReturn(List.of(application));
         // When: Gọi nghiệp vụ cần kiểm tra với dữ liệu đã chuẩn bị.
         service.closeJob(20);
         // Then: Kiểm tra kết quả và số lần gọi repository theo đúng ca này.
@@ -362,7 +366,7 @@ class TalentPoolDecisionUnitTests {
         when(currentUser.requireUser()).thenReturn(hr);
         when(jobs.findForUpdate(20)).thenReturn(Optional.of(job));
         application.setApplicationStatus("Interviewing");
-        when(applications.findPendingApplicationsForClosedJob(20)).thenReturn(List.of(application));
+        when(poolApplications.findPendingApplicationsForClosedJob(20)).thenReturn(List.of(application));
         when(applications.transition(100, Set.of("Interviewing"), "Rejected")).thenReturn(1);
         when(audit.cancelInterviews(100)).thenReturn(2);
         // When: Gọi nghiệp vụ cần kiểm tra với dữ liệu đã chuẩn bị.
@@ -381,7 +385,7 @@ class TalentPoolDecisionUnitTests {
         when(currentUser.requireUser()).thenReturn(hr);
         when(jobs.findForUpdate(20)).thenReturn(Optional.of(job));
         application.setApplicationStatus("Interviewing");
-        when(applications.findPendingApplicationsForClosedJob(20)).thenReturn(List.of(application));
+        when(poolApplications.findPendingApplicationsForClosedJob(20)).thenReturn(List.of(application));
         when(applications.transition(100, Set.of("Interviewing"), "Rejected")).thenReturn(1);
         // When: Gọi nghiệp vụ cần kiểm tra với dữ liệu đã chuẩn bị.
         service.closeJob(20);
@@ -624,7 +628,7 @@ class TalentPoolDecisionUnitTests {
         // Given: Danh sách gợi ý ánh xạ draft từ repository.
         when(currentUser.requireUser()).thenReturn(hr);
         when(jobs.findById(20)).thenReturn(Optional.of(job));
-        when(applications.findHrRecommendations(20)).thenReturn(List.of(application));
+        when(poolApplications.findHrRecommendations(20)).thenReturn(List.of(application));
         ApplicationReview origin = ApplicationReview.builder().reviewId(1).reviewer(hr).reviewerRole("HR").decision("Hold").reviewedAt(at).build();
         when(reviews.findWithReviewerByApplicationId(100)).thenReturn(List.of(origin));
         // When: Gọi nghiệp vụ cần kiểm tra với dữ liệu đã chuẩn bị.
@@ -646,7 +650,7 @@ class TalentPoolDecisionUnitTests {
         when(reviews.findWithReviewerByApplicationId(100)).thenReturn(List.of(origin));
         candidate.setPotential(false);
         when(candidates.findById(8)).thenReturn(Optional.of(candidate));
-        when(applications.findPreviousCvByCandidateId(8)).thenReturn(List.of(application));
+        when(poolApplications.findPreviousCvByCandidateId(8)).thenReturn(List.of(application));
         // When: Gọi nghiệp vụ cần kiểm tra với dữ liệu đã chuẩn bị.
         var result = service.recommendationDetail(8, 100);
         // Then: Kiểm tra kết quả và số lần gọi repository theo đúng ca này.
@@ -711,7 +715,7 @@ class TalentPoolDecisionUnitTests {
         Application source = Application.builder().applicationId(100).candidate(candidate)
             .jobPosting(JobPosting.builder().jobPostingId(10).build()).appliedCvUrl("https://example.test/cv.pdf").build();
         when(applications.findDetailById(100)).thenReturn(Optional.of(source));
-        when(applications.findPreviousCvByCandidateId(8)).thenReturn(List.of(Application.builder().applicationId(101).build()));
+        when(poolApplications.findPreviousCvByCandidateId(8)).thenReturn(List.of(Application.builder().applicationId(101).build()));
         // When: HR chọn CV đã mất điều kiện làm nguồn.
         assertThrows(TalentPoolException.class, () -> service.recommend(20, new TalentPoolSuggestRequest(List.of(100))));
         // Then: Không ghi draft từ CV sai điều kiện.

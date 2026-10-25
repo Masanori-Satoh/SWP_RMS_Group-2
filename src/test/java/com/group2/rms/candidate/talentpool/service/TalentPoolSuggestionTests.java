@@ -4,6 +4,7 @@ import com.group2.rms.candidate.domain.rule.ApplicationAccess;
 import com.group2.rms.candidate.infra.cv.CvStorage;
 import com.group2.rms.candidate.domain.repository.ApplicationRepository;
 import com.group2.rms.candidate.domain.repository.CandidateRepository;
+import com.group2.rms.candidate.talentpool.repository.TalentPoolApplicationRepository;
 import com.group2.rms.candidate.talentpool.dto.TalentPoolSuggestRequest;
 import com.group2.rms.candidate.domain.entity.Application;
 import com.group2.rms.candidate.domain.entity.Candidate;
@@ -33,6 +34,7 @@ import static org.mockito.Mockito.*;
 class TalentPoolSuggestionTests {
     @Mock CandidateRepository candidates;
     @Mock ApplicationRepository applications;
+    @Mock TalentPoolApplicationRepository poolApplications;
     @Mock TalentPoolNoteRepository notes;
     @Mock TalentPoolAuditRepository audit;
     @Mock JobPostingRepository jobs;
@@ -60,7 +62,7 @@ class TalentPoolSuggestionTests {
                 .jobPosting(JobPosting.builder().jobPostingId(3).build())
                 .applicationStatus("Rejected").appliedCvUrl("local:cv/" + cid + "/old.pdf").build();
         when(applications.findDetailById(id)).thenReturn(Optional.of(a));
-        lenient().when(applications.findPreviousCvByCandidateId(cid)).thenReturn(List.of(a));
+        lenient().when(poolApplications.findPreviousCvByCandidateId(cid)).thenReturn(List.of(a));
         return a;
     }
 

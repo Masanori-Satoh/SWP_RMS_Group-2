@@ -7,6 +7,8 @@ import com.group2.rms.candidate.infra.cv.CvStorage;
 import com.group2.rms.candidate.domain.repository.ApplicationRepository;
 import com.group2.rms.candidate.domain.repository.ApplicationReviewRepository;
 import com.group2.rms.candidate.domain.repository.CandidateRepository;
+import com.group2.rms.candidate.talentpool.repository.TalentPoolApplicationRepository;
+import com.group2.rms.candidate.talentpool.repository.TalentPoolCandidateRepository;
 import com.group2.rms.candidate.talentpool.entity.TalentPoolNote;
 import com.group2.rms.candidate.talentpool.exception.TalentPoolException;
 import com.group2.rms.candidate.talentpool.dto.*;
@@ -36,6 +38,8 @@ import static org.mockito.Mockito.*;
 class TalentPoolReadUnitTests {
     private final CandidateRepository candidates = mock(CandidateRepository.class);
     private final ApplicationRepository applications = mock(ApplicationRepository.class);
+    private final TalentPoolApplicationRepository poolApplications = mock(TalentPoolApplicationRepository.class);
+    private final TalentPoolCandidateRepository poolCandidates = mock(TalentPoolCandidateRepository.class);
     private final TalentPoolNoteRepository notes = mock(TalentPoolNoteRepository.class);
     private final TalentPoolAuditRepository audit = mock(TalentPoolAuditRepository.class);
     private final JobPostingRepository jobs = mock(JobPostingRepository.class);
@@ -45,7 +49,7 @@ class TalentPoolReadUnitTests {
     private final UserRepository users = mock(UserRepository.class);
     private final CvStorage storage = mock(CvStorage.class);
     private final ApplicationReviewRepository reviews = mock(ApplicationReviewRepository.class);
-    private final TalentPoolService service = new TalentPoolService(candidates, applications, notes, audit,
+    private final TalentPoolService service = new TalentPoolService(candidates, applications, poolApplications, poolCandidates, notes, audit,
             jobs, currentUser, jobAccess, applicationAccess, users, storage, reviews);
     private final User hr = User.builder().userId(5).fullName("HR Linh")
             .role(Role.builder().roleName("HR").build()).build();
@@ -88,12 +92,12 @@ class TalentPoolReadUnitTests {
     void search_null_normalizesKeywordAndLimitsPage() {
         // Given: Tìm kiếm keyword null và giới hạn 50 dòng.
         when(currentUser.requireUser()).thenReturn(hr);
-        when(candidates.searchPotential(null, 5, 20, PageRequest.of(2, 50))).thenReturn(Page.empty());
+        when(poolCandidates.searchPotential(null, 5, 20, PageRequest.of(2, 50))).thenReturn(Page.empty());
         // When: Gọi nghiệp vụ cần kiểm tra với dữ liệu đã chuẩn bị.
         var result = service.search(new TalentPoolSearch(null, 5, 20), PageRequest.of(2, 100));
         // Then: Kiểm tra kết quả và số lần gọi repository theo đúng ca này.
         assertEquals(0, result.getTotalElements());
-        verify(candidates, times(1)).searchPotential(null, 5, 20, PageRequest.of(2, 50));
+        verify(poolCandidates, times(1)).searchPotential(null, 5, 20, PageRequest.of(2, 50));
     }
 
     @Test
@@ -101,12 +105,12 @@ class TalentPoolReadUnitTests {
     void search_blank_normalizesKeywordAndLimitsPage() {
         // Given: Tìm kiếm keyword blank và giới hạn 50 dòng.
         when(currentUser.requireUser()).thenReturn(hr);
-        when(candidates.searchPotential(null, 5, 20, PageRequest.of(2, 50))).thenReturn(Page.empty());
+        when(poolCandidates.searchPotential(null, 5, 20, PageRequest.of(2, 50))).thenReturn(Page.empty());
         // When: Gọi nghiệp vụ cần kiểm tra với dữ liệu đã chuẩn bị.
         var result = service.search(new TalentPoolSearch("  ", 5, 20), PageRequest.of(2, 100));
         // Then: Kiểm tra kết quả và số lần gọi repository theo đúng ca này.
         assertEquals(0, result.getTotalElements());
-        verify(candidates, times(1)).searchPotential(null, 5, 20, PageRequest.of(2, 50));
+        verify(poolCandidates, times(1)).searchPotential(null, 5, 20, PageRequest.of(2, 50));
     }
 
     @Test
@@ -114,12 +118,12 @@ class TalentPoolReadUnitTests {
     void search_trimmed_normalizesKeywordAndLimitsPage() {
         // Given: Tìm kiếm keyword trimmed và giới hạn 50 dòng.
         when(currentUser.requireUser()).thenReturn(hr);
-        when(candidates.searchPotential("Java", 5, 20, PageRequest.of(2, 50))).thenReturn(Page.empty());
+        when(poolCandidates.searchPotential("Java", 5, 20, PageRequest.of(2, 50))).thenReturn(Page.empty());
         // When: Gọi nghiệp vụ cần kiểm tra với dữ liệu đã chuẩn bị.
         var result = service.search(new TalentPoolSearch("  Java  ", 5, 20), PageRequest.of(2, 100));
         // Then: Kiểm tra kết quả và số lần gọi repository theo đúng ca này.
         assertEquals(0, result.getTotalElements());
-        verify(candidates, times(1)).searchPotential("Java", 5, 20, PageRequest.of(2, 50));
+        verify(poolCandidates, times(1)).searchPotential("Java", 5, 20, PageRequest.of(2, 50));
     }
 
     @Test
@@ -127,12 +131,12 @@ class TalentPoolReadUnitTests {
     void search_long_normalizesKeywordAndLimitsPage() {
         // Given: Tìm kiếm keyword long và giới hạn 50 dòng.
         when(currentUser.requireUser()).thenReturn(hr);
-        when(candidates.searchPotential("x".repeat(100), 5, 20, PageRequest.of(2, 50))).thenReturn(Page.empty());
+        when(poolCandidates.searchPotential("x".repeat(100), 5, 20, PageRequest.of(2, 50))).thenReturn(Page.empty());
         // When: Gọi nghiệp vụ cần kiểm tra với dữ liệu đã chuẩn bị.
         var result = service.search(new TalentPoolSearch("x".repeat(101), 5, 20), PageRequest.of(2, 100));
         // Then: Kiểm tra kết quả và số lần gọi repository theo đúng ca này.
         assertEquals(0, result.getTotalElements());
-        verify(candidates, times(1)).searchPotential("x".repeat(100), 5, 20, PageRequest.of(2, 50));
+        verify(poolCandidates, times(1)).searchPotential("x".repeat(100), 5, 20, PageRequest.of(2, 50));
     }
 
     @Test
@@ -140,8 +144,8 @@ class TalentPoolReadUnitTests {
     void search_candidateRow_mapsContactAndPreviousCv() {
         // Given: Kết quả tìm kiếm có thông tin liên hệ và CV nguồn.
         when(currentUser.requireUser()).thenReturn(hr);
-        when(candidates.searchPotential(null, null, null, PageRequest.of(0, 10))).thenReturn(new PageImpl<>(List.of(candidate)));
-        when(applications.findPreviousCvByCandidateId(8)).thenReturn(List.of(application));
+        when(poolCandidates.searchPotential(null, null, null, PageRequest.of(0, 10))).thenReturn(new PageImpl<>(List.of(candidate)));
+        when(poolApplications.findPreviousCvByCandidateId(8)).thenReturn(List.of(application));
         // When: Gọi nghiệp vụ cần kiểm tra với dữ liệu đã chuẩn bị.
         var row = service.search(new TalentPoolSearch(null, null, null), PageRequest.of(0, 10)).getContent().getFirst();
         // Then: Kiểm tra kết quả và số lần gọi repository theo đúng ca này.
@@ -183,7 +187,7 @@ class TalentPoolReadUnitTests {
         // Given: Chi tiết ứng viên tiềm năng có ghi chú và CV.
         when(currentUser.requireUser()).thenReturn(hr);
         when(candidates.findById(8)).thenReturn(Optional.of(candidate));
-        when(applications.findPreviousCvByCandidateId(8)).thenReturn(List.of(application));
+        when(poolApplications.findPreviousCvByCandidateId(8)).thenReturn(List.of(application));
         TalentPoolNote note = TalentPoolNote.builder().noteId(2).author(hr).noteContent("Good").createdAt(at).build();
         when(notes.findByCandidate_CandidateIdOrderByCreatedAtDescNoteIdDesc(8)).thenReturn(List.of(note));
         // When: Gọi nghiệp vụ cần kiểm tra với dữ liệu đã chuẩn bị.
@@ -193,7 +197,7 @@ class TalentPoolReadUnitTests {
         assertEquals(8, result.candidate().candidateId());
         assertEquals(new TalentPoolNoteResponse(2, "HR Linh", "Good", at), result.notes().getFirst());
         assertEquals(new TalentPoolCvResponse(100, "Java Developer", at), result.cvs().getFirst());
-        verify(applications, times(2)).findPreviousCvByCandidateId(8);
+        verify(poolApplications, times(2)).findPreviousCvByCandidateId(8);
     }
 
     @Test
@@ -206,7 +210,7 @@ class TalentPoolReadUnitTests {
         // When: Gọi nghiệp vụ cần kiểm tra với dữ liệu đã chuẩn bị.
         assertThrows(ResourceNotFoundException.class, () -> service.detail(8));
         // Then: Kiểm tra kết quả và số lần gọi repository theo đúng ca này.
-        verify(applications, times(0)).findPreviousCvByCandidateId(any());
+        verify(poolApplications, times(0)).findPreviousCvByCandidateId(any());
         verify(notes, times(0)).findByCandidate_CandidateIdOrderByCreatedAtDescNoteIdDesc(any());
     }
 
@@ -482,7 +486,7 @@ class TalentPoolReadUnitTests {
         // Given: Số gợi ý chờ xử lý theo đúng tin.
         when(currentUser.requireUser()).thenReturn(hr);
         when(jobs.findById(20)).thenReturn(Optional.of(job));
-        when(applications.countPendingHrRecommendationsForJob(20)).thenReturn(3L);
+        when(poolApplications.countPendingHrRecommendationsForJob(20)).thenReturn(3L);
         // When: Gọi nghiệp vụ cần kiểm tra với dữ liệu đã chuẩn bị.
         long result = service.pendingRecommendationCount(20);
         // Then: Kiểm tra kết quả và số lần gọi repository theo đúng ca này.
@@ -495,7 +499,7 @@ class TalentPoolReadUnitTests {
         // Given: Danh sách đề xuất trả đúng liên hệ và người đề xuất.
         when(currentUser.requireUser()).thenReturn(hr);
         when(jobs.findById(20)).thenReturn(Optional.of(job));
-        when(applications.findSuggestionsByJobPostingId(20)).thenReturn(List.of(application));
+        when(poolApplications.findSuggestionsByJobPostingId(20)).thenReturn(List.of(application));
         when(audit.suggestedBy(100)).thenReturn("HM An");
         // When: Gọi nghiệp vụ cần kiểm tra với dữ liệu đã chuẩn bị.
         var result = service.suggestions(20).getFirst();
@@ -827,7 +831,7 @@ class TalentPoolReadUnitTests {
             .jobPosting(JobPosting.builder().jobPostingId(10).postingTitle("Old Job").build())
             .appliedCvUrl("https://example.test/cv.pdf").build();
         when(applications.findDetailById(100)).thenReturn(Optional.of(source));
-        when(applications.findPreviousCvByCandidateId(8)).thenReturn(List.of(Application.builder().applicationId(101).build()));
+        when(poolApplications.findPreviousCvByCandidateId(8)).thenReturn(List.of(Application.builder().applicationId(101).build()));
         // When: Kiểm tra điều kiện của CV nguồn ID 100.
         var result = service.reviewSelection(20, new TalentPoolSuggestRequest(List.of(100)));
         // Then: Báo lỗi đúng dòng, không tạo draft từ ID sai.

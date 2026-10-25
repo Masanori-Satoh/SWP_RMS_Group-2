@@ -3,6 +3,9 @@ package com.group2.rms.candidate.talentpool;
 import com.group2.rms.candidate.domain.rule.ApplicationStatusService;
 import com.group2.rms.candidate.infra.cv.CvStorage;
 import com.group2.rms.candidate.domain.repository.ApplicationRepository;
+import com.group2.rms.candidate.application.portal.repository.MyApplicationRepository;
+import com.group2.rms.candidate.application.pipeline.repository.ApplicationPipelineRepository;
+import com.group2.rms.candidate.talentpool.repository.TalentPoolApplicationRepository;
 import com.group2.rms.candidate.domain.repository.CandidateRepository;
 import com.group2.rms.candidate.domain.entity.Application;
 import com.group2.rms.candidate.application.submission.ApplicationSubmittedEvent;
@@ -43,6 +46,9 @@ import static org.hamcrest.Matchers.containsString;
 class TalentPoolFlowIntegrationTests {
     @Autowired MockMvc mvc;
     @Autowired ApplicationRepository applications;
+    @Autowired MyApplicationRepository myApplications;
+    @Autowired ApplicationPipelineRepository pipelineQueries;
+    @Autowired TalentPoolApplicationRepository poolApplications;
     @Autowired CandidateRepository candidates;
     @Autowired UserRepository users;
     @Autowired JobPostingRepository jobs;
@@ -70,7 +76,7 @@ class TalentPoolFlowIntegrationTests {
                             || cv == null || !cv.startsWith("/samples/cv/") || !new ClassPathResource("static" + cv).exists()) continue;
                     if (applications.existsActiveByCandidateAndJobPosting(cid, target.getJobPostingId())
                             || applications.findFirstByCandidate_CandidateIdAndJobPosting_JobPostingIdAndApplicationStatus(cid, target.getJobPostingId(), "HM_Suggested").isPresent()) continue;
-                    if (applications.findPreviousCvByCandidateId(cid).stream().anyMatch(a -> a.getApplicationId().equals(source.getApplicationId())))
+                    if (poolApplications.findPreviousCvByCandidateId(cid).stream().anyMatch(a -> a.getApplicationId().equals(source.getApplicationId())))
                         return new Fixture(hm, hr, target, source);
                 }
             }
@@ -88,7 +94,7 @@ class TalentPoolFlowIntegrationTests {
         return applications.findFirstByCandidate_CandidateIdAndJobPosting_JobPostingIdAndApplicationStatus(
                 f.source().getCandidate().getCandidateId(), f.target().getJobPostingId(), "HM_Suggested").orElseThrow().getApplicationId();
     }
-    private List<Integer> formalIds() { return applications.findPipelineIds(true, null, null, null, null, null, "newest"); }
+    private List<Integer> formalIds() { return pipelineQueries.findPipelineIds(true, null, null, null, null, null, "newest"); }
 
     private int recommend(Fixture f) throws Exception {
         mvc.perform(post("/talent-pool/jobs/" + f.target().getJobPostingId() + "/recommend")
@@ -114,8 +120,8 @@ class TalentPoolFlowIntegrationTests {
         em.flush(); em.clear();
         assertEquals("Rejected",applications.findById(id).orElseThrow().getApplicationStatus());
         assertEquals(0,applications.countPendingHrRecommendation(id));
-        assertEquals(1,applications.countTalentPoolCancellation(id));
-        assertFalse(applications.findHrRecommendations(jobId).stream().anyMatch(a->a.getApplicationId().equals(id)));
+        assertEquals(1,pipelineQueries.countTalentPoolCancellation(id));
+        assertFalse(poolApplications.findHrRecommendations(jobId).stream().anyMatch(a->a.getApplicationId().equals(id)));
         assertFalse(formalIds().contains(id)); assertEquals(formal,metrics.applications());
         assertEquals(candidateCount,candidates.count()); assertTrue(candidates.findById(cid).orElseThrow().isPotential());
         assertEquals(sourceCv,applications.findById(f.source().getApplicationId()).orElseThrow().getAppliedCvUrl());
@@ -141,22 +147,22 @@ class TalentPoolFlowIntegrationTests {
                 .andExpect(flash().attributeExists("errorMessage"));
         em.flush(); em.clear();
         assertEquals("HM_Suggested",applications.findById(id).orElseThrow().getApplicationStatus());
-        assertEquals(0,applications.countTalentPoolCancellation(id));
-        assertTrue(applications.findHrRecommendations(jobId).stream().anyMatch(a->a.getApplicationId().equals(id)));
-        assertTrue(applications.findSuggestionsByJobPostingId(jobId).stream().anyMatch(a->a.getApplicationId().equals(id)));
+        assertEquals(0,pipelineQueries.countTalentPoolCancellation(id));
+        assertTrue(poolApplications.findHrRecommendations(jobId).stream().anyMatch(a->a.getApplicationId().equals(id)));
+        assertTrue(poolApplications.findSuggestionsByJobPostingId(jobId).stream().anyMatch(a->a.getApplicationId().equals(id)));
     }
 
     @Test void realHrRecommendationHmReviewAllCvsAndNotesThenConsentUseOneDraft() throws Exception {
         var f = fixture(); int jobId=f.target().getJobPostingId(), cid=f.source().getCandidate().getCandidateId();
         long appCount=applications.count(), candidateCount=candidates.count(), formalCount=metrics.applications();
         String sourceCv=f.source().getAppliedCvUrl(), sourceStatus=f.source().getApplicationStatus();
-        var oldCvs=applications.findPreviousCvByCandidateId(cid);
+        var oldCvs=poolApplications.findPreviousCvByCandidateId(cid);
         int id=recommend(f);
         assertEquals(1,applications.countPendingHrRecommendation(id));
-        assertEquals(1,applications.countPendingHrRecommendationsForJob(jobId));
+        assertEquals(1,poolApplications.countPendingHrRecommendationsForJob(jobId));
         assertEquals(appCount+1,applications.count()); assertEquals(candidateCount,candidates.count());
         assertFalse(formalIds().contains(id)); assertEquals(formalCount,metrics.applications());
-        assertFalse(applications.findSuggestionsByJobPostingId(jobId).stream().anyMatch(a -> a.getApplicationId().equals(id)));
+        assertFalse(poolApplications.findSuggestionsByJobPostingId(jobId).stream().anyMatch(a -> a.getApplicationId().equals(id)));
         mvc.perform(get("/internal/job-postings/"+jobId).with(user(f.hm().getUsername()).roles("HIRING_MANAGER")))
                 .andExpect(status().isOk()).andExpect(content().string(containsString("Gợi ý từ HR")));
         mvc.perform(get("/talent-pool/jobs/"+jobId+"/recommendations").with(user(f.hm().getUsername()).roles("HIRING_MANAGER")))
@@ -183,7 +189,7 @@ class TalentPoolFlowIntegrationTests {
         assertEquals(0,applications.countPendingHrRecommendation(id));
         assertEquals(appCount+1,applications.count()); assertEquals(formalCount,metrics.applications());
         assertEquals("HM_Suggested",applications.findById(id).orElseThrow().getApplicationStatus());
-        assertTrue(applications.findSuggestionsByJobPostingId(jobId).stream().anyMatch(a -> a.getApplicationId().equals(id)));
+        assertTrue(poolApplications.findSuggestionsByJobPostingId(jobId).stream().anyMatch(a -> a.getApplicationId().equals(id)));
         assertThrows(TalentPoolException.class,()->statusService.requireScheduleable(id));
         mvc.perform(post("/talent-pool/recommendations/"+id+"/decision").with(user(f.hm().getUsername()).roles("HIRING_MANAGER"))
                         .with(csrf()).param("decision","Fail")).andExpect(flash().attributeExists("errorMessage"));
@@ -204,10 +210,10 @@ class TalentPoolFlowIntegrationTests {
                         .with(csrf()).param("decision","Fail")).andExpect(flash().attributeExists("successMessage"));
         em.flush(); em.clear();
         assertEquals("Rejected",applications.findById(id).orElseThrow().getApplicationStatus());
-        assertEquals(0,applications.countPendingHrRecommendation(id)); assertEquals(1,applications.countTalentPoolCancellation(id));
+        assertEquals(0,applications.countPendingHrRecommendation(id)); assertEquals(1,pipelineQueries.countTalentPoolCancellation(id));
         assertEquals(before,metrics.applications()); assertFalse(formalIds().contains(id));
         assertTrue(candidates.findById(cid).orElseThrow().isPotential());
-        assertFalse(applications.findSuggestionsByJobPostingId(f.target().getJobPostingId()).stream().anyMatch(a->a.getApplicationId().equals(id)));
+        assertFalse(poolApplications.findSuggestionsByJobPostingId(f.target().getJobPostingId()).stream().anyMatch(a->a.getApplicationId().equals(id)));
         mvc.perform(get("/talent-pool/"+cid+"?recommendationId="+id).with(user(f.hm().getUsername()).roles("HIRING_MANAGER")))
                 .andExpect(status().isOk()).andExpect(content().string(containsString("HM đã từ chối")))
                 .andExpect(content().string(org.hamcrest.Matchers.not(containsString("data-pool-decision"))));
@@ -224,7 +230,7 @@ class TalentPoolFlowIntegrationTests {
         var draft = applications.findById(id).orElseThrow();
         assertEquals(cid, draft.getCandidate().getCandidateId()); assertEquals(originalCv, draft.getAppliedCvUrl());
         assertFalse(formalIds().contains(id)); assertEquals(formalCount, metrics.applications());
-        assertFalse(applications.findOwnedByUserId(f.source().getCandidate().getAccount().getUserId()).stream().anyMatch(a -> a.getApplicationId().equals(id)));
+        assertFalse(myApplications.findOwnedByUserId(f.source().getCandidate().getAccount().getUserId()).stream().anyMatch(a -> a.getApplicationId().equals(id)));
         mvc.perform(get("/talent-pool/jobs/" + f.target().getJobPostingId() + "/suggestions")
                         .with(user(f.hr().getUsername()).roles("HR")))
                 .andExpect(status().isOk()).andExpect(content().string(containsString("/applications/" + id)));
@@ -255,9 +261,9 @@ class TalentPoolFlowIntegrationTests {
                 .andExpect(status().is3xxRedirection());
         em.flush(); em.clear();
         assertEquals("Rejected", applications.findById(id).orElseThrow().getApplicationStatus());
-        assertEquals(1, applications.countTalentPoolCancellation(id));
+        assertEquals(1, pipelineQueries.countTalentPoolCancellation(id));
         assertFalse(formalIds().contains(id)); assertEquals(before, metrics.applications());
-        assertFalse(applications.findSuggestionsByJobPostingId(f.target().getJobPostingId()).stream().anyMatch(a -> a.getApplicationId().equals(id)));
+        assertFalse(poolApplications.findSuggestionsByJobPostingId(f.target().getJobPostingId()).stream().anyMatch(a -> a.getApplicationId().equals(id)));
         mvc.perform(get("/applications/" + id).with(user(f.hr().getUsername()).roles("HR")))
                 .andExpect(status().isOk()).andExpect(content().string(containsString("Đề xuất đã kết thúc")));
         assertThrows(TalentPoolException.class, () -> statusService.requireScheduleable(id));
@@ -303,7 +309,7 @@ class TalentPoolFlowIntegrationTests {
         assertEquals(sourceCv,applications.findById(sourceId).orElseThrow().getAppliedCvUrl());
         assertEquals(sourceStatus,applications.findById(sourceId).orElseThrow().getApplicationStatus());
         assertTrue(formalIds().contains(id));
-        assertFalse(applications.findSuggestionsByJobPostingId(jobId).stream().anyMatch(a -> a.getApplicationId().equals(id)));
+        assertFalse(poolApplications.findSuggestionsByJobPostingId(jobId).stream().anyMatch(a -> a.getApplicationId().equals(id)));
         if (approved) {
             assertEquals(0,events.stream(ApplicationSubmittedEvent.class).count());
             assertDoesNotThrow(()->statusService.requireScheduleable(id));

@@ -9,6 +9,8 @@ import com.group2.rms.candidate.infra.cv.LocalCvStorage;
 import com.group2.rms.candidate.domain.repository.ApplicationRepository;
 import com.group2.rms.candidate.domain.repository.ApplicationReviewRepository;
 import com.group2.rms.candidate.domain.repository.CandidateRepository;
+import com.group2.rms.candidate.talentpool.repository.TalentPoolApplicationRepository;
+import com.group2.rms.candidate.talentpool.repository.TalentPoolCandidateRepository;
 import com.group2.rms.candidate.talentpool.entity.TalentPoolNote;
 import com.group2.rms.candidate.talentpool.exception.TalentPoolException;
 import com.group2.rms.candidate.domain.rule.ApplicationAccess;
@@ -37,6 +39,8 @@ import java.util.*;
 public class TalentPoolService {
     private final CandidateRepository candidates;
     private final ApplicationRepository applications;
+    private final TalentPoolApplicationRepository poolApplications;
+    private final TalentPoolCandidateRepository poolCandidates;
     private final TalentPoolNoteRepository notes;
     private final TalentPoolAuditRepository audit;
     private final JobPostingRepository jobs;
@@ -80,7 +84,7 @@ public class TalentPoolService {
         if (keyword != null && keyword.length() > 100)
             keyword = keyword.substring(0, 100);
         // get match potential candidate
-        return candidates.searchPotential(keyword, filter.markedBy(), filter.sourceJobId(),
+        return poolCandidates.searchPotential(keyword, filter.markedBy(), filter.sourceJobId(),
                 PageRequest.of(Math.max(0, page.getPageNumber()), Math.min(50, page.getPageSize())))
                 .map(this::candidateResponse);
     }
@@ -112,7 +116,7 @@ public class TalentPoolService {
         if (!candidate.isPotential())
             throw new ResourceNotFoundException("Ứng viên chưa nằm trong kho tiềm năng.");
         return new TalentPoolDetailResponse(candidateResponse(candidate), true,
-                notesFor(id), applications.findPreviousCvByCandidateId(id).stream()
+                notesFor(id), poolApplications.findPreviousCvByCandidateId(id).stream()
                         .map(a -> new TalentPoolCvResponse(a.getApplicationId(), a.getJobPosting().getPostingTitle(),
                                 a.getSubmissionDate()))
                         .toList());
@@ -130,7 +134,7 @@ public class TalentPoolService {
         recommendation(recommendationId, candidateId);
         Candidate c = candidate(candidateId);
         return new TalentPoolDetailResponse(candidateResponse(c), c.isPotential(), notesFor(candidateId),
-                applications.findPreviousCvByCandidateId(candidateId).stream()
+                poolApplications.findPreviousCvByCandidateId(candidateId).stream()
                         .map(a -> new TalentPoolCvResponse(a.getApplicationId(), a.getJobPosting().getPostingTitle(),
                                 a.getSubmissionDate()))
                         .toList());
@@ -230,7 +234,7 @@ public class TalentPoolService {
         //check permission in department
         requireTarget(user, job);
         //get list candidate recommend by HM
-        return applications.findSuggestionsByJobPostingId(jobId).stream().map(a -> {
+        return poolApplications.findSuggestionsByJobPostingId(jobId).stream().map(a -> {
             User c = a.getCandidate().getAccount();
             return new TalentPoolSuggestionResponse(a.getApplicationId(), c.getFullName(), c.getEmail(), c.getPhoneNumber(),
                     audit.suggestedBy(a.getApplicationId()), a.getCreatedAt());
@@ -266,7 +270,7 @@ public class TalentPoolService {
                     throw new TalentPoolException("Ứng viên được chọn nhiều lần.");
                 if (source.getJobPosting().getJobPostingId().equals(jobId))
                     throw new TalentPoolException("Chọn CV từ một tin tuyển dụng khác.");
-                if (applications.findPreviousCvByCandidateId(candidateId).stream()
+                if (poolApplications.findPreviousCvByCandidateId(candidateId).stream()
                         .noneMatch(a -> a.getApplicationId().equals(sourceId)))
                     throw new TalentPoolException("CV này không còn đủ điều kiện làm hồ sơ nguồn.");
                 if (applications.existsActiveByCandidateAndJobPosting(candidateId, jobId)
@@ -314,7 +318,7 @@ public class TalentPoolService {
                 throw new TalentPoolException("Chỉ chọn một CV cho mỗi ứng viên.");
             if (source.getJobPosting().getJobPostingId().equals(jobId))
                 throw new TalentPoolException("CV nguồn phải thuộc một đợt tuyển khác.");
-            if (!applications.findPreviousCvByCandidateId(candidate.getCandidateId()).stream()
+            if (!poolApplications.findPreviousCvByCandidateId(candidate.getCandidateId()).stream()
                     .anyMatch(a -> a.getApplicationId().equals(sourceId)))
                 throw new TalentPoolException("CV nguồn phải thuộc đơn ứng tuyển chính thức.");
             requireCv(source.getAppliedCvUrl());
@@ -375,14 +379,14 @@ public class TalentPoolService {
 
     public long pendingRecommendationCount(Integer jobId) {
         requireTarget(actor(), job(jobId, false));
-        return applications.countPendingHrRecommendationsForJob(jobId);
+        return poolApplications.countPendingHrRecommendationsForJob(jobId);
     }
 
     public List<TalentPoolRecommendationResponse> recommendations(Integer jobId) {
         User user = actor();
         JobPosting target = job(jobId, false);
         requireTarget(user, target);
-        return applications.findHrRecommendations(jobId).stream().map(a -> recommendationResponse(a, user)).toList();
+        return poolApplications.findHrRecommendations(jobId).stream().map(a -> recommendationResponse(a, user)).toList();
     }
 
     public TalentPoolRecommendationResponse recommendation(Integer id, Integer candidateId) {
@@ -524,12 +528,12 @@ public class TalentPoolService {
         posting.setPostingStatus("Closed");
         posting.setClosedAt(java.time.LocalDateTime.now());
         audit.record(user.getUserId(), "UPDATE", "JobPosting", id, null, "Closed");
-        for (Application suggestion : applications.findAllDraftsByJobPostingId(id)) {
+        for (Application suggestion : poolApplications.findAllDraftsByJobPostingId(id)) {
             if (applications.transition(suggestion.getApplicationId(), Set.of("HM_Suggested"), "Rejected") == 1)
                 audit.record(user.getUserId(), "UPDATE", "Application", suggestion.getApplicationId(), "HM_Suggested",
                         "TalentPoolCancelled");
         }
-        for (Application app : applications.findPendingApplicationsForClosedJob(id)) {
+        for (Application app : poolApplications.findPendingApplicationsForClosedJob(id)) {
             if (audit.hasAcceptedOffer(app.getApplicationId()))
                 continue;
             String old = app.getApplicationStatus();
@@ -610,7 +614,7 @@ public class TalentPoolService {
     private TalentPoolCandidateResponse candidateResponse(Candidate c) {
         User u = c.getAccount();
         //get cv of candidate
-        var cvs = applications.findPreviousCvByCandidateId(c.getCandidateId()).stream()
+        var cvs = poolApplications.findPreviousCvByCandidateId(c.getCandidateId()).stream()
                 .map(a -> new TalentPoolCvResponse(a.getApplicationId(), a.getJobPosting().getPostingTitle(),
                         a.getSubmissionDate()))
                 .toList();

@@ -6,6 +6,8 @@ import com.group2.rms.candidate.infra.cv.CvStorage;
 import com.group2.rms.candidate.domain.repository.ApplicationReviewRepository;
 import com.group2.rms.candidate.domain.repository.CandidateRepository;
 import com.group2.rms.candidate.domain.repository.ApplicationRepository;
+import com.group2.rms.candidate.talentpool.repository.TalentPoolApplicationRepository;
+import com.group2.rms.candidate.talentpool.repository.TalentPoolCandidateRepository;
 import com.group2.rms.candidate.talentpool.service.TalentPoolService;
 import com.group2.rms.candidate.talentpool.dto.TalentPoolConfirmRequest;
 import com.group2.rms.candidate.talentpool.exception.TalentPoolException;
@@ -44,6 +46,7 @@ class ApplicationStatusServiceTests {
                     .role(com.group2.rms.user.entity.Role.builder().roleName("HR").build()).build();
             when(current.requireUser()).thenReturn(hr);
             pool = new TalentPoolService(mock(CandidateRepository.class), applications,
+                    mock(TalentPoolApplicationRepository.class), mock(TalentPoolCandidateRepository.class),
                     mock(TalentPoolNoteRepository.class), audit, jobs, current,
                     mock(com.group2.rms.requisition.service.RequisitionAccess.class), mock(ApplicationAccess.class),
                     mock(com.group2.rms.user.repository.UserRepository.class), mock(CvStorage.class),

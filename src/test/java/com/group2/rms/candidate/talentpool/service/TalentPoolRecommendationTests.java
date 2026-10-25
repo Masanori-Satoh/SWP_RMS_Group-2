@@ -8,6 +8,7 @@ import com.group2.rms.candidate.infra.cv.CvStorage;
 import com.group2.rms.candidate.domain.repository.ApplicationRepository;
 import com.group2.rms.candidate.domain.repository.ApplicationReviewRepository;
 import com.group2.rms.candidate.domain.repository.CandidateRepository;
+import com.group2.rms.candidate.talentpool.repository.TalentPoolApplicationRepository;
 import com.group2.rms.candidate.talentpool.exception.TalentPoolException;
 import com.group2.rms.candidate.talentpool.dto.TalentPoolConfirmRequest;
 import com.group2.rms.candidate.talentpool.dto.TalentPoolSuggestRequest;
@@ -35,6 +36,7 @@ import static org.mockito.Mockito.*;
 class TalentPoolRecommendationTests {
     @Mock CandidateRepository candidates;
     @Mock ApplicationRepository applications;
+    @Mock TalentPoolApplicationRepository poolApplications;
     @Mock ApplicationReviewRepository reviews;
     @Mock TalentPoolNoteRepository notes;
     @Mock TalentPoolAuditRepository audit;
@@ -71,7 +73,7 @@ class TalentPoolRecommendationTests {
         var source = Application.builder().applicationId(id).candidate(Candidate.builder().candidateId(cid).isPotential(true).build())
                 .jobPosting(JobPosting.builder().jobPostingId(3).build()).applicationStatus("Rejected").appliedCvUrl("local:cv/old.pdf").build();
         when(applications.findDetailById(id)).thenReturn(Optional.of(source));
-        lenient().when(applications.findPreviousCvByCandidateId(cid)).thenReturn(List.of(source));
+        lenient().when(poolApplications.findPreviousCvByCandidateId(cid)).thenReturn(List.of(source));
         return source;
     }
 
