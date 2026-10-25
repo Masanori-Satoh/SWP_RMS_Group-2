@@ -5,7 +5,7 @@ import com.group2.rms.candidate.infra.cv.CvStorage;
 import com.group2.rms.candidate.domain.repository.ApplicationRepository;
 import com.group2.rms.candidate.domain.repository.CandidateRepository;
 import com.group2.rms.candidate.domain.entity.Application;
-import com.group2.rms.candidate.submission.ApplicationSubmittedEvent;
+import com.group2.rms.candidate.application.submission.ApplicationSubmittedEvent;
 import com.group2.rms.candidate.talentpool.service.TalentPoolService;
 import com.group2.rms.candidate.talentpool.exception.TalentPoolException;
 import com.group2.rms.dashboard.DashboardMetricsRepository;

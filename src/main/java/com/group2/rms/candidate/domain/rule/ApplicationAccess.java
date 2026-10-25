@@ -1,7 +1,7 @@
 package com.group2.rms.candidate.domain.rule;
 
 import com.group2.rms.candidate.domain.entity.Application;
-import com.group2.rms.candidate.pipeline.service.ApplicationScope;
+import com.group2.rms.candidate.application.pipeline.service.ApplicationScope;
 import com.group2.rms.requisition.service.RequisitionAccess;
 import com.group2.rms.user.entity.User;
 import lombok.RequiredArgsConstructor;

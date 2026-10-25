@@ -1,6 +1,6 @@
 package com.group2.rms.candidate.domain.rule;
 
-import com.group2.rms.candidate.pipeline.service.ApplicationReviewService;
+import com.group2.rms.candidate.application.pipeline.service.ApplicationReviewService;
 import com.group2.rms.candidate.talentpool.exception.TalentPoolException;
 import com.group2.rms.candidate.domain.repository.ApplicationRepository;
 import com.group2.rms.core.exception.ResourceNotFoundException;

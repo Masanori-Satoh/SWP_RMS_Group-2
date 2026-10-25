@@ -1,7 +1,7 @@
 package com.group2.rms.candidate.domain.repository;
 
-import com.group2.rms.candidate.pipeline.dto.ApplicationPipelineResponse;
-import com.group2.rms.candidate.pipeline.dto.JobPostingOption;
+import com.group2.rms.candidate.application.pipeline.dto.ApplicationPipelineResponse;
+import com.group2.rms.candidate.application.pipeline.dto.JobPostingOption;
 import com.group2.rms.candidate.domain.entity.Application;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
@@ -136,14 +136,14 @@ public interface ApplicationRepository extends JpaRepository<Application, Intege
      * {@link #findPipelineIds}). {@code ids} là id của một trang, không được rỗng.
      */
     @Query("""
-            select new com.group2.rms.candidate.pipeline.dto.ApplicationPipelineResponse(
+            select new com.group2.rms.candidate.application.pipeline.dto.ApplicationPipelineResponse(
                 a.applicationId, u.fullName, u.email, jp.postingTitle, a.submissionDate, a.applicationStatus,
                 ai.aiMatchScore, c.isPotential)
             """ + PIPELINE_JOINS + LATEST_SCORE_JOIN + "where a.applicationId in :ids")
     List<ApplicationPipelineResponse> findPipelineRows(@Param("ids") Collection<Integer> applicationIds);
 
         /** Các tin có đơn trong phạm vi người xem, cho ô lọc "Vị trí". */
-        @Query("select distinct new com.group2.rms.candidate.pipeline.dto.JobPostingOption(jp.jobPostingId, jp.postingTitle) "
+        @Query("select distinct new com.group2.rms.candidate.application.pipeline.dto.JobPostingOption(jp.jobPostingId, jp.postingTitle) "
                         + PIPELINE_JOINS + FORMAL_SCOPE_FILTER + "order by jp.postingTitle")
         List<JobPostingOption> findPostingOptions(@Param("allDepartments") boolean allDepartments,
                         @Param("managerUserId") Integer managerUserId,

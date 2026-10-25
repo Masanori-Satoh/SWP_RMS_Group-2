@@ -1,14 +1,12 @@
 package com.group2.rms.candidate.domain.repository;
 
-import com.group2.rms.candidate.domain.repository.ApplicationRepository;
-import com.group2.rms.candidate.domain.repository.ApplicationReviewRepository;
-import com.group2.rms.candidate.pipeline.dto.ApplicationPipelineResponse;
-import com.group2.rms.candidate.pipeline.dto.ApplicationSearch;
-import com.group2.rms.candidate.pipeline.dto.JobPostingOption;
+import com.group2.rms.candidate.application.pipeline.dto.ApplicationPipelineResponse;
+import com.group2.rms.candidate.application.pipeline.dto.ApplicationSearch;
+import com.group2.rms.candidate.application.pipeline.dto.JobPostingOption;
 import com.group2.rms.candidate.domain.entity.Application;
 import com.group2.rms.candidate.domain.rule.ApplicationProgressFacts;
 import com.group2.rms.candidate.domain.rule.ApplicationProgressResolver;
-import com.group2.rms.candidate.pipeline.service.ApplicationScope;
+import com.group2.rms.candidate.application.pipeline.service.ApplicationScope;
 import com.group2.rms.user.entity.User;
 import com.group2.rms.user.repository.UserRepository;
 import jakarta.persistence.EntityManager;
