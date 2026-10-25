@@ -9,6 +9,7 @@ import org.springframework.data.domain.*;
 import org.springframework.data.jpa.domain.Specification;
 import java.sql.SQLException;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import java.util.*;
 
@@ -20,9 +21,18 @@ import static org.mockito.Mockito.*;
 class DepartmentCoverageTests {
     private final DepartmentRepository departments = mock(DepartmentRepository.class);
     private final UserRepository users = mock(UserRepository.class);
-    private final DepartmentService service = new DepartmentService(departments, users);
+    private final RoleRepository roles = mock(RoleRepository.class);
+    private final DepartmentService service = new DepartmentService(departments, users, roles);
     private final Department department = Department.builder().departmentId(7).departmentName("Engineering")
             .departmentStatus("Active").build();
+
+    @BeforeEach
+    void configureTransferRoles() {
+        when(roles.findByRoleName("Hiring Manager"))
+            .thenReturn(Optional.of(Role.builder().roleId(3).roleName("Hiring Manager").build()));
+        when(roles.findByRoleName("Interviewer"))
+            .thenReturn(Optional.of(Role.builder().roleId(5).roleName("Interviewer").build()));
+    }
 
     @Test
     @DisplayName("DEPARTMENT-UNIT-01 | Tên phòng ban Null: trả lỗi và không lưu")
@@ -70,7 +80,7 @@ class DepartmentCoverageTests {
     @DisplayName("DEPARTMENT-UNIT-04 | Tên phòng ban đúng 1 ký tự: chấp nhận và giữ ID")
     void update_nameLength1_acceptsBoundary() {
         // Given: Tên phòng ban đúng 1 ký tự: chấp nhận và giữ ID.
-        when(departments.findById(7)).thenReturn(Optional.of(department));
+        when(departments.findForUpdate(7)).thenReturn(Optional.of(department));
 
         // When: Gọi service với dữ liệu đã chuẩn bị.
         service.update(7, new DepartmentRequest("x".repeat(1), null));
@@ -86,7 +96,7 @@ class DepartmentCoverageTests {
     @DisplayName("DEPARTMENT-UNIT-05 | Tên phòng ban đúng 100 ký tự: chấp nhận và giữ ID")
     void update_nameLength100_acceptsBoundary() {
         // Given: Tên phòng ban đúng 100 ký tự: chấp nhận và giữ ID.
-        when(departments.findById(7)).thenReturn(Optional.of(department));
+        when(departments.findForUpdate(7)).thenReturn(Optional.of(department));
 
         // When: Gọi service với dữ liệu đã chuẩn bị.
         service.update(7, new DepartmentRequest("x".repeat(100), null));
@@ -139,52 +149,12 @@ class DepartmentCoverageTests {
     }
 
     @Test
-    @DisplayName("DEPARTMENT-UNIT-08 | Manager role System Admin Active và cùng phòng ban: được gán, role giữ nguyên")
+    @DisplayName("DEPARTMENT-UNIT-08 | System Admin được bổ nhiệm trưởng phòng chuyển thành Hiring Manager")
     void update_activeAdminInSameDepartment_assignsManager() {
-        // Given: Manager role System Admin Active và cùng phòng ban: được gán, role giữ nguyên.
+        // Given: Tài khoản nội bộ Active và cùng phòng được bổ nhiệm trưởng phòng.
         User manager = User.builder().userId(9).role(Role.builder().roleName("System Admin").build())
             .accountStatus("Active").department(department).build();
-        when(departments.findById(7)).thenReturn(Optional.of(department));
-        when(users.findById(9)).thenReturn(Optional.of(manager));
-
-        // When: Gọi service với dữ liệu đã chuẩn bị.
-        service.update(7, new DepartmentRequest("New Department", 9));
-
-        // Then: Kiểm tra dữ liệu thực tế và số lần gọi dependency.
-        assertEquals(manager, department.getManager());
-        assertEquals("New Department", department.getDepartmentName());
-        assertEquals("System Admin", manager.getRole().getRoleName());
-        verify(departments, times(1)).saveAndFlush(department);
-        verify(users, times(0)).save(any(User.class));
-    }
-
-    @Test
-    @DisplayName("DEPARTMENT-UNIT-09 | Manager role HR Active và cùng phòng ban: được gán, role giữ nguyên")
-    void update_activeHRInSameDepartment_assignsManager() {
-        // Given: Manager role HR Active và cùng phòng ban: được gán, role giữ nguyên.
-        User manager = User.builder().userId(9).role(Role.builder().roleName("HR").build())
-            .accountStatus("Active").department(department).build();
-        when(departments.findById(7)).thenReturn(Optional.of(department));
-        when(users.findById(9)).thenReturn(Optional.of(manager));
-
-        // When: Gọi service với dữ liệu đã chuẩn bị.
-        service.update(7, new DepartmentRequest("New Department", 9));
-
-        // Then: Kiểm tra dữ liệu thực tế và số lần gọi dependency.
-        assertEquals(manager, department.getManager());
-        assertEquals("New Department", department.getDepartmentName());
-        assertEquals("HR", manager.getRole().getRoleName());
-        verify(departments, times(1)).saveAndFlush(department);
-        verify(users, times(0)).save(any(User.class));
-    }
-
-    @Test
-    @DisplayName("DEPARTMENT-UNIT-10 | Manager role Hiring Manager Active và cùng phòng ban: được gán, role giữ nguyên")
-    void update_activeHMInSameDepartment_assignsManager() {
-        // Given: Manager role Hiring Manager Active và cùng phòng ban: được gán, role giữ nguyên.
-        User manager = User.builder().userId(9).role(Role.builder().roleName("Hiring Manager").build())
-            .accountStatus("Active").department(department).build();
-        when(departments.findById(7)).thenReturn(Optional.of(department));
+        when(departments.findForUpdate(7)).thenReturn(Optional.of(department));
         when(users.findById(9)).thenReturn(Optional.of(manager));
 
         // When: Gọi service với dữ liệu đã chuẩn bị.
@@ -199,12 +169,12 @@ class DepartmentCoverageTests {
     }
 
     @Test
-    @DisplayName("DEPARTMENT-UNIT-11 | Manager role Director Active và cùng phòng ban: được gán, role giữ nguyên")
-    void update_activeDirectorInSameDepartment_assignsManager() {
-        // Given: Manager role Director Active và cùng phòng ban: được gán, role giữ nguyên.
-        User manager = User.builder().userId(9).role(Role.builder().roleName("Director").build())
+    @DisplayName("DEPARTMENT-UNIT-09 | HR được bổ nhiệm trưởng phòng chuyển thành Hiring Manager")
+    void update_activeHRInSameDepartment_assignsManager() {
+        // Given: HR Active và cùng phòng được bổ nhiệm trưởng phòng.
+        User manager = User.builder().userId(9).role(Role.builder().roleName("HR").build())
             .accountStatus("Active").department(department).build();
-        when(departments.findById(7)).thenReturn(Optional.of(department));
+        when(departments.findForUpdate(7)).thenReturn(Optional.of(department));
         when(users.findById(9)).thenReturn(Optional.of(manager));
 
         // When: Gọi service với dữ liệu đã chuẩn bị.
@@ -213,18 +183,18 @@ class DepartmentCoverageTests {
         // Then: Kiểm tra dữ liệu thực tế và số lần gọi dependency.
         assertEquals(manager, department.getManager());
         assertEquals("New Department", department.getDepartmentName());
-        assertEquals("Director", manager.getRole().getRoleName());
+        assertEquals("Hiring Manager", manager.getRole().getRoleName());
         verify(departments, times(1)).saveAndFlush(department);
         verify(users, times(0)).save(any(User.class));
     }
 
     @Test
-    @DisplayName("DEPARTMENT-UNIT-12 | Manager role Interviewer Active và cùng phòng ban: được gán, role giữ nguyên")
-    void update_activeInterviewerInSameDepartment_assignsManager() {
-        // Given: Manager role Interviewer Active và cùng phòng ban: được gán, role giữ nguyên.
-        User manager = User.builder().userId(9).role(Role.builder().roleName("Interviewer").build())
+    @DisplayName("DEPARTMENT-UNIT-10 | Manager role Hiring Manager Active và cùng phòng ban: được gán, role giữ nguyên")
+    void update_activeHMInSameDepartment_assignsManager() {
+        // Given: Manager role Hiring Manager Active và cùng phòng ban: được gán, role giữ nguyên.
+        User manager = User.builder().userId(9).role(Role.builder().roleName("Hiring Manager").build())
             .accountStatus("Active").department(department).build();
-        when(departments.findById(7)).thenReturn(Optional.of(department));
+        when(departments.findForUpdate(7)).thenReturn(Optional.of(department));
         when(users.findById(9)).thenReturn(Optional.of(manager));
 
         // When: Gọi service với dữ liệu đã chuẩn bị.
@@ -233,7 +203,47 @@ class DepartmentCoverageTests {
         // Then: Kiểm tra dữ liệu thực tế và số lần gọi dependency.
         assertEquals(manager, department.getManager());
         assertEquals("New Department", department.getDepartmentName());
-        assertEquals("Interviewer", manager.getRole().getRoleName());
+        assertEquals("Hiring Manager", manager.getRole().getRoleName());
+        verify(departments, times(1)).saveAndFlush(department);
+        verify(users, times(0)).save(any(User.class));
+    }
+
+    @Test
+    @DisplayName("DEPARTMENT-UNIT-11 | Director được bổ nhiệm trưởng phòng chuyển thành Hiring Manager")
+    void update_activeDirectorInSameDepartment_assignsManager() {
+        // Given: Director Active và cùng phòng được bổ nhiệm trưởng phòng.
+        User manager = User.builder().userId(9).role(Role.builder().roleName("Director").build())
+            .accountStatus("Active").department(department).build();
+        when(departments.findForUpdate(7)).thenReturn(Optional.of(department));
+        when(users.findById(9)).thenReturn(Optional.of(manager));
+
+        // When: Gọi service với dữ liệu đã chuẩn bị.
+        service.update(7, new DepartmentRequest("New Department", 9));
+
+        // Then: Kiểm tra dữ liệu thực tế và số lần gọi dependency.
+        assertEquals(manager, department.getManager());
+        assertEquals("New Department", department.getDepartmentName());
+        assertEquals("Hiring Manager", manager.getRole().getRoleName());
+        verify(departments, times(1)).saveAndFlush(department);
+        verify(users, times(0)).save(any(User.class));
+    }
+
+    @Test
+    @DisplayName("DEPARTMENT-UNIT-12 | Interviewer được bổ nhiệm trưởng phòng chuyển thành Hiring Manager")
+    void update_activeInterviewerInSameDepartment_assignsManager() {
+        // Given: Interviewer Active và cùng phòng được bổ nhiệm trưởng phòng.
+        User manager = User.builder().userId(9).role(Role.builder().roleName("Interviewer").build())
+            .accountStatus("Active").department(department).build();
+        when(departments.findForUpdate(7)).thenReturn(Optional.of(department));
+        when(users.findById(9)).thenReturn(Optional.of(manager));
+
+        // When: Gọi service với dữ liệu đã chuẩn bị.
+        service.update(7, new DepartmentRequest("New Department", 9));
+
+        // Then: Kiểm tra dữ liệu thực tế và số lần gọi dependency.
+        assertEquals(manager, department.getManager());
+        assertEquals("New Department", department.getDepartmentName());
+        assertEquals("Hiring Manager", manager.getRole().getRoleName());
         verify(departments, times(1)).saveAndFlush(department);
         verify(users, times(0)).save(any(User.class));
     }
@@ -243,7 +253,7 @@ class DepartmentCoverageTests {
     void update_managerWithoutDepartment_rejectsBeforeMutation() {
         // Given: Manager không thuộc phòng ban nào: từ chối, không đổi tên hoặc lưu.
         User manager = User.builder().userId(9).role(Role.builder().roleName("HR").build()).accountStatus("Active").build();
-        when(departments.findById(7)).thenReturn(Optional.of(department));
+        when(departments.findForUpdate(7)).thenReturn(Optional.of(department));
         when(users.findById(9)).thenReturn(Optional.of(manager));
 
         // When: Gọi service với dữ liệu đã chuẩn bị.
@@ -261,7 +271,7 @@ class DepartmentCoverageTests {
     @DisplayName("DEPARTMENT-UNIT-14 | Tên trùng phòng ban khác: không sửa dữ liệu hiện tại")
     void update_duplicateName_rejectsBeforeMutation() {
         // Given: Tên trùng phòng ban khác: không sửa dữ liệu hiện tại.
-        when(departments.findById(7)).thenReturn(Optional.of(department));
+        when(departments.findForUpdate(7)).thenReturn(Optional.of(department));
         when(departments.existsByDepartmentNameIgnoreCaseAndDepartmentIdNot("Taken", 7)).thenReturn(true);
 
         // When: Gọi service với dữ liệu đã chuẩn bị.
@@ -309,7 +319,7 @@ class DepartmentCoverageTests {
     void update_sqlDuplicate_preservesDepartmentIdAndSubmittedForm() {
         // Given: Phòng 7 tồn tại; repository mock báo duplicate khi lưu form sửa phòng.
         DepartmentRequest input = new DepartmentRequest("New name", null);
-        when(departments.findById(7)).thenReturn(Optional.of(department));
+        when(departments.findForUpdate(7)).thenReturn(Optional.of(department));
         when(departments.saveAndFlush(department)).thenThrow(
                 new DataIntegrityViolationException("write", new SQLException("duplicate", "23000", 2627)));
 
@@ -372,23 +382,22 @@ class DepartmentCoverageTests {
     }
 
     @Test
-    @DisplayName("DEPARTMENT-UNIT-20 | Ghi nhận hiện trạng: đổi manager không đồng bộ role cũ và mới")
-    void update_replaceManager_currentBehaviorLeavesBothRolesUnchanged() {
+    @DisplayName("DEPARTMENT-UNIT-20 | Đổi manager đồng bộ người mới thành HM và người cũ thành Interviewer")
+    void update_replaceManager_transfersBothRoles() {
         // Given: Manager cũ có role HM, người được thay thế đang là Interviewer trong cùng phòng.
         Role hmRole = Role.builder().roleName("Hiring Manager").build();
         Role interviewerRole = Role.builder().roleName("Interviewer").build();
         User oldManager = User.builder().userId(1).role(hmRole).department(department).accountStatus("Active").build();
         User newManager = User.builder().userId(2).role(interviewerRole).department(department).accountStatus("Active").build();
         department.setManager(oldManager);
-        when(departments.findById(7)).thenReturn(Optional.of(department));
+        when(departments.findForUpdate(7)).thenReturn(Optional.of(department));
         when(users.findById(2)).thenReturn(Optional.of(newManager));
         // When: Đổi người quản lý phòng sang user 2 qua service hiện tại.
         service.update(7, new DepartmentRequest("Engineering", 2));
-        // Then: Đây là hiện trạng cần báo cáo: chỉ đổi manager; hai role vẫn giữ nguyên.
-        // Ca này mô tả source hiện tại, không khẳng định hành vi đồng bộ role đã đúng nghiệp vụ.
+        // Then: Cùng một lần cập nhật phải chuyển cả phân công và vai trò đăng nhập.
         assertEquals(newManager, department.getManager());
-        assertEquals("Hiring Manager", oldManager.getRole().getRoleName());
-        assertEquals("Interviewer", newManager.getRole().getRoleName());
+        assertEquals("Interviewer", oldManager.getRole().getRoleName());
+        assertEquals("Hiring Manager", newManager.getRole().getRoleName());
         verify(departments, times(1)).saveAndFlush(department);
     }
 }

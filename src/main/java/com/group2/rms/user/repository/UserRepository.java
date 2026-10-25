@@ -28,6 +28,9 @@ public interface UserRepository extends JpaRepository<User, Integer>, JpaSpecifi
 
     List<User> findAllByDepartmentDepartmentIdAndAccountStatusOrderByFullNameAscUserIdAsc(Integer departmentId, String accountStatus);
 
+    boolean existsByDepartmentDepartmentIdAndRoleRoleNameAndAccountStatusAndUserIdNot(
+            Integer departmentId, String roleName, String accountStatus, Integer userId);
+
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("select u from User u where u.userId = :id")
     Optional<User> findByIdForUpdate(@Param("id") Integer id);

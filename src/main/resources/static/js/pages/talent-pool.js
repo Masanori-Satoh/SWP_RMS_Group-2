@@ -16,9 +16,13 @@ document.querySelectorAll('[data-pool-cv]').forEach(select => {
     const confirm = byId('tp-confirm');
     const notesDialog = byId('tp-notes');
     const feedback = byId('tp-feedback');
+    
     let storage;
+    // get session storage
     try { storage = window.sessionStorage; } catch { storage = null; }
+    //get scope
     const scope = page.dataset.poolScope;
+    //check if hr
     const hrMode = page.dataset.poolFlow === 'hr';
     const key = scope && page.dataset.poolJob
         ? `rms:talent-selection:v1:${encodeURIComponent(scope)}:${page.dataset.poolJob}` : null;
@@ -70,8 +74,10 @@ document.querySelectorAll('[data-pool-cv]').forEach(select => {
             all.checked = eligible.length > 0 && checked === eligible.length;
             all.indeterminate = checked > 0 && checked < eligible.length;
         }
+        //selection bar
         byId('tp-selection-bar').hidden = state.size === 0;
         byId('tp-selection-slot').hidden = state.size === 0;
+        // total candidate choose
         byId('tp-selection-count').textContent = `Đã chọn ${state.size} ứng viên`;
         byId('tp-review-selection').textContent = hrMode ? `Gửi ${state.size} gợi ý cho HM` : `Thêm ${state.size} ứng viên`;
         if (!state.persistenceAvailable && state.size > 0) {
@@ -121,10 +127,14 @@ document.querySelectorAll('[data-pool-cv]').forEach(select => {
     }
 
     function ajaxHeaders(jsonBody = false) {
+        // response is json 
         const headers = {Accept: 'application/json'};
+        // get csrf token
         const csrf = document.querySelector('meta[name="_csrf"]')?.content;
+        // check if csrf is found
         if (csrf) headers['X-CSRF-TOKEN'] = csrf;
-        if (jsonBody) headers['Content-Type'] = 'application/json';
+        // check if body is json
+        if (jsonBody) headers['Content-Type'] = 'application/json'; 
         return headers;
     }
 
@@ -291,12 +301,15 @@ document.querySelectorAll('[data-pool-cv]').forEach(select => {
     }
 
     async function requestReview() {
+        //check if is reviewing
         if (saving) return;
         readyToSubmit = false;
         reviewRequest?.abort();
         const controller = new AbortController();
         reviewRequest = controller;
+        //set timeout to cancel request
         const timer = setTimeout(() => controller.abort(), 20000);
+        //lock add button 
         byId('tp-confirm-submit').disabled = true;
         byId('tp-recheck').disabled = true;
         byId('tp-recheck').hidden = true;
@@ -310,6 +323,7 @@ document.querySelectorAll('[data-pool-cv]').forEach(select => {
             if (controller.signal.aborted || !confirm.open) return;
             const results = new Map(result.items.map(item => [item.sourceApplicationId, item]));
             renderReview(results);
+            //check dupplicate cv
             const hasErrors = state.values().some(item => {
                 const checked = results.get(item.sourceId);
                 return !checked || checked.error || checked.candidateId !== item.candidateId;
@@ -324,6 +338,7 @@ document.querySelectorAll('[data-pool-cv]').forEach(select => {
             byId('tp-confirm-submit').disabled = !readyToSubmit;
             byId('tp-recheck').hidden = !hasErrors;
         } catch (error) {
+            //check if form is open and request is not aborted
             if (reviewRequest !== controller || !confirm.open) return;
             reviewStatus(controller.signal.aborted ? 'Kiểm tra quá lâu. Hãy thử lại.' : error.message, 'warning');
             byId('tp-recheck').hidden = false;
@@ -334,6 +349,7 @@ document.querySelectorAll('[data-pool-cv]').forEach(select => {
     }
     byId('tp-review-selection').addEventListener('click', () => {
         if (!state.size) return;
+        //show pop up confirm
         confirm.showModal();
         requestReview();
     });
@@ -353,6 +369,7 @@ document.querySelectorAll('[data-pool-cv]').forEach(select => {
         const timer = setTimeout(() => controller.abort(), 30000);
         try {
             const result = await json(await fetch(form.action, {method: 'POST',
+                //get all candidate potential selection
                 body: JSON.stringify({sourceApplicationIds: state.values().map(item => item.sourceId)}),
                 headers: ajaxHeaders(true), signal: controller.signal}));
             state.clear();
@@ -377,6 +394,7 @@ document.querySelectorAll('[data-pool-cv]').forEach(select => {
             saving = false;
             clearTimeout(timer);
             byId('tp-recheck').disabled = false;
+            // number in button
             byId('tp-confirm-submit').textContent = `Xác nhận thêm ${state.size} ứng viên`;
         }
     });

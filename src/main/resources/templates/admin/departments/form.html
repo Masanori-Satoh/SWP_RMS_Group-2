@@ -36,7 +36,7 @@
                                         th:text="${department.managerName + ' (không còn đủ điều kiện — hãy chọn lại)'}"></option>
                                 <option th:each="manager : ${managers}" th:value="${manager.id}" th:text="${manager.fullName + ' (' + manager.username + ')'}"></option>
                             </select>
-                            <small class="account-field-hint" id="department-manager-hint">Chọn tài khoản nội bộ đang hoạt động thuộc chính phòng ban này, hoặc để trống.</small>
+                            <small class="account-field-hint" id="department-manager-hint">Chọn tài khoản nội bộ đang hoạt động thuộc chính phòng ban này, hoặc để trống. Người được chọn nhận quyền trưởng phòng; trưởng phòng cũ chuyển sang vai trò người phỏng vấn.</small>
                             <span class="form-error" id="department-manager-error" th:if="${#fields.hasErrors('managerId')}" th:errors="*{managerId}"></span>
                         </div>
                         <div class="account-field-full" th:if="${departmentId == null}">
