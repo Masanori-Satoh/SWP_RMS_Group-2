@@ -364,12 +364,12 @@ body {
    Khung section
    ============================================================ */
 .lp-section {
-  padding: 84px 0;
+  padding: 60px 0;
 }
 
 .lp-heading {
   max-width: 680px;
-  margin: 0 auto 38px;
+  margin: 0 auto 32px;
   text-align: center;
 }
 
@@ -867,7 +867,7 @@ body {
    CTA: khung xanh đậm, chữ trái / ảnh phải có câu viết tay
    ============================================================ */
 .lp-cta {
-  padding: 0 0 72px;
+  padding: 0 0 56px;
   background: var(--surface);
 }
 
@@ -1210,10 +1210,10 @@ body {
     padding: 0 8px;
   }
   .lp-section {
-    padding: 58px 0;
+    padding: 44px 0;
   }
   .lp-heading {
-    margin-bottom: 26px;
+    margin-bottom: 22px;
   }
   .lp-jobs-all {
     position: static;
@@ -1240,7 +1240,7 @@ body {
     grid-template-columns: 1fr;
   }
   .lp-cta {
-    padding-bottom: 40px;
+    padding-bottom: 32px;
   }
   .lp-cta-copy {
     padding: 26px 22px;
