@@ -1,8 +1,9 @@
 package com.group2.rms.interview;
 
-import com.group2.rms.candidate.entity.Application;
-import com.group2.rms.candidate.entity.Candidate;
-import com.group2.rms.candidate.repository.ApplicationRepository;
+import com.group2.rms.candidate.domain.entity.Application;
+import com.group2.rms.candidate.domain.entity.Candidate;
+import com.group2.rms.candidate.domain.repository.ApplicationRepository;
+import com.group2.rms.candidate.talentpool.service.RecruitmentEmailService;
 import com.group2.rms.core.config.SecurityConfig;
 import com.group2.rms.core.security.DatabaseUserDetailsService;
 import com.group2.rms.interview.controller.InterviewSchedulingController;
@@ -44,7 +45,7 @@ class InterviewScheduleFormWebTests {
     @Autowired MockMvc mvc;
     @MockitoBean InterviewSchedulingService schedulingService;
     @MockitoBean com.group2.rms.interview.service.InterviewResultService resultService;
-    @MockitoBean com.group2.rms.candidate.service.RecruitmentEmailService recruitmentEmail;
+    @MockitoBean RecruitmentEmailService recruitmentEmail;
     @MockitoBean ApplicationRepository applications;
     @MockitoBean UserRepository users;
 

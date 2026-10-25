@@ -1,6 +1,6 @@
 package com.group2.rms.dashboard;
 
-import com.group2.rms.candidate.service.ApplicationStatusLabels;
+import com.group2.rms.candidate.domain.rule.ApplicationStatusLabels;
 import com.group2.rms.dashboard.DashboardMetricsRepository.DecisionRow;
 import com.group2.rms.dashboard.DashboardMetricsRepository.StatusCount;
 import com.group2.rms.dashboard.dto.DashboardChartResponse;

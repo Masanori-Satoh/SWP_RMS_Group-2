@@ -1,7 +1,10 @@
 package com.group2.rms.interview.controller;
 
-import com.group2.rms.candidate.entity.Application;
-import com.group2.rms.candidate.repository.ApplicationRepository;
+import com.group2.rms.candidate.domain.entity.Application;
+import com.group2.rms.candidate.domain.repository.ApplicationRepository;
+import com.group2.rms.candidate.talentpool.service.RecruitmentEmailService;
+import com.group2.rms.candidate.talentpool.exception.RecruitmentEmailException;
+import com.group2.rms.candidate.domain.rule.ApplicationStatusException;
 import com.group2.rms.core.security.RoleAuthorities;
 import com.group2.rms.interview.dto.InterviewScheduleRequest;
 import com.group2.rms.interview.dto.InterviewScheduleResponse;
@@ -45,7 +48,7 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 @Slf4j
 public class InterviewSchedulingController {
-    private final com.group2.rms.candidate.service.RecruitmentEmailService recruitmentEmail;
+    private final RecruitmentEmailService recruitmentEmail;
 
     private final InterviewSchedulingService interviewSchedulingService;
     private final com.group2.rms.interview.service.InterviewResultService interviewResultService;
@@ -182,12 +185,13 @@ public class InterviewSchedulingController {
             redirectAttributes.addFlashAttribute("successMessage", "Tạo lịch phỏng vấn thành công!");
             if (saved != null && saved.interviewStatus() == InterviewStatus.Scheduled) {
                 try { recruitmentEmail.sendInterview(saved.interviewId()); }
-                catch (com.group2.rms.candidate.exception.RecruitmentEmailException e) {
+                catch (RecruitmentEmailException e) {
                     redirectAttributes.addFlashAttribute("errorMessage", e.getMessage());
                 }
             }
             return "redirect:/interviews";
-        } catch (InterviewStatusException | IllegalArgumentException | com.group2.rms.candidate.exception.TalentPoolException ex) {
+        } catch (InterviewStatusException | IllegalArgumentException | ApplicationStatusException ex) {
+            // dunglt bổ sung: requireScheduleable ném ApplicationStatusException (trước là TalentPoolException)
             log.warn("Ngoại lệ nghiệp vụ khi tạo lịch phỏng vấn: {}", ex.getMessage());
             bindingResult.reject("businessError", ex.getMessage());
             prepareFormModel(model, false, null, currentUser);
