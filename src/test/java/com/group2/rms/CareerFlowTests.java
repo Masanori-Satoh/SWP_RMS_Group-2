@@ -77,9 +77,10 @@ class CareerFlowTests {
         @Test
         void publicJobBoardRendersPublishedJobsForGuests() throws Exception {
                 setupJobs();
+                // "/" là landing (3 tin mới nhất); tìm kiếm, lọc, phân trang ở /jobs
                 MvcResult home = mvc.perform(get("/")).andExpect(status().isOk())
-                                .andExpect(view().name("candidate/job-board"))
-                                .andExpect(content().string(containsString("Mộc Careers")))
+                                .andExpect(view().name("candidate/landing"))
+                                .andExpect(content().string(containsString("Mộc Tuyển dụng")))
                                 .andExpect(content().string(containsString("href=\"/jobs/41\"")))
                                 .andExpect(content().string(containsString("href=\"/jobs/42\"")))
                                 .andExpect(content().string(containsString("Senior Java Engineer")))
@@ -118,9 +119,14 @@ class CareerFlowTests {
         void emptyJobBoardShowsRecoveryState() throws Exception {
                 when(careers.getPublishedJobs(any(), any(), any(), any(Pageable.class))).thenReturn(Page.empty());
                 when(careers.getSmartSortedDepartments()).thenReturn(List.of());
+                when(careers.getLatestJobs(anyInt())).thenReturn(List.of());
+                // "Xóa bộ lọc" chỉ hiện khi đang lọc
+                mvc.perform(get("/jobs").param("keyword", "khong-co-tin")).andExpect(status().isOk())
+                                .andExpect(content().string(containsString("Không tìm thấy vị trí phù hợp")))
+                                .andExpect(content().string(containsString("Xóa bộ lọc")))
+                                .andExpect(content().string(containsString("Xem tất cả vị trí")));
                 mvc.perform(get("/")).andExpect(status().isOk())
-                                .andExpect(content().string(containsString("Không tìm thấy kết quả")))
-                                .andExpect(content().string(containsString("Xóa bộ lọc")));
+                                .andExpect(content().string(containsString("Hiện chưa có vị trí nào đang tuyển")));
         }
 
         // ------------------------------------------------------------------ job detail
@@ -432,6 +438,7 @@ class CareerFlowTests {
                                 "Full-time", "VND 22–30 million", FUTURE_DEADLINE, POSTED);
                 when(careers.getPublishedJobs(any(), any(), any(), any(Pageable.class)))
                                 .thenReturn(new PageImpl<>(List.of(job, second), PageRequest.of(0, 9), 2));
+                when(careers.getLatestJobs(anyInt())).thenReturn(List.of(job, second));
                 when(careers.getSmartSortedDepartments()).thenReturn(List.of(
                                 new DepartmentFilterResponse(1, "Engineering"),
                                 new DepartmentFilterResponse(2, "Design"),
