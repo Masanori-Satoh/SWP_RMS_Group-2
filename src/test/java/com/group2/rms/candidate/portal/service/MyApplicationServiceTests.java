@@ -2,9 +2,9 @@ package com.group2.rms.candidate.portal.service;
 
 import com.group2.rms.candidate.portal.dto.MyApplicationListResponse;
 import com.group2.rms.candidate.portal.dto.MyApplicationResponse;
-import com.group2.rms.candidate.entity.Application;
+import com.group2.rms.candidate.domain.entity.Application;
 import com.group2.rms.candidate.portal.exception.ApplicationWithdrawalException;
-import com.group2.rms.candidate.repository.ApplicationRepository;
+import com.group2.rms.candidate.domain.repository.ApplicationRepository;
 import com.group2.rms.core.exception.ResourceNotFoundException;
 import com.group2.rms.core.security.CurrentUserService;
 import com.group2.rms.core.web.TimelineItem;

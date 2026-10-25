@@ -2,9 +2,9 @@ package com.group2.rms.candidate.portal.service;
 
 import com.group2.rms.candidate.portal.dto.CandidateDetailsRequest;
 import com.group2.rms.candidate.portal.dto.CandidateProfileResponse;
-import com.group2.rms.candidate.entity.Candidate;
+import com.group2.rms.candidate.domain.entity.Candidate;
 import com.group2.rms.candidate.portal.exception.CandidateProfileException;
-import com.group2.rms.candidate.repository.CandidateRepository;
+import com.group2.rms.candidate.domain.repository.CandidateRepository;
 import com.group2.rms.core.exception.ResourceNotFoundException;
 import com.group2.rms.user.dto.UpdateProfileRequest;
 import com.group2.rms.user.service.UserProfileService;

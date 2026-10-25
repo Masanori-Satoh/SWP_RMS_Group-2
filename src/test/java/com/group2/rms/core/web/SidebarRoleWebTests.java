@@ -1,14 +1,15 @@
 package com.group2.rms.core.web;
 
-import com.group2.rms.candidate.controller.ApplicationPipelineController;
+import com.group2.rms.candidate.pipeline.controller.ApplicationPipelineController;
 import com.group2.rms.candidate.portal.controller.MyApplicationController;
-import com.group2.rms.candidate.dto.ApplicationListResponse;
-import com.group2.rms.candidate.dto.ApplicationSearch;
+import com.group2.rms.candidate.pipeline.dto.ApplicationListResponse;
+import com.group2.rms.candidate.pipeline.dto.ApplicationSearch;
 import com.group2.rms.candidate.portal.dto.MyApplicationListResponse;
-import com.group2.rms.candidate.service.ApplicationPipelineService;
-import com.group2.rms.candidate.service.ApplicationReviewService;
-import com.group2.rms.candidate.service.ApplicationStage;
+import com.group2.rms.candidate.pipeline.service.ApplicationPipelineService;
+import com.group2.rms.candidate.pipeline.service.ApplicationReviewService;
+import com.group2.rms.candidate.domain.rule.ApplicationStage;
 import com.group2.rms.candidate.portal.service.MyApplicationService;
+import com.group2.rms.candidate.talentpool.service.TalentPoolService;
 import com.group2.rms.core.config.SecurityConfig;
 import com.group2.rms.core.security.CurrentUserService;
 import com.group2.rms.core.security.DatabaseUserDetailsService;
@@ -66,7 +67,7 @@ class SidebarRoleWebTests {
     @MockitoBean NotificationService notifications;
     @MockitoBean ApplicationPipelineService pipeline;
     @MockitoBean ApplicationReviewService reviewService;
-    @MockitoBean com.group2.rms.candidate.service.TalentPoolService talentPool;
+    @MockitoBean TalentPoolService talentPool;
 
     /** Ứng viên không có sidebar mà dùng topbar ứng viên (dunglt chốt 2026-10-20; menu topbar để trống), không lộ link của HR. */
     @Test

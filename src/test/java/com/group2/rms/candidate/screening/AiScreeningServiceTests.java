@@ -1,9 +1,12 @@
 package com.group2.rms.candidate.screening;
 
-import com.group2.rms.candidate.entity.AIScreeningResult;
-import com.group2.rms.candidate.entity.Application;
-import com.group2.rms.candidate.repository.AIScreeningResultRepository;
-import com.group2.rms.candidate.repository.ApplicationRepository;
+import com.group2.rms.candidate.domain.entity.AIScreeningResult;
+import com.group2.rms.candidate.domain.entity.Application;
+import com.group2.rms.candidate.domain.repository.AIScreeningResultRepository;
+import com.group2.rms.candidate.domain.repository.ApplicationRepository;
+import com.group2.rms.candidate.infra.ai.AiScreeningClient;
+import com.group2.rms.candidate.infra.ai.AiScreeningInput;
+import com.group2.rms.candidate.infra.ai.AiScreeningOutcome;
 import com.group2.rms.core.exception.ResourceNotFoundException;
 import com.group2.rms.jobposting.entity.JobPosting;
 import com.group2.rms.requisition.entity.JobRequisition;

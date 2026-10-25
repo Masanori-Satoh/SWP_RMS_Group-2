@@ -1,11 +1,11 @@
 package com.group2.rms.candidate.submission;
 
-import com.group2.rms.candidate.entity.Application;
-import com.group2.rms.candidate.entity.Candidate;
-import com.group2.rms.candidate.repository.ApplicationRepository;
-import com.group2.rms.candidate.repository.CandidateRepository;
-import com.group2.rms.candidate.cv.CvStorage;
-import com.group2.rms.candidate.cv.StoredFile;
+import com.group2.rms.candidate.domain.entity.Application;
+import com.group2.rms.candidate.domain.entity.Candidate;
+import com.group2.rms.candidate.domain.repository.ApplicationRepository;
+import com.group2.rms.candidate.domain.repository.CandidateRepository;
+import com.group2.rms.candidate.infra.cv.CvStorage;
+import com.group2.rms.candidate.infra.cv.StoredFile;
 import com.group2.rms.core.exception.ResourceNotFoundException;
 import com.group2.rms.jobposting.entity.JobPosting;
 import com.group2.rms.jobposting.repository.JobPostingRepository;

@@ -1,5 +1,6 @@
 package com.group2.rms.candidate.screening;
 
+import com.group2.rms.candidate.infra.ai.AiScreeningOutcome;
 import com.group2.rms.candidate.submission.ApplicationSubmittedEvent;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;

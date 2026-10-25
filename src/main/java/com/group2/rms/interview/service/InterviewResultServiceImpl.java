@@ -1,6 +1,6 @@
 package com.group2.rms.interview.service;
 
-import com.group2.rms.candidate.entity.Application;
+import com.group2.rms.candidate.domain.entity.Application;
 import com.group2.rms.core.exception.ResourceNotFoundException;
 import com.group2.rms.interview.dto.InterviewCardState;
 import com.group2.rms.interview.dto.InterviewEvaluationResponse;

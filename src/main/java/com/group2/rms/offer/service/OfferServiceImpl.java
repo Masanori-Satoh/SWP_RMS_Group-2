@@ -1,8 +1,7 @@
 package com.group2.rms.offer.service;
 
-import com.group2.rms.candidate.entity.Application;
-import com.group2.rms.candidate.repository.ApplicationRepository;
-import com.group2.rms.core.exception.BaseBusinessException;
+import com.group2.rms.candidate.domain.entity.Application;
+import com.group2.rms.candidate.domain.repository.ApplicationRepository;
 import com.group2.rms.core.exception.ResourceNotFoundException;
 import com.group2.rms.interview.entity.InterviewFinalResult;
 import com.group2.rms.offer.dto.CreateOfferRequest;
@@ -21,7 +20,7 @@ import com.group2.rms.user.repository.UserRepository;
 import com.group2.rms.notification.OfferMailSender;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import com.group2.rms.candidate.entity.Candidate;
+import com.group2.rms.candidate.domain.entity.Candidate;
 import jakarta.persistence.criteria.Join;
 import jakarta.persistence.criteria.JoinType;
 import jakarta.persistence.criteria.Predicate;

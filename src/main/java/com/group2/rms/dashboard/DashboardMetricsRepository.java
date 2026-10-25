@@ -4,9 +4,9 @@ import org.springframework.stereotype.Repository;
 
 import com.group2.rms.core.security.RoleAuthorities;
 import com.group2.rms.interview.entity.InterviewFormat;
-import static com.group2.rms.candidate.repository.ApplicationRepository.FORMAL_FILTER;
-import static com.group2.rms.candidate.repository.ApplicationRepository.FORMAL_SCOPE_FILTER;
-import static com.group2.rms.candidate.repository.ApplicationRepository.PIPELINE_JOINS;
+import static com.group2.rms.candidate.domain.repository.ApplicationRepository.FORMAL_FILTER;
+import static com.group2.rms.candidate.domain.repository.ApplicationRepository.FORMAL_SCOPE_FILTER;
+import static com.group2.rms.candidate.domain.repository.ApplicationRepository.PIPELINE_JOINS;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;

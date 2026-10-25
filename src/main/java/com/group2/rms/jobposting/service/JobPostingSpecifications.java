@@ -1,6 +1,6 @@
 package com.group2.rms.jobposting.service;
 
-import com.group2.rms.candidate.entity.Application;
+import com.group2.rms.candidate.domain.entity.Application;
 import com.group2.rms.jobposting.entity.JobPosting;
 import com.group2.rms.core.util.ListFilters;
 import com.group2.rms.user.entity.User;
