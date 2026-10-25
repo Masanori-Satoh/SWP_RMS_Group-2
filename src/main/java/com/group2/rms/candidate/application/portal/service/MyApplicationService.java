@@ -13,7 +13,7 @@ import com.group2.rms.candidate.application.portal.service.MyApplicationJourney.
 import com.group2.rms.candidate.application.portal.service.MyApplicationJourney.Interview;
 import com.group2.rms.candidate.application.portal.service.MyApplicationJourney.Mark;
 import com.group2.rms.candidate.application.portal.service.MyApplicationJourney.Offer;
-import com.group2.rms.candidate.application.pipeline.service.ApplicationReviewService;
+import com.group2.rms.candidate.domain.rule.ApplicationStatusService;
 import com.group2.rms.core.exception.ResourceNotFoundException;
 import com.group2.rms.core.security.CurrentUserService;
 import com.group2.rms.user.entity.User;
@@ -124,7 +124,7 @@ public class MyApplicationService {
             throw new ApplicationWithdrawalException(
                     "Hồ sơ đã qua vòng sơ tuyển nên không thể rút. Vui lòng liên hệ bộ phận tuyển dụng.");
         }
-        if (applications.transition(applicationId, WITHDRAWABLE_STATUSES, ApplicationReviewService.REJECTED) == 0) {
+        if (applications.transition(applicationId, WITHDRAWABLE_STATUSES, ApplicationStatusService.REJECTED) == 0) {
             throw new ApplicationWithdrawalException("Hồ sơ vừa được cập nhật. Vui lòng tải lại trang.");
         }
         applications.recordWithdrawal(user.getUserId(), applicationId, status);

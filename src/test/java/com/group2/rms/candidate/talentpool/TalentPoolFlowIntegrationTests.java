@@ -1,5 +1,6 @@
 package com.group2.rms.candidate.talentpool;
 
+import com.group2.rms.candidate.domain.rule.ApplicationStatusException;
 import com.group2.rms.candidate.domain.rule.ApplicationStatusService;
 import com.group2.rms.candidate.infra.cv.CvStorage;
 import com.group2.rms.candidate.domain.repository.ApplicationRepository;
@@ -190,7 +191,7 @@ class TalentPoolFlowIntegrationTests {
         assertEquals(appCount+1,applications.count()); assertEquals(formalCount,metrics.applications());
         assertEquals("HM_Suggested",applications.findById(id).orElseThrow().getApplicationStatus());
         assertTrue(poolApplications.findSuggestionsByJobPostingId(jobId).stream().anyMatch(a -> a.getApplicationId().equals(id)));
-        assertThrows(TalentPoolException.class,()->statusService.requireScheduleable(id));
+        assertThrows(ApplicationStatusException.class,()->statusService.requireScheduleable(id));
         mvc.perform(post("/talent-pool/recommendations/"+id+"/decision").with(user(f.hm().getUsername()).roles("HIRING_MANAGER"))
                         .with(csrf()).param("decision","Fail")).andExpect(flash().attributeExists("errorMessage"));
         mvc.perform(post("/talent-pool/applications/"+id+"/confirm").with(user(f.hr().getUsername()).roles("HR")).with(csrf()).param("consent","true"))
@@ -266,7 +267,7 @@ class TalentPoolFlowIntegrationTests {
         assertFalse(poolApplications.findSuggestionsByJobPostingId(f.target().getJobPostingId()).stream().anyMatch(a -> a.getApplicationId().equals(id)));
         mvc.perform(get("/applications/" + id).with(user(f.hr().getUsername()).roles("HR")))
                 .andExpect(status().isOk()).andExpect(content().string(containsString("Đề xuất đã kết thúc")));
-        assertThrows(TalentPoolException.class, () -> statusService.requireScheduleable(id));
+        assertThrows(ApplicationStatusException.class, () -> statusService.requireScheduleable(id));
     }
 
     @ParameterizedTest
@@ -319,7 +320,7 @@ class TalentPoolFlowIntegrationTests {
                     .andExpect(status().isOk()).andExpect(content().string(containsString("Lên lịch phỏng vấn")));
         } else {
             assertEquals(1,events.stream(ApplicationSubmittedEvent.class).filter(e->e.applicationId().equals(id)).count());
-            assertThrows(TalentPoolException.class,()->statusService.requireScheduleable(id));
+            assertThrows(ApplicationStatusException.class,()->statusService.requireScheduleable(id));
         }
         // A second upload cannot create another application or replace the confirmed CV.
         mvc.perform(multipart("/jobs/"+jobId+"/apply").file(file)

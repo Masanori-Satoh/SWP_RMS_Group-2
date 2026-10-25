@@ -1,6 +1,4 @@
-package com.group2.rms.candidate.application.pipeline.service;
-
-import com.group2.rms.candidate.domain.rule.ApplicationAccess;
+package com.group2.rms.candidate.domain.rule;
 
 /**
  * Phạm vi đơn ứng tuyển một người được xem, dùng làm điều kiện cho query danh sách.

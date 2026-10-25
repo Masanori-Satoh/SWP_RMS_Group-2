@@ -8,7 +8,7 @@ import com.group2.rms.candidate.domain.repository.ApplicationRepository;
 import com.group2.rms.candidate.domain.repository.ApplicationReviewRepository;
 import com.group2.rms.candidate.domain.rule.ApplicationProgressFacts;
 import com.group2.rms.candidate.domain.rule.ApplicationProgressResolver;
-import com.group2.rms.candidate.application.pipeline.service.ApplicationScope;
+import com.group2.rms.candidate.domain.rule.ApplicationScope;
 import com.group2.rms.user.entity.User;
 import com.group2.rms.user.repository.UserRepository;
 import jakarta.persistence.EntityManager;

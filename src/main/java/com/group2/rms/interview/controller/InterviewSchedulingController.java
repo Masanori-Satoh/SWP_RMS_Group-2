@@ -4,7 +4,7 @@ import com.group2.rms.candidate.domain.entity.Application;
 import com.group2.rms.candidate.domain.repository.ApplicationRepository;
 import com.group2.rms.candidate.talentpool.service.RecruitmentEmailService;
 import com.group2.rms.candidate.talentpool.exception.RecruitmentEmailException;
-import com.group2.rms.candidate.talentpool.exception.TalentPoolException;
+import com.group2.rms.candidate.domain.rule.ApplicationStatusException;
 import com.group2.rms.core.security.RoleAuthorities;
 import com.group2.rms.interview.dto.InterviewScheduleRequest;
 import com.group2.rms.interview.dto.InterviewScheduleResponse;
@@ -190,7 +190,8 @@ public class InterviewSchedulingController {
                 }
             }
             return "redirect:/interviews";
-        } catch (InterviewStatusException | IllegalArgumentException | TalentPoolException ex) {
+        } catch (InterviewStatusException | IllegalArgumentException | ApplicationStatusException ex) {
+            // dunglt bổ sung: requireScheduleable ném ApplicationStatusException (trước là TalentPoolException)
             log.warn("Ngoại lệ nghiệp vụ khi tạo lịch phỏng vấn: {}", ex.getMessage());
             bindingResult.reject("businessError", ex.getMessage());
             prepareFormModel(model, false, null, currentUser);

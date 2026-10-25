@@ -2,6 +2,7 @@ package com.group2.rms.candidate.application.pipeline.service;
 
 import com.group2.rms.candidate.domain.rule.ApplicationAccess;
 import com.group2.rms.candidate.domain.rule.ApplicationProgressStep;
+import com.group2.rms.candidate.domain.rule.ApplicationScope;
 import com.group2.rms.candidate.domain.rule.ApplicationStage;
 import com.group2.rms.candidate.infra.cv.ApplicationCv;
 import com.group2.rms.candidate.infra.cv.CvStorage;

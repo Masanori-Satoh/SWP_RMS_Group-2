@@ -1,7 +1,5 @@
 package com.group2.rms.candidate.domain.rule;
 
-import com.group2.rms.candidate.application.pipeline.service.ApplicationReviewService;
-import com.group2.rms.candidate.talentpool.exception.TalentPoolException;
 import com.group2.rms.candidate.domain.repository.ApplicationRepository;
 import com.group2.rms.core.exception.ResourceNotFoundException;
 import com.group2.rms.jobposting.repository.JobPostingRepository;
@@ -40,6 +38,8 @@ public class ApplicationStatusService {
     static final Set<String> IN_INTERVIEW = Set.of("HM_Passed", "Interviewing");
     static final Set<String> OFFERED = Set.of("Offered");
 
+    public static final String REJECTED = "Rejected";
+
     private final ApplicationRepository applications;
     private final JobPostingRepository jobs;
 
@@ -51,11 +51,11 @@ public class ApplicationStatusService {
         var job = jobs.findForUpdate(app.getJobPosting().getJobPostingId()).orElseThrow();
         // check if job posting is not published and application status is not valid
         if (!"Published".equals(job.getPostingStatus()) || !IN_INTERVIEW.contains(app.getApplicationStatus()))
-            throw new TalentPoolException("Hồ sơ chưa đủ điều kiện hoặc đợt tuyển đã đóng.");
+            throw new ApplicationStatusException("Hồ sơ chưa đủ điều kiện hoặc đợt tuyển đã đóng.");
         var rows = applications.findProgressFacts(List.of(id));
         //check if cv is not empty  and stage of CV is Interview
         if (!rows.isEmpty() && ApplicationProgressResolver.resolve(ApplicationProgressFacts.from(rows.getFirst()),LocalDateTime.now()).stage() != ApplicationStage.INTERVIEW)
-            throw new TalentPoolException("Hồ sơ đã chuyển sang vòng Offer hoặc đã kết thúc.");
+            throw new ApplicationStatusException("Hồ sơ đã chuyển sang vòng Offer hoặc đã kết thúc.");
     }
 
     /** HR xếp lịch phỏng vấn. */
@@ -72,13 +72,13 @@ public class ApplicationStatusService {
         if (passed) {
             move(applicationId, BEFORE_INTERVIEW, "Interviewing");
         } else {
-            move(applicationId, IN_INTERVIEW, ApplicationReviewService.REJECTED);
+            move(applicationId, IN_INTERVIEW, REJECTED);
         }
     }
 
     /** Ứng viên trả lời offer đã gửi: nhận thì {@code Hired}, từ chối thì {@code Rejected}. */
     public void onOfferAnswered(Integer applicationId, boolean accepted) {
-        move(applicationId, OFFERED, accepted ? "Hired" : ApplicationReviewService.REJECTED);
+        move(applicationId, OFFERED, accepted ? "Hired" : REJECTED);
     }
 
     private void move(Integer applicationId, Set<String> from, String to) {

@@ -10,6 +10,7 @@ import com.group2.rms.candidate.infra.ai.AiScreeningOutcome;
 import com.group2.rms.candidate.application.screening.AiScreeningService;
 import com.group2.rms.candidate.domain.rule.ApplicationAccess;
 import com.group2.rms.candidate.domain.rule.ApplicationStatusLabels;
+import com.group2.rms.candidate.domain.rule.ApplicationStatusService;
 import com.group2.rms.core.exception.ResourceNotFoundException;
 import com.group2.rms.user.entity.User;
 import lombok.RequiredArgsConstructor;
@@ -32,8 +33,6 @@ import java.util.Set;
 @Service
 @RequiredArgsConstructor
 public class ApplicationReviewService {
-
-    public static final String REJECTED = "Rejected";
 
     private final ApplicationRepository applications;
     private final ApplicationReviewRepository reviews;
@@ -68,7 +67,7 @@ public class ApplicationReviewService {
 
         String target = switch (decision) {
             case "Pass" -> hrStep ? "HR_Passed" : "HM_Passed";
-            case "Fail" -> REJECTED;
+            case "Fail" -> ApplicationStatusService.REJECTED;
             default -> null;
         };
         if (target != null) {
