@@ -9,7 +9,7 @@
 </head>
 <body>
 <main id="main" layout:fragment="content" class="page-content container dash-page adm-page ads-page adm-dashboard" tabindex="-1">
-    <div class="page-header ads-heading">
+    <div class="page-header ads-heading adm-dashboard-heading">
         <div><h1 class="page-title ads-title">Tổng quan hệ thống</h1><p class="page-subtitle" th:text="${dashboard.scope}"></p></div>
         <a class="btn btn--primary" th:href="@{/admin/accounts/new}">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
@@ -77,16 +77,12 @@
             <div class="adm-chart-heading"><h2 id="adm-roles-title" class="adm-panel-title">Tài khoản nội bộ theo vai trò</h2><p class="adm-help">Tất cả trạng thái · Chọn vai trò để mở danh sách đã lọc.</p></div>
             <div class="adm-chart-shell" hidden><canvas id="adm-role-chart" class="adm-chart-canvas" role="img" aria-labelledby="adm-roles-title" aria-describedby="adm-role-hint"></canvas></div>
             <p id="adm-role-hint" class="adm-help" data-chart-fallback>Đọc số liệu và mở danh sách bằng các liên kết bên dưới.</p>
-            <details class="adm-role-data" open>
-            <summary>Xem số liệu theo vai trò</summary>
-            <ul class="adm-role-links">
+            <ul class="adm-role-links" aria-label="Mở danh sách tài khoản theo vai trò">
                 <li th:each="role : ${dashboard.roleCounts}" th:with="roleLabel=${role.roleName == 'System Admin' ? 'Quản trị hệ thống' : (role.roleName == 'HR' ? 'Nhân sự' : (role.roleName == 'Hiring Manager' ? 'Trưởng phòng tuyển dụng' : (role.roleName == 'Director' ? 'Giám đốc' : (role.roleName == 'Interviewer' ? 'Người phỏng vấn' : role.roleName))))}"><a class="adm-data-link" th:href="@{/admin/accounts(roleId=${role.roleId},page=0)}" data-chart-point
                       th:attr="data-key=${role.roleId},data-label=${roleLabel},data-count=${role.count},aria-label=|${roleLabel}: ${role.count} tài khoản. Mở danh sách đã lọc|">
                     <span th:text="${roleLabel}"></span><strong th:text="${role.count}"></strong>
                 </a></li>
             </ul>
-            <p class="adm-help">Các vai trò có 0 tài khoản vẫn mở được danh sách.</p>
-            </details>
             <p class="adm-help" th:if="${#lists.isEmpty(dashboard.roleCounts)}">Chưa có vai trò nội bộ được cấu hình.</p>
         </section>
     </div>

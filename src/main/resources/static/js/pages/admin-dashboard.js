@@ -147,7 +147,8 @@
         try {
             createChart(panel.querySelector('canvas'), () => points, true);
             panel.querySelector('[data-chart-fallback]').hidden = true;
-            panel.querySelector('.adm-role-data').open = false;
+            // Canvas remains the visual view; keep the same links for keyboard/AT and failure fallback.
+            panel.querySelector('.adm-role-links').classList.add('adm-role-links--chart');
             panel.querySelector('canvas').setAttribute('aria-label',
                 points.map((point) => point.label + ' ' + point.count).join(', '));
         } catch (_error) {
