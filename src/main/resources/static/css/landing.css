@@ -1101,11 +1101,12 @@ body {
     grid-template-columns: 225px minmax(0, 1fr);
     gap: 28px;
   }
+  /* Chữ và ảnh chồng nhau ít lại để mô tả không đè lên ảnh */
   .lp-hero-copy {
-    width: 54%;
+    width: 50%;
   }
   .lp-hero-art {
-    width: 66%;
+    width: 60%;
   }
   .lp-job {
     padding: 22px 20px 18px;
@@ -1127,11 +1128,11 @@ body {
     min-height: 560px;
   }
   .lp-hero-copy {
-    width: 62%;
+    width: 58%;
   }
   .lp-hero-art {
-    width: 67%;
-    opacity: 0.68;
+    width: 55%;
+    opacity: 0.75;
   }
   .lp-jobs-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
