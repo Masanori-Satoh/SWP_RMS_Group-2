@@ -1963,33 +1963,7 @@ function submitDirectorApprove() {
         reverseButtons: true
     }).then((result) => {
         if (result.isConfirmed) {
-            const csrf = getCsrfInfo();
-            const headers = {
-                'Content-Type': 'application/json',
-                'Accept': 'application/json'
-            };
-            if (csrf.token) {
-                headers[csrf.header] = csrf.token;
-            }
-
-            fetch(`/offers/${currentDirectorOfferId}/approve`, {
-                method: 'POST',
-                headers: headers,
-                body: JSON.stringify({ comments: 'Phê duyệt trực tiếp' })
-            })
-                .then(res => res.json())
-                .then(data => {
-                    if (data.success) {
-                        Swal.fire({ title: 'Thành công', text: data.message, icon: 'success', timer: 1500, showConfirmButton: false })
-                            .then(() => window.location.reload());
-                    } else {
-                        Swal.fire('Lỗi', data.message || 'Có lỗi xảy ra.', 'error');
-                    }
-                })
-                .catch(err => {
-                    console.error(err);
-                    Swal.fire('Lỗi', 'Lỗi kết nối.', 'error');
-                });
+            executeDirectorDecisionApi(currentDirectorOfferId, `/offers/${currentDirectorOfferId}/approve`, 'Phê duyệt trực tiếp');
         }
     });
 }
@@ -2007,33 +1981,7 @@ function submitDirectorReject() {
     }
 
     showDirectorRejectConfirmModal(currentDirectorOfferId, () => {
-        const csrf = getCsrfInfo();
-        const headers = {
-            'Content-Type': 'application/json',
-            'Accept': 'application/json'
-        };
-        if (csrf.token) {
-            headers[csrf.header] = csrf.token;
-        }
-
-        fetch(`/offers/${currentDirectorOfferId}/reject`, {
-            method: 'POST',
-            headers: headers,
-            body: JSON.stringify({ comments: reason })
-        })
-            .then(res => res.json())
-            .then(data => {
-                if (data.success) {
-                    Swal.fire({ title: 'Thành công', text: data.message, icon: 'success', timer: 1500, showConfirmButton: false })
-                        .then(() => window.location.reload());
-                } else {
-                    Swal.fire('Lỗi', data.message || 'Có lỗi xảy ra.', 'error');
-                }
-            })
-            .catch(err => {
-                console.error(err);
-                Swal.fire('Lỗi', 'Lỗi kết nối.', 'error');
-            });
+        executeDirectorDecisionApi(currentDirectorOfferId, `/offers/${currentDirectorOfferId}/reject`, reason);
     });
 }
 
