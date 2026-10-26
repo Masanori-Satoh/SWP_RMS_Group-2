@@ -84,7 +84,7 @@ class InterviewPotentialWebTests {
                 .andExpect(content().string(containsString("/js/pages/interview-result.js")))
                 .andExpect(content().string(containsString("/js/pages/applications.js")));
     }
-    @ParameterizedTest @ValueSource(strings={"Interviewer","Director","System Admin"})
+    @ParameterizedTest @ValueSource(strings={"Interviewer","Director"})
     void otherResultViewersDoNotReceivePotentialUiOrItsScript(String role) throws Exception {
         when(resultService.getResult(eq(7L),any())).thenReturn(result("Passed",false));
         mvc.perform(get("/interviews/7/result").with(as(role))).andExpect(status().isOk())
@@ -92,6 +92,13 @@ class InterviewPotentialWebTests {
                 .andExpect(content().string(not(containsString("/js/pages/applications.js"))))
                 .andExpect(content().string(not(containsString("id=\"app-bookmark\""))));
         verifyNoInteractions(pool);
+    }
+
+    @Test
+    void adminCannotOpenInterviewResult() throws Exception {
+        mvc.perform(get("/interviews/7/result").with(as("System Admin")))
+                .andExpect(status().isForbidden());
+        verifyNoInteractions(resultService, pool);
     }
     @Test void existingReadApiReturnsSavedStateAndSharedNotes() throws Exception {
         when(pool.bookmark(218)).thenReturn(new TalentPoolBookmarkResponse(8,true,

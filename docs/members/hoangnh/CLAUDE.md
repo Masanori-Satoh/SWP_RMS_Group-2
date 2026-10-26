@@ -322,6 +322,7 @@ Rule cho `{X}Access`:
 - **Cờ quyền cho giao diện** (`editable`, `deletable`, `copyable`, `postable`...) do Mapper gắn vào DTO bằng cách gọi `access.canX`. **Template chỉ đọc cờ** (`th:if="${req.editable}"`), không tự so sánh role / trạng thái. `th:if` không thay cho kiểm tra ở backend.
 - Phạm vi dữ liệu ở màn danh sách = một `Specification` theo role, mọi bộ lọc khác **nối AND** vào đó → sửa URL cũng không thấy dữ liệu ngoài phạm vi. Phạm vi danh sách phải khớp `requireView`.
 - Không tin dữ liệu frontend: người tạo, người duyệt, phòng ban (với HM), trạng thái, số đợt đều do server tự xác định.
+- **System Admin chỉ cấu hình hệ thống** (tài khoản, phân quyền, phòng ban, giám sát API, cấu hình AI, audit log). Không cho Admin vào nghiệp vụ (requisition, job posting, hồ sơ, phỏng vấn, offer), kể cả chỉ xem: không thêm `ROLE_SYSTEM_ADMIN` / `"System Admin"` vào `SecurityConfig` nghiệp vụ, `{X}Access`, `ListService#scope` hay `th:if`. Role không thuộc nhánh nào trong `scope` / `buildFilterOptions` thì ném `AccessDeniedException`, không trả "xem tất cả". Xem ARCHITECTURE_GUIDE §5.
 
 ## 12. Validation
 
@@ -508,7 +509,7 @@ Rule khác:
 
 ## 21. Requisition
 
-- **Phân quyền:** HM thao tác yêu cầu của mình / phòng ban mình (thuộc hoặc làm trưởng phòng); Director xem mọi yêu cầu trừ nháp, duyệt / trả lại yêu cầu `Pending_Director` của người khác; HR chỉ xem `Approved`; System Admin xem tất cả, sửa được nháp của người khác (phiếu giữ phòng ban cũ).
+- **Phân quyền:** HM thao tác yêu cầu của mình / phòng ban mình (thuộc hoặc làm trưởng phòng); Director xem mọi yêu cầu trừ nháp, duyệt / trả lại yêu cầu `Pending_Director` của người khác; HR chỉ xem `Approved`; System Admin không truy cập nghiệp vụ Requisition.
 - **Phòng ban:** HM luôn lấy phòng ban của tài khoản (bỏ giá trị trên form), tài khoản không có phòng ban `Active` thì không tạo được. Director tự chọn phòng ban `Active`.
 - **Gửi duyệt phải kiểm tra:** trường bắt buộc, blank / space, độ dài, khoảng lương (1 → 1.000.000.000, min ≤ max, ≤ 2 số thập phân), số lượng 1–30, ngày bắt đầu từ hôm nay đến +1 năm, thử việc 1–180 ngày, tiêu chí sàng lọc.
 - **Tiêu chí:** tối đa 50 dòng; dòng trống bỏ qua khi nháp; dòng đã bắt đầu nhập phải đủ; tên không trùng (không phân biệt hoa thường); trọng số 0.01–100, ≤ 2 số thập phân; **gửi duyệt tổng đúng 100%** (kiểm ở backend, không chỉ JS). `criteriaId` gửi lên phải thuộc chính yêu cầu đó.
@@ -520,6 +521,7 @@ Rule khác:
 ## 22. Job Posting
 
 - Chỉ tạo từ **yêu cầu `Approved`**, kiểm lại khi đăng.
+- Chỉ **HR** tạo / sửa / đăng / tạm dừng / đóng / xóa tin; HM, Director chỉ xem (không thấy tin nháp); System Admin không vào màn tin.
 - Thông tin yêu cầu nguồn hiển thị **chỉ đọc** và luôn nạp lại từ DB (không tin số gửi lên). "Lý do tuyển dụng" chỉ nội bộ, không copy sang tin, không hiện cho khách / ứng viên.
 - HR chỉ sửa trường thuộc bảng `JobPosting`: `PostingTitle`, `JobDescription`, `JobRequirements`, `Benefits`, `SalaryDisplay`, `NumberOfPositionsDisplay`, `WorkLocation`, `ApplicationDeadline` (+ thời điểm hẹn đăng: > hiện tại, ≤ 90 ngày, < hạn nộp). Không nhập trực tiếp: `PostingStatus`, `CreatedBy`, `CreatedAt`, `UpdatedAt`, yêu cầu nguồn sau khi tạo.
 - **Lưu nháp:** `Draft`, `PostingDate = NULL`; vẫn bắt buộc Tiêu đề, Mô tả, Yêu cầu (NOT NULL); không giữ lịch hẹn.

@@ -218,7 +218,7 @@ class RequisitionControllerTests {
                                 .andExpect(status().isOk())
                                 .andExpect(view().name("requisitions/detail"))
                                 .andExpect(model().attributeExists("req"))
-                                .andExpect(content().string(containsString("Bắt buộc")));
+                                .andExpect(content().string(containsString("rqd-criteria")));
         }
 
         @Test

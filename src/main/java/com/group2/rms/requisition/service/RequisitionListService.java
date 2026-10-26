@@ -98,7 +98,6 @@ public class RequisitionListService {
      *   khớp với quyền xem chi tiết RequisitionAccess#requireView
      * - Director: chỉ xem các yêu cầu đã nộp (khác Draft)
      * - HR: chỉ xem các yêu cầu đã được phê duyệt (Approved)
-     * - System Admin: xem tất cả
      * Mọi bộ lọc khác đều được nối thêm (AND) vào điều kiện này, nên sửa URL cũng không thấy dữ liệu ngoài phạm vi.
      */
     private Specification<JobRequisition> scope(User currentUser) {
@@ -122,8 +121,7 @@ public class RequisitionListService {
         if (RequisitionAccess.ROLE_HR.equals(role)) {
             return (root, query, cb) -> cb.equal(root.get("approvalStatus"), RequisitionAccess.STATUS_APPROVED);
         }
-        // System Admin: không giới hạn
-        return (root, query, cb) -> cb.conjunction();
+        throw new org.springframework.security.access.AccessDeniedException("Vai trò không có quyền xem yêu cầu tuyển dụng.");
     }
 
     /** Bước 1: mỗi role được thấy những ô lọc nào (đúng bảng đã chốt trong wireframe). */
@@ -149,9 +147,7 @@ public class RequisitionListService {
             return new RequisitionFilterOptions(false, true, true, true, false,
                     List.of(), postingOptions(), departmentOptions(), creatorOptions(approvedOnly), sorts);
         }
-        // System Admin: nhiều ô lọc nhất
-        return new RequisitionFilterOptions(true, false, true, true, true,
-                statusOptions(ALL_STATUSES), List.of(), departmentOptions(), creatorOptions(ALL_STATUSES), sorts);
+        throw new org.springframework.security.access.AccessDeniedException("Vai trò không có quyền xem yêu cầu tuyển dụng.");
     }
 
     /**

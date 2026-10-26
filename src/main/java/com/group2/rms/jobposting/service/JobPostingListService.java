@@ -73,7 +73,7 @@ public class JobPostingListService {
     /**
      * Phạm vi dữ liệu theo vai trò (lớp bảo vệ theo dữ liệu, mọi bộ lọc khác được nối thêm AND, khớp
      * JobPostingAccess#canView):
-     * - HR, System Admin: mọi tin
+     * - HR: mọi tin
      * - Hiring Manager: tin thuộc phòng ban của mình, trừ tin nháp
      * - Director: mọi tin, trừ tin nháp
      */
@@ -108,9 +108,7 @@ public class JobPostingListService {
             return new JobPostingFilterOptions(true, true, false, false,
                     statusOptions(JobPostingAccess.VIEW_STATUSES), departmentOptions(), List.of(), deadlines, sorts);
         }
-        // System Admin: thêm lọc người tạo và ngày đăng, không có ô hạn nộp (đúng mockup)
-        return new JobPostingFilterOptions(true, false, true, true,
-                statusOptions(JobPostingAccess.VIEW_STATUSES), departmentOptions(), creatorOptions(), List.of(), sorts);
+        throw new org.springframework.security.access.AccessDeniedException("Vai trò không có quyền xem tin tuyển dụng.");
     }
 
     /** Bước 2: giá trị nào vai trò không được dùng, hoặc không có trong danh sách lựa chọn, thì bỏ qua. */
@@ -287,12 +285,4 @@ public class JobPostingListService {
         return options;
     }
 
-    /** Ô "Người tạo" chỉ gồm người đã tạo tin (Admin thấy mọi tin nên không lộ tên ngoài phạm vi). */
-    private List<FilterOption> creatorOptions() {
-        List<FilterOption> options = new ArrayList<>();
-        for (User creator : postings.findPostingCreators()) {
-            options.add(new FilterOption(String.valueOf(creator.getUserId()), creator.getFullName()));
-        }
-        return options;
-    }
 }

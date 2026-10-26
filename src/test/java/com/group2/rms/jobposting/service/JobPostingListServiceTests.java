@@ -112,7 +112,7 @@ class JobPostingListServiceTests {
     // ----- Quyền xem -----
 
     @Test
-    @DisplayName("Interviewer (không phải HR / Admin / HM / Director) -> 403, không truy vấn")
+    @DisplayName("Interviewer (không phải HR / HM / Director) -> 403, không truy vấn")
     void getListPage_shouldDeny_whenRoleCannotRead() {
         User interviewer = userWithRole("Interviewer");
 
@@ -144,13 +144,10 @@ class JobPostingListServiceTests {
     }
 
     @Test
-    @DisplayName("Admin -> Có Người tạo và Ngày đăng, không có Hạn nộp, đủ 5 trạng thái; HR được quản lý tin")
-    void getListPage_shouldShowAdminFilters_whenViewerIsAdmin() {
-        JobPostingListResponse adminList = service.getListPage(emptyFilter(), userWithRole(RequisitionAccess.ROLE_SYSTEM_ADMIN));
-        assertTrue(adminList.options().showCreator() && adminList.options().showPostedDate());
-        assertFalse(adminList.options().showDeadline());
-        assertEquals(JobPostingAccess.VIEW_STATUSES.size(), adminList.options().statuses().size());
-
+    @DisplayName("Admin bị chặn; HR được quản lý tin")
+    void getListPage_shouldDenyAdminAndAllowHr() {
+        assertThrows(AccessDeniedException.class,
+                () -> service.getListPage(emptyFilter(), userWithRole(RequisitionAccess.ROLE_SYSTEM_ADMIN)));
         assertTrue(service.getListPage(emptyFilter(), userWithRole(RequisitionAccess.ROLE_HR)).canManage());
     }
 

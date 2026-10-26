@@ -33,8 +33,7 @@ public class RequisitionAccess {
     private static final Set<String> ALLOWED_ROLES = Set.of(
             ROLE_HIRING_MANAGER,
             ROLE_DIRECTOR,
-            ROLE_HR,
-            ROLE_SYSTEM_ADMIN
+            ROLE_HR
     );
 
     private final UserRepository userRepository;
@@ -79,33 +78,32 @@ public class RequisitionAccess {
         return ROLE_DIRECTOR.equals(role(user));
     }
 
-    // Security: Hiring Manager, Director và System Admin có quyền tạo Requisition
+    // Security: Hiring Manager và Director có quyền tạo Requisition
     public boolean canCreate(User user) {
         String userRole = role(user);
-        return Set.of(ROLE_HIRING_MANAGER, ROLE_DIRECTOR, ROLE_SYSTEM_ADMIN).contains(userRole);
+        return Set.of(ROLE_HIRING_MANAGER, ROLE_DIRECTOR).contains(userRole);
     }
 
-    // Security: Tạo tin tuyển dụng chỉ dành cho HR và Admin
+    // Security: Tạo tin tuyển dụng chỉ dành cho HR
     public boolean canCreatePosting(User user) {
         String userRole = role(user);
-        return ROLE_HR.equals(userRole) || ROLE_SYSTEM_ADMIN.equals(userRole);
+        return ROLE_HR.equals(userRole);
     }
 
-    // Security: Xem tin tuyển dụng nội bộ dành cho HR, HM, Director và Admin
+    // Security: Xem tin tuyển dụng nội bộ dành cho HR, HM và Director
     public boolean canViewPosting(User user) {
         String userRole = role(user);
-        return ROLE_HR.equals(userRole) || ROLE_HIRING_MANAGER.equals(userRole) || ROLE_DIRECTOR.equals(userRole)
-                || ROLE_SYSTEM_ADMIN.equals(userRole);
+        return ROLE_HR.equals(userRole) || ROLE_HIRING_MANAGER.equals(userRole) || ROLE_DIRECTOR.equals(userRole);
     }
 
-    // Security: Chỉ người tạo hoặc Admin mới được sửa Requisition khi ở trạng thái Draft hoặc Rejected
+    // Security: Chỉ người tạo mới được sửa Requisition khi ở trạng thái Draft hoặc Rejected
     public boolean canEdit(User user, JobRequisition requisition) {
         if (requisition == null) {
             return false;
         }
-        boolean isOwnerOrAdmin = owns(user, requisition) || ROLE_SYSTEM_ADMIN.equals(role(user));
+        boolean isOwner = owns(user, requisition) && canCreate(user);
         boolean isEditableStatus = Set.of(STATUS_DRAFT, STATUS_REJECTED).contains(requisition.getApprovalStatus());
-        return isOwnerOrAdmin && isEditableStatus;
+        return isOwner && isEditableStatus;
     }
 
     /**
@@ -140,7 +138,7 @@ public class RequisitionAccess {
         return canCreate(user) && isFinishedStatus(requisition.getApprovalStatus());
     }
 
-    // Rule: Tin tuyển dụng chỉ tạo từ yêu cầu Đã duyệt, chưa có tin, và người tạo là HR / Admin
+    // Rule: Tin tuyển dụng chỉ tạo từ yêu cầu Đã duyệt, chưa có tin, và người tạo là HR
     public boolean canCreatePostingFrom(User user, JobRequisition requisition, boolean hasPosting) {
         if (requisition == null || hasPosting) {
             return false;
@@ -150,7 +148,7 @@ public class RequisitionAccess {
 
     /**
      * Rule: Có hiện link mở tin tuyển dụng mới nhất không.
-     * HM và Director không xem được tin nháp (trang tin trả 403), nên tin nháp chỉ có link với HR / Admin.
+     * HM và Director không xem được tin nháp (trang tin trả 403), nên tin nháp chỉ có link với HR.
      *
      * @param latestPostingStatus trạng thái tin mới nhất, null = yêu cầu chưa có tin
      */
@@ -178,7 +176,7 @@ public class RequisitionAccess {
     // Security: Yêu cầu quyền tạo Requisition, ném ngoại lệ nếu không đủ thẩm quyền
     public void requireCreate(User user) {
         if (!canCreate(user)) {
-            throw new AccessDeniedException("Chỉ Hiring Manager, Director và Quản trị viên mới có quyền tạo yêu cầu tuyển dụng.");
+            throw new AccessDeniedException("Chỉ Hiring Manager và Director mới có quyền tạo yêu cầu tuyển dụng.");
         }
     }
 
@@ -196,7 +194,7 @@ public class RequisitionAccess {
             return false;
         }
         String userRole = role(user);
-        if (Set.of(ROLE_DIRECTOR, ROLE_SYSTEM_ADMIN).contains(userRole)) {
+        if (ROLE_DIRECTOR.equals(userRole)) {
             return true;
         }
         if (ROLE_HIRING_MANAGER.equals(userRole)) {
@@ -216,9 +214,6 @@ public class RequisitionAccess {
             throw new AccessDeniedException("Yêu cầu tuyển dụng không tồn tại.");
         }
         String userRole = role(user);
-        if (ROLE_SYSTEM_ADMIN.equals(userRole)) {
-            return;
-        }
         // Security: HR chỉ có quyền xem các yêu cầu tuyển dụng đã được phê duyệt (Approved)
         if (ROLE_HR.equals(userRole)) {
             if (STATUS_APPROVED.equals(requisition.getApprovalStatus())) {
@@ -226,7 +221,7 @@ public class RequisitionAccess {
             }
             throw new AccessDeniedException("HR chỉ có quyền xem các yêu cầu tuyển dụng đã được phê duyệt.");
         }
-        if (owns(user, requisition)) {
+        if (canCreate(user) && owns(user, requisition)) {
             return;
         }
         if (ROLE_DIRECTOR.equals(userRole) && !STATUS_DRAFT.equals(requisition.getApprovalStatus())) {

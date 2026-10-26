@@ -98,7 +98,7 @@ public class RecruitmentEmailService {
     private Integer actor() {
         var authentication = SecurityContextHolder.getContext().getAuthentication();
         if (authentication == null || authentication.getAuthorities().stream()
-                .noneMatch(a -> a.getAuthority().equals("ROLE_HR") || a.getAuthority().equals("ROLE_SYSTEM_ADMIN")))
+                .noneMatch(a -> a.getAuthority().equals("ROLE_HR")))
             throw new AccessDeniedException("Chỉ HR được gửi email tuyển dụng.");
         return currentUser.requireUser().getUserId();
     }

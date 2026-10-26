@@ -14,14 +14,14 @@
 | **Hiring Manager** | `hm_huong` | `12345678` | Đỗ Thu Hương | Sales & Marketing (ID: 2) | Tạo / Sửa Yêu cầu tuyển dụng kinh doanh |
 | **Director** | `director` | `12345678` | Nguyễn Thế Hoàng | Ban Giám đốc (HR) | Duyệt / Từ chối Yêu cầu tuyển dụng; tự tạo yêu cầu và Phê duyệt trực tiếp |
 | **HR Specialist** | `hr_lan` | `12345678` | Lê Thị Mai Lan | Human Resources (ID: 3) | Soạn tin / Đăng tin / Quản lý Tin tuyển dụng |
-| **System Admin** | `admin` | `12345678` | Trần Minh Đức | Ban Quản trị | Quản lý toàn bộ hệ thống |
+| **System Admin** | `admin` | `12345678` | Trần Minh Đức | Ban Quản trị | Cấu hình hệ thống (tài khoản, phòng ban, giám sát API); không vào nghiệp vụ tuyển dụng |
 
 ---
 
 ## 1. FORM TẠO & CẬP NHẬT YÊU CẦU TUYỂN DỤNG (JOB REQUISITION)
 
 * **URL:** `GET /requisitions/create` (Tạo mới) hoặc `GET /requisitions/{id}/edit` (Chỉnh sửa)
-* **Quyền:** `Hiring Manager` (chỉ tạo cho phòng ban mình quản lý), `Director` (tự chọn phòng ban), `System Admin`
+* **Quyền:** `Hiring Manager` (chỉ tạo cho phòng ban mình quản lý), `Director` (tự chọn phòng ban)
 * **Quy tắc cốt lõi:**
   - **Lưu nháp (`action = "draft"`):** Chỉ bắt buộc Tên vị trí, Số lượng (1–30), Hình thức, Mô hình. Tiêu chí AI có thể bỏ trống hoặc nhập dở dang.
   - **Gửi duyệt (`action = "submit"`):** Bắt buộc điền đầy đủ các mục dấu `*`; Ngày bắt đầu ≥ Hôm nay; Tổng trọng số tiêu chí AI bắt buộc **tròn 100%**.
@@ -165,7 +165,7 @@ Yêu cầu tuyển dụng tạm thời chưa được phê duyệt do mức ngâ
 ## 3. FORM TẠO & CẬP NHẬT TIN TUYỂN DỤNG (JOB POSTING)
 
 * **URL:** `GET /internal/job-postings/create` (Tạo mới) hoặc `GET /internal/job-postings/{id}/edit` (Sửa tin)
-* **Quyền:** `HR Specialist` (`hr_lan`), `System Admin`
+* **Quyền:** `HR Specialist` (`hr_lan`)
 * **Điều kiện tiên quyết:** Phải có ít nhất 1 Job Requisition ở trạng thái **`Approved`**.
 * **Quy tắc cốt lõi:**
   - **Tiêu đề tin (`postingTitle`):** Bắt buộc, tối đa 200 ký tự.
