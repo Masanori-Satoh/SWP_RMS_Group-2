@@ -32,6 +32,26 @@
 .dm-manager { display: block; font-weight: 600; line-height: 1.35; overflow-wrap: anywhere; }
 .dm-manager-login { display: block; margin-top: var(--s1); color: var(--muted); font-size: var(--font-xs); line-height: 1.35; overflow-wrap: anywhere; }
 .dm-manager--empty { color: var(--muted); font-weight: 400; }
+/* Department sample: retain the existing table/inspector behaviour. */
+.dm-page.ads-page--refined {
+  --iac-edit-bg: var(--surface);
+  --iac-edit-border: var(--control-line);
+  --iac-edit-color: var(--brand-dark);
+  --iac-edit-hover-bg: var(--brand-soft);
+  --iac-edit-hover-border: var(--brand);
+  --iac-edit-hover-color: var(--brand-dark);
+  --iac-danger-bg: var(--error-soft);
+  --iac-danger-border: color-mix(in srgb, var(--error) 25%, var(--line));
+  --iac-danger-color: var(--error);
+  --iac-danger-hover-bg: var(--error-soft);
+  --iac-danger-hover-border: var(--error);
+  --iac-danger-hover-color: var(--error);
+}
+.dm-page.ads-page--refined .iac-actions { gap: var(--s2); }
+.dm-page.ads-page--refined .iac-icon-button { width: var(--btn-sm-h); height: var(--btn-sm-h); min-height: var(--btn-sm-h); }
+.dm-page.ads-page--refined .dm-col-actions { width: calc(var(--s12) * 2 + var(--s4)); }
+.dm-page.ads-page--refined .dm-manager-login { font-size: var(--font-sm); }
+.dm-page.ads-page--refined .iac-status { font-size: var(--font-sm); }
 @container departments (max-width: 700px) {
   .dm-filters { grid-template-columns: minmax(0, 1fr) max-content; grid-template-areas: "search search" "status actions"; }
 }

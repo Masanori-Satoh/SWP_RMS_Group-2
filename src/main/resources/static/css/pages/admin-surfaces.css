@@ -70,6 +70,79 @@
 .ads-form-page .ads-heading::before { right: 0; }
 .ads-form-page .account-heading p { max-width: 65ch; margin-top: var(--s2); color: var(--muted); font-size: var(--font-sm); }
 .ads-form-page .ads-title { margin-top: var(--s3); }
+/* Approved Admin surface variant. Opt in per view after visual review;
+   Department is the first adopter. Shared catalog components stay intact. */
+.rms-app .ads-page--refined { padding: var(--s6); font-size: var(--font-base); }
+.ads-page--refined .mft-toolbar {
+  padding-block: var(--s3);
+  border-color: color-mix(in srgb, var(--control-line) 30%, var(--line));
+  box-shadow: none;
+}
+.ads-page--refined .mft-search { border-color: var(--control-line); }
+.ads-page--refined .mft-search:focus-within { border-color: var(--brand); }
+.ads-page--refined .ads-table-card {
+  border-color: color-mix(in srgb, var(--control-line) 30%, var(--line));
+  box-shadow: var(--shadow-md);
+}
+.ads-page--refined .ads-table-header {
+  border-bottom-color: color-mix(in srgb, var(--control-line) 22%, var(--line));
+}
+.ads-page--refined .iac-table { font-size: 14px; line-height: 1.5; }
+.ads-page--refined .iac-table th.iac-cell {
+  background: var(--brand-soft);
+  color: var(--brand-dark);
+  font-size: 14px;
+  border-bottom-color: color-mix(in srgb, var(--control-line) 30%, var(--line));
+}
+.ads-page--refined .aim-inspector {
+  background: var(--surface-subtle);
+  border-color: var(--line);
+  box-shadow: none;
+}
+.ads-page--refined .aim-panel-header { background: var(--surface); }
+.ads-page--refined .aim-total strong { font: 600 36px/1.2 var(--sans); font-variant-numeric: tabular-nums; }
+/* Brand emphasis: share the homepage/auth voice (Lora headings, deep green) and lift white
+   surfaces off a deeper tinted canvas. Only inside the refined variant. */
+.rms-app .ads-page--refined {
+  background-color: color-mix(in srgb, var(--brand-soft) 78%, var(--page));
+  background-image:
+    radial-gradient(ellipse at 70% 0, color-mix(in srgb, var(--brand) 14%, transparent), transparent 58%),
+    linear-gradient(160deg, color-mix(in srgb, var(--surface) 55%, transparent), transparent 46%);
+}
+.ads-page--refined .iac-title, .ads-page--refined .ads-title {
+  color: var(--brand-dark); font: 600 clamp(28px, 2.4vw, 34px)/1.2 var(--serif); letter-spacing: -.01em; text-wrap: balance;
+}
+.ads-page--refined .iac-breadcrumb a { font-weight: 600; }
+.ads-page--refined .mft-toolbar { background: var(--surface); box-shadow: var(--shadow-sm); }
+.ads-page--refined .ads-table-card, .ads-page--refined .iacv-card {
+  background: var(--surface); box-shadow: 0 10px 28px rgba(37, 41, 35, .10);
+}
+.ads-page--refined .ads-table-icon, .ads-page--refined .iacv-icon { background: var(--brand-dark); color: var(--on-brand); }
+.ads-page--refined .ads-table-title, .ads-page--refined .iacv-title { color: var(--brand-dark); font-family: var(--serif); font-weight: 600; }
+.ads-page--refined .ads-table-header, .ads-page--refined .iacv-header { background: var(--surface); border-bottom-color: color-mix(in srgb, var(--brand) 22%, var(--line)); }
+.ads-page--refined .iac-table th.iac-cell { background: var(--brand-dark); color: var(--on-brand); border-bottom: 0; }
+.ads-page--refined .iac-table th.iac-cell:first-child { border-top-left-radius: var(--radius-md); }
+.ads-page--refined .iac-table th.iac-cell:last-child { border-top-right-radius: var(--radius-md); }
+.ads-page--refined .iac-table tbody tr:nth-child(even) .iac-cell { background: color-mix(in srgb, var(--brand-soft) 22%, var(--surface)); }
+.ads-page--refined .iac-table tbody tr:hover .iac-cell, .ads-page--refined .iac-table tbody tr:focus-within .iac-cell { background: color-mix(in srgb, var(--brand-soft) 70%, var(--surface)); }
+.ads-page--refined .ads-status-item[aria-current='page'], .ads-page--refined .amg-segment[aria-current='page'] { background: var(--brand-dark); color: var(--on-brand); }
+.ads-page--refined .aim-inspector { background: var(--surface); box-shadow: 0 10px 28px rgba(37, 41, 35, .10); }
+.ads-page--refined .aim-panel-header { background: color-mix(in srgb, var(--brand-soft) 60%, var(--surface)); }
+.ads-page--refined .aim-panel-header { background: var(--brand-dark); border-bottom: 0; }
+.ads-page--refined .aim-panel-title { color: var(--on-brand); font-family: var(--serif); font-size: var(--font-lg); }
+.ads-page--refined .aim-panel-header .aim-close { background: transparent; border-color: color-mix(in srgb, var(--on-brand) 45%, transparent); color: var(--on-brand); }
+.ads-page--refined .aim-panel-header .aim-close:hover { background: color-mix(in srgb, var(--on-brand) 16%, transparent); border-color: var(--on-brand); }
+.ads-page--refined .aim-panel-header .aim-close:focus-visible { outline: 3px solid var(--on-brand); outline-offset: 2px; }
+.ads-page--refined .aim-summary { padding: var(--s6) var(--s4) var(--s4); }
+.ads-page--refined .aim-total { padding: var(--s4); border-radius: var(--radius-md); background: var(--brand-soft); }
+.ads-page--refined .aim-total strong { color: var(--brand-dark); font: 600 48px/1.1 var(--serif); }
+.ads-page--refined .aim-total span { color: var(--brand-dark); font-weight: 600; }
+.ads-page--refined .aim-summary .aim-scope { margin-top: var(--s3); }
+.ads-page--refined .aim-summary .aim-section-title { color: var(--brand-dark); font: 600 var(--font-base)/1.4 var(--serif); }
+.ads-page--refined .aim-status-counts { gap: var(--s2); }
+.ads-page--refined .aim-status-counts li { padding: var(--s2) var(--s3); border: 1px solid var(--line); border-radius: var(--radius-md); background: var(--surface-subtle); }
+.ads-page--refined .aim-status-counts strong { color: var(--ink); font-size: var(--font-lg); }
+.ads-page--refined .aim-guidance { margin-top: var(--s4); padding: var(--s3); border-radius: var(--radius-md); background: var(--surface-subtle); color: var(--ink); }
 /* Container width accounts for the sidebar and the optional account inspector. */
 @container (max-width: 880px) {
   .ads-page .mft-toolbar { display: grid; grid-template-columns: auto minmax(0, 1fr); grid-template-areas: 'filter search' 'statuses statuses'; }
@@ -86,9 +159,17 @@
   .dm-page .mft-search { width: 100%; }
 }
 @media (max-width: 768px) {
+  .rms-app .ads-page--refined { padding: var(--s4); }
   .ads-heading::before { display: none; }
   .ads-table-header, .ads-table-inset, .ads-page .iac-pagination { padding-inline: var(--s4); }
   .ads-status-group { border-radius: var(--radius-lg); }
   .ads-page .ads-form-card { padding: var(--s4); }
 }
 @media (prefers-reduced-motion: reduce) { .ads-page .iac-table .iac-cell { transition: none; } }
+/* Keep the create action in the top-right corner, but sit it lower than the page title. */
+.ads-page--refined .iac-heading { align-items: flex-start; min-height: var(--s16); }
+.ads-page--refined .iac-heading .aim-heading-actions { align-self: flex-end; }
+.ads-page--refined .iac-heading .aim-heading-actions .btn--primary { min-width: 200px; min-height: var(--s12); padding-inline: var(--s8); justify-content: center; font-size: var(--font-base); }
+/* Flash toast on Admin views: stay on screen for 5s instead of the default 3s. */
+.ads-page .flash-toast-progress { animation-duration: 5s; }
+.ads-page .flash-toast { border-color: color-mix(in srgb, var(--toast-color) 35%, var(--line)); }
