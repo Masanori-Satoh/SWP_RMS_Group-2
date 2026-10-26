@@ -202,7 +202,6 @@ public class RequisitionServiceImpl implements RequisitionService {
             requestDto.setDepartmentId(requireActiveDepartment(requestDto.getDepartmentId()));
         } else {
             // Rule: Sửa yêu cầu không đổi phòng ban: giữ phòng ban đã lưu
-            // (Admin sửa phiếu của HM thì phiếu vẫn thuộc phòng ban của HM, không chuyển sang phòng ban của Admin)
             requestDto.setDepartmentId(jobRequisition.getDepartment().getDepartmentId());
         }
 

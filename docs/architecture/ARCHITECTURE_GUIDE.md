@@ -198,20 +198,24 @@ Phân quyền URL nằm tập trung trong `core/config/SecurityConfig` (chưa d�
 | `/login`, `/register/**`, `/forgot-password`, `/reset-password/**` | Công khai |
 | `GET /jobs`, `/jobs/**`, `/public/jobs/**` | Công khai |
 | `/jobs/*/apply/**` | `CANDIDATE` |
-| `/admin/accounts`, `/admin/departments`, `/admin/candidate-accounts`, `/admin/api-monitoring`, `/admin/ai-configuration` (+ `/**`) | `SYSTEM_ADMIN` |
-| `/interviews/new`, `/interviews/*/edit`, mọi thao tác ghi `/interviews/**` | `HR`, `SYSTEM_ADMIN` |
-| `GET /interviews/**` | `HR`, `SYSTEM_ADMIN`, `DIRECTOR`, `HIRING_MANAGER`, `INTERVIEWER` |
+| `/admin/accounts`, `/admin/departments`, `/admin/candidate-accounts`, `/admin/api-monitoring`, `/admin/ai-configuration` (+ `/**`), mọi URL `/admin/**` | `SYSTEM_ADMIN` |
+| `/interviews/new`, `/interviews/*/edit`, mọi thao tác ghi `/interviews/**` | `HR`, `DIRECTOR` (POST evaluation: `INTERVIEWER`, `HIRING_MANAGER`, `DIRECTOR`, `HR`; POST final-result: `HIRING_MANAGER`) |
+| `GET /interviews/**` | `HR`, `DIRECTOR`, `HIRING_MANAGER`, `INTERVIEWER` |
 | `GET /portal/interviews` | `CANDIDATE` (các method khác: chặn) |
 | `/portal/applications/**` | `CANDIDATE` |
 | `/portal/offers/**` | `CANDIDATE` |
-| `/offers/**` | `HR`, `DIRECTOR`, `SYSTEM_ADMIN` |
-| `/requisitions/**` | `HIRING_MANAGER`, `DIRECTOR`, `HR`, `SYSTEM_ADMIN` |
+| `POST /offers/*/approve`, `POST /offers/*/reject` | `DIRECTOR` |
+| `/offers/**` | `HR`, `DIRECTOR` |
+| `/requisitions/**` | `HIRING_MANAGER`, `DIRECTOR`, `HR` |
 | `/internal/job-postings/*/close` | `HR` |
-| `/internal/job-postings/create`, `/internal/job-postings/dashboard` | `HR`, `SYSTEM_ADMIN` |
-| `GET /internal/job-postings`, `GET /internal/job-postings/*` (danh sách, chi tiết) | `HR`, `HIRING_MANAGER`, `DIRECTOR`, `SYSTEM_ADMIN` (HM, Director không xem tin nháp; kiểm tra ở `JobPostingServiceImpl`) |
-| Mọi thao tác ghi còn lại `/internal/job-postings/**` | `HR`, `SYSTEM_ADMIN` |
+| `/internal/job-postings/create`, `/internal/job-postings/dashboard` | `HR` |
+| `GET /internal/job-postings`, `GET /internal/job-postings/*` (danh sách, chi tiết) | `HR`, `HIRING_MANAGER`, `DIRECTOR` (HM, Director không xem tin nháp; kiểm tra ở `JobPostingServiceImpl`) |
+| Mọi thao tác ghi còn lại `/internal/job-postings/**` | `HR` |
+| `/applications/**` | `HR`, `HIRING_MANAGER`, `DIRECTOR` |
 | `/dashboard/**`, `/notifications/**`, mọi URL còn lại | Đã đăng nhập |
 
+- **System Admin chỉ cấu hình hệ thống** (tài khoản, phân quyền, phòng ban, giám sát API, cấu hình AI, audit log). Admin **không** vào nghiệp vụ tuyển dụng: không có quyền ở `/requisitions/**`, `/internal/job-postings/**`, `/applications/**`, `/interviews/**`, `/offers/**`, kể cả chỉ xem. Nội dung nghiệp vụ thuộc HR, Hiring Manager, Director, Interviewer. Không thêm `SYSTEM_ADMIN` vào rule nghiệp vụ trong `SecurityConfig`, `{X}Access` hay `th:if` của template.
+- Duyệt / từ chối offer (`POST /offers/*/approve`, `/reject`) chỉ `DIRECTOR`.
 - Đăng nhập: form `/login` → `/dashboard`. Đăng xuất: `POST /logout` → `/login?logout`.
 - **Thêm route mới = thêm rule vào `SecurityConfig`.** Không có rule thì route rơi vào "đã đăng nhập", tức mọi vai trò (kể cả Candidate) đều vào được.
 - Người dùng hiện tại: dùng `core/security/CurrentUserService`, không tự query lại từ `Authentication` trong Controller.

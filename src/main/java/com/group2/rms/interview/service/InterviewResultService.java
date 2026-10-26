@@ -15,7 +15,7 @@ public interface InterviewResultService {
 
     /**
      * Kết quả của một lịch phỏng vấn theo góc nhìn của người xem (D5):
-     * HR, Hiring Manager, Director, System Admin thấy mọi phiếu; Interviewer chỉ vào được lịch mình
+     * HR, Hiring Manager, Director thấy mọi phiếu; Interviewer chỉ vào được lịch mình
      * được gán và chỉ thấy phiếu của mình cho tới khi có Final Result (GBR-05).
      * canFinalize chỉ bật cho Hiring Manager phụ trách phòng ban của vị trí, khi lịch chưa được chốt hoặc đang Cân nhắc.
      *

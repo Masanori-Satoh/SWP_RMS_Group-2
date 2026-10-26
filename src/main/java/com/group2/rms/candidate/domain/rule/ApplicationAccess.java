@@ -13,10 +13,10 @@ import static com.group2.rms.requisition.service.RequisitionAccess.*;
 
 /**
  * Ai xem được đơn nào và làm được gì trên đơn (5.1.22, 5.1.23).
- * HR, Director, Admin xem mọi đơn; Hiring Manager xem mọi đơn phòng ban mình, kể cả
+ * HR, Director xem mọi đơn; Hiring Manager xem mọi đơn phòng ban mình, kể cả
  * đơn HR chưa chuyển (Q1.4).
  * HR duyệt bước HR; Hiring Manager duyệt bước HM của phòng mình; Director duyệt thay ở bước HM (mọi phòng, khi HM
- * vắng — Q2.3), không duyệt bước HR; Admin chỉ xem.
+ * vắng — Q2.3), không duyệt bước HR.
  */
 @Component
 @RequiredArgsConstructor
@@ -25,7 +25,7 @@ public class ApplicationAccess {
     public static final Set<String> HR_REVIEW_STATUSES = Set.of("Applied", "AI_Screened");
     public static final String HM_REVIEW_STATUS = "HR_Passed";
 
-    private static final Set<String> VIEW_ALL_ROLES = Set.of(ROLE_HR, ROLE_DIRECTOR, ROLE_SYSTEM_ADMIN);
+    private static final Set<String> VIEW_ALL_ROLES = Set.of(ROLE_HR, ROLE_DIRECTOR);
 
     private final RequisitionAccess requisitionAccess;
 
@@ -42,7 +42,10 @@ public class ApplicationAccess {
             Integer departmentId = user.getDepartment() == null ? null : user.getDepartment().getDepartmentId();
             return ApplicationScope.hiringManager(user.getUserId(), departmentId);
         }
-        return ApplicationScope.ALL;
+        if (VIEW_ALL_ROLES.contains(role(user))) {
+            return ApplicationScope.ALL;
+        }
+        throw new AccessDeniedException("Vai trò không có quyền xem hồ sơ ứng tuyển.");
     }
 
     public boolean canView(User user, Application application) {
@@ -79,19 +82,17 @@ public class ApplicationAccess {
     }
 
     /**
-     * Khớp quyền URL {@code /interviews/new} (HR, Admin) bên module interview; chỉ
+     * Khớp quyền URL {@code /interviews/new} (HR) bên module interview; chỉ
      * khi hồ sơ đang ở giai đoạn
      * phỏng vấn (sang offer thì thôi).
      */
     public boolean canScheduleInterview(User user, ApplicationProgressResponse progress) {
-        // check if system admin or HR is set interview and check Step is passed HM
-        // PASSED
-        return Set.of(ROLE_HR, ROLE_SYSTEM_ADMIN).contains(role(user))
+        return ROLE_HR.equals(role(user))
                 && progress.stage() == ApplicationStage.INTERVIEW;
     }
 
     /**
-     * Khớp quyền URL {@code /offers/**} (HR, Director, Admin) bên module offer; chỉ
+     * Khớp quyền URL {@code /offers/**} (HR, Director) bên module offer; chỉ
      * khi đã đạt phỏng vấn, chưa có offer.
      */
     public boolean canCreateOffer(User user, ApplicationProgressResponse progress) {
@@ -99,11 +100,11 @@ public class ApplicationAccess {
     }
 
     /**
-     * Khớp quyền URL {@code /internal/job-postings/**} (HR, Admin): chỉ khi đó mới
+     * Khớp quyền URL {@code /internal/job-postings/**} (HR, Hiring Manager): chỉ khi đó mới
      * hiện link sang trang tin nội bộ.
      */
     public boolean canOpenJobPosting(User user) {
-        return Set.of(ROLE_HR, ROLE_HIRING_MANAGER, ROLE_SYSTEM_ADMIN).contains(role(user));
+        return Set.of(ROLE_HR, ROLE_HIRING_MANAGER).contains(role(user));
     }
 
     /** HR, Hiring Manager, hoặc Director (duyệt thay bước HM): các vai trò có bước duyệt hồ sơ. */

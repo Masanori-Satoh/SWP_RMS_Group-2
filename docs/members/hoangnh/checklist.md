@@ -374,3 +374,11 @@ Nhằm đảm bảo chất lượng code và phòng ngừa lỗi hồi quy (regr
 ## Kế hoạch Chatbot (2026-10-20)
 
 - [x] Tạo `chatbot_plan.md`: 3 giai đoạn (luật, không thêm bảng → thêm `ChatSession`/`ChatMessage` → tích hợp LLM), bảng phủ 11 use case, ước lượng thời gian và chỗ cắt nếu thiếu thời gian. Chưa code.
+
+## Tách System Admin khỏi nghiệp vụ (2026-10-26, nhánh `feat/hoang-admin-fix-permission`)
+
+- [x] Admin chỉ cấu hình hệ thống: bỏ `SYSTEM_ADMIN` khỏi `/requisitions/**`, `/internal/job-postings/**`, `/applications/**`, `/interviews/**`, `/offers/**` (`SecurityConfig`), khỏi `RequisitionAccess`, `JobPostingAccess`, `ApplicationAccess`, `InterviewResultServiceImpl`, `InterviewSchedulingController#isHrUser`, `RecruitmentEmailService`, `OfferController`, template offer / job-detail. `ListService#scope` gặp role lạ thì 403. **Cần báo nhóm** (sửa `SecurityConfig`, module offer / interview của người khác).
+- [x] `POST /offers/*/approve|reject` chỉ `DIRECTOR` (trước đó HR cũng gọi được).
+- [x] Docs: ARCHITECTURE_GUIDE §5 (bảng + nguyên tắc Admin), CLAUDE.md §11, §21, §22, `posting-review-guide`, `requisition-review-guide`, `input.md`.
+- [x] Kiểm tra: `clean test` bằng Maven 3.9.16 cài sẵn (wrapper gặp lỗi PowerShell): 1848 test, 0 fail, 0 error, 1 skip.
+- [ ] Còn treo: `sidebars/recruiter.html:94` vẫn có `System Admin` (file chỉ được append, cần Lead; vô hại vì Admin dùng sidebar admin). Docs của Đức (`interview-integration-handoff.md`, `iter2-3-prompts.md` D5) còn ghi Admin xem phiếu phỏng vấn, báo Đức cập nhật.

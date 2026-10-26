@@ -46,10 +46,7 @@ public class OfferController {
     public void populateCommonAttributes(Model model, Principal principal) {
         String userRole = "HR";
         if (principal instanceof org.springframework.security.core.Authentication auth) {
-            if (auth.getAuthorities().stream().anyMatch(
-                    a -> com.group2.rms.core.security.RoleAuthorities.SYSTEM_ADMIN.equals(a.getAuthority()))) {
-                userRole = "System Admin";
-            } else if (auth.getAuthorities().stream().anyMatch(a -> "ROLE_DIRECTOR".equals(a.getAuthority()))) {
+            if (auth.getAuthorities().stream().anyMatch(a -> "ROLE_DIRECTOR".equals(a.getAuthority()))) {
                 userRole = "Director";
             } else if (auth.getAuthorities().stream().anyMatch(a -> "ROLE_HR".equals(a.getAuthority()))) {
                 userRole = "HR";
@@ -467,8 +464,7 @@ public class OfferController {
             Principal principal) {
         if (principal instanceof org.springframework.security.core.Authentication auth) {
             boolean isAuthorized = auth.getAuthorities().stream().anyMatch(a -> "ROLE_HR".equals(a.getAuthority())
-                    || "ROLE_DIRECTOR".equals(a.getAuthority())
-                    || com.group2.rms.core.security.RoleAuthorities.SYSTEM_ADMIN.equals(a.getAuthority()));
+                    || "ROLE_DIRECTOR".equals(a.getAuthority()));
             if (!isAuthorized) {
                 return org.springframework.http.ResponseEntity.status(org.springframework.http.HttpStatus.FORBIDDEN)
                         .build();

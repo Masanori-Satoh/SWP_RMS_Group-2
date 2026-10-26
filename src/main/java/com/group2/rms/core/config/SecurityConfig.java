@@ -102,6 +102,8 @@ public class SecurityConfig {
                                                                 // api config
                                                                 "/admin/ai-configuration", "/admin/ai-configuration/**")
                                                 .hasAuthority(RoleAuthorities.SYSTEM_ADMIN)
+                                                .requestMatchers("/admin", "/admin/**")
+                                                .hasAuthority(RoleAuthorities.SYSTEM_ADMIN)
                                                 // Candidate portal is read-only and isolated from internal schedules.
                                                 .requestMatchers(HttpMethod.GET, "/portal/interviews")
                                                 .hasAuthority("ROLE_CANDIDATE")
@@ -115,29 +117,28 @@ public class SecurityConfig {
                                                 // dunglt bổ sung: ứng viên xem / nhận / từ chối offer đã gửi cho mình (phải đứng trước /offers/**)
                                                 .requestMatchers("/portal/offers", "/portal/offers/**")
                                                 .hasAuthority("ROLE_CANDIDATE")
-                                                // Forms and all writes: HR, Director (UC 62-64, SRS footnote 13) and Admin.
+                                                // Forms and all writes: HR, Director (UC 62-64, SRS footnote 13).
                                                 .requestMatchers("/interviews/new", "/interviews/*/edit")
-                                                .hasAnyAuthority("ROLE_HR", "ROLE_DIRECTOR", RoleAuthorities.SYSTEM_ADMIN)
+                                                .hasAnyAuthority("ROLE_HR", "ROLE_DIRECTOR")
                                                 .requestMatchers(HttpMethod.GET, "/interviews", "/interviews/**")
-                                                .hasAnyAuthority("ROLE_HR", RoleAuthorities.SYSTEM_ADMIN,
+                                                .hasAnyAuthority("ROLE_HR",
                                                                 "ROLE_DIRECTOR", "ROLE_HIRING_MANAGER", "ROLE_INTERVIEWER")
                                                 .requestMatchers(HttpMethod.POST, "/interviews/*/evaluations")
                                                 .hasAnyAuthority("ROLE_INTERVIEWER", "ROLE_HIRING_MANAGER", "ROLE_DIRECTOR", "ROLE_HR")
                                                 .requestMatchers(HttpMethod.POST, "/interviews/*/final-result")
                                                 .hasAuthority("ROLE_HIRING_MANAGER")
                                                 .requestMatchers("/interviews", "/interviews/**")
-                                                .hasAnyAuthority("ROLE_HR", "ROLE_DIRECTOR", RoleAuthorities.SYSTEM_ADMIN)
-                                                // require authenticated for SYSTEM_ADMIN, ROLE_HR, ROLE_DIRECTOR
+                                                .hasAnyAuthority("ROLE_HR", "ROLE_DIRECTOR")
+                                                .requestMatchers(HttpMethod.POST, "/offers/*/approve", "/offers/*/reject")
+                                                .hasAuthority("ROLE_DIRECTOR")
                                                 .requestMatchers("/offers", "/offers/**")
-                                                .hasAnyAuthority("ROLE_HR", "ROLE_DIRECTOR",
-                                                                RoleAuthorities.SYSTEM_ADMIN)
+                                                .hasAnyAuthority("ROLE_HR", "ROLE_DIRECTOR")
                                                 // authenticaed require for dashboard notification
                                                 .requestMatchers("/dashboard", "/dashboard/**", "/notifications",
                                                                 "/notifications/**", "/api/notifications", "/api/notifications/**")
                                                 .authenticated()
                                                 .requestMatchers("/requisitions", "/requisitions/**")
-                                                .hasAnyAuthority("ROLE_HIRING_MANAGER", "ROLE_DIRECTOR", "ROLE_HR",
-                                                                RoleAuthorities.SYSTEM_ADMIN)
+                                                .hasAnyAuthority("ROLE_HIRING_MANAGER", "ROLE_DIRECTOR", "ROLE_HR")
                                                 .requestMatchers("/talent-pool/applications/*/confirm", "/talent-pool/applications/*/decline",
                                                         "/talent-pool/applications/*/resend-email", "/talent-pool/interviews/*/resend-email",
                                                         "/talent-pool/jobs/*/close", "/internal/job-postings/*/close")
@@ -149,16 +150,15 @@ public class SecurityConfig {
                                                 .requestMatchers("/talent-pool", "/talent-pool/**")
                                                 .hasAnyAuthority("ROLE_HR", "ROLE_HIRING_MANAGER")
                                                 .requestMatchers("/internal/job-postings/create", "/internal/job-postings/dashboard")
-                                                .hasAnyAuthority("ROLE_HR", RoleAuthorities.SYSTEM_ADMIN)
+                                                .hasAuthority("ROLE_HR")
                                                 // Xem danh sách / chi tiết tin: thêm Director (chỉ xem, không thao tác); service ẩn tin nháp với HM, Director
                                                 .requestMatchers(HttpMethod.GET, "/internal/job-postings", "/internal/job-postings/*")
-                                                .hasAnyAuthority("ROLE_HR", "ROLE_HIRING_MANAGER", "ROLE_DIRECTOR", RoleAuthorities.SYSTEM_ADMIN)
+                                                .hasAnyAuthority("ROLE_HR", "ROLE_HIRING_MANAGER", "ROLE_DIRECTOR")
                                                 .requestMatchers("/internal/job-postings", "/internal/job-postings/**")
-                                                .hasAnyAuthority("ROLE_HR", RoleAuthorities.SYSTEM_ADMIN)
+                                                .hasAuthority("ROLE_HR")
                                                 // application pipeline: HM scope (own department) is checked in ApplicationAccess
                                                 .requestMatchers("/applications", "/applications/**")
-                                                .hasAnyAuthority("ROLE_HR", "ROLE_HIRING_MANAGER", "ROLE_DIRECTOR",
-                                                                RoleAuthorities.SYSTEM_ADMIN)
+                                                .hasAnyAuthority("ROLE_HR", "ROLE_HIRING_MANAGER", "ROLE_DIRECTOR")
                                                 .anyRequest().authenticated())
                                 // store target url before login
                                 .requestCache(cache -> cache.requestCache(requestCache))
