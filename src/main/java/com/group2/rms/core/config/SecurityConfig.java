@@ -89,9 +89,6 @@ public class SecurityConfig {
                                                 .requestMatchers(HttpMethod.GET, "/jobs", "/jobs/**", "/public/jobs",
                                                                 "/public/jobs/**")
                                                 .permitAll()
-                                                // HoangNH: chatbot ứng viên mở cho cả khách; phần hồ sơ riêng kiểm tra ở ChatbotAccess
-                                                .requestMatchers(HttpMethod.POST, "/api/chatbot/message")
-                                                .permitAll()
                                                 // requrired role system admin for admin pages
                                                 // account
                                                 .requestMatchers("/admin/accounts", "/admin/accounts/**",

@@ -200,20 +200,4 @@ public interface JobPostingRepository extends JpaRepository<JobPosting, Integer>
          + "ORDER BY j.postingDate DESC")
     List<JobPosting> findOpenPostings(@Param("now") LocalDateTime now);
 
-    // ----- Chatbot ứng viên (module chatbot): lấy luôn phòng ban để không chạy thêm câu cho từng tin -----
-
-    /** Tin đang nhận hồ sơ (cùng điều kiện findOpenPostings), kèm yêu cầu nguồn + phòng ban. */
-    @EntityGraph(attributePaths = {"requisition", "requisition.department"})
-    @Query("""
-            SELECT j FROM JobPosting j
-            WHERE j.postingStatus = :status
-              AND (j.postingDate IS NULL OR j.postingDate <= :now)
-              AND (j.applicationDeadline IS NULL OR j.applicationDeadline >= :now)
-            ORDER BY j.postingDate DESC, j.jobPostingId DESC
-            """)
-    List<JobPosting> findOpenWithDepartment(@Param("status") String status, @Param("now") LocalDateTime now);
-
-    /** Các tin theo id (kể cả đã đóng), kèm phòng ban: dùng để biết ứng viên từng nộp vào phòng ban / địa điểm nào. */
-    @EntityGraph(attributePaths = {"requisition", "requisition.department"})
-    List<JobPosting> findByJobPostingIdIn(Collection<Integer> jobPostingIds);
 }

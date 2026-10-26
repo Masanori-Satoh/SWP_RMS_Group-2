@@ -371,17 +371,7 @@ Nhằm đảm bảo chất lượng code và phòng ngừa lỗi hồi quy (regr
 - [x] **Giao diện & UI Thông báo:** Bổ sung badge hiển thị "Chờ phê duyệt" (`event-pending`, `badge--warning`) và "Yêu cầu đã được duyệt" (`event-approved`, `badge--success`) trên trang danh sách thông báo `/notifications` (`notifications/list.html` và `notifications.css`).
 - [x] **Kiểm thử đầy đủ:** Unit test (`NotificationServiceImplTest` 27/27 test, `RequisitionServiceTests` 48/48 test) và Integration test (`RequisitionIntegrationTests` 10/10 test) đều PASS 100%.
 
-## Kế hoạch Chatbot (2026-10-20)
+## Dashboard nội bộ theo mockup (2026-10-26)
 
-- [x] Tạo `chatbot_plan.md`: 3 giai đoạn (luật, không thêm bảng → thêm `ChatSession`/`ChatMessage` → tích hợp LLM), bảng phủ 11 use case, ước lượng thời gian và chỗ cắt nếu thiếu thời gian. Chưa code.
-
-## Chatbot ứng viên GĐ 1 (2026-10-20)
-
-- [x] Module mới `chatbot/` (theo luật, chưa LLM, không thêm bảng): `ChatbotApiController` (`POST /api/chatbot/message`), `ChatbotService`, `ChatbotIntentResolver`, `ChatbotJobService`, `ChatbotConfigService`, `ChatbotAccess`, `ChatbotLabels`, `ChatbotText`, `ChatbotValidator`. Thêm `admin/repository/SystemConfigRepository`.
-- [x] `JobPostingRepository`: thêm `findOpenWithDepartment`, `findByJobPostingIdIn` (`@EntityGraph`, chống N+1). Migration `010_chatbot_config.sql` (chỉ thêm dòng `SystemConfig`: FAQ, email HR, bật/tắt). **Cần báo nhóm chạy migration 010.**
-- [x] Theo quyết định tích hợp mới, `fragments/rms-chat.html` dùng widget RMS gọi trực tiếp `POST /api/chatbot/message`; bỏ webhook n8n ở widget này. Landing, `/jobs` và `/jobs/{id}` tiếp tục nhận widget qua `public-topbar.html` có sẵn.
-- [x] Test: 77 unit/controller + 4 integration (SQL Server), chạy cùng JobPosting*/CareerPortal* đều PASS.
-- [ ] **Cần báo nhóm:** sửa `SecurityConfig` (permitAll `POST /api/chatbot/message`).
-- [ ] **Cần báo nhóm và linhkata1806:** widget ở `fragments/rms-chat.html` đã chuyển từ n8n sang API RMS. Cấu hình webhook n8n cũ không còn được widget này sử dụng.
-- [x] Đã giải quyết conflict `DashboardCandidateRedirectTests`: giữ một `DashboardChartService` mock; 2 test dashboard và 77 test chatbot tập trung PASS. 4 integration test chatbot với SQL Server PASS. Chưa chạy toàn bộ test dự án.
-- [ ] Wireframe chatbot chưa được GV duyệt (CLAUDE.md §1).
+- [x] Lập kế hoạch `dashboard.md`: mockup 4 role (HM, HR, Director, Interviewer) đã được GV duyệt, chốt Q1–Q9, chia 6 bước làm.
+- [ ] Bước 1–6 theo `dashboard.md` (chưa bắt đầu code).
