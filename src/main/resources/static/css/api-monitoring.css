@@ -23,7 +23,40 @@
 .apm-service-notice svg { flex-shrink: 0; margin-top: 2px; }
 .apm-probe-form { margin: 0; flex-shrink: 0; }
 .apm-probe-button:disabled { cursor: wait; }
+/* Match the approved Admin lists. Keep service states, notices and probe forms
+   in their existing flow; only identity, surface and spacing are refined. */
+.apm-page.ads-page--refined .apm-service {
+  background: var(--surface);
+  border-color: color-mix(in srgb, var(--brand) 10%, var(--line));
+  box-shadow: var(--shadow-md);
+}
+.apm-page.ads-page--refined .apm-service-header {
+  padding: var(--s3) var(--s6);
+  background: var(--surface);
+}
+.apm-page.ads-page--refined .apm-service-icon {
+  flex-basis: var(--s8);
+  height: var(--s8);
+  background: var(--brand-dark);
+  color: var(--on-brand);
+}
+.apm-page.ads-page--refined .apm-service-heading {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: var(--s1) var(--s3);
+}
+.apm-page.ads-page--refined .apm-service-name { color: var(--brand-dark); font-family: var(--serif); }
+.apm-page.ads-page--refined .apm-service-type { margin: 0; }
+.apm-page.ads-page--refined .apm-service-body {
+  align-items: center;
+  border-top-color: color-mix(in srgb, var(--brand) 22%, var(--line));
+}
+.apm-page.ads-page--refined .apm-metric dt { margin-bottom: var(--s1); }
+.apm-page.ads-page--refined .apm-metric dd { margin-top: 0; }
+.apm-page.ads-page--refined .apm-service-notice { color: var(--ink); }
 @media (max-width: 768px) {
+  .apm-page.ads-page--refined .apm-service-header { padding: var(--s3) var(--s4); }
   .apm-service-header, .apm-service-body { padding: var(--s4); }
   .apm-service-notice { padding: var(--s3) var(--s4); }
   .apm-metrics { gap: var(--s4) var(--s6); }
