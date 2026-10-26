@@ -958,19 +958,32 @@ function confirmSendOffer(offerId) {
                 })
                 .then(res => {
                     if (res && res.success) {
+                        const successMsg = res.message || 'Phát hành Thư mời làm việc thành công!';
+                        try {
+                            sessionStorage.setItem('offerPageFlashMessage', successMsg);
+                        } catch (e) {
+                            console.warn('Cannot write sessionStorage for flash message', e);
+                        }
+
                         if (typeof Swal !== 'undefined') {
                             Swal.fire({
-                                title: 'Thành công',
-                                text: res.message || 'Phát hành Thư mời làm việc thành công!',
+                                title: 'Phát hành thành công!',
+                                text: successMsg,
                                 icon: 'success',
-                                timer: 1500,
-                                showConfirmButton: false
+                                showConfirmButton: true,
+                                confirmButtonText: 'Đã hiểu',
+                                buttonsStyling: false,
+                                customClass: {
+                                    popup: 'director-reject-alert-modal',
+                                    confirmButton: 'btn-director-reject-confirm'
+                                }
                             }).then(() => {
                                 closeModal('detailOfferModal');
                                 window.location.reload();
                             });
                         } else {
-                            showToast(res.message, 'success');
+                            displayOfferFlashBanner(successMsg, 'success');
+                            showToast(successMsg, 'success');
                             closeModal('detailOfferModal');
                             setTimeout(() => window.location.reload(), 800);
                         }
@@ -2027,12 +2040,58 @@ function initOfferFormExpectedStartDateMin() {
     }
 }
 
+function displayOfferFlashBanner(message, type = 'success') {
+    let flashContainer = document.getElementById('pageFlashContainer');
+    if (!flashContainer) {
+        flashContainer = document.createElement('div');
+        flashContainer.id = 'pageFlashContainer';
+        flashContainer.className = 'page-flash-container';
+        const targetParent = document.getElementById('main') || document.querySelector('.page-content') || document.body;
+        if (targetParent.firstChild) {
+            targetParent.insertBefore(flashContainer, targetParent.firstChild);
+        } else {
+            targetParent.appendChild(flashContainer);
+        }
+    }
+
+    flashContainer.style.display = 'flex';
+    flashContainer.classList.remove('flash-dismissed');
+    flashContainer.innerHTML = `
+        <div class="page-flash-alert page-flash-${type}" id="flash${type.charAt(0).toUpperCase() + type.slice(1)}Alert">
+            <i class="fa-solid fa-circle-check"></i>
+            <span>${message}</span>
+        </div>
+    `;
+
+    setTimeout(() => {
+        flashContainer.classList.add('flash-dismissed');
+        setTimeout(() => {
+            flashContainer.style.display = 'none';
+        }, 450);
+    }, 4500);
+}
+
+function checkPendingOfferFlash() {
+    try {
+        const storedMsg = sessionStorage.getItem('offerPageFlashMessage');
+        if (storedMsg) {
+            sessionStorage.removeItem('offerPageFlashMessage');
+            displayOfferFlashBanner(storedMsg, 'success');
+            showToast(storedMsg, 'success');
+        }
+    } catch (e) {
+        console.warn('Cannot read sessionStorage for flash message', e);
+    }
+}
+
 if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', () => {
+        checkPendingOfferFlash();
         initOfferFlashAutoDismiss();
         initOfferFormExpectedStartDateMin();
     });
 } else {
+    checkPendingOfferFlash();
     initOfferFlashAutoDismiss();
     initOfferFormExpectedStartDateMin();
 }
