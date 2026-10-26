@@ -33,8 +33,8 @@ class DashboardCandidateRedirectTests {
 
     @Autowired MockMvc mvc;
     @MockitoBean DashboardService dashboardService;
+    @MockitoBean DashboardChartService chartService;
     @MockitoBean UserRepository users;
-    @MockitoBean DashboardChartService dashboardChartService;
 
     @Test
     void candidateIsSentToMyApplicationsWithoutLoadingTheDashboard() throws Exception {
@@ -55,6 +55,6 @@ class DashboardCandidateRedirectTests {
         when(dashboardService.forUsername("hr_lan")).thenReturn(hr);
         var auth = new UsernamePasswordAuthenticationToken("hr_lan", null, List.of(new SimpleGrantedAuthority("ROLE_HR")));
 
-        assertEquals("dashboard/index", new DashboardController(dashboardService, dashboardChartService).dashboard(auth, new ExtendedModelMap()));
+        assertEquals("dashboard/index", new DashboardController(dashboardService, chartService).dashboard(auth, new ExtendedModelMap()));
     }
 }
