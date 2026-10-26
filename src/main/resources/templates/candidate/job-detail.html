@@ -117,7 +117,7 @@
                         <!-- Tài khoản nội bộ: không nộp hồ sơ. HR, Admin có link sang tin nội bộ
                              (khớp quyền SecurityConfig /internal/job-postings/**), vai trò khác chỉ thấy thông báo. -->
                         <div th:if="${currentUser != null and currentUser.roleName != 'Candidate'}"
-                             th:with="canOpenInternal=${currentUser.roleName == 'HR' or currentUser.roleName == 'System Admin'}"
+                             th:with="canOpenInternal=${currentUser.roleName == 'HR'}"
                              class="internal-employee-notice">
                             <strong>Tài khoản nội bộ</strong>
                             <span th:if="${canOpenInternal}">Xem tin này trong trang quản lý để theo dõi hồ sơ ứng tuyển.</span>
