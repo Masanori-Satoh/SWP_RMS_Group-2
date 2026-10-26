@@ -13,6 +13,8 @@ import com.group2.rms.user.repository.UserRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.context.annotation.Import;
@@ -31,6 +33,7 @@ import java.util.Optional;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -44,6 +47,21 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @WebMvcTest(OfferController.class)
 @Import({SecurityConfig.class, DatabaseUserDetailsService.class})
 class OfferIntegrationTests {
+
+    @ParameterizedTest
+    @ValueSource(strings = {"/interviews", "/offers", "/requisitions", "/internal/job-postings", "/applications"})
+    void systemAdminCannotOpenRecruitmentModules(String path) throws Exception {
+        mvc.perform(get(path).with(user("admin").authorities(() -> "ROLE_SYSTEM_ADMIN")))
+                .andExpect(status().isForbidden());
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"approve", "reject"})
+    void hrCannotDecideOffer(String action) throws Exception {
+        mvc.perform(post("/offers/1/" + action).with(user("hr_specialist").authorities(() -> "ROLE_HR"))
+                        .with(csrf()).contentType(MediaType.APPLICATION_JSON).content("{\"comments\":\"Denied\"}"))
+                .andExpect(status().isForbidden());
+    }
 
     @Autowired
     private MockMvc mvc;
@@ -88,6 +106,10 @@ class OfferIntegrationTests {
                 .role(dirRole)
                 .build();
         when(userRepository.findByUsernameIgnoreCase("director_user")).thenReturn(Optional.of(dirUser));
+
+        User adminUser = User.builder().userId(4).username("admin").accountStatus("Active")
+                .role(Role.builder().roleName("System Admin").build()).build();
+        when(userRepository.findByUsernameIgnoreCase("admin")).thenReturn(Optional.of(adminUser));
     }
 
     @Test

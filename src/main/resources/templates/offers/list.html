@@ -247,7 +247,7 @@
                                         </button>
 
                                         <!-- Director Duyệt / Từ chối (Chỉ khi Pending_Director và là Director) -->
-                                        <th:block th:if="${o.offerStatus == 'Pending_Director' and (userRole == 'Director' or userRole == 'System Admin')}">
+                                        <th:block th:if="${o.offerStatus == 'Pending_Director' and userRole == 'Director'}">
                                             <button type="button" th:onclick="'openDirectorDecisionModal(' + ${o.offerId} + ', \'APPROVE\')'" class="btn-icon btn-icon-success" title="Phê duyệt">
                                                 <i class="fa-solid fa-check"></i>
                                             </button>
