@@ -70,8 +70,8 @@
 .ads-form-page .ads-heading::before { right: 0; }
 .ads-form-page .account-heading p { max-width: 65ch; margin-top: var(--s2); color: var(--muted); font-size: var(--font-sm); }
 .ads-form-page .ads-title { margin-top: var(--s3); }
-/* Approved Admin surface variant. Opt in per view after visual review;
-   Department is the first adopter. Shared catalog components stay intact. */
+/* Approved Admin surface variant shared by Internal Accounts, Candidate
+   Accounts and Department lists. Shared catalog components stay intact. */
 .rms-app .ads-page--refined { padding: var(--s6); font-size: var(--font-base); }
 .ads-page--refined .mft-toolbar {
   padding-block: var(--s3);
@@ -81,7 +81,7 @@
 .ads-page--refined .mft-search { border-color: var(--control-line); }
 .ads-page--refined .mft-search:focus-within { border-color: var(--brand); }
 .ads-page--refined .ads-table-card {
-  border-color: color-mix(in srgb, var(--control-line) 30%, var(--line));
+  border-color: color-mix(in srgb, var(--brand) 10%, var(--line));
   box-shadow: var(--shadow-md);
 }
 .ads-page--refined .ads-table-header {

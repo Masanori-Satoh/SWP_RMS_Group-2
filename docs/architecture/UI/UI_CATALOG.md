@@ -417,3 +417,23 @@ Chỉ là class + markup (không có fragment), không cần JS: thẻ `<details
 
 Biến thể chỉ thay trình bày; không đổi dữ liệu, URL, handler, lựa chọn dòng,
 điều kiện dock/drawer hoặc mặc định mở panel. Chưa áp dụng cho Homepage/Auth.
+
+### Cập nhật 26/10/2026 — Đồng bộ ba danh sách Admin theo Internal Accounts
+
+Theo mẫu được chọn tại `/admin/accounts`, các trang
+`admin/accounts/candidates.html` và `admin/departments/list.html` dùng cùng
+`.ads-page--refined` trong `pages/admin-surfaces.css`. Quy ước trình bày mới nhất:
+
+- Tiêu đề Lora; header bảng và header panel dùng `--brand-dark` / `--on-brand`.
+- Card trắng, bo `--radius-lg`; viền và bóng theo mẫu Internal Accounts.
+- Dữ liệu bảng 14px. Toolbar và các liên kết phân trang dùng thành phần hiện có.
+- Nút thao tác của Department dùng lại palette/kích thước Internal Accounts;
+  giữ chữ phụ tên đăng nhập trưởng phòng ở cỡ `--font-sm`.
+- Candidate dùng màu chữ badge catalog giống Internal; ngoại lệ màu legacy của
+  `workspace.css` chỉ được mở rộng thêm cho `.cac-page`.
+- Bộ lọc, cột dữ liệu, URL, CSRF và hành vi dock/drawer giữ riêng theo nghiệp vụ.
+  Không ép bảng Department ít cột có cùng min-width với bảng tài khoản.
+
+Homepage, Auth, Dashboard và API Monitoring không được bật hoặc đổi theme trong
+đợt đồng bộ hai danh sách này. Các giá trị trình bày ở cập nhật này thay thế mẫu
+Department ban đầu phía trên; không thay đổi design token toàn hệ thống.
