@@ -51,22 +51,23 @@ Mọi `POST` cần CSRF token (thiếu → 403). Thao tác ghi trên danh sách 
 
 | URL | Vai trò |
 |---|---|
-| `GET /internal/job-postings`, `GET /internal/job-postings/{id}` | HR, Hiring Manager, Director, System Admin |
-| `/internal/job-postings/create`, `/dashboard` | HR, System Admin |
+| `GET /internal/job-postings`, `GET /internal/job-postings/{id}` | HR, Hiring Manager, Director |
+| `/internal/job-postings/create`, `/dashboard` | chỉ HR |
 | `/internal/job-postings/{id}/close` | chỉ HR |
-| Mọi thao tác ghi khác | HR, System Admin |
+| Mọi thao tác ghi khác | chỉ HR |
+
+System Admin không có rule nào ở đây → 403 (Admin chỉ cấu hình hệ thống, không làm nghiệp vụ).
 
 **Lớp 2, dữ liệu** (`JobPostingAccess#canView` / `requireView`; danh sách lọc cùng phạm vi ở `JobPostingListService#scope`):
 
 | Vai trò | Thấy tin nào | Thao tác |
 |---|---|---|
 | HR | Tất cả | Tạo, sửa, đăng, hẹn đăng, tạm dừng, mở lại, **đóng**, xóa nháp, đăng lại |
-| System Admin | Tất cả | Như HR, **trừ đóng tin** (D7: đóng tin còn xử lý Offer / đề xuất ứng viên) |
 | Hiring Manager | Tin của phòng mình, **trừ tin nháp** (D5) | Chỉ xem; xem ứng viên, ứng viên tiềm năng |
 | Director | Mọi tin, **trừ tin nháp** (D4, D5) | Chỉ xem |
 
 > GV hỏi: *"HM gõ thẳng `/internal/job-postings/17` của một tin nháp thì sao?"*
-> Trả lời: service kiểm tra lại, tin nháp mà người xem không phải HR / Admin → `AccessDeniedException` → 403.
+> Trả lời: service kiểm tra lại, tin nháp mà người xem không phải HR → `AccessDeniedException` → 403.
 > Danh sách cũng tự ẩn tin nháp (`JobPostingSpecifications#notDraft`), sửa URL `?status=Draft` cũng bị bỏ qua.
 
 ---
@@ -97,12 +98,11 @@ Mọi `POST` cần CSRF token (thiếu → 403). Thao tác ghi trên danh sách 
 |---|---|
 | Ô tìm kiếm | `?q=` → LIKE trên **tiêu đề tin** hoặc **tên phòng ban** (escape `% _ [`, tối đa 120 ký tự) |
 | Trạng thái (nhiều lựa chọn) | `?status=` gồm Bản nháp, **Hẹn đăng**, Đang đăng, Tạm dừng, Đã đóng (HM / Director không có Bản nháp). Hẹn đăng = `Published AND PostingDate > now`; Đang đăng = `Published AND PostingDate <= now` |
-| Phòng ban | HR, Director, Admin |
+| Phòng ban | HR, Director |
 | Hạn nộp | HR, HM, Director: còn hạn (> 7 ngày) / sắp hết (0–7 ngày) / đã quá hạn |
-| Người tạo, Ngày đăng (từ–đến) | Chỉ Admin |
 | Sắp xếp | Mới đăng nhất, Hạn nộp gần nhất, **Nhiều hồ sơ nhất** (ORDER BY số hồ sơ bằng subquery, `JobPostingSpecifications#orderByApplicationCount`), Tiêu đề A–Z |
 | Chip ✕ | Bỏ riêng một bộ lọc, giữ các tham số khác (`RequisitionListLinks#without`) |
-| Dải "N yêu cầu đã duyệt chưa có tin" | HR / Admin: yêu cầu Approved chưa có tin đang mở; bấm để mở form tạo tin |
+| Dải "N yêu cầu đã duyệt chưa có tin" | HR: yêu cầu Approved chưa có tin đang mở; bấm để mở form tạo tin |
 
 Giá trị lạ trên URL (vai trò không có ô đó, giá trị ngoài danh sách) bị bỏ qua (`normalizeFilter`), không báo lỗi.
 
@@ -116,7 +116,7 @@ Giá trị lạ trên URL (vai trò không có ô đó, giá trị ngoài danh s
 | Ngày đăng | `PostingDate`; tin hẹn đăng có "sau N ngày"; nháp hiện "Chưa đăng" |
 | Hạn nộp | `ApplicationDeadline`; "còn N ngày" / "quá hạn N ngày"; vàng khi ≤ 7 ngày, đỏ khi quá hạn; tin đã đóng không tô màu |
 | Trạng thái | `JobPostingLabels#statusLabel` / `#statusTone` |
-| Người tạo | `JobPosting.CreatedBy` (chỉ HR, Admin thấy) |
+| Người tạo | `JobPosting.CreatedBy` (chỉ HR thấy) |
 | Menu ⋯ | Theo cờ do `JobPostingMapper#toListRow` tính (luật ở `JobPostingAccess`): Đăng tin, Mở lại, Xem ứng viên, Xem chi tiết, Chỉnh sửa, Tạm dừng, Đóng tin (HR), Xóa bản nháp (nháp chưa có hồ sơ) |
 
 ---
@@ -183,7 +183,7 @@ Số liệu chỉ có khi tin đã lên trang tuyển dụng (đang đăng / t�
 
 ### 5.2 Nút ở đầu trang
 
-| Trạng thái | Nút (HR / Admin) |
+| Trạng thái | Nút (HR) |
 |---|---|
 | Nháp | Đăng tin · Chỉnh sửa · Xóa bản nháp (chưa có hồ sơ) |
 | Hẹn đăng | Đăng ngay · Chỉnh sửa · Hủy lịch đăng |
