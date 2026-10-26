@@ -25,7 +25,10 @@ import java.util.Set;
 @RequiredArgsConstructor
 public class RequisitionValidator {
 
-    /** Hai nút trên form: "Lưu bản nháp" gửi action=draft, "Gửi duyệt" gửi action=submit. */
+    /**
+     * Hai nút trên form: "Lưu bản nháp" gửi action=draft, "Gửi duyệt" gửi
+     * action=submit.
+     */
     public static final String ACTION_DRAFT = "draft";
     public static final String ACTION_SUBMIT = "submit";
 
@@ -34,17 +37,12 @@ public class RequisitionValidator {
     public static final int TEXT_FIELD_CHAR_LIMIT = 2000;
     public static final int SHORT_FIELD_CHAR_LIMIT = 255;
     public static final int CRITERIA_NAME_CHAR_LIMIT = 150;
-    /** Độ dài tối đa ý kiến của Giám đốc khi duyệt / trả lại. */
     public static final int COMMENT_CHAR_LIMIT = 1000;
-    /** Tên vị trí mặc định, không được gửi duyệt với tên này. */
     public static final String PLACEHOLDER_TITLE = "Untitled requisition";
     public static final int PROBATION_MIN_DAYS = 1;
-    /** Thời gian thử việc tối đa (ngày), theo Điều 25 Bộ luật Lao động 2019. */
     public static final int PROBATION_MAX_DAYS = 180;
-    /** Số lượng cần tuyển tối thiểu của một yêu cầu. */
     public static final int POSITIONS_MIN = 1;
     public static final int POSITIONS_MAX = 30;
-    /** Mức lương tối đa (VND/tháng) được nhập, chặn gõ thừa số 0. Dạng chuỗi để dùng trong @DecimalMax của DTO. */
     public static final String SALARY_MAX_TEXT = "1000000000";
     public static final BigDecimal SALARY_MAX = new BigDecimal(SALARY_MAX_TEXT);
     public static final int MAX_CRITERIA_LIMIT = 50;
@@ -52,14 +50,15 @@ public class RequisitionValidator {
     public static final String WEIGHT_MAX_TEXT = "100";
     public static final BigDecimal REQUIRED_TOTAL_WEIGHT = new BigDecimal(WEIGHT_MAX_TEXT);
 
-    // Câu lỗi dùng chung giữa annotation trên DTO (Bean Validation) và validate() bên dưới
+    // Câu lỗi dùng chung giữa annotation trên DTO (Bean Validation) và validate()
+    // bên dưới
     public static final String TITLE_TOO_LONG = "Nội dung quá " + TITLE_CHAR_LIMIT + " ký tự";
     public static final String SHORT_FIELD_TOO_LONG = "Nội dung quá " + SHORT_FIELD_CHAR_LIMIT + " ký tự";
     public static final String CRITERIA_NAME_TOO_LONG = "Nội dung quá " + CRITERIA_NAME_CHAR_LIMIT + " ký tự";
-    public static final String PROBATION_RANGE_MESSAGE =
-            "Thời gian thử việc phải từ " + PROBATION_MIN_DAYS + " đến " + PROBATION_MAX_DAYS + " ngày.";
-    public static final String POSITIONS_RANGE_MESSAGE =
-            "Số lượng cần tuyển phải từ " + POSITIONS_MIN + " đến " + POSITIONS_MAX + " người.";
+    public static final String PROBATION_RANGE_MESSAGE = "Thời gian thử việc phải từ " + PROBATION_MIN_DAYS + " đến "
+            + PROBATION_MAX_DAYS + " ngày.";
+    public static final String POSITIONS_RANGE_MESSAGE = "Số lượng cần tuyển phải từ " + POSITIONS_MIN + " đến "
+            + POSITIONS_MAX + " người.";
     public static final String SALARY_FORMAT_MESSAGE = "Mức lương phải lớn hơn 0 với tối đa 2 chữ số thập phân.";
     public static final String SALARY_MAX_MESSAGE = "Mức lương không được vượt quá 1.000.000.000 VND/tháng.";
     public static final String WEIGHT_MESSAGE = "Trọng số phải từ 0.01 đến 100 với tối đa hai chữ số thập phân.";
@@ -71,7 +70,10 @@ public class RequisitionValidator {
     public static final String GENDER_ANY = "Any";
     public static final List<String> HIRING_TYPES = List.of("New", "Replacement");
 
-    /** Đồng hồ dùng chung (core/config/ClockConfig); test truyền Clock.fixed để cố định "hôm nay". */
+    /**
+     * Đồng hồ dùng chung (core/config/ClockConfig); test truyền Clock.fixed để cố
+     * định "hôm nay".
+     */
     private final Clock clock;
 
     /** Người dùng bấm "Gửi duyệt" (không phải "Lưu bản nháp"). */
@@ -230,7 +232,6 @@ public class RequisitionValidator {
         return (textValue == null || textValue.isBlank()) ? null : textValue.trim();
     }
 
-    //Làm sạch nội dung ô nhiều dòng
     public static String cleanMultiline(String textValue) {
         String cleaned = cleanString(textValue);
         return cleaned == null ? null : cleaned.replace("\r\n", "\n");
