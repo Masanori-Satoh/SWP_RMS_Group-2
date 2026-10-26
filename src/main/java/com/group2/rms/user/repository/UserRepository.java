@@ -44,4 +44,7 @@ public interface UserRepository extends JpaRepository<User, Integer>, JpaSpecifi
 
     @Query("SELECT u FROM User u WHERE LOWER(TRIM(u.role.roleName)) = 'director' AND LOWER(TRIM(u.accountStatus)) = 'active'")
     List<User> findAllActiveDirectors();
+
+    @Query("SELECT u FROM User u WHERE LOWER(TRIM(u.role.roleName)) = 'hr' AND LOWER(TRIM(u.accountStatus)) = 'active'")
+    List<User> findAllActiveHrs();
 }

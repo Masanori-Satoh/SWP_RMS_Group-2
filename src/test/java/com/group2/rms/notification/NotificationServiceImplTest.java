@@ -479,6 +479,36 @@ class NotificationServiceImplTest {
         assertTrue(saved.getEventId().startsWith("OFFER_DEC_REJ_1_"));
     }
 
+    @Test
+    @DisplayName("notifyDirectorDecisionOnOffer: Phát thông báo phê duyệt tới cả người tạo và tất cả chuyên viên HR active")
+    void notifyDirectorDecisionOnOffer_broadcastToAllActiveHrs() {
+        User hrCreator = User.builder().userId(15).username("hr.creator").fullName("HR Creator").build();
+        User hrColleague = User.builder().userId(16).username("hr.colleague").fullName("HR Colleague").build();
+        User candidateUser = User.builder().userId(22).username("candidate").fullName("Candidate Name").build();
+        Candidate candidate = Candidate.builder().candidateId(5).account(candidateUser).build();
+        Application app = Application.builder().applicationId(10).candidate(candidate).build();
+        com.group2.rms.offer.entity.OfferProposal offer = com.group2.rms.offer.entity.OfferProposal.builder()
+                .offerId(99)
+                .offeredPositionTitle("Frontend ReactJS Developer")
+                .proposedBy(hrCreator)
+                .application(app)
+                .build();
+
+        User directorUser = User.builder().userId(20).username("dir").fullName("Nguyen Van Director").build();
+        when(userRepository.findAllActiveHrs()).thenReturn(List.of(hrCreator, hrColleague));
+        when(notificationRepository.existsByRecipient_UserIdAndEventId(any(), any())).thenReturn(false);
+
+        notificationService.notifyDirectorDecisionOnOffer(offer, directorUser, true, "Đã duyệt");
+
+        ArgumentCaptor<Notification> captor = ArgumentCaptor.forClass(Notification.class);
+        verify(notificationRepository, times(2)).save(captor.capture());
+
+        List<Notification> savedList = captor.getAllValues();
+        assertEquals(2, savedList.size());
+        assertTrue(savedList.stream().anyMatch(n -> n.getRecipient().getUserId().equals(15)));
+        assertTrue(savedList.stream().anyMatch(n -> n.getRecipient().getUserId().equals(16)));
+    }
+
     // =========================================================================
     // notifyRequisitionPendingDirector
     // =========================================================================
