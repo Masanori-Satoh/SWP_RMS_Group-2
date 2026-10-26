@@ -930,7 +930,6 @@ function confirmSendOffer(offerId) {
         `,
         title: 'Phát hành Thư mời làm việc?',
         desc: 'Bạn có chắc chắn muốn phát hành Thư mời làm việc (Offer Letter) tới ứng viên?',
-        subtext: 'Trạng thái đề xuất sẽ được chuyển sang Sent_Candidate.',
         confirmText: 'Xác nhận phát hành',
         confirmClass: 'btn-director-reject-confirm',
         showCancel: true,
@@ -1798,6 +1797,7 @@ function showDirectorCustomModal({
             ${iconHtml || defaultIcon}
             <h3 class="reject-warn-title">${title}</h3>
             <p class="reject-warn-desc">${desc}</p>
+            ${subtext ? `
             <div class="reject-warn-divider"></div>
             <div class="reject-warn-subtext">
                 <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#475569" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -1805,8 +1805,8 @@ function showDirectorCustomModal({
                     <line x1="12" y1="16" x2="12" y2="12"></line>
                     <line x1="12" y1="8" x2="12.01" y2="8"></line>
                 </svg>
-                <span>${subtext || 'Thông tin này sẽ được gửi lại để HR xử lý tiếp.'}</span>
-            </div>
+                <span>${subtext}</span>
+            </div>` : ''}
         `,
         showConfirmButton: true,
         confirmButtonText: confirmText,
