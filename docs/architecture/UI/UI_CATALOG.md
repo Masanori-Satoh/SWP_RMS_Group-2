@@ -437,3 +437,14 @@ Theo mẫu được chọn tại `/admin/accounts`, các trang
 Homepage, Auth, Dashboard và API Monitoring không được bật hoặc đổi theme trong
 đợt đồng bộ hai danh sách này. Các giá trị trình bày ở cập nhật này thay thế mẫu
 Department ban đầu phía trên; không thay đổi design token toàn hệ thống.
+
+### Cập nhật 26/10/2026 — Giám sát API theo giao diện Admin đã đồng bộ
+
+`admin/api-monitoring/index.html` dùng `.ads-page--refined` cho tiêu đề, nền và
+khoảng cách chung. `api-monitoring.css` giữ bố cục danh sách dịch vụ, dùng card
+trắng bo 12px, `--shadow-md`, icon xanh đậm và tiêu đề dịch vụ Lora như các danh
+sách Admin. Loại dịch vụ nằm cùng hàng với tên khi đủ chỗ, tự xuống dòng khi hẹp.
+
+Giữ đủ badge trạng thái, số đo, thời điểm, thông báo cấu hình và các form kiểm
+tra hiện có. Nút nhỏ vẫn dùng catalog 40px. Không tự chạy probe, gửi email, đổi
+endpoint hoặc suy diễn trạng thái hoạt động từ việc chỉnh giao diện.
