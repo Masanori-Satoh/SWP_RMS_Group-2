@@ -103,9 +103,9 @@ class RequisitionAccessTests {
                 "director, Pending_Director, true",
                 "director, Approved, true",
                 "director, Rejected, true",
-                // Admin: tất cả
-                "admin, Draft, true",
-                "admin, Approved, true"
+                // Admin: không tham gia nghiệp vụ
+                "admin, Draft, false",
+                "admin, Approved, false"
         })
         @DisplayName("Mỗi role chỉ xem được đúng các trạng thái được phép")
         void requireView_shouldFollowRoleAndStatusTable_whenViewerOpensDetail(String viewer, String status, boolean allowed) {
@@ -239,13 +239,13 @@ class RequisitionAccessTests {
         @ParameterizedTest(name = "{0} mở tin {1} -> có link = {2}")
         @CsvSource({
                 "hr, Draft, true",
-                "admin, Draft, true",
+                "admin, Draft, false",
                 "manager, Draft, false",
                 "director, Draft, false",
                 "manager, Published, true",
                 "director, Closed, true"
         })
-        @DisplayName("Link tin tuyển dụng: tin nháp chỉ HR / Admin thấy; tin khác mọi role nội bộ đều thấy")
+        @DisplayName("Link tin tuyển dụng: tin nháp chỉ HR thấy; Admin không thấy tin")
         void canOpenPosting_shouldHideDraftPosting_whenViewerIsNotHrOrAdmin(String viewer, String postingStatus,
                 boolean expected) {
             assertEquals(expected, access.canOpenPosting(userByName(viewer), postingStatus));

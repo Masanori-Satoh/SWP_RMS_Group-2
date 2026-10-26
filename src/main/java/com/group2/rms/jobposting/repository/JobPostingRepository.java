@@ -76,10 +76,6 @@ public interface JobPostingRepository extends JpaRepository<JobPosting, Integer>
     @Query("SELECT DISTINCT p.requisition.requisitionId FROM JobPosting p WHERE p.postingStatus IN :statuses")
     Set<Integer> findRequisitionIdsWithPostingStatusIn(@Param("statuses") Collection<String> statuses);
 
-    /** Những người đã tạo tin, cho ô lọc "Người tạo" (Admin). */
-    @Query("SELECT DISTINCT u FROM JobPosting p JOIN p.createdBy u ORDER BY u.fullName ASC")
-    List<User> findPostingCreators();
-
     /** Mọi lần đăng của một yêu cầu, theo thứ tự lần đăng. */
     List<JobPosting> findByRequisition_RequisitionIdOrderByPostingNoAsc(Integer requisitionId);
 

@@ -39,7 +39,7 @@ Mọi `POST` đều cần CSRF token (Spring Security tự chèn `_csrf` vào fo
 
 ## 1. Phân quyền: hai lớp bảo vệ
 
-**Lớp 1, theo URL** (`core/config/SecurityConfig`): `/requisitions/**` chỉ cho `HIRING_MANAGER`, `DIRECTOR`, `HR`, `SYSTEM_ADMIN`. Candidate, Interviewer gõ URL thì bị 403 trước khi vào controller.
+**Lớp 1, theo URL** (`core/config/SecurityConfig`): `/requisitions/**` chỉ cho `HIRING_MANAGER`, `DIRECTOR`, `HR`. Candidate, Interviewer, System Admin gõ URL thì bị 403 trước khi vào controller.
 
 **Lớp 2, theo dữ liệu** (`RequisitionServiceImpl#scope` + `RequisitionAccess`):
 
@@ -48,7 +48,6 @@ Mọi `POST` đều cần CSRF token (Spring Security tự chèn `_csrf` vào fo
 | Hiring Manager | Chỉ yêu cầu **mình tạo** | Của mình, hoặc thuộc phòng mình quản lý | Của mình, khi **Draft / Rejected** | Không | Của mình, khi **Pending_Director** |
 | Director | Mọi yêu cầu **trừ Draft** | Mọi yêu cầu trừ Draft | Không | Khi **Pending_Director** và không phải người tạo | Không |
 | HR | Chỉ **Approved** | Chỉ Approved | Không | Không | Không |
-| System Admin | Tất cả | Tất cả | Khi Draft / Rejected | Không | Không |
 
 > GV hỏi: *"Nếu HR sửa URL thành `?status=Draft` thì sao?"*
 > Trả lời: bộ lọc luôn được **nối thêm (AND)** vào `scope`. Câu SQL thành `ApprovalStatus = 'Approved' AND ApprovalStatus = 'Draft'` nên ra 0 dòng. Ngoài ra `normalizeFilter` bỏ luôn tham số `status` vì HR không có ô lọc trạng thái.
@@ -85,7 +84,7 @@ Mọi `POST` đều cần CSRF token (Spring Security tự chèn `_csrf` vào fo
 |---|---|
 | **Ô tìm kiếm** | Form `GET`: Enter → `?q=...`. Service tìm `LIKE` trên **tên vị trí** (`JobRequisition.Title`) **hoặc tên phòng ban** (`Department.DepartmentName`), không phân biệt hoa thường. Ký tự `% _ [` được escape (`RequisitionSpecifications#escapeLike`). Cắt tối đa 120 ký tự |
 | **Nút "Bộ lọc"** | Thẻ `<details>` tự mở/đóng, không cần JS. Số trên nút = `RequisitionSearchRequest#activeFilterCount` (không tính từ khóa, sắp xếp) |
-| **Ô lọc theo role** | Do `RequisitionServiceImpl#buildFilterOptions` quyết định: HM (Trạng thái, Tin tuyển dụng, Ngày tạo); Director (Trạng thái trừ Bản nháp, Phòng ban, Người tạo); HR (Tin tuyển dụng, Phòng ban, Người tạo); Admin (Trạng thái, Phòng ban, Người tạo, Ngày tạo). Mọi role có Sắp xếp |
+| **Ô lọc theo role** | Do `RequisitionServiceImpl#buildFilterOptions` quyết định: HM (Trạng thái, Tin tuyển dụng, Ngày tạo); Director (Trạng thái trừ Bản nháp, Phòng ban, Người tạo); HR (Tin tuyển dụng, Phòng ban, Người tạo). Mọi role có Sắp xếp |
 | **Trạng thái** | Checkbox nhiều lựa chọn → `?status=A&status=B` → `ApprovalStatus IN (...)` |
 | **Tin tuyển dụng** | `none` → `NOT EXISTS` trong `JobPosting`; `Published/Paused/Closed` → trạng thái của **tin mới nhất** (`MAX(JobPostingId)`) bằng giá trị đó (`RequisitionSpecifications#latestPostingStatusIs`) |
 | **Phòng ban / Người tạo** | `DepartmentId = ?` / `HiringManagerId = ?`. Danh sách người tạo chỉ gồm HM có yêu cầu trong phạm vi người xem được thấy (`findCreatorsWithStatusIn`) |
@@ -96,7 +95,7 @@ Mọi `POST` đều cần CSRF token (Spring Security tự chèn `_csrf` vào fo
 | **Chip ✕** | Link do `RequisitionListLinks#without` tạo: giữ các tham số khác, bỏ tham số của chip, bỏ `page`. Không role nào bị lọc sẵn trạng thái (Director vào trang cũng thấy tất cả) |
 | **"Xóa bộ lọc"** | `/requisitions?status=` → xem tất cả |
 | **"Đặt lại mặc định"** | `/requisitions` → về mặc định của role (Director lại thấy Chờ duyệt) |
-| **"+ Tạo yêu cầu mới"** | Chỉ hiện khi `canCreate` (HM, Director, Admin) → `GET /requisitions/create` |
+| **"+ Tạo yêu cầu mới"** | Chỉ hiện khi `canCreate` (HM, Director) → `GET /requisitions/create` |
 
 ### 3.2 Các cột của bảng
 
@@ -109,7 +108,7 @@ Mọi `POST` đều cần CSRF token (Spring Security tự chèn `_csrf` vào fo
 | Số lượng | `JobRequisition.NumberOfPositions` |
 | Hình thức | `EmploymentType` dịch bằng `RequisitionLabels#employmentType` |
 | Trạng thái | `ApprovalStatus` → nhãn `RequisitionLabels#approvalStatus`, màu `#approvalTone` (Đã duyệt xanh, Chờ duyệt vàng, Từ chối đỏ, Nháp xám) |
-| Tin tuyển dụng | Tin **mới nhất** của yêu cầu (`JobPostingRepository#findTopByRequisition_RequisitionIdOrderByJobPostingIdDesc`) → `RequisitionLabels#postingStatus`. Chỉ thành link khi `postingViewable` (HR, HM, Admin; Director bị 403 ở trang tin nên không có link) |
+| Tin tuyển dụng | Tin **mới nhất** của yêu cầu (`JobPostingRepository#findTopByRequisition_RequisitionIdOrderByJobPostingIdDesc`) → `RequisitionLabels#postingStatus`. Chỉ thành link khi `postingViewable` (HR, HM; Director bị 403 ở trang tin nên không có link) |
 | Ngày tạo | `JobRequisition.CreatedAt` (tự đặt ở `BaseEntity#onCreate`) |
 | Menu ⋯ | Mỗi mục hiện theo cờ do service tính trong `RequisitionServiceImpl#response`: `editable`, `copyable`, `postable`, `postingViewable`, `deletable` |
 
@@ -128,7 +127,7 @@ Fragment catalog `fragments/ui/pagination :: paged`, link do `PageLinks#to` tạ
 | Trường | Cột DB & Kiểu | Lưu nháp | Gửi duyệt | Quy tắc kiểm tra & Hành vi giao diện |
 |---|---|---|---|---|
 | **Tên vị trí** | `Title` NVARCHAR(200) NOT NULL | **Bắt buộc** | **Bắt buộc** | Không được để trống. Cắt khoảng trắng 2 đầu; tối đa 200 ký tự. Khi gửi duyệt không được để tiêu đề mặc định `"Untitled requisition"` |
-| **Phòng ban** | `DepartmentId` INT NOT NULL | (tự động) | (tự động) | **Không lấy từ form** (không có trong `@InitBinder`). Tạo mới: phòng ban của tài khoản đang đăng nhập, phải đang `Active`, không có thì báo "Tài khoản của bạn chưa được gán phòng ban đang hoạt động...". Sửa: giữ phòng ban đã lưu (Admin sửa phiếu của HM không làm đổi phòng ban) |
+| **Phòng ban** | `DepartmentId` INT NOT NULL | (tự động) | (tự động) | **Không lấy từ form** (không có trong `@InitBinder`). Tạo mới: phòng ban của tài khoản đang đăng nhập, phải đang `Active`, không có thì báo "Tài khoản của bạn chưa được gán phòng ban đang hoạt động...". Sửa: giữ phòng ban đã lưu |
 | **Đợt tuyển dụng** | `RecruitmentRound` INT NOT NULL | (tự động) | (tự động) | Tạo mới = 1; sao chép = đợt lớn nhất trong chuỗi + 1 (`assignRecruitmentRound`, khóa dòng phiếu gốc tránh trùng đợt) |
 | **Số lượng cần tuyển** | `NumberOfPositions` INT NOT NULL | **Bắt buộc** | **Bắt buộc** | Số nguyên **1–30** (mặc định 1, hằng số `POSITIONS_MIN`/`POSITIONS_MAX`). Nút −/+ dừng ở 1 và 30 |
 | **Loại tuyển dụng** | `HiringType` NVARCHAR(20) | Không | Không | Tuyển mới (`New`) hoặc Tuyển thay thế (`Replacement`). Không chọn gì tương đương "Chưa xác định" (`NULL`) |
@@ -171,7 +170,7 @@ Form được thiết kế với cơ chế phòng ngừa vỡ layout toàn diệ
 2. Form `POST` với `action=draft` → `RequisitionController#create` (hoặc `#update`).
 3. `@InitBinder` đăng ký whitelist các trường được phép bind (chống can thiệp các trường nhạy cảm như `approvalStatus`) và đăng ký custom `PropertyEditor` cho `minSalary`, `maxSalary` (đọc `20.000.000` thành 20000000 khi parse sang `BigDecimal`).
 4. `RequisitionServiceImpl#createRequisition`:
-   - `access.requireCreate`: chỉ HM, Director, Admin.
+   - `access.requireCreate`: chỉ HM, Director.
    - Lấy phòng ban của người tạo (phải có và đang `Active`), ghi vào `departmentId`.
    - `RequisitionValidator#validate` (kiểm tra lại toàn bộ, không tin JS).
    - Chặn trùng: đã có **bản nháp cùng tên trong cùng phòng ban** thì báo lỗi.
@@ -231,12 +230,12 @@ Form được thiết kế với cơ chế phòng ngừa vỡ layout toàn diệ
 | Nút | Hiện khi | Bấm thì |
 |---|---|---|
 | **← Quay về danh sách** | Luôn hiện | `GET /requisitions` (về màn danh sách, bộ lọc mặc định của vai trò) |
-| **Chỉnh sửa / Sửa & gửi lại** | `editable`: người tạo hoặc Admin, trạng thái Draft hoặc Rejected | `GET /edit/{id}` → form |
+| **Chỉnh sửa / Sửa & gửi lại** | `editable`: người tạo (HM / Director), trạng thái Draft hoặc Rejected | `GET /edit/{id}` → form |
 | **Rút lại để chỉnh sửa** | `withdrawable`: người tạo, trạng thái Pending_Director | `POST /{id}/withdraw` → `withdraw`: khóa dòng, kiểm tra lại quyền, `Pending_Director → Draft`, ghi `AuditLog` |
 | **Xóa** | `deletable`: được sửa, **chưa có tin tuyển dụng và chưa có đợt tuyển sau sao chép từ nó** | Hộp thoại xác nhận → `POST /delete/{id}` → `deleteRequisition`: kiểm tra quyền, chặn nếu đã có `JobPosting` hoặc đã là phiếu gốc của đợt sau (`existsByOriginalRequisition_RequisitionId`), ghi `AuditLog` (`DELETE`), xóa `RequisitionApproval`, xóa yêu cầu (tiêu chí xóa theo cascade) |
 | **Sao chép thành đợt mới** | `copyable`: có quyền tạo, trạng thái Approved / Rejected | `GET /copy/{id}` (xem mục 4.4) |
-| **Tạo tin tuyển dụng** | `postable`: HR / Admin, Approved, chưa có tin | `GET /internal/job-postings/create?requisitionId=...` (module Tin tuyển dụng) |
-| **Xem tin tuyển dụng** | `postingViewable`: đã có tin, role HR / HM / Admin | `GET /internal/job-postings/{id}` |
+| **Tạo tin tuyển dụng** | `postable`: HR, Approved, chưa có tin | `GET /internal/job-postings/create?requisitionId=...` (module Tin tuyển dụng) |
+| **Xem tin tuyển dụng** | `postingViewable`: đã có tin, role HR / HM | `GET /internal/job-postings/{id}` |
 | **Phê duyệt / Trả lại** | `decidable`: Director, không phải người tạo, Pending_Director | `POST /{id}/decision` → `decide`: khóa dòng; **Trả lại bắt buộc có ý kiến** (cả JS lẫn server), tối đa 1000 ký tự; đổi trạng thái; thêm bản ghi `RequisitionApproval` (Director, kết quả, ý kiến, thời điểm); ghi `AuditLog`; **Phê duyệt hoặc Trả lại đều tạo `Notification` cho HM** |
 
 ---

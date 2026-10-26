@@ -93,6 +93,13 @@ class InterviewResultWebTests {
     }
 
     @Test
+    void adminIsForbidden() throws Exception {
+        mvc.perform(get("/interviews/7/result").with(as(31, "admin", "System Admin")))
+                .andExpect(status().isForbidden());
+        verifyNoInteractions(resultService);
+    }
+
+    @Test
     void hrSeesAllEvaluationsWithoutEvaluateButton() throws Exception {
         when(resultService.getResult(eq(7L), argThat(u -> u.getUserId() == 1))).thenReturn(result(true, false, null, true, false));
 

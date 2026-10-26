@@ -52,16 +52,18 @@ class ApplicationAccessTests {
     }
 
     @Test
-    @DisplayName("HR, Director và Admin được xem mọi application, không cần review HR")
-    void hrDirectorAndAdminSeeEveryApplication() {
-        // Given: HR, Director và Admin được xem mọi application, không cần review HR.
+    @DisplayName("HR và Director được xem mọi application; Admin bị chặn")
+    void hrAndDirectorSeeEveryApplicationButAdminDoesNot() {
+        // Given: HR và Director được xem mọi application.
         Application application = application(engineering, "Applied");
-        for (User user : List.of(hr, director, admin)) {
+        for (User user : List.of(hr, director)) {
             // When: Gọi access.scopeOf với dữ liệu đã chuẩn bị.
-            // Then: HR, Director và Admin được xem mọi application, không cần review HR.
+            // Then: HR và Director được xem mọi application.
             assertEquals(ApplicationScope.ALL, access.scopeOf(user));
             assertEquals(true, access.canView(user, application));
         }
+        assertEquals(false, access.canView(admin, application));
+        assertThrows(AccessDeniedException.class, () -> access.scopeOf(admin));
     }
 
     @Test
@@ -210,7 +212,7 @@ class ApplicationAccessTests {
         assertEquals(false, access.canReview(admin, application));
     }
 
-    /** Lên lịch: HR, Admin (quyền URL bên interview), chỉ ở giai đoạn phỏng vấn; sang offer thì ẩn. */
+    /** Lên lịch: HR, chỉ ở giai đoạn phỏng vấn; sang offer thì ẩn. */
     @Test
     @DisplayName("Quyền lên lịch theo bước AWAITING_AI")
     void schedulingInterviewOnlyDuringInterviewStage_AWAITING_AI() {
@@ -271,7 +273,7 @@ class ApplicationAccessTests {
         // When: Gọi access.canScheduleInterview với dữ liệu đã chuẩn bị.
         // Then: Quyền lên lịch theo bước AWAITING_SCHEDULE.
         assertEquals(true, access.canScheduleInterview(hr, progress));
-        assertEquals(true, access.canScheduleInterview(admin, progress));
+        assertEquals(false, access.canScheduleInterview(admin, progress));
         assertEquals(false, access.canScheduleInterview(director, progress));
         assertEquals(false, access.canScheduleInterview(engineeringHead, progress));
     }
@@ -284,7 +286,7 @@ class ApplicationAccessTests {
         // When: Gọi access.canScheduleInterview với dữ liệu đã chuẩn bị.
         // Then: Quyền lên lịch theo bước INTERVIEW_SCHEDULED.
         assertEquals(true, access.canScheduleInterview(hr, progress));
-        assertEquals(true, access.canScheduleInterview(admin, progress));
+        assertEquals(false, access.canScheduleInterview(admin, progress));
         assertEquals(false, access.canScheduleInterview(director, progress));
         assertEquals(false, access.canScheduleInterview(engineeringHead, progress));
     }
@@ -297,7 +299,7 @@ class ApplicationAccessTests {
         // When: Gọi access.canScheduleInterview với dữ liệu đã chuẩn bị.
         // Then: Quyền lên lịch theo bước AWAITING_EVALUATIONS.
         assertEquals(true, access.canScheduleInterview(hr, progress));
-        assertEquals(true, access.canScheduleInterview(admin, progress));
+        assertEquals(false, access.canScheduleInterview(admin, progress));
         assertEquals(false, access.canScheduleInterview(director, progress));
         assertEquals(false, access.canScheduleInterview(engineeringHead, progress));
     }
@@ -310,7 +312,7 @@ class ApplicationAccessTests {
         // When: Gọi access.canScheduleInterview với dữ liệu đã chuẩn bị.
         // Then: Quyền lên lịch theo bước AWAITING_DECISION.
         assertEquals(true, access.canScheduleInterview(hr, progress));
-        assertEquals(true, access.canScheduleInterview(admin, progress));
+        assertEquals(false, access.canScheduleInterview(admin, progress));
         assertEquals(false, access.canScheduleInterview(director, progress));
         assertEquals(false, access.canScheduleInterview(engineeringHead, progress));
     }
@@ -471,7 +473,7 @@ class ApplicationAccessTests {
         assertEquals(false, access.canScheduleInterview(engineeringHead, progress));
     }
 
-    /** Tạo offer: HR, Director, Admin (quyền URL bên offer), chỉ khi đã đạt phỏng vấn và chưa có offer. */
+    /** Tạo offer: HR, Director, chỉ khi đã đạt phỏng vấn và chưa có offer. */
     @Test
     @DisplayName("Quyền tạo offer theo bước AWAITING_AI")
     void creatingOfferOnlyAfterPassedInterview_AWAITING_AI() {
@@ -585,7 +587,7 @@ class ApplicationAccessTests {
         // Then: Quyền tạo offer theo bước PASSED_AWAITING_OFFER.
         assertEquals(true, access.canCreateOffer(hr, progress));
         assertEquals(true, access.canCreateOffer(director, progress));
-        assertEquals(true, access.canCreateOffer(admin, progress));
+        assertEquals(false, access.canCreateOffer(admin, progress));
         assertEquals(false, access.canCreateOffer(engineeringHead, progress));
     }
 
@@ -764,13 +766,13 @@ class ApplicationAccessTests {
     }
 
     @Test
-    @DisplayName("HR/Admin/HM có link tin nội bộ; Director không có link này")
+    @DisplayName("HR/HM có link tin nội bộ; Director và Admin không có link này")
     void hrAdminAndHiringManagerGetLinkToInternalJobPosting() {
         // Given: HR/Admin/HM có link tin nội bộ; Director không có link này.
         // When: Gọi access.canOpenJobPosting với dữ liệu đã chuẩn bị.
         // Then: HR/Admin/HM có link tin nội bộ; Director không có link này.
         assertEquals(true, access.canOpenJobPosting(hr));
-        assertEquals(true, access.canOpenJobPosting(admin));
+        assertEquals(false, access.canOpenJobPosting(admin));
         assertEquals(false, access.canOpenJobPosting(director));
         assertEquals(true, access.canOpenJobPosting(engineeringHead));
     }

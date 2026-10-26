@@ -120,7 +120,7 @@ public class RequisitionController {
     @GetMapping("/create")
     public String createForm(Model model) {
         var currentUser = access.actor();
-        // Rule: Chỉ Hiring Manager / Director / Admin mới được tạo yêu cầu
+        // Rule: Chỉ Hiring Manager / Director mới được tạo yêu cầu
         access.requireCreate(currentUser);
 
         RequisitionRequest requisitionRequest = new RequisitionRequest();
