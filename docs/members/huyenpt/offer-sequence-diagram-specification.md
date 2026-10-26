@@ -23,9 +23,8 @@ Mô tả quy trình Chuyên viên Nhân sự (HR) mở giao diện tạo mới �
 | 5 | `InterviewFinalResultRepository` | `com.group2.rms.interview.repository.InterviewFinalResultRepository` | Truy vấn danh sách ứng viên đỗ phỏng vấn (`Passed`) |
 | 6 | `OfferProposalRepository` | `com.group2.rms.offer.repository.OfferProposalRepository` | Kiểm tra quy tắc Offer duy nhất (GBR-07) và lưu `OfferProposal` |
 | 7 | `ApplicationRepository` | `com.group2.rms.candidate.repository.ApplicationRepository` | Xác thực sự tồn tại của hồ sơ ứng tuyển (`Application`) |
-| 8 | `OfferMailSender` | `com.group2.rms.notification.OfferMailSender` | Gửi email thông báo cho Ban Giám đốc khi có Offer mới cần duyệt |
-| 9 | `NotificationServiceImpl` | `com.group2.rms.notification.NotificationServiceImpl` | Tạo thông báo in-app cho toàn bộ Giám đốc hoạt động |
-| 10 | `UserRepository` | `com.group2.rms.user.repository.UserRepository` | Lấy danh sách tài khoản Director và xác định người tạo (`proposedBy`) |
+| 8 | `NotificationServiceImpl` | `com.group2.rms.notification.NotificationServiceImpl` | Tạo thông báo in-app cho toàn bộ Giám đốc hoạt động |
+| 9 | `UserRepository` | `com.group2.rms.user.repository.UserRepository` | Lấy danh sách tài khoản Director và xác định người tạo (`proposedBy`) |
 
 ### Entry Point
 
@@ -95,12 +94,10 @@ Mô tả quy trình Chuyên viên Nhân sự (HR) mở giao diện tạo mới �
 #### else Submit to Director (Trình Giám đốc phê duyệt)
 - **Điều kiện:** HR nhấn nút "Trình Giám đốc" (`dto.isDraft == false`).
 - `OfferServiceImpl` gán `offerStatus = "Pending_Director"`.
-- `OfferServiceImpl` gọi `OfferMailSender.notifyDirectorNewPendingOffer(saved)`:
-  - `OfferMailSender` soạn email thông báo kèm thông tin ứng viên, vị trí, mức lương và gửi tới Ban Giám đốc (`director@rms-tech.vn` hoặc SMTP configured).
 - `OfferServiceImpl` gọi `NotificationServiceImpl.notifyOfferPendingDirector(saved, proposedBy)`:
   - `NotificationServiceImpl` gọi `UserRepository.findAllActiveDirectors()` lấy danh sách toàn bộ Giám đốc đang hoạt động.
   - Với mỗi Giám đốc, tạo thực thể `Notification` với `eventType = "OFFER_PENDING_DIRECTOR"`, `referenceId = offerId`, `linkUrl = "/offers/{id}"`.
-  - Lưu thông báo vào cơ sở dữ liệu.
+  - Lưu thông báo vào cơ sở dữ liệu (không gửi email nội bộ, chỉ gửi thông báo in-app).
 - `OfferServiceImpl` lưu và trả về `OfferResponse` với trạng thái `Pending_Director`.
 - `OfferController` phản hồi thông báo thành công: `"Đã nộp trình đề xuất Offer lên Giám đốc thành công!"` (Redirect về `/offers` hoặc trả JSON HTTP 201).
 
@@ -114,7 +111,7 @@ Mô tả quy trình Chuyên viên Nhân sự (HR) mở giao diện tạo mới �
 ### Notifications / Emails
 - **Save Draft:** Không có email, không có thông báo.
 - **Submit to Director:**
-  - **Email:** `OfferMailSender.notifyDirectorNewPendingOffer(saved)` gửi thông báo đề xuất mới tới Ban Giám đốc.
+  - **Email:** Không gửi email nội bộ.
   - **In-App:** `NotificationServiceImpl.notifyOfferPendingDirector(saved, proposedBy)` tạo thông báo chuông cho tất cả tài khoản Giám đốc đang active.
 
 ### Final State
@@ -130,7 +127,6 @@ Mô tả quy trình Chuyên viên Nhân sự (HR) mở giao diện tạo mới �
   - `database "InterviewFinalResultRepository" as FinalResultRepo`
   - `database "ApplicationRepository" as AppRepo`
   - `database "OfferProposalRepository" as OfferRepo`
-  - `participant "OfferMailSender" as MailSender`
   - `participant "NotificationServiceImpl" as NotifService`
   - `database "UserRepository" as UserRepo`
 - **UML Constructs:**
@@ -163,8 +159,7 @@ Mô tả quy trình Giám đốc (Director) truy cập danh sách các đề xu�
 | 5 | `OfferProposalRepository` | `com.group2.rms.offer.repository.OfferProposalRepository` | Đọc dữ liệu đề xuất và lưu trạng thái mới (`Director_Approved` / `Director_Rejected`) |
 | 6 | `OfferApprovalRepository` | `com.group2.rms.offer.repository.OfferApprovalRepository` | Lưu lịch sử phê duyệt (`OfferApproval`) của Director |
 | 7 | `InterviewFinalResultRepository` | `com.group2.rms.interview.repository.InterviewFinalResultRepository` | Truy vấn kết quả phỏng vấn để hiển thị đối chiếu cho Director |
-| 8 | `OfferMailSender` | `com.group2.rms.notification.OfferMailSender` | Gửi email thông báo kết quả phê duyệt về cho HR tạo đề xuất |
-| 9 | `NotificationServiceImpl` | `com.group2.rms.notification.NotificationServiceImpl` | Tạo thông báo in-app cho HR về quyết định của Giám đốc |
+| 8 | `NotificationServiceImpl` | `com.group2.rms.notification.NotificationServiceImpl` | Tạo thông báo in-app cho HR về quyết định của Giám đốc |
 
 ### Entry Point
 
@@ -221,10 +216,8 @@ Mô tả quy trình Giám đốc (Director) truy cập danh sách các đề xu�
   - `directorComments = comments`
   - `approvedAt = LocalDateTime.now()`
 - `OfferServiceImpl` gọi `OfferApprovalRepository.save(approval)`.
-- `OfferServiceImpl` gọi `OfferMailSender.notifyHrOfDirectorDecision(saved, "Approved", comments)`:
-  - Gửi email thông báo kết quả phê duyệt tới HR tạo đề xuất (`offer.getProposedBy().getEmail()`).
 - `OfferServiceImpl` gọi `NotificationServiceImpl.notifyDirectorDecisionOnOffer(saved, director, true, comments)`:
-  - Tạo thực thể `Notification` (`eventType = "OFFER_DIRECTOR_APPROVED"`) gửi tới tài khoản HR (`offer.getProposedBy()`).
+  - Tạo thực thể `Notification` (`eventType = "OFFER_DIRECTOR_APPROVED"`) gửi tới tài khoản HR (`offer.getProposedBy()`) (không gửi email nội bộ, chỉ gửi thông báo in-app).
 - `OfferController` trả về phản hồi thành công: `"Đã phê duyệt đề xuất Offer thành công!"`.
 
 #### else Reject (Giám đốc từ chối)
@@ -238,10 +231,8 @@ Mô tả quy trình Giám đốc (Director) truy cập danh sách các đề xu�
   - `directorComments = comments`
   - `approvedAt = LocalDateTime.now()`
 - `OfferServiceImpl` gọi `OfferApprovalRepository.save(approval)`.
-- `OfferServiceImpl` gọi `OfferMailSender.notifyHrOfDirectorDecision(saved, "Rejected", comments)`:
-  - Gửi email thông báo từ chối kèm lý do tới HR (`offer.getProposedBy().getEmail()`).
 - `OfferServiceImpl` gọi `NotificationServiceImpl.notifyDirectorDecisionOnOffer(saved, director, false, comments)`:
-  - Tạo thực thể `Notification` (`eventType = "OFFER_DIRECTOR_REJECTED"`) gửi tới tài khoản HR (`offer.getProposedBy()`).
+  - Tạo thực thể `Notification` (`eventType = "OFFER_DIRECTOR_REJECTED"`) gửi tới tài khoản HR (`offer.getProposedBy()`) (không gửi email nội bộ, chỉ gửi thông báo in-app).
 - `OfferController` trả về phản hồi thành công: `"Đã từ chối đề xuất Offer thành công!"`.
 
 ### Database Effects
@@ -253,8 +244,8 @@ Mô tả quy trình Giám đốc (Director) truy cập danh sách các đề xu�
 | `Notification` | `INSERT` | `RecipientId = proposedBy.userId`, `ActorId = director.userId`, `Title`, `Content`, `EventType = 'OFFER_DIRECTOR_APPROVED'` hoặc `'OFFER_DIRECTOR_REJECTED'`, `ReferenceId = offerId`, `LinkUrl = '/offers/{id}'`, `IsRead = 0` |
 
 ### Notifications / Emails
-- **Email:** `OfferMailSender.notifyHrOfDirectorDecision(saved, decision, comments)` gửi email trực tiếp tới hòm thư của HR tạo đề xuất thông báo kết quả và nhận xét của Giám đốc.
-- **In-App:** `NotificationServiceImpl.notifyDirectorDecisionOnOffer(...)` tạo thông báo chuông cho HR.
+- **Email:** Không gửi email nội bộ.
+- **In-App:** `NotificationServiceImpl.notifyDirectorDecisionOnOffer(...)` tạo thông báo chuông cho HR về quyết định của Giám đốc.
 
 ### Final State
 - Nếu Phê duyệt: `OfferProposal.OfferStatus = 'Director_Approved'`. Đề xuất sẵn sàng để HR phát hành thư mời cho ứng viên.
@@ -270,7 +261,6 @@ Mô tả quy trình Giám đốc (Director) truy cập danh sách các đề xu�
   - `database "OfferProposalRepository" as OfferRepo`
   - `database "OfferApprovalRepository" as ApprovalRepo`
   - `database "InterviewFinalResultRepository" as FinalResultRepo`
-  - `participant "OfferMailSender" as MailSender`
   - `participant "NotificationServiceImpl" as NotifService`
 - **UML Constructs:**
   - `alt offerStatus != "Pending_Director"`: Ném ngoại lệ `OfferValidationException("OFFER_STATUS_INVALID")`.
