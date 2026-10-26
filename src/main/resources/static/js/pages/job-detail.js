@@ -4,6 +4,8 @@
  *   hoặc khi server render lại sau lỗi (data-open-on-load="true").
  * - Kiểm tra sớm đuôi .pdf và dung lượng; server vẫn là nơi kiểm tra chính (CvFileValidator).
  * - Khóa nút "Nộp hồ sơ" khi đang gửi để tránh gửi hai lần.
+ * - Khóa nút "Nộp hồ sơ" khi chưa tick ô "Tôi đã kiểm tra CV" (chỉ phía trình duyệt;
+ *   HTML không render sẵn disabled để không có JS vẫn nộp được).
  */
 (function () {
   'use strict';
@@ -19,6 +21,7 @@
   var clientError = dialog.querySelector('[data-cv-client-error]');
   var submitButton = dialog.querySelector('[data-apply-submit]');
   var submitLabel = submitButton ? submitButton.textContent : '';
+  var confirmInput = dialog.querySelector('[data-apply-confirm]');
 
   function open() {
     if (!dialog.open) {
@@ -52,12 +55,27 @@
     fileInput.setAttribute('aria-invalid', message ? 'true' : 'false');
   }
 
-  function resetSubmitButton() {
+  function isConfirmed() {
+    return !confirmInput || confirmInput.checked;
+  }
+
+  function syncSubmitButton() {
     if (submitButton) {
-      submitButton.disabled = false;
-      submitButton.textContent = submitLabel;
+      submitButton.disabled = !isConfirmed();
     }
   }
+
+  function resetSubmitButton() {
+    if (submitButton) {
+      submitButton.textContent = submitLabel;
+    }
+    syncSubmitButton();
+  }
+
+  if (confirmInput) {
+    confirmInput.addEventListener('change', syncSubmitButton);
+  }
+  syncSubmitButton();
 
   document.querySelectorAll('[data-dialog-open="job-apply-dialog"]').forEach(function (button) {
     button.addEventListener('click', open);
@@ -77,6 +95,11 @@
     });
 
     form.addEventListener('submit', function (event) {
+      if (!isConfirmed()) {
+        event.preventDefault();
+        confirmInput.focus();
+        return;
+      }
       var message = validateFile();
       if (message) {
         event.preventDefault();

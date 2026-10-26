@@ -1,8 +1,9 @@
 package com.group2.rms.interview;
 
-import com.group2.rms.candidate.entity.Application;
-import com.group2.rms.candidate.entity.Candidate;
-import com.group2.rms.candidate.repository.ApplicationRepository;
+import com.group2.rms.candidate.domain.entity.Application;
+import com.group2.rms.candidate.domain.entity.Candidate;
+import com.group2.rms.candidate.domain.repository.ApplicationRepository;
+import com.group2.rms.candidate.talentpool.service.RecruitmentEmailService;
 import com.group2.rms.core.config.SecurityConfig;
 import com.group2.rms.core.security.DatabaseUserDetailsService;
 import com.group2.rms.interview.controller.InterviewSchedulingController;
@@ -43,7 +44,8 @@ class InterviewScheduleFormWebTests {
 
     @Autowired MockMvc mvc;
     @MockitoBean InterviewSchedulingService schedulingService;
-    @MockitoBean com.group2.rms.candidate.service.RecruitmentEmailService recruitmentEmail;
+    @MockitoBean com.group2.rms.interview.service.InterviewResultService resultService;
+    @MockitoBean RecruitmentEmailService recruitmentEmail;
     @MockitoBean ApplicationRepository applications;
     @MockitoBean UserRepository users;
 
@@ -115,14 +117,43 @@ class InterviewScheduleFormWebTests {
     }
 
     @Test
-    void applicationIdFromApplicationPageIsPreselected() throws Exception {
+    void applicationIdFromApplicationPageLocksTheApplication() throws Exception {
+        // Mở từ danh sách / chi tiết hồ sơ: hồ sơ được cố định, không còn ô tìm kiếm và dropdown để đổi ứng viên
         mvc.perform(get("/interviews/new").param("applicationId", "298").with(user("hr_lan").authorities(() -> "ROLE_HR")))
                 .andExpect(status().isOk())
                 .andExpect(view().name("interview/form"))
                 .andExpect(model().attribute("scheduleRequest",
                         org.hamcrest.Matchers.hasProperty("applicationId", org.hamcrest.Matchers.is(298))))
-                .andExpect(content().string(matchesPattern("(?s).*<option value=\"298\"[^>]*selected=\"selected\".*")))
-                .andExpect(content().string(not(matchesPattern("(?s).*<option value=\"120\"[^>]*selected=\"selected\".*"))));
+                .andExpect(content().string(containsString("Hồ sơ #298")))
+                .andExpect(content().string(containsString("Ung vien 298")))
+                .andExpect(content().string(matchesPattern("(?s).*<input type=\"hidden\" name=\"applicationId\" value=\"298\">.*")))
+                .andExpect(content().string(containsString("name=\"lockApplication\" value=\"true\"")))
+                .andExpect(content().string(not(containsString("id=\"applicationSearchBox\""))))
+                .andExpect(content().string(not(containsString("<select id=\"applicationId\""))))
+                .andExpect(content().string(not(containsString("Ung vien 120"))));
+    }
+
+    @Test
+    void ineligibleApplicationRedirectsBackToApplicationPage() throws Exception {
+        mvc.perform(get("/interviews/new").param("applicationId", "999").with(user("hr_lan").authorities(() -> "ROLE_HR")))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrl("/applications/999"))
+                .andExpect(flash().attribute("errorMessage", containsString("Hồ sơ #999 chưa đủ điều kiện")));
+    }
+
+    @Test
+    void lockedApplicationStaysLockedAfterValidationError() throws Exception {
+        // Thiếu giờ và hội đồng: form bị trả lại nhưng vẫn khóa đúng hồ sơ đã chọn
+        mvc.perform(post("/interviews/new").with(user("hr_lan").authorities(() -> "ROLE_HR")).with(csrf())
+                        .param("applicationId", "298")
+                        .param("lockApplication", "true")
+                        .param("interviewFormat", "Online_GoogleMeet"))
+                .andExpect(status().isOk())
+                .andExpect(view().name("interview/form"))
+                .andExpect(content().string(containsString("Hồ sơ #298")))
+                .andExpect(content().string(not(containsString("<select id=\"applicationId\""))));
+
+        verifyNoInteractions(schedulingService);
     }
 
     @Test

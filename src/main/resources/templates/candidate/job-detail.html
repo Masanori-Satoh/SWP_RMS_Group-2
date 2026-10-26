@@ -209,6 +209,15 @@
                             <span class="form-error" data-cv-client-error hidden></span>
                             <span th:if="${#fields.hasErrors('cvFile')}" th:errors="*{cvFile}" class="form-error">Lỗi file</span>
                         </div>
+
+                        <!-- Ô tick không có name: không gửi lên server, chỉ chặn bấm nhầm. Luật một lần do server kiểm. -->
+                        <div class="alert alert--warning job-apply-warning" role="note">
+                            Mỗi vị trí chỉ nộp hồ sơ 01 lần, kể cả khi bạn rút hồ sơ sau đó. Sau khi nộp, bạn không sửa hay thay được CV.
+                        </div>
+                        <label class="job-apply-confirm" for="cvConfirmed">
+                            <input type="checkbox" id="cvConfirmed" class="job-apply-confirm__input" data-apply-confirm>
+                            <span>Tôi đã kiểm tra CV</span>
+                        </label>
                     </th:block>
 
                     <div class="dialog-actions">

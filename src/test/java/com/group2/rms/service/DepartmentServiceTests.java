@@ -22,7 +22,8 @@ import static org.mockito.ArgumentMatchers.any;
 class DepartmentServiceTests {
     private final DepartmentRepository departments = mock(DepartmentRepository.class);
     private final UserRepository users = mock(UserRepository.class);
-    private final DepartmentService service = new DepartmentService(departments, users);
+    private final RoleRepository roles = mock(RoleRepository.class);
+    private final DepartmentService service = new DepartmentService(departments, users, roles);
     private final Department department = Department.builder().departmentId(7).departmentName("Sản phẩm").build();
 
     @Test
@@ -78,12 +79,15 @@ class DepartmentServiceTests {
         // Given: Sửa phòng giữ tên hiện tại, chọn HR Active cùng phòng và giữ trạng thái Inactive.
         department.setDepartmentStatus("Inactive");
         var manager=member(9,"HR","Active",department);
-        when(departments.findById(7)).thenReturn(Optional.of(department));
+        when(departments.findForUpdate(7)).thenReturn(Optional.of(department));
         when(users.findById(9)).thenReturn(Optional.of(manager));
+        when(roles.findByRoleName("Hiring Manager"))
+            .thenReturn(Optional.of(Role.builder().roleId(3).roleName("Hiring Manager").build()));
         // When: Gọi service.update với dữ liệu đã chuẩn bị.
         service.update(7,new DepartmentRequest("Sản phẩm",9));
         // Then: Sửa phòng giữ tên hiện tại, chọn HR Active cùng phòng và giữ trạng thái Inactive.
         assertEquals(manager,department.getManager());
+        assertEquals("Hiring Manager",manager.getRole().getRoleName());
         assertEquals("Inactive",department.getDepartmentStatus());
         verify(departments, times(1)).existsByDepartmentNameIgnoreCaseAndDepartmentIdNot("Sản phẩm",7);
     }
@@ -92,7 +96,7 @@ class DepartmentServiceTests {
     @DisplayName("Chặn manager khác phòng, Inactive, Candidate hoặc không tồn tại; giữ nguyên dữ liệu")
     void rejectsForeignInactiveCandidateAndMissingManagers() {
         // Given: Chặn manager khác phòng, Inactive, Candidate hoặc không tồn tại; giữ nguyên dữ liệu.
-        when(departments.findById(7)).thenReturn(Optional.of(department));
+        when(departments.findForUpdate(7)).thenReturn(Optional.of(department));
         for (User invalid:List.of(member(9,"HR","Active",Department.builder().departmentId(8).build()),
             member(9,"HR","Inactive",department), member(9,"Candidate","Active",department))) {
             when(users.findById(9)).thenReturn(Optional.of(invalid));
@@ -114,12 +118,16 @@ class DepartmentServiceTests {
     @DisplayName("Bỏ chọn manager khi sửa phòng: manager được đặt null")
     void managerCanBeExplicitlyCleared() {
         // Given: Bỏ chọn manager khi sửa phòng.
-        department.setManager(member(9,"HR","Active",department));
-        when(departments.findById(7)).thenReturn(Optional.of(department));
+        var oldManager = member(9,"Hiring Manager","Active",department);
+        department.setManager(oldManager);
+        when(departments.findForUpdate(7)).thenReturn(Optional.of(department));
+        when(roles.findByRoleName("Interviewer"))
+            .thenReturn(Optional.of(Role.builder().roleId(5).roleName("Interviewer").build()));
         // When: Gọi service.update với dữ liệu đã chuẩn bị.
         service.update(7,new DepartmentRequest("Sản phẩm",null));
         // Then: manager được đặt null.
         assertEquals(null, department.getManager());
+        assertEquals("Interviewer", oldManager.getRole().getRoleName());
     }
 
     @Test

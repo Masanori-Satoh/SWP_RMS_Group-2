@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<body>
+<!-- Chân sidebar dùng chung mọi role nội bộ: logo, caption và ảnh văn phòng. Chỉ hiện khi sidebar mở rộng (≥ 769px). -->
+<figure th:fragment="footer" class="sidebar-footer">
+    <figcaption class="sidebar-footer-identity">
+        <a th:replace="~{fragments/brand :: wordmarkLink('RMS', '/dashboard')}"></a>
+        <p class="sidebar-footer-caption">Hệ thống quản trị<br>nhân sự &amp; tuyển dụng</p>
+    </figcaption>
+    <div class="sidebar-footer-scene" aria-hidden="true">
+        <img class="sidebar-footer-photo" th:src="@{/images/admin-sidebar-office.webp}" width="193" height="547" alt="" decoding="async">
+    </div>
+</figure>
+</body>
+</html>

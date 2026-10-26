@@ -1,6 +1,6 @@
 package com.group2.rms.offer.service;
 
-import com.group2.rms.candidate.service.ApplicationStatusService;
+import com.group2.rms.candidate.domain.rule.ApplicationStatusService;
 import com.group2.rms.core.exception.ResourceNotFoundException;
 import com.group2.rms.core.security.CurrentUserService;
 import com.group2.rms.offer.dto.CandidateOfferDetailResponse;
@@ -8,7 +8,6 @@ import com.group2.rms.offer.dto.CandidateOfferResponse;
 import com.group2.rms.offer.entity.OfferProposal;
 import com.group2.rms.offer.exception.OfferResponseException;
 import com.group2.rms.offer.repository.CandidateOfferRepository;
-import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 

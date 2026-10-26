@@ -2,8 +2,8 @@ package com.group2.rms.jobposting.service;
 
 import com.group2.rms.admin.entity.AuditLog;
 import com.group2.rms.admin.repository.AuditLogRepository;
-import com.group2.rms.candidate.repository.ApplicationRepository;
-import com.group2.rms.candidate.service.TalentPoolService;
+import com.group2.rms.candidate.domain.repository.ApplicationRepository;
+import com.group2.rms.candidate.talentpool.service.TalentPoolService;
 import com.group2.rms.core.dto.FilterOption;
 import com.group2.rms.core.exception.ResourceNotFoundException;
 import com.group2.rms.jobposting.dto.InternalJobPostingDetailResponse;

@@ -15,7 +15,7 @@
                 draft.slice(0, limit).filter(TalentPoolSelection.valid).forEach(item => {
                     this.items.set(item.candidateId, TalentPoolSelection.copy(item));
                 });
-                // Migrate older drafts immediately: persistent storage contains identifiers only.
+
                 this.persist();
             } catch (error) {
                 if (!(error instanceof SyntaxError)) this.persistenceAvailable = false;

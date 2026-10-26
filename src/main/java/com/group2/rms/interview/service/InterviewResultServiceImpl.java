@@ -1,8 +1,10 @@
 package com.group2.rms.interview.service;
 
-import com.group2.rms.candidate.entity.Application;
+import com.group2.rms.candidate.domain.entity.Application;
 import com.group2.rms.core.exception.ResourceNotFoundException;
+import com.group2.rms.interview.dto.InterviewCardState;
 import com.group2.rms.interview.dto.InterviewEvaluationResponse;
+import com.group2.rms.interview.dto.InterviewScheduleResponse;
 import com.group2.rms.interview.dto.InterviewResultDetailResponse;
 import com.group2.rms.interview.dto.InterviewResultDetailResponse.Averages;
 import com.group2.rms.interview.dto.InterviewResultDetailResponse.FinalResult;
@@ -24,9 +26,12 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.util.HtmlUtils;
 
+import java.time.Clock;
+import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -46,10 +51,12 @@ public class InterviewResultServiceImpl implements InterviewResultService {
     private final InterviewEvaluationRepository interviewEvaluationRepository;
     private final InterviewFinalResultRepository interviewFinalResultRepository;
     private final InterviewFinalResultService interviewFinalResultService;
+    private final Clock clock;
 
     @Override
     @Transactional(readOnly = true)
     public InterviewResultDetailResponse getResult(Long interviewId, User viewer) {
+        LocalDateTime now = LocalDateTime.now(clock);
         Integer viewerId = viewer != null ? viewer.getUserId() : null;
         String viewerRoleName = viewer != null && viewer.getRole() != null ? viewer.getRole().getRoleName() : null;
         InterviewSchedule schedule = interviewScheduleRepository.findByIdWithDetails(interviewId)
@@ -65,13 +72,14 @@ public class InterviewResultServiceImpl implements InterviewResultService {
 
         List<InterviewEvaluation> allEvaluations = interviewEvaluationRepository.findByScheduleIdWithInterviewer(interviewId);
         FinalResult finalResult = interviewFinalResultRepository.findByScheduleId(interviewId)
-                .map(InterviewResultServiceImpl::toFinalResult)
+                .map(result -> toFinalResult(result, now))
                 .orElse(null);
         boolean canSeeAll = fullAccess || finalResult != null;
 
-        Set<Integer> submittedIds = allEvaluations.stream()
-                .map(evaluation -> evaluation.getInterviewer().getUserId())
-                .collect(Collectors.toSet());
+        Map<Integer, LocalDateTime> submittedAtById = allEvaluations.stream()
+                .collect(Collectors.toMap(evaluation -> evaluation.getInterviewer().getUserId(),
+                        InterviewEvaluation::getEvaluatedAt, (first, second) -> first));
+        Set<Integer> submittedIds = submittedAtById.keySet();
         Map<Integer, String> roleByInterviewer = schedule.getInterviewPanels().stream()
                 .filter(panel -> panel.getInterviewer() != null)
                 .collect(Collectors.toMap(panel -> panel.getInterviewer().getUserId(),
@@ -82,34 +90,48 @@ public class InterviewResultServiceImpl implements InterviewResultService {
                 .filter(member -> member.getInterviewer() != null)
                 .sorted(Comparator.comparing((InterviewPanel member) -> member.getInterviewer().getFullName(),
                         Comparator.nullsLast(String.CASE_INSENSITIVE_ORDER)))
-                .map(member -> new PanelMemberStatus(
-                        member.getInterviewer().getUserId(),
-                        member.getInterviewer().getFullName(),
-                        member.getRoleInPanel() != null ? member.getRoleInPanel().getDisplayName() : "",
-                        submittedIds.contains(member.getInterviewer().getUserId()),
-                        isUser(member.getInterviewer(), viewerId)))
+                .map(member -> {
+                    Integer memberId = member.getInterviewer().getUserId();
+                    InterviewDeadlines.EvaluationProgress progress =
+                            InterviewDeadlines.progress(schedule, submittedAtById.get(memberId), now);
+                    return new PanelMemberStatus(
+                            memberId,
+                            member.getInterviewer().getFullName(),
+                            member.getRoleInPanel() != null ? member.getRoleInPanel().getDisplayName() : "",
+                            submittedIds.contains(memberId),
+                            isUser(member.getInterviewer(), viewerId),
+                            progress.getDisplayName(),
+                            progress.getBadgeClass());
+                })
                 .toList();
+        int submittedPanelCount = (int) panel.stream().filter(PanelMemberStatus::submitted).count();
 
         List<InterviewEvaluation> visibleEvaluations = canSeeAll
                 ? allEvaluations
                 : allEvaluations.stream().filter(evaluation -> isUser(evaluation.getInterviewer(), viewerId)).toList();
         List<InterviewEvaluationResponse> evaluations = visibleEvaluations.stream()
-                .map(evaluation -> toResponse(evaluation, roleByInterviewer, viewerId))
+                .map(evaluation -> toResponse(evaluation, roleByInterviewer, viewerId, schedule))
                 .toList();
 
         String blockedReason = null;
         boolean canEvaluate = false;
         if (panelMember && !submittedIds.contains(viewerId)) {
-            blockedReason = InterviewEvaluationService.blockedReason(schedule, LocalDateTime.now());
+            blockedReason = InterviewEvaluationService.blockedReason(schedule, now);
             canEvaluate = blockedReason == null;
         }
 
         String finalizeBlockedReason = null;
         boolean canFinalize = false;
-        if (finalResult == null && interviewFinalResultService.isDecisionMaker(viewer, schedule)) {
-            finalizeBlockedReason = InterviewFinalResultService.blockedReason(schedule, LocalDateTime.now());
+        boolean openDecision = finalResult == null || finalResult.considering();
+        if (openDecision && interviewFinalResultService.isDecisionMaker(viewer, schedule)) {
+            // Đang cân nhắc thì đã qua cửa đủ phiếu ở lần chốt đầu, không chặn lại
+            finalizeBlockedReason = finalResult == null
+                    ? InterviewFinalResultService.blockedReason(schedule, submittedPanelCount, panel.size(), now)
+                    : null;
             canFinalize = finalizeBlockedReason == null;
         }
+        LocalDateTime decisionDeadline = InterviewDeadlines.decisionDeadline(schedule);
+        boolean decisionOverdue = finalResult == null && decisionDeadline != null && now.isAfter(decisionDeadline);
 
         Application application = schedule.getApplication();
         InterviewStatus status = schedule.getInterviewStatus();
@@ -135,13 +157,104 @@ public class InterviewResultServiceImpl implements InterviewResultService {
                 canEvaluate,
                 blockedReason,
                 canFinalize,
-                finalizeBlockedReason
+                finalizeBlockedReason,
+                InterviewDeadlines.evaluationDeadline(schedule),
+                decisionDeadline,
+                decisionOverdue
         );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Map<Long, InterviewCardState> decisionStates(List<InterviewScheduleResponse> schedules) {
+        if (schedules == null || schedules.isEmpty()) {
+            return Map.of();
+        }
+        LocalDateTime now = LocalDateTime.now(clock);
+        Map<Long, InterviewFinalResult> results = interviewFinalResultRepository
+                .findByInterviewSchedule_InterviewIdIn(schedules.stream().map(InterviewScheduleResponse::interviewId).toList())
+                .stream()
+                .collect(Collectors.toMap(result -> result.getInterviewSchedule().getInterviewId(), Function.identity(),
+                        (first, second) -> first));
+        Map<Long, InterviewCardState> states = new HashMap<>();
+        for (InterviewScheduleResponse schedule : schedules) {
+            InterviewCardState state = decisionState(schedule, results.get(schedule.interviewId()), now);
+            if (state != null) {
+                states.put(schedule.interviewId(), state);
+            }
+        }
+        return states;
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Map<Long, InterviewCardState> evaluationStates(List<InterviewScheduleResponse> schedules, Integer viewerId) {
+        if (schedules == null || schedules.isEmpty() || viewerId == null) {
+            return Map.of();
+        }
+        List<InterviewScheduleResponse> mine = schedules.stream()
+                .filter(schedule -> schedule.interviewers() != null && schedule.interviewers().stream()
+                        .anyMatch(member -> member != null && viewerId.equals(member.interviewerId())))
+                .toList();
+        if (mine.isEmpty()) {
+            return Map.of();
+        }
+        LocalDateTime now = LocalDateTime.now(clock);
+        Map<Long, LocalDateTime> submittedAt = interviewEvaluationRepository
+                .findByInterviewer_UserIdAndInterviewSchedule_InterviewIdIn(viewerId,
+                        mine.stream().map(InterviewScheduleResponse::interviewId).toList())
+                .stream()
+                .collect(Collectors.toMap(evaluation -> evaluation.getInterviewSchedule().getInterviewId(),
+                        InterviewEvaluation::getEvaluatedAt, (first, second) -> first));
+        Map<Long, InterviewCardState> states = new HashMap<>();
+        for (InterviewScheduleResponse schedule : mine) {
+            InterviewDeadlines.EvaluationProgress progress = InterviewDeadlines.progress(schedule.interviewStatus(),
+                    schedule.startTime(), schedule.endTime(), submittedAt.get(schedule.interviewId()), now);
+            if (progress == InterviewDeadlines.EvaluationProgress.PENDING) {
+                LocalDateTime deadline = InterviewDeadlines.evaluationDeadline(schedule.interviewStatus(), schedule.endTime());
+                String left = deadline != null ? " · còn " + hoursLeft(now, deadline) : "";
+                states.put(schedule.interviewId(), new InterviewCardState("EVALUATION_PENDING",
+                        progress.getDisplayName() + left, progress.getBadgeClass()));
+            } else if (progress == InterviewDeadlines.EvaluationProgress.OVERDUE) {
+                states.put(schedule.interviewId(), new InterviewCardState("EVALUATION_OVERDUE",
+                        progress.getDisplayName(), progress.getBadgeClass()));
+            }
+        }
+        return states;
+    }
+
+    private static InterviewCardState decisionState(InterviewScheduleResponse schedule, InterviewFinalResult result,
+                                                    LocalDateTime now) {
+        if (result != null) {
+            if (result.isConsidering()) {
+                LocalDateTime deadline = InterviewDeadlines.considerDeadline(result.getConsideredAt());
+                return deadline != null && now.isAfter(deadline)
+                        ? new InterviewCardState("CONSIDER_OVERDUE", "Cân nhắc quá 7 ngày", "badge--danger")
+                        : new InterviewCardState("CONSIDERING", "Đang cân nhắc", "badge--warning");
+            }
+            return InterviewFinalResult.PASSED.equalsIgnoreCase(result.getFinalDecision())
+                    ? new InterviewCardState("PASSED", "Đạt", "badge--success")
+                    : new InterviewCardState("FAILED", "Không đạt", "badge--danger");
+        }
+        if (schedule.interviewStatus() == InterviewStatus.Cancelled
+                || schedule.endTime() == null || now.isBefore(schedule.endTime())) {
+            return null;
+        }
+        LocalDateTime deadline = InterviewDeadlines.decisionDeadline(schedule.interviewStatus(), schedule.endTime());
+        return deadline != null && now.isAfter(deadline)
+                ? new InterviewCardState("DECISION_OVERDUE", "Quá hạn chốt kết quả", "badge--danger")
+                : new InterviewCardState("AWAITING_DECISION", "Chờ chốt kết quả", "badge--warning");
+    }
+
+    private static String hoursLeft(LocalDateTime now, LocalDateTime deadline) {
+        long minutes = Math.max(0, Duration.between(now, deadline).toMinutes());
+        return minutes >= 60 ? (minutes / 60) + "h" : minutes + " phút";
     }
 
     private static InterviewEvaluationResponse toResponse(InterviewEvaluation evaluation,
                                                           Map<Integer, String> roleByInterviewer,
-                                                          Integer viewerId) {
+                                                          Integer viewerId,
+                                                          InterviewSchedule schedule) {
         User interviewer = evaluation.getInterviewer();
         EvaluationRecommendation recommendation = EvaluationRecommendation.fromValue(evaluation.getRecommendation());
         return new InterviewEvaluationResponse(
@@ -161,7 +274,8 @@ public class InterviewResultServiceImpl implements InterviewResultService {
                 toHtml(evaluation.getWeaknesses()),
                 toHtml(evaluation.getComments()),
                 evaluation.getEvaluatedAt(),
-                isUser(interviewer, viewerId));
+                isUser(interviewer, viewerId),
+                InterviewDeadlines.isLate(schedule, evaluation.getEvaluatedAt()));
     }
 
     private static Averages averages(List<InterviewEvaluation> evaluations) {
@@ -190,16 +304,27 @@ public class InterviewResultServiceImpl implements InterviewResultService {
                 .toList();
     }
 
-    private static FinalResult toFinalResult(InterviewFinalResult result) {
-        boolean passed = "Passed".equalsIgnoreCase(result.getFinalDecision());
+    private static FinalResult toFinalResult(InterviewFinalResult result, LocalDateTime now) {
+        String decision = result.getFinalDecision();
+        boolean considering = result.isConsidering();
+        String display = considering ? "Đang cân nhắc"
+                : InterviewFinalResult.PASSED.equalsIgnoreCase(decision) ? "Đạt" : "Không đạt";
+        String badge = considering ? "badge--warning"
+                : InterviewFinalResult.PASSED.equalsIgnoreCase(decision) ? "badge--success" : "badge--danger";
+        LocalDateTime considerDeadline = considering ? InterviewDeadlines.considerDeadline(result.getConsideredAt()) : null;
         return new FinalResult(
-                result.getFinalDecision(),
-                passed ? "Đạt" : "Không đạt",
-                passed ? "badge--success" : "badge--danger",
+                decision,
+                display,
+                badge,
                 result.getHiringManager() != null ? result.getHiringManager().getFullName() : null,
                 result.getRecommendedSalary(),
                 toHtml(result.getFinalSummaryComments()),
-                result.getApprovedAt());
+                result.getApprovedAt(),
+                considering,
+                result.getConsideredAt(),
+                considerDeadline,
+                considerDeadline != null && now.isAfter(considerDeadline),
+                result.getFinalSummaryComments());
     }
 
     private static Double average(Stream<Integer> scores) {

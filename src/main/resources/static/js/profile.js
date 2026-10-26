@@ -19,14 +19,16 @@ document.addEventListener('DOMContentLoaded', () => {
     const passwordAlertBox = document.getElementById('changePasswordAlert');
     const btnSubmitPassword = document.getElementById('btnSubmitPassword');
     const toastContainer = document.getElementById('toastContainer');
+    // Chữ của nút lấy từ trang (trang ứng viên viết tiếng Việt); data-busy-label là chữ lúc đang gửi
+    const submitPasswordLabel = btnSubmitPassword ? btnSubmitPassword.textContent : '';
 
     // -------------------------------------------------------------
     // 2. Elements & Variables: Profile Form & Confirmation
     // -------------------------------------------------------------
     const profileForm = document.getElementById('profileForm');
     const fullNameInput = document.getElementById('full-name');
-    const phoneInput = document.getElementById('phone-number');
-    const avatarInput = document.getElementById('avatar-url');
+    // Mọi ô được theo dõi thay đổi có data-profile-field (/profile và /portal/profile dùng chung file này)
+    const profileFields = profileForm ? Array.from(profileForm.querySelectorAll('[data-profile-field]')) : [];
     const btnSaveProfile = document.getElementById('btnSaveProfile');
     const btnDiscardProfile = document.getElementById('btnDiscardProfile');
     const confirmSaveModal = document.getElementById('confirmSaveModal');
@@ -34,23 +36,20 @@ document.addEventListener('DOMContentLoaded', () => {
 
     let isSubmittingProfile = false;
 
+    // Ẩn/hiện bằng cả thuộc tính hidden (trang mới không dùng style nội tuyến; global.css: [hidden] !important)
+    // lẫn style.display (trang /profile cũ khởi tạo bằng style="display: none")
+    function setVisible(el, visible, display = 'block') {
+        if (!el) return;
+        el.hidden = !visible;
+        el.style.display = visible ? display : 'none';
+    }
+
     // Snapshot of initial values (trimmed for reliable comparison)
-    const initialProfileValues = {
-        fullName: fullNameInput ? fullNameInput.value.trim() : '',
-        phoneNumber: phoneInput ? phoneInput.value.trim() : '',
-        avatarUrl: avatarInput ? avatarInput.value.trim() : ''
-    };
+    const initialProfileValues = new Map(profileFields.map(field => [field, field.value.trim()]));
 
     // Helper: Determine if profile has real changes compared to initial state
     function isProfileDirty() {
-        if (!fullNameInput) return false;
-        const currentFullName = fullNameInput.value.trim();
-        const currentPhone = phoneInput ? phoneInput.value.trim() : '';
-        const currentAvatar = avatarInput ? avatarInput.value.trim() : '';
-
-        return (currentFullName !== initialProfileValues.fullName)
-            || (currentPhone !== initialProfileValues.phoneNumber)
-            || (currentAvatar !== initialProfileValues.avatarUrl);
+        return profileFields.some(field => field.value.trim() !== initialProfileValues.get(field));
     }
 
     // Update UI state based on dirty status
@@ -60,26 +59,19 @@ document.addEventListener('DOMContentLoaded', () => {
             btnSaveProfile.disabled = !dirty;
         }
         if (btnDiscardProfile) {
-            btnDiscardProfile.style.display = dirty ? 'inline-block' : 'none';
+            setVisible(btnDiscardProfile, dirty, 'inline-block');
         }
     }
 
     // Attach dirty-checking listeners to profile inputs
-    [fullNameInput, phoneInput, avatarInput].forEach(input => {
-        if (!input) return;
+    profileFields.forEach(input => {
         input.addEventListener('input', updateProfileFormState);
         input.addEventListener('change', updateProfileFormState);
 
         // When leaving input (blur), auto-clean accidental whitespace if value equals initial
         input.addEventListener('blur', () => {
-            if (input === fullNameInput && input.value.trim() === initialProfileValues.fullName) {
-                input.value = initialProfileValues.fullName;
-            }
-            if (input === phoneInput && input.value.trim() === initialProfileValues.phoneNumber) {
-                input.value = initialProfileValues.phoneNumber;
-            }
-            if (input === avatarInput && input.value.trim() === initialProfileValues.avatarUrl) {
-                input.value = initialProfileValues.avatarUrl;
+            if (input.value.trim() === initialProfileValues.get(input)) {
+                input.value = initialProfileValues.get(input);
             }
             updateProfileFormState();
         });
@@ -88,11 +80,9 @@ document.addEventListener('DOMContentLoaded', () => {
     // Discard changes button
     if (btnDiscardProfile) {
         btnDiscardProfile.addEventListener('click', () => {
-            if (fullNameInput) fullNameInput.value = initialProfileValues.fullName;
-            if (phoneInput) phoneInput.value = initialProfileValues.phoneNumber;
-            if (avatarInput) avatarInput.value = initialProfileValues.avatarUrl;
+            profileFields.forEach(field => { field.value = initialProfileValues.get(field); });
             updateProfileFormState();
-            showToast('Changes discarded. Profile restored to original values.');
+            showToast('Đã hoàn tác, hồ sơ trở về giá trị ban đầu.');
         });
     }
 
@@ -106,7 +96,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const fullNameErr = document.getElementById('full-name-error');
             if (fullNameErr) {
                 fullNameErr.textContent = '';
-                fullNameErr.style.display = 'none';
+                setVisible(fullNameErr, false);
             }
             if (fullNameInput) fullNameInput.classList.remove('is-invalid');
 
@@ -115,8 +105,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
             if (!val) {
                 if (fullNameErr) {
-                    fullNameErr.textContent = 'Full name is required.';
-                    fullNameErr.style.display = 'block';
+                    fullNameErr.textContent = 'Vui lòng nhập họ tên.';
+                    setVisible(fullNameErr, true);
                 }
                 if (fullNameInput) {
                     fullNameInput.classList.add('is-invalid');
@@ -127,8 +117,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
             if (!namePattern.test(val)) {
                 if (fullNameErr) {
-                    fullNameErr.textContent = 'Full name must start with a letter and can only contain letters, spaces, hyphens, and apostrophes.';
-                    fullNameErr.style.display = 'block';
+                    fullNameErr.textContent = 'Họ tên bắt đầu bằng chữ cái, chỉ gồm chữ cái, khoảng trắng, dấu chấm, dấu gạch nối và dấu nháy.';
+                    setVisible(fullNameErr, true);
                 }
                 if (fullNameInput) {
                     fullNameInput.classList.add('is-invalid');
@@ -157,9 +147,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (confirmSaveModal) confirmSaveModal.close();
 
             // Clean values before submit
-            if (fullNameInput) fullNameInput.value = fullNameInput.value.trim();
-            if (phoneInput) phoneInput.value = phoneInput.value.trim();
-            if (avatarInput) avatarInput.value = avatarInput.value.trim();
+            profileFields.forEach(field => { field.value = field.value.trim(); });
 
             profileForm.submit();
         });
@@ -178,7 +166,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // -------------------------------------------------------------
     function clearPasswordErrors() {
         if (passwordAlertBox) {
-            passwordAlertBox.style.display = 'none';
+            setVisible(passwordAlertBox, false);
             passwordAlertBox.textContent = '';
         }
         ['currentPassword', 'newPassword', 'confirmPassword'].forEach(fieldId => {
@@ -189,7 +177,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 input.removeAttribute('aria-invalid');
             }
             if (errSpan) {
-                errSpan.style.display = 'none';
+                setVisible(errSpan, false);
                 errSpan.textContent = '';
             }
         });
@@ -204,14 +192,14 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         if (errSpan) {
             errSpan.textContent = message;
-            errSpan.style.display = 'block';
+            setVisible(errSpan, true);
         }
     }
 
     function showPasswordAlert(message) {
         if (passwordAlertBox) {
             passwordAlertBox.textContent = message;
-            passwordAlertBox.style.display = 'block';
+            setVisible(passwordAlertBox, true);
         }
     }
 
@@ -239,7 +227,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const closeBtn = document.createElement('button');
         closeBtn.className = 'toast-close';
         closeBtn.type = 'button';
-        closeBtn.setAttribute('aria-label', 'Close toast');
+        closeBtn.setAttribute('aria-label', 'Đóng thông báo');
         closeBtn.innerHTML = '&times;';
         closeBtn.onclick = () => removeToast(toast);
 
@@ -294,33 +282,33 @@ document.addEventListener('DOMContentLoaded', () => {
             let firstInvalidField = null;
 
             if (!currentPassword) {
-                setPasswordFieldError('currentPassword', 'Enter your current password.');
+                setPasswordFieldError('currentPassword', 'Vui lòng nhập mật khẩu hiện tại.');
                 hasError = true;
                 if (!firstInvalidField) firstInvalidField = passwordForm.currentPassword;
             }
 
             if (!newPassword) {
-                setPasswordFieldError('newPassword', 'Enter a new password.');
+                setPasswordFieldError('newPassword', 'Vui lòng nhập mật khẩu mới.');
                 hasError = true;
                 if (!firstInvalidField) firstInvalidField = passwordForm.newPassword;
             } else if (newPassword.length < 8 || newPassword.length > 32) {
-                setPasswordFieldError('newPassword', 'Password must contain 8–32 characters.');
+                setPasswordFieldError('newPassword', 'Mật khẩu mới dài 8–32 ký tự.');
                 hasError = true;
                 if (!firstInvalidField) firstInvalidField = passwordForm.newPassword;
             }
 
             if (!confirmPassword) {
-                setPasswordFieldError('confirmPassword', 'Confirm your new password.');
+                setPasswordFieldError('confirmPassword', 'Vui lòng nhập lại mật khẩu mới.');
                 hasError = true;
                 if (!firstInvalidField) firstInvalidField = passwordForm.confirmPassword;
             } else if (newPassword && confirmPassword !== newPassword) {
-                setPasswordFieldError('confirmPassword', 'Passwords do not match.');
+                setPasswordFieldError('confirmPassword', 'Mật khẩu nhập lại không khớp.');
                 hasError = true;
                 if (!firstInvalidField) firstInvalidField = passwordForm.confirmPassword;
             }
 
             if (hasError) {
-                showPasswordAlert('Please review the highlighted errors.');
+                showPasswordAlert('Vui lòng sửa các ô được đánh dấu.');
                 if (firstInvalidField) firstInvalidField.focus();
                 return;
             }
@@ -347,7 +335,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             if (btnSubmitPassword) {
                 btnSubmitPassword.disabled = true;
-                btnSubmitPassword.textContent = 'Updating...';
+                btnSubmitPassword.textContent = btnSubmitPassword.dataset.busyLabel || 'Đang lưu...';
             }
 
             try {
@@ -364,9 +352,9 @@ document.addEventListener('DOMContentLoaded', () => {
                     passwordForm.reset();
                     clearPasswordErrors();
                     if (passwordModal) passwordModal.close();
-                    showToast(data.message || 'Password changed successfully.', 'success');
+                    showToast(data.message || 'Đã đổi mật khẩu.', 'success');
                 } else {
-                    showPasswordAlert(data.message || 'Unable to update password.');
+                    showPasswordAlert(data.message || 'Chưa đổi được mật khẩu.');
                     if (data.errors) {
                         for (const [field, errorMsg] of Object.entries(data.errors)) {
                             setPasswordFieldError(field, errorMsg);
@@ -374,12 +362,43 @@ document.addEventListener('DOMContentLoaded', () => {
                     }
                 }
             } catch (err) {
-                showPasswordAlert('A network error occurred. Please check your connection and try again.');
+                showPasswordAlert('Lỗi kết nối mạng. Vui lòng kiểm tra kết nối rồi thử lại.');
             } finally {
                 if (btnSubmitPassword) {
                     btnSubmitPassword.disabled = false;
-                    btnSubmitPassword.textContent = 'Update Password';
+                    btnSubmitPassword.textContent = submitPasswordLabel;
                 }
+            }
+        });
+    }
+
+    // -------------------------------------------------------------
+    // 4. Avatar upload: kiểm trước ở trình duyệt; máy chủ vẫn kiểm lại byte đầu của file
+    // -------------------------------------------------------------
+    const avatarForm = document.querySelector('[data-avatar-form]');
+    if (avatarForm) {
+        const avatarInput = avatarForm.querySelector('input[type="file"]');
+        const avatarError = avatarForm.querySelector('.form-error');
+        const allowedTypes = ['image/jpeg', 'image/png', 'image/webp'];
+        const maxBytes = 2 * 1024 * 1024;
+
+        avatarForm.addEventListener('submit', (e) => {
+            const file = avatarInput && avatarInput.files ? avatarInput.files[0] : null;
+            let message = '';
+            if (!file) {
+                message = 'Vui lòng chọn ảnh.';
+            } else if (!allowedTypes.includes(file.type)) {
+                message = 'Chỉ nhận ảnh JPEG, PNG hoặc WebP.';
+            } else if (file.size > maxBytes) {
+                message = 'Ảnh tối đa 2 MB.';
+            }
+            if (message) {
+                e.preventDefault();
+                if (avatarError) {
+                    avatarError.textContent = message;
+                    avatarError.hidden = false;
+                }
+                if (avatarInput) avatarInput.setAttribute('aria-invalid', 'true');
             }
         });
     }

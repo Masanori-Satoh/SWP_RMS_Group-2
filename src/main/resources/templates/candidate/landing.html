@@ -4,8 +4,6 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="_csrf" th:content="${_csrf?.token}">
-  <meta name="_csrf_header" th:content="${_csrf?.headerName}">
   <title>Cơ hội việc làm & Sự nghiệp — Mộc Tuyển dụng</title>
   <meta name="description"
     content="Khám phá các vị trí tuyển dụng mới nhất tại Mộc. Nền tảng tuyển dụng minh bạch, chuyên nghiệp và đồng hành cùng sự phát triển của bạn.">
@@ -13,8 +11,9 @@
     href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Cpath d='M15 27C8 23 6 13 11 7c4-5 11-4 16-3 0 9-3 18-12 23Z' fill='%232e5a45'/%3E%3C/svg%3E">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <!-- Playwrite VN: chỉ cho câu viết tay ở CTA -->
   <link
-    href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Lora:ital,wght@0,500;0,600;0,700;1,400&display=swap"
+    href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Lora:ital,wght@0,500;0,600;0,700;1,400&family=Playwrite+VN:wght@200&display=swap"
     rel="stylesheet">
   <link rel="stylesheet" th:href="@{/css/global.css}" href="/css/global.css">
   <link rel="stylesheet" th:href="@{/css/landing.css}" href="/css/landing.css">
@@ -22,96 +21,68 @@
 </head>
 
 <body>
+  <!-- Bộ icon của landing: dùng bằng <svg class="lp-icon"><use href="#i-..."/></svg> -->
+  <svg class="sr-only" width="0" height="0" aria-hidden="true" xmlns="http://www.w3.org/2000/svg">
+    <symbol id="i-arrow" viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></symbol>
+    <symbol id="i-doc" viewBox="0 0 24 24"><path d="M5 3h9l5 5v13H5zM14 3v6h5M8 13h8M8 17h8"/></symbol>
+    <symbol id="i-bell" viewBox="0 0 24 24"><path d="M18 8a6 6 0 0 0-12 0c0 8-3 8-3 10h18c0-2-3-2-3-10M10 21h4"/></symbol>
+    <symbol id="i-chart" viewBox="0 0 24 24"><path d="M4 21V12h4v9M10 21V8h4v13M16 21V3h4v18M2 21h20"/></symbol>
+    <symbol id="i-users" viewBox="0 0 24 24"><circle cx="9" cy="8" r="3"/><path d="M3 20v-2a6 6 0 0 1 12 0v2M16 6a3 3 0 0 1 0 6M17 14a5 5 0 0 1 4 5v1"/></symbol>
+    <symbol id="i-search" viewBox="0 0 24 24"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m16 16 5 5"/></symbol>
+    <symbol id="i-check" viewBox="0 0 24 24"><path d="M4 12l5 5L20 6"/></symbol>
+    <symbol id="i-pin" viewBox="0 0 24 24"><path d="M20 10c0 5-8 11-8 11S4 15 4 10a8 8 0 1 1 16 0Z"/><circle cx="12" cy="10" r="2.5"/></symbol>
+    <symbol id="i-calendar" viewBox="0 0 24 24"><rect height="16" rx="2" width="18" x="3" y="5"/><path d="M7 3v4M17 3v4M3 10h18"/></symbol>
+    <symbol id="i-briefcase" viewBox="0 0 24 24"><rect height="14" rx="2" width="18" x="3" y="7"/><path d="M8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M3 12h18M10 12v2h4v-2"/></symbol>
+    <symbol id="i-monitor" viewBox="0 0 24 24"><rect height="14" rx="2" width="18" x="3" y="4"/><path d="M8 22h8M12 18v4"/></symbol>
+    <symbol id="i-book" viewBox="0 0 24 24"><path d="M12 6c-2-2-5-3-9-2v15c4-1 7 0 9 2 2-2 5-3 9-2V4c-4-1-7 0-9 2Zm0 0v15"/></symbol>
+    <symbol id="i-heart" viewBox="0 0 24 24"><path d="M20.7 5.6a5.4 5.4 0 0 0-7.7 0l-1 1-1-1a5.4 5.4 0 0 0-7.7 7.7L12 22l8.7-8.7a5.4 5.4 0 0 0 0-7.7Z"/></symbol>
+    <symbol id="i-coffee" viewBox="0 0 24 24"><path d="M4 7h13v8a6 6 0 0 1-6 6H10a6 6 0 0 1-6-6V7Zm13 1h2a3 3 0 0 1 0 6h-2M3 22h17"/></symbol>
+  </svg>
+
   <!-- Topbar công khai dùng chung (fragments/layout/public-topbar.html) -->
   <header th:replace="~{fragments/layout/public-topbar :: topbar('', true)}"></header>
 
   <main id="main">
-    <!-- Hero Section (Phong cách Mộc & Hiện đại) -->
-    <section class="landing-hero" aria-labelledby="hero-title">
-      <div class="container">
-        <div class="hero-grid">
-          <div class="hero-text-content">
-            <div class="hero-badge">
-              <span class="hero-badge-dot"></span>
-              Cơ hội nghề nghiệp tại Mộc RMS · 2026
-            </div>
-            <h1 class="hero-title" id="hero-title">
-              Làm việc cùng Mộc.<br>
-              <span class="hero-title-accent">Kết nối tài năng, kiến tạo giá trị thật.</span>
-            </h1>
-            <p class="hero-description">
-              Mộc phát triển giải pháp phần mềm quản trị tuyển dụng hiện đại, minh bạch và tinh gọn. Chúng tôi mở rộng
-              cánh cửa đón chào những chuyên gia tận tâm cùng xây dựng sản phẩm hữu ích mỗi ngày.
-            </p>
-            <div class="hero-actions">
-              <a th:href="@{/jobs}" class="btn-hero-primary">
-                Xem vị trí đang tuyển
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"
-                  stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                  <path d="M5 12h14M12 5l7 7-7 7" />
-                </svg>
-              </a>
-              <a href="#process" class="btn-hero-secondary">
-                Tìm hiểu quy trình
-              </a>
-            </div>
+    <!-- Hero: ảnh lớn bên phải mờ dần sang trái, 3 điểm nổi bật dưới nút -->
+    <section class="lp-hero" aria-labelledby="hero-title">
+      <div class="lp-hero-art" role="img" aria-label="Góc làm việc với laptop, cây xanh và tách cà phê"></div>
+      <div class="lp-container lp-hero-inner">
+        <div class="lp-hero-copy">
+          <div class="lp-hero-badge">
+            <span class="lp-hero-badge-dot"></span>
+            Cơ hội nghề nghiệp tại Mộc RMS · 2026
+          </div>
+          <h1 class="lp-hero-title" id="hero-title">
+            Làm việc cùng Mộc.
+            <span class="lp-hero-title-accent">Kết nối tài năng, kiến tạo giá trị thật.</span>
+          </h1>
+          <p class="lp-hero-desc">
+            Mộc phát triển giải pháp phần mềm quản trị tuyển dụng hiện đại, minh bạch và tinh gọn. Chúng tôi mở rộng
+            cánh cửa đón chào những chuyên gia tận tâm cùng xây dựng sản phẩm hữu ích mỗi ngày.
+          </p>
+          <div class="lp-hero-actions">
+            <a th:href="@{/jobs}" href="/jobs" class="lp-btn lp-btn-dark">
+              Xem vị trí đang tuyển
+              <svg class="lp-icon" aria-hidden="true"><use href="#i-arrow"/></svg>
+            </a>
+            <a href="#process" class="lp-btn lp-btn-outline">Tìm hiểu quy trình</a>
           </div>
 
-          <!-- Hero Visual Feature Box -->
-          <div class="hero-visual-card">
-            <div class="visual-card-header">
-              <span class="visual-badge">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
-                </svg>
-                Cam kết tuyển dụng
-              </span>
-              <span class="visual-badge-sub">Xác thực bởi RMS</span>
+          <div class="lp-hero-highlights">
+            <div class="lp-highlight">
+              <div class="lp-highlight-icon"><svg class="lp-icon" aria-hidden="true"><use href="#i-doc"/></svg></div>
+              <strong>Ứng tuyển dễ dàng</strong>
+              <span>Chỉ vài bước, nộp hồ sơ ở bất cứ đâu.</span>
             </div>
-
-            <div class="visual-feature-list">
-              <div class="visual-feature-item">
-                <div class="visual-feature-icon">
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                    stroke-linecap="round" stroke-linejoin="round">
-                    <polyline points="20 6 9 17 4 12" />
-                  </svg>
-                </div>
-                <div class="visual-feature-text">
-                  <strong>100% Minh bạch thông tin</strong>
-                  <span>Mô tả công việc, dải lương và tiêu chí đánh giá được công khai rõ ràng.</span>
-                </div>
-              </div>
-
-              <div class="visual-feature-item">
-                <div class="visual-feature-icon">
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                    stroke-linecap="round" stroke-linejoin="round">
-                    <circle cx="12" cy="12" r="10" />
-                    <polyline points="12 6 12 12 16 14" />
-                  </svg>
-                </div>
-                <div class="visual-feature-text">
-                  <strong>Phản hồi trong 24 – 48 giờ</strong>
-                  <span>Tôn trọng thời gian của ứng viên. Mọi hồ sơ đều nhận phản hồi chính thức.</span>
-                </div>
-              </div>
-
-              <div class="visual-feature-item">
-                <div class="visual-feature-icon">
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                    stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
-                    <circle cx="9" cy="7" r="4" />
-                    <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
-                    <path d="M16 3.13a4 4 0 0 1 0 7.75" />
-                  </svg>
-                </div>
-                <div class="visual-feature-text">
-                  <strong>Môi trường trao quyền & phát triển</strong>
-                  <span>Học hỏi qua dự án thực tiễn, phản hồi trực tiếp và lộ trình thăng tiến rõ ràng.</span>
-                </div>
-              </div>
+            <div class="lp-highlight">
+              <div class="lp-highlight-icon"><svg class="lp-icon" aria-hidden="true"><use href="#i-bell"/></svg></div>
+              <strong>Cập nhật liên tục</strong>
+              <span>Theo dõi hồ sơ trong mục Đơn ứng tuyển của tôi.</span>
+            </div>
+            <div class="lp-highlight">
+              <div class="lp-highlight-icon"><svg class="lp-icon" aria-hidden="true"><use href="#i-chart"/></svg></div>
+              <strong>Trải nghiệm minh bạch</strong>
+              <span>Mọi thông tin tuyển dụng đều rõ ràng.</span>
             </div>
           </div>
         </div>
@@ -120,323 +91,233 @@
 
     <!-- Vị trí mới nhất (#featured): 3 tin đang tuyển mới nhất theo ngày đăng, không phân trang.
          Tìm kiếm, lọc và phân trang toàn bộ tin nằm ở trang Jobs Board (/jobs). -->
-    <section id="featured" class="roles-anchor-section section" aria-labelledby="featured-heading">
-      <div class="container">
-        <div class="section-head">
-          <span class="section-eyebrow">Mới nhất</span>
-          <h2 class="section-title-lg" id="featured-heading">Vị trí vừa mở tuyển</h2>
-          <p class="section-subtitle-lg">Những cơ hội mới nhất tại Mộc, cập nhật ngay khi có vị trí mới được đăng.</p>
-        </div>
-
-        <!-- Có tin: tối đa 3 thẻ + nút xem tất cả -->
-        <th:block th:unless="${#lists.isEmpty(featuredJobs)}">
-        <div class="jobs-modern-grid">
-          <a th:each="job : ${featuredJobs}" th:href="@{'/jobs/' + ${job.id}}" class="job-modern-card">
-            <div class="job-card-badges">
-              <span class="badge-department" th:text="${job.departmentName}">Kỹ thuật</span>
-              <span class="badge-type" th:text="${job.employmentType}">Full-time</span>
-            </div>
-
-            <h3 class="job-card-title" th:text="${job.postingTitle}">Senior Java Developer</h3>
-
-            <div class="job-card-meta-list">
-              <div class="job-card-meta-item">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                  stroke-linecap="round" stroke-linejoin="round">
-                  <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
-                  <circle cx="12" cy="10" r="3" />
-                </svg>
-                <span
-                  th:text="${job.workLocation != null and !job.workLocation.isEmpty() ? job.workLocation : 'Địa điểm trao đổi'}">Hà
-                  Nội</span>
-              </div>
-
-              <div class="job-card-meta-item" th:if="${job.salaryDisplay != null}">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                  stroke-linecap="round" stroke-linejoin="round">
-                  <rect x="2" y="4" width="20" height="16" rx="2" />
-                  <line x1="12" y1="8" x2="12" y2="16" />
-                  <line x1="8" y1="12" x2="16" y2="12" />
-                </svg>
-                <span class="job-salary-highlight" th:text="${job.salaryDisplay}">25–35 triệu VND</span>
-              </div>
-
-              <div class="job-card-meta-item" th:if="${job.applicationDeadline != null}">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                  stroke-linecap="round" stroke-linejoin="round">
-                  <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
-                  <line x1="16" y1="2" x2="16" y2="6" />
-                  <line x1="8" y1="2" x2="8" y2="6" />
-                  <line x1="3" y1="10" x2="21" y2="10" />
-                </svg>
-                <span>Hạn nộp: <strong
-                    th:text="${#temporals.format(job.applicationDeadline, 'dd/MM/yyyy')}">31/12/2026</strong></span>
-              </div>
-            </div>
-
-            <div class="job-card-footer">
-              <span class="job-posted-time">
-                <span th:if="${job.postingDate != null}">Đăng: <time th:datetime="${job.postingDate}"
-                    th:text="${#temporals.format(job.postingDate, 'dd/MM/yyyy')}"></time></span>
-                <span th:if="${job.postingDate == null}">Vị trí mới</span>
-              </span>
-              <span class="job-view-action">
-                Xem chi tiết &rarr;
-              </span>
-            </div>
+    <section id="featured" class="lp-section lp-jobs" aria-labelledby="featured-heading">
+      <div class="lp-container">
+        <div class="lp-jobs-head">
+          <div class="lp-heading">
+            <span class="lp-eyebrow">Mới nhất</span>
+            <h2 id="featured-heading">Vị trí vừa mở tuyển</h2>
+            <p>Những cơ hội mới nhất tại Mộc, cập nhật ngay khi có vị trí mới được đăng.</p>
+          </div>
+          <a th:href="@{/jobs}" href="/jobs" class="lp-jobs-all" th:unless="${#lists.isEmpty(featuredJobs)}">
+            Xem tất cả vị trí
+            <svg class="lp-icon" aria-hidden="true"><use href="#i-arrow"/></svg>
           </a>
         </div>
-        <div class="landing-featured-more">
-          <a th:href="@{/jobs}" class="btn-hero-primary">
+
+        <!-- Có tin: tối đa 3 thẻ (cả thẻ là link) + nút xem tất cả -->
+        <th:block th:unless="${#lists.isEmpty(featuredJobs)}">
+        <div class="lp-jobs-grid">
+          <a th:each="job : ${featuredJobs}" th:href="@{'/jobs/' + ${job.id}}" class="lp-job">
+            <div class="lp-job-badges">
+              <span class="lp-job-dept" th:text="${job.departmentName}">Engineering</span>
+              <span class="lp-job-type" th:text="${job.employmentType}">Full-time</span>
+            </div>
+
+            <h3 class="lp-job-title" th:text="${job.postingTitle}">Senior Java Developer</h3>
+
+            <div class="lp-job-meta">
+              <div class="lp-job-meta-item">
+                <svg class="lp-icon" aria-hidden="true"><use href="#i-pin"/></svg>
+                <span
+                  th:text="${job.workLocation != null and !job.workLocation.isEmpty() ? job.workLocation : 'Địa điểm trao đổi'}">Hà Nội</span>
+              </div>
+              <div class="lp-job-meta-item" th:if="${job.salaryDisplay != null}">
+                <svg class="lp-icon" aria-hidden="true"><use href="#i-briefcase"/></svg>
+                <span class="lp-job-salary" th:text="${job.salaryDisplay}">25–35 triệu VND</span>
+              </div>
+              <div class="lp-job-meta-item" th:if="${job.applicationDeadline != null}">
+                <svg class="lp-icon" aria-hidden="true"><use href="#i-calendar"/></svg>
+                <span>Hạn nộp: <strong
+                    th:text="${#temporals.format(job.applicationDeadline, 'dd/MM/yyyy')}">31/12/2026</strong></span>
+              </div>
+            </div>
+
+            <div class="lp-job-foot">
+              <span>
+                <span th:if="${job.postingDate != null}">Đăng: <time th:datetime="${job.postingDate}"
+                    th:text="${#temporals.format(job.postingDate, 'dd/MM/yyyy')}"></time></span>
+                <span th:if="${job.postingDate == null}">Vị trí mới</span>
+              </span>
+              <span class="lp-job-view">Xem chi tiết &rarr;</span>
+            </div>
+          </a>
+        </div>
+        <div class="lp-jobs-more">
+          <a th:href="@{/jobs}" href="/jobs" class="lp-btn lp-btn-dark">
             Xem tất cả vị trí đang tuyển
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"
-              stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-              <path d="M5 12h14M12 5l7 7-7 7" />
-            </svg>
+            <svg class="lp-icon" aria-hidden="true"><use href="#i-arrow"/></svg>
           </a>
         </div>
         </th:block>
 
         <!-- Chưa có tin nào đang tuyển: nói thẳng + mời tìm hiểu thêm -->
-        <div th:if="${#lists.isEmpty(featuredJobs)}" class="empty-state-card">
-          <div class="empty-state-icon">
-            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-              stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-              <rect x="2" y="7" width="20" height="14" rx="2" ry="2" />
-              <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16" />
-            </svg>
-          </div>
-          <h3 class="empty-state-title">Hiện chưa có vị trí nào đang tuyển</h3>
-          <p class="empty-state-desc">Mộc chưa mở vị trí mới vào lúc này. Hãy tìm hiểu cách chúng tôi làm việc và quay lại sau nhé.</p>
-          <a href="#culture" class="btn-hero-primary">Tìm hiểu thêm</a>
+        <div th:if="${#lists.isEmpty(featuredJobs)}" class="lp-empty">
+          <div class="lp-empty-icon"><svg class="lp-icon" aria-hidden="true"><use href="#i-briefcase"/></svg></div>
+          <h3 class="lp-empty-title">Hiện chưa có vị trí nào đang tuyển</h3>
+          <p class="lp-empty-desc">Mộc chưa mở vị trí mới vào lúc này. Hãy tìm hiểu cách chúng tôi làm việc và quay lại sau nhé.</p>
+          <a href="#culture" class="lp-btn lp-btn-dark">Tìm hiểu thêm</a>
         </div>
       </div>
     </section>
 
-    <!-- Hiring Process Section (#process) -->
-    <section id="process" class="process-section" aria-labelledby="process-heading">
-      <div class="container">
-        <div class="section-head">
-          <span class="section-eyebrow">Quy trình</span>
-          <h2 class="section-title-lg" id="process-heading">Quy trình ứng tuyển tinh gọn & minh bạch</h2>
-          <p class="section-subtitle-lg">Mọi vòng tuyển dụng tại Mộc đều hướng tới sự thấu hiểu hai chiều, tôn trọng
-            thời gian và đánh giá đúng năng lực của ứng viên.</p>
+    <!-- Quy trình (#process) -->
+    <section id="process" class="lp-section lp-process" aria-labelledby="process-heading">
+      <div class="lp-container lp-split">
+        <div class="lp-intro">
+          <span class="lp-eyebrow">Quy trình</span>
+          <h2 id="process-heading">Quy trình ứng tuyển tinh gọn &amp; minh bạch</h2>
+          <p>Mọi vòng tuyển dụng tại Mộc đều hướng tới sự thấu hiểu hai chiều, tôn trọng thời gian và đánh giá đúng
+            năng lực của ứng viên.</p>
         </div>
-
-        <div class="process-grid">
-          <div class="process-card">
-            <span class="process-step-num">01</span>
-            <h3 class="process-card-title">Ứng tuyển trực tuyến</h3>
-            <p class="process-card-desc">Chọn vị trí phù hợp và gửi hồ sơ CV trong vài phút. Không yêu cầu các thủ tục
-              rườm rà.</p>
-          </div>
-
-          <div class="process-card">
-            <span class="process-step-num">02</span>
-            <h3 class="process-card-title">Sàng lọc & Phản hồi</h3>
-            <p class="process-card-desc">Đội ngũ tuyển dụng đối chiếu hồ sơ và gửi thông báo kết quả trong vòng 24 đến
-              48 giờ làm việc.</p>
-          </div>
-
-          <div class="process-card">
-            <span class="process-step-num">03</span>
-            <h3 class="process-card-title">Phỏng vấn chuyên môn</h3>
-            <p class="process-card-desc">Trao đổi cởi mở cùng Hiring Manager và nhóm về giải pháp thực tế và cách phối
-              hợp làm việc.</p>
-          </div>
-
-          <div class="process-card">
-            <span class="process-step-num">04</span>
-            <h3 class="process-card-title">Đề nghị & Gia nhập</h3>
-            <p class="process-card-desc">Nhận thư mời làm việc minh bạch về đãi ngộ, trao đổi lộ trình và bắt đầu hành
-              trình cùng Mộc.</p>
-          </div>
+        <div class="lp-process-grid">
+          <article class="lp-process-card">
+            <div class="lp-process-icon"><svg class="lp-icon" aria-hidden="true"><use href="#i-doc"/></svg></div>
+            <span class="lp-step">01</span>
+            <h3>Ứng tuyển trực tuyến</h3>
+            <p>Chọn vị trí phù hợp và gửi CV trong vài phút. Không yêu cầu các thủ tục rườm rà.</p>
+          </article>
+          <article class="lp-process-card">
+            <div class="lp-process-icon"><svg class="lp-icon" aria-hidden="true"><use href="#i-search"/></svg></div>
+            <span class="lp-step">02</span>
+            <h3>Sàng lọc &amp; Đánh giá</h3>
+            <p>Đội ngũ tuyển dụng và trưởng bộ phận lần lượt xem xét hồ sơ của bạn.</p>
+          </article>
+          <article class="lp-process-card">
+            <div class="lp-process-icon"><svg class="lp-icon" aria-hidden="true"><use href="#i-users"/></svg></div>
+            <span class="lp-step">03</span>
+            <h3>Phỏng vấn chuyên môn</h3>
+            <p>Trao đổi cởi mở cùng Hiring Manager và nhóm về giải pháp thực tế và cách phối hợp làm việc.</p>
+          </article>
+          <article class="lp-process-card">
+            <div class="lp-process-icon"><svg class="lp-icon" aria-hidden="true"><use href="#i-check"/></svg></div>
+            <span class="lp-step">04</span>
+            <h3>Đề nghị &amp; Gia nhập</h3>
+            <p>Nhận thư mời làm việc minh bạch về đãi ngộ, trao đổi lộ trình và bắt đầu hành trình cùng Mộc.</p>
+          </article>
         </div>
       </div>
     </section>
 
-    <!-- Culture Section (#culture) -->
-    <section id="culture" class="culture-section" aria-labelledby="culture-heading">
-      <div class="container">
-        <div class="section-head">
-          <span class="section-eyebrow">Văn hóa Mộc</span>
-          <h2 class="section-title-lg" id="culture-heading">Môi trường nơi bạn được tự chủ & phát triển</h2>
-          <p class="section-subtitle-lg">Chúng tôi tin rằng phần mềm hữu ích chỉ được tạo nên bởi những con người gắn
-            kết và có không gian sáng tạo tự do.</p>
+    <!-- Văn hóa (#culture) -->
+    <section id="culture" class="lp-section lp-culture" aria-labelledby="culture-heading">
+      <div class="lp-container lp-split">
+        <div class="lp-intro">
+          <span class="lp-eyebrow">Văn hóa Mộc</span>
+          <h2 id="culture-heading">Môi trường nơi bạn được tự chủ &amp; phát triển</h2>
+          <p>Chúng tôi tin rằng phần mềm hữu ích chỉ được tạo nên bởi những con người gắn kết và có không gian sáng tạo
+            tự do.</p>
         </div>
-
-        <div class="culture-grid">
-          <div class="culture-card">
-            <div class="culture-icon-wrapper">
-              <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                stroke-linecap="round" stroke-linejoin="round">
-                <circle cx="12" cy="12" r="10" />
-                <path d="m4.93 4.93 4.24 4.24" />
-                <path d="m14.83 9.17 4.24-4.24" />
-                <path d="m14.83 14.83 4.24 4.24" />
-                <path d="m9.17 14.83-4.24 4.24" />
-                <circle cx="12" cy="12" r="4" />
-              </svg>
+        <div class="lp-culture-cards">
+          <article class="lp-culture-card">
+            <div class="lp-culture-photo lp-culture-photo-goals" role="img"
+              aria-label="Hình minh họa môi trường làm việc và tinh thần hợp tác"></div>
+            <div class="lp-culture-body">
+              <div class="lp-culture-icon"><svg class="lp-icon" aria-hidden="true"><use href="#i-users"/></svg></div>
+              <h3>Mục tiêu rõ ràng, tự chủ cao</h3>
+              <p>Đội ngũ cùng thống nhất mục tiêu cốt lõi và đo lường dựa trên giá trị thật mang lại cho người dùng. Bạn
+                được toàn quyền chủ động quyết định giải pháp triển khai.</p>
             </div>
-            <h3 class="culture-card-title">Mục tiêu rõ ràng, tự chủ cao</h3>
-            <p class="culture-card-desc">
-              Đội ngũ cùng thống nhất mục tiêu cốt lõi và đo lường dựa trên giá trị thật mang lại cho người dùng. Bạn
-              được toàn quyền chủ động quyết định giải pháp triển khai.
-            </p>
-          </div>
-
-          <div class="culture-card">
-            <div class="culture-icon-wrapper">
-              <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                stroke-linecap="round" stroke-linejoin="round">
-                <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z" />
-                <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z" />
-              </svg>
+          </article>
+          <article class="lp-culture-card">
+            <div class="lp-culture-photo lp-culture-photo-learning" role="img"
+              aria-label="Hình minh họa học hỏi và phát triển nghề nghiệp"></div>
+            <div class="lp-culture-body">
+              <div class="lp-culture-icon"><svg class="lp-icon" aria-hidden="true"><use href="#i-book"/></svg></div>
+              <h3>Học hỏi qua bài toán thực tế</h3>
+              <p>Phản hồi thẳng thắn, chia sẻ mã nguồn và bài học kinh nghiệm sau mỗi lần release. Ngân sách đào tạo định
+                kỳ hỗ trợ bạn liên tục nâng tầm chuyên môn.</p>
             </div>
-            <h3 class="culture-card-title">Học hỏi qua bài toán thực tế</h3>
-            <p class="culture-card-desc">
-              Phản hồi thẳng thắn, chia sẻ mã nguồn và bài học kinh nghiệm sau mỗi lần release. Ngân sách đào tạo định
-              kỳ hỗ trợ bạn liên tục nâng tầm chuyên môn.
-            </p>
-          </div>
-
-          <div class="culture-card">
-            <div class="culture-icon-wrapper">
-              <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                stroke-linecap="round" stroke-linejoin="round">
-                <path
-                  d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
-              </svg>
+          </article>
+          <article class="lp-culture-card">
+            <div class="lp-culture-photo lp-culture-photo-focus" role="img"
+              aria-label="Hình minh họa không gian làm việc sáng tạo"></div>
+            <div class="lp-culture-body">
+              <div class="lp-culture-icon"><svg class="lp-icon" aria-hidden="true"><use href="#i-heart"/></svg></div>
+              <h3>Tôn trọng &amp; Bảo vệ sự tập trung</h3>
+              <p>Hạn chế các cuộc họp không cần thiết. Trao đổi minh bạch qua tài liệu và tôn trọng không gian làm việc
+                sâu để từng cá nhân đạt hiệu suất cao nhất.</p>
             </div>
-            <h3 class="culture-card-title">Tôn trọng & Bảo vệ sự tập trung</h3>
-            <p class="culture-card-desc">
-              Hạn chế các cuộc họp không cần thiết. Trao đổi minh bạch qua tài liệu và tôn trọng không gian làm việc sâu
-              để từng cá nhân đạt hiệu suất cao nhất.
-            </p>
-          </div>
+          </article>
         </div>
       </div>
     </section>
 
-    <!-- Perks & Benefits Section (#perks) -->
-    <section id="perks" class="perks-section" aria-labelledby="perks-heading">
-      <div class="container">
-        <div class="section-head">
-          <span class="section-eyebrow">Đãi ngộ</span>
-          <h2 class="section-title-lg" id="perks-heading">Chế độ đãi ngộ & Quyền lợi thành viên</h2>
-          <p class="section-subtitle-lg">Chăm sóc toàn diện từ sức khỏe, đời sống đến môi trường làm việc để bạn luôn an
-            tâm cống hiến.</p>
+    <!-- Đãi ngộ (#perks) -->
+    <section id="perks" class="lp-section lp-perks" aria-labelledby="perks-heading">
+      <div class="lp-container lp-split">
+        <div class="lp-intro">
+          <span class="lp-eyebrow">Đãi ngộ</span>
+          <h2 id="perks-heading">Chế độ đãi ngộ &amp; Quyền lợi thành viên</h2>
+          <p>Chăm sóc toàn diện từ sức khỏe, đời sống đến môi trường làm việc để bạn luôn an tâm cống hiến.</p>
         </div>
-
-        <div class="perks-grid">
-          <div class="perk-card">
-            <div class="perk-icon-box">
-              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                stroke-linecap="round" stroke-linejoin="round">
-                <rect x="2" y="7" width="20" height="14" rx="2" ry="2" />
-                <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16" />
-              </svg>
-            </div>
-            <div class="perk-info">
-              <strong>Lương thưởng cạnh tranh</strong>
+        <div class="lp-perk-grid">
+          <div class="lp-perk">
+            <div class="lp-perk-icon"><svg class="lp-icon" aria-hidden="true"><use href="#i-briefcase"/></svg></div>
+            <div>
+              <h3>Lương thưởng cạnh tranh</h3>
               <p>Mức thu nhập hấp dẫn theo năng lực, thưởng tháng 13 và đánh giá tăng lương 2 lần/năm.</p>
             </div>
           </div>
-
-          <div class="perk-card">
-            <div class="perk-icon-box">
-              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                stroke-linecap="round" stroke-linejoin="round">
-                <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
-                <line x1="16" y1="2" x2="16" y2="6" />
-                <line x1="8" y1="2" x2="8" y2="6" />
-                <line x1="3" y1="10" x2="21" y2="10" />
-              </svg>
-            </div>
-            <div class="perk-info">
-              <strong>Mô hình Hybrid linh hoạt</strong>
+          <div class="lp-perk">
+            <div class="lp-perk-icon"><svg class="lp-icon" aria-hidden="true"><use href="#i-calendar"/></svg></div>
+            <div>
+              <h3>Mô hình Hybrid linh hoạt</h3>
               <p>Kết hợp linh hoạt làm việc tại văn phòng và làm việc từ xa lên đến 2 ngày mỗi tuần.</p>
             </div>
           </div>
-
-          <div class="perk-card">
-            <div class="perk-icon-box">
-              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                stroke-linecap="round" stroke-linejoin="round">
-                <path d="M22 12h-4l-3 9L9 3l-3 9H2" />
-              </svg>
-            </div>
-            <div class="perk-info">
-              <strong>Bảo hiểm sức khỏe cao cấp</strong>
-              <p>Gói bảo hiểm sức khỏe toàn diện ngoài bảo hiểm nhà nước và khám sức khỏe định kỳ hàng năm.</p>
+          <div class="lp-perk">
+            <div class="lp-perk-icon"><svg class="lp-icon" aria-hidden="true"><use href="#i-heart"/></svg></div>
+            <div>
+              <h3>Bảo hiểm sức khỏe cao cấp</h3>
+              <p>Gói bảo hiểm sức khỏe toàn diện ngoài bảo hiểm nhà nước và khám sức khỏe định kỳ hằng năm.</p>
             </div>
           </div>
-
-          <div class="perk-card">
-            <div class="perk-icon-box">
-              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                stroke-linecap="round" stroke-linejoin="round">
-                <rect x="2" y="3" width="20" height="14" rx="2" ry="2" />
-                <line x1="8" y1="21" x2="16" y2="21" />
-                <line x1="12" y1="17" x2="12" y2="21" />
-              </svg>
-            </div>
-            <div class="perk-info">
-              <strong>Thiết bị làm việc hiện đại</strong>
+          <div class="lp-perk">
+            <div class="lp-perk-icon"><svg class="lp-icon" aria-hidden="true"><use href="#i-monitor"/></svg></div>
+            <div>
+              <h3>Thiết bị làm việc hiện đại</h3>
               <p>Trang bị MacBook hoặc laptop cấu hình cao cùng màn hình phụ và phụ kiện phục vụ công việc.</p>
             </div>
           </div>
-
-          <div class="perk-card">
-            <div class="perk-icon-box">
-              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                stroke-linecap="round" stroke-linejoin="round">
-                <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" />
-                <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" />
-              </svg>
-            </div>
-            <div class="perk-info">
-              <strong>Ngân sách học tập hàng năm</strong>
+          <div class="lp-perk">
+            <div class="lp-perk-icon"><svg class="lp-icon" aria-hidden="true"><use href="#i-book"/></svg></div>
+            <div>
+              <h3>Ngân sách học tập hằng năm</h3>
               <p>Tài trợ kinh phí mua sách, tham gia các khóa học chuyên môn và hội thảo công nghệ.</p>
             </div>
           </div>
-
-          <div class="perk-card">
-            <div class="perk-icon-box">
-              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                stroke-linecap="round" stroke-linejoin="round">
-                <path d="M18 8h1a4 4 0 0 1 0 8h-1" />
-                <path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z" />
-                <line x1="6" y1="1" x2="6" y2="4" />
-                <line x1="10" y1="1" x2="10" y2="4" />
-                <line x1="14" y1="1" x2="14" y2="4" />
-              </svg>
-            </div>
-            <div class="perk-info">
-              <strong>Đời sống & Gắn kết</strong>
-              <p>Teambuilding hàng quý, sự kiện công ty và trà, cà phê, đồ ăn nhẹ phục vụ cả ngày.</p>
+          <div class="lp-perk">
+            <div class="lp-perk-icon"><svg class="lp-icon" aria-hidden="true"><use href="#i-coffee"/></svg></div>
+            <div>
+              <h3>Đời sống &amp; Gắn kết</h3>
+              <p>Teambuilding hằng quý, sự kiện công ty và trà, cà phê, đồ ăn nhẹ phục vụ cả ngày.</p>
             </div>
           </div>
         </div>
       </div>
     </section>
 
-    <!-- Call to Action Banner (Pre-footer) -->
-    <section class="cta-banner-section">
-      <div class="container">
-        <div class="cta-banner-box">
-          <div class="cta-banner-content">
-            <h2 class="cta-banner-title">Chưa tìm thấy cơ hội phù hợp hôm nay?</h2>
-            <p class="cta-banner-desc">
-              Tạo tài khoản ứng viên tại Mộc RMS để lưu hồ sơ của bạn. Chúng tôi sẽ chủ động liên hệ ngay khi có cơ hội
-              việc làm mới mở ra đúng với kỳ vọng của bạn.
-            </p>
-            <div class="cta-banner-buttons">
-              <a th:href="@{/register}" class="cta-btn-white" th:if="${currentUser == null}">Tạo tài khoản ứng viên</a>
+    <!-- CTA trước footer: nút theo vai (khách / Candidate / nội bộ) -->
+    <section class="lp-cta" aria-labelledby="cta-heading">
+      <div class="lp-container">
+        <div class="lp-cta-box">
+          <div class="lp-cta-image">
+            <span class="lp-cta-quote">
+              <span class="lp-cta-quote-line">Cùng Mộc,</span>
+              <em class="lp-cta-quote-line">kiến tạo giá trị thật!</em>
+              <svg class="lp-cta-stroke" viewBox="0 0 160 28" aria-hidden="true"><path d="M9 20c36-19 84-20 134-10m-12-7 12 7-12 8"/></svg>
+            </span>
+          </div>
+          <div class="lp-cta-copy">
+            <h2 class="lp-cta-title" id="cta-heading">Chưa tìm thấy cơ hội phù hợp hôm nay?</h2>
+            <p class="lp-cta-desc">Tạo tài khoản ứng viên để ứng tuyển nhanh và theo dõi mọi hồ sơ ở một nơi.</p>
+            <div class="lp-cta-buttons">
+              <a th:href="@{/register}" class="lp-btn lp-cta-btn-white" th:if="${currentUser == null}">Tạo tài khoản ứng viên</a>
               <a th:href="${currentUser.roleName == 'Candidate'} ? @{/portal/applications} : @{/dashboard}"
-                 class="cta-btn-white" th:if="${currentUser != null}"
+                 class="lp-btn lp-cta-btn-white" th:if="${currentUser != null}"
                  th:text="${currentUser.roleName == 'Candidate' ? 'Xem đơn ứng tuyển của tôi' : 'Truy cập Bảng điều khiển'}">Truy cập Bảng điều khiển</a>
-              <a th:href="@{/jobs}" class="cta-btn-ghost">Khám phá vị trí đang mở</a>
+              <a th:href="@{/jobs}" href="/jobs" class="lp-btn lp-cta-btn-ghost">Khám phá vị trí đang mở</a>
             </div>
           </div>
         </div>

@@ -15,16 +15,21 @@ public class CurrentUserService {
 
     @Transactional(readOnly = true)
     public User requireUser() {
+        //get authentication
         var authentication = SecurityContextHolder.getContext().getAuthentication();
+        //check if authentication is not  exist and not authenticated
         if (authentication == null || !authentication.isAuthenticated()) {
             throw new AccessDeniedException("Please log in.");
         }
+        //get user by username from authentication
         return users.findByUsernameIgnoreCase(authentication.getName())
+                //check if user is active
                 .filter(user -> "Active".equals(user.getAccountStatus()))
                 .orElseThrow(() -> new AccessDeniedException("An active account is required."));
     }
 
     public static boolean hasRole(User user, String role) {
+        //check if  role is match
         return user.getRole() != null && role.equals(user.getRole().getRoleName());
     }
 

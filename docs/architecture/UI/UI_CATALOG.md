@@ -283,7 +283,7 @@ Mọi trang HTML con kế thừa thông qua: `layout:decorate="~{layout/[tên-la
 |---|---|---|---|
 | Logo | `fragments/brand :: wordmark(subtitle)` / `wordmarkLink(subtitle, href)` | `topbar.css` mục 4 | Công khai: `'TUYỂN DỤNG'`. Nội bộ (sidebar): `'RMS'`. Không tự vẽ SVG logo. |
 | Góc phải (avatar, tên, role, email, Đăng xuất, hộp thoại) | `fragments/layout/topbar-user :: actions(name, email, role, avatar, idPrefix)` | `topbar.css` mục 1–3 | Role truyền tên gốc (`'HR'`, `'Candidate'`...), fragment tự dịch sang tiếng Việt. |
-| Dữ liệu người dùng | Model attribute `topbarUser` (`core/web/TopbarUserAdvice`) | – | Có sẵn ở **mọi** trang khi đã đăng nhập: `fullName`, `email`, `roleName`, `avatarUrl`. Không tự lấy từ biến riêng của controller. |
+| Dữ liệu người dùng | Model attribute `topbarUser` (`core/web/TopbarUserAdvice`) | – | Có sẵn ở **mọi** trang khi đã đăng nhập: `fullName`, `email`, `roleName`, `avatarUrl`. `avatarUrl` là link `/users/{id}/avatar?v=...` (ảnh đã tải lên, có file trên máy) do `TopbarUserAdvice` tính, hoặc `null` khi chưa có ảnh; không phải giá trị thô của cột. Không tự lấy từ biến riêng của controller. |
 | Topbar nội bộ | `fragments/workspace-header :: header(role, fullName)` | `workspace.css` (`@import topbar.css`) | Không có logo (logo nằm ở đầu sidebar). |
 | Topbar công khai | `fragments/layout/public-topbar :: topbar(activeNav, onLanding)` | `topbar.css` mục 5 | Dùng cho landing (`candidate/landing.html`) và `layout/public` (jobs board, job-detail). Trang chứa phải nạp `css/topbar.css`. |
 | Font Lora / Source Sans 3 | – | `fonts.css` | `tokens.css` và `topbar.css` cùng `@import`. |
@@ -315,7 +315,7 @@ Mọi trang HTML con kế thừa thông qua: `layout:decorate="~{layout/[tên-la
 |---|---|
 | `.topbar-user` | Khung bọc góc phải (flex, gap 12px). Nút Đăng xuất luôn **ngoài cùng bên phải**. |
 | `.workspace-identity` | Khối Avatar + Tên + Role + Email, click về `/profile`, hover nền `var(--brand-soft)`. |
-| `.workspace-avatar` / `.workspace-avatar-fallback` | Avatar tròn 44px; không có ảnh thì hiện chữ cái đầu trên nền `var(--brand-soft)`. |
+| `.workspace-avatar` / `.workspace-avatar-fallback` | Avatar tròn 44px; chưa có ảnh thì hiện chữ cái đầu trên nền `var(--avatar-bg)`, chữ `var(--avatar-fg)` (token trong `tokens.css`, một màu cho mọi vai trò). |
 | `.workspace-user-name` / `.workspace-role` / `.workspace-user-email` | Tên đậm 16px / Badge role bo 8px / Email xám, cắt bớt khi dài. |
 | `.workspace-logout-btn` | Nút Đăng xuất: viền `var(--brand)`, bo 8px, cao 40px, icon SVG; hover chuyển đỏ `var(--error)`. Tự đủ kiểu, **không cần** thêm `.btn`. |
 | `.topbar-dialog` + `__content` / `__title` / `__body` / `__actions` | Hộp thoại xác nhận đăng xuất (native `<dialog>`). Id: `{idPrefix}-logout-dialog`, form: `{idPrefix}-logout-form`. |
@@ -346,6 +346,7 @@ Mọi trang HTML con kế thừa thông qua: `layout:decorate="~{layout/[tên-la
 - **Trạng thái thu gọn (68px):** Tối ưu không gian làm việc, hiển thị icon kèm Tooltip nổi giải thích tính năng khi hover.
 - **Trạng thái mở rộng (250px):** Mở ra khi rê chuột hoặc bấm nút ghim (`#sidebar-pin-toggle`).
 - **Nút ghim (icon đinh ghim):** chưa ghim = đinh ghim viền xám; đã ghim = đinh ghim tô xanh trên nền `var(--sidebar-brand-soft)`; đã ghim + rê chuột = icon "bỏ ghim" (đinh ghim gạch chéo). Trạng thái lưu ở `localStorage` (`rms_sidebar_pinned`), `aria-pressed` do `interface.js` cập nhật.
+- **Chân sidebar (`sidebar-footer.html`):** logo, caption và ảnh văn phòng, dùng chung mọi role nội bộ, gọi một lần trong `sidebar-shell.html`. Chỉ hiện khi sidebar mở rộng (≥ 769px), mờ dần cùng nhãn menu. Rộng cố định bằng sidebar mở rộng để ảnh không reflow khi sidebar co/giãn. CSS: `workspace.css` (`.sidebar-footer*`).
 - **Phân nhánh Menu theo Role:** Tự động nạp menu tương ứng (`admin.html`, `candidate.html`, `interviewer.html`, `recruiter.html`).
 
 ---

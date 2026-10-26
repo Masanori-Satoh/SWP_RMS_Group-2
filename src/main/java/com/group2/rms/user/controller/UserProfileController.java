@@ -3,6 +3,7 @@ package com.group2.rms.user.controller;
 import com.group2.rms.user.dto.ChangePasswordRequest;
 import com.group2.rms.user.dto.UpdateProfileRequest;
 import com.group2.rms.user.dto.UserProfileResponse;
+import com.group2.rms.user.exception.AvatarUploadException;
 import com.group2.rms.user.service.UserProfileService;
 import jakarta.validation.Valid;
 import org.springframework.http.MediaType;
@@ -13,6 +14,7 @@ import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.util.HashMap;
@@ -34,13 +36,18 @@ public class UserProfileController {
         this.profileService = profileService;
     }
 
+    /** Ứng viên có trang riêng {@code /portal/profile} (Q7.1-L1): gõ {@code /profile} thì chuyển sang đó, không báo 403. */
     @GetMapping
     public String viewProfile(Authentication authentication, Model model) {
+        if (authentication.getAuthorities().stream().anyMatch(a -> "ROLE_CANDIDATE".equals(a.getAuthority()))) {
+            return "redirect:/portal/profile";
+        }
         UserProfileResponse profile = profileService.getProfile(authentication.getName());
         model.addAttribute("userProfile", profile);
+        model.addAttribute("vietnameseUi", true);
         if (!model.containsAttribute("updateRequest")) {
             model.addAttribute("updateRequest",
-                    new UpdateProfileRequest(profile.fullName(), profile.phoneNumber(), profile.avatarUrl()));
+                    new UpdateProfileRequest(profile.fullName(), profile.phoneNumber()));
         }
         if (!model.containsAttribute("passwordRequest")) {
             model.addAttribute("passwordRequest", new ChangePasswordRequest("", "", ""));
@@ -59,7 +66,21 @@ public class UserProfileController {
             return "redirect:/profile";
         }
         profileService.updateProfile(authentication.getName(), request);
-        redirectAttributes.addFlashAttribute("successMessage", "Profile updated successfully.");
+        redirectAttributes.addFlashAttribute("successMessage", "Đã lưu hồ sơ.");
+        return "redirect:/profile";
+    }
+
+    /** Tải ảnh đại diện mới (form multipart thường); lỗi file hiện ngay dưới ô chọn ảnh. */
+    @PostMapping("/avatar")
+    public String changeAvatar(Authentication authentication,
+                               @RequestParam(name = "avatarFile", required = false) MultipartFile avatarFile,
+                               RedirectAttributes redirectAttributes) {
+        try {
+            profileService.changeAvatar(authentication.getName(), avatarFile);
+            redirectAttributes.addFlashAttribute("successMessage", "Đã cập nhật ảnh đại diện.");
+        } catch (AvatarUploadException e) {
+            redirectAttributes.addFlashAttribute("avatarError", e.getMessage());
+        }
         return "redirect:/profile";
     }
 
@@ -78,18 +99,18 @@ public class UserProfileController {
 
         if (request.newPassword() != null && request.confirmPassword() != null
                 && !request.newPassword().equals(request.confirmPassword())) {
-            bindingResult.addError(new FieldError("changePasswordRequest", "confirmPassword", "Passwords do not match."));
+            bindingResult.addError(new FieldError("changePasswordRequest", "confirmPassword", "Mật khẩu nhập lại không khớp."));
         }
 
         if (!bindingResult.hasErrors()
                 && !profileService.changePassword(authentication.getName(), request)) {
             bindingResult.addError(new FieldError("changePasswordRequest", "currentPassword",
-                    "Incorrect current password. Please check again."));
+                    "Mật khẩu hiện tại không đúng."));
         }
 
         if (bindingResult.hasErrors()) {
             response.put("success", false);
-            response.put("message", "Unable to update password. Please check the errors below.");
+            response.put("message", "Chưa đổi được mật khẩu. Vui lòng xem lỗi bên dưới.");
             Map<String, String> fieldErrors = new HashMap<>();
             for (FieldError error : bindingResult.getFieldErrors()) {
                 fieldErrors.putIfAbsent(error.getField(), error.getDefaultMessage());
@@ -99,7 +120,7 @@ public class UserProfileController {
         }
 
         response.put("success", true);
-        response.put("message", "Password changed successfully.");
+        response.put("message", "Đã đổi mật khẩu.");
         return ResponseEntity.ok(response);
     }
 
@@ -115,12 +136,12 @@ public class UserProfileController {
 
         if (request.newPassword() != null && request.confirmPassword() != null
                 && !request.newPassword().equals(request.confirmPassword())) {
-            bindingResult.addError(new FieldError("passwordRequest", "confirmPassword", "Passwords do not match."));
+            bindingResult.addError(new FieldError("passwordRequest", "confirmPassword", "Mật khẩu nhập lại không khớp."));
         }
         if (!bindingResult.hasErrors()
                 && !profileService.changePassword(authentication.getName(), request)) {
             bindingResult.addError(new FieldError("passwordRequest", "currentPassword",
-                    "Incorrect current password. Please check again."));
+                    "Mật khẩu hiện tại không đúng."));
         }
         if (bindingResult.hasErrors()) {
             redirectAttributes.addFlashAttribute("openPasswordModal", true);
@@ -128,7 +149,7 @@ public class UserProfileController {
             redirectAttributes.addFlashAttribute("passwordRequest", new ChangePasswordRequest("", "", ""));
             return "redirect:/profile";
         }
-        redirectAttributes.addFlashAttribute("successMessage", "Password changed successfully.");
+        redirectAttributes.addFlashAttribute("successMessage", "Đã đổi mật khẩu.");
         return "redirect:/profile";
     }
 }

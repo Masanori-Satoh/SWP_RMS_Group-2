@@ -45,6 +45,7 @@
   const jobSelect = document.getElementById('filter-job');
   const levelSelect = document.getElementById('filter-level');
   const statusSelect = document.getElementById('filter-status');
+  const resultSelect = document.getElementById('filter-result');
   const interviewerSelect = document.getElementById('filter-interviewer');
   const countText = document.getElementById('filter-count-text');
   const pillsContainer = document.getElementById('active-pills');
@@ -216,6 +217,9 @@
       if (match && statusSelect.value) {
         match = card.dataset.status === statusSelect.value;
       }
+      if (match && resultSelect && resultSelect.value) {
+        match = card.dataset.result === resultSelect.value;
+      }
       if (match && interviewerSelect && interviewerSelect.value) {
         match = Array.from(card.querySelectorAll('.il-member'))
           .some(function (member) {
@@ -279,6 +283,7 @@
     addSelectPill(jobSelect, 'Vị trí');
     addSelectPill(levelSelect, 'Cấp bậc');
     addSelectPill(statusSelect, 'Trạng thái');
+    addSelectPill(resultSelect, 'Kết quả');
     addSelectPill(interviewerSelect, 'Người phỏng vấn');
 
     btnClearAll.hidden = pillsContainer.childElementCount === 0;
@@ -310,7 +315,7 @@
 
   function clearAllFilters() {
     searchInput.value = '';
-    [jobSelect, levelSelect, statusSelect, interviewerSelect].forEach(function (select) {
+    [jobSelect, levelSelect, statusSelect, resultSelect, interviewerSelect].forEach(function (select) {
       if (select) {
         select.value = '';
       }
@@ -346,7 +351,7 @@
   });
 
   searchInput.addEventListener('input', applyFilters);
-  [jobSelect, levelSelect, statusSelect, interviewerSelect].forEach(function (select) {
+  [jobSelect, levelSelect, statusSelect, resultSelect, interviewerSelect].forEach(function (select) {
     if (select) {
       select.addEventListener('change', applyFilters);
     }

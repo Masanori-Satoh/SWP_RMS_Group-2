@@ -1,8 +1,11 @@
 package com.group2.rms.interview;
 
-import com.group2.rms.candidate.entity.Application;
-import com.group2.rms.candidate.entity.Candidate;
+import com.group2.rms.candidate.domain.entity.Application;
+import com.group2.rms.candidate.domain.entity.Candidate;
+import com.group2.rms.interview.dto.InterviewCardState;
 import com.group2.rms.interview.dto.InterviewResultDetailResponse;
+import com.group2.rms.interview.dto.InterviewScheduleResponse;
+import com.group2.rms.interview.dto.PanelMemberResponse;
 import com.group2.rms.interview.entity.InterviewEvaluation;
 import com.group2.rms.interview.entity.InterviewFinalResult;
 import com.group2.rms.interview.entity.InterviewFormat;
@@ -22,11 +25,16 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.security.access.AccessDeniedException;
 
+import java.time.Clock;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.util.Map;
 import java.util.List;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.anyCollection;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
 class InterviewResultServiceTests {
@@ -50,7 +58,7 @@ class InterviewResultServiceTests {
         interviewFinalResultRepository = mock(InterviewFinalResultRepository.class);
         interviewFinalResultService = mock(InterviewFinalResultService.class);
         service = new InterviewResultServiceImpl(interviewScheduleRepository, interviewEvaluationRepository,
-                interviewFinalResultRepository, interviewFinalResultService);
+                interviewFinalResultRepository, interviewFinalResultService, java.time.Clock.systemDefaultZone());
 
         interviewerA = user(21, "An Interviewer", "Interviewer");
         interviewerB = user(22, "Binh Interviewer", "Interviewer");
@@ -217,5 +225,154 @@ class InterviewResultServiceTests {
 
         assertFalse(result.canFinalize());
         assertNull(result.finalizeBlockedReason());
+    }
+
+    // ===== Hạn chấm điểm, quá hạn chốt và "Cân nhắc" (đồng hồ cố định) =====
+
+    private static final LocalDateTime NOW = LocalDateTime.of(2026, 10, 23, 10, 0);
+
+    private InterviewResultServiceImpl serviceAtNow() {
+        Clock fixed = Clock.fixed(NOW.atZone(ZoneId.systemDefault()).toInstant(), ZoneId.systemDefault());
+        return new InterviewResultServiceImpl(interviewScheduleRepository, interviewEvaluationRepository,
+                interviewFinalResultRepository, interviewFinalResultService, fixed);
+    }
+
+    private void endedAt(LocalDateTime end) {
+        schedule.setInterviewStatus(InterviewStatus.Completed);
+        schedule.setStartTime(end.minusHours(1));
+        schedule.setEndTime(end);
+    }
+
+    private InterviewEvaluation submittedAt(User by, LocalDateTime at) {
+        InterviewEvaluation evaluation = evaluation(by.getUserId(), by, 4, 4, 4, "Hire", null);
+        evaluation.setEvaluatedAt(at);
+        return evaluation;
+    }
+
+    @Test
+    @DisplayName("Trạng thái chấm điểm từng người: nộp đúng hạn / nộp trễ")
+    void panelProgressShowsLate() {
+        endedAt(NOW.minusHours(30));
+        when(interviewEvaluationRepository.findByScheduleIdWithInterviewer(INTERVIEW_ID)).thenReturn(List.of(
+                submittedAt(interviewerA, NOW.minusHours(29)),
+                submittedAt(interviewerB, NOW.minusHours(2))));
+
+        InterviewResultDetailResponse result = serviceAtNow().getResult(INTERVIEW_ID, user(1, "Lan HR", "HR"));
+
+        assertEquals("Đã nộp", result.panel().get(0).progressDisplay());
+        assertEquals("Nộp trễ", result.panel().get(1).progressDisplay());
+        assertFalse(result.evaluations().get(0).late());
+        assertTrue(result.evaluations().get(1).late());
+        assertEquals(NOW.minusHours(6), result.evaluationDeadline());
+        assertEquals(NOW.plusHours(42), result.decisionDeadline());
+    }
+
+    @Test
+    @DisplayName("Quá 24h chưa nộp: Quá hạn đánh giá nhưng vẫn được nộp")
+    void overdueMemberCanStillEvaluate() {
+        endedAt(NOW.minusHours(30));
+        when(interviewEvaluationRepository.findByScheduleIdWithInterviewer(INTERVIEW_ID)).thenReturn(List.of(
+                submittedAt(interviewerA, NOW.minusHours(29))));
+
+        InterviewResultDetailResponse result = serviceAtNow().getResult(INTERVIEW_ID, interviewerB);
+
+        assertEquals("Quá hạn đánh giá", result.panel().stream()
+                .filter(InterviewResultDetailResponse.PanelMemberStatus::me).findFirst().orElseThrow().progressDisplay());
+        assertTrue(result.canEvaluate());
+    }
+
+    @Test
+    @DisplayName("HM trong 24h mà thiếu phiếu: không chốt được, có lý do hiển thị")
+    void decisionMakerBlockedUntilAllEvaluations() {
+        endedAt(NOW.minusHours(2));
+        User hm = user(40, "Hoa HM", "Hiring Manager");
+        when(interviewFinalResultService.isDecisionMaker(hm, schedule)).thenReturn(true);
+        when(interviewEvaluationRepository.findByScheduleIdWithInterviewer(INTERVIEW_ID)).thenReturn(List.of(
+                submittedAt(interviewerA, NOW.minusHours(1))));
+
+        InterviewResultDetailResponse result = serviceAtNow().getResult(INTERVIEW_ID, hm);
+
+        assertFalse(result.canFinalize());
+        assertTrue(result.finalizeBlockedReason().contains("1/2"));
+    }
+
+    @Test
+    @DisplayName("Chưa chốt và quá hạn 2 ngày sau hạn chấm điểm: chỉ cảnh báo, vẫn chốt được")
+    void overdueDecisionIsOnlyAWarning() {
+        endedAt(NOW.minusHours(80));
+        User hm = user(40, "Hoa HM", "Hiring Manager");
+        when(interviewFinalResultService.isDecisionMaker(hm, schedule)).thenReturn(true);
+
+        InterviewResultDetailResponse result = serviceAtNow().getResult(INTERVIEW_ID, hm);
+
+        assertTrue(result.decisionOverdue());
+        assertTrue(result.canFinalize());
+    }
+
+    @Test
+    @DisplayName("Đang cân nhắc: HM chốt lại được; quá 7 ngày thì cảnh báo")
+    void consideringCanBeRedecidedAndWarnsAfterSevenDays() {
+        endedAt(NOW.minusDays(10));
+        User hm = user(40, "Hoa HM", "Hiring Manager");
+        when(interviewFinalResultService.isDecisionMaker(hm, schedule)).thenReturn(true);
+        when(interviewFinalResultRepository.findByScheduleId(INTERVIEW_ID)).thenReturn(Optional.of(
+                InterviewFinalResult.builder().finalResultId(3).interviewSchedule(schedule).hiringManager(hm)
+                        .finalDecision("Considering").consideredAt(NOW.minusDays(8))
+                        .approvedAt(NOW.minusDays(8)).build()));
+
+        InterviewResultDetailResponse result = serviceAtNow().getResult(INTERVIEW_ID, hm);
+
+        assertTrue(result.canFinalize());
+        assertNull(result.finalizeBlockedReason());
+        assertTrue(result.finalResult().considering());
+        assertEquals("Đang cân nhắc", result.finalResult().decisionDisplay());
+        assertTrue(result.finalResult().considerOverdue());
+        assertFalse(result.decisionOverdue(), "Đã có quyết định (dù tạm) thì không báo quá hạn chốt");
+    }
+
+    @Test
+    @DisplayName("Nhãn danh sách lịch: chờ chốt, quá hạn chốt, đang cân nhắc; lịch chưa kết thúc không có nhãn")
+    void listDecisionStates() {
+        InterviewScheduleResponse awaiting = listItem(1L, NOW.minusHours(5));
+        InterviewScheduleResponse overdue = listItem(2L, NOW.minusHours(80));
+        InterviewScheduleResponse considering = listItem(3L, NOW.minusDays(2));
+        InterviewScheduleResponse upcoming = listItem(4L, NOW.plusDays(1));
+        InterviewSchedule consideredSchedule = InterviewSchedule.builder().interviewId(3L).build();
+        when(interviewFinalResultRepository.findByInterviewSchedule_InterviewIdIn(anyCollection())).thenReturn(List.of(
+                InterviewFinalResult.builder().interviewSchedule(consideredSchedule).finalDecision("Considering")
+                        .consideredAt(NOW.minusDays(1)).build()));
+
+        Map<Long, InterviewCardState> states = serviceAtNow()
+                .decisionStates(List.of(awaiting, overdue, considering, upcoming));
+
+        assertEquals("AWAITING_DECISION", states.get(1L).code());
+        assertEquals("DECISION_OVERDUE", states.get(2L).code());
+        assertEquals("CONSIDERING", states.get(3L).code());
+        assertFalse(states.containsKey(4L));
+    }
+
+    @Test
+    @DisplayName("Nhãn chấm điểm của người xem: chờ đánh giá kèm giờ còn lại, quá hạn")
+    void listEvaluationStatesForViewer() {
+        InterviewScheduleResponse pending = listItem(1L, NOW.minusHours(4));
+        InterviewScheduleResponse overdue = listItem(2L, NOW.minusHours(30));
+        when(interviewEvaluationRepository.findByInterviewer_UserIdAndInterviewSchedule_InterviewIdIn(eq(21), anyCollection()))
+                .thenReturn(List.of());
+
+        Map<Long, InterviewCardState> states = serviceAtNow().evaluationStates(List.of(pending, overdue), 21);
+
+        assertEquals("EVALUATION_PENDING", states.get(1L).code());
+        assertTrue(states.get(1L).display().contains("còn 20h"));
+        assertEquals("EVALUATION_OVERDUE", states.get(2L).code());
+        assertTrue(serviceAtNow().evaluationStates(List.of(pending), 99).isEmpty(), "Không thuộc hội đồng thì không có nhãn");
+    }
+
+    private static InterviewScheduleResponse listItem(Long id, LocalDateTime end) {
+        return new InterviewScheduleResponse(id, 100, "Chi", "chi@example.com", null, "Java Developer",
+                InterviewFormat.Offline_Office, "Tại văn phòng",
+                end.isAfter(NOW) ? InterviewStatus.Scheduled : InterviewStatus.Completed, "",
+                end.minusHours(1), end, null, 1, "Lan HR", end.minusDays(3),
+                List.of(new PanelMemberResponse(21, "iv_an", "An Interviewer", null, null,
+                        RoleInPanel.Interviewer, "Interviewer")));
     }
 }

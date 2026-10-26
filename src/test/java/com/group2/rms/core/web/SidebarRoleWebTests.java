@@ -1,14 +1,15 @@
 package com.group2.rms.core.web;
 
-import com.group2.rms.candidate.controller.ApplicationPipelineController;
-import com.group2.rms.candidate.controller.MyApplicationController;
-import com.group2.rms.candidate.dto.ApplicationListResponse;
-import com.group2.rms.candidate.dto.ApplicationSearch;
-import com.group2.rms.candidate.dto.MyApplicationListResponse;
-import com.group2.rms.candidate.service.ApplicationPipelineService;
-import com.group2.rms.candidate.service.ApplicationReviewService;
-import com.group2.rms.candidate.service.ApplicationStage;
-import com.group2.rms.candidate.service.MyApplicationService;
+import com.group2.rms.candidate.application.pipeline.controller.ApplicationPipelineController;
+import com.group2.rms.candidate.application.portal.controller.MyApplicationController;
+import com.group2.rms.candidate.application.pipeline.dto.ApplicationListResponse;
+import com.group2.rms.candidate.application.pipeline.dto.ApplicationSearch;
+import com.group2.rms.candidate.application.portal.dto.MyApplicationListResponse;
+import com.group2.rms.candidate.application.pipeline.service.ApplicationPipelineService;
+import com.group2.rms.candidate.application.pipeline.service.ApplicationReviewService;
+import com.group2.rms.candidate.domain.rule.ApplicationStage;
+import com.group2.rms.candidate.application.portal.service.MyApplicationService;
+import com.group2.rms.candidate.talentpool.service.TalentPoolService;
 import com.group2.rms.core.config.SecurityConfig;
 import com.group2.rms.core.security.CurrentUserService;
 import com.group2.rms.core.security.DatabaseUserDetailsService;
@@ -66,7 +67,7 @@ class SidebarRoleWebTests {
     @MockitoBean NotificationService notifications;
     @MockitoBean ApplicationPipelineService pipeline;
     @MockitoBean ApplicationReviewService reviewService;
-    @MockitoBean com.group2.rms.candidate.service.TalentPoolService talentPool;
+    @MockitoBean TalentPoolService talentPool;
 
     /** Ứng viên không có sidebar mà dùng topbar ứng viên (dunglt chốt 2026-10-20; menu topbar để trống), không lộ link của HR. */
     @Test
@@ -128,7 +129,8 @@ class SidebarRoleWebTests {
         String sidebar = sidebar("/test/legacy-sidebar-probe", as(account("director", "Director")));
         assertTrue(sidebar.contains("href=\"/requisitions\""));
         assertTrue(sidebar.contains("href=\"/offers\""));
-        assertFalse(sidebar.contains("href=\"/internal/job-postings\""), "Director không có mục chỉ HR thấy");
+        assertTrue(sidebar.contains("href=\"/internal/job-postings\""), "Director được xem tin tuyển dụng");
+        assertFalse(sidebar.contains("href=\"/talent-pool\""), "Director không có mục chỉ HR, HM thấy");
     }
 
     private String sidebar(String page, RequestPostProcessor viewer) throws Exception {

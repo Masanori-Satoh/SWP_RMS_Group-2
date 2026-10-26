@@ -6,10 +6,11 @@
     =============================================================================
     Góc phải topbar, DÙNG CHUNG cho topbar nội bộ (workspace-header.html) và
     topbar công khai (public-topbar.html):
-      Avatar + Tên + Badge role + Email (click về /profile)  |  Nút Đăng xuất (ngoài cùng phải)
-      + Hộp thoại xác nhận đăng xuất.
+      Avatar + Tên + Badge role + Email (click về hồ sơ: ứng viên /portal/profile, người nội bộ /profile)
+      |  Nút Đăng xuất (ngoài cùng phải) + Hộp thoại xác nhận đăng xuất.
     CSS: static/css/topbar.css.
-    Tham số: name, email, role (tên role gốc, tự dịch sang tiếng Việt), avatar (URL hoặc null),
+    Tham số: name, email, role (tên role gốc, tự dịch sang tiếng Việt),
+          avatar (link /users/{id}/avatar?v=... từ TopbarUserAdvice, hoặc null → chữ cái đầu trên màu --avatar-bg),
           idPrefix ('workspace' hoặc 'public' → id form/dialog: {idPrefix}-logout-form / {idPrefix}-logout-dialog)
     =============================================================================
 -->
@@ -44,8 +45,8 @@
   </div>
 
   <!-- Khối định danh: click vào bất kỳ đâu đều về hồ sơ cá nhân -->
-  <a th:href="@{/profile}" class="workspace-identity" title="Xem hồ sơ cá nhân của bạn">
-    <img class="workspace-avatar" th:if="${hasAvatar}" th:src="${avatar}" alt="Avatar" referrerpolicy="no-referrer">
+  <a th:href="${role == 'Candidate'} ? @{/portal/profile} : @{/profile}" class="workspace-identity" title="Xem hồ sơ cá nhân của bạn">
+    <img class="workspace-avatar" th:if="${hasAvatar}" th:src="${avatar}" alt="Ảnh đại diện">
     <div class="workspace-avatar workspace-avatar-fallback" th:unless="${hasAvatar}" aria-hidden="true"
          th:text="${name != null and !#strings.isEmpty(name) ? #strings.toUpperCase(#strings.substring(name, 0, 1)) : 'U'}">U</div>
     <div class="workspace-user-meta">

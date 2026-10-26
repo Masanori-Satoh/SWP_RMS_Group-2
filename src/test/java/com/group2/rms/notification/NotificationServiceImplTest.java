@@ -1,5 +1,7 @@
 package com.group2.rms.notification;
 
+import com.group2.rms.candidate.domain.entity.Application;
+import com.group2.rms.candidate.domain.entity.Candidate;
 import com.group2.rms.core.exception.ResourceNotFoundException;
 import com.group2.rms.requisition.entity.JobRequisition;
 import com.group2.rms.requisition.entity.RequisitionApproval;
@@ -14,7 +16,6 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
-import org.springframework.data.domain.PageRequest;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -246,11 +247,11 @@ class NotificationServiceImplTest {
     @DisplayName("notifyOfferLetterSent: Lưu thông báo thư mời làm việc cho ứng viên với link chuẩn")
     void notifyOfferLetterSent_success() {
         User candidateUser = User.builder().userId(22).username("trung").fullName("Huỳnh Hoàng Trung").build();
-        com.group2.rms.candidate.entity.Candidate candidate = com.group2.rms.candidate.entity.Candidate.builder()
+        Candidate candidate = Candidate.builder()
                 .candidateId(5)
                 .account(candidateUser)
                 .build();
-        com.group2.rms.candidate.entity.Application app = com.group2.rms.candidate.entity.Application.builder()
+        Application app = Application.builder()
                 .applicationId(10)
                 .candidate(candidate)
                 .build();
@@ -290,11 +291,11 @@ class NotificationServiceImplTest {
     void notifyOfferResponseFromCandidate_accepted() {
         User hrUser = User.builder().userId(15).username("hr.user").fullName("Lê Thị HR").build();
         User candidateUser = User.builder().userId(22).username("trung").fullName("Huỳnh Hoàng Trung").build();
-        com.group2.rms.candidate.entity.Candidate candidate = com.group2.rms.candidate.entity.Candidate.builder()
+        Candidate candidate = Candidate.builder()
                 .candidateId(5)
                 .account(candidateUser)
                 .build();
-        com.group2.rms.candidate.entity.Application app = com.group2.rms.candidate.entity.Application.builder()
+        Application app = Application.builder()
                 .applicationId(10)
                 .candidate(candidate)
                 .build();
@@ -328,11 +329,11 @@ class NotificationServiceImplTest {
     void notifyOfferResponseFromCandidate_declinedWithReason() {
         User hrUser = User.builder().userId(15).username("hr.user").fullName("Lê Thị HR").build();
         User candidateUser = User.builder().userId(22).username("trung").fullName("Huỳnh Hoàng Trung").build();
-        com.group2.rms.candidate.entity.Candidate candidate = com.group2.rms.candidate.entity.Candidate.builder()
+        Candidate candidate = Candidate.builder()
                 .candidateId(5)
                 .account(candidateUser)
                 .build();
-        com.group2.rms.candidate.entity.Application app = com.group2.rms.candidate.entity.Application.builder()
+        Application app = Application.builder()
                 .applicationId(10)
                 .candidate(candidate)
                 .build();
@@ -366,11 +367,11 @@ class NotificationServiceImplTest {
     void notifyOfferPendingDirector_success() {
         User hrUser = User.builder().userId(15).username("hr.user").fullName("Lê Thị HR").build();
         User candidateUser = User.builder().userId(22).username("trung").fullName("Huỳnh Hoàng Trung").build();
-        com.group2.rms.candidate.entity.Candidate candidate = com.group2.rms.candidate.entity.Candidate.builder()
+        Candidate candidate = Candidate.builder()
                 .candidateId(5)
                 .account(candidateUser)
                 .build();
-        com.group2.rms.candidate.entity.Application app = com.group2.rms.candidate.entity.Application.builder()
+        Application app = Application.builder()
                 .applicationId(10)
                 .candidate(candidate)
                 .build();
@@ -407,11 +408,11 @@ class NotificationServiceImplTest {
     void notifyDirectorDecisionOnOffer_approved() {
         User hrUser = User.builder().userId(15).username("hr.user").fullName("Lê Thị HR").build();
         User candidateUser = User.builder().userId(22).username("trung").fullName("Huỳnh Hoàng Trung").build();
-        com.group2.rms.candidate.entity.Candidate candidate = com.group2.rms.candidate.entity.Candidate.builder()
+        Candidate candidate = Candidate.builder()
                 .candidateId(5)
                 .account(candidateUser)
                 .build();
-        com.group2.rms.candidate.entity.Application app = com.group2.rms.candidate.entity.Application.builder()
+        Application app = Application.builder()
                 .applicationId(10)
                 .candidate(candidate)
                 .build();
@@ -445,11 +446,11 @@ class NotificationServiceImplTest {
     void notifyDirectorDecisionOnOffer_rejected() {
         User hrUser = User.builder().userId(15).username("hr.user").fullName("Lê Thị HR").build();
         User candidateUser = User.builder().userId(22).username("trung").fullName("Huỳnh Hoàng Trung").build();
-        com.group2.rms.candidate.entity.Candidate candidate = com.group2.rms.candidate.entity.Candidate.builder()
+        Candidate candidate = Candidate.builder()
                 .candidateId(5)
                 .account(candidateUser)
                 .build();
-        com.group2.rms.candidate.entity.Application app = com.group2.rms.candidate.entity.Application.builder()
+        Application app = Application.builder()
                 .applicationId(10)
                 .candidate(candidate)
                 .build();

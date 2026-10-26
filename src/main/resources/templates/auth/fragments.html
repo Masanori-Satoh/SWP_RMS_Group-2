@@ -30,15 +30,7 @@
     <div class="auth-story-content">
     <p class="auth-eyebrow">Cơ hội nghề nghiệp tại Mộc</p>
     <p class="auth-statement">Nơi tài năng<br> được tạo ra<br> <span>những giá trị thật.</span></p>
-    <p class="auth-story-copy">Khám phá các vị trí phù hợp, theo dõi hồ sơ<br class="auth-wide-only"> và bắt đầu hành trình mới cùng chúng tôi.</p>
-    <th:block th:if="${botanical == true}">
-      <ul class="auth-highlights" aria-label="Cùng Mộc phát triển">
-        <li><svg th:replace="~{auth/fragments :: icon('document')}"></svg><strong>Ứng tuyển dễ dàng</strong><span>Chỉ vài bước, nộp hồ sơ<br>ở bất cứ đâu.</span></li>
-        <li><svg th:replace="~{auth/fragments :: icon('bell')}"></svg><strong>Cập nhật liên tục</strong><span>Theo dõi trạng thái hồ sơ<br>theo thời gian thực.</span></li>
-        <li><svg th:replace="~{auth/fragments :: icon('opportunity')}"></svg><strong>Trải nghiệm minh bạch</strong><span>Mọi thông tin tuyển dụng<br>được công khai, rõ ràng.</span></li>
-      </ul>
-    </th:block>
-    <a class="auth-story-link" th:href="@{/jobs}">Khám phá vị trí đang tuyển<svg th:replace="~{auth/fragments :: icon('arrow')}"></svg></a>
+    <a class="btn btn--secondary auth-story-link auth-story-link--button" th:href="@{/jobs}">Khám phá vị trí đang tuyển<svg th:replace="~{auth/fragments :: icon('arrow')}"></svg></a>
     </div>
   </aside>
   <div class="auth-scene auth-botanical-art" th:fragment="scene" aria-hidden="true"></div>

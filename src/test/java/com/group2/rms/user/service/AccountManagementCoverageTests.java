@@ -1,7 +1,7 @@
 package com.group2.rms.user.service;
 
-import com.group2.rms.candidate.entity.Candidate;
-import com.group2.rms.candidate.repository.CandidateRepository;
+import com.group2.rms.candidate.domain.entity.Candidate;
+import com.group2.rms.candidate.domain.repository.CandidateRepository;
 import com.group2.rms.user.entity.*;
 import com.group2.rms.user.exception.AccountFieldException;
 import com.group2.rms.user.repository.*;

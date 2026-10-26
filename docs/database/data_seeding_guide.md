@@ -155,6 +155,7 @@ Sau khi cột đã là `NVARCHAR`, toàn bộ mảng dữ liệu mẫu trong `Sm
 - **Vấn đề trước đây**: Các bảng nghiệp vụ cốt lõi như `Application`, `Candidate`, `JobPosting` có nhiều cột bị `NULL` (ví dụ: `overallScore`, `hrReviewNotes`, `hmReviewNotes`, `avatarUrl`, `reviewedBy`, `education`, `jobRequirements`, `jobBenefits`), khiến giao diện web thử nghiệm trông rất thô sơ, thiếu sức sống và khó test các tính năng lọc/tìm kiếm.
 - **Cải tiến đã thực hiện**:
   1. **Sinh Avatar tự động**: Tích hợp URL avatar động dựa theo tên ứng viên qua dịch vụ chuẩn `https://ui-avatars.com/api/?name=...&background=random`.
+     > **Lưu ý (2026-10-24):** `AvatarUrl` chỉ tính giá trị `local:` (ảnh người dùng tự tải lên, lưu ở `uploads/avatar/`); link ngoài như `ui-avatars` coi như chưa có ảnh, giao diện hiện chữ cái đầu trên một màu chung. Seed không cần sửa.
   2. **Mô phỏng vòng đời tuyển dụng thực tế (State Machine)**:
      - Ứng viên trạng thái `Applied`: Hồ sơ mới nộp, đang chờ phân loại.
      - Ứng viên trạng thái `Screening`: Có đầy đủ nhận xét sơ loại của HR (`hrReviewNotes`), liên kết đúng ID của HR phụ trách (`reviewedBy`).
