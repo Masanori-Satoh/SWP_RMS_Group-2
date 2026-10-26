@@ -109,12 +109,15 @@ public class SecurityConfig {
                                                 // Candidate's own applications and withdrawal (ownership checked in MyApplicationService)
                                                 .requestMatchers("/portal/applications", "/portal/applications/**")
                                                 .hasAuthority("ROLE_CANDIDATE")
+                                                // Candidate's own profile page (Q7.1); internal roles use /profile
+                                                .requestMatchers("/portal/profile", "/portal/profile/**")
+                                                .hasAuthority("ROLE_CANDIDATE")
                                                 // dunglt bổ sung: ứng viên xem / nhận / từ chối offer đã gửi cho mình (phải đứng trước /offers/**)
                                                 .requestMatchers("/portal/offers", "/portal/offers/**")
                                                 .hasAuthority("ROLE_CANDIDATE")
-                                                // Forms and all writes remain restricted to existing HR/Admin editors.
+                                                // Forms and all writes: HR, Director (UC 62-64, SRS footnote 13) and Admin.
                                                 .requestMatchers("/interviews/new", "/interviews/*/edit")
-                                                .hasAnyAuthority("ROLE_HR", RoleAuthorities.SYSTEM_ADMIN)
+                                                .hasAnyAuthority("ROLE_HR", "ROLE_DIRECTOR", RoleAuthorities.SYSTEM_ADMIN)
                                                 .requestMatchers(HttpMethod.GET, "/interviews", "/interviews/**")
                                                 .hasAnyAuthority("ROLE_HR", RoleAuthorities.SYSTEM_ADMIN,
                                                                 "ROLE_DIRECTOR", "ROLE_HIRING_MANAGER", "ROLE_INTERVIEWER")
@@ -123,7 +126,7 @@ public class SecurityConfig {
                                                 .requestMatchers(HttpMethod.POST, "/interviews/*/final-result")
                                                 .hasAuthority("ROLE_HIRING_MANAGER")
                                                 .requestMatchers("/interviews", "/interviews/**")
-                                                .hasAnyAuthority("ROLE_HR", RoleAuthorities.SYSTEM_ADMIN)
+                                                .hasAnyAuthority("ROLE_HR", "ROLE_DIRECTOR", RoleAuthorities.SYSTEM_ADMIN)
                                                 // require authenticated for SYSTEM_ADMIN, ROLE_HR, ROLE_DIRECTOR
                                                 .requestMatchers("/offers", "/offers/**")
                                                 .hasAnyAuthority("ROLE_HR", "ROLE_DIRECTOR",

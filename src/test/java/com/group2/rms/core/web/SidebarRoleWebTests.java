@@ -1,14 +1,15 @@
 package com.group2.rms.core.web;
 
-import com.group2.rms.candidate.controller.ApplicationPipelineController;
-import com.group2.rms.candidate.controller.MyApplicationController;
-import com.group2.rms.candidate.dto.ApplicationListResponse;
-import com.group2.rms.candidate.dto.ApplicationSearch;
-import com.group2.rms.candidate.dto.MyApplicationListResponse;
-import com.group2.rms.candidate.service.ApplicationPipelineService;
-import com.group2.rms.candidate.service.ApplicationReviewService;
-import com.group2.rms.candidate.service.ApplicationStage;
-import com.group2.rms.candidate.service.MyApplicationService;
+import com.group2.rms.candidate.application.pipeline.controller.ApplicationPipelineController;
+import com.group2.rms.candidate.application.portal.controller.MyApplicationController;
+import com.group2.rms.candidate.application.pipeline.dto.ApplicationListResponse;
+import com.group2.rms.candidate.application.pipeline.dto.ApplicationSearch;
+import com.group2.rms.candidate.application.portal.dto.MyApplicationListResponse;
+import com.group2.rms.candidate.application.pipeline.service.ApplicationPipelineService;
+import com.group2.rms.candidate.application.pipeline.service.ApplicationReviewService;
+import com.group2.rms.candidate.domain.rule.ApplicationStage;
+import com.group2.rms.candidate.application.portal.service.MyApplicationService;
+import com.group2.rms.candidate.talentpool.service.TalentPoolService;
 import com.group2.rms.core.config.SecurityConfig;
 import com.group2.rms.core.security.CurrentUserService;
 import com.group2.rms.core.security.DatabaseUserDetailsService;
@@ -66,7 +67,7 @@ class SidebarRoleWebTests {
     @MockitoBean NotificationService notifications;
     @MockitoBean ApplicationPipelineService pipeline;
     @MockitoBean ApplicationReviewService reviewService;
-    @MockitoBean com.group2.rms.candidate.service.TalentPoolService talentPool;
+    @MockitoBean TalentPoolService talentPool;
 
     /** Ứng viên không có sidebar mà dùng topbar ứng viên (dunglt chốt 2026-10-20; menu topbar để trống), không lộ link của HR. */
     @Test
@@ -99,13 +100,37 @@ class SidebarRoleWebTests {
         assertFalse(sidebar.contains("href=\"/portal/offers\""));
     }
 
+    /** Footer Mộc (fragments/layout/public-footer) chỉ có ở trang ứng viên trong layout nội bộ, kèm lối tắt portal. */
+    @Test
+    void candidatePagesHavePublicFooterWithPortalLinksStaffPagesDoNot() throws Exception {
+        User candidate = account("an.vo", "Candidate");
+        when(currentUser.requireUser()).thenReturn(candidate);
+        when(notifications.getNotificationsForUser(any(), anyInt(), anyInt())).thenReturn(Page.empty());
+        when(myApplications.list(any())).thenReturn(new MyApplicationListResponse(
+                List.of(), Map.of(1, 0L, 2, 0L, 3, 0L, 4, 0L), null, 0));
+        for (String page : List.of("/portal/applications", "/portal/offers", "/portal/interviews", "/notifications")) {
+            String html = render(page, as(candidate));
+            assertTrue(html.contains("class=\"site-footer\""), page + ": thiếu footer");
+            assertTrue(html.contains(">Đơn ứng tuyển của tôi</a></li>"), page + ": footer thiếu lối tắt tới đơn");
+            assertFalse(html.contains("href=\"/portal/offers\">Thư mời"), page + ": footer không còn mục thư mời riêng");
+            assertFalse(html.contains("Đăng ký ứng viên"), page + ": ứng viên đã đăng nhập không cần Đăng ký");
+        }
+
+        when(pipeline.list(any(), any())).thenReturn(new ApplicationListResponse(
+                new PageImpl<>(List.of(), Pageable.ofSize(20), 0), zeroCounts(), List.of(),
+                new ApplicationSearch(null, null, null, "score", null).normalized(), null, true, false, "HR"));
+        assertFalse(render("/applications", as(account("hr_lan", "HR"))).contains("class=\"site-footer\""),
+                "trang nhân sự không có footer công khai");
+    }
+
     /** {@code fragments/sidebar :: sidebar} gán cứng 'HR': vai trò thật của người đăng nhập phải thắng. */
     @Test
     void legacySidebarFragmentFollowsSignedInRole() throws Exception {
         String sidebar = sidebar("/test/legacy-sidebar-probe", as(account("director", "Director")));
         assertTrue(sidebar.contains("href=\"/requisitions\""));
         assertTrue(sidebar.contains("href=\"/offers\""));
-        assertFalse(sidebar.contains("href=\"/internal/job-postings\""), "Director không có mục chỉ HR thấy");
+        assertTrue(sidebar.contains("href=\"/internal/job-postings\""), "Director được xem tin tuyển dụng");
+        assertFalse(sidebar.contains("href=\"/talent-pool\""), "Director không có mục chỉ HR, HM thấy");
     }
 
     private String sidebar(String page, RequestPostProcessor viewer) throws Exception {

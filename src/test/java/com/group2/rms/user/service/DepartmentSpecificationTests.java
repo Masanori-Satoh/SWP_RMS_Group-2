@@ -3,6 +3,7 @@ package com.group2.rms.user.service;
 import com.group2.rms.user.entity.Department;
 import com.group2.rms.user.repository.DepartmentRepository;
 import com.group2.rms.user.repository.UserRepository;
+import com.group2.rms.user.repository.RoleRepository;
 import jakarta.persistence.criteria.Path;
 import jakarta.persistence.criteria.Predicate;
 import jakarta.persistence.criteria.Root;
@@ -25,7 +26,7 @@ import static org.mockito.Mockito.*;
 @SuppressWarnings("unchecked")
 class DepartmentSpecificationTests {
     private final DepartmentRepository departments = mock(DepartmentRepository.class);
-    private final DepartmentService service = new DepartmentService(departments, mock(UserRepository.class));
+    private final DepartmentService service = new DepartmentService(departments, mock(UserRepository.class), mock(RoleRepository.class));
     private final Root<Department> root = mock(Root.class);
     private final CriteriaBuilder builder = mock(CriteriaBuilder.class);
     private final Path<String> departmentName = mock(Path.class);

@@ -1,8 +1,7 @@
 package com.group2.rms.offer.service;
 
-import com.group2.rms.candidate.entity.Application;
-import com.group2.rms.candidate.entity.Candidate;
-import com.group2.rms.core.exception.BaseBusinessException;
+import com.group2.rms.candidate.domain.entity.Application;
+import com.group2.rms.candidate.domain.entity.Candidate;
 import com.group2.rms.offer.exception.OfferValidationException;
 import com.group2.rms.offer.dto.OfferExportFilterRequest;
 import com.group2.rms.offer.dto.OfferExportRequest;

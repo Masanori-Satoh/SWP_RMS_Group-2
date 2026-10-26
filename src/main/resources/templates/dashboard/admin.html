@@ -4,11 +4,12 @@
     <title>Tổng quan hệ thống · Mộc RMS</title>
     <th:block layout:fragment="styles"><link rel="stylesheet" th:href="@{/css/dashboard.css}">
         <link rel="stylesheet" th:href="@{/css/pages/admin-surfaces.css}">
+        <link rel="stylesheet" th:href="@{/css/pages/admin-dashboard.css}">
     </th:block>
 </head>
 <body>
-<main id="main" layout:fragment="content" class="page-content container dash-page adm-page ads-page" tabindex="-1">
-    <div class="page-header ads-heading">
+<main id="main" layout:fragment="content" class="page-content container dash-page adm-page ads-page adm-dashboard" tabindex="-1">
+    <div class="page-header ads-heading adm-dashboard-heading">
         <div><h1 class="page-title ads-title">Tổng quan hệ thống</h1><p class="page-subtitle" th:text="${dashboard.scope}"></p></div>
         <a class="btn btn--primary" th:href="@{/admin/accounts/new}">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
@@ -16,45 +17,39 @@
         </a>
     </div>
 
-    <div class="grid-3-col adm-summaries" aria-label="Số liệu tổng quan">
-        <a class="card adm-summary-card adm-summary-link" th:href="@{/admin/accounts(page=0)}" data-summary="internal">
-            <div class="adm-summary-heading">
-                <h2 class="adm-summary-label">Tài khoản nội bộ</h2>
-                <svg class="adm-summary-icon" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2M22 21v-2a4 4 0 0 0-3-3.87"/><circle cx="9" cy="7" r="4"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
-            </div>
+    <div class="adm-summaries" role="group" aria-label="Số liệu tổng quan">
+        <a class="adm-summary-link adm-summary-link--lead" th:href="@{/admin/accounts(page=0)}" data-summary="internal">
+            <h2 class="adm-summary-label">Tài khoản nội bộ</h2>
             <p class="adm-summary-value" th:text="${dashboard.internalTotal()}"></p>
             <p class="adm-summary-detail">Tất cả vai trò và trạng thái nội bộ</p>
-            <span class="adm-summary-action">Mở danh sách nội bộ <span class="adm-arrow" aria-hidden="true">↗</span></span>
+            <span class="adm-summary-action"><span class="sr-only">Mở danh sách nội bộ</span><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M7 7h10v10"/></svg></span>
         </a>
-        <a class="card adm-summary-card adm-summary-link" th:href="@{/admin/candidate-accounts(page=0)}" data-summary="candidates">
-            <div class="adm-summary-heading">
-                <h2 class="adm-summary-label">Tổng số ứng viên</h2>
-                <svg class="adm-summary-icon" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="9" cy="9" r="2"/><path d="M5 17v-1a4 4 0 0 1 8 0v1M16 8h2M16 12h2M16 16h2"/></svg>
-            </div>
+        <a class="adm-summary-link" th:href="@{/admin/candidate-accounts(page=0)}" data-summary="candidates">
+            <h2 class="adm-summary-label">Tổng số ứng viên</h2>
             <p class="adm-summary-value" th:text="${dashboard.candidates.total}"></p>
             <p class="adm-summary-detail">Hồ sơ ứng viên · Mỗi hồ sơ tính một lần</p>
-            <span class="adm-summary-action">Quản lý tài khoản ứng viên <span class="adm-arrow" aria-hidden="true">↗</span></span>
+            <span class="adm-summary-action"><span class="sr-only">Quản lý tài khoản ứng viên</span><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M7 7h10v10"/></svg></span>
         </a>
-        <a class="card adm-summary-card adm-summary-link" th:href="@{/admin/candidate-accounts(page=0)}" data-summary="new-candidates"
+        <a class="adm-summary-link" th:href="@{/admin/candidate-accounts(page=0)}" data-summary="new-candidates"
            th:title="|Hồ sơ tạo từ ${#temporals.format(dashboard.candidates.from, 'dd/MM/yyyy HH:mm:ss')} đến ${#temporals.format(dashboard.candidates.to, 'dd/MM/yyyy HH:mm:ss')} (${dashboard.candidates.timeZone}). Danh sách đích là tài khoản ứng viên, chưa lọc ngày tạo hồ sơ.|">
-            <div class="adm-summary-heading">
-                <h2 class="adm-summary-label">Ứng viên mới (30 ngày)</h2>
-                <svg class="adm-summary-icon" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M16 3v4M8 3v4M3 11h18M12 14v4M10 16h4"/></svg>
-            </div>
+            <h2 class="adm-summary-label">Ứng viên mới (30 ngày)</h2>
             <p class="adm-summary-value" th:text="${dashboard.candidates.newLast30Days}"></p>
             <p class="adm-summary-detail" th:text="|Hồ sơ tạo ${#temporals.format(dashboard.candidates.from, 'dd/MM')}–${#temporals.format(dashboard.candidates.to, 'dd/MM')} · ${dashboard.candidates.timeZone == 'Asia/Saigon' or dashboard.candidates.timeZone == 'Asia/Ho_Chi_Minh' ? 'Giờ Việt Nam' : dashboard.candidates.timeZone}|"></p>
-            <span class="adm-summary-action">Tài khoản ứng viên · Chưa lọc 30 ngày <span class="adm-arrow" aria-hidden="true">↗</span></span>
+            <p class="adm-summary-caveat">Danh sách chưa lọc 30 ngày</p>
+            <span class="adm-summary-action"><span class="sr-only">Tài khoản ứng viên · Chưa lọc 30 ngày</span><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M7 7h10v10"/></svg></span>
         </a>
     </div>
 
-    <div class="grid-2-col adm-analytics">
-        <section class="card adm-chart-panel" id="adm-status-panel" aria-labelledby="dash-accounts-title">
-            <div class="adm-chart-heading"><h2 id="dash-accounts-title" class="adm-panel-title">Trạng thái tài khoản</h2><p id="adm-table-hint" class="adm-help">Chọn cột hoặc trạng thái để mở danh sách đã lọc.</p></div>
-            <div class="adm-scope-control" hidden>
-                <label class="form-label" for="adm-account-scope">Nhóm tài khoản</label>
-                <select id="adm-account-scope" class="form-select">
-                    <option th:each="summary, iteration : ${dashboard.accountSummaries}" th:value="|adm-status-group-${iteration.index}|" th:text="${summary.title}"></option>
-                </select>
+    <div class="adm-analytics">
+        <section class="adm-chart-panel" id="adm-status-panel" aria-labelledby="dash-accounts-title">
+            <div class="adm-chart-heading adm-chart-heading--filter">
+                <div class="adm-chart-intro"><h2 id="dash-accounts-title" class="adm-panel-title">Trạng thái tài khoản</h2><p id="adm-table-hint" class="adm-help">Chọn cột hoặc trạng thái để mở danh sách đã lọc.</p></div>
+                <div class="adm-scope-control" hidden>
+                    <label class="sr-only" for="adm-account-scope">Nhóm tài khoản</label>
+                    <select id="adm-account-scope" class="form-select">
+                        <option th:each="summary, iteration : ${dashboard.accountSummaries}" th:value="|adm-status-group-${iteration.index}|" th:text="${summary.title}"></option>
+                    </select>
+                </div>
             </div>
             <div class="adm-chart-shell" hidden><canvas id="adm-status-chart" class="adm-chart-canvas" role="img" aria-labelledby="dash-accounts-title" aria-describedby="adm-table-hint"></canvas></div>
             <p class="adm-help" data-chart-fallback>Đọc số liệu và mở danh sách bằng các liên kết bên dưới.</p>
@@ -69,38 +64,52 @@
             </section>
             <p class="adm-help" th:if="${#lists.isEmpty(dashboard.accountSummaries)}">Chưa có số liệu tài khoản để hiển thị.</p>
         </section>
-        <section class="card adm-chart-panel adm-chart-panel--roles" id="adm-role-panel" aria-labelledby="adm-roles-title">
+        <section class="adm-chart-panel adm-chart-panel--roles" id="adm-role-panel" aria-labelledby="adm-roles-title">
             <div class="adm-chart-heading"><h2 id="adm-roles-title" class="adm-panel-title">Tài khoản nội bộ theo vai trò</h2><p class="adm-help">Tất cả trạng thái · Chọn vai trò để mở danh sách đã lọc.</p></div>
             <div class="adm-chart-shell" hidden><canvas id="adm-role-chart" class="adm-chart-canvas" role="img" aria-labelledby="adm-roles-title" aria-describedby="adm-role-hint"></canvas></div>
             <p id="adm-role-hint" class="adm-help" data-chart-fallback>Đọc số liệu và mở danh sách bằng các liên kết bên dưới.</p>
-            <ul class="adm-role-links">
+            <ul class="adm-role-links" aria-label="Mở danh sách tài khoản theo vai trò">
                 <li th:each="role : ${dashboard.roleCounts}" th:with="roleLabel=${role.roleName == 'System Admin' ? 'Quản trị hệ thống' : (role.roleName == 'HR' ? 'Nhân sự' : (role.roleName == 'Hiring Manager' ? 'Trưởng phòng tuyển dụng' : (role.roleName == 'Director' ? 'Giám đốc' : (role.roleName == 'Interviewer' ? 'Người phỏng vấn' : role.roleName))))}"><a class="adm-data-link" th:href="@{/admin/accounts(roleId=${role.roleId},page=0)}" data-chart-point
                       th:attr="data-key=${role.roleId},data-label=${roleLabel},data-count=${role.count},aria-label=|${roleLabel}: ${role.count} tài khoản. Mở danh sách đã lọc|">
                     <span th:text="${roleLabel}"></span><strong th:text="${role.count}"></strong>
                 </a></li>
             </ul>
             <p class="adm-help" th:if="${#lists.isEmpty(dashboard.roleCounts)}">Chưa có vai trò nội bộ được cấu hình.</p>
-            <p class="adm-help">Các vai trò có 0 tài khoản vẫn mở được danh sách.</p>
         </section>
     </div>
 
-    <section class="card adm-monitor" aria-labelledby="dash-health-title">
+    <section class="adm-monitor" aria-labelledby="dash-health-title">
         <div class="adm-monitor-heading">
-            <h2 id="dash-health-title" class="adm-panel-title">Hệ thống và tích hợp</h2>
+            <h2 id="dash-health-title" class="adm-panel-title">Giám sát dịch vụ</h2>
             <a class="adm-link" th:href="@{/admin/api-monitoring}">Chi tiết <span class="adm-arrow" aria-hidden="true">↗</span></a>
         </div>
-        <ul class="adm-monitor-rows">
-            <li th:each="row : ${dashboard.monitorRows}" class="adm-monitor-row" th:attr="data-monitor-id=${row.id}">
-                <strong class="adm-monitor-name" th:text="${row.id == 'internal' ? 'Ứng dụng và SQL Server' : (row.id == 'ai' ? 'Sàng lọc hồ sơ bằng AI' : (row.id == 'email' ? 'Dịch vụ email' : row.name))}"></strong>
-                <span class="badge" th:classappend="${row.status == 'OPERATIONAL' ? 'badge--success' : (row.status == 'FAILED' ? 'badge--danger' : 'badge--neutral')}"
-                      th:text="${row.status == 'OPERATIONAL' ? 'Hoạt động tốt' : (row.status == 'FAILED' ? 'Thất bại' : (row.status == 'Unconfigured' ? 'Chưa cấu hình' : 'Chưa kiểm tra'))}"></span>
-                <div class="adm-monitor-result">
-                    <time th:if="${row.lastCheckedAt != null}" th:datetime="${row.lastCheckedAt}" th:text="${#temporals.format(row.lastCheckedAt, 'dd/MM/yyyy HH:mm:ss')}"></time>
-                    <span th:if="${row.responseTimeMs != null}" th:text="|${row.responseTimeMs} ms|"></span>
-                    <span th:if="${row.lastCheckedAt == null}" th:text="${row.status == 'Unconfigured' ? (row.id == 'email' ? 'Chưa cấu hình SMTP' : 'Chưa có phép kiểm tra tích hợp') : 'Chưa có kết quả kiểm tra'}"></span>
-                </div>
-            </li>
-        </ul>
+        <p class="adm-monitor-caption">Kết quả của lần kiểm tra gần nhất cho từng dịch vụ.</p>
+        <div class="table-wrapper adm-service-table-wrapper" th:unless="${#lists.isEmpty(dashboard.monitorRows)}" tabindex="0" role="region" aria-labelledby="dash-health-title">
+            <table class="table adm-service-table">
+                <thead><tr><th scope="col">Dịch vụ</th><th scope="col">Trạng thái</th><th scope="col">Thời gian phản hồi</th><th scope="col">Kiểm tra gần nhất</th></tr></thead>
+                <tbody>
+                    <tr th:each="row : ${dashboard.monitorRows}" th:attr="data-monitor-id=${row.id}">
+                        <th scope="row">
+                            <div class="adm-service-identity">
+                                <span class="adm-service-icon" aria-hidden="true">
+                                    <svg th:if="${row.id == 'internal'}" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="5" rx="8" ry="3"/><path d="M4 5v7c0 4 16 4 16 0V5M4 12v7c0 4 16 4 16 0v-7"/></svg>
+                                    <svg th:if="${row.id == 'email'}" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 6 9 7 9-7"/></svg>
+                                    <svg th:if="${row.id != 'internal' and row.id != 'email'}" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="6" width="12" height="12" rx="3"/><path d="M9 2v4M15 2v4M9 18v4M15 18v4M2 9h4M2 15h4M18 9h4M18 15h4"/><path d="M10 10h4v4h-4z"/></svg>
+                                </span>
+                                <strong class="adm-service-name" th:text="${row.id == 'internal' ? 'Ứng dụng và SQL Server' : (row.id == 'ai' ? 'Sàng lọc hồ sơ bằng AI' : (row.id == 'email' ? 'Dịch vụ email' : row.name))}"></strong>
+                            </div>
+                        </th>
+                        <td><span class="badge" th:classappend="${row.status == 'OPERATIONAL' ? 'badge--success' : (row.status == 'FAILED' ? 'badge--danger' : 'badge--neutral')}"
+                                  th:text="${row.status == 'OPERATIONAL' ? 'Hoạt động tốt' : (row.status == 'FAILED' ? 'Thất bại' : (row.status == 'Unconfigured' ? 'Chưa cấu hình' : 'Chưa kiểm tra'))}"></span></td>
+                        <td class="adm-service-measure"><span th:if="${row.responseTimeMs != null}" th:text="|${row.responseTimeMs} ms|"></span><span th:if="${row.responseTimeMs == null}">Chưa có kết quả</span></td>
+                        <td class="adm-service-measure">
+                            <time th:if="${row.lastCheckedAt != null}" th:datetime="${row.lastCheckedAt}" th:text="${#temporals.format(row.lastCheckedAt, 'dd/MM/yyyy HH:mm:ss')}"></time>
+                            <span th:if="${row.lastCheckedAt == null}" th:text="${row.status == 'Unconfigured' ? (row.id == 'email' ? 'Chưa cấu hình SMTP' : 'Chưa có phép kiểm tra tích hợp') : 'Chưa có kết quả kiểm tra'}"></span>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
         <p class="adm-help" th:if="${#lists.isEmpty(dashboard.monitorRows)}">Chưa có dữ liệu giám sát. Mở trang giám sát để xem chi tiết.</p>
 
     </section>

@@ -4,9 +4,11 @@ import com.group2.rms.core.exception.ResourceNotFoundException;
 import com.group2.rms.core.security.RoleAuthorities;
 import com.group2.rms.user.dto.*;
 import com.group2.rms.user.entity.Department;
+import com.group2.rms.user.entity.Role;
 import com.group2.rms.user.entity.User;
 import com.group2.rms.user.exception.DepartmentFieldException;
 import com.group2.rms.user.repository.DepartmentRepository;
+import com.group2.rms.user.repository.RoleRepository;
 import com.group2.rms.user.repository.UserRepository;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Page;
@@ -19,15 +21,18 @@ import org.springframework.transaction.annotation.Transactional;
 import java.sql.SQLException;
 import java.util.List;
 import java.util.Locale;
+import java.util.Objects;
 
 @Service
 public class DepartmentService {
     private final DepartmentRepository departments;
     private final UserRepository users;
+    private final RoleRepository roles;
 
-    public DepartmentService(DepartmentRepository departments, UserRepository users) {
+    public DepartmentService(DepartmentRepository departments, UserRepository users, RoleRepository roles) {
         this.departments = departments;
         this.users = users;
+        this.roles = roles;
     }
 
     @Transactional(readOnly = true)
@@ -67,7 +72,8 @@ public class DepartmentService {
     @Transactional
     @SuppressWarnings("null")
     public void update(int id, DepartmentRequest form) {
-        Department department = find(id);
+        Department department = departments.findForUpdate(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy phòng ban."));
         String name = validateName(id, form);
         User manager = null;
         if (form.managerId() != null) {
@@ -78,9 +84,29 @@ public class DepartmentService {
                 throw invalid("managerId", "Trưởng phòng phải là tài khoản nội bộ đang hoạt động thuộc chính phòng ban này.", id, form);
             }
         }
+        User previousManager = department.getManager();
+        boolean managerChanged = !Objects.equals(previousManager == null ? null : previousManager.getUserId(),
+                manager == null ? null : manager.getUserId());
+        // Resolve every required role before changing managed entities; the flush below
+        // persists the assignment and both users' roles in this same transaction.
+        Role managerRole = manager != null && !hasRole(manager, "Hiring Manager")
+                ? assignmentRole("Hiring Manager", id, form) : null;
+        Role previousRole = previousManager != null && managerChanged && !hasRole(previousManager, "Interviewer")
+                ? assignmentRole("Interviewer", id, form) : null;
+        if (previousRole != null) previousManager.setRole(previousRole);
+        if (managerRole != null) manager.setRole(managerRole);
         department.setDepartmentName(name);
         department.setManager(manager);
         persist(department, id, form);
+    }
+
+    private static boolean hasRole(User user, String name) {
+        return user.getRole() != null && name.equals(user.getRole().getRoleName());
+    }
+
+    private Role assignmentRole(String name, int departmentId, DepartmentRequest form) {
+        return roles.findByRoleName(name).orElseThrow(() -> invalid("managerId",
+                "Chưa cấu hình vai trò " + name + ". Không thể thay đổi trưởng phòng.", departmentId, form));
     }
 
     @Transactional

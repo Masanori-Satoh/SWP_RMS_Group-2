@@ -14,7 +14,7 @@ import java.math.BigDecimal;
  */
 public record SubmitFinalResultRequest(
         @NotBlank(message = "Vui lòng chọn kết quả.")
-        @Pattern(regexp = "Passed|Failed", message = "Kết quả không hợp lệ.")
+        @Pattern(regexp = "Passed|Failed|Considering", message = "Kết quả không hợp lệ.")
         String finalDecision,
 
         @DecimalMin(value = "0", message = "Mức lương đề xuất không được âm.")

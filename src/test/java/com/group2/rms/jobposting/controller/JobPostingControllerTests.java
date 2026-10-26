@@ -1,8 +1,8 @@
 package com.group2.rms.jobposting.controller;
 
-import com.group2.rms.candidate.exception.TalentPoolException;
-import com.group2.rms.candidate.service.RecruitmentEmailService;
-import com.group2.rms.candidate.service.TalentPoolService;
+import com.group2.rms.candidate.talentpool.exception.TalentPoolException;
+import com.group2.rms.candidate.talentpool.service.RecruitmentEmailService;
+import com.group2.rms.candidate.talentpool.service.TalentPoolService;
 import com.group2.rms.core.config.SecurityConfig;
 import com.group2.rms.core.dto.FilterOption;
 import com.group2.rms.core.exception.ResourceNotFoundException;

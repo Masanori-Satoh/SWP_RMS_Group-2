@@ -41,4 +41,7 @@ public interface InterviewFinalResultRepository extends JpaRepository<InterviewF
            "LEFT JOIN FETCH r.hiringManager hm " +
            "WHERE r.interviewSchedule.interviewId = :interviewId")
     Optional<InterviewFinalResult> findByScheduleId(@Param("interviewId") Long interviewId);
+
+    /** Kết quả của nhiều lịch cùng lúc (danh sách lịch: nhãn kết quả / quá hạn chốt). */
+    List<InterviewFinalResult> findByInterviewSchedule_InterviewIdIn(java.util.Collection<Long> interviewIds);
 }

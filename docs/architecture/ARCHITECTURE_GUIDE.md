@@ -14,6 +14,15 @@ Mã nguồn đóng gói theo **nghiệp vụ**, không theo tầng. Quy tắc **
 
 - **Module nhỏ (< 10 file):** mọi class nằm phẳng trong package của module (hiện tại: `dashboard`, `notification`).
 - **Module lớn (≥ 10 file):** bắt buộc chia sub-package `controller/`, `service/`, `repository/`, `entity/`, `dto/`, và khi cần `exception/`, `validator/`.
+- **Gói con (module rất lớn, hiện chỉ có `candidate`):** module chia thành 4 hộp, mỗi hộp có người phụ trách (ghi trong `package-info.java` của hộp):
+  - `domain/`: lõi dùng chung: `entity/`, `repository/`, `rule/` (luật trạng thái, quyền xem đơn).
+  - `application/`: vòng đời hồ sơ: `submission/` (nộp đơn), `screening/` (AI chấm), `pipeline/` (`/applications` nội bộ), `portal/` (màn của ứng viên, `/portal/**`).
+  - `talentpool/`: kho ứng viên tiềm năng và email tuyển dụng.
+  - `infra/`: kỹ thuật dùng chung, không chứa nghiệp vụ: `cv/` (lưu, đọc file CV), `ai/` (client gọi AI).
+
+  **Đặt file:** module khác hoặc từ 2 hộp trở lên cùng dùng → `domain`; chỉ một hộp dùng → để trong hộp đó (kể cả câu truy vấn: hộp có repository riêng chỉ chứa câu đọc của mình, kế thừa `org.springframework.data.repository.Repository<…>`; câu ghi luôn ở `domain`); kỹ thuật dùng chung → `infra`. Trong mỗi hộp và gói con: < 10 file thì phẳng, ≥ 10 file (hoặc biết chắc sắp vượt) thì chia tầng như module.
+
+  **Phụ thuộc một chiều:** `application`, `talentpool` → `domain`, `infra`. `domain` và `infra` không import hộp tính năng. `talentpool` không import `application`. Trong `application`: `pipeline` → `screening` → `submission`, `portal` không gọi gói con khác. Ngoại lệ đang có: `ApplicationPipelineController` gọi `TalentPoolService.pendingRecommendationUrl` và `notesFor` (trang chi tiết hồ sơ), sẽ gỡ sau.
 
 ```text
 src/main/java/com/group2/rms/
@@ -29,7 +38,8 @@ src/main/java/com/group2/rms/
 ├── {module_nhỏ}/          ← dashboard, notification: Controller/Service/Repository/DTO nằm phẳng
 ├── {module_lớn}/          ← auth, user, requisition, jobposting, interview, offer, admin, career, candidate
 │   ├── controller/  service/  repository/  entity/  dto/
-│   └── exception/  validator/   (khi cần)
+│   ├── exception/  validator/   (khi cần)
+│   └── {hộp}/{gói_con}/   ← chỉ ở module rất lớn: candidate/{domain, application, talentpool, infra}/, ví dụ candidate/application/portal/
 └── RmsApplication.java
 ```
 

@@ -75,8 +75,8 @@
   width: 44px;
   height: 44px;
   border-radius: 50%;
-  background: var(--brand-soft);
-  color: var(--brand-dark);
+  background: var(--avatar-bg);
+  color: var(--avatar-fg);
   font-weight: 700;
   font-size: 16px;
   display: flex;
