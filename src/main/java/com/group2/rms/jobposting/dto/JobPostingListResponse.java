@@ -15,7 +15,7 @@ import java.util.List;
  * @param options   ô lọc nào được hiện và các lựa chọn của từng ô
  * @param chips     các bộ lọc đang bật, hiển thị thành chip có nút ✕ (dùng
  *                  chung kiểu chip với màn yêu cầu)
- * @param canManage người xem được tạo / sửa / đăng tin không (HR, System Admin)
+ * @param canManage người xem được tạo / sửa / đăng tin không (HR)
  */
 public record JobPostingListResponse(
                 Page<InternalJobPostingResponse> page,

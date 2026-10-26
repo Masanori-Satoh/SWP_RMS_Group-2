@@ -127,24 +127,24 @@ class JobPostingMapperTests {
         }
 
         @Test
-        @DisplayName("Tin nháp chưa có hồ sơ, Admin -> Đăng / xóa được; hạn nộp còn 7 ngày (biên) là 'soon'")
-        void toListRow_shouldAllowPublishAndDelete_whenAdminViewsEmptyDraft() {
+        @DisplayName("Tin nháp chưa có hồ sơ, Admin -> không được đăng / xóa; hạn nộp còn 7 ngày là 'soon'")
+        void toListRow_shouldDenyPublishAndDelete_whenAdminViewsEmptyDraft() {
             InternalJobPostingResponse row = mapper.toListRow(
                     posting(JobPostingAccess.STATUS_DRAFT, null, NOW.plusDays(JobPostingLabels.DEADLINE_SOON_DAYS)),
                     admin, 0, 0, NOW);
 
-            assertTrue(row.publishable() && row.deletable());
+            assertFalse(row.publishable() || row.deletable());
             assertEquals(JobPostingLabels.DEADLINE_SOON, row.deadlineState());
             assertFalse(row.applicationsViewable());
         }
 
         @Test
-        @DisplayName("Admin xem tin tạm dừng đã quá hạn -> Mở lại được, không đóng được (D7), hạn nộp 'past'")
+        @DisplayName("Admin xem tin tạm dừng đã quá hạn -> không mở lại hoặc đóng được, hạn nộp 'past'")
         void toListRow_shouldNotAllowClose_whenAdminViewsPausedPosting() {
             InternalJobPostingResponse row = mapper.toListRow(
                     posting(JobPostingAccess.STATUS_PAUSED, NOW.minusDays(10), NOW.minusDays(1)), admin, 1, 0, NOW);
 
-            assertTrue(row.reopenable());
+            assertFalse(row.reopenable());
             assertFalse(row.closable());
             assertEquals(JobPostingLabels.DEADLINE_PAST, row.deadlineState());
         }
@@ -213,12 +213,13 @@ class JobPostingMapperTests {
         }
 
         @Test
-        @DisplayName("Tin hẹn đăng, Admin -> Đăng ngay / Hủy lịch; ứng viên chưa thấy; Admin không thấy talent pool")
-        void toDetail_shouldAllowScheduleActions_whenAdminViewsScheduledPosting() {
+        @DisplayName("Tin hẹn đăng, Admin -> không thể Đăng ngay / Hủy lịch; ứng viên chưa thấy")
+        void toDetail_shouldDenyScheduleActions_whenAdminViewsScheduledPosting() {
             InternalJobPostingDetailResponse detail =
                     detail(posting(JobPostingAccess.STATUS_PUBLISHED, NOW.plusDays(3), NOW.plusDays(30)), admin);
 
-            assertTrue(detail.scheduledBanner() && detail.publishNowable() && detail.unschedulable());
+            assertTrue(detail.scheduledBanner());
+            assertFalse(detail.publishNowable() || detail.unschedulable());
             assertFalse(detail.publicViewable() || detail.live() || detail.talentPoolVisible());
         }
 

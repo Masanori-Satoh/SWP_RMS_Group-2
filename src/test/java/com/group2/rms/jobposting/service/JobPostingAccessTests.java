@@ -127,7 +127,7 @@ class JobPostingAccessTests {
         @ParameterizedTest(name = "{0}: quản lý={1}, xem={2}, đóng tin={3}, talent pool={4}")
         @CsvSource({
                 "hr,          true,  true,  true,  true",
-                "admin,       true,  true,  false, false",
+                "admin,       false, false, false, false",
                 "manager,     false, true,  false, true",
                 "director,    false, true,  false, false",
                 "interviewer, false, false, false, false"})
@@ -142,10 +142,10 @@ class JobPostingAccessTests {
         }
 
         @Test
-        @DisplayName("Không phải HR / Admin gọi requireManage -> AccessDeniedException")
+        @DisplayName("Không phải HR gọi requireManage -> AccessDeniedException")
         void requireManage_shouldThrow_whenViewerIsDirector() {
             assertThrows(AccessDeniedException.class, () -> access.requireManage(director));
-            assertDoesNotThrow(() -> access.requireManage(admin));
+            assertThrows(AccessDeniedException.class, () -> access.requireManage(admin));
         }
 
         @Test
@@ -166,7 +166,7 @@ class JobPostingAccessTests {
         @ParameterizedTest(name = "{0} xem tin {1} của phòng IT -> {2}")
         @CsvSource({
                 "hr,           Draft,     true",
-                "admin,        Draft,     true",
+                "admin,        Draft,     false",
                 "manager,      Draft,     false",
                 "director,     Draft,     false",
                 "manager,      Published, true",

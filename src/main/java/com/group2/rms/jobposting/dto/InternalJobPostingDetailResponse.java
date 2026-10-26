@@ -23,7 +23,7 @@ import java.util.List;
  * @param deadlineCountdown      hiện "· còn N ngày" cạnh hạn nộp (tin chưa đóng, chưa quá hạn)
  * @param deadlineOverdue        hiện "· quá hạn" cạnh hạn nộp (tin chưa đóng)
  * @param live                   tin đã lên trang tuyển dụng (đang đăng / tạm dừng / đã đóng): có số liệu hồ sơ
- * @param canManage              HR / System Admin: hiện gợi ý "sửa hạn nộp"
+ * @param canManage              HR: hiện gợi ý "sửa hạn nộp"
  * @param repostable             tin đã đóng, yêu cầu vẫn đã duyệt và chưa có tin đang mở: tạo tin lần mới
  * @param publicViewable         ứng viên đang thấy tin trên trang tuyển dụng
  * @param talentPoolVisible      hiện khối "Ứng viên tiềm năng" (HR, HM)
@@ -75,7 +75,7 @@ public record InternalJobPostingDetailResponse(
         boolean live,
         boolean canManage,
 
-        // Cờ thao tác (HR, System Admin; "Đóng tin" chỉ HR)
+        // Cờ thao tác của HR
         boolean publishable,
         boolean publishNowable,
         boolean unschedulable,

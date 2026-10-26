@@ -47,9 +47,9 @@ public class JobPostingAccess {
 
     private static final Set<String> EDITABLE_STATUSES = Set.of(STATUS_DRAFT, STATUS_PUBLISHED, STATUS_PAUSED);
     private static final Set<String> MANAGER_ROLES =
-            Set.of(RequisitionAccess.ROLE_HR, RequisitionAccess.ROLE_SYSTEM_ADMIN);
+            Set.of(RequisitionAccess.ROLE_HR);
     private static final Set<String> READER_ROLES = Set.of(RequisitionAccess.ROLE_HR,
-            RequisitionAccess.ROLE_SYSTEM_ADMIN, RequisitionAccess.ROLE_HIRING_MANAGER, RequisitionAccess.ROLE_DIRECTOR);
+            RequisitionAccess.ROLE_HIRING_MANAGER, RequisitionAccess.ROLE_DIRECTOR);
     private static final Set<String> TALENT_POOL_ROLES =
             Set.of(RequisitionAccess.ROLE_HR, RequisitionAccess.ROLE_HIRING_MANAGER);
 
@@ -96,7 +96,7 @@ public class JobPostingAccess {
         return requisitionAccess.role(user);
     }
 
-    /** HR và System Admin được tạo / sửa / đăng / tạm dừng / xóa tin. */
+    /** HR được tạo / sửa / đăng / tạm dừng / xóa tin. */
     public boolean canManage(User user) {
         return MANAGER_ROLES.contains(role(user));
     }
@@ -106,7 +106,7 @@ public class JobPostingAccess {
         return RequisitionAccess.ROLE_HR.equals(role(user));
     }
 
-    /** Được vào màn tin tuyển dụng nội bộ: HR, System Admin, Hiring Manager, Director (Director chỉ xem). */
+    /** Được vào màn tin tuyển dụng nội bộ: HR, Hiring Manager, Director (Director chỉ xem). */
     public boolean canRead(User user) {
         return READER_ROLES.contains(role(user));
     }
