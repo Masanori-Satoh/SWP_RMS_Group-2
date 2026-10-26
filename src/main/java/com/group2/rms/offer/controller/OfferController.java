@@ -2,6 +2,7 @@ package com.group2.rms.offer.controller;
 
 import com.group2.rms.core.dto.ApiResponse;
 import com.group2.rms.core.exception.BaseBusinessException;
+import com.group2.rms.core.exception.ResourceNotFoundException;
 import com.group2.rms.offer.dto.CreateOfferRequest;
 import com.group2.rms.offer.dto.DirectorDecisionRequest;
 import com.group2.rms.offer.dto.OfferDetailResponse;
@@ -11,6 +12,7 @@ import com.group2.rms.offer.dto.UpdateOfferRequest;
 import com.group2.rms.offer.service.OfferService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpStatus;
@@ -34,6 +36,7 @@ import java.util.Map;
  * Điều hướng và xử lý toàn bộ các màn hình Screen 30 (List & Create) và Screen
  * 32 (Detail & Update).
  */
+@Slf4j
 @Controller
 @RequestMapping("/offers")
 @RequiredArgsConstructor
@@ -338,7 +341,12 @@ public class OfferController {
             offerService.deleteDraftOfferByHr(id);
             return ResponseEntity.ok(new ApiResponse<>(true, "Đã xóa bản thảo Offer thành công."));
         } catch (BaseBusinessException e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ApiResponse<>(false, e.getMessage()));
+            HttpStatus status = (e instanceof ResourceNotFoundException) ? HttpStatus.NOT_FOUND : HttpStatus.BAD_REQUEST;
+            return ResponseEntity.status(status).body(new ApiResponse<>(false, e.getMessage()));
+        } catch (Exception e) {
+            log.error("Lỗi không mong muốn khi xóa bản thảo Offer ID {}: {}", id, e.getMessage(), e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(new ApiResponse<>(false, "Đã xảy ra lỗi hệ thống khi xóa bản thảo Offer."));
         }
     }
 
@@ -368,7 +376,12 @@ public class OfferController {
             return ResponseEntity.ok(new ApiResponse<>(true,
                     "Đã phát hành và gửi thư mời nhận việc (Offer Letter) tới ứng viên thành công!", sentOffer));
         } catch (BaseBusinessException e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ApiResponse<>(false, e.getMessage()));
+            HttpStatus status = (e instanceof ResourceNotFoundException) ? HttpStatus.NOT_FOUND : HttpStatus.BAD_REQUEST;
+            return ResponseEntity.status(status).body(new ApiResponse<>(false, e.getMessage()));
+        } catch (Exception e) {
+            log.error("Lỗi không mong muốn khi phát hành Offer ID {}: {}", id, e.getMessage(), e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(new ApiResponse<>(false, "Đã xảy ra lỗi hệ thống khi phát hành thư mời nhận việc."));
         }
     }
 
@@ -400,7 +413,12 @@ public class OfferController {
             OfferResponse approved = offerService.approveOfferByDirector(id, request.getComments());
             return ResponseEntity.ok(new ApiResponse<>(true, "Đã phê duyệt đề xuất Offer thành công!", approved));
         } catch (BaseBusinessException e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ApiResponse<>(false, e.getMessage()));
+            HttpStatus status = (e instanceof ResourceNotFoundException) ? HttpStatus.NOT_FOUND : HttpStatus.BAD_REQUEST;
+            return ResponseEntity.status(status).body(new ApiResponse<>(false, e.getMessage()));
+        } catch (Exception e) {
+            log.error("Lỗi không mong muốn khi phê duyệt Offer ID {}: {}", id, e.getMessage(), e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(new ApiResponse<>(false, "Đã xảy ra lỗi hệ thống khi phê duyệt Offer."));
         }
     }
 
@@ -416,7 +434,12 @@ public class OfferController {
             OfferResponse rejected = offerService.rejectOfferByDirector(id, request.getComments());
             return ResponseEntity.ok(new ApiResponse<>(true, "Đã từ chối đề xuất Offer thành công!", rejected));
         } catch (BaseBusinessException e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ApiResponse<>(false, e.getMessage()));
+            HttpStatus status = (e instanceof ResourceNotFoundException) ? HttpStatus.NOT_FOUND : HttpStatus.BAD_REQUEST;
+            return ResponseEntity.status(status).body(new ApiResponse<>(false, e.getMessage()));
+        } catch (Exception e) {
+            log.error("Lỗi không mong muốn khi từ chối Offer ID {}: {}", id, e.getMessage(), e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(new ApiResponse<>(false, "Đã xảy ra lỗi hệ thống khi từ chối đề xuất Offer."));
         }
     }
 
