@@ -798,13 +798,7 @@ public class OfferServiceImpl implements OfferService {
         offer.setOfferStatus("Director_Approved");
         OfferProposal saved = offerProposalRepository.save(offer);
 
-        OfferApproval approval = OfferApproval.builder()
-                .offerProposal(saved)
-                .director(director)
-                .status("Approved")
-                .directorComments(comments)
-                .approvedAt(LocalDateTime.now())
-                .build();
+        OfferApproval approval = new OfferApproval(saved, director, "Approved", comments);
         offerApprovalRepository.save(approval);
 
         if (systemNotificationService != null) {
@@ -838,13 +832,7 @@ public class OfferServiceImpl implements OfferService {
         offer.setOfferStatus("Director_Rejected");
         OfferProposal saved = offerProposalRepository.save(offer);
 
-        OfferApproval approval = OfferApproval.builder()
-                .offerProposal(saved)
-                .director(director)
-                .status("Rejected")
-                .directorComments(comments)
-                .approvedAt(LocalDateTime.now())
-                .build();
+        OfferApproval approval = new OfferApproval(saved, director, "Rejected", comments);
         offerApprovalRepository.save(approval);
 
         if (systemNotificationService != null) {

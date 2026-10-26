@@ -1905,9 +1905,18 @@ function executeDirectorDecisionApi(offerId, url, comments) {
         headers: headers,
         body: JSON.stringify({ comments: comments })
     })
-        .then(res => res.json())
-        .then(data => {
-            if (data.success) {
+        .then(async res => {
+            let data = null;
+            try {
+                const contentType = res.headers.get('content-type');
+                if (contentType && contentType.includes('application/json')) {
+                    data = await res.json();
+                }
+            } catch (e) {
+                console.warn('Cannot parse JSON response from director decision API:', e);
+            }
+
+            if (res.ok && data?.success) {
                 Swal.fire({
                     title: 'Thành công',
                     text: data.message,
@@ -1917,13 +1926,19 @@ function executeDirectorDecisionApi(offerId, url, comments) {
                 }).then(() => {
                     window.location.href = '/offers';
                 });
+            } else if (res.status === 403) {
+                Swal.fire('Lỗi phân quyền', 'Bạn không có quyền thực hiện thao tác này hoặc phiên làm việc đã hết hạn. Vui lòng tải lại trang.', 'warning');
+            } else if (data && data.message) {
+                Swal.fire('Lỗi', data.message, 'error');
+            } else if (res.status >= 500) {
+                Swal.fire('Lỗi hệ thống', `Máy chủ phản hồi mã lỗi ${res.status}. Vui lòng thử lại sau hoặc liên hệ quản trị viên.`, 'error');
             } else {
-                Swal.fire('Lỗi', data.message || 'Có lỗi xảy ra.', 'error');
+                Swal.fire('Lỗi', 'Thao tác không thành công. Mã trạng thái: ' + res.status, 'error');
             }
         })
         .catch(err => {
-            console.error(err);
-            Swal.fire('Lỗi', 'Không thể kết nối đến máy chủ.', 'error');
+            console.error('Director decision network error:', err);
+            Swal.fire('Lỗi kết nối', 'Không thể kết nối đến máy chủ. Vui lòng kiểm tra lại kết nối mạng.', 'error');
         });
 }
 
