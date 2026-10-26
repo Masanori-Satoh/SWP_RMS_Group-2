@@ -33,7 +33,8 @@ public class DashboardController {
         }
         DashboardResponse dashboard = dashboardService.forUsername(authentication.getName());
         model.addAttribute("dashboard", dashboard);
-        if ("HR".equals(dashboard.roleName()) || "Hiring Manager".equals(dashboard.roleName())
+        // NOTE: tạm thời — 3 role chưa chuyển sang service riêng vẫn lấy biểu đồ cũ; bỏ khi chuyển xong.
+        if ("HR".equals(dashboard.roleName())
                 || "Director".equals(dashboard.roleName()) || "Interviewer".equals(dashboard.roleName())) {
             model.addAttribute("dashboardCharts", chartService.forUsername(authentication.getName(), dashboard.roleName()));
         }

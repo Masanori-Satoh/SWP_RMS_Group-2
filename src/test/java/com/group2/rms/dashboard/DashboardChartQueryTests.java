@@ -21,11 +21,9 @@ class DashboardChartQueryTests {
         LocalDateTime from = LocalDateTime.of(2026, 10, 1, 0, 0);
         LocalDateTime to = from.plusDays(30);
 
-        assertEquals(0, metrics.visibleCandidatesForHiringManager(-1, null));
-        assertTrue(metrics.hiringManagerApplicationStatuses(-1, null).isEmpty());
         assertTrue(metrics.hiringManagerRequisitionStatuses(-1, null).isEmpty());
-        assertEquals(0, metrics.upcomingInterviewsForDepartment(null, from));
-        assertTrue(metrics.upcomingDepartmentInterviewDates(null, from, to).isEmpty());
+        assertEquals(0, metrics.interviewsForDepartmentBetween(null, from, to));
+        assertEquals(0, metrics.interviewsForDepartmentBetween(-1, from, to));
         assertTrue(metrics.directorDecisions(-1, from, to).isEmpty());
         assertTrue(metrics.assignedInterviewStatuses(-1).isEmpty());
         assertTrue(metrics.upcomingAssignedInterviewDates(-1, from, to).isEmpty());

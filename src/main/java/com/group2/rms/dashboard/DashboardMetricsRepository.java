@@ -5,8 +5,6 @@ import org.springframework.stereotype.Repository;
 import com.group2.rms.core.security.RoleAuthorities;
 import com.group2.rms.interview.entity.InterviewFormat;
 import static com.group2.rms.candidate.domain.repository.ApplicationRepository.FORMAL_FILTER;
-import static com.group2.rms.candidate.domain.repository.ApplicationRepository.FORMAL_SCOPE_FILTER;
-import static com.group2.rms.candidate.domain.repository.ApplicationRepository.PIPELINE_JOINS;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -26,6 +24,8 @@ public class DashboardMetricsRepository {
     /** Only offers sent to the candidate are visible; director decisions stay internal. */
     private static final String CANDIDATE_VISIBLE_OFFER_STATUSES =
             "('Sent_Candidate', 'Accepted', 'Declined')";
+    /** Lịch phỏng vấn chưa diễn ra và chưa bị hủy. */
+    static final String ACTIVE_INTERVIEW_STATUSES = "('Scheduled', 'Rescheduled')";
 
     private final EntityManager entityManager;
 
@@ -97,27 +97,6 @@ public class DashboardMetricsRepository {
                 + " group by a.applicationStatus", Map.of());
     }
 
-    /** Uses the exact scope of the Hiring Manager pipeline. */
-    // dunglt bổ sung: Q1.4 HM thấy mọi đơn phòng mình (bỏ cờ forwardedOnly), dashboard đếm khớp /applications
-    public List<StatusCount> hiringManagerApplicationStatuses(int userId, Integer departmentId) {
-        var query = entityManager.createQuery("select a.applicationStatus, count(a) " + PIPELINE_JOINS
-                + FORMAL_SCOPE_FILTER + "group by a.applicationStatus", Object[].class);
-        query.setParameter("allDepartments", false);
-        query.setParameter("managerUserId", userId);
-        query.setParameter("departmentId", departmentId);
-        return query.getResultList().stream()
-                .map(row -> new StatusCount((String) row[0], (Long) row[1])).toList();
-    }
-
-    public long visibleCandidatesForHiringManager(int userId, Integer departmentId) {
-        var query = entityManager.createQuery("select count(distinct c.candidateId) " + PIPELINE_JOINS
-                + FORMAL_SCOPE_FILTER, Long.class);
-        query.setParameter("allDepartments", false);
-        query.setParameter("managerUserId", userId);
-        query.setParameter("departmentId", departmentId);
-        return query.getSingleResult();
-    }
-
     /** Matches the requisition list's HM visibility rule, including managed departments. */
     public List<StatusCount> hiringManagerRequisitionStatuses(int userId, Integer departmentId) {
         var query = entityManager.createQuery("select r.approvalStatus, count(r) from JobRequisition r "
@@ -148,27 +127,16 @@ public class DashboardMetricsRepository {
                 .setParameter("from", from).setParameter("to", to).getResultList();
     }
 
-    public List<LocalDateTime> upcomingDepartmentInterviewDates(Integer departmentId, LocalDateTime from,
-            LocalDateTime to) {
-        if (departmentId == null) {
-            return List.of();
-        }
-        return entityManager.createQuery("select i.startTime from InterviewSchedule i "
-                + "where i.application.jobPosting.requisition.department.departmentId = :departmentId "
-                + "and i.startTime >= :from and i.startTime < :to "
-                + "and i.interviewStatus in ('Scheduled', 'Rescheduled')", LocalDateTime.class)
-                .setParameter("departmentId", departmentId).setParameter("from", from).setParameter("to", to)
-                .getResultList();
-    }
-
-    public long upcomingInterviewsForDepartment(Integer departmentId, LocalDateTime now) {
+    /** Lịch phỏng vấn còn hiệu lực của phòng ban, bắt đầu trong [from, to). Không có phòng ban thì 0. */
+    public long interviewsForDepartmentBetween(Integer departmentId, LocalDateTime from, LocalDateTime to) {
         if (departmentId == null) {
             return 0;
         }
         return count("select count(i) from InterviewSchedule i "
                 + "where i.application.jobPosting.requisition.department.departmentId = :departmentId "
-                + "and i.startTime >= :now and i.interviewStatus in ('Scheduled', 'Rescheduled')",
-                Map.of("departmentId", departmentId, "now", now));
+                + "and i.startTime >= :from and i.startTime < :to "
+                + "and i.interviewStatus in " + ACTIVE_INTERVIEW_STATUSES,
+                Map.of("departmentId", departmentId, "from", from, "to", to));
     }
 
     public List<DecisionRow> directorDecisions(int userId, LocalDateTime from, LocalDateTime to) {
@@ -200,14 +168,16 @@ public class DashboardMetricsRepository {
                 Map.of("userId", userId));
     }
 
-    public long departmentRequisitions(int departmentId) {
-        return count("select count(r) from JobRequisition r where r.department.departmentId = :departmentId",
-                Map.of("departmentId", departmentId));
-    }
-
     public long ownPendingRequisitions(int userId) {
         return count("select count(r) from JobRequisition r where r.hiringManager.userId = :userId "
                 + "and r.approvalStatus = 'Pending_Director'", Map.of("userId", userId));
+    }
+
+    /** Yêu cầu của HM đang chờ Giám đốc và đã gửi duyệt trước mốc staleBefore (chờ lâu). */
+    public long ownStalePendingRequisitions(int userId, LocalDateTime staleBefore) {
+        return count("select count(r) from JobRequisition r where r.hiringManager.userId = :userId "
+                + "and r.approvalStatus = 'Pending_Director' and r.submittedAt < :staleBefore",
+                Map.of("userId", userId, "staleBefore", staleBefore));
     }
 
     public long requisitionsAwaitingDirector() {

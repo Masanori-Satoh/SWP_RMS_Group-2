@@ -18,6 +18,7 @@ import org.springframework.security.access.AccessDeniedException;
 
 import java.util.List;
 import java.util.Optional;
+import java.time.Clock;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
@@ -30,7 +31,9 @@ class AdminDashboardAnalyticsTests {
     private final UserRepository users = mock(UserRepository.class);
     private final DashboardMetricsRepository metrics = mock(DashboardMetricsRepository.class);
     private final ApiMonitoringService monitoring = mock(ApiMonitoringService.class);
-    private final DashboardService service = new DashboardService(users, metrics, monitoring);
+    private final HiringManagerDashboardService hiringManagerDashboard = mock(HiringManagerDashboardService.class);
+    private final DashboardService service = new DashboardService(users, metrics, monitoring, hiringManagerDashboard,
+            Clock.systemDefaultZone());
 
     private void admin(String status) {
         when(users.findByUsernameIgnoreCase("analytics-test")).thenReturn(Optional.of(User.builder()

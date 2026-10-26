@@ -22,6 +22,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 /** Unit checks for role scope, chart values and links. JPQL is verified separately on SQL Server. */
@@ -33,24 +34,16 @@ class DashboardChartServiceTests {
     private final DashboardChartService service = new DashboardChartService(users, metrics, CLOCK);
 
     @Test
-    void forUsername_shouldUseForwardedDepartmentScope_whenHiringManager() {
+    void forUsername_shouldReturnNoLegacyCharts_whenHiringManager() {
+        // Hiring Manager đã có biểu đồ riêng trong HiringManagerDashboardService.
         User actor = actor("Hiring Manager");
         actor.setDepartment(Department.builder().departmentId(3).build());
         when(users.findByUsernameIgnoreCase("viewer")).thenReturn(Optional.of(actor));
-        when(metrics.hiringManagerRequisitionStatuses(7, 3)).thenReturn(List.of(new StatusCount("Draft", 2)));
-        when(metrics.hiringManagerApplicationStatuses(7, 3)).thenReturn(List.of(new StatusCount("HR_Passed", 4)));
-        when(metrics.upcomingDepartmentInterviewDates(eq(3), any(), any())).thenReturn(List.of(
-                LocalDateTime.of(2026, 10, 20, 11, 0)));
 
         var charts = service.forUsername("viewer", "Hiring Manager");
 
-        assertEquals(3, charts.size());
-        assertEquals(2, charts.get(0).points().getFirst().count());
-        assertEquals("/requisitions?status=Draft", charts.get(0).points().getFirst().href());
-        assertEquals(4, charts.get(1).points().get(2).count());
-        assertEquals("/applications?status=HR_Passed", charts.get(1).points().get(2).href());
-        assertEquals(1, charts.get(2).points().getFirst().count());
-        verify(metrics).hiringManagerApplicationStatuses(7, 3);
+        assertEquals(List.of(), charts);
+        verifyNoInteractions(metrics);
     }
 
     @Test

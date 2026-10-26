@@ -9,7 +9,10 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.DisplayName;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import java.time.Clock;
+import java.time.Instant;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.time.LocalDate;
 import java.math.BigDecimal;
 import java.util.*;
@@ -20,13 +23,16 @@ import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 class DashboardRoleUnitTests {
     private final UserRepository users = mock(UserRepository.class);
     private final DashboardMetricsRepository metrics = mock(DashboardMetricsRepository.class);
     private final ApiMonitoringService monitoring = mock(ApiMonitoringService.class);
-    private final DashboardService service = new DashboardService(users, metrics, monitoring);
+    private final HiringManagerDashboardService hiringManagerDashboard = mock(HiringManagerDashboardService.class);
+    private final DashboardService service = new DashboardService(users, metrics, monitoring, hiringManagerDashboard,
+            Clock.fixed(Instant.parse("2026-10-19T02:00:00Z"), ZoneId.of("Asia/Ho_Chi_Minh")));
     private final User user = User.builder().userId(7).username("dashboard").fullName("Test User")
             .email("candidate@example.test").accountStatus("Active").role(Role.builder().roleName("Candidate").build()).build();
     private final LocalDateTime at = LocalDateTime.of(2026, 10, 19, 9, 0);
@@ -122,23 +128,22 @@ class DashboardRoleUnitTests {
     }
 
     @Test
-    @DisplayName("DASHBOARD-UNIT-06 | HM có phòng ban: truy vấn đúng department và user ID")
-    void hiringManager_withDepartment_queriesOwnDepartment() {
-        // Given: HM có phòng ban: truy vấn đúng department và user ID.
+    @DisplayName("DASHBOARD-UNIT-06 | Hiring Manager -> giao cho HiringManagerDashboardService, không đọc số liệu khác")
+    void forUsername_shouldDelegateToHiringManagerService_whenRoleIsHiringManager() {
+        // Arrange
         user.getRole().setRoleName("Hiring Manager");
-        user.setDepartment(Department.builder().departmentId(3).build());
         when(users.findByUsernameIgnoreCase("dashboard")).thenReturn(Optional.of(user));
-        when(metrics.departmentRequisitions(3)).thenReturn(6L);
+        HiringManagerDashboardResponse built = new HiringManagerDashboardResponse("Hiring Manager", "Test User",
+                List.of(), List.of(), List.of(), List.of(), 0, List.of());
+        when(hiringManagerDashboard.build(user)).thenReturn(built);
 
-        // When: Lấy dashboard của tài khoản hiện tại.
-        RecruitmentDashboardResponse result = (RecruitmentDashboardResponse) service.forUsername("dashboard");
+        // Act
+        DashboardResponse result = service.forUsername("dashboard");
 
-        // Then: Kiểm tra dữ liệu hiển thị và phạm vi truy vấn.
-        assertEquals(6L, result.metrics().get(1).value());
-        assertEquals(true, result.scope().contains("my department"));
-        verify(metrics, times(1)).ownRequisitions(7);
-        verify(metrics, times(1)).departmentRequisitions(3);
-        verify(monitoring, times(0)).rows();
+        // Assert
+        assertEquals(built, result);
+        verify(hiringManagerDashboard, times(1)).build(user);
+        verifyNoInteractions(metrics, monitoring);
     }
 
     @Test

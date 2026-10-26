@@ -28,8 +28,7 @@ class RecruitmentDashboardWebTests {
     @Autowired UserRepository users;
 
     @ParameterizedTest
-    @CsvSource({"Hiring Manager,ROLE_HIRING_MANAGER", "HR,ROLE_HR", "Director,ROLE_DIRECTOR",
-            "Interviewer,ROLE_INTERVIEWER"})
+    @CsvSource({"HR,ROLE_HR", "Director,ROLE_DIRECTOR", "Interviewer,ROLE_INTERVIEWER"})
     void dashboard_shouldRenderChartsAndAccessibleValues_whenRoleIsActive(String roleName, String authority)
             throws Exception {
         User actor = users.findAllWithRoleAndDepartment().stream()

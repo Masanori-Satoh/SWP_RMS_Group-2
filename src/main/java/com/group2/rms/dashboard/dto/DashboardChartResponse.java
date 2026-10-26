@@ -2,8 +2,11 @@ package com.group2.rms.dashboard.dto;
 
 import java.util.List;
 
-/** Read-only chart data; each point remains visible as an ordinary HTML link or value. */
-public record DashboardChartResponse(String title, String description, String type, List<Point> points) {
-    public record Point(String label, long count, String href) {
-    }
+/*
+ * DTO: một biểu đồ thanh ngang của dashboard (tiêu đề, phạm vi đang thống kê, các thanh).
+ */
+public record DashboardChartResponse(
+        String title,
+        String scope,
+        List<DashboardBarResponse> bars) {
 }

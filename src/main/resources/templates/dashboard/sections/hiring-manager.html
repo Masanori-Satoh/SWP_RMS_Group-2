@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<body>
+<!-- Nội dung dashboard Hiring Manager; dashboard/index.html chèn vào theo dashboard.roleName. -->
+<th:block th:fragment="content(dashboard)">
+    <div class="page-header">
+        <div>
+            <h1 class="page-title">Tổng quan tuyển dụng của tôi</h1>
+            <p class="page-subtitle">Theo dõi yêu cầu của bạn, lịch phỏng vấn của phòng ban và những việc cần xử lý.</p>
+        </div>
+    </div>
+
+    <th:block th:replace="~{dashboard/fragments :: kpis(${dashboard.kpis})}"></th:block>
+
+    <section class="card dash-panel dash-panel--priority" aria-labelledby="hm-attention-title">
+        <div class="dash-panel__heading">
+            <h2 id="hm-attention-title" class="dash-panel__title">Công việc cần xử lý</h2>
+            <span class="badge badge--warning" th:unless="${#lists.isEmpty(dashboard.needsAttention)}">Ưu tiên cao</span>
+        </div>
+        <p class="dash-empty" th:if="${#lists.isEmpty(dashboard.needsAttention)}">Không có việc cần xử lý. Các yêu cầu
+            của bạn đều đang đúng tiến độ.</p>
+        <th:block th:unless="${#lists.isEmpty(dashboard.needsAttention)}">
+            <ul th:replace="~{dashboard/fragments :: workItems(${dashboard.needsAttention})}"></ul>
+        </th:block>
+        <p class="dash-panel__more" th:if="${dashboard.moreNeedsAttention > 0}">
+            <span th:text="|+${dashboard.moreNeedsAttention} việc khác|">+2 việc khác</span>
+            <a class="dash-link" th:href="@{/requisitions}">Xem tất cả</a>
+        </p>
+    </section>
+
+    <div class="dash-split dash-split--panels">
+        <section class="card dash-panel" aria-labelledby="hm-recent-title">
+            <div class="dash-panel__heading">
+                <h2 id="hm-recent-title" class="dash-panel__title">Yêu cầu tuyển dụng gần đây</h2>
+                <a class="dash-link" th:href="@{/requisitions}">Xem tất cả</a>
+            </div>
+            <p class="dash-empty" th:if="${#lists.isEmpty(dashboard.recentRequisitions)}">Bạn chưa có yêu cầu tuyển
+                dụng nào.</p>
+            <div class="table-wrapper" th:unless="${#lists.isEmpty(dashboard.recentRequisitions)}" tabindex="0"
+                 role="region" aria-labelledby="hm-recent-title">
+                <table class="table">
+                    <caption class="sr-only">Năm yêu cầu tuyển dụng cập nhật gần nhất của bạn</caption>
+                    <thead>
+                    <tr>
+                        <th scope="col">Trạng thái</th>
+                        <th scope="col">Vị trí</th>
+                        <th scope="col">Cập nhật</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr th:each="requisition : ${dashboard.recentRequisitions}">
+                        <td><span class="badge" th:classappend="|badge--${requisition.statusTone}|"
+                                  th:text="${requisition.statusLabel}">Bản nháp</span></td>
+                        <td>
+                            <a class="dash-link" th:href="@{${requisition.href}}"
+                               th:text="|${requisition.code} · ${requisition.title}|">REQ-0001 · Tiêu đề</a>
+                        </td>
+                        <td><time th:datetime="${requisition.updatedAt}"
+                                  th:text="${#temporals.format(requisition.updatedAt, 'dd/MM/yyyy')}">01/01/2026</time></td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <section class="card dash-panel" aria-labelledby="hm-interviews-title">
+            <div class="dash-panel__heading">
+                <h2 id="hm-interviews-title" class="dash-panel__title">Lịch phỏng vấn</h2>
+                <a class="dash-link" th:href="@{/interviews}">Xem lịch</a>
+            </div>
+            <p class="dash-empty" th:if="${#lists.isEmpty(dashboard.upcomingInterviews)}">Phòng ban chưa có lịch
+                phỏng vấn trong 7 ngày tới.</p>
+            <div class="table-wrapper" th:unless="${#lists.isEmpty(dashboard.upcomingInterviews)}" tabindex="0"
+                 role="region" aria-labelledby="hm-interviews-title">
+                <table class="table">
+                    <caption class="sr-only">Lịch phỏng vấn của phòng ban trong 7 ngày tới</caption>
+                    <thead>
+                    <tr>
+                        <th scope="col">Thời gian</th>
+                        <th scope="col">Ứng viên</th>
+                        <th scope="col">Vị trí</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr th:each="interview : ${dashboard.upcomingInterviews}">
+                        <td><time th:datetime="${interview.startTime}"
+                                  th:text="${#temporals.format(interview.startTime, 'dd/MM HH:mm')}">01/01 09:00</time></td>
+                        <td th:text="${interview.candidateName ?: 'Ứng viên chưa có tên'}">Ứng viên</td>
+                        <td th:text="${interview.positionTitle}">Vị trí</td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+    </div>
+
+    <div class="dash-chart-grid dash-panels-row">
+        <th:block th:each="chart, chartIndex : ${dashboard.charts}">
+            <section th:replace="~{dashboard/fragments :: barChart(${chart}, |hm-chart-${chartIndex.index}|)}"></section>
+        </th:block>
+    </div>
+</th:block>
+</body>
+</html>

@@ -28,6 +28,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.net.URI;
+import java.time.Clock;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.LinkedHashMap;
@@ -40,12 +41,17 @@ public class DashboardService {
         private final UserRepository userRepository;
         private final DashboardMetricsRepository metrics;
         private final ApiMonitoringService monitoring;
+        private final HiringManagerDashboardService hiringManagerDashboard;
+        private final Clock clock;
 
         public DashboardService(UserRepository userRepository, DashboardMetricsRepository metrics,
-                        ApiMonitoringService monitoring) {
+                        ApiMonitoringService monitoring, HiringManagerDashboardService hiringManagerDashboard,
+                        Clock clock) {
                 this.userRepository = userRepository;
                 this.metrics = metrics;
                 this.monitoring = monitoring;
+                this.hiringManagerDashboard = hiringManagerDashboard;
+                this.clock = clock;
         }
 
         @Transactional(readOnly = true)
@@ -57,13 +63,13 @@ public class DashboardService {
                         throw new AccessDeniedException("Inactive account cannot access dashboard");
                 }
 
-                LocalDateTime now = LocalDateTime.now();
+                LocalDateTime now = LocalDateTime.now(clock);
                 String role = user.getRole().getRoleName();
                 // performed navigation based role
                 return switch (role) {
                         case "System Admin" -> admin(user);
                         case "HR" -> hr(user, now);
-                        case "Hiring Manager" -> hiringManager(user, now);
+                        case "Hiring Manager" -> hiringManagerDashboard.build(user);
                         case "Director" -> director(user, now);
                         case "Interviewer" -> interviewer(user, now);
                         case "Candidate" -> candidate(user, now);
@@ -74,7 +80,7 @@ public class DashboardService {
         @SuppressWarnings("null")
         private AdminDashboardResponse admin(User user) {
                
-                LocalDateTime to = LocalDateTime.now();
+                LocalDateTime to = LocalDateTime.now(clock);
                 LocalDateTime from = to.minusDays(30);
                 var monitorRows = monitoring.rows();
                 Map<String, Long> healthCounts = new LinkedHashMap<>();
@@ -144,40 +150,6 @@ public class DashboardService {
                                 // get number of candidate
                                 List.of(new DashboardBreakdownResponse("Applications by Status",
                                                 metrics.formalApplicationStatuses())),
-                                List.of());
-        }
-
-        @SuppressWarnings("null")
-        private RecruitmentDashboardResponse hiringManager(User user, LocalDateTime now) {
-                int userId = user.getUserId();
-                Integer departmentId = user.getDepartment() == null ? null : user.getDepartment().getDepartmentId();
-                return view(user,
-                                "Requisitions I Manage" + (departmentId == null ? "" : " and my department"),
-                                List.of(
-                                                // get requisitions managed by hiring manager
-                                                new DashboardMetricResponse("My Requisitions",
-                                                                metrics.ownRequisitions(userId),
-                                                                "Linked to this account’s HiringManagerId"),
-                                                // get department requisitions
-                                                new DashboardMetricResponse("Department Requisitions",
-                                                                departmentId == null ? 0
-                                                                                : metrics.departmentRequisitions(
-                                                                                                departmentId),
-                                                                departmentId == null ? "This account has no department"
-                                                                                : "Same DepartmentId"),
-                                                // get requis pending
-                                                new DashboardMetricResponse("Requisitions Awaiting Director Approval",
-                                                                metrics.ownPendingRequisitions(userId),
-                                                                "My requisitions with Pending_Director status"),
-                                                // get candidate for req
-                                                new DashboardMetricResponse("Candidates Forwarded to My Department",
-                                                                metrics.visibleCandidatesForHiringManager(userId, departmentId),
-                                                                "Distinct candidates in the department pipeline"), // dunglt bổ sung: Q1.4, không còn lọc "HR đã chuyển"
-                                                // get upcoming inter
-                                                new DashboardMetricResponse("Upcoming Interviews",
-                                                                metrics.upcomingInterviewsForDepartment(departmentId, now),
-                                                                "Within my department")),
-                                List.of(),
                                 List.of());
         }
 

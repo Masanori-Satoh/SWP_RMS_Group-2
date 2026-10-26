@@ -3,11 +3,10 @@ package com.group2.rms.dashboard;
 import com.group2.rms.candidate.domain.rule.ApplicationStatusLabels;
 import com.group2.rms.dashboard.DashboardMetricsRepository.DecisionRow;
 import com.group2.rms.dashboard.DashboardMetricsRepository.StatusCount;
-import com.group2.rms.dashboard.dto.DashboardChartResponse;
-import com.group2.rms.dashboard.dto.DashboardChartResponse.Point;
+import com.group2.rms.dashboard.dto.RecruitmentChartResponse;
+import com.group2.rms.dashboard.dto.RecruitmentChartResponse.Point;
 import com.group2.rms.jobposting.service.JobPostingAccess;
 import com.group2.rms.interview.entity.InterviewStatus;
-import com.group2.rms.requisition.service.RequisitionAccess;
 import com.group2.rms.user.entity.User;
 import com.group2.rms.user.repository.UserRepository;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -25,11 +24,9 @@ import java.util.List;
 import java.util.Map;
 
 /** Builds role-scoped chart series while leaving ordinary links and values in the rendered page. */
+// NOTE: chỉ còn HR, Director, Interviewer; Hiring Manager đã chuyển sang HiringManagerDashboardService.
 @Service
 public class DashboardChartService {
-    private static final List<String> REQUISITION_STATUSES = List.of(
-            RequisitionAccess.STATUS_DRAFT, RequisitionAccess.STATUS_PENDING_DIRECTOR,
-            RequisitionAccess.STATUS_APPROVED, RequisitionAccess.STATUS_REJECTED);
     private static final List<String> APPLICATION_STATUSES = List.of(
             "Applied", "AI_Screened", "HR_Passed", "HM_Passed", "Interviewing", "Offered", "Hired", "Rejected");
     private static final List<String> POSTING_STATUSES = List.of(
@@ -51,7 +48,7 @@ public class DashboardChartService {
     }
 
     @Transactional(readOnly = true)
-    public List<DashboardChartResponse> forUsername(String username, String roleName) {
+    public List<RecruitmentChartResponse> forUsername(String username, String roleName) {
         User user = users.findByUsernameIgnoreCase(username)
                 .orElseThrow(() -> new UsernameNotFoundException("Account not found"));
         if (!"Active".equals(user.getAccountStatus()) || user.getRole() == null
@@ -59,7 +56,6 @@ public class DashboardChartService {
             throw new AccessDeniedException("Dashboard role is no longer active");
         }
         return switch (roleName) {
-            case "Hiring Manager" -> hiringManager(user);
             case "HR" -> hr();
             case "Director" -> director(user);
             case "Interviewer" -> interviewer(user);
@@ -67,30 +63,7 @@ public class DashboardChartService {
         };
     }
 
-    private List<DashboardChartResponse> hiringManager(User user) {
-        int userId = user.getUserId();
-        Integer departmentId = user.getDepartment() == null ? null : user.getDepartment().getDepartmentId();
-        List<Point> requisitions = statusPoints(metrics.hiringManagerRequisitionStatuses(userId, departmentId),
-                REQUISITION_STATUSES, status -> "/requisitions?status=" + status, this::requisitionLabel);
-        List<Point> applications = statusPoints(metrics.hiringManagerApplicationStatuses(userId, departmentId),
-                APPLICATION_STATUSES, status -> "/applications?status=" + status, ApplicationStatusLabels::label);
-        LocalDate today = LocalDate.now(clock);
-        List<Point> interviews = dailyPoints(today, 7,
-                metrics.upcomingDepartmentInterviewDates(departmentId, LocalDateTime.now(clock),
-                        today.plusDays(7).atStartOfDay()), "/interviews");
-        return List.of(
-                new DashboardChartResponse("Yêu cầu trong phạm vi của tôi",
-                        "Yêu cầu do bạn tạo hoặc thuộc phòng ban bạn quản lý; chọn trạng thái để mở danh sách.",
-                        "bar", requisitions),
-                // dunglt bổ sung: Q1.4 HM thấy mọi đơn phòng mình (kể cả HR chưa chuyển)
-                new DashboardChartResponse("Hồ sơ của phòng ban",
-                        "Hồ sơ chính thức trong phạm vi phòng ban của bạn, theo trạng thái hiện tại.",
-                        "bar", applications),
-                new DashboardChartResponse("Lịch phỏng vấn 7 ngày tới",
-                        "Lịch sắp tới thuộc phòng ban của bạn.", "line", interviews));
-    }
-
-    private List<DashboardChartResponse> hr() {
+    private List<RecruitmentChartResponse> hr() {
         LocalDate today = LocalDate.now(clock);
         List<Point> applications = statusPoints(metrics.formalApplicationStatuses(), APPLICATION_STATUSES,
                 status -> "/applications?status=" + status, ApplicationStatusLabels::label);
@@ -100,16 +73,16 @@ public class DashboardChartService {
                 metrics.recentApplicationDates(today.minusDays(13).atStartOfDay(), today.plusDays(1).atStartOfDay()),
                 null);
         return List.of(
-                new DashboardChartResponse("Hồ sơ theo trạng thái", "Số hồ sơ ứng tuyển chính thức trên toàn hệ thống.",
+                new RecruitmentChartResponse("Hồ sơ theo trạng thái", "Số hồ sơ ứng tuyển chính thức trên toàn hệ thống.",
                         "bar", applications),
-                new DashboardChartResponse("Hồ sơ nhận trong 14 ngày", "Đếm theo ngày nộp hồ sơ, bao gồm hôm nay.",
+                new RecruitmentChartResponse("Hồ sơ nhận trong 14 ngày", "Đếm theo ngày nộp hồ sơ, bao gồm hôm nay.",
                         "line", received),
-                new DashboardChartResponse("Tin tuyển dụng theo trạng thái",
+                new RecruitmentChartResponse("Tin tuyển dụng theo trạng thái",
                         "Trạng thái hiển thị của tin, gồm cả tin hẹn đăng; số tin đang nhận hồ sơ ở thẻ tổng quan.",
                         "bar", postings));
     }
 
-    private List<DashboardChartResponse> director(User user) {
+    private List<RecruitmentChartResponse> director(User user) {
         LocalDateTime now = LocalDateTime.now(clock);
         LocalDate today = now.toLocalDate();
         List<Point> queue = List.of(
@@ -124,17 +97,17 @@ public class DashboardChartService {
                 new Point("Đã từ chối", rejected, null));
         List<LocalDateTime> decisionDates = decisions.stream().map(DecisionRow::at).toList();
         return List.of(
-                new DashboardChartResponse("Hàng đợi phê duyệt", "Toàn hệ thống; chọn loại để mở danh sách chờ duyệt.",
+                new RecruitmentChartResponse("Hàng đợi phê duyệt", "Toàn hệ thống; chọn loại để mở danh sách chờ duyệt.",
                         "bar", queue),
-                new DashboardChartResponse("Kết quả quyết định của tôi",
+                new RecruitmentChartResponse("Kết quả quyết định của tôi",
                         "Quyết định của bạn trong 14 ngày qua, gồm yêu cầu và đề nghị tuyển dụng.",
                         "bar", outcomes),
-                new DashboardChartResponse("Quyết định của tôi trong 14 ngày",
+                new RecruitmentChartResponse("Quyết định của tôi trong 14 ngày",
                         "Số lần duyệt hoặc từ chối do chính bạn thực hiện, theo ngày.",
                         "line", dailyPoints(today.minusDays(13), 14, decisionDates, null)));
     }
 
-    private List<DashboardChartResponse> interviewer(User user) {
+    private List<RecruitmentChartResponse> interviewer(User user) {
         int userId = user.getUserId();
         LocalDate today = LocalDate.now(clock);
         List<Point> statuses = statusPoints(metrics.assignedInterviewStatuses(userId), INTERVIEW_STATUSES,
@@ -146,11 +119,11 @@ public class DashboardChartService {
                 new Point("Chờ đánh giá", metrics.pendingInterviewEvaluations(userId), "/interviews"),
                 new Point("Đã đánh giá", metrics.completedInterviewsEvaluatedBy(userId), "/interviews"));
         return List.of(
-                new DashboardChartResponse("Lịch được phân công theo trạng thái",
+                new RecruitmentChartResponse("Lịch được phân công theo trạng thái",
                         "Các lịch bạn tham gia hội đồng; mở danh sách để xem chi tiết.", "bar", statuses),
-                new DashboardChartResponse("Lịch của tôi trong 7 ngày tới",
+                new RecruitmentChartResponse("Lịch của tôi trong 7 ngày tới",
                         "Lịch đã hẹn hoặc đổi lịch được phân công cho bạn.", "line", upcoming),
-                new DashboardChartResponse("Đánh giá sau phỏng vấn",
+                new RecruitmentChartResponse("Đánh giá sau phỏng vấn",
                         "Các lịch đã hoàn tất được phân công cho bạn, theo tình trạng phiếu đánh giá của bạn.",
                         "bar", evaluations));
     }
@@ -184,16 +157,6 @@ public class DashboardChartService {
         List<Point> points = new ArrayList<>();
         counts.forEach((date, count) -> points.add(new Point(date.format(DAY_LABEL), count, href)));
         return points;
-    }
-
-    private String requisitionLabel(String status) {
-        return switch (status) {
-            case RequisitionAccess.STATUS_DRAFT -> "Bản nháp";
-            case RequisitionAccess.STATUS_PENDING_DIRECTOR -> "Chờ Giám đốc duyệt";
-            case RequisitionAccess.STATUS_APPROVED -> "Đã duyệt";
-            case RequisitionAccess.STATUS_REJECTED -> "Bị từ chối";
-            default -> status;
-        };
     }
 
     private String postingLabel(String status) {

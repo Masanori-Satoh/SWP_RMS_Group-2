@@ -12,25 +12,25 @@
 <body>
     <main id="main" layout:fragment="content" class="page-content container dash-page dash-page--recruitment" tabindex="-1"
         th:with="role=${dashboard.roleName}">
+        <!-- Dashboard theo role mới: mỗi role một file trong dashboard/sections/, tên file do DTO trả về (section) -->
+        <th:block th:if="${dashboard.section != null}">
+            <th:block th:replace="~{dashboard/sections/__${dashboard.section}__ :: content(${dashboard})}"></th:block>
+        </th:block>
+
+        <!-- NOTE: khung cũ cho HR, Director, Interviewer; bỏ khi các role này chuyển sang dashboard/sections/ -->
+        <th:block th:if="${dashboard.section == null}">
         <div class="page-header">
             <div th:switch="${role}">
                 <h1 class="page-title" th:case="'HR'">Tổng quan nhân sự</h1>
-                <h1 class="page-title" th:case="'Hiring Manager'">Tổng quan tuyển dụng của tôi</h1>
                 <h1 class="page-title" th:case="'Director'">Phê duyệt và phỏng vấn</h1>
                 <h1 class="page-title" th:case="*">Lịch và đánh giá phỏng vấn</h1>
                 <p class="page-subtitle" th:switch="${role}">
                     <span th:case="'HR'">Theo dõi hồ sơ mới, tiến trình tuyển dụng và các lịch hẹn sắp tới.</span>
-                    <span th:case="'Hiring Manager'">Theo dõi yêu cầu của bạn, nhu cầu phòng ban và ứng viên đang
-                        tuyển.</span>
                     <span th:case="'Director'">Xem hàng đợi phê duyệt toàn hệ thống và lịch bạn được phân công.</span>
                     <span th:case="*">Theo dõi các buổi phỏng vấn được phân công và đánh giá cần hoàn tất.</span>
                 </p>
             </div>
-            <a class="btn btn--primary" th:if="${role == 'Hiring Manager'}" th:href="@{/applications}">Xem hồ sơ ứng
-                tuyển</a>
             <a class="btn btn--primary" th:if="${role == 'HR'}" th:href="@{/applications}">Xem hồ sơ ứng tuyển</a>
-            <a class="btn btn--primary" th:if="${role == 'Hiring Manager'}" th:href="@{/requisitions}">Xem yêu cầu tuyển
-                dụng</a>
             <a class="btn btn--primary" th:if="${role == 'Director'}" th:href="@{/offers}">Xem đề nghị chờ duyệt</a>
             <a class="btn btn--primary" th:if="${role == 'Interviewer'}" th:href="@{/interviews}">Xem lịch phỏng vấn</a>
         </div>
@@ -76,7 +76,7 @@
                 <p class="text-muted">Tiếp tục công việc trong từng phân hệ.</p>
             </div>
             <nav class="dash-actions" aria-label="Công việc theo vai trò">
-                <a class="btn btn--secondary" th:if="${role == 'HR' || role== 'Hiring Manager'}"
+                <a class="btn btn--secondary" th:if="${role == 'HR'}"
                     th:href="@{/internal/job-postings}">Tin tuyển dụng</a>
                 <a class="btn btn--secondary" th:if="${role == 'HR'}"
                     th:href="@{/internal/job-postings/dashboard}">Quản lý đăng tin</a>
@@ -89,8 +89,6 @@
                     tuyển dụng</a>
                 <a class="btn btn--secondary" th:href="@{/notifications}">Thông báo của tôi</a>
             </nav>
-            <p class="dash-note" th:if="${role == 'Hiring Manager'}">Số liệu yêu cầu do bạn tạo và số liệu phòng ban có
-                phạm vi khác nhau; biểu đồ ghi rõ phạm vi đang thống kê.</p>
             <p class="dash-note" th:if="${role == 'Director'}">Bạn có thể xem toàn bộ lịch nội bộ. Hai số liệu phỏng vấn
                 ở trên chỉ tính lịch và ứng viên được phân công cho bạn.</p>
             <p class="dash-note" th:if="${role == 'Interviewer'}">Mở lịch được phân công để xem thông tin và hoàn tất
@@ -141,10 +139,13 @@
                 </table>
             </div>
         </section>
+        </th:block>
     </main>
 <th:block layout:fragment="scripts">
-    <script defer th:src="@{/js/vendor/chart.umd.min.js}"></script>
-    <script defer th:src="@{/js/pages/recruitment-dashboard.js}"></script>
+    <th:block th:if="${dashboard.section == null}">
+        <script defer th:src="@{/js/vendor/chart.umd.min.js}"></script>
+        <script defer th:src="@{/js/pages/recruitment-dashboard.js}"></script>
+    </th:block>
 </th:block>
 </body>
 
