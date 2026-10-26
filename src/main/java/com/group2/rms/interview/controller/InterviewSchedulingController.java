@@ -429,11 +429,11 @@ public class InterviewSchedulingController {
     private boolean isHrUser(User user, Authentication authentication) {
         if (user != null && user.getRole() != null) {
             String role = user.getRole().getRoleName();
-            return "HR".equalsIgnoreCase(role) || "System Admin".equalsIgnoreCase(role);
+            return "HR".equalsIgnoreCase(role);
         }
         if (authentication != null) {
             return authentication.getAuthorities().stream()
-                    .anyMatch(a -> "ROLE_HR".equals(a.getAuthority()) || RoleAuthorities.SYSTEM_ADMIN.equals(a.getAuthority()));
+                    .anyMatch(a -> "ROLE_HR".equals(a.getAuthority()));
         }
         return false;
     }

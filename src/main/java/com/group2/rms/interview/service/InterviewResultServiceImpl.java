@@ -45,7 +45,7 @@ import java.util.stream.Stream;
 public class InterviewResultServiceImpl implements InterviewResultService {
 
     /** Vai trò được xem mọi phiếu đánh giá (D5). */
-    private static final Set<String> FULL_ACCESS_ROLES = Set.of("HR", "Hiring Manager", "Director", "System Admin");
+    private static final Set<String> FULL_ACCESS_ROLES = Set.of("HR", "Hiring Manager", "Director");
 
     private final InterviewScheduleRepository interviewScheduleRepository;
     private final InterviewEvaluationRepository interviewEvaluationRepository;

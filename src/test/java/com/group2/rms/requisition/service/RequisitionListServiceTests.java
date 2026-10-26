@@ -28,6 +28,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
+import org.springframework.security.access.AccessDeniedException;
 
 import java.time.Clock;
 import java.time.Instant;
@@ -183,7 +184,7 @@ class RequisitionListServiceTests {
     @DisplayName("Gửi trùng một trạng thái hai lần -> Chỉ giữ một lần, chip hiện một lần")
     void getListPage_shouldRemoveDuplicateStatus_whenSameStatusIsSentTwice() {
         // Arrange
-        loginAs(RequisitionAccess.ROLE_SYSTEM_ADMIN);
+        loginAs(RequisitionAccess.ROLE_DIRECTOR);
 
         // Act
         RequisitionListResponse list = service.getListPage(onlyStatus(
@@ -195,6 +196,12 @@ class RequisitionListServiceTests {
     }
 
     // ----- Ô lọc theo role -----
+
+    @Test
+    void getListPage_shouldDenySystemAdmin() {
+        loginAs(RequisitionAccess.ROLE_SYSTEM_ADMIN);
+        assertThrows(AccessDeniedException.class, () -> service.getListPage(onlyStatus(List.of())));
+    }
 
     @Test
     @DisplayName("Hiring Manager -> Không có ô Phòng ban / Người tạo; departmentId, creatorId trên URL bị bỏ qua")
@@ -217,9 +224,9 @@ class RequisitionListServiceTests {
 
     @Test
     @DisplayName("Phòng ban không có trong danh sách lựa chọn (id giả) -> Bỏ qua; phòng ban hợp lệ được giữ")
-    void getListPage_shouldIgnoreUnknownDepartment_whenViewerIsAdmin() {
+    void getListPage_shouldIgnoreUnknownDepartment_whenViewerIsDirector() {
         // Arrange
-        loginAs(RequisitionAccess.ROLE_SYSTEM_ADMIN);
+        loginAs(RequisitionAccess.ROLE_DIRECTOR);
         Department engineering = Department.builder().departmentId(1).departmentName("Engineering").build();
         when(departments.findAll(any(Sort.class))).thenReturn(List.of(engineering));
 

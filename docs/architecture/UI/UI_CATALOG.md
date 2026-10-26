@@ -397,3 +397,23 @@ Chỉ là class + markup (không có fragment), không cần JS: thẻ `<details
 
 - Chỉ đưa vào menu những mục người xem **dùng được** (kiểm quyền ở server); không còn mục nào thì không render menu.
 - Chưa tự đóng khi bấm ra ngoài (cần JS). CSS: `components.css` mục N.
+
+---
+
+## 12. Biến thể bề mặt Admin (triển khai từng trang)
+
+`.ads-page--refined` là biến thể opt-in trong `pages/admin-surfaces.css`, dùng cùng
+`.ads-page` và các thành phần danh sách hiện có. Trang mẫu đầu tiên là
+`admin/departments/list.html`; chưa bật cho các trang Admin còn lại trước khi duyệt.
+
+| Thành phần | Quy ước |
+|---|---|
+| Nội dung / dữ liệu bảng | 15px / 14px; giữ font theo token hiện có |
+| Toolbar | Control 40–44px; CTA lớn dùng nút catalog 48px |
+| Card dữ liệu chính | Nền `--surface`, bo `--radius-lg`, viền vừa phải từ `--control-line` và `--line`, bóng `--shadow-md`; không nổi lên khi hover |
+| Header bảng | Nền `--brand-soft`, chữ `--brand-dark` 14px/600 |
+| Panel phụ | Nền `--surface-subtle`, viền `--line`, không bóng; số tổng quan 36px |
+| Badge Admin | Giữ các modifier catalog. `workspace.css` không áp màu chữ legacy lên badge trong Dashboard, Internal Accounts, Department và API Monitoring. Chữ warning dùng `color-mix(in srgb, var(--warning) 90%, var(--ink))` để đạt tương phản AA trên `--warning-soft` |
+
+Biến thể chỉ thay trình bày; không đổi dữ liệu, URL, handler, lựa chọn dòng,
+điều kiện dock/drawer hoặc mặc định mở panel. Chưa áp dụng cho Homepage/Auth.

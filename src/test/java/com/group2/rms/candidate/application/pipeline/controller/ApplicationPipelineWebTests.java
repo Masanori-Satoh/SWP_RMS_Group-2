@@ -408,11 +408,11 @@ class ApplicationPipelineWebTests {
     }
 
     @Test
-    void directorAndAdminCanOpenTheList() throws Exception {
+    void directorCanOpenTheListAndAdminIsForbidden() throws Exception {
         when(pipeline.list(any(), any())).thenReturn(listOf(false, "Director"));
 
         mvc.perform(get("/applications").with(as("director", "Director"))).andExpect(status().isOk());
-        mvc.perform(get("/applications").with(as("admin", "System Admin"))).andExpect(status().isOk());
+        mvc.perform(get("/applications").with(as("admin", "System Admin"))).andExpect(status().isForbidden());
     }
 
     @Test
@@ -716,8 +716,7 @@ class ApplicationPipelineWebTests {
     void reviewNeedsCsrfAndAReviewerRole() throws Exception {
         mvc.perform(post("/applications/298/review").with(as("hr_lan", "HR")).param("decision", "Pass"))
                 .andExpect(status().isForbidden());
-        // Admin qua được rule URL nhưng Service từ chối (Director nay là người duyệt thay, xem test dưới).
-        when(reviewService.review(eq(298), any())).thenThrow(new AccessDeniedException("no"));
+        // Admin bị chặn ngay tại rule URL.
         mvc.perform(post("/applications/298/review").with(as("admin", "System Admin")).with(csrf())
                         .param("decision", "Pass"))
                 .andExpect(status().isForbidden());
@@ -858,15 +857,15 @@ class ApplicationPipelineWebTests {
                 .andExpect(status().isOk()).andExpect(content().string(containsString("Ứng viên thật")))
                 .andExpect(content().string(containsString("href=\"/applications/219\"")))
                 .andExpect(content().string(containsString("chưa phải hồ sơ ứng tuyển chính thức")))
-                .andExpect(content().string(not(containsString("Thêm ứng viên tiềm năng"))));
+                .andExpect(content().string(not(containsString("Thêm ứng viên tiềm"))));
         when(talentPool.viewerRole()).thenReturn("Hiring Manager"); when(talentPool.canSuggest(8)).thenReturn(true);
         mvc.perform(get("/talent-pool/jobs/8/suggestions").with(as("hm", "Hiring Manager")))
-                .andExpect(status().isOk()).andExpect(content().string(containsString("Thêm ứng viên tiềm năng")))
+                .andExpect(status().isOk()).andExpect(content().string(containsString("Thêm ứng viên tiềm")))
                 .andExpect(content().string(containsString("href=\"/talent-pool?jobPostingId=8\"")))
                 .andExpect(content().string(containsString("class=\"page-title\">Ứng viên tiềm năng</h1>")));
         when(talentPool.canSuggest(8)).thenReturn(false);
         mvc.perform(get("/talent-pool/jobs/8/suggestions").with(as("hm", "Hiring Manager")))
-                .andExpect(status().isOk()).andExpect(content().string(not(containsString("Thêm ứng viên tiềm năng"))));
+                .andExpect(status().isOk()).andExpect(content().string(not(containsString("Thêm ứng viên tiềm"))));
     }
 
     @Test
