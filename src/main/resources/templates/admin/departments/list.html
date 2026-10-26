@@ -10,11 +10,12 @@
         <link rel="stylesheet" th:href="@{/css/pages/departments.css}">
         <link rel="stylesheet" th:href="@{/css/pages/account-inspector.css}">
         <link rel="stylesheet" th:href="@{/css/pages/management-filters.css}">
+        <link rel="stylesheet" th:href="@{/css/pages/flash-toast.css}">
         <link rel="stylesheet" th:href="@{/css/pages/admin-surfaces.css}">
     </th:block>
 </head>
 <body>
-<main id="main" layout:fragment="content" class="page-content container ads-page iac-page dm-page aim-page" data-inspector-kind="department" data-inspector-overview="true" tabindex="-1">
+<main id="main" layout:fragment="content" class="page-content container ads-page ads-page--refined iac-page dm-page aim-page" data-inspector-kind="department" data-inspector-overview="true" tabindex="-1">
     <nav class="iac-breadcrumb" aria-label="Đường dẫn">
         <a th:href="@{/dashboard}">Tổng quan</a><span aria-hidden="true">/</span><span aria-current="page">Quản lý phòng ban</span>
     </nav>
@@ -28,7 +29,7 @@
         </a>
         </div>
     </div>
-    <div class="alert alert--success" role="status" th:if="${successMessage}" th:text="${successMessage}"></div>
+    <th:block th:replace="~{fragments/ui/flash-toast :: flashToast(${successMessage}, null)}"></th:block>
     <div class="aim-layout"><div class="aim-master">
     <form class="card mft-toolbar" th:action="@{/admin/departments}" method="get" aria-label="Bộ lọc phòng ban">
         <input type="hidden" name="status" th:value="${selectedStatus ?: ''}">
@@ -132,6 +133,7 @@
     <dialog th:replace="~{fragments/status-actions :: confirmation}"></dialog>
 </main>
 <th:block layout:fragment="scripts">
+    <script th:src="@{/js/pages/flash-toast.js}" defer></script>
     <script th:src="@{/js/pages/management-filters.js}" defer></script>
     <script th:src="@{/js/status-confirmation.js}" defer></script>
     <script th:src="@{/js/pages/internal-accounts.js}" defer></script>

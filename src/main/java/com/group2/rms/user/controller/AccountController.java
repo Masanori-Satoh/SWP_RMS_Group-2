@@ -80,7 +80,7 @@ public class AccountController {
         if (!errors.hasErrors()) {
             try {
                 management.createInternal(form.toCommand());
-                redirectAttributes.addFlashAttribute("successMessage", "Account created successfully.");
+                redirectAttributes.addFlashAttribute("successMessage", "Đã tạo tài khoản thành công.");
                 return "redirect:/admin/accounts";
             } catch (AccountFieldException exception) {
                 errors.rejectValue(exception.getField(), "account.invalid", exception.getMessage());
@@ -118,7 +118,7 @@ public class AccountController {
         if (!errors.hasErrors()) {
             try {
                 management.updateInternal(userId, form.toCommand());
-                redirectAttributes.addFlashAttribute("successMessage", "Account updated successfully.");
+                redirectAttributes.addFlashAttribute("successMessage", "Đã cập nhật tài khoản thành công.");
                 return "redirect:/admin/accounts";
             } catch (AccountFieldException exception) {
                 errors.rejectValue(exception.getField(), "account.invalid", exception.getMessage());

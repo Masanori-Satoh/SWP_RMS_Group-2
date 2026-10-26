@@ -9,11 +9,13 @@
         <link rel="stylesheet" th:href="@{/css/pages/internal-accounts.css}">
         <link rel="stylesheet" th:href="@{/css/pages/account-inspector.css}">
         <link rel="stylesheet" th:href="@{/css/pages/management-filters.css}">
+        <link rel="stylesheet" th:href="@{/css/pages/flash-toast.css}">
         <link rel="stylesheet" th:href="@{/css/pages/internal-account-card.css}">
+        <link rel="stylesheet" th:href="@{/css/pages/admin-surfaces.css}">
     </th:block>
 </head>
 <body>
-<main id="main" layout:fragment="content" class="page-content container iac-page iac-internal-page aim-page" data-account-overview="true" tabindex="-1">
+<main id="main" layout:fragment="content" class="page-content container ads-page ads-page--refined iac-page iac-internal-page aim-page" data-account-overview="true" tabindex="-1">
     <nav class="iac-breadcrumb" aria-label="Đường dẫn">
         <a th:href="@{/dashboard}">Tổng quan</a><span aria-hidden="true">/</span><span aria-current="page">Quản lý tài khoản</span>
     </nav>
@@ -31,7 +33,7 @@
         </a>
         </div>
     </div>
-    <div class="alert alert--success" role="status" th:if="${successMessage}" th:text="${successMessage}"></div>
+    <th:block th:replace="~{fragments/ui/flash-toast :: flashToast(${successMessage}, null)}"></th:block>
     <div class="aim-layout"><div class="aim-master">
     <form class="card mft-toolbar" th:action="@{/admin/accounts}" method="get" aria-label="Bộ lọc tài khoản nội bộ">
         <input type="hidden" name="roleId" th:value="${selectedRoleId}">
@@ -75,10 +77,10 @@
                     </div>
                 </div>
             </details>
-            <nav class="amg-status-group iacv-role-group" aria-label="Lọc nhanh theo vai trò">
-                <a class="amg-segment" th:href="@{/admin/accounts(search=${search},status=${selectedStatus},roleId='',departmentId=${selectedDepartmentId},sort=${selectedSort})}"
+            <nav class="amg-status-group ads-status-group iacv-role-group" aria-label="Lọc nhanh theo vai trò">
+                <a class="amg-segment ads-status-item" th:href="@{/admin/accounts(search=${search},status=${selectedStatus},roleId='',departmentId=${selectedDepartmentId},sort=${selectedSort})}"
                    th:attr="aria-current=${selectedRoleId == null ? 'page' : null}">Tất cả</a>
-                <a class="amg-segment" th:each="role : ${roles}"
+                <a class="amg-segment ads-status-item" th:each="role : ${roles}"
                    th:href="@{/admin/accounts(search=${search},status=${selectedStatus},roleId=${role.roleId},departmentId=${selectedDepartmentId},sort=${selectedSort})}"
                    th:attr="aria-current=${role.roleId == selectedRoleId ? 'page' : null}"
                    th:text="${role.roleName == 'System Admin' ? 'Quản trị hệ thống' : (role.roleName == 'HR' ? 'Nhân sự' : (role.roleName == 'Hiring Manager' ? 'Trưởng phòng tuyển dụng' : (role.roleName == 'Director' ? 'Giám đốc' : (role.roleName == 'Interviewer' ? 'Người phỏng vấn' : role.roleName))))}">Vai trò</a>
@@ -176,6 +178,7 @@
     <dialog th:replace="~{fragments/status-actions :: confirmation}"></dialog>
 </main>
 <th:block layout:fragment="scripts">
+    <script th:src="@{/js/pages/flash-toast.js}" defer></script>
     <script th:src="@{/js/pages/management-filters.js}" defer></script>
     <script th:src="@{/js/status-confirmation.js}" defer></script>
     <script th:src="@{/js/pages/internal-accounts.js}" defer></script>
