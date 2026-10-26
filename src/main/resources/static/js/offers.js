@@ -964,29 +964,11 @@ function confirmSendOffer(offerId) {
                         } catch (e) {
                             console.warn('Cannot write sessionStorage for flash message', e);
                         }
-
                         if (typeof Swal !== 'undefined') {
-                            Swal.fire({
-                                title: 'Phát hành thành công!',
-                                text: successMsg,
-                                icon: 'success',
-                                showConfirmButton: true,
-                                confirmButtonText: 'Đã hiểu',
-                                buttonsStyling: false,
-                                customClass: {
-                                    popup: 'director-reject-alert-modal',
-                                    confirmButton: 'btn-director-reject-confirm'
-                                }
-                            }).then(() => {
-                                closeModal('detailOfferModal');
-                                window.location.reload();
-                            });
-                        } else {
-                            displayOfferFlashBanner(successMsg, 'success');
-                            showToast(successMsg, 'success');
-                            closeModal('detailOfferModal');
-                            setTimeout(() => window.location.reload(), 800);
+                            Swal.close();
                         }
+                        closeModal('detailOfferModal');
+                        window.location.reload();
                     } else {
                         if (typeof Swal !== 'undefined') {
                             Swal.fire('Lỗi', res?.message || 'Lỗi phát hành Offer.', 'error');
@@ -2011,7 +1993,51 @@ function initOfferFlashAutoDismiss() {
         setTimeout(() => {
             flashContainer.style.display = 'none';
         }, 450);
-    }, 2000);
+    }, 1500);
+}
+
+function displayOfferFlashBanner(message, type = 'success') {
+    let flashContainer = document.getElementById('pageFlashContainer');
+    if (!flashContainer) {
+        flashContainer = document.createElement('div');
+        flashContainer.id = 'pageFlashContainer';
+        flashContainer.className = 'page-flash-container';
+        const targetParent = document.getElementById('main') || document.querySelector('.page-content') || document.body;
+        if (targetParent.firstChild) {
+            targetParent.insertBefore(flashContainer, targetParent.firstChild);
+        } else {
+            targetParent.appendChild(flashContainer);
+        }
+    }
+
+    flashContainer.style.display = 'flex';
+    flashContainer.classList.remove('flash-dismissed');
+    delete flashContainer.dataset.dismissInit;
+    flashContainer.innerHTML = `
+        <div class="page-flash-alert page-flash-${type}" id="flash${type.charAt(0).toUpperCase() + type.slice(1)}Alert">
+            <i class="fa-solid fa-circle-check"></i>
+            <span>${message}</span>
+        </div>
+    `;
+
+    setTimeout(() => {
+        flashContainer.classList.add('flash-dismissed');
+        setTimeout(() => {
+            flashContainer.style.display = 'none';
+        }, 450);
+    }, 1500);
+}
+
+function checkPendingOfferFlash() {
+    try {
+        const storedMsg = sessionStorage.getItem('offerPageFlashMessage');
+        if (storedMsg) {
+            sessionStorage.removeItem('offerPageFlashMessage');
+            displayOfferFlashBanner(storedMsg, 'success');
+        }
+    } catch (e) {
+        console.warn('Cannot read sessionStorage for flash message', e);
+    }
 }
 
 function updateMinExpectedStartDate() {
@@ -2037,50 +2063,6 @@ function initOfferFormExpectedStartDateMin() {
     if (periodInput) {
         periodInput.addEventListener('input', updateMinExpectedStartDate);
         periodInput.addEventListener('change', updateMinExpectedStartDate);
-    }
-}
-
-function displayOfferFlashBanner(message, type = 'success') {
-    let flashContainer = document.getElementById('pageFlashContainer');
-    if (!flashContainer) {
-        flashContainer = document.createElement('div');
-        flashContainer.id = 'pageFlashContainer';
-        flashContainer.className = 'page-flash-container';
-        const targetParent = document.getElementById('main') || document.querySelector('.page-content') || document.body;
-        if (targetParent.firstChild) {
-            targetParent.insertBefore(flashContainer, targetParent.firstChild);
-        } else {
-            targetParent.appendChild(flashContainer);
-        }
-    }
-
-    flashContainer.style.display = 'flex';
-    flashContainer.classList.remove('flash-dismissed');
-    flashContainer.innerHTML = `
-        <div class="page-flash-alert page-flash-${type}" id="flash${type.charAt(0).toUpperCase() + type.slice(1)}Alert">
-            <i class="fa-solid fa-circle-check"></i>
-            <span>${message}</span>
-        </div>
-    `;
-
-    setTimeout(() => {
-        flashContainer.classList.add('flash-dismissed');
-        setTimeout(() => {
-            flashContainer.style.display = 'none';
-        }, 450);
-    }, 4500);
-}
-
-function checkPendingOfferFlash() {
-    try {
-        const storedMsg = sessionStorage.getItem('offerPageFlashMessage');
-        if (storedMsg) {
-            sessionStorage.removeItem('offerPageFlashMessage');
-            displayOfferFlashBanner(storedMsg, 'success');
-            showToast(storedMsg, 'success');
-        }
-    } catch (e) {
-        console.warn('Cannot read sessionStorage for flash message', e);
     }
 }
 
