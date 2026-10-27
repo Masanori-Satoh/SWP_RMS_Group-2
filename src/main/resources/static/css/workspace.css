@@ -555,7 +555,7 @@ body:not(.sidebar-pinned) .workspace-sidebar:not(:hover) .sidebar-nav-link[data-
     flex-wrap: wrap;
   }
 
-  .workspace-identity {
+  .workspace-header .workspace-identity {
     order: 4;
     min-width: 0;
     padding-bottom: var(--s1);

@@ -3,6 +3,7 @@ package com.group2.rms.candidate.application.portal.repository;
 import com.group2.rms.candidate.domain.repository.ApplicationRepository;
 import com.group2.rms.candidate.domain.entity.Application;
 import jakarta.persistence.EntityManager;
+import org.hibernate.Hibernate;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -50,6 +51,19 @@ class MyApplicationQueryTests {
         assertTrue(owned.stream().allMatch(a -> a.getCandidate().getAccount().getUserId().equals(ownerUserId)));
         assertTrue(myApplications.findOwnedById(early.getApplicationId(), ownerUserId).isPresent());
         assertTrue(myApplications.findOwnedById(early.getApplicationId(), -1).isEmpty());
+    }
+
+    /** Thẻ đơn hiện tên phòng ban; open-in-view=false nên phòng ban phải về cùng câu query, không nạp lười. */
+    @Test
+    void ownedQueriesFetchPostingRequisitionAndDepartment() {
+        entityManager.clear();
+
+        Application owned = myApplications.findOwnedById(early.getApplicationId(), ownerUserId).orElseThrow();
+
+        assertTrue(Hibernate.isInitialized(owned.getJobPosting()));
+        assertTrue(Hibernate.isInitialized(owned.getJobPosting().getRequisition()));
+        assertTrue(Hibernate.isInitialized(owned.getJobPosting().getRequisition().getDepartment()));
+        assertNotNull(owned.getJobPosting().getRequisition().getDepartment().getDepartmentName());
     }
 
     @Test
@@ -133,7 +147,8 @@ class MyApplicationQueryTests {
         List<MyApplicationRepository.MyInterviewRow> rows = myApplications.findMyInterviews(userId);
         assertFalse(rows.isEmpty());
         assertTrue(rows.stream().allMatch(r -> ownIds.contains(r.getApplicationId())
-                && r.getStartTime() != null && r.getFormat() != null && r.getStatus() != null));
+                && r.getStartTime() != null && r.getFormat() != null && r.getStatus() != null
+                && r.getScheduledAt() != null));
     }
 
     private List<Integer> visibleOfferIds(Integer userId) {

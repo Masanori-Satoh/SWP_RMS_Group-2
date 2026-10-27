@@ -18,10 +18,12 @@ import static com.group2.rms.candidate.domain.repository.ApplicationRepository.F
  */
 @Repository
 public interface MyApplicationRepository extends org.springframework.data.repository.Repository<Application, Integer> {
-        /** Đơn của một ứng viên (My Applications), mới nhất trước. */
+        /** Đơn của một ứng viên ("Đơn của tôi"), mới nhất trước; kèm tin, yêu cầu tuyển, phòng ban (thẻ hiện tên phòng). */
         @Query("""
                         SELECT a FROM Application a
-                            JOIN FETCH a.jobPosting
+                            JOIN FETCH a.jobPosting j
+                            JOIN FETCH j.requisition r
+                            JOIN FETCH r.department
                         WHERE a.candidate.account.userId = :userId
                         """ + " AND " + FORMAL_FILTER + """
                         ORDER BY a.submissionDate DESC, a.applicationId DESC
@@ -31,7 +33,9 @@ public interface MyApplicationRepository extends org.springframework.data.reposi
         /** Một đơn, chỉ khi thuộc về ứng viên {@code userId}. */
         @Query("""
                         SELECT a FROM Application a
-                            JOIN FETCH a.jobPosting
+                            JOIN FETCH a.jobPosting j
+                            JOIN FETCH j.requisition r
+                            JOIN FETCH r.department
                         WHERE a.applicationId = :id
                           AND a.candidate.account.userId = :userId
                         """ + " AND " + FORMAL_FILTER + """
@@ -50,10 +54,13 @@ public interface MyApplicationRepository extends org.springframework.data.reposi
         // một ứng viên (theo userId) nên số câu không tăng theo số đơn. SQL thuần, cùng lý do với
         // ApplicationPipelineRepository.findInterviewEvents.
 
-        /** Mọi lịch phỏng vấn (kể cả lịch đã hủy) của các đơn thuộc ứng viên {@code userId}, cũ nhất trước. */
+        /**
+         * Mọi lịch phỏng vấn (kể cả lịch đã hủy) của các đơn thuộc ứng viên {@code userId}, cũ nhất trước.
+         * {@code scheduledAt} (lúc xếp lịch) là lúc ứng viên được báo, dùng để xếp "đơn mới có chuyển biến".
+         */
         @Query(value = """
                         SELECT s.ApplicationId AS applicationId, s.StartTime AS startTime,
-                               s.InterviewFormat AS format, s.InterviewStatus AS status
+                               s.InterviewFormat AS format, s.InterviewStatus AS status, s.CreatedAt AS scheduledAt
                         FROM InterviewSchedule s
                             JOIN Application a ON a.ApplicationId = s.ApplicationId
                             JOIN Candidate c ON c.CandidateId = a.CandidateId
@@ -106,6 +113,8 @@ public interface MyApplicationRepository extends org.springframework.data.reposi
                 String getFormat();
 
                 String getStatus();
+
+                LocalDateTime getScheduledAt();
         }
 
         /** Một dòng của {@link #findMyVisibleOffers}; {@code responseDeadline} có thể {@code null}. */

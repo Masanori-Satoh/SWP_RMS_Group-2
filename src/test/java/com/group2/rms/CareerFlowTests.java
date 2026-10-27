@@ -192,7 +192,37 @@ class CareerFlowTests {
         void successFlashIsShownOnJobDetail() throws Exception {
                 setupJobs();
                 mvc.perform(get("/jobs/41").flashAttr("applySuccess", true)).andExpect(status().isOk())
-                                .andExpect(content().string(containsString("Đã nộp hồ sơ.")));
+                                .andExpect(content().string(containsString("Đã nộp hồ sơ.")))
+                                .andExpect(content().string(not(containsString("Xem đơn đã nộp"))));
+        }
+
+        /** ux.md mục 0: alert sau khi nộp dẫn thẳng tới chi tiết đơn vừa nộp. */
+        @Test
+        void successFlashLinksToTheApplicationJustSubmitted() throws Exception {
+                setupJobs();
+                mvc.perform(get("/jobs/41").flashAttr("applySuccess", true).flashAttr("appliedApplicationId", 301))
+                                .andExpect(status().isOk())
+                                .andExpect(content().string(containsString("href=\"/portal/applications/301\"")))
+                                .andExpect(content().string(containsString("Xem đơn đã nộp")));
+        }
+
+        /** ux.md mục 0: ứng viên ở trang công khai có hàng menu riêng (hiện ở màn hẹp); khách và nội bộ thì không. */
+        @Test
+        void onlyCandidatesGetTheCandidateMenuRowOnPublicPages() throws Exception {
+                setupJobs();
+                account("candidate-test", "Candidate", "Active");
+                account("hr-test", "HR", "Active");
+                MockHttpSession candidate = login(null, "candidate-test", "/dashboard");
+                MockHttpSession hr = login(null, "hr-test", "/dashboard");
+
+                mvc.perform(get("/jobs/41").session(candidate)).andExpect(status().isOk())
+                                .andExpect(content().string(stringContainsInOrder("class=\"public-topbar__candidate-nav\"",
+                                                "href=\"/jobs\"", "aria-current=\"page\">Vị trí tuyển dụng",
+                                                "href=\"/portal/applications\"", "Đơn của tôi")));
+                mvc.perform(get("/jobs/41").session(hr)).andExpect(status().isOk())
+                                .andExpect(content().string(not(containsString("public-topbar__candidate-nav"))));
+                mvc.perform(get("/jobs/41")).andExpect(status().isOk())
+                                .andExpect(content().string(not(containsString("public-topbar__candidate-nav"))));
         }
 
         @Test
@@ -255,7 +285,8 @@ class CareerFlowTests {
                 mvc.perform(multipart("/jobs/41/apply").file(CV).session(session).with(csrf()))
                                 .andExpect(status().is3xxRedirection())
                                 .andExpect(redirectedUrl("/jobs/41"))
-                                .andExpect(flash().attribute("applySuccess", true));
+                                .andExpect(flash().attribute("applySuccess", true))
+                                .andExpect(flash().attribute("appliedApplicationId", 301));
                 verify(applications).apply(eq("candidate-test"), eq(41),
                                 argThat(file -> file != null && "cv.pdf".equals(file.getOriginalFilename())));
         }
