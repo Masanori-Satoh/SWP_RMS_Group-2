@@ -1,44 +1,43 @@
-/* Dashboard-only composition. Operate surface: one metrics strip, two analysis panels, one service ledger. */
+/* PAGES/ADMIN-DASHBOARD.CSS — System Admin /dashboard only.
+   Mộc Tech Glass: user-supplied tech office below solid data surfaces.
+   The opt-in adw component owns the shared Admin workspace presentation. */
 .rms-app .adm-dashboard {
-  padding: var(--s8);
+  position: relative;
+  isolation: isolate;
+  display: flex;
+  flex: 1 0 auto;
+  flex-direction: column;
+  min-height: 0;
+  padding: var(--s4);
+  font-size: var(--font-base);
+  background: transparent;
 }
 
-.adm-dashboard .adm-dashboard-heading {
-  margin-bottom: var(--s6);
-  padding: 0;
-}
-
-.adm-dashboard :is(.adm-summaries, .adm-chart-panel, .adm-monitor) {
-  border: 1px solid var(--line);
-  border-radius: var(--radius-lg);
-  background: var(--surface);
-}
-
-/* Metrics strip: one container, three readings divided by hairlines. */
+/* The same three real metrics share equal columns and one 16px gutter.
+   Three columns + two gutters fill exactly the same width as the analysis row. */
 .adm-dashboard .adm-summaries {
   display: grid;
-  grid-template-columns: minmax(0, 1.35fr) repeat(2, minmax(0, 1fr));
-  margin-bottom: var(--s6);
-  overflow: hidden;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--s4);
+  margin-bottom: var(--s4);
 }
 
 .adm-dashboard .adm-summary-link {
   position: relative;
   display: grid;
+  grid-template-columns: var(--s12) minmax(0, 1fr);
   align-content: start;
-  gap: var(--s1);
-  padding: var(--s6) var(--s8) var(--s6) var(--s6);
+  gap: var(--s1) var(--s4);
+  padding: var(--s4) var(--s8) var(--s4) var(--s4);
   color: inherit;
   text-decoration: none;
   transition: background-color var(--transition);
 }
 
-.adm-dashboard .adm-summary-link+.adm-summary-link {
-  border-left: 1px solid var(--line);
-}
-
 .adm-dashboard .adm-summary-link:hover {
   background: var(--surface-subtle);
+  border-color: var(--control-line);
+  box-shadow: var(--shadow-md);
 }
 
 .adm-dashboard .adm-summary-link:focus-visible {
@@ -47,29 +46,29 @@
 }
 
 .adm-dashboard .adm-summary-label {
+  grid-column: 2;
   margin: 0;
-  color: var(--muted);
-  font: 600 var(--font-base)/1.4 var(--sans);
+  color: var(--brand-dark);
+  font: 650 18px/1.35 var(--sans);
 }
 
 .adm-dashboard .adm-summary-value {
-  margin: var(--s2) 0 var(--s1);
+  grid-column: 2;
+  margin: var(--s1) 0;
   color: var(--ink);
-  font: 600 clamp(2.25rem, 3.2vw, 3rem)/1.05 var(--serif);
+  font: 600 36px/1.15 var(--sans);
   font-variant-numeric: lining-nums tabular-nums;
 }
 
-.adm-dashboard .adm-summary-link:not(.adm-summary-link--lead) .adm-summary-value {
-  font-size: clamp(2rem, 2.6vw, 2.5rem);
-}
-
 .adm-dashboard .adm-summary-detail {
+  grid-column: 2;
   margin: 0;
   font-size: var(--font-sm);
   overflow-wrap: anywhere;
 }
 
 .adm-dashboard .adm-summary-caveat {
+  grid-column: 2;
   margin: 0;
   color: var(--muted);
   font-size: var(--font-xs);
@@ -77,35 +76,43 @@
 
 .adm-dashboard .adm-summary-action {
   position: absolute;
-  top: var(--s6);
+  top: var(--s4);
   right: var(--s4);
   color: var(--brand);
-  transition: transform var(--transition);
 }
 
-.adm-dashboard .adm-summary-link:hover .adm-summary-action {
-  transform: translate(2px, -2px);
+.adm-dashboard .adm-kpi-icon {
+  display: grid;
+  grid-column: 1;
+  grid-row: 1 / 3;
+  place-items: center;
+  width: var(--s12);
+  height: var(--s12);
+  border-radius: var(--radius-lg);
+  background: var(--brand-soft);
+  color: var(--brand-dark);
 }
 
 /* Analysis panels. */
 .adm-dashboard .adm-analytics {
   display: grid;
   grid-template-columns: minmax(0, 5fr) minmax(0, 6fr);
-  gap: var(--s6);
+  gap: var(--s4);
 }
 
 .adm-dashboard .adm-chart-panel {
-  padding: var(--s6);
+  padding: var(--s4);
   container-type: inline-size;
 }
 
 .adm-dashboard .adm-panel-title {
-  font-size: var(--font-lg);
+  color: var(--brand-dark);
+  font: 700 20px/1.35 var(--sans);
 }
 
 .adm-dashboard .adm-chart-heading {
   min-height: 0;
-  margin-bottom: var(--s4);
+  margin-bottom: var(--s3);
 }
 
 .adm-dashboard .adm-help {
@@ -128,22 +135,25 @@
   gap: var(--s2);
 }
 
-.adm-dashboard .adm-scope-control>select {
+.adm-dashboard .adm-scope-select {
   width: 100%;
+  min-height: var(--btn-sm-h);
+  height: var(--btn-sm-h);
+  padding-block: var(--s2);
+  font-size: var(--font-sm);
 }
 
 .adm-dashboard .adm-chart-shell {
   flex: 1 0 auto;
-  height: 180px;
-  margin-bottom: var(--s3);
+  margin-bottom: 0;
 }
 
 .adm-dashboard .adm-chart-panel--roles .adm-chart-shell {
-  height: 260px;
+  height: 220px;
 }
 
 .adm-dashboard .adm-group-heading {
-  margin-bottom: var(--s3);
+  margin-bottom: var(--s2);
 }
 
 .adm-dashboard .adm-group-heading h3 {
@@ -151,10 +161,11 @@
   color: var(--muted);
 }
 
-/* Compact status tiles retain the same filtered links and semantic colours as the chart. */
+/* Status bars retain native links and counts; percentages/progress are progressive
+   enhancement derived from those same counts, never a second data source. */
 .adm-dashboard .adm-status-links {
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: var(--s2);
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--s1);
 }
 
 .adm-dashboard .adm-data-link {
@@ -167,55 +178,76 @@
 }
 
 .adm-dashboard .adm-status-links .adm-data-link {
-  position: relative;
-  flex-direction: column-reverse;
-  align-items: flex-start;
-  justify-content: flex-end;
-  gap: var(--s1);
-  height: 100%;
-  padding: var(--s2) var(--s3);
-  border: 1px solid var(--line);
+  --adm-state: var(--success);
+  --adm-state-soft: var(--success-soft);
+  display: grid;
+  grid-template-columns: var(--s3) minmax(0, 1fr) var(--s12) var(--s12);
+  align-items: center;
+  gap: var(--s2) var(--s3);
+  min-height: 60px;
+  padding: var(--s2);
+  border: 1px solid transparent;
   border-radius: var(--radius-md);
-  background: var(--success-soft);
-  color: var(--success);
+  background: var(--surface);
+  color: var(--ink);
 }
 
 .adm-dashboard .adm-status-links .adm-data-link strong {
-  color: currentColor;
-  font: 600 var(--font-xl)/1.1 var(--sans);
+  grid-column: 3;
+  padding: var(--s1) var(--s2);
+  border-radius: var(--radius-sm);
+  background: var(--adm-state-soft);
+  color: var(--adm-state);
+  font: 600 var(--font-base)/1.2 var(--sans);
+  text-align: center;
 }
 
 .adm-dashboard .adm-status-links .adm-data-link::before {
   content: '';
-  position: absolute;
-  top: var(--s3);
-  right: var(--s3);
-  width: var(--s2);
-  height: var(--s2);
+  grid-column: 1;
+  grid-row: 1;
+  width: var(--s3);
+  height: var(--s3);
   border-radius: var(--radius-full);
-  background: var(--success);
-}
-
-.adm-dashboard .adm-status-links .adm-data-link[data-key='Inactive']::before {
-  background: var(--neutral);
-}
-
-.adm-dashboard .adm-status-links .adm-data-link[data-key='Blocked']::before {
-  background: var(--error);
+  background: var(--adm-state);
 }
 
 .adm-dashboard .adm-status-links .adm-data-link[data-key='Inactive'] {
-  background: var(--neutral-soft);
-  color: var(--neutral);
+  --adm-state: var(--neutral);
+  --adm-state-soft: var(--neutral-soft);
 }
 
 .adm-dashboard .adm-status-links .adm-data-link[data-key='Blocked'] {
-  background: var(--error-soft);
-  color: var(--error);
+  --adm-state: var(--error);
+  --adm-state-soft: var(--error-soft);
 }
 
 .adm-dashboard .adm-status-links .adm-data-link:hover {
-  border-color: currentColor;
+  border-color: var(--control-line);
+  background: var(--surface-subtle);
+}
+
+.adm-status-label { grid-column: 2; font-size: var(--font-base); }
+.adm-status-share { grid-column: 4; color: var(--muted); text-align: right; font-variant-numeric: tabular-nums; }
+.adm-status-meter {
+  grid-column: 2 / -1;
+  display: block;
+  width: 100%;
+  height: var(--s2);
+  border: 0;
+  border-radius: var(--radius-full);
+  overflow: hidden;
+  appearance: none;
+  accent-color: var(--adm-state);
+  background: var(--adm-state-soft);
+}
+.adm-status-meter::-webkit-progress-bar { background: var(--adm-state-soft); border-radius: var(--radius-full); }
+.adm-status-meter::-webkit-progress-value { background: var(--adm-state); border-radius: var(--radius-full); }
+.adm-status-meter::-moz-progress-bar { background: var(--adm-state); border-radius: var(--radius-full); }
+
+.adm-dashboard .adm-group-heading .adm-link {
+  min-height: var(--s8);
+  padding-block: var(--s1);
 }
 
 .adm-dashboard .adm-data-link:focus-visible {
@@ -279,38 +311,50 @@
 
 /* Service ledger. */
 .adm-dashboard .adm-monitor {
-  margin-top: var(--s6);
-  padding: var(--s6);
+  display: flex;
+  flex: 1 0 auto;
+  flex-direction: column;
+  margin-top: var(--s4);
+  padding: var(--s4);
 }
 
 .adm-dashboard .adm-monitor-heading {
   margin: 0;
 }
 
+.adm-dashboard .adm-monitor-heading .adm-link {
+  min-height: var(--s8);
+}
+
 .adm-dashboard .adm-monitor-caption {
-  margin: var(--s1) 0 var(--s4);
+  margin: var(--s1) 0 var(--s3);
   color: var(--muted);
   font-size: var(--font-sm);
 }
 
 .adm-dashboard .adm-service-table-wrapper {
+  display: grid;
+  flex: 1 0 auto;
+  grid-template-columns: minmax(0, 1fr);
   margin-bottom: 0;
 }
 
 .adm-dashboard .adm-service-table {
   min-width: 680px;
+  height: 100%;
   margin: 0;
+  font-size: 14px;
 }
 
 .adm-dashboard .adm-service-table :is(th, td) {
-  padding: var(--s4);
+  padding: var(--s3) var(--s4);
 }
 
 .adm-dashboard .adm-service-table thead th {
-  background: transparent;
+  background: var(--surface-subtle);
   border-bottom: 1px solid var(--line);
-  color: var(--muted);
-  font-size: var(--font-sm);
+  color: var(--ink);
+  font-size: 14px;
 }
 
 .adm-dashboard .adm-service-table tbody th {
@@ -338,11 +382,11 @@
 }
 
 .adm-dashboard .adm-service-name {
-  font-size: var(--font-base);
+  font-size: 14px;
 }
 
 .adm-dashboard .adm-service-measure {
-  font-size: var(--font-sm);
+  font-size: 14px;
   color: var(--muted);
   font-variant-numeric: tabular-nums;
 }
@@ -379,11 +423,6 @@
     grid-template-columns: 1fr;
   }
 
-  .adm-dashboard .adm-summary-link+.adm-summary-link {
-    border-left: 0;
-    border-top: 1px solid var(--line);
-  }
-
   .adm-dashboard .adm-analytics {
     grid-template-columns: 1fr;
   }
@@ -394,12 +433,12 @@
     padding: var(--s4);
   }
 
-  .adm-dashboard :is(.adm-chart-panel, .adm-monitor) {
-    padding: var(--s4);
+  .adm-dashboard .adm-dashboard-title {
+    font-size: 28px;
   }
 
-  .adm-dashboard .adm-status-links .adm-data-link {
-    padding-inline: var(--s2);
+  .adm-dashboard :is(.adm-chart-panel, .adm-monitor) {
+    padding: var(--s4);
   }
 
   .adm-dashboard .adm-role-links {
@@ -416,9 +455,5 @@
   .adm-dashboard .adm-summary-link,
   .adm-dashboard .adm-summary-action {
     transition: none;
-  }
-
-  .adm-dashboard .adm-summary-link:hover .adm-summary-action {
-    transform: none;
   }
 }

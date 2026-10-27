@@ -173,3 +173,24 @@
 /* Flash toast on Admin views: stay on screen for 5s instead of the default 3s. */
 .ads-page .flash-toast-progress { animation-duration: 5s; }
 .ads-page .flash-toast { border-color: color-mix(in srgb, var(--toast-color) 35%, var(--line)); }
+
+/* Admin workspace adaptation: the adw component owns the frame and common
+   surfaces; these rules cover only Admin feature composition. */
+.adw-page .iacv-botanical, .adw-page .ads-heading::before { display: none; }
+.adw-page .adw-heading .aim-heading-actions { align-self: center; }
+.adw-page .aim-total strong {
+  color: var(--brand-dark);
+  font: 600 36px/1.2 var(--sans);
+  font-variant-numeric: tabular-nums;
+}
+.adw-page .aim-summary .aim-section-title { font-family: var(--sans); }
+.adw-page .mft-toolbar { padding-block: var(--s4); }
+.adw-page .ads-form-card { margin-bottom: 0; }
+.adw-page .account-field-hint { display: block; margin-top: var(--s2); color: var(--muted); font-size: var(--font-sm); }
+.adw-page .ads-heading p { margin: var(--s3) 0 0; }
+.adw-page .account-form-grid .form-group { margin-bottom: 0; }
+.adw-page .aim-drawer .adw-surface { border: 0; border-radius: 0; box-shadow: none; }
+@media (max-width: 768px) {
+  .adw-page .adw-heading .aim-heading-actions { flex-basis: 100%; justify-content: flex-start; }
+  .adw-page .adw-heading .aim-heading-actions .btn { flex: 1 1 auto; }
+}

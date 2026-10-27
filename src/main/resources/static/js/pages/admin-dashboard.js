@@ -1,7 +1,8 @@
 /* Admin dashboard: progressive enhancement of server-rendered counts and links. */
 (() => {
     'use strict';
-    if (typeof window.Chart !== 'function') return;
+    const dashboard = document.querySelector('.adm-dashboard');
+    if (!dashboard) return;
 
     const styles = getComputedStyle(document.documentElement);
     const token = (name) => styles.getPropertyValue(name).trim();
@@ -98,35 +99,35 @@
         const groups = Array.from(panel.querySelectorAll('.adm-status-group'));
         if (!groups.length) return;
         const selector = panel.querySelector('select');
-        const shell = panel.querySelector('.adm-chart-shell');
-        let points = readPoints(groups[0]);
-        shell.hidden = false;
-        let chart;
+        const formatPercent = new Intl.NumberFormat('vi-VN', { maximumFractionDigits: 1 });
         const restore = () => {
             groups.forEach((group) => { group.hidden = false; });
-            shell.hidden = true;
             panel.querySelector('.adm-scope-control').hidden = true;
             panel.querySelector('[data-chart-fallback]').hidden = false;
-            if (chart) {
-                try { chart.destroy(); } catch (_error) { /* Links are already restored. */ }
-            }
         };
         try {
-            chart = createChart(panel.querySelector('canvas'), () => points, false);
+            // Each bar uses the same server-rendered count and native filtered link.
+            // Zero stays an empty track, including when the whole group is empty.
+            groups.forEach((group) => {
+                const points = readPoints(group);
+                const total = points.reduce((sum, point) => sum + point.count, 0);
+                group.querySelectorAll('[data-chart-point]').forEach((link, index) => {
+                    const share = document.createElement('span');
+                    share.className = 'adm-status-share';
+                    share.setAttribute('aria-hidden', 'true');
+                    share.textContent = formatPercent.format(total ? points[index].count / total * 100 : 0) + '%';
+                    const bar = document.createElement('progress');
+                    bar.className = 'adm-status-meter';
+                    bar.max = total || 1;
+                    bar.value = points[index].count;
+                    bar.setAttribute('aria-hidden', 'true');
+                    link.append(share, bar);
+                });
+            });
             function selectGroup() {
                 const group = groups.find((item) => item.id === selector.value);
                 if (!group) throw new Error('Unknown account scope');
-                const next = readPoints(group);
-                points = next;
-                chart.data.labels = next.map((point) => point.label);
-                chart.data.datasets[0].data = next.map((point) => point.count);
-                chart.data.datasets[0].backgroundColor = next.map((point) => statusColors[point.key]);
-                chart.data.datasets[0].hoverBackgroundColor = next.map((point) => statusColors[point.key]);
                 groups.forEach((item) => { item.hidden = item !== group; });
-                shell.hidden = !next.some((point) => point.count > 0);
-                panel.querySelector('canvas').setAttribute('aria-label',
-                    group.dataset.scopeLabel + ': ' + next.map((point) => point.label + ' ' + point.count).join(', '));
-                chart.update('none');
             }
             selectGroup();
             panel.querySelector('.adm-scope-control').hidden = false;
@@ -138,6 +139,7 @@
     }
 
     function setupRoles() {
+        if (typeof window.Chart !== 'function') return;
         const panel = document.getElementById('adm-role-panel');
         if (!panel) return;
         const points = readPoints(panel);

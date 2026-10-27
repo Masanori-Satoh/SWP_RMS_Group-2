@@ -15,16 +15,14 @@
     </th:block>
 </head>
 <body>
-<main id="main" layout:fragment="content" class="page-content container ads-page ads-page--refined iac-page iac-internal-page aim-page" data-account-overview="true" tabindex="-1">
-    <nav class="iac-breadcrumb" aria-label="Đường dẫn">
-        <a th:href="@{/dashboard}">Tổng quan</a><span aria-hidden="true">/</span><span aria-current="page">Quản lý tài khoản</span>
-    </nav>
-    <div class="page-header iac-heading">
+<main id="main" layout:fragment="content" class="page-content container ads-page ads-page--refined iac-page iac-internal-page aim-page adw-page" data-account-overview="true" tabindex="-1">
+    <th:block th:replace="~{fragments/ui/admin-workspace :: scene}"></th:block>
+    <div class="page-header iac-heading adw-heading">
         <svg class="iacv-botanical" width="260" height="112" viewBox="0 0 260 112" fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
             <path d="M12 108C76 105 154 72 246 12M75 97C84 77 86 59 84 40M133 74C152 78 174 77 193 68M189 44C191 31 196 18 207 7"/>
             <path d="M84 66C65 62 58 48 61 35C77 39 86 51 84 66ZM85 45C98 42 106 31 105 18C91 21 83 32 85 45ZM109 86C94 77 91 65 95 55C109 61 114 74 109 86ZM150 77C154 91 169 98 183 94C177 81 163 75 150 77ZM177 73C184 60 198 56 211 60C204 73 190 78 177 73ZM191 39C178 37 171 26 173 15C186 19 193 27 191 39ZM211 34C224 39 239 33 246 23C230 20 218 24 211 34Z"/>
         </svg>
-        <h1 id="account-list-title" class="iac-title">Tài khoản nội bộ</h1>
+        <h1 id="account-list-title" class="iac-title adw-title">Tài khoản nội bộ</h1>
         <div class="aim-heading-actions">
         <button class="btn btn--secondary btn--sm aim-open-overview" type="button" aria-controls="account-inspector" hidden>Tổng quan tài khoản</button>
         <a class="btn btn--primary" th:href="@{/admin/accounts/new}">
@@ -35,7 +33,7 @@
     </div>
     <th:block th:replace="~{fragments/ui/flash-toast :: flashToast(${successMessage}, null)}"></th:block>
     <div class="aim-layout"><div class="aim-master">
-    <form class="card mft-toolbar" th:action="@{/admin/accounts}" method="get" aria-label="Bộ lọc tài khoản nội bộ">
+    <form class="card mft-toolbar adw-surface" th:action="@{/admin/accounts}" method="get" aria-label="Bộ lọc tài khoản nội bộ">
         <input type="hidden" name="roleId" th:value="${selectedRoleId}">
         <div class="mft-controls">
             <details class="mft-disclosure">
@@ -95,19 +93,19 @@
                    placeholder="Họ tên, email hoặc tên đăng nhập" th:value="${search}" maxlength="100">
         </div>
     </form>
-    <section class="card iac-card mft-table-card iacv-card" aria-labelledby="account-table-title">
-        <header class="iacv-header">
+    <section class="card iac-card mft-table-card iacv-card adw-surface" aria-labelledby="account-table-title">
+        <header class="iacv-header adw-panel-heading">
             <div class="iacv-identity">
-                <span class="iacv-icon" aria-hidden="true">
+                <span class="iacv-icon adw-icon" aria-hidden="true">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2M22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/><circle cx="9" cy="7" r="4"/></svg>
                 </span>
-                <h2 class="iacv-title" id="account-table-title">Danh sách tài khoản nội bộ</h2>
+                <h2 class="iacv-title adw-panel-title" id="account-table-title">Danh sách tài khoản nội bộ</h2>
             </div>
             <span class="badge badge--neutral iacv-count" th:text="|${accounts.totalElements} kết quả|"></span>
         </header>
         <div class="iacv-table-inset">
         <div class="table-wrapper iac-scroll" tabindex="0" role="region" aria-labelledby="account-list-title">
-        <table class="table iac-table iacv-table">
+        <table class="table iac-table iacv-table adw-data-table">
             <caption class="sr-only">Tài khoản nội bộ với thao tác sửa và thay đổi trạng thái.</caption>
             <thead>
             <tr>
@@ -178,6 +176,7 @@
     <dialog th:replace="~{fragments/status-actions :: confirmation}"></dialog>
 </main>
 <th:block layout:fragment="scripts">
+    <th:block th:replace="~{fragments/ui/admin-workspace :: scripts}"></th:block>
     <script th:src="@{/js/pages/flash-toast.js}" defer></script>
     <script th:src="@{/js/pages/management-filters.js}" defer></script>
     <script th:src="@{/js/status-confirmation.js}" defer></script>
