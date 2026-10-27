@@ -6,35 +6,56 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 /**
- * Một thẻ đơn của My Applications (5.1.38): Stage (tag "Bước n · vòng", cùng số và icon với dải quy trình đầu trang),
- * Status (một dòng + một dòng giải thích), việc tiếp theo và hành trình. Không có điểm AI, nhận xét, người duyệt hay
- * offer nội bộ (GBR-02).
+ * Một đơn của "Đơn của tôi": thẻ trên danh sách và nội dung trang chi tiết. Thanh 4 bước, chữ trạng thái kèm một dòng
+ * giải thích, việc tiếp theo, việc gấp và hành trình. Không có điểm AI, nhận xét, người duyệt hay offer nội bộ (GBR-02).
  *
- * @param stepNumber  bước đơn đang đứng hoặc dừng, 1–4 (Nộp CV → Xét CV → Phỏng vấn → Thư mời)
- * @param stepLabel   tên vòng của bước đó
- * @param stepState   {@code current} (đang ở bước này), {@code closed} (dừng ở bước này), {@code done} (xong cả 4)
- * @param statusNote  dòng giải thích dưới tình trạng; {@code null} nếu không có
- * @param statusTone  màu: {@code neutral}, {@code success}, {@code warning}, {@code danger}
- * @param actionLabel nút việc tiếp theo; {@code null} nếu không có
- * @param actionHref  đường dẫn trong ứng dụng của nút việc tiếp theo
- * @param canWithdraw đơn còn ở vòng đầu (HR chưa duyệt) nên hiện nút "Rút đơn"
- * @param journey     các mốc đơn đã đi qua, cũ nhất trước
- * @param lastActivityAt lần cập nhật gần nhất ứng viên thấy được; danh sách xếp theo trường này, mới nhất trước
+ * @param departmentName    phòng ban của yêu cầu tuyển
+ * @param applicationCode   mã hiển thị {@code #CAN-0042} (id đệm 4 số), không lưu DB
+ * @param steps             thanh Nộp CV → Phỏng vấn → Thư mời → Nhận việc, mỗi bước một trạng thái
+ *                          {@code done}, {@code current}, {@code closed} (đơn dừng ở bước này), {@code upcoming}
+ * @param lastActivityAt    lần cập nhật gần nhất ứng viên thấy được; danh sách xếp theo trường này, mới nhất trước
+ * @param statusNote        dòng giải thích dưới chữ trạng thái; {@code null} nếu không có
+ * @param statusTone        màu: {@code neutral}, {@code success}, {@code warning}, {@code danger}
+ * @param actionLabel       nút việc tiếp theo; {@code null} nếu không có
+ * @param actionHref        đường dẫn trong ứng dụng của nút việc tiếp theo
+ * @param urgentUntil       hạn của việc cần làm ngay; {@code null} nếu đơn không gấp
+ * @param urgentLabel       dòng "còn …" của việc gấp; {@code null} nếu đơn không gấp
+ * @param ended             đơn đã dừng hoặc đã nhận việc (tab "Đã kết thúc")
+ * @param stopped           đơn dừng giữa chừng (rút, bị loại, tin đóng, từ chối thư mời): thanh xám, chữ thành badge
+ * @param priority          nhóm xếp danh sách: 1 có sự kiện sắp tới, 2 đang xử lý, 3 đã kết thúc
+ * @param upcomingAt        mốc sự kiện sắp tới của nhóm 1; {@code null} nếu không có hoặc thư mời không hạn
+ * @param canWithdraw       đơn còn rút được nên trang chi tiết hiện nút "Rút đơn"
+ * @param hasCv             đơn có CV để xem lại
+ * @param jobPostingVisible tin còn hiện ở trang công khai (không thì ẩn link "Xem tin tuyển dụng")
+ * @param journey           các mốc đơn đã đi qua, cũ nhất trước
  */
 public record MyApplicationResponse(
         Integer applicationId,
         Integer jobPostingId,
         String postingTitle,
+        String departmentName,
+        String applicationCode,
         LocalDateTime submissionDate,
         LocalDateTime lastActivityAt,
-        int stepNumber,
-        String stepLabel,
-        String stepState,
+        List<MyApplicationStep> steps,
         String statusLabel,
         String statusNote,
         String statusTone,
         String actionLabel,
         String actionHref,
+        LocalDateTime urgentUntil,
+        String urgentLabel,
+        boolean ended,
+        boolean stopped,
+        int priority,
+        LocalDateTime upcomingAt,
         boolean canWithdraw,
+        boolean hasCv,
+        boolean jobPostingVisible,
         List<TimelineItem> journey) {
+
+    /** Đơn có việc cần làm ngay (viền nổi, dòng "còn …", banner). */
+    public boolean urgent() {
+        return urgentUntil != null;
+    }
 }

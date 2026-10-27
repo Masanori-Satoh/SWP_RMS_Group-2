@@ -14,8 +14,11 @@ import com.group2.rms.candidate.application.portal.service.MyApplicationJourney.
 import com.group2.rms.candidate.application.portal.service.MyApplicationJourney.Mark;
 import com.group2.rms.candidate.application.portal.service.MyApplicationJourney.Offer;
 import com.group2.rms.candidate.domain.rule.ApplicationStatusService;
+import com.group2.rms.candidate.infra.cv.ApplicationCv;
+import com.group2.rms.candidate.infra.cv.CvStorage;
 import com.group2.rms.core.exception.ResourceNotFoundException;
 import com.group2.rms.core.security.CurrentUserService;
+import com.group2.rms.jobposting.entity.JobPosting;
 import com.group2.rms.user.entity.User;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -26,11 +29,10 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.TreeMap;
 import java.util.stream.Collectors;
 
 /**
- * Đơn của chính ứng viên đang đăng nhập (5.1.38 My Applications) và rút đơn (UC 39).
+ * Đơn của chính ứng viên đang đăng nhập ("Đơn của tôi": danh sách, chi tiết, xem lại CV) và rút đơn (UC 39).
  * Rút đơn: schema không có trạng thái {@code Withdrawn} nên đơn chuyển {@code Rejected}
  * và ghi một dòng {@code AuditLog} để phân biệt "đã rút" với "bị loại".
  */
@@ -41,41 +43,74 @@ public class MyApplicationService {
     /** Chỉ rút được khi đơn còn ở vòng đầu, HR chưa duyệt (SRS: Applied, Screening). */
     static final Set<String> WITHDRAWABLE_STATUSES = Set.of("Applied", "AI_Screened");
 
+    /** Tab của danh sách; giá trị khác (gõ tay trên URL) là "Tất cả". */
+    public static final String TAB_ALL = "all";
+    public static final String TAB_ACTIVE = "active";
+    public static final String TAB_ENDED = "ended";
+
     private final ApplicationRepository applications;
     private final MyApplicationRepository myApplications;
     private final CurrentUserService currentUserService;
+    private final CvStorage cvStorage;
 
-    /** Số bước trên dải hướng dẫn (Nộp CV → Xét CV → Phỏng vấn → Thư mời). */
-    static final int STEP_COUNT = 4;
-
-    /** Mới cập nhật nhất trước; cùng lúc thì đơn nộp sau, rồi id lớn hơn trước (thứ tự ổn định cho phân trang sau này). */
-    static final Comparator<MyApplicationResponse> NEWEST_ACTIVITY_FIRST =
-            Comparator.comparing(MyApplicationResponse::lastActivityAt, Comparator.nullsLast(Comparator.reverseOrder()))
+    /**
+     * Thứ tự danh sách (dunglt 27/10): nhóm 1 (có phỏng vấn / thư mời sắp tới, sự kiện gần nhất trước, thư mời không hạn
+     * sau cùng nhóm) → nhóm 2 (đang xử lý) → nhóm 3 (đã kết thúc, luôn cuối). Trong nhóm: mới có chuyển biến trước, rồi
+     * đơn nộp sau, rồi id lớn hơn (thứ tự ổn định cho phân trang sau này).
+     */
+    static final Comparator<MyApplicationResponse> DISPLAY_ORDER =
+            Comparator.comparingInt(MyApplicationResponse::priority)
+                    .thenComparing(MyApplicationResponse::upcomingAt, Comparator.nullsLast(Comparator.naturalOrder()))
+                    .thenComparing(MyApplicationResponse::lastActivityAt, Comparator.nullsLast(Comparator.reverseOrder()))
                     .thenComparing(MyApplicationResponse::submissionDate, Comparator.nullsLast(Comparator.reverseOrder()))
                     .thenComparing(MyApplicationResponse::applicationId, Comparator.reverseOrder());
 
     /**
-     * Trang My Applications của ứng viên đang đăng nhập: thẻ đơn mới cập nhật nhất trước, lọc theo bước nếu có, kèm
-     * số đơn ở từng bước cho dải hướng dẫn.
+     * Danh sách đơn của ứng viên đang đăng nhập: thẻ của tab {@code tab} (lọc phía server để sau này thêm phân trang
+     * vẫn đúng), số đơn mỗi tab, và mọi đơn gấp cho banner (hạn gần nhất trước).
      *
-     * @param step bước cần lọc (1–4); {@code null} hoặc ngoài khoảng thì xem tất cả
+     * @param tab {@value #TAB_ACTIVE}, {@value #TAB_ENDED}; giá trị khác hoặc {@code null} là tất cả
      */
     @Transactional(readOnly = true)
-    public MyApplicationListResponse list(Integer step) {
+    public MyApplicationListResponse list(String tab) {
         List<MyApplicationResponse> all = cards(currentUserService.requireUser().getUserId());
-        Map<Integer, Long> counts = new TreeMap<>();
-        for (int i = 1; i <= STEP_COUNT; i++) {
-            counts.put(i, 0L);
-        }
-        all.forEach(card -> counts.merge(card.stepNumber(), 1L, Long::sum));
-        Integer selected = step != null && step >= 1 && step <= STEP_COUNT ? step : null;
-        List<MyApplicationResponse> shown = selected == null ? all
-                : all.stream().filter(card -> card.stepNumber() == selected).toList();
-        return new MyApplicationListResponse(shown, counts, selected, all.size());
+        String selected = TAB_ACTIVE.equals(tab) || TAB_ENDED.equals(tab) ? tab : TAB_ALL;
+        List<MyApplicationResponse> shown = switch (selected) {
+            case TAB_ACTIVE -> all.stream().filter(card -> !card.ended()).toList();
+            case TAB_ENDED -> all.stream().filter(MyApplicationResponse::ended).toList();
+            default -> all;
+        };
+        int ended = (int) all.stream().filter(MyApplicationResponse::ended).count();
+        List<MyApplicationResponse> urgent = all.stream()
+                .filter(MyApplicationResponse::urgent)
+                .sorted(Comparator.comparing(MyApplicationResponse::urgentUntil))
+                .toList();
+        return new MyApplicationListResponse(shown, selected, all.size(), all.size() - ended, ended, urgent);
     }
 
     /**
-     * Mọi thẻ đơn của ứng viên {@code userId}, mới cập nhật nhất trước. Dữ kiện lịch, offer, dấu dừng đọc theo
+     * Trang chi tiết một đơn của chính mình (L8). Đi cùng đường với danh sách để chữ, bước, việc gấp chỉ tính ở một
+     * chỗ; ứng viên thường chỉ có vài đơn nên đọc cả bộ không đáng kể.
+     */
+    @Transactional(readOnly = true)
+    public MyApplicationResponse detail(Integer applicationId) {
+        return cards(currentUserService.requireUser().getUserId()).stream()
+                .filter(card -> card.applicationId().equals(applicationId))
+                .findFirst()
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy hồ sơ ứng tuyển."));
+    }
+
+    /** CV đã nộp của một đơn của chính mình; đơn người khác hoặc không có CV thì 404. */
+    @Transactional(readOnly = true)
+    public ApplicationCv cv(Integer applicationId) {
+        Application application = myApplications.findOwnedById(applicationId, currentUserService.requireUser().getUserId())
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy hồ sơ ứng tuyển."));
+        return ApplicationCv.of(application.getAppliedCvUrl(), cvStorage)
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy CV của hồ sơ này."));
+    }
+
+    /**
+     * Mọi thẻ đơn của ứng viên {@code userId}, theo {@link #DISPLAY_ORDER}. Dữ kiện lịch, offer, dấu dừng đọc theo
      * {@code userId} (mỗi loại một câu cho cả trang, không một câu cho từng đơn), gom theo id đơn rồi quy đổi bằng
      * {@link MyApplicationJourney}.
      */
@@ -86,7 +121,7 @@ public class MyApplicationService {
         }
         Map<Integer, List<Interview>> interviews = myApplications.findMyInterviews(userId).stream()
                 .collect(Collectors.groupingBy(MyInterviewRow::getApplicationId, Collectors.mapping(
-                        row -> new Interview(row.getStartTime(), row.getFormat(), row.getStatus()),
+                        row -> new Interview(row.getStartTime(), row.getFormat(), row.getStatus(), row.getScheduledAt()),
                         Collectors.toList())));
         Map<Integer, Offer> offers = myApplications.findMyVisibleOffers(userId).stream()
                 .collect(Collectors.toMap(MyOfferRow::getApplicationId,
@@ -102,9 +137,9 @@ public class MyApplicationService {
                     Integer id = application.getApplicationId();
                     Facts facts = new Facts(application.getApplicationStatus(), application.getSubmissionDate(),
                             interviews.getOrDefault(id, List.of()), offers.get(id), marks.getOrDefault(id, List.of()));
-                    return toResponse(application, MyApplicationJourney.resolve(facts, now));
+                    return toResponse(application, MyApplicationJourney.resolve(facts, now), now);
                 })
-                .sorted(NEWEST_ACTIVITY_FIRST)
+                .sorted(DISPLAY_ORDER)
                 .toList();
     }
 
@@ -131,22 +166,40 @@ public class MyApplicationService {
         return application.getJobPosting().getPostingTitle();
     }
 
-    private static MyApplicationResponse toResponse(Application application, MyApplicationJourney.View view) {
+    /** Mã đơn hiển thị trên thẻ: {@code #CAN-} + id đệm 4 số. Chỉ để ứng viên nhắc khi liên hệ, không lưu DB. */
+    static String applicationCode(Integer applicationId) {
+        return String.format("#CAN-%04d", applicationId);
+    }
+
+    private static MyApplicationResponse toResponse(Application application, MyApplicationJourney.View view,
+                                                    LocalDateTime now) {
+        JobPosting job = application.getJobPosting();
+        String department = job.getRequisition() == null || job.getRequisition().getDepartment() == null
+                ? null : job.getRequisition().getDepartment().getDepartmentName();
+        String cvUrl = application.getAppliedCvUrl();
         return new MyApplicationResponse(
                 application.getApplicationId(),
-                application.getJobPosting().getJobPostingId(),
-                application.getJobPosting().getPostingTitle(),
+                job.getJobPostingId(),
+                job.getPostingTitle(),
+                department,
+                applicationCode(application.getApplicationId()),
                 application.getSubmissionDate(),
                 view.lastActivityAt(),
-                view.stepNumber(),
-                view.step().label(),
-                view.step().state(),
+                view.steps(),
                 view.statusLabel(),
                 view.statusNote(),
                 view.tone(),
                 view.actionLabel(),
                 view.actionHref(),
+                view.urgentUntil(),
+                view.urgentLabel(),
+                view.ended(),
+                view.stopped(),
+                view.priority(),
+                view.upcomingAt(),
                 WITHDRAWABLE_STATUSES.contains(application.getApplicationStatus()),
+                cvUrl != null && !cvUrl.isBlank(),
+                job.isVisibleToCandidates(now),
                 view.journey());
     }
 }

@@ -4,7 +4,6 @@ import com.group2.rms.candidate.domain.entity.ApplicationReview;
 import com.group2.rms.candidate.domain.rule.*;
 import com.group2.rms.candidate.infra.cv.ApplicationCv;
 import com.group2.rms.candidate.infra.cv.CvStorage;
-import com.group2.rms.candidate.infra.cv.LocalCvStorage;
 import com.group2.rms.candidate.application.pipeline.dto.ApplicationDetailResponse;
 import com.group2.rms.candidate.application.pipeline.dto.ApplicationListResponse;
 import com.group2.rms.candidate.application.pipeline.dto.ApplicationPipelineResponse;
@@ -175,10 +174,7 @@ public class ApplicationPipelineService {
         return ApplicationProgressResolver.resolve(facts, now);
     }
 
-    /**
-     * CV của đơn, cùng quyền với trang chi tiết. {@code AppliedCvUrl} có 3 dạng: {@code local:{key}} (đơn nộp qua web),
-     * {@code /samples/cv/...} (seed), {@code http(s)://...} (dịch vụ lưu file ngoài sau này).
-     */
+    /** CV của đơn, cùng quyền với trang chi tiết. Dạng {@code AppliedCvUrl}: {@link ApplicationCv#of}. */
     @Transactional(readOnly = true)
     public ApplicationCv cv(Integer applicationId) {
         User actor = access.actor();
@@ -186,15 +182,8 @@ public class ApplicationPipelineService {
                 .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy hồ sơ ứng tuyển."));
         access.requireView(actor, application);
 
-        String url = application.getAppliedCvUrl();
-        if (url != null && url.startsWith(LocalCvStorage.URL_PREFIX)) {
-            return ApplicationCv.file(cvStorage.load(url.substring(LocalCvStorage.URL_PREFIX.length())));
-        }
-        if (url != null && (url.startsWith("/") && !url.startsWith("//")
-                || url.startsWith("https://") || url.startsWith("http://"))) {
-            return ApplicationCv.redirect(url);
-        }
-        throw new ResourceNotFoundException("Không tìm thấy CV của hồ sơ này.");
+        return ApplicationCv.of(application.getAppliedCvUrl(), cvStorage)
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy CV của hồ sơ này."));
     }
 
     /**
