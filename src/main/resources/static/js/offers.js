@@ -944,6 +944,18 @@ function confirmSendOffer(offerId) {
                 headers[csrf.header] = csrf.token;
             }
 
+            if (typeof Swal !== 'undefined') {
+                Swal.fire({
+                    title: 'Đang phát hành...',
+                    text: 'Đang kết nối gửi email Thư mời nhận việc tới ứng viên, vui lòng đợi trong giây lát.',
+                    allowOutsideClick: false,
+                    allowEscapeKey: false,
+                    didOpen: () => {
+                        Swal.showLoading();
+                    }
+                });
+            }
+
             fetch(`/offers/${offerId}/send`, {
                 method: 'POST',
                 headers: headers
@@ -958,17 +970,22 @@ function confirmSendOffer(offerId) {
                 })
                 .then(res => {
                     if (res && res.success) {
-                        const successMsg = res.message || 'Phát hành Thư mời làm việc thành công!';
-                        try {
-                            sessionStorage.setItem('offerPageFlashMessage', successMsg);
-                        } catch (e) {
-                            console.warn('Cannot write sessionStorage for flash message', e);
-                        }
                         if (typeof Swal !== 'undefined') {
-                            Swal.close();
+                            Swal.fire({
+                                title: 'Thành công',
+                                text: res.message || 'Phát hành Thư mời làm việc thành công!',
+                                icon: 'success',
+                                timer: 1500,
+                                showConfirmButton: false
+                            }).then(() => {
+                                closeModal('detailOfferModal');
+                                window.location.reload();
+                            });
+                        } else {
+                            showToast(res.message, 'success');
+                            closeModal('detailOfferModal');
+                            setTimeout(() => window.location.reload(), 1500);
                         }
-                        closeModal('detailOfferModal');
-                        window.location.reload();
                     } else {
                         if (typeof Swal !== 'undefined') {
                             Swal.fire('Lỗi', res?.message || 'Lỗi phát hành Offer.', 'error');
