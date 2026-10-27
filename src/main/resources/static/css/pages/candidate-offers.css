@@ -805,4 +805,703 @@
   }
 }
 
+/* =============================================================================
+   MÀN HÌNH THƯ MỜI NHẬN VIỆC (OFFER LETTER DOCUMENT REDESIGN THEO MOCKUP)
+   ============================================================================= */
+
+/* 1. Thanh tác vụ phía trên (Top Action Bar) */
+.cof-top-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--s4);
+  max-width: 900px;
+  margin: 0 auto var(--s6);
+  padding: var(--s3) var(--s6);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+}
+
+.cof-top-bar__deadline {
+  display: flex;
+  align-items: center;
+  gap: var(--s4);
+  min-width: 0;
+}
+
+.cof-top-bar__divider {
+  width: 1px;
+  height: 32px;
+  background: var(--line);
+  flex-shrink: 0;
+}
+
+.cof-top-bar__item {
+  display: flex;
+  align-items: center;
+  gap: var(--s3);
+}
+
+.cof-top-bar__icon-wrap {
+  width: 38px;
+  height: 38px;
+  border-radius: var(--radius-full);
+  background: var(--brand-soft);
+  color: var(--brand-dark);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.cof-top-bar__icon-wrap--timer {
+  background: var(--warning-soft);
+  color: var(--warning);
+}
+
+.cof-top-bar__text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.cof-top-bar__label {
+  font-size: var(--font-xs);
+  color: var(--muted);
+  text-transform: uppercase;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+}
+
+.cof-top-bar__val {
+  font-size: var(--font-base);
+  font-weight: 700;
+  color: var(--ink);
+}
+
+.cof-top-bar__val--timer {
+  color: var(--warning);
+}
+
+.cof-top-bar__actions {
+  display: flex;
+  align-items: center;
+  gap: var(--s3);
+  flex-shrink: 0;
+}
+
+.cof-top-btn-accept {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s2);
+  font-weight: 600;
+  padding: 0 var(--s5);
+  height: var(--btn-sm-h);
+  border-radius: var(--radius-md);
+  background: var(--brand);
+  color: var(--on-brand);
+  border: 1px solid var(--brand);
+  cursor: pointer;
+  transition: background var(--transition);
+}
+
+.cof-top-btn-accept:hover {
+  background: var(--brand-hover);
+  border-color: var(--brand-hover);
+}
+
+.cof-top-btn-decline {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s2);
+  font-weight: 600;
+  padding: 0 var(--s5);
+  height: var(--btn-sm-h);
+  border-radius: var(--radius-md);
+  background: var(--surface);
+  color: var(--error);
+  border: 1px solid var(--error);
+  text-decoration: none;
+  cursor: pointer;
+  transition: all var(--transition);
+}
+
+.cof-top-btn-decline:hover {
+  background: var(--error-soft);
+}
+
+/* 2. Tờ thư mời trang trọng (Letterhead Paper Document) */
+.cof-letter-paper {
+  position: relative;
+  max-width: 900px;
+  margin: 0 auto var(--s12);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-md);
+  padding: var(--s12) var(--s12) var(--s8);
+  overflow: hidden;
+}
+
+.cof-watermark {
+  position: absolute;
+  top: var(--s4);
+  right: var(--s4);
+  opacity: 0.85;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.cof-paper-header {
+  text-align: center;
+  position: relative;
+  z-index: 1;
+  margin-bottom: var(--s8);
+}
+
+.cof-paper-rule {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--s4);
+  margin-bottom: var(--s3);
+}
+
+.cof-paper-rule__line {
+  flex: 1;
+  max-width: 140px;
+  height: 1px;
+  background: var(--control-line);
+  opacity: 0.45;
+}
+
+.cof-paper-rule__title {
+  font-size: var(--font-sm);
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--brand);
+}
+
+.cof-paper-title {
+  font-family: var(--serif);
+  font-size: 28px;
+  font-weight: 700;
+  color: var(--brand-dark);
+  margin: 0 0 var(--s3);
+  line-height: 1.35;
+}
+
+.cof-paper-meta {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--s3);
+  font-size: var(--font-sm);
+  color: var(--muted);
+}
+
+.cof-paper-meta strong {
+  color: var(--ink);
+  font-weight: 600;
+}
+
+.cof-paper-meta__sep {
+  color: var(--line);
+}
+
+/* 3. Lời mở đầu thư ngỏ */
+.cof-paper-greeting {
+  position: relative;
+  z-index: 1;
+  margin-bottom: var(--s8);
+  color: var(--ink);
+  font-size: var(--font-base);
+  line-height: 1.7;
+}
+
+.cof-salutation {
+  font-size: var(--font-lg);
+  font-weight: 600;
+  margin-bottom: var(--s3);
+}
+
+.cof-paper-greeting p {
+  margin: 0 0 var(--s3);
+}
+
+.cof-paper-signoff {
+  margin-top: var(--s6);
+}
+
+.cof-paper-signoff p {
+  margin: 0 0 var(--s1);
+  font-style: italic;
+  color: var(--muted);
+}
+
+.cof-signature-brand {
+  font-size: var(--font-base);
+  font-weight: 700;
+  color: var(--brand-dark);
+}
+
+/* 4. Lưới bố cục 2 cột nội dung */
+.cof-paper-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--s6);
+  position: relative;
+  z-index: 1;
+  margin-bottom: var(--s8);
+}
+
+.cof-panel {
+  background: var(--surface-subtle);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.cof-panel__head {
+  display: flex;
+  align-items: center;
+  gap: var(--s3);
+  padding: var(--s3) var(--s4);
+  background: var(--surface);
+  border-bottom: 1px solid var(--line);
+}
+
+.cof-panel__icon {
+  width: 32px;
+  height: 32px;
+  border-radius: var(--radius-sm);
+  background: var(--brand-soft);
+  color: var(--brand-dark);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.cof-panel__icon--salary {
+  background: var(--brand-soft);
+  color: var(--brand);
+}
+
+.cof-panel__icon--star {
+  background: var(--warning-soft);
+  color: var(--warning);
+}
+
+.cof-panel__title {
+  font-size: var(--font-base);
+  font-weight: 700;
+  color: var(--brand-dark);
+  margin: 0;
+}
+
+.cof-panel__body {
+  padding: var(--s4);
+  flex: 1;
+}
+
+/* Cột 1: Thông tin công việc */
+.cof-info-table {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s3);
+  margin: 0;
+}
+
+.cof-info-row {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding-bottom: var(--s2);
+  border-bottom: 1px dashed var(--line);
+}
+
+.cof-info-row:last-child {
+  border-bottom: none;
+  padding-bottom: 0;
+}
+
+.cof-info-row dt {
+  font-size: var(--font-xs);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--muted);
+  font-weight: 600;
+  margin: 0;
+}
+
+.cof-info-row dd {
+  font-size: var(--font-base);
+  font-weight: 600;
+  color: var(--ink);
+  margin: 0;
+  line-height: 1.4;
+}
+
+.cof-note-sub {
+  display: block;
+  font-size: var(--font-xs);
+  color: var(--muted);
+  font-weight: 400;
+  margin-top: 2px;
+}
+
+/* Cột 2: Lương & đãi ngộ + Quyền lợi */
+.cof-paper-right-col {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s6);
+}
+
+.cof-salary-panel {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s4);
+}
+
+.cof-salary-card {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md);
+  padding: var(--s4);
+}
+
+.cof-salary-card__label {
+  display: block;
+  font-size: var(--font-xs);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--muted);
+  font-weight: 700;
+  margin-bottom: var(--s1);
+}
+
+.cof-salary-card__val {
+  font-size: 24px;
+  font-weight: 800;
+  color: var(--brand);
+  line-height: 1.2;
+  margin-bottom: var(--s2);
+}
+
+.cof-salary-card__sub {
+  display: block;
+  font-size: var(--font-xs);
+  color: var(--muted);
+}
+
+.cof-salary-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s2);
+  padding: 4px var(--s3);
+  border-radius: var(--radius-full);
+  background: var(--brand-soft);
+  color: var(--brand-dark);
+  font-size: var(--font-xs);
+  font-weight: 600;
+}
+
+.cof-benefit-group {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--s3);
+}
+
+.cof-benefit-entry {
+  display: flex;
+  align-items: center;
+  gap: var(--s3);
+}
+
+.cof-benefit-icon {
+  width: 32px;
+  height: 32px;
+  border-radius: var(--radius-full);
+  background: var(--brand-soft);
+  color: var(--brand);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.cof-benefit-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  font-size: var(--font-sm);
+}
+
+.cof-benefit-text strong {
+  color: var(--ink);
+  font-weight: 600;
+}
+
+.cof-benefit-text span {
+  color: var(--muted);
+}
+
+.cof-custom-benefits {
+  margin-top: var(--s4);
+  padding-top: var(--s3);
+  border-top: 1px dashed var(--line);
+}
+
+.cof-custom-benefits__label {
+  display: block;
+  font-size: var(--font-xs);
+  color: var(--muted);
+  font-weight: 600;
+  margin-bottom: var(--s1);
+}
+
+.cof-custom-benefits__val {
+  font-size: var(--font-sm);
+  color: var(--ink);
+  margin: 0;
+  white-space: pre-line;
+}
+
+/* 5. Khối Các bước tiếp theo (Stepper) */
+.cof-stepper-panel {
+  background: var(--surface-subtle);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md);
+  padding: var(--s6);
+  margin-bottom: var(--s6);
+  position: relative;
+  z-index: 1;
+}
+
+.cof-stepper-panel__title {
+  font-size: var(--font-md);
+  font-weight: 700;
+  color: var(--brand-dark);
+  margin: 0 0 var(--s5);
+}
+
+.cof-steps-row {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--s4);
+}
+
+.cof-step-box {
+  display: flex;
+  gap: var(--s3);
+  align-items: flex-start;
+}
+
+.cof-step-circle {
+  width: 32px;
+  height: 32px;
+  border-radius: var(--radius-full);
+  background: var(--line);
+  color: var(--muted);
+  font-weight: 700;
+  font-size: var(--font-sm);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.cof-step-circle--active {
+  background: var(--brand);
+  color: var(--on-brand);
+}
+
+.cof-step-meta {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s1);
+}
+
+.cof-step-title {
+  font-size: var(--font-sm);
+  font-weight: 700;
+  color: var(--ink);
+}
+
+.cof-step-desc {
+  font-size: var(--font-xs);
+  color: var(--muted);
+  line-height: 1.5;
+  margin: 0;
+}
+
+/* 6. Thanh file đính kèm PDF */
+.cof-download-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: var(--s4);
+  background: var(--surface-subtle);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md);
+  position: relative;
+  z-index: 1;
+}
+
+.cof-download-bar__file {
+  display: flex;
+  align-items: center;
+  gap: var(--s3);
+}
+
+.cof-download-bar__icon {
+  color: var(--error);
+  display: inline-flex;
+  align-items: center;
+}
+
+.cof-download-bar__filename {
+  font-size: var(--font-sm);
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.cof-download-bar__btn {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s2);
+  font-size: var(--font-sm);
+  font-weight: 600;
+  padding: 0 var(--s4);
+  height: var(--btn-sm-h);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--control-line);
+  background: var(--surface);
+  color: var(--ink);
+  cursor: pointer;
+  transition: all var(--transition);
+}
+
+.cof-download-bar__btn:hover {
+  background: var(--surface-subtle);
+  border-color: var(--ink);
+}
+
+/* 7. Thiết kế đáp ứng trên thiết bị di động (Responsive Breakpoints) */
+@media (max-width: 768px) {
+  .cof-top-bar {
+    flex-direction: column;
+    align-items: stretch;
+    padding: var(--s4);
+  }
+
+  .cof-top-bar__deadline {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--s3);
+  }
+
+  .cof-top-bar__divider {
+    display: none;
+  }
+
+  .cof-top-bar__actions {
+    width: 100%;
+    justify-content: stretch;
+  }
+
+  .cof-top-bar__actions button,
+  .cof-top-bar__actions a {
+    flex: 1;
+    text-align: center;
+    justify-content: center;
+  }
+
+  .cof-letter-paper {
+    padding: var(--s6) var(--s4);
+    margin-bottom: var(--s6);
+  }
+
+  .cof-watermark {
+    display: none;
+  }
+
+  .cof-paper-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .cof-steps-row {
+    grid-template-columns: 1fr;
+    gap: var(--s4);
+  }
+
+  .cof-download-bar {
+    flex-direction: column;
+    align-items: stretch;
+    gap: var(--s3);
+  }
+
+  .cof-download-bar__btn {
+    width: 100%;
+    justify-content: center;
+  }
+}
+
+/* 8. Bản in trang & Xuất PDF (@media print) */
+@media print {
+  .no-print,
+  .public-topbar,
+  .site-footer,
+  .skip-link,
+  .cof-breadcrumb,
+  #cof-accept-dialog,
+  #cof-decline-dialog,
+  #cof-accept-success-modal {
+    display: none !important;
+  }
+
+  body,
+  html {
+    background: #ffffff !important;
+    color: #000000 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+
+  .page-wrapper,
+  .main-content,
+  .page-content {
+    padding: 0 !important;
+    margin: 0 !important;
+    width: 100% !important;
+    max-width: 100% !important;
+  }
+
+  .cof-letter-paper {
+    border: none !important;
+    box-shadow: none !important;
+    padding: 10px 0 !important;
+    max-width: 100% !important;
+    margin: 0 !important;
+  }
+
+  .cof-panel,
+  .cof-salary-card,
+  .cof-stepper-panel,
+  .cof-download-bar {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+}
+
+
 
