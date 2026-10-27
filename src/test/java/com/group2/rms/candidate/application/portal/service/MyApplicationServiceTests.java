@@ -79,7 +79,7 @@ class MyApplicationServiceTests {
         assertEquals("Đã nhận việc", rows.get(5).statusLabel());
         assertTrue(rows.get(1).canWithdraw());
         assertFalse(rows.get(2).canWithdraw());
-        assertEquals(List.of(2, 2, 2, 3, 4), List.of(1, 2, 3, 4, 5).stream().map(id -> rows.get(id).stepNumber()).toList());
+        assertEquals(List.of(1, 1, 1, 2, 4), List.of(1, 2, 3, 4, 5).stream().map(id -> rows.get(id).stepNumber()).toList());
         assertEquals(List.of("current", "closed", "closed", "current", "done"),
                 List.of(1, 2, 3, 4, 5).stream().map(id -> rows.get(id).stepState()).toList());
         assertEquals("Phỏng vấn", rows.get(4).stepLabel());
@@ -89,7 +89,7 @@ class MyApplicationServiceTests {
                 rows.get(5).journey().stream().map(TimelineItem::title).toList());
         assertEquals(LocalDateTime.of(2026, 10, 20, 9, 0), rows.get(5).lastActivityAt());
         assertEquals("danger", rows.get(3).statusTone());
-        assertEquals(Map.of(1, 0L, 2, 3L, 3, 1L, 4, 1L), page.stepCounts());
+        assertEquals(Map.of(1, 3L, 2, 1L, 3, 0L, 4, 1L), page.stepCounts());
         assertNull(page.selectedStep());
         assertEquals(5, page.total());
     }
@@ -99,11 +99,12 @@ class MyApplicationServiceTests {
         when(myApplications.findOwnedByUserId(USER_ID)).thenReturn(List.of(
                 application(1, "Applied"), application(2, "HR_Passed"), application(3, "HM_Passed")));
 
-        MyApplicationListResponse page = service.list(2);
+        MyApplicationListResponse page = service.list(1);
 
-        assertEquals(List.of(2, 1), page.applications().stream().map(MyApplicationResponse::applicationId).toList());
-        assertEquals(2, page.selectedStep());
-        assertEquals(Map.of(1, 0L, 2, 2L, 3, 1L, 4, 0L), page.stepCounts());
+        // L6: mọi bước duyệt nội bộ trước phỏng vấn đều ở bước 1 "Nộp CV"
+        assertEquals(List.of(3, 2, 1), page.applications().stream().map(MyApplicationResponse::applicationId).toList());
+        assertEquals(1, page.selectedStep());
+        assertEquals(Map.of(1, 3L, 2, 0L, 3, 0L, 4, 0L), page.stepCounts());
         assertEquals(3, page.total());
     }
 
