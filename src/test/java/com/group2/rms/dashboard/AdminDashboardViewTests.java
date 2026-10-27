@@ -87,7 +87,8 @@ class AdminDashboardViewTests {
         assertTrue(html.contains("Thất bại"));
         assertTrue(html.contains("Chưa cấu hình"));
         assertTrue(html.contains("/admin/api-monitoring"));
-        assertTrue(html.contains("/admin/accounts/new"));
+        assertFalse(html.contains("/admin/accounts/new"));
+        assertFalse(html.contains("30 ngày gần đây"));
         assertTrue(html.contains("Chưa lọc 30 ngày"));
         assertFalse(html.contains("99.98%"));
         assertFalse(html.contains("Nhật ký hoạt động gần đây"));

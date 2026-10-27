@@ -448,3 +448,87 @@ sách Admin. Loại dịch vụ nằm cùng hàng với tên khi đủ chỗ, t�
 Giữ đủ badge trạng thái, số đo, thời điểm, thông báo cấu hình và các form kiểm
 tra hiện có. Nút nhỏ vẫn dùng catalog 40px. Không tự chạy probe, gửi email, đổi
 endpoint hoặc suy diễn trạng thái hoạt động từ việc chỉnh giao diện.
+
+### Cập nhật 27/10/2026 — Dashboard System Admin ưu tiên dữ liệu
+
+`dashboard/admin.html` và `pages/admin-dashboard.css` giữ các nguồn số liệu,
+biểu đồ, liên kết lọc và bảng giám sát hiện có. Chỉ template System Admin nạp
+stylesheet này; dashboard các role khác không đổi. JavaScript trang gắn các class
+phụ `.adm-chrome-*` lên fragment hiện có, chỉ để đổi cách trình bày tại Dashboard;
+không sửa file shell, navigation handler, trạng thái ghim hoặc form đăng xuất.
+
+- Header chỉ giữ tiêu đề; bỏ dòng mô tả phạm vi và CTA tạo tài khoản ở
+  Dashboard. Tạo tài khoản vẫn truy cập từ `/admin/accounts`. Không có bộ lọc
+  thời gian ở header; KPI ứng viên mới vẫn phản ánh 30 ngày cố định từ backend.
+- `.adm-dashboard-title` dùng `--sans` 36px (28px trên mobile), nội dung 15px,
+  `.adm-summary-value` thống nhất 36px và chữ số dạng bảng.
+- Tiêu đề trang đặt trực tiếp trên nền, thẳng lề với hàng KPI; không có thẻ,
+  nền hay viền bao riêng. Nét nhấn xanh 48×4px dưới tiêu đề tạo điểm tựa;
+  giữ khoảng cách 24px với hàng KPI. Chữ xanh `--brand-dark`, weight 700.
+  Nhãn KPI 18px/650; tiêu đề biểu đồ và dịch vụ 20px/700. Không đổi cỡ dữ liệu bảng.
+- Ba KPI có cột bằng nhau, khoảng cách 16px, nền trắng đặc, viền `--line`,
+  bo `--radius-lg`, bóng `--shadow-md`; không có ô mặc định được chọn hoặc nâng
+  card khi hover. Panel phân tích và bảng dịch vụ có cùng bề mặt trắng rõ nét.
+- Dùng asset người dùng cung cấp `admin-tech-office.png` làm nền công nghệ.
+  Blur 4px, saturation 0.7, contrast 0.9 và overlay `--surface` 52% nằm trên
+  lớp nền riêng `.adm-scene`, không nằm trên container chứa nội dung. Lớp nền
+  phủ toàn bộ frame trang, không bị kết thúc ở chiều cao viewport ban đầu.
+- Sidebar có glass nhẹ, topbar dùng khối nhận diện hiện có trên bề mặt sáng;
+  dữ liệu vẫn nằm trên nền trắng đặc. Bỏ footer/khối thương hiệu lặp ở chân sidebar;
+  asset cây tách nền `admin-tech-plant.png` hòa vào phần trống còn lại dưới menu,
+  không có khung riêng, không kéo cao rail hoặc che điều hướng. Artwork rộng cố định
+  bằng sidebar mở rộng và chỉ bị cắt khi thu gọn, tránh reflow khi pin/hover.
+  Rail và nội dung dùng chung lề 16px; mép dưới rail theo chiều cao frame nội dung,
+  không chốt cứng 100vh. Logo/menu sticky trong rail khi cuộn. Chỉ modifier
+  `.adm-chrome-sidebar` đổi position legacy bằng `!important` để đáp ứng căn mép;
+  file `workspace.css` và cơ chế pin/hover không đổi. Không thêm circuit/glow/animation.
+  Rule scoped `[hidden]` trên mobile dùng `!important` để thắng
+  `display:flex !important` legacy của sidebar, bảo toàn trạng thái từ `interface.js`.
+- `.adm-scope-select` cao 40px, giữ ID, options và handler chuyển nhóm tài khoản.
+  Trạng thái dùng thanh ngang native `<progress>` như mockup; số, phần trăm và
+  độ dài lấy từ chính các `data-count` server render. Giữ link lọc, giá trị 0,
+  và danh sách HTML dự phòng khi JavaScript không chạy. Không cần Chart.js cho
+  trạng thái; biểu đồ vai trò vẫn dùng Chart.js và các liên kết bàn phím cũ.
+  Bảng dịch vụ dùng chữ 14px, header nền `--surface-subtle`; bảng vẫn cuộn trong
+  wrapper khi hẹp, không bỏ cột. Giữ nguyên badge và trạng thái chưa kiểm tra.
+- Dưới 992px, KPI và các panel phân tích về một cột để vẫn đọc được nhãn và
+  nội dung khi sidebar đang ghim. Card giám sát giãn theo phần chiều cao còn lại
+  trên màn hình lớn, giữ đáy card thẳng với rail mà không tạo vùng trống sau bảng.
+
+
+### Cập nhật 27/10/2026 — Component Admin workspace (`adw-`)
+
+Đồng bộ Dashboard, danh sách tài khoản nội bộ/ứng viên, phòng ban, giám sát API
+và form tạo/sửa tài khoản/phòng ban. Các trang khác không tự động bật giao diện này.
+
+- Component mới được **append** vào `static/css/components.css`; không đổi selector
+  hay token cũ. Fragment `fragments/ui/admin-workspace.html :: scene/scripts` và
+  marker `.adw-page` bật giao diện. Trang vẫn decorate `layout/internal`; hai form
+  Admin đã chuyển từ `interfaceHead` sang layout này, giữ toàn bộ hợp đồng form.
+- `pages/admin-workspace.js` chỉ thêm các class `.adw-frame`, `.adw-main`,
+  `.adw-sidebar`, `.adw-topbar`, `.adw-actions` lên DOM khung hiện có và đưa lớp
+  trang trí ra frame. Không thay handler ghim/menu, role menu, identity hoặc logout.
+  Dashboard không còn giữ bản CSS/JS khung riêng `.adm-chrome-*`; phần analytics cũ
+  vẫn nằm trong `pages/admin-dashboard.js`.
+- Dùng lại ảnh nền và cây của Dashboard, cùng lề 16px, sidebar 68/250px và nền trắng
+  đặc của dữ liệu. Chỉ lớp ảnh có blur. Tiêu đề sans 36/28px có nét nhấn 48×4px,
+  không có thẻ riêng; cách nội dung 24px. Tiêu đề panel 20px, dữ liệu bảng 14px.
+- `.adw-surface`, `.adw-panel-title`, `.adw-panel-heading`, `.adw-data-table`,
+  `.adw-close`, `.adw-form-wrap` là các class phụ thêm vào component/markup cũ;
+  không thay class nghiệp vụ. `pages/admin-surfaces.css` chỉ điều chỉnh composition
+  của Admin (toolbar, khoảng cách field, panel trong dialog), không redefine shell.
+- Password/validation của hai form vẫn do `interface.js` xử lý; script Admin chỉ
+  thêm alias trình bày `.adw-password-*` và `.adw-validation-summary`. Routes,
+  names, IDs, `th:field`, validation, CSRF, bộ lọc, phân trang và inspector giữ nguyên.
+- Rule `position` và `[hidden]` của `.adw-sidebar` dùng `!important` có comment để
+  giải quyết xung đột legacy trong `workspace.css`; không sửa file được bảo vệ.
+  Ở mobile, sidebar dùng đúng hidden/open state của menu sẵn có; bảng vẫn cuộn
+  trong wrapper, không bỏ cột. Không thêm dữ liệu, probe, menu hay chức năng mới.
+- Tham khảo bổ sung: Awesome DESIGN.md / SAP Analysis, mục chrome/surface,
+  áp dụng bề mặt sáng và độ phân cấp bằng token Mộc, không dùng palette/font SAP.
+  Taste `accent-ladder`, seed `378800654`, `--keep palette,type`; nhận diện và
+  bố cục Dashboard đã được người dùng duyệt có ưu tiên hơn house rules chung.
+
+Theo yêu cầu tiếp theo của người dùng: bỏ breadcrumb nhỏ phía trên tiêu đề ở
+các trang Admin và form tạo/sửa. Giữ tiêu đề lớn, nút thao tác và điều hướng
+sidebar; không bỏ hướng dẫn nhập liệu hoặc liên kết Hủy trong form.
