@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<body>
+<!--
+    CANDIDATE/MY-APPLICATION-PARTS.HTML — linh kiện của "Đơn của tôi", dùng ở danh sách (candidate/my-applications)
+    và trang chi tiết (candidate/my-application-detail). Chỉ dùng trong 2 trang này nên không ghi vào UI_CATALOG.
+      stepper(steps)  thanh Nộp CV → Phỏng vấn → Thư mời → Nhận việc (MyApplicationResponse.steps)
+      status(item)    chữ trạng thái + một dòng giải thích + dòng "còn …" khi đơn gấp
+      action(item)    nút việc tiếp theo (null thì không có)
+      cvLink(item)    "Xem lại CV": link thường tới /portal/applications/{id}/cv; có JS thì mở trong popup cvDialog
+      cvDialog        popup <dialog> chứa <iframe>; nạp CV khi mở (static/js/pages/my-applications.js)
+    Trạng thái dựa vào [data-state]/[data-tone] (bẫy "__" của Thymeleaf). CSS: css/pages/my-applications.css (myapp-).
+-->
+
+<!-- Thanh 4 bước. data-state: done (✓), current (vòng bao chấm), closed (đơn dừng ở bước này: [X], cả thanh xám),
+     upcoming (mờ). aria-hidden: chữ trạng thái bên cạnh đã nói đủ cho trình đọc màn hình. -->
+<ol th:fragment="stepper(steps)" class="myapp-stepper" aria-hidden="true">
+    <li th:each="step : ${steps}" class="myapp-stepper__step" th:data-state="${step.state}">
+        <span class="myapp-stepper__dot">
+            <th:block th:if="${step.state == 'done'}">
+                <svg th:replace="~{candidate/my-application-icons :: icon('check')}"></svg>
+            </th:block>
+            <th:block th:if="${step.state == 'closed'}">
+                <svg th:replace="~{candidate/my-application-icons :: icon('close')}"></svg>
+            </th:block>
+        </span>
+        <span class="myapp-stepper__label" th:text="${step.label}">Nộp CV</span>
+    </li>
+</ol>
+
+<div th:fragment="status(item)" class="myapp-status" th:data-tone="${item.statusTone}">
+    <!-- Đơn tự rút: nhãn bo tròn xám để tách khỏi đơn đang chạy (chữ lấy từ MyApplicationJourney) -->
+    <p class="myapp-status__label">
+        <span th:if="${item.statusLabel == 'Đã tự rút hồ sơ'}" class="badge myapp-badge-withdrawn"
+              th:text="${item.statusLabel}">Đã tự rút hồ sơ</span>
+        <th:block th:unless="${item.statusLabel == 'Đã tự rút hồ sơ'}" th:text="${item.statusLabel}">Phỏng vấn 10:00 24/11</th:block>
+    </p>
+    <p th:if="${item.statusNote != null}" class="myapp-status__note" th:text="${item.statusNote}">
+        Tại văn phòng. Xem chi tiết ở Lịch phỏng vấn.
+    </p>
+    <p th:if="${item.urgent}" class="myapp-status__urgent" th:text="${item.urgentLabel}">Phỏng vấn sau 26 giờ</p>
+</div>
+
+<a th:fragment="action(item)" th:if="${item.actionHref != null}" th:href="@{${item.actionHref}}"
+   class="btn btn--sm myapp-action" th:classappend="${item.statusTone == 'warning' ? 'btn--primary' : 'btn--outline'}"
+   th:with="actionIcon=${#strings.startsWith(item.actionHref, '/portal/interviews') ? 'calendar'
+           : #strings.startsWith(item.actionHref, '/portal/offers') ? 'mail' : 'search'}">
+    <svg th:replace="~{candidate/my-application-icons :: icon(${actionIcon})}"></svg>
+    <span th:text="${item.actionLabel}">Xem lịch phỏng vấn</span>
+</a>
+
+<a th:fragment="cvLink(item)" th:if="${item.hasCv}" th:href="@{/portal/applications/{id}/cv(id=${item.applicationId})}"
+   class="myapp-cv-link" target="_blank" rel="noopener" data-cv-open
+   th:attr="data-cv-title=${'CV đã nộp · ' + item.postingTitle}">
+    <svg th:replace="~{candidate/my-application-icons :: icon('file')}"></svg>
+    <span>Xem lại CV</span>
+</a>
+
+<dialog th:fragment="cvDialog" id="myapp-cv-dialog" class="confirm-dialog myapp-cv-dialog" aria-labelledby="myapp-cv-title">
+    <div class="dialog-content myapp-cv-dialog__content">
+        <div class="dialog-header myapp-cv-dialog__header">
+            <h2 id="myapp-cv-title" class="dialog-title" data-cv-title>CV đã nộp</h2>
+            <button type="button" class="btn btn--secondary btn--sm" data-cv-close>Đóng</button>
+        </div>
+        <iframe class="myapp-cv-dialog__frame" title="CV đã nộp" data-cv-frame></iframe>
+    </div>
+</dialog>
+
+</body>
+</html>

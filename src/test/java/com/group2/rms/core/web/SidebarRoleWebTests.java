@@ -76,7 +76,7 @@ class SidebarRoleWebTests {
         when(currentUser.requireUser()).thenReturn(candidate);
         when(notifications.getNotificationsForUser(any(), anyInt(), anyInt())).thenReturn(Page.empty());
         when(myApplications.list(any())).thenReturn(new MyApplicationListResponse(
-                List.of(), Map.of(1, 0L, 2, 0L, 3, 0L, 4, 0L), null, 0));
+                List.of(), "all", 0, 0, 0, List.of()));
 
         for (String page : List.of("/portal/applications", "/portal/offers", "/portal/interviews", "/notifications")) {
             String html = render(page, as(candidate));
@@ -107,7 +107,7 @@ class SidebarRoleWebTests {
         when(currentUser.requireUser()).thenReturn(candidate);
         when(notifications.getNotificationsForUser(any(), anyInt(), anyInt())).thenReturn(Page.empty());
         when(myApplications.list(any())).thenReturn(new MyApplicationListResponse(
-                List.of(), Map.of(1, 0L, 2, 0L, 3, 0L, 4, 0L), null, 0));
+                List.of(), "all", 0, 0, 0, List.of()));
         for (String page : List.of("/portal/applications", "/portal/offers", "/portal/interviews", "/notifications")) {
             String html = render(page, as(candidate));
             assertTrue(html.contains("class=\"site-footer\""), page + ": thiếu footer");

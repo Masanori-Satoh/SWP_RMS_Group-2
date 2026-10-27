@@ -1,22 +1,16 @@
 /* =============================================================================
-   PAGES/MY-APPLICATIONS.CSS — Đơn ứng tuyển của tôi
-   (/portal/applications, candidate/my-applications.html)
-   Chỉ chứa phần catalog chưa có: dải hướng dẫn 4 bước (cùng DNA với "Quy trình" của landing), thẻ đơn,
-   tag bước, dải 4 đoạn, nhãn "đã tự rút", khung hành trình, trạng thái rỗng.
+   PAGES/MY-APPLICATIONS.CSS — "Đơn của tôi" của ứng viên
+   (/portal/applications: candidate/my-applications.html; /portal/applications/{id}: candidate/my-application-detail.html;
+   linh kiện chung: candidate/my-application-parts.html)
+   Chỉ chứa phần catalog chưa có: tab, banner đơn gấp, thẻ đơn 2 dòng, thanh 4 bước, popup xem CV, trang chi tiết.
 
-   Màu: chỉ một màu thương hiệu (xanh lá đậm của landing = --brand-dark) + xám, khai báo một lần ở .myapp-page.
-     Dải hướng dẫn [data-phase]: current = viền + nền xanh, chữ đậm; done = viền xám + dấu tích xanh; todo = nhạt 60%.
-     Dải 4 đoạn trong thẻ [data-seg]: đã qua và đang ở = xanh; chưa tới = xám nhạt; dừng = xám sẫm.
+   Màu: chỉ một màu thương hiệu (xanh lá = --brand-dark) + xám, khai báo một lần ở .myapp-page. "Đã xong" và "đang ở"
+   cùng màu, phân biệt bằng hình (✓ vs vòng bao chấm). Đơn dừng: cả thanh xám, [X] ở bước dừng. Đơn gấp: --warning.
+   Trạng thái dựa vào [data-state], [data-tone], [data-urgent], [aria-current] (bẫy "__" của Thymeleaf).
 
-   Font: sans của khung ứng viên (Plus Jakarta Sans, css/candidate-shell.css), chỉ tiêu đề trang serif.
-   Thang chữ (một bậc cho mỗi vai trò; xám = --muted vì xám nhạt hơn không đủ tương phản cho chữ nhỏ):
-     24px 700  tiêu đề trang (sans, không serif như trang khác)
-     18px 700  tên bước ở dải hướng dẫn
-     17px 600  tên vị trí trên thẻ; 17px 700 tiêu đề danh sách
-     15px 700  tình trạng đơn
-     13px      mô tả bước (line-height 1.4); 13.5px nút bỏ lọc, ghi chú, hành trình
-     12px      ngày nộp / cập nhật, nhãn "Đã tự rút hồ sơ"
-     11px      "BƯỚC n", tag bước, nhãn dải 4 đoạn, số hồ sơ
+   Font: sans của khung ứng viên (Plus Jakarta Sans, css/candidate-shell.css).
+   Thang chữ: 24px tiêu đề trang · 17px tên vị trí · 15px chữ trạng thái · 13.5px ghi chú, tab, link ·
+              12.5px dòng gấp · 12px phòng ban / ngày / mã, nhãn bước
    Tiền tố class: myapp-
    ============================================================================= */
 
@@ -34,6 +28,7 @@
   font-weight: 700;
   letter-spacing: -0.01em;
   color: var(--myapp-text-main);
+  overflow-wrap: anywhere;
 }
 
 .myapp-icon {
@@ -42,304 +37,72 @@
   height: 18px;
 }
 
-/* ---- Dải hướng dẫn 4 bước (bước 2–4 là bộ lọc, bước 1 dẫn tới /jobs) ---- */
-.myapp-guide {
-  margin-bottom: var(--s12);
-}
-
-.myapp-guide__list {
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: var(--s6);
+/* ---- Banner đơn gấp (alert--warning của catalog + link) ---- */
+.myapp-urgent-banner__text {
   margin: 0;
-  padding: 0;
-  list-style: none;
+  line-height: 1.5;
 }
 
-.myapp-guide__item {
-  position: relative;
-  display: flex;
-}
-
-/* Mũi tên nối sang bước sau: thân (::after) + đầu tam giác (::before), nằm trong khoảng cách giữa hai thẻ. */
-.myapp-guide__item:not(:last-child)::after {
-  content: "";
-  position: absolute;
-  top: 50%;
-  right: calc(-1 * var(--s6) + 5px);
-  width: calc(var(--s6) - 12px);
-  height: 2px;
-  background-color: var(--control-line);
-}
-
-.myapp-guide__item:not(:last-child)::before {
-  content: "";
-  position: absolute;
-  top: calc(50% - 4px);
-  right: calc(-1 * var(--s6) + 1px);
-  border-top: 5px solid transparent;
-  border-bottom: 5px solid transparent;
-  border-left: 7px solid var(--control-line);
-}
-
-/* Thẻ bước là link. Mặc định = Upcoming (chưa tới): chữ, viền nhạt, mờ 60%; rê chuột / focus thì rõ lại. */
-.myapp-guide__step {
-  position: relative;
-  display: flex;
-  flex: 1;
-  flex-direction: column;
-  align-items: flex-start;
-  overflow: hidden;
-  padding: var(--s6);
-  background-color: var(--surface);
-  border: 1px solid var(--line);
-  border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-sm);
-  color: var(--myapp-text-muted);
-  text-decoration: none;
-  opacity: 0.6;
-  transition: transform 0.28s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.28s ease,
-    border-color 0.2s ease, background-color 0.2s ease, opacity 0.2s ease;
-}
-
-/* Completed (đã qua): viền xám, chữ thường, dấu tích xanh. */
-.myapp-guide__step[data-phase="done"] {
-  color: var(--myapp-text-main);
-  opacity: 1;
-}
-
-/* Active (đang có hồ sơ ở bước này / bước đang lọc): viền + nền xanh nhạt, chữ và icon xanh, đậm hơn. */
-.myapp-guide__step[data-phase="current"],
-.myapp-guide__step[aria-current="true"] {
-  border-color: var(--myapp-primary);
-  background-color: var(--myapp-primary-light);
-  color: var(--myapp-primary);
-  opacity: 1;
-}
-
-.myapp-guide__step::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(115deg, transparent 35%,
-    color-mix(in srgb, var(--surface) 75%, transparent) 50%, transparent 65%);
-  transform: translateX(-120%);
-  transition: transform 0.7s ease;
-  pointer-events: none;
-}
-
-.myapp-guide__step:hover,
-.myapp-guide__step:focus-visible {
-  transform: translateY(-6px);
-  border-color: var(--myapp-primary);
-  box-shadow: var(--shadow-lg);
-  opacity: 1;
-}
-
-.myapp-guide__step:hover::after,
-.myapp-guide__step:focus-visible::after {
-  transform: translateX(120%);
-}
-
-.myapp-guide__step:focus-visible {
-  outline: 2px solid var(--focus);
-  outline-offset: 3px;
-}
-
-.myapp-guide__step:active {
-  transform: translateY(-2px) scale(0.98);
-  box-shadow: var(--shadow-md);
-}
-
-/* Bước đang lọc: thêm vòng sáng để phân biệt với các bước Active khác. */
-.myapp-guide__step[aria-current="true"] {
-  box-shadow: 0 0 0 2px var(--myapp-primary), var(--shadow-md);
-}
-
-/* Đang lọc một bước thì các bước khác nhạt đi, rê chuột vào lại sáng. */
-.myapp-guide__list:has([aria-current="true"]) .myapp-guide__step:not([aria-current="true"]) {
-  opacity: 0.55;
-}
-
-.myapp-guide__list:has([aria-current="true"]) .myapp-guide__step:not([aria-current="true"]):hover {
-  opacity: 1;
-}
-
-/* Hàng đầu thẻ: icon · "BƯỚC n" · số hồ sơ hoặc dấu tích (sát phải). */
-.myapp-guide__head {
-  display: flex;
-  align-items: center;
-  gap: var(--s3);
-  width: 100%;
-}
-
-.myapp-guide__icon {
-  display: inline-flex;
-  flex-shrink: 0;
-  align-items: center;
-  justify-content: center;
-  width: 44px;
-  height: 44px;
-  border-radius: var(--radius-md);
-  background-color: var(--neutral-soft);
-  color: var(--myapp-text-muted);
-  transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), background-color 0.2s ease, color 0.2s ease;
-}
-
-.myapp-guide__icon .myapp-icon {
-  width: 22px;
-  height: 22px;
-}
-
-.myapp-guide__step[data-phase="current"] .myapp-guide__icon,
-.myapp-guide__step[aria-current="true"] .myapp-guide__icon {
-  background-color: var(--surface);
-  color: var(--myapp-primary);
-}
-
-.myapp-guide__step:hover .myapp-guide__icon,
-.myapp-guide__step:focus-visible .myapp-guide__icon {
-  background-color: var(--myapp-primary);
-  color: var(--on-brand);
-  transform: scale(1.1) rotate(-8deg);
-}
-
-.myapp-guide__num {
-  color: var(--myapp-text-muted);
-  font-size: 11px;
-  font-weight: 500;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-}
-
-.myapp-guide__count {
-  margin-left: auto;
-  padding: 2px var(--s2);
-  border-radius: var(--radius-full);
-  background-color: var(--neutral-soft);
-  color: var(--myapp-text-muted);
-  font-size: 11px;
+.myapp-urgent-banner__link {
+  margin-left: var(--s1);
+  color: inherit;
   font-weight: 700;
+  text-decoration: underline;
   white-space: nowrap;
 }
 
-.myapp-guide__step[data-phase="current"] .myapp-guide__count,
-.myapp-guide__step[aria-current="true"] .myapp-guide__count {
-  background-color: var(--myapp-primary);
-  color: var(--on-brand);
-}
-
-/* Dấu tích của bước đã qua. */
-.myapp-guide__done {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 26px;
-  height: 26px;
-  margin-left: auto;
-  border-radius: var(--radius-full);
-  background-color: var(--myapp-primary);
-  color: var(--on-brand);
-}
-
-.myapp-guide__done .myapp-icon {
-  width: 16px;
-  height: 16px;
-}
-
-.myapp-guide__title {
-  margin: var(--s4) 0 var(--s1);
-  color: var(--myapp-text-main);
-  font-size: 18px;
-  font-weight: 700;
-  line-height: 1.3;
-  letter-spacing: -0.01em;
-}
-
-.myapp-guide__desc {
-  margin: 0;
-  color: var(--myapp-text-muted);
-  font-size: 13px;
-  line-height: 1.4;
-}
-
-/* Bước 1: lời mời tìm vị trí dạng nút đặc, nằm cuối thẻ (cả thẻ là link nên đây chỉ là span). */
-.myapp-guide__cta {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--s1);
-  margin-top: auto;
-  padding: var(--s2) var(--s4);
-  border-radius: var(--radius-md);
-  background-color: var(--brand);
-  color: var(--on-brand);
-  font-size: var(--font-sm);
-  font-weight: 700;
-  box-shadow: var(--shadow-sm);
-  transition: background-color 0.2s ease;
-}
-
-.myapp-guide__desc + .myapp-guide__cta {
-  margin-top: var(--s4);
-}
-
-.myapp-guide__step:hover .myapp-guide__cta,
-.myapp-guide__step:focus-visible .myapp-guide__cta {
-  background-color: var(--brand-hover);
-}
-
-/* ---- Đầu danh sách: một hàng, trái = tên + số hồ sơ, phải = bỏ lọc ---- */
-.myapp-list-head {
+/* ---- Tab: link thường, tab đang chọn có aria-current="page" ---- */
+.myapp-tabs {
   display: flex;
-  flex-wrap: wrap;
-  align-items: baseline;
-  justify-content: space-between;
-  gap: var(--s2) var(--s4);
-  margin-bottom: var(--s3);
-  padding-bottom: var(--s3);
+  gap: var(--s1);
+  margin-bottom: var(--s4);
   border-bottom: 1px solid var(--line);
+  overflow-x: auto;
 }
 
-.myapp-list-heading {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: baseline;
-  gap: var(--s2);
-  margin: 0;
-  font-family: var(--sans);
-  font-size: var(--font-lg);
-  font-weight: 700;
-  letter-spacing: 0;
-}
-
-.myapp-list-heading__count {
-  color: var(--muted);
-  font-size: var(--font-sm);
-  font-weight: 500;
-}
-
-.myapp-clear-filter {
+.myapp-tab {
   display: inline-flex;
+  flex-shrink: 0;
   align-items: center;
-  gap: var(--s1);
-  color: var(--brand);
+  gap: var(--s2);
+  margin-bottom: -1px;
+  padding: var(--s2) var(--s4);
+  border-bottom: 2px solid transparent;
+  color: var(--myapp-text-muted);
   font-size: var(--font-sm);
   font-weight: 600;
   text-decoration: none;
+  white-space: nowrap;
   transition: var(--transition);
 }
 
-.myapp-clear-filter .myapp-icon {
-  width: 14px;
-  height: 14px;
+.myapp-tab:hover {
+  color: var(--myapp-text-main);
 }
 
-.myapp-clear-filter:hover,
-.myapp-clear-filter:focus-visible {
-  color: var(--brand-hover);
-  text-decoration: underline;
+.myapp-tab:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: -2px;
 }
 
+.myapp-tab[aria-current="page"] {
+  border-bottom-color: var(--myapp-primary);
+  color: var(--myapp-primary);
+}
+
+.myapp-tab__count {
+  padding: 0 var(--s2);
+  border-radius: var(--radius-full);
+  background-color: var(--neutral-soft);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.myapp-tab[aria-current="page"] .myapp-tab__count {
+  background-color: var(--myapp-primary-light);
+}
+
+/* ---- Danh sách + thẻ đơn 2 dòng ---- */
 .myapp-list {
   display: grid;
   gap: var(--s3);
@@ -348,55 +111,111 @@
   list-style: none;
 }
 
-/* ---- Thẻ đơn: trái = tag, tên vị trí, ngày, dải 4 đoạn; phải = tình trạng + nút; dưới = hành trình ----
-   Không kẻ vạch trong thẻ: các khối cách nhau bằng khoảng lưới 12px.
-   Viền trái: đang chạy / xong = xanh thương hiệu, dừng = xám (bị loại = đỏ). */
+/* Viền trái: đang đi / xong = xanh thương hiệu, dừng = xám (bị loại = đỏ), gấp = --warning + viền ngoài. */
 .myapp-card.card {
   --myapp-accent: var(--myapp-primary);
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(13rem, 17rem);
-  grid-template-areas:
-    "main    side"
-    "journey journey";
-  gap: var(--s3) var(--s6);
-  padding: var(--s4) var(--s6) var(--s2);
+  gap: var(--s4);
+  padding: var(--s4) var(--s6);
   border-left: 4px solid var(--myapp-accent);
   box-shadow: var(--shadow-sm);
-  transition: transform 0.22s ease, box-shadow 0.22s ease, border-color 0.2s ease;
+  transition: transform 0.22s ease, box-shadow 0.22s ease;
 }
 
 .myapp-card[data-state="closed"] { --myapp-accent: var(--control-line); }
 .myapp-card[data-state="closed"][data-tone="danger"] { --myapp-accent: var(--error); }
+
+.myapp-card[data-urgent="true"] {
+  --myapp-accent: var(--warning);
+  box-shadow: 0 0 0 1px var(--warning), var(--shadow-sm);
+}
 
 .myapp-card:hover {
   transform: translateY(-2px);
   box-shadow: var(--shadow-md);
 }
 
-.myapp-card__main {
-  grid-area: main;
+.myapp-card[data-urgent="true"]:hover {
+  box-shadow: 0 0 0 1px var(--warning), var(--shadow-md);
+}
+
+/* Dòng 1: định danh | Xem lại CV */
+.myapp-card__head {
   display: flex;
-  flex-direction: column;
   align-items: flex-start;
-  gap: 6px;
+  justify-content: space-between;
+  gap: var(--s4);
+}
+
+.myapp-card__id {
   min-width: 0;
 }
 
+.myapp-card__title {
+  margin: 0 0 var(--s1);
+  font-family: var(--sans);
+  font-size: var(--font-lg);
+  font-weight: 600;
+  line-height: 1.35;
+  overflow-wrap: anywhere;
+}
+
+.myapp-card__title a {
+  color: var(--myapp-text-main);
+  text-decoration: none;
+}
+
+.myapp-card__title a:hover,
+.myapp-card__title a:focus-visible {
+  color: var(--brand);
+  text-decoration: underline;
+}
+
+/* Phòng ban · Nộp dd/MM/yyyy · #CAN-xxxx: mỗi cụm một khối, hết chỗ thì xuống dòng nguyên cụm. */
+.myapp-card__meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--s1) var(--s3);
+  margin: 0;
+  color: var(--myapp-text-muted);
+  font-size: 12px;
+}
+
+.myapp-card__meta > span {
+  white-space: nowrap;
+}
+
+.myapp-card__code {
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.02em;
+}
+
+/* Dòng 2: thanh 4 bước | chữ trạng thái + nút */
+.myapp-card__body {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(14rem, 20rem);
+  align-items: center;
+  gap: var(--s4) var(--s8);
+}
+
 .myapp-card__side {
-  grid-area: side;
   display: flex;
   flex-direction: column;
-  justify-content: space-between;
   align-items: flex-end;
   gap: var(--s3);
   text-align: right;
 }
 
-.myapp-journey {
-  grid-area: journey;
+.myapp-card__actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--s2);
 }
 
-/* Thẻ trượt vào lần lượt khi mở trang / đổi bộ lọc. */
+/* Thẻ trượt vào lần lượt khi mở trang / đổi tab. */
 .myapp-list > li {
   animation: myapp-rise 0.4s ease both;
 }
@@ -418,143 +237,109 @@
   }
 }
 
-/* Tag bước: đang ở bước này hoặc xong cả 4 (xanh nhạt, chữ xanh); dừng thì xám / đỏ. */
-.myapp-tag {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 2px 8px;
-  border-radius: 6px;
-  background-color: var(--myapp-primary-light);
-  color: var(--myapp-primary);
-  font-size: 11px;
-  font-weight: 600;
-}
-
-.myapp-tag .myapp-icon {
-  width: 14px;
-  height: 14px;
-}
-
-/* Chấm nhấp nháy: hồ sơ đang chờ ứng viên làm gì đó (trả lời thư mời, đi phỏng vấn). */
-.myapp-tag[data-state="current"][data-tone="warning"]::before {
-  content: "";
-  width: 7px;
-  height: 7px;
-  border-radius: var(--radius-full);
-  background-color: var(--myapp-primary);
-  animation: myapp-pulse 1.8s ease-out infinite;
-}
-
-@keyframes myapp-pulse {
-  0% {
-    box-shadow: 0 0 0 0 color-mix(in srgb, var(--myapp-primary) 55%, transparent);
-  }
-  70%,
-  100% {
-    box-shadow: 0 0 0 7px color-mix(in srgb, var(--myapp-primary) 0%, transparent);
-  }
-}
-
-.myapp-tag[data-state="closed"] {
-  background-color: var(--neutral-soft);
-  color: var(--neutral);
-}
-
-.myapp-tag[data-state="closed"][data-tone="danger"] {
-  background-color: var(--error-soft);
-  color: var(--error);
-}
-
-.myapp-card__title {
-  margin: 0;
-  font-size: var(--font-lg);
-  font-weight: 600;
-  line-height: 1.35;
-  overflow-wrap: anywhere;
-}
-
-.myapp-card__title a {
-  color: var(--myapp-text-main);
-  text-decoration: none;
-}
-
-.myapp-card__title a:hover,
-.myapp-card__title a:focus-visible {
-  color: var(--brand);
-  text-decoration: underline;
-}
-
-.myapp-card__meta {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: var(--s1);
-  margin: 0;
-  color: var(--myapp-text-muted);
-  font-size: 12px;
-}
-
-/* "Nộp ngày …" và "· Cập nhật …" mỗi cụm một khối, hết chỗ thì xuống dòng nguyên cụm. */
-.myapp-card__meta > span {
-  white-space: nowrap;
-}
-
-.myapp-card__meta .myapp-icon {
-  width: 13px;
-  height: 13px;
-}
-
-/* ---- Dải 4 đoạn, cùng logic với dải hướng dẫn: đã qua + đang ở = xanh, chưa tới = xám nhạt,
-   dừng = màu viền thẻ (xám, bị loại = đỏ) ---- */
-.myapp-progress {
+/* ---- Thanh 4 bước ----
+   Đường nối phía trước mỗi bước (::before): xanh khi bước đã tới (done/current), xám khi chưa tới.
+   Đơn dừng (có bước closed): cả thanh tone xám. */
+.myapp-stepper {
+  --myapp-step-color: var(--myapp-primary);
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: var(--s1);
   width: 100%;
-  max-width: 28rem;
-  margin: var(--s1) 0 0;
+  max-width: 34rem;
+  margin: 0;
   padding: 0;
   list-style: none;
 }
 
-.myapp-progress__step {
-  display: flex;
-  flex-direction: column;
-  gap: var(--s1);
-  min-width: 0;
+.myapp-stepper:has([data-state="closed"]) {
+  --myapp-step-color: var(--neutral);
 }
 
-.myapp-progress__bar {
-  height: 5px;
-  border-radius: var(--radius-full);
+.myapp-stepper__step {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  text-align: center;
+}
+
+.myapp-stepper__step:not(:first-child)::before {
+  content: "";
+  position: absolute;
+  top: 11px;
+  right: 50%;
+  width: 100%;
+  height: 2px;
+  background-color: var(--myapp-step-color);
+}
+
+.myapp-stepper__step[data-state="upcoming"]::before,
+.myapp-stepper__step[data-state="closed"]::before {
   background-color: var(--line);
 }
 
-.myapp-progress__label {
+.myapp-stepper__dot {
+  position: relative;
+  z-index: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border: 2px solid var(--control-line);
+  border-radius: var(--radius-full);
+  background-color: var(--surface);
+  color: var(--on-brand);
+}
+
+.myapp-stepper__dot .myapp-icon {
+  width: 14px;
+  height: 14px;
+  stroke-width: 3;
+}
+
+.myapp-stepper__step[data-state="done"] .myapp-stepper__dot {
+  border-color: var(--myapp-step-color);
+  background-color: var(--myapp-step-color);
+}
+
+/* Đang ở: vòng màu bao chấm nhỏ. */
+.myapp-stepper__step[data-state="current"] .myapp-stepper__dot {
+  border-color: var(--myapp-step-color);
+}
+
+.myapp-stepper__step[data-state="current"] .myapp-stepper__dot::after {
+  content: "";
+  width: 10px;
+  height: 10px;
+  border-radius: var(--radius-full);
+  background-color: var(--myapp-step-color);
+}
+
+/* Dừng ở bước này: [X] xám. */
+.myapp-stepper__step[data-state="closed"] .myapp-stepper__dot {
+  border-color: var(--neutral);
+  background-color: var(--neutral-soft);
+  color: var(--neutral);
+}
+
+.myapp-stepper__label {
+  max-width: 100%;
+  color: var(--myapp-text-main);
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1.3;
+}
+
+.myapp-stepper__step[data-state="upcoming"] .myapp-stepper__label {
   color: var(--myapp-text-muted);
-  font-size: 11px;
   font-weight: 500;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
 }
 
-.myapp-progress__step[data-seg="done"] .myapp-progress__bar,
-.myapp-progress__step[data-seg="current"] .myapp-progress__bar {
-  background-color: var(--myapp-primary);
-}
-
-.myapp-progress__step[data-seg="closed"] .myapp-progress__bar {
-  background-color: var(--myapp-accent);
-}
-
-.myapp-card[data-state="closed"]:not([data-tone="danger"]) .myapp-progress__step[data-seg="closed"] .myapp-progress__bar {
-  background-color: var(--neutral);
-}
-
-/* ---- Cột phải: tình trạng (chữ màu, không khung) + nút ---- */
-.myapp-card__status-label {
+/* ---- Chữ trạng thái + dòng giải thích + dòng gấp ---- */
+.myapp-status__label {
   margin: 0;
   color: var(--ink);
   font-size: var(--font-base);
@@ -562,13 +347,31 @@
 }
 
 /* Tích cực hoặc cần ứng viên làm gì đó: màu thương hiệu; bị loại: đỏ; còn lại: chữ thường. */
-.myapp-card__status[data-tone="success"] .myapp-card__status-label,
-.myapp-card__status[data-tone="warning"] .myapp-card__status-label {
+.myapp-status[data-tone="success"] .myapp-status__label,
+.myapp-status[data-tone="warning"] .myapp-status__label {
   color: var(--myapp-primary);
 }
 
-.myapp-card__status[data-tone="danger"] .myapp-card__status-label {
+.myapp-status[data-tone="danger"] .myapp-status__label {
   color: var(--error);
+}
+
+.myapp-status__note {
+  margin: 2px 0 0;
+  color: var(--muted);
+  font-size: var(--font-sm);
+  line-height: 1.5;
+}
+
+.myapp-status__urgent {
+  display: inline-block;
+  margin: var(--s2) 0 0;
+  padding: 2px var(--s2);
+  border-radius: var(--radius-sm);
+  background-color: var(--warning-soft);
+  color: var(--ink);
+  font-size: var(--font-xs);
+  font-weight: 700;
 }
 
 /* Đơn tự rút: nhãn bo tròn xám nhạt (ghi đè cỡ của .badge trong catalog). */
@@ -582,21 +385,7 @@
   font-weight: 500;
 }
 
-.myapp-card__note {
-  margin: 2px 0 0;
-  color: var(--muted);
-  font-size: var(--font-sm);
-  line-height: 1.5;
-}
-
-.myapp-card__actions {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: flex-end;
-  gap: var(--s2);
-}
-
+/* ---- Nút ---- */
 .myapp-action,
 .myapp-withdraw-btn {
   display: inline-flex;
@@ -609,6 +398,30 @@
 .myapp-withdraw-btn .myapp-icon {
   width: 16px;
   height: 16px;
+}
+
+/* "Xem lại CV", "Xem tin tuyển dụng": link chữ màu thương hiệu kèm icon. */
+.myapp-cv-link {
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+  gap: 6px;
+  color: var(--brand);
+  font-size: var(--font-sm);
+  font-weight: 600;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.myapp-cv-link .myapp-icon {
+  width: 16px;
+  height: 16px;
+}
+
+.myapp-cv-link:hover,
+.myapp-cv-link:focus-visible {
+  color: var(--brand-hover);
+  text-decoration: underline;
 }
 
 /* Rút đơn: nút viền nhạt, đỏ khi rê chuột (không quay lại được, có hộp thoại xác nhận). */
@@ -635,43 +448,128 @@
   margin: 0;
 }
 
-/* ---- Hành trình (<details>, mở/đóng không cần JS) ---- */
-.myapp-journey__toggle {
+/* ---- Popup xem lại CV (confirm-dialog của catalog, nới rộng cho PDF) ---- */
+dialog.myapp-cv-dialog {
+  max-width: 960px;
+  height: min(88vh, 960px);
+}
+
+.myapp-cv-dialog__content {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  padding: var(--s4);
+}
+
+.myapp-cv-dialog__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s4);
+}
+
+.myapp-cv-dialog__header .dialog-title {
+  min-width: 0;
+  font-size: var(--font-lg);
+  overflow-wrap: anywhere;
+}
+
+.myapp-cv-dialog__frame {
+  flex: 1;
+  width: 100%;
+  min-height: 0;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md);
+  background-color: var(--surface-subtle);
+}
+
+/* ---- Trang chi tiết ---- */
+.myapp-back {
   display: inline-flex;
   align-items: center;
   gap: var(--s1);
-  padding: var(--s1) 0;
+  margin-bottom: var(--s3);
   color: var(--brand);
   font-size: var(--font-sm);
   font-weight: 600;
-  list-style: none;
-  cursor: pointer;
+  text-decoration: none;
 }
 
-.myapp-journey__toggle::-webkit-details-marker {
-  display: none;
-}
-
-.myapp-journey__toggle .myapp-icon {
+.myapp-back .myapp-icon {
   width: 16px;
   height: 16px;
-  transition: transform var(--transition);
 }
 
-.myapp-journey[open] .myapp-journey__toggle .myapp-icon {
-  transform: rotate(180deg);
+.myapp-back:hover,
+.myapp-back:focus-visible {
+  text-decoration: underline;
 }
 
-.myapp-journey__toggle:focus-visible {
-  outline: 2px solid var(--focus);
-  outline-offset: 2px;
+.myapp-detail .page-header .myapp-card__meta {
+  margin-top: var(--s2);
 }
 
-.myapp-journey__body {
-  margin: var(--s1) 0 var(--s2);
-  padding: var(--s4);
-  border-radius: var(--radius-md);
-  background-color: var(--surface-subtle);
+.myapp-detail__progress.card {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(14rem, 22rem);
+  align-items: center;
+  gap: var(--s4) var(--s8);
+  margin-bottom: var(--s4);
+  padding: var(--s6);
+}
+
+.myapp-detail__progress[data-urgent="true"] {
+  box-shadow: 0 0 0 1px var(--warning), var(--shadow-sm);
+}
+
+.myapp-detail__status {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--s3);
+}
+
+.myapp-detail__status .myapp-card__actions {
+  justify-content: flex-start;
+}
+
+.myapp-detail__section.card {
+  margin-bottom: var(--s4);
+  padding: var(--s6);
+}
+
+.myapp-detail__heading {
+  margin: 0 0 var(--s3);
+  font-family: var(--sans);
+  font-size: var(--font-base);
+  font-weight: 700;
+}
+
+.myapp-detail__links {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--s3) var(--s6);
+}
+
+.myapp-detail__none {
+  margin: 0;
+  font-size: var(--font-sm);
+}
+
+.myapp-detail__withdraw {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--s2) var(--s4);
+  margin-top: var(--s6);
+  padding-top: var(--s4);
+  border-top: 1px solid var(--line);
+}
+
+.myapp-detail__withdraw-note {
+  margin: 0;
+  font-size: var(--font-sm);
 }
 
 /* ---- Trạng thái rỗng ---- */
@@ -690,32 +588,19 @@
   margin: 0;
 }
 
-/* ---- Màn hẹp ---- */
-@media (max-width: 1100px) {
-  .myapp-guide__list {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: var(--s4);
-  }
-
-  /* Hai cột thì bước 2 → 3 xuống dòng: bỏ mũi tên, số bước đã đủ thứ tự. */
-  .myapp-guide__item:not(:last-child)::after,
-  .myapp-guide__item:not(:last-child)::before {
-    display: none;
-  }
+.myapp-empty__cta {
+  margin-top: var(--s4);
 }
 
-@media (max-width: 760px) {
-  .myapp-card.card {
+/* ---- Màn hẹp ---- */
+@media (max-width: 860px) {
+  .myapp-card__body,
+  .myapp-detail__progress.card {
     grid-template-columns: minmax(0, 1fr);
-    grid-template-areas:
-      "main"
-      "side"
-      "journey";
-    padding: var(--s4) var(--s4) var(--s2);
   }
 
   .myapp-card__side {
-    align-items: stretch;
+    align-items: flex-start;
     text-align: left;
   }
 
@@ -725,53 +610,53 @@
 }
 
 @media (max-width: 600px) {
-  .myapp-guide {
-    margin-bottom: var(--s8);
-  }
-
-  .myapp-guide__list {
-    grid-template-columns: minmax(0, 1fr);
-    gap: var(--s2);
-  }
-
-  .myapp-guide__step {
+  .myapp-card.card {
     padding: var(--s4);
   }
 
-  .myapp-guide__icon {
-    width: 40px;
-    height: 40px;
+  .myapp-detail__progress.card,
+  .myapp-detail__section.card {
+    padding: var(--s4);
   }
 
-  .myapp-guide__title {
-    margin-top: var(--s3);
+  /* "Xem lại CV" xuống dưới phần định danh để tên vị trí đủ chỗ. */
+  .myapp-card__head {
+    flex-direction: column;
+    gap: var(--s2);
+  }
+
+  /* Ba tab chia đều bề ngang để cả ba số đếm cùng hiện ở 375px. */
+  .myapp-tabs {
+    gap: 0;
+  }
+
+  .myapp-tab {
+    flex: 1 1 auto;
+    justify-content: center;
+    gap: var(--s1);
+    padding: var(--s2) var(--s1);
+  }
+
+  dialog.myapp-cv-dialog {
+    height: 92vh;
+  }
+
+  .myapp-cv-dialog__content {
+    padding: var(--s3);
   }
 }
 
-/* Người dùng bật "giảm chuyển động": giữ màu và bóng, bỏ nổi, ánh lướt, trượt, nhấp nháy. */
+/* Người dùng bật "giảm chuyển động": bỏ nổi khi rê chuột và hiệu ứng trượt. */
 @media (prefers-reduced-motion: reduce) {
-  .myapp-guide__step,
-  .myapp-guide__step::after,
-  .myapp-guide__icon,
   .myapp-card {
     transition: none;
   }
 
-  .myapp-guide__step:hover,
-  .myapp-guide__step:focus-visible,
-  .myapp-guide__step:active,
-  .myapp-guide__step:hover .myapp-guide__icon,
-  .myapp-guide__step:focus-visible .myapp-guide__icon,
   .myapp-card:hover {
     transform: none;
   }
 
-  .myapp-guide__step::after {
-    display: none;
-  }
-
-  .myapp-list > li,
-  .myapp-tag[data-state="current"][data-tone="warning"]::before {
+  .myapp-list > li {
     animation: none;
   }
 }
