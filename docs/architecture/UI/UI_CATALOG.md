@@ -286,6 +286,8 @@ Mọi trang HTML con kế thừa thông qua: `layout:decorate="~{layout/[tên-la
 | Dữ liệu người dùng | Model attribute `topbarUser` (`core/web/TopbarUserAdvice`) | – | Có sẵn ở **mọi** trang khi đã đăng nhập: `fullName`, `email`, `roleName`, `avatarUrl`. `avatarUrl` là link `/users/{id}/avatar?v=...` (ảnh đã tải lên, có file trên máy) do `TopbarUserAdvice` tính, hoặc `null` khi chưa có ảnh; không phải giá trị thô của cột. Không tự lấy từ biến riêng của controller. |
 | Topbar nội bộ | `fragments/workspace-header :: header(role, fullName)` | `workspace.css` (`@import topbar.css`) | Không có logo (logo nằm ở đầu sidebar). |
 | Topbar công khai | `fragments/layout/public-topbar :: topbar(activeNav, onLanding)` | `topbar.css` mục 5 | Dùng cho landing (`candidate/landing.html`) và `layout/public` (jobs board, job-detail). Trang chứa phải nạp `css/topbar.css`. |
+| Topbar ứng viên | `fragments/layout/candidate-topbar :: topbar(activeMenu)` | `candidate-shell.css` | `layout/internal` khi người xem là Candidate (`/portal/*`, `/notifications`): logo, menu ứng viên, góc phải. Không sidebar. |
+| Menu ứng viên (2 mục) | `fragments/layout/candidate-nav :: links(current)` | `topbar.css` (`__link`, `__candidate-nav`), `candidate-shell.css` | "Vị trí tuyển dụng" → `/jobs`, "Đơn của tôi" → `/portal/applications`; `current` = `'jobs'` \| `'applications'` \| `''`. Một nguồn cho topbar ứng viên (luôn hiện) và topbar công khai (chỉ ứng viên, ≤ 1299px thành hàng thứ hai). |
 | Font Lora / Source Sans 3 | – | `fonts.css` | `tokens.css` và `topbar.css` cùng `@import`. |
 
 **Kích thước chung:** cao `var(--topbar-h)` = 74px (đầu sidebar cũng 74px), lề trái/phải 32px, dãn hết chiều ngang (không dồn vào giữa).
@@ -335,12 +337,13 @@ Mọi trang HTML con kế thừa thông qua: `layout:decorate="~{layout/[tên-la
 | `.public-topbar` / `__inner` | Khung sticky, nền trắng, viền dưới; `__inner` dãn hết chiều ngang, lề 32px. Gắn sẵn token chuẩn nên không bị trang landing đổi màu. |
 | `.public-topbar__nav` / `__link` | Menu section. `__link` không bao giờ xuống dòng; hover và mục đang xem (`.active` / `aria-current`) sáng nền `var(--brand-soft)` + gạch chân. |
 | `.public-topbar__actions` | Nút Đăng nhập / Tạo tài khoản (khách) hoặc nút "Bảng điều khiển" + `topbar-user` (đã đăng nhập). |
-| `.public-topbar__dashboard` | Nút "Bảng điều khiển →", ẩn trên điện thoại. |
+| `.public-topbar__dashboard` | Nút "Bảng điều khiển →" (ứng viên: "Đơn ứng tuyển của tôi →"), ẩn trên điện thoại. |
+| `.public-topbar__candidate-nav` | Chỉ ứng viên đã đăng nhập: hàng thứ hai `candidate-nav` (2 mục chia đều) khi ≤ 1299px, thay menu bị ẩn và nút `__dashboard`. Màn rộng: ẩn. |
 
 - **Menu:** "Vị trí tuyển dụng" luôn dẫn tới Jobs Board `/jobs` (sáng khi `activeNav = 'jobs'`). "Quy trình", "Văn hóa Mộc", "Chế độ đãi ngộ" là section của landing (`#process`, `#culture`, `#perks`).
 - **Làm sáng menu:** `static/js/public-topbar.js` (fragment tự nạp): sáng khi bấm, và sáng theo section đang cuộn tới trên landing.
 - **Logo ngoài topbar** (vd footer landing) cũng đúng chuẩn vì khối cầu nối token trong `topbar.css` áp dụng cho cả `.wordmark`.
-- **Thu gọn khi màn hình hẹp** (mốc được kiểm tra với `--chrome-step` đến 2px; tăng quá 2px thì kiểm tra lại): dưới 1440px ẩn email; dưới 1366px ẩn badge role, thu hẹp menu; dưới 1300px (đã đăng nhập) hoặc 1150px (khách) ẩn menu; dưới 640px chỉ còn logo, avatar và icon đăng xuất.
+- **Thu gọn khi màn hình hẹp** (mốc được kiểm tra với `--chrome-step` đến 2px; tăng quá 2px thì kiểm tra lại): dưới 1440px ẩn email; dưới 1366px ẩn badge role, thu hẹp menu; dưới 1300px (đã đăng nhập) hoặc 1150px (khách) ẩn menu (ứng viên: menu ứng viên xuống hàng thứ hai); dưới 640px chỉ còn logo, avatar và icon đăng xuất.
 
 ### D. Sidebar Đa Trạng Thái (`sidebar-shell.html`)
 - **Trạng thái thu gọn (68px):** Tối ưu không gian làm việc, hiển thị icon kèm Tooltip nổi giải thích tính năng khi hover.

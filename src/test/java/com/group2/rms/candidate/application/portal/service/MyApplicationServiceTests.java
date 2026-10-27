@@ -160,7 +160,7 @@ class MyApplicationServiceTests {
         when(myApplications.findOwnedByUserId(USER_ID)).thenReturn(List.of(
                 application(1, "Offered"), application(2, "Interviewing"), application(3, "Applied")));
         when(myApplications.findMyInterviews(USER_ID)).thenReturn(List.of(
-                new InterviewRow(2, now.plusHours(5), "Offline_Office", "Scheduled")));
+                new InterviewRow(2, now.plusHours(5).plusMinutes(30), "Offline_Office", "Scheduled")));
         when(myApplications.findMyVisibleOffers(USER_ID)).thenReturn(List.of(
                 new OfferRow(1, 9, "Sent_Candidate", now.plusDays(2), now.minusDays(1))));
 
@@ -168,7 +168,7 @@ class MyApplicationServiceTests {
 
         assertTrue(page.applications().isEmpty());
         assertEquals(List.of(2, 1), ids(page.urgent()));
-        assertEquals("Phỏng vấn sau 4 giờ", page.urgent().getFirst().urgentLabel());
+        assertEquals("Phỏng vấn sau 5 giờ", page.urgent().getFirst().urgentLabel());
     }
 
     @Test

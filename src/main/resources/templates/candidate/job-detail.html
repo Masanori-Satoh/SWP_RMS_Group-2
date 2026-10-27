@@ -29,9 +29,11 @@
             <strong>Lưu ý:</strong> Vị trí này đã đóng hoặc ngừng nhận hồ sơ.
         </div>
 
-        <!-- Thông báo sau khi nộp hồ sơ thành công (flash từ POST /jobs/{id}/apply) -->
+        <!-- Thông báo sau khi nộp hồ sơ thành công (flash từ POST /jobs/{id}/apply, kèm id đơn vừa nộp) -->
         <div th:if="${applySuccess}" class="alert alert--success job-detail-alert" role="status">
-            <strong>Đã nộp hồ sơ.</strong> Bộ phận tuyển dụng sẽ liên hệ với bạn qua email.
+            <span><strong>Đã nộp hồ sơ.</strong> Bộ phận tuyển dụng sẽ liên hệ với bạn qua email.</span>
+            <a th:if="${appliedApplicationId != null}" class="job-detail-alert__link"
+               th:href="@{/portal/applications/{id}(id=${appliedApplicationId})}">Xem đơn đã nộp &rarr;</a>
         </div>
 
         <div class="job-detail-layout">

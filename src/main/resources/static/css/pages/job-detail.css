@@ -145,7 +145,17 @@
 }
 
 .job-detail-alert {
+  flex-wrap: wrap;
   margin-bottom: var(--s6);
+}
+
+/* "Xem đơn đã nộp →" trong alert sau khi nộp: sát phải, xuống dòng nguyên cụm khi hẹp. */
+.job-detail-alert__link {
+  margin-left: auto;
+  color: inherit;
+  font-weight: 700;
+  text-decoration: underline;
+  white-space: nowrap;
 }
 
 .job-action-wrap {

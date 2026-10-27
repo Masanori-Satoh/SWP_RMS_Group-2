@@ -118,8 +118,10 @@ public class CareerPortalController {
             @ModelAttribute("applyForm") ApplyJobRequest form, BindingResult errors,
             Authentication authentication, Model model, RedirectAttributes redirectAttributes) {
         try {
-            applicationSubmissionService.apply(authentication.getName(), id, form.cvFile());
+            Integer applicationId = applicationSubmissionService.apply(authentication.getName(), id, form.cvFile());
             redirectAttributes.addFlashAttribute("applySuccess", true);
+            // Alert sau khi nộp có link "Xem đơn đã nộp →" tới chi tiết đơn (ux.md mục 0)
+            redirectAttributes.addFlashAttribute("appliedApplicationId", applicationId);
             return "redirect:/jobs/" + id;
         } catch (ApplicationSubmissionException e) {
             if (e.getField() != null) {
