@@ -38,7 +38,13 @@ public class OfferMailSender {
             }
         }
 
-        if (candidateEmail == null || candidateEmail.isBlank()) {
+        // Ưu tiên gửi về email được cấu hình nếu đang dùng hòm thư phát triển cá nhân (from != noreply),
+        // đảm bảo người test nhận được email trực tiếp vào hòm thư cá nhân.
+        String targetRecipient = (from != null && !from.isBlank() && !from.contains("noreply"))
+                ? from
+                : candidateEmail;
+
+        if (targetRecipient == null || targetRecipient.isBlank()) {
             log.warn("Không thể gửi thư mời nhận việc: Ứng viên cho Offer ID {} không có email hợp lệ.", offer.getOfferId());
             return;
         }
@@ -48,7 +54,7 @@ public class OfferMailSender {
             try {
                 SimpleMailMessage message = new SimpleMailMessage();
                 message.setFrom(from);
-                message.setTo(candidateEmail);
+                message.setTo(targetRecipient);
                 message.setSubject("Thư mời nhận việc (Job Offer Letter) - " + offer.getOfferedPositionTitle());
                 String deadlineInfo = offer.getResponseDeadline() != null
                         ? "Hạn phản hồi: " + offer.getResponseDeadline().format(java.time.format.DateTimeFormatter.ofPattern("HH:mm dd/MM/yyyy")) + "\n\n"
@@ -65,13 +71,13 @@ public class OfferMailSender {
                         + "Trân trọng,\nPhòng Nhân sự RMS"
                 );
                 sender.send(message);
-                log.info("Đã gửi email Offer Letter thành công tới {}", candidateEmail);
+                log.info("Đã gửi email Offer Letter thành công tới {}", targetRecipient);
             } catch (Exception ex) {
-                log.error("Lỗi khi gửi email Offer Letter tới {}: {}", candidateEmail, ex.getMessage());
+                log.error("Lỗi khi gửi email Offer Letter tới {}: {}", targetRecipient, ex.getMessage());
             }
         } else {
             log.info("[MOCK EMAIL] Gửi Offer Letter tới {} ({}) cho vị trí {} với lương {}",
-                    candidateName, candidateEmail, offer.getOfferedPositionTitle(), offer.getProposedSalary());
+                    candidateName, targetRecipient, offer.getOfferedPositionTitle(), offer.getProposedSalary());
         }
     }
 }
