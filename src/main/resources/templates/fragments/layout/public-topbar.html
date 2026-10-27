@@ -12,6 +12,7 @@
       - onLanding: true nếu đang ở trang landing (menu cuộn tới section trong trang),
                    false ở trang khác (menu dẫn về landing kèm #section)
     Người dùng lấy từ model attribute topbarUser (TopbarUserAdvice), giống topbar nội bộ.
+    Ứng viên đã đăng nhập ở màn hẹp: hàng thứ hai "Vị trí tuyển dụng · Đơn của tôi" (fragments/layout/candidate-nav).
     =============================================================================
 -->
 <header th:fragment="topbar(activeNav, onLanding)" class="public-topbar"
@@ -54,9 +55,15 @@
         <div th:replace="~{fragments/layout/topbar-user :: actions(${viewer.fullName}, ${viewer.email}, ${viewer.roleName}, ${viewer.avatarUrl}, 'public')}"></div>
       </th:block>
     </div>
+
+    <!-- Ứng viên, màn hẹp (≤ 1299px, khi menu trên bị ẩn): hàng thứ hai cùng 2 mục với topbar ứng viên
+         (fragments/layout/candidate-nav), thay nút "Đơn ứng tuyển của tôi →". Màn rộng: ẩn (topbar.css). -->
+    <nav th:if="${viewer != null and viewer.roleName == 'Candidate'}" class="public-topbar__candidate-nav"
+         aria-label="Điều hướng ứng viên">
+      <th:block th:replace="~{fragments/layout/candidate-nav :: links(${activeNav == 'jobs' ? 'jobs' : ''})}"></th:block>
+    </nav>
   </div>
   <script defer th:src="@{/js/public-topbar.js}"></script>
-  <th:block th:replace="~{fragments/rms-chat :: chat}"></th:block>
 </header>
 </body>
 </html>

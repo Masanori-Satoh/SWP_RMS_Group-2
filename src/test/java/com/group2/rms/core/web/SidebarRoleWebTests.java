@@ -76,7 +76,7 @@ class SidebarRoleWebTests {
         when(currentUser.requireUser()).thenReturn(candidate);
         when(notifications.getNotificationsForUser(any(), anyInt(), anyInt())).thenReturn(Page.empty());
         when(myApplications.list(any())).thenReturn(new MyApplicationListResponse(
-                List.of(), Map.of(1, 0L, 2, 0L, 3, 0L, 4, 0L), null, 0));
+                List.of(), "all", 0, 0, 0, List.of()));
 
         for (String page : List.of("/portal/applications", "/portal/offers", "/portal/interviews", "/notifications")) {
             String html = render(page, as(candidate));
@@ -85,6 +85,11 @@ class SidebarRoleWebTests {
 
             assertFalse(nav.contains("href=\"/applications\""), page + ": lộ menu HR /applications");
             assertFalse(nav.contains("href=\"/offers\""), page + ": lộ menu HR /offers");
+            // ux.md mục 0: menu 2 mục (fragments/layout/candidate-nav)
+            assertTrue(nav.contains("href=\"/jobs\""), page + ": thiếu mục Vị trí tuyển dụng");
+            assertTrue(nav.contains("href=\"/portal/applications\""), page + ": thiếu mục Đơn của tôi");
+            // "Đơn của tôi" sáng ở trang đơn, lịch phỏng vấn, thư mời; không sáng ở thông báo
+            assertEquals(!"/notifications".equals(page), nav.contains("aria-current=\"page\">Đơn của tôi"), page);
         }
     }
 
@@ -107,7 +112,7 @@ class SidebarRoleWebTests {
         when(currentUser.requireUser()).thenReturn(candidate);
         when(notifications.getNotificationsForUser(any(), anyInt(), anyInt())).thenReturn(Page.empty());
         when(myApplications.list(any())).thenReturn(new MyApplicationListResponse(
-                List.of(), Map.of(1, 0L, 2, 0L, 3, 0L, 4, 0L), null, 0));
+                List.of(), "all", 0, 0, 0, List.of()));
         for (String page : List.of("/portal/applications", "/portal/offers", "/portal/interviews", "/notifications")) {
             String html = render(page, as(candidate));
             assertTrue(html.contains("class=\"site-footer\""), page + ": thiếu footer");

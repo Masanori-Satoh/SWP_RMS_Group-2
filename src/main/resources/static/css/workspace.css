@@ -448,16 +448,16 @@ body:not(.sidebar-pinned) .workspace-sidebar:not(:hover) .sidebar-nav-link[data-
   font-weight: 600;
 }
 
-/* These four Admin views use the catalog's BEM status colours. Keep the
+/* Admin account lists, Department and Monitoring use BEM status colours. Keep the
    legacy neutral foreground elsewhere, without overriding their modifiers.
    :where() preserves the original specificity for every other workspace. */
-.badge:not(:where(.adm-dashboard *, .iac-internal-page *, .dm-page *, .apm-page *)) {
+.badge:not(:where(.adm-dashboard *, .iac-internal-page *, .cac-page *, .dm-page *, .apm-page *)) {
   color: var(--muted);
 }
 
 /* The standard warning pair is just below 4.5:1. Darken only Admin warnings
    using existing tokens; other modules retain their current presentation. */
-:where(.adm-dashboard, .iac-internal-page, .dm-page, .apm-page) :is(.badge--warning, .badge-warning) {
+:where(.adm-dashboard, .iac-internal-page, .cac-page, .dm-page, .apm-page) :is(.badge--warning, .badge-warning) {
   color: color-mix(in srgb, var(--warning) 90%, var(--ink));
 }
 
@@ -555,7 +555,7 @@ body:not(.sidebar-pinned) .workspace-sidebar:not(:hover) .sidebar-nav-link[data-
     flex-wrap: wrap;
   }
 
-  .workspace-identity {
+  .workspace-header .workspace-identity {
     order: 4;
     min-width: 0;
     padding-bottom: var(--s1);

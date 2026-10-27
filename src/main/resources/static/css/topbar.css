@@ -370,9 +370,38 @@
   }
 }
 
+/* Hàng thứ hai của ứng viên (fragments/layout/candidate-nav, ux.md mục 0): màn rộng thì ẩn vì menu công khai
+   đã có "Vị trí tuyển dụng" và nút "Đơn ứng tuyển của tôi →". */
+.public-topbar__candidate-nav {
+  display: none;
+}
+
 /* Đã đăng nhập: góc phải rộng hơn nên ẩn menu sớm hơn */
 @media (max-width: 1299px) {
   .public-topbar:has(.topbar-user) .public-topbar__nav {
+    display: none;
+  }
+
+  /* Ứng viên: menu trên vừa ẩn thì hiện hàng thứ hai cùng 2 mục (chia đều, không ☰) và bỏ nút trùng đích. */
+  .public-topbar__inner:has(.public-topbar__candidate-nav) {
+    flex-wrap: wrap;
+    row-gap: 0;
+  }
+
+  .public-topbar__candidate-nav {
+    display: flex;
+    order: 3;
+    flex-basis: 100%;
+    gap: 4px;
+    padding-bottom: 8px;
+  }
+
+  .public-topbar__candidate-nav .public-topbar__link {
+    flex: 1;
+    justify-content: center;
+  }
+
+  .public-topbar:has(.public-topbar__candidate-nav) .public-topbar__dashboard {
     display: none;
   }
 }
@@ -424,6 +453,13 @@
 /* Bấm menu cuộn tới section: chừa chỗ cho topbar sticky */
 :root:has(.public-topbar) {
   scroll-padding-top: 74px;
+}
+
+/* Ứng viên, màn hẹp: topbar cao thêm hàng thứ hai (40px + 8px). Đặt sau rule trên vì cùng độ ưu tiên. */
+@media (max-width: 1299px) {
+  :root:has(.public-topbar__candidate-nav) {
+    scroll-padding-top: 122px;
+  }
 }
 
 /* -----------------------------------------------------------------------------

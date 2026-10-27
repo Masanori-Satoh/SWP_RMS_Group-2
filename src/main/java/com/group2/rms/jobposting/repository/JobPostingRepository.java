@@ -195,4 +195,5 @@ public interface JobPostingRepository extends JpaRepository<JobPosting, Integer>
          + "AND (j.applicationDeadline IS NULL OR j.applicationDeadline >= :now) "
          + "ORDER BY j.postingDate DESC")
     List<JobPosting> findOpenPostings(@Param("now") LocalDateTime now);
+
 }

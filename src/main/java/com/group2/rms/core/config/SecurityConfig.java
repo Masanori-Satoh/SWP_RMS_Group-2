@@ -39,6 +39,8 @@ public class SecurityConfig {
          */
         private static final RequestMatcher CV_PATHS = new OrRequestMatcher(
                         PathPatternRequestMatcher.withDefaults().matcher("/applications/*/cv"),
+                        // dunglt bổ sung: popup "Xem lại CV" của ứng viên (L8 luồng 5)
+                        PathPatternRequestMatcher.withDefaults().matcher("/portal/applications/*/cv"),
                         PathPatternRequestMatcher.withDefaults().matcher("/samples/cv/**"));
 
         @Bean
