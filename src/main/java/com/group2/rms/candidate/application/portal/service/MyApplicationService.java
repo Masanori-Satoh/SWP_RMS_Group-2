@@ -53,9 +53,15 @@ public class MyApplicationService {
     private final CurrentUserService currentUserService;
     private final CvStorage cvStorage;
 
-    /** Mới cập nhật nhất trước; cùng lúc thì đơn nộp sau, rồi id lớn hơn trước (thứ tự ổn định cho phân trang sau này). */
-    static final Comparator<MyApplicationResponse> NEWEST_ACTIVITY_FIRST =
-            Comparator.comparing(MyApplicationResponse::lastActivityAt, Comparator.nullsLast(Comparator.reverseOrder()))
+    /**
+     * Thứ tự danh sách (dunglt 27/10): nhóm 1 (có phỏng vấn / thư mời sắp tới, sự kiện gần nhất trước, thư mời không hạn
+     * sau cùng nhóm) → nhóm 2 (đang xử lý) → nhóm 3 (đã kết thúc, luôn cuối). Trong nhóm: mới có chuyển biến trước, rồi
+     * đơn nộp sau, rồi id lớn hơn (thứ tự ổn định cho phân trang sau này).
+     */
+    static final Comparator<MyApplicationResponse> DISPLAY_ORDER =
+            Comparator.comparingInt(MyApplicationResponse::priority)
+                    .thenComparing(MyApplicationResponse::upcomingAt, Comparator.nullsLast(Comparator.naturalOrder()))
+                    .thenComparing(MyApplicationResponse::lastActivityAt, Comparator.nullsLast(Comparator.reverseOrder()))
                     .thenComparing(MyApplicationResponse::submissionDate, Comparator.nullsLast(Comparator.reverseOrder()))
                     .thenComparing(MyApplicationResponse::applicationId, Comparator.reverseOrder());
 
@@ -104,7 +110,7 @@ public class MyApplicationService {
     }
 
     /**
-     * Mọi thẻ đơn của ứng viên {@code userId}, mới cập nhật nhất trước. Dữ kiện lịch, offer, dấu dừng đọc theo
+     * Mọi thẻ đơn của ứng viên {@code userId}, theo {@link #DISPLAY_ORDER}. Dữ kiện lịch, offer, dấu dừng đọc theo
      * {@code userId} (mỗi loại một câu cho cả trang, không một câu cho từng đơn), gom theo id đơn rồi quy đổi bằng
      * {@link MyApplicationJourney}.
      */
@@ -115,7 +121,7 @@ public class MyApplicationService {
         }
         Map<Integer, List<Interview>> interviews = myApplications.findMyInterviews(userId).stream()
                 .collect(Collectors.groupingBy(MyInterviewRow::getApplicationId, Collectors.mapping(
-                        row -> new Interview(row.getStartTime(), row.getFormat(), row.getStatus()),
+                        row -> new Interview(row.getStartTime(), row.getFormat(), row.getStatus(), row.getScheduledAt()),
                         Collectors.toList())));
         Map<Integer, Offer> offers = myApplications.findMyVisibleOffers(userId).stream()
                 .collect(Collectors.toMap(MyOfferRow::getApplicationId,
@@ -133,7 +139,7 @@ public class MyApplicationService {
                             interviews.getOrDefault(id, List.of()), offers.get(id), marks.getOrDefault(id, List.of()));
                     return toResponse(application, MyApplicationJourney.resolve(facts, now), now);
                 })
-                .sorted(NEWEST_ACTIVITY_FIRST)
+                .sorted(DISPLAY_ORDER)
                 .toList();
     }
 
@@ -188,6 +194,9 @@ public class MyApplicationService {
                 view.urgentUntil(),
                 view.urgentLabel(),
                 view.ended(),
+                view.stopped(),
+                view.priority(),
+                view.upcomingAt(),
                 WITHDRAWABLE_STATUSES.contains(application.getApplicationStatus()),
                 cvUrl != null && !cvUrl.isBlank(),
                 job.isVisibleToCandidates(now),

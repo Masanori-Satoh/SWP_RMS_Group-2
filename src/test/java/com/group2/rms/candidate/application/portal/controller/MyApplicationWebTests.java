@@ -156,6 +156,24 @@ class MyApplicationWebTests {
                         "còn 2 ngày để trả lời thư mời", "href=\"/portal/offers/3\"", "Trả lời thư mời")));
     }
 
+    /** Đơn dừng (dunglt 27/10): Nộp CV vẫn ✓, cả thanh xám, chữ trạng thái thành badge, không còn [X]. */
+    @Test
+    void stoppedCardHasGreyBarWithTicksAndBadgeInsteadOfCross() throws Exception {
+        when(myApplications.list(null)).thenReturn(page(List.of(card(44)
+                .status("Đã tự rút hồ sơ", "Bạn đã rút hồ sơ ngày 25/10.", "neutral")
+                .steps("done", "upcoming", "upcoming", "upcoming").stopped().build()), "all"));
+
+        mvc.perform(get("/portal/applications").with(as("an.vo", "Candidate")))
+                .andExpect(status().isOk())
+                .andExpect(content().string(containsString("data-state=\"stopped\"")))
+                .andExpect(content().string(containsString("data-stopped=\"true\"")))
+                .andExpect(content().string(stringContainsInOrder("data-state=\"done\"", "<polyline points=\"20 6 9 17 4 12\"/>",
+                        "Nộp CV")))
+                .andExpect(content().string(containsString("class=\"badge myapp-badge-stopped\">Đã tự rút hồ sơ</span>")))
+                .andExpect(content().string(not(containsString("data-state=\"closed\""))))
+                .andExpect(content().string(not(containsString("<line x1=\"18\" y1=\"6\""))));
+    }
+
     @Test
     void cardWithoutCvHasNoCvLink() throws Exception {
         when(myApplications.list(null)).thenReturn(page(List.of(card(42).noCv().build()), "all"));
@@ -192,8 +210,9 @@ class MyApplicationWebTests {
 
     // ---- Chi tiết ----
 
+    /** Lưới 2 cột (dunglt 27/10): trái Tiến độ → Thông báo → Hành trình; phải Thông tin & Tài liệu → Rút đơn. */
     @Test
-    void detailShowsProgressSubmittedFilesJourneyAndWithdraw() throws Exception {
+    void detailShowsProgressNoticeJourneyThenInfoAndWithdraw() throws Exception {
         when(myApplications.detail(42)).thenReturn(card(42).canWithdraw(true)
                 .journey(new TimelineItem(SUBMITTED, "Đã nộp hồ sơ", null, null, "brand")).build());
 
@@ -202,10 +221,13 @@ class MyApplicationWebTests {
                 .andExpect(view().name("candidate/my-application-detail"))
                 .andExpect(model().attribute("activeMenu", "applications"))
                 .andExpect(content().string(stringContainsInOrder("href=\"/portal/applications\"", "Đơn của tôi",
-                        "Junior Java Developer", "Engineering", "#CAN-0042", "05/10/2026",
-                        "myapp-stepper", "Đã nộp CV", "Hồ sơ đã nộp", "href=\"/portal/applications/42/cv\"",
-                        "href=\"/jobs/7\"", "Xem tin tuyển dụng", "Hành trình", "Đã nộp hồ sơ", "05/10/2026 09:00",
-                        "action=\"/portal/applications/42/withdraw\"")))
+                        "Junior Java Developer", "Engineering",
+                        "class=\"myapp-detail__main\"", "Tiến độ", "myapp-stepper",
+                        "Thông báo", "Đã nộp CV", "Hành trình hồ sơ", "Đã nộp hồ sơ", "05/10/2026 09:00",
+                        "class=\"myapp-detail__side\"", "Thông tin &amp; Tài liệu", "Mã đơn", "#CAN-0042",
+                        "Ngày nộp", "05/10/2026", "href=\"/portal/applications/42/cv\"",
+                        "href=\"/jobs/7\"", "Xem tin tuyển dụng", "href=\"mailto:careers@moc.com\"",
+                        "action=\"/portal/applications/42/withdraw\"", "</aside>")))
                 .andExpect(content().string(containsString("aria-label=\"Rút đơn vị trí Junior Java Developer\"")))
                 .andExpect(content().string(containsString("data-posting-title=\"Junior Java Developer\"")))
                 .andExpect(content().string(containsString("id=\"myapp-withdraw-dialog\"")))
@@ -214,14 +236,15 @@ class MyApplicationWebTests {
     }
 
     @Test
-    void detailOfApplicationPastScreeningOnClosedPostingHasNoWithdrawNorPostingLink() throws Exception {
+    void detailOfApplicationStoppedOnClosedPostingHasGreyBarBadgeAndNoWithdrawNorPostingLink() throws Exception {
         when(myApplications.detail(42)).thenReturn(card(42).postingClosed()
-                .status("Vị trí đã ngừng tuyển", null, "neutral").steps("closed", "upcoming", "upcoming", "upcoming")
-                .ended().build());
+                .status("Vị trí đã ngừng tuyển", null, "neutral").steps("done", "upcoming", "upcoming", "upcoming")
+                .stopped().build());
 
         mvc.perform(get("/portal/applications/42").with(as("an.vo", "Candidate")))
                 .andExpect(status().isOk())
-                .andExpect(content().string(containsString("data-state=\"closed\"")))
+                .andExpect(content().string(containsString("data-stopped=\"true\"")))
+                .andExpect(content().string(containsString("class=\"badge myapp-badge-stopped\">Vị trí đã ngừng tuyển")))
                 .andExpect(content().string(containsString("Tin tuyển dụng đã đóng.")))
                 .andExpect(content().string(not(containsString("href=\"/jobs/7\""))))
                 .andExpect(content().string(not(containsString("/withdraw"))))
@@ -333,6 +356,7 @@ class MyApplicationWebTests {
         private LocalDateTime urgentUntil;
         private String urgentLabel;
         private boolean ended;
+        private boolean stopped;
         private boolean canWithdraw;
         private boolean hasCv = true;
         private boolean postingVisible = true;
@@ -348,6 +372,7 @@ class MyApplicationWebTests {
         Card steps(String... states) { steps = stepList(states); return this; }
         Card urgent(LocalDateTime until, String l) { urgentUntil = until; urgentLabel = l; return this; }
         Card ended() { ended = true; return this; }
+        Card stopped() { ended = true; stopped = true; return this; }
         Card canWithdraw(boolean value) { canWithdraw = value; return this; }
         Card noCv() { hasCv = false; return this; }
         Card postingClosed() { postingVisible = false; return this; }
@@ -356,7 +381,8 @@ class MyApplicationWebTests {
         MyApplicationResponse build() {
             return new MyApplicationResponse(id, 7, title, "Engineering", String.format("#CAN-%04d", id), SUBMITTED,
                     SUBMITTED, steps, label, note, tone, actionLabel, actionHref, urgentUntil, urgentLabel, ended,
-                    canWithdraw, hasCv, postingVisible, journey);
+                    stopped, ended ? 3 : urgentUntil != null ? 1 : 2, urgentUntil, canWithdraw, hasCv, postingVisible,
+                    journey);
         }
 
         private static List<MyApplicationStep> stepList(String... states) {

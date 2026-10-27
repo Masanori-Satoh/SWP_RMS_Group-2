@@ -4,24 +4,23 @@
 <!--
     CANDIDATE/MY-APPLICATION-PARTS.HTML — linh kiện của "Đơn của tôi", dùng ở danh sách (candidate/my-applications)
     và trang chi tiết (candidate/my-application-detail). Chỉ dùng trong 2 trang này nên không ghi vào UI_CATALOG.
-      stepper(steps)  thanh Nộp CV → Phỏng vấn → Thư mời → Nhận việc (MyApplicationResponse.steps)
-      status(item)    chữ trạng thái + một dòng giải thích + dòng "còn …" khi đơn gấp
+      stepper(steps, stopped)  thanh Nộp CV → Phỏng vấn → Thư mời → Nhận việc (MyApplicationResponse.steps);
+                      stopped = đơn dừng: cả thanh xám mờ, các bước đã tới vẫn ✓ (dunglt 27/10, không còn [X])
+      status(item)    chữ trạng thái (đơn dừng: badge xám) + một dòng giải thích + dòng "còn …" khi đơn gấp
       action(item)    nút việc tiếp theo (null thì không có)
       cvLink(item)    "Xem lại CV": link thường tới /portal/applications/{id}/cv; có JS thì mở trong popup cvDialog
       cvDialog        popup <dialog> chứa <iframe>; nạp CV khi mở (static/js/pages/my-applications.js)
     Trạng thái dựa vào [data-state]/[data-tone] (bẫy "__" của Thymeleaf). CSS: css/pages/my-applications.css (myapp-).
 -->
 
-<!-- Thanh 4 bước. data-state: done (✓), current (vòng bao chấm), closed (đơn dừng ở bước này: [X], cả thanh xám),
-     upcoming (mờ). aria-hidden: chữ trạng thái bên cạnh đã nói đủ cho trình đọc màn hình. -->
-<ol th:fragment="stepper(steps)" class="myapp-stepper" aria-hidden="true">
+<!-- Thanh 4 bước. data-state: done (✓), current (vòng bao chấm), upcoming (mờ). data-stopped: đơn dừng, cả thanh
+     xám mờ. aria-hidden: chữ trạng thái bên cạnh đã nói đủ cho trình đọc màn hình. -->
+<ol th:fragment="stepper(steps, stopped)" class="myapp-stepper" aria-hidden="true"
+    th:attr="data-stopped=${stopped ? 'true' : null}">
     <li th:each="step : ${steps}" class="myapp-stepper__step" th:data-state="${step.state}">
         <span class="myapp-stepper__dot">
             <th:block th:if="${step.state == 'done'}">
                 <svg th:replace="~{candidate/my-application-icons :: icon('check')}"></svg>
-            </th:block>
-            <th:block th:if="${step.state == 'closed'}">
-                <svg th:replace="~{candidate/my-application-icons :: icon('close')}"></svg>
             </th:block>
         </span>
         <span class="myapp-stepper__label" th:text="${step.label}">Nộp CV</span>
@@ -29,11 +28,11 @@
 </ol>
 
 <div th:fragment="status(item)" class="myapp-status" th:data-tone="${item.statusTone}">
-    <!-- Đơn tự rút: nhãn bo tròn xám để tách khỏi đơn đang chạy (chữ lấy từ MyApplicationJourney) -->
+    <!-- Đơn dừng (rút, bị loại, tin đóng, từ chối thư mời): nhãn bo tròn xám để tách khỏi đơn đang chạy
+         (chữ lấy từ MyApplicationJourney, bảng 5.3) -->
     <p class="myapp-status__label">
-        <span th:if="${item.statusLabel == 'Đã tự rút hồ sơ'}" class="badge myapp-badge-withdrawn"
-              th:text="${item.statusLabel}">Đã tự rút hồ sơ</span>
-        <th:block th:unless="${item.statusLabel == 'Đã tự rút hồ sơ'}" th:text="${item.statusLabel}">Phỏng vấn 10:00 24/11</th:block>
+        <span th:if="${item.stopped}" class="badge myapp-badge-stopped" th:text="${item.statusLabel}">Đã tự rút hồ sơ</span>
+        <th:block th:unless="${item.stopped}" th:text="${item.statusLabel}">Phỏng vấn 10:00 24/11</th:block>
     </p>
     <p th:if="${item.statusNote != null}" class="myapp-status__note" th:text="${item.statusNote}">
         Tại văn phòng. Xem chi tiết ở Lịch phỏng vấn.

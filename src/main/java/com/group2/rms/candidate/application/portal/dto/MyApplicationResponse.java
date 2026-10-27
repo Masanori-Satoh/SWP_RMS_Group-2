@@ -21,6 +21,9 @@ import java.util.List;
  * @param urgentUntil       hạn của việc cần làm ngay; {@code null} nếu đơn không gấp
  * @param urgentLabel       dòng "còn …" của việc gấp; {@code null} nếu đơn không gấp
  * @param ended             đơn đã dừng hoặc đã nhận việc (tab "Đã kết thúc")
+ * @param stopped           đơn dừng giữa chừng (rút, bị loại, tin đóng, từ chối thư mời): thanh xám, chữ thành badge
+ * @param priority          nhóm xếp danh sách: 1 có sự kiện sắp tới, 2 đang xử lý, 3 đã kết thúc
+ * @param upcomingAt        mốc sự kiện sắp tới của nhóm 1; {@code null} nếu không có hoặc thư mời không hạn
  * @param canWithdraw       đơn còn rút được nên trang chi tiết hiện nút "Rút đơn"
  * @param hasCv             đơn có CV để xem lại
  * @param jobPostingVisible tin còn hiện ở trang công khai (không thì ẩn link "Xem tin tuyển dụng")
@@ -43,6 +46,9 @@ public record MyApplicationResponse(
         LocalDateTime urgentUntil,
         String urgentLabel,
         boolean ended,
+        boolean stopped,
+        int priority,
+        LocalDateTime upcomingAt,
         boolean canWithdraw,
         boolean hasCv,
         boolean jobPostingVisible,

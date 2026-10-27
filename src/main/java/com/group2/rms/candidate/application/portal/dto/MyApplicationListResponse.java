@@ -3,7 +3,8 @@ package com.group2.rms.candidate.application.portal.dto;
 import java.util.List;
 
 /**
- * Trang "Đơn của tôi": các thẻ của tab đang chọn (mới cập nhật nhất trước), số đơn mỗi tab, và các đơn gấp cho banner.
+ * Trang "Đơn của tôi": các thẻ của tab đang chọn (sự kiện sắp tới → đang xử lý → đã kết thúc), số đơn mỗi tab, và các
+ * đơn gấp cho banner.
  *
  * @param applications các thẻ của tab {@code tab}
  * @param tab          tab đang chọn: {@code all}, {@code active} (Đang xử lý), {@code ended} (Đã kết thúc)

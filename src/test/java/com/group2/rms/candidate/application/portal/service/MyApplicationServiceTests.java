@@ -66,17 +66,18 @@ class MyApplicationServiceTests {
                 application(1, "Applied"), application(2, "Rejected"), application(3, "Rejected"),
                 application(4, "Interviewing"), application(5, "Hired")));
         when(myApplications.findMyInterviews(USER_ID)).thenReturn(List.of(
-                new InterviewRow(4, nextMonth, "Online_GoogleMeet", "Scheduled"),
-                new InterviewRow(5, LocalDateTime.of(2026, 10, 19, 9, 0), "Offline_Office", "Completed")));
+                new InterviewRow(4, nextMonth, "Online_GoogleMeet", "Scheduled", LocalDateTime.of(2026, 10, 4, 9, 0)),
+                new InterviewRow(5, LocalDateTime.of(2026, 10, 19, 9, 0), "Offline_Office", "Completed",
+                        LocalDateTime.of(2026, 10, 15, 9, 0))));
         when(myApplications.findMyVisibleOffers(USER_ID)).thenReturn(List.of(
                 new OfferRow(5, 8, "Accepted", null, LocalDateTime.of(2026, 10, 20, 9, 0))));
         when(myApplications.findMyApplicationMarks(USER_ID)).thenReturn(List.of(
                 new MarkRow(2, "Withdrawn", "Applied", LocalDateTime.of(2026, 10, 6, 9, 0))));
 
         MyApplicationListResponse page = service.list(null);
-        // Mới cập nhật nhất trước: #5 nhận lời 20/10, #2 rút 06/10, còn lại cùng 05/10 thì id lớn trước
-        // (lịch phỏng vấn tháng sau của #4 chưa xảy ra nên chưa tính).
-        assertEquals(List.of(5, 2, 4, 3, 1), ids(page.applications()));
+        // Nhóm 1: #4 có lịch phỏng vấn tháng sau. Nhóm 2: #1 đang xét. Nhóm 3 (đã kết thúc), mới có chuyển biến trước:
+        // #5 nhận lời 20/10, #2 rút 06/10, #3 bị loại (chỉ có mốc nộp 05/10).
+        assertEquals(List.of(4, 1, 5, 2, 3), ids(page.applications()));
         Map<Integer, MyApplicationResponse> rows = page.applications().stream()
                 .collect(Collectors.toMap(MyApplicationResponse::applicationId, row -> row));
 
@@ -100,6 +101,38 @@ class MyApplicationServiceTests {
         assertEquals(5, page.allCount());
         assertEquals(2, page.activeCount());
         assertEquals(3, page.endedCount());
+    }
+
+    /** Lỗi dunglt thấy ở an.vo (27/10): đơn vừa có lịch phỏng vấn nằm dưới đơn đã rút. */
+    @Test
+    void applicationWithNewInterviewComesBeforeRecentlyWithdrawnOne() {
+        LocalDateTime now = LocalDateTime.now();
+        when(myApplications.findOwnedByUserId(USER_ID)).thenReturn(List.of(application(44, "Rejected"), application(210, "Interviewing")));
+        when(myApplications.findMyInterviews(USER_ID)).thenReturn(List.of(
+                new InterviewRow(210, now.plusHours(22), "Offline_Office", "Scheduled", now.minusMinutes(30))));
+        when(myApplications.findMyApplicationMarks(USER_ID)).thenReturn(List.of(
+                new MarkRow(44, "Withdrawn", "AI_Screened", now.minusDays(2))));
+
+        List<MyApplicationResponse> cards = service.list(null).applications();
+
+        assertEquals(List.of(210, 44), ids(cards));
+        assertEquals(now.minusMinutes(30), cards.getFirst().lastActivityAt());
+        assertTrue(cards.get(1).stopped());
+    }
+
+    @Test
+    void upcomingGroupIsOrderedByTheNearestEventAndOffersWithoutDeadlineComeLast() {
+        LocalDateTime now = LocalDateTime.now();
+        when(myApplications.findOwnedByUserId(USER_ID)).thenReturn(List.of(
+                application(1, "Offered"), application(2, "Interviewing"), application(3, "Interviewing"),
+                application(4, "Applied")));
+        when(myApplications.findMyInterviews(USER_ID)).thenReturn(List.of(
+                new InterviewRow(2, now.plusDays(10), "Offline_Office", "Scheduled", now.minusDays(1)),
+                new InterviewRow(3, now.plusDays(3), "Offline_Office", "Scheduled", now.minusDays(5))));
+        when(myApplications.findMyVisibleOffers(USER_ID)).thenReturn(List.of(
+                new OfferRow(1, 9, "Sent_Candidate", null, now.minusHours(1))));
+
+        assertEquals(List.of(3, 2, 1, 4), ids(service.list(null).applications()));
     }
 
     @Test
@@ -160,7 +193,7 @@ class MyApplicationServiceTests {
         when(myApplications.findOwnedByUserId(USER_ID)).thenReturn(List.of(
                 application(1, "Offered"), application(2, "Interviewing"), application(3, "Applied")));
         when(myApplications.findMyInterviews(USER_ID)).thenReturn(List.of(
-                new InterviewRow(2, now.plusHours(5).plusMinutes(30), "Offline_Office", "Scheduled")));
+                new InterviewRow(2, now.plusHours(5).plusMinutes(30), "Offline_Office", "Scheduled", now.minusDays(1))));
         when(myApplications.findMyVisibleOffers(USER_ID)).thenReturn(List.of(
                 new OfferRow(1, 9, "Sent_Candidate", now.plusDays(2), now.minusDays(1))));
 
@@ -292,7 +325,8 @@ class MyApplicationServiceTests {
 
     // Dòng kết quả giả của 3 câu dữ kiện (tên thành phần trùng tên getter của interface).
     private record InterviewRow(Integer getApplicationId, LocalDateTime getStartTime, String getFormat,
-                                String getStatus) implements MyApplicationRepository.MyInterviewRow {
+                                String getStatus, LocalDateTime getScheduledAt)
+            implements MyApplicationRepository.MyInterviewRow {
     }
 
     private record OfferRow(Integer getApplicationId, Integer getOfferId, String getStatus,

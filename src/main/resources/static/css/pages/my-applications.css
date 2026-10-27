@@ -5,7 +5,7 @@
    Chỉ chứa phần catalog chưa có: tab, banner đơn gấp, thẻ đơn 2 dòng, thanh 4 bước, popup xem CV, trang chi tiết.
 
    Màu: chỉ một màu thương hiệu (xanh lá = --brand-dark) + xám, khai báo một lần ở .myapp-page. "Đã xong" và "đang ở"
-   cùng màu, phân biệt bằng hình (✓ vs vòng bao chấm). Đơn dừng: cả thanh xám, [X] ở bước dừng. Đơn gấp: --warning.
+   cùng màu, phân biệt bằng hình (✓ vs vòng bao chấm). Đơn dừng: bước đã tới vẫn ✓, cả thanh xám mờ, chữ thành badge. Đơn gấp: --warning.
    Trạng thái dựa vào [data-state], [data-tone], [data-urgent], [aria-current] (bẫy "__" của Thymeleaf).
 
    Font: sans của khung ứng viên (Plus Jakarta Sans, css/candidate-shell.css).
@@ -122,8 +122,7 @@
   transition: transform 0.22s ease, box-shadow 0.22s ease;
 }
 
-.myapp-card[data-state="closed"] { --myapp-accent: var(--control-line); }
-.myapp-card[data-state="closed"][data-tone="danger"] { --myapp-accent: var(--error); }
+.myapp-card[data-state="stopped"] { --myapp-accent: var(--control-line); }
 
 .myapp-card[data-urgent="true"] {
   --myapp-accent: var(--warning);
@@ -186,7 +185,10 @@
   white-space: nowrap;
 }
 
+/* Mã đơn: thông tin phụ, nhỏ và nhạt nhất trang (dunglt 27/10: --control-line, tương phản thấp có chủ ý). */
 .myapp-card__code {
+  color: var(--control-line);
+  font-size: 11px;
   font-variant-numeric: tabular-nums;
   letter-spacing: 0.02em;
 }
@@ -239,7 +241,7 @@
 
 /* ---- Thanh 4 bước ----
    Đường nối phía trước mỗi bước (::before): xanh khi bước đã tới (done/current), xám khi chưa tới.
-   Đơn dừng (có bước closed): cả thanh tone xám. */
+   Đơn dừng [data-stopped]: các bước đã tới vẫn ✓ nhưng cả thanh tone xám và mờ (không đặt [X] vào bước nào). */
 .myapp-stepper {
   --myapp-step-color: var(--myapp-primary);
   display: grid;
@@ -251,8 +253,9 @@
   list-style: none;
 }
 
-.myapp-stepper:has([data-state="closed"]) {
+.myapp-stepper[data-stopped="true"] {
   --myapp-step-color: var(--neutral);
+  opacity: 0.6;
 }
 
 .myapp-stepper__step {
@@ -275,8 +278,7 @@
   background-color: var(--myapp-step-color);
 }
 
-.myapp-stepper__step[data-state="upcoming"]::before,
-.myapp-stepper__step[data-state="closed"]::before {
+.myapp-stepper__step[data-state="upcoming"]::before {
   background-color: var(--line);
 }
 
@@ -316,13 +318,6 @@
   height: 10px;
   border-radius: var(--radius-full);
   background-color: var(--myapp-step-color);
-}
-
-/* Dừng ở bước này: [X] xám. */
-.myapp-stepper__step[data-state="closed"] .myapp-stepper__dot {
-  border-color: var(--neutral);
-  background-color: var(--neutral-soft);
-  color: var(--neutral);
 }
 
 .myapp-stepper__label {
@@ -374,8 +369,8 @@
   font-weight: 700;
 }
 
-/* Đơn tự rút: nhãn bo tròn xám nhạt (ghi đè cỡ của .badge trong catalog). */
-.myapp-badge-withdrawn.badge {
+/* Đơn dừng (rút, bị loại, tin đóng, từ chối thư mời): nhãn bo tròn xám nhạt (ghi đè cỡ của .badge trong catalog). */
+.myapp-badge-stopped.badge {
   padding: 4px 12px;
   border-color: transparent;
   border-radius: var(--radius-full);
@@ -509,67 +504,89 @@ dialog.myapp-cv-dialog {
   margin-top: var(--s2);
 }
 
-.myapp-detail__progress.card {
+/* Lưới 12 cột (dunglt 27/10): trái 8 = luồng chính, phải 4 = thông tin & tài liệu. Màn hẹp: 1 cột, trái trước. */
+.myapp-detail__grid {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(14rem, 22rem);
-  align-items: center;
-  gap: var(--s4) var(--s8);
-  margin-bottom: var(--s4);
-  padding: var(--s6);
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+  align-items: start;
+  gap: var(--s6);
 }
 
-.myapp-detail__progress[data-urgent="true"] {
-  box-shadow: 0 0 0 1px var(--warning), var(--shadow-sm);
+.myapp-detail__main {
+  grid-column: span 8;
+  display: grid;
+  gap: var(--s4);
+  min-width: 0;
 }
 
-.myapp-detail__status {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: var(--s3);
-}
-
-.myapp-detail__status .myapp-card__actions {
-  justify-content: flex-start;
+.myapp-detail__side {
+  grid-column: span 4;
+  min-width: 0;
 }
 
 .myapp-detail__section.card {
-  margin-bottom: var(--s4);
+  margin: 0;
   padding: var(--s6);
 }
 
+.myapp-detail__notice[data-urgent="true"] {
+  box-shadow: 0 0 0 1px var(--warning), var(--shadow-sm);
+}
+
+.myapp-detail__notice .myapp-card__actions {
+  justify-content: flex-start;
+  margin-top: var(--s4);
+}
+
 .myapp-detail__heading {
-  margin: 0 0 var(--s3);
+  margin: 0 0 var(--s4);
   font-family: var(--sans);
   font-size: var(--font-base);
   font-weight: 700;
 }
 
-.myapp-detail__links {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: var(--s3) var(--s6);
+/* Thẻ "Thông tin & Tài liệu": nhãn trên, giá trị dưới, các dòng cách nhau bằng vạch mảnh. */
+.myapp-info {
+  display: grid;
+  margin: 0;
 }
 
-.myapp-detail__none {
+.myapp-info__row {
+  display: grid;
+  gap: 2px;
+  padding: var(--s3) 0;
+  border-top: 1px solid var(--line);
+}
+
+.myapp-info__row:first-child {
+  padding-top: 0;
+  border-top: 0;
+}
+
+.myapp-info dt {
+  color: var(--myapp-text-muted);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.myapp-info dd {
   margin: 0;
   font-size: var(--font-sm);
+  overflow-wrap: anywhere;
 }
 
 .myapp-detail__withdraw {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: var(--s2) var(--s4);
-  margin-top: var(--s6);
+  display: grid;
+  justify-items: start;
+  gap: var(--s2);
+  margin-top: var(--s2);
   padding-top: var(--s4);
   border-top: 1px solid var(--line);
 }
 
 .myapp-detail__withdraw-note {
   margin: 0;
-  font-size: var(--font-sm);
+  font-size: var(--font-xs);
 }
 
 /* ---- Trạng thái rỗng ---- */
@@ -593,9 +610,15 @@ dialog.myapp-cv-dialog {
 }
 
 /* ---- Màn hẹp ---- */
+@media (max-width: 900px) {
+  .myapp-detail__main,
+  .myapp-detail__side {
+    grid-column: 1 / -1;
+  }
+}
+
 @media (max-width: 860px) {
-  .myapp-card__body,
-  .myapp-detail__progress.card {
+  .myapp-card__body {
     grid-template-columns: minmax(0, 1fr);
   }
 
@@ -614,7 +637,6 @@ dialog.myapp-cv-dialog {
     padding: var(--s4);
   }
 
-  .myapp-detail__progress.card,
   .myapp-detail__section.card {
     padding: var(--s4);
   }

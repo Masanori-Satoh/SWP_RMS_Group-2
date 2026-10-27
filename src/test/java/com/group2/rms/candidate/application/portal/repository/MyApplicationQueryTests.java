@@ -147,7 +147,8 @@ class MyApplicationQueryTests {
         List<MyApplicationRepository.MyInterviewRow> rows = myApplications.findMyInterviews(userId);
         assertFalse(rows.isEmpty());
         assertTrue(rows.stream().allMatch(r -> ownIds.contains(r.getApplicationId())
-                && r.getStartTime() != null && r.getFormat() != null && r.getStatus() != null));
+                && r.getStartTime() != null && r.getFormat() != null && r.getStatus() != null
+                && r.getScheduledAt() != null));
     }
 
     private List<Integer> visibleOfferIds(Integer userId) {

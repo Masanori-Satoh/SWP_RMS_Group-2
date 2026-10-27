@@ -5,11 +5,12 @@
       layout:decorate="~{layout/internal}">
 <!--
     CANDIDATE/MY-APPLICATION-DETAIL.HTML — Chi tiết một đơn của ứng viên (/portal/applications/{id}; L8, ux.md mục 3)
-    Thứ tự: ← Đơn của tôi → tên vị trí, phòng ban · mã · ngày nộp → thanh 4 bước → chữ trạng thái (+ dòng gấp) và nút
-    việc tiếp theo → "Hồ sơ đã nộp" (Xem lại CV, Xem tin tuyển dụng nếu tin còn hiện) → Hành trình (mở sẵn) → Rút đơn.
-    Đây là chỗ duy nhất để rút đơn: form POST thường, JS hỏi xác nhận bằng hộp thoại (myapp-withdraw-dialog).
-    Đơn người khác: 404 từ Service. Chỉ hiện điều ứng viên được biết (GBR-02).
-    Linh kiện: candidate/my-application-parts. CSS: css/pages/my-applications.css (myapp-).
+    Đầu trang: ← Đơn của tôi, tên vị trí, phòng ban. Lưới 12 cột (dunglt 27/10), màn hẹp xếp 1 cột (trái trước):
+      trái 8: Tiến độ (thanh 4 bước) → Thông báo (chữ trạng thái, giải thích, dòng gấp, nút việc tiếp theo) → Hành trình
+      phải 4: Thông tin & Tài liệu (mã đơn, ngày nộp, Xem lại CV, tin tuyển dụng, hỗ trợ) → Rút đơn (chỉ khi rút được)
+    Rút đơn: form POST thường, JS hỏi xác nhận bằng hộp thoại (myapp-withdraw-dialog). Đơn người khác: 404 từ Service.
+    Model attribute là myApplication, không phải application: Thymeleaf dành ${application} cho ServletContext.
+    Chỉ hiện điều ứng viên được biết (GBR-02). Linh kiện: candidate/my-application-parts. CSS: css/pages/my-applications.css.
 -->
 <head>
     <title th:text="${myApplication.postingTitle} + ' · Đơn của tôi'">Đơn ứng tuyển</title>
@@ -28,58 +29,93 @@
     <div class="page-header">
         <div>
             <h1 class="page-title" th:text="${myApplication.postingTitle}">Junior Java Developer</h1>
-            <p class="myapp-card__meta">
-                <span th:if="${myApplication.departmentName != null}" th:text="${myApplication.departmentName}">Phòng Công nghệ</span>
-                <span class="myapp-card__code" th:text="${myApplication.applicationCode}">#CAN-0042</span>
-                <span>Nộp <time th:datetime="${#temporals.formatISO(myApplication.submissionDate)}"
-                                th:text="${#temporals.format(myApplication.submissionDate, 'dd/MM/yyyy')}">05/10/2026</time></span>
-            </p>
+            <p th:if="${myApplication.departmentName != null}" class="myapp-card__meta"
+               th:text="${myApplication.departmentName}">Phòng Công nghệ</p>
         </div>
     </div>
 
     <div th:if="${successMessage}" class="alert alert--success" role="status" th:text="${successMessage}">Đã rút hồ sơ.</div>
     <div th:if="${errorMessage}" class="alert alert--danger" role="alert" th:text="${errorMessage}">Không thể rút hồ sơ.</div>
 
-    <section class="card myapp-detail__progress" aria-label="Tiến độ hồ sơ"
-             th:data-state="${!myApplication.ended ? 'current' : myApplication.statusTone == 'success' ? 'done' : 'closed'}"
-             th:attr="data-urgent=${myApplication.urgent ? 'true' : null}">
-        <ol th:replace="~{candidate/my-application-parts :: stepper(${myApplication.steps})}"></ol>
-        <div class="myapp-detail__status">
-            <div th:replace="~{candidate/my-application-parts :: status(${myApplication})}"></div>
-            <div class="myapp-card__actions">
-                <a th:replace="~{candidate/my-application-parts :: action(${myApplication})}"></a>
-            </div>
+    <div class="myapp-detail__grid">
+        <div class="myapp-detail__main">
+            <section class="card myapp-detail__section" aria-labelledby="myapp-progress-title">
+                <h2 id="myapp-progress-title" class="myapp-detail__heading">Tiến độ</h2>
+                <ol th:replace="~{candidate/my-application-parts :: stepper(${myApplication.steps}, ${myApplication.stopped})}"></ol>
+            </section>
+
+            <section class="card myapp-detail__section myapp-detail__notice" aria-labelledby="myapp-notice-title"
+                     th:attr="data-urgent=${myApplication.urgent ? 'true' : null}">
+                <h2 id="myapp-notice-title" class="myapp-detail__heading">Thông báo</h2>
+                <div th:replace="~{candidate/my-application-parts :: status(${myApplication})}"></div>
+                <div class="myapp-card__actions">
+                    <a th:replace="~{candidate/my-application-parts :: action(${myApplication})}"></a>
+                </div>
+            </section>
+
+            <section class="card myapp-detail__section" aria-labelledby="myapp-journey-title">
+                <h2 id="myapp-journey-title" class="myapp-detail__heading">Hành trình hồ sơ</h2>
+                <th:block th:replace="~{fragments/ui/timeline :: timeline(items=${myApplication.journey})}"></th:block>
+            </section>
         </div>
-    </section>
 
-    <section class="card myapp-detail__section" aria-labelledby="myapp-submitted-title">
-        <h2 id="myapp-submitted-title" class="myapp-detail__heading">Hồ sơ đã nộp</h2>
-        <div class="myapp-detail__links">
-            <a th:replace="~{candidate/my-application-parts :: cvLink(${myApplication})}"></a>
-            <a th:if="${myApplication.jobPostingVisible}" th:href="@{/jobs/{id}(id=${myApplication.jobPostingId})}" class="myapp-cv-link">
-                <svg th:replace="~{candidate/my-application-icons :: icon('search')}"></svg>
-                <span>Xem tin tuyển dụng</span>
-            </a>
-            <p th:unless="${myApplication.jobPostingVisible}" class="text-muted myapp-detail__none">Tin tuyển dụng đã đóng.</p>
-        </div>
-    </section>
+        <aside class="myapp-detail__side" aria-labelledby="myapp-info-title">
+            <section class="card myapp-detail__section">
+                <h2 id="myapp-info-title" class="myapp-detail__heading">Thông tin &amp; Tài liệu</h2>
+                <dl class="myapp-info">
+                    <div class="myapp-info__row">
+                        <dt>Mã đơn</dt>
+                        <dd class="myapp-card__code" th:text="${myApplication.applicationCode}">#CAN-0042</dd>
+                    </div>
+                    <div class="myapp-info__row">
+                        <dt>Ngày nộp</dt>
+                        <dd><time th:datetime="${#temporals.formatISO(myApplication.submissionDate)}"
+                                  th:text="${#temporals.format(myApplication.submissionDate, 'dd/MM/yyyy')}">05/10/2026</time></dd>
+                    </div>
+                    <div class="myapp-info__row">
+                        <dt>CV đã nộp</dt>
+                        <dd>
+                            <a th:replace="~{candidate/my-application-parts :: cvLink(${myApplication})}"></a>
+                            <span th:unless="${myApplication.hasCv}" class="text-muted">Không có CV</span>
+                        </dd>
+                    </div>
+                    <div class="myapp-info__row">
+                        <dt>Tin tuyển dụng</dt>
+                        <dd>
+                            <a th:if="${myApplication.jobPostingVisible}" th:href="@{/jobs/{id}(id=${myApplication.jobPostingId})}"
+                               class="myapp-cv-link">
+                                <svg th:replace="~{candidate/my-application-icons :: icon('search')}"></svg>
+                                <span>Xem tin tuyển dụng</span>
+                            </a>
+                            <span th:unless="${myApplication.jobPostingVisible}" class="text-muted">Tin tuyển dụng đã đóng.</span>
+                        </dd>
+                    </div>
+                    <div class="myapp-info__row">
+                        <dt>Hỗ trợ</dt>
+                        <dd>
+                            <a href="mailto:careers@moc.com" class="myapp-cv-link">
+                                <svg th:replace="~{candidate/my-application-icons :: icon('mail')}"></svg>
+                                <span>careers@moc.com</span>
+                            </a>
+                        </dd>
+                    </div>
+                </dl>
 
-    <section class="card myapp-detail__section" aria-labelledby="myapp-journey-title">
-        <h2 id="myapp-journey-title" class="myapp-detail__heading">Hành trình</h2>
-        <th:block th:replace="~{fragments/ui/timeline :: timeline(items=${myApplication.journey})}"></th:block>
-    </section>
-
-    <section th:if="${myApplication.canWithdraw}" class="myapp-detail__withdraw" aria-label="Rút hồ sơ">
-        <form th:action="@{/portal/applications/{id}/withdraw(id=${myApplication.applicationId})}" method="post"
-              class="myapp-withdraw-form" data-withdraw-form th:attr="data-posting-title=${myApplication.postingTitle}">
-            <button type="submit" class="btn btn--sm myapp-withdraw-btn"
-                    th:attr="aria-label=${'Rút đơn vị trí ' + myApplication.postingTitle}">
-                <svg th:replace="~{candidate/my-application-icons :: icon('withdraw')}"></svg>
-                <span>Rút đơn</span>
-            </button>
-        </form>
-        <p class="text-muted myapp-detail__withdraw-note">Sau khi rút, bạn không thể nộp lại cho vị trí này.</p>
-    </section>
+                <div th:if="${myApplication.canWithdraw}" class="myapp-detail__withdraw">
+                    <form th:action="@{/portal/applications/{id}/withdraw(id=${myApplication.applicationId})}" method="post"
+                          class="myapp-withdraw-form" data-withdraw-form
+                          th:attr="data-posting-title=${myApplication.postingTitle}">
+                        <button type="submit" class="btn btn--sm myapp-withdraw-btn"
+                                th:attr="aria-label=${'Rút đơn vị trí ' + myApplication.postingTitle}">
+                            <svg th:replace="~{candidate/my-application-icons :: icon('withdraw')}"></svg>
+                            <span>Rút đơn</span>
+                        </button>
+                    </form>
+                    <p class="text-muted myapp-detail__withdraw-note">Sau khi rút, bạn không thể nộp lại cho vị trí này.</p>
+                </div>
+            </section>
+        </aside>
+    </div>
 
     <dialog th:if="${myApplication.canWithdraw}" id="myapp-withdraw-dialog" class="confirm-dialog"
             aria-labelledby="myapp-withdraw-title" aria-describedby="myapp-withdraw-message">
