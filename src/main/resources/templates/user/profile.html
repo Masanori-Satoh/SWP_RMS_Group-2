@@ -1,183 +1,185 @@
 <!DOCTYPE html>
-<html lang="vi" xmlns:th="http://www.thymeleaf.org">
-<head th:replace="~{fragments/head :: interfaceHead('Hồ sơ cá nhân', ~{::pageStyles})}">
-  <th:block th:fragment="pageStyles">
-    <meta name="_csrf" th:content="${_csrf.token}"/>
-    <meta name="_csrf_header" th:content="${_csrf.headerName}"/>
-    <link rel="stylesheet" th:href="@{/css/profile.css}">
-  </th:block>
+<html lang="vi"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/internal}">
+<!--
+    USER/PROFILE.HTML — Hồ sơ cá nhân của người dùng nội bộ (/profile). Ứng viên dùng /portal/profile (candidate/my-profile.html).
+    Khung (sidebar, topbar, CSRF meta) do layout/internal lo. JS: js/profile.js (dùng chung với /portal/profile).
+    CSS: css/profile.css (profile-). Ẩn/hiện bằng thuộc tính hidden, không style nội tuyến.
+-->
+<head>
+    <title>Hồ sơ cá nhân</title>
+    <th:block layout:fragment="styles">
+        <link rel="stylesheet" th:href="@{/css/profile.css}">
+    </th:block>
 </head>
-<body class="rms-app">
-<div class="page-wrapper">
-    <aside th:replace="~{fragments/sidebar :: workspace('profile', ${userProfile.roleName})}"></aside>
+<body>
+<main id="main" layout:fragment="content" class="page-content container" tabindex="-1">
+    <div class="profile-container">
+        <div class="profile-heading">
+            <h1>Hồ sơ cá nhân</h1>
+            <p>Xem và cập nhật thông tin cá nhân của bạn.</p>
+        </div>
 
-    <div class="main-content">
-        <header th:replace="~{fragments/workspace-header :: header(${userProfile.roleName}, ${userProfile.fullName})}"></header>
-        <main id="main" class="page-content" tabindex="-1">
-            <div class="container profile-container">
-                <div class="profile-heading">
-                    <h1>Hồ sơ cá nhân</h1>
-                    <p>Xem và cập nhật thông tin cá nhân của bạn.</p>
+        <!-- Thông báo lưu thành công -->
+        <div class="alert alert--success" role="status" th:if="${successMessage}" th:text="${successMessage}"></div>
+
+        <!-- Thẻ 1: Thông tin chung -->
+        <section class="profile-card" aria-labelledby="general-title">
+            <h2 id="general-title">Thông tin chung</h2>
+
+            <div class="profile-identity">
+                <img class="profile-avatar" th:if="${userProfile.avatarUrl != null}"
+                     th:src="${userProfile.avatarUrl}" alt="Ảnh đại diện">
+                <div class="profile-avatar profile-avatar-fallback" th:unless="${userProfile.avatarUrl != null}"
+                     aria-hidden="true" th:text="${#strings.toUpperCase(#strings.substring(userProfile.fullName, 0, 1))}">A</div>
+                <div>
+                    <p class="profile-identity-name" th:text="${userProfile.fullName}">Họ và tên</p>
+                    <p class="profile-identity-meta" th:text="${userProfile.roleLabel}">Vai trò</p>
+                </div>
+                <!-- Ảnh chỉ tải file lên (JPEG/PNG/WebP ≤ 2 MB); form riêng, không lồng trong form thông tin -->
+                <form class="profile-avatar-form" th:action="@{/profile/avatar}" method="post"
+                      enctype="multipart/form-data" data-avatar-form>
+                    <label class="form-label" for="avatar-file">Ảnh đại diện</label>
+                    <div class="profile-avatar-upload">
+                        <input class="form-control" id="avatar-file" name="avatarFile" type="file"
+                               accept="image/jpeg,image/png,image/webp" required
+                               th:attr="aria-invalid=${avatarError != null}" aria-describedby="avatar-file-hint avatar-file-error">
+                        <button class="btn btn--secondary" type="submit">Tải ảnh lên</button>
+                    </div>
+                    <small id="avatar-file-hint" class="form-hint">JPEG, PNG hoặc WebP, tối đa 2 MB.</small>
+                    <span id="avatar-file-error" class="form-error" role="alert"
+                          th:text="${avatarError}" th:hidden="${avatarError == null}"></span>
+                </form>
+            </div>
+
+            <form id="profileForm" th:action="@{/profile/update}" th:object="${updateRequest}" method="post">
+                <div th:replace="~{fragments/messages :: validationSummary}"></div>
+
+                <div class="profile-grid">
+                    <div class="form-group">
+                        <label class="form-label" for="email">Email</label>
+                        <input class="form-control profile-readonly" id="email" type="email"
+                               th:value="${userProfile.email}" disabled>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="username">Tên đăng nhập</label>
+                        <input class="form-control profile-readonly" id="username" type="text"
+                               th:value="${userProfile.username}" disabled>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="role">Vai trò</label>
+                        <input class="form-control profile-readonly" id="role" type="text"
+                               th:value="${userProfile.roleLabel}" disabled>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="department">Phòng ban</label>
+                        <input class="form-control profile-readonly" id="department" type="text"
+                               th:value="${userProfile.departmentName}" disabled>
+                    </div>
+
+                    <div class="form-group profile-field-full">
+                        <label class="form-label" for="full-name">Họ và tên <span aria-hidden="true">*</span></label>
+                        <input class="form-control" id="full-name" type="text" th:field="*{fullName}" data-profile-field
+                               minlength="2" maxlength="100" autocomplete="name" required
+                               pattern="^[\p{L}][\p{L}\s.'-]*$"
+                               title="Họ tên bắt đầu bằng chữ cái, chỉ gồm chữ cái, khoảng trắng, dấu chấm, dấu gạch nối và dấu nháy."
+                               th:attr="aria-invalid=${#fields.hasErrors('fullName')},aria-describedby=${#fields.hasErrors('fullName') ? 'full-name-error' : null}">
+                        <span id="full-name-error" class="form-error" th:if="${#fields.hasErrors('fullName')}" th:errors="*{fullName}"></span>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="phone-number">Số điện thoại</label>
+                        <input class="form-control" id="phone-number" type="tel" th:field="*{phoneNumber}" data-profile-field
+                               maxlength="15" autocomplete="tel"
+                               pattern="^[0-9+\s()-]*$"
+                               title="Chỉ gồm chữ số, khoảng trắng, dấu gạch nối, dấu cộng và ngoặc."
+                               th:attr="aria-invalid=${#fields.hasErrors('phoneNumber')},aria-describedby=${#fields.hasErrors('phoneNumber') ? 'phone-number-error' : 'phone-number-hint'}">
+                        <small id="phone-number-hint" class="form-hint">Tối đa 15 ký tự.</small>
+                        <span id="phone-number-error" class="form-error" th:if="${#fields.hasErrors('phoneNumber')}" th:errors="*{phoneNumber}"></span>
+                    </div>
                 </div>
 
-                <!-- Thông báo lưu thành công -->
-                <div class="alert alert-success" role="status" th:if="${successMessage}" th:text="${successMessage}"></div>
+                <div class="profile-actions">
+                    <button class="btn btn--secondary" id="btnDiscardProfile" type="button" hidden>Hoàn tác</button>
+                    <button class="btn btn--primary" id="btnSaveProfile" type="button" disabled>Lưu hồ sơ</button>
+                </div>
+            </form>
+        </section>
 
-                <!-- Thẻ 1: Thông tin chung -->
-                <section class="profile-card" aria-labelledby="general-title">
-                    <h2 id="general-title">Thông tin chung</h2>
-
-                    <div class="profile-identity">
-                        <img class="profile-avatar" th:if="${userProfile.avatarUrl != null}"
-                             th:src="${userProfile.avatarUrl}" alt="Ảnh đại diện">
-                        <div class="profile-avatar profile-avatar-fallback" th:unless="${userProfile.avatarUrl != null}"
-                             aria-hidden="true" th:text="${#strings.toUpperCase(#strings.substring(userProfile.fullName, 0, 1))}">A</div>
-                        <div>
-                            <p class="profile-identity-name" th:text="${userProfile.fullName}">Họ và tên</p>
-                            <p class="profile-identity-meta" th:text="${userProfile.roleLabel}">Vai trò</p>
-                        </div>
-                        <!-- Ảnh chỉ tải file lên (JPEG/PNG/WebP ≤ 2 MB); form riêng, không lồng trong form thông tin -->
-                        <form class="profile-avatar-form" th:action="@{/profile/avatar}" method="post"
-                              enctype="multipart/form-data" data-avatar-form>
-                            <label class="form-label" for="avatar-file">Ảnh đại diện</label>
-                            <div class="profile-avatar-upload">
-                                <input class="form-control" id="avatar-file" name="avatarFile" type="file"
-                                       accept="image/jpeg,image/png,image/webp" required
-                                       th:attr="aria-invalid=${avatarError != null}" aria-describedby="avatar-file-hint avatar-file-error">
-                                <button class="btn btn-secondary" type="submit">Tải ảnh lên</button>
-                            </div>
-                            <small id="avatar-file-hint" class="account-field-hint">JPEG, PNG hoặc WebP, tối đa 2 MB.</small>
-                            <span id="avatar-file-error" class="form-error" role="alert"
-                                  th:text="${avatarError}" th:hidden="${avatarError == null}"></span>
-                        </form>
-                    </div>
-
-                    <form id="profileForm" th:action="@{/profile/update}" th:object="${updateRequest}" method="post">
-                        <div th:replace="~{fragments/messages :: validationSummary}"></div>
-
-                        <div class="profile-grid">
-                            <div class="form-group">
-                                <label class="form-label" for="email">Email</label>
-                                <input class="form-control profile-readonly" id="email" type="email"
-                                       th:value="${userProfile.email}" disabled>
-                            </div>
-                            <div class="form-group">
-                                <label class="form-label" for="username">Tên đăng nhập</label>
-                                <input class="form-control profile-readonly" id="username" type="text"
-                                       th:value="${userProfile.username}" disabled>
-                            </div>
-                            <div class="form-group">
-                                <label class="form-label" for="role">Vai trò</label>
-                                <input class="form-control profile-readonly" id="role" type="text"
-                                       th:value="${userProfile.roleLabel}" disabled>
-                            </div>
-                            <div class="form-group">
-                                <label class="form-label" for="department">Phòng ban</label>
-                                <input class="form-control profile-readonly" id="department" type="text"
-                                       th:value="${userProfile.departmentName}" disabled>
-                            </div>
-
-                            <div class="form-group profile-field-full">
-                                <label class="form-label" for="full-name">Họ và tên <span aria-hidden="true">*</span></label>
-                                <input class="form-control" id="full-name" type="text" th:field="*{fullName}" data-profile-field
-                                       minlength="2" maxlength="100" autocomplete="name" required
-                                       pattern="^[\p{L}][\p{L}\s.'-]*$"
-                                       title="Họ tên bắt đầu bằng chữ cái, chỉ gồm chữ cái, khoảng trắng, dấu chấm, dấu gạch nối và dấu nháy."
-                                       th:attr="aria-invalid=${#fields.hasErrors('fullName')},aria-describedby=${#fields.hasErrors('fullName') ? 'full-name-error' : null}">
-                                <span id="full-name-error" class="form-error" th:if="${#fields.hasErrors('fullName')}" th:errors="*{fullName}"></span>
-                            </div>
-                            <div class="form-group">
-                                <label class="form-label" for="phone-number">Số điện thoại</label>
-                                <input class="form-control" id="phone-number" type="tel" th:field="*{phoneNumber}" data-profile-field
-                                       maxlength="15" autocomplete="tel"
-                                       pattern="^[0-9+\s()-]*$"
-                                       title="Chỉ gồm chữ số, khoảng trắng, dấu gạch nối, dấu cộng và ngoặc."
-                                       th:attr="aria-invalid=${#fields.hasErrors('phoneNumber')},aria-describedby=${#fields.hasErrors('phoneNumber') ? 'phone-number-error' : 'phone-number-hint'}">
-                                <small id="phone-number-hint" class="account-field-hint">Tối đa 15 ký tự.</small>
-                                <span id="phone-number-error" class="form-error" th:if="${#fields.hasErrors('phoneNumber')}" th:errors="*{phoneNumber}"></span>
-                            </div>
-                        </div>
-
-                        <div class="profile-actions">
-                            <button class="btn btn-secondary" id="btnDiscardProfile" type="button" style="display: none;">Hoàn tác</button>
-                            <button class="btn btn-primary" id="btnSaveProfile" type="button" disabled>Lưu hồ sơ</button>
-                        </div>
-                    </form>
-                </section>
-
-                <!-- Thẻ 2: Mật khẩu -->
-                <section class="profile-card" aria-labelledby="security-title">
-                    <h2 id="security-title">Mật khẩu</h2>
-                    <div class="profile-security">
-                        <p aria-label="Mật khẩu đã ẩn">Mật khẩu: ••••••••</p>
-                        <button class="btn btn-secondary" type="button" data-open-modal="changePasswordModal">Đổi mật khẩu</button>
-                    </div>
-                </section>
+        <!-- Thẻ 2: Mật khẩu -->
+        <section class="profile-card" aria-labelledby="security-title">
+            <h2 id="security-title">Mật khẩu</h2>
+            <div class="profile-security">
+                <p aria-label="Mật khẩu đã ẩn">Mật khẩu: ••••••••</p>
+                <button class="btn btn--secondary" type="button" data-open-modal="changePasswordModal">Đổi mật khẩu</button>
             </div>
-        </main>
-    </div>
-</div>
-
-<!-- Hộp thoại đổi mật khẩu -->
-<dialog id="changePasswordModal" class="profile-modal" aria-labelledby="change-password-title"
-        th:attr="data-open-on-load=${openPasswordModal != null} ? 'true' : 'false'">
-    <div class="profile-modal-header">
-        <h2 id="change-password-title">Đổi mật khẩu</h2>
-        <button class="modal-close-icon" type="button" data-close-modal aria-label="Đóng">&times;</button>
+        </section>
     </div>
 
-    <!-- Lỗi đổi mật khẩu (AJAX) -->
-    <div id="changePasswordAlert" class="alert alert-danger" role="alert" style="display: none;"></div>
+    <!-- Hộp thoại đổi mật khẩu -->
+    <dialog id="changePasswordModal" class="profile-modal" aria-labelledby="change-password-title"
+            th:attr="data-open-on-load=${openPasswordModal != null} ? 'true' : 'false'">
+        <div class="profile-modal-header">
+            <h2 id="change-password-title">Đổi mật khẩu</h2>
+            <button class="modal-close-icon" type="button" data-close-modal aria-label="Đóng">&times;</button>
+        </div>
 
-    <form id="changePasswordForm" th:action="@{/profile/change-password}" th:object="${passwordRequest}" method="post">
-        <!-- CSRF -->
-        <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
+        <!-- Lỗi đổi mật khẩu (AJAX) -->
+        <div id="changePasswordAlert" class="alert alert--danger" role="alert" hidden></div>
 
-        <div class="form-group">
-            <label class="form-label" for="currentPassword">Mật khẩu hiện tại <span aria-hidden="true">*</span></label>
-            <input class="form-control" id="currentPassword" type="password" name="currentPassword"
-                   autocomplete="current-password" required
-                   aria-describedby="currentPassword-error">
-            <span class="form-error" id="currentPassword-error" style="display: none;"></span>
+        <form id="changePasswordForm" th:action="@{/profile/change-password}" th:object="${passwordRequest}" method="post">
+            <!-- CSRF -->
+            <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
+
+            <div class="form-group">
+                <label class="form-label" for="currentPassword">Mật khẩu hiện tại <span aria-hidden="true">*</span></label>
+                <input class="form-control" id="currentPassword" type="password" name="currentPassword"
+                       autocomplete="current-password" required
+                       aria-describedby="currentPassword-error">
+                <span class="form-error" id="currentPassword-error" hidden></span>
+            </div>
+            <div class="form-group">
+                <label class="form-label" for="newPassword">Mật khẩu mới <span aria-hidden="true">*</span></label>
+                <input class="form-control" id="newPassword" type="password" name="newPassword"
+                       minlength="8" maxlength="32" autocomplete="new-password" required
+                       aria-describedby="newPassword-hint newPassword-error">
+                <small id="newPassword-hint" class="form-hint">8–32 ký tự, dùng được mọi ký tự đặc biệt.</small>
+                <span class="form-error" id="newPassword-error" hidden></span>
+            </div>
+            <div class="form-group">
+                <label class="form-label" for="confirmPassword">Nhập lại mật khẩu mới <span aria-hidden="true">*</span></label>
+                <input class="form-control" id="confirmPassword" type="password" name="confirmPassword"
+                       minlength="8" maxlength="32" autocomplete="new-password" required
+                       aria-describedby="confirmPassword-error">
+                <span class="form-error" id="confirmPassword-error" hidden></span>
+            </div>
+            <div class="profile-actions">
+                <button class="btn btn--secondary" type="button" data-close-modal>Hủy</button>
+                <button class="btn btn--primary" id="btnSubmitPassword" type="submit" data-busy-label="Đang lưu...">Đổi mật khẩu</button>
+            </div>
+        </form>
+    </dialog>
+
+    <!-- Hỏi lại trước khi lưu -->
+    <dialog id="confirmSaveModal" class="profile-modal" aria-labelledby="confirm-save-title">
+        <div class="profile-modal-header">
+            <h2 id="confirm-save-title">Lưu thay đổi?</h2>
+            <button class="modal-close-icon" type="button" data-close-modal aria-label="Đóng">&times;</button>
         </div>
-        <div class="form-group">
-            <label class="form-label" for="newPassword">Mật khẩu mới <span aria-hidden="true">*</span></label>
-            <input class="form-control" id="newPassword" type="password" name="newPassword"
-                   minlength="8" maxlength="32" autocomplete="new-password" required
-                   aria-describedby="newPassword-hint newPassword-error">
-            <small id="newPassword-hint" class="account-field-hint">8–32 ký tự, dùng được mọi ký tự đặc biệt.</small>
-            <span class="form-error" id="newPassword-error" style="display: none;"></span>
-        </div>
-        <div class="form-group">
-            <label class="form-label" for="confirmPassword">Nhập lại mật khẩu mới <span aria-hidden="true">*</span></label>
-            <input class="form-control" id="confirmPassword" type="password" name="confirmPassword"
-                   minlength="8" maxlength="32" autocomplete="new-password" required
-                   aria-describedby="confirmPassword-error">
-            <span class="form-error" id="confirmPassword-error" style="display: none;"></span>
-        </div>
+        <p>Bạn có chắc muốn lưu các thay đổi trong hồ sơ?</p>
         <div class="profile-actions">
-            <button class="btn btn-secondary" type="button" data-close-modal>Hủy</button>
-            <button class="btn btn-primary" id="btnSubmitPassword" type="submit" data-busy-label="Đang lưu...">Đổi mật khẩu</button>
+            <button class="btn btn--secondary" type="button" data-close-modal>Hủy</button>
+            <button class="btn btn--primary" id="btnConfirmSave" type="button">Lưu</button>
         </div>
-    </form>
-</dialog>
+    </dialog>
 
-<!-- Hỏi lại trước khi lưu -->
-<dialog id="confirmSaveModal" class="profile-modal" aria-labelledby="confirm-save-title">
-    <div class="profile-modal-header">
-        <h2 id="confirm-save-title">Lưu thay đổi?</h2>
-        <button class="modal-close-icon" type="button" data-close-modal aria-label="Đóng">&times;</button>
-    </div>
-    <p>Bạn có chắc muốn lưu các thay đổi trong hồ sơ?</p>
-    <div class="profile-actions">
-        <button class="btn btn-secondary" type="button" data-close-modal>Hủy</button>
-        <button class="btn btn-primary" id="btnConfirmSave" type="button">Lưu</button>
-    </div>
-</dialog>
+    <!-- Vùng thông báo nhanh (toast) -->
+    <div id="toastContainer" class="toast-container" aria-live="polite" aria-atomic="true"></div>
+</main>
 
-<!-- Vùng thông báo nhanh (toast) -->
-<div id="toastContainer" class="toast-container" aria-live="polite" aria-atomic="true"></div>
-
-<script th:src="@{/js/profile.js}"></script>
+<th:block layout:fragment="scripts">
+    <script defer th:src="@{/js/profile.js}"></script>
+</th:block>
 </body>
 </html>
