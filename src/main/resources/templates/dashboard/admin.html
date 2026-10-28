@@ -58,7 +58,6 @@
                 <ul class="adm-status-links">
                     <li><a class="adm-data-link" th:href="@{${summary.url}(status='Active',page=0)}" data-chart-point data-key="Active" data-label="Hoạt động" th:attr="data-count=${summary.active},aria-label=|${summary.title}: ${summary.active} hoạt động. Mở danh sách đã lọc|"><span class="adm-status-label">Hoạt động</span><strong th:text="${summary.active}"></strong></a></li>
                     <li><a class="adm-data-link" th:href="@{${summary.url}(status='Inactive',page=0)}" data-chart-point data-key="Inactive" data-label="Vô hiệu hóa" th:attr="data-count=${summary.inactive},aria-label=|${summary.title}: ${summary.inactive} vô hiệu hóa. Mở danh sách đã lọc|"><span class="adm-status-label">Vô hiệu hóa</span><strong th:text="${summary.inactive}"></strong></a></li>
-                    <li><a class="adm-data-link" th:href="@{${summary.url}(status='Blocked',page=0)}" data-chart-point data-key="Blocked" data-label="Bị khóa" th:attr="data-count=${summary.blocked},aria-label=|${summary.title}: ${summary.blocked} bị khóa. Mở danh sách đã lọc|"><span class="adm-status-label">Bị khóa</span><strong th:text="${summary.blocked}"></strong></a></li>
                 </ul>
                 <p class="adm-help" th:if="${summary.total == 0}">Nhóm này chưa có tài khoản. Các liên kết vẫn mở danh sách với bộ lọc tương ứng.</p>
             </section>

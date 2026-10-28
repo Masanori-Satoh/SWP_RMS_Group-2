@@ -14,7 +14,7 @@
         }
         return { key: link.dataset.key, label: link.dataset.label, count, href: link.href };
     });
-    const statusColors = { Active: token('--success'), Inactive: token('--neutral'), Blocked: token('--error') };
+    const statusColors = { Active: token('--success'), Inactive: token('--neutral') };
 
     function createChart(canvas, getPoints, horizontal) {
         const points = getPoints();

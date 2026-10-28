@@ -48,7 +48,6 @@
                 <option value="">Tất cả trạng thái</option>
                 <option value="Active" th:selected="${selectedStatus == 'Active'}">Hoạt động</option>
                 <option value="Inactive" th:selected="${selectedStatus == 'Inactive'}">Vô hiệu hóa</option>
-                <option value="Blocked" th:selected="${selectedStatus == 'Blocked'}">Bị khóa</option>
             </select>
         </div>
                     <div class="mft-field">
@@ -128,8 +127,8 @@
                 <td class="iac-cell iac-role" th:text="${account.roleName == 'System Admin' ? 'Quản trị hệ thống' : (account.roleName == 'HR' ? 'Nhân sự' : (account.roleName == 'Hiring Manager' ? 'Trưởng phòng tuyển dụng' : (account.roleName == 'Director' ? 'Giám đốc' : (account.roleName == 'Interviewer' ? 'Người phỏng vấn' : account.roleName))))}">Vai trò</td>
                 <td class="iac-cell iac-department" th:text="${account.departmentName != null ? account.departmentName : '—'}">—</td>
                 <td class="iac-cell iac-state-cell">
-                    <span class="badge iac-status" th:text="${account.status == 'Active' ? 'Hoạt động' : (account.status == 'Inactive' ? 'Vô hiệu hóa' : 'Bị khóa')}"
-                          th:classappend="${account.status == 'Active' ? ' badge--success' : (account.status == 'Blocked' ? ' badge--danger' : ' badge--neutral')}">Hoạt động</span>
+                    <span class="badge iac-status" th:text="${account.status == 'Active' ? 'Hoạt động' : 'Vô hiệu hóa'}"
+                          th:classappend="${account.status == 'Active' ? ' badge--success' : ' badge--neutral'}">Hoạt động</span>
                 </td>
                 <td class="iac-cell iac-actions-cell"><div class="iac-actions">
                     <a class="btn btn--sm btn--secondary iac-edit iac-icon-button" data-tooltip="Sửa"

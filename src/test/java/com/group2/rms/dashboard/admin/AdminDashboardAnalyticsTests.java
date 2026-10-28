@@ -46,8 +46,8 @@ class AdminDashboardAnalyticsTests {
     @Test
     void summariesKeepLifecyclesSeparateAndUseOneMonitoringSnapshotWithoutProbing() {
         admin("Active");
-        when(metrics.internalAccountStatuses()).thenReturn(List.of(new StatusCount("Active", 12), new StatusCount("Blocked", 2)));
-        when(metrics.candidateAccountStatuses()).thenReturn(List.of(new StatusCount("Inactive", 7), new StatusCount("Blocked", 3)));
+        when(metrics.internalAccountStatuses()).thenReturn(List.of(new StatusCount("Active", 12), new StatusCount("Inactive", 2)));
+        when(metrics.candidateAccountStatuses()).thenReturn(List.of(new StatusCount("Inactive", 10)));
         when(metrics.candidates()).thenReturn(8L);
         when(metrics.candidatesCreatedBetween(any(), any())).thenReturn(2L);
         var role = new RoleCount(97, "HR", 0);
@@ -56,7 +56,8 @@ class AdminDashboardAnalyticsTests {
         when(monitoring.rows()).thenReturn(rows);
         var response = (AdminDashboardResponse) service.forUsername("analytics-test");
         assertEquals(14, response.internalTotal());
-        assertEquals(5, response.blockedTotal());
+        assertEquals(2, response.accountSummaries().getFirst().inactive());
+        assertEquals(10, response.accountSummaries().getLast().inactive());
         assertEquals(8, response.candidates().total());
         assertEquals(2, response.candidates().newLast30Days());
         assertEquals(Duration.ofDays(30), Duration.between(response.candidates().from(), response.candidates().to()));
@@ -80,7 +81,7 @@ class AdminDashboardAnalyticsTests {
         when(monitoring.rows()).thenReturn(List.of());
         var response = (AdminDashboardResponse) service.forUsername("analytics-test");
         assertEquals(0, response.internalTotal());
-        assertEquals(0, response.blockedTotal());
+        assertEquals(0, response.accountSummaries().stream().mapToLong(AdminDashboardResponse.AccountSummary::inactive).sum());
         assertEquals(0, response.candidates().total());
         assertEquals(0, response.candidates().newLast30Days());
         assertEquals(97, response.roleCounts().getFirst().roleId());

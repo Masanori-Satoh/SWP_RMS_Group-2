@@ -120,13 +120,13 @@ class AccountManagementServiceTests {
         when(fixtures.users.saveAndFlush(account)).thenReturn(account);
         // When: Gọi fixtures.service.update với dữ liệu đã chuẩn bị.
         fixtures.service.update(22, new AccountManagementService.UpdateCommand(
-            "Name mới", "new@example.com", null, 6, null, "Blocked"));
+            "Name mới", "new@example.com", null, 6, null, "Inactive"));
         // Then: đổi email/trạng thái, giữ username/hash và quan hệ profile.
         assertEquals("stable-login", account.getUsername());
         assertEquals("existing-hash", account.getPasswordHash());
         assertEquals("new@example.com", account.getEmail());
         assertEquals("new@example.com", profile.getAccount().getEmail());
-        assertEquals("Blocked", account.getAccountStatus());
+        assertEquals("Inactive", account.getAccountStatus());
         verify(fixtures.candidates, times(0)).save(any(Candidate.class));
         verify(encoder, times(0)).encode(any());
         verify(encoder, times(0)).matches(any(), any());

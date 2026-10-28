@@ -189,8 +189,8 @@ public interface ApplicationRepository extends JpaRepository<Application, Intege
                         """)
         int promoteSuggestionToHmPassed(@Param("id") Integer applicationId);
 
-        // Candidate uploads a new CV: approved proposal goes straight to interview;
-        // an HR recommendation still awaiting HM follows ordinary application screening.
+        // Candidate uploads a new CV: every proposal enters ordinary application screening.
+        // Only the separate HR old-CV confirmation may promote a proposal to HM_Passed.
         @Modifying
         @Query("""
                         UPDATE Application a
@@ -200,7 +200,7 @@ public interface ApplicationRepository extends JpaRepository<Application, Intege
                         a.updatedAt = CURRENT_TIMESTAMP
                         WHERE a.applicationId = :id
                         AND a.applicationStatus = 'HM_Suggested'
-                        """ + " AND :status IN ('Applied', 'HM_Passed') AND (:status = 'Applied' OR NOT (" + PENDING_HR_RECOMMENDATION + "))")
+                        """ + " AND :status = 'Applied'")
         int submitSuggestionWithNewCv(@Param("id") Integer id, @Param("cv") String cv, @Param("status") String status);
 
         // Update status from HM_Suggested to CANDIDATE_SUBMITTED

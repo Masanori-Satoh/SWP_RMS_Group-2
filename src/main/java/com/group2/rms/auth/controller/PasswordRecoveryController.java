@@ -4,6 +4,8 @@ import com.group2.rms.auth.dto.ForgotPasswordRequest;
 import com.group2.rms.auth.service.PasswordRecoveryService;
 import com.group2.rms.auth.dto.ResetPasswordRequest;
 import com.group2.rms.auth.dto.VerifyPasswordResetOtpRequest;
+import com.group2.rms.auth.exception.PasswordRecoveryFlowException;
+
 import jakarta.servlet.http.HttpSession;
 import jakarta.validation.Valid;
 import org.springframework.stereotype.Controller;
@@ -21,7 +23,7 @@ public class PasswordRecoveryController {
         this.recoveryService = recoveryService;
     }
 
-    //1. show form enter email
+    // 1. show form enter email
     @GetMapping("/forgot-password")
     public String forgotForm(Model model) {
         if (!model.containsAttribute("form")) {
@@ -71,7 +73,11 @@ public class PasswordRecoveryController {
         }
         // check if otp is not valid or expired
         if (!recoveryService.hasPendingReset(session)) {
-            return "redirect:/forgot-password";
+            throw new PasswordRecoveryFlowException(
+                    PasswordRecoveryFlowException.Step.FORGOT,
+                    null,
+                    "RESET_REQUEST_INVALID",
+                    "Mã OTP đã hết hạn hoặc phiên làm việc không hợp lệ. Vui lòng gửi lại yêu cầu.");
         }
         // check if otp has error
         if (errors.hasErrors()) {

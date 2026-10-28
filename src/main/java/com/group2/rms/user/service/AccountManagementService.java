@@ -23,7 +23,7 @@ import java.util.Set;
 public class AccountManagementService {
 
     private static final String HIRING_MANAGER = "Hiring Manager";
-    private static final Set<String> STATUSES = Set.of("Active", "Inactive", "Blocked");
+    private static final Set<String> STATUSES = Set.of("Active", "Inactive");
 
     private final UserRepository users;
     private final RoleRepository roles;

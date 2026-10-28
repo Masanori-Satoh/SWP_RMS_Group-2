@@ -91,7 +91,6 @@ public class AdminDashboardService {
                 Map<String, Long> counts = new java.util.HashMap<>();
                 statuses.forEach(row -> counts.put(row.status(), row.count()));
                 return new AccountSummary(title, url, statuses.stream().mapToLong(StatusCount::count).sum(),
-                                counts.getOrDefault("Active", 0L), counts.getOrDefault("Inactive", 0L),
-                                counts.getOrDefault("Blocked", 0L));
+                                counts.getOrDefault("Active", 0L), counts.getOrDefault("Inactive", 0L));
         }
 }

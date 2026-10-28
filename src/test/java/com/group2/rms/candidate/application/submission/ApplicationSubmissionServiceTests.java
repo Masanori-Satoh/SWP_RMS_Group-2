@@ -68,8 +68,10 @@ class ApplicationSubmissionServiceTests {
 
     // ------------------------------------------------------------------ thành công
 
-    @Test
-    void applySavesAppliedApplicationAndPublishesEvent() {
+    @ParameterizedTest
+    @ValueSource(booleans = {false, true})
+    void applySavesAppliedApplicationAndPublishesEvent(boolean potential) {
+        candidate.setPotential(potential);
         givenCandidate();
         givenJob(job("Published", LocalDateTime.now().plusDays(7)));
         when(cvStorage.store(PDF, CANDIDATE_ID)).thenReturn(STORED);
@@ -89,6 +91,7 @@ class ApplicationSubmissionServiceTests {
         assertEquals("local:cv/15/abc.pdf", saved.getValue().getAppliedCvUrl());
         assertEquals("Applied", saved.getValue().getApplicationStatus());
         verify(events).publishEvent(new ApplicationSubmittedEvent(301));
+        assertEquals(potential, candidate.isPotential());
     }
 
     @Test
@@ -241,35 +244,17 @@ class ApplicationSubmissionServiceTests {
 
     // ------------------------------------------------------------------ helpers
     @Test
-    void candidateWithHmApprovedSuggestionSubmitsNewCvStraightToInterviewWithoutAi() {
-        givenCandidate();
-        givenJob(job("Published", LocalDateTime.now().plusDays(7)));
-        candidate.setAccount(com.group2.rms.user.entity.User.builder().userId(15).build());
-        Application suggestion = Application.builder().applicationId(302).candidate(candidate)
-                .applicationStatus("HM_Suggested").appliedCvUrl("local:old.pdf").build();
-        when(cvStorage.store(PDF, CANDIDATE_ID)).thenReturn(STORED);
-        when(applications.findFirstByCandidate_CandidateIdAndJobPosting_JobPostingIdAndApplicationStatus(
-                CANDIDATE_ID, JOB_ID, "HM_Suggested")).thenReturn(Optional.of(suggestion));
-        when(applications.submitSuggestionWithNewCv(302, STORED.url(), "HM_Passed")).thenReturn(1);
-        org.junit.jupiter.api.Assertions.assertEquals(302, service.apply(USERNAME, JOB_ID, PDF));
-        verifyNoInteractions(events);
-        verify(applications).recordSuggestionSubmitted(15, 302);
-        verify(applications, never()).save(any(Application.class));
-        verify(cvStorage, never()).delete("old.pdf");
-    }
-
-    @Test
-    void candidateWithHrRecommendationStillAwaitingHmFollowsNormalScreening() {
+    void candidateWithHmApprovedSuggestionSubmitsNewCvThroughNormalScreening() {
         givenSuggestion();
-        when(applications.countPendingHrRecommendation(302)).thenReturn(1L);
         when(applications.submitSuggestionWithNewCv(302, STORED.url(), "Applied")).thenReturn(1);
 
         assertEquals(302, service.apply(USERNAME, JOB_ID, PDF));
 
         verify(events).publishEvent(new ApplicationSubmittedEvent(302));
         verify(applications).recordSuggestionSubmitted(15, 302);
-        verify(applications, never()).submitSuggestionWithNewCv(302, STORED.url(), "HM_Passed");
+        verify(applications, never()).submitSuggestionWithNewCv(anyInt(), anyString(), eq("HM_Passed"));
         verify(applications, never()).save(any(Application.class));
+        verify(cvStorage, never()).delete("old.pdf");
     }
 
     @Test
