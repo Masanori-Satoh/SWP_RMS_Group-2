@@ -61,7 +61,7 @@
         <div class="cof-system-banner__header">
             <strong>Đã ghi nhận phản hồi từ chối thư mời</strong>
         </div>
-        <p th:text="${successMessage}">Bạn đã từ chối offer.</p>
+        <p th:text="${successMessage}">Bạn đã từ chối thư mời nhận việc.</p>
         <p th:if="${declineReasonDisplay}" class="cof-system-banner__reason">
             <em>Lý do chia sẻ:</em> <span th:text="${declineReasonDisplay}"></span>
         </p>
@@ -186,7 +186,7 @@
                 </button>
                 <a th:href="|mailto:${offer.hrContactEmail != null ? offer.hrContactEmail : 'tuyendung@mocrms.com.vn'}?subject=Câu hỏi về Thư mời nhận việc ${offer.offerCode}|" class="btn btn--subtle cof-download-bar__btn">
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
-                    Gửi câu hỏi cho HR
+                    Gửi câu hỏi cho Bộ phận Tuyển dụng
                 </a>
             </div>
         </div>
@@ -250,7 +250,7 @@
                 <div class="cof-panel__body cof-salary-panel">
                     <!-- Hộp Lương thử việc -->
                     <div class="cof-salary-card">
-                        <span class="cof-salary-card__label">LƯƠNG THỬ VIỆC / THÁNG (GROSS)</span>
+                        <span class="cof-salary-card__label">LƯƠNG THỬ VIỆC / THÁNG (TRƯỚC THUẾ)</span>
                         <div class="cof-salary-card__val" th:text="${offer.probationSalary == null ? 'Thỏa thuận' : #numbers.formatDecimal(offer.probationSalary, 1, 'POINT', 0, 'COMMA') + ' đ'}">
                             17.000.000 đ
                         </div>
@@ -261,7 +261,7 @@
 
                     <!-- Hộp Lương chính thức -->
                     <div class="cof-salary-card">
-                        <span class="cof-salary-card__label">LƯƠNG CHÍNH THỨC / THÁNG (GROSS)</span>
+                        <span class="cof-salary-card__label">LƯƠNG CHÍNH THỨC / THÁNG (TRƯỚC THUẾ)</span>
                         <div class="cof-salary-card__val" th:text="${offer.proposedSalary == null ? 'Thỏa thuận' : #numbers.formatDecimal(offer.proposedSalary, 1, 'POINT', 0, 'COMMA') + ' đ'}">
                             20.000.000 đ
                         </div>
@@ -270,7 +270,7 @@
 
                     <div class="cof-salary-footnote">
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
-                        <span>Mức gross, chưa khấu trừ bảo hiểm bắt buộc và thuế thu nhập cá nhân.</span>
+                        <span>Mức lương trước thuế, chưa khấu trừ bảo hiểm bắt buộc và thuế thu nhập cá nhân.</span>
                     </div>
                 </div>
             </section>

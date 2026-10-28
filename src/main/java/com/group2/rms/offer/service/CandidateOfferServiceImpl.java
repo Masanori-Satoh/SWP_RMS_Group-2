@@ -179,7 +179,7 @@ public class CandidateOfferServiceImpl implements CandidateOfferService {
 
     private static String statusLabel(String status) {
         return switch (status) {
-            case ACCEPTED -> "Đã nhận offer";
+            case ACCEPTED -> "Đã nhận việc";
             case DECLINED -> "Đã từ chối";
             default -> "Chờ bạn trả lời";
         };
