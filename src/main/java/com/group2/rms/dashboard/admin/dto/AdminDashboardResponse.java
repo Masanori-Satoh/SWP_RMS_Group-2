@@ -31,17 +31,12 @@ public record AdminDashboardResponse(
                 .mapToLong(AccountSummary::total).sum();
     }
 
-    public long blockedTotal() {
-        return accountSummaries.stream().mapToLong(AccountSummary::blocked).sum();
-    }
-
     public record AccountSummary(
             String title,
             String url,
             long total,
             long active,
-            long inactive,
-            long blocked) {
+            long inactive) {
     }
 
     public record DepartmentSummary(

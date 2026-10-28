@@ -30,7 +30,7 @@ import java.util.Set;
 public class AccountListService {
 
     private static final int PAGE_SIZE = 10;
-    private static final Set<String> STATUSES = Set.of("Active", "Inactive", "Blocked");
+    private static final Set<String> STATUSES = Set.of("Active", "Inactive");
 
     private final UserRepository users;
     private final RoleRepository roles;
@@ -156,9 +156,8 @@ public class AccountListService {
                 : !RoleAuthorities.INTERNAL_ROLE_NAMES.contains(user.getRole().getRoleName())) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Tài khoản không thuộc nhóm này.");
         }
-        if ("Blocked".equals(user.getAccountStatus())) {
-            throw new ResponseStatusException(HttpStatus.CONFLICT,
-                    "Không thể kích hoạt tài khoản đang bị khóa bằng thao tác này.");
+        if (!"Active".equals(user.getAccountStatus()) && !"Inactive".equals(user.getAccountStatus())) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "Trạng thái tài khoản không hợp lệ.");
         }
         if ("Inactive".equals(user.getAccountStatus())) {
             user.setAccountStatus("Active");

@@ -60,13 +60,11 @@ public class ApplicationSubmissionService {
 
         Application draft = applications.findFirstByCandidate_CandidateIdAndJobPosting_JobPostingIdAndApplicationStatus(
                 candidate.getCandidateId(), jobPostingId, "HM_Suggested").orElse(null);
-        // Same eligibility as the HR old-CV confirmation: HM added it, or accepted HR's recommendation.
-        // Merely belonging to the global Talent Pool does not bypass screening for another posting.
-        boolean approvedSuggestion = draft != null && applications.countPendingHrRecommendation(draft.getApplicationId()) == 0;
+        // A candidate-submitted CV always enters ordinary screening, including an HM-approved proposal.
+        // HR confirmation of consent to use the old CV remains a separate operation.
         Application saved;
         if (draft != null) {
-            String targetStatus = approvedSuggestion ? "HM_Passed" : INITIAL_STATUS;
-            if (applications.submitSuggestionWithNewCv(draft.getApplicationId(), stored.url(), targetStatus) != 1)
+            if (applications.submitSuggestionWithNewCv(draft.getApplicationId(), stored.url(), INITIAL_STATUS) != 1)
                 throw new ApplicationSubmissionException(null, "Đề xuất vừa được xử lý. Vui lòng tải lại trang.");
             applications.recordSuggestionSubmitted(candidate.getAccount().getUserId(), draft.getApplicationId());
             saved = draft;
@@ -74,7 +72,7 @@ public class ApplicationSubmissionService {
             saved = applications.save(Application.builder().candidate(candidate).jobPosting(job)
                     .appliedCvUrl(stored.url()).applicationStatus(INITIAL_STATUS).build());
         }
-        if (!approvedSuggestion) events.publishEvent(new ApplicationSubmittedEvent(saved.getApplicationId()));
+        events.publishEvent(new ApplicationSubmittedEvent(saved.getApplicationId()));
         return saved.getApplicationId();
     }
 

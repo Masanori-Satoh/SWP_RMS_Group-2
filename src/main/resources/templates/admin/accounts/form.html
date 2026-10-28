@@ -74,9 +74,8 @@
                                 <select class="form-control ads-form-control" id="account-status" th:field="*{accountStatus}" required th:attr="aria-invalid=${#fields.hasErrors('accountStatus')},aria-describedby=${#fields.hasErrors('accountStatus') ? 'account-status-hint account-status-error' : 'account-status-hint'}">
                                     <option value="Active">Hoạt động</option>
                                     <option value="Inactive">Vô hiệu hóa</option>
-                                    <option value="Blocked">Bị khóa</option>
                                 </select>
-                                <small id="account-status-hint" class="account-field-hint">Tài khoản đã vô hiệu hóa hoặc bị khóa không thể đăng nhập hay truy cập trang được bảo vệ.</small>
+                                <small id="account-status-hint" class="account-field-hint">Tài khoản vô hiệu hóa không thể đăng nhập hay truy cập trang được bảo vệ.</small>
                                 <span id="account-status-error" class="form-error" th:if="${#fields.hasErrors('accountStatus')}" th:errors="*{accountStatus}"></span>
                             </div></div></fieldset>
 <fieldset class="account-form-section" th:if="${createMode}"><legend>Mật khẩu ban đầu</legend><div class="account-form-grid"><div class="form-group" th:if="${createMode}">

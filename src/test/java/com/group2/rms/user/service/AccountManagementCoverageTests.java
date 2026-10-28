@@ -418,9 +418,10 @@ class AccountManagementCoverageTests {
         verify(candidates, times(0)).save(any(Candidate.class));
     }
 
-    @Test
-    @DisplayName("ACCOUNT-UNIT-22 | Trạng thái Unsupported: giữ thông tin cũ và không lưu")
-    void update_statusUnsupported_preservesAccount() {
+    @org.junit.jupiter.params.ParameterizedTest
+    @org.junit.jupiter.params.provider.ValueSource(strings = {"Deleted", "Blocked"})
+    @DisplayName("ACCOUNT-UNIT-22 | Trạng thái không hỗ trợ: giữ thông tin cũ và không lưu")
+    void update_statusUnsupported_preservesAccount(String unsupportedStatus) {
         // Given: Trạng thái Unsupported: giữ thông tin cũ và không lưu.
         User account = User.builder().userId(7).username("employee").email("employee@example.test")
             .fullName("Original").passwordHash("old-hash").role(hr).department(department).accountStatus("Active").build();
@@ -430,7 +431,7 @@ class AccountManagementCoverageTests {
 
         // When: Thực hiện thao tác cần kiểm tra.
         AccountFieldException error = assertThrows(AccountFieldException.class, () -> service.update(7,
-            new AccountManagementService.UpdateCommand("Changed", "changed@example.test", null, 2, 3, "Deleted")));
+            new AccountManagementService.UpdateCommand("Changed", "changed@example.test", null, 2, 3, unsupportedStatus)));
 
         // Then: Kiểm tra kết quả nghiệp vụ và số lần gọi dependency.
         assertEquals("accountStatus", error.getField());
