@@ -20,14 +20,15 @@
 </head>
 
 <body>
-    <main id="main" layout:fragment="content" class="page-content container" tabindex="-1" th:with="isDraft=${req.approvalStatus == 'Draft'}, isPending=${req.approvalStatus == 'Pending_Director'},
+    <main id="main" layout:fragment="content" class="page-content container adw-page" tabindex="-1" th:with="isDraft=${req.approvalStatus == 'Draft'}, isPending=${req.approvalStatus == 'Pending_Director'},
                isApproved=${req.approvalStatus == 'Approved'}, isRejected=${req.approvalStatus == 'Rejected'},
                lastDecision=${#lists.isEmpty(req.approvals) ? null : req.approvals[0]}">
+        <th:block th:replace="~{fragments/ui/admin-workspace :: scene}"></th:block>
 
         <!-- ===== 1. ĐẦU TRANG: tên, trạng thái, mã, phòng ban, đợt + các nút thao tác ===== -->
-        <header class="rqd-head">
+        <header class="rqd-head adw-heading">
             <div class="rqd-title">
-                <h1 th:text="${req.title}">Key Account Manager</h1>
+                <h1 class="adw-title" th:text="${req.title}">Key Account Manager</h1>
                 <div class="rqd-meta">
                     <span class="badge" th:classappend="|badge--${req.statusTone}|" th:text="${req.statusLabel}">Chờ
                         duyệt</span>
@@ -65,7 +66,7 @@
         </th:block>
 
         <!-- ===== THANH TIẾN TRÌNH: Tạo nháp → Gửi duyệt → Giám đốc duyệt → Đăng tin ===== -->
-        <ol class="card rqd-steps" aria-label="Tiến trình yêu cầu">
+        <ol class="card rqd-steps adw-surface" aria-label="Tiến trình yêu cầu">
             <li class="is-done">
                 <strong>Tạo bản nháp</strong>
                 <span th:text="${#temporals.format(req.createdAt, 'dd/MM/yyyy')}">03/10/2026</span>
@@ -92,7 +93,7 @@
         <div class="rqd-layout">
             <!-- ===== 4. NỘI DUNG (cột trái) ===== -->
             <div class="rqd-main">
-                <section class="card rqd-section" aria-labelledby="rqd-h-basic">
+                <section class="card rqd-section adw-surface" aria-labelledby="rqd-h-basic">
                     <h2 id="rqd-h-basic">Thông tin cơ bản</h2>
                     <!-- Thứ tự ô theo yêu cầu của nhóm: Địa điểm ở cuối và chiếm 2 cột -->
                     <dl class="rqd-facts">
@@ -139,7 +140,7 @@
                     </dl>
                 </section>
 
-                <section class="card rqd-section" aria-label="Nội dung tuyển dụng">
+                <section class="card rqd-section adw-surface" aria-label="Nội dung tuyển dụng">
                     <!-- Nội dung nhiều dòng: service đã escape HTML rồi đổi xuống dòng thành <br/>, nên dùng th:utext an toàn -->
                     <div class="rqd-text">
                         <h2>Lý do tuyển dụng</h2>
@@ -159,14 +160,14 @@
                     </div>
                 </section>
 
-                <section class="card rqd-section" aria-labelledby="rqd-h-criteria">
+                <section class="card rqd-section adw-surface" aria-labelledby="rqd-h-criteria">
                     <div class="rqd-section-head">
                         <h2 id="rqd-h-criteria">Tiêu chí sàng lọc hồ sơ</h2>
                         <span class="rqd-sub" th:text="|${#lists.size(req.screeningCriteria)} tiêu chí|">4 tiêu
                             chí</span>
                     </div>
                     <div class="table-wrapper" role="region" aria-label="Tiêu chí sàng lọc" tabindex="0">
-                        <table class="rqd-criteria">
+                        <table class="rqd-criteria adw-data-table">
                             <thead>
                                 <tr>
                                     <th scope="col">Tiêu chí</th>
@@ -180,8 +181,7 @@
                                         <strong th:text="${criterion.criteriaName}">Kinh nghiệm Sales B2B</strong>
                                         <div class="rqd-sub">
                                             <span th:text="${criterion.criteriaTypeLabel}">Kinh nghiệm</span>
-                                            <span class="badge badge--danger" th:if="${criterion.isMandatory}">Bắt
-                                                buộc</span>
+                                            <span class="badge badge--danger" th:if="${criterion.isMandatory}">Bắt buộc</span>
                                         </div>
                                     </td>
                                     <td th:text="${criterion.requiredValue}">≥ 2 năm</td>
@@ -209,7 +209,7 @@
             <!-- ===== 5. CỘT PHẢI: quyết định của Giám đốc, tin tuyển dụng, ý kiến, lịch sử ===== -->
             <aside class="rqd-rail" aria-label="Duyệt và lịch sử">
                 <!-- Chỉ Director (không phải người tạo) khi yêu cầu đang Chờ duyệt -->
-                <section class="card rqd-section rqd-decision" th:if="${req.decidable}"
+                <section class="card rqd-section rqd-decision adw-surface" th:if="${req.decidable}"
                     aria-labelledby="rqd-h-decision">
                     <h2 id="rqd-h-decision">Quyết định của bạn</h2>
                     <form id="decision-form" method="post"
@@ -229,7 +229,7 @@
                 </section>
 
                 <!-- Tin tuyển dụng (bản đơn giản): chỉ khi yêu cầu đã duyệt -->
-                <section class="card rqd-section" th:if="${isApproved}" aria-labelledby="rqd-h-posting">
+                <section class="card rqd-section adw-surface" th:if="${isApproved}" aria-labelledby="rqd-h-posting">
                     <h2 id="rqd-h-posting">Tin tuyển dụng</h2>
                     <dl class="rqd-kv" th:if="${req.jobPostingId != null}">
                         <div>
@@ -260,7 +260,7 @@
                 </section>
 
                 <!-- Ý kiến của Giám đốc: bảng RequisitionApproval, mới nhất trước -->
-                <section class="card rqd-section" th:unless="${#lists.isEmpty(req.approvals)}"
+                <section class="card rqd-section adw-surface" th:unless="${#lists.isEmpty(req.approvals)}"
                     aria-labelledby="rqd-h-approvals">
                     <h2 id="rqd-h-approvals">Ý kiến của Giám đốc</h2>
                     <article class="rqd-approval" th:each="approval : ${req.approvals}">
@@ -277,7 +277,7 @@
                 </section>
 
                 <!-- Lịch sử thao tác: bảng AuditLog (EntityName = 'JobRequisition'), mới nhất trước -->
-                <section class="card rqd-section" aria-labelledby="rqd-h-history">
+                <section class="card rqd-section adw-surface" aria-labelledby="rqd-h-history">
                     <h2 id="rqd-h-history">Lịch sử</h2>
                     <ol class="rqd-timeline" th:unless="${#lists.isEmpty(req.activityLog)}">
                         <li th:each="log : ${req.activityLog}">
@@ -303,6 +303,7 @@
     </main>
 
     <th:block layout:fragment="scripts">
+        <th:block th:replace="~{fragments/ui/admin-workspace :: scripts}"></th:block>
         <!-- text-limit.js: báo lỗi đỏ "Nội dung quá N ký tự" khi gõ / dán vượt maxlength -->
         <script th:src="@{/js/text-limit.js}" defer></script>
         <!-- requisition-actions.js: hộp thoại xóa, lý do từ chối, chống gửi lặp -->

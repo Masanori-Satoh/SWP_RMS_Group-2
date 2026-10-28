@@ -82,7 +82,7 @@ public final class PublicJobSearch {
 
             List<Predicate> where = new ArrayList<>();
             where.add(cb.equal(root.get("postingStatus"), JobPostingAccess.STATUS_PUBLISHED));
-            // Tin hẹn đăng (PostingDate ở tương lai) chưa hiện cho ứng viên
+            // Giữ tin cũ có PostingDate ở tương lai ngoài trang công khai cho tới khi dữ liệu được xử lý.
             where.add(cb.or(cb.isNull(root.get("postingDate")),
                     cb.lessThanOrEqualTo(root.<LocalDateTime>get("postingDate"), now)));
             where.add(cb.or(cb.isNull(root.get("applicationDeadline")),

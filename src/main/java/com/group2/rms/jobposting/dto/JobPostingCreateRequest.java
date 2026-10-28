@@ -10,7 +10,6 @@ import lombok.Setter;
 import org.springframework.format.annotation.DateTimeFormat;
 
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 
 /**
  * Dữ liệu form Tạo / Sửa tin tuyển dụng (job-postings/create.html).
@@ -35,9 +34,6 @@ public class JobPostingCreateRequest {
     public static final String SALARY_RANGE = "range";
     public static final String SALARY_NEGOTIABLE = "nego";
     public static final String SALARY_CUSTOM = "custom";
-    // Lựa chọn "Ngày đăng"
-    public static final String PUBLISH_NOW = "now";
-    public static final String PUBLISH_LATER = "later";
 
     private Integer jobPostingId;
     private Integer requisitionId;
@@ -74,9 +70,7 @@ public class JobPostingCreateRequest {
     private boolean draftOrNew;
     /** Đang sửa tin tạm dừng: có nút "Lưu thay đổi" + "Lưu và mở lại". */
     private boolean paused;
-    /** Đang sửa tin hẹn đăng: "Đăng ngay" nghĩa là đăng khi lưu. */
-    private boolean scheduled;
-    /** Tin đã lên trang tuyển dụng (đang đăng hoặc tạm dừng): không đổi được ngày đăng nữa. */
+    /** Tin đã lên trang tuyển dụng (đang đăng hoặc tạm dừng). */
     private boolean live;
 
     // ----- Nội dung tin (HR nhập) -----
@@ -102,12 +96,6 @@ public class JobPostingCreateRequest {
     @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
     private LocalDate applicationDeadline;
 
-    /** "now" (đăng ngay) hoặc "later" (hẹn ngày đăng). */
-    private String publishMode;
-    /** Thời điểm hẹn đăng (ô datetime-local gửi dạng 2026-10-20T08:00). */
-    @DateTimeFormat(pattern = "yyyy-MM-dd'T'HH:mm")
-    private LocalDateTime scheduledAt;
-
-    /** JobPostingValidator.ACTION_DRAFT (lưu nháp / lưu thay đổi) hoặc ACTION_PUBLISH (đăng tin / lên lịch đăng). */
+    /** JobPostingValidator.ACTION_DRAFT (lưu nháp / lưu thay đổi) hoặc ACTION_PUBLISH (đăng tin). */
     private String action;
 }

@@ -5,11 +5,12 @@
   <!--
     FRAGMENTS/LAYOUT/CANDIDATE-TOPBAR.HTML
     =============================================================================
-    Topbar của ứng viên trong layout/internal (dunglt chốt 2026-10-20): ứng viên không có sidebar, không có menu.
-      Logo (về /) | (khoảng trống) | chuông + avatar (về /profile) + Đăng xuất
-    Không cần menu: logo về landing, thẻ "Bước 1" trên trang đơn dẫn tới /jobs, trang đơn là trang chính của ứng viên;
-    lịch phỏng vấn (/portal/interviews) và thư mời (/portal/offers) mở từ nút trên thẻ đơn.
-    .candidate-topbar__nav để trống, chỉ giữ chỗ (flex: 1) đẩy góc người dùng sang phải.
+    Topbar của ứng viên trong layout/internal (dunglt chốt 2026-10-20; menu thêm 2026-10-27, ux.md mục 0):
+    ứng viên không có sidebar.
+      Logo (về /) | Vị trí tuyển dụng · Đơn của tôi | chuông + avatar (về /portal/profile) + Đăng xuất
+    Menu dùng chung với topbar công khai (fragments/layout/candidate-nav). "Đơn của tôi" sáng ở trang đơn, chi tiết
+    đơn, lịch phỏng vấn (/portal/interviews) và thư mời (/portal/offers): hai trang sau mở từ nút trên thẻ đơn.
+    .candidate-topbar__nav giãn (flex: 1) đẩy góc người dùng sang phải; màn hẹp xuống hàng thứ hai.
     CSS: static/css/candidate-shell.css (+ topbar.css qua workspace.css). Người dùng lấy từ topbarUser (TopbarUserAdvice).
     =============================================================================
 -->
@@ -17,11 +18,9 @@
     <div class="public-topbar__inner candidate-topbar__inner">
       <a th:replace="~{fragments/brand :: wordmark('TUYỂN DỤNG')}"></a>
 
-      <nav class="candidate-topbar__nav" aria-label="Điều hướng ứng viên">
-        <!-- <a class="public-topbar__link" th:href="@{/portal/applications}"
-          th:with="onMyApplications=${activeMenu == 'applications' or activeMenu == 'interviews' or activeMenu == 'offers'}"
-          th:classappend="${onMyApplications} ? 'active'" th:attr="aria-current=${onMyApplications ? 'page' : null}">Đơn
-          ứng tuyển của tôi</a> -->
+      <nav class="candidate-topbar__nav" aria-label="Điều hướng ứng viên"
+           th:with="onMyApplications=${activeMenu == 'applications' or activeMenu == 'interviews' or activeMenu == 'offers'}">
+        <th:block th:replace="~{fragments/layout/candidate-nav :: links(${onMyApplications ? 'applications' : ''})}"></th:block>
       </nav>
 
       <div class="public-topbar__actions">

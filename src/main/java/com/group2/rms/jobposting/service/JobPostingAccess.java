@@ -8,7 +8,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Component;
 
-import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Set;
 
@@ -30,20 +29,15 @@ public class JobPostingAccess {
     public static final String STATUS_PUBLISHED = "Published";
     public static final String STATUS_PAUSED = "Paused";
     public static final String STATUS_CLOSED = "Closed";
-    /**
-     * Chỉ dùng để hiển thị và lọc, KHÔNG lưu DB: "Hẹn đăng" = Published + PostingDate ở tương lai
-     * (ứng viên chưa thấy tin cho tới đúng giờ đăng).
-     */
-    public static final String STATUS_SCHEDULED = "Scheduled";
 
     /** Tin "đang mở" của một yêu cầu: mỗi yêu cầu chỉ được có 1 tin ở các trạng thái này. */
     public static final List<String> OPEN_STATUSES = List.of(STATUS_DRAFT, STATUS_PUBLISHED, STATUS_PAUSED);
     /** Trạng thái hiển thị theo thứ tự trên bộ lọc. */
     public static final List<String> VIEW_STATUSES =
-            List.of(STATUS_DRAFT, STATUS_SCHEDULED, STATUS_PUBLISHED, STATUS_PAUSED, STATUS_CLOSED);
+            List.of(STATUS_DRAFT, STATUS_PUBLISHED, STATUS_PAUSED, STATUS_CLOSED);
     /** HM và Director không xem tin nháp. */
     public static final List<String> VIEW_STATUSES_WITHOUT_DRAFT =
-            List.of(STATUS_SCHEDULED, STATUS_PUBLISHED, STATUS_PAUSED, STATUS_CLOSED);
+            List.of(STATUS_PUBLISHED, STATUS_PAUSED, STATUS_CLOSED);
 
     private static final Set<String> EDITABLE_STATUSES = Set.of(STATUS_DRAFT, STATUS_PUBLISHED, STATUS_PAUSED);
     private static final Set<String> MANAGER_ROLES =
@@ -58,24 +52,12 @@ public class JobPostingAccess {
 
     // ----- Trạng thái (hàm static: so chuỗi, không cần người dùng) -----
 
-    /** Trạng thái hiển thị của một tin: tách "Hẹn đăng" ra khỏi "Đang đăng". */
-    public static String viewStatus(String postingStatus, LocalDateTime postingDate, LocalDateTime now) {
-        if (STATUS_PUBLISHED.equals(postingStatus) && postingDate != null && postingDate.isAfter(now)) {
-            return STATUS_SCHEDULED;
-        }
-        return postingStatus;
-    }
-
-    public static String viewStatus(JobPosting posting, LocalDateTime now) {
-        return viewStatus(posting.getPostingStatus(), posting.getPostingDate(), now);
-    }
-
     /** Tin đã đóng thì không sửa được nữa ("Đăng lại" = tạo tin mới). */
     public static boolean isEditableStatus(String postingStatus) {
         return EDITABLE_STATUSES.contains(postingStatus);
     }
 
-    /** Tin đã lên trang tuyển dụng (đang đăng, hoặc tạm dừng sau khi đã đăng): không hẹn lại ngày đăng được. */
+    /** Tin đang đăng hoặc tạm dừng sau khi đã đăng. */
     public static boolean isLive(String viewStatus) {
         return STATUS_PUBLISHED.equals(viewStatus) || STATUS_PAUSED.equals(viewStatus);
     }
@@ -139,11 +121,6 @@ public class JobPostingAccess {
 
     public boolean canPublish(User user, String viewStatus) {
         return canManage(user) && STATUS_DRAFT.equals(viewStatus);
-    }
-
-    /** "Đăng ngay" và "Hủy lịch đăng" chỉ có ở tin hẹn đăng. */
-    public boolean canChangeSchedule(User user, String viewStatus) {
-        return canManage(user) && STATUS_SCHEDULED.equals(viewStatus);
     }
 
     public boolean canReopen(User user, String viewStatus) {

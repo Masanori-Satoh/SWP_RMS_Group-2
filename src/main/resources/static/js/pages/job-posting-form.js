@@ -140,21 +140,7 @@
     /* ---------------------------------------------------------------------
      * 5. NGÀY ĐĂNG VÀ HẠN NỘP
      * --------------------------------------------------------------------- */
-    const scheduledAt = $('scheduledAt');
-    const publishButton = $('jpf-publish');
-    const later = () => radioValue('publishMode') === 'later';
-    /** Ngày đăng dự kiến (yyyy-MM-dd): ngày hẹn nếu chọn hẹn đăng, ngược lại là hôm nay. */
-    const postingDay = () => (later() && scheduledAt?.value) ? scheduledAt.value.slice(0, 10) : today;
-
-    if (scheduledAt) {
-        // Bấm vào ô thời điểm thì tự chọn "Hẹn ngày đăng"; ô đang trống thì gợi ý 8 giờ sáng mai
-        scheduledAt.min = `${today}T00:00`;
-        scheduledAt.addEventListener('focus', () => {
-            form.querySelector('input[name="publishMode"][value="later"]').checked = true;
-            if (!scheduledAt.value) scheduledAt.value = `${addDays(today, 1)}T08:00`;
-            refresh();
-        });
-    }
+    const postingDay = () => today;
 
     const deadline = $('applicationDeadline');
     form.querySelectorAll('[data-days]').forEach(button => button.addEventListener('click', () => {
@@ -167,9 +153,6 @@
         const days = value ? daysBetween(postingDay(), value) : null;
         $('deadline-help').textContent = days !== null && days > 0
             ? `Nhận hồ sơ trong ${days} ngày, đến hết ${viDate(value)}.` : '';
-        if (publishButton) {
-            publishButton.textContent = later() ? 'Lên lịch đăng' : 'Đăng tin';
-        }
     }
 
     /* ---------------------------------------------------------------------
@@ -235,11 +218,6 @@
         if (showPositions.checked) {
             required('numberOfPositionsDisplay', 'Nhập số lượng hiển thị hoặc tắt hiển thị số lượng.');
         }
-        if (publishing && later()) {
-            const value = scheduledAt?.value;
-            if (!value) errors.scheduledAt = 'Vui lòng chọn thời điểm đăng.';
-            else if (new Date(value) <= new Date()) errors.scheduledAt = 'Thời điểm hẹn đăng phải sau thời điểm hiện tại.';
-        }
         if (!deadline.value) {
             if (publishing) errors.applicationDeadline = 'Vui lòng chọn hạn nộp hồ sơ.';
         } else if (deadline.value < today) {
@@ -249,7 +227,7 @@
         }
 
         ['postingTitle', 'jobDescription', 'jobRequirements', 'salaryCustom', 'numberOfPositionsDisplay',
-            'scheduledAt', 'applicationDeadline'].forEach(field => showError(field, errors[field] || ''));
+            'applicationDeadline'].forEach(field => showError(field, errors[field] || ''));
         return errors;
     }
 
@@ -260,7 +238,7 @@
             return;
         }
         const action = event.submitter?.value || 'draft';
-        // Giống server: tin không còn là nháp (đã đăng / hẹn đăng / tạm dừng) thì "Lưu thay đổi" cũng phải đủ hạn nộp
+        // Giống server: tin không còn là nháp (đã đăng / tạm dừng) thì "Lưu thay đổi" cũng phải đủ hạn nộp
         const publishing = action === 'publish' || form.dataset.draft !== 'true';
         const errors = validate(publishing);
         const first = Object.keys(errors)[0];

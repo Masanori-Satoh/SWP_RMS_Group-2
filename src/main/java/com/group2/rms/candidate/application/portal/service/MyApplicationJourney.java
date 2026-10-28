@@ -4,6 +4,7 @@ import com.group2.rms.candidate.application.portal.dto.MyApplicationStep;
 import com.group2.rms.candidate.domain.rule.ApplicationProgressResolver;
 import com.group2.rms.core.web.TimelineItem;
 
+import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
@@ -12,12 +13,14 @@ import java.util.List;
 import java.util.Optional;
 
 /**
- * Quy đổi dữ kiện một đơn thành điều ứng viên thấy ở My Applications (hàm thuần, không đọc DB): vòng trên thanh
- * 4 chấm (cột Stage của SRS #63), badge Status kèm một dòng giải thích, nút việc tiếp theo, hành trình.
+ * Quy đổi dữ kiện một đơn thành điều ứng viên thấy ở "Đơn của tôi" (hàm thuần, không đọc DB): thanh 4 bước
+ * Nộp CV → Phỏng vấn → Thư mời → Nhận việc, chữ trạng thái kèm một dòng giải thích, nút việc tiếp theo, đơn gấp,
+ * hành trình.
  * <p>
- * Nguyên tắc: ứng viên chỉ thấy điều đã được công bố cho họ. Dữ kiện đầu vào đã bỏ sẵn phần nội bộ (offer chưa gửi,
- * điểm AI, lượt duyệt, kết quả chốt phỏng vấn: GBR-02), nên ví dụ HM chốt "Đạt" mà HR chưa gửi offer thì đơn vẫn ở
- * vòng Phỏng vấn. Bảng quy đổi xét từ trên xuống, gặp điều kiện đầu tiên đúng thì dừng (spec My Applications mục 2.2).
+ * Nguyên tắc (L6 luồng 5): chữ ứng viên thấy chỉ đổi khi ứng viên đã được báo (có lịch, có thư mời). Dữ kiện đầu vào
+ * đã bỏ sẵn phần nội bộ (offer chưa gửi, điểm AI, lượt duyệt, kết quả chốt phỏng vấn: GBR-02), nên mọi bước duyệt
+ * nội bộ trước phỏng vấn đều là "Đã nộp CV", và HM chốt "Đạt" mà HR chưa gửi offer thì đơn vẫn ở Phỏng vấn. Bảng
+ * quy đổi là bảng 5.3 của {@code nghiep-vu.md}, xét từ trên xuống, gặp điều kiện đầu tiên đúng thì dừng.
  * Giống {@link ApplicationProgressResolver} nhưng cho góc nhìn ứng viên.
  */
 public final class MyApplicationJourney {
@@ -27,18 +30,25 @@ public final class MyApplicationJourney {
     static final String INTERVIEWS_HREF = "/portal/interviews";
     static final String JOBS_HREF = "/jobs";
 
+    /** Lịch phỏng vấn bắt đầu trong khoảng này tính từ bây giờ là đơn gấp (ux mục 2). */
+    static final Duration INTERVIEW_URGENT_WITHIN = Duration.ofHours(48);
+
+    /** Câu giải thích chung cho mọi bước duyệt nội bộ trước phỏng vấn: không lộ bước nào đang xét (L6). */
+    static final String SUBMITTED_NOTE =
+            "Hồ sơ của bạn đang được xem xét. Bạn sẽ nhận được thông báo khi có lịch phỏng vấn.";
+
     private static final DateTimeFormatter DAY_MONTH = DateTimeFormatter.ofPattern("dd/MM");
     private static final DateTimeFormatter TIME_DAY_MONTH = DateTimeFormatter.ofPattern("HH:mm dd/MM");
 
     private MyApplicationJourney() {
     }
 
-    /** 4 vòng ứng viên thấy, theo thứ tự luồng. */
+    /** 4 bước ứng viên thấy, theo thứ tự luồng (Q5.4). */
     public enum Round {
         SUBMIT("Nộp CV"),
-        SCREENING("Xét CV"),
         INTERVIEW("Phỏng vấn"),
-        OFFER("Thư mời");
+        OFFER("Thư mời"),
+        HIRED("Nhận việc");
 
         private final String label;
 
@@ -51,8 +61,17 @@ public final class MyApplicationJourney {
         }
     }
 
-    /** Một lịch phỏng vấn ({@code InterviewSchedule}), kể cả lịch đã hủy. */
-    public record Interview(LocalDateTime start, String format, String status) {
+    /**
+     * Một lịch phỏng vấn ({@code InterviewSchedule}), kể cả lịch đã hủy.
+     *
+     * @param scheduledAt lúc xếp lịch ({@code CreatedAt}) = lúc ứng viên được báo; {@code null} nếu không rõ
+     */
+    public record Interview(LocalDateTime start, String format, String status, LocalDateTime scheduledAt) {
+
+        /** Lịch không rõ lúc xếp (dữ liệu cũ, test). */
+        public Interview(LocalDateTime start, String format, String status) {
+            this(start, format, status, null);
+        }
     }
 
     /** Offer ứng viên được thấy ({@code Sent_Candidate}, {@code Accepted}, {@code Declined}). */
@@ -77,88 +96,109 @@ public final class MyApplicationJourney {
     /**
      * Điều trang hiển thị cho một đơn.
      *
-     * @param tone        màu badge: {@code neutral}, {@code success}, {@code warning}, {@code danger}
-     * @param statusNote  dòng giải thích dưới badge; {@code null} nếu không có
-     * @param actionLabel nút việc tiếp theo; {@code null} nếu không có (nút Rút đơn do Service quyết định riêng)
-     * @param journey     các mốc ứng viên được biết, cũ nhất trước
-     * @param lastActivityAt mốc mới nhất đã xảy ra (không tính lịch hẹn ở tương lai): thứ tự mặc định của danh sách
+     * @param tone           màu chữ trạng thái: {@code neutral}, {@code success}, {@code warning}, {@code danger}
+     * @param statusNote     dòng giải thích dưới chữ trạng thái; {@code null} nếu không có
+     * @param actionLabel    nút việc tiếp theo; {@code null} nếu không có (nút Rút đơn do Service quyết định riêng)
+     * @param journey        các mốc ứng viên được biết, cũ nhất trước
+     * @param lastActivityAt lần mới nhất ứng viên được báo điều gì đó (đã xảy ra); xếp trong cùng nhóm ưu tiên
+     * @param urgentUntil    hạn của việc cần làm ngay (hạn trả lời thư mời, giờ phỏng vấn); {@code null} nếu không gấp
+     * @param urgentLabel    dòng "còn …" của việc gấp; {@code null} nếu không gấp
+     * @param ended          đơn đã dừng hoặc đã nhận việc (tab "Đã kết thúc")
+     * @param stopped        đơn dừng giữa chừng (rút, bị loại, tin đóng, từ chối thư mời): thanh bước xám, chữ thành badge
+     * @param priority       nhóm xếp danh sách: {@value #PRIORITY_UPCOMING} có sự kiện sắp tới,
+     *                       {@value #PRIORITY_IN_FLOW} đang xử lý, {@value #PRIORITY_ENDED} đã kết thúc
+     * @param upcomingAt     mốc sự kiện sắp tới của nhóm 1 (giờ phỏng vấn, hạn trả lời thư mời); {@code null} nếu không có
+     *                       hoặc thư mời không có hạn
      */
     public record View(List<MyApplicationStep> steps, String statusLabel, String statusNote, String tone,
                        String actionLabel, String actionHref, List<TimelineItem> journey,
-                       LocalDateTime lastActivityAt) {
-
-        /** Số thứ tự (1–4) của bước đơn đang đứng hoặc dừng; xong cả 4 vòng thì là bước cuối. */
-        public int stepNumber() {
-            for (int i = 0; i < steps.size(); i++) {
-                String state = steps.get(i).state();
-                if ("current".equals(state) || "closed".equals(state)) {
-                    return i + 1;
-                }
-            }
-            return steps.size();
-        }
-
-        /** Bước ứng với {@link #stepNumber()}: nhãn và trạng thái cho tag trên thẻ. */
-        public MyApplicationStep step() {
-            return steps.get(stepNumber() - 1);
-        }
+                       LocalDateTime lastActivityAt, LocalDateTime urgentUntil, String urgentLabel, boolean ended,
+                       boolean stopped, int priority, LocalDateTime upcomingAt) {
     }
+
+    /** Nhóm xếp danh sách (dunglt 27/10): đơn có sự kiện sắp tới lên đầu, đơn đã kết thúc luôn chìm cuối. */
+    public static final int PRIORITY_UPCOMING = 1;
+    public static final int PRIORITY_IN_FLOW = 2;
+    public static final int PRIORITY_ENDED = 3;
 
     public static View resolve(Facts facts, LocalDateTime now) {
         Status status = status(facts, now);
         List<TimelineItem> journey = journey(facts);
+        boolean inFlow = status.mode() == Mode.IN_FLOW;
+        Optional<Urgency> urgency = inFlow ? urgency(facts, now) : Optional.empty();
+        Optional<Upcoming> upcoming = inFlow ? upcoming(facts, now) : Optional.empty();
+        int priority = !inFlow ? PRIORITY_ENDED : upcoming.isPresent() ? PRIORITY_UPCOMING : PRIORITY_IN_FLOW;
         return new View(steps(status.round(), status.mode()), status.label(), status.note(), status.tone(),
-                status.actionLabel(), status.actionHref(), journey, lastActivityAt(journey, facts.submittedAt(), now));
+                status.actionLabel(), status.actionHref(), journey, lastActivityAt(facts, now),
+                urgency.map(Urgency::until).orElse(null), urgency.map(Urgency::label).orElse(null),
+                !inFlow, status.mode() == Mode.STOPPED, priority, upcoming.map(Upcoming::at).orElse(null));
     }
 
     /**
-     * Lần cập nhật gần nhất ứng viên thấy được: mốc mới nhất trên hành trình đã xảy ra. Không dùng
-     * {@code Application.UpdatedAt} vì nó đổi cả khi HR/HM duyệt nội bộ (thẻ sẽ nhảy lên mà ứng viên không thấy gì mới).
+     * Lần mới nhất ứng viên được báo điều gì đó, chỉ tính mốc đã xảy ra: lúc nộp, lúc xếp lịch phỏng vấn (không phải
+     * giờ hẹn: lịch hẹn ngày mai vừa được báo hôm nay là chuyển biến hôm nay), giờ phỏng vấn đã qua, thư mời gửi / trả
+     * lời, rút đơn, đóng tin. Không dùng {@code Application.UpdatedAt} vì nó đổi cả khi HR/HM duyệt nội bộ (thẻ sẽ nhảy
+     * lên mà ứng viên không thấy gì mới).
      */
-    static LocalDateTime lastActivityAt(List<TimelineItem> journey, LocalDateTime submittedAt, LocalDateTime now) {
-        return journey.stream()
-                .map(TimelineItem::at)
+    static LocalDateTime lastActivityAt(Facts facts, LocalDateTime now) {
+        List<LocalDateTime> moments = new ArrayList<>();
+        moments.add(facts.submittedAt());
+        for (Interview interview : facts.interviews()) {
+            moments.add(interview.scheduledAt());
+            moments.add(interview.start());
+        }
+        if (facts.offer() != null) {
+            moments.add(facts.offer().at());
+        }
+        facts.marks().forEach(mark -> moments.add(mark.at()));
+        return moments.stream()
                 .filter(at -> at != null && !at.isAfter(now))
                 .max(Comparator.naturalOrder())
-                .orElse(submittedAt);
+                .orElse(facts.submittedAt());
     }
 
-    /** Đơn đang đi ({@code IN_FLOW}), đã dừng ở một vòng ({@code STOPPED}), hay đã xong cả 4 vòng ({@code FINISHED}). */
+    /** Đơn đang đi ({@code IN_FLOW}), đã dừng ở một bước ({@code STOPPED}), hay đã xong cả 4 bước ({@code FINISHED}). */
     enum Mode { IN_FLOW, STOPPED, FINISHED }
 
     private record Status(Round round, Mode mode, String label, String note, String tone,
                           String actionLabel, String actionHref) {
     }
 
-    // ---- Stage + Status (bảng 2.2) ----
+    private record Urgency(LocalDateTime until, String label) {
+    }
+
+    /** Sự kiện sắp tới của nhóm 1; {@code at} {@code null} = thư mời không có hạn. */
+    private record Upcoming(LocalDateTime at) {
+    }
+
+    // ---- Chữ trạng thái + bước (bảng 5.3) ----
 
     private static Status status(Facts facts, LocalDateTime now) {
         Offer offer = facts.offer();
         return switch (facts.applicationStatus()) {
             case "Rejected" -> stopped(facts);
-            case "Hired" -> new Status(Round.OFFER, Mode.FINISHED, "Đã nhận việc", "Chúc mừng bạn!", "success",
+            case "Hired" -> new Status(Round.HIRED, Mode.FINISHED, "Đã nhận việc", "Chúc mừng bạn!", "success",
                     offer == null ? null : "Xem thư mời", offerHref(offer));
             case "Offered" -> offered(offer);
             case "HM_Passed", "Interviewing" -> interviewing(facts.interviews(), now);
-            case "HR_Passed" -> waiting("Chờ xét CV", "Bộ phận chuyên môn đang xem CV của bạn.");
-            case "AI_Screened" -> waiting("Chờ xét CV", "Bộ phận tuyển dụng đang xem CV của bạn.");
-            case "Applied" -> waiting("Đã nộp CV", "Hệ thống đang sàng lọc CV của bạn.");
+            case "Applied", "AI_Screened", "HR_Passed" -> submitted();
             // Trạng thái lạ (ngoài CK_Application_Status): không đoán, chỉ báo đang xử lý.
-            default -> waiting("Đang xử lý", null);
+            default -> new Status(Round.SUBMIT, Mode.IN_FLOW, "Đang xử lý", null, "neutral", null, null);
         };
     }
 
-    /** Dòng 1–5: đơn {@code Rejected}, vì sao dừng và dừng ở vòng nào. */
+    /** Đơn {@code Rejected}: vì sao dừng và dừng ở bước nào. */
     private static Status stopped(Facts facts) {
         Optional<Mark> withdrawn = mark(facts, WITHDRAWN);
         if (withdrawn.isPresent()) {
             LocalDateTime at = withdrawn.get().at();
             String note = at == null ? "Bạn đã rút hồ sơ." : "Bạn đã rút hồ sơ ngày " + at.format(DAY_MONTH) + ".";
-            return new Status(Round.SCREENING, Mode.STOPPED, "Đã tự rút hồ sơ", note, "neutral", null, null);
+            return new Status(roundWhenStopped(facts, withdrawn.get().oldStatus()), Mode.STOPPED, "Đã tự rút hồ sơ",
+                    note, "neutral", null, null);
         }
         Optional<Mark> closed = mark(facts, POSTING_CLOSED);
         if (closed.isPresent()) {
-            return new Status(roundWhenClosed(facts, closed.get().oldStatus()), Mode.STOPPED, "Vị trí đã ngừng tuyển",
+            return new Status(roundWhenStopped(facts, closed.get().oldStatus()), Mode.STOPPED, "Vị trí đã ngừng tuyển",
                     "Công ty đã ngừng tuyển vị trí này nên hồ sơ của bạn dừng lại. Bạn có thể ứng tuyển vị trí khác.",
                     "neutral", "Xem vị trí đang tuyển", JOBS_HREF);
         }
@@ -171,26 +211,30 @@ public final class MyApplicationJourney {
             return new Status(Round.INTERVIEW, Mode.STOPPED, "Không đạt phỏng vấn",
                     "Cảm ơn bạn đã tham gia phỏng vấn.", "danger", null, null);
         }
-        return new Status(Round.SCREENING, Mode.STOPPED, "Không đạt vòng CV",
-                "Hồ sơ chưa phù hợp với vị trí này.", "danger", null, null);
+        // Q2.4: không nêu lý do (GBR-02), không hứa "lưu hồ sơ".
+        return new Status(Round.SUBMIT, Mode.STOPPED, "Không đạt vòng CV",
+                "Cảm ơn bạn đã quan tâm. Hồ sơ của bạn chưa phù hợp với vị trí này.", "danger",
+                "Xem vị trí khác", JOBS_HREF);
     }
 
     /**
-     * Vòng dừng khi tin bị đóng: có offer → Thư mời; có lịch chưa hủy → Phỏng vấn; còn lại → Xét CV. Đóng tin hủy luôn
-     * các lịch chưa diễn ra, nên xét thêm trạng thái ngay trước khi đóng ({@code OldValue} của dấu) và lấy vòng xa hơn.
+     * Bước dừng khi đơn bị dừng giữa chừng (đóng tin, ứng viên tự rút): có offer → Thư mời; có lịch chưa hủy →
+     * Phỏng vấn; còn lại → Nộp CV. Đóng tin hủy luôn các lịch chưa diễn ra, nên xét thêm trạng thái ngay trước khi
+     * dừng ({@code OldValue} của dấu) và lấy bước xa hơn. {@code HM_Passed} là Nộp CV: chưa có lịch thì ứng viên chưa
+     * được báo gì (L6; xếp lịch chuyển đơn sang {@code Interviewing}).
      */
-    static Round roundWhenClosed(Facts facts, String statusBeforeClose) {
+    static Round roundWhenStopped(Facts facts, String statusBeforeStop) {
         Round fromFacts = facts.offer() != null ? Round.OFFER
-                : hasActiveInterview(facts.interviews()) ? Round.INTERVIEW : Round.SCREENING;
-        Round fromStatus = statusBeforeClose == null ? Round.SCREENING : switch (statusBeforeClose) {
+                : hasActiveInterview(facts.interviews()) ? Round.INTERVIEW : Round.SUBMIT;
+        Round fromStatus = statusBeforeStop == null ? Round.SUBMIT : switch (statusBeforeStop) {
             case "Offered" -> Round.OFFER;
-            case "HM_Passed", "Interviewing" -> Round.INTERVIEW;
-            default -> Round.SCREENING;
+            case "Interviewing" -> Round.INTERVIEW;
+            default -> Round.SUBMIT;
         };
         return fromFacts.compareTo(fromStatus) >= 0 ? fromFacts : fromStatus;
     }
 
-    /** Dòng 7 và 14: đơn {@code Offered}. */
+    /** Đơn {@code Offered}. */
     private static Status offered(Offer offer) {
         if (offer != null && "Sent_Candidate".equals(offer.status())) {
             String note = offer.responseDeadline() == null
@@ -204,12 +248,9 @@ public final class MyApplicationJourney {
                 "neutral", null, null);
     }
 
-    /** Dòng 8–10: đơn {@code HM_Passed}/{@code Interviewing}; xét lịch sắp tới trước, rồi lịch đã qua. */
+    /** Đơn {@code HM_Passed}/{@code Interviewing}: xét lịch sắp tới trước, rồi lịch đã qua; chỉ có lịch đã hủy = chưa có lịch. */
     private static Status interviewing(List<Interview> interviews, LocalDateTime now) {
-        Optional<Interview> upcoming = interviews.stream()
-                .filter(i -> "Scheduled".equals(i.status()) || "Rescheduled".equals(i.status()))
-                .filter(i -> i.start() != null && i.start().isAfter(now))
-                .min(Comparator.comparing(Interview::start));
+        Optional<Interview> upcoming = upcomingInterview(interviews, now);
         if (upcoming.isPresent()) {
             String format = formatLabel(upcoming.get().format());
             String note = (format == null ? "" : format + ". ") + "Xem chi tiết ở Lịch phỏng vấn.";
@@ -217,32 +258,87 @@ public final class MyApplicationJourney {
                     note, "warning", "Xem lịch phỏng vấn", INTERVIEWS_HREF);
         }
         if (hasActiveInterview(interviews)) {
-            return new Status(Round.INTERVIEW, Mode.IN_FLOW, "Chờ kết quả",
-                    "Bạn đã phỏng vấn xong, kết quả sẽ được thông báo.", "neutral", "Xem lịch phỏng vấn", INTERVIEWS_HREF);
+            return new Status(Round.INTERVIEW, Mode.IN_FLOW, "Đã phỏng vấn, chờ kết quả",
+                    "Kết quả sẽ được thông báo cho bạn.", "neutral", "Xem lịch phỏng vấn", INTERVIEWS_HREF);
         }
-        return new Status(Round.INTERVIEW, Mode.IN_FLOW, "CV đạt yêu cầu",
-                "Bộ phận tuyển dụng sẽ hẹn lịch phỏng vấn với bạn.", "success", null, null);
+        return submitted();
     }
 
-    /** Dòng 11–13: đơn còn ở vòng Xét CV. */
-    private static Status waiting(String label, String note) {
-        return new Status(Round.SCREENING, Mode.IN_FLOW, label, note, "neutral", null, null);
+    /** Mọi bước duyệt nội bộ trước khi có lịch phỏng vấn. */
+    private static Status submitted() {
+        return new Status(Round.SUBMIT, Mode.IN_FLOW, "Đã nộp CV", SUBMITTED_NOTE, "neutral", null, null);
     }
 
-    /** Thanh 4 chấm: trước vòng hiện tại là {@code done}, vòng hiện tại {@code current}/{@code closed}, sau là {@code upcoming}. */
+    /**
+     * Thanh 4 bước: trước bước hiện tại là {@code done}, bước hiện tại {@code current}, sau là {@code upcoming}. Đơn dừng
+     * (dunglt 27/10): mọi bước đã tới, kể cả bước dừng, là {@code done} (đã nộp thì Nộp CV vẫn ✓); thanh xám và chữ
+     * trạng thái thành badge do giao diện lo theo {@link View#stopped()}, không đặt [X] vào bước nào.
+     */
     static List<MyApplicationStep> steps(Round round, Mode mode) {
         List<MyApplicationStep> steps = new ArrayList<>();
         for (Round r : Round.values()) {
             int order = r.compareTo(round);
-            String state = mode == Mode.FINISHED || order < 0 ? "done"
-                    : order > 0 ? "upcoming"
-                    : mode == Mode.STOPPED ? "closed" : "current";
+            String state = mode == Mode.FINISHED || order < 0 || (mode == Mode.STOPPED && order == 0) ? "done"
+                    : order > 0 ? "upcoming" : "current";
             steps.add(new MyApplicationStep(r.label(), state));
         }
         return steps;
     }
 
-    // ---- Hành trình (bảng 2.3) ----
+    // ---- Đơn gấp (ux mục 2) ----
+
+    /**
+     * Việc ứng viên cần làm ngay trên một đơn đang đi: thư mời {@code Sent_Candidate} còn hạn, hoặc lịch phỏng vấn bắt
+     * đầu trong {@link #INTERVIEW_URGENT_WITHIN} tới. Cả hai cùng có thì lấy mốc gần hơn. Thư mời không có hạn hoặc đã
+     * quá hạn thì không gấp.
+     */
+    private static Optional<Urgency> urgency(Facts facts, LocalDateTime now) {
+        List<Urgency> candidates = new ArrayList<>();
+        Offer offer = facts.offer();
+        if ("Offered".equals(facts.applicationStatus()) && offer != null && "Sent_Candidate".equals(offer.status())
+                && offer.responseDeadline() != null && offer.responseDeadline().isAfter(now)) {
+            candidates.add(new Urgency(offer.responseDeadline(), offerUrgentLabel(Duration.between(now, offer.responseDeadline()))));
+        }
+        upcomingInterview(facts.interviews(), now)
+                .filter(i -> !i.start().isAfter(now.plus(INTERVIEW_URGENT_WITHIN)))
+                .ifPresent(i -> candidates.add(new Urgency(i.start(), interviewUrgentLabel(Duration.between(now, i.start())))));
+        return candidates.stream().min(Comparator.comparing(Urgency::until));
+    }
+
+    /**
+     * Sự kiện sắp tới của một đơn đang đi (nhóm 1 khi xếp danh sách): lịch {@code Scheduled}/{@code Rescheduled} còn ở
+     * tương lai (bao xa cũng tính, khác việc gấp 48 giờ), hoặc thư mời {@code Sent_Candidate} chưa quá hạn (kể cả không
+     * có hạn). Cả hai cùng có thì lấy mốc sớm hơn; thư mời không hạn xếp sau mọi mốc có giờ.
+     */
+    private static Optional<Upcoming> upcoming(Facts facts, LocalDateTime now) {
+        Optional<LocalDateTime> interview = upcomingInterview(facts.interviews(), now).map(Interview::start);
+        Offer offer = facts.offer();
+        boolean offerAwaiting = "Offered".equals(facts.applicationStatus()) && offer != null
+                && "Sent_Candidate".equals(offer.status())
+                && (offer.responseDeadline() == null || offer.responseDeadline().isAfter(now));
+        if (!offerAwaiting) {
+            return interview.map(Upcoming::new);
+        }
+        LocalDateTime deadline = offer.responseDeadline();
+        if (interview.isEmpty()) {
+            return Optional.of(new Upcoming(deadline));
+        }
+        return Optional.of(new Upcoming(deadline != null && deadline.isBefore(interview.get()) ? deadline : interview.get()));
+    }
+
+    /** "Còn N ngày" (N làm tròn xuống); dưới 24 giờ "Còn N giờ"; dưới 1 giờ "Còn chưa tới 1 giờ". */
+    private static String offerUrgentLabel(Duration left) {
+        long hours = left.toHours();
+        String amount = hours >= 24 ? (hours / 24) + " ngày" : hours >= 1 ? hours + " giờ" : "chưa tới 1 giờ";
+        return "Còn " + amount + " để trả lời thư mời";
+    }
+
+    private static String interviewUrgentLabel(Duration left) {
+        long hours = left.toHours();
+        return hours >= 1 ? "Phỏng vấn sau " + hours + " giờ" : "Phỏng vấn trong vòng 1 giờ tới";
+    }
+
+    // ---- Hành trình ----
 
     /** Các mốc ứng viên được biết, cũ nhất trước. Không có người thực hiện, không có nhận xét (GBR-02). */
     static List<TimelineItem> journey(Facts facts) {
@@ -297,6 +393,14 @@ public final class MyApplicationJourney {
             case "Offline_Office" -> "Tại văn phòng";
             default -> null;
         };
+    }
+
+    /** Lịch {@code Scheduled}/{@code Rescheduled} gần nhất còn ở tương lai. */
+    private static Optional<Interview> upcomingInterview(List<Interview> interviews, LocalDateTime now) {
+        return interviews.stream()
+                .filter(i -> "Scheduled".equals(i.status()) || "Rescheduled".equals(i.status()))
+                .filter(i -> i.start() != null && i.start().isAfter(now))
+                .min(Comparator.comparing(Interview::start));
     }
 
     private static boolean hasActiveInterview(List<Interview> interviews) {

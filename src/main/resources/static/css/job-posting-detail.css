@@ -15,7 +15,6 @@
 .jp-detail-page .jpd-banner { margin-bottom:var(--s4); padding:var(--s3) var(--s4); border:1px solid var(--line); border-left-width:4px; border-radius:var(--radius-md); background:var(--surface); }
 .jp-detail-page .jpd-banner p { margin:0; }
 .jp-detail-page .jpd-banner--muted { border-left-color:var(--neutral); }
-.jp-detail-page .jpd-banner--info { border-left-color:var(--brand); background:var(--brand-soft); }
 .jp-detail-page .jpd-banner--warning { border-left-color:var(--warning); background:var(--warning-soft); }
 .jp-detail-page .jpd-banner--danger { border-left-color:var(--error); background:var(--error-soft); }
 
@@ -33,7 +32,7 @@
 .jp-detail-page .jpd-rail { display:grid; gap:var(--s4); min-width:0; }
 .jp-detail-page .jpd-sec { display:grid; gap:var(--s2); padding:var(--s4) var(--s5, 20px); min-width:0; }
 .jp-detail-page .jpd-main .jpd-sec + .jpd-sec { border-top:1px solid var(--line); }
-.jp-detail-page .jpd-sec h2 { margin:0; font:600 var(--font-lg)/1.3 var(--serif); }
+.jp-detail-page .jpd-sec h2 { margin:0; color:var(--brand-dark); font:700 20px/1.35 var(--sans); }
 .jp-detail-page .jpd-sec h3 { margin:0; font-size:var(--font-base); }
 .jp-detail-page .jpd-sec-head { display:flex; flex-wrap:wrap; justify-content:space-between; align-items:baseline; gap:var(--s2); }
 .jp-detail-page .jpd-muted { color:var(--muted); font-size:var(--font-sm); }

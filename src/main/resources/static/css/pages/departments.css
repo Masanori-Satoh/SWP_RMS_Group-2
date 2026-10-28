@@ -32,6 +32,8 @@
 .dm-manager { display: block; font-weight: 600; line-height: 1.35; overflow-wrap: anywhere; }
 .dm-manager-login { display: block; margin-top: var(--s1); color: var(--muted); font-size: var(--font-xs); line-height: 1.35; overflow-wrap: anywhere; }
 .dm-manager--empty { color: var(--muted); font-weight: 400; }
+/* Keep manager metadata readable; actions reuse Internal Accounts unchanged. */
+.dm-page.ads-page--refined .dm-manager-login { font-size: var(--font-sm); }
 @container departments (max-width: 700px) {
   .dm-filters { grid-template-columns: minmax(0, 1fr) max-content; grid-template-areas: "search search" "status actions"; }
 }

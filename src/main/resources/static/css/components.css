@@ -1215,3 +1215,184 @@ a.stage-bar__link:focus-visible {
     display: none;
   }
 }
+
+
+/* Admin workspace opt-in component (adw-).
+   Shared by Dashboard, account/department management and API monitoring.
+   Only new classes: the workspace shell and global tokens remain unchanged. */
+.rms-app .adw-frame { isolation: isolate; }
+.rms-app .adw-frame .adw-page {
+  position: relative;
+  isolation: isolate;
+  width: 100%;
+  max-width: none;
+  min-width: 0;
+  min-height: 0;
+  margin-inline: 0;
+  padding: var(--s4);
+  font-size: var(--font-base);
+  background: transparent;
+}
+.adw-scene {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  overflow: hidden;
+  pointer-events: none;
+  background: var(--brand-soft);
+}
+.adw-scene-office {
+  position: absolute;
+  inset: calc(-1 * var(--s4));
+  background: url('../images/admin-tech-office.png') center / cover no-repeat;
+  filter: blur(4px) saturate(.7) contrast(.9);
+}
+.adw-scene::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: color-mix(in srgb, var(--surface) 52%, transparent);
+}
+.rms-app .adw-frame .adw-main { margin-left: calc(var(--sidebar-w) + var(--s6)); }
+.rms-app .adw-sidebar {
+  isolation: isolate;
+  /* Legacy workspace.css fixes position with !important. This opt-in rail
+     follows the document so both ends share the content's 16px gutter. */
+  position: absolute !important;
+  top: var(--s4);
+  bottom: var(--s4);
+  left: var(--s4);
+  height: auto;
+  min-height: calc(100dvh - var(--s8));
+  overflow: clip;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  background: color-mix(in srgb, var(--surface) 90%, transparent);
+  backdrop-filter: blur(12px);
+  box-shadow: var(--shadow-md);
+}
+.rms-app .adw-sidebar .adw-sidebar-head { position: sticky; top: var(--s4); z-index: 2; background: var(--surface-subtle); }
+.rms-app .adw-sidebar .adw-sidebar-menu { position: sticky; top: calc(var(--topbar-h) + var(--s4)); z-index: 1; }
+/* Fixed artwork width is clipped as the rail folds; it never resizes the menu. */
+.adw-sidebar::after {
+  content: '';
+  display: block;
+  flex: 1 1 0%;
+  min-height: 0;
+  max-height: 360px;
+  width: var(--sidebar-expanded-w);
+  margin-top: auto;
+  background: url('../images/admin-tech-plant.png') left bottom / 100% auto no-repeat;
+  mask-image: linear-gradient(to top, var(--ink) 65%, transparent);
+  opacity: .65;
+  pointer-events: none;
+}
+.rms-app .adw-sidebar .adw-footer { display: none; }
+.rms-app .adw-frame .adw-topbar { padding: var(--s4) var(--s4) 0; background: transparent; border-bottom: 0; }
+.rms-app .adw-frame .adw-actions {
+  padding: var(--s1) var(--s4);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  background: color-mix(in srgb, var(--surface) 96%, transparent);
+  backdrop-filter: blur(12px);
+  box-shadow: var(--shadow-sm);
+}
+.rms-app .adw-page .adw-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: var(--s4);
+  min-height: 0;
+  margin-bottom: var(--s6);
+  padding: var(--s2) 0;
+}
+.rms-app .adw-page .adw-title {
+  margin: 0;
+  color: var(--brand-dark);
+  font: 700 36px/1.2 var(--sans);
+  letter-spacing: -.02em;
+  text-wrap: balance;
+}
+.adw-title::after {
+  content: '';
+  display: block;
+  width: var(--s12);
+  height: var(--s1);
+  margin-top: var(--s3);
+  background: var(--brand);
+}
+.rms-app .adw-page .adw-surface {
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+  box-shadow: var(--shadow-md);
+}
+.rms-app .adw-frame .adw-page .adw-panel-title {
+  color: var(--brand-dark);
+  font: 700 20px/1.35 var(--sans);
+}
+.rms-app .adw-page .adw-panel-heading { background: var(--surface); border-bottom: 1px solid var(--line); }
+.rms-app .adw-frame .adw-page .adw-icon { color: var(--brand-dark); background: var(--brand-soft); }
+.rms-app .adw-frame .adw-page .adw-close { color: var(--brand-dark); background: var(--surface); border-color: var(--control-line); }
+.rms-app .adw-frame .adw-page .adw-close:hover { color: var(--brand-dark); background: var(--brand-soft); border-color: var(--brand); }
+.rms-app .adw-frame .adw-page .adw-close:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
+.rms-app .adw-page .adw-data-table { font-size: 14px; line-height: 1.5; }
+.rms-app .adw-page .adw-data-table thead th {
+  color: var(--brand-dark);
+  background: var(--surface-subtle);
+  border-bottom: 1px solid var(--line);
+  font-family: var(--sans);
+  font-size: 14px;
+  font-weight: 600;
+}
+.rms-app .adw-page .adw-form-wrap { width: 100%; max-width: 880px; margin-inline: auto; }
+.adw-password-field { position: relative; }
+.rms-app .adw-page .adw-password-input { padding-right: 76px; }
+.adw-password-toggle {
+  position: absolute;
+  right: var(--s1);
+  top: 2px;
+  min-height: 44px;
+  min-width: var(--s16);
+  padding: var(--s2);
+  border: 0;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--brand-dark);
+  font: 600 14px/1.4 var(--sans);
+  cursor: pointer;
+}
+.adw-password-toggle:hover { text-decoration: underline; }
+.adw-password-toggle:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
+.adw-validation-summary {
+  margin-bottom: var(--s6);
+  padding: var(--s4);
+  border: 1px solid var(--error);
+  border-radius: var(--radius-md);
+  background: var(--error-soft);
+  color: var(--error);
+}
+.adw-validation-summary h2 { margin: 0 0 var(--s2); font: 600 20px/1.35 var(--sans); }
+.adw-validation-summary a { color: inherit; }
+@media (max-width: 768px) {
+  .rms-app .adw-frame .adw-main { margin-left: 0; }
+  .rms-app .adw-sidebar {
+    /* Match the shared mobile menu's existing hidden/open behavior. */
+    position: static !important;
+    top: auto; left: auto; bottom: auto;
+    min-height: 0;
+    /* Desktop tooltip pseudo-elements must not widen the open mobile menu. */
+    overflow: clip;
+    border-radius: 0;
+    backdrop-filter: none;
+  }
+  .rms-app .adw-sidebar .adw-sidebar-head, .rms-app .adw-sidebar .adw-sidebar-menu { position: static; }
+  .adw-sidebar::after { content: none; }
+  /* Legacy workspace.css declares display:flex !important on the sidebar. */
+  .adw-sidebar[hidden] { display: none !important; }
+  .rms-app .adw-frame .adw-topbar { padding: var(--s2) var(--s4); background: var(--surface); }
+  .rms-app .adw-frame .adw-actions { padding: 0; border: 0; border-radius: 0; box-shadow: none; backdrop-filter: none; }
+  .adw-scene-office { filter: blur(4px) saturate(.65) contrast(.9); }
+  .rms-app .adw-page .adw-title { font-size: 28px; }
+}

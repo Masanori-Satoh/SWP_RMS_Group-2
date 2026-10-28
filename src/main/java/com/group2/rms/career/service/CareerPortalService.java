@@ -86,7 +86,7 @@ public class CareerPortalService {
         JobPosting job = jobPostingRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy tin tuyển dụng"));
 
-        // Tin hẹn đăng chưa tới giờ đăng cũng coi như chưa có (JobPosting#isVisibleToCandidates)
+        // Tin có PostingDate ở tương lai trong dữ liệu cũ chưa công khai (JobPosting#isVisibleToCandidates).
         if (!job.isVisibleToCandidates(LocalDateTime.now())) {
             throw new ResourceNotFoundException("Tin tuyển dụng này không còn khả dụng.");
         }

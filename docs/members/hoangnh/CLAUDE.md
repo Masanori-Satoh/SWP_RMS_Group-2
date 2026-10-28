@@ -88,7 +88,11 @@ Spring Boot 3.5, Java 21, Spring Security, Spring Data JPA trên **SQL Server**,
 ```text
 com.group2.rms/
 ├── core/            ← dùng chung toàn hệ thống, KHÔNG chứa nghiệp vụ
-├── dashboard/, notification/                  ← module nhỏ (< 10 file): để phẳng
+├── notification/                              ← module nhỏ (< 10 file): để phẳng
+├── dashboard/                                 ← chia hộp: DashboardEntryController (/dashboard → redirect theo role)
+│   ├── shared/      DashboardAccess, DashboardMetricsRepository, DTO dùng chung
+│   ├── admin/       controller/ service/ dto/        (/dashboard/admin)
+│   └── internal/    controller/ service/ repository/ dto/   (/dashboard/internal: HR, HM, Director, Interviewer)
 └── auth/, user/, requisition/, jobposting/, candidate/, interview/, offer/, admin/, career/
     ├── controller/  service/  repository/  entity/  dto/
     └── validator/   exception/                ← khi cần
@@ -388,14 +392,13 @@ Không cho: `Approved → Draft`, `Draft → Approved` (trừ ngoại lệ Giám
 **Job Posting** (CHECK chỉ 4 giá trị `Draft`, `Published`, `Paused`, `Closed`):
 
 ```text
-Draft      → Published   (đăng ngay: PostingDate = giờ server; hoặc hẹn đăng: PostingDate trong 90 ngày tới)
-Published hẹn đăng (PostingDate > hiện tại) → Published (đăng ngay) | Draft (hủy lịch: PostingDate = NULL)
+Draft      → Published   (đăng ngay: PostingDate = giờ server)
 Published  → Paused | Closed (Closed chỉ HR)
 Paused     → Published (mở lại: PostingDate = giờ server) | Closed (chỉ HR)
 Closed     → không đổi nữa; "Đăng lại" = tạo tin MỚI cùng yêu cầu, PostingNo + 1
 ```
 
-"Hẹn đăng" **không phải** trạng thái trong DB: là `Published` + `PostingDate` > hiện tại. Mọi truy vấn trang công khai phải kèm `PostingDate <= hiện tại` (`JobPosting#isVisibleToCandidates`).
+Không cho chọn ngày đăng tương lai. Truy vấn trang công khai vẫn kiểm tra `PostingDate <= hiện tại` để bảo vệ dữ liệu cũ chưa được xử lý (`JobPosting#isVisibleToCandidates`).
 
 ## 15. Database / JPA / N+1
 
@@ -523,9 +526,9 @@ Rule khác:
 - Chỉ tạo từ **yêu cầu `Approved`**, kiểm lại khi đăng.
 - Chỉ **HR** tạo / sửa / đăng / tạm dừng / đóng / xóa tin; HM, Director chỉ xem (không thấy tin nháp); System Admin không vào màn tin.
 - Thông tin yêu cầu nguồn hiển thị **chỉ đọc** và luôn nạp lại từ DB (không tin số gửi lên). "Lý do tuyển dụng" chỉ nội bộ, không copy sang tin, không hiện cho khách / ứng viên.
-- HR chỉ sửa trường thuộc bảng `JobPosting`: `PostingTitle`, `JobDescription`, `JobRequirements`, `Benefits`, `SalaryDisplay`, `NumberOfPositionsDisplay`, `WorkLocation`, `ApplicationDeadline` (+ thời điểm hẹn đăng: > hiện tại, ≤ 90 ngày, < hạn nộp). Không nhập trực tiếp: `PostingStatus`, `CreatedBy`, `CreatedAt`, `UpdatedAt`, yêu cầu nguồn sau khi tạo.
-- **Lưu nháp:** `Draft`, `PostingDate = NULL`; vẫn bắt buộc Tiêu đề, Mô tả, Yêu cầu (NOT NULL); không giữ lịch hẹn.
-- **Đăng:** kiểm tra đầy đủ → yêu cầu nguồn vẫn `Approved` → `Published` → `PostingDate` = giờ server hoặc giờ hẹn → hạn nộp bắt buộc và sau `PostingDate` (`CK_JobPosting_Deadline`) → audit → thông báo HM.
+- HR chỉ sửa trường thuộc bảng `JobPosting`: `PostingTitle`, `JobDescription`, `JobRequirements`, `Benefits`, `SalaryDisplay`, `NumberOfPositionsDisplay`, `WorkLocation`, `ApplicationDeadline`. Không nhập trực tiếp: `PostingStatus`, `PostingDate`, `CreatedBy`, `CreatedAt`, `UpdatedAt`, yêu cầu nguồn sau khi tạo.
+- **Lưu nháp:** `Draft`, `PostingDate = NULL`; vẫn bắt buộc Tiêu đề, Mô tả, Yêu cầu (NOT NULL).
+- **Đăng:** kiểm tra đầy đủ → yêu cầu nguồn vẫn `Approved` → `Published` → `PostingDate` = giờ server → hạn nộp bắt buộc và sau `PostingDate` (`CK_JobPosting_Deadline`) → audit → thông báo HM.
 - Sửa tin **không** sửa ngược yêu cầu.
 - **Trang công khai:** query tự lọc `Published` và `PostingDate <= hiện tại` (gõ URL trực tiếp cũng không thấy tin nháp / tạm dừng / đóng / chưa tới giờ). HM, Director mở tin nháp → 403.
 - Nội dung công khai dùng chung một fragment giữa trang chi tiết nội bộ và công khai; trang công khai không có dữ liệu nội bộ (trạng thái, người tạo, lịch sử, yêu cầu nguồn).

@@ -179,7 +179,7 @@ public interface JobPostingRepository extends JpaRepository<JobPosting, Integer>
 
     @Query("SELECT j FROM JobPosting j " +
            "WHERE j.postingStatus = 'Published' " +
-           // Tin hẹn đăng (PostingDate ở tương lai) chưa hiện cho ứng viên
+           // Giữ tin cũ có PostingDate ở tương lai ngoài trang công khai cho tới khi dữ liệu được xử lý.
            "AND (j.postingDate IS NULL OR j.postingDate <= CURRENT_TIMESTAMP) " +
            "AND (j.applicationDeadline IS NULL OR j.applicationDeadline >= CURRENT_TIMESTAMP) " +
            "AND (:keyword IS NULL OR LOWER(j.postingTitle) LIKE LOWER(CONCAT('%', :keyword, '%'))) " +
@@ -195,4 +195,5 @@ public interface JobPostingRepository extends JpaRepository<JobPosting, Integer>
          + "AND (j.applicationDeadline IS NULL OR j.applicationDeadline >= :now) "
          + "ORDER BY j.postingDate DESC")
     List<JobPosting> findOpenPostings(@Param("now") LocalDateTime now);
+
 }

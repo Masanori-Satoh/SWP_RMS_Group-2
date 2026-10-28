@@ -17,10 +17,11 @@
 </head>
 
 <body>
-            <main id="main" layout:fragment="content" class="page-content container" tabindex="-1">
+            <main id="main" layout:fragment="content" class="page-content container adw-page" tabindex="-1">
+                    <th:block th:replace="~{fragments/ui/admin-workspace :: scene}"></th:block>
 
-                    <div class="requisition-page-header">
-                        <h1 class="page-title">Yêu cầu tuyển dụng</h1>
+                    <div class="requisition-page-header adw-heading">
+                        <h1 class="page-title adw-title">Yêu cầu tuyển dụng</h1>
                         <div class="requisition-page-actions" th:if="${canCreate}">
                             <a th:href="@{/requisitions/create}" class="btn btn--primary btn-create">+ Tạo yêu cầu mới</a>
                         </div>
@@ -32,7 +33,7 @@
                         Đây là form GET: bấm "Áp dụng" hoặc Enter thì trình duyệt tự ghép các ô thành ?q=...&status=...
                         Ô nào hiện là do service quyết định theo role (list.options.show...).
                     -->
-                    <form class="card mft-toolbar req-toolbar" th:action="@{/requisitions}" method="get" role="search"
+                    <form class="card mft-toolbar req-toolbar adw-surface" th:action="@{/requisitions}" method="get" role="search"
                         aria-label="Tìm kiếm và lọc yêu cầu tuyển dụng">
                         <div class="mft-controls">
                             <!-- <details> tự mở/đóng khi bấm <summary>, không cần JS -->
@@ -134,19 +135,19 @@
                         <a class="req-chips-reset" th:href="@{/requisitions}">Đặt lại mặc định</a>
                     </div>
 
-                    <section class="list-container" aria-labelledby="requisition-list-title">
+                    <section class="list-container adw-surface" aria-labelledby="requisition-list-title">
                         <header class="req-list-header">
                             <span class="req-list-icon" aria-hidden="true">
                                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3h8l4 4v14H4V3h4Z"/><path d="M16 3v5h4M8 12h8M8 16h8"/></svg>
                             </span>
-                            <h2 id="requisition-list-title">Danh sách yêu cầu tuyển dụng</h2>
+                            <h2 id="requisition-list-title" class="adw-panel-title">Danh sách yêu cầu tuyển dụng</h2>
                             <span class="badge badge--neutral req-list-count" th:text="|${list.page.totalElements} yêu cầu|">0 yêu cầu</span>
                         </header>
                         <div class="req-list-body">
                         <p class="table-scroll-note" hidden>Cuộn ngang để xem toàn bộ các cột và thao tác.</p>
                         <div class="table-wrapper requisition-table-wrap" role="region"
                             aria-label="Danh sách yêu cầu tuyển dụng" tabindex="0">
-                            <table class="requisition-list-table">
+                            <table class="requisition-list-table adw-data-table">
                                 <colgroup>
                                     <col class="col-index">
                                     <col class="col-position">
@@ -243,6 +244,7 @@
             </main>
 
     <th:block layout:fragment="scripts">
+        <th:block th:replace="~{fragments/ui/admin-workspace :: scripts}"></th:block>
         <script th:src="@{/js/pages/requisition-actions.js}" defer></script>
         <!-- flash-toast.js: thông báo sau thao tác tự tắt sau 3 giây -->
         <script th:src="@{/js/pages/flash-toast.js}" defer></script>

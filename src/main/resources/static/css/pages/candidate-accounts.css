@@ -32,6 +32,9 @@
 /* Size the three content columns from their actual values, without forced word breaks. */
 .cac-table .iac-name, .cac-table .iac-login, .cac-table .iac-email { white-space: nowrap; overflow-wrap: normal; }
 .cac-date { white-space: nowrap; }
+/* Match the Internal Accounts heading's room for its 48px primary action,
+   without adding an action that Candidate Accounts does not provide. */
+.cac-page.ads-page--refined .iac-heading { min-height: var(--s16); }
 @container internal-accounts (max-width: 880px) {
   .cac-filters { grid-template-columns: repeat(2, minmax(0, 1fr)); grid-template-areas: "search search" "status sort" "actions actions"; }
 }

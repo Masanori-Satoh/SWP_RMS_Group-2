@@ -28,7 +28,7 @@ import java.util.Set;
 @RequiredArgsConstructor
 public class JobPostingValidator {
 
-    /** Hai giá trị nút trên form: "Lưu nháp" / "Lưu thay đổi" gửi draft, "Đăng tin" / "Lên lịch đăng" / "Lưu và mở lại" gửi publish. */
+    /** Hai giá trị nút trên form: "Lưu nháp" / "Lưu thay đổi" gửi draft, "Đăng tin" / "Lưu và mở lại" gửi publish. */
     public static final String ACTION_DRAFT = "draft";
     public static final String ACTION_PUBLISH = "publish";
 
@@ -42,8 +42,6 @@ public class JobPostingValidator {
     public static final int POSITIONS_TEXT_LIMIT = 50;
     /** Cột WorkLocation NVARCHAR(255). */
     public static final int LOCATION_LIMIT = 255;
-    /** Hẹn đăng tối đa bao nhiêu ngày kể từ bây giờ. */
-    public static final int MAX_SCHEDULE_DAYS = 90;
     /** Hạn nộp điền sẵn khi tạo tin: hôm nay + 30 ngày (đúng mockup). */
     public static final int DEFAULT_DEADLINE_DAYS = 30;
     /** Hạn nộp được lưu là cuối ngày đã chọn (23:59:59). */
@@ -58,13 +56,11 @@ public class JobPostingValidator {
     private static final Set<String> ACTIONS = Set.of(ACTION_DRAFT, ACTION_PUBLISH);
     private static final List<String> SALARY_MODES = List.of(JobPostingCreateRequest.SALARY_RANGE,
             JobPostingCreateRequest.SALARY_NEGOTIABLE, JobPostingCreateRequest.SALARY_CUSTOM);
-    private static final List<String> PUBLISH_MODES =
-            List.of(JobPostingCreateRequest.PUBLISH_NOW, JobPostingCreateRequest.PUBLISH_LATER);
 
     /** Đồng hồ dùng chung (core/config/ClockConfig); test truyền Clock.fixed để cố định "bây giờ". */
     private final Clock clock;
 
-    /** Người dùng bấm nút đăng ("Đăng tin", "Lên lịch đăng", "Lưu và mở lại"). */
+    /** Người dùng bấm nút đăng ("Đăng tin", "Lưu và mở lại"). */
     public static boolean isPublish(String action) {
         return ACTION_PUBLISH.equals(action);
     }
@@ -111,14 +107,13 @@ public class JobPostingValidator {
      *
      * @param request     dữ liệu form
      * @param publishing  true khi tin sẽ / đang hiển thị cho ứng viên (đăng tin, hoặc sửa tin đã đăng): bắt buộc hạn nộp
-     * @param canSchedule true khi tin chưa lên trang tuyển dụng (tạo mới, nháp, hẹn đăng): được chọn "Hẹn ngày đăng"
      */
-    public void normalizeAndValidate(JobPostingCreateRequest request, boolean publishing, boolean canSchedule) {
+    public void normalizeAndValidate(JobPostingCreateRequest request, boolean publishing) {
         LocalDateTime now = LocalDateTime.now(clock);
         normalize(request);
         Map<String, String> errors = new LinkedHashMap<>();
 
-        // Rule: action chỉ là "draft" (lưu nháp / lưu thay đổi) hoặc "publish" (đăng tin / lên lịch đăng)
+        // Rule: action chỉ là "draft" (lưu nháp / lưu thay đổi) hoặc "publish" (đăng tin)
         if (request.getAction() == null || !ACTIONS.contains(request.getAction())) {
             errors.put("action", "Thao tác lưu tin không hợp lệ.");
         }
@@ -145,8 +140,7 @@ public class JobPostingValidator {
                     "Nhập số lượng hiển thị hoặc tắt hiển thị số lượng.");
         }
 
-        LocalDateTime postingTime = validateSchedule(errors, request, publishing, canSchedule, now);
-        validateDeadline(errors, request, publishing, postingTime, now);
+        validateDeadline(errors, request, publishing, now);
 
         if (!errors.isEmpty()) {
             throw new JobPostingValidationException(errors);
@@ -161,15 +155,6 @@ public class JobPostingValidator {
         return request.getApplicationDeadline().atTime(DEADLINE_TIME);
     }
 
-    /** Thời điểm đăng HR chọn: "Hẹn ngày đăng" → thời điểm hẹn; còn lại → ngay bây giờ. */
-    public LocalDateTime chosenPostingTime(JobPostingCreateRequest request, LocalDateTime now) {
-        boolean isLater = JobPostingCreateRequest.PUBLISH_LATER.equals(request.getPublishMode());
-        if (isLater && request.getScheduledAt() != null) {
-            return request.getScheduledAt();
-        }
-        return now;
-    }
-
     // ----- Các hàm nhỏ -----
 
     private void normalize(JobPostingCreateRequest request) {
@@ -182,43 +167,9 @@ public class JobPostingValidator {
         request.setNumberOfPositionsDisplay(RequisitionValidator.cleanString(request.getNumberOfPositionsDisplay()));
     }
 
-    /**
-     * Ngày đăng: "Đăng ngay" hoặc "Hẹn ngày đăng" (chỉ khi tin chưa lên trang tuyển dụng).
-     * Lưu nháp không giữ lịch đăng (PostingDate của tin nháp luôn NULL), nên chỉ kiểm tra khi tin sẽ được đăng.
-     *
-     * @return thời điểm tin sẽ hiện cho ứng viên (để so với hạn nộp)
-     */
-    private LocalDateTime validateSchedule(Map<String, String> errors, JobPostingCreateRequest request,
-            boolean publishing, boolean canSchedule, LocalDateTime now) {
-        String publishMode = request.getPublishMode();
-        if (publishMode != null && !PUBLISH_MODES.contains(publishMode)) {
-            errors.put("publishMode", "Vui lòng chọn ngày đăng.");
-            return now;
-        }
-        boolean isLater = publishing && JobPostingCreateRequest.PUBLISH_LATER.equals(publishMode);
-        if (!isLater) {
-            return now;
-        }
-        if (!canSchedule) {
-            errors.put("publishMode", "Tin đã đăng nên không hẹn lại ngày đăng được.");
-            return now;
-        }
-        LocalDateTime scheduledAt = request.getScheduledAt();
-        if (scheduledAt == null) {
-            errors.put("scheduledAt", "Vui lòng chọn thời điểm đăng.");
-        } else if (!scheduledAt.isAfter(now)) {
-            errors.put("scheduledAt", "Thời điểm hẹn đăng phải sau thời điểm hiện tại.");
-        } else if (scheduledAt.isAfter(now.plusDays(MAX_SCHEDULE_DAYS))) {
-            errors.put("scheduledAt", "Chỉ hẹn đăng trong vòng " + MAX_SCHEDULE_DAYS + " ngày tới.");
-        } else {
-            return scheduledAt;
-        }
-        return now;
-    }
-
     /** Rule (D6): đăng tin bắt buộc có hạn nộp; hạn nộp phải sau ngày đăng (CK_JobPosting_Deadline). */
     private void validateDeadline(Map<String, String> errors, JobPostingCreateRequest request, boolean publishing,
-            LocalDateTime postingTime, LocalDateTime now) {
+            LocalDateTime now) {
         LocalDateTime deadline = deadlineOf(request);
         if (deadline == null) {
             if (publishing) {
@@ -226,8 +177,6 @@ public class JobPostingValidator {
             }
         } else if (!deadline.isAfter(now)) {
             errors.put("applicationDeadline", "Hạn nộp hồ sơ phải từ hôm nay trở đi.");
-        } else if (!deadline.isAfter(postingTime)) {
-            errors.put("applicationDeadline", "Hạn nộp hồ sơ phải sau ngày đăng.");
         }
     }
 

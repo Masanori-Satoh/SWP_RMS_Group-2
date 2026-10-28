@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<body>
+<!--
+    FRAGMENTS/LAYOUT/CANDIDATE-NAV.HTML
+    =============================================================================
+    Menu 2 mục của ứng viên đã đăng nhập (ux.md mục 0): từ mọi trang 1 cú tới "Vị trí tuyển dụng" và "Đơn của tôi".
+    Dùng ở hai topbar để chữ, đích, trạng thái sáng luôn giống nhau:
+      - fragments/layout/candidate-topbar.html (/portal/*, /notifications): luôn hiện; màn hẹp xuống hàng thứ hai
+        (css/candidate-shell.css)
+      - fragments/layout/public-topbar.html (/, /jobs, /jobs/{id}): chỉ hiện khi menu công khai bị ẩn (≤ 1299px),
+        thành hàng thứ hai (css/topbar.css)
+    Tham số current: 'jobs' | 'applications' | '' (không mục nào sáng). Class lấy của public-topbar__link (topbar.css).
+    =============================================================================
+-->
+<th:block th:fragment="links(current)">
+    <a class="public-topbar__link" th:href="@{/jobs}"
+       th:classappend="${current == 'jobs'} ? 'active'"
+       th:attr="aria-current=${current == 'jobs' ? 'page' : null}">Vị trí tuyển dụng</a>
+    <a class="public-topbar__link" th:href="@{/portal/applications}"
+       th:classappend="${current == 'applications'} ? 'active'"
+       th:attr="aria-current=${current == 'applications' ? 'page' : null}">Đơn của tôi</a>
+</th:block>
+</body>
+</html>

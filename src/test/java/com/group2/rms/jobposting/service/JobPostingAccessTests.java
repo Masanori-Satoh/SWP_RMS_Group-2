@@ -82,32 +82,11 @@ class JobPostingAccessTests {
     }
 
     // =========================================================================
-    // viewStatus: "Hẹn đăng" không lưu DB
+    // Trạng thái tin
     // =========================================================================
     @Nested
-    @DisplayName("viewStatus")
-    class ViewStatus {
-
-        @Test
-        @DisplayName("Published + ngày đăng sau hiện tại 1 phút -> Scheduled (hẹn đăng)")
-        void viewStatus_shouldBeScheduled_whenPublishedInFuture() {
-            assertEquals(JobPostingAccess.STATUS_SCHEDULED,
-                    JobPostingAccess.viewStatus(JobPostingAccess.STATUS_PUBLISHED, NOW.plusMinutes(1), NOW));
-        }
-
-        @Test
-        @DisplayName("Published + ngày đăng đúng bằng hiện tại (biên) -> Published")
-        void viewStatus_shouldBePublished_whenPostingDateIsNow() {
-            assertEquals(JobPostingAccess.STATUS_PUBLISHED,
-                    JobPostingAccess.viewStatus(JobPostingAccess.STATUS_PUBLISHED, NOW, NOW));
-        }
-
-        @Test
-        @DisplayName("Draft có ngày đăng ở tương lai (dữ liệu lạ) -> vẫn là Draft")
-        void viewStatus_shouldKeepDbStatus_whenNotPublished() {
-            assertEquals(JobPostingAccess.STATUS_DRAFT,
-                    JobPostingAccess.viewStatus(JobPostingAccess.STATUS_DRAFT, NOW.plusDays(1), NOW));
-        }
+    @DisplayName("Trạng thái")
+    class Status {
 
         @ParameterizedTest(name = "{0} -> sửa được: {1}")
         @CsvSource({"Draft, true", "Published, true", "Paused, true", "Closed, false"})
@@ -193,18 +172,16 @@ class JobPostingAccessTests {
     @DisplayName("Cờ thao tác")
     class Actions {
 
-        @ParameterizedTest(name = "HR, {0}: đăng={1} đăng ngay/hủy lịch={2} mở lại={3} sửa={4} tạm dừng={5} đóng={6}")
+        @ParameterizedTest(name = "HR, {0}: đăng={1} mở lại={2} sửa={3} tạm dừng={4} đóng={5}")
         @CsvSource({
-                "Draft,     true,  false, false, true,  false, false",
-                "Scheduled, false, true,  false, true,  false, false",
-                "Published, false, false, false, true,  true,  true",
-                "Paused,    false, false, true,  true,  false, true",
-                "Closed,    false, false, false, false, false, false"})
+                "Draft,     true,  false, true,  false, false",
+                "Published, false, false, true,  true,  true",
+                "Paused,    false, true,  true,  false, true",
+                "Closed,    false, false, false, false, false"})
         @DisplayName("HR: nút theo từng trạng thái (Closed không làm gì được nữa)")
-        void canX_shouldFollowStatusTable_whenViewerIsHr(String viewStatus, boolean publish, boolean schedule,
+        void canX_shouldFollowStatusTable_whenViewerIsHr(String viewStatus, boolean publish,
                 boolean reopen, boolean edit, boolean pause, boolean close) {
             assertEquals(publish, access.canPublish(hr, viewStatus));
-            assertEquals(schedule, access.canChangeSchedule(hr, viewStatus));
             assertEquals(reopen, access.canReopen(hr, viewStatus));
             assertEquals(edit, access.canEdit(hr, viewStatus));
             assertEquals(pause, access.canPause(hr, viewStatus));

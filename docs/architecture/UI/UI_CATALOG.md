@@ -286,6 +286,8 @@ Mọi trang HTML con kế thừa thông qua: `layout:decorate="~{layout/[tên-la
 | Dữ liệu người dùng | Model attribute `topbarUser` (`core/web/TopbarUserAdvice`) | – | Có sẵn ở **mọi** trang khi đã đăng nhập: `fullName`, `email`, `roleName`, `avatarUrl`. `avatarUrl` là link `/users/{id}/avatar?v=...` (ảnh đã tải lên, có file trên máy) do `TopbarUserAdvice` tính, hoặc `null` khi chưa có ảnh; không phải giá trị thô của cột. Không tự lấy từ biến riêng của controller. |
 | Topbar nội bộ | `fragments/workspace-header :: header(role, fullName)` | `workspace.css` (`@import topbar.css`) | Không có logo (logo nằm ở đầu sidebar). |
 | Topbar công khai | `fragments/layout/public-topbar :: topbar(activeNav, onLanding)` | `topbar.css` mục 5 | Dùng cho landing (`candidate/landing.html`) và `layout/public` (jobs board, job-detail). Trang chứa phải nạp `css/topbar.css`. |
+| Topbar ứng viên | `fragments/layout/candidate-topbar :: topbar(activeMenu)` | `candidate-shell.css` | `layout/internal` khi người xem là Candidate (`/portal/*`, `/notifications`): logo, menu ứng viên, góc phải. Không sidebar. |
+| Menu ứng viên (2 mục) | `fragments/layout/candidate-nav :: links(current)` | `topbar.css` (`__link`, `__candidate-nav`), `candidate-shell.css` | "Vị trí tuyển dụng" → `/jobs`, "Đơn của tôi" → `/portal/applications`; `current` = `'jobs'` \| `'applications'` \| `''`. Một nguồn cho topbar ứng viên (luôn hiện) và topbar công khai (chỉ ứng viên, ≤ 1299px thành hàng thứ hai). |
 | Font Lora / Source Sans 3 | – | `fonts.css` | `tokens.css` và `topbar.css` cùng `@import`. |
 
 **Kích thước chung:** cao `var(--topbar-h)` = 74px (đầu sidebar cũng 74px), lề trái/phải 32px, dãn hết chiều ngang (không dồn vào giữa).
@@ -335,12 +337,13 @@ Mọi trang HTML con kế thừa thông qua: `layout:decorate="~{layout/[tên-la
 | `.public-topbar` / `__inner` | Khung sticky, nền trắng, viền dưới; `__inner` dãn hết chiều ngang, lề 32px. Gắn sẵn token chuẩn nên không bị trang landing đổi màu. |
 | `.public-topbar__nav` / `__link` | Menu section. `__link` không bao giờ xuống dòng; hover và mục đang xem (`.active` / `aria-current`) sáng nền `var(--brand-soft)` + gạch chân. |
 | `.public-topbar__actions` | Nút Đăng nhập / Tạo tài khoản (khách) hoặc nút "Bảng điều khiển" + `topbar-user` (đã đăng nhập). |
-| `.public-topbar__dashboard` | Nút "Bảng điều khiển →", ẩn trên điện thoại. |
+| `.public-topbar__dashboard` | Nút "Bảng điều khiển →" (ứng viên: "Đơn ứng tuyển của tôi →"), ẩn trên điện thoại. |
+| `.public-topbar__candidate-nav` | Chỉ ứng viên đã đăng nhập: hàng thứ hai `candidate-nav` (2 mục chia đều) khi ≤ 1299px, thay menu bị ẩn và nút `__dashboard`. Màn rộng: ẩn. |
 
 - **Menu:** "Vị trí tuyển dụng" luôn dẫn tới Jobs Board `/jobs` (sáng khi `activeNav = 'jobs'`). "Quy trình", "Văn hóa Mộc", "Chế độ đãi ngộ" là section của landing (`#process`, `#culture`, `#perks`).
 - **Làm sáng menu:** `static/js/public-topbar.js` (fragment tự nạp): sáng khi bấm, và sáng theo section đang cuộn tới trên landing.
 - **Logo ngoài topbar** (vd footer landing) cũng đúng chuẩn vì khối cầu nối token trong `topbar.css` áp dụng cho cả `.wordmark`.
-- **Thu gọn khi màn hình hẹp** (mốc được kiểm tra với `--chrome-step` đến 2px; tăng quá 2px thì kiểm tra lại): dưới 1440px ẩn email; dưới 1366px ẩn badge role, thu hẹp menu; dưới 1300px (đã đăng nhập) hoặc 1150px (khách) ẩn menu; dưới 640px chỉ còn logo, avatar và icon đăng xuất.
+- **Thu gọn khi màn hình hẹp** (mốc được kiểm tra với `--chrome-step` đến 2px; tăng quá 2px thì kiểm tra lại): dưới 1440px ẩn email; dưới 1366px ẩn badge role, thu hẹp menu; dưới 1300px (đã đăng nhập) hoặc 1150px (khách) ẩn menu (ứng viên: menu ứng viên xuống hàng thứ hai); dưới 640px chỉ còn logo, avatar và icon đăng xuất.
 
 ### D. Sidebar Đa Trạng Thái (`sidebar-shell.html`)
 - **Trạng thái thu gọn (68px):** Tối ưu không gian làm việc, hiển thị icon kèm Tooltip nổi giải thích tính năng khi hover.
@@ -397,3 +400,138 @@ Chỉ là class + markup (không có fragment), không cần JS: thẻ `<details
 
 - Chỉ đưa vào menu những mục người xem **dùng được** (kiểm quyền ở server); không còn mục nào thì không render menu.
 - Chưa tự đóng khi bấm ra ngoài (cần JS). CSS: `components.css` mục N.
+
+---
+
+## 12. Biến thể bề mặt Admin (triển khai từng trang)
+
+`.ads-page--refined` là biến thể opt-in trong `pages/admin-surfaces.css`, dùng cùng
+`.ads-page` và các thành phần danh sách hiện có. Trang mẫu đầu tiên là
+`admin/departments/list.html`; chưa bật cho các trang Admin còn lại trước khi duyệt.
+
+| Thành phần | Quy ước |
+|---|---|
+| Nội dung / dữ liệu bảng | 15px / 14px; giữ font theo token hiện có |
+| Toolbar | Control 40–44px; CTA lớn dùng nút catalog 48px |
+| Card dữ liệu chính | Nền `--surface`, bo `--radius-lg`, viền vừa phải từ `--control-line` và `--line`, bóng `--shadow-md`; không nổi lên khi hover |
+| Header bảng | Nền `--brand-soft`, chữ `--brand-dark` 14px/600 |
+| Panel phụ | Nền `--surface-subtle`, viền `--line`, không bóng; số tổng quan 36px |
+| Badge Admin | Giữ các modifier catalog. `workspace.css` không áp màu chữ legacy lên badge trong Dashboard, Internal Accounts, Department và API Monitoring. Chữ warning dùng `color-mix(in srgb, var(--warning) 90%, var(--ink))` để đạt tương phản AA trên `--warning-soft` |
+
+Biến thể chỉ thay trình bày; không đổi dữ liệu, URL, handler, lựa chọn dòng,
+điều kiện dock/drawer hoặc mặc định mở panel. Chưa áp dụng cho Homepage/Auth.
+
+### Cập nhật 26/10/2026 — Đồng bộ ba danh sách Admin theo Internal Accounts
+
+Theo mẫu được chọn tại `/admin/accounts`, các trang
+`admin/accounts/candidates.html` và `admin/departments/list.html` dùng cùng
+`.ads-page--refined` trong `pages/admin-surfaces.css`. Quy ước trình bày mới nhất:
+
+- Tiêu đề Lora; header bảng và header panel dùng `--brand-dark` / `--on-brand`.
+- Card trắng, bo `--radius-lg`; viền và bóng theo mẫu Internal Accounts.
+- Dữ liệu bảng 14px. Toolbar và các liên kết phân trang dùng thành phần hiện có.
+- Nút thao tác của Department dùng lại palette/kích thước Internal Accounts;
+  giữ chữ phụ tên đăng nhập trưởng phòng ở cỡ `--font-sm`.
+- Candidate dùng màu chữ badge catalog giống Internal; ngoại lệ màu legacy của
+  `workspace.css` chỉ được mở rộng thêm cho `.cac-page`.
+- Bộ lọc, cột dữ liệu, URL, CSRF và hành vi dock/drawer giữ riêng theo nghiệp vụ.
+  Không ép bảng Department ít cột có cùng min-width với bảng tài khoản.
+
+Homepage, Auth, Dashboard và API Monitoring không được bật hoặc đổi theme trong
+đợt đồng bộ hai danh sách này. Các giá trị trình bày ở cập nhật này thay thế mẫu
+Department ban đầu phía trên; không thay đổi design token toàn hệ thống.
+
+### Cập nhật 26/10/2026 — Giám sát API theo giao diện Admin đã đồng bộ
+
+`admin/api-monitoring/index.html` dùng `.ads-page--refined` cho tiêu đề, nền và
+khoảng cách chung. `api-monitoring.css` giữ bố cục danh sách dịch vụ, dùng card
+trắng bo 12px, `--shadow-md`, icon xanh đậm và tiêu đề dịch vụ Lora như các danh
+sách Admin. Loại dịch vụ nằm cùng hàng với tên khi đủ chỗ, tự xuống dòng khi hẹp.
+
+Giữ đủ badge trạng thái, số đo, thời điểm, thông báo cấu hình và các form kiểm
+tra hiện có. Nút nhỏ vẫn dùng catalog 40px. Không tự chạy probe, gửi email, đổi
+endpoint hoặc suy diễn trạng thái hoạt động từ việc chỉnh giao diện.
+
+### Cập nhật 27/10/2026 — Dashboard System Admin ưu tiên dữ liệu
+
+`dashboard/admin.html` và `pages/admin-dashboard.css` giữ các nguồn số liệu,
+biểu đồ, liên kết lọc và bảng giám sát hiện có. Chỉ template System Admin nạp
+stylesheet này; dashboard các role khác không đổi. JavaScript trang gắn các class
+phụ `.adm-chrome-*` lên fragment hiện có, chỉ để đổi cách trình bày tại Dashboard;
+không sửa file shell, navigation handler, trạng thái ghim hoặc form đăng xuất.
+
+- Header chỉ giữ tiêu đề; bỏ dòng mô tả phạm vi và CTA tạo tài khoản ở
+  Dashboard. Tạo tài khoản vẫn truy cập từ `/admin/accounts`. Không có bộ lọc
+  thời gian ở header; KPI ứng viên mới vẫn phản ánh 30 ngày cố định từ backend.
+- `.adm-dashboard-title` dùng `--sans` 36px (28px trên mobile), nội dung 15px,
+  `.adm-summary-value` thống nhất 36px và chữ số dạng bảng.
+- Tiêu đề trang đặt trực tiếp trên nền, thẳng lề với hàng KPI; không có thẻ,
+  nền hay viền bao riêng. Nét nhấn xanh 48×4px dưới tiêu đề tạo điểm tựa;
+  giữ khoảng cách 24px với hàng KPI. Chữ xanh `--brand-dark`, weight 700.
+  Nhãn KPI 18px/650; tiêu đề biểu đồ và dịch vụ 20px/700. Không đổi cỡ dữ liệu bảng.
+- Ba KPI có cột bằng nhau, khoảng cách 16px, nền trắng đặc, viền `--line`,
+  bo `--radius-lg`, bóng `--shadow-md`; không có ô mặc định được chọn hoặc nâng
+  card khi hover. Panel phân tích và bảng dịch vụ có cùng bề mặt trắng rõ nét.
+- Dùng asset người dùng cung cấp `admin-tech-office.png` làm nền công nghệ.
+  Blur 4px, saturation 0.7, contrast 0.9 và overlay `--surface` 52% nằm trên
+  lớp nền riêng `.adm-scene`, không nằm trên container chứa nội dung. Lớp nền
+  phủ toàn bộ frame trang, không bị kết thúc ở chiều cao viewport ban đầu.
+- Sidebar có glass nhẹ, topbar dùng khối nhận diện hiện có trên bề mặt sáng;
+  dữ liệu vẫn nằm trên nền trắng đặc. Bỏ footer/khối thương hiệu lặp ở chân sidebar;
+  asset cây tách nền `admin-tech-plant.png` hòa vào phần trống còn lại dưới menu,
+  không có khung riêng, không kéo cao rail hoặc che điều hướng. Artwork rộng cố định
+  bằng sidebar mở rộng và chỉ bị cắt khi thu gọn, tránh reflow khi pin/hover.
+  Rail và nội dung dùng chung lề 16px; mép dưới rail theo chiều cao frame nội dung,
+  không chốt cứng 100vh. Logo/menu sticky trong rail khi cuộn. Chỉ modifier
+  `.adm-chrome-sidebar` đổi position legacy bằng `!important` để đáp ứng căn mép;
+  file `workspace.css` và cơ chế pin/hover không đổi. Không thêm circuit/glow/animation.
+  Rule scoped `[hidden]` trên mobile dùng `!important` để thắng
+  `display:flex !important` legacy của sidebar, bảo toàn trạng thái từ `interface.js`.
+- `.adm-scope-select` cao 40px, giữ ID, options và handler chuyển nhóm tài khoản.
+  Trạng thái dùng thanh ngang native `<progress>` như mockup; số, phần trăm và
+  độ dài lấy từ chính các `data-count` server render. Giữ link lọc, giá trị 0,
+  và danh sách HTML dự phòng khi JavaScript không chạy. Không cần Chart.js cho
+  trạng thái; biểu đồ vai trò vẫn dùng Chart.js và các liên kết bàn phím cũ.
+  Bảng dịch vụ dùng chữ 14px, header nền `--surface-subtle`; bảng vẫn cuộn trong
+  wrapper khi hẹp, không bỏ cột. Giữ nguyên badge và trạng thái chưa kiểm tra.
+- Dưới 992px, KPI và các panel phân tích về một cột để vẫn đọc được nhãn và
+  nội dung khi sidebar đang ghim. Card giám sát giãn theo phần chiều cao còn lại
+  trên màn hình lớn, giữ đáy card thẳng với rail mà không tạo vùng trống sau bảng.
+
+
+### Cập nhật 27/10/2026 — Component Admin workspace (`adw-`)
+
+Đồng bộ Dashboard, danh sách tài khoản nội bộ/ứng viên, phòng ban, giám sát API
+và form tạo/sửa tài khoản/phòng ban. Các trang khác không tự động bật giao diện này.
+
+- Component mới được **append** vào `static/css/components.css`; không đổi selector
+  hay token cũ. Fragment `fragments/ui/admin-workspace.html :: scene/scripts` và
+  marker `.adw-page` bật giao diện. Trang vẫn decorate `layout/internal`; hai form
+  Admin đã chuyển từ `interfaceHead` sang layout này, giữ toàn bộ hợp đồng form.
+- `pages/admin-workspace.js` chỉ thêm các class `.adw-frame`, `.adw-main`,
+  `.adw-sidebar`, `.adw-topbar`, `.adw-actions` lên DOM khung hiện có và đưa lớp
+  trang trí ra frame. Không thay handler ghim/menu, role menu, identity hoặc logout.
+  Dashboard không còn giữ bản CSS/JS khung riêng `.adm-chrome-*`; phần analytics cũ
+  vẫn nằm trong `pages/admin-dashboard.js`.
+- Dùng lại ảnh nền và cây của Dashboard, cùng lề 16px, sidebar 68/250px và nền trắng
+  đặc của dữ liệu. Chỉ lớp ảnh có blur. Tiêu đề sans 36/28px có nét nhấn 48×4px,
+  không có thẻ riêng; cách nội dung 24px. Tiêu đề panel 20px, dữ liệu bảng 14px.
+- `.adw-surface`, `.adw-panel-title`, `.adw-panel-heading`, `.adw-data-table`,
+  `.adw-close`, `.adw-form-wrap` là các class phụ thêm vào component/markup cũ;
+  không thay class nghiệp vụ. `pages/admin-surfaces.css` chỉ điều chỉnh composition
+  của Admin (toolbar, khoảng cách field, panel trong dialog), không redefine shell.
+- Password/validation của hai form vẫn do `interface.js` xử lý; script Admin chỉ
+  thêm alias trình bày `.adw-password-*` và `.adw-validation-summary`. Routes,
+  names, IDs, `th:field`, validation, CSRF, bộ lọc, phân trang và inspector giữ nguyên.
+- Rule `position` và `[hidden]` của `.adw-sidebar` dùng `!important` có comment để
+  giải quyết xung đột legacy trong `workspace.css`; không sửa file được bảo vệ.
+  Ở mobile, sidebar dùng đúng hidden/open state của menu sẵn có; bảng vẫn cuộn
+  trong wrapper, không bỏ cột. Không thêm dữ liệu, probe, menu hay chức năng mới.
+- Tham khảo bổ sung: Awesome DESIGN.md / SAP Analysis, mục chrome/surface,
+  áp dụng bề mặt sáng và độ phân cấp bằng token Mộc, không dùng palette/font SAP.
+  Taste `accent-ladder`, seed `378800654`, `--keep palette,type`; nhận diện và
+  bố cục Dashboard đã được người dùng duyệt có ưu tiên hơn house rules chung.
+
+Theo yêu cầu tiếp theo của người dùng: bỏ breadcrumb nhỏ phía trên tiêu đề ở
+các trang Admin và form tạo/sửa. Giữ tiêu đề lớn, nút thao tác và điều hướng
+sidebar; không bỏ hướng dẫn nhập liệu hoặc liên kết Hủy trong form.

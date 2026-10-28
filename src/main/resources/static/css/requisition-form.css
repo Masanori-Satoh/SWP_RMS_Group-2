@@ -8,10 +8,12 @@
 /* ----- Bố cục 2 cột ----- */
 .req-form-page .rqf-layout { display:grid; grid-template-columns:minmax(0,1fr) 300px; gap:var(--s6); align-items:start; }
 .req-form-page .rqf-main { display:grid; gap:var(--s4); min-width:0; }
+.req-form-page .requisition-page-intro.adw-heading { flex-direction:column; align-items:flex-start; gap:var(--s2); }
+.req-form-page .requisition-page-description { margin:0; }
 .req-form-page .rqf-card { padding:0; }
 .req-form-page .rqf-section { display:grid; gap:var(--s4); padding:var(--s6); scroll-margin-top:calc(var(--topbar-h) + var(--s4)); }
 .req-form-page .rqf-section + .rqf-section { border-top:1px solid var(--line); }
-.req-form-page .rqf-section h2 { margin:0; font:600 var(--font-lg)/1.3 var(--serif); }
+.req-form-page .rqf-section h2 { margin:0; color:var(--brand-dark); font:700 20px/1.35 var(--sans); }
 .req-form-page .rqf-section-head { display:flex; flex-wrap:wrap; justify-content:space-between; align-items:baseline; gap:var(--s2) var(--s4); }
 .req-form-page .rqf-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:var(--s4); }
 .req-form-page .rqf-full { grid-column:1 / -1; }

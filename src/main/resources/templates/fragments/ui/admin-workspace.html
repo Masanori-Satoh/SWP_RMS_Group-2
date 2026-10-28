@@ -1,0 +1,13 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<body>
+<!-- Opt-in Admin presentation only. The shared internal layout owns navigation,
+     identity, role visibility, CSRF and all menu/pin behavior. -->
+<div th:fragment="scene" class="adw-scene" aria-hidden="true">
+    <div class="adw-scene-office"></div>
+</div>
+<th:block th:fragment="scripts">
+    <script defer th:src="@{/js/pages/admin-workspace.js}"></script>
+</th:block>
+</body>
+</html>

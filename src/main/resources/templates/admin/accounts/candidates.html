@@ -10,23 +10,22 @@
         <link rel="stylesheet" th:href="@{/css/pages/candidate-accounts.css}">
         <link rel="stylesheet" th:href="@{/css/pages/account-inspector.css}">
         <link rel="stylesheet" th:href="@{/css/pages/management-filters.css}">
+        <link rel="stylesheet" th:href="@{/css/pages/flash-toast.css}">
         <link rel="stylesheet" th:href="@{/css/pages/admin-surfaces.css}">
     </th:block>
 </head>
 <body>
-<main id="main" layout:fragment="content" class="page-content container ads-page iac-page cac-page aim-page" data-account-overview="true" tabindex="-1">
-    <nav class="iac-breadcrumb" aria-label="Đường dẫn">
-        <a th:href="@{/dashboard}">Tổng quan</a><span aria-hidden="true">/</span><span aria-current="page">Quản lý tài khoản</span>
-    </nav>
-    <div class="page-header iac-heading ads-heading">
-        <h1 id="candidate-list-title" class="iac-title ads-title">Tài khoản ứng viên</h1>
+<main id="main" layout:fragment="content" class="page-content container ads-page ads-page--refined iac-page cac-page aim-page adw-page" data-account-overview="true" tabindex="-1">
+    <th:block th:replace="~{fragments/ui/admin-workspace :: scene}"></th:block>
+    <div class="page-header iac-heading ads-heading adw-heading">
+        <h1 id="candidate-list-title" class="iac-title ads-title adw-title">Tài khoản ứng viên</h1>
         <div class="aim-heading-actions">
             <button class="btn btn--secondary btn--sm aim-open-overview" type="button" aria-controls="account-inspector" hidden>Tổng quan tài khoản</button>
         </div>
     </div>
-    <div class="alert alert--success" role="status" th:if="${successMessage}" th:text="${successMessage}"></div>
+    <th:block th:replace="~{fragments/ui/flash-toast :: flashToast(${successMessage}, null)}"></th:block>
     <div class="aim-layout"><div class="aim-master">
-    <form class="card mft-toolbar" th:action="@{/admin/candidate-accounts}" method="get" aria-label="Bộ lọc tài khoản ứng viên">
+    <form class="card mft-toolbar adw-surface" th:action="@{/admin/candidate-accounts}" method="get" aria-label="Bộ lọc tài khoản ứng viên">
         <input type="hidden" name="status" th:value="${selectedStatus ?: ''}">
         <div class="mft-controls">
             <details class="mft-disclosure">
@@ -69,16 +68,16 @@
             <input class="form-control mft-search-input" id="account-search" type="search" name="search" th:value="${search}" placeholder="Họ tên, email hoặc tên đăng nhập" maxlength="100">
         </div>
     </form>
-    <section class="card iac-card cac-card mft-table-card ads-table-card" aria-labelledby="candidate-table-title">
-        <header class="ads-table-header">
-            <div class="ads-table-identity"><span class="ads-table-icon" aria-hidden="true"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="4"/><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2M22 21v-2a4 4 0 0 0-3-3.87"/></svg></span><h2 class="ads-table-title" id="candidate-table-title">Danh sách tài khoản ứng viên</h2></div>
+    <section class="card iac-card cac-card mft-table-card ads-table-card adw-surface" aria-labelledby="candidate-table-title">
+        <header class="ads-table-header adw-panel-heading">
+            <div class="ads-table-identity"><span class="ads-table-icon adw-icon" aria-hidden="true"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="4"/><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2M22 21v-2a4 4 0 0 0-3-3.87"/></svg></span><h2 class="ads-table-title adw-panel-title" id="candidate-table-title">Danh sách tài khoản ứng viên</h2></div>
             <span class="badge badge--neutral ads-table-count" th:text="|${accounts.totalElements} kết quả|"></span>
         </header>
 
         <p id="candidate-scroll-hint" class="sr-only">Cuộn ngang để xem đầy đủ thông tin và thao tác.</p>
         <div class="ads-table-inset">
         <div class="table-wrapper iac-scroll" tabindex="0" role="region" aria-labelledby="candidate-list-title" aria-describedby="candidate-scroll-hint">
-            <table class="table iac-table cac-table">
+            <table class="table iac-table cac-table adw-data-table">
                 <caption class="sr-only">Tài khoản ứng viên và thao tác thay đổi trạng thái truy cập.</caption>
                 <colgroup>
                     <col class="cac-col-number">
@@ -149,6 +148,8 @@
     <dialog th:replace="~{fragments/status-actions :: confirmation}"></dialog>
 </main>
 <th:block layout:fragment="scripts">
+    <th:block th:replace="~{fragments/ui/admin-workspace :: scripts}"></th:block>
+    <script th:src="@{/js/pages/flash-toast.js}" defer></script>
     <script th:src="@{/js/pages/management-filters.js}" defer></script>
     <script th:src="@{/js/status-confirmation.js}" defer></script>
     <script th:src="@{/js/pages/internal-accounts.js}" defer></script>

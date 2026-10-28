@@ -53,16 +53,12 @@ public class JobPostingMapper {
      */
     public InternalJobPostingResponse toListRow(JobPosting posting, User viewer, long totalApplications,
             long newApplications, LocalDateTime now) {
-        String viewStatus = JobPostingAccess.viewStatus(posting, now);
+        String viewStatus = posting.getPostingStatus();
         LocalDate today = now.toLocalDate();
 
         Long daysUntilDeadline = null;
         if (posting.getApplicationDeadline() != null) {
             daysUntilDeadline = JobPostingLabels.daysFromToday(posting.getApplicationDeadline(), today);
-        }
-        Long daysUntilPosting = null;
-        if (JobPostingAccess.STATUS_SCHEDULED.equals(viewStatus)) {
-            daysUntilPosting = JobPostingLabels.daysFromToday(posting.getPostingDate(), today);
         }
         boolean hasApplications = totalApplications > 0;
 
@@ -80,7 +76,6 @@ public class JobPostingMapper {
                 .statusTone(JobPostingLabels.statusTone(viewStatus))
                 .applicationCount(totalApplications)
                 .newApplicationCount(newApplications)
-                .daysUntilPosting(daysUntilPosting)
                 .daysUntilDeadline(daysUntilDeadline)
                 .deadlineState(JobPostingLabels.deadlineState(viewStatus, posting.getApplicationDeadline(), now))
                 // Cờ thao tác (luật nằm ở JobPostingAccess, template chỉ đọc cờ)
@@ -109,7 +104,7 @@ public class JobPostingMapper {
             boolean hasApplications, boolean hasOpenPosting, ApplicationStats stats, List<PostingRound> rounds,
             List<AuditLog> activityLogs) {
         JobRequisition requisition = posting.getRequisition();
-        String viewStatus = JobPostingAccess.viewStatus(posting, now);
+        String viewStatus = posting.getPostingStatus();
         boolean published = JobPostingAccess.STATUS_PUBLISHED.equals(viewStatus);
         boolean closed = JobPostingAccess.STATUS_CLOSED.equals(viewStatus);
         boolean viewerIsHiringManager = access.isHiringManager(viewer);
@@ -154,7 +149,6 @@ public class JobPostingMapper {
                         .activityHistory(toActivityHistory(posting, activityLogs))
                         // Dải thông báo theo trạng thái
                         .draftBanner(JobPostingAccess.STATUS_DRAFT.equals(viewStatus))
-                        .scheduledBanner(JobPostingAccess.STATUS_SCHEDULED.equals(viewStatus))
                         .pausedBanner(JobPostingAccess.STATUS_PAUSED.equals(viewStatus))
                         .closedBanner(closed)
                         .deadlineSoonBanner(published && deadlineSoon)
@@ -165,8 +159,6 @@ public class JobPostingMapper {
                         .canManage(access.canManage(viewer))
                         // Cờ thao tác (luật nằm ở JobPostingAccess)
                         .publishable(access.canPublish(viewer, viewStatus))
-                        .publishNowable(access.canChangeSchedule(viewer, viewStatus))
-                        .unschedulable(access.canChangeSchedule(viewer, viewStatus))
                         .editable(access.canEdit(viewer, viewStatus))
                         .pausable(access.canPause(viewer, viewStatus))
                         .reopenable(access.canReopen(viewer, viewStatus))
@@ -206,9 +198,8 @@ public class JobPostingMapper {
     }
 
     /** Một lần đăng của yêu cầu, hiện ở mục "Các lần đăng". */
-    public PostingRound toPostingRound(JobPosting round, Integer currentId, long applications, long hired,
-            LocalDateTime now) {
-        String viewStatus = JobPostingAccess.viewStatus(round, now);
+    public PostingRound toPostingRound(JobPosting round, Integer currentId, long applications, long hired) {
+        String viewStatus = round.getPostingStatus();
         return new PostingRound(round.getJobPostingId(), round.getPostingNo(), round.getPostingDate(),
                 round.getApplicationDeadline(), JobPostingLabels.statusLabel(viewStatus),
                 JobPostingLabels.statusTone(viewStatus), applications, hired,
@@ -280,16 +271,15 @@ public class JobPostingMapper {
         }
         form.setNumberOfPositionsDisplay(positions);
         form.setApplicationDeadline(validator.defaultDeadline());
-        form.setPublishMode(JobPostingCreateRequest.PUBLISH_NOW);
         form.setAction(JobPostingValidator.ACTION_DRAFT);
         return form;
     }
 
-    /** Form sửa một tin có sẵn: nội dung tin, cách đăng hiện tại và trạng thái form. */
-    public JobPostingCreateRequest toEditForm(JobPosting posting, LocalDateTime now) {
+    /** Form sửa một tin có sẵn: nội dung tin và trạng thái form. */
+    public JobPostingCreateRequest toEditForm(JobPosting posting) {
         JobPostingCreateRequest form = toCreateForm(posting.getRequisition(), posting.getPostingNo());
         form.setJobPostingId(posting.getJobPostingId());
-        fillFormState(form, posting, now);
+        fillFormState(form, posting);
         copyPostingContent(form, posting);
         LocalDate deadline = null;
         if (posting.getApplicationDeadline() != null) {
@@ -297,23 +287,15 @@ public class JobPostingMapper {
         }
         form.setApplicationDeadline(deadline);
 
-        if (form.isScheduled()) {
-            form.setPublishMode(JobPostingCreateRequest.PUBLISH_LATER);
-            form.setScheduledAt(posting.getPostingDate());
-        } else {
-            form.setPublishMode(JobPostingCreateRequest.PUBLISH_NOW);
-            form.setScheduledAt(null);
-        }
         return form;
     }
 
-    /** Trạng thái form (nút nào hiện, có đổi ngày đăng được không) theo trạng thái hiện tại của tin. */
-    public void fillFormState(JobPostingCreateRequest form, JobPosting posting, LocalDateTime now) {
-        String viewStatus = JobPostingAccess.viewStatus(posting, now);
+    /** Trạng thái form theo trạng thái hiện tại của tin. */
+    public void fillFormState(JobPostingCreateRequest form, JobPosting posting) {
+        String viewStatus = posting.getPostingStatus();
         form.setPostingNo(posting.getPostingNo());
         form.setDraftOrNew(JobPostingAccess.STATUS_DRAFT.equals(viewStatus));
         form.setPaused(JobPostingAccess.STATUS_PAUSED.equals(viewStatus));
-        form.setScheduled(JobPostingAccess.STATUS_SCHEDULED.equals(viewStatus));
         form.setLive(JobPostingAccess.isLive(viewStatus));
     }
 
@@ -322,7 +304,6 @@ public class JobPostingMapper {
         form.setPostingNo(postingNo);
         form.setDraftOrNew(true);
         form.setPaused(false);
-        form.setScheduled(false);
         form.setLive(false);
     }
 
@@ -377,8 +358,8 @@ public class JobPostingMapper {
     // BẢNG ĐIỀU KHIỂN HR
     // ===================================================================================
 
-    public JobPostingDashboardResponse.RecentPosting toRecentPosting(JobPosting posting, LocalDateTime now) {
-        String viewStatus = JobPostingAccess.viewStatus(posting, now);
+    public JobPostingDashboardResponse.RecentPosting toRecentPosting(JobPosting posting) {
+        String viewStatus = posting.getPostingStatus();
         String departmentName = null;
         if (posting.getRequisition() != null && posting.getRequisition().getDepartment() != null) {
             departmentName = posting.getRequisition().getDepartment().getDepartmentName();
