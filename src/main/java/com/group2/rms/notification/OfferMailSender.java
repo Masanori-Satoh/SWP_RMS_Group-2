@@ -55,20 +55,24 @@ public class OfferMailSender {
                 SimpleMailMessage message = new SimpleMailMessage();
                 message.setFrom(from);
                 message.setTo(targetRecipient);
-                message.setSubject("Thư mời nhận việc (Job Offer Letter) - " + offer.getOfferedPositionTitle());
+                message.setSubject("Thư mời nhận việc - " + offer.getOfferedPositionTitle());
                 String deadlineInfo = offer.getResponseDeadline() != null
                         ? "Hạn phản hồi: " + offer.getResponseDeadline().format(java.time.format.DateTimeFormatter.ofPattern("HH:mm dd/MM/yyyy")) + "\n\n"
                         : "\n";
+                String officialSalary = offer.getProposedSalary() != null
+                        ? String.format("%,d VNĐ/tháng", offer.getProposedSalary().longValue()) : "Thỏa thuận";
+                String probationSalary = offer.getProbationSalary() != null
+                        ? String.format("%,d VNĐ/tháng", offer.getProbationSalary().longValue()) : "Thỏa thuận";
                 message.setText(
                         "Xin chào " + candidateName + ",\n\n"
                         + "Chúng tôi rất vui mừng thông báo bạn đã vượt qua các vòng phỏng vấn và trân trọng gửi tới bạn Thư mời nhận việc cho vị trí: "
                         + offer.getOfferedPositionTitle() + ".\n"
-                        + "Mức lương chính thức: " + offer.getProposedSalary() + " VND/tháng\n"
-                        + "Mức lương thử việc: " + offer.getProbationSalary() + " VND/tháng\n"
+                        + "Mức lương chính thức (Trước thuế): " + officialSalary + "\n"
+                        + "Mức lương thử việc (Trước thuế): " + probationSalary + "\n"
                         + "Địa điểm làm việc: " + (offer.getWorkLocation() != null ? offer.getWorkLocation() : "Văn phòng công ty") + "\n"
                         + deadlineInfo
-                        + "Vui lòng đăng nhập vào hệ thống RMS để xem chi tiết và phản hồi thư mời làm việc.\n\n"
-                        + "Trân trọng,\nPhòng Nhân sự RMS"
+                        + "Vui lòng đăng nhập vào hệ thống để xem chi tiết và phản hồi thư mời nhận việc.\n\n"
+                        + "Trân trọng,\nBộ phận Tuyển dụng Mộc RMS"
                 );
                 sender.send(message);
                 log.info("Đã gửi email Offer Letter thành công tới {}", targetRecipient);

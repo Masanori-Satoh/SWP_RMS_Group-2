@@ -398,7 +398,7 @@ class NotificationServiceImplTest {
         assertEquals("OFFER_PENDING_DIRECTOR", saved.getEventType());
         assertEquals("/offers/1", saved.getLinkUrl());
         assertEquals("1", saved.getReferenceId());
-        assertTrue(saved.getTitle().contains("Yêu cầu phê duyệt Đề xuất Offer"));
+        assertTrue(saved.getTitle().contains("Yêu cầu phê duyệt Đề xuất nhận việc"));
         assertTrue(saved.getContent().contains("Huỳnh Hoàng Trung"));
         assertTrue(saved.getEventId().startsWith("OFFER_PENDING_DIR_1_20_"));
     }
@@ -436,7 +436,7 @@ class NotificationServiceImplTest {
         assertEquals(directorUser, saved.getActor());
         assertEquals("OFFER_DIRECTOR_APPROVED", saved.getEventType());
         assertEquals("/offers/1", saved.getLinkUrl());
-        assertTrue(saved.getTitle().contains("Đề xuất Offer đã được Giám đốc phê duyệt"));
+        assertTrue(saved.getTitle().contains("Đề xuất nhận việc đã được Giám đốc phê duyệt"));
         assertTrue(saved.getContent().contains("Đồng ý mức đãi ngộ"));
         assertTrue(saved.getEventId().startsWith("OFFER_DEC_APPV_1_"));
     }
@@ -474,7 +474,7 @@ class NotificationServiceImplTest {
         assertEquals(directorUser, saved.getActor());
         assertEquals("OFFER_DIRECTOR_REJECTED", saved.getEventType());
         assertEquals("/offers/1", saved.getLinkUrl());
-        assertTrue(saved.getTitle().contains("Đề xuất Offer bị Giám đốc từ chối"));
+        assertTrue(saved.getTitle().contains("Đề xuất nhận việc bị Giám đốc từ chối"));
         assertTrue(saved.getContent().contains("Lương vượt ngân sách"));
         assertTrue(saved.getEventId().startsWith("OFFER_DEC_REJ_1_"));
     }

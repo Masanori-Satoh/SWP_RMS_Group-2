@@ -202,13 +202,13 @@ public class NotificationServiceImpl implements NotificationService {
                 && offer.getApplication().getCandidate().getAccount() != null)
                 ? offer.getApplication().getCandidate().getAccount().getFullName() : "Ứng viên";
         String hrName = hrActor != null ? hrActor.getFullName()
-                : (offer.getProposedBy() != null ? offer.getProposedBy().getFullName() : "Chuyên viên HR");
+                : (offer.getProposedBy() != null ? offer.getProposedBy().getFullName() : "Chuyên viên tuyển dụng");
         String salary = offer.getProposedSalary() != null
                 ? String.format("%,d ₫", offer.getProposedSalary().longValue()) : "Thỏa thuận";
 
-        String title = "Yêu cầu phê duyệt Đề xuất Offer: " + positionTitle;
+        String title = "Yêu cầu phê duyệt Đề xuất nhận việc: " + positionTitle;
         String content = String.format(
-                "Chuyên viên HR %s đã nộp đề xuất Offer cho ứng viên %s (Vị trí: %s, Lương chính thức: %s). Vui lòng xem xét và thực hiện phê duyệt.",
+                "Chuyên viên tuyển dụng %s đã nộp đề xuất nhận việc cho ứng viên %s (Vị trí: %s, Lương chính thức: %s). Vui lòng xem xét và thực hiện phê duyệt.",
                 hrName, candidateName, positionTitle, salary);
         String timeKey = offer.getUpdatedAt() != null ? offer.getUpdatedAt().format(EVENT_TIME) : LocalDateTime.now().format(EVENT_TIME);
 
@@ -268,17 +268,17 @@ public class NotificationServiceImpl implements NotificationService {
 
         if (approved) {
             String noteText = comments != null && !comments.isBlank() ? " Ghi chú: \"" + comments.trim() + "\"." : "";
-            title = "Đề xuất Offer đã được Giám đốc phê duyệt: " + positionTitle;
+            title = "Đề xuất nhận việc đã được Giám đốc phê duyệt: " + positionTitle;
             content = String.format(
-                    "Giám đốc %s đã phê duyệt đề xuất Offer cho ứng viên %s (Vị trí: %s).%s Bạn có thể tiến hành phát hành Thư mời làm việc cho ứng viên.",
+                    "Giám đốc %s đã phê duyệt đề xuất nhận việc cho ứng viên %s (Vị trí: %s).%s Bạn có thể tiến hành phát hành Thư mời nhận việc cho ứng viên.",
                     directorName, candidateName, positionTitle, noteText);
             eventType = "OFFER_DIRECTOR_APPROVED";
             eventPrefix = "OFFER_DEC_APPV_";
         } else {
             String reasonText = comments != null && !comments.isBlank() ? comments.trim() : "Không có lý do cụ thể";
-            title = "Đề xuất Offer bị Giám đốc từ chối: " + positionTitle;
+            title = "Đề xuất nhận việc bị Giám đốc từ chối: " + positionTitle;
             content = String.format(
-                    "Giám đốc %s đã từ chối đề xuất Offer cho ứng viên %s (Vị trí: %s). Lý do: \"%s\". Vui lòng kiểm tra lại điều khoản và chỉnh sửa bản thảo nếu cần.",
+                    "Giám đốc %s đã từ chối đề xuất nhận việc cho ứng viên %s (Vị trí: %s). Lý do: \"%s\". Vui lòng kiểm tra lại điều khoản và chỉnh sửa bản thảo nếu cần.",
                     directorName, candidateName, positionTitle, reasonText);
             eventType = "OFFER_DIRECTOR_REJECTED";
             eventPrefix = "OFFER_DEC_REJ_";
@@ -350,9 +350,9 @@ public class NotificationServiceImpl implements NotificationService {
 
         if (accepted) {
             hrNotification
-                    .title(String.format("🎉 Ứng viên đã nhận offer: %s (%s)", candidateName, positionTitle))
+                    .title(String.format("🎉 Ứng viên đã đồng ý nhận việc: %s (%s)", candidateName, positionTitle))
                     .content(String.format(
-                            "Ứng viên %s đã đồng ý nhận lời mời làm việc cho vị trí \"%s\". Trạng thái hồ sơ đã chuyển sang \"Đã nhận việc\" (Hired). Vui lòng chuẩn bị thủ tục tiếp nhận nhân sự.",
+                            "Ứng viên %s đã đồng ý nhận lời mời làm việc cho vị trí \"%s\". Trạng thái hồ sơ đã chuyển sang \"Đã nhận việc\". Vui lòng chuẩn bị thủ tục tiếp nhận nhân sự.",
                             candidateName, positionTitle))
                     .eventType("OFFER_ACCEPTED")
                     .eventId("OFFER_RESP_ACC_" + offer.getOfferId() + "_" + timeKey);
@@ -360,9 +360,9 @@ public class NotificationServiceImpl implements NotificationService {
             String reasonText = declineReason != null && !declineReason.isBlank()
                     ? String.format(" Lý do: \"%s\".", declineReason.trim()) : "";
             hrNotification
-                    .title(String.format("Ứng viên từ chối offer: %s (%s)", candidateName, positionTitle))
+                    .title(String.format("Ứng viên từ chối thư mời nhận việc: %s (%s)", candidateName, positionTitle))
                     .content(String.format(
-                            "Ứng viên %s đã từ chối thư mời làm việc cho vị trí \"%s\".%s Trạng thái hồ sơ đã chuyển sang \"Không tiếp tục\" (Rejected).",
+                            "Ứng viên %s đã từ chối thư mời làm việc cho vị trí \"%s\".%s Trạng thái hồ sơ đã chuyển sang \"Không tiếp tục\".",
                             candidateName, positionTitle, reasonText))
                     .eventType("OFFER_DECLINED")
                     .eventId("OFFER_RESP_DEC_" + offer.getOfferId() + "_" + timeKey);
