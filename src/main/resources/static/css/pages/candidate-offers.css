@@ -1119,22 +1119,6 @@
   color: var(--brand-hover);
 }
 
-.cof-download-bar__btn--secondary {
-  color: var(--ink);
-  border: 1px solid var(--line);
-  font-weight: 500;
-}
-
-.cof-download-bar__btn--secondary svg {
-  color: var(--brand);
-}
-
-.cof-download-bar__btn--secondary:hover {
-  border-color: var(--brand);
-  color: var(--brand);
-  background: rgba(62, 113, 87, 0.04);
-}
-
 .cof-download-bar__note {
   font-size: 12.5px;
   color: var(--muted);
