@@ -40,10 +40,6 @@
                     th:data-url="@{/internal/job-postings/{id}/publish(id=${p.jobPostingId})}" th:data-title="${p.postingTitle}"
                     data-heading="Đăng tin tuyển dụng?" data-message="Tin sẽ hiện trên trang tuyển dụng và ứng viên có thể nộp hồ sơ ngay."
                     data-confirm="Đăng tin">Đăng tin</button>
-            <button th:if="${p.publishNowable}" class="btn btn--primary" type="button" data-jp-action
-                    th:data-url="@{/internal/job-postings/{id}/publish-now(id=${p.jobPostingId})}" th:data-title="${p.postingTitle}"
-                    data-heading="Đăng tin ngay?" data-message="Tin sẽ hiện trên trang tuyển dụng ngay bây giờ thay vì đợi tới giờ hẹn."
-                    data-confirm="Đăng ngay">Đăng ngay</button>
             <button th:if="${p.reopenable}" class="btn btn--primary" type="button" data-jp-action
                     th:data-url="@{/internal/job-postings/{id}/publish(id=${p.jobPostingId})}" th:data-title="${p.postingTitle}"
                     data-heading="Mở lại nhận hồ sơ?" data-message="Tin sẽ hiện lại trên trang tuyển dụng."
@@ -56,10 +52,6 @@
                     th:data-url="@{/internal/job-postings/{id}/pause(id=${p.jobPostingId})}" th:data-title="${p.postingTitle}"
                     data-heading="Tạm dừng nhận hồ sơ?" data-message="Tin bị ẩn khỏi trang tuyển dụng. Hồ sơ đã nộp vẫn được xử lý bình thường."
                     data-confirm="Tạm dừng">Tạm dừng nhận hồ sơ</button>
-            <button th:if="${p.unschedulable}" class="btn btn--danger" type="button" data-jp-action data-danger
-                    th:data-url="@{/internal/job-postings/{id}/unschedule(id=${p.jobPostingId})}" th:data-title="${p.postingTitle}"
-                    data-heading="Hủy lịch đăng?" data-message="Tin trở về bản nháp, ứng viên sẽ không thấy tin."
-                    data-confirm="Hủy lịch đăng">Hủy lịch đăng</button>
             <button th:if="${p.closable}" class="btn btn--danger" type="button" data-jp-action data-danger
                     th:data-url="@{/internal/job-postings/{id}/close(id=${p.jobPostingId})}" th:data-title="${p.postingTitle}"
                     data-heading="Đóng tin tuyển dụng?"
@@ -75,10 +67,6 @@
     <!-- ===== 2. DẢI THÔNG BÁO THEO TRẠNG THÁI ===== -->
     <div class="jpd-banner jpd-banner--muted" th:if="${p.draftBanner}" role="status">
         <p><strong>Bản nháp, ứng viên chưa nhìn thấy.</strong> Kiểm tra nội dung rồi bấm "Đăng tin".</p>
-    </div>
-    <div class="jpd-banner jpd-banner--info" th:if="${p.scheduledBanner}" role="status">
-        <p><strong th:text="|Tin sẽ tự đăng lúc ${#temporals.format(p.postingDate, 'HH:mm')} ngày ${#temporals.format(p.postingDate, 'dd/MM/yyyy')}.|">Tin sẽ tự đăng lúc 08:00 ngày 20/10/2026.</strong>
-            Trước thời điểm đó ứng viên chưa thấy tin trên trang tuyển dụng.</p>
     </div>
     <div class="jpd-banner jpd-banner--warning" th:if="${p.pausedBanner}" role="status">
         <p><strong>Đang tạm dừng nhận hồ sơ.</strong> Tin bị ẩn khỏi trang tuyển dụng. Hồ sơ đã nộp vẫn được xử lý bình thường.</p>

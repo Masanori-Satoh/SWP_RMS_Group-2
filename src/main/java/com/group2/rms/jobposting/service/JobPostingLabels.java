@@ -11,7 +11,7 @@ import java.util.Objects;
 /**
  * Nơi duy nhất đổi giá trị của tin tuyển dụng (trạng thái, nhóm hạn nộp, dòng audit log) sang chữ tiếng Việt
  * và tông màu badge. Template chỉ đọc kết quả đã tính sẵn, không tự so sánh chuỗi trạng thái.
- * Giá trị trạng thái nằm ở JobPostingAccess (STATUS_*); trạng thái "Hẹn đăng" xem JobPostingAccess#viewStatus.
+ * Giá trị trạng thái nằm ở JobPostingAccess (STATUS_*).
  */
 public final class JobPostingLabels {
 
@@ -37,9 +37,7 @@ public final class JobPostingLabels {
     public static final String LOG_CREATE = "Tạo tin tuyển dụng";
     public static final String LOG_UPDATE = "Cập nhật tin tuyển dụng";
     public static final String LOG_PUBLISH = "Đăng tin tuyển dụng";
-    public static final String LOG_SCHEDULE = "Hẹn đăng tin tuyển dụng";
     public static final String LOG_PAUSE = "Tạm dừng tin tuyển dụng";
-    public static final String LOG_UNSCHEDULE = "Hủy lịch đăng tin tuyển dụng";
     public static final String LOG_DELETE = "Xóa tin tuyển dụng";
     /** TalentPoolService#closeJob ghi NewValue = "Closed" khi đóng tin. */
     private static final String LOG_CLOSED_BY_TALENT_POOL = JobPostingAccess.STATUS_CLOSED;
@@ -54,7 +52,6 @@ public final class JobPostingLabels {
         }
         return switch (viewStatus) {
             case JobPostingAccess.STATUS_DRAFT -> "Bản nháp";
-            case JobPostingAccess.STATUS_SCHEDULED -> "Hẹn đăng";
             case JobPostingAccess.STATUS_PUBLISHED -> "Đang đăng";
             case JobPostingAccess.STATUS_PAUSED -> "Tạm dừng";
             case JobPostingAccess.STATUS_CLOSED -> "Đã đóng";
@@ -69,7 +66,7 @@ public final class JobPostingLabels {
         }
         return switch (viewStatus) {
             case JobPostingAccess.STATUS_PUBLISHED -> "success";
-            case JobPostingAccess.STATUS_SCHEDULED, JobPostingAccess.STATUS_PAUSED -> "warning";
+            case JobPostingAccess.STATUS_PAUSED -> "warning";
             default -> "neutral";
         };
     }
@@ -159,12 +156,6 @@ public final class JobPostingLabels {
         }
         if (detail.startsWith(LOG_PAUSE)) {
             return "Tạm dừng";
-        }
-        if (detail.startsWith(LOG_SCHEDULE)) {
-            return "Hẹn đăng tin";
-        }
-        if (detail.startsWith(LOG_UNSCHEDULE)) {
-            return "Hủy lịch đăng";
         }
         if (detail.equals(LOG_CLOSED_BY_TALENT_POOL)) {
             return "Đóng tin";

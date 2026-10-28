@@ -38,20 +38,12 @@ public final class JobPostingSpecifications {
                         .get("departmentName")), pattern, '\\'));
     }
 
-    /** Trạng thái hiển thị nằm trong danh sách đã chọn (có tính "Hẹn đăng", xem JobPostingLabels#viewStatus). */
-    public static Specification<JobPosting> viewStatusIn(List<String> viewStatuses, LocalDateTime now) {
+    /** Trạng thái tin nằm trong danh sách đã chọn. */
+    public static Specification<JobPosting> viewStatusIn(List<String> viewStatuses) {
         return (root, query, cb) -> {
             List<Predicate> anyOf = new ArrayList<>();
             for (String viewStatus : viewStatuses) {
-                if (JobPostingAccess.STATUS_SCHEDULED.equals(viewStatus)) {
-                    anyOf.add(cb.and(cb.equal(root.get("postingStatus"), JobPostingAccess.STATUS_PUBLISHED),
-                            cb.greaterThan(root.get("postingDate"), now)));
-                } else if (JobPostingAccess.STATUS_PUBLISHED.equals(viewStatus)) {
-                    anyOf.add(cb.and(cb.equal(root.get("postingStatus"), JobPostingAccess.STATUS_PUBLISHED),
-                            cb.or(cb.isNull(root.get("postingDate")), cb.lessThanOrEqualTo(root.get("postingDate"), now))));
-                } else {
-                    anyOf.add(cb.equal(root.get("postingStatus"), viewStatus));
-                }
+                anyOf.add(cb.equal(root.get("postingStatus"), viewStatus));
             }
             return cb.or(anyOf.toArray(new Predicate[0]));
         };

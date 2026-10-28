@@ -182,8 +182,6 @@
                                 <th:block th:if="${post.postingDate != null}">
                                     <span
                                         th:text="${#temporals.format(post.postingDate, 'dd/MM/yyyy')}">25/09/2026</span>
-                                    <div class="jp-sub" th:if="${post.daysUntilPosting != null}"
-                                        th:text="|sau ${post.daysUntilPosting} ngày|">sau 3 ngày</div>
                                 </th:block>
                                 <span class="jp-sub" th:if="${post.postingDate == null}">Chưa đăng</span>
                             </td>

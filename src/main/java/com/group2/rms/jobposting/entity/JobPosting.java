@@ -94,7 +94,7 @@ public class JobPosting extends BaseEntity {
 
     /**
      * Ứng viên thấy được tin này chưa: đang đăng (Published) VÀ đã tới giờ đăng.
-     * Tin hẹn đăng (PostingDate ở tương lai) chưa hiện trên trang tuyển dụng, chưa nộp hồ sơ được.
+     * Dữ liệu cũ có PostingDate ở tương lai vẫn chưa hiển thị cho tới khi được xử lý.
      */
     public boolean isVisibleToCandidates(LocalDateTime now) {
         return JobPostingAccess.STATUS_PUBLISHED.equals(postingStatus) && (postingDate == null || !postingDate.isAfter(now));

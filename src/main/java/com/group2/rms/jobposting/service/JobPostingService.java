@@ -28,7 +28,7 @@ public interface JobPostingService {
     /** "Đăng lại" tin đã đóng: form tạo tin lần mới, nội dung lấy từ tin đã đóng. */
     JobPostingCreateRequest prepareRepostForm(Integer closedPostingId, User currentUser);
 
-    /** Form chỉnh sửa tin đang nháp / hẹn đăng / đang đăng / tạm dừng. */
+    /** Form chỉnh sửa tin đang nháp / đang đăng / tạm dừng. */
     JobPostingCreateRequest prepareEditForm(Integer jobPostingId, User currentUser);
 
     /**
@@ -40,23 +40,17 @@ public interface JobPostingService {
     /** Lưu bản nháp từ yêu cầu đã duyệt. */
     Integer createJobPosting(JobPostingCreateRequest request, User currentUser);
 
-    /** Tạo và đăng (hoặc hẹn đăng) trong cùng một giao dịch khi HR bấm "Đăng tin" trên form tạo. */
+    /** Tạo và đăng trong cùng một giao dịch khi HR bấm "Đăng tin" trên form tạo. */
     Integer createAndPublishJobPosting(JobPostingCreateRequest request, User currentUser);
 
-    /** "Lưu nháp" / "Lưu thay đổi": trạng thái giữ nguyên (tin hẹn đăng thì áp dụng lại lịch). */
+    /** "Lưu nháp" / "Lưu thay đổi": trạng thái giữ nguyên. */
     void updateJobPosting(Integer id, JobPostingCreateRequest request, User currentUser);
 
-    /** "Đăng tin" / "Lên lịch đăng" / "Lưu và mở lại" trên form sửa. */
+    /** "Đăng tin" / "Lưu và mở lại" trên form sửa. */
     void updateAndPublishJobPosting(Integer id, JobPostingCreateRequest request, User currentUser);
 
     /** Đăng tin nháp hoặc mở lại tin tạm dừng (nút trên trang chi tiết). */
     void publishJobPosting(Integer id, User currentUser);
-
-    /** "Đăng ngay" tin đang hẹn đăng (ngày đăng = bây giờ). */
-    void publishNow(Integer id, User currentUser);
-
-    /** "Hủy lịch đăng": tin hẹn đăng trở về bản nháp. */
-    void unschedule(Integer id, User currentUser);
 
     void pauseJobPosting(Integer id, User currentUser);
 

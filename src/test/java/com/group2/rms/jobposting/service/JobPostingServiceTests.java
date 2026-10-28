@@ -124,7 +124,6 @@ class JobPostingServiceTests {
                 .salaryMode(JobPostingCreateRequest.SALARY_NEGOTIABLE)
                 .showPositions(false)
                 .applicationDeadline(TODAY.plusDays(30))
-                .publishMode(JobPostingCreateRequest.PUBLISH_NOW)
                 .action(action)
                 .build();
     }
@@ -207,26 +206,6 @@ class JobPostingServiceTests {
             JobPosting saved = savedPosting();
             assertEquals(JobPostingAccess.STATUS_PUBLISHED, saved.getPostingStatus());
             assertEquals(NOW, saved.getPostingDate());
-            verify(notificationService).notifyJobPostingPublished(saved, hr);
-        }
-
-        @Test
-        @DisplayName("Hẹn đăng -> Published + PostingDate = thời điểm hẹn, ứng viên chưa thấy, có thông báo")
-        void createAndPublishJobPosting_shouldSchedule_whenPublishLater() {
-            // Arrange
-            requisitionCanBeLocked();
-            LocalDateTime at = TODAY.plusDays(3).atTime(8, 0);
-            JobPostingCreateRequest form = validForm(JobPostingValidator.ACTION_PUBLISH);
-            form.setPublishMode(JobPostingCreateRequest.PUBLISH_LATER);
-            form.setScheduledAt(at);
-
-            // Act
-            service.createAndPublishJobPosting(form, hr);
-
-            // Assert
-            JobPosting saved = savedPosting();
-            assertEquals(at, saved.getPostingDate());
-            assertFalse(saved.isVisibleToCandidates(NOW), "Chưa tới giờ đăng thì ứng viên chưa thấy");
             verify(notificationService).notifyJobPostingPublished(saved, hr);
         }
 
@@ -330,18 +309,6 @@ class JobPostingServiceTests {
         }
 
         @Test
-        @DisplayName("Tin hẹn đăng, đổi sang 'Đăng ngay' rồi lưu -> Đăng luôn (ngày đăng = bây giờ), có thông báo")
-        void updateJobPosting_shouldPublishNow_whenScheduledPostingSwitchesToNow() {
-            JobPosting scheduled = existingPosting(10, JobPostingAccess.STATUS_PUBLISHED, NOW.plusDays(5));
-
-            service.updateJobPosting(10, editForm(10, JobPostingValidator.ACTION_DRAFT), hr);
-
-            assertEquals(NOW, scheduled.getPostingDate());
-            assertTrue(savedAudit().getNewValue().startsWith(JobPostingLabels.LOG_PUBLISH));
-            verify(notificationService).notifyJobPostingPublished(scheduled, hr);
-        }
-
-        @Test
         @DisplayName("Tin tạm dừng: 'Lưu thay đổi' vẫn tạm dừng; 'Lưu và mở lại' -> Published, ngày đăng = bây giờ")
         void updateJobPosting_shouldKeepPausedOrReopen_dependingOnAction() {
             // Arrange
@@ -441,32 +408,6 @@ class JobPostingServiceTests {
         }
 
         @Test
-        @DisplayName("Đăng ngay tin hẹn đăng -> Ngày đăng = bây giờ, có thông báo; tin không hẹn đăng -> Lỗi")
-        void publishNow_shouldMovePostingDateToNow_onlyForScheduledPosting() {
-            JobPosting scheduled = existingPosting(23, JobPostingAccess.STATUS_PUBLISHED, NOW.plusDays(2));
-
-            service.publishNow(23, hr);
-
-            assertEquals(NOW, scheduled.getPostingDate());
-            verify(notificationService).notifyJobPostingPublished(scheduled, hr);
-
-            existingPosting(24, JobPostingAccess.STATUS_PUBLISHED, NOW.minusDays(1));
-            assertThrows(JobPostingValidationException.class, () -> service.publishNow(24, hr));
-        }
-
-        @Test
-        @DisplayName("Hủy lịch đăng -> Về bản nháp, PostingDate = NULL, không thông báo")
-        void unschedule_shouldReturnToDraft() {
-            JobPosting scheduled = existingPosting(25, JobPostingAccess.STATUS_PUBLISHED, NOW.plusDays(2));
-
-            service.unschedule(25, hr);
-
-            assertEquals(JobPostingAccess.STATUS_DRAFT, scheduled.getPostingStatus());
-            assertNull(scheduled.getPostingDate());
-            verifyNoInteractions(notificationService);
-        }
-
-        @Test
         @DisplayName("Tạm dừng tin đang đăng -> Paused; tạm dừng bản nháp -> Lỗi, vẫn là nháp")
         void pauseJobPosting_shouldOnlyPausePublishedPosting() {
             JobPosting published = existingPosting(26, JobPostingAccess.STATUS_PUBLISHED, NOW.minusDays(1));
@@ -556,18 +497,6 @@ class JobPostingServiceTests {
             assertEquals(1, detail.hiredApplications());
             assertEquals(2, detail.interviewingApplications());
             assertEquals("70", detail.aiThreshold().toPlainString());
-        }
-
-        @Test
-        @DisplayName("Tin hẹn đăng -> Chưa có số liệu, không chạy câu đếm hồ sơ")
-        void getInternalJobPostingDetail_shouldSkipStats_whenPostingIsScheduled() {
-            existingPosting(41, JobPostingAccess.STATUS_PUBLISHED, NOW.plusDays(3));
-            when(postings.findConfigValue(any())).thenReturn(Optional.empty());
-
-            InternalJobPostingDetailResponse detail = service.getInternalJobPostingDetail(41, hr);
-
-            assertEquals(0, detail.totalApplications());
-            verify(postings, never()).countApplicationsByStatus(any());
         }
 
         @Test

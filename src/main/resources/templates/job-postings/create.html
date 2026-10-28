@@ -13,8 +13,7 @@
 </head>
 
 <body>
-    <main id="main" layout:fragment="content" class="page-content container" tabindex="-1" th:with="draftOrNew=${postingDto.draftOrNew}, paused=${postingDto.paused},
-               scheduledEdit=${postingDto.scheduled}">
+    <main id="main" layout:fragment="content" class="page-content container" tabindex="-1" th:with="draftOrNew=${postingDto.draftOrNew}, paused=${postingDto.paused}">
 
         <nav class="jpf-crumbs" aria-label="Đường dẫn">
             <a th:href="@{/internal/job-postings}">Tin tuyển dụng</a> /
@@ -89,7 +88,7 @@
             th:action="${isEdit} ? @{/internal/job-postings/{id}/edit(id=*{jobPostingId})} : @{/internal/job-postings/create}"
             th:data-today="${today}" th:data-salary-range="*{salaryRangeLabel}"
             th:data-employment="*{employmentType}" th:data-work-model="*{workModel}"
-            th:data-department="*{departmentName}" th:data-max-schedule-days="${maxScheduleDays}"
+            th:data-department="*{departmentName}"
             th:data-draft="${draftOrNew}">
             <input type="hidden" th:field="*{jobPostingId}">
             <input type="hidden" th:field="*{requisitionId}">
@@ -235,26 +234,7 @@
                     <section class="jpf-sec" aria-labelledby="jpf-h3">
                         <h2 id="jpf-h3">Thời gian nhận hồ sơ</h2>
 
-                        <!-- Ngày đăng: chỉ chọn được khi tin chưa lên trang tuyển dụng (tạo mới, nháp, hẹn đăng) -->
-                        <fieldset class="jpf-field" id="publishMode-group" th:unless="*{live}">
-                            <legend class="form-label">Ngày đăng</legend>
-                            <div class="jpf-choice">
-                                <label><input type="radio" th:field="*{publishMode}" value="now">
-                                    <span><b
-                                            th:text="${scheduledEdit ? 'Đăng ngay khi lưu' : 'Đăng ngay khi bấm &quot;Đăng tin&quot;'}">Đăng
-                                            ngay khi bấm "Đăng tin"</b></span></label>
-                                <label><input type="radio" th:field="*{publishMode}" value="later">
-                                    <span><b>Hẹn ngày đăng</b>
-                                        <input class="form-input" type="datetime-local" th:field="*{scheduledAt}"
-                                            aria-label="Thời điểm đăng"></span></label>
-                            </div>
-                            <small class="jpf-help" th:if="${draftOrNew}">Lưu nháp không giữ lịch đăng; lịch chỉ áp dụng
-                                khi bấm "Lên lịch đăng".</small>
-                            <small id="publishMode-error" class="field-error"
-                                th:text="${#fields.hasErrors('publishMode')} ? ${#fields.errors('publishMode')[0]} : ''"></small>
-                            <small id="scheduledAt-error" class="field-error"
-                                th:text="${#fields.hasErrors('scheduledAt')} ? ${#fields.errors('scheduledAt')[0]} : ''"></small>
-                        </fieldset>
+                        <p class="jpf-help" th:if="${draftOrNew}">Tin sẽ hiển thị cho ứng viên ngay khi bấm "Đăng tin".</p>
                         <p class="jpf-help" th:if="*{live}">Tin đã đăng nên ngày đăng giữ nguyên.</p>
 
                         <div class="jpf-field">
@@ -281,14 +261,14 @@
                     <div class="jpf-actions">
                         <a class="btn btn--secondary"
                             th:href="${isEdit} ? @{/internal/job-postings/{id}(id=*{jobPostingId})} : @{/internal/job-postings}">Hủy</a>
-                        <!-- Nháp / tạo mới: Lưu nháp + Đăng tin (đổi thành "Lên lịch đăng" khi chọn hẹn ngày) -->
+                        <!-- Nháp / tạo mới: Lưu nháp + Đăng tin -->
                         <th:block th:if="${draftOrNew}">
                             <button class="btn btn--secondary" type="submit" name="action" value="draft"
                                 formnovalidate>Lưu nháp</button>
                             <button class="btn btn--primary" type="submit" name="action" value="publish"
                                 id="jpf-publish">Đăng tin</button>
                         </th:block>
-                        <!-- Hẹn đăng / đang đăng: lưu thay đổi, trạng thái giữ nguyên (hẹn đăng thì áp dụng lại lịch) -->
+                        <!-- Đang đăng: lưu thay đổi, trạng thái giữ nguyên -->
                         <button th:if="${!draftOrNew and !paused}" class="btn btn--primary" type="submit" name="action"
                             value="draft">Lưu thay đổi</button>
                         <!-- Tạm dừng: lưu thay đổi (vẫn tạm dừng) hoặc lưu và mở lại nhận hồ sơ -->
