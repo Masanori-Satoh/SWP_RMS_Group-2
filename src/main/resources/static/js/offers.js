@@ -1027,7 +1027,7 @@ function confirmDeleteOffer(offerId) {
             const isJson = res.headers.get('content-type')?.includes('application/json');
             const data = isJson ? await res.json() : null;
             if (!res.ok) {
-                throw new Error(data?.message || `Lỗi xóa bản thảo (${res.status})`);
+                throw new Error(data?.message || `Lỗi xóa bản nháp (${res.status})`);
             }
             return data;
         })
@@ -1420,11 +1420,11 @@ function openDirectorDecisionModal(offerId, actionType) {
     const btnSubmit = document.getElementById('btnSubmitDecision');
 
     if (actionType === 'APPROVE') {
-        titleEl.innerHTML = '<i class="fa-solid fa-check-circle" style="color:var(--success);"></i> Phê Duyệt Đề Xuất Offer';
+        titleEl.innerHTML = '<i class="fa-solid fa-check-circle" style="color:var(--success);"></i> Phê Duyệt Đề Xuất Nhận Việc';
         btnSubmit.innerHTML = '<i class="fa-solid fa-check"></i> Phê Duyệt';
         btnSubmit.className = 'btn btn-primary';
     } else {
-        titleEl.innerHTML = '<i class="fa-solid fa-xmark-circle" style="color:var(--error);"></i> Từ Chối Đề Xuất Offer';
+        titleEl.innerHTML = '<i class="fa-solid fa-xmark-circle" style="color:var(--error);"></i> Từ Chối Đề Xuất Nhận Việc';
         btnSubmit.innerHTML = '<i class="fa-solid fa-xmark"></i> Từ Chối';
         btnSubmit.className = 'btn btn-danger';
     }
@@ -1660,7 +1660,7 @@ function openDirectorDetailModal(id) {
                 if (benefitsEl) benefitsEl.innerText = detail.benefitsPackage || 'Theo quy chế đãi ngộ chung của công ty.';
 
                 // HR Note
-                const hrName = detail.proposedByName || 'HR';
+                const hrName = detail.proposedByName || 'Bộ phận Tuyển dụng';
                 const createdDate = detail.createdAt ? (typeof formatOfferDateTime === 'function' ? formatOfferDateTime(detail.createdAt) : new Date(detail.createdAt).toLocaleDateString('vi-VN')) : 'N/A';
                 const hrNote = document.getElementById('directorHrNote');
                 if (hrNote) {
@@ -1845,7 +1845,7 @@ function showDirectorRejectReasonRequiredAlert(onCloseCallback) {
     showDirectorCustomModal({
         title: 'Cần nhập lý do từ chối',
         desc: 'Vui lòng nhập lý do từ chối vào ô nhận xét bên dưới trước khi tiếp tục.',
-        subtext: 'Thông tin này sẽ được gửi lại để HR xử lý tiếp.',
+        subtext: 'Thông tin này sẽ được gửi lại để Bộ phận Tuyển dụng xử lý tiếp.',
         confirmText: 'Đã hiểu',
         confirmClass: 'btn-director-reject-confirm',
         showCancel: false,
@@ -1856,9 +1856,9 @@ function showDirectorRejectReasonRequiredAlert(onCloseCallback) {
 
 function showDirectorRejectConfirmModal(offerId, onConfirmCallback) {
     showDirectorCustomModal({
-        title: 'Từ chối đề xuất Offer?',
+        title: 'Từ chối đề xuất nhận việc?',
         desc: `Bạn có chắc chắn muốn từ chối đề xuất #${offerId}?`,
-        subtext: 'Lý do từ chối sẽ được gửi lại để HR xử lý tiếp.',
+        subtext: 'Lý do từ chối sẽ được gửi lại để Bộ phận Tuyển dụng xử lý tiếp.',
         confirmText: 'Xác nhận từ chối',
         confirmClass: 'btn-director-reject-danger',
         showCancel: true,
@@ -1886,8 +1886,8 @@ function submitDirectorDecisionFromScreen(offerId, action) {
         });
     } else if (action === 'APPROVE') {
         Swal.fire({
-            title: 'Phê duyệt đề xuất Offer?',
-            text: 'Sau khi phê duyệt, HR sẽ được thông báo để tiếp tục phát hành Offer Letter cho ứng viên.',
+            title: 'Phê duyệt đề xuất nhận việc?',
+            text: 'Sau khi phê duyệt, Bộ phận Tuyển dụng sẽ được thông báo để tiếp tục phát hành Thư mời nhận việc cho ứng viên.',
             icon: 'question',
             showCancelButton: true,
             confirmButtonText: 'Xác nhận phê duyệt',
@@ -1965,8 +1965,8 @@ function submitDirectorApprove() {
     if (!currentDirectorOfferId) return;
 
     Swal.fire({
-        title: 'Phê duyệt đề xuất?',
-        text: 'Sau khi phê duyệt, HR sẽ được thông báo để tiếp tục phát hành Offer cho ứng viên.',
+        title: 'Phê duyệt đề xuất nhận việc?',
+        text: 'Sau khi phê duyệt, Bộ phận Tuyển dụng sẽ được thông báo để tiếp tục phát hành Thư mời nhận việc cho ứng viên.',
         icon: 'question',
         showCancelButton: true,
         confirmButtonText: 'Xác nhận phê duyệt',
