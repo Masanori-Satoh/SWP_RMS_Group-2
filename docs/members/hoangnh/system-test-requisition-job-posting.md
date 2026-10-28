@@ -1,28 +1,28 @@
-# System test: Requisition → Job Posting → Candidate
+# System test: Requisition → Job Posting → trang tuyển dụng
 
-**Phạm vi:** ứng dụng đang chạy, đăng nhập và thao tác qua giao diện/HTTP thật với SQL Server test. Các ca dưới đây là kịch bản cần thực thi, **chưa phải kết quả PASS**. Mỗi ca dùng dữ liệu riêng để có thể chạy độc lập.
+**Phạm vi:** ứng dụng đang chạy, đăng nhập và thao tác qua giao diện/HTTP thật với SQL Server test. Luồng dừng ở việc tin xuất hiện hoặc biến mất trên trang tuyển dụng công khai; **chưa kiểm thử Candidate ứng tuyển, Application, Interview hoặc Offer**. Các ca dưới đây là kịch bản cần thực thi, **chưa phải kết quả PASS**. Mỗi ca dùng dữ liệu riêng để có thể chạy độc lập.
 
 ## Chuẩn bị chung
 
 - Môi trường test có dữ liệu theo `database/schema/db.sql`; không chạy trên database dùng chung nếu chưa thống nhất cách dọn dữ liệu.
-- Tài khoản đang `Active`: `HM-A` thuộc phòng A; `HM-B` thuộc phòng B; `D` là Director; `H` là HR; `C` là Candidate có hồ sơ và CV hợp lệ; `SA` là System Admin. Dùng hai phòng ban đang hoạt động. Ghi username thực tế vào biên bản chạy test.
+- Tài khoản đang `Active`: `HM-A` thuộc phòng A; `HM-B` thuộc phòng B; `D` là Director; `H` là HR; `SA` là System Admin. Dùng hai phòng ban đang hoạt động và một phiên khách để xem trang tuyển dụng công khai. Ghi username thực tế vào biên bản chạy test.
 - Mỗi lần chạy đặt tên vị trí duy nhất, ví dụ `ST-REQ-<runId>-01`, để tránh quy tắc chặn hai bản nháp cùng vị trí/phòng ban. Ghi `RequisitionId`, `JobPostingId`, `PostingNo` và URL chi tiết ngay khi tạo.
 - Hạn nộp của ca đăng tin thành công phải sau thời điểm test. Khi đổi tài khoản, đăng xuất hoặc dùng phiên trình duyệt riêng; lưu ảnh trang và URL trước/sau thao tác. Không sửa trạng thái trực tiếp trong DB trừ ca dữ liệu hết hạn có nêu rõ.
-- Các truy vấn SQL ở cuối tài liệu chỉ dùng **đọc** để đối chiếu trạng thái lưu trữ. Chụp kết quả hoặc đính kèm log, che thông tin cá nhân của Candidate.
+- Các truy vấn SQL ở cuối tài liệu chỉ dùng **đọc** để đối chiếu trạng thái lưu trữ. Chụp kết quả hoặc đính kèm log, che thông tin cá nhân nếu có.
 
 **Quy ước ghi kết quả:** với mỗi ca, điền `Actual`, `Status` (`NOT RUN`/`PASS`/`FAIL`/`BLOCKED`) và `Evidence` (ảnh, URL, log, mã bản ghi). Nếu FAIL, ghi mã lỗi trong bug tracker chung và liên kết tới ca này; không sửa trực tiếp dữ liệu test để biến ca thành PASS.
 
-## ST-RJ-01 — Luồng chuẩn HM gửi yêu cầu → Director duyệt → HR đăng tin → Candidate ứng tuyển
+## ST-RJ-01 — Happy case: HM gửi yêu cầu → Director duyệt → HR đăng tin → tin công khai và HM nhận thông báo
 
-**Vai trò:** HM-A, D, H, C. **Tiền điều kiện:** chưa có yêu cầu cùng tên trong phòng A; Candidate C có CV hợp lệ.
+**Vai trò:** HM-A, D, H, phiên khách. **Tiền điều kiện:** chưa có yêu cầu cùng tên trong phòng A; không có tin mở cho yêu cầu sẽ tạo.
 
 | Bước | Thao tác | Kết quả mong đợi |
 |---|---|---|
 | 1 | HM-A vào `/requisitions/create`, nhập đủ trường bắt buộc và tiêu chí sàng lọc có tổng trọng số 100%, bấm **Gửi Giám đốc duyệt**. | Chuyển tới chi tiết; sinh mã `REQ-...`; trạng thái `Pending_Director`; HM-A thấy lịch sử gửi. |
-| 2 | D mở yêu cầu từ danh sách/thông báo và bấm **Duyệt**. | Trạng thái `Approved`; có bản ghi phê duyệt và lịch sử; HM-A nhận thông báo đúng yêu cầu. |
-| 3 | H mở yêu cầu Approved, chọn **Tạo tin**, kiểm tra dữ liệu nguồn chỉ đọc, nhập hạn nộp tương lai và bấm **Đăng tin**. | Tạo tin `Published`, `PostingDate` là giờ đăng; trang nội bộ hiển thị liên kết về yêu cầu nguồn; HM-A nhận thông báo phát hành. |
-| 4 | Mở `/jobs`, tìm tin theo tiêu đề rồi mở `/jobs/{id}` ở phiên khách/Candidate. | Tin xuất hiện trong danh sách và trang chi tiết công khai; thông tin nội bộ (lịch sử duyệt, lý do tuyển dụng, người tạo) không lộ ra. |
-| 5 | C nộp CV qua nút ứng tuyển của tin. | Có thông báo nộp thành công và hồ sơ mới gắn với đúng `JobPostingId`; số hồ sơ nội bộ cập nhật khi tải lại. |
+| 2 | D mở yêu cầu từ danh sách/thông báo và bấm **Duyệt**. | Trạng thái `Approved`; có bản ghi phê duyệt và lịch sử. |
+| 3 | H mở yêu cầu Approved, chọn **Tạo tin**, kiểm tra dữ liệu nguồn chỉ đọc, nhập hạn nộp tương lai và bấm **Đăng tin**. | Tạo tin `Published`, `PostingDate` là giờ đăng; trang nội bộ hiển thị liên kết về yêu cầu nguồn. |
+| 4 | Ở phiên khách, mở `/jobs`, tìm tin theo tiêu đề rồi mở `/jobs/{id}`. | Tin xuất hiện trong danh sách và trang chi tiết công khai; thông tin nội bộ (lịch sử duyệt, lý do tuyển dụng, người tạo) không lộ ra. |
+| 5 | HM-A đăng nhập và mở thông báo sau khi HR đăng tin. | Người tạo yêu cầu nhận đúng thông báo **“Tin tuyển dụng đã phát hành”** gắn với tin/yêu cầu vừa tạo; mở thông báo đi tới đúng bản ghi. |
 
 **Actual:** …  **Status:** NOT RUN  **Evidence:** …
 
@@ -93,15 +93,15 @@
 
 ## ST-RJ-07 — HR lưu nháp tin, chặn tin trùng và phát hành
 
-**Vai trò:** H, HM-A, D, C. **Tiền điều kiện:** một yêu cầu `Approved` chưa có tin mở; hạn nộp hợp lệ.
+**Vai trò:** H, HM-A, D, phiên khách. **Tiền điều kiện:** một yêu cầu `Approved` chưa có tin mở; hạn nộp hợp lệ.
 
 | Bước | Thao tác | Kết quả mong đợi |
 |---|---|---|
 | 1 | H mở `/internal/job-postings/create?requisitionId={id}`, kiểm tra form không có lựa chọn hẹn đăng, lưu bản nháp. | Tin có `PostingStatus=Draft`, `PostingDate=NULL`; HR xem/sửa được; HM-A và D không mở được tin nháp bằng URL trực tiếp. |
-| 2 | Phiên khách/Candidate tìm tin trên `/jobs` và mở `/jobs/{id}`. | Tin nháp không xuất hiện; URL chi tiết công khai không trả nội dung tin. |
+| 2 | Phiên khách tìm tin trên `/jobs` và mở `/jobs/{id}`. | Tin nháp không xuất hiện; URL chi tiết công khai không trả nội dung tin. |
 | 3 | H thử tạo tin thứ hai từ cùng yêu cầu khi tin nháp còn mở. | Bị chặn; vẫn chỉ một tin mở cho yêu cầu. |
 | 4 | H sửa tin nháp, nhập hạn nộp tương lai, bấm **Đăng tin**. | Cùng `JobPostingId` đổi sang `Published`, `PostingDate` được đặt tại lúc đăng; thông báo HM-A là “đã phát hành”. |
-| 5 | HM-A và D mở tin nội bộ; C mở `/jobs/{id}`. | Các vai trò xem được đúng phạm vi; Candidate thấy tin công khai và nút ứng tuyển. |
+| 5 | HM-A và D mở tin nội bộ; phiên khách mở `/jobs/{id}`. | Các vai trò xem được đúng phạm vi; tin hiển thị công khai. |
 
 **Actual:** …  **Status:** NOT RUN  **Evidence:** …
 
@@ -111,7 +111,7 @@
 
 | Bước | Thao tác | Kết quả mong đợi |
 |---|---|---|
-| 1 | H tạo/đăng tin với hạn nộp đã qua hoặc thiếu nội dung bắt buộc. | Form báo lỗi; không có tin Published mới; Candidate không thấy tin. |
+| 1 | H tạo/đăng tin với hạn nộp đã qua hoặc thiếu nội dung bắt buộc. | Form báo lỗi; không có tin Published mới; phiên khách không thấy tin. |
 | 2 | H gửi lại form với `requisitionId` bị đổi sang yêu cầu chưa Approved hoặc đổi nguồn khi sửa tin. | Server từ chối, không gắn tin sang nguồn khác và không tạo tin công khai. |
 | 3 | HM-A, D, SA thử truy cập URL tạo/sửa/đăng/tạm dừng/đóng tin bằng phiên riêng. | Không thực hiện được thao tác quản lý; trạng thái, `PostingDate` và lịch sử không đổi. |
 | 4 | Gửi POST thao tác quản lý không có CSRF token. | Bị chặn trước khi thay đổi dữ liệu. |
@@ -120,39 +120,37 @@
 
 ## ST-RJ-09 — Tạm dừng và mở lại tin đang đăng
 
-**Vai trò:** H, HM-A, C. **Tiền điều kiện:** tin Published còn hạn nộp từ yêu cầu phòng A.
+**Vai trò:** H, HM-A, phiên khách. **Tiền điều kiện:** tin Published còn hạn nộp từ yêu cầu phòng A.
 
 | Bước | Thao tác | Kết quả mong đợi |
 |---|---|---|
-| 1 | H bấm **Tạm dừng**. | Tin thành `Paused`; có lịch sử; tin biến mất khỏi `/jobs`, URL `/jobs/{id}` không còn hiển thị cho Candidate. |
-| 2 | HM-A mở chi tiết tin nội bộ, C thử ứng tuyển qua URL cũ. | HM-A vẫn xem được tin thuộc phòng mình; C không nộp được hồ sơ mới. |
+| 1 | H bấm **Tạm dừng**. | Tin thành `Paused`; có lịch sử; tin biến mất khỏi `/jobs`, URL `/jobs/{id}` không còn hiển thị cho phiên khách. |
+| 2 | HM-A mở chi tiết tin nội bộ; phiên khách mở URL công khai cũ. | HM-A vẫn xem được tin thuộc phòng mình; trang công khai không trả nội dung tin. |
 | 3 | H bấm **Mở lại/Đăng tin**. | Tin trở lại `Published`, `PostingDate` được cập nhật; có lịch sử/thông báo phát hành. |
-| 4 | C tải lại `/jobs/{id}` và ứng tuyển nếu chưa nộp tin này. | Tin hiển thị lại và nhận hồ sơ khi hạn nộp còn hiệu lực. |
+| 4 | Phiên khách tải lại `/jobs/{id}` và tìm tin trên `/jobs`. | Tin hiển thị lại trong danh sách và trang chi tiết khi hạn nộp còn hiệu lực. |
 
 **Actual:** …  **Status:** NOT RUN  **Evidence:** …
 
-## ST-RJ-10 — Đóng tin, xử lý hồ sơ liên quan và đăng lại
+## ST-RJ-10 — Đóng tin chưa có hồ sơ và đăng lại
 
-**Vai trò:** H, C. **Tiền điều kiện:** tin Published/Paused có ít nhất một hồ sơ đang xử lý; chuẩn bị riêng biến thể có Offer chưa kết thúc. Luồng Offer thuộc module khác, cần phối hợp người phụ trách để tạo/hoàn tất fixture.
+**Vai trò:** H, phiên khách. **Tiền điều kiện:** tin Published/Paused chưa có hồ sơ ứng tuyển hoặc Offer; yêu cầu nguồn vẫn `Approved`.
 
 | Bước | Thao tác | Kết quả mong đợi |
 |---|---|---|
-| 1 | H bấm **Đóng tin** khi còn Offer chưa kết thúc. | Hệ thống báo phải xử lý Offer trước; tin chưa thành `Closed`; hồ sơ chưa bị kết thúc. |
-| 2 | Hoàn tất Offer theo luồng được phép, rồi H bấm **Đóng tin** lại. | Tin thành `Closed`, có lịch sử; các hồ sơ chờ không có Offer được nhận bị xử lý theo luồng đóng, lịch phỏng vấn liên quan bị hủy; hồ sơ đã có Offer được nhận không bị từ chối. |
-| 3 | C mở `/jobs` và URL công khai của tin cũ; H mở chi tiết nội bộ. | Tin đóng không hiển thị công khai; nội bộ vẫn xem được lịch sử; tin cũ không sửa/đăng lại trên cùng bản ghi. |
-| 4 | H chọn **Đăng lại** từ tin đã đóng, lưu bản nháp rồi phát hành. | Tạo `JobPostingId` mới, cùng `RequisitionId`, `PostingNo` tăng; bản ghi cũ vẫn `Closed`; chỉ tin mới xuất hiện công khai sau phát hành. |
+| 1 | H bấm **Đóng tin**. | Tin thành `Closed`, lưu `ClosedAt` và lịch sử đóng. |
+| 2 | Phiên khách mở `/jobs` và URL công khai của tin cũ; H mở chi tiết nội bộ. | Tin đóng không hiển thị công khai; nội bộ vẫn xem được lịch sử; tin cũ không sửa/đăng lại trên cùng bản ghi. |
+| 3 | H chọn **Đăng lại** từ tin đã đóng, lưu bản nháp rồi phát hành. | Tạo `JobPostingId` mới, cùng `RequisitionId`, `PostingNo` tăng; bản ghi cũ vẫn `Closed`; chỉ tin mới xuất hiện công khai sau phát hành. |
 
 **Actual:** …  **Status:** NOT RUN  **Evidence:** …
 
-## ST-RJ-11 — Tin hết hạn và giới hạn nhận hồ sơ
+## ST-RJ-11 — Tin hết hạn: kiểm tra hiển thị công khai và trạng thái lưu trữ
 
-**Vai trò:** H, C. **Tiền điều kiện:** tin `Published` có `ApplicationDeadline` đã qua trong database test. Tạo fixture bằng quy trình dữ liệu test được nhóm duyệt; không đổi đồng hồ hệ thống và không sửa trực tiếp database dùng chung.
+**Vai trò:** H, phiên khách. **Tiền điều kiện:** tin `Published` có `ApplicationDeadline` đã qua trong database test. Tạo fixture bằng quy trình dữ liệu test được nhóm duyệt; không đổi đồng hồ hệ thống và không sửa trực tiếp database dùng chung.
 
 | Bước | Thao tác | Kết quả mong đợi |
 |---|---|---|
-| 1 | C tìm trên `/jobs`, sau đó mở URL `/jobs/{id}` đã lưu. | Tin không còn trong danh sách đang tuyển; chi tiết tin đã Published vẫn có thể xem. |
-| 2 | C truy cập `/jobs/{id}/apply` và thử gửi hồ sơ. | Không tạo Application mới vì đã quá hạn. |
-| 3 | H mở chi tiết nội bộ và kiểm tra trạng thái. | `PostingStatus` vẫn `Published` nếu HR chưa đóng; hết hạn không tự chuyển `Closed`. |
+| 1 | Phiên khách tìm trên `/jobs`, sau đó mở URL `/jobs/{id}` đã lưu. | Tin không còn trong danh sách đang tuyển; chi tiết tin đã Published vẫn có thể xem. |
+| 2 | H mở chi tiết nội bộ và kiểm tra trạng thái. | `PostingStatus` vẫn `Published` nếu HR chưa đóng; hết hạn không tự chuyển `Closed`. |
 
 **Actual:** …  **Status:** NOT RUN  **Evidence:** …
 
@@ -189,4 +187,4 @@ FROM JobPosting WHERE RequisitionId = @RequisitionId
 ORDER BY PostingNo;
 ```
 
-Đối chiếu thêm số hồ sơ, lịch sử và thông báo bằng màn hình tương ứng. Nếu cần SQL sâu hơn, lấy tên cột từ `database/schema/db.sql` của đúng bản đang test.
+Đối chiếu thêm lịch sử và thông báo bằng màn hình tương ứng. Nếu cần SQL sâu hơn, lấy tên cột từ `database/schema/db.sql` của đúng bản đang test.
