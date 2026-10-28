@@ -23,7 +23,6 @@ class JobPostingLabelsTests {
     @ParameterizedTest(name = "{0} -> {1} ({2})")
     @CsvSource({
             "Draft,     Bản nháp,  neutral",
-            "Scheduled, Hẹn đăng,  warning",
             "Published, Đang đăng, success",
             "Paused,    Tạm dừng,  warning",
             "Closed,    Đã đóng,   neutral"})
@@ -53,9 +52,7 @@ class JobPostingLabelsTests {
             "CREATE | Tạo tin tuyển dụng: Published: Java | Tạo và đăng tin",
             "CREATE | Tạo tin tuyển dụng: Draft: Java     | Tạo mới",
             "UPDATE | Đăng tin tuyển dụng: Java           | Đăng tin",
-            "UPDATE | Hẹn đăng tin tuyển dụng             | Hẹn đăng tin",
             "UPDATE | Tạm dừng tin tuyển dụng: Java       | Tạm dừng",
-            "UPDATE | Hủy lịch đăng tin tuyển dụng: Java  | Hủy lịch đăng",
             "UPDATE | Closed                              | Đóng tin",
             "UPDATE | Cập nhật tin tuyển dụng             | Cập nhật",
             "DELETE | Xóa tin tuyển dụng: Java            | Xóa"})

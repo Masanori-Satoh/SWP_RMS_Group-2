@@ -205,13 +205,13 @@ class JobPostingListServiceTests {
     @Test
     @DisplayName("Chip: trạng thái, hạn nộp, sắp xếp khác mặc định; 'Nhiều hồ sơ nhất' sắp bằng Specification")
     void getListPage_shouldDescribeChips_andSortByApplicationsInSpecification() {
-        JobPostingSearchRequest raw = new JobPostingSearchRequest(null, List.of(JobPostingAccess.STATUS_SCHEDULED), null,
+        JobPostingSearchRequest raw = new JobPostingSearchRequest(null, List.of(JobPostingAccess.STATUS_PUBLISHED), null,
                 null, JobPostingLabels.DEADLINE_SOON, null, null, JobPostingSort.MOST_APPLICATIONS.param(), 0, 10);
 
         JobPostingListResponse list = service.getListPage(raw, userWithRole(RequisitionAccess.ROLE_HR));
 
         List<String> labels = list.chips().stream().map(FilterChip::label).toList();
-        assertEquals(List.of("Trạng thái: Hẹn đăng", "Hạn nộp: Sắp hết hạn (≤ 7 ngày)", "Sắp xếp: Nhiều hồ sơ nhất"), labels);
+        assertEquals(List.of("Trạng thái: Đang đăng", "Hạn nộp: Sắp hết hạn (≤ 7 ngày)", "Sắp xếp: Nhiều hồ sơ nhất"), labels);
         ArgumentCaptor<Pageable> pageable = ArgumentCaptor.forClass(Pageable.class);
         verify(postings).findAll(any(Specification.class), pageable.capture());
         assertTrue(pageable.getValue().getSort().isUnsorted(), "Sắp theo số hồ sơ nằm trong Specification, không dùng Sort");

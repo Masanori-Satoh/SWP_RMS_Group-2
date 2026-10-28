@@ -114,15 +114,14 @@ class JobPostingMapperTests {
         }
 
         @Test
-        @DisplayName("Published + ngày đăng sau 3 ngày -> 'Hẹn đăng', còn 3 ngày, không tạm dừng / đóng được")
-        void toListRow_shouldShowScheduled_whenPostingDateIsInFuture() {
+        @DisplayName("Tin đã đăng -> nhãn đang đăng và có thể tạm dừng")
+        void toListRow_shouldShowPublished() {
             InternalJobPostingResponse row = mapper.toListRow(
-                    posting(JobPostingAccess.STATUS_PUBLISHED, NOW.plusDays(3), NOW.plusDays(30)), hr, 0, 0, NOW);
+                    posting(JobPostingAccess.STATUS_PUBLISHED, NOW.minusDays(3), NOW.plusDays(30)), hr, 0, 0, NOW);
 
-            assertEquals(JobPostingAccess.STATUS_SCHEDULED, row.viewStatus());
-            assertEquals("Hẹn đăng", row.statusLabel());
-            assertEquals(3L, row.daysUntilPosting());
-            assertFalse(row.pausable() || row.closable());
+            assertEquals(JobPostingAccess.STATUS_PUBLISHED, row.viewStatus());
+            assertEquals("Đang đăng", row.statusLabel());
+            assertTrue(row.pausable() && row.closable());
             assertTrue(row.editable());
         }
 
@@ -213,14 +212,13 @@ class JobPostingMapperTests {
         }
 
         @Test
-        @DisplayName("Tin hẹn đăng, Admin -> không thể Đăng ngay / Hủy lịch; ứng viên chưa thấy")
-        void toDetail_shouldDenyScheduleActions_whenAdminViewsScheduledPosting() {
+        @DisplayName("Tin đã đăng, Admin không có nút quản lý")
+        void toDetail_shouldDenyManageActions_whenAdminViewsPublishedPosting() {
             InternalJobPostingDetailResponse detail =
-                    detail(posting(JobPostingAccess.STATUS_PUBLISHED, NOW.plusDays(3), NOW.plusDays(30)), admin);
+                    detail(posting(JobPostingAccess.STATUS_PUBLISHED, NOW.minusDays(3), NOW.plusDays(30)), admin);
 
-            assertTrue(detail.scheduledBanner());
-            assertFalse(detail.publishNowable() || detail.unschedulable());
-            assertFalse(detail.publicViewable() || detail.live() || detail.talentPoolVisible());
+            assertFalse(detail.editable() || detail.pausable() || detail.talentPoolVisible());
+            assertTrue(detail.publicViewable() && detail.live());
         }
 
         @Test
@@ -297,26 +295,24 @@ class JobPostingMapperTests {
         }
 
         @Test
-        @DisplayName("Form sửa tin hẹn đăng -> Nhận ra lương tự nhập, số lượng bị ẩn, giữ lịch hẹn, chưa 'live'")
-        void toEditForm_shouldDeriveChoices_whenPostingIsScheduled() {
+        @DisplayName("Form sửa tin đã đăng -> Nhận ra lương tự nhập, số lượng bị ẩn, trạng thái live")
+        void toEditForm_shouldDeriveChoices_whenPostingIsPublished() {
             // Arrange
-            LocalDateTime at = NOW.plusDays(4);
+            LocalDateTime at = NOW.minusDays(4);
             JobPosting posting = posting(JobPostingAccess.STATUS_PUBLISHED, at, NOW.plusDays(30));
             posting.setPostingNo(2);
             posting.setSalaryDisplay("Lên đến 30 triệu + hoa hồng");
 
             // Act
-            JobPostingCreateRequest form = mapper.toEditForm(posting, NOW);
+            JobPostingCreateRequest form = mapper.toEditForm(posting);
 
             // Assert
             assertEquals(11, form.getJobPostingId());
             assertEquals(JobPostingCreateRequest.SALARY_CUSTOM, form.getSalaryMode());
             assertEquals("Lên đến 30 triệu + hoa hồng", form.getSalaryCustom());
             assertEquals(Boolean.FALSE, form.getShowPositions());
-            assertEquals(JobPostingCreateRequest.PUBLISH_LATER, form.getPublishMode());
-            assertEquals(at, form.getScheduledAt());
-            assertTrue(form.isScheduled());
-            assertFalse(form.isLive() || form.isDraftOrNew());
+            assertTrue(form.isLive());
+            assertFalse(form.isDraftOrNew());
             assertEquals(2, form.getPostingNo());
         }
 
@@ -326,7 +322,7 @@ class JobPostingMapperTests {
             JobPosting posting = posting(JobPostingAccess.STATUS_PAUSED, NOW.minusDays(3), NOW.plusDays(10));
             posting.setSalaryDisplay(JobPostingLabels.SALARY_NEGOTIABLE_OLD_SPELLING);
 
-            JobPostingCreateRequest form = mapper.toEditForm(posting, NOW);
+            JobPostingCreateRequest form = mapper.toEditForm(posting);
 
             assertEquals(JobPostingCreateRequest.SALARY_NEGOTIABLE, form.getSalaryMode());
             assertTrue(form.isPaused() && form.isLive());

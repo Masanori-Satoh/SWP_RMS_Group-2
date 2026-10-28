@@ -5,9 +5,9 @@
    ============================================================================= */
 
 /* ----- 1. Đầu trang ----- */
-.rms-app.jp-list-page .page-content { width:100%; max-width:none; box-sizing:border-box; margin-inline:0; padding-block:var(--s6); padding-inline:clamp(var(--s4), 2vw, var(--s8)); background:color-mix(in srgb, var(--brand-soft) 50%, var(--page)); }
+.rms-app.jp-list-page .page-content { width:100%; max-width:none; box-sizing:border-box; margin-inline:0; padding:var(--s4); }
 .jp-list-page .jp-head { display:flex; flex-wrap:wrap; justify-content:space-between; align-items:center; gap:var(--s3); margin-bottom:var(--s4); }
-.jp-list-page .jp-head h1 { margin:0; font:600 26px/1.3 var(--sans); letter-spacing:-.02em; }
+.jp-list-page .jp-head h1 { margin:0; }
 
 /* Dải "N yêu cầu đã duyệt chưa có tin" (HR, Admin) */
 .jp-list-page .jp-await { display:flex; flex-wrap:wrap; align-items:center; gap:var(--s2) var(--s4); margin-bottom:var(--s4);

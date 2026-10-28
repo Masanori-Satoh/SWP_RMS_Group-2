@@ -31,7 +31,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
-import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Set;
 
@@ -51,11 +50,10 @@ public class JobPostingController {
     private static final String LIST_URL = "/internal/job-postings";
     private static final String FORM_VIEW = "job-postings/create";
     private static final String PUBLISHED_NOW_MESSAGE = "Đã đăng tin. Ứng viên có thể nộp hồ sơ ngay.";
-    private static final DateTimeFormatter SCHEDULE_FORMAT = DateTimeFormatter.ofPattern("HH:mm 'ngày' dd/MM/yyyy");
     /** Các ô có trên form (lỗi của ô khác, ví dụ "action", hiện ở đầu form). */
     private static final Set<String> FORM_FIELDS = Set.of("postingTitle", "jobDescription", "jobRequirements",
             "benefits", "workLocation", "salaryMode", "salaryCustom", "numberOfPositionsDisplay",
-            "applicationDeadline", "publishMode", "scheduledAt");
+            "applicationDeadline");
     /** Gợi ý quyền lợi trên form (nút thêm nhanh), theo mockup. */
     private static final List<String> BENEFIT_SUGGESTIONS = List.of("Lương tháng 13", "Thưởng theo hiệu quả công việc",
             "Đóng BHXH, BHYT, BHTN đầy đủ", "Bảo hiểm sức khỏe", "Review lương 2 lần/năm", "12 ngày phép năm",
@@ -85,7 +83,7 @@ public class JobPostingController {
     void formBinder(WebDataBinder binder) {
         binder.setAllowedFields("jobPostingId", "requisitionId", "postingTitle", "jobDescription", "jobRequirements",
                 "benefits", "workLocation", "salaryMode", "salaryCustom", "showPositions", "numberOfPositionsDisplay",
-                "applicationDeadline", "publishMode", "scheduledAt", "action");
+                "applicationDeadline", "action");
     }
 
     /**
@@ -148,7 +146,7 @@ public class JobPostingController {
         return form(model, jobPostingService.prepareEditForm(id, currentUser), currentUser);
     }
 
-    /** Lưu nháp (action=draft) hoặc đăng / lên lịch đăng (action=publish) tin mới. */
+    /** Lưu nháp (action=draft) hoặc đăng ngay (action=publish) tin mới. */
     @PostMapping("/create")
     public String createJobPosting(@Valid @ModelAttribute("postingDto") JobPostingCreateRequest request,
             BindingResult errors, Model model, RedirectAttributes flash) {
@@ -171,7 +169,7 @@ public class JobPostingController {
         return form(model, jobPostingService.restoreSourceInfo(request, currentUser), currentUser);
     }
 
-    /** Lưu thay đổi (action=draft) hoặc đăng / lên lịch đăng / mở lại (action=publish) tin đã có. */
+    /** Lưu thay đổi (action=draft) hoặc đăng / mở lại (action=publish) tin đã có. */
     @PostMapping("/{id}/edit")
     public String updateJobPosting(@PathVariable Integer id,
             @Valid @ModelAttribute("postingDto") JobPostingCreateRequest request,
@@ -199,30 +197,6 @@ public class JobPostingController {
         try {
             jobPostingService.publishJobPosting(id, access.actor());
             flash.addFlashAttribute("successMessage", "Đã đăng tin tuyển dụng.");
-        } catch (JobPostingValidationException e) {
-            flash.addFlashAttribute("errorMessage", e.getMessage());
-        }
-        return redirectToDetail(id);
-    }
-
-    /** Tin đang hẹn đăng: đăng ngay bây giờ. */
-    @PostMapping("/{id}/publish-now")
-    public String publishNow(@PathVariable Integer id, RedirectAttributes flash) {
-        try {
-            jobPostingService.publishNow(id, access.actor());
-            flash.addFlashAttribute("successMessage", PUBLISHED_NOW_MESSAGE);
-        } catch (JobPostingValidationException e) {
-            flash.addFlashAttribute("errorMessage", e.getMessage());
-        }
-        return redirectToDetail(id);
-    }
-
-    /** Tin đang hẹn đăng: hủy lịch, trở về bản nháp. */
-    @PostMapping("/{id}/unschedule")
-    public String unschedule(@PathVariable Integer id, RedirectAttributes flash) {
-        try {
-            jobPostingService.unschedule(id, access.actor());
-            flash.addFlashAttribute("successMessage", "Đã hủy lịch đăng. Tin trở về bản nháp.");
         } catch (JobPostingValidationException e) {
             flash.addFlashAttribute("errorMessage", e.getMessage());
         }
@@ -296,7 +270,6 @@ public class JobPostingController {
         model.addAttribute("benefitSuggestions", BENEFIT_SUGGESTIONS);
         // Rule ngày nằm ở validator: hạn nộp sớm nhất là hôm nay
         model.addAttribute("today", validator.today());
-        model.addAttribute("maxScheduleDays", JobPostingValidator.MAX_SCHEDULE_DAYS);
         // Giới hạn độ dài khớp 3 nơi: maxlength trên form = validator = cột DB
         model.addAttribute("titleLimit", JobPostingValidator.TITLE_LIMIT);
         model.addAttribute("textLimit", JobPostingValidator.TEXT_LIMIT);
@@ -328,10 +301,6 @@ public class JobPostingController {
         }
         if (!isPublish) {
             return "Đã lưu thay đổi.";
-        }
-        boolean isLater = JobPostingCreateRequest.PUBLISH_LATER.equals(request.getPublishMode());
-        if (isLater && request.getScheduledAt() != null) {
-            return "Đã lên lịch đăng tin lúc " + request.getScheduledAt().format(SCHEDULE_FORMAT) + ".";
         }
         return PUBLISHED_NOW_MESSAGE;
     }

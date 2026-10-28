@@ -3,149 +3,22 @@
     layout:decorate="~{layout/internal}">
 
 <head>
-    <title>Tổng quan tuyển dụng · Mộc RMS</title>
+    <title>Bảng điều khiển · Mộc RMS</title>
     <th:block layout:fragment="styles">
         <link rel="stylesheet" th:href="@{/css/dashboard.css}">
     </th:block>
 </head>
 
 <body>
-    <main id="main" layout:fragment="content" class="page-content container dash-page dash-page--recruitment" tabindex="-1"
-        th:with="role=${dashboard.roleName}">
-        <div class="page-header">
-            <div th:switch="${role}">
-                <h1 class="page-title" th:case="'HR'">Tổng quan nhân sự</h1>
-                <h1 class="page-title" th:case="'Hiring Manager'">Tổng quan tuyển dụng của tôi</h1>
-                <h1 class="page-title" th:case="'Director'">Phê duyệt và phỏng vấn</h1>
-                <h1 class="page-title" th:case="*">Lịch và đánh giá phỏng vấn</h1>
-                <p class="page-subtitle" th:switch="${role}">
-                    <span th:case="'HR'">Theo dõi hồ sơ mới, tiến trình tuyển dụng và các lịch hẹn sắp tới.</span>
-                    <span th:case="'Hiring Manager'">Theo dõi yêu cầu của bạn, nhu cầu phòng ban và ứng viên đang
-                        tuyển.</span>
-                    <span th:case="'Director'">Xem hàng đợi phê duyệt toàn hệ thống và lịch bạn được phân công.</span>
-                    <span th:case="*">Theo dõi các buổi phỏng vấn được phân công và đánh giá cần hoàn tất.</span>
-                </p>
-            </div>
-            <a class="btn btn--primary" th:if="${role == 'Hiring Manager'}" th:href="@{/applications}">Xem hồ sơ ứng
-                tuyển</a>
-            <a class="btn btn--primary" th:if="${role == 'HR'}" th:href="@{/applications}">Xem hồ sơ ứng tuyển</a>
-            <a class="btn btn--primary" th:if="${role == 'Hiring Manager'}" th:href="@{/requisitions}">Xem yêu cầu tuyển
-                dụng</a>
-            <a class="btn btn--primary" th:if="${role == 'Director'}" th:href="@{/offers}">Xem đề nghị chờ duyệt</a>
-            <a class="btn btn--primary" th:if="${role == 'Interviewer'}" th:href="@{/interviews}">Xem lịch phỏng vấn</a>
-        </div>
-
-        <th:block th:replace="~{dashboard/fragments :: metrics(${dashboard.metrics})}"></th:block>
-
-        <section class="dash-section" th:if="${dashboardCharts != null and not #lists.isEmpty(dashboardCharts)}"
-            aria-labelledby="dash-analytics-title">
-            <div class="dash-section__heading">
-                <div>
-                    <h2 id="dash-analytics-title" class="dash-section__title">Phân tích tuyển dụng</h2>
-                    <p class="text-muted">Số liệu lấy từ dữ liệu hiện tại theo phạm vi của vai trò đang đăng nhập.</p>
-                </div>
-            </div>
-            <div class="dash-chart-grid">
-                <section class="card dash-chart-panel" th:each="chart, chartIndex : ${dashboardCharts}"
-                    th:attr="data-chart-type=${chart.type}" th:aria-labelledby="|dash-chart-title-${chartIndex.index}|">
-                    <h3 class="dash-chart-title" th:id="|dash-chart-title-${chartIndex.index}|" th:text="${chart.title}"></h3>
-                    <p class="dash-chart-description" th:text="${chart.description}"></p>
-                    <div class="dash-chart-canvas" hidden>
-                        <canvas role="img" th:aria-labelledby="|dash-chart-title-${chartIndex.index}|"></canvas>
-                    </div>
-                    <p class="dash-chart-empty" th:if="${#lists.isEmpty(chart.points.?[count > 0])}">Chưa có dữ liệu trong phạm vi này.</p>
-                    <ul class="dash-chart-points" aria-label="Số liệu và liên kết của biểu đồ">
-                        <li th:each="point : ${chart.points}">
-                            <a th:if="${point.href != null}" th:href="@{${point.href}}" data-chart-point
-                                th:attr="data-label=${point.label},data-count=${point.count}">
-                                <span th:text="${point.label}"></span><strong th:text="${point.count}"></strong>
-                            </a>
-                            <span th:unless="${point.href != null}" data-chart-point
-                                th:attr="data-label=${point.label},data-count=${point.count}">
-                                <span th:text="${point.label}"></span><strong th:text="${point.count}"></strong>
-                            </span>
-                        </li>
-                    </ul>
-                </section>
-            </div>
-        </section>
-
-        <section class="dash-section" aria-labelledby="dash-actions-title">
-            <div class="dash-section__heading">
-                <h2 id="dash-actions-title" class="dash-section__title">Không gian làm việc</h2>
-                <p class="text-muted">Tiếp tục công việc trong từng phân hệ.</p>
-            </div>
-            <nav class="dash-actions" aria-label="Công việc theo vai trò">
-                <a class="btn btn--secondary" th:if="${role == 'HR' || role== 'Hiring Manager'}"
-                    th:href="@{/internal/job-postings}">Tin tuyển dụng</a>
-                <a class="btn btn--secondary" th:if="${role == 'HR'}"
-                    th:href="@{/internal/job-postings/dashboard}">Quản lý đăng tin</a>
-                <a class="btn btn--secondary" th:if="${role != 'Interviewer'}" th:href="@{/requisitions}">Yêu cầu tuyển
-                    dụng</a>
-                <a class="btn btn--secondary" th:if="${role != 'Interviewer'}" th:href="@{/applications}">Hồ sơ ứng
-                    tuyển</a>
-                <a class="btn btn--secondary" th:href="@{/interviews}">Lịch phỏng vấn</a>
-                <a class="btn btn--secondary" th:if="${role == 'HR' or role == 'Director'}" th:href="@{/offers}">Đề nghị
-                    tuyển dụng</a>
-                <a class="btn btn--secondary" th:href="@{/notifications}">Thông báo của tôi</a>
-            </nav>
-            <p class="dash-note" th:if="${role == 'Hiring Manager'}">Số liệu yêu cầu do bạn tạo và số liệu phòng ban có
-                phạm vi khác nhau; biểu đồ ghi rõ phạm vi đang thống kê.</p>
-            <p class="dash-note" th:if="${role == 'Director'}">Bạn có thể xem toàn bộ lịch nội bộ. Hai số liệu phỏng vấn
-                ở trên chỉ tính lịch và ứng viên được phân công cho bạn.</p>
-            <p class="dash-note" th:if="${role == 'Interviewer'}">Mở lịch được phân công để xem thông tin và hoàn tất
-                đánh giá sau buổi phỏng vấn.</p>
-        </section>
-
-        <th:block th:each="breakdown : ${dashboard.breakdowns}">
-            <th:block
-                th:replace="~{dashboard/fragments :: statuses('Hồ sơ theo tiến trình tuyển dụng', ${breakdown.statuses})}">
-            </th:block>
-        </th:block>
-
-        <section class="dash-section" th:if="${role == 'Director'}" aria-labelledby="dash-activity-title">
-            <div class="dash-section__heading">
-                <div>
-                    <h2 id="dash-activity-title" class="dash-section__title">Hoạt động phê duyệt gần đây</h2>
-                    <p class="text-muted">Các quyết định do bạn thực hiện.</p>
-                </div>
-            </div>
-            <p class="dash-empty" th:if="${#lists.isEmpty(dashboard.activities)}">Bạn chưa có quyết định phê duyệt hoặc
-                từ chối được ghi nhận.</p>
-            <div class="table-wrapper" th:unless="${#lists.isEmpty(dashboard.activities)}" tabindex="0" role="region"
-                aria-labelledby="dash-activity-title">
-                <table class="table">
-                    <caption class="sr-only">Lịch sử quyết định của giám đốc đang đăng nhập</caption>
-                    <thead>
-                        <tr>
-                            <th scope="col">Loại</th>
-                            <th scope="col">Nội dung</th>
-                            <th scope="col">Quyết định</th>
-                            <th scope="col">Thời gian</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr th:each="activity : ${dashboard.activities}">
-                            <td
-                                th:text="${activity.type == 'Job Requisition' or activity.type == 'Requisition' ? 'Yêu cầu tuyển dụng' : (activity.type == 'Offer' ? 'Đề nghị tuyển dụng' : activity.type)}">
-                            </td>
-                            <th scope="row" th:text="${activity.title}"></th>
-                            <td><span class="badge"
-                                    th:classappend="${activity.status == 'Approved' ? 'badge--success' : (activity.status == 'Rejected' ? 'badge--danger' : 'badge--neutral')}"
-                                    th:text="${activity.status == 'Approved' ? 'Đã duyệt' : (activity.status == 'Rejected' ? 'Đã từ chối' : activity.status)}"></span>
-                            </td>
-                            <td><time th:datetime="${activity.at}"
-                                    th:text="${#temporals.format(activity.at, 'dd/MM/yyyy HH:mm')}"></time></td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
-        </section>
+    <!-- Dashboard nội bộ: mỗi role một file trong dashboard/sections/, tên file do DTO trả về (section),
+         nên template không so sánh tên role. -->
+    <main id="main" layout:fragment="content" class="page-content container dash-page dash-page--recruitment adw-page" tabindex="-1">
+        <th:block th:replace="~{fragments/ui/admin-workspace :: scene}"></th:block>
+        <th:block th:replace="~{dashboard/sections/__${dashboard.section}__ :: content(${dashboard})}"></th:block>
     </main>
-<th:block layout:fragment="scripts">
-    <script defer th:src="@{/js/vendor/chart.umd.min.js}"></script>
-    <script defer th:src="@{/js/pages/recruitment-dashboard.js}"></script>
-</th:block>
+    <th:block layout:fragment="scripts">
+        <th:block th:replace="~{fragments/ui/admin-workspace :: scripts}"></th:block>
+    </th:block>
 </body>
 
 </html>

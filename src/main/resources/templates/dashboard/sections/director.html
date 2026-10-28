@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<body>
+<!-- Dashboard Giám đốc (toàn công ty); dashboard/index.html chèn vào theo dashboard.section. -->
+<th:block th:fragment="content(dashboard)">
+    <div th:replace="~{dashboard/fragments :: pageHeader('Bảng điều khiển', 'Toàn công ty · 30 ngày gần nhất')}"></div>
+
+    <th:block th:replace="~{dashboard/fragments :: kpis(${dashboard.kpis})}"></th:block>
+
+    <section class="card dash-panel dash-panel--priority adw-surface" aria-labelledby="dr-requisitions-title">
+        <div class="dash-panel__heading">
+            <h2 id="dr-requisitions-title" class="dash-panel__title">
+                <svg th:replace="~{dashboard/fragments :: icon('inbox')}"></svg>Yêu cầu chờ duyệt
+            </h2>
+            <a class="dash-link" th:href="@{/requisitions}">Xem tất cả</a>
+        </div>
+        <p class="dash-empty" th:if="${#lists.isEmpty(dashboard.pendingRequisitions)}">Không có yêu cầu chờ duyệt.</p>
+        <div class="table-wrapper" th:unless="${#lists.isEmpty(dashboard.pendingRequisitions)}" tabindex="0"
+             role="region" aria-labelledby="dr-requisitions-title">
+            <table class="table adw-data-table">
+                <caption class="sr-only">Yêu cầu tuyển dụng chờ duyệt, chờ lâu nhất ở trên</caption>
+                <thead>
+                <tr>
+                    <th scope="col">Yêu cầu</th>
+                    <th scope="col">Phòng ban</th>
+                    <th scope="col">Người gửi</th>
+                    <th scope="col">Số lượng</th>
+                    <th scope="col">Loại</th>
+                    <th scope="col">Đã chờ</th>
+                    <th scope="col"><span class="sr-only">Thao tác</span></th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="requisition : ${dashboard.pendingRequisitions}">
+                    <td>
+                        <span class="dash-cell-title" th:text="${requisition.title}">Vị trí</span>
+                        <span class="dash-cell-meta" th:text="${requisition.code}">REQ-0001</span>
+                    </td>
+                    <td th:text="${requisition.departmentName}">Phòng ban</td>
+                    <td th:text="${requisition.requesterName}">Người gửi</td>
+                    <td th:text="${requisition.positions}">1</td>
+                    <td>
+                        <span th:class="${requisition.replacement ? 'dash-cell-emphasis' : null}"
+                              th:text="${requisition.hiringTypeLabel}">Tuyển mới</span>
+                        <span class="dash-cell-meta" th:if="${requisition.roundText != null}"
+                              th:text="${requisition.roundText}">Tuyển lại lần 2</span>
+                    </td>
+                    <td><span class="badge" th:classappend="|badge--${requisition.waitTone}|"
+                              th:text="${requisition.waitText}">0 ngày</span></td>
+                    <td><a class="btn btn--secondary btn--sm" th:href="@{${requisition.href}}">Xem xét</a></td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+        <p class="dash-panel__more" th:if="${dashboard.morePendingRequisitions > 0}">
+            <span th:text="|+${dashboard.morePendingRequisitions} yêu cầu khác|">+2 yêu cầu khác</span>
+            <a class="dash-link" th:href="@{/requisitions}">Xem tất cả</a>
+        </p>
+    </section>
+
+    <div class="dash-split">
+        <section class="card dash-panel adw-surface" aria-labelledby="dr-offers-title">
+            <div class="dash-panel__heading">
+                <h2 id="dr-offers-title" class="dash-panel__title">
+                    <svg th:replace="~{dashboard/fragments :: icon('banknote')}"></svg>Đề nghị chờ duyệt
+                </h2>
+                <a class="dash-link" th:href="@{/offers}">Xem tất cả</a>
+            </div>
+            <p class="dash-empty" th:if="${#lists.isEmpty(dashboard.pendingOffers)}">Không có đề nghị chờ duyệt.</p>
+            <ul class="dash-work" th:unless="${#lists.isEmpty(dashboard.pendingOffers)}">
+                <li th:each="offer : ${dashboard.pendingOffers}" class="dash-work__item">
+                    <div class="dash-work__body">
+                        <p class="dash-work__title" th:text="|${offer.candidateName} · ${offer.positionTitle}|">Ứng viên · Vị trí</p>
+                        <p class="dash-work__detail" th:text="${offer.salaryText}">15.000.000 VND</p>
+                    </div>
+                    <span class="badge" th:classappend="|badge--${offer.waitTone}|">
+                        <span class="sr-only">Đã chờ </span><span th:text="${offer.waitText}">0 ngày</span>
+                    </span>
+                    <a class="btn btn--secondary btn--sm" th:href="@{${offer.href}}">Xem xét</a>
+                </li>
+            </ul>
+            <p class="dash-panel__more" th:if="${dashboard.morePendingOffers > 0}">
+                <span th:text="|+${dashboard.morePendingOffers} đề nghị khác|">+2 đề nghị khác</span>
+                <a class="dash-link" th:href="@{/offers}">Xem tất cả</a>
+            </p>
+        </section>
+
+        <section class="card dash-panel adw-surface" aria-labelledby="dr-departments-title">
+            <div class="dash-panel__heading">
+                <h2 id="dr-departments-title" class="dash-panel__title">
+                    <svg th:replace="~{dashboard/fragments :: icon('building')}"></svg>Yêu cầu đang mở theo phòng ban
+                </h2>
+            </div>
+            <p class="dash-panel__sub">Toàn công ty, gồm cả yêu cầu bạn không trực tiếp duyệt.</p>
+            <p class="dash-empty" th:if="${#lists.isEmpty(dashboard.openByDepartment)}">Chưa có yêu cầu đang mở.</p>
+            <th:block th:unless="${#lists.isEmpty(dashboard.openByDepartment)}">
+                <ul th:replace="~{dashboard/fragments :: barChart(${dashboard.openByDepartment})}"></ul>
+            </th:block>
+        </section>
+    </div>
+
+    <section class="card dash-panel adw-surface" aria-labelledby="dr-decisions-title">
+        <div class="dash-panel__heading">
+            <h2 id="dr-decisions-title" class="dash-panel__title">
+                <svg th:replace="~{dashboard/fragments :: icon('history')}"></svg>Quyết định gần đây
+            </h2>
+        </div>
+        <p class="dash-empty" th:if="${#lists.isEmpty(dashboard.recentDecisions)}">Bạn chưa có quyết định nào.</p>
+        <ul class="dash-work" th:unless="${#lists.isEmpty(dashboard.recentDecisions)}">
+            <li th:each="decision : ${dashboard.recentDecisions}" class="dash-work__item">
+                <div class="dash-work__body">
+                    <p class="dash-work__title" th:text="${decision.title}">Tiêu đề</p>
+                    <p class="dash-work__detail" th:text="${decision.typeLabel}">Yêu cầu tuyển dụng</p>
+                </div>
+                <time class="dash-cell-meta" th:if="${decision.decidedAt != null}" th:datetime="${decision.decidedAt}"
+                      th:text="${#temporals.format(decision.decidedAt, 'dd/MM/yyyy HH:mm')}">01/01/2026 09:00</time>
+                <span class="badge" th:classappend="|badge--${decision.statusTone}|" th:text="${decision.statusLabel}">Đã duyệt</span>
+            </li>
+        </ul>
+    </section>
+</th:block>
+</body>
+</html>

@@ -349,15 +349,14 @@ class JobPostingControllerTests {
 
     @Test
     @WithMockUser(username = "hr_officer", roles = "HR")
-    @DisplayName("POST tạo (hẹn đăng) -> Flash 'Đã lên lịch đăng tin lúc 08:00 ngày 20/10/2026.'")
-    void createJobPosting_shouldShowScheduleMessage_whenPublishLater() throws Exception {
+    @DisplayName("POST tạo và đăng -> Flash thông báo ứng viên có thể nộp ngay")
+    void createJobPosting_shouldShowPublishedMessage() throws Exception {
         when(service.createAndPublishJobPosting(any(JobPostingCreateRequest.class), any(User.class))).thenReturn(56);
 
         mvc.perform(post(BASE + "/create").with(csrf())
-                        .param("requisitionId", "101").param("action", JobPostingValidator.ACTION_PUBLISH)
-                        .param("publishMode", JobPostingCreateRequest.PUBLISH_LATER).param("scheduledAt", "2026-10-20T08:00"))
+                        .param("requisitionId", "101").param("action", JobPostingValidator.ACTION_PUBLISH))
                 .andExpect(redirectedUrl(BASE + "/56"))
-                .andExpect(flash().attribute("successMessage", "Đã lên lịch đăng tin lúc 08:00 ngày 20/10/2026."));
+                .andExpect(flash().attribute("successMessage", "Đã đăng tin. Ứng viên có thể nộp hồ sơ ngay."));
     }
 
     @Test

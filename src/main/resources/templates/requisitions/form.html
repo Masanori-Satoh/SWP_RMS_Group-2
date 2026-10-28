@@ -23,10 +23,11 @@
 </head>
 
 <body>
-    <main id="main" layout:fragment="content" class="page-content container" tabindex="-1">
+    <main id="main" layout:fragment="content" class="page-content container adw-page" tabindex="-1">
+        <th:block th:replace="~{fragments/ui/admin-workspace :: scene}"></th:block>
 
-        <header class="requisition-page-intro">
-            <h1 th:text="${isEdit ? 'Chỉnh sửa yêu cầu tuyển dụng' : 'Tạo yêu cầu tuyển dụng'}">Tạo yêu cầu tuyển dụng
+        <header class="requisition-page-intro adw-heading">
+            <h1 class="adw-title" th:text="${isEdit ? 'Chỉnh sửa yêu cầu tuyển dụng' : 'Tạo yêu cầu tuyển dụng'}">Tạo yêu cầu tuyển dụng
             </h1>
             <p class="requisition-page-description">
                 Bạn có thể lưu bản nháp bất cứ lúc nào (cần tối thiểu Tên vị trí, Số lượng, Hình thức và Mô hình làm
@@ -58,7 +59,7 @@
                     </ul>
                 </section>
 
-                <div class="card rqf-card">
+                <div class="card rqf-card adw-surface">
                     <!-- ===== 1. VỊ TRÍ CẦN TUYỂN ===== -->
                     <section class="rqf-section" id="rqf-position" aria-labelledby="rqf-h-position">
                         <h2 id="rqf-h-position">Vị trí cần tuyển</h2>
@@ -295,7 +296,7 @@
                             th:text="${#fields.hasErrors('screeningCriteria')} ? ${#strings.listJoin(#fields.errors('screeningCriteria'), '; ')} : ''"></small>
 
                         <div class="table-wrapper" role="region" aria-label="Bảng tiêu chí sàng lọc" tabindex="0">
-                            <table class="rqf-criteria">
+                            <table class="rqf-criteria adw-data-table">
                                 <thead>
                                     <tr>
                                         <th scope="col">#</th>
@@ -409,14 +410,14 @@
 
             <!-- ===== CỘT PHẢI: tiến độ + nút thao tác ===== -->
             <aside class="rqf-rail" aria-label="Tình trạng biểu mẫu">
-                <section class="card rqf-rail-card">
+                <section class="card rqf-rail-card adw-surface">
                     <h2 class="rqf-rail-title">Sẵn sàng gửi duyệt</h2>
                     <p class="rqf-hint" id="rqf-progress">0/10 mục bắt buộc đã xong</p>
                     <!-- JS điền danh sách: mỗi mục là link nhảy tới trường tương ứng -->
                     <ul class="rqf-checklist" id="rqf-checklist"></ul>
                 </section>
 
-                <section class="card rqf-rail-card rqf-actions">
+                <section class="card rqf-rail-card rqf-actions adw-surface">
                     <div id="rqf-buttons" class="rqf-buttons">
                         <!-- Bấm "Gửi Giám đốc duyệt" chỉ mở bước xác nhận; nút gửi thật nằm trong bước xác nhận.
                          Giám đốc gửi thì phê duyệt luôn (service đặt Approved), nên nút đổi thành "Phê duyệt trực tiếp" -->
@@ -450,6 +451,7 @@
     </main>
 
     <th:block layout:fragment="scripts">
+        <th:block th:replace="~{fragments/ui/admin-workspace :: scripts}"></th:block>
         <!-- text-limit.js: báo lỗi đỏ "Nội dung quá N ký tự" khi gõ / dán vượt maxlength -->
         <script th:src="@{/js/text-limit.js}" defer></script>
         <!-- requisition-form.js: kiểm tra nhập liệu, bảng tiêu chí, checklist, bước xác nhận -->

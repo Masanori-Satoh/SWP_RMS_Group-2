@@ -1,7 +1,7 @@
 /* REQUISITION-LIST.CSS — Danh sách yêu cầu tuyển dụng (/requisitions). Badge và menu ⋯ dùng class catalog (.badge--*, .more-menu). */
-.rms-app.req-list-page .page-content { width:100%; max-width:none; box-sizing:border-box; margin-inline:0; padding-block:var(--s6); padding-inline:clamp(var(--s4), 2vw, var(--s8)); background:color-mix(in srgb, var(--brand-soft) 50%, var(--page)); }
+.rms-app.req-list-page .page-content { width:100%; max-width:none; box-sizing:border-box; margin-inline:0; padding:var(--s4); }
 .req-list-page .requisition-page-header { align-items:center; margin-bottom:var(--s4); }
-.req-list-page .requisition-page-header .page-title { margin:0; font:600 26px/1.3 var(--sans); letter-spacing:-.02em; }
+.req-list-page .requisition-page-header .page-title { margin:0; }
 .req-list-page .requisition-page-actions { display:flex; justify-content:flex-end; }
 .req-list-page .requisition-page-actions .btn-create { white-space:nowrap; }
 @media (max-width:768px) {

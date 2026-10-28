@@ -45,7 +45,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 /*
  * INTEGRATION TEST: JobPostingListService + JobPostingRepository + SQL Server THẬT (cần SQL Server đang chạy).
  * Mỗi test chạy trong một transaction và rollback ở cuối (@Transactional), nên không để lại dữ liệu.
- * Kiểm tra những gì unit test không thấy: Specification (Hẹn đăng, nhóm hạn nộp, phạm vi HM, tìm tiếng Việt,
+ * Kiểm tra những gì unit test không thấy: Specification (trạng thái, nhóm hạn nộp, phạm vi HM, tìm tiếng Việt,
  * sắp theo số hồ sơ), các câu JPQL mới của bảng điều khiển / ô chọn yêu cầu, và render trang qua bảo mật thật.
  * Dữ liệu tạo trong một phòng ban riêng, tiêu đề riêng để không đụng dữ liệu seed.
  *
@@ -135,24 +135,22 @@ class JobPostingIntegrationTests {
     // =========================================================================
 
     @Test
-    @DisplayName("Lọc 'Hẹn đăng' / 'Đang đăng' -> Tách đúng theo PostingDate so với hiện tại (không có cột riêng trong DB)")
-    void getListPage_shouldSplitScheduledFromPublished_onSqlServer() {
+    @DisplayName("Lọc 'Đang đăng' -> Lấy các tin Published trên SQL Server")
+    void getListPage_shouldFindPublished_onSqlServer() {
         // Arrange
         JobRequisition requisitionA = savedRequisition("IT-JP Req A", department);
         JobRequisition requisitionB = savedRequisition("IT-JP Req B", department);
         savedPosting(requisitionA, 1, TITLE_PREFIX + "Đang đăng", JobPostingAccess.STATUS_PUBLISHED,
                 now.minusDays(1), now.plusDays(20));
-        savedPosting(requisitionB, 1, TITLE_PREFIX + "Hẹn đăng", JobPostingAccess.STATUS_PUBLISHED,
-                now.plusDays(2), now.plusDays(20));
+        savedPosting(requisitionB, 1, TITLE_PREFIX + "Đã đăng lần hai", JobPostingAccess.STATUS_PUBLISHED,
+                now.minusDays(2), now.plusDays(20));
         entityManager.clear();
 
         // Act
-        List<InternalJobPostingResponse> scheduled = search(hr, List.of(JobPostingAccess.STATUS_SCHEDULED), null, null);
         List<InternalJobPostingResponse> published = search(hr, List.of(JobPostingAccess.STATUS_PUBLISHED), null, null);
 
         // Assert
-        assertEquals(List.of(TITLE_PREFIX + "Hẹn đăng"), titles(scheduled));
-        assertEquals(List.of(TITLE_PREFIX + "Đang đăng"), titles(published));
+        assertEquals(List.of(TITLE_PREFIX + "Đang đăng", TITLE_PREFIX + "Đã đăng lần hai"), titles(published));
     }
 
     @Test
