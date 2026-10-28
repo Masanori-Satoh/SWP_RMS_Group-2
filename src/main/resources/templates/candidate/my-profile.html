@@ -158,7 +158,7 @@
     <dialog id="changePasswordModal" class="profile-modal" aria-labelledby="change-password-title">
         <div class="profile-modal-header">
             <h2 id="change-password-title">Đổi mật khẩu</h2>
-            <button class="modal-close-icon" type="button" data-close-modal aria-label="Đóng">&times;</button>
+            <button class="profile-modal__close" type="button" data-close-modal aria-label="Đóng">&times;</button>
         </div>
         <div id="changePasswordAlert" class="alert alert--danger" role="alert" hidden></div>
         <form id="changePasswordForm" th:action="@{/profile/change-password}" method="post">
@@ -193,7 +193,7 @@
     <dialog id="confirmSaveModal" class="profile-modal" aria-labelledby="confirm-save-title">
         <div class="profile-modal-header">
             <h2 id="confirm-save-title">Lưu thay đổi?</h2>
-            <button class="modal-close-icon" type="button" data-close-modal aria-label="Đóng">&times;</button>
+            <button class="profile-modal__close" type="button" data-close-modal aria-label="Đóng">&times;</button>
         </div>
         <p>Thông tin mới sẽ hiện ngay với bộ phận tuyển dụng ở mọi đơn bạn đã nộp.</p>
         <div class="profile-actions">
@@ -202,7 +202,7 @@
         </div>
     </dialog>
 
-    <div id="toastContainer" class="toast-container" aria-live="polite" aria-atomic="true"></div>
+    <div id="toastContainer" class="profile-toast-container" aria-live="polite" aria-atomic="true"></div>
 </main>
 
 <th:block layout:fragment="scripts">
