@@ -1000,7 +1000,7 @@
 .cof-paper-greeting {
   position: relative;
   z-index: 1;
-  margin-bottom: var(--s5);
+  margin-bottom: var(--s8);
   color: var(--ink);
   font-size: 14.5px;
   line-height: 1.65;
@@ -1032,18 +1032,20 @@
   color: var(--ink);
 }
 
-/* 4. Thanh file đính kèm PDF ngay dưới thư ngỏ (Inline PDF Bar) */
+/* 4. Thanh file đính kèm PDF đặt dưới khối các bước tiếp theo */
 .cof-download-bar {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 12px 18px;
+  max-width: 960px;
+  margin: 0 auto var(--s12);
+  padding: 14px 22px;
   background: #f4f8f5;
   border: 1px solid #dbeae0;
-  border-radius: 10px;
-  margin-bottom: 32px;
+  border-radius: 12px;
   position: relative;
   z-index: 1;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.02);
 }
 
 .cof-download-bar__file {
@@ -1331,7 +1333,7 @@
 /* 6. Khối Các bước tiếp theo (Stepper bên dưới Tờ thư mời) */
 .cof-stepper-panel {
   max-width: 960px;
-  margin: 0 auto var(--s12);
+  margin: 0 auto var(--s5);
   background: var(--surface);
   border: 1px solid var(--line);
   border-radius: 16px;

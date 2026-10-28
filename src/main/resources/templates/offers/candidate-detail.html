@@ -171,26 +171,6 @@
             </div>
         </div>
 
-        <!-- Thanh file đính kèm PDF ngay dưới thư ngỏ (theo Mockup) -->
-        <div class="cof-download-bar">
-            <div class="cof-download-bar__file">
-                <span class="cof-download-bar__icon" aria-hidden="true">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
-                </span>
-                <span class="cof-download-bar__filename" th:text="|Thu-moi-nhan-viec_${offer.offerCode}.pdf|">Thu-moi-nhan-viec_OFFR-2026-0128.pdf</span>
-            </div>
-            <div class="cof-download-bar__actions no-print">
-                <button type="button" class="btn btn--subtle cof-download-bar__btn" data-action="download-pdf">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
-                    Tải xuống
-                </button>
-                <a th:href="|mailto:${offer.hrContactEmail != null ? offer.hrContactEmail : 'tuyendung@mocrms.com.vn'}?subject=Câu hỏi về Thư mời nhận việc ${offer.offerCode}|" class="btn btn--subtle cof-download-bar__btn">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
-                    Gửi câu hỏi cho Bộ phận Tuyển dụng
-                </a>
-            </div>
-        </div>
-
         <!-- BỐ CỤC 3 CỘT NỘI DUNG THEO MOCKUP -->
         <div class="cof-paper-grid cof-paper-grid--3cols">
 
@@ -359,6 +339,26 @@
             </div>
         </div>
     </section>
+
+    <!-- 4. KHỐI TẢI XUỐNG THƯ MỜI & LIÊN HỆ TUYỂN DỤNG (ĐẶT SAU CÁC BƯỚC TIẾP THEO, TRƯỚC FOOTER) -->
+    <div class="cof-download-bar no-print">
+        <div class="cof-download-bar__file">
+            <span class="cof-download-bar__icon" aria-hidden="true">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+            </span>
+            <span class="cof-download-bar__filename" th:text="|Thu-moi-nhan-viec_${offer.offerCode}.pdf|">Thu-moi-nhan-viec_OFFR-2026-0128.pdf</span>
+        </div>
+        <div class="cof-download-bar__actions">
+            <button type="button" class="btn btn--subtle cof-download-bar__btn" data-action="download-pdf">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+                Tải xuống
+            </button>
+            <a th:href="|mailto:${offer.hrContactEmail != null ? offer.hrContactEmail : 'tuyendung@mocrms.com.vn'}?subject=Câu hỏi về Thư mời nhận việc ${offer.offerCode}|" class="btn btn--subtle cof-download-bar__btn">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
+                Gửi câu hỏi cho Bộ phận Tuyển dụng
+            </a>
+        </div>
+    </div>
 
     <!-- Hộp thoại Xác nhận Đồng ý nhận việc -->
     <dialog id="cof-accept-dialog" class="confirm-dialog no-print" aria-labelledby="cof-accept-dialog-title"
