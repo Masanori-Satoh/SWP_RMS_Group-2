@@ -7,7 +7,7 @@ import org.hibernate.annotations.DynamicUpdate;
 
 /**
  * 3.1 User - Tài khoản người dùng trong hệ thống.
- * Các trạng thái AccountStatus: Active, Inactive, Blocked
+ * Các trạng thái AccountStatus: Active, Inactive
  */
 @Entity
 @Table(name = "\"User\"") // Quote the reserved SQL Server identifier without making brackets part of its name.
@@ -51,7 +51,7 @@ public class User extends BaseEntity {
     private Department department;
 
     /**
-     * Trạng thái tài khoản: Active, Inactive, Blocked
+     * Trạng thái tài khoản: Active, Inactive
      */
     @Column(name = "AccountStatus", nullable = false, length = 20)
     private String accountStatus;

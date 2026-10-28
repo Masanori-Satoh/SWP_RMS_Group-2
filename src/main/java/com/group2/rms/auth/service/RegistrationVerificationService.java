@@ -23,8 +23,8 @@ import org.springframework.stereotype.Service;
 @Service
 public class RegistrationVerificationService {
     private static final String REGISTER_STATE = RegistrationVerificationService.class.getName() + ".REGISTER_STATE";
-    private static final Duration OTP_LIFETIME = Duration.ofMinutes(15);
-    private static final Duration RESEND_DELAY = Duration.ofMinutes(5);
+    private static final Duration OTP_LIFETIME = Duration.ofMinutes(1);
+    private static final Duration RESEND_DELAY = Duration.ofMinutes(1);
     private static final int MAX_FAILED_ATTEMPTS = 5;
 
     private final AccountManagementService accountManagementService;

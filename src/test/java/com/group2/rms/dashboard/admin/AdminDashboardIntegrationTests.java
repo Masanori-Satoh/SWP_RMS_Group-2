@@ -59,18 +59,17 @@ class AdminDashboardIntegrationTests {
         var response = (AdminDashboardResponse) dashboard.forUsername(admin.getUsername());
         for (var summary : response.accountSummaries()) {
             boolean candidate = "/admin/candidate-accounts".equals(summary.url());
-            for (String status : List.of("Active", "Inactive", "Blocked")) {
+            for (String status : List.of("Active", "Inactive")) {
                 long filtered = candidate
                         ? accounts.findCandidateAccounts("", status, "name", 0).getTotalElements()
                         : accounts.findAccounts("", null, null, status, "name", 0).getTotalElements();
                 long metric = switch (status) {
                     case "Active" -> summary.active();
-                    case "Inactive" -> summary.inactive();
-                    default -> summary.blocked();
+                    default -> summary.inactive();
                 };
                 assertEquals(filtered, metric, summary.title() + " " + status);
             }
-            assertEquals(summary.total(), summary.active() + summary.inactive() + summary.blocked());
+            assertEquals(summary.total(), summary.active() + summary.inactive());
         }
         for (var role : response.roleCounts()) {
             long sqlCount = jdbc.queryForObject("SELECT COUNT_BIG(*) FROM [User] WHERE RoleId=?", Long.class, role.roleId());
@@ -109,7 +108,7 @@ class AdminDashboardIntegrationTests {
         String html = mvc.perform(get("/dashboard/admin").with(user(admin.getUsername())
                         .authorities(new SimpleGrantedAuthority(RoleAuthorities.SYSTEM_ADMIN))))
                 .andExpect(status().isOk()).andReturn().getResponse().getContentAsString();
-        for (String status : List.of("Active", "Inactive", "Blocked")) {
+        for (String status : List.of("Active", "Inactive")) {
             assertTrue(html.contains("/admin/accounts?status=" + status + "&amp;page=0"));
             assertTrue(html.contains("/admin/candidate-accounts?status=" + status + "&amp;page=0"));
         }
@@ -138,7 +137,7 @@ class AdminDashboardIntegrationTests {
 
     @Test
     void iconActionsPreserveEditAndStatusPostContractsForEveryAccountState() throws Exception {
-        for (String state : List.of("Active", "Inactive", "Blocked")) {
+        for (String state : List.of("Active", "Inactive")) {
             boolean inactive = "Inactive".equals(state);
             String operation = inactive ? "activate" : "deactivate";
             String label = inactive ? "Kích hoạt lại" : "Vô hiệu hóa";
@@ -174,7 +173,7 @@ class AdminDashboardIntegrationTests {
 
     @Test
     void destinationsSelectFiltersAndPaginationKeepsThem() throws Exception {
-        for (String status : List.of("Active", "Inactive", "Blocked")) {
+        for (String status : List.of("Active", "Inactive")) {
             mvc.perform(get("/admin/accounts").param("status", status)
                     .with(user(admin.getUsername()).authorities(new SimpleGrantedAuthority(RoleAuthorities.SYSTEM_ADMIN))))
                     .andExpect(status().isOk()).andExpect(model().attribute("selectedStatus", status));
@@ -203,7 +202,7 @@ class AdminDashboardIntegrationTests {
         var actual = (AdminDashboardResponse) dashboard.forUsername(admin.getUsername());
         var empty = new AdminDashboardResponse(actual.roleName(), actual.fullName(), actual.scope(),
                 actual.accountSummaries().stream().map(row -> new AdminDashboardResponse.AccountSummary(
-                        row.title(), row.url(), 0, 0, 0, 0)).toList(),
+                        row.title(), row.url(), 0, 0, 0)).toList(),
                 actual.departments(), actual.breakdowns(), actual.shortcuts(),
                 actual.roleCounts().stream().map(row -> new DashboardMetricsRepository.RoleCount(
                         row.roleId(), row.roleName(), 0)).toList(), List.of(),
