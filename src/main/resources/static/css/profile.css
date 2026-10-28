@@ -1,14 +1,15 @@
-/* ============================================================
-   User Profile & Change Password Styles
-   ============================================================ */
-.profile-container { max-width:880px !important; }
-.profile-heading { margin-bottom:var(--s6); }
-.profile-heading h1 { margin:0 0 var(--s2); }
-.profile-heading p { margin:0; color:var(--muted); }
-.profile-card { background:var(--surface); border:1px solid var(--line); border-radius:8px; padding:var(--s8); margin-bottom:var(--s6); }
-.profile-card h2 { font:600 20px/1.4 var(--sans); margin:0 0 var(--s6); }
+/* =============================================================================
+   PROFILE.CSS — Hồ sơ cá nhân (/profile, user/profile.html; /portal/profile, candidate/my-profile.html)
+   Chỉ chứa phần catalog chưa có: khối định danh + ảnh đại diện, lưới form, hộp thoại,
+   toast của profile.js. Nền thẻ, tiêu đề, độ rộng do catalog (card, adw-surface, adw-form-wrap) lo.
+   Tiền tố class: profile-
+   ============================================================================= */
+/* Khoảng cách thẻ; nền, viền, bo góc của thẻ đã có ở card + adw-surface */
+.profile-card { padding:var(--s8); margin-bottom:var(--s6); }
+/* Bằng adw-panel-title; class đó chỉ chạy trong .adw-frame nên trang ứng viên không dùng được */
+.profile-card h2 { margin:0 0 var(--s6); color:var(--brand-dark); font:700 20px/1.35 var(--sans); }
 .profile-identity { display:flex; align-items:center; gap:var(--s6); margin-bottom:var(--s8); }
-.profile-avatar { width:88px; height:88px; border-radius:50%; object-fit:cover; background:var(--brand-soft); border:1px solid var(--line); flex:none; }
+.profile-avatar { width:88px; height:88px; border-radius:var(--radius-full); object-fit:cover; background:var(--brand-soft); border:1px solid var(--line); flex:none; }
 .profile-avatar-fallback { display:flex; align-items:center; justify-content:center; background:var(--avatar-bg); color:var(--avatar-fg); font:600 32px/1 var(--serif); }
 .profile-identity-name { margin:0; font:600 20px/1.3 var(--sans); }
 .profile-identity-meta { margin:var(--s1) 0 0; color:var(--muted); }
@@ -28,90 +29,85 @@
 .profile-security { display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:var(--s4); }
 .profile-security p { margin:0; font-size:18px; letter-spacing:.08em; }
 
-/* Modal Styling */
-.profile-modal { width:min(480px,calc(100vw - 32px)); border:1px solid var(--line); border-radius:8px; padding:var(--s8); background:var(--surface); color:var(--ink); box-shadow:0 20px 25px -5px rgba(0,0,0,0.1),0 10px 10px -5px rgba(0,0,0,0.04); }
-.profile-modal::backdrop { background:rgba(37,41,35,.55); backdrop-filter:blur(2px); }
+/* Hộp thoại (đổi mật khẩu, hỏi lại trước khi lưu) */
+.profile-modal { width:min(480px,calc(100vw - 32px)); border:1px solid var(--line); border-radius:var(--radius-md); padding:var(--s8); background:var(--surface); color:var(--ink); box-shadow:var(--shadow-lg); }
+.profile-modal::backdrop { background:color-mix(in srgb, var(--ink) 55%, transparent); backdrop-filter:blur(2px); }
 .profile-modal-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:var(--s6); }
 .profile-modal-header h2 { margin:0; font:600 20px/1.4 var(--sans); }
-.modal-close-icon { background:transparent; border:none; font-size:24px; color:var(--muted); cursor:pointer; line-height:1; padding:0; }
-.modal-close-icon:hover { color:var(--ink); }
+.profile-modal__close { background:transparent; border:none; font-size:24px; color:var(--muted); cursor:pointer; line-height:1; padding:0; }
+.profile-modal__close:hover { color:var(--ink); }
 .profile-modal p { margin:0 0 var(--s6); color:var(--muted); font-size:15px; line-height:1.5; }
 .profile-modal .form-group { margin-bottom:var(--s4); }
 
-.btn:disabled { opacity:0.55; cursor:not-allowed; }
-
-/* Field Error Highlight */
-.form-control.is-invalid { border-color:var(--error, #dc2626) !important; background-color:#fffdfd; }
-
-/* Toast Notifications */
-.toast-container {
+/* Toast do profile.js tạo sau thao tác AJAX (khác flash-toast của server) */
+.profile-toast-container {
     position: fixed;
-    top: 24px;
-    right: 24px;
+    top: calc(var(--topbar-h) + var(--s4));
+    right: var(--s4);
     z-index: 10000;
     display: flex;
     flex-direction: column;
-    gap: 12px;
+    gap: var(--s3);
     pointer-events: none;
 }
-.toast-message {
+.profile-toast-message {
     pointer-events: auto;
     min-width: 320px;
     max-width: 440px;
     padding: 14px 18px;
     border-radius: 6px;
-    background: #2e5a45;
-    color: #ffffff;
+    background: var(--brand-dark);
+    color: var(--on-brand);
     font-family: var(--sans);
     font-size: 14px;
     font-weight: 500;
-    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.25), 0 8px 10px -6px rgba(0, 0, 0, 0.2);
+    box-shadow: var(--shadow-lg);
     display: flex;
     align-items: center;
     justify-content: space-between;
-    gap: 12px;
-    animation: toastSlideIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    gap: var(--s3);
+    animation: profileToastIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
     transition: opacity 0.3s ease, transform 0.3s ease;
 }
-.toast-message.toast-error {
-    background: #991b1b;
+.profile-toast-message.profile-toast-error {
+    background: var(--error);
 }
-.toast-message.toast-fade-out {
+.profile-toast-message.profile-toast-fade-out {
     opacity: 0;
     transform: translateY(-12px);
 }
-.toast-body {
+.profile-toast-body {
     display: flex;
     align-items: center;
     gap: 10px;
     flex-grow: 1;
 }
-.toast-check-icon {
+.profile-toast-check-icon {
     display: inline-flex;
     align-items: center;
     justify-content: center;
     width: 20px;
     height: 20px;
-    border-radius: 50%;
-    background: rgba(255, 255, 255, 0.2);
+    border-radius: var(--radius-full);
+    background: color-mix(in srgb, var(--on-brand) 20%, transparent);
     font-size: 13px;
     font-weight: bold;
     flex-shrink: 0;
 }
-.toast-close {
+.profile-toast-close {
     background: transparent;
     border: none;
-    color: rgba(255, 255, 255, 0.8);
+    color: color-mix(in srgb, var(--on-brand) 80%, transparent);
     cursor: pointer;
     font-size: 18px;
     padding: 0;
     line-height: 1;
 }
-.toast-close:hover {
-    color: #ffffff;
+.profile-toast-close:hover {
+    color: var(--on-brand);
 }
 
-@keyframes toastSlideIn {
+@keyframes profileToastIn {
     from {
         opacity: 0;
         transform: translateY(-20px) scale(0.96);
@@ -127,6 +123,6 @@
     .profile-field-full { grid-column:auto; }
     .profile-identity { flex-direction:column; align-items:flex-start; }
     .profile-avatar-form { margin-left:0; width:100%; }
-    .toast-container { left: 16px; right: 16px; top: 16px; }
-    .toast-message { min-width: auto; width: 100%; }
+    .profile-toast-container { left: var(--s4); right: var(--s4); top: var(--s4); }
+    .profile-toast-message { min-width: auto; width: 100%; }
 }

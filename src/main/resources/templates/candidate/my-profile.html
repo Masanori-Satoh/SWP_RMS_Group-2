@@ -21,19 +21,20 @@
     </th:block>
 </head>
 <body>
-<main id="main" layout:fragment="content" class="page-content container profile-container" tabindex="-1"
+<main id="main" layout:fragment="content" class="page-content container adw-page profile-page" tabindex="-1"
       th:with="account=${profile.account}">
 
-    <div class="page-header">
+    <div class="adw-form-wrap">
+    <div class="page-header adw-heading">
         <div>
-            <h1 class="page-title">Hồ sơ cá nhân</h1>
+            <h1 class="page-title adw-title">Hồ sơ cá nhân</h1>
             <p class="page-subtitle">Bộ phận tuyển dụng dùng thông tin này để liên hệ với bạn. Bạn sửa được bất cứ lúc nào; CV đã nộp giữ nguyên.</p>
         </div>
     </div>
 
     <div th:if="${successMessage}" class="alert alert--success" role="status" th:text="${successMessage}">Đã lưu hồ sơ.</div>
 
-    <section class="card profile-card" aria-labelledby="myprofile-info-title">
+    <section class="card profile-card adw-surface" aria-labelledby="myprofile-info-title">
         <h2 id="myprofile-info-title">Thông tin cá nhân</h2>
 
         <div class="profile-identity">
@@ -144,19 +145,20 @@
         </form>
     </section>
 
-    <section class="card profile-card" aria-labelledby="myprofile-security-title">
+    <section class="card profile-card adw-surface" aria-labelledby="myprofile-security-title">
         <h2 id="myprofile-security-title">Mật khẩu</h2>
         <div class="profile-security">
             <p aria-label="Mật khẩu đã ẩn">Mật khẩu: ••••••••</p>
             <button class="btn btn--secondary" type="button" data-open-modal="changePasswordModal">Đổi mật khẩu</button>
         </div>
     </section>
+    </div>
 
     <!-- Đổi mật khẩu: profile.js gửi JSON, lỗi hiện ngay trong hộp thoại -->
     <dialog id="changePasswordModal" class="profile-modal" aria-labelledby="change-password-title">
         <div class="profile-modal-header">
             <h2 id="change-password-title">Đổi mật khẩu</h2>
-            <button class="modal-close-icon" type="button" data-close-modal aria-label="Đóng">&times;</button>
+            <button class="profile-modal__close" type="button" data-close-modal aria-label="Đóng">&times;</button>
         </div>
         <div id="changePasswordAlert" class="alert alert--danger" role="alert" hidden></div>
         <form id="changePasswordForm" th:action="@{/profile/change-password}" method="post">
@@ -191,7 +193,7 @@
     <dialog id="confirmSaveModal" class="profile-modal" aria-labelledby="confirm-save-title">
         <div class="profile-modal-header">
             <h2 id="confirm-save-title">Lưu thay đổi?</h2>
-            <button class="modal-close-icon" type="button" data-close-modal aria-label="Đóng">&times;</button>
+            <button class="profile-modal__close" type="button" data-close-modal aria-label="Đóng">&times;</button>
         </div>
         <p>Thông tin mới sẽ hiện ngay với bộ phận tuyển dụng ở mọi đơn bạn đã nộp.</p>
         <div class="profile-actions">
@@ -200,7 +202,7 @@
         </div>
     </dialog>
 
-    <div id="toastContainer" class="toast-container" aria-live="polite" aria-atomic="true"></div>
+    <div id="toastContainer" class="profile-toast-container" aria-live="polite" aria-atomic="true"></div>
 </main>
 
 <th:block layout:fragment="scripts">

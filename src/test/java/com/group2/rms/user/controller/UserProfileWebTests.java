@@ -21,10 +21,12 @@ import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.util.StringUtils;
 
 import java.util.Optional;
 
 import static org.hamcrest.Matchers.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doThrow;
@@ -184,7 +186,7 @@ class UserProfileWebTests {
         mvc.perform(get("/profile"))
                 .andExpect(status().isOk())
                 .andExpect(content().string(containsString("<html lang=\"vi\">")))
-                .andExpect(content().string(containsString("<h1>Hồ sơ cá nhân</h1>")))
+                .andExpect(content().string(containsString("<h1 class=\"page-title adw-title\">Hồ sơ cá nhân</h1>")))
                 .andExpect(content().string(containsString("value=\"Nhân sự\"")))
                 .andExpect(content().string(containsString("Chưa thuộc phòng ban")))
                 .andExpect(content().string(containsString(">Đổi mật khẩu</button>")))
@@ -192,6 +194,24 @@ class UserProfileWebTests {
                 .andExpect(content().string(not(containsString("Save Profile"))))
                 .andExpect(content().string(not(containsString("Change Password"))))
                 .andExpect(content().string(not(containsString("Cancel"))));
+    }
+
+    /** /profile nằm trong layout/internal (đúng một sidebar, menu "profile" sáng) và bật giao diện adw. */
+    @Test
+    @WithMockUser(username = "testuser", authorities = "ROLE_HR")
+    void viewProfile_UsesInternalLayoutWithAdwLook() throws Exception {
+        when(profileService.getProfile("testuser")).thenReturn(new UserProfileResponse(
+                1, "testuser", "test@example.com", "Test User", null, null, "HR", "Nhân sự", "Chưa thuộc phòng ban"));
+
+        String html = mvc.perform(get("/profile"))
+                .andExpect(status().isOk())
+                .andExpect(model().attribute("activeMenu", "profile"))
+                .andExpect(content().string(containsString("adw-page")))
+                .andExpect(content().string(containsString("adw-scene")))
+                .andExpect(content().string(containsString("/js/pages/admin-workspace.js")))
+                .andReturn().getResponse().getContentAsString();
+
+        assertEquals(1, StringUtils.countOccurrencesOf(html, "id=\"workspace-navigation\""));
     }
 
     @Test

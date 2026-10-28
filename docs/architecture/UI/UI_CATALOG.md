@@ -535,3 +535,53 @@ và form tạo/sửa tài khoản/phòng ban. Các trang khác không tự độ
 Theo yêu cầu tiếp theo của người dùng: bỏ breadcrumb nhỏ phía trên tiêu đề ở
 các trang Admin và form tạo/sửa. Giữ tiêu đề lớn, nút thao tác và điều hướng
 sidebar; không bỏ hướng dẫn nhập liệu hoặc liên kết Hủy trong form.
+
+
+### Cập nhật 28/10/2026 — Potential Candidate dùng giao diện workspace Admin
+
+- Các trang `talent-pool/list`, `detail`, `suggestions`, `recommendations` tiếp tục
+  decorate `layout/internal`, sử dụng component `adw-` đã có qua
+  `fragments/ui/admin-workspace :: scene` và `:: scripts`. Không truyền role
+  System Admin cho các trang này; menu và danh tính vẫn lấy từ HR/Hiring Manager.
+- Tái sử dụng `adw-heading`, `adw-title`, `adw-surface`, `adw-panel-heading`,
+  `adw-panel-title`, `adw-data-table`. Không chép lại khung/sidebar/topbar/logo.
+- `list` dùng GET toolbar `mft-` và `management-filters.js` có sẵn: từ khóa ở
+  ngoài; người đánh dấu và vị trí từng ứng tuyển trong disclosure. Giữ tên query,
+  `jobPostingId` và guard bảo toàn danh sách đang chọn.
+- `pages/talent-pool-workspace.css` chỉ nạp trên bốn trang này. Các alias `tpw-`
+  điều chỉnh inset bảng, spacing phân trang, cỡ nút icon 40px và bố cục hẹp;
+  bảng cuộn trong wrapper, không bỏ cột hoặc đổi dữ liệu.
+- `tpw-status` + `data-tpw-tone="warning|success"` sửa màu chữ badge tại chỗ,
+  không redefine `.badge` hoặc sửa `workspace.css`. Warning dùng
+  `color-mix(in srgb, var(--warning) 90%, var(--ink))`; neutral dùng token hiện có.
+- Đây là tái sử dụng component hiện trạng, không phải xác nhận đã khắc phục nợ
+  phân tầng shell/CSS hoặc stylesheet lặp của `adw-`.
+- Chi tiết file change và kiểm thử: [work log](../../management/work_logs/2026-10-28-potential-candidate-admin-ui-sync.md).
+
+
+### Cập nhật 28/10/2026 — Phân cấp danh sách Potential Candidate
+
+- Dùng trang Quản lý tài khoản Admin làm mẫu về bề mặt dữ liệu: `adw-surface`,
+  `adw-panel-heading`, `adw-panel-title`, `adw-data-table`. Header, GET toolbar,
+  bảng và pager nằm trong cùng result surface; không tạo thêm shell hay inspector.
+- `tpw-record-table` có header nền brand-soft, đường phân cách theo token,
+  dữ liệu 14px, tên ứng viên 15px semibold, avatar chữ cái và phản hồi hover/focus
+  trên hàng. Không thêm KPI, màu theo từng người hay hiệu ứng nâng card.
+- `list` bỏ cột CV nguồn riêng theo yêu cầu. Native select `[data-pool-cv]`
+  chuyển vào `<details class="tpw-source-picker">` dưới tên ứng viên; số CV lấy
+  từ model. Caption tên tin được xuống dòng đầy đủ, ngày nộp đi cùng; chọn nhiều
+  CV tự mở trong selection mode. Không thay option/value, preview hoặc hợp đồng
+  chọn CV. `pages/talent-pool-workspace.js` chỉ cập nhật caption/ngày/tooltip
+  bằng `textContent`, chạy sau script nghiệp vụ hiện có.
+- `recommendations` trình bày cùng mô hình bảng: ứng viên, HR gợi ý, trạng thái,
+  thao tác. Giữ từng form quyết định/rút gợi ý và điều kiện quyền. Guidance chung
+  chỉ xuất hiện một lần; khi rỗng không dựng header bảng hoặc pager thừa.
+- `detail` ghép CV và ghi chú vào một workspace hai phần, nút quay lại cùng hàng
+  với thông tin ứng viên. Không cố định chiều cao hay tạo dữ liệu lấp khoảng trống.
+- Chỉ mở rộng `pages/talent-pool-workspace.css` và bốn template Talent Pool.
+  Token, background, shared shell và các trang Admin/Auth không bị sửa. Bảng hẹp
+  cuộn trong wrapper; dưới 480px search chiếm hàng riêng để giữ độ rộng nhập liệu.
+- Đây là chỉnh composition trên `adw-` hiện trạng; các ngoại lệ kiến trúc của
+  component đã ghi ở trên vẫn còn, không được coi là đã xử lý trong lần này.
+- Chi tiết file change, kiểm chứng và giới hạn:
+  [work log](../../management/work_logs/2026-10-28-potential-candidate-list-polish.md).
