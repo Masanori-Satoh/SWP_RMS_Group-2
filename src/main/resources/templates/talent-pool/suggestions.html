@@ -7,34 +7,36 @@
     <th:block layout:fragment="styles">
         <link rel="stylesheet" th:href="@{/css/pages/applications.css}">
         <link rel="stylesheet" th:href="@{/css/pages/talent-pool.css}">
+        <link rel="stylesheet" th:href="@{/css/pages/talent-pool-workspace.css}">
     </th:block>
 </head>
 
 <body>
-    <main id="main" layout:fragment="content" class="page-content container app-page" tabindex="-1">
+    <main id="main" layout:fragment="content" class="page-content container app-page tpw-page adw-page" tabindex="-1">
+    <th:block th:replace="~{fragments/ui/admin-workspace :: scene}"></th:block>
         <div th:if="${successMessage}" class="alert alert--success" role="status" th:text="${successMessage}"></div>
         <div th:if="${errorMessage}" class="alert alert--danger" role="alert" th:text="${errorMessage}"></div>
 
-        <nav class="breadcrumbs" aria-label="Điều hướng"><a
-                th:href="@{/internal/job-postings/{id}(id=${jobPostingId})}">Tin tuyển dụng</a><span aria-hidden="true">
-                / </span><span aria-current="page">Đề xuất ứng viên</span></nav>
-        <div class="page-header">
+
+        <div class="page-header adw-heading tpw-heading">
             <div>
-                <h1 class="page-title"
+                <h1 class="page-title adw-title"
                     th:text="${viewerRole == 'Hiring Manager' ? 'Ứng viên tiềm năng' : 'Ứng viên được HM đề xuất'}">Ứng
                     viên tiềm năng</h1>
-                <p class="page-subtitle" th:text="${jobTitle}"></p>
+                <p class="page-subtitle tpw-subtitle" th:text="${jobTitle}"></p>
             </div>
             <div class="tp-recommendation-actions"><a th:if="${viewerRole == 'Hiring Manager' and canSuggest}"
                     class="btn btn--primary" th:href="@{/talent-pool(jobPostingId=${jobPostingId})}">Thêm ứng viên tiềm
                     năng</a><a class="btn btn--secondary"
                     th:href="@{/internal/job-postings/{id}(id=${jobPostingId})}">Quay lại tin tuyển dụng</a></div>
         </div>
-        <p class="text-muted">Đề xuất nội bộ, chưa phải hồ sơ ứng tuyển chính thức. HR liên hệ qua điện thoại hoặc email
+        <section class="card adw-surface tpw-results" aria-labelledby="tp-suggestions-title">
+        <header class="tpw-panel-heading adw-panel-heading"><h2 id="tp-suggestions-title" class="adw-panel-title tpw-panel-title">Danh sách đề xuất</h2></header>
+        <p class="text-muted tpw-intro">Đề xuất nội bộ, chưa phải hồ sơ ứng tuyển chính thức. HR liên hệ qua điện thoại hoặc email
             trước khi xác nhận ứng viên đồng ý dùng CV cũ.</p>
-        <p th:if="${#lists.isEmpty(suggestions)}" class="empty-state">Không có đề xuất đang chờ liên hệ.</p>
-        <div th:unless="${#lists.isEmpty(suggestions)}" class="table-wrapper">
-            <table class="table">
+        <p th:if="${#lists.isEmpty(suggestions)}" class="empty-state tpw-empty">Không có đề xuất đang chờ liên hệ.</p>
+        <div th:unless="${#lists.isEmpty(suggestions)}" class="table-wrapper tpw-table-scroll">
+            <table class="table adw-data-table tpw-suggestions-table">
                 <thead>
                     <tr>
                         <th scope="col">STT</th>
@@ -59,8 +61,10 @@
                 </tbody>
             </table>
         </div>
+        </section>
     </main>
     <th:block layout:fragment="scripts">
+    <th:block th:replace="~{fragments/ui/admin-workspace :: scripts}"></th:block>
         <script th:src="@{/js/pages/talent-pool.js}" defer></script>
     </th:block>
 </body>

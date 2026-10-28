@@ -5,15 +5,15 @@
     <th:block layout:fragment="styles">
         <link rel="stylesheet" th:href="@{/css/pages/applications.css}">
         <link rel="stylesheet" th:href="@{/css/pages/talent-pool.css}">
+        <link rel="stylesheet" th:href="@{/css/pages/talent-pool-workspace.css}">
     </th:block>
 </head>
 <body>
-<main id="main" layout:fragment="content" class="page-content container app-page tp-detail-page" tabindex="-1">
-    <header class="card tp-profile">
-        <div class="tp-profile-top">
-            <nav class="app-breadcrumb tp-profile-breadcrumb" aria-label="Điều hướng">
-                <a th:href="@{${backUrl}}" th:text="${recommendation != null ? 'Gợi ý từ HR' : 'Ứng viên tiềm năng'}"></a><span aria-hidden="true">/</span><span aria-current="page">Chi tiết ứng viên</span>
-            </nav>
+<main id="main" layout:fragment="content" class="page-content container app-page tp-detail-page tpw-page adw-page" tabindex="-1">
+    <th:block th:replace="~{fragments/ui/admin-workspace :: scene}"></th:block>
+    <header class="card tp-profile adw-surface tpw-profile">
+        <div class="tp-profile-top tpw-profile-top">
+
             <a class="btn btn--secondary btn--sm" th:href="@{${backUrl}}" data-pool-back>
                 <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="m10 5-7 7 7 7 M3 12h18"/></svg><span th:text="${recommendation != null ? 'Quay lại gợi ý từ HR' : 'Quay lại danh sách'}"></span>
             </a>
@@ -22,11 +22,11 @@
             <span class="tp-profile-avatar" aria-hidden="true" th:with="parts=${#strings.arraySplit(detail.candidate.fullName ?: '', ' ')}"
                   th:text="${#arrays.length(parts) > 0 ? #strings.toUpperCase(#strings.substring(parts[0], 0, 1) + (#arrays.length(parts) > 1 ? #strings.substring(parts[#arrays.length(parts) - 1], 0, 1) : '')) : ''}"></span>
             <div class="tp-profile-info">
-                <h1 class="page-title tp-profile-title" th:text="${detail.candidate.fullName}"></h1>
+                <h1 class="page-title tp-profile-title adw-title tpw-profile-title" th:text="${detail.candidate.fullName}"></h1>
                 <p class="tp-profile-contact"><a th:href="|mailto:${detail.candidate.email}|" th:text="${detail.candidate.email}"></a><span aria-hidden="true">·</span><span th:text="${detail.candidate.phoneNumber ?: 'Chưa có số điện thoại'}"></span></p>
             </div>
-            <span th:if="${recommendation == null}" class="badge badge--success tp-profile-badge">Ứng viên tiềm năng</span>
-            <span th:if="${recommendation != null}" class="badge tp-profile-badge" th:classappend="${recommendation.pending ? 'badge--warning' : 'badge--neutral'}" th:text="${recommendation.statusLabel}"></span>
+            <span th:if="${recommendation == null}" class="badge badge--success tp-profile-badge tpw-status" data-tpw-tone="success">Ứng viên tiềm năng</span>
+            <span th:if="${recommendation != null}" class="badge tp-profile-badge tpw-status" th:attr="data-tpw-tone=${recommendation.pending ? 'warning' : 'neutral'}" th:classappend="${recommendation.pending ? 'badge--warning' : 'badge--neutral'}" th:text="${recommendation.statusLabel}"></span>
         </div>
         <div th:if="${recommendation != null}" class="tp-recommendation-context"><p th:text="|Được HR ${recommendation.recommendedBy} gợi ý|"></p><time class="tp-feed-time" th:datetime="${#temporals.formatISO(recommendation.recommendedAt)}" th:text="${#temporals.format(recommendation.recommendedAt,'dd/MM/yyyy · HH:mm')}"></time><h2 class="tp-cv-title" th:text="${recommendation.jobTitle}"></h2></div>
     </header>
@@ -35,9 +35,9 @@
     <div th:if="${errorMessage}" class="alert alert--danger" role="alert" th:text="${errorMessage}"></div>
 
     <div class="tp-detail-workspace">
-        <section class="card" aria-labelledby="tp-cv-history-title">
-            <div class="card-header">
-                <h2 id="tp-cv-history-title" class="card-title tp-workspace-title"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><rect x="4" y="7" width="13" height="13" rx="2"/><path d="M8 7V4h12v12h-3"/></svg>CV từ các lần ứng tuyển trước</h2>
+        <section class="card adw-surface" aria-labelledby="tp-cv-history-title">
+            <div class="card-header tpw-detail-heading adw-panel-heading">
+                <h2 id="tp-cv-history-title" class="card-title tp-workspace-title adw-panel-title"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><rect x="4" y="7" width="13" height="13" rx="2"/><path d="M8 7V4h12v12h-3"/></svg>CV từ các lần ứng tuyển trước</h2>
             </div>
             <p th:if="${#lists.isEmpty(detail.cvs)}" class="text-muted tp-detail-empty">Chưa có CV từ lần ứng tuyển trước.</p>
             <ul th:unless="${#lists.isEmpty(detail.cvs)}" class="tp-cv-history">
@@ -55,13 +55,13 @@
         </section>
 
         <div class="tp-detail-sidebar">
-        <section th:if="${recommendation != null}" class="card" aria-labelledby="tp-contact-title">
-            <div class="card-header"><h2 id="tp-contact-title" class="card-title tp-workspace-title">Thông tin ứng viên</h2></div>
+        <section th:if="${recommendation != null}" class="card adw-surface" aria-labelledby="tp-contact-title">
+            <div class="card-header tpw-detail-heading adw-panel-heading"><h2 id="tp-contact-title" class="card-title tp-workspace-title adw-panel-title">Thông tin ứng viên</h2></div>
             <dl class="tp-contact-facts"><dt>Email</dt><dd><a th:href="|mailto:${detail.candidate.email}|" th:text="${detail.candidate.email}"></a></dd><dt>Điện thoại</dt><dd th:text="${detail.candidate.phoneNumber ?: 'Chưa có số điện thoại'}"></dd><dt>Kho tiềm năng</dt><dd th:text="${detail.potential ? 'Đã lưu tiềm năng' : 'Đã bỏ lưu tiềm năng'}"></dd></dl>
         </section>
-        <section class="card" aria-labelledby="tp-note-history-title">
-            <div class="card-header">
-                <h2 id="tp-note-history-title" class="card-title tp-workspace-title"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M4 4h16v12H9l-5 4V4Z M8 8h8 M8 12h6"/></svg>Ghi chú đánh giá nội bộ</h2>
+        <section class="card adw-surface" aria-labelledby="tp-note-history-title">
+            <div class="card-header tpw-detail-heading adw-panel-heading">
+                <h2 id="tp-note-history-title" class="card-title tp-workspace-title adw-panel-title"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M4 4h16v12H9l-5 4V4Z M8 8h8 M8 12h6"/></svg>Ghi chú đánh giá nội bộ</h2>
             </div>
             <p th:if="${#lists.isEmpty(detail.notes)}" class="text-muted tp-detail-empty">Chưa có ghi chú đánh giá.</p>
             <ul th:unless="${#lists.isEmpty(detail.notes)}" class="tp-notes-feed" aria-label="Ghi chú mới nhất trước">
@@ -83,12 +83,13 @@
         </section>
         </div>
     </div>
-    <section th:if="${recommendation != null}" class="card tp-decision" aria-labelledby="tp-decision-title"><div><h2 id="tp-decision-title" class="card-title">Quyết định của Hiring Manager</h2><p class="text-muted" th:text="${recommendation.pending ? 'Xem xét hồ sơ trước khi phản hồi gợi ý từ HR.' : recommendation.statusLabel}"></p></div>
+    <section th:if="${recommendation != null}" class="card tp-decision adw-surface" aria-labelledby="tp-decision-title"><div><h2 id="tp-decision-title" class="card-title adw-panel-title">Quyết định của Hiring Manager</h2><p class="text-muted" th:text="${recommendation.pending ? 'Xem xét hồ sơ trước khi phản hồi gợi ý từ HR.' : recommendation.statusLabel}"></p></div>
         <form th:if="${recommendation.canDecide}" data-pool-decision class="tp-recommendation-actions" method="post" th:action="@{/talent-pool/recommendations/{id}/decision(id=${recommendation.applicationId},keyword=${filter.keyword},page=${sourcePage})}"><button class="btn btn--secondary btn--sm" type="submit" name="decision" value="Fail">Từ chối</button><button class="btn btn--primary btn--sm" type="submit" name="decision" value="Pass">Chấp nhận</button></form>
         <p th:if="${recommendation.pending and !recommendation.canDecide}" class="text-muted">Đang chờ HM phản hồi hoặc tin không còn nhận gợi ý.</p>
     </section>
     <dialog th:replace="~{candidate/application-dialogs :: preview}"></dialog>
 </main>
-<th:block layout:fragment="scripts"><script th:src="@{/js/pages/applications.js}" defer></script><script th:src="@{/js/pages/talent-pool-recommendations.js}" defer></script></th:block>
+<th:block layout:fragment="scripts">
+    <th:block th:replace="~{fragments/ui/admin-workspace :: scripts}"></th:block><script th:src="@{/js/pages/applications.js}" defer></script><script th:src="@{/js/pages/talent-pool-recommendations.js}" defer></script></th:block>
 </body>
 </html>

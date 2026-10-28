@@ -309,31 +309,31 @@ public class TalentPoolService {
         requireTarget(user, target);
         // check job posting is avaiable
         requireOpen(target);
-        //check if Hr is recommend and not have HM manage
+        // check if Hr is recommend and not have HM manage
         if (fromHr && receivingHiringManager(target) == null)
             throw new TalentPoolException("Tin chưa có Hiring Manager phụ trách hợp lệ để nhận gợi ý.");
         Set<Integer> selected = new HashSet<>();
         List<Application> sources = new ArrayList<>();
-        //loop full candidate by application
+        // loop full candidate by application
         for (Integer sourceId : request.sourceApplicationIds()) {
             Application source = application(sourceId);
             Candidate candidate = source.getCandidate();
-            //check if candidate is not potential
+            // check if candidate is not potential
             if (!candidate.isPotential())
                 throw new TalentPoolException("Ứng viên phải được đánh dấu tiềm năng.");
-            //check if candidate is add before
+            // check if candidate is add before
             if (!selected.add(candidate.getCandidateId()))
                 throw new TalentPoolException("Chỉ chọn một CV cho mỗi ứng viên.");
-            //check if application is from another job posting
+            // check if application is from another job posting
             if (source.getJobPosting().getJobPostingId().equals(jobId))
                 throw new TalentPoolException("CV nguồn phải thuộc một đợt tuyển khác.");
-            //check if application is from official application
+            // check if application is from official application
             if (!poolApplications.findPreviousCvByCandidateId(candidate.getCandidateId()).stream()
                     .anyMatch(a -> a.getApplicationId().equals(sourceId)))
                 throw new TalentPoolException("CV nguồn phải thuộc đơn ứng tuyển chính thức.");
-            //check if cv is exist
+            // check if cv is exist
             requireCv(source.getAppliedCvUrl());
-            //check if candidate is already applied or suggested
+            // check if candidate is already applied or suggested
             if (applications.existsActiveByCandidateAndJobPosting(candidate.getCandidateId(), jobId)
                     || applications.findFirstByCandidate_CandidateIdAndJobPosting_JobPostingIdAndApplicationStatus(
                             candidate.getCandidateId(), jobId, "HM_Suggested").isPresent())
@@ -341,13 +341,13 @@ public class TalentPoolService {
             sources.add(source);
         }
 
-        //loop all cv is valid
+        // loop all cv is valid
         for (Application source : sources) {
             Application saved = applications.saveAndFlush(Application.builder().candidate(source.getCandidate())
                     .jobPosting(target).appliedCvUrl(source.getAppliedCvUrl()).applicationStatus("HM_Suggested")
                     .build());
-            //if hr create draft
-            if (fromHr){
+            // if hr create draft
+            if (fromHr) {
                 reviews.saveAndFlush(ApplicationReview.builder().application(saved).reviewer(user)
                         .reviewerRole("HR").decision("Hold").build());
             }
@@ -414,7 +414,8 @@ public class TalentPoolService {
         User user = actor();
         JobPosting target = job(jobId, false);
         requireTarget(user, target);
-        return poolApplications.findHrRecommendations(jobId).stream().map(a -> recommendationResponse(a, user)).toList();
+        return poolApplications.findHrRecommendations(jobId).stream().map(a -> recommendationResponse(a, user))
+                .toList();
     }
 
     public TalentPoolRecommendationResponse recommendation(Integer id, Integer candidateId) {
@@ -594,17 +595,17 @@ public class TalentPoolService {
     }
 
     private void requireCv(String url) {
-        //check if cv is empty
+        // check if cv is empty
         if (url == null || url.isBlank())
             throw new TalentPoolException("Hồ sơ nguồn không có CV.");
-        //check if cv is uploaded to the system
+        // check if cv is uploaded to the system
         if (url.startsWith(LocalCvStorage.URL_PREFIX)) {
             storage.load(url.substring(LocalCvStorage.URL_PREFIX.length()));
         } else if (url.startsWith("/") && !url.startsWith("//")) {
-            //check if cv is exist in the system
+            // check if cv is exist in the system
             if (!new ClassPathResource("static" + url).exists())
                 throw new TalentPoolException("File CV cũ không còn tồn tại. Ứng viên cần nộp CV mới.");
-        //chek if cv is not store
+            // chek if cv is not store
         } else if (!url.startsWith("https://") && !url.startsWith("http://")) {
             throw new TalentPoolException("Đường dẫn CV không hợp lệ.");
         }
@@ -634,7 +635,7 @@ public class TalentPoolService {
     }
 
     private Application application(Integer id) {
-        //get application by id
+        // get application by id
         return applications.findDetailById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy hồ sơ."));
     }
