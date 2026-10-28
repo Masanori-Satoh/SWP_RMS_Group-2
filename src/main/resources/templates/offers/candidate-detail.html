@@ -149,26 +149,21 @@
             </div>
             <h1 class="cof-paper-title">
                 <span class="sr-only" th:text="|Thư mời nhận việc: ${offer.offeredPositionTitle}|">Thư mời nhận việc: Senior Java Developer</span>
-                <span aria-hidden="true" th:text="${offer.offeredPositionTitle}">Chuyên Viên Phát Triển Kinh Doanh B2B (Software Solutions)</span>
+                <span aria-hidden="true" th:text="${offer.offeredPositionTitle}">Chuyên viên Phát triển Kinh doanh B2B (Software Solutions)</span>
             </h1>
-            <div class="cof-paper-meta">
-                <span>Mã thư mời: <strong th:text="${offer.offerCode}">OFFR-2026-0128</strong></span>
-                <span class="cof-paper-meta__sep">|</span>
-                <span>Ngày gửi: <strong th:text="${offer.sentAt != null ? #temporals.format(offer.sentAt, 'dd/MM/yyyy') : #temporals.format(offer.updatedAt, 'dd/MM/yyyy')}">27/10/2026</strong></span>
-            </div>
         </header>
 
         <!-- Lời mở đầu thư ngỏ -->
         <div class="cof-paper-greeting">
             <p class="cof-salutation">Kính gửi <strong th:text="${offer.candidateName}">Đỗ Thu Phương</strong>,</p>
             <p>
-                Thay mặt Ban Giám đốc và toàn thể đội ngũ, chúng tôi rất vui mừng được gửi tới bạn thư mời gia nhập công ty cho vị trí <strong th:text="${offer.offeredPositionTitle}">Chuyên Viên Phát Triển Kinh Doanh B2B (Software Solutions)</strong>.
+                Thay mặt Ban Giám đốc và toàn thể đội ngũ Mộc RMS, chúng tôi rất vui mừng gửi tới bạn thư mời gia nhập công ty cho vị trí <strong th:text="${offer.offeredPositionTitle}">Chuyên viên Phát triển Kinh doanh B2B (Software Solutions)</strong>.
             </p>
             <p>
-                Chúng tôi tin rằng với tài năng, sự sáng tạo và nhiệt huyết của bạn, bạn sẽ là một mảnh ghép quan trọng trong hành trình phát triển của chúng tôi.
+                Chúng tôi tin rằng với tài năng, sự sáng tạo và nhiệt huyết của bạn, bạn sẽ là một mảnh ghép quan trọng trong hành trình phát triển bền vững của Mộc RMS.
             </p>
             <p>
-                Vui lòng xem chi tiết các điều khoản bên dưới và phản hồi trước hạn chót. Chúng tôi rất mong sớm được chào đón bạn gia nhập đội ngũ.
+                Vui lòng xem chi tiết các điều khoản bên dưới và phản hồi trước hạn chót. Chúng tôi rất mong sớm được chào đón bạn gia nhập đội ngũ Mộc RMS.
             </p>
             <div class="cof-paper-signoff">
                 <p>Trân trọng,</p>
@@ -176,22 +171,42 @@
             </div>
         </div>
 
-        <!-- BỐ CỤC 2 CỘT NỘI DUNG -->
-        <div class="cof-paper-grid">
+        <!-- Thanh file đính kèm PDF ngay dưới thư ngỏ (theo Mockup) -->
+        <div class="cof-download-bar">
+            <div class="cof-download-bar__file">
+                <span class="cof-download-bar__icon" aria-hidden="true">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+                </span>
+                <span class="cof-download-bar__filename" th:text="|Thu-moi-nhan-viec_${offer.offerCode}.pdf|">Thu-moi-nhan-viec_OFFR-2026-0128.pdf</span>
+            </div>
+            <div class="cof-download-bar__actions no-print">
+                <button type="button" class="btn btn--subtle cof-download-bar__btn" data-action="download-pdf">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+                    Tải xuống
+                </button>
+                <a th:href="|mailto:${offer.hrContactEmail != null ? offer.hrContactEmail : 'tuyendung@mocrms.com.vn'}?subject=Câu hỏi về Thư mời nhận việc ${offer.offerCode}|" class="btn btn--subtle cof-download-bar__btn">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
+                    Gửi câu hỏi cho HR
+                </a>
+            </div>
+        </div>
+
+        <!-- BỐ CỤC 3 CỘT NỘI DUNG THEO MOCKUP -->
+        <div class="cof-paper-grid cof-paper-grid--3cols">
 
             <!-- Cột 1: Thông tin công việc -->
             <section class="cof-panel">
                 <div class="cof-panel__head">
                     <span class="cof-panel__icon cof-panel__icon--briefcase" aria-hidden="true">
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path></svg>
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path></svg>
                     </span>
                     <h2 class="cof-panel__title">Thông tin công việc</h2>
                 </div>
                 <div class="cof-panel__body">
                     <dl class="cof-info-table">
                         <div class="cof-info-row">
-                            <dt>Vị trí tuyển dụng</dt>
-                            <dd th:text="${offer.offeredPositionTitle}">Chuyên Viên Phát Triển Kinh Doanh B2B (Software Solutions)</dd>
+                            <dt>Vị trí</dt>
+                            <dd th:text="${offer.offeredPositionTitle}">Chuyên viên Phát triển Kinh doanh B2B (Software Solutions)</dd>
                         </div>
                         <div class="cof-info-row">
                             <dt>Phòng ban</dt>
@@ -203,13 +218,13 @@
                         </div>
                         <div class="cof-info-row">
                             <dt>Hình thức</dt>
-                            <dd th:text="${offer.employmentType}">Toàn thời gian (08:30 – 17:30, Thứ Hai đến Thứ Sáu)</dd>
+                            <dd th:text="${offer.employmentType}">Toàn thời gian · 08:30 – 17:30, Thứ Hai đến Thứ Sáu</dd>
                         </div>
                         <div class="cof-info-row">
                             <dt>Địa điểm</dt>
                             <dd>
-                                <span th:text="${#strings.isEmpty(offer.workLocation) ? 'Quận 1, TP. Hồ Chí Minh & Cầu Giấy, Hà Nội' : offer.workLocation}">Quận 1, TP. Hồ Chí Minh &amp; Cầu Giấy, Hà Nội</span>
-                                <small class="cof-note-sub">Làm việc tại địa điểm theo phân công của công ty.</small>
+                                <span th:text="${#strings.isEmpty(offer.workLocation) ? 'Quận 1, TP. Hồ Chí Minh hoặc Cầu Giấy, Hà Nội' : offer.workLocation}">Quận 1, TP. Hồ Chí Minh hoặc Cầu Giấy, Hà Nội</span>
+                                <small class="cof-note-sub">Bạn chọn một địa điểm khi phản hồi thư mời.</small>
                             </dd>
                         </div>
                         <div class="cof-info-row">
@@ -224,140 +239,126 @@
                 </div>
             </section>
 
-            <!-- Cột 2: Lương & đãi ngộ + Quyền lợi nổi bật -->
-            <div class="cof-paper-right-col">
-
-                <!-- Phần Lương & đãi ngộ -->
-                <section class="cof-panel">
-                    <div class="cof-panel__head">
-                        <span class="cof-panel__icon cof-panel__icon--salary" aria-hidden="true">
-                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"></line><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>
-                        </span>
-                        <h2 class="cof-panel__title">Lương &amp; đãi ngộ</h2>
-                    </div>
-                    <div class="cof-panel__body cof-salary-panel">
-                        <!-- Hộp Lương thử việc -->
-                        <div class="cof-salary-card">
-                            <span class="cof-salary-card__label">LƯƠNG THỬ VIỆC / THÁNG (GROSS)</span>
-                            <div class="cof-salary-card__val" th:text="${offer.probationSalary == null ? 'Thỏa thuận' : #numbers.formatDecimal(offer.probationSalary, 1, 'POINT', 0, 'COMMA') + ' đ'}">
-                                17.000.000 đ
-                            </div>
-                            <div class="cof-salary-badge">
-                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"></polyline><polyline points="17 6 23 6 23 12"></polyline></svg>
-                                <span th:text="${offer.probationRatePercent != null ? 'Bằng ' + offer.probationRatePercent + '% lương chính thức · ' + offer.probationDuration + ' đầu' : 'Lương trong thời gian thử việc'}">Bằng 85% lương chính thức · 60 ngày đầu</span>
-                            </div>
+            <!-- Cột 2: Lương & thưởng -->
+            <section class="cof-panel">
+                <div class="cof-panel__head">
+                    <span class="cof-panel__icon cof-panel__icon--salary" aria-hidden="true">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M16 8h-6a2 2 0 1 0 0 4h4a2 2 0 1 1 0 4H8"></path><path d="M12 6v2"></path><path d="M12 16v2"></path></svg>
+                    </span>
+                    <h2 class="cof-panel__title">Lương &amp; thưởng</h2>
+                </div>
+                <div class="cof-panel__body cof-salary-panel">
+                    <!-- Hộp Lương thử việc -->
+                    <div class="cof-salary-card">
+                        <span class="cof-salary-card__label">LƯƠNG THỬ VIỆC / THÁNG (GROSS)</span>
+                        <div class="cof-salary-card__val" th:text="${offer.probationSalary == null ? 'Thỏa thuận' : #numbers.formatDecimal(offer.probationSalary, 1, 'POINT', 0, 'COMMA') + ' đ'}">
+                            17.000.000 đ
                         </div>
-
-                        <!-- Hộp Lương chính thức -->
-                        <div class="cof-salary-card">
-                            <span class="cof-salary-card__label">LƯƠNG CHÍNH THỨC / THÁNG (GROSS)</span>
-                            <div class="cof-salary-card__val" th:text="${offer.proposedSalary == null ? 'Thỏa thuận' : #numbers.formatDecimal(offer.proposedSalary, 1, 'POINT', 0, 'COMMA') + ' đ'}">
-                                20.000.000 đ
-                            </div>
-                            <small class="cof-salary-card__sub">Áp dụng sau thời gian thử việc</small>
+                        <div class="cof-salary-badge">
+                            <span th:text="${offer.probationRatePercent != null ? 'Bằng ' + offer.probationRatePercent + '% lương chính thức · ' + offer.probationDuration + ' đầu' : 'Lương trong thời gian thử việc'}">Bằng 85% lương chính thức · 60 ngày đầu</span>
                         </div>
                     </div>
-                </section>
 
-                <!-- Phần Quyền lợi nổi bật -->
-                <section class="cof-panel">
-                    <div class="cof-panel__head">
-                        <span class="cof-panel__icon cof-panel__icon--star" aria-hidden="true">
-                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
-                        </span>
-                        <h2 class="cof-panel__title">Quyền lợi nổi bật</h2>
-                    </div>
-                    <div class="cof-panel__body">
-                        <ul class="cof-benefit-group">
-                            <li class="cof-benefit-entry">
-                                <span class="cof-benefit-icon" aria-hidden="true">
-                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
-                                </span>
-                                <div class="cof-benefit-text">
-                                    <strong>Bảo hiểm</strong>
-                                    <span>Đầy đủ (BHXH, BHYT, BHTN)</span>
-                                </div>
-                            </li>
-                            <li class="cof-benefit-entry">
-                                <span class="cof-benefit-icon" aria-hidden="true">
-                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 12 20 22 4 22 4 12"></polyline><rect x="2" y="7" width="20" height="5"></rect><line x1="12" y1="22" x2="12" y2="7"></line><path d="M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7z"></path><path d="M12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z"></path></svg>
-                                </span>
-                                <div class="cof-benefit-text">
-                                    <strong>Thưởng hiệu suất</strong>
-                                    <span>Và các khoản thưởng khác</span>
-                                </div>
-                            </li>
-                            <li class="cof-benefit-entry">
-                                <span class="cof-benefit-icon" aria-hidden="true">
-                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg>
-                                </span>
-                                <div class="cof-benefit-text">
-                                    <strong>Cơ hội đào tạo</strong>
-                                    <span>Và phát triển nghề nghiệp</span>
-                                </div>
-                            </li>
-                            <li class="cof-benefit-entry">
-                                <span class="cof-benefit-icon" aria-hidden="true">
-                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
-                                </span>
-                                <div class="cof-benefit-text">
-                                    <strong>Môi trường làm việc</strong>
-                                    <span>Chuyên nghiệp, thân thiện</span>
-                                </div>
-                            </li>
-                        </ul>
-                        <div th:unless="${#strings.isEmpty(offer.benefitsPackage)}" class="cof-custom-benefits">
-                            <span class="cof-custom-benefits__label">Gói đãi ngộ chi tiết:</span>
-                            <p class="cof-custom-benefits__val" th:text="${offer.benefitsPackage}"></p>
+                    <!-- Hộp Lương chính thức -->
+                    <div class="cof-salary-card">
+                        <span class="cof-salary-card__label">LƯƠNG CHÍNH THỨC / THÁNG (GROSS)</span>
+                        <div class="cof-salary-card__val" th:text="${offer.proposedSalary == null ? 'Thỏa thuận' : #numbers.formatDecimal(offer.proposedSalary, 1, 'POINT', 0, 'COMMA') + ' đ'}">
+                            20.000.000 đ
                         </div>
+                        <small class="cof-salary-card__sub">Áp dụng sau thời gian thử việc</small>
                     </div>
-                </section>
-            </div>
+
+                    <div class="cof-salary-footnote">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
+                        <span>Mức gross, chưa khấu trừ bảo hiểm bắt buộc và thuế thu nhập cá nhân.</span>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Cột 3: Quyền lợi -->
+            <section class="cof-panel">
+                <div class="cof-panel__head">
+                    <span class="cof-panel__icon cof-panel__icon--star" aria-hidden="true">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
+                    </span>
+                    <h2 class="cof-panel__title">Quyền lợi</h2>
+                </div>
+                <div class="cof-panel__body">
+                    <ul class="cof-benefit-group">
+                        <li class="cof-benefit-entry">
+                            <span class="cof-benefit-icon" aria-hidden="true">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
+                            </span>
+                            <div class="cof-benefit-text">
+                                <strong>Bảo hiểm theo quy định</strong>
+                                <span>BHXH, BHYT, BHTN, áp dụng từ khi ký hợp đồng lao động</span>
+                            </div>
+                        </li>
+                        <li class="cof-benefit-entry">
+                            <span class="cof-benefit-icon" aria-hidden="true">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 12 20 22 4 22 4 12"></polyline><rect x="2" y="7" width="20" height="5"></rect><line x1="12" y1="22" x2="12" y2="7"></line><path d="M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7z"></path><path d="M12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z"></path></svg>
+                            </span>
+                            <div class="cof-benefit-text">
+                                <strong>Thưởng hiệu suất</strong>
+                                <span>Theo kết quả kinh doanh và chính sách của công ty</span>
+                            </div>
+                        </li>
+                        <li class="cof-benefit-entry">
+                            <span class="cof-benefit-icon" aria-hidden="true">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg>
+                            </span>
+                            <div class="cof-benefit-text">
+                                <strong>Đào tạo &amp; phát triển</strong>
+                                <span>Cơ hội đào tạo và phát triển nghề nghiệp</span>
+                            </div>
+                        </li>
+                        <li class="cof-benefit-entry">
+                            <span class="cof-benefit-icon" aria-hidden="true">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
+                            </span>
+                            <div class="cof-benefit-text">
+                                <strong>Môi trường làm việc</strong>
+                                <span>Chuyên nghiệp, thân thiện</span>
+                            </div>
+                        </li>
+                    </ul>
+                    <div th:unless="${#strings.isEmpty(offer.benefitsPackage)}" class="cof-custom-benefits">
+                        <span class="cof-custom-benefits__label">Gói đãi ngộ chi tiết:</span>
+                        <p class="cof-custom-benefits__val" th:text="${offer.benefitsPackage}"></p>
+                    </div>
+                </div>
+            </section>
         </div>
 
-        <!-- 3. KHỐI CÁC BƯỚC TIẾP THEO (STEPPER THEO MOCKUP) -->
-        <section class="cof-stepper-panel">
-            <h2 class="cof-stepper-panel__title">Các bước tiếp theo</h2>
-            <div class="cof-steps-row">
-                <div class="cof-step-box">
-                    <div class="cof-step-circle cof-step-circle--active">1</div>
-                    <div class="cof-step-meta">
-                        <strong class="cof-step-title">Phản hồi thư mời</strong>
-                        <p class="cof-step-desc" th:text="|Xác nhận trước ${offer.responseDeadline != null ? #temporals.format(offer.responseDeadline, 'HH:mm ngày dd/MM/yyyy') : 'hạn chót'} và chọn đáp án bên trên.|">Xác nhận trước 23:48 ngày 01/11/2026 và chọn đáp án bên trên.</p>
-                    </div>
-                </div>
-                <div class="cof-step-box">
-                    <div class="cof-step-circle">2</div>
-                    <div class="cof-step-meta">
-                        <strong class="cof-step-title">Hoàn tất hồ sơ &amp; ký hợp đồng</strong>
-                        <p class="cof-step-desc">Bộ phận Nhân sự sẽ liên hệ hướng dẫn hồ sơ và hợp đồng trực tiếp.</p>
-                    </div>
-                </div>
-                <div class="cof-step-box">
-                    <div class="cof-step-circle">3</div>
-                    <div class="cof-step-meta">
-                        <strong class="cof-step-title">Bắt đầu làm việc</strong>
-                        <p class="cof-step-desc" th:text="|Ngày bắt đầu dự kiến: ${offer.expectedStartDate != null ? #temporals.format(offer.expectedStartDate, 'dd/MM/yyyy') : 'Thỏa thuận trực tiếp'}.|">Ngày bắt đầu dự kiến: 12/12/2026.</p>
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        <!-- 4. THANH FILE ĐÍNH KÈM PDF (PDF ATTACHMENT BAR THEO MOCKUP) -->
-        <footer class="cof-download-bar">
-            <div class="cof-download-bar__file">
-                <span class="cof-download-bar__icon" aria-hidden="true">
-                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
-                </span>
-                <span class="cof-download-bar__filename" th:text="|Thu-moi-nhan-viec_${offer.offerCode}.pdf|">Thu-moi-nhan-viec_OFFR-2026-0128.pdf</span>
-            </div>
-            <button type="button" class="btn btn--subtle cof-download-bar__btn no-print" data-action="download-pdf">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
-                Tải xuống
-            </button>
-        </footer>
-
     </article>
+
+    <!-- 3. KHỐI CÁC BƯỚC TIẾP THEO (STEPPER THEO MOCKUP ĐẶT DƯỚI TỜ THƯ MỜI) -->
+    <section class="cof-stepper-panel" aria-labelledby="cof-stepper-title">
+        <h2 id="cof-stepper-title" class="cof-stepper-panel__title">Các bước tiếp theo</h2>
+        <div class="cof-steps-row">
+            <div class="cof-step-box">
+                <div class="cof-step-circle cof-step-circle--active" aria-hidden="true">1</div>
+                <div class="cof-step-meta">
+                    <strong class="cof-step-title">Phản hồi thư mời</strong>
+                    <p class="cof-step-desc" th:text="|Xác nhận trước ${offer.responseDeadline != null ? #temporals.format(offer.responseDeadline, 'HH:mm ngày dd/MM/yyyy') : 'hạn chót'} và chọn địa điểm làm việc.|">Xác nhận trước 23:59 ngày 01/11/2026 và chọn địa điểm làm việc.</p>
+                </div>
+            </div>
+            <div class="cof-step-box">
+                <div class="cof-step-circle cof-step-circle--active" aria-hidden="true">2</div>
+                <div class="cof-step-meta">
+                    <strong class="cof-step-title">Hoàn tất hồ sơ &amp; ký hợp đồng</strong>
+                    <p class="cof-step-desc">Bộ phận Nhân sự liên hệ hướng dẫn hồ sơ và hợp đồng thử việc.</p>
+                </div>
+            </div>
+            <div class="cof-step-box">
+                <div class="cof-step-circle cof-step-circle--active" aria-hidden="true">3</div>
+                <div class="cof-step-meta">
+                    <strong class="cof-step-title">Bắt đầu thử việc</strong>
+                    <p class="cof-step-desc" th:text="|Ngày bắt đầu dự kiến: ${offer.expectedStartDate != null ? #temporals.format(offer.expectedStartDate, 'dd/MM/yyyy') : '12/12/2026'}.|">Ngày bắt đầu dự kiến: 12/12/2026.</p>
+                </div>
+            </div>
+        </div>
+    </section>
 
     <!-- Hộp thoại Xác nhận Đồng ý nhận việc -->
     <dialog id="cof-accept-dialog" class="confirm-dialog no-print" aria-labelledby="cof-accept-dialog-title"

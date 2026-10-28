@@ -815,11 +815,11 @@
   justify-content: space-between;
   align-items: center;
   gap: var(--s4);
-  max-width: 900px;
+  max-width: 960px;
   margin: 0 auto var(--s6);
-  padding: var(--s3) var(--s6);
-  background: var(--surface);
-  border: 1px solid var(--line);
+  padding: 14px 24px;
+  background: #fffdf8;
+  border: 1px solid #f2e9dc;
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-sm);
 }
@@ -834,7 +834,7 @@
 .cof-top-bar__divider {
   width: 1px;
   height: 32px;
-  background: var(--line);
+  background: #eedfcb;
   flex-shrink: 0;
 }
 
@@ -848,8 +848,9 @@
   width: 38px;
   height: 38px;
   border-radius: var(--radius-full);
-  background: var(--brand-soft);
-  color: var(--brand-dark);
+  background: #fdf5ea;
+  color: var(--warning);
+  border: 1px solid #fae6cb;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -857,8 +858,9 @@
 }
 
 .cof-top-bar__icon-wrap--timer {
-  background: var(--warning-soft);
+  background: #fdf5ea;
   color: var(--warning);
+  border-color: #fae6cb;
 }
 
 .cof-top-bar__text {
@@ -883,6 +885,7 @@
 
 .cof-top-bar__val--timer {
   color: var(--warning);
+  font-size: 16px;
 }
 
 .cof-top-bar__actions {
@@ -897,8 +900,8 @@
   align-items: center;
   gap: var(--s2);
   font-weight: 600;
-  padding: 0 var(--s5);
-  height: var(--btn-sm-h);
+  padding: 0 20px;
+  height: 42px;
   border-radius: var(--radius-md);
   background: var(--brand);
   color: var(--on-brand);
@@ -917,8 +920,8 @@
   align-items: center;
   gap: var(--s2);
   font-weight: 600;
-  padding: 0 var(--s5);
-  height: var(--btn-sm-h);
+  padding: 0 18px;
+  height: 42px;
   border-radius: var(--radius-md);
   background: var(--surface);
   color: var(--error);
@@ -935,13 +938,13 @@
 /* 2. Tờ thư mời trang trọng (Letterhead Paper Document) */
 .cof-letter-paper {
   position: relative;
-  max-width: 900px;
-  margin: 0 auto var(--s12);
+  max-width: 960px;
+  margin: 0 auto var(--s6);
   background: var(--surface);
   border: 1px solid var(--line);
-  border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-md);
-  padding: var(--s12) var(--s12) var(--s8);
+  border-radius: 16px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04);
+  padding: 48px 48px 36px;
   overflow: hidden;
 }
 
@@ -958,7 +961,7 @@
   text-align: center;
   position: relative;
   z-index: 1;
-  margin-bottom: var(--s8);
+  margin-bottom: var(--s6);
 }
 
 .cof-paper-rule {
@@ -971,69 +974,50 @@
 
 .cof-paper-rule__line {
   flex: 1;
-  max-width: 140px;
+  max-width: 120px;
   height: 1px;
-  background: var(--control-line);
-  opacity: 0.45;
+  background: #c5d7cc;
 }
 
 .cof-paper-rule__title {
-  font-size: var(--font-sm);
+  font-size: 12.5px;
   font-weight: 700;
-  letter-spacing: 0.16em;
+  letter-spacing: 0.18em;
   text-transform: uppercase;
   color: var(--brand);
 }
 
 .cof-paper-title {
   font-family: var(--serif);
-  font-size: 28px;
+  font-size: 30px;
   font-weight: 700;
   color: var(--brand-dark);
-  margin: 0 0 var(--s3);
+  margin: 0 0 28px;
   line-height: 1.35;
-}
-
-.cof-paper-meta {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: var(--s3);
-  font-size: var(--font-sm);
-  color: var(--muted);
-}
-
-.cof-paper-meta strong {
-  color: var(--ink);
-  font-weight: 600;
-}
-
-.cof-paper-meta__sep {
-  color: var(--line);
 }
 
 /* 3. Lời mở đầu thư ngỏ */
 .cof-paper-greeting {
   position: relative;
   z-index: 1;
-  margin-bottom: var(--s8);
+  margin-bottom: var(--s5);
   color: var(--ink);
-  font-size: var(--font-base);
-  line-height: 1.7;
+  font-size: 14.5px;
+  line-height: 1.65;
 }
 
 .cof-salutation {
-  font-size: var(--font-lg);
-  font-weight: 600;
+  font-size: 15.5px;
+  font-weight: 700;
   margin-bottom: var(--s3);
 }
 
 .cof-paper-greeting p {
-  margin: 0 0 var(--s3);
+  margin: 0 0 var(--s2);
 }
 
 .cof-paper-signoff {
-  margin-top: var(--s6);
+  margin-top: 18px;
 }
 
 .cof-paper-signoff p {
@@ -1043,25 +1027,85 @@
 }
 
 .cof-signature-brand {
-  font-size: var(--font-base);
+  font-size: 14.5px;
   font-weight: 700;
-  color: var(--brand-dark);
+  color: var(--ink);
 }
 
-/* 4. Lưới bố cục 2 cột nội dung */
-.cof-paper-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: var(--s6);
+/* 4. Thanh file đính kèm PDF ngay dưới thư ngỏ (Inline PDF Bar) */
+.cof-download-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 18px;
+  background: #f4f8f5;
+  border: 1px solid #dbeae0;
+  border-radius: 10px;
+  margin-bottom: 32px;
   position: relative;
   z-index: 1;
-  margin-bottom: var(--s8);
+}
+
+.cof-download-bar__file {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.cof-download-bar__icon {
+  color: var(--brand);
+  display: inline-flex;
+  align-items: center;
+}
+
+.cof-download-bar__filename {
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--ink);
+  font-family: monospace, sans-serif;
+}
+
+.cof-download-bar__actions {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.cof-download-bar__btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--brand-dark);
+  text-decoration: none;
+  cursor: pointer;
+  border: none;
+  background: transparent;
+  padding: 6px 10px;
+  border-radius: 6px;
+  transition: all var(--transition);
+}
+
+.cof-download-bar__btn:hover {
+  background: rgba(62, 113, 87, 0.1);
+  color: var(--brand-hover);
+}
+
+/* 5. Lưới bố cục 3 cột nội dung (3 Columns Panel Grid) */
+.cof-paper-grid--3cols {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 18px;
+  position: relative;
+  z-index: 1;
+  align-items: stretch;
 }
 
 .cof-panel {
-  background: var(--surface-subtle);
-  border: 1px solid var(--line);
-  border-radius: var(--radius-md);
+  background: var(--surface);
+  border: 1px solid #e1e7e2;
+  border-radius: 12px;
   overflow: hidden;
   display: flex;
   flex-direction: column;
@@ -1070,18 +1114,14 @@
 .cof-panel__head {
   display: flex;
   align-items: center;
-  gap: var(--s3);
-  padding: var(--s3) var(--s4);
-  background: var(--surface);
-  border-bottom: 1px solid var(--line);
+  gap: 10px;
+  padding: 14px 16px;
+  background: #f8faf8;
+  border-bottom: 1px solid #e8ede9;
 }
 
 .cof-panel__icon {
-  width: 32px;
-  height: 32px;
-  border-radius: var(--radius-sm);
-  background: var(--brand-soft);
-  color: var(--brand-dark);
+  color: var(--brand);
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -1089,32 +1129,32 @@
 }
 
 .cof-panel__icon--salary {
-  background: var(--brand-soft);
   color: var(--brand);
 }
 
 .cof-panel__icon--star {
-  background: var(--warning-soft);
-  color: var(--warning);
+  color: var(--brand);
 }
 
 .cof-panel__title {
-  font-size: var(--font-base);
+  font-size: 15px;
   font-weight: 700;
-  color: var(--brand-dark);
+  color: var(--ink);
   margin: 0;
 }
 
 .cof-panel__body {
-  padding: var(--s4);
+  padding: 16px;
   flex: 1;
+  display: flex;
+  flex-direction: column;
 }
 
 /* Cột 1: Thông tin công việc */
 .cof-info-table {
   display: flex;
   flex-direction: column;
-  gap: var(--s3);
+  gap: 12px;
   margin: 0;
 }
 
@@ -1122,7 +1162,7 @@
   display: flex;
   flex-direction: column;
   gap: 2px;
-  padding-bottom: var(--s2);
+  padding-bottom: 10px;
   border-bottom: 1px dashed var(--line);
 }
 
@@ -1132,16 +1172,14 @@
 }
 
 .cof-info-row dt {
-  font-size: var(--font-xs);
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
+  font-size: 12px;
   color: var(--muted);
-  font-weight: 600;
+  font-weight: 500;
   margin: 0;
 }
 
 .cof-info-row dd {
-  font-size: var(--font-base);
+  font-size: 13.5px;
   font-weight: 600;
   color: var(--ink);
   margin: 0;
@@ -1150,105 +1188,119 @@
 
 .cof-note-sub {
   display: block;
-  font-size: var(--font-xs);
+  font-size: 11.5px;
   color: var(--muted);
-  font-weight: 400;
+  font-style: italic;
   margin-top: 2px;
 }
 
-/* Cột 2: Lương & đãi ngộ + Quyền lợi */
-.cof-paper-right-col {
-  display: flex;
-  flex-direction: column;
-  gap: var(--s6);
-}
-
+/* Cột 2: Lương & thưởng */
 .cof-salary-panel {
   display: flex;
   flex-direction: column;
-  gap: var(--s4);
+  gap: 14px;
+  height: 100%;
 }
 
 .cof-salary-card {
-  background: var(--surface);
-  border: 1px solid var(--line);
-  border-radius: var(--radius-md);
-  padding: var(--s4);
+  background: #fbfdfb;
+  border: 1px solid #e3ede5;
+  border-radius: 8px;
+  padding: 14px;
 }
 
 .cof-salary-card__label {
   display: block;
-  font-size: var(--font-xs);
+  font-size: 11px;
   text-transform: uppercase;
-  letter-spacing: 0.04em;
+  letter-spacing: 0.05em;
   color: var(--muted);
   font-weight: 700;
-  margin-bottom: var(--s1);
+  margin-bottom: 4px;
 }
 
 .cof-salary-card__val {
-  font-size: 24px;
+  font-size: 22px;
   font-weight: 800;
-  color: var(--brand);
+  color: var(--brand-dark);
   line-height: 1.2;
-  margin-bottom: var(--s2);
+  margin-bottom: 6px;
 }
 
 .cof-salary-card__sub {
   display: block;
-  font-size: var(--font-xs);
+  font-size: 11.5px;
   color: var(--muted);
+  margin-top: 2px;
 }
 
 .cof-salary-badge {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--s2);
-  padding: 4px var(--s3);
+  display: inline-block;
+  padding: 3px 10px;
   border-radius: var(--radius-full);
   background: var(--brand-soft);
   color: var(--brand-dark);
-  font-size: var(--font-xs);
+  font-size: 11.5px;
   font-weight: 600;
+  border: 1px solid #c9decb;
 }
 
+.cof-salary-footnote {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  font-size: 11.5px;
+  color: var(--muted);
+  line-height: 1.4;
+  margin-top: auto;
+  padding-top: 6px;
+}
+
+.cof-salary-footnote svg {
+  flex-shrink: 0;
+  margin-top: 2px;
+  color: var(--muted);
+}
+
+/* Cột 3: Quyền lợi */
 .cof-benefit-group {
   list-style: none;
   padding: 0;
   margin: 0;
   display: flex;
   flex-direction: column;
-  gap: var(--s3);
+  gap: 14px;
 }
 
 .cof-benefit-entry {
   display: flex;
-  align-items: center;
-  gap: var(--s3);
+  align-items: flex-start;
+  gap: 10px;
 }
 
 .cof-benefit-icon {
-  width: 32px;
-  height: 32px;
-  border-radius: var(--radius-full);
-  background: var(--brand-soft);
+  width: 20px;
+  height: 20px;
   color: var(--brand);
+  flex-shrink: 0;
+  margin-top: 2px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  flex-shrink: 0;
 }
 
 .cof-benefit-text {
   display: flex;
   flex-direction: column;
   gap: 2px;
-  font-size: var(--font-sm);
+  font-size: 12px;
+  line-height: 1.35;
 }
 
 .cof-benefit-text strong {
   color: var(--ink);
-  font-weight: 600;
+  font-weight: 700;
+  font-size: 13.5px;
 }
 
 .cof-benefit-text span {
@@ -1256,148 +1308,97 @@
 }
 
 .cof-custom-benefits {
-  margin-top: var(--s4);
-  padding-top: var(--s3);
+  margin-top: 12px;
+  padding-top: 10px;
   border-top: 1px dashed var(--line);
 }
 
 .cof-custom-benefits__label {
   display: block;
-  font-size: var(--font-xs);
+  font-size: 11.5px;
   color: var(--muted);
   font-weight: 600;
-  margin-bottom: var(--s1);
+  margin-bottom: 2px;
 }
 
 .cof-custom-benefits__val {
-  font-size: var(--font-sm);
+  font-size: 12px;
   color: var(--ink);
   margin: 0;
   white-space: pre-line;
 }
 
-/* 5. Khối Các bước tiếp theo (Stepper) */
+/* 6. Khối Các bước tiếp theo (Stepper bên dưới Tờ thư mời) */
 .cof-stepper-panel {
-  background: var(--surface-subtle);
+  max-width: 960px;
+  margin: 0 auto var(--s12);
+  background: var(--surface);
   border: 1px solid var(--line);
-  border-radius: var(--radius-md);
-  padding: var(--s6);
-  margin-bottom: var(--s6);
-  position: relative;
-  z-index: 1;
+  border-radius: 16px;
+  padding: 22px 28px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.03);
 }
 
 .cof-stepper-panel__title {
-  font-size: var(--font-md);
+  font-size: 16px;
   font-weight: 700;
-  color: var(--brand-dark);
-  margin: 0 0 var(--s5);
+  color: var(--ink);
+  margin: 0 0 16px;
 }
 
 .cof-steps-row {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: var(--s4);
+  gap: 20px;
 }
 
 .cof-step-box {
   display: flex;
-  gap: var(--s3);
+  gap: 12px;
   align-items: flex-start;
 }
 
 .cof-step-circle {
-  width: 32px;
-  height: 32px;
+  width: 28px;
+  height: 28px;
   border-radius: var(--radius-full);
-  background: var(--line);
-  color: var(--muted);
+  background: var(--brand);
+  color: #ffffff;
   font-weight: 700;
-  font-size: var(--font-sm);
+  font-size: 13px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
+  margin-top: 2px;
 }
 
 .cof-step-circle--active {
   background: var(--brand);
-  color: var(--on-brand);
+  color: #ffffff;
 }
 
 .cof-step-meta {
   display: flex;
   flex-direction: column;
-  gap: var(--s1);
+  gap: 3px;
 }
 
 .cof-step-title {
-  font-size: var(--font-sm);
+  font-size: 13.5px;
   font-weight: 700;
   color: var(--ink);
 }
 
 .cof-step-desc {
-  font-size: var(--font-xs);
+  font-size: 12px;
   color: var(--muted);
-  line-height: 1.5;
+  line-height: 1.45;
   margin: 0;
 }
 
-/* 6. Thanh file đính kèm PDF */
-.cof-download-bar {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: var(--s4);
-  background: var(--surface-subtle);
-  border: 1px solid var(--line);
-  border-radius: var(--radius-md);
-  position: relative;
-  z-index: 1;
-}
-
-.cof-download-bar__file {
-  display: flex;
-  align-items: center;
-  gap: var(--s3);
-}
-
-.cof-download-bar__icon {
-  color: var(--error);
-  display: inline-flex;
-  align-items: center;
-}
-
-.cof-download-bar__filename {
-  font-size: var(--font-sm);
-  font-weight: 600;
-  color: var(--ink);
-}
-
-.cof-download-bar__btn {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--s2);
-  font-size: var(--font-sm);
-  font-weight: 600;
-  padding: 0 var(--s4);
-  height: var(--btn-sm-h);
-  border-radius: var(--radius-md);
-  border: 1px solid var(--control-line);
-  background: var(--surface);
-  color: var(--ink);
-  cursor: pointer;
-  transition: all var(--transition);
-}
-
-.cof-download-bar__btn:hover {
-  background: var(--surface-subtle);
-  border-color: var(--ink);
-}
-
 /* 7. Thiết kế đáp ứng trên thiết bị di động (Responsive Breakpoints) */
-@media (max-width: 768px) {
+@media (max-width: 991px) {
   .cof-top-bar {
     flex-direction: column;
     align-items: stretch;
@@ -1407,7 +1408,7 @@
   .cof-top-bar__deadline {
     flex-direction: column;
     align-items: flex-start;
-    gap: var(--s3);
+    gap: 10px;
   }
 
   .cof-top-bar__divider {
@@ -1427,31 +1428,40 @@
   }
 
   .cof-letter-paper {
-    padding: var(--s6) var(--s4);
-    margin-bottom: var(--s6);
+    padding: 28px 20px;
+    margin-bottom: var(--s4);
   }
 
   .cof-watermark {
     display: none;
   }
 
-  .cof-paper-grid {
+  .cof-paper-grid--3cols {
     grid-template-columns: 1fr;
+    gap: 16px;
   }
 
   .cof-steps-row {
     grid-template-columns: 1fr;
-    gap: var(--s4);
+    gap: 14px;
+  }
+
+  .cof-stepper-panel {
+    padding: 20px;
   }
 
   .cof-download-bar {
     flex-direction: column;
     align-items: stretch;
-    gap: var(--s3);
+    gap: 12px;
+  }
+
+  .cof-download-bar__actions {
+    justify-content: stretch;
   }
 
   .cof-download-bar__btn {
-    width: 100%;
+    flex: 1;
     justify-content: center;
   }
 }
@@ -1463,6 +1473,7 @@
   .site-footer,
   .skip-link,
   .cof-breadcrumb,
+  .cof-top-bar,
   #cof-accept-dialog,
   #cof-decline-dialog,
   #cof-accept-success-modal {
@@ -1502,6 +1513,7 @@
     page-break-inside: avoid;
   }
 }
+
 
 
 
