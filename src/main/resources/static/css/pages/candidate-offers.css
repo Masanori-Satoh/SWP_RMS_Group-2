@@ -1032,66 +1032,115 @@
   color: var(--ink);
 }
 
-/* 4. Thanh file đính kèm PDF đặt dưới khối các bước tiếp theo */
+/* 4. Khối Tải xuống Thư mời & Liên hệ HR đặt dưới khối các bước tiếp theo */
+.cof-download-section {
+  max-width: 960px;
+  margin: 0 auto var(--s12);
+}
+
 .cof-download-bar {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  max-width: 960px;
-  margin: 0 auto var(--s12);
-  padding: 14px 22px;
-  background: #f4f8f5;
-  border: 1px solid #dbeae0;
+  padding: 16px 24px;
+  background: var(--surface);
+  border: 1px solid var(--line);
   border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.03);
   position: relative;
   z-index: 1;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.02);
 }
 
 .cof-download-bar__file {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 14px;
 }
 
 .cof-download-bar__icon {
+  width: 44px;
+  height: 44px;
+  border-radius: 8px;
+  background: #edf7ee;
   color: var(--brand);
   display: inline-flex;
   align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.cof-download-bar__text {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
 }
 
 .cof-download-bar__filename {
-  font-size: 13.5px;
+  font-size: 14px;
   font-weight: 600;
   color: var(--ink);
-  font-family: monospace, sans-serif;
+  font-family: inherit;
+}
+
+.cof-download-bar__desc {
+  font-size: 12.5px;
+  color: var(--muted);
+  font-weight: 400;
 }
 
 .cof-download-bar__actions {
   display: flex;
   align-items: center;
-  gap: 14px;
+  gap: 12px;
 }
 
 .cof-download-bar__btn {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  font-size: 13.5px;
+  gap: 7px;
+  font-size: 13px;
   font-weight: 600;
-  color: var(--brand-dark);
+  padding: 8px 16px;
+  border-radius: 6px;
   text-decoration: none;
   cursor: pointer;
-  border: none;
-  background: transparent;
-  padding: 6px 10px;
-  border-radius: 6px;
+  background: var(--surface);
   transition: all var(--transition);
 }
 
-.cof-download-bar__btn:hover {
-  background: rgba(62, 113, 87, 0.1);
+.cof-download-bar__btn--primary {
+  color: var(--brand);
+  border: 1px solid var(--brand);
+}
+
+.cof-download-bar__btn--primary:hover {
+  background: rgba(62, 113, 87, 0.08);
+  border-color: var(--brand-hover);
   color: var(--brand-hover);
+}
+
+.cof-download-bar__btn--secondary {
+  color: var(--ink);
+  border: 1px solid var(--line);
+  font-weight: 500;
+}
+
+.cof-download-bar__btn--secondary svg {
+  color: var(--brand);
+}
+
+.cof-download-bar__btn--secondary:hover {
+  border-color: var(--brand);
+  color: var(--brand);
+  background: rgba(62, 113, 87, 0.04);
+}
+
+.cof-download-bar__note {
+  font-size: 12.5px;
+  color: var(--muted);
+  margin: 12px 0 0;
+  line-height: 1.5;
+  padding-left: 2px;
 }
 
 /* 5. Lưới bố cục 3 cột nội dung (3 Columns Panel Grid) */
@@ -1452,18 +1501,25 @@
     padding: 20px;
   }
 
+  .cof-download-section {
+    margin-bottom: var(--s8);
+  }
+
   .cof-download-bar {
     flex-direction: column;
     align-items: stretch;
-    gap: 12px;
+    gap: 14px;
+    padding: 16px;
   }
 
   .cof-download-bar__actions {
-    justify-content: stretch;
+    flex-direction: column;
+    gap: 8px;
+    width: 100%;
   }
 
   .cof-download-bar__btn {
-    flex: 1;
+    width: 100%;
     justify-content: center;
   }
 }
