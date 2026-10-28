@@ -131,3 +131,18 @@ $RECYCLE.BIN/
 .codex/
 .impeccable/
 ui-ux-pro-max-skill-main/
+
+# ===================================================================
+# 10. Playwright & Node.js (Personal E2E Testing)
+# ===================================================================
+package.json
+package-lock.json
+playwright.config.*
+e2e/
+node_modules/
+test-results/
+playwright-report/
+blob-report/
+playwright/
+.playwright/
+
