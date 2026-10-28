@@ -65,4 +65,25 @@ public class OfferControllerBugTests {
                 .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.model().attribute("currentStatus", "Accepted"))
                 .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.model().attribute("currentTab", "HISTORY"));
     }
+
+    @Test
+    @WithMockUser(username = "hr_1", authorities = {"ROLE_HR"})
+    public void testCreateOfferForm_withoutApplicationId_shouldNotLockCandidate() throws Exception {
+        com.group2.rms.user.entity.Role role = com.group2.rms.user.entity.Role.builder().roleName("HR").build();
+        com.group2.rms.user.entity.User fakeUser = new com.group2.rms.user.entity.User();
+        fakeUser.setUserId(20);
+        fakeUser.setUsername("hr_1");
+        fakeUser.setFullName("HR Specialist");
+        fakeUser.setAccountStatus("Active");
+        fakeUser.setRole(role);
+
+        org.mockito.Mockito.when(userRepository.findByUsernameIgnoreCase("hr_1"))
+                .thenReturn(java.util.Optional.of(fakeUser));
+
+        mockMvc.perform(get("/offers/create"))
+                .andExpect(status().isOk())
+                .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.view().name("offers/form"))
+                .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.model().attribute("isLockedCandidate", false))
+                .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.model().attribute("isEdit", false));
+    }
 }
