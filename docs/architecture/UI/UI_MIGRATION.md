@@ -19,6 +19,8 @@ Trang cũ tự dựng khung, có các dấu hiệu:
     <main>… nội dung …</main>
 ```
 
+> **Từ 28/10/2026 không còn trang nào dùng khung này** (`interfaceHead` đã xóa khỏi `fragments/head.html`); mục 1 giữ để nhận diện nếu gặp lại trong nhánh cũ.
+
 Chúng **vẫn hiển thị đúng** (topbar, logo, góc phải, nút ghim, hộp thoại đăng xuất đã dùng chung nguồn với trang mới). Mục đích migrate: bỏ khung chép tay, bỏ bộ CSS cũ (`interface.css`, `design-tokens.css`), dọn CSS trùng catalog, để sau này chỉ cần sửa một chỗ.
 
 ---
@@ -88,7 +90,8 @@ Chúng **vẫn hiển thị đúng** (topbar, logo, góc phải, nút ghim, hộ
 | Công khai | `candidate/job-board.html` (`/jobs`) | ✅ `layout/public` — trang mẫu |
 | Công khai | `candidate/job-detail.html` (`/jobs/{id}`) | ✅ `layout/public` |
 | Nội bộ | `notifications/list.html` | ✅ `layout/internal` |
-| Nội bộ | `dashboard/index.html` (+ `dashboard/candidate.html`), `user/profile.html` | ⏳ Cũ |
+| Nội bộ | `user/profile.html` (`/profile`) | ✅ `layout/internal` + `adw` (2026-10-28; `interfaceHead` đã xóa, không còn trang nào dùng khung cũ) |
+| Nội bộ | `dashboard/index.html` (+ `dashboard/candidate.html`) | ⏳ Cũ |
 | Nội bộ | `requisitions/{list,detail,form}.html` | ⏳ Cũ |
 | Nội bộ | `job-postings/{list,detail,create,dashboard}.html` | ⏳ Cũ |
 | Nội bộ | `interview/{list,form}.html` | ✅ `layout/internal` (2026-10-11; CSS/JS phẳng `interview-list.*`, `interview-form.*` + dùng chung `pages/interview-common.css`) |

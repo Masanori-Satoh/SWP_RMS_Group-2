@@ -24,7 +24,6 @@ Tầng sau ghi đè tầng trước. Mỗi tầng chỉ làm đúng việc của
 | `layout/internal` | tokens → global → components → workspace (tự `@import` topbar, fonts) → CSS trang |
 | `layout/public` | tokens → global → components → topbar → CSS trang |
 | Landing `candidate/landing.html` (ngoại lệ) | global → `landing.css` → topbar |
-| Trang nội bộ cũ (`fragments/head :: interfaceHead`) | design-tokens → interface → workspace → CSS trang. **Bộ cũ, không dùng cho trang mới.** |
 
 CSS trang luôn nạp **sau cùng** qua `<th:block layout:fragment="styles">`, nên nó ghi đè được, và chính vì thế nó **không được** ghi đè class dùng chung (rò rỉ thiết kế).
 
@@ -109,4 +108,4 @@ Khi một khối đã xuất hiện ở ≥ 2 trang:
 |---|---|---|
 | `landing.css` | Tự định nghĩa `:root` (màu, bo góc, font riêng); không nạp `tokens.css`/`components.css` | Trang "bộ mặt" có phong cách riêng. Topbar và logo vẫn chuẩn nhờ khối cầu nối token trong `topbar.css`. |
 | `topbar.css` (khối `.public-topbar, .wordmark`) | Ghi lại giá trị token bằng hex | Cầu nối để topbar/logo đúng màu trên landing. Giá trị phải luôn khớp `tokens.css`. |
-| `design-tokens.css`, `interface.css` | Bộ token/CSS cũ song song | Còn phục vụ trang nội bộ chưa migrate; xóa theo `UI_LEGACY_CLEANUP.md`. |
+| `design-tokens.css`, `interface.css` | Bộ token/CSS cũ song song | Không còn trang nội bộ nào nạp (`interfaceHead` đã gỡ 28/10); chờ xóa theo `UI_LEGACY_CLEANUP.md`. |
