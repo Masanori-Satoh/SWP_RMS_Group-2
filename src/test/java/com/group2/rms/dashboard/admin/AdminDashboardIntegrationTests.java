@@ -1,7 +1,9 @@
-package com.group2.rms.dashboard;
+package com.group2.rms.dashboard.admin;
 
 import com.group2.rms.core.security.RoleAuthorities;
-import com.group2.rms.dashboard.dto.AdminDashboardResponse;
+import com.group2.rms.dashboard.admin.service.AdminDashboardService;
+import com.group2.rms.dashboard.admin.dto.AdminDashboardResponse;
+import com.group2.rms.dashboard.shared.DashboardMetricsRepository;
 import com.group2.rms.user.entity.User;
 import com.group2.rms.user.repository.UserRepository;
 import com.group2.rms.user.service.AccountListService;
@@ -36,7 +38,7 @@ import static org.mockito.Mockito.doReturn;
 @AutoConfigureMockMvc
 @Transactional(readOnly = true)
 class AdminDashboardIntegrationTests {
-    @MockitoSpyBean DashboardService dashboard;
+    @MockitoSpyBean AdminDashboardService dashboard;
     @Autowired DashboardMetricsRepository metrics;
     @Autowired UserRepository users;
     @MockitoSpyBean AccountListService accounts;
@@ -104,7 +106,7 @@ class AdminDashboardIntegrationTests {
 
     @Test
     void renderedDashboardLinksUseStoredIdsAndEveryStatusHasCorrectDestination() throws Exception {
-        String html = mvc.perform(get("/dashboard").with(user(admin.getUsername())
+        String html = mvc.perform(get("/dashboard/admin").with(user(admin.getUsername())
                         .authorities(new SimpleGrantedAuthority(RoleAuthorities.SYSTEM_ADMIN))))
                 .andExpect(status().isOk()).andReturn().getResponse().getContentAsString();
         for (String status : List.of("Active", "Inactive", "Blocked")) {
@@ -126,7 +128,7 @@ class AdminDashboardIntegrationTests {
                     .filter(user -> roleName.equals(user.getRole().getRoleName()) && "Active".equals(user.getAccountStatus()))
                     .findFirst().orElseThrow();
             String authority = roleName.equals("HR") ? "ROLE_HR" : "ROLE_HIRING_MANAGER";
-            String html = mvc.perform(get("/dashboard").with(user(actor.getUsername())
+            String html = mvc.perform(get("/dashboard/internal").with(user(actor.getUsername())
                             .authorities(new SimpleGrantedAuthority(authority))))
                     .andExpect(status().isOk()).andReturn().getResponse().getContentAsString(StandardCharsets.UTF_8);
             assertFalse(html.contains("data-summary="));
@@ -208,7 +210,7 @@ class AdminDashboardIntegrationTests {
                 new AdminDashboardResponse.CandidateSummary(0, 0, actual.candidates().from(),
                         actual.candidates().to(), actual.candidates().timeZone()));
         doReturn(empty).when(dashboard).forUsername(admin.getUsername());
-        String html = mvc.perform(get("/dashboard").with(user(admin.getUsername())
+        String html = mvc.perform(get("/dashboard/admin").with(user(admin.getUsername())
                         .authorities(new SimpleGrantedAuthority(RoleAuthorities.SYSTEM_ADMIN))))
                 .andExpect(status().isOk()).andReturn().getResponse().getContentAsString(StandardCharsets.UTF_8);
         for (var role : actual.roleCounts()) {

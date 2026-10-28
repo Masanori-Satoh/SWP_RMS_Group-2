@@ -1,4 +1,4 @@
-package com.group2.rms.dashboard;
+package com.group2.rms.dashboard.internal.service;
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -6,6 +6,8 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 
+import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -82,5 +84,31 @@ class DashboardLabelsTests {
         // Act + Assert
         assertEquals(expectedLabel, DashboardLabels.interviewStatus(status));
         assertEquals(expectedTone, DashboardLabels.interviewStatusTone(status));
+    }
+
+    @ParameterizedTest(name = "{0} / {1} -> {2} / {3}")
+    @CsvSource({"Job Requisition,Approved,Yêu cầu tuyển dụng,Đã duyệt", "Offer,Rejected,Đề nghị tuyển dụng,Đã từ chối"})
+    @DisplayName("Quyết định của Giám đốc -> loại và kết quả tiếng Việt")
+    void decisionLabels_shouldTranslateTypeAndStatus(String type, String status, String expectedType,
+            String expectedStatus) {
+        // Act + Assert
+        assertEquals(expectedType, DashboardLabels.decisionType(type));
+        assertEquals(expectedStatus, DashboardLabels.decisionStatus(status));
+    }
+
+    @Test
+    @DisplayName("Số tiền có dấu chấm hàng nghìn; chưa nhập -> 'Chưa nhập'")
+    void money_shouldGroupThousandsWithDots() {
+        // Act + Assert
+        assertEquals("15.000.000 VND", DashboardLabels.money(new BigDecimal("15000000")));
+        assertEquals("Chưa nhập", DashboardLabels.money(null));
+    }
+
+    @ParameterizedTest(name = "{0} -> {1}")
+    @CsvSource({"2026-10-26,T2", "2026-10-31,T7", "2026-11-01,CN"})
+    @DisplayName("Tên thứ ngắn: thứ Hai T2 ... Chủ nhật CN")
+    void weekday_shouldUseVietnameseShortNames(String day, String expected) {
+        // Act + Assert
+        assertEquals(expected, DashboardLabels.weekday(LocalDate.parse(day)));
     }
 }

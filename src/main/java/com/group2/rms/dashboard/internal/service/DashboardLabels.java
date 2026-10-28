@@ -1,8 +1,14 @@
-package com.group2.rms.dashboard;
+package com.group2.rms.dashboard.internal.service;
 
+import com.group2.rms.dashboard.internal.repository.InternalMetricsRepository.ApprovalActivity;
 import com.group2.rms.interview.entity.InterviewFormat;
 import com.group2.rms.interview.entity.InterviewStatus;
 
+import java.math.BigDecimal;
+import java.text.DecimalFormat;
+import java.text.DecimalFormatSymbols;
+import java.time.DayOfWeek;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 
@@ -16,6 +22,10 @@ public final class DashboardLabels {
     public static final int WAIT_WARNING_DAYS = 3;
     /** Chờ từ 7 ngày: tô đỏ, coi là quá hạn xử lý. */
     public static final int WAIT_DANGER_DAYS = 7;
+
+    /** Cột Status của RequisitionApproval / OfferApproval. */
+    public static final String DECISION_APPROVED = "Approved";
+    public static final String DECISION_REJECTED = "Rejected";
 
     private DashboardLabels() {
         // Chỉ chứa hàm static, không tạo đối tượng
@@ -73,5 +83,54 @@ public final class DashboardLabels {
             return "warning";
         }
         return "neutral";
+    }
+
+    /** Loại quyết định của Giám đốc (InternalMetricsRepository.ApprovalActivity.type). */
+    public static String decisionType(String type) {
+        if (ApprovalActivity.OFFER.equals(type)) {
+            return "Đề nghị tuyển dụng";
+        }
+        return "Yêu cầu tuyển dụng";
+    }
+
+    /** Kết quả quyết định (RequisitionApproval.Status, OfferApproval.Status). */
+    public static String decisionStatus(String status) {
+        if (DECISION_APPROVED.equals(status)) {
+            return "Đã duyệt";
+        }
+        if (DECISION_REJECTED.equals(status)) {
+            return "Đã từ chối";
+        }
+        return status;
+    }
+
+    public static String decisionTone(String status) {
+        if (DECISION_APPROVED.equals(status)) {
+            return "success";
+        }
+        if (DECISION_REJECTED.equals(status)) {
+            return "danger";
+        }
+        return "neutral";
+    }
+
+    /** Số tiền đầy đủ có dấu chấm ngăn cách hàng nghìn: 15000000 → "15.000.000 VND". */
+    public static String money(BigDecimal amount) {
+        if (amount == null) {
+            return "Chưa nhập";
+        }
+        DecimalFormatSymbols symbols = new DecimalFormatSymbols();
+        symbols.setGroupingSeparator('.');
+        DecimalFormat format = new DecimalFormat("#,##0", symbols);
+        return format.format(amount) + " VND";
+    }
+
+    /** Tên thứ ngắn kiểu Việt Nam: thứ Hai → "T2", Chủ nhật → "CN". */
+    public static String weekday(LocalDate day) {
+        DayOfWeek dayOfWeek = day.getDayOfWeek();
+        if (dayOfWeek == DayOfWeek.SUNDAY) {
+            return "CN";
+        }
+        return "T" + (dayOfWeek.getValue() + 1);
     }
 }

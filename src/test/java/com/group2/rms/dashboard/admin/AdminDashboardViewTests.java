@@ -1,10 +1,13 @@
-package com.group2.rms.dashboard;
+package com.group2.rms.dashboard.admin;
 
 import com.group2.rms.admin.dto.MonitorRowResponse;
 import com.group2.rms.core.config.SecurityConfig;
 import com.group2.rms.core.security.DatabaseUserDetailsService;
-import com.group2.rms.dashboard.dto.AdminDashboardResponse;
-import com.group2.rms.dashboard.dto.AdminDashboardResponse.*;
+import com.group2.rms.dashboard.admin.controller.AdminDashboardController;
+import com.group2.rms.dashboard.admin.service.AdminDashboardService;
+import com.group2.rms.dashboard.admin.dto.AdminDashboardResponse;
+import com.group2.rms.dashboard.admin.dto.AdminDashboardResponse.*;
+import com.group2.rms.dashboard.shared.DashboardMetricsRepository;
 import com.group2.rms.user.repository.UserRepository;
 import com.group2.rms.user.entity.User;
 import com.group2.rms.user.entity.Role;
@@ -30,12 +33,11 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 /** Real dashboard/layout rendering with fixture data; no database or service probes. */
-@WebMvcTest(DashboardController.class)
+@WebMvcTest(AdminDashboardController.class)
 @Import({SecurityConfig.class, DatabaseUserDetailsService.class})
 class AdminDashboardViewTests {
     @Autowired MockMvc mvc;
-    @MockitoBean DashboardService dashboards;
-    @MockitoBean DashboardChartService charts;
+    @MockitoBean AdminDashboardService dashboards;
     @MockitoBean UserRepository users;
 
     @BeforeEach void activeAdminSession() {
@@ -60,13 +62,12 @@ class AdminDashboardViewTests {
 
     private String render(AdminDashboardResponse data, String snapshot) throws Exception {
         when(dashboards.forUsername("dashboard-ui")).thenReturn(data);
-        String html = mvc.perform(get("/dashboard").with(user("dashboard-ui").roles("SYSTEM_ADMIN")))
+        String html = mvc.perform(get("/dashboard/admin").with(user("dashboard-ui").roles("SYSTEM_ADMIN")))
                 .andExpect(status().isOk()).andReturn().getResponse().getContentAsString(StandardCharsets.UTF_8);
         if (Boolean.getBoolean("dashboard.ui.snapshots")) {
             Files.createDirectories(Path.of("target/dashboard-ui"));
             Files.writeString(Path.of("target/dashboard-ui/" + snapshot + ".html"), html, StandardCharsets.UTF_8);
         }
-        verifyNoInteractions(charts);
         return html;
     }
 

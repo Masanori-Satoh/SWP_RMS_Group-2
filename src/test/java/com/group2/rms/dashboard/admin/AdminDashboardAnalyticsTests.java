@@ -1,12 +1,15 @@
-package com.group2.rms.dashboard;
+package com.group2.rms.dashboard.admin;
 
 import com.group2.rms.admin.dto.MonitorRowResponse;
 import com.group2.rms.admin.service.ApiMonitoringService;
 import com.group2.rms.core.security.RoleAuthorities;
 import com.group2.rms.core.web.PageLinks;
-import com.group2.rms.dashboard.DashboardMetricsRepository.RoleCount;
-import com.group2.rms.dashboard.DashboardMetricsRepository.StatusCount;
-import com.group2.rms.dashboard.dto.AdminDashboardResponse;
+import com.group2.rms.dashboard.shared.DashboardMetricsRepository.RoleCount;
+import com.group2.rms.dashboard.shared.DashboardMetricsRepository.StatusCount;
+import com.group2.rms.dashboard.admin.dto.AdminDashboardResponse;
+import com.group2.rms.dashboard.admin.service.AdminDashboardService;
+import com.group2.rms.dashboard.shared.DashboardAccess;
+import com.group2.rms.dashboard.shared.DashboardMetricsRepository;
 import com.group2.rms.user.entity.Role;
 import com.group2.rms.user.entity.User;
 import com.group2.rms.user.repository.UserRepository;
@@ -31,9 +34,8 @@ class AdminDashboardAnalyticsTests {
     private final UserRepository users = mock(UserRepository.class);
     private final DashboardMetricsRepository metrics = mock(DashboardMetricsRepository.class);
     private final ApiMonitoringService monitoring = mock(ApiMonitoringService.class);
-    private final HiringManagerDashboardService hiringManagerDashboard = mock(HiringManagerDashboardService.class);
-    private final DashboardService service = new DashboardService(users, metrics, monitoring, hiringManagerDashboard,
-            Clock.systemDefaultZone());
+    private final AdminDashboardService service = new AdminDashboardService(new DashboardAccess(users), metrics,
+            monitoring, Clock.systemDefaultZone());
 
     private void admin(String status) {
         when(users.findByUsernameIgnoreCase("analytics-test")).thenReturn(Optional.of(User.builder()
@@ -94,27 +96,26 @@ class AdminDashboardAnalyticsTests {
     }
 
     @Test
-    void hrDashboardDoesNotLoadAdminMetricsOrMonitoring() {
-        when(users.findByUsernameIgnoreCase("hr-test")).thenReturn(Optional.of(User.builder()
-                .username("hr-test").fullName("HR test").accountStatus("Active")
-                .role(Role.builder().roleId(97).roleName("HR").build()).build()));
-        service.forUsername("hr-test");
-        verify(metrics, never()).internalAccountsByRole();
-        verify(metrics, never()).internalAccountStatuses();
-        verify(metrics, never()).candidates();
-        verify(metrics, never()).candidatesCreatedBetween(any(), any());
-        verifyNoInteractions(monitoring);
+    void staffRolesCannotOpenAdminDashboardOrLoadAdminMetrics() {
+        for (String roleName : List.of("HR", "Hiring Manager", "Director", "Interviewer")) {
+            when(users.findByUsernameIgnoreCase("staff-test")).thenReturn(Optional.of(User.builder()
+                    .userId(77).username("staff-test").fullName("Staff").accountStatus("Active")
+                    .role(Role.builder().roleId(97).roleName(roleName).build()).build()));
+            assertThrows(AccessDeniedException.class, () -> service.forUsername("staff-test"));
+        }
+        verifyNoInteractions(metrics, monitoring);
     }
 
     @Test
-    void hiringManagerDoesNotLoadCandidateSummaryMetrics() {
-        when(users.findByUsernameIgnoreCase("manager-test")).thenReturn(Optional.of(User.builder()
-                .userId(77).username("manager-test").fullName("Manager").accountStatus("Active")
-                .role(Role.builder().roleId(97).roleName("Hiring Manager").build()).build()));
-        service.forUsername("manager-test");
-        verify(metrics, never()).candidates();
-        verify(metrics, never()).candidatesCreatedBetween(any(), any());
-        verifyNoInteractions(monitoring);
+    void departmentCountsPreserveActiveInactiveAndTotal() {
+        admin("Active");
+        when(metrics.departmentStatuses()).thenReturn(List.of(new StatusCount("Active", 2),
+                new StatusCount("Inactive", 1), new StatusCount("Other", 4)));
+        var response = service.forUsername("analytics-test");
+        assertEquals(7L, response.departments().totalCount());
+        assertEquals(2L, response.departments().activeCount());
+        assertEquals(1L, response.departments().inactiveCount());
+        verify(monitoring, times(1)).rows();
     }
 
     @Test

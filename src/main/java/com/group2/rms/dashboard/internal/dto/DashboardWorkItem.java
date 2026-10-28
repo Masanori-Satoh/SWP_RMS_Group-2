@@ -1,4 +1,4 @@
-package com.group2.rms.dashboard.dto;
+package com.group2.rms.dashboard.internal.dto;
 
 /*
  * DTO: một việc cần xử lý trên dashboard (nhãn loại việc, nội dung, đã chờ bao lâu, nút thao tác).
@@ -11,5 +11,6 @@ public record DashboardWorkItem(
         String waitText,
         String waitTone,
         String actionLabel,
-        String href) {
+        String href,
+        boolean primary) {
 }

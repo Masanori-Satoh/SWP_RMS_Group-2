@@ -1,4 +1,4 @@
-package com.group2.rms.dashboard.dto;
+package com.group2.rms.dashboard.internal.dto;
 
 import java.time.LocalDateTime;
 

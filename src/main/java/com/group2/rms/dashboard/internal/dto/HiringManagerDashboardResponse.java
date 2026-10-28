@@ -1,4 +1,4 @@
-package com.group2.rms.dashboard.dto;
+package com.group2.rms.dashboard.internal.dto;
 
 import java.util.List;
 
@@ -9,14 +9,14 @@ import java.util.List;
 public record HiringManagerDashboardResponse(
         String roleName,
         String fullName,
+        String scopeLabel,
         List<DashboardMetricResponse> kpis,
-        List<RequisitionItem> recentRequisitions,
-        List<DashboardInterviewItem> upcomingInterviews,
         List<DashboardWorkItem> needsAttention,
         int moreNeedsAttention,
-        List<DashboardChartResponse> charts) implements DashboardResponse {
+        List<DashboardInterviewItem> upcomingInterviews,
+        List<HiringProgressItem> progress,
+        List<RequisitionItem> recentRequisitions) implements DashboardResponse {
 
-    /** Tên file trong templates/dashboard/sections/ mà index.html chèn vào. */
     @Override
     public String section() {
         return "hiring-manager";

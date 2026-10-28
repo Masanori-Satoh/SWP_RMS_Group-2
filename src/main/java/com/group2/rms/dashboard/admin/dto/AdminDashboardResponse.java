@@ -1,10 +1,14 @@
-package com.group2.rms.dashboard.dto;
+package com.group2.rms.dashboard.admin.dto;
 
 import java.util.List;
 import java.time.LocalDateTime;
 import com.group2.rms.admin.dto.MonitorRowResponse;
-import com.group2.rms.dashboard.DashboardMetricsRepository.RoleCount;
+import com.group2.rms.dashboard.shared.DashboardBreakdownResponse;
+import com.group2.rms.dashboard.shared.DashboardMetricsRepository.RoleCount;
 
+/*
+ * DTO: toàn bộ dữ liệu dashboard System Admin (dashboard/admin.html).
+ */
 public record AdminDashboardResponse(
         String roleName,
         String fullName,
@@ -15,7 +19,7 @@ public record AdminDashboardResponse(
         List<Shortcut> shortcuts,
         List<RoleCount> roleCounts,
         List<MonitorRowResponse> monitorRows,
-        CandidateSummary candidates) implements DashboardResponse {
+        CandidateSummary candidates) {
 
     public record CandidateSummary(long total, long newLast30Days,
             LocalDateTime from, LocalDateTime to, String timeZone) {

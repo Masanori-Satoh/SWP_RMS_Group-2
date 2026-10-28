@@ -1,6 +1,6 @@
 package com.group2.rms.service;
 
-import com.group2.rms.dashboard.*;
+import com.group2.rms.dashboard.shared.DashboardMetricsRepository;
 import com.group2.rms.user.repository.*;
 import com.group2.rms.user.service.DepartmentService;
 import org.junit.jupiter.api.Test;
