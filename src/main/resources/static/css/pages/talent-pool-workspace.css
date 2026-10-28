@@ -1,0 +1,61 @@
+/* =============================================================================
+   PAGES/TALENT-POOL-WORKSPACE.CSS — Potential Candidate surfaces (/talent-pool).
+   Reuses catalog adw surfaces and the management GET toolbar. Only feature layout,
+   source-CV selection, readable local status aliases and responsive spacing.
+   Prefix: tpw-. Shared shell, tokens and business handlers are not redefined here.
+   ============================================================================= */
+.tpw-page { min-width: 0; }
+.tpw-heading { align-items: center; gap: var(--s4) var(--s6); }
+.tpw-subtitle { max-width: 72ch; margin-top: var(--s3); color: var(--ink); font-size: var(--font-base); }
+.tpw-page .tpw-destination { margin-bottom: var(--s4); padding: var(--s4) var(--s6); }
+.tpw-page .tpw-filter { display: flex; align-items: center; gap: var(--s4); padding: var(--s4) var(--s6); margin-bottom: var(--s4); }
+.tpw-filter-controls { flex: 1 1 220px; }
+.tpw-page .tpw-filter-toggle { min-height: 44px; border-radius: var(--radius-md); }
+.tpw-filter-fields { width: min(560px, 100%); }
+.tpw-search { display: flex; align-items: end; gap: var(--s2); flex: 0 1 480px; min-width: 0; }
+.tpw-search-field { flex: 1 1 auto; min-width: 0; }
+.tpw-page .tpw-toolbar-input { height: 44px; min-height: 44px; font-size: 14px; }
+.tpw-search > button { min-height: 44px; flex-shrink: 0; }
+.tpw-page .tpw-results { padding: 0; margin-bottom: var(--s6); min-width: 0; overflow: clip; }
+.tpw-panel-heading { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--s2) var(--s4); margin: 0; padding: var(--s4) var(--s6); }
+.tpw-panel-title { margin: 0; }
+.tpw-result-count { color: var(--muted); font-size: 14px; font-variant-numeric: tabular-nums; }
+.tpw-result-count strong { color: var(--brand-dark); }
+.tpw-page .tpw-table-scroll { border: 0; border-radius: 0; margin: var(--s3) var(--s6) 0; max-width: calc(100% - var(--s12)); }
+.tpw-suggestions-table { min-width: 850px; }
+.tpw-page .tpw-icon-button { width: 40px; height: 40px; min-width: 40px; min-height: 40px; padding: var(--s2); flex-shrink: 0; }
+/* The catalog permits page-owned placement and spacing of its pager. */
+.tpw-pagination .pagination-wrapper { margin: 0; padding: var(--s2) 0; }
+.tpw-pagination { padding: var(--s3) var(--s6); border-top: 1px solid var(--line); }
+.tpw-empty { padding: var(--s6); margin: 0; }
+.tpw-intro { margin: 0; padding: var(--s4) var(--s6); font-size: 14px; line-height: 1.6; }
+.tpw-results > #tp-feedback:not(:empty), .tpw-results > noscript { display: block; padding-inline: var(--s6); }
+.tpw-page .tpw-profile { margin-bottom: var(--s6); }
+.tpw-profile-top { justify-content: flex-end; margin-bottom: var(--s4); }
+.tpw-profile-title::after { content: none; }
+.tpw-detail-heading { padding-bottom: var(--s4); margin-bottom: var(--s4); }
+.tpw-page .tpw-tools { padding: var(--s4) var(--s6); gap: var(--s3) var(--s6); margin-bottom: var(--s4); }
+.tpw-page .tpw-recommendation-name { color: var(--brand-dark); font: 700 20px/1.35 var(--sans); }
+/* Local aliases correct the legacy workspace badge foreground without changing
+   .badge modifiers or the colour of any other module. Warning ink exceeds AA. */
+.tpw-page .tpw-status { flex: none; white-space: nowrap; color: var(--neutral); }
+.tpw-page .tpw-status[data-tpw-tone="success"] { color: var(--success); }
+.tpw-page .tpw-status[data-tpw-tone="warning"] { color: color-mix(in srgb, var(--warning) 90%, var(--ink)); }
+@media (max-width: 992px) {
+  .tpw-search { flex: 1 1 320px; }
+  .tpw-heading > .tp-recommendation-actions { justify-content: flex-start; }
+}
+@media (max-width: 768px) {
+  .tpw-page .tpw-filter, .tpw-page .tpw-tools { padding: var(--s4); }
+  .tpw-filter-controls { flex: 1 1 100%; }
+  .tpw-search { flex: 1 1 100%; }
+  .tpw-filter-fields { grid-template-columns: minmax(0, 1fr); }
+  .tpw-panel-heading { padding: var(--s4); }
+  .tpw-table-scroll { margin-inline: var(--s4); max-width: calc(100% - var(--s8)); }
+  .tpw-pagination, .tpw-intro { padding-inline: var(--s4); }
+  .tpw-heading > .tp-recommendation-actions { width: 100%; }
+  .tpw-heading > .tp-recommendation-actions > a { flex: 1 1 220px; }
+  .tpw-tools > .tp-recommendation-search { width: 100%; min-width: 0; }
+  .tpw-tools .tpw-toolbar-input { min-width: 0; }
+  .tpw-page .tpw-profile-title { font-size: 28px; }
+}

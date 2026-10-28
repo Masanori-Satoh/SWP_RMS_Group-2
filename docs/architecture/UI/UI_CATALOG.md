@@ -535,3 +535,25 @@ và form tạo/sửa tài khoản/phòng ban. Các trang khác không tự độ
 Theo yêu cầu tiếp theo của người dùng: bỏ breadcrumb nhỏ phía trên tiêu đề ở
 các trang Admin và form tạo/sửa. Giữ tiêu đề lớn, nút thao tác và điều hướng
 sidebar; không bỏ hướng dẫn nhập liệu hoặc liên kết Hủy trong form.
+
+
+### Cập nhật 28/10/2026 — Potential Candidate dùng giao diện workspace Admin
+
+- Các trang `talent-pool/list`, `detail`, `suggestions`, `recommendations` tiếp tục
+  decorate `layout/internal`, sử dụng component `adw-` đã có qua
+  `fragments/ui/admin-workspace :: scene` và `:: scripts`. Không truyền role
+  System Admin cho các trang này; menu và danh tính vẫn lấy từ HR/Hiring Manager.
+- Tái sử dụng `adw-heading`, `adw-title`, `adw-surface`, `adw-panel-heading`,
+  `adw-panel-title`, `adw-data-table`. Không chép lại khung/sidebar/topbar/logo.
+- `list` dùng GET toolbar `mft-` và `management-filters.js` có sẵn: từ khóa ở
+  ngoài; người đánh dấu và vị trí từng ứng tuyển trong disclosure. Giữ tên query,
+  `jobPostingId` và guard bảo toàn danh sách đang chọn.
+- `pages/talent-pool-workspace.css` chỉ nạp trên bốn trang này. Các alias `tpw-`
+  điều chỉnh inset bảng, spacing phân trang, cỡ nút icon 40px và bố cục hẹp;
+  bảng cuộn trong wrapper, không bỏ cột hoặc đổi dữ liệu.
+- `tpw-status` + `data-tpw-tone="warning|success"` sửa màu chữ badge tại chỗ,
+  không redefine `.badge` hoặc sửa `workspace.css`. Warning dùng
+  `color-mix(in srgb, var(--warning) 90%, var(--ink))`; neutral dùng token hiện có.
+- Đây là tái sử dụng component hiện trạng, không phải xác nhận đã khắc phục nợ
+  phân tầng shell/CSS hoặc stylesheet lặp của `adw-`.
+- Chi tiết file change và kiểm thử: [work log](../../management/work_logs/2026-10-28-potential-candidate-admin-ui-sync.md).

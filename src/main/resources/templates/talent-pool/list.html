@@ -4,40 +4,56 @@
     <title>Ứng viên tiềm năng — Mộc RMS</title>
     <th:block layout:fragment="styles">
         <link rel="stylesheet" th:href="@{/css/pages/applications.css}">
+        <link rel="stylesheet" th:href="@{/css/pages/management-filters.css}">
         <link rel="stylesheet" th:href="@{/css/pages/talent-pool.css}">
+        <link rel="stylesheet" th:href="@{/css/pages/talent-pool-workspace.css}">
     </th:block>
 </head>
 <body>
-<main id="main" layout:fragment="content" class="page-content container app-page tp-page" tabindex="-1"
+<main id="main" layout:fragment="content" class="page-content container app-page tp-page tpw-page adw-page" tabindex="-1"
       th:with="hrMode=${jobPostingId != null and viewerRole == 'HR'},selectionMode=${jobPostingId != null and (viewerRole == 'Hiring Manager' or viewerRole == 'HR')}"
       th:attr="data-pool-job=${jobPostingId},data-pool-scope=${selectionScope},data-pool-base=@{/talent-pool},data-pool-flow=${hrMode ? 'hr' : 'hm'}">
+    <th:block th:replace="~{fragments/ui/admin-workspace :: scene}"></th:block>
     <div th:if="${successMessage}" class="alert alert--success" role="status" th:text="${successMessage}"></div>
     <div th:if="${errorMessage}" class="alert alert--danger" role="alert" th:text="${errorMessage}"></div>
-    <nav class="app-breadcrumb" aria-label="Điều hướng">
-        <a th:href="@{/dashboard}">Bảng điều khiển</a><span aria-hidden="true">/</span><span aria-current="page">Ứng viên tiềm năng</span>
-    </nav>
-    <div class="page-header">
-        <div><h1 class="page-title" th:text="${selectionMode ? 'Chọn ứng viên tiềm năng' : 'Ứng viên tiềm năng'}"></h1>
-            <p class="page-subtitle" th:text="${hrMode ? 'Chọn ứng viên và CV cũ để gửi gợi ý cho HM phụ trách tin tuyển dụng.' : (selectionMode ? 'Chọn ứng viên từ kho chung để đề xuất cho tin tuyển dụng.' : 'Xem CV đã nộp và ghi chú của HR, HM trong kho chung.')}"></p></div>
+
+    <div class="page-header adw-heading tpw-heading">
+        <div><h1 class="page-title adw-title" th:text="${selectionMode ? 'Chọn ứng viên tiềm năng' : 'Ứng viên tiềm năng'}"></h1>
+            <p class="page-subtitle tpw-subtitle" th:text="${hrMode ? 'Chọn ứng viên và CV cũ để gửi gợi ý cho HM phụ trách tin tuyển dụng.' : (selectionMode ? 'Chọn ứng viên từ kho chung để đề xuất cho tin tuyển dụng.' : 'Xem CV đã nộp và ghi chú của HR, HM trong kho chung.')}"></p></div>
         <a th:if="${jobPostingId != null}" class="btn btn--secondary" th:href="@{/internal/job-postings/{id}(id=${jobPostingId})}">Quay lại tin tuyển dụng</a>
     </div>
-    <section th:if="${jobTitle != null}" class="card tp-destination" aria-labelledby="tp-destination-title">
+    <section th:if="${jobTitle != null}" class="card tp-destination adw-surface tpw-destination" aria-labelledby="tp-destination-title">
         <div><p class="tp-destination__label" th:text="${hrMode ? 'Gợi ý ứng viên cho vị trí' : 'Đang thêm vào'}"></p><h2 id="tp-destination-title" class="tp-destination__title" th:text="${jobTitle}"></h2><p th:if="${hrMode and receivingManager != null}" class="text-muted" th:text="|HM phụ trách: ${receivingManager}|"></p></div>
         <a class="btn btn--secondary btn--sm" th:href="${hrMode ? '/talent-pool/jobs/' + jobPostingId + '/recommendations' : '/talent-pool/jobs/' + jobPostingId + '/suggestions'}" th:text="${hrMode ? 'Xem gợi ý đã gửi' : 'Xem danh sách đã đề xuất'}"></a>
     </section>
-    <form class="card tp-filter" method="get" th:action="@{/talent-pool}" role="search" aria-label="Lọc kho ứng viên">
+    <form class="card tp-filter tpw-filter mft-toolbar adw-surface" method="get" th:action="@{/talent-pool}" role="search" aria-label="Lọc kho ứng viên">
         <input th:if="${jobPostingId != null}" type="hidden" name="jobPostingId" th:value="${jobPostingId}">
-        <div class="form-group"><label class="form-label" for="keyword">Ứng viên</label><input class="form-input" type="search" id="keyword" name="keyword" maxlength="100" placeholder="Họ tên hoặc email" th:value="${filter.keyword}"></div>
-        <div class="form-group"><label class="form-label" for="markedBy">Người đánh dấu</label><select class="form-select" id="markedBy" name="markedBy"><option value="">Tất cả</option><option th:each="author : ${authors}" th:value="${author.key}" th:text="${author.value}" th:selected="${filter.markedBy == author.key}"></option></select></div>
-        <div class="form-group"><label class="form-label" for="sourceJobId">Vị trí từng ứng tuyển</label><select class="form-select" id="sourceJobId" name="sourceJobId"><option value="">Tất cả vị trí</option><option th:each="job : ${sourceJobs}" th:value="${job.key}" th:text="${job.value}" th:selected="${filter.sourceJobId == job.key}"></option></select></div>
-        <div class="tp-filter__actions"><button class="btn btn--primary" type="submit">Lọc</button><a class="btn btn--secondary" th:href="@{/talent-pool(jobPostingId=${jobPostingId})}">Xóa bộ lọc</a></div>
+        <div class="mft-controls tpw-filter-controls">
+            <details class="mft-disclosure">
+                <summary class="mft-toggle tpw-filter-toggle" aria-controls="tp-filter-fields">
+                    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 4h18l-7 8v7l-4 2v-9Z"/></svg>
+                    Bộ lọc
+                </summary>
+                <div id="tp-filter-fields" class="mft-popover tpw-filter-fields">
+                    <div class="form-group mft-field"><label class="form-label" for="markedBy">Người đánh dấu</label><select class="form-select" id="markedBy" name="markedBy"><option value="">Tất cả</option><option th:each="author : ${authors}" th:value="${author.key}" th:text="${author.value}" th:selected="${filter.markedBy == author.key}"></option></select></div>
+                    <div class="form-group mft-field"><label class="form-label" for="sourceJobId">Vị trí từng ứng tuyển</label><select class="form-select" id="sourceJobId" name="sourceJobId"><option value="">Tất cả vị trí</option><option th:each="job : ${sourceJobs}" th:value="${job.key}" th:text="${job.value}" th:selected="${filter.sourceJobId == job.key}"></option></select></div>
+                    <div class="tp-filter__actions mft-actions"><button class="btn btn--primary btn--sm" type="submit">Lọc</button><a class="btn btn--secondary btn--sm" th:href="@{/talent-pool(jobPostingId=${jobPostingId})}">Xóa bộ lọc</a></div>
+                </div>
+            </details>
+            <span th:if="${filter.keyword != null or filter.markedBy != null or filter.sourceJobId != null}" class="badge badge--neutral tpw-status">Đang lọc</span>
+        </div>
+        <div class="tpw-search">
+            <div class="form-group tpw-search-field"><label class="sr-only" for="keyword">Ứng viên</label><input class="form-input tpw-toolbar-input" type="search" id="keyword" name="keyword" maxlength="100" placeholder="Họ tên hoặc email" th:value="${filter.keyword}"></div>
+            <button class="btn btn--secondary btn--sm" type="submit">Tìm kiếm</button>
+        </div>
     </form>
-    <div class="tp-results"><p><strong th:text="${page.totalElements}">0</strong> ứng viên trong kho chung</p><span th:if="${filter.keyword != null or filter.markedBy != null or filter.sourceJobId != null}" class="badge badge--neutral">Đang lọc</span></div>
+    <section class="card adw-surface tpw-results" aria-labelledby="tp-results-title">
+    <header class="tp-results tpw-panel-heading adw-panel-heading"><h2 id="tp-results-title" class="adw-panel-title tpw-panel-title">Kho ứng viên tiềm năng</h2><p class="tpw-result-count"><strong th:text="${page.totalElements}">0</strong> ứng viên trong kho chung</p></header>
     <p id="tp-feedback" class="tp-feedback" role="status" aria-live="polite"></p>
     <noscript><p class="alert alert--warning">Bật JavaScript để chọn nhiều ứng viên và xem nhanh CV. Bạn vẫn có thể mở hồ sơ chi tiết.</p></noscript>
-    <section th:if="${page.empty}" class="card tp-empty"><h2 class="app-section-title">Chưa có ứng viên phù hợp</h2><p class="text-muted">Thử bỏ bớt bộ lọc hoặc lưu ứng viên tại trang hồ sơ ứng tuyển.</p><a class="btn btn--secondary" th:href="@{/applications}">Xem hồ sơ ứng tuyển</a></section>
-    <div th:unless="${page.empty}" class="table-wrapper">
-        <table class="table tp-table">
+    <section th:if="${page.empty}" class="tp-empty tpw-empty"><h2 class="app-section-title">Chưa có ứng viên phù hợp</h2><p class="text-muted">Thử bỏ bớt bộ lọc hoặc lưu ứng viên tại trang hồ sơ ứng tuyển.</p><a class="btn btn--secondary" th:href="@{/applications}">Xem hồ sơ ứng tuyển</a></section>
+    <div th:unless="${page.empty}" class="table-wrapper tpw-table-scroll">
+        <table class="table tp-table adw-data-table">
             <caption class="sr-only">Ứng viên trong kho tiềm năng và CV nguồn</caption>
             <thead><tr>
                 <th th:if="${selectionMode}" scope="col" class="tp-check-cell"><input id="tp-select-page" class="tp-checkbox" type="checkbox" aria-label="Chọn tất cả ứng viên có CV trên trang này" disabled></th>
@@ -60,14 +76,14 @@
                     </th:block>
                 </td>
                 <td><div class="tp-row-actions">
-                    <button th:unless="${#lists.isEmpty(candidate.cvs)}" type="button" class="btn btn--secondary btn--sm app-icon-button" data-app-preview title="Xem CV nguồn đã chọn" aria-haspopup="dialog" aria-controls="app-preview"
+                    <button th:unless="${#lists.isEmpty(candidate.cvs)}" type="button" class="btn btn--secondary btn--sm app-icon-button tpw-icon-button" data-app-preview title="Xem CV nguồn đã chọn" aria-haspopup="dialog" aria-controls="app-preview"
                         th:attr="aria-label=|Xem CV nguồn của ${candidate.fullName}|,data-name=${candidate.fullName},data-job=${candidate.cvs[0].jobTitle},data-cv-url=@{/talent-pool/{id}/cv/{appId}(id=${candidate.candidateId},appId=${candidate.cvs[0].applicationId})},data-detail-url=@{/talent-pool/{id}(id=${candidate.candidateId},jobPostingId=${jobPostingId},keyword=${filter.keyword},markedBy=${filter.markedBy},sourceJobId=${filter.sourceJobId},page=${page.number})}">
                         <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12Z"/><circle cx="12" cy="12" r="3"/></svg>
                     </button>
-                    <button type="button" class="btn btn--secondary btn--sm app-icon-button" data-pool-notes title="Xem ghi chú chung" aria-haspopup="dialog" aria-controls="tp-notes" th:attr="aria-label=|Xem ghi chú chung của ${candidate.fullName}|,data-notes-url=@{/talent-pool/{id}/notes(id=${candidate.candidateId})}">
+                    <button type="button" class="btn btn--secondary btn--sm app-icon-button tpw-icon-button" data-pool-notes title="Xem ghi chú chung" aria-haspopup="dialog" aria-controls="tp-notes" th:attr="aria-label=|Xem ghi chú chung của ${candidate.fullName}|,data-notes-url=@{/talent-pool/{id}/notes(id=${candidate.candidateId})}">
                         <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M4 4h16v12H9l-5 4V4Z M8 8h8 M8 12h6"/></svg>
                     </button>
-                    <a class="btn btn--secondary btn--sm app-icon-button" title="Xem hồ sơ chi tiết" data-pool-detail th:attr="aria-label=|Xem hồ sơ của ${candidate.fullName}|" th:href="@{/talent-pool/{id}(id=${candidate.candidateId},jobPostingId=${jobPostingId},keyword=${filter.keyword},markedBy=${filter.markedBy},sourceJobId=${filter.sourceJobId},page=${page.number})}">
+                    <a class="btn btn--secondary btn--sm app-icon-button tpw-icon-button" title="Xem hồ sơ chi tiết" data-pool-detail th:attr="aria-label=|Xem hồ sơ của ${candidate.fullName}|" th:href="@{/talent-pool/{id}(id=${candidate.candidateId},jobPostingId=${jobPostingId},keyword=${filter.keyword},markedBy=${filter.markedBy},sourceJobId=${filter.sourceJobId},page=${page.number})}">
                         <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><circle cx="12" cy="7" r="4"/><path d="M4 21v-2a8 8 0 0 1 16 0v2"/></svg>
                     </a>
                 </div></td>
@@ -75,7 +91,8 @@
             </tbody>
         </table>
     </div>
-    <nav th:replace="~{fragments/ui/pagination :: paged(page=${page})}"></nav>
+    <div class="tpw-pagination"><nav th:replace="~{fragments/ui/pagination :: paged(page=${page})}"></nav></div>
+    </section>
     <div th:if="${selectionMode}" id="tp-selection-slot" class="tp-selection-slot" hidden>
         <section id="tp-selection-bar" class="tp-selection-bar" aria-label="Danh sách đang chọn" hidden>
             <div><strong id="tp-selection-count" role="status" aria-live="polite">Đã chọn 0 ứng viên</strong><p class="tp-selection-destination" th:text="${jobTitle}"></p></div>
@@ -83,7 +100,7 @@
         </section>
     </div>
     <dialog th:if="${selectionMode}" id="tp-confirm" class="dialog tp-dialog tp-confirm" aria-labelledby="tp-confirm-title">
-        <div class="tp-dialog-head"><h2 id="tp-confirm-title" class="app-section-title" tabindex="-1">Xác nhận thêm ứng viên</h2><button type="button" class="btn btn--secondary btn--sm app-icon-button" data-pool-close aria-label="Đóng"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="m6 6 12 12 M6 18 18 6"/></svg></button></div>
+        <div class="tp-dialog-head"><h2 id="tp-confirm-title" class="app-section-title" tabindex="-1">Xác nhận thêm ứng viên</h2><button type="button" class="btn btn--secondary btn--sm app-icon-button tpw-icon-button" data-pool-close aria-label="Đóng"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="m6 6 12 12 M6 18 18 6"/></svg></button></div>
         <p id="tp-confirm-summary" class="tp-confirm-subtitle" th:text="${hrMode ? 'Gửi gợi ý cho HM xem xét' : 'Thêm ứng viên tiềm năng vào tin tuyển dụng'}"></p><p class="tp-confirm-job" th:text="${jobTitle}"></p><p th:if="${hrMode and receivingManager != null}" class="tp-confirm-subtitle" th:text="|HM phụ trách: ${receivingManager}|"></p><p id="tp-review-status" class="tp-confirm-status" role="status"></p>
         <ul id="tp-confirm-list" class="tp-confirm-list" aria-label="Ứng viên và CV nguồn đang chọn"></ul>
         <p class="tp-confirm-subtitle" th:text="${hrMode ? 'HM sẽ xem xét gợi ý. Chỉ sau khi HM chấp nhận, HR mới liên hệ xác nhận ứng viên đồng ý.' : 'Đề xuất được lưu nội bộ. HR sẽ liên hệ trước khi xác nhận ứng tuyển.'}"></p>
@@ -93,13 +110,15 @@
         </form>
     </dialog>
     <dialog id="tp-notes" class="dialog tp-dialog" aria-labelledby="tp-notes-title tp-notes-name">
-        <div class="tp-dialog-head"><div><h2 id="tp-notes-title" class="app-section-title">Ghi chú chung</h2><p id="tp-notes-name"></p></div><button type="button" class="btn btn--secondary btn--sm app-icon-button" data-pool-close aria-label="Đóng"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="m6 6 12 12 M6 18 18 6"/></svg></button></div>
+        <div class="tp-dialog-head"><div><h2 id="tp-notes-title" class="app-section-title">Ghi chú chung</h2><p id="tp-notes-name"></p></div><button type="button" class="btn btn--secondary btn--sm app-icon-button tpw-icon-button" data-pool-close aria-label="Đóng"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="m6 6 12 12 M6 18 18 6"/></svg></button></div>
         <p id="tp-notes-status" role="status"></p><ul id="tp-notes-list" class="app-notes"></ul>
         <div class="tp-dialog-footer"><a id="tp-notes-detail" class="btn btn--secondary btn--sm">Mở hồ sơ và thêm ghi chú</a><button id="tp-notes-retry" type="button" class="btn btn--secondary btn--sm" hidden>Thử lại</button></div>
     </dialog>
     <dialog th:replace="~{candidate/application-dialogs :: preview}"></dialog>
 </main>
 <th:block layout:fragment="scripts">
+    <th:block th:replace="~{fragments/ui/admin-workspace :: scripts}"></th:block>
+    <script th:src="@{/js/pages/management-filters.js}" defer></script>
     <!--store list potential of jobposting-->
     <script th:src="@{/js/pages/talent-pool-selection.js}" defer></script>
     <script th:src="@{/js/pages/talent-pool.js}" defer></script>
