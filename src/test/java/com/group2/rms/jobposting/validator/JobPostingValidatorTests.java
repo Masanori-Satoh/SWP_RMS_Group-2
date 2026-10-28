@@ -51,14 +51,13 @@ class JobPostingValidatorTests {
                 .salaryMode(JobPostingCreateRequest.SALARY_NEGOTIABLE)
                 .showPositions(false)
                 .applicationDeadline(TODAY.plusDays(30))
-                .publishMode(JobPostingCreateRequest.PUBLISH_NOW)
                 .action(action)
                 .build();
     }
 
-    private Map<String, String> errorsOf(JobPostingCreateRequest form, boolean publishing, boolean canSchedule) {
+    private Map<String, String> errorsOf(JobPostingCreateRequest form, boolean publishing) {
         JobPostingValidationException exception = assertThrows(JobPostingValidationException.class,
-                () -> validator.normalizeAndValidate(form, publishing, canSchedule));
+                () -> validator.normalizeAndValidate(form, publishing));
         return exception.getFieldErrors();
     }
 
@@ -76,7 +75,7 @@ class JobPostingValidatorTests {
             JobPostingCreateRequest form = validForm(JobPostingValidator.ACTION_PUBLISH);
 
             // Act
-            validator.normalizeAndValidate(form, true, true);
+            validator.normalizeAndValidate(form, true);
 
             // Assert
             assertEquals("Key Account Manager", form.getPostingTitle());
@@ -91,7 +90,7 @@ class JobPostingValidatorTests {
             JobPostingCreateRequest form = validForm(JobPostingValidator.ACTION_DRAFT);
             form.setPostingTitle(title);
 
-            assertEquals("Vui lòng nhập tiêu đề tin.", errorsOf(form, false, true).get("postingTitle"));
+            assertEquals("Vui lòng nhập tiêu đề tin.", errorsOf(form, false).get("postingTitle"));
         }
 
         @Test
@@ -101,7 +100,7 @@ class JobPostingValidatorTests {
             form.setJobDescription(null);
             form.setJobRequirements("");
 
-            Map<String, String> errors = errorsOf(form, false, true);
+            Map<String, String> errors = errorsOf(form, false);
 
             assertTrue(errors.containsKey("jobDescription"));
             assertTrue(errors.containsKey("jobRequirements"));
@@ -112,11 +111,11 @@ class JobPostingValidatorTests {
         void normalizeAndValidate_shouldEnforceTitleLimit_atBoundary() {
             JobPostingCreateRequest atLimit = validForm(JobPostingValidator.ACTION_DRAFT);
             atLimit.setPostingTitle("a".repeat(JobPostingValidator.TITLE_LIMIT));
-            assertDoesNotThrow(() -> validator.normalizeAndValidate(atLimit, false, true));
+            assertDoesNotThrow(() -> validator.normalizeAndValidate(atLimit, false));
 
             JobPostingCreateRequest overLimit = validForm(JobPostingValidator.ACTION_DRAFT);
             overLimit.setPostingTitle("a".repeat(JobPostingValidator.TITLE_LIMIT + 1));
-            assertEquals(JobPostingValidator.TITLE_TOO_LONG, errorsOf(overLimit, false, true).get("postingTitle"));
+            assertEquals(JobPostingValidator.TITLE_TOO_LONG, errorsOf(overLimit, false).get("postingTitle"));
         }
 
         @Test
@@ -126,13 +125,13 @@ class JobPostingValidatorTests {
             // 2 ký tự mỗi dòng trước khi chuẩn hóa → vượt TEXT_LIMIT; sau chuẩn hóa còn đúng TEXT_LIMIT - 1
             form.setJobDescription("a\r\n".repeat(JobPostingValidator.TEXT_LIMIT / 2 - 1) + "a");
 
-            assertDoesNotThrow(() -> validator.normalizeAndValidate(form, false, true));
+            assertDoesNotThrow(() -> validator.normalizeAndValidate(form, false));
         }
 
         @Test
         @DisplayName("Action lạ (sửa HTML) -> Lỗi chung 'action'")
         void normalizeAndValidate_shouldRejectUnknownAction() {
-            assertEquals("Thao tác lưu tin không hợp lệ.", errorsOf(validForm("hack"), true, true).get("action"));
+            assertEquals("Thao tác lưu tin không hợp lệ.", errorsOf(validForm("hack"), true).get("action"));
         }
     }
 
@@ -152,7 +151,7 @@ class JobPostingValidatorTests {
             form.setShowPositions(true);
             form.setNumberOfPositionsDisplay("");
 
-            Map<String, String> errors = errorsOf(form, true, true);
+            Map<String, String> errors = errorsOf(form, true);
 
             assertEquals("Nhập mức lương hiển thị hoặc chọn một lựa chọn khác.", errors.get("salaryCustom"));
             assertEquals("Nhập số lượng hiển thị hoặc tắt hiển thị số lượng.", errors.get("numberOfPositionsDisplay"));
@@ -166,12 +165,12 @@ class JobPostingValidatorTests {
             JobPostingCreateRequest form = validForm(JobPostingValidator.ACTION_PUBLISH);
             form.setSalaryMode(salaryMode);
 
-            assertTrue(errorsOf(form, true, true).containsKey("salaryMode"));
+            assertTrue(errorsOf(form, true).containsKey("salaryMode"));
         }
     }
 
     // =========================================================================
-    // normalizeAndValidate: hạn nộp và hẹn đăng
+    // normalizeAndValidate: hạn nộp
     // =========================================================================
     @Nested
     @DisplayName("normalizeAndValidate - ngày")
@@ -182,11 +181,11 @@ class JobPostingValidatorTests {
         void normalizeAndValidate_shouldRequireDeadline_onlyWhenPublishing() {
             JobPostingCreateRequest publish = validForm(JobPostingValidator.ACTION_PUBLISH);
             publish.setApplicationDeadline(null);
-            assertEquals("Vui lòng chọn hạn nộp hồ sơ.", errorsOf(publish, true, true).get("applicationDeadline"));
+            assertEquals("Vui lòng chọn hạn nộp hồ sơ.", errorsOf(publish, true).get("applicationDeadline"));
 
             JobPostingCreateRequest draft = validForm(JobPostingValidator.ACTION_DRAFT);
             draft.setApplicationDeadline(null);
-            assertDoesNotThrow(() -> validator.normalizeAndValidate(draft, false, true));
+            assertDoesNotThrow(() -> validator.normalizeAndValidate(draft, false));
         }
 
         @Test
@@ -195,62 +194,13 @@ class JobPostingValidatorTests {
             JobPostingCreateRequest yesterday = validForm(JobPostingValidator.ACTION_PUBLISH);
             yesterday.setApplicationDeadline(TODAY.minusDays(1));
             assertEquals("Hạn nộp hồ sơ phải từ hôm nay trở đi.",
-                    errorsOf(yesterday, true, true).get("applicationDeadline"));
+                    errorsOf(yesterday, true).get("applicationDeadline"));
 
             JobPostingCreateRequest today = validForm(JobPostingValidator.ACTION_PUBLISH);
             today.setApplicationDeadline(TODAY);
-            assertDoesNotThrow(() -> validator.normalizeAndValidate(today, true, true));
+            assertDoesNotThrow(() -> validator.normalizeAndValidate(today, true));
         }
 
-        @Test
-        @DisplayName("Hẹn đăng: đã qua -> Lỗi; đúng MAX_SCHEDULE_DAYS -> Hợp lệ; MAX + 1 ngày -> Lỗi")
-        void normalizeAndValidate_shouldEnforceScheduleWindow() {
-            JobPostingCreateRequest past = scheduledForm(NOW.minusHours(1), TODAY.plusDays(120));
-            assertEquals("Thời điểm hẹn đăng phải sau thời điểm hiện tại.", errorsOf(past, true, true).get("scheduledAt"));
-
-            JobPostingCreateRequest atLimit = scheduledForm(NOW.plusDays(JobPostingValidator.MAX_SCHEDULE_DAYS),
-                    TODAY.plusDays(120));
-            assertDoesNotThrow(() -> validator.normalizeAndValidate(atLimit, true, true));
-
-            JobPostingCreateRequest tooFar = scheduledForm(NOW.plusDays(JobPostingValidator.MAX_SCHEDULE_DAYS + 1L),
-                    TODAY.plusDays(120));
-            assertTrue(errorsOf(tooFar, true, true).containsKey("scheduledAt"));
-        }
-
-        @Test
-        @DisplayName("Hẹn đăng sau hạn nộp -> Lỗi ở ô hạn nộp (CK_JobPosting_Deadline)")
-        void normalizeAndValidate_shouldRejectDeadlineBeforeScheduledTime() {
-            JobPostingCreateRequest form = scheduledForm(NOW.plusDays(40), TODAY.plusDays(30));
-
-            assertEquals("Hạn nộp hồ sơ phải sau ngày đăng.", errorsOf(form, true, true).get("applicationDeadline"));
-        }
-
-        @Test
-        @DisplayName("Tin đã lên trang tuyển dụng chọn 'Hẹn ngày đăng' -> Lỗi; lưu nháp thì bỏ qua lịch đăng")
-        void normalizeAndValidate_shouldOnlyAllowScheduleBeforeGoingLive() {
-            JobPostingCreateRequest live = scheduledForm(NOW.plusDays(2), TODAY.plusDays(30));
-            assertEquals("Tin đã đăng nên không hẹn lại ngày đăng được.", errorsOf(live, true, false).get("publishMode"));
-
-            JobPostingCreateRequest draft = scheduledForm(NOW.minusDays(1), TODAY.plusDays(30));
-            assertDoesNotThrow(() -> validator.normalizeAndValidate(draft, false, true));
-        }
-
-        @Test
-        @DisplayName("publishMode lạ -> Lỗi 'Vui lòng chọn ngày đăng.'")
-        void normalizeAndValidate_shouldRejectUnknownPublishMode() {
-            JobPostingCreateRequest form = validForm(JobPostingValidator.ACTION_PUBLISH);
-            form.setPublishMode("tomorrow");
-
-            assertEquals("Vui lòng chọn ngày đăng.", errorsOf(form, true, true).get("publishMode"));
-        }
-
-        private JobPostingCreateRequest scheduledForm(LocalDateTime scheduledAt, LocalDate deadline) {
-            JobPostingCreateRequest form = validForm(JobPostingValidator.ACTION_PUBLISH);
-            form.setPublishMode(JobPostingCreateRequest.PUBLISH_LATER);
-            form.setScheduledAt(scheduledAt);
-            form.setApplicationDeadline(deadline);
-            return form;
-        }
     }
 
     // =========================================================================

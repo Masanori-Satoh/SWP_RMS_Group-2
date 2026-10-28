@@ -104,7 +104,7 @@ public class JobPostingServiceImpl implements JobPostingService {
 
         List<JobPostingDashboardResponse.RecentPosting> recent = new ArrayList<>();
         for (JobPosting posting : postings.findRecent(PageRequest.of(0, DASHBOARD_RECENT_POSTINGS))) {
-            recent.add(mapper.toRecentPosting(posting, now));
+            recent.add(mapper.toRecentPosting(posting));
         }
 
         List<JobPostingDashboardResponse.AwaitingRequisition> awaiting = new ArrayList<>();
@@ -172,7 +172,7 @@ public class JobPostingServiceImpl implements JobPostingService {
         JobPosting posting = findById(jobPostingId);
         validator.requireEditable(posting.getPostingStatus());
         validator.requireApproved(posting.getRequisition());
-        return mapper.toEditForm(posting, LocalDateTime.now(clock));
+        return mapper.toEditForm(posting);
     }
 
     @Override
@@ -182,7 +182,7 @@ public class JobPostingServiceImpl implements JobPostingService {
         if (edited.getJobPostingId() != null) {
             JobPosting posting = findById(edited.getJobPostingId());
             mapper.fillSourceInfo(edited, posting.getRequisition());
-            mapper.fillFormState(edited, posting, LocalDateTime.now(clock));
+            mapper.fillFormState(edited, posting);
             return edited;
         }
         if (edited.getRequisitionId() == null) {
@@ -220,7 +220,7 @@ public class JobPostingServiceImpl implements JobPostingService {
                 .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy yêu cầu tuyển dụng nguồn."));
         validator.requireApproved(requisition);
         requireNoOtherOpenPosting(requisition.getRequisitionId(), null);
-        validator.normalizeAndValidate(request, publish, true);
+        validator.normalizeAndValidate(request, publish);
 
         LocalDateTime now = LocalDateTime.now(clock);
         JobPosting posting = new JobPosting();
@@ -230,10 +230,9 @@ public class JobPostingServiceImpl implements JobPostingService {
         applyEditableFields(posting, request, requisition);
         if (publish) {
             posting.setPostingStatus(JobPostingAccess.STATUS_PUBLISHED);
-            // Rule (D1): hẹn đăng = Published + PostingDate ở tương lai; ứng viên chỉ thấy tin từ thời điểm đó
-            posting.setPostingDate(validator.chosenPostingTime(request, now));
+            posting.setPostingDate(now);
         } else {
-            // Rule: tin nháp không có ngày đăng, không giữ lịch hẹn
+            // Tin nháp chưa có ngày đăng.
             posting.setPostingStatus(JobPostingAccess.STATUS_DRAFT);
         }
 
@@ -260,8 +259,7 @@ public class JobPostingServiceImpl implements JobPostingService {
 
     /**
      * Sửa tin. Trạng thái sau khi lưu:
-     * - Nháp: "Lưu nháp" giữ nháp; "Đăng tin" → đăng ngay hoặc hẹn đăng
-     * - Hẹn đăng: lưu lại thời điểm đăng mới (chọn "Đăng ngay" thì đăng luôn)
+     * - Nháp: "Lưu nháp" giữ nháp; "Đăng tin" → đăng ngay
      * - Đang đăng: giữ nguyên ngày đăng, chỉ đổi nội dung
      * - Tạm dừng: "Lưu thay đổi" giữ tạm dừng; "Lưu và mở lại" → Published, ngày đăng = bây giờ
      * Không đổi gì thì không lưu, không ghi audit, không thông báo.
@@ -274,22 +272,21 @@ public class JobPostingServiceImpl implements JobPostingService {
         validator.requireApproved(posting.getRequisition());
 
         LocalDateTime now = LocalDateTime.now(clock);
-        String viewStatus = JobPostingAccess.viewStatus(posting, now);
+        String viewStatus = posting.getPostingStatus();
         boolean isDraft = JobPostingAccess.STATUS_DRAFT.equals(viewStatus);
         boolean isPaused = JobPostingAccess.STATUS_PAUSED.equals(viewStatus);
-        boolean isScheduled = JobPostingAccess.STATUS_SCHEDULED.equals(viewStatus);
         if (publish && isPaused) {
             requireNoOtherOpenPosting(posting.getRequisition().getRequisitionId(), id);
         }
-        // Tin đã / sẽ hiển thị cho ứng viên thì bắt buộc hạn nộp; chỉ nháp và hẹn đăng mới đổi được ngày đăng
-        validator.normalizeAndValidate(request, publish || !isDraft, isDraft || isScheduled);
+        // Tin đã đăng hoặc đang được đăng phải có hạn nộp.
+        validator.normalizeAndValidate(request, publish || !isDraft);
 
         Map<String, String> before = auditLogger.snapshot(posting);
         LocalDateTime oldPostingDate = posting.getPostingDate();
         applyEditableFields(posting, request, posting.getRequisition());
-        if ((isDraft && publish) || isScheduled) {
+        if (isDraft && publish) {
             posting.setPostingStatus(JobPostingAccess.STATUS_PUBLISHED);
-            posting.setPostingDate(validator.chosenPostingTime(request, now));
+            posting.setPostingDate(now);
         } else if (isPaused && publish) {
             posting.setPostingStatus(JobPostingAccess.STATUS_PUBLISHED);
             posting.setPostingDate(now);
@@ -302,9 +299,7 @@ public class JobPostingServiceImpl implements JobPostingService {
 
         boolean isNewPublication = posting.getPostingDate() != null && !posting.getPostingDate().equals(oldPostingDate);
         String description = JobPostingLabels.LOG_UPDATE;
-        if (isNewPublication && posting.getPostingDate().isAfter(now)) {
-            description = JobPostingLabels.LOG_SCHEDULE;
-        } else if (isNewPublication) {
+        if (isNewPublication) {
             description = JobPostingLabels.LOG_PUBLISH;
         }
         postings.save(posting);
@@ -338,35 +333,6 @@ public class JobPostingServiceImpl implements JobPostingService {
         postings.save(posting);
         auditLogger.log(posting, currentUser, JobPostingAuditLogger.ACTION_UPDATE, JobPostingLabels.LOG_PUBLISH);
         notificationService.notifyJobPostingPublished(posting, currentUser);
-    }
-
-    @Override
-    @Transactional
-    public void publishNow(Integer id, User currentUser) {
-        access.requireManage(currentUser);
-        JobPosting posting = findForUpdate(id);
-        LocalDateTime now = LocalDateTime.now(clock);
-        requireScheduled(posting, now, "Chỉ tin đang hẹn đăng mới đăng ngay được.");
-        validator.requireApproved(posting.getRequisition());
-
-        posting.setPostingDate(now);
-        postings.save(posting);
-        auditLogger.log(posting, currentUser, JobPostingAuditLogger.ACTION_UPDATE, JobPostingLabels.LOG_PUBLISH);
-        notificationService.notifyJobPostingPublished(posting, currentUser);
-    }
-
-    /** Rule: hủy lịch đăng → tin trở về bản nháp, PostingDate = NULL (tin nháp không có ngày đăng). */
-    @Override
-    @Transactional
-    public void unschedule(Integer id, User currentUser) {
-        access.requireManage(currentUser);
-        JobPosting posting = findForUpdate(id);
-        requireScheduled(posting, LocalDateTime.now(clock), "Chỉ tin đang hẹn đăng mới hủy lịch được.");
-
-        posting.setPostingStatus(JobPostingAccess.STATUS_DRAFT);
-        posting.setPostingDate(null);
-        postings.save(posting);
-        auditLogger.log(posting, currentUser, JobPostingAuditLogger.ACTION_UPDATE, JobPostingLabels.LOG_UNSCHEDULE);
     }
 
     @Override
@@ -416,7 +382,7 @@ public class JobPostingServiceImpl implements JobPostingService {
         access.requireView(currentUser, posting);
 
         LocalDateTime now = LocalDateTime.now(clock);
-        String viewStatus = JobPostingAccess.viewStatus(posting, now);
+        String viewStatus = posting.getPostingStatus();
         JobRequisition requisition = posting.getRequisition();
 
         // Số liệu hồ sơ chỉ có khi tin đã lên trang tuyển dụng
@@ -436,7 +402,7 @@ public class JobPostingServiceImpl implements JobPostingService {
         }
         List<PostingRound> rounds = List.of();
         if (requisition != null) {
-            rounds = postingRounds(requisition.getRequisitionId(), id, now);
+            rounds = postingRounds(requisition.getRequisitionId(), id);
         }
         return mapper.toDetail(posting, currentUser, now, hasApplications, hasOpenPosting, stats, rounds,
                 auditLogger.history(id));
@@ -493,7 +459,7 @@ public class JobPostingServiceImpl implements JobPostingService {
     }
 
     /** Các lần đăng của cùng yêu cầu, kèm số hồ sơ và số đã tuyển (2 câu đếm gộp). */
-    private List<PostingRound> postingRounds(Integer requisitionId, Integer currentId, LocalDateTime now) {
+    private List<PostingRound> postingRounds(Integer requisitionId, Integer currentId) {
         List<JobPosting> all = postings.findByRequisition_RequisitionIdOrderByPostingNoAsc(requisitionId);
         if (all.isEmpty()) {
             return List.of();
@@ -511,7 +477,7 @@ public class JobPostingServiceImpl implements JobPostingService {
         for (JobPosting round : all) {
             rounds.add(mapper.toPostingRound(round, currentId,
                     applicationCounts.getOrDefault(round.getJobPostingId(), 0L),
-                    hiredCounts.getOrDefault(round.getJobPostingId(), 0L), now));
+                    hiredCounts.getOrDefault(round.getJobPostingId(), 0L)));
         }
         return rounds;
     }
@@ -581,12 +547,6 @@ public class JobPostingServiceImpl implements JobPostingService {
         boolean isSameRequisition = posting.getRequisition().getRequisitionId().equals(request.getRequisitionId());
         if (!isSamePosting || !isSameRequisition) {
             throw new JobPostingValidationException("Không thể đổi tin hoặc yêu cầu tuyển dụng nguồn.");
-        }
-    }
-
-    private void requireScheduled(JobPosting posting, LocalDateTime now, String message) {
-        if (!JobPostingAccess.STATUS_SCHEDULED.equals(JobPostingAccess.viewStatus(posting, now))) {
-            throw new JobPostingValidationException(message);
         }
     }
 

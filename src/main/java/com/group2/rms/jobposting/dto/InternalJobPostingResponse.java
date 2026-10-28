@@ -10,11 +10,10 @@ import java.time.LocalDateTime;
  * template chỉ đọc, không tự so sánh trạng thái hay vai trò.
  *
  * @param postingNo            lần đăng thứ mấy của yêu cầu nguồn (PostingNo)
- * @param viewStatus           trạng thái hiển thị: Draft, Scheduled (hẹn đăng), Published, Paused, Closed
+ * @param viewStatus           trạng thái hiển thị: Draft, Published, Paused, Closed
  * @param statusTone           màu badge: success, warning, neutral
  * @param applicationCount     tổng số hồ sơ đã nộp vào tin
  * @param newApplicationCount  số hồ sơ chưa ai xử lý (ApplicationStatus = Applied)
- * @param daysUntilPosting     tin hẹn đăng: còn bao nhiêu ngày nữa thì đăng
  * @param daysUntilDeadline    số ngày còn lại tới hạn nộp (âm = đã quá hạn); null nếu không có hạn nộp
  * @param deadlineState        "open", "soon" (≤ 7 ngày) hoặc "past" để tô màu cột hạn nộp; null nếu tin đã đóng / không có hạn
  * @param publishable          đăng tin nháp
@@ -38,7 +37,6 @@ public record InternalJobPostingResponse(
         String statusTone,
         long applicationCount,
         long newApplicationCount,
-        Long daysUntilPosting,
         Long daysUntilDeadline,
         String deadlineState,
         boolean publishable,

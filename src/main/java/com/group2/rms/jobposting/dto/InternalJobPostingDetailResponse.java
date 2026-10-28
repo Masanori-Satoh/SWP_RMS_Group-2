@@ -12,10 +12,9 @@ import java.util.List;
  * Mọi nhãn, số liệu và cờ do JobPostingMapper#toDetail tính sẵn; template chỉ đọc, không tự so sánh vai trò
  * hay trạng thái.
  *
- * @param viewStatus             Draft, Scheduled (hẹn đăng), Published, Paused, Closed
+ * @param viewStatus             Draft, Published, Paused, Closed
  * @param daysUntilDeadline      số ngày còn lại tới hạn nộp (âm = đã quá); null nếu không có hạn nộp
  * @param draftBanner            hiện dải "Bản nháp, ứng viên chưa nhìn thấy"
- * @param scheduledBanner        hiện dải "Tin sẽ tự đăng lúc ..."
  * @param pausedBanner           hiện dải "Đang tạm dừng nhận hồ sơ"
  * @param closedBanner           hiện dải "Tin đã đóng ngày ..."
  * @param deadlineSoonBanner     tin đang đăng, còn 0..7 ngày tới hạn nộp
@@ -65,7 +64,6 @@ public record InternalJobPostingDetailResponse(
 
         // Dải thông báo và nhắc hạn nộp
         boolean draftBanner,
-        boolean scheduledBanner,
         boolean pausedBanner,
         boolean closedBanner,
         boolean deadlineSoonBanner,
@@ -77,8 +75,6 @@ public record InternalJobPostingDetailResponse(
 
         // Cờ thao tác của HR
         boolean publishable,
-        boolean publishNowable,
-        boolean unschedulable,
         boolean editable,
         boolean pausable,
         boolean reopenable,

@@ -147,7 +147,7 @@ public class JobPostingListService {
             where = where.and(JobPostingSpecifications.titleOrDepartmentContains(filter.q()));
         }
         if (!filter.status().isEmpty()) {
-            where = where.and(JobPostingSpecifications.viewStatusIn(filter.status(), now));
+            where = where.and(JobPostingSpecifications.viewStatusIn(filter.status()));
         }
         if (filter.departmentId() != null) {
             where = where.and(JobPostingSpecifications.departmentIs(filter.departmentId()));

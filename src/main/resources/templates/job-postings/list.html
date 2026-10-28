@@ -16,10 +16,11 @@
 </head>
 
 <body>
-    <main id="main" layout:fragment="content" class="page-content container" tabindex="-1">
+    <main id="main" layout:fragment="content" class="page-content container adw-page" tabindex="-1">
+        <th:block th:replace="~{fragments/ui/admin-workspace :: scene}"></th:block>
 
-        <div class="jp-head">
-            <h1>Tin tuyển dụng</h1>
+        <div class="jp-head adw-heading">
+            <h1 class="adw-title">Tin tuyển dụng</h1>
             <!-- Không có nút tạo tin ở đây: tin chỉ được tạo từ một yêu cầu đã duyệt (màn Yêu cầu tuyển dụng / dashboard HR) -->
         </div>
 
@@ -29,7 +30,7 @@
 
         <!-- Thanh công cụ: Bộ lọc → Trạng thái → Tìm kiếm. Form GET ghép các ô thành ?q=...&status=...
          Ô nào hiện là do service quyết định theo vai trò (list.options.show...). -->
-        <form class="card mft-toolbar jp-toolbar" th:action="@{/internal/job-postings}" method="get" role="search"
+        <form class="card mft-toolbar jp-toolbar adw-surface" th:action="@{/internal/job-postings}" method="get" role="search"
             aria-label="Tìm kiếm và lọc tin tuyển dụng">
             <div class="mft-controls">
                 <!-- <details> tự mở/đóng khi bấm <summary>, không cần JS -->
@@ -141,18 +142,18 @@
             <a class="jp-chips-reset" th:href="@{/internal/job-postings}">Đặt lại mặc định</a>
         </div>
 
-        <section class="jp-list" aria-labelledby="job-posting-list-title" th:with="showCreator=${list.canManage},
+        <section class="jp-list adw-surface" aria-labelledby="job-posting-list-title" th:with="showCreator=${list.canManage},
                       columns=${8 + (showCreator ? 1 : 0)}">
             <header class="jp-list-header">
                 <span class="jp-list-icon" aria-hidden="true">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M8 5V3m8 2V3M3 10h18M8 14h8m-8 4h5"/></svg>
                 </span>
-                <h2 id="job-posting-list-title">Danh sách tin tuyển dụng</h2>
+                <h2 id="job-posting-list-title" class="adw-panel-title">Danh sách tin tuyển dụng</h2>
                 <span class="badge badge--neutral jp-list-count" th:text="|${list.page.totalElements} tin|">0 tin</span>
             </header>
             <div class="jp-list-body">
             <div class="table-wrapper" role="region" aria-label="Danh sách tin tuyển dụng" tabindex="0">
-                <table class="jp-table">
+                <table class="jp-table adw-data-table">
                     <thead>
                         <tr>
                             <th scope="col">STT</th>
@@ -182,8 +183,6 @@
                                 <th:block th:if="${post.postingDate != null}">
                                     <span
                                         th:text="${#temporals.format(post.postingDate, 'dd/MM/yyyy')}">25/09/2026</span>
-                                    <div class="jp-sub" th:if="${post.daysUntilPosting != null}"
-                                        th:text="|sau ${post.daysUntilPosting} ngày|">sau 3 ngày</div>
                                 </th:block>
                                 <span class="jp-sub" th:if="${post.postingDate == null}">Chưa đăng</span>
                             </td>
@@ -271,6 +270,7 @@
     </main>
 
     <th:block layout:fragment="scripts">
+        <th:block th:replace="~{fragments/ui/admin-workspace :: scripts}"></th:block>
         <!-- Đóng popover "Bộ lọc" khi bấm ra ngoài hoặc nhấn Esc (dùng chung với các màn quản lý khác) -->
         <script th:src="@{/js/pages/management-filters.js}" defer></script>
         <script th:src="@{/js/pages/job-posting-actions.js}" defer></script>

@@ -12,7 +12,7 @@ import com.group2.rms.candidate.domain.entity.Application;
 import com.group2.rms.candidate.application.submission.ApplicationSubmittedEvent;
 import com.group2.rms.candidate.talentpool.service.TalentPoolService;
 import com.group2.rms.candidate.talentpool.exception.TalentPoolException;
-import com.group2.rms.dashboard.DashboardMetricsRepository;
+import com.group2.rms.dashboard.shared.DashboardMetricsRepository;
 import com.group2.rms.jobposting.entity.JobPosting;
 import com.group2.rms.jobposting.repository.JobPostingRepository;
 import com.group2.rms.requisition.service.RequisitionAccess;

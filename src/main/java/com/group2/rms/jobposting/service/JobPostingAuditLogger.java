@@ -42,7 +42,7 @@ public class JobPostingAuditLogger {
     }
 
     /**
-     * Ghi audit khi sửa: dòng đầu là mô tả (Cập nhật / Đăng / Hẹn đăng), sau đó mỗi dòng một trường đã đổi
+     * Ghi audit khi sửa: dòng đầu là mô tả (Cập nhật / Đăng), sau đó mỗi dòng một trường đã đổi
      * ("tên: cũ → mới"). Gọi khi changedKeys không rỗng.
      */
     public void logChanges(JobPosting posting, User actor, String description, List<String> changedKeys,

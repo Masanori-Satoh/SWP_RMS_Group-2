@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<body>
+<!-- Dashboard HR (toàn công ty); dashboard/index.html chèn vào theo dashboard.section. -->
+<th:block th:fragment="content(dashboard)">
+    <div th:replace="~{dashboard/fragments :: pageHeader('Bảng điều khiển', 'Toàn công ty · 30 ngày gần nhất')}"></div>
+
+    <th:block th:replace="~{dashboard/fragments :: kpis(${dashboard.kpis})}"></th:block>
+
+    <div class="dash-split dash-split--wide">
+        <section class="card dash-panel dash-panel--priority adw-surface" aria-labelledby="hr-work-title">
+            <div class="dash-panel__heading">
+                <h2 id="hr-work-title" class="dash-panel__title">
+                    <svg th:replace="~{dashboard/fragments :: icon('clipboardCheck')}"></svg>Việc cần xử lý
+                </h2>
+                <a class="dash-link" th:href="@{/applications}">Hồ sơ</a>
+            </div>
+            <p class="dash-empty" th:if="${#lists.isEmpty(dashboard.work)}">Không có việc cần xử lý.</p>
+            <th:block th:unless="${#lists.isEmpty(dashboard.work)}">
+                <ul th:replace="~{dashboard/fragments :: workItems(${dashboard.work})}"></ul>
+            </th:block>
+            <p class="dash-panel__more" th:if="${dashboard.moreWork > 0}">
+                <span th:text="|+${dashboard.moreWork} việc khác|">+2 việc khác</span>
+                <a class="dash-link" th:href="@{/applications}">Xem tất cả</a>
+            </p>
+        </section>
+
+        <section class="card dash-panel adw-surface" aria-labelledby="hr-interviews-title">
+            <div class="dash-panel__heading">
+                <h2 id="hr-interviews-title" class="dash-panel__title">
+                    <svg th:replace="~{dashboard/fragments :: icon('calendarDays')}"></svg>Phỏng vấn hôm nay và ngày mai
+                </h2>
+                <a class="dash-link" th:href="@{/interviews}">Xem lịch</a>
+            </div>
+            <p class="dash-empty" th:if="${#lists.isEmpty(dashboard.upcomingInterviews)}">Không có lịch phỏng vấn.</p>
+            <th:block th:unless="${#lists.isEmpty(dashboard.upcomingInterviews)}">
+                <ul th:replace="~{dashboard/fragments :: interviewList(${dashboard.upcomingInterviews})}"></ul>
+            </th:block>
+        </section>
+    </div>
+
+    <div class="dash-split">
+        <section class="card dash-panel adw-surface" aria-labelledby="hr-stages-title">
+            <div class="dash-panel__heading">
+                <h2 id="hr-stages-title" class="dash-panel__title">
+                    <svg th:replace="~{dashboard/fragments :: icon('chartBar')}"></svg>Hồ sơ đang chờ theo giai đoạn
+                </h2>
+            </div>
+            <ul th:replace="~{dashboard/fragments :: barChart(${dashboard.waitingStages})}"></ul>
+        </section>
+
+        <section class="card dash-panel adw-surface" aria-labelledby="hr-trend-title">
+            <div class="dash-panel__heading">
+                <h2 id="hr-trend-title" class="dash-panel__title">
+                    <svg th:replace="~{dashboard/fragments :: icon('chartColumnIncreasing')}"></svg>Hồ sơ mới theo tuần
+                </h2>
+            </div>
+            <ol th:replace="~{dashboard/fragments :: columnChart(${dashboard.weeklyApplications}, 'Số hồ sơ mới mỗi tuần, 8 tuần gần nhất')}"></ol>
+            <p class="dash-panel__more" th:text="${dashboard.trendSummary}">4 tuần gần nhất: 0 hồ sơ</p>
+        </section>
+    </div>
+
+    <section class="card dash-panel adw-surface" aria-labelledby="hr-postings-title">
+        <div class="dash-panel__heading">
+            <h2 id="hr-postings-title" class="dash-panel__title">
+                <svg th:replace="~{dashboard/fragments :: icon('briefcaseBusiness')}"></svg>Tin đang mở
+                <span class="dash-panel__count" th:text="|· ${dashboard.openPostingCount}|">· 0</span>
+            </h2>
+            <a class="dash-link" th:href="@{/internal/job-postings}">Xem tất cả</a>
+        </div>
+        <p class="dash-empty" th:if="${#lists.isEmpty(dashboard.openPostings)}">Không có tin nào đang nhận hồ sơ.</p>
+        <div class="table-wrapper" th:unless="${#lists.isEmpty(dashboard.openPostings)}" tabindex="0"
+             role="region" aria-labelledby="hr-postings-title">
+            <table class="table adw-data-table">
+                <caption class="sr-only">Tin đang mở, ít hồ sơ trên mỗi vị trí cần tuyển nhất ở trên</caption>
+                <thead>
+                <tr>
+                    <th scope="col">Tin tuyển dụng</th>
+                    <th scope="col">Phòng ban</th>
+                    <th scope="col">Cần tuyển</th>
+                    <th scope="col">Hồ sơ</th>
+                    <th scope="col">Hạn nộp</th>
+                    <th scope="col">Trạng thái</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="posting : ${dashboard.openPostings}">
+                    <td><a class="dash-link" th:href="@{${posting.href}}" th:text="${posting.title}">Tin</a></td>
+                    <td th:text="${posting.departmentName}">Phòng ban</td>
+                    <td th:text="${posting.needed}">1</td>
+                    <td>
+                        <span class="dash-table-meter">
+                            <strong class="dash-table-meter__count" th:text="${posting.applications}">0</strong>
+                            <progress class="dash-bars__meter" aria-hidden="true" th:value="${posting.applications}"
+                                      th:max="${posting.applicationsMax}"></progress>
+                        </span>
+                    </td>
+                    <td>
+                        <span th:if="${posting.deadlineText != null}" class="badge"
+                              th:classappend="|badge--${posting.deadlineTone}|" th:text="${posting.deadlineText}">Còn 3 ngày</span>
+                        <time th:if="${posting.deadline != null}" class="dash-cell-meta" th:datetime="${posting.deadline}"
+                              th:text="${#temporals.format(posting.deadline, 'dd/MM/yyyy')}">01/01/2026</time>
+                        <span th:if="${posting.deadline == null}">Không giới hạn</span>
+                    </td>
+                    <td><span class="badge" th:classappend="|badge--${posting.statusTone}|"
+                              th:text="${posting.statusLabel}">Đang nhận</span></td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
+</th:block>
+</body>
+</html>

@@ -32,6 +32,29 @@
   gap: 28px;
 }
 
+/* Reuse the Admin workspace shell without constraining the recruitment content. */
+.rms-app .adw-page.hr-dashboard-page { min-height:0; background:transparent; }
+.rms-app .adw-page .hr-dashboard-wrapper { max-width:none; padding:0; }
+.rms-app .adw-page .hr-dash-title-group h1 { margin:0; }
+.rms-app .adw-page .hr-panel-header h2 { color:var(--brand-dark); font:700 20px/1.35 var(--sans); }
+.rms-app .adw-page.hr-dashboard-page {
+  --hr-dash-primary:var(--brand-dark);
+  --hr-dash-primary-hover:var(--brand);
+  --hr-dash-primary-light:var(--brand-soft);
+  --hr-dash-card-bg:var(--surface);
+  --hr-dash-border:var(--line);
+  --hr-dash-text:var(--ink);
+  --hr-dash-muted:var(--muted);
+}
+.rms-app .adw-page .hr-kpi-card::before { display:none; }
+.rms-app .adw-page .hr-kpi-icon { background:var(--brand-soft); color:var(--brand-dark); }
+.rms-app .adw-page .hr-dept-bar-track { background:var(--surface-subtle); }
+.rms-app .adw-page .hr-dept-bar-fill { background:var(--brand); }
+.rms-app .adw-page .hr-req-awaiting-item { background:var(--surface-subtle); border-color:var(--line); border-left-color:var(--brand); }
+.rms-app .adw-page .hr-req-code-tag { background:var(--brand-soft); }
+.rms-app .adw-page .hr-actions-cell { text-align:right; }
+.rms-app .adw-page .hr-muted { color:var(--muted); }
+
 /* 1. Header / Navigation switcher */
 .hr-dash-header {
   display: flex;
