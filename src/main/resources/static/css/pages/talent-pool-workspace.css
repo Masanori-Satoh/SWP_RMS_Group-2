@@ -1,61 +1,126 @@
-/* =============================================================================
-   PAGES/TALENT-POOL-WORKSPACE.CSS — Potential Candidate surfaces (/talent-pool).
-   Reuses catalog adw surfaces and the management GET toolbar. Only feature layout,
-   source-CV selection, readable local status aliases and responsive spacing.
-   Prefix: tpw-. Shared shell, tokens and business handlers are not redefined here.
-   ============================================================================= */
+/* PAGES/TALENT-POOL-WORKSPACE.CSS — Feature composition on the existing Admin
+   workspace. Prefix tpw-. Reuse catalog surfaces/controls; never style the shell. */
 .tpw-page { min-width: 0; }
 .tpw-heading { align-items: center; gap: var(--s4) var(--s6); }
 .tpw-subtitle { max-width: 72ch; margin-top: var(--s3); color: var(--ink); font-size: var(--font-base); }
-.tpw-page .tpw-destination { margin-bottom: var(--s4); padding: var(--s4) var(--s6); }
-.tpw-page .tpw-filter { display: flex; align-items: center; gap: var(--s4); padding: var(--s4) var(--s6); margin-bottom: var(--s4); }
-.tpw-filter-controls { flex: 1 1 220px; }
+.tpw-job-title { max-inline-size: 70ch; overflow-wrap: anywhere; line-height: 1.5; }
+.tpw-page .tpw-destination { margin-bottom: var(--s4); padding: var(--s4) var(--s6); gap: var(--s3) var(--s6); }
+.tpw-destination > div { min-width: 0; flex: 1 1 360px; }
+.tpw-page .tpw-results { padding: 0; margin-bottom: var(--s6); min-width: 0; overflow: visible; }
+.tpw-panel-heading { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--s2) var(--s4); margin: 0; padding: var(--s4) var(--s6); border-radius: var(--radius-lg) var(--radius-lg) 0 0; }
+.tpw-panel-title { margin: 0; }
+.tpw-table-identity { display: flex; align-items: center; min-width: 0; gap: var(--s3); }
+.tpw-list-icon { display: grid; place-items: center; flex: 0 0 36px; height: 36px; border-radius: var(--radius-md); }
+.tpw-result-count { flex-shrink: 0; color: var(--muted); font-size: 14px; font-variant-numeric: tabular-nums; }
+.tpw-result-count strong { color: var(--brand-dark); }
+.tpw-page .tpw-filter { display: flex; flex-wrap: wrap; align-items: center; justify-content: flex-start; gap: var(--s3); padding: var(--s4) var(--s6); margin: 0; border-bottom: 1px solid var(--line); }
+.tpw-filter-controls { flex: 0 1 auto; order: 2; }
 .tpw-page .tpw-filter-toggle { min-height: 44px; border-radius: var(--radius-md); }
 .tpw-filter-fields { width: min(560px, 100%); }
-.tpw-search { display: flex; align-items: end; gap: var(--s2); flex: 0 1 480px; min-width: 0; }
+.tpw-search { display: flex; align-items: center; gap: var(--s2); flex: 0 1 540px; min-width: 0; order: 1; }
 .tpw-search-field { flex: 1 1 auto; min-width: 0; }
 .tpw-page .tpw-toolbar-input { height: 44px; min-height: 44px; font-size: 14px; }
 .tpw-search > button { min-height: 44px; flex-shrink: 0; }
-.tpw-page .tpw-results { padding: 0; margin-bottom: var(--s6); min-width: 0; overflow: clip; }
-.tpw-panel-heading { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--s2) var(--s4); margin: 0; padding: var(--s4) var(--s6); }
-.tpw-panel-title { margin: 0; }
-.tpw-result-count { color: var(--muted); font-size: 14px; font-variant-numeric: tabular-nums; }
-.tpw-result-count strong { color: var(--brand-dark); }
-.tpw-page .tpw-table-scroll { border: 0; border-radius: 0; margin: var(--s3) var(--s6) 0; max-width: calc(100% - var(--s12)); }
-.tpw-suggestions-table { min-width: 850px; }
+.tpw-page .tpw-table-scroll { border: 0; border-radius: 0; margin: var(--s3) var(--s6); max-width: calc(100% - var(--s12)); }
+.tpw-page .tpw-record-table { width: 100%; table-layout: fixed; font-size: 14px; line-height: 1.5; }
+.tpw-page .tpw-pool-table { min-width: 760px; }
+.tpw-page .tpw-suggestions-table { min-width: 1120px; }
+.tpw-page .tpw-recommendations-table { min-width: 1080px; }
+.tpw-page .tpw-table-scroll .tpw-record-table thead th { background: color-mix(in srgb, var(--brand-soft) 60%, var(--surface)); color: var(--brand-dark); font-weight: 650; padding-block: var(--s3); border-bottom: 1px solid var(--control-line); }
+.tpw-record-table td { vertical-align: middle; padding-block: var(--s4); overflow-wrap: anywhere; }
+.tpw-record-table tbody tr:hover td, .tpw-record-table tbody tr:focus-within td { background: color-mix(in srgb, var(--brand-soft) 48%, var(--surface)); }
+.tpw-record-table tbody tr.tp-row--selected td { background: var(--brand-soft); }
+.tpw-col-check { width: 44px; }
+.tpw-col-index { width: 52px; }
+.tpw-col-contact { width: 29%; }
+.tpw-col-pool-actions { width: 176px; }
+.tpw-col-author { width: 190px; }
+.tpw-col-date { width: 180px; }
+.tpw-col-suggestion-actions { width: 140px; }
+.tpw-col-recommender { width: 250px; }
+.tpw-col-status { width: 220px; }
+.tpw-col-recommendation-actions { width: 320px; }
+.tpw-person { display: flex; align-items: flex-start; min-width: 0; gap: var(--s3); }
+.tpw-person-copy { min-width: 0; flex: 1; }
+.tpw-avatar { display: grid; place-items: center; flex: 0 0 36px; width: 36px; height: 36px; border-radius: var(--radius-full); background: var(--brand-soft); color: var(--brand-dark); font: 600 15px/1 var(--sans); }
+.tpw-person-link { color: var(--brand-dark); font-size: 15px; font-weight: 650; text-decoration: none; text-underline-offset: 3px; }
+.tpw-person-link:hover { text-decoration: underline; }
+.tpw-person-link:focus-visible { outline: 3px solid var(--focus); outline-offset: 3px; border-radius: var(--radius-sm); }
+.tpw-source-picker { margin-top: var(--s2); max-width: 520px; }
+.tpw-source-toggle { display: inline-flex; align-items: center; flex-wrap: wrap; gap: var(--s2); min-height: 32px; color: var(--brand-dark); font-size: 13px; font-weight: 500; cursor: pointer; list-style: none; border-radius: var(--radius-sm); }
+.tpw-source-toggle::-webkit-details-marker { display: none; }
+.tpw-source-toggle:hover { text-decoration: underline; }
+.tpw-source-toggle:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
+.tpw-source-count { display: inline-grid; place-items: center; min-width: 20px; padding-inline: var(--s1); border-radius: var(--radius-sm); background: var(--neutral-soft); font-variant-numeric: tabular-nums; }
+.tpw-source-picker[open] .tpw-source-chevron { rotate: 180deg; }
+.tpw-source-content { padding: var(--s3); margin-top: var(--s1); border: 1px solid var(--line); border-radius: var(--radius-md); background: var(--surface-subtle); }
+.tpw-source-caption { margin: 0; color: var(--ink); font-weight: 600; line-height: 1.5; overflow-wrap: anywhere; }
+.tpw-source-date { margin: var(--s1) 0 var(--s2); color: var(--muted); font-size: 13px; }
+.tpw-page .tpw-source-select { width: 100%; max-width: 100%; min-height: 40px; height: 40px; font-size: 14px; }
+.tpw-missing-cv { display: block; margin-top: var(--s2); font-size: 13px; }
 .tpw-page .tpw-icon-button { width: 40px; height: 40px; min-width: 40px; min-height: 40px; padding: var(--s2); flex-shrink: 0; }
-/* The catalog permits page-owned placement and spacing of its pager. */
+.tpw-page .tpw-profile-link { width: auto; min-width: 112px; gap: var(--s2); }
+.tpw-row-tools { display: flex; flex-wrap: wrap; align-items: center; justify-content: flex-end; gap: var(--s2); }
+.tpw-row-tools .tp-recommendation-actions { gap: var(--s2); }
+.tpw-page .tpw-row-name { margin: 0; color: var(--brand-dark); font: 650 15px/1.5 var(--sans); }
+.tpw-row-hint { margin: var(--s2) 0 0; line-height: 1.5; }
+.tpw-record-table td > p { margin: 0; }
+.tpw-recommendations-table-wrap { display: block; }
+.tpw-list-guidance { padding: 0 var(--s6) var(--s3); color: var(--muted); }
+.tpw-list-guidance .tp-recommendation-hint { margin: 0; }
+/* Catalog permits page-owned placement and spacing of its existing pager. */
 .tpw-pagination .pagination-wrapper { margin: 0; padding: var(--s2) 0; }
 .tpw-pagination { padding: var(--s3) var(--s6); border-top: 1px solid var(--line); }
 .tpw-empty { padding: var(--s6); margin: 0; }
 .tpw-intro { margin: 0; padding: var(--s4) var(--s6); font-size: 14px; line-height: 1.6; }
 .tpw-results > #tp-feedback:not(:empty), .tpw-results > noscript { display: block; padding-inline: var(--s6); }
-.tpw-page .tpw-profile { margin-bottom: var(--s6); }
-.tpw-profile-top { justify-content: flex-end; margin-bottom: var(--s4); }
+.tpw-page .tpw-profile { padding: var(--s6); margin-bottom: var(--s6); }
+.tpw-profile-identity { gap: var(--s4); }
+.tpw-profile-identity > .tp-profile-info { flex: 1 1 300px; }
+.tpw-profile-actions { display: flex; align-items: center; justify-content: flex-end; flex-wrap: wrap; gap: var(--s3); margin-left: auto; }
+.tpw-avatar--profile { width: 56px; height: 56px; flex-basis: 56px; font-size: 20px; }
 .tpw-profile-title::after { content: none; }
+.tpw-page .tpw-detail-surface { grid-template-columns: minmax(0, 1fr) minmax(340px, 440px); align-items: stretch; gap: 0; padding: 0; }
+.tpw-cv-panel, .tpw-notes-panel { min-width: 0; padding: var(--s6); }
+.tpw-notes-panel { border-left: 1px solid var(--line); }
+.tpw-contact-panel { padding-bottom: var(--s4); border-bottom: 1px solid var(--line); }
 .tpw-detail-heading { padding-bottom: var(--s4); margin-bottom: var(--s4); }
-.tpw-page .tpw-tools { padding: var(--s4) var(--s6); gap: var(--s3) var(--s6); margin-bottom: var(--s4); }
-.tpw-page .tpw-recommendation-name { color: var(--brand-dark); font: 700 20px/1.35 var(--sans); }
-/* Local aliases correct the legacy workspace badge foreground without changing
-   .badge modifiers or the colour of any other module. Warning ink exceeds AA. */
+.tpw-cv-entry { display: grid; grid-template-columns: 32px minmax(0, 1fr) auto; align-items: center; gap: var(--s3); }
+.tpw-document-icon { display: grid; place-items: center; height: 40px; color: var(--brand-dark); }
+.tpw-cv-caption { min-width: 0; }
+.tpw-page .tpw-cv-open { width: auto; justify-self: end; }
+.tpw-cv-caption .tp-cv-date { margin-bottom: 0; }
+.tpw-page .tpw-tools { padding: var(--s4) var(--s6); justify-content: flex-start; gap: var(--s3) var(--s4); margin: 0; border-bottom: 1px solid var(--line); }
+.tpw-tools > .tp-recommendation-search { flex: 0 1 480px; min-width: 0; }
+.tpw-page .tpw-recommendation-name { color: var(--brand-dark); font: 650 15px/1.5 var(--sans); }
+/* Local status aliases leave global badge modifiers and other modules intact. */
 .tpw-page .tpw-status { flex: none; white-space: nowrap; color: var(--neutral); }
 .tpw-page .tpw-status[data-tpw-tone="success"] { color: var(--success); }
 .tpw-page .tpw-status[data-tpw-tone="warning"] { color: color-mix(in srgb, var(--warning) 90%, var(--ink)); }
 @media (max-width: 992px) {
-  .tpw-search { flex: 1 1 320px; }
   .tpw-heading > .tp-recommendation-actions { justify-content: flex-start; }
+  .tpw-page .tpw-detail-surface { grid-template-columns: minmax(0, 1fr); }
+  .tpw-notes-panel { border-left: 0; border-top: 1px solid var(--line); }
 }
 @media (max-width: 768px) {
-  .tpw-page .tpw-filter, .tpw-page .tpw-tools { padding: var(--s4); }
-  .tpw-filter-controls { flex: 1 1 100%; }
-  .tpw-search { flex: 1 1 100%; }
+  .tpw-page .tpw-filter, .tpw-page .tpw-tools, .tpw-panel-heading { padding: var(--s4); }
+  .tpw-filter-controls { flex: 0 0 auto; }
+  .tpw-search { flex: 1 1 220px; }
   .tpw-filter-fields { grid-template-columns: minmax(0, 1fr); }
-  .tpw-panel-heading { padding: var(--s4); }
-  .tpw-table-scroll { margin-inline: var(--s4); max-width: calc(100% - var(--s8)); }
-  .tpw-pagination, .tpw-intro { padding-inline: var(--s4); }
+  .tpw-table-identity { align-items: flex-start; }
+  .tpw-page .tpw-table-scroll { margin-inline: var(--s4); max-width: calc(100% - var(--s8)); }
+  .tpw-pagination, .tpw-intro, .tpw-list-guidance { padding-inline: var(--s4); }
   .tpw-heading > .tp-recommendation-actions { width: 100%; }
   .tpw-heading > .tp-recommendation-actions > a { flex: 1 1 220px; }
-  .tpw-tools > .tp-recommendation-search { width: 100%; min-width: 0; }
+  .tpw-tools > .tp-recommendation-search { flex-basis: 100%; width: 100%; }
   .tpw-tools .tpw-toolbar-input { min-width: 0; }
+  .tpw-page .tpw-profile, .tpw-cv-panel, .tpw-notes-panel { padding: var(--s4); }
+  .tpw-profile-actions { width: 100%; margin-left: 0; justify-content: space-between; }
   .tpw-page .tpw-profile-title { font-size: 28px; }
+  .tpw-cv-entry { grid-template-columns: 28px minmax(0, 1fr); }
+  .tpw-page .tpw-cv-open { grid-column: 2; justify-self: start; }
+}
+
+@media (max-width: 480px) {
+  .tpw-search { flex: 1 0 100%; }
 }

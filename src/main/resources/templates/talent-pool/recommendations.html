@@ -6,29 +6,35 @@
 <main id="main" layout:fragment="content" class="page-content container app-page tp-recommendations tpw-page adw-page" tabindex="-1">
     <th:block th:replace="~{fragments/ui/admin-workspace :: scene}"></th:block>
 
-    <div class="page-header adw-heading tpw-heading"><div><h1 class="page-title adw-title" th:text="${viewerRole == 'HR' ? 'Gợi ý đã gửi cho HM' : 'Gợi ý từ HR'}"></h1><p class="page-subtitle tpw-subtitle" th:text="${jobTitle}"></p></div><div class="tp-recommendation-actions"><a th:if="${viewerRole == 'HR' and canRecommend}" class="btn btn--primary" th:href="@{/talent-pool(jobPostingId=${jobPostingId})}">Gợi ý ứng viên cho HM</a><a class="btn btn--secondary" th:href="@{/internal/job-postings/{id}(id=${jobPostingId})}">Quay lại tin tuyển dụng</a></div></div>
+    <div class="page-header adw-heading tpw-heading"><div><h1 class="page-title adw-title" th:text="${viewerRole == 'HR' ? 'Gợi ý đã gửi cho HM' : 'Gợi ý từ HR'}"></h1><p class="page-subtitle tpw-subtitle tpw-job-title" th:title="${jobTitle}" th:text="${jobTitle}"></p></div><div class="tp-recommendation-actions"><a th:if="${viewerRole == 'HR' and canRecommend}" class="btn btn--primary" th:href="@{/talent-pool(jobPostingId=${jobPostingId})}">Gợi ý ứng viên cho HM</a><a class="btn btn--secondary" th:href="@{/internal/job-postings/{id}(id=${jobPostingId})}">Quay lại tin tuyển dụng</a></div></div>
     <div th:if="${successMessage}" class="alert alert--success" role="status" th:text="${successMessage}"></div>
     <div th:if="${errorMessage}" class="alert alert--danger" role="alert" th:text="${errorMessage}"></div>
-    <div class="tp-recommendation-tools card adw-surface tpw-tools"><form method="get" class="tp-recommendation-search" th:action="@{/talent-pool/jobs/{id}/recommendations(id=${jobPostingId})}"><label class="sr-only" for="keyword">Tìm tên ứng viên</label><input class="form-input tpw-toolbar-input" id="keyword" type="search" name="keyword" maxlength="100" placeholder="Tìm tên ứng viên" th:value="${keyword}"><button class="btn btn--secondary btn--sm" type="submit">Tìm</button></form><span class="badge badge--warning tpw-status" data-tpw-tone="warning" th:text="|${pendingCount} chờ phản hồi|"></span></div>
-    <p th:if="${page.empty}" class="card text-muted adw-surface tpw-empty">Chưa có gợi ý phù hợp. Gợi ý mới sẽ xuất hiện tại đây sau khi HR gửi.</p>
-    <div class="tp-recommendation-list">
-        <article class="card tp-recommendation adw-surface" th:each="r : ${page.content}">
-            <div class="tp-recommendation-head"><div><h2 class="tp-recommendation-name tpw-recommendation-name" th:text="${r.fullName}"></h2><p class="text-muted" th:text="|Được gợi ý bởi ${r.recommendedBy} (HR)|"></p><time class="tp-feed-time" th:datetime="${#temporals.formatISO(r.recommendedAt)}" th:text="${#temporals.format(r.recommendedAt,'dd/MM/yyyy · HH:mm')}"></time></div>
-                <div class="tp-recommendation-identity"><span class="badge tpw-status" th:attr="data-tpw-tone=${r.pending ? 'warning' : 'neutral'}" th:classappend="${r.pending ? 'badge--warning' : 'badge--neutral'}" th:text="${r.statusLabel}"></span><a class="btn btn--secondary btn--sm app-icon-button tpw-icon-button" title="Mở hồ sơ ứng viên" th:attr="aria-label=|Mở hồ sơ ứng viên ${r.fullName}|" th:href="@{/talent-pool/{id}(id=${r.candidateId},recommendationId=${r.applicationId},keyword=${keyword},page=${page.number})}"><svg data-icon="file-user" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z M14 2v6h6"/><circle cx="12" cy="13" r="2"/><path d="M8 20v-1a4 4 0 0 1 8 0v1"/></svg></a></div>
-            </div>
-            <p class="tp-recommendation-hint">Xem hồ sơ, CV và ghi chú chung để đánh giá mức độ phù hợp.</p>
-            <form th:if="${r.canDecide}" data-pool-decision class="tp-recommendation-actions" method="post" th:action="@{/talent-pool/recommendations/{id}/decision(id=${r.applicationId},keyword=${keyword},page=${page.number})}"><button class="btn btn--secondary btn--sm" type="submit" name="decision" value="Fail">Từ chối</button><button class="btn btn--primary btn--sm" type="submit" name="decision" value="Pass">Chấp nhận</button></form>
-            <th:block th:if="${viewerRole == 'HR' and r.pending}">
+    <section class="card adw-surface tpw-results" aria-labelledby="tp-recommendations-title">
+        <header class="tpw-panel-heading adw-panel-heading"><h2 id="tp-recommendations-title" class="adw-panel-title tpw-panel-title">Danh sách gợi ý</h2><span class="tpw-result-count" th:text="|${page.totalElements} ứng viên|"></span></header>
+    <div class="tp-recommendation-tools tpw-tools"><form method="get" class="tp-recommendation-search" th:action="@{/talent-pool/jobs/{id}/recommendations(id=${jobPostingId})}"><label class="sr-only" for="keyword">Tìm tên ứng viên</label><input class="form-input tpw-toolbar-input" id="keyword" type="search" name="keyword" maxlength="100" placeholder="Tìm tên ứng viên" th:value="${keyword}"><button class="btn btn--secondary btn--sm" type="submit">Tìm</button></form><span class="badge tpw-status" th:classappend="${pendingCount > 0 ? 'badge--warning' : 'badge--neutral'}" th:attr="data-tpw-tone=${pendingCount > 0 ? 'warning' : 'neutral'}" th:text="|${pendingCount} chờ phản hồi|"></span></div>
+    <p th:if="${page.empty}" class="text-muted tpw-empty">Chưa có gợi ý phù hợp. Gợi ý mới sẽ xuất hiện tại đây sau khi HR gửi.</p>
+        <div th:unless="${page.empty}" class="tp-recommendation-list table-wrapper tpw-table-scroll tpw-recommendations-table-wrap">
+            <table class="table adw-data-table tpw-record-table tpw-recommendations-table">
+                <caption class="sr-only">Gợi ý ứng viên từ HR, trạng thái và thao tác theo quyền</caption>
+                <colgroup><col><col class="tpw-col-recommender"><col class="tpw-col-status"><col class="tpw-col-recommendation-actions"></colgroup>
+                <thead><tr><th scope="col">Ứng viên</th><th scope="col">HR gợi ý</th><th scope="col">Trạng thái</th><th scope="col" class="tp-actions-head">Thao tác</th></tr></thead>
+                <tbody><tr class="tp-recommendation" th:each="r : ${page.content}">
+                    <td><div class="tpw-person"><span class="tpw-avatar" aria-hidden="true" th:text="${#strings.isEmpty(r.fullName) ? '?' : #strings.toUpperCase(#strings.substring(r.fullName, 0, 1))}"></span><div><h2 class="tp-recommendation-name tpw-recommendation-name tpw-row-name" th:text="${r.fullName}"></h2></div></div></td>
+                    <td><p class="text-muted" th:text="|Được gợi ý bởi ${r.recommendedBy} (HR)|"></p><time class="tp-feed-time" th:datetime="${#temporals.formatISO(r.recommendedAt)}" th:text="${#temporals.format(r.recommendedAt,'dd/MM/yyyy · HH:mm')}"></time></td>
+                    <td><span class="badge tpw-status" th:attr="data-tpw-tone=${r.pending ? 'warning' : 'neutral'}" th:classappend="${r.pending ? 'badge--warning' : 'badge--neutral'}" th:text="${r.statusLabel}"></span><p th:if="${r.pending and !r.canDecide}" class="tp-recommendation-hint tpw-row-hint" th:text="${viewerRole == 'HR' ? 'Đang chờ HM phụ trách phản hồi.' : 'Tin không còn nhận gợi ý. Hành động phản hồi đã khóa.'}"></p></td>
+                    <td><div class="tpw-row-tools"><a class="btn btn--secondary btn--sm app-icon-button tpw-icon-button tpw-profile-link" title="Mở hồ sơ ứng viên" th:attr="aria-label=|Mở hồ sơ ứng viên ${r.fullName}|" th:href="@{/talent-pool/{id}(id=${r.candidateId},recommendationId=${r.applicationId},keyword=${keyword},page=${page.number})}"><svg data-icon="file-user" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z M14 2v6h6"/><circle cx="12" cy="13" r="2"/><path d="M8 20v-1a4 4 0 0 1 8 0v1"/></svg><span>Xem hồ sơ</span></a><form th:if="${r.canDecide}" data-pool-decision class="tp-recommendation-actions" method="post" th:action="@{/talent-pool/recommendations/{id}/decision(id=${r.applicationId},keyword=${keyword},page=${page.number})}"><button class="btn btn--secondary btn--sm" type="submit" name="decision" value="Fail">Từ chối</button><button class="btn btn--primary btn--sm" type="submit" name="decision" value="Pass">Chấp nhận</button></form><th:block th:if="${viewerRole == 'HR' and r.pending}">
                 <form class="tp-recommendation-actions" method="post" data-pool-withdraw
                       th:action="@{/talent-pool/jobs/{jobId}/recommendations/{id}/withdraw(jobId=${jobPostingId},id=${r.applicationId},keyword=${keyword},page=${page.number})}">
                     <button class="btn btn--danger btn--sm" type="button" data-pool-withdraw-dialog="tp-withdraw-dialog"
                         th:attr="data-name=${r.fullName},aria-label=|Xóa gợi ý ${r.fullName}|" aria-haspopup="dialog">Xóa gợi ý</button>
                 </form>
-            </th:block>
-            <p th:if="${r.pending and !r.canDecide}" class="tp-recommendation-hint" th:text="${viewerRole == 'HR' ? 'Đang chờ HM phụ trách phản hồi.' : 'Tin không còn nhận gợi ý. Hành động phản hồi đã khóa.'}"></p>
-        </article>
-    </div>
-    <nav th:replace="~{fragments/ui/pagination :: paged(page=${page})}"></nav>
+            </th:block></div></td>
+                </tr></tbody>
+            </table>
+        </div>
+        <div th:unless="${page.empty}" class="tpw-list-guidance"><p class="tp-recommendation-hint">Xem hồ sơ, CV và ghi chú chung để đánh giá mức độ phù hợp.</p></div>
+        <div th:unless="${page.empty}" class="tpw-pagination"><nav th:replace="~{fragments/ui/pagination :: paged(page=${page})}"></nav></div>
+    </section>
     <th:block th:if="${viewerRole == 'HR'}">
         <dialog id="tp-withdraw-dialog" class="confirm-dialog" aria-labelledby="tp-withdraw-title" aria-describedby="tp-withdraw-description">
             <div class="dialog-content"><div class="dialog-header"><h2 class="dialog-title" id="tp-withdraw-title">Xóa gợi ý đã gửi?</h2></div>

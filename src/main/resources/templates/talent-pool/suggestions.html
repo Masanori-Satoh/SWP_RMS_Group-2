@@ -23,7 +23,7 @@
                 <h1 class="page-title adw-title"
                     th:text="${viewerRole == 'Hiring Manager' ? 'Ứng viên tiềm năng' : 'Ứng viên được HM đề xuất'}">Ứng
                     viên tiềm năng</h1>
-                <p class="page-subtitle tpw-subtitle" th:text="${jobTitle}"></p>
+                <p class="page-subtitle tpw-subtitle tpw-job-title" th:title="${jobTitle}" th:text="${jobTitle}"></p>
             </div>
             <div class="tp-recommendation-actions"><a th:if="${viewerRole == 'Hiring Manager' and canSuggest}"
                     class="btn btn--primary" th:href="@{/talent-pool(jobPostingId=${jobPostingId})}">Thêm ứng viên tiềm
@@ -31,12 +31,14 @@
                     th:href="@{/internal/job-postings/{id}(id=${jobPostingId})}">Quay lại tin tuyển dụng</a></div>
         </div>
         <section class="card adw-surface tpw-results" aria-labelledby="tp-suggestions-title">
-        <header class="tpw-panel-heading adw-panel-heading"><h2 id="tp-suggestions-title" class="adw-panel-title tpw-panel-title">Danh sách đề xuất</h2></header>
+        <header class="tpw-panel-heading adw-panel-heading"><h2 id="tp-suggestions-title" class="adw-panel-title tpw-panel-title">Danh sách đề xuất</h2><span class="tpw-result-count" th:text="|${#lists.size(suggestions)} ứng viên|"></span></header>
         <p class="text-muted tpw-intro">Đề xuất nội bộ, chưa phải hồ sơ ứng tuyển chính thức. HR liên hệ qua điện thoại hoặc email
             trước khi xác nhận ứng viên đồng ý dùng CV cũ.</p>
         <p th:if="${#lists.isEmpty(suggestions)}" class="empty-state tpw-empty">Không có đề xuất đang chờ liên hệ.</p>
         <div th:unless="${#lists.isEmpty(suggestions)}" class="table-wrapper tpw-table-scroll">
-            <table class="table adw-data-table tpw-suggestions-table">
+            <table class="table adw-data-table tpw-suggestions-table tpw-record-table">
+                <caption class="sr-only">Danh sách ứng viên được đề xuất và người đề xuất</caption>
+                <colgroup><col class="tpw-col-index"><col><col class="tpw-col-contact"><col class="tpw-col-author"><col class="tpw-col-date"><col class="tpw-col-suggestion-actions"></colgroup>
                 <thead>
                     <tr>
                         <th scope="col">STT</th>
@@ -50,7 +52,7 @@
                 <tbody>
                     <tr th:each="s, stat : ${suggestions}">
                         <td th:text="${stat.count}"></td>
-                        <td th:text="${s.fullName}"></td>
+                        <td><div class="tpw-person"><span class="tpw-avatar" aria-hidden="true" th:text="${#strings.isEmpty(s.fullName) ? '?' : #strings.toUpperCase(#strings.substring(s.fullName, 0, 1))}"></span><strong class="tpw-row-name" th:text="${s.fullName}"></strong></div></td>
                         <td><span th:text="${s.email}"></span><br><span
                                 th:text="${s.phoneNumber ?: 'Chưa có số điện thoại'}"></span></td>
                         <td th:text="${s.suggestedBy}"></td>
