@@ -320,7 +320,7 @@
                 <div class="cof-step-circle cof-step-circle--active" aria-hidden="true">1</div>
                 <div class="cof-step-meta">
                     <strong class="cof-step-title">Phản hồi thư mời</strong>
-                    <p class="cof-step-desc" th:text="|Xác nhận trước ${offer.responseDeadline != null ? #temporals.format(offer.responseDeadline, 'HH:mm ngày dd/MM/yyyy') : 'hạn chót'} và chọn địa điểm làm việc.|">Xác nhận trước 23:59 ngày 01/11/2026 và chọn địa điểm làm việc.</p>
+                    <p class="cof-step-desc" th:text="|Xác nhận trước ${offer.responseDeadline != null ? (#temporals.format(offer.responseDeadline, 'HH:mm') + ' ngày ' + #temporals.format(offer.responseDeadline, 'dd/MM/yyyy')) : 'hạn chót'} và chọn địa điểm làm việc.|">Xác nhận trước 23:59 ngày 01/11/2026 và chọn địa điểm làm việc.</p>
                 </div>
             </div>
             <div class="cof-step-box">

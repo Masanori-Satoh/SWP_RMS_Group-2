@@ -1382,7 +1382,8 @@
 /* 6. Khối Các bước tiếp theo (Stepper bên dưới Tờ thư mời) */
 .cof-stepper-panel {
   max-width: 960px;
-  margin: 0 auto var(--s5);
+  margin: 0 auto var(--s6);
+  margin-inline: auto;
   background: var(--surface);
   border: 1px solid var(--line);
   border-radius: 16px;
