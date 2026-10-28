@@ -1,31 +1,25 @@
 <!DOCTYPE html>
-<html lang="vi" xmlns:th="http://www.thymeleaf.org">
-<head th:replace="~{fragments/head :: interfaceHead(${createMode ? 'Tạo tài khoản nội bộ' : 'Sửa tài khoản nội bộ'}, ~{::pageStyles})}">
-  <th:block th:fragment="pageStyles"><link rel="stylesheet" th:href="@{/css/account-form.css}">
+<html lang="vi" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/internal(activeMenu='accounts',role='System Admin')}">
+<head>
+    <title th:text="${createMode ? 'Tạo tài khoản nội bộ' : 'Sửa tài khoản nội bộ'}">Mộc RMS</title>
+    <th:block layout:fragment="styles">
+        <link rel="stylesheet" th:href="@{/css/account-form.css}">
         <link rel="stylesheet" th:href="@{/css/pages/admin-surfaces.css}">
-</th:block>
+    </th:block>
 </head>
-<body class="rms-app">
-<div class="page-wrapper">
-    <!-- SIDEBAR -->
-    <aside th:replace="~{fragments/sidebar :: workspace('accounts', 'System Admin')}"></aside>
-
-    <div class="main-content">
-        <!-- TOPBAR -->
-        <header th:replace="~{fragments/workspace-header :: header('System Admin', null)}"></header>
-        <main id="main" class="page-content ads-page ads-form-page" tabindex="-1">
-            <div class="container account-form-container">
-                <div class="account-heading ads-heading">
+<body>
+<main id="main" layout:fragment="content" class="page-content ads-page ads-form-page adw-page" tabindex="-1">
+    <th:block th:replace="~{fragments/ui/admin-workspace :: scene}"></th:block>
+            <div class="container account-form-container adw-form-wrap">
+                <div class="account-heading ads-heading adw-heading">
                     <div>
-                        <a class="account-back-link" th:href="@{/admin/accounts}">Tài khoản nội bộ</a>
-                        <span aria-hidden="true"> / </span>
-                        <span th:text="${createMode} ? 'Tạo mới' : 'Chỉnh sửa'">Tạo mới</span>
-                        <h1 class="ads-title" th:text="${createMode} ? 'Tạo tài khoản nội bộ' : 'Sửa tài khoản nội bộ'">Tạo tài khoản nội bộ</h1>
+                <h1 class="ads-title adw-title" th:text="${createMode} ? 'Tạo tài khoản nội bộ' : 'Sửa tài khoản nội bộ'">Tạo tài khoản nội bộ</h1>
                         <p th:text="${createMode} ? 'Tài khoản mới sẽ có trạng thái đang hoạt động.' : 'Tên đăng nhập và mật khẩu hiện tại được giữ nguyên.'"></p>
                     </div>
                 </div>
 
-                <section class="workspace-section account-card ads-form-card">
+                <section class="workspace-section account-card ads-form-card adw-surface">
                     <form th:action="${createMode} ? @{/admin/accounts} : @{/admin/accounts/{id}(id=${accountId})}"
                           th:object="${form}" method="post">
                         <div th:replace="~{fragments/messages :: validationSummary}"></div>
@@ -106,7 +100,8 @@
                 </section>
             </div>
         </main>
-    </div>
-</div>
+<th:block layout:fragment="scripts">
+    <th:block th:replace="~{fragments/ui/admin-workspace :: scripts}"></th:block>
+</th:block>
 </body>
 </html>
