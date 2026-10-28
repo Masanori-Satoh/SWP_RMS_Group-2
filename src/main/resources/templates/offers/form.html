@@ -44,8 +44,7 @@
     <div>
       <h1 class="page-title" th:text="${isEdit ? 'Chỉnh Sửa Đề Xuất Nhận Việc #' + offerId : 'Tạo Mới Đề Xuất Nhận Việc'}">Tạo Mới Đề Xuất Nhận Việc</h1>
       <p class="page-subtitle">
-        <span th:if="${!isEdit and isLockedCandidate and fixedCandidate != null}" th:text="|Thiết lập gói đãi ngộ và điều khoản hợp đồng lao động cho ứng viên ${fixedCandidate.candidateName}.|">Thiết lập gói đãi ngộ và điều khoản hợp đồng lao động.</span>
-        <span th:if="${!isEdit and (!isLockedCandidate or fixedCandidate == null)}">Chọn ứng viên đã đạt phỏng vấn để thiết lập gói đãi ngộ và điều khoản hợp đồng lao động.</span>
+        <span th:if="${!isEdit}">Chọn ứng viên đã đạt phỏng vấn để thiết lập gói đãi ngộ và điều khoản hợp đồng lao động.</span>
         <span th:if="${isEdit}">Cập nhật các điều khoản đãi ngộ cho bản thảo đề xuất nhận việc trước khi trình duyệt Giám đốc.</span>
       </p>
     </div>
@@ -77,28 +76,16 @@
     </div>
     <div class="card-body">
 
-      <!-- Trường hợp 1: TẠO MỚI THEO NGỮ CẢNH CỤ THỂ (Ứng viên được chỉ định cố định, ẩn hoàn toàn dropdown) -->
+      <!-- Trường hợp 1: TẠO MỚI THEO NGỮ CẢNH CỤ THỂ (Cố định ứng viên, không cho chọn ứng viên khác) -->
       <div th:if="${!isEdit and isLockedCandidate and fixedCandidate != null}">
-        <input type="hidden" th:field="*{applicationId}" th:value="${fixedCandidate.applicationId}">
-
-        <div class="offer-locked-banner">
-          <div class="offer-locked-banner__left">
-            <span class="badge badge--success">
-              <i class="fa-solid fa-lock"></i> Ứng viên được chỉ định
-            </span>
-            <span class="offer-locked-banner__text">
-              Đề xuất nhận việc được thiết lập đích danh cho ứng viên này từ hồ sơ ứng tuyển.
+        <div class="form-group">
+          <label class="form-label" for="fixedCandidateBar">Chọn ứng viên chờ tạo đề xuất nhận việc</label>
+          <div id="fixedCandidateBar" class="form-select offer-candidate-select-fixed">
+            <span th:text="${fixedCandidate.candidateName} + ' - ' + ${fixedCandidate.appliedPosition} + ' (' + ${fixedCandidate.departmentName} + ')'">
+              Huỳnh Văn Toàn - Chuyên Viên Phát Triển Kinh Doanh B2B (Software Solutions) (Sales & Marketing)
             </span>
           </div>
-          <div class="offer-locked-banner__actions">
-            <a th:href="@{/offers/create}" class="offer-locked-action-link" title="Chuyển sang chế độ chọn tự do từ danh sách ứng viên chờ">
-              <i class="fa-solid fa-rotate-left"></i> Chọn ứng viên khác
-            </a>
-            <span class="offer-locked-action-sep">•</span>
-            <a th:href="@{/applications(sort='score', stage='OFFER')}" class="offer-locked-action-link">
-              <i class="fa-solid fa-arrow-left"></i> Quay lại hồ sơ
-            </a>
-          </div>
+          <input type="hidden" th:field="*{applicationId}" th:value="${fixedCandidate.applicationId}">
         </div>
 
         <div class="offer-group-a-box offer-group-a-box--locked">
