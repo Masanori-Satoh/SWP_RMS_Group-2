@@ -153,25 +153,32 @@ public class OfferController {
 
         CreateOfferRequest createRequest = new CreateOfferRequest();
         createRequest.setProbationDays(60);
+        PassedCandidateResponse fixedCandidate = null;
+        boolean isLockedCandidate = false;
+
         if (applicationId != null) {
-            createRequest.setApplicationId(applicationId);
-            passedCandidates.stream()
+            var found = passedCandidates.stream()
                     .filter(c -> applicationId.equals(c.getApplicationId()))
-                    .findFirst()
-                    .ifPresent(c -> {
-                        createRequest.setOfferedPositionTitle(c.getAppliedPosition());
-                        createRequest.setWorkLocation(
-                                c.getWorkLocation() != null ? c.getWorkLocation() : "Trụ sở chính Mộc RMS");
-                        if (c.getRecommendedSalary() != null) {
-                            createRequest.setProposedSalary(c.getRecommendedSalary().setScale(0, RoundingMode.HALF_UP));
-                            createRequest.setProbationSalary(c.getRecommendedSalary().multiply(new BigDecimal("0.85"))
-                                    .setScale(0, RoundingMode.HALF_UP));
-                        }
-                    });
+                    .findFirst();
+            if (found.isPresent()) {
+                fixedCandidate = found.get();
+                isLockedCandidate = true;
+                createRequest.setApplicationId(applicationId);
+                createRequest.setOfferedPositionTitle(fixedCandidate.getAppliedPosition());
+                createRequest.setWorkLocation(
+                        fixedCandidate.getWorkLocation() != null ? fixedCandidate.getWorkLocation() : "Trụ sở chính Mộc RMS");
+                if (fixedCandidate.getRecommendedSalary() != null) {
+                    createRequest.setProposedSalary(fixedCandidate.getRecommendedSalary().setScale(0, RoundingMode.HALF_UP));
+                    createRequest.setProbationSalary(fixedCandidate.getRecommendedSalary().multiply(new BigDecimal("0.85"))
+                            .setScale(0, RoundingMode.HALF_UP));
+                }
+            }
         }
 
         model.addAttribute("offerDto", createRequest);
         model.addAttribute("isEdit", false);
+        model.addAttribute("isLockedCandidate", isLockedCandidate);
+        model.addAttribute("fixedCandidate", fixedCandidate);
         return "offers/form";
     }
 
@@ -203,12 +210,22 @@ public class OfferController {
     public String createOffer(
             @Valid @ModelAttribute("offerDto") CreateOfferRequest createRequest,
             BindingResult errors,
+            @RequestParam(required = false, defaultValue = "false") Boolean isLockedCandidate,
             Model model,
             RedirectAttributes flash) {
 
         if (errors.hasErrors()) {
-            model.addAttribute("passedCandidates", offerService.getPassedCandidatesForOffer());
+            List<PassedCandidateResponse> passedCandidates = offerService.getPassedCandidatesForOffer();
+            model.addAttribute("passedCandidates", passedCandidates);
             model.addAttribute("isEdit", false);
+            boolean locked = Boolean.TRUE.equals(isLockedCandidate);
+            model.addAttribute("isLockedCandidate", locked);
+            if (locked && createRequest.getApplicationId() != null) {
+                passedCandidates.stream()
+                        .filter(c -> createRequest.getApplicationId().equals(c.getApplicationId()))
+                        .findFirst()
+                        .ifPresent(c -> model.addAttribute("fixedCandidate", c));
+            }
             return "offers/form";
         }
 
@@ -221,8 +238,17 @@ public class OfferController {
             return "redirect:/offers";
         } catch (BaseBusinessException e) {
             errors.reject("businessError", e.getMessage());
-            model.addAttribute("passedCandidates", offerService.getPassedCandidatesForOffer());
+            List<PassedCandidateResponse> passedCandidates = offerService.getPassedCandidatesForOffer();
+            model.addAttribute("passedCandidates", passedCandidates);
             model.addAttribute("isEdit", false);
+            boolean locked = Boolean.TRUE.equals(isLockedCandidate);
+            model.addAttribute("isLockedCandidate", locked);
+            if (locked && createRequest.getApplicationId() != null) {
+                passedCandidates.stream()
+                        .filter(c -> createRequest.getApplicationId().equals(c.getApplicationId()))
+                        .findFirst()
+                        .ifPresent(c -> model.addAttribute("fixedCandidate", c));
+            }
             return "offers/form";
         }
     }
