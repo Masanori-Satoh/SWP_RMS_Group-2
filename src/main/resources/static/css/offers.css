@@ -2439,3 +2439,61 @@
     color: var(--error);
 }
 
+/* Locked Candidate Contextual Banner & Box */
+.offer-locked-banner {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 12px;
+    background: var(--brand-soft, #e7f0e8);
+    border: 1px solid color-mix(in srgb, var(--brand) 25%, transparent);
+    border-radius: 6px;
+    padding: 10px 14px;
+    margin-bottom: 16px;
+}
+
+.offer-locked-banner__left {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.offer-locked-banner__text {
+    font-size: 13.5px;
+    color: var(--brand-dark, #1e4d38);
+    font-weight: 500;
+}
+
+.offer-locked-banner__actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13px;
+}
+
+.offer-locked-action-link {
+    color: var(--brand-dark, #1e4d38);
+    font-weight: 600;
+    text-decoration: underline;
+    text-underline-offset: 3px;
+    transition: opacity 0.15s ease;
+}
+
+.offer-locked-action-link:hover {
+    color: var(--brand, #3e7157);
+    opacity: 0.85;
+}
+
+.offer-locked-action-sep {
+    color: var(--control-line, #7b8b7d);
+}
+
+.offer-group-a-box--locked {
+    display: block !important;
+    border-color: color-mix(in srgb, var(--brand) 25%, var(--line));
+    background: var(--surface);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+}
+
