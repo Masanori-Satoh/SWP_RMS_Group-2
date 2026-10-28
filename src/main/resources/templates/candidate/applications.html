@@ -138,8 +138,8 @@
                        th:attr="aria-label=|Lên lịch phỏng vấn cho ${row.fullName}|" th:href="@{/interviews/new(applicationId=${row.applicationId})}">
                         <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M7 3v4 M17 3v4 M3 10h18 M12 13v5 M9.5 15.5h5"/></svg>
                     </a>
-                    <a th:if="${row.canCreateOffer}" class="btn btn--secondary btn--sm app-icon-button" title="Tạo offer"
-                       th:attr="aria-label=|Tạo offer cho ${row.fullName}|" th:href="@{/offers/create(applicationId=${row.applicationId})}">
+                    <a th:if="${row.canCreateOffer}" class="btn btn--secondary btn--sm app-icon-button" title="Tạo đề xuất nhận việc"
+                       th:attr="aria-label=|Tạo đề xuất nhận việc cho ${row.fullName}|" th:href="@{/offers/create(applicationId=${row.applicationId})}">
                         <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 6 9 7 9-7"/></svg>
                     </a>
                     </div>
