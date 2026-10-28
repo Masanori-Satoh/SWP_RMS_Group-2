@@ -189,7 +189,7 @@ function handleSelectPassedCandidate(appId) {
     setElemText('dispHm', opt.getAttribute('data-hm'));
 
     const recom = opt.getAttribute('data-recom-salary');
-    setElemText('dispRecomSalary', recom ? Number(recom).toLocaleString('vi-VN') + ' VND' : 'Chưa có gợi ý');
+    setElemText('dispRecomSalary', recom ? Number(recom).toLocaleString('vi-VN') + ' VNĐ' : 'Chưa có gợi ý');
     setElemText('dispInterviewComments', opt.getAttribute('data-comments') || 'Không có ghi chú thêm.');
 
     const defaultWorkLoc = opt.getAttribute('data-work-location') || 'Trụ sở chính Mộc RMS';
@@ -251,11 +251,11 @@ function validateProbationRuleUi() {
         const minProb = proposed * 0.85;
         if (probation < minProb) {
             notice.style.color = 'var(--error)';
-            notice.innerHTML = `<i class="fa-solid fa-triangle-exclamation"></i> CẢNH BÁO: Lương thử việc phải đạt tối thiểu 85% lương chính thức (${Math.round(minProb).toLocaleString('vi-VN')} VND).`;
+            notice.innerHTML = `<i class="fa-solid fa-triangle-exclamation"></i> CẢNH BÁO: Lương thử việc phải đạt tối thiểu 85% lương chính thức (${Math.round(minProb).toLocaleString('vi-VN')} VNĐ).`;
             return false;
         } else if (probation > proposed) {
             notice.style.color = 'var(--error)';
-            notice.innerHTML = `<i class="fa-solid fa-triangle-exclamation"></i> CẢNH BÁO: Lương thử việc không được vượt quá lương chính thức (${Math.round(proposed).toLocaleString('vi-VN')} VND).`;
+            notice.innerHTML = `<i class="fa-solid fa-triangle-exclamation"></i> CẢNH BÁO: Lương thử việc không được vượt quá lương chính thức (${Math.round(proposed).toLocaleString('vi-VN')} VNĐ).`;
             return false;
         } else {
             const pct = (probation / proposed * 100).toFixed(1);
@@ -501,7 +501,7 @@ function renderDetailModalHtml(d) {
             const dotClass = isApproved ? 'dot-approved' : 'dot-rejected';
             const statusColor = isApproved ? 'var(--brand-dark)' : 'var(--error)';
             const director = escapeOfferHtml(a.directorName || 'Giám đốc');
-            const statusText = escapeOfferHtml(a.status || '');
+            const statusText = (a.status === 'Approved' || a.status === 'Director_Approved') ? 'Đã phê duyệt' : ((a.status === 'Rejected' || a.status === 'Director_Rejected') ? 'Đã từ chối' : escapeOfferHtml(a.status || ''));
             const timeText = formatOfferDateTime(a.approvedAt);
             const commentsText = escapeOfferHtml(a.directorComments || 'Không có ghi chú thêm.');
 
@@ -564,7 +564,7 @@ function renderDetailModalHtml(d) {
                     <div class="detail-item-value">${departmentName}</div>
                 </div>
                 <div>
-                    <div class="detail-item-label">Mã Yêu cầu tuyển dụng (Requisition ID)</div>
+                    <div class="detail-item-label">Mã Yêu cầu tuyển dụng</div>
                     <div class="detail-item-value">${requisitionId}</div>
                 </div>
             </div>
@@ -578,7 +578,7 @@ function renderDetailModalHtml(d) {
                     <div style="font-size:13px; color:var(--muted); margin-top:4px;">${interviewComments}</div>
                 </div>
                 <div>
-                    <div class="detail-item-label">Lương khuyến nghị từ Hiring Manager:</div>
+                    <div class="detail-item-label">Lương khuyến nghị từ Trưởng bộ phận:</div>
                     <div class="detail-item-value" style="color:var(--brand-dark); font-weight:700; font-size:14.5px;">${recomSalary}</div>
                     <div style="font-size:13px; color:var(--muted); margin-top:4px;">Người phụ trách: ${hiringManagerName}</div>
                 </div>
@@ -587,7 +587,7 @@ function renderDetailModalHtml(d) {
 
         <div class="detail-section">
             <div class="section-title">
-                <i class="fa-solid fa-coins"></i> 2. Gói Đãi Ngộ & Điều Khoản Offer
+                <i class="fa-solid fa-coins"></i> 2. Gói Đãi Ngộ & Điều Khoản Đề Xuất
             </div>
             <div class="detail-grid-3">
                 <div>
@@ -595,11 +595,11 @@ function renderDetailModalHtml(d) {
                     <div class="detail-item-value" style="font-weight:700;">${offeredTitle}</div>
                 </div>
                 <div>
-                    <div class="detail-item-label">Lương chính thức (Gross/tháng)</div>
+                    <div class="detail-item-label">Lương chính thức (Trước thuế/tháng)</div>
                     <div class="detail-item-value" style="color:var(--ink); font-weight:700; font-size:15px;">${proposedSalary}</div>
                 </div>
                 <div>
-                    <div class="detail-item-label">Lương thử việc (Gross/tháng)</div>
+                    <div class="detail-item-label">Lương thử việc (Trước thuế/tháng)</div>
                     <div class="detail-item-value" style="color:var(--brand-dark); font-weight:700; font-size:15px;">
                         <span>${probationSalary}</span> ${probationPctBadge}
                     </div>
@@ -617,7 +617,7 @@ function renderDetailModalHtml(d) {
                     <div class="detail-item-value">${workLocation}</div>
                 </div>
                 <div>
-                    <div class="detail-item-label">Thời hạn phản hồi offer</div>
+                    <div class="detail-item-label">Thời hạn phản hồi thư mời</div>
                     <div class="detail-item-value">
                         <span style="font-weight:700; color:var(--brand-dark);">${d.responsePeriodDays || 5} ngày</span>
                         ${d.responseDeadline ? `<div style="font-size:12px; color:var(--muted); margin-top:2px;">Hạn chót: <strong style="color:var(--ink);">${formatOfferDateTime(d.responseDeadline)}</strong></div>` : ''}
@@ -636,7 +636,7 @@ function renderDetailModalHtml(d) {
         ${d.approvalHistory && d.approvalHistory.length > 0 ? `
         <div class="detail-section" style="margin-bottom:0;">
             <div class="section-title">
-                <i class="fa-solid fa-stamp"></i> 3. Lịch Sử Phê Duyệt Của Director
+                <i class="fa-solid fa-stamp"></i> 3. Lịch Sử Phê Duyệt Của Giám Đốc
             </div>
             ${approvalHtml}
         </div>
@@ -659,7 +659,7 @@ function renderDetailFooterHtml(d) {
     } else if (d.offerStatus === 'Director_Approved' || d.offerStatus === 'Approved') {
         btns += `
             <button type="button" class="btn btn-primary" onclick="confirmSendOffer(${d.offerId})">
-                <i class="fa-solid fa-paper-plane" style="margin-right:4px;"></i> Phát hành Offer Letter
+                <i class="fa-solid fa-paper-plane" style="margin-right:4px;"></i> Phát hành Thư mời nhận việc
             </button>
         `;
     }
@@ -685,7 +685,7 @@ function openEditOfferModal(offerId) {
     if (form) form.reset();
 
     const titleEl = document.getElementById('editModalTitle');
-    if (titleEl) titleEl.textContent = `Chỉnh Sửa Offer Proposal #${offerId}`;
+    if (titleEl) titleEl.textContent = `Chỉnh Sửa Đề Xuất Nhận Việc #${offerId}`;
 
     const idInput = document.getElementById('editOfferId');
     if (idInput) idInput.value = offerId;
@@ -904,7 +904,7 @@ function submitUpdateOffer(isDraft) {
                 closeModal('editOfferModal');
                 setTimeout(() => window.location.reload(), 800);
             } else {
-                showToast(res?.message || 'Lỗi khi cập nhật Offer.', 'danger');
+                showToast(res?.message || 'Lỗi khi cập nhật đề xuất nhận việc.', 'danger');
             }
         })
         .catch(err => {
@@ -928,8 +928,8 @@ function confirmSendOffer(offerId) {
                 </svg>
             </div>
         `,
-        title: 'Phát hành Thư mời làm việc?',
-        desc: 'Bạn có chắc chắn muốn phát hành Thư mời làm việc (Offer Letter) tới ứng viên?',
+        title: 'Phát hành Thư mời nhận việc?',
+        desc: 'Bạn có chắc chắn muốn phát hành Thư mời nhận việc tới ứng viên?',
         confirmText: 'Xác nhận phát hành',
         confirmClass: 'btn-director-reject-confirm',
         showCancel: true,
@@ -964,7 +964,7 @@ function confirmSendOffer(offerId) {
                     const isJson = res.headers.get('content-type')?.includes('application/json');
                     const data = isJson ? await res.json() : null;
                     if (!res.ok) {
-                        throw new Error(data?.message || `Lỗi phát hành Offer (${res.status})`);
+                        throw new Error(data?.message || `Lỗi phát hành thư mời nhận việc (${res.status})`);
                     }
                     return data;
                 })
@@ -988,15 +988,15 @@ function confirmSendOffer(offerId) {
                         }
                     } else {
                         if (typeof Swal !== 'undefined') {
-                            Swal.fire('Lỗi', res?.message || 'Lỗi phát hành Offer.', 'error');
+                            Swal.fire('Lỗi', res?.message || 'Lỗi phát hành thư mời nhận việc.', 'error');
                         } else {
-                            showToast(res?.message || 'Lỗi phát hành Offer.', 'danger');
+                            showToast(res?.message || 'Lỗi phát hành thư mời nhận việc.', 'danger');
                         }
                     }
                 })
                 .catch(err => {
                     if (typeof Swal !== 'undefined') {
-                        Swal.fire('Lỗi', err.message || 'Không thể phát hành Offer.', 'error');
+                        Swal.fire('Lỗi', err.message || 'Không thể phát hành thư mời nhận việc.', 'error');
                     } else {
                         showToast(err.message, 'danger');
                     }
@@ -1007,7 +1007,7 @@ function confirmSendOffer(offerId) {
 
 function confirmDeleteOffer(offerId) {
     if (!offerId) return;
-    if (!confirm('Bạn có chắc chắn muốn xóa bản thảo Offer này khỏi hệ thống?')) {
+    if (!confirm('Bạn có chắc chắn muốn xóa bản thảo đề xuất này khỏi hệ thống?')) {
         return;
     }
 
@@ -1325,7 +1325,7 @@ function executeOfferExport() {
                     if (json && json.message) errorMsg = json.message;
                 } catch (e) {
                     if (response.status === 403) {
-                        errorMsg = 'Bạn không có quyền hạn xuất dữ liệu Offer.';
+                        errorMsg = 'Bạn không có quyền hạn xuất dữ liệu đề xuất nhận việc.';
                     }
                 }
                 throw new Error(errorMsg);

@@ -17,7 +17,7 @@
                 <div class="offers-header">
                     <div class="offers-title-group">
                         <h1>Quản lý Đề xuất</h1>
-                        <p class="offers-subtitle">Xem xét và quyết định các đề xuất gói lương do HR gửi lên.</p>
+                        <p class="offers-subtitle">Xem xét và quyết định các đề xuất gói lương do Bộ phận Tuyển dụng gửi lên.</p>
                     </div>
                 </div>
 
@@ -67,7 +67,7 @@
                     <div class="toolbar-left">
                         <div class="search-box">
                             <i class="fa-solid fa-magnifying-glass" onclick="applyDirectorFilters()"></i>
-                            <input type="text" id="searchInput" placeholder="Tìm theo tên ứng viên, vị trí, mã offer..."
+                            <input type="text" id="searchInput" placeholder="Tìm theo tên ứng viên, vị trí, mã đề xuất..."
                                    th:value="${search}"
                                    onkeydown="if(event.key==='Enter'){ applyDirectorFilters(); }">
                             <button type="button" th:if="${search != null and search != ''}" onclick="clearDirectorSearch()"
@@ -108,7 +108,7 @@
                     <table class="offers-table">
                         <thead>
                             <tr>
-                                <th style="width: 70px;">Mã Offer</th>
+                                <th style="width: 70px;">Mã đề xuất</th>
                                 <th>Ứng viên</th>
                                 <th>Vị trí đề xuất</th>
                                 <th>Lương chính thức</th>
@@ -138,11 +138,11 @@
                                     <span style="font-weight:600; color:var(--ink);" th:text="${o.offeredPositionTitle}">Vị trí</span>
                                 </td>
                                 <td>
-                                    <div class="salary-main" th:text="${o.proposedSalary != null ? #numbers.formatDecimal(o.proposedSalary, 0, 'POINT', 0, 'COMMA') + ' VND' : '-'}">25,000,000 VND</div>
+                                    <div class="salary-main" th:text="${o.proposedSalary != null ? #numbers.formatDecimal(o.proposedSalary, 0, 'POINT', 0, 'COMMA') + ' VNĐ' : '-'}">25,000,000 VNĐ</div>
                                 </td>
                                 <td>
                                     <div class="salary-probation">
-                                        <span th:text="${o.probationSalary != null ? #numbers.formatDecimal(o.probationSalary, 0, 'POINT', 0, 'COMMA') + ' VND' : '-'}">21,250,000 VND</span>
+                                        <span th:text="${o.probationSalary != null ? #numbers.formatDecimal(o.probationSalary, 0, 'POINT', 0, 'COMMA') + ' VNĐ' : '-'}">21,250,000 VNĐ</span>
                                         <span class="salary-badge-pct" th:if="${o.proposedSalary != null and o.probationSalary != null and o.proposedSalary.compareTo(T(java.math.BigDecimal).ZERO) > 0}"
                                               th:text="${#numbers.formatDecimal(o.probationSalary.multiply(new java.math.BigDecimal(100)).divide(o.proposedSalary, 0, T(java.math.RoundingMode).HALF_UP), 0, 0)} + '%'">85%</span>
                                     </div>
@@ -172,8 +172,8 @@
                                 </td>
                                 <td style="color:var(--muted); font-size:13.5px;" th:text="${o.createdAt != null ? #temporals.format(o.createdAt, 'dd/MM/yyyy HH:mm') : '-'}">01/10/2026</td>
                                 <td>
-                                    <div th:text="${o.proposedByName != null ? o.proposedByName : 'HR'}">HR</div>
-                                    <div class="cand-email-sub">(HR)</div>
+                                    <div th:text="${o.proposedByName != null ? o.proposedByName : 'Bộ phận Tuyển dụng'}">Bộ phận Tuyển dụng</div>
+                                    <div class="cand-email-sub">(Bộ phận Tuyển dụng)</div>
                                 </td>
                                 <td style="text-align: right;">
                                     <a th:href="@{/offers/{id}(id=${o.offerId})}"
