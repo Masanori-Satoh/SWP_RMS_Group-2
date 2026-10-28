@@ -8,7 +8,7 @@
     <th:block th:replace="~{dashboard/fragments :: kpis(${dashboard.kpis})}"></th:block>
 
     <div class="dash-split">
-        <section class="card dash-panel dash-panel--priority" aria-labelledby="hm-attention-title">
+        <section class="card dash-panel dash-panel--priority adw-surface" aria-labelledby="hm-attention-title">
             <div class="dash-panel__heading">
                 <h2 id="hm-attention-title" class="dash-panel__title">
                     <svg th:replace="~{dashboard/fragments :: icon('clipboardCheck')}"></svg>Cần bạn xử lý
@@ -24,7 +24,7 @@
             </p>
         </section>
 
-        <section class="card dash-panel" aria-labelledby="hm-interviews-title">
+        <section class="card dash-panel adw-surface" aria-labelledby="hm-interviews-title">
             <div class="dash-panel__heading">
                 <h2 id="hm-interviews-title" class="dash-panel__title">
                     <svg th:replace="~{dashboard/fragments :: icon('calendarDays')}"></svg>Lịch phỏng vấn sắp tới
@@ -38,7 +38,7 @@
         </section>
     </div>
 
-    <section class="card dash-panel" aria-labelledby="hm-progress-title">
+    <section class="card dash-panel adw-surface" aria-labelledby="hm-progress-title">
         <div class="dash-panel__heading">
             <h2 id="hm-progress-title" class="dash-panel__title">
                 <svg th:replace="~{dashboard/fragments :: icon('target')}"></svg>Tiến độ tuyển theo vị trí
@@ -62,7 +62,7 @@
         </ul>
     </section>
 
-    <section class="card dash-panel" aria-labelledby="hm-recent-title">
+    <section class="card dash-panel adw-surface" aria-labelledby="hm-recent-title">
         <div class="dash-panel__heading">
             <h2 id="hm-recent-title" class="dash-panel__title">
                 <svg th:replace="~{dashboard/fragments :: icon('eye')}"></svg>Yêu cầu cần theo dõi
@@ -72,7 +72,7 @@
         <p class="dash-empty" th:if="${#lists.isEmpty(dashboard.recentRequisitions)}">Bạn chưa có yêu cầu tuyển dụng nào.</p>
         <div class="table-wrapper" th:unless="${#lists.isEmpty(dashboard.recentRequisitions)}" tabindex="0"
              role="region" aria-labelledby="hm-recent-title">
-            <table class="table">
+            <table class="table adw-data-table">
                 <caption class="sr-only">Năm yêu cầu tuyển dụng cập nhật gần nhất của bạn</caption>
                 <thead>
                 <tr>

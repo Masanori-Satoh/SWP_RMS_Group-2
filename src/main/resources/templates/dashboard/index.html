@@ -12,9 +12,13 @@
 <body>
     <!-- Dashboard nội bộ: mỗi role một file trong dashboard/sections/, tên file do DTO trả về (section),
          nên template không so sánh tên role. -->
-    <main id="main" layout:fragment="content" class="page-content container dash-page dash-page--recruitment" tabindex="-1">
+    <main id="main" layout:fragment="content" class="page-content container dash-page dash-page--recruitment adw-page" tabindex="-1">
+        <th:block th:replace="~{fragments/ui/admin-workspace :: scene}"></th:block>
         <th:block th:replace="~{dashboard/sections/__${dashboard.section}__ :: content(${dashboard})}"></th:block>
     </main>
+    <th:block layout:fragment="scripts">
+        <th:block th:replace="~{fragments/ui/admin-workspace :: scripts}"></th:block>
+    </th:block>
 </body>
 
 </html>

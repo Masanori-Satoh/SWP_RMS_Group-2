@@ -8,7 +8,7 @@
     <th:block th:replace="~{dashboard/fragments :: kpis(${dashboard.kpis})}"></th:block>
 
     <div class="dash-split dash-split--wide">
-        <section class="card dash-panel dash-panel--priority" aria-labelledby="hr-work-title">
+        <section class="card dash-panel dash-panel--priority adw-surface" aria-labelledby="hr-work-title">
             <div class="dash-panel__heading">
                 <h2 id="hr-work-title" class="dash-panel__title">
                     <svg th:replace="~{dashboard/fragments :: icon('clipboardCheck')}"></svg>Việc cần xử lý
@@ -25,7 +25,7 @@
             </p>
         </section>
 
-        <section class="card dash-panel" aria-labelledby="hr-interviews-title">
+        <section class="card dash-panel adw-surface" aria-labelledby="hr-interviews-title">
             <div class="dash-panel__heading">
                 <h2 id="hr-interviews-title" class="dash-panel__title">
                     <svg th:replace="~{dashboard/fragments :: icon('calendarDays')}"></svg>Phỏng vấn hôm nay và ngày mai
@@ -40,7 +40,7 @@
     </div>
 
     <div class="dash-split">
-        <section class="card dash-panel" aria-labelledby="hr-stages-title">
+        <section class="card dash-panel adw-surface" aria-labelledby="hr-stages-title">
             <div class="dash-panel__heading">
                 <h2 id="hr-stages-title" class="dash-panel__title">
                     <svg th:replace="~{dashboard/fragments :: icon('chartBar')}"></svg>Hồ sơ đang chờ theo giai đoạn
@@ -49,7 +49,7 @@
             <ul th:replace="~{dashboard/fragments :: barChart(${dashboard.waitingStages})}"></ul>
         </section>
 
-        <section class="card dash-panel" aria-labelledby="hr-trend-title">
+        <section class="card dash-panel adw-surface" aria-labelledby="hr-trend-title">
             <div class="dash-panel__heading">
                 <h2 id="hr-trend-title" class="dash-panel__title">
                     <svg th:replace="~{dashboard/fragments :: icon('chartColumnIncreasing')}"></svg>Hồ sơ mới theo tuần
@@ -60,7 +60,7 @@
         </section>
     </div>
 
-    <section class="card dash-panel" aria-labelledby="hr-postings-title">
+    <section class="card dash-panel adw-surface" aria-labelledby="hr-postings-title">
         <div class="dash-panel__heading">
             <h2 id="hr-postings-title" class="dash-panel__title">
                 <svg th:replace="~{dashboard/fragments :: icon('briefcaseBusiness')}"></svg>Tin đang mở
@@ -71,7 +71,7 @@
         <p class="dash-empty" th:if="${#lists.isEmpty(dashboard.openPostings)}">Không có tin nào đang nhận hồ sơ.</p>
         <div class="table-wrapper" th:unless="${#lists.isEmpty(dashboard.openPostings)}" tabindex="0"
              role="region" aria-labelledby="hr-postings-title">
-            <table class="table">
+            <table class="table adw-data-table">
                 <caption class="sr-only">Tin đang mở, ít hồ sơ trên mỗi vị trí cần tuyển nhất ở trên</caption>
                 <thead>
                 <tr>

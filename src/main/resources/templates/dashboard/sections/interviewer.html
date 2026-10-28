@@ -7,7 +7,7 @@
 
     <th:block th:replace="~{dashboard/fragments :: kpis(${dashboard.kpis})}"></th:block>
 
-    <section class="card dash-next" th:if="${dashboard.nextInterview != null}" aria-labelledby="iv-next-title"
+    <section class="card dash-next adw-surface" th:if="${dashboard.nextInterview != null}" aria-labelledby="iv-next-title"
              th:with="next=${dashboard.nextInterview}">
         <div class="dash-next__time">
             <span th:text="${#temporals.format(next.startTime, 'dd/MM')}">01/01</span>
@@ -23,7 +23,7 @@
         <a class="btn btn--primary" th:href="@{${next.href}}">Mở lịch phỏng vấn</a>
     </section>
 
-    <section class="card dash-panel dash-panel--priority" aria-labelledby="iv-evaluations-title">
+    <section class="card dash-panel dash-panel--priority adw-surface" aria-labelledby="iv-evaluations-title">
         <div class="dash-panel__heading">
             <h2 id="iv-evaluations-title" class="dash-panel__title">
                 <svg th:replace="~{dashboard/fragments :: icon('clipboardCheck')}"></svg>Đánh giá cần hoàn thành
@@ -46,7 +46,7 @@
         </ul>
     </section>
 
-    <section class="card dash-panel" aria-labelledby="iv-week-title">
+    <section class="card dash-panel adw-surface" aria-labelledby="iv-week-title">
         <div class="dash-panel__heading">
             <div>
                 <h2 id="iv-week-title" class="dash-panel__title">

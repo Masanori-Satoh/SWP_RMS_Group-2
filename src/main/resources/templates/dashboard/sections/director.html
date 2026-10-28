@@ -7,7 +7,7 @@
 
     <th:block th:replace="~{dashboard/fragments :: kpis(${dashboard.kpis})}"></th:block>
 
-    <section class="card dash-panel dash-panel--priority" aria-labelledby="dr-requisitions-title">
+    <section class="card dash-panel dash-panel--priority adw-surface" aria-labelledby="dr-requisitions-title">
         <div class="dash-panel__heading">
             <h2 id="dr-requisitions-title" class="dash-panel__title">
                 <svg th:replace="~{dashboard/fragments :: icon('inbox')}"></svg>Yêu cầu chờ duyệt
@@ -17,7 +17,7 @@
         <p class="dash-empty" th:if="${#lists.isEmpty(dashboard.pendingRequisitions)}">Không có yêu cầu chờ duyệt.</p>
         <div class="table-wrapper" th:unless="${#lists.isEmpty(dashboard.pendingRequisitions)}" tabindex="0"
              role="region" aria-labelledby="dr-requisitions-title">
-            <table class="table">
+            <table class="table adw-data-table">
                 <caption class="sr-only">Yêu cầu tuyển dụng chờ duyệt, chờ lâu nhất ở trên</caption>
                 <thead>
                 <tr>
@@ -59,7 +59,7 @@
     </section>
 
     <div class="dash-split">
-        <section class="card dash-panel" aria-labelledby="dr-offers-title">
+        <section class="card dash-panel adw-surface" aria-labelledby="dr-offers-title">
             <div class="dash-panel__heading">
                 <h2 id="dr-offers-title" class="dash-panel__title">
                     <svg th:replace="~{dashboard/fragments :: icon('banknote')}"></svg>Đề nghị chờ duyệt
@@ -85,7 +85,7 @@
             </p>
         </section>
 
-        <section class="card dash-panel" aria-labelledby="dr-departments-title">
+        <section class="card dash-panel adw-surface" aria-labelledby="dr-departments-title">
             <div class="dash-panel__heading">
                 <h2 id="dr-departments-title" class="dash-panel__title">
                     <svg th:replace="~{dashboard/fragments :: icon('building')}"></svg>Yêu cầu đang mở theo phòng ban
@@ -99,7 +99,7 @@
         </section>
     </div>
 
-    <section class="card dash-panel" aria-labelledby="dr-decisions-title">
+    <section class="card dash-panel adw-surface" aria-labelledby="dr-decisions-title">
         <div class="dash-panel__heading">
             <h2 id="dr-decisions-title" class="dash-panel__title">
                 <svg th:replace="~{dashboard/fragments :: icon('history')}"></svg>Quyết định gần đây

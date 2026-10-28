@@ -31,17 +31,17 @@
 </svg>
 
 <!-- Tiêu đề trang: lời chào + phạm vi số liệu -->
-<div th:fragment="pageHeader(title, scope)" class="page-header dash-page-header">
+<div th:fragment="pageHeader(title, scope)" class="page-header dash-page-header adw-heading">
     <div>
-        <h1 class="page-title" th:text="${title}">Bảng điều khiển</h1>
+        <h1 class="page-title adw-title" th:text="${title}">Bảng điều khiển</h1>
         <p class="page-subtitle" th:text="${scope}">Phạm vi</p>
     </div>
 </div>
 
 <!-- 4 thẻ KPI bấm được: ô icon, nhãn, con số, % so với kỳ trước, 1 dòng phụ -->
 <section th:fragment="kpis(items)" class="dash-kpis" aria-label="Số liệu tổng quan">
-    <a th:each="kpi : ${items}" class="card dash-kpi" th:classappend="|dash-kpi--${kpi.tone}|" th:href="@{${kpi.href}}">
-        <span class="dash-kpi__icon"><svg th:replace="~{dashboard/fragments :: icon(${kpi.icon})}"></svg></span>
+    <a th:each="kpi : ${items}" class="card dash-kpi adw-surface" th:classappend="|dash-kpi--${kpi.tone}|" th:href="@{${kpi.href}}">
+        <span class="dash-kpi__icon" aria-hidden="true"><svg th:replace="~{dashboard/fragments :: icon(${kpi.icon})}"></svg></span>
         <span class="dash-kpi__body">
             <span class="dash-kpi__label" th:text="${kpi.title}">Chỉ số</span>
             <span class="dash-kpi__value-row">
@@ -51,6 +51,7 @@
             </span>
             <span class="dash-kpi__detail" th:text="${kpi.detail}">Dòng phụ</span>
         </span>
+        <span class="dash-kpi__action" aria-hidden="true"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M7 17 17 7M7 7h10v10"/></svg></span>
     </a>
 </section>
 
