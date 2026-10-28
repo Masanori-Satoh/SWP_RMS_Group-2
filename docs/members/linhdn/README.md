@@ -4,6 +4,8 @@ Các báo cáo cập nhật Candidate/Talent Pool và Application ngày 16–17/
 
 ## Trạng thái mới nhất
 
+28/10 — sửa clean build sau refactor Dashboard: gỡ service cũ bị thêm lại và đồng bộ đối số DTO Admin đã bỏ Blocked. [Nguyên nhân, phạm vi và kiểm chứng](2026-10-28-dashboard-compile-fix.md).
+
 Cập nhật 28/10: quản lý tài khoản chỉ dùng **Active / Inactive**, bỏ lựa chọn và thống kê Blocked; giữ schema và bảo mật chỉ cho phép Active. [Phạm vi, script dữ liệu và kiểm chứng](2026-10-28-account-status-active-inactive.md).
 
 Login / Register / OTP đăng ký được chỉnh theo Botanical Minimalism, Register năm trường gọn hai cột và card Login căn giữa riêng theo phản hồi. Theo yêu cầu tiếp theo, **Quên mật khẩu / OTP khôi phục / Đặt mật khẩu mới** cũng dùng chung giao diện botanical và căn khung; giữ hợp đồng form/backend: [Báo cáo thay đổi, responsive và giới hạn kiểm chứng](2026-10-17-auth-botanical-redesign.md).
