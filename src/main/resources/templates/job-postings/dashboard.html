@@ -1,5 +1,6 @@
 <!DOCTYPE html>
-<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<html lang="vi" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/internal}">
 <!--
     JOB-POSTINGS/DASHBOARD.HTML
     =============================================================================
@@ -14,28 +15,22 @@
     =============================================================================
 -->
 
-<head th:replace="~{fragments/head :: interfaceHead('Bảng điều khiển Tuyển dụng HR', ~{::pageStyles})}">
-    <th:block th:fragment="pageStyles">
+<head>
+    <title>Bảng điều khiển Tuyển dụng HR</title>
+    <th:block layout:fragment="styles">
         <link rel="stylesheet" th:href="@{/css/hr-dashboard.css}">
     </th:block>
 </head>
 
-<body class="rms-app req-app hr-dashboard-page">
-    <div class="page-wrapper">
-        <!-- Sidebar Navigation -->
-        <aside th:replace="~{fragments/sidebar :: workspace('job-postings', ${viewerRole})}"></aside>
-
-        <div class="main-content">
-            <!-- Header Bar -->
-            <header th:replace="~{fragments/workspace-header :: header(${viewerRole}, ${viewerName})}"></header>
-
-            <main id="main" tabindex="-1" class="page-content">
+<body>
+            <main id="main" layout:fragment="content" tabindex="-1" class="page-content container adw-page hr-dashboard-page">
+                <th:block th:replace="~{fragments/ui/admin-workspace :: scene}"></th:block>
                 <div class="hr-dashboard-wrapper">
 
                     <!-- 1. HEADER SECTION & NAVIGATION SWITCHER -->
-                    <div class="hr-dash-header">
+                    <div class="hr-dash-header adw-heading">
                         <div class="hr-dash-title-group">
-                            <h1>Bảng điều khiển Tuyển dụng HR</h1>
+                            <h1 class="adw-title">Bảng điều khiển Tuyển dụng HR</h1>
                             <p>Theo dõi tiến độ phát hành tin tuyển dụng và xử lý các yêu cầu tuyển dụng đã được phê duyệt.</p>
                         </div>
                         <div class="hr-dash-actions">
@@ -53,7 +48,7 @@
                     <!-- 2. KPI METRICS CARDS -->
                     <div class="hr-kpi-grid">
                         <!-- KPI 1: Active Postings -->
-                        <div class="hr-kpi-card kpi-active">
+                        <div class="hr-kpi-card kpi-active adw-surface">
                             <div class="hr-kpi-top">
                                 <span class="hr-kpi-label">Tin đang mở tuyển</span>
                                 <div class="hr-kpi-icon" aria-hidden="true">📢</div>
@@ -65,7 +60,7 @@
                         </div>
 
                         <!-- KPI 2: Draft Postings -->
-                        <div class="hr-kpi-card kpi-draft">
+                        <div class="hr-kpi-card kpi-draft adw-surface">
                             <div class="hr-kpi-top">
                                 <span class="hr-kpi-label">Tin bản nháp</span>
                                 <div class="hr-kpi-icon" aria-hidden="true">📝</div>
@@ -77,7 +72,7 @@
                         </div>
 
                         <!-- KPI 3: Requisitions awaiting posting -->
-                        <div class="hr-kpi-card kpi-pending">
+                        <div class="hr-kpi-card kpi-pending adw-surface">
                             <div class="hr-kpi-top">
                                 <span class="hr-kpi-label">Yêu cầu chờ đăng tin</span>
                                 <div class="hr-kpi-icon" aria-hidden="true">⏳</div>
@@ -89,7 +84,7 @@
                         </div>
 
                         <!-- KPI 4: Closed / Expired -->
-                        <div class="hr-kpi-card kpi-closed">
+                        <div class="hr-kpi-card kpi-closed adw-surface">
                             <div class="hr-kpi-top">
                                 <span class="hr-kpi-label">Đã đóng / Hết hạn</span>
                                 <div class="hr-kpi-icon" aria-hidden="true">📁</div>
@@ -105,7 +100,7 @@
                     <div class="hr-analytics-grid">
 
                         <!-- Cột Trái: Phân bố theo phòng ban -->
-                        <div class="hr-panel-card">
+                        <div class="hr-panel-card adw-surface">
                             <div class="hr-panel-header">
                                 <h2>🏢 Tin tuyển dụng theo phòng ban</h2>
                                 <span class="hr-panel-badge" th:text="|${deptStats.size()} phòng ban|">0 phòng ban</span>
@@ -129,7 +124,7 @@
                         </div>
 
                         <!-- Cột Phải: Yêu cầu tuyển dụng đã duyệt cần xử lý ngay -->
-                        <div class="hr-panel-card">
+                        <div class="hr-panel-card adw-surface">
                             <div class="hr-panel-header">
                                 <h2>⚡ Yêu cầu đã duyệt cần đăng tin</h2>
                                 <span class="hr-panel-badge" th:text="|${pendingReqsCount} yêu cầu|">0 yêu cầu</span>
@@ -160,13 +155,13 @@
                     </div>
 
                     <!-- 4. RECENT JOB POSTINGS TABLE -->
-                    <div class="hr-panel-card">
+                    <div class="hr-panel-card adw-surface">
                         <div class="hr-panel-header">
                             <h2>🕒 Tin tuyển dụng mới nhất</h2>
                             <a th:href="@{/internal/job-postings}" class="hr-btn-table-action">Xem tất cả →</a>
                         </div>
                         <div class="hr-table-responsive">
-                            <table class="hr-dash-table">
+                            <table class="hr-dash-table adw-data-table">
                                 <thead>
                                     <tr>
                                         <th>Tiêu đề tin tuyển dụng</th>
@@ -174,7 +169,7 @@
                                         <th>Trạng thái</th>
                                         <th>Hạn nộp hồ sơ</th>
                                         <th>Ngày đăng</th>
-                                        <th style="text-align: right;">Thao tác</th>
+                                        <th class="hr-actions-cell">Thao tác</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -192,14 +187,14 @@
                                         <td>
                                             <span th:if="${post.applicationDeadline != null}"
                                                   th:text="${#temporals.format(post.applicationDeadline, 'dd/MM/yyyy')}">15/10/2026</span>
-                                            <span th:unless="${post.applicationDeadline != null}" style="color: #64748b;">Tuyển liên tục</span>
+                                            <span class="hr-muted" th:unless="${post.applicationDeadline != null}">Tuyển liên tục</span>
                                         </td>
                                         <td>
                                             <span th:if="${post.postingDate != null}"
                                                   th:text="${#temporals.format(post.postingDate, 'dd/MM/yyyy')}">01/10/2026</span>
                                             <span th:unless="${post.postingDate != null}">—</span>
                                         </td>
-                                        <td style="text-align: right;">
+                                        <td class="hr-actions-cell">
                                             <a th:href="@{/internal/job-postings/{id}(id=${post.jobPostingId})}" class="hr-btn-table-action">Chi tiết</a>
                                             <a th:if="${post.editable}" th:href="@{/internal/job-postings/{id}/edit(id=${post.jobPostingId})}" class="hr-btn-table-action">Sửa</a>
                                         </td>
@@ -214,7 +209,8 @@
 
                 </div>
             </main>
-        </div>
-    </div>
+    <th:block layout:fragment="scripts">
+        <th:block th:replace="~{fragments/ui/admin-workspace :: scripts}"></th:block>
+    </th:block>
 </body>
 </html>

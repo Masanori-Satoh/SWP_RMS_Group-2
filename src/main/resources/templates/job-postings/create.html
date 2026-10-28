@@ -13,18 +13,19 @@
 </head>
 
 <body>
-    <main id="main" layout:fragment="content" class="page-content container" tabindex="-1" th:with="draftOrNew=${postingDto.draftOrNew}, paused=${postingDto.paused}">
+    <main id="main" layout:fragment="content" class="page-content container adw-page" tabindex="-1" th:with="draftOrNew=${postingDto.draftOrNew}, paused=${postingDto.paused}">
+        <th:block th:replace="~{fragments/ui/admin-workspace :: scene}"></th:block>
 
         <nav class="jpf-crumbs" aria-label="Đường dẫn">
             <a th:href="@{/internal/job-postings}">Tin tuyển dụng</a> /
             <span th:text="${isEdit ? 'Chỉnh sửa tin' : 'Tạo tin mới'}">Tạo tin mới</span>
         </nav>
-        <h1 th:text="${isEdit ? 'Chỉnh sửa tin tuyển dụng' : 'Tạo tin tuyển dụng'}">Tạo tin tuyển dụng</h1>
+        <h1 class="adw-title" th:text="${isEdit ? 'Chỉnh sửa tin tuyển dụng' : 'Tạo tin tuyển dụng'}">Tạo tin tuyển dụng</h1>
         <p class="jpf-lead">Nội dung được điền sẵn từ yêu cầu tuyển dụng đã duyệt. Bạn có thể sửa lại cho hấp dẫn ứng
             viên trước khi đăng.</p>
 
         <!-- ===== Yêu cầu nguồn (chỉ đọc) ===== -->
-        <section class="card jpf-source" aria-label="Yêu cầu tuyển dụng nguồn" th:object="${postingDto}">
+        <section class="card jpf-source adw-surface" aria-label="Yêu cầu tuyển dụng nguồn" th:object="${postingDto}">
             <div class="jpf-source-main">
                 <span class="jpf-k">Tạo từ yêu cầu đã duyệt</span>
                 <span class="jpf-source-title" th:text="*{requisitionTitle}">Key Account Manager</span>
@@ -109,7 +110,7 @@
             </div>
 
             <div class="jpf-layout">
-                <div class="card jpf-main">
+                <div class="card jpf-main adw-surface">
 
                     <!-- ===== 1. THÔNG TIN HIỂN THỊ ===== -->
                     <section class="jpf-sec" aria-labelledby="jpf-h1">
@@ -284,13 +285,14 @@
                 <!-- ===== Xem trước: ứng viên sẽ thấy ===== -->
                 <aside class="jpf-preview-col" aria-label="Xem trước tin tuyển dụng">
                     <span class="jpf-k">Ứng viên sẽ thấy</span>
-                    <article class="card jpf-preview" id="jpf-preview" aria-live="off"></article>
+                    <article class="card jpf-preview adw-surface" id="jpf-preview" aria-live="off"></article>
                 </aside>
             </div>
         </form>
     </main>
 
     <th:block layout:fragment="scripts">
+        <th:block th:replace="~{fragments/ui/admin-workspace :: scripts}"></th:block>
         <!-- text-limit.js: báo lỗi đỏ "Nội dung quá N ký tự" khi gõ / dán vượt maxlength -->
         <script th:src="@{/js/text-limit.js}" defer></script>
         <script th:src="@{/js/pages/job-posting-form.js}" defer></script>

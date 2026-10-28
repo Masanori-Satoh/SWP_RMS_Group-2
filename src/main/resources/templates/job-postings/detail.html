@@ -14,16 +14,17 @@
     </th:block>
 </head>
 <body>
-<main id="main" layout:fragment="content" class="page-content container" tabindex="-1"
+<main id="main" layout:fragment="content" class="page-content container adw-page" tabindex="-1"
       th:with="p=${posting}, applicationsUrl=@{/applications(jobPostingId=${posting.jobPostingId})}">
+    <th:block th:replace="~{fragments/ui/admin-workspace :: scene}"></th:block>
 
     <!-- Thông báo sau thao tác: khung nổi góc phải, tự tắt sau 3 giây (dùng chung với màn Yêu cầu) -->
     <th:block th:replace="~{fragments/ui/flash-toast :: flashToast(${successMessage ?: message}, ${errorMessage})}"></th:block>
 
     <!-- ===== 1. ĐẦU TRANG: tiêu đề + nút theo trạng thái ===== -->
-    <header class="jpd-head">
+    <header class="jpd-head adw-heading">
         <div class="jpd-title">
-            <h1 th:text="${p.postingTitle}">Product Owner (SaaS)</h1>
+            <h1 class="adw-title" th:text="${p.postingTitle}">Product Owner (SaaS)</h1>
             <div class="jpd-meta">
                 <span class="badge" th:classappend="|badge--${p.statusTone}|" th:text="${p.postingStatusLabel}">Đang đăng</span>
                 <span class="jpd-pno" th:text="|Lần ${p.postingNo}|">Lần 2</span>
@@ -85,22 +86,22 @@
 
     <!-- ===== 3. SỐ LIỆU HỒ SƠ (chỉ khi tin đã lên trang tuyển dụng) ===== -->
     <section class="jpd-kpis" th:if="${p.live}" aria-label="Số liệu hồ sơ">
-        <div class="card jpd-kpi"><span>Tổng hồ sơ</span><b th:text="${p.totalApplications}">14</b>
+        <div class="card jpd-kpi adw-surface"><span>Tổng hồ sơ</span><b th:text="${p.totalApplications}">14</b>
             <small th:text="|+${p.applicationsLast7Days} trong 7 ngày|">+2 trong 7 ngày</small></div>
-        <div class="card jpd-kpi"><span>Chờ xử lý</span><b th:text="${p.pendingApplications}">9</b>
+        <div class="card jpd-kpi adw-surface"><span>Chờ xử lý</span><b th:text="${p.pendingApplications}">9</b>
             <small>mới nộp hoặc AI đã chấm</small></div>
-        <div class="card jpd-kpi"><span>Đạt ngưỡng AI</span><b th:text="${p.aiPassedApplications}">7</b>
+        <div class="card jpd-kpi adw-surface"><span>Đạt ngưỡng AI</span><b th:text="${p.aiPassedApplications}">7</b>
             <small th:text="|điểm ≥ ${p.aiThreshold.toPlainString()}|">điểm ≥ 70</small></div>
-        <div class="card jpd-kpi"><span>Đang phỏng vấn</span><b th:text="${p.interviewingApplications}">2</b>
+        <div class="card jpd-kpi adw-surface"><span>Đang phỏng vấn</span><b th:text="${p.interviewingApplications}">2</b>
             <small>đang trong vòng phỏng vấn</small></div>
-        <div class="card jpd-kpi jpd-kpi--goal"><span>Đã tuyển</span>
+        <div class="card jpd-kpi jpd-kpi--goal adw-surface"><span>Đã tuyển</span>
             <b><th:block th:text="${p.hiredApplications}">0</th:block> <small th:if="${p.numberOfPositions != null}" th:text="|/ ${p.numberOfPositions}|">/ 1</small></b>
             <small th:text="|theo yêu cầu ${p.requisitionCode}|">theo yêu cầu REQ-0016</small></div>
     </section>
 
     <div class="jpd-layout">
         <!-- ===== 4. CỘT CHÍNH: tab Nội dung tin / Ứng viên ===== -->
-        <section class="card jpd-main" data-tabs>
+        <section class="card jpd-main adw-surface" data-tabs>
             <div class="jpd-tabs" role="tablist" aria-label="Nội dung tin và ứng viên">
                 <button type="button" role="tab" id="tab-content" aria-controls="panel-content" aria-selected="true" data-tab="content">Nội dung tin</button>
                 <button type="button" role="tab" id="tab-candidates" aria-controls="panel-candidates" aria-selected="false" data-tab="candidates">
@@ -157,7 +158,7 @@
                     <p class="jpd-empty" th:if="${#lists.isEmpty(p.recentApplications)}">Chưa có hồ sơ nào.</p>
                     <div class="table-wrapper" th:unless="${#lists.isEmpty(p.recentApplications)}" role="region"
                          aria-label="Hồ sơ gần đây" tabindex="0">
-                        <table class="jpd-apps">
+                        <table class="jpd-apps adw-data-table">
                             <thead><tr><th scope="col">Ứng viên</th><th scope="col">Điểm AI</th><th scope="col">Trạng thái</th><th scope="col">Ngày nộp</th></tr></thead>
                             <tbody>
                             <tr th:each="app : ${p.recentApplications}">
@@ -179,7 +180,7 @@
 
         <!-- ===== 5. CỘT PHẢI ===== -->
         <aside class="jpd-rail" aria-label="Thông tin bổ sung">
-            <section class="card jpd-sec">
+            <section class="card jpd-sec adw-surface">
                 <h3>Yêu cầu tuyển dụng</h3>
                 <dl class="jpd-kv">
                     <div><dt>Mã</dt><dd class="jpd-code" th:text="${p.requisitionCode}">REQ-0016</dd></div>
@@ -191,7 +192,7 @@
             </section>
 
             <!-- Ứng viên tiềm năng / gợi ý (module talent pool của nhóm): HR và HM (cờ talentPoolVisible) -->
-            <section class="card jpd-sec" th:if="${p.talentPoolVisible}">
+            <section class="card jpd-sec adw-surface" th:if="${p.talentPoolVisible}">
                 <h3>Ứng viên tiềm năng</h3>
                 <div class="jpd-links">
                     <a class="btn btn--secondary btn--sm" th:href="@{/talent-pool/jobs/{id}/suggestions(id=${p.jobPostingId})}"
@@ -203,7 +204,7 @@
                 </div>
             </section>
 
-            <section class="card jpd-sec">
+            <section class="card jpd-sec adw-surface">
                 <h3>Lịch sử</h3>
                 <ol class="jpd-timeline" th:unless="${#lists.isEmpty(p.activityHistory)}">
                     <li th:each="act : ${p.activityHistory}">
@@ -221,6 +222,7 @@
 </main>
 
 <th:block layout:fragment="scripts">
+    <th:block th:replace="~{fragments/ui/admin-workspace :: scripts}"></th:block>
     <script th:src="@{/js/pages/job-posting-actions.js}" defer></script>
     <script th:src="@{/js/pages/job-posting-detail.js}" defer></script>
     <!-- flash-toast.js: thông báo sau thao tác tự tắt sau 3 giây -->
