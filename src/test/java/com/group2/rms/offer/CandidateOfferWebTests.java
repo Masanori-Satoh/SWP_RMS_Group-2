@@ -67,7 +67,7 @@ class CandidateOfferWebTests {
     void candidateSeesAnswerButtonsOnlyOnOffersWaitingForThem() throws Exception {
         when(candidateOffers.list()).thenReturn(List.of(
                 offer(12, "Junior Java Developer", "Chờ bạn trả lời", "badge--warning", true),
-                offer(8, "UI/UX Designer", "Đã nhận offer", "badge--success", false)));
+                offer(8, "UI/UX Designer", "Đã nhận việc", "badge--success", false)));
 
         mvc.perform(get("/portal/offers").with(as("an.vo", "Candidate")))
                 .andExpect(status().isOk())
@@ -103,7 +103,7 @@ class CandidateOfferWebTests {
         mvc.perform(post("/portal/offers/12/accept").with(as("an.vo", "Candidate")).with(csrf()))
                 .andExpect(status().is3xxRedirection())
                 .andExpect(redirectedUrl("/portal/offers"))
-                .andExpect(flash().attribute("successMessage", "Bạn đã nhận offer vị trí Junior Java Developer."));
+                .andExpect(flash().attribute("successMessage", "Bạn đã đồng ý nhận việc vị trí Junior Java Developer."));
     }
 
     @Test
@@ -113,7 +113,7 @@ class CandidateOfferWebTests {
         mvc.perform(post("/portal/offers/12/decline").with(as("an.vo", "Candidate")).with(csrf()))
                 .andExpect(status().is3xxRedirection())
                 .andExpect(redirectedUrl("/portal/offers"))
-                .andExpect(flash().attribute("successMessage", "Bạn đã từ chối offer vị trí Junior Java Developer."));
+                .andExpect(flash().attribute("successMessage", "Bạn đã từ chối thư mời nhận việc vị trí Junior Java Developer."));
     }
 
     @Test
@@ -174,7 +174,7 @@ class CandidateOfferWebTests {
                         .with(as("an.vo", "Candidate")).with(csrf()))
                 .andExpect(status().is3xxRedirection())
                 .andExpect(redirectedUrl("/portal/offers/12"))
-                .andExpect(flash().attribute("successMessage", "Bạn đã nhận offer vị trí Junior Java Developer."))
+                .andExpect(flash().attribute("successMessage", "Bạn đã đồng ý nhận việc vị trí Junior Java Developer."))
                 .andExpect(flash().attribute("decisionType", "ACCEPTED"));
     }
 
@@ -188,7 +188,7 @@ class CandidateOfferWebTests {
                         .with(as("an.vo", "Candidate")).with(csrf()))
                 .andExpect(status().is3xxRedirection())
                 .andExpect(redirectedUrl("/portal/offers/12"))
-                .andExpect(flash().attribute("successMessage", "Bạn đã từ chối offer vị trí Junior Java Developer."))
+                .andExpect(flash().attribute("successMessage", "Bạn đã từ chối thư mời nhận việc vị trí Junior Java Developer."))
                 .andExpect(flash().attribute("decisionType", "DECLINED"))
                 .andExpect(flash().attribute("declineReasonDisplay", "Mức đãi ngộ chưa đạt kỳ vọng"));
     }

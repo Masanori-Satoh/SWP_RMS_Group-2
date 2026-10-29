@@ -56,7 +56,7 @@ class CandidateOfferServiceTests {
 
         List<CandidateOfferResponse> rows = service.list();
 
-        assertEquals(List.of("Chờ bạn trả lời", "Đã nhận offer", "Đã từ chối"),
+        assertEquals(List.of("Chờ bạn trả lời", "Đã nhận việc", "Đã từ chối"),
                 rows.stream().map(CandidateOfferResponse::statusLabel).toList());
         assertEquals(List.of("badge--warning", "badge--success", "badge--neutral"),
                 rows.stream().map(CandidateOfferResponse::statusBadge).toList());

@@ -48,12 +48,12 @@ public class OfferExportServiceImpl implements OfferExportService {
 
     static {
         // Nhóm Mặc định (Default Group)
-        COLUMN_WHITELIST.put("offerId", "Mã Offer");
+        COLUMN_WHITELIST.put("offerId", "Mã đề xuất");
         COLUMN_WHITELIST.put("candidateName", "Ứng viên");
         COLUMN_WHITELIST.put("candidateEmail", "Email");
         COLUMN_WHITELIST.put("offeredPositionTitle", "Vị trí đề xuất");
-        COLUMN_WHITELIST.put("proposedSalary", "Lương chính thức (VND)");
-        COLUMN_WHITELIST.put("probationSalary", "Lương thử việc (VND)");
+        COLUMN_WHITELIST.put("proposedSalary", "Lương chính thức (VNĐ)");
+        COLUMN_WHITELIST.put("probationSalary", "Lương thử việc (VNĐ)");
         COLUMN_WHITELIST.put("probationPercentage", "Tỷ lệ thử việc");
         COLUMN_WHITELIST.put("offerStatus", "Trạng thái");
         COLUMN_WHITELIST.put("expectedStartDate", "Ngày bắt đầu dự kiến");
@@ -65,14 +65,14 @@ public class OfferExportServiceImpl implements OfferExportService {
         COLUMN_WHITELIST.put("applicationId", "Mã đơn ứng tuyển");
         COLUMN_WHITELIST.put("candidatePhone", "Số điện thoại");
         COLUMN_WHITELIST.put("departmentName", "Phòng ban");
-        COLUMN_WHITELIST.put("requisitionId", "Mã Requisition");
-        COLUMN_WHITELIST.put("jobPostingId", "Mã Job Posting");
+        COLUMN_WHITELIST.put("requisitionId", "Mã yêu cầu tuyển dụng");
+        COLUMN_WHITELIST.put("jobPostingId", "Mã tin tuyển dụng");
         COLUMN_WHITELIST.put("probationDays", "Thời gian thử việc (ngày)");
         COLUMN_WHITELIST.put("benefitsPackage", "Gói phúc lợi");
         COLUMN_WHITELIST.put("proposedByName", "Người tạo đề xuất");
-        COLUMN_WHITELIST.put("directorName", "Director xử lý");
-        COLUMN_WHITELIST.put("directorDecision", "Quyết định Director");
-        COLUMN_WHITELIST.put("directorComments", "Phản hồi Director");
+        COLUMN_WHITELIST.put("directorName", "Giám đốc xử lý");
+        COLUMN_WHITELIST.put("directorDecision", "Quyết định của Giám đốc");
+        COLUMN_WHITELIST.put("directorComments", "Ý kiến của Giám đốc");
         COLUMN_WHITELIST.put("approvedAt", "Thời điểm duyệt");
         COLUMN_WHITELIST.put("declineReason", "Lý do ứng viên từ chối");
     }
@@ -85,7 +85,7 @@ public class OfferExportServiceImpl implements OfferExportService {
         // 1. Lấy danh sách entities theo Scope & Filters
         List<OfferProposal> entities = fetchOffersByScope(request);
         if (entities.isEmpty()) {
-            throw new OfferValidationException("Không có dữ liệu đề xuất Offer phù hợp để xuất Excel.", "EMPTY_EXPORT_DATA");
+            throw new OfferValidationException("Không có dữ liệu đề xuất nhận việc phù hợp để xuất Excel.", "EMPTY_EXPORT_DATA");
         }
 
         // 2. Chuyển đổi entities sang DTO phẳng (OfferExportRow)
@@ -310,12 +310,12 @@ public class OfferExportServiceImpl implements OfferExportService {
     public static String mapOfferStatusLabel(String status) {
         if (status == null) return "-";
         return switch (status.trim().toLowerCase(Locale.ROOT)) {
-            case "draft" -> "Bản thảo";
-            case "pending_director" -> "Chờ Director duyệt";
-            case "director_approved", "approved" -> "Director đã duyệt";
-            case "director_rejected", "rejected" -> "Director từ chối";
-            case "sent_candidate" -> "Đã gửi ứng viên";
-            case "accepted" -> "Ứng viên đồng ý";
+            case "draft" -> "Bản nháp";
+            case "pending_director" -> "Chờ Giám đốc duyệt";
+            case "director_approved", "approved" -> "Giám đốc đã duyệt";
+            case "director_rejected", "rejected" -> "Giám đốc từ chối";
+            case "sent_candidate" -> "Đã gửi thư mời";
+            case "accepted" -> "Ứng viên chấp nhận";
             case "declined" -> "Ứng viên từ chối";
             case "canceled", "cancelled" -> "Đã hủy";
             case "voided" -> "Không còn hiệu lực";
@@ -643,7 +643,7 @@ public class OfferExportServiceImpl implements OfferExportService {
         // Row 0: Title
         Row r0 = sheet.createRow(0);
         Cell c0 = r0.createCell(0);
-        c0.setCellValue("BÁO CÁO TỔNG HỢP DANH SÁCH ĐỀ XUẤT OFFER");
+        c0.setCellValue("BÁO CÁO TỔNG HỢP DANH SÁCH ĐỀ XUẤT NHẬN VIỆC");
         c0.setCellStyle(titleStyle);
 
         // Row 2: Người xuất
@@ -651,7 +651,7 @@ public class OfferExportServiceImpl implements OfferExportService {
         Cell c2_0 = r2.createCell(0);
         c2_0.setCellValue("Người xuất:");
         c2_0.setCellStyle(labelStyle);
-        r2.createCell(1).setCellValue(exportedBy != null ? exportedBy : "HR");
+        r2.createCell(1).setCellValue(exportedBy != null ? exportedBy : "Bộ phận Tuyển dụng");
 
         // Row 3: Thời gian xuất
         Row r3 = sheet.createRow(3);
@@ -668,7 +668,7 @@ public class OfferExportServiceImpl implements OfferExportService {
         String scopeDesc = switch (request.scope()) {
             case FILTERED -> "Danh sách đang lọc";
             case SELECTED -> "Các đề xuất được chọn (" + rows.size() + ")";
-            case ALL -> "Toàn bộ Offer";
+            case ALL -> "Toàn bộ đề xuất";
         };
         r4.createCell(1).setCellValue(scopeDesc);
 
@@ -711,25 +711,25 @@ public class OfferExportServiceImpl implements OfferExportService {
 
         // Đếm theo từng trạng thái trên TẬP DỮ LIỆU ĐƯỢC XUẤT
         Map<String, Long> statusCounts = new LinkedHashMap<>();
-        statusCounts.put("Bản thảo (Draft)", 0L);
-        statusCounts.put("Chờ Director duyệt (Pending_Director)", 0L);
-        statusCounts.put("Director đã duyệt (Approved)", 0L);
-        statusCounts.put("Director từ chối (Rejected)", 0L);
-        statusCounts.put("Đã gửi ứng viên (Sent_Candidate)", 0L);
-        statusCounts.put("Ứng viên đồng ý (Accepted)", 0L);
-        statusCounts.put("Ứng viên từ chối (Declined)", 0L);
+        statusCounts.put("Bản nháp", 0L);
+        statusCounts.put("Chờ Giám đốc duyệt", 0L);
+        statusCounts.put("Giám đốc đã duyệt", 0L);
+        statusCounts.put("Giám đốc từ chối", 0L);
+        statusCounts.put("Đã gửi thư mời", 0L);
+        statusCounts.put("Ứng viên chấp nhận", 0L);
+        statusCounts.put("Ứng viên từ chối", 0L);
 
         for (OfferExportRow row : rows) {
             String s = row.rawOfferStatus();
             if (s == null) continue;
             switch (s.trim().toLowerCase(Locale.ROOT)) {
-                case "draft" -> statusCounts.put("Bản thảo (Draft)", statusCounts.get("Bản thảo (Draft)") + 1);
-                case "pending_director" -> statusCounts.put("Chờ Director duyệt (Pending_Director)", statusCounts.get("Chờ Director duyệt (Pending_Director)") + 1);
-                case "director_approved", "approved" -> statusCounts.put("Director đã duyệt (Approved)", statusCounts.get("Director đã duyệt (Approved)") + 1);
-                case "director_rejected", "rejected" -> statusCounts.put("Director từ chối (Rejected)", statusCounts.get("Director từ chối (Rejected)") + 1);
-                case "sent_candidate" -> statusCounts.put("Đã gửi ứng viên (Sent_Candidate)", statusCounts.get("Đã gửi ứng viên (Sent_Candidate)") + 1);
-                case "accepted" -> statusCounts.put("Ứng viên đồng ý (Accepted)", statusCounts.get("Ứng viên đồng ý (Accepted)") + 1);
-                case "declined" -> statusCounts.put("Ứng viên từ chối (Declined)", statusCounts.get("Ứng viên từ chối (Declined)") + 1);
+                case "draft" -> statusCounts.put("Bản nháp", statusCounts.get("Bản nháp") + 1);
+                case "pending_director" -> statusCounts.put("Chờ Giám đốc duyệt", statusCounts.get("Chờ Giám đốc duyệt") + 1);
+                case "director_approved", "approved" -> statusCounts.put("Giám đốc đã duyệt", statusCounts.get("Giám đốc đã duyệt") + 1);
+                case "director_rejected", "rejected" -> statusCounts.put("Giám đốc từ chối", statusCounts.get("Giám đốc từ chối") + 1);
+                case "sent_candidate" -> statusCounts.put("Đã gửi thư mời", statusCounts.get("Đã gửi thư mời") + 1);
+                case "accepted" -> statusCounts.put("Ứng viên chấp nhận", statusCounts.get("Ứng viên chấp nhận") + 1);
+                case "declined" -> statusCounts.put("Ứng viên từ chối", statusCounts.get("Ứng viên từ chối") + 1);
             }
         }
 

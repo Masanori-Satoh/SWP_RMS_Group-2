@@ -17,46 +17,68 @@
 <body>
 <main id="main" layout:fragment="content" class="page-content container adw-page profile-page" tabindex="-1">
     <th:block th:replace="~{fragments/ui/admin-workspace :: scene}"></th:block>
-    <div class="adw-form-wrap">
-        <div class="page-header adw-heading">
-            <h1 class="page-title adw-title">Hồ sơ cá nhân</h1>
-        </div>
+    <div class="profile-shell">
+    <div class="page-header adw-heading">
+        <h1 class="page-title adw-title">Hồ sơ cá nhân</h1>
+    </div>
 
-        <!-- Thông báo lưu thành công -->
-        <div class="alert alert--success" role="status" th:if="${successMessage}" th:text="${successMessage}"></div>
+    <!-- Thông báo lưu thành công -->
+    <div class="alert alert--success" role="status" th:if="${successMessage}" th:text="${successMessage}"></div>
 
-        <!-- Thẻ 1: Thông tin chung -->
-        <section class="card profile-card adw-surface" aria-labelledby="general-title">
-            <h2 id="general-title">Thông tin chung</h2>
+    <div class="profile-layout">
+        <!-- Cột trái: một thẻ tổng quan (ảnh, tên, vai trò, mật khẩu) -->
+        <section class="card profile-card profile-overview adw-surface" aria-labelledby="overview-name">
+            <!-- Bấm vào ảnh để chọn file; profile.js tự gửi form khi chọn xong (JPEG/PNG/WebP ≤ 2 MB) -->
+            <form class="profile-avatar-form" th:action="@{/profile/avatar}" method="post"
+                  enctype="multipart/form-data" data-avatar-form>
+                <label class="profile-avatar-picker" for="avatar-file">
+                    <img class="profile-avatar" th:if="${userProfile.avatarUrl != null}"
+                         th:src="${userProfile.avatarUrl}" alt="">
+                    <span class="profile-avatar profile-avatar-fallback" th:unless="${userProfile.avatarUrl != null}"
+                          aria-hidden="true" th:text="${#strings.toUpperCase(#strings.substring(userProfile.fullName, 0, 1))}">A</span>
+                    <span class="profile-avatar-overlay" aria-hidden="true">
+                        <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+                    </span>
+                    <span class="sr-only">Đổi ảnh đại diện</span>
+                </label>
+                <input class="sr-only" id="avatar-file" name="avatarFile" type="file"
+                       accept="image/jpeg,image/png,image/webp" required
+                       th:attr="aria-invalid=${avatarError != null}" aria-describedby="avatar-file-hint avatar-file-error">
+                <small id="avatar-file-hint" class="form-hint">JPEG, PNG hoặc WebP, tối đa 2 MB.</small>
+                <span id="avatar-file-error" class="form-error" role="alert"
+                      th:text="${avatarError}" th:hidden="${avatarError == null}"></span>
+            </form>
 
             <div class="profile-identity">
-                <img class="profile-avatar" th:if="${userProfile.avatarUrl != null}"
-                     th:src="${userProfile.avatarUrl}" alt="Ảnh đại diện">
-                <div class="profile-avatar profile-avatar-fallback" th:unless="${userProfile.avatarUrl != null}"
-                     aria-hidden="true" th:text="${#strings.toUpperCase(#strings.substring(userProfile.fullName, 0, 1))}">A</div>
+                <p id="overview-name" class="profile-identity-name" th:text="${userProfile.fullName}">Họ và tên</p>
+                <span class="badge badge--neutral" th:text="${userProfile.roleLabel}">Vai trò</span>
+            </div>
+
+            <!-- Mật khẩu: nút mở hộp thoại, không đặt form ở trang chính -->
+            <div class="profile-security">
                 <div>
-                    <p class="profile-identity-name" th:text="${userProfile.fullName}">Họ và tên</p>
-                    <p class="profile-identity-meta" th:text="${userProfile.roleLabel}">Vai trò</p>
+                    <h2 class="profile-security-title">Mật khẩu</h2>
+                    <p aria-label="Mật khẩu đã ẩn">••••••••</p>
                 </div>
-                <!-- Ảnh chỉ tải file lên (JPEG/PNG/WebP ≤ 2 MB); form riêng, không lồng trong form thông tin -->
-                <form class="profile-avatar-form" th:action="@{/profile/avatar}" method="post"
-                      enctype="multipart/form-data" data-avatar-form>
-                    <label class="form-label" for="avatar-file">Ảnh đại diện</label>
-                    <div class="profile-avatar-upload">
-                        <input class="form-control" id="avatar-file" name="avatarFile" type="file"
-                               accept="image/jpeg,image/png,image/webp" required
-                               th:attr="aria-invalid=${avatarError != null}" aria-describedby="avatar-file-hint avatar-file-error">
-                        <button class="btn btn--secondary" type="submit">Tải ảnh lên</button>
-                    </div>
-                    <small id="avatar-file-hint" class="form-hint">JPEG, PNG hoặc WebP, tối đa 2 MB.</small>
-                    <span id="avatar-file-error" class="form-error" role="alert"
-                          th:text="${avatarError}" th:hidden="${avatarError == null}"></span>
-                </form>
+                <button class="btn btn--outline" type="button" data-open-modal="changePasswordModal">Đổi mật khẩu</button>
+            </div>
+        </section>
+
+        <!-- Cột phải: thông tin chi tiết -->
+        <section class="card profile-card adw-surface" aria-labelledby="general-title">
+            <div class="profile-card-head">
+                <h2 id="general-title">Thông tin hồ sơ</h2>
+                <!-- type="button": profile.js hỏi lại rồi mới gửi #profileForm -->
+                <div class="profile-card-actions">
+                    <button class="btn btn--secondary" id="btnDiscardProfile" type="button" hidden>Hủy</button>
+                    <button class="btn btn--primary" id="btnSaveProfile" type="button" disabled>Lưu thay đổi</button>
+                </div>
             </div>
 
             <form id="profileForm" th:action="@{/profile/update}" th:object="${updateRequest}" method="post">
                 <div th:replace="~{fragments/messages :: validationSummary}"></div>
 
+                <h3 class="profile-section-title">Tài khoản &amp; hệ thống</h3>
                 <div class="profile-grid">
                     <div class="form-group">
                         <label class="form-label" for="email">Email</label>
@@ -78,7 +100,13 @@
                         <input class="form-control profile-readonly" id="department" type="text"
                                th:value="${userProfile.departmentName}" disabled>
                     </div>
+                    <p class="form-hint profile-field-full">Liên hệ Quản trị viên để thay đổi Email hoặc Vai trò.</p>
+                </div>
 
+                <hr class="profile-divider">
+
+                <h3 class="profile-section-title">Thông tin cá nhân</h3>
+                <div class="profile-grid">
                     <div class="form-group profile-field-full">
                         <label class="form-label" for="full-name">Họ và tên <span aria-hidden="true">*</span></label>
                         <input class="form-control" id="full-name" type="text" th:field="*{fullName}" data-profile-field
@@ -100,21 +128,9 @@
                     </div>
                 </div>
 
-                <div class="profile-actions">
-                    <button class="btn btn--secondary" id="btnDiscardProfile" type="button" hidden>Hoàn tác</button>
-                    <button class="btn btn--primary" id="btnSaveProfile" type="button" disabled>Lưu hồ sơ</button>
-                </div>
             </form>
         </section>
-
-        <!-- Thẻ 2: Mật khẩu -->
-        <section class="card profile-card adw-surface" aria-labelledby="security-title">
-            <h2 id="security-title">Mật khẩu</h2>
-            <div class="profile-security">
-                <p aria-label="Mật khẩu đã ẩn">Mật khẩu: ••••••••</p>
-                <button class="btn btn--secondary" type="button" data-open-modal="changePasswordModal">Đổi mật khẩu</button>
-            </div>
-        </section>
+    </div>
     </div>
 
     <!-- Hộp thoại đổi mật khẩu -->
@@ -134,24 +150,36 @@
 
             <div class="form-group">
                 <label class="form-label" for="currentPassword">Mật khẩu hiện tại <span aria-hidden="true">*</span></label>
-                <input class="form-control" id="currentPassword" type="password" name="currentPassword"
-                       autocomplete="current-password" required
-                       aria-describedby="currentPassword-error">
+                <div class="profile-password-field">
+                    <input class="form-control profile-password-input" data-password-own-toggle id="currentPassword" type="password" name="currentPassword"
+                           autocomplete="current-password" required
+                           aria-describedby="currentPassword-error">
+                    <button class="profile-password-toggle" type="button" data-password-toggle aria-controls="currentPassword"
+                            aria-pressed="false" aria-label="Hiện mật khẩu hiện tại" data-show-label="Hiện mật khẩu hiện tại" data-hide-label="Ẩn mật khẩu hiện tại"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/><path class="profile-eye-slash" d="m3 3 18 18"/></svg></button>
+                </div>
                 <span class="form-error" id="currentPassword-error" hidden></span>
             </div>
             <div class="form-group">
                 <label class="form-label" for="newPassword">Mật khẩu mới <span aria-hidden="true">*</span></label>
-                <input class="form-control" id="newPassword" type="password" name="newPassword"
-                       minlength="8" maxlength="32" autocomplete="new-password" required
-                       aria-describedby="newPassword-hint newPassword-error">
+                <div class="profile-password-field">
+                    <input class="form-control profile-password-input" data-password-own-toggle id="newPassword" type="password" name="newPassword"
+                           minlength="8" maxlength="32" autocomplete="new-password" required
+                           aria-describedby="newPassword-hint newPassword-error">
+                    <button class="profile-password-toggle" type="button" data-password-toggle aria-controls="newPassword"
+                            aria-pressed="false" aria-label="Hiện mật khẩu mới" data-show-label="Hiện mật khẩu mới" data-hide-label="Ẩn mật khẩu mới"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/><path class="profile-eye-slash" d="m3 3 18 18"/></svg></button>
+                </div>
                 <small id="newPassword-hint" class="form-hint">8–32 ký tự, dùng được mọi ký tự đặc biệt.</small>
                 <span class="form-error" id="newPassword-error" hidden></span>
             </div>
             <div class="form-group">
                 <label class="form-label" for="confirmPassword">Nhập lại mật khẩu mới <span aria-hidden="true">*</span></label>
-                <input class="form-control" id="confirmPassword" type="password" name="confirmPassword"
-                       minlength="8" maxlength="32" autocomplete="new-password" required
-                       aria-describedby="confirmPassword-error">
+                <div class="profile-password-field">
+                    <input class="form-control profile-password-input" data-password-own-toggle id="confirmPassword" type="password" name="confirmPassword"
+                           minlength="8" maxlength="32" autocomplete="new-password" required
+                           aria-describedby="confirmPassword-error">
+                    <button class="profile-password-toggle" type="button" data-password-toggle aria-controls="confirmPassword"
+                            aria-pressed="false" aria-label="Hiện mật khẩu nhập lại" data-show-label="Hiện mật khẩu nhập lại" data-hide-label="Ẩn mật khẩu nhập lại"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/><path class="profile-eye-slash" d="m3 3 18 18"/></svg></button>
+                </div>
                 <span class="form-error" id="confirmPassword-error" hidden></span>
             </div>
             <div class="profile-actions">

@@ -4,7 +4,7 @@
       xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
       layout:decorate="~{layout/internal}">
 <head>
-  <title>Quản lý Đề xuất Offer | Mộc RMS</title>
+  <title>Quản lý Đề xuất nhận việc | Mộc RMS</title>
   <th:block layout:fragment="styles">
     <!-- Font Awesome Icons for specialized actions & icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -19,7 +19,7 @@
     <div class="page-flash-container" id="pageFlashContainer" th:if="${successMessage != null or errorMessage != null}">
         <div th:if="${successMessage}" class="page-flash-alert page-flash-success" id="flashSuccessAlert">
             <i class="fa-solid fa-circle-check"></i>
-            <span th:text="${successMessage}">Đã nộp trình đề xuất Offer lên Giám đốc thành công!</span>
+            <span th:text="${successMessage}">Đã nộp trình đề xuất nhận việc lên Giám đốc thành công!</span>
         </div>
         <div th:if="${errorMessage}" class="page-flash-alert page-flash-danger" id="flashErrorAlert">
             <i class="fa-solid fa-triangle-exclamation"></i>
@@ -155,7 +155,7 @@
                                 <th class="offer-col-w-44 offer-text-center">
                                     <input type="checkbox" id="selectAllOffers" class="offer-checkbox" onchange="toggleSelectAllOffers(this.checked)" title="Chọn tất cả trên trang này">
                                 </th>
-                                <th class="offer-col-w-70">Mã Offer</th>
+                                <th class="offer-col-w-70">Mã đề xuất</th>
                                 <th>Ứng viên</th>
                                 <th>Vị trí đề xuất</th>
                                 <th>Lương chính thức</th>
@@ -169,7 +169,7 @@
                             <tr th:if="${#lists.isEmpty(offers)}">
                                 <td colspan="9" class="offer-empty-state-cell">
                                     <i class="fa-solid fa-inbox offer-empty-state-icon"></i>
-                                    Không tìm thấy đề xuất Offer nào phù hợp với bộ lọc.
+                                    Không tìm thấy đề xuất nhận việc nào phù hợp với bộ lọc.
                                 </td>
                             </tr>
                             <tr th:each="o : ${offers}" th:attr="data-id=${o.offerId}, data-status=${o.offerStatus}">
@@ -189,11 +189,11 @@
                                     <span class="offer-position-title" th:text="${o.offeredPositionTitle}">Senior Java Developer</span>
                                 </td>
                                 <td>
-                                    <div class="salary-main" th:text="${#numbers.formatDecimal(o.proposedSalary, 0, 'POINT', 0, 'COMMA')} + ' VND'">25,000,000 VND</div>
+                                    <div class="salary-main" th:text="${#numbers.formatDecimal(o.proposedSalary, 0, 'POINT', 0, 'COMMA')} + ' VNĐ'">25,000,000 VNĐ</div>
                                 </td>
                                 <td>
                                     <div class="salary-probation">
-                                        <span th:text="${#numbers.formatDecimal(o.probationSalary, 0, 'POINT', 0, 'COMMA')} + ' VND'">21,250,000 VND</span>
+                                        <span th:text="${#numbers.formatDecimal(o.probationSalary, 0, 'POINT', 0, 'COMMA')} + ' VNĐ'">21,250,000 VNĐ</span>
                                         <span class="salary-badge-pct" th:if="${o.proposedSalary != null and o.proposedSalary.compareTo(T(java.math.BigDecimal).ZERO) > 0}"
                                               th:text="${#numbers.formatDecimal(o.probationSalary.multiply(new java.math.BigDecimal(100)).divide(o.proposedSalary, 0, T(java.math.RoundingMode).HALF_UP), 0, 0)} + '%'">
                                             85%
@@ -236,7 +236,7 @@
 
                                         <!-- Phát hành gửi Offer cho Candidate (Chỉ khi Director_Approved) -->
                                         <button type="button" th:if="${o.offerStatus == 'Director_Approved' or o.offerStatus == 'Approved'}"
-                                                th:onclick="'confirmSendOffer(' + ${o.offerId} + ')'" class="btn-icon btn-icon-success" title="Phát hành gửi Offer Letter">
+                                                th:onclick="'confirmSendOffer(' + ${o.offerId} + ')'" class="btn-icon btn-icon-success" title="Phát hành gửi Thư mời nhận việc">
                                             <i class="fa-solid fa-paper-plane"></i>
                                         </button>
 
@@ -279,7 +279,7 @@
                     <i class="fa-solid fa-file-excel"></i>
                 </div>
                 <div>
-                    <div style="font-size: 17px; font-weight: 700; color: var(--ink);">Xuất dữ liệu Offer</div>
+                    <div style="font-size: 17px; font-weight: 700; color: var(--ink);">Xuất dữ liệu Đề xuất nhận việc</div>
                     <div style="font-size: 12.5px; color: var(--muted); font-family: var(--sans); font-weight: normal; margin-top: 2px;">Tải dữ liệu đề xuất lương ra file Microsoft Excel (.xlsx)</div>
                 </div>
             </div>
@@ -310,7 +310,7 @@
                     <label class="scope-radio-label">
                         <input type="radio" name="exportScope" value="ALL" onchange="handleScopeChange()">
                         <div class="scope-radio-content">
-                            <div class="scope-name">Toàn bộ Offer</div>
+                            <div class="scope-name">Toàn bộ đề xuất</div>
                             <div class="scope-desc">Xuất tất cả đề xuất đang hoạt động trong hệ thống</div>
                         </div>
                     </label>
@@ -334,7 +334,7 @@
                 <div class="column-group-label">Nhóm mặc định</div>
                 <div class="columns-grid">
                     <label class="column-checkbox-label">
-                        <input type="checkbox" name="exportCol" value="offerId" checked> Mã Offer
+                        <input type="checkbox" name="exportCol" value="offerId" checked> Mã đề xuất
                     </label>
                     <label class="column-checkbox-label">
                         <input type="checkbox" name="exportCol" value="candidateName" checked> Ứng viên
@@ -384,10 +384,10 @@
                         <input type="checkbox" name="exportCol" value="departmentName"> Phòng ban
                     </label>
                     <label class="column-checkbox-label">
-                        <input type="checkbox" name="exportCol" value="requisitionId"> Mã Requisition
+                        <input type="checkbox" name="exportCol" value="requisitionId"> Mã yêu cầu tuyển dụng
                     </label>
                     <label class="column-checkbox-label">
-                        <input type="checkbox" name="exportCol" value="jobPostingId"> Mã Job Posting
+                        <input type="checkbox" name="exportCol" value="jobPostingId"> Mã tin tuyển dụng
                     </label>
                     <label class="column-checkbox-label">
                         <input type="checkbox" name="exportCol" value="probationDays"> Thời gian thử việc
@@ -399,13 +399,13 @@
                         <input type="checkbox" name="exportCol" value="proposedByName"> Người tạo đề xuất
                     </label>
                     <label class="column-checkbox-label">
-                        <input type="checkbox" name="exportCol" value="directorName"> Director xử lý
+                        <input type="checkbox" name="exportCol" value="directorName"> Giám đốc xử lý
                     </label>
                     <label class="column-checkbox-label">
-                        <input type="checkbox" name="exportCol" value="directorDecision"> Quyết định Director
+                        <input type="checkbox" name="exportCol" value="directorDecision"> Quyết định của Giám đốc
                     </label>
                     <label class="column-checkbox-label">
-                        <input type="checkbox" name="exportCol" value="directorComments"> Phản hồi Director
+                        <input type="checkbox" name="exportCol" value="directorComments"> Ý kiến của Giám đốc
                     </label>
                     <label class="column-checkbox-label">
                         <input type="checkbox" name="exportCol" value="approvedAt"> Thời điểm duyệt
@@ -443,7 +443,7 @@
         <div class="modal-header">
             <div style="display:flex; align-items:center; gap:8px;">
                 <i class="fa-solid fa-pen-to-square" style="color:var(--brand-dark);"></i>
-                <span id="editModalTitle">Chỉnh Sửa Offer Proposal</span>
+                <span id="editModalTitle">Chỉnh Sửa Đề Xuất Nhận Việc</span>
             </div>
             <button type="button" class="btn-icon" onclick="closeModal('editOfferModal')">✕</button>
         </div>
@@ -460,13 +460,13 @@
                 <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px;">
                     <div class="form-group">
                         <div style="display: flex; align-items: center; justify-content: space-between; min-height: 28px; margin-bottom: 4px;">
-                            <label style="margin-bottom: 0;">Lương chính thức (VND/tháng) <span style="color:var(--error, #ef4444);">*</span></label>
+                            <label style="margin-bottom: 0;">Lương chính thức (VNĐ/tháng) <span style="color:var(--error, #ef4444);">*</span></label>
                         </div>
                         <input type="number" id="editProposedSalary" class="input-control" min="0" step="any" oninput="editAutoCalculateProbation()" required>
                     </div>
                     <div class="form-group">
                         <div style="display: flex; align-items: center; justify-content: space-between; min-height: 28px; margin-bottom: 4px;">
-                            <label style="margin-bottom: 0;">Lương thử việc (VND/tháng) <span style="color:var(--error, #ef4444);">*</span></label>
+                            <label style="margin-bottom: 0;">Lương thử việc (VNĐ/tháng) <span style="color:var(--error, #ef4444);">*</span></label>
                             <button type="button" class="quick-calc-btn" onclick="editAutoCalculateProbation(true)">Gợi ý 85%</button>
                         </div>
                         <input type="number" id="editProbationSalary" class="input-control" min="0" step="any" oninput="editValidateProbation()" required>
@@ -507,7 +507,7 @@
         <div class="modal-footer">
             <button type="button" class="btn btn-secondary" onclick="closeModal('editOfferModal')">Hủy bỏ</button>
             <button type="button" class="btn btn-secondary" onclick="submitUpdateOffer(true)">
-                <i class="fa-regular fa-floppy-disk" style="margin-right:6px;"></i> Lưu Bản Thảo (Draft)
+                <i class="fa-regular fa-floppy-disk" style="margin-right:6px;"></i> Lưu bản nháp
             </button>
             <button type="button" class="btn btn-primary" onclick="submitUpdateOffer(false)">
                 <i class="fa-solid fa-paper-plane" style="margin-right:6px;"></i> Trình Giám Đốc
@@ -523,7 +523,7 @@
     <div class="modal-box" style="max-width: 500px;">
         <div class="modal-header">
             <div id="directorDecisionTitle" style="display:flex; align-items:center; gap:8px; font-weight:600; font-size:16px;">
-                Phê Duyệt Đề Xuất Offer
+                Phê Duyệt Đề Xuất Nhận Việc
             </div>
             <button type="button" class="btn-icon" onclick="closeDirectorDecisionModal()">✕</button>
         </div>

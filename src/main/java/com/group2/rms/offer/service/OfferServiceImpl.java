@@ -126,13 +126,6 @@ public class OfferServiceImpl implements OfferService {
         OfferProposal savedOffer = offerProposalRepository.save(newOffer);
 
         if ("Pending_Director".equals(savedOffer.getOfferStatus())) {
-            if (offerMailSender != null) {
-                try {
-                    offerMailSender.notifyDirectorNewPendingOffer(savedOffer);
-                } catch (Exception e) {
-                    log.warn("Lỗi khi gửi email thông báo Director về Offer mới ID {}: {}", savedOffer.getOfferId(), e.getMessage());
-                }
-            }
             if (systemNotificationService != null) {
                 try {
                     systemNotificationService.notifyOfferPendingDirector(savedOffer, proposedBy);
@@ -287,13 +280,6 @@ public class OfferServiceImpl implements OfferService {
         OfferProposal saved = offerProposalRepository.save(offerToSave);
 
         if ("Pending_Director".equals(status)) {
-            if (offerMailSender != null) {
-                try {
-                    offerMailSender.notifyDirectorNewPendingOffer(saved);
-                } catch (Exception e) {
-                    log.warn("Lỗi khi gửi email thông báo Director về Offer mới ID {}: {}", saved.getOfferId(), e.getMessage());
-                }
-            }
             if (systemNotificationService != null) {
                 try {
                     systemNotificationService.notifyOfferPendingDirector(saved, proposedBy);
@@ -532,13 +518,6 @@ public class OfferServiceImpl implements OfferService {
         OfferProposal saved = offerProposalRepository.save(offer);
 
         if ("Pending_Director".equals(offer.getOfferStatus())) {
-            if (offerMailSender != null) {
-                try {
-                    offerMailSender.notifyDirectorNewPendingOffer(saved);
-                } catch (Exception e) {
-                    log.warn("Lỗi khi gửi email thông báo Director về Offer cập nhật ID {}: {}", saved.getOfferId(), e.getMessage());
-                }
-            }
             if (systemNotificationService != null) {
                 try {
                     User currentHr = resolveProposedBy(null);
@@ -819,22 +798,8 @@ public class OfferServiceImpl implements OfferService {
         offer.setOfferStatus("Director_Approved");
         OfferProposal saved = offerProposalRepository.save(offer);
 
-        OfferApproval approval = OfferApproval.builder()
-                .offerProposal(saved)
-                .director(director)
-                .status("Approved")
-                .directorComments(comments)
-                .approvedAt(LocalDateTime.now())
-                .build();
+        OfferApproval approval = new OfferApproval(saved, director, "Approved", comments);
         offerApprovalRepository.save(approval);
-
-        if (offerMailSender != null) {
-            try {
-                offerMailSender.notifyHrOfDirectorDecision(saved, "Approved", comments);
-            } catch (Exception e) {
-                log.warn("Lỗi khi gửi email thông báo HR duyệt Offer ID {}: {}", saved.getOfferId(), e.getMessage());
-            }
-        }
 
         if (systemNotificationService != null) {
             try {
@@ -867,22 +832,8 @@ public class OfferServiceImpl implements OfferService {
         offer.setOfferStatus("Director_Rejected");
         OfferProposal saved = offerProposalRepository.save(offer);
 
-        OfferApproval approval = OfferApproval.builder()
-                .offerProposal(saved)
-                .director(director)
-                .status("Rejected")
-                .directorComments(comments)
-                .approvedAt(LocalDateTime.now())
-                .build();
+        OfferApproval approval = new OfferApproval(saved, director, "Rejected", comments);
         offerApprovalRepository.save(approval);
-
-        if (offerMailSender != null) {
-            try {
-                offerMailSender.notifyHrOfDirectorDecision(saved, "Rejected", comments);
-            } catch (Exception e) {
-                log.warn("Lỗi khi gửi email thông báo HR từ chối Offer ID {}: {}", saved.getOfferId(), e.getMessage());
-            }
-        }
 
         if (systemNotificationService != null) {
             try {

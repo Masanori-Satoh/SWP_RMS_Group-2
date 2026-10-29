@@ -4,7 +4,7 @@
       xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
       layout:decorate="~{layout/internal}">
 <head>
-  <title th:text="${isEdit ? 'Chỉnh sửa Đề xuất Offer #' + offerId : 'Tạo Mới Đề Xuất Offer Proposal'}">Tạo Mới Đề Xuất Offer Proposal</title>
+  <title th:text="${isEdit ? 'Chỉnh sửa Đề xuất nhận việc #' + offerId : 'Tạo Mới Đề Xuất Nhận Việc'}">Tạo Mới Đề Xuất Nhận Việc</title>
   <th:block layout:fragment="styles">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" th:href="@{/css/offers.css}">
@@ -42,10 +42,10 @@
   <!-- PAGE HEADER -->
   <div class="page-header">
     <div>
-      <h1 class="page-title" th:text="${isEdit ? 'Chỉnh Sửa Offer Proposal #' + offerId : 'Tạo Mới Offer Proposal'}">Tạo Mới Offer Proposal</h1>
+      <h1 class="page-title" th:text="${isEdit ? 'Chỉnh Sửa Đề Xuất Nhận Việc #' + offerId : 'Tạo Mới Đề Xuất Nhận Việc'}">Tạo Mới Đề Xuất Nhận Việc</h1>
       <p class="page-subtitle">
         <span th:if="${!isEdit}">Chọn ứng viên đã đạt phỏng vấn để thiết lập gói đãi ngộ và điều khoản hợp đồng lao động.</span>
-        <span th:if="${isEdit}">Cập nhật các điều khoản đãi ngộ cho bản thảo Offer trước khi trình duyệt Giám đốc.</span>
+        <span th:if="${isEdit}">Cập nhật các điều khoản đãi ngộ cho bản thảo đề xuất nhận việc trước khi trình duyệt Giám đốc.</span>
       </p>
     </div>
   </div>
@@ -55,6 +55,7 @@
                 <form id="offerForm" th:object="${offerDto}"
                       th:action="${isEdit ? '/offers/' + offerId + '/edit' : '/offers/create'}"
                       method="post">
+  <input type="hidden" name="isLockedCandidate" th:value="${isLockedCandidate ? 'true' : 'false'}">
 
   <!-- VALIDATION SUMMARY ALERT -->
   <div th:if="${#fields.hasAnyErrors()}" class="alert alert--danger offer-alert-spacing">
@@ -75,10 +76,68 @@
     </div>
     <div class="card-body">
 
-      <!-- Trường hợp TẠO MỚI: Dropdown chọn ứng viên -->
-      <div th:if="${!isEdit}">
+      <!-- Trường hợp 1: TẠO MỚI THEO NGỮ CẢNH CỤ THỂ (Cố định ứng viên, không cho chọn ứng viên khác) -->
+      <div th:if="${!isEdit and isLockedCandidate and fixedCandidate != null}">
         <div class="form-group">
-          <label class="form-label form-label--required" for="createAppSelect">Chọn ứng viên chờ tạo Offer</label>
+          <label class="form-label" for="fixedCandidateBar">Chọn ứng viên chờ tạo đề xuất nhận việc</label>
+          <div id="fixedCandidateBar" class="form-select offer-candidate-select-fixed">
+            <span th:text="${fixedCandidate.candidateName} + ' - ' + ${fixedCandidate.appliedPosition} + ' (' + ${fixedCandidate.departmentName} + ')'">
+              Huỳnh Văn Toàn - Chuyên Viên Phát Triển Kinh Doanh B2B (Software Solutions) (Sales & Marketing)
+            </span>
+          </div>
+          <input type="hidden" th:field="*{applicationId}" th:value="${fixedCandidate.applicationId}">
+        </div>
+
+        <div class="offer-group-a-box offer-group-a-box--locked">
+          <div class="detail-grid-3">
+            <div>
+              <div class="detail-item-label">Mã Ứng viên</div>
+              <div class="detail-item-value" th:text="${fixedCandidate.candidateId != null ? '#' + fixedCandidate.candidateId : '-'}">#51</div>
+            </div>
+            <div>
+              <div class="detail-item-label">Họ và tên</div>
+              <div class="detail-item-value offer-font-bold" th:text="${fixedCandidate.candidateName}">Huỳnh Văn Toàn</div>
+            </div>
+            <div>
+              <div class="detail-item-label">Email</div>
+              <div class="detail-item-value" th:text="${fixedCandidate.email}">toan.van.huynh@fpt.edu.vn</div>
+            </div>
+            <div>
+              <div class="detail-item-label">Số điện thoại</div>
+              <div class="detail-item-value" th:text="${fixedCandidate.phoneNumber != null ? fixedCandidate.phoneNumber : '-'}">0708883823</div>
+            </div>
+            <div>
+              <div class="detail-item-label">Vị trí ứng tuyển</div>
+              <div class="detail-item-value" th:text="${fixedCandidate.appliedPosition}">Chuyên Viên Phát Triển Kinh Doanh B2B</div>
+            </div>
+            <div>
+              <div class="detail-item-label">Phòng ban</div>
+              <div class="detail-item-value" th:text="${fixedCandidate.departmentName}">Sales & Marketing</div>
+            </div>
+            <div>
+              <div class="detail-item-label">Mã yêu cầu tuyển dụng</div>
+              <div class="detail-item-value" th:text="${fixedCandidate.requisitionId != null ? '#' + fixedCandidate.requisitionId : '-'}">#4</div>
+            </div>
+            <div>
+              <div class="detail-item-label">Lương đề xuất của Trưởng bộ phận</div>
+              <div class="detail-item-value offer-salary-highlight" th:text="${fixedCandidate.recommendedSalary != null ? #numbers.formatDecimal(fixedCandidate.recommendedSalary, 1, 'POINT', 0, 'COMMA') + ' VNĐ' : 'Chưa có gợi ý'}">20.000.000 VNĐ</div>
+            </div>
+            <div>
+              <div class="detail-item-label">Trưởng bộ phận chuyên môn</div>
+              <div class="detail-item-value" th:text="${fixedCandidate.hiringManagerName != null ? fixedCandidate.hiringManagerName : '-'}">Đỗ Thu Hương</div>
+            </div>
+          </div>
+          <div class="offer-mt-2">
+            <div class="detail-item-label">Đánh giá Hội đồng phỏng vấn:</div>
+            <div class="detail-item-value offer-font-italic-muted" th:text="${fixedCandidate.interviewSummaryComments != null ? fixedCandidate.interviewSummaryComments : 'Đạt yêu cầu đầu vào, đề xuất gửi thư mời nhận việc (Offer).'}">-</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Trường hợp 2: TẠO MỚI TỰ DO (HR vào từ trang Quản lý Offer, chọn từ danh sách) -->
+      <div th:if="${!isEdit and (!isLockedCandidate or fixedCandidate == null)}">
+        <div class="form-group">
+          <label class="form-label form-label--required" for="createAppSelect">Chọn ứng viên chờ tạo đề xuất nhận việc</label>
           <select id="createAppSelect" th:field="*{applicationId}" class="form-select" onchange="handleSelectPassedCandidate(this.value)" required>
             <option value="">-- Chọn ứng viên đã đỗ phỏng vấn --</option>
             <option th:each="c : ${passedCandidates}"
@@ -93,23 +152,23 @@
 
         <!-- Khung xem trước thông tin Group A (Tự động cập nhật qua JS khi chọn dropdown) -->
         <div id="groupASection" class="offer-group-a-box">
-                                <div class="detail-grid-3">
-                                    <div><div class="detail-item-label">Mã Ứng viên</div><div class="detail-item-value" id="dispCandId">-</div></div>
-                                    <div><div class="detail-item-label">Họ và tên</div><div class="detail-item-value offer-font-bold" id="dispCandName">-</div></div>
-                                    <div><div class="detail-item-label">Email</div><div class="detail-item-value" id="dispCandEmail">-</div></div>
-                                    <div><div class="detail-item-label">Số điện thoại</div><div class="detail-item-value" id="dispCandPhone">-</div></div>
-                                    <div><div class="detail-item-label">Vị trí ứng tuyển</div><div class="detail-item-value" id="dispPosition">-</div></div>
-                                    <div><div class="detail-item-label">Phòng ban</div><div class="detail-item-value" id="dispDept">-</div></div>
-                                    <div><div class="detail-item-label">Mã Requisition</div><div class="detail-item-value" id="dispReqId">-</div></div>
-                                    <div><div class="detail-item-label">Lương đề xuất Hiring Manager</div><div class="detail-item-value offer-salary-highlight" id="dispRecomSalary">-</div></div>
-                                    <div><div class="detail-item-label">Hiring Manager</div><div class="detail-item-value" id="dispHm">-</div></div>
-                                </div>
-                                <div class="offer-mt-2">
-                                    <div class="detail-item-label">Đánh giá Hội đồng phỏng vấn:</div>
-                                    <div class="detail-item-value offer-font-italic-muted" id="dispInterviewComments">-</div>
-                                </div>
-                            </div>
-                        </div>
+          <div class="detail-grid-3">
+            <div><div class="detail-item-label">Mã Ứng viên</div><div class="detail-item-value" id="dispCandId">-</div></div>
+            <div><div class="detail-item-label">Họ và tên</div><div class="detail-item-value offer-font-bold" id="dispCandName">-</div></div>
+            <div><div class="detail-item-label">Email</div><div class="detail-item-value" id="dispCandEmail">-</div></div>
+            <div><div class="detail-item-label">Số điện thoại</div><div class="detail-item-value" id="dispCandPhone">-</div></div>
+            <div><div class="detail-item-label">Vị trí ứng tuyển</div><div class="detail-item-value" id="dispPosition">-</div></div>
+            <div><div class="detail-item-label">Phòng ban</div><div class="detail-item-value" id="dispDept">-</div></div>
+            <div><div class="detail-item-label">Mã yêu cầu tuyển dụng</div><div class="detail-item-value" id="dispReqId">-</div></div>
+            <div><div class="detail-item-label">Lương đề xuất của Trưởng bộ phận</div><div class="detail-item-value offer-salary-highlight" id="dispRecomSalary">-</div></div>
+            <div><div class="detail-item-label">Trưởng bộ phận chuyên môn</div><div class="detail-item-value" id="dispHm">-</div></div>
+          </div>
+          <div class="offer-mt-2">
+            <div class="detail-item-label">Đánh giá Hội đồng phỏng vấn:</div>
+            <div class="detail-item-value offer-font-italic-muted" id="dispInterviewComments">-</div>
+          </div>
+        </div>
+      </div>
 
       <!-- Trường hợp CHỈNH SỬA: Hiển thị thông tin ứng viên cố định (Read-only) -->
       <div th:if="${isEdit and detail != null}">
@@ -119,7 +178,7 @@
           <div><div class="detail-item-label">Số điện thoại</div><div class="detail-item-value" th:text="${detail.candidatePhone}">-</div></div>
           <div><div class="detail-item-label">Vị trí ứng tuyển</div><div class="detail-item-value" th:text="${detail.appliedPosition}">-</div></div>
           <div><div class="detail-item-label">Phòng ban</div><div class="detail-item-value" th:text="${detail.departmentName}">-</div></div>
-          <div><div class="detail-item-label">Mã Requisition</div><div class="detail-item-value" th:text="'#' + ${detail.requisitionId}">-</div></div>
+          <div><div class="detail-item-label">Mã yêu cầu tuyển dụng</div><div class="detail-item-value" th:text="'#' + ${detail.requisitionId}">-</div></div>
         </div>
       </div>
     </div>
@@ -128,7 +187,7 @@
   <!-- STEP 2: THÔNG TIN ĐÃI NGỘ & ĐIỀU KHOẢN (GROUP B) -->
   <div class="card">
     <div class="card-header">
-      <h2 class="card-title"><i class="fa-solid fa-coins"></i> 2. Thông Tin Đãi Ngộ & Điều Khoản Offer</h2>
+      <h2 class="card-title"><i class="fa-solid fa-coins"></i> 2. Thông Tin Đãi Ngộ & Điều Khoản Đề Xuất</h2>
     </div>
     <div class="card-body">
 
@@ -142,7 +201,7 @@
         <div class="form-group">
           <div class="offer-field-header-row">
             <label class="form-label form-label--required" for="proposedSalary">
-              Lương chính thức (VND/tháng)
+              Lương chính thức (VNĐ/tháng)
             </label>
           </div>
           <input type="number" id="proposedSalary" th:field="*{proposedSalary}" class="form-input"
@@ -155,7 +214,7 @@
         <div class="form-group">
           <div class="offer-field-header-row">
             <label class="form-label form-label--required" for="probationSalary">
-              Lương thử việc (VND/tháng)
+              Lương thử việc (VNĐ/tháng)
             </label>
             <button type="button" class="btn btn--sm offer-btn-calc-probation" onclick="autoCalculateProbationSalary(true)"
                     title="Gợi ý mức sàn 85% theo quy định BR-OFF-01">
@@ -185,7 +244,7 @@
           <label class="form-label form-label--required" for="responsePeriodDays">Thời hạn phản hồi (ngày)</label>
           <input type="number" id="responsePeriodDays" th:field="*{responsePeriodDays}" class="form-input" min="1" max="60" placeholder="5" oninput="updateMinExpectedStartDate()" required>
           <div class="form-hint">
-            Hạn phản hồi = Thời điểm HR phát hành + số ngày này (mặc định 5 ngày).
+            Hạn phản hồi = Thời điểm Bộ phận Tuyển dụng phát hành + số ngày này (mặc định 5 ngày).
           </div>
           <p class="form-error" th:if="${#fields.hasErrors('responsePeriodDays')}"
              th:text="${#strings.contains(#fields.errors('responsePeriodDays')[0], 'Failed to convert') ? 'Thời hạn phản hồi phải là số ngày hợp lệ (1-60 ngày).' : #fields.errors('responsePeriodDays')[0]}"></p>
@@ -220,7 +279,7 @@
     <a th:href="${isEdit ? '/offers/' + offerId : '/offers'}" class="btn btn--secondary">Hủy bỏ</a>
     <!-- Submit as Draft -->
     <button type="submit" name="isDraft" value="true" class="btn btn--secondary">
-      <i class="fa-regular fa-floppy-disk"></i> Lưu Bản Thảo (Draft)
+      <i class="fa-regular fa-floppy-disk"></i> Lưu bản nháp
     </button>
     <!-- Submit to Director -->
     <button type="submit" name="isDraft" value="false" class="btn btn--primary">

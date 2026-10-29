@@ -19,7 +19,7 @@
         <div class="dialog-header">
             <h2 id="ifr-title" class="dialog-title">Chốt kết quả phỏng vấn</h2>
             <p class="form-hint">“Đạt” và “Không đạt” là kết quả cuối, không sửa được. Chọn “Cân nhắc” nếu muốn xem lại cuối đợt tuyển
-                (nên chốt lại trong 7 ngày). Ứng viên “Đạt” sẽ xuất hiện trong danh sách tạo offer của HR.</p>
+                (nên chốt lại trong 7 ngày). Ứng viên “Đạt” sẽ xuất hiện trong danh sách tạo đề xuất nhận việc của Bộ phận Tuyển dụng.</p>
         </div>
 
         <div th:if="${submittedCount < panelSize}" class="alert alert--warning" role="note"
@@ -57,7 +57,7 @@
                 <input id="ifr-salary" type="number" name="recommendedSalary" class="form-input" min="0" step="100000"
                        inputmode="numeric" placeholder="VD: 25000000"
                        th:value="${current != null and current.recommendedSalary != null ? current.recommendedSalary.stripTrailingZeros().toPlainString() : ''}">
-                <p class="form-hint">Không bắt buộc. Nên nhập khi kết quả là Đạt để HR làm offer.</p>
+                <p class="form-hint">Không bắt buộc. Nên nhập khi kết quả là Đạt để Bộ phận Tuyển dụng lập đề xuất nhận việc.</p>
                 <p class="form-error iev-error" data-error-for="recommendedSalary" hidden></p>
             </div>
 

@@ -62,7 +62,7 @@
         <div class="cof-system-banner__header">
             <strong>Đã ghi nhận phản hồi từ chối thư mời</strong>
         </div>
-        <p th:text="${successMessage}">Bạn đã từ chối offer.</p>
+        <p th:text="${successMessage}">Bạn đã từ chối thư mời nhận việc.</p>
         <p th:if="${declineReasonDisplay}" class="cof-system-banner__reason">
             <em>Lý do chia sẻ:</em> <span th:text="${declineReasonDisplay}"></span>
         </p>
@@ -70,7 +70,7 @@
             Cảm ơn bạn đã quan tâm và đồng hành cùng Mộc RMS trong suốt quá trình tuyển dụng. Chúc bạn luôn thành công!
         </p>
     </div>
-    <div th:if="${successMessage != null and decisionType == null}" class="alert alert--success" role="status" th:text="${successMessage}">Bạn đã nhận offer.</div>
+    <div th:if="${successMessage != null and decisionType == null}" class="alert alert--success" role="status" th:text="${successMessage}">Bạn đã đồng ý nhận việc.</div>
     <div th:if="${errorMessage}" class="alert alert--danger" role="alert" th:text="${errorMessage}">Không thể trả lời thư mời.</div>
 
     <div th:if="${#lists.isEmpty(offers)}" class="card cof-empty">
@@ -134,7 +134,7 @@
 
             <footer class="cof-card__footer">
                 <div class="cof-card__status-desc">
-                    <span th:if="${offer.statusLabel == 'Đã nhận offer'}" class="cof-status-note cof-status-note--success">
+                    <span th:if="${offer.statusLabel == 'Đã nhận việc' or offer.statusLabel == 'Đã nhận offer'}" class="cof-status-note cof-status-note--success">
                         <span aria-hidden="true">✓</span> Bạn đã đồng ý nhận lời mời làm việc này.
                     </span>
                     <span th:if="${offer.statusLabel == 'Đã từ chối'}" class="cof-status-note cof-status-note--declined text-muted">
@@ -188,15 +188,15 @@
         <div class="dialog-content">
             <div class="dialog-header">
                 <h2 id="cof-dialog-title" class="dialog-title">
-                    <span data-offer-copy="accept">Nhận offer?</span>
-                    <span data-offer-copy="decline" hidden>Từ chối offer?</span>
+                    <span data-offer-copy="accept">Đồng ý nhận việc?</span>
+                    <span data-offer-copy="decline" hidden>Từ chối thư mời?</span>
                 </h2>
             </div>
             <div class="dialog-body">
                 <p id="cof-dialog-message">
-                    <span data-offer-copy="accept">Bạn sẽ nhận offer vị trí <strong data-offer-title></strong>.
+                    <span data-offer-copy="accept">Bạn xác nhận đồng ý nhận lời mời làm việc cho vị trí <strong data-offer-title></strong>.
                         Hồ sơ của bạn chuyển sang "Đã nhận việc" và bạn không thể đổi lại.</span>
-                    <span data-offer-copy="decline" hidden>Bạn sẽ từ chối offer vị trí <strong data-offer-title></strong>.
+                    <span data-offer-copy="decline" hidden>Bạn xác nhận từ chối thư mời cho vị trí <strong data-offer-title></strong>.
                         Hồ sơ của bạn sẽ dừng lại và bạn không thể đổi lại.</span>
                 </p>
                 <div data-offer-copy="decline" hidden class="cof-dialog-reason">
@@ -214,8 +214,8 @@
             <div class="dialog-actions">
                 <button type="button" class="btn btn--secondary btn--sm" data-offer-cancel>Xem lại</button>
                 <button type="button" class="btn btn--primary btn--sm" data-offer-confirm>
-                    <span data-offer-copy="accept">Nhận offer</span>
-                    <span data-offer-copy="decline" hidden>Từ chối offer</span>
+                    <span data-offer-copy="accept">Đồng ý nhận việc</span>
+                    <span data-offer-copy="decline" hidden>Từ chối thư mời</span>
                 </button>
             </div>
         </div>
