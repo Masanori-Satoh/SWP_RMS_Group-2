@@ -244,14 +244,31 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
+    // Icon con mắt trong ô mật khẩu: đổi type password <-> text; aria-pressed bật/tắt nét gạch chéo (profile.css)
+    const passwordToggles = Array.from(document.querySelectorAll('#changePasswordModal [data-password-toggle]'));
+    function setPasswordVisible(button, visible) {
+        const input = document.getElementById(button.getAttribute('aria-controls'));
+        if (!input) return;
+        input.type = visible ? 'text' : 'password';
+        button.setAttribute('aria-pressed', String(visible));
+        button.setAttribute('aria-label', visible ? button.dataset.hideLabel : button.dataset.showLabel);
+    }
+    function resetPasswordToggles() {
+        passwordToggles.forEach(button => setPasswordVisible(button, false));
+    }
+    passwordToggles.forEach(button => button.addEventListener('click', () =>
+        setPasswordVisible(button, button.getAttribute('aria-pressed') !== 'true')));
+
     // Modal open / close handlers
     function openPasswordModal() {
+        resetPasswordToggles();
         clearPasswordErrors();
         if (passwordForm) passwordForm.reset();
         if (passwordModal && !passwordModal.open) passwordModal.showModal();
     }
 
     function closeAllModals() {
+        resetPasswordToggles();
         clearPasswordErrors();
         if (passwordForm) passwordForm.reset();
         if (passwordModal && passwordModal.open) passwordModal.close();

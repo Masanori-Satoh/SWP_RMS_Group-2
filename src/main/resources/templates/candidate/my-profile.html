@@ -74,7 +74,14 @@
 
         <!-- Cột phải: thông tin chi tiết -->
         <section class="card profile-card adw-surface" aria-labelledby="myprofile-info-title">
-            <h2 id="myprofile-info-title">Thông tin hồ sơ</h2>
+            <div class="profile-card-head">
+                <h2 id="myprofile-info-title">Thông tin hồ sơ</h2>
+                <!-- type="button": profile.js hỏi lại rồi mới gửi #profileForm -->
+                <div class="profile-card-actions">
+                    <button class="btn btn--secondary" id="btnDiscardProfile" type="button" hidden>Hủy</button>
+                    <button class="btn btn--primary" id="btnSaveProfile" type="button" disabled>Lưu thay đổi</button>
+                </div>
+            </div>
 
             <form id="profileForm" th:action="@{/portal/profile/update}" method="post">
                 <h3 class="profile-section-title">Tài khoản</h3>
@@ -154,10 +161,6 @@
                     </div>
                 </div>
 
-                <div class="profile-actions">
-                    <button class="btn btn--secondary" id="btnDiscardProfile" type="button" hidden>Hủy bỏ</button>
-                    <button class="btn btn--primary" id="btnSaveProfile" type="button" disabled>Lưu thay đổi</button>
-                </div>
             </form>
         </section>
     </div>
@@ -173,22 +176,34 @@
         <form id="changePasswordForm" th:action="@{/profile/change-password}" method="post">
             <div class="form-group">
                 <label class="form-label" for="currentPassword">Mật khẩu hiện tại <span aria-hidden="true">*</span></label>
-                <input class="form-control" id="currentPassword" type="password" name="currentPassword"
-                       autocomplete="current-password" required aria-describedby="currentPassword-error">
+                <div class="profile-password-field">
+                    <input class="form-control profile-password-input" data-password-own-toggle id="currentPassword" type="password" name="currentPassword"
+                           autocomplete="current-password" required aria-describedby="currentPassword-error">
+                    <button class="profile-password-toggle" type="button" data-password-toggle aria-controls="currentPassword"
+                            aria-pressed="false" aria-label="Hiện mật khẩu hiện tại" data-show-label="Hiện mật khẩu hiện tại" data-hide-label="Ẩn mật khẩu hiện tại"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/><path class="profile-eye-slash" d="m3 3 18 18"/></svg></button>
+                </div>
                 <span class="form-error" id="currentPassword-error" hidden></span>
             </div>
             <div class="form-group">
                 <label class="form-label" for="newPassword">Mật khẩu mới <span aria-hidden="true">*</span></label>
-                <input class="form-control" id="newPassword" type="password" name="newPassword"
-                       minlength="8" maxlength="32" autocomplete="new-password" required
-                       aria-describedby="newPassword-hint newPassword-error">
+                <div class="profile-password-field">
+                    <input class="form-control profile-password-input" data-password-own-toggle id="newPassword" type="password" name="newPassword"
+                           minlength="8" maxlength="32" autocomplete="new-password" required
+                           aria-describedby="newPassword-hint newPassword-error">
+                    <button class="profile-password-toggle" type="button" data-password-toggle aria-controls="newPassword"
+                            aria-pressed="false" aria-label="Hiện mật khẩu mới" data-show-label="Hiện mật khẩu mới" data-hide-label="Ẩn mật khẩu mới"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/><path class="profile-eye-slash" d="m3 3 18 18"/></svg></button>
+                </div>
                 <p id="newPassword-hint" class="form-hint">8–32 ký tự, dùng được mọi ký tự đặc biệt.</p>
                 <span class="form-error" id="newPassword-error" hidden></span>
             </div>
             <div class="form-group">
                 <label class="form-label" for="confirmPassword">Nhập lại mật khẩu mới <span aria-hidden="true">*</span></label>
-                <input class="form-control" id="confirmPassword" type="password" name="confirmPassword"
-                       minlength="8" maxlength="32" autocomplete="new-password" required aria-describedby="confirmPassword-error">
+                <div class="profile-password-field">
+                    <input class="form-control profile-password-input" data-password-own-toggle id="confirmPassword" type="password" name="confirmPassword"
+                           minlength="8" maxlength="32" autocomplete="new-password" required aria-describedby="confirmPassword-error">
+                    <button class="profile-password-toggle" type="button" data-password-toggle aria-controls="confirmPassword"
+                            aria-pressed="false" aria-label="Hiện mật khẩu nhập lại" data-show-label="Hiện mật khẩu nhập lại" data-hide-label="Ẩn mật khẩu nhập lại"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/><path class="profile-eye-slash" d="m3 3 18 18"/></svg></button>
+                </div>
                 <span class="form-error" id="confirmPassword-error" hidden></span>
             </div>
             <div class="profile-actions">

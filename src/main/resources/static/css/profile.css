@@ -12,6 +12,10 @@
 .profile-card { padding:var(--s8); margin:0; }
 /* Bằng adw-panel-title; class đó chỉ chạy trong .adw-frame nên trang ứng viên không dùng được */
 .profile-card h2 { margin:0 0 var(--s6); color:var(--brand-dark); font:700 20px/1.35 var(--sans); }
+/* Đầu thẻ phải: tiêu đề bên trái, nút Hủy / Lưu bên phải */
+.profile-card-head { display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:var(--s4); margin-bottom:var(--s6); }
+.profile-card .profile-card-head h2 { margin:0; }
+.profile-card-actions { display:flex; flex-wrap:wrap; gap:var(--s3); }
 
 /* Cột trái: thẻ tổng quan, căn giữa */
 .profile-overview { display:flex; flex-direction:column; align-items:center; text-align:center; }
@@ -37,7 +41,7 @@
 .profile-grid .form-group { margin:0; }
 .profile-grid > .form-hint { margin:0; }
 .profile-field-full { grid-column:1 / -1; }
-.profile-divider { margin:var(--s8) 0; border:0; border-top:1px solid var(--line); }
+.profile-divider { margin:var(--s4) 0; border:0; border-top:1px solid var(--line); }
 .profile-readonly { background:var(--page); color:var(--muted); cursor:not-allowed; }
 .profile-actions { display:flex; justify-content:flex-end; gap:var(--s3); padding-top:var(--s6); margin-top:var(--s6); border-top:1px solid var(--line); }
 
@@ -49,7 +53,18 @@
 .profile-modal__close { background:transparent; border:none; font-size:24px; color:var(--muted); cursor:pointer; line-height:1; padding:0; }
 .profile-modal__close:hover { color:var(--ink); }
 .profile-modal p { margin:0 0 var(--s6); color:var(--muted); font-size:15px; line-height:1.5; }
-.profile-modal .form-group { margin-bottom:var(--s4); }
+.profile-modal form { display:grid; gap:var(--s4); }
+.profile-modal .form-group { margin:0; }
+.profile-modal .form-hint { margin-top:var(--s1); font-size:var(--font-xs); }
+.profile-modal .profile-actions { margin-top:0; }
+/* Ô mật khẩu: icon con mắt nằm trong lề phải; profile.js đổi type password <-> text */
+.profile-password-field { position:relative; }
+.profile-password-input { padding-right:var(--s12); }
+.profile-password-toggle { position:absolute; top:50%; right:var(--s1); display:inline-flex; align-items:center; justify-content:center; width:40px; height:40px; padding:0; border:0; border-radius:var(--radius-sm); background:transparent; color:var(--muted); cursor:pointer; transform:translateY(-50%); }
+.profile-password-toggle:hover { color:var(--brand-dark); }
+.profile-password-toggle:focus-visible { outline:3px solid var(--focus); outline-offset:0; }
+/* Mắt gạch chéo khi mật khẩu đang hiện */
+.profile-password-toggle[aria-pressed="false"] .profile-eye-slash { display:none; }
 
 /* Toast do profile.js tạo sau thao tác AJAX (khác flash-toast của server) */
 .profile-toast-container {
