@@ -40,7 +40,8 @@
       } catch (err) {}
     });
   }
-  document.querySelectorAll('input[type="password"]').forEach(input => {
+  // Ô có data-password-own-toggle tự lo nút hiện/ẩn (vd icon con mắt ở profile.js)
+  document.querySelectorAll('input[type="password"]:not([data-password-own-toggle])').forEach(input => {
     const vi = document.documentElement.lang === 'vi';
     const show = vi ? 'Hiện' : 'Show';
     const hide = vi ? 'Ẩn' : 'Hide';
