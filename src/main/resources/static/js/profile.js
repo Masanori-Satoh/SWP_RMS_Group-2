@@ -382,6 +382,13 @@ document.addEventListener('DOMContentLoaded', () => {
         const allowedTypes = ['image/jpeg', 'image/png', 'image/webp'];
         const maxBytes = 2 * 1024 * 1024;
 
+        // Ảnh là nhãn của ô file (không còn nút "Tải ảnh lên"): chọn xong thì gửi luôn, vẫn qua bước kiểm bên dưới
+        if (avatarInput) {
+            avatarInput.addEventListener('change', () => {
+                if (avatarInput.files && avatarInput.files.length) avatarForm.requestSubmit();
+            });
+        }
+
         avatarForm.addEventListener('submit', (e) => {
             const file = avatarInput && avatarInput.files ? avatarInput.files[0] : null;
             let message = '';

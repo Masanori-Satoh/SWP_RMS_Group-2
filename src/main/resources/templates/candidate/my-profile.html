@@ -24,7 +24,7 @@
 <main id="main" layout:fragment="content" class="page-content container adw-page profile-page" tabindex="-1"
       th:with="account=${profile.account}">
 
-    <div class="adw-form-wrap">
+    <div class="profile-shell">
     <div class="page-header adw-heading">
         <div>
             <h1 class="page-title adw-title">Hồ sơ cá nhân</h1>
@@ -34,124 +34,133 @@
 
     <div th:if="${successMessage}" class="alert alert--success" role="status" th:text="${successMessage}">Đã lưu hồ sơ.</div>
 
-    <section class="card profile-card adw-surface" aria-labelledby="myprofile-info-title">
-        <h2 id="myprofile-info-title">Thông tin cá nhân</h2>
-
-        <div class="profile-identity">
-            <img class="profile-avatar" th:if="${account.avatarUrl != null}" th:src="${account.avatarUrl}" alt="Ảnh đại diện">
-            <div class="profile-avatar profile-avatar-fallback" th:unless="${account.avatarUrl != null}" aria-hidden="true"
-                 th:text="${#strings.toUpperCase(#strings.substring(account.fullName, 0, 1))}">A</div>
-            <div>
-                <p class="profile-identity-name" th:text="${account.fullName}">Họ và tên</p>
-                <p class="profile-identity-meta">Ứng viên</p>
-            </div>
+    <div class="profile-layout">
+        <!-- Cột trái: một thẻ tổng quan (ảnh, tên, vai trò, mật khẩu) -->
+        <section class="card profile-card profile-overview adw-surface" aria-labelledby="myprofile-overview-name">
+            <!-- Bấm vào ảnh để chọn file; profile.js tự gửi form khi chọn xong (JPEG/PNG/WebP ≤ 2 MB) -->
             <form class="profile-avatar-form" th:action="@{/portal/profile/avatar}" method="post"
                   enctype="multipart/form-data" data-avatar-form>
-                <label class="form-label" for="avatar-file">Ảnh đại diện</label>
-                <div class="profile-avatar-upload">
-                    <input class="form-control" id="avatar-file" name="avatarFile" type="file"
-                           accept="image/jpeg,image/png,image/webp" required
-                           th:attr="aria-invalid=${avatarError != null}" aria-describedby="avatar-file-hint avatar-file-error">
-                    <button class="btn btn--secondary" type="submit">Tải ảnh lên</button>
-                </div>
+                <label class="profile-avatar-picker" for="avatar-file">
+                    <img class="profile-avatar" th:if="${account.avatarUrl != null}" th:src="${account.avatarUrl}" alt="">
+                    <span class="profile-avatar profile-avatar-fallback" th:unless="${account.avatarUrl != null}" aria-hidden="true"
+                          th:text="${#strings.toUpperCase(#strings.substring(account.fullName, 0, 1))}">A</span>
+                    <span class="profile-avatar-overlay" aria-hidden="true">
+                        <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+                    </span>
+                    <span class="sr-only">Đổi ảnh đại diện</span>
+                </label>
+                <input class="sr-only" id="avatar-file" name="avatarFile" type="file"
+                       accept="image/jpeg,image/png,image/webp" required
+                       th:attr="aria-invalid=${avatarError != null}" aria-describedby="avatar-file-hint avatar-file-error">
                 <p id="avatar-file-hint" class="form-hint">JPEG, PNG hoặc WebP, tối đa 2 MB.</p>
                 <span id="avatar-file-error" class="form-error" role="alert"
                       th:text="${avatarError}" th:hidden="${avatarError == null}"></span>
             </form>
-        </div>
 
-        <form id="profileForm" th:action="@{/portal/profile/update}" method="post">
-            <h3 class="profile-section-title">Tài khoản</h3>
-            <div class="profile-grid">
-                <div class="form-group">
-                    <label class="form-label" for="email">Email</label>
-                    <input class="form-control profile-readonly" id="email" type="email" th:value="${account.email}" disabled>
-                </div>
-                <div class="form-group">
-                    <label class="form-label" for="username">Tên đăng nhập</label>
-                    <input class="form-control profile-readonly" id="username" type="text" th:value="${account.username}" disabled>
-                </div>
-                <p class="form-hint profile-field-full">Muốn đổi email hoặc tên đăng nhập, vui lòng liên hệ quản trị viên.</p>
+            <div class="profile-identity">
+                <p id="myprofile-overview-name" class="profile-identity-name" th:text="${account.fullName}">Họ và tên</p>
+                <span class="badge badge--neutral">Ứng viên</span>
             </div>
 
-            <div class="profile-grid" th:object="${updateRequest}">
-                <div class="form-group profile-field-full">
-                    <label class="form-label" for="full-name">Họ và tên <span aria-hidden="true">*</span></label>
-                    <input class="form-control" id="full-name" type="text" th:field="*{fullName}" data-profile-field
-                           minlength="2" maxlength="100" autocomplete="name" required pattern="^[\p{L}][\p{L}\s.'-]*$"
-                           title="Họ tên bắt đầu bằng chữ cái, chỉ gồm chữ cái, khoảng trắng, dấu gạch nối và dấu nháy."
-                           th:attr="aria-invalid=${#fields.hasErrors('fullName')}" aria-describedby="full-name-error">
-                    <span id="full-name-error" class="form-error" role="alert" th:hidden="${!#fields.hasErrors('fullName')}"><th:block
-                          th:each="err : ${#fields.errors('fullName')}" th:text="${err}"></th:block></span>
+            <!-- Mật khẩu: nút mở hộp thoại, không đặt form ở trang chính -->
+            <div class="profile-security">
+                <div>
+                    <h2 class="profile-security-title">Mật khẩu</h2>
+                    <p aria-label="Mật khẩu đã ẩn">••••••••</p>
                 </div>
-                <div class="form-group">
-                    <label class="form-label" for="phone-number">Số điện thoại</label>
-                    <input class="form-control" id="phone-number" type="tel" th:field="*{phoneNumber}" data-profile-field
-                           maxlength="15" autocomplete="tel" pattern="^[0-9+\s()-]*$"
-                           title="Chỉ gồm chữ số, khoảng trắng, dấu gạch nối, dấu cộng và ngoặc."
-                           th:attr="aria-invalid=${#fields.hasErrors('phoneNumber')}" aria-describedby="phone-number-hint phone-number-error">
-                    <p id="phone-number-hint" class="form-hint">Tối đa 15 ký tự.</p>
-                    <span id="phone-number-error" class="form-error" th:if="${#fields.hasErrors('phoneNumber')}" th:errors="*{phoneNumber}"></span>
-                </div>
+                <button class="btn btn--outline" type="button" data-open-modal="changePasswordModal">Đổi mật khẩu</button>
             </div>
+        </section>
 
-            <h3 class="profile-section-title">Thông tin ứng viên</h3>
-            <div class="profile-grid" th:object="${detailsRequest}">
-                <div class="form-group">
-                    <label class="form-label" for="date-of-birth">Ngày sinh</label>
-                    <input class="form-control" id="date-of-birth" type="date" th:field="*{dateOfBirth}" data-profile-field
-                           th:max="${maxBirthDate}" autocomplete="bday"
-                           th:attr="aria-invalid=${#fields.hasErrors('dateOfBirth')}" aria-describedby="date-of-birth-error">
-                    <span id="date-of-birth-error" class="form-error" th:if="${#fields.hasErrors('dateOfBirth')}" th:errors="*{dateOfBirth}"></span>
-                </div>
-                <div class="form-group">
-                    <label class="form-label" for="gender">Giới tính</label>
-                    <select class="form-select" id="gender" th:field="*{gender}" data-profile-field
-                            th:attr="aria-invalid=${#fields.hasErrors('gender')}" aria-describedby="gender-error">
-                        <option value="">Chưa chọn</option>
-                        <option th:each="g : ${genders}" th:value="${g}" th:text="${g}">Nam</option>
-                    </select>
-                    <span id="gender-error" class="form-error" th:if="${#fields.hasErrors('gender')}" th:errors="*{gender}"></span>
-                </div>
-                <div class="form-group profile-field-full">
-                    <label class="form-label" for="address">Địa chỉ</label>
-                    <input class="form-control" id="address" type="text" th:field="*{address}" data-profile-field
-                           maxlength="255" autocomplete="street-address"
-                           th:attr="aria-invalid=${#fields.hasErrors('address')}" aria-describedby="address-error">
-                    <span id="address-error" class="form-error" th:if="${#fields.hasErrors('address')}" th:errors="*{address}"></span>
-                </div>
-                <div class="form-group">
-                    <label class="form-label" for="linkedin-url">LinkedIn</label>
-                    <input class="form-control" id="linkedin-url" type="text" inputmode="url" th:field="*{linkedInUrl}" data-profile-field
-                           maxlength="500" placeholder="https://linkedin.com/in/..." pattern="^https?://[^\s<>]+$"
-                           title="Link bắt đầu bằng http:// hoặc https://, không có khoảng trắng."
-                           th:attr="aria-invalid=${#fields.hasErrors('linkedInUrl')}" aria-describedby="linkedin-url-error">
-                    <span id="linkedin-url-error" class="form-error" th:if="${#fields.hasErrors('linkedInUrl')}" th:errors="*{linkedInUrl}"></span>
-                </div>
-                <div class="form-group">
-                    <label class="form-label" for="portfolio-url">Portfolio</label>
-                    <input class="form-control" id="portfolio-url" type="text" inputmode="url" th:field="*{portfolioUrl}" data-profile-field
-                           maxlength="500" placeholder="https://" pattern="^https?://[^\s<>]+$"
-                           title="Link bắt đầu bằng http:// hoặc https://, không có khoảng trắng."
-                           th:attr="aria-invalid=${#fields.hasErrors('portfolioUrl')}" aria-describedby="portfolio-url-error">
-                    <span id="portfolio-url-error" class="form-error" th:if="${#fields.hasErrors('portfolioUrl')}" th:errors="*{portfolioUrl}"></span>
-                </div>
-            </div>
+        <!-- Cột phải: thông tin chi tiết -->
+        <section class="card profile-card adw-surface" aria-labelledby="myprofile-info-title">
+            <h2 id="myprofile-info-title">Thông tin hồ sơ</h2>
 
-            <div class="profile-actions">
-                <button class="btn btn--secondary" id="btnDiscardProfile" type="button" hidden>Hoàn tác</button>
-                <button class="btn btn--primary" id="btnSaveProfile" type="button" disabled>Lưu hồ sơ</button>
-            </div>
-        </form>
-    </section>
+            <form id="profileForm" th:action="@{/portal/profile/update}" method="post">
+                <h3 class="profile-section-title">Tài khoản</h3>
+                <div class="profile-grid">
+                    <div class="form-group">
+                        <label class="form-label" for="email">Email</label>
+                        <input class="form-control profile-readonly" id="email" type="email" th:value="${account.email}" disabled>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="username">Tên đăng nhập</label>
+                        <input class="form-control profile-readonly" id="username" type="text" th:value="${account.username}" disabled>
+                    </div>
+                    <p class="form-hint profile-field-full">Liên hệ Quản trị viên để thay đổi Email hoặc Tên đăng nhập.</p>
+                </div>
 
-    <section class="card profile-card adw-surface" aria-labelledby="myprofile-security-title">
-        <h2 id="myprofile-security-title">Mật khẩu</h2>
-        <div class="profile-security">
-            <p aria-label="Mật khẩu đã ẩn">Mật khẩu: ••••••••</p>
-            <button class="btn btn--secondary" type="button" data-open-modal="changePasswordModal">Đổi mật khẩu</button>
-        </div>
-    </section>
+                <hr class="profile-divider">
+
+                <!-- Hai khối th:object (updateRequest: bảng User; detailsRequest: bảng Candidate) đặt trên từng ô để xếp chung một lưới -->
+                <h3 class="profile-section-title">Thông tin cá nhân</h3>
+                <div class="profile-grid">
+                    <div class="form-group profile-field-full" th:object="${updateRequest}">
+                        <label class="form-label" for="full-name">Họ và tên <span aria-hidden="true">*</span></label>
+                        <input class="form-control" id="full-name" type="text" th:field="*{fullName}" data-profile-field
+                               minlength="2" maxlength="100" autocomplete="name" required pattern="^[\p{L}][\p{L}\s.'-]*$"
+                               title="Họ tên bắt đầu bằng chữ cái, chỉ gồm chữ cái, khoảng trắng, dấu gạch nối và dấu nháy."
+                               th:attr="aria-invalid=${#fields.hasErrors('fullName')}" aria-describedby="full-name-error">
+                        <span id="full-name-error" class="form-error" role="alert" th:hidden="${!#fields.hasErrors('fullName')}"><th:block
+                              th:each="err : ${#fields.errors('fullName')}" th:text="${err}"></th:block></span>
+                    </div>
+                    <div class="form-group" th:object="${updateRequest}">
+                        <label class="form-label" for="phone-number">Số điện thoại</label>
+                        <input class="form-control" id="phone-number" type="tel" th:field="*{phoneNumber}" data-profile-field
+                               maxlength="15" autocomplete="tel" pattern="^[0-9+\s()-]*$"
+                               title="Chỉ gồm chữ số, khoảng trắng, dấu gạch nối, dấu cộng và ngoặc."
+                               th:attr="aria-invalid=${#fields.hasErrors('phoneNumber')}" aria-describedby="phone-number-hint phone-number-error">
+                        <p id="phone-number-hint" class="form-hint">Tối đa 15 ký tự.</p>
+                        <span id="phone-number-error" class="form-error" th:if="${#fields.hasErrors('phoneNumber')}" th:errors="*{phoneNumber}"></span>
+                    </div>
+                    <div class="form-group" th:object="${detailsRequest}">
+                        <label class="form-label" for="date-of-birth">Ngày sinh</label>
+                        <input class="form-control" id="date-of-birth" type="date" th:field="*{dateOfBirth}" data-profile-field
+                               th:max="${maxBirthDate}" autocomplete="bday"
+                               th:attr="aria-invalid=${#fields.hasErrors('dateOfBirth')}" aria-describedby="date-of-birth-error">
+                        <span id="date-of-birth-error" class="form-error" th:if="${#fields.hasErrors('dateOfBirth')}" th:errors="*{dateOfBirth}"></span>
+                    </div>
+                    <div class="form-group" th:object="${detailsRequest}">
+                        <label class="form-label" for="gender">Giới tính</label>
+                        <select class="form-select" id="gender" th:field="*{gender}" data-profile-field
+                                th:attr="aria-invalid=${#fields.hasErrors('gender')}" aria-describedby="gender-error">
+                            <option value="">Chưa chọn</option>
+                            <option th:each="g : ${genders}" th:value="${g}" th:text="${g}">Nam</option>
+                        </select>
+                        <span id="gender-error" class="form-error" th:if="${#fields.hasErrors('gender')}" th:errors="*{gender}"></span>
+                    </div>
+                    <div class="form-group" th:object="${detailsRequest}">
+                        <label class="form-label" for="address">Địa chỉ</label>
+                        <input class="form-control" id="address" type="text" th:field="*{address}" data-profile-field
+                               maxlength="255" autocomplete="street-address"
+                               th:attr="aria-invalid=${#fields.hasErrors('address')}" aria-describedby="address-error">
+                        <span id="address-error" class="form-error" th:if="${#fields.hasErrors('address')}" th:errors="*{address}"></span>
+                    </div>
+                    <div class="form-group" th:object="${detailsRequest}">
+                        <label class="form-label" for="linkedin-url">LinkedIn</label>
+                        <input class="form-control" id="linkedin-url" type="text" inputmode="url" th:field="*{linkedInUrl}" data-profile-field
+                               maxlength="500" placeholder="https://linkedin.com/in/..." pattern="^https?://[^\s<>]+$"
+                               title="Link bắt đầu bằng http:// hoặc https://, không có khoảng trắng."
+                               th:attr="aria-invalid=${#fields.hasErrors('linkedInUrl')}" aria-describedby="linkedin-url-error">
+                        <span id="linkedin-url-error" class="form-error" th:if="${#fields.hasErrors('linkedInUrl')}" th:errors="*{linkedInUrl}"></span>
+                    </div>
+                    <div class="form-group" th:object="${detailsRequest}">
+                        <label class="form-label" for="portfolio-url">Portfolio / GitHub</label>
+                        <input class="form-control" id="portfolio-url" type="text" inputmode="url" th:field="*{portfolioUrl}" data-profile-field
+                               maxlength="500" placeholder="https://" pattern="^https?://[^\s<>]+$"
+                               title="Link bắt đầu bằng http:// hoặc https://, không có khoảng trắng."
+                               th:attr="aria-invalid=${#fields.hasErrors('portfolioUrl')}" aria-describedby="portfolio-url-error">
+                        <span id="portfolio-url-error" class="form-error" th:if="${#fields.hasErrors('portfolioUrl')}" th:errors="*{portfolioUrl}"></span>
+                    </div>
+                </div>
+
+                <div class="profile-actions">
+                    <button class="btn btn--secondary" id="btnDiscardProfile" type="button" hidden>Hủy bỏ</button>
+                    <button class="btn btn--primary" id="btnSaveProfile" type="button" disabled>Lưu thay đổi</button>
+                </div>
+            </form>
+        </section>
+    </div>
     </div>
 
     <!-- Đổi mật khẩu: profile.js gửi JSON, lỗi hiện ngay trong hộp thoại -->
