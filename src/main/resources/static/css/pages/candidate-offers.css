@@ -765,17 +765,16 @@
 }
 
 .cof-accept-success-title {
-  font-family: var(--font-serif, "Playfair Display", Georgia, serif);
+  font-family: var(--serif);
   font-size: 24px;
   font-weight: 700;
   color: #0f3822;
   margin: 0 0 10px;
   line-height: 1.3;
-  letter-spacing: -0.01em;
 }
 
 .cof-accept-success-desc {
-  font-family: var(--font-sans, "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif);
+  font-family: var(--sans);
   font-size: 14.5px;
   color: #475569;
   line-height: 1.55;
@@ -804,5 +803,759 @@
     transform: scale(1) translateY(0);
   }
 }
+
+/* =============================================================================
+   MÀN HÌNH THƯ MỜI NHẬN VIỆC (OFFER LETTER DOCUMENT REDESIGN THEO MOCKUP)
+   ============================================================================= */
+
+/* 1. Thanh tác vụ phía trên (Top Action Bar) */
+.cof-top-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--s4);
+  max-width: 960px;
+  margin: 0 auto var(--s6);
+  padding: 14px 24px;
+  background: #fffdf8;
+  border: 1px solid #f2e9dc;
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+}
+
+.cof-top-bar__deadline {
+  display: flex;
+  align-items: center;
+  gap: var(--s4);
+  min-width: 0;
+}
+
+.cof-top-bar__divider {
+  width: 1px;
+  height: 32px;
+  background: #eedfcb;
+  flex-shrink: 0;
+}
+
+.cof-top-bar__item {
+  display: flex;
+  align-items: center;
+  gap: var(--s3);
+}
+
+.cof-top-bar__icon-wrap {
+  width: 38px;
+  height: 38px;
+  border-radius: var(--radius-full);
+  background: #fdf5ea;
+  color: var(--warning);
+  border: 1px solid #fae6cb;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.cof-top-bar__icon-wrap--timer {
+  background: #fdf5ea;
+  color: var(--warning);
+  border-color: #fae6cb;
+}
+
+.cof-top-bar__text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.cof-top-bar__label {
+  font-size: var(--font-xs);
+  color: var(--muted);
+  text-transform: uppercase;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+}
+
+.cof-top-bar__val {
+  font-size: var(--font-base);
+  font-weight: 700;
+  color: var(--ink);
+}
+
+.cof-top-bar__val--timer {
+  color: var(--warning);
+  font-size: 16px;
+}
+
+.cof-top-bar__actions {
+  display: flex;
+  align-items: center;
+  gap: var(--s3);
+  flex-shrink: 0;
+}
+
+.cof-top-btn-accept {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s2);
+  font-weight: 600;
+  padding: 0 20px;
+  height: 42px;
+  border-radius: var(--radius-md);
+  background: var(--brand);
+  color: var(--on-brand);
+  border: 1px solid var(--brand);
+  cursor: pointer;
+  transition: background var(--transition);
+}
+
+.cof-top-btn-accept:hover {
+  background: var(--brand-hover);
+  border-color: var(--brand-hover);
+}
+
+.cof-top-btn-decline {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s2);
+  font-weight: 600;
+  padding: 0 18px;
+  height: 42px;
+  border-radius: var(--radius-md);
+  background: var(--surface);
+  color: var(--error);
+  border: 1px solid var(--error);
+  text-decoration: none;
+  cursor: pointer;
+  transition: all var(--transition);
+}
+
+.cof-top-btn-decline:hover {
+  background: var(--error-soft);
+}
+
+/* 2. Tờ thư mời trang trọng (Letterhead Paper Document) */
+.cof-letter-paper {
+  position: relative;
+  max-width: 960px;
+  margin: 0 auto var(--s6);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04);
+  padding: 48px 48px 36px;
+  overflow: hidden;
+}
+
+.cof-watermark {
+  position: absolute;
+  top: var(--s4);
+  right: var(--s4);
+  opacity: 0.85;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.cof-paper-header {
+  text-align: center;
+  position: relative;
+  z-index: 1;
+  margin-bottom: var(--s6);
+}
+
+.cof-paper-rule {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--s4);
+  margin-bottom: var(--s3);
+}
+
+.cof-paper-rule__line {
+  flex: 1;
+  max-width: 120px;
+  height: 1px;
+  background: #c5d7cc;
+}
+
+.cof-paper-rule__title {
+  font-size: 12.5px;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--brand);
+}
+
+.cof-paper-title {
+  font-family: var(--serif);
+  font-size: 30px;
+  font-weight: 700;
+  color: var(--brand-dark);
+  margin: 0 0 28px;
+  line-height: 1.35;
+}
+
+/* 3. Lời mở đầu thư ngỏ */
+.cof-paper-greeting {
+  position: relative;
+  z-index: 1;
+  margin-bottom: var(--s8);
+  color: var(--ink);
+  font-size: 14.5px;
+  line-height: 1.65;
+}
+
+.cof-salutation {
+  font-size: 15.5px;
+  font-weight: 700;
+  margin-bottom: var(--s3);
+}
+
+.cof-paper-greeting p {
+  margin: 0 0 var(--s2);
+}
+
+.cof-paper-signoff {
+  margin-top: 18px;
+}
+
+.cof-paper-signoff p {
+  margin: 0 0 var(--s1);
+  font-style: italic;
+  color: var(--muted);
+}
+
+.cof-signature-brand {
+  font-size: 14.5px;
+  font-weight: 700;
+  color: var(--ink);
+}
+
+/* 4. Khối Tải xuống Thư mời & Liên hệ HR đặt dưới khối các bước tiếp theo */
+.cof-download-section {
+  max-width: 960px;
+  margin: 0 auto var(--s12);
+}
+
+.cof-download-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 24px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.03);
+  position: relative;
+  z-index: 1;
+}
+
+.cof-download-bar__file {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.cof-download-bar__icon {
+  width: 44px;
+  height: 44px;
+  border-radius: 8px;
+  background: #edf7ee;
+  color: var(--brand);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.cof-download-bar__text {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.cof-download-bar__filename {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--ink);
+  font-family: inherit;
+}
+
+.cof-download-bar__desc {
+  font-size: 12.5px;
+  color: var(--muted);
+  font-weight: 400;
+}
+
+.cof-download-bar__actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.cof-download-bar__btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 13px;
+  font-weight: 600;
+  padding: 8px 16px;
+  border-radius: 6px;
+  text-decoration: none;
+  cursor: pointer;
+  background: var(--surface);
+  transition: all var(--transition);
+}
+
+.cof-download-bar__btn--primary {
+  color: var(--brand);
+  border: 1px solid var(--brand);
+}
+
+.cof-download-bar__btn--primary:hover {
+  background: rgba(62, 113, 87, 0.08);
+  border-color: var(--brand-hover);
+  color: var(--brand-hover);
+}
+
+.cof-download-bar__note {
+  font-size: 12.5px;
+  color: var(--muted);
+  margin: 12px 0 0;
+  line-height: 1.5;
+  padding-left: 2px;
+}
+
+/* 5. Lưới bố cục 3 cột nội dung (3 Columns Panel Grid) */
+.cof-paper-grid--3cols {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 18px;
+  position: relative;
+  z-index: 1;
+  align-items: stretch;
+}
+
+.cof-panel {
+  background: var(--surface);
+  border: 1px solid #e1e7e2;
+  border-radius: 12px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.cof-panel__head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 16px;
+  background: #f8faf8;
+  border-bottom: 1px solid #e8ede9;
+}
+
+.cof-panel__icon {
+  color: var(--brand);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.cof-panel__icon--salary {
+  color: var(--brand);
+}
+
+.cof-panel__icon--star {
+  color: var(--brand);
+}
+
+.cof-panel__title {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--ink);
+  margin: 0;
+}
+
+.cof-panel__body {
+  padding: 16px;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Cột 1: Thông tin công việc */
+.cof-info-table {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin: 0;
+}
+
+.cof-info-row {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding-bottom: 10px;
+  border-bottom: 1px dashed var(--line);
+}
+
+.cof-info-row:last-child {
+  border-bottom: none;
+  padding-bottom: 0;
+}
+
+.cof-info-row dt {
+  font-size: 12px;
+  color: var(--muted);
+  font-weight: 500;
+  margin: 0;
+}
+
+.cof-info-row dd {
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--ink);
+  margin: 0;
+  line-height: 1.4;
+}
+
+.cof-note-sub {
+  display: block;
+  font-size: 11.5px;
+  color: var(--muted);
+  font-style: italic;
+  margin-top: 2px;
+}
+
+/* Cột 2: Lương & thưởng */
+.cof-salary-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  height: 100%;
+}
+
+.cof-salary-card {
+  background: #fbfdfb;
+  border: 1px solid #e3ede5;
+  border-radius: 8px;
+  padding: 14px;
+}
+
+.cof-salary-card__label {
+  display: block;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--muted);
+  font-weight: 700;
+  margin-bottom: 4px;
+}
+
+.cof-salary-card__val {
+  font-size: 22px;
+  font-weight: 800;
+  color: var(--brand-dark);
+  line-height: 1.2;
+  margin-bottom: 6px;
+}
+
+.cof-salary-card__sub {
+  display: block;
+  font-size: 11.5px;
+  color: var(--muted);
+  margin-top: 2px;
+}
+
+.cof-salary-badge {
+  display: inline-block;
+  padding: 3px 10px;
+  border-radius: var(--radius-full);
+  background: var(--brand-soft);
+  color: var(--brand-dark);
+  font-size: 11.5px;
+  font-weight: 600;
+  border: 1px solid #c9decb;
+}
+
+.cof-salary-footnote {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  font-size: 11.5px;
+  color: var(--muted);
+  line-height: 1.4;
+  margin-top: auto;
+  padding-top: 6px;
+}
+
+.cof-salary-footnote svg {
+  flex-shrink: 0;
+  margin-top: 2px;
+  color: var(--muted);
+}
+
+/* Cột 3: Quyền lợi */
+.cof-benefit-group {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.cof-benefit-entry {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+}
+
+.cof-benefit-icon {
+  width: 20px;
+  height: 20px;
+  color: var(--brand);
+  flex-shrink: 0;
+  margin-top: 2px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.cof-benefit-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  font-size: 12px;
+  line-height: 1.35;
+}
+
+.cof-benefit-text strong {
+  color: var(--ink);
+  font-weight: 700;
+  font-size: 13.5px;
+}
+
+.cof-benefit-text span {
+  color: var(--muted);
+}
+
+.cof-custom-benefits {
+  margin-top: 12px;
+  padding-top: 10px;
+  border-top: 1px dashed var(--line);
+}
+
+.cof-custom-benefits__label {
+  display: block;
+  font-size: 11.5px;
+  color: var(--muted);
+  font-weight: 600;
+  margin-bottom: 2px;
+}
+
+.cof-custom-benefits__val {
+  font-size: 12px;
+  color: var(--ink);
+  margin: 0;
+  white-space: pre-line;
+}
+
+/* 6. Khối Các bước tiếp theo (Stepper bên dưới Tờ thư mời) */
+.cof-stepper-panel {
+  max-width: 960px;
+  margin: 0 auto var(--s6);
+  margin-inline: auto;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  padding: 22px 28px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.03);
+}
+
+.cof-stepper-panel__title {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--ink);
+  margin: 0 0 16px;
+}
+
+.cof-steps-row {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 20px;
+}
+
+.cof-step-box {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+}
+
+.cof-step-circle {
+  width: 28px;
+  height: 28px;
+  border-radius: var(--radius-full);
+  background: var(--brand);
+  color: #ffffff;
+  font-weight: 700;
+  font-size: 13px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.cof-step-circle--active {
+  background: var(--brand);
+  color: #ffffff;
+}
+
+.cof-step-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.cof-step-title {
+  font-size: 13.5px;
+  font-weight: 700;
+  color: var(--ink);
+}
+
+.cof-step-desc {
+  font-size: 12px;
+  color: var(--muted);
+  line-height: 1.45;
+  margin: 0;
+}
+
+/* 7. Thiết kế đáp ứng trên thiết bị di động (Responsive Breakpoints) */
+@media (max-width: 991px) {
+  .cof-top-bar {
+    flex-direction: column;
+    align-items: stretch;
+    padding: var(--s4);
+  }
+
+  .cof-top-bar__deadline {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+  }
+
+  .cof-top-bar__divider {
+    display: none;
+  }
+
+  .cof-top-bar__actions {
+    width: 100%;
+    justify-content: stretch;
+  }
+
+  .cof-top-bar__actions button,
+  .cof-top-bar__actions a {
+    flex: 1;
+    text-align: center;
+    justify-content: center;
+  }
+
+  .cof-letter-paper {
+    padding: 28px 20px;
+    margin-bottom: var(--s4);
+  }
+
+  .cof-watermark {
+    display: none;
+  }
+
+  .cof-paper-grid--3cols {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+
+  .cof-steps-row {
+    grid-template-columns: 1fr;
+    gap: 14px;
+  }
+
+  .cof-stepper-panel {
+    padding: 20px;
+  }
+
+  .cof-download-section {
+    margin-bottom: var(--s8);
+  }
+
+  .cof-download-bar {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 14px;
+    padding: 16px;
+  }
+
+  .cof-download-bar__actions {
+    flex-direction: column;
+    gap: 8px;
+    width: 100%;
+  }
+
+  .cof-download-bar__btn {
+    width: 100%;
+    justify-content: center;
+  }
+}
+
+/* 8. Bản in trang & Xuất PDF (@media print) */
+@media print {
+  .no-print,
+  .public-topbar,
+  .site-footer,
+  .skip-link,
+  .cof-breadcrumb,
+  .cof-top-bar,
+  #cof-accept-dialog,
+  #cof-decline-dialog,
+  #cof-accept-success-modal {
+    display: none !important;
+  }
+
+  body,
+  html {
+    background: #ffffff !important;
+    color: #000000 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+
+  .page-wrapper,
+  .main-content,
+  .page-content {
+    padding: 0 !important;
+    margin: 0 !important;
+    width: 100% !important;
+    max-width: 100% !important;
+  }
+
+  .cof-letter-paper {
+    border: none !important;
+    box-shadow: none !important;
+    padding: 10px 0 !important;
+    max-width: 100% !important;
+    margin: 0 !important;
+  }
+
+  .cof-panel,
+  .cof-salary-card,
+  .cof-stepper-panel,
+  .cof-download-bar {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+}
+
+
 
 

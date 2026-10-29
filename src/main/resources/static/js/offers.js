@@ -189,7 +189,7 @@ function handleSelectPassedCandidate(appId) {
     setElemText('dispHm', opt.getAttribute('data-hm'));
 
     const recom = opt.getAttribute('data-recom-salary');
-    setElemText('dispRecomSalary', recom ? Number(recom).toLocaleString('vi-VN') + ' VND' : 'Chưa có gợi ý');
+    setElemText('dispRecomSalary', recom ? Number(recom).toLocaleString('vi-VN') + ' VNĐ' : 'Chưa có gợi ý');
     setElemText('dispInterviewComments', opt.getAttribute('data-comments') || 'Không có ghi chú thêm.');
 
     const defaultWorkLoc = opt.getAttribute('data-work-location') || 'Trụ sở chính Mộc RMS';
@@ -251,11 +251,11 @@ function validateProbationRuleUi() {
         const minProb = proposed * 0.85;
         if (probation < minProb) {
             notice.style.color = 'var(--error)';
-            notice.innerHTML = `<i class="fa-solid fa-triangle-exclamation"></i> CẢNH BÁO: Lương thử việc phải đạt tối thiểu 85% lương chính thức (${Math.round(minProb).toLocaleString('vi-VN')} VND).`;
+            notice.innerHTML = `<i class="fa-solid fa-triangle-exclamation"></i> CẢNH BÁO: Lương thử việc phải đạt tối thiểu 85% lương chính thức (${Math.round(minProb).toLocaleString('vi-VN')} VNĐ).`;
             return false;
         } else if (probation > proposed) {
             notice.style.color = 'var(--error)';
-            notice.innerHTML = `<i class="fa-solid fa-triangle-exclamation"></i> CẢNH BÁO: Lương thử việc không được vượt quá lương chính thức (${Math.round(proposed).toLocaleString('vi-VN')} VND).`;
+            notice.innerHTML = `<i class="fa-solid fa-triangle-exclamation"></i> CẢNH BÁO: Lương thử việc không được vượt quá lương chính thức (${Math.round(proposed).toLocaleString('vi-VN')} VNĐ).`;
             return false;
         } else {
             const pct = (probation / proposed * 100).toFixed(1);
@@ -501,7 +501,7 @@ function renderDetailModalHtml(d) {
             const dotClass = isApproved ? 'dot-approved' : 'dot-rejected';
             const statusColor = isApproved ? 'var(--brand-dark)' : 'var(--error)';
             const director = escapeOfferHtml(a.directorName || 'Giám đốc');
-            const statusText = escapeOfferHtml(a.status || '');
+            const statusText = (a.status === 'Approved' || a.status === 'Director_Approved') ? 'Đã phê duyệt' : ((a.status === 'Rejected' || a.status === 'Director_Rejected') ? 'Đã từ chối' : escapeOfferHtml(a.status || ''));
             const timeText = formatOfferDateTime(a.approvedAt);
             const commentsText = escapeOfferHtml(a.directorComments || 'Không có ghi chú thêm.');
 
@@ -564,7 +564,7 @@ function renderDetailModalHtml(d) {
                     <div class="detail-item-value">${departmentName}</div>
                 </div>
                 <div>
-                    <div class="detail-item-label">Mã Yêu cầu tuyển dụng (Requisition ID)</div>
+                    <div class="detail-item-label">Mã Yêu cầu tuyển dụng</div>
                     <div class="detail-item-value">${requisitionId}</div>
                 </div>
             </div>
@@ -578,7 +578,7 @@ function renderDetailModalHtml(d) {
                     <div style="font-size:13px; color:var(--muted); margin-top:4px;">${interviewComments}</div>
                 </div>
                 <div>
-                    <div class="detail-item-label">Lương khuyến nghị từ Hiring Manager:</div>
+                    <div class="detail-item-label">Lương khuyến nghị từ Trưởng bộ phận:</div>
                     <div class="detail-item-value" style="color:var(--brand-dark); font-weight:700; font-size:14.5px;">${recomSalary}</div>
                     <div style="font-size:13px; color:var(--muted); margin-top:4px;">Người phụ trách: ${hiringManagerName}</div>
                 </div>
@@ -587,7 +587,7 @@ function renderDetailModalHtml(d) {
 
         <div class="detail-section">
             <div class="section-title">
-                <i class="fa-solid fa-coins"></i> 2. Gói Đãi Ngộ & Điều Khoản Offer
+                <i class="fa-solid fa-coins"></i> 2. Gói Đãi Ngộ & Điều Khoản Đề Xuất
             </div>
             <div class="detail-grid-3">
                 <div>
@@ -595,11 +595,11 @@ function renderDetailModalHtml(d) {
                     <div class="detail-item-value" style="font-weight:700;">${offeredTitle}</div>
                 </div>
                 <div>
-                    <div class="detail-item-label">Lương chính thức (Gross/tháng)</div>
+                    <div class="detail-item-label">Lương chính thức (Trước thuế/tháng)</div>
                     <div class="detail-item-value" style="color:var(--ink); font-weight:700; font-size:15px;">${proposedSalary}</div>
                 </div>
                 <div>
-                    <div class="detail-item-label">Lương thử việc (Gross/tháng)</div>
+                    <div class="detail-item-label">Lương thử việc (Trước thuế/tháng)</div>
                     <div class="detail-item-value" style="color:var(--brand-dark); font-weight:700; font-size:15px;">
                         <span>${probationSalary}</span> ${probationPctBadge}
                     </div>
@@ -617,7 +617,7 @@ function renderDetailModalHtml(d) {
                     <div class="detail-item-value">${workLocation}</div>
                 </div>
                 <div>
-                    <div class="detail-item-label">Thời hạn phản hồi offer</div>
+                    <div class="detail-item-label">Thời hạn phản hồi thư mời</div>
                     <div class="detail-item-value">
                         <span style="font-weight:700; color:var(--brand-dark);">${d.responsePeriodDays || 5} ngày</span>
                         ${d.responseDeadline ? `<div style="font-size:12px; color:var(--muted); margin-top:2px;">Hạn chót: <strong style="color:var(--ink);">${formatOfferDateTime(d.responseDeadline)}</strong></div>` : ''}
@@ -636,7 +636,7 @@ function renderDetailModalHtml(d) {
         ${d.approvalHistory && d.approvalHistory.length > 0 ? `
         <div class="detail-section" style="margin-bottom:0;">
             <div class="section-title">
-                <i class="fa-solid fa-stamp"></i> 3. Lịch Sử Phê Duyệt Của Director
+                <i class="fa-solid fa-stamp"></i> 3. Lịch Sử Phê Duyệt Của Giám Đốc
             </div>
             ${approvalHtml}
         </div>
@@ -659,7 +659,7 @@ function renderDetailFooterHtml(d) {
     } else if (d.offerStatus === 'Director_Approved' || d.offerStatus === 'Approved') {
         btns += `
             <button type="button" class="btn btn-primary" onclick="confirmSendOffer(${d.offerId})">
-                <i class="fa-solid fa-paper-plane" style="margin-right:4px;"></i> Phát hành Offer Letter
+                <i class="fa-solid fa-paper-plane" style="margin-right:4px;"></i> Phát hành Thư mời nhận việc
             </button>
         `;
     }
@@ -685,7 +685,7 @@ function openEditOfferModal(offerId) {
     if (form) form.reset();
 
     const titleEl = document.getElementById('editModalTitle');
-    if (titleEl) titleEl.textContent = `Chỉnh Sửa Offer Proposal #${offerId}`;
+    if (titleEl) titleEl.textContent = `Chỉnh Sửa Đề Xuất Nhận Việc #${offerId}`;
 
     const idInput = document.getElementById('editOfferId');
     if (idInput) idInput.value = offerId;
@@ -904,7 +904,7 @@ function submitUpdateOffer(isDraft) {
                 closeModal('editOfferModal');
                 setTimeout(() => window.location.reload(), 800);
             } else {
-                showToast(res?.message || 'Lỗi khi cập nhật Offer.', 'danger');
+                showToast(res?.message || 'Lỗi khi cập nhật đề xuất nhận việc.', 'danger');
             }
         })
         .catch(err => {
@@ -928,9 +928,8 @@ function confirmSendOffer(offerId) {
                 </svg>
             </div>
         `,
-        title: 'Phát hành Thư mời làm việc?',
-        desc: 'Bạn có chắc chắn muốn phát hành Thư mời làm việc (Offer Letter) tới ứng viên?',
-        subtext: 'Trạng thái đề xuất sẽ được chuyển sang Sent_Candidate.',
+        title: 'Phát hành Thư mời nhận việc?',
+        desc: 'Bạn có chắc chắn muốn phát hành Thư mời nhận việc tới ứng viên?',
         confirmText: 'Xác nhận phát hành',
         confirmClass: 'btn-director-reject-confirm',
         showCancel: true,
@@ -945,6 +944,18 @@ function confirmSendOffer(offerId) {
                 headers[csrf.header] = csrf.token;
             }
 
+            if (typeof Swal !== 'undefined') {
+                Swal.fire({
+                    title: 'Đang phát hành...',
+                    text: 'Đang kết nối gửi email Thư mời nhận việc tới ứng viên, vui lòng đợi trong giây lát.',
+                    allowOutsideClick: false,
+                    allowEscapeKey: false,
+                    didOpen: () => {
+                        Swal.showLoading();
+                    }
+                });
+            }
+
             fetch(`/offers/${offerId}/send`, {
                 method: 'POST',
                 headers: headers
@@ -953,7 +964,7 @@ function confirmSendOffer(offerId) {
                     const isJson = res.headers.get('content-type')?.includes('application/json');
                     const data = isJson ? await res.json() : null;
                     if (!res.ok) {
-                        throw new Error(data?.message || `Lỗi phát hành Offer (${res.status})`);
+                        throw new Error(data?.message || `Lỗi phát hành thư mời nhận việc (${res.status})`);
                     }
                     return data;
                 })
@@ -973,19 +984,19 @@ function confirmSendOffer(offerId) {
                         } else {
                             showToast(res.message, 'success');
                             closeModal('detailOfferModal');
-                            setTimeout(() => window.location.reload(), 800);
+                            setTimeout(() => window.location.reload(), 1500);
                         }
                     } else {
                         if (typeof Swal !== 'undefined') {
-                            Swal.fire('Lỗi', res?.message || 'Lỗi phát hành Offer.', 'error');
+                            Swal.fire('Lỗi', res?.message || 'Lỗi phát hành thư mời nhận việc.', 'error');
                         } else {
-                            showToast(res?.message || 'Lỗi phát hành Offer.', 'danger');
+                            showToast(res?.message || 'Lỗi phát hành thư mời nhận việc.', 'danger');
                         }
                     }
                 })
                 .catch(err => {
                     if (typeof Swal !== 'undefined') {
-                        Swal.fire('Lỗi', err.message || 'Không thể phát hành Offer.', 'error');
+                        Swal.fire('Lỗi', err.message || 'Không thể phát hành thư mời nhận việc.', 'error');
                     } else {
                         showToast(err.message, 'danger');
                     }
@@ -996,7 +1007,7 @@ function confirmSendOffer(offerId) {
 
 function confirmDeleteOffer(offerId) {
     if (!offerId) return;
-    if (!confirm('Bạn có chắc chắn muốn xóa bản thảo Offer này khỏi hệ thống?')) {
+    if (!confirm('Bạn có chắc chắn muốn xóa bản thảo đề xuất này khỏi hệ thống?')) {
         return;
     }
 
@@ -1016,7 +1027,7 @@ function confirmDeleteOffer(offerId) {
             const isJson = res.headers.get('content-type')?.includes('application/json');
             const data = isJson ? await res.json() : null;
             if (!res.ok) {
-                throw new Error(data?.message || `Lỗi xóa bản thảo (${res.status})`);
+                throw new Error(data?.message || `Lỗi xóa bản nháp (${res.status})`);
             }
             return data;
         })
@@ -1314,7 +1325,7 @@ function executeOfferExport() {
                     if (json && json.message) errorMsg = json.message;
                 } catch (e) {
                     if (response.status === 403) {
-                        errorMsg = 'Bạn không có quyền hạn xuất dữ liệu Offer.';
+                        errorMsg = 'Bạn không có quyền hạn xuất dữ liệu đề xuất nhận việc.';
                     }
                 }
                 throw new Error(errorMsg);
@@ -1409,11 +1420,11 @@ function openDirectorDecisionModal(offerId, actionType) {
     const btnSubmit = document.getElementById('btnSubmitDecision');
 
     if (actionType === 'APPROVE') {
-        titleEl.innerHTML = '<i class="fa-solid fa-check-circle" style="color:var(--success);"></i> Phê Duyệt Đề Xuất Offer';
+        titleEl.innerHTML = '<i class="fa-solid fa-check-circle" style="color:var(--success);"></i> Phê Duyệt Đề Xuất Nhận Việc';
         btnSubmit.innerHTML = '<i class="fa-solid fa-check"></i> Phê Duyệt';
         btnSubmit.className = 'btn btn-primary';
     } else {
-        titleEl.innerHTML = '<i class="fa-solid fa-xmark-circle" style="color:var(--error);"></i> Từ Chối Đề Xuất Offer';
+        titleEl.innerHTML = '<i class="fa-solid fa-xmark-circle" style="color:var(--error);"></i> Từ Chối Đề Xuất Nhận Việc';
         btnSubmit.innerHTML = '<i class="fa-solid fa-xmark"></i> Từ Chối';
         btnSubmit.className = 'btn btn-danger';
     }
@@ -1649,7 +1660,7 @@ function openDirectorDetailModal(id) {
                 if (benefitsEl) benefitsEl.innerText = detail.benefitsPackage || 'Theo quy chế đãi ngộ chung của công ty.';
 
                 // HR Note
-                const hrName = detail.proposedByName || 'HR';
+                const hrName = detail.proposedByName || 'Bộ phận Tuyển dụng';
                 const createdDate = detail.createdAt ? (typeof formatOfferDateTime === 'function' ? formatOfferDateTime(detail.createdAt) : new Date(detail.createdAt).toLocaleDateString('vi-VN')) : 'N/A';
                 const hrNote = document.getElementById('directorHrNote');
                 if (hrNote) {
@@ -1798,6 +1809,7 @@ function showDirectorCustomModal({
             ${iconHtml || defaultIcon}
             <h3 class="reject-warn-title">${title}</h3>
             <p class="reject-warn-desc">${desc}</p>
+            ${subtext ? `
             <div class="reject-warn-divider"></div>
             <div class="reject-warn-subtext">
                 <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#475569" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -1805,8 +1817,8 @@ function showDirectorCustomModal({
                     <line x1="12" y1="16" x2="12" y2="12"></line>
                     <line x1="12" y1="8" x2="12.01" y2="8"></line>
                 </svg>
-                <span>${subtext || 'Thông tin này sẽ được gửi lại để HR xử lý tiếp.'}</span>
-            </div>
+                <span>${subtext}</span>
+            </div>` : ''}
         `,
         showConfirmButton: true,
         confirmButtonText: confirmText,
@@ -1833,7 +1845,7 @@ function showDirectorRejectReasonRequiredAlert(onCloseCallback) {
     showDirectorCustomModal({
         title: 'Cần nhập lý do từ chối',
         desc: 'Vui lòng nhập lý do từ chối vào ô nhận xét bên dưới trước khi tiếp tục.',
-        subtext: 'Thông tin này sẽ được gửi lại để HR xử lý tiếp.',
+        subtext: 'Thông tin này sẽ được gửi lại để Bộ phận Tuyển dụng xử lý tiếp.',
         confirmText: 'Đã hiểu',
         confirmClass: 'btn-director-reject-confirm',
         showCancel: false,
@@ -1844,9 +1856,9 @@ function showDirectorRejectReasonRequiredAlert(onCloseCallback) {
 
 function showDirectorRejectConfirmModal(offerId, onConfirmCallback) {
     showDirectorCustomModal({
-        title: 'Từ chối đề xuất Offer?',
+        title: 'Từ chối đề xuất nhận việc?',
         desc: `Bạn có chắc chắn muốn từ chối đề xuất #${offerId}?`,
-        subtext: 'Lý do từ chối sẽ được gửi lại để HR xử lý tiếp.',
+        subtext: 'Lý do từ chối sẽ được gửi lại để Bộ phận Tuyển dụng xử lý tiếp.',
         confirmText: 'Xác nhận từ chối',
         confirmClass: 'btn-director-reject-danger',
         showCancel: true,
@@ -1874,8 +1886,8 @@ function submitDirectorDecisionFromScreen(offerId, action) {
         });
     } else if (action === 'APPROVE') {
         Swal.fire({
-            title: 'Phê duyệt đề xuất Offer?',
-            text: 'Sau khi phê duyệt, HR sẽ được thông báo để tiếp tục phát hành Offer Letter cho ứng viên.',
+            title: 'Phê duyệt đề xuất nhận việc?',
+            text: 'Sau khi phê duyệt, Bộ phận Tuyển dụng sẽ được thông báo để tiếp tục phát hành Thư mời nhận việc cho ứng viên.',
             icon: 'question',
             showCancelButton: true,
             confirmButtonText: 'Xác nhận phê duyệt',
@@ -1905,9 +1917,18 @@ function executeDirectorDecisionApi(offerId, url, comments) {
         headers: headers,
         body: JSON.stringify({ comments: comments })
     })
-        .then(res => res.json())
-        .then(data => {
-            if (data.success) {
+        .then(async res => {
+            let data = null;
+            try {
+                const contentType = res.headers.get('content-type');
+                if (contentType && contentType.includes('application/json')) {
+                    data = await res.json();
+                }
+            } catch (e) {
+                console.warn('Cannot parse JSON response from director decision API:', e);
+            }
+
+            if (res.ok && data?.success) {
                 Swal.fire({
                     title: 'Thành công',
                     text: data.message,
@@ -1917,13 +1938,19 @@ function executeDirectorDecisionApi(offerId, url, comments) {
                 }).then(() => {
                     window.location.href = '/offers';
                 });
+            } else if (res.status === 403) {
+                Swal.fire('Lỗi phân quyền', 'Bạn không có quyền thực hiện thao tác này hoặc phiên làm việc đã hết hạn. Vui lòng tải lại trang.', 'warning');
+            } else if (data && data.message) {
+                Swal.fire('Lỗi', data.message, 'error');
+            } else if (res.status >= 500) {
+                Swal.fire('Lỗi hệ thống', `Máy chủ phản hồi mã lỗi ${res.status}. Vui lòng thử lại sau hoặc liên hệ quản trị viên.`, 'error');
             } else {
-                Swal.fire('Lỗi', data.message || 'Có lỗi xảy ra.', 'error');
+                Swal.fire('Lỗi', 'Thao tác không thành công. Mã trạng thái: ' + res.status, 'error');
             }
         })
         .catch(err => {
-            console.error(err);
-            Swal.fire('Lỗi', 'Không thể kết nối đến máy chủ.', 'error');
+            console.error('Director decision network error:', err);
+            Swal.fire('Lỗi kết nối', 'Không thể kết nối đến máy chủ. Vui lòng kiểm tra lại kết nối mạng.', 'error');
         });
 }
 
@@ -1938,8 +1965,8 @@ function submitDirectorApprove() {
     if (!currentDirectorOfferId) return;
 
     Swal.fire({
-        title: 'Phê duyệt đề xuất?',
-        text: 'Sau khi phê duyệt, HR sẽ được thông báo để tiếp tục phát hành Offer cho ứng viên.',
+        title: 'Phê duyệt đề xuất nhận việc?',
+        text: 'Sau khi phê duyệt, Bộ phận Tuyển dụng sẽ được thông báo để tiếp tục phát hành Thư mời nhận việc cho ứng viên.',
         icon: 'question',
         showCancelButton: true,
         confirmButtonText: 'Xác nhận phê duyệt',
@@ -1948,33 +1975,7 @@ function submitDirectorApprove() {
         reverseButtons: true
     }).then((result) => {
         if (result.isConfirmed) {
-            const csrf = getCsrfInfo();
-            const headers = {
-                'Content-Type': 'application/json',
-                'Accept': 'application/json'
-            };
-            if (csrf.token) {
-                headers[csrf.header] = csrf.token;
-            }
-
-            fetch(`/offers/${currentDirectorOfferId}/approve`, {
-                method: 'POST',
-                headers: headers,
-                body: JSON.stringify({ comments: 'Phê duyệt trực tiếp' })
-            })
-                .then(res => res.json())
-                .then(data => {
-                    if (data.success) {
-                        Swal.fire({ title: 'Thành công', text: data.message, icon: 'success', timer: 1500, showConfirmButton: false })
-                            .then(() => window.location.reload());
-                    } else {
-                        Swal.fire('Lỗi', data.message || 'Có lỗi xảy ra.', 'error');
-                    }
-                })
-                .catch(err => {
-                    console.error(err);
-                    Swal.fire('Lỗi', 'Lỗi kết nối.', 'error');
-                });
+            executeDirectorDecisionApi(currentDirectorOfferId, `/offers/${currentDirectorOfferId}/approve`, 'Phê duyệt trực tiếp');
         }
     });
 }
@@ -1992,33 +1993,7 @@ function submitDirectorReject() {
     }
 
     showDirectorRejectConfirmModal(currentDirectorOfferId, () => {
-        const csrf = getCsrfInfo();
-        const headers = {
-            'Content-Type': 'application/json',
-            'Accept': 'application/json'
-        };
-        if (csrf.token) {
-            headers[csrf.header] = csrf.token;
-        }
-
-        fetch(`/offers/${currentDirectorOfferId}/reject`, {
-            method: 'POST',
-            headers: headers,
-            body: JSON.stringify({ comments: reason })
-        })
-            .then(res => res.json())
-            .then(data => {
-                if (data.success) {
-                    Swal.fire({ title: 'Thành công', text: data.message, icon: 'success', timer: 1500, showConfirmButton: false })
-                        .then(() => window.location.reload());
-                } else {
-                    Swal.fire('Lỗi', data.message || 'Có lỗi xảy ra.', 'error');
-                }
-            })
-            .catch(err => {
-                console.error(err);
-                Swal.fire('Lỗi', 'Lỗi kết nối.', 'error');
-            });
+        executeDirectorDecisionApi(currentDirectorOfferId, `/offers/${currentDirectorOfferId}/reject`, reason);
     });
 }
 
@@ -2035,7 +2010,51 @@ function initOfferFlashAutoDismiss() {
         setTimeout(() => {
             flashContainer.style.display = 'none';
         }, 450);
-    }, 2000);
+    }, 1500);
+}
+
+function displayOfferFlashBanner(message, type = 'success') {
+    let flashContainer = document.getElementById('pageFlashContainer');
+    if (!flashContainer) {
+        flashContainer = document.createElement('div');
+        flashContainer.id = 'pageFlashContainer';
+        flashContainer.className = 'page-flash-container';
+        const targetParent = document.getElementById('main') || document.querySelector('.page-content') || document.body;
+        if (targetParent.firstChild) {
+            targetParent.insertBefore(flashContainer, targetParent.firstChild);
+        } else {
+            targetParent.appendChild(flashContainer);
+        }
+    }
+
+    flashContainer.style.display = 'flex';
+    flashContainer.classList.remove('flash-dismissed');
+    delete flashContainer.dataset.dismissInit;
+    flashContainer.innerHTML = `
+        <div class="page-flash-alert page-flash-${type}" id="flash${type.charAt(0).toUpperCase() + type.slice(1)}Alert">
+            <i class="fa-solid fa-circle-check"></i>
+            <span>${message}</span>
+        </div>
+    `;
+
+    setTimeout(() => {
+        flashContainer.classList.add('flash-dismissed');
+        setTimeout(() => {
+            flashContainer.style.display = 'none';
+        }, 450);
+    }, 1500);
+}
+
+function checkPendingOfferFlash() {
+    try {
+        const storedMsg = sessionStorage.getItem('offerPageFlashMessage');
+        if (storedMsg) {
+            sessionStorage.removeItem('offerPageFlashMessage');
+            displayOfferFlashBanner(storedMsg, 'success');
+        }
+    } catch (e) {
+        console.warn('Cannot read sessionStorage for flash message', e);
+    }
 }
 
 function updateMinExpectedStartDate() {
@@ -2066,10 +2085,12 @@ function initOfferFormExpectedStartDateMin() {
 
 if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', () => {
+        checkPendingOfferFlash();
         initOfferFlashAutoDismiss();
         initOfferFormExpectedStartDateMin();
     });
 } else {
+    checkPendingOfferFlash();
     initOfferFlashAutoDismiss();
     initOfferFormExpectedStartDateMin();
 }

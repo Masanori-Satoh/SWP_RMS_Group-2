@@ -47,6 +47,8 @@
   /* Typography */
   --sans: 'Inter', 'Source Sans 3', 'Segoe UI', system-ui, -apple-system, sans-serif;
   --serif: 'Lora', 'Times New Roman', Georgia, serif;
+  --font-sans: var(--sans);
+  --font-serif: var(--serif);
 
   /* Thang Cỡ Chữ Chuẩn DNA C++ (Typography Scale) */
   --font-xs: 12.5px;
@@ -61,6 +63,7 @@
   --s2: 8px;
   --s3: 12px;
   --s4: 16px;
+  --s5: 20px;
   --s6: 24px;
   --s8: 32px;
   --s12: 48px;
