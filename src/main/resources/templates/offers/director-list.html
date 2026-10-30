@@ -6,20 +6,19 @@
 <head>
   <title>Quản lý Đề xuất | Mộc RMS</title>
   <th:block layout:fragment="styles">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" th:href="@{/css/offers.css}">
+    <link rel="stylesheet" th:href="@{/css/pages/offer-workspace.css}">
   </th:block>
 </head>
 <body>
 
-<main id="main" layout:fragment="content" class="page-content container" tabindex="-1">
+<main id="main" layout:fragment="content" class="page-content container adw-page ofw-page" tabindex="-1">
 
-                <div class="offers-header">
-                    <div class="offers-title-group">
-                        <h1>Quản lý Đề xuất</h1>
-                        <p class="offers-subtitle">Xem xét và quyết định các đề xuất gói lương do Bộ phận Tuyển dụng gửi lên.</p>
-                    </div>
-                </div>
+    <th:block th:replace="~{fragments/ui/admin-workspace :: scene}"></th:block>
+
+    <!-- TIÊU ĐỀ TRANG CHUẨN ADMIN WORKSPACE -->
+    <div class="adw-heading ofw-heading">
+        <h1 class="adw-title ofw-title">Quản lý Đề xuất</h1>
+    </div>
 
                 <!-- 3 Stat Cards (Compact Horizontal Mockup) -->
                 <div class="director-stats-grid">
@@ -191,6 +190,8 @@
 </main>
 
 <th:block layout:fragment="scripts">
+    <th:block th:replace="~{fragments/ui/admin-workspace :: scripts}"></th:block>
+    <script th:src="@{/js/pages/flash-toast.js}" defer></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script th:src="@{/js/offers.js}" defer></script>
 </th:block>
