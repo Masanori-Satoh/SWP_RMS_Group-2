@@ -8,6 +8,8 @@ Theo yêu cầu LinhDN ngày 30/10/2026: mỗi lượt hoàn thành công việc
 
 ## Trạng thái mới nhất
 
+30/10 — giải quyết 3 conflict tài liệu khi merge origin/main: [Nội dung giữ lại và kiểm chứng](2026-10-30-merge-main-docs-conflicts.md).
+
 30/10 — rà soát toàn bộ Markdown trong docs, làm sạch tên công cụ theo yêu cầu: [Phạm vi, file thay đổi và kiểm chứng](2026-10-30-cleanup-markdown-docs.md).
 
 30/10 — đồng bộ chi tiết Application với Talent Pool/HR Recommend, có ảnh desktop/mobile: [Báo cáo thay đổi và ảnh giao diện](2026-10-30-application-detail-ui.md).
