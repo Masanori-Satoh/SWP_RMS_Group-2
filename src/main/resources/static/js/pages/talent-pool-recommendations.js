@@ -24,7 +24,9 @@
     const forms = document.querySelectorAll('[data-pool-decision], [data-pool-note], [data-pool-withdraw]');
     forms.forEach(form => {
         const buttons = [...form.querySelectorAll('button[type="submit"]')];
-        const labels = buttons.map(button => button.textContent);
+        // Buttons with an icon keep their text in [data-label] so the icon survives relabelling.
+        const label = button => button.querySelector?.('[data-label]') || button;
+        const labels = buttons.map(button => label(button).textContent);
         let submitting = false;
         form.addEventListener('submit', event => {
             if (submitting) { event.preventDefault(); return; }
@@ -37,12 +39,12 @@
             submitting = true;
             form.setAttribute('aria-busy', 'true');
             buttons.forEach(button => { button.disabled = true; });
-            if (event.submitter) event.submitter.textContent = 'Đang lưu…';
+            if (event.submitter) label(event.submitter).textContent = 'Đang lưu…';
         });
         window.addEventListener('pageshow', () => {
             submitting = false; form.removeAttribute('aria-busy');
             form.querySelector('[data-pool-decision-value]')?.remove();
-            buttons.forEach((button, index) => { button.disabled = false; button.textContent = labels[index]; });
+            buttons.forEach((button, index) => { button.disabled = false; label(button).textContent = labels[index]; });
         });
     });
 })();
