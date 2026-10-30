@@ -150,13 +150,13 @@ Các integration test chạy chế độ đọc trên SQL Server với `ddl-auto
 
 Ảnh và log local:
 
-- [Giao diện 1366px, sidebar ghim](<D:/KÌ 5/SWP/hireflow-api/RetireManagement/.codex-tmp/summary-1366-pinned.png>)
-- [Giao diện 1440px](<D:/KÌ 5/SWP/hireflow-api/RetireManagement/.codex-tmp/summary-1440-collapsed.png>)
-- [Giao diện 1920px](<D:/KÌ 5/SWP/hireflow-api/RetireManagement/.codex-tmp/summary-1920-collapsed.png>)
-- [Build và 13 test](<D:/KÌ 5/SWP/hireflow-api/RetireManagement/.codex-tmp/summary-metrics-build-test.log>)
-- [Build cuối](<D:/KÌ 5/SWP/hireflow-api/RetireManagement/.codex-tmp/summary-final-build.log>)
-- [Kiểm tra Chrome](<D:/KÌ 5/SWP/hireflow-api/RetireManagement/.codex-tmp/summary-ui-checks.log>)
-- [Đo layout cuối](<D:/KÌ 5/SWP/hireflow-api/RetireManagement/.codex-tmp/summary-width-checks.log>)
+- Giao diện 1366px, sidebar ghim — tệp QA cục bộ `summary-1366-pinned.png`
+- Giao diện 1440px — tệp QA cục bộ `summary-1440-collapsed.png`
+- Giao diện 1920px — tệp QA cục bộ `summary-1920-collapsed.png`
+- Build và 13 test — tệp QA cục bộ `summary-metrics-build-test.log`
+- Build cuối — tệp QA cục bộ `summary-final-build.log`
+- Kiểm tra Chrome — tệp QA cục bộ `summary-ui-checks.log`
+- Đo layout cuối — tệp QA cục bộ `summary-width-checks.log`
 
 ## 8. Giới hạn còn lại
 

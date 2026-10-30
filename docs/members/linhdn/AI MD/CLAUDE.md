@@ -14,7 +14,7 @@ Spring Boot + Thymeleaf (with layout dialect) app. Package root: `com.group2.rms
 
 ## Shared Mộc design contract (2026-10-27)
 
-Read @DESIGN.md before UI work. This is the same design contract used by Codex.
+Read @DESIGN.md before UI work. This design contract is shared across development assistants.
 
 The earlier Design Context above is retained. Its token/font summary is historical shorthand: current `layout/base.html` and `auth/fragments.html` load `tokens.css` → `global.css` → `components.css`; `design-tokens.css` is a separate legacy file, not the current shared entry point. Current shared `--sans` starts with Inter then Source Sans 3; auth scopes Arial/Segoe UI, and candidate/landing scopes Plus Jakarta Sans. Existing external font links on those surfaces are documented in DESIGN.md; do not add new font dependencies. Follow the actual target's cascade and DESIGN.md when the older summary differs. Language also varies by surface; preserve the surrounding Vietnamese/English copy rather than assuming one language globally.
 
@@ -25,7 +25,7 @@ For design decisions use **DESIGN.md → UI UX Pro Max → Impeccable → Taste 
 - `.claude/skills/design-taste-frontend/SKILL.md` is manual-only (`disable-model-invocation: true`). Use `/design-taste-frontend` only when the user requests substantial design improvement. For a natural-language request, offer that explicit command; do not bypass the invocation restriction by loading the body yourself. Routine polish/audit/configuration work does not activate Taste.
 - Other installed skills do not override this order. Taste recommendations cannot replace Mộc tokens, brand, components, copy or behavior without explicit scope.
 - Preserve routes, Thymeleaf bindings, fragment APIs, CSRF, validation, OTP/countdowns and business rules. Respect protected shared files and preserve unrelated changes. Do not delete, commit or push without authorization.
-- Do not enable automatic hooks or run hook installers. The existing `.codex/hooks.json` remains unchanged by the user's decision on 2026-10-27; this setup does not claim those old hooks are disabled.
+- Do not enable automatic hooks or run hook installers. The existing hook configuration remains unchanged by the user's decision on 2026-10-27; this setup does not claim those old hooks are disabled.
 
 See [.agents/SKILLS_SETUP.md](.agents/SKILLS_SETUP.md) for provenance, invocation and verification limits. Report static, browser and live runtime evidence separately.
 

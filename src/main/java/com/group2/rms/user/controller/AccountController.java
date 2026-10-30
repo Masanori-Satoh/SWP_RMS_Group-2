@@ -139,11 +139,13 @@ public class AccountController {
     }
 
     private void prepareEdit(Model model, int userId, String username) {
+        AccountManagementService.AccountForEdit account = management.findForEdit(userId);
         model.addAttribute("vietnameseUi", true);
         model.addAttribute("createMode", false);
         model.addAttribute("accountId", userId);
         model.addAttribute("accountUsername", username);
-        model.addAttribute("currentDepartmentId", management.findForEdit(userId).departmentId());
+        model.addAttribute("currentDepartmentId", account.departmentId());
+        model.addAttribute("accountSummary", account);
         model.addAttribute("roles", accounts.findRoles());
         model.addAttribute("departments", accounts.findDepartments());
     }

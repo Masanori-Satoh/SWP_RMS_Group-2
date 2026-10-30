@@ -488,11 +488,59 @@ class ApplicationPipelineWebTests {
                 .andReturn().getResponse().getContentAsString();
         int journey = html.indexOf("id=\"app-journey-title\"");
         int cv = html.indexOf("id=\"app-cv-title\"");
-        int side = html.indexOf("<aside class=\"app-detail__side\"");
+        int side = html.indexOf("<aside class=\"app-detail__side apd-side\"");
         int contact = html.indexOf("id=\"app-contact-title\"");
         int notes = html.indexOf("id=\"app-detail-notes\"");
         int history = html.indexOf("id=\"app-timeline-title\"");
         assertTrue(journey >= 0 && journey < cv && cv < side && side < contact && contact < notes && notes < history);
+    }
+
+    @Test
+    void detailWorkspaceKeepsConsentAndReviewActionsScopedToViewerAndApplicationState() throws Exception {
+        var fixtures = java.nio.file.Path.of("target/application-detail-fixtures");
+        java.nio.file.Files.createDirectories(fixtures);
+        var pendingHr = detail(false, true, "https://linkedin.com/in/an-vo", false, false, null, "HM_Suggested");
+        when(pipeline.detail(298)).thenReturn(pendingHr);
+        String proposal = mvc.perform(get("/applications/298").with(as("hr_lan", "HR")))
+                .andExpect(status().isOk())
+                .andExpect(content().string(containsString("id=\"apd-consent-form\"")))
+                .andExpect(content().string(containsString("form=\"apd-consent-form\"")))
+                .andExpect(content().string(containsString("name=\"consent\" value=\"true\" required")))
+                .andExpect(content().string(containsString("action=\"/talent-pool/applications/298/confirm\"")))
+                .andExpect(content().string(containsString("name=\"_csrf\"")))
+                .andExpect(content().string(not(containsString("id=\"app-review-form\""))))
+                .andReturn().getResponse().getContentAsString();
+        assertEquals(2, proposal.split("data-state=\"upcoming\"", -1).length - 1);
+        java.nio.file.Files.writeString(fixtures.resolve("proposal-hr.html"), proposal);
+
+        when(pipeline.detail(298)).thenReturn(detail(false, false, null, false, false, null,
+                "HM_Suggested", null, "Hiring Manager"));
+        String hm = mvc.perform(get("/applications/298").with(as("hm_tuan", "Hiring Manager")))
+                .andExpect(status().isOk())
+                .andExpect(content().string(not(containsString("id=\"apd-consent-form\""))))
+                .andExpect(content().string(not(containsString("id=\"talent-decline-dialog\""))))
+                .andReturn().getResponse().getContentAsString();
+        java.nio.file.Files.writeString(fixtures.resolve("proposal-hm.html"), hm);
+
+        when(pipeline.detail(298)).thenReturn(detail(false, true, "https://linkedin.com/in/an-vo",
+                true, true, null, "Applied"));
+        String review = mvc.perform(get("/applications/298").with(as("hr_lan", "HR")))
+                .andExpect(status().isOk())
+                .andExpect(content().string(containsString("id=\"app-review-form\"")))
+                .andExpect(content().string(containsString("id=\"app-reject-dialog\"")))
+                .andExpect(content().string(not(containsString("id=\"apd-consent-form\""))))
+                .andReturn().getResponse().getContentAsString();
+        java.nio.file.Files.writeString(fixtures.resolve("review-hr.html"), review);
+
+        when(pipeline.detail(298)).thenReturn(detail(false, false, null, true, false, null,
+                "HR_Passed", null, "Director", false));
+        String director = mvc.perform(get("/applications/298").with(as("director", "Director")))
+                .andExpect(status().isOk())
+                .andExpect(content().string(containsString("duyệt thay trưởng bộ phận")))
+                .andExpect(content().string(not(containsString("data-app-bookmark "))))
+                .andExpect(content().string(not(containsString("id=\"apd-consent-form\""))))
+                .andReturn().getResponse().getContentAsString();
+        java.nio.file.Files.writeString(fixtures.resolve("review-director.html"), director);
     }
 
     @Test
@@ -1113,7 +1161,7 @@ class ApplicationPipelineWebTests {
                 personalFacts ? java.time.LocalDate.of(1995, 8, 17) : null, personalFacts ? "Nữ" : null,
                 personalFacts ? "Số 88 Láng Hạ, Đống Đa, Hà Nội" : "  ",
                 7, "REQ-007", 12, "Digital Marketing Executive", "Sales & Marketing", SUBMITTED,
-                status, "Qua vòng chuyên môn", "badge--warning", aiMatchScore, aiMatchScore == null ? null : SUBMITTED.plusMinutes(1),
+                status, ApplicationStatusLabels.label(status), ApplicationStatusLabels.badge(status), aiMatchScore, aiMatchScore == null ? null : SUBMITTED.plusMinutes(1),
                 List.of(new TimelineItem(SUBMITTED.plusDays(1), "HR: Đạt", "Lan HR", "Hợp vị trí", "success"),
                         new TimelineItem(SUBMITTED, "Nộp hồ sơ", "An Võ", null, "neutral")),
                 List.of(new StageItem("APPLIED", "Ứng tuyển", null, null, "done", null, false),

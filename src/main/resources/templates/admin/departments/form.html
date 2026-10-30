@@ -6,29 +6,49 @@
     <th:block layout:fragment="styles">
         <link rel="stylesheet" th:href="@{/css/account-form.css}">
         <link rel="stylesheet" th:href="@{/css/pages/admin-surfaces.css}">
+        <link rel="stylesheet" th:unless="${departmentId == null}" th:href="@{/css/pages/department-edit.css}">
     </th:block>
 </head>
 <body>
-<main id="main" layout:fragment="content" class="page-content ads-page ads-form-page adw-page" tabindex="-1">
-    <th:block th:replace="~{fragments/ui/admin-workspace :: scene}"></th:block><div class="container account-form-container adw-form-wrap">
-            <div class="account-heading ads-heading adw-heading"><div>
-                <h1 class="ads-title adw-title" th:text="${departmentId == null ? 'Tạo phòng ban' : 'Sửa phòng ban'}"></h1>
-                <p th:text="${departmentId == null ? 'Phòng ban mới sẽ có trạng thái đang hoạt động.' : 'Chỉnh sửa thông tin phòng ban. Thay đổi trạng thái tại danh sách phòng ban.'}"></p>
-            </div></div>
-            <section class="workspace-section account-card ads-form-card adw-surface">
-                <form th:action="${departmentId == null} ? @{/admin/departments} : @{/admin/departments/{id}(id=${departmentId})}" th:object="${form}" method="post">
-                    <div th:replace="~{fragments/messages :: validationSummary}"></div>
-                    <fieldset class="account-form-section"><legend>Thông tin phòng ban</legend>
-                        <div class="account-form-grid"><div class="form-group account-field-full">
+<main id="main" layout:fragment="content" class="page-content ads-page ads-form-page adw-page" th:classappend="${departmentId != null} ? 'def-page'" tabindex="-1">
+    <th:block th:replace="~{fragments/ui/admin-workspace :: scene}"></th:block>
+    <div class="container" th:classappend="${departmentId == null ? 'account-form-container adw-form-wrap' : 'def-container'}">
+        <div class="account-heading ads-heading adw-heading def-heading"><div>
+            <h1 class="ads-title adw-title" th:text="${departmentId == null ? 'Tạo phòng ban' : 'Sửa phòng ban'}"></h1>
+            <p th:text="${departmentId == null ? 'Phòng ban mới sẽ có trạng thái đang hoạt động.' : 'Chỉnh sửa thông tin phòng ban. Thay đổi trạng thái tại danh sách phòng ban.'}"></p>
+        </div></div>
+        <section class="workspace-section account-card ads-form-card adw-surface def-card">
+            <section th:if="${departmentId != null}" class="def-summary" aria-label="Thông tin phòng ban đang lưu">
+                <div class="def-summary-identity">
+                    <span class="def-avatar" aria-hidden="true">
+                        <svg viewBox="0 0 24 24" width="30" height="30" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 21V5a1 1 0 0 1 1-1h8a1 1 0 0 1 1 1v16M14 10h5a1 1 0 0 1 1 1v10M2 21h20M8 8h2M8 12h2M8 16h2"/></svg>
+                    </span>
+                    <div class="def-summary-dept">
+                        <h2 class="def-summary-name" th:text="${department.name}"></h2>
+                        <p class="def-summary-meta">Phòng ban · Mã <span th:text="${departmentId}"></span></p>
+                    </div>
+                </div>
+                <dl class="def-summary-field">
+                    <dt><svg class="def-summary-icon" viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><circle cx="12" cy="7" r="4"/><path d="M4 21v-2a8 8 0 0 1 16 0v2z"/></svg>Trưởng phòng hiện tại</dt>
+                    <dd th:if="${department.managerId != null}"><span th:text="${department.managerName}"></span><small th:if="${department.managerUsername != null}" th:text="${department.managerUsername}"></small></dd>
+                    <dd th:unless="${department.managerId != null}">Chưa phân công</dd>
+                </dl>
+                <span class="badge def-summary-status" th:classappend="${department.status == 'Active' ? 'badge--success' : 'badge--neutral'}"><span class="def-status-dot" aria-hidden="true"></span><span th:text="${department.status == 'Active' ? 'Đang hoạt động' : 'Đã vô hiệu hóa'}"></span></span>
+            </section>
+            <form th:action="${departmentId == null} ? @{/admin/departments} : @{/admin/departments/{id}(id=${departmentId})}" th:object="${form}" method="post">
+                <div th:replace="~{fragments/messages :: validationSummary}"></div>
+                <fieldset class="account-form-section def-section"><legend class="def-legend"><svg th:unless="${departmentId == null}" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M4 21V5a1 1 0 0 1 1-1h8a1 1 0 0 1 1 1v16M14 10h5a1 1 0 0 1 1 1v10M2 21h20M8 8h2M8 12h2M8 16h2"/></svg><span>Thông tin phòng ban</span></legend>
+                    <div class="account-form-grid def-grid">
+                        <div class="form-group" th:classappend="${departmentId == null} ? 'account-field-full'">
                             <label class="form-label" for="department-name">Tên phòng ban <span aria-hidden="true">*</span></label>
-                            <input class="form-control ads-form-control" id="department-name" type="text" th:field="*{departmentName}" maxlength="100" required autocomplete="off"
+                            <input class="form-control ads-form-control def-input" id="department-name" type="text" th:field="*{departmentName}" maxlength="100" required autocomplete="off"
                                    th:attr="aria-invalid=${#fields.hasErrors('departmentName')},aria-describedby=${#fields.hasErrors('departmentName') ? 'department-name-hint department-name-error' : 'department-name-hint'}">
                             <small class="account-field-hint" id="department-name-hint">Tối đa 100 ký tự. Tên không được trùng với phòng ban khác.</small>
                             <span class="form-error" id="department-name-error" th:if="${#fields.hasErrors('departmentName')}" th:errors="*{departmentName}"></span>
                         </div>
-                        <div class="form-group account-field-full" th:if="${departmentId != null}">
+                        <div class="form-group" th:if="${departmentId != null}">
                             <label class="form-label" for="department-manager">Trưởng phòng <span class="account-field-hint">(không bắt buộc)</span></label>
-                            <select class="form-control ads-form-control" id="department-manager" th:field="*{managerId}"
+                            <select class="form-control ads-form-control def-input" id="department-manager" th:field="*{managerId}"
                                     th:attr="aria-invalid=${#fields.hasErrors('managerId')},aria-describedby=${#fields.hasErrors('managerId') ? 'department-manager-hint department-manager-error' : 'department-manager-hint'}">
                                 <option value="">Chưa phân công</option>
                                 <option th:if="${department.managerId != null and !currentManagerEligible}" th:value="${department.managerId}"
@@ -42,14 +62,13 @@
                             <p class="account-field-hint">Sau khi tạo phòng ban, gán tài khoản nội bộ vào phòng ban rồi quay lại chọn trưởng phòng.</p>
                             <span class="form-error" th:if="${#fields.hasErrors('managerId')}" th:errors="*{managerId}"></span>
                         </div>
-                        <div class="account-field-full" th:if="${departmentId != null}"><p>Trạng thái: <strong th:text="${department.status == 'Active' ? 'Đang hoạt động' : 'Đã vô hiệu hóa'}"></strong></p></div>
-                        </div>
-                    </fieldset>
-                    <div class="account-form-actions"><a class="btn btn-secondary" th:href="@{/admin/departments}">Hủy</a>
-                        <button class="btn btn-primary" type="submit" th:text="${departmentId == null ? 'Tạo phòng ban' : 'Lưu thay đổi'}"></button></div>
-                </form>
-            </section>
-        </div></main>
+                    </div>
+                </fieldset>
+                <div class="account-form-actions def-actions"><a class="btn btn-secondary" th:href="@{/admin/departments}">Hủy</a>
+                    <button class="btn btn-primary" type="submit"><svg th:unless="${departmentId == null}" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M4 3h13l3 3v15H4zM8 3v6h8V3M8 21v-8h8v8"/></svg><span th:text="${departmentId == null ? 'Tạo phòng ban' : 'Lưu thay đổi'}"></span></button></div>
+            </form>
+        </section>
+    </div></main>
 <th:block layout:fragment="scripts">
     <th:block th:replace="~{fragments/ui/admin-workspace :: scripts}"></th:block>
 </th:block>
