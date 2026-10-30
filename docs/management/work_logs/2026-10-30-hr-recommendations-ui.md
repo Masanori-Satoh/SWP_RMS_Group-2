@@ -1,7 +1,7 @@
 # HR Recommendations — bảng gợi ý và trạng thái rỗng
 
 - **Ngày:** 30/10/2026 (Asia/Saigon).
-- **Người thực hiện:** LinhDN / Codex, theo yêu cầu người dùng.
+- **Người thực hiện:** LinhDN theo yêu cầu người dùng.
 - **Yêu cầu cuối cùng:** làm bảng HR Recommend theo ảnh tham khảo; không có tìm kiếm/bộ lọc; chuyển liên kết “Xem ứng viên được HM đề xuất” lên đầu trang; thống kê file và số dòng thêm/xóa.
 - **Baseline:** chụp từng file ngay trước tác vụ này. Báo cáo không cộng thay đổi đã có từ những lượt Talent Pool trước hoặc file lịch sử đang sửa sẵn.
 
