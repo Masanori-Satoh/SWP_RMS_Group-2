@@ -132,7 +132,7 @@
                         <th>Trạng thái</th>
                         <th>Ngày lập</th>
                         <th>Người đề xuất</th>
-                        <th class="ofw-col-action">Hành động</th>
+                        <th class="ofw-col-action ofw-col-action-wide">Hành động</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -181,13 +181,27 @@
                             <div th:text="${o.proposedByName != null ? o.proposedByName : 'Bộ phận Tuyển dụng'}">Bộ phận Tuyển dụng</div>
                             <div class="cand-email-sub ofw-cand-email">(Bộ phận Tuyển dụng)</div>
                         </td>
-                        <td class="ofw-col-action">
+                        <td class="ofw-col-action ofw-col-action-wide">
                             <div class="offer-actions-cell ofw-actions-cell">
                                 <a th:href="@{/offers/{id}(id=${o.offerId})}"
                                    class="btn-icon ofw-action-btn"
                                    th:title="${o.offerStatus == 'Pending_Director' ? 'Xem xét & ra quyết định' : 'Xem chi tiết'}">
                                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>
                                 </a>
+
+                                <!-- Nút Phê duyệt / Từ chối nhanh cho Giám đốc khi ở trạng thái Chờ duyệt -->
+                                <th:block th:if="${o.offerStatus == 'Pending_Director'}">
+                                    <button type="button" th:onclick="'openDirectorDecisionModal(' + ${o.offerId} + ', \'APPROVE\')'"
+                                            class="btn-icon btn-icon-success ofw-action-btn ofw-action-btn--success"
+                                            title="Phê duyệt nhanh">
+                                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>
+                                    </button>
+                                    <button type="button" th:onclick="'openDirectorDecisionModal(' + ${o.offerId} + ', \'REJECT\')'"
+                                            class="btn-icon btn-icon-danger ofw-action-btn ofw-action-btn--danger"
+                                            title="Từ chối đề xuất">
+                                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                                    </button>
+                                </th:block>
                             </div>
                         </td>
                     </tr>
@@ -197,6 +211,36 @@
         <!-- Phân trang chuẩn UI catalog -->
         <nav th:replace="~{fragments/ui/pagination :: paged(page=${offersPage})}"></nav>
     </div>
+
+    <!-- ===========================================================================
+         MODAL: DIRECTOR APPROVAL MODAL (Duyệt / Từ chối Offer nhanh)
+         =========================================================================== -->
+    <div class="modal-overlay" id="directorDecisionModal" style="display: none;">
+        <div class="modal-box ofw-modal-box--sm">
+            <div class="modal-header">
+                <div id="directorDecisionTitle" class="ofw-modal-title-group ofw-modal-title--medium">
+                    Phê Duyệt Đề Xuất Nhận Việc
+                </div>
+                <button type="button" class="btn-icon" onclick="closeDirectorDecisionModal()">✕</button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="directorDecisionOfferId">
+                <input type="hidden" id="directorDecisionAction">
+
+                <div class="form-group">
+                    <label>Phản hồi / Ghi chú của Giám đốc (Không bắt buộc)</label>
+                    <textarea id="directorDecisionComments" class="input-control" rows="4" placeholder="Nhập ghi chú hoặc lý do từ chối..."></textarea>
+                </div>
+            </div>
+            <div class="modal-footer ofw-modal-footer--end">
+                <button type="button" class="btn btn-secondary" onclick="closeDirectorDecisionModal()">Hủy</button>
+                <button type="button" id="btnSubmitDecision" class="btn btn-primary" onclick="submitDirectorDecision()">Xác Nhận</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Notification Container -->
+    <div class="toast-container" id="toastContainer"></div>
 </main>
 
 <th:block layout:fragment="scripts">
