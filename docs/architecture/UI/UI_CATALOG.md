@@ -610,3 +610,22 @@ sidebar; không bỏ hướng dẫn nhập liệu hoặc liên kết Hủy trong
   validation lỗi dùng `.adw-validation-summary`, thông báo flash dùng `fragments/ui/flash-toast :: flashToast`.
 - Chi tiết file change và kiểm thử:
   [work log](../../management/work_logs/2026-10-31-hr-offer-proposal-admin-ui-sync.md).
+
+
+### Cập nhật 31/10/2026 — Danh sách Offer Giám đốc (Director List) dùng giao diện workspace Admin (`ofw-`)
+
+- Màn hình Danh sách Offer của Giám đốc (`offers/director-list.html`):
+  kế thừa `layout/internal`, kích hoạt giao diện Admin workspace opt-in qua
+  marker `.adw-page ofw-page`, `fragments/ui/admin-workspace :: scene` và `:: scripts`. Giữ nguyên
+  vai trò `Director`.
+- Bổ sung `model.addAttribute("activeMenu", "offers")` trong Controller đảm bảo sidebar sáng mục đúng khi Giám đốc đăng nhập.
+- Tiêu đề trang chuẩn `.adw-heading ofw-heading` và `.adw-title ofw-title` (gạch chân thương hiệu 48×4px), loại bỏ dòng mô tả phụ rườm rà.
+- 3 thẻ thống kê ngang chuyển sang `.adw-surface.ofw-stat-card` bên trong `.ofw-director-stats-grid` với inline SVG chuẩn.
+- Tab chuyển đổi trạng thái dùng `.ofw-director-tabs` và `.ofw-director-tab` với inline SVG thay thế FontAwesome.
+- Thanh công cụ lọc và tìm kiếm bọc trong `.card.offers-toolbar.ofw-toolbar.adw-surface` với icon SVG search và reset.
+- Bảng dữ liệu dùng `.adw-data-table` bọc trong `.ofw-list-surface.adw-surface` kèm header chuẩn `.ofw-list-header`, icon `.ofw-list-icon`, tiêu đề `.adw-panel-title` và badge đếm số lượng `.ofw-list-count`.
+- Toàn bộ 7 badge trạng thái, icon phân trang và trạng thái rỗng chuyển sang 100% inline SVG.
+- Loại bỏ hoàn toàn 9 thuộc tính inline `style="..."`, chuyển toàn bộ sang Section 17 token CSS trong `offer-workspace.css`.
+- Bổ sung các nút hành động nhanh Phê duyệt / Từ chối (Quick Approve / Reject) và modal quyết định (`#directorDecisionModal`) kèm container `#toastContainer` cho trạng thái `Pending_Director`.
+- Chi tiết file change và kiểm thử:
+  [work log](../../management/work_logs/2026-10-31-director-offer-ui-sync.md).
