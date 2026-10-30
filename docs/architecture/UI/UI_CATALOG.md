@@ -597,8 +597,7 @@ sidebar; không bỏ hướng dẫn nhập liệu hoặc liên kết Hủy trong
   tổng quan trong `.ofw-stats-grid`, thanh công cụ `.ofw-toolbar.adw-surface`, danh sách
   đề xuất bọc trong `.adw-surface` với header chuẩn `.ofw-list-header`, icon `.ofw-list-icon`,
   tiêu đề `.adw-panel-title`, badge `.ofw-list-count` và bảng dữ liệu `.adw-data-table`.
-- Màn hình Form (`/offers/create`): bọc toàn bộ form trong `.adw-form-wrap` (max-width 880px
-  căn giữa). Tiêu đề trang chuẩn `.adw-heading` và `.adw-title` (36px desktop / 28px mobile,
+- Màn hình Form (`/offers/create`): mở rộng toàn bộ bề ngang workspace giống trang Danh sách (`/offers`), Tiêu đề trang chuẩn `.adw-heading` và `.adw-title` (36px desktop / 28px mobile,
   gạch chân thương hiệu 48×4px).
 - Thẻ Card chuyển sang `.adw-surface` kèm `.adw-panel-heading` và `.adw-panel-title`,
   kết hợp badge số thứ tự bước tròn `1`, `2` trang nhã (`.ofw-step-badge`).

@@ -30,8 +30,8 @@
   - Thanh công cụ lọc và tìm kiếm bọc trong `.ofw-toolbar.adw-surface`.
   - Danh sách đề xuất bọc trong `.adw-surface` với header chuẩn `.ofw-list-header`, icon hộp bo góc `.ofw-list-icon`, tiêu đề `.adw-panel-title` và badge đếm số lượng `.ofw-list-count`.
   - Bảng dữ liệu dùng `.adw-data-table` với header xanh đậm thương hiệu Mộc RMS, zebra/hover rows nhẹ nhàng và badge trạng thái rõ nét.
-- **Căn giữa và giới hạn khung nhìn màn hình Form (`/offers/create`):**
-  - Áp dụng `.adw-form-wrap` (max-width 880px căn giữa) giúp giao diện tập trung, dễ quét dữ liệu và không bị kéo dãn quá mức trên màn hình 1440px / 1920px.
+- **Mở rộng toàn bộ lề 2 bên màn hình Form (`/offers/create`):**
+  - Mở rộng toàn bộ form dàn đều ngang workspace giống trang Danh sách (`/offers`), loại bỏ giới hạn 880px để thẻ thông tin ứng viên và điều khoản hợp đồng lấp đầy không gian hiển thị, đồng bộ lề 2 bên với thanh topbar và sidebar.
   - Thẻ thông tin ứng viên và điều khoản đãi ngộ dùng `.adw-surface` với bo góc `var(--radius-lg)`, viền `var(--line)` và shadow `var(--shadow-md)`.
   - Tiêu đề phân mục dùng `.adw-panel-heading` và `.adw-panel-title` kèm badge số bước `1`, `2` tròn tinh tế.
   - Lưới thông tin ứng viên `ofw-info-grid` với label uppercase xám nhẹ và giá trị semibold, mức lương gợi ý được bọc trong badge nổi bật `var(--brand-soft)`.

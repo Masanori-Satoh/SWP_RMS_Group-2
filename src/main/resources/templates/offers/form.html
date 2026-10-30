@@ -15,7 +15,6 @@
 <main id="main" layout:fragment="content" class="page-content container adw-page ofw-page" tabindex="-1">
   <th:block th:replace="~{fragments/ui/admin-workspace :: scene}"></th:block>
 
-  <div class="adw-form-wrap ofw-form-wrap">
     <!-- FLASH TOAST MESSAGES -->
     <th:block th:replace="~{fragments/ui/flash-toast :: flashToast(${successMessage}, ${errorMessage})}"></th:block>
 
@@ -287,7 +286,6 @@
       </div>
 
     </form>
-  </div>
 </main>
 
 <th:block layout:fragment="scripts">

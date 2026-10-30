@@ -11,8 +11,8 @@
 
 .ofw-form-wrap {
   width: 100%;
-  max-width: 880px;
-  margin-inline: auto;
+  max-width: none;
+  margin-inline: 0;
 }
 
 .ofw-heading {
