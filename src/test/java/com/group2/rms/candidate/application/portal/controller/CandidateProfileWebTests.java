@@ -83,6 +83,20 @@ class CandidateProfileWebTests {
                 .andExpect(content().string(not(containsString("sidebar-shell"))));
     }
 
+    /** Khung ứng viên giữ nguyên, nội dung theo adw; không nền ảnh/sidebar (admin-workspace.js thoát ở khung ứng viên). */
+    @Test
+    void candidateProfileUsesAdwContentWithoutWorkspaceScene() throws Exception {
+        when(candidateProfiles.get("an.vo")).thenReturn(profile());
+
+        mvc.perform(get("/portal/profile").with(as("an.vo", "Candidate")))
+                .andExpect(status().isOk())
+                .andExpect(content().string(containsString("adw-page")))
+                .andExpect(content().string(containsString("adw-form-wrap")))
+                .andExpect(content().string(not(containsString("adw-scene"))))
+                .andExpect(content().string(not(containsString("admin-workspace.js"))))
+                .andExpect(content().string(not(containsString("id=\"workspace-navigation\""))));
+    }
+
     @Test
     void validSaveUpdatesBothPartsAndRedirects() throws Exception {
         mvc.perform(save().param("dateOfBirth", "1999-04-12").param("gender", "Nữ"))

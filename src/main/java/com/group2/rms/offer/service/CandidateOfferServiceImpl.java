@@ -179,7 +179,7 @@ public class CandidateOfferServiceImpl implements CandidateOfferService {
 
     private static String statusLabel(String status) {
         return switch (status) {
-            case ACCEPTED -> "Đã nhận offer";
+            case ACCEPTED -> "Đã nhận việc";
             case DECLINED -> "Đã từ chối";
             default -> "Chờ bạn trả lời";
         };
@@ -219,17 +219,38 @@ public class CandidateOfferServiceImpl implements CandidateOfferService {
 
         String probDuration = (requisition != null && requisition.getProbationDays() != null)
                 ? requisition.getProbationDays() + " ngày"
-                : "60 ngày (2 tháng)";
+                : "60 ngày";
+
+        String deptName = department != null ? department.getDepartmentName() : "Toàn công ty";
+        String reportTo = (department != null && department.getDepartmentName() != null)
+                ? "Trưởng phòng " + department.getDepartmentName()
+                : "Ban Giám đốc";
+
+        String empTypeLabel = (requisition != null && requisition.getEmploymentType() != null)
+                ? com.group2.rms.requisition.service.RequisitionLabels.employmentType(requisition.getEmploymentType())
+                : "Toàn thời gian";
+        String employmentType = "Toàn thời gian".equalsIgnoreCase(empTypeLabel)
+                ? "Toàn thời gian (08:30 – 17:30, Thứ Hai đến Thứ Sáu)"
+                : empTypeLabel;
+
+        String offerCode = offer.getOfferId() != null
+                ? String.format("OFFR-%d-%04d",
+                        offer.getCreatedAt() != null ? offer.getCreatedAt().getYear() : 2026,
+                        offer.getOfferId())
+                : "OFFR-2026-0000";
 
         return new CandidateOfferDetailResponse(
                 offer.getOfferId(),
+                offerCode,
                 user != null ? user.getFullName() : "Ứng viên",
                 user != null ? user.getEmail() : null,
                 user != null ? user.getPhoneNumber() : null,
                 candidate != null ? candidate.getAddress() : null,
                 posting != null ? posting.getPostingTitle() : offer.getOfferedPositionTitle(),
                 offer.getOfferedPositionTitle(),
-                department != null ? department.getDepartmentName() : "Toàn công ty",
+                deptName,
+                reportTo,
+                employmentType,
                 proposed,
                 probation,
                 ratePct,

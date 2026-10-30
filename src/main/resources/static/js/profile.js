@@ -207,25 +207,25 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!toastContainer) return;
 
         const toast = document.createElement('div');
-        toast.className = `toast-message ${type === 'error' ? 'toast-error' : ''}`;
+        toast.className = `profile-toast-message ${type === 'error' ? 'profile-toast-error' : ''}`;
         toast.setAttribute('role', 'alert');
 
         const body = document.createElement('div');
-        body.className = 'toast-body';
+        body.className = 'profile-toast-body';
 
         const icon = document.createElement('span');
-        icon.className = 'toast-check-icon';
+        icon.className = 'profile-toast-check-icon';
         icon.textContent = type === 'error' ? '!' : '✓';
 
         const text = document.createElement('span');
-        text.className = 'toast-text';
+        text.className = 'profile-toast-text';
         text.textContent = message;
 
         body.appendChild(icon);
         body.appendChild(text);
 
         const closeBtn = document.createElement('button');
-        closeBtn.className = 'toast-close';
+        closeBtn.className = 'profile-toast-close';
         closeBtn.type = 'button';
         closeBtn.setAttribute('aria-label', 'Đóng thông báo');
         closeBtn.innerHTML = '&times;';
@@ -239,19 +239,36 @@ document.addEventListener('DOMContentLoaded', () => {
 
         function removeToast(el) {
             clearTimeout(timer);
-            el.classList.add('toast-fade-out');
+            el.classList.add('profile-toast-fade-out');
             setTimeout(() => el.remove(), 300);
         }
     }
 
+    // Icon con mắt trong ô mật khẩu: đổi type password <-> text; aria-pressed bật/tắt nét gạch chéo (profile.css)
+    const passwordToggles = Array.from(document.querySelectorAll('#changePasswordModal [data-password-toggle]'));
+    function setPasswordVisible(button, visible) {
+        const input = document.getElementById(button.getAttribute('aria-controls'));
+        if (!input) return;
+        input.type = visible ? 'text' : 'password';
+        button.setAttribute('aria-pressed', String(visible));
+        button.setAttribute('aria-label', visible ? button.dataset.hideLabel : button.dataset.showLabel);
+    }
+    function resetPasswordToggles() {
+        passwordToggles.forEach(button => setPasswordVisible(button, false));
+    }
+    passwordToggles.forEach(button => button.addEventListener('click', () =>
+        setPasswordVisible(button, button.getAttribute('aria-pressed') !== 'true')));
+
     // Modal open / close handlers
     function openPasswordModal() {
+        resetPasswordToggles();
         clearPasswordErrors();
         if (passwordForm) passwordForm.reset();
         if (passwordModal && !passwordModal.open) passwordModal.showModal();
     }
 
     function closeAllModals() {
+        resetPasswordToggles();
         clearPasswordErrors();
         if (passwordForm) passwordForm.reset();
         if (passwordModal && passwordModal.open) passwordModal.close();
@@ -381,6 +398,13 @@ document.addEventListener('DOMContentLoaded', () => {
         const avatarError = avatarForm.querySelector('.form-error');
         const allowedTypes = ['image/jpeg', 'image/png', 'image/webp'];
         const maxBytes = 2 * 1024 * 1024;
+
+        // Ảnh là nhãn của ô file (không còn nút "Tải ảnh lên"): chọn xong thì gửi luôn, vẫn qua bước kiểm bên dưới
+        if (avatarInput) {
+            avatarInput.addEventListener('change', () => {
+                if (avatarInput.files && avatarInput.files.length) avatarForm.requestSubmit();
+            });
+        }
 
         avatarForm.addEventListener('submit', (e) => {
             const file = avatarInput && avatarInput.files ? avatarInput.files[0] : null;

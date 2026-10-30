@@ -56,8 +56,6 @@
                    th:attr="aria-current=${selectedStatus == 'Active' ? 'page' : null}" title="Hoạt động">Hoạt động</a>
                 <a class="amg-segment ads-status-item" th:href="@{/admin/candidate-accounts(search=${search},status='Inactive',sort=${selectedSort})}"
                    th:attr="aria-current=${selectedStatus == 'Inactive' ? 'page' : null}" title="Vô hiệu hóa">Vô hiệu hóa</a>
-                <a class="amg-segment ads-status-item" th:href="@{/admin/candidate-accounts(search=${search},status='Blocked',sort=${selectedSort})}"
-                   th:attr="aria-current=${selectedStatus == 'Blocked' ? 'page' : null}" title="Bị khóa">Bị khóa</a>
             </nav>
         </div>
         <div class="mft-search">
@@ -104,8 +102,8 @@
                     <td class="iac-cell iac-email" th:text="${account.email}">Email</td>
                     <td class="iac-cell iac-login" th:text="${account.username}">Tên đăng nhập</td>
                     <td class="iac-cell iac-state-cell">
-                        <span class="badge iac-status" th:text="${account.status == 'Active' ? 'Hoạt động' : (account.status == 'Inactive' ? 'Vô hiệu hóa' : 'Bị khóa')}"
-                              th:classappend="${account.status == 'Active' ? ' badge--success' : (account.status == 'Blocked' ? ' badge--danger' : ' badge--neutral')}">Trạng thái</span>
+                        <span class="badge iac-status" th:text="${account.status == 'Active' ? 'Hoạt động' : 'Vô hiệu hóa'}"
+                              th:classappend="${account.status == 'Active' ? ' badge--success' : ' badge--neutral'}">Trạng thái</span>
                     </td>
                     <td class="iac-cell cac-date">
                         <time th:if="${account.createdAt != null}" th:datetime="${account.createdAt}" th:text="${#temporals.format(account.createdAt, 'dd/MM/yyyy')}">Ngày đăng ký</time><span th:unless="${account.createdAt != null}">—</span>

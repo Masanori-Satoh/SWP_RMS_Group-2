@@ -272,7 +272,7 @@ class TalentPoolFlowIntegrationTests {
 
     @ParameterizedTest
     @ValueSource(strings={"HM_ADDED", "HR_ACCEPTED", "HR_PENDING", "NO_PROPOSAL"})
-    void candidateNewCvUsesMatchingApprovedProposalToEnterInterview(String origin) throws Exception {
+    void candidateNewCvAlwaysFollowsNormalScreeningRegardlessOfProposal(String origin) throws Exception {
         var f=fixture(); int jobId=f.target().getJobPostingId(), cid=f.source().getCandidate().getCandidateId();
         int sourceId=f.source().getApplicationId();
         String sourceCv=f.source().getAppliedCvUrl(), sourceStatus=f.source().getApplicationStatus();
@@ -285,10 +285,11 @@ class TalentPoolFlowIntegrationTests {
                 mvc.perform(post("/talent-pool/recommendations/"+proposalId+"/decision")
                                 .with(user(f.hm().getUsername()).roles("HIRING_MANAGER")).with(csrf()).param("decision","Pass"))
                         .andExpect(flash().attributeExists("successMessage"));
-            } else {
-                // The database update itself must also prevent bypassing the pending HM decision.
-                assertEquals(0,applications.submitSuggestionWithNewCv(proposalId,sourceCv,"HM_Passed"));
             }
+        }
+        if (proposalId != null) {
+            // No proposal origin may use the upload query to skip screening.
+            assertEquals(0, applications.submitSuggestionWithNewCv(proposalId, sourceCv, "HM_Passed"));
         }
         byte[] pdf=new ClassPathResource("static"+sourceCv).getContentAsByteArray();
         var file=new MockMultipartFile("cvFile","updated-cv.pdf","application/pdf",pdf);
@@ -300,8 +301,8 @@ class TalentPoolFlowIntegrationTests {
                 .filter(a -> a.getCandidate().getCandidateId().equals(cid) && a.getJobPosting().getJobPostingId().equals(jobId))
                 .findFirst().orElseThrow();
         int id=saved.getApplicationId();
-        boolean approved=Set.of("HM_ADDED","HR_ACCEPTED").contains(origin);
-        assertEquals(approved?"HM_Passed":"Applied",saved.getApplicationStatus());
+        assertEquals("Applied", saved.getApplicationStatus());
+        assertTrue(candidates.findById(cid).orElseThrow().isPotential());
         if (proposalId!=null) assertEquals(proposalId,id,"reuse the same proposal, not a second application");
         assertTrue(saved.getAppliedCvUrl().startsWith("local:cv/"+cid+"/"));
         assertNotEquals(sourceCv,saved.getAppliedCvUrl());
@@ -311,17 +312,9 @@ class TalentPoolFlowIntegrationTests {
         assertEquals(sourceStatus,applications.findById(sourceId).orElseThrow().getApplicationStatus());
         assertTrue(formalIds().contains(id));
         assertFalse(poolApplications.findSuggestionsByJobPostingId(jobId).stream().anyMatch(a -> a.getApplicationId().equals(id)));
-        if (approved) {
-            assertEquals(0,events.stream(ApplicationSubmittedEvent.class).count());
-            assertDoesNotThrow(()->statusService.requireScheduleable(id));
-            assertTrue(applications.findEligibleForInterview().stream().anyMatch(a -> a.getApplicationId().equals(id)));
-            mvc.perform(get("/interviews/new").param("applicationId",Integer.toString(id))
-                            .with(user(f.hr().getUsername()).roles("HR")))
-                    .andExpect(status().isOk()).andExpect(content().string(containsString("Lên lịch phỏng vấn")));
-        } else {
-            assertEquals(1,events.stream(ApplicationSubmittedEvent.class).filter(e->e.applicationId().equals(id)).count());
-            assertThrows(ApplicationStatusException.class,()->statusService.requireScheduleable(id));
-        }
+        assertEquals(1, events.stream(ApplicationSubmittedEvent.class).filter(e -> e.applicationId().equals(id)).count());
+        assertThrows(ApplicationStatusException.class, () -> statusService.requireScheduleable(id));
+        assertFalse(applications.findEligibleForInterview().stream().anyMatch(a -> a.getApplicationId().equals(id)));
         // A second upload cannot create another application or replace the confirmed CV.
         mvc.perform(multipart("/jobs/"+jobId+"/apply").file(file)
                         .with(user(f.source().getCandidate().getAccount().getUsername()).roles("CANDIDATE")).with(csrf()))

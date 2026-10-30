@@ -23,7 +23,6 @@
             <ul class="aim-status-counts">
                 <li><span class="badge badge--success iac-status">Hoạt động</span><strong th:text="${#lists.size(page.content.?[status == 'Active'])}"></strong></li>
                 <li><span class="badge badge--neutral iac-status">Vô hiệu hóa</span><strong th:text="${#lists.size(page.content.?[status == 'Inactive'])}"></strong></li>
-                <li><span class="badge badge--danger iac-status">Bị khóa</span><strong th:text="${#lists.size(page.content.?[status == 'Blocked'])}"></strong></li>
             </ul>
             <p class="aim-scope">Thống kê trạng thái chỉ tính các dòng đang hiển thị.</p>
             <p class="aim-guidance">Chọn tên hoặc một hàng trong bảng để xem chi tiết tài khoản.</p>
@@ -43,8 +42,8 @@
             <span class="aim-avatar" aria-hidden="true" th:text="${#strings.isEmpty(account.fullName) ? '?' : #strings.substring(account.fullName, 0, 1)}"></span>
             <div><h3 class="aim-name" th:text="${account.fullName}"></h3><p class="aim-username"><span class="sr-only">Tên đăng nhập: </span><span th:text="${account.username}"></span></p></div>
         </div>
-        <span class="badge iac-status" th:classappend="${account.status == 'Active' ? ' badge--success' : (account.status == 'Blocked' ? ' badge--danger' : ' badge--neutral')}"
-              th:text="${account.status == 'Active' ? 'Hoạt động' : (account.status == 'Inactive' ? 'Vô hiệu hóa' : 'Bị khóa')}"></span>
+        <span class="badge iac-status" th:classappend="${account.status == 'Active' ? ' badge--success' : ' badge--neutral'}"
+              th:text="${account.status == 'Active' ? 'Hoạt động' : 'Vô hiệu hóa'}"></span>
         <th:block th:if="${kind == 'internal'}">
             <h4 class="aim-section-title">Phân quyền &amp; phòng ban</h4>
             <dl class="aim-fields aim-assignment-fields">

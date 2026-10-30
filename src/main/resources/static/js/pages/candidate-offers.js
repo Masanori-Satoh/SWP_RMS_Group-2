@@ -198,7 +198,7 @@
         if (isNaN(diff)) return;
 
         if (diff <= 0) {
-          el.textContent = '⏱ Đã hết hạn phản hồi';
+          el.textContent = el.classList.contains('cof-top-bar__val') ? 'Đã hết hạn' : '⏱ Đã hết hạn phản hồi';
           el.classList.add('cof-countdown--expired');
         } else {
           var days = Math.floor(diff / (1000 * 60 * 60 * 24));
@@ -211,7 +211,7 @@
             parts.push(days + ' ngày');
           }
           parts.push(pad(hours) + 'h ' + pad(minutes) + 'm ' + pad(seconds) + 's');
-          el.textContent = '⏱ Còn lại: ' + parts.join(' ');
+          el.textContent = el.classList.contains('cof-top-bar__val') ? parts.join(' ') : ('⏱ Còn lại: ' + parts.join(' '));
         }
       });
     }
@@ -250,5 +250,12 @@
       }
     });
   }
+
+  // 7. Xử lý nút Tải xuống PDF (in trang / lưu thành PDF)
+  document.querySelectorAll('[data-action="download-pdf"]').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      window.print();
+    });
+  });
 })();
 

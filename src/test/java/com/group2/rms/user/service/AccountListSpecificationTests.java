@@ -187,31 +187,21 @@ class AccountListSpecificationTests {
     }
 
     @Test
-    @DisplayName("SPEC-ACCOUNT-07 | Trạng thái Blocked được thêm vào bộ lọc")
-    void statusBlocked_addsExactStatusPredicate() {
-        // Given: SPEC-ACCOUNT-07 | Trạng thái Blocked được thêm vào bộ lọc.
-        Path<Object> status = mock(Path.class);
-        Predicate statusFilter = mock(Predicate.class);
-        when(root.get("accountStatus")).thenReturn(status);
-        when(builder.equal(status, "Blocked")).thenReturn(statusFilter);
-
-        // When: Service tạo Specification; gọi toPredicate thật trên các Criteria mock.
+    @DisplayName("SPEC-ACCOUNT-07 | Trạng thái Blocked đã bỏ không tạo bộ lọc riêng")
+    void removedBlockedStatusIsIgnored() {
         service.findAccounts(null, null, null, "Blocked", "name", 0);
-        verify(users, times(1)).findAll(specification.capture(), any(Pageable.class));
-        Predicate actual = specification.getValue().toPredicate(root, null, builder);
-
-        // Then: Kiểm tra bộ điều kiện AND/OR và đối số filter; không phụ thuộc thứ tự các nhánh AND.
-        assertEquals(combinedPredicate, actual);
-        verify(builder, times(1)).and(andClauses.capture());
-        assertEquals(Set.of(rolePredicate, statusFilter), Set.of(andClauses.getValue()));
-        verify(builder, times(1)).equal(status, "Blocked");
+        verify(users).findAll(specification.capture(), any(Pageable.class));
+        assertEquals(combinedPredicate, specification.getValue().toPredicate(root, null, builder));
+        verify(builder).and(andClauses.capture());
+        assertEquals(Set.of(rolePredicate), Set.of(andClauses.getValue()));
+        verify(root, never()).get("accountStatus");
     }
 
     @Test
     @DisplayName("SPEC-ACCOUNT-08 | Status Deleted không tạo điều kiện trạng thái")
     void statusUnknown_isIgnored() {
         // Given: SPEC-ACCOUNT-08 | Status Deleted không tạo điều kiện trạng thái.
-        // Status không thuộc Active, Inactive, Blocked.
+        // Status không thuộc Active, Inactive.
 
         // When: Service tạo Specification; gọi toPredicate thật trên các Criteria mock.
         service.findAccounts(null, null, null, "Deleted", "name", 0);
@@ -229,7 +219,7 @@ class AccountListSpecificationTests {
     @DisplayName("SPEC-ACCOUNT-12 | Status trống không tạo điều kiện trạng thái")
     void statusBlank_isIgnored() {
         // Given: SPEC-ACCOUNT-12 | Status trống không tạo điều kiện trạng thái.
-        // Status không thuộc Active, Inactive, Blocked.
+        // Status không thuộc Active, Inactive.
 
         // When: Service tạo Specification; gọi toPredicate thật trên các Criteria mock.
         service.findAccounts(null, null, null, "  ", "name", 0);
@@ -305,14 +295,14 @@ class AccountListSpecificationTests {
     }
 
     @Test
-    @DisplayName("SPEC-ACCOUNT-11 | Tìm kiếm Candidate vẫn AND role Candidate và trạng thái Blocked")
-    void candidateKeywordAndBlockedStatus_keepCandidateRestriction() {
-        // Given: SPEC-ACCOUNT-11 | Tìm kiếm Candidate vẫn AND role Candidate và trạng thái Blocked.
+    @DisplayName("SPEC-ACCOUNT-11 | Tìm kiếm Candidate vẫn AND role Candidate và trạng thái Inactive")
+    void candidateKeywordAndInactiveStatus_keepCandidateRestriction() {
+        // Given: SPEC-ACCOUNT-11 | Tìm kiếm Candidate vẫn AND role Candidate và trạng thái Inactive.
         when(builder.equal(roleName, "Candidate")).thenReturn(rolePredicate);
         Path<Object> status = mock(Path.class);
         Predicate statusFilter = mock(Predicate.class);
         when(root.get("accountStatus")).thenReturn(status);
-        when(builder.equal(status, "Blocked")).thenReturn(statusFilter);
+        when(builder.equal(status, "Inactive")).thenReturn(statusFilter);
         String expectedPattern = "%email%";
         Path<String> fullName = mock(Path.class);
         Path<String> email = mock(Path.class);
@@ -333,7 +323,7 @@ class AccountListSpecificationTests {
         when(builder.or(any(Predicate[].class))).thenReturn(searchPredicate);
 
         // When: Service tạo Specification; gọi toPredicate thật trên các Criteria mock.
-        service.findCandidateAccounts("  EMAIL  ", "Blocked", "name", 0);
+        service.findCandidateAccounts("  EMAIL  ", "Inactive", "name", 0);
         verify(users, times(1)).findAll(specification.capture(), any(Pageable.class));
         Predicate actual = specification.getValue().toPredicate(root, null, builder);
 
@@ -342,7 +332,7 @@ class AccountListSpecificationTests {
         verify(builder, times(1)).and(andClauses.capture());
         assertEquals(Set.of(rolePredicate, searchPredicate, statusFilter), Set.of(andClauses.getValue()));
         verify(builder, times(1)).equal(roleName, "Candidate");
-        verify(builder, times(1)).equal(status, "Blocked");
+        verify(builder, times(1)).equal(status, "Inactive");
         verify(roleName, times(0)).in(anyCollection());
         verify(builder, times(1)).lower(fullName);
         verify(builder, times(1)).lower(email);

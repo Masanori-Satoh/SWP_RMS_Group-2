@@ -1,5 +1,7 @@
 # Candidate nộp CV mới cho đề xuất đã được HM duyệt
 
+> Lịch sử: nhánh Candidate tự nộp CV đi thẳng `HM_Passed` trong báo cáo này đã được bỏ ngày 28/10/2026. Hành vi mới là `Applied` và xét duyệt thông thường; xem [báo cáo cập nhật](2026-10-28-new-cv-normal-screening.md). Kết quả test bên dưới thuộc thời điểm 17/10.
+
 Ngày: 17/10/2026. Đây là quyết định mới thay cho nhánh CV mới → Applied trong các báo cáo trước. Không sửa schema; không commit/push.
 
 ## Luồng đã chốt

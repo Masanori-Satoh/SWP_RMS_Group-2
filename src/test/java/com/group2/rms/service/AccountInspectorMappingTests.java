@@ -32,7 +32,7 @@ class AccountInspectorMappingTests {
         User employee = User.builder().userId(7).fullName("Nhân viên").username("employee")
             .email("employee@example.test").phoneNumber("0123456789").passwordHash("never-expose")
             .role(Role.builder().roleName("HR").build())
-            .department(Department.builder().departmentName("Engineering").build()).accountStatus("Blocked").build();
+            .department(Department.builder().departmentName("Engineering").build()).accountStatus("Inactive").build();
         employee.setCreatedAt(LocalDateTime.of(2026, 1, 2, 10, 30));
         // Dùng updatedAt khác null để phát hiện việc bỏ sót getter khi map inspector.
         employee.setUpdatedAt(LocalDateTime.of(2026, 1, 3, 11, 45));
@@ -47,7 +47,7 @@ class AccountInspectorMappingTests {
         assertEquals("employee", row.username());
         assertEquals("HR", row.roleName());
         assertEquals("Engineering", row.departmentName());
-        assertEquals("Blocked", row.status());
+        assertEquals("Inactive", row.status());
         assertEquals(employee.getPhoneNumber(), row.details().phoneNumber());
         assertEquals(employee.getCreatedAt(), row.details().createdAt());
         assertEquals(LocalDateTime.of(2026, 1, 3, 11, 45), row.details().updatedAt());

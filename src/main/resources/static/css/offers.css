@@ -2439,3 +2439,19 @@
     color: var(--error);
 }
 
+/* Fixed Candidate Bar in Contextual Mode (Replaces dropdown without changing layout) */
+.offer-candidate-select-fixed {
+    display: flex;
+    align-items: center;
+    background-image: none !important;
+    background-color: #f8fafc !important;
+    color: var(--ink) !important;
+    font-weight: 500;
+    cursor: default;
+    user-select: text;
+}
+
+.offer-group-a-box--locked {
+    display: block !important;
+}
+

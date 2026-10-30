@@ -4,6 +4,10 @@ Các báo cáo cập nhật Candidate/Talent Pool và Application ngày 16–17/
 
 ## Trạng thái mới nhất
 
+28/10 — sửa clean build sau refactor Dashboard: gỡ service cũ bị thêm lại và đồng bộ đối số DTO Admin đã bỏ Blocked. [Nguyên nhân, phạm vi và kiểm chứng](2026-10-28-dashboard-compile-fix.md).
+
+Cập nhật 28/10: quản lý tài khoản chỉ dùng **Active / Inactive**, bỏ lựa chọn và thống kê Blocked; giữ schema và bảo mật chỉ cho phép Active. [Phạm vi, script dữ liệu và kiểm chứng](2026-10-28-account-status-active-inactive.md).
+
 Login / Register / OTP đăng ký được chỉnh theo Botanical Minimalism, Register năm trường gọn hai cột và card Login căn giữa riêng theo phản hồi. Theo yêu cầu tiếp theo, **Quên mật khẩu / OTP khôi phục / Đặt mật khẩu mới** cũng dùng chung giao diện botanical và căn khung; giữ hợp đồng form/backend: [Báo cáo thay đổi, responsive và giới hạn kiểm chứng](2026-10-17-auth-botanical-redesign.md).
 
 HM cũng dùng một nút **Ứng viên tiềm năng** ở chi tiết tin; bên trong danh sách có **Thêm ứng viên tiềm năng** mở selection cũ. HR giữ nhãn và hành động riêng. Xem phần bổ sung trong [báo cáo Flow C](2026-10-17-hr-hm-recommendations-flow-c.md).
@@ -12,7 +16,7 @@ HR dùng một lối vào **Gợi ý đã gửi cho HM** từ chi tiết tin. Tr
 
 Bookmark trong phỏng vấn đã gộp thành **một nút mở popup ghi chú dùng chung với Application**, theo yêu cầu cuối: [Báo cáo tái sử dụng và kiểm thử](2026-10-17-interview-bookmark-toggle.md). Popup có lịch sử, thêm ghi chú và bỏ lưu; gỡ CSS/JS riêng để tránh duy trì hai bản.
 
-Nhánh Candidate nộp CV mới cho đề xuất đã được HM duyệt chuyển thẳng `HM_Passed` để HR xếp lịch: [Quyết định nghiệp vụ, phạm vi và kiểm chứng](2026-10-17-new-cv-approved-proposal-interview.md). HR liên hệ bên ngoài; dùng CV cũ vẫn xác nhận theo luồng hiện có. Gợi ý còn chờ HM và tự ứng tuyển thông thường vẫn qua sàng lọc.
+Cập nhật 28/10: Candidate tự nộp CV vào tin có đề xuất tiềm năng cũng bắt đầu ở `Applied`, phát sự kiện sàng lọc và được HR/HM xét duyệt thông thường. Bỏ tự động `HM_Passed` cho nhánh này; HR xác nhận dùng CV cũ giữ nguyên: [Phạm vi thay đổi và kiểm chứng](2026-10-28-new-cv-normal-screening.md).
 
 Đã tích hợp bookmark tiềm năng và ghi chú chung vào màn hình kết quả phỏng vấn HR/HM: [Báo cáo phạm vi, phân quyền và kiểm thử](2026-10-17-interview-potential-bookmark.md). Component độc lập với Pass/Fail; module Interview chỉ thêm 6 dòng template, dùng lại API Talent Pool, không sửa backend hoặc schema.
 
@@ -27,7 +31,8 @@ Không bổ sung bảng/cột/enum hoặc sửa file schema. Tuy nhiên đã có
 | Tài liệu | Nội dung |
 | --- | --- |
 | [Popup bookmark trong phỏng vấn 17/10](2026-10-17-interview-bookmark-toggle.md) | Một nút mở popup Application cũ, giữ ghi chú/trạng thái tuyển dụng; 108 Java + 39 JavaScript test qua. |
-| [CV mới cho đề xuất đã duyệt 17/10](2026-10-17-new-cv-approved-proposal-interview.md) | Candidate nộp CV mới đúng tin → cùng đề xuất chuyển `HM_Passed`; HR xếp lịch, không chấm AI lại. |
+| [CV mới trở lại xét duyệt 28/10](2026-10-28-new-cv-normal-screening.md) | Candidate tự nộp CV luôn bắt đầu `Applied`; giữ luồng HR xác nhận CV cũ và module Interview. |
+| [CV mới cho đề xuất đã duyệt 17/10 — lịch sử](2026-10-17-new-cv-approved-proposal-interview.md) | Quyết định đi thẳng `HM_Passed` đã được thay thế ngày 28/10. |
 | [Bookmark trong kết quả phỏng vấn 17/10](2026-10-17-interview-potential-bookmark.md) | HR/HM lưu tiềm năng, xem/thêm ghi chú chung qua API hiện có; giới hạn tác động module Interview và kiểm chứng. |
 | [Flow C HR → HM 17/10](2026-10-17-hr-hm-recommendations-flow-c.md) | Tái sử dụng Application/Review, HR gửi, HM phản hồi trên list/detail, CV lịch sử và kiểm chứng. |
 | [Tổng kết cập nhật 16/10](UPDATE_SUMMARY_2026-10-16.md) | Bookmark chung, ghi chú HR/HM, bỏ lưu, preview CV, trang Application và phần admin do người dùng sửa; kế hoạch chia commit ban đầu. |

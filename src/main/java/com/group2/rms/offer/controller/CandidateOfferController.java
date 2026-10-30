@@ -63,7 +63,7 @@ public class CandidateOfferController {
                          RedirectAttributes redirect) {
         try {
             String postingTitle = candidateOffers.accept(id);
-            redirect.addFlashAttribute("successMessage", "Bạn đã nhận offer vị trí " + postingTitle + ".");
+            redirect.addFlashAttribute("successMessage", "Bạn đã đồng ý nhận việc vị trí " + postingTitle + ".");
             redirect.addFlashAttribute("decisionType", "ACCEPTED");
             redirect.addFlashAttribute("congratsTitle", postingTitle);
         } catch (OfferResponseException e) {
@@ -82,7 +82,7 @@ public class CandidateOfferController {
             String postingTitle = (declineReason != null && !declineReason.isBlank())
                     ? candidateOffers.decline(id, declineReason.trim())
                     : candidateOffers.decline(id);
-            redirect.addFlashAttribute("successMessage", "Bạn đã từ chối offer vị trí " + postingTitle + ".");
+            redirect.addFlashAttribute("successMessage", "Bạn đã từ chối thư mời nhận việc vị trí " + postingTitle + ".");
             redirect.addFlashAttribute("decisionType", "DECLINED");
             if (declineReason != null && !declineReason.isBlank()) {
                 redirect.addFlashAttribute("declineReasonDisplay", declineReason.trim());

@@ -398,7 +398,7 @@ class NotificationServiceImplTest {
         assertEquals("OFFER_PENDING_DIRECTOR", saved.getEventType());
         assertEquals("/offers/1", saved.getLinkUrl());
         assertEquals("1", saved.getReferenceId());
-        assertTrue(saved.getTitle().contains("Yêu cầu phê duyệt Đề xuất Offer"));
+        assertTrue(saved.getTitle().contains("Yêu cầu phê duyệt Đề xuất nhận việc"));
         assertTrue(saved.getContent().contains("Huỳnh Hoàng Trung"));
         assertTrue(saved.getEventId().startsWith("OFFER_PENDING_DIR_1_20_"));
     }
@@ -436,7 +436,7 @@ class NotificationServiceImplTest {
         assertEquals(directorUser, saved.getActor());
         assertEquals("OFFER_DIRECTOR_APPROVED", saved.getEventType());
         assertEquals("/offers/1", saved.getLinkUrl());
-        assertTrue(saved.getTitle().contains("Đề xuất Offer đã được Giám đốc phê duyệt"));
+        assertTrue(saved.getTitle().contains("Đề xuất nhận việc đã được Giám đốc phê duyệt"));
         assertTrue(saved.getContent().contains("Đồng ý mức đãi ngộ"));
         assertTrue(saved.getEventId().startsWith("OFFER_DEC_APPV_1_"));
     }
@@ -474,9 +474,39 @@ class NotificationServiceImplTest {
         assertEquals(directorUser, saved.getActor());
         assertEquals("OFFER_DIRECTOR_REJECTED", saved.getEventType());
         assertEquals("/offers/1", saved.getLinkUrl());
-        assertTrue(saved.getTitle().contains("Đề xuất Offer bị Giám đốc từ chối"));
+        assertTrue(saved.getTitle().contains("Đề xuất nhận việc bị Giám đốc từ chối"));
         assertTrue(saved.getContent().contains("Lương vượt ngân sách"));
         assertTrue(saved.getEventId().startsWith("OFFER_DEC_REJ_1_"));
+    }
+
+    @Test
+    @DisplayName("notifyDirectorDecisionOnOffer: Phát thông báo phê duyệt tới cả người tạo và tất cả chuyên viên HR active")
+    void notifyDirectorDecisionOnOffer_broadcastToAllActiveHrs() {
+        User hrCreator = User.builder().userId(15).username("hr.creator").fullName("HR Creator").build();
+        User hrColleague = User.builder().userId(16).username("hr.colleague").fullName("HR Colleague").build();
+        User candidateUser = User.builder().userId(22).username("candidate").fullName("Candidate Name").build();
+        Candidate candidate = Candidate.builder().candidateId(5).account(candidateUser).build();
+        Application app = Application.builder().applicationId(10).candidate(candidate).build();
+        com.group2.rms.offer.entity.OfferProposal offer = com.group2.rms.offer.entity.OfferProposal.builder()
+                .offerId(99)
+                .offeredPositionTitle("Frontend ReactJS Developer")
+                .proposedBy(hrCreator)
+                .application(app)
+                .build();
+
+        User directorUser = User.builder().userId(20).username("dir").fullName("Nguyen Van Director").build();
+        when(userRepository.findAllActiveHrs()).thenReturn(List.of(hrCreator, hrColleague));
+        when(notificationRepository.existsByRecipient_UserIdAndEventId(any(), any())).thenReturn(false);
+
+        notificationService.notifyDirectorDecisionOnOffer(offer, directorUser, true, "Đã duyệt");
+
+        ArgumentCaptor<Notification> captor = ArgumentCaptor.forClass(Notification.class);
+        verify(notificationRepository, times(2)).save(captor.capture());
+
+        List<Notification> savedList = captor.getAllValues();
+        assertEquals(2, savedList.size());
+        assertTrue(savedList.stream().anyMatch(n -> n.getRecipient().getUserId().equals(15)));
+        assertTrue(savedList.stream().anyMatch(n -> n.getRecipient().getUserId().equals(16)));
     }
 
     // =========================================================================

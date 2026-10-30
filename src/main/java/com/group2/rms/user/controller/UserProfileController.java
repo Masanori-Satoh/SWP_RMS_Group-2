@@ -44,6 +44,7 @@ public class UserProfileController {
         }
         UserProfileResponse profile = profileService.getProfile(authentication.getName());
         model.addAttribute("userProfile", profile);
+        model.addAttribute("activeMenu", "profile");
         model.addAttribute("vietnameseUi", true);
         if (!model.containsAttribute("updateRequest")) {
             model.addAttribute("updateRequest",

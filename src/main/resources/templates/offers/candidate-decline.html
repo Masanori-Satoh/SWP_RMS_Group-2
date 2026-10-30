@@ -61,7 +61,7 @@
                         <span class="cof-meta-val" th:text="${offer.departmentName}">Phòng Kỹ thuật</span>
                     </div>
                     <div class="cof-meta-item">
-                        <span class="cof-meta-label">Mức lương chính thức (Gross)</span>
+                        <span class="cof-meta-label">Mức lương chính thức (Trước thuế)</span>
                         <span class="cof-meta-val" th:text="${offer.proposedSalary == null ? 'Thỏa thuận' : #numbers.formatDecimal(offer.proposedSalary, 1, 'POINT', 0, 'COMMA') + ' ₫'}">25.000.000 ₫</span>
                     </div>
                     <div class="cof-meta-item">
@@ -77,8 +77,8 @@
                         <span class="cof-meta-val" th:text="${#strings.isEmpty(offer.workLocation) ? 'Trụ sở chính Mộc RMS' : offer.workLocation}">Hà Nội</span>
                     </div>
                     <div class="cof-meta-item">
-                        <span class="cof-meta-label">Người phụ trách tuyển dụng</span>
-                        <span class="cof-meta-val" th:text="|${offer.hrContactName} (${offer.hrContactEmail})|">HR Contact</span>
+                        <span class="cof-meta-label">Bộ phận Tuyển dụng</span>
+                        <span class="cof-meta-val" th:text="|${offer.hrContactName} (${offer.hrContactEmail})|">Chuyên viên tuyển dụng</span>
                     </div>
                 </div>
             </section>

@@ -22,8 +22,8 @@ import jakarta.servlet.http.HttpSession;
 public class PasswordRecoveryService {
     private static final String RESET_STATE = PasswordRecoveryService.class.getName() + ".RESET_STATE";
 
-    private static final Duration OTP_LIFETIME = Duration.ofMinutes(15);
-    private static final Duration RESEND_DELAY = Duration.ofMinutes(20);
+    private static final Duration OTP_LIFETIME = Duration.ofMinutes(1);
+    private static final Duration RESEND_DELAY = Duration.ofMinutes(1);
     private static final int MAX_FAILED_ATTEMPTS = 5;
 
     private final PasswordResetService resetService;
