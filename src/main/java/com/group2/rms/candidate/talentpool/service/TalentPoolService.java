@@ -22,6 +22,7 @@ import com.group2.rms.core.security.CurrentUserService;
 import com.group2.rms.jobposting.entity.JobPosting;
 import com.group2.rms.jobposting.repository.JobPostingRepository;
 import com.group2.rms.requisition.service.RequisitionAccess;
+import com.group2.rms.requisition.service.RequisitionLabels;
 import com.group2.rms.user.entity.User;
 import com.group2.rms.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -117,8 +118,7 @@ public class TalentPoolService {
             throw new ResourceNotFoundException("Ứng viên chưa nằm trong kho tiềm năng.");
         return new TalentPoolDetailResponse(candidateResponse(candidate), true,
                 notesFor(id), poolApplications.findPreviousCvByCandidateId(id).stream()
-                        .map(a -> new TalentPoolCvResponse(a.getApplicationId(), a.getJobPosting().getPostingTitle(),
-                                a.getSubmissionDate()))
+                        .map(this::cvDetail)
                         .toList());
     }
 
@@ -135,8 +135,7 @@ public class TalentPoolService {
         Candidate c = candidate(candidateId);
         return new TalentPoolDetailResponse(candidateResponse(c), c.isPotential(), notesFor(candidateId),
                 poolApplications.findPreviousCvByCandidateId(candidateId).stream()
-                        .map(a -> new TalentPoolCvResponse(a.getApplicationId(), a.getJobPosting().getPostingTitle(),
-                                a.getSubmissionDate()))
+                        .map(this::cvDetail)
                         .toList());
     }
 
@@ -644,6 +643,17 @@ public class TalentPoolService {
         // get job by ID
         return (lock ? jobs.findForUpdate(id) : jobs.findById(id))
                 .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy tin tuyển dụng."));
+    }
+
+    // CV row on the profile page, with the department and employment type of its posting
+    private TalentPoolCvResponse cvDetail(Application a) {
+        var requisition = a.getJobPosting().getRequisition();
+        String department = requisition == null || requisition.getDepartment() == null ? null
+                : requisition.getDepartment().getDepartmentName();
+        String employmentType = requisition == null || requisition.getEmploymentType() == null ? null
+                : RequisitionLabels.employmentType(requisition.getEmploymentType());
+        return new TalentPoolCvResponse(a.getApplicationId(), a.getJobPosting().getPostingTitle(),
+                a.getSubmissionDate(), department, employmentType);
     }
 
     private TalentPoolCandidateResponse candidateResponse(Candidate c) {
