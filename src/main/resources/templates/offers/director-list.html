@@ -20,46 +20,50 @@
         <h1 class="adw-title ofw-title">Quản lý Đề xuất</h1>
     </div>
 
-                <!-- 3 Stat Cards (Compact Horizontal Mockup) -->
-                <div class="director-stats-grid">
-                    <div class="director-stat-card">
-                        <div class="director-stat-left">
-                            <div class="offer-stat-icon stat-icon-amber">
-                                <i class="fa-solid fa-hourglass-half"></i>
-                            </div>
-                            <span class="stat-label">Chờ duyệt</span>
-                        </div>
-                        <div class="stat-value" th:text="${statPending}">0</div>
-                    </div>
-                    <div class="director-stat-card">
-                        <div class="director-stat-left">
-                            <div class="offer-stat-icon stat-icon-green">
-                                <i class="fa-solid fa-user-check"></i>
-                            </div>
-                            <span class="stat-label">Đã duyệt</span>
-                        </div>
-                        <div class="stat-value" th:text="${statApproved}">0</div>
-                    </div>
-                    <div class="director-stat-card">
-                        <div class="director-stat-left">
-                            <div class="offer-stat-icon stat-icon-danger">
-                                <i class="fa-solid fa-ban"></i>
-                            </div>
-                            <span class="stat-label">Đã từ chối</span>
-                        </div>
-                        <div class="stat-value" th:text="${statRejected}">0</div>
-                    </div>
+    <!-- 3 Stat Cards chuẩn Admin Workspace -->
+    <div class="director-stats-grid ofw-director-stats-grid">
+        <div class="director-stat-card adw-surface ofw-stat-card">
+            <div class="ofw-stat-label">Chờ duyệt</div>
+            <div class="ofw-stat-bottom">
+                <div class="ofw-stat-icon stat-icon-amber">
+                    <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M5 22h14M5 2h14M17 22v-4.172a2 2 0 0 0-.586-1.414L12 12l-4.414 4.414A2 2 0 0 0 7 17.828V22M7 2v4.172a2 2 0 0 0 .586 1.414L12 12l4.414-4.414A2 2 0 0 0 17 6.172V2"/></svg>
                 </div>
+                <div class="ofw-stat-value" id="statPending" th:text="${statPending}">0</div>
+            </div>
+        </div>
 
-                <!-- 2 Tabs -->
-                <div class="director-tabs">
-                    <a th:href="@{/offers(status='Pending_Director')}" th:classappend="${currentTab == 'PENDING'} ? 'active' : ''" class="director-tab">
-                        Chờ duyệt (<span th:text="${statusCounts != null ? (statusCounts['Pending_Director'] ?: 0) : statPending}">0</span>)
-                    </a>
-                    <a th:href="@{/offers(status='HISTORY')}" th:classappend="${currentTab == 'HISTORY'} ? 'active' : ''" class="director-tab">
-                        Lịch sử quyết định
-                    </a>
+        <div class="director-stat-card adw-surface ofw-stat-card">
+            <div class="ofw-stat-label">Đã duyệt</div>
+            <div class="ofw-stat-bottom">
+                <div class="ofw-stat-icon stat-icon-green">
+                    <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><polyline points="17 11 19 13 23 9"/></svg>
                 </div>
+                <div class="ofw-stat-value" id="statApproved" th:text="${statApproved}">0</div>
+            </div>
+        </div>
+
+        <div class="director-stat-card adw-surface ofw-stat-card">
+            <div class="ofw-stat-label">Đã từ chối</div>
+            <div class="ofw-stat-bottom">
+                <div class="ofw-stat-icon stat-icon-danger">
+                    <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/></svg>
+                </div>
+                <div class="ofw-stat-value" id="statRejected" th:text="${statRejected}">0</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 2 Tabs Điều Hướng -->
+    <div class="director-tabs ofw-director-tabs">
+        <a th:href="@{/offers(status='Pending_Director')}" th:classappend="${currentTab == 'PENDING'} ? 'active' : ''" class="director-tab ofw-director-tab">
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M5 22h14M5 2h14M17 22v-4.172a2 2 0 0 0-.586-1.414L12 12l-4.414 4.414A2 2 0 0 0 7 17.828V22M7 2v4.172a2 2 0 0 0 .586 1.414L12 12l4.414-4.414A2 2 0 0 0 17 6.172V2"/></svg>
+            <span>Chờ duyệt (<span th:text="${statusCounts != null ? (statusCounts['Pending_Director'] ?: 0) : statPending}">0</span>)</span>
+        </a>
+        <a th:href="@{/offers(status='HISTORY')}" th:classappend="${currentTab == 'HISTORY'} ? 'active' : ''" class="director-tab ofw-director-tab">
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 14 14"/></svg>
+            <span>Lịch sử quyết định</span>
+        </a>
+    </div>
 
                 <!-- Filter Toolbar -->
                 <div class="offers-toolbar">
