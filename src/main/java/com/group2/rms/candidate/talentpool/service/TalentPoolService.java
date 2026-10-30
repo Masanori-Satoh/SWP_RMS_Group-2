@@ -480,7 +480,9 @@ public class TalentPoolService {
                 a.getJobPosting().getJobPostingId(), a.getJobPosting().getPostingTitle(),
                 a.getCandidate().getAccount().getFullName(),
                 origin.getReviewer().getFullName(), origin.getReviewedAt(), label, pending,
-                pending && open && CurrentUserService.hasRole(user, "Hiring Manager"));
+                pending && open && CurrentUserService.hasRole(user, "Hiring Manager"),
+                a.getCandidate().getAccount().getEmail(), a.getCandidate().getAccount().getPhoneNumber(),
+                pending ? "pending" : decision.map(r -> "Fail".equals(r.getDecision()) ? "rejected" : "accepted").orElse("closed"));
     }
 
     public TalentPoolRecommendationResponse recommendationForDecision(Integer id) {

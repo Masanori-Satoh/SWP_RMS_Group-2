@@ -102,6 +102,36 @@ a.tpw-contact-line:focus-visible { outline: 3px solid var(--focus); outline-offs
 .tpw-suggestion-action { text-align: right; }
 .tpw-suggestion-action .btn { gap: var(--s2); white-space: nowrap; }
 .tpw-results > #tp-feedback:not(:empty), .tpw-results > noscript { display: block; padding-inline: var(--s6); }
+/* HR recommendations: seven-column roster and a quiet empty state. */
+.rms-app .adw-frame .tpw-hr-recommendations .tpw-hr-page-title { font-family: var(--sans); font-weight: 700; }
+.tpw-hr-panel-heading { border-bottom: 1px solid var(--line); }
+.tpw-hr-summary { display: flex; flex-wrap: wrap; align-items: center; gap: var(--s3); }
+.tpw-hr-empty { margin-top: var(--s4); border-style: solid; }
+.tpw-page .tpw-hr-table { min-width: 1254px; }
+.tpw-hr-col-index { width: 44px; }
+.tpw-hr-col-person { width: 200px; }
+.tpw-hr-col-contact { width: 240px; }
+.tpw-hr-col-author { width: 170px; }
+.tpw-hr-col-status { width: 220px; }
+.tpw-hr-col-date { width: 120px; }
+.tpw-hr-col-actions { width: 260px; }
+.tpw-page .tpw-hr-table--hm { min-width: 1374px; }
+.tpw-hr-table--hm .tpw-hr-col-actions { width: 380px; }
+.tpw-hr-table .tpw-person { align-items: center; }
+.tpw-hr-table .tpw-row-name { font-size: 14px; }
+.tpw-hr-table .tpw-contact-line { font-size: 13px; }
+.tpw-hr-table .tpw-row-tools { flex-wrap: nowrap; gap: var(--s2); }
+.tpw-hr-author { display: block; color: var(--ink); font-size: 14px; font-weight: 500; }
+.tpw-hr-meta { display: block; margin-top: var(--s1); color: var(--muted); font-size: 12px; line-height: 1.5; font-variant-numeric: tabular-nums; }
+.tpw-hr-sent-date { display: block; color: var(--ink); font-size: 13px; white-space: nowrap; font-variant-numeric: tabular-nums; }
+.tpw-hr-status-hint { margin: var(--s1) 0 0; color: var(--muted); font-size: 12px; line-height: 1.5; }
+.tpw-hr-missing { color: var(--muted); font-size: 13px; }
+.tpw-hr-index { color: var(--muted); font-size: 13px; font-variant-numeric: tabular-nums; }
+.tpw-hr-action { gap: var(--s2); padding-inline: var(--s3); font-size: 13px; white-space: nowrap; }
+.tpw-hr-table .tpw-profile-link { min-width: 0; }
+.tpw-hr-action > svg { flex: none; }
+.tpw-hr-withdraw { color: var(--error); }
+.tpw-hr-withdraw:disabled { color: var(--muted); }
 /* Talent Pool list: search and filter disclosure live in the result header. */
 .rms-app .adw-frame .tp-page .tpw-list-title { font-family: var(--sans); font-weight: 700; }
 .tpw-list-header { justify-content: flex-start; gap: var(--s4); border-bottom: 1px solid var(--line); }

@@ -169,3 +169,13 @@ Phần này thay thế quyết định không có menu ở mục 9 và vị trí
 - Chrome desktop/mobile: header chứa search form, GET gửi đúng keyword/markedBy/sourceJobId; Escape đóng mà không mất draft; filter badge 2; kết quả lần lượt 49/27/0 theo fixture; selection mode giữ jobPostingId=12 và checkbox hoạt động. Mobile document scrollWidth=viewport=390px, popover rộng 324px, bảng cuộn trong wrapper. Không có JS exception. Đã xem ảnh desktop thường/lọc và mobile mở bộ lọc.
 - 49/27 và các ứng viên trong ảnh chỉ là fixture kiểm thử, không seed vào database hoặc hardcode vào sản phẩm. Không chạy lại SQL Server thật; đối chiếu countQuery từ source và kiểm tra hợp đồng model/MVC.
 - Template/CSS target/classes trùng source; git diff --check qua. Ảnh: `C:/Users/Administrator/.codex/visualizations/2026/10/30/01a18c5b-8f9a-7663-87be-b1559676ec27/list-desktop.png`, `list-filtered-desktop.png`, `list-filter-mobile.png`; kết quả chi tiết `list-qa.json`.
+
+## 14. Hướng xử lý conflict bản dán feature/update-ui-authen ↔ main — 30/10
+
+- Người dùng gửi conflict của TalentPoolCvResponse và ba file đính kèm: TalentPoolService, talent-pool-workspace.css, detail.html.
+- Checkout hiện tại không có file unmerged hoặc marker trong bốn file đích; không bắt đầu merge/stage/commit để giải quyết một conflict không hiện diện local.
+- Đối chiếu từng hunk: DTO giữ applicationStatus, statusLabel/statusTone, constructor tương thích 3/5 tham số và submittedAgo. Service giữ ba hunk feature (hai mapping chi tiết và cvDetail có trạng thái). HTML giữ ba hunk feature (main-stack/thông tin/CV, role/menu ghi chú, form có cvPage/counter). CSS giữ năm hunk feature về layout/ghi chú/responsive.
+- Resolve bản dán Service và HTML theo feature cho kết quả trùng file local. CSS local mới hơn bản resolve vì còn thay đổi list header/search/filter/count và suggestions; xuất CSS local để không mất các thay đổi này. Không chọn Accept Both gây trùng cấu trúc/constructor/selector.
+- Đã xuất bốn file sạch, README và SHA-256 theo đường dẫn repository trong `C:/Users/Administrator/.codex/visualizations/2026/10/30/01a18c5b-8f9a-7663-87be-b1559676ec27/talent-pool-conflict-resolved.zip`. Không ghi đè source bằng bản đính kèm hoặc bỏ thay đổi người dùng đang làm.
+- Hướng dẫn áp dụng yêu cầu giữ các phụ thuộc feature: DTO chi tiết/note, controller cvHistory/sửa-xóa, ownership service, repository author.role và talent-pool-detail.js. Current/Incoming phụ thuộc thao tác merge/rebase, phải nhìn nhãn nhánh của hunk.
+- Kiểm tra lại: 152 test Java qua (đọc Talent Pool, recommendations và MVC/pipeline), 0 failure/error; bốn file xuất trùng SHA-256 với checkout kiểm tra. Chưa thực hiện merge hoặc commit ở checkout/remote khác.

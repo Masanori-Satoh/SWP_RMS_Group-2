@@ -198,13 +198,10 @@ public class TalentPoolController {
     public String recommendations(@PathVariable Integer id, @RequestParam(defaultValue = "") String keyword,
             @RequestParam(defaultValue = "0") int page, Model model) {
         var all = pool.recommendations(id);
-        String query = keyword.strip().toLowerCase(java.util.Locale.ROOT);
-        if (query.length() > 100) query = query.substring(0, 100);
-        final String search = query;
-        var filtered = all.stream().filter(r -> r.fullName().toLowerCase(java.util.Locale.ROOT).contains(search)).toList();
+        var filtered = all;
         int current = Math.min(Math.max(0, page), Math.max(0, (filtered.size() - 1) / 20));
         model.addAttribute("page", new PageImpl<>(filtered.subList(current * 20, Math.min(filtered.size(), (current + 1) * 20)), PageRequest.of(current, 20), filtered.size()));
-        model.addAttribute("keyword", keyword.length() > 100 ? keyword.substring(0, 100) : keyword);
+        model.addAttribute("keyword", "");
         model.addAttribute("pendingCount", all.stream().filter(TalentPoolRecommendationResponse::pending).count());
         model.addAttribute("canRecommend", pool.canRecommend(id));
         model.addAttribute("jobPostingId", id);
