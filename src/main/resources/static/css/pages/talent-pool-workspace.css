@@ -14,7 +14,7 @@
 .tpw-result-count { flex-shrink: 0; color: var(--muted); font-size: 14px; font-variant-numeric: tabular-nums; }
 .tpw-result-count strong { color: var(--brand-dark); }
 .tpw-page .tpw-pool-table { min-width: 880px; }
-/* Filter card sits above the table card (accounts-list pattern): two labelled selects on the left, search on the right. */
+/* Legacy toolbar aliases are retained; the list composes a compact disclosure in its result header below. */
 .tpw-page .tpw-toolbar { margin: 0 0 var(--s4); padding: var(--s3) var(--s4); gap: var(--s3) var(--s4); }
 .tpw-toolbar-controls { gap: var(--s2) var(--s3); flex: 1 1 520px; }
 .tpw-filter-select { display: inline-flex; align-items: center; gap: var(--s2); min-width: 0; max-width: 100%; min-height: 44px; padding-left: var(--s3); border: 1px solid var(--line); border-radius: var(--radius-full); background: var(--surface); color: var(--muted); }
@@ -53,7 +53,7 @@ a.tpw-contact-line:focus-visible { outline: 3px solid var(--focus); outline-offs
 .tpw-page .tpw-toolbar-input { height: 44px; min-height: 44px; font-size: 14px; }
 .tpw-page .tpw-table-scroll { border: 0; border-radius: 0; margin: var(--s3) var(--s6); max-width: calc(100% - var(--s12)); }
 .tpw-page .tpw-record-table { width: 100%; table-layout: fixed; font-size: 14px; line-height: 1.5; }
-.tpw-page .tpw-suggestions-table { min-width: 1120px; }
+.tpw-page .tpw-suggestions-table { min-width: 820px; }
 .tpw-page .tpw-recommendations-table { min-width: 1080px; }
 .tpw-page .tpw-table-scroll .tpw-record-table thead th { background: color-mix(in srgb, var(--brand-soft) 60%, var(--surface)); color: var(--brand-dark); font-weight: 650; padding-block: var(--s3); border-bottom: 1px solid var(--control-line); }
 .tpw-record-table td { vertical-align: middle; padding-block: var(--s4); overflow-wrap: anywhere; }
@@ -63,9 +63,8 @@ a.tpw-contact-line:focus-visible { outline: 3px solid var(--focus); outline-offs
 .tpw-col-index { width: 52px; }
 .tpw-col-contact { width: 29%; }
 .tpw-col-pool-actions { width: 176px; }
-.tpw-col-author { width: 190px; }
-.tpw-col-date { width: 180px; }
-.tpw-col-suggestion-actions { width: 140px; }
+.tpw-col-date { width: 160px; }
+.tpw-col-suggestion-actions { width: 190px; }
 .tpw-col-recommender { width: 250px; }
 .tpw-col-status { width: 220px; }
 .tpw-col-recommendation-actions { width: 320px; }
@@ -89,8 +88,44 @@ a.tpw-contact-line:focus-visible { outline: 3px solid var(--focus); outline-offs
 .tpw-pagination .pagination-wrapper { margin: 0; padding: var(--s2) 0; }
 .tpw-pagination { padding: var(--s3) var(--s6); border-top: 1px solid var(--line); }
 .tpw-empty { padding: var(--s6); margin: 0; }
-.tpw-intro { margin: 0; padding: var(--s4) var(--s6); font-size: 14px; line-height: 1.6; }
+/* Suggestions list (HM -> HR): process note, empty state and a compact five-column table. */
+.tpw-count-chip { flex-shrink: 0; padding: 4px var(--s3); border-radius: var(--radius-sm); background: var(--neutral-soft); color: var(--muted); font-size: 13px; font-variant-numeric: tabular-nums; }
+.tpw-process-note { display: flex; align-items: flex-start; gap: var(--s3); margin: var(--s4) var(--s6); padding: var(--s3) var(--s4); border: 1px solid var(--line); border-radius: var(--radius-md); background: color-mix(in srgb, var(--brand-soft) 55%, var(--surface)); }
+.tpw-process-note > svg { flex-shrink: 0; margin-top: 2px; color: var(--brand-dark); }
+.tpw-process-note strong { color: var(--brand-dark); font-size: 14px; }
+.tpw-process-note p { max-width: 96ch; margin: 2px 0 0; color: var(--ink); font-size: 14px; line-height: 1.6; }
+.tpw-suggestion-empty { display: grid; justify-items: center; gap: var(--s2); margin: var(--s2) var(--s6) var(--s6); padding: var(--s12) var(--s6); border: 1px dashed var(--line); border-radius: var(--radius-lg); background: var(--surface-subtle); text-align: center; }
+.tpw-suggestion-empty .tpw-empty-hint { max-width: 52ch; }
+.tpw-empty-icon--lg { flex-basis: 72px; width: 72px; height: 72px; margin-bottom: var(--s2); }
+.tpw-suggested-date { display: block; color: var(--ink); font-variant-numeric: tabular-nums; }
+.tpw-suggested-time { display: block; color: var(--muted); font-size: 13px; font-variant-numeric: tabular-nums; }
+.tpw-suggestion-action { text-align: right; }
+.tpw-suggestion-action .btn { gap: var(--s2); white-space: nowrap; }
 .tpw-results > #tp-feedback:not(:empty), .tpw-results > noscript { display: block; padding-inline: var(--s6); }
+/* Talent Pool list: search and filter disclosure live in the result header. */
+.rms-app .adw-frame .tp-page .tpw-list-title { font-family: var(--sans); font-weight: 700; }
+.tpw-list-header { justify-content: flex-start; gap: var(--s4); border-bottom: 1px solid var(--line); }
+.rms-app .adw-frame .tpw-list-header .tpw-panel-title { font: 650 18px/1.4 var(--sans); }
+.tpw-page .tpw-list-search { flex: 0 1 340px; flex-wrap: nowrap; gap: var(--s3); margin: 0 0 0 auto; padding: 0; }
+.tpw-page .tpw-list-search .tpw-toolbar-search { flex: 1 1 240px; min-width: 160px; min-height: 40px; margin: 0; }
+.tpw-list-search .mft-search-submit { width: 40px; height: 38px; flex-basis: 40px; }
+.tpw-list-search .mft-search-input { height: 38px; min-height: 38px; }
+.tpw-list-filters { position: static; }
+.tpw-filter-toggle { position: relative; justify-content: center; width: 40px; height: 40px; min-height: 40px; padding: var(--s2); border-radius: var(--radius-md); color: var(--brand-dark); }
+.tpw-filter-count { position: absolute; top: -8px; right: -8px; min-width: 18px; height: 18px; padding-inline: var(--s1); background: var(--brand-dark); color: var(--surface); font-size: 11px; }
+.tpw-list-search .tpw-filter-popover { right: 0; left: auto; width: min(460px, calc(100vw - var(--s8))); }
+.tpw-list-count { margin: 0; padding-left: var(--s4); border-left: 1px solid var(--line); white-space: nowrap; }
+.tpw-page .tpw-pool-table .tpw-person { align-items: center; }
+@media (max-width: 992px) {
+  .tpw-list-header > .tpw-table-identity { flex: 1 1 auto; }
+  .tpw-page .tpw-list-search { flex: 1 1 280px; }
+}
+@media (max-width: 768px) {
+  .tpw-list-header > .tpw-table-identity { flex-basis: calc(100% - 110px); }
+  .tpw-page .tpw-list-search { order: 3; flex: 1 0 100%; }
+  .tpw-list-count { margin-left: auto; padding-left: 0; border-left: 0; }
+  .tpw-list-search .tpw-filter-popover { right: 0; grid-template-columns: minmax(0, 1fr); width: 100%; }
+}
 /* Candidate profile: identity header, CV history table and notes column.
    The page fills the workspace height so its last cards end level with the rail. */
 .rms-app .adw-main:has(> .tp-detail-page) { min-height: 100dvh; }
@@ -264,7 +299,7 @@ a.tpw-contact-line:focus-visible { outline: 3px solid var(--focus); outline-offs
   .tpw-page .tpw-tools, .tpw-panel-heading { padding: var(--s4); }
   .tpw-table-identity { align-items: flex-start; }
   .tpw-page .tpw-table-scroll { margin-inline: var(--s4); max-width: calc(100% - var(--s8)); }
-  .tpw-pagination, .tpw-intro, .tpw-list-guidance { padding-inline: var(--s4); }
+  .tpw-pagination, .tpw-list-guidance { padding-inline: var(--s4); }
   .tpw-heading > .tp-recommendation-actions { width: 100%; }
   .tpw-heading > .tp-recommendation-actions > a { flex: 1 1 220px; }
   .tpw-tools > .tp-recommendation-search { flex-basis: 100%; width: 100%; }

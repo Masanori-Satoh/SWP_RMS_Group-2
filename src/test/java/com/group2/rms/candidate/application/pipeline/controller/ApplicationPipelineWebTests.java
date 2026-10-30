@@ -1187,4 +1187,44 @@ class ApplicationPipelineWebTests {
         mvc.perform(post("/talent-pool/15/notes/1/edit").with(as("hr", "HR")).with(csrf()).param("content", "Hack"))
                 .andExpect(status().isForbidden());
     }
+
+    @Test
+    void talentPoolListCountFollowsFiltersAcrossPages() throws Exception {
+        var cv = new TalentPoolCvResponse(10, "QA Automation Engineer (Playwright / Selenium / API)", SUBMITTED);
+        var otherCv = new TalentPoolCvResponse(11, "Business Analyst (BA)", SUBMITTED.minusDays(2));
+        var candidates = List.of(
+                new TalentPoolCandidateResponse(15, "An Võ", "an@example.com", "0901234567", List.of(cv)),
+                new TalentPoolCandidateResponse(16, "Nguyễn Bình", "binh@example.com", "0902345678", List.of()),
+                new TalentPoolCandidateResponse(17, "Lê Minh", "minh@example.com", "0903456789", List.of(cv, otherCv)),
+                new TalentPoolCandidateResponse(18, "Trần Hà", "ha@example.com", "0904567890", List.of(otherCv)),
+                new TalentPoolCandidateResponse(19, "Phạm Nam", "nam@example.com", "0905678901", List.of(cv)));
+        when(talentPool.search(any(), any())).thenReturn(
+                new PageImpl<>(candidates, org.springframework.data.domain.PageRequest.of(0, 20), 49),
+                new PageImpl<>(candidates, org.springframework.data.domain.PageRequest.of(0, 20), 27), Page.empty());
+        when(talentPool.viewerRole()).thenReturn("HR");
+        when(talentPool.selectionScope()).thenReturn(5);
+        when(talentPool.authors()).thenReturn(Map.of(5, "HR Lan"));
+        when(talentPool.sourceJobs()).thenReturn(Map.of(12, "QA Automation Engineer (Playwright / Selenium / API)"));
+        var all = mvc.perform(get("/talent-pool").with(as("hr", "HR")))
+                .andExpect(status().isOk())
+                .andExpect(content().string(containsString("<strong>49</strong>")))
+                .andExpect(content().string(not(containsString("ứng viên trong kho chung"))))
+                .andExpect(content().string(containsString("tpw-list-search")))
+                .andReturn();
+        var filtered = mvc.perform(get("/talent-pool?keyword=An&markedBy=5&sourceJobId=12").with(as("hr", "HR")))
+                .andExpect(status().isOk())
+                .andExpect(content().string(containsString("<strong>27</strong>")))
+                .andExpect(content().string(containsString("tpw-filter-count")))
+                .andReturn();
+        verify(talentPool).search(argThat(f -> "An".equals(f.keyword()) && Integer.valueOf(5).equals(f.markedBy())
+                && Integer.valueOf(12).equals(f.sourceJobId())), any());
+        var empty = mvc.perform(get("/talent-pool?keyword=NoMatch").with(as("hr", "HR")))
+                .andExpect(status().isOk()).andExpect(content().string(containsString("<strong>0</strong>")))
+                .andExpect(content().string(containsString("Chưa có ứng viên phù hợp"))).andReturn();
+        var dir = java.nio.file.Path.of("docs/members/linhdn/tmp/talent-pool");
+        java.nio.file.Files.createDirectories(dir);
+        java.nio.file.Files.writeString(dir.resolve("list-overview.html"), all.getResponse().getContentAsString(), java.nio.charset.StandardCharsets.UTF_8);
+        java.nio.file.Files.writeString(dir.resolve("list-filtered.html"), filtered.getResponse().getContentAsString(), java.nio.charset.StandardCharsets.UTF_8);
+        java.nio.file.Files.writeString(dir.resolve("list-empty.html"), empty.getResponse().getContentAsString(), java.nio.charset.StandardCharsets.UTF_8);
+    }
 }
