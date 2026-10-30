@@ -6,6 +6,7 @@ Tài liệu này là lịch sử tóm tắt các thay đổi quan trọng và b�
 
 | Ngày | Tên công việc / Yêu cầu chính | Người thực hiện | Chi tiết thay đổi |
 | --- | --- | --- | --- |
+| **2026-10-31** | Đồng bộ giao diện các màn hình Offer của HR (Danh sách & Đề xuất) theo layout Admin, giữ 100% nghiệp vụ | HuyenPT | [File change và kiểm thử](work_logs/2026-10-31-hr-offer-proposal-admin-ui-sync.md) |
 | **2026-10-30** | Cập nhật bảng HR Recommend theo mockup; bỏ tìm kiếm/bộ lọc, chuyển liên kết HM lên đầu trang | LinhDN | [File change, số dòng và kiểm chứng](work_logs/2026-10-30-hr-recommendations-ui.md) |
 | **2026-10-30** | Tổng hợp lịch sử thay đổi LinhDN; thêm thông tin hồ sơ vào chi tiết ứng viên tiềm năng theo mockup | LinhDN | [Lịch sử, file change và kiểm chứng](work_logs/2026-10-30-linhdn-history-and-candidate-info.md) |
 | **2026-10-28** | Làm nổi bật danh sách Potential Candidate theo Quản lý tài khoản Admin; gọn CV và tên tin dài | LinhDN  | [File change và kiểm chứng](work_logs/2026-10-28-potential-candidate-list-polish.md) |

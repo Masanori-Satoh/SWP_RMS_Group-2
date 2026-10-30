@@ -122,6 +122,7 @@ public class OfferController {
 
         Page<OfferResponse> pagedData = offerService.getAllOffersForHr(search, status, timeSort,
                 PageRequest.of(validPage, size));
+        model.addAttribute("activeMenu", "offers");
         List<PassedCandidateResponse> passedCandidates = offerService.getPassedCandidatesForOffer();
 
         Map<String, Long> stats = offerService.getOfferStats();
@@ -148,6 +149,7 @@ public class OfferController {
      */
     @GetMapping("/create")
     public String createOfferForm(@RequestParam(required = false) Integer applicationId, Model model) {
+        model.addAttribute("activeMenu", "offers");
         List<PassedCandidateResponse> passedCandidates = offerService.getPassedCandidatesForOffer();
         model.addAttribute("passedCandidates", passedCandidates);
 
@@ -215,7 +217,8 @@ public class OfferController {
             RedirectAttributes flash) {
 
         if (errors.hasErrors()) {
-            List<PassedCandidateResponse> passedCandidates = offerService.getPassedCandidatesForOffer();
+            model.addAttribute("activeMenu", "offers");
+        List<PassedCandidateResponse> passedCandidates = offerService.getPassedCandidatesForOffer();
             model.addAttribute("passedCandidates", passedCandidates);
             model.addAttribute("isEdit", false);
             boolean locked = Boolean.TRUE.equals(isLockedCandidate);
@@ -238,7 +241,8 @@ public class OfferController {
             return "redirect:/offers";
         } catch (BaseBusinessException e) {
             errors.reject("businessError", e.getMessage());
-            List<PassedCandidateResponse> passedCandidates = offerService.getPassedCandidatesForOffer();
+            model.addAttribute("activeMenu", "offers");
+        List<PassedCandidateResponse> passedCandidates = offerService.getPassedCandidatesForOffer();
             model.addAttribute("passedCandidates", passedCandidates);
             model.addAttribute("isEdit", false);
             boolean locked = Boolean.TRUE.equals(isLockedCandidate);
@@ -269,6 +273,7 @@ public class OfferController {
      */
     @GetMapping("/{id}")
     public String viewOfferDetail(@PathVariable Integer id, Model model) {
+        model.addAttribute("activeMenu", "offers");
         OfferDetailResponse detail = offerService.getOfferDetailForHr(id);
         model.addAttribute("detail", detail);
         return "offers/detail";
@@ -282,6 +287,7 @@ public class OfferController {
         try {
             UpdateOfferRequest updateRequest = offerService.getUpdateOfferRequestById(id);
             OfferDetailResponse detail = offerService.getOfferDetailForHr(id);
+            model.addAttribute("activeMenu", "offers");
             model.addAttribute("offerDto", updateRequest);
             model.addAttribute("offerId", id);
             model.addAttribute("detail", detail);
@@ -334,6 +340,7 @@ public class OfferController {
 
         if (errors.hasErrors()) {
             OfferDetailResponse detail = offerService.getOfferDetailForHr(id);
+            model.addAttribute("activeMenu", "offers");
             model.addAttribute("offerId", id);
             model.addAttribute("detail", detail);
             model.addAttribute("isEdit", true);
@@ -350,6 +357,7 @@ public class OfferController {
         } catch (BaseBusinessException e) {
             errors.reject("businessError", e.getMessage());
             OfferDetailResponse detail = offerService.getOfferDetailForHr(id);
+            model.addAttribute("activeMenu", "offers");
             model.addAttribute("offerId", id);
             model.addAttribute("detail", detail);
             model.addAttribute("isEdit", true);
