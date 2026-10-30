@@ -6,8 +6,9 @@ Tài liệu này là lịch sử tóm tắt các thay đổi quan trọng và b�
 
 | Ngày | Tên công việc / Yêu cầu chính | Người thực hiện | Chi tiết thay đổi |
 | --- | --- | --- | --- |
-| **2026-10-30** | Đồng bộ chi tiết Application với workspace Talent Pool; bố cục hồ sơ/CV và cột thông tin/thao tác theo mockup | LinhDN / Codex | [File change, số dòng và kiểm chứng](work_logs/2026-10-30-application-detail-ui.md) |
-| **2026-10-30** | Cập nhật bảng HR Recommend theo mockup; bỏ tìm kiếm/bộ lọc, chuyển liên kết HM lên đầu trang | LinhDN / Codex | [File change, số dòng và kiểm chứng](work_logs/2026-10-30-hr-recommendations-ui.md) |
+| **2026-10-30** | Rà soát toàn bộ Markdown trong docs, làm sạch tên công cụ và tham chiếu đường dẫn cục bộ | LinhDN | [Phạm vi và kiểm chứng](../members/linhdn/2026-10-30-cleanup-markdown-docs.md) |
+| **2026-10-30** | Đồng bộ chi tiết Application với workspace Talent Pool; bố cục hồ sơ/CV và cột thông tin/thao tác theo mockup | LinhDN | [File change, số dòng và kiểm chứng](work_logs/2026-10-30-application-detail-ui.md) |
+| **2026-10-30** | Cập nhật bảng HR Recommend theo mockup; bỏ tìm kiếm/bộ lọc, chuyển liên kết HM lên đầu trang | LinhDN | [File change, số dòng và kiểm chứng](work_logs/2026-10-30-hr-recommendations-ui.md) |
 | **2026-10-30** | Tổng hợp lịch sử thay đổi LinhDN; thêm thông tin hồ sơ vào chi tiết ứng viên tiềm năng theo mockup | LinhDN | [Lịch sử, file change và kiểm chứng](work_logs/2026-10-30-linhdn-history-and-candidate-info.md) |
 | **2026-10-28** | Làm nổi bật danh sách Potential Candidate theo Quản lý tài khoản Admin; gọn CV và tên tin dài | LinhDN  | [File change và kiểm chứng](work_logs/2026-10-28-potential-candidate-list-polish.md) |
 | **2026-10-28** | Đồng bộ toàn bộ layout workspace Admin cho Potential Candidate, giữ nghiệp vụ HR/HM | LinhDN  | [File change và kiểm thử](work_logs/2026-10-28-potential-candidate-admin-ui-sync.md) |

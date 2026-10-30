@@ -1,6 +1,6 @@
 # 2026-10-30 — Đồng bộ giao diện chi tiết Application
 
-- Người thực hiện: LinhDN / Codex.
+- Người thực hiện: LinhDN.
 - Yêu cầu: dùng 4 skill FE đã cài, áp dụng bố cục ảnh mẫu và giữ cùng giao diện với Talent Pool / HR Recommend.
 - Phạm vi: `/applications/{id}`; không thay đổi trang danh sách Application hay luồng của module khác.
 - Database: không sửa schema, migration, seed hoặc dữ liệu.
@@ -33,7 +33,7 @@
 
 ## Báo cáo có ảnh trong thư mục LinhDN
 
-[Báo cáo thay đổi kèm ảnh desktop/mobile](../../members/linhdn/2026-10-30-application-detail-ui.md). Ảnh được lưu trong repo, không phụ thuộc thư mục tạm của Codex.
+[Báo cáo thay đổi kèm ảnh desktop/mobile](../../members/linhdn/2026-10-30-application-detail-ui.md). Ảnh được lưu trong repo, không phụ thuộc thư mục tạm của máy.
 
 ## File change
 
@@ -67,7 +67,7 @@ Số dòng dưới đây tính so với snapshot ngay trước tác vụ này, k
 - Browser Chrome: kiểm tra viewport 1440px, 768px và 390px từ HTML render thật của MVC; các mốc đề xuất có trạng thái đúng, quyền HR/HM/Director, checkbox required, CSRF và nút submit gắn đúng form.
 - Browser: mở/Hủy kết thúc đề xuất, mở dialog lưu ứng viên, mở/Hủy loại hồ sơ; không gửi mutation nghiệp vụ trong fixture QA.
 - Kiểm tra tên/vị trí/email dài ở mobile, không tràn ngang toàn trang; không có JavaScript exception.
-- Artifact nằm ngoài source tại `C:/Users/Administrator/.codex/visualizations/2026/10/30/01a18c5b-8f9a-7663-87be-b1559676ec27/`: `application-detail-*.png`, `application-detail-qa.json`, log Maven và báo cáo Taste inspector.
+- Artifact nằm ngoài source tại thư mục QA cục bộ `01a18c5b-8f9a-7663-87be-b1559676ec27/`: `application-detail-*.png`, `application-detail-qa.json`, log Maven và báo cáo Taste inspector.
 - Ảnh dùng dữ liệu fixture của MVC và PDF mẫu có sẵn `samples/cv/sample_cv_frontend_react.pdf`; không seed hoặc thay CV người dùng. Chưa kiểm chứng live SQL Server/SMTP/CV của tài khoản thật trong lượt này.
 - Đối chiếu hash file ngoài phạm vi và `git diff --check` trước bàn giao. Không commit/push.
 

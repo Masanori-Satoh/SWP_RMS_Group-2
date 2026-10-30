@@ -1,7 +1,7 @@
 # HR Recommendations — bảng gợi ý và trạng thái rỗng
 
 - **Ngày:** 30/10/2026 (Asia/Saigon).
-- **Người thực hiện:** LinhDN / Codex, theo yêu cầu người dùng.
+- **Người thực hiện:** LinhDN, theo yêu cầu người dùng.
 - **Yêu cầu cuối cùng:** làm bảng HR Recommend theo ảnh tham khảo; không có tìm kiếm/bộ lọc; chuyển liên kết “Xem ứng viên được HM đề xuất” lên đầu trang; thống kê file và số dòng thêm/xóa.
 - **Baseline:** chụp từng file ngay trước tác vụ này. Báo cáo không cộng thay đổi đã có từ những lượt Talent Pool trước hoặc file lịch sử đang sửa sẵn.
 
@@ -55,7 +55,7 @@
 - **Chrome thật trên HTML fixture MVC:** HR có 4 hàng, 7 cột, 0 search/filter; 2 nút xóa hoạt động và 2 nút disabled; tone warning/warning/success/neutral đúng từng trạng thái. Liên hệ đủ email/điện thoại; liên kết danh sách HM trong header.
 - Mở/Hủy dialog Xóa hoạt động; không gửi thao tác xóa trong lượt browser fixture. HM có 2 form quyết định, không có nút xóa HR. Empty state không dựng table/thead trống.
 - Desktop 1440×1000 và mobile viewport 390px: scrollWidth toàn trang 390px, bảng cuộn trong wrapper (1254px/324px), không có JS exception. Đã xem ảnh có dữ liệu và rỗng.
-- Ảnh/kết quả nằm ngoài source: `C:/Users/Administrator/.codex/visualizations/2026/10/30/01a18c5b-8f9a-7663-87be-b1559676ec27/hr-recommendations-desktop.png`, `hr-recommendations-empty.png`, `hr-recommendations-hm.png`, `hr-recommendations-mobile.png`, `hr-recommendations-qa.json`.
+- Ảnh/kết quả nằm ngoài source: `hr-recommendations-desktop.png`, `hr-recommendations-empty.png`, `hr-recommendations-hm.png`, `hr-recommendations-mobile.png`, `hr-recommendations-qa.json`.
 - Dữ liệu trong ảnh là fixture, không seed vào database. Chưa kiểm chứng UI/đọc SQL Server/SMTP/PDF end-to-end với tài khoản thật trong tác vụ này. Không có schema hoặc mutation nghiệp vụ mới.
 
 - `git diff --check` và đối chiếu resource source/target qua. Không cộng file lịch sử đã sửa sẵn vào thống kê của tác vụ này.

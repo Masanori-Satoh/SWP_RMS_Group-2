@@ -53,7 +53,7 @@ Login ngắn hơn tự nhiên, có hai trường nhập, không có bước xác
 - `AuthBotanicalWebTests`: **BUILD SUCCESS, 6 test đạt**. MockMvc chạy Security thật với repository/service mock; có POST đăng nhập Candidate và HR, redirect `/dashboard`, CSRF và hợp đồng form. Không chứng minh E2E với tài khoản/database thật.
 - Đối chiếu 50 phần tử form/input/button/label và các điều kiện Thymeleaf không đổi; `git diff --check` đạt.
 
-Ảnh và JSON: `../.codex-tmp/login-sync-*.png`, `login-register-sync-results.json`; log Maven `login-register-sync-tests.log`. Browser dùng HTML Thymeleaf do MockMvc render qua preview chỉ đọc, bỏ qua loader chat trong QA. Chưa kiểm tra phiên ứng dụng thật hoặc email/database thật.
+Ảnh và JSON: `login-sync-*.png`, `login-register-sync-results.json`; log Maven `login-register-sync-tests.log`. Browser dùng HTML Thymeleaf do MockMvc render qua preview chỉ đọc, bỏ qua loader chat trong QA. Chưa kiểm tra phiên ứng dụng thật hoặc email/database thật.
 
 ## Phạm vi bảo toàn
 
@@ -79,4 +79,4 @@ Các thuộc tính Card, typography, field, nút, khoảng cách, năm lá và n
 - Browser kiểm tra required, hiện/ẩn mật khẩu, Tab/focus, Enter submit (chặn trước khi gửi), CSRF, nhập sáu số OTP đồng bộ vào trường backend và khối phản hồi mô phỏng: đạt. Lần kiểm tra OTP đầu dùng nhầm selector của ô số đầu; sửa bộ kiểm tra sang `#otp-value` và chạy riêng thao tác, không sửa JavaScript ứng dụng.
 - `AuthBotanicalWebTests`: 6/6 đạt với Spring Security/Thymeleaf thật và dịch vụ dữ liệu/email được mock; không chứng minh luồng DB/email thực tế. Kiểm tra tĩnh 50 hợp đồng form/field và `git diff --check`: đạt.
 
-Ảnh kiểm tra và script nằm ở `.codex-tmp/` của workspace cha; đây là preview Thymeleaf cục bộ, không phải bằng chứng môi trường đang triển khai. Không đổi template, JavaScript, bitmap, backend, nghiệp vụ hoặc các file khung dùng chung. Không commit/push.
+Ảnh kiểm tra và script nằm ở thư mục QA cục bộ của workspace cha; đây là preview Thymeleaf cục bộ, không phải bằng chứng môi trường đang triển khai. Không đổi template, JavaScript, bitmap, backend, nghiệp vụ hoặc các file khung dùng chung. Không commit/push.

@@ -1,6 +1,6 @@
-# Mộc RMS — Codex project instructions
+# Mộc RMS — Project instructions
 
-Read [DESIGN.md](DESIGN.md) before UI analysis or changes. It is the shared visual contract for Codex and Claude Code; do not create a separate Codex design system.
+Read [DESIGN.md](DESIGN.md) before UI analysis or changes. It is the shared visual contract for development assistants; do not create a separate design system.
 
 ## Scope and implementation
 
@@ -18,7 +18,7 @@ For design decisions, apply this order: **DESIGN.md → UI UX Pro Max → Impecc
 3. Use the existing `.agents/skills/impeccable/SKILL.md` for the requested critique, refinement or design documentation. Preserve identity and behavior for refinement. Do not run `init`, replace DESIGN.md, enable hooks or migrate the visual system merely because a skill suggests it.
 4. Load `.agents/skills/design-taste-frontend/SKILL.md` only when the user explicitly requests a substantial design improvement or invokes `$design-taste-frontend` for that purpose. Routine fixes, audits, small polish and this configuration setup do not activate Taste. Even then, preserve DESIGN.md and higher-priority guidance; ask before changing an established brand or protected shared files.
 
-Existing additional skills remain installed; they do not supersede this order. No new automatic hook is authorized. The pre-existing `.codex/hooks.json` is preserved by user decision on 2026-10-27.
+Existing additional skills remain installed; they do not supersede this order. No new automatic hook is authorized. The pre-existing hook configuration is preserved by user decision on 2026-10-27.
 
 ## Verification
 

@@ -8,6 +8,8 @@ Theo yêu cầu LinhDN ngày 30/10/2026: mỗi lượt hoàn thành công việc
 
 ## Trạng thái mới nhất
 
+30/10 — rà soát toàn bộ Markdown trong docs, làm sạch tên công cụ theo yêu cầu: [Phạm vi, file thay đổi và kiểm chứng](2026-10-30-cleanup-markdown-docs.md).
+
 30/10 — đồng bộ chi tiết Application với Talent Pool/HR Recommend, có ảnh desktop/mobile: [Báo cáo thay đổi và ảnh giao diện](2026-10-30-application-detail-ui.md).
 
 28/10 — sửa clean build sau refactor Dashboard: gỡ service cũ bị thêm lại và đồng bộ đối số DTO Admin đã bỏ Blocked. [Nguyên nhân, phạm vi và kiểm chứng](2026-10-28-dashboard-compile-fix.md).

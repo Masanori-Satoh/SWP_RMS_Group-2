@@ -1,6 +1,6 @@
 # 30/10/2026 — Đồng bộ giao diện chi tiết Application
 
-**Người thực hiện:** LinhDN / Codex. **Trang:** `/applications/{id}`.
+**Người thực hiện:** LinhDN. **Trang:** `/applications/{id}`.
 
 ## Yêu cầu và kết quả
 

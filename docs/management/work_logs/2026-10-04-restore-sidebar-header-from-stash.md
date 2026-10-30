@@ -16,7 +16,7 @@ Khôi phục menu Interview Schedule, Offer Management, My Profile và dialog lo
 
 1. Đọc Git status, log theo hai file, stash list và bản gốc origin/main.
 2. Đối chiếu stash e8e02f7; xác nhận đúng bản cần phục hồi.
-3. Sao lưu diff của working tree và archive bốn file sẽ khôi phục vào `../.codex-tmp/sidebar-header-recovery-2026-10-04/`.
+3. Sao lưu diff của working tree và archive bốn file sẽ khôi phục vào thư mục QA cục bộ `sidebar-header-recovery-2026-10-04/`.
 4. Lưu SHA256 bốn file đang được người dùng chỉnh sửa để kiểm tra sau thao tác.
 5. Dùng `git restore --source=e8e02f7 --worktree -- <file>` cho riêng hai fragment và hai test UI cùng bản fix. Không áp dụng toàn bộ stash, không pop/drop stash.
 6. Chạy Maven Wrapper cho CandidateDashboardWebTests và AdminDepartmentWebTests.
@@ -55,4 +55,4 @@ File tài liệu tạo mới: báo cáo này và [kịch bản test](../../membe
 - Thay đổi nằm trong working tree, chưa commit/push/rebase.
 - Stash gốc vẫn được giữ. Không áp dụng các thay đổi backend khác nằm trong stash.
 - Header main vốn có nhãn dialog tiếng Việt; giữ nguyên copy và CSS/JS của tác giả. Sidebar được khôi phục bằng tiếng Anh.
-- Log và backup: `../.codex-tmp/sidebar-header-recovery-2026-10-04/`.
+- Log và backup: thư mục QA cục bộ `sidebar-header-recovery-2026-10-04/`.
