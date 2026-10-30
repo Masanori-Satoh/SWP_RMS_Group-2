@@ -20,13 +20,7 @@
 
     <!-- PAGE HEADING -->
     <div class="adw-heading ofw-heading">
-      <div>
-        <h1 class="adw-title ofw-title" th:text="${isEdit ? 'Chỉnh Sửa Đề Xuất Nhận Việc #' + offerId : 'Tạo Mới Đề Xuất Nhận Việc'}">Tạo Mới Đề Xuất Nhận Việc</h1>
-        <p class="ofw-subtitle">
-          <span th:if="${!isEdit}">Chọn ứng viên đã đạt phỏng vấn để thiết lập gói đãi ngộ và điều khoản hợp đồng lao động.</span>
-          <span th:if="${isEdit}">Cập nhật các điều khoản đãi ngộ cho bản thảo đề xuất nhận việc trước khi trình duyệt Giám đốc.</span>
-        </p>
-      </div>
+      <h1 class="adw-title ofw-title" th:text="${isEdit ? 'Chỉnh Sửa Đề Xuất Nhận Việc #' + offerId : 'Tạo Mới Đề Xuất Nhận Việc'}">Tạo Mới Đề Xuất Nhận Việc</h1>
     </div>
 
     <!-- MAIN FORM -->

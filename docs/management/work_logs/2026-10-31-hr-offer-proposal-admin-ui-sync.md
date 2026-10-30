@@ -25,7 +25,7 @@
 
 - **Opt-in Workspace không đổi phân quyền:** Tiếp tục kế thừa `layout/internal`, kích hoạt nền công nghệ mộc và hiệu ứng khung bằng marker `.adw-page`, fragment `fragments/ui/admin-workspace :: scene` và script `admin-workspace.js`. Giữ nguyên vai trò `HR` / `Recruiter`, không ép quyền `System Admin`.
 - **Đồng bộ màn hình Danh sách (`/offers`):**
-  - Tiêu đề trang `.adw-heading` và `.adw-title` (36px desktop / 28px mobile, gạch chân thương hiệu 48×4px).
+  - Tiêu đề trang `.adw-heading` và `.adw-title` (36px desktop / 28px mobile, gạch chân thương hiệu 48×4px), loại bỏ mô tả phụ lặp để giao diện tối giản, tập trung giống trang Tin tuyển dụng.
   - 5 thẻ thống kê tổng quan với icon SVG tương ứng, border `var(--line)`, shadow `var(--shadow-sm)` và bo góc `var(--radius-lg)`.
   - Thanh công cụ lọc và tìm kiếm bọc trong `.ofw-toolbar.adw-surface`.
   - Danh sách đề xuất bọc trong `.adw-surface` với header chuẩn `.ofw-list-header`, icon hộp bo góc `.ofw-list-icon`, tiêu đề `.adw-panel-title` và badge đếm số lượng `.ofw-list-count`.
