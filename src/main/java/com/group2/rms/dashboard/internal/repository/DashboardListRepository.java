@@ -37,23 +37,6 @@ public class DashboardListRepository {
 
     // ===== Hiring Manager =====
 
-    /** Yêu cầu do HM này phụ trách, mới cập nhật lên đầu. */
-    public List<RequisitionRow> recentRequisitions(int userId, int limit) {
-        List<Object[]> rows = entityManager.createQuery("select r.requisitionId, r.requisitionCode, r.title, "
-                        + "r.numberOfPositions, r.approvalStatus, coalesce(r.updatedAt, r.createdAt) "
-                        + "from JobRequisition r where r.hiringManager.userId = :userId "
-                        + "order by coalesce(r.updatedAt, r.createdAt) desc, r.requisitionId desc", Object[].class)
-                .setParameter("userId", userId)
-                .setMaxResults(limit)
-                .getResultList();
-        List<RequisitionRow> result = new ArrayList<>();
-        for (Object[] row : rows) {
-            result.add(new RequisitionRow((Integer) row[0], (String) row[1], (String) row[2],
-                    (Integer) row[3], (String) row[4], (LocalDateTime) row[5]));
-        }
-        return result;
-    }
-
     /**
      * Yêu cầu HM phải tự làm tiếp: bị từ chối (sửa lại) và bản nháp (gửi duyệt).
      * Bị từ chối xếp trước, trong mỗi nhóm mới cập nhật lên đầu.
@@ -313,10 +296,6 @@ public class DashboardListRepository {
             return 0;
         }
         return ((Number) value).longValue();
-    }
-
-    public record RequisitionRow(int requisitionId, String requisitionCode, String title, int numberOfPositions,
-            String approvalStatus, LocalDateTime updatedAt) {
     }
 
     public record AttentionRow(int requisitionId, String requisitionCode, String title, String approvalStatus,

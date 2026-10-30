@@ -5,7 +5,7 @@
 <th:block th:fragment="content(dashboard)">
     <div th:replace="~{dashboard/fragments :: pageHeader('Bảng điều khiển', ${dashboard.scopeLabel})}"></div>
 
-    <th:block th:replace="~{dashboard/fragments :: kpis(${dashboard.kpis})}"></th:block>
+    <div class="dash-role-kpis" th:insert="~{dashboard/fragments :: kpis(${dashboard.kpis})}"></div>
 
     <div class="dash-split">
         <section class="card dash-panel dash-panel--priority adw-surface" aria-labelledby="hm-attention-title">
@@ -60,41 +60,6 @@
                 <p class="dash-progress__note" th:text="${item.pipelineText}">1 đang phỏng vấn</p>
             </li>
         </ul>
-    </section>
-
-    <section class="card dash-panel adw-surface" aria-labelledby="hm-recent-title">
-        <div class="dash-panel__heading">
-            <h2 id="hm-recent-title" class="dash-panel__title">
-                <svg th:replace="~{dashboard/fragments :: icon('eye')}"></svg>Yêu cầu cần theo dõi
-            </h2>
-            <a class="dash-link" th:href="@{/requisitions}">Xem tất cả</a>
-        </div>
-        <p class="dash-empty" th:if="${#lists.isEmpty(dashboard.recentRequisitions)}">Bạn chưa có yêu cầu tuyển dụng nào.</p>
-        <div class="table-wrapper" th:unless="${#lists.isEmpty(dashboard.recentRequisitions)}" tabindex="0"
-             role="region" aria-labelledby="hm-recent-title">
-            <table class="table adw-data-table">
-                <caption class="sr-only">Năm yêu cầu tuyển dụng cập nhật gần nhất của bạn</caption>
-                <thead>
-                <tr>
-                    <th scope="col">Yêu cầu</th>
-                    <th scope="col">Số lượng</th>
-                    <th scope="col">Trạng thái</th>
-                    <th scope="col">Cập nhật</th>
-                </tr>
-                </thead>
-                <tbody>
-                <tr th:each="requisition : ${dashboard.recentRequisitions}">
-                    <td><a class="dash-link" th:href="@{${requisition.href}}"
-                           th:text="|${requisition.code} · ${requisition.title}|">REQ-0001 · Tiêu đề</a></td>
-                    <td th:text="${requisition.positions}">1</td>
-                    <td><span class="badge" th:classappend="|badge--${requisition.statusTone}|"
-                              th:text="${requisition.statusLabel}">Bản nháp</span></td>
-                    <td><time th:datetime="${requisition.updatedAt}"
-                              th:text="${#temporals.format(requisition.updatedAt, 'dd/MM/yyyy')}">01/01/2026</time></td>
-                </tr>
-                </tbody>
-            </table>
-        </div>
     </section>
 </th:block>
 </body>

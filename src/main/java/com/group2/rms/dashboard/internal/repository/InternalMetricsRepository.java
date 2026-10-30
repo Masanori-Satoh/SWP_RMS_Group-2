@@ -1,5 +1,6 @@
 package com.group2.rms.dashboard.internal.repository;
 
+import com.group2.rms.jobposting.service.JobPostingAccess;
 import com.group2.rms.requisition.service.RequisitionAccess;
 import jakarta.persistence.EntityManager;
 import org.springframework.stereotype.Repository;
@@ -37,28 +38,28 @@ public class InternalMetricsRepository {
 
     // ===== Hiring Manager =====
 
-    /** Hồ sơ chính thức nộp vào phòng ban HM thuộc hoặc quản lý, trong [from, to). */
-    public long departmentApplicationsBetween(int userId, Integer departmentId, LocalDateTime from,
-            LocalDateTime to) {
-        var query = entityManager.createQuery("select count(a) from Application a join a.jobPosting j "
-                + "join j.requisition r left join r.department d left join d.manager m "
+    /** Yêu cầu của phòng ban HM thuộc hoặc quản lý đã có ít nhất một tin đang đăng (Published). */
+    public long postedDepartmentRequisitions(int userId, Integer departmentId) {
+        var query = entityManager.createQuery("select count(r) from JobRequisition r "
+                + "left join r.department d left join d.manager m "
                 + "where (m.userId = :userId or d.departmentId = :departmentId) "
-                + "and a.submissionDate >= :from and a.submissionDate < :to and " + FORMAL_FILTER, Long.class);
+                + "and exists (select j from JobPosting j where j.requisition = r and j.postingStatus = :published)",
+                Long.class);
         query.setParameter("userId", userId);
         query.setParameter("departmentId", departmentId);
-        query.setParameter("from", from);
-        query.setParameter("to", to);
+        query.setParameter("published", JobPostingAccess.STATUS_PUBLISHED);
         return query.getSingleResult();
     }
 
-    /** Buổi phỏng vấn đã hoàn tất của phòng ban, bắt đầu trong [from, to). Không có phòng ban thì 0. */
-    public long completedDepartmentInterviewsBetween(Integer departmentId, LocalDateTime from, LocalDateTime to) {
+    /** Buổi phỏng vấn còn hiệu lực của phòng ban, bắt đầu trong [from, to). Không có phòng ban thì 0. */
+    public long upcomingDepartmentInterviews(Integer departmentId, LocalDateTime from, LocalDateTime to) {
         if (departmentId == null) {
             return 0;
         }
         return count("select count(i) from InterviewSchedule i "
                 + "where i.application.jobPosting.requisition.department.departmentId = :departmentId "
-                + "and i.startTime >= :from and i.startTime < :to and i.interviewStatus = 'Completed'",
+                + "and i.startTime >= :from and i.startTime < :to "
+                + "and i.interviewStatus in " + ACTIVE_INTERVIEW_STATUSES,
                 Map.of("departmentId", departmentId, "from", from, "to", to));
     }
 
@@ -78,6 +79,13 @@ public class InternalMetricsRepository {
     }
 
     // ===== HR =====
+
+    /** Tin đang đăng có ngày đăng trong [from, to), tính trên toàn công ty. */
+    public long publishedPostingsBetween(LocalDateTime from, LocalDateTime to) {
+        return count("select count(j) from JobPosting j where j.postingStatus = :published "
+                + "and j.postingDate >= :from and j.postingDate < :to",
+                Map.of("published", JobPostingAccess.STATUS_PUBLISHED, "from", from, "to", to));
+    }
 
     /** Hồ sơ chính thức nộp trong [from, to), toàn công ty. */
     public long applicationsBetween(LocalDateTime from, LocalDateTime to) {
@@ -161,6 +169,16 @@ public class InternalMetricsRepository {
     }
 
     // ===== Interviewer =====
+
+    /** Ứng viên được HM chốt Passed trong [from, to) ở buổi có người này trong hội đồng. */
+    public long passedInterviewCandidatesBetween(int userId, LocalDateTime from, LocalDateTime to) {
+        return count("select count(distinct r.interviewSchedule.application.candidate.candidateId) "
+                + "from InterviewFinalResult r where r.finalDecision = :passed "
+                + "and r.approvedAt >= :from and r.approvedAt < :to "
+                + "and exists (select p from InterviewPanel p where p.interviewSchedule = r.interviewSchedule "
+                + "and p.interviewer.userId = :userId)",
+                Map.of("passed", "Passed", "from", from, "to", to, "userId", userId));
+    }
 
     /** Số phiếu đánh giá người này đã gửi từ mốc since (null = từ trước tới nay). */
     public long evaluationsSubmittedSince(int userId, LocalDateTime since) {

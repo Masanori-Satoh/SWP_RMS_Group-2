@@ -122,26 +122,29 @@ class HrDashboardServiceTests {
     }
 
     @Test
-    @DisplayName("KPI chờ quá 3 ngày chỉ đếm hồ sơ HR cầm bóng, không cộng yêu cầu tạo tin")
-    void build_shouldCountScreeningAndOverdue_whenHrWorkExists() {
+    @DisplayName("HR có đúng 3 KPI: hồ sơ chưa sàng lọc, tin đăng hôm nay, offer nhận trong tuần")
+    void build_shouldReturnThreeKpisForCurrentDayAndWeek() {
         // Arrange
-        application(1, ApplicationStage.SCREENING, HrDashboardService.HR_OWNER, 6);
-        application(2, ApplicationStage.SCREENING, HrDashboardService.HR_OWNER, 1);
-        application(3, ApplicationStage.SCREENING, "Trưởng bộ phận", 10);
-        when(lists.requisitionsAwaitingPosting()).thenReturn(List.of(
-                new AwaitingPostingRow(40, "REQ-0040", "Kế toán", NOW.minusDays(8))));
+        application(1, ApplicationStage.APPLIED, "Hệ thống", 2);
+        application(2, ApplicationStage.APPLIED, "Hệ thống", 1);
+        application(3, ApplicationStage.SCREENING, HrDashboardService.HR_OWNER, 6);
+        when(metrics.publishedPostingsBetween(NOW.toLocalDate().atStartOfDay(), NOW)).thenReturn(5L);
+        when(metrics.offersWithStatusBetween(InternalMetricsRepository.OFFER_ACCEPTED,
+                NOW.toLocalDate().minusDays(2).atStartOfDay(), NOW)).thenReturn(8L);
 
         // Act
         List<DashboardMetricResponse> kpis = build().kpis();
 
         // Assert
-        assertEquals("2", kpis.get(1).value());
-        assertEquals("Lâu nhất: 6 ngày", kpis.get(1).detail());
-        assertEquals("warning", kpis.get(1).tone());
-        assertEquals("1", kpis.get(2).value());
-        assertEquals("Hồ sơ chờ quá 3 ngày", kpis.get(2).title());
-        assertEquals("/applications", kpis.get(2).href());
-        assertEquals("danger", kpis.get(2).tone());
+        assertEquals(List.of("Hồ sơ chờ sàng lọc", "Tin mới đăng trong ngày", "Offer được chấp nhận"),
+                kpis.stream().map(DashboardMetricResponse::title).toList());
+        assertEquals(List.of("2", "5", "8"), kpis.stream().map(DashboardMetricResponse::value).toList());
+        assertEquals(List.of("Chưa được sàng lọc", "Đã đăng hôm nay", "Trong tuần này"),
+                kpis.stream().map(DashboardMetricResponse::detail).toList());
+        assertEquals("/applications?stage=APPLIED", kpis.get(0).href());
+        assertEquals("/internal/job-postings?status=Published&postedFrom=2026-10-28&postedTo=2026-10-28",
+                kpis.get(1).href());
+        assertEquals("/offers?status=Accepted", kpis.get(2).href());
     }
 
     @Test

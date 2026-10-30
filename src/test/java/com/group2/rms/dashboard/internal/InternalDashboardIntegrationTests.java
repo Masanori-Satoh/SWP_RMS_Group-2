@@ -171,6 +171,19 @@ class InternalDashboardIntegrationTests {
                 .filter(row -> row.jobPostingId() == live.getJobPostingId()).findFirst().orElseThrow().postingStatus());
     }
 
+    @Test
+    @DisplayName("HR đếm tin Published có ngày đăng hôm nay, bỏ tin hôm qua và hẹn ngày mai")
+    void publishedPostingsBetween_shouldCountOnlyToday() {
+        LocalDateTime start = now.toLocalDate().atStartOfDay();
+        long before = metrics.publishedPostingsBetween(start, now);
+        savePosting(saveRequisition("Đăng hôm nay", RequisitionAccess.STATUS_APPROVED, 1, null), start);
+        savePosting(saveRequisition("Đăng hôm qua", RequisitionAccess.STATUS_APPROVED, 1, null), start.minusDays(1));
+        savePosting(saveRequisition("Hẹn ngày mai", RequisitionAccess.STATUS_APPROVED, 1, null), now.plusDays(1));
+        entityManager.clear();
+
+        assertEquals(before + 1, metrics.publishedPostingsBetween(start, now));
+    }
+
     private JobPosting savePosting(JobRequisition requisition, LocalDateTime postingDate) {
         return postings.saveAndFlush(JobPosting.builder().requisition(requisition).postingNo(1)
                 .postingTitle(requisition.getTitle()).jobDescription("Mô tả kiểm thử")
@@ -204,6 +217,7 @@ class InternalDashboardIntegrationTests {
 
         // Act + Assert
         assertTrue(metrics.applicationsBetween(from, now) >= 0);
+        assertTrue(metrics.publishedPostingsBetween(now.toLocalDate().atStartOfDay(), now) >= 0);
         assertTrue(metrics.applicationDates(from, now).size() >= 0);
         assertTrue(metrics.applicationWaitingSince().size() >= 0);
         assertTrue(metrics.offersWithStatusBetween(InternalMetricsRepository.OFFER_ACCEPTED, from, now) >= 0);
@@ -211,6 +225,7 @@ class InternalDashboardIntegrationTests {
         assertTrue(metrics.recentDirectorActivity(userId, 5).size() <= 5);
         assertTrue(metrics.evaluationsSubmittedSince(userId, from) >= 0);
         assertTrue(metrics.evaluationsSubmittedSince(userId, null) >= 0);
+        assertTrue(metrics.passedInterviewCandidatesBetween(userId, now.toLocalDate().withDayOfMonth(1).atStartOfDay(), now) >= 0);
         assertTrue(lists.allInterviews(now, now.plusDays(2), 5).size() <= 5);
         assertTrue(lists.panelInterviews(userId, now.minusDays(7), now.plusDays(7)).size() >= 0);
         assertTrue(lists.pendingEvaluations(userId).size() >= 0);
@@ -239,6 +254,20 @@ class InternalDashboardIntegrationTests {
         // Assert
         assertTrue(html.contains(heading));
         assertTrue(html.contains("dash-kpi__icon"));
+        if ("Director".equals(roleName)) {
+            assertEquals(3, html.split("class=\"card dash-kpi", -1).length - 1);
+            assertTrue(html.contains("Yêu cầu tuyển dụng chờ duyệt"));
+            assertTrue(html.contains("Thư mời nhận việc chờ duyệt"));
+            assertTrue(html.contains("Ứng viên trúng tuyển trong tháng"));
+            assertFalse(html.contains("Tỷ lệ nhận offer"));
+        }
+        if ("Interviewer".equals(roleName)) {
+            assertEquals(3, html.split("class=\"card dash-kpi", -1).length - 1);
+            assertTrue(html.contains("Buổi phỏng vấn sắp tới"));
+            assertTrue(html.contains("Đánh giá chưa hoàn thành"));
+            assertTrue(html.contains("Ứng viên đạt phỏng vấn"));
+            assertFalse(html.contains("Đã gửi tháng này"));
+        }
         assertFalse(html.contains("chart.umd.min.js"));
         assertFalse(html.contains("recruitment-dashboard.js"));
     }

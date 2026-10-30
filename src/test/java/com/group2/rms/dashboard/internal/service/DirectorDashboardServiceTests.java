@@ -21,6 +21,7 @@ import org.junit.jupiter.api.Test;
 import java.math.BigDecimal;
 import java.time.Clock;
 import java.time.Instant;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.ArrayList;
@@ -42,8 +43,7 @@ class DirectorDashboardServiceTests {
     private static final Clock CLOCK = Clock.fixed(Instant.parse("2026-10-28T02:00:00Z"),
             ZoneId.of("Asia/Ho_Chi_Minh"));
     private static final LocalDateTime NOW = LocalDateTime.now(CLOCK);
-    private static final LocalDateTime CURRENT_FROM = NOW.minusDays(30);
-    private static final LocalDateTime PREVIOUS_FROM = NOW.minusDays(60);
+    private static final LocalDateTime MONTH_START = LocalDate.of(NOW.getYear(), NOW.getMonth(), 1).atStartOfDay();
     private static final int USER_ID = 9;
 
     private InternalMetricsRepository metrics;
@@ -65,10 +65,6 @@ class DirectorDashboardServiceTests {
     private PendingRequisitionRow requisition(int id, String hiringType, Integer round, int waitedDays) {
         return new PendingRequisitionRow(id, null, "Vị trí " + id, "Kỹ thuật", "Hoài Nam", 2, hiringType, round,
                 NOW.minusDays(waitedDays));
-    }
-
-    private void givenOffers(String status, LocalDateTime from, LocalDateTime to, long count) {
-        when(metrics.offersWithStatusBetween(eq(status), eq(from), eq(to))).thenReturn(count);
     }
 
     @Test
@@ -94,7 +90,7 @@ class DirectorDashboardServiceTests {
     }
 
     @Test
-    @DisplayName("KPI yêu cầu chờ: đếm toàn bộ (kể cả ngoài 5 dòng hiện), dòng phụ = số yêu cầu chờ từ 7 ngày")
+    @DisplayName("Director có đúng ba KPI; yêu cầu chờ đếm toàn bộ, kể cả ngoài 5 dòng hiện")
     void build_shouldCountAllPendingRequisitions_whenMoreThanLimit() {
         // Arrange
         List<PendingRequisitionRow> rows = new ArrayList<>();
@@ -108,15 +104,19 @@ class DirectorDashboardServiceTests {
         DashboardMetricResponse kpi = result.kpis().get(0);
 
         // Assert
+        assertEquals(3, result.kpis().size());
+        assertEquals("Yêu cầu tuyển dụng chờ duyệt", kpi.title());
         assertEquals("7", kpi.value());
-        assertEquals("1 yêu cầu chờ quá 7 ngày", kpi.detail());
-        assertEquals("danger", kpi.tone());
+        assertEquals("Đang chờ phê duyệt", kpi.detail());
+        assertEquals("warning", kpi.tone());
+        assertEquals("Thư mời nhận việc chờ duyệt", result.kpis().get(1).title());
+        assertEquals("Ứng viên trúng tuyển trong tháng", result.kpis().get(2).title());
         assertEquals(5, result.pendingRequisitions().size());
         assertEquals(2, result.morePendingRequisitions());
     }
 
     @Test
-    @DisplayName("Đề nghị chờ: lương có dấu chấm, link chi tiết; KPI 'Lâu nhất' lấy dòng đầu (chờ lâu nhất)")
+    @DisplayName("Thư mời nhận việc chờ duyệt: lương có dấu chấm, link chi tiết, KPI đếm toàn bộ")
     void build_shouldMapPendingOffers_whenOffersWaiting() {
         // Arrange
         when(lists.pendingOffers()).thenReturn(List.of(
@@ -131,37 +131,25 @@ class DirectorDashboardServiceTests {
         assertEquals("25.000.000 VND", offers.get(0).salaryText());
         assertEquals("/offers/31", offers.get(0).href());
         assertEquals("Ứng viên chưa có tên", offers.get(1).candidateName());
-        assertEquals("Lâu nhất: 4 ngày", result.kpis().get(1).detail());
-        assertEquals("warning", result.kpis().get(1).tone());
+        assertEquals("2", result.kpis().get(1).value());
+        assertEquals("Đang chờ phê duyệt", result.kpis().get(1).detail());
+        assertEquals("/offers?status=Pending_Director", result.kpis().get(1).href());
     }
 
     @Test
-    @DisplayName("Tỷ lệ nhận offer: 17/20 = 85%, kỳ trước 6/8 = 75% -> '↑ 10 điểm'")
-    void build_shouldComputeAcceptanceRate_whenOffersDecided() {
+    @DisplayName("Ứng viên trúng tuyển chỉ tính từ đầu tháng hiện tại đến thời điểm xem")
+    void build_shouldCountHiredApplicationsInCurrentMonth() {
         // Arrange
-        givenOffers(InternalMetricsRepository.OFFER_ACCEPTED, CURRENT_FROM, NOW, 17);
-        givenOffers(InternalMetricsRepository.OFFER_DECLINED, CURRENT_FROM, NOW, 3);
-        givenOffers(InternalMetricsRepository.OFFER_ACCEPTED, PREVIOUS_FROM, CURRENT_FROM, 6);
-        givenOffers(InternalMetricsRepository.OFFER_DECLINED, PREVIOUS_FROM, CURRENT_FROM, 2);
+        when(metrics.hiredBetween(eq(MONTH_START), eq(NOW))).thenReturn(12L);
 
         // Act
-        DashboardMetricResponse rate = service.build(director()).kpis().get(3);
+        DashboardMetricResponse hired = service.build(director()).kpis().get(2);
 
         // Assert
-        assertEquals("85%", rate.value());
-        assertEquals("↑ 10 điểm", rate.delta());
-        assertEquals("success", rate.deltaTone());
-    }
-
-    @Test
-    @DisplayName("Chưa có offer nào có kết quả -> tỷ lệ '—', không có mũi tên")
-    void build_shouldShowDash_whenNoOfferDecided() {
-        // Act
-        DashboardMetricResponse rate = service.build(director()).kpis().get(3);
-
-        // Assert
-        assertEquals("—", rate.value());
-        assertNull(rate.delta());
+        assertEquals("12", hired.value());
+        assertEquals("Trong tháng này", hired.detail());
+        assertEquals("/applications?stage=HIRED", hired.href());
+        assertNull(hired.delta());
     }
 
     @Test

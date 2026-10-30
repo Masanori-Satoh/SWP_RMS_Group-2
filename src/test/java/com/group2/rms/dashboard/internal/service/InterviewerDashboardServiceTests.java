@@ -66,7 +66,7 @@ class InterviewerDashboardServiceTests {
     }
 
     @Test
-    @DisplayName("Hôm nay 1 buổi đã xong + 1 buổi lúc 14:00 -> KPI '1 đã xong, 1 còn lại'; buổi tiếp theo còn 300 phút")
+    @DisplayName("Chỉ tính buổi phỏng vấn sắp tới, không tính buổi đã xong hôm nay")
     void build_shouldFindNextInterview_whenOneDoneOneUpcoming() {
         // Arrange
         InterviewRow done = interview(1, NOW.minusHours(2), "Completed");
@@ -77,10 +77,11 @@ class InterviewerDashboardServiceTests {
         InterviewerDashboardResponse result = service.build(interviewer(), null);
 
         // Assert
-        DashboardMetricResponse today = result.kpis().get(0);
-        assertEquals("2", today.value());
-        assertEquals("1 đã xong, 1 còn lại", today.detail());
-        assertEquals("1", result.kpis().get(2).value());
+        DashboardMetricResponse upcoming = result.kpis().get(0);
+        assertEquals(3, result.kpis().size());
+        assertEquals("Buổi phỏng vấn sắp tới", upcoming.title());
+        assertEquals("1", upcoming.value());
+        assertEquals("Trong 7 ngày tới", upcoming.detail());
         assertEquals("Ứng viên 2", result.nextInterview().candidateName());
         assertEquals("Phòng 3A", result.nextInterview().location());
         assertEquals(300, result.minutesUntilNext());
@@ -101,14 +102,14 @@ class InterviewerDashboardServiceTests {
     }
 
     @Test
-    @DisplayName("Phiếu chờ: kết thúc 4 ngày trước -> tô cam, KPI đỏ 'phiếu quá 3 ngày'; link về /interviews")
+    @DisplayName("Phiếu chưa hoàn thành và ứng viên đạt tháng này đều thuộc phạm vi người phỏng vấn")
     void build_shouldFlagOverdueEvaluation_whenEndedThreeDaysAgoOrMore() {
         // Arrange
         when(lists.pendingEvaluations(USER_ID)).thenReturn(List.of(
                 new EvaluationRow(5, "Lý Minh Khoa", "Frontend", NOW.minusDays(4)),
                 new EvaluationRow(6, null, "Backend", NOW.minusHours(3))));
-        when(metrics.evaluationsSubmittedSince(USER_ID, null)).thenReturn(18L);
-        when(metrics.evaluationsSubmittedSince(eq(USER_ID), eq(LocalDate.of(2026, 10, 1).atStartOfDay()))).thenReturn(11L);
+        when(metrics.passedInterviewCandidatesBetween(eq(USER_ID),
+                eq(LocalDate.of(2026, 10, 1).atStartOfDay()), eq(NOW))).thenReturn(8L);
 
         // Act
         InterviewerDashboardResponse result = service.build(interviewer(), null);
@@ -117,12 +118,12 @@ class InterviewerDashboardServiceTests {
         assertEquals("warning", result.pendingEvaluations().get(0).waitTone());
         assertEquals("Ứng viên chưa có tên", result.pendingEvaluations().get(1).candidateName());
         assertEquals(DashboardViews.INTERVIEWS_HREF, result.pendingEvaluations().get(0).href());
+        assertEquals("Đánh giá chưa hoàn thành", result.kpis().get(1).title());
         assertEquals("2", result.kpis().get(1).value());
-        assertEquals("1 phiếu quá 3 ngày", result.kpis().get(1).detail());
-        assertEquals("danger", result.kpis().get(1).tone());
-        assertEquals("Đã gửi tháng này", result.kpis().get(3).title());
-        assertEquals("11", result.kpis().get(3).value());
-        assertEquals("Tổng: 18 phiếu", result.kpis().get(3).detail());
+        assertEquals("Đang chờ đánh giá", result.kpis().get(1).detail());
+        assertEquals("Ứng viên đạt phỏng vấn", result.kpis().get(2).title());
+        assertEquals("8", result.kpis().get(2).value());
+        assertEquals("Trong tháng này", result.kpis().get(2).detail());
     }
 
     @Test

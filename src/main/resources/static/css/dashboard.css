@@ -13,6 +13,7 @@
 
 /* Thẻ KPI: ô icon + nhãn + con số + % so với kỳ trước + 1 dòng phụ */
 .dash-kpis { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: var(--s4); }
+.dash-role-kpis .dash-kpis { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 .dash-kpi { display: grid; grid-template-columns: var(--s12) minmax(0, 1fr); align-content: start; gap: var(--s1) var(--s4); min-width: 0; padding: var(--s4) var(--s8) var(--s4) var(--s4); color: var(--ink); text-decoration: none; transition: background-color var(--transition), border-color var(--transition), box-shadow var(--transition); }
 .dash-kpi:hover { background: var(--surface-subtle); border-color: var(--control-line); box-shadow: var(--shadow-md); }
 .dash-kpi:focus-visible { outline: 2px solid var(--focus); outline-offset: 3px; }
@@ -189,14 +190,14 @@
 
 
 @media (max-width: 1200px) {
-  .dash-kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .dash-kpis, .dash-role-kpis .dash-kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
 @media (max-width: 992px) {
   .dash-split, .dash-split--wide { grid-template-columns: 1fr; }
   .adm-summaries { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
 @media (max-width: 768px) {
-  .dash-kpis { grid-template-columns: 1fr; }
+  .dash-kpis, .dash-role-kpis .dash-kpis { grid-template-columns: 1fr; }
   .dash-panel, .dash-kpi, .dash-next { padding: var(--s4); }
   .dash-week-scroll { margin-inline: calc(var(--s4) * -1); padding-inline: var(--s4); }
   .dash-work__item { display: flex; flex-wrap: wrap; }

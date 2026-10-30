@@ -27,12 +27,9 @@ import java.util.List;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.ArgumentMatchers.isNull;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -77,53 +74,37 @@ class HiringManagerDashboardServiceTests {
     class Kpis {
 
         @Test
-        @DisplayName("Hồ sơ mới so 30 ngày trước; đã tuyển / cần tuyển cộng mọi yêu cầu đang tuyển; icon đúng thứ tự")
-        void build_shouldReturnFourKpis_whenDepartmentAssigned() {
+        @DisplayName("3 thẻ: chờ Giám đốc duyệt, đã đăng tuyển, phỏng vấn 7 ngày tới; icon và link đúng thứ tự")
+        void build_shouldReturnThreeKpis_whenDepartmentAssigned() {
             // Arrange
-            when(metrics.departmentApplicationsBetween(USER_ID, DEPARTMENT_ID, NOW.minusDays(30), NOW)).thenReturn(12L);
-            when(metrics.departmentApplicationsBetween(USER_ID, DEPARTMENT_ID, NOW.minusDays(60), NOW.minusDays(30)))
-                    .thenReturn(10L);
-            when(lists.hiringProgress(USER_ID, DEPARTMENT_ID)).thenReturn(List.of(
-                    progressRow(1, 3, 1, 0, 0), progressRow(2, 4, 2, 1, 0)));
+            when(metrics.ownPendingRequisitions(USER_ID)).thenReturn(5L);
+            when(metrics.postedDepartmentRequisitions(USER_ID, DEPARTMENT_ID)).thenReturn(7L);
+            when(metrics.upcomingDepartmentInterviews(DEPARTMENT_ID, NOW, NOW.plusDays(7))).thenReturn(8L);
 
             // Act
             List<DashboardMetricResponse> kpis = service.build(hiringManager(DEPARTMENT_ID)).kpis();
 
             // Assert
-            assertEquals(List.of("file", "target", "clock", "calendarCheck"),
+            assertEquals(List.of("clock", "megaphone", "calendarDays"),
                     kpis.stream().map(DashboardMetricResponse::icon).toList());
-            assertEquals("12", kpis.get(0).value());
-            assertEquals("↑ 20%", kpis.get(0).delta());
-            assertEquals("success", kpis.get(0).deltaTone());
-            assertEquals("3/7", kpis.get(1).value());
+            assertEquals(List.of("5", "7", "8"), kpis.stream().map(DashboardMetricResponse::value).toList());
+            assertEquals("Đang chờ phê duyệt", kpis.get(0).detail());
+            assertEquals("warning", kpis.get(0).tone());
+            assertEquals("/requisitions?status=" + RequisitionAccess.STATUS_PENDING_DIRECTOR, kpis.get(0).href());
+            assertEquals("/internal/job-postings?status=Published", kpis.get(1).href());
+            assertEquals("Trong 7 ngày tới", kpis.get(2).detail());
+            assertEquals("/interviews", kpis.get(2).href());
         }
 
         @Test
-        @DisplayName("Có yêu cầu chờ 8 ngày -> thẻ Chờ duyệt đỏ, dòng phụ 'Lâu nhất: 8 ngày'")
-        void build_shouldMarkPendingDanger_whenOldestWaitedSevenDaysOrMore() {
-            // Arrange
-            when(metrics.ownPendingRequisitions(USER_ID)).thenReturn(2L);
-            when(metrics.oldestOwnPendingSubmittedAt(USER_ID)).thenReturn(NOW.minusDays(8));
-
+        @DisplayName("Không có yêu cầu chờ -> thẻ chờ duyệt xám")
+        void build_shouldMarkPendingNeutral_whenNothingPending() {
             // Act
-            DashboardMetricResponse pending = service.build(hiringManager(DEPARTMENT_ID)).kpis().get(2);
-
-            // Assert
-            assertEquals("2", pending.value());
-            assertEquals("Lâu nhất: 8 ngày", pending.detail());
-            assertEquals("danger", pending.tone());
-        }
-
-        @Test
-        @DisplayName("Không có yêu cầu chờ -> không tra ngày gửi sớm nhất, thẻ xám")
-        void build_shouldNotQueryOldest_whenNothingPending() {
-            // Act
-            DashboardMetricResponse pending = service.build(hiringManager(DEPARTMENT_ID)).kpis().get(2);
+            DashboardMetricResponse pending = service.build(hiringManager(DEPARTMENT_ID)).kpis().get(0);
 
             // Assert
             assertEquals("0", pending.value());
             assertEquals("neutral", pending.tone());
-            verify(metrics, never()).oldestOwnPendingSubmittedAt(anyInt());
         }
 
         @Test
@@ -133,8 +114,9 @@ class HiringManagerDashboardServiceTests {
             HiringManagerDashboardResponse result = service.build(hiringManager(null));
 
             // Assert
-            assertEquals("Chưa được gán phòng ban · 30 ngày gần nhất", result.scopeLabel());
-            verify(metrics, times(2)).completedDepartmentInterviewsBetween(isNull(), any(), any());
+            assertEquals("Chưa được gán phòng ban", result.scopeLabel());
+            verify(metrics).postedDepartmentRequisitions(eq(USER_ID), isNull());
+            verify(metrics).upcomingDepartmentInterviews(isNull(), any(), any());
             verify(lists).hiringProgress(eq(USER_ID), isNull());
         }
     }
@@ -165,7 +147,7 @@ class HiringManagerDashboardServiceTests {
         }
 
         @Test
-        @DisplayName("Hơn 5 yêu cầu đang tuyển -> hiện 5, KPI vẫn cộng đủ")
+        @DisplayName("Hơn 5 yêu cầu đang tuyển -> chỉ hiện 5")
         void build_shouldShowFiveRows_whenMoreRequisitionsInProgress() {
             // Arrange
             List<ProgressRow> rows = new ArrayList<>();
@@ -179,7 +161,6 @@ class HiringManagerDashboardServiceTests {
 
             // Assert
             assertEquals(HiringManagerDashboardService.LIST_LIMIT, result.progress().size());
-            assertEquals("0/7", result.kpis().get(1).value());
         }
     }
 

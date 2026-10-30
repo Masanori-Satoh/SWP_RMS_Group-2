@@ -86,7 +86,7 @@ public class HrDashboardService {
         return new HrDashboardResponse(
                 user.getRole().getRoleName(),
                 user.getFullName(),
-                kpis(now, stageRows, waitingSince),
+                kpis(now, stageRows),
                 shownWork,
                 allWork.size() - shownWork.size(),
                 upcomingInterviews(now),
@@ -114,68 +114,22 @@ public class HrDashboardService {
     }
 
     private List<DashboardMetricResponse> kpis(LocalDateTime now,
-            Map<ApplicationStage, List<ApplicationPipelineResponse>> stageRows,
-            Map<Integer, LocalDateTime> waitingSince) {
-        LocalDateTime currentFrom = DashboardPeriod.currentFrom(now);
-        LocalDateTime previousFrom = DashboardPeriod.previousFrom(now);
-
-        long newApplications = metrics.applicationsBetween(currentFrom, now);
-        long previousApplications = metrics.applicationsBetween(previousFrom, currentFrom);
-        long acceptedOffers = metrics.offersWithStatusBetween(InternalMetricsRepository.OFFER_ACCEPTED,
-                currentFrom, now);
-        long previousAcceptedOffers = metrics.offersWithStatusBetween(InternalMetricsRepository.OFFER_ACCEPTED,
-                previousFrom, currentFrom);
+            Map<ApplicationStage, List<ApplicationPipelineResponse>> stageRows) {
+        LocalDate today = now.toLocalDate();
+        LocalDateTime weekStart = today.with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY)).atStartOfDay();
+        long unscreened = stageRows.get(ApplicationStage.APPLIED).size();
+        long postedToday = metrics.publishedPostingsBetween(today.atStartOfDay(), now);
+        long acceptedThisWeek = metrics.offersWithStatusBetween(InternalMetricsRepository.OFFER_ACCEPTED,
+                weekStart, now);
 
         return List.of(
-                DashboardViews.flowMetric("file", "Hồ sơ mới", newApplications, previousApplications,
-                        "/applications?sort=" + ApplicationSearch.SORT_NEWEST),
-                screeningMetric(stageRows.get(ApplicationStage.SCREENING), waitingSince, now),
-                overdueApplicationMetric(stageRows, waitingSince, now),
-                DashboardViews.flowMetric("fileCheck", "Offer được nhận", acceptedOffers, previousAcceptedOffers,
-                        "/offers"));
-    }
-
-    /** "Chờ sàng lọc": hồ sơ ở giai đoạn Sàng lọc CV mà HR đang cầm bóng, dòng phụ là thời gian chờ lâu nhất. */
-    private DashboardMetricResponse screeningMetric(List<ApplicationPipelineResponse> screeningRows,
-            Map<Integer, LocalDateTime> waitingSince, LocalDateTime now) {
-        long count = 0;
-        long longestWait = 0;
-        for (ApplicationPipelineResponse row : screeningRows) {
-            if (HR_OWNER.equals(row.ownerLabel())) {
-                count++;
-                longestWait = Math.max(longestWait, DashboardLabels.waitDays(waitingSince.get(row.applicationId()), now));
-            }
-        }
-        String detail = "Không có hồ sơ chờ";
-        String tone = "neutral";
-        if (count > 0) {
-            detail = "Lâu nhất: " + DashboardLabels.waitText(longestWait);
-            tone = DashboardLabels.waitTone(longestWait);
-        }
-        return DashboardMetricResponse.backlog("filter", "Chờ sàng lọc", count, detail,
-                "/applications?stage=" + ApplicationStage.SCREENING.name(), tone);
-    }
-
-    /** Chỉ đếm hồ sơ HR đang cầm bóng để link /applications dẫn tới đúng loại việc. */
-    private DashboardMetricResponse overdueApplicationMetric(
-            Map<ApplicationStage, List<ApplicationPipelineResponse>> stageRows,
-            Map<Integer, LocalDateTime> waitingSince, LocalDateTime now) {
-        long overdue = 0;
-        for (ApplicationStage stage : WAITING_STAGES) {
-            for (ApplicationPipelineResponse row : stageRows.get(stage)) {
-                if (HR_OWNER.equals(row.ownerLabel())
-                        && DashboardLabels.waitDays(waitingSince.get(row.applicationId()), now)
-                                >= DashboardLabels.WAIT_WARNING_DAYS) {
-                    overdue++;
-                }
-            }
-        }
-        String tone = "neutral";
-        if (overdue > 0) {
-            tone = "danger";
-        }
-        return DashboardMetricResponse.backlog("alert", "Hồ sơ chờ quá " + DashboardLabels.WAIT_WARNING_DAYS + " ngày",
-                overdue, "Hồ sơ đang chờ HR xử lý", "/applications", tone);
+                DashboardMetricResponse.backlog("fileSearch", "Hồ sơ chờ sàng lọc", unscreened,
+                        "Chưa được sàng lọc", "/applications?stage=" + ApplicationStage.APPLIED.name(), "neutral"),
+                DashboardMetricResponse.backlog("megaphone", "Tin mới đăng trong ngày", postedToday,
+                        "Đã đăng hôm nay", "/internal/job-postings?status=Published&postedFrom=" + today
+                                + "&postedTo=" + today, "neutral"),
+                DashboardMetricResponse.backlog("circleCheck", "Offer được chấp nhận", acceptedThisWeek,
+                        "Trong tuần này", "/offers?status=Accepted", "neutral"));
     }
 
     /** Việc HR phải làm: hồ sơ HR đang cầm bóng + yêu cầu đã duyệt chưa có tin. Chờ lâu nhất lên đầu. */

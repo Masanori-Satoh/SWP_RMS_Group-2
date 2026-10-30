@@ -14,8 +14,7 @@ public record HiringManagerDashboardResponse(
         List<DashboardWorkItem> needsAttention,
         int moreNeedsAttention,
         List<DashboardInterviewItem> upcomingInterviews,
-        List<HiringProgressItem> progress,
-        List<RequisitionItem> recentRequisitions) implements DashboardResponse {
+        List<HiringProgressItem> progress) implements DashboardResponse {
 
     @Override
     public String section() {

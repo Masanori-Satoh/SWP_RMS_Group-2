@@ -80,50 +80,23 @@ public class InterviewerDashboardService {
     private List<DashboardMetricResponse> kpis(int userId, List<InterviewRow> soon, List<EvaluationRow> evaluationRows,
             LocalDateTime now) {
         LocalDate today = now.toLocalDate();
-        long todayTotal = 0;
-        long todayDone = 0;
         long upcoming = 0;
         for (InterviewRow row : soon) {
-            if (row.startTime().toLocalDate().equals(today)) {
-                todayTotal++;
-                if (isFinished(row, now)) {
-                    todayDone++;
-                }
-            }
             if (!row.startTime().isBefore(now) && isActive(row)) {
                 upcoming++;
             }
         }
 
-        long overdueEvaluations = 0;
-        for (EvaluationRow row : evaluationRows) {
-            if (DashboardLabels.waitDays(row.endTime(), now) >= DashboardLabels.WAIT_WARNING_DAYS) {
-                overdueEvaluations++;
-            }
-        }
-        String evaluationDetail = "Không có phiếu quá hạn";
-        String evaluationTone = "neutral";
-        if (overdueEvaluations > 0) {
-            evaluationDetail = overdueEvaluations + " phiếu quá " + DashboardLabels.WAIT_WARNING_DAYS + " ngày";
-            evaluationTone = "danger";
-        } else if (!evaluationRows.isEmpty()) {
-            evaluationTone = "warning";
-        }
-
         LocalDateTime monthStart = today.withDayOfMonth(1).atStartOfDay();
-        long sentThisMonth = metrics.evaluationsSubmittedSince(userId, monthStart);
-        long sentTotal = metrics.evaluationsSubmittedSince(userId, null);
+        long passedThisMonth = metrics.passedInterviewCandidatesBetween(userId, monthStart, now);
 
         return List.of(
-                DashboardMetricResponse.backlog("calendarCheck", "Phỏng vấn hôm nay", todayTotal,
-                        todayDone + " đã xong, " + (todayTotal - todayDone) + " còn lại", DashboardViews.INTERVIEWS_HREF,
-                        "neutral"),
-                DashboardMetricResponse.backlog("clipboardCheck", "Chờ đánh giá", evaluationRows.size(), evaluationDetail,
-                        DashboardViews.INTERVIEWS_HREF, evaluationTone),
-                DashboardMetricResponse.backlog("calendar", "Sắp tới", upcoming, "Trong 7 ngày tới",
+                DashboardMetricResponse.backlog("calendarDays", "Buổi phỏng vấn sắp tới", upcoming, "Trong 7 ngày tới",
                         DashboardViews.INTERVIEWS_HREF, "neutral"),
-                DashboardMetricResponse.backlog("send", "Đã gửi tháng này", sentThisMonth,
-                        "Tổng: " + sentTotal + " phiếu", DashboardViews.INTERVIEWS_HREF, "neutral"));
+                DashboardMetricResponse.backlog("clipboardCheck", "Đánh giá chưa hoàn thành", evaluationRows.size(),
+                        "Đang chờ đánh giá", DashboardViews.INTERVIEWS_HREF, "neutral"),
+                DashboardMetricResponse.backlog("userCheck", "Ứng viên đạt phỏng vấn", passedThisMonth,
+                        "Trong tháng này", DashboardViews.INTERVIEWS_HREF, "neutral"));
     }
 
     /** Buổi còn hiệu lực sớm nhất chưa kết thúc (đang diễn ra cũng tính); không có thì null. */

@@ -3,9 +3,9 @@
 <body>
 <!-- Dashboard Giám đốc (toàn công ty); dashboard/index.html chèn vào theo dashboard.section. -->
 <th:block th:fragment="content(dashboard)">
-    <div th:replace="~{dashboard/fragments :: pageHeader('Bảng điều khiển', 'Toàn công ty · 30 ngày gần nhất')}"></div>
+    <div th:replace="~{dashboard/fragments :: pageHeader('Bảng điều khiển', 'Toàn công ty')}"></div>
 
-    <th:block th:replace="~{dashboard/fragments :: kpis(${dashboard.kpis})}"></th:block>
+    <div class="dash-role-kpis" th:insert="~{dashboard/fragments :: kpis(${dashboard.kpis})}"></div>
 
     <section class="card dash-panel dash-panel--priority adw-surface" aria-labelledby="dr-requisitions-title">
         <div class="dash-panel__heading">
