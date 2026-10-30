@@ -4,7 +4,7 @@
 - **Nhánh thực hiện (Branch):** `feat/huyenpt/update-offer-hr-ui`
 - **Nhánh gốc (Base Branch):** `main`
 - **Thành viên phụ trách (Assignee):** Phạm Thị Huyền (`HuyenPT`)
-- **Phân hệ (Module):** Quản lý Đề xuất Offer (HR Screens: Danh sách `/offers` & Tạo mới/Chỉnh sửa `/offers/create`)
+- **Phân hệ (Module):** Quản lý Đề xuất Offer (HR Screens: Danh sách `/offers`, Tạo mới/Chỉnh sửa `/offers/create`, Chi tiết `/offers/{id}`)
 - **Tài liệu tham chiếu:**
   - Quy chuẩn kiến trúc hệ thống: [`docs/architecture/ARCHITECTURE_GUIDE.md`](../../architecture/ARCHITECTURE_GUIDE.md)
   - Hướng dẫn thành phần UI: [`docs/architecture/UI/UI_CATALOG.md`](../../architecture/UI/UI_CATALOG.md)
@@ -22,14 +22,16 @@ Trước đợt cập nhật này, giao diện các màn hình của HR trong lu
 - Tiêu đề chưa có đường gạch chân thương hiệu 48×4px chuẩn `adw-title`.
 - Còn phụ thuộc vào thư viện FontAwesome qua CDN ngoài (`cdnjs.cloudflare.com`), chưa chuyển đổi sang hệ thống inline SVG đồng nhất của dự án.
 - Màn hình tạo đề xuất trước đó bị thu hẹp trong khung 880px, tạo khoảng trống lề hai bên quá lớn so với trang danh sách.
+- Màn hình xem chi tiết đề xuất (`offers/detail.html`) còn dùng layout cũ với nhiều icon FontAwesome và mã script nội tuyến.
 
 ### 2. Mục tiêu cốt lõi
-1. **Đồng bộ toàn diện layout Admin Workspace (`adw-`):** Đưa toàn bộ các màn hình phía HR của phân hệ Offer về chung một hệ thống trải nghiệm thị giác hiện đại, chuyên nghiệp theo phong cách Mộc RMS.
-2. **Mở rộng đồng bộ lề hai bên:** Màn hình tạo đề xuất (`offers/create`) mở rộng dàn đều ngang workspace tương tự trang danh sách (`offers`), tối ưu hóa không gian nhập liệu và khả năng quét dữ liệu của HR.
+1. **Đồng bộ toàn diện layout Admin Workspace (`adw-`):** Đưa toàn bộ các màn hình phía HR của phân hệ Offer (`list.html`, `form.html`, `detail.html`) về chung một hệ thống trải nghiệm thị giác hiện đại, chuyên nghiệp theo phong cách Mộc RMS.
+2. **Mở rộng đồng bộ lề hai bên:** Màn hình tạo đề xuất (`offers/create`) và chi tiết đề xuất (`offers/{id}`) mở rộng dàn đều ngang workspace tương tự trang danh sách (`offers`), tối ưu hóa không gian hiển thị và khả năng thao tác của HR.
 3. **Tinh giản tiêu đề:** Loại bỏ các dòng mô tả phụ rườm rà dưới tiêu đề chính ở cả 2 màn hình, mang lại diện mạo tối giản, trang nhã.
 4. **Loại bỏ 100% FontAwesome CDN & Inline Code:** Chuyển đổi toàn bộ icon sang SVG nội bộ sắc nét; không còn bất kỳ thẻ `<script>` nội tuyến nào.
-5. **Tuân thủ nghiêm ngặt 100% Token CSS:** Toàn bộ CSS mới dùng biến ngữ nghĩa từ `tokens.css`, 0 mã màu hex hardcoded, 0 `!important`.
-6. **Bảo toàn 100% nghiệp vụ và ranh giới phân quyền:** Tuyệt đối không thay đổi logic backend, giữ nguyên các ID/name/data-attributes phục vụ binding dữ liệu; **chỉ áp dụng cho màn hình HR, chưa đụng tới Director (`director-list.html`) và Candidate**.
+5. **Đóng gói Modal & Inline Styles vào CSS:** Di dời toàn bộ inline styles trong modal xuất Excel, modal chỉnh sửa nhanh và trang chi tiết vào `offer-workspace.css`.
+6. **Tuân thủ nghiêm ngặt 100% Token CSS:** Toàn bộ CSS mới dùng biến ngữ nghĩa từ `tokens.css`, 0 mã màu hex hardcoded, 0 `!important`.
+7. **Bảo toàn 100% nghiệp vụ và ranh giới phân quyền:** Tuyệt đối không thay đổi logic backend, giữ nguyên các ID/name/data-attributes phục vụ binding dữ liệu; **chỉ áp dụng cho màn hình HR, chưa đụng tới Director (`director-list.html`) và Candidate**.
 
 ---
 
@@ -37,7 +39,7 @@ Trước đợt cập nhật này, giao diện các màn hình của HR trong lu
 
 ### 1. Kế thừa cơ chế Admin Workspace Opt-in (`adw-`)
 
-- **Thẻ `<main>` kích hoạt:** Thêm class `.adw-page ofw-page` trên `<main id="main">` tại cả [list.html](file:///c:/Users/Admin/Documents/Ky_5/SWP391/SWP_RMS_Group-2/src/main/resources/templates/offers/list.html) và [form.html](file:///c:/Users/Admin/Documents/Ky_5/SWP391/SWP_RMS_Group-2/src/main/resources/templates/offers/form.html).
+- **Thẻ `<main>` kích hoạt:** Thêm class `.adw-page ofw-page` trên `<main id="main">` tại cả [list.html](file:///c:/Users/Admin/Documents/Ky_5/SWP391/SWP_RMS_Group-2/src/main/resources/templates/offers/list.html), [form.html](file:///c:/Users/Admin/Documents/Ky_5/SWP391/SWP_RMS_Group-2/src/main/resources/templates/offers/form.html) và [detail.html](file:///c:/Users/Admin/Documents/Ky_5/SWP391/SWP_RMS_Group-2/src/main/resources/templates/offers/detail.html).
 - **Phông nền công nghệ:** Nhúng fragment:
   ```html
   <th:block th:replace="~{fragments/ui/admin-workspace :: scene}"></th:block>
@@ -46,82 +48,60 @@ Trước đợt cập nhật này, giao diện các màn hình của HR trong lu
   ```html
   <th:block th:replace="~{fragments/ui/admin-workspace :: scripts}"></th:block>
   ```
-  Script này tự động gắn class `adw-frame`, `adw-sidebar`, `adw-topbar`, `adw-actions` để tạo hiệu ứng floating rail cho sidebar và glassmorphism cho thanh công cụ phía trên.
-- **Làm sáng menu điều hướng:** Bổ sung `model.addAttribute("activeMenu", "offers");` tại tất cả các phương thức liên quan trong [OfferController.java](file:///c:/Users/Admin/Documents/Ky_5/SWP391/SWP_RMS_Group-2/src/main/java/com/group2/rms/offer/controller/OfferController.java), đảm bảo icon "Đề nghị tuyển dụng" trên sidebar luôn được active chính xác.
+- **Làm sáng menu điều hướng:** Bổ sung `model.addAttribute("activeMenu", "offers");` tại tất cả các phương thức liên quan trong [OfferController.java](file:///c:/Users/Admin/Documents/Ky_5/SWP391/SWP_RMS_Group-2/src/main/java/com/group2/rms/offer/controller/OfferController.java).
 
 ---
 
 ### 2. Xây dựng Stylesheet Chuyên biệt `offer-workspace.css`
 
-Tạo mới tệp [offer-workspace.css](file:///c:/Users/Admin/Documents/Ky_5/SWP391/SWP_RMS_Group-2/src/main/resources/static/css/pages/offer-workspace.css) (744 dòng mã nguồn chất lượng cao):
+Tệp [offer-workspace.css](file:///c:/Users/Admin/Documents/Ky_5/SWP391/SWP_RMS_Group-2/src/main/resources/static/css/pages/offer-workspace.css) được mở rộng với 16 phân đoạn rõ ràng:
 - **Phạm vi scoped:** Sử dụng tiền tố `ofw-` cho toàn bộ các class nghiệp vụ để không xung đột với các module khác.
-- **Tiêu chuẩn Token 100%:** Sử dụng toàn diện biến từ `tokens.css`:
-  - Màu sắc: `var(--brand)`, `var(--brand-dark)`, `var(--brand-soft)`, `var(--surface)`, `var(--surface-subtle)`, `var(--line)`, `var(--ink)`, `var(--muted)`, `var(--error)`, `var(--warning)`, `var(--success)`.
-  - Khoảng cách: `var(--s1)` đến `var(--s6)`.
-  - Bo góc: `var(--radius-sm)`, `var(--radius-md)`, `var(--radius-lg)`, `var(--radius-full)`.
-  - Đổ bóng: `var(--shadow-sm)`, `var(--shadow-md)`.
-- **Button DNA chuẩn Mộc RMS:** Toàn bộ nút hành động có chiều cao tiêu chuẩn `var(--btn-h)` (48px) và bo góc chữ nhật `var(--radius-md)` (8px), không dùng nút bo tròn viên thuốc (pill) không đúng chuẩn thương hiệu.
-- **Hỗ trợ Responsive:** Tối ưu hóa hiển thị mượt mà trên mọi kích thước màn hình từ Desktop (1920px, 1440px), Laptop (1366px), Tablet (768px) đến Mobile (390px).
+- **Tiêu chuẩn Token 100%:** Sử dụng toàn diện biến từ `tokens.css` (màu sắc, khoảng cách, bo góc, bóng đổ).
+- **Phân đoạn 15 & 16:** Đóng gói toàn bộ các class cho Modal (Xuất Excel, Sửa nhanh, Giám đốc duyệt) và màn hình Chi tiết (Decline card, Audit footer, Section headers), xóa bỏ sạch sẽ mọi inline `style="..."`.
+- **Button DNA chuẩn Mộc RMS:** Toàn bộ nút hành động có chiều cao tiêu chuẩn `var(--btn-h)` (48px) và bo góc chữ nhật `var(--radius-md)` (8px).
+- **Hỗ trợ Responsive:** Tối ưu hóa hiển thị mượt mà trên Desktop, Laptop, Tablet đến Mobile.
 
 ---
 
 ### 3. Màn hình Danh sách Đề xuất (`offers/list.html` — Screen 30)
 
-- **Tiêu đề trang tinh gọn:** Sử dụng `.adw-heading` và `.adw-title` với đường kẻ thương hiệu xanh lá 48×4px. Đã loại bỏ dòng mô tả phụ lặp theo yêu cầu người dùng để tiêu đề ngang bằng với các nút hành động bên phải.
-- **5 Thẻ thống kê tổng quan (`.ofw-stats-grid`):**
-  - Hiển thị 5 chỉ số: Tổng đề xuất, Chờ Giám đốc duyệt, Giám đốc đã duyệt, Đã gửi thư mời, Ứng viên chấp nhận.
-  - Từng thẻ bọc trong `.ofw-stat-card.adw-surface`, có icon SVG trong hộp bo góc màu tương ứng (`stat-icon-brand`, `stat-icon-amber`, `stat-icon-green`, `stat-icon-blue`).
-- **Thanh công cụ lọc và tìm kiếm (`.ofw-toolbar.adw-surface`):**
-  - Ô tìm kiếm có icon kính lúp SVG và nút xóa nhanh (`.ofw-search-clear`).
-  - Dropdown lọc trạng thái và sắp xếp thời gian có chiều cao 42px đồng nhất.
-- **Card bề mặt bảng dữ liệu (`.ofw-list-surface.adw-surface`):**
-  - Header chuẩn mực `.ofw-list-header`: Icon hộp bo góc `.ofw-list-icon`, tiêu đề bảng `.adw-panel-title` và badge đếm tổng số lượng đề xuất `.ofw-list-count`.
-  - Bảng dữ liệu `.adw-data-table`: Hàng tiêu đề nền xám nhạt chữ xanh đậm `var(--brand-dark)`, hàng dữ liệu có hiệu ứng hover êm ái, căn chỉnh cột số tiền tệ rõ ràng kèm badge phần trăm lương thử việc.
-- **Thay thế 100% FontAwesome sang Inline SVG:**
-  - Thay toàn bộ icon trạng thái (Bản nháp, Chờ GĐ duyệt, GĐ đã duyệt, GĐ từ chối, Đã gửi thư mời, Ứng viên chấp nhận, Ứng viên từ chối).
-  - Thay toàn bộ icon nút hành động (Xem chi tiết, Phát hành thư mời, Chỉnh sửa, Xóa bản nháp).
-  - Xóa bỏ link nạp `font-awesome/6.4.0` CDN khỏi thẻ `<head>`.
+- **Tiêu đề trang tinh gọn:** Sử dụng `.adw-heading` và `.adw-title` với đường kẻ thương hiệu xanh lá 48×4px. Đã loại bỏ dòng mô tả phụ lặp theo yêu cầu người dùng.
+- **5 Thẻ thống kê tổng quan (`.ofw-stats-grid`):** Bọc trong `.ofw-stat-card.adw-surface` với icon SVG trong hộp bo góc màu tương ứng.
+- **Thanh công cụ lọc và tìm kiếm (`.ofw-toolbar.adw-surface`):** Ô tìm kiếm kính lúp SVG, nút xóa nhanh, dropdown lọc 42px.
+- **Card bề mặt bảng dữ liệu (`.ofw-list-surface.adw-surface`):** Header chuẩn `.ofw-list-header`, icon hộp bo góc `.ofw-list-icon`, tiêu đề `.adw-panel-title`, bảng dữ liệu `.adw-data-table`.
+- **Đóng gói Modal & Thay thế 100% FontAwesome sang Inline SVG:**
+  - Modal Xuất Excel, Modal Sửa nhanh, Modal Quyết định Giám đốc hoàn toàn dùng class `ofw-`.
+  - Thay toàn bộ icon trạng thái và nút hành động sang inline SVG.
+  - Xóa bỏ link nạp `font-awesome/6.4.0` CDN.
 
 ---
 
 ### 4. Màn hình Tạo mới & Chỉnh sửa Đề xuất (`offers/form.html` — Screen 31)
 
-- **Mở rộng toàn bộ lề hai bên:**
-  - Loại bỏ hoàn toàn khối bao bọc `.adw-form-wrap` (giới hạn 880px trước đây).
-  - Cập nhật `.ofw-form-wrap` thành `max-width: none; margin-inline: 0;`.
-  - Header và các thẻ Form giờ đây trải đều ngang toàn bộ không gian làm việc của `.page-content.container.adw-page`, căn lề 16px (`var(--s4)`) chuẩn xác với topbar và sidebar.
-- **Tiêu đề phân cấp rõ ràng:**
-  - Tiêu đề chính `.adw-title` độc lập, loại bỏ dòng mô tả phụ dài dòng.
-  - Phân vùng nhập liệu thành **2 bước (Cards)** trực quan với số thứ tự bước tròn `.ofw-step-badge` mang phong cách hiện đại:
-    - **Bước 1 — Thông tin Ứng viên Đỗ Phỏng vấn:** Dropdown chọn ứng viên đỗ, bảng thông tin trích xuất 3 cột `.ofw-info-grid` với badge lương khuyến nghị nổi bật `.ofw-salary-badge`.
-    - **Bước 2 — Thông tin Đãi ngộ & Điều khoản Đề xuất:** Lưới 2 cột `.grid-2-col` cho mức lương, thời gian thử việc, ngày bắt đầu và địa điểm làm việc.
-- **Hỗ trợ tính toán 85% lương thử việc:**
-  - Nút "Gợi ý 85%" tự động tính toán nhanh mức sàn theo Luật Lao động.
-  - Thông báo phản hồi trực quan `.ofw-rule-notice` đổi màu và icon SVG thời gian thực khi tỷ lệ đạt hoặc không đạt điều kiện.
-- **Xử lý lỗi và thông báo:**
-  - Thay thế khối alert thủ công bằng `.adw-validation-summary` đồng bộ với hệ thống.
-  - Thông báo flash qua `fragments/ui/flash-toast :: flashToast` tự động biến mất sau 3 giây, loại bỏ hoàn toàn các đoạn code `<script>` nội tuyến.
+- **Mở rộng toàn bộ lề hai bên:** Cập nhật `.ofw-form-wrap` thành `max-width: none; margin-inline: 0;`, dàn đều ngang toàn bộ không gian làm việc.
+- **Tiêu đề phân cấp rõ ràng:** Tiêu đề `.adw-title` độc lập, phân vùng nhập liệu thành **2 bước (Cards)** với số bước tròn `.ofw-step-badge`.
+- **Hỗ trợ tính toán 85% lương thử việc:** Nút "Gợi ý 85%" tự động tính toán, thông báo phản hồi `.ofw-rule-notice` đổi màu và icon SVG thời gian thực.
+- **Xử lý lỗi và thông báo:** Thay thế alert thủ công bằng `.adw-validation-summary` và `fragments/ui/flash-toast :: flashToast`.
 
 ---
 
-### 5. Tinh chỉnh Tầng JavaScript `offers.js`
+### 5. Màn hình Chi tiết Đề xuất (`offers/detail.html` — Screen 32)
 
-- Trong hàm `validateProbationRuleUi()`:
-  - Thay thế các thẻ `<i class="fa-solid ..."></i>` bằng chuỗi SVG nội bộ inline.
-  - Tự động thêm/bỏ class `.ofw-rule-notice--invalid` và dùng màu CSS token thay vì màu cứng.
+- **Đồng bộ Admin Workspace Layout:** Gắn `.adw-page ofw-page offer-detail-container`, nhúng `scene` và `scripts` admin.
+- **Thay thế 100% FontAwesome sang Inline SVG:** Toàn bộ ~30 vị trí icon FontAwesome (briefcase, user, calendar, arrow-left, file-lines, location-dot, clock, user-pen, etc.) chuyển sang SVG chuẩn.
+- **Xóa bỏ script nội tuyến:** Chuyển flash alert cũ sang `fragments/ui/flash-toast :: flashToast` tự động đóng không cần script nhúng.
+- **Xóa bỏ toàn bộ inline styles:** Đóng gói thành các class ngữ nghĩa `ofw-cand-decline-header`, `ofw-cand-decline-title`, `ofw-detail-section-title`, `ofw-detail-audit-footer`, v.v.
 
 ---
 
 ## 🔒 III. BẢO TOÀN 100% NGHIỆP VỤ & HỢP ĐỒNG DỮ LIỆU
 
-Mọi chỉnh sửa trong đợt này đều tuân thủ chặt chẽ nguyên tắc bảo toàn nghiệp vụ (Zero Regression):
-
 | Hạng mục | Hiện trạng sau đồng bộ |
 |---|---|
-| **View Paths & Routes** | Giữ nguyên: `GET /offers`, `GET /offers/create`, `POST /offers/create`, `GET /offers/{id}`, `GET /offers/{id}/edit`, `POST /offers/{id}/edit`, `POST /offers/export`. |
-| **Form Data Bindings** | Giữ nguyên 100% `th:object="${offerDto}"` và các trường: `applicationId`, `offeredPositionTitle`, `proposedSalary`, `probationSalary`, `probationDays`, `responsePeriodDays`, `expectedStartDate`, `workLocation`, `benefitsPackage`. |
-| **DOM IDs cho JavaScript** | Giữ nguyên toàn bộ: `createAppSelect`, `groupASection`, `dispCandId`, `dispCandName`, `dispCandEmail`, `dispPosition`, `dispDept`, `dispRecomSalary`, `dispInterviewComments`, `probationRuleNotice`, `searchInput`, `statusFilter`, `timeSortFilter`, `selectAllOffers`, `.offer-row-checkbox`. |
-| **Các Pop-up Modal** | Modal Xuất Excel (`#offerExportModal`), Modal Sửa nhanh (`#editOfferModal`), Modal Xóa bản nháp đều hoạt động bình thường với đầy đủ CSRF token. |
+| **View Paths & Routes** | Giữ nguyên: `GET /offers`, `GET /offers/create`, `POST /offers/create`, `GET /offers/{id}`, `GET /offers/{id}/edit`, `POST /offers/{id}/edit`, `POST /offers/{id}/delete`, `POST /offers/export`. |
+| **Form Data Bindings** | Giữ nguyên 100% `th:object="${offerDto}"` và các trường dữ liệu. |
+| **DOM IDs cho JavaScript** | Giữ nguyên toàn bộ: `createAppSelect`, `groupASection`, `dispCandId`, `dispCandName`, `dispCandEmail`, `dispPosition`, `dispDept`, `dispRecomSalary`, `dispInterviewComments`, `probationRuleNotice`, `searchInput`, `statusFilter`, `timeSortFilter`, `selectAllOffers`, `.offer-row-checkbox`, `directorDetailComments`. |
+| **Các Pop-up Modal** | Modal Xuất Excel (`#offerExportModal`), Modal Sửa nhanh (`#editOfferModal`), Modal Duyệt (`#directorDecisionModal`) đều hoạt động bình thường với đầy đủ CSRF token. |
 | **Phân quyền người dùng** | Giữ nguyên vai trò `HR`/`Recruiter`, không ép quyền `System Admin`. **Không thay đổi mã nguồn của Director (`director-list.html`) hay Candidate**. |
 
 ---
@@ -130,10 +110,11 @@ Mọi chỉnh sửa trong đợt này đều tuân thủ chặt chẽ nguyên t�
 
 | Tiêu chuẩn trong Guide | Mức độ | Minh chứng kỹ thuật |
 |---|:---:|---|
-| **Layout Level 3 (Kế thừa layout chung)** | ✅ Đạt 100% | Sử dụng `layout:decorate="~{layout/internal}"`, kích hoạt `.adw-page`, `scene` và `scripts`. |
+| **Layout Level 3 (Kế thừa layout chung)** | ✅ Đạt 100% | Sử dụng `layout:decorate="~{layout/internal}"`, kích hoạt `.adw-page`, `scene` và `scripts` trên cả 3 màn hình. |
 | **Quy chuẩn Token CSS (No Raw Hex)** | ✅ Đạt 100% | 0 mã hex hardcoded trong `offer-workspace.css`, sử dụng 100% biến từ `tokens.css`. |
 | **Button DNA Mộc RMS** | ✅ Đạt 100% | Nút chữ nhật bo góc 8px (`var(--radius-md)`), cao 48px, không dùng nút bo tròn pill. |
-| **Zero Inline Code** | ✅ Đạt 100% | Đã loại bỏ toàn bộ thẻ `<script>` nội tuyến khỏi `form.html` và `list.html`. |
+| **Zero Inline Code** | ✅ Đạt 100% | Đã loại bỏ toàn bộ thẻ `<script>` nội tuyến khỏi cả 3 template `list.html`, `form.html`, `detail.html`. |
+| **Zero Inline Styles** | ✅ Đạt 100% | Không còn các thuộc tính `style="..."` về layout, margin, padding, color trong template. |
 | **Chuẩn Icon Nội bộ (No Font CDN)** | ✅ Đạt 100% | Gỡ bỏ hoàn toàn FontAwesome CDN; 100% icon chuyển thành inline SVG có ngữ nghĩa. |
 | **Accessibility (a11y)** | ✅ Đạt 100% | Đầy đủ `tabindex="-1"` trên `<main>`, `aria-label`, `aria-hidden="true"` cho icon trang trí. |
 
@@ -141,33 +122,31 @@ Mọi chỉnh sửa trong đợt này đều tuân thủ chặt chẽ nguyên t�
 
 ## 🧪 V. KẾT QUẢ KIỂM THỬ TỰ ĐỘNG (TEST RESULTS)
 
-Đã chạy toàn bộ bộ kiểm thử tích hợp và kiểm thử hồi quy của phân hệ Offer thông qua Maven wrapper:
-
 ```powershell
 ./mvnw.cmd test "-Dtest=OfferIntegrationTests,OfferControllerBugTests"
 ```
 
-### Kết quả chi tiết:
-- **`OfferIntegrationTests`**: **31/31 PASSED** (Bao gồm kiểm thử tải trang danh sách, tạo mới, chỉnh sửa, validation dữ liệu, kiểm tra quyền hạn, xuất Excel).
-- **`OfferControllerBugTests`**: **3/3 PASSED** (Kiểm tra các trường hợp biên và xử lý ngoại lệ nghiệp vụ).
-- **Tổng kết:**
-  ```text
-  [INFO] -------------------------------------------------------
-  [INFO]  T E S T S
-  [INFO] -------------------------------------------------------
-  [INFO] Running com.group2.rms.offer.controller.OfferControllerBugTests
-  [INFO] Tests run: 3, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 19.47 s
-  [INFO] Running com.group2.rms.offer.OfferIntegrationTests
-  [INFO] Tests run: 31, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 2.102 s
-  [INFO] 
-  [INFO] Results:
-  [INFO] 
-  [INFO] Tests run: 34, Failures: 0, Errors: 0, Skipped: 0
-  [INFO] 
-  [INFO] ------------------------------------------------------------------------
-  [INFO] BUILD SUCCESS
-  [INFO] ------------------------------------------------------------------------
-  ```
+- **`OfferIntegrationTests`**: **31/31 PASSED**
+- **`OfferControllerBugTests`**: **3/3 PASSED**
+- **Tổng cộng**: **34/34 PASSED (100%)**
+
+```text
+[INFO] -------------------------------------------------------
+[INFO]  T E S T S
+[INFO] -------------------------------------------------------
+[INFO] Running com.group2.rms.offer.controller.OfferControllerBugTests
+[INFO] Tests run: 3, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 20.63 s
+[INFO] Running com.group2.rms.offer.OfferIntegrationTests
+[INFO] Tests run: 31, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 2.046 s
+[INFO] 
+[INFO] Results:
+[INFO] 
+[INFO] Tests run: 34, Failures: 0, Errors: 0, Skipped: 0
+[INFO] 
+[INFO] ------------------------------------------------------------------------
+[INFO] BUILD SUCCESS
+[INFO] ------------------------------------------------------------------------
+```
 
 ---
 
@@ -175,19 +154,23 @@ Mọi chỉnh sửa trong đợt này đều tuân thủ chặt chẽ nguyên t�
 
 ### 1. Danh sách file thay đổi
 - `src/main/java/com/group2/rms/offer/controller/OfferController.java` (Sửa: Bổ sung `activeMenu`)
-- `src/main/resources/static/css/pages/offer-workspace.css` (Tạo mới: 744 dòng CSS chuẩn token)
-- `src/main/resources/templates/offers/list.html` (Sửa: Đồng bộ layout Admin, inline SVG, bỏ subtitle)
+- `src/main/resources/static/css/pages/offer-workspace.css` (Mở rộng: Thêm Section 15 & 16 đóng gói toàn bộ modals & detail page)
+- `src/main/resources/templates/offers/list.html` (Sửa: Đồng bộ layout Admin, inline SVG, bỏ subtitle, đóng gói inline modal styles)
 - `src/main/resources/templates/offers/form.html` (Sửa: Đồng bộ layout Admin, mở rộng lề, bỏ subtitle)
+- `src/main/resources/templates/offers/detail.html` (Sửa: Đồng bộ layout Admin, inline SVG, bỏ FA CDN, bỏ flash script, đóng gói inline styles)
 - `src/main/resources/static/js/offers.js` (Sửa: Hàm validate hiển thị inline SVG)
 - `docs/architecture/UI/UI_CATALOG.md` (Cập nhật hướng dẫn UI)
 - `docs/management/WORK_LOG.md` (Cập nhật nhật ký công việc)
-- `docs/management/work_logs/2026-10-31-hr-offer-proposal-admin-ui-sync.md` (Tạo mới: Log kỹ thuật)
-- `docs/members/huyenpt/summary-update-offer-hr-ui.md` (Tạo mới: Báo cáo tổng kết)
+- `docs/management/work_logs/2026-10-31-hr-offer-proposal-admin-ui-sync.md` (Cập nhật: Chi tiết kỹ thuật)
+- `docs/members/huyenpt/summary-update-offer-hr-ui.md` (Cập nhật: Báo cáo tổng kết)
 
 ### 2. Lịch sử commit trên branch `feat/huyenpt/update-offer-hr-ui`
 ```text
+a5ecf60 refactor(offer): extract inline modal and card styles into offer-workspace.css
+4ca3b65 style(offer): sync HR offer detail screen with admin workspace layout and inline SVGs
+4c6c328 merge: sync with origin/main and resolve conflict in WORK_LOG.md
+bc9995f docs(offer): add summary report for HR offer UI synchronization
 086f7b1 style(offer): remove redundant subtitle descriptions from HR offer headers
 caa3abf style(offer): expand create offer proposal form width to match offer workspace
 26eeced feat(offer): sync HR offer screens with admin workspace layout
 ```
-
