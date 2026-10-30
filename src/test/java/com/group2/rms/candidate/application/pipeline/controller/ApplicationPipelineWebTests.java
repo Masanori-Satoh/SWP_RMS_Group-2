@@ -187,7 +187,7 @@ class ApplicationPipelineWebTests {
                 new TalentPoolCvResponse(102,"QA Automation",SUBMITTED));
         when(talentPool.recommendation(219,15)).thenReturn(recommendation(true,true));
         when(talentPool.recommendationDetail(15,219)).thenReturn(new TalentPoolDetailResponse(c,true,
-                List.of(new TalentPoolNoteResponse(1,"HR Lan","<script>note</script>",SUBMITTED)),history));
+                List.of(new TalentPoolNoteResponse(1,"HR Lan","<script>note</script>",SUBMITTED)),history, null, null, null, null, null, null));
         mvc.perform(get("/talent-pool/15?recommendationId=219&keyword=An&page=1").with(as("hm","Hiring Manager")))
                 .andExpect(status().isOk()).andExpect(content().string(containsString("Quay lại gợi ý từ HR")))
                 .andExpect(content().string(containsString("Java Backend"))).andExpect(content().string(containsString("QA Automation")))
@@ -899,7 +899,7 @@ class ApplicationPipelineWebTests {
     void sharedNotesReadUsesExistingAuthorizedPoolDetail() throws Exception {
         var candidate = new TalentPoolCandidateResponse(15, "An Võ", "an@example.com", null, List.of());
         when(talentPool.detail(15)).thenReturn(new TalentPoolDetailResponse(candidate, true,
-                List.of(new TalentPoolNoteResponse(1, "HM Tuấn", "Nhận xét thật", SUBMITTED)), List.of()));
+                List.of(new TalentPoolNoteResponse(1, "HM Tuấn", "Nhận xét thật", SUBMITTED)), List.of(), null, null, null, null, null, null));
         mvc.perform(get("/talent-pool/15/notes").with(as("hm", "Hiring Manager")))
                 .andExpect(status().isOk()).andExpect(jsonPath("$.success").value(true))
                 .andExpect(jsonPath("$.data[0].author").value("HM Tuấn"))
@@ -925,17 +925,27 @@ class ApplicationPipelineWebTests {
     }
     @Test
     void talentPoolDetailRendersNotesAndCv() throws Exception {
-        var cv = new TalentPoolCvResponse(10, "Java Developer", SUBMITTED);
+        var cv = new TalentPoolCvResponse(10, "Java Developer", SUBMITTED, "Engineering", "Toàn thời gian", "Applied");
         var c = new TalentPoolCandidateResponse(15, "An Võ", "an@example.com", "0901234567", List.of(cv));
         when(talentPool.detail(15)).thenReturn(new TalentPoolDetailResponse(c, true,
-                List.of(new TalentPoolNoteResponse(1, "HR Lan", "Giao tiếp tốt", SUBMITTED)), List.of(cv)));
+                List.of(new TalentPoolNoteResponse(1, "HR Lan", "Giao tiếp tốt", SUBMITTED, "HR", true),
+                        new TalentPoolNoteResponse(2, "HM Tuấn", "Kinh nghiệm phù hợp vị trí ứng tuyển.", SUBMITTED.minusDays(1), "Hiring Manager", false)), List.of(cv),
+                java.time.LocalDate.of(2000, 8, 12), "Nam", "Hà Nội, Việt Nam", "Website",
+                "https://linkedin.com/in/an-vo", "https://example.com/portfolio"));
         when(talentPool.viewerRole()).thenReturn("Hiring Manager");
         when(talentPool.targetJobTitle(12)).thenReturn("Java Developer");
-        var response = mvc.perform(get("/talent-pool/15?jobPostingId=12").with(as("hm", "Hiring Manager")))
-                .andExpect(status().isOk()).andExpect(content().string(containsString("Giao tiếp tốt")))
+        var response = mvc.perform(get("/talent-pool/15?jobPostingId=12").with(as("hm", "Hiring Manager")).flashAttr("successMessage", "Đã thêm ghi chú."))
+                .andExpect(status().isOk())
+                .andExpect(content().string(containsString("flash-toast--success")))
+                .andExpect(content().string(containsString("Đã thêm ghi chú.")))
+                .andExpect(content().string(containsString("tpw-note-header")))
+                .andExpect(content().string(containsString("12/08/2000")))
+                .andExpect(content().string(containsString("Hà Nội, Việt Nam")))
+                .andExpect(content().string(containsString("href=\"https://linkedin.com/in/an-vo\"")))
+                .andExpect(content().string(containsString("rel=\"noopener noreferrer\""))).andExpect(content().string(containsString("Giao tiếp tốt")))
                 .andExpect(content().string(containsString("Quay lại danh sách")))
                 .andExpect(content().string(containsString("tp-detail-workspace")))
-                .andExpect(content().string(containsString("CV từ các lần ứng tuyển trước")))
+                .andExpect(content().string(containsString("Lịch sử ứng tuyển &amp; CV")))
                 .andExpect(content().string(containsString("Ghi chú đánh giá nội bộ")))
                 .andExpect(content().string(containsString("data-cv-url=\"/talent-pool/15/cv/10\"")))
                 .andExpect(content().string(containsString("data-hide-detail-link=\"true\"")))
@@ -948,9 +958,24 @@ class ApplicationPipelineWebTests {
         java.nio.file.Files.writeString(path, response.getResponse().getContentAsString(), java.nio.charset.StandardCharsets.UTF_8);
     }
     @Test
+    void talentPoolProfileEscapesTextAndDoesNotLinkUnsafeOrBlankUrls() throws Exception {
+        var candidate = new TalentPoolCandidateResponse(15, "An Võ", "an@example.com", null, List.of());
+        when(talentPool.detail(15)).thenReturn(new TalentPoolDetailResponse(candidate, true, List.of(), List.of(),
+                null, "  ", "<script>alert(1)</script>", null, "javascript:alert(1)", "  "));
+        when(talentPool.viewerRole()).thenReturn("Hiring Manager");
+        mvc.perform(get("/talent-pool/15").with(as("hm", "Hiring Manager")))
+                .andExpect(status().isOk())
+                .andExpect(content().string(containsString("Thông tin ứng viên")))
+                .andExpect(content().string(containsString("Chưa có thông tin")))
+                .andExpect(content().string(containsString("&lt;script&gt;alert(1)&lt;/script&gt;")))
+                .andExpect(content().string(not(containsString("href=\"javascript:"))))
+                .andExpect(content().string(not(containsString("class=\"tpw-info-link\""))));
+    }
+
+    @Test
     void talentPoolDetailPreservesTypedContextAndIgnoresExternalReturnUrl() throws Exception {
         var candidate = new TalentPoolCandidateResponse(15, "An Võ", "an@example.com", null, List.of());
-        when(talentPool.detail(15)).thenReturn(new TalentPoolDetailResponse(candidate, true, List.of(), List.of()));
+        when(talentPool.detail(15)).thenReturn(new TalentPoolDetailResponse(candidate, true, List.of(), List.of(), null, null, null, null, null, null));
         when(talentPool.viewerRole()).thenReturn("Hiring Manager");
         when(talentPool.targetJobTitle(12)).thenReturn("Java Developer");
         mvc.perform(get("/talent-pool/15").with(as("hm", "Hiring Manager"))
@@ -1105,5 +1130,61 @@ class ApplicationPipelineWebTests {
                 SUBMITTED, status, ApplicationStatusLabels.label(status), ApplicationStatusLabels.badge(status),
                 "Applied".equals(status) ? null : "HR",
                 score == null ? null : new BigDecimal(score), schedule, offer, false);
+    }
+
+    @Test
+    void noteControlsOnlyRenderForOwnedNotesAndCvHistoryIsPaginated() throws Exception {
+        var candidate = new TalentPoolCandidateResponse(15, "An Võ", "an@example.com", null, List.of());
+        var history = java.util.stream.IntStream.rangeClosed(1, 7)
+                .mapToObj(i -> new TalentPoolCvResponse(i, "Job " + i, SUBMITTED, "Engineering", null, "Applied")).toList();
+        when(talentPool.detail(15)).thenReturn(new TalentPoolDetailResponse(candidate, true,
+                List.of(new TalentPoolNoteResponse(1, "Cùng tên", "Mine", SUBMITTED, "HR", true),
+                        new TalentPoolNoteResponse(2, "Cùng tên", "Other", SUBMITTED, "HR", false)), history,
+                null, null, null, null, null, null));
+        var result = mvc.perform(get("/talent-pool/15?cvPage=1").with(as("hr", "HR")))
+                .andExpect(status().isOk())
+                .andExpect(content().string(containsString("/notes/1/edit")))
+                .andExpect(content().string(containsString("/notes/1/delete")))
+                .andExpect(content().string(not(containsString("/notes/2/edit"))))
+                .andExpect(content().string(not(containsString("/notes/2/delete"))))
+                .andExpect(content().string(containsString("Job 4")))
+                .andExpect(content().string(not(containsString("Job 1"))))
+                .andExpect(content().string(not(containsString("Job 7"))))
+                .andReturn();
+        var page = (Page<?>) result.getModelAndView().getModel().get("cvHistory");
+        assertEquals(7, page.getTotalElements());
+        assertEquals(3, page.getContent().size());
+    }
+
+    @Test
+    void editAndDeleteNoteKeepContextAndRequireCsrf() throws Exception {
+        mvc.perform(post("/talent-pool/15/notes/1/edit").with(as("hr", "HR")).param("content", "Sửa"))
+                .andExpect(status().isForbidden());
+        mvc.perform(post("/talent-pool/15/notes/1/delete").with(as("hr", "HR")))
+                .andExpect(status().isForbidden());
+        verify(talentPool, never()).updateNote(any(), any(), any());
+        verify(talentPool, never()).deleteNote(any(), any());
+        mvc.perform(post("/talent-pool/15/notes/1/edit").with(as("hr", "HR")).with(csrf())
+                        .param("content", "Sửa").param("jobPostingId", "12").param("cvPage", "1"))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrl("/talent-pool/15?jobPostingId=12&cvPage=1"));
+        verify(talentPool).updateNote(eq(15), eq(1), any());
+        mvc.perform(post("/talent-pool/15/notes/1/delete").with(as("hr", "HR")).with(csrf()))
+                .andExpect(status().is3xxRedirection());
+        verify(talentPool).deleteNote(15, 1);
+    }
+
+    @Test
+    void invalidEditPreservesDraftAndForbiddenOwnerDoesNotRedirectAsSuccess() throws Exception {
+        mvc.perform(post("/talent-pool/15/notes/1/edit").with(as("hr", "HR")).with(csrf()).param("content", "  "))
+                .andExpect(status().is3xxRedirection()).andExpect(flash().attribute("editingNoteId", 1))
+                .andExpect(flash().attribute("editNoteDraft", "  "));
+        verify(talentPool, never()).updateNote(any(), any(), any());
+        doThrow(new AccessDeniedException("Not your note")).when(talentPool).deleteNote(15, 1);
+        doThrow(new AccessDeniedException("Not your note")).when(talentPool).updateNote(eq(15), eq(1), any());
+        mvc.perform(post("/talent-pool/15/notes/1/delete").with(as("hr", "HR")).with(csrf()))
+                .andExpect(status().isForbidden());
+        mvc.perform(post("/talent-pool/15/notes/1/edit").with(as("hr", "HR")).with(csrf()).param("content", "Hack"))
+                .andExpect(status().isForbidden());
     }
 }
