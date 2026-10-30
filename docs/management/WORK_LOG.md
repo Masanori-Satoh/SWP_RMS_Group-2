@@ -6,9 +6,9 @@ Tài liệu này là lịch sử tóm tắt các thay đổi quan trọng và b�
 
 | Ngày | Tên công việc / Yêu cầu chính | Người thực hiện | Chi tiết thay đổi |
 | --- | --- | --- | --- |
-| **2026-10-30** | Tổng hợp lịch sử thay đổi LinhDN; thêm thông tin hồ sơ vào chi tiết ứng viên tiềm năng theo mockup | LinhDN / Codex | [Lịch sử, file change và kiểm chứng](work_logs/2026-10-30-linhdn-history-and-candidate-info.md) |
-| **2026-10-28** | Làm nổi bật danh sách Potential Candidate theo Quản lý tài khoản Admin; gọn CV và tên tin dài | LinhDN / Codex | [File change và kiểm chứng](work_logs/2026-10-28-potential-candidate-list-polish.md) |
-| **2026-10-28** | Đồng bộ toàn bộ layout workspace Admin cho Potential Candidate, giữ nghiệp vụ HR/HM | LinhDN / Codex | [File change và kiểm thử](work_logs/2026-10-28-potential-candidate-admin-ui-sync.md) |
+| **2026-10-30** | Tổng hợp lịch sử thay đổi LinhDN; thêm thông tin hồ sơ vào chi tiết ứng viên tiềm năng theo mockup | LinhDN | [Lịch sử, file change và kiểm chứng](work_logs/2026-10-30-linhdn-history-and-candidate-info.md) |
+| **2026-10-28** | Làm nổi bật danh sách Potential Candidate theo Quản lý tài khoản Admin; gọn CV và tên tin dài | LinhDN  | [File change và kiểm chứng](work_logs/2026-10-28-potential-candidate-list-polish.md) |
+| **2026-10-28** | Đồng bộ toàn bộ layout workspace Admin cho Potential Candidate, giữ nghiệp vụ HR/HM | LinhDN  | [File change và kiểm thử](work_logs/2026-10-28-potential-candidate-admin-ui-sync.md) |
 | **2026-10-23** | Hạn chấm điểm phỏng vấn 24h, kết quả "Cân nhắc" (migration 010) & khóa hồ sơ khi đặt lịch từ hồ sơ | Đức | [Xem chi tiết](work_logs/2026-10-23-interview-evaluation-deadline-consider.md) |
 | **2026-10-17** | Hạn phản hồi Offer, tái thiết kế chi tiết duyệt Director & chuẩn hóa Flash Toast 2s | HuyenPT | [Xem chi tiết](../members/huyenpt/pr-description.md) |
 | **2026-10-17** | Hoàn thiện đề xuất HM bằng Application/HM_Suggested, UI và kiểm thử tích hợp | LinhDN | [Tổng hợp tài liệu](../members/linhdn/README.md) · [Chức năng và kiểm chứng](../members/linhdn/2026-10-17-hm-suggestions-functional.md) |
