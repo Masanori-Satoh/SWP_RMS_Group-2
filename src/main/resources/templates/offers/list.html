@@ -166,7 +166,7 @@
                 <tbody id="offersTableBody">
                     <tr th:if="${#lists.isEmpty(offers)}">
                         <td colspan="9" class="offer-empty-state-cell">
-                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="margin-right:8px; vertical-align:middle;"><path d="M22 12h-6l-2 3h-4l-2-3H2v7a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-7Z"/><path d="M5.45 5.11 2 12v0h20v0l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/></svg>
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" class="ofw-empty-state-icon"><path d="M22 12h-6l-2 3h-4l-2-3H2v7a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-7Z"/><path d="M5.45 5.11 2 12v0h20v0l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/></svg>
                             Không tìm thấy đề xuất nhận việc nào phù hợp với bộ lọc.
                         </td>
                     </tr>
@@ -255,13 +255,13 @@
 <div id="offerExportModal" class="modal-overlay modal-backdrop" style="display: none;" onclick="handleExportModalBackdropClick(event)">
     <div class="modal-box modal-lg modal-export-card" onclick="event.stopPropagation()">
         <div class="modal-header">
-            <div style="display: flex; align-items: center; gap: 10px;">
-                <div class="offer-stat-icon stat-icon-green" style="width: 36px; height: 36px; font-size: 16px; border-radius: 6px;">
+            <div class="ofw-modal-title-group">
+                <div class="offer-stat-icon stat-icon-green ofw-modal-stat-icon">
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
                 </div>
                 <div>
-                    <div style="font-size: 17px; font-weight: 700; color: var(--ink);">Xuất dữ liệu Đề xuất nhận việc</div>
-                    <div style="font-size: 12.5px; color: var(--muted); font-family: var(--sans); font-weight: normal; margin-top: 2px;">Tải dữ liệu đề xuất lương ra file Microsoft Excel (.xlsx)</div>
+                    <div class="ofw-modal-title">Xuất dữ liệu Đề xuất nhận việc</div>
+                    <div class="ofw-modal-desc">Tải dữ liệu đề xuất lương ra file Microsoft Excel (.xlsx)</div>
                 </div>
             </div>
             <button type="button" class="btn-icon" onclick="closeExportModal()" title="Đóng">✕</button>
@@ -299,9 +299,9 @@
             </div>
 
             <!-- CỘT DỮ LIỆU -->
-            <div class="export-section" style="margin-top: 18px;">
+            <div class="export-section ofw-export-section--spaced">
                 <div class="export-columns-header">
-                    <label class="export-section-title" style="margin-bottom:0;">Cột dữ liệu</label>
+                    <label class="export-section-title ofw-export-title--no-mb">Cột dữ liệu</label>
                     <div class="columns-quick-actions">
                         <button type="button" class="btn-link-action" onclick="selectAllColumns()">Chọn tất cả</button>
                         <span class="sep-dot">•</span>
@@ -353,7 +353,7 @@
                 </div>
 
                 <!-- Nhóm Mở rộng -->
-                <div class="column-group-label" style="margin-top: 14px;">Nhóm mở rộng</div>
+                <div class="column-group-label ofw-column-group-label--spaced">Nhóm mở rộng</div>
                 <div class="columns-grid">
                     <label class="column-checkbox-label">
                         <input type="checkbox" name="exportCol" value="applicationId"> Mã đơn ứng tuyển
@@ -398,7 +398,7 @@
             </div>
 
             <!-- Alert Box if Error inside Modal -->
-            <div id="exportModalError" class="modal-alert modal-alert-danger" style="display: none; margin-top: 14px;">
+            <div id="exportModalError" class="modal-alert modal-alert-danger ofw-modal-alert--spaced" style="display: none;">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
                 <span id="exportModalErrorText">Vui lòng chọn ít nhất một cột dữ liệu.</span>
             </div>
@@ -422,7 +422,7 @@
 <div class="modal-overlay" id="editOfferModal" style="display: none;" onclick="handleEditModalBackdropClick(event)">
     <div class="modal-box modal-lg" onclick="event.stopPropagation()">
         <div class="modal-header">
-            <div style="display:flex; align-items:center; gap:8px;">
+            <div class="ofw-modal-title-group">
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--brand-dark)" stroke-width="1.8" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
                 <span id="editModalTitle">Chỉnh Sửa Đề Xuất Nhận Việc</span>
             </div>
@@ -434,64 +434,64 @@
 
 
                 <div class="form-group">
-                    <label>Vị trí chức danh đề xuất <span style="color:var(--error);">*</span></label>
+                    <label>Vị trí chức danh đề xuất <span class="ofw-required-star" aria-hidden="true">*</span></label>
                     <input type="text" id="editOfferedTitle" class="input-control" required>
                 </div>
 
-                <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px;">
+                <div class="ofw-modal-grid-2">
                     <div class="form-group">
-                        <div style="display: flex; align-items: center; justify-content: space-between; min-height: 28px; margin-bottom: 4px;">
-                            <label style="margin-bottom: 0;">Lương chính thức (VNĐ/tháng) <span style="color:var(--error);">*</span></label>
+                        <div class="ofw-field-header-row">
+                            <label class="ofw-export-title--no-mb">Lương chính thức (VNĐ/tháng) <span class="ofw-required-star" aria-hidden="true">*</span></label>
                         </div>
                         <input type="number" id="editProposedSalary" class="input-control" min="0" step="any" oninput="editAutoCalculateProbation()" required>
                     </div>
                     <div class="form-group">
-                        <div style="display: flex; align-items: center; justify-content: space-between; min-height: 28px; margin-bottom: 4px;">
-                            <label style="margin-bottom: 0;">Lương thử việc (VNĐ/tháng) <span style="color:var(--error);">*</span></label>
+                        <div class="ofw-field-header-row">
+                            <label class="ofw-export-title--no-mb">Lương thử việc (VNĐ/tháng) <span class="ofw-required-star" aria-hidden="true">*</span></label>
                             <button type="button" class="quick-calc-btn" onclick="editAutoCalculateProbation(true)">Gợi ý 85%</button>
                         </div>
                         <input type="number" id="editProbationSalary" class="input-control" min="0" step="any" oninput="editValidateProbation()" required>
-                        <div id="editProbationNotice" class="form-hint" style="color:var(--brand-dark);">
+                        <div id="editProbationNotice" class="form-hint ofw-hint--brand">
                             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg> Đạt điều kiện tối thiểu 85% lương chính thức.
                         </div>
                     </div>
                 </div>
 
-                <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px;">
+                <div class="ofw-modal-grid-2">
                     <div class="form-group">
-                        <label>Thời gian thử việc (ngày) <span style="color:var(--error);">*</span></label>
+                        <label>Thời gian thử việc (ngày) <span class="ofw-required-star" aria-hidden="true">*</span></label>
                         <input type="number" id="editProbationDays" class="input-control" min="1" placeholder="VD: 60" required>
                     </div>
                     <div class="form-group">
-                        <label>Thời hạn phản hồi (ngày) <span style="color:var(--error);">*</span></label>
+                        <label>Thời hạn phản hồi (ngày) <span class="ofw-required-star" aria-hidden="true">*</span></label>
                         <input type="number" id="editResponsePeriodDays" class="input-control" min="1" max="60" placeholder="VD: 5" required>
                     </div>
                 </div>
 
-                <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px;">
+                <div class="ofw-modal-grid-2">
                     <div class="form-group">
-                        <label>Ngày bắt đầu dự kiến <span style="color:var(--error);">*</span></label>
+                        <label>Ngày bắt đầu dự kiến <span class="ofw-required-star" aria-hidden="true">*</span></label>
                         <input type="date" id="editStartDate" class="input-control" required>
                     </div>
                     <div class="form-group">
-                        <label>Địa điểm làm việc <span style="color:var(--error);">*</span></label>
+                        <label>Địa điểm làm việc <span class="ofw-required-star" aria-hidden="true">*</span></label>
                         <input type="text" id="editWorkLocation" class="input-control" required>
                     </div>
                 </div>
 
                 <div class="form-group">
-                    <label>Gói phúc lợi & Chế độ đãi ngộ <span style="color:var(--muted); font-weight:normal;">(Không bắt buộc)</span></label>
-                    <textarea id="editBenefits" class="input-control" style="height:76px;"></textarea>
+                    <label>Gói phúc lợi & Chế độ đãi ngộ <span class="ofw-optional-text">(Không bắt buộc)</span></label>
+                    <textarea id="editBenefits" class="input-control ofw-textarea-compact"></textarea>
                 </div>
             </form>
         </div>
         <div class="modal-footer">
             <button type="button" class="btn btn-secondary" onclick="closeModal('editOfferModal')">Hủy bỏ</button>
             <button type="button" class="btn btn-secondary" onclick="submitUpdateOffer(true)">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true" style="margin-right:6px;"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg> Lưu bản nháp
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true" class="ofw-btn-icon"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg> Lưu bản nháp
             </button>
             <button type="button" class="btn btn-primary" onclick="submitUpdateOffer(false)">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true" style="margin-right:6px;"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg> Trình Giám Đốc
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true" class="ofw-btn-icon"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg> Trình Giám Đốc
             </button>
         </div>
     </div>
@@ -501,9 +501,9 @@
      MODAL 4: DIRECTOR APPROVAL MODAL (Duyệt / Từ chối Offer)
      =========================================================================== -->
 <div class="modal-overlay" id="directorDecisionModal" style="display: none;">
-    <div class="modal-box" style="max-width: 500px;">
+    <div class="modal-box ofw-modal-box--sm">
         <div class="modal-header">
-            <div id="directorDecisionTitle" style="display:flex; align-items:center; gap:8px; font-weight:600; font-size:16px;">
+            <div id="directorDecisionTitle" class="ofw-modal-title-group ofw-modal-title--medium">
                 Phê Duyệt Đề Xuất Nhận Việc
             </div>
             <button type="button" class="btn-icon" onclick="closeDirectorDecisionModal()">✕</button>
@@ -517,7 +517,7 @@
                 <textarea id="directorDecisionComments" class="input-control" rows="4" placeholder="Nhập ghi chú hoặc lý do từ chối..."></textarea>
             </div>
         </div>
-        <div class="modal-footer" style="justify-content: flex-end; gap: 12px; margin-top: 16px;">
+        <div class="modal-footer ofw-modal-footer--end">
             <button type="button" class="btn btn-secondary" onclick="closeDirectorDecisionModal()">Hủy</button>
             <button type="button" id="btnSubmitDecision" class="btn btn-primary" onclick="submitDirectorDecision()">Xác Nhận</button>
         </div>
