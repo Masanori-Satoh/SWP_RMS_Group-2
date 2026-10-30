@@ -1187,4 +1187,91 @@ class ApplicationPipelineWebTests {
         mvc.perform(post("/talent-pool/15/notes/1/edit").with(as("hr", "HR")).with(csrf()).param("content", "Hack"))
                 .andExpect(status().isForbidden());
     }
+
+    @Test
+    void talentPoolListCountFollowsFiltersAcrossPages() throws Exception {
+        var cv = new TalentPoolCvResponse(10, "QA Automation Engineer (Playwright / Selenium / API)", SUBMITTED);
+        var otherCv = new TalentPoolCvResponse(11, "Business Analyst (BA)", SUBMITTED.minusDays(2));
+        var candidates = List.of(
+                new TalentPoolCandidateResponse(15, "An Võ", "an@example.com", "0901234567", List.of(cv)),
+                new TalentPoolCandidateResponse(16, "Nguyễn Bình", "binh@example.com", "0902345678", List.of()),
+                new TalentPoolCandidateResponse(17, "Lê Minh", "minh@example.com", "0903456789", List.of(cv, otherCv)),
+                new TalentPoolCandidateResponse(18, "Trần Hà", "ha@example.com", "0904567890", List.of(otherCv)),
+                new TalentPoolCandidateResponse(19, "Phạm Nam", "nam@example.com", "0905678901", List.of(cv)));
+        when(talentPool.search(any(), any())).thenReturn(
+                new PageImpl<>(candidates, org.springframework.data.domain.PageRequest.of(0, 20), 49),
+                new PageImpl<>(candidates, org.springframework.data.domain.PageRequest.of(0, 20), 27), Page.empty());
+        when(talentPool.viewerRole()).thenReturn("HR");
+        when(talentPool.selectionScope()).thenReturn(5);
+        when(talentPool.authors()).thenReturn(Map.of(5, "HR Lan"));
+        when(talentPool.sourceJobs()).thenReturn(Map.of(12, "QA Automation Engineer (Playwright / Selenium / API)"));
+        var all = mvc.perform(get("/talent-pool").with(as("hr", "HR")))
+                .andExpect(status().isOk())
+                .andExpect(content().string(containsString("<strong>49</strong>")))
+                .andExpect(content().string(not(containsString("ứng viên trong kho chung"))))
+                .andExpect(content().string(containsString("tpw-list-search")))
+                .andReturn();
+        var filtered = mvc.perform(get("/talent-pool?keyword=An&markedBy=5&sourceJobId=12").with(as("hr", "HR")))
+                .andExpect(status().isOk())
+                .andExpect(content().string(containsString("<strong>27</strong>")))
+                .andExpect(content().string(containsString("tpw-filter-count")))
+                .andReturn();
+        verify(talentPool).search(argThat(f -> "An".equals(f.keyword()) && Integer.valueOf(5).equals(f.markedBy())
+                && Integer.valueOf(12).equals(f.sourceJobId())), any());
+        var empty = mvc.perform(get("/talent-pool?keyword=NoMatch").with(as("hr", "HR")))
+                .andExpect(status().isOk()).andExpect(content().string(containsString("<strong>0</strong>")))
+                .andExpect(content().string(containsString("Chưa có ứng viên phù hợp"))).andReturn();
+        var dir = java.nio.file.Path.of("docs/members/linhdn/tmp/talent-pool");
+        java.nio.file.Files.createDirectories(dir);
+        java.nio.file.Files.writeString(dir.resolve("list-overview.html"), all.getResponse().getContentAsString(), java.nio.charset.StandardCharsets.UTF_8);
+        java.nio.file.Files.writeString(dir.resolve("list-filtered.html"), filtered.getResponse().getContentAsString(), java.nio.charset.StandardCharsets.UTF_8);
+        java.nio.file.Files.writeString(dir.resolve("list-empty.html"), empty.getResponse().getContentAsString(), java.nio.charset.StandardCharsets.UTF_8);
+    }
+
+    @Test
+    void hrRecommendationRosterShowsContactsStatesAndOnlyPendingWithdrawalWithoutSearch() throws Exception {
+        var rows = List.of(
+                new TalentPoolRecommendationResponse(219, 15, 8, "Tin đích", "An Võ", "HR Lan", SUBMITTED,
+                        "Chờ phản hồi", true, false, "an@example.com", "0901234567", "pending"),
+                new TalentPoolRecommendationResponse(220, 16, 8, "Tin đích", "Nguyễn Bình", "HR Lan", SUBMITTED,
+                        "Chờ phản hồi", true, false, "binh@example.com", "0902345678", "pending"),
+                new TalentPoolRecommendationResponse(221, 17, 8, "Tin đích", "Lê Minh", "HR Lan", SUBMITTED.minusDays(1),
+                        "HM đã chấp nhận", false, false, "minh@example.com", "0903456789", "accepted"),
+                new TalentPoolRecommendationResponse(222, 18, 8, "Tin đích", "Trần Hà", "HR Lan", SUBMITTED.minusDays(2),
+                        "HM đã từ chối", false, false, "ha@example.com", "0904567890", "rejected"));
+        when(talentPool.recommendations(8)).thenReturn(rows);
+        when(talentPool.viewerRole()).thenReturn("HR");
+        when(talentPool.canRecommend(8)).thenReturn(true);
+        when(talentPool.targetJobTitle(8)).thenReturn("Thực tập sinh Kỹ sư Phần mềm — Kỳ Xuân 2027");
+        var response = mvc.perform(get("/talent-pool/jobs/8/recommendations?keyword=NoMatch").with(as("hr", "HR")))
+                .andExpect(status().isOk()).andExpect(content().string(containsString("an@example.com")))
+                .andExpect(content().string(containsString("0901234567")))
+                .andExpect(content().string(containsString("HM đã chấp nhận")))
+                .andExpect(content().string(containsString("HM đã từ chối")))
+                .andExpect(content().string(not(containsString("type=\"search\""))))
+                .andExpect(content().string(not(containsString("name=\"keyword\""))))
+                .andExpect(content().string(not(containsString("mft-disclosure"))))
+                .andReturn();
+        var html = response.getResponse().getContentAsString();
+        assertEquals(2, html.split("data-pool-withdraw-dialog=", -1).length - 1);
+        assertEquals(2, html.split("Chỉ xóa được gợi ý khi HM chưa phản hồi", -1).length - 1);
+        assertTrue(html.indexOf("Xem ứng viên được HM đề xuất") < html.indexOf("id=\"tp-recommendations-title\""));
+        assertEquals(4, ((Page<?>) response.getModelAndView().getModel().get("page")).getTotalElements());
+        var dir = java.nio.file.Path.of("docs/members/linhdn/tmp/talent-pool");
+        java.nio.file.Files.createDirectories(dir);
+        java.nio.file.Files.writeString(dir.resolve("recommendations-hr.html"), html, java.nio.charset.StandardCharsets.UTF_8);
+        when(talentPool.recommendations(8)).thenReturn(List.of());
+        var empty = mvc.perform(get("/talent-pool/jobs/8/recommendations").with(as("hr", "HR")))
+                .andExpect(status().isOk()).andExpect(content().string(containsString("Chưa có gợi ý ứng viên nào")))
+                .andExpect(content().string(not(containsString("<thead>")))).andReturn();
+        java.nio.file.Files.writeString(dir.resolve("recommendations-empty.html"), empty.getResponse().getContentAsString(), java.nio.charset.StandardCharsets.UTF_8);
+        when(talentPool.viewerRole()).thenReturn("Hiring Manager");
+        when(talentPool.recommendations(8)).thenReturn(rows.stream().map(r -> new TalentPoolRecommendationResponse(
+                r.applicationId(), r.candidateId(), r.jobPostingId(), r.jobTitle(), r.fullName(), r.recommendedBy(),
+                r.recommendedAt(), r.statusLabel(), r.pending(), r.pending(), r.email(), r.phoneNumber(), r.stateKey())).toList());
+        var hm = mvc.perform(get("/talent-pool/jobs/8/recommendations").with(as("hm", "Hiring Manager")))
+                .andExpect(status().isOk()).andExpect(content().string(containsString("data-pool-decision")))
+                .andExpect(content().string(not(containsString("data-pool-withdraw-dialog")))).andReturn();
+        java.nio.file.Files.writeString(dir.resolve("recommendations-hm.html"), hm.getResponse().getContentAsString(), java.nio.charset.StandardCharsets.UTF_8);
+    }
 }

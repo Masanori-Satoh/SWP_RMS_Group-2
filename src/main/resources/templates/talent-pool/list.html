@@ -18,7 +18,7 @@
     <div th:if="${errorMessage}" class="alert alert--danger" role="alert" th:text="${errorMessage}"></div>
 
     <div class="page-header adw-heading tpw-heading">
-        <div><h1 class="page-title adw-title" th:text="${selectionMode ? 'Chọn ứng viên tiềm năng' : 'Ứng viên tiềm năng'}"></h1>
+        <div><h1 class="page-title adw-title tpw-list-title" th:text="${selectionMode ? 'Chọn ứng viên tiềm năng' : 'Ứng viên tiềm năng'}"></h1>
             <p class="page-subtitle tpw-subtitle" th:text="${hrMode ? 'Chọn ứng viên và CV cũ để gửi gợi ý cho HM phụ trách tin tuyển dụng.' : (selectionMode ? 'Chọn ứng viên từ kho chung để đề xuất cho tin tuyển dụng.' : 'Xem CV đã nộp và ghi chú của HR, HM trong kho chung.')}"></p></div>
         <a th:if="${jobPostingId != null}" class="btn btn--secondary" th:href="@{/internal/job-postings/{id}(id=${jobPostingId})}">Quay lại tin tuyển dụng</a>
     </div>
@@ -27,36 +27,37 @@
         <a class="btn btn--secondary btn--sm" th:href="${hrMode ? '/talent-pool/jobs/' + jobPostingId + '/recommendations' : '/talent-pool/jobs/' + jobPostingId + '/suggestions'}" th:text="${hrMode ? 'Xem gợi ý đã gửi' : 'Xem danh sách đã đề xuất'}"></a>
     </section>
 
-    <form class="card mft-toolbar tpw-toolbar adw-surface" method="get" th:action="@{/talent-pool}" role="search" aria-label="Lọc kho ứng viên"
-          th:with="filtering=${filter.keyword != null or filter.markedBy != null or filter.sourceJobId != null}">
-        <input th:if="${jobPostingId != null}" type="hidden" name="jobPostingId" th:value="${jobPostingId}">
-        <div class="mft-controls tpw-toolbar-controls">
-            <div class="tpw-filter-select" th:classappend="${filter.markedBy != null} ? 'tpw-filter-select--active'">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21v-1a8 8 0 0 1 16 0v1"/></svg>
-                <label class="tpw-filter-label" for="markedBy">Người đánh dấu</label>
-                <select class="tpw-filter-control" id="markedBy" name="markedBy"><option value="">Tất cả</option><option th:each="author : ${authors}" th:value="${author.key}" th:text="${author.value}" th:selected="${filter.markedBy == author.key}"></option></select>
-            </div>
-            <div class="tpw-filter-select" th:classappend="${filter.sourceJobId != null} ? 'tpw-filter-select--active'">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="7" width="18" height="13" rx="2"/><path d="M9 7V5a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2M3 13h18"/></svg>
-                <label class="tpw-filter-label" for="sourceJobId">Vị trí ứng tuyển</label>
-                <select class="tpw-filter-control" id="sourceJobId" name="sourceJobId"><option value="">Tất cả</option><option th:each="job : ${sourceJobs}" th:value="${job.key}" th:text="${job.value}" th:selected="${filter.sourceJobId == job.key}"></option></select>
-            </div>
-            <button class="btn btn--primary btn--sm tpw-filter-submit" type="submit">Lọc</button>
-            <a th:if="${filtering}" class="tpw-filter-clear" th:href="@{/talent-pool(jobPostingId=${jobPostingId})}">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="m6 6 12 12M6 18 18 6"/></svg>Xóa bộ lọc
-            </a>
-        </div>
-        <div class="mft-search tpw-toolbar-search">
-            <label class="sr-only" for="keyword">Tìm theo họ tên hoặc email</label>
-            <button class="mft-search-submit" type="submit" aria-label="Tìm kiếm ứng viên" title="Tìm kiếm">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m16 16 4 4"/></svg>
-            </button>
-            <input class="form-control mft-search-input" type="search" id="keyword" name="keyword" maxlength="100" placeholder="Họ tên hoặc email" th:value="${filter.keyword}">
-        </div>
-    </form>
-
     <section class="card adw-surface tpw-results" aria-labelledby="tp-results-title">
-    <header class="tp-results tpw-panel-heading adw-panel-heading"><span class="tpw-table-identity"><span class="tpw-list-icon adw-icon" aria-hidden="true"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="9" cy="7" r="4"/><path d="M2 21v-2a7 7 0 0 1 14 0v2M16 4a4 4 0 0 1 0 8M22 21v-2a6 6 0 0 0-4-5"/></svg></span><h2 id="tp-results-title" class="adw-panel-title tpw-panel-title">Kho ứng viên tiềm năng</h2></span><p class="tpw-result-count" th:with="filtering=${filter.keyword != null or filter.markedBy != null or filter.sourceJobId != null}"><strong th:text="${page.totalElements}">0</strong> <span th:text="${filtering ? 'kết quả phù hợp' : 'ứng viên trong kho chung'}">ứng viên trong kho chung</span></p></header>
+    <header class="tp-results tpw-panel-heading adw-panel-heading tpw-list-header">
+        <span class="tpw-table-identity"><span class="tpw-list-icon adw-icon" aria-hidden="true"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="9" cy="7" r="4"/><path d="M2 21v-2a7 7 0 0 1 14 0v2M16 4a4 4 0 0 1 0 8M22 21v-2a6 6 0 0 0-4-5"/></svg></span><h2 id="tp-results-title" class="adw-panel-title tpw-panel-title">Kho ứng viên tiềm năng</h2></span>
+        <form class="mft-toolbar tp-filter tpw-toolbar tpw-list-search" method="get" th:action="@{/talent-pool}" role="search" aria-label="Lọc kho ứng viên"
+              th:with="filtering=${!#strings.isEmpty(#strings.trim(filter.keyword)) or filter.markedBy != null or filter.sourceJobId != null},activeCount=${(filter.markedBy != null ? 1 : 0) + (filter.sourceJobId != null ? 1 : 0)}">
+            <input th:if="${jobPostingId != null}" type="hidden" name="jobPostingId" th:value="${jobPostingId}">
+            <div class="mft-search tpw-toolbar-search">
+                <label class="sr-only" for="keyword">Tìm theo họ tên hoặc email</label>
+                <button class="mft-search-submit" type="submit" aria-label="Tìm kiếm ứng viên" title="Tìm kiếm"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m16 16 4 4"/></svg></button>
+                <input class="form-control mft-search-input" type="search" id="keyword" name="keyword" maxlength="100" placeholder="Họ tên hoặc email" th:value="${filter.keyword}">
+            </div>
+            <details class="mft-disclosure tpw-list-filters">
+                <summary class="mft-toggle tpw-filter-toggle" aria-label="Bộ lọc ứng viên" aria-controls="tp-filter-fields" title="Bộ lọc ứng viên">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 4h18l-7 8v7l-4 2v-9Z"/></svg>
+                    <span th:if="${activeCount > 0}" class="mft-count tpw-filter-count"><span class="sr-only">Bộ lọc đang áp dụng: </span><span th:text="${activeCount}"></span></span>
+                </summary>
+                <div id="tp-filter-fields" class="mft-popover tpw-filter-popover">
+                    <div class="mft-field">
+                        <label class="form-label" for="markedBy">Người đánh dấu</label>
+                        <select class="form-select" id="markedBy" name="markedBy"><option value="">Tất cả</option><option th:each="author : ${authors}" th:value="${author.key}" th:text="${author.value}" th:selected="${filter.markedBy == author.key}"></option></select>
+                    </div>
+                    <div class="mft-field">
+                        <label class="form-label" for="sourceJobId">Vị trí ứng tuyển</label>
+                        <select class="form-select" id="sourceJobId" name="sourceJobId"><option value="">Tất cả</option><option th:each="job : ${sourceJobs}" th:value="${job.key}" th:text="${job.value}" th:selected="${filter.sourceJobId == job.key}"></option></select>
+                    </div>
+                    <div class="mft-actions"><button class="btn btn--primary btn--sm" type="submit">Áp dụng</button><a th:if="${filtering}" class="tpw-filter-clear" th:href="@{/talent-pool(jobPostingId=${jobPostingId})}">Xóa bộ lọc</a></div>
+                </div>
+            </details>
+        </form>
+        <p class="tpw-result-count tpw-list-count" title="Tổng số ứng viên thỏa mãn bộ lọc hiện tại trên tất cả các trang"><strong th:text="${page.totalElements}">0</strong> <span>ứng viên</span></p>
+    </header>
     <p id="tp-feedback" class="tp-feedback" role="status" aria-live="polite"></p>
     <noscript><p class="alert alert--warning">Bật JavaScript để chọn nhiều ứng viên và xem nhanh CV. Bạn vẫn có thể mở hồ sơ chi tiết.</p></noscript>
     <section th:if="${page.empty}" class="tp-empty tpw-empty"><h2 class="app-section-title">Chưa có ứng viên phù hợp</h2><p class="text-muted">Thử bỏ bớt bộ lọc hoặc lưu ứng viên tại trang hồ sơ ứng tuyển.</p><a class="btn btn--secondary" th:href="@{/applications}">Xem hồ sơ ứng tuyển</a></section>
@@ -140,6 +141,7 @@
     <script th:src="@{/js/pages/talent-pool-selection.js}" defer></script>
     <script th:src="@{/js/pages/talent-pool.js}" defer></script>
     <script th:src="@{/js/pages/applications.js}" defer></script>
+    <script th:src="@{/js/pages/management-filters.js}" defer></script>
     <script th:src="@{/js/pages/talent-pool-workspace.js}" defer></script>
 </th:block>
 </body>

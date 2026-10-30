@@ -46,6 +46,7 @@ Ngày trong tên báo cáo là ngày công việc được tài liệu ghi nhậ
 | --- | --- |
 | `src/main/java/com/group2/rms/candidate/talentpool/dto/TalentPoolDetailResponse.java` | Thêm sáu trường hồ sơ chỉ đọc vào DTO chi tiết. |
 | `src/main/java/com/group2/rms/candidate/talentpool/service/TalentPoolService.java` | Map các trường Candidate trong `detail` và `recommendationDetail`. |
+| `src/main/resources/templates/talent-pool/list.html` | Header bảng tích hợp tìm kiếm/bộ lọc phễu, đếm tổng ứng viên theo bộ lọc và kiểu danh sách theo mockup. |
 | `src/main/resources/templates/talent-pool/detail.html` | Thêm section thông tin, xử lý thiếu dữ liệu và liên kết ngoài. |
 | `src/main/resources/static/css/pages/talent-pool-workspace.css` | Class `tpw-info-*`, bố cục responsive và trạng thái focus của liên kết. |
 | `src/test/java/com/group2/rms/candidate/talentpool/service/TalentPoolReadUnitTests.java` | Kiểm tra mapping các trường hồ sơ thật từ Candidate. |
@@ -154,3 +155,27 @@ Phần này thay thế quyết định không có menu ở mục 9 và vị trí
 - Bỏ đường kẻ ngang dưới header ghi chú và giữa các comment; tăng khoảng cách dọc comment lên 16px. Giữ tên/role/menu riêng chủ sở hữu và form dưới đáy.
 - Đồng bộ CSS/template vào target/classes. Chỉ thay trình bày, không đổi nghiệp vụ hoặc chạy lại test backend.
 - Chrome xác nhận computed border-top giữa comment và border-bottom header ghi chú đều 0px, padding ngang ô bảng 16px; menu chính chủ/sửa-hủy/xóa-hủy vẫn hoạt động. Desktop đã xem ảnh; mobile viewport và scrollWidth cùng 390px, không có JS exception. Ảnh: `C:/Users/Administrator/.codex/visualizations/2026/10/30/01a18c5b-8f9a-7663-87be-b1559676ec27/actions-spacing-desktop.png`.
+
+## 13. Trang danh sách Talent Pool theo mockup — 30/10
+
+- Đưa form GET tìm kiếm/bộ lọc vào header “Kho ứng viên tiềm năng” của card bảng. Search bên phải, nút phễu mở disclosure cho Người đánh dấu/Vị trí ứng tuyển; badge chỉ đếm số bộ lọc phụ đang áp dụng. Giữ input name, options, query jobPostingId, action và reset link hiện có.
+- Đổi phần đếm thành **“X ứng viên”** ở mép phải header. X lấy `page.totalElements`, là tổng ứng viên thỏa keyword/markedBy/sourceJobId trên mọi trang, không lấy `page.content.size` và không hardcode số từ ảnh.
+- Đối chiếu `TalentPoolCandidateRepository.POTENTIAL_FILTER`: query lấy dữ liệu và countQuery dùng cùng WHERE; không cần sửa backend để đếm.
+- Tiêu đề trang sans đậm, avatar/tên căn giữa; giữ bảng ứng viên/liên hệ/vị trí/thao tác với nút xem CV, ghi chú và hồ sơ hiện hữu. Multi-CV vẫn giữ native select và mapping CV nguồn.
+- Tái sử dụng management-filters.css/js: outside-click/Escape đóng popover, giữ lựa chọn khi đóng, label/focus và form GET hoạt động không cần JS. CSS mới chỉ alias `tpw-list-*`/`tpw-filter-*` trong file feature.
+- Giữ class `.tp-filter` trên form mới vì handler lựa chọn đang truy vấn class này để gắn guard rời trang. Đã kiểm tra selection mode vẫn có checkbox và hidden jobPostingId.
+- Không sửa shared shell, role/quyền hoặc workflow. Bảng hẹp cuộn trong wrapper; mobile xếp search xuống hàng dưới và popover một cột.
+- Kiểm thử: **2/2 MVC render test** qua, trong đó fixture có 5 hàng nhưng tổng 49; sau filter tổng 27; rỗng tổng 0. Kiểm tra đúng giá trị filter truyền xuống service. **38/38 test JS Talent Pool** qua (selection, UI, workspace, recommendation, bookmark action).
+- Chrome desktop/mobile: header chứa search form, GET gửi đúng keyword/markedBy/sourceJobId; Escape đóng mà không mất draft; filter badge 2; kết quả lần lượt 49/27/0 theo fixture; selection mode giữ jobPostingId=12 và checkbox hoạt động. Mobile document scrollWidth=viewport=390px, popover rộng 324px, bảng cuộn trong wrapper. Không có JS exception. Đã xem ảnh desktop thường/lọc và mobile mở bộ lọc.
+- 49/27 và các ứng viên trong ảnh chỉ là fixture kiểm thử, không seed vào database hoặc hardcode vào sản phẩm. Không chạy lại SQL Server thật; đối chiếu countQuery từ source và kiểm tra hợp đồng model/MVC.
+- Template/CSS target/classes trùng source; git diff --check qua. Ảnh: `C:/Users/Administrator/.codex/visualizations/2026/10/30/01a18c5b-8f9a-7663-87be-b1559676ec27/list-desktop.png`, `list-filtered-desktop.png`, `list-filter-mobile.png`; kết quả chi tiết `list-qa.json`.
+
+## 14. Hướng xử lý conflict bản dán feature/update-ui-authen ↔ main — 30/10
+
+- Người dùng gửi conflict của TalentPoolCvResponse và ba file đính kèm: TalentPoolService, talent-pool-workspace.css, detail.html.
+- Checkout hiện tại không có file unmerged hoặc marker trong bốn file đích; không bắt đầu merge/stage/commit để giải quyết một conflict không hiện diện local.
+- Đối chiếu từng hunk: DTO giữ applicationStatus, statusLabel/statusTone, constructor tương thích 3/5 tham số và submittedAgo. Service giữ ba hunk feature (hai mapping chi tiết và cvDetail có trạng thái). HTML giữ ba hunk feature (main-stack/thông tin/CV, role/menu ghi chú, form có cvPage/counter). CSS giữ năm hunk feature về layout/ghi chú/responsive.
+- Resolve bản dán Service và HTML theo feature cho kết quả trùng file local. CSS local mới hơn bản resolve vì còn thay đổi list header/search/filter/count và suggestions; xuất CSS local để không mất các thay đổi này. Không chọn Accept Both gây trùng cấu trúc/constructor/selector.
+- Đã xuất bốn file sạch, README và SHA-256 theo đường dẫn repository trong `C:/Users/Administrator/.codex/visualizations/2026/10/30/01a18c5b-8f9a-7663-87be-b1559676ec27/talent-pool-conflict-resolved.zip`. Không ghi đè source bằng bản đính kèm hoặc bỏ thay đổi người dùng đang làm.
+- Hướng dẫn áp dụng yêu cầu giữ các phụ thuộc feature: DTO chi tiết/note, controller cvHistory/sửa-xóa, ownership service, repository author.role và talent-pool-detail.js. Current/Incoming phụ thuộc thao tác merge/rebase, phải nhìn nhãn nhánh của hunk.
+- Kiểm tra lại: 152 test Java qua (đọc Talent Pool, recommendations và MVC/pipeline), 0 failure/error; bốn file xuất trùng SHA-256 với checkout kiểm tra. Chưa thực hiện merge hoặc commit ở checkout/remote khác.
