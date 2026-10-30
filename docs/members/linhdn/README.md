@@ -8,6 +8,8 @@ Theo yêu cầu LinhDN ngày 30/10/2026: mỗi lượt hoàn thành công việc
 
 ## Trạng thái mới nhất
 
+31/10 — sửa giao diện chỉnh tài khoản nội bộ theo mockup, giữ khung điều hướng chung: [Báo cáo và ảnh desktop/mobile](2026-10-31-admin-account-edit-ui.md).
+
 30/10 — giải quyết 3 conflict tài liệu khi merge origin/main: [Nội dung giữ lại và kiểm chứng](2026-10-30-merge-main-docs-conflicts.md).
 
 30/10 — rà soát toàn bộ Markdown trong docs, làm sạch tên công cụ theo yêu cầu: [Phạm vi, file thay đổi và kiểm chứng](2026-10-30-cleanup-markdown-docs.md).
