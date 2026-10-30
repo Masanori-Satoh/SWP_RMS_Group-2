@@ -2,7 +2,13 @@
 
 Các báo cáo cập nhật Candidate/Talent Pool và Application ngày 16–17/10/2026 đã được gom về thư mục này. Mã nguồn chức năng giữ nguyên vị trí trong `src/`; không commit/push.
 
+## Quy ước ghi nhận thay đổi
+
+Theo yêu cầu LinhDN ngày 30/10/2026: mỗi lượt hoàn thành công việc tạo hoặc cập nhật một báo cáo `YYYY-MM-DD-<ten-cong-viec>.md` trong thư mục này. Ghi yêu cầu, thay đổi theo file, kiểm chứng và giới hạn; nếu chỉnh FE thì đính kèm ảnh chụp bản render, lưu ảnh vào `assets/<ten-cong-viec>/` và nhúng bằng đường dẫn tương đối. Liên kết báo cáo từ README và work log chung; không ghi việc chưa làm thành kết quả.
+
 ## Trạng thái mới nhất
+
+30/10 — đồng bộ chi tiết Application với Talent Pool/HR Recommend, có ảnh desktop/mobile: [Báo cáo thay đổi và ảnh giao diện](2026-10-30-application-detail-ui.md).
 
 28/10 — sửa clean build sau refactor Dashboard: gỡ service cũ bị thêm lại và đồng bộ đối số DTO Admin đã bỏ Blocked. [Nguyên nhân, phạm vi và kiểm chứng](2026-10-28-dashboard-compile-fix.md).
 
