@@ -1,0 +1,51 @@
+/* PAGES/DEPARTMENT-EDIT.CSS — /admin/departments/{id}/edit only.
+   Prefix def-. Reuse the workspace shell, surface and form controls; same rhythm as account-edit.css.
+   Two equal form columns + 24px gutter = full card content width. */
+.def-page .def-container { width: 100%; max-width: 1080px; margin-inline: auto; }
+.def-page .def-heading { margin-bottom: var(--s6); padding-inline: var(--s4); }
+.def-page .def-card { padding: var(--s8); }
+.def-summary { display: grid; grid-template-columns: minmax(240px, 1.5fr) minmax(200px, 1.2fr) auto; align-items: center; gap: var(--s5); margin-bottom: var(--s5); padding: var(--s5); border-radius: var(--radius-lg); background: color-mix(in srgb, var(--brand-soft) 58%, var(--surface)); }
+.def-summary-identity { display: flex; align-items: center; gap: var(--s5); min-width: 0; }
+.def-avatar { display: grid; place-items: center; flex: 0 0 64px; width: 64px; height: 64px; border: 1px solid color-mix(in srgb, var(--brand) 16%, var(--line)); border-radius: var(--radius-lg); background: var(--surface); color: var(--brand-dark); }
+.def-summary-dept { min-width: 0; }
+.def-page .def-summary-name { margin: 0 0 var(--s1); color: var(--ink); font: 700 22px/1.3 var(--sans); overflow-wrap: anywhere; }
+.def-summary-meta { margin: 0; color: var(--muted); font-size: var(--font-sm); line-height: 1.5; }
+.def-summary-field { position: relative; min-width: 0; margin: 0; padding: 0 0 0 68px; border-left: 1px solid var(--line); }
+.def-summary-field dt { margin-bottom: var(--s1); color: var(--muted); font-size: var(--font-xs); line-height: 1.4; }
+.def-summary-field dd { margin: 0; color: var(--ink); font-size: var(--font-base); font-weight: 600; line-height: 1.5; overflow-wrap: anywhere; }
+.def-summary-field dd small { display: block; color: var(--muted); font-size: var(--font-sm); font-weight: 400; }
+.def-summary-icon { position: absolute; top: 0; left: var(--s5); box-sizing: content-box; padding: var(--s2); border-radius: var(--radius-md); background: var(--surface); color: var(--brand-dark); }
+.def-summary-status { display: inline-flex; align-items: center; justify-self: end; gap: var(--s2); white-space: normal; line-height: 1.5; }
+.def-status-dot { flex: 0 0 7px; width: 7px; height: 7px; border-radius: var(--radius-full); background: currentColor; }
+.def-page .def-section { margin: 0 0 var(--s6); }
+.def-page .def-legend { display: flex; align-items: center; gap: var(--s3); width: 100%; margin-bottom: var(--s5); padding: var(--s5) 0 0; border-top: 1px solid var(--line); color: var(--ink); font: 650 20px/1.4 var(--sans); }
+.def-legend > svg { color: var(--brand-dark); flex-shrink: 0; }
+.def-page .def-grid { gap: var(--s6) var(--s8); align-items: start; }
+.def-page .form-label .account-field-hint { display: inline; margin: 0 0 0 var(--s1); font-weight: 400; }
+.def-page .def-input { min-height: 44px; padding-block: var(--s2); font-size: var(--font-base); }
+.def-page .def-input:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; border-color: var(--brand); }
+.def-page .def-actions { gap: var(--s3); padding-top: var(--s3); }
+@media (max-width: 992px) {
+  .def-page .def-card { padding: var(--s6); }
+  .def-page .def-heading { padding-inline: 0; }
+  .def-summary { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--s4); }
+  .def-summary-identity { grid-column: 1 / -1; }
+  .def-summary-field { border-left: 0; padding-left: 48px; }
+  .def-summary-icon { left: 0; }
+  .def-summary-status { justify-self: start; align-self: center; }
+}
+@media (max-width: 768px) {
+  .def-page .def-grid { grid-template-columns: minmax(0, 1fr); gap: var(--s5); }
+  .def-page .def-card { padding: var(--s4); }
+  .def-page .def-legend { font-size: 18px; }
+  .def-summary { padding: var(--s4); }
+}
+@media (max-width: 540px) {
+  .def-summary { grid-template-columns: minmax(0, 1fr); }
+  .def-summary-identity { gap: var(--s3); }
+  .def-avatar { flex-basis: 52px; width: 52px; height: 52px; }
+  .def-page .def-summary-name { font-size: 20px; }
+  .def-page .def-actions { flex-wrap: nowrap; }
+  .def-actions > a { flex: 1; }
+  .def-actions > button { flex: 2; }
+}

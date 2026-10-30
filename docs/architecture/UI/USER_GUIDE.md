@@ -1,6 +1,6 @@
 # Hướng Dẫn Sử Dụng Bộ Tài Liệu UI & Cách Nhờ AI Làm Giao Diện
 
-> **Dành cho:** thành viên team khi cần làm giao diện, đặc biệt khi dùng AI (Claude Code, Cursor, Codex, Copilot…) để viết code.
+> **Dành cho:** thành viên team khi cần làm giao diện, đặc biệt khi dùng AI (Claude Code, Cursor, Copilot…) để viết code.
 > **Đọc mất:** khoảng 5 phút. Không cần thuộc hết các file còn lại, AI sẽ đọc thay bạn nếu bạn chỉ đúng file.
 
 ---

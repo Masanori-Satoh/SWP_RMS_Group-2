@@ -1,10 +1,10 @@
 # Tổng hợp quá trình thay đổi và bổ sung thông tin ứng viên tiềm năng
 
 - **Ngày tổng hợp:** 30/10/2026, giờ Việt Nam.
-- **Người tổng hợp / thực hiện lần này:** LinhDN / Codex, theo yêu cầu người dùng.
+- **Người tổng hợp / thực hiện lần này:** LinhDN, theo yêu cầu người dùng.
 - **Yêu cầu:** tham khảo mockup để thêm thông tin hồ sơ vào chi tiết ứng viên tiềm năng; rà lại quá trình thay đổi trước đây và cập nhật work log.
 - **Nguồn:** lịch sử Git của checkout hiện tại và các báo cáo trong `docs/members/linhdn/`, `docs/management/work_logs/`. Đây là tổng hợp phạm vi LinhDN có bằng chứng lưu trong repository, không phải danh sách mọi thay đổi của toàn nhóm hoặc mọi phiên chat.
-- **Mốc Git khi bắt đầu:** `f13cea2c` (`update UI for potential candidate detail`, 30/10/2026); working tree sạch. Phần lịch sử dưới đây đã tồn tại trước phiên này, không ghi nhận là code mới của Codex.
+- **Mốc Git khi bắt đầu:** `f13cea2c` (`update UI for potential candidate detail`, 30/10/2026); working tree sạch. Phần lịch sử dưới đây đã tồn tại trước phiên này, không ghi nhận là code mới trong lần cập nhật này.
 
 ## 1. Quá trình đã thay đổi
 
@@ -106,7 +106,7 @@ mvn.cmd -o '-Dtest=TalentPoolReadUnitTests,TalentPoolRecommendationTests,Applica
 - Vạch chia cột dùng pseudo-element ngắn, chừa 16px trên/dưới; đường ngang chia hai hàng giữ nhẹ theo token. Responsive giữ 3/2/1 cột.
 - URL dài hiển thị một dòng có ellipsis để không làm hàng phình; có title chứa đầy đủ URL và link mở thật. Địa chỉ vẫn xuống dòng nếu cần để giữ thông tin.
 - Đã đồng bộ template/CSS sang target/classes. Không chạy lại test backend cho thay đổi trình bày này; kiểm tra diff và đối chiếu source/resource.
-- Lần này đã khởi chạy được Chrome headless qua quyền chạy trình duyệt và xem ảnh render desktop 1440×1000: khối thông tin gọn, 3 cột × 2 hàng, vạch ngăn ngắn, ghi chú nằm ngang bên phải. Dữ liệu trong ảnh là fixture MockMvc, không phải hồ sơ SQL thật. Ảnh: `C:/Users/Administrator/.codex/visualizations/2026/10/30/01a18c5b-8f9a-7663-87be-b1559676ec27/desktop.png`.
+- Lần này đã khởi chạy được Chrome headless qua quyền chạy trình duyệt và xem ảnh render desktop 1440×1000: khối thông tin gọn, 3 cột × 2 hàng, vạch ngăn ngắn, ghi chú nằm ngang bên phải. Dữ liệu trong ảnh là fixture MockMvc, không phải hồ sơ SQL thật. Ảnh: `desktop.png`.
 - Có capture mobile nhưng khung bị cắt bên phải nên chưa coi là nghiệm thu mobile; không tuyên bố kiểm chứng toàn bộ responsive. Giới hạn ảnh của các lượt trước vẫn là bằng chứng lịch sử, không áp dụng cho capture desktop mới này.
 
 ## 9. Toast góc phải và giao diện ghi chú — 30/10
@@ -116,7 +116,7 @@ mvn.cmd -o '-Dtest=TalentPoolReadUnitTests,TalentPoolRecommendationTests,Applica
 - Form Thêm ghi chú theo ngay sau danh sách, không bị đẩy xuống đáy cột bởi khoảng trống. Panel giữ chiều cao theo nội dung; không thêm menu “…” hay nút sửa/xóa.
 - Không suy đoán vai trò hay ảnh người viết khi DTO hiện tại chưa có các dữ liệu này. Giữ POST/CSRF/validation, noteDraft, phân quyền và handler lưu hiện hữu.
 - Mở rộng fixture render hiện có để kiểm tra thông báo flash và header ghi chú mới.
-- Kết quả cuối: 5/5 kiểm thử render/redirect ghi chú qua, 0 failure/error/skipped; kiểm tra cú pháp flash-toast.js và git diff --check qua. Fixture flash ban đầu chưa truyền successMessage đã được bổ sung trước lượt chạy đạt. Source và target/classes đồng bộ. Đã xem ảnh Chrome desktop 1440×900 có toast góc phải và ghi chú/form gọn, không có menu thao tác; dữ liệu ảnh là fixture. Ảnh: `C:/Users/Administrator/.codex/visualizations/2026/10/30/01a18c5b-8f9a-7663-87be-b1559676ec27/notes-desktop.png`.
+- Kết quả cuối: 5/5 kiểm thử render/redirect ghi chú qua, 0 failure/error/skipped; kiểm tra cú pháp flash-toast.js và git diff --check qua. Fixture flash ban đầu chưa truyền successMessage đã được bổ sung trước lượt chạy đạt. Source và target/classes đồng bộ. Đã xem ảnh Chrome desktop 1440×900 có toast góc phải và ghi chú/form gọn, không có menu thao tác; dữ liệu ảnh là fixture. Ảnh: `notes-desktop.png`.
 
 ## 10. Căn đáy khung ghi chú với cột CV — 30/10
 
@@ -124,7 +124,7 @@ mvn.cmd -o '-Dtest=TalentPoolReadUnitTests,TalentPoolRecommendationTests,Applica
 - Giữ form theo ngay sau feed; phần nền trắng dư ở cuối panel, không kéo giãn textarea hoặc khối thông tin ứng viên.
 - Dưới 992px giữ rule `flex: 0 0 auto` đã có để panel trở về chiều cao nội dung khi xếp một cột.
 - Đã đồng bộ CSS vào target/classes và kiểm tra diff; không đổi nghiệp vụ hay chạy lại test backend cho hai declaration trình bày.
-- Đã đối chiếu ảnh Chrome với profile mới: đáy khung ghi chú ngang đáy CV; form giữ nguyên phía trên. Ảnh fixture desktop: `C:/Users/Administrator/.codex/visualizations/2026/10/30/01a18c5b-8f9a-7663-87be-b1559676ec27/notes-aligned.png`.
+- Đã đối chiếu ảnh Chrome với profile mới: đáy khung ghi chú ngang đáy CV; form giữ nguyên phía trên. Ảnh fixture desktop: `notes-aligned.png`.
 
 ## 11. Menu sở hữu, role, lịch sử CV và bố cục chốt — 30/10
 
@@ -144,7 +144,7 @@ Phần này thay thế quyết định không có menu ở mục 9 và vị trí
 - Bao gồm sửa/xóa chính chủ; chặn người khác dù trùng tên; sai CandidateId; blank/quá dài; bất biến tác giả/ngày tạo; ownership DTO; trạng thái rút từ audit; menu chỉ hiện chính chủ; phân trang; CSRF; redirect/draft; 403 khi backend từ chối sở hữu.
 - Sau chỉnh tổng ở header/form ở đáy, chạy lại các ca render/endpoint liên quan: kết quả ghi dưới đây. CSS phóng to thêm sau đó được kiểm tra bằng Chrome.
 - Kiểm tra Chrome thật trên HTML fixture Thymeleaf: 2 note nhưng chỉ 1 menu, có hai role cạnh tên, bảng 6 cột; mở sửa đúng form và focus textarea; hủy trả về nội dung; hủy xóa không gửi/không khóa nút; bộ đếm cập nhật 4/1000. Không có JS exception. Desktop 1440×1000 và viewport mobile thực 390px, document scrollWidth=390 (không tràn ngang).
-- Đã xem ảnh desktop cuối: tổng CV ở header, form dưới đáy, khung hai bên ngang đáy, avatar/tên lớn hơn. Ảnh và số đo: `C:/Users/Administrator/.codex/visualizations/2026/10/30/01a18c5b-8f9a-7663-87be-b1559676ec27/actions-final-desktop.png`, `actions-final-menu.png`, `actions-final-mobile.png`, `actions-final-qa.json`.
+- Đã xem ảnh desktop cuối: tổng CV ở header, form dưới đáy, khung hai bên ngang đáy, avatar/tên lớn hơn. Ảnh và số đo: `actions-final-desktop.png`, `actions-final-menu.png`, `actions-final-mobile.png`, `actions-final-qa.json`.
 - Đây là unit + MVC service mock và browser fixture; **chưa chạy sửa/xóa trên SQL Server thật**. Không thay cấu hình server/schema, không commit/push. Java đã biên dịch; template/CSS/JS trong target/classes được đối chiếu với source.
 - Lượt kiểm tra sau cùng: 8/ 8 test render/endpoint qua; không cộng lượt chạy lại này vào 171. `node --check` và `git diff --check` qua. Tổng phạm vi cuối: 13 file (11 đã theo dõi + 2 mới), bao gồm các thay đổi của những lượt trước trong chat này.
 
@@ -154,7 +154,7 @@ Phần này thay thế quyết định không có menu ở mục 9 và vị trí
 - Tăng khoảng đệm ô bảng từ 12px lên 16px; cấp rộng hơn cho phòng ban/ngày/trạng thái/thao tác, dùng table-layout fixed. Bảng tối thiểu 800px và cuộn trong wrapper nếu không đủ chỗ; dưới 768px giữ dạng từng hồ sơ, không tràn toàn trang.
 - Bỏ đường kẻ ngang dưới header ghi chú và giữa các comment; tăng khoảng cách dọc comment lên 16px. Giữ tên/role/menu riêng chủ sở hữu và form dưới đáy.
 - Đồng bộ CSS/template vào target/classes. Chỉ thay trình bày, không đổi nghiệp vụ hoặc chạy lại test backend.
-- Chrome xác nhận computed border-top giữa comment và border-bottom header ghi chú đều 0px, padding ngang ô bảng 16px; menu chính chủ/sửa-hủy/xóa-hủy vẫn hoạt động. Desktop đã xem ảnh; mobile viewport và scrollWidth cùng 390px, không có JS exception. Ảnh: `C:/Users/Administrator/.codex/visualizations/2026/10/30/01a18c5b-8f9a-7663-87be-b1559676ec27/actions-spacing-desktop.png`.
+- Chrome xác nhận computed border-top giữa comment và border-bottom header ghi chú đều 0px, padding ngang ô bảng 16px; menu chính chủ/sửa-hủy/xóa-hủy vẫn hoạt động. Desktop đã xem ảnh; mobile viewport và scrollWidth cùng 390px, không có JS exception. Ảnh: `actions-spacing-desktop.png`.
 
 ## 13. Trang danh sách Talent Pool theo mockup — 30/10
 
@@ -168,7 +168,7 @@ Phần này thay thế quyết định không có menu ở mục 9 và vị trí
 - Kiểm thử: **2/2 MVC render test** qua, trong đó fixture có 5 hàng nhưng tổng 49; sau filter tổng 27; rỗng tổng 0. Kiểm tra đúng giá trị filter truyền xuống service. **38/38 test JS Talent Pool** qua (selection, UI, workspace, recommendation, bookmark action).
 - Chrome desktop/mobile: header chứa search form, GET gửi đúng keyword/markedBy/sourceJobId; Escape đóng mà không mất draft; filter badge 2; kết quả lần lượt 49/27/0 theo fixture; selection mode giữ jobPostingId=12 và checkbox hoạt động. Mobile document scrollWidth=viewport=390px, popover rộng 324px, bảng cuộn trong wrapper. Không có JS exception. Đã xem ảnh desktop thường/lọc và mobile mở bộ lọc.
 - 49/27 và các ứng viên trong ảnh chỉ là fixture kiểm thử, không seed vào database hoặc hardcode vào sản phẩm. Không chạy lại SQL Server thật; đối chiếu countQuery từ source và kiểm tra hợp đồng model/MVC.
-- Template/CSS target/classes trùng source; git diff --check qua. Ảnh: `C:/Users/Administrator/.codex/visualizations/2026/10/30/01a18c5b-8f9a-7663-87be-b1559676ec27/list-desktop.png`, `list-filtered-desktop.png`, `list-filter-mobile.png`; kết quả chi tiết `list-qa.json`.
+- Template/CSS target/classes trùng source; git diff --check qua. Ảnh: `list-desktop.png`, `list-filtered-desktop.png`, `list-filter-mobile.png`; kết quả chi tiết `list-qa.json`.
 
 ## 14. Hướng xử lý conflict bản dán feature/update-ui-authen ↔ main — 30/10
 
@@ -176,6 +176,6 @@ Phần này thay thế quyết định không có menu ở mục 9 và vị trí
 - Checkout hiện tại không có file unmerged hoặc marker trong bốn file đích; không bắt đầu merge/stage/commit để giải quyết một conflict không hiện diện local.
 - Đối chiếu từng hunk: DTO giữ applicationStatus, statusLabel/statusTone, constructor tương thích 3/5 tham số và submittedAgo. Service giữ ba hunk feature (hai mapping chi tiết và cvDetail có trạng thái). HTML giữ ba hunk feature (main-stack/thông tin/CV, role/menu ghi chú, form có cvPage/counter). CSS giữ năm hunk feature về layout/ghi chú/responsive.
 - Resolve bản dán Service và HTML theo feature cho kết quả trùng file local. CSS local mới hơn bản resolve vì còn thay đổi list header/search/filter/count và suggestions; xuất CSS local để không mất các thay đổi này. Không chọn Accept Both gây trùng cấu trúc/constructor/selector.
-- Đã xuất bốn file sạch, README và SHA-256 theo đường dẫn repository trong `C:/Users/Administrator/.codex/visualizations/2026/10/30/01a18c5b-8f9a-7663-87be-b1559676ec27/talent-pool-conflict-resolved.zip`. Không ghi đè source bằng bản đính kèm hoặc bỏ thay đổi người dùng đang làm.
+- Đã xuất bốn file sạch, README và SHA-256 theo đường dẫn repository trong `talent-pool-conflict-resolved.zip`. Không ghi đè source bằng bản đính kèm hoặc bỏ thay đổi người dùng đang làm.
 - Hướng dẫn áp dụng yêu cầu giữ các phụ thuộc feature: DTO chi tiết/note, controller cvHistory/sửa-xóa, ownership service, repository author.role và talent-pool-detail.js. Current/Incoming phụ thuộc thao tác merge/rebase, phải nhìn nhãn nhánh của hunk.
 - Kiểm tra lại: 152 test Java qua (đọc Talent Pool, recommendations và MVC/pipeline), 0 failure/error; bốn file xuất trùng SHA-256 với checkout kiểm tra. Chưa thực hiện merge hoặc commit ở checkout/remote khác.

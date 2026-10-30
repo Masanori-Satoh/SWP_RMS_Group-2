@@ -2,7 +2,7 @@
 
 ## Overview
 
-Đây là hợp đồng thiết kế chung của Codex và Claude Code, được rút từ source hiện tại ngày 2026-10-27, không sao chép một bộ Awesome DESIGN.md. CSS đang được trang nạp là nguồn giá trị triển khai; tài liệu này chỉ rõ cách giữ và áp dụng chúng, không tự cấp phép sửa source.
+Đây là hợp đồng thiết kế chung cho các công cụ hỗ trợ lập trình, được rút từ source hiện tại ngày 2026-10-27, không sao chép một bộ Awesome DESIGN.md. CSS đang được trang nạp là nguồn giá trị triển khai; tài liệu này chỉ rõ cách giữ và áp dụng chúng, không tự cấp phép sửa source.
 
 Mộc có các bề mặt khác nhau: workspace nội bộ phục vụ thao tác tuyển dụng; candidate portal; landing/jobs công khai; xác thực. Giữ nhận diện xanh lá trầm, nền sáng ấm, tương phản dễ đọc, logo lá và tên Mộc. Workspace ưu tiên bảng, bộ lọc, số liệu và hành động rõ ràng; landing có hình ảnh văn phòng/cây xanh; auth dùng câu chuyện bên trái và form bên phải. Không ép mọi trang thành cùng một bố cục.
 
@@ -85,10 +85,10 @@ Focus chung: `:focus-visible` có outline 3px màu focus, offset 4px; `.btn` dù
 1. Đọc DESIGN.md và UI_RULES/UI_CATALOG/UI_CSS_GUIDE; chọn đúng surface và layout.
 2. UI UX Pro Max bổ sung UX/accessibility/responsive. Không dùng bộ palette/font/React/Tailwind mặc định của skill để thay hệ thống Mộc.
 3. Impeccable hỗ trợ critique, refinement và tài liệu theo yêu cầu. Giữ nhận diện, copy thật và chức năng khi refinement. Không tự tạo PRODUCT.md, thay DESIGN.md hoặc cài/bật hook.
-4. Taste chỉ dành cho yêu cầu cải thiện mạnh về thiết kế hoặc lời gọi tường minh cho mục đích đó. Routine fix, audit, polish nhỏ và cài cấu hình không kích hoạt Taste. Codex dùng `$design-taste-frontend`; Claude Code dùng `/design-taste-frontend` (manual-only). Taste phải giữ palette/type hiện có (dùng `--keep palette,type` khi chạy draw), stack và các thành phần ở trên; việc có một gợi ý layout không tự cho phép đổi brand, protected file hoặc chức năng.
+4. Taste chỉ dành cho yêu cầu cải thiện mạnh về thiết kế hoặc lời gọi tường minh cho mục đích đó. Routine fix, audit, polish nhỏ và cài cấu hình không kích hoạt Taste. Lệnh CLI là `$design-taste-frontend`; Claude Code dùng `/design-taste-frontend` (manual-only). Taste phải giữ palette/type hiện có (dùng `--keep palette,type` khi chạy draw), stack và các thành phần ở trên; việc có một gợi ý layout không tự cho phép đổi brand, protected file hoặc chức năng.
 
 Giữ template routes, `${...}`, `th:*`, layout slots, fragment signature, CSRF, validation, OTP/countdown, data attributes và hành vi phân quyền. Không đổi backend, schema hay nghiệp vụ trong tác vụ presentation/configuration. Bọc `th:if/th:each` bên ngoài phần tử `th:replace` khi cần, theo UI_RULES.
 
 Không tự sửa các file shared được UI_RULES đánh dấu bảo vệ (layout, tokens/fonts, topbar/workspace, navigation JS, brand, core web advice). Shared components/global/fragments thuộc vùng chỉ append theo hợp đồng; sửa selector/API cũ cần quyền rõ ràng. CSS trang không redefine class shared hay thêm inline style/raw color.
 
-Báo cáo phạm vi file và bằng chứng kiểm tra thật. Không commit/push, xóa file, thay cấu hình khác hoặc bật automatic hooks khi chưa được duyệt. Hook Impeccable có sẵn trong `.codex/hooks.json` được giữ nguyên theo quyết định người dùng ngày 2026-10-27; không tuyên bố nó đã bị tắt.
+Báo cáo phạm vi file và bằng chứng kiểm tra thật. Không commit/push, xóa file, thay cấu hình khác hoặc bật automatic hooks khi chưa được duyệt. Hook Impeccable có sẵn trong cấu hình hiện có được giữ nguyên theo quyết định người dùng ngày 2026-10-27; không tuyên bố nó đã bị tắt.

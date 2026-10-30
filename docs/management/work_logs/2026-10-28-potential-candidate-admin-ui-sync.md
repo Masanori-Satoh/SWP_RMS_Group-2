@@ -1,7 +1,7 @@
 # Đồng bộ Potential Candidate theo layout Admin
 
 - **Ngày:** 28/10/2026.
-- **Người thực hiện:** LinhDN / Codex, theo yêu cầu người dùng.
+- **Người thực hiện:** LinhDN, theo yêu cầu người dùng.
 - **Yêu cầu đã làm rõ:** dùng cùng layout và giao diện Admin cho các trang liên quan Potential Candidate; báo rõ file change và cập nhật work log.
 - **Phạm vi:** frontend Thymeleaf/CSS, một assertion kiểm thử và tài liệu. Không đổi nghiệp vụ.
 
@@ -80,4 +80,4 @@ Tổng cộng **9 file dự án**. Các script/capture phục vụ QA nằm ngo�
 - `localhost:8081` không chạy khi kiểm tra. Ảnh được chụp trên Chrome từ HTML MockMvc và CSS/JS thật, không phải phiên có SQL thật. Chưa kiểm thử tích hợp SQL, lưu ghi chú/đề xuất thật, gửi email hay CV thật.
 - Chưa đo native browser zoom, FPS, Core Web Vitals hoặc tương phản mọi vùng ảnh nền. Không thay ảnh nền để xử lý các rủi ro chưa đo.
 - Không mở rộng thay đổi sang layout hay handler của màn Hồ sơ ứng tuyển/Phỏng vấn; các đường chuyển tiếp vẫn giữ nguyên.
-- Bằng chứng QA cục bộ ở `C:/Users/Administrator/.codex/visualizations/2026/10/14/01a13a55-2ffe-7341-ac69-6a4f1c685469/potential-ui-20261028/`: `before/`, `final/`, `contracts.json`, `quality.json`, `interactions.json`, `source-verification.json` và `taste/`.
+- Bằng chứng QA cục bộ ở thư mục QA cục bộ `potential-ui-20261028/`: `before/`, `final/`, `contracts.json`, `quality.json`, `interactions.json`, `source-verification.json` và `taste/`.

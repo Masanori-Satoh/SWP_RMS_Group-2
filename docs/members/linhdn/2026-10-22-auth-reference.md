@@ -21,14 +21,14 @@ Giữ navbar/brand chung qua fragment hiện có và các token màu của RMS; 
 - `AuthBotanicalWebTests`: 6 tests, 0 failures, 0 errors, 0 skipped. Render Thymeleaf và filter bảo mật thật; các service/repository được mock.
 - Browser Chrome: 6 màn × 6 viewport (1694×928, 1440×900, 1024×768, 768×1024, 390×844, 320×740) = 36 lượt render. Không tràn ngang/control vượt Card; có CSRF và tab trên mọi màn. Kiểm tra thêm hiện/ẩn mật khẩu, focus bàn phím, nhập đủ sáu số OTP, error summary. Không lỗi JavaScript.
 - Detector trên CSS và các template chính trả `[]`.
-- Kết quả browser và ảnh: `../.codex-tmp/auth-new-reference/`. Log test: `target/auth-reference-20261022-tests.log`.
+- Kết quả browser và ảnh: thư mục QA cục bộ `auth-new-reference/`. Log test: `target/auth-reference-20261022-tests.log`.
 - Đây là preview từ MockMvc, không phải E2E với tài khoản/database/email thật. Không gửi OTP hay sửa tài khoản thật.
 
 ## Ảnh nền và prompt
 
 Asset dùng trong app: `src/main/resources/static/images/auth-office-scene.png`.
 
-Tạo bằng công cụ Imagegen tích hợp, chế độ sửa ảnh, từ PNG nhúng đầu tiên của HTML mẫu. Bản sinh gốc: `C:/Users/Administrator/.codex/generated_images/01a162d9-6b9e-7602-8562-d29427b61035/exec-aab70155-0b67-4371-8d69-f3e790ba03f2.png`. Không ghi đè các ảnh cũ.
+Tạo bằng công cụ Imagegen tích hợp, chế độ sửa ảnh, từ PNG nhúng đầu tiên của HTML mẫu. Bản sinh gốc: `exec-aab70155-0b67-4371-8d69-f3e790ba03f2.png`. Không ghi đè các ảnh cũ.
 
 Prompt chính xác:
 

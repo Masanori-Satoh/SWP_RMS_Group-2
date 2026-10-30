@@ -28,7 +28,7 @@ Package của hai test: `com.group2.rms`. Kiểm tra bằng MockMvc/Thymeleaf th
 3. `git diff --exit-code origin/main -- src/main/resources/templates/fragments/workspace-header.html` — exit 0.
 4. `git diff --exit-code e8e02f7 -- src/main/resources/templates/fragments/sidebar.html src/main/resources/templates/fragments/workspace-header.html` — exit 0.
 5. `git stash list` — stash nguồn vẫn còn, không bị pop/drop.
-6. So sánh SHA256 với `../.codex-tmp/sidebar-header-recovery-2026-10-04/user-file-hashes-before.json` — bốn file đang sửa từ trước giữ nguyên.
+6. So sánh SHA256 với `user-file-hashes-before.json` — bốn file đang sửa từ trước giữ nguyên.
 
 ## 3. Test tay — hướng dẫn, chưa chạy
 
@@ -77,4 +77,4 @@ Package của hai test: `com.group2.rms`. Kiểm tra bằng MockMvc/Thymeleaf th
 - Bốn file đang sửa sẵn giữ nguyên: **PASS**.
 - UI-01..05 trong browser thật: **NOT TESTED**.
 - Full suite, SQL Server/JPA mapping: **NOT RERUN** ở đợt này; không dùng kết quả 310 test cũ cho checkout hiện tại.
-- Log: `../.codex-tmp/sidebar-header-recovery-2026-10-04/tests-ui-recovery.log`.
+- Log: `tests-ui-recovery.log`.
