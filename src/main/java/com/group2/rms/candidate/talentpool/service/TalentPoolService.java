@@ -119,14 +119,16 @@ public class TalentPoolService {
         return new TalentPoolDetailResponse(candidateResponse(candidate), true,
                 notesFor(id), poolApplications.findPreviousCvByCandidateId(id).stream()
                         .map(this::cvDetail)
-                        .toList());
+                        .toList(), candidate.getDateOfBirth(), candidate.getGender(), candidate.getAddress(),
+                candidate.getCandidateSource(), candidate.getLinkedInUrl(), candidate.getPortfolioUrl());
     }
 
     public List<TalentPoolNoteResponse> notesFor(Integer id) {
-        actor();
+        User viewer = actor();
         return notes.findByCandidate_CandidateIdOrderByCreatedAtDescNoteIdDesc(id).stream()
                 .map(n -> new TalentPoolNoteResponse(n.getNoteId(), n.getAuthor().getFullName(), n.getNoteContent(),
-                        n.getCreatedAt()))
+                        n.getCreatedAt(), n.getAuthor().getRole() == null ? null : n.getAuthor().getRole().getRoleName(),
+                        java.util.Objects.equals(viewer.getUserId(), n.getAuthor().getUserId())))
                 .toList();
     }
 
@@ -136,7 +138,8 @@ public class TalentPoolService {
         return new TalentPoolDetailResponse(candidateResponse(c), c.isPotential(), notesFor(candidateId),
                 poolApplications.findPreviousCvByCandidateId(candidateId).stream()
                         .map(this::cvDetail)
-                        .toList());
+                        .toList(), c.getDateOfBirth(), c.getGender(), c.getAddress(),
+                c.getCandidateSource(), c.getLinkedInUrl(), c.getPortfolioUrl());
     }
 
     public String pendingRecommendationUrl(Integer id) {
@@ -212,6 +215,34 @@ public class TalentPoolService {
             throw new TalentPoolException("Hãy đánh dấu ứng viên tiềm năng trước khi thêm ghi chú.");
         notes.save(TalentPoolNote.builder().candidate(candidate).author(user).noteContent(request.content().strip())
                 .build());
+    }
+
+    @Transactional
+    public void updateNote(Integer candidateId, Integer noteId, TalentPoolNoteRequest request) {
+        TalentPoolNote note = ownedNote(candidateId, noteId);
+        String content = request.content() == null ? "" : request.content().strip();
+        if (content.isEmpty() || content.length() > 1000)
+            throw new TalentPoolException("Ghi chú cần có nội dung và tối đa 1.000 ký tự.");
+        note.setNoteContent(content);
+        notes.save(note);
+    }
+
+    @Transactional
+    public void deleteNote(Integer candidateId, Integer noteId) {
+        notes.delete(ownedNote(candidateId, noteId));
+    }
+
+    private TalentPoolNote ownedNote(Integer candidateId, Integer noteId) {
+        User viewer = actor();
+        TalentPoolNote note = notes.findById(noteId)
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy ghi chú."));
+        if (!java.util.Objects.equals(note.getCandidate().getCandidateId(), candidateId))
+            throw new ResourceNotFoundException("Ghi chú không thuộc ứng viên này.");
+        if (!java.util.Objects.equals(note.getAuthor().getUserId(), viewer.getUserId()))
+            throw new AccessDeniedException("Bạn chỉ có thể sửa hoặc xóa ghi chú của mình.");
+        if (!note.getCandidate().isPotential())
+            throw new TalentPoolException("Ứng viên không còn trong kho tiềm năng.");
+        return note;
     }
 
     public String targetJobTitle(Integer id) {
@@ -653,7 +684,8 @@ public class TalentPoolService {
         String employmentType = requisition == null || requisition.getEmploymentType() == null ? null
                 : RequisitionLabels.employmentType(requisition.getEmploymentType());
         return new TalentPoolCvResponse(a.getApplicationId(), a.getJobPosting().getPostingTitle(),
-                a.getSubmissionDate(), department, employmentType);
+                a.getSubmissionDate(), department, employmentType,
+                audit.has("Application", a.getApplicationId(), "Withdrawn") ? "Withdrawn" : a.getApplicationStatus());
     }
 
     private TalentPoolCandidateResponse candidateResponse(Candidate c) {

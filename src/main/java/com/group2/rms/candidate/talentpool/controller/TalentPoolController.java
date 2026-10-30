@@ -72,11 +72,15 @@ public class TalentPoolController {
     public String detail(@PathVariable Integer id, @RequestParam(required = false) Integer jobPostingId,
             @RequestParam(required = false) Integer recommendationId,
             @ModelAttribute("filter") TalentPoolSearch filter,
-            @RequestParam(defaultValue = "0") int page, Model model) {
+            @RequestParam(defaultValue = "0") int page, @RequestParam(defaultValue = "0") int cvPage, Model model) {
         TalentPoolRecommendationResponse recommendation = recommendationId == null ? null : pool.recommendation(recommendationId, id);
         if (recommendation != null) jobPostingId = recommendation.jobPostingId();
         model.addAttribute("recommendation", recommendation);
-        model.addAttribute("detail", recommendation == null ? pool.detail(id) : pool.recommendationDetail(id, recommendationId));
+        var detail = recommendation == null ? pool.detail(id) : pool.recommendationDetail(id, recommendationId);
+        model.addAttribute("detail", detail);
+        int currentCvPage = Math.min(Math.max(0, cvPage), Math.max(0, (detail.cvs().size() - 1) / 3));
+        model.addAttribute("cvHistory", new PageImpl<>(detail.cvs().subList(currentCvPage * 3,
+                Math.min(detail.cvs().size(), (currentCvPage + 1) * 3)), PageRequest.of(currentCvPage, 3), detail.cvs().size()));
         model.addAttribute("jobPostingId", jobPostingId);
         model.addAttribute("jobTitle", jobPostingId == null ? null : pool.targetJobTitle(jobPostingId));
         model.addAttribute("viewerRole", pool.viewerRole());
@@ -116,7 +120,7 @@ public class TalentPoolController {
 
     @PostMapping("/{id}/notes")
     // add note for a potential candidate
-    public String note(@PathVariable Integer id, @Valid @ModelAttribute TalentPoolNoteRequest request,
+    public String note(@PathVariable Integer id, @RequestParam(defaultValue = "0") int cvPage, @Valid @ModelAttribute TalentPoolNoteRequest request,
             BindingResult errors, @RequestParam(required = false) Integer jobPostingId,
             @RequestParam(required = false) Integer recommendationId,
             @ModelAttribute("filter") TalentPoolSearch filter,
@@ -136,7 +140,58 @@ public class TalentPoolController {
         }
         String destination = poolUrl(id, jobPostingId, filter, page);
         if (recommendationId != null) destination += (destination.contains("?") ? "&" : "?") + "recommendationId=" + recommendationId;
+        if (cvPage > 0) destination += (destination.contains("?") ? "&" : "?") + "cvPage=" + cvPage;
         return "redirect:" + destination;
+    }
+
+    @PostMapping("/{id}/notes/{noteId}/edit")
+    public String editNote(@PathVariable Integer id, @PathVariable Integer noteId,
+            @Valid @ModelAttribute TalentPoolNoteRequest request, BindingResult errors,
+            @RequestParam(required = false) Integer jobPostingId,
+            @RequestParam(required = false) Integer recommendationId,
+            @RequestParam(defaultValue = "0") int cvPage,
+            @ModelAttribute("filter") TalentPoolSearch filter,
+            @RequestParam(defaultValue = "0") int page, RedirectAttributes flash) {
+        if (recommendationId != null) pool.recommendation(recommendationId, id);
+        if (errors.hasErrors()) {
+            flash.addFlashAttribute("errorMessage", errors.getAllErrors().getFirst().getDefaultMessage());
+            flash.addFlashAttribute("editingNoteId", noteId);
+            flash.addFlashAttribute("editNoteDraft", request.content());
+        } else {
+            try {
+                pool.updateNote(id, noteId, request);
+                flash.addFlashAttribute("successMessage", "Đã cập nhật ghi chú.");
+            } catch (TalentPoolException e) {
+                flash.addFlashAttribute("errorMessage", e.getMessage());
+                flash.addFlashAttribute("editingNoteId", noteId);
+                flash.addFlashAttribute("editNoteDraft", request.content());
+            }
+        }
+        return noteRedirect(id, jobPostingId, recommendationId, cvPage, filter, page);
+    }
+
+    @PostMapping("/{id}/notes/{noteId}/delete")
+    public String deleteNote(@PathVariable Integer id, @PathVariable Integer noteId,
+            @RequestParam(required = false) Integer jobPostingId,
+            @RequestParam(required = false) Integer recommendationId,
+            @RequestParam(defaultValue = "0") int cvPage,
+            @ModelAttribute("filter") TalentPoolSearch filter,
+            @RequestParam(defaultValue = "0") int page, RedirectAttributes flash) {
+        if (recommendationId != null) pool.recommendation(recommendationId, id);
+        try {
+            pool.deleteNote(id, noteId);
+            flash.addFlashAttribute("successMessage", "Đã xóa ghi chú.");
+        } catch (TalentPoolException e) {
+            flash.addFlashAttribute("errorMessage", e.getMessage());
+        }
+        return noteRedirect(id, jobPostingId, recommendationId, cvPage, filter, page);
+    }
+
+    private String noteRedirect(Integer id, Integer jobId, Integer recommendationId, int cvPage,
+            TalentPoolSearch filter, int page) {
+        String destination = poolUrl(id, jobId, filter, page);
+        if (recommendationId != null) destination += (destination.contains("?") ? "&" : "?") + "recommendationId=" + recommendationId;
+        return "redirect:" + destination + (destination.contains("?") ? "&" : "?") + "cvPage=" + Math.max(0, cvPage);
     }
 
     @GetMapping("/jobs/{id}/recommendations")

@@ -5,7 +5,7 @@ import org.springframework.data.jpa.repository.*;
 import java.util.List;
 
 public interface TalentPoolNoteRepository extends JpaRepository<TalentPoolNote, Integer> {
-    @EntityGraph(attributePaths = "author")
+    @EntityGraph(attributePaths = {"author", "author.role"})
     List<TalentPoolNote> findByCandidate_CandidateIdOrderByCreatedAtDescNoteIdDesc(Integer candidateId);
 }
 
