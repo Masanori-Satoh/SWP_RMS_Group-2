@@ -585,3 +585,28 @@ sidebar; không bỏ hướng dẫn nhập liệu hoặc liên kết Hủy trong
   component đã ghi ở trên vẫn còn, không được coi là đã xử lý trong lần này.
 - Chi tiết file change, kiểm chứng và giới hạn:
   [work log](../../management/work_logs/2026-10-28-potential-candidate-list-polish.md).
+
+
+### Cập nhật 31/10/2026 — Đề xuất Offer (HR) dùng giao diện workspace Admin (`ofw-`)
+
+- Hai màn hình của HR: Danh sách (`offers/list.html`) và Tạo/Chỉnh sửa (`offers/form.html`)
+  tiếp tục decorate `layout/internal`, kích hoạt giao diện Admin workspace opt-in qua
+  marker `.adw-page`, `fragments/ui/admin-workspace :: scene` và `:: scripts`. Giữ nguyên
+  vai trò `HR`/`Recruiter`, không đổi quyền của người dùng.
+- Màn hình Danh sách (`/offers`): tiêu đề `.adw-heading` và `.adw-title`, 5 stat cards
+  tổng quan trong `.ofw-stats-grid`, thanh công cụ `.ofw-toolbar.adw-surface`, danh sách
+  đề xuất bọc trong `.adw-surface` với header chuẩn `.ofw-list-header`, icon `.ofw-list-icon`,
+  tiêu đề `.adw-panel-title`, badge `.ofw-list-count` và bảng dữ liệu `.adw-data-table`.
+- Màn hình Form (`/offers/create`): mở rộng toàn bộ bề ngang workspace giống trang Danh sách (`/offers`), Tiêu đề trang chuẩn `.adw-heading` và `.adw-title` (36px desktop / 28px mobile,
+  gạch chân thương hiệu 48×4px).
+- Thẻ Card chuyển sang `.adw-surface` kèm `.adw-panel-heading` và `.adw-panel-title`,
+  kết hợp badge số thứ tự bước tròn `1`, `2` trang nhã (`.ofw-step-badge`).
+- Lưới thông tin ứng viên dạng key-value `.ofw-info-grid` với mức lương đề xuất được
+  nổi bật bằng badge `.ofw-salary-badge`. Toàn bộ controls tuân thủ Button DNA 8px radius
+  cao 48px, không dùng nút bo tròn pill.
+- CSS chuyên biệt đặt tại `static/css/pages/offer-workspace.css` tiền tố `ofw-`, sử dụng
+  100% tokens từ `tokens.css`, không hardcode mã hex hay `!important`.
+- Loại bỏ hoàn toàn script nội tuyến và FontAwesome CDN; dùng 100% inline SVG chuẩn;
+  validation lỗi dùng `.adw-validation-summary`, thông báo flash dùng `fragments/ui/flash-toast :: flashToast`.
+- Chi tiết file change và kiểm thử:
+  [work log](../../management/work_logs/2026-10-31-hr-offer-proposal-admin-ui-sync.md).
