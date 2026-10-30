@@ -958,3 +958,49 @@
   font-weight: 700;
   color: var(--error);
 }
+
+
+/* ==========================================================================
+   17. Director List Specific Utilities (100% Tokens, Zero Inline Styles)
+   ========================================================================== */
+.ofw-col-id {
+  width: 80px;
+}
+
+.ofw-col-action {
+  width: 100px;
+  text-align: right;
+}
+
+.ofw-col-action-wide {
+  width: 140px;
+  text-align: right;
+}
+
+.ofw-cell-link {
+  text-decoration: none;
+  color: inherit;
+}
+
+.ofw-date-cell {
+  color: var(--muted);
+  font-size: 13.5px;
+}
+
+.ofw-empty-cell {
+  text-align: center;
+  padding: 48px 24px;
+  color: var(--muted);
+}
+
+.ofw-empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--s3);
+}
+
+.ofw-empty-state svg {
+  color: var(--control-line);
+}
