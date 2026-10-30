@@ -9,7 +9,8 @@
   min-width: 0;
 }
 
-.ofw-form-wrap {
+.ofw-form-wrap,
+.ofw-page.offer-detail-container {
   width: 100%;
   max-width: none;
   margin-inline: 0;
