@@ -174,3 +174,24 @@ bc9995f docs(offer): add summary report for HR offer UI synchronization
 caa3abf style(offer): expand create offer proposal form width to match offer workspace
 26eeced feat(offer): sync HR offer screens with admin workspace layout
 ```
+
+
+---
+
+## 🏛️ VII. KHẮC PHỤC CÁC VI PHẠM THEO QUY CHUẨN KIẾN TRÚC (ARCHITECTURE GUIDE)
+
+Nhằm đảm bảo phân hệ Offer hoàn toàn tuân thủ các nguyên tắc thiết kế trong `docs/architecture/ARCHITECTURE_GUIDE.md` và `docs/architecture/UI/UI_RULES.md`:
+
+1. **Khắc phục Circular Dependency (`offer` ↔ `notification`):**
+   - Di dời `OfferMailSender.java` từ package `com.group2.rms.notification` sang đúng domain nghiệp vụ `com.group2.rms.offer.service`.
+   - Package `notification` giữ đúng trách nhiệm thông báo nội bộ hệ thống (`NotificationService`), xóa bỏ hoàn toàn phụ thuộc hai chiều.
+2. **Khử Coupling đặc thù module trong `GlobalExceptionHandler`:**
+   - Loại bỏ các điều kiện `expectedStartDate`, `proposedSalary`, `probationSalary`, `probationDays` hardcoded tại `GlobalExceptionHandler.java`.
+   - Trả tầng core về dạng generic thuần túy; sử dụng cơ chế `messages.properties` và Spring DataBinder để chuyển đổi thông báo hợp đồng dữ liệu chuẩn hóa.
+3. **Chuẩn hóa 100% Design Tokens & Xóa `!important` trong `candidate-offers.css`:**
+   - Tăng độ đặc hiệu CSS (CSS Specificity) bằng cách kết hợp tag + class `.cof-system-banner p.cof-system-banner__guide` và `.cof-system-banner p.cof-system-banner__reason` để loại bỏ 2 vị trí `!important`.
+   - Chuyển đổi 20 vị trí mã màu hex hardcoded sang các token biến hệ thống (`--surface`, `--muted`, `--neutral-soft`, `--ink`, `--brand-dark`, `--brand-soft`, `--line`, `--warning-soft`, `--on-brand`, `--surface-subtle`).
+4. **Dọn dẹp Endpoint Form POST thừa (`OfferController.java`):**
+   - Xóa bỏ 2 endpoint Form POST không sử dụng `approveOfferForm` (`POST /{id}/approve`) và `rejectOfferForm` (`POST /{id}/reject`), thống nhất quy chuẩn gọi JSON API modal `approveOfferJson` và `rejectOfferJson`.
+5. **Kiểm thử nghiệm thu:**
+   - 164/164 tests trong bộ test suite liên quan (`OfferIntegrationTests`, `OfferControllerBugTests`, `CandidateOfferWebTests`, `OfferServiceTests`) đạt tỷ lệ thành công 100%.

@@ -70,3 +70,29 @@
 - **Kiểm tra cú pháp & Kiến trúc:**
   - `offer-workspace.css`: 100% token CSS, 0 raw hex color, 0 `!important`.
   - Cả 3 template `list.html`, `form.html`, `detail.html`: `tabindex="-1"` chuẩn Accessibility, không còn thẻ `<script>` nội tuyến, 100% SVG inline.
+
+
+---
+
+## 5. Cải Tiến Kiến Trúc & Xóa Bỏ Vi Phạm (Refactoring for Architecture Guide Compliance)
+
+Thực hiện rà soát và khắc phục triệt để 4 vi phạm kiến trúc theo `docs/architecture/ARCHITECTURE_GUIDE.md`:
+
+1. **Xóa bỏ Circular Dependency giữa module `offer` và `notification`:**
+   - Di chuyển [OfferMailSender.java](file:///c:/Users/Admin/Documents/Ky_5/SWP391/SWP_RMS_Group-2/src/main/java/com/group2/rms/offer/service/OfferMailSender.java) từ `com.group2.rms.notification` sang đúng phân hệ nghiệp vụ `com.group2.rms.offer.service`.
+   - Cập nhật package và loại bỏ import chéo tại `OfferServiceImpl.java` và `OfferServiceTests.java`. Module `notification` chỉ tập trung in-app notification (`NotificationService`), không còn phụ thuộc vòng tròn vào `offer`.
+
+2. **Khử Coupling đặc thù module trong Core Exception Handler:**
+   - Loại bỏ đoạn mã hardcoded kiểm tra các trường dữ liệu `expectedStartDate`, `proposedSalary`, `probationSalary`, `probationDays` trong [GlobalExceptionHandler.java](file:///c:/Users/Admin/Documents/Ky_5/SWP391/SWP_RMS_Group-2/src/main/java/com/group2/rms/core/exception/GlobalExceptionHandler.java).
+   - Tầng `core` trở về trạng thái generic hoàn toàn (`Dữ liệu nhập vào không đúng định dạng.`), các thông báo cụ thể theo trường dữ liệu tiếng Việt được phân phối chuẩn qua Spring DataBinder và `messages.properties`.
+
+3. **Chuẩn hóa Token CSS 100% trong `candidate-offers.css`:**
+   - Xóa bỏ hoàn toàn thuộc tính `!important` tại `.cof-system-banner p.cof-system-banner__guide` và `.cof-system-banner p.cof-system-banner__reason` bằng cách tăng CSS specificity (tag + class selector) thay vì ép quy tắc.
+   - Thay thế toàn bộ 20 vị trí mã màu hex hardcoded (`#ffffff`, `#64748b`, `#f1f5f9`, `#0f172a`, `#0f3822`, `#475569`, `#1e293b`, `#fffdf8`, `#eedfcb`, `#fdf5ea`, `#fae6cb`, `#c5d7cc`, `#edf7ee`, `#e1e7e2`, `#f8faf8`, `#e8ede9`, `#fbfdfb`, `#e3ede5`, `#c9decb`) sang biến semantic của hệ thống (`--surface`, `--muted`, `--neutral-soft`, `--ink`, `--brand-dark`, `--brand-soft`, `--line`, `--warning-soft`, `--on-brand`, `--surface-subtle`).
+
+4. **Dọn dẹp Endpoint Form POST thừa trong `OfferController.java`:**
+   - Loại bỏ các endpoint Form POST không sử dụng `approveOfferForm` (`POST /{id}/approve`) và `rejectOfferForm` (`POST /{id}/reject`).
+   - Thống nhất toàn bộ luồng phê duyệt/từ chối của Giám đốc qua chuẩn REST JSON `approveOfferJson` và `rejectOfferJson` tương thích với giao diện modal pop-up.
+
+5. **Kết quả kiểm thử toàn diện:**
+   - Chạy toàn bộ 4 test suite liên quan (`OfferIntegrationTests`, `OfferControllerBugTests`, `CandidateOfferWebTests`, `OfferServiceTests`): **75/75 tests PASS 100%**.

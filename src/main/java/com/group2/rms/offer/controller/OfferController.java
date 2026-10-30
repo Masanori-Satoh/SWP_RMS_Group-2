@@ -478,40 +478,6 @@ public class OfferController {
     }
 
     /**
-     * 9c. DIRECTOR APPROVE (FORM POST): Director duyệt Offer Proposal từ Form POST
-     */
-    @PostMapping("/{id}/approve")
-    public String approveOfferForm(
-            @PathVariable Integer id,
-            @RequestParam(required = false, defaultValue = "Phê duyệt trực tiếp") String comments,
-            RedirectAttributes flash) {
-        try {
-            offerService.approveOfferByDirector(id, comments);
-            flash.addFlashAttribute("successMessage", "Đã phê duyệt đề xuất nhận việc thành công!");
-        } catch (BaseBusinessException e) {
-            flash.addFlashAttribute("errorMessage", e.getMessage());
-        }
-        return "redirect:/offers";
-    }
-
-    /**
-     * 9d. DIRECTOR REJECT (FORM POST): Director từ chối Offer Proposal từ Form POST
-     */
-    @PostMapping("/{id}/reject")
-    public String rejectOfferForm(
-            @PathVariable Integer id,
-            @RequestParam(required = false) String comments,
-            RedirectAttributes flash) {
-        try {
-            offerService.rejectOfferByDirector(id, comments);
-            flash.addFlashAttribute("successMessage", "Đã từ chối đề xuất nhận việc thành công!");
-        } catch (BaseBusinessException e) {
-            flash.addFlashAttribute("errorMessage", e.getMessage());
-        }
-        return "redirect:/offers";
-    }
-
-    /**
      * 10. EXPORT EXCEL: Xuất dữ liệu Offer theo phạm vi và bộ cột được chọn (Screen
      * 30)
      */
