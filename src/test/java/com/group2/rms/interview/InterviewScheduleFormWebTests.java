@@ -104,7 +104,7 @@ class InterviewScheduleFormWebTests {
 
         mvc.perform(get("/interviews").with(user("hr_lan").authorities(() -> "ROLE_HR")))
                 .andExpect(status().isOk())
-                .andExpect(content().string(containsString("class=\"card il-card\"")))
+                .andExpect(content().string(containsString("class=\"card il-card adw-surface\"")))
                 .andExpect(content().string(containsString("badge badge--warning")))
                 .andExpect(content().string(containsString("data-member-name=\"Quang HR\"")))
                 .andExpect(content().string(containsString("href=\"/interviews/7/result\"")))
