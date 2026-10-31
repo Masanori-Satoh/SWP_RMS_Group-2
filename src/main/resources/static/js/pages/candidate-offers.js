@@ -181,6 +181,16 @@
     });
   });
 
+  // Tự động mở Modal từ chối nếu có tham số ?openDecline=true trên URL
+  if (declineDialog && typeof declineDialog.showModal === 'function') {
+    var urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('openDecline') === 'true') {
+      declineDialog.showModal();
+      var autoCancelBtn = declineDialog.querySelector('[data-detail-close]');
+      if (autoCancelBtn) autoCancelBtn.focus();
+    }
+  }
+
   // Đóng modal chi tiết
   document.querySelectorAll('[data-detail-close]').forEach(function (btn) {
     btn.addEventListener('click', function () {

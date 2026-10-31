@@ -234,17 +234,12 @@ class CandidateOfferWebTests {
     }
 
     @Test
-    void candidateCanViewDeclinePage() throws Exception {
+    void candidateAccessDeclineRouteRedirectsToDetailWithModalParam() throws Exception {
         when(candidateOffers.getDetail(12)).thenReturn(detailOffer(12, "Sent_Candidate", "Chờ bạn trả lời", "badge--warning", true));
 
         mvc.perform(get("/portal/offers/12/decline").with(as("an.vo", "Candidate")))
-                .andExpect(status().isOk())
-                .andExpect(view().name("offers/candidate-decline"))
-                .andExpect(model().attribute("activeMenu", "offers"))
-                .andExpect(content().string(containsString("Từ chối Thư mời nhận việc")))
-                .andExpect(content().string(containsString("action=\"/portal/offers/12/decline\"")))
-                .andExpect(content().string(containsString("Mức đãi ngộ chưa đạt kỳ vọng")))
-                .andExpect(content().string(not(containsString("style=\""))));
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrl("/portal/offers/12?openDecline=true"));
     }
 
     @Test
