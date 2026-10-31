@@ -170,6 +170,7 @@ a.tpw-contact-line:focus-visible { outline: 3px solid var(--focus); outline-offs
 .rms-app .adw-page.tpw-page .tpw-profile-title { margin: 0; font-size: 28px; line-height: 1.25; }
 .tpw-profile-title::after { content: none; }
 .tpw-page .tpw-name-badge { display: inline-flex; align-items: center; margin: 0; gap: 6px; padding: 4px 12px; font-size: 13px; font-weight: 600; }
+.tpw-state-row { margin-top: var(--s3); }
 .tpw-contact-chips { display: flex; flex-wrap: wrap; gap: var(--s2); margin: 0; padding: 0; list-style: none; }
 .tpw-contact-chip { display: inline-flex; align-items: center; gap: var(--s2); min-height: 34px; max-width: 100%; padding: 4px var(--s3); border: 1px solid var(--line); border-radius: var(--radius-md); background: var(--surface-subtle); color: var(--ink); font-size: 14px; overflow-wrap: anywhere; }
 .tpw-contact-chip svg { flex-shrink: 0; color: var(--brand-dark); }

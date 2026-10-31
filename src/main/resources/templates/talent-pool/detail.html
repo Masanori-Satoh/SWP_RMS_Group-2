@@ -26,13 +26,12 @@
             <div class="tp-profile-info">
                 <div class="tpw-name-row">
                     <h1 class="page-title tp-profile-title adw-title tpw-profile-title" th:text="${detail.candidate.fullName}"></h1>
-                    <th:block th:if="${recommendation == null and bookmarkSourceId != null}">
+                    <th:block th:if="${bookmarkSourceId != null}">
                         <span th:replace="~{talent-pool/potential-toggle :: toggle(applicationId=${bookmarkSourceId},candidateName=${detail.candidate.fullName},saved=${detail.potential},keepSource=${true})}"></span>
                     </th:block>
                     <span th:if="${recommendation == null and bookmarkSourceId == null}" class="badge badge--success tp-profile-badge tpw-status tpw-name-badge" data-tpw-tone="success">
                         <svg viewBox="0 0 24 24" width="15" height="15" fill="currentColor" aria-hidden="true"><path d="m12 2.8 2.8 5.7 6.3.9-4.6 4.4 1.1 6.2L12 17.1 6.4 20l1.1-6.2L2.9 9.4l6.3-.9Z"/></svg>Ứng viên tiềm năng
                     </span>
-                    <span th:if="${recommendation != null}" class="badge tp-profile-badge tpw-status tpw-name-badge" th:attr="data-tpw-tone=${recommendation.pending ? 'warning' : 'neutral'}" th:classappend="${recommendation.pending ? 'badge--warning' : 'badge--neutral'}" th:text="${recommendation.statusLabel}"></span>
                 </div>
                 <ul class="tpw-contact-chips" aria-label="Thông tin liên hệ">
                     <li class="tpw-contact-chip">
@@ -43,11 +42,10 @@
                         <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2Z"/></svg>
                         <span th:text="${detail.candidate.phoneNumber ?: 'Chưa có số điện thoại'}"></span>
                     </li>
-                    <li th:if="${recommendation != null}" class="tpw-contact-chip">
-                        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="m12 2.8 2.8 5.7 6.3.9-4.6 4.4 1.1 6.2L12 17.1 6.4 20l1.1-6.2L2.9 9.4l6.3-.9Z"/></svg>
-                        <span th:text="${detail.potential ? 'Đã lưu tiềm năng' : 'Đã bỏ lưu tiềm năng'}"></span>
-                    </li>
                 </ul>
+                <div th:if="${recommendation != null}" class="tpw-state-row">
+                    <span class="badge tp-profile-badge tpw-status" th:attr="data-tpw-tone=${recommendation.pending ? 'warning' : 'neutral'}" th:classappend="${recommendation.pending ? 'badge--warning' : 'badge--neutral'}" th:text="${recommendation.statusLabel}"></span>
+                </div>
             </div>
             <div class="tpw-profile-actions">
                 <a class="btn btn--secondary btn--sm" th:href="@{${backUrl}}" data-pool-back>
