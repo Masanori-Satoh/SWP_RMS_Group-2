@@ -952,94 +952,80 @@ function submitUpdateOffer(isDraft) {
 // 3.3. THAO TÁC PHÁT HÀNH & XÓA OFFER (Send, Delete)
 // =========================================================================
 
+let pendingSendOfferId = null;
+
 function confirmSendOffer(offerId) {
     if (!offerId) return;
+    pendingSendOfferId = offerId;
 
-    showDirectorCustomModal({
-        iconHtml: `
-            <div class="reject-warn-icon-wrapper" style="background:#e8f5e9; border-color:#c8e6c9;">
-                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#166534" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <line x1="22" y1="2" x2="11" y2="13"></line>
-                    <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
-                </svg>
-            </div>
-        `,
-        title: 'Phát hành Thư mời nhận việc?',
-        desc: 'Bạn có chắc chắn muốn phát hành Thư mời nhận việc tới ứng viên?',
-        confirmText: 'Xác nhận phát hành',
-        confirmClass: 'btn-director-reject-confirm',
-        showCancel: true,
-        cancelText: 'Hủy',
-        cancelClass: 'btn-director-modal-cancel',
-        onConfirm: () => {
-            const csrf = getCsrfInfo();
-            const headers = {
-                'Accept': 'application/json'
-            };
-            if (csrf.token) {
-                headers[csrf.header] = csrf.token;
-            }
-
-            if (typeof Swal !== 'undefined') {
-                Swal.fire({
-                    title: 'Đang phát hành...',
-                    text: 'Đang kết nối gửi email Thư mời nhận việc tới ứng viên, vui lòng đợi trong giây lát.',
-                    allowOutsideClick: false,
-                    allowEscapeKey: false,
-                    didOpen: () => {
-                        Swal.showLoading();
-                    }
-                });
-            }
-
-            fetch(`/offers/${offerId}/send`, {
-                method: 'POST',
-                headers: headers
-            })
-                .then(async res => {
-                    const isJson = res.headers.get('content-type')?.includes('application/json');
-                    const data = isJson ? await res.json() : null;
-                    if (!res.ok) {
-                        throw new Error(data?.message || `Lỗi phát hành thư mời nhận việc (${res.status})`);
-                    }
-                    return data;
-                })
-                .then(res => {
-                    if (res && res.success) {
-                        if (typeof Swal !== 'undefined') {
-                            Swal.fire({
-                                title: 'Thành công',
-                                text: res.message || 'Phát hành Thư mời làm việc thành công!',
-                                icon: 'success',
-                                timer: 1500,
-                                showConfirmButton: false
-                            }).then(() => {
-                                closeModal('detailOfferModal');
-                                window.location.reload();
-                            });
-                        } else {
-                            showToast(res.message, 'success');
-                            closeModal('detailOfferModal');
-                            setTimeout(() => window.location.reload(), 1500);
-                        }
-                    } else {
-                        if (typeof Swal !== 'undefined') {
-                            Swal.fire('Lỗi', res?.message || 'Lỗi phát hành thư mời nhận việc.', 'error');
-                        } else {
-                            showToast(res?.message || 'Lỗi phát hành thư mời nhận việc.', 'danger');
-                        }
-                    }
-                })
-                .catch(err => {
-                    if (typeof Swal !== 'undefined') {
-                        Swal.fire('Lỗi', err.message || 'Không thể phát hành thư mời nhận việc.', 'error');
-                    } else {
-                        showToast(err.message, 'danger');
-                    }
-                });
+    const dialog = document.getElementById('sendOfferConfirmDialog');
+    if (dialog && typeof dialog.showModal === 'function') {
+        dialog.showModal();
+    } else {
+        if (confirm('Bạn có chắc chắn muốn phát hành Thư mời nhận việc tới ứng viên?')) {
+            executeSendOfferAction();
         }
-    });
+    }
 }
+
+function executeSendOfferAction() {
+    const offerId = pendingSendOfferId;
+    if (!offerId) return;
+
+    const dialog = document.getElementById('sendOfferConfirmDialog');
+    if (dialog) dialog.close();
+
+    const btnModal = document.getElementById('btnConfirmSendOfferModal');
+    if (btnModal) {
+        btnModal.disabled = true;
+        btnModal.innerHTML = '<span class="ofw-spinner-sm" aria-hidden="true"></span> Đang gửi...';
+    }
+
+    showFlashToast('Đang phát hành và gửi email Thư mời nhận việc tới ứng viên...', 'info');
+
+    const csrf = getCsrfInfo();
+    const headers = {
+        'Accept': 'application/json'
+    };
+    if (csrf.token) {
+        headers[csrf.header] = csrf.token;
+    }
+
+    fetch(`/offers/${offerId}/send`, {
+        method: 'POST',
+        headers: headers
+    })
+        .then(async res => {
+            const isJson = res.headers.get('content-type')?.includes('application/json');
+            const data = isJson ? await res.json() : null;
+            if (!res.ok) {
+                throw new Error(data?.message || `Lỗi phát hành thư mời nhận việc (${res.status})`);
+            }
+            return data;
+        })
+        .then(res => {
+            if (res && res.success) {
+                showFlashToast(res.message || 'Phát hành Thư mời làm việc thành công!', 'success');
+                setTimeout(() => {
+                    window.location.reload();
+                }, 1200);
+            } else {
+                showFlashToast(res?.message || 'Lỗi phát hành thư mời nhận việc.', 'error');
+            }
+        })
+        .catch(err => {
+            showFlashToast(err.message || 'Không thể phát hành thư mời nhận việc.', 'error');
+        })
+        .finally(() => {
+            if (btnModal) {
+                btnModal.disabled = false;
+                btnModal.innerHTML = '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true" class="ofw-btn-icon-inline"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg> Xác nhận phát hành';
+            }
+        });
+}
+
+window.confirmSendOffer = confirmSendOffer;
+window.executeSendOfferAction = executeSendOfferAction;
 
 function confirmDeleteOffer(offerId) {
     if (!offerId) return;
@@ -1721,13 +1707,13 @@ function openDirectorDetailModal(id) {
                     }
                 }
             } else {
-                Swal.fire('Lỗi', data.message || 'Không thể lấy thông tin chi tiết.', 'error');
+                showFlashToast(data?.message || 'Không thể lấy thông tin chi tiết.', 'error');
                 closeDirectorDetailModal();
             }
         })
         .catch(err => {
             console.error(err);
-            Swal.fire('Lỗi', 'Đã xảy ra lỗi khi kết nối server.', 'error');
+            showFlashToast('Đã xảy ra lỗi khi kết nối server.', 'error');
             closeDirectorDetailModal();
         });
 }
@@ -1805,51 +1791,30 @@ function showDirectorCustomModal({
     onConfirm,
     onClose
 }) {
-    const defaultIcon = `
-        <div class="reject-warn-icon-wrapper">
-            <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-                <circle cx="12" cy="12" r="10"></circle>
-                <line x1="12" y1="8" x2="12" y2="12"></line>
-                <line x1="12" y1="16" x2="12.01" y2="16"></line>
-            </svg>
-        </div>
-    `;
-
-    Swal.fire({
-        html: `
-            ${iconHtml || defaultIcon}
-            <h3 class="reject-warn-title">${title}</h3>
-            <p class="reject-warn-desc">${desc}</p>
-            ${subtext ? `
-            <div class="reject-warn-divider"></div>
-            <div class="reject-warn-subtext">
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#475569" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <circle cx="12" cy="12" r="10"></circle>
-                    <line x1="12" y1="16" x2="12" y2="12"></line>
-                    <line x1="12" y1="8" x2="12.01" y2="8"></line>
-                </svg>
-                <span>${subtext}</span>
-            </div>` : ''}
-        `,
-        showConfirmButton: true,
-        confirmButtonText: confirmText,
-        showCancelButton: showCancel,
-        cancelButtonText: cancelText,
-        showCloseButton: true,
-        buttonsStyling: false,
-        reverseButtons: true,
-        customClass: {
-            popup: 'director-reject-alert-modal',
-            confirmButton: confirmClass,
-            cancelButton: cancelClass
-        }
-    }).then((result) => {
-        if (result.isConfirmed) {
-            if (typeof onConfirm === 'function') onConfirm();
+    if (typeof Swal !== 'undefined') {
+        Swal.fire({
+            title: title,
+            text: desc,
+            icon: 'info',
+            showCancelButton: showCancel,
+            confirmButtonText: confirmText,
+            cancelButtonText: cancelText
+        }).then((result) => {
+            if (result.isConfirmed && typeof onConfirm === 'function') onConfirm();
+            else if (!result.isConfirmed && typeof onClose === 'function') onClose();
+        });
+    } else {
+        if (showCancel) {
+            if (confirm(desc || title)) {
+                if (typeof onConfirm === 'function') onConfirm();
+            } else {
+                if (typeof onClose === 'function') onClose();
+            }
         } else {
-            if (typeof onClose === 'function') onClose();
+            showFlashToast(desc || title, 'info');
+            if (typeof onConfirm === 'function') onConfirm();
         }
-    });
+    }
 }
 
 function showDirectorRejectReasonRequiredAlert(onCloseCallback) {
