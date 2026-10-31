@@ -1,5 +1,7 @@
-package com.group2.rms.notification;
+package com.group2.rms.notification.controller;
 
+import com.group2.rms.notification.dto.NotificationResponse;
+import com.group2.rms.notification.service.NotificationService;
 import com.group2.rms.user.entity.Role;
 import com.group2.rms.user.entity.User;
 import com.group2.rms.user.repository.UserRepository;
@@ -26,7 +28,7 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
-class NotificationApiControllerTest {
+class NotificationApiControllerTests {
 
     @Mock
     private NotificationService notificationService;

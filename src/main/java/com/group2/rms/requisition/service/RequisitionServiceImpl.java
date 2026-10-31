@@ -4,7 +4,7 @@ import com.group2.rms.core.exception.ResourceNotFoundException;
 import com.group2.rms.core.util.FieldChanges;
 import com.group2.rms.jobposting.entity.JobPosting;
 import com.group2.rms.jobposting.repository.JobPostingRepository;
-import com.group2.rms.notification.NotificationService;
+import com.group2.rms.notification.service.NotificationService;
 import com.group2.rms.requisition.dto.RequisitionRequest;
 import com.group2.rms.requisition.dto.RequisitionResponse;
 import com.group2.rms.requisition.dto.ScreeningCriteriaRequest;
@@ -35,14 +35,8 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
 
-/**
- * Service xử lý nghiệp vụ Yêu cầu tuyển dụng (Job Requisition): tạo, sửa, xóa, duyệt, rút lại, sao chép, xem chi tiết.
- *
- * Các phần phụ đã tách ra file riêng để file này chỉ còn luồng nghiệp vụ:
- * - màn danh sách (lọc, tìm kiếm, phân trang): RequisitionListService
- * - entity → DTO và cờ quyền cho template: RequisitionMapper
- * - ghi / đọc audit log: RequisitionAuditLogger
- * - luật phân quyền: RequisitionAccess; luật dữ liệu form: RequisitionValidator
+/*
+ * SERVICE: nghiệp vụ yêu cầu tuyển dụng (tạo, sửa, xóa, duyệt, rút lại, sao chép, xem chi tiết).
  */
 @Service
 @Transactional
@@ -63,9 +57,7 @@ public class RequisitionServiceImpl implements RequisitionService {
     private final NotificationService notificationService;
     private final Clock clock;
 
-    // ===================================================================================
-    // ĐỌC: chi tiết, form sửa, form sao chép
-    // ===================================================================================
+    // ----- Đọc: chi tiết, form sửa, form sao chép -----
 
     @Override
     @Transactional(readOnly = true)
@@ -84,12 +76,12 @@ public class RequisitionServiceImpl implements RequisitionService {
 
     @Override
     @Transactional(readOnly = true)
-    public RequisitionRequest getRequestDtoById(Integer id) {
+    public RequisitionRequest prepareEditForm(Integer id) {
         User currentUser = access.actor();
         JobRequisition jobRequisition = findRequisitionById(id, false);
         // Rule: Chỉ người có quyền sửa (HM sở hữu yêu cầu khi còn là Draft) mới lấy được DTO form
         access.requireEdit(currentUser, jobRequisition);
-        return mapper.toRequestDto(jobRequisition);
+        return mapper.toEditForm(jobRequisition);
     }
 
     @Override
@@ -102,53 +94,47 @@ public class RequisitionServiceImpl implements RequisitionService {
         access.requireView(currentUser, jobRequisition);
         requireCopyableSource(jobRequisition);
 
-        RequisitionRequest copiedDto = mapper.toRequestDto(jobRequisition);
+        RequisitionRequest copiedRequest = mapper.toEditForm(jobRequisition);
         // Reset criteria IDs để khi tạo mới sẽ sinh bản ghi mới
-        for (ScreeningCriteriaRequest criterion : copiedDto.getScreeningCriteria()) {
+        for (ScreeningCriteriaRequest criterion : copiedRequest.getScreeningCriteria()) {
             criterion.setCriteriaId(null);
         }
 
-        // Đợt tiếp theo trong chuỗi của phiếu gốc; chỉ để hiển thị, server tính lại khi lưu
-        // (đổi tên vị trí thì thành yêu cầu mới, quay về đợt 1)
+        // Đợt kế tiếp chỉ để hiển thị; server tính lại khi lưu
         JobRequisition root = rootOf(jobRequisition);
-        copiedDto.setOriginalRequisitionId(root.getRequisitionId());
-        copiedDto.setOriginalTitle(root.getTitle());
-        copiedDto.setRecruitmentRound(requisitions.findMaxRoundInChain(root.getRequisitionId()) + 1);
-        return copiedDto;
+        copiedRequest.setOriginalRequisitionId(root.getRequisitionId());
+        copiedRequest.setOriginalTitle(root.getTitle());
+        copiedRequest.setRecruitmentRound(requisitions.findMaxRoundInChain(root.getRequisitionId()) + 1);
+        return copiedRequest;
     }
 
-    // ===================================================================================
-    // GHI: tạo, sửa, xóa
-    // ===================================================================================
+    // ----- Ghi: tạo, sửa, xóa -----
 
     @Override
-    public Integer createRequisition(RequisitionRequest requestDto) {
+    public Integer createRequisition(RequisitionRequest request) {
         User currentUser = access.actor();
         // Rule: Kiểm tra quyền tạo yêu cầu
         access.requireCreate(currentUser);
 
         if (access.isDirector(currentUser)) {
             // Rule: Giám đốc không thuộc phòng ban nào: tự chọn phòng ban cho yêu cầu trên form
-            requestDto.setDepartmentId(requireActiveDepartment(requestDto.getDepartmentId()));
+            request.setDepartmentId(requireActiveDepartment(request.getDepartmentId()));
         } else {
-            // Rule: Yêu cầu luôn thuộc phòng ban của người tạo (không lấy từ form).
-            // Tài khoản chưa được gán phòng ban, hoặc phòng ban đã ngừng hoạt động, thì không tạo được
-            // (cột DepartmentId là NOT NULL, báo lỗi ở đây thay vì để DB báo lỗi).
+            // Rule: yêu cầu thuộc phòng ban đang hoạt động của người tạo, không lấy từ form
             Department department = currentUser.getDepartment();
             if (department == null || !DEPARTMENT_ACTIVE.equals(department.getDepartmentStatus())) {
                 throw createValidationException("departmentId",
                         "Tài khoản của bạn chưa được gán phòng ban đang hoạt động. Vui lòng liên hệ quản trị viên.");
             }
-            requestDto.setDepartmentId(department.getDepartmentId());
+            request.setDepartmentId(department.getDepartmentId());
         }
 
-        validator.validate(requestDto);
-        // Hướng 2: chặn trùng lặp đơn Draft cho cùng vị trí trong phòng ban
-        requireNoOtherDraft(requestDto, null,
+        validator.validate(request);
+        requireNoOtherDraft(request, null,
                 "Bạn đang có một bản nháp cho vị trí này trong phòng ban. Vui lòng hoàn thiện bản nháp hiện có.");
 
         // Rule: Tiêu chí mới không được chứa ID đã tồn tại
-        for (ScreeningCriteriaRequest criteriaRow : requestDto.getScreeningCriteria()) {
+        for (ScreeningCriteriaRequest criteriaRow : request.getScreeningCriteria()) {
             if (criteriaRow.getCriteriaId() != null) {
                 throw createValidationException("screeningCriteria", "Tiêu chí mới không được tham chiếu bản ghi có sẵn.");
             }
@@ -158,22 +144,21 @@ public class RequisitionServiceImpl implements RequisitionService {
         jobRequisition.setHiringManager(currentUser);
         jobRequisition.setCreatedBy(currentUser);
         jobRequisition.setScreeningCriteria(new ArrayList<>());
-        assignRecruitmentRound(jobRequisition, requestDto.getOriginalRequisitionId(), requestDto.getTitle(), currentUser);
-        applyDataToEntity(jobRequisition, requestDto);
+        assignRecruitmentRound(jobRequisition, request, currentUser);
+        applyDataToEntity(jobRequisition, request);
 
-        for (ScreeningCriteriaRequest criteriaRow : requestDto.getScreeningCriteria()) {
+        for (ScreeningCriteriaRequest criteriaRow : request.getScreeningCriteria()) {
             if (!RequisitionValidator.isBlankCriteria(criteriaRow)) {
                 jobRequisition.getScreeningCriteria().add(buildCriterionEntity(jobRequisition, criteriaRow));
             }
         }
 
         // Rule: Xác định trạng thái ban đầu (Draft, Pending_Director hoặc Approved nếu Giám đốc gửi)
-        applySavedStatus(jobRequisition, requestDto.getAction(), currentUser);
+        applySavedStatus(jobRequisition, request.getAction(), currentUser);
 
         requisitions.saveAndFlush(jobRequisition);
 
-        // Rule: Mã yêu cầu sinh từ RequisitionId, nên chỉ có sau khi DB cấp id ở lần lưu đầu tiên.
-        // Gán vào entity đang được quản lý trong transaction, Hibernate tự UPDATE khi transaction kết thúc.
+        // Mã sinh từ id nên gán sau lần lưu đầu; Hibernate tự UPDATE khi kết thúc transaction
         jobRequisition.setRequisitionCode(RequisitionLabels.requisitionCode(jobRequisition.getRequisitionId()));
 
         boolean directlyApproved = recordDirectApprovalIfNeeded(jobRequisition, currentUser);
@@ -191,7 +176,7 @@ public class RequisitionServiceImpl implements RequisitionService {
     }
 
     @Override
-    public void updateRequisition(Integer id, RequisitionRequest requestDto) {
+    public void updateRequisition(Integer id, RequisitionRequest request) {
         User currentUser = access.actor();
         JobRequisition jobRequisition = findRequisitionById(id, true);
         // Rule: Chỉ cho phép chỉnh sửa khi còn là bản nháp và đúng người sở hữu
@@ -199,28 +184,28 @@ public class RequisitionServiceImpl implements RequisitionService {
 
         if (access.isDirector(currentUser)) {
             // Rule: Giám đốc sửa bản nháp của mình thì được chọn lại phòng ban
-            requestDto.setDepartmentId(requireActiveDepartment(requestDto.getDepartmentId()));
+            request.setDepartmentId(requireActiveDepartment(request.getDepartmentId()));
         } else {
             // Rule: Sửa yêu cầu không đổi phòng ban: giữ phòng ban đã lưu
-            requestDto.setDepartmentId(jobRequisition.getDepartment().getDepartmentId());
+            request.setDepartmentId(jobRequisition.getDepartment().getDepartmentId());
         }
 
-        validator.validate(requestDto);
-        requireNoOtherDraft(requestDto, id, "Bạn đang có một bản nháp khác cho vị trí này trong phòng ban.");
+        validator.validate(request);
+        requireNoOtherDraft(request, id, "Bạn đang có một bản nháp khác cho vị trí này trong phòng ban.");
 
         Map<String, String> before = auditLogger.snapshot(jobRequisition);
-        synchronizeCriteria(jobRequisition, requestDto.getScreeningCriteria());
-        applyDataToEntity(jobRequisition, requestDto);
+        synchronizeCriteria(jobRequisition, request.getScreeningCriteria());
+        applyDataToEntity(jobRequisition, request);
 
-        // Rule: Bản sao (đợt > 1) bị đổi tên vị trí thì thành yêu cầu mới: bỏ phiếu gốc, quay về đợt 1
+        // Rule: bản sao đổi tên vị trí hoặc phòng ban thì thành yêu cầu mới ở đợt 1
         JobRequisition original = jobRequisition.getOriginalRequisition();
-        if (original != null && !isSameTitle(jobRequisition.getTitle(), original.getTitle())) {
+        if (original != null && !isSameChain(request, original)) {
             jobRequisition.setOriginalRequisition(null);
             jobRequisition.setRecruitmentRound(1);
         }
 
         // Rule: Cập nhật trạng thái khi nộp lại hoặc tiếp tục lưu nháp
-        applySavedStatus(jobRequisition, requestDto.getAction(), currentUser);
+        applySavedStatus(jobRequisition, request.getAction(), currentUser);
 
         // Rule: Không đổi gì thì không lưu và không ghi audit
         Map<String, String> after = auditLogger.snapshot(jobRequisition);
@@ -247,8 +232,7 @@ public class RequisitionServiceImpl implements RequisitionService {
         if (postings.existsByRequisition_RequisitionId(id)) {
             throw createValidationException("action", "Yêu cầu này đã được liên kết với tin đăng tuyển và không thể xóa.");
         }
-        // Rule: Không cho phép xóa phiếu gốc khi đã có đợt tuyển sau sao chép từ nó
-        // (nếu xóa, các đợt sau mất phiếu gốc và vi phạm khóa ngoại FK_JobRequisition_Original)
+        // Rule: không xóa phiếu gốc đã có đợt sau (FK_JobRequisition_Original)
         if (requisitions.existsByOriginalRequisition_RequisitionId(id)) {
             throw createValidationException("action", "Yêu cầu này đã có đợt tuyển sau được sao chép từ nó và không thể xóa.");
         }
@@ -260,9 +244,7 @@ public class RequisitionServiceImpl implements RequisitionService {
         requisitions.flush();
     }
 
-    // ===================================================================================
-    // CHUYỂN TRẠNG THÁI: duyệt / trả lại, rút lại
-    // ===================================================================================
+    // ----- Chuyển trạng thái: duyệt / trả lại, rút lại -----
 
     @Override
     public void decide(Integer id, boolean approved, String comment) {
@@ -289,6 +271,8 @@ public class RequisitionServiceImpl implements RequisitionService {
             nextStatus = RequisitionAccess.STATUS_APPROVED;
         }
         jobRequisition.setApprovalStatus(nextStatus);
+        // Dashboard HR tính số ngày chờ tạo tin từ mốc này
+        jobRequisition.setUpdatedAt(LocalDateTime.now(clock));
 
         RequisitionApproval decision = approvals.save(RequisitionApproval.builder()
                 .requisition(jobRequisition)
@@ -330,30 +314,29 @@ public class RequisitionServiceImpl implements RequisitionService {
         String oldStatus = "Status: " + RequisitionAccess.STATUS_PENDING_DIRECTOR;
         auditLogger.log(jobRequisition, currentUser, RequisitionAuditLogger.ACTION_UPDATE, oldStatus,
                 oldStatus + " → " + RequisitionAccess.STATUS_DRAFT + " (rút lại)");
+        notificationService.markRequisitionPendingRead(id);
+        notificationService.notifyRequisitionWithdrawn(jobRequisition, currentUser);
     }
 
-    // ===================================================================================
-    // CÁC HÀM NHỎ DÙNG CHUNG
-    // ===================================================================================
+    // ----- Hàm nhỏ dùng chung -----
 
-    /** Hướng 1: chỉ sao chép được yêu cầu đã xong vòng duyệt (không phải Draft / Pending_Director). */
+    /** Rule: chỉ sao chép yêu cầu đã duyệt; bị từ chối thì sửa và gửi lại chính nó. */
     private void requireCopyableSource(JobRequisition source) {
-        if (!RequisitionAccess.isFinishedStatus(source.getApprovalStatus())) {
-            throw createValidationException("action", "Chỉ có thể sao chép yêu cầu đã hoàn tất phê duyệt hoặc bị từ chối.");
+        if (!RequisitionAccess.STATUS_APPROVED.equals(source.getApprovalStatus())) {
+            throw createValidationException("action", "Chỉ có thể sao chép yêu cầu đã được phê duyệt.");
         }
     }
 
-    /**
-     * Rule: Một phòng ban không có hai bản nháp cùng tên vị trí.
-     *
-     * @param excludeId id của chính yêu cầu đang sửa (null khi tạo mới)
-     */
-    private void requireNoOtherDraft(RequisitionRequest requestDto, Integer excludeId, String message) {
-        if (requestDto.getDepartmentId() == null || requestDto.getTitle() == null || requestDto.getTitle().isBlank()) {
+    /** Rule: khi lưu nháp, một phòng ban không có hai bản nháp cùng tên vị trí (excludeId = yêu cầu đang sửa). */
+    private void requireNoOtherDraft(RequisitionRequest request, Integer excludeId, String message) {
+        if (RequisitionValidator.isSubmit(request.getAction())) {
+            return;
+        }
+        if (request.getDepartmentId() == null || request.getTitle() == null || request.getTitle().isBlank()) {
             return;
         }
         boolean hasDraft = requisitions.existsDraftByTitleAndDepartment(
-                requestDto.getTitle().trim(), requestDto.getDepartmentId(), excludeId);
+                request.getTitle().trim(), request.getDepartmentId(), excludeId);
         if (hasDraft) {
             throw createValidationException("title", message);
         }
@@ -410,21 +393,17 @@ public class RequisitionServiceImpl implements RequisitionService {
         }
     }
 
-    /**
-     * Rule: Đợt 1 không có phiếu gốc; đợt sau trỏ về phiếu đợt 1 và lấy số đợt kế tiếp trong chuỗi
-     * (CK_JobRequisition_RoundOrigin, UX_JobRequisition_Original_Round). Số đợt client gửi lên bị bỏ qua.
-     * Sao chép nhưng đổi tên vị trí thì coi là yêu cầu mới: đợt 1, không có phiếu gốc.
-     */
-    private void assignRecruitmentRound(JobRequisition jobRequisition, Integer sourceRequisitionId, String title, User currentUser) {
-        if (sourceRequisitionId == null) {
+    /** Rule: bản sao cùng tên vị trí và phòng ban thì nối vào phiếu đợt 1, số đợt = max + 1; khác thì đợt 1. */
+    private void assignRecruitmentRound(JobRequisition jobRequisition, RequisitionRequest request, User currentUser) {
+        if (request.getOriginalRequisitionId() == null) {
             jobRequisition.setRecruitmentRound(1);
             return;
         }
-        JobRequisition source = requisitions.findById(sourceRequisitionId)
+        JobRequisition source = requisitions.findById(request.getOriginalRequisitionId())
                 .orElseThrow(() -> createValidationException("originalRequisitionId", "Yêu cầu nguồn để sao chép không tồn tại."));
         access.requireView(currentUser, source);
         requireCopyableSource(source);
-        if (!isSameTitle(title, rootOf(source).getTitle())) {
+        if (!isSameChain(request, rootOf(source))) {
             jobRequisition.setRecruitmentRound(1);
             return;
         }
@@ -439,6 +418,13 @@ public class RequisitionServiceImpl implements RequisitionService {
             return jobRequisition.getOriginalRequisition();
         }
         return jobRequisition;
+    }
+
+    /** Cùng chuỗi đợt khi cùng phòng ban và cùng tên vị trí (bỏ qua hoa/thường, khoảng trắng đầu/cuối). */
+    private boolean isSameChain(RequisitionRequest request, JobRequisition root) {
+        Integer rootDepartmentId = root.getDepartment() == null ? null : root.getDepartment().getDepartmentId();
+        return Objects.equals(request.getDepartmentId(), rootDepartmentId)
+                && isSameTitle(request.getTitle(), root.getTitle());
     }
 
     /** Hai tên vị trí coi là giống nhau khi khác nhau chỉ ở khoảng trắng đầu/cuối hoặc chữ hoa/thường. */
@@ -458,10 +444,7 @@ public class RequisitionServiceImpl implements RequisitionService {
         return department.getDepartmentId();
     }
 
-    /**
-     * Rule: Trạng thái khi lưu form tạo / sửa.
-     * Lưu nháp → Draft. Gửi → Pending_Director; riêng Giám đốc gửi thì không cần ai duyệt nữa → Approved.
-     */
+    /** Rule: lưu nháp → Draft; gửi → Pending_Director, Giám đốc gửi → Approved. */
     private void applySavedStatus(JobRequisition jobRequisition, String action, User currentUser) {
         if (!RequisitionValidator.isSubmit(action)) {
             jobRequisition.setApprovalStatus(RequisitionAccess.STATUS_DRAFT);
@@ -475,58 +458,55 @@ public class RequisitionServiceImpl implements RequisitionService {
         }
     }
 
-    /**
-     * Giám đốc gửi yêu cầu của mình thì lưu luôn một bản ghi phê duyệt (người duyệt là chính Giám đốc),
-     * để lịch sử duyệt ở trang chi tiết vẫn có người duyệt và ngày duyệt như phiếu thường.
-     * Trả về true nếu đã ghi.
-     */
+    /** Giám đốc tự gửi thì lưu bản ghi duyệt của chính mình và báo HR tạo tin; trả về true nếu đã ghi. */
     private boolean recordDirectApprovalIfNeeded(JobRequisition jobRequisition, User currentUser) {
         boolean isApproved = RequisitionAccess.STATUS_APPROVED.equals(jobRequisition.getApprovalStatus());
         if (!isApproved || !access.isDirector(currentUser)) {
             return false;
         }
-        approvals.save(RequisitionApproval.builder()
+        RequisitionApproval approval = RequisitionApproval.builder()
                 .requisition(jobRequisition)
                 .director(currentUser)
                 .status(RequisitionAccess.STATUS_APPROVED)
                 .comments("Giám đốc tạo và phê duyệt trực tiếp.")
-                .build());
+                .build();
+        approvals.save(approval);
+        notificationService.notifyRequisitionApproved(approval);
         return true;
     }
 
-    private ScreeningCriteria buildCriterionEntity(JobRequisition jobRequisition, ScreeningCriteriaRequest criteriaDto) {
+    private ScreeningCriteria buildCriterionEntity(JobRequisition jobRequisition, ScreeningCriteriaRequest criterionRequest) {
         ScreeningCriteria criterion = new ScreeningCriteria();
         criterion.setRequisition(jobRequisition);
-        copyCriterionProperties(criterion, criteriaDto);
+        copyCriterionProperties(criterion, criterionRequest);
         return criterion;
     }
 
-    private void copyCriterionProperties(ScreeningCriteria targetEntity, ScreeningCriteriaRequest sourceDto) {
-        targetEntity.setCriteriaName(sourceDto.getCriteriaName());
-        targetEntity.setCriteriaType(sourceDto.getCriteriaType());
-        targetEntity.setRequiredValue(sourceDto.getRequiredValue());
-        targetEntity.setWeight(sourceDto.getWeight());
-        targetEntity.setIsMandatory(Boolean.TRUE.equals(sourceDto.getIsMandatory()));
+    private void copyCriterionProperties(ScreeningCriteria criterion, ScreeningCriteriaRequest source) {
+        criterion.setCriteriaName(source.getCriteriaName());
+        criterion.setCriteriaType(source.getCriteriaType());
+        criterion.setRequiredValue(source.getRequiredValue());
+        criterion.setWeight(source.getWeight());
+        criterion.setIsMandatory(Boolean.TRUE.equals(source.getIsMandatory()));
     }
 
-    private void applyDataToEntity(JobRequisition jobRequisition, RequisitionRequest requestDto) {
+    private void applyDataToEntity(JobRequisition jobRequisition, RequisitionRequest request) {
         // Tên vị trí luôn có giá trị (validator bắt buộc cả khi lưu nháp)
-        jobRequisition.setTitle(requestDto.getTitle());
-        jobRequisition.setHiringType(requestDto.getHiringType());
-        jobRequisition.setDepartment(findDepartment(requestDto.getDepartmentId()));
-        jobRequisition.setNumberOfPositions(requestDto.getNumberOfPositions());
-        jobRequisition.setEmploymentType(requestDto.getEmploymentType());
-        jobRequisition.setMinSalary(requestDto.getMinSalary());
-        jobRequisition.setMaxSalary(requestDto.getMaxSalary());
-        jobRequisition.setGender(requestDto.getGender());
-        jobRequisition.setWorkLocation(requestDto.getWorkLocation());
-        jobRequisition.setWorkModel(requestDto.getWorkModel());
-        jobRequisition.setProbationDays(requestDto.getProbationDays());
-        jobRequisition.setReasonForHiring(requestDto.getReasonForHiring());
-        // Rule: Bản nháp được phép để trống mô tả / yêu cầu, nhưng 2 cột này NOT NULL trong DB
-        // nên lưu chuỗi rỗng thay cho null (khi gửi duyệt, validator đã bắt buộc nhập)
-        jobRequisition.setJobDescription(Objects.requireNonNullElse(requestDto.getJobDescription(), ""));
-        jobRequisition.setRequirementDetails(Objects.requireNonNullElse(requestDto.getRequirementDetails(), ""));
+        jobRequisition.setTitle(request.getTitle());
+        jobRequisition.setHiringType(request.getHiringType());
+        jobRequisition.setDepartment(findDepartment(request.getDepartmentId()));
+        jobRequisition.setNumberOfPositions(request.getNumberOfPositions());
+        jobRequisition.setEmploymentType(request.getEmploymentType());
+        jobRequisition.setMinSalary(request.getMinSalary());
+        jobRequisition.setMaxSalary(request.getMaxSalary());
+        jobRequisition.setGender(request.getGender());
+        jobRequisition.setWorkLocation(request.getWorkLocation());
+        jobRequisition.setWorkModel(request.getWorkModel());
+        jobRequisition.setProbationDays(request.getProbationDays());
+        jobRequisition.setReasonForHiring(request.getReasonForHiring());
+        // Rule: nháp được để trống mô tả / yêu cầu, lưu chuỗi rỗng vì cột NOT NULL
+        jobRequisition.setJobDescription(Objects.requireNonNullElse(request.getJobDescription(), ""));
+        jobRequisition.setRequirementDetails(Objects.requireNonNullElse(request.getRequirementDetails(), ""));
     }
 
     /** Phòng ban theo id; id null thì trả về null, id không tồn tại thì báo lỗi ở ô phòng ban. */

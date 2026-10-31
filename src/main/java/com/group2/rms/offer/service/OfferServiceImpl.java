@@ -60,7 +60,7 @@ public class OfferServiceImpl implements OfferService {
     private final InterviewFinalResultRepository interviewFinalResultRepository;
     private final OfferApprovalRepository offerApprovalRepository;
     private final OfferMailSender offerMailSender;
-    private final com.group2.rms.notification.NotificationService systemNotificationService;
+    private final com.group2.rms.notification.service.NotificationService systemNotificationService;
 
     /**
      * Quy tắc GBR-07:

@@ -15,10 +15,8 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * Các điều kiện WHERE của màn danh sách tin tuyển dụng.
- * Mỗi hàm trả về một Specification nhỏ; service ghép chúng bằng .and(...).
- * Các hàm phụ thuộc thời gian nhận "now" làm tham số để test được (không gọi LocalDateTime.now() bên trong).
+/*
+ * SPECIFICATIONS: điều kiện WHERE của màn danh sách tin; service ghép bằng .and(...).
  */
 public final class JobPostingSpecifications {
 
@@ -79,10 +77,7 @@ public final class JobPostingSpecifications {
         return (root, query, cb) -> cb.equal(root.get("createdBy").get("userId"), userId);
     }
 
-    /**
-     * Nhóm hạn nộp:
-     * past = đã qua hạn; soon = còn từ 0 đến 7 ngày; open = còn trên 7 ngày (hoặc tin cũ không có hạn nộp).
-     */
+    /** Nhóm hạn nộp: past đã qua; soon còn 0–7 ngày; open còn trên 7 ngày hoặc không có hạn. */
     public static Specification<JobPosting> deadlineIn(String bucket, LocalDateTime now) {
         // Hết ngày thứ 7 tính từ hôm nay = đầu ngày thứ 8
         LocalDateTime soonEnd = now.toLocalDate().plusDays(JobPostingLabels.DEADLINE_SOON_DAYS + 1L).atStartOfDay();
@@ -106,11 +101,7 @@ public final class JobPostingSpecifications {
         return (root, query, cb) -> cb.lessThan(root.get("postingDate"), to.plusDays(1).atStartOfDay());
     }
 
-    /**
-     * Sắp xếp "Nhiều hồ sơ nhất": ORDER BY (số hồ sơ của tin) giảm dần.
-     * Spring Data cũng chạy Specification này cho câu đếm tổng (SELECT COUNT), câu đó không được có ORDER BY,
-     * nên chỉ thêm ORDER BY khi đang lấy dữ liệu (kết quả không phải Long).
-     */
+    /** Sắp xếp "Nhiều hồ sơ nhất"; câu COUNT của Spring không được có ORDER BY nên bỏ qua khi đếm. */
     public static Specification<JobPosting> orderByApplicationCount() {
         return (root, query, cb) -> {
             Class<?> resultType = query.getResultType();

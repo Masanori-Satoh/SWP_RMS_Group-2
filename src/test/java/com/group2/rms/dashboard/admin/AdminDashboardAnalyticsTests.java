@@ -48,8 +48,8 @@ class AdminDashboardAnalyticsTests {
         admin("Active");
         when(metrics.internalAccountStatuses()).thenReturn(List.of(new StatusCount("Active", 12), new StatusCount("Inactive", 2)));
         when(metrics.candidateAccountStatuses()).thenReturn(List.of(new StatusCount("Inactive", 10)));
-        when(metrics.candidates()).thenReturn(8L);
-        when(metrics.candidatesCreatedBetween(any(), any())).thenReturn(2L);
+        when(metrics.countCandidates()).thenReturn(8L);
+        when(metrics.countCandidatesCreatedBetween(any(), any())).thenReturn(2L);
         var role = new RoleCount(97, "HR", 0);
         when(metrics.internalAccountsByRole()).thenReturn(List.of(role));
         var rows = List.of(new MonitorRowResponse("internal", "Application and SQL Server", "Internal", "Not check", null, null));
@@ -62,7 +62,7 @@ class AdminDashboardAnalyticsTests {
         assertEquals(2, response.candidates().newLast30Days());
         assertEquals(Duration.ofDays(30), Duration.between(response.candidates().from(), response.candidates().to()));
         assertEquals(ZoneId.systemDefault().getId(), response.candidates().timeZone());
-        verify(metrics).candidatesCreatedBetween(response.candidates().from(), response.candidates().to());
+        verify(metrics).countCandidatesCreatedBetween(response.candidates().from(), response.candidates().to());
         assertEquals("/admin/accounts", response.accountSummaries().getFirst().url());
         assertEquals("/admin/candidate-accounts", response.accountSummaries().getLast().url());
         assertEquals(List.of(role), response.roleCounts());

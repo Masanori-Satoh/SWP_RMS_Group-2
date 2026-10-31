@@ -21,6 +21,9 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+/*
+ * REPOSITORY: truy vấn yêu cầu tuyển dụng (danh sách theo Specification, khóa ghi khi duyệt, chuỗi đợt tuyển).
+ */
 @Repository
 public interface JobRequisitionRepository
         extends JpaRepository<JobRequisition, Integer>,
@@ -51,8 +54,7 @@ public interface JobRequisitionRepository
         """)
     List<Integer> findIdsWithLaterRounds(@Param("ids") Collection<Integer> ids);
 
-    // Màn danh sách: lấy luôn phòng ban + người tạo trong cùng câu SELECT,
-    // để mỗi dòng không phải chạy thêm 2 câu lấy tên phòng ban / tên người tạo
+    // Màn danh sách: lấy kèm phòng ban + người tạo trong cùng câu (chống N+1)
     @Override
     @EntityGraph(attributePaths = {"department", "hiringManager"})
     Page<JobRequisition> findAll(Specification<JobRequisition> spec, Pageable pageable);

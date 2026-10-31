@@ -35,11 +35,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-/**
- * Màn "Danh sách yêu cầu tuyển dụng": phạm vi dữ liệu theo role, bộ lọc, tìm kiếm, phân trang.
- *
- * Tách riêng khỏi RequisitionServiceImpl (thêm / sửa / duyệt) để mỗi file chỉ lo một màn.
- * Màn danh sách khác (ví dụ tin tuyển dụng) có thể làm theo đúng 4 bước của getListPage.
+/*
+ * SERVICE: màn danh sách yêu cầu theo 4 bước (ô lọc, làm sạch bộ lọc, truy vấn, chip); chỉ đọc.
  */
 @Service
 @Transactional(readOnly = true)
@@ -76,13 +73,7 @@ public class RequisitionListService {
     private final RequisitionAccess access;
     private final RequisitionMapper mapper;
 
-    /**
-     * Chuẩn bị toàn bộ dữ liệu cho màn danh sách, theo 4 bước:
-     * 1. Xác định role được thấy ô lọc nào
-     * 2. Làm sạch bộ lọc từ URL theo quyền
-     * 3. Truy vấn DB
-     * 4. Mô tả các bộ lọc đang bật thành chip
-     */
+    /** Màn danh sách theo 4 bước: ô lọc theo role → làm sạch bộ lọc → truy vấn → chip bộ lọc. */
     public RequisitionListResponse getListPage(RequisitionSearchRequest rawFilter) {
         User currentUser = access.actor();
         RequisitionFilterOptions options = buildFilterOptions(currentUser);
@@ -92,14 +83,7 @@ public class RequisitionListService {
         return new RequisitionListResponse(page, filter, options, chips);
     }
 
-    /**
-     * Rule: Phân quyền phạm vi dữ liệu theo Role người dùng (lớp bảo vệ theo dữ liệu):
-     * - Hiring Manager: yêu cầu do mình tạo + mọi yêu cầu của phòng ban mình (phòng mình thuộc hoặc mình làm trưởng phòng),
-     *   khớp với quyền xem chi tiết RequisitionAccess#requireView
-     * - Director: chỉ xem các yêu cầu đã nộp (khác Draft)
-     * - HR: chỉ xem các yêu cầu đã được phê duyệt (Approved)
-     * Mọi bộ lọc khác đều được nối thêm (AND) vào điều kiện này, nên sửa URL cũng không thấy dữ liệu ngoài phạm vi.
-     */
+    /** Rule: phạm vi theo role, khớp requireView; mọi bộ lọc khác nối AND vào đây. */
     private Specification<JobRequisition> scope(User currentUser) {
         String role = access.role(currentUser);
         if (RequisitionAccess.ROLE_HIRING_MANAGER.equals(role)) {
@@ -130,8 +114,7 @@ public class RequisitionListService {
         List<FilterOption> sorts = sortOptions();
 
         if (RequisitionAccess.ROLE_HIRING_MANAGER.equals(role)) {
-            // HM chỉ thấy yêu cầu của phòng ban mình nên không cần lọc phòng ban.
-            // Chưa có ô "Người tạo": creatorOptions lấy người tạo của mọi phòng ban, sẽ lộ tên người ngoài phạm vi
+            // HM không có ô phòng ban và ô "Người tạo" (danh sách người tạo sẽ lộ tên người ngoài phạm vi)
             return new RequisitionFilterOptions(true, true, false, false, true,
                     statusOptions(ALL_STATUSES), postingOptions(), List.of(), List.of(), sorts);
         }
@@ -150,10 +133,7 @@ public class RequisitionListService {
         throw new org.springframework.security.access.AccessDeniedException("Vai trò không có quyền xem yêu cầu tuyển dụng.");
     }
 
-    /**
-     * Bước 2: không tin dữ liệu từ URL. Giá trị nào role không được dùng, hoặc không nằm trong danh sách lựa chọn,
-     * thì bỏ qua (coi như không lọc) thay vì báo lỗi.
-     */
+    /** Bước 2: giá trị trên URL mà role không được dùng hoặc không có trong lựa chọn thì bỏ qua. */
     private RequisitionSearchRequest normalizeFilter(RequisitionSearchRequest raw, RequisitionFilterOptions options) {
         String keyword = ListFilters.cleanKeyword(raw.q());
 

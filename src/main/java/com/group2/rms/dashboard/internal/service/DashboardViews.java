@@ -1,7 +1,6 @@
 package com.group2.rms.dashboard.internal.service;
 
 import com.group2.rms.dashboard.internal.dto.DashboardInterviewItem;
-import com.group2.rms.dashboard.internal.dto.DashboardMetricResponse;
 import com.group2.rms.dashboard.internal.repository.DashboardListRepository.InterviewRow;
 import com.group2.rms.interview.entity.InterviewFormat;
 import com.group2.rms.interview.entity.InterviewStatus;
@@ -21,15 +20,6 @@ public final class DashboardViews {
 
     private DashboardViews() {
         // Chỉ chứa hàm static, không tạo đối tượng
-    }
-
-    /** Thẻ KPI "dòng chảy": số trong 30 ngày gần nhất kèm % so với 30 ngày trước đó. */
-    public static DashboardMetricResponse flowMetric(String icon, String title, long current, long previous,
-            String href) {
-        String delta = DashboardPeriod.changeText(current, previous);
-        String deltaTone = DashboardPeriod.changeTone(current, previous);
-        return new DashboardMetricResponse(icon, title, String.valueOf(current), delta, deltaTone,
-                "so với 30 ngày trước", href, "neutral");
     }
 
     /** Dòng lịch phỏng vấn. Buổi đã kết thúc hiện "Đã xong" để người xem phân biệt với buổi sắp tới. */

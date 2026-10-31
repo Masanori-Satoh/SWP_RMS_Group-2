@@ -12,14 +12,8 @@ import org.springframework.data.jpa.domain.Specification;
 import java.time.LocalDate;
 import java.util.List;
 
-/**
- * Các điều kiện WHERE dùng cho màn danh sách yêu cầu tuyển dụng.
- *
- * Mỗi hàm trả về một Specification = một mẩu điều kiện WHERE viết bằng Java.
- * Service ghép chúng lại bằng .and(...), ví dụ:
- *   scope.and(titleOrDepartmentContains("java")).and(statusIn(List.of("Approved")))
- * sinh ra SQL dạng:
- *   WHERE (...phạm vi theo role...) AND (Title LIKE '%java%' OR DepartmentName LIKE '%java%') AND ApprovalStatus IN ('Approved')
+/*
+ * SPECIFICATIONS: điều kiện WHERE của màn danh sách yêu cầu; service ghép bằng .and(...).
  */
 public final class RequisitionSpecifications {
 
@@ -63,17 +57,14 @@ public final class RequisitionSpecifications {
     /** Yêu cầu chưa có tin tuyển dụng nào (NOT EXISTS trong bảng JobPosting). */
     public static Specification<JobRequisition> hasNoPosting() {
         return (root, query, cb) -> {
-            Subquery<Integer> posting = query.subquery(Integer.class);
-            Root<JobPosting> p = posting.from(JobPosting.class);
-            posting.select(p.get("jobPostingId")).where(cb.equal(p.get("requisition"), root));
-            return cb.not(cb.exists(posting));
+            Subquery<Integer> postingIds = query.subquery(Integer.class);
+            Root<JobPosting> posting = postingIds.from(JobPosting.class);
+            postingIds.select(posting.get("jobPostingId")).where(cb.equal(posting.get("requisition"), root));
+            return cb.not(cb.exists(postingIds));
         };
     }
 
-    /**
-     * Tin tuyển dụng MỚI NHẤT của yêu cầu (JobPostingId lớn nhất) đang ở trạng thái đã chọn.
-     * Một yêu cầu có thể đăng nhiều lần (PostingNo 1, 2...), nên chỉ xét lần mới nhất.
-     */
+    /** Tin mới nhất (JobPostingId lớn nhất) của yêu cầu đang ở trạng thái đã chọn. */
     public static Specification<JobRequisition> latestPostingStatusIs(String postingStatus) {
         return (root, query, cb) -> {
             // Bước 1: tìm id tin mới nhất của yêu cầu đang xét
@@ -84,10 +75,10 @@ public final class RequisitionSpecifications {
 
             // Bước 2: tin có id đó phải đang ở trạng thái được chọn
             Subquery<Integer> match = query.subquery(Integer.class);
-            Root<JobPosting> p = match.from(JobPosting.class);
-            match.select(p.get("jobPostingId"))
-                    .where(cb.equal(p.get("jobPostingId"), latestId),
-                            cb.equal(p.get("postingStatus"), postingStatus));
+            Root<JobPosting> posting = match.from(JobPosting.class);
+            match.select(posting.get("jobPostingId"))
+                    .where(cb.equal(posting.get("jobPostingId"), latestId),
+                            cb.equal(posting.get("postingStatus"), postingStatus));
             return cb.exists(match);
         };
     }

@@ -146,3 +146,6 @@ blob-report/
 playwright/
 .playwright/
 
+
+# Visual Paradigm auto-backups
+*.vpp.bak_*

@@ -39,7 +39,7 @@ class CandidateOfferServiceTests {
     @Mock CandidateOfferRepository offers;
     @Mock CurrentUserService currentUserService;
     @Mock ApplicationStatusService applicationStatusService;
-    @Mock com.group2.rms.notification.NotificationService systemNotificationService;
+    @Mock com.group2.rms.notification.service.NotificationService systemNotificationService;
 
     private CandidateOfferServiceImpl service;
 

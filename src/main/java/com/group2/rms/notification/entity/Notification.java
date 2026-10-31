@@ -1,11 +1,29 @@
-package com.group2.rms.notification;
+package com.group2.rms.notification.entity;
 
 import com.group2.rms.user.entity.User;
-import jakarta.persistence.*;
-import lombok.*;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.PrePersist;
+import jakarta.persistence.Table;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 
 import java.time.LocalDateTime;
 
+/*
+ * ENTITY: một thông báo in-app gửi cho một người nhận; EventId chống tạo trùng cùng sự kiện.
+ */
 @Entity
 @Table(name = "Notification")
 @Getter
@@ -37,11 +55,11 @@ public class Notification {
     @Column(name = "Content", nullable = false, length = 1000)
     private String content;
 
-    @org.hibernate.annotations.JdbcTypeCode(org.hibernate.type.SqlTypes.VARCHAR)
+    @JdbcTypeCode(SqlTypes.VARCHAR)
     @Column(name = "EventType", nullable = false, length = 50)
     private String eventType;
 
-    @org.hibernate.annotations.JdbcTypeCode(org.hibernate.type.SqlTypes.VARCHAR)
+    @JdbcTypeCode(SqlTypes.VARCHAR)
     @Column(name = "ReferenceId", length = 50)
     private String referenceId;
 
@@ -55,7 +73,7 @@ public class Notification {
     @Column(name = "ReadAt")
     private LocalDateTime readAt;
 
-    @org.hibernate.annotations.JdbcTypeCode(org.hibernate.type.SqlTypes.VARCHAR)
+    @JdbcTypeCode(SqlTypes.VARCHAR)
     @Column(name = "EventId", length = 100)
     private String eventId;
 

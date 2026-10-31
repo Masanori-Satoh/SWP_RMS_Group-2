@@ -51,6 +51,31 @@
     return headers;
   }
 
+  // Một kết nối WebSocket dùng chung cho mọi chuông trên trang
+  const pushListeners = [];
+  let pushClient = null;
+
+  function onPush(listener) {
+    pushListeners.push(listener);
+    if (pushClient || !window.StompJs) return;
+    const scheme = location.protocol === 'https:' ? 'wss' : 'ws';
+    pushClient = new window.StompJs.Client({
+      brokerURL: `${scheme}://${location.host}/ws`,
+      reconnectDelay: 10000,
+      onConnect: () => {
+        pushClient.subscribe('/user/queue/notifications', frame => {
+          try {
+            const data = JSON.parse(frame.body);
+            pushListeners.forEach(fn => fn(data.unreadCount));
+          } catch (err) {
+            // bỏ qua tin lỗi định dạng
+          }
+        });
+      }
+    });
+    pushClient.activate();
+  }
+
   function initNotificationWidget(widget) {
     const trigger = widget.querySelector('.topbar-notification-btn');
     const dropdown = widget.querySelector('.topbar-notif-dropdown');
@@ -219,8 +244,14 @@
       }
     });
 
-    // Background polling every 45s
-    setInterval(fetchUnreadCount, 45000);
+    // WebSocket: server đẩy số chưa đọc ngay khi có thông báo mới; đang mở dropdown thì tải lại danh sách
+    onPush(count => {
+      updateBadge(count);
+      if (isOpen && !isFetching) loadRecentNotifications();
+    });
+
+    // Dự phòng khi WebSocket mất kết nối hoặc không tải được thư viện
+    setInterval(fetchUnreadCount, 180000);
 
     // Initial check on load
     fetchUnreadCount();

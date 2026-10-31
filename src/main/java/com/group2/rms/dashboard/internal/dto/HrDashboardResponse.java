@@ -4,7 +4,7 @@ import java.util.List;
 
 /*
  * DTO: toàn bộ dữ liệu dashboard HR (dashboard/sections/hr.html).
- * moreWork = số việc còn lại ngoài các việc đang hiện; openPostingCount = tổng số tin đang mở.
+ * moreWork = số việc còn lại ngoài các việc đang hiện.
  */
 public record HrDashboardResponse(
         String roleName,
@@ -13,11 +13,7 @@ public record HrDashboardResponse(
         List<DashboardWorkItem> work,
         int moreWork,
         List<DashboardInterviewItem> upcomingInterviews,
-        List<DashboardBarResponse> waitingStages,
-        List<DashboardColumnResponse> weeklyApplications,
-        String trendSummary,
-        List<OpenPostingItem> openPostings,
-        int openPostingCount) implements DashboardResponse {
+        List<WeeklyApplicationItem> weeklyApplications) implements DashboardResponse {
 
     @Override
     public String section() {

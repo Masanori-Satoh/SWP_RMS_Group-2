@@ -19,18 +19,8 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * Dữ liệu form Tạo / Sửa yêu cầu tuyển dụng (requisitions/form.html).
- *
- * Annotation ở đây là tầng 2 (Bean Validation, AG §2.4): chặn sớm giá trị sai
- * định dạng / quá giới hạn,
- * lỗi tự vào BindingResult khi controller nhận bằng @Valid. Giới hạn và câu lỗi
- * lấy từ RequisitionValidator
- * nên chỉ sửa một chỗ.
- * Không đặt @NotBlank: "Lưu bản nháp" được để trống, phần bắt buộc do
- * RequisitionValidator kiểm tra
- * (phân biệt nháp / gửi duyệt). RequisitionValidator vẫn kiểm tra lại toàn bộ
- * vì service không tin controller.
+/*
+ * DTO: form tạo / sửa yêu cầu; annotation chặn sớm định dạng, phần bắt buộc do RequisitionValidator kiểm tra.
  */
 @Data
 @Builder
@@ -43,15 +33,9 @@ public class RequisitionRequest {
     private String title;
     private Integer departmentId;
     private Integer recruitmentRound;
-    /**
-     * Phiếu nguồn khi sao chép sang đợt mới; server tự quy về phiếu đợt 1 và tính
-     * lại số đợt.
-     */
+    /** Phiếu nguồn khi sao chép; server tự quy về phiếu đợt 1 và tính lại số đợt. */
     private Integer originalRequisitionId;
-    /**
-     * Tên vị trí của phiếu đợt 1, chỉ để form đổi số đợt hiển thị khi người dùng
-     * sửa tên; server không dùng giá trị này.
-     */
+    /** Tên vị trí của phiếu đợt 1, chỉ để form đổi số đợt hiển thị; server không dùng. */
     private String originalTitle;
     private String hiringType;
 
@@ -79,10 +63,7 @@ public class RequisitionRequest {
     @Max(value = RequisitionValidator.PROBATION_MAX_DAYS, message = RequisitionValidator.PROBATION_RANGE_MESSAGE)
     private Integer probationDays;
 
-    // NOTE: 3 ô nhiều dòng không đặt @Size: trình duyệt gửi xuống dòng là \r\n (2
-    // ký tự), Bean Validation
-    // chạy trước khi RequisitionValidator.cleanMultiline đổi về \n, nên đếm ở đây
-    // sẽ chặn oan đoạn văn gần giới hạn.
+    // Không đặt @Size cho 3 ô nhiều dòng: \r\n đếm 2 ký tự trước khi validator đổi về \n
     private String reasonForHiring;
     private String jobDescription;
     private String requirementDetails;

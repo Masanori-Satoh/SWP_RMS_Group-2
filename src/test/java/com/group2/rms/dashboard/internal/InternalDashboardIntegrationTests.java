@@ -155,20 +155,16 @@ class InternalDashboardIntegrationTests {
     }
 
     @Test
-    @DisplayName("HR không thấy tin Published hẹn đăng ngày mai trong Tin đang mở")
-    void openPostings_shouldExcludeFuturePostingDate() {
-        JobRequisition futureRequisition = saveRequisition("Tin hẹn đăng", RequisitionAccess.STATUS_APPROVED, 1, null);
-        JobRequisition liveRequisition = saveRequisition("Tin đang nhận", RequisitionAccess.STATUS_APPROVED, 1, null);
-        JobPosting future = savePosting(futureRequisition, now.plusDays(1));
-        JobPosting live = savePosting(liveRequisition, now.minusDays(1));
+    @DisplayName("HR đếm tin Published có ngày đăng hôm nay, bỏ tin hôm qua và hẹn ngày mai")
+    void publishedPostingsBetween_shouldCountOnlyToday() {
+        LocalDateTime start = now.toLocalDate().atStartOfDay();
+        long before = metrics.countPublishedPostingsBetween(start, now);
+        savePosting(saveRequisition("Đăng hôm nay", RequisitionAccess.STATUS_APPROVED, 1, null), start);
+        savePosting(saveRequisition("Đăng hôm qua", RequisitionAccess.STATUS_APPROVED, 1, null), start.minusDays(1));
+        savePosting(saveRequisition("Hẹn ngày mai", RequisitionAccess.STATUS_APPROVED, 1, null), now.plusDays(1));
         entityManager.clear();
 
-        List<DashboardListRepository.OpenPostingRow> open = lists.openPostings(now);
-
-        assertFalse(open.stream().anyMatch(row -> row.jobPostingId() == future.getJobPostingId()));
-        assertTrue(open.stream().anyMatch(row -> row.jobPostingId() == live.getJobPostingId()));
-        assertEquals(JobPostingAccess.STATUS_PUBLISHED, open.stream()
-                .filter(row -> row.jobPostingId() == live.getJobPostingId()).findFirst().orElseThrow().postingStatus());
+        assertEquals(before + 1, metrics.countPublishedPostingsBetween(start, now));
     }
 
     private JobPosting savePosting(JobRequisition requisition, LocalDateTime postingDate) {
@@ -203,27 +199,23 @@ class InternalDashboardIntegrationTests {
         int userId = hiringManager.getUserId();
 
         // Act + Assert
-        assertTrue(metrics.applicationsBetween(from, now) >= 0);
+        assertTrue(metrics.countPublishedPostingsBetween(now.toLocalDate().atStartOfDay(), now) >= 0);
         assertTrue(metrics.applicationDates(from, now).size() >= 0);
         assertTrue(metrics.applicationWaitingSince().size() >= 0);
-        assertTrue(metrics.offersWithStatusBetween(InternalMetricsRepository.OFFER_ACCEPTED, from, now) >= 0);
-        assertTrue(metrics.hiredBetween(from, now) >= 0);
-        assertTrue(metrics.recentDirectorActivity(userId, 5).size() <= 5);
-        assertTrue(metrics.evaluationsSubmittedSince(userId, from) >= 0);
-        assertTrue(metrics.evaluationsSubmittedSince(userId, null) >= 0);
+        assertTrue(metrics.countHiredBetween(from, now) >= 0);
+        assertTrue(metrics.countPassedInterviewCandidatesBetween(userId, now.toLocalDate().withDayOfMonth(1).atStartOfDay(), now) >= 0);
         assertTrue(lists.allInterviews(now, now.plusDays(2), 5).size() <= 5);
         assertTrue(lists.panelInterviews(userId, now.minusDays(7), now.plusDays(7)).size() >= 0);
         assertTrue(lists.pendingEvaluations(userId).size() >= 0);
-        assertTrue(lists.openPostings(now).stream().allMatch(row -> row.applications() >= 0));
         assertTrue(lists.pendingOffers().size() >= 0);
     }
 
     @ParameterizedTest(name = "{0} mở /dashboard/internal -> thấy \"{2}\"")
     @CsvSource({
             "HR,ROLE_HR,Việc cần xử lý",
-            "Director,ROLE_DIRECTOR,Yêu cầu chờ duyệt",
-            "Interviewer,ROLE_INTERVIEWER,Lịch tuần"})
-    @DisplayName("HR / Director / Interviewer -> trang mới có KPI icon, không nạp Chart.js")
+            "Director,ROLE_DIRECTOR,Đề nghị tuyển dụng chờ duyệt",
+            "Interviewer,ROLE_INTERVIEWER,Lịch phỏng vấn"})
+    @DisplayName("HR / Director / Interviewer -> có KPI icon; chỉ trang có biểu đồ mới nạp Chart.js")
     void dashboard_shouldRenderRoleSection_whenSeedAccountLogsIn(String roleName, String authority, String heading)
             throws Exception {
         // Arrange
@@ -239,7 +231,23 @@ class InternalDashboardIntegrationTests {
         // Assert
         assertTrue(html.contains(heading));
         assertTrue(html.contains("dash-kpi__icon"));
-        assertFalse(html.contains("chart.umd.min.js"));
+        if ("Director".equals(roleName)) {
+            assertEquals(3, html.split("class=\"card dash-kpi", -1).length - 1);
+            assertTrue(html.contains("Yêu cầu tuyển dụng chờ duyệt"));
+            assertTrue(html.contains("Thư mời nhận việc chờ duyệt"));
+            assertTrue(html.contains("Ứng viên trúng tuyển trong tháng"));
+            assertFalse(html.contains("Tỷ lệ nhận offer"));
+        }
+        if ("Interviewer".equals(roleName)) {
+            assertEquals(3, html.split("class=\"card dash-kpi", -1).length - 1);
+            assertTrue(html.contains("Buổi phỏng vấn sắp tới"));
+            assertTrue(html.contains("Đánh giá chưa hoàn thành"));
+            assertTrue(html.contains("Ứng viên đạt phỏng vấn"));
+            assertFalse(html.contains("Đã gửi tháng này"));
+        }
+        boolean hasCharts = !"Interviewer".equals(roleName);
+        assertEquals(hasCharts, html.contains("chart.umd.min.js"));
+        assertEquals(hasCharts, html.contains("internal-dashboard.js"));
         assertFalse(html.contains("recruitment-dashboard.js"));
     }
 
@@ -257,7 +265,7 @@ class InternalDashboardIntegrationTests {
                 .andReturn().getResponse().getContentAsString(StandardCharsets.UTF_8);
 
         // Assert
-        assertTrue(html.contains("Lịch tuần"));
+        assertTrue(html.contains("Lịch phỏng vấn"));
         assertTrue(html.contains("Tuần này"));
     }
 

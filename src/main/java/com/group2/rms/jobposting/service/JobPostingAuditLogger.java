@@ -15,11 +15,8 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-/**
- * Ghi và đọc audit log (bảng AuditLog) của tin tuyển dụng.
- *
- * Gom về một chỗ để: tên entity "JobPosting" chỉ viết một lần, và cách mô tả thay đổi
- * ("Tiêu đề tin: A → B") giống nhau ở mọi thao tác. Không quyết định nghiệp vụ (đó là việc của service).
+/*
+ * AUDIT: ghi và đọc audit log của tin tuyển dụng, mô tả thay đổi dạng "tên: cũ → mới".
  */
 @Component
 @RequiredArgsConstructor
@@ -41,10 +38,7 @@ public class JobPostingAuditLogger {
         save(posting.getJobPostingId(), actor, action, null, description + ": " + posting.getPostingTitle());
     }
 
-    /**
-     * Ghi audit khi sửa: dòng đầu là mô tả (Cập nhật / Đăng), sau đó mỗi dòng một trường đã đổi
-     * ("tên: cũ → mới"). Gọi khi changedKeys không rỗng.
-     */
+    /** Audit khi sửa: dòng đầu là mô tả, mỗi dòng sau là "tên: cũ → mới". */
     public void logChanges(JobPosting posting, User actor, String description, List<String> changedKeys,
             Map<String, String> before, Map<String, String> after) {
         save(posting.getJobPostingId(), actor, ACTION_UPDATE,
@@ -57,10 +51,7 @@ public class JobPostingAuditLogger {
         return audit.findByEntityNameAndEntityIdOrderByTimestampDesc(ENTITY_NAME, String.valueOf(jobPostingId));
     }
 
-    /**
-     * "Ảnh chụp" các trường người dùng nhìn thấy, để so sánh trước / sau khi sửa.
-     * Key là tên trường tiếng Việt (người đọc lịch sử là người dùng), value là giá trị dạng chữ (null = trống).
-     */
+    /** Giá trị các trường người dùng thấy (key tiếng Việt), để so trước / sau khi sửa. */
     public Map<String, String> snapshot(JobPosting posting) {
         Map<String, String> snapshot = new LinkedHashMap<>();
         snapshot.put("Tiêu đề tin", posting.getPostingTitle());
@@ -70,8 +61,8 @@ public class JobPostingAuditLogger {
         snapshot.put("Mức lương hiển thị", posting.getSalaryDisplay());
         snapshot.put("Số lượng hiển thị", posting.getNumberOfPositionsDisplay());
         snapshot.put("Địa điểm làm việc", posting.getWorkLocation());
-        snapshot.put("Hạn nộp hồ sơ", format(posting.getApplicationDeadline()));
-        snapshot.put("Ngày đăng", format(posting.getPostingDate()));
+        snapshot.put("Hạn nộp hồ sơ", formatTime(posting.getApplicationDeadline()));
+        snapshot.put("Ngày đăng", formatTime(posting.getPostingDate()));
         snapshot.put("Trạng thái", posting.getPostingStatus());
         return snapshot;
     }
@@ -88,7 +79,7 @@ public class JobPostingAuditLogger {
                 .build());
     }
 
-    private static String format(LocalDateTime moment) {
+    private static String formatTime(LocalDateTime moment) {
         if (moment == null) {
             return null;
         }
