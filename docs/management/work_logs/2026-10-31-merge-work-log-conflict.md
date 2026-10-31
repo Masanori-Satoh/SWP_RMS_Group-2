@@ -28,3 +28,11 @@ Giải quyết conflict hiện tại, bảo toàn phần việc của các thàn
 - So sánh index trước/sau: các entry ngoài Work Log và báo cáo mới giữ nguyên, bao gồm các file Offer đã tự merge và các thao tác đổi tên file.
 - Không sửa Java/HTML/CSS/JS, không thao tác database, không chạy lại kiểm thử ứng dụng vì lượt này chỉ giải quyết tài liệu. Không suy diễn rằng các thay đổi Offer đã được kiểm thử bởi lượt xử lý này.
 - Không commit hoặc push; trạng thái merge được để lại cho người dùng kiểm tra và hoàn tất.
+
+## Bổ sung: conflict khi khôi phục stash
+
+- Sau lượt trước, HEAD đã chuyển sang merge commit `633fa1db`. Conflict mới trong Work Log có nhãn `Updated upstream` / `Stashed changes`; đây là lượt khôi phục stash, không phải conflict merge cũ chưa được gỡ.
+- Giữ các dòng Offer và nhật ký giải quyết merge từ upstream, đồng thời giữ dòng Tạo tài khoản/Tạo phòng ban từ stash. Chỉ bỏ ba dấu conflict và thêm dòng liên kết mục bổ sung này.
+- Lượt này chỉ sửa Work Log và bổ sung báo cáo hiện tại. Giữ nguyên source, ảnh, báo cáo giao diện, README, các file mới chưa theo dõi và trạng thái xóa `simplify_expected_results.py` đã có từ đầu lượt.
+- Lưu stage 1/2/3, snapshot index, danh sách stash và hash các file ngoài phạm vi. Kiểm tra không còn unmerged/dấu conflict; đối chiếu nội dung cả hai phía, index ngoài hai tài liệu và stash giữ nguyên. Chỉ stage hai file tài liệu đã xử lý, không stage lại phần khôi phục khác.
+- Không chạy test ứng dụng vì không sửa source; không commit/push, không xóa hoặc áp dụng lại stash.

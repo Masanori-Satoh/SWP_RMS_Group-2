@@ -96,10 +96,10 @@ class AccountEditWebTests {
     }
 
     @Test
-    void createKeepsItsOriginalFormAndDoesNotLoadEditOnlyUi() throws Exception {
+    void createKeepsItsControlsAndDoesNotLoadEditOnlyUi() throws Exception {
         String html = mvc.perform(get("/admin/accounts/new").with(as("System Admin")))
                 .andExpect(status().isOk())
-                .andExpect(content().string(containsString("account-form-container adw-form-wrap")))
+                .andExpect(content().string(containsString("admin-create-forms.css")))
                 .andExpect(content().string(containsString("name=\"username\"")))
                 .andExpect(content().string(containsString("name=\"password\"")))
                 .andExpect(content().string(containsString("name=\"confirmPassword\"")))
