@@ -477,3 +477,12 @@ Nhằm đảm bảo chất lượng code và phòng ngừa lỗi hồi quy (regr
 - [x] Test: `ApplicationRepositoryTests` (3 integration: Lần 2 cùng đợt bị chặn, đợt 2 được nộp, chỉ `HM_Suggested` thì được), sửa 2 test trong `ApplicationSubmissionServiceTests`, nới chuỗi kiểm tra ở `TalentPoolFlowIntegrationTests`. 58 test liên quan PASS.
 - [ ] Lỗi có sẵn, không do thay đổi này: `PasswordRecoveryServiceTests`, `RegistrationVerificationServiceTests`, `CandidateProfileWebTests` (`adw-form-wrap`).
 - [ ] Talent Pool (`TalentPoolService`) vẫn kiểm tra trùng theo tin → HR vẫn gợi ý được ứng viên cũ vào tin Lần 2; báo Linh xử lý.
+
+## System test Requisition + Job Posting + Thông báo (31/10/2026)
+- [x] Viết lại bộ ca từ đầu ở `system-test.md` (16 ca: 6 Requisition, 8 Job Posting gồm BR-CAN-01, 2 Thông báo); bỏ chatbot khỏi phạm vi.
+- [x] Chạy thật trên app (Chrome + HTTP có phiên/CSRF, curl cho người thứ hai, SQL chỉ đọc): 16/16 PASS, chuông WebSocket đổi ngay khi người khác thao tác.
+- [ ] Nhận xét UX: sao chép yêu cầu chưa duyệt hiện trang 400 chung; trang 404 nội bộ dùng giao diện "Mộc Careers"; lịch sử ghi lần duyệt là "Cập nhật".
+- [ ] `system-test-requisition-job-posting.md` (bản cũ, 12 ca NOT RUN) đã được `system-test.md` thay thế → chờ xác nhận xóa.
+- [x] System test Dashboard (`system-test.md` phần D, 5 ca): 4 PASS, **1 FAIL** (ST-DB-03).
+- [ ] **FAIL ST-DB-03:** thẻ HR "Tin mới đăng trong ngày" dẫn tới `/internal/job-postings?status=Published&postedFrom=…&postedTo=…` nhưng danh sách bỏ bộ lọc ngày (`showPostedDate = false`) → hiện mọi tin đang đăng. Cần chốt: bật bộ lọc ngày đăng cho HR, hoặc đổi link thẻ.
+- [ ] Nhận xét dashboard: HR "Xem tất cả" không gồm yêu cầu chờ đăng tin; thẻ "Hồ sơ chờ lên lịch" ≠ tab Phỏng vấn; Giám đốc gọi offer bằng hai tên khác nhau.
