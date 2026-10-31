@@ -85,7 +85,7 @@
         <div class="table-wrapper aul-scroll" th:unless="${#lists.isEmpty(recentAuditLogs)}" tabindex="0" role="region" aria-labelledby="dash-audit-title">
             <table class="table adw-data-table adm-recent-table">
                 <thead><tr><th scope="col">Thời gian</th><th scope="col">Người thực hiện</th><th scope="col">Hành động</th><th scope="col">Đối tượng</th></tr></thead>
-                <tbody><tr th:each="row : ${recentAuditLogs}"><td th:text="${#temporals.format(row.timestamp, 'dd/MM/yyyy HH:mm')}"></td><td><span th:replace="~{admin/audit-log :: actor(name=${row.performedBy},initials=${row.initials()})}"></span></td><td><span th:replace="~{admin/audit-log :: actionBadge(action=${row.action},label=${row.actionLabel()})}"></span></td><td th:text="|${row.entityLabel()} #${row.entityId}|"></td></tr></tbody>
+                <tbody><tr th:each="row : ${recentAuditLogs}"><td th:text="${#temporals.format(row.timestamp, 'dd/MM/yyyy HH:mm')}"></td><td><span th:replace="~{admin/audit-log :: actor(name=${row.performedBy},initials=${row.initials()})}"></span></td><td><span th:replace="~{admin/audit-log :: actionBadge(action=${row.action},label=${row.actionLabel()})}"></span></td><td><div th:replace="~{admin/audit-log :: target(row=${row})}"></div><span class="aul-target-id" th:text="|#${row.entityId}|"></span></td></tr></tbody>
             </table>
         </div>
         <p class="adm-help" th:if="${#lists.isEmpty(recentAuditLogs)}">Chưa có hoạt động được ghi nhận.</p>

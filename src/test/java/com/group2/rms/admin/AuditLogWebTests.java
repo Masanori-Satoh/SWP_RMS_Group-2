@@ -97,16 +97,16 @@ class AuditLogWebTests {
 
     @Test void localizesStoredTalentPoolCodesWhileKeepingFilterValues() throws Exception {
         var at = LocalDateTime.of(2026, 10, 30, 21, 53, 36);
-        var rows = List.of(new AuditLogService.Row(at, "Lê Thị Mai Lan", "CREATE", "Application", "1226", "135", "TalentPoolHrRecommended"),
-                new AuditLogService.Row(at, "Lê Thị Mai Lan", "CREATE", "Application", "1225", "139", "TalentPoolHrRecommended"),
-                new AuditLogService.Row(at.minusHours(5), "Lê Thị Mai Lan", "UPDATE", "Application", "1223", "HM_Suggested", "TalentPoolCancelled"),
-                new AuditLogService.Row(at.minusHours(5).minusSeconds(5), "Lê Thị Mai Lan", "UPDATE", "Application", "1222", "HM_Suggested", "TalentPoolHrWithdrawn"),
-                new AuditLogService.Row(at.minusDays(2), "Vũ Anh Tuấn", "UPDATE", "Application", "221", null, "TalentPoolSuggested"),
-                new AuditLogService.Row(at.minusDays(5), "Vũ Anh Tuấn", "CREATE", "Application", "218", "129", "TalentPoolHrRecommended"),
-                new AuditLogService.Row(at.minusDays(23), "Đỗ Minh Khánh", "CREATE", "JobRequisition", "19", null, "Tạo yêu cầu: Chuyên viên Kiểm toán Nội bộ"),
-                new AuditLogService.Row(at.minusDays(24), "Nguyễn Hoài Anh", "UPDATE", "Department", "12", "Tên phòng ban: Marketing", "Tên phòng ban: Marketing & Communication"),
+        var rows = List.of(new AuditLogService.Row(at, "Lê Thị Mai Lan", "CREATE", "Application", "1226", "135", "TalentPoolHrRecommended", "Nguyễn Văn An · Backend Java Developer"),
+                new AuditLogService.Row(at, "Lê Thị Mai Lan", "CREATE", "Application", "1225", "139", "TalentPoolHrRecommended", "Trần Thị Bình · Backend Java Developer"),
+                new AuditLogService.Row(at.minusHours(5), "Lê Thị Mai Lan", "UPDATE", "Application", "1223", "HM_Suggested", "TalentPoolCancelled", "Phạm Quốc Huy · Frontend Developer"),
+                new AuditLogService.Row(at.minusHours(5).minusSeconds(5), "Lê Thị Mai Lan", "UPDATE", "Application", "1222", "HM_Suggested", "TalentPoolHrWithdrawn", "Nguyễn Hoàng Anh · Frontend Developer"),
+                new AuditLogService.Row(at.minusDays(2), "Vũ Anh Tuấn", "UPDATE", "Application", "221", null, "TalentPoolSuggested", "Lê Minh Châu · Chuyên viên Phân tích dữ liệu"),
+                new AuditLogService.Row(at.minusDays(5), "Vũ Anh Tuấn", "CREATE", "Application", "218", "129", "TalentPoolHrRecommended", "Vũ Thị Mai · Backend Java Developer"),
+                new AuditLogService.Row(at.minusDays(23), "Đỗ Minh Khánh", "CREATE", "JobRequisition", "19", null, "Tạo yêu cầu: Chuyên viên Kiểm toán Nội bộ", "Chuyên viên Kiểm toán Nội bộ"),
+                new AuditLogService.Row(at.minusDays(24), "Nguyễn Hoài Anh", "UPDATE", "Department", "12", "Tên phòng ban: Marketing", "Tên phòng ban: Marketing & Communication", "Marketing & Communication"),
                 new AuditLogService.Row(at.minusDays(26), "Trần Văn Minh", "DELETE", "TalentPoolNote", "11", "Ứng viên #8\nCó kinh nghiệm quản lý nhóm", null),
-                new AuditLogService.Row(at.minusDays(27), "Lê Thị Mai Lan", "LOGIN", "User", "5", null, "User logged in successfully"));
+                new AuditLogService.Row(at.minusDays(27), "Lê Thị Mai Lan", "LOGIN", "User", "5", null, "User logged in successfully", "Lê Thị Mai Lan (lethimailan)"));
         when(audit.search(null, null, null, "", "", "", 0)).thenReturn(new PageImpl<>(rows, PageRequest.of(0, 10), 70));
         when(audit.entities()).thenReturn(List.of("Application", "Department", "JobRequisition", "TalentPoolNote", "User"));
         String html = mvc.perform(get("/admin/audit-logs").with(user("audit-admin").roles("SYSTEM_ADMIN")))
@@ -115,6 +115,9 @@ class AuditLogWebTests {
         assertTrue(html.contains("Trạng thái: HR đã rút lại gợi ý"));
         assertTrue(html.contains("Hồ sơ nguồn: #135"));
         assertTrue(html.contains("Hồ sơ ứng tuyển"));
+        assertTrue(html.contains("Nguyễn Văn An · Backend Java Developer"));
+        assertTrue(html.contains("Marketing &amp; Communication"));
+        assertTrue(html.contains("Không tìm thấy thông tin đối tượng"));
         assertTrue(html.contains("value=\"Application\""));
         assertFalse(html.contains("TalentPoolHrRecommended"));
         assertFalse(html.contains("HM_Suggested"));

@@ -2,6 +2,7 @@ package com.group2.rms.admin.service;
 
 import com.group2.rms.admin.entity.AuditLog;
 import com.group2.rms.admin.repository.AuditLogRepository;
+import com.group2.rms.admin.repository.AuditLogTargetRepository;
 import com.group2.rms.user.entity.User;
 import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.CriteriaQuery;
@@ -25,7 +26,8 @@ import static org.mockito.Mockito.*;
 @SuppressWarnings("unchecked")
 class AuditLogServiceTests {
     final AuditLogRepository logs = mock(AuditLogRepository.class);
-    final AuditLogService service = new AuditLogService(logs);
+    final AuditLogTargetRepository targets = mock(AuditLogTargetRepository.class);
+    final AuditLogService service = new AuditLogService(logs, targets);
 
     @Test void combinesFiltersAndIncludesTheWholeEndDate() {
         LocalDate from = LocalDate.of(2026, 10, 1), to = LocalDate.of(2026, 10, 31);
@@ -74,5 +76,26 @@ class AuditLogServiceTests {
         verify(logs).findAll(page.capture());
         assertEquals(5, page.getValue().getPageSize());
         assertEquals(0, page.getValue().getPageNumber());
+    }
+
+    @Test void attachesTargetNamesWithoutChangingStoredAuditValues() {
+        var log = AuditLog.builder().auditLogId(1L).user(User.builder().fullName("HR").build())
+                .entityName("Application").entityId("1226").action("CREATE")
+                .oldValue("135").newValue("TalentPoolHrRecommended").build();
+        when(logs.findAll(any(Specification.class), any(Pageable.class)))
+                .thenReturn(new PageImpl<>(List.of(log)));
+        when(targets.findNames(List.of(log))).thenReturn(java.util.Map.of(
+                new AuditLogTargetRepository.Target("Application", "1226"), "Nguyễn Văn An · Java Developer"));
+        var row = service.search(null, null, null, "", "", "", 0).getContent().getFirst();
+        assertEquals("Nguyễn Văn An · Java Developer", row.targetDescription());
+        assertEquals("135", row.oldValue());
+        assertEquals("1226", row.entityId());
+        verify(targets).findNames(List.of(log));
+    }
+
+    @Test void missingTargetKeepsItsIdAndExplainsThatItCannotBeFound() {
+        var row = new AuditLogService.Row(null, "HR", "DELETE", "TalentPoolNote", "11", "Ghi chú cũ", null);
+        assertEquals("11", row.entityId());
+        assertEquals("Không tìm thấy thông tin đối tượng", row.targetDescription());
     }
 }
