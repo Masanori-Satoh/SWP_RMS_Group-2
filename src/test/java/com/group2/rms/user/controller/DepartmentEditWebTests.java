@@ -64,10 +64,10 @@ class DepartmentEditWebTests {
     }
 
     @Test
-    void createKeepsItsOriginalFormAndDoesNotLoadEditOnlyUi() throws Exception {
+    void createKeepsItsControlsAndDoesNotLoadEditOnlyUi() throws Exception {
         String html = mvc.perform(get("/admin/departments/new").with(admin()))
                 .andExpect(status().isOk())
-                .andExpect(content().string(containsString("account-form-container adw-form-wrap")))
+                .andExpect(content().string(containsString("admin-create-forms.css")))
                 .andExpect(content().string(not(containsString("department-edit.css"))))
                 .andExpect(content().string(not(containsString("class=\"def-summary\""))))
                 .andReturn().getResponse().getContentAsString();
