@@ -420,6 +420,46 @@
     <!-- Toast Notification Container -->
     <div class="toast-container" id="toastContainer"></div>
 
+    <!-- ===========================================================================
+         DIALOG 1: NATIVE HTML5 XÁC NHẬN PHÊ DUYỆT CỦA GIÁM ĐỐC
+         =========================================================================== -->
+    <dialog id="directorApproveConfirmDialog" class="confirm-dialog" aria-labelledby="directorApproveTitle">
+        <div class="dialog-content">
+            <div class="dialog-header">
+                <h3 id="directorApproveTitle" class="dialog-title">Phê duyệt đề xuất nhận việc?</h3>
+            </div>
+            <div class="dialog-body">
+                <p>Sau khi phê duyệt, Bộ phận Tuyển dụng sẽ được thông báo để tiếp tục phát hành Thư mời nhận việc cho ứng viên.</p>
+            </div>
+            <div class="dialog-actions">
+                <button type="button" class="btn btn--secondary" onclick="document.getElementById('directorApproveConfirmDialog').close()">Hủy</button>
+                <button type="button" id="btnConfirmApproveModal" class="btn btn--primary" onclick="confirmDirectorApproveAction()">Xác nhận phê duyệt</button>
+            </div>
+        </div>
+    </dialog>
+
+    <!-- ===========================================================================
+         DIALOG 2: NATIVE HTML5 XÁC NHẬN TỪ CHỐI CỦA GIÁM ĐỐC
+         =========================================================================== -->
+    <dialog id="directorRejectConfirmDialog" class="confirm-dialog" aria-labelledby="directorRejectTitle">
+        <div class="dialog-content">
+            <div class="dialog-header">
+                <h3 id="directorRejectTitle" class="dialog-title">Từ chối đề xuất nhận việc?</h3>
+            </div>
+            <div class="dialog-body">
+                <p id="directorRejectDialogDesc">Bạn có chắc chắn muốn từ chối đề xuất nhận việc này?</p>
+                <div class="ofw-dialog-subnote">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+                    <span>Lý do từ chối sẽ được gửi lại để Bộ phận Tuyển dụng xử lý tiếp.</span>
+                </div>
+            </div>
+            <div class="dialog-actions">
+                <button type="button" class="btn btn--secondary" onclick="document.getElementById('directorRejectConfirmDialog').close()">Hủy</button>
+                <button type="button" id="btnConfirmRejectModal" class="btn btn--danger" onclick="confirmDirectorRejectAction()">Xác nhận từ chối</button>
+            </div>
+        </div>
+    </dialog>
+
 </main>
 
 <th:block layout:fragment="scripts">

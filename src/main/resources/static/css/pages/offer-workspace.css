@@ -1046,3 +1046,12 @@
     margin-top: 6px;
     font-weight: 500;
 }
+
+.ofw-dialog-subnote {
+    margin-top: 8px;
+    font-size: 13px;
+    color: var(--muted);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}

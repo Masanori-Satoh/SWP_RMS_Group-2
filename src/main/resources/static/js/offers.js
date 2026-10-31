@@ -1866,18 +1866,18 @@ function showDirectorRejectReasonRequiredAlert(onCloseCallback) {
     if (typeof onCloseCallback === 'function') onCloseCallback();
 }
 
+let pendingDirectorDecision = null;
+
 function showDirectorRejectConfirmModal(offerId, onConfirmCallback) {
-    showDirectorCustomModal({
-        title: 'Từ chối đề xuất nhận việc?',
-        desc: `Bạn có chắc chắn muốn từ chối đề xuất #${offerId}?`,
-        subtext: 'Lý do từ chối sẽ được gửi lại để Bộ phận Tuyển dụng xử lý tiếp.',
-        confirmText: 'Xác nhận từ chối',
-        confirmClass: 'btn-director-reject-danger',
-        showCancel: true,
-        cancelText: 'Hủy',
-        cancelClass: 'btn-director-modal-cancel',
-        onConfirm: onConfirmCallback
-    });
+    const rejectDialog = document.getElementById('directorRejectConfirmDialog');
+    if (rejectDialog && typeof rejectDialog.showModal === 'function') {
+        const descEl = document.getElementById('directorRejectDialogDesc');
+        if (descEl) descEl.innerText = `Bạn có chắc chắn muốn từ chối đề xuất #${offerId}?`;
+        window._tempRejectConfirmCallback = onConfirmCallback;
+        rejectDialog.showModal();
+    } else {
+        if (typeof onConfirmCallback === 'function') onConfirmCallback();
+    }
 }
 
 function submitDirectorDecisionFromScreen(offerId, action) {
@@ -1885,34 +1885,65 @@ function submitDirectorDecisionFromScreen(offerId, action) {
     const commentsEl = document.getElementById('directorDetailComments');
     const comments = commentsEl ? commentsEl.value.trim() : '';
 
+    pendingDirectorDecision = {
+        offerId: offerId,
+        action: action,
+        comments: comments
+    };
+
     if (action === 'REJECT') {
         if (!comments) {
-            showDirectorRejectReasonRequiredAlert(() => {
-                if (commentsEl) commentsEl.focus();
-            });
+            showDirectorRejectReasonRequiredAlert();
             return;
         }
 
-        showDirectorRejectConfirmModal(offerId, () => {
+        const rejectDialog = document.getElementById('directorRejectConfirmDialog');
+        if (rejectDialog && typeof rejectDialog.showModal === 'function') {
+            const descEl = document.getElementById('directorRejectDialogDesc');
+            if (descEl) descEl.innerText = `Bạn có chắc chắn muốn từ chối đề xuất #${offerId}?`;
+            rejectDialog.showModal();
+        } else {
             executeDirectorDecisionApi(offerId, `/offers/${offerId}/reject`, comments);
-        });
+        }
     } else if (action === 'APPROVE') {
-        Swal.fire({
-            title: 'Phê duyệt đề xuất nhận việc?',
-            text: 'Sau khi phê duyệt, Bộ phận Tuyển dụng sẽ được thông báo để tiếp tục phát hành Thư mời nhận việc cho ứng viên.',
-            icon: 'question',
-            showCancelButton: true,
-            confirmButtonText: 'Xác nhận phê duyệt',
-            cancelButtonText: 'Hủy',
-            confirmButtonColor: '#166534',
-            reverseButtons: true
-        }).then((result) => {
-            if (result.isConfirmed) {
-                executeDirectorDecisionApi(offerId, `/offers/${offerId}/approve`, comments || 'Phê duyệt trực tiếp');
-            }
-        });
+        const approveDialog = document.getElementById('directorApproveConfirmDialog');
+        if (approveDialog && typeof approveDialog.showModal === 'function') {
+            approveDialog.showModal();
+        } else {
+            executeDirectorDecisionApi(offerId, `/offers/${offerId}/approve`, comments || 'Phê duyệt trực tiếp');
+        }
     }
 }
+
+function confirmDirectorApproveAction() {
+    const approveDialog = document.getElementById('directorApproveConfirmDialog');
+    if (approveDialog) approveDialog.close();
+
+    if (pendingDirectorDecision && pendingDirectorDecision.offerId) {
+        const { offerId, comments } = pendingDirectorDecision;
+        executeDirectorDecisionApi(offerId, `/offers/${offerId}/approve`, comments || 'Phê duyệt trực tiếp');
+    }
+}
+
+function confirmDirectorRejectAction() {
+    const rejectDialog = document.getElementById('directorRejectConfirmDialog');
+    if (rejectDialog) rejectDialog.close();
+
+    if (typeof window._tempRejectConfirmCallback === 'function') {
+        const cb = window._tempRejectConfirmCallback;
+        window._tempRejectConfirmCallback = null;
+        cb();
+        return;
+    }
+
+    if (pendingDirectorDecision && pendingDirectorDecision.offerId) {
+        const { offerId, comments } = pendingDirectorDecision;
+        executeDirectorDecisionApi(offerId, `/offers/${offerId}/reject`, comments);
+    }
+}
+
+window.confirmDirectorApproveAction = confirmDirectorApproveAction;
+window.confirmDirectorRejectAction = confirmDirectorRejectAction;
 
 function executeDirectorDecisionApi(offerId, url, comments) {
     const csrf = getCsrfInfo();
@@ -1970,38 +2001,12 @@ window.confirmSendOffer = confirmSendOffer;
 
 function submitDirectorApprove() {
     if (!currentDirectorOfferId) return;
-
-    Swal.fire({
-        title: 'Phê duyệt đề xuất nhận việc?',
-        text: 'Sau khi phê duyệt, Bộ phận Tuyển dụng sẽ được thông báo để tiếp tục phát hành Thư mời nhận việc cho ứng viên.',
-        icon: 'question',
-        showCancelButton: true,
-        confirmButtonText: 'Xác nhận phê duyệt',
-        cancelButtonText: 'Hủy',
-        confirmButtonColor: '#166534',
-        reverseButtons: true
-    }).then((result) => {
-        if (result.isConfirmed) {
-            executeDirectorDecisionApi(currentDirectorOfferId, `/offers/${currentDirectorOfferId}/approve`, 'Phê duyệt trực tiếp');
-        }
-    });
+    submitDirectorDecisionFromScreen(currentDirectorOfferId, 'APPROVE');
 }
 
 function submitDirectorReject() {
     if (!currentDirectorOfferId) return;
-
-    const reason = document.getElementById('rejectReasonInput') ? document.getElementById('rejectReasonInput').value.trim() : '';
-    if (!reason) {
-        showDirectorRejectReasonRequiredAlert(() => {
-            const input = document.getElementById('rejectReasonInput');
-            if (input) input.focus();
-        });
-        return;
-    }
-
-    showDirectorRejectConfirmModal(currentDirectorOfferId, () => {
-        executeDirectorDecisionApi(currentDirectorOfferId, `/offers/${currentDirectorOfferId}/reject`, reason);
-    });
+    submitDirectorDecisionFromScreen(currentDirectorOfferId, 'REJECT');
 }
 
 // =========================================================================
