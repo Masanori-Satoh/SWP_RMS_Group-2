@@ -85,30 +85,61 @@ function handleEditModalBackdropClick(event) {
     }
 }
 
-function showToast(message, type = 'info') {
-    let container = document.getElementById('toastContainer');
+/**
+ * Chuẩn hóa Flash Toast hiển thị thông báo theo hệ thống (flash-toast.css / UI Catalog)
+ * Thay thế hoàn toàn alert() và các popup SweetAlert chặn toàn màn hình.
+ * @param {string} message 
+ * @param {'success'|'error'|'warning'|'info'} type 
+ */
+function showFlashToast(message, type = 'success') {
+    let container = document.querySelector('.flash-toasts');
     if (!container) {
         container = document.createElement('div');
-        container.id = 'toastContainer';
-        container.className = 'toast-container';
+        container.className = 'flash-toasts';
         document.body.appendChild(container);
     }
 
+    const isError = type === 'error' || type === 'danger';
+    const isWarning = type === 'warning';
     const toast = document.createElement('div');
-    toast.className = `toast toast-${type}`;
+    toast.className = `flash-toast ${isError ? 'flash-toast--error' : (isWarning ? 'flash-toast--warning' : '')}`;
+    toast.setAttribute('role', isError ? 'alert' : 'status');
+    toast.setAttribute('data-flash-toast', '');
 
-    let icon = 'fa-info-circle';
-    if (type === 'success') icon = 'fa-check-circle';
-    else if (type === 'danger') icon = 'fa-exclamation-circle';
-    else if (type === 'warning') icon = 'fa-triangle-exclamation';
+    const iconSvg = isError
+        ? `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true" style="flex:none; color:var(--error); margin-top:2px;"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>`
+        : (isWarning
+            ? `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true" style="flex:none; color:var(--focus); margin-top:2px;"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>`
+            : `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true" style="flex:none; color:var(--success); margin-top:2px;"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>`);
 
-    toast.innerHTML = `<i class="fa-solid ${icon}"></i> <span>${message}</span>`;
+    toast.innerHTML = `
+        <span class="flash-toast-progress" aria-hidden="true"></span>
+        ${iconSvg}
+        <p class="flash-toast-text">${escapeOfferHtml(message)}</p>
+        <button type="button" class="flash-toast-close" aria-label="Đóng thông báo" data-flash-close>&times;</button>
+    `;
+
     container.appendChild(toast);
 
-    setTimeout(() => {
-        toast.style.opacity = '0';
-        setTimeout(() => toast.remove(), 200);
-    }, 3000);
+    function dismissToast() {
+        if (toast.classList.contains('is-leaving')) return;
+        toast.classList.add('is-leaving');
+        const remove = () => {
+            toast.remove();
+            if (container && !container.querySelector('[data-flash-toast]')) {
+                container.remove();
+            }
+        };
+        toast.addEventListener('transitionend', remove, { once: true });
+        setTimeout(remove, 350);
+    }
+
+    toast.querySelector('.flash-toast-progress')?.addEventListener('animationend', dismissToast);
+    toast.querySelector('[data-flash-close]')?.addEventListener('click', dismissToast);
+}
+
+function showToast(message, type = 'info') {
+    showFlashToast(message, type === 'danger' ? 'error' : type);
 }
 
 function getTodayDateString() {
@@ -1379,34 +1410,7 @@ function executeOfferExport() {
  * Hiển thị thông báo Toast góc dưới màn hình
  */
 function showOfferToast(message, type = 'info') {
-    let container = document.getElementById('offerToastContainer');
-    if (!container) {
-        container = document.createElement('div');
-        container.id = 'offerToastContainer';
-        container.style.position = 'fixed';
-        container.style.bottom = '24px';
-        container.style.right = '24px';
-        container.style.zIndex = '99999';
-        container.style.display = 'flex';
-        container.style.flexDirection = 'column';
-        container.style.gap = '8px';
-        document.body.appendChild(container);
-    }
-
-    const toast = document.createElement('div');
-    toast.className = `custom-toast toast-${type}`;
-    const iconClass = (type === 'success') ? 'fa-circle-check' :
-        (type === 'danger') ? 'fa-triangle-exclamation' : 'fa-circle-info';
-
-    toast.innerHTML = `<i class="fa-solid ${iconClass}"></i><span>${message}</span>`;
-    container.appendChild(toast);
-
-    setTimeout(() => {
-        toast.style.transition = 'opacity 0.3s ease, transform 0.3s ease';
-        toast.style.opacity = '0';
-        toast.style.transform = 'translateY(10px)';
-        setTimeout(() => toast.remove(), 300);
-    }, 4000);
+    showFlashToast(message, type === 'danger' ? 'error' : type);
 }
 
 // =========================================================================
@@ -1456,7 +1460,7 @@ function submitDirectorDecision() {
     const btn = document.getElementById('btnSubmitDecision');
     const originalBtnHtml = btn.innerHTML;
     btn.disabled = true;
-    btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Đang xử lý...';
+    btn.innerHTML = '<span class="ofw-spinner-sm" aria-hidden="true"></span> Đang xử lý...';
 
     const token = document.querySelector('meta[name="_csrf"]')?.getAttribute('content');
     const url = actionType === 'APPROVE' ? `/offers/${offerId}/approve` : `/offers/${offerId}/reject`;
@@ -1486,8 +1490,7 @@ function submitDirectorDecision() {
             }, 1000);
         })
         .catch(err => {
-            alert(err.message);
-            showOfferToast(err.message, 'danger');
+            showFlashToast(err.message, 'error');
             btn.disabled = false;
             btn.innerHTML = originalBtnHtml;
         });
@@ -1934,28 +1937,23 @@ function executeDirectorDecisionApi(offerId, url, comments) {
             }
 
             if (res.ok && data?.success) {
-                Swal.fire({
-                    title: 'Thành công',
-                    text: data.message,
-                    icon: 'success',
-                    timer: 1500,
-                    showConfirmButton: false
-                }).then(() => {
+                showFlashToast(data.message || 'Xử lý quyết định thành công!', 'success');
+                setTimeout(() => {
                     window.location.href = '/offers';
-                });
+                }, 1200);
             } else if (res.status === 403) {
-                Swal.fire('Lỗi phân quyền', 'Bạn không có quyền thực hiện thao tác này hoặc phiên làm việc đã hết hạn. Vui lòng tải lại trang.', 'warning');
+                showFlashToast('Bạn không có quyền thực hiện thao tác này hoặc phiên làm việc đã hết hạn.', 'warning');
             } else if (data && data.message) {
-                Swal.fire('Lỗi', data.message, 'error');
+                showFlashToast(data.message, 'error');
             } else if (res.status >= 500) {
-                Swal.fire('Lỗi hệ thống', `Máy chủ phản hồi mã lỗi ${res.status}. Vui lòng thử lại sau hoặc liên hệ quản trị viên.`, 'error');
+                showFlashToast(`Máy chủ phản hồi mã lỗi ${res.status}. Vui lòng thử lại sau hoặc liên hệ quản trị viên.`, 'error');
             } else {
-                Swal.fire('Lỗi', 'Thao tác không thành công. Mã trạng thái: ' + res.status, 'error');
+                showFlashToast('Thao tác không thành công. Mã trạng thái: ' + res.status, 'error');
             }
         })
         .catch(err => {
             console.error('Director decision network error:', err);
-            Swal.fire('Lỗi kết nối', 'Không thể kết nối đến máy chủ. Vui lòng kiểm tra lại kết nối mạng.', 'error');
+            showFlashToast('Không thể kết nối đến máy chủ. Vui lòng kiểm tra lại kết nối mạng.', 'error');
         });
 }
 
