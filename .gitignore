@@ -145,4 +145,5 @@ playwright-report/
 blob-report/
 playwright/
 .playwright/
+integration-test/
 
