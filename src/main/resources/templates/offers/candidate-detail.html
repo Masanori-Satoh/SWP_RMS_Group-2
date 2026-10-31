@@ -121,10 +121,10 @@
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"></polyline></svg>
                     <span>Đồng ý nhận việc</span>
                 </button>
-                <a th:href="@{/portal/offers/{id}/decline(id=${offer.offerId})}" class="btn btn--outline cof-btn-decline">
+                <button type="button" class="btn btn--outline cof-btn-decline" data-detail-trigger="decline" id="btn-trigger-decline">
                     <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
                     <span>Từ chối thư mời</span>
-                </a>
+                </button>
             </div>
         </div>
     </section>
@@ -342,22 +342,26 @@
         </div>
     </dialog>
 
-    <!-- Hộp thoại Xác nhận Từ chối thư mời -->
-    <dialog id="cof-decline-dialog" class="confirm-dialog no-print" aria-labelledby="cof-decline-dialog-title"
+    <!-- Hộp thoại Xác nhận Từ chối thư mời (Modal trực tiếp trên màn hình chi tiết) -->
+    <dialog id="cof-decline-dialog" class="confirm-dialog cof-modal no-print" aria-labelledby="cof-decline-dialog-title"
             aria-describedby="cof-decline-dialog-message">
-        <div class="dialog-content">
+        <div class="dialog-content cof-modal__content">
             <form th:action="@{/portal/offers/{id}/decline(id=${offer.offerId})}" method="post" class="cof-detail-form">
                 <input type="hidden" name="fromDetail" value="true">
-                <div class="dialog-header">
-                    <h2 id="cof-decline-dialog-title" class="dialog-title">Từ chối thư mời nhận việc?</h2>
+                <div class="dialog-header cof-modal__header">
+                    <h2 id="cof-decline-dialog-title" class="dialog-title">Từ chối thư mời</h2>
+                    <button type="button" class="cof-modal__close-btn" data-detail-close="cof-decline-dialog" aria-label="Đóng">&times;</button>
                 </div>
-                <div class="dialog-body">
-                    <p id="cof-decline-dialog-message">
-                        Bạn có chắc chắn muốn từ chối thư mời cho vị trí <strong th:text="${offer.offeredPositionTitle}">Java Developer</strong>?
-                        Hồ sơ của bạn sẽ dừng lại và bạn không thể đổi lại sau khi xác nhận.
+                <div class="dialog-body cof-modal__body">
+                    <p id="cof-decline-dialog-message" class="cof-modal__desc">
+                        Bạn có chắc muốn từ chối thư mời cho vị trí <strong th:text="${offer.offeredPositionTitle}">Java Developer</strong>?
                     </p>
+                    <div class="cof-modal__warning" role="note">
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
+                        <span>Sau khi xác nhận, bạn không thể thay đổi lựa chọn này.</span>
+                    </div>
                     <div class="cof-dialog-reason">
-                        <label for="cof-detail-reason-input" class="form-label">Lý do từ chối (tùy chọn):</label>
+                        <label for="cof-detail-reason-input" class="form-label cof-modal__reason-label">Lý do từ chối (không bắt buộc)</label>
                         <div class="cof-chips" role="group" aria-label="Lý do phổ biến">
                             <button type="button" class="cof-chip" data-reason="Mức đãi ngộ chưa đạt kỳ vọng">Mức đãi ngộ chưa đạt kỳ vọng</button>
                             <button type="button" class="cof-chip" data-reason="Đã nhận lời mời từ công ty khác">Đã nhận lời mời từ công ty khác</button>
@@ -365,11 +369,11 @@
                             <button type="button" class="cof-chip" data-reason="Kế hoạch cá nhân thay đổi">Kế hoạch cá nhân thay đổi</button>
                         </div>
                         <textarea id="cof-detail-reason-input" name="declineReason" class="form-input cof-textarea" rows="3"
-                                  placeholder="Vui lòng chia sẻ thêm lý do hoặc góp ý cho Mộc RMS..."></textarea>
+                                  maxlength="1000" placeholder="Chia sẻ thêm lý do..."></textarea>
                     </div>
                 </div>
-                <div class="dialog-actions">
-                    <button type="button" class="btn btn--secondary btn--sm" data-detail-close="cof-decline-dialog">Xem lại</button>
+                <div class="dialog-actions cof-modal__actions">
+                    <button type="button" class="btn btn--secondary btn--sm" data-detail-close="cof-decline-dialog">Quay lại</button>
                     <button type="submit" class="btn btn--danger btn--sm">Xác nhận từ chối</button>
                 </div>
             </form>

@@ -127,9 +127,39 @@
 
   if (declineDialog) {
     initReasonChips(declineDialog);
+
+    // Trả lại focus cho nút Từ chối thư mời và reset form khi đóng modal
+    declineDialog.addEventListener('close', function () {
+      var triggerBtn = document.querySelector('[data-detail-trigger="decline"]');
+      if (triggerBtn) {
+        triggerBtn.focus();
+      }
+    });
   }
 
-  // 4. Logic trang Từ chối riêng (/portal/offers/{id}/decline)
+  if (acceptDialog) {
+    acceptDialog.addEventListener('close', function () {
+      var triggerBtn = document.querySelector('[data-detail-trigger="accept"]');
+      if (triggerBtn) {
+        triggerBtn.focus();
+      }
+    });
+  }
+
+  // Đóng modal khi bấm ra ngoài phần backdrop
+  [acceptDialog, declineDialog].forEach(function (dlg) {
+    if (!dlg) return;
+    dlg.addEventListener('click', function (e) {
+      var rect = dlg.getBoundingClientRect();
+      var isInDialog = (rect.top <= e.clientY && e.clientY <= rect.top + rect.height &&
+                        rect.left <= e.clientX && e.clientX <= rect.left + rect.width);
+      if (!isInDialog && typeof dlg.close === 'function') {
+        dlg.close();
+      }
+    });
+  });
+
+  // 4. Logic trang Từ chối riêng (/portal/offers/{id}/decline) - tương thích ngược
   var declinePageContainer = document.querySelector('.cof-decline-form');
   if (declinePageContainer) {
     initReasonChips(declinePageContainer);
@@ -141,8 +171,12 @@
       var action = btn.dataset.detailTrigger;
       if (action === 'accept' && acceptDialog && typeof acceptDialog.showModal === 'function') {
         acceptDialog.showModal();
+        var cancelBtn = acceptDialog.querySelector('[data-detail-close]');
+        if (cancelBtn) cancelBtn.focus();
       } else if (action === 'decline' && declineDialog && typeof declineDialog.showModal === 'function') {
         declineDialog.showModal();
+        var cancelBtn = declineDialog.querySelector('[data-detail-close]');
+        if (cancelBtn) cancelBtn.focus();
       }
     });
   });

@@ -2397,3 +2397,117 @@
     gap: var(--s2);
   }
 }
+
+
+/* =============================================================================
+   HỘP THOẠI XÁC NHẬN TỪ CHỐI THƯ MỜI TRÊN TRANG CHI TIẾT (#cof-decline-dialog)
+   ============================================================================= */
+#cof-decline-dialog.confirm-dialog {
+  max-width: 540px;
+  width: calc(100% - 32px);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--line);
+  background: var(--surface);
+  box-shadow: var(--shadow-lg);
+  color: var(--ink);
+}
+
+.cof-modal__content {
+  padding: var(--s5) var(--s6);
+}
+
+.cof-modal__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: var(--s3);
+  padding-bottom: var(--s2);
+  border-bottom: 1px solid var(--line-subtle, var(--line));
+}
+
+.cof-modal__header .dialog-title {
+  font-family: var(--serif);
+  font-size: 19px;
+  font-weight: 600;
+  color: var(--ink);
+  margin: 0;
+}
+
+.cof-modal__close-btn {
+  background: transparent;
+  border: none;
+  font-size: 24px;
+  line-height: 1;
+  color: var(--muted);
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: var(--radius-sm);
+  transition: color 0.15s ease, background-color 0.15s ease;
+}
+
+.cof-modal__close-btn:hover,
+.cof-modal__close-btn:focus-visible {
+  color: var(--ink);
+  background-color: var(--surface-subtle);
+  outline: none;
+}
+
+.cof-modal__body {
+  margin-bottom: var(--s5);
+}
+
+.cof-modal__desc {
+  font-size: 14px;
+  color: var(--ink);
+  line-height: 1.5;
+  margin: 0 0 var(--s2) 0;
+}
+
+.cof-modal__warning {
+  display: flex;
+  align-items: center;
+  gap: var(--s2);
+  font-size: 13px;
+  color: var(--warning, #a06325);
+  background: var(--warning-soft, #fff4e5);
+  border: 1px solid color-mix(in srgb, var(--warning) 25%, transparent);
+  border-radius: var(--radius-sm);
+  padding: var(--s2) var(--s3);
+  margin: var(--s2) 0 var(--s3);
+}
+
+.cof-modal__warning svg {
+  flex-shrink: 0;
+  color: var(--warning);
+}
+
+.cof-modal__reason-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ink);
+  margin-bottom: var(--s1);
+  display: block;
+}
+
+.cof-modal__actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--s3);
+  padding-top: var(--s3);
+  border-top: 1px solid var(--line-subtle, var(--line));
+}
+
+@media (max-width: 640px) {
+  .cof-modal__content {
+    padding: var(--s4);
+  }
+  .cof-modal__actions {
+    flex-direction: column-reverse;
+    gap: var(--s2);
+  }
+  .cof-modal__actions .btn {
+    width: 100%;
+    justify-content: center;
+  }
+}
