@@ -79,6 +79,35 @@ Trước đợt rà soát và nâng cấp toàn diện này, phân hệ Cổng t
 - Đồng bộ toàn bộ trải nghiệm người dùng từ Danh sách -> Chi tiết -> Từ chối.
 - **Kiểm thử:** 148/148 tests passing.
 
+### Phase 6: Thiết Kế Lại Giao Diện Đơn Ứng Tuyển Theo Mockup Mẫu (/portal/applications)
+- **Tabs lọc hồ sơ:** Thiết kế lại thành dạng pill bo tròn mềm mại (`border-radius: var(--radius-full)`), loại bỏ thanh cuộn ngang xanh lá.
+- **Thẻ đơn ứng tuyển:** Chuyển sang phong cách thẻ trắng tinh khôi (`var(--surface)`), viền mảnh 1px (`var(--line)`), bo góc 14px mềm mại.
+- **Menu tùy chọn thẻ:** Tích hợp menu ba chấm dọc `⋮` (`.myapp-card__more`) ở góc trên phải thẻ với tùy chọn *"Xem lại CV"*.
+- **Khối trạng thái có thư mời:** Pill badge mint `[✉] Có thư mời`, Hạn phản hồi hiển thị ngắn gọn kèm huy hiệu đếm ngược dạng pill.
+- **Cặp nút hành động:** Đồng bộ 2 nút ngang hàng (cao 40px, bo 8px): nút chính `[✉] Trả lời thư mời` (`.btn--primary`) và nút phụ `Xem chi tiết` (`.btn--secondary`).
+- **Kiểm thử:** 72/72 test cases passed (20/20 MyApplicationWebTests, 52/52 MyApplicationJourneyTests, BUILD SUCCESS).
+
+### Phase 7: Thiết Kế Lại Màn Hình Xem Thư Mời Làm Việc Theo Mockup (/portal/offers/{id})
+- **Thanh điều hướng:** Tích hợp nút quay lại danh sách (`← Quay lại danh sách đơn ứng tuyển`) kèm breadcrumb gọn gàng.
+- **Thẻ 1 (Overview & Stepper):** Tên vị trí, bộ ba metadata, thanh tiến độ Stepper 4 bước chuẩn với ngày tháng, Hạn phản hồi & đếm ngược, cặp nút hành động ngang hàng.
+- **Thẻ 2 (Tờ Thư Mời):** Header với icon thư xanh, tiêu đề Thư mời nhận việc, mã thư mời và nút Tải PDF.
+- **Thẻ 3 (Accordion Chi Tiết):** Đưa 3 khối chi tiết vào thẻ Accordion (`<details class="card cof-accordion" open>`).
+- **Kiểm thử:** 67/67 test cases passed (BUILD SUCCESS).
+
+### Phase 8: Thiết Kế Lại Khung Trên Dạng Hero Card Căn Giữa Chuẩn Mockup Mới (/portal/offers/{id})
+- **Thẻ 1 (Hero Card Căn Giữa):**
+  - Huy hiệu pill mint `[✉] THƯ MỜI NHẬN VIỆC` (`.cof-hero-badge`) căn giữa.
+  - Tên vị trí tuyển dụng to đậm 24px (`.cof-hero-title`).
+  - Hàng metadata căn giữa: `[🏢] Phòng ban` · `[📅] Ngày gửi` · `[📅] Bắt đầu dự kiến`.
+  - Hàng thao tác căn giữa: Hộp Hạn phản hồi màu hổ phách ấm (`.cof-deadline-box`) + Cặp nút `[✓] Đồng ý nhận việc` (`.btn--primary`) và `[✕] Từ chối thư mời` (`.btn--outline`).
+- **Thẻ 2 (Nội Dung Thư Mời):**
+  - Header: Icon thư + `Nội dung thư mời` & Nút `[📄] Tải về PDF`.
+  - Chữ ký căn lề trái (`.cof-letter-signoff-left`): *Trân trọng, Đội ngũ Mộc RMS*.
+- **Thẻ 3 (Accordion Chi Tiết Đề Xuất):**
+  - Accordion 3 cột: Thông tin công việc, Lương & thưởng (Lương thử việc % + Lương chính thức), Đãi ngộ & quyền lợi.
+- **Kiểm thử:** 67/67 test cases passed (16/16 CandidateOfferWebTests, 31/31 OfferIntegrationTests, 20/20 MyApplicationWebTests, BUILD SUCCESS).
+
+
 ---
 
 ## 📊 III. BẢNG TỔNG HỢP KIỂM CHỨNG THEO TIÊU CHUẨN HỆ THỐNG

@@ -1677,6 +1677,184 @@
   font-weight: 600;
 }
 
+/* 2. Thẻ 1: Khung trên dạng Hero Card Căn Giữa Chuẩn Mockup */
+.cof-hero-card.card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 36px 32px 32px;
+  background-color: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+  margin-bottom: var(--s5);
+}
+
+.cof-hero-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 16px;
+  border-radius: var(--radius-full);
+  background-color: var(--brand-soft);
+  color: var(--brand-dark);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  margin-bottom: var(--s3);
+}
+
+.cof-hero-badge svg {
+  color: var(--brand-dark);
+  flex-shrink: 0;
+}
+
+.cof-hero-title {
+  margin: 0 0 var(--s2);
+  font-family: var(--sans);
+  font-size: 24px;
+  font-weight: 700;
+  line-height: 1.35;
+  color: var(--ink);
+  max-width: 820px;
+}
+
+.cof-hero-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: var(--s2) var(--s5);
+  margin: 0 0 var(--s6);
+  color: var(--muted);
+  font-size: 14px;
+}
+
+.cof-hero-meta-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  white-space: nowrap;
+}
+
+.cof-hero-meta-item svg {
+  color: var(--muted);
+  flex-shrink: 0;
+}
+
+.cof-hero-actions-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: var(--s3);
+  width: 100%;
+}
+
+.cof-hero-actions-bar .cof-deadline-box {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 18px;
+  background-color: var(--warning-soft);
+  border: 1px solid rgba(160, 99, 37, 0.18);
+  border-radius: var(--radius-md);
+  color: var(--ink);
+  font-size: 13.5px;
+  min-height: 42px;
+  box-sizing: border-box;
+}
+
+.cof-deadline-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  white-space: nowrap;
+}
+
+.cof-deadline-item svg {
+  color: var(--warning);
+  flex-shrink: 0;
+}
+
+.cof-deadline-item strong {
+  font-weight: 700;
+  color: var(--ink);
+}
+
+.cof-deadline-divider {
+  color: rgba(160, 99, 37, 0.35);
+  font-weight: 300;
+  user-select: none;
+}
+
+.cof-deadline-countdown {
+  color: var(--warning);
+  font-weight: 600;
+}
+
+.cof-deadline-countdown svg {
+  color: var(--warning);
+}
+
+.cof-hero-buttons {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s3);
+}
+
+.cof-hero-buttons .cof-btn-accept {
+  width: auto;
+  min-width: 175px;
+  height: 42px;
+  padding: 0 var(--s5);
+  border-radius: var(--radius-md);
+  font-size: 14px;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  background-color: var(--brand);
+  color: var(--on-brand);
+  border: 1px solid var(--brand);
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+.cof-hero-buttons .cof-btn-accept:hover {
+  background-color: var(--brand-hover);
+  border-color: var(--brand-hover);
+}
+
+.cof-hero-buttons .cof-btn-decline {
+  width: auto;
+  min-width: 165px;
+  height: 42px;
+  padding: 0 var(--s5);
+  border-radius: var(--radius-md);
+  font-size: 14px;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  background-color: var(--surface);
+  color: var(--error);
+  border: 1px solid rgba(135, 55, 47, 0.4);
+  text-decoration: none;
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+.cof-hero-buttons .cof-btn-decline:hover {
+  background-color: var(--error-soft);
+  border-color: var(--error);
+  color: var(--error);
+}
+
 /* 2. Thẻ 1: Tổng quan đơn ứng tuyển & Tiến độ (Overview Card) */
 .cof-overview-card.card {
   display: grid;
@@ -2031,6 +2209,25 @@
   font-size: 14.5px;
   color: var(--ink);
 }
+/* Chữ ký thư mời căn trái chuẩn Mockup mới */
+.cof-letter-signoff-left {
+  margin-top: var(--s6);
+  text-align: left;
+  color: var(--ink);
+}
+
+.cof-letter-signoff-left p {
+  margin: 0 0 4px;
+  line-height: 1.5;
+  color: var(--ink);
+}
+
+.cof-letter-signoff-left strong {
+  font-size: 14.5px;
+  font-weight: 700;
+  color: var(--ink);
+}
+
 
 /* 4. Thẻ 3: Accordion Chi tiết đề xuất */
 .cof-accordion.card {
@@ -2146,5 +2343,41 @@
   .cof-letter-card__head {
     flex-direction: column;
     align-items: flex-start;
+  }
+}
+
+@media (max-width: 768px) {
+  .cof-hero-card.card {
+    padding: var(--s5) var(--s4);
+  }
+
+  .cof-hero-title {
+    font-size: 20px;
+  }
+
+  .cof-hero-meta {
+    flex-direction: column;
+    gap: var(--s2);
+  }
+
+  .cof-hero-actions-bar {
+    flex-direction: column;
+    width: 100%;
+  }
+
+  .cof-hero-actions-bar .cof-deadline-box {
+    width: 100%;
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+
+  .cof-hero-buttons {
+    width: 100%;
+    flex-direction: column;
+  }
+
+  .cof-hero-buttons .cof-btn-accept,
+  .cof-hero-buttons .cof-btn-decline {
+    width: 100%;
   }
 }

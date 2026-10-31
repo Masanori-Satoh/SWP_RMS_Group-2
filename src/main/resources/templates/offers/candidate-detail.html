@@ -6,10 +6,13 @@
 <!--
     OFFERS/CANDIDATE-DETAIL.HTML — Màn hình Thư mời nhận việc chính thức (Offer Letter)
     Chỉ dành riêng cho ứng viên (/portal/offers/{id}).
-    Trình bày trang trọng theo hình thức thư mời tuyển dụng chuẩn doanh nghiệp theo Mockup mẫu:
-    - Thanh điều hướng: Quay lại danh sách đơn ứng tuyển > Đơn ứng tuyển / Thư mời nhận việc / #{id}
-    - Thẻ 1: Tổng quan đơn ứng tuyển + Thanh 4 bước (có ngày tháng) + Hạn phản hồi đếm ngược + 2 nút thao tác
-    - Thẻ 2: Tờ Thư mời nhận việc chính thức (Header có nút Tải về PDF, nội dung thư chào mừng, chữ ký)
+    Thiết kế tinh gọn, sang trọng theo đúng Mockup:
+    - Thẻ 1: Khung trên dạng Hero Card căn giữa:
+        + Huy hiệu [✉] THƯ MỜI NHẬN VIỆC
+        + Tên vị trí tuyển dụng to rõ
+        + Hàng thông tin [Phòng ban] · [Ngày gửi] · [Bắt đầu dự kiến]
+        + Thanh ngang căn giữa: [Hạn phản hồi: dd/MM/yyyy | Còn N ngày] + [✓ Đồng ý nhận việc] + [✕ Từ chối thư mời]
+    - Thẻ 2: Tờ thư mời [Nội dung thư mời | Tải về PDF] với nội dung chào mừng và chữ ký Đội ngũ Mộc RMS căn trái
     - Thẻ 3: Accordion Chi tiết đề xuất (Thông tin công việc, Lương & thưởng, Quyền lợi)
     CSS riêng: css/pages/candidate-offers.css (cof-).
 -->
@@ -26,7 +29,7 @@
     <!-- FLASH MESSAGES (Căn giữa thanh topbar ngang hàng thông tin người dùng) -->
     <th:block th:replace="~{fragments/ui/flash-toast :: flashToast(${successMessage}, ${errorMessage})}"></th:block>
 
-    <!-- Điều hướng quay lại chuẩn Mockup -->
+    <!-- Điều hướng quay lại -->
     <nav class="cof-nav-bar no-print" aria-label="Đường dẫn">
         <a th:href="@{/portal/applications}" class="cof-back-link">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
@@ -64,83 +67,56 @@
         </p>
     </div>
 
-    <!-- 1. THẺ TỔNG QUAN ĐƠN ỨNG TUYỂN & THAO TÁC THEO MOCKUP -->
-    <section class="card cof-overview-card no-print" aria-label="Tổng quan tiến độ đơn ứng tuyển">
-        <div class="cof-overview__main">
-            <h1 class="cof-overview__title" th:text="${offer.offeredPositionTitle}">QA Automation Engineer (Playwright / Selenium / API)</h1>
-            <span class="sr-only" th:text="|Thư mời nhận việc: ${offer.offeredPositionTitle}|">Thư mời nhận việc: Senior Java Developer</span>
-            <p class="cof-overview__meta">
-                <span class="cof-overview__meta-item">
-                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="2" width="16" height="20" rx="2" ry="2"></rect><line x1="9" y1="22" x2="9" y2="22.01"></line><line x1="15" y1="22" x2="15" y2="22.01"></line><line x1="8" y1="6" x2="8" y2="6.01"></line><line x1="16" y1="6" x2="16" y2="6.01"></line><line x1="8" y1="10" x2="8" y2="10.01"></line><line x1="16" y1="10" x2="16" y2="10.01"></line><line x1="8" y1="14" x2="8" y2="14.01"></line><line x1="16" y1="14" x2="16" y2="14.01"></line><line x1="8" y1="18" x2="8" y2="18.01"></line><line x1="16" y1="18" x2="16" y2="18.01"></line></svg>
-                    <span th:text="${offer.departmentName}">Engineering</span>
-                </span>
-                <span class="cof-overview__meta-sep" aria-hidden="true">|</span>
-                <span class="cof-overview__meta-item">
-                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
-                    <span>Nộp <time th:datetime="${#temporals.formatISO(offer.submissionDate)}" th:text="${offer.submissionDate != null ? #temporals.format(offer.submissionDate, 'dd/MM/yyyy') : '16/10/2026'}">16/10/2026</time></span>
-                </span>
-                <span class="cof-overview__meta-sep" aria-hidden="true">|</span>
-                <span class="cof-overview__meta-item">
-                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"></path><line x1="7" y1="7" x2="7.01" y2="7"></line></svg>
-                    <span class="cof-overview__code" th:text="${offer.applicationCode ?: '#CAN-0058'}">#CAN-0058</span>
-                </span>
-            </p>
-
-            <!-- Stepper 4 bước với ngày tháng phía dưới theo mockup -->
-            <ol class="cof-stepper" aria-hidden="true">
-                <li class="cof-stepper__step" data-state="done">
-                    <span class="cof-stepper__dot">
-                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
-                    </span>
-                    <span class="cof-stepper__name">Nộp CV</span>
-                    <span class="cof-stepper__date" th:text="${offer.submissionDate != null ? #temporals.format(offer.submissionDate, 'dd/MM/yyyy') : '16/10/2026'}">16/10/2026</span>
-                </li>
-                <li class="cof-stepper__step" data-state="done">
-                    <span class="cof-stepper__dot">
-                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
-                    </span>
-                    <span class="cof-stepper__name">Phỏng vấn</span>
-                    <span class="cof-stepper__date" th:text="${offer.submissionDate != null ? #temporals.format(offer.submissionDate.plusDays(4), 'dd/MM/yyyy') : '20/10/2026'}">20/10/2026</span>
-                </li>
-                <li class="cof-stepper__step" th:attr="data-state=${offer.offerStatus == 'Accepted' ? 'done' : 'current'}">
-                    <span class="cof-stepper__dot">
-                        <th:block th:if="${offer.offerStatus == 'Accepted'}">
-                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
-                        </th:block>
-                    </span>
-                    <span class="cof-stepper__name">Thư mời</span>
-                    <span class="cof-stepper__date" th:text="${offer.sentAt != null ? #temporals.format(offer.sentAt, 'dd/MM/yyyy') : (offer.updatedAt != null ? #temporals.format(offer.updatedAt, 'dd/MM/yyyy') : '27/10/2026')}">27/10/2026</span>
-                </li>
-                <li class="cof-stepper__step" th:attr="data-state=${offer.offerStatus == 'Accepted' ? 'current' : 'upcoming'}">
-                    <span class="cof-stepper__dot"></span>
-                    <span class="cof-stepper__name">Nhận việc</span>
-                    <span class="cof-stepper__date" th:text="${offer.offerStatus == 'Accepted' and offer.expectedStartDate != null ? #temporals.format(offer.expectedStartDate, 'dd/MM/yyyy') : '-'}">-</span>
-                </li>
-            </ol>
+    <!-- 1. THẺ KHUNG TRÊN DẠNG HERO CARD CĂN GIỮA CHUẨN MOCKUP MỚI -->
+    <section class="card cof-hero-card no-print" aria-label="Tổng quan thư mời nhận việc">
+        <!-- Huy hiệu phía trên -->
+        <div class="cof-hero-badge">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="4" width="20" height="16" rx="2"></rect><polyline points="22 6 12 13 2 6"></polyline></svg>
+            <span>THƯ MỜI NHẬN VIỆC</span>
         </div>
 
-        <div class="cof-overview__side">
-            <!-- Huy hiệu trạng thái -->
-            <div class="cof-status-pill cof-status-pill--offer">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="4" width="20" height="16" rx="2"></rect><polyline points="22 6 12 13 2 6"></polyline></svg>
-                <span th:text="${offer.statusLabel}">Có thư mời</span>
-            </div>
+        <!-- Tên vị trí tuyển dụng -->
+        <h1 class="cof-hero-title" th:text="${offer.offeredPositionTitle}">QA Automation Engineer (Playwright / Selenium / API)</h1>
+        <span class="sr-only" th:text="|Thư mời nhận việc: ${offer.offeredPositionTitle}|">Thư mời nhận việc: Senior Java Developer</span>
 
-            <!-- Hạn phản hồi & Đếm ngược -->
+        <!-- Hàng thông tin metadata: Phòng ban, Ngày gửi, Bắt đầu dự kiến -->
+        <div class="cof-hero-meta">
+            <span class="cof-hero-meta-item">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="2" width="16" height="20" rx="2" ry="2"></rect><line x1="9" y1="22" x2="9" y2="22.01"></line><line x1="15" y1="22" x2="15" y2="22.01"></line><line x1="8" y1="6" x2="8" y2="6.01"></line><line x1="16" y1="6" x2="16" y2="6.01"></line><line x1="8" y1="10" x2="8" y2="10.01"></line><line x1="16" y1="10" x2="16" y2="10.01"></line><line x1="8" y1="14" x2="8" y2="14.01"></line><line x1="16" y1="14" x2="16" y2="14.01"></line><line x1="8" y1="18" x2="8" y2="18.01"></line><line x1="16" y1="18" x2="16" y2="18.01"></line></svg>
+                <span th:text="${offer.departmentName}">Engineering</span>
+            </span>
+            <span class="cof-hero-meta-item">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+                <span>Ngày gửi: <time th:text="${offer.sentAt != null ? #temporals.format(offer.sentAt, 'dd/MM/yyyy') : (offer.updatedAt != null ? #temporals.format(offer.updatedAt, 'dd/MM/yyyy') : '31/10/2026')}">31/10/2026</time></span>
+            </span>
+            <span class="cof-hero-meta-item">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+                <span>Bắt đầu dự kiến: <time th:text="${offer.expectedStartDate != null ? #temporals.format(offer.expectedStartDate, 'dd/MM/yyyy') : '12/12/2026'}">12/12/2026</time></span>
+            </span>
+        </div>
+
+        <!-- Hàng ngang: Hộp Hạn chót + 2 nút thao tác -->
+        <div class="cof-hero-actions-bar">
+            <!-- Hộp Hạn chót & Còn N ngày -->
             <div class="cof-deadline-box">
-                <div class="cof-deadline-row">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+                <span class="cof-deadline-item">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
                     <span>Hạn phản hồi: <strong th:text="${offer.responseDeadline != null ? #temporals.format(offer.responseDeadline, 'dd/MM/yyyy') : (offer.expectedStartDate != null ? #temporals.format(offer.expectedStartDate, 'dd/MM/yyyy') : '05/11/2026')}">05/11/2026</strong></span>
-                </div>
-                <div class="cof-countdown-row text-muted" th:if="${offer.canRespond and offer.responseDeadline != null}">
-                    <span class="cof-countdown" th:attr="data-deadline=${#temporals.format(offer.responseDeadline, 'yyyy-MM-dd''T''HH:mm:ss')}">Tính toán...</span>
-                </div>
+                </span>
+                <span class="cof-deadline-divider" aria-hidden="true">|</span>
+                <span class="cof-deadline-item cof-deadline-countdown" th:if="${offer.canRespond and offer.responseDeadline != null}">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="13" r="8"></circle><path d="M12 9v4l2 2"></path><path d="M5 3L2 6"></path><path d="M22 6l-3-3"></path><path d="M12 2v2"></path></svg>
+                    <span class="cof-countdown" th:attr="data-deadline=${#temporals.format(offer.responseDeadline, 'yyyy-MM-dd''T''HH:mm:ss')}">Còn 4 ngày</span>
+                </span>
+                <span class="cof-deadline-item" th:unless="${offer.canRespond or offer.responseDeadline == null}">
+                    <span class="badge" th:classappend="${offer.statusBadge}" th:text="${offer.statusLabel}">Đã phản hồi</span>
+                </span>
                 <!-- Chuỗi thời gian chuẩn xác phục vụ test -->
                 <span class="sr-only" th:if="${offer.responseDeadline != null}" th:text="${#temporals.format(offer.responseDeadline, 'HH:mm - dd/MM/yyyy')}">17:00 - 20/10/2026</span>
             </div>
 
-            <!-- Nút hành động -->
-            <div class="cof-overview__actions" th:if="${offer.canRespond}">
+            <!-- Cặp nút thao tác chuẩn Button DNA -->
+            <div class="cof-hero-buttons" th:if="${offer.canRespond}">
                 <button type="button" class="btn btn--primary cof-btn-accept" data-detail-trigger="accept">
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"></polyline></svg>
                     <span>Đồng ý nhận việc</span>
@@ -150,28 +126,17 @@
                     <span>Từ chối thư mời</span>
                 </a>
             </div>
-
-            <div class="cof-overview__responded" th:unless="${offer.canRespond}">
-                <span class="badge" th:classappend="${offer.statusBadge}" th:text="${offer.statusLabel}">Đã phản hồi</span>
-            </div>
         </div>
     </section>
 
-    <!-- 2. THẺ TỜ THƯ MỜI NHẬN VIỆC TRANG TRỌNG THEO MOCKUP -->
+    <!-- 2. THẺ NỘI DUNG THƯ MỜI CHUẨN MOCKUP MỚI -->
     <article class="card cof-letter-card" id="offer-letter-document">
         <header class="cof-letter-card__head">
             <div class="cof-letter-card__title-wrap">
                 <span class="cof-letter-card__icon" aria-hidden="true">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"></rect><polyline points="22 6 12 13 2 6"></polyline></svg>
                 </span>
-                <div>
-                    <h2 class="cof-letter-card__title">Thư mời nhận việc</h2>
-                    <p class="cof-letter-card__meta">
-                        <span>Ngày gửi: <time th:text="${offer.sentAt != null ? #temporals.format(offer.sentAt, 'dd/MM/yyyy') : (offer.updatedAt != null ? #temporals.format(offer.updatedAt, 'dd/MM/yyyy') : '27/10/2026')}">27/10/2026</time></span>
-                        <span class="cof-letter-card__sep">|</span>
-                        <span>Mã thư mời: <strong th:text="${offer.offerCode ?: 'OFFR-2026-0128'}">OFFR-2026-0128</strong></span>
-                    </p>
-                </div>
+                <h2 class="cof-letter-card__title">Nội dung thư mời</h2>
             </div>
             <button type="button" class="btn btn--secondary btn--sm cof-pdf-btn no-print" data-action="download-pdf">
                 <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
@@ -187,19 +152,19 @@
                 Thay mặt Ban Giám đốc và toàn thể đội ngũ Mộc RMS, chúng tôi rất vui mừng được gửi tới bạn thư mời gia nhập công ty cho vị trí <strong th:text="${offer.offeredPositionTitle}">QA Automation Engineer (Playwright / Selenium / API)</strong> thuộc phòng <strong th:text="${offer.departmentName}">Engineering</strong>.
             </p>
             <p>
-                Chúng tôi tin tưởng rằng với tài năng, sự sáng tạo và nhiệt huyết của bạn, bạn sẽ là một mảnh ghép quan trọng trong hành trình phát triển bền vững của Mộc RMS.
+                Chúng tôi tin tưởng rằng với tài năng, sự sáng tạo và nhiệt huyết của bạn, bạn sẽ là một mảnh ghép quan trọng trong hành trình phát triển bền vững của Mộc RMS. Chúng tôi mong muốn được đồng hành cùng bạn và tin rằng bạn sẽ có những trải nghiệm ý nghĩa tại đây.
             </p>
             <p>
-                Vui lòng xem chi tiết các điều khoản đãi ngộ dưới đây và gửi phản hồi trước hạn chót. Chúng tôi rất mong sớm được chào đón bạn gia nhập đại gia đình Mộc RMS.
+                Rất mong nhận được phản hồi từ bạn.
             </p>
-            <div class="cof-letter-signoff">
+            <div class="cof-letter-signoff-left">
                 <p>Trân trọng,</p>
-                <p><strong>Đội ngũ Tuyển dụng Mộc RMS</strong></p>
+                <strong>Đội ngũ Mộc RMS</strong>
             </div>
         </div>
     </article>
 
-    <!-- 3. ACCORDION CHI TIẾT ĐỀ XUẤT THEO MOCKUP -->
+    <!-- 3. ACCORDION CHI TIẾT ĐỀ XUẤT -->
     <details class="card cof-accordion" open>
         <summary class="cof-accordion__summary">
             <div class="cof-accordion__title-wrap">

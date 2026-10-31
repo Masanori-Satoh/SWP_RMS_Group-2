@@ -87,3 +87,23 @@
 - **Thẻ 3 (Accordion Chi Tiết Đề Xuất):**
   - Chuyển 3 khối thông tin (Thông tin công việc, Lương & thưởng, Quyền lợi) vào thẻ Accordion đóng/mở tiện lợi (`<details class="card cof-accordion">`), mở mặc định với icon cặp tài liệu và mũi tên chevron xoay mượt mà.
 - **Kiểm thử:** 67/67 test cases passed (16/16 CandidateOfferWebTests, 31/31 OfferIntegrationTests, 20/20 MyApplicationWebTests, BUILD SUCCESS).
+
+### Phase 8: Thiết Kế Lại Khung Trên Thư Mời Dạng Hero Card Căn Giữa Chuẩn Mockup Mới (/portal/offers/{id})
+- **Thẻ 1 (Hero Card Căn Giữa):**
+  - **Huy hiệu:** Dạng pill mint `[✉] THƯ MỜI NHẬN VIỆC` (`.cof-hero-badge`) căn giữa phía trên.
+  - **Tiêu đề công việc:** Tên vị trí tuyển dụng to đậm 24px (`.cof-hero-title`), màu `var(--ink)`.
+  - **Metadata:** Hàng thông tin căn giữa gồm 3 mục kèm icon SVG: `[🏢] Phòng ban` · `[📅] Ngày gửi: dd/MM/yyyy` · `[📅] Bắt đầu dự kiến: dd/MM/yyyy`.
+  - **Thanh thao tác căn giữa:**
+    - Hộp Hạn phản hồi màu hổ phách ấm (`.cof-deadline-box`): `[🕒] Hạn phản hồi: dd/MM/yyyy` | `[⏱️] Còn N ngày/giờ`.
+    - Nút chính: `[✓] Đồng ý nhận việc` (`.btn--primary`, cao 42px, bo 8px, nền xanh `var(--brand)`).
+    - Nút phụ: `[✕] Từ chối thư mời` (`.btn--outline`, cao 42px, bo 8px, viền đỏ `var(--error)`).
+- **Thẻ 2 (Nội Dung Thư Mời):**
+  - Header: Bên trái icon thư mint + tiêu đề `Nội dung thư mời`; bên phải nút `[📄] Tải về PDF`.
+  - Chữ ký kết thúc: Căn lề trái (`.cof-letter-signoff-left`):
+    ```
+    Trân trọng,
+    Đội ngũ Mộc RMS
+    ```
+- **Thẻ 3 (Accordion Chi Tiết Đề Xuất):**
+  - Giữ nguyên thẻ `<details class="card cof-accordion" open>` chứa đầy đủ 3 khối thông tin (Công việc, Lương & thưởng, Quyền lợi) đóng mở tiện lợi.
+- **Kiểm thử:** 67/67 test cases passed (16/16 CandidateOfferWebTests, 31/31 OfferIntegrationTests, 20/20 MyApplicationWebTests, BUILD SUCCESS).
