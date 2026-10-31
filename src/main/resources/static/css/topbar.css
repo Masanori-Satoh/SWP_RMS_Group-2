@@ -287,15 +287,19 @@
 }
 
 /* -----------------------------------------------------------------------------
-   5. Khung topbar công khai — dãn hết chiều ngang, lề 32px như topbar nội bộ
+   5. Khung topbar công khai — Phong cách "Khối nổi" (Floating Islands) đồng bộ Admin Workspace
    ----------------------------------------------------------------------------- */
 .public-topbar {
-  position: sticky;
+  position: fixed;
   top: 0;
+  left: 0;
+  right: 0;
   z-index: 100;
-  background: var(--surface);
-  border-bottom: 1px solid var(--line);
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
+  background: transparent;
+  border-bottom: none;
+  box-shadow: none;
+  padding: var(--s4, 16px);
+  pointer-events: none;
   color: var(--ink);
 }
 
@@ -303,164 +307,421 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 24px;
-  min-height: var(--topbar-h);
-  padding: 0 32px;
+  gap: 16px;
+  min-height: auto;
+  padding: 0;
+  pointer-events: none;
+  width: 100%;
+  box-sizing: border-box;
 }
 
-.public-topbar__nav {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-}
-
-.public-topbar__link {
+/* ĐẢO 1: Khối Thương hiệu & Chuyển trang (Góc trên cùng bên trái) — Cỡ chữ to rõ như layout nội bộ */
+.public-brand-island {
   display: inline-flex;
   align-items: center;
-  height: 40px;
+  gap: 16px;
+  padding: 0 18px;
+  height: 56px;
+  min-height: 56px;
+  box-sizing: border-box;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg, 16px);
+  background: color-mix(in srgb, var(--surface, #ffffff) 96%, transparent);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05), 0 4px 14px rgba(17, 45, 35, 0.05);
+  pointer-events: auto;
+  transition: var(--transition);
+}
+
+.public-brand-island:hover {
+  box-shadow: var(--shadow-md, 0 4px 16px rgba(17, 45, 35, 0.09));
+  border-color: color-mix(in srgb, var(--brand) 20%, var(--line));
+}
+
+.public-brand-island .wordmark {
+  min-height: 44px;
+  gap: 10px;
+}
+
+.public-brand-island .wordmark .brand-mark {
+  width: 28px;
+  height: 28px;
+}
+
+.public-brand-island .wordmark .brand-name {
+  font: 600 26px/1 var(--serif);
+}
+
+.public-brand-island .wordmark .brand-sub {
+  font: 700 11px/1.2 var(--sans);
+  letter-spacing: 0.12em;
+  padding-left: 12px;
+}
+
+.public-island-divider {
+  width: 1px;
+  height: 26px;
+  background: var(--line);
+  margin: 0 2px;
+}
+
+/* Nút "Vị trí đang tuyển" — Cỡ chữ to 16px rõ ràng, tương xứng thanh menu nội bộ */
+.public-jobs-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  height: 42px;
   padding: 0 14px;
-  border-radius: var(--radius-md);
-  font-size: calc(14.5px + var(--chrome-step));
+  border-radius: 10px;
+  background: transparent;
+  color: var(--ink);
+  font-size: calc(15px + var(--chrome-step));
   font-weight: 600;
-  color: var(--muted);
   text-decoration: none;
   white-space: nowrap;
   transition: var(--transition);
 }
 
-.public-topbar__link:hover {
+.public-jobs-btn svg {
+  width: 19px;
+  height: 19px;
+  color: var(--muted);
+  transition: color 0.15s ease;
+}
+
+.public-jobs-btn:hover {
   background: var(--brand-soft);
   color: var(--brand-dark);
 }
 
-/* Mục đang xem: sáng nền + gạch chân, cập nhật theo cuộn bởi public-topbar.js */
-.public-topbar__link.active,
-.public-topbar__link[aria-current] {
+.public-jobs-btn:hover svg {
+  color: var(--brand-dark);
+}
+
+.public-jobs-btn.active,
+.public-jobs-btn[aria-current="page"] {
   background: var(--brand-soft);
   color: var(--brand-dark);
+  font-weight: 650;
   box-shadow: inset 0 -2px 0 var(--brand);
 }
 
-.public-topbar__actions {
+.public-jobs-btn.active svg,
+.public-jobs-btn[aria-current="page"] svg {
+  color: var(--brand);
+}
+
+/* CỤM ĐẢO GÓC TRÊN CÙNG BÊN PHẢI */
+.public-actions-cluster {
   display: flex;
   align-items: center;
   gap: 12px;
+  pointer-events: none;
 }
 
-/* Thu dần khi màn hình hẹp: không bao giờ để chữ menu xuống dòng hay nút bị tràn.
-   Mốc đã kiểm tra với --chrome-step từ 1px đến 2px; tăng quá 2px thì kiểm tra lại các mốc này. */
+/* ĐẢO 2: Nút Bảng điều khiển / Đơn ứng tuyển — Cao 56px, chữ to 16px đậm rõ ràng */
+.public-dashboard-island {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  height: 56px;
+  min-height: 56px;
+  box-sizing: border-box;
+  padding: 0 20px;
+  border-radius: var(--radius-lg, 16px);
+  background: var(--brand-dark, #2e5a45);
+  color: #ffffff !important;
+  font-size: calc(15px + var(--chrome-step));
+  font-weight: 600;
+  text-decoration: none;
+  border: 1px solid var(--brand, #3e7157);
+  box-shadow: 0 2px 8px rgba(46, 90, 69, 0.25);
+  pointer-events: auto;
+  transition: all 0.18s cubic-bezier(0.4, 0, 0.2, 1);
+  white-space: nowrap;
+}
+
+.public-dashboard-island:hover {
+  background: var(--brand, #3e7157);
+  color: #ffffff !important;
+  box-shadow: 0 4px 14px rgba(46, 90, 69, 0.32);
+  transform: translateY(-1px);
+}
+
+.public-dashboard-island svg {
+  width: 18px;
+  height: 18px;
+  transition: transform 0.18s ease;
+}
+
+.public-dashboard-island:hover svg {
+  transform: translateX(2px);
+}
+
+/* ĐẢO 3: Khối thông tin người dùng — Cao 56px, giữ 100% cỡ chữ to chuẩn gốc của layout nội bộ */
+.public-user-island {
+  display: inline-flex;
+  align-items: center;
+  height: 56px;
+  min-height: 56px;
+  box-sizing: border-box;
+  padding: 4px 16px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg, 16px);
+  background: color-mix(in srgb, var(--surface, #ffffff) 96%, transparent);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05), 0 4px 14px rgba(17, 45, 35, 0.05);
+  pointer-events: auto;
+  transition: var(--transition);
+}
+
+.public-user-island:hover {
+  box-shadow: var(--shadow-md, 0 4px 16px rgba(17, 45, 35, 0.09));
+  border-color: color-mix(in srgb, var(--brand) 20%, var(--line));
+}
+
+/* KHỐI ĐĂNG NHẬP / ĐĂNG KÝ (KHI CHƯA ĐĂNG NHẬP) */
+.public-auth-island {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  height: 56px;
+  min-height: 56px;
+  box-sizing: border-box;
+  padding: 0 12px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg, 16px);
+  background: color-mix(in srgb, var(--surface, #ffffff) 96%, transparent);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05), 0 4px 14px rgba(17, 45, 35, 0.05);
+  pointer-events: auto;
+  transition: var(--transition);
+}
+
+.public-auth-island:hover {
+  box-shadow: var(--shadow-md, 0 4px 16px rgba(17, 45, 35, 0.09));
+}
+
+.public-auth-link {
+  display: inline-flex;
+  align-items: center;
+  height: 42px;
+  padding: 0 16px;
+  border-radius: 10px;
+  color: var(--ink);
+  font-size: calc(14.5px + var(--chrome-step));
+  font-weight: 600;
+  text-decoration: none;
+  transition: all 0.15s ease;
+}
+
+.public-auth-link:hover {
+  background: var(--brand-soft);
+  color: var(--brand-dark);
+}
+
+.public-auth-btn {
+  display: inline-flex;
+  align-items: center;
+  height: 42px;
+  padding: 0 20px;
+  border-radius: 10px;
+  background: var(--brand, #3e7157);
+  color: #ffffff !important;
+  font-size: calc(14.5px + var(--chrome-step));
+  font-weight: 600;
+  text-decoration: none;
+  transition: all 0.15s ease;
+  box-shadow: 0 2px 6px rgba(46, 90, 69, 0.2);
+}
+
+.public-auth-btn:hover {
+  background: var(--brand-dark, #2e5a45);
+  color: #ffffff !important;
+  box-shadow: 0 4px 12px rgba(46, 90, 69, 0.3);
+  transform: translateY(-1px);
+}
+
+/* ĐẢO CUỘN DỌC 4 MỤC (Cạnh trái màn hình — Chỉ hiện ở Trang chủ)
+   Luôn hiển thị đầy đủ Icon + Chữ (KHÔNG TỰ ẨN CHỮ), kiểu dáng chuẩn menu dọc nội bộ */
+.public-scroll-rail {
+  position: fixed;
+  left: var(--s4, 16px);
+  top: calc(var(--s4, 16px) + 68px);
+  z-index: 95;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  padding: 8px;
+  width: 196px;
+  box-sizing: border-box;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg, 16px);
+  background: color-mix(in srgb, var(--surface, #ffffff) 96%, transparent);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  box-shadow: 0 4px 18px rgba(17, 45, 35, 0.08), 0 1px 3px rgba(0, 0, 0, 0.04);
+  pointer-events: auto;
+  transition: box-shadow 0.2s ease, border-color 0.2s ease;
+}
+
+.public-scroll-rail:hover {
+  border-color: color-mix(in srgb, var(--brand) 25%, var(--line));
+  box-shadow: 0 8px 24px rgba(17, 45, 35, 0.12), 0 2px 6px rgba(0, 0, 0, 0.05);
+}
+
+.public-scroll-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  height: 42px;
+  min-height: 42px;
+  padding: 0 12px;
+  border-radius: 10px;
+  text-decoration: none;
+  color: var(--ink);
+  white-space: nowrap;
+  transition: all 0.15s ease;
+  position: relative;
+}
+
+.public-scroll-item:hover {
+  background: var(--brand-soft);
+  color: var(--brand-dark);
+}
+
+.public-scroll-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  min-width: 22px;
+  flex-shrink: 0;
+  color: var(--muted);
+  transition: color 0.15s ease, transform 0.15s ease;
+}
+
+.public-scroll-item:hover .public-scroll-icon {
+  color: var(--brand);
+}
+
+/* Chữ nhãn: LUÔN HIỂN THỊ RÕ RÀNG (không bao giờ tự ẩn), cỡ chữ 14.5px */
+.public-scroll-label {
+  display: inline-block !important;
+  opacity: 1 !important;
+  visibility: visible !important;
+  transform: none !important;
+  font-size: calc(13.5px + var(--chrome-step));
+  font-weight: 550;
+  color: inherit;
+  white-space: nowrap;
+}
+
+/* Trạng thái Active khi cuộn tới: sáng nền xanh và có vạch xanh thương hiệu chuẩn sidebar nội bộ */
+.public-scroll-item.active,
+.public-scroll-item[aria-current="location"] {
+  background: var(--brand-soft) !important;
+  color: var(--brand-dark) !important;
+  font-weight: 600;
+  box-shadow: inset 3.5px 0 0 var(--brand);
+}
+
+.public-scroll-item.active .public-scroll-icon,
+.public-scroll-item[aria-current="location"] .public-scroll-icon {
+  color: var(--brand) !important;
+}
+
+.public-scroll-item.active .public-scroll-label,
+.public-scroll-item[aria-current="location"] .public-scroll-label {
+  font-weight: 600;
+}
+
+/* Hàng thứ hai của ứng viên (fragments/layout/candidate-nav, ux.md mục 0) */
+.public-topbar__candidate-nav {
+  display: none;
+}
+
+/* Thu dần khi màn hình hẹp: không bao giờ để chữ menu xuống dòng hay nút bị tràn. */
 .workspace-logout-btn svg,
 .topbar-btn svg {
   flex-shrink: 0;
 }
 
-@media (max-width: 1439px) {
+@media (max-width: 1024px) {
   .public-topbar .workspace-user-email {
     display: none;
   }
 }
 
-@media (max-width: 1365px) {
-  .public-topbar__link {
-    padding: 0 10px;
-  }
-
+@media (max-width: 860px) {
   .public-topbar .workspace-role {
     display: none;
   }
-}
-
-/* Hàng thứ hai của ứng viên (fragments/layout/candidate-nav, ux.md mục 0): màn rộng thì ẩn vì menu công khai
-   đã có "Vị trí tuyển dụng" và nút "Đơn ứng tuyển của tôi →". */
-.public-topbar__candidate-nav {
-  display: none;
-}
-
-/* Đã đăng nhập: góc phải rộng hơn nên ẩn menu sớm hơn */
-@media (max-width: 1299px) {
-  .public-topbar:has(.topbar-user) .public-topbar__nav {
-    display: none;
-  }
-
-  /* Ứng viên: menu trên vừa ẩn thì hiện hàng thứ hai cùng 2 mục (chia đều, không ☰) và bỏ nút trùng đích. */
-  .public-topbar__inner:has(.public-topbar__candidate-nav) {
-    flex-wrap: wrap;
-    row-gap: 0;
-  }
-
-  .public-topbar__candidate-nav {
-    display: flex;
-    order: 3;
-    flex-basis: 100%;
-    gap: 4px;
-    padding-bottom: 8px;
-  }
-
-  .public-topbar__candidate-nav .public-topbar__link {
-    flex: 1;
-    justify-content: center;
-  }
-
-  .public-topbar:has(.public-topbar__candidate-nav) .public-topbar__dashboard {
+  .public-scroll-rail {
     display: none;
   }
 }
 
-@media (max-width: 1149px) {
-  .public-topbar__nav {
-    display: none;
+@media (max-width: 768px) {
+  .public-topbar {
+    padding: 10px 12px;
   }
-
-  /* Đã đăng nhập: bỏ tên và chữ phụ của logo, giữ avatar */
-  .public-topbar .workspace-user-meta,
-  .public-topbar:has(.topbar-user) .brand-sub {
-    display: none;
-  }
-}
-
-@media (max-width: 640px) {
   .public-topbar__inner {
+    gap: 8px;
+  }
+  .public-brand-island {
+    padding: 0 12px;
+    height: 46px;
+    min-height: 46px;
+    gap: 8px;
+  }
+  .public-jobs-btn span {
+    display: none;
+  }
+  .public-jobs-btn {
+    padding: 0 8px;
+    height: 36px;
+  }
+  .public-dashboard-island {
+    height: 46px;
+    min-height: 46px;
+    padding: 0 12px;
+    font-size: 13.5px;
+  }
+  .public-dashboard-island span {
+    display: none;
+  }
+  .public-user-island,
+  .public-auth-island {
+    height: 46px;
+    min-height: 46px;
+    padding: 0 10px;
+  }
+  .public-topbar .workspace-user-name,
+  .public-topbar .workspace-user-meta {
+    display: none;
+  }
+  .public-auth-btn {
     padding: 0 14px;
-    gap: 12px;
+    font-size: 13.5px;
+    height: 36px;
   }
-
-  .public-topbar .brand-sub,
-  .public-topbar .workspace-user-meta,
-  .public-topbar__dashboard {
-    display: none;
-  }
-
-  /* Khách: chỉ giữ "Đăng nhập" (trang đăng nhập có link tạo tài khoản) */
-  .public-topbar__actions > .topbar-btn--primary {
-    display: none;
-  }
-
-  /* Đăng xuất chỉ còn icon; chữ ẩn kiểu .sr-only để trình đọc màn hình vẫn đọc tên nút */
-  .public-topbar .workspace-logout-btn {
-    padding: 0 var(--s3, 12px);
-  }
-
-  .public-topbar .workspace-logout-btn span {
-    position: absolute;
-    width: 1px;
-    height: 1px;
-    overflow: hidden;
-    clip: rect(0, 0, 0, 0);
-    white-space: nowrap;
+  .public-auth-link {
+    height: 36px;
+    padding: 0 10px;
+    font-size: 13.5px;
   }
 }
 
-/* Bấm menu cuộn tới section: chừa chỗ cho topbar sticky */
+/* Bấm menu cuộn tới section: chừa chỗ cho khoảng nổi */
 :root:has(.public-topbar) {
-  scroll-padding-top: 74px;
+  scroll-padding-top: 80px;
 }
 
-/* Ứng viên, màn hẹp: topbar cao thêm hàng thứ hai (40px + 8px). Đặt sau rule trên vì cùng độ ưu tiên. */
-@media (max-width: 1299px) {
-  :root:has(.public-topbar__candidate-nav) {
-    scroll-padding-top: 122px;
-  }
-}
 
 /* -----------------------------------------------------------------------------
    6. Chuông thông báo & Menu thả (Notification Bell & Dropdown)
@@ -708,4 +969,9 @@
     width: auto;
     max-width: none;
   }
-}
+}
+
+.public-main-content {
+  padding-top: calc(52px + var(--s4, 16px) * 2 + 12px);
+  min-height: calc(100vh - 180px);
+}
