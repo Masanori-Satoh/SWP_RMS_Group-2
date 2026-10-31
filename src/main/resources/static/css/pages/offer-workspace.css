@@ -1055,3 +1055,52 @@
     align-items: center;
     gap: 6px;
 }
+
+
+/* Modal Overlay & Box dùng chung cho Workspace (Zero Inline Styles) */
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(37, 41, 35, 0.55);
+    backdrop-filter: blur(4px);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 1200;
+    padding: 20px;
+}
+
+.modal-overlay.active {
+    display: flex;
+}
+
+.modal-box {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: var(--radius-md, 8px);
+    width: 100%;
+    max-width: 620px;
+    box-shadow: var(--shadow-lg);
+    overflow: hidden;
+}
+
+.ofw-modal-title-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    margin-right: 6px;
+    vertical-align: middle;
+}
+.ofw-modal-title-icon--success {
+    color: var(--success);
+}
+.ofw-modal-title-icon--danger {
+    color: var(--error);
+}
+.ofw-btn-icon-inline {
+    margin-right: 6px;
+    vertical-align: middle;
+}
