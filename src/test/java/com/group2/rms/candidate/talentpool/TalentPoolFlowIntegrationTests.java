@@ -318,7 +318,7 @@ class TalentPoolFlowIntegrationTests {
         // A second upload cannot create another application or replace the confirmed CV.
         mvc.perform(multipart("/jobs/"+jobId+"/apply").file(file)
                         .with(user(f.source().getCandidate().getAccount().getUsername()).roles("CANDIDATE")).with(csrf()))
-                .andExpect(status().isOk()).andExpect(content().string(containsString("Bạn đã ứng tuyển vị trí này.")));
+                .andExpect(status().isOk()).andExpect(content().string(containsString("Bạn đã ứng tuyển vị trí này")));
         assertEquals(appCount+1,applications.count());
         assertEquals(saved.getAppliedCvUrl(),applications.findById(id).orElseThrow().getAppliedCvUrl());
     }

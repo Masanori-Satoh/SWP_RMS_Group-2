@@ -471,3 +471,9 @@ Nhằm đảm bảo chất lượng code và phòng ngừa lỗi hồi quy (regr
 ## Integration test tin tuyển dụng bổ sung (31/10/2026)
 - [x] `JobPostingIntegrationTests` thêm 12 test (7 → 19, PASS): lọc theo id phòng ban; `creatorIs`; biên ngày đăng từ / đến; nhóm hạn "còn hạn" gồm tin không hạn và biên ngày 7 / 8; HM là trưởng phòng (có và không có phòng ban); từ khóa có `%` `_`; `findMaxPostingNo`; ô chọn yêu cầu khi tạo tin (`findRequisitionIdsWithPostingStatusIn` + `findWithDepartmentByApprovalStatus…`); `countApplicationsSince` biên 7 ngày; `countApplicationsWithAiScoreAtLeast` lấy lần chấm mới nhất; `findConfigValue`.
 - [ ] Bộ lọc người tạo và ngày đăng không dùng được trên màn danh sách: `JobPostingListService.buildFilterOptions` để `showCreator = false`, `showPostedDate = false` cho mọi role nên `normalizeFilter` luôn bỏ hai bộ lọc này. Test gọi thẳng Specification. Cần chốt: bật lại cho HR / Director, hay xóa `creatorIs`, `postedOnOrAfter`, `postedOnOrBefore`.
+
+## BR-CAN-01 — chỉ nộp lại khi có đợt mới (31/10/2026)
+- [x] `ApplicationRepository.existsActiveByCandidateInSameRequisition`: đã nộp vào bất kỳ tin nào cùng Requisition (kể cả tin "Đăng lại" Lần 2) thì coi như đã ứng tuyển; `HM_Suggested` / đề xuất đã hủy không tính. `ApplicationSubmissionService.apply` + `hasApplied` dùng query này, câu báo lỗi mới `ALREADY_APPLIED_MESSAGE`.
+- [x] Test: `ApplicationRepositoryTests` (3 integration: Lần 2 cùng đợt bị chặn, đợt 2 được nộp, chỉ `HM_Suggested` thì được), sửa 2 test trong `ApplicationSubmissionServiceTests`, nới chuỗi kiểm tra ở `TalentPoolFlowIntegrationTests`. 58 test liên quan PASS.
+- [ ] Lỗi có sẵn, không do thay đổi này: `PasswordRecoveryServiceTests`, `RegistrationVerificationServiceTests`, `CandidateProfileWebTests` (`adw-form-wrap`).
+- [ ] Talent Pool (`TalentPoolService`) vẫn kiểm tra trùng theo tin → HR vẫn gợi ý được ứng viên cũ vào tin Lần 2; báo Linh xử lý.
