@@ -99,7 +99,7 @@ Trước đợt rà soát và nâng cấp toàn diện này, phân hệ Cổng t
   - Huy hiệu pill mint `[✉] THƯ MỜI NHẬN VIỆC` (`.cof-hero-badge`) căn giữa.
   - Tên vị trí tuyển dụng to đậm 24px (`.cof-hero-title`).
   - Hàng metadata căn giữa: `[🏢] Phòng ban` · `[📅] Ngày gửi` · `[📅] Bắt đầu dự kiến`.
-  - Hàng thao tác căn giữa: Cả 3 box (Hộp Hạn phản hồi, Nút Đồng ý nhận việc, Nút Từ chối thư mời) được căn chỉnh có chiều rộng bằng nhau 300px (`width: 300px; flex: 0 0 300px`) và chiều cao 42px, tạo sự cân bằng và đồng bộ thị giác hoàn hảo. Tối ưu JS countdown hiển thị gọn gàng `Còn N ngày` theo mockup, không bị lặp icon hoặc xuống dòng.
+  - Hàng thao tác căn giữa: Cả 3 box (Hộp Hạn phản hồi, Nút Đồng ý nhận việc, Nút Từ chối thư mời) được căn chỉnh có chiều rộng bằng nhau 300px (`width: 300px; flex: 0 0 300px`) và chiều cao 42px. Khắc phục triệt để lỗi lệch cao/thấp (6px) do margin-bottom của layout cũ bằng cách cô lập selector sidebar cũ và thiết lập `margin: 0 !important`, `height: 42px !important`, cùng `.cof-hero-buttons { display: contents; }` giúp cả 3 box thẳng hàng tuyệt đối. Tối ưu JS countdown hiển thị gọn gàng `Còn N ngày` theo mockup, không bị lặp icon hoặc xuống dòng.
 - **Thẻ 2 (Nội Dung Thư Mời):**
   - Header: Icon thư + `Nội dung thư mời` & Nút `[📄] Tải về PDF`.
   - Chữ ký căn lề trái (`.cof-letter-signoff-left`): *Trân trọng, Đội ngũ Mộc RMS*.

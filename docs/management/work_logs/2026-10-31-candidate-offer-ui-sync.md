@@ -98,6 +98,7 @@
     - Nút chính: `[✓] Đồng ý nhận việc` (`.btn--primary`, rộng 300px, cao 42px, bo 8px, nền xanh `var(--brand)`).
     - Nút phụ: `[✕] Từ chối thư mời` (`.btn--outline`, rộng 300px, cao 42px, bo 8px, viền đỏ `var(--error)`).
     - Cả 3 box được cố định chiều rộng bằng nhau 300px trên desktop, tạo sự cân bằng thị giác tuyệt đối theo yêu cầu.
+    - Khắc phục triệt để lỗi lệch cao/thấp (vertical misalignment 6px) do `.cof-deadline-box` cũ bị dính `margin-bottom: 16px`: cô lập selector sidebar cũ thành `.cof-detail-sidebar .cof-deadline-box`, thiết lập `margin: 0 !important`, `height: 42px !important`, và đặt `.cof-hero-buttons { display: contents; }` để cả 3 box nằm thẳng tắp trên cùng một đường chân trời.
 - **Thẻ 2 (Nội Dung Thư Mời):**
   - Header: Bên trái icon thư mint + tiêu đề `Nội dung thư mời`; bên phải nút `[📄] Tải về PDF`.
   - Chữ ký kết thúc: Căn lề trái (`.cof-letter-signoff-left`):
