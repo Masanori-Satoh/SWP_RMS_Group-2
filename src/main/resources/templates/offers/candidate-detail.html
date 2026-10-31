@@ -26,10 +26,18 @@
 
     <!-- Điều hướng quay lại -->
     <nav class="cof-breadcrumb no-print" aria-label="Đường dẫn">
-        <a th:href="@{/portal/offers}" class="cof-back-link">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
-            Quay lại danh sách thư mời
-        </a>
+        <div class="cof-breadcrumb__inner">
+            <a th:href="@{/portal/applications}" class="cof-breadcrumb__link">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+                <span>Đơn ứng tuyển</span>
+            </a>
+            <span class="cof-breadcrumb__separator" aria-hidden="true">/</span>
+            <a th:href="@{/portal/offers}" class="cof-breadcrumb__link">
+                <span>Thư mời nhận việc</span>
+            </a>
+            <span class="cof-breadcrumb__separator" aria-hidden="true">/</span>
+            <span class="cof-breadcrumb__current" th:text="|#${offer.offerId} · ${offer.offeredPositionTitle}|">#16 · QA Automation Engineer</span>
+        </div>
     </nav>
 
 
@@ -57,54 +65,55 @@
     </div>
 
 
-    <!-- 1. THANH TÁC VỤ TRÊN CÙNG (TOP ACTION BAR THEO MOCKUP) -->
-    <div class="cof-top-bar cof-deadline-box no-print">
-        <div class="cof-top-bar__deadline">
-            <div class="cof-top-bar__item">
-                <span class="cof-top-bar__icon-wrap" aria-hidden="true">
-                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+    <!-- 1. THANH TÁC VỤ TRÊN CÙNG (TOP ACTION BAR HIỆN ĐẠI) -->
+    <section class="cof-top-bar no-print" aria-label="Thao tác thư mời nhận việc">
+        <div class="cof-top-bar__status-group">
+            <!-- Hạn chót phản hồi -->
+            <div class="cof-meta-badge cof-meta-badge--deadline">
+                <span class="cof-meta-badge__icon" aria-hidden="true">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
                 </span>
-                <div class="cof-top-bar__text">
-                    <span class="cof-top-bar__label">Hạn chót phản hồi</span>
-                    <strong class="cof-top-bar__val" th:text="${offer.responseDeadline != null ? #temporals.format(offer.responseDeadline, 'HH:mm - dd/MM/yyyy') : (offer.expectedStartDate != null ? #temporals.format(offer.expectedStartDate, 'dd/MM/yyyy') : 'Trước ngày nhận việc')}">23:48 - 01/11/2026</strong>
+                <div class="cof-meta-badge__content">
+                    <span class="cof-meta-badge__label">Hạn chót phản hồi</span>
+                    <strong class="cof-meta-badge__val" th:text="${offer.responseDeadline != null ? #temporals.format(offer.responseDeadline, 'HH:mm - dd/MM/yyyy') : (offer.expectedStartDate != null ? #temporals.format(offer.expectedStartDate, 'dd/MM/yyyy') : 'Trước ngày nhận việc')}">11:07 - 05/11/2026</strong>
                 </div>
             </div>
 
-            <th:block th:if="${offer.responseDeadline != null and offer.canRespond}">
-                <div class="cof-top-bar__divider"></div>
-                <div class="cof-top-bar__item">
-                    <span class="cof-top-bar__icon-wrap cof-top-bar__icon-wrap--timer" aria-hidden="true">
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="13" r="8"></circle><path d="M12 9v4l2 2"></path><path d="M5 3L2 6"></path><path d="M22 6l-3-3"></path><path d="M12 2v2"></path></svg>
-                    </span>
-                    <div class="cof-top-bar__text">
-                        <span class="cof-top-bar__label">Còn lại</span>
-                        <strong class="cof-top-bar__val cof-top-bar__val--timer cof-countdown" th:attr="data-deadline=${#temporals.format(offer.responseDeadline, 'yyyy-MM-dd''T''HH:mm:ss')}">Tính toán...</strong>
-                    </div>
+            <!-- Thời gian còn lại (khi còn phản hồi được) -->
+            <div th:if="${offer.responseDeadline != null and offer.canRespond}" class="cof-meta-badge cof-meta-badge--countdown">
+                <span class="cof-meta-badge__icon" aria-hidden="true">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="13" r="8"></circle><path d="M12 9v4l2 2"></path><path d="M5 3L2 6"></path><path d="M22 6l-3-3"></path><path d="M12 2v2"></path></svg>
+                </span>
+                <div class="cof-meta-badge__content">
+                    <span class="cof-meta-badge__label">Thời gian còn lại</span>
+                    <strong class="cof-meta-badge__val cof-countdown" th:attr="data-deadline=${#temporals.format(offer.responseDeadline, 'yyyy-MM-dd''T''HH:mm:ss')}">Tính toán...</strong>
                 </div>
-            </th:block>
+            </div>
 
-            <th:block th:unless="${offer.canRespond}">
-                <div class="cof-top-bar__divider"></div>
-                <div class="cof-top-bar__item">
-                    <div class="cof-top-bar__text">
-                        <span class="cof-top-bar__label">Trạng thái</span>
-                        <span class="badge" th:classappend="${offer.statusBadge}" th:text="${offer.statusLabel}">Đã phản hồi</span>
-                    </div>
+            <!-- Badge trạng thái khi đã phản hồi -->
+            <div th:unless="${offer.canRespond}" class="cof-meta-badge cof-meta-badge--status">
+                <span class="cof-meta-badge__icon" aria-hidden="true">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
+                </span>
+                <div class="cof-meta-badge__content">
+                    <span class="cof-meta-badge__label">Trạng thái</span>
+                    <span class="badge" th:classappend="${offer.statusBadge}" th:text="${offer.statusLabel}">Đã phản hồi</span>
                 </div>
-            </th:block>
+            </div>
         </div>
 
+        <!-- Các nút hành động chuẩn Button DNA -->
         <div class="cof-top-bar__actions" th:if="${offer.canRespond}">
-            <button type="button" class="btn btn--primary cof-top-btn-accept" data-detail-trigger="accept">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"></polyline></svg>
-                Đồng ý nhận việc
+            <button type="button" class="btn btn--primary cof-action-btn cof-action-btn--accept" data-detail-trigger="accept">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                <span>Đồng ý nhận việc</span>
             </button>
-            <a th:href="@{/portal/offers/{id}/decline(id=${offer.offerId})}" class="btn btn--outline cof-top-btn-decline">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
-                Từ chối thư mời
+            <a th:href="@{/portal/offers/{id}/decline(id=${offer.offerId})}" class="btn btn--outline cof-action-btn cof-action-btn--decline">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                <span>Từ chối thư mời</span>
             </a>
         </div>
-    </div>
+    </section>
 
     <!-- 2. TỜ THƯ MỜI NHẬN VIỆC TRANG TRỌNG (LETTERHEAD PAPER DOCUMENT) -->
     <article class="cof-letter-paper" id="offer-letter-document">
