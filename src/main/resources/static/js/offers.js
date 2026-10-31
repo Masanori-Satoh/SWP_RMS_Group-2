@@ -1778,6 +1778,11 @@ function updateDirectorDetailCommentCounter(el) {
     const len = el.value.length;
     const cnt = document.getElementById('directorDetailCommentCount');
     if (cnt) cnt.innerText = len;
+    if (el.value.trim().length > 0) {
+        el.classList.remove('is-invalid');
+        const errorMsg = document.getElementById('directorCommentsError');
+        if (errorMsg) errorMsg.style.display = 'none';
+    }
 }
 
 function scrollToDirectorDecision() {
@@ -1850,16 +1855,15 @@ function showDirectorCustomModal({
 }
 
 function showDirectorRejectReasonRequiredAlert(onCloseCallback) {
-    showDirectorCustomModal({
-        title: 'Cần nhập lý do từ chối',
-        desc: 'Vui lòng nhập lý do từ chối vào ô nhận xét bên dưới trước khi tiếp tục.',
-        subtext: 'Thông tin này sẽ được gửi lại để Bộ phận Tuyển dụng xử lý tiếp.',
-        confirmText: 'Đã hiểu',
-        confirmClass: 'btn-director-reject-confirm',
-        showCancel: false,
-        onClose: onCloseCallback,
-        onConfirm: onCloseCallback
-    });
+    const commentsEl = document.getElementById('directorDetailComments') || document.getElementById('rejectReasonInput');
+    if (commentsEl) {
+        commentsEl.classList.add('is-invalid');
+        commentsEl.focus();
+        const errorMsg = document.getElementById('directorCommentsError');
+        if (errorMsg) errorMsg.style.display = 'flex';
+    }
+    showFlashToast('Vui lòng nhập lý do từ chối vào ô nhận xét trước khi tiếp tục.', 'warning');
+    if (typeof onCloseCallback === 'function') onCloseCallback();
 }
 
 function showDirectorRejectConfirmModal(offerId, onConfirmCallback) {

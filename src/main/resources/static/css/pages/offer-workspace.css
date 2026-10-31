@@ -1029,3 +1029,20 @@
     --toast-color: var(--focus);
     --toast-soft: var(--warning-soft, #fef9c3);
 }
+
+
+/* Inline validation feedback cho ô nhận xét của Giám đốc */
+.director-decision-textarea.is-invalid {
+    border-color: var(--error) !important;
+    box-shadow: 0 0 0 3px var(--error-soft) !important;
+}
+
+.director-comment-error-msg {
+    display: none;
+    align-items: center;
+    gap: 6px;
+    font-size: 13px;
+    color: var(--error);
+    margin-top: 6px;
+    font-weight: 500;
+}
