@@ -5,86 +5,73 @@
 <head>
   <title th:text="'Chi tiết Đề xuất nhận việc #' + ${detail.offerId} + ' | Mộc RMS'">Chi tiết Đề xuất nhận việc | Mộc RMS</title>
   <th:block layout:fragment="styles">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" th:href="@{/css/offers.css}">
+    <link rel="stylesheet" th:href="@{/css/pages/offer-workspace.css}">
+    <link rel="stylesheet" th:href="@{/css/pages/flash-toast.css}">
   </th:block>
 </head>
 <body>
 
-<main id="main" layout:fragment="content" class="page-content container offer-detail-container" tabindex="-1">
-    <!-- FLASH MESSAGES -->
-    <div class="page-flash-container" id="pageFlashContainer" th:if="${successMessage != null or errorMessage != null}">
-        <div th:if="${successMessage}" class="page-flash-alert page-flash-success" id="flashSuccessAlert">
-            <i class="fa-solid fa-circle-check"></i>
-            <span th:text="${successMessage}">Thao tác thành công.</span>
-        </div>
-        <div th:if="${errorMessage}" class="page-flash-alert page-flash-danger" id="flashErrorAlert">
-            <i class="fa-solid fa-triangle-exclamation"></i>
-            <span th:text="${errorMessage}">Lỗi xử lý yêu cầu.</span>
-        </div>
-    </div>
-    <script th:if="${successMessage != null or errorMessage != null}">
-        (function() {
-            var flash = document.getElementById('pageFlashContainer');
-            if (flash && !flash.dataset.dismissInit) {
-                flash.dataset.dismissInit = 'true';
-                setTimeout(function() {
-                    flash.classList.add('flash-dismissed');
-                    setTimeout(function() {
-                        flash.style.display = 'none';
-                    }, 450);
-                }, 2000);
-            }
-        })();
-    </script>
+<main id="main" layout:fragment="content" class="page-content container adw-page ofw-page offer-detail-container" tabindex="-1">
+    <th:block th:replace="~{fragments/ui/admin-workspace :: scene}"></th:block>
 
-    <!-- HEADER SECTION (REDESIGNED ACCORDING TO MOCKUP) -->
-    <div class="offers-detail-header">
+    <!-- FLASH MESSAGES -->
+    <th:block th:replace="~{fragments/ui/flash-toast :: flashToast(${successMessage}, ${errorMessage})}"></th:block>
+
+    <!-- HEADER SECTION -->
+    <div class="offers-detail-header adw-heading ofw-heading">
         <div class="offers-detail-header-left">
             <!-- Title & Status Badge -->
             <div class="offers-detail-title-row">
-                <h1 class="offers-detail-title" th:text="'Đề Xuất Nhận Việc #' + ${detail.offerId}">Đề Xuất Nhận Việc #12</h1>
+                <h1 class="offers-detail-title adw-title" th:text="'Đề Xuất Nhận Việc #' + ${detail.offerId}">Đề Xuất Nhận Việc #12</h1>
                 
                 <!-- STATUS BADGES -->
                 <span th:if="${detail.offerStatus == 'Draft'}" class="status-badge status-draft">
-                    <i class="fa-regular fa-file"></i> Bản nháp
+                    <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+                    <span>Bản nháp</span>
                 </span>
                 <span th:if="${detail.offerStatus == 'Pending_Director'}" class="status-badge status-pending">
-                    <i class="fa-regular fa-clock"></i> Chờ Giám đốc duyệt
+                    <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                    <span>Chờ Giám đốc duyệt</span>
                 </span>
                 <span th:if="${detail.offerStatus == 'Director_Approved' or detail.offerStatus == 'Approved'}" class="status-badge status-approved">
-                    <i class="fa-solid fa-check"></i> Giám đốc đã duyệt
+                    <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>
+                    <span>Giám đốc đã duyệt</span>
                 </span>
                 <span th:if="${detail.offerStatus == 'Director_Rejected' or detail.offerStatus == 'Rejected'}" class="status-badge status-rejected">
-                    <i class="fa-solid fa-xmark"></i> Giám đốc từ chối
+                    <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                    <span>Giám đốc từ chối</span>
                 </span>
                 <span th:if="${detail.offerStatus == 'Sent_Candidate'}" class="status-badge status-sent">
-                    <i class="fa-regular fa-paper-plane"></i> Đã gửi thư mời
+                    <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+                    <span>Đã gửi thư mời</span>
                 </span>
                 <span th:if="${detail.offerStatus == 'Accepted'}" class="status-badge status-accepted">
-                    <i class="fa-solid fa-user-check"></i> Ứng viên chấp nhận
+                    <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><polyline points="17 11 19 13 23 9"/></svg>
+                    <span>Ứng viên chấp nhận</span>
                 </span>
                 <span th:if="${detail.offerStatus == 'Declined'}" class="status-badge status-declined">
-                    <i class="fa-solid fa-user-xmark"></i> Ứng viên từ chối
+                    <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="18" y1="8" x2="23" y2="13"/><line x1="23" y1="8" x2="18" y2="13"/></svg>
+                    <span>Ứng viên từ chối</span>
                 </span>
             </div>
 
             <!-- Single Line Inline Meta per Mockup -->
             <div class="offers-detail-inline-meta">
                 <span class="meta-item">
-                    <i class="fa-solid fa-briefcase"></i>
+                    <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
                     <span class="meta-label">Vị trí:</span>
                     <span class="meta-val" th:text="${detail.offeredPositionTitle}">Chuyên Viên Phát Triển Kinh Doanh B2B</span>
                 </span>
                 <span class="meta-dot">•</span>
                 <span class="meta-item">
-                    <i class="fa-regular fa-user"></i>
+                    <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
                     <span class="meta-label">Ứng viên:</span>
                     <span class="meta-val" th:text="${detail.candidateName}">Đỗ Thu Phương</span>
                 </span>
                 <span class="meta-dot">•</span>
                 <span class="meta-item">
-                    <i class="fa-regular fa-calendar"></i>
+                    <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
                     <span class="meta-label">Ngày tạo:</span>
                     <span class="meta-val" th:text="${detail.createdAt != null ? #temporals.format(detail.createdAt, 'dd/MM/yyyy HH:mm') : '-'}">17/10/2026 11:05</span>
                 </span>
@@ -94,33 +81,38 @@
         <!-- Right Side: Action Buttons -->
         <div class="offers-detail-header-actions">
             <a th:href="@{/offers}" class="btn btn--secondary">
-                <i class="fa-solid fa-arrow-left"></i> Danh sách
+                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
+                <span>Danh sách</span>
             </a>
 
             <!-- Action when Pending_Director (Director View) -->
             <th:block th:if="${detail.offerStatus == 'Pending_Director' and userRole == 'Director'}">
                 <button type="button" onclick="scrollToDirectorDecision()" class="btn btn-director-decision-jump">
-                    <i class="fa-solid fa-circle-check"></i> Ra quyết định
+                    <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+                    <span>Ra quyết định</span>
                 </button>
             </th:block>
 
             <!-- Actions when Draft -->
             <th:block th:if="${detail.offerStatus == 'Draft'}">
-                <form th:action="@{/offers/{id}/delete(id=${detail.offerId})}" method="post" style="display:inline;"
+                <form th:action="@{/offers/{id}/delete(id=${detail.offerId})}" method="post" class="ofw-form-inline"
                       onsubmit="return confirm('Bạn có chắc chắn muốn xóa bản thảo đề xuất này khỏi hệ thống?');">
                     <button type="submit" class="btn btn--danger">
-                        <i class="fa-solid fa-trash-can"></i> Xóa bản thảo
+                        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>
+                        <span>Xóa bản thảo</span>
                     </button>
                 </form>
                 <a th:href="@{/offers/{id}/edit(id=${detail.offerId})}" class="btn btn--primary">
-                    <i class="fa-solid fa-pen-to-square"></i> Chỉnh sửa
+                    <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                    <span>Chỉnh sửa</span>
                 </a>
             </th:block>
 
             <!-- Action when Director Approved -->
             <th:block th:if="${detail.offerStatus == 'Director_Approved' or detail.offerStatus == 'Approved'}">
                 <button type="button" class="btn btn--primary" th:onclick="'confirmSendOffer(' + ${detail.offerId} + ')'">
-                    <i class="fa-solid fa-paper-plane"></i> Phát hành Thư mời nhận việc
+                    <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+                    <span>Phát hành Thư mời nhận việc</span>
                 </button>
             </th:block>
 
@@ -129,42 +121,49 @@
 
     <!-- CANDIDATE DECLINE CALLOUT (KHI OFFERSTATUS == 'Declined') -->
     <div th:if="${detail.offerStatus == 'Declined'}"
-         class="card cand-decline-card" style="margin-bottom: 20px;">
-        <div class="card-header" style="background: transparent; border-bottom: 1px solid #fee2e2;">
-            <h2 class="card-title" style="font-size: 16px; color: #991b1b; display: flex; align-items: center; gap: 8px;">
-                <i class="fa-solid fa-user-xmark"></i> Phản Hồi Từ Chối Của Ứng Viên
+         class="card cand-decline-card adw-surface ofw-card">
+        <div class="card-header ofw-cand-decline-header">
+            <h2 class="card-title ofw-cand-decline-title">
+                <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="18" y1="8" x2="23" y2="13"/><line x1="23" y1="8" x2="18" y2="13"/></svg>
+                <span>Phản Hồi Từ Chối Của Ứng Viên</span>
             </h2>
         </div>
         <div class="card-body">
-            <div style="font-size: 13.5px; color: #7f1d1d; font-weight: 600; margin-bottom: 6px;">
+            <div class="ofw-cand-decline-label">
                 Lý do ứng viên không nhận việc:
             </div>
             <div class="cand-decline-reason-box"
                  th:text="${detail.declineReason != null and !#strings.isEmpty(detail.declineReason) ? detail.declineReason : 'Ứng viên không cung cấp lý do chi tiết khi từ chối.'}">
                 Lý do từ chối...
             </div>
-            <div style="margin-top: 10px; font-size: 12.5px; color: #991b1b; display: flex; align-items: center; gap: 6px;">
-                <i class="fa-regular fa-clock"></i> Thời điểm cập nhật: 
+            <div class="ofw-cand-decline-time">
+                <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                <span>Thời điểm cập nhật: </span>
                 <span th:text="${detail.updatedAt != null ? #temporals.format(detail.updatedAt, 'dd/MM/yyyy HH:mm') : '-'}">-</span>
             </div>
         </div>
     </div>
 
     <!-- 1. THÔNG TIN ỨNG VIÊN -->
-    <div class="card" style="margin-bottom: 20px;">
-        <div class="card-header card-header-flex">
-            <h2 class="card-title" style="font-size:15px; display:flex; align-items:center; text-transform: uppercase; font-weight:700;">
-                <span class="card-title-icon"><i class="fa-solid fa-user"></i></span> 1. THÔNG TIN ỨNG VIÊN
+    <div class="card adw-surface ofw-card">
+        <div class="card-header card-header-flex ofw-card-header">
+            <h2 class="card-title adw-panel-title ofw-detail-section-title">
+                <span class="card-title-icon ofw-card-title-icon">
+                    <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                </span>
+                <span>1. THÔNG TIN ỨNG VIÊN</span>
             </h2>
             <!-- Nút Xem CV pill badge ở góc phải header theo mockup -->
             <div th:if="${detail.applicationId != null or (detail.appliedCvUrl != null and !detail.appliedCvUrl.isBlank())}">
                 <a th:href="${detail.applicationId != null ? '/applications/' + detail.applicationId : detail.appliedCvUrl}"
                    target="_blank" rel="noopener noreferrer" class="btn-view-cv-pill">
-                    <i class="fa-regular fa-file-lines"></i> Xem CV <i class="fa-solid fa-arrow-up-right-from-square" style="font-size:11px;"></i>
+                    <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+                    <span>Xem CV</span>
+                    <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
                 </a>
             </div>
         </div>
-        <div class="card-body">
+        <div class="card-body ofw-card-body">
             <div class="candidate-detail-grid">
                 <!-- Hàng 1: 3 cột -->
                 <div>
@@ -206,23 +205,27 @@
     </div>
 
     <!-- 2. NỘI DUNG ĐỀ XUẤT OFFER -->
-    <div class="card" style="margin-bottom: 20px;">
-        <div class="card-header card-header-flex">
-            <h2 class="card-title" style="font-size:15px; display:flex; align-items:center; text-transform: uppercase; font-weight:700;">
-                <span class="card-title-icon"><i class="fa-solid fa-file-lines"></i></span> 2. NỘI DUNG ĐỀ XUẤT NHẬN VIỆC
+    <div class="card adw-surface ofw-card">
+        <div class="card-header card-header-flex ofw-card-header">
+            <h2 class="card-title adw-panel-title ofw-detail-section-title">
+                <span class="card-title-icon ofw-card-title-icon">
+                    <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+                </span>
+                <span>2. NỘI DUNG ĐỀ XUẤT NHẬN VIỆC</span>
             </h2>
-            <div class="interview-eval-manager" style="font-size:13.5px;">
+            <div class="interview-eval-manager ofw-eval-manager-text">
                 Người phụ trách: <strong th:text="${detail.hiringManagerName != null ? detail.hiringManagerName : 'N/A'}">Đỗ Thu Hương</strong>
             </div>
         </div>
-        <div class="card-body">
+        <div class="card-body ofw-card-body">
             <!-- 2.1: Kết quả hội đồng phỏng vấn (Hộp tóm tắt đánh giá & Lương khuyến nghị của HM) -->
             <div class="interview-eval-box">
                 <div class="interview-eval-header">
                     <div class="interview-eval-title">
                         KẾT QUẢ HỘI ĐỒNG PHỎNG VẤN
                         <span class="interview-eval-badge-passed">
-                            <i class="fa-solid fa-check"></i> <span th:text="${detail.finalDecision != null and detail.finalDecision == 'Passed' ? 'Đạt yêu cầu' : (detail.finalDecision != null ? detail.finalDecision : 'Đạt yêu cầu')}">Đạt yêu cầu</span>
+                            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>
+                            <span th:text="${detail.finalDecision != null and detail.finalDecision == 'Passed' ? 'Đạt yêu cầu' : (detail.finalDecision != null ? detail.finalDecision : 'Đạt yêu cầu')}">Đạt yêu cầu</span>
                         </span>
                     </div>
                 </div>
@@ -288,8 +291,8 @@
                     <div class="detail-info-tile-val">
                         <span th:text="${detail.responsePeriodDays != null ? detail.responsePeriodDays + ' ngày làm việc' : '5 ngày làm việc'}">3 ngày làm việc</span>
                         <th:block th:if="${detail.responseDeadline != null}">
-                            <div style="font-size:12px; color:var(--muted); font-weight:400; margin-top:2px;">
-                                Hạn chót: <strong style="color:var(--ink);" th:text="${#temporals.format(detail.responseDeadline, 'HH:mm dd/MM/yyyy')}">17:00 20/10/2026</strong>
+                            <div class="ofw-deadline-sub">
+                                Hạn chót: <strong class="ofw-deadline-val" th:text="${#temporals.format(detail.responseDeadline, 'HH:mm dd/MM/yyyy')}">17:00 20/10/2026</strong>
                             </div>
                         </th:block>
                     </div>
@@ -306,26 +309,30 @@
             <div class="detail-soft-field">
                 <div class="detail-item-label-upper">ĐỊA ĐIỂM LÀM VIỆC</div>
                 <div class="detail-soft-box">
-                    <i class="fa-solid fa-location-dot"></i>
+                    <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
                     <span th:text="${detail.workLocation != null ? detail.workLocation : 'Trụ sở chính Mộc RMS'}">QUẬN 1, TP. HỒ CHÍ MINH & CẦU GIẤY, HÀ NỘI</span>
                 </div>
             </div>
 
             <div class="detail-soft-field">
                 <div class="detail-item-label-upper">CHẾ ĐỘ PHÚC LỢI & ĐÃI NGỘ ĐẶC THÙ</div>
-                <div class="detail-soft-box" style="white-space: pre-wrap;"
+                <div class="detail-soft-box ofw-soft-box-pre"
                      th:text="${detail.benefitsPackage != null and !detail.benefitsPackage.isBlank() ? detail.benefitsPackage : 'Theo quy chế đãi ngộ chung của công ty.'}">
                     Bảo hiểm xã hội & chính sách đãi ngộ theo quy định công ty. Thưởng hiệu quả kinh doanh dự án theo quý.
                 </div>
             </div>
 
             <!-- Footer Section 2: Người lập & Thời điểm lập -->
-            <div style="margin-top:20px; padding-top:14px; border-top:1px dashed var(--line); font-size:13px; color:var(--muted); display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
-                <div>
-                    <i class="fa-solid fa-user-pen" style="margin-right:4px;"></i> Người lập đề xuất: <strong style="color:var(--ink);" th:text="${detail.proposedByName != null ? detail.proposedByName : 'Bộ phận Tuyển dụng'}">Phạm Quang Huy</strong>
+            <div class="ofw-detail-audit-footer">
+                <div class="ofw-detail-audit-item">
+                    <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/><path d="M17 11l2 2 4-4"/></svg>
+                    <span>Người lập đề xuất: </span>
+                    <strong th:text="${detail.proposedByName != null ? detail.proposedByName : 'Bộ phận Tuyển dụng'}">Phạm Quang Huy</strong>
                 </div>
-                <div>
-                    <i class="fa-regular fa-clock" style="margin-right:4px;"></i> Thời điểm lập: <span th:text="${detail.createdAt != null ? #temporals.format(detail.createdAt, 'dd/MM/yyyy HH:mm') : '-'}">17/10/2026 11:05</span>
+                <div class="ofw-detail-audit-item">
+                    <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                    <span>Thời điểm lập: </span>
+                    <span th:text="${detail.createdAt != null ? #temporals.format(detail.createdAt, 'dd/MM/yyyy HH:mm') : '-'}">17/10/2026 11:05</span>
                 </div>
             </div>
         </div>
@@ -339,7 +346,7 @@
         <!-- Header: Nền xanh lá đậm `#0f5132` + Badge CẤP DUYỆT CUỐI -->
         <div class="director-decision-card-header">
             <div class="director-decision-card-title">
-                <i class="fa-solid fa-circle-check"></i>
+                <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
                 <span>3. QUYẾT ĐỊNH CỦA GIÁM ĐỐC</span>
             </div>
             <span class="director-badge-final">CẤP DUYỆT CUỐI</span>
@@ -349,7 +356,7 @@
             <!-- Label & Character Counter (0/500) -->
             <div class="director-comment-label-row">
                 <label for="directorDetailComments">Ý kiến phê duyệt hoặc lý do từ chối:</label>
-                <span style="font-size:12px; color:var(--muted); font-weight:500;">
+                <span class="ofw-counter-label">
                     <span id="directorDetailCommentCount">0</span>/500
                 </span>
             </div>
@@ -369,32 +376,33 @@
             <div class="director-decision-footer-btns">
                 <button type="button" class="btn-director-reject"
                         th:onclick="'submitDirectorDecisionFromScreen(' + ${detail.offerId} + ', \'REJECT\')'">
-                    <i class="fa-solid fa-xmark"></i> Từ chối đề xuất
+                    <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                    <span>Từ chối đề xuất</span>
                 </button>
                 <button type="button" class="btn-director-approve"
                         th:onclick="'submitDirectorDecisionFromScreen(' + ${detail.offerId} + ', \'APPROVE\')'">
-                    <i class="fa-solid fa-check"></i> Phê duyệt đề xuất
+                    <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>
+                    <span>Phê duyệt đề xuất</span>
                 </button>
             </div>
         </div>
     </div>
 
     <!-- AUDIT LOGS: LỊCH SỬ PHÊ DUYỆT CỦA DIRECTOR (CHỈ HIỆN KHI ĐÃ CÓ LỊCH SỬ) -->
-    <div th:if="${!#lists.isEmpty(detail.approvalHistory)}" class="card" style="margin-bottom: 20px;">
-        <div class="card-header">
-            <h2 class="card-title" style="font-size:16px;">
-                <i class="fa-solid fa-clock-rotate-left"></i> 
+    <div th:if="${!#lists.isEmpty(detail.approvalHistory)}" class="card adw-surface ofw-card">
+        <div class="card-header ofw-card-header">
+            <h2 class="card-title adw-panel-title ofw-history-header-title">
+                <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/><path d="M3.05 11a9 9 0 0 1 .5-2m.5-2a9 9 0 0 1 14.15-2.15"/></svg>
                 <span th:text="${detail.offerStatus == 'Pending_Director' and userRole == 'Director' ? '4. Lịch Sử Phê Duyệt Của Giám Đốc' : '3. Lịch Sử Phê Duyệt Của Giám Đốc'}">3. Lịch Sử Phê Duyệt Của Giám Đốc</span>
             </h2>
         </div>
-        <div class="card-body">
+        <div class="card-body ofw-card-body">
             <div class="history-timeline">
                 <div class="timeline-item" th:each="a : ${detail.approvalHistory}">
                     <div class="timeline-dot" th:classappend="${a.status == 'Approved' or a.status == 'Director_Approved' ? 'dot-approved' : 'dot-rejected'}"></div>
                     <div class="timeline-header">
                         <span th:text="${a.directorName != null ? a.directorName : 'Giám đốc'}">Giám đốc</span> - 
-                        <span style="font-weight:700;"
-                              th:styleappend="${a.status == 'Approved' or a.status == 'Director_Approved' ? 'color:var(--brand-dark);' : 'color:var(--error);'}"
+                        <span th:classappend="${a.status == 'Approved' or a.status == 'Director_Approved' ? 'ofw-history-status--approved' : 'ofw-history-status--rejected'}"
                               th:text="${a.status == 'Approved' or a.status == 'Director_Approved' ? 'Đã phê duyệt' : (a.status == 'Rejected' or a.status == 'Director_Rejected' ? 'Đã từ chối' : a.status)}">Đã phê duyệt</span>
                     </div>
                     <div class="timeline-time" th:text="${a.approvedAt != null ? #temporals.format(a.approvedAt, 'dd/MM/yyyy HH:mm') : ''}">05/10/2026 14:30</div>
@@ -410,6 +418,8 @@
 </main>
 
 <th:block layout:fragment="scripts">
+  <th:block th:replace="~{fragments/ui/admin-workspace :: scripts}"></th:block>
+  <script th:src="@{/js/pages/flash-toast.js}" defer></script>
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
   <script th:src="@{/js/offers.js}" defer></script>
 </th:block>

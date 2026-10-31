@@ -1,4 +1,4 @@
-package com.group2.rms.notification;
+package com.group2.rms.offer.service;
 
 import com.group2.rms.offer.entity.OfferProposal;
 import lombok.extern.slf4j.Slf4j;

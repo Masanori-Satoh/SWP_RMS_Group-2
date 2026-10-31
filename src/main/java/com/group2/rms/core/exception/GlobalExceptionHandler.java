@@ -197,10 +197,6 @@ public class GlobalExceptionHandler {
                 .map(err -> {
                     String msg = err.getDefaultMessage();
                     if (msg != null && (msg.contains("Failed to convert") || msg.contains("typeMismatch") || msg.contains("ConversionFailedException"))) {
-                        if (msg.contains("expectedStartDate")) return "Ngày bắt đầu dự kiến không hợp lệ.";
-                        if (msg.contains("proposedSalary")) return "Mức lương chính thức phải là số hợp lệ.";
-                        if (msg.contains("probationSalary")) return "Mức lương thử việc phải là số hợp lệ.";
-                        if (msg.contains("probationDays")) return "Thời gian thử việc phải là số ngày hợp lệ.";
                         return "Dữ liệu nhập vào không đúng định dạng.";
                     }
                     return msg;
