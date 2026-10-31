@@ -128,32 +128,54 @@
 
         <!-- Tiêu đề trang trọng -->
         <header class="cof-paper-header">
+            <div class="cof-letterhead-brand">
+                <span class="cof-letterhead-leaf" aria-hidden="true">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10Z"></path><path d="M2 21c0-3 1.85-5.36 5.08-6C9.5 14.52 12 13 13 12"></path></svg>
+                </span>
+                <span class="cof-letterhead-name">MỘC RMS</span>
+                <span class="cof-letterhead-divider">|</span>
+                <span class="cof-letterhead-sub">HỆ THỐNG QUẢN TRỊ TUYỂN DỤNG</span>
+            </div>
+
+            <div class="cof-paper-meta-row">
+                <span class="cof-paper-meta-item">
+                    <strong>Mã văn bản:</strong> <span th:text="${offer.offerCode ?: 'OFFR-2026-#' + offer.offerId}">OFFR-2026-0016</span>
+                </span>
+                <span class="cof-paper-meta-dot" aria-hidden="true">•</span>
+                <span class="cof-paper-meta-item">
+                    <strong>Ngày phát hành:</strong> <span th:text="${offer.sentAt != null ? #temporals.format(offer.sentAt, 'dd/MM/yyyy') : (offer.updatedAt != null ? #temporals.format(offer.updatedAt, 'dd/MM/yyyy') : 'Gần nhất')}">31/10/2026</span>
+                </span>
+            </div>
+
             <div class="cof-paper-rule">
                 <span class="cof-paper-rule__line"></span>
-                <span class="cof-paper-rule__title">THƯ MỜI NHẬN VIỆC</span>
+                <span class="cof-paper-rule__title">THƯ MỜI NHẬN VIỆC CHÍNH THỨC</span>
                 <span class="cof-paper-rule__line"></span>
             </div>
+
             <h1 class="cof-paper-title">
                 <span class="sr-only" th:text="|Thư mời nhận việc: ${offer.offeredPositionTitle}|">Thư mời nhận việc: Senior Java Developer</span>
                 <span aria-hidden="true" th:text="${offer.offeredPositionTitle}">Chuyên viên Phát triển Kinh doanh B2B (Software Solutions)</span>
             </h1>
         </header>
 
-        <!-- Lời mở đầu thư ngỏ -->
-        <div class="cof-paper-greeting">
-            <p class="cof-salutation">Kính gửi <strong th:text="${offer.candidateName}">Đỗ Thu Phương</strong>,</p>
-            <p>
-                Thay mặt Ban Giám đốc và toàn thể đội ngũ Mộc RMS, chúng tôi rất vui mừng gửi tới bạn thư mời gia nhập công ty cho vị trí <strong th:text="${offer.offeredPositionTitle}">Chuyên viên Phát triển Kinh doanh B2B (Software Solutions)</strong>.
-            </p>
-            <p>
-                Chúng tôi tin rằng với tài năng, sự sáng tạo và nhiệt huyết của bạn, bạn sẽ là một mảnh ghép quan trọng trong hành trình phát triển bền vững của Mộc RMS.
-            </p>
-            <p>
-                Vui lòng xem chi tiết các điều khoản bên dưới và phản hồi trước hạn chót. Chúng tôi rất mong sớm được chào đón bạn gia nhập đội ngũ Mộc RMS.
-            </p>
-            <div class="cof-paper-signoff">
-                <p>Trân trọng,</p>
-                <strong class="cof-signature-brand">Đội ngũ Tuyển dụng Mộc RMS</strong>
+        <!-- Lời mở đầu thư ngỏ dạng Khung đón mừng trang trọng -->
+        <div class="cof-paper-greeting-box">
+            <div class="cof-paper-greeting">
+                <p class="cof-salutation">Kính gửi <strong class="cof-candidate-highlight" th:text="${offer.candidateName}">Đỗ Thu Phương</strong>,</p>
+                <p>
+                    Thay mặt Ban Giám đốc và toàn thể đội ngũ Mộc RMS, chúng tôi rất vui mừng gửi tới bạn thư mời gia nhập công ty cho vị trí <strong th:text="${offer.offeredPositionTitle}">Chuyên viên Phát triển Kinh doanh B2B (Software Solutions)</strong> thuộc phòng ban <strong th:text="${offer.departmentName}">Sales &amp; Marketing</strong>.
+                </p>
+                <p>
+                    Chúng tôi tin tưởng rằng với tài năng, sự sáng tạo và nhiệt huyết của bạn, bạn sẽ là một mảnh ghép quan trọng trong hành trình phát triển bền vững và bứt phá của Mộc RMS.
+                </p>
+                <p>
+                    Vui lòng xem chi tiết các điều khoản đãi ngộ dưới đây và gửi phản hồi trước hạn chót. Chúng tôi rất mong sớm được chào đón bạn gia nhập đại gia đình Mộc RMS.
+                </p>
+                <div class="cof-paper-signoff">
+                    <p>Trân trọng,</p>
+                    <strong class="cof-signature-brand">Ban Giám đốc &amp; Đội ngũ Tuyển dụng Mộc RMS</strong>
+                </div>
             </div>
         </div>
 

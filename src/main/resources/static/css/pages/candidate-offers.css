@@ -898,8 +898,8 @@
   background: var(--surface);
   border: 1px solid var(--line);
   border-radius: 16px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04);
-  padding: 48px 48px 36px;
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.05), 0 1px 3px rgba(0, 0, 0, 0.02);
+  padding: 44px 48px 36px;
   overflow: hidden;
 }
 
@@ -919,6 +919,55 @@
   margin-bottom: var(--s6);
 }
 
+.cof-letterhead-brand {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin-bottom: 6px;
+  color: var(--brand);
+}
+
+.cof-letterhead-leaf {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.cof-letterhead-name {
+  font-weight: 800;
+  font-size: 16px;
+  letter-spacing: 0.08em;
+  color: var(--brand-dark);
+}
+
+.cof-letterhead-divider {
+  color: var(--line-strong, #cbd5e1);
+  font-size: 13px;
+}
+
+.cof-letterhead-sub {
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--muted);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.cof-paper-meta-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  font-size: 13px;
+  color: var(--muted);
+  margin-bottom: 18px;
+}
+
+.cof-paper-meta-dot {
+  color: var(--line-strong, #cbd5e1);
+}
+
 .cof-paper-rule {
   display: flex;
   align-items: center;
@@ -929,13 +978,13 @@
 
 .cof-paper-rule__line {
   flex: 1;
-  max-width: 120px;
-  height: 1px;
-  background: var(--line);
+  max-width: 140px;
+  height: 1.5px;
+  background: linear-gradient(90deg, transparent, var(--brand), transparent);
 }
 
 .cof-paper-rule__title {
-  font-size: 12.5px;
+  font-size: 13px;
   font-weight: 700;
   letter-spacing: 0.18em;
   text-transform: uppercase;
@@ -943,28 +992,41 @@
 }
 
 .cof-paper-title {
-  font-family: var(--serif);
-  font-size: 30px;
+  font-family: inherit;
+  font-size: 28px;
   font-weight: 700;
-  color: var(--brand-dark);
-  margin: 0 0 28px;
+  color: var(--ink);
+  margin: 0 0 20px;
   line-height: 1.35;
 }
 
-/* 3. Lời mở đầu thư ngỏ */
-.cof-paper-greeting {
+/* 3. Lời mở đầu thư ngỏ dạng Khung đón mừng trang trọng */
+.cof-paper-greeting-box {
+  background: var(--surface-sunken, #f8fafc);
+  border-left: 4px solid var(--brand);
+  border-radius: 8px;
+  padding: 22px 28px;
+  margin-bottom: var(--s8);
   position: relative;
   z-index: 1;
-  margin-bottom: var(--s8);
+}
+
+.cof-paper-greeting {
   color: var(--ink);
   font-size: 14.5px;
-  line-height: 1.65;
+  line-height: 1.7;
 }
 
 .cof-salutation {
-  font-size: 15.5px;
+  font-size: 16px;
   font-weight: 700;
   margin-bottom: var(--s3);
+  color: var(--ink);
+}
+
+.cof-candidate-highlight {
+  color: var(--brand-dark);
+  font-size: 16.5px;
 }
 
 .cof-paper-greeting p {
@@ -972,20 +1034,24 @@
 }
 
 .cof-paper-signoff {
-  margin-top: 18px;
+  margin-top: 16px;
+  padding-top: 12px;
+  border-top: 1px dashed var(--line);
 }
 
 .cof-paper-signoff p {
-  margin: 0 0 var(--s1);
+  margin: 0 0 2px;
   font-style: italic;
+  font-size: 13.5px;
   color: var(--muted);
 }
 
 .cof-signature-brand {
+  color: var(--brand-dark);
   font-size: 14.5px;
   font-weight: 700;
-  color: var(--ink);
 }
+
 
 /* 4. Khối Tải xuống Thư mời & Liên hệ HR đặt dưới khối các bước tiếp theo */
 .cof-download-section {
