@@ -1152,7 +1152,7 @@
 .cof-paper-grid--3cols {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 18px;
+  gap: 20px;
   position: relative;
   z-index: 1;
   align-items: stretch;
@@ -1161,35 +1161,38 @@
 .cof-panel {
   background: var(--surface);
   border: 1px solid var(--line);
-  border-radius: 12px;
+  border-radius: 14px;
   overflow: hidden;
   display: flex;
   flex-direction: column;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.02);
+  transition: all 0.2s ease;
+}
+
+.cof-panel:hover {
+  border-color: var(--line-strong, #cbd5e1);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.05);
 }
 
 .cof-panel__head {
   display: flex;
   align-items: center;
-  gap: 10px;
-  padding: 14px 16px;
-  background: var(--surface-subtle);
+  gap: 12px;
+  padding: 14px 18px;
+  background: var(--surface-sunken, #f8fafc);
   border-bottom: 1px solid var(--line);
 }
 
 .cof-panel__icon {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  background: var(--brand-soft);
   color: var(--brand);
   display: inline-flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
-}
-
-.cof-panel__icon--salary {
-  color: var(--brand);
-}
-
-.cof-panel__icon--star {
-  color: var(--brand);
 }
 
 .cof-panel__title {
@@ -1200,7 +1203,7 @@
 }
 
 .cof-panel__body {
-  padding: 16px;
+  padding: 18px;
   flex: 1;
   display: flex;
   flex-direction: column;
@@ -1217,7 +1220,7 @@
 .cof-info-row {
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: 3px;
   padding-bottom: 10px;
   border-bottom: 1px dashed var(--line);
 }
@@ -1228,9 +1231,11 @@
 }
 
 .cof-info-row dt {
-  font-size: 12px;
+  font-size: 11.5px;
   color: var(--muted);
-  font-weight: 500;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
   margin: 0;
 }
 
@@ -1250,7 +1255,7 @@
   margin-top: 2px;
 }
 
-/* Cột 2: Lương & thưởng */
+/* Cột 2: Lương & thưởng cao cấp */
 .cof-salary-panel {
   display: flex;
   flex-direction: column;
@@ -1259,10 +1264,20 @@
 }
 
 .cof-salary-card {
-  background: var(--surface-subtle);
+  border-radius: 10px;
+  padding: 16px;
+  transition: all 0.15s ease;
+}
+
+.cof-salary-card--official {
+  background: linear-gradient(135deg, var(--brand-soft) 0%, #ffffff 100%);
+  border: 1.5px solid var(--brand);
+  box-shadow: 0 2px 8px rgba(62, 113, 87, 0.08);
+}
+
+.cof-salary-card--probation {
+  background: var(--surface-sunken, #f8fafc);
   border: 1px solid var(--line);
-  border-radius: 8px;
-  padding: 14px;
 }
 
 .cof-salary-card__label {
@@ -1276,11 +1291,16 @@
 }
 
 .cof-salary-card__val {
-  font-size: 22px;
+  font-size: 24px;
   font-weight: 800;
   color: var(--brand-dark);
   line-height: 1.2;
   margin-bottom: 6px;
+}
+
+.cof-salary-card--probation .cof-salary-card__val {
+  font-size: 20px;
+  color: var(--ink);
 }
 
 .cof-salary-card__sub {
@@ -1291,25 +1311,28 @@
 }
 
 .cof-salary-badge {
-  display: inline-block;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
   padding: 3px 10px;
   border-radius: var(--radius-full);
-  background: var(--brand-soft);
+  background: var(--surface);
   color: var(--brand-dark);
   font-size: 11.5px;
   font-weight: 600;
   border: 1px solid var(--line);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
 }
 
 .cof-salary-footnote {
   display: flex;
   align-items: flex-start;
-  gap: 6px;
+  gap: 8px;
   font-size: 11.5px;
   color: var(--muted);
-  line-height: 1.4;
+  line-height: 1.45;
   margin-top: auto;
-  padding-top: 6px;
+  padding-top: 8px;
 }
 
 .cof-salary-footnote svg {
@@ -1325,18 +1348,26 @@
   margin: 0;
   display: flex;
   flex-direction: column;
-  gap: 14px;
+  gap: 12px;
 }
 
 .cof-benefit-entry {
   display: flex;
   align-items: flex-start;
   gap: 10px;
+  padding: 8px 10px;
+  border-radius: 8px;
+  background: var(--surface-sunken, #f8fafc);
+  transition: background 0.15s ease;
+}
+
+.cof-benefit-entry:hover {
+  background: var(--brand-soft);
 }
 
 .cof-benefit-icon {
-  width: 20px;
-  height: 20px;
+  width: 22px;
+  height: 22px;
   color: var(--brand);
   flex-shrink: 0;
   margin-top: 2px;
@@ -1365,15 +1396,17 @@
 
 .cof-custom-benefits {
   margin-top: 12px;
-  padding-top: 10px;
-  border-top: 1px dashed var(--line);
+  padding: 10px 12px;
+  border-radius: 8px;
+  background: var(--brand-soft);
+  border: 1px solid rgba(62, 113, 87, 0.15);
 }
 
 .cof-custom-benefits__label {
   display: block;
   font-size: 11.5px;
-  color: var(--muted);
-  font-weight: 600;
+  color: var(--brand-dark);
+  font-weight: 700;
   margin-bottom: 2px;
 }
 

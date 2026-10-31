@@ -237,7 +237,7 @@
                 </div>
                 <div class="cof-panel__body cof-salary-panel">
                     <!-- Hộp Lương thử việc -->
-                    <div class="cof-salary-card">
+                    <div class="cof-salary-card cof-salary-card--probation">
                         <span class="cof-salary-card__label">LƯƠNG THỬ VIỆC / THÁNG (TRƯỚC THUẾ)</span>
                         <div class="cof-salary-card__val" th:text="${offer.probationSalary == null ? 'Thỏa thuận' : #numbers.formatDecimal(offer.probationSalary, 1, 'POINT', 0, 'COMMA') + ' đ'}">
                             17.000.000 đ
@@ -248,7 +248,7 @@
                     </div>
 
                     <!-- Hộp Lương chính thức -->
-                    <div class="cof-salary-card">
+                    <div class="cof-salary-card cof-salary-card--official">
                         <span class="cof-salary-card__label">LƯƠNG CHÍNH THỨC / THÁNG (TRƯỚC THUẾ)</span>
                         <div class="cof-salary-card__val" th:text="${offer.proposedSalary == null ? 'Thỏa thuận' : #numbers.formatDecimal(offer.proposedSalary, 1, 'POINT', 0, 'COMMA') + ' đ'}">
                             20.000.000 đ
