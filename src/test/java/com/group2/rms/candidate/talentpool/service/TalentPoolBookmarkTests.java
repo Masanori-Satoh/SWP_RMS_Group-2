@@ -98,7 +98,12 @@ class TalentPoolBookmarkTests {
         var previous = TalentPoolNote.builder().noteId(1).candidate(candidate).author(hm)
             .noteContent("Ghi chú trước").createdAt(LocalDateTime.of(2026, 10, 16, 17, 0)).build();
         when(notes.findByCandidate_CandidateIdOrderByCreatedAtDescNoteIdDesc(8)).thenReturn(List.of(previous));
-        TalentPoolNote expectedNote = TalentPoolNote.builder().candidate(candidate).author(hm).noteContent("Ghi chú mới").build();
+        TalentPoolNote expectedNote = TalentPoolNote.builder().noteId(2).candidate(candidate).author(hm).noteContent("Ghi chú mới").build();
+        when(notes.save(any())).thenAnswer(invocation -> {
+            TalentPoolNote note = invocation.getArgument(0);
+            note.setNoteId(2);
+            return note;
+        });
 
         // When: Gọi pool.saveBookmark với dữ liệu đã chuẩn bị.
         var result = pool.saveBookmark(218, new TalentPoolBookmarkRequest("  Ghi chú mới  "));
@@ -107,7 +112,7 @@ class TalentPoolBookmarkTests {
         assertEquals("Ghi chú trước", previous.getNoteContent());
         assertEquals("Ghi chú trước", result.notes().getFirst().content());
         assertEquals("Rejected", application.getApplicationStatus());
-        verify(audit, times(0)).record(any(), any(), any(), any(), any(), any());
+        verify(audit).record(5, "CREATE", "TalentPoolNote", 2, null, "Ứng viên #8\nGhi chú mới");
         verify(jobs, times(0)).findById(any());
         verify(jobs, times(0)).findForUpdate(any());
         verify(jobs, times(0)).findAll();

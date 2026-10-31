@@ -7,9 +7,7 @@
 .tp-destination { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--s4); background: var(--brand-soft); padding: var(--s4) var(--s6); margin-bottom: var(--s4); }
 .tp-destination__label { margin: 0 0 var(--s1); color: var(--muted); font-size: var(--font-xs); }
 .tp-destination__title { margin: 0; font-size: var(--font-lg); font-family: var(--sans); color: var(--brand-dark); overflow-wrap: anywhere; }
-.tp-filter { display: grid; grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr) minmax(0, 1.1fr) auto; gap: var(--s4); align-items: end; margin-bottom: var(--s6); }
-.tp-filter .form-group { margin: 0; }
-.tp-filter__actions, .tp-results { display: flex; flex-wrap: wrap; align-items: center; gap: var(--s2); }
+.tp-results { display: flex; flex-wrap: wrap; align-items: center; gap: var(--s2); }
 .tp-results { justify-content: space-between; margin-bottom: var(--s3); }
 .tp-results p, .tp-feedback:empty { margin: 0; }
 .tp-feedback:empty { display: none; }
@@ -27,11 +25,6 @@
 .tp-row--selected td { background: var(--brand-soft); }
 /* Preserve the selected state while hovering over a row. */
 .tp-table .tp-row--selected:hover td { background: var(--success-soft); }
-.tp-contact { min-width: 185px; overflow-wrap: anywhere; }
-.tp-contact span { display: block; margin-top: var(--s1); color: var(--muted); font-size: var(--font-xs); }
-.tp-source { min-width: 250px; width: 30%; }
-.tp-source__select { width: 100%; max-width: 360px; text-overflow: ellipsis; }
-.tp-source__hint { display: block; color: var(--muted); margin-top: var(--s1); }
 .tp-row-actions { display: flex; align-items: center; justify-content: flex-end; gap: var(--s2); }
 .tp-actions-head { text-align: right; }
 .tp-empty { margin-bottom: var(--s6); }
@@ -115,8 +108,6 @@
 .tp-recommendation-hint { margin: var(--s4) 0; color: var(--muted); font-size: var(--font-sm); }
 .tp-decision { margin-top: var(--s4); }
 @media (max-width: 992px) {
-  .tp-filter { grid-template-columns: 1fr 1fr; }
-  .tp-filter__actions { align-self: end; }
   .tp-detail-workspace { grid-template-columns: 1fr; }
 }
 @media (max-width: 768px) {
@@ -125,7 +116,6 @@
   .tp-profile-identity { flex-wrap: wrap; }
   .tp-profile-badge { margin-left: 0; }
   .tp-profile-title { font-size: 24px; }
-  .tp-filter { grid-template-columns: 1fr; }
   .tp-selection-bar { padding: var(--s4); }
   .tp-selection-actions { width: 100%; justify-content: space-between; }
   .tp-selection-slot { bottom: var(--s2); }

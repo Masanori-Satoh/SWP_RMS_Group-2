@@ -834,3 +834,19 @@
   .app-dialog__head { flex-wrap: wrap; }
   .app-row-actions { flex-wrap: wrap; min-width: 160px; }
 }
+
+/* Shared Talent Pool action; the notes panel remains a separate interaction. */
+.app-candidate-name-row { display: flex; align-items: center; flex-wrap: wrap; gap: var(--s2) var(--s3); }
+.app-candidate-name-row > h1 { margin: 0; }
+.app-potential-control { display: inline-flex; align-items: center; flex-wrap: wrap; gap: var(--s2); max-width: 100%; }
+.app-potential-toggle { min-height: 36px; gap: var(--s2); white-space: nowrap; touch-action: manipulation; }
+.app-potential-toggle svg { flex: none; }
+.app-potential-toggle[aria-pressed="true"] { background: var(--brand-soft); border-color: var(--brand); color: var(--brand-dark); }
+.app-potential-toggle[aria-pressed="true"] svg { fill: currentColor; }
+.app-potential-toggle:focus-visible { outline: 3px solid var(--focus); outline-offset: 3px; }
+.app-potential-toggle:disabled { cursor: wait; opacity: .65; }
+.app-potential-feedback { flex-basis: 100%; color: var(--error); font-size: 13px; white-space: normal; }
+.app-potential-feedback[hidden] { display: none; }
+.app-row-actions .app-potential-toggle { width: 36px; padding: 0; justify-content: center; }
+.app-row-actions .app-potential-toggle [data-potential-toggle-label] { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+@media (pointer: coarse) { .app-potential-toggle { min-height: 44px; } .app-row-actions .app-potential-toggle { width: 44px; } }

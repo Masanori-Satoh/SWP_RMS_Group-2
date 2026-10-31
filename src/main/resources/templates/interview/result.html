@@ -30,7 +30,11 @@
 
     <div class="page-header">
         <div>
-            <h1 class="page-title" th:text="${result.candidateName ?: 'Ứng viên'}">Nguyễn Văn An</h1>
+            <div class="app-candidate-name-row"><h1 class="page-title" th:text="${result.candidateName ?: 'Ứng viên'}">Nguyễn Văn An</h1>
+    <th:block th:if="${result.applicationId != null and topbarUser != null and (topbarUser.roleName == 'HR' or topbarUser.roleName == 'Hiring Manager')}">
+        <span th:replace="~{talent-pool/potential-candidate-action :: action(applicationId=${result.applicationId}, candidateName=${result.candidateName})}"></span>
+    </th:block>
+            </div>
             <p class="page-subtitle">
                 <span th:text="${result.jobTitle ?: 'Chưa rõ vị trí'}">Java Developer</span>
                 <th:block th:if="${result.startTime != null}"> ·
@@ -54,9 +58,7 @@
         </div>
     </div>
 
-    <th:block th:if="${result.applicationId != null and topbarUser != null and (topbarUser.roleName == 'HR' or topbarUser.roleName == 'Hiring Manager')}">
-        <section th:replace="~{talent-pool/potential-candidate-action :: action(applicationId=${result.applicationId}, candidateName=${result.candidateName})}"></section>
-    </th:block>
+
 
     <div th:if="${param.evaluated}" class="alert alert--success" role="status">Đã gửi phiếu đánh giá. Cảm ơn bạn!</div>
     <div th:if="${successMessage}" class="alert alert--success" role="status" th:text="${successMessage}"></div>
@@ -289,7 +291,7 @@
 </main>
 <th:block layout:fragment="scripts">
     <script th:if="${result.canEvaluate or result.canFinalize}" defer th:src="@{/js/pages/interview-result.js}"></script>
-    <script th:if="${result.applicationId != null and topbarUser != null and (topbarUser.roleName == 'HR' or topbarUser.roleName == 'Hiring Manager')}" defer th:src="@{/js/pages/applications.js}"></script>
+    <script th:if="${result.applicationId != null and topbarUser != null and (topbarUser.roleName == 'HR' or topbarUser.roleName == 'Hiring Manager')}" defer th:src="@{/js/pages/potential-candidate-toggle.js}"></script>
 </th:block>
 </body>
 </html>

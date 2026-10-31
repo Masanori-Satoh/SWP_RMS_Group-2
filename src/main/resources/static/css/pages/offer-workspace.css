@@ -1,0 +1,1106 @@
+/* ==========================================================================
+   OFFER WORKSPACE (OFW) — Layout Admin Composition for HR Offer Proposal
+   Prefix: ofw-
+   Follows ARCHITECTURE_GUIDE.md & UI_CSS_GUIDE.md (Strict 100% token usage)
+   ========================================================================== */
+
+/* 1. Page Wrap & Heading */
+.ofw-page {
+  min-width: 0;
+}
+
+.ofw-form-wrap,
+.ofw-page.offer-detail-container {
+  width: 100%;
+  max-width: none;
+  margin-inline: 0;
+}
+
+.ofw-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: var(--s4);
+  margin-bottom: var(--s6);
+  padding: var(--s2) 0;
+}
+
+.ofw-title {
+  margin: 0;
+}
+
+.ofw-subtitle {
+  max-width: 76ch;
+  margin-top: var(--s2);
+  color: var(--ink);
+  font-size: var(--font-base);
+  line-height: 1.5;
+}
+
+/* 2. Validation Summary Alert */
+.ofw-validation-summary {
+  margin-bottom: var(--s6);
+  padding: var(--s4) var(--s5);
+  border: 1px solid var(--error);
+  border-radius: var(--radius-md);
+  background: var(--error-soft);
+  color: var(--error);
+}
+
+.ofw-validation-header {
+  display: flex;
+  align-items: center;
+  gap: var(--s2);
+  margin-bottom: var(--s2);
+}
+
+.ofw-validation-header svg {
+  flex-shrink: 0;
+}
+
+.ofw-validation-header h2 {
+  margin: 0;
+  font: 600 16px/1.4 var(--sans);
+  color: var(--error);
+}
+
+.ofw-error-list {
+  margin: 0;
+  padding-left: var(--s5);
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+/* 3. Surface Cards & Step Headers */
+.ofw-card {
+  margin-bottom: var(--s6);
+  overflow: hidden;
+}
+
+.ofw-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--s4) var(--s6);
+}
+
+.ofw-panel-title-wrap {
+  display: flex;
+  align-items: center;
+  gap: var(--s3);
+}
+
+.ofw-step-badge {
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border-radius: var(--radius-full);
+  background: var(--brand-soft);
+  color: var(--brand-dark);
+  font: 700 14px/1 var(--sans);
+}
+
+.ofw-card-body {
+  padding: var(--s6);
+}
+
+/* 4. Candidate Info Grid & Previews */
+.ofw-fixed-candidate-bar {
+  display: flex;
+  align-items: center;
+  gap: var(--s3);
+  min-height: 44px;
+  padding: var(--s2) var(--s4);
+  background: var(--surface-subtle);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md);
+}
+
+.ofw-candidate-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 8px;
+  background: var(--brand-soft);
+  color: var(--brand-dark);
+  border-radius: var(--radius-sm);
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.ofw-fixed-candidate-text {
+  font-weight: 600;
+  color: var(--ink);
+  font-size: 14px;
+  overflow-wrap: anywhere;
+}
+
+.ofw-candidate-preview-box {
+  background: var(--surface-subtle);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md);
+  padding: var(--s4) var(--s5);
+  margin-top: var(--s4);
+}
+
+.ofw-info-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--s4) var(--s6);
+}
+
+.ofw-info-item {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.ofw-info-label {
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: .04em;
+  color: var(--muted);
+}
+
+.ofw-info-value {
+  font-size: 14px;
+  color: var(--ink);
+  line-height: 1.45;
+  overflow-wrap: anywhere;
+}
+
+.ofw-info-value--strong {
+  font-weight: 650;
+  color: var(--brand-dark);
+}
+
+.ofw-salary-badge {
+  display: inline-flex;
+  align-items: center;
+  width: fit-content;
+  padding: 4px 10px;
+  background: color-mix(in srgb, var(--brand-soft) 80%, var(--surface));
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  color: var(--brand-dark);
+  font-weight: 700;
+  font-size: 14px;
+  font-variant-numeric: tabular-nums;
+}
+
+.ofw-comments-box {
+  margin-top: var(--s4);
+  padding-top: var(--s3);
+  border-top: 1px dashed var(--line);
+}
+
+.ofw-info-comments {
+  margin: 4px 0 0;
+  color: var(--ink);
+  font-size: 14px;
+  font-style: italic;
+  line-height: 1.5;
+}
+
+/* 5. Terms & Fields Layout */
+.ofw-field-header-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s2);
+}
+
+.ofw-btn-calc {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 32px;
+  padding: 0 var(--s3);
+  font-size: 13px;
+  font-weight: 600;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+}
+
+.ofw-rule-notice {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: var(--s2);
+  padding: 6px var(--s3);
+  background: var(--brand-soft);
+  border-radius: var(--radius-sm);
+  color: var(--brand-dark);
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.ofw-rule-notice svg {
+  flex-shrink: 0;
+}
+
+.ofw-rule-notice--invalid {
+  background: var(--error-soft);
+  color: var(--error);
+}
+
+.ofw-hint-inline {
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: normal;
+}
+
+/* 6. Action Footer (Button DNA 8px radius, 48px height) */
+.ofw-form-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--s3);
+  padding-top: var(--s4);
+  margin-top: var(--s6);
+}
+
+.ofw-form-actions .btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--s2);
+  height: var(--btn-h);
+  border-radius: var(--radius-md);
+  font-size: 15px;
+  font-weight: 600;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+/* 7. Responsive Breakpoints */
+@media (max-width: 768px) {
+  .ofw-info-grid {
+    grid-template-columns: 1fr;
+    gap: var(--s3);
+  }
+
+  .ofw-card-body {
+    padding: var(--s4);
+  }
+
+  .ofw-form-actions {
+    flex-direction: column-reverse;
+    width: 100%;
+  }
+
+  .ofw-form-actions .btn {
+    width: 100%;
+  }
+}
+
+/* ==========================================================================
+   OFFER LIST WORKSPACE (HR & DIRECTOR LIST SCREENS)
+   ========================================================================== */
+
+/* 8. List Header Actions */
+.ofw-header-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--s3);
+}
+
+.ofw-header-actions .btn {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s2);
+  height: var(--btn-h);
+  border-radius: var(--radius-md);
+  font-size: 15px;
+  font-weight: 600;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+/* 9. Stats Grid */
+.ofw-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: var(--s4);
+  margin-bottom: var(--s6);
+}
+
+.ofw-director-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--s4);
+  margin-bottom: var(--s6);
+}
+
+.ofw-stat-card {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: var(--s4) var(--s5);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+  transition: transform .15s ease, box-shadow .15s ease;
+}
+
+.ofw-stat-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+}
+
+.ofw-stat-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: .02em;
+}
+
+.ofw-stat-bottom {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: var(--s3);
+}
+
+.ofw-stat-icon {
+  display: grid;
+  place-items: center;
+  width: 42px;
+  height: 42px;
+  border-radius: var(--radius-md);
+}
+
+.ofw-stat-icon.stat-icon-brand {
+  background: var(--brand-soft);
+  color: var(--brand-dark);
+}
+
+.ofw-stat-icon.stat-icon-amber {
+  background: var(--warning-soft);
+  color: var(--warning);
+}
+
+.ofw-stat-icon.stat-icon-green,
+.ofw-stat-icon.stat-icon-emerald {
+  background: var(--success-soft);
+  color: var(--success);
+}
+
+.ofw-stat-icon.stat-icon-blue {
+  background: color-mix(in srgb, var(--brand-soft) 80%, var(--surface));
+  color: var(--brand-dark);
+}
+
+.ofw-stat-icon.stat-icon-danger {
+  background: var(--error-soft);
+  color: var(--error);
+}
+
+.ofw-stat-value {
+  font-size: 26px;
+  font-weight: 700;
+  color: var(--brand-dark);
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+}
+
+/* 10. Director Tabs */
+.ofw-director-tabs {
+  display: flex;
+  gap: var(--s2);
+  margin-bottom: var(--s5);
+}
+
+.ofw-director-tab {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s2);
+  padding: 8px 18px;
+  border-radius: var(--radius-full);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  color: var(--muted);
+  font-size: 14px;
+  font-weight: 600;
+  text-decoration: none;
+  transition: all .15s ease;
+}
+
+.ofw-director-tab:hover {
+  background: var(--surface-subtle);
+  color: var(--brand-dark);
+}
+
+.ofw-director-tab.active {
+  background: var(--brand);
+  color: var(--surface);
+  border-color: var(--brand);
+}
+
+/* 11. Toolbar (Filters & Search) */
+.ofw-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: var(--s3);
+  padding: var(--s3) var(--s4);
+  margin-bottom: var(--s5);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+  box-shadow: var(--shadow-sm);
+}
+
+.ofw-toolbar-left {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--s3);
+  flex: 1 1 auto;
+}
+
+.ofw-search-box {
+  position: relative;
+  display: flex;
+  align-items: center;
+  flex: 1 1 300px;
+  max-width: 380px;
+}
+
+.ofw-search-box svg {
+  position: absolute;
+  left: 14px;
+  color: var(--muted);
+  pointer-events: none;
+}
+
+.ofw-search-input {
+  width: 100%;
+  height: 42px;
+  padding: 0 36px 0 38px;
+  border: 1px solid var(--control-line);
+  border-radius: var(--radius-md);
+  background: var(--surface);
+  color: var(--ink);
+  font-size: 14px;
+  transition: border-color .15s ease;
+}
+
+.ofw-search-input:focus {
+  outline: none;
+  border-color: var(--brand);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--brand) 15%, transparent);
+}
+
+.ofw-search-clear {
+  position: absolute;
+  right: 10px;
+  display: grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  padding: 0;
+  border: none;
+  border-radius: var(--radius-full);
+  background: var(--neutral-soft);
+  color: var(--muted);
+  cursor: pointer;
+}
+
+.ofw-search-clear:hover {
+  background: var(--line);
+  color: var(--ink);
+}
+
+.ofw-filter-select {
+  height: 42px;
+  padding: 0 34px 0 14px;
+  border: 1px solid var(--control-line);
+  border-radius: var(--radius-md);
+  background: var(--surface);
+  color: var(--ink);
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.ofw-filter-select:focus {
+  outline: none;
+  border-color: var(--brand);
+}
+
+/* 12. Selection Toolbar */
+.ofw-selection-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: var(--s3);
+  padding: var(--s3) var(--s5);
+  margin-bottom: var(--s4);
+  background: var(--brand-soft);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md);
+  color: var(--brand-dark);
+}
+
+.ofw-selection-toolbar-left {
+  display: flex;
+  align-items: center;
+  gap: var(--s2);
+  font-size: 14px;
+}
+
+.ofw-selection-toolbar-right {
+  display: flex;
+  align-items: center;
+  gap: var(--s2);
+}
+
+/* 13. List Container Surface & Table */
+.ofw-list-surface {
+  margin-bottom: var(--s6);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+  box-shadow: var(--shadow-md);
+  overflow: hidden;
+}
+
+.ofw-list-header {
+  display: flex;
+  align-items: center;
+  gap: var(--s3);
+  padding: var(--s4) var(--s6);
+  border-bottom: 1px solid var(--line);
+  background: var(--surface);
+}
+
+.ofw-list-icon {
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  border-radius: var(--radius-md);
+  background: var(--brand-soft);
+  color: var(--brand-dark);
+}
+
+.ofw-list-count {
+  margin-left: auto;
+  font-size: 13px;
+  font-weight: 600;
+  padding: 4px 10px;
+  border-radius: var(--radius-sm);
+  background: var(--surface-subtle);
+  color: var(--muted);
+}
+
+.ofw-table-wrapper {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.ofw-list-surface .adw-data-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.ofw-list-surface .adw-data-table thead th {
+  padding: var(--s3) var(--s4);
+  background: var(--surface-subtle);
+  color: var(--brand-dark);
+  font-size: 13px;
+  font-weight: 600;
+  text-align: left;
+  border-bottom: 1px solid var(--line);
+  white-space: nowrap;
+}
+
+.ofw-list-surface .adw-data-table tbody td {
+  padding: var(--s3) var(--s4);
+  border-bottom: 1px solid var(--line);
+  font-size: 14px;
+  color: var(--ink);
+  vertical-align: middle;
+}
+
+.ofw-list-surface .adw-data-table tbody tr:hover td {
+  background: color-mix(in srgb, var(--brand-soft) 35%, var(--surface));
+}
+
+.ofw-cand-name {
+  font-weight: 650;
+  color: var(--brand-dark);
+  text-decoration: none;
+}
+
+.ofw-cand-name:hover {
+  text-decoration: underline;
+}
+
+.ofw-cand-email {
+  font-size: 12.5px;
+  color: var(--muted);
+  margin-top: 2px;
+}
+
+.ofw-salary-main {
+  font-weight: 650;
+  color: var(--ink);
+  font-variant-numeric: tabular-nums;
+}
+
+.ofw-salary-prob {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  color: var(--muted);
+  margin-top: 2px;
+}
+
+.ofw-pct-badge {
+  display: inline-block;
+  padding: 1px 6px;
+  border-radius: var(--radius-sm);
+  background: var(--success-soft);
+  color: var(--success);
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.ofw-actions-cell {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--s2);
+}
+
+.ofw-action-btn {
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  padding: 0;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  color: var(--ink);
+  text-decoration: none;
+  cursor: pointer;
+  transition: all .15s ease;
+}
+
+.ofw-action-btn:hover {
+  border-color: var(--brand);
+  background: var(--brand-soft);
+  color: var(--brand-dark);
+}
+
+.ofw-action-btn--success:hover {
+  border-color: var(--success);
+  background: var(--success-soft);
+  color: var(--success);
+}
+
+.ofw-action-btn--danger:hover {
+  border-color: var(--error);
+  background: var(--error-soft);
+  color: var(--error);
+}
+
+/* 14. Responsive Breakpoints for List */
+@media (max-width: 1024px) {
+  .ofw-stats-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+@media (max-width: 768px) {
+  .ofw-stats-grid {
+    grid-template-columns: 1fr;
+  }
+  .ofw-director-stats-grid {
+    grid-template-columns: 1fr;
+  }
+  .ofw-toolbar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .ofw-toolbar-left {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .ofw-search-box {
+    max-width: none;
+  }
+}
+
+/* ==========================================================================
+   15. Modal & Dialog UI Enhancements (No inline styles)
+   ========================================================================== */
+.ofw-modal-title-group {
+  display: flex;
+  align-items: center;
+  gap: var(--s2);
+}
+
+.ofw-modal-title {
+  font-size: 17px;
+  font-weight: 700;
+  color: var(--ink);
+}
+
+.ofw-modal-desc {
+  font-size: 12.5px;
+  color: var(--muted);
+  font-family: var(--sans);
+  font-weight: normal;
+  margin-top: 2px;
+}
+
+.ofw-modal-stat-icon {
+  width: 36px;
+  height: 36px;
+  font-size: 16px;
+  border-radius: var(--radius-sm);
+}
+
+.ofw-export-section--spaced {
+  margin-top: var(--s4);
+}
+
+.ofw-export-title--no-mb {
+  margin-bottom: 0;
+}
+
+.ofw-column-group-label--spaced {
+  margin-top: var(--s3);
+}
+
+.ofw-modal-alert--spaced {
+  margin-top: var(--s3);
+}
+
+.ofw-modal-grid-2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--s4);
+}
+
+@media (max-width: 640px) {
+  .ofw-modal-grid-2 {
+    grid-template-columns: 1fr;
+  }
+}
+
+.ofw-required-star {
+  color: var(--error);
+}
+
+.ofw-optional-text {
+  color: var(--muted);
+  font-weight: normal;
+}
+
+.ofw-hint--brand {
+  color: var(--brand-dark);
+}
+
+.ofw-textarea-compact {
+  height: 76px;
+  resize: vertical;
+}
+
+.ofw-btn-icon {
+  margin-right: 6px;
+}
+
+.ofw-empty-state-icon {
+  margin-right: var(--s2);
+  vertical-align: middle;
+}
+
+.ofw-modal-box--sm {
+  max-width: 500px;
+}
+
+.ofw-modal-title--medium {
+  font-weight: 600;
+  font-size: 16px;
+}
+
+.ofw-modal-footer--end {
+  justify-content: flex-end;
+  gap: var(--s3);
+  margin-top: var(--s4);
+}
+
+/* ==========================================================================
+   16. Detail Screen Semantic Classes (Clean inline styles)
+   ========================================================================== */
+.ofw-form-inline {
+  display: inline;
+}
+
+.ofw-cand-decline-header {
+  background: transparent;
+  border-bottom: 1px solid var(--error-soft);
+}
+
+.ofw-cand-decline-title {
+  font-size: 16px;
+  color: var(--error);
+  display: flex;
+  align-items: center;
+  gap: var(--s2);
+}
+
+.ofw-cand-decline-label {
+  font-size: 13.5px;
+  color: var(--error);
+  font-weight: 600;
+  margin-bottom: 6px;
+}
+
+.ofw-cand-decline-time {
+  margin-top: 10px;
+  font-size: 12.5px;
+  color: var(--error);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.ofw-detail-section-title {
+  font-size: 15px;
+  display: flex;
+  align-items: center;
+  text-transform: uppercase;
+  font-weight: 700;
+}
+
+.ofw-card-title-icon {
+  display: inline-flex;
+  align-items: center;
+  margin-right: 8px;
+}
+
+.ofw-eval-manager-text {
+  font-size: 13.5px;
+}
+
+.ofw-deadline-sub {
+  font-size: 12px;
+  color: var(--muted);
+  font-weight: 400;
+  margin-top: 2px;
+}
+
+.ofw-deadline-val {
+  color: var(--ink);
+}
+
+.ofw-soft-box-pre {
+  white-space: pre-wrap;
+}
+
+.ofw-detail-audit-footer {
+  margin-top: var(--s5);
+  padding-top: 14px;
+  border-top: 1px dashed var(--line);
+  font-size: 13px;
+  color: var(--muted);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--s2);
+}
+
+.ofw-detail-audit-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.ofw-detail-audit-item strong {
+  color: var(--ink);
+}
+
+.ofw-counter-label {
+  font-size: 12px;
+  color: var(--muted);
+  font-weight: 500;
+}
+
+.ofw-history-header-title {
+  font-size: 16px;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s2);
+}
+
+.ofw-history-status--approved {
+  font-weight: 700;
+  color: var(--brand-dark);
+}
+
+.ofw-history-status--rejected {
+  font-weight: 700;
+  color: var(--error);
+}
+
+
+/* ==========================================================================
+   17. Director List Specific Utilities (100% Tokens, Zero Inline Styles)
+   ========================================================================== */
+.ofw-col-id {
+  width: 80px;
+}
+
+.ofw-col-action {
+  width: 100px;
+  text-align: right;
+}
+
+.ofw-col-action-wide {
+  width: 140px;
+  text-align: right;
+}
+
+.ofw-cell-link {
+  text-decoration: none;
+  color: inherit;
+}
+
+.ofw-date-cell {
+  color: var(--muted);
+  font-size: 13.5px;
+}
+
+.ofw-empty-cell {
+  text-align: center;
+  padding: 48px 24px;
+  color: var(--muted);
+}
+
+.ofw-empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--s3);
+}
+
+.ofw-empty-state svg {
+  color: var(--control-line);
+}
+
+
+/* -----------------------------------------------------------------------------
+   18. SPINNER & FLASH TOAST EXTENSIONS (Zero CDN)
+   ----------------------------------------------------------------------------- */
+.ofw-spinner-sm {
+    display: inline-block;
+    width: 14px;
+    height: 14px;
+    border: 2px solid rgba(255, 255, 255, 0.35);
+    border-top-color: #ffffff;
+    border-radius: 50%;
+    animation: ofw-spin 0.6s linear infinite;
+    vertical-align: middle;
+    margin-right: 6px;
+}
+
+@keyframes ofw-spin {
+    to { transform: rotate(360deg); }
+}
+
+.flash-toast--warning {
+    --toast-color: var(--focus);
+    --toast-soft: var(--warning-soft, #fef9c3);
+}
+
+
+/* Inline validation feedback cho ô nhận xét của Giám đốc */
+.director-decision-textarea.is-invalid {
+    border-color: var(--error) !important;
+    box-shadow: 0 0 0 3px var(--error-soft) !important;
+}
+
+.director-comment-error-msg {
+    display: none;
+    align-items: center;
+    gap: 6px;
+    font-size: 13px;
+    color: var(--error);
+    margin-top: 6px;
+    font-weight: 500;
+}
+
+.ofw-dialog-subnote {
+    margin-top: 8px;
+    font-size: 13px;
+    color: var(--muted);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+
+/* Modal Overlay & Box dùng chung cho Workspace (Zero Inline Styles) */
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(37, 41, 35, 0.55);
+    backdrop-filter: blur(4px);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 1200;
+    padding: 20px;
+}
+
+.modal-overlay.active {
+    display: flex;
+}
+
+.modal-box {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: var(--radius-md, 8px);
+    width: 100%;
+    max-width: 620px;
+    box-shadow: var(--shadow-lg);
+    overflow: hidden;
+}
+
+.ofw-modal-title-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    margin-right: 6px;
+    vertical-align: middle;
+}
+.ofw-modal-title-icon--success {
+    color: var(--success);
+}
+.ofw-modal-title-icon--danger {
+    color: var(--error);
+}
+.ofw-btn-icon-inline {
+    margin-right: 6px;
+    vertical-align: middle;
+}

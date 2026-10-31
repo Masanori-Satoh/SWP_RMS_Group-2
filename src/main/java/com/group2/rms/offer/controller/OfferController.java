@@ -116,12 +116,14 @@ public class OfferController {
             model.addAttribute("search", search != null ? search.trim() : "");
             model.addAttribute("currentTimeSort",
                     timeSort != null && !timeSort.isBlank() ? timeSort.trim() : "DEFAULT");
+            model.addAttribute("activeMenu", "offers");
 
             return "offers/director-list";
         }
 
         Page<OfferResponse> pagedData = offerService.getAllOffersForHr(search, status, timeSort,
                 PageRequest.of(validPage, size));
+        model.addAttribute("activeMenu", "offers");
         List<PassedCandidateResponse> passedCandidates = offerService.getPassedCandidatesForOffer();
 
         Map<String, Long> stats = offerService.getOfferStats();
@@ -148,6 +150,7 @@ public class OfferController {
      */
     @GetMapping("/create")
     public String createOfferForm(@RequestParam(required = false) Integer applicationId, Model model) {
+        model.addAttribute("activeMenu", "offers");
         List<PassedCandidateResponse> passedCandidates = offerService.getPassedCandidatesForOffer();
         model.addAttribute("passedCandidates", passedCandidates);
 
@@ -215,7 +218,8 @@ public class OfferController {
             RedirectAttributes flash) {
 
         if (errors.hasErrors()) {
-            List<PassedCandidateResponse> passedCandidates = offerService.getPassedCandidatesForOffer();
+            model.addAttribute("activeMenu", "offers");
+        List<PassedCandidateResponse> passedCandidates = offerService.getPassedCandidatesForOffer();
             model.addAttribute("passedCandidates", passedCandidates);
             model.addAttribute("isEdit", false);
             boolean locked = Boolean.TRUE.equals(isLockedCandidate);
@@ -238,7 +242,8 @@ public class OfferController {
             return "redirect:/offers";
         } catch (BaseBusinessException e) {
             errors.reject("businessError", e.getMessage());
-            List<PassedCandidateResponse> passedCandidates = offerService.getPassedCandidatesForOffer();
+            model.addAttribute("activeMenu", "offers");
+        List<PassedCandidateResponse> passedCandidates = offerService.getPassedCandidatesForOffer();
             model.addAttribute("passedCandidates", passedCandidates);
             model.addAttribute("isEdit", false);
             boolean locked = Boolean.TRUE.equals(isLockedCandidate);
@@ -269,6 +274,7 @@ public class OfferController {
      */
     @GetMapping("/{id}")
     public String viewOfferDetail(@PathVariable Integer id, Model model) {
+        model.addAttribute("activeMenu", "offers");
         OfferDetailResponse detail = offerService.getOfferDetailForHr(id);
         model.addAttribute("detail", detail);
         return "offers/detail";
@@ -282,6 +288,7 @@ public class OfferController {
         try {
             UpdateOfferRequest updateRequest = offerService.getUpdateOfferRequestById(id);
             OfferDetailResponse detail = offerService.getOfferDetailForHr(id);
+            model.addAttribute("activeMenu", "offers");
             model.addAttribute("offerDto", updateRequest);
             model.addAttribute("offerId", id);
             model.addAttribute("detail", detail);
@@ -334,6 +341,7 @@ public class OfferController {
 
         if (errors.hasErrors()) {
             OfferDetailResponse detail = offerService.getOfferDetailForHr(id);
+            model.addAttribute("activeMenu", "offers");
             model.addAttribute("offerId", id);
             model.addAttribute("detail", detail);
             model.addAttribute("isEdit", true);
@@ -350,6 +358,7 @@ public class OfferController {
         } catch (BaseBusinessException e) {
             errors.reject("businessError", e.getMessage());
             OfferDetailResponse detail = offerService.getOfferDetailForHr(id);
+            model.addAttribute("activeMenu", "offers");
             model.addAttribute("offerId", id);
             model.addAttribute("detail", detail);
             model.addAttribute("isEdit", true);
@@ -467,40 +476,6 @@ public class OfferController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(new ApiResponse<>(false, "Đã xảy ra lỗi hệ thống khi từ chối đề xuất nhận việc."));
         }
-    }
-
-    /**
-     * 9c. DIRECTOR APPROVE (FORM POST): Director duyệt Offer Proposal từ Form POST
-     */
-    @PostMapping("/{id}/approve")
-    public String approveOfferForm(
-            @PathVariable Integer id,
-            @RequestParam(required = false, defaultValue = "Phê duyệt trực tiếp") String comments,
-            RedirectAttributes flash) {
-        try {
-            offerService.approveOfferByDirector(id, comments);
-            flash.addFlashAttribute("successMessage", "Đã phê duyệt đề xuất nhận việc thành công!");
-        } catch (BaseBusinessException e) {
-            flash.addFlashAttribute("errorMessage", e.getMessage());
-        }
-        return "redirect:/offers";
-    }
-
-    /**
-     * 9d. DIRECTOR REJECT (FORM POST): Director từ chối Offer Proposal từ Form POST
-     */
-    @PostMapping("/{id}/reject")
-    public String rejectOfferForm(
-            @PathVariable Integer id,
-            @RequestParam(required = false) String comments,
-            RedirectAttributes flash) {
-        try {
-            offerService.rejectOfferByDirector(id, comments);
-            flash.addFlashAttribute("successMessage", "Đã từ chối đề xuất nhận việc thành công!");
-        } catch (BaseBusinessException e) {
-            flash.addFlashAttribute("errorMessage", e.getMessage());
-        }
-        return "redirect:/offers";
     }
 
     /**

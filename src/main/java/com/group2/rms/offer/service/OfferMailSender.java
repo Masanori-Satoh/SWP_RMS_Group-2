@@ -1,4 +1,4 @@
-package com.group2.rms.notification.service;
+package com.group2.rms.offer.service;
 
 import com.group2.rms.offer.entity.OfferProposal;
 import lombok.extern.slf4j.Slf4j;
@@ -8,10 +8,10 @@ import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.stereotype.Service;
 
-import java.time.format.DateTimeFormatter;
-
-/*
- * MAIL: gửi thư mời nhận việc tới ứng viên; không cấu hình SMTP thì chỉ ghi log.
+/**
+ * Gửi email cho luồng Offer: phát hành thư mời nhận việc (Offer Letter) tới ứng viên.
+ * Không có cấu hình SMTP thì chỉ ghi log (mock).
+ * Thông báo in-app cho nội bộ (Giám đốc, HR) nằm ở {@link NotificationService}.
  */
 @Slf4j
 @Service
@@ -38,7 +38,8 @@ public class OfferMailSender {
             }
         }
 
-        // Hòm thư phát triển cá nhân (from khác noreply) thì gửi về địa chỉ cấu hình để người test nhận được
+        // Ưu tiên gửi về email được cấu hình nếu đang dùng hòm thư phát triển cá nhân (from != noreply),
+        // đảm bảo người test nhận được email trực tiếp vào hòm thư cá nhân.
         String targetRecipient = (from != null && !from.isBlank() && !from.contains("noreply"))
                 ? from
                 : candidateEmail;
@@ -56,7 +57,7 @@ public class OfferMailSender {
                 message.setTo(targetRecipient);
                 message.setSubject("Thư mời nhận việc - " + offer.getOfferedPositionTitle());
                 String deadlineInfo = offer.getResponseDeadline() != null
-                        ? "Hạn phản hồi: " + offer.getResponseDeadline().format(DateTimeFormatter.ofPattern("HH:mm dd/MM/yyyy")) + "\n\n"
+                        ? "Hạn phản hồi: " + offer.getResponseDeadline().format(java.time.format.DateTimeFormatter.ofPattern("HH:mm dd/MM/yyyy")) + "\n\n"
                         : "\n";
                 String officialSalary = offer.getProposedSalary() != null
                         ? String.format("%,d VNĐ/tháng", offer.getProposedSalary().longValue()) : "Thỏa thuận";

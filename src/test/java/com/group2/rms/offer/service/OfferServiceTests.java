@@ -21,7 +21,6 @@ import com.group2.rms.jobposting.entity.JobPosting;
 import com.group2.rms.requisition.entity.JobRequisition;
 import com.group2.rms.user.entity.Department;
 import com.group2.rms.offer.dto.PassedCandidateResponse;
-import com.group2.rms.notification.service.OfferMailSender;
 import com.group2.rms.user.entity.User;
 import com.group2.rms.user.entity.Role;
 import com.group2.rms.user.repository.UserRepository;

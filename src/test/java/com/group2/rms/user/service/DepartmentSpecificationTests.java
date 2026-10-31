@@ -26,7 +26,7 @@ import static org.mockito.Mockito.*;
 @SuppressWarnings("unchecked")
 class DepartmentSpecificationTests {
     private final DepartmentRepository departments = mock(DepartmentRepository.class);
-    private final DepartmentService service = new DepartmentService(departments, mock(UserRepository.class), mock(RoleRepository.class));
+    private final DepartmentService service = new DepartmentService(departments, mock(UserRepository.class), mock(RoleRepository.class), org.mockito.Mockito.mock(com.group2.rms.user.service.UserAuditLogger.class));
     private final Root<Department> root = mock(Root.class);
     private final CriteriaBuilder builder = mock(CriteriaBuilder.class);
     private final Path<String> departmentName = mock(Path.class);

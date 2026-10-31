@@ -1,7 +1,7 @@
 # Thống kê thay đổi UI Potential Candidate
 
 - **Ngày tổng hợp:** 28/10/2026.
-- **Người tổng hợp:** LinhDN / Codex, theo yêu cầu người dùng.
+- **Người tổng hợp:** LinhDN, theo yêu cầu người dùng.
 - **Phạm vi báo cáo:** đợt đồng bộ các trang Potential Candidate theo layout Admin hiện tại.
 - **Commit đối chiếu:** `ddd73d63a061ec771311a414d720ba56f85f1b14` — `sync potential candidate v1`, ngày 28/10/2026 lúc 20:38:22, giờ Việt Nam.
 - **Trạng thái khi bắt đầu xuất báo cáo:** Git working tree và index sạch; các thay đổi dưới đây đã có trong commit, không còn là thay đổi chưa lưu của tác vụ trước.
@@ -103,7 +103,7 @@ Các số liệu trên được đối chiếu lại với work log và artifact
 - [Mục công việc chung](../../management/WORK_LOG.md).
 - [UI Catalog](../../architecture/UI/UI_CATALOG.md).
 - [Báo cáo kiến trúc Admin trước đó](2026-10-27-admin-ui-architecture-review.md).
-- Artifact QA cục bộ: `C:/Users/Administrator/.codex/visualizations/2026/10/14/01a13a55-2ffe-7341-ac69-6a4f1c685469/potential-ui-20261028/`, gồm `quality.json`, `contracts.json`, `interactions.json`, `source-verification.json`, ảnh `before/` và `final/`.
+- Artifact QA cục bộ: thư mục QA cục bộ `potential-ui-20261028/`, gồm `quality.json`, `contracts.json`, `interactions.json`, `source-verification.json`, ảnh `before/` và `final/`.
 
 ### Ghi chú lệnh khởi động
 

@@ -6,289 +6,285 @@
 <head>
   <title th:text="${isEdit ? 'Chỉnh sửa Đề xuất nhận việc #' + offerId : 'Tạo Mới Đề Xuất Nhận Việc'}">Tạo Mới Đề Xuất Nhận Việc</title>
   <th:block layout:fragment="styles">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" th:href="@{/css/offers.css}">
+    <link rel="stylesheet" th:href="@{/css/pages/offer-workspace.css}">
+    <link rel="stylesheet" th:href="@{/css/pages/flash-toast.css}">
   </th:block>
 </head>
 <body>
-<main id="main" layout:fragment="content" class="page-content container" tabindex="1">
+<main id="main" layout:fragment="content" class="page-content container adw-page ofw-page" tabindex="-1">
+  <th:block th:replace="~{fragments/ui/admin-workspace :: scene}"></th:block>
 
-  <!-- FLASH MESSAGES -->
-  <div class="page-flash-container" id="pageFlashContainer" th:if="${successMessage != null or errorMessage != null}">
-    <div th:if="${successMessage}" class="page-flash-alert page-flash-success" id="flashSuccessAlert">
-      <i class="fa-solid fa-circle-check"></i>
-      <span th:text="${successMessage}">Thành công</span>
+    <!-- FLASH TOAST MESSAGES -->
+    <th:block th:replace="~{fragments/ui/flash-toast :: flashToast(${successMessage}, ${errorMessage})}"></th:block>
+
+    <!-- PAGE HEADING -->
+    <div class="adw-heading ofw-heading">
+      <h1 class="adw-title ofw-title" th:text="${isEdit ? 'Chỉnh Sửa Đề Xuất Nhận Việc #' + offerId : 'Tạo Mới Đề Xuất Nhận Việc'}">Tạo Mới Đề Xuất Nhận Việc</h1>
     </div>
-    <div th:if="${errorMessage}" class="page-flash-alert page-flash-danger" id="flashErrorAlert">
-      <i class="fa-solid fa-triangle-exclamation"></i>
-      <span th:text="${errorMessage}">Lỗi</span>
-    </div>
-  </div>
-  <script th:if="${successMessage != null or errorMessage != null}">
-    (function() {
-      var flash = document.getElementById('pageFlashContainer');
-      if (flash && !flash.dataset.dismissInit) {
-        flash.dataset.dismissInit = 'true';
-        setTimeout(function() {
-          flash.classList.add('flash-dismissed');
-          setTimeout(function() {
-            flash.style.display = 'none';
-          }, 450);
-        }, 2000);
-      }
-    })();
-  </script>
 
-  <!-- PAGE HEADER -->
-  <div class="page-header">
-    <div>
-      <h1 class="page-title" th:text="${isEdit ? 'Chỉnh Sửa Đề Xuất Nhận Việc #' + offerId : 'Tạo Mới Đề Xuất Nhận Việc'}">Tạo Mới Đề Xuất Nhận Việc</h1>
-      <p class="page-subtitle">
-        <span th:if="${!isEdit}">Chọn ứng viên đã đạt phỏng vấn để thiết lập gói đãi ngộ và điều khoản hợp đồng lao động.</span>
-        <span th:if="${isEdit}">Cập nhật các điều khoản đãi ngộ cho bản thảo đề xuất nhận việc trước khi trình duyệt Giám đốc.</span>
-      </p>
-    </div>
-  </div>
+    <!-- MAIN FORM -->
+    <form id="offerForm" th:object="${offerDto}"
+          th:action="${isEdit ? '/offers/' + offerId + '/edit' : '/offers/create'}"
+          method="post">
+      <input type="hidden" name="isLockedCandidate" th:value="${isLockedCandidate ? 'true' : 'false'}">
 
-
-                <!-- MAIN FORM -->
-                <form id="offerForm" th:object="${offerDto}"
-                      th:action="${isEdit ? '/offers/' + offerId + '/edit' : '/offers/create'}"
-                      method="post">
-  <input type="hidden" name="isLockedCandidate" th:value="${isLockedCandidate ? 'true' : 'false'}">
-
-  <!-- VALIDATION SUMMARY ALERT -->
-  <div th:if="${#fields.hasAnyErrors()}" class="alert alert--danger offer-alert-spacing">
-    <i class="fa-solid fa-triangle-exclamation"></i>
-    <div>
-      <strong>Dữ liệu nhập chưa hợp lệ. Vui lòng kiểm tra lại:</strong>
-      <ul class="offer-error-list">
-        <li th:each="err : ${#fields.allErrors()}"
-            th:text="${#strings.contains(err, 'Failed to convert') or #strings.contains(err, 'typeMismatch') ? (#strings.contains(err, 'expectedStartDate') ? 'Ngày bắt đầu dự kiến không hợp lệ.' : (#strings.contains(err, 'proposedSalary') ? 'Mức lương chính thức phải là số hợp lệ.' : (#strings.contains(err, 'probationSalary') ? 'Mức lương thử việc phải là số hợp lệ.' : (#strings.contains(err, 'probationDays') ? 'Thời gian thử việc phải là số ngày hợp lệ.' : 'Dữ liệu nhập vào không đúng định dạng.')))) : err}"></li>
-      </ul>
-    </div>
-  </div>
-
-  <!-- STEP 1: CHỌN ỨNG VIÊN ĐỖ PHỎNG VẤN (CREATE) HOẶC XEM HỒ SƠ (EDIT) -->
-  <div class="card">
-    <div class="card-header">
-      <h2 class="card-title"><i class="fa-solid fa-user"></i> 1. Thông Tin Ứng Viên Đỗ Phỏng Vấn</h2>
-    </div>
-    <div class="card-body">
-
-      <!-- Trường hợp 1: TẠO MỚI THEO NGỮ CẢNH CỤ THỂ (Cố định ứng viên, không cho chọn ứng viên khác) -->
-      <div th:if="${!isEdit and isLockedCandidate and fixedCandidate != null}">
-        <div class="form-group">
-          <label class="form-label" for="fixedCandidateBar">Chọn ứng viên chờ tạo đề xuất nhận việc</label>
-          <div id="fixedCandidateBar" class="form-select offer-candidate-select-fixed">
-            <span th:text="${fixedCandidate.candidateName} + ' - ' + ${fixedCandidate.appliedPosition} + ' (' + ${fixedCandidate.departmentName} + ')'">
-              Huỳnh Văn Toàn - Chuyên Viên Phát Triển Kinh Doanh B2B (Software Solutions) (Sales & Marketing)
-            </span>
-          </div>
-          <input type="hidden" th:field="*{applicationId}" th:value="${fixedCandidate.applicationId}">
+      <!-- VALIDATION SUMMARY ALERT -->
+      <div th:if="${#fields.hasAnyErrors()}" class="adw-validation-summary ofw-validation-summary" role="alert" tabindex="-1">
+        <div class="ofw-validation-header">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="m10.29 3.86-8.58 15A2 2 0 0 0 3.43 22h17.14a2 2 0 0 0 1.72-3.14l-8.58-15a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+          <h2>Dữ liệu nhập chưa hợp lệ. Vui lòng kiểm tra lại:</h2>
         </div>
+        <ul class="ofw-error-list">
+          <li th:each="err : ${#fields.allErrors()}"
+              th:text="${#strings.contains(err, 'Failed to convert') or #strings.contains(err, 'typeMismatch') ? (#strings.contains(err, 'expectedStartDate') ? 'Ngày bắt đầu dự kiến không hợp lệ.' : (#strings.contains(err, 'proposedSalary') ? 'Mức lương chính thức phải là số hợp lệ.' : (#strings.contains(err, 'probationSalary') ? 'Mức lương thử việc phải là số hợp lệ.' : (#strings.contains(err, 'probationDays') ? 'Thời gian thử việc phải là số ngày hợp lệ.' : 'Dữ liệu nhập vào không đúng định dạng.')))) : err}"></li>
+        </ul>
+      </div>
 
-        <div class="offer-group-a-box offer-group-a-box--locked">
-          <div class="detail-grid-3">
-            <div>
-              <div class="detail-item-label">Mã Ứng viên</div>
-              <div class="detail-item-value" th:text="${fixedCandidate.candidateId != null ? '#' + fixedCandidate.candidateId : '-'}">#51</div>
+      <!-- STEP 1: CHỌN ỨNG VIÊN ĐỖ PHỎNG VẤN (CREATE) HOẶC XEM HỒ SƠ (EDIT) -->
+      <div class="card adw-surface ofw-card">
+        <div class="adw-panel-heading ofw-card-header">
+          <div class="ofw-panel-title-wrap">
+            <span class="ofw-step-badge" aria-hidden="true">1</span>
+            <h2 class="adw-panel-title">Thông Tin Ứng Viên Đỗ Phỏng Vấn</h2>
+          </div>
+        </div>
+        <div class="ofw-card-body">
+
+          <!-- Trường hợp 1: TẠO MỚI THEO NGỮ CẢNH CỤ THỂ (Cố định ứng viên, không cho chọn ứng viên khác) -->
+          <div th:if="${!isEdit and isLockedCandidate and fixedCandidate != null}">
+            <div class="form-group">
+              <label class="form-label" for="fixedCandidateBar">Ứng viên chờ tạo đề xuất nhận việc</label>
+              <div id="fixedCandidateBar" class="ofw-fixed-candidate-bar">
+                <span class="ofw-candidate-badge">
+                  <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                  Hồ sơ cố định
+                </span>
+                <span class="ofw-fixed-candidate-text" th:text="${fixedCandidate.candidateName} + ' - ' + ${fixedCandidate.appliedPosition} + ' (' + ${fixedCandidate.departmentName} + ')'">
+                  Huỳnh Văn Toàn - Chuyên Viên Phát Triển Kinh Doanh B2B (Software Solutions) (Sales & Marketing)
+                </span>
+              </div>
+              <input type="hidden" th:field="*{applicationId}" th:value="${fixedCandidate.applicationId}">
             </div>
-            <div>
-              <div class="detail-item-label">Họ và tên</div>
-              <div class="detail-item-value offer-font-bold" th:text="${fixedCandidate.candidateName}">Huỳnh Văn Toàn</div>
-            </div>
-            <div>
-              <div class="detail-item-label">Email</div>
-              <div class="detail-item-value" th:text="${fixedCandidate.email}">toan.van.huynh@fpt.edu.vn</div>
-            </div>
-            <div>
-              <div class="detail-item-label">Số điện thoại</div>
-              <div class="detail-item-value" th:text="${fixedCandidate.phoneNumber != null ? fixedCandidate.phoneNumber : '-'}">0708883823</div>
-            </div>
-            <div>
-              <div class="detail-item-label">Vị trí ứng tuyển</div>
-              <div class="detail-item-value" th:text="${fixedCandidate.appliedPosition}">Chuyên Viên Phát Triển Kinh Doanh B2B</div>
-            </div>
-            <div>
-              <div class="detail-item-label">Phòng ban</div>
-              <div class="detail-item-value" th:text="${fixedCandidate.departmentName}">Sales & Marketing</div>
-            </div>
-            <div>
-              <div class="detail-item-label">Mã yêu cầu tuyển dụng</div>
-              <div class="detail-item-value" th:text="${fixedCandidate.requisitionId != null ? '#' + fixedCandidate.requisitionId : '-'}">#4</div>
-            </div>
-            <div>
-              <div class="detail-item-label">Lương đề xuất của Trưởng bộ phận</div>
-              <div class="detail-item-value offer-salary-highlight" th:text="${fixedCandidate.recommendedSalary != null ? #numbers.formatDecimal(fixedCandidate.recommendedSalary, 1, 'POINT', 0, 'COMMA') + ' VNĐ' : 'Chưa có gợi ý'}">20.000.000 VNĐ</div>
-            </div>
-            <div>
-              <div class="detail-item-label">Trưởng bộ phận chuyên môn</div>
-              <div class="detail-item-value" th:text="${fixedCandidate.hiringManagerName != null ? fixedCandidate.hiringManagerName : '-'}">Đỗ Thu Hương</div>
+
+            <div class="ofw-candidate-preview-box">
+              <div class="ofw-info-grid">
+                <div class="ofw-info-item">
+                  <span class="ofw-info-label">Mã Ứng viên</span>
+                  <span class="ofw-info-value" th:text="${fixedCandidate.candidateId != null ? '#' + fixedCandidate.candidateId : '-'}">#51</span>
+                </div>
+                <div class="ofw-info-item">
+                  <span class="ofw-info-label">Họ và tên</span>
+                  <span class="ofw-info-value ofw-info-value--strong" th:text="${fixedCandidate.candidateName}">Huỳnh Văn Toàn</span>
+                </div>
+                <div class="ofw-info-item">
+                  <span class="ofw-info-label">Email</span>
+                  <span class="ofw-info-value" th:text="${fixedCandidate.email}">toan.van.huynh@fpt.edu.vn</span>
+                </div>
+                <div class="ofw-info-item">
+                  <span class="ofw-info-label">Số điện thoại</span>
+                  <span class="ofw-info-value" th:text="${fixedCandidate.phoneNumber != null ? fixedCandidate.phoneNumber : '-'}">0708883823</span>
+                </div>
+                <div class="ofw-info-item">
+                  <span class="ofw-info-label">Vị trí ứng tuyển</span>
+                  <span class="ofw-info-value" th:text="${fixedCandidate.appliedPosition}">Chuyên Viên Phát Triển Kinh Doanh B2B</span>
+                </div>
+                <div class="ofw-info-item">
+                  <span class="ofw-info-label">Phòng ban</span>
+                  <span class="ofw-info-value" th:text="${fixedCandidate.departmentName}">Sales & Marketing</span>
+                </div>
+                <div class="ofw-info-item">
+                  <span class="ofw-info-label">Mã yêu cầu tuyển dụng</span>
+                  <span class="ofw-info-value" th:text="${fixedCandidate.requisitionId != null ? '#' + fixedCandidate.requisitionId : '-'}">#4</span>
+                </div>
+                <div class="ofw-info-item">
+                  <span class="ofw-info-label">Lương đề xuất của Trưởng bộ phận</span>
+                  <div>
+                    <div class="ofw-salary-badge" th:text="${fixedCandidate.recommendedSalary != null ? #numbers.formatDecimal(fixedCandidate.recommendedSalary, 1, 'POINT', 0, 'COMMA') + ' VNĐ' : 'Chưa có gợi ý'}">20.000.000 VNĐ</div>
+                  </div>
+                </div>
+                <div class="ofw-info-item">
+                  <span class="ofw-info-label">Trưởng bộ phận chuyên môn</span>
+                  <span class="ofw-info-value" th:text="${fixedCandidate.hiringManagerName != null ? fixedCandidate.hiringManagerName : '-'}">Đỗ Thu Hương</span>
+                </div>
+              </div>
+              <div class="ofw-comments-box">
+                <span class="ofw-info-label">Đánh giá Hội đồng phỏng vấn</span>
+                <p class="ofw-info-comments" th:text="${fixedCandidate.interviewSummaryComments != null ? fixedCandidate.interviewSummaryComments : 'Đạt yêu cầu đầu vào, đề xuất gửi thư mời nhận việc (Offer).'}">-</p>
+              </div>
             </div>
           </div>
-          <div class="offer-mt-2">
-            <div class="detail-item-label">Đánh giá Hội đồng phỏng vấn:</div>
-            <div class="detail-item-value offer-font-italic-muted" th:text="${fixedCandidate.interviewSummaryComments != null ? fixedCandidate.interviewSummaryComments : 'Đạt yêu cầu đầu vào, đề xuất gửi thư mời nhận việc (Offer).'}">-</div>
+
+          <!-- Trường hợp 2: TẠO MỚI TỰ DO (HR vào từ trang Quản lý Offer, chọn từ danh sách) -->
+          <div th:if="${!isEdit and (!isLockedCandidate or fixedCandidate == null)}">
+            <div class="form-group">
+              <label class="form-label form-label--required" for="createAppSelect">Chọn ứng viên chờ tạo đề xuất nhận việc</label>
+              <select id="createAppSelect" th:field="*{applicationId}" class="form-select" onchange="handleSelectPassedCandidate(this.value)" required>
+                <option value="">-- Chọn ứng viên đã đỗ phỏng vấn --</option>
+                <option th:each="c : ${passedCandidates}"
+                        th:value="${c.applicationId}"
+                        th:attr="data-cand-id=${c.candidateId}, data-cand-name=${c.candidateName}, data-email=${c.email}, data-phone=${c.phoneNumber}, data-pos=${c.appliedPosition}, data-dept=${c.departmentName}, data-req-id=${c.requisitionId}, data-work-location=${c.workLocation}, data-comments=${c.interviewSummaryComments}, data-recom-salary=${c.recommendedSalary != null ? #numbers.formatDecimal(c.recommendedSalary, 0, 0) : ''}, data-hm=${c.hiringManagerName}"
+                        th:text="${c.candidateName} + ' - ' + ${c.appliedPosition} + ' (' + ${c.departmentName} + ')'">
+                  Nguyễn Văn A - Backend Dev (Engineering)
+                </option>
+              </select>
+              <p class="form-error" th:if="${#fields.hasErrors('applicationId')}" th:errors="*{applicationId}"></p>
+            </div>
+
+            <!-- Khung xem trước thông tin Group A (Tự động cập nhật qua JS khi chọn dropdown) -->
+            <div id="groupASection" class="ofw-candidate-preview-box" style="display: none;">
+              <div class="ofw-info-grid">
+                <div class="ofw-info-item"><span class="ofw-info-label">Mã Ứng viên</span><span class="ofw-info-value" id="dispCandId">-</span></div>
+                <div class="ofw-info-item"><span class="ofw-info-label">Họ và tên</span><span class="ofw-info-value ofw-info-value--strong" id="dispCandName">-</span></div>
+                <div class="ofw-info-item"><span class="ofw-info-label">Email</span><span class="ofw-info-value" id="dispCandEmail">-</span></div>
+                <div class="ofw-info-item"><span class="ofw-info-label">Số điện thoại</span><span class="ofw-info-value" id="dispCandPhone">-</span></div>
+                <div class="ofw-info-item"><span class="ofw-info-label">Vị trí ứng tuyển</span><span class="ofw-info-value" id="dispPosition">-</span></div>
+                <div class="ofw-info-item"><span class="ofw-info-label">Phòng ban</span><span class="ofw-info-value" id="dispDept">-</span></div>
+                <div class="ofw-info-item"><span class="ofw-info-label">Mã yêu cầu tuyển dụng</span><span class="ofw-info-value" id="dispReqId">-</span></div>
+                <div class="ofw-info-item"><span class="ofw-info-label">Lương đề xuất của Trưởng bộ phận</span><div><div class="ofw-salary-badge" id="dispRecomSalary">-</div></div></div>
+                <div class="ofw-info-item"><span class="ofw-info-label">Trưởng bộ phận chuyên môn</span><span class="ofw-info-value" id="dispHm">-</span></div>
+              </div>
+              <div class="ofw-comments-box">
+                <span class="ofw-info-label">Đánh giá Hội đồng phỏng vấn</span>
+                <p class="ofw-info-comments" id="dispInterviewComments">-</p>
+              </div>
+            </div>
           </div>
+
+          <!-- Trường hợp CHỈNH SỬA: Hiển thị thông tin ứng viên cố định (Read-only) -->
+          <div th:if="${isEdit and detail != null}">
+            <div class="ofw-candidate-preview-box">
+              <div class="ofw-info-grid">
+                <div class="ofw-info-item"><span class="ofw-info-label">Họ và tên ứng viên</span><span class="ofw-info-value ofw-info-value--strong" th:text="${detail.candidateName}">-</span></div>
+                <div class="ofw-info-item"><span class="ofw-info-label">Email</span><span class="ofw-info-value" th:text="${detail.candidateEmail}">-</span></div>
+                <div class="ofw-info-item"><span class="ofw-info-label">Số điện thoại</span><span class="ofw-info-value" th:text="${detail.candidatePhone}">-</span></div>
+                <div class="ofw-info-item"><span class="ofw-info-label">Vị trí ứng tuyển</span><span class="ofw-info-value" th:text="${detail.appliedPosition}">-</span></div>
+                <div class="ofw-info-item"><span class="ofw-info-label">Phòng ban</span><span class="ofw-info-value" th:text="${detail.departmentName}">-</span></div>
+                <div class="ofw-info-item"><span class="ofw-info-label">Mã yêu cầu tuyển dụng</span><span class="ofw-info-value" th:text="'#' + ${detail.requisitionId}">-</span></div>
+              </div>
+            </div>
+          </div>
+
         </div>
       </div>
 
-      <!-- Trường hợp 2: TẠO MỚI TỰ DO (HR vào từ trang Quản lý Offer, chọn từ danh sách) -->
-      <div th:if="${!isEdit and (!isLockedCandidate or fixedCandidate == null)}">
-        <div class="form-group">
-          <label class="form-label form-label--required" for="createAppSelect">Chọn ứng viên chờ tạo đề xuất nhận việc</label>
-          <select id="createAppSelect" th:field="*{applicationId}" class="form-select" onchange="handleSelectPassedCandidate(this.value)" required>
-            <option value="">-- Chọn ứng viên đã đỗ phỏng vấn --</option>
-            <option th:each="c : ${passedCandidates}"
-                    th:value="${c.applicationId}"
-                    th:attr="data-cand-id=${c.candidateId}, data-cand-name=${c.candidateName}, data-email=${c.email}, data-phone=${c.phoneNumber}, data-pos=${c.appliedPosition}, data-dept=${c.departmentName}, data-req-id=${c.requisitionId}, data-work-location=${c.workLocation}, data-comments=${c.interviewSummaryComments}, data-recom-salary=${c.recommendedSalary != null ? #numbers.formatDecimal(c.recommendedSalary, 0, 0) : ''}, data-hm=${c.hiringManagerName}"
-                    th:text="${c.candidateName} + ' - ' + ${c.appliedPosition} + ' (' + ${c.departmentName} + ')'">
-              Nguyễn Văn A - Backend Dev (Engineering)
-            </option>
-          </select>
-          <p class="form-error" th:if="${#fields.hasErrors('applicationId')}" th:errors="*{applicationId}"></p>
-        </div>
-
-        <!-- Khung xem trước thông tin Group A (Tự động cập nhật qua JS khi chọn dropdown) -->
-        <div id="groupASection" class="offer-group-a-box">
-          <div class="detail-grid-3">
-            <div><div class="detail-item-label">Mã Ứng viên</div><div class="detail-item-value" id="dispCandId">-</div></div>
-            <div><div class="detail-item-label">Họ và tên</div><div class="detail-item-value offer-font-bold" id="dispCandName">-</div></div>
-            <div><div class="detail-item-label">Email</div><div class="detail-item-value" id="dispCandEmail">-</div></div>
-            <div><div class="detail-item-label">Số điện thoại</div><div class="detail-item-value" id="dispCandPhone">-</div></div>
-            <div><div class="detail-item-label">Vị trí ứng tuyển</div><div class="detail-item-value" id="dispPosition">-</div></div>
-            <div><div class="detail-item-label">Phòng ban</div><div class="detail-item-value" id="dispDept">-</div></div>
-            <div><div class="detail-item-label">Mã yêu cầu tuyển dụng</div><div class="detail-item-value" id="dispReqId">-</div></div>
-            <div><div class="detail-item-label">Lương đề xuất của Trưởng bộ phận</div><div class="detail-item-value offer-salary-highlight" id="dispRecomSalary">-</div></div>
-            <div><div class="detail-item-label">Trưởng bộ phận chuyên môn</div><div class="detail-item-value" id="dispHm">-</div></div>
-          </div>
-          <div class="offer-mt-2">
-            <div class="detail-item-label">Đánh giá Hội đồng phỏng vấn:</div>
-            <div class="detail-item-value offer-font-italic-muted" id="dispInterviewComments">-</div>
+      <!-- STEP 2: THÔNG TIN ĐÃI NGỘ & ĐIỀU KHOẢN (GROUP B) -->
+      <div class="card adw-surface ofw-card">
+        <div class="adw-panel-heading ofw-card-header">
+          <div class="ofw-panel-title-wrap">
+            <span class="ofw-step-badge" aria-hidden="true">2</span>
+            <h2 class="adw-panel-title">Thông Tin Đãi Ngộ & Điều Khoản Đề Xuất</h2>
           </div>
         </div>
-      </div>
+        <div class="ofw-card-body">
 
-      <!-- Trường hợp CHỈNH SỬA: Hiển thị thông tin ứng viên cố định (Read-only) -->
-      <div th:if="${isEdit and detail != null}">
-        <div class="detail-grid-3">
-          <div><div class="detail-item-label">Họ và tên ứng viên</div><div class="detail-item-value offer-font-bold" th:text="${detail.candidateName}">-</div></div>
-          <div><div class="detail-item-label">Email</div><div class="detail-item-value" th:text="${detail.candidateEmail}">-</div></div>
-          <div><div class="detail-item-label">Số điện thoại</div><div class="detail-item-value" th:text="${detail.candidatePhone}">-</div></div>
-          <div><div class="detail-item-label">Vị trí ứng tuyển</div><div class="detail-item-value" th:text="${detail.appliedPosition}">-</div></div>
-          <div><div class="detail-item-label">Phòng ban</div><div class="detail-item-value" th:text="${detail.departmentName}">-</div></div>
-          <div><div class="detail-item-label">Mã yêu cầu tuyển dụng</div><div class="detail-item-value" th:text="'#' + ${detail.requisitionId}">-</div></div>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- STEP 2: THÔNG TIN ĐÃI NGỘ & ĐIỀU KHOẢN (GROUP B) -->
-  <div class="card">
-    <div class="card-header">
-      <h2 class="card-title"><i class="fa-solid fa-coins"></i> 2. Thông Tin Đãi Ngộ & Điều Khoản Đề Xuất</h2>
-    </div>
-    <div class="card-body">
-
-      <div class="form-group">
-        <label class="form-label form-label--required" for="offeredPositionTitle">Vị trí chức danh chính thức đề xuất</label>
-        <input type="text" id="offeredPositionTitle" th:field="*{offeredPositionTitle}" class="form-input" placeholder="VD: Senior Java Developer" required>
-        <p class="form-error" th:if="${#fields.hasErrors('offeredPositionTitle')}" th:errors="*{offeredPositionTitle}"></p>
-      </div>
-
-      <div class="grid-2-col">
-        <div class="form-group">
-          <div class="offer-field-header-row">
-            <label class="form-label form-label--required" for="proposedSalary">
-              Lương chính thức (VNĐ/tháng)
-            </label>
+          <div class="form-group">
+            <label class="form-label form-label--required" for="offeredPositionTitle">Vị trí chức danh chính thức đề xuất</label>
+            <input type="text" id="offeredPositionTitle" th:field="*{offeredPositionTitle}" class="form-input" placeholder="VD: Senior Java Developer" required>
+            <p class="form-error" th:if="${#fields.hasErrors('offeredPositionTitle')}" th:errors="*{offeredPositionTitle}"></p>
           </div>
-          <input type="number" id="proposedSalary" th:field="*{proposedSalary}" class="form-input"
-                 placeholder="VD: 25000000" min="0" step="any"
-                 oninput="autoCalculateProbationSalary()" required>
-          <p class="form-error" th:if="${#fields.hasErrors('proposedSalary')}"
-             th:text="${#strings.contains(#fields.errors('proposedSalary')[0], 'Failed to convert') ? 'Mức lương chính thức phải là số hợp lệ.' : #fields.errors('proposedSalary')[0]}"></p>
-        </div>
 
-        <div class="form-group">
-          <div class="offer-field-header-row">
-            <label class="form-label form-label--required" for="probationSalary">
-              Lương thử việc (VNĐ/tháng)
-            </label>
-            <button type="button" class="btn btn--sm offer-btn-calc-probation" onclick="autoCalculateProbationSalary(true)"
-                    title="Gợi ý mức sàn 85% theo quy định BR-OFF-01">
-              <i class="fa-solid fa-wand-magic-sparkles"></i> Gợi ý 85%
-            </button>
+          <div class="grid-2-col">
+            <div class="form-group">
+              <div class="ofw-field-header-row">
+                <label class="form-label form-label--required" for="proposedSalary">
+                  Lương chính thức (VNĐ/tháng)
+                </label>
+              </div>
+              <input type="number" id="proposedSalary" th:field="*{proposedSalary}" class="form-input"
+                     placeholder="VD: 25000000" min="0" step="any"
+                     oninput="autoCalculateProbationSalary()" required>
+              <p class="form-error" th:if="${#fields.hasErrors('proposedSalary')}"
+                 th:text="${#strings.contains(#fields.errors('proposedSalary')[0], 'Failed to convert') ? 'Mức lương chính thức phải là số hợp lệ.' : #fields.errors('proposedSalary')[0]}"></p>
+            </div>
+
+            <div class="form-group">
+              <div class="ofw-field-header-row">
+                <label class="form-label form-label--required" for="probationSalary">
+                  Lương thử việc (VNĐ/tháng)
+                </label>
+                <button type="button" class="btn btn--secondary btn--sm ofw-btn-calc" onclick="autoCalculateProbationSalary(true)"
+                        title="Gợi ý mức sàn 85% theo quy định BR-OFF-01">
+                  <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="m12 3-1.9 5.8a2 2 0 0 1-1.3 1.3L3 12l5.8 1.9a2 2 0 0 1 1.3 1.3L12 21l1.9-5.8a2 2 0 0 1 1.3-1.3L21 12l-5.8-1.9a2 2 0 0 1-1.3-1.3Z"/></svg>
+                  <span>Gợi ý 85%</span>
+                </button>
+              </div>
+              <input type="number" id="probationSalary" th:field="*{probationSalary}" class="form-input"
+                     placeholder="Tối thiểu 85% lương chính thức" min="0" step="any"
+                     oninput="validateProbationRuleUi()" required>
+              <div id="probationRuleNotice" class="ofw-rule-notice">
+                <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+                <span>Tuân thủ quy định tối thiểu 85% lương chính thức.</span>
+              </div>
+              <p class="form-error" th:if="${#fields.hasErrors('probationSalary')}"
+                 th:text="${#strings.contains(#fields.errors('probationSalary')[0], 'Failed to convert') ? 'Mức lương thử việc phải là số hợp lệ.' : #fields.errors('probationSalary')[0]}"></p>
+            </div>
           </div>
-          <input type="number" id="probationSalary" th:field="*{probationSalary}" class="form-input"
-                 placeholder="Tối thiểu 85% lương chính thức" min="0" step="any"
-                 oninput="validateProbationRuleUi()" required>
-          <div id="probationRuleNotice" class="form-hint offer-rule-notice">
-            <i class="fa-solid fa-circle-check"></i> Tuân thủ quy định tối thiểu 85% lương chính thức.
+
+          <div class="grid-2-col">
+            <div class="form-group">
+              <label class="form-label form-label--required" for="probationDays">Thời gian thử việc (ngày)</label>
+              <input type="number" id="probationDays" th:field="*{probationDays}" class="form-input" min="1" max="365" placeholder="60" required>
+              <p class="form-error" th:if="${#fields.hasErrors('probationDays')}"
+                 th:text="${#strings.contains(#fields.errors('probationDays')[0], 'Failed to convert') ? 'Thời gian thử việc phải là số ngày hợp lệ.' : #fields.errors('probationDays')[0]}"></p>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label form-label--required" for="responsePeriodDays">Thời hạn phản hồi (ngày)</label>
+              <input type="number" id="responsePeriodDays" th:field="*{responsePeriodDays}" class="form-input" min="1" max="60" placeholder="5" oninput="updateMinExpectedStartDate()" required>
+              <div class="form-hint">
+                Hạn phản hồi = Thời điểm Bộ phận Tuyển dụng phát hành + số ngày này (mặc định 5 ngày).
+              </div>
+              <p class="form-error" th:if="${#fields.hasErrors('responsePeriodDays')}"
+                 th:text="${#strings.contains(#fields.errors('responsePeriodDays')[0], 'Failed to convert') ? 'Thời hạn phản hồi phải là số ngày hợp lệ (1-60 ngày).' : #fields.errors('responsePeriodDays')[0]}"></p>
+            </div>
           </div>
-          <p class="form-error" th:if="${#fields.hasErrors('probationSalary')}"
-             th:text="${#strings.contains(#fields.errors('probationSalary')[0], 'Failed to convert') ? 'Mức lương thử việc phải là số hợp lệ.' : #fields.errors('probationSalary')[0]}"></p>
-        </div>
-      </div>
 
-      <div class="grid-2-col">
-        <div class="form-group">
-          <label class="form-label form-label--required" for="probationDays">Thời gian thử việc (ngày)</label>
-          <input type="number" id="probationDays" th:field="*{probationDays}" class="form-input" min="1" max="365" placeholder="60" required>
-          <p class="form-error" th:if="${#fields.hasErrors('probationDays')}"
-             th:text="${#strings.contains(#fields.errors('probationDays')[0], 'Failed to convert') ? 'Thời gian thử việc phải là số ngày hợp lệ.' : #fields.errors('probationDays')[0]}"></p>
-        </div>
+          <div class="grid-2-col">
+            <div class="form-group">
+              <label class="form-label form-label--required" for="expectedStartDate">Ngày bắt đầu dự kiến</label>
+              <input type="date" id="expectedStartDate" th:field="*{expectedStartDate}" class="form-input" max="2099-12-31" required>
+              <p class="form-error" th:if="${#fields.hasErrors('expectedStartDate')}"
+                 th:text="${#strings.contains(#fields.errors('expectedStartDate')[0], 'Failed to convert') ? 'Ngày bắt đầu dự kiến không hợp lệ.' : #fields.errors('expectedStartDate')[0]}"></p>
+            </div>
 
-        <div class="form-group">
-          <label class="form-label form-label--required" for="responsePeriodDays">Thời hạn phản hồi (ngày)</label>
-          <input type="number" id="responsePeriodDays" th:field="*{responsePeriodDays}" class="form-input" min="1" max="60" placeholder="5" oninput="updateMinExpectedStartDate()" required>
-          <div class="form-hint">
-            Hạn phản hồi = Thời điểm Bộ phận Tuyển dụng phát hành + số ngày này (mặc định 5 ngày).
+            <div class="form-group">
+              <label class="form-label form-label--required" for="workLocation">Địa điểm làm việc</label>
+              <input type="text" id="workLocation" th:field="*{workLocation}" class="form-input" placeholder="Địa điểm làm việc" required>
+              <p class="form-error" th:if="${#fields.hasErrors('workLocation')}" th:errors="*{workLocation}"></p>
+            </div>
           </div>
-          <p class="form-error" th:if="${#fields.hasErrors('responsePeriodDays')}"
-             th:text="${#strings.contains(#fields.errors('responsePeriodDays')[0], 'Failed to convert') ? 'Thời hạn phản hồi phải là số ngày hợp lệ (1-60 ngày).' : #fields.errors('responsePeriodDays')[0]}"></p>
+
+          <div class="form-group">
+            <label class="form-label" for="benefitsPackage">Gói phúc lợi & Chế độ đãi ngộ <span class="ofw-hint-inline">(Không bắt buộc)</span></label>
+            <textarea id="benefitsPackage" th:field="*{benefitsPackage}" class="form-textarea" rows="4"
+                      placeholder="Bảo hiểm sức khỏe, phụ cấp ăn trưa, thưởng tháng 13..."></textarea>
+          </div>
+
         </div>
       </div>
 
-      <div class="grid-2-col">
-        <div class="form-group">
-          <label class="form-label form-label--required" for="expectedStartDate">Ngày bắt đầu dự kiến</label>
-          <input type="date" id="expectedStartDate" th:field="*{expectedStartDate}" class="form-input" max="2099-12-31" required>
-          <p class="form-error" th:if="${#fields.hasErrors('expectedStartDate')}"
-             th:text="${#strings.contains(#fields.errors('expectedStartDate')[0], 'Failed to convert') ? 'Ngày bắt đầu dự kiến không hợp lệ.' : #fields.errors('expectedStartDate')[0]}"></p>
-        </div>
-
-        <div class="form-group">
-          <label class="form-label form-label--required" for="workLocation">Địa điểm làm việc</label>
-          <input type="text" id="workLocation" th:field="*{workLocation}" class="form-input" placeholder="Địa điểm làm việc" required>
-          <p class="form-error" th:if="${#fields.hasErrors('workLocation')}" th:errors="*{workLocation}"></p>
-        </div>
+      <!-- FOOTER ACTIONS -->
+      <div class="ofw-form-actions">
+        <a th:href="${isEdit ? '/offers/' + offerId : '/offers'}" class="btn btn--secondary">Hủy bỏ</a>
+        <!-- Submit as Draft -->
+        <button type="submit" name="isDraft" value="true" class="btn btn--secondary">
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+          <span>Lưu bản nháp</span>
+        </button>
+        <!-- Submit to Director -->
+        <button type="submit" name="isDraft" value="false" class="btn btn--primary">
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+          <span>Trình Giám Đốc</span>
+        </button>
       </div>
 
-      <div class="form-group">
-        <label class="form-label" for="benefitsPackage">Gói phúc lợi & Chế độ đãi ngộ <span class="offer-hint-inline">(Không bắt buộc)</span></label>
-        <textarea id="benefitsPackage" th:field="*{benefitsPackage}" class="form-textarea" rows="4"
-                  placeholder="Bảo hiểm sức khỏe, phụ cấp ăn trưa, thưởng tháng 13..."></textarea>
-      </div>
-    </div>
-  </div>
-
-  <!-- FOOTER ACTIONS -->
-  <div class="form-actions">
-    <a th:href="${isEdit ? '/offers/' + offerId : '/offers'}" class="btn btn--secondary">Hủy bỏ</a>
-    <!-- Submit as Draft -->
-    <button type="submit" name="isDraft" value="true" class="btn btn--secondary">
-      <i class="fa-regular fa-floppy-disk"></i> Lưu bản nháp
-    </button>
-    <!-- Submit to Director -->
-    <button type="submit" name="isDraft" value="false" class="btn btn--primary">
-      <i class="fa-solid fa-paper-plane"></i> Trình Giám Đốc
-    </button>
-  </div>
-</form>
+    </form>
+</main>
 
 <th:block layout:fragment="scripts">
+  <th:block th:replace="~{fragments/ui/admin-workspace :: scripts}"></th:block>
+  <script th:src="@{/js/pages/flash-toast.js}" defer></script>
   <script th:src="@{/js/offers.js}" defer></script>
 </th:block>
 </body>

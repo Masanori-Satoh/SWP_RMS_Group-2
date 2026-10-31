@@ -555,4 +555,30 @@ class TalentPoolRecommendationTests {
         target.getRequisition().setHiringManager(null);
         assertEquals(false, pool.canRecommend(8));
     }
+
+    @Test
+    void recommendationContactsAndToneFollowOriginalStructuredDecision() {
+        when(current.requireUser()).thenReturn(hr);
+        when(applications.findDetailById(219)).thenReturn(Optional.of(draft));
+        when(audit.has("Application", 219, "TalentPoolHrRecommended")).thenReturn(true);
+        draft.getCandidate().setAccount(User.builder().fullName("An Võ").email("an@example.com").phoneNumber("0901234567").build());
+        var origin = ApplicationReview.builder().reviewId(1).reviewer(hr).reviewerRole("HR").decision("Hold")
+                .reviewedAt(java.time.LocalDateTime.of(2026, 10, 30, 10, 0)).build();
+        var pass = ApplicationReview.builder().reviewId(2).reviewer(hm).reviewerRole("HiringManager").decision("Pass").build();
+        var fail = ApplicationReview.builder().reviewId(2).reviewer(hm).reviewerRole("HiringManager").decision("Fail").build();
+        when(reviews.findWithReviewerByApplicationId(219)).thenReturn(List.of(origin), List.of(origin, pass), List.of(origin, fail), List.of(origin));
+        var pending = pool.recommendation(219, 11);
+        assertEquals("an@example.com", pending.email());
+        assertEquals("0901234567", pending.phoneNumber());
+        assertEquals("pending", pending.stateKey());
+        assertEquals(false, pending.canDecide());
+        var accepted = pool.recommendation(219, 11);
+        assertEquals("accepted", accepted.stateKey());
+        assertEquals("success", accepted.statusTone());
+        var rejected = pool.recommendation(219, 11);
+        assertEquals("rejected", rejected.stateKey());
+        assertEquals("neutral", rejected.statusTone());
+        draft.setApplicationStatus("Rejected");
+        assertEquals("closed", pool.recommendation(219, 11).stateKey());
+    }
 }

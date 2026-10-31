@@ -112,21 +112,50 @@ public class TalentPoolService {
     }
 
     public TalentPoolDetailResponse detail(Integer id) {
-        actor();
+        return detail(id, null);
+    }
+
+    public TalentPoolDetailResponse detail(Integer id, Integer sourceApplicationId) {
+        User user = actor();
         Candidate candidate = candidate(id);
-        if (!candidate.isPotential())
-            throw new ResourceNotFoundException("Ứng viên chưa nằm trong kho tiềm năng.");
-        return new TalentPoolDetailResponse(candidateResponse(candidate), true,
+        if (!candidate.isPotential()) {
+            if (sourceApplicationId == null)
+                throw new ResourceNotFoundException("Ứng viên chưa nằm trong kho tiềm năng.");
+            requireBookmarkSource(user, id, sourceApplicationId);
+        }
+        return new TalentPoolDetailResponse(candidateResponse(candidate), candidate.isPotential(),
                 notesFor(id), poolApplications.findPreviousCvByCandidateId(id).stream()
                         .map(this::cvDetail)
-                        .toList());
+                        .toList(), candidate.getDateOfBirth(), candidate.getGender(), candidate.getAddress(),
+                candidate.getCandidateSource(), candidate.getLinkedInUrl(), candidate.getPortfolioUrl());
+    }
+
+    /** A detail-page toggle uses the same application visibility rules as the existing bookmark. */
+    public Integer bookmarkSource(Integer candidateId) {
+        User user = actor();
+        return applications.findByCandidate_CandidateIdOrderByApplicationIdDesc(candidateId).stream()
+                .filter(application -> applicationAccess.canView(user, application))
+                .map(Application::getApplicationId).findFirst().orElse(null);
+    }
+
+    /** Validate the application return context before a candidate note is changed. */
+    public void validateNoteApplication(Integer candidateId, Integer applicationId) {
+        requireBookmarkSource(actor(), candidateId, applicationId);
+    }
+
+    private void requireBookmarkSource(User user, Integer candidateId, Integer applicationId) {
+        Application source = application(applicationId);
+        if (!source.getCandidate().getCandidateId().equals(candidateId))
+            throw new AccessDeniedException("Hồ sơ không thuộc ứng viên này.");
+        applicationAccess.requireView(user, source);
     }
 
     public List<TalentPoolNoteResponse> notesFor(Integer id) {
-        actor();
+        User viewer = actor();
         return notes.findByCandidate_CandidateIdOrderByCreatedAtDescNoteIdDesc(id).stream()
                 .map(n -> new TalentPoolNoteResponse(n.getNoteId(), n.getAuthor().getFullName(), n.getNoteContent(),
-                        n.getCreatedAt()))
+                        n.getCreatedAt(), n.getAuthor().getRole() == null ? null : n.getAuthor().getRole().getRoleName(),
+                        java.util.Objects.equals(viewer.getUserId(), n.getAuthor().getUserId())))
                 .toList();
     }
 
@@ -136,7 +165,8 @@ public class TalentPoolService {
         return new TalentPoolDetailResponse(candidateResponse(c), c.isPotential(), notesFor(candidateId),
                 poolApplications.findPreviousCvByCandidateId(candidateId).stream()
                         .map(this::cvDetail)
-                        .toList());
+                        .toList(), c.getDateOfBirth(), c.getGender(), c.getAddress(),
+                c.getCandidateSource(), c.getLinkedInUrl(), c.getPortfolioUrl());
     }
 
     public String pendingRecommendationUrl(Integer id) {
@@ -210,8 +240,45 @@ public class TalentPoolService {
         Candidate candidate = candidate(candidateId);
         if (!candidate.isPotential())
             throw new TalentPoolException("Hãy đánh dấu ứng viên tiềm năng trước khi thêm ghi chú.");
-        notes.save(TalentPoolNote.builder().candidate(candidate).author(user).noteContent(request.content().strip())
+        TalentPoolNote saved = notes.save(TalentPoolNote.builder().candidate(candidate).author(user).noteContent(request.content().strip())
                 .build());
+        audit.record(user.getUserId(), "CREATE", "TalentPoolNote", saved.getNoteId(), null,
+                "Ứng viên #" + candidateId + "\n" + saved.getNoteContent());
+    }
+
+    @Transactional
+    public void updateNote(Integer candidateId, Integer noteId, TalentPoolNoteRequest request) {
+        TalentPoolNote note = ownedNote(candidateId, noteId);
+        String content = request.content() == null ? "" : request.content().strip();
+        if (content.isEmpty() || content.length() > 1000)
+            throw new TalentPoolException("Ghi chú cần có nội dung và tối đa 1.000 ký tự.");
+        String before = note.getNoteContent();
+        if (java.util.Objects.equals(before, content)) return;
+        note.setNoteContent(content);
+        notes.save(note);
+        audit.record(note.getAuthor().getUserId(), "UPDATE", "TalentPoolNote", noteId,
+                "Ứng viên #" + candidateId + "\n" + before, "Ứng viên #" + candidateId + "\n" + content);
+    }
+
+    @Transactional
+    public void deleteNote(Integer candidateId, Integer noteId) {
+        TalentPoolNote note = ownedNote(candidateId, noteId);
+        notes.delete(note);
+        audit.record(note.getAuthor().getUserId(), "DELETE", "TalentPoolNote", noteId,
+                "Ứng viên #" + candidateId + "\n" + note.getNoteContent(), null);
+    }
+
+    private TalentPoolNote ownedNote(Integer candidateId, Integer noteId) {
+        User viewer = actor();
+        TalentPoolNote note = notes.findById(noteId)
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy ghi chú."));
+        if (!java.util.Objects.equals(note.getCandidate().getCandidateId(), candidateId))
+            throw new ResourceNotFoundException("Ghi chú không thuộc ứng viên này.");
+        if (!java.util.Objects.equals(note.getAuthor().getUserId(), viewer.getUserId()))
+            throw new AccessDeniedException("Bạn chỉ có thể sửa hoặc xóa ghi chú của mình.");
+        if (!note.getCandidate().isPotential())
+            throw new TalentPoolException("Ứng viên không còn trong kho tiềm năng.");
+        return note;
     }
 
     public String targetJobTitle(Integer id) {
@@ -449,7 +516,9 @@ public class TalentPoolService {
                 a.getJobPosting().getJobPostingId(), a.getJobPosting().getPostingTitle(),
                 a.getCandidate().getAccount().getFullName(),
                 origin.getReviewer().getFullName(), origin.getReviewedAt(), label, pending,
-                pending && open && CurrentUserService.hasRole(user, "Hiring Manager"));
+                pending && open && CurrentUserService.hasRole(user, "Hiring Manager"),
+                a.getCandidate().getAccount().getEmail(), a.getCandidate().getAccount().getPhoneNumber(),
+                pending ? "pending" : decision.map(r -> "Fail".equals(r.getDecision()) ? "rejected" : "accepted").orElse("closed"));
     }
 
     public TalentPoolRecommendationResponse recommendationForDecision(Integer id) {
@@ -579,13 +648,22 @@ public class TalentPoolService {
     }
 
     public ApplicationCv cv(Integer candidateId, Integer appId, Integer recommendationId) {
-        actor();
+        return cv(candidateId, appId, recommendationId, null);
+    }
+
+    public ApplicationCv cv(Integer candidateId, Integer appId, Integer recommendationId, Integer sourceApplicationId) {
+        User user = actor();
         if (recommendationId != null)
             recommendation(recommendationId, candidateId);
         Candidate c = candidate(candidateId);
         Application app = application(appId);
-        if ((!c.isPotential() && recommendationId == null) || !app.getCandidate().getCandidateId().equals(candidateId))
+        if (!app.getCandidate().getCandidateId().equals(candidateId))
             throw new AccessDeniedException("CV không thuộc ứng viên tiềm năng này.");
+        if (!c.isPotential() && recommendationId == null) {
+            if (sourceApplicationId == null)
+                throw new AccessDeniedException("CV không thuộc ứng viên tiềm năng này.");
+            requireBookmarkSource(user, candidateId, sourceApplicationId);
+        }
         requireCv(app.getAppliedCvUrl());
         if (app.getAppliedCvUrl().startsWith(LocalCvStorage.URL_PREFIX))
             return ApplicationCv
@@ -653,7 +731,8 @@ public class TalentPoolService {
         String employmentType = requisition == null || requisition.getEmploymentType() == null ? null
                 : RequisitionLabels.employmentType(requisition.getEmploymentType());
         return new TalentPoolCvResponse(a.getApplicationId(), a.getJobPosting().getPostingTitle(),
-                a.getSubmissionDate(), department, employmentType);
+                a.getSubmissionDate(), department, employmentType,
+                audit.has("Application", a.getApplicationId(), "Withdrawn") ? "Withdrawn" : a.getApplicationStatus());
     }
 
     private TalentPoolCandidateResponse candidateResponse(Candidate c) {

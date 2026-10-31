@@ -1,5 +1,6 @@
 package com.group2.rms.jobposting.repository;
 
+import com.group2.rms.candidate.domain.repository.ApplicationRepository;
 import com.group2.rms.jobposting.entity.JobPosting;
 import jakarta.persistence.LockModeType;
 import org.springframework.data.domain.Page;
@@ -94,28 +95,36 @@ public interface JobPostingRepository extends JpaRepository<JobPosting, Integer>
 
     // ----- Số liệu cho trang chi tiết tin -----
 
+    /**
+     * Các câu đếm / liệt kê dưới đây chỉ tính đơn ứng tuyển chính thức: bỏ đề xuất của HM, gợi ý của HR
+     * (xem ở khối Ứng viên tiềm năng) và đề xuất đã huỷ, cùng bộ lọc với danh sách /applications.
+     */
+
     /** Số hồ sơ của một tin theo từng trạng thái. Mỗi dòng: [ApplicationStatus, số hồ sơ]. */
     @Query("SELECT a.applicationStatus, COUNT(a) FROM Application a "
-            + "WHERE a.jobPosting.jobPostingId = :postingId GROUP BY a.applicationStatus")
+            + "WHERE a.jobPosting.jobPostingId = :postingId AND " + ApplicationRepository.FORMAL_FILTER
+            + " GROUP BY a.applicationStatus")
     List<Object[]> countApplicationsByStatus(@Param("postingId") Integer postingId);
 
     /** Số hồ sơ nộp từ một thời điểm trở đi (ví dụ trong 7 ngày gần nhất). */
-    @Query("SELECT COUNT(a) FROM Application a WHERE a.jobPosting.jobPostingId = :postingId AND a.submissionDate >= :since")
+    @Query("SELECT COUNT(a) FROM Application a WHERE a.jobPosting.jobPostingId = :postingId AND a.submissionDate >= :since AND "
+            + ApplicationRepository.FORMAL_FILTER)
     long countApplicationsSince(@Param("postingId") Integer postingId, @Param("since") LocalDateTime since);
 
     /** Số hồ sơ có điểm AI (lần chấm mới nhất) từ ngưỡng trở lên. */
     @Query("""
-            SELECT COUNT(r) FROM AIScreeningResult r
-            WHERE r.application.jobPosting.jobPostingId = :postingId
+            SELECT COUNT(r) FROM AIScreeningResult r JOIN r.application a
+            WHERE a.jobPosting.jobPostingId = :postingId
               AND r.aiMatchScore >= :threshold
               AND r.screenedAt = (SELECT MAX(r2.screenedAt) FROM AIScreeningResult r2 WHERE r2.application = r.application)
-            """)
+            """ + " AND " + ApplicationRepository.FORMAL_FILTER)
     long countApplicationsWithAiScoreAtLeast(@Param("postingId") Integer postingId,
             @Param("threshold") BigDecimal threshold);
 
     /** Hồ sơ mới nhất của tin. Mỗi dòng: [applicationId, tên ứng viên, ApplicationStatus, ngày nộp]. */
     @Query("SELECT a.applicationId, a.candidate.account.fullName, a.applicationStatus, a.submissionDate "
-            + "FROM Application a WHERE a.jobPosting.jobPostingId = :postingId ORDER BY a.submissionDate DESC")
+            + "FROM Application a WHERE a.jobPosting.jobPostingId = :postingId AND " + ApplicationRepository.FORMAL_FILTER
+            + " ORDER BY a.submissionDate DESC")
     List<Object[]> findRecentApplications(@Param("postingId") Integer postingId, Pageable pageable);
 
     /** Điểm AI lần chấm mới nhất của các hồ sơ. Mỗi dòng: [applicationId, điểm]. */

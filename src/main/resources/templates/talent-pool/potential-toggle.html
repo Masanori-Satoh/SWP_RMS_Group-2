@@ -1,0 +1,12 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org"><body>
+<span th:fragment="toggle(applicationId, candidateName, saved, keepSource)" class="app-potential-control">
+    <button type="button" class="btn btn--secondary btn--sm app-potential-toggle" data-potential-toggle
+            th:disabled="${saved == null}" th:title="${saved == true ? 'Bỏ ứng viên khỏi kho tiềm năng' : 'Lưu ứng viên vào kho tiềm năng'}"
+            th:attr="data-saved=${saved},data-name=${candidateName},data-source-id=${keepSource ? applicationId : null},data-bookmark-url=@{/talent-pool/applications/{id}/bookmark(id=${applicationId})},aria-pressed=${saved == true},aria-label=|${saved == true ? 'Bỏ lưu tiềm năng' : 'Lưu tiềm năng'}: ${candidateName}|">
+        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M6 3h12v18l-6-4-6 4V3Z"/></svg>
+        <span data-potential-toggle-label th:text="${saved == null ? 'Đang tải…' : (saved ? 'Bỏ lưu tiềm năng' : 'Lưu tiềm năng')}"></span>
+    </button>
+    <span data-potential-toggle-feedback class="app-potential-feedback" role="status" aria-live="polite" hidden></span>
+</span>
+</body></html>

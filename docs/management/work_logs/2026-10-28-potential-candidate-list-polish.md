@@ -1,6 +1,6 @@
 # Potential Candidate — phân cấp danh sách theo Quản lý tài khoản Admin
 
-Ngày: 28/10/2026. Thực hiện: LinhDN / Codex.
+Ngày: 28/10/2026. Thực hiện: LinhDN.
 
 ## Yêu cầu và phạm vi
 
@@ -100,7 +100,7 @@ không phải kiểm chứng ghi dữ liệu SQL, gửi gợi ý/ghi chú hay đ
 phiên HR/HM. Không tạo dữ liệu giả trong ứng dụng hoặc sửa DB.
 
 Evidence tại máy thực hiện:
-`C:/Users/Administrator/.codex/visualizations/2026/10/14/01a13a55-2ffe-7341-ac69-6a4f1c685469/potential-polish-20261028/`.
+thư mục QA cục bộ `potential-polish-20261028/`.
 Các mục chính: `before/`, `final/`, `final-render.json`, `interactions.json`,
 `contracts.json`, `source-before.json`, `taste-summary.json`,
 `taste-fixture-summary.json`, `final-verification.json`.

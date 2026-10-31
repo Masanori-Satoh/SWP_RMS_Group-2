@@ -36,13 +36,15 @@ public class AccountListService {
     private final RoleRepository roles;
     private final DepartmentRepository departments;
     private final CandidateRepository candidates;
+    private final UserAuditLogger audit;
 
     public AccountListService(UserRepository users, RoleRepository roles, DepartmentRepository departments,
-            CandidateRepository candidates) {
+            CandidateRepository candidates, UserAuditLogger audit) {
         this.users = users;
         this.roles = roles;
         this.departments = departments;
         this.candidates = candidates;
+        this.audit = audit;
     }
 
     @Transactional(readOnly = true)
@@ -160,8 +162,10 @@ public class AccountListService {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "Trạng thái tài khoản không hợp lệ.");
         }
         if ("Inactive".equals(user.getAccountStatus())) {
+            var before = UserAuditLogger.userSnapshot(user);
             user.setAccountStatus("Active");
             users.save(user);
+            audit.changes("User", userId, before, UserAuditLogger.userSnapshot(user));
         }
     }
 
@@ -173,8 +177,10 @@ public class AccountListService {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Account not found in this account group");
         }
         if (!"Inactive".equals(user.getAccountStatus())) {
+            var before = UserAuditLogger.userSnapshot(user);
             user.setAccountStatus("Inactive");
             users.save(user);
+            audit.changes("User", userId, before, UserAuditLogger.userSnapshot(user));
         }
     }
 

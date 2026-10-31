@@ -70,6 +70,8 @@ public interface ApplicationRepository extends JpaRepository<Application, Intege
 
         boolean existsByCandidate_CandidateIdAndJobPosting_JobPostingId(Integer candidateId, Integer jobPostingId);
 
+        List<Application> findByCandidate_CandidateIdOrderByApplicationIdDesc(Integer candidateId);
+
         boolean existsByJobPosting_JobPostingId(Integer jobPostingId);
 
         /**

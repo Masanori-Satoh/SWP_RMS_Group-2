@@ -10,10 +10,32 @@ public record TalentPoolCvResponse(
         String jobTitle,
         LocalDateTime submittedAt,
         String department,
-        String employmentType) {
+        String employmentType,
+        String applicationStatus) {
 
     public TalentPoolCvResponse(Integer applicationId, String jobTitle, LocalDateTime submittedAt) {
-        this(applicationId, jobTitle, submittedAt, null, null);
+        this(applicationId, jobTitle, submittedAt, null, null, null);
+    }
+
+    public TalentPoolCvResponse(Integer applicationId, String jobTitle, LocalDateTime submittedAt,
+            String department, String employmentType) {
+        this(applicationId, jobTitle, submittedAt, department, employmentType, null);
+    }
+
+    public String statusLabel() {
+        if (applicationStatus == null) return "Chưa có trạng thái";
+        if ("Withdrawn".equals(applicationStatus)) return "Đã rút";
+        return com.group2.rms.candidate.domain.rule.ApplicationStatusLabels.label(applicationStatus);
+    }
+
+    public String statusTone() {
+        if (applicationStatus == null) return "neutral";
+        return switch (applicationStatus) {
+            case "Applied", "Hired", "Offered" -> "success";
+            case "Rejected" -> "error";
+            case "Withdrawn" -> "neutral";
+            default -> "warning";
+        };
     }
 
     // relative label shown under the submitted date on the profile page

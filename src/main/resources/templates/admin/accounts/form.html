@@ -6,94 +6,136 @@
     <th:block layout:fragment="styles">
         <link rel="stylesheet" th:href="@{/css/account-form.css}">
         <link rel="stylesheet" th:href="@{/css/pages/admin-surfaces.css}">
+        <link rel="stylesheet" th:unless="${createMode}" th:href="@{/css/pages/account-edit.css}">
+        <link rel="stylesheet" th:if="${createMode}" th:href="@{/css/pages/admin-create-forms.css}">
     </th:block>
 </head>
 <body>
-<main id="main" layout:fragment="content" class="page-content ads-page ads-form-page adw-page" tabindex="-1">
+<main id="main" layout:fragment="content" class="page-content ads-page ads-form-page adw-page" th:classappend="${createMode ? 'acf-page acf-page--account' : 'aef-page'}" tabindex="-1">
     <th:block th:replace="~{fragments/ui/admin-workspace :: scene}"></th:block>
-            <div class="container account-form-container adw-form-wrap">
-                <div class="account-heading ads-heading adw-heading">
+            <div class="container" th:classappend="${createMode ? 'acf-container' : 'aef-container'}">
+                <div class="account-heading ads-heading adw-heading aef-heading acf-heading">
                     <div>
-                <h1 class="ads-title adw-title" th:text="${createMode} ? 'Tạo tài khoản nội bộ' : 'Sửa tài khoản nội bộ'">Tạo tài khoản nội bộ</h1>
-                        <p th:text="${createMode} ? 'Tài khoản mới sẽ có trạng thái đang hoạt động.' : 'Tên đăng nhập và mật khẩu hiện tại được giữ nguyên.'"></p>
+                <h1 class="ads-title adw-title aef-title" th:text="${createMode} ? 'Tạo tài khoản nội bộ' : 'Sửa tài khoản nội bộ'">Tạo tài khoản nội bộ</h1>
+                        <p class="aef-subtitle" th:text="${createMode} ? 'Tài khoản mới sẽ có trạng thái đang hoạt động.' : 'Tên đăng nhập và mật khẩu hiện tại được giữ nguyên.'"></p>
                     </div>
                 </div>
 
-                <section class="workspace-section account-card ads-form-card adw-surface">
+                <section th:class="${createMode ? 'acf-workspace' : 'workspace-section account-card ads-form-card adw-surface aef-card'}">
+                    <section th:unless="${createMode}" class="aef-summary" aria-label="Thông tin tài khoản đang lưu">
+                        <div class="aef-summary-identity">
+                            <span class="aef-avatar" aria-hidden="true" th:text="${#strings.isEmpty(#strings.trim(accountSummary.fullName)) ? '?' : #strings.toUpperCase(#strings.substring(#strings.trim(accountSummary.fullName), 0, 1))}"></span>
+                            <div class="aef-summary-person">
+                                <h2 class="aef-summary-name" th:text="${accountSummary.fullName}"></h2>
+                                <p class="aef-summary-assignment">
+                                    <span th:each="role : ${roles}" th:if="${role.roleId == accountSummary.roleId}"
+                                          th:text="${role.roleName == 'System Admin' ? 'Quản trị hệ thống' : (role.roleName == 'HR' ? 'Nhân sự' : (role.roleName == 'Hiring Manager' ? 'Trưởng phòng tuyển dụng' : (role.roleName == 'Director' ? 'Giám đốc' : (role.roleName == 'Interviewer' ? 'Người phỏng vấn' : role.roleName))))}"></span>
+                                    <th:block th:if="${accountSummary.departmentId != null}"><span aria-hidden="true"> · </span><span th:each="department : ${departments}" th:if="${department.departmentId == accountSummary.departmentId}" th:text="${department.departmentName}"></span></th:block>
+                                    <th:block th:unless="${accountSummary.departmentId != null}"><span aria-hidden="true"> · </span><span>Chưa phân công phòng ban</span></th:block>
+                                </p>
+                            </div>
+                        </div>
+                        <dl class="aef-summary-field">
+                            <dt><svg class="aef-summary-icon" viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><circle cx="12" cy="7" r="4"/><path d="M4 21v-2a8 8 0 0 1 16 0v2z"/></svg>Tên đăng nhập</dt>
+                            <dd th:text="${accountSummary.username}"></dd>
+                        </dl>
+                        <dl class="aef-summary-field">
+                            <dt><svg class="aef-summary-icon" viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/></svg>Email</dt>
+                            <dd th:text="${accountSummary.email}"></dd>
+                        </dl>
+                        <dl class="aef-summary-field">
+                            <dt><svg class="aef-summary-icon" viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M5 3h4l2 5-2.5 1.5a11 11 0 0 0 6 6L16 13l5 2v4a2 2 0 0 1-2 2A18 18 0 0 1 3 5a2 2 0 0 1 2-2Z"/></svg>Số điện thoại</dt>
+                            <dd th:text="${#strings.isEmpty(#strings.trim(accountSummary.phoneNumber)) ? 'Chưa cập nhật' : accountSummary.phoneNumber}"></dd>
+                        </dl>
+                        <span class="badge aef-summary-status" th:classappend="${accountSummary.accountStatus == 'Active' ? 'badge--success badge-success' : 'badge--neutral badge-secondary'}"><span class="aef-status-dot" aria-hidden="true"></span><span th:text="${accountSummary.accountStatus == 'Active' ? 'Đang hoạt động' : 'Đã vô hiệu hóa'}"></span></span>
+                    </section>
                     <form th:action="${createMode} ? @{/admin/accounts} : @{/admin/accounts/{id}(id=${accountId})}"
                           th:object="${form}" method="post">
                         <div th:replace="~{fragments/messages :: validationSummary}"></div>
 
-                        <fieldset class="account-form-section" ><legend>Thông tin tài khoản</legend><div class="account-form-grid"><div class="form-group account-field-full">
-                                <label class="form-label" for="full-name">Họ và tên <span aria-hidden="true">*</span></label>
-                                <input class="form-control ads-form-control" id="full-name" type="text" th:field="*{fullName}"
+                        <div class="acf-layout" th:remove="${createMode ? 'none' : 'tag'}">
+                        <div class="acf-main" th:remove="${createMode ? 'none' : 'tag'}">
+                        <fieldset class="account-form-section aef-section acf-panel" th:classappend="${createMode} ? 'adw-surface'"><legend class="aef-legend acf-legend"><svg class="acf-section-icon" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><circle cx="12" cy="7" r="4"/><path d="M4 21v-2a8 8 0 0 1 16 0v2z"/></svg><span class="acf-legend-copy"><span>Thông tin tài khoản</span><small th:if="${createMode}">Nhập thông tin cơ bản cho tài khoản nội bộ.</small></span></legend><div class="account-form-grid aef-grid"><div class="form-group" th:classappend="${createMode} ? 'account-field-full'">
+                                <label class="form-label aef-label" for="full-name">Họ và tên <span aria-hidden="true">*</span></label>
+                                <input class="form-control ads-form-control aef-input" id="full-name" th:placeholder="${createMode} ? 'Nhập họ và tên'" type="text" th:field="*{fullName}"
                                        maxlength="100" autocomplete="name" required th:attr="aria-invalid=${#fields.hasErrors('fullName')},aria-describedby=${#fields.hasErrors('fullName') ? 'full-name-error' : null}">
                                 <span id="full-name-error" class="form-error" th:if="${#fields.hasErrors('fullName')}" th:errors="*{fullName}"></span>
                             </div><div class="form-group" th:if="${createMode}">
-                                <label class="form-label" for="username">Tên đăng nhập <span aria-hidden="true">*</span></label>
-                                <input class="form-control ads-form-control" id="username" type="text" th:field="*{username}"
+                                <label class="form-label aef-label" for="username">Tên đăng nhập <span aria-hidden="true">*</span></label>
+                                <input class="form-control ads-form-control aef-input" id="username" th:placeholder="${createMode} ? 'Nhập tên đăng nhập'" type="text" th:field="*{username}"
                                        maxlength="50" autocomplete="username" required th:attr="aria-invalid=${#fields.hasErrors('username')},aria-describedby=${#fields.hasErrors('username') ? 'username-hint username-error' : 'username-hint'}">
-                                <small id="username-hint" class="account-field-hint">Tên đăng nhập không thể thay đổi sau khi tạo.</small>
+                                <small id="username-hint" class="account-field-hint aef-hint">Tên đăng nhập không thể thay đổi sau khi tạo.</small>
                                 <span id="username-error" class="form-error" th:if="${#fields.hasErrors('username')}" th:errors="*{username}"></span>
                             </div><div class="form-group" th:unless="${createMode}">
-                                <label class="form-label" for="username-readonly">Tên đăng nhập</label>
-                                <input class="form-control ads-form-control account-readonly" id="username-readonly" type="text"
+                                <label class="form-label aef-label" for="username-readonly">Tên đăng nhập</label>
+                                <input class="form-control ads-form-control aef-input account-readonly" id="username-readonly" type="text"
                                        th:value="${accountUsername}" readonly aria-describedby="username-hint">
-                                <small id="username-hint" class="account-field-hint">Tên đăng nhập không thể thay đổi sau khi tạo.</small>
+                                <small id="username-hint" class="account-field-hint aef-hint">Tên đăng nhập không thể thay đổi sau khi tạo.</small>
                             </div><div class="form-group">
-                                <label class="form-label" for="email">Email <span aria-hidden="true">*</span></label>
-                                <input class="form-control ads-form-control" id="email" type="email" th:field="*{email}"
+                                <label class="form-label aef-label" for="email">Email <span aria-hidden="true">*</span></label>
+                                <input class="form-control ads-form-control aef-input" id="email" th:placeholder="${createMode} ? 'Nhập địa chỉ email'" type="email" th:field="*{email}"
                                        maxlength="150" autocomplete="email" required th:attr="aria-invalid=${#fields.hasErrors('email')},aria-describedby=${#fields.hasErrors('email') ? 'email-error' : null}">
                                 <span id="email-error" class="form-error" th:if="${#fields.hasErrors('email')}" th:errors="*{email}"></span>
                             </div><div class="form-group">
-                                <label class="form-label" for="phone-number">Số điện thoại</label>
-                                <input class="form-control ads-form-control" id="phone-number" type="tel" th:field="*{phoneNumber}"
+                                <label class="form-label aef-label" for="phone-number">Số điện thoại</label>
+                                <input class="form-control ads-form-control aef-input" id="phone-number" th:placeholder="${createMode} ? 'Nhập số điện thoại'" type="tel" th:field="*{phoneNumber}"
                                        maxlength="20" autocomplete="tel" th:attr="aria-invalid=${#fields.hasErrors('phoneNumber')},aria-describedby=${#fields.hasErrors('phoneNumber') ? 'phone-number-error' : null}">
                                 <span id="phone-number-error" class="form-error" th:if="${#fields.hasErrors('phoneNumber')}" th:errors="*{phoneNumber}"></span>
                             </div></div></fieldset>
-<fieldset class="account-form-section" ><legend>Quyền truy cập và trạng thái</legend><div class="account-form-grid"><div class="form-group">
-                                <label class="form-label" for="role">Vai trò <span aria-hidden="true">*</span></label>
-                                <select class="form-control ads-form-control" id="role" th:field="*{roleId}" required th:attr="aria-invalid=${#fields.hasErrors('roleId')},aria-describedby=${#fields.hasErrors('roleId') ? 'role-error' : null}">
+<fieldset class="account-form-section aef-section acf-panel" th:classappend="${createMode} ? 'adw-surface'"><legend class="aef-legend acf-legend"><svg class="acf-section-icon" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="m9 3-1 3-3 1 1 3-2 2 2 2-1 3 3 1 1 3h6l1-3 3-1-1-3 2-2-2-2 1-3-3-1-1-3z"/><circle cx="12" cy="12" r="3"/></svg><span class="acf-legend-copy"><span>Quyền truy cập và trạng thái</span><small th:if="${createMode}">Thiết lập vai trò và phòng ban cho tài khoản.</small></span></legend><div class="account-form-grid aef-grid"><div class="form-group">
+                                <label class="form-label aef-label" for="role">Vai trò <span aria-hidden="true">*</span></label>
+                                <select class="form-control ads-form-control aef-input" id="role" th:field="*{roleId}" required th:attr="aria-invalid=${#fields.hasErrors('roleId')},aria-describedby=${#fields.hasErrors('roleId') ? 'role-error' : null}">
                                     <option value="">Chọn vai trò</option>
                                     <option th:each="role : ${roles}" th:value="${role.roleId}"
                                             th:attr="data-role-name=${role.roleName}" th:text="${role.roleName == 'System Admin' ? 'Quản trị hệ thống' : (role.roleName == 'HR' ? 'Nhân sự' : (role.roleName == 'Hiring Manager' ? 'Trưởng phòng tuyển dụng' : (role.roleName == 'Director' ? 'Giám đốc' : (role.roleName == 'Interviewer' ? 'Người phỏng vấn' : role.roleName))))}">Vai trò</option>
                                 </select>
                                 <span id="role-error" class="form-error" th:if="${#fields.hasErrors('roleId')}" th:errors="*{roleId}"></span>
                             </div><div class="form-group">
-                                <label class="form-label" for="department">Phòng ban <span aria-hidden="true">*</span></label>
-                                <select class="form-control ads-form-control" id="department" th:field="*{departmentId}" required th:attr="aria-invalid=${#fields.hasErrors('departmentId')},aria-describedby=${#fields.hasErrors('departmentId') ? 'department-error' : null}">
+                                <label class="form-label aef-label" for="department">Phòng ban <span aria-hidden="true">*</span></label>
+                                <select class="form-control ads-form-control aef-input" id="department" th:field="*{departmentId}" required th:attr="aria-invalid=${#fields.hasErrors('departmentId')},aria-describedby=${#fields.hasErrors('departmentId') ? 'department-error' : null}">
                                     <option value="">Chọn phòng ban</option>
                                     <option th:each="department : ${departments}" th:value="${department.departmentId}"
                                             th:if="${department.departmentStatus == 'Active' or (!createMode and department.departmentId == currentDepartmentId)}"
                                             th:text="${department.departmentName + (department.departmentStatus == 'Inactive' ? ' (đã vô hiệu hóa)' : '')}">Phòng ban</option>
                                 </select>
-                                <small class="account-field-hint">Chỉ được chọn phòng ban đang hoạt động. Có thể giữ phòng ban đã vô hiệu hóa của tài khoản hiện tại.</small>
+                                <small class="account-field-hint aef-hint" th:text="${createMode ? 'Chỉ được chọn phòng ban đang hoạt động.' : 'Chỉ được chọn phòng ban đang hoạt động. Có thể giữ phòng ban đã vô hiệu hóa của tài khoản hiện tại.'}"></small>
                                 <span id="department-error" class="form-error" th:if="${#fields.hasErrors('departmentId')}" th:errors="*{departmentId}"></span>
                             </div><div class="form-group" th:unless="${createMode}">
-                                <label class="form-label" for="account-status">Trạng thái <span aria-hidden="true">*</span></label>
-                                <select class="form-control ads-form-control" id="account-status" th:field="*{accountStatus}" required th:attr="aria-invalid=${#fields.hasErrors('accountStatus')},aria-describedby=${#fields.hasErrors('accountStatus') ? 'account-status-hint account-status-error' : 'account-status-hint'}">
+                                <label class="form-label aef-label" for="account-status">Trạng thái <span aria-hidden="true">*</span></label>
+                                <select class="form-control ads-form-control aef-input" id="account-status" th:field="*{accountStatus}" required th:attr="aria-invalid=${#fields.hasErrors('accountStatus')},aria-describedby=${#fields.hasErrors('accountStatus') ? 'account-status-hint account-status-error' : 'account-status-hint'}">
                                     <option value="Active">Hoạt động</option>
                                     <option value="Inactive">Vô hiệu hóa</option>
                                 </select>
-                                <small id="account-status-hint" class="account-field-hint">Tài khoản vô hiệu hóa không thể đăng nhập hay truy cập trang được bảo vệ.</small>
+                                <small id="account-status-hint" class="account-field-hint aef-hint">Tài khoản vô hiệu hóa không thể đăng nhập hay truy cập trang được bảo vệ.</small>
                                 <span id="account-status-error" class="form-error" th:if="${#fields.hasErrors('accountStatus')}" th:errors="*{accountStatus}"></span>
                             </div></div></fieldset>
-<fieldset class="account-form-section" th:if="${createMode}"><legend>Mật khẩu ban đầu</legend><div class="account-form-grid"><div class="form-group" th:if="${createMode}">
-                                <label class="form-label" for="password">Mật khẩu <span aria-hidden="true">*</span></label>
-                                <input class="form-control ads-form-control" id="password" type="password" name="password"
+<fieldset class="account-form-section acf-panel adw-surface" th:if="${createMode}"><legend class="acf-legend"><svg class="acf-section-icon" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><rect x="5" y="10" width="14" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3M12 14v3"/></svg><span class="acf-legend-copy"><span>Mật khẩu ban đầu</span><small>Thiết lập mật khẩu cho tài khoản. Người dùng có thể thay đổi sau khi đăng nhập.</small></span></legend><div class="account-form-grid"><div class="form-group" th:if="${createMode}">
+                                <label class="form-label aef-label" for="password">Mật khẩu <span aria-hidden="true">*</span></label>
+                                <input class="form-control ads-form-control aef-input" id="password" placeholder="Nhập mật khẩu" type="password" name="password"
                                        minlength="8" maxlength="32" autocomplete="new-password" required th:attr="aria-invalid=${#fields.hasErrors('password')},aria-describedby=${#fields.hasErrors('password') ? 'password-hint password-error' : 'password-hint'}">
-                                <small id="password-hint" class="account-field-hint">Từ 8 đến 32 ký tự.</small>
+                                <small id="password-hint" class="account-field-hint aef-hint">Từ 8 đến 32 ký tự.</small>
                                 <span id="password-error" class="form-error" th:if="${#fields.hasErrors('password')}" th:errors="*{password}"></span>
                             </div><div class="form-group" th:if="${createMode}">
-                                <label class="form-label" for="confirm-password">Xác nhận mật khẩu <span aria-hidden="true">*</span></label>
-                                <input class="form-control ads-form-control" id="confirm-password" type="password" name="confirmPassword"
+                                <label class="form-label aef-label" for="confirm-password">Xác nhận mật khẩu <span aria-hidden="true">*</span></label>
+                                <input class="form-control ads-form-control aef-input" id="confirm-password" placeholder="Nhập lại mật khẩu" type="password" name="confirmPassword"
                                        minlength="8" maxlength="32" autocomplete="new-password" required th:attr="aria-invalid=${#fields.hasErrors('confirmPassword')},aria-describedby=${#fields.hasErrors('confirmPassword') ? 'confirm-password-error' : null}">
                                 <span id="confirm-password-error" class="form-error" th:if="${#fields.hasErrors('confirmPassword')}" th:errors="*{confirmPassword}"></span>
                             </div></div></fieldset>
-<div class="account-form-actions">
+                        </div>
+                        <aside th:if="${createMode}" class="card adw-surface acf-notes" aria-labelledby="acf-notes-title">
+                            <div class="acf-notes-heading"><svg class="acf-section-icon" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M9 18h6M10 21h4M8 13a6 6 0 1 1 8 0c-1 1-1 2-1 3H9c0-1 0-2-1-3ZM12 1v2M3 5l2 2M21 5l-2 2"/></svg><div><h2 id="acf-notes-title" class="acf-notes-title">Lưu ý khi tạo tài khoản</h2><p>Một số quy định quan trọng cần lưu ý.</p></div></div>
+                            <ul class="acf-tips">
+                                <li><svg class="acf-tip-icon" viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="m7 12 3 3 7-7"/></svg><div><strong>Tài khoản sẽ ở trạng thái đang hoạt động</strong><p>Tài khoản mới sau khi tạo có trạng thái đang hoạt động và có thể đăng nhập ngay.</p></div></li>
+                                <li><svg class="acf-tip-icon" viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><circle cx="12" cy="7" r="4"/><path d="M4 21v-2a8 8 0 0 1 16 0v2z"/></svg><div><strong>Tên đăng nhập không thể thay đổi</strong><p>Kiểm tra kỹ tên đăng nhập trước khi tạo tài khoản.</p></div></li>
+                                <li><svg class="acf-tip-icon" viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><rect x="5" y="10" width="14" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3M12 14v3"/></svg><div><strong>Sử dụng mật khẩu mạnh</strong><p>Mật khẩu cần từ 8 đến 32 ký tự. Nhập lại đúng mật khẩu ở ô xác nhận.</p></div></li>
+                                <li><svg class="acf-tip-icon" viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><circle cx="9" cy="8" r="3"/><path d="M3 21v-3a6 6 0 0 1 12 0v3M16 5a3 3 0 0 1 0 6M18 15a5 5 0 0 1 3 4v2"/></svg><div><strong>Chọn đúng vai trò và phòng ban</strong><p>Chọn vai trò và phòng ban phù hợp với phạm vi công việc của người dùng.</p></div></li>
+                                <li><svg class="acf-tip-icon" viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M4 21V4h10v17M14 10h6v11M2 21h20M8 8h2M8 12h2M8 16h2"/></svg><div><strong>Phòng ban đang hoạt động</strong><p>Chỉ có thể chọn các phòng ban đang hoạt động khi tạo tài khoản mới.</p></div></li>
+                            </ul>
+                        </aside>
+                        </div>
+<div class="account-form-actions aef-actions acf-actions">
                             <a class="btn btn-secondary" th:href="@{/admin/accounts}">Hủy</a>
-                            <button class="btn btn-primary" type="submit"
-                                    th:text="${createMode} ? 'Tạo tài khoản nội bộ' : 'Lưu thay đổi'">Lưu</button>
+                            <button class="btn btn-primary" type="submit"><svg th:unless="${createMode}" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M4 3h13l3 3v15H4zM8 3v6h8V3M8 21v-8h8v8"/></svg><span th:text="${createMode} ? 'Tạo tài khoản nội bộ' : 'Lưu thay đổi'">Lưu</span></button>
                         </div>
                     </form>
                 </section>

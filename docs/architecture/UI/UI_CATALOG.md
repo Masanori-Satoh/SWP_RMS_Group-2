@@ -364,7 +364,7 @@ Gọi bằng cú pháp Thymeleaf: `th:replace="~{fragments/ui/[file] :: [tênFra
 | **`statCard`** | `fragments/ui/cards.html` | `<article th:replace="~{fragments/ui/cards :: statCard(title='Tổng hồ sơ', value=${total}, detail='Tháng này')}"></article>` | `title`, `value`, `detail` |
 | **`paged`** (phân trang) | `fragments/ui/pagination.html` | `<nav th:replace="~{fragments/ui/pagination :: paged(page=${jobsPage})}"></nav>` | `page`: Spring Data `Page<T>`. **Tự giữ mọi tham số lọc/tìm kiếm** trên URL, chỉ đổi `?page=` (qua `pageLinks`). Ẩn khi chỉ có 1 trang. Số phần tử/trang do Controller đặt (`@PageableDefault(size = …)`). CSS: `components.css` mục L. Bản cũ `pagedWithUrl(page, baseUrl)` và `fragments/pagination :: paged/pager` chỉ cho trang chưa migrate. |
 | **`confirm`** | `fragments/ui/dialogs.html` | `<dialog th:replace="~{fragments/ui/dialogs :: confirm(dialogId='logoutDialog', formId='logoutForm', title='Xác nhận', message='Bạn có chắc chắn?')}"></dialog>` | `dialogId`, `formId`, `title`, `message` |
-| **`flashToast`** | `fragments/ui/flash-toast.html` | `<th:block th:replace="~{fragments/ui/flash-toast :: flashToast(${successMessage}, ${failureMessage})}"></th:block>` | `success`, `error`: thông điệp tùy chọn. Dùng trên danh sách/chi tiết Requisition và Job Posting; nạp `css/pages/flash-toast.css` và `js/pages/flash-toast.js`. Thanh đếm ngược 3 giây ở mép dưới, tạm dừng khi rê chuột hoặc focus. |
+| **`flashToast`** | `fragments/ui/flash-toast.html` | `<th:block th:replace="~{fragments/ui/flash-toast :: flashToast(${successMessage}, ${failureMessage})}"></th:block>` | `success`, `error`: thông điệp tùy chọn. Dùng trên danh sách/chi tiết Requisition, Job Posting, Offer, Accounts; nạp `css/pages/flash-toast.css` và `js/pages/flash-toast.js`. Căn giữa thanh topbar ngang hàng thẻ người dùng (`top: 14px; left: 50%`), không che nút hành động trang. Thanh đếm ngược 3 giây ở mép dưới, tạm dừng khi rê chuột hoặc focus. Hỗ trợ lưu qua reload bằng `sessionStorage.pendingFlashToast`. |
 | **`topbar`** (công khai) | `fragments/layout/public-topbar.html` | `<header th:replace="~{fragments/layout/public-topbar :: topbar('jobs', false)}"></header>` | `activeNav` (`'jobs'` hoặc `''`), `onLanding`. Trang chứa phải nạp `css/topbar.css` |
 | **`footer`** (công khai) | `fragments/layout/public-footer.html` | `<footer th:replace="~{fragments/layout/public-footer :: footer}"></footer>` | Không tham số. Một nguồn cho landing, `layout/public` và trang ứng viên trong `layout/internal` (chỉ khi `topbarUser.roleName == 'Candidate'`; nhân sự không có footer). Cột "Dành cho ứng viên": khách thấy Đăng nhập / Đăng ký, ứng viên đã đăng nhập thấy lối tắt portal. CSS: `components.css` (`.site-footer`, `.footer-*`) |
 | **`wordmark`** | `fragments/brand.html` | `<a th:replace="~{fragments/brand :: wordmark('TUYỂN DỤNG')}"></a>` | `subtitle` (link về `/`) |
@@ -585,3 +585,48 @@ sidebar; không bỏ hướng dẫn nhập liệu hoặc liên kết Hủy trong
   component đã ghi ở trên vẫn còn, không được coi là đã xử lý trong lần này.
 - Chi tiết file change, kiểm chứng và giới hạn:
   [work log](../../management/work_logs/2026-10-28-potential-candidate-list-polish.md).
+
+
+### Cập nhật 31/10/2026 — Đề xuất Offer (HR) dùng giao diện workspace Admin (`ofw-`)
+
+- Hai màn hình của HR: Danh sách (`offers/list.html`) và Tạo/Chỉnh sửa (`offers/form.html`)
+  tiếp tục decorate `layout/internal`, kích hoạt giao diện Admin workspace opt-in qua
+  marker `.adw-page`, `fragments/ui/admin-workspace :: scene` và `:: scripts`. Giữ nguyên
+  vai trò `HR`/`Recruiter`, không đổi quyền của người dùng.
+- Màn hình Danh sách (`/offers`): tiêu đề `.adw-heading` và `.adw-title`, 5 stat cards
+  tổng quan trong `.ofw-stats-grid`, thanh công cụ `.ofw-toolbar.adw-surface`, danh sách
+  đề xuất bọc trong `.adw-surface` với header chuẩn `.ofw-list-header`, icon `.ofw-list-icon`,
+  tiêu đề `.adw-panel-title`, badge `.ofw-list-count` và bảng dữ liệu `.adw-data-table`.
+- Màn hình Form (`/offers/create`): mở rộng toàn bộ bề ngang workspace giống trang Danh sách (`/offers`), Tiêu đề trang chuẩn `.adw-heading` và `.adw-title` (36px desktop / 28px mobile,
+  gạch chân thương hiệu 48×4px).
+- Thẻ Card chuyển sang `.adw-surface` kèm `.adw-panel-heading` và `.adw-panel-title`,
+  kết hợp badge số thứ tự bước tròn `1`, `2` trang nhã (`.ofw-step-badge`).
+- Lưới thông tin ứng viên dạng key-value `.ofw-info-grid` với mức lương đề xuất được
+  nổi bật bằng badge `.ofw-salary-badge`. Toàn bộ controls tuân thủ Button DNA 8px radius
+  cao 48px, không dùng nút bo tròn pill.
+- CSS chuyên biệt đặt tại `static/css/pages/offer-workspace.css` tiền tố `ofw-`, sử dụng
+  100% tokens từ `tokens.css`, không hardcode mã hex hay `!important`.
+- Loại bỏ hoàn toàn script nội tuyến và FontAwesome CDN; dùng 100% inline SVG chuẩn;
+  validation lỗi dùng `.adw-validation-summary`, thông báo flash dùng `fragments/ui/flash-toast :: flashToast`.
+- Chi tiết file change và kiểm thử:
+  [work log](../../management/work_logs/2026-10-31-hr-offer-proposal-admin-ui-sync.md).
+
+
+### Cập nhật 31/10/2026 — Danh sách Offer Giám đốc (Director List) dùng giao diện workspace Admin (`ofw-`)
+
+- Màn hình Danh sách Offer của Giám đốc (`offers/director-list.html`):
+  kế thừa `layout/internal`, kích hoạt giao diện Admin workspace opt-in qua
+  marker `.adw-page ofw-page`, `fragments/ui/admin-workspace :: scene` và `:: scripts`. Giữ nguyên
+  vai trò `Director`.
+- Bổ sung `model.addAttribute("activeMenu", "offers")` trong Controller đảm bảo sidebar sáng mục đúng khi Giám đốc đăng nhập.
+- Tiêu đề trang chuẩn `.adw-heading ofw-heading` và `.adw-title ofw-title` (gạch chân thương hiệu 48×4px), loại bỏ dòng mô tả phụ rườm rà.
+- 3 thẻ thống kê ngang chuyển sang `.adw-surface.ofw-stat-card` bên trong `.ofw-director-stats-grid` với inline SVG chuẩn.
+- Tab chuyển đổi trạng thái dùng `.ofw-director-tabs` và `.ofw-director-tab` với inline SVG thay thế FontAwesome.
+- Thanh công cụ lọc và tìm kiếm bọc trong `.card.offers-toolbar.ofw-toolbar.adw-surface` với icon SVG search và reset.
+- Bảng dữ liệu dùng `.adw-data-table` bọc trong `.ofw-list-surface.adw-surface` kèm header chuẩn `.ofw-list-header`, icon `.ofw-list-icon`, tiêu đề `.adw-panel-title` và badge đếm số lượng `.ofw-list-count`.
+- Toàn bộ 7 badge trạng thái, icon phân trang và trạng thái rỗng chuyển sang 100% inline SVG.
+- Loại bỏ hoàn toàn 9 thuộc tính inline `style="..."`, chuyển toàn bộ sang Section 17 token CSS trong `offer-workspace.css`.
+- Bổ sung các nút hành động nhanh Phê duyệt / Từ chối (Quick Approve / Reject) và modal quyết định (`#directorDecisionModal`) kèm container `#toastContainer` cho trạng thái `Pending_Director`.
+- Chuẩn hóa toàn bộ pop-up xác nhận sang native HTML5 `<dialog class="confirm-dialog">` và hệ thống thông báo Flash Toast (`flash-toast.css` / `flash-toast.js`), loại bỏ hoàn toàn CDN SweetAlert2 và các lệnh `alert()` native của trình duyệt.
+- Chi tiết file change và kiểm thử:
+  [work log](../../management/work_logs/2026-10-31-director-offer-ui-sync.md).
