@@ -7,10 +7,14 @@
     <title th:text="|Từ chối thư mời nhận việc - ${offer.offeredPositionTitle}|">Từ chối thư mời nhận việc</title>
     <th:block layout:fragment="styles">
         <link rel="stylesheet" th:href="@{/css/pages/candidate-offers.css}">
+        <link rel="stylesheet" th:href="@{/css/pages/flash-toast.css}">
     </th:block>
 </head>
 <body>
 <main id="main" layout:fragment="content" class="page-content container" tabindex="-1">
+
+    <!-- FLASH MESSAGES (Căn giữa thanh topbar ngang hàng thông tin người dùng) -->
+    <th:block th:replace="~{fragments/ui/flash-toast :: flashToast(${successMessage}, ${errorMessage})}"></th:block>
 
     <!-- Điều hướng quay lại màn hình chi tiết -->
     <nav class="cof-breadcrumb" aria-label="Đường dẫn">
@@ -30,8 +34,7 @@
         </div>
     </div>
 
-    <!-- Thông báo lỗi nếu có -->
-    <div th:if="${errorMessage}" class="alert alert--danger" role="alert" th:text="${errorMessage}">Không thể xử lý yêu cầu.</div>
+
 
     <!-- Thẻ nội dung xác nhận từ chối -->
     <div class="card cof-decline-card">
@@ -124,6 +127,7 @@
 
 </main>
 <th:block layout:fragment="scripts">
+    <script defer th:src="@{/js/pages/flash-toast.js}"></script>
     <script defer th:src="@{/js/pages/candidate-offers.js}"></script>
 </th:block>
 </body>

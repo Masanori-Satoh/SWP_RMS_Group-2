@@ -15,10 +15,14 @@
     <title th:text="|Thư mời nhận việc - ${offer.offeredPositionTitle}|">Thư mời nhận việc</title>
     <th:block layout:fragment="styles">
         <link rel="stylesheet" th:href="@{/css/pages/candidate-offers.css}">
+        <link rel="stylesheet" th:href="@{/css/pages/flash-toast.css}">
     </th:block>
 </head>
 <body>
 <main id="main" layout:fragment="content" class="page-content container" tabindex="-1">
+
+    <!-- FLASH MESSAGES (Căn giữa thanh topbar ngang hàng thông tin người dùng) -->
+    <th:block th:replace="~{fragments/ui/flash-toast :: flashToast(${successMessage}, ${errorMessage})}"></th:block>
 
     <!-- Điều hướng quay lại -->
     <nav class="cof-breadcrumb no-print" aria-label="Đường dẫn">
@@ -28,33 +32,7 @@
         </a>
     </nav>
 
-    <!-- Modal Chấp nhận thư mời thành công (Mockup) -->
-    <div th:if="${decisionType == 'ACCEPTED'}" id="cof-accept-success-modal" class="cof-accept-success-backdrop no-print" role="dialog" aria-modal="true" aria-labelledby="cof-success-modal-title">
-        <div class="cof-accept-success-modal">
-            <button type="button" class="cof-accept-success-close" aria-label="Đóng" onclick="closeAcceptSuccessModal()">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <line x1="18" y1="6" x2="6" y2="18"></line>
-                    <line x1="6" y1="6" x2="18" y2="18"></line>
-                </svg>
-            </button>
-            <div class="cof-accept-success-badge">
-                <svg width="84" height="84" viewBox="0 0 84 84" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <line x1="42" y1="5" x2="42" y2="11" stroke="#15803d" stroke-width="2.5" stroke-linecap="round"/>
-                    <line x1="56" y1="11" x2="52" y2="16" stroke="#15803d" stroke-width="2.5" stroke-linecap="round"/>
-                    <line x1="68" y1="21" x2="62" y2="24" stroke="#15803d" stroke-width="2.5" stroke-linecap="round"/>
-                    <line x1="74" y1="35" x2="68" y2="35" stroke="#15803d" stroke-width="2.5" stroke-linecap="round"/>
-                    <circle cx="42" cy="46" r="32" fill="#e8f5e9"/>
-                    <circle cx="42" cy="46" r="20" fill="#1e7e48"/>
-                    <path d="M35 46.5L39.5 51L49 41.5" stroke="#ffffff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
-                </svg>
-            </div>
-            <h2 id="cof-success-modal-title" class="cof-accept-success-title">Chấp nhận thư mời thành công</h2>
-            <p class="cof-accept-success-desc">
-                Bạn đã xác nhận đồng ý với thư mời làm việc cho vị trí
-                <span class="cof-accept-success-position" th:text="${offer.offeredPositionTitle != null ? offer.offeredPositionTitle + '.' : (congratsTitle != null ? congratsTitle + '.' : '')}">Senior Java Backend Engineer.</span>
-            </p>
-        </div>
-    </div>
+
 
     <!-- Thông báo phản hồi hệ thống (Nếu có) -->
     <div th:if="${decisionType == 'DECLINED'}" class="alert alert--neutral cof-system-banner no-print" role="status">
@@ -77,8 +55,7 @@
             Ngày bắt đầu nhận việc dự kiến (<span th:text="${offer.expectedStartDate != null ? #temporals.format(offer.expectedStartDate, 'dd/MM/yyyy') : 'Chưa xác định'}"></span>) đã qua. Nếu bạn vẫn mong muốn gia nhập đội ngũ Mộc RMS, vui lòng liên hệ với chuyên viên tuyển dụng phụ trách để được hỗ trợ.
         </p>
     </div>
-    <div th:if="${successMessage != null and decisionType == null}" class="alert alert--success no-print" role="status" th:text="${successMessage}">Cập nhật thành công.</div>
-    <div th:if="${errorMessage}" class="alert alert--danger no-print" role="alert" th:text="${errorMessage}">Không thể xử lý yêu cầu.</div>
+
 
     <!-- 1. THANH TÁC VỤ TRÊN CÙNG (TOP ACTION BAR THEO MOCKUP) -->
     <div class="cof-top-bar cof-deadline-box no-print">
@@ -423,6 +400,7 @@
 
 </main>
 <th:block layout:fragment="scripts">
+    <script defer th:src="@{/js/pages/flash-toast.js}"></script>
     <script defer th:src="@{/js/pages/candidate-offers.js}"></script>
 </th:block>
 </body>

@@ -222,34 +222,7 @@
 
   initCountdowns();
 
-  // 6. Đóng modal thông báo chấp nhận thành công theo Mockup
-  window.closeAcceptSuccessModal = function () {
-    var modalBackdrop = document.getElementById('cof-accept-success-modal');
-    if (modalBackdrop) {
-      modalBackdrop.style.transition = 'opacity 0.2s ease';
-      modalBackdrop.style.opacity = '0';
-      setTimeout(function () {
-        if (modalBackdrop.parentNode) {
-          modalBackdrop.parentNode.removeChild(modalBackdrop);
-        }
-      }, 200);
-    }
-  };
 
-  document.addEventListener('keydown', function (e) {
-    if (e.key === 'Escape') {
-      window.closeAcceptSuccessModal();
-    }
-  });
-
-  var successBackdrop = document.getElementById('cof-accept-success-modal');
-  if (successBackdrop) {
-    successBackdrop.addEventListener('click', function (e) {
-      if (e.target === successBackdrop) {
-        window.closeAcceptSuccessModal();
-      }
-    });
-  }
 
   // 7. Xử lý nút Tải xuống PDF (in trang / lưu thành PDF)
   document.querySelectorAll('[data-action="download-pdf"]').forEach(function (btn) {
