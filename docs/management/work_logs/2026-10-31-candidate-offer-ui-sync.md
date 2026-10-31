@@ -93,10 +93,11 @@
   - **Huy hiệu:** Dạng pill mint `[✉] THƯ MỜI NHẬN VIỆC` (`.cof-hero-badge`) căn giữa phía trên.
   - **Tiêu đề công việc:** Tên vị trí tuyển dụng to đậm 24px (`.cof-hero-title`), màu `var(--ink)`.
   - **Metadata:** Hàng thông tin căn giữa gồm 3 mục kèm icon SVG: `[🏢] Phòng ban` · `[📅] Ngày gửi: dd/MM/yyyy` · `[📅] Bắt đầu dự kiến: dd/MM/yyyy`.
-  - **Thanh thao tác căn giữa:**
-    - Hộp Hạn phản hồi màu hổ phách ấm (`.cof-deadline-box`): `[🕒] Hạn phản hồi: dd/MM/yyyy` | `[⏱️] Còn N ngày/giờ`. Căn chỉnh nằm ngang tuyệt đối (`flex-direction: row !important`), chiều cao 42px khớp thẳng hàng với cặp nút thao tác, tối ưu JS countdown hiển thị `Còn N ngày` không bị xuống dòng hay lặp icon.
-    - Nút chính: `[✓] Đồng ý nhận việc` (`.btn--primary`, cao 42px, bo 8px, nền xanh `var(--brand)`).
-    - Nút phụ: `[✕] Từ chối thư mời` (`.btn--outline`, cao 42px, bo 8px, viền đỏ `var(--error)`).
+  - **Thanh thao tác căn giữa (3 box có chiều rộng bằng nhau 300px):**
+    - Hộp Hạn phản hồi màu hổ phách ấm (`.cof-deadline-box`): `[🕒] Hạn phản hồi: dd/MM/yyyy` | `[⏱️] Còn N ngày/giờ`. Căn chỉnh nằm ngang tuyệt đối (`flex-direction: row !important`), cố định chiều rộng 300px (`width: 300px; flex: 0 0 300px`), chiều cao 42px khớp thẳng hàng với cặp nút thao tác, tối ưu JS countdown hiển thị `Còn N ngày` không bị xuống dòng hay lặp icon.
+    - Nút chính: `[✓] Đồng ý nhận việc` (`.btn--primary`, rộng 300px, cao 42px, bo 8px, nền xanh `var(--brand)`).
+    - Nút phụ: `[✕] Từ chối thư mời` (`.btn--outline`, rộng 300px, cao 42px, bo 8px, viền đỏ `var(--error)`).
+    - Cả 3 box được cố định chiều rộng bằng nhau 300px trên desktop, tạo sự cân bằng thị giác tuyệt đối theo yêu cầu.
 - **Thẻ 2 (Nội Dung Thư Mời):**
   - Header: Bên trái icon thư mint + tiêu đề `Nội dung thư mời`; bên phải nút `[📄] Tải về PDF`.
   - Chữ ký kết thúc: Căn lề trái (`.cof-letter-signoff-left`):
