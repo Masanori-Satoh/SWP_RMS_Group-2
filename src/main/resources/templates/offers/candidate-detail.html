@@ -29,21 +29,6 @@
     <!-- FLASH MESSAGES (Căn giữa thanh topbar ngang hàng thông tin người dùng) -->
     <th:block th:replace="~{fragments/ui/flash-toast :: flashToast(${successMessage}, ${errorMessage})}"></th:block>
 
-    <!-- Điều hướng quay lại -->
-    <nav class="cof-nav-bar no-print" aria-label="Đường dẫn">
-        <a th:href="@{/portal/applications}" class="cof-back-link">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
-            <span>Quay lại danh sách đơn ứng tuyển</span>
-        </a>
-        <span class="cof-nav-separator" aria-hidden="true">&rsaquo;</span>
-        <div class="cof-breadcrumb-trail">
-            <a th:href="@{/portal/applications}">Đơn ứng tuyển</a>
-            <span class="cof-breadcrumb-sep">/</span>
-            <a th:href="@{/portal/offers}">Thư mời nhận việc</a>
-            <span class="cof-breadcrumb-sep">/</span>
-            <span class="cof-breadcrumb-curr" th:text="|#${offer.offerId}|">#17</span>
-        </div>
-    </nav>
 
     <!-- Thông báo phản hồi hệ thống (Nếu có) -->
     <div th:if="${decisionType == 'DECLINED'}" class="alert alert--neutral cof-system-banner no-print" role="status">
