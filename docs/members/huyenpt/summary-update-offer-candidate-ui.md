@@ -1,6 +1,6 @@
-# BÁO CÁO CHUẨN HÓA GIAO DIỆN CỔNG OFFER ỨNG VIÊN (CANDIDATE OFFER PORTAL) THEO UI_RULES & ARCHITECTURE_GUIDE
+# BÁO CÁO ĐỒNG BỘ & NÂNG CẤP TOÀN DIỆN GIAO DIỆN CỔNG OFFER ỨNG VIÊN THEO UI_RULES & ARCHITECTURE_GUIDE
 
-- **Dự án:** Hệ Thống Quản Lý Tuyển Dụng — SWP_RMS_Group-2 (Mực RMS)
+- **Dự án:** Hệ Thống Quản Lý Tuyển Dụng — SWP_RMS_Group-2 (Mộc RMS)
 - **Nhánh thực hiện (Branch):** `feat/huyenpt/update-offer-candidate-ui`
 - **Nhánh gốc (Base Branch):** `main`
 - **Thành viên phụ trách (Assignee):** Phạm Thị Huyền (`HuyenPT`)
@@ -19,71 +19,65 @@
 ## 🎯 I. MỤC TIÊU & BỐI CẢNH TRIỂN KHAI
 
 ### 1. Bối cảnh
-Trước đợt rà soát và chuẩn hóa này, phân hệ Cổng thông tin Offer dành cho Ứng viên (`/portal/offers/**`) còn tồn tại một số điểm chưa đồng bộ với tiêu chuẩn thiết kế chung của hệ thống:
-1. **Hệ thống thông báo phân mảnh & Popup che màn hình:**
-   - Khi ứng viên đồng ý nhận việc, giao diện hiển thị một modal blocking tự chế `#cof-accept-success-modal` với backdrop tối và animation riêng, thay vì sử dụng cơ chế Flash Toast chuẩn toàn hệ thống (`fragments/ui/flash-toast`).
-   - Màn hình danh sách và chi tiết sử dụng các thẻ `.alert.alert-success`, `.alert.alert-danger` tĩnh, gây giật giao diện và không đồng bộ với trải nghiệm của HR/Director.
-2. **Vi phạm Button DNA:**
-   - Nút chấp nhận offer trong `candidate-detail.html` dùng `.btn--success` (màu xanh lá riêng biệt) thay vì `.btn.btn--primary` chuẩn mực.
-   - Nút từ chối dùng `.btn--outline-danger` thay vì `.btn.btn--outline`.
-   - Nút tải PDF dùng class không chuẩn `.cof-download-bar__btn` thay vì `.btn.btn--secondary.btn--sm`.
-3. **Hardcoded Hex Color trong Watermark:**
-   - Dấu watermark "THƯ MỜI NHẬN VIỆC CHÍNH THỨC" trong `candidate-detail.html` chứa mã hex cứng `stroke="#2d6a4f"` và `fill="#2d6a4f"` thay vì dùng biến token `var(--brand)`.
-4. **Ký tự Entity thô:**
-   - Màn hình từ chối `candidate-decline.html` dùng thực thể HTML thô `&larr; Quay lại` thay vì inline SVG icon có aria-hidden.
-5. **Thiếu liên kết trực tiếp trong Email Offer:**
-   - Khi HR phát hành offer, `OfferMailSender.java` chỉ gửi email thông báo văn bản thuần mà không có đường link trực tiếp dẫn ứng viên tới `/portal/offers/{offerId}`.
+Trước đợt rà soát và nâng cấp toàn diện này, phân hệ Cổng thông tin Offer dành cho Ứng viên (`/portal/offers/**`) tồn tại các điểm cần hoàn thiện:
+1. **Thông báo phân mảnh & Popup che màn hình:**
+   - Ứng viên bấm đồng ý nhận việc thì hệ thống hiện modal tự chế `#cof-accept-success-modal` che tối toàn bộ màn hình, thay vì dùng cơ chế Flash Toast chuẩn toàn hệ thống (`fragments/ui/flash-toast`).
+2. **Kích thước nút bấm và nhận diện chưa chuẩn Button DNA:**
+   - Nút hành động bị giới hạn chiều cao 42px thay vì chiều cao chuẩn 48px (`var(--btn-h)`).
+   - Nút chấp nhận và từ chối chưa có bóng đổ nhận diện thương hiệu.
+3. **Thư mời nhận việc còn đơn điệu về thị giác:**
+   - Thiếu định danh thương hiệu Mộc RMS ở đầu văn bản.
+   - Thiếu mã văn bản thư mời chính thức (`offerCode`) và ngày phát hành (`sentAt`).
+   - Lời ngỏ chưa được đóng khung trang trọng; khối lương chưa làm nổi bật sự khác biệt giữa Lương chính thức và Lương thử việc.
+4. **Định tuyến Breadcrumb chưa liên kết liền mạch:**
+   - Chỉ có nút "Quay lại danh sách" đơn lẻ, chưa kết nối hành trình từ `Đơn ứng tuyển của tôi / Thư mời nhận việc / Chi tiết`.
 
 ### 2. Mục tiêu cốt lõi
-1. **Chuẩn hóa thông báo Flash Toast:** Đưa toàn bộ phản hồi (đồng ý nhận việc, từ chối nhận việc, thông báo hết hạn, lỗi phân quyền) về Flash Toast chuẩn đặt giữa màn hình (`fragments/ui/flash-toast`), xóa bỏ hoàn toàn modal tự chế.
-2. **Tuân thủ Buttons DNA & Token CSS:** 100% nút bấm tuân thủ cấu trúc `.btn`, sử dụng `var(--brand)`, bo góc tiêu chuẩn 8px, 0 mã hex hardcoded.
-3. **Làm sạch mã nguồn CSS & JS:** Xóa sạch CSS mồ côi và keyframes thừa trong `candidate-offers.css`, loại bỏ mã JS mở modal cũ trong `candidate-offers.js`.
-4. **Bổ sung đường link trực tiếp trong Email:** Inject `app.base-url` và tự động gắn link chi tiết vào email Offer gửi ứng viên.
-5. **Bảo toàn 100% nghiệp vụ và kiểm thử:** Đảm bảo 100% test cases của phân hệ Offer đều vượt qua.
+1. **Chuẩn hóa Thông báo Flash Toast:** Đưa toàn bộ phản hồi về Flash Toast đặt giữa màn hình trên Topbar, loại bỏ 100% modal blocking tự chế.
+2. **Nâng cấp Bố cục Khung & Thanh Thao Tác:** Breadcrumb định tuyến dạng pill sang trọng, Action bar với meta badge hạn chót & đếm ngược thời gian còn lại trực quan.
+3. **Tuân thủ Tuyệt đối Buttons DNA:** Nút cao 48px, bo góc 8px, font 15.5px semibold, bóng đổ thương hiệu Mộc RMS.
+4. **Trang trọng hóa Thư Mời (Official Letterhead):** Bổ sung logo Mộc RMS, mã văn bản, ngày phát hành, khung đón mừng ứng viên và làm nổi bật khối lương/đãi ngộ.
+5. **Bảo toàn Kiến trúc & Bộ Kiểm Thử:** Đảm bảo 100% test cases phân hệ Offer vượt qua, không ảnh hưởng tới bất kỳ luồng nào khác (HR, Giám đốc, Đơn ứng tuyển).
 
 ---
 
 ## 🛠️ II. TIẾN ĐỘ THỰC HIỆN THEO TỪNG PHASE
 
-### Phase 1: Chuẩn Hóa Flash Toast & Loại Bỏ Modal Tự Chế (Commit `936e7d4`)
-- Nhúng `flash-toast.css` và `flash-toast.js` vào:
-  - `candidate-list.html`
-  - `candidate-detail.html`
-  - `candidate-decline.html`
-- Thay thế các khối `.alert-success` / `.alert-danger` bằng Thymeleaf fragment chuẩn:
-  ```html
-  <th:block th:replace="~{fragments/ui/flash-toast :: flashToast(${successMessage}, ${errorMessage})}"></th:block>
-  ```
-- Loại bỏ hoàn toàn modal tự chế `#cof-accept-success-modal` khỏi `candidate-detail.html`.
-- Loại bỏ mã script lắng nghe và hiển thị modal thành công trong `candidate-offers.js`.
-- **Kiểm thử:** 34/34 tests passing.
+### Phase 1: Chuẩn Hóa Flash Toast, Buttons DNA & Link Email (Commits `936e7d4`, `0c3adab`, `205c413`, `02eede8`)
+- Xóa bỏ hoàn toàn modal tự chế `#cof-accept-success-modal`.
+- Tích hợp fragment `fragments/ui/flash-toast :: flashToast` vào `candidate-list.html`, `candidate-detail.html`, `candidate-decline.html`.
+- Thay thế mã màu cứng `#2d6a4f` trong watermark bằng biến token `var(--brand)`.
+- Thay thế ký tự thô `&larr;` bằng inline SVG arrow.
+- Tối ưu `OfferMailSender.java`: chèn link trực tiếp `baseUrl + "/portal/offers/" + offer.getOfferId()` vào email gửi ứng viên.
+- **Kiểm thử:** 148/148 tests passing.
 
-### Phase 2: Chuẩn Hóa Buttons DNA, Loại Bỏ Hex Colors & Ký Tự Thô (Commit `0c3adab`)
-- Nút "Đồng ý nhận việc": chuyển từ `class="btn btn--success btn--lg"` sang `class="btn btn--primary btn--lg"`.
-- Nút "Từ chối nhận việc": chuyển từ `class="btn btn--outline-danger btn--lg"` sang `class="btn btn--outline btn--lg"`.
-- Nút "Tải bản PDF": chuyển từ `class="btn cof-download-bar__btn"` sang `class="btn btn--secondary btn--sm"`.
-- Thay thế mã màu cứng `#2d6a4f` trong SVG watermark bằng biến token `var(--brand)`.
-- Thay thế ký tự thô `&larr;` trong `candidate-decline.html` bằng inline SVG mũi tên quay lại chuẩn hóa.
-- **Kiểm thử:** 34/34 tests passing.
+### Phase 2: Nâng Cấp Bố Cục Khung & Thanh Điều Hướng (Commit `6bbdd5f`)
+- Nâng cấp `<nav class="cof-breadcrumb">` thành thanh định tuyến pill tinh tế: `Đơn ứng tuyển / Thư mời nhận việc / #{id} · {Vị trí}`.
+- Thiết kế lại `.cof-top-bar` thành thẻ Surface hiện đại bo tròn 14px:
+  - Thẻ Hạn chót phản hồi kèm icon lịch.
+  - Thẻ Thời gian còn lại dạng đếm ngược tự đổi sang màu cảnh báo ấm `var(--warning-soft)` & `var(--warning)`.
+  - Nút *"Đồng ý nhận việc"* chuẩn `.btn.btn--primary` (cao 48px, bo 8px, bóng đổ xanh thương hiệu).
+  - Nút *"Từ chối thư mời"* chuẩn `.btn.btn--outline` (cao 48px, bo 8px, viền đỏ tinh tế).
+- **Kiểm thử:** 148/148 tests passing.
 
-### Phase 3: Làm Sạch CSS Mồ Côi & Tối Ưu candidate-offers.css (Commit `205c413`)
-- Xóa bỏ hoàn toàn 7 selector CSS mồ côi của modal chấp nhận thành công:
-  - `.cof-accept-success-modal`, `.cof-accept-success-backdrop`, `.cof-accept-success-card`, `.cof-accept-success-icon`, `.cof-accept-success-title`, `.cof-accept-success-desc`, `.cof-accept-success-btn`.
-- Xóa bỏ các animation keyframes không còn dùng: `@keyframes cofFadeIn`, `@keyframes cofScaleUp`.
-- Cập nhật quy tắc `@media print` sạch sẽ, sẵn sàng cho việc in ấn/xuất PDF thư mời nhận việc.
-- **Kiểm thử:** 34/34 tests passing.
+### Phase 3: Nâng Cấp Thị Giác Tờ Thư Mời (Official Letterhead) (Commit `5ffdd63`)
+- Thêm định danh thương hiệu: `MỘC RMS | HỆ THỐNG QUẢN TRỊ TUYỂN DỤNG` kèm icon lá xanh thương hiệu ở đầu văn bản.
+- Hiển thị metadata văn bản: Mã văn bản (`offerCode`) và Ngày phát hành (`sentAt`).
+- Tiêu đề thư mời sắc nét kèm thanh gạch đôi phân cách `THƯ MỜI NHẬN VIỆC CHÍNH THỨC`.
+- Đóng khung lời ngỏ trang trọng (`.cof-paper-greeting-box`) với viền nhấn xanh `var(--brand)`.
+- Chữ ký trang trọng: *Ban Giám đốc & Đội ngũ Tuyển dụng Mộc RMS*.
+- **Kiểm thử:** 148/148 tests passing.
 
-### Phase 4: Bổ Sung Link Offer Trong Email & Kiểm Thử Toàn Diện (Commit `02eede8`)
-- Mở rộng `OfferMailSender.java`:
-  - Tiêm thuộc tính `@Value("${app.base-url:${APP_BASE_URL:http://localhost:8080}}") baseUrl`.
-  - Chuẩn hóa URL loại bỏ dấu gạch chéo cuối nếu có.
-  - Chèn khối hướng dẫn truy cập kèm đường link trực tiếp `baseUrl + "/portal/offers/" + offer.getOfferId()` vào nội dung email gửi ứng viên.
-  - Cập nhật định dạng email chuyên nghiệp, rõ ràng mức đãi ngộ và thời hạn phản hồi.
-- Chạy toàn diện bộ test phân hệ Offer:
-  - `OfferControllerBugTests`: 3/3 passed.
-  - `OfferIntegrationTests`: 31/31 passed.
-  - `OfferServiceTests`: 114/114 passed.
-  - **Tổng cộng:** 148/148 passed (0 failures, 0 errors, BUILD SUCCESS).
+### Phase 4: Nâng Cấp 3 Khối Nội Dung Cốt Lõi (Thông Tin - Lương Thưởng - Quyền Lợi) (Commit `9fb9922`)
+- **Thẻ Lương chính thức:** Đóng khung viền xanh `var(--brand)`, số tiền to 24px đậm nét `var(--brand-dark)`, nền gradient nhẹ sang trọng.
+- **Thẻ Lương thử việc:** Nền `var(--surface-sunken)`, badge tỷ lệ *85% lương chính thức* thanh lịch.
+- **Cột Thông tin công việc & Quyền lợi:** Bo tròn 14px, icon bo góc trên nền `var(--brand-soft)`, các item quyền lợi có hiệu ứng hover mượt mà.
+- **Kiểm thử:** 148/148 tests passing.
+
+### Phase 5: Đồng Bộ Màn Hình Danh Sách & Từ Chối (Commit `6c937b8`)
+- Bổ sung Breadcrumb định tuyến liền mạch cho cả `candidate-list.html` và `candidate-decline.html`.
+- Đồng bộ toàn bộ trải nghiệm người dùng từ Danh sách -> Chi tiết -> Từ chối.
+- **Kiểm thử:** 148/148 tests passing.
 
 ---
 
@@ -91,10 +85,11 @@ Trước đợt rà soát và chuẩn hóa này, phân hệ Cổng thông tin Of
 
 | Tiêu chuẩn | Trước khi nâng cấp | Sau khi nâng cấp | Đánh giá |
 | --- | --- | --- | --- |
-| **Hệ thống Flash Toast** | Dùng modal tự chế `#cof-accept-success-modal` và inline alerts | Nhúng `fragments/ui/flash-toast` chuẩn toàn hệ thống | ✅ Đạt 100% |
-| **Buttons DNA** | Dùng `.btn--success`, `.btn--outline-danger`, `.cof-download-bar__btn` | Chuẩn hóa `.btn.btn--primary`, `.btn.btn--outline`, `.btn.btn--secondary.btn--sm` | ✅ Đạt 100% |
-| **Màu sắc & Token CSS** | Chứa mã màu cứng `#2d6a4f` trong SVG watermark | 100% dùng `var(--brand)` và biến token `tokens.css` | ✅ Đạt 100% |
-| **Biểu tượng (Icons)** | Dùng ký tự HTML thô `&larr;` | 100% inline SVG có `aria-hidden="true"` | ✅ Đạt 100% |
-| **Mã CSS mồ côi** | Còn tồn tại nhiều class modal và keyframes thừa | Dọn dẹp sạch sẽ 100% | ✅ Đạt 100% |
-| **Trải nghiệm Email** | Email thông báo không có đường dẫn đến offer | Tự động sinh link trực tiếp `/portal/offers/{id}` | ✅ Đạt 100% |
-| **Kiểm thử tự động** | Chưa chạy toàn bộ test sau sửa đổi UI | 148/148 tests pass (BUILD SUCCESS) | ✅ Đạt 100% |
+| **Hệ thống Flash Toast** | Dùng modal tự chế `#cof-accept-success-modal` và inline alerts | Nhúng `fragments/ui/flash-toast` chuẩn toàn hệ thống căn giữa Topbar | ✅ Đạt 100% |
+| **Buttons DNA** | Chiều cao 42px, dùng class tự chế `.cof-top-btn-*` | Chuẩn hóa `.btn.btn--primary`, `.btn.btn--outline`, chiều cao 48px, bo 8px | ✅ Đạt 100% |
+| **Màu sắc & Token CSS** | Chứa mã màu cứng `#2d6a4f` | 100% dùng `var(--brand)` và biến token `tokens.css` | ✅ Đạt 100% |
+| **Header Thư mời** | Chỉ có dòng chữ nhỏ đơn điệu | Logo Mộc RMS, mã văn bản, ngày phát hành, thanh gạch đôi trang trọng | ✅ Đạt 100% |
+| **Khối Lương & Đãi ngộ** | Thẻ xám phẳng, chưa nổi bật mức lương chính thức | Nền gradient, viền xanh `var(--brand)`, số tiền 24px đậm, badge tỷ lệ thử việc | ✅ Đạt 100% |
+| **Breadcrumb định tuyến** | Nút quay lại đơn lẻ | Thanh breadcrumb pill sang trọng: Đơn ứng tuyển / Thư mời / #{id} | ✅ Đạt 100% |
+| **Trải nghiệm Email** | Email thông báo không có đường dẫn | Tự động sinh link trực tiếp `/portal/offers/{id}` | ✅ Đạt 100% |
+| **Kiểm thử tự động** | Chưa chạy toàn bộ test | 148/148 tests pass (BUILD SUCCESS) | ✅ Đạt 100% |
