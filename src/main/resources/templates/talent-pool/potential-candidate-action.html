@@ -1,18 +1,6 @@
 <!DOCTYPE html>
-<html lang="vi" xmlns:th="http://www.thymeleaf.org">
-<body>
-<!-- Reuse the Application bookmark dialog, styles and script; no Interview workflow mutation. -->
-<section th:fragment="action(applicationId, candidateName)" class="app-page form-group" data-tp-potential
-         th:attr="aria-label=|Lưu tiềm năng và ghi chú của ${candidateName}|,data-candidate-name=${candidateName}">
-    <button class="btn btn--secondary btn--sm app-bookmark-button" type="button" data-app-bookmark data-bookmark-load
-            data-saved-label="Đã lưu tiềm năng" data-unsaved-label="Lưu ứng viên tiềm năng" disabled
-            aria-haspopup="dialog" aria-controls="app-bookmark"
-            th:attr="data-name=${candidateName},data-candidate-key=|application-${applicationId}|,data-application-id=${applicationId},data-bookmark-url=@{/talent-pool/applications/{id}/bookmark(id=${applicationId})}">
-        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M6 3h12v18l-6-4-6 4V3Z"/></svg>
-        <span data-app-bookmark-label>Đang tải trạng thái…</span>
-    </button>
-    <p class="app-feedback" id="app-feedback" role="status" aria-live="polite"></p>
-    <dialog th:replace="~{candidate/application-dialogs :: bookmark(canBookmark=true)}"></dialog>
-    <noscript><p class="text-muted">Bật JavaScript để xem trạng thái lưu và thêm ghi chú chung.</p></noscript>
-</section>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org"><body>
+<th:block th:fragment="action(applicationId, candidateName)">
+    <span th:replace="~{talent-pool/potential-toggle :: toggle(applicationId=${applicationId},candidateName=${candidateName},saved=${null},keepSource=${false})}"></span>
+</th:block>
 </body></html>

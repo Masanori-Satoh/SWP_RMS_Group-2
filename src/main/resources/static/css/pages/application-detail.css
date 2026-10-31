@@ -82,3 +82,9 @@
   .apd-page .apd-cv-head > a { width: 100%; }
   .apd-page .apd-cv-frame { min-height: 360px; }
 }
+
+/* Reuse candidate comments without inheriting the Talent Pool page layout. */
+.apd-grid .tpw-notes-panel { margin: 0; padding: var(--s5); }
+.apd-grid .tpw-notes-panel .tp-note-form { margin-top: var(--s4); }
+.apd-grid .tpw-notes-panel .tp-note-input { min-height: 112px; }
+.apd-grid .tpw-notes-panel .tp-note-actions { display: flex; justify-content: flex-end; margin-top: var(--s2); }

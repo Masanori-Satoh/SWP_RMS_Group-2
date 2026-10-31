@@ -222,7 +222,7 @@ class ApplicationPipelineWebTests {
     }
 
     @Test
-    void bookmarkModalPreservesListActionsAndCsrf() throws Exception {
+    void directPotentialTogglePreservesListActionsAndCsrf() throws Exception {
         when(pipeline.list(any(), any())).thenReturn(listOf(true, "Hiring Manager",
                 row(218, "HM_Passed", "80", true, true)));
         mvc.perform(get("/applications").with(as("hm_tuan", "Hiring Manager")))
@@ -232,11 +232,12 @@ class ApplicationPipelineWebTests {
                 .andExpect(content().string(containsString("Xem chi tiết")))
                 .andExpect(content().string(containsString("/interviews/new?applicationId=218")))
                 .andExpect(content().string(containsString("/offers/create?applicationId=218")))
-                .andExpect(content().string(containsString("Lịch sử ghi chú")))
-                .andExpect(content().string(containsString("Bỏ lưu tiềm năng")))
+                .andExpect(content().string(containsString("data-potential-toggle")))
+                .andExpect(content().string(containsString("aria-pressed=\"false\"")))
+                .andExpect(content().string(not(containsString("id=\"app-bookmark\""))))
                 .andExpect(content().string(not(containsString("more-menu"))))
                 .andExpect(content().string(not(containsString("Tối đa 1.000 ký tự."))))
-                .andExpect(content().string(containsString("name=\"_csrf\"")));
+                .andExpect(content().string(containsString("name=\"_csrf_header\"")));
     }
 
     @Test
@@ -490,7 +491,7 @@ class ApplicationPipelineWebTests {
         int cv = html.indexOf("id=\"app-cv-title\"");
         int side = html.indexOf("<aside class=\"app-detail__side apd-side\"");
         int contact = html.indexOf("id=\"app-contact-title\"");
-        int notes = html.indexOf("id=\"app-detail-notes\"");
+        int notes = html.indexOf("id=\"candidate-notes\"");
         int history = html.indexOf("id=\"app-timeline-title\"");
         assertTrue(journey >= 0 && journey < cv && cv < side && side < contact && contact < notes && notes < history);
     }
@@ -537,7 +538,7 @@ class ApplicationPipelineWebTests {
         String director = mvc.perform(get("/applications/298").with(as("director", "Director")))
                 .andExpect(status().isOk())
                 .andExpect(content().string(containsString("duyệt thay trưởng bộ phận")))
-                .andExpect(content().string(not(containsString("data-app-bookmark "))))
+                .andExpect(content().string(not(containsString("data-potential-toggle "))))
                 .andExpect(content().string(not(containsString("id=\"apd-consent-form\""))))
                 .andReturn().getResponse().getContentAsString();
         java.nio.file.Files.writeString(fixtures.resolve("review-director.html"), director);
@@ -995,7 +996,7 @@ class ApplicationPipelineWebTests {
                 .andExpect(content().string(containsString("tp-detail-workspace")))
                 .andExpect(content().string(containsString("Lịch sử ứng tuyển &amp; CV")))
                 .andExpect(content().string(containsString("Ghi chú đánh giá nội bộ")))
-                .andExpect(content().string(containsString("data-cv-url=\"/talent-pool/15/cv/10\"")))
+                .andExpect(content().string(containsString("data-cv-url=\"/talent-pool/15/cv/10?")))
                 .andExpect(content().string(containsString("data-hide-detail-link=\"true\"")))
                 .andExpect(content().string(not(containsString("talent-pool-selection.js"))))
                 .andExpect(content().string(not(containsString("data-pool-source"))))
@@ -1178,6 +1179,46 @@ class ApplicationPipelineWebTests {
                 SUBMITTED, status, ApplicationStatusLabels.label(status), ApplicationStatusLabels.badge(status),
                 "Applied".equals(status) ? null : "HR",
                 score == null ? null : new BigDecimal(score), schedule, offer, false);
+    }
+
+    @Test
+    void applicationNotesReturnToTheSameApplicationAndValidateContextBeforeWriting() throws Exception {
+        mvc.perform(post("/talent-pool/15/notes").with(as("hr", "HR")).with(csrf())
+                        .param("content", "Nhận xét").param("returnApplicationId", "298"))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrl("/applications/298#candidate-notes"));
+        var order = inOrder(talentPool);
+        order.verify(talentPool).validateNoteApplication(15, 298);
+        order.verify(talentPool).addNote(15, new TalentPoolNoteRequest("Nhận xét"));
+        doThrow(new AccessDeniedException("Không được xem hồ sơ này"))
+                .when(talentPool).validateNoteApplication(15, 999);
+        mvc.perform(post("/talent-pool/15/notes/1/delete").with(as("hr", "HR")).with(csrf())
+                        .param("returnApplicationId", "999"))
+                .andExpect(status().isForbidden());
+        verify(talentPool, never()).deleteNote(any(), any());
+    }
+
+    @Test
+    void potentialProfileToggleAndCommentsRenderInTheApplicationWorkspace() throws Exception {
+        var candidate = new TalentPoolCandidateResponse(15, "An Võ", "an@example.com", "0901234567", List.of());
+        when(talentPool.detail(15)).thenReturn(new TalentPoolDetailResponse(candidate, true,
+                List.of(new TalentPoolNoteResponse(1, "Lan HR", "Nhận xét nội bộ", SUBMITTED, "HR", true)),
+                List.of(new TalentPoolCvResponse(298, "Backend Developer", SUBMITTED, "Engineering", null, "HM_Passed")),
+                java.time.LocalDate.of(1995, 8, 17), "Nữ", "Hà Nội", "LinkedIn", "https://linkedin.com/in/an-vo", null));
+        when(talentPool.bookmarkSource(15)).thenReturn(298);
+        String html = mvc.perform(get("/talent-pool/15").with(as("hr", "HR")))
+                .andExpect(status().isOk())
+                .andExpect(content().string(containsString("data-potential-toggle")))
+                .andExpect(content().string(containsString("aria-pressed=\"true\"")))
+                .andExpect(content().string(containsString("data-source-id=\"298\"")))
+                .andExpect(content().string(containsString("Bỏ lưu tiềm năng")))
+                .andExpect(content().string(containsString("data-pool-note")))
+                .andReturn().getResponse().getContentAsString();
+        assertTrue(html.indexOf("tpw-main-stack") < html.indexOf("tpw-profile-identity"));
+        assertTrue(html.indexOf("tpw-side-stack") < html.indexOf("id=\"tp-candidate-info-title\""));
+        var fixtures = java.nio.file.Path.of("target/application-detail-fixtures");
+        java.nio.file.Files.createDirectories(fixtures);
+        java.nio.file.Files.writeString(fixtures.resolve("potential-profile.html"), html);
     }
 
     @Test

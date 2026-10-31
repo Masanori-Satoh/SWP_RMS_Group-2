@@ -71,13 +71,17 @@ public class TalentPoolController {
     // detail for a potential candidate
     public String detail(@PathVariable Integer id, @RequestParam(required = false) Integer jobPostingId,
             @RequestParam(required = false) Integer recommendationId,
+            @RequestParam(required = false) Integer sourceApplicationId,
             @ModelAttribute("filter") TalentPoolSearch filter,
             @RequestParam(defaultValue = "0") int page, @RequestParam(defaultValue = "0") int cvPage, Model model) {
         TalentPoolRecommendationResponse recommendation = recommendationId == null ? null : pool.recommendation(recommendationId, id);
         if (recommendation != null) jobPostingId = recommendation.jobPostingId();
         model.addAttribute("recommendation", recommendation);
-        var detail = recommendation == null ? pool.detail(id) : pool.recommendationDetail(id, recommendationId);
+        var detail = recommendation == null
+                ? (sourceApplicationId == null ? pool.detail(id) : pool.detail(id, sourceApplicationId))
+                : pool.recommendationDetail(id, recommendationId);
         model.addAttribute("detail", detail);
+        model.addAttribute("bookmarkSourceId", pool.bookmarkSource(id));
         int currentCvPage = Math.min(Math.max(0, cvPage), Math.max(0, (detail.cvs().size() - 1) / 3));
         model.addAttribute("cvHistory", new PageImpl<>(detail.cvs().subList(currentCvPage * 3,
                 Math.min(detail.cvs().size(), (currentCvPage + 1) * 3)), PageRequest.of(currentCvPage, 3), detail.cvs().size()));
@@ -123,8 +127,10 @@ public class TalentPoolController {
     public String note(@PathVariable Integer id, @RequestParam(defaultValue = "0") int cvPage, @Valid @ModelAttribute TalentPoolNoteRequest request,
             BindingResult errors, @RequestParam(required = false) Integer jobPostingId,
             @RequestParam(required = false) Integer recommendationId,
+            @RequestParam(required = false) Integer returnApplicationId,
             @ModelAttribute("filter") TalentPoolSearch filter,
             @RequestParam(defaultValue = "0") int page, RedirectAttributes flash) {
+        if (returnApplicationId != null) pool.validateNoteApplication(id, returnApplicationId);
         if (recommendationId != null) pool.recommendation(recommendationId, id);
         if (errors.hasErrors()) {
             flash.addFlashAttribute("errorMessage", errors.getAllErrors().getFirst().getDefaultMessage());
@@ -138,6 +144,7 @@ public class TalentPoolController {
                 flash.addFlashAttribute("noteDraft", request.content());
             }
         }
+        if (returnApplicationId != null) return "redirect:/applications/" + returnApplicationId + "#candidate-notes";
         String destination = poolUrl(id, jobPostingId, filter, page);
         if (recommendationId != null) destination += (destination.contains("?") ? "&" : "?") + "recommendationId=" + recommendationId;
         if (cvPage > 0) destination += (destination.contains("?") ? "&" : "?") + "cvPage=" + cvPage;
@@ -149,9 +156,11 @@ public class TalentPoolController {
             @Valid @ModelAttribute TalentPoolNoteRequest request, BindingResult errors,
             @RequestParam(required = false) Integer jobPostingId,
             @RequestParam(required = false) Integer recommendationId,
+            @RequestParam(required = false) Integer returnApplicationId,
             @RequestParam(defaultValue = "0") int cvPage,
             @ModelAttribute("filter") TalentPoolSearch filter,
             @RequestParam(defaultValue = "0") int page, RedirectAttributes flash) {
+        if (returnApplicationId != null) pool.validateNoteApplication(id, returnApplicationId);
         if (recommendationId != null) pool.recommendation(recommendationId, id);
         if (errors.hasErrors()) {
             flash.addFlashAttribute("errorMessage", errors.getAllErrors().getFirst().getDefaultMessage());
@@ -167,6 +176,7 @@ public class TalentPoolController {
                 flash.addFlashAttribute("editNoteDraft", request.content());
             }
         }
+        if (returnApplicationId != null) return "redirect:/applications/" + returnApplicationId + "#candidate-notes";
         return noteRedirect(id, jobPostingId, recommendationId, cvPage, filter, page);
     }
 
@@ -174,9 +184,11 @@ public class TalentPoolController {
     public String deleteNote(@PathVariable Integer id, @PathVariable Integer noteId,
             @RequestParam(required = false) Integer jobPostingId,
             @RequestParam(required = false) Integer recommendationId,
+            @RequestParam(required = false) Integer returnApplicationId,
             @RequestParam(defaultValue = "0") int cvPage,
             @ModelAttribute("filter") TalentPoolSearch filter,
             @RequestParam(defaultValue = "0") int page, RedirectAttributes flash) {
+        if (returnApplicationId != null) pool.validateNoteApplication(id, returnApplicationId);
         if (recommendationId != null) pool.recommendation(recommendationId, id);
         try {
             pool.deleteNote(id, noteId);
@@ -184,6 +196,7 @@ public class TalentPoolController {
         } catch (TalentPoolException e) {
             flash.addFlashAttribute("errorMessage", e.getMessage());
         }
+        if (returnApplicationId != null) return "redirect:/applications/" + returnApplicationId + "#candidate-notes";
         return noteRedirect(id, jobPostingId, recommendationId, cvPage, filter, page);
     }
 
@@ -391,8 +404,10 @@ public class TalentPoolController {
     @GetMapping("/{id}/cv/{appId}")
     // view preview CV
     public ResponseEntity<Resource> cv(@PathVariable Integer id,
-            @PathVariable Integer appId, @RequestParam(required = false) Integer recommendationId) {
-        ApplicationCv cv = recommendationId == null ? pool.cv(id, appId) : pool.cv(id, appId, recommendationId);
+            @PathVariable Integer appId, @RequestParam(required = false) Integer recommendationId,
+            @RequestParam(required = false) Integer sourceApplicationId) {
+        ApplicationCv cv = sourceApplicationId != null ? pool.cv(id, appId, recommendationId, sourceApplicationId)
+                : recommendationId == null ? pool.cv(id, appId) : pool.cv(id, appId, recommendationId);
         if (cv.redirectUrl() != null)
             return ResponseEntity.status(302).location(URI.create(cv.redirectUrl()))
                     .build();

@@ -60,14 +60,12 @@ class InterviewPotentialWebTests {
     void hmFinalPassOrFailHasIndependentPotentialActionAndUnchangedFinalResult(String decision) throws Exception {
         when(resultService.getResult(eq(7L),any())).thenReturn(result(decision,false));
         mvc.perform(get("/interviews/7/result").with(as("Hiring Manager")))
-                .andExpect(status().isOk()).andExpect(content().string(containsString("data-tp-potential")))
+                .andExpect(status().isOk()).andExpect(content().string(containsString("data-potential-toggle")))
                 .andExpect(content().string(containsString("/talent-pool/applications/218/bookmark")))
                 .andExpect(content().string(containsString("Kết quả cuối")))
                 .andExpect(content().string(containsString("Nhận xét chuyên môn")))
-                .andExpect(content().string(containsString("Đang tải trạng thái…")))
-                .andExpect(content().string(containsString("aria-controls=\"app-bookmark\"")))
-                .andExpect(content().string(containsString("id=\"app-bookmark\"")))
-                .andExpect(content().string(containsString("Lịch sử ghi chú")))
+                .andExpect(content().string(containsString("Đang tải…")))
+                .andExpect(content().string(not(containsString("id=\"app-bookmark\""))))
                 .andExpect(content().string(not(containsString("data-tp-notes"))))
                 .andExpect(content().string(not(containsString("id=\"app-preview\""))));
         verifyNoInteractions(pool,email);
@@ -75,21 +73,21 @@ class InterviewPotentialWebTests {
     @Test void hrHasSameActionBeforeFinalDecisionAndHmFinalizeDialogIsPreserved() throws Exception {
         when(resultService.getResult(eq(7L),any())).thenReturn(result(null,false));
         mvc.perform(get("/interviews/7/result").with(as("HR")))
-                .andExpect(status().isOk()).andExpect(content().string(containsString("data-tp-potential")))
+                .andExpect(status().isOk()).andExpect(content().string(containsString("data-potential-toggle")))
                 .andExpect(content().string(containsString("Thông tin buổi phỏng vấn")));
         when(resultService.getResult(eq(7L),any())).thenReturn(result(null,true));
         mvc.perform(get("/interviews/7/result").with(as("Hiring Manager")))
                 .andExpect(status().isOk()).andExpect(content().string(containsString("data-action=\"/interviews/7/final-result\"")))
                 .andExpect(content().string(containsString("Chốt kết quả")))
                 .andExpect(content().string(containsString("/js/pages/interview-result.js")))
-                .andExpect(content().string(containsString("/js/pages/applications.js")));
+                .andExpect(content().string(containsString("/js/pages/potential-candidate-toggle.js")));
     }
     @ParameterizedTest @ValueSource(strings={"Interviewer","Director"})
     void otherResultViewersDoNotReceivePotentialUiOrItsScript(String role) throws Exception {
         when(resultService.getResult(eq(7L),any())).thenReturn(result("Passed",false));
         mvc.perform(get("/interviews/7/result").with(as(role))).andExpect(status().isOk())
-                .andExpect(content().string(not(containsString("data-tp-potential"))))
-                .andExpect(content().string(not(containsString("/js/pages/applications.js"))))
+                .andExpect(content().string(not(containsString("data-potential-toggle"))))
+                .andExpect(content().string(not(containsString("/js/pages/potential-candidate-toggle.js"))))
                 .andExpect(content().string(not(containsString("id=\"app-bookmark\""))));
         verifyNoInteractions(pool);
     }
