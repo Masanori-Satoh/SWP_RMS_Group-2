@@ -116,6 +116,7 @@ public class OfferController {
             model.addAttribute("search", search != null ? search.trim() : "");
             model.addAttribute("currentTimeSort",
                     timeSort != null && !timeSort.isBlank() ? timeSort.trim() : "DEFAULT");
+            model.addAttribute("activeMenu", "offers");
 
             return "offers/director-list";
         }

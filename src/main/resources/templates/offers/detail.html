@@ -371,6 +371,11 @@
             <div class="director-decision-subnote">
                 * Nếu từ chối đề xuất, vui lòng nêu rõ lý do để Bộ phận Tuyển dụng tiếp tục hỗ trợ xử lý.
             </div>
+            <!-- Thông báo lỗi khi thiếu lý do từ chối -->
+            <div id="directorCommentsError" class="director-comment-error-msg" style="display: none;">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                <span>Vui lòng nhập lý do từ chối vào ô nhận xét trước khi tiếp tục.</span>
+            </div>
 
             <!-- Action Buttons: Từ chối & Phê duyệt (Căn lề góc dưới bên phải) -->
             <div class="director-decision-footer-btns">
@@ -412,15 +417,73 @@
         </div>
     </div>
 
-    <!-- Toast Notification Container -->
-    <div class="toast-container" id="toastContainer"></div>
+
+    <!-- ===========================================================================
+         DIALOG 1: NATIVE HTML5 XÁC NHẬN PHÊ DUYỆT CỦA GIÁM ĐỐC
+         =========================================================================== -->
+    <dialog id="directorApproveConfirmDialog" class="confirm-dialog" aria-labelledby="directorApproveTitle">
+        <div class="dialog-content">
+            <div class="dialog-header">
+                <h3 id="directorApproveTitle" class="dialog-title">Phê duyệt đề xuất nhận việc?</h3>
+            </div>
+            <div class="dialog-body">
+                <p>Sau khi phê duyệt, Bộ phận Tuyển dụng sẽ được thông báo để tiếp tục phát hành Thư mời nhận việc cho ứng viên.</p>
+            </div>
+            <div class="dialog-actions">
+                <button type="button" class="btn btn--secondary" onclick="document.getElementById('directorApproveConfirmDialog').close()">Hủy</button>
+                <button type="button" id="btnConfirmApproveModal" class="btn btn--primary" onclick="confirmDirectorApproveAction()">Xác nhận phê duyệt</button>
+            </div>
+        </div>
+    </dialog>
+
+    <!-- ===========================================================================
+         DIALOG 2: NATIVE HTML5 XÁC NHẬN TỪ CHỐI CỦA GIÁM ĐỐC
+         =========================================================================== -->
+    <dialog id="directorRejectConfirmDialog" class="confirm-dialog" aria-labelledby="directorRejectTitle">
+        <div class="dialog-content">
+            <div class="dialog-header">
+                <h3 id="directorRejectTitle" class="dialog-title">Từ chối đề xuất nhận việc?</h3>
+            </div>
+            <div class="dialog-body">
+                <p id="directorRejectDialogDesc">Bạn có chắc chắn muốn từ chối đề xuất nhận việc này?</p>
+                <div class="ofw-dialog-subnote">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+                    <span>Lý do từ chối sẽ được gửi lại để Bộ phận Tuyển dụng xử lý tiếp.</span>
+                </div>
+            </div>
+            <div class="dialog-actions">
+                <button type="button" class="btn btn--secondary" onclick="document.getElementById('directorRejectConfirmDialog').close()">Hủy</button>
+                <button type="button" id="btnConfirmRejectModal" class="btn btn--danger" onclick="confirmDirectorRejectAction()">Xác nhận từ chối</button>
+            </div>
+        </div>
+    </dialog>
+
+    <!-- ===========================================================================
+         DIALOG 3: NATIVE HTML5 XÁC NHẬN PHÁT HÀNH THƯ MỜI NHẬN VIỆC (HR)
+         =========================================================================== -->
+    <dialog id="sendOfferConfirmDialog" class="confirm-dialog" aria-labelledby="sendOfferTitle">
+        <div class="dialog-content">
+            <div class="dialog-header">
+                <h3 id="sendOfferTitle" class="dialog-title">Phát hành Thư mời nhận việc?</h3>
+            </div>
+            <div class="dialog-body">
+                <p>Bạn có chắc chắn muốn phát hành Thư mời nhận việc tới ứng viên? Hệ thống sẽ gửi email thư mời chính thức kèm thời hạn phản hồi.</p>
+            </div>
+            <div class="dialog-actions">
+                <button type="button" class="btn btn--secondary" onclick="document.getElementById('sendOfferConfirmDialog').close()">Hủy</button>
+                <button type="button" id="btnConfirmSendOfferModal" class="btn btn--primary" onclick="executeSendOfferAction()">
+                    <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true" class="ofw-btn-icon-inline"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+                    Xác nhận phát hành
+                </button>
+            </div>
+        </div>
+    </dialog>
 
 </main>
 
 <th:block layout:fragment="scripts">
   <th:block th:replace="~{fragments/ui/admin-workspace :: scripts}"></th:block>
   <script th:src="@{/js/pages/flash-toast.js}" defer></script>
-  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
   <script th:src="@{/js/offers.js}" defer></script>
 </th:block>
 </body>
