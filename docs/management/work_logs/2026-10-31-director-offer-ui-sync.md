@@ -72,6 +72,11 @@
   - Bổ sung trạng thái xử lý bất đồng bộ trực quan: Nút phát hành hiển thị spinner inline `.ofw-spinner-sm` và vô hiệu hóa tạm thời để chống click đúp.
   - Chuyển toàn bộ thông báo đang xử lý, thành công và thất bại sang Flash Toast không chặn UI (`showFlashToast`).
   - Bổ sung phòng thủ an toàn (safe fallback) cho hàm `showDirectorCustomModal` trong `offers.js`.
+- **Căn Giữa Thông Báo Flash Toast Ngang Hàng Thẻ Người Dùng Trên Topbar:**
+  - Định vị lại container `.flash-toasts` lên `top: 14px; left: 50%; transform: translateX(-50%); z-index: 1200;` để thông báo nằm ngay giữa màn hình, cùng dòng ngang hàng với tên nhân viên / vai trò trong Topbar, khắc phục tình trạng bị "chìm ngỉm ở chỗ Danh sách" do vị trí cũ `top: 90px; right: 16px`.
+  - Hiệu ứng chuyển động mượt mà: trượt nhẹ từ trên xuống `translateY(-12px) -> translateY(0)` và mờ dần khi tắt.
+  - Hỗ trợ lưu trữ `sessionStorage.pendingFlashToast`: Cho phép thông báo thành công (ví dụ: phát hành offer, phê duyệt, từ chối, xóa) hiển thị trọn vẹn 3 giây sau khi trang reload/chuyển hướng.
+  - Nhúng fragment `flashToast` vào `director-list.html` và dọn dẹp các thẻ `#toastContainer` cũ lỗi thời khỏi `detail.html`, `list.html`, `director-list.html`.
 
 
 ---
