@@ -47,15 +47,20 @@ public class CandidateOfferController {
     /** Chuyển tiếp tương thích ngược: tự động redirect về trang chi tiết và mở Modal từ chối. */
     @GetMapping("/{id}/decline")
     public String declinePage(@PathVariable Integer id, RedirectAttributes redirect) {
-        CandidateOfferDetailResponse offer = candidateOffers.getDetail(id);
-        if (!offer.canRespond()) {
-            String msg = offer.isExpired()
-                    ? "Thư mời này đã quá ngày bắt đầu nhận việc dự kiến, không thể phản hồi nữa."
-                    : "Thư mời này đã được trả lời nên không thể thay đổi.";
-            redirect.addFlashAttribute("errorMessage", msg);
+        try {
+            CandidateOfferDetailResponse offer = candidateOffers.getDetail(id);
+            if (!offer.canRespond()) {
+                String msg = offer.isExpired()
+                        ? "Thư mời này đã quá ngày bắt đầu nhận việc dự kiến, không thể phản hồi nữa."
+                        : "Thư mời này đã được trả lời nên không thể thay đổi.";
+                redirect.addFlashAttribute("errorMessage", msg);
+                return "redirect:/portal/offers/" + id;
+            }
+            return "redirect:/portal/offers/" + id + "?openDecline=true";
+        } catch (Exception e) {
+            redirect.addFlashAttribute("errorMessage", "Không thể xử lý yêu cầu: " + e.getMessage());
             return "redirect:/portal/offers/" + id;
         }
-        return "redirect:/portal/offers/" + id + "?openDecline=true";
     }
 
     /** Nhận offer; kết quả hoặc lỗi hiện bằng thông báo trên trang danh sách hoặc chi tiết. */
@@ -70,6 +75,10 @@ public class CandidateOfferController {
             redirect.addFlashAttribute("congratsTitle", postingTitle);
         } catch (OfferResponseException e) {
             redirect.addFlashAttribute("errorMessage", e.getMessage());
+        } catch (com.group2.rms.core.exception.ResourceNotFoundException e) {
+            throw e;
+        } catch (Exception e) {
+            redirect.addFlashAttribute("errorMessage", "Đã xảy ra lỗi khi xử lý nhận việc: " + e.getMessage());
         }
         return fromDetail ? "redirect:/portal/offers/" + id : "redirect:/portal/offers";
     }
@@ -98,6 +107,10 @@ public class CandidateOfferController {
             }
         } catch (OfferResponseException e) {
             redirect.addFlashAttribute("errorMessage", e.getMessage());
+        } catch (com.group2.rms.core.exception.ResourceNotFoundException e) {
+            throw e;
+        } catch (Exception e) {
+            redirect.addFlashAttribute("errorMessage", "Đã xảy ra lỗi khi xử lý từ chối: " + e.getMessage());
         }
         return fromDetail ? "redirect:/portal/offers/" + id : "redirect:/portal/offers";
     }

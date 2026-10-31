@@ -18,6 +18,7 @@ import java.util.List;
 import java.util.Set;
 
 @Service
+@Transactional
 public class CandidateOfferServiceImpl implements CandidateOfferService {
 
     static final String SENT = "Sent_Candidate";
@@ -90,6 +91,12 @@ public class CandidateOfferServiceImpl implements CandidateOfferService {
     @Transactional
     public String accept(Integer offerId) {
         return answer(offerId, true, null);
+    }
+
+    @Override
+    @Transactional
+    public String decline(Integer offerId) {
+        return answer(offerId, false, null);
     }
 
     @Override
