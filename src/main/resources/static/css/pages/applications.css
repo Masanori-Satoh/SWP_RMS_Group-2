@@ -6,12 +6,31 @@
    Tiền tố class: app-
    ============================================================================= */
 
-/* --- Danh sách --------------------------------------------------------------- */
+/* --- Danh sách (Internal Applications List) ---------------------------------- */
+.app-page {
+  width: 100%;
+  max-width: none;
+  box-sizing: border-box;
+}
+
+.app-header {
+  margin-bottom: var(--s6);
+}
+
+.app-back-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s2);
+  white-space: nowrap;
+}
+
+/* Thanh bộ lọc ứng viên */
 .app-filter {
   display: grid;
   grid-template-columns: 2fr 2fr 1.5fr auto;
   gap: var(--s4);
   align-items: end;
+  padding: var(--s5) var(--s6);
   margin-bottom: var(--s6);
 }
 
@@ -19,45 +38,259 @@
   margin-bottom: 0;
 }
 
+.app-filter .form-label {
+  display: block;
+  margin-bottom: var(--s2);
+  font-size: var(--font-sm);
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.app-filter .form-input,
+.app-filter .form-select {
+  width: 100%;
+  height: var(--input-h);
+  padding: 0 var(--s3);
+  border: 1px solid var(--control-line);
+  border-radius: var(--radius-md);
+  background-color: var(--surface);
+  color: var(--ink);
+  font-size: var(--font-base);
+  box-sizing: border-box;
+  transition: border-color 150ms ease, box-shadow 150ms ease;
+}
+
+.app-filter .form-input:focus,
+.app-filter .form-select:focus {
+  border-color: var(--brand);
+  outline: 2px solid var(--brand);
+  outline-offset: -1px;
+}
+
 .app-filter__actions {
   display: flex;
+  align-items: center;
   gap: var(--s2);
+}
+
+.app-filter__actions .btn {
+  height: var(--btn-h);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--s2);
+  padding: 0 var(--s5);
+  white-space: nowrap;
+}
+
+/* Card chứa bảng danh sách */
+.app-list-card {
+  margin-bottom: var(--s8);
+  overflow: hidden;
+}
+
+.app-list-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: var(--s3);
+  padding: var(--s4) var(--s6);
+  border-bottom: 1px solid var(--line);
+  background: var(--surface);
+}
+
+.app-list-header__identity {
+  display: flex;
+  align-items: center;
+  gap: var(--s3);
+}
+
+.app-list-header__icon {
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  border-radius: var(--radius-md);
+  background: var(--brand-soft);
+  color: var(--brand-dark);
 }
 
 .app-results {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: var(--s4);
-  margin-bottom: var(--s4);
+  gap: var(--s3);
 }
 
 .app-results__count {
-  margin: 0;
-  color: var(--muted);
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s1);
+  padding: var(--s1) var(--s3);
+  font-size: var(--font-sm);
+  font-weight: 600;
+  color: var(--brand-dark);
+  background: var(--brand-soft);
+  border-radius: var(--radius-full);
 }
 
-.app-candidate__name {
-  display: block;
+.app-clear-filter-btn {
+  font-size: var(--font-sm);
+  white-space: nowrap;
+}
+
+/* Bảng dữ liệu ứng viên */
+.app-table-wrapper {
+  margin: 0;
+  border: 0;
+}
+
+.app-table {
+  width: 100%;
+  margin: 0;
+  border-collapse: separate;
+  border-spacing: 0;
+}
+
+.app-table thead th {
+  padding: var(--s3) var(--s4);
+  background: var(--surface-subtle);
+  color: var(--brand-dark);
+  font-family: var(--sans);
+  font-size: 13.5px;
+  font-weight: 700;
+  letter-spacing: .02em;
+  border-bottom: 1px solid var(--line);
+  white-space: nowrap;
+}
+
+.app-table tbody td {
+  padding: var(--s3) var(--s4);
+  border-bottom: 1px solid var(--line);
+  vertical-align: middle;
+  transition: background-color 150ms ease;
+}
+
+.app-table tbody tr:hover td {
+  background-color: color-mix(in srgb, var(--brand-soft) 40%, var(--surface));
+}
+
+.app-table tbody tr:last-child td {
+  border-bottom: 0;
+}
+
+.app-col-num {
+  width: 60px;
+  text-align: center;
+  color: var(--muted);
+  font-size: var(--font-sm);
+  font-variant-numeric: tabular-nums;
+}
+
+.app-candidate-cell {
+  display: flex;
+  align-items: center;
+  gap: var(--s3);
+}
+
+.app-candidate-avatar {
+  display: grid;
+  place-items: center;
+  width: 38px;
+  height: 38px;
+  border-radius: var(--radius-full);
+  background: var(--brand-soft);
+  color: var(--brand-dark);
+  font-weight: 700;
+  font-size: 13.5px;
+  flex-shrink: 0;
+  border: 1px solid color-mix(in srgb, var(--brand) 20%, transparent);
+}
+
+.app-candidate-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.app-candidate-title-line {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--s2);
+}
+
+.app-candidate__name-link {
+  text-decoration: none;
   color: var(--ink);
 }
 
-.app-candidate__email {
-  display: block;
-  font-size: 13px;
-  color: var(--muted);
+.app-candidate__name-link:hover .app-candidate__name {
+  color: var(--brand);
+  text-decoration: underline;
 }
 
-.app-owner {
-  display: block;
-  margin-top: var(--s1);
-  font-size: var(--font-xs);
+.app-candidate__name {
+  color: var(--ink);
+  font-weight: 600;
+  font-size: 15px;
+}
+
+.app-candidate__email {
   color: var(--muted);
+  font-size: 13px;
+  text-decoration: none;
+}
+
+.app-candidate__email:hover {
+  color: var(--brand);
+  text-decoration: underline;
+}
+
+.app-col-job {
+  font-weight: 500;
+  color: var(--ink);
+}
+
+.app-col-date {
+  color: var(--muted);
+  font-size: 13.5px;
+  white-space: nowrap;
+}
+
+.app-col-score {
+  text-align: center;
+  white-space: nowrap;
+}
+
+.app-score-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s1);
+  padding: 2px 10px;
+  border-radius: var(--radius-full);
+  font-size: 13px;
+}
+
+.app-score-badge--high {
+  background: var(--success-soft);
+  color: var(--success);
+}
+
+.app-score-badge--mid {
+  background: var(--warning-soft);
+  color: var(--warning);
+}
+
+.app-score-badge--low {
+  background: var(--neutral-soft);
+  color: var(--neutral);
 }
 
 .app-score {
   font-weight: 700;
-  color: var(--ink);
+  font-variant-numeric: tabular-nums;
 }
 
 .app-score--empty {
@@ -65,6 +298,19 @@
   font-size: 13px;
   color: var(--muted);
   white-space: nowrap;
+}
+
+.app-status-cell {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+}
+
+.app-owner {
+  display: block;
+  font-size: var(--font-xs);
+  color: var(--muted);
 }
 
 .app-table__actions-head {
@@ -81,18 +327,66 @@
   vertical-align: top;
 }
 
+.app-row-actions {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--s2);
+}
+
+.app-icon-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--control-line);
+  background: var(--surface);
+  color: var(--ink);
+  transition: all 150ms ease;
+}
+
+.app-icon-button:hover {
+  background: var(--brand-soft);
+  color: var(--brand-dark);
+  border-color: var(--brand);
+  transform: translateY(-1px);
+}
+
+/* Trạng thái rỗng */
 .app-empty {
   text-align: center;
-  margin-bottom: var(--s6);
+  padding: var(--s12) var(--s6);
+}
+
+.app-empty__icon {
+  display: grid;
+  place-items: center;
+  margin-inline: auto;
+  margin-bottom: var(--s4);
+  color: var(--muted);
+  opacity: .5;
 }
 
 .app-empty__title {
   margin: 0 0 var(--s2);
   font-size: var(--font-lg);
+  color: var(--ink);
+  font-weight: 600;
 }
 
 .app-empty__desc {
   margin: 0;
+  font-size: 14.5px;
+}
+
+/* Phân trang chân bảng */
+.app-pagination-wrap {
+  padding: var(--s4) var(--s6);
+  border-top: 1px solid var(--line);
+  background: var(--surface);
 }
 
 /* --- Chi tiết ------------------------------------------------------------------ */
@@ -807,6 +1101,15 @@
 }
 
 @media (max-width: 768px) {
+  .app-list-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--s3);
+  }
+  .app-list-header .app-results {
+    width: 100%;
+    justify-content: space-between;
+  }
   .app-journey__ai { justify-content: flex-start; }
   .app-proposal-progress { grid-template-columns: 1fr; }
   .app-detail-page .app-cv__frame { height: 65vh; min-height: 360px; }
