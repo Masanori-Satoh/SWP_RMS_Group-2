@@ -5,6 +5,7 @@ import com.group2.rms.auth.exception.PasswordRecoveryFlowException;
 import com.group2.rms.auth.exception.PasswordRecoveryFlowException.Step;
 import com.group2.rms.user.entity.User;
 import com.group2.rms.user.repository.UserRepository;
+import com.group2.rms.user.service.UserAuditLogger;
 
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -26,22 +27,24 @@ public class PasswordResetService {
     private final UserRepository users;
     private final PasswordEncoder passwordEncoder;
     private final Clock clock;
+    private final UserAuditLogger audit;
 
     @Autowired
     public PasswordResetService(
             UserRepository users,
-            PasswordEncoder passwordEncoder) {
-        this(users, passwordEncoder, Clock.systemUTC());
+            PasswordEncoder passwordEncoder, UserAuditLogger audit) {
+        this(users, passwordEncoder, Clock.systemUTC(), audit);
     }
 
     public PasswordResetService(
             UserRepository users,
             PasswordEncoder passwordEncoder,
-            Clock clock) {
+            Clock clock, UserAuditLogger audit) {
 
         this.users = users;
         this.passwordEncoder = passwordEncoder;
         this.clock = clock;
+        this.audit = audit;
     }
 
     @Transactional(readOnly = true)
@@ -114,6 +117,7 @@ public class PasswordResetService {
 
         user.setPasswordHash(passwordEncoder.encode(newPassword));
         users.saveAndFlush(user);
+        audit.record(user, "UPDATE", "User", user.getUserId(), null, "Đặt lại mật khẩu thành công");
     }
 
     private static boolean matchesAccount(User user, AccountSnapshotResponse  expected) {

@@ -5,6 +5,7 @@
     <th:block layout:fragment="styles"><link rel="stylesheet" th:href="@{/css/dashboard.css}">
         <link rel="stylesheet" th:href="@{/css/pages/admin-surfaces.css}">
         <link rel="stylesheet" th:href="@{/css/pages/admin-dashboard.css}">
+        <link rel="stylesheet" th:href="@{/css/pages/audit-log.css}">
     </th:block>
 </head>
 <body>
@@ -77,6 +78,18 @@
         </section>
     </div>
 
+    <div class="adm-audit-layout">
+    <section class="adm-monitor adw-surface" aria-labelledby="dash-audit-title">
+        <div class="adm-monitor-heading"><h2 id="dash-audit-title" class="adm-panel-title adw-panel-title">Nhật ký kiểm toán gần đây</h2><a class="adm-link" th:href="@{/admin/audit-logs}">Xem tất cả <span aria-hidden="true">→</span></a></div>
+        <p class="adm-monitor-caption">Theo dõi các hoạt động quan trọng trong hệ thống.</p>
+        <div class="table-wrapper aul-scroll" th:unless="${#lists.isEmpty(recentAuditLogs)}" tabindex="0" role="region" aria-labelledby="dash-audit-title">
+            <table class="table adw-data-table adm-recent-table">
+                <thead><tr><th scope="col">Thời gian</th><th scope="col">Người thực hiện</th><th scope="col">Hành động</th><th scope="col">Đối tượng</th></tr></thead>
+                <tbody><tr th:each="row : ${recentAuditLogs}"><td th:text="${#temporals.format(row.timestamp, 'dd/MM/yyyy HH:mm')}"></td><td><span th:replace="~{admin/audit-log :: actor(name=${row.performedBy},initials=${row.initials()})}"></span></td><td><span th:replace="~{admin/audit-log :: actionBadge(action=${row.action},label=${row.actionLabel()})}"></span></td><td th:text="|${row.entityLabel()} #${row.entityId}|"></td></tr></tbody>
+            </table>
+        </div>
+        <p class="adm-help" th:if="${#lists.isEmpty(recentAuditLogs)}">Chưa có hoạt động được ghi nhận.</p>
+    </section>
     <section class="adm-monitor adw-surface" aria-labelledby="dash-health-title">
         <div class="adm-monitor-heading">
             <h2 id="dash-health-title" class="adm-panel-title adw-panel-title">Giám sát dịch vụ</h2>
@@ -112,7 +125,7 @@
         <p class="adm-help" th:if="${#lists.isEmpty(dashboard.monitorRows)}">Chưa có dữ liệu giám sát. Mở trang giám sát để xem chi tiết.</p>
 
     </section>
-
+    </div>
 
 </main>
 <th:block layout:fragment="scripts">

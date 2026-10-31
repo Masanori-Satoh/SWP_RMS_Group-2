@@ -79,6 +79,13 @@
             <span class="nav-label-text">Quản lý phòng ban</span>
         </a>
 
+        <a th:href="@{/admin/audit-logs}" class="sidebar-nav-link"
+            th:classappend="${activeMenu == 'audit-logs' ? 'active' : ''}"
+            th:attr="aria-current=${activeMenu == 'audit-logs' ? 'page' : null}" title="Lịch sử hoạt động" data-tooltip="Lịch sử hoạt động">
+            <span class="nav-icon-wrapper"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 7h8M8 12h8M8 17h5"/></svg></span>
+            <span class="nav-label-text">Lịch sử hoạt động</span>
+        </a>
+
         <!-- Giám sát API -->
         <a th:href="@{/admin/api-monitoring}" class="sidebar-nav-link"
             th:classappend="${activeMenu == 'api-monitoring' ? 'active' : ''}"

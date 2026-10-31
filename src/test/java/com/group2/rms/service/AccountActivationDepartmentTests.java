@@ -23,8 +23,8 @@ class AccountActivationDepartmentTests {
     private final DepartmentRepository departments=mock(DepartmentRepository.class);
     private final CandidateRepository candidates=mock(CandidateRepository.class);
     private final PasswordEncoder encoder=mock(PasswordEncoder.class);
-    private final AccountListService list=new AccountListService(users,roles,departments,candidates);
-    private final AccountManagementService management=new AccountManagementService(users,roles,departments,candidates,encoder);
+    private final AccountListService list=new AccountListService(users,roles,departments,candidates, org.mockito.Mockito.mock(com.group2.rms.user.service.UserAuditLogger.class));
+    private final AccountManagementService management=new AccountManagementService(users,roles,departments,candidates,encoder, org.mockito.Mockito.mock(com.group2.rms.user.service.UserAuditLogger.class));
     private final Role hr=Role.builder().roleId(2).roleName("HR").build();
     private final Department inactive=Department.builder().departmentId(7).departmentName("Old").departmentStatus("Inactive").build();
 

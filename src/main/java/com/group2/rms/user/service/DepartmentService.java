@@ -28,11 +28,13 @@ public class DepartmentService {
     private final DepartmentRepository departments;
     private final UserRepository users;
     private final RoleRepository roles;
+    private final UserAuditLogger audit;
 
-    public DepartmentService(DepartmentRepository departments, UserRepository users, RoleRepository roles) {
+    public DepartmentService(DepartmentRepository departments, UserRepository users, RoleRepository roles, UserAuditLogger audit) {
         this.departments = departments;
         this.users = users;
         this.roles = roles;
+        this.audit = audit;
     }
 
     @Transactional(readOnly = true)
@@ -66,6 +68,7 @@ public class DepartmentService {
         }
         var department = Department.builder().departmentName(name).departmentStatus("Active").build();
         persist(department, null, form);
+        audit.createdDepartment(department);
         return department.getDepartmentId();
     }
 
@@ -74,6 +77,7 @@ public class DepartmentService {
     public void update(int id, DepartmentRequest form) {
         Department department = departments.findForUpdate(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy phòng ban."));
+        var before = UserAuditLogger.departmentSnapshot(department);
         String name = validateName(id, form);
         User manager = null;
         if (form.managerId() != null) {
@@ -93,11 +97,18 @@ public class DepartmentService {
                 ? assignmentRole("Hiring Manager", id, form) : null;
         Role previousRole = previousManager != null && managerChanged && !hasRole(previousManager, "Interviewer")
                 ? assignmentRole("Interviewer", id, form) : null;
+        var previousUser = previousManager == null ? null : UserAuditLogger.userSnapshot(previousManager);
+        var incomingUser = manager == null ? null : UserAuditLogger.userSnapshot(manager);
         if (previousRole != null) previousManager.setRole(previousRole);
         if (managerRole != null) manager.setRole(managerRole);
         department.setDepartmentName(name);
         department.setManager(manager);
         persist(department, id, form);
+        audit.changes("Department", id, before, UserAuditLogger.departmentSnapshot(department));
+        if (previousRole != null) audit.changes("User", previousManager.getUserId(), previousUser,
+                UserAuditLogger.userSnapshot(previousManager));
+        if (managerRole != null) audit.changes("User", manager.getUserId(), incomingUser,
+                UserAuditLogger.userSnapshot(manager));
     }
 
     private static boolean hasRole(User user, String name) {
@@ -118,8 +129,10 @@ public class DepartmentService {
     private void setStatus(int id, String status) {
         Department department = find(id);
         if (!status.equals(department.getDepartmentStatus())) {
+            var before = UserAuditLogger.departmentSnapshot(department);
             department.setDepartmentStatus(status);
             departments.saveAndFlush(department);
+            audit.changes("Department", id, before, UserAuditLogger.departmentSnapshot(department));
         }
     }
 

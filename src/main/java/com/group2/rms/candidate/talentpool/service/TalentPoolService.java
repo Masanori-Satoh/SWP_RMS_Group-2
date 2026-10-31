@@ -213,8 +213,10 @@ public class TalentPoolService {
         Candidate candidate = candidate(candidateId);
         if (!candidate.isPotential())
             throw new TalentPoolException("Hãy đánh dấu ứng viên tiềm năng trước khi thêm ghi chú.");
-        notes.save(TalentPoolNote.builder().candidate(candidate).author(user).noteContent(request.content().strip())
+        TalentPoolNote saved = notes.save(TalentPoolNote.builder().candidate(candidate).author(user).noteContent(request.content().strip())
                 .build());
+        audit.record(user.getUserId(), "CREATE", "TalentPoolNote", saved.getNoteId(), null,
+                "Ứng viên #" + candidateId + "\n" + saved.getNoteContent());
     }
 
     @Transactional
@@ -223,13 +225,20 @@ public class TalentPoolService {
         String content = request.content() == null ? "" : request.content().strip();
         if (content.isEmpty() || content.length() > 1000)
             throw new TalentPoolException("Ghi chú cần có nội dung và tối đa 1.000 ký tự.");
+        String before = note.getNoteContent();
+        if (java.util.Objects.equals(before, content)) return;
         note.setNoteContent(content);
         notes.save(note);
+        audit.record(note.getAuthor().getUserId(), "UPDATE", "TalentPoolNote", noteId,
+                "Ứng viên #" + candidateId + "\n" + before, "Ứng viên #" + candidateId + "\n" + content);
     }
 
     @Transactional
     public void deleteNote(Integer candidateId, Integer noteId) {
-        notes.delete(ownedNote(candidateId, noteId));
+        TalentPoolNote note = ownedNote(candidateId, noteId);
+        notes.delete(note);
+        audit.record(note.getAuthor().getUserId(), "DELETE", "TalentPoolNote", noteId,
+                "Ứng viên #" + candidateId + "\n" + note.getNoteContent(), null);
     }
 
     private TalentPoolNote ownedNote(Integer candidateId, Integer noteId) {

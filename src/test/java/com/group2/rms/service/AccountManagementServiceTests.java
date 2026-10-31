@@ -232,7 +232,7 @@ class AccountManagementServiceTests {
 
         Fixtures(PasswordEncoder encoder) {
             this.encoder = encoder;
-            this.service = new AccountManagementService(users, roles, departments, candidates, encoder);
+            this.service = new AccountManagementService(users, roles, departments, candidates, encoder, org.mockito.Mockito.mock(com.group2.rms.user.service.UserAuditLogger.class));
         }
     }
 }

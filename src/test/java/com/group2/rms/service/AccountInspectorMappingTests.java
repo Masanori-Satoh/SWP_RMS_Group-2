@@ -23,7 +23,7 @@ class AccountInspectorMappingTests {
     final UserRepository users = mock(UserRepository.class);
     final CandidateRepository candidates = mock(CandidateRepository.class);
     final AccountListService service = new AccountListService(users, mock(RoleRepository.class),
-            mock(DepartmentRepository.class), candidates);
+            mock(DepartmentRepository.class), candidates, org.mockito.Mockito.mock(com.group2.rms.user.service.UserAuditLogger.class));
 
     @Test
     @DisplayName("Inspector nội bộ map liên hệ/phòng/trạng thái, không lộ hash và không query profile")
