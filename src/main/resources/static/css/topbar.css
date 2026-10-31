@@ -466,7 +466,8 @@
   height: 56px;
   min-height: 56px;
   box-sizing: border-box;
-  padding: 4px 16px;
+  /* Lề trắng rộng hơn cho khớp đảo người dùng của trang nội bộ (dunglt 31/10) */
+  padding: 4px var(--s6);
   border: 1px solid var(--line);
   border-radius: var(--radius-lg, 16px);
   background: color-mix(in srgb, var(--surface, #ffffff) 96%, transparent);
