@@ -63,3 +63,15 @@
 - Thêm Breadcrumb định tuyến liền mạch cho cả `candidate-list.html` và `candidate-decline.html`.
 - Đồng bộ toàn bộ trải nghiệm người dùng từ Danh sách -> Chi tiết -> Từ chối.
 - **Kiểm thử:** 148/148 test cases passed (0 failures, 0 errors, BUILD SUCCESS).
+
+### Phase 6: Thiết Kế Lại Giao Diện Đơn Ứng Tuyển Theo Mockup Mẫu (/portal/applications)
+- **Tabs lọc hồ sơ:** Thiết kế lại thành dạng pill bo tròn mềm mại (`border-radius: var(--radius-full)`), loại bỏ hoàn toàn viền gạch chân thô và thanh cuộn xanh lá (scrollbar). Tab đang chọn hiển thị nền mint `var(--brand-soft)` với chữ xanh đậm `var(--brand-dark)` và badge số đếm tinh tế.
+- **Thẻ đơn ứng tuyển:** Chuyển sang phong cách thẻ trắng tinh khôi (`var(--surface)`), viền mảnh 1px (`var(--line)`), bo góc 14px mềm mại, loại bỏ hoàn toàn viền trái dày và viền vàng thô ráp.
+- **Menu tùy chọn thẻ:** Tích hợp menu ba chấm dọc `⋮` (`.myapp-card__more`) ở góc trên phải thẻ với dropdown đóng mở nhẹ nhàng, chứa liên kết *"Xem lại CV"* (`data-cv-open`).
+- **Khối trạng thái có thư mời:**
+  - Chuyển thành pill badge mint `[✉] Có thư mời` (`.myapp-status-pill.myapp-status-pill--offer`).
+  - Dòng hạn chót hiển thị ngắn gọn, rõ ràng: `Hạn phản hồi: dd/MM/yyyy`.
+  - Huy hiệu đếm ngược gấp gọn gàng dạng pill `[🕒] Còn N ngày/giờ`.
+- **Cặp nút hành động:** Đồng bộ 2 nút ngang hàng nhau (cao 40px, bo 8px): nút chính `[✉] Trả lời thư mời` (`.btn--primary`) và nút phụ `Xem chi tiết` (`.btn--secondary`).
+- **Banner đơn gấp:** Chỉ hiển thị khi có từ 2 việc gấp trở lên để không gây trùng lặp, rối mắt khi ứng viên chỉ có 1 hồ sơ.
+- **Kiểm thử:** 72/72 test cases passed (20/20 MyApplicationWebTests, 52/52 MyApplicationJourneyTests, BUILD SUCCESS).

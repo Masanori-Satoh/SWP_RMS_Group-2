@@ -96,4 +96,13 @@
   window.addEventListener('pageshow', function () {
     confirmButton.disabled = false;
   });
+
+  // ---- 3. Đóng menu tùy chọn khác (details.myapp-card__more) khi click ra ngoài ----
+  document.addEventListener('click', function (event) {
+    document.querySelectorAll('details.myapp-card__more[open]').forEach(function (details) {
+      if (!details.contains(event.target)) {
+        details.removeAttribute('open');
+      }
+    });
+  });
 })();

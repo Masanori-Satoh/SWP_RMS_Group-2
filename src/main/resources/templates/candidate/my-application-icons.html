@@ -43,6 +43,15 @@
             <line x1="19" y1="12" x2="5" y2="12"/>
             <polyline points="12 19 5 12 12 5"/>
         </th:block>
+        <th:block th:case="'clock'">
+            <circle cx="12" cy="12" r="10"/>
+            <polyline points="12 6 12 12 16 14"/>
+        </th:block>
+        <th:block th:case="'more'">
+            <circle cx="12" cy="5" r="1.5" fill="currentColor" stroke="none"/>
+            <circle cx="12" cy="12" r="1.5" fill="currentColor" stroke="none"/>
+            <circle cx="12" cy="19" r="1.5" fill="currentColor" stroke="none"/>
+        </th:block>
     </th:block>
 </svg>
 </body>

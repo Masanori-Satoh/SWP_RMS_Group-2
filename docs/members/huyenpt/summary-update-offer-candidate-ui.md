@@ -92,4 +92,5 @@ Trước đợt rà soát và nâng cấp toàn diện này, phân hệ Cổng t
 | **Khối Lương & Đãi ngộ** | Thẻ xám phẳng, chưa nổi bật mức lương chính thức | Nền gradient, viền xanh `var(--brand)`, số tiền 24px đậm, badge tỷ lệ thử việc | ✅ Đạt 100% |
 | **Breadcrumb định tuyến** | Nút quay lại đơn lẻ | Thanh breadcrumb pill sang trọng: Đơn ứng tuyển / Thư mời / #{id} | ✅ Đạt 100% |
 | **Trải nghiệm Email** | Email thông báo không có đường dẫn | Tự động sinh link trực tiếp `/portal/offers/{id}` | ✅ Đạt 100% |
-| **Kiểm thử tự động** | Chưa chạy toàn bộ test | 148/148 tests pass (BUILD SUCCESS) | ✅ Đạt 100% |
+| **Giao diện Đơn ứng tuyển (/portal/applications)** | Thẻ viền vàng thô, thanh cuộn tab xanh lá, thông tin gấp rối mắt | Thẻ trắng tinh tế, tab dạng pill không thanh cuộn, pill badge Có thư mời, menu ⋮, cặp nút chuẩn DNA | ✅ Đạt 100% |
+| **Kiểm thử tự động** | Chưa chạy toàn bộ test | 148/148 offer tests pass, 72/72 application tests pass (BUILD SUCCESS) | ✅ Đạt 100% |
