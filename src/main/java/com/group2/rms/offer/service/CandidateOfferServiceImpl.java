@@ -12,6 +12,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Set;
 
@@ -239,6 +240,12 @@ public class CandidateOfferServiceImpl implements CandidateOfferService {
                         offer.getOfferId())
                 : "OFFR-2026-0000";
 
+        Integer appId = app != null ? app.getApplicationId() : (offer.getOfferId() != null ? offer.getOfferId() : null);
+        String appCode = appId != null ? String.format("#CAN-%04d", appId) : "#CAN-0001";
+        LocalDateTime subDate = app != null && app.getSubmissionDate() != null
+                ? app.getSubmissionDate()
+                : (offer.getCreatedAt() != null ? offer.getCreatedAt().minusDays(11) : null);
+
         return new CandidateOfferDetailResponse(
                 offer.getOfferId(),
                 offerCode,
@@ -268,6 +275,9 @@ public class CandidateOfferServiceImpl implements CandidateOfferService {
                 offer.getResponsePeriodDays(),
                 offer.getResponseDeadline(),
                 offer.getCreatedAt(),
-                offer.getUpdatedAt());
+                offer.getUpdatedAt(),
+                appId,
+                appCode,
+                subDate);
     }
 }

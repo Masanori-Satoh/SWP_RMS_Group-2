@@ -1613,3 +1613,538 @@
 
 
 
+
+
+/* =============================================================================
+   MOCKUP 2026 CANDIDATE OFFER DETAIL REDESIGN (cof-overview-card, cof-letter-card, cof-accordion)
+   ============================================================================= */
+
+/* 1. Thanh điều hướng kết hợp Back link & Breadcrumb */
+.cof-nav-bar {
+  display: flex;
+  align-items: center;
+  gap: var(--s3);
+  margin-bottom: var(--s4);
+  font-size: 13.5px;
+}
+
+.cof-back-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--muted);
+  text-decoration: none;
+  font-weight: 500;
+  transition: color var(--transition);
+}
+
+.cof-back-link:hover {
+  color: var(--brand);
+  text-decoration: underline;
+}
+
+.cof-nav-separator {
+  color: var(--line);
+  font-size: 16px;
+  user-select: none;
+}
+
+.cof-breadcrumb-trail {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--muted);
+}
+
+.cof-breadcrumb-trail a {
+  color: var(--muted);
+  text-decoration: none;
+  transition: color var(--transition);
+}
+
+.cof-breadcrumb-trail a:hover {
+  color: var(--brand);
+  text-decoration: underline;
+}
+
+.cof-breadcrumb-sep {
+  color: var(--line);
+  font-size: 12px;
+}
+
+.cof-breadcrumb-curr {
+  color: var(--ink);
+  font-weight: 600;
+}
+
+/* 2. Thẻ 1: Tổng quan đơn ứng tuyển & Tiến độ (Overview Card) */
+.cof-overview-card.card {
+  display: grid;
+  grid-template-columns: minmax(0, 1.35fr) minmax(260px, auto);
+  align-items: start;
+  justify-content: space-between;
+  gap: var(--s6) var(--s8);
+  padding: var(--s6) var(--s8);
+  background-color: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+  margin-bottom: var(--s5);
+}
+
+.cof-overview__main {
+  min-width: 0;
+}
+
+.cof-overview__title {
+  margin: 0 0 var(--s2);
+  font-family: var(--sans);
+  font-size: 20px;
+  font-weight: 700;
+  line-height: 1.35;
+  color: var(--ink);
+  overflow-wrap: anywhere;
+}
+
+.cof-overview__meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--s2) var(--s3);
+  margin: 0 0 var(--s6);
+  color: var(--muted);
+  font-size: 13.5px;
+}
+
+.cof-overview__meta-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  white-space: nowrap;
+}
+
+.cof-overview__meta-sep {
+  color: var(--line);
+  font-size: 13px;
+  user-select: none;
+}
+
+.cof-overview__code {
+  color: var(--control-line);
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Stepper 4 bước với ngày tháng phía dưới */
+.cof-stepper {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  position: relative;
+  max-width: 32rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.cof-stepper__step {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+.cof-stepper__step:not(:first-child)::before {
+  content: "";
+  position: absolute;
+  top: 12px;
+  right: 50%;
+  width: 100%;
+  height: 2px;
+  background-color: var(--brand);
+}
+
+.cof-stepper__step[data-state="upcoming"]::before {
+  background-color: var(--line);
+}
+
+.cof-stepper__dot {
+  position: relative;
+  z-index: 1;
+  width: 24px;
+  height: 24px;
+  border-radius: var(--radius-full);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background-color: var(--surface);
+  border: 2px solid var(--line);
+  color: #fff;
+  margin-bottom: 6px;
+  transition: var(--transition);
+}
+
+.cof-stepper__step[data-state="done"] .cof-stepper__dot {
+  background-color: var(--brand);
+  border-color: var(--brand);
+}
+
+.cof-stepper__step[data-state="current"] .cof-stepper__dot {
+  border-color: var(--brand);
+  background-color: var(--surface);
+}
+
+.cof-stepper__step[data-state="current"] .cof-stepper__dot::after {
+  content: "";
+  width: 10px;
+  height: 10px;
+  border-radius: var(--radius-full);
+  background-color: var(--brand);
+}
+
+.cof-stepper__name {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ink);
+  line-height: 1.25;
+}
+
+.cof-stepper__step[data-state="upcoming"] .cof-stepper__name {
+  color: var(--muted);
+  font-weight: 500;
+}
+
+.cof-stepper__date {
+  font-size: 11.5px;
+  color: var(--muted);
+  margin-top: 3px;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Cột phải của Thẻ 1: Trạng thái, Hạn chót & Nút bấm */
+.cof-overview__side {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: var(--s3);
+  text-align: right;
+}
+
+.cof-status-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 14px;
+  border-radius: var(--radius-full);
+  font-size: 13px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.cof-status-pill--offer {
+  background-color: var(--warning-soft);
+  color: var(--warning);
+  border: 1px solid rgba(160, 99, 37, 0.2);
+}
+
+.cof-deadline-box {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 3px;
+}
+
+.cof-deadline-row {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 13px;
+  color: var(--ink);
+  font-weight: 500;
+}
+
+.cof-deadline-row strong {
+  font-weight: 700;
+  color: var(--ink);
+}
+
+.cof-countdown-row {
+  font-size: 12.5px;
+  color: var(--muted);
+}
+
+.cof-overview__actions {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s2);
+  width: 100%;
+  max-width: 220px;
+  margin-top: 4px;
+}
+
+.cof-btn-accept {
+  width: 100%;
+  height: 42px;
+  border-radius: var(--radius-md);
+  font-size: 14px;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  background-color: var(--brand);
+  color: var(--on-brand);
+  border: 1px solid var(--brand);
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+.cof-btn-accept:hover {
+  background-color: var(--brand-hover);
+  border-color: var(--brand-hover);
+}
+
+.cof-btn-decline {
+  width: 100%;
+  height: 42px;
+  border-radius: var(--radius-md);
+  font-size: 14px;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  background-color: var(--surface);
+  color: var(--error);
+  border: 1px solid rgba(135, 55, 47, 0.4);
+  text-decoration: none;
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+.cof-btn-decline:hover {
+  background-color: var(--error-soft);
+  border-color: var(--error);
+  color: var(--error);
+}
+
+.cof-overview__responded {
+  margin-top: var(--s2);
+}
+
+/* 3. Thẻ 2: Tờ Thư mời nhận việc (Letter Card) */
+.cof-letter-card.card {
+  background-color: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+  padding: 0;
+  overflow: hidden;
+  margin-bottom: var(--s5);
+}
+
+.cof-letter-card__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--s5) var(--s8);
+  gap: var(--s4);
+}
+
+.cof-letter-card__title-wrap {
+  display: flex;
+  align-items: center;
+  gap: var(--s3);
+}
+
+.cof-letter-card__icon {
+  width: 38px;
+  height: 38px;
+  border-radius: var(--radius-md);
+  background-color: var(--brand-soft);
+  color: var(--brand-dark);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.cof-letter-card__title {
+  margin: 0;
+  font-family: var(--sans);
+  font-size: 17px;
+  font-weight: 700;
+  color: var(--ink);
+}
+
+.cof-letter-card__meta {
+  margin: 2px 0 0;
+  font-size: 13px;
+  color: var(--muted);
+}
+
+.cof-letter-card__sep {
+  margin: 0 var(--s1);
+  color: var(--line);
+}
+
+.cof-pdf-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 36px;
+  padding: 0 var(--s3);
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.cof-letter-card__divider {
+  border: 0;
+  border-top: 1px solid var(--line);
+  margin: 0;
+}
+
+.cof-letter-card__body {
+  padding: var(--s6) var(--s8) var(--s8);
+  font-size: 14.5px;
+  line-height: 1.7;
+  color: var(--ink);
+}
+
+.cof-letter-salutation {
+  font-weight: 700;
+  margin-bottom: var(--s3);
+}
+
+.cof-letter-signoff {
+  margin-top: var(--s6);
+  text-align: right;
+  color: var(--ink);
+}
+
+.cof-letter-signoff p {
+  margin: 0;
+  line-height: 1.5;
+}
+
+.cof-letter-signoff strong {
+  font-size: 14.5px;
+  color: var(--ink);
+}
+
+/* 4. Thẻ 3: Accordion Chi tiết đề xuất */
+.cof-accordion.card {
+  background-color: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+  padding: 0;
+  overflow: hidden;
+  margin-bottom: var(--s6);
+}
+
+.cof-accordion__summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--s4) var(--s8);
+  cursor: pointer;
+  list-style: none;
+  user-select: none;
+  transition: background-color var(--transition);
+}
+
+.cof-accordion__summary::-webkit-details-marker {
+  display: none;
+}
+
+.cof-accordion__summary:hover {
+  background-color: var(--surface-subtle);
+}
+
+.cof-accordion__title-wrap {
+  display: flex;
+  align-items: center;
+  gap: var(--s3);
+}
+
+.cof-accordion__icon {
+  width: 32px;
+  height: 32px;
+  border-radius: var(--radius-md);
+  background-color: var(--brand-soft);
+  color: var(--brand-dark);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.cof-accordion__title {
+  margin: 0;
+  font-family: var(--sans);
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--ink);
+}
+
+.cof-accordion__chevron {
+  width: 20px;
+  height: 20px;
+  color: var(--muted);
+  transition: transform 0.2s ease;
+}
+
+.cof-accordion[open] .cof-accordion__chevron {
+  transform: rotate(180deg);
+}
+
+.cof-accordion__body {
+  border-top: 1px solid var(--line);
+  padding: var(--s6) var(--s8);
+}
+
+/* Responsive */
+@media (max-width: 860px) {
+  .cof-overview-card.card {
+    grid-template-columns: 1fr;
+    gap: var(--s5);
+  }
+
+  .cof-overview__side {
+    align-items: flex-start;
+    text-align: left;
+  }
+
+  .cof-deadline-box {
+    align-items: flex-start;
+  }
+
+  .cof-overview__actions {
+    max-width: 100%;
+    flex-direction: row;
+  }
+
+  .cof-letter-card__head,
+  .cof-letter-card__body,
+  .cof-accordion__summary,
+  .cof-accordion__body {
+    padding-left: var(--s5);
+    padding-right: var(--s5);
+  }
+}
+
+@media (max-width: 600px) {
+  .cof-overview__actions {
+    flex-direction: column;
+  }
+
+  .cof-stepper {
+    max-width: 100%;
+  }
+
+  .cof-letter-card__head {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}

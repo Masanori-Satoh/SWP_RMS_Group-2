@@ -75,3 +75,15 @@
 - **Cặp nút hành động:** Đồng bộ 2 nút ngang hàng nhau (cao 40px, bo 8px): nút chính `[✉] Trả lời thư mời` (`.btn--primary`) và nút phụ `Xem chi tiết` (`.btn--secondary`).
 - **Banner đơn gấp:** Chỉ hiển thị khi có từ 2 việc gấp trở lên để không gây trùng lặp, rối mắt khi ứng viên chỉ có 1 hồ sơ.
 - **Kiểm thử:** 72/72 test cases passed (20/20 MyApplicationWebTests, 52/52 MyApplicationJourneyTests, BUILD SUCCESS).
+
+### Phase 7: Thiết Kế Lại Màn Hình Xem Thư Mời Làm Việc Theo Mockup (/portal/offers/{id})
+- **Thanh điều hướng:** Tích hợp nút quay lại danh sách (`← Quay lại danh sách đơn ứng tuyển`) kèm thanh breadcrumb gọn gàng (`› Đơn ứng tuyển / Thư mời nhận việc / #{id}`).
+- **Thẻ 1 (Overview & Stepper & Thao tác):**
+  - Cột trái: Tên vị trí tuyển dụng đậm nét, bộ ba metadata kèm icon (Phòng ban, Ngày nộp hồ sơ, Mã #CAN-xxxx), thanh tiến độ Stepper 4 bước chuẩn với ngày tháng hiển thị dưới mỗi mốc.
+  - Cột phải: Pill badge trạng thái `Có thư mời`, Hạn phản hồi kèm đếm ngược thời gian thực, cặp nút hành động ngang hàng: `[✉] Đồng ý nhận việc` (`.btn--primary`) và `[✕] Từ chối thư mời` (`.btn--outline`).
+- **Thẻ 2 (Tờ Thư Mời Nhận Việc Chính Thức):**
+  - Header trang trọng với icon thư xanh, tiêu đề `Thư mời nhận việc`, `Ngày gửi | Mã thư mời: OFFR-2026-xxxx` và nút `[📄] Tải về PDF`.
+  - Nội dung thư chúc mừng, đón chào chuẩn doanh nghiệp và chữ ký đại diện Đội ngũ Tuyển dụng Mộc RMS căn phải tinh tế.
+- **Thẻ 3 (Accordion Chi Tiết Đề Xuất):**
+  - Chuyển 3 khối thông tin (Thông tin công việc, Lương & thưởng, Quyền lợi) vào thẻ Accordion đóng/mở tiện lợi (`<details class="card cof-accordion">`), mở mặc định với icon cặp tài liệu và mũi tên chevron xoay mượt mà.
+- **Kiểm thử:** 67/67 test cases passed (16/16 CandidateOfferWebTests, 31/31 OfferIntegrationTests, 20/20 MyApplicationWebTests, BUILD SUCCESS).
