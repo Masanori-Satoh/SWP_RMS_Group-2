@@ -1,0 +1,57 @@
+/* PAGES/ADMIN-CREATE-FORMS.CSS — Account and Department creation only.
+   Prefix acf-. Compose existing workspace, surfaces, controls and validation.
+   Account: 70/30 columns share the available width after a 16px gap.
+   Department: one 880px form. Edit screens do not load this stylesheet. */
+.acf-page .acf-container { width: 100%; max-width: 1440px; margin-inline: auto; }
+.rms-app .acf-page .acf-heading { padding: 0; margin-bottom: var(--s6); }
+.acf-page .acf-heading p { margin-top: var(--s2); color: var(--muted); font-size: var(--font-sm); line-height: 1.5; }
+.acf-workspace { min-width: 0; }
+.acf-layout { display: grid; grid-template-columns: minmax(0, 7fr) minmax(300px, 3fr); align-items: start; gap: var(--s4); }
+.acf-main { display: flex; flex-direction: column; gap: var(--s4); min-width: 0; }
+.acf-page .acf-panel { min-width: 0; margin: 0; padding: var(--s5); }
+/* Floating the native legend puts its heading inside the card, while retaining
+   the fieldset's accessible name and the original form control bindings. */
+.acf-page .acf-legend { float: left; display: flex; align-items: flex-start; gap: var(--s4); width: 100%; padding: 0; margin: 0 0 var(--s4); color: var(--ink); font: 650 18px/1.4 var(--sans); }
+.acf-legend-copy { display: block; min-width: 0; }
+.acf-legend-copy > small { display: block; margin-top: 2px; color: var(--muted); font: 400 var(--font-xs)/1.5 var(--sans); }
+.acf-section-icon { flex-shrink: 0; box-sizing: content-box; padding: var(--s2); border-radius: var(--radius-md); background: var(--brand-soft); color: var(--brand-dark); }
+.acf-page .acf-panel > .account-form-grid { clear: both; gap: var(--s4) var(--s6); }
+.acf-page .aef-label { margin-bottom: 0; line-height: 1.4; }
+.acf-page .aef-input { min-height: 44px; padding-block: var(--s2); font-size: var(--font-base); }
+.acf-page .aef-input:focus-visible, .acf-page .def-input:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; border-color: var(--brand); }
+.acf-page .aef-hint { margin-top: 0; font-size: var(--font-xs); line-height: 1.5; }
+.acf-page .acf-notes { min-width: 0; padding: var(--s5); }
+.acf-notes-heading { display: flex; align-items: flex-start; gap: var(--s4); margin-bottom: var(--s5); }
+.acf-page .acf-notes-title { margin: 0; color: var(--ink); font: 650 18px/1.4 var(--sans); }
+.acf-notes-heading p { margin: 2px 0 0; color: var(--muted); font-size: var(--font-xs); line-height: 1.5; }
+.acf-tips { display: flex; flex-direction: column; gap: var(--s2); margin: 0; padding: 0; list-style: none; }
+.acf-tips > li { display: flex; align-items: flex-start; gap: var(--s3); min-width: 0; padding: var(--s3); border-radius: var(--radius-md); background: color-mix(in srgb, var(--brand-soft) 52%, var(--surface)); }
+.acf-tip-icon { flex-shrink: 0; box-sizing: content-box; padding: var(--s2); border-radius: var(--radius-md); background: var(--brand-soft); color: var(--brand-dark); }
+.acf-tips strong { color: var(--ink); font-size: var(--font-sm); font-weight: 650; line-height: 1.45; }
+.acf-tips p { margin: var(--s1) 0 0; color: var(--muted); font-size: var(--font-xs); line-height: 1.55; }
+.acf-page .acf-actions { gap: var(--s3); margin-top: var(--s5); padding-top: var(--s4); }
+.acf-page--department .acf-container { max-width: 880px; }
+.acf-page--department .acf-department-card { padding: var(--s6); }
+.acf-page--department .acf-dept-section { margin-bottom: var(--s6); }
+.acf-page--department .acf-dept-legend { margin-bottom: var(--s6); }
+.acf-page--department .acf-dept-grid { grid-template-columns: minmax(0, 1fr); gap: var(--s6); }
+.acf-page--department .acf-actions { margin-top: 0; padding-top: var(--s6); }
+@media (max-width: 1100px) {
+  .acf-layout { grid-template-columns: minmax(0, 1fr) 300px; }
+}
+@media (max-width: 992px) {
+  .acf-page--account .acf-workspace > form { display: flex; flex-direction: column; }
+  .acf-layout { display: contents; }
+  .acf-main { order: 1; }
+  .acf-page--account .acf-actions { order: 2; margin-bottom: var(--s4); }
+  .acf-page .acf-notes { order: 3; margin-top: 0; }
+}
+@media (max-width: 768px) {
+  .rms-app .acf-page .adw-title { font-size: 26px; }
+  .acf-page .acf-panel, .acf-page .acf-notes, .acf-page--department .acf-department-card { padding: var(--s4); }
+  .acf-page .acf-panel > .account-form-grid { grid-template-columns: minmax(0, 1fr); }
+  .acf-page .account-field-full { grid-column: 1 / -1; }
+  .acf-page .acf-actions { flex-wrap: nowrap; }
+  .acf-actions > a { flex: 1; }
+  .acf-actions > button { flex: 2; }
+}

@@ -7,7 +7,10 @@ Tài liệu này là lịch sử tóm tắt các thay đổi quan trọng và b�
 | Ngày | Tên công việc / Yêu cầu chính | Người thực hiện | Chi tiết thay đổi |
 | --- | --- | --- | --- |
 | **2026-10-31** | Đồng bộ giao diện Danh sách Offer của Giám đốc (Director List) theo layout Admin, giữ 100% nghiệp vụ | HuyenPT | [File change và kiểm thử](work_logs/2026-10-31-director-offer-ui-sync.md) |
+| **2026-10-31** | Giải quyết conflict Work Log khi khôi phục stash sau merge, giữ cả nhật ký Offer và giao diện tạo mới | LinhDN | [Bổ sung xử lý stash](work_logs/2026-10-31-merge-work-log-conflict.md#bổ-sung-conflict-khi-khôi-phục-stash) |
+| **2026-10-31** | Giải quyết conflict Work Log khi merge, giữ lịch sử hai bên và các file Offer đã tự merge | LinhDN | [Phạm vi và kiểm chứng](work_logs/2026-10-31-merge-work-log-conflict.md) |
 | **2026-10-31** | Đồng bộ giao diện các màn hình Offer của HR (Danh sách & Đề xuất) theo layout Admin, giữ 100% nghiệp vụ | HuyenPT | [File change và kiểm thử](work_logs/2026-10-31-hr-offer-proposal-admin-ui-sync.md) |
+| **2026-10-31** | Áp dụng mockup Tạo tài khoản/Tạo phòng ban, giữ hai màn sửa và khung điều hướng | LinhDN | [Thống kê, kiểm chứng và ảnh giao diện](../members/linhdn/2026-10-31-admin-create-forms-ui.md) |
 | **2026-10-31** | Chỉnh nội dung Sửa tài khoản nội bộ theo mockup, giữ sidebar/topbar và nghiệp vụ | LinhDN | [Thống kê, kiểm chứng và ảnh giao diện](../members/linhdn/2026-10-31-admin-account-edit-ui.md) |
 | **2026-10-30** | Giải quyết 3 conflict tài liệu khi merge origin/main; giữ lịch sử và nội dung đã làm sạch | LinhDN | [Phạm vi và kiểm chứng](../members/linhdn/2026-10-30-merge-main-docs-conflicts.md) |
 | **2026-10-30** | Rà soát toàn bộ Markdown trong docs, làm sạch tên công cụ và tham chiếu đường dẫn cục bộ | LinhDN | [Phạm vi và kiểm chứng](../members/linhdn/2026-10-30-cleanup-markdown-docs.md) |
