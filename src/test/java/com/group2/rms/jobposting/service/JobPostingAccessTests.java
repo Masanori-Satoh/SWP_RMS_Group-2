@@ -115,7 +115,7 @@ class JobPostingAccessTests {
             User user = userByName(who);
 
             assertEquals(manage, access.canManage(user));
-            assertEquals(read, access.canRead(user));
+            assertEquals(read, access.canAccessPostings(user));
             assertEquals(close, access.canCloseAny(user));
             assertEquals(talentPool, access.canSeeTalentPool(user));
         }

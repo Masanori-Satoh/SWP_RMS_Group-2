@@ -60,41 +60,13 @@
 .dash-interviews__body { display: flex; flex-direction: column; min-width: 0; }
 .dash-interviews__meta { color: var(--muted); font-size: var(--font-sm); overflow-wrap: anywhere; }
 
-/* Biểu đồ thanh ngang (thẻ progress) */
-.dash-bars { list-style: none; padding: 0; margin: 0; display: grid; gap: var(--s1); }
-.dash-bars__row { display: grid; grid-template-columns: minmax(110px, 2fr) minmax(0, 3fr) minmax(64px, auto); align-items: center; gap: var(--s3); min-height: 40px; padding: var(--s1) var(--s2); border-radius: var(--radius-sm); color: var(--ink); font-size: var(--font-sm); text-decoration: none; }
-.dash-bars__row:hover, .dash-bars__row:focus-visible { background: var(--brand-soft); outline-color: var(--focus); }
-.dash-bars__label { overflow-wrap: anywhere; }
-.dash-bars__value { display: flex; flex-direction: column; align-items: flex-end; font-variant-numeric: tabular-nums; }
-.dash-bars__note { font-size: var(--font-xs); font-weight: 600; }
-.dash-bars__note--danger { color: var(--error); }
-.dash-bars__note--warning { color: var(--warning); }
-.dash-bars__meter { width: 100%; height: 10px; appearance: none; border: 0; border-radius: var(--radius-pill); background: var(--surface-subtle); overflow: hidden; }
-.dash-bars__meter::-webkit-progress-bar { background: var(--surface-subtle); border-radius: var(--radius-pill); }
-.dash-bars__meter::-webkit-progress-value { background: var(--brand); border-radius: var(--radius-pill); }
-.dash-bars__meter::-moz-progress-bar { background: var(--brand); border-radius: var(--radius-pill); }
-.dash-table-meter { display: grid; grid-template-columns: 4ch minmax(60px, 1fr); align-items: center; gap: var(--s2); min-width: 140px; font-variant-numeric: tabular-nums; }
-.dash-table-meter__count { font-size: var(--font-md); }
-
-/* Biểu đồ cột theo tuần: chiều cao theo bậc 0..10 do server tính (DashboardColumnResponse.level) */
-.dash-columns { list-style: none; padding: 0; margin: 0; display: grid; grid-template-columns: repeat(8, minmax(0, 1fr)); gap: var(--s2); align-items: end; }
-.dash-columns__item { display: flex; flex-direction: column; align-items: center; gap: var(--s1); min-width: 0; }
-.dash-columns__count { font-size: var(--font-sm); font-variant-numeric: tabular-nums; }
-.dash-columns__bar { display: block; width: 100%; max-width: 40px; height: 4px; border-radius: var(--radius-sm) var(--radius-sm) 0 0; background: var(--brand); }
-.dash-col-current { background: var(--brand-dark); }
-.dash-col-h1 { height: 16px; } .dash-col-h2 { height: 32px; } .dash-col-h3 { height: 48px; }
-.dash-col-h4 { height: 64px; } .dash-col-h5 { height: 80px; } .dash-col-h6 { height: 96px; }
-.dash-col-h7 { height: 112px; } .dash-col-h8 { height: 128px; } .dash-col-h9 { height: 144px; }
-.dash-col-h10 { height: 160px; }
-.dash-columns__label { color: var(--muted); font-size: var(--font-xs); font-variant-numeric: tabular-nums; white-space: nowrap; }
-
-/* Tiến độ tuyển theo vị trí (HM) */
-.dash-progress { list-style: none; padding: 0; margin: 0; }
-.dash-progress__item { display: grid; gap: var(--s2); padding-block: var(--s3); border-bottom: 1px solid var(--line); }
-.dash-progress__item:last-child { border-bottom: 0; }
-.dash-progress__head { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--s2); }
-.dash-progress__bar { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: var(--s3); font-variant-numeric: tabular-nums; }
-.dash-progress__note { margin: 0; color: var(--muted); font-size: var(--font-sm); }
+/* Biểu đồ Chart.js (internal-dashboard.js); danh sách dữ liệu ngay sau là bản dự phòng khi không vẽ được */
+.dash-chart { position: relative; width: 100%; height: 280px; }
+.dash-chart--progress { height: 300px; }
+.dash-chart__canvas { display: block; }
+.dash-chart[hidden] { display: none; }
+.dash-chart-data { list-style: none; padding: 0; margin: 0; display: grid; gap: var(--s2); font-size: var(--font-sm); font-variant-numeric: tabular-nums; }
+.dash-chart-data li { display: flex; flex-wrap: wrap; gap: var(--s1) var(--s3); }
 
 /* Ô bảng (Director) */
 .dash-cell-title { display: block; font-weight: 600; }
@@ -103,15 +75,6 @@
 .dash-page--recruitment .table-wrapper { border: 1px solid var(--line); border-radius: var(--radius-md); }
 .dash-page--recruitment .table :is(th, td) { padding: var(--s3) var(--s4); }
 .dash-page--recruitment .table tbody tr:hover { background: var(--surface-subtle); }
-
-/* Buổi phỏng vấn tiếp theo (Interviewer) */
-.dash-next { display: flex; flex-wrap: wrap; align-items: center; gap: var(--s4); margin-top: var(--s6); padding: var(--s4) var(--s6); background: var(--brand-soft); border-color: var(--brand); }
-.dash-next__time { display: flex; flex-direction: column; align-items: center; justify-content: center; min-width: 88px; padding: var(--s2); border-radius: var(--radius-md); background: var(--brand-dark); color: var(--on-brand); font-variant-numeric: tabular-nums; }
-.dash-next__time strong { font-size: var(--font-xl); }
-.dash-next__body { display: flex; flex-direction: column; gap: var(--s1); flex: 1 1 280px; min-width: 0; }
-.dash-next__title { margin: 0; color: var(--brand-dark); font-family: var(--sans); font-size: var(--font-sm); font-weight: 600; }
-.dash-next__name { font-size: var(--font-lg); }
-.dash-next__meta { color: var(--ink); font-size: var(--font-sm); overflow-wrap: anywhere; }
 
 /* Lịch tuần (Interviewer): 7 cột, màn hẹp cuộn ngang trong khung riêng */
 .dash-week-nav { display: flex; gap: var(--s2); }
@@ -198,13 +161,11 @@
 }
 @media (max-width: 768px) {
   .dash-kpis, .dash-role-kpis .dash-kpis { grid-template-columns: 1fr; }
-  .dash-panel, .dash-kpi, .dash-next { padding: var(--s4); }
+  .dash-panel, .dash-kpi { padding: var(--s4); }
   .dash-week-scroll { margin-inline: calc(var(--s4) * -1); padding-inline: var(--s4); }
   .dash-work__item { display: flex; flex-wrap: wrap; }
   .dash-work__body { flex-basis: 100%; order: -1; }
-  .dash-bars__row { grid-template-columns: minmax(0, 1fr) auto; }
-  .dash-bars__meter { grid-column: 1 / -1; grid-row: 2; }
-  .dash-columns { gap: var(--s1); }
+  .dash-chart, .dash-chart--progress { height: 240px; }
   .adm-summaries { grid-template-columns: 1fr; }
   .adm-status-links { grid-template-columns: 1fr; }
   .adm-monitor-rows { grid-template-columns: 1fr; }

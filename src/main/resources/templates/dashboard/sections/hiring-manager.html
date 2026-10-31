@@ -11,7 +11,7 @@
         <section class="card dash-panel dash-panel--priority adw-surface" aria-labelledby="hm-attention-title">
             <div class="dash-panel__heading">
                 <h2 id="hm-attention-title" class="dash-panel__title">
-                    <svg th:replace="~{dashboard/fragments :: icon('clipboardCheck')}"></svg>Cần bạn xử lý
+                    <svg th:replace="~{dashboard/fragments :: icon('clipboardCheck')}"></svg>Việc cần xử lý
                 </h2>
             </div>
             <p class="dash-empty" th:if="${#lists.isEmpty(dashboard.needsAttention)}">Không có việc cần xử lý.</p>
@@ -43,23 +43,22 @@
             <h2 id="hm-progress-title" class="dash-panel__title">
                 <svg th:replace="~{dashboard/fragments :: icon('target')}"></svg>Tiến độ tuyển theo vị trí
             </h2>
-            <a class="dash-link" th:href="@{/requisitions}">Xem tất cả</a>
+            <a class="dash-link" th:href="@{/requisitions}">Xem tất cả yêu cầu</a>
         </div>
         <p class="dash-empty" th:if="${#lists.isEmpty(dashboard.progress)}">Chưa có yêu cầu nào đang tuyển.</p>
-        <ul class="dash-progress" th:unless="${#lists.isEmpty(dashboard.progress)}">
-            <li th:each="item : ${dashboard.progress}" class="dash-progress__item">
-                <div class="dash-progress__head">
+        <th:block th:unless="${#lists.isEmpty(dashboard.progress)}">
+            <div th:replace="~{dashboard/fragments :: chartCanvas('progress', 'dash-chart--progress')}"></div>
+            <!-- Dữ liệu biểu đồ; cũng là bản đọc được khi không có JavaScript -->
+            <ul class="dash-chart-data" data-chart-data>
+                <li th:each="item : ${dashboard.progress}" data-chart-point
+                    th:data-label="${item.title}" th:data-title="|${item.code} · ${item.title}|"
+                    th:data-hired="${item.hired}" th:data-missing="${item.missing}" th:data-needed="${item.needed}"
+                    th:data-note="${item.pipelineText}" th:data-href="@{${item.href}}">
                     <a class="dash-link" th:href="@{${item.href}}" th:text="|${item.code} · ${item.title}|">REQ-0001 · Vị trí</a>
-                    <span class="badge" th:classappend="|badge--${item.stateTone}|" th:text="${item.stateLabel}">Đang tiến triển</span>
-                </div>
-                <div class="dash-progress__bar">
-                    <progress class="dash-bars__meter" th:value="${item.hired}" th:max="${item.needed > 0 ? item.needed : 1}"
-                              th:aria-label="|Đã tuyển ${item.hired} trên ${item.needed} người|"></progress>
-                    <strong th:text="|${item.hired}/${item.needed} người|">1/3 người</strong>
-                </div>
-                <p class="dash-progress__note" th:text="${item.pipelineText}">1 đang phỏng vấn</p>
-            </li>
-        </ul>
+                    <span th:text="|Đã tuyển ${item.hired}/${item.needed} người · ${item.pipelineText}|">Đã tuyển 1/3 người</span>
+                </li>
+            </ul>
+        </th:block>
     </section>
 </th:block>
 </body>

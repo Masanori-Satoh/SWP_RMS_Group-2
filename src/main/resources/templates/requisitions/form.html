@@ -38,7 +38,7 @@
 
         <p class="notice" th:if="${copyNotice}" th:text="${copyNotice}"></p>
 
-        <form id="requisition-form" class="rqf-layout" th:object="${requisitionDto}" method="post"
+        <form id="requisition-form" class="rqf-layout" th:object="${form}" method="post"
             th:action="${isEdit} ? @{/requisitions/edit/{id}(id=${requisitionId})} : @{/requisitions/create}">
 
             <!-- Phòng ban (trừ Giám đốc) và đợt tuyển dụng do server tự xác định, form chỉ giữ lại để gửi kèm -->
@@ -95,9 +95,9 @@
                                 <!-- Lấy theo phòng ban của tài khoản đang đăng nhập (service ghi đè departmentId khi lưu) -->
                                 <div class="rqf-readonly">
                                     <th:block th:each="department : ${departments}"
-                                        th:if="${department.departmentId == requisitionDto.departmentId}"
+                                        th:if="${department.departmentId == form.departmentId}"
                                         th:text="${department.departmentName}">Engineering</th:block>
-                                    <span th:if="${requisitionDto.departmentId == null}">Chưa được gán phòng ban</span>
+                                    <span th:if="${form.departmentId == null}">Chưa được gán phòng ban</span>
                                     <span class="rqf-hint">theo tài khoản của bạn</span>
                                 </div>
                             </div>
@@ -255,7 +255,7 @@
                                 placeholder="Vì sao phòng ban cần thêm người cho vị trí này?"
                                 aria-describedby="reasonForHiring-count reasonForHiring-error"></textarea>
                             <div class="rqf-counter" id="reasonForHiring-count" aria-live="polite"
-                                th:text="|${#strings.length(requisitionDto.reasonForHiring ?: '')}/2000|">0/2000</div>
+                                th:text="|${#strings.length(form.reasonForHiring ?: '')}/2000|">0/2000</div>
                             <small id="reasonForHiring-error" class="field-error"
                                 th:text="${#fields.hasErrors('reasonForHiring')} ? ${#strings.listJoin(#fields.errors('reasonForHiring'), '; ')} : ''"></small>
                         </div>
@@ -266,7 +266,7 @@
                                 placeholder="Các đầu việc chính, mỗi ý một dòng"
                                 aria-describedby="jobDescription-count jobDescription-error"></textarea>
                             <div class="rqf-counter" id="jobDescription-count" aria-live="polite"
-                                th:text="|${#strings.length(requisitionDto.jobDescription ?: '')}/2000|">0/2000</div>
+                                th:text="|${#strings.length(form.jobDescription ?: '')}/2000|">0/2000</div>
                             <small id="jobDescription-error" class="field-error"
                                 th:text="${#fields.hasErrors('jobDescription')} ? ${#strings.listJoin(#fields.errors('jobDescription'), '; ')} : ''"></small>
                         </div>
@@ -277,7 +277,7 @@
                                 placeholder="Kinh nghiệm, kỹ năng, bằng cấp cần có"
                                 aria-describedby="requirementDetails-count requirementDetails-error"></textarea>
                             <div class="rqf-counter" id="requirementDetails-count" aria-live="polite"
-                                th:text="|${#strings.length(requisitionDto.requirementDetails ?: '')}/2000|">0/2000
+                                th:text="|${#strings.length(form.requirementDetails ?: '')}/2000|">0/2000
                             </div>
                             <small id="requirementDetails-error" class="field-error"
                                 th:text="${#fields.hasErrors('requirementDetails')} ? ${#strings.listJoin(#fields.errors('requirementDetails'), '; ')} : ''"></small>

@@ -77,9 +77,9 @@ class HiringManagerDashboardServiceTests {
         @DisplayName("3 thẻ: chờ Giám đốc duyệt, đã đăng tuyển, phỏng vấn 7 ngày tới; icon và link đúng thứ tự")
         void build_shouldReturnThreeKpis_whenDepartmentAssigned() {
             // Arrange
-            when(metrics.ownPendingRequisitions(USER_ID)).thenReturn(5L);
-            when(metrics.postedDepartmentRequisitions(USER_ID, DEPARTMENT_ID)).thenReturn(7L);
-            when(metrics.upcomingDepartmentInterviews(DEPARTMENT_ID, NOW, NOW.plusDays(7))).thenReturn(8L);
+            when(metrics.countPendingRequisitionsInScope(USER_ID, DEPARTMENT_ID)).thenReturn(5L);
+            when(metrics.countPostedDepartmentRequisitions(USER_ID, DEPARTMENT_ID)).thenReturn(7L);
+            when(metrics.countUpcomingDepartmentInterviews(USER_ID, DEPARTMENT_ID, NOW, NOW.plusDays(7))).thenReturn(8L);
 
             // Act
             List<DashboardMetricResponse> kpis = service.build(hiringManager(DEPARTMENT_ID)).kpis();
@@ -115,8 +115,8 @@ class HiringManagerDashboardServiceTests {
 
             // Assert
             assertEquals("Chưa được gán phòng ban", result.scopeLabel());
-            verify(metrics).postedDepartmentRequisitions(eq(USER_ID), isNull());
-            verify(metrics).upcomingDepartmentInterviews(isNull(), any(), any());
+            verify(metrics).countPostedDepartmentRequisitions(eq(USER_ID), isNull());
+            verify(metrics).countUpcomingDepartmentInterviews(eq(USER_ID), isNull(), any(), any());
             verify(lists).hiringProgress(eq(USER_ID), isNull());
         }
     }
@@ -126,8 +126,8 @@ class HiringManagerDashboardServiceTests {
     class Progress {
 
         @Test
-        @DisplayName("Đủ người / thiếu ứng viên / đang tiến triển theo luật D11")
-        void build_shouldLabelProgressState_whenComparingPipelineWithMissing() {
+        @DisplayName("Thanh chồng: đã tuyển / còn thiếu; dòng phụ = đang phỏng vấn + có offer, đủ người thì báo chờ đóng")
+        void build_shouldSplitHiredAndMissing_whenRequisitionsInProgress() {
             // Arrange
             when(lists.hiringProgress(USER_ID, DEPARTMENT_ID)).thenReturn(List.of(
                     progressRow(1, 3, 3, 0, 0),
@@ -138,11 +138,11 @@ class HiringManagerDashboardServiceTests {
             List<HiringProgressItem> items = service.build(hiringManager(DEPARTMENT_ID)).progress();
 
             // Assert
-            assertEquals("Đã đủ người", items.get(0).stateLabel());
-            assertEquals("success", items.get(0).stateTone());
-            assertEquals("Thiếu ứng viên", items.get(1).stateLabel());
-            assertEquals("1 đang phỏng vấn · 0 có offer · còn thiếu 2", items.get(1).pipelineText());
-            assertEquals("Đang tiến triển", items.get(2).stateLabel());
+            assertEquals(0, items.get(0).missing());
+            assertEquals("Đã tuyển đủ, chờ đóng yêu cầu", items.get(0).pipelineText());
+            assertEquals(2, items.get(1).missing());
+            assertEquals("1 đang phỏng vấn · 0 có offer", items.get(1).pipelineText());
+            assertEquals(2, items.get(2).hired());
             assertEquals("/requisitions/3", items.get(2).href());
         }
 
@@ -165,7 +165,7 @@ class HiringManagerDashboardServiceTests {
     }
 
     @Nested
-    @DisplayName("Cần bạn xử lý")
+    @DisplayName("Việc cần xử lý")
     class NeedsAttention {
 
         @Test

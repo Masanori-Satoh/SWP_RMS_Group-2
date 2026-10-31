@@ -13,8 +13,7 @@ public record DirectorDashboardResponse(
         int morePendingRequisitions,
         List<PendingOfferItem> pendingOffers,
         int morePendingOffers,
-        List<DashboardBarResponse> openByDepartment,
-        List<DecisionItem> recentDecisions) implements DashboardResponse {
+        List<DepartmentRequisitionItem> openByDepartment) implements DashboardResponse {
 
     @Override
     public String section() {

@@ -97,8 +97,8 @@ class AdminDashboardIntegrationTests {
         if (first != null) {
             var at = first.toLocalDateTime();
             assertEquals(jdbc.queryForObject("SELECT COUNT_BIG(*) FROM Candidate WHERE CreatedAt=?", Long.class, first),
-                    metrics.candidatesCreatedBetween(at, at), "Both time boundaries are inclusive");
-            assertEquals(0, metrics.candidatesCreatedBetween(at.minusDays(1), at.minusSeconds(1)),
+                    metrics.countCandidatesCreatedBetween(at, at), "Both time boundaries are inclusive");
+            assertEquals(0, metrics.countCandidatesCreatedBetween(at.minusDays(1), at.minusSeconds(1)),
                     "A window before the first profile returns zero");
         }
     }

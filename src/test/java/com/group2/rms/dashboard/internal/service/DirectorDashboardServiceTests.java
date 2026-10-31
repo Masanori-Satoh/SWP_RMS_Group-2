@@ -1,8 +1,7 @@
 package com.group2.rms.dashboard.internal.service;
 
-import com.group2.rms.dashboard.internal.dto.DashboardBarResponse;
+import com.group2.rms.dashboard.internal.dto.DepartmentRequisitionItem;
 import com.group2.rms.dashboard.internal.dto.DashboardMetricResponse;
-import com.group2.rms.dashboard.internal.dto.DecisionItem;
 import com.group2.rms.dashboard.internal.dto.DirectorDashboardResponse;
 import com.group2.rms.dashboard.internal.dto.PendingOfferItem;
 import com.group2.rms.dashboard.internal.dto.PendingRequisitionItem;
@@ -11,7 +10,6 @@ import com.group2.rms.dashboard.internal.repository.DashboardListRepository.Depa
 import com.group2.rms.dashboard.internal.repository.DashboardListRepository.PendingOfferRow;
 import com.group2.rms.dashboard.internal.repository.DashboardListRepository.PendingRequisitionRow;
 import com.group2.rms.dashboard.internal.repository.InternalMetricsRepository;
-import com.group2.rms.dashboard.internal.repository.InternalMetricsRepository.ApprovalActivity;
 import com.group2.rms.user.entity.Role;
 import com.group2.rms.user.entity.User;
 import org.junit.jupiter.api.BeforeEach;
@@ -140,7 +138,7 @@ class DirectorDashboardServiceTests {
     @DisplayName("Ứng viên trúng tuyển chỉ tính từ đầu tháng hiện tại đến thời điểm xem")
     void build_shouldCountHiredApplicationsInCurrentMonth() {
         // Arrange
-        when(metrics.hiredBetween(eq(MONTH_START), eq(NOW))).thenReturn(12L);
+        when(metrics.countHiredBetween(eq(MONTH_START), eq(NOW))).thenReturn(12L);
 
         // Act
         DashboardMetricResponse hired = service.build(director()).kpis().get(2);
@@ -153,36 +151,22 @@ class DirectorDashboardServiceTests {
     }
 
     @Test
-    @DisplayName("Theo phòng ban: thanh = chờ duyệt + đang tuyển, chữ phụ chỉ khi có yêu cầu chờ duyệt")
-    void build_shouldBuildDepartmentBars_whenRequisitionsOpen() {
+    @DisplayName("Theo phòng ban: mỗi phòng một cột chồng chờ duyệt + đã duyệt, giữ thứ tự từ repository")
+    void build_shouldBuildDepartmentColumns_whenRequisitionsOpen() {
         // Arrange
         when(lists.openRequisitionsByDepartment()).thenReturn(List.of(
                 new DepartmentRequisitionRow("Kỹ thuật", 3, 15),
                 new DepartmentRequisitionRow("Tài chính", 0, 4)));
 
         // Act
-        List<DashboardBarResponse> bars = service.build(director()).openByDepartment();
+        List<DepartmentRequisitionItem> departments = service.build(director()).openByDepartment();
 
         // Assert
-        assertEquals(18, bars.get(0).count());
-        assertEquals(18, bars.get(0).max());
-        assertEquals("3 chờ duyệt", bars.get(0).note());
-        assertNull(bars.get(1).note());
+        assertEquals(2, departments.size());
+        assertEquals("Kỹ thuật", departments.get(0).departmentName());
+        assertEquals(3, departments.get(0).pending());
+        assertEquals(15, departments.get(0).approved());
+        assertEquals(0, departments.get(1).pending());
     }
 
-    @Test
-    @DisplayName("Quyết định gần đây: nhãn tiếng Việt cho loại và kết quả")
-    void build_shouldTranslateDecisions_whenActivityExists() {
-        // Arrange
-        when(metrics.recentDirectorActivity(USER_ID, DirectorDashboardService.LIST_LIMIT)).thenReturn(List.of(
-                new ApprovalActivity(ApprovalActivity.OFFER, "Sales Executive", "Rejected", NOW)));
-
-        // Act
-        DecisionItem decision = service.build(director()).recentDecisions().get(0);
-
-        // Assert
-        assertEquals("Đề nghị tuyển dụng", decision.typeLabel());
-        assertEquals("Đã từ chối", decision.statusLabel());
-        assertEquals("danger", decision.statusTone());
-    }
 }

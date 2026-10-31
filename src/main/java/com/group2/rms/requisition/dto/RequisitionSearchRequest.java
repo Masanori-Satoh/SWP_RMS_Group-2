@@ -5,29 +5,12 @@ import org.springframework.format.annotation.DateTimeFormat;
 import java.time.LocalDate;
 import java.util.List;
 
-/**
- * Mọi điều kiện tìm kiếm của màn "Yêu cầu tuyển dụng", lấy từ URL.
- * Ví dụ: /requisitions?q=java&status=Approved&sort=oldest&page=1
- *
- * Spring tự tạo record này từ query string (controller dùng @ModelAttribute).
- * Giá trị chưa được kiểm tra: service sẽ "làm sạch" lại theo quyền của người xem
- * (xem RequisitionServiceImpl#normalizeFilter).
- *
- * @param q            từ khóa tìm theo tên vị trí hoặc phòng ban
- * @param status       trạng thái duyệt được chọn (Spring nhận dạng danh sách, service chỉ giữ một giá trị).
- *                     null = URL không có tham số status (lần vào đầu);
- *                     danh sách rỗng = người dùng chủ động bỏ hết trạng thái
- * @param posting      trạng thái tin tuyển dụng mới nhất: "none", "Published", "Paused", "Closed"
- * @param departmentId lọc theo phòng ban
- * @param creatorId    lọc theo người tạo yêu cầu (Hiring Manager)
- * @param createdFrom  ngày tạo từ (tính cả ngày này)
- * @param createdTo    ngày tạo đến (tính cả ngày này)
- * @param sort         cách sắp xếp, xem RequisitionSort
- * @param page         số trang, đếm từ 0 (giống Spring Data)
- * @param size         số dòng mỗi trang
+/*
+ * DTO: điều kiện tìm kiếm của màn danh sách yêu cầu, lấy từ URL; service làm sạch lại theo quyền.
  */
 public record RequisitionSearchRequest(
         String q,
+        // null = lần vào đầu (chưa có tham số status); rỗng = người dùng bỏ hết trạng thái
         List<String> status,
         String posting,
         Integer departmentId,

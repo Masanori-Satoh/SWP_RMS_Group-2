@@ -25,8 +25,8 @@
     /* ---------------------------------------------------------------------
      * 1. TIỆN ÍCH
      * --------------------------------------------------------------------- */
-    const esc = text => String(text ?? '').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
-    const pad = n => String(n).padStart(2, '0');
+    const escapeHtml = text => String(text ?? '').replace(/[&<>"]/g, char => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[char]));
+    const pad = number => String(number).padStart(2, '0');
     /** yyyy-MM-dd theo giờ máy người dùng (không dùng toISOString vì trả giờ UTC). */
     const isoDate = date => `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
     /** "2026-10-20" hoặc "2026-10-20T08:00" → "20/10/2026". */
@@ -80,7 +80,7 @@
         if (!address) {
             return '<p class="jpf-map-empty">Nhập địa chỉ để xem bản đồ</p>';
         }
-        return `<iframe title="Bản đồ ${esc(address)}" src="${mapsEmbed(address)}" loading="lazy"
+        return `<iframe title="Bản đồ ${escapeHtml(address)}" src="${mapsEmbed(address)}" loading="lazy"
                     referrerpolicy="no-referrer-when-downgrade"></iframe>
                 <a class="jpf-map-link" href="${mapsLink(address)}" target="_blank" rel="noopener">Mở Google Maps ↗</a>`;
     }
@@ -158,9 +158,9 @@
     /* ---------------------------------------------------------------------
      * 6. XEM TRƯỚC "ỨNG VIÊN SẼ THẤY" + TAB TRÊN ĐIỆN THOẠI
      * --------------------------------------------------------------------- */
-    function block(title, text) {
+    function previewSection(title, text) {
         const value = text.trim();
-        return `<section><h4>${title}</h4>${value ? `<p>${esc(value)}</p>` : '<p class="jpf-empty">Chưa có nội dung</p>'}</section>`;
+        return `<section><h4>${title}</h4>${value ? `<p>${escapeHtml(value)}</p>` : '<p class="jpf-empty">Chưa có nội dung</p>'}</section>`;
     }
     function renderPreview() {
         const title = $('postingTitle').value.trim();
@@ -173,14 +173,14 @@
         facts.push(['Địa điểm', address || '—']);
 
         $('jpf-preview').innerHTML = `
-            <header><h3>${title ? esc(title) : '<span class="jpf-empty">Tiêu đề tin</span>'}</h3>
-                <div class="jpf-tags">${tags.map(t => `<span>${esc(t)}</span>`).join('')}</div></header>
-            <dl class="jpf-facts">${facts.map(([k, v]) => `<div><dt>${k}</dt><dd>${esc(v)}</dd></div>`).join('')}</dl>
+            <header><h3>${title ? escapeHtml(title) : '<span class="jpf-empty">Tiêu đề tin</span>'}</h3>
+                <div class="jpf-tags">${tags.map(tag => `<span>${escapeHtml(tag)}</span>`).join('')}</div></header>
+            <dl class="jpf-facts">${facts.map(([label, value]) => `<div><dt>${label}</dt><dd>${escapeHtml(value)}</dd></div>`).join('')}</dl>
             <div class="jpf-body">
-                ${block('Mô tả công việc', $('jobDescription').value)}
-                ${block('Yêu cầu ứng viên', $('jobRequirements').value)}
-                ${benefitBox.value.trim() ? block('Quyền lợi', benefitBox.value) : ''}
-                ${address ? `<section><h4>Nơi làm việc</h4><a href="${mapsLink(address)}" target="_blank" rel="noopener">${esc(address)} ↗</a></section>` : ''}
+                ${previewSection('Mô tả công việc', $('jobDescription').value)}
+                ${previewSection('Yêu cầu ứng viên', $('jobRequirements').value)}
+                ${benefitBox.value.trim() ? previewSection('Quyền lợi', benefitBox.value) : ''}
+                ${address ? `<section><h4>Nơi làm việc</h4><a href="${mapsLink(address)}" target="_blank" rel="noopener">${escapeHtml(address)} ↗</a></section>` : ''}
             </div>
             <footer><span>Đăng ${viDate(postingDay())}</span><span class="btn btn--primary btn--sm" aria-hidden="true">Ứng tuyển ngay</span></footer>`;
     }

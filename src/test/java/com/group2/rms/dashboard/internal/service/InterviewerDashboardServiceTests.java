@@ -22,7 +22,6 @@ import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
@@ -67,7 +66,7 @@ class InterviewerDashboardServiceTests {
 
     @Test
     @DisplayName("Chỉ tính buổi phỏng vấn sắp tới, không tính buổi đã xong hôm nay")
-    void build_shouldFindNextInterview_whenOneDoneOneUpcoming() {
+    void build_shouldCountUpcomingOnly_whenOneDoneOneUpcoming() {
         // Arrange
         InterviewRow done = interview(1, NOW.minusHours(2), "Completed");
         InterviewRow next = interview(2, NOW.withHour(14).withMinute(0), "Scheduled");
@@ -82,14 +81,11 @@ class InterviewerDashboardServiceTests {
         assertEquals("Buổi phỏng vấn sắp tới", upcoming.title());
         assertEquals("1", upcoming.value());
         assertEquals("Trong 7 ngày tới", upcoming.detail());
-        assertEquals("Ứng viên 2", result.nextInterview().candidateName());
-        assertEquals("Phòng 3A", result.nextInterview().location());
-        assertEquals(300, result.minutesUntilNext());
     }
 
     @Test
-    @DisplayName("7 ngày tới không có buổi nào -> không có khối 'Buổi tiếp theo'")
-    void build_shouldHaveNoNextInterview_whenNothingScheduled() {
+    @DisplayName("7 ngày tới không có buổi nào -> KPI buổi sắp tới = 0")
+    void build_shouldCountZeroUpcoming_whenNothingScheduled() {
         // Arrange
         givenSoon(List.of());
 
@@ -97,25 +93,23 @@ class InterviewerDashboardServiceTests {
         InterviewerDashboardResponse result = service.build(interviewer(), null);
 
         // Assert
-        assertNull(result.nextInterview());
         assertEquals("0", result.kpis().get(0).value());
     }
 
     @Test
     @DisplayName("Phiếu chưa hoàn thành và ứng viên đạt tháng này đều thuộc phạm vi người phỏng vấn")
-    void build_shouldFlagOverdueEvaluation_whenEndedThreeDaysAgoOrMore() {
+    void build_shouldListEvaluationsAndCountPassed_whenInterviewerScoped() {
         // Arrange
         when(lists.pendingEvaluations(USER_ID)).thenReturn(List.of(
                 new EvaluationRow(5, "Lý Minh Khoa", "Frontend", NOW.minusDays(4)),
                 new EvaluationRow(6, null, "Backend", NOW.minusHours(3))));
-        when(metrics.passedInterviewCandidatesBetween(eq(USER_ID),
+        when(metrics.countPassedInterviewCandidatesBetween(eq(USER_ID),
                 eq(LocalDate.of(2026, 10, 1).atStartOfDay()), eq(NOW))).thenReturn(8L);
 
         // Act
         InterviewerDashboardResponse result = service.build(interviewer(), null);
 
         // Assert
-        assertEquals("warning", result.pendingEvaluations().get(0).waitTone());
         assertEquals("Ứng viên chưa có tên", result.pendingEvaluations().get(1).candidateName());
         assertEquals(DashboardViews.INTERVIEWS_HREF, result.pendingEvaluations().get(0).href());
         assertEquals("Đánh giá chưa hoàn thành", result.kpis().get(1).title());
@@ -127,7 +121,7 @@ class InterviewerDashboardServiceTests {
     }
 
     @Test
-    @DisplayName("Lịch tuần: 7 cột T2..CN, buổi xếp đúng ngày, hôm nay được đánh dấu, buổi đã qua giờ = finished")
+    @DisplayName("Lịch phỏng vấn: 7 cột T2..CN, buổi xếp đúng ngày, hôm nay được đánh dấu, buổi đã qua giờ = finished")
     void build_shouldGroupWeekByDay_whenCurrentWeek() {
         // Arrange
         InterviewRow tuesday = interview(1, LocalDateTime.of(2026, 10, 27, 15, 0), "Scheduled");
@@ -148,7 +142,6 @@ class InterviewerDashboardServiceTests {
         assertTrue(week.get(1).interviews().get(0).finished());
         assertTrue(week.get(2).today());
         assertFalse(week.get(2).interviews().get(0).finished());
-        assertEquals(2, result.weekInterviewCount());
         assertEquals(MONDAY.minusWeeks(1), result.previousWeek());
     }
 

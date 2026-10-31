@@ -13,7 +13,7 @@
 </head>
 
 <body>
-    <main id="main" layout:fragment="content" class="page-content container adw-page" tabindex="-1" th:with="draftOrNew=${postingDto.draftOrNew}, paused=${postingDto.paused}">
+    <main id="main" layout:fragment="content" class="page-content container adw-page" tabindex="-1" th:with="draftOrNew=${form.draftOrNew}, paused=${form.paused}">
         <th:block th:replace="~{fragments/ui/admin-workspace :: scene}"></th:block>
 
         <nav class="jpf-crumbs" aria-label="Đường dẫn">
@@ -25,7 +25,7 @@
             viên trước khi đăng.</p>
 
         <!-- ===== Yêu cầu nguồn (chỉ đọc) ===== -->
-        <section class="card jpf-source adw-surface" aria-label="Yêu cầu tuyển dụng nguồn" th:object="${postingDto}">
+        <section class="card jpf-source adw-surface" aria-label="Yêu cầu tuyển dụng nguồn" th:object="${form}">
             <div class="jpf-source-main">
                 <span class="jpf-k">Tạo từ yêu cầu đã duyệt</span>
                 <span class="jpf-source-title" th:text="*{requisitionTitle}">Key Account Manager</span>
@@ -78,14 +78,14 @@
                 <select class="form-select" id="requisition-switch" name="requisitionId" data-auto-submit>
                     <option th:each="choice : ${requisitionChoices}" th:value="${choice.value}"
                         th:text="${choice.label}"
-                        th:selected="${choice.value == #strings.toString(postingDto.requisitionId)}">Business Analyst ·
+                        th:selected="${choice.value == #strings.toString(form.requisitionId)}">Business Analyst ·
                         REQ-0019</option>
                 </select>
                 <noscript><button class="btn btn--secondary btn--sm" type="submit">Đổi</button></noscript>
             </form>
         </section>
 
-        <form id="posting-form" class="jpf-form" method="post" th:object="${postingDto}" novalidate
+        <form id="posting-form" class="jpf-form" method="post" th:object="${form}" novalidate
             th:action="${isEdit} ? @{/internal/job-postings/{id}/edit(id=*{jobPostingId})} : @{/internal/job-postings/create}"
             th:data-today="${today}" th:data-salary-range="*{salaryRangeLabel}"
             th:data-employment="*{employmentType}" th:data-work-model="*{workModel}"

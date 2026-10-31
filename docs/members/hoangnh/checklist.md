@@ -398,3 +398,61 @@ Nhằm đảm bảo chất lượng code và phòng ngừa lỗi hồi quy (regr
 - [x] Test: viết lại unit test 4 role + `DashboardPeriodTests` + bổ sung `DashboardLabelsTests`; integration `HiringManagerDashboardIntegrationTests`, `InternalDashboardIntegrationTests` (thay `RecruitmentDashboardWebTests`, `DashboardChartQueryTests`, `DashboardChartServiceTests` đã xóa). `mvnw clean test`: 1935 test, 0 lỗi, 1 skip có sẵn ở `ApplicationPipelineQueryTests`.
 - [ ] Còn lại: xem thật trên trình duyệt 4 role + bề rộng 390px; trình GV mockup. **Cần báo nhóm / Lead:** AG §1 cây thư mục `dashboard` và bảng module (dòng 59 còn `dashboard/candidate`); dashboard dùng truy vấn đọc trên bảng Offer / Interview / Application của module khác (chỉ đọc, đặt trong repository của dashboard).
 - [x] Tinh chỉnh UI theo nhận xét (28/10): icon dùng path gốc Lucide + icon tiêu đề khối theo gợi ý (clipboardCheck, calendarDays, chartBar, chartColumnIncreasing, briefcaseBusiness); nút "Tạo tin" là nút chính (`DashboardWorkItem.primary`); chú thích khi rê chuột trên thanh / cột (`hint` → `title`); Tin đang mở: số hồ sơ nổi bật, badge "Còn N ngày" / "Hết hạn hôm nay", bỏ trạng thái "Sắp hết hạn"; chữ "chờ quá 3 ngày" đổi sang cam; card có bóng nhẹ, tiêu đề khối đậm hơn. Giữ `.page-title` chung (không định nghĩa lại). Test dashboard + Admin: 115/115 qua. Mockup HR cập nhật bảng tin.
+
+## Dọn tên, logic, code thừa, comment: requisition / job posting / notification / dashboard (2026-10-30, nhánh `feat/hoang-dashboard-fix`)
+
+- [x] Dọn code thừa: xóa trang `/internal/job-postings/dashboard` (template, `hr-dashboard.css`, `JobPostingDashboardResponse`, `getDashboard`, 2 hàm mapper, 5 hàm repository, đường dẫn trong `SecurityConfig` + AG §5), `RequisitionItem`, hàm dashboard không còn dùng sau khi rút 3 KPI, `candidate-dashboard.js`, `DashboardDatabaseTests` (comment toàn bộ). Thêm `*.vpp.bak_*` vào `.gitignore`.
+- [x] Đổi tên theo AG §3 / CLAUDE.md §5: `JobPostingCreateRequest` → `JobPostingRequest`; model attribute `requisitionDto` / `postingDto` → `form`; `getRequestDtoById` → `prepareEditForm`; `canRead` → `canAccessPostings`; `send` → `saveIfNotDuplicate`; hàm đếm dashboard thêm `count`; biến 1 chữ cái và tên JS chung chung. Mã yêu cầu dùng chung `RequisitionLabels.requisitionCode(id, savedCode)`.
+- [x] Sửa logic (có test): notification dùng `Clock`; duyệt yêu cầu (kể cả Giám đốc tự duyệt) báo cả HR; rút lại yêu cầu thì đánh dấu đã đọc thông báo chờ duyệt; chỉ sao chép yêu cầu Approved; sao chép sang phòng ban khác thành đợt 1; chặn trùng bản nháp chỉ khi lưu nháp; `decide` ghi `updatedAt`; dashboard HM tính cả phòng HM làm trưởng phòng.
+- [x] Rút gọn 83 comment nhiều dòng + 34 header class về 1 dòng.
+- [x] `mvnw clean test`: 1942 test, 20 lỗi đều ở `PasswordRecoveryServiceTests`, `RegistrationVerificationServiceTests`, `CandidateProfileWebTests`; chạy trên `HEAD` gốc cũng lỗi y hệt (có sẵn từ merge `main`, không thuộc phần này).
+- [x] Thẻ HM "Yêu cầu chờ Giám đốc duyệt" đếm theo phạm vi giống màn `/requisitions` (`countPendingRequisitionsInScope`), bấm vào khớp số.
+- [ ] Còn treo: thẻ Offer (HR) và Trúng tuyển (Director) cần module offer / application thêm lọc ngày, **báo người phụ trách**. Đã sửa `SecurityConfig` (core), **báo Lead**.
+
+## Hoàn thiện thông báo N1–N7 (2026-10-30, nhánh `feat/hoang-dashboard-fix`)
+
+Đã có từ trước: Requisition (gửi duyệt / duyệt / từ chối), Job Posting (đăng tin), Offer (chờ duyệt / quyết định / gửi thư / ứng viên phản hồi).
+
+- [x] **N1 — Rút yêu cầu:** HM rút `Pending_Director` → mọi Giám đốc nhận `REQUISITION_WITHDRAWN`, link `/requisitions/{id}`; Giám đốc tự rút thì không báo chính mình.
+- [x] **N2 — Tạm dừng / đóng tin:** `JOB_POSTING_PAUSED` / `JOB_POSTING_CLOSED` → HM chủ requisition, link `/internal/job-postings/{id}`. Đóng tin báo sau `talentPoolService.closeJob`, không sửa `TalentPoolService`.
+- [x] **N3 — Hồ sơ chờ HM duyệt:** HR chấm Đạt → HM chủ requisition + trưởng phòng (bỏ trùng), `APPLICATION_HR_PASSED`, link `/applications/{id}` (`ApplicationReviewService.review`, module DungLT).
+- [x] **N4 — Hồ sơ HM duyệt xong:** HM / Giám đốc duyệt thay chấm Đạt → mọi HR, `APPLICATION_HM_PASSED`, link `/applications/{id}`.
+- [x] **N5 — Lịch mới:** `createSchedule` → hội đồng (trừ người tạo) link `/interviews`, ứng viên link `/portal/interviews` (module Đức).
+- [x] **N6 — Đổi / hủy lịch:** `updateSchedule` (chỉ khi lịch còn Scheduled / Rescheduled) và `cancelSchedule` → hội đồng + ứng viên; lý do hủy chỉ ghi cho hội đồng.
+- [x] **N7 — Kết quả phỏng vấn:** `InterviewFinalResultServiceImpl.decide` → mọi HR, `INTERVIEW_RESULT_DECIDED`, link `/interviews/{id}/result`; Considering rồi chốt lại là 2 thông báo.
+- [x] Trang `/notifications`: badge loại sự kiện lấy từ `NotificationLabels` (file mới) thay vì `th:if` theo giá trị DB trong template (§19); có badge cho cả Offer. Xóa CSS `.notif-badge.event-*` không còn dùng.
+- [x] Test: thêm 12 test notify mới + `NotificationLabels` trong `NotificationServiceImplTest`; verify gọi notify (và không gọi khi lỗi / Không đạt / Tạm giữ) ở test Requisition, JobPosting, ApplicationReview, InterviewScheduling, InterviewFinalResult. `mvnw clean test`: 1955 test, 20 lỗi vẫn là 3 lớp có sẵn (`PasswordRecoveryServiceTests`, `RegistrationVerificationServiceTests`, `CandidateProfileWebTests`).
+- [x] Không làm: hồ sơ mới nộp (dễ spam HR, đã có thẻ dashboard); tin hẹn giờ tự lên (chưa có `@Scheduled`).
+- [x] Đổi so với kế hoạch: hàm notify nhận entity `Application` / `InterviewSchedule` (giống `OfferProposal` có sẵn) để code chèn vào module người khác chỉ 1 dòng; chưa tách `NotificationMessages` (file `NotificationServiceImpl` ~720 dòng, phần mới đã gom helper `notifyEach`).
+- [ ] **Báo DungLT, Đức** về dòng `// hoangnh bổ sung` trong service của họ; **báo Lead** thêm `interview → notification`, `candidate → notification` vào ARCHITECTURE_GUIDE (dòng 67–68).
+- [ ] Người bị gỡ khỏi hội đồng khi đổi lịch chưa nhận thông báo (chỉ báo hội đồng hiện tại).
+
+## Thông báo tức thời qua WebSocket (2026-10-30)
+
+- [x] Thêm `spring-boot-starter-websocket` (`pom.xml`) và `core/config/WebSocketConfig` (STOMP, endpoint `/ws`, kênh riêng `/user/queue/notifications`); bộ chặn `OwnQueueOnly` chỉ cho người đã đăng nhập nghe kênh của mình, chặn SEND.
+- [x] `SecurityConfig`: `/ws` chỉ cho người đã đăng nhập.
+- [x] `NotificationServiceImpl` lưu thông báo xong thì phát event; `NotificationPushListener` (mới) đợi commit xong mới đẩy số chưa đọc, rollback thì không đẩy, đẩy lỗi chỉ ghi log.
+- [x] Topbar: nhúng `@stomp/stompjs@7.0.0` (CDN jsdelivr); `topbar-notifications.js` nghe kênh riêng, cập nhật chuông ngay, đang mở dropdown thì tải lại danh sách. Hỏi lại server giãn từ 45 giây → 3 phút (dự phòng mất kết nối).
+- [x] Test: `NotificationPushListenerTest` (3), `WebSocketConfigTest` (4), thêm 1 test phát event trong `NotificationServiceImplTest`. `mvnw test` (heap nhỏ do máy thiếu RAM): 1963 test, 20 lỗi vẫn là 3 lớp có sẵn.
+- [ ] **Báo Lead:** sửa `core/config` (WebSocketConfig mới, SecurityConfig), `pom.xml` và `topbar-user.html` (UI_RULES §2A). Module `notification` lên 10 file (chạm mốc < 10 để phẳng).
+- [ ] Chưa thử bằng trình duyệt thật (2 tài khoản, 1 bên tạo sự kiện, bên kia thấy chuông đổi ngay).
+
+## Dashboard nội bộ theo mockup rút gọn (30/10/2026)
+- [x] Bỏ theo mockup: HR "Hồ sơ chờ theo giai đoạn" + "Tin đang mở"; Director "Quyết định gần đây"; Interviewer thẻ "Buổi tiếp theo", badge số ngày chờ, "· N buổi". Xóa DTO/hàm/truy vấn không còn dùng (`DashboardBarResponse`, `DashboardColumnResponse`, `DecisionItem`, `OpenPostingItem`, `openPostings`, `recentDirectorActivity`).
+- [x] Biểu đồ đổi sang Chart.js (bỏ D4): HM thanh ngang chồng Đã tuyển/Còn thiếu, HR đường 8 tuần, Director cột chồng Chờ duyệt/Đã duyệt. `js/pages/internal-dashboard.js` đọc `data-chart-point` do server render; vẽ lỗi thì giữ danh sách. Interviewer không nạp Chart.js (`hasCharts()`).
+- [x] Đổi tiêu đề theo mockup (Việc cần xử lý, Phỏng vấn sắp diễn ra, Xu hướng hồ sơ ứng tuyển, ... chờ duyệt, Lịch phỏng vấn). Test dashboard: 110 pass.
+- [ ] Chưa xem bằng trình duyệt thật; `plan_dashboard.md` (D4, D14) chưa cập nhật.
+- [x] Thêm `database/seeds/seed_dashboard_demo.sql` (bước 5 trong `data_seeding_guide.md`): dời 85 hồ sơ có ngày nộp ở tương lai về 8 tuần qua, thêm 3 offer chờ Giám đốc duyệt, 4 hồ sơ Hired trong tháng, 2 tin đăng hôm nay. Đã chạy trên DB local, chạy lại thì bỏ qua.
+- [x] `seed_dashboard_demo.sql` bước 5: Interviewer demo `viet.bui@rms-tech.vn` có 7 buổi (4 buổi đã xong tuần này chưa có phiếu, 3 buổi đầu tuần sau); dời các buổi Scheduled còn xa > 14 ngày và thêm Việt vào hội đồng.
+- [x] HR dashboard: bỏ dòng "+N việc khác" dưới "Việc cần xử lý", chỉ giữ link "Xem tất cả" khi còn việc bị ẩn.
+- [x] Director dashboard: bỏ phụ đề "Toàn công ty" dưới "Bảng điều khiển" (fragment `pageHeader` ẩn phụ đề khi scope = null).
+- [x] Interviewer dashboard: bỏ phụ đề "Lịch phỏng vấn được phân công cho bạn" dưới "Bảng điều khiển".
+- [x] HR dashboard: card "Offer được chấp nhận" đổi thành "Hồ sơ chờ lên lịch phỏng vấn" (hồ sơ giai đoạn Phỏng vấn HR đang cầm bóng, link `/applications?stage=INTERVIEW`); xóa `countOffersWithStatusBetween` + `OFFER_ACCEPTED` không còn dùng.
+
+## Rà lỗi cấu trúc sau đợt thông báo + dashboard (31/10/2026)
+- [x] Module `notification` đủ 10 file nên chia `controller/ service/ repository/ entity/ dto/` (AG §1); sửa import ở requisition, jobposting, offer, interview, candidate và test. **Cần báo nhóm:** import `com.group2.rms.notification.service.NotificationService` (đổi package).
+- [x] Tách `NotificationMessages` (soạn tiêu đề / nội dung / khóa thời gian) khỏi `NotificationServiceImpl` (735 → 698 dòng vì ternary lồng đổi sang if / else); chữ thông báo giữ nguyên. Còn lại trong Impl: chữ của `notifyOfferResponseFromCandidate` (code Offer cũ).
+- [x] Bỏ wildcard import (`NotificationController`, `NotificationApiController`, `Notification`, `JobRequisition`), bỏ tên package đầy đủ trong thân code (`OfferMailSender`, `Notification`, `NotificationServiceImpl`), thêm ngoặc nhọn ở `RequisitionController`, thêm comment đầu class còn thiếu.
+- [x] Đổi tên test `*Test` → `*Tests` (§5): `NotificationServiceImplTests`, `NotificationPushListenerTests`, `NotificationApiControllerTests`, `WebSocketConfigTests`.
+- [ ] Phụ thuộc vòng `notification` ↔ requisition / jobposting / offer / interview / candidate (notification import entity của các module này): giữ nguyên, **báo Lead** ghi ngoại lệ vào AG §1.2.
+- [ ] **Báo Lead** sửa AG §1: `notification` không còn phẳng; `dashboard` đã chia `shared/ admin/ internal/`; §1.2 `dashboard` còn phụ thuộc `candidate`, `jobposting`, `requisition`.

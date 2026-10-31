@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <html lang="vi" xmlns:th="http://www.thymeleaf.org"><body>
-<!-- Linh kiện dùng chung của dashboard nội bộ (dashboard/sections/*). Không có JavaScript, không style inline. -->
+<!-- Linh kiện dùng chung của dashboard nội bộ (dashboard/sections/*). Không style inline; biểu đồ do js/pages/internal-dashboard.js vẽ. -->
 
 <!-- Icon nét mảnh dùng chung cho dashboard nội bộ. Mỗi tên chọn một path SVG tĩnh. -->
 <svg th:fragment="icon(name)" class="dash-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"
@@ -37,7 +37,7 @@
 <div th:fragment="pageHeader(title, scope)" class="page-header dash-page-header adw-heading">
     <div>
         <h1 class="page-title adw-title" th:text="${title}">Bảng điều khiển</h1>
-        <p class="page-subtitle" th:text="${scope}">Phạm vi</p>
+        <p class="page-subtitle" th:if="${scope != null}" th:text="${scope}">Phạm vi</p>
     </div>
 </div>
 
@@ -58,32 +58,11 @@
     </a>
 </section>
 
-<!-- Biểu đồ thanh ngang: độ dài thanh vẽ bằng thẻ progress; note = chữ phụ tô màu (ví dụ "3 chờ quá 3 ngày") -->
-<ul th:fragment="barChart(bars)" class="dash-bars">
-    <li th:each="bar : ${bars}">
-        <a class="dash-bars__row" th:href="@{${bar.href}}" th:title="${bar.hint}">
-            <span class="dash-bars__label" th:text="${bar.label}">Giai đoạn</span>
-            <progress class="dash-bars__meter" aria-hidden="true" th:value="${bar.count}"
-                      th:max="${bar.max > 0 ? bar.max : 1}"></progress>
-            <span class="dash-bars__value">
-                <strong th:text="${bar.count}">0</strong>
-                <span th:if="${bar.note != null}" class="dash-bars__note" th:classappend="|dash-bars__note--${bar.noteTone}|"
-                      th:text="${bar.note}">0 quá hạn</span>
-            </span>
-        </a>
-    </li>
-</ul>
-
-<!-- Biểu đồ cột dọc theo tuần: chiều cao theo bậc 0..10 (class dash-col-h{n}), không style inline.
-     Không dùng "__" trong biểu thức th:classappend: Thymeleaf hiểu __...__ là tiền xử lý. -->
-<ol th:fragment="columnChart(columns, label)" class="dash-columns" th:aria-label="${label}">
-    <li th:each="column : ${columns}" class="dash-columns__item" th:title="${column.hint}">
-        <strong class="dash-columns__count" th:text="${column.count}">0</strong>
-        <span class="dash-columns__bar" aria-hidden="true"
-              th:classappend="${'dash-col-h' + column.level + (column.current ? ' dash-col-current' : '')}"></span>
-        <span class="dash-columns__label" th:text="${column.label}">01/09</span>
-    </li>
-</ol>
+<!-- Khung biểu đồ Chart.js: ẩn sẵn, JS mở ra khi vẽ được; danh sách data-chart-data ngay sau nó là dữ liệu + bản dự phòng.
+     kind = progress | trend | departments (xem internal-dashboard.js). -->
+<div th:fragment="chartCanvas(kind, modifier)" class="dash-chart" th:classappend="${modifier}" th:data-chart="${kind}" hidden>
+    <canvas class="dash-chart__canvas" aria-hidden="true"></canvas>
+</div>
 
 <!-- Danh sách việc cần xử lý: nội dung bên trái; thời gian chờ, loại việc, nút bên phải -->
 <ul th:fragment="workItems(items)" class="dash-work">

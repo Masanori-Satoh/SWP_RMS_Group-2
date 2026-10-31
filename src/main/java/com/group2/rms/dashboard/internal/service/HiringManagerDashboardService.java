@@ -65,14 +65,14 @@ public class HiringManagerDashboardService {
                 kpis(userId, departmentId, now),
                 shownWork,
                 allWork.size() - shownWork.size(),
-                upcomingInterviews(departmentId, now),
+                upcomingInterviews(userId, departmentId, now),
                 progress(DashboardViews.firstItems(progressRows, LIST_LIMIT)));
     }
 
     private List<DashboardMetricResponse> kpis(int userId, Integer departmentId, LocalDateTime now) {
-        long pending = metrics.ownPendingRequisitions(userId);
-        long posted = metrics.postedDepartmentRequisitions(userId, departmentId);
-        long interviews = metrics.upcomingDepartmentInterviews(departmentId, now,
+        long pending = metrics.countPendingRequisitionsInScope(userId, departmentId);
+        long posted = metrics.countPostedDepartmentRequisitions(userId, departmentId);
+        long interviews = metrics.countUpcomingDepartmentInterviews(userId, departmentId, now,
                 now.plusDays(INTERVIEW_WINDOW_DAYS));
 
         return List.of(
@@ -98,7 +98,7 @@ public class HiringManagerDashboardService {
 
     private DashboardWorkItem workItem(AttentionRow row) {
         String status = row.approvalStatus();
-        String title = codeOf(row.requisitionId(), row.requisitionCode()) + " · " + row.title();
+        String title = RequisitionLabels.requisitionCode(row.requisitionId(), row.requisitionCode()) + " · " + row.title();
         String tag = RequisitionLabels.approvalStatus(status);
         String tagTone = RequisitionLabels.approvalTone(status);
 
@@ -115,8 +115,8 @@ public class HiringManagerDashboardService {
                 "Gửi duyệt", editHref(row.requisitionId()), false);
     }
 
-    private List<DashboardInterviewItem> upcomingInterviews(Integer departmentId, LocalDateTime now) {
-        return DashboardViews.interviewItems(lists.departmentInterviews(departmentId, now,
+    private List<DashboardInterviewItem> upcomingInterviews(int userId, Integer departmentId, LocalDateTime now) {
+        return DashboardViews.interviewItems(lists.departmentInterviews(userId, departmentId, now,
                 now.plusDays(INTERVIEW_WINDOW_DAYS), LIST_LIMIT), now);
     }
 
@@ -128,40 +128,15 @@ public class HiringManagerDashboardService {
         return items;
     }
 
-    /**
-     * Rule (D11): còn thiếu = số cần tuyển − số đã nhận việc. "Thiếu ứng viên" khi
-     * số người đang phỏng vấn
-     * cộng đã có offer ít hơn số còn thiếu.
-     */
+    /** Dòng phụ trong tooltip của thanh chồng: số đang phỏng vấn / có offer, hoặc đã đủ người. */
     private HiringProgressItem progressItem(ProgressRow row) {
         long needed = row.numberOfPositions();
-        long missing = Math.max(needed - row.hired(), 0);
-        long inPipeline = row.interviewing() + row.offered();
-
-        String stateLabel = "Đang tiến triển";
-        String stateTone = "neutral";
-        String pipelineText = row.interviewing() + " đang phỏng vấn · " + row.offered() + " có offer · còn thiếu "
-                + missing;
-        if (missing == 0) {
-            stateLabel = "Đã đủ người";
-            stateTone = "success";
+        String pipelineText = row.interviewing() + " đang phỏng vấn · " + row.offered() + " có offer";
+        if (row.hired() >= needed) {
             pipelineText = "Đã tuyển đủ, chờ đóng yêu cầu";
-        } else if (inPipeline < missing) {
-            stateLabel = "Thiếu ứng viên";
-            stateTone = "warning";
         }
-        return new HiringProgressItem(codeOf(row.requisitionId(), row.requisitionCode()), row.title(),
-                row.hired(), needed, stateLabel, stateTone, pipelineText, detailHref(row.requisitionId()));
-    }
-
-    /**
-     * Yêu cầu cũ có thể chưa lưu mã thì sinh lại từ id (cùng định dạng REQ-0001).
-     */
-    private String codeOf(int requisitionId, String requisitionCode) {
-        if (requisitionCode == null || requisitionCode.isBlank()) {
-            return RequisitionLabels.requisitionCode(requisitionId);
-        }
-        return requisitionCode;
+        return new HiringProgressItem(RequisitionLabels.requisitionCode(row.requisitionId(), row.requisitionCode()),
+                row.title(), row.hired(), needed, pipelineText, detailHref(row.requisitionId()));
     }
 
     private String detailHref(int requisitionId) {

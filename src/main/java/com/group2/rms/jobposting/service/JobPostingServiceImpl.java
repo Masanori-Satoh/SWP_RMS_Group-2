@@ -10,13 +10,12 @@ import com.group2.rms.jobposting.dto.InternalJobPostingDetailResponse;
 import com.group2.rms.jobposting.dto.InternalJobPostingDetailResponse.ApplicationStats;
 import com.group2.rms.jobposting.dto.InternalJobPostingDetailResponse.PostingRound;
 import com.group2.rms.jobposting.dto.InternalJobPostingDetailResponse.RecentApplication;
-import com.group2.rms.jobposting.dto.JobPostingCreateRequest;
-import com.group2.rms.jobposting.dto.JobPostingDashboardResponse;
+import com.group2.rms.jobposting.dto.JobPostingRequest;
 import com.group2.rms.jobposting.entity.JobPosting;
 import com.group2.rms.jobposting.exception.JobPostingValidationException;
 import com.group2.rms.jobposting.repository.JobPostingRepository;
 import com.group2.rms.jobposting.validator.JobPostingValidator;
-import com.group2.rms.notification.NotificationService;
+import com.group2.rms.notification.service.NotificationService;
 import com.group2.rms.requisition.entity.JobRequisition;
 import com.group2.rms.requisition.repository.JobRequisitionRepository;
 import com.group2.rms.requisition.service.RequisitionAccess;
@@ -36,12 +35,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-/**
- * Luồng nghiệp vụ của một tin tuyển dụng (tạo, sửa, chuyển trạng thái, xóa, xem chi tiết) và bảng điều khiển HR.
- *
- * Đọc từ trên xuống là thấy nghiệp vụ: lấy tin → kiểm quyền (JobPostingAccess) → kiểm dữ liệu (JobPostingValidator)
- * → áp dữ liệu / đổi trạng thái → lưu → audit (JobPostingAuditLogger) → thông báo HM.
- * Không lo: màn danh sách (JobPostingListService), dựng DTO (JobPostingMapper), chữ hiển thị (JobPostingLabels).
+/*
+ * SERVICE: nghiệp vụ một tin tuyển dụng (tạo, sửa, chuyển trạng thái, xóa, xem chi tiết).
  */
 @Service
 @RequiredArgsConstructor
@@ -60,9 +55,6 @@ public class JobPostingServiceImpl implements JobPostingService {
     private static final int RECENT_APPLICATIONS = 7;
     /** Ô "+N trong 7 ngày" ở trang chi tiết. */
     private static final int RECENT_WINDOW_DAYS = 7;
-    /** Số tin mới nhất ở bảng điều khiển HR. */
-    private static final int DASHBOARD_RECENT_POSTINGS = 5;
-    private static final int PERCENT = 100;
 
     private final JobPostingRepository postings;
     private final JobRequisitionRepository requisitions;
@@ -75,44 +67,7 @@ public class JobPostingServiceImpl implements JobPostingService {
     private final TalentPoolService talentPoolService;
     private final Clock clock;
 
-    // ===================================================================================
-    // BẢNG ĐIỀU KHIỂN HR
-    // ===================================================================================
-
-    @Override
-    @Transactional(readOnly = true)
-    public JobPostingDashboardResponse getDashboard(User currentUser) {
-        access.requireManage(currentUser);
-        LocalDateTime now = LocalDateTime.now(clock);
-
-        long active = postings.countWithOpenDeadline(JobPostingAccess.STATUS_PUBLISHED, now);
-        long drafts = postings.countByPostingStatus(JobPostingAccess.STATUS_DRAFT);
-        // Tin đang đăng nhưng đã quá hạn nộp cũng tính là đã đóng (ứng viên không nộp thêm được)
-        long closed = postings.countByPostingStatus(JobPostingAccess.STATUS_CLOSED)
-                + postings.countWithPassedDeadline(JobPostingAccess.STATUS_PUBLISHED, now);
-
-        long total = postings.count();
-        List<JobPostingDashboardResponse.DeptStat> departmentStats = new ArrayList<>();
-        for (Object[] row : postings.countByDepartment()) {
-            long count = ((Number) row[1]).longValue();
-            int percentage = 0;
-            if (total > 0) {
-                percentage = (int) Math.round(count * (double) PERCENT / total);
-            }
-            departmentStats.add(new JobPostingDashboardResponse.DeptStat((String) row[0], count, percentage));
-        }
-
-        List<JobPostingDashboardResponse.RecentPosting> recent = new ArrayList<>();
-        for (JobPosting posting : postings.findRecent(PageRequest.of(0, DASHBOARD_RECENT_POSTINGS))) {
-            recent.add(mapper.toRecentPosting(posting));
-        }
-
-        List<JobPostingDashboardResponse.AwaitingRequisition> awaiting = new ArrayList<>();
-        for (JobRequisition requisition : requisitionsAwaitingPosting()) {
-            awaiting.add(mapper.toAwaitingRequisition(requisition));
-        }
-        return new JobPostingDashboardResponse(active, drafts, closed, awaiting, departmentStats, recent);
-    }
+    // ----- Danh sách yêu cầu chờ tạo tin -----
 
     @Override
     @Transactional(readOnly = true)
@@ -133,13 +88,11 @@ public class JobPostingServiceImpl implements JobPostingService {
         return choices;
     }
 
-    // ===================================================================================
-    // MỞ FORM
-    // ===================================================================================
+    // ----- Mở form -----
 
     @Override
     @Transactional(readOnly = true)
-    public JobPostingCreateRequest prepareCreateForm(Integer requisitionId, User currentUser) {
+    public JobPostingRequest prepareCreateForm(Integer requisitionId, User currentUser) {
         access.requireManage(currentUser);
         // Rule: tin chỉ được tạo từ một yêu cầu cụ thể đã duyệt, và mỗi yêu cầu chỉ có 1 tin đang mở
         if (requisitionId == null) {
@@ -153,21 +106,21 @@ public class JobPostingServiceImpl implements JobPostingService {
 
     @Override
     @Transactional(readOnly = true)
-    public JobPostingCreateRequest prepareRepostForm(Integer closedPostingId, User currentUser) {
+    public JobPostingRequest prepareRepostForm(Integer closedPostingId, User currentUser) {
         access.requireManage(currentUser);
         JobPosting closed = findById(closedPostingId);
         // Rule (D10): "Đăng lại" = tạo tin MỚI cùng yêu cầu (PostingNo + 1), nội dung lấy từ tin vừa đóng
         if (!JobPostingAccess.STATUS_CLOSED.equals(closed.getPostingStatus())) {
             throw new JobPostingValidationException("Chỉ tin đã đóng mới đăng lại được.");
         }
-        JobPostingCreateRequest form = prepareCreateForm(closed.getRequisition().getRequisitionId(), currentUser);
+        JobPostingRequest form = prepareCreateForm(closed.getRequisition().getRequisitionId(), currentUser);
         mapper.copyPostingContent(form, closed);
         return form;
     }
 
     @Override
     @Transactional(readOnly = true)
-    public JobPostingCreateRequest prepareEditForm(Integer jobPostingId, User currentUser) {
+    public JobPostingRequest prepareEditForm(Integer jobPostingId, User currentUser) {
         access.requireManage(currentUser);
         JobPosting posting = findById(jobPostingId);
         validator.requireEditable(posting.getPostingStatus());
@@ -177,7 +130,7 @@ public class JobPostingServiceImpl implements JobPostingService {
 
     @Override
     @Transactional(readOnly = true)
-    public JobPostingCreateRequest restoreSourceInfo(JobPostingCreateRequest edited, User currentUser) {
+    public JobPostingRequest restoreSourceInfo(JobPostingRequest edited, User currentUser) {
         access.requireManage(currentUser);
         if (edited.getJobPostingId() != null) {
             JobPosting posting = findById(edited.getJobPostingId());
@@ -194,23 +147,21 @@ public class JobPostingServiceImpl implements JobPostingService {
         return edited;
     }
 
-    // ===================================================================================
-    // TẠO / SỬA
-    // ===================================================================================
+    // ----- Tạo / sửa -----
 
     @Override
     @Transactional
-    public Integer createJobPosting(JobPostingCreateRequest request, User currentUser) {
+    public Integer createJobPosting(JobPostingRequest request, User currentUser) {
         return create(request, currentUser, false);
     }
 
     @Override
     @Transactional
-    public Integer createAndPublishJobPosting(JobPostingCreateRequest request, User currentUser) {
+    public Integer createAndPublishJobPosting(JobPostingRequest request, User currentUser) {
         return create(request, currentUser, true);
     }
 
-    private Integer create(JobPostingCreateRequest request, User actor, boolean publish) {
+    private Integer create(JobPostingRequest request, User actor, boolean publish) {
         access.requireManage(actor);
         if (request.getJobPostingId() != null || request.getRequisitionId() == null) {
             throw new JobPostingValidationException("Yêu cầu tạo tin không hợp lệ.");
@@ -247,24 +198,18 @@ public class JobPostingServiceImpl implements JobPostingService {
 
     @Override
     @Transactional
-    public void updateJobPosting(Integer id, JobPostingCreateRequest request, User currentUser) {
+    public void updateJobPosting(Integer id, JobPostingRequest request, User currentUser) {
         update(id, request, currentUser, false);
     }
 
     @Override
     @Transactional
-    public void updateAndPublishJobPosting(Integer id, JobPostingCreateRequest request, User currentUser) {
+    public void updateAndPublishJobPosting(Integer id, JobPostingRequest request, User currentUser) {
         update(id, request, currentUser, true);
     }
 
-    /**
-     * Sửa tin. Trạng thái sau khi lưu:
-     * - Nháp: "Lưu nháp" giữ nháp; "Đăng tin" → đăng ngay
-     * - Đang đăng: giữ nguyên ngày đăng, chỉ đổi nội dung
-     * - Tạm dừng: "Lưu thay đổi" giữ tạm dừng; "Lưu và mở lại" → Published, ngày đăng = bây giờ
-     * Không đổi gì thì không lưu, không ghi audit, không thông báo.
-     */
-    private void update(Integer id, JobPostingCreateRequest request, User actor, boolean publish) {
+    /** Sửa tin; đăng hoặc mở lại thì ngày đăng = bây giờ; không đổi gì thì không lưu, không audit. */
+    private void update(Integer id, JobPostingRequest request, User actor, boolean publish) {
         access.requireManage(actor);
         JobPosting posting = findForUpdate(id);
         validator.requireEditable(posting.getPostingStatus());
@@ -309,9 +254,7 @@ public class JobPostingServiceImpl implements JobPostingService {
         }
     }
 
-    // ===================================================================================
-    // CHUYỂN TRẠNG THÁI (nút trên trang chi tiết / danh sách)
-    // ===================================================================================
+    // ----- Chuyển trạng thái -----
 
     @Override
     @Transactional
@@ -346,6 +289,7 @@ public class JobPostingServiceImpl implements JobPostingService {
         posting.setPostingStatus(JobPostingAccess.STATUS_PAUSED);
         postings.save(posting);
         auditLogger.log(posting, currentUser, JobPostingAuditLogger.ACTION_UPDATE, JobPostingLabels.LOG_PAUSE);
+        notificationService.notifyJobPostingPaused(posting, currentUser);
     }
 
     @Override
@@ -353,6 +297,7 @@ public class JobPostingServiceImpl implements JobPostingService {
     public void closeJobPosting(Integer id, User currentUser) {
         access.requireCloseAny(currentUser);
         talentPoolService.closeJob(id);
+        postings.findById(id).ifPresent(posting -> notificationService.notifyJobPostingClosed(posting, currentUser));
     }
 
     @Override
@@ -370,14 +315,12 @@ public class JobPostingServiceImpl implements JobPostingService {
         postings.delete(posting);
     }
 
-    // ===================================================================================
-    // TRANG CHI TIẾT
-    // ===================================================================================
+    // ----- Trang chi tiết -----
 
     @Override
     @Transactional(readOnly = true)
     public InternalJobPostingDetailResponse getInternalJobPostingDetail(Integer id, User currentUser) {
-        access.requireRead(currentUser);
+        access.requireAccessPostings(currentUser);
         JobPosting posting = findById(id);
         access.requireView(currentUser, posting);
 
@@ -500,9 +443,7 @@ public class JobPostingServiceImpl implements JobPostingService {
         }
     }
 
-    // ===================================================================================
-    // CÁC HÀM KIỂM TRA / TRA CỨU DÙNG CHUNG
-    // ===================================================================================
+    // ----- Hàm kiểm tra / tra cứu dùng chung -----
 
     private JobPosting findForUpdate(Integer id) {
         if (id == null) {
@@ -542,7 +483,7 @@ public class JobPostingServiceImpl implements JobPostingService {
     }
 
     /** Rule: sửa tin không đổi được tin khác hay yêu cầu nguồn (id gửi từ form phải khớp với tin trong DB). */
-    private void requireSameSource(Integer id, JobPostingCreateRequest request, JobPosting posting) {
+    private void requireSameSource(Integer id, JobPostingRequest request, JobPosting posting) {
         boolean isSamePosting = id.equals(request.getJobPostingId());
         boolean isSameRequisition = posting.getRequisition().getRequisitionId().equals(request.getRequisitionId());
         if (!isSamePosting || !isSameRequisition) {
@@ -592,7 +533,7 @@ public class JobPostingServiceImpl implements JobPostingService {
     }
 
     /** Ghi các trường HR được sửa (CLAUDE.md §22). Chuỗi đã được validator trim / làm sạch. */
-    private void applyEditableFields(JobPosting posting, JobPostingCreateRequest request, JobRequisition requisition) {
+    private void applyEditableFields(JobPosting posting, JobPostingRequest request, JobRequisition requisition) {
         posting.setPostingTitle(request.getPostingTitle());
         posting.setJobDescription(request.getJobDescription());
         posting.setJobRequirements(request.getJobRequirements());
@@ -609,11 +550,11 @@ public class JobPostingServiceImpl implements JobPostingService {
     }
 
     /** Chuỗi lương lưu vào SalaryDisplay: theo yêu cầu (lấy từ DB, không tin số gửi lên), thỏa thuận, hoặc tự nhập. */
-    private String salaryDisplayOf(JobPostingCreateRequest request, JobRequisition requisition) {
+    private String salaryDisplayOf(JobPostingRequest request, JobRequisition requisition) {
         return switch (request.getSalaryMode()) {
-            case JobPostingCreateRequest.SALARY_RANGE ->
+            case JobPostingRequest.SALARY_RANGE ->
                     RequisitionLabels.salary(requisition.getMinSalary(), requisition.getMaxSalary());
-            case JobPostingCreateRequest.SALARY_CUSTOM -> request.getSalaryCustom();
+            case JobPostingRequest.SALARY_CUSTOM -> request.getSalaryCustom();
             default -> JobPostingLabels.SALARY_NEGOTIABLE;
         };
     }

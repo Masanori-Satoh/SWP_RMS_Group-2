@@ -24,7 +24,6 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.transaction.annotation.Transactional;
@@ -230,27 +229,6 @@ class JobPostingIntegrationTests {
 
         // Assert
         assertEquals(Map.of(postedTwice.getRequisitionId(), 2), result);
-    }
-
-    @Test
-    @DisplayName("Đếm bảng điều khiển: thêm 1 tin còn hạn + 1 tin quá hạn -> Mỗi câu đếm tăng đúng 1; tin mới nằm trong 'gần đây'")
-    void dashboardQueries_shouldCountByStatusAndDeadline() {
-        // Arrange
-        long openBefore = postings.countWithOpenDeadline(JobPostingAccess.STATUS_PUBLISHED, now);
-        long passedBefore = postings.countWithPassedDeadline(JobPostingAccess.STATUS_PUBLISHED, now);
-        savedPosting(savedRequisition("IT-JP Open count", department), 1, TITLE_PREFIX + "Còn hạn",
-                JobPostingAccess.STATUS_PUBLISHED, now.minusMinutes(1), now.plusDays(5));
-        savedPosting(savedRequisition("IT-JP Passed count", department), 1, TITLE_PREFIX + "Hết hạn",
-                JobPostingAccess.STATUS_PUBLISHED, now.minusDays(10), now.minusDays(1));
-        entityManager.clear();
-
-        // Act + Assert
-        assertEquals(openBefore + 1, postings.countWithOpenDeadline(JobPostingAccess.STATUS_PUBLISHED, now));
-        assertEquals(passedBefore + 1, postings.countWithPassedDeadline(JobPostingAccess.STATUS_PUBLISHED, now));
-        assertTrue(postings.countByDepartment().stream()
-                .anyMatch(row -> "IT-JP Phòng Kỹ thuật".equals(row[0]) && ((Number) row[1]).longValue() == 2));
-        List<JobPosting> recent = postings.findRecent(PageRequest.of(0, 5));
-        assertTrue(recent.stream().anyMatch(posting -> (TITLE_PREFIX + "Còn hạn").equals(posting.getPostingTitle())));
     }
 
     // =========================================================================

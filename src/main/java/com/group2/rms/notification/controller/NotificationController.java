@@ -1,16 +1,22 @@
-package com.group2.rms.notification;
+package com.group2.rms.notification.controller;
 
+import com.group2.rms.notification.dto.NotificationResponse;
+import com.group2.rms.notification.service.NotificationService;
 import com.group2.rms.core.security.CurrentUserService;
 import com.group2.rms.user.entity.User;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
-/**
- * Trang thông báo của người dùng hiện tại. Endpoint JSON cho chuông thông báo nằm ở {@link NotificationApiController}.
+/*
+ * CONTROLLER: trang /notifications của người đang đăng nhập; JSON cho chuông thông báo nằm ở NotificationApiController.
  */
 @Controller
 @RequestMapping("/notifications")
@@ -41,10 +47,6 @@ public class NotificationController {
         return "notifications/list";
     }
 
-    /**
-     * Đánh dấu đã đọc. Khi {@code open=true} chuyển tới liên kết lưu trong thông báo (do server tạo),
-     * không nhận URL chuyển hướng từ client.
-     */
     @PostMapping("/{id}/read")
     public String markAsRead(
             @PathVariable Long id,

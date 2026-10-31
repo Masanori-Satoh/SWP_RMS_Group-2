@@ -20,6 +20,41 @@
                 <ul th:replace="~{dashboard/fragments :: workItems(${dashboard.work})}"></ul>
             </th:block>
             <p class="dash-panel__more" th:if="${dashboard.moreWork > 0}">
+                <a class="dash-link" th:href="@{/applications}">Xem tất cả</a>
+            </p>
+        </section>
+
+        <section class="card dash-panel adw-surface" aria-labelledby="hr-interviews-title">
+            <div class="dash-panel__heading">
+                <h2 id="hr-interviews-title" class="dash-panel__title">
+                    <svg th:replace="~{dashboard/fragments :: icon('calendarDays')}"></svg>Phỏng vấn sắp diễn ra
+                </h2>
+                <a class="dash-link" th:href="@{/interviews}">Xem lịch</a>
+            </div>
+            <p class="dash-empty" th:if="${#lists.isEmpty(dashboard.upcomingInterviews)}">Không có lịch phỏng vấn.</p>
+            <th:block th:unless="${#lists.isEmpty(dashboard.upcomingInterviews)}">
+                <ul th:replace="~{dashboard/fragments :: interviewList(${dashboard.upcomingInterviews})}"></ul>
+            </th:block>
+        </section>
+    </div>
+
+    <section class="card dash-panel adw-surface" aria-labelledby="hr-trend-title">
+        <div class="dash-panel__heading">
+            <h2 id="hr-trend-title" class="dash-panel__title">
+                <svg th:replace="~{dashboard/fragments :: icon('chartColumnIncreasing')}"></svg>Xu hướng hồ sơ ứng tuyển
+            </h2>
+            <span class="dash-panel__count">Hồ sơ mới / tuần</span>
+        </div>
+        <div th:replace="~{dashboard/fragments :: chartCanvas('trend', 'dash-chart--trend')}"></div>
+        <!-- Dữ liệu biểu đồ; cũng là bản đọc được khi không có JavaScript -->
+        <ol class="dash-chart-data" data-chart-data>
+            <li th:each="week : ${dashboard.weeklyApplications}" data-chart-point
+                th:data-label="${week.weekLabel}" th:data-title="${week.rangeLabel}" th:data-count="${week.count}"
+                th:text="|${week.rangeLabel}: ${week.count} hồ sơ mới|">Tuần 01/09 – 07/09: 0 hồ sơ mới</li>
+        </ol>
+    </section>
+</th:block>
+            <p class="dash-panel__more" th:if="${dashboard.moreWork > 0}">
                 <span th:text="|+${dashboard.moreWork} việc khác|">+2 việc khác</span>
                 <a class="dash-link" th:href="@{/applications}">Xem tất cả</a>
             </p>
@@ -28,7 +63,7 @@
         <section class="card dash-panel adw-surface" aria-labelledby="hr-interviews-title">
             <div class="dash-panel__heading">
                 <h2 id="hr-interviews-title" class="dash-panel__title">
-                    <svg th:replace="~{dashboard/fragments :: icon('calendarDays')}"></svg>Phỏng vấn hôm nay và ngày mai
+                    <svg th:replace="~{dashboard/fragments :: icon('calendarDays')}"></svg>Phỏng vấn sắp diễn ra
                 </h2>
                 <a class="dash-link" th:href="@{/interviews}">Xem lịch</a>
             </div>

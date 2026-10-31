@@ -21,7 +21,7 @@ import com.group2.rms.jobposting.entity.JobPosting;
 import com.group2.rms.requisition.entity.JobRequisition;
 import com.group2.rms.user.entity.Department;
 import com.group2.rms.offer.dto.PassedCandidateResponse;
-import com.group2.rms.notification.OfferMailSender;
+import com.group2.rms.notification.service.OfferMailSender;
 import com.group2.rms.user.entity.User;
 import com.group2.rms.user.entity.Role;
 import com.group2.rms.user.repository.UserRepository;
@@ -76,7 +76,7 @@ class OfferServiceTests {
     private OfferMailSender offerMailSender;
 
     @Mock
-    private com.group2.rms.notification.NotificationService systemNotificationService;
+    private com.group2.rms.notification.service.NotificationService systemNotificationService;
 
     @InjectMocks
     private OfferServiceImpl offerService;

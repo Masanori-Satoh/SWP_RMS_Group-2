@@ -86,16 +86,6 @@ class DashboardLabelsTests {
         assertEquals(expectedTone, DashboardLabels.interviewStatusTone(status));
     }
 
-    @ParameterizedTest(name = "{0} / {1} -> {2} / {3}")
-    @CsvSource({"Job Requisition,Approved,Yêu cầu tuyển dụng,Đã duyệt", "Offer,Rejected,Đề nghị tuyển dụng,Đã từ chối"})
-    @DisplayName("Quyết định của Giám đốc -> loại và kết quả tiếng Việt")
-    void decisionLabels_shouldTranslateTypeAndStatus(String type, String status, String expectedType,
-            String expectedStatus) {
-        // Act + Assert
-        assertEquals(expectedType, DashboardLabels.decisionType(type));
-        assertEquals(expectedStatus, DashboardLabels.decisionStatus(status));
-    }
-
     @Test
     @DisplayName("Số tiền có dấu chấm hàng nghìn; chưa nhập -> 'Chưa nhập'")
     void money_shouldGroupThousandsWithDots() {

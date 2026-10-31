@@ -86,7 +86,7 @@ class InternalDashboardServiceTests {
         // Arrange
         User user = account(DashboardAccess.ROLE_HR, "Active");
         HrDashboardResponse expected = new HrDashboardResponse("HR", "Người dùng kiểm thử", List.of(), List.of(), 0,
-                List.of(), List.of(), List.of(), "", List.of(), 0);
+                List.of(), List.of());
         when(hrDashboard.build(user)).thenReturn(expected);
 
         // Act
@@ -120,7 +120,7 @@ class InternalDashboardServiceTests {
         // Arrange
         User user = account(DashboardAccess.ROLE_DIRECTOR, "Active");
         DirectorDashboardResponse expected = new DirectorDashboardResponse("Director", "Người dùng kiểm thử", List.of(),
-                List.of(), 0, List.of(), 0, List.of(), List.of());
+                List.of(), 0, List.of(), 0, List.of());
         when(directorDashboard.build(user)).thenReturn(expected);
 
         // Act
@@ -137,7 +137,7 @@ class InternalDashboardServiceTests {
         // Arrange
         User user = account(DashboardAccess.ROLE_INTERVIEWER, "Active");
         InterviewerDashboardResponse expected = new InterviewerDashboardResponse("Interviewer", "Người dùng kiểm thử",
-                List.of(), null, 0, List.of(), List.of(), LocalDate.of(2026, 11, 2), 0);
+                List.of(), List.of(), List.of(), LocalDate.of(2026, 11, 2));
         when(interviewerDashboard.build(any(), any())).thenReturn(expected);
 
         // Act

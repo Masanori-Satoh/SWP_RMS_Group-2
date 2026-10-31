@@ -17,7 +17,7 @@ import com.group2.rms.interview.repository.InterviewFinalResultRepository;
 import com.group2.rms.offer.exception.OfferValidationException;
 import com.group2.rms.user.entity.User;
 import com.group2.rms.user.repository.UserRepository;
-import com.group2.rms.notification.OfferMailSender;
+import com.group2.rms.notification.service.OfferMailSender;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import com.group2.rms.candidate.domain.entity.Candidate;
@@ -61,7 +61,7 @@ public class OfferServiceImpl implements OfferService {
     private final InterviewFinalResultRepository interviewFinalResultRepository;
     private final OfferApprovalRepository offerApprovalRepository;
     private final OfferMailSender offerMailSender;
-    private final com.group2.rms.notification.NotificationService systemNotificationService;
+    private final com.group2.rms.notification.service.NotificationService systemNotificationService;
 
     /**
      * Quy tắc GBR-07:

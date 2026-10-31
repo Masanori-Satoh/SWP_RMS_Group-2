@@ -106,14 +106,6 @@ public class RequisitionAccess {
         return isOwner && isEditableStatus;
     }
 
-    /**
-     * Yêu cầu đã "xong" vòng duyệt (Approved hoặc Rejected).
-     * Chỉ yêu cầu đã xong mới được sao chép sang đợt mới; Draft / Pending_Director thì chưa.
-     */
-    public static boolean isFinishedStatus(String approvalStatus) {
-        return STATUS_APPROVED.equals(approvalStatus) || STATUS_REJECTED.equals(approvalStatus);
-    }
-
     // Rule: Chỉ người tạo được rút lại yêu cầu đang chờ Giám đốc duyệt
     public boolean canWithdraw(User user, JobRequisition requisition) {
         if (requisition == null) {
@@ -122,20 +114,17 @@ public class RequisitionAccess {
         return owns(user, requisition) && STATUS_PENDING_DIRECTOR.equals(requisition.getApprovalStatus());
     }
 
-    /**
-     * Rule: Xóa được khi sửa được (canEdit), chưa có tin tuyển dụng và chưa có đợt tuyển sau sao chép từ nó.
-     * Hai thông tin cuối cần truy vấn DB nên service tra trước rồi truyền vào.
-     */
+    /** Rule: xóa được khi sửa được, chưa có tin và chưa có đợt sau (2 điều kiện cuối do service tra). */
     public boolean canDelete(User user, JobRequisition requisition, boolean hasPosting, boolean hasLaterRound) {
         return canEdit(user, requisition) && !hasPosting && !hasLaterRound;
     }
 
-    // Rule: Sao chép được khi có quyền tạo yêu cầu và yêu cầu đã xong vòng duyệt
+    // Rule: sao chép được khi có quyền tạo yêu cầu và yêu cầu đã được duyệt
     public boolean canCopy(User user, JobRequisition requisition) {
         if (requisition == null) {
             return false;
         }
-        return canCreate(user) && isFinishedStatus(requisition.getApprovalStatus());
+        return canCreate(user) && STATUS_APPROVED.equals(requisition.getApprovalStatus());
     }
 
     // Rule: Tin tuyển dụng chỉ tạo từ yêu cầu Đã duyệt, chưa có tin, và người tạo là HR
@@ -146,12 +135,7 @@ public class RequisitionAccess {
         return STATUS_APPROVED.equals(requisition.getApprovalStatus()) && canCreatePosting(user);
     }
 
-    /**
-     * Rule: Có hiện link mở tin tuyển dụng mới nhất không.
-     * HM và Director không xem được tin nháp (trang tin trả 403), nên tin nháp chỉ có link với HR.
-     *
-     * @param latestPostingStatus trạng thái tin mới nhất, null = yêu cầu chưa có tin
-     */
+    /** Rule: link tới tin mới nhất; tin nháp chỉ HR mở được (HM, Director bị 403). */
     public boolean canOpenPosting(User user, String latestPostingStatus) {
         if (latestPostingStatus == null || !canViewPosting(user)) {
             return false;

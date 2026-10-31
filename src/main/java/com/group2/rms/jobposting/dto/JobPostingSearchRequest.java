@@ -5,23 +5,8 @@ import org.springframework.format.annotation.DateTimeFormat;
 import java.time.LocalDate;
 import java.util.List;
 
-/**
- * Mọi điều kiện tìm kiếm của màn "Tin tuyển dụng", lấy từ URL.
- * Ví dụ: /internal/job-postings?q=java&status=Published&deadline=soon&sort=apps&page=1
- *
- * Giá trị chưa được kiểm tra: service "làm sạch" lại theo quyền của người xem
- * (xem JobPostingListService#normalizeFilter).
- *
- * @param q            từ khóa tìm theo tiêu đề tin hoặc tên phòng ban
- * @param status       trạng thái hiển thị được chọn (Spring nhận dạng danh sách, service chỉ giữ một giá trị)
- * @param departmentId lọc theo phòng ban
- * @param creatorId    lọc theo người tạo tin
- * @param deadline     nhóm hạn nộp: open, soon, past
- * @param postedFrom   ngày đăng từ (tính cả ngày này)
- * @param postedTo     ngày đăng đến (tính cả ngày này)
- * @param sort         cách sắp xếp, xem JobPostingSort
- * @param page         số trang, đếm từ 0
- * @param size         số dòng mỗi trang
+/*
+ * DTO: điều kiện tìm kiếm của màn danh sách tin, lấy từ URL; service làm sạch lại theo quyền.
  */
 public record JobPostingSearchRequest(
         String q,
