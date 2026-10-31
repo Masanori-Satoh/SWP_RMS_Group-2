@@ -8,8 +8,11 @@
     Interviewer chỉ thấy phiếu của mình cho tới khi có Final Result (GBR-05); quyền nằm ở InterviewResultService.
     Nút "Đánh giá" mở pop-up interview/evaluation-dialog (SRS 5.1.29); nút "Chốt kết quả" (Hiring Manager phụ trách phòng ban)
     mở pop-up interview/final-result-dialog. Cả hai gửi AJAX bằng js/pages/interview-result.js.
-    Dựng bằng catalog: page-header, card, card-header, badge, btn, alert, confirm-dialog.
-    CSS riêng: static/css/pages/interview-common.css (iv-) + static/css/pages/interview-result.css (ir-, iev-).
+    Dựng bằng catalog: card, card-header, badge, btn, alert, confirm-dialog, flash-toast.
+    Giao diện Admin workspace (adw-) như Offer/Yêu cầu tuyển dụng: scene + scripts của fragments/ui/admin-workspace.
+    Vị trí và giờ phỏng vấn đã có trong thẻ "Thông tin buổi phỏng vấn" nên không lặp lại dưới tiêu đề.
+    CSS riêng: static/css/pages/interview-common.css (iv-) + static/css/pages/interview-result.css (ir-, iev-)
+    + static/css/pages/interview-workspace.css (ivw-).
 -->
 <head>
     <title th:text="|Kết quả phỏng vấn — ${result.candidateName ?: 'Ứng viên'}|">Kết quả phỏng vấn</title>
@@ -17,28 +20,16 @@
         <link rel="stylesheet" th:href="@{/css/pages/interview-common.css}">
         <link rel="stylesheet" th:href="@{/css/pages/interview-result.css}">
         <link th:if="${topbarUser != null and (topbarUser.roleName == 'HR' or topbarUser.roleName == 'Hiring Manager')}" rel="stylesheet" th:href="@{/css/pages/applications.css}">
+        <link rel="stylesheet" th:href="@{/css/pages/interview-workspace.css}">
+        <link rel="stylesheet" th:href="@{/css/pages/flash-toast.css}">
     </th:block>
 </head>
 <body>
-<main id="main" layout:fragment="content" class="page-content container ir-page" tabindex="-1">
+<main id="main" layout:fragment="content" class="page-content container adw-page ivw-page ir-page" tabindex="-1">
+    <th:block th:replace="~{fragments/ui/admin-workspace :: scene}"></th:block>
 
-    <nav class="iv-breadcrumb" aria-label="Breadcrumb">
-        <a th:href="@{/interviews}">Lịch phỏng vấn</a>
-        <span aria-hidden="true">/</span>
-        <span aria-current="page" th:text="|Kết quả buổi #${result.interviewId}|">Kết quả buổi #7</span>
-    </nav>
-
-    <div class="page-header">
-        <div>
-            <h1 class="page-title" th:text="${result.candidateName ?: 'Ứng viên'}">Nguyễn Văn An</h1>
-            <p class="page-subtitle">
-                <span th:text="${result.jobTitle ?: 'Chưa rõ vị trí'}">Java Developer</span>
-                <th:block th:if="${result.startTime != null}"> ·
-                    <time th:datetime="${#temporals.formatISO(result.startTime)}"
-                          th:text="${#temporals.format(result.startTime, 'dd/MM/yyyy HH:mm')}">10/10/2026 09:00</time>
-                </th:block>
-            </p>
-        </div>
+    <div class="adw-heading ivw-heading">
+        <h1 class="page-title adw-title" th:text="${result.candidateName ?: 'Ứng viên'}">Nguyễn Văn An</h1>
         <div class="iv-header-actions">
             <form th:if="${canResendRecruitmentEmail and (result.statusBadge != null)}" method="post"
                   th:action="@{/talent-pool/interviews/{id}/resend-email(id=${result.interviewId})}">
@@ -58,10 +49,11 @@
         <section th:replace="~{talent-pool/potential-candidate-action :: action(applicationId=${result.applicationId}, candidateName=${result.candidateName})}"></section>
     </th:block>
 
-    <div th:if="${param.evaluated}" class="alert alert--success" role="status">Đã gửi phiếu đánh giá. Cảm ơn bạn!</div>
-    <div th:if="${successMessage}" class="alert alert--success" role="status" th:text="${successMessage}"></div>
-    <div th:if="${errorMessage}" class="alert alert--danger" role="alert" th:text="${errorMessage}"></div>
-    <div th:if="${param.finalized}" class="alert alert--success" role="status">Đã chốt kết quả phỏng vấn.</div>
+    <!-- Sau khi gửi phiếu / chốt kết quả bằng AJAX, trang tải lại với ?evaluated=1 hoặc ?finalized=1 -->
+    <!-- Thymeleaf 3.1 cấm đọc ${param} trong tham số fragment, nên tính câu thông báo bằng th:with ở thẻ ngoài -->
+    <th:block th:with="flashSuccess=${param.evaluated != null ? 'Đã gửi phiếu đánh giá. Cảm ơn bạn!' : (param.finalized != null ? 'Đã chốt kết quả phỏng vấn.' : successMessage)}">
+        <th:block th:replace="~{fragments/ui/flash-toast :: flashToast(${flashSuccess}, ${errorMessage})}"></th:block>
+    </th:block>
     <div th:if="${result.finalizeBlockedReason != null}" class="alert alert--warning" role="note"
          th:text="${result.finalizeBlockedReason}">Buổi phỏng vấn chưa diễn ra, chưa thể chốt kết quả.</div>
     <div th:if="${result.evaluateBlockedReason != null}" class="alert alert--warning" role="note"
@@ -75,9 +67,9 @@
 
     <div class="ir-layout">
         <div class="ir-main">
-            <section class="card" aria-labelledby="ir-info-title">
-                <div class="card-header">
-                    <h2 id="ir-info-title" class="card-title">Thông tin buổi phỏng vấn</h2>
+            <section class="card adw-surface" aria-labelledby="ir-info-title">
+                <div class="card-header adw-panel-heading">
+                    <h2 id="ir-info-title" class="card-title adw-panel-title">Thông tin buổi phỏng vấn</h2>
                 </div>
                 <dl class="ir-facts">
                     <div class="ir-facts__item">
@@ -126,9 +118,9 @@
                 </dl>
             </section>
 
-            <section class="card" aria-labelledby="ir-evals-title">
-                <div class="card-header">
-                    <h2 id="ir-evals-title" class="card-title">Phiếu đánh giá</h2>
+            <section class="card adw-surface" aria-labelledby="ir-evals-title">
+                <div class="card-header adw-panel-heading">
+                    <h2 id="ir-evals-title" class="card-title adw-panel-title">Phiếu đánh giá</h2>
                     <span class="text-muted"
                           th:text="|${result.submittedCount}/${#lists.size(result.panel)} thành viên đã nộp|">1/2 thành viên đã nộp</span>
                 </div>
@@ -193,9 +185,9 @@
         </div>
 
         <aside class="ir-side">
-            <section th:if="${result.canSeeAll}" class="card" aria-labelledby="ir-summary-title">
-                <div class="card-header">
-                    <h2 id="ir-summary-title" class="card-title">Tổng hợp điểm</h2>
+            <section th:if="${result.canSeeAll}" class="card adw-surface" aria-labelledby="ir-summary-title">
+                <div class="card-header adw-panel-heading">
+                    <h2 id="ir-summary-title" class="card-title adw-panel-title">Tổng hợp điểm</h2>
                 </div>
                 <p th:if="${result.averages == null}" class="iv-empty">Chưa có điểm để tổng hợp.</p>
                 <th:block th:if="${result.averages != null}">
@@ -227,9 +219,9 @@
                 </th:block>
             </section>
 
-            <section class="card" aria-labelledby="ir-panel-title">
-                <div class="card-header">
-                    <h2 id="ir-panel-title" class="card-title">Hội đồng phỏng vấn</h2>
+            <section class="card adw-surface" aria-labelledby="ir-panel-title">
+                <div class="card-header adw-panel-heading">
+                    <h2 id="ir-panel-title" class="card-title adw-panel-title">Hội đồng phỏng vấn</h2>
                 </div>
                 <p th:if="${#lists.isEmpty(result.panel)}" class="iv-empty">Chưa có thành viên hội đồng.</p>
                 <ul th:unless="${#lists.isEmpty(result.panel)}" class="ir-panel">
@@ -244,9 +236,9 @@
                 </ul>
             </section>
 
-            <section th:if="${result.finalResult != null}" class="card" aria-labelledby="ir-final-title">
-                <div class="card-header">
-                    <h2 id="ir-final-title" class="card-title">Kết quả cuối</h2>
+            <section th:if="${result.finalResult != null}" class="card adw-surface" aria-labelledby="ir-final-title">
+                <div class="card-header adw-panel-heading">
+                    <h2 id="ir-final-title" class="card-title adw-panel-title">Kết quả cuối</h2>
                     <span class="badge" th:classappend="${result.finalResult.decisionBadge}"
                           th:text="${result.finalResult.decisionDisplay}">Đạt</span>
                 </div>
@@ -289,6 +281,8 @@
 </main>
 <th:block layout:fragment="scripts">
     <script th:if="${result.canEvaluate or result.canFinalize}" defer th:src="@{/js/pages/interview-result.js}"></script>
+    <script defer th:src="@{/js/pages/flash-toast.js}"></script>
+    <th:block th:replace="~{fragments/ui/admin-workspace :: scripts}"></th:block>
     <script th:if="${result.applicationId != null and topbarUser != null and (topbarUser.roleName == 'HR' or topbarUser.roleName == 'Hiring Manager')}" defer th:src="@{/js/pages/applications.js}"></script>
 </th:block>
 </body>

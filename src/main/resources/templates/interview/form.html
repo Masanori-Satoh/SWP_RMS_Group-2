@@ -7,40 +7,33 @@
     INTERVIEW/FORM.HTML — Tạo / sửa lịch phỏng vấn (/interviews/new, /interviews/{id}/edit)
     Form truyền thống (th:object scheduleRequest); lỗi hiện cạnh ô, lỗi nghiệp vụ ở alert đầu form.
     Tìm hồ sơ, lọc người phỏng vấn theo vai trò, chip người đã chọn: js/interview-form.js.
-    Dựng bằng catalog: page-header, card, form-group/form-label/form-input/form-select/form-error/form-hint,
-    form-actions, btn, alert. CSS riêng: css/pages/interview-common.css (iv-) + css/interview-form.css (if-).
+    Dựng bằng catalog: card, form-group/form-label/form-input/form-select/form-error/form-hint, form-actions, btn.
+    Giao diện Admin workspace (adw-) như Offer/Yêu cầu tuyển dụng: scene + scripts của fragments/ui/admin-workspace.
+    CSS riêng: css/pages/interview-common.css (iv-) + css/interview-form.css (if-) + css/pages/interview-workspace.css (ivw-).
 -->
 <head>
     <title th:text="${isEdit ? 'Chỉnh sửa lịch phỏng vấn' : 'Lên lịch phỏng vấn mới'}">Lên lịch phỏng vấn mới</title>
     <th:block layout:fragment="styles">
         <link rel="stylesheet" th:href="@{/css/pages/interview-common.css}">
         <link rel="stylesheet" th:href="@{/css/interview-form.css}">
+        <link rel="stylesheet" th:href="@{/css/pages/interview-workspace.css}">
     </th:block>
 </head>
 <body>
-<main id="main" layout:fragment="content" class="page-content container if-page" tabindex="-1">
+<main id="main" layout:fragment="content" class="page-content container adw-page ivw-page if-page" tabindex="-1">
+    <th:block th:replace="~{fragments/ui/admin-workspace :: scene}"></th:block>
 
-    <nav class="iv-breadcrumb" aria-label="Breadcrumb">
-        <a th:href="@{/interviews}">Lịch phỏng vấn</a>
-        <span aria-hidden="true">/</span>
-        <span aria-current="page" th:text="${isEdit ? 'Chỉnh sửa lịch #' + interviewId : 'Lên lịch mới'}">Lên lịch mới</span>
-    </nav>
-
-    <div class="page-header">
-        <div>
-            <h1 class="page-title"
-                th:text="${isEdit ? 'Chỉnh sửa lịch phỏng vấn #' + interviewId : 'Lên lịch phỏng vấn mới'}">Lên lịch phỏng vấn mới</h1>
-            <p class="page-subtitle" th:if="${!isEdit}">Chọn hồ sơ, thời gian và phân công hội đồng phỏng vấn.</p>
-            <p class="page-subtitle" th:if="${isEdit}">Cập nhật buổi phỏng vấn. Trạng thái chỉ đi tiến, không lùi (GBR-01).</p>
-        </div>
+    <div class="adw-heading ivw-heading">
+        <h1 class="page-title adw-title"
+            th:text="${isEdit ? 'Chỉnh sửa lịch phỏng vấn #' + interviewId : 'Lên lịch phỏng vấn mới'}">Lên lịch phỏng vấn mới</h1>
     </div>
 
-    <form class="card if-form" th:action="${isEdit ? '/interviews/' + interviewId + '/edit' : '/interviews/new'}"
+    <form class="card if-form adw-surface" th:action="${isEdit ? '/interviews/' + interviewId + '/edit' : '/interviews/new'}"
           th:object="${scheduleRequest}" method="post">
 
         <!-- Lỗi nghiệp vụ (GBR-01, MSG26, hội đồng...) -->
-        <div th:if="${#fields.hasGlobalErrors()}" class="alert alert--danger" role="alert">
-            <strong>Không lưu được lịch phỏng vấn:</strong>
+        <div th:if="${#fields.hasGlobalErrors()}" class="adw-validation-summary" role="alert">
+            <h2>Không lưu được lịch phỏng vấn</h2>
             <ul class="if-error-list">
                 <li th:each="err : ${#fields.globalErrors()}" th:text="${err}">Lỗi nghiệp vụ.</li>
             </ul>
@@ -180,6 +173,7 @@
 </main>
 <th:block layout:fragment="scripts">
     <script defer th:src="@{/js/interview-form.js}"></script>
+    <th:block th:replace="~{fragments/ui/admin-workspace :: scripts}"></th:block>
 </th:block>
 </body>
 </html>
