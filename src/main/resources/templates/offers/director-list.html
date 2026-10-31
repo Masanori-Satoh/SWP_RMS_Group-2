@@ -16,6 +16,9 @@
 
     <th:block th:replace="~{fragments/ui/admin-workspace :: scene}"></th:block>
 
+    <!-- FLASH MESSAGES -->
+    <th:block th:replace="~{fragments/ui/flash-toast :: flashToast(${successMessage}, ${errorMessage})}"></th:block>
+
     <!-- TIÊU ĐỀ TRANG CHUẨN ADMIN WORKSPACE -->
     <div class="adw-heading ofw-heading">
         <h1 class="adw-title ofw-title">Quản lý Đề xuất</h1>
@@ -242,8 +245,6 @@
         </div>
     </div>
 
-    <!-- Toast Notification Container -->
-    <div class="toast-container" id="toastContainer"></div>
 </main>
 
 <th:block layout:fragment="scripts">

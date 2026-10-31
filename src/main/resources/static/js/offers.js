@@ -101,16 +101,19 @@ function showFlashToast(message, type = 'success') {
 
     const isError = type === 'error' || type === 'danger';
     const isWarning = type === 'warning';
+    const isInfo = type === 'info';
     const toast = document.createElement('div');
-    toast.className = `flash-toast ${isError ? 'flash-toast--error' : (isWarning ? 'flash-toast--warning' : '')}`;
+    toast.className = `flash-toast ${isError ? 'flash-toast--error' : (isWarning ? 'flash-toast--warning' : (isInfo ? 'flash-toast--info' : ''))}`;
     toast.setAttribute('role', isError ? 'alert' : 'status');
     toast.setAttribute('data-flash-toast', '');
 
     const iconSvg = isError
-        ? `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true" style="flex:none; color:var(--error); margin-top:2px;"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>`
+        ? `<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true" class="flash-toast-icon"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>`
         : (isWarning
-            ? `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true" style="flex:none; color:var(--focus); margin-top:2px;"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>`
-            : `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true" style="flex:none; color:var(--success); margin-top:2px;"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>`);
+            ? `<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true" class="flash-toast-icon"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>`
+            : (isInfo
+                ? `<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true" class="flash-toast-icon"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>`
+                : `<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true" class="flash-toast-icon"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>`));
 
     toast.innerHTML = `
         <span class="flash-toast-progress" aria-hidden="true"></span>
@@ -136,6 +139,29 @@ function showFlashToast(message, type = 'success') {
 
     toast.querySelector('.flash-toast-progress')?.addEventListener('animationend', dismissToast);
     toast.querySelector('[data-flash-close]')?.addEventListener('click', dismissToast);
+}
+
+window.showFlashToast = showFlashToast;
+
+function checkOfferPendingFlashToast() {
+    try {
+        const pending = sessionStorage.getItem('pendingFlashToast');
+        if (pending) {
+            sessionStorage.removeItem('pendingFlashToast');
+            const data = JSON.parse(pending);
+            if (data && data.message) {
+                showFlashToast(data.message, data.type || 'success');
+            }
+        }
+    } catch (e) {
+        sessionStorage.removeItem('pendingFlashToast');
+    }
+}
+
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', checkOfferPendingFlashToast);
+} else {
+    checkOfferPendingFlashToast();
 }
 
 function showToast(message, type = 'info') {
@@ -1005,10 +1031,13 @@ function executeSendOfferAction() {
         })
         .then(res => {
             if (res && res.success) {
-                showFlashToast(res.message || 'Phát hành Thư mời làm việc thành công!', 'success');
-                setTimeout(() => {
-                    window.location.reload();
-                }, 1200);
+                try {
+                    sessionStorage.setItem('pendingFlashToast', JSON.stringify({
+                        message: res.message || 'Phát hành Thư mời làm việc thành công!',
+                        type: 'success'
+                    }));
+                } catch (e) { }
+                window.location.reload();
             } else {
                 showFlashToast(res?.message || 'Lỗi phát hành thư mời nhận việc.', 'error');
             }
@@ -1055,11 +1084,16 @@ function confirmDeleteOffer(offerId) {
         })
         .then(res => {
             if (res && res.success) {
-                showToast(res.message, 'success');
                 closeModal('detailOfferModal');
-                setTimeout(() => window.location.reload(), 800);
+                try {
+                    sessionStorage.setItem('pendingFlashToast', JSON.stringify({
+                        message: res.message || 'Đã xóa bản thảo đề xuất thành công.',
+                        type: 'success'
+                    }));
+                } catch (e) { }
+                window.location.reload();
             } else {
-                showToast(res?.message || 'Lỗi xóa bản thảo.', 'danger');
+                showFlashToast(res?.message || 'Lỗi xóa bản thảo.', 'error');
             }
         })
         .catch(err => {
@@ -1467,11 +1501,13 @@ function submitDirectorDecision() {
         })
         .then(data => {
             closeDirectorDecisionModal();
-            showOfferToast(data.message || 'Xử lý thành công!', 'success');
-            // Refresh trang sau 1s để cập nhật list/detail
-            setTimeout(() => {
-                window.location.reload();
-            }, 1000);
+            try {
+                sessionStorage.setItem('pendingFlashToast', JSON.stringify({
+                    message: data.message || 'Xử lý quyết định thành công!',
+                    type: 'success'
+                }));
+            } catch (e) { }
+            window.location.reload();
         })
         .catch(err => {
             showFlashToast(err.message, 'error');
@@ -1935,10 +1971,13 @@ function executeDirectorDecisionApi(offerId, url, comments) {
             }
 
             if (res.ok && data?.success) {
-                showFlashToast(data.message || 'Xử lý quyết định thành công!', 'success');
-                setTimeout(() => {
-                    window.location.href = '/offers';
-                }, 1200);
+                try {
+                    sessionStorage.setItem('pendingFlashToast', JSON.stringify({
+                        message: data.message || 'Xử lý quyết định thành công!',
+                        type: 'success'
+                    }));
+                } catch (e) { }
+                window.location.href = '/offers';
             } else if (res.status === 403) {
                 showFlashToast('Bạn không có quyền thực hiện thao tác này hoặc phiên làm việc đã hết hạn.', 'warning');
             } else if (data && data.message) {

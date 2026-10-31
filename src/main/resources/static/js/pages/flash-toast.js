@@ -24,10 +24,33 @@
         setTimeout(remove, 350);
     }
 
-    document.querySelectorAll('[data-flash-toast]').forEach(toast => {
-        toast.querySelector('.flash-toast-progress')
-            ?.addEventListener('animationend', () => dismiss(toast));
-        toast.querySelector('[data-flash-close]')
-            ?.addEventListener('click', () => dismiss(toast));
-    });
+    function initToasts(root = document) {
+        root.querySelectorAll('[data-flash-toast]').forEach(toast => {
+            if (toast._toastBound) return;
+            toast._toastBound = true;
+            toast.querySelector('.flash-toast-progress')
+                ?.addEventListener('animationend', () => dismiss(toast));
+            toast.querySelector('[data-flash-close]')
+                ?.addEventListener('click', () => dismiss(toast));
+        });
+    }
+
+    initToasts();
+
+    // Hỗ trợ hiển thị pendingFlashToast từ sessionStorage (sau khi reload / chuyển trang)
+    try {
+        const pending = sessionStorage.getItem('pendingFlashToast');
+        if (pending) {
+            sessionStorage.removeItem('pendingFlashToast');
+            const data = JSON.parse(pending);
+            if (data && data.message && typeof window.showFlashToast === 'function') {
+                window.showFlashToast(data.message, data.type || 'success');
+            }
+        }
+    } catch (e) {
+        sessionStorage.removeItem('pendingFlashToast');
+    }
+
+    window.initFlashToasts = initToasts;
+    window.dismissFlashToast = dismiss;
 })();
