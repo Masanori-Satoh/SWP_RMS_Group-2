@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org"><body>
+<section th:fragment="panel(candidateId, potential, notes, returnApplicationId, jobPostingId, cvPage, recommendationId, filter, sourcePage)" id="candidate-notes" class="card adw-surface tpw-panel tpw-notes-panel" aria-labelledby="tp-note-history-title">
+                <div class="tpw-section-head">
+                    <span class="tpw-section-icon" aria-hidden="true"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 4h16v12H9l-5 4V4Z M8 8h8 M8 12h6"/></svg></span>
+                    <div class="tpw-section-copy">
+                        <h2 id="tp-note-history-title" class="card-title adw-panel-title tpw-section-title" th:text="|Ghi chú đánh giá nội bộ (${#lists.size(notes)})|">Ghi chú đánh giá nội bộ</h2>
+                    </div>
+                </div>
+                <div class="tpw-notes-body">
+                    <div th:if="${#lists.isEmpty(notes)}" class="tpw-empty-state tp-detail-empty">
+                        <span class="tpw-empty-icon" aria-hidden="true"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M14 2H5v20h14V7ZM14 2v6h5M8 12h8M8 16h6"/></svg></span>
+                        <p class="tpw-empty-title">Chưa có ghi chú đánh giá.</p>
+                        <p th:if="${potential}" class="tpw-empty-hint">Thêm ghi chú để lưu lại nhận xét, đánh giá về ứng viên này.</p>
+                    </div>
+                    <ul th:unless="${#lists.isEmpty(notes)}" class="tp-notes-feed" aria-label="Ghi chú mới nhất trước">
+                        <li th:each="note : ${notes}" class="tp-feed-item" data-note-item>
+                            <span class="tp-feed-avatar" aria-hidden="true" th:with="parts=${#strings.arraySplit(note.author ?: '', ' ')}"
+                                  th:text="${#arrays.length(parts) > 0 ? #strings.toUpperCase(#strings.substring(parts[0], 0, 1) + (#arrays.length(parts) > 1 ? #strings.substring(parts[#arrays.length(parts) - 1], 0, 1) : '')) : ''}"></span>
+                            <div class="tp-feed-content">
+                                <div class="tpw-note-header">
+                                    <div class="tpw-note-identity"><strong class="tp-feed-author" th:text="${note.author}"></strong><span class="tpw-note-role" th:if="${note.authorRole != null}" th:text="${note.authorRole == 'HR' ? 'Nhân sự' : note.authorRole}"></span></div>
+                                    <time class="tp-feed-time" th:datetime="${#temporals.formatISO(note.createdAt)}" th:text="${#temporals.format(note.createdAt, 'dd/MM/yyyy HH:mm')}"></time>
+                                    <details th:if="${potential and note.owned}" class="tpw-note-menu">
+                                        <summary th:attr="aria-label=|Thao tác ghi chú của ${note.author}|"><svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor" aria-hidden="true"><circle cx="5" cy="12" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="19" cy="12" r="1.5"/></svg></summary>
+                                        <div class="tpw-note-menu-items">
+                                            <button type="button" data-note-edit>Sửa</button>
+                                            <form method="post" data-note-delete th:action="@{/talent-pool/{id}/notes/{noteId}/delete(id=${candidateId},returnApplicationId=${returnApplicationId},noteId=${note.id},cvPage=${cvPage},jobPostingId=${jobPostingId},recommendationId=${recommendationId},keyword=${filter != null ? filter.keyword : null},markedBy=${filter != null ? filter.markedBy : null},sourceJobId=${filter != null ? filter.sourceJobId : null},page=${sourcePage})}"><button type="submit">Xóa</button></form>
+                                        </div>
+                                    </details>
+                                </div>
+                                <p class="tp-feed-body" data-note-text th:hidden="${editingNoteId != null and editingNoteId == note.id}" th:text="${note.content}"></p>
+                                <form th:if="${potential and note.owned}" class="tpw-note-edit-form" data-note-edit-form method="post" th:hidden="${editingNoteId == null or editingNoteId != note.id}" th:action="@{/talent-pool/{id}/notes/{noteId}/edit(id=${candidateId},returnApplicationId=${returnApplicationId},noteId=${note.id},cvPage=${cvPage},jobPostingId=${jobPostingId},recommendationId=${recommendationId},keyword=${filter != null ? filter.keyword : null},markedBy=${filter != null ? filter.markedBy : null},sourceJobId=${filter != null ? filter.sourceJobId : null},page=${sourcePage})}">
+                                    <label class="form-label" th:for="|edit-note-${note.id}|">Sửa ghi chú</label>
+                                    <textarea class="form-textarea" th:id="|edit-note-${note.id}|" name="content" rows="3" maxlength="1000" required th:text="${editingNoteId != null and editingNoteId == note.id ? editNoteDraft : note.content}"></textarea>
+                                    <div class="tpw-note-edit-actions"><button class="btn btn--secondary btn--sm" type="button" data-note-cancel>Hủy</button><button class="btn btn--primary btn--sm" type="submit">Lưu thay đổi</button></div>
+                                </form>
+                            </div>
+                        </li>
+                    </ul>
+                </div>
+                <p th:unless="${potential}" class="text-muted">Lưu ứng viên vào kho tiềm năng để thêm ghi chú.</p>
+                <form th:if="${potential}" class="tp-note-form" data-pool-note method="post" th:action="@{/talent-pool/{id}/notes(id=${candidateId},returnApplicationId=${returnApplicationId},cvPage=${cvPage},jobPostingId=${jobPostingId},keyword=${filter != null ? filter.keyword : null},markedBy=${filter != null ? filter.markedBy : null},sourceJobId=${filter != null ? filter.sourceJobId : null},page=${sourcePage},recommendationId=${recommendationId})}">
+                    <label class="form-label tpw-note-label" for="content">Thêm ghi chú</label>
+                    <textarea class="form-textarea tp-note-input" id="content" name="content" rows="4" maxlength="1000" required placeholder="Nhập nhận xét của bạn…" th:text="${noteDraft}"></textarea>
+                    <p class="tpw-note-counter" data-note-counter aria-live="off">0/1000</p>
+                    <div class="tp-note-actions"><button class="btn btn--primary btn--sm" type="submit"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M5 3h11l3 3v15H5Z M8 3v6h8V3 M8 21v-7h8v7"/></svg><span data-label>Lưu ghi chú</span></button></div>
+                </form>
+            </section>
+</body></html>

@@ -360,3 +360,16 @@ a.tpw-contact-line:focus-visible { outline: 3px solid var(--focus); outline-offs
   .tpw-page .tpw-filter-submit { flex: 1 1 auto; }
   .tpw-page .tpw-pool-table { min-width: 760px; }
 }
+
+/* Align the Talent Pool profile with the application detail workspace. */
+.tpw-main-stack > .tpw-profile { margin-bottom: 0; }
+.tpw-side-stack .tpw-info-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.tpw-side-stack .tpw-info-item { padding: var(--s3); }
+.tpw-side-stack .tpw-info-icon { display: none; }
+.tpw-side-stack .tpw-info-item::before { content: none; }
+.tpw-side-stack .tpw-info-item:nth-child(n) { border-top: 0; }
+.tpw-side-stack .tpw-info-item:nth-child(n + 3) { border-top: 1px solid var(--line); }
+@media (max-width: 480px) {
+  .tpw-side-stack .tpw-info-grid { grid-template-columns: minmax(0, 1fr); }
+  .tpw-side-stack .tpw-info-item + .tpw-info-item { border-top: 1px solid var(--line); }
+}
