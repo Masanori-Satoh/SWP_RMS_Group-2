@@ -63,9 +63,15 @@
   - Áp dụng triệt để Button DNA: Bo góc 8px `var(--radius-md)`, nút chính `.btn.btn--primary`, nút nguy hiểm `.btn.btn--danger`, nút hủy `.btn.btn--secondary`.
   - 100% icon SVG nội bộ, không dùng mã màu hex hardcoded.
 - **Loại Bỏ SweetAlert2 CDN & Dọn Dẹp CSS Cũ:**
-  - Gỡ bỏ hoàn toàn thẻ `<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>` khỏi `director-list.html` và `detail.html`.
+  - Gỡ bỏ hoàn toàn thẻ `<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>` khỏi `director-list.html`, `detail.html` và `list.html`.
   - Xóa bỏ toàn bộ các class CSS cũ chứa mã màu hex (`.director-reject-alert-modal`, `.btn-director-reject-confirm`, `.reject-warn-*`) trong `offers.css`.
   - Chuẩn hóa `#directorDecisionModal` trên danh sách: Bỏ `style="display: none;"`, dùng nút đóng SVG, icon tiêu đề SVG.
+- **Khắc Phục Nút Phát Hành Thư Mời Nhận Việc & Chuẩn Hóa Dialog Phát Hành:**
+  - Khắc phục lỗi nghẽn không phản hồi khi bấm nút "Phát hành Thư mời nhận việc" do gọi hàm phụ thuộc `Swal.fire` khi thư viện SweetAlert2 đã bị gỡ bỏ (`ReferenceError: Swal is not defined`).
+  - Thay thế toàn bộ popup phát hành offer bằng HTML5 Native `<dialog id="sendOfferConfirmDialog" class="confirm-dialog">` trên cả `offers/detail.html` và `offers/list.html`.
+  - Bổ sung trạng thái xử lý bất đồng bộ trực quan: Nút phát hành hiển thị spinner inline `.ofw-spinner-sm` và vô hiệu hóa tạm thời để chống click đúp.
+  - Chuyển toàn bộ thông báo đang xử lý, thành công và thất bại sang Flash Toast không chặn UI (`showFlashToast`).
+  - Bổ sung phòng thủ an toàn (safe fallback) cho hàm `showDirectorCustomModal` trong `offers.js`.
 
 
 ---

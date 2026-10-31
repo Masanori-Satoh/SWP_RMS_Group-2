@@ -72,9 +72,10 @@ Quá trình nâng cấp được chia nhỏ thành 5 phase độc lập, kiểm 
 - Thêm container `#toastContainer` cho các phản hồi trực quan.
 - **Kiểm thử:** 34/34 test cases passed.
 
-### Phase 6: Chuẩn Hóa Pop-up & Loại Bỏ SweetAlert2 CDN (Commits `8efcc2c`, `da71c6e`, `7beec45`, `8d92fc9`)
-- **Loại bỏ 100% SweetAlert2 CDN:** Gỡ bỏ hoàn toàn thư viện bên ngoài `cdn.jsdelivr.net/npm/sweetalert2@11` khỏi `director-list.html` và `detail.html`.
-- **Hộp thoại xác nhận Native HTML5:** Chuyển đổi toàn bộ popup phê duyệt / từ chối sang `<dialog class="confirm-dialog">` chuẩn theo Mục 8 `UI_CATALOG.md`.
+### Phase 6: Chuẩn Hóa Pop-up & Loại Bỏ SweetAlert2 CDN (Commits `8efcc2c`, `da71c6e`, `7beec45`, `8d92fc9`, `06d01ff`)
+- **Loại bỏ 100% SweetAlert2 CDN:** Gỡ bỏ hoàn toàn thư viện bên ngoài `cdn.jsdelivr.net/npm/sweetalert2@11` khỏi `director-list.html`, `detail.html` và `list.html`.
+- **Hộp thoại xác nhận Native HTML5:** Chuyển đổi toàn bộ popup phê duyệt, từ chối và phát hành offer sang `<dialog class="confirm-dialog">` (`#directorApproveConfirmDialog`, `#directorRejectConfirmDialog`, `#sendOfferConfirmDialog`) chuẩn theo Mục 8 `UI_CATALOG.md`.
+- **Khắc phục lỗi nút "Phát hành Thư mời nhận việc":** Xử lý triệt để nguyên nhân nghẽn không phản hồi do `Swal is not defined`. Thay thế bằng dialog native HTML5, bổ sung hiệu ứng loading inline spinner `.ofw-spinner-sm` và vô hiệu hóa nút chống click đúp.
 - **Button DNA chuẩn 8px:** Dùng `.btn.btn--primary`, `.btn.btn--danger`, `.btn.btn--secondary` bo góc 8px `var(--radius-md)`.
 - **Inline Form Validation:** Áp dụng viền đỏ `.is-invalid` và tự động focus cho textarea nhận xét thay vì modal SweetAlert chặn toàn màn hình.
 - **Hệ thống Flash Toast chuẩn:** Thống nhất dùng Flash Toast góc trên bên phải kèm thanh tiến trình 3 giây, loại bỏ lệnh `alert()` của trình duyệt.
