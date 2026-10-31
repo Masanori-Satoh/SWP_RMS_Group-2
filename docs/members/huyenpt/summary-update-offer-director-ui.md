@@ -72,6 +72,15 @@ Quá trình nâng cấp được chia nhỏ thành 5 phase độc lập, kiểm 
 - Thêm container `#toastContainer` cho các phản hồi trực quan.
 - **Kiểm thử:** 34/34 test cases passed.
 
+### Phase 6: Chuẩn Hóa Pop-up & Loại Bỏ SweetAlert2 CDN (Commits `8efcc2c`, `da71c6e`, `7beec45`, `8d92fc9`)
+- **Loại bỏ 100% SweetAlert2 CDN:** Gỡ bỏ hoàn toàn thư viện bên ngoài `cdn.jsdelivr.net/npm/sweetalert2@11` khỏi `director-list.html` và `detail.html`.
+- **Hộp thoại xác nhận Native HTML5:** Chuyển đổi toàn bộ popup phê duyệt / từ chối sang `<dialog class="confirm-dialog">` chuẩn theo Mục 8 `UI_CATALOG.md`.
+- **Button DNA chuẩn 8px:** Dùng `.btn.btn--primary`, `.btn.btn--danger`, `.btn.btn--secondary` bo góc 8px `var(--radius-md)`.
+- **Inline Form Validation:** Áp dụng viền đỏ `.is-invalid` và tự động focus cho textarea nhận xét thay vì modal SweetAlert chặn toàn màn hình.
+- **Hệ thống Flash Toast chuẩn:** Thống nhất dùng Flash Toast góc trên bên phải kèm thanh tiến trình 3 giây, loại bỏ lệnh `alert()` của trình duyệt.
+- **Dọn dẹp mã cũ:** Xóa bỏ toàn bộ các style SweetAlert cũ và mã màu hex hardcoded trong `offers.css`.
+
+
 ### Phase 5: Xác Minh Toàn Diện & Tài Liệu Hóa
 - Kiểm thử toàn bộ bộ test tự động của phân hệ Offer: 34/34 test cases passed (100% pass rate).
 - Cập nhật nhật ký công việc `docs/management/WORK_LOG.md` và tạo work log chi tiết `docs/management/work_logs/2026-10-31-director-offer-ui-sync.md`.

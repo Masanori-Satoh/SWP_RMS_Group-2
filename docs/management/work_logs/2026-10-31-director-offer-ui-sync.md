@@ -50,6 +50,24 @@
 - **Toast Container:** Bổ sung container `#toastContainer` cho các thông báo phản hồi thao tác.
 - **Kiểm thử:** 34/34 test cases passed (0 failure, 0 error).
 
+### Phase 6: Chuẩn Hóa Toàn Diện Hệ Thống Pop-up & Toast Thông Báo (Zero SweetAlert2 / Zero CDN)
+- **Chuẩn hóa Thông Báo (Flash Toast):**
+  - Chuyển toàn bộ thông báo kết quả (Thành công / Thất bại / Phân quyền) sang component Flash Toast chuẩn của hệ thống (`flash-toast.css` / `flash-toast.js`).
+  - Thay thế popup SweetAlert2 che kín toàn màn hình bằng Toast góc trên bên phải có thanh tiến trình 3 giây và tự động chuyển hướng.
+  - Loại bỏ hoàn toàn lệnh `alert()` của trình duyệt và xóa bỏ hàm tự chế `showOfferToast`.
+- **Inline Validation Lý Do Từ Chối:**
+  - Khi Giám đốc từ chối mà chưa nhập ý kiến: Thay vì bật modal SweetAlert2 "Cần nhập lý do từ chối", hệ thống đánh dấu viền đỏ `.is-invalid` ô nhận xét, tự động focus con trỏ, hiện thông báo gợi ý dưới ô và kích hoạt Flash Toast cảnh báo.
+  - Tự động xóa trạng thái lỗi khi Giám đốc bắt đầu gõ ký tự.
+- **Chuẩn Hóa Hộp Thoại Xác Nhận (Confirm Dialogs):**
+  - Thay thế toàn bộ popup SweetAlert2 phê duyệt / từ chối bằng HTML5 Native `<dialog class="confirm-dialog">` (`#directorApproveConfirmDialog`, `#directorRejectConfirmDialog`).
+  - Áp dụng triệt để Button DNA: Bo góc 8px `var(--radius-md)`, nút chính `.btn.btn--primary`, nút nguy hiểm `.btn.btn--danger`, nút hủy `.btn.btn--secondary`.
+  - 100% icon SVG nội bộ, không dùng mã màu hex hardcoded.
+- **Loại Bỏ SweetAlert2 CDN & Dọn Dẹp CSS Cũ:**
+  - Gỡ bỏ hoàn toàn thẻ `<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>` khỏi `director-list.html` và `detail.html`.
+  - Xóa bỏ toàn bộ các class CSS cũ chứa mã màu hex (`.director-reject-alert-modal`, `.btn-director-reject-confirm`, `.reject-warn-*`) trong `offers.css`.
+  - Chuẩn hóa `#directorDecisionModal` trên danh sách: Bỏ `style="display: none;"`, dùng nút đóng SVG, icon tiêu đề SVG.
+
+
 ---
 
 ## 3. Xác Minh Chất Lượng & Tuân Thủ

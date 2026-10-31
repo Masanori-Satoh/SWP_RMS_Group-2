@@ -627,5 +627,6 @@ sidebar; không bỏ hướng dẫn nhập liệu hoặc liên kết Hủy trong
 - Toàn bộ 7 badge trạng thái, icon phân trang và trạng thái rỗng chuyển sang 100% inline SVG.
 - Loại bỏ hoàn toàn 9 thuộc tính inline `style="..."`, chuyển toàn bộ sang Section 17 token CSS trong `offer-workspace.css`.
 - Bổ sung các nút hành động nhanh Phê duyệt / Từ chối (Quick Approve / Reject) và modal quyết định (`#directorDecisionModal`) kèm container `#toastContainer` cho trạng thái `Pending_Director`.
+- Chuẩn hóa toàn bộ pop-up xác nhận sang native HTML5 `<dialog class="confirm-dialog">` và hệ thống thông báo Flash Toast (`flash-toast.css` / `flash-toast.js`), loại bỏ hoàn toàn CDN SweetAlert2 và các lệnh `alert()` native của trình duyệt.
 - Chi tiết file change và kiểm thử:
   [work log](../../management/work_logs/2026-10-31-director-offer-ui-sync.md).
