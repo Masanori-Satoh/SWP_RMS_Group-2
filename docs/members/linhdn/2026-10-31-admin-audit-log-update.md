@@ -20,11 +20,11 @@ Bổ sung trang tra cứu lịch sử hoạt động, sau đó chỉnh bảng th
 | Thành phần | Trước | Sau |
 | --- | --- | --- |
 | Hành động | `CREATE`, `UPDATE`, `DELETE`, `LOGIN` | Tạo mới, Cập nhật, Xóa, Đăng nhập; có icon và màu riêng |
-| Đối tượng | `User`, `Department`, `Application`… | Tài khoản, Phòng ban, Hồ sơ ứng tuyển…; có icon nhận diện |
+| Đối tượng | `User`, `Department`, `Application`… | Loại đối tượng kèm tên cụ thể: tên ứng viên và tin ứng tuyển, tên yêu cầu, tin tuyển dụng, tài khoản hoặc phòng ban |
 | Người thực hiện | Chỉ có họ tên | Họ tên kèm avatar chữ cái |
 | Nội dung cũ/mới | Giá trị thô, nhiều mã khó hiểu | Nhãn tiếng Việt và nền màu nhẹ để phân biệt |
 | Hồ sơ nguồn | Chỉ hiện số, ví dụ `135` | `Hồ sơ nguồn: #135` khi bản ghi tạo đề xuất có lưu ID hồ sơ nguồn |
-| Mật độ bảng | Dòng cao, nhiều khoảng trắng | Dòng thông thường khoảng **40px** ở bản kiểm tra desktop; nội dung dài vẫn xuống dòng để đọc đầy đủ |
+| Mật độ bảng | Dòng cao, nhiều khoảng trắng | Khoảng cách gọn; sau bổ sung loại và tên đối tượng, dòng mẫu khoảng **53px** trên desktop. Nội dung dài vẫn xuống dòng để đọc đầy đủ |
 | Màn hình nhỏ | Bảng nhiều cột | Bộ lọc xuống dòng; bảng cuộn ngang bên trong, không làm tràn ngang cả trang |
 
 Một số mã đã được chuyển thành nội dung dễ đọc:
@@ -41,6 +41,14 @@ Một số mã đã được chuyển thành nội dung dễ đọc:
 | `TalentPoolMarked` / `TalentPoolUnmarked` | Tiềm năng: Đã đánh dấu / Đã bỏ đánh dấu |
 
 Các nhãn này chỉ dùng khi hiển thị. Giá trị gốc, ID, số lượng và thứ tự bản ghi được giữ nguyên. Ghi chú tự do và giá trị chưa có ánh xạ vẫn giữ nguyên nội dung, tránh diễn giải sai. Hủy một đề xuất không được mô tả thành bỏ đánh dấu ứng viên tiềm năng.
+
+### Tên cụ thể của đối tượng
+
+- Hồ sơ ứng tuyển: **tên ứng viên · tên tin tuyển dụng**.
+- Yêu cầu/tin tuyển dụng, phòng ban: tên tương ứng. Tài khoản: họ tên kèm username; ứng viên và ghi chú ứng viên: tên ứng viên liên quan.
+- Lịch phỏng vấn: tên ứng viên, tin tuyển dụng và thời gian bắt đầu. Cấu hình hệ thống: mô tả hoặc khóa cấu hình, không đọc giá trị cấu hình để làm tên.
+- Áp dụng cùng cách trình bày ở bảng log gần đây trên dashboard. Giữ ID để đối chiếu; đối tượng không còn dữ liệu hiện thông báo thay vì đoán tên.
+- Tên được lấy từ **dữ liệu hiện tại**, không phải bản chụp tên ở thời điểm ghi log. Chỉ tra cứu theo các đối tượng trong trang, gom theo loại và loại bỏ ID trùng để tránh truy vấn riêng từng dòng; không đổi schema hoặc luồng ghi log.
 
 ## 3. Ảnh giao diện
 
@@ -84,6 +92,8 @@ Không bổ sung chức năng xóa cứng tài khoản/phòng ban. Không bổ s
 
 ## 5. Kiểm tra và giới hạn bằng chứng
 
+**Đợt bổ sung tên đối tượng:** 24 test liên quan đã qua, gồm kiểm tra gom ID trùng, đối tượng không còn dữ liệu, ID không hợp lệ và bảo toàn giá trị log. Thêm 2 test chỉ đọc trên SQL Server đã qua; đã thực thi truy vấn cho 9 loại đối tượng được hỗ trợ và đối chiếu tên ứng viên/tin ứng tuyển. Chrome desktop/mobile không tràn ngang toàn trang và không có lỗi JavaScript.
+
 **Đợt chỉnh giao diện dễ đọc:** 18 test đã qua, không có lỗi hoặc test bị bỏ qua.
 
 | Bộ test | Số test |
@@ -107,6 +117,7 @@ Không bổ sung chức năng xóa cứng tài khoản/phòng ban. Không bổ s
 - `src/main/resources/static/css/pages/audit-log.css`: bảng gọn, màu, khoảng cách và responsive.
 - `src/main/java/com/group2/rms/admin/dto/AuditLogLabels.java`: nhãn tiếng Việt và nội dung trình bày.
 - `src/main/java/com/group2/rms/admin/service/AuditLogService.java`: truy vấn log và dữ liệu hiển thị.
+- `src/main/java/com/group2/rms/admin/repository/AuditLogTargetRepository.java`: tra cứu tên đối tượng theo từng nhóm trên trang.
 - `src/main/java/com/group2/rms/admin/controller/AuditLogController.java`: trang tra cứu và lựa chọn bộ lọc.
 - `src/main/resources/templates/dashboard/admin.html`: bảng hoạt động gần đây.
 
