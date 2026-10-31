@@ -11,7 +11,7 @@ import org.springframework.stereotype.Service;
 /**
  * Gửi email cho luồng Offer: phát hành thư mời nhận việc (Offer Letter) tới ứng viên.
  * Không có cấu hình SMTP thì chỉ ghi log (mock).
- * Thông báo in-app cho nội bộ (Giám đốc, HR) nằm ở {@link NotificationService}.
+ * Thông báo in-app cho nội bộ (Giám đốc, HR) nằm ở {@link com.group2.rms.notification.NotificationService}.
  */
 @Slf4j
 @Service
@@ -19,11 +19,14 @@ public class OfferMailSender {
 
     private final ObjectProvider<JavaMailSender> mailSender;
     private final String from;
+    private final String baseUrl;
 
     public OfferMailSender(ObjectProvider<JavaMailSender> mailSender,
-                           @Value("${app.mail.from:${APP_MAIL_FROM:noreply@rms.group2.com}}") String from) {
+                           @Value("${app.mail.from:${APP_MAIL_FROM:noreply@rms.group2.com}}") String from,
+                           @Value("${app.base-url:${APP_BASE_URL:http://localhost:8080}}") String baseUrl) {
         this.mailSender = mailSender;
         this.from = from;
+        this.baseUrl = baseUrl.endsWith("/") ? baseUrl.substring(0, baseUrl.length() - 1) : baseUrl;
     }
 
     public void sendOfferLetterToCandidate(OfferProposal offer) {
@@ -66,12 +69,14 @@ public class OfferMailSender {
                 message.setText(
                         "Xin chào " + candidateName + ",\n\n"
                         + "Chúng tôi rất vui mừng thông báo bạn đã vượt qua các vòng phỏng vấn và trân trọng gửi tới bạn Thư mời nhận việc cho vị trí: "
-                        + offer.getOfferedPositionTitle() + ".\n"
-                        + "Mức lương chính thức (Trước thuế): " + officialSalary + "\n"
-                        + "Mức lương thử việc (Trước thuế): " + probationSalary + "\n"
-                        + "Địa điểm làm việc: " + (offer.getWorkLocation() != null ? offer.getWorkLocation() : "Văn phòng công ty") + "\n"
+                        + offer.getOfferedPositionTitle() + ".\n\n"
+                        + "THÔNG TIN ĐÃI NGỘ CHÍNH THỨC:\n"
+                        + "• Mức lương chính thức (Trước thuế): " + officialSalary + "\n"
+                        + "• Mức lương thử việc (Trước thuế): " + probationSalary + "\n"
+                        + "• Địa điểm làm việc: " + (offer.getWorkLocation() != null ? offer.getWorkLocation() : "Văn phòng công ty") + "\n"
                         + deadlineInfo
-                        + "Vui lòng đăng nhập vào hệ thống để xem chi tiết và phản hồi thư mời nhận việc.\n\n"
+                        + "Bạn có thể xem chi tiết Thư mời nhận việc và gửi phản hồi trực tiếp tại đường dẫn sau:\n"
+                        + baseUrl + "/portal/offers/" + offer.getOfferId() + "\n\n"
                         + "Trân trọng,\nBộ phận Tuyển dụng Mộc RMS"
                 );
                 sender.send(message);
@@ -80,8 +85,8 @@ public class OfferMailSender {
                 log.error("Lỗi khi gửi email Offer Letter tới {}: {}", targetRecipient, ex.getMessage());
             }
         } else {
-            log.info("[MOCK EMAIL] Gửi Offer Letter tới {} ({}) cho vị trí {} với lương {}",
-                    candidateName, targetRecipient, offer.getOfferedPositionTitle(), offer.getProposedSalary());
+            log.info("[MOCK EMAIL] Gửi Offer Letter tới {} ({}) cho vị trí {} với lương {}. Link: {}/portal/offers/{}",
+                    candidateName, targetRecipient, offer.getOfferedPositionTitle(), offer.getProposedSalary(), baseUrl, offer.getOfferId());
         }
     }
 }
