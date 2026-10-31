@@ -94,7 +94,7 @@
   - **Tiêu đề công việc:** Tên vị trí tuyển dụng to đậm 24px (`.cof-hero-title`), màu `var(--ink)`.
   - **Metadata:** Hàng thông tin căn giữa gồm 3 mục kèm icon SVG: `[🏢] Phòng ban` · `[📅] Ngày gửi: dd/MM/yyyy` · `[📅] Bắt đầu dự kiến: dd/MM/yyyy`.
   - **Thanh thao tác căn giữa:**
-    - Hộp Hạn phản hồi màu hổ phách ấm (`.cof-deadline-box`): `[🕒] Hạn phản hồi: dd/MM/yyyy` | `[⏱️] Còn N ngày/giờ`.
+    - Hộp Hạn phản hồi màu hổ phách ấm (`.cof-deadline-box`): `[🕒] Hạn phản hồi: dd/MM/yyyy` | `[⏱️] Còn N ngày/giờ`. Căn chỉnh nằm ngang tuyệt đối (`flex-direction: row !important`), chiều cao 42px khớp thẳng hàng với cặp nút thao tác, tối ưu JS countdown hiển thị `Còn N ngày` không bị xuống dòng hay lặp icon.
     - Nút chính: `[✓] Đồng ý nhận việc` (`.btn--primary`, cao 42px, bo 8px, nền xanh `var(--brand)`).
     - Nút phụ: `[✕] Từ chối thư mời` (`.btn--outline`, cao 42px, bo 8px, viền đỏ `var(--error)`).
 - **Thẻ 2 (Nội Dung Thư Mời):**

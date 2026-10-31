@@ -99,7 +99,7 @@ Trước đợt rà soát và nâng cấp toàn diện này, phân hệ Cổng t
   - Huy hiệu pill mint `[✉] THƯ MỜI NHẬN VIỆC` (`.cof-hero-badge`) căn giữa.
   - Tên vị trí tuyển dụng to đậm 24px (`.cof-hero-title`).
   - Hàng metadata căn giữa: `[🏢] Phòng ban` · `[📅] Ngày gửi` · `[📅] Bắt đầu dự kiến`.
-  - Hàng thao tác căn giữa: Hộp Hạn phản hồi màu hổ phách ấm (`.cof-deadline-box`) + Cặp nút `[✓] Đồng ý nhận việc` (`.btn--primary`) và `[✕] Từ chối thư mời` (`.btn--outline`).
+  - Hàng thao tác căn giữa: Hộp Hạn phản hồi màu hổ phách ấm (`.cof-deadline-box`) nằm ngang tuyệt đối (`flex-direction: row !important`), chiều cao 42px khớp thẳng hàng với cặp nút `[✓] Đồng ý nhận việc` (`.btn--primary`) và `[✕] Từ chối thư mời` (`.btn--outline`). Tối ưu JS countdown hiển thị gọn gàng `Còn N ngày` theo mockup, không bị lặp icon hoặc xuống dòng.
 - **Thẻ 2 (Nội Dung Thư Mời):**
   - Header: Icon thư + `Nội dung thư mời` & Nút `[📄] Tải về PDF`.
   - Chữ ký căn lề trái (`.cof-letter-signoff-left`): *Trân trọng, Đội ngũ Mộc RMS*.

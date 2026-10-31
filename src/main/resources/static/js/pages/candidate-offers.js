@@ -197,8 +197,9 @@
 
         if (isNaN(diff)) return;
 
+        var hasSvg = el.previousElementSibling && el.previousElementSibling.tagName && el.previousElementSibling.tagName.toLowerCase() === 'svg';
         if (diff <= 0) {
-          el.textContent = el.classList.contains('cof-top-bar__val') ? 'Đã hết hạn' : '⏱ Đã hết hạn phản hồi';
+          el.textContent = (hasSvg || el.classList.contains('cof-top-bar__val')) ? 'Đã hết hạn phản hồi' : '⏱ Đã hết hạn phản hồi';
           el.classList.add('cof-countdown--expired');
         } else {
           var days = Math.floor(diff / (1000 * 60 * 60 * 24));
@@ -211,7 +212,13 @@
             parts.push(days + ' ngày');
           }
           parts.push(pad(hours) + 'h ' + pad(minutes) + 'm ' + pad(seconds) + 's');
-          el.textContent = el.classList.contains('cof-top-bar__val') ? parts.join(' ') : ('⏱ Còn lại: ' + parts.join(' '));
+          if (hasSvg) {
+            el.textContent = 'Còn ' + (days > 0 ? (days + ' ngày') : parts.join(' '));
+          } else if (el.classList.contains('cof-top-bar__val')) {
+            el.textContent = parts.join(' ');
+          } else {
+            el.textContent = '⏱ Còn lại: ' + parts.join(' ');
+          }
         }
       });
     }
