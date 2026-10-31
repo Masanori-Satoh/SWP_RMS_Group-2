@@ -456,3 +456,18 @@ Nhằm đảm bảo chất lượng code và phòng ngừa lỗi hồi quy (regr
 - [x] Đổi tên test `*Test` → `*Tests` (§5): `NotificationServiceImplTests`, `NotificationPushListenerTests`, `NotificationApiControllerTests`, `WebSocketConfigTests`.
 - [ ] Phụ thuộc vòng `notification` ↔ requisition / jobposting / offer / interview / candidate (notification import entity của các module này): giữ nguyên, **báo Lead** ghi ngoại lệ vào AG §1.2.
 - [ ] **Báo Lead** sửa AG §1: `notification` không còn phẳng; `dashboard` đã chia `shared/ admin/ internal/`; §1.2 `dashboard` còn phụ thuộc `candidate`, `jobposting`, `requisition`.
+
+## Integration test thông báo (31/10/2026)
+- [x] Thêm `notification/integration/NotificationIntegrationTests` (16 test, SQL Server thật, rollback): 6 câu query repository (lọc theo người nhận + sắp xếp, đếm chưa đọc, 3 câu `@Modifying` đánh dấu đã đọc, NVARCHAR), chống trùng EventId, không đọc được thông báo người khác, API chuông + trang `/notifications` (chặn redirect `//ngoài`). PASS.
+- [x] Case HM + HR dùng chung EventId PASS → DB local không có `UNIQUE(EventId)` toàn bảng như `005_notification.sql`; cần báo nhóm sửa migration 005 cho khớp `db.md` (unique theo `RecipientId, EventId`).
+- [ ] Chạy test `@Nested` phải dùng `-Dtest=NotificationIntegrationTests*` (không có `*` thì surefire chạy 0 test).
+- [ ] Luồng interview / application / job posting (paused, closed) của notification mới có unit test (`NotificationServiceImplTests`), chưa có integration test.
+
+## Controller test dashboard nội bộ (31/10/2026)
+- [x] Thêm `dashboard/internal/controller/InternalDashboardControllerTests` (6 test, `@WebMvcTest` + bảo mật thật, `InternalDashboardService` + `DashboardAccess` bản thật, mock 4 service theo role): chưa đăng nhập → `/login`; Candidate / System Admin gõ URL → 403; tài khoản bị khóa → `/login?session-expired`; HR → `dashboard/index` chỉ gọi service HR; Interviewer `?week=abc` truyền nguyên chuỗi. PASS.
+- [x] Lệch §23.7 (không mock `InternalDashboardService`) có chủ đích: để kiểm khâu chặn role thật, đã được duyệt (phương án A).
+- [x] Đổi tên theo §5 / §23.3–23.4 trong 2 file test trên: tên test theo hàm thật (`getUnreadCount_`, `list_`, `markAsRead_`...), bỏ biến vô nghĩa (`ofB`, `forA`, `rows`), hàm hỗ trợ có nghiệp vụ (`unreadNotification`, `saveNotification`, `findNotificationsOf`, `loginAs`), dùng `DashboardAccess.INTERNAL_DASHBOARD_URL` thay chuỗi. 22 test PASS.
+
+## Integration test tin tuyển dụng bổ sung (31/10/2026)
+- [x] `JobPostingIntegrationTests` thêm 12 test (7 → 19, PASS): lọc theo id phòng ban; `creatorIs`; biên ngày đăng từ / đến; nhóm hạn "còn hạn" gồm tin không hạn và biên ngày 7 / 8; HM là trưởng phòng (có và không có phòng ban); từ khóa có `%` `_`; `findMaxPostingNo`; ô chọn yêu cầu khi tạo tin (`findRequisitionIdsWithPostingStatusIn` + `findWithDepartmentByApprovalStatus…`); `countApplicationsSince` biên 7 ngày; `countApplicationsWithAiScoreAtLeast` lấy lần chấm mới nhất; `findConfigValue`.
+- [ ] Bộ lọc người tạo và ngày đăng không dùng được trên màn danh sách: `JobPostingListService.buildFilterOptions` để `showCreator = false`, `showPostedDate = false` cho mọi role nên `normalizeFilter` luôn bỏ hai bộ lọc này. Test gọi thẳng Specification. Cần chốt: bật lại cho HR / Director, hay xóa `creatorIs`, `postedOnOrAfter`, `postedOnOrBefore`.
