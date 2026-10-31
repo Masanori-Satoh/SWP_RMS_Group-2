@@ -95,12 +95,12 @@
         </div>
 
         <div class="cof-top-bar__actions" th:if="${offer.canRespond}">
-            <button type="button" class="btn btn--success cof-top-btn-accept" data-detail-trigger="accept">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"></polyline></svg>
+            <button type="button" class="btn btn--primary cof-top-btn-accept" data-detail-trigger="accept">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"></polyline></svg>
                 Đồng ý nhận việc
             </button>
-            <a th:href="@{/portal/offers/{id}/decline(id=${offer.offerId})}" class="btn btn--outline-danger cof-top-btn-decline">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+            <a th:href="@{/portal/offers/{id}/decline(id=${offer.offerId})}" class="btn btn--outline cof-top-btn-decline">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
                 Từ chối thư mời
             </a>
         </div>
@@ -112,8 +112,8 @@
         <!-- Watermark lá Mộc RMS góc phải trên -->
         <div class="cof-watermark" aria-hidden="true">
             <svg width="140" height="150" viewBox="0 0 140 150" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M130 10C80 10 20 60 10 135C65 135 125 95 130 10Z" fill="#2d6a4f" fill-opacity="0.08"/>
-                <path d="M10 135C50 110 85 70 130 10" stroke="#2d6a4f" stroke-opacity="0.12" stroke-width="2.5" stroke-linecap="round"/>
+                <path d="M130 10C80 10 20 60 10 135C65 135 125 95 130 10Z" fill="var(--brand)" fill-opacity="0.08"/>
+                <path d="M10 135C50 110 85 70 130 10" stroke="var(--brand)" stroke-opacity="0.12" stroke-width="2.5" stroke-linecap="round"/>
             </svg>
         </div>
 
@@ -330,9 +330,9 @@
                 </div>
             </div>
             <div class="cof-download-bar__actions">
-                <button type="button" class="btn cof-download-bar__btn cof-download-bar__btn--primary" data-action="download-pdf">
+                <button type="button" class="btn btn--secondary btn--sm cof-download-bar__btn" data-action="download-pdf">
                     <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
-                    Tải xuống
+                    Tải xuống PDF
                 </button>
             </div>
         </div>
