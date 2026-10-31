@@ -30,15 +30,17 @@ public class AccountManagementService {
     private final DepartmentRepository departments;
     private final CandidateRepository candidates;
     private final PasswordEncoder passwordEncoder;
+    private final UserAuditLogger audit;
 
     public AccountManagementService(UserRepository users, RoleRepository roles,
             DepartmentRepository departments, CandidateRepository candidates,
-            PasswordEncoder passwordEncoder) {
+            PasswordEncoder passwordEncoder, UserAuditLogger audit) {
         this.users = users;
         this.roles = roles;
         this.departments = departments;
         this.candidates = candidates;
         this.passwordEncoder = passwordEncoder;
+        this.audit = audit;
     }
 
     @Transactional(readOnly = true)
@@ -90,7 +92,7 @@ public class AccountManagementService {
         checkEmailAvailable(email, null);
         checkSingleHiringManager(role, department, "Active", 0);
         int id = persistAccount(fullName, username, email, phone, role, department,
-                passwordEncoder.encode(command.password()));
+                passwordEncoder.encode(command.password()), false);
         if (isHiringManager(role) && department != null && department.getManager() == null) {
             department.setManager(users.getReferenceById(id));
             departments.save(department);
@@ -131,12 +133,12 @@ public class AccountManagementService {
                 .orElseThrow(() -> new IllegalStateException("Candidate role is not configured"));
         checkUsernameAvailable(username, null);
         checkEmailAvailable(email, null);
-        return persistAccount(fullName, username, email, null, candidate, null, passwordHash);
+        return persistAccount(fullName, username, email, null, candidate, null, passwordHash, true);
     }
 
     @SuppressWarnings("null")
     private int persistAccount(String fullName, String username, String email, String phone,
-            Role role, Department department, String passwordHash) {
+            Role role, Department department, String passwordHash, boolean registration) {
         User user = users.saveAndFlush(User.builder()
                 .fullName(fullName)
                 .username(username)
@@ -151,12 +153,14 @@ public class AccountManagementService {
         if (isCandidate(role)) {
             candidates.save(newCandidateProfile(user));
         }
+        audit.createdUser(user, registration);
         return user.getUserId();
     }
 
     @Transactional
     public void update(int userId, UpdateCommand command) {
         User user = findUser(userId);
+        var before = UserAuditLogger.userSnapshot(user);
         Role role = findRole(command.roleId());
         if (isCandidate(user.getRole()) != isCandidate(role)) {
             throw new AccountFieldException("roleId",
@@ -194,6 +198,7 @@ public class AccountManagementService {
         user.setDepartment(department);
         user.setAccountStatus(command.accountStatus());
         users.saveAndFlush(user);
+        audit.changes("User", userId, before, UserAuditLogger.userSnapshot(user));
 
         // Username and passwordHash are intentionally never assigned here.
     }

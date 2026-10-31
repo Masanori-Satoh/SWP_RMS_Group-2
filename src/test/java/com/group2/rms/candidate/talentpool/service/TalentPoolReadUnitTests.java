@@ -257,6 +257,11 @@ class TalentPoolReadUnitTests {
         when(currentUser.requireUser()).thenReturn(hr);
         when(candidates.findById(8)).thenReturn(Optional.of(candidate));
         when(applications.findDetailById(100)).thenReturn(Optional.of(application));
+        when(notes.save(any())).thenAnswer(invocation -> {
+            TalentPoolNote note = invocation.getArgument(0);
+            note.setNoteId(4);
+            return note;
+        });
         // When: Gọi nghiệp vụ cần kiểm tra với dữ liệu đã chuẩn bị.
         var result = service.saveBookmark(100, new TalentPoolBookmarkRequest("x".repeat(1000)));
         // Then: Kiểm tra kết quả và số lần gọi repository theo đúng ca này.
@@ -861,8 +866,19 @@ class TalentPoolReadUnitTests {
         assertEquals(hr, note.getAuthor());
         assertEquals(at, note.getCreatedAt());
         verify(notes).save(note);
+        verify(audit).record(hr.getUserId(), "UPDATE", "TalentPoolNote", 3, "Ứng viên #8\nCũ", "Ứng viên #8\nĐã sửa");
         service.deleteNote(8, 3);
         verify(notes).delete(note);
+        verify(audit).record(hr.getUserId(), "DELETE", "TalentPoolNote", 3, "Ứng viên #8\nĐã sửa", null);
+    }
+
+    @Test void unchangedNoteCreatesNoAuditEntry() {
+        when(currentUser.requireUser()).thenReturn(hr);
+        var note = TalentPoolNote.builder().noteId(3).candidate(candidate).author(hr).noteContent("Ghi chú").build();
+        when(notes.findById(3)).thenReturn(Optional.of(note));
+        service.updateNote(8, 3, new TalentPoolNoteRequest("  Ghi chú  "));
+        verifyNoInteractions(audit);
+        verify(notes, never()).save(any());
     }
 
     @Test

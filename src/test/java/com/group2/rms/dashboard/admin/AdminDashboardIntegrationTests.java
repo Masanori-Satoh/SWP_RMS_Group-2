@@ -38,6 +38,7 @@ import static org.mockito.Mockito.doReturn;
 @AutoConfigureMockMvc
 @Transactional(readOnly = true)
 class AdminDashboardIntegrationTests {
+    @Autowired com.group2.rms.admin.service.AuditLogService audit;
     @MockitoSpyBean AdminDashboardService dashboard;
     @Autowired DashboardMetricsRepository metrics;
     @Autowired UserRepository users;
@@ -45,6 +46,25 @@ class AdminDashboardIntegrationTests {
     @Autowired JdbcTemplate jdbc;
     @Autowired MockMvc mvc;
     private User admin;
+
+    @Test void auditLogQueriesMatchExistingDatabaseRowsWithoutWrites() {
+        var page = audit.search(null, null, null, "", "", "", 0);
+        assertEquals(jdbc.queryForObject("SELECT COUNT_BIG(*) FROM AuditLog", Long.class), page.getTotalElements());
+        var actors = audit.actors();
+        assertEquals(jdbc.queryForObject("SELECT COUNT(DISTINCT UserId) FROM AuditLog", Integer.class), actors.size());
+        assertEquals(jdbc.queryForObject("SELECT COUNT(DISTINCT EntityName) FROM AuditLog", Integer.class), audit.entities().size());
+        if (!actors.isEmpty()) {
+            int actorId = actors.getFirst().getId();
+            assertEquals(jdbc.queryForObject("SELECT COUNT_BIG(*) FROM AuditLog WHERE UserId=?", Long.class, actorId),
+                    audit.search(null, null, actorId, "", "", "", 0).getTotalElements());
+        }
+        if (!page.isEmpty()) {
+            var day = page.getContent().getFirst().timestamp().toLocalDate();
+            assertEquals(jdbc.queryForObject("SELECT COUNT_BIG(*) FROM AuditLog WHERE [Timestamp]>=? AND [Timestamp]<?",
+                    Long.class, Timestamp.valueOf(day.atStartOfDay()), Timestamp.valueOf(day.plusDays(1).atStartOfDay())),
+                    audit.search(day, day, null, "", "", "", 0).getTotalElements());
+        }
+    }
 
     @BeforeEach
     void currentAdmin() {

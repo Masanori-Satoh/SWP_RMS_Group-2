@@ -23,7 +23,7 @@ class DepartmentManagerTransferTests {
     private final DepartmentRepository departments = mock(DepartmentRepository.class);
     private final UserRepository users = mock(UserRepository.class);
     private final RoleRepository roles = mock(RoleRepository.class);
-    private final DepartmentService service = new DepartmentService(departments, users, roles);
+    private final DepartmentService service = new DepartmentService(departments, users, roles, org.mockito.Mockito.mock(com.group2.rms.user.service.UserAuditLogger.class));
     private final Role hiringManager = role(3, "Hiring Manager");
     private final Role interviewer = role(5, "Interviewer");
     private final Department department = Department.builder().departmentId(7)

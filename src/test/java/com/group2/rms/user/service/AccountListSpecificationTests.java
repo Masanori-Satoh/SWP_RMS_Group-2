@@ -28,7 +28,7 @@ import static org.mockito.Mockito.*;
 class AccountListSpecificationTests {
     private final UserRepository users = mock(UserRepository.class);
     private final AccountListService service = new AccountListService(users, mock(RoleRepository.class),
-            mock(DepartmentRepository.class), mock(CandidateRepository.class));
+            mock(DepartmentRepository.class), mock(CandidateRepository.class), org.mockito.Mockito.mock(com.group2.rms.user.service.UserAuditLogger.class));
     private final Root<User> root = mock(Root.class);
     private final CriteriaBuilder builder = mock(CriteriaBuilder.class);
     private final Path<Object> role = mock(Path.class);

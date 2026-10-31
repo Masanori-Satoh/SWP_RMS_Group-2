@@ -22,7 +22,8 @@ class AccountManagementCoverageTests {
     private final DepartmentRepository departments = mock(DepartmentRepository.class);
     private final CandidateRepository candidates = mock(CandidateRepository.class);
     private final PasswordEncoder encoder = mock(PasswordEncoder.class);
-    private final AccountManagementService service = new AccountManagementService(users, roles, departments, candidates, encoder);
+    private final UserAuditLogger audit = mock(UserAuditLogger.class);
+    private final AccountManagementService service = new AccountManagementService(users, roles, departments, candidates, encoder, audit);
     private final Role hr = Role.builder().roleId(2).roleName("HR").build();
     private final Role candidateRole = Role.builder().roleId(6).roleName("Candidate").build();
     private final Department department = Department.builder().departmentId(3).departmentStatus("Active").build();
@@ -597,6 +598,7 @@ class AccountManagementCoverageTests {
 
         // When: Thực hiện thao tác cần kiểm tra.
         int result = service.createCandidateWithPasswordHash("Name", "candidate", "candidate@example.test", "prepared-hash");
+        verify(audit).createdUser(argThat(user -> user.getUserId() == 7), eq(true));
 
         // Then: Kiểm tra kết quả nghiệp vụ và số lần gọi dependency.
         assertEquals(7, result);

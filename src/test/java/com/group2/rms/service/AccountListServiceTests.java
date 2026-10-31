@@ -26,7 +26,7 @@ class AccountListServiceTests {
             .role(Role.builder().roleName("HR").build())
             .accountStatus("Active").passwordHash("existing-bcrypt-hash").build();
         when(users.findById(12)).thenReturn(Optional.of(account));
-        new AccountListService(users, mock(RoleRepository.class), mock(DepartmentRepository.class), mock(CandidateRepository.class))
+        new AccountListService(users, mock(RoleRepository.class), mock(DepartmentRepository.class), mock(CandidateRepository.class), org.mockito.Mockito.mock(com.group2.rms.user.service.UserAuditLogger.class))
             .deactivate(12);
         // When: Gọi deactivationPreservesAccountAndPasswordHash với dữ liệu đã chuẩn bị.
         // Then: đổi Inactive và giữ password hash.
@@ -41,7 +41,7 @@ class AccountListServiceTests {
     void deactivationRejectsCrossGroupTargetsAndPreservesInactive() {
         // Given: Chặn target khác nhóm; giữ account Inactive và cho vô hiệu hóa Candidate đúng nhóm.
         UserRepository users = mock(UserRepository.class);
-        AccountListService service = new AccountListService(users, mock(RoleRepository.class), mock(DepartmentRepository.class), mock(CandidateRepository.class));
+        AccountListService service = new AccountListService(users, mock(RoleRepository.class), mock(DepartmentRepository.class), mock(CandidateRepository.class), org.mockito.Mockito.mock(com.group2.rms.user.service.UserAuditLogger.class));
         User candidate = User.builder().userId(7).role(Role.builder().roleName("Candidate").build()).accountStatus("Active").build();
         User employee = User.builder().userId(8).role(Role.builder().roleName("HR").build()).accountStatus("Inactive").build();
         when(users.findById(7)).thenReturn(Optional.of(candidate));

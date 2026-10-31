@@ -38,6 +38,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 class AdminDashboardViewTests {
     @Autowired MockMvc mvc;
     @MockitoBean AdminDashboardService dashboards;
+    @MockitoBean com.group2.rms.admin.service.AuditLogService audit;
     @MockitoBean UserRepository users;
 
     @BeforeEach void activeAdminSession() {
@@ -62,6 +63,11 @@ class AdminDashboardViewTests {
 
     private String render(AdminDashboardResponse data, String snapshot) throws Exception {
         when(dashboards.forUsername("dashboard-ui")).thenReturn(data);
+        when(audit.recent()).thenReturn(snapshot.equals("populated") ? List.of(
+                new com.group2.rms.admin.service.AuditLogService.Row(LocalDateTime.of(2026, 10, 30, 10, 45),
+                        "Trần Minh Đức", "UPDATE", "User", "18", "Vai trò: Interviewer", "Vai trò: HR"),
+                new com.group2.rms.admin.service.AuditLogService.Row(LocalDateTime.of(2026, 10, 30, 9, 20),
+                        "Nguyễn Thị Lan", "CREATE", "Department", "5", null, "Tên: Engineering")) : List.of());
         String html = mvc.perform(get("/dashboard/admin").with(user("dashboard-ui").roles("SYSTEM_ADMIN")))
                 .andExpect(status().isOk()).andReturn().getResponse().getContentAsString(StandardCharsets.UTF_8);
         if (Boolean.getBoolean("dashboard.ui.snapshots")) {
@@ -95,7 +101,9 @@ class AdminDashboardViewTests {
         assertFalse(html.contains("30 ngày gần đây"));
         assertTrue(html.contains("Chưa lọc 30 ngày"));
         assertFalse(html.contains("99.98%"));
-        assertFalse(html.contains("Nhật ký hoạt động gần đây"));
+        assertTrue(html.contains("Nhật ký kiểm toán gần đây"));
+        assertTrue(html.contains("Tài khoản #18"));
+        assertTrue(html.contains("/admin/audit-logs"));
     }
 
     @Test void missingMeasurementsStayUnknownRatherThanZeroOrHealthy() throws Exception {
