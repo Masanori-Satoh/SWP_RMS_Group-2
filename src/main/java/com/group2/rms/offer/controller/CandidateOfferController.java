@@ -1,12 +1,16 @@
 package com.group2.rms.offer.controller;
 
+import com.group2.rms.offer.dto.CandidateOfferDeclineRequest;
 import com.group2.rms.offer.dto.CandidateOfferDetailResponse;
 import com.group2.rms.offer.exception.OfferResponseException;
 import com.group2.rms.offer.service.CandidateOfferService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
+import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -45,7 +49,7 @@ public class CandidateOfferController {
     public String declinePage(@PathVariable Integer id, Model model, RedirectAttributes redirect) {
         CandidateOfferDetailResponse offer = candidateOffers.getDetail(id);
         if (!offer.canRespond()) {
-            String msg = "Đã quá hạn phản hồi".equals(offer.statusLabel())
+            String msg = offer.isExpired()
                     ? "Thư mời này đã quá ngày bắt đầu nhận việc dự kiến, không thể phản hồi nữa."
                     : "Thư mời này đã được trả lời nên không thể thay đổi.";
             redirect.addFlashAttribute("errorMessage", msg);
@@ -75,9 +79,16 @@ public class CandidateOfferController {
     /** Từ chối offer kèm lý do; kết quả hoặc lỗi hiện bằng thông báo trên trang danh sách hoặc chi tiết. */
     @PostMapping("/{id}/decline")
     public String decline(@PathVariable Integer id,
-                          @RequestParam(value = "declineReason", required = false) String declineReason,
-                          @RequestParam(value = "fromDetail", required = false, defaultValue = "false") boolean fromDetail,
+                          @Valid @ModelAttribute CandidateOfferDeclineRequest form,
+                          BindingResult bindingResult,
                           RedirectAttributes redirect) {
+        boolean fromDetail = form != null && form.isFromDetail();
+        if (bindingResult != null && bindingResult.hasErrors()) {
+            String errorMsg = bindingResult.getAllErrors().getFirst().getDefaultMessage();
+            redirect.addFlashAttribute("errorMessage", errorMsg);
+            return fromDetail ? "redirect:/portal/offers/" + id : "redirect:/portal/offers";
+        }
+        String declineReason = form != null ? form.declineReason() : null;
         try {
             String postingTitle = (declineReason != null && !declineReason.isBlank())
                     ? candidateOffers.decline(id, declineReason.trim())

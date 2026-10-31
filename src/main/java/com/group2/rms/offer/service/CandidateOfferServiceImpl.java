@@ -12,6 +12,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.time.Clock;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Set;
@@ -30,42 +31,42 @@ public class CandidateOfferServiceImpl implements CandidateOfferService {
     private final CurrentUserService currentUserService;
     private final ApplicationStatusService applicationStatusService;
     private final com.group2.rms.notification.NotificationService systemNotificationService;
+    private final Clock clock;
 
     @org.springframework.beans.factory.annotation.Autowired
     public CandidateOfferServiceImpl(CandidateOfferRepository offers,
                                     CurrentUserService currentUserService,
                                     ApplicationStatusService applicationStatusService,
-                                    com.group2.rms.notification.NotificationService systemNotificationService) {
+                                    com.group2.rms.notification.NotificationService systemNotificationService,
+                                    Clock clock) {
         this.offers = offers;
         this.currentUserService = currentUserService;
         this.applicationStatusService = applicationStatusService;
         this.systemNotificationService = systemNotificationService;
+        this.clock = clock != null ? clock : Clock.systemDefaultZone();
+    }
+
+    public CandidateOfferServiceImpl(CandidateOfferRepository offers,
+                                    CurrentUserService currentUserService,
+                                    ApplicationStatusService applicationStatusService,
+                                    com.group2.rms.notification.NotificationService systemNotificationService) {
+        this(offers, currentUserService, applicationStatusService, systemNotificationService, Clock.systemDefaultZone());
     }
 
     public CandidateOfferServiceImpl(CandidateOfferRepository offers,
                                     CurrentUserService currentUserService,
                                     ApplicationStatusService applicationStatusService) {
-        this(offers, currentUserService, applicationStatusService, null);
+        this(offers, currentUserService, applicationStatusService, null, Clock.systemDefaultZone());
     }
 
     @Override
-    @Transactional
+    @Transactional(readOnly = true)
     public List<CandidateOfferResponse> list() {
         Integer userId = currentUserService.requireUser().getUserId();
         List<OfferProposal> visibleOffers = offers.findVisibleByUserId(userId, CANDIDATE_VISIBLE_STATUSES);
 
-        if (systemNotificationService != null) {
-            for (OfferProposal o : visibleOffers) {
-                if (SENT.equals(o.getOfferStatus())) {
-                    try {
-                        systemNotificationService.notifyOfferLetterSent(o);
-                    } catch (Exception ignored) {}
-                }
-            }
-        }
-
         return visibleOffers.stream()
-                .map(CandidateOfferServiceImpl::toResponse)
+                .map(this::toResponse)
                 .toList();
     }
 
@@ -105,6 +106,9 @@ public class CandidateOfferServiceImpl implements CandidateOfferService {
         requireAnswerable(offer);
         String toStatus = accepted ? ACCEPTED : DECLINED;
         String cleanReason = (!accepted && declineReason != null && !declineReason.isBlank()) ? declineReason.trim() : null;
+        if (cleanReason != null && cleanReason.length() > 1000) {
+            cleanReason = cleanReason.substring(0, 1000);
+        }
         int updated = (cleanReason != null)
                 ? offers.answerIfSent(offerId, toStatus, cleanReason)
                 : offers.answerIfSent(offerId, toStatus);
@@ -131,7 +135,7 @@ public class CandidateOfferServiceImpl implements CandidateOfferService {
         if (!SENT.equals(offer.getOfferStatus())) {
             throw new OfferResponseException("Thư mời này đã được trả lời nên không thể thay đổi.");
         }
-        java.time.LocalDateTime now = java.time.LocalDateTime.now();
+        LocalDateTime now = LocalDateTime.now(clock);
         if (offer.getResponseDeadline() != null && now.isAfter(offer.getResponseDeadline())) {
             String deadlineStr = java.time.format.DateTimeFormatter.ofPattern("HH:mm dd/MM/yyyy")
                     .format(offer.getResponseDeadline());
@@ -143,11 +147,11 @@ public class CandidateOfferServiceImpl implements CandidateOfferService {
         }
     }
 
-    private static boolean isExpired(OfferProposal offer) {
+    private boolean isExpired(OfferProposal offer) {
         if (!SENT.equals(offer.getOfferStatus())) {
             return false;
         }
-        java.time.LocalDateTime now = java.time.LocalDateTime.now();
+        LocalDateTime now = LocalDateTime.now(clock);
         boolean deadlinePassed = offer.getResponseDeadline() != null
                 && now.isAfter(offer.getResponseDeadline());
         boolean startDatePassed = offer.getExpectedStartDate() != null
@@ -155,7 +159,7 @@ public class CandidateOfferServiceImpl implements CandidateOfferService {
         return deadlinePassed || startDatePassed;
     }
 
-    private static CandidateOfferResponse toResponse(OfferProposal offer) {
+    private CandidateOfferResponse toResponse(OfferProposal offer) {
         String status = offer.getOfferStatus();
         boolean expired = isExpired(offer);
         boolean canRespond = SENT.equals(status) && !expired;
@@ -194,7 +198,7 @@ public class CandidateOfferServiceImpl implements CandidateOfferService {
         };
     }
 
-    private static CandidateOfferDetailResponse toDetailResponse(OfferProposal offer) {
+    private CandidateOfferDetailResponse toDetailResponse(OfferProposal offer) {
         String status = offer.getOfferStatus();
         boolean expired = isExpired(offer);
         boolean canRespond = SENT.equals(status) && !expired;
@@ -236,7 +240,7 @@ public class CandidateOfferServiceImpl implements CandidateOfferService {
 
         String offerCode = offer.getOfferId() != null
                 ? String.format("OFFR-%d-%04d",
-                        offer.getCreatedAt() != null ? offer.getCreatedAt().getYear() : 2026,
+                        offer.getCreatedAt() != null ? offer.getCreatedAt().getYear() : LocalDateTime.now(clock).getYear(),
                         offer.getOfferId())
                 : "OFFR-2026-0000";
 

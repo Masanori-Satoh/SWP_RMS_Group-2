@@ -108,4 +108,9 @@ public record CandidateOfferDetailResponse(
                 offerStatus, statusLabel, statusBadge, canRespond, hrContactName, hrContactEmail, declineReason,
                 responsePeriodDays, responseDeadline, sentAt, updatedAt);
     }
+
+    public boolean isExpired() {
+        return "Đã quá hạn phản hồi".equals(statusLabel)
+                || (!canRespond && "Sent_Candidate".equals(offerStatus));
+    }
 }

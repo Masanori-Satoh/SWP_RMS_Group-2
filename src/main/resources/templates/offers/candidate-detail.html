@@ -58,7 +58,7 @@
             Cảm ơn bạn đã dành thời gian và sự quan tâm tới cơ hội làm việc tại Mộc RMS. Chúc bạn luôn gặt hái được nhiều thành công trên chặng đường sự nghiệp tiếp theo!
         </p>
     </div>
-    <div th:if="${offer.statusLabel == 'Đã quá hạn phản hồi' and decisionType == null}" class="alert alert--neutral cof-system-banner no-print" role="status">
+    <div th:if="${offer.expired and decisionType == null}" class="alert alert--neutral cof-system-banner no-print" role="status">
         <div class="cof-system-banner__header">
             <strong>⏱ Thư mời đã quá hạn phản hồi</strong>
         </div>
