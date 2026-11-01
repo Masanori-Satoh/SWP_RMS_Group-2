@@ -1,168 +1,274 @@
 /* =============================================================================
    PAGES/JOB-DETAIL.CSS — Chi tiết tin tuyển dụng (/jobs/{id}) candidate/job-detail.html
-   Tách từ job-board.css cũ. Chỉ chứa phần catalog chưa có; badge, nút, alert, card dùng
-   nguyên components.css. Chỉ dùng token của tokens.css.
+   Badge, nút, alert, card dùng nguyên components.css. Chỉ dùng token của tokens.css;
+   biến --jd-* bên dưới là cách phối token riêng của trang (bo, bóng, nền xanh bạc hà như landing).
    ============================================================================= */
 
-/* Nền .adw-scene phủ vùng main; khoảng đệm dưới topbar nổi lấy từ .public-main-content */
 .jd-page {
+  --jd-radius: 16px;
+  --jd-shadow: 0 1px 2px color-mix(in srgb, var(--ink) 6%, transparent),
+               0 12px 32px color-mix(in srgb, var(--brand-dark) 9%, transparent);
+  --jd-mint: color-mix(in srgb, var(--brand-soft) 65%, var(--surface));
   position: relative;
   isolation: isolate;
+  padding-bottom: var(--s16);
+  /* Cắt ảnh nền cố định trong vùng main, không đè lên footer phía dưới */
+  clip-path: inset(0);
 }
 
-/* Ảnh nền đứng yên khi cuộn (cùng cách trang /portal, candidate-shell.css): không kéo dãn theo trang dài */
+/* Ảnh nền đứng yên khi cuộn (cùng cách trang /portal), phủ trắng dày hơn để trang sáng, đỡ xám */
 .jd-page > .adw-scene {
   position: fixed;
 }
 
-/* Cắt ảnh nền cố định trong vùng main, không đè lên footer phía dưới */
-.jd-page {
-  clip-path: inset(0);
+.jd-page > .adw-scene::after {
+  background: color-mix(in srgb, var(--surface) 74%, transparent);
 }
 
+.jd-page > .container {
+  max-width: 1200px;
+}
+
+/* Bố cục 2 cột ~ 8:4; cột phải dính dưới topbar khi cuộn */
 .job-detail-layout {
   display: grid;
-  grid-template-columns: 1fr 340px;
-  gap: 48px;
+  grid-template-columns: minmax(0, 1fr) 340px;
+  gap: var(--s8);
   align-items: start;
-  margin-top: 32px;
+  margin-top: var(--s4);
 }
 
-.job-detail-title {
-  font-family: var(--sans);
-  font-size: clamp(28px, 3.4vw, 40px);
-  font-weight: 800;
-  line-height: 1.25;
-  letter-spacing: -0.02em;
-  margin-bottom: 12px;
-  color: var(--ink);
+.job-content {
+  display: grid;
+  gap: var(--s6);
+  min-width: 0;
 }
 
-.section-title {
-  position: relative;
+.job-header-card,
+.job-section-card,
+.summary-card,
+.support-card {
+  border: 1px solid var(--line);
+  border-radius: var(--jd-radius);
+  background: var(--surface);
+  box-shadow: var(--jd-shadow);
+}
+
+/* ---- Thẻ đầu: tên vị trí ---- */
+.job-header-card {
+  padding: var(--s8);
+}
+
+.job-header-badges {
   display: flex;
-  align-items: center;
-  gap: 10px;
-  font-family: var(--sans);
-  font-size: 20px;
-  font-weight: 700;
-  letter-spacing: -0.01em;
-  margin-bottom: 18px;
-  padding-bottom: 12px;
-  border-bottom: 1px solid var(--line);
+  flex-wrap: wrap;
+  gap: var(--s2);
+  margin-bottom: var(--s5);
+}
+
+.job-header-badges .badge {
+  max-width: 100%;
+  border-radius: var(--radius-full);
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+
+.job-header-badges .badge--neutral {
+  border-color: transparent;
+  background: var(--jd-mint);
   color: var(--brand-dark);
 }
 
-.section-title::before {
-  content: '';
-  display: inline-block;
-  width: 4px;
-  height: 18px;
-  border-radius: var(--radius-sm);
-  background: var(--brand);
-  flex-shrink: 0;
+.job-detail-title {
+  margin: 0 0 var(--s5);
+  color: var(--ink);
+  font-family: var(--serif);
+  font-size: clamp(28px, 3.2vw, 40px);
+  font-weight: 600;
+  line-height: 1.25;
+  letter-spacing: -0.01em;
 }
 
-.section-title::after {
-  content: '';
-  position: absolute;
-  bottom: -1px;
-  left: 0;
-  width: 48px;
-  height: 2px;
-  border-radius: var(--radius-sm);
-  background: var(--brand);
+.job-meta-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s5);
+  padding-top: var(--s4);
+  border-top: 1px solid var(--line);
+  color: var(--muted);
+  font-size: var(--font-sm);
+}
+
+.job-meta-item {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s2);
+}
+
+.job-meta-item svg {
+  color: var(--brand);
+}
+
+.job-meta-item strong {
+  color: var(--ink);
+}
+
+/* ---- Thẻ nội dung: một khối đọc liền mạch ---- */
+.job-section-card {
+  padding: var(--s8);
+}
+
+.jd-section + .jd-section {
+  margin-top: var(--s8);
+  padding-top: var(--s8);
+  border-top: 1px solid var(--line);
+}
+
+.section-title {
+  margin: 0 0 var(--s4);
+  color: var(--brand-dark);
+  font-family: var(--sans);
+  font-size: var(--font-lg);
+  font-weight: 700;
+  letter-spacing: -0.01em;
 }
 
 .rich-text {
-  font-size: 16px;
-  line-height: 1.7;
+  max-width: 72ch;
   color: var(--ink);
+  font-size: var(--font-base);
+  line-height: 1.75;
 }
 
-.rich-text ul, .rich-text ol {
-  padding-left: 24px;
-  margin-bottom: 16px;
+.rich-text p {
+  margin: 0 0 var(--s3);
+}
+
+.rich-text ul,
+.rich-text ol {
+  margin: 0 0 var(--s3);
+  padding-left: var(--s6);
 }
 
 .rich-text li {
-  margin-bottom: 8px;
+  margin-bottom: var(--s2);
 }
 
+.rich-text li::marker {
+  color: var(--brand);
+}
+
+/* ---- Cột phải ---- */
 .job-sidebar {
   position: sticky;
-  top: 96px;
+  top: calc(var(--topbar-h) + var(--s8));
+  display: grid;
+  gap: var(--s5);
 }
 
 .summary-card {
-  padding: 28px;
-  background: var(--surface);
-  border: 1px solid var(--line);
-  border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-md);
+  padding: var(--s6);
 }
 
-.summary-card h3 {
-  position: relative;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-family: var(--sans);
-  font-size: 18px;
-  font-weight: 700;
-  letter-spacing: -0.01em;
-  margin-bottom: 20px;
+.summary-card__title,
+.support-card__title {
+  margin: 0 0 var(--s4);
   color: var(--ink);
-}
-
-.summary-card h3::before {
-  content: '';
-  display: inline-block;
-  width: 3.5px;
-  height: 16px;
-  border-radius: 3px;
-  background: linear-gradient(180deg, var(--brand), var(--brand));
-  flex-shrink: 0;
+  font-family: var(--sans);
+  font-size: var(--font-md);
+  font-weight: 700;
 }
 
 .summary-list {
-  list-style: none;
-  padding: 0;
+  display: grid;
+  gap: var(--s4);
   margin: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-  font-size: 14px;
+  padding: 0;
+  list-style: none;
 }
 
+/* Nhãn xám chữ thường, giá trị đen đậm: tương phản rõ */
 .summary-label {
-  color: var(--muted);
   display: block;
-  font-size: 12px;
-  text-transform: uppercase;
-  letter-spacing: .06em;
-  font-weight: 700;
-  margin-bottom: 4px;
+  margin-bottom: 2px;
+  color: var(--muted);
+  font-size: var(--font-sm);
 }
 
 .summary-value {
-  font-weight: 600;
   color: var(--ink);
-  font-size: 15px;
+  font-size: var(--font-base);
+  font-weight: 600;
+  overflow-wrap: anywhere;
 }
 
-@media (max-width: 1024px) {
-  .job-detail-layout {
-    grid-template-columns: 1fr;
-  }
-  .job-sidebar {
-    position: static;
-  }
+.job-action-wrap {
+  margin-top: var(--s6);
+  padding-top: var(--s5);
+  border-top: 1px solid var(--line);
+}
+
+.job-action-wrap .btn--primary {
+  min-height: 48px;
+  border-radius: var(--radius-full);
+  font-size: var(--font-md);
+  box-shadow: 0 6px 16px color-mix(in srgb, var(--brand-dark) 24%, transparent);
+}
+
+.job-action-wrap .btn--primary:hover {
+  transform: translateY(-1px);
+}
+
+.btn-full-width {
+  width: 100%;
+}
+
+.internal-employee-notice {
+  padding: var(--s4);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md);
+  background: var(--surface-subtle);
+  color: var(--muted);
+  font-size: var(--font-sm);
+  line-height: 1.5;
+  text-align: center;
+}
+
+.internal-employee-notice strong {
+  display: block;
+  margin-bottom: var(--s1);
+  color: var(--ink);
+}
+
+.internal-employee-notice__link {
+  margin-top: var(--s3);
+}
+
+.support-card {
+  padding: var(--s6);
+  background: var(--jd-mint);
+}
+
+.support-card__title {
+  margin-bottom: var(--s2);
+  color: var(--brand-dark);
+}
+
+.support-card p {
+  margin: 0 0 var(--s4);
+  color: var(--muted);
+  font-size: var(--font-sm);
+  line-height: 1.55;
+}
+
+.support-card .btn {
+  border-radius: var(--radius-full);
 }
 
 .job-detail-alert {
   flex-wrap: wrap;
   margin-bottom: var(--s6);
+  border-radius: var(--jd-radius);
   box-shadow: var(--shadow-sm);
 }
 
@@ -175,115 +281,26 @@
   white-space: nowrap;
 }
 
-.job-action-wrap {
-  margin-top: var(--s4);
+@media (max-width: 1024px) {
+  .job-detail-layout {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .job-sidebar {
+    position: static;
+  }
 }
 
-.internal-employee-notice {
-  background: var(--surface-subtle);
-  color: var(--muted);
-  padding: 14px;
-  border-radius: var(--radius-sm);
-  text-align: center;
-  font-size: 13px;
-  line-height: 1.5;
-  border: 1px solid var(--line);
-}
+@media (max-width: 640px) {
+  .job-header-card,
+  .job-section-card {
+    padding: var(--s5);
+  }
 
-.internal-employee-notice strong {
-  display: block;
-  color: var(--ink);
-  margin-bottom: 4px;
-}
-
-.internal-employee-notice__link {
-  margin-top: 12px;
-}
-
-.btn-full-width {
-  width: 100%;
-}
-
-.job-header-card {
-  padding: 32px;
-  background: var(--surface);
-  border: 1px solid var(--line);
-  border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-md);
-  margin-bottom: 28px;
-}
-
-.job-header-badges {
-  display: flex;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 10px;
-  margin-bottom: 16px;
-}
-
-.job-department-name {
-  font-size: 15px;
-  font-weight: 600;
-  color: var(--brand);
-  margin-bottom: 12px;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.job-meta-row {
-  display: flex;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 20px;
-  padding-top: 16px;
-  border-top: 1px solid var(--line);
-  color: var(--muted);
-  font-size: 13.5px;
-}
-
-.job-meta-item {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-}
-
-.job-meta-item svg {
-  color: var(--brand);
-}
-
-.job-section-card {
-  padding: 28px 32px;
-  background: var(--surface);
-  border: 1px solid var(--line);
-  border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-md);
-  margin-bottom: 24px;
-}
-
-.support-card {
-  margin-top: 24px;
-  padding: 24px;
-  background: var(--surface);
-  border: 1px solid var(--line);
-  border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-md);
-}
-
-.support-card h4 {
-  font-family: var(--sans);
-  font-size: 16px;
-  font-weight: 700;
-  color: var(--brand-dark);
-  margin-top: 0;
-  margin-bottom: 8px;
-}
-
-.support-card p {
-  font-size: 13.5px;
-  color: var(--muted);
-  line-height: 1.5;
-  margin-bottom: 16px;
+  .jd-section + .jd-section {
+    margin-top: var(--s6);
+    padding-top: var(--s6);
+  }
 }
 
 /* -----------------------------------------------------------------------------

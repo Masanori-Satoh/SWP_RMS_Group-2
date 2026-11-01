@@ -1,39 +1,97 @@
 /* =============================================================================
    PAGES/JOB-BOARD.CSS — Jobs Board (/jobs, candidate/job-board.html)
-   Chỉ chứa phần catalog chưa có: bố cục form tìm kiếm, thanh kết quả, trạng thái rỗng.
-   Thẻ việc làm, nút, form, lưới, phân trang dùng nguyên catalog (components.css).
+   Chỉ chứa phần catalog chưa có: tiêu đề + số kết quả, thanh tìm kiếm, lưới thẻ, trạng thái rỗng.
+   Thẻ việc làm (fragments/ui/cards :: jobCard) chỉ được ghi đè trong .jb-grid, không đụng chỗ khác.
+   Biến --jb-* là cách phối token riêng của trang (bo, bóng, nền xanh bạc hà như landing).
    Tiền tố class: jb-
    ============================================================================= */
 
 .jb-page {
-  /* Giữ khoảng đệm dưới topbar nổi của .public-main-content; scene (.adw-scene) phủ đúng vùng main */
+  --jb-radius: 16px;
+  --jb-shadow: 0 1px 2px color-mix(in srgb, var(--ink) 6%, transparent),
+               0 12px 32px color-mix(in srgb, var(--brand-dark) 9%, transparent);
+  --jb-shadow-hover: 0 2px 4px color-mix(in srgb, var(--ink) 6%, transparent),
+                     0 20px 40px color-mix(in srgb, var(--brand-dark) 14%, transparent);
+  --jb-mint: color-mix(in srgb, var(--brand-soft) 65%, var(--surface));
   position: relative;
   isolation: isolate;
-  padding-bottom: var(--s12);
+  padding-bottom: var(--s16);
+  /* Cắt ảnh nền cố định trong vùng main, không đè lên footer phía dưới */
+  clip-path: inset(0);
 }
 
-/* Ảnh nền đứng yên khi cuộn (cùng cách trang /portal, candidate-shell.css) */
+/* Ảnh nền đứng yên khi cuộn (cùng cách trang /portal), phủ trắng dày hơn để trang sáng, đỡ xám */
 .jb-page > .adw-scene {
   position: fixed;
 }
 
-/* Cắt ảnh nền cố định trong vùng main, không đè lên footer phía dưới */
-.jb-page {
-  clip-path: inset(0);
+.jb-page > .adw-scene::after {
+  background: color-mix(in srgb, var(--surface) 74%, transparent);
 }
 
-.jb-page .page-header {
-  margin-bottom: var(--s6);
+.jb-page > .container {
+  max-width: 1200px;
 }
 
-/* Form tìm kiếm: từ khóa rộng gấp đôi, 2 ô chọn, nút bấm thẳng hàng đáy */
+/* ---- Tiêu đề + số kết quả ---- */
+.jb-header {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: var(--s4);
+  margin: var(--s6) 0 var(--s6);
+}
+
+.jb-title {
+  color: var(--ink);
+  font-family: var(--serif);
+  font-size: clamp(30px, 3.4vw, 42px);
+  font-weight: 600;
+  line-height: 1.2;
+}
+
+.jb-results {
+  display: flex;
+  align-items: center;
+  gap: var(--s3);
+}
+
+.jb-results__count {
+  margin: 0;
+  color: var(--muted);
+  font-size: var(--font-sm);
+}
+
+.jb-results__count strong {
+  display: inline-grid;
+  place-items: center;
+  min-width: 32px;
+  height: 32px;
+  margin-right: var(--s1);
+  padding: 0 var(--s2);
+  border-radius: var(--radius-full);
+  background: var(--brand-dark);
+  color: var(--surface);
+  font-variant-numeric: tabular-nums;
+}
+
+.jb-results .btn {
+  border-radius: var(--radius-full);
+}
+
+/* ---- Thanh tìm kiếm: một khối bo tròn, từ khóa rộng gấp đôi, nút thẳng hàng đáy ---- */
 .jb-search {
   display: grid;
   grid-template-columns: 2fr 1fr 1fr auto;
   gap: var(--s4);
   align-items: end;
+  margin-bottom: var(--s8);
   padding: var(--s5) var(--s6);
-  margin-bottom: var(--s6);
+  border: 1px solid var(--line);
+  border-radius: var(--jb-radius);
+  background: var(--surface);
+  box-shadow: var(--jb-shadow);
 }
 
 .jb-search .form-group {
@@ -43,9 +101,9 @@
 .jb-search .form-label {
   display: block;
   margin-bottom: var(--s2);
+  color: var(--muted);
   font-size: var(--font-sm);
   font-weight: 600;
-  color: var(--ink);
 }
 
 .jb-search .form-input,
@@ -53,6 +111,8 @@
   width: 100%;
   height: var(--input-h);
   box-sizing: border-box;
+  border-radius: var(--radius-md);
+  background: var(--surface-subtle);
 }
 
 .jb-search .form-input:focus,
@@ -60,80 +120,103 @@
   border-color: var(--brand);
   outline: 2px solid var(--brand);
   outline-offset: -1px;
+  background: var(--surface);
 }
 
 .jb-search__submit .btn {
-  height: var(--btn-h);
+  height: var(--input-h);
+  padding-inline: var(--s6);
+  border-radius: var(--radius-full);
   white-space: nowrap;
 }
 
-.jb-results {
+/* ---- Lưới thẻ việc làm ---- */
+.jb-grid {
+  gap: var(--s5);
+}
+
+.jb-grid .job-modern-card {
   display: flex;
-  align-items: center;
-  justify-content: space-between;
-  flex-wrap: wrap;
-  gap: var(--s3);
-  padding: var(--s3) var(--s5);
-  margin-bottom: var(--s6);
+  flex-direction: column;
+  height: 100%;
+  border: 1px solid var(--line);
+  border-radius: var(--jb-radius);
+  background: var(--surface);
+  box-shadow: var(--jb-shadow);
+  transition: transform 180ms ease, box-shadow 180ms ease, border-color 180ms ease;
 }
 
-.jb-results__count {
-  margin: 0;
-  color: var(--muted);
+.jb-grid .job-modern-card:hover {
+  border-color: color-mix(in srgb, var(--brand) 35%, var(--line));
+  box-shadow: var(--jb-shadow-hover);
+  transform: translateY(-3px);
 }
 
-.jb-results__count strong {
-  display: inline-block;
-  min-width: var(--s6);
-  padding: var(--s1) var(--s3);
+/* Cả thẻ là một link: kéo giãn để "Xem chi tiết" luôn nằm đáy thẻ */
+.jb-grid .job-card-link {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+}
+
+.jb-grid .job-card-badges .badge {
+  border-color: transparent;
   border-radius: var(--radius-full);
-  background: var(--brand-soft);
-  color: var(--brand-dark);
-  text-align: center;
-  font-variant-numeric: tabular-nums;
 }
 
+.jb-grid .job-card-badges .badge--neutral {
+  background: var(--jb-mint);
+  color: var(--brand-dark);
+}
+
+.jb-grid .job-card-title {
+  font-family: var(--sans);
+  font-size: var(--font-md);
+  font-weight: 700;
+  line-height: 1.4;
+  letter-spacing: -0.01em;
+}
+
+.jb-grid .job-card-meta-item svg {
+  color: var(--brand);
+}
+
+.jb-grid .job-card-footer {
+  padding-top: var(--s3);
+  border-top: 1px solid var(--line);
+}
+
+/* ---- Không có kết quả ---- */
 .jb-empty {
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: var(--s3);
   padding-block: var(--s12);
+  border-radius: var(--jb-radius);
+  box-shadow: var(--jb-shadow);
   text-align: center;
 }
 
 .jb-empty__title {
   margin: 0;
-  font-size: 20px;
+  font-size: var(--font-lg);
 }
 
 .jb-empty__desc {
   margin: 0 0 var(--s2);
 }
 
-/* Thẻ việc làm nổi trên ảnh nền: chỉ ghi đè trong lưới của trang này, không đụng landing */
-.jb-grid .job-modern-card {
-  border: 1px solid var(--line);
-  border-radius: var(--radius-lg);
-  background: var(--surface);
-  box-shadow: var(--shadow-md);
-  transition: transform 150ms ease, box-shadow 150ms ease;
-}
-
-.jb-grid .job-modern-card:hover {
-  transform: translateY(-2px);
-  box-shadow: var(--shadow-lg);
-}
-
+/* ---- Phân trang ---- */
 .jb-page .pagination-wrapper {
   width: fit-content;
   max-width: 100%;
   margin: var(--s8) auto 0;
   padding: var(--s2) var(--s4);
   border: 1px solid var(--line);
-  border-radius: var(--radius-lg);
+  border-radius: var(--radius-full);
   background: var(--surface);
-  box-shadow: var(--shadow-sm);
+  box-shadow: var(--jb-shadow);
 }
 
 @media (max-width: 992px) {
@@ -145,10 +228,19 @@
   .jb-search__submit {
     grid-column: 1 / -1;
   }
+
+  .jb-search__submit .btn {
+    width: 100%;
+  }
 }
 
 @media (max-width: 768px) {
   .jb-search {
     grid-template-columns: 1fr;
+    padding: var(--s4);
+  }
+
+  .jb-header {
+    align-items: flex-start;
   }
 }
