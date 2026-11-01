@@ -35,6 +35,9 @@ public class CareerPortalController {
 
     private static final int FEATURED_JOB_COUNT = 3;
     private static final int JOBS_PER_PAGE = 6;
+    /** Mục đang sáng trên topbar công khai (layout/public.html); thiếu thì mặc định "Vị trí đang tuyển". */
+    private static final String PUBLIC_NAV = "publicNav";
+    private static final String NAV_JOB_DETAIL = "job-detail";
 
     @ModelAttribute("currentUser")
     public ViewerProfileResponse currentUser(Authentication authentication) {
@@ -94,6 +97,7 @@ public class CareerPortalController {
         PublicJobDetailResponse jobDetail = careerPortalService.getPublishedJobDetail(id, username);
         model.addAttribute("job", jobDetail);
         model.addAttribute("applyForm", new ApplyJobRequest(null));
+        model.addAttribute(PUBLIC_NAV, NAV_JOB_DETAIL);
         return "candidate/job-detail";
     }
 
@@ -133,6 +137,7 @@ public class CareerPortalController {
 
         model.addAttribute("job", careerPortalService.getPublishedJobDetail(id, authentication.getName()));
         model.addAttribute("applyDialogOpen", true);
+        model.addAttribute(PUBLIC_NAV, NAV_JOB_DETAIL);
         return "candidate/job-detail";
     }
 }

@@ -56,12 +56,12 @@
   white-space: nowrap;
 }
 
-/* ---- Tab: dạng pill bo tròn theo mockup, tab đang chọn có aria-current="page" ---- */
+/* ---- Tab: nút tròn kính mờ (cùng kiểu đảo kính của topbar), tab đang chọn có aria-current="page" ---- */
 .myapp-tabs {
   display: flex;
   gap: var(--s2);
   margin-bottom: var(--s5);
-  border-bottom: none;
+  padding: 3px;
   overflow-x: auto;
   scrollbar-width: none;
   -ms-overflow-style: none;
@@ -76,9 +76,14 @@
   flex-shrink: 0;
   align-items: center;
   gap: var(--s2);
-  padding: var(--s2) var(--s4);
-  border-bottom: 2px solid transparent;
-  color: var(--myapp-primary);
+  min-height: 42px;
+  padding: 0 var(--s2) 0 var(--s4);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-full);
+  background: color-mix(in srgb, var(--surface) 78%, transparent);
+  backdrop-filter: blur(12px);
+  box-shadow: var(--shadow-sm);
+  color: var(--ink);
   font-size: var(--font-sm);
   font-weight: 600;
   text-decoration: none;
@@ -87,7 +92,8 @@
 }
 
 .myapp-tab:hover {
-  border-bottom-color: var(--myapp-primary-light);
+  background: color-mix(in srgb, var(--surface) 94%, transparent);
+  color: var(--brand-dark);
 }
 
 .myapp-tab:focus-visible {
@@ -96,22 +102,27 @@
 }
 
 .myapp-tab[aria-current="page"] {
-  background-color: var(--brand-soft);
-  color: var(--brand-dark);
-  border-color: transparent;
+  border-color: var(--brand-dark);
+  background: var(--brand-dark);
+  color: var(--surface);
 }
 
 .myapp-tab__count {
-  padding: 1px 8px;
+  display: inline-grid;
+  place-items: center;
+  min-width: 24px;
+  height: 24px;
+  padding: 0 6px;
   border-radius: var(--radius-full);
-  background-color: var(--surface);
+  background: var(--brand-soft);
+  color: var(--brand-dark);
   font-size: 12px;
   font-weight: 700;
 }
 
 .myapp-tab[aria-current="page"] .myapp-tab__count {
-  background-color: rgba(46, 90, 69, 0.14);
-  color: var(--brand-dark);
+  background: color-mix(in srgb, var(--surface) 22%, transparent);
+  color: var(--surface);
 }
 
 /* ---- Danh sách + thẻ đơn 2 dòng ---- */
@@ -795,14 +806,14 @@ dialog.myapp-cv-dialog {
 
   /* Ba tab chia đều bề ngang để cả ba số đếm cùng hiện ở 375px. */
   .myapp-tabs {
-    gap: 0;
+    gap: var(--s1);
   }
 
   .myapp-tab {
     flex: 1 1 auto;
     justify-content: center;
     gap: var(--s1);
-    padding: var(--s2) var(--s1);
+    padding: 0 var(--s1) 0 var(--s2);
   }
 
   dialog.myapp-cv-dialog {
