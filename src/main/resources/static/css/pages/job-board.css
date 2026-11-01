@@ -12,6 +12,16 @@
   padding-bottom: var(--s12);
 }
 
+/* Ảnh nền đứng yên khi cuộn (cùng cách trang /portal, candidate-shell.css) */
+.jb-page > .adw-scene {
+  position: fixed;
+}
+
+/* Cắt ảnh nền cố định trong vùng main, không đè lên footer phía dưới */
+.jb-page {
+  clip-path: inset(0);
+}
+
 .jb-page .page-header {
   margin-bottom: var(--s6);
 }

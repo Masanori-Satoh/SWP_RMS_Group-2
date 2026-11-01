@@ -31,11 +31,16 @@
   --error: #87372f;
   --error-soft: #f7ece8;
   --radius-md: 8px;
+  --radius-lg: 12px;
+  --avatar-bg: #e7f0e8;
+  --shadow-sm: 0 1px 2px rgba(37, 41, 35, 0.05);
   --topbar-h: 74px;
   --btn-sm-h: 40px;
+  --s1: 4px;
   --s2: 8px;
   --s3: 12px;
   --s4: 16px;
+  --s6: 24px;
   --sans: 'Inter', 'Source Sans 3', 'Segoe UI', system-ui, -apple-system, sans-serif;
   --serif: 'Lora', 'Times New Roman', Georgia, serif;
   --transition: 0.18s cubic-bezier(0.4, 0, 0.2, 1);
@@ -305,7 +310,8 @@
 
 .public-topbar__inner {
   display: flex;
-  align-items: center;
+  /* Các đảo cao bằng nhau: khi đã đăng nhập, cao theo đảo người dùng (khớp đảo nội bộ .adw-actions) */
+  align-items: stretch;
   justify-content: space-between;
   gap: 16px;
   min-height: auto;
@@ -321,7 +327,6 @@
   align-items: center;
   gap: 16px;
   padding: 0 18px;
-  height: 56px;
   min-height: 56px;
   box-sizing: border-box;
   border: 1px solid var(--line);
@@ -412,10 +417,16 @@
   color: var(--brand);
 }
 
+/* Dấu ">" giữa "Vị trí đang tuyển" và mục đang sáng của trang chi tiết tin */
+.public-nav-sep {
+  flex-shrink: 0;
+  color: var(--muted);
+}
+
 /* CỤM ĐẢO GÓC TRÊN CÙNG BÊN PHẢI */
 .public-actions-cluster {
   display: flex;
-  align-items: center;
+  align-items: stretch;
   gap: 12px;
   pointer-events: none;
 }
@@ -425,7 +436,6 @@
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  height: 56px;
   min-height: 56px;
   box-sizing: border-box;
   padding: 0 20px;
@@ -463,17 +473,16 @@
 .public-user-island {
   display: inline-flex;
   align-items: center;
-  height: 56px;
   min-height: 56px;
   box-sizing: border-box;
-  /* Lề trắng rộng hơn cho khớp đảo người dùng của trang nội bộ (dunglt 31/10) */
-  padding: 4px var(--s6);
+  /* Cùng số đo với đảo nội bộ .adw-actions (components.css): lề 4px/16px, bo 12px, bóng nhẹ (dunglt 01/11) */
+  padding: var(--s1) var(--s4);
   border: 1px solid var(--line);
-  border-radius: var(--radius-lg, 16px);
+  border-radius: var(--radius-lg);
   background: color-mix(in srgb, var(--surface, #ffffff) 96%, transparent);
   backdrop-filter: blur(14px);
   -webkit-backdrop-filter: blur(14px);
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05), 0 4px 14px rgba(17, 45, 35, 0.05);
+  box-shadow: var(--shadow-sm);
   pointer-events: auto;
   transition: var(--transition);
 }
@@ -488,7 +497,6 @@
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  height: 56px;
   min-height: 56px;
   box-sizing: border-box;
   padding: 0 12px;
@@ -687,6 +695,11 @@
     padding: 0 8px;
     height: 36px;
   }
+  /* Trang chi tiết tin: màn hẹp chỉ giữ mục đang sáng, bỏ "Vị trí đang tuyển" và dấu ">" */
+  .public-brand-island:has(.public-nav-sep) .public-jobs-btn:not([aria-current]),
+  .public-nav-sep {
+    display: none;
+  }
   .public-dashboard-island {
     height: 46px;
     min-height: 46px;
@@ -715,6 +728,14 @@
     height: 36px;
     padding: 0 10px;
     font-size: 13.5px;
+  }
+}
+
+/* Màn rất hẹp: logo chỉ còn chữ "mộc." để các đảo vừa một hàng */
+@media (max-width: 480px) {
+  .public-brand-island .wordmark .brand-sub,
+  .public-island-divider {
+    display: none;
   }
 }
 

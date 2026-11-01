@@ -14,16 +14,6 @@
     <th:block th:replace="~{fragments/ui/admin-workspace :: scene}"></th:block>
     <div class="container">
 
-        <!-- Breadcrumb / Quay lại danh sách việc làm -->
-        <nav class="mb-4" aria-label="Điều hướng quay lại">
-            <a th:href="@{/jobs}" class="job-detail-back-link">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                    <line x1="19" y1="12" x2="5" y2="12"></line>
-                    <polyline points="12 19 5 12 12 5"></polyline>
-                </svg>
-                <span>Tất cả vị trí tuyển dụng</span>
-            </a>
-        </nav>
 
         <!-- Thông báo vị trí đã đóng tuyển dụng -->
         <div th:if="${!job.isAcceptingApplications}" class="alert alert--danger job-detail-alert">
