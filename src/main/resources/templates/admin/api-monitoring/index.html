@@ -27,11 +27,10 @@
                 <div class="apm-service-identity">
                     <span class="apm-service-icon adw-icon" aria-hidden="true" th:switch="${endpoint.id}">
                         <svg th:case="'internal'" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="7" rx="2"/><rect x="3" y="14" width="18" height="7" rx="2"/><path d="M7 6.5h.01M7 17.5h.01M11 6.5h6M11 17.5h6"/></svg>
-                        <svg th:case="'ai'" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="6" width="12" height="12" rx="2"/><path d="M9 2v4M15 2v4M9 18v4M15 18v4M2 9h4M2 15h4M18 9h4M18 15h4"/><rect x="10" y="10" width="4" height="4" rx=".5"/></svg>
                         <svg th:case="*" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/></svg>
                     </span>
                     <div class="apm-service-heading">
-                        <h2 class="apm-service-name adw-panel-title" th:id="${'service-' + endpoint.id}" th:text="${endpoint.id == 'internal' ? 'Ứng dụng và SQL Server' : (endpoint.id == 'ai' ? 'Sàng lọc hồ sơ bằng AI' : (endpoint.id == 'email' ? 'Dịch vụ email' : endpoint.name))}"></h2>
+                        <h2 class="apm-service-name adw-panel-title" th:id="${'service-' + endpoint.id}" th:text="${endpoint.id == 'internal' ? 'Ứng dụng và SQL Server' : (endpoint.id == 'email' ? 'Dịch vụ email' : endpoint.name)}"></h2>
                         <p class="apm-service-type" th:text="${endpoint.category == 'Internal' ? 'Nội bộ' : ((endpoint.category == 'External Integration' or endpoint.category == 'External Intergration') ? 'Tích hợp ngoài' : endpoint.category)}"></p>
                     </div>
                 </div>

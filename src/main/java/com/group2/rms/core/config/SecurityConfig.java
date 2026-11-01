@@ -100,9 +100,7 @@ public class SecurityConfig {
                                                                 "/admin/candidate-accounts",
                                                                 "/admin/candidate-accounts/**",
                                                                 // api
-                                                                "/admin/api-monitoring", "/admin/api-monitoring/**",
-                                                                // api config
-                                                                "/admin/ai-configuration", "/admin/ai-configuration/**")
+                                                                "/admin/api-monitoring", "/admin/api-monitoring/**")
                                                 .hasAuthority(RoleAuthorities.SYSTEM_ADMIN)
                                                 .requestMatchers("/admin", "/admin/**")
                                                 .hasAuthority(RoleAuthorities.SYSTEM_ADMIN)

@@ -63,7 +63,6 @@ class ApplicationStatusServiceTests {
             when(applications.promoteSuggestionToHmPassed(ID)).thenReturn(1);
             pool.confirm(ID, new TalentPoolConfirmRequest(true));
             verify(audit).record(9, "UPDATE", "Application", ID, "HM_Suggested", "TalentPoolActivated");
-            verify(applications, never()).markScreened(anyInt());
         }
         @Test
         void staleConsentCannotCreateASecondActivationEvent() {

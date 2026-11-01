@@ -146,9 +146,6 @@
 .adm-tools__links { display: flex; flex-wrap: wrap; gap: var(--s2); }
 .adm-tool-link { display: inline-flex; align-items: center; gap: var(--s3); min-height: 44px; padding: var(--s2) var(--s3); color: var(--brand-dark); border: 1px solid var(--line); border-radius: var(--radius-md); font-size: var(--font-base); font-weight: 600; cursor: pointer; transition: background-color var(--transition), border-color var(--transition); }
 .adm-tool-link:hover { background: var(--brand-soft); border-color: var(--brand); }
-.adm-ai-note { max-width: 40ch; color: var(--muted); font-size: var(--font-sm); }
-.adm-ai-note__title { display: flex; align-items: center; flex-wrap: wrap; gap: var(--s3); margin-bottom: var(--s2); }
-.adm-ai-note h3 { font-family: var(--sans); color: var(--ink); font-size: var(--font-md); }
 .adm-scope-control[hidden], .adm-chart-shell[hidden], .adm-status-group[hidden] { display: none; }
 
 

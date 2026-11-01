@@ -7,9 +7,8 @@
    Các phần:
      1. Quy tắc kiểm tra từng trường (FIELD_RULES)
      2. Ô tăng/giảm số (stepper), bộ đếm ký tự
-     3. Bảng tiêu chí sàng lọc + tổng trọng số
-     4. Cột "Sẵn sàng gửi duyệt" (checklist)
-     5. Lưu nháp / Gửi duyệt + bước xác nhận
+     3. Cột "Sẵn sàng gửi duyệt" (checklist)
+     4. Lưu nháp / Gửi duyệt + bước xác nhận
    ============================================================================= */
 (() => {
     'use strict';
@@ -281,118 +280,7 @@
     });
 
     /* -------------------------------------------------------------------------
-     * 3. BẢNG TIÊU CHÍ SÀNG LỌC
-     * ------------------------------------------------------------------------- */
-    const MAX_CRITERIA = 50;           // khớp RequisitionValidator.MAX_CRITERIA_LIMIT
-    const REQUIRED_TOTAL_WEIGHT = 100; // khớp RequisitionValidator.REQUIRED_TOTAL_WEIGHT
-    const rows = document.getElementById('criteria-rows');
-    const criteriaError = document.getElementById('criteria-error');
-
-    /** Spring cần tên ô dạng screeningCriteria[0].criteriaName, [1]... liên tục: đánh lại sau mỗi lần thêm/xóa dòng. */
-    function renumberRows() {
-        rows.querySelectorAll('tr').forEach((row, index) => {
-            row.querySelector('.row-index').textContent = index + 1;
-            row.querySelectorAll('[name]').forEach(input => {
-                input.name = input.name.replace(/screeningCriteria\[(?:\d+|__INDEX__)\]/, `screeningCriteria[${index}]`);
-            });
-        });
-    }
-
-    /**
-     * Dòng tiêu chí "trống" (giống hệt RequisitionValidator.isBlankCriteria): tên, loại, giá trị đều trống
-     * và không bật "Bắt buộc". Trọng số KHÔNG được tính. Dòng trống bị server bỏ qua khi lưu.
-     */
-    function isBlankRow(row) {
-        const text = [...row.querySelectorAll('[name$=".criteriaName"], [name$=".criteriaType"], [name$=".requiredValue"]')]
-            .map(input => input.value.trim()).join('');
-        const mandatory = row.querySelector('input[type=checkbox]')?.checked;
-        return !text && !mandatory;
-    }
-
-    /** Tổng trọng số CHỈ tính các dòng đã nhập (dòng trống bị server bỏ qua nên trọng số của nó không có ý nghĩa). */
-    function totalWeight() {
-        const sum = [...rows.querySelectorAll('tr')]
-            .filter(row => !isBlankRow(row))
-            .reduce((total, row) => total + Math.round((Number(row.querySelector('.rqf-weight').value) || 0) * 100), 0);
-        return sum / 100;
-    }
-
-    function updateWeightBox() {
-        const total = totalWeight();
-        const box = document.getElementById('rqf-weight-box');
-        document.getElementById('rqf-weight-total').textContent = `${total}%`;
-        document.getElementById('rqf-weight-fill').style.width = `${Math.min(total, 100)}%`;
-        box.classList.toggle('is-ok', total === REQUIRED_TOTAL_WEIGHT);
-        box.classList.toggle('is-over', total > REQUIRED_TOTAL_WEIGHT);
-        document.getElementById('rqf-weight-state').textContent = total === REQUIRED_TOTAL_WEIGHT ? 'Đã đủ'
-            : total > REQUIRED_TOTAL_WEIGHT ? `Thừa ${Math.round((total - 100) * 100) / 100}%`
-            : `Còn thiếu ${Math.round((100 - total) * 100) / 100}%`;
-    }
-
-    /** Kiểm tra bảng tiêu chí. Khớp server: dòng đã nhập phải đủ trường; gửi duyệt cần ≥ 1 dòng, tên không trùng, tổng 100%. */
-    function validateCriteria(action) {
-        const filled = [...rows.querySelectorAll('tr')].filter(row => !isBlankRow(row));
-        let message = '';
-
-        const incomplete = filled.some(row => [...row.querySelectorAll('[name$=".criteriaName"], [name$=".criteriaType"], [name$=".requiredValue"], [name$=".weight"]')]
-            .some(input => !input.value.trim()));
-        const names = filled.map(row => row.querySelector('[name$=".criteriaName"]').value.trim().toLowerCase());
-
-        if (incomplete) {
-            message = 'Mỗi tiêu chí đã nhập cần đủ tên, loại, giá trị yêu cầu và trọng số.';
-        } else if (new Set(names).size !== names.length) {
-            message = 'Tên các tiêu chí không được trùng nhau.';
-        } else if (action === 'submit' && (filled.length === 0 || totalWeight() !== REQUIRED_TOTAL_WEIGHT)) {
-            message = 'Vui lòng thêm đầy đủ tiêu chí với tổng trọng số đúng bằng 100%.';
-        }
-        criteriaError.textContent = message;
-        criteriaError.hidden = !message;
-        return !message;
-    }
-
-    document.getElementById('btn-add-criteria').addEventListener('click', () => {
-        if (rows.children.length >= MAX_CRITERIA) {
-            criteriaError.textContent = `Chỉ được thêm tối đa ${MAX_CRITERIA} tiêu chí.`;
-            criteriaError.hidden = false;
-            return;
-        }
-        const newRow = document.getElementById('criteria-template').content.firstElementChild.cloneNode(true);
-        rows.appendChild(newRow);
-        renumberRows();
-        updateWeightBox();
-        refreshChecklist();
-        newRow.querySelector('input:not([type=hidden])').focus();
-    });
-
-    rows.addEventListener('click', event => {
-        if (event.target.closest('[data-remove-criterion]')) {
-            event.target.closest('tr').remove();
-            renumberRows();
-            updateWeightBox();
-            refreshChecklist();
-        }
-    });
-    rows.addEventListener('input', updateWeightBox);
-    rows.addEventListener('change', updateWeightBox);
-
-    // "Chia đều trọng số": chia 100 cho các dòng đã nhập; dòng cuối nhận phần dư để tổng đúng 100
-    document.getElementById('rqf-split-weight').addEventListener('click', () => {
-        const inputs = [...rows.querySelectorAll('tr')].filter(row => !isBlankRow(row)).map(row => row.querySelector('.rqf-weight'));
-        if (!inputs.length) {
-            return;
-        }
-        const share = Math.floor(10000 / inputs.length) / 100;
-        inputs.forEach((input, index) => {
-            input.value = index === inputs.length - 1
-                ? Math.round((100 - share * (inputs.length - 1)) * 100) / 100
-                : share;
-        });
-        updateWeightBox();
-        refreshChecklist();
-    });
-
-    /* -------------------------------------------------------------------------
-     * 4. CỘT "SẴN SÀNG GỬI DUYỆT"
+     * 3. CỘT "SẴN SÀNG GỬI DUYỆT"
      *    Mỗi mục bắt buộc khi gửi duyệt là một dòng ✓ / chưa xong, bấm vào thì nhảy tới trường đó.
      * ------------------------------------------------------------------------- */
     function refreshChecklist() {
@@ -403,8 +291,6 @@
             return true;
         };
         const items = FIELD_RULES.map(rule => ({ label: rule.label, target: rule.radio ? rule.id + '-group' : rule.id, done: isFieldDone(rule) }));
-        const filledRows = [...rows.querySelectorAll('tr')].filter(row => !isBlankRow(row)).length;
-        items.push({ label: 'Tiêu chí đủ 100%', target: 'rqf-criteria', done: filledRows > 0 && totalWeight() === REQUIRED_TOTAL_WEIGHT });
 
         const doneCount = items.filter(item => item.done).length;
         document.getElementById('rqf-progress').textContent = `${doneCount}/${items.length} mục bắt buộc đã xong`;
@@ -431,15 +317,14 @@
     form.addEventListener('change', refreshChecklist);
 
     /* -------------------------------------------------------------------------
-     * 5. LƯU NHÁP / GỬI DUYỆT
+     * 4. LƯU NHÁP / GỬI DUYỆT
      * ------------------------------------------------------------------------- */
     /** Kiểm tra toàn bộ form; trả về true nếu được phép gửi lên server. */
     function validateAll(action) {
         const fieldsOk = FIELD_RULES.map(rule => validateField(rule, action)).every(Boolean);
         const numbersOk = validateNumbers();
-        const criteriaOk = validateCriteria(action);
-        if (!(fieldsOk && numbersOk && criteriaOk)) {
-            const firstError = form.querySelector('[aria-invalid="true"], .is-invalid input') || (criteriaOk ? null : criteriaError);
+        if (!(fieldsOk && numbersOk)) {
+            const firstError = form.querySelector('[aria-invalid="true"], .is-invalid input');
             firstError?.scrollIntoView({ behavior: 'smooth', block: 'center' });
             firstError?.focus?.({ preventScroll: true });
             return false;
@@ -490,12 +375,6 @@
     });
 
     // Khởi tạo trạng thái ban đầu.
-    // Bản nháp chưa có tiêu chí nào thì thêm sẵn 1 dòng trống cho người dùng nhập (dòng trống không bị lưu).
-    if (rows.children.length === 0) {
-        rows.appendChild(document.getElementById('criteria-template').content.firstElementChild.cloneNode(true));
-    }
-    renumberRows();
-    updateWeightBox();
     refreshChecklist();
     document.getElementById('validation-summary')?.focus();
 })();

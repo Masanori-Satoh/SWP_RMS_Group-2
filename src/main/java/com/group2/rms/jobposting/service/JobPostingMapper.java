@@ -10,7 +10,6 @@ import com.group2.rms.jobposting.dto.JobPostingRequest;
 import com.group2.rms.jobposting.entity.JobPosting;
 import com.group2.rms.jobposting.validator.JobPostingValidator;
 import com.group2.rms.requisition.entity.JobRequisition;
-import com.group2.rms.requisition.entity.ScreeningCriteria;
 import com.group2.rms.requisition.service.RequisitionLabels;
 import com.group2.rms.user.entity.User;
 import lombok.RequiredArgsConstructor;
@@ -154,8 +153,7 @@ public class JobPostingMapper {
                         .totalApplications(stats.total())
                         .applicationsLast7Days(stats.last7Days())
                         .pendingApplications(stats.pending())
-                        .aiPassedApplications(stats.aiPassed())
-                        .aiThreshold(stats.aiThreshold())
+                        .passedCvRoundApplications(stats.passedCvRound())
                         .interviewingApplications(stats.interviewing())
                         .hiredApplications(stats.hired())
                         .recentApplications(stats.recent())
@@ -326,35 +324,11 @@ public class JobPostingMapper {
 
     // ----- Các hàm nhỏ -----
 
-    /** Yêu cầu ứng viên điền sẵn: chi tiết yêu cầu + danh sách tiêu chí bắt buộc. */
+    /** Yêu cầu ứng viên điền sẵn: chi tiết yêu cầu của phiếu. */
     private String requirementsFromRequisition(JobRequisition requisition) {
-        StringBuilder requirements = new StringBuilder();
-        if (requisition.getRequirementDetails() != null && !requisition.getRequirementDetails().isBlank()) {
-            requirements.append(requisition.getRequirementDetails().trim());
-        }
-        List<ScreeningCriteria> mandatory = new ArrayList<>();
-        if (requisition.getScreeningCriteria() != null) {
-            for (ScreeningCriteria criteria : requisition.getScreeningCriteria()) {
-                if (Boolean.TRUE.equals(criteria.getIsMandatory())) {
-                    mandatory.add(criteria);
-                }
-            }
-        }
-        if (mandatory.isEmpty()) {
-            return requirements.toString().trim();
-        }
-        if (!requirements.isEmpty()) {
-            requirements.append("\n\n");
-        }
-        requirements.append("Tiêu chí bắt buộc:\n");
-        for (ScreeningCriteria criteria : mandatory) {
-            requirements.append("- ").append(criteria.getCriteriaName());
-            if (criteria.getRequiredValue() != null && !criteria.getRequiredValue().isBlank()) {
-                requirements.append(": ").append(criteria.getRequiredValue());
-            }
-            requirements.append("\n");
-        }
-        return requirements.toString().trim();
+        // dunglt bổ sung: bỏ phần chép "Tiêu chí bắt buộc" (gỡ tiêu chí sàng lọc, 01/11)
+        String details = requisition.getRequirementDetails();
+        return details == null ? "" : details.trim();
     }
 
     private static String departmentName(JobRequisition requisition) {

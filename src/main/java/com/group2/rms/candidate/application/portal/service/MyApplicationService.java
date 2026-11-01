@@ -40,8 +40,8 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class MyApplicationService {
 
-    /** Chỉ rút được khi đơn còn ở vòng đầu, HR chưa duyệt (SRS: Applied, Screening). */
-    static final Set<String> WITHDRAWABLE_STATUSES = Set.of("Applied", "AI_Screened");
+    /** Chỉ rút được khi đơn còn chờ sàng lọc, HR chưa duyệt (BR-CAN-03). */
+    static final Set<String> WITHDRAWABLE_STATUSES = Set.of("Applied");
 
     /** Tab của danh sách; giá trị khác (gõ tay trên URL) là "Tất cả". */
     public static final String TAB_ALL = "all";

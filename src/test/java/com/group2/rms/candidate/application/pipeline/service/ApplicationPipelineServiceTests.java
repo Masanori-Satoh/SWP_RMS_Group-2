@@ -10,11 +10,9 @@ import com.group2.rms.candidate.application.pipeline.dto.ApplicationDetailRespon
 import com.group2.rms.candidate.application.pipeline.dto.ApplicationListResponse;
 import com.group2.rms.candidate.application.pipeline.dto.ApplicationPipelineResponse;
 import com.group2.rms.candidate.application.pipeline.dto.ApplicationSearch;
-import com.group2.rms.candidate.domain.entity.AIScreeningResult;
 import com.group2.rms.candidate.domain.entity.Application;
 import com.group2.rms.candidate.domain.entity.ApplicationReview;
 import com.group2.rms.candidate.domain.entity.Candidate;
-import com.group2.rms.candidate.domain.repository.AIScreeningResultRepository;
 import com.group2.rms.candidate.domain.repository.ApplicationRepository;
 import com.group2.rms.candidate.application.pipeline.repository.ApplicationPipelineRepository;
 import com.group2.rms.candidate.domain.repository.ApplicationRepository.ProgressFactsRow;
@@ -64,7 +62,6 @@ class ApplicationPipelineServiceTests {
 
     @Mock ApplicationRepository applications;
     @Mock ApplicationPipelineRepository pipelineQueries;
-    @Mock AIScreeningResultRepository screeningResults;
     @Mock ApplicationReviewRepository reviews;
     @Mock ApplicationAccess access;
     @Mock CvStorage cvStorage;
@@ -75,7 +72,7 @@ class ApplicationPipelineServiceTests {
 
     @BeforeEach
     void setUp() {
-        service = new ApplicationPipelineService(applications, pipelineQueries, screeningResults, reviews, access, cvStorage,
+        service = new ApplicationPipelineService(applications, pipelineQueries, reviews, access, cvStorage,
                 jobPostings);
         when(access.actor()).thenReturn(actor);
     }
@@ -83,7 +80,7 @@ class ApplicationPipelineServiceTests {
     @Test
     void listPassesViewerScopeAndCleanedFilterToRepository() {
         when(access.scopeOf(actor)).thenReturn(ApplicationScope.hiringManager(5, 10));
-        when(pipelineQueries.findPipelineIds(anyBoolean(), any(), any(), any(), any(), any(), any()))
+        when(pipelineQueries.findPipelineIds(anyBoolean(), any(), any(), any(), any(), any()))
                 .thenReturn(List.of(ID));
         when(applications.findProgressFacts(List.of(ID))).thenReturn(List.of(facts("HM_Passed", null)));
         when(pipelineQueries.findPipelineRows(List.of(ID))).thenReturn(List.of(row("HM_Passed")));
@@ -91,13 +88,13 @@ class ApplicationPipelineServiceTests {
                 .thenReturn(true);
 
         ApplicationListResponse result = service.list(
-                new ApplicationSearch(6, "Bogus", "  an.vo  ", "newest", "Bogus"),
+                new ApplicationSearch(6, "Bogus", "  an.vo  ", "Bogus"),
                 PageRequest.of(0, 20, Sort.by("applicationId")));
 
-        verify(pipelineQueries).findPipelineIds(false, 5, 10, 6, null, "an.vo", "newest");
+        verify(pipelineQueries).findPipelineIds(false, 5, 10, 6, null, "an.vo");
         verify(pipelineQueries).findPostingOptions(false, 5, 10);
         assertTrue(result.departmentView());
-        assertEquals(new ApplicationSearch(6, null, "an.vo", "newest", null), result.search());
+        assertEquals(new ApplicationSearch(6, null, "an.vo", null), result.search());
         ApplicationPipelineResponse first = result.applications().getContent().getFirst();
         assertTrue(first.canScheduleInterview());
         assertFalse(first.canCreateOffer());
@@ -109,14 +106,14 @@ class ApplicationPipelineServiceTests {
     @Test
     void listLabelsAndActionsFollowInterviewResult() {
         when(access.scopeOf(actor)).thenReturn(ApplicationScope.ALL);
-        when(pipelineQueries.findPipelineIds(anyBoolean(), any(), any(), any(), any(), any(), any()))
+        when(pipelineQueries.findPipelineIds(anyBoolean(), any(), any(), any(), any(), any()))
                 .thenReturn(List.of(ID));
         when(applications.findProgressFacts(List.of(ID))).thenReturn(List.of(facts("Interviewing", "Passed")));
         when(pipelineQueries.findPipelineRows(List.of(ID))).thenReturn(List.of(row("Interviewing")));
         when(access.canCreateOffer(eq(actor), argThat(p -> p.step() == ApplicationProgressStep.PASSED_AWAITING_OFFER)))
                 .thenReturn(true);
 
-        ApplicationPipelineResponse first = service.list(new ApplicationSearch(null, null, null, null, null),
+        ApplicationPipelineResponse first = service.list(new ApplicationSearch(null, null, null, null),
                 PageRequest.of(0, 20)).applications().getContent().getFirst();
 
         assertEquals("Đạt phỏng vấn, chờ lập offer", first.statusLabel());
@@ -131,13 +128,13 @@ class ApplicationPipelineServiceTests {
     @Test
     void stageCountsUseResolvedProgressNotStoredStatus() {
         when(access.scopeOf(actor)).thenReturn(ApplicationScope.ALL);
-        when(pipelineQueries.findPipelineIds(anyBoolean(), any(), any(), any(), any(), any(), any()))
+        when(pipelineQueries.findPipelineIds(anyBoolean(), any(), any(), any(), any(), any()))
                 .thenReturn(List.of(1, 2, 3, 4, 5));
         when(applications.findProgressFacts(List.of(1, 2, 3, 4, 5))).thenReturn(List.of(
                 facts(1, "Applied", null), facts(2, "HM_Passed", null), facts(3, "HM_Passed", "Failed"),
                 facts(4, "Interviewing", "Passed"), facts(5, "Rejected", null)));
 
-        ApplicationListResponse result = service.list(new ApplicationSearch(null, null, null, null, null),
+        ApplicationListResponse result = service.list(new ApplicationSearch(null, null, null, null),
                 PageRequest.of(0, 20));
 
         assertEquals(Map.of(ApplicationStage.APPLIED, 1L, ApplicationStage.SCREENING, 0L,
@@ -151,7 +148,7 @@ class ApplicationPipelineServiceTests {
     @Test
     void stageFilterKeepsQueryOrderAndPagesInJava() {
         when(access.scopeOf(actor)).thenReturn(ApplicationScope.ALL);
-        when(pipelineQueries.findPipelineIds(anyBoolean(), any(), any(), any(), any(), any(), any()))
+        when(pipelineQueries.findPipelineIds(anyBoolean(), any(), any(), any(), any(), any()))
                 .thenReturn(List.of(5, 4, 3, 2, 1));
         when(applications.findProgressFacts(List.of(5, 4, 3, 2, 1))).thenReturn(List.of(
                 facts(1, "HM_Passed", null), facts(2, "Applied", null), facts(3, "Interviewing", null),
@@ -159,7 +156,7 @@ class ApplicationPipelineServiceTests {
         when(pipelineQueries.findPipelineRows(List.of(1))).thenReturn(List.of(row(1, "HM_Passed")));
 
         ApplicationListResponse result = service.list(
-                new ApplicationSearch(null, null, null, null, "INTERVIEW"), PageRequest.of(1, 2));
+                new ApplicationSearch(null, null, null, "INTERVIEW"), PageRequest.of(1, 2));
 
         assertEquals(List.of(1), result.applications().getContent().stream()
                 .map(ApplicationPipelineResponse::applicationId).toList(), "trang 2 của [5, 3, 1] với 2 dòng/trang");
@@ -173,14 +170,14 @@ class ApplicationPipelineServiceTests {
     @Test
     void pageRowsFollowIdOrder() {
         when(access.scopeOf(actor)).thenReturn(ApplicationScope.ALL);
-        when(pipelineQueries.findPipelineIds(anyBoolean(), any(), any(), any(), any(), any(), any()))
+        when(pipelineQueries.findPipelineIds(anyBoolean(), any(), any(), any(), any(), any()))
                 .thenReturn(List.of(3, 1, 2));
         when(applications.findProgressFacts(List.of(3, 1, 2))).thenReturn(List.of(
                 facts(1, "Applied", null), facts(2, "Applied", null), facts(3, "Applied", null)));
         when(pipelineQueries.findPipelineRows(List.of(3, 1, 2)))
                 .thenReturn(List.of(row(1, "Applied"), row(2, "Applied"), row(3, "Applied")));
 
-        List<Integer> order = service.list(new ApplicationSearch(null, null, null, null, null), PageRequest.of(0, 20))
+        List<Integer> order = service.list(new ApplicationSearch(null, null, null, null), PageRequest.of(0, 20))
                 .applications().getContent().stream().map(ApplicationPipelineResponse::applicationId).toList();
 
         assertEquals(List.of(3, 1, 2), order);
@@ -191,11 +188,11 @@ class ApplicationPipelineServiceTests {
     void progressFactsAreReadInBatchesOf2000() {
         List<Integer> ids = IntStream.rangeClosed(1, 2001).boxed().toList();
         when(access.scopeOf(actor)).thenReturn(ApplicationScope.ALL);
-        when(pipelineQueries.findPipelineIds(anyBoolean(), any(), any(), any(), any(), any(), any()))
+        when(pipelineQueries.findPipelineIds(anyBoolean(), any(), any(), any(), any(), any()))
                 .thenReturn(ids);
         when(applications.findProgressFacts(any())).thenReturn(List.of());
 
-        service.list(new ApplicationSearch(null, null, null, null, null), PageRequest.of(0, 20));
+        service.list(new ApplicationSearch(null, null, null, null), PageRequest.of(0, 20));
 
         verify(applications).findProgressFacts(ids.subList(0, 2000));
         verify(applications).findProgressFacts(List.of(2001));
@@ -204,10 +201,10 @@ class ApplicationPipelineServiceTests {
     @Test
     void emptyListSkipsProgressAndRowQueries() {
         when(access.scopeOf(actor)).thenReturn(ApplicationScope.ALL);
-        when(pipelineQueries.findPipelineIds(anyBoolean(), any(), any(), any(), any(), any(), any()))
+        when(pipelineQueries.findPipelineIds(anyBoolean(), any(), any(), any(), any(), any()))
                 .thenReturn(List.of());
 
-        ApplicationListResponse result = service.list(new ApplicationSearch(null, null, null, null, null),
+        ApplicationListResponse result = service.list(new ApplicationSearch(null, null, null, null),
                 PageRequest.of(0, 20));
 
         verify(applications, never()).findProgressFacts(any());
@@ -221,12 +218,12 @@ class ApplicationPipelineServiceTests {
     void postingFilterLooksUpPostingTitle() {
         when(access.scopeOf(actor)).thenReturn(ApplicationScope.ALL);
         when(access.canOpenJobPosting(actor)).thenReturn(true);
-        when(pipelineQueries.findPipelineIds(anyBoolean(), any(), any(), any(), any(), any(), any()))
+        when(pipelineQueries.findPipelineIds(anyBoolean(), any(), any(), any(), any(), any()))
                 .thenReturn(List.of());
         when(jobPostings.findById(12)).thenReturn(Optional.of(
                 JobPosting.builder().jobPostingId(12).postingTitle("Digital Marketing Executive").build()));
 
-        ApplicationListResponse result = service.list(new ApplicationSearch(12, null, null, null, null),
+        ApplicationListResponse result = service.list(new ApplicationSearch(12, null, null, null),
                 PageRequest.of(0, 20));
 
         assertEquals("Digital Marketing Executive", result.postingTitle());
@@ -236,25 +233,12 @@ class ApplicationPipelineServiceTests {
     @Test
     void withoutPostingFilterThereIsNoPostingTitle() {
         when(access.scopeOf(actor)).thenReturn(ApplicationScope.ALL);
-        when(pipelineQueries.findPipelineIds(anyBoolean(), any(), any(), any(), any(), any(), any()))
+        when(pipelineQueries.findPipelineIds(anyBoolean(), any(), any(), any(), any(), any()))
                 .thenReturn(List.of());
 
-        assertNull(service.list(new ApplicationSearch(null, null, null, null, null), PageRequest.of(0, 20))
+        assertNull(service.list(new ApplicationSearch(null, null, null, null), PageRequest.of(0, 20))
                 .postingTitle());
         verifyNoInteractions(jobPostings);
-    }
-
-    @Test
-    void unknownSortFallsBackToAiScore() {
-        when(access.scopeOf(actor)).thenReturn(ApplicationScope.ALL);
-        when(pipelineQueries.findPipelineIds(anyBoolean(), any(), any(), any(), any(), any(), any()))
-                .thenReturn(List.of());
-
-        ApplicationListResponse result = service.list(new ApplicationSearch(null, null, " ", "salary", null),
-                PageRequest.of(0, 20));
-
-        verify(pipelineQueries).findPipelineIds(true, null, null, null, null, null, "score");
-        assertFalse(result.departmentView());
     }
 
     @Test
@@ -271,15 +255,13 @@ class ApplicationPipelineServiceTests {
         doThrow(new AccessDeniedException("no")).when(access).requireView(actor, application);
 
         assertThrows(AccessDeniedException.class, () -> service.detail(ID));
-        verifyNoInteractions(screeningResults, reviews);
+        verifyNoInteractions(reviews);
     }
 
     @Test
-    void detailMapsLatestScoreActionsAndTimelineNewestFirst() {
+    void detailMapsActionsAndTimelineNewestFirst() {
         Application application = application();
         when(applications.findDetailById(ID)).thenReturn(Optional.of(application));
-        when(screeningResults.findByApplication_ApplicationIdOrderByAiScreeningIdDesc(ID)).thenReturn(List.of(
-                score("79.34", SUBMITTED.plusMinutes(1)), score("60.00", SUBMITTED.plusSeconds(5))));
         when(reviews.findWithReviewerByApplicationId(ID)).thenReturn(List.of(ApplicationReview.builder()
                 .reviewerRole("HR").decision("Pass").comments("Hợp vị trí")
                 .reviewer(User.builder().fullName("Lan HR").build())
@@ -298,15 +280,14 @@ class ApplicationPipelineServiceTests {
         assertEquals("Số 88 Láng Hạ, Đống Đa, Hà Nội", detail.address());
         assertEquals("REQ-007", detail.requisitionCode());
         assertEquals("Sales & Marketing", detail.departmentName());
-        assertEquals(new BigDecimal("79.34"), detail.aiMatchScore());
         assertEquals("Chờ HR duyệt CV", detail.statusLabel());
-        assertEquals(List.of("done", "current", "upcoming", "upcoming", "upcoming"),
+        assertEquals(List.of("current", "upcoming", "upcoming", "upcoming", "upcoming"),
                 detail.stepper().stream().map(StageItem::state).toList());
-        assertEquals("Chờ HR duyệt CV · Đang chờ: HR", detail.stepper().get(1).detail());
+        assertEquals("Chờ HR duyệt CV · Đang chờ: HR", detail.stepper().get(0).detail());
         assertNull(detail.interviewId(), "chưa có lịch phỏng vấn");
-        assertEquals(new ApplicationDetailResponse.Actions(true, false, false, false, true), detail.actions());
+        assertEquals(new ApplicationDetailResponse.Actions(true, false, false, true), detail.actions());
         assertEquals(List.of("Offer: Draft", "Kết quả phỏng vấn: Đạt", "Lịch phỏng vấn: Scheduled", "HR: Đạt",
-                        "AI chấm điểm: 79,34", "AI chấm điểm: 60,00", "Nộp hồ sơ"),
+                        "Nộp hồ sơ"),
                 detail.timeline().stream().map(TimelineItem::title).toList());
         assertEquals("success", detail.timeline().get(1).tone());
         TimelineItem review = detail.timeline().get(3);
@@ -375,7 +356,6 @@ class ApplicationPipelineServiceTests {
     @Test
     void detailStepperFollowsProgressAndExposesLatestInterviewId() {
         when(applications.findDetailById(ID)).thenReturn(Optional.of(application()));
-        when(screeningResults.findByApplication_ApplicationIdOrderByAiScreeningIdDesc(ID)).thenReturn(List.of());
         when(applications.findProgressFacts(List.of(ID))).thenReturn(List.of(facts("Interviewing", "Passed")));
 
         ApplicationDetailResponse detail = service.detail(ID);
@@ -390,25 +370,12 @@ class ApplicationPipelineServiceTests {
     @Test
     void failedInterviewResultIsDangerOnTimeline() {
         when(applications.findDetailById(ID)).thenReturn(Optional.of(application()));
-        when(screeningResults.findByApplication_ApplicationIdOrderByAiScreeningIdDesc(ID)).thenReturn(List.of());
         when(pipelineQueries.findInterviewResultEvents(ID)).thenReturn(List.of(event(SUBMITTED.plusDays(4), "Failed")));
 
         TimelineItem result = service.detail(ID).timeline().getFirst();
 
         assertEquals("Kết quả phỏng vấn: Không đạt", result.title());
         assertEquals("danger", result.tone());
-    }
-
-    @Test
-    void detailWithoutAiScoreLeavesScoreEmpty() {
-        when(applications.findDetailById(ID)).thenReturn(Optional.of(application()));
-        when(screeningResults.findByApplication_ApplicationIdOrderByAiScreeningIdDesc(ID)).thenReturn(List.of());
-
-        ApplicationDetailResponse detail = service.detail(ID);
-
-        assertNull(detail.aiMatchScore());
-        assertNull(detail.screenedAt());
-        assertEquals(List.of("Nộp hồ sơ"), detail.timeline().stream().map(TimelineItem::title).toList());
     }
 
     // ------------------------------------------------------------------ CV
@@ -465,7 +432,7 @@ class ApplicationPipelineServiceTests {
 
     private static ApplicationPipelineResponse row(int id, String status) {
         return new ApplicationPipelineResponse(id, "An Võ", "an.vo@example.com", "Digital Marketing Executive",
-                SUBMITTED, status, new BigDecimal("79.34"));
+                SUBMITTED, status);
     }
 
     private static Application application() {
@@ -480,12 +447,8 @@ class ApplicationPipelineServiceTests {
                 .jobPosting(JobPosting.builder().jobPostingId(12).postingTitle("Digital Marketing Executive")
                         .requisition(requisition).build())
                 .submissionDate(SUBMITTED)
-                .applicationStatus("AI_Screened")
+                .applicationStatus("Applied")
                 .build();
-    }
-
-    private static AIScreeningResult score(String value, LocalDateTime at) {
-        return AIScreeningResult.builder().aiMatchScore(new BigDecimal(value)).screenedAt(at).build();
     }
 
     private static ProgressFactsRow facts(String status, String decision) {

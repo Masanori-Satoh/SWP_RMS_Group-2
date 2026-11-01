@@ -22,7 +22,6 @@ public final class AuditLogLabels {
             Map.entry("TalentPoolCandidateSubmitted", "Trạng thái: Ứng viên đã nộp CV mới"),
             Map.entry("HM_Suggested", "Trạng thái: Chờ xử lý đề xuất"),
             Map.entry("Applied", "Trạng thái: Đã ứng tuyển"),
-            Map.entry("AI_Screened", "Trạng thái: Đã sàng lọc bằng AI"),
             Map.entry("HR_Passed", "Trạng thái: Đã qua vòng nhân sự"),
             Map.entry("HM_Passed", "Trạng thái: Đã qua vòng chuyên môn"),
             Map.entry("Interviewing", "Trạng thái: Đang phỏng vấn"),

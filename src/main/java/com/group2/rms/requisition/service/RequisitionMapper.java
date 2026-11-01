@@ -6,11 +6,8 @@ import com.group2.rms.jobposting.entity.JobPosting;
 import com.group2.rms.requisition.dto.ApprovalResponse;
 import com.group2.rms.requisition.dto.RequisitionRequest;
 import com.group2.rms.requisition.dto.RequisitionResponse;
-import com.group2.rms.requisition.dto.ScreeningCriteriaRequest;
-import com.group2.rms.requisition.dto.ScreeningCriteriaResponse;
 import com.group2.rms.requisition.entity.JobRequisition;
 import com.group2.rms.requisition.entity.RequisitionApproval;
-import com.group2.rms.requisition.entity.ScreeningCriteria;
 import com.group2.rms.requisition.exception.RequisitionValidationException;
 import com.group2.rms.requisition.validator.RequisitionValidator;
 import com.group2.rms.user.entity.User;
@@ -18,7 +15,6 @@ import com.group2.rms.user.entity.User;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
-import java.math.BigDecimal;
 import java.time.Clock;
 import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
@@ -39,18 +35,6 @@ public class RequisitionMapper {
     // ----- Form tạo / sửa / sao chép -----
 
     public RequisitionRequest toEditForm(JobRequisition jobRequisition) {
-        List<ScreeningCriteriaRequest> criteriaList = new ArrayList<>();
-        for (ScreeningCriteria criterion : jobRequisition.getScreeningCriteria()) {
-            criteriaList.add(ScreeningCriteriaRequest.builder()
-                    .criteriaId(criterion.getCriteriaId())
-                    .criteriaName(criterion.getCriteriaName())
-                    .criteriaType(criterion.getCriteriaType())
-                    .requiredValue(criterion.getRequiredValue())
-                    .weight(criterion.getWeight())
-                    .isMandatory(criterion.getIsMandatory())
-                    .build());
-        }
-
         String originalTitle = null;
         if (jobRequisition.getOriginalRequisition() != null) {
             originalTitle = jobRequisition.getOriginalRequisition().getTitle();
@@ -77,7 +61,6 @@ public class RequisitionMapper {
                 .reasonForHiring(jobRequisition.getReasonForHiring())
                 .jobDescription(jobRequisition.getJobDescription())
                 .requirementDetails(jobRequisition.getRequirementDetails())
-                .screeningCriteria(criteriaList)
                 .build();
     }
 
@@ -166,8 +149,6 @@ public class RequisitionMapper {
 
         return toListRow(jobRequisition, viewer, latestPosting, hasLaterRound).toBuilder()
                 .incomplete(incomplete)
-                .screeningCriteria(toCriteriaResponses(jobRequisition.getScreeningCriteria()))
-                .criteriaTotalWeight(totalWeight(jobRequisition.getScreeningCriteria()))
                 // Nhãn tiếng Việt cho các trường thông tin cơ bản
                 .salaryLabel(RequisitionLabels.salary(jobRequisition.getMinSalary(), jobRequisition.getMaxSalary()))
                 .probationLabel(RequisitionLabels.probation(jobRequisition.getProbationDays()))
@@ -198,33 +179,6 @@ public class RequisitionMapper {
         } catch (RequisitionValidationException incomplete) {
             return false;
         }
-    }
-
-    private List<ScreeningCriteriaResponse> toCriteriaResponses(List<ScreeningCriteria> criteria) {
-        List<ScreeningCriteriaResponse> responses = new ArrayList<>();
-        for (ScreeningCriteria criterion : criteria) {
-            responses.add(ScreeningCriteriaResponse.builder()
-                    .criteriaId(criterion.getCriteriaId())
-                    .criteriaName(criterion.getCriteriaName())
-                    .criteriaType(criterion.getCriteriaType())
-                    .criteriaTypeLabel(RequisitionLabels.criteriaType(criterion.getCriteriaType()))
-                    .requiredValue(criterion.getRequiredValue())
-                    .weight(criterion.getWeight())
-                    .isMandatory(criterion.getIsMandatory())
-                    .build());
-        }
-        return responses;
-    }
-
-    /** Tổng trọng số tiêu chí (hiện dưới bảng tiêu chí), bỏ qua tiêu chí chưa có trọng số. */
-    private BigDecimal totalWeight(List<ScreeningCriteria> criteria) {
-        BigDecimal total = BigDecimal.ZERO;
-        for (ScreeningCriteria criterion : criteria) {
-            if (criterion.getWeight() != null) {
-                total = total.add(criterion.getWeight());
-            }
-        }
-        return total.stripTrailingZeros();
     }
 
     private List<ApprovalResponse> toApprovalResponses(List<RequisitionApproval> approvalHistory) {

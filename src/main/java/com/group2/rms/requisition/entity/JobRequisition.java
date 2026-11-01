@@ -3,7 +3,6 @@ package com.group2.rms.requisition.entity;
 import com.group2.rms.core.base.BaseEntity;
 import com.group2.rms.user.entity.Department;
 import com.group2.rms.user.entity.User;
-import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
@@ -12,7 +11,6 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
-import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -113,7 +111,4 @@ public class JobRequisition extends BaseEntity {
     // Cột có trong DB nhưng luồng requisition hiện chưa ghi (không có trạng thái đóng yêu cầu)
     @Column(name = "ClosedAt")
     private java.time.LocalDateTime closedAt;
-
-    @OneToMany(mappedBy = "requisition", cascade = CascadeType.ALL, orphanRemoval = true)
-    private java.util.List<ScreeningCriteria> screeningCriteria;
 }

@@ -24,8 +24,7 @@ public final class ApplicationProgressResolver {
 
     public static ApplicationProgressResponse resolve(ApplicationProgressFacts facts, LocalDateTime now) {
         return switch (facts.applicationStatus()) {
-            case "Applied" -> of(AWAITING_AI);
-            case "AI_Screened" -> of(AWAITING_HR_REVIEW);
+            case "Applied" -> of(AWAITING_HR_REVIEW);
             case "HR_Passed" -> of(AWAITING_HM_REVIEW);
             case "HM_Suggested" -> of(HM_SUGGESTED);
             case "Hired" -> of(HIRED_DONE);

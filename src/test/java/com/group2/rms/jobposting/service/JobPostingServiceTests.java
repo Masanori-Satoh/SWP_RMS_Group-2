@@ -106,7 +106,7 @@ class JobPostingServiceTests {
                 .approvalStatus(RequisitionAccess.STATUS_APPROVED)
                 .department(Department.builder().departmentId(2).departmentName("Sales").build())
                 .minSalary(new BigDecimal("20000000")).maxSalary(new BigDecimal("30000000"))
-                .numberOfPositions(2).screeningCriteria(new ArrayList<>()).build();
+                .numberOfPositions(2).build();
         lenient().when(postings.save(any(JobPosting.class))).thenAnswer(invocation -> invocation.getArgument(0));
     }
 
@@ -480,12 +480,10 @@ class JobPostingServiceTests {
         void getInternalJobPostingDetail_shouldCountApplications_whenPostingIsLive() {
             // Arrange
             existingPosting(40, JobPostingAccess.STATUS_PUBLISHED, NOW.minusDays(10));
-            when(postings.findConfigValue("AI_SCORE_THRESHOLD")).thenReturn(Optional.of("70.00"));
             when(postings.countApplicationsByStatus(40)).thenReturn(List.of(
-                    new Object[] {"Applied", 4L}, new Object[] {"AI_Screened", 5L}, new Object[] {"Interviewing", 2L},
+                    new Object[] {"Applied", 9L}, new Object[] {"Interviewing", 2L},
                     new Object[] {"Hired", 1L}, new Object[] {"Rejected", 2L}));
             when(postings.countApplicationsSince(40, NOW.minusDays(7))).thenReturn(2L);
-            when(postings.countApplicationsWithAiScoreAtLeast(40, new BigDecimal("70"))).thenReturn(7L);
             when(postings.findRecentApplications(eq(40), any(Pageable.class))).thenReturn(List.of());
             when(postings.findByRequisition_RequisitionIdOrderByPostingNoAsc(101)).thenReturn(List.of());
 
@@ -496,11 +494,9 @@ class JobPostingServiceTests {
             verify(access).requireView(eq(hr), any(JobPosting.class));
             assertEquals(14, detail.totalApplications());
             assertEquals(9, detail.pendingApplications());
-            assertEquals(7, detail.aiPassedApplications());
             assertEquals(2, detail.applicationsLast7Days());
             assertEquals(1, detail.hiredApplications());
             assertEquals(2, detail.interviewingApplications());
-            assertEquals("70", detail.aiThreshold().toPlainString());
         }
 
         @Test
@@ -520,7 +516,6 @@ class JobPostingServiceTests {
             JobPosting current = existingPosting(43, JobPostingAccess.STATUS_CLOSED, NOW.minusDays(40));
             JobPosting firstRound = JobPosting.builder().jobPostingId(44).postingNo(2).postingStatus(JobPostingAccess.STATUS_CLOSED)
                     .requisition(requisition).build();
-            when(postings.findConfigValue(any())).thenReturn(Optional.empty());
             when(postings.countApplicationsByStatus(43)).thenReturn(List.of());
             when(postings.findRecentApplications(eq(43), any(Pageable.class))).thenReturn(List.of());
             when(postings.findByRequisition_RequisitionIdOrderByPostingNoAsc(101))
