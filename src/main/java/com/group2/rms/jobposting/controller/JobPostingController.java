@@ -90,16 +90,19 @@ public class JobPostingController {
 
     /** Form tạo tin từ yêu cầu đã duyệt; fromPostingId = "Đăng lại" từ một tin đã đóng. */
     @GetMapping("/create")
-    public String showCreateForm(@RequestParam(value = "requisitionId", required = false) Integer requisitionId,
-            @RequestParam(value = "fromPostingId", required = false) Integer fromPostingId,
+    public String showCreateForm(@RequestParam(value = "requisitionId", required = false) String requisitionIdParam,
+            @RequestParam(value = "fromPostingId", required = false) String fromPostingIdParam,
             Model model, RedirectAttributes flash) {
         User currentUser = access.actor();
+        // Có tham số fromPostingId là "Đăng lại"; lấy phần số như "{1873}" -> 1873
+        boolean isRepost = fromPostingIdParam != null;
+        Integer fromPostingId = parseId(fromPostingIdParam);
         try {
             JobPostingRequest form;
-            if (fromPostingId != null) {
+            if (isRepost) {
                 form = jobPostingService.prepareRepostForm(fromPostingId, currentUser);
             } else {
-                form = jobPostingService.prepareCreateForm(requisitionId, currentUser);
+                form = jobPostingService.prepareCreateForm(parseId(requisitionIdParam), currentUser);
             }
             return renderForm(model, form, currentUser);
         } catch (JobPostingValidationException e) {
@@ -111,10 +114,11 @@ public class JobPostingController {
         }
     }
 
+    /** id nhận dạng chuỗi để URL gõ tay như "{1689}" vẫn hiểu là tin 1689 (không ra lỗi 500). */
     @GetMapping("/{id}/edit")
-    public String showEditForm(@PathVariable("id") Integer id, Model model) {
+    public String showEditForm(@PathVariable("id") String idParam, Model model) {
         User currentUser = access.actor();
-        return renderForm(model, jobPostingService.prepareEditForm(id, currentUser), currentUser);
+        return renderForm(model, jobPostingService.prepareEditForm(parseId(idParam), currentUser), currentUser);
     }
 
     /** Lưu nháp (action=draft) hoặc đăng ngay (action=publish) tin mới. */
@@ -204,7 +208,8 @@ public class JobPostingController {
     }
 
     @GetMapping("/{id}")
-    public String showJobPostingDetail(@PathVariable("id") Integer id, Model model) {
+    public String showJobPostingDetail(@PathVariable("id") String idParam, Model model) {
+        Integer id = parseId(idParam);
         InternalJobPostingDetailResponse detail = jobPostingService.getInternalJobPostingDetail(id, access.actor());
         model.addAttribute("posting", detail);
         model.addAttribute("bodyClass", "jp-detail-page");
@@ -274,6 +279,15 @@ public class JobPostingController {
             return "Đã lưu thay đổi.";
         }
         return PUBLISHED_NOW_MESSAGE;
+    }
+
+    // Lấy phần số của mã gõ trên URL (vd "{1753}" -> 1753); không có số thì trả null để service báo lỗi
+    private static Integer parseId(String raw) {
+        String digits = raw == null ? "" : raw.replaceAll("\\D", "");
+        if (digits.isEmpty() || digits.length() > 9) {
+            return null;
+        }
+        return Integer.valueOf(digits);
     }
 
     private static String redirectToDetail(Integer id) {

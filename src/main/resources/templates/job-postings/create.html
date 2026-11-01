@@ -16,13 +16,8 @@
     <main id="main" layout:fragment="content" class="page-content container adw-page" tabindex="-1" th:with="draftOrNew=${form.draftOrNew}, paused=${form.paused}">
         <th:block th:replace="~{fragments/ui/admin-workspace :: scene}"></th:block>
 
-        <nav class="jpf-crumbs" aria-label="Đường dẫn">
-            <a th:href="@{/internal/job-postings}">Tin tuyển dụng</a> /
-            <span th:text="${isEdit ? 'Chỉnh sửa tin' : 'Tạo tin mới'}">Tạo tin mới</span>
-        </nav>
         <h1 class="adw-title" th:text="${isEdit ? 'Chỉnh sửa tin tuyển dụng' : 'Tạo tin tuyển dụng'}">Tạo tin tuyển dụng</h1>
-        <p class="jpf-lead">Nội dung được điền sẵn từ yêu cầu tuyển dụng đã duyệt. Bạn có thể sửa lại cho hấp dẫn ứng
-            viên trước khi đăng.</p>
+        <p class="jpf-lead">Nội dung được điền sẵn từ yêu cầu tuyển dụng đã duyệt</p>
 
         <!-- ===== Yêu cầu nguồn (chỉ đọc) ===== -->
         <section class="card jpf-source adw-surface" aria-label="Yêu cầu tuyển dụng nguồn" th:object="${form}">
@@ -124,8 +119,7 @@
                             </div>
                             <input class="form-input" th:field="*{postingTitle}" th:maxlength="${titleLimit}"
                                 aria-describedby="postingTitle-help postingTitle-error">
-                            <small id="postingTitle-help" class="jpf-help">Thêm điểm nổi bật để ứng viên dễ tìm, VD:
-                                "Key Account Manager (B2B SaaS)".</small>
+
                             <small id="postingTitle-error" class="field-error"
                                 th:text="${#fields.hasErrors('postingTitle')} ? ${#fields.errors('postingTitle')[0]} : ''"></small>
                         </div>
@@ -152,8 +146,6 @@
                                 </summary>
                                 <div class="jpf-map" id="jpf-map"></div>
                             </details>
-                            <small id="workLocation-help" class="jpf-help">Bấm "Xem bản đồ" để kiểm tra vị trí. Ứng viên
-                                bấm vào địa chỉ sẽ mở Google Maps để xem đường đi.</small>
                             <small id="workLocation-error" class="field-error"
                                 th:text="${#fields.hasErrors('workLocation')} ? ${#fields.errors('workLocation')[0]} : ''"></small>
                         </div>
@@ -185,8 +177,7 @@
                             <input class="form-input jpf-short" th:field="*{numberOfPositionsDisplay}" th:maxlength="${positionsTextLimit}"
                                 aria-label="Số lượng hiển thị"
                                 aria-describedby="numberOfPositionsDisplay-help numberOfPositionsDisplay-error">
-                            <small id="numberOfPositionsDisplay-help" class="jpf-help">Tắt nếu không muốn công khai số
-                                lượng.</small>
+
                             <small id="numberOfPositionsDisplay-error" class="field-error"
                                 th:text="${#fields.hasErrors('numberOfPositionsDisplay')} ? ${#fields.errors('numberOfPositionsDisplay')[0]} : ''"></small>
                         </div>
@@ -218,8 +209,7 @@
                                 th:text="${#fields.hasErrors('jobRequirements')} ? ${#fields.errors('jobRequirements')[0]} : ''"></small>
                         </div>
                         <div class="jpf-field">
-                            <label class="form-label" for="benefits">Quyền lợi <span class="jpf-opt">không bắt
-                                    buộc</span></label>
+                            <label class="form-label" for="benefits">Quyền lợi </label>
                             <div class="jpf-chips" aria-label="Thêm nhanh quyền lợi">
                                 <button type="button" th:each="benefit : ${benefitSuggestions}"
                                     th:data-benefit="${benefit}" th:text="|+ ${benefit}|">+ Lương tháng 13</button>
@@ -235,8 +225,6 @@
                     <section class="jpf-sec" aria-labelledby="jpf-h3">
                         <h2 id="jpf-h3">Thời gian nhận hồ sơ</h2>
 
-                        <p class="jpf-help" th:if="${draftOrNew}">Tin sẽ hiển thị cho ứng viên ngay khi bấm "Đăng tin".</p>
-                        <p class="jpf-help" th:if="*{live}">Tin đã đăng nên ngày đăng giữ nguyên.</p>
 
                         <div class="jpf-field">
                             <label class="form-label" for="applicationDeadline">Hạn nộp hồ sơ <span
@@ -244,14 +232,9 @@
                             <div class="jpf-deadline">
                                 <input class="form-input" type="date" th:field="*{applicationDeadline}"
                                     th:min="${today}"
-                                    aria-describedby="deadline-help deadline-warn applicationDeadline-error">
-                                <div class="jpf-quick" aria-label="Chọn nhanh">
-                                    <button type="button" data-days="14">+14 ngày</button>
-                                    <button type="button" data-days="30">+30 ngày</button>
-                                    <button type="button" data-days="45">+45 ngày</button>
-                                </div>
+                                    aria-describedby="deadline-warn applicationDeadline-error">
+
                             </div>
-                            <small id="deadline-help" class="jpf-help"></small>
                             <small id="deadline-warn" class="jpf-warn"></small>
                             <small id="applicationDeadline-error" class="field-error"
                                 th:text="${#fields.hasErrors('applicationDeadline')} ? ${#fields.errors('applicationDeadline')[0]} : ''"></small>

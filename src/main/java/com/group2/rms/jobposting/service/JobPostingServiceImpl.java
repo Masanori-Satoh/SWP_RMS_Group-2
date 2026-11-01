@@ -191,7 +191,7 @@ public class JobPostingServiceImpl implements JobPostingService {
         auditLogger.log(saved, actor, JobPostingAuditLogger.ACTION_CREATE,
                 JobPostingLabels.LOG_CREATE + ": " + saved.getPostingStatus());
         if (publish) {
-            notificationService.notifyJobPostingPublished(saved, actor);
+            notifyPublishedOrReopened(saved, actor, false);
         }
         return saved.getJobPostingId();
     }
@@ -250,7 +250,7 @@ public class JobPostingServiceImpl implements JobPostingService {
         postings.save(posting);
         auditLogger.logChanges(posting, actor, description, changedKeys, before, after);
         if (isNewPublication) {
-            notificationService.notifyJobPostingPublished(posting, actor);
+            notifyPublishedOrReopened(posting, actor, isPaused);
         }
     }
 
@@ -271,11 +271,12 @@ public class JobPostingServiceImpl implements JobPostingService {
         validator.requirePublishableContent(posting, now);
         requireNoOtherOpenPosting(posting.getRequisition().getRequisitionId(), id);
 
+        boolean wasPaused = JobPostingAccess.STATUS_PAUSED.equals(status);
         posting.setPostingStatus(JobPostingAccess.STATUS_PUBLISHED);
         posting.setPostingDate(now);
         postings.save(posting);
         auditLogger.log(posting, currentUser, JobPostingAuditLogger.ACTION_UPDATE, JobPostingLabels.LOG_PUBLISH);
-        notificationService.notifyJobPostingPublished(posting, currentUser);
+        notifyPublishedOrReopened(posting, currentUser, wasPaused);
     }
 
     @Override
@@ -518,6 +519,16 @@ public class JobPostingServiceImpl implements JobPostingService {
             result.put((Integer) row[0], ((Number) row[1]).intValue());
         }
         return result;
+    }
+
+    /** Rule: tin tạm dừng đăng lại, hoặc lần đăng thứ 2 trở đi (tin trước đã đóng) là "mở lại"; còn lại là phát hành lần đầu. */
+    private void notifyPublishedOrReopened(JobPosting posting, User actor, boolean wasPaused) {
+        boolean repostAfterClose = posting.getPostingNo() != null && posting.getPostingNo() > 1;
+        if (wasPaused || repostAfterClose) {
+            notificationService.notifyJobPostingReopened(posting, actor);
+        } else {
+            notificationService.notifyJobPostingPublished(posting, actor);
+        }
     }
 
     private int nextPostingNo(Integer requisitionId) {

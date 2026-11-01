@@ -216,7 +216,7 @@ class JobPostingIntegrationTests {
     }
 
     @Test
-    @DisplayName("Lọc hạn nộp 'sắp hết hạn' / 'đã quá hạn' -> Đúng nhóm trên SQL Server")
+    @DisplayName("Lọc hạn nộp 'còn hạn' (gồm cả tin sắp hết hạn) / 'đã quá hạn' -> Đúng nhóm trên SQL Server")
     void getListPage_shouldFilterByDeadlineBucket_onSqlServer() {
         // Arrange
         JobRequisition soon = savedRequisition("IT-JP Soon", department);
@@ -228,9 +228,10 @@ class JobPostingIntegrationTests {
         entityManager.clear();
 
         // Act + Assert
-        assertEquals(List.of(TITLE_PREFIX + "Còn 3 ngày"), titles(search(hr, null, JobPostingLabels.DEADLINE_SOON, null)));
         assertEquals(List.of(TITLE_PREFIX + "Quá hạn"), titles(search(hr, null, JobPostingLabels.DEADLINE_PAST, null)));
-        assertEquals(List.of(TITLE_PREFIX + "Còn 30 ngày"), titles(search(hr, null, JobPostingLabels.DEADLINE_OPEN, null)));
+        List<String> stillOpen = titles(search(hr, null, JobPostingLabels.DEADLINE_OPEN, null));
+        assertEquals(2, stillOpen.size());
+        assertTrue(stillOpen.containsAll(List.of(TITLE_PREFIX + "Còn 3 ngày", TITLE_PREFIX + "Còn 30 ngày")));
     }
 
     @Test
@@ -329,23 +330,24 @@ class JobPostingIntegrationTests {
     }
 
     @Test
-    @DisplayName("Lọc hạn nộp 'còn hạn' -> Có tin không hạn và tin hạn từ ngày thứ 8, loại tin hết hạn trong ngày thứ 7")
+    @DisplayName("Lọc hạn nộp 'còn hạn' -> Có tin không hạn và tin chưa tới hạn (dù chỉ còn 30 phút), loại tin vừa quá hạn")
     void getListPage_shouldIncludeNoDeadline_whenDeadlineBucketIsOpen() {
         // Arrange
-        LocalDate today = now.toLocalDate();
         savedPosting(savedRequisition("IT-JP No deadline", department), 1, TITLE_PREFIX + "Không hạn",
                 JobPostingAccess.STATUS_PUBLISHED, now.minusDays(1), null);
-        savedPosting(savedRequisition("IT-JP Day 7", department), 1, TITLE_PREFIX + "Hết ngày thứ 7",
-                JobPostingAccess.STATUS_PUBLISHED, now.minusDays(1), today.plusDays(7).atTime(23, 59));
-        savedPosting(savedRequisition("IT-JP Day 8", department), 1, TITLE_PREFIX + "Đầu ngày thứ 8",
-                JobPostingAccess.STATUS_PUBLISHED, now.minusDays(1), today.plusDays(8).atStartOfDay());
+        savedPosting(savedRequisition("IT-JP Almost", department), 1, TITLE_PREFIX + "Còn 30 phút",
+                JobPostingAccess.STATUS_PUBLISHED, now.minusDays(1), now.plusMinutes(30));
+        savedPosting(savedRequisition("IT-JP Just past", department), 1, TITLE_PREFIX + "Quá hạn 1 giờ",
+                JobPostingAccess.STATUS_PUBLISHED, now.minusDays(1), now.minusHours(1));
         entityManager.clear();
 
         // Act
-        List<InternalJobPostingResponse> rows = search(hr, null, JobPostingLabels.DEADLINE_OPEN, null);
+        List<String> openTitles = titles(search(hr, null, JobPostingLabels.DEADLINE_OPEN, null));
 
         // Assert
-        assertEquals(List.of(TITLE_PREFIX + "Không hạn", TITLE_PREFIX + "Đầu ngày thứ 8"), titles(rows));
+        assertEquals(2, openTitles.size());
+        assertTrue(openTitles.containsAll(List.of(TITLE_PREFIX + "Không hạn", TITLE_PREFIX + "Còn 30 phút")));
+        assertFalse(openTitles.contains(TITLE_PREFIX + "Quá hạn 1 giờ"));
     }
 
     @Test

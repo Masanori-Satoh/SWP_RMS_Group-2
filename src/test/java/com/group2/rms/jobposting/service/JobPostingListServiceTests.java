@@ -1,6 +1,7 @@
 package com.group2.rms.jobposting.service;
 
 import com.group2.rms.core.dto.FilterChip;
+import com.group2.rms.core.dto.FilterOption;
 import com.group2.rms.jobposting.dto.InternalJobPostingResponse;
 import com.group2.rms.jobposting.dto.JobPostingListResponse;
 import com.group2.rms.jobposting.dto.JobPostingSearchRequest;
@@ -151,6 +152,22 @@ class JobPostingListServiceTests {
         assertTrue(service.getListPage(emptyFilter(), userWithRole(RequisitionAccess.ROLE_HR)).canManage());
     }
 
+    @Test
+    @DisplayName("Ô Hạn nộp chỉ còn 'Còn hạn' / 'Đã quá hạn'; link cũ deadline=soon bị bỏ qua")
+    void getListPage_shouldOfferOnlyOpenAndPastDeadlines() {
+        // Arrange
+        JobPostingSearchRequest raw = new JobPostingSearchRequest(null, null, null, null,
+                JobPostingLabels.DEADLINE_SOON, null, null, null, 0, 10);
+
+        // Act
+        JobPostingListResponse list = service.getListPage(raw, userWithRole(RequisitionAccess.ROLE_HR));
+
+        // Assert
+        List<String> labels = list.options().deadlines().stream().map(FilterOption::label).toList();
+        assertEquals(List.of("Còn hạn", "Đã quá hạn"), labels);
+        assertNull(list.filter().deadline());
+    }
+
     // ----- Bước 2: làm sạch bộ lọc -----
 
     @Test
@@ -206,12 +223,12 @@ class JobPostingListServiceTests {
     @DisplayName("Chip: trạng thái, hạn nộp, sắp xếp khác mặc định; 'Nhiều hồ sơ nhất' sắp bằng Specification")
     void getListPage_shouldDescribeChips_andSortByApplicationsInSpecification() {
         JobPostingSearchRequest raw = new JobPostingSearchRequest(null, List.of(JobPostingAccess.STATUS_PUBLISHED), null,
-                null, JobPostingLabels.DEADLINE_SOON, null, null, JobPostingSort.MOST_APPLICATIONS.param(), 0, 10);
+                null, JobPostingLabels.DEADLINE_OPEN, null, null, JobPostingSort.MOST_APPLICATIONS.param(), 0, 10);
 
         JobPostingListResponse list = service.getListPage(raw, userWithRole(RequisitionAccess.ROLE_HR));
 
         List<String> labels = list.chips().stream().map(FilterChip::label).toList();
-        assertEquals(List.of("Trạng thái: Đang đăng", "Hạn nộp: Sắp hết hạn (≤ 7 ngày)", "Sắp xếp: Nhiều hồ sơ nhất"), labels);
+        assertEquals(List.of("Trạng thái: Đang đăng", "Hạn nộp: Còn hạn", "Sắp xếp: Nhiều hồ sơ nhất"), labels);
         ArgumentCaptor<Pageable> pageable = ArgumentCaptor.forClass(Pageable.class);
         verify(postings).findAll(any(Specification.class), pageable.capture());
         assertTrue(pageable.getValue().getSort().isUnsorted(), "Sắp theo số hồ sơ nằm trong Specification, không dùng Sort");
