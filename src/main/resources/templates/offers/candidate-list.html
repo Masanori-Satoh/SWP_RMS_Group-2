@@ -120,7 +120,7 @@
 
             <footer class="cof-card__footer">
                 <div class="cof-card__status-desc">
-                    <span th:if="${offer.statusLabel == 'Đã nhận việc' or offer.statusLabel == 'Đã nhận offer'}" class="cof-status-note cof-status-note--success">
+                    <span th:if="${offer.statusLabel == 'Đã nhận việc'}" class="cof-status-note cof-status-note--success">
                         <span aria-hidden="true">✓</span> Bạn đã đồng ý nhận lời mời làm việc này.
                     </span>
                     <span th:if="${offer.statusLabel == 'Đã từ chối'}" class="cof-status-note cof-status-note--declined text-muted">
@@ -151,12 +151,12 @@
                         <form th:action="@{/portal/offers/{id}/decline(id=${offer.offerId})}" method="post"
                               class="cof-form" data-offer-form="decline"
                               th:attr="data-posting-title=${offer.postingTitle}">
-                            <button type="submit" class="btn btn--outline btn--sm cof-btn">Từ chối</button>
+                            <button type="submit" class="btn btn--outline btn--sm cof-btn">Từ chối thư mời</button>
                         </form>
                         <form th:action="@{/portal/offers/{id}/accept(id=${offer.offerId})}" method="post"
                               class="cof-form" data-offer-form="accept"
                               th:attr="data-posting-title=${offer.postingTitle}">
-                            <button type="submit" class="btn btn--primary btn--sm cof-btn">Chấp nhận</button>
+                            <button type="submit" class="btn btn--primary btn--sm cof-btn">Đồng ý nhận việc</button>
                         </form>
                     </th:block>
                     <a th:href="@{/portal/offers/{id}(id=${offer.offerId})}" class="btn btn--secondary btn--sm cof-btn">Xem chi tiết</a>

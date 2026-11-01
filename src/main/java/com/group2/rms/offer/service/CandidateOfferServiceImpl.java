@@ -50,7 +50,7 @@ public class CandidateOfferServiceImpl implements CandidateOfferService {
     public CandidateOfferServiceImpl(CandidateOfferRepository offers,
                                     CurrentUserService currentUserService,
                                     ApplicationStatusService applicationStatusService,
-                                    com.group2.rms.notification.NotificationService systemNotificationService) {
+                                    com.group2.rms.notification.service.NotificationService systemNotificationService) {
         this(offers, currentUserService, applicationStatusService, systemNotificationService, Clock.systemDefaultZone());
     }
 
