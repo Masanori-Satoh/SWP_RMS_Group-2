@@ -16,13 +16,13 @@ Mã nguồn đóng gói theo **nghiệp vụ**, không theo tầng. Quy tắc **
 - **Module lớn (≥ 10 file):** bắt buộc chia sub-package `controller/`, `service/`, `repository/`, `entity/`, `dto/`, và khi cần `exception/`, `validator/`.
 - **Gói con (module rất lớn, hiện chỉ có `candidate`):** module chia thành 4 hộp, mỗi hộp có người phụ trách (ghi trong `package-info.java` của hộp):
   - `domain/`: lõi dùng chung: `entity/`, `repository/`, `rule/` (luật trạng thái, quyền xem đơn).
-  - `application/`: vòng đời hồ sơ: `submission/` (nộp đơn), `screening/` (AI chấm), `pipeline/` (`/applications` nội bộ), `portal/` (màn của ứng viên, `/portal/**`).
+  - `application/`: vòng đời hồ sơ: `submission/` (nộp đơn), `pipeline/` (`/applications` nội bộ), `portal/` (màn của ứng viên, `/portal/**`).
   - `talentpool/`: kho ứng viên tiềm năng và email tuyển dụng.
-  - `infra/`: kỹ thuật dùng chung, không chứa nghiệp vụ: `cv/` (lưu, đọc file CV), `ai/` (client gọi AI).
+  - `infra/`: kỹ thuật dùng chung, không chứa nghiệp vụ: `cv/` (lưu, đọc file CV).
 
   **Đặt file:** module khác hoặc từ 2 hộp trở lên cùng dùng → `domain`; chỉ một hộp dùng → để trong hộp đó (kể cả câu truy vấn: hộp có repository riêng chỉ chứa câu đọc của mình, kế thừa `org.springframework.data.repository.Repository<…>`; câu ghi luôn ở `domain`); kỹ thuật dùng chung → `infra`. Trong mỗi hộp và gói con: < 10 file thì phẳng, ≥ 10 file (hoặc biết chắc sắp vượt) thì chia tầng như module.
 
-  **Phụ thuộc một chiều:** `application`, `talentpool` → `domain`, `infra`. `domain` và `infra` không import hộp tính năng. `talentpool` không import `application`. Trong `application`: `pipeline` → `screening` → `submission`, `portal` không gọi gói con khác. Ngoại lệ đang có: `ApplicationPipelineController` gọi `TalentPoolService.pendingRecommendationUrl` và `notesFor` (trang chi tiết hồ sơ), sẽ gỡ sau.
+  **Phụ thuộc một chiều:** `application`, `talentpool` → `domain`, `infra`. `domain` và `infra` không import hộp tính năng. `talentpool` không import `application`. Trong `application`: `pipeline` → `submission`, `portal` không gọi gói con khác. Ngoại lệ đang có: `ApplicationPipelineController` gọi `TalentPoolService.pendingRecommendationUrl` và `notesFor` (trang chi tiết hồ sơ), sẽ gỡ sau.
 
 ```text
 src/main/java/com/group2/rms/
@@ -50,9 +50,9 @@ src/main/java/com/group2/rms/
 | `career` | Cổng tuyển dụng công khai: landing, Jobs Board, chi tiết tin, nút ứng tuyển | `/`, `/jobs`, `/jobs/{id}`, `/jobs/{id}/apply` (`CareerPortalController`) | `candidate/landing`, `candidate/job-board`, `candidate/job-detail` |
 | `auth` | Đăng nhập, đăng ký ứng viên (OTP email), quên/đặt lại mật khẩu (OTP) | `/login`, `/register/**`, `/forgot-password`, `/reset-password/**` | `auth/*`, `auth/email/*` |
 | `user` | Tài khoản nội bộ, tài khoản ứng viên, phòng ban, hồ sơ cá nhân, đổi mật khẩu | `/admin/accounts/**`, `/admin/candidate-accounts/**`, `/admin/departments/**`, `/profile/**` | `admin/accounts/*`, `admin/departments/*`, `user/profile` |
-| `requisition` | Yêu cầu tuyển dụng, phê duyệt, lịch sử và tiêu chí sàng lọc | `/requisitions/**` (`RequisitionController`) | `requisitions/*` |
+| `requisition` | Yêu cầu tuyển dụng, phê duyệt, lịch sử | `/requisitions/**` (`RequisitionController`) | `requisitions/*` |
 | `jobposting` | Tin tuyển dụng nội bộ và vòng đời đăng tuyển | `/internal/job-postings/**` (`JobPostingController`) | `job-postings/*` |
-| `candidate` | **Chỉ tầng dữ liệu:** `Candidate`, `Application`, `ApplicationReview`, `AIScreeningResult` + repository. Chưa có controller | — | — |
+| `candidate` | **Chỉ tầng dữ liệu:** `Candidate`, `Application`, `ApplicationReview` + repository. Chưa có controller | — | — |
 | `interview` | Lập lịch phỏng vấn, hội đồng (panel), kết quả | `/interviews/**` (`InterviewSchedulingController`) | `interview/*` |
 | `offer` | Đề xuất offer, phê duyệt, gửi, xuất Excel | `/offers/**` (`OfferController`, có cả endpoint JSON) | `offers/*` |
 | `notification` | Thông báo trong ứng dụng | `/notifications/**` | `notifications/list` |
@@ -198,7 +198,7 @@ Phân quyền URL nằm tập trung trong `core/config/SecurityConfig` (chưa d�
 | `/login`, `/register/**`, `/forgot-password`, `/reset-password/**` | Công khai |
 | `GET /jobs`, `/jobs/**`, `/public/jobs/**` | Công khai |
 | `/jobs/*/apply/**` | `CANDIDATE` |
-| `/admin/accounts`, `/admin/departments`, `/admin/candidate-accounts`, `/admin/api-monitoring`, `/admin/ai-configuration` (+ `/**`), mọi URL `/admin/**` | `SYSTEM_ADMIN` |
+| `/admin/accounts`, `/admin/departments`, `/admin/candidate-accounts`, `/admin/api-monitoring` (+ `/**`), mọi URL `/admin/**` | `SYSTEM_ADMIN` |
 | `/interviews/new`, `/interviews/*/edit`, mọi thao tác ghi `/interviews/**` | `HR`, `DIRECTOR` (POST evaluation: `INTERVIEWER`, `HIRING_MANAGER`, `DIRECTOR`, `HR`; POST final-result: `HIRING_MANAGER`) |
 | `GET /interviews/**` | `HR`, `DIRECTOR`, `HIRING_MANAGER`, `INTERVIEWER` |
 | `GET /portal/interviews` | `CANDIDATE` (các method khác: chặn) |
@@ -214,7 +214,7 @@ Phân quyền URL nằm tập trung trong `core/config/SecurityConfig` (chưa d�
 | `/applications/**` | `HR`, `HIRING_MANAGER`, `DIRECTOR` |
 | `/dashboard/**`, `/notifications/**`, mọi URL còn lại | Đã đăng nhập |
 
-- **System Admin chỉ cấu hình hệ thống** (tài khoản, phân quyền, phòng ban, giám sát API, cấu hình AI, audit log). Admin **không** vào nghiệp vụ tuyển dụng: không có quyền ở `/requisitions/**`, `/internal/job-postings/**`, `/applications/**`, `/interviews/**`, `/offers/**`, kể cả chỉ xem. Nội dung nghiệp vụ thuộc HR, Hiring Manager, Director, Interviewer. Không thêm `SYSTEM_ADMIN` vào rule nghiệp vụ trong `SecurityConfig`, `{X}Access` hay `th:if` của template.
+- **System Admin chỉ cấu hình hệ thống** (tài khoản, phân quyền, phòng ban, giám sát API, audit log). Admin **không** vào nghiệp vụ tuyển dụng: không có quyền ở `/requisitions/**`, `/internal/job-postings/**`, `/applications/**`, `/interviews/**`, `/offers/**`, kể cả chỉ xem. Nội dung nghiệp vụ thuộc HR, Hiring Manager, Director, Interviewer. Không thêm `SYSTEM_ADMIN` vào rule nghiệp vụ trong `SecurityConfig`, `{X}Access` hay `th:if` của template.
 - Duyệt / từ chối offer (`POST /offers/*/approve`, `/reject`) chỉ `DIRECTOR`.
 - Đăng nhập: form `/login` → `/dashboard`. Đăng xuất: `POST /logout` → `/login?logout`.
 - **Thêm route mới = thêm rule vào `SecurityConfig`.** Không có rule thì route rơi vào "đã đăng nhập", tức mọi vai trò (kể cả Candidate) đều vào được.

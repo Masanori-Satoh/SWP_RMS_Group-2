@@ -30,20 +30,6 @@ class ApplicationProgressResolverTests {
         }
 
         @Test
-        void applied_awaitsAiScreening() {
-            ApplicationProgressResponse progress = resolve(status("Applied"));
-
-            assertProgress(progress, ApplicationStage.APPLIED, AWAITING_AI, "Chờ AI chấm CV", "Hệ thống", "neutral");
-        }
-
-        @Test
-        void aiScreened_awaitsHrReview() {
-            ApplicationProgressResponse progress = resolve(status("AI_Screened"));
-
-            assertProgress(progress, ApplicationStage.SCREENING, AWAITING_HR_REVIEW, "Chờ HR duyệt CV", "HR", "warning");
-        }
-
-        @Test
         void hrPassed_awaitsHiringManagerReview() {
             ApplicationProgressResponse progress = resolve(status("HR_Passed"));
 

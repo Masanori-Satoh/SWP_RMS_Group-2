@@ -7,8 +7,6 @@ import com.group2.rms.candidate.domain.entity.ApplicationReview;
 import com.group2.rms.candidate.application.pipeline.exception.ApplicationReviewException;
 import com.group2.rms.candidate.domain.repository.ApplicationRepository;
 import com.group2.rms.candidate.domain.repository.ApplicationReviewRepository;
-import com.group2.rms.candidate.infra.ai.AiScreeningOutcome;
-import com.group2.rms.candidate.application.screening.AiScreeningService;
 import com.group2.rms.core.exception.ResourceNotFoundException;
 import com.group2.rms.notification.service.NotificationService;
 import com.group2.rms.user.entity.User;
@@ -22,7 +20,6 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.access.AccessDeniedException;
 
-import java.math.BigDecimal;
 import java.util.Optional;
 import java.util.Set;
 
@@ -42,7 +39,6 @@ class ApplicationReviewServiceTests {
     @Mock ApplicationRepository applications;
     @Mock ApplicationReviewRepository reviews;
     @Mock ApplicationAccess access;
-    @Mock AiScreeningService aiScreeningService;
     @Mock NotificationService notificationService;
 
     private ApplicationReviewService service;
@@ -50,12 +46,12 @@ class ApplicationReviewServiceTests {
 
     @BeforeEach
     void setUp() {
-        service = new ApplicationReviewService(applications, reviews, access, aiScreeningService, notificationService);
+        service = new ApplicationReviewService(applications, reviews, access, notificationService);
         when(access.actor()).thenReturn(actor);
     }
 
     @ParameterizedTest
-    @ValueSource(strings = {"Applied", "AI_Screened"})
+    @ValueSource(strings = {"Applied"})
     void hrPassForwardsToHiringManager(String status) {
         Application application = reviewable(status);
         when(applications.transition(ID, ApplicationAccess.HR_REVIEW_STATUSES, "HR_Passed")).thenReturn(1);
@@ -125,7 +121,7 @@ class ApplicationReviewServiceTests {
 
     @Test
     void holdRecordsReviewButKeepsStatus() {
-        reviewable("AI_Screened");
+        reviewable("Applied");
 
         assertEquals("Đã tạm giữ hồ sơ.", service.review(ID, new ApplicationReviewRequest("Hold", "Chờ bổ sung")));
 
@@ -136,7 +132,7 @@ class ApplicationReviewServiceTests {
 
     @Test
     void someoneElseMovedTheApplicationFirst() {
-        reviewable("AI_Screened");
+        reviewable("Applied");
         when(applications.transition(anyInt(), any(), any())).thenReturn(0);
 
         ApplicationReviewException e = assertThrows(ApplicationReviewException.class,
@@ -148,7 +144,7 @@ class ApplicationReviewServiceTests {
 
     @Test
     void adminAndOtherRolesCannotReview() {
-        Application application = application("AI_Screened");
+        Application application = application("Applied");
         when(applications.findDetailById(ID)).thenReturn(Optional.of(application));
         when(access.isReviewer(actor)).thenReturn(false);
 
@@ -189,37 +185,6 @@ class ApplicationReviewServiceTests {
     }
 
     // ------------------------------------------------------------------ chấm lại AI
-
-    @Test
-    void hrRescreensBeforeForwarding() {
-        Application application = application("Applied");
-        when(applications.findDetailById(ID)).thenReturn(Optional.of(application));
-        when(access.isHr(actor)).thenReturn(true);
-        when(access.canRescreen(actor, application)).thenReturn(true);
-        when(aiScreeningService.screen(ID)).thenReturn(new AiScreeningOutcome(new BigDecimal("71.20")));
-
-        assertEquals(new BigDecimal("71.20"), service.rescreen(ID).matchScore());
-    }
-
-    @Test
-    void onlyHrMayRescreen() {
-        when(applications.findDetailById(ID)).thenReturn(Optional.of(application("Applied")));
-        when(access.isHr(actor)).thenReturn(false);
-
-        assertThrows(AccessDeniedException.class, () -> service.rescreen(ID));
-        verifyNoInteractions(aiScreeningService);
-    }
-
-    @Test
-    void rescreenAfterForwardingIsRefused() {
-        Application application = application("HR_Passed");
-        when(applications.findDetailById(ID)).thenReturn(Optional.of(application));
-        when(access.isHr(actor)).thenReturn(true);
-        when(access.canRescreen(actor, application)).thenReturn(false);
-
-        assertThrows(ApplicationReviewException.class, () -> service.rescreen(ID));
-        verifyNoInteractions(aiScreeningService);
-    }
 
     private Application reviewable(String status) {
         Application application = application(status);

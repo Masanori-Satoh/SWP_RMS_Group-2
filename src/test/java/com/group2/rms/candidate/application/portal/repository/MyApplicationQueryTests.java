@@ -34,7 +34,7 @@ class MyApplicationQueryTests {
     void pickEarlyApplication() {
         List<Application> found = entityManager.createQuery("""
                         select a from Application a join fetch a.candidate c join fetch c.account
-                        where a.applicationStatus in ('Applied', 'AI_Screened')
+                        where a.applicationStatus in ('Applied')
                         order by a.applicationId""", Application.class)
                 .setMaxResults(1)
                 .getResultList();
@@ -71,7 +71,7 @@ class MyApplicationQueryTests {
         Integer id = early.getApplicationId();
         assertFalse(myApplications.findWithdrawnApplicationIds(ownerUserId).contains(id));
 
-        assertEquals(1, applications.transition(id, Set.of("Applied", "AI_Screened"), "Rejected"));
+        assertEquals(1, applications.transition(id, Set.of("Applied"), "Rejected"));
         applications.recordWithdrawal(ownerUserId, id, early.getApplicationStatus());
 
         assertTrue(myApplications.findWithdrawnApplicationIds(ownerUserId).contains(id));
@@ -81,7 +81,7 @@ class MyApplicationQueryTests {
     @Test
     void withdrawalMarkComesBackWithStatusBeforeAndTime() {
         Integer id = early.getApplicationId();
-        applications.transition(id, Set.of("Applied", "AI_Screened"), "Rejected");
+        applications.transition(id, Set.of("Applied"), "Rejected");
         applications.recordWithdrawal(ownerUserId, id, early.getApplicationStatus());
 
         MyApplicationRepository.MyApplicationMarkRow mark = myApplications.findMyApplicationMarks(ownerUserId).stream()

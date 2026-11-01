@@ -26,7 +26,6 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.math.BigDecimal;
 import java.time.Clock;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -44,13 +43,9 @@ public class JobPostingServiceImpl implements JobPostingService {
 
     // Trạng thái hồ sơ (cột Application.ApplicationStatus) dùng cho số liệu trang chi tiết
     private static final String APPLICATION_APPLIED = "Applied";
-    private static final String APPLICATION_AI_SCREENED = "AI_Screened";
     private static final String APPLICATION_INTERVIEWING = "Interviewing";
     private static final String APPLICATION_HIRED = "Hired";
 
-    /** Khóa cấu hình ngưỡng điểm AI "đạt" trong bảng SystemConfig, và giá trị dùng khi chưa cấu hình. */
-    private static final String AI_THRESHOLD_CONFIG_KEY = "AI_SCORE_THRESHOLD";
-    private static final BigDecimal DEFAULT_AI_THRESHOLD = new BigDecimal("70");
     /** Số hồ sơ gần đây hiện ở tab "Ứng viên" trang chi tiết tin. */
     private static final int RECENT_APPLICATIONS = 7;
     /** Ô "+N trong 7 ngày" ở trang chi tiết. */
@@ -329,10 +324,9 @@ public class JobPostingServiceImpl implements JobPostingService {
         JobRequisition requisition = posting.getRequisition();
 
         // Số liệu hồ sơ chỉ có khi tin đã lên trang tuyển dụng
-        BigDecimal threshold = aiScoreThreshold();
-        ApplicationStats stats = ApplicationStats.empty(threshold);
+        ApplicationStats stats = ApplicationStats.empty();
         if (JobPostingAccess.hasBeenPublished(viewStatus)) {
-            stats = applicationStats(id, threshold, now);
+            stats = applicationStats(id, now);
         }
         boolean hasApplications = stats.total() > 0;
         if (JobPostingAccess.STATUS_DRAFT.equals(viewStatus)) {
@@ -352,7 +346,7 @@ public class JobPostingServiceImpl implements JobPostingService {
     }
 
     /** Số liệu hồ sơ của tin: đếm theo trạng thái (1 câu) + vài câu đếm riêng. */
-    private ApplicationStats applicationStats(Integer postingId, BigDecimal threshold, LocalDateTime now) {
+    private ApplicationStats applicationStats(Integer postingId, LocalDateTime now) {
         Map<String, Long> byStatus = new HashMap<>();
         long total = 0;
         for (Object[] row : postings.countApplicationsByStatus(postingId)) {
@@ -363,38 +357,21 @@ public class JobPostingServiceImpl implements JobPostingService {
         return ApplicationStats.builder()
                 .total(total)
                 .last7Days(postings.countApplicationsSince(postingId, now.minusDays(RECENT_WINDOW_DAYS)))
-                .pending(byStatus.getOrDefault(APPLICATION_APPLIED, 0L)
-                        + byStatus.getOrDefault(APPLICATION_AI_SCREENED, 0L))
-                .aiPassed(postings.countApplicationsWithAiScoreAtLeast(postingId, threshold))
-                .aiThreshold(threshold)
+                .pending(byStatus.getOrDefault(APPLICATION_APPLIED, 0L))
+                // dunglt bổ sung: thay thẻ "Đạt ngưỡng AI" bằng "Qua vòng CV" (gỡ AI, 01/11)
+                .passedCvRound(applications.countPastCvRoundByJobPosting(postingId))
                 .interviewing(byStatus.getOrDefault(APPLICATION_INTERVIEWING, 0L))
                 .hired(byStatus.getOrDefault(APPLICATION_HIRED, 0L))
-                .recent(recentApplications(postingId, threshold))
+                .recent(recentApplications(postingId))
                 .build();
     }
 
-    /** Các hồ sơ mới nhất kèm điểm AI lần chấm gần nhất (null = chưa chấm). Điểm AI tra gộp 1 câu. */
-    private List<RecentApplication> recentApplications(Integer postingId, BigDecimal threshold) {
-        List<Object[]> rows = postings.findRecentApplications(postingId, PageRequest.of(0, RECENT_APPLICATIONS));
-        if (rows.isEmpty()) {
-            return List.of();
-        }
-        List<Integer> ids = new ArrayList<>();
-        for (Object[] row : rows) {
-            ids.add((Integer) row[0]);
-        }
-        Map<Integer, BigDecimal> scores = new HashMap<>();
-        for (Object[] row : postings.findLatestAiScores(ids)) {
-            scores.put((Integer) row[0], (BigDecimal) row[1]);
-        }
-
+    /** Các hồ sơ mới nhất của tin. */
+    private List<RecentApplication> recentApplications(Integer postingId) {
         List<RecentApplication> result = new ArrayList<>();
-        for (Object[] row : rows) {
-            Integer applicationId = (Integer) row[0];
+        for (Object[] row : postings.findRecentApplications(postingId, PageRequest.of(0, RECENT_APPLICATIONS))) {
             String status = (String) row[2];
-            BigDecimal score = scores.get(applicationId);
-            boolean isAiPassed = score != null && score.compareTo(threshold) >= 0;
-            result.add(new RecentApplication(applicationId, (String) row[1], score, isAiPassed,
+            result.add(new RecentApplication((Integer) row[0], (String) row[1],
                     ApplicationStatusLabels.label(status), ApplicationStatusLabels.badge(status),
                     (LocalDateTime) row[3]));
         }
@@ -425,23 +402,6 @@ public class JobPostingServiceImpl implements JobPostingService {
         return rounds;
     }
 
-    /** Ngưỡng điểm AI "đạt" (SystemConfig.AI_SCORE_THRESHOLD); thiếu hoặc sai định dạng thì dùng 70. */
-    private BigDecimal aiScoreThreshold() {
-        String configured = postings.findConfigValue(AI_THRESHOLD_CONFIG_KEY).orElse(null);
-        if (configured == null) {
-            return DEFAULT_AI_THRESHOLD;
-        }
-        try {
-            // Cấu hình lưu "70.00" thì hiển thị "70" (setScale(0) để 70 không thành 7E+1)
-            BigDecimal trimmed = new BigDecimal(configured.trim()).stripTrailingZeros();
-            if (trimmed.scale() < 0) {
-                return trimmed.setScale(0);
-            }
-            return trimmed;
-        } catch (NumberFormatException invalidConfig) {
-            return DEFAULT_AI_THRESHOLD;
-        }
-    }
 
     // ----- Hàm kiểm tra / tra cứu dùng chung -----
 

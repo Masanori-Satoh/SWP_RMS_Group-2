@@ -94,7 +94,7 @@ class RequisitionListServiceTests {
 
     private JobRequisition row(int id) {
         return JobRequisition.builder().requisitionId(id).title("Vị trí " + id).approvalStatus(RequisitionAccess.STATUS_APPROVED)
-                .hiringManager(User.builder().userId(1).fullName("HM").build()).screeningCriteria(new ArrayList<>()).build();
+                .hiringManager(User.builder().userId(1).fullName("HM").build()).build();
     }
 
     // ----- Phạm vi dữ liệu theo role -----

@@ -1,7 +1,6 @@
 package com.group2.rms.jobposting.integration;
 
 import com.group2.rms.admin.entity.SystemConfig;
-import com.group2.rms.candidate.domain.entity.AIScreeningResult;
 import com.group2.rms.candidate.domain.entity.Application;
 import com.group2.rms.candidate.domain.entity.Candidate;
 import com.group2.rms.core.dto.FilterOption;
@@ -125,7 +124,7 @@ class JobPostingIntegrationTests {
                 .employmentType("Full-time").gender("Any").workModel("On-site")
                 .jobDescription("Integration-test responsibilities").requirementDetails("Integration-test requirements")
                 .approvalStatus(RequisitionAccess.STATUS_APPROVED).hiringManager(hiringManager)
-                .department(inDepartment).screeningCriteria(new ArrayList<>()).build());
+                .department(inDepartment).build());
     }
 
     private JobPosting savedPosting(JobRequisition requisition, int postingNo, String title, String status,
@@ -181,11 +180,6 @@ class JobPostingIntegrationTests {
                 .build();
         entityManager.persist(application);
         return application;
-    }
-
-    private void savedAiScore(Application application, String score, LocalDateTime screenedAt) {
-        entityManager.persist(AIScreeningResult.builder().application(application)
-                .aiMatchScore(new BigDecimal(score)).screenedAt(screenedAt).build());
     }
 
     private Set<String> choiceValues() {
@@ -488,39 +482,6 @@ class JobPostingIntegrationTests {
 
         // Assert
         assertEquals(2, count);
-    }
-
-    @Test
-    @DisplayName("Đếm hồ sơ đạt điểm AI -> Chỉ tính lần chấm mới nhất, đúng ngưỡng vẫn đạt")
-    void countApplicationsWithAiScoreAtLeast_shouldUseLatestScore_whenApplicationScoredTwice() {
-        // Arrange
-        JobPosting posting = savedPosting(savedRequisition("IT-JP AI", department), 1, TITLE_PREFIX + "Điểm AI",
-                JobPostingAccess.STATUS_PUBLISHED, now.minusDays(20), now.plusDays(10));
-        Application rescoredLower = savedApplication(posting, now.minusDays(5));
-        savedAiScore(rescoredLower, "90.00", now.minusDays(4));
-        savedAiScore(rescoredLower, "60.00", now.minusDays(3));
-        savedAiScore(savedApplication(posting, now.minusDays(5)), "70.00", now.minusDays(4));
-        savedAiScore(savedApplication(posting, now.minusDays(5)), "69.99", now.minusDays(4));
-        entityManager.flush();
-
-        // Act
-        long passed = postings.countApplicationsWithAiScoreAtLeast(posting.getJobPostingId(), new BigDecimal("70"));
-
-        // Assert
-        assertEquals(1, passed);
-    }
-
-    @Test
-    @DisplayName("Đọc khóa cấu hình hệ thống -> Có khóa trả giá trị, khóa không tồn tại trả rỗng")
-    void findConfigValue_shouldReturnValueOrEmpty_whenKeyExistsOrNot() {
-        // Arrange
-        entityManager.persist(SystemConfig.builder().configKey("IT_JP_CONFIG").configValue("75.50")
-                .description("Khóa tạm cho integration test").build());
-        entityManager.flush();
-
-        // Act + Assert
-        assertEquals("75.50", postings.findConfigValue("IT_JP_CONFIG").orElseThrow());
-        assertTrue(postings.findConfigValue("IT_JP_KHONG_CO").isEmpty());
     }
 
     // =========================================================================

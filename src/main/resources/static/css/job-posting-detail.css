@@ -71,8 +71,6 @@
 .jp-detail-page .jpd-apps { width:100%; border-collapse:collapse; }
 .jp-detail-page .jpd-apps th { padding:var(--s2); border-bottom:1px solid var(--line); color:var(--muted); font-size:var(--font-xs); text-align:left; }
 .jp-detail-page .jpd-apps td { padding:var(--s2); border-bottom:1px solid var(--line); }
-.jp-detail-page .jpd-score { font-weight:700; color:var(--brand-dark); font-variant-numeric:tabular-nums; }
-.jp-detail-page .jpd-score--low { color:var(--muted); }
 
 /* Cột phải */
 .jp-detail-page .jpd-kv { display:grid; gap:var(--s2); margin:0; font-size:var(--font-sm); }

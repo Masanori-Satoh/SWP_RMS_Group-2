@@ -135,23 +135,6 @@ public final class RequisitionLabels {
         return "Chưa xác định";
     }
 
-    /** Loại tiêu chí sàng lọc (ScreeningCriteria.CriteriaType). */
-    public static String criteriaType(String type) {
-        if ("Education".equals(type)) {
-            return "Học vấn";
-        }
-        if ("Experience".equals(type)) {
-            return "Kinh nghiệm";
-        }
-        if ("Skill".equals(type)) {
-            return "Kỹ năng";
-        }
-        if ("Knockout".equals(type)) {
-            return "Điều kiện loại trừ";
-        }
-        return type == null ? "—" : type;
-    }
-
     /** Lương theo đơn vị triệu: "20 – 30 triệu VND/tháng"; không nhập thì "Thỏa thuận". */
     public static String salary(BigDecimal min, BigDecimal max) {
         if (min == null && max == null) {

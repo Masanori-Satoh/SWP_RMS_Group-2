@@ -224,32 +224,6 @@ CREATE TABLE RequisitionApproval (
 GO
 
 -- =============================================================================
--- 3.8 SCREENING CRITERIA (Tiêu chí sàng lọc CV)
--- =============================================================================
-CREATE TABLE ScreeningCriteria (
-    CriteriaId INT IDENTITY(1,1) PRIMARY KEY,
-    RequisitionId INT NOT NULL,
-    CriteriaName NVARCHAR(150) NOT NULL,
-    CriteriaType NVARCHAR(30) NOT NULL,
-    RequiredValue NVARCHAR(255) NOT NULL,
-    [Weight] DECIMAL(5,2) NOT NULL CONSTRAINT DF_ScreeningCriteria_Weight DEFAULT 100.00,
-    IsMandatory BIT NOT NULL CONSTRAINT DF_ScreeningCriteria_IsMandatory DEFAULT 0,
-
-    CONSTRAINT FK_ScreeningCriteria_Requisition
-        FOREIGN KEY (RequisitionId) REFERENCES JobRequisition(RequisitionId),
-
-    CONSTRAINT CK_ScreeningCriteria_Type
-        CHECK (CriteriaType IN (N'Education', N'Experience', N'Skill', N'Knockout')),
-
-    CONSTRAINT CK_ScreeningCriteria_Weight
-        CHECK ([Weight] > 0),
-
-    CONSTRAINT UQ_ScreeningCriteria_Requisition_Name
-        UNIQUE (RequisitionId, CriteriaName)
-);
-GO
-
--- =============================================================================
 -- 3.9 JOB POSTING (Tin tuyển dụng công khai)
 -- =============================================================================
 
@@ -348,7 +322,6 @@ CREATE TABLE Application (
     AppliedCvUrl NVARCHAR(500) NOT NULL,
     SubmissionDate DATETIME2 NOT NULL CONSTRAINT DF_Application_SubmissionDate DEFAULT SYSDATETIME(),
     ApplicationStatus NVARCHAR(30) NOT NULL CONSTRAINT DF_Application_Status DEFAULT N'Applied',
-    OverallScore DECIMAL(5,2) NULL,
     CreatedAt DATETIME2 NOT NULL CONSTRAINT DF_Application_CreatedAt DEFAULT SYSDATETIME(),
     UpdatedAt DATETIME2 NULL,
 
@@ -361,7 +334,6 @@ CREATE TABLE Application (
     CONSTRAINT CK_Application_Status
         CHECK (ApplicationStatus IN (
             N'Applied',
-            N'AI_Screened',
             N'HR_Passed',
             N'HM_Passed',
             --new status for HM SUGGEST
@@ -397,23 +369,6 @@ CREATE TABLE ApplicationReview (
 
     CONSTRAINT CK_ApplicationReview_Decision
         CHECK (Decision IN (N'Pass', N'Fail', N'Hold'))
-);
-GO
-
--- =============================================================================
--- 3.13 AI SCREENING RESULT (Kết quả AI chấm điểm và so khớp CV)
--- =============================================================================
-CREATE TABLE AIScreeningResult (
-    AIScreeningId INT IDENTITY(1,1) PRIMARY KEY,
-    ApplicationId INT NOT NULL,
-    AIMatchScore DECIMAL(5,2) NOT NULL,
-    ScreenedAt DATETIME2 NOT NULL CONSTRAINT DF_AIScreeningResult_ScreenedAt DEFAULT SYSDATETIME(),
-
-    CONSTRAINT FK_AIScreeningResult_Application
-        FOREIGN KEY (ApplicationId) REFERENCES Application(ApplicationId),
-
-    CONSTRAINT CK_AIScreeningResult_Score
-        CHECK (AIMatchScore >= 0 AND AIMatchScore <= 100)
 );
 GO
 
@@ -684,7 +639,6 @@ GO
 -- =============================================================================
 CREATE NONCLUSTERED INDEX IX_RequisitionApproval_RequisitionId ON RequisitionApproval(RequisitionId);
 CREATE NONCLUSTERED INDEX IX_RequisitionApproval_DirectorId ON RequisitionApproval(DirectorId);
-CREATE NONCLUSTERED INDEX IX_ScreeningCriteria_RequisitionId ON ScreeningCriteria(RequisitionId);
 CREATE NONCLUSTERED INDEX IX_Candidate_IsPotential ON Candidate(IsPotential) WHERE IsPotential = 1;
 CREATE NONCLUSTERED INDEX IX_Application_CandidateId ON Application(CandidateId);
 CREATE NONCLUSTERED INDEX IX_Application_JobPostingId ON Application(JobPostingId);
