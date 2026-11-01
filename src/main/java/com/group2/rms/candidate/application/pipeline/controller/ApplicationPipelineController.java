@@ -35,7 +35,8 @@ import java.util.Optional;
 import java.util.Set;
 
 /**
- * Hồ sơ ứng tuyển cho người tuyển dụng: danh sách (5.1.22), chi tiết, CV, duyệt và chấm lại AI (5.1.23). Quyền theo vai trò ở {@code SecurityConfig},
+ * Hồ sơ ứng tuyển cho người tuyển dụng: danh sách (5.1.22), chi tiết, CV, duyệt
+ * và chấm lại AI (5.1.23). Quyền theo vai trò ở {@code SecurityConfig},
  * phạm vi từng người (HM chỉ thấy phòng ban mình) ở {@code ApplicationAccess}.
  */
 @Controller
@@ -52,7 +53,7 @@ public class ApplicationPipelineController {
 
     @GetMapping
     public String list(@ModelAttribute ApplicationSearch search,
-                       @PageableDefault(size = PAGE_SIZE) Pageable pageable, Model model) {
+            @PageableDefault(size = PAGE_SIZE) Pageable pageable, Model model) {
         ApplicationListResponse result = pipeline.list(search, pageable);
         model.addAttribute("result", result);
         model.addAttribute("stageItems", stageItems(result));
@@ -62,7 +63,8 @@ public class ApplicationPipelineController {
     }
 
     /**
-     * Các ô của thanh giai đoạn: "Tất cả", các giai đoạn trong luồng, "Đã dừng". Link giữ bộ lọc đang có, chỉ đổi
+     * Các ô của thanh giai đoạn: "Tất cả", các giai đoạn trong luồng, "Đã dừng".
+     * Link giữ bộ lọc đang có, chỉ đổi
      * giai đoạn và quay về trang đầu.
      */
     static List<StageItem> stageItems(ApplicationListResponse result) {
@@ -93,18 +95,22 @@ public class ApplicationPipelineController {
     @GetMapping("/{id}")
     public String detail(@PathVariable Integer id, Model model) {
         String recommendationUrl = talentPool.pendingRecommendationUrl(id);
-        if (recommendationUrl != null) return "redirect:" + recommendationUrl;
+        if (recommendationUrl != null)
+            return "redirect:" + recommendationUrl;
         if (!model.containsAttribute("reviewForm")) {
             model.addAttribute("reviewForm", new ApplicationReviewRequest(null, null));
         }
         return renderDetail(id, model);
     }
 
-    /** Đạt / Tạm giữ / Không đạt (form truyền thống). Sai bước duyệt thì render lại trang kèm lỗi. */
+    /**
+     * Đạt / Tạm giữ / Không đạt (form truyền thống). Sai bước duyệt thì render lại
+     * trang kèm lỗi.
+     */
     @PostMapping("/{id}/review")
     public String review(@PathVariable Integer id,
-                         @Valid @ModelAttribute("reviewForm") ApplicationReviewRequest form, BindingResult errors,
-                         Model model, RedirectAttributes redirect) {
+            @Valid @ModelAttribute("reviewForm") ApplicationReviewRequest form, BindingResult errors,
+            Model model, RedirectAttributes redirect) {
         if (!errors.hasErrors()) {
             try {
                 redirect.addFlashAttribute("successMessage", reviewService.review(id, form));
@@ -136,9 +142,11 @@ public class ApplicationPipelineController {
     private String renderDetail(Integer id, Model model) {
         ApplicationDetailResponse detail = pipeline.detail(id);
         model.addAttribute("detail", detail);
-        // Keep shared note history available to authorized reviewers after removing a bookmark.
+        // Keep shared note history available to authorized reviewers after removing a
+        // bookmark.
         model.addAttribute("talentNotes", Set.of("HR", "Hiring Manager").contains(detail.viewerRole())
-                ? talentPool.notesFor(detail.candidateId()) : List.of());
+                ? talentPool.notesFor(detail.candidateId())
+                : List.of());
         model.addAttribute("closedByPosting", pipeline.closedByPosting(id));
         model.addAttribute("activeMenu", "applications");
         model.addAttribute("viewerRole", detail.viewerRole());
@@ -146,8 +154,10 @@ public class ApplicationPipelineController {
     }
 
     /**
-     * CV hiển thị trong khung của trang chi tiết (hoặc tab mới). File lưu nội bộ trả thẳng PDF {@code inline};
-     * CV mẫu / link ngoài thì chuyển hướng. Header cho phép nhúng khung cùng nguồn đặt ở {@code SecurityConfig}.
+     * CV hiển thị trong khung của trang chi tiết (hoặc tab mới). File lưu nội bộ
+     * trả thẳng PDF {@code inline};
+     * CV mẫu / link ngoài thì chuyển hướng. Header cho phép nhúng khung cùng nguồn
+     * đặt ở {@code SecurityConfig}.
      */
     @GetMapping("/{id}/cv")
     public ResponseEntity<Resource> cv(@PathVariable Integer id) {

@@ -49,6 +49,7 @@ public class ApplicationAccess {
     }
 
     public boolean canView(User user, Application application) {
+        //check if can view 
         if (VIEW_ALL_ROLES.contains(role(user))) {
             return true;
         }

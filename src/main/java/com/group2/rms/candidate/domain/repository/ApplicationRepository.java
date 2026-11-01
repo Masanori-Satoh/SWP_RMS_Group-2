@@ -186,7 +186,7 @@ public interface ApplicationRepository extends JpaRepository<Application, Intege
                         """ + " and " + FORMAL_FILTER)
         boolean existsActiveByCandidateInSameRequisition(@Param("candidateId") Integer candidateId,
                         @Param("jobPostingId") Integer jobPostingId);
-
+            
         @Query("select count(a) from Application a where a.applicationId = :id and a.applicationStatus = 'HM_Suggested' and " + PENDING_HR_RECOMMENDATION)
         long countPendingHrRecommendation(@Param("id") Integer applicationId);
 

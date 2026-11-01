@@ -6,13 +6,16 @@
         <p class="app-feedback" id="app-feedback" role="status" aria-live="polite"></p>
 
         <!-- Modal Xem nhanh CV -->
-        <dialog th:fragment="preview" id="app-preview" class="dialog app-dialog app-dialog--preview" aria-labelledby="app-preview-title">
+        <dialog th:fragment="preview" id="app-preview" class="dialog app-dialog app-dialog--preview"
+            aria-labelledby="app-preview-title">
             <div class="app-dialog__head">
                 <div class="app-dialog__head-content">
                     <div class="app-dialog__badge-row">
                         <span class="app-dialog__pill">Xem nhanh CV</span>
                     </div>
+                    <!--Title -->
                     <h2 id="app-preview-title" class="app-section-title">Xem nhanh CV</h2>
+                    <!--title job-->
                     <p id="app-preview-job" class="app-dialog__subtitle"></p>
                 </div>
                 <div class="app-dialog__head-actions">
@@ -25,7 +28,10 @@
                         <span class="app-preview-expand-text">Mở rộng</span>
                     </button>
                     <button type="button" class="btn btn--secondary btn--sm" data-app-close aria-label="Đóng cửa sổ CV">
-                        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="m6 6 12 12 M6 18 18 6"/></svg><span>Đóng</span>
+                        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor"
+                            stroke-width="1.8" aria-hidden="true">
+                            <path d="m6 6 12 12 M6 18 18 6" />
+                        </svg><span>Đóng</span>
                     </button>
                 </div>
             </div>
@@ -34,14 +40,17 @@
                 <iframe id="app-preview-frame" class="app-preview__frame" title="Xem nhanh CV" hidden></iframe>
             </div>
             <div class="app-dialog__footer">
-                <a id="app-preview-original" class="btn btn--secondary btn--sm" target="_blank" rel="noopener">Mở CV trong tab mới</a>
+                <!--new tab-->
+                <a id="app-preview-original" class="btn btn--secondary btn--sm" target="_blank" rel="noopener">Mở CV
+                    trong tab mới</a>
+                <!--detail-->
                 <a id="app-preview-detail" class="btn btn--primary btn--sm">Xem hồ sơ chi tiết</a>
             </div>
         </dialog>
 
         <!-- Modal Lưu / Ghi chú ứng viên tiềm năng -->
-        <dialog th:fragment="bookmark(canBookmark)" th:if="${canBookmark}" id="app-bookmark" class="dialog app-dialog app-dialog--bookmark"
-            aria-labelledby="app-bookmark-title app-bookmark-name">
+        <dialog th:fragment="bookmark(canBookmark)" th:if="${canBookmark}" id="app-bookmark"
+            class="dialog app-dialog app-dialog--bookmark" aria-labelledby="app-bookmark-title app-bookmark-name">
             <div class="app-dialog__head">
                 <div>
                     <h2 id="app-bookmark-title" class="app-section-title">Ghi chú ứng viên</h2>
@@ -74,7 +83,8 @@
                         <span id="app-bookmark-count" class="app-bookmark-count-badge" hidden>0</span>
                     </div>
                     <p id="app-bookmark-status" role="status"></p>
-                    <button id="app-bookmark-retry" type="button" class="btn btn--secondary btn--sm" hidden>Tải lại ghi chú</button>
+                    <button id="app-bookmark-retry" type="button" class="btn btn--secondary btn--sm" hidden>Tải lại ghi
+                        chú</button>
                     <ul id="app-bookmark-notes" class="app-notes" aria-label="Ghi chú của HR và HM"></ul>
                 </section>
 
@@ -96,15 +106,18 @@
                     </div>
                     <p id="app-bookmark-error" class="form-error" role="alert"></p>
                     <div class="app-dialog__footer">
-                        <button id="app-bookmark-remove" type="button" class="btn btn--danger btn--sm" hidden>Bỏ lưu tiềm năng</button>
-                        <button id="app-bookmark-submit" type="submit" class="btn btn--primary btn--sm" disabled>Lưu ứng viên</button>
+                        <button id="app-bookmark-remove" type="button" class="btn btn--danger btn--sm" hidden>Bỏ lưu
+                            tiềm năng</button>
+                        <button id="app-bookmark-submit" type="submit" class="btn btn--primary btn--sm" disabled>Lưu ứng
+                            viên</button>
                     </div>
                     <div id="app-bookmark-remove-confirm" class="app-remove-confirm" hidden>
                         <p>Bỏ khỏi kho tiềm năng chung? Hồ sơ và ghi chú vẫn được giữ lại.</p>
                         <div class="app-dialog__footer">
                             <button id="app-bookmark-remove-cancel" type="button"
                                 class="btn btn--secondary btn--sm">Hủy</button>
-                            <button id="app-bookmark-remove-submit" type="button" class="btn btn--danger btn--sm">Xác nhận bỏ lưu</button>
+                            <button id="app-bookmark-remove-submit" type="button" class="btn btn--danger btn--sm">Xác
+                                nhận bỏ lưu</button>
                         </div>
                     </div>
                 </form>
