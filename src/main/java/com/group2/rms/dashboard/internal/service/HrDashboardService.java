@@ -1,7 +1,7 @@
 package com.group2.rms.dashboard.internal.service;
 
 import com.group2.rms.candidate.application.pipeline.dto.ApplicationPipelineResponse;
-import com.group2.rms.candidate.application.pipeline.dto.ApplicationSearch;
+import com.group2.rms.candidate.application.pipeline.dto.OwnerWorkloadResponse;
 import com.group2.rms.candidate.application.pipeline.service.ApplicationPipelineService;
 import com.group2.rms.candidate.domain.rule.ApplicationStage;
 import com.group2.rms.dashboard.internal.dto.DashboardInterviewItem;
@@ -14,7 +14,6 @@ import com.group2.rms.dashboard.internal.repository.DashboardListRepository.Awai
 import com.group2.rms.dashboard.internal.repository.InternalMetricsRepository;
 import com.group2.rms.requisition.service.RequisitionLabels;
 import com.group2.rms.user.entity.User;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -27,7 +26,6 @@ import java.time.temporal.ChronoUnit;
 import java.time.temporal.TemporalAdjusters;
 import java.util.ArrayList;
 import java.util.Comparator;
-import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
 
@@ -68,10 +66,11 @@ public class HrDashboardService {
     @Transactional(readOnly = true)
     public HrDashboardResponse build(User user) {
         LocalDateTime now = LocalDateTime.now(clock);
-        Map<ApplicationStage, List<ApplicationPipelineResponse>> stageRows = applicationsByStage();
+        // Số mỗi giai đoạn khớp các tab /applications; chỉ dựng dòng của hồ sơ HR đang cầm bóng
+        OwnerWorkloadResponse workload = applicationPipeline.ownerWorkload(HR_OWNER, WAITING_STAGES);
         Map<Integer, LocalDateTime> waitingSince = metrics.applicationWaitingSince();
 
-        List<DashboardWorkItem> allWork = workQueue(stageRows, waitingSince, now);
+        List<DashboardWorkItem> allWork = workQueue(workload, waitingSince, now);
         List<DashboardWorkItem> shownWork = DashboardViews.firstItems(allWork, LIST_LIMIT);
 
         List<LocalDateTime> applicationDates = metrics.applicationDates(trendFrom(now), now);
@@ -79,31 +78,19 @@ public class HrDashboardService {
         return new HrDashboardResponse(
                 user.getRole().getRoleName(),
                 user.getFullName(),
-                kpis(now, stageRows),
+                kpis(now, workload),
                 shownWork,
                 allWork.size() - shownWork.size(),
                 upcomingInterviews(now),
                 weeklyApplications(applicationDates, now));
     }
 
-    /** Hồ sơ từng giai đoạn lấy từ màn /applications để số trên dashboard khớp các tab. */
-    private Map<ApplicationStage, List<ApplicationPipelineResponse>> applicationsByStage() {
-        Map<ApplicationStage, List<ApplicationPipelineResponse>> result = new EnumMap<>(ApplicationStage.class);
-        for (ApplicationStage stage : WAITING_STAGES) {
-            ApplicationSearch onlyStage = new ApplicationSearch(null, null, null, null, stage.name());
-            // Lấy toàn bộ kết quả để KPI không lệch khỏi tab /applications khi giai đoạn rất đông
-            result.put(stage, applicationPipeline.list(onlyStage, PageRequest.of(0, Integer.MAX_VALUE))
-                    .applications().getContent());
-        }
-        return result;
-    }
-
-    private List<DashboardMetricResponse> kpis(LocalDateTime now,
-            Map<ApplicationStage, List<ApplicationPipelineResponse>> stageRows) {
+    private List<DashboardMetricResponse> kpis(LocalDateTime now, OwnerWorkloadResponse workload) {
         LocalDate today = now.toLocalDate();
-        long unscreened = stageRows.get(ApplicationStage.APPLIED).size();
+        long unscreened = workload.count(ApplicationStage.APPLIED);
         long postedToday = metrics.countPublishedPostingsBetween(today.atStartOfDay(), now);
-        long awaitingSchedule = countHrOwned(stageRows.get(ApplicationStage.INTERVIEW));
+        // Ở giai đoạn phỏng vấn, HR chỉ cầm bóng khi hồ sơ đang chờ xếp lịch (AWAITING_SCHEDULE)
+        long awaitingSchedule = workload.owned(ApplicationStage.INTERVIEW).size();
 
         return List.of(
                 DashboardMetricResponse.backlog("fileSearch", "Hồ sơ chờ sàng lọc", unscreened,
@@ -115,21 +102,14 @@ public class HrDashboardService {
                         "Chưa xếp lịch", "/applications?stage=" + ApplicationStage.INTERVIEW.name(), "neutral"));
     }
 
-    /** Ở giai đoạn phỏng vấn, HR chỉ cầm bóng khi hồ sơ đang chờ xếp lịch (AWAITING_SCHEDULE). */
-    private long countHrOwned(List<ApplicationPipelineResponse> rows) {
-        return rows.stream().filter(row -> HR_OWNER.equals(row.ownerLabel())).count();
-    }
-
     /** Việc HR phải làm: hồ sơ HR đang cầm bóng + yêu cầu đã duyệt chưa có tin. Chờ lâu nhất lên đầu. */
-    private List<DashboardWorkItem> workQueue(Map<ApplicationStage, List<ApplicationPipelineResponse>> stageRows,
+    private List<DashboardWorkItem> workQueue(OwnerWorkloadResponse workload,
             Map<Integer, LocalDateTime> waitingSince, LocalDateTime now) {
         List<WaitingWork> waiting = new ArrayList<>();
         for (ApplicationStage stage : WAITING_STAGES) {
-            for (ApplicationPipelineResponse row : stageRows.get(stage)) {
-                if (HR_OWNER.equals(row.ownerLabel())) {
-                    long days = DashboardLabels.waitDays(waitingSince.get(row.applicationId()), now);
-                    waiting.add(new WaitingWork(days, applicationWork(stage, row, days)));
-                }
+            for (ApplicationPipelineResponse row : workload.owned(stage)) {
+                long days = DashboardLabels.waitDays(waitingSince.get(row.applicationId()), now);
+                waiting.add(new WaitingWork(days, applicationWork(stage, row, days)));
             }
         }
         for (AwaitingPostingRow row : lists.requisitionsAwaitingPosting()) {

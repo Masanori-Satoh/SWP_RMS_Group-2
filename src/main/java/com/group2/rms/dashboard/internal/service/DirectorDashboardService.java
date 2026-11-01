@@ -116,7 +116,8 @@ public class DirectorDashboardService {
         for (PendingOfferRow row : rows) {
             long days = DashboardLabels.waitDays(row.waitingSince(), now);
             // Rule (D8): Giám đốc là người duyệt lương nên thấy mức lương đề xuất.
-            items.add(new PendingOfferItem(DashboardViews.candidateName(row.candidateName()), row.positionTitle(),
+            String name = DashboardViews.candidateName(row.candidateName());
+            items.add(new PendingOfferItem(name, DashboardLabels.initials(row.candidateName()), row.positionTitle(),
                     DashboardLabels.money(row.proposedSalary()), DashboardLabels.waitText(days),
                     DashboardLabels.waitTone(days), "/offers/" + row.offerId()));
         }
@@ -127,7 +128,9 @@ public class DirectorDashboardService {
     private List<DepartmentRequisitionItem> departments(List<DepartmentRequisitionRow> rows) {
         List<DepartmentRequisitionItem> items = new ArrayList<>();
         for (DepartmentRequisitionRow row : rows) {
-            items.add(new DepartmentRequisitionItem(row.departmentName(), row.pending(), row.approved()));
+            long total = row.pending() + row.approved();
+            String chartTitle = row.departmentName() + " · " + total + " yêu cầu";
+            items.add(new DepartmentRequisitionItem(row.departmentName(), row.pending(), row.approved(), chartTitle));
         }
         return items;
     }

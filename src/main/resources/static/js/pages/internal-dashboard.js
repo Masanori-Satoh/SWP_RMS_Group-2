@@ -91,7 +91,9 @@
         options.scales.x.grid.display = false;
         options.scales.y.stacked = true;
         options.scales.y.beginAtZero = true;
-        options.plugins.tooltip.callbacks.label = (item) => item.dataset.label + ': ' + item.raw + ' yêu cầu';
+        // Tooltip: tiêu đề "Kinh doanh · 9 yêu cầu" (data-title), từng dòng "Đã duyệt: 7"
+        options.plugins.tooltip.callbacks.label = (item) => item.dataset.label + ': ' + item.raw;
+        options.plugins.legend.reverse = true;
         return new Chart(canvas, {
             type: 'bar',
             data: {

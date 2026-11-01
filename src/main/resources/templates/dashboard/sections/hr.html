@@ -3,7 +3,7 @@
 <body>
 <!-- Dashboard HR (toàn công ty); dashboard/index.html chèn vào theo dashboard.section. -->
 <th:block th:fragment="content(dashboard)">
-    <div th:replace="~{dashboard/fragments :: pageHeader('Bảng điều khiển', 'Toàn công ty')}"></div>
+    <div th:replace="~{dashboard/fragments :: pageHeader('Bảng điều khiển', null)}"></div>
 
     <div class="dash-role-kpis dash-hr-kpis" th:insert="~{dashboard/fragments :: kpis(${dashboard.kpis})}"></div>
 

@@ -8,6 +8,7 @@ import com.group2.rms.candidate.application.pipeline.dto.ApplicationDetailRespon
 import com.group2.rms.candidate.application.pipeline.dto.ApplicationListResponse;
 import com.group2.rms.candidate.application.pipeline.dto.ApplicationPipelineResponse;
 import com.group2.rms.candidate.application.pipeline.dto.ApplicationSearch;
+import com.group2.rms.candidate.application.pipeline.dto.OwnerWorkloadResponse;
 import com.group2.rms.candidate.domain.entity.AIScreeningResult;
 import com.group2.rms.candidate.domain.entity.Application;
 import com.group2.rms.candidate.domain.entity.Candidate;
@@ -31,6 +32,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Comparator;
 import java.util.EnumMap;
 import java.util.HashMap;
@@ -39,8 +41,6 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
-import java.util.function.Function;
-import java.util.stream.Collectors;
 
 /**
  * Đọc dữ liệu cho danh sách hồ sơ (5.1.22) và chi tiết hồ sơ (5.1.23), trong phạm vi người xem được phép.
@@ -75,20 +75,8 @@ public class ApplicationPipelineService {
         ApplicationScope scope = access.scopeOf(actor);
         ApplicationSearch filter = search.normalized();
 
-        List<Integer> ids = pipelineQueries.findPipelineIds(
-                scope.allDepartments(), scope.managerUserId(), scope.departmentId(),
-                filter.jobPostingId(), filter.status(), filter.keyword(), filter.sort());
-        Map<Integer, ApplicationProgressFacts> facts = progressFacts(ids);
-        LocalDateTime now = LocalDateTime.now();
-        Map<Integer, ApplicationProgressResponse> progress = new LinkedHashMap<>();
-        ids.stream().filter(facts::containsKey)
-                .forEach(id -> progress.put(id, progress(facts.get(id), now)));
-
-        Map<ApplicationStage, Long> stageCounts = new EnumMap<>(ApplicationStage.class);
-        for (ApplicationStage stage : ApplicationStage.values()) {
-            stageCounts.put(stage, 0L);
-        }
-        progress.values().forEach(p -> stageCounts.merge(p.stage(), 1L, Long::sum));
+        Map<Integer, ApplicationProgressResponse> progress = progressInScope(scope, filter);
+        Map<ApplicationStage, Long> stageCounts = stageCounts(progress);
 
         ApplicationStage stage = filter.stageFilter();
         List<Integer> matching = progress.entrySet().stream()
@@ -97,11 +85,7 @@ public class ApplicationPipelineService {
         Pageable pageRequest = PageRequest.of(pageable.getPageNumber(), pageable.getPageSize());
         List<Integer> pageIds = matching.stream()
                 .skip(pageRequest.getOffset()).limit(pageRequest.getPageSize()).toList();
-        List<ApplicationPipelineResponse> rows = pageRows(pageIds).stream().map(row -> {
-            ApplicationProgressResponse rowProgress = progress.get(row.applicationId());
-            return row.withProgress(rowProgress,
-                    access.canScheduleInterview(actor, rowProgress), access.canCreateOffer(actor, rowProgress));
-        }).toList();
+        List<ApplicationPipelineResponse> rows = rowsWithProgress(pageIds, progress, actor);
 
         // Lấy thẳng từ bảng tin: tin chưa có hồ sơ nào (mở từ trang tin) không nằm trong danh sách lựa chọn.
         String postingTitle = filter.jobPostingId() == null ? null
@@ -110,6 +94,33 @@ public class ApplicationPipelineService {
                 pipelineQueries.findPostingOptions(scope.allDepartments(), scope.managerUserId(), scope.departmentId()),
                 filter, postingTitle, access.canOpenJobPosting(actor), !scope.allDepartments(),
                 actor.getRole() == null ? null : actor.getRole().getRoleName());
+    }
+
+    /**
+     * Cho dashboard: số hồ sơ mỗi giai đoạn và các dòng do {@code ownerLabel} cầm bóng ở {@code stages}, không lọc.
+     * Cùng cách tính giai đoạn với {@link #list} nên số khớp các tab, nhưng chỉ đọc dữ kiện một lần và chỉ dựng dòng
+     * cần hiện thay vì dựng mọi dòng của từng giai đoạn.
+     */
+    @Transactional(readOnly = true)
+    public OwnerWorkloadResponse ownerWorkload(String ownerLabel, Collection<ApplicationStage> stages) {
+        User actor = access.actor();
+        ApplicationScope scope = access.scopeOf(actor);
+        ApplicationSearch filter = new ApplicationSearch(null, null, null, null, null).normalized();
+
+        Map<Integer, ApplicationProgressResponse> progress = progressInScope(scope, filter);
+        List<Integer> ownedIds = progress.entrySet().stream()
+                .filter(entry -> stages.contains(entry.getValue().stage())
+                        && Objects.equals(ownerLabel, entry.getValue().ownerLabel()))
+                .map(Map.Entry::getKey).toList();
+
+        Map<ApplicationStage, List<ApplicationPipelineResponse>> ownedRows = new EnumMap<>(ApplicationStage.class);
+        for (ApplicationStage stage : stages) {
+            ownedRows.put(stage, new ArrayList<>());
+        }
+        for (ApplicationPipelineResponse row : rowsWithProgress(ownedIds, progress, actor)) {
+            ownedRows.get(progress.get(row.applicationId()).stage()).add(row);
+        }
+        return new OwnerWorkloadResponse(stageCounts(progress), ownedRows);
     }
 
     @Transactional(readOnly = true)
@@ -201,13 +212,49 @@ public class ApplicationPipelineService {
         return facts;
     }
 
-    /** Các dòng của một trang, đúng thứ tự của {@code pageIds}. */
+    /** Giai đoạn của mọi đơn trong phạm vi và bộ lọc, giữ thứ tự sắp xếp của {@code filter}. */
+    private Map<Integer, ApplicationProgressResponse> progressInScope(ApplicationScope scope, ApplicationSearch filter) {
+        List<Integer> ids = pipelineQueries.findPipelineIds(
+                scope.allDepartments(), scope.managerUserId(), scope.departmentId(),
+                filter.jobPostingId(), filter.status(), filter.keyword(), filter.sort());
+        Map<Integer, ApplicationProgressFacts> facts = progressFacts(ids);
+        LocalDateTime now = LocalDateTime.now();
+        Map<Integer, ApplicationProgressResponse> progress = new LinkedHashMap<>();
+        ids.stream().filter(facts::containsKey)
+                .forEach(id -> progress.put(id, progress(facts.get(id), now)));
+        return progress;
+    }
+
+    /** Số đơn mỗi giai đoạn; giai đoạn không có đơn nào vẫn có mặt với giá trị 0. */
+    private static Map<ApplicationStage, Long> stageCounts(Map<Integer, ApplicationProgressResponse> progress) {
+        Map<ApplicationStage, Long> stageCounts = new EnumMap<>(ApplicationStage.class);
+        for (ApplicationStage stage : ApplicationStage.values()) {
+            stageCounts.put(stage, 0L);
+        }
+        progress.values().forEach(p -> stageCounts.merge(p.stage(), 1L, Long::sum));
+        return stageCounts;
+    }
+
+    /** Dòng của {@code ids} kèm nhãn giai đoạn và quyền thao tác của người xem. */
+    private List<ApplicationPipelineResponse> rowsWithProgress(List<Integer> ids,
+            Map<Integer, ApplicationProgressResponse> progress, User actor) {
+        return pageRows(ids).stream().map(row -> {
+            ApplicationProgressResponse rowProgress = progress.get(row.applicationId());
+            return row.withProgress(rowProgress,
+                    access.canScheduleInterview(actor, rowProgress), access.canCreateOffer(actor, rowProgress));
+        }).toList();
+    }
+
+    /** Các dòng của một trang, đúng thứ tự của {@code pageIds}; chia lô như {@link #progressFacts}. */
     private List<ApplicationPipelineResponse> pageRows(List<Integer> pageIds) {
         if (pageIds.isEmpty()) {
             return List.of();
         }
-        Map<Integer, ApplicationPipelineResponse> byId = pipelineQueries.findPipelineRows(pageIds).stream()
-                .collect(Collectors.toMap(ApplicationPipelineResponse::applicationId, Function.identity()));
+        Map<Integer, ApplicationPipelineResponse> byId = new HashMap<>();
+        for (int from = 0; from < pageIds.size(); from += FACTS_BATCH) {
+            pipelineQueries.findPipelineRows(pageIds.subList(from, Math.min(from + FACTS_BATCH, pageIds.size())))
+                    .forEach(row -> byId.put(row.applicationId(), row));
+        }
         return pageIds.stream().map(byId::get).filter(Objects::nonNull).toList();
     }
 

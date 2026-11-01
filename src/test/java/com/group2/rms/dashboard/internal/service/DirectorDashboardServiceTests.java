@@ -114,7 +114,7 @@ class DirectorDashboardServiceTests {
     }
 
     @Test
-    @DisplayName("Thư mời nhận việc chờ duyệt: lương có dấu chấm, link chi tiết, KPI đếm toàn bộ")
+    @DisplayName("Thư mời nhận việc chờ duyệt: lương có dấu chấm, chữ viết tắt họ + tên, link chi tiết, KPI đếm toàn bộ")
     void build_shouldMapPendingOffers_whenOffersWaiting() {
         // Arrange
         when(lists.pendingOffers()).thenReturn(List.of(
@@ -127,8 +127,10 @@ class DirectorDashboardServiceTests {
 
         // Assert
         assertEquals("25.000.000 VND", offers.get(0).salaryText());
+        assertEquals("LH", offers.get(0).initials());
         assertEquals("/offers/31", offers.get(0).href());
         assertEquals("Ứng viên chưa có tên", offers.get(1).candidateName());
+        assertEquals("?", offers.get(1).initials());
         assertEquals("2", result.kpis().get(1).value());
         assertEquals("Đang chờ phê duyệt", result.kpis().get(1).detail());
         assertEquals("/offers?status=Pending_Director", result.kpis().get(1).href());
@@ -151,7 +153,7 @@ class DirectorDashboardServiceTests {
     }
 
     @Test
-    @DisplayName("Theo phòng ban: mỗi phòng một cột chồng chờ duyệt + đã duyệt, giữ thứ tự từ repository")
+    @DisplayName("Theo phòng ban: mỗi phòng một cột chồng chờ duyệt + đã duyệt, tiêu đề tooltip có tổng, giữ thứ tự từ repository")
     void build_shouldBuildDepartmentColumns_whenRequisitionsOpen() {
         // Arrange
         when(lists.openRequisitionsByDepartment()).thenReturn(List.of(
@@ -166,6 +168,7 @@ class DirectorDashboardServiceTests {
         assertEquals("Kỹ thuật", departments.get(0).departmentName());
         assertEquals(3, departments.get(0).pending());
         assertEquals(15, departments.get(0).approved());
+        assertEquals("Kỹ thuật · 18 yêu cầu", departments.get(0).chartTitle());
         assertEquals(0, departments.get(1).pending());
     }
 

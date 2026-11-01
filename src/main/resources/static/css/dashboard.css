@@ -51,6 +51,10 @@
 .dash-work__item:last-child { border-bottom: 0; }
 .dash-work__title { font-weight: 600; margin: 0; overflow-wrap: anywhere; }
 .dash-work__detail { margin: var(--s1) 0 0; color: var(--muted); font-size: var(--font-sm); overflow-wrap: anywhere; }
+/* Director: dòng duyệt không có cột loại việc; dòng đề nghị có ô tròn chữ viết tắt ở đầu */
+.dash-work--approve .dash-work__item { grid-template-columns: minmax(0, 1fr) auto auto; }
+.dash-work--people .dash-work__item { grid-template-columns: auto minmax(0, 1fr) auto auto; }
+.dash-avatar { display: grid; place-items: center; width: 36px; height: 36px; border-radius: var(--radius-full); background: var(--avatar-bg); color: var(--avatar-fg); font: 600 var(--font-sm)/1 var(--sans); }
 
 /* Lịch phỏng vấn dạng danh sách */
 .dash-interviews { list-style: none; padding: 0; margin: 0; }
@@ -63,6 +67,7 @@
 /* Biểu đồ Chart.js (internal-dashboard.js); danh sách dữ liệu ngay sau là bản dự phòng khi không vẽ được */
 .dash-chart { position: relative; width: 100%; height: 280px; }
 .dash-chart--progress { height: 300px; }
+.dash-chart--departments { height: 360px; }
 .dash-chart__canvas { display: block; }
 .dash-chart[hidden] { display: none; }
 .dash-chart-data { list-style: none; padding: 0; margin: 0; display: grid; gap: var(--s2); font-size: var(--font-sm); font-variant-numeric: tabular-nums; }
@@ -165,7 +170,7 @@
   .dash-week-scroll { margin-inline: calc(var(--s4) * -1); padding-inline: var(--s4); }
   .dash-work__item { display: flex; flex-wrap: wrap; }
   .dash-work__body { flex-basis: 100%; order: -1; }
-  .dash-chart, .dash-chart--progress { height: 240px; }
+  .dash-chart, .dash-chart--progress, .dash-chart--departments { height: 240px; }
   .adm-summaries { grid-template-columns: 1fr; }
   .adm-status-links { grid-template-columns: 1fr; }
   .adm-monitor-rows { grid-template-columns: 1fr; }

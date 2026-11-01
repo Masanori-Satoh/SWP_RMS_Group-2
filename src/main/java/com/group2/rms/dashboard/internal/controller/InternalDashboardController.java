@@ -20,7 +20,6 @@ public class InternalDashboardController {
         this.internalDashboardService = internalDashboardService;
     }
 
-    /** week: tuần của "Lịch tuần này" (Interviewer), giữ dạng chuỗi để giá trị lạ quay về tuần hiện tại (D13). */
     @GetMapping("/dashboard/internal")
     public String dashboard(@RequestParam(value = "week", required = false) String week,
             Authentication authentication, Model model) {
