@@ -58,7 +58,7 @@ class ApplicationSubmissionServiceTests {
     @BeforeEach
     void setUp() {
         service = new ApplicationSubmissionService(candidates, applications, jobPostings,
-                new CvFileValidator(), cvStorage, events);
+                new CvFileValidator(), cvStorage);
         TransactionSynchronizationManager.initSynchronization();
     }
 
@@ -91,7 +91,6 @@ class ApplicationSubmissionServiceTests {
         assertEquals(JOB_ID, saved.getValue().getJobPosting().getJobPostingId());
         assertEquals("local:cv/15/abc.pdf", saved.getValue().getAppliedCvUrl());
         assertEquals("Applied", saved.getValue().getApplicationStatus());
-        verify(events).publishEvent(new ApplicationSubmittedEvent(301));
         assertEquals(potential, candidate.isPotential());
     }
 
@@ -256,7 +255,6 @@ class ApplicationSubmissionServiceTests {
 
         assertEquals(302, service.apply(USERNAME, JOB_ID, PDF));
 
-        verify(events).publishEvent(new ApplicationSubmittedEvent(302));
         verify(applications).recordSuggestionSubmitted(15, 302);
         verify(applications, never()).submitSuggestionWithNewCv(anyInt(), anyString(), eq("HM_Passed"));
         verify(applications, never()).save(any(Application.class));

@@ -22,7 +22,7 @@ import static com.group2.rms.requisition.service.RequisitionAccess.*;
 @RequiredArgsConstructor
 public class ApplicationAccess {
 
-    public static final Set<String> HR_REVIEW_STATUSES = Set.of("Applied", "AI_Screened");
+    public static final Set<String> HR_REVIEW_STATUSES = Set.of("Applied");
     public static final String HM_REVIEW_STATUS = "HR_Passed";
 
     private static final Set<String> VIEW_ALL_ROLES = Set.of(ROLE_HR, ROLE_DIRECTOR);
@@ -76,10 +76,6 @@ public class ApplicationAccess {
             return HM_REVIEW_STATUS.equals(status);
         }
         return isHiringManager(user) && HM_REVIEW_STATUS.equals(status) && inManagedDepartment(user, application);
-    }
-
-    public boolean canRescreen(User user, Application application) {
-        return ROLE_HR.equals(role(user)) && HR_REVIEW_STATUSES.contains(application.getApplicationStatus());
     }
 
     /**

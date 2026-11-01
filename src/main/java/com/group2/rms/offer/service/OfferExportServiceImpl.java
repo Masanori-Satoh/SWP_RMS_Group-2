@@ -315,7 +315,7 @@ public class OfferExportServiceImpl implements OfferExportService {
             case "director_approved", "approved" -> "Giám đốc đã duyệt";
             case "director_rejected", "rejected" -> "Giám đốc từ chối";
             case "sent_candidate" -> "Đã gửi thư mời";
-            case "accepted" -> "Ứng viên chấp nhận";
+            case "accepted" -> "Ứng viên đã nhận việc";
             case "declined" -> "Ứng viên từ chối";
             case "canceled", "cancelled" -> "Đã hủy";
             case "voided" -> "Không còn hiệu lực";
@@ -695,7 +695,7 @@ public class OfferExportServiceImpl implements OfferExportService {
         // Row 6: Tổng số Offer trong file
         Row r6 = sheet.createRow(6);
         Cell c6_0 = r6.createCell(0);
-        c6_0.setCellValue("Tổng số đề xuất xuất:");
+        c6_0.setCellValue("Tổng số đề xuất được xuất:");
         c6_0.setCellStyle(labelStyle);
         Cell c6_1 = r6.createCell(1);
         c6_1.setCellValue(rows.size());
@@ -716,7 +716,7 @@ public class OfferExportServiceImpl implements OfferExportService {
         statusCounts.put("Giám đốc đã duyệt", 0L);
         statusCounts.put("Giám đốc từ chối", 0L);
         statusCounts.put("Đã gửi thư mời", 0L);
-        statusCounts.put("Ứng viên chấp nhận", 0L);
+        statusCounts.put("Ứng viên đã nhận việc", 0L);
         statusCounts.put("Ứng viên từ chối", 0L);
 
         for (OfferExportRow row : rows) {
@@ -728,7 +728,7 @@ public class OfferExportServiceImpl implements OfferExportService {
                 case "director_approved", "approved" -> statusCounts.put("Giám đốc đã duyệt", statusCounts.get("Giám đốc đã duyệt") + 1);
                 case "director_rejected", "rejected" -> statusCounts.put("Giám đốc từ chối", statusCounts.get("Giám đốc từ chối") + 1);
                 case "sent_candidate" -> statusCounts.put("Đã gửi thư mời", statusCounts.get("Đã gửi thư mời") + 1);
-                case "accepted" -> statusCounts.put("Ứng viên chấp nhận", statusCounts.get("Ứng viên chấp nhận") + 1);
+                case "accepted" -> statusCounts.put("Ứng viên đã nhận việc", statusCounts.get("Ứng viên đã nhận việc") + 1);
                 case "declined" -> statusCounts.put("Ứng viên từ chối", statusCounts.get("Ứng viên từ chối") + 1);
             }
         }

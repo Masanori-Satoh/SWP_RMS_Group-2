@@ -86,15 +86,8 @@ public class ApiMonitoringService {
                     null);
         }
 
-        return List.of(internal,
-                new MonitorRowResponse(
-                        "ai",
-                        "AI CV Screening",
-                        "External Intergration",
-                        "Unconfigured",
-                        null,
-                        null),
-                emailMonitoring.row());
+        // dunglt bổ sung: bỏ dòng "AI CV Screening" (gỡ AI, 01/11)
+        return List.of(internal, emailMonitoring.row());
     }
 
     public ProbeOutcomeResponse probeEmail(HttpServletRequest request) {

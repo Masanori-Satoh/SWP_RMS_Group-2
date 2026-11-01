@@ -452,7 +452,7 @@ function submitCreateOffer(isDraft) {
                 closeModal('createOfferModal');
                 setTimeout(() => window.location.reload(), 800);
             } else {
-                showToast(res?.message || 'Lỗi khi tạo Offer', 'danger');
+                showToast(res?.message || 'Lỗi khi tạo đề xuất nhận việc', 'danger');
             }
         })
         .catch(err => {
@@ -520,7 +520,7 @@ function getStatusBadgeHtml(status) {
         case 'Sent_Candidate':
             return '<span class="status-badge status-sent"><i class="fa-regular fa-paper-plane"></i> Đã gửi thư mời</span>';
         case 'Accepted':
-            return '<span class="status-badge status-accepted"><i class="fa-solid fa-user-check"></i> Ứng viên chấp nhận</span>';
+            return '<span class="status-badge status-accepted"><i class="fa-solid fa-user-check"></i> Ứng viên đã nhận việc</span>';
         case 'Declined':
             return '<span class="status-badge status-declined"><i class="fa-solid fa-user-xmark"></i> Ứng viên từ chối</span>';
         default:
@@ -857,7 +857,7 @@ function submitUpdateOffer(isDraft) {
     const offerIdInput = document.getElementById('editOfferId');
     const offerId = offerIdInput ? offerIdInput.value : '';
     if (!offerId) {
-        showToast('Không xác định được Offer cần cập nhật.', 'danger');
+        showToast('Không xác định được đề xuất nhận việc cần cập nhật.', 'danger');
         return;
     }
 
@@ -1058,7 +1058,7 @@ window.executeSendOfferAction = executeSendOfferAction;
 
 function confirmDeleteOffer(offerId) {
     if (!offerId) return;
-    if (!confirm('Bạn có chắc chắn muốn xóa bản thảo đề xuất này khỏi hệ thống?')) {
+    if (!confirm('Bạn có chắc chắn muốn xóa bản nháp đề xuất này khỏi hệ thống?')) {
         return;
     }
 
@@ -1087,13 +1087,13 @@ function confirmDeleteOffer(offerId) {
                 closeModal('detailOfferModal');
                 try {
                     sessionStorage.setItem('pendingFlashToast', JSON.stringify({
-                        message: res.message || 'Đã xóa bản thảo đề xuất thành công.',
+                        message: res.message || 'Đã xóa bản nháp đề xuất thành công.',
                         type: 'success'
                     }));
                 } catch (e) { }
                 window.location.reload();
             } else {
-                showFlashToast(res?.message || 'Lỗi xóa bản thảo.', 'error');
+                showFlashToast(res?.message || 'Lỗi xóa bản nháp.', 'error');
             }
         })
         .catch(err => {
@@ -1607,7 +1607,7 @@ function openDirectorDetailModal(id) {
                 } else if (detail.offerStatus === 'Sent_Candidate') {
                     statusHtml = '<span class="status-badge status-sent"><i class="fa-solid fa-paper-plane"></i> Đã gửi thư mời</span>';
                 } else if (detail.offerStatus === 'Accepted') {
-                    statusHtml = '<span class="status-badge status-accepted"><i class="fa-solid fa-circle-check"></i> Ứng viên chấp nhận</span>';
+                    statusHtml = '<span class="status-badge status-accepted"><i class="fa-solid fa-circle-check"></i> Ứng viên đã nhận việc</span>';
                 } else if (detail.offerStatus === 'Declined') {
                     statusHtml = '<span class="status-badge status-rejected"><i class="fa-solid fa-circle-xmark"></i> Ứng viên từ chối</span>';
                 } else {

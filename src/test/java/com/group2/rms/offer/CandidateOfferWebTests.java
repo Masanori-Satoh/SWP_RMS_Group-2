@@ -194,17 +194,52 @@ class CandidateOfferWebTests {
     }
 
     @Test
-    void candidateCanViewDeclinePage() throws Exception {
+    void declineFromDetailWithBlankReasonSucceeds() throws Exception {
+        when(candidateOffers.decline(12)).thenReturn("Junior Java Developer");
+
+        mvc.perform(post("/portal/offers/12/decline")
+                        .param("fromDetail", "true")
+                        .param("declineReason", "   ")
+                        .with(as("an.vo", "Candidate")).with(csrf()))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrl("/portal/offers/12"))
+                .andExpect(flash().attribute("successMessage", "Bạn đã từ chối thư mời nhận việc vị trí Junior Java Developer."))
+                .andExpect(flash().attribute("decisionType", "DECLINED"))
+                .andExpect(flash().attribute("declineReasonDisplay", nullValue()));
+    }
+
+    @Test
+    void declineReasonExceedingMaxLengthFailsValidation() throws Exception {
+        String longReason = "a".repeat(1001);
+
+        mvc.perform(post("/portal/offers/12/decline")
+                        .param("fromDetail", "true")
+                        .param("declineReason", longReason)
+                        .with(as("an.vo", "Candidate")).with(csrf()))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrl("/portal/offers/12"))
+                .andExpect(flash().attribute("errorMessage", "Lý do từ chối không được vượt quá 1000 ký tự."));
+
+        verify(candidateOffers, never()).decline(anyInt(), anyString());
+    }
+
+    @Test
+    void candidateDetailWhenCannotRespondDoesNotShowActionsOrDialogs() throws Exception {
+        when(candidateOffers.getDetail(12)).thenReturn(detailOffer(12, "Accepted", "Đã nhận việc", "badge--success", false));
+
+        mvc.perform(get("/portal/offers/12").with(as("an.vo", "Candidate")))
+                .andExpect(status().isOk())
+                .andExpect(content().string(not(containsString("data-detail-trigger=\"accept\""))))
+                .andExpect(content().string(not(containsString("data-detail-trigger=\"decline\""))));
+    }
+
+    @Test
+    void candidateAccessDeclineRouteRedirectsToDetailWithModalParam() throws Exception {
         when(candidateOffers.getDetail(12)).thenReturn(detailOffer(12, "Sent_Candidate", "Chờ bạn trả lời", "badge--warning", true));
 
         mvc.perform(get("/portal/offers/12/decline").with(as("an.vo", "Candidate")))
-                .andExpect(status().isOk())
-                .andExpect(view().name("offers/candidate-decline"))
-                .andExpect(model().attribute("activeMenu", "offers"))
-                .andExpect(content().string(containsString("Từ chối Thư mời nhận việc")))
-                .andExpect(content().string(containsString("action=\"/portal/offers/12/decline\"")))
-                .andExpect(content().string(containsString("Mức đãi ngộ chưa đạt kỳ vọng")))
-                .andExpect(content().string(not(containsString("style=\""))));
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrl("/portal/offers/12?openDecline=true"));
     }
 
     @Test

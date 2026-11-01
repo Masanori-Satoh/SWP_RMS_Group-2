@@ -56,15 +56,6 @@
 .req-detail-page .rqd-text + .rqd-text { padding-top:var(--s3); border-top:1px solid var(--line); }
 .req-detail-page .rqd-text p { margin:0; max-width:75ch; }
 
-/* Bảng tiêu chí */
-.req-detail-page .rqd-criteria { width:100%; border-collapse:collapse; }
-.req-detail-page .rqd-criteria th { padding:var(--s2); border-bottom:1px solid var(--line); color:var(--muted); font-size:var(--font-xs); font-weight:600; text-align:left; }
-.req-detail-page .rqd-criteria td { padding:var(--s3) var(--s2); border-bottom:1px solid var(--line); vertical-align:top; }
-.req-detail-page .rqd-criteria th:last-child { width:170px; }
-.req-detail-page .rqd-criteria .rqd-sub { display:flex; flex-wrap:wrap; align-items:center; gap:var(--s2); margin-top:2px; }
-.req-detail-page .rqd-weight { display:flex; align-items:center; gap:var(--s2); font-weight:700; font-variant-numeric:tabular-nums; }
-.req-detail-page .rqd-weight progress { flex:1; height:6px; accent-color:var(--brand); }
-
 /* ----- 5. Cột phải ----- */
 .req-detail-page .rqd-decision { border-color:var(--warning); }
 .req-detail-page .rqd-decision form { display:grid; gap:var(--s2); }

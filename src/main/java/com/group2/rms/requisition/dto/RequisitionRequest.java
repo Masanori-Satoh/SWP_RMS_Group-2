@@ -1,7 +1,6 @@
 package com.group2.rms.requisition.dto;
 
 import com.group2.rms.requisition.validator.RequisitionValidator;
-import jakarta.validation.Valid;
 import jakarta.validation.constraints.DecimalMax;
 import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.Digits;
@@ -12,12 +11,8 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import org.springframework.format.annotation.DateTimeFormat;
 
 import java.math.BigDecimal;
-import java.time.LocalDate;
-import java.util.ArrayList;
-import java.util.List;
 
 /*
  * DTO: form tạo / sửa yêu cầu; annotation chặn sớm định dạng, phần bắt buộc do RequisitionValidator kiểm tra.
@@ -67,8 +62,4 @@ public class RequisitionRequest {
     private String reasonForHiring;
     private String jobDescription;
     private String requirementDetails;
-
-    @Valid
-    @Builder.Default
-    private List<ScreeningCriteriaRequest> screeningCriteria = new ArrayList<>();
 }

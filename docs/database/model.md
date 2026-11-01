@@ -41,7 +41,7 @@ IpAddress;NULL;User's IP address
 Timestamp;NOT NULL, DEFAULT SYSDATETIME();Time the action occurred
 3.5 SystemConfig
 Column;Constraints;Notes
-ConfigKey;PRIMARY KEY;e.g. AI_SCREENING_ENDPOINT, EMAIL_SMTP
+ConfigKey;PRIMARY KEY;e.g. SMTP_HOST, SME_COMPANY_NAME
 ConfigValue;NOT NULL;Configuration value
 Description;NULL;Purpose of the configuration
 UpdatedAt;NOT NULL, DEFAULT SYSDATETIME();Last update time
@@ -74,15 +74,6 @@ DirectorId;NOT NULL, FOREIGN KEY -> User.UserId;Director who approved it
 Status;NOT NULL;Approved / Rejected
 Comments;NULL;Director's remarks / rejection reason
 ApprovalDate;NOT NULL, DEFAULT SYSDATETIME();Time of approval
-3.8 ScreeningCriteria
-Column;Constraints;Notes
-CriteriaId;PRIMARY KEY, IDENTITY(1,1);Criteria identifier
-RequisitionId;NOT NULL, FOREIGN KEY -> JobRequisition.RequisitionId;Related requisition
-CriteriaName;NOT NULL;e.g. "React experience", "Bachelor's degree"
-CriteriaType;NOT NULL;Education, Experience, Skill, Knockout
-RequiredValue;NOT NULL;Minimum/required value
-Weight;NOT NULL, DEFAULT 1.00;AI scoring weight
-IsMandatory;NOT NULL, DEFAULT 0;1 = mandatory, 0 = optional
 3.9 JobPosting
 Column;Constraints;Notes
 JobPostingId;PRIMARY KEY, IDENTITY(1,1);Job posting identifier
@@ -118,8 +109,7 @@ CandidateId;NOT NULL, FOREIGN KEY -> Candidate.CandidateId;Applying candidate
 JobPostingId;NOT NULL, FOREIGN KEY -> JobPosting.JobPostingId;Position applied for
 AppliedCvUrl;NOT NULL;CV file path/URL used for this application (replaces Resume)
 SubmissionDate;NOT NULL, DEFAULT SYSDATETIME();Submission timestamp
-ApplicationStatus;NOT NULL;Applied, AI_Screened, HR_Passed, HM_Passed, Interviewing, Offered, Hired, Rejected
-OverallScore;NULL;Overall combined score
+ApplicationStatus;NOT NULL;Applied, HR_Passed, HM_Passed, HM_Suggested, Interviewing, Offered, Hired, Rejected
 CreatedAt;NOT NULL, DEFAULT SYSDATETIME();Record creation date
 UpdatedAt;NULL;Last update date
 3.12 ApplicationReview
@@ -127,16 +117,10 @@ Column;Constraints;Notes
 ReviewId;PRIMARY KEY, IDENTITY(1,1);Review record identifier
 ApplicationId;NOT NULL, FOREIGN KEY -> Application.ApplicationId;Application being reviewed
 ReviewerId;NOT NULL, FOREIGN KEY -> User.UserId;User who performed the review
-ReviewerRole;NOT NULL;HR, HiringManager
+ReviewerRole;NOT NULL;HR, HiringManager, Director
 Decision;NOT NULL;Pass, Fail, Hold
 Comments;NULL;Reviewer's remarks
 ReviewedAt;NOT NULL, DEFAULT SYSDATETIME();Time of review
-3.13 AIScreeningResult
-Column;Constraints;Notes
-AIScreeningId;PRIMARY KEY, IDENTITY(1,1);AI result identifier
-ApplicationId;NOT NULL, FOREIGN KEY -> Application.ApplicationId;Application scored by AI, multiple results preserve rescoring history
-AIMatchScore;NOT NULL, CHECK 0-100;AI match score (%)
-ScreenedAt;NOT NULL, DEFAULT SYSDATETIME();Time AI finished processing
 3.14 InterviewSchedule
 Column;Constraints;Notes
 InterviewId;PRIMARY KEY, IDENTITY(1,1);Interview session identifier

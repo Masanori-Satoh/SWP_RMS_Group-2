@@ -10,7 +10,6 @@
 --   2. 19 requisition: 13 Approved, 2 Draft, 2 Pending_Director, 2 Rejected
 --   3. 12 tin tuyển dụng: 9 Published còn hạn (hiện trên Jobs Board), 1 Published đã hết hạn,
 --      1 Closed, 1 Paused; 1 requisition Approved chưa có tin (để HR tạo tin)
---   4. Tiêu chí sàng lọc cho 17 requisition (đạt chuẩn 100% trọng số theo quy tắc nghiệp vụ)
 --   4.1 Lịch sử thao tác (AuditLog) cho toàn bộ 19 requisition
 --   5. 22 đơn ứng tuyển trên 4 tin mới (đủ trạng thái Applied -> HM_Passed, Rejected ở vòng sàng lọc)
 --   6. AppliedCvUrl của mọi đơn trỏ về CV mẫu trong src/main/resources/static/samples/cv/
@@ -140,51 +139,6 @@ INSERT INTO RequisitionApproval (RequisitionId, DirectorId, [Status], Comments, 
 INSERT INTO RequisitionApproval (RequisitionId, DirectorId, [Status], Comments, ApprovalDate) VALUES (@r17, @director, N'Approved', N'Đồng ý tuyển BA cho các module mới.', '2026-10-03 10:00:00');
 INSERT INTO RequisitionApproval (RequisitionId, DirectorId, [Status], Comments, ApprovalDate) VALUES (@r22, @director, N'Rejected', N'Chưa nằm trong định hướng sản phẩm năm 2027. Đề nghị nghiên cứu thêm tính khả thi trước khi đề xuất lại.', '2026-09-27 10:00:00');
 INSERT INTO RequisitionApproval (RequisitionId, DirectorId, [Status], Comments, ApprovalDate) VALUES (@r23, @director, N'Rejected', N'Ngân sách sự kiện quý 1 chưa được duyệt. Đề nghị gộp vào kế hoạch marketing chung.', '2026-09-28 09:00:00');
-
--- =============================================================================
--- 4. SCREENING CRITERIA
--- =============================================================================
-INSERT INTO ScreeningCriteria (RequisitionId, CriteriaName, CriteriaType, RequiredValue, [Weight], IsMandatory) VALUES (@r5, N'Kinh nghiệm Java & Spring Boot', N'Experience', N'>= 1 năm', 57.00, 1);
-INSERT INTO ScreeningCriteria (RequisitionId, CriteriaName, CriteriaType, RequiredValue, [Weight], IsMandatory) VALUES (@r5, N'Kiến thức SQL', N'Skill', N'SQL Server hoặc MySQL', 29.00, 0);
-INSERT INTO ScreeningCriteria (RequisitionId, CriteriaName, CriteriaType, RequiredValue, [Weight], IsMandatory) VALUES (@r5, N'Docker cơ bản', N'Skill', N'Docker', 14.00, 0);
-INSERT INTO ScreeningCriteria (RequisitionId, CriteriaName, CriteriaType, RequiredValue, [Weight], IsMandatory) VALUES (@r6, N'Kinh nghiệm DevOps', N'Experience', N'>= 3 năm', 50.00, 1);
-INSERT INTO ScreeningCriteria (RequisitionId, CriteriaName, CriteriaType, RequiredValue, [Weight], IsMandatory) VALUES (@r6, N'AWS & Kubernetes', N'Skill', N'AWS, Kubernetes, Terraform', 50.00, 1);
-INSERT INTO ScreeningCriteria (RequisitionId, CriteriaName, CriteriaType, RequiredValue, [Weight], IsMandatory) VALUES (@r7, N'Kinh nghiệm Flutter', N'Experience', N'>= 2 năm', 67.00, 1);
-INSERT INTO ScreeningCriteria (RequisitionId, CriteriaName, CriteriaType, RequiredValue, [Weight], IsMandatory) VALUES (@r7, N'Ứng dụng đã phát hành', N'Knockout', N'Ít nhất 1 ứng dụng trên store', 33.00, 1);
-INSERT INTO ScreeningCriteria (RequisitionId, CriteriaName, CriteriaType, RequiredValue, [Weight], IsMandatory) VALUES (@r8, N'Sinh viên ngành CNTT', N'Education', N'Năm 3 trở lên', 50.00, 1);
-INSERT INTO ScreeningCriteria (RequisitionId, CriteriaName, CriteriaType, RequiredValue, [Weight], IsMandatory) VALUES (@r8, N'Ngôn ngữ lập trình', N'Skill', N'Java hoặc JavaScript', 50.00, 0);
-INSERT INTO ScreeningCriteria (RequisitionId, CriteriaName, CriteriaType, RequiredValue, [Weight], IsMandatory) VALUES (@r9, N'Kinh nghiệm Digital Marketing B2B', N'Experience', N'>= 2 năm', 57.00, 1);
-INSERT INTO ScreeningCriteria (RequisitionId, CriteriaName, CriteriaType, RequiredValue, [Weight], IsMandatory) VALUES (@r9, N'Công cụ quảng cáo', N'Skill', N'Google Ads, Meta Ads', 43.00, 0);
-INSERT INTO ScreeningCriteria (RequisitionId, CriteriaName, CriteriaType, RequiredValue, [Weight], IsMandatory) VALUES (@r10, N'Kỹ năng giao tiếp qua điện thoại', N'Skill', N'Giọng nói rõ ràng', 100.00, 1);
-INSERT INTO ScreeningCriteria (RequisitionId, CriteriaName, CriteriaType, RequiredValue, [Weight], IsMandatory) VALUES (@r11, N'Kinh nghiệm kế toán tổng hợp', N'Experience', N'>= 3 năm', 50.00, 1);
-INSERT INTO ScreeningCriteria (RequisitionId, CriteriaName, CriteriaType, RequiredValue, [Weight], IsMandatory) VALUES (@r11, N'Phần mềm kế toán', N'Skill', N'MISA, Excel', 25.00, 0);
-INSERT INTO ScreeningCriteria (RequisitionId, CriteriaName, CriteriaType, RequiredValue, [Weight], IsMandatory) VALUES (@r11, N'Trình độ chuyên môn', N'Education', N'Cử nhân Kế toán/Tài chính', 25.00, 1);
-INSERT INTO ScreeningCriteria (RequisitionId, CriteriaName, CriteriaType, RequiredValue, [Weight], IsMandatory) VALUES (@r12, N'Kinh nghiệm UI/UX', N'Experience', N'>= 2 năm', 45.00, 1);
-INSERT INTO ScreeningCriteria (RequisitionId, CriteriaName, CriteriaType, RequiredValue, [Weight], IsMandatory) VALUES (@r12, N'Portfolio', N'Knockout', N'Có portfolio sản phẩm thực tế', 22.00, 1);
-INSERT INTO ScreeningCriteria (RequisitionId, CriteriaName, CriteriaType, RequiredValue, [Weight], IsMandatory) VALUES (@r12, N'Figma', N'Skill', N'Figma, Design System', 33.00, 0);
-INSERT INTO ScreeningCriteria (RequisitionId, CriteriaName, CriteriaType, RequiredValue, [Weight], IsMandatory) VALUES (@r13, N'Kinh nghiệm Product Owner/BA', N'Experience', N'>= 3 năm', 67.00, 1);
-INSERT INTO ScreeningCriteria (RequisitionId, CriteriaName, CriteriaType, RequiredValue, [Weight], IsMandatory) VALUES (@r13, N'Scrum', N'Skill', N'Scrum, viết user story', 33.00, 0);
-INSERT INTO ScreeningCriteria (RequisitionId, CriteriaName, CriteriaType, RequiredValue, [Weight], IsMandatory) VALUES (@r14, N'Sinh viên ngành CNTT / Toán tin', N'Education', N'Năm 3 trở lên', 50.00, 1);
-INSERT INTO ScreeningCriteria (RequisitionId, CriteriaName, CriteriaType, RequiredValue, [Weight], IsMandatory) VALUES (@r14, N'Tư duy logic & Kiểm thử cơ bản', N'Skill', N'Viết test case, tư duy logic', 50.00, 0);
-INSERT INTO ScreeningCriteria (RequisitionId, CriteriaName, CriteriaType, RequiredValue, [Weight], IsMandatory) VALUES (@r15, N'Kinh nghiệm phân tích tài chính', N'Experience', N'>= 2 năm', 50.00, 1);
-INSERT INTO ScreeningCriteria (RequisitionId, CriteriaName, CriteriaType, RequiredValue, [Weight], IsMandatory) VALUES (@r15, N'Kỹ năng Excel & Power BI', N'Skill', N'Excel, Power BI, mô hình tài chính', 30.00, 0);
-INSERT INTO ScreeningCriteria (RequisitionId, CriteriaName, CriteriaType, RequiredValue, [Weight], IsMandatory) VALUES (@r15, N'Bằng cấp chuyên ngành Tài chính / Kế toán', N'Education', N'Đại học chuyên ngành', 20.00, 1);
-INSERT INTO ScreeningCriteria (RequisitionId, CriteriaName, CriteriaType, RequiredValue, [Weight], IsMandatory) VALUES (@r16, N'Kinh nghiệm Data Engineer & ETL', N'Experience', N'>= 2 năm', 50.00, 1);
-INSERT INTO ScreeningCriteria (RequisitionId, CriteriaName, CriteriaType, RequiredValue, [Weight], IsMandatory) VALUES (@r16, N'Thành thạo SQL & Python', N'Skill', N'SQL Server/PostgreSQL, Python', 30.00, 1);
-INSERT INTO ScreeningCriteria (RequisitionId, CriteriaName, CriteriaType, RequiredValue, [Weight], IsMandatory) VALUES (@r16, N'Kiến thức Data Warehouse & Airflow', N'Skill', N'DWH, Apache Airflow', 20.00, 0);
-INSERT INTO ScreeningCriteria (RequisitionId, CriteriaName, CriteriaType, RequiredValue, [Weight], IsMandatory) VALUES (@r17, N'Kinh nghiệm Business Analyst phần mềm', N'Experience', N'>= 2 năm', 50.00, 1);
-INSERT INTO ScreeningCriteria (RequisitionId, CriteriaName, CriteriaType, RequiredValue, [Weight], IsMandatory) VALUES (@r17, N'Kỹ năng Use Case & BPMN', N'Skill', N'Use Case, User Story, BPMN', 30.00, 1);
-INSERT INTO ScreeningCriteria (RequisitionId, CriteriaName, CriteriaType, RequiredValue, [Weight], IsMandatory) VALUES (@r17, N'Trình độ Đại học', N'Education', N'Đại học', 20.00, 0);
-INSERT INTO ScreeningCriteria (RequisitionId, CriteriaName, CriteriaType, RequiredValue, [Weight], IsMandatory) VALUES (@r20, N'Kinh nghiệm bán hàng B2B phần mềm', N'Experience', N'>= 4 năm', 40.00, 1);
-INSERT INTO ScreeningCriteria (RequisitionId, CriteriaName, CriteriaType, RequiredValue, [Weight], IsMandatory) VALUES (@r20, N'Kinh nghiệm quản lý khách hàng lớn (Key Account)', N'Experience', N'>= 2 năm', 40.00, 1);
-INSERT INTO ScreeningCriteria (RequisitionId, CriteriaName, CriteriaType, RequiredValue, [Weight], IsMandatory) VALUES (@r20, N'Kỹ năng thương lượng & đàm phán cấp cao', N'Skill', N'Đàm phán hợp đồng, thuyết trình', 20.00, 0);
-INSERT INTO ScreeningCriteria (RequisitionId, CriteriaName, CriteriaType, RequiredValue, [Weight], IsMandatory) VALUES (@r21, N'Kinh nghiệm phân tích dữ liệu sản phẩm', N'Experience', N'>= 2 năm', 50.00, 1);
-INSERT INTO ScreeningCriteria (RequisitionId, CriteriaName, CriteriaType, RequiredValue, [Weight], IsMandatory) VALUES (@r21, N'Thành thạo SQL & BI Dashboard', N'Skill', N'SQL, Power BI hoặc Tableau', 30.00, 1);
-INSERT INTO ScreeningCriteria (RequisitionId, CriteriaName, CriteriaType, RequiredValue, [Weight], IsMandatory) VALUES (@r21, N'Phân tích phễu & A/B testing', N'Skill', N'A/B Testing, Funnel Analysis', 20.00, 0);
-INSERT INTO ScreeningCriteria (RequisitionId, CriteriaName, CriteriaType, RequiredValue, [Weight], IsMandatory) VALUES (@r22, N'Kinh nghiệm lập trình Solidity & Smart Contract', N'Experience', N'>= 2 năm', 60.00, 1);
-INSERT INTO ScreeningCriteria (RequisitionId, CriteriaName, CriteriaType, RequiredValue, [Weight], IsMandatory) VALUES (@r22, N'Kiến thức Web3 & tích hợp ví điện tử', N'Skill', N'Web3.js, Ethers.js', 40.00, 0);
-INSERT INTO ScreeningCriteria (RequisitionId, CriteriaName, CriteriaType, RequiredValue, [Weight], IsMandatory) VALUES (@r23, N'Kinh nghiệm tổ chức sự kiện B2B', N'Experience', N'>= 2 năm', 60.00, 1);
-INSERT INTO ScreeningCriteria (RequisitionId, CriteriaName, CriteriaType, RequiredValue, [Weight], IsMandatory) VALUES (@r23, N'Kỹ năng điều phối & quản lý ngân sách sự kiện', N'Skill', N'Quản lý sự kiện, Điều phối vendor', 40.00, 0);
 
 -- =============================================================================
 -- 4.1 AUDIT LOG CHO JOB REQUISITION (Lịch sử thao tác cho các yêu cầu tuyển dụng)
@@ -360,127 +314,111 @@ INSERT INTO JobPosting (RequisitionId, PostingNo, PostingTitle, JobDescription, 
 SET @p_r16 = SCOPE_IDENTITY();
 
 -- =============================================================================
--- 6. ĐƠN ỨNG TUYỂN TRÊN TIN MỚI (+ kết quả AI, review của HR/HM)
---    Ứng viên lấy từ seed_data.sql theo Username. AI chỉ là điểm tham khảo;
+-- 6. ĐƠN ỨNG TUYỂN TRÊN TIN MỚI (+ review của HR/HM)
+--    Ứng viên lấy từ seed_data.sql theo Username.
 --    Rejected ở đây là quyết định của HR/HM (có ApplicationReview Fail).
 -- =============================================================================
 DECLARE @c INT, @a INT;
 -- thang.duong -> Junior Java Developer (Spring Boot) [Applied]
 SET @c = (SELECT c.CandidateId FROM Candidate c JOIN [User] u ON u.UserId = c.UserId WHERE u.Username = N'thang.duong');
-INSERT INTO Application (CandidateId, JobPostingId, AppliedCvUrl, SubmissionDate, ApplicationStatus, OverallScore, CreatedAt) VALUES (@c, @p_r5, N'/samples/cv/sample_cv_fresher_intern.pdf', '2026-10-08 09:15:00', N'Applied', NULL, '2026-10-08 09:15:00');
+INSERT INTO Application (CandidateId, JobPostingId, AppliedCvUrl, SubmissionDate, ApplicationStatus, CreatedAt) VALUES (@c, @p_r5, N'/samples/cv/sample_cv_fresher_intern.pdf', '2026-10-08 09:15:00', N'Applied', '2026-10-08 09:15:00');
 SET @a = SCOPE_IDENTITY();
 -- quynh.ho -> Junior Java Developer (Spring Boot) [Applied]
 SET @c = (SELECT c.CandidateId FROM Candidate c JOIN [User] u ON u.UserId = c.UserId WHERE u.Username = N'quynh.ho');
-INSERT INTO Application (CandidateId, JobPostingId, AppliedCvUrl, SubmissionDate, ApplicationStatus, OverallScore, CreatedAt) VALUES (@c, @p_r5, N'/samples/cv/sample_cv_java_backend.pdf', '2026-10-09 14:40:00', N'Applied', NULL, '2026-10-09 14:40:00');
+INSERT INTO Application (CandidateId, JobPostingId, AppliedCvUrl, SubmissionDate, ApplicationStatus, CreatedAt) VALUES (@c, @p_r5, N'/samples/cv/sample_cv_java_backend.pdf', '2026-10-09 14:40:00', N'Applied', '2026-10-09 14:40:00');
 SET @a = SCOPE_IDENTITY();
--- phuc.le -> Junior Java Developer (Spring Boot) [AI_Screened]
+-- phuc.le -> Junior Java Developer (Spring Boot) [Applied]
 SET @c = (SELECT c.CandidateId FROM Candidate c JOIN [User] u ON u.UserId = c.UserId WHERE u.Username = N'phuc.le');
-INSERT INTO Application (CandidateId, JobPostingId, AppliedCvUrl, SubmissionDate, ApplicationStatus, OverallScore, CreatedAt) VALUES (@c, @p_r5, N'/samples/cv/sample_cv_java_backend.pdf', '2026-10-05 10:20:00', N'AI_Screened', 81.50, '2026-10-05 10:20:00');
+INSERT INTO Application (CandidateId, JobPostingId, AppliedCvUrl, SubmissionDate, ApplicationStatus, CreatedAt) VALUES (@c, @p_r5, N'/samples/cv/sample_cv_java_backend.pdf', '2026-10-05 10:20:00', N'Applied', '2026-10-05 10:20:00');
 SET @a = SCOPE_IDENTITY();
-INSERT INTO AIScreeningResult (ApplicationId, AIMatchScore, ScreenedAt) VALUES (@a, 81.50, '2026-10-05 10:23:00');
--- vinh.hoang -> Junior Java Developer (Spring Boot) [AI_Screened]
+-- vinh.hoang -> Junior Java Developer (Spring Boot) [Applied]
 SET @c = (SELECT c.CandidateId FROM Candidate c JOIN [User] u ON u.UserId = c.UserId WHERE u.Username = N'vinh.hoang');
-INSERT INTO Application (CandidateId, JobPostingId, AppliedCvUrl, SubmissionDate, ApplicationStatus, OverallScore, CreatedAt) VALUES (@c, @p_r5, N'/samples/cv/sample_cv_java_backend.pdf', '2026-10-06 16:05:00', N'AI_Screened', 64.20, '2026-10-06 16:05:00');
+INSERT INTO Application (CandidateId, JobPostingId, AppliedCvUrl, SubmissionDate, ApplicationStatus, CreatedAt) VALUES (@c, @p_r5, N'/samples/cv/sample_cv_java_backend.pdf', '2026-10-06 16:05:00', N'Applied', '2026-10-06 16:05:00');
 SET @a = SCOPE_IDENTITY();
-INSERT INTO AIScreeningResult (ApplicationId, AIMatchScore, ScreenedAt) VALUES (@a, 64.20, '2026-10-06 16:08:00');
 -- an.dinh -> Junior Java Developer (Spring Boot) [HR_Passed]
 SET @c = (SELECT c.CandidateId FROM Candidate c JOIN [User] u ON u.UserId = c.UserId WHERE u.Username = N'an.dinh');
-INSERT INTO Application (CandidateId, JobPostingId, AppliedCvUrl, SubmissionDate, ApplicationStatus, OverallScore, CreatedAt) VALUES (@c, @p_r5, N'/samples/cv/sample_cv_java_backend.pdf', '2026-10-02 08:50:00', N'HR_Passed', 86.40, '2026-10-02 08:50:00');
+INSERT INTO Application (CandidateId, JobPostingId, AppliedCvUrl, SubmissionDate, ApplicationStatus, CreatedAt) VALUES (@c, @p_r5, N'/samples/cv/sample_cv_java_backend.pdf', '2026-10-02 08:50:00', N'HR_Passed', '2026-10-02 08:50:00');
 SET @a = SCOPE_IDENTITY();
-INSERT INTO AIScreeningResult (ApplicationId, AIMatchScore, ScreenedAt) VALUES (@a, 86.40, '2026-10-02 08:53:00');
 INSERT INTO ApplicationReview (ApplicationId, ReviewerId, ReviewerRole, Decision, Comments, ReviewedAt) VALUES (@a, @hrLan, N'HR', N'Pass', N'Kinh nghiệm Spring Boot phù hợp, chuyển Trưởng bộ phận đánh giá.', '2026-10-03 08:50:00');
 -- nga.do -> Junior Java Developer (Spring Boot) [HM_Passed]
 SET @c = (SELECT c.CandidateId FROM Candidate c JOIN [User] u ON u.UserId = c.UserId WHERE u.Username = N'nga.do');
-INSERT INTO Application (CandidateId, JobPostingId, AppliedCvUrl, SubmissionDate, ApplicationStatus, OverallScore, CreatedAt) VALUES (@c, @p_r5, N'/samples/cv/sample_cv_java_backend.pdf', '2026-10-01 11:30:00', N'HM_Passed', 90.10, '2026-10-01 11:30:00');
+INSERT INTO Application (CandidateId, JobPostingId, AppliedCvUrl, SubmissionDate, ApplicationStatus, CreatedAt) VALUES (@c, @p_r5, N'/samples/cv/sample_cv_java_backend.pdf', '2026-10-01 11:30:00', N'HM_Passed', '2026-10-01 11:30:00');
 SET @a = SCOPE_IDENTITY();
-INSERT INTO AIScreeningResult (ApplicationId, AIMatchScore, ScreenedAt) VALUES (@a, 90.10, '2026-10-01 11:33:00');
 INSERT INTO ApplicationReview (ApplicationId, ReviewerId, ReviewerRole, Decision, Comments, ReviewedAt) VALUES (@a, @hrLan, N'HR', N'Pass', N'Hồ sơ đạt yêu cầu sàng lọc, chuyển Trưởng bộ phận.', '2026-10-02 11:30:00');
 INSERT INTO ApplicationReview (ApplicationId, ReviewerId, ReviewerRole, Decision, Comments, ReviewedAt) VALUES (@a, @hmTuan, N'HiringManager', N'Pass', N'Nền tảng tốt, đề xuất mời phỏng vấn kỹ thuật.', '2026-10-03 11:30:00');
 -- phong.nguyen -> Junior Java Developer (Spring Boot) [Rejected]
 SET @c = (SELECT c.CandidateId FROM Candidate c JOIN [User] u ON u.UserId = c.UserId WHERE u.Username = N'phong.nguyen');
-INSERT INTO Application (CandidateId, JobPostingId, AppliedCvUrl, SubmissionDate, ApplicationStatus, OverallScore, CreatedAt) VALUES (@c, @p_r5, N'/samples/cv/sample_cv_fresher_intern.pdf', '2026-10-03 13:10:00', N'Rejected', 42.30, '2026-10-03 13:10:00');
+INSERT INTO Application (CandidateId, JobPostingId, AppliedCvUrl, SubmissionDate, ApplicationStatus, CreatedAt) VALUES (@c, @p_r5, N'/samples/cv/sample_cv_fresher_intern.pdf', '2026-10-03 13:10:00', N'Rejected', '2026-10-03 13:10:00');
 SET @a = SCOPE_IDENTITY();
-INSERT INTO AIScreeningResult (ApplicationId, AIMatchScore, ScreenedAt) VALUES (@a, 42.30, '2026-10-03 13:13:00');
 INSERT INTO ApplicationReview (ApplicationId, ReviewerId, ReviewerRole, Decision, Comments, ReviewedAt) VALUES (@a, @hrLan, N'HR', N'Fail', N'Chưa đáp ứng tiêu chí bắt buộc: chưa có kinh nghiệm Spring Boot thực tế.', '2026-10-04 13:10:00');
 -- van.ly -> Junior Java Developer (Spring Boot) [Rejected]
 SET @c = (SELECT c.CandidateId FROM Candidate c JOIN [User] u ON u.UserId = c.UserId WHERE u.Username = N'van.ly');
-INSERT INTO Application (CandidateId, JobPostingId, AppliedCvUrl, SubmissionDate, ApplicationStatus, OverallScore, CreatedAt) VALUES (@c, @p_r5, N'/samples/cv/sample_cv_java_backend.pdf', '2026-10-02 15:45:00', N'Rejected', 71.80, '2026-10-02 15:45:00');
+INSERT INTO Application (CandidateId, JobPostingId, AppliedCvUrl, SubmissionDate, ApplicationStatus, CreatedAt) VALUES (@c, @p_r5, N'/samples/cv/sample_cv_java_backend.pdf', '2026-10-02 15:45:00', N'Rejected', '2026-10-02 15:45:00');
 SET @a = SCOPE_IDENTITY();
-INSERT INTO AIScreeningResult (ApplicationId, AIMatchScore, ScreenedAt) VALUES (@a, 71.80, '2026-10-02 15:48:00');
 INSERT INTO ApplicationReview (ApplicationId, ReviewerId, ReviewerRole, Decision, Comments, ReviewedAt) VALUES (@a, @hrLan, N'HR', N'Pass', N'Hồ sơ đạt yêu cầu sàng lọc, chuyển Trưởng bộ phận.', '2026-10-03 15:45:00');
 INSERT INTO ApplicationReview (ApplicationId, ReviewerId, ReviewerRole, Decision, Comments, ReviewedAt) VALUES (@a, @hmTuan, N'HiringManager', N'Fail', N'Kiến thức thiết kế cơ sở dữ liệu chưa đạt yêu cầu của vị trí.', '2026-10-04 15:45:00');
 -- viet.trinh -> Thực tập sinh Kỹ sư Phần mềm – Kỳ Xuân 2027 [Applied]
 SET @c = (SELECT c.CandidateId FROM Candidate c JOIN [User] u ON u.UserId = c.UserId WHERE u.Username = N'viet.trinh');
-INSERT INTO Application (CandidateId, JobPostingId, AppliedCvUrl, SubmissionDate, ApplicationStatus, OverallScore, CreatedAt) VALUES (@c, @p_r8, N'/samples/cv/sample_cv_fresher_intern.pdf', '2026-10-09 10:00:00', N'Applied', NULL, '2026-10-09 10:00:00');
+INSERT INTO Application (CandidateId, JobPostingId, AppliedCvUrl, SubmissionDate, ApplicationStatus, CreatedAt) VALUES (@c, @p_r8, N'/samples/cv/sample_cv_fresher_intern.pdf', '2026-10-09 10:00:00', N'Applied', '2026-10-09 10:00:00');
 SET @a = SCOPE_IDENTITY();
 -- thang.dang -> Thực tập sinh Kỹ sư Phần mềm – Kỳ Xuân 2027 [Applied]
 SET @c = (SELECT c.CandidateId FROM Candidate c JOIN [User] u ON u.UserId = c.UserId WHERE u.Username = N'thang.dang');
-INSERT INTO Application (CandidateId, JobPostingId, AppliedCvUrl, SubmissionDate, ApplicationStatus, OverallScore, CreatedAt) VALUES (@c, @p_r8, N'/samples/cv/sample_cv_fresher_intern.pdf', '2026-10-08 19:30:00', N'Applied', NULL, '2026-10-08 19:30:00');
+INSERT INTO Application (CandidateId, JobPostingId, AppliedCvUrl, SubmissionDate, ApplicationStatus, CreatedAt) VALUES (@c, @p_r8, N'/samples/cv/sample_cv_fresher_intern.pdf', '2026-10-08 19:30:00', N'Applied', '2026-10-08 19:30:00');
 SET @a = SCOPE_IDENTITY();
--- long.pham -> Thực tập sinh Kỹ sư Phần mềm – Kỳ Xuân 2027 [AI_Screened]
+-- long.pham -> Thực tập sinh Kỹ sư Phần mềm – Kỳ Xuân 2027 [Applied]
 SET @c = (SELECT c.CandidateId FROM Candidate c JOIN [User] u ON u.UserId = c.UserId WHERE u.Username = N'long.pham');
-INSERT INTO Application (CandidateId, JobPostingId, AppliedCvUrl, SubmissionDate, ApplicationStatus, OverallScore, CreatedAt) VALUES (@c, @p_r8, N'/samples/cv/sample_cv_fresher_intern.pdf', '2026-10-04 09:40:00', N'AI_Screened', 77.00, '2026-10-04 09:40:00');
+INSERT INTO Application (CandidateId, JobPostingId, AppliedCvUrl, SubmissionDate, ApplicationStatus, CreatedAt) VALUES (@c, @p_r8, N'/samples/cv/sample_cv_fresher_intern.pdf', '2026-10-04 09:40:00', N'Applied', '2026-10-04 09:40:00');
 SET @a = SCOPE_IDENTITY();
-INSERT INTO AIScreeningResult (ApplicationId, AIMatchScore, ScreenedAt) VALUES (@a, 77.00, '2026-10-04 09:43:00');
 -- yen.pham -> Thực tập sinh Kỹ sư Phần mềm – Kỳ Xuân 2027 [HR_Passed]
 SET @c = (SELECT c.CandidateId FROM Candidate c JOIN [User] u ON u.UserId = c.UserId WHERE u.Username = N'yen.pham');
-INSERT INTO Application (CandidateId, JobPostingId, AppliedCvUrl, SubmissionDate, ApplicationStatus, OverallScore, CreatedAt) VALUES (@c, @p_r8, N'/samples/cv/sample_cv_fresher_intern.pdf', '2026-10-02 20:10:00', N'HR_Passed', 83.60, '2026-10-02 20:10:00');
+INSERT INTO Application (CandidateId, JobPostingId, AppliedCvUrl, SubmissionDate, ApplicationStatus, CreatedAt) VALUES (@c, @p_r8, N'/samples/cv/sample_cv_fresher_intern.pdf', '2026-10-02 20:10:00', N'HR_Passed', '2026-10-02 20:10:00');
 SET @a = SCOPE_IDENTITY();
-INSERT INTO AIScreeningResult (ApplicationId, AIMatchScore, ScreenedAt) VALUES (@a, 83.60, '2026-10-02 20:13:00');
 INSERT INTO ApplicationReview (ApplicationId, ReviewerId, ReviewerRole, Decision, Comments, ReviewedAt) VALUES (@a, @hrLan, N'HR', N'Pass', N'Điểm học tập tốt, có dự án nhóm Spring Boot.', '2026-10-03 20:10:00');
 -- hieu.dinh -> Thực tập sinh Kỹ sư Phần mềm – Kỳ Xuân 2027 [Rejected]
 SET @c = (SELECT c.CandidateId FROM Candidate c JOIN [User] u ON u.UserId = c.UserId WHERE u.Username = N'hieu.dinh');
-INSERT INTO Application (CandidateId, JobPostingId, AppliedCvUrl, SubmissionDate, ApplicationStatus, OverallScore, CreatedAt) VALUES (@c, @p_r8, N'/samples/cv/sample_cv_fresher_intern.pdf', '2026-10-03 07:55:00', N'Rejected', 38.90, '2026-10-03 07:55:00');
+INSERT INTO Application (CandidateId, JobPostingId, AppliedCvUrl, SubmissionDate, ApplicationStatus, CreatedAt) VALUES (@c, @p_r8, N'/samples/cv/sample_cv_fresher_intern.pdf', '2026-10-03 07:55:00', N'Rejected', '2026-10-03 07:55:00');
 SET @a = SCOPE_IDENTITY();
-INSERT INTO AIScreeningResult (ApplicationId, AIMatchScore, ScreenedAt) VALUES (@a, 38.90, '2026-10-03 07:58:00');
 INSERT INTO ApplicationReview (ApplicationId, ReviewerId, ReviewerRole, Decision, Comments, ReviewedAt) VALUES (@a, @hrLan, N'HR', N'Fail', N'Chưa phải sinh viên năm 3 trở lên theo tiêu chí bắt buộc.', '2026-10-04 07:55:00');
--- khanh.ho -> Kế toán tổng hợp [AI_Screened]
+-- khanh.ho -> Kế toán tổng hợp [Applied]
 SET @c = (SELECT c.CandidateId FROM Candidate c JOIN [User] u ON u.UserId = c.UserId WHERE u.Username = N'khanh.ho');
-INSERT INTO Application (CandidateId, JobPostingId, AppliedCvUrl, SubmissionDate, ApplicationStatus, OverallScore, CreatedAt) VALUES (@c, @p_r11, N'/samples/cv/sample_cv_accountant.pdf', '2026-10-04 08:30:00', N'AI_Screened', 88.20, '2026-10-04 08:30:00');
+INSERT INTO Application (CandidateId, JobPostingId, AppliedCvUrl, SubmissionDate, ApplicationStatus, CreatedAt) VALUES (@c, @p_r11, N'/samples/cv/sample_cv_accountant.pdf', '2026-10-04 08:30:00', N'Applied', '2026-10-04 08:30:00');
 SET @a = SCOPE_IDENTITY();
-INSERT INTO AIScreeningResult (ApplicationId, AIMatchScore, ScreenedAt) VALUES (@a, 88.20, '2026-10-04 08:33:00');
--- nam.ly -> Kế toán tổng hợp [AI_Screened]
+-- nam.ly -> Kế toán tổng hợp [Applied]
 SET @c = (SELECT c.CandidateId FROM Candidate c JOIN [User] u ON u.UserId = c.UserId WHERE u.Username = N'nam.ly');
-INSERT INTO Application (CandidateId, JobPostingId, AppliedCvUrl, SubmissionDate, ApplicationStatus, OverallScore, CreatedAt) VALUES (@c, @p_r11, N'/samples/cv/sample_cv_accountant.pdf', '2026-10-06 11:20:00', N'AI_Screened', 58.70, '2026-10-06 11:20:00');
+INSERT INTO Application (CandidateId, JobPostingId, AppliedCvUrl, SubmissionDate, ApplicationStatus, CreatedAt) VALUES (@c, @p_r11, N'/samples/cv/sample_cv_accountant.pdf', '2026-10-06 11:20:00', N'Applied', '2026-10-06 11:20:00');
 SET @a = SCOPE_IDENTITY();
-INSERT INTO AIScreeningResult (ApplicationId, AIMatchScore, ScreenedAt) VALUES (@a, 58.70, '2026-10-06 11:23:00');
 -- tuan.bui -> Kế toán tổng hợp [Rejected]
 SET @c = (SELECT c.CandidateId FROM Candidate c JOIN [User] u ON u.UserId = c.UserId WHERE u.Username = N'tuan.bui');
-INSERT INTO Application (CandidateId, JobPostingId, AppliedCvUrl, SubmissionDate, ApplicationStatus, OverallScore, CreatedAt) VALUES (@c, @p_r11, N'/samples/cv/sample_cv_accountant.pdf', '2026-10-02 14:00:00', N'Rejected', 33.10, '2026-10-02 14:00:00');
+INSERT INTO Application (CandidateId, JobPostingId, AppliedCvUrl, SubmissionDate, ApplicationStatus, CreatedAt) VALUES (@c, @p_r11, N'/samples/cv/sample_cv_accountant.pdf', '2026-10-02 14:00:00', N'Rejected', '2026-10-02 14:00:00');
 SET @a = SCOPE_IDENTITY();
-INSERT INTO AIScreeningResult (ApplicationId, AIMatchScore, ScreenedAt) VALUES (@a, 33.10, '2026-10-02 14:03:00');
 INSERT INTO ApplicationReview (ApplicationId, ReviewerId, ReviewerRole, Decision, Comments, ReviewedAt) VALUES (@a, @hrLan, N'HR', N'Fail', N'Hồ sơ chưa có kinh nghiệm kế toán tổng hợp.', '2026-10-03 14:00:00');
 -- viet.do -> Kế toán tổng hợp [Applied]
 SET @c = (SELECT c.CandidateId FROM Candidate c JOIN [User] u ON u.UserId = c.UserId WHERE u.Username = N'viet.do');
-INSERT INTO Application (CandidateId, JobPostingId, AppliedCvUrl, SubmissionDate, ApplicationStatus, OverallScore, CreatedAt) VALUES (@c, @p_r11, N'/samples/cv/sample_cv_accountant.pdf', '2026-10-09 09:05:00', N'Applied', NULL, '2026-10-09 09:05:00');
+INSERT INTO Application (CandidateId, JobPostingId, AppliedCvUrl, SubmissionDate, ApplicationStatus, CreatedAt) VALUES (@c, @p_r11, N'/samples/cv/sample_cv_accountant.pdf', '2026-10-09 09:05:00', N'Applied', '2026-10-09 09:05:00');
 SET @a = SCOPE_IDENTITY();
 -- an.vo -> UI/UX Designer (Web & Mobile) [HM_Passed]
 SET @c = (SELECT c.CandidateId FROM Candidate c JOIN [User] u ON u.UserId = c.UserId WHERE u.Username = N'an.vo');
-INSERT INTO Application (CandidateId, JobPostingId, AppliedCvUrl, SubmissionDate, ApplicationStatus, OverallScore, CreatedAt) VALUES (@c, @p_r12, N'/samples/cv/sample_cv_uiux_designer.pdf', '2026-10-01 09:10:00', N'HM_Passed', 91.30, '2026-10-01 09:10:00');
+INSERT INTO Application (CandidateId, JobPostingId, AppliedCvUrl, SubmissionDate, ApplicationStatus, CreatedAt) VALUES (@c, @p_r12, N'/samples/cv/sample_cv_uiux_designer.pdf', '2026-10-01 09:10:00', N'HM_Passed', '2026-10-01 09:10:00');
 SET @a = SCOPE_IDENTITY();
-INSERT INTO AIScreeningResult (ApplicationId, AIMatchScore, ScreenedAt) VALUES (@a, 91.30, '2026-10-01 09:13:00');
 INSERT INTO ApplicationReview (ApplicationId, ReviewerId, ReviewerRole, Decision, Comments, ReviewedAt) VALUES (@a, @hrQuang, N'HR', N'Pass', N'Hồ sơ đạt yêu cầu sàng lọc, chuyển Trưởng bộ phận.', '2026-10-02 09:10:00');
 INSERT INTO ApplicationReview (ApplicationId, ReviewerId, ReviewerRole, Decision, Comments, ReviewedAt) VALUES (@a, @hmTrang, N'HiringManager', N'Pass', N'Portfolio ấn tượng, đề xuất mời phỏng vấn và làm bài test thiết kế.', '2026-10-03 09:10:00');
 -- hang.nguyen -> UI/UX Designer (Web & Mobile) [HR_Passed]
 SET @c = (SELECT c.CandidateId FROM Candidate c JOIN [User] u ON u.UserId = c.UserId WHERE u.Username = N'hang.nguyen');
-INSERT INTO Application (CandidateId, JobPostingId, AppliedCvUrl, SubmissionDate, ApplicationStatus, OverallScore, CreatedAt) VALUES (@c, @p_r12, N'/samples/cv/sample_cv_uiux_designer.pdf', '2026-10-03 10:45:00', N'HR_Passed', 84.90, '2026-10-03 10:45:00');
+INSERT INTO Application (CandidateId, JobPostingId, AppliedCvUrl, SubmissionDate, ApplicationStatus, CreatedAt) VALUES (@c, @p_r12, N'/samples/cv/sample_cv_uiux_designer.pdf', '2026-10-03 10:45:00', N'HR_Passed', '2026-10-03 10:45:00');
 SET @a = SCOPE_IDENTITY();
-INSERT INTO AIScreeningResult (ApplicationId, AIMatchScore, ScreenedAt) VALUES (@a, 84.90, '2026-10-03 10:48:00');
 INSERT INTO ApplicationReview (ApplicationId, ReviewerId, ReviewerRole, Decision, Comments, ReviewedAt) VALUES (@a, @hrQuang, N'HR', N'Pass', N'Có kinh nghiệm design system, chuyển Trưởng bộ phận đánh giá.', '2026-10-04 10:45:00');
--- hai.huynh -> UI/UX Designer (Web & Mobile) [AI_Screened]
+-- hai.huynh -> UI/UX Designer (Web & Mobile) [Applied]
 SET @c = (SELECT c.CandidateId FROM Candidate c JOIN [User] u ON u.UserId = c.UserId WHERE u.Username = N'hai.huynh');
-INSERT INTO Application (CandidateId, JobPostingId, AppliedCvUrl, SubmissionDate, ApplicationStatus, OverallScore, CreatedAt) VALUES (@c, @p_r12, N'/samples/cv/sample_cv_uiux_designer.pdf', '2026-10-05 15:30:00', N'AI_Screened', 73.40, '2026-10-05 15:30:00');
+INSERT INTO Application (CandidateId, JobPostingId, AppliedCvUrl, SubmissionDate, ApplicationStatus, CreatedAt) VALUES (@c, @p_r12, N'/samples/cv/sample_cv_uiux_designer.pdf', '2026-10-05 15:30:00', N'Applied', '2026-10-05 15:30:00');
 SET @a = SCOPE_IDENTITY();
-INSERT INTO AIScreeningResult (ApplicationId, AIMatchScore, ScreenedAt) VALUES (@a, 73.40, '2026-10-05 15:33:00');
 -- binh.hoang -> UI/UX Designer (Web & Mobile) [Rejected]
 SET @c = (SELECT c.CandidateId FROM Candidate c JOIN [User] u ON u.UserId = c.UserId WHERE u.Username = N'binh.hoang');
-INSERT INTO Application (CandidateId, JobPostingId, AppliedCvUrl, SubmissionDate, ApplicationStatus, OverallScore, CreatedAt) VALUES (@c, @p_r12, N'/samples/cv/sample_cv_uiux_designer.pdf', '2026-10-04 17:20:00', N'Rejected', 47.60, '2026-10-04 17:20:00');
+INSERT INTO Application (CandidateId, JobPostingId, AppliedCvUrl, SubmissionDate, ApplicationStatus, CreatedAt) VALUES (@c, @p_r12, N'/samples/cv/sample_cv_uiux_designer.pdf', '2026-10-04 17:20:00', N'Rejected', '2026-10-04 17:20:00');
 SET @a = SCOPE_IDENTITY();
-INSERT INTO AIScreeningResult (ApplicationId, AIMatchScore, ScreenedAt) VALUES (@a, 47.60, '2026-10-04 17:23:00');
 INSERT INTO ApplicationReview (ApplicationId, ReviewerId, ReviewerRole, Decision, Comments, ReviewedAt) VALUES (@a, @hrQuang, N'HR', N'Fail', N'Chưa có portfolio sản phẩm thực tế theo tiêu chí bắt buộc.', '2026-10-05 17:20:00');
 -- duc.le -> UI/UX Designer (Web & Mobile) [Applied]
 SET @c = (SELECT c.CandidateId FROM Candidate c JOIN [User] u ON u.UserId = c.UserId WHERE u.Username = N'duc.le');
-INSERT INTO Application (CandidateId, JobPostingId, AppliedCvUrl, SubmissionDate, ApplicationStatus, OverallScore, CreatedAt) VALUES (@c, @p_r12, N'/samples/cv/sample_cv_uiux_designer.pdf', '2026-10-09 16:50:00', N'Applied', NULL, '2026-10-09 16:50:00');
+INSERT INTO Application (CandidateId, JobPostingId, AppliedCvUrl, SubmissionDate, ApplicationStatus, CreatedAt) VALUES (@c, @p_r12, N'/samples/cv/sample_cv_uiux_designer.pdf', '2026-10-09 16:50:00', N'Applied', '2026-10-09 16:50:00');
 SET @a = SCOPE_IDENTITY();
 
 -- =============================================================================

@@ -5,7 +5,6 @@ import com.group2.rms.candidate.application.pipeline.dto.ApplicationListResponse
 import com.group2.rms.candidate.application.pipeline.dto.ApplicationReviewRequest;
 import com.group2.rms.candidate.application.pipeline.dto.ApplicationSearch;
 import com.group2.rms.candidate.application.pipeline.exception.ApplicationReviewException;
-import com.group2.rms.candidate.infra.ai.AiScreeningOutcome;
 import com.group2.rms.candidate.application.pipeline.service.ApplicationPipelineService;
 import com.group2.rms.candidate.application.pipeline.service.ApplicationReviewService;
 import com.group2.rms.candidate.talentpool.service.TalentPoolService;
@@ -30,13 +29,12 @@ import org.springframework.web.util.UriComponentsBuilder;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Locale;
 import java.util.Optional;
 import java.util.Set;
 
 /**
- * Hồ sơ ứng tuyển cho người tuyển dụng: danh sách (5.1.22), chi tiết, CV, duyệt
- * và chấm lại AI (5.1.23). Quyền theo vai trò ở {@code SecurityConfig},
+ * Hồ sơ ứng tuyển cho người tuyển dụng: danh sách (5.1.22), chi tiết, CV và duyệt
+ * (5.1.23). Quyền theo vai trò ở {@code SecurityConfig},
  * phạm vi từng người (HM chỉ thấy phòng ban mình) ở {@code ApplicationAccess}.
  */
 @Controller
@@ -45,7 +43,6 @@ import java.util.Set;
 public class ApplicationPipelineController {
 
     static final int PAGE_SIZE = 20;
-    private static final Locale VIETNAMESE = Locale.of("vi", "VN");
 
     private final ApplicationPipelineService pipeline;
     private final ApplicationReviewService reviewService;
@@ -86,7 +83,6 @@ public class ApplicationPipelineController {
                 .queryParamIfPresent("jobPostingId", Optional.ofNullable(search.jobPostingId()))
                 .queryParamIfPresent("keyword", Optional.ofNullable(search.keyword()))
                 .queryParamIfPresent("status", Optional.ofNullable(search.status()))
-                .queryParam("sort", search.sort())
                 .queryParamIfPresent("stage", Optional.ofNullable(stage).map(Enum::name))
                 .encode()
                 .toUriString();
@@ -124,19 +120,6 @@ public class ApplicationPipelineController {
             }
         }
         return renderDetail(id, model);
-    }
-
-    /** HR chấm lại AI; kết quả hoặc lỗi hiện bằng thông báo trên trang chi tiết. */
-    @PostMapping("/{id}/ai-screening")
-    public String rescreen(@PathVariable Integer id, RedirectAttributes redirect) {
-        try {
-            AiScreeningOutcome outcome = reviewService.rescreen(id);
-            redirect.addFlashAttribute("successMessage",
-                    "Đã chấm lại AI: " + String.format(VIETNAMESE, "%.2f", outcome.matchScore()) + " điểm.");
-        } catch (ApplicationReviewException e) {
-            redirect.addFlashAttribute("errorMessage", e.getMessage());
-        }
-        return "redirect:/applications/" + id;
     }
 
     private String renderDetail(Integer id, Model model) {

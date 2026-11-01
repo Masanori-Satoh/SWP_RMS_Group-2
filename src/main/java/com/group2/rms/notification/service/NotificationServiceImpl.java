@@ -516,15 +516,15 @@ public class NotificationServiceImpl implements NotificationService {
                 .linkUrl("/offers");
         if (accepted) {
             hmNotification
-                    .title(String.format("🎉 Ứng viên nhận offer: %s (%s)", candidateName, positionTitle))
+                    .title(String.format("🎉 Ứng viên đã nhận việc: %s (%s)", candidateName, positionTitle))
                     .content(String.format(
-                            "Ứng viên %s đã đồng ý nhận việc cho vị trí \"%s\". Bộ phận Nhân sự đang chuẩn bị thủ tục Onboarding tiếp theo.",
+                            "Ứng viên %s đã đồng ý nhận việc cho vị trí \"%s\". Bộ phận Tuyển dụng đang chuẩn bị thủ tục tiếp nhận nhân sự tiếp theo.",
                             candidateName, positionTitle))
                     .eventType("OFFER_ACCEPTED")
                     .eventId("OFFER_RESP_HM_ACC_" + offer.getOfferId());
         } else {
             hmNotification
-                    .title(String.format("Ứng viên từ chối offer: %s (%s)", candidateName, positionTitle))
+                    .title(String.format("Ứng viên từ chối thư mời nhận việc: %s (%s)", candidateName, positionTitle))
                     .content(String.format("Ứng viên %s đã từ chối thư mời làm việc cho vị trí \"%s\".%s",
                             candidateName, positionTitle, reasonText))
                     .eventType("OFFER_DECLINED")

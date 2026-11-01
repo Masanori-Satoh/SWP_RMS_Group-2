@@ -18,7 +18,7 @@ import java.util.Optional;
  * hành trình.
  * <p>
  * Nguyên tắc (L6 luồng 5): chữ ứng viên thấy chỉ đổi khi ứng viên đã được báo (có lịch, có thư mời). Dữ kiện đầu vào
- * đã bỏ sẵn phần nội bộ (offer chưa gửi, điểm AI, lượt duyệt, kết quả chốt phỏng vấn: GBR-02), nên mọi bước duyệt
+ * đã bỏ sẵn phần nội bộ (offer chưa gửi, lượt duyệt, kết quả chốt phỏng vấn: GBR-02), nên mọi bước duyệt
  * nội bộ trước phỏng vấn đều là "Đã nộp CV", và HM chốt "Đạt" mà HR chưa gửi offer thì đơn vẫn ở Phỏng vấn. Bảng
  * quy đổi là bảng 5.3 của {@code nghiep-vu.md}, xét từ trên xuống, gặp điều kiện đầu tiên đúng thì dừng.
  * Giống {@link ApplicationProgressResolver} nhưng cho góc nhìn ứng viên.
@@ -181,7 +181,7 @@ public final class MyApplicationJourney {
                     offer == null ? null : "Xem thư mời", offerHref(offer));
             case "Offered" -> offered(offer);
             case "HM_Passed", "Interviewing" -> interviewing(facts.interviews(), now);
-            case "Applied", "AI_Screened", "HR_Passed" -> submitted();
+            case "Applied", "HR_Passed" -> submitted();
             // Trạng thái lạ (ngoài CK_Application_Status): không đoán, chỉ báo đang xử lý.
             default -> new Status(Round.SUBMIT, Mode.IN_FLOW, "Đang xử lý", null, "neutral", null, null);
         };

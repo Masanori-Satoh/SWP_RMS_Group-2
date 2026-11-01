@@ -5,12 +5,11 @@ import com.group2.rms.jobposting.entity.JobPosting;
 import jakarta.persistence.*;
 import lombok.*;
 
-import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 /**
  * 3.13 Application - Hồ sơ ứng tuyển của ứng viên cho một vị trí.
- * ApplicationStatus: Applied, AI_Screened, HR_Passed, HM_Passed,
+ * ApplicationStatus: Applied, HR_Passed, HM_Passed, HM_Suggested,
  *                    Interviewing, Offered, Hired, Rejected
  */
 @Entity
@@ -45,16 +44,10 @@ public class Application extends BaseEntity {
     private LocalDateTime submissionDate;
 
     /**
-     * Applied, AI_Screened, HR_Passed, HM_Passed, Interviewing, Offered, Hired, Rejected
+     * Applied, HR_Passed, HM_Passed, HM_Suggested, Interviewing, Offered, Hired, Rejected
      */
     @Column(name = "ApplicationStatus", nullable = false, length = 30)
     private String applicationStatus;
-
-    /**
-     * Điểm tổng hợp (từ AI + đánh giá phỏng vấn)
-     */
-    @Column(name = "OverallScore", precision = 5, scale = 2)
-    private BigDecimal overallScore;
 
     @PrePersist
     protected void onApplicationPersist() {

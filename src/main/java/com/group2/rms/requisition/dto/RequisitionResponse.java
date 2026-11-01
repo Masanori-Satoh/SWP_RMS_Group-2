@@ -2,8 +2,6 @@ package com.group2.rms.requisition.dto;
 
 import com.group2.rms.admin.dto.ActivityLogResponse;
 
-import java.math.BigDecimal;
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -56,12 +54,10 @@ public record RequisitionResponse(
         String reasonForHiringHtml,         // nội dung nhiều dòng đã escape + <br/> (hiển thị bằng th:utext)
         String jobDescriptionHtml,
         String requirementDetailsHtml,
-        BigDecimal criteriaTotalWeight,     // tổng trọng số tiêu chí
         Integer postingNo,                  // JobPosting.PostingNo của tin mới nhất (lần đăng thứ mấy)
         LocalDateTime postingDate,          // JobPosting.PostingDate
         LocalDateTime postingDeadline,      // JobPosting.ApplicationDeadline
 
-        List<ScreeningCriteriaResponse> screeningCriteria,
         List<ApprovalResponse> approvals,
         List<ActivityLogResponse> activityLog) {
 }

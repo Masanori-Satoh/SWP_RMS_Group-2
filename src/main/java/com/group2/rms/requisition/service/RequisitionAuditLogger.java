@@ -4,7 +4,6 @@ import com.group2.rms.admin.entity.AuditLog;
 import com.group2.rms.admin.repository.AuditLogRepository;
 import com.group2.rms.core.util.FieldChanges;
 import com.group2.rms.requisition.entity.JobRequisition;
-import com.group2.rms.requisition.entity.ScreeningCriteria;
 import com.group2.rms.user.entity.User;
 
 import lombok.RequiredArgsConstructor;
@@ -81,20 +80,6 @@ public class RequisitionAuditLogger {
         snapshot.put("Mô tả công việc", jobRequisition.getJobDescription());
         snapshot.put("Yêu cầu ứng viên", jobRequisition.getRequirementDetails());
         snapshot.put("Trạng thái phê duyệt", jobRequisition.getApprovalStatus());
-
-        int unnamedIndex = 0;
-        for (ScreeningCriteria criterion : jobRequisition.getScreeningCriteria()) {
-            String criterionName = criterion.getCriteriaName();
-            if (criterionName == null) {
-                unnamedIndex++;
-                criterionName = "Tiêu chí " + unnamedIndex;
-            }
-            snapshot.put("Tiêu chí: " + criterionName,
-                    FieldChanges.display(criterion.getCriteriaType()) + "; "
-                            + FieldChanges.display(criterion.getRequiredValue()) + "; trọng số "
-                            + FieldChanges.display(formatNumber(criterion.getWeight())) + "%; bắt buộc "
-                            + Boolean.TRUE.equals(criterion.getIsMandatory()));
-        }
         return snapshot;
     }
 

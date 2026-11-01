@@ -13,8 +13,8 @@ import static com.group2.rms.candidate.domain.rule.ApplicationStage.*;
  * @see ApplicationStage
  */
 public enum ApplicationProgressStep {
-    AWAITING_AI(APPLIED, "Chờ AI chấm CV", "Hệ thống", "neutral"),
-    AWAITING_HR_REVIEW(SCREENING, "Chờ HR duyệt CV", "HR", "warning"),
+    // Giai đoạn APPLIED: thẻ "Hồ sơ chờ sàng lọc" của HrDashboardService đếm theo giai đoạn này
+    AWAITING_HR_REVIEW(APPLIED, "Chờ HR duyệt CV", "HR", "warning"),
     AWAITING_HM_REVIEW(SCREENING, "Chờ trưởng bộ phận duyệt CV", "Trưởng bộ phận", "warning"),
     HM_SUGGESTED(SCREENING, "HM đề xuất — chờ HR liên hệ", "HR", "warning"),
     AWAITING_SCHEDULE(INTERVIEW, "Chờ xếp lịch phỏng vấn", "HR", "warning"),

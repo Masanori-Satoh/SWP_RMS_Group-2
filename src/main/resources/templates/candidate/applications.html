@@ -37,7 +37,7 @@
         </div>
         <div th:if="${result.postingTitle == null and !result.departmentView}">
             <h1 class="page-title adw-title">Danh sách ứng viên</h1>
-            <p class="page-subtitle">Xếp theo điểm AI; chọn hồ sơ đạt để chuyển cho trưởng bộ phận.</p>
+            <p class="page-subtitle">Hồ sơ mới nộp lên đầu; chọn hồ sơ đạt để chuyển cho trưởng bộ phận.</p>
         </div>
         <a th:if="${result.postingTitle != null and result.canOpenJobPosting}"
            th:href="@{/internal/job-postings/{id}(id=${search.jobPostingId})}"
@@ -65,13 +65,6 @@
                 <option value="">Tất cả vị trí</option>
                 <option th:each="job : ${result.jobOptions}" th:value="${job.jobPostingId}" th:text="${job.postingTitle}"
                         th:selected="${search.jobPostingId == job.jobPostingId}">Java Developer</option>
-            </select>
-        </div>
-        <div class="form-group">
-            <label class="form-label" for="app-sort">Sắp xếp</label>
-            <select id="app-sort" name="sort" class="form-select">
-                <option value="score" th:selected="${search.sort == 'score'}">Điểm AI cao nhất</option>
-                <option value="newest" th:selected="${search.sort == 'newest'}">Mới nộp nhất</option>
             </select>
         </div>
         <div class="app-filter__actions">
@@ -120,7 +113,6 @@
                     <th scope="col" class="app-col-candidate">Ứng viên</th>
                     <th scope="col" class="app-col-job">Vị trí</th>
                     <th scope="col" class="app-col-date">Ngày nộp</th>
-                    <th scope="col" class="app-col-score">Điểm AI</th>
                     <th scope="col" class="app-col-status">Trạng thái</th>
                     <th scope="col" class="app-col-actions app-table__actions-head">Thao tác</th>
                 </tr>
@@ -145,15 +137,6 @@
                     </td>
                     <td class="app-col-job" th:text="${row.postingTitle}">Java Developer</td>
                     <td class="app-col-date" th:text="${#temporals.format(row.submissionDate, 'dd/MM/yyyy')}">10/10/2026</td>
-                    <td class="app-col-score">
-                        <div th:if="${row.aiMatchScore != null}" class="app-score-badge"
-                             th:classappend="${row.aiMatchScore >= 80 ? 'app-score-badge--high' : (row.aiMatchScore >= 60 ? 'app-score-badge--mid' : 'app-score-badge--low')}">
-                            <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="m12 3-1.9 5.8a2 2 0 0 1-1.3 1.3L3 12l5.8 1.9a2 2 0 0 1 1.3 1.3L12 21l1.9-5.8a2 2 0 0 1 1.3-1.3L21 12l-5.8-1.9a2 2 0 0 1-1.3-1.3Z"/></svg>
-                            <strong class="app-score" th:text="${#numbers.formatDecimal(row.aiMatchScore, 1, 0)}">79</strong>
-                        </div>
-                        <span th:if="${row.aiMatchScore == null}" class="app-score app-score--empty"
-                              th:text="${row.applicationStatus == 'Applied' ? 'Chờ AI chấm' : '—'}">Chờ AI chấm</span>
-                    </td>
                     <td class="app-col-status">
                         <div class="app-status-cell">
                             <span class="badge" th:classappend="${row.statusBadge}" th:text="${row.statusLabel}">Chờ HR duyệt CV</span>

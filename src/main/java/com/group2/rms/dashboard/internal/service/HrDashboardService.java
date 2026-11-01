@@ -90,7 +90,8 @@ public class HrDashboardService {
     private Map<ApplicationStage, List<ApplicationPipelineResponse>> applicationsByStage() {
         Map<ApplicationStage, List<ApplicationPipelineResponse>> result = new EnumMap<>(ApplicationStage.class);
         for (ApplicationStage stage : WAITING_STAGES) {
-            ApplicationSearch onlyStage = new ApplicationSearch(null, null, null, null, stage.name());
+            // dunglt bổ sung: bỏ tham số sort (danh sách hồ sơ không còn xếp theo điểm AI)
+            ApplicationSearch onlyStage = new ApplicationSearch(null, null, null, stage.name());
             // Lấy toàn bộ kết quả để KPI không lệch khỏi tab /applications khi giai đoạn rất đông
             result.put(stage, applicationPipeline.list(onlyStage, PageRequest.of(0, Integer.MAX_VALUE))
                     .applications().getContent());

@@ -98,7 +98,7 @@
                   <span class="ofw-info-value" th:text="${fixedCandidate.requisitionId != null ? '#' + fixedCandidate.requisitionId : '-'}">#4</span>
                 </div>
                 <div class="ofw-info-item">
-                  <span class="ofw-info-label">Lương đề xuất của Trưởng bộ phận</span>
+                  <span class="ofw-info-label">Lương khuyến nghị từ Trưởng bộ phận</span>
                   <div>
                     <div class="ofw-salary-badge" th:text="${fixedCandidate.recommendedSalary != null ? #numbers.formatDecimal(fixedCandidate.recommendedSalary, 1, 'POINT', 0, 'COMMA') + ' VNĐ' : 'Chưa có gợi ý'}">20.000.000 VNĐ</div>
                   </div>
@@ -110,7 +110,7 @@
               </div>
               <div class="ofw-comments-box">
                 <span class="ofw-info-label">Đánh giá Hội đồng phỏng vấn</span>
-                <p class="ofw-info-comments" th:text="${fixedCandidate.interviewSummaryComments != null ? fixedCandidate.interviewSummaryComments : 'Đạt yêu cầu đầu vào, đề xuất gửi thư mời nhận việc (Offer).'}">-</p>
+                <p class="ofw-info-comments" th:text="${fixedCandidate.interviewSummaryComments != null ? fixedCandidate.interviewSummaryComments : 'Đạt yêu cầu đầu vào, đề xuất gửi thư mời nhận việc.'}">-</p>
               </div>
             </div>
           </div>
@@ -141,7 +141,7 @@
                 <div class="ofw-info-item"><span class="ofw-info-label">Vị trí ứng tuyển</span><span class="ofw-info-value" id="dispPosition">-</span></div>
                 <div class="ofw-info-item"><span class="ofw-info-label">Phòng ban</span><span class="ofw-info-value" id="dispDept">-</span></div>
                 <div class="ofw-info-item"><span class="ofw-info-label">Mã yêu cầu tuyển dụng</span><span class="ofw-info-value" id="dispReqId">-</span></div>
-                <div class="ofw-info-item"><span class="ofw-info-label">Lương đề xuất của Trưởng bộ phận</span><div><div class="ofw-salary-badge" id="dispRecomSalary">-</div></div></div>
+                <div class="ofw-info-item"><span class="ofw-info-label">Lương khuyến nghị từ Trưởng bộ phận</span><div><div class="ofw-salary-badge" id="dispRecomSalary">-</div></div></div>
                 <div class="ofw-info-item"><span class="ofw-info-label">Trưởng bộ phận chuyên môn</span><span class="ofw-info-value" id="dispHm">-</span></div>
               </div>
               <div class="ofw-comments-box">
@@ -275,7 +275,7 @@
         <!-- Submit to Director -->
         <button type="submit" name="isDraft" value="false" class="btn btn--primary">
           <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
-          <span>Trình Giám Đốc</span>
+          <span>Trình Giám đốc</span>
         </button>
       </div>
 

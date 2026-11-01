@@ -3,7 +3,7 @@
     layout:decorate="~{layout/internal}">
 <!--
     CANDIDATE/APPLICATION-DETAIL.HTML — Chi tiết hồ sơ (/applications/{id}, SRS 5.1.23 Shared CV Details)
-    Dữ liệu nội bộ (điểm AI, nhận xét): chỉ cho người tuyển dụng, không dùng cho màn của ứng viên (GBR-02).
+    Dữ liệu nội bộ (nhận xét, người duyệt): chỉ cho người tuyển dụng, không dùng cho màn của ứng viên (GBR-02).
     Dựng bằng catalog: page-header, card, badge, btn, fragments/ui/stages :: stageBar (stepper), fragments/ui/timeline :: timeline.
     CSS nền: applications.css; bố cục riêng: application-detail.css (tiền tố apd-).
 -->
@@ -32,8 +32,7 @@
                         <a th:unless="${detail.proposalOnly}" th:href="@{/applications}">Hồ sơ ứng tuyển</a>
                         <!--HM suggestion in talent pool-->
                         <a th:if="${detail.proposalOnly}"
-                            th:href="@{/talent-pool/jobs/{id}/suggestions(id=${detail.jobPostingId})}">Ứng viên HM đề
-                            xuất</a>
+                            th:href="@{/talent-pool/jobs/{id}/suggestions(id=${detail.jobPostingId})}">Ứng viên HM đề xuất</a>
                         <span aria-hidden="true">/</span>
                         <span aria-current="page" th:text="${detail.fullName}">Nguyễn Văn An</span>
                     </nav>
@@ -87,7 +86,7 @@
                     <div th:if="${successMessage}" class="alert alert--success" role="status"
                         th:text="${successMessage}">Đã chuyển hồ sơ.</div>
                     <div th:if="${errorMessage}" class="alert alert--danger" role="alert" th:text="${errorMessage}">
-                        Không thể chấm lại.</div>
+                        Không thể xử lý hồ sơ.</div>
 
 
                 </header>
@@ -111,29 +110,6 @@
                                 th:text="${detail.proposalOnly ? 'Hành trình đề xuất' : 'Hành trình hồ sơ'}">Hành trình
                                 hồ sơ</h2>
                         </div>
-                        <div class="app-journey__ai apd-ai" aria-label="Đánh giá AI">
-                            <p class="app-journey__score apd-ai-score">
-                                <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor"
-                                    stroke-width="1.8" aria-hidden="true">
-                                    <path
-                                        d="m12 3 2.5 6.5L21 12l-6.5 2.5L12 21l-2.5-6.5L3 12l6.5-2.5L12 3Z M20 2v4 M18 4h4" />
-                                </svg>
-                                <span>AI:</span><strong th:if="${detail.aiMatchScore != null}"
-                                    th:text="|${#numbers.formatDecimal(detail.aiMatchScore, 1, 'POINT', 2, 'COMMA')}/100|"></strong>
-                                <span th:if="${detail.aiMatchScore == null}"
-                                    th:text="${pendingSuggestion ? 'Chưa sàng lọc AI' : 'Chưa có điểm AI'}"></span>
-                            </p>
-                            <time th:if="${detail.aiMatchScore != null and detail.screenedAt != null}"
-                                class="app-journey__time" th:datetime="${#temporals.formatISO(detail.screenedAt)}"
-                                th:text="|Chấm lúc ${#temporals.format(detail.screenedAt, 'dd/MM/yyyy HH:mm')}|"></time>
-                            <form th:if="${detail.actions.rescreen}"
-                                th:action="@{/applications/{id}/ai-screening(id=${detail.applicationId})}" method="post"
-                                class="app-journey__rescreen">
-                                <button type="submit" class="btn btn--secondary btn--sm"
-                                    th:text="${detail.aiMatchScore == null ? 'Chấm điểm AI' : 'Chấm lại AI'}">Chấm lại
-                                    AI</button>
-                            </form>
-                        </div>
                     </div>
                     <ol th:if="${pendingSuggestion}" class="apd-proposal-progress" aria-label="Tiến độ đề xuất">
                         <li data-state="done"><svg class="apd-progress-check" viewBox="0 0 24 24" width="20" height="20"
@@ -154,8 +130,6 @@
                         <nav th:replace="~{fragments/ui/stages :: stageBar(items=${detail.stepper}, mode='stepper')}">
                         </nav>
                     </th:block>
-                    <p th:if="${detail.aiMatchScore != null}" class="app-journey__hint">Điểm AI chỉ mang tính gợi ý;
-                        quyết định thuộc về người duyệt.</p>
                 </section>
 
                 <section class="card app-cv adw-surface apd-cv" aria-labelledby="app-cv-title">
@@ -191,16 +165,13 @@
                     <dl class="apd-facts">
                         <!-- Q7.5: ứng viên tự khai ở hồ sơ cá nhân; trống thì không hiện dòng -->
                         <div class="apd-fact" th:if="${hasBirth}">
-                            <dt>Ngày sinh</dt>
-                            <dd th:text="${#temporals.format(detail.dateOfBirth, 'dd/MM/yyyy')}">09/03/1993</dd>
+                            <dt>Ngày sinh</dt><dd th:text="${#temporals.format(detail.dateOfBirth, 'dd/MM/yyyy')}">09/03/1993</dd>
                         </div>
                         <div class="apd-fact" th:if="${hasGender}">
-                            <dt>Giới tính</dt>
-                            <dd th:text="${detail.gender}">Nữ</dd>
+                            <dt>Giới tính</dt><dd th:text="${detail.gender}">Nữ</dd>
                         </div>
                         <div class="apd-fact" th:if="${hasAddress}">
-                            <dt>Địa chỉ</dt>
-                            <dd th:text="${detail.address}">Số 91 Chùa Bộc, Đống Đa, Hà Nội</dd>
+                            <dt>Địa chỉ</dt><dd th:text="${detail.address}">Số 91 Chùa Bộc, Đống Đa, Hà Nội</dd>
                         </div>
                         <div class="apd-fact" th:if="${hasEmail}">
                             <dt>Email</dt>
@@ -237,8 +208,7 @@
                             <circle cx="12" cy="12" r="9" />
                             <path d="M12 7v5l3 2" />
                         </svg>
-                        <h2 id="app-timeline-title" class="card-title app-workspace-title apd-title">Hành trình hoạt
-                            động</h2>
+                        <h2 id="app-timeline-title" class="card-title app-workspace-title apd-title">Hành trình hoạt động</h2>
                     </div>
                     <p th:if="${#lists.isEmpty(detail.timeline)}" class="text-muted apd-empty">Chưa có hoạt động được
                         ghi nhận.</p>
@@ -272,8 +242,7 @@
                             <span th:if="${#fields.hasErrors('comments')}" th:errors="*{comments}"
                                 class="form-error">Nhận xét tối đa 1000 ký tự.</span>
                         </div>
-                        <p th:if="${detail.viewerRole == 'Director'}" class="text-muted">Bạn đang duyệt thay trưởng bộ
-                            phận; lịch sử sẽ ghi "Giám đốc".</p>
+                        <p th:if="${detail.viewerRole == 'Director'}" class="text-muted">Bạn đang duyệt thay trưởng bộ phận; lịch sử sẽ ghi "Giám đốc".</p>
                         <div class="app-review__actions">
                             <button type="submit" name="decision" value="Pass" class="btn btn--primary btn--sm"
                                 th:text="${detail.applicationStatus == 'HR_Passed' ? 'Đạt' : 'Đạt, chuyển trưởng bộ phận'}">Đạt</button>
