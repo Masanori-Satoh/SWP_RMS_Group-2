@@ -6,6 +6,7 @@ Tài liệu này là lịch sử tóm tắt các thay đổi quan trọng và b�
 
 | Ngày | Tên công việc / Yêu cầu chính | Người thực hiện | Chi tiết thay đổi |
 | --- | --- | --- | --- |
+| **2026-11-01** | Dọn fixture/comment AI screening trong Admin/Admin Dashboard; giữ nguyên 9 file module khác theo xác nhận của người dùng | LinhDN | [4 file thay đổi, 19 test qua và giới hạn SQL Server](work_logs/2026-11-01-admin-ai-screening-cleanup.md) |
 | **2026-10-31** | Chuẩn hóa giao diện cổng Offer ứng viên (Candidate Offer Portal) theo UI_RULES & ARCHITECTURE_GUIDE | HuyenPT | [File change và kiểm thử](work_logs/2026-10-31-candidate-offer-ui-sync.md) |
 | **2026-10-31** | Đồng bộ giao diện Danh sách Offer của Giám đốc (Director List) theo layout Admin, giữ 100% nghiệp vụ | HuyenPT | [File change và kiểm thử](work_logs/2026-10-31-director-offer-ui-sync.md) |
 | **2026-10-31** | Giải quyết conflict Work Log khi khôi phục stash sau merge, giữ cả nhật ký Offer và giao diện tạo mới | LinhDN | [Bổ sung xử lý stash](work_logs/2026-10-31-merge-work-log-conflict.md#bổ-sung-conflict-khi-khôi-phục-stash) |
