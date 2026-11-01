@@ -100,7 +100,7 @@ public class OfferServiceImpl implements OfferService {
 
         Application application = applicationRepository.findById(request.getApplicationId())
                 .orElseThrow(() -> new ResourceNotFoundException(
-                        "Không tìm thấy Application với ID: " + request.getApplicationId()));
+                        "Không tìm thấy đơn ứng tuyển với ID: " + request.getApplicationId()));
 
         User proposedBy = resolveProposedBy(request.getProposedById());
 
@@ -141,7 +141,7 @@ public class OfferServiceImpl implements OfferService {
     @Transactional(readOnly = true)
     public OfferResponse getOfferById(Integer offerId) {
         OfferProposal offer = offerProposalRepository.findById(offerId)
-                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy OfferProposal với ID: " + offerId));
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy đề xuất nhận việc với ID: " + offerId));
         return mapToResponse(offer);
     }
 
@@ -150,7 +150,7 @@ public class OfferServiceImpl implements OfferService {
     public OfferResponse getOfferByApplicationId(Integer applicationId) {
         OfferProposal offer = offerProposalRepository.findByApplication_ApplicationId(applicationId)
                 .orElseThrow(() -> new ResourceNotFoundException(
-                        "Không tìm thấy OfferProposal cho Application ID: " + applicationId));
+                        "Không tìm thấy đề xuất nhận việc cho đơn ứng tuyển ID: " + applicationId));
         return mapToResponse(offer);
     }
 
@@ -254,8 +254,8 @@ public class OfferServiceImpl implements OfferService {
         if (existingOfferOpt.isPresent() && !Boolean.TRUE.equals(existingOfferOpt.get().getIsDeleted())) {
             String currentStatus = existingOfferOpt.get().getOfferStatus();
             throw new OfferValidationException(
-                    "Theo quy tắc GBR-07, không thể tạo mới Offer Proposal vì đơn ứng tuyển đang có gói Offer ở trạng thái ["
-                            + currentStatus + "]. Vui lòng chỉnh sửa trực tiếp trên danh sách Offer thay vì tạo mới.",
+                    "Theo quy tắc GBR-07, không thể tạo mới đề xuất nhận việc vì đơn ứng tuyển đang có gói đề xuất ở trạng thái ["
+                            + OfferExportServiceImpl.mapOfferStatusLabel(currentStatus) + "]. Vui lòng chỉnh sửa trực tiếp trên danh sách đề xuất thay vì tạo mới.",
                     "OFFER_LOCKED_STATE");
         }
 
@@ -389,7 +389,7 @@ public class OfferServiceImpl implements OfferService {
     @Transactional(readOnly = true)
     public OfferDetailResponse getOfferDetailForHr(Integer id) {
         OfferProposal offer = offerProposalRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy OfferProposal với ID: " + id));
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy đề xuất nhận việc với ID: " + id));
 
         var app = offer.getApplication();
         var cand = app != null ? app.getCandidate() : null;
@@ -475,15 +475,15 @@ public class OfferServiceImpl implements OfferService {
     @Override
     public OfferResponse updateOfferByHr(Integer id, UpdateOfferRequest dto) {
         OfferProposal offer = offerProposalRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy OfferProposal với ID: " + id));
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy đề xuất nhận việc với ID: " + id));
 
         String currentStatus = offer.getOfferStatus();
         boolean canEdit = "Draft".equalsIgnoreCase(currentStatus);
 
         if (!canEdit) {
             throw new OfferValidationException(
-                    "Theo quy tắc GBR-07, chỉ được phép cập nhật Offer khi ở trạng thái thuộc Nhóm A (Draft). Trạng thái hiện tại: "
-                            + currentStatus,
+                    "Theo quy tắc GBR-07, chỉ được phép cập nhật đề xuất khi ở trạng thái Bản nháp (Draft). Trạng thái hiện tại: "
+                            + OfferExportServiceImpl.mapOfferStatusLabel(currentStatus),
                     "OFFER_STATUS_INVALID");
         }
 
@@ -534,13 +534,13 @@ public class OfferServiceImpl implements OfferService {
     @Transactional(readOnly = true)
     public UpdateOfferRequest getUpdateOfferRequestById(Integer id) {
         OfferProposal offer = offerProposalRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy OfferProposal với ID: " + id));
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy đề xuất nhận việc với ID: " + id));
 
         String currentStatus = offer.getOfferStatus();
         if (!"Draft".equalsIgnoreCase(currentStatus)) {
             throw new OfferValidationException(
-                    "Theo quy tắc GBR-07, chỉ được phép chỉnh sửa Offer khi ở trạng thái Bản thảo (Draft). Trạng thái hiện tại: "
-                            + currentStatus,
+                    "Theo quy tắc GBR-07, chỉ được phép chỉnh sửa đề xuất khi ở trạng thái Bản nháp (Draft). Trạng thái hiện tại: "
+                            + OfferExportServiceImpl.mapOfferStatusLabel(currentStatus),
                     "OFFER_STATUS_INVALID");
         }
 
@@ -560,11 +560,11 @@ public class OfferServiceImpl implements OfferService {
     @Override
     public void deleteDraftOfferByHr(Integer id) {
         OfferProposal offer = offerProposalRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy OfferProposal với ID: " + id));
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy đề xuất nhận việc với ID: " + id));
 
         if (!"Draft".equalsIgnoreCase(offer.getOfferStatus())) {
             throw new OfferValidationException(
-                    "Chỉ được phép xóa bản thảo Offer (Draft). Trạng thái hiện tại: " + offer.getOfferStatus(),
+                    "Chỉ được phép xóa bản nháp đề xuất nhận việc. Trạng thái hiện tại: " + OfferExportServiceImpl.mapOfferStatusLabel(offer.getOfferStatus()),
                     "OFFER_NOT_DRAFT");
         }
 
@@ -577,7 +577,7 @@ public class OfferServiceImpl implements OfferService {
     @Override
     public OfferResponse sendOfferToCandidate(Integer id) {
         OfferProposal offer = offerProposalRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy OfferProposal với ID: " + id));
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy đề xuất nhận việc với ID: " + id));
 
         String currentStatus = offer.getOfferStatus();
         boolean isApproved = "Approved".equalsIgnoreCase(currentStatus)
@@ -585,13 +585,13 @@ public class OfferServiceImpl implements OfferService {
 
         if (!isApproved) {
             throw new OfferValidationException(
-                    "Chỉ được gửi thư mời nhận việc khi Offer đã được Director phê duyệt. Trạng thái hiện tại: "
-                            + currentStatus,
+                    "Chỉ được gửi thư mời nhận việc khi đề xuất đã được Giám đốc phê duyệt. Trạng thái hiện tại: "
+                            + OfferExportServiceImpl.mapOfferStatusLabel(currentStatus),
                     "OFFER_NOT_APPROVED");
         }
 
         if (offer.getResponsePeriodDays() == null || offer.getResponsePeriodDays() <= 0) {
-            throw new OfferValidationException("Offer chưa có thời gian phản hồi hợp lệ.");
+            throw new OfferValidationException("Thư mời nhận việc chưa có thời gian phản hồi hợp lệ.");
         }
 
         LocalDateTime deadline = LocalDateTime.now().plusDays(offer.getResponsePeriodDays());
@@ -780,18 +780,18 @@ public class OfferServiceImpl implements OfferService {
     @Override
     public OfferResponse approveOfferByDirector(Integer id, String comments) {
         OfferProposal offer = offerProposalRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy OfferProposal với ID: " + id));
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy đề xuất nhận việc với ID: " + id));
 
         if (!"Pending_Director".equalsIgnoreCase(offer.getOfferStatus())) {
             throw new OfferValidationException(
-                    "Chỉ được phê duyệt đề xuất Offer khi ở trạng thái chờ duyệt (Pending_Director). Trạng thái hiện tại: "
-                            + offer.getOfferStatus(),
+                    "Chỉ được phê duyệt đề xuất khi ở trạng thái Chờ Giám đốc duyệt. Trạng thái hiện tại: "
+                            + OfferExportServiceImpl.mapOfferStatusLabel(offer.getOfferStatus()),
                     "OFFER_STATUS_INVALID");
         }
 
         User director = resolveProposedBy(null); // Resolve current logged in user (Director)
         if (director == null) {
-            throw new OfferValidationException("Không xác định được danh tính Director để thực hiện phê duyệt.", "USER_NOT_FOUND");
+            throw new OfferValidationException("Không xác định được danh tính Giám đốc để thực hiện phê duyệt.", "USER_NOT_FOUND");
         }
 
         offer.setOfferStatus("Director_Approved");
@@ -814,18 +814,18 @@ public class OfferServiceImpl implements OfferService {
     @Override
     public OfferResponse rejectOfferByDirector(Integer id, String comments) {
         OfferProposal offer = offerProposalRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy OfferProposal với ID: " + id));
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy đề xuất nhận việc với ID: " + id));
 
         if (!"Pending_Director".equalsIgnoreCase(offer.getOfferStatus())) {
             throw new OfferValidationException(
-                    "Chỉ được từ chối đề xuất Offer khi ở trạng thái chờ duyệt (Pending_Director). Trạng thái hiện tại: "
-                            + offer.getOfferStatus(),
+                    "Chỉ được từ chối đề xuất khi ở trạng thái Chờ Giám đốc duyệt. Trạng thái hiện tại: "
+                            + OfferExportServiceImpl.mapOfferStatusLabel(offer.getOfferStatus()),
                     "OFFER_STATUS_INVALID");
         }
 
         User director = resolveProposedBy(null); // Resolve current logged in user (Director)
         if (director == null) {
-            throw new OfferValidationException("Không xác định được danh tính Director để thực hiện từ chối.", "USER_NOT_FOUND");
+            throw new OfferValidationException("Không xác định được danh tính Giám đốc để thực hiện từ chối.", "USER_NOT_FOUND");
         }
 
         offer.setOfferStatus("Director_Rejected");

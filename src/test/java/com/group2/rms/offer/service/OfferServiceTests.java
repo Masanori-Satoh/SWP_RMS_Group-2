@@ -649,7 +649,7 @@ class OfferServiceTests {
         });
 
         assertEquals("OFFER_LOCKED_STATE", ex.getErrorCode());
-        assertTrue(ex.getMessage().contains("không thể tạo mới Offer Proposal"));
+        assertTrue(ex.getMessage().contains("không thể tạo mới đề xuất nhận việc"));
         verify(offerProposalRepository, never()).save(any());
     }
 
@@ -745,7 +745,7 @@ class OfferServiceTests {
         });
 
         assertEquals("OFFER_STATUS_INVALID", ex.getErrorCode());
-        assertTrue(ex.getMessage().contains("Nhóm A"));
+        assertTrue(ex.getMessage().contains("Bản nháp"));
         verify(offerProposalRepository, never()).save(any());
     }
 
@@ -787,7 +787,7 @@ class OfferServiceTests {
         });
 
         assertEquals("OFFER_STATUS_INVALID", ex.getErrorCode());
-        assertTrue(ex.getMessage().contains("Draft"));
+        assertTrue(ex.getMessage().contains("Bản nháp"));
     }
 
     @Test
@@ -995,7 +995,7 @@ class OfferServiceTests {
         });
 
         assertEquals("OFFER_NOT_DRAFT", ex.getErrorCode());
-        assertTrue(ex.getMessage().contains("Chỉ được phép xóa bản thảo"));
+        assertTrue(ex.getMessage().contains("Chỉ được phép xóa bản nháp"));
     }
 
     @Test
@@ -1039,7 +1039,7 @@ class OfferServiceTests {
         });
 
         assertEquals("OFFER_NOT_APPROVED", ex.getErrorCode());
-        assertTrue(ex.getMessage().contains("Chỉ được gửi thư mời nhận việc khi Offer đã được Director phê duyệt"));
+        assertTrue(ex.getMessage().contains("Chỉ được gửi thư mời nhận việc khi đề xuất đã được Giám đốc phê duyệt"));
     }
 
     @Test
