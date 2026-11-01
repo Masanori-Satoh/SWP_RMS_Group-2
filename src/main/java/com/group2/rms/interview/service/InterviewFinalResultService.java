@@ -8,9 +8,9 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 
 /**
- * Hiring Manager chốt kết quả cuối của buổi phỏng vấn (InterviewFinalResult).
+ * Hiring Manager (hoặc Giám đốc khi tuyển Hiring Manager) chốt kết quả cuối của buổi phỏng vấn (InterviewFinalResult).
  * Kết quả Passed là nguồn của danh sách "ứng viên đạt" khi HR tạo offer.
- * Considering là quyết định tạm: hồ sơ giữ Interviewing, HM chốt lại Passed/Failed sau.
+ * Considering là quyết định tạm: hồ sơ giữ Interviewing, người chốt chốt lại Passed/Failed sau.
  */
 public interface InterviewFinalResultService {
 
@@ -31,7 +31,14 @@ public interface InterviewFinalResultService {
     void decide(Long interviewId, SubmitFinalResultRequest request, User hiringManager);
 
     /**
-     * Người dùng có phải Hiring Manager phụ trách phòng ban của vị trí phỏng vấn không.
+     * Vị trí phỏng vấn có yêu cầu Giám đốc chốt kết quả hay không.
+     * Áp dụng khi tuyển vị trí Hiring Manager (Phương án 2: yêu cầu do Giám đốc tạo).
+     */
+    boolean requiresDirectorDecision(InterviewSchedule schedule);
+
+    /**
+     * Người dùng có phải người có quyền chốt kết quả của vị trí phỏng vấn không
+     * (Hiring Manager phụ trách phòng ban cho vị trí thường; Giám đốc khi tuyển Hiring Manager).
      * Cần gọi trong transaction (đọc requisition/department LAZY của lịch).
      */
     boolean isDecisionMaker(User user, InterviewSchedule schedule);

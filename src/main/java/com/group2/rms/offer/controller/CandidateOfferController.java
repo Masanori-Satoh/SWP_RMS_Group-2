@@ -1,12 +1,18 @@
 package com.group2.rms.offer.controller;
 
+import com.group2.rms.core.exception.ResourceNotFoundException;
+import com.group2.rms.offer.dto.CandidateOfferDeclineRequest;
 import com.group2.rms.offer.dto.CandidateOfferDetailResponse;
 import com.group2.rms.offer.exception.OfferResponseException;
 import com.group2.rms.offer.service.CandidateOfferService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
+import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -21,6 +27,7 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 @Controller
 @RequestMapping("/portal/offers")
 @RequiredArgsConstructor
+@Slf4j
 public class CandidateOfferController {
 
     private final CandidateOfferService candidateOffers;
@@ -40,20 +47,26 @@ public class CandidateOfferController {
         return "offers/candidate-detail";
     }
 
-    /** Màn hình riêng xác nhận từ chối Thư mời nhận việc (Decline Page). */
+    /** Chuyển tiếp tương thích ngược: tự động redirect về trang chi tiết và mở Modal từ chối. */
     @GetMapping("/{id}/decline")
-    public String declinePage(@PathVariable Integer id, Model model, RedirectAttributes redirect) {
-        CandidateOfferDetailResponse offer = candidateOffers.getDetail(id);
-        if (!offer.canRespond()) {
-            String msg = "Đã quá hạn phản hồi".equals(offer.statusLabel())
-                    ? "Thư mời này đã quá ngày bắt đầu nhận việc dự kiến, không thể phản hồi nữa."
-                    : "Thư mời này đã được trả lời nên không thể thay đổi.";
-            redirect.addFlashAttribute("errorMessage", msg);
+    public String declinePage(@PathVariable Integer id, RedirectAttributes redirect) {
+        try {
+            CandidateOfferDetailResponse offer = candidateOffers.getDetail(id);
+            if (!offer.canRespond()) {
+                String msg = offer.isExpired()
+                        ? "Thư mời này đã quá ngày bắt đầu nhận việc dự kiến, không thể phản hồi nữa."
+                        : "Thư mời này đã được trả lời nên không thể thay đổi.";
+                redirect.addFlashAttribute("errorMessage", msg);
+                return "redirect:/portal/offers/" + id;
+            }
+            return "redirect:/portal/offers/" + id + "?openDecline=true";
+        } catch (ResourceNotFoundException e) {
+            throw e;
+        } catch (Exception e) {
+            log.error("Lỗi khi mở giao diện từ chối thư mời #{}: ", id, e);
+            redirect.addFlashAttribute("errorMessage", "Đã xảy ra sự cố khi mở thư mời. Vui lòng thử lại sau.");
             return "redirect:/portal/offers/" + id;
         }
-        model.addAttribute("offer", offer);
-        model.addAttribute("activeMenu", "offers");
-        return "offers/candidate-decline";
     }
 
     /** Nhận offer; kết quả hoặc lỗi hiện bằng thông báo trên trang danh sách hoặc chi tiết. */
@@ -68,6 +81,11 @@ public class CandidateOfferController {
             redirect.addFlashAttribute("congratsTitle", postingTitle);
         } catch (OfferResponseException e) {
             redirect.addFlashAttribute("errorMessage", e.getMessage());
+        } catch (ResourceNotFoundException e) {
+            throw e;
+        } catch (Exception e) {
+            log.error("Lỗi không mong muốn khi ứng viên chấp nhận thư mời #{}: ", id, e);
+            redirect.addFlashAttribute("errorMessage", "Đã xảy ra sự cố trong quá trình xử lý. Vui lòng thử lại sau hoặc liên hệ Bộ phận Tuyển dụng.");
         }
         return fromDetail ? "redirect:/portal/offers/" + id : "redirect:/portal/offers";
     }
@@ -75,9 +93,16 @@ public class CandidateOfferController {
     /** Từ chối offer kèm lý do; kết quả hoặc lỗi hiện bằng thông báo trên trang danh sách hoặc chi tiết. */
     @PostMapping("/{id}/decline")
     public String decline(@PathVariable Integer id,
-                          @RequestParam(value = "declineReason", required = false) String declineReason,
-                          @RequestParam(value = "fromDetail", required = false, defaultValue = "false") boolean fromDetail,
+                          @Valid @ModelAttribute CandidateOfferDeclineRequest form,
+                          BindingResult bindingResult,
                           RedirectAttributes redirect) {
+        boolean fromDetail = form != null && form.isFromDetail();
+        if (bindingResult != null && bindingResult.hasErrors()) {
+            String errorMsg = bindingResult.getAllErrors().getFirst().getDefaultMessage();
+            redirect.addFlashAttribute("errorMessage", errorMsg);
+            return fromDetail ? "redirect:/portal/offers/" + id : "redirect:/portal/offers";
+        }
+        String declineReason = form != null ? form.declineReason() : null;
         try {
             String postingTitle = (declineReason != null && !declineReason.isBlank())
                     ? candidateOffers.decline(id, declineReason.trim())
@@ -89,6 +114,11 @@ public class CandidateOfferController {
             }
         } catch (OfferResponseException e) {
             redirect.addFlashAttribute("errorMessage", e.getMessage());
+        } catch (ResourceNotFoundException e) {
+            throw e;
+        } catch (Exception e) {
+            log.error("Lỗi không mong muốn khi ứng viên từ chối thư mời #{}: ", id, e);
+            redirect.addFlashAttribute("errorMessage", "Đã xảy ra sự cố trong quá trình xử lý. Vui lòng thử lại sau hoặc liên hệ Bộ phận Tuyển dụng.");
         }
         return fromDetail ? "redirect:/portal/offers/" + id : "redirect:/portal/offers";
     }

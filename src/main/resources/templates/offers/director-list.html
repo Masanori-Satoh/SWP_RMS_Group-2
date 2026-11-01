@@ -94,7 +94,7 @@
                 <option value="Sent_Candidate" th:selected="${currentStatus == 'Sent_Candidate'}"
                         th:text="'Đã gửi thư mời (' + ${statusCounts != null ? (statusCounts['Sent_Candidate'] ?: 0) : 0} + ')'">Đã gửi thư mời (0)</option>
                 <option value="Accepted" th:selected="${currentStatus == 'Accepted'}"
-                        th:text="'Ứng viên chấp nhận (' + ${statusCounts != null ? (statusCounts['Accepted'] ?: 0) : 0} + ')'">Ứng viên chấp nhận (0)</option>
+                        th:text="'Ứng viên đã nhận việc (' + ${statusCounts != null ? (statusCounts['Accepted'] ?: 0) : 0} + ')'">Ứng viên đã nhận việc (0)</option>
                 <option value="Declined" th:selected="${currentStatus == 'Declined'}"
                         th:text="'Ứng viên từ chối (' + ${statusCounts != null ? (statusCounts['Declined'] ?: 0) : 0} + ')'">Ứng viên từ chối (0)</option>
                 <option value="Director_Rejected" th:selected="${currentStatus == 'Director_Rejected' or currentStatus == 'Rejected'}"
@@ -177,7 +177,7 @@
                             <span th:if="${o.offerStatus == 'Director_Approved' or o.offerStatus == 'Approved'}" class="status-badge status-approved"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg> GĐ đã duyệt</span>
                             <span th:if="${o.offerStatus == 'Director_Rejected' or o.offerStatus == 'Rejected'}" class="status-badge status-rejected"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/></svg> GĐ từ chối</span>
                             <span th:if="${o.offerStatus == 'Sent_Candidate'}" class="status-badge status-sent"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg> Đã gửi thư mời</span>
-                            <span th:if="${o.offerStatus == 'Accepted'}" class="status-badge status-accepted"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg> Ứng viên chấp nhận</span>
+                            <span th:if="${o.offerStatus == 'Accepted'}" class="status-badge status-accepted"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg> Ứng viên đã nhận việc</span>
                             <span th:if="${o.offerStatus == 'Declined'}" class="status-badge status-declined"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg> Ứng viên từ chối</span>
                         </td>
                         <td class="ofw-date-cell" th:text="${o.createdAt != null ? #temporals.format(o.createdAt, 'dd/MM/yyyy HH:mm') : '-'}">01/10/2026</td>

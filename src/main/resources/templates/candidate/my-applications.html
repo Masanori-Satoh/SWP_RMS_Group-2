@@ -31,7 +31,7 @@
     </div>
 
     <!-- Banner gộp mọi đơn gấp (không phụ thuộc tab): số việc + việc gần hạn nhất -->
-    <div th:unless="${#lists.isEmpty(urgent)}" class="alert alert--warning myapp-urgent-banner" role="status"
+    <div th:if="${#lists.size(urgent) > 1}" class="alert alert--warning myapp-urgent-banner" role="status"
          th:with="first=${urgent[0]}">
         <p class="myapp-urgent-banner__text">
             <strong th:text="|Bạn có ${#lists.size(urgent)} việc cần chú ý|">Bạn có 2 việc cần chú ý</strong>
@@ -88,7 +88,14 @@
                                 <span class="myapp-card__code" th:text="${item.applicationCode}">#CAN-0042</span>
                             </p>
                         </div>
-                        <a th:replace="~{candidate/my-application-parts :: cvLink(${item})}"></a>
+                        <details th:if="${item.hasCv}" class="myapp-card__more">
+                            <summary class="myapp-card__more-trigger" aria-label="Tùy chọn khác">
+                                <svg th:replace="~{candidate/my-application-icons :: icon('more')}"></svg>
+                            </summary>
+                            <div class="myapp-card__more-menu">
+                                <a th:replace="~{candidate/my-application-parts :: cvLink(${item})}"></a>
+                            </div>
+                        </details>
                     </div>
 
                     <div class="myapp-card__body">
@@ -99,7 +106,7 @@
                                 <a th:replace="~{candidate/my-application-parts :: action(${item})}"></a>
                                 <a th:href="@{/portal/applications/{id}(id=${item.applicationId})}"
                                    class="btn btn--sm btn--secondary myapp-detail-link"
-                                   th:attr="aria-label=${'Xem chi tiết đơn ' + item.postingTitle}">Xem chi tiết đơn</a>
+                                   th:attr="aria-label=${'Xem chi tiết đơn ' + item.postingTitle}">Xem chi tiết</a>
                             </div>
                         </div>
                     </div>

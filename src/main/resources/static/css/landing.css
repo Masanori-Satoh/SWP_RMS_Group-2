@@ -242,7 +242,7 @@ body {
 
 .lp-hero-copy {
   width: min(51%, 600px);
-  padding: 64px 0 70px;
+  padding: 104px 0 70px;
   position: relative;
   z-index: 2;
 }
@@ -1294,5 +1294,17 @@ body {
     animation: none !important;
     transition: none !important;
     scroll-behavior: auto !important;
+  }
+}
+
+/* Chừa lề bên trái để không bị viên đảo cuộn 196px che khuất nội dung */
+@media (min-width: 1025px) and (max-width: 1400px) {
+  .lp-hero-inner {
+    padding-left: 140px;
+  }
+}
+@media (min-width: 1401px) {
+  .lp-hero-inner {
+    padding-left: 100px;
   }
 }

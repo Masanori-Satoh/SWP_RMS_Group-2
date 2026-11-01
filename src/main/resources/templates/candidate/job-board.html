@@ -6,7 +6,7 @@
 <!--
     CANDIDATE/JOB-BOARD.HTML — Jobs Board (/jobs)
     Tìm kiếm, lọc và phân trang toàn bộ tin tuyển dụng công khai (6 tin / trang).
-    Dựng bằng catalog: page-header, card, form-input/form-select, btn, grid-3-col,
+    Đồng bộ kiểu khối nổi của Admin Workspace (adw-: scene, heading, surface). Dựng bằng catalog: page-header, card, form-input/form-select, btn, grid-3-col,
     fragments/ui/cards :: jobCard, fragments/ui/pagination :: paged.
     CSS riêng (bố cục form, thanh kết quả, trạng thái rỗng): static/css/pages/job-board.css (tiền tố jb-).
 -->
@@ -17,18 +17,19 @@
     </th:block>
 </head>
 <body>
-<main id="main" layout:fragment="content" class="jb-page" tabindex="-1">
+<main id="main" layout:fragment="content" class="public-main-content adw-page jb-page" tabindex="-1">
+    <th:block th:replace="~{fragments/ui/admin-workspace :: scene}"></th:block>
     <div class="container">
 
-        <div class="page-header">
+        <div class="page-header adw-heading">
             <div>
-                <h1 class="page-title">Vị trí đang tuyển</h1>
+                <h1 class="page-title adw-title">Vị trí đang tuyển</h1>
                 <p class="page-subtitle">Tìm vị trí phù hợp theo từ khóa, phòng ban và hình thức làm việc.</p>
             </div>
         </div>
 
         <!-- Tìm kiếm & lọc -->
-        <form th:action="@{/jobs}" method="get" class="card jb-search" role="search" aria-label="Tìm kiếm vị trí tuyển dụng">
+        <form th:action="@{/jobs}" method="get" class="card jb-search adw-surface" role="search" aria-label="Tìm kiếm vị trí tuyển dụng">
             <div class="form-group jb-search__keyword">
                 <label class="form-label" for="jb-keyword">Từ khóa</label>
                 <input id="jb-keyword" type="search" name="keyword" class="form-input" th:value="${selectedKeyword}"
@@ -59,14 +60,14 @@
         </form>
 
         <!-- Thanh kết quả -->
-        <div class="jb-results">
+        <div class="jb-results adw-surface">
             <p class="jb-results__count">Tìm thấy <strong th:text="${jobsPage.totalElements}">0</strong> vị trí đang tuyển</p>
             <a th:if="${selectedKeyword != null or selectedDept != null or selectedType != null}"
                th:href="@{/jobs}" class="btn btn--secondary btn--sm">Xóa bộ lọc</a>
         </div>
 
         <!-- Không có kết quả -->
-        <div th:if="${jobsPage.isEmpty()}" class="card jb-empty">
+        <div th:if="${jobsPage.isEmpty()}" class="card jb-empty adw-surface">
             <h2 class="jb-empty__title">Không tìm thấy vị trí phù hợp</h2>
             <p class="jb-empty__desc text-muted">Hãy thử từ khóa ngắn hơn hoặc chọn phòng ban, hình thức khác.</p>
             <a th:href="@{/jobs}" class="btn btn--outline">Xem tất cả vị trí</a>

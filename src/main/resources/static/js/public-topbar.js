@@ -1,13 +1,15 @@
 /* =============================================================================
-   PUBLIC-TOPBAR.JS — làm sáng mục menu topbar công khai
-   - Khi bấm: sáng ngay mục vừa bấm.
-   - Khi cuộn (trang landing): sáng mục ứng với section đang nằm dưới topbar.
-   - Trang không có các section (job-detail): giữ nguyên mục server đã đánh dấu.
+   PUBLIC-TOPBAR.JS — Quản lý hành vi topbar và thanh cuộn dọc trang chủ
+   - Khi bấm vào mục cuộn: cuộn mượt tới section tương ứng.
+   - Khi cuộn trang: tự động sáng icon + label tương ứng trên thanh điều hướng dọc.
+   - Mặc định ở đỉnh trang: mục đầu tiên (Việc làm Hot) sáng.
    ============================================================================= */
 (() => {
   'use strict';
+
   const nav = document.querySelector('[data-public-nav]');
   if (!nav) return;
+
   const links = [...nav.querySelectorAll('a[data-section]')];
   const sections = links
     .map(link => document.getElementById(link.dataset.section))
@@ -17,39 +19,71 @@
     links.forEach(link => {
       const on = link.dataset.section === id;
       link.classList.toggle('active', on);
-      if (on) link.setAttribute('aria-current', 'location');
-      else link.removeAttribute('aria-current');
+      if (on) {
+        link.setAttribute('aria-current', 'location');
+      } else {
+        link.removeAttribute('aria-current');
+      }
     });
   };
 
-  links.forEach(link => link.addEventListener('click', () => {
-    if (sections.length) setActive(link.dataset.section);
-  }));
+  // Cuộn mượt khi click vào icon / label
+  links.forEach(link => {
+    link.addEventListener('click', (e) => {
+      const sectionId = link.dataset.section;
+      const target = document.getElementById(sectionId);
+      if (target) {
+        e.preventDefault();
+        // Trừ bớt 64px để không bị che bởi floating topbar
+        const targetTop = target.getBoundingClientRect().top + window.scrollY - 64;
+        window.scrollTo({ top: targetTop, behavior: 'smooth' });
+        setActive(sectionId);
+      }
+    });
+  });
 
   if (!sections.length) return;
 
-  const topbar = nav.closest('.public-topbar');
+  // Lắng nghe cuộn để cập nhật mục đang xem
   const update = () => {
-    // Mốc đọc: ngay dưới topbar + 1/3 chiều cao phần còn lại của màn hình
-    const offset = (topbar ? topbar.offsetHeight : 0);
-    const probe = offset + (window.innerHeight - offset) / 3;
+    const scrollPos = window.scrollY + 180;
     let current = '';
-    sections.forEach(section => {
-      if (section.getBoundingClientRect().top <= probe) current = section.id;
-    });
-    // Cuộn chạm đáy trang: sáng mục cuối
-    if (window.innerHeight + window.scrollY >= document.documentElement.scrollHeight - 2) {
+
+    // Nếu cuộn chạm gần đáy trang: sáng mục cuối cùng (perks - Chế độ đãi ngộ)
+    if (window.innerHeight + window.scrollY >= document.documentElement.scrollHeight - 20) {
       current = sections[sections.length - 1].id;
+    } else {
+      sections.forEach(section => {
+        const top = section.offsetTop;
+        const height = section.offsetHeight;
+        if (scrollPos >= top && scrollPos < top + height) {
+          current = section.id;
+        }
+      });
     }
-    setActive(current);
+
+    // Nếu ở đỉnh trang (khu vực Hero): mặc định sáng mục đầu tiên (Việc làm Hot)
+    if (!current && sections.length > 0 && window.scrollY < sections[0].offsetTop) {
+      current = sections[0].id;
+    }
+
+    if (current) {
+      setActive(current);
+    }
   };
 
   let ticking = false;
   window.addEventListener('scroll', () => {
-    if (ticking) return;
-    ticking = true;
-    requestAnimationFrame(() => { update(); ticking = false; });
+    if (!ticking) {
+      window.requestAnimationFrame(() => {
+        update();
+        ticking = false;
+      });
+      ticking = true;
+    }
   }, { passive: true });
+
   window.addEventListener('resize', update);
+  // Cập nhật ngay khi trang tải xong
   update();
 })();

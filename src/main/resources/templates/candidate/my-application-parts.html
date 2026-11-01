@@ -32,12 +32,27 @@
          (chữ lấy từ MyApplicationJourney, bảng 5.3) -->
     <p class="myapp-status__label">
         <span th:if="${item.stopped}" class="badge myapp-badge-stopped" th:text="${item.statusLabel}">Đã tự rút hồ sơ</span>
-        <th:block th:unless="${item.stopped}" th:text="${item.statusLabel}">Phỏng vấn 10:00 24/11</th:block>
+        <span th:if="${!item.stopped and item.statusLabel == 'Có thư mời'}" class="myapp-status-pill myapp-status-pill--offer">
+            <svg th:replace="~{candidate/my-application-icons :: icon('mail')}"></svg>
+            <span th:text="${item.statusLabel}">Có thư mời</span>
+        </span>
+        <th:block th:if="${!item.stopped and item.statusLabel != 'Có thư mời'}" th:text="${item.statusLabel}">Phỏng vấn 10:00 24/11</th:block>
     </p>
-    <p th:if="${item.statusNote != null}" class="myapp-status__note" th:text="${item.statusNote}">
-        Tại văn phòng. Xem chi tiết ở Lịch phỏng vấn.
+    <p th:if="${item.statusNote != null}" class="myapp-status__note">
+        <span th:if="${item.statusLabel == 'Có thư mời' and item.urgentUntil != null}"
+              th:text="${'Hạn phản hồi: ' + #temporals.format(item.urgentUntil, 'dd/MM/yyyy')}">Hạn phản hồi: 05/11/2026</span>
+        <span th:unless="${item.statusLabel == 'Có thư mời' and item.urgentUntil != null}"
+              th:text="${item.statusNote}">Tại văn phòng. Xem chi tiết ở Lịch phỏng vấn.</span>
     </p>
-    <p th:if="${item.urgent}" class="myapp-status__urgent" th:text="${item.urgentLabel}">Phỏng vấn sau 26 giờ</p>
+    <p th:if="${item.urgent}" class="myapp-status__urgent" th:title="${item.urgentLabel}">
+        <svg th:replace="~{candidate/my-application-icons :: icon('clock')}"></svg>
+        <span th:if="${item.statusLabel == 'Có thư mời' and #strings.contains(item.urgentLabel, ' để trả lời thư mời')}"
+              th:text="${#strings.substringBefore(item.urgentLabel, ' để trả lời thư mời')}">Còn 4 ngày</span>
+        <span th:unless="${item.statusLabel == 'Có thư mời' and #strings.contains(item.urgentLabel, ' để trả lời thư mời')}"
+              th:text="${item.urgentLabel}">Phỏng vấn sau 26 giờ</span>
+        <span class="sr-only" th:if="${item.statusLabel == 'Có thư mời' and #strings.contains(item.urgentLabel, ' để trả lời thư mời')}"
+              th:text="${item.urgentLabel}">Còn 4 ngày để trả lời thư mời</span>
+    </p>
 </div>
 
 <a th:fragment="action(item)" th:if="${item.actionHref != null}" th:href="@{${item.actionHref}}"

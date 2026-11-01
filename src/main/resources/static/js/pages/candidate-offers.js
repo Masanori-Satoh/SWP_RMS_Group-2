@@ -127,9 +127,39 @@
 
   if (declineDialog) {
     initReasonChips(declineDialog);
+
+    // Trả lại focus cho nút Từ chối thư mời và reset form khi đóng modal
+    declineDialog.addEventListener('close', function () {
+      var triggerBtn = document.querySelector('[data-detail-trigger="decline"]');
+      if (triggerBtn) {
+        triggerBtn.focus();
+      }
+    });
   }
 
-  // 4. Logic trang Từ chối riêng (/portal/offers/{id}/decline)
+  if (acceptDialog) {
+    acceptDialog.addEventListener('close', function () {
+      var triggerBtn = document.querySelector('[data-detail-trigger="accept"]');
+      if (triggerBtn) {
+        triggerBtn.focus();
+      }
+    });
+  }
+
+  // Đóng modal khi bấm ra ngoài phần backdrop
+  [acceptDialog, declineDialog].forEach(function (dlg) {
+    if (!dlg) return;
+    dlg.addEventListener('click', function (e) {
+      var rect = dlg.getBoundingClientRect();
+      var isInDialog = (rect.top <= e.clientY && e.clientY <= rect.top + rect.height &&
+                        rect.left <= e.clientX && e.clientX <= rect.left + rect.width);
+      if (!isInDialog && typeof dlg.close === 'function') {
+        dlg.close();
+      }
+    });
+  });
+
+  // 4. Logic trang Từ chối riêng (/portal/offers/{id}/decline) - tương thích ngược
   var declinePageContainer = document.querySelector('.cof-decline-form');
   if (declinePageContainer) {
     initReasonChips(declinePageContainer);
@@ -141,11 +171,25 @@
       var action = btn.dataset.detailTrigger;
       if (action === 'accept' && acceptDialog && typeof acceptDialog.showModal === 'function') {
         acceptDialog.showModal();
+        var cancelBtn = acceptDialog.querySelector('[data-detail-close]');
+        if (cancelBtn) cancelBtn.focus();
       } else if (action === 'decline' && declineDialog && typeof declineDialog.showModal === 'function') {
         declineDialog.showModal();
+        var cancelBtn = declineDialog.querySelector('[data-detail-close]');
+        if (cancelBtn) cancelBtn.focus();
       }
     });
   });
+
+  // Tự động mở Modal từ chối nếu có tham số ?openDecline=true trên URL
+  if (declineDialog && typeof declineDialog.showModal === 'function') {
+    var urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('openDecline') === 'true') {
+      declineDialog.showModal();
+      var autoCancelBtn = declineDialog.querySelector('[data-detail-close]');
+      if (autoCancelBtn) autoCancelBtn.focus();
+    }
+  }
 
   // Đóng modal chi tiết
   document.querySelectorAll('[data-detail-close]').forEach(function (btn) {
@@ -197,8 +241,9 @@
 
         if (isNaN(diff)) return;
 
+        var hasSvg = el.previousElementSibling && el.previousElementSibling.tagName && el.previousElementSibling.tagName.toLowerCase() === 'svg';
         if (diff <= 0) {
-          el.textContent = el.classList.contains('cof-top-bar__val') ? 'Đã hết hạn' : '⏱ Đã hết hạn phản hồi';
+          el.textContent = (hasSvg || el.classList.contains('cof-top-bar__val')) ? 'Đã hết hạn phản hồi' : '⏱ Đã hết hạn phản hồi';
           el.classList.add('cof-countdown--expired');
         } else {
           var days = Math.floor(diff / (1000 * 60 * 60 * 24));
@@ -211,7 +256,13 @@
             parts.push(days + ' ngày');
           }
           parts.push(pad(hours) + 'h ' + pad(minutes) + 'm ' + pad(seconds) + 's');
-          el.textContent = el.classList.contains('cof-top-bar__val') ? parts.join(' ') : ('⏱ Còn lại: ' + parts.join(' '));
+          if (hasSvg) {
+            el.textContent = 'Còn ' + (days > 0 ? (days + ' ngày') : parts.join(' '));
+          } else if (el.classList.contains('cof-top-bar__val')) {
+            el.textContent = parts.join(' ');
+          } else {
+            el.textContent = '⏱ Còn lại: ' + parts.join(' ');
+          }
         }
       });
     }
@@ -222,34 +273,7 @@
 
   initCountdowns();
 
-  // 6. Đóng modal thông báo chấp nhận thành công theo Mockup
-  window.closeAcceptSuccessModal = function () {
-    var modalBackdrop = document.getElementById('cof-accept-success-modal');
-    if (modalBackdrop) {
-      modalBackdrop.style.transition = 'opacity 0.2s ease';
-      modalBackdrop.style.opacity = '0';
-      setTimeout(function () {
-        if (modalBackdrop.parentNode) {
-          modalBackdrop.parentNode.removeChild(modalBackdrop);
-        }
-      }, 200);
-    }
-  };
 
-  document.addEventListener('keydown', function (e) {
-    if (e.key === 'Escape') {
-      window.closeAcceptSuccessModal();
-    }
-  });
-
-  var successBackdrop = document.getElementById('cof-accept-success-modal');
-  if (successBackdrop) {
-    successBackdrop.addEventListener('click', function (e) {
-      if (e.target === successBackdrop) {
-        window.closeAcceptSuccessModal();
-      }
-    });
-  }
 
   // 7. Xử lý nút Tải xuống PDF (in trang / lưu thành PDF)
   document.querySelectorAll('[data-action="download-pdf"]').forEach(function (btn) {

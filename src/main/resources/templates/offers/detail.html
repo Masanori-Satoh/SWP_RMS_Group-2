@@ -48,7 +48,7 @@
                 </span>
                 <span th:if="${detail.offerStatus == 'Accepted'}" class="status-badge status-accepted">
                     <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><polyline points="17 11 19 13 23 9"/></svg>
-                    <span>Ứng viên chấp nhận</span>
+                    <span>Ứng viên đã nhận việc</span>
                 </span>
                 <span th:if="${detail.offerStatus == 'Declined'}" class="status-badge status-declined">
                     <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="18" y1="8" x2="23" y2="13"/><line x1="23" y1="8" x2="18" y2="13"/></svg>
@@ -96,10 +96,10 @@
             <!-- Actions when Draft -->
             <th:block th:if="${detail.offerStatus == 'Draft'}">
                 <form th:action="@{/offers/{id}/delete(id=${detail.offerId})}" method="post" class="ofw-form-inline"
-                      onsubmit="return confirm('Bạn có chắc chắn muốn xóa bản thảo đề xuất này khỏi hệ thống?');">
+                      onsubmit="return confirm('Bạn có chắc chắn muốn xóa bản nháp đề xuất này khỏi hệ thống?');">
                     <button type="submit" class="btn btn--danger">
                         <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>
-                        <span>Xóa bản thảo</span>
+                        <span>Xóa bản nháp</span>
                     </button>
                 </form>
                 <a th:href="@{/offers/{id}/edit(id=${detail.offerId})}" class="btn btn--primary">
