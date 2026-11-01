@@ -3,7 +3,6 @@ package com.group2.rms.requisition.controller;
 import com.group2.rms.core.util.FilterLinks;
 import com.group2.rms.requisition.dto.RequisitionRequest;
 import com.group2.rms.requisition.dto.RequisitionSearchRequest;
-import com.group2.rms.requisition.dto.ScreeningCriteriaRequest;
 import com.group2.rms.requisition.exception.RequisitionValidationException;
 import com.group2.rms.requisition.service.RequisitionAccess;
 import com.group2.rms.requisition.service.RequisitionListService;
@@ -42,7 +41,7 @@ public class RequisitionController {
     private static final String DECISION_APPROVE = "approve";
     private static final String DECISION_REJECT = "reject";
     private static final String STORAGE_ERROR =
-            "Không thể lưu dữ liệu. Vui lòng kiểm tra lại tính trùng lặp tiêu chí và giá trị các trường.";
+            "Không thể lưu dữ liệu. Vui lòng kiểm tra lại giá trị các trường.";
 
     private final RequisitionService service;
     private final RequisitionListService listService;
@@ -52,16 +51,11 @@ public class RequisitionController {
 
     @InitBinder("form")
     void binder(WebDataBinder binder) {
-        binder.setAutoGrowCollectionLimit(50);
         // departmentId chỉ có tác dụng với Giám đốc; originalTitle chỉ để form hiện số đợt
         binder.setAllowedFields("action", "title", "departmentId", "originalTitle", "numberOfPositions", "employmentType", "minSalary",
                 "maxSalary",
                 "gender", "workLocation", "workModel", "probationDays", "reasonForHiring", "hiringType", "originalRequisitionId",
-                "jobDescription", "requirementDetails",
-                "screeningCriteria[*].criteriaId", "screeningCriteria[*].criteriaName",
-                "screeningCriteria[*].criteriaType",
-                "screeningCriteria[*].requiredValue", "screeningCriteria[*].weight",
-                "screeningCriteria[*].isMandatory");
+                "jobDescription", "requirementDetails");
 
         // Ô lương hiển thị kiểu Việt Nam "20.000.000"
         PropertyEditorSupport salaryEditor = new PropertyEditorSupport() {
@@ -138,8 +132,6 @@ public class RequisitionController {
         if (currentUser.getDepartment() != null && !access.isDirector(currentUser)) {
             form.setDepartmentId(currentUser.getDepartment().getDepartmentId());
         }
-        form.getScreeningCriteria()
-                .add(ScreeningCriteriaRequest.builder().weight(new BigDecimal("100")).isMandatory(false).build());
 
         model.addAttribute("form", form);
         return renderForm(model, false, null);
@@ -276,7 +268,6 @@ public class RequisitionController {
     private void addFormOptions(Model model) {
         model.addAttribute("departments", departments.findAll());
         model.addAttribute("employmentTypes", RequisitionValidator.EMPLOYMENT_TYPES);
-        model.addAttribute("criteriaTypes", RequisitionValidator.CRITERIA_TYPES);
         model.addAttribute("genders", RequisitionValidator.GENDERS);
         model.addAttribute("probationMinDays", RequisitionValidator.PROBATION_MIN_DAYS);
         model.addAttribute("probationMaxDays", RequisitionValidator.PROBATION_MAX_DAYS);

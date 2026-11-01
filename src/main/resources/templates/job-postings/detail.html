@@ -86,9 +86,9 @@
         <div class="card jpd-kpi adw-surface"><span>Tổng hồ sơ</span><b th:text="${p.totalApplications}">14</b>
             <small th:text="|+${p.applicationsLast7Days} trong 7 ngày|">+2 trong 7 ngày</small></div>
         <div class="card jpd-kpi adw-surface"><span>Chờ xử lý</span><b th:text="${p.pendingApplications}">9</b>
-            <small>mới nộp hoặc AI đã chấm</small></div>
-        <div class="card jpd-kpi adw-surface"><span>Đạt ngưỡng AI</span><b th:text="${p.aiPassedApplications}">7</b>
-            <small th:text="|điểm ≥ ${p.aiThreshold.toPlainString()}|">điểm ≥ 70</small></div>
+            <small>chờ HR sàng lọc</small></div>
+        <div class="card jpd-kpi adw-surface"><span>Qua vòng CV</span><b th:text="${p.passedCvRoundApplications}">7</b>
+            <small>HR đã cho đạt</small></div>
         <div class="card jpd-kpi adw-surface"><span>Đang phỏng vấn</span><b th:text="${p.interviewingApplications}">2</b>
             <small>đang trong vòng phỏng vấn</small></div>
         <div class="card jpd-kpi jpd-kpi--goal adw-surface"><span>Đã tuyển</span>
@@ -156,15 +156,10 @@
                     <div class="table-wrapper" th:unless="${#lists.isEmpty(p.recentApplications)}" role="region"
                          aria-label="Hồ sơ gần đây" tabindex="0">
                         <table class="jpd-apps adw-data-table">
-                            <thead><tr><th scope="col">Ứng viên</th><th scope="col">Điểm AI</th><th scope="col">Trạng thái</th><th scope="col">Ngày nộp</th></tr></thead>
+                            <thead><tr><th scope="col">Ứng viên</th><th scope="col">Trạng thái</th><th scope="col">Ngày nộp</th></tr></thead>
                             <tbody>
                             <tr th:each="app : ${p.recentApplications}">
                                 <td><a th:href="@{/applications/{id}(id=${app.applicationId})}" th:text="${app.candidateName}">Trần Quốc Bảo</a></td>
-                                <td>
-                                    <span th:if="${app.aiScore == null}" class="jpd-muted">Đang chấm</span>
-                                    <span th:if="${app.aiScore != null}" class="jpd-score" th:classappend="${app.aiPassed} ? '' : 'jpd-score--low'"
-                                          th:text="${#numbers.formatDecimal(app.aiScore, 1, 1)}">84.5</span>
-                                </td>
                                 <td><span class="badge" th:classappend="${app.statusBadge}" th:text="${app.statusLabel}">Đang phỏng vấn</span></td>
                                 <td class="nowrap" th:text="${#temporals.format(app.submittedAt, 'dd/MM/yyyy')}">03/10/2026</td>
                             </tr>

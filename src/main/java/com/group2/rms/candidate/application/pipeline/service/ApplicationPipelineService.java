@@ -9,10 +9,8 @@ import com.group2.rms.candidate.application.pipeline.dto.ApplicationListResponse
 import com.group2.rms.candidate.application.pipeline.dto.ApplicationPipelineResponse;
 import com.group2.rms.candidate.application.pipeline.dto.ApplicationSearch;
 import com.group2.rms.candidate.application.pipeline.dto.OwnerWorkloadResponse;
-import com.group2.rms.candidate.domain.entity.AIScreeningResult;
 import com.group2.rms.candidate.domain.entity.Application;
 import com.group2.rms.candidate.domain.entity.Candidate;
-import com.group2.rms.candidate.domain.repository.AIScreeningResultRepository;
 import com.group2.rms.candidate.domain.repository.ApplicationRepository;
 import com.group2.rms.candidate.application.pipeline.repository.ApplicationPipelineRepository;
 import com.group2.rms.candidate.domain.repository.ApplicationReviewRepository;
@@ -29,7 +27,6 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -38,7 +35,6 @@ import java.util.EnumMap;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 
@@ -49,19 +45,17 @@ import java.util.Objects;
 @RequiredArgsConstructor
 public class ApplicationPipelineService {
 
-    private static final Locale VIETNAMESE = Locale.of("vi", "VN");
     private static final int FACTS_BATCH = 2000;
 
     private final ApplicationRepository applications;
     private final ApplicationPipelineRepository pipelineQueries;
-    private final AIScreeningResultRepository screeningResults;
     private final ApplicationReviewRepository reviews;
     private final ApplicationAccess access;
     private final CvStorage cvStorage;
     private final JobPostingRepository jobPostings;
 
     /**
-     * Một trang danh sách kèm số hồ sơ mỗi giai đoạn. Thứ tự do {@code search.sort()} quyết định; sort trong
+     * Một trang danh sách kèm số hồ sơ mỗi giai đoạn. Xếp theo ngày nộp, mới trước; sort trong
      * {@code pageable} bị bỏ qua.
      * <p>
      * Giai đoạn tính bằng {@link ApplicationProgressResolver} (cùng chỗ tính nhãn), không viết lại bằng SQL, để số
@@ -105,7 +99,7 @@ public class ApplicationPipelineService {
     public OwnerWorkloadResponse ownerWorkload(String ownerLabel, Collection<ApplicationStage> stages) {
         User actor = access.actor();
         ApplicationScope scope = access.scopeOf(actor);
-        ApplicationSearch filter = new ApplicationSearch(null, null, null, null, null).normalized();
+        ApplicationSearch filter = new ApplicationSearch(null, null, null, null).normalized();
 
         Map<Integer, ApplicationProgressResponse> progress = progressInScope(scope, filter);
         List<Integer> ownedIds = progress.entrySet().stream()
@@ -135,9 +129,6 @@ public class ApplicationPipelineService {
         JobPosting job = application.getJobPosting();
         JobRequisition requisition = job.getRequisition();
         String status = application.getApplicationStatus();
-        List<AIScreeningResult> scores = screeningResults
-                .findByApplication_ApplicationIdOrderByAiScreeningIdDesc(applicationId);
-        AIScreeningResult latest = scores.isEmpty() ? null : scores.getFirst();
         ApplicationProgressFacts facts = knownFacts(applicationId, status, progressFacts(List.of(applicationId)));
         ApplicationProgressResponse progress = progress(facts, LocalDateTime.now());
         boolean cancelledProposal = pipelineQueries.countTalentPoolCancellation(applicationId) > 0;
@@ -153,14 +144,11 @@ public class ApplicationPipelineService {
                 requisition.getDepartment() == null ? null : requisition.getDepartment().getDepartmentName(),
                 application.getSubmissionDate(),
                 status, cancelledProposal ? "Đề xuất đã kết thúc" : progress.detailLabel(), cancelledProposal ? "badge--neutral" : progress.badge(),
-                latest == null ? null : latest.getAiMatchScore(),
-                latest == null ? null : latest.getScreenedAt(),
-                timeline(application, account, scores),
+                timeline(application, account),
                 ApplicationStepper.items(progress),
                 facts.interviewId(),
                 new ApplicationDetailResponse.Actions(
                         access.canReview(actor, application),
-                        access.canRescreen(actor, application),
                         access.canScheduleInterview(actor, progress),
                         access.canCreateOffer(actor, progress),
                         access.canOpenJobPosting(actor)),
@@ -212,11 +200,11 @@ public class ApplicationPipelineService {
         return facts;
     }
 
-    /** Giai đoạn của mọi đơn trong phạm vi và bộ lọc, giữ thứ tự sắp xếp của {@code filter}. */
+    /** Giai đoạn của mọi đơn trong phạm vi và bộ lọc, giữ thứ tự ngày nộp, mới trước. */
     private Map<Integer, ApplicationProgressResponse> progressInScope(ApplicationScope scope, ApplicationSearch filter) {
         List<Integer> ids = pipelineQueries.findPipelineIds(
                 scope.allDepartments(), scope.managerUserId(), scope.departmentId(),
-                filter.jobPostingId(), filter.status(), filter.keyword(), filter.sort());
+                filter.jobPostingId(), filter.status(), filter.keyword());
         Map<Integer, ApplicationProgressFacts> facts = progressFacts(ids);
         LocalDateTime now = LocalDateTime.now();
         Map<Integer, ApplicationProgressResponse> progress = new LinkedHashMap<>();
@@ -265,8 +253,8 @@ public class ApplicationPipelineService {
                 new ApplicationProgressFacts(applicationId, status, false, null, null, null, 0, 0, null, null));
     }
 
-    /** Hành trình của đơn, mới nhất trước: nộp, AI chấm, các lượt duyệt, lịch và kết quả phỏng vấn, offer. */
-    private List<TimelineItem> timeline(Application application, User account, List<AIScreeningResult> scores) {
+    /** Hành trình của đơn, mới nhất trước: nộp, các lượt duyệt, lịch và kết quả phỏng vấn, offer. */
+    private List<TimelineItem> timeline(Application application, User account) {
         Integer id = application.getApplicationId();
         List<TimelineItem> items = new ArrayList<>();
         var poolEvents = pipelineQueries.findTalentPoolEvents(id);
@@ -288,8 +276,6 @@ public class ApplicationPipelineService {
             items.add(new TimelineItem(application.getSubmissionDate(), "Nộp hồ sơ", account.getFullName(), null,
                     "neutral"));
         }
-        scores.forEach(score -> items.add(new TimelineItem(score.getScreenedAt(),
-                "AI chấm điểm: " + formatScore(score.getAiMatchScore()), "Hệ thống", null, "brand")));
         var reviewHistory = reviews.findWithReviewerByApplicationId(id);
         Integer originReviewId = hrRecommendation ? reviewHistory.stream()
                 .filter(r -> "HR".equals(r.getReviewerRole()) && "Hold".equals(r.getDecision()))
@@ -317,9 +303,5 @@ public class ApplicationPipelineService {
         }
         items.sort(Comparator.comparing(TimelineItem::at, Comparator.nullsLast(Comparator.reverseOrder())));
         return items;
-    }
-
-    private static String formatScore(BigDecimal score) {
-        return String.format(VIETNAMESE, "%.2f", score);
     }
 }

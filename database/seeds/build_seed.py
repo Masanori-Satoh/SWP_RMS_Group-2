@@ -168,8 +168,6 @@ lines.append("-- ===============================================================
 lines.append("-- 4. SYSTEM CONFIG (4 SME System Configurations)")
 lines.append("-- =============================================================================")
 configs = [
-    ("AI_SCREENING_ENDPOINT", "https://api.rms-ai.internal/v1/cv-match", "Endpoint dịch vụ AI sàng lọc hồ sơ CV tự động", "2026-09-01 08:00:00"),
-    ("AI_SCORE_THRESHOLD", "70.00", "Ngưỡng điểm AI tối thiểu để hệ thống gợi ý PASS vòng sơ loại hồ sơ", "2026-09-01 08:00:00"),
     ("SMTP_HOST", "smtp.office365.com", "Máy chủ mail gateway gửi email tự động cho ứng viên", "2026-09-01 08:00:00"),
     ("SME_COMPANY_NAME", "RMS Technology Solutions Vietnam", "Tên doanh nghiệp công nghệ SME triển khai hệ thống RMS", "2026-09-01 08:00:00")
 ]
@@ -188,8 +186,6 @@ audit_logs = [
     (1, "CREATE", "Department", "3", None, "Đã tạo phòng ban Nhân sự", "192.168.1.10", "2026-08-01 08:15:00"),
     (1, "CREATE", "User", "2", None, "Created director account", "192.168.1.10", "2026-08-01 08:35:00"),
     (2, "LOGIN", "User", "2", None, "Director initial login", "192.168.1.15", "2026-08-02 09:00:00"),
-    (1, "CREATE", "SystemConfig", "AI_SCREENING_ENDPOINT", None, "Initialized AI endpoint", "192.168.1.10", "2026-09-01 08:05:00"),
-    (1, "CREATE", "SystemConfig", "AI_SCORE_THRESHOLD", None, "Set threshold 70.00", "192.168.1.10", "2026-09-01 08:10:00"),
     (5, "CREATE", "JobRequisition", "1", None, "Tạo yêu cầu: Senior Java Backend Engineer · Pending_Director", "192.168.1.25", "2026-09-10 09:00:00"),
     (2, "UPDATE", "JobRequisition", "1", "Pending_Director", "Status: Pending_Director → Approved\nÝ kiến Giám đốc: Đã rà soát ngân sách quý 4/2026. Đồng ý phê duyệt tuyển 2 kỹ sư Java Backend.", "192.168.1.15", "2026-09-15 10:00:00"),
     (5, "CREATE", "JobRequisition", "2", None, "Tạo yêu cầu: Frontend ReactJS Developer · Pending_Director", "192.168.1.25", "2026-09-11 10:00:00"),
@@ -273,37 +269,6 @@ for req_id, dir_id, st, com, ap_dt in req_approvals:
     lines.append(
         f"INSERT INTO RequisitionApproval (RequisitionId, DirectorId, [Status], Comments, ApprovalDate) "
         f"VALUES ({req_id}, {dir_id}, N'{st}', N'{com}', '{ap_dt}');"
-    )
-lines.append("")
-
-# 8. SCREENING CRITERIA (3-4 per requisition, total 14)
-lines.append("-- =============================================================================")
-lines.append("-- 8. SCREENING CRITERIA (Weighted AI Screening Criteria for 4 Positions)")
-lines.append("-- =============================================================================")
-screening_criteria = [
-    # Req 1: Java
-    (1, "Trình độ Đại học chuyên ngành CNTT / Phần mềm", "Education", "Đại học", 1.00, 1),
-    (1, "Kinh nghiệm Java & Spring Boot", "Experience", ">= 3 năm", 2.00, 1),
-    (1, "Kiến thức SQL Server & Database Optimization", "Skill", "SQL Server, Redis", 1.50, 0),
-    (1, "Kiến thức Microservices & Docker", "Skill", "Docker, REST API", 1.00, 0),
-    # Req 2: React
-    (2, "Bằng cử nhân CNTT hoặc chứng chỉ lập trình Frontend uy tín", "Education", "Đại học / Cao đẳng", 1.00, 0),
-    (2, "Kinh nghiệm phát triển ReactJS & TypeScript", "Experience", ">= 2 năm", 2.00, 1),
-    (2, "Kỹ năng State Management & UI Component Styling", "Skill", "Redux/Zustand, CSS", 1.50, 0),
-    # Req 3: QA
-    (3, "Bằng cấp chuyên ngành CNTT hoặc Toán tin ứng dụng", "Education", "Đại học", 1.00, 0),
-    (3, "Kinh nghiệm Automation Test với Selenium/Playwright", "Experience", ">= 2 năm", 2.00, 1),
-    (3, "Kỹ năng kiểm thử API & Performance Testing", "Skill", "Postman, k6, JMeter", 1.50, 0),
-    (3, "Cam kết làm việc onsite tại Hà Nội", "Knockout", "Hà Nội", 1.00, 1),
-    # Req 4: Sales B2B
-    (4, "Tốt nghiệp Cao đẳng/Đại học chuyên ngành QTKD/Kinh tế/CNTT", "Education", "Cao đẳng / Đại học", 1.00, 0),
-    (4, "Kinh nghiệm Sales B2B giải pháp phần mềm", "Experience", ">= 1 năm", 2.00, 1),
-    (4, "Kỹ năng thuyết trình, đàm phán và giao tiếp tự tin", "Skill", "Giao tiếp, Đàm phán", 1.50, 1)
-]
-for r_id, c_name, c_type, req_val, weight, is_man in screening_criteria:
-    lines.append(
-        f"INSERT INTO ScreeningCriteria (RequisitionId, CriteriaName, CriteriaType, RequiredValue, [Weight], IsMandatory) "
-        f"VALUES ({r_id}, N'{c_name}', N'{c_type}', N'{req_val}', {weight:.2f}, {is_man});"
     )
 lines.append("")
 
@@ -466,7 +431,7 @@ for day_idx in range(num_days):
         # 10% Offer (Passed)
         # 20% Interviewing
         # 30% Review (HR/HM Passed or Rejected at review)
-        # 40% AI Screened / Applied
+        # 40% Applied (chờ HR sàng lọc)
         funnel_rand = random.random()
         
         all_candidates_data.append({
@@ -497,7 +462,7 @@ for day_idx in range(num_days):
 # - User INSERTs for the day's candidates
 # - Candidate INSERTs for the day's candidates
 # - Application INSERTs for the day's candidates
-# - Downstream tables (AIScreeningResult, ApplicationReview, InterviewSchedule, InterviewPanel, InterviewEvaluation, InterviewFinalResult, OfferProposal, OfferApproval)
+# - Downstream tables (ApplicationReview, InterviewSchedule, InterviewPanel, InterviewEvaluation, InterviewFinalResult, OfferProposal, OfferApproval)
 
 interview_id_counter = 1
 offer_id_counter = 1
@@ -524,7 +489,7 @@ for day_idx in range(num_days):
         linkedin = f"https://linkedin.com/in/{c['username'].replace('.', '-')}"
         github = f"https://github.com/{c['username'].replace('.', '')}" if c['posting_id'] in [1, 2, 3] else "NULL"
         gh_sql = f"N'{github}'" if github != "NULL" else "NULL"
-        # IsPotential: ứng viên có điểm AI cao (>= 80) hoặc vào được vòng phỏng vấn đều là potential
+        # IsPotential: ứng viên vào được vòng phỏng vấn trở lên là potential
         is_potential = 1 if c.get('funnel_rand', 1) < 0.30 else 0
         lines.append(
             f"INSERT INTO Candidate (UserId, DateOfBirth, Gender, Address, LinkedInUrl, PortfolioUrl, CandidateSource, IsPotential, CreatedAt) "
@@ -537,37 +502,20 @@ for day_idx in range(num_days):
         fr = c["funnel_rand"]
         if fr < 0.10: # Stage 4: Offer
             status = "Offered" if c["date_obj"] > datetime.date(2026, 12, 1) else "Hired"
-            score = round(random.uniform(86.0, 96.5), 2)
         elif fr < 0.30: # Stage 3: Interviewing
             status = "Interviewing" if c["date_obj"] > datetime.date(2026, 12, 5) else ("HM_Passed" if random.random() < 0.5 else "Rejected")
-            score = round(random.uniform(75.0, 88.0), 2)
         elif fr < 0.60: # Stage 2: Review (HR/HM)
             status = "HM_Passed" if random.random() < 0.6 else "HR_Passed"
-            score = round(random.uniform(68.0, 82.0), 2)
-        else: # Stage 1: AI Screened or Applied
-            status = "AI_Screened" if random.random() < 0.85 else "Applied"
-            score = round(random.uniform(42.0, 68.0), 2) if status == "AI_Screened" else None
-            
+        else: # Stage 1: chờ HR sàng lọc
+            status = "Applied"
+
         c["computed_status"] = status
-        c["computed_score"] = score
-        score_sql = f"{score:.2f}" if score is not None else "NULL"
-        
+
         lines.append(
-            f"INSERT INTO Application (CandidateId, JobPostingId, AppliedCvUrl, SubmissionDate, ApplicationStatus, OverallScore, CreatedAt) "
-            f"VALUES ({c['candidate_id']}, {c['posting_id']}, N'{c['cv_url']}', '{c['sub_time']}', N'{status}', {score_sql}, '{c['sub_time']}');"
+            f"INSERT INTO Application (CandidateId, JobPostingId, AppliedCvUrl, SubmissionDate, ApplicationStatus, CreatedAt) "
+            f"VALUES ({c['candidate_id']}, {c['posting_id']}, N'{c['cv_url']}', '{c['sub_time']}', N'{status}', '{c['sub_time']}');"
         )
-        
-    # 4. AIScreeningResult (for almost all except pure 'Applied')
-    for c in day_cands:
-        if c["computed_status"] != "Applied":
-            ai_score = c["computed_score"] if c["computed_score"] is not None else round(random.uniform(50.0, 92.0), 2)
-            # Screened 5 - 15 minutes after submission
-            screen_dt = (datetime.datetime.strptime(c["sub_time"], "%Y-%m-%d %H:%M:%S") + datetime.timedelta(minutes=random.randint(5, 20))).strftime("%Y-%m-%d %H:%M:%S")
-            lines.append(
-                f"INSERT INTO AIScreeningResult (ApplicationId, AIMatchScore, ScreenedAt) "
-                f"VALUES ({c['app_id']}, {ai_score:.2f}, '{screen_dt}');"
-            )
-            
+
     # 5. ApplicationReview (for Stage 2, 3, 4)
     for c in day_cands:
         if c["funnel_rand"] < 0.60: # Review stage or further
@@ -773,12 +721,10 @@ lines.append("UNION ALL SELECT 'AuditLog', COUNT(*) FROM AuditLog")
 lines.append("UNION ALL SELECT 'SystemConfig', COUNT(*) FROM SystemConfig")
 lines.append("UNION ALL SELECT 'JobRequisition', COUNT(*) FROM JobRequisition")
 lines.append("UNION ALL SELECT 'RequisitionApproval', COUNT(*) FROM RequisitionApproval")
-lines.append("UNION ALL SELECT 'ScreeningCriteria', COUNT(*) FROM ScreeningCriteria")
 lines.append("UNION ALL SELECT 'JobPosting', COUNT(*) FROM JobPosting")
 lines.append("UNION ALL SELECT 'Candidate', COUNT(*) FROM Candidate")
 lines.append("UNION ALL SELECT 'Application', COUNT(*) FROM Application")
 lines.append("UNION ALL SELECT 'ApplicationReview', COUNT(*) FROM ApplicationReview")
-lines.append("UNION ALL SELECT 'AIScreeningResult', COUNT(*) FROM AIScreeningResult")
 lines.append("UNION ALL SELECT 'InterviewSchedule', COUNT(*) FROM InterviewSchedule")
 lines.append("UNION ALL SELECT 'InterviewPanel', COUNT(*) FROM InterviewPanel")
 lines.append("UNION ALL SELECT 'InterviewEvaluation', COUNT(*) FROM InterviewEvaluation")
@@ -797,12 +743,10 @@ lines.append("    IF (SELECT COUNT(*) FROM AuditLog) = 0 SET @EmptyTables = @Emp
 lines.append("    IF (SELECT COUNT(*) FROM SystemConfig) = 0 SET @EmptyTables = @EmptyTables + 1;")
 lines.append("    IF (SELECT COUNT(*) FROM JobRequisition) = 0 SET @EmptyTables = @EmptyTables + 1;")
 lines.append("    IF (SELECT COUNT(*) FROM RequisitionApproval) = 0 SET @EmptyTables = @EmptyTables + 1;")
-lines.append("    IF (SELECT COUNT(*) FROM ScreeningCriteria) = 0 SET @EmptyTables = @EmptyTables + 1;")
 lines.append("    IF (SELECT COUNT(*) FROM JobPosting) = 0 SET @EmptyTables = @EmptyTables + 1;")
 lines.append("    IF (SELECT COUNT(*) FROM Candidate) = 0 SET @EmptyTables = @EmptyTables + 1;")
 lines.append("    IF (SELECT COUNT(*) FROM Application) = 0 SET @EmptyTables = @EmptyTables + 1;")
 lines.append("    IF (SELECT COUNT(*) FROM ApplicationReview) = 0 SET @EmptyTables = @EmptyTables + 1;")
-lines.append("    IF (SELECT COUNT(*) FROM AIScreeningResult) = 0 SET @EmptyTables = @EmptyTables + 1;")
 lines.append("    IF (SELECT COUNT(*) FROM InterviewSchedule) = 0 SET @EmptyTables = @EmptyTables + 1;")
 lines.append("    IF (SELECT COUNT(*) FROM InterviewPanel) = 0 SET @EmptyTables = @EmptyTables + 1;")
 lines.append("    IF (SELECT COUNT(*) FROM InterviewEvaluation) = 0 SET @EmptyTables = @EmptyTables + 1;")

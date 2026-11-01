@@ -3,13 +3,12 @@ package com.group2.rms.candidate.application.pipeline.dto;
 import com.group2.rms.core.web.StageItem;
 import com.group2.rms.core.web.TimelineItem;
 
-import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 
 /**
- * Chi tiết một hồ sơ cho người tuyển dụng (5.1.23). Chứa điểm AI và nhận xét nội bộ:
+ * Chi tiết một hồ sơ cho người tuyển dụng (5.1.23). Chứa nhận xét nội bộ:
  * không bao giờ dùng DTO này cho màn của ứng viên (SRS GBR-02).
  *
  * @param dateOfBirth ngày sinh, giới tính, địa chỉ do ứng viên tự khai ở hồ sơ cá nhân (Q7.5); {@code null} nếu chưa khai
@@ -39,8 +38,6 @@ public record ApplicationDetailResponse(
         String applicationStatus,
         String statusLabel,
         String statusBadge,
-        BigDecimal aiMatchScore,
-        LocalDateTime screenedAt,
         List<TimelineItem> timeline,
         List<StageItem> stepper,
         Long interviewId,
@@ -49,7 +46,7 @@ public record ApplicationDetailResponse(
         boolean proposalOnly) {
 
     /** Thao tác người xem được làm trên hồ sơ này. */
-    public record Actions(boolean review, boolean rescreen, boolean scheduleInterview, boolean createOffer,
+    public record Actions(boolean review, boolean scheduleInterview, boolean createOffer,
                           boolean openJobPosting) {
     }
 }

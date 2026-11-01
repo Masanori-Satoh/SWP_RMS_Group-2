@@ -54,43 +54,6 @@
 .req-form-page .form-textarea { resize:vertical; min-height:80px; overflow-wrap:anywhere; word-break:break-word; }
 .req-form-page :is(.rqf-field, .rqf-readonly, .field-error, .rqf-hint) { min-width:0; max-width:100%; overflow-wrap:anywhere; word-break:break-word; }
 
-/* ----- Bảng tiêu chí ----- */
-/* table-layout:fixed + độ rộng cột cố định để bảng vừa khung, chỉ cuộn ngang khi màn hình thật sự hẹp */
-.req-form-page .rqf-criteria { width:100%; min-width:620px; border-collapse:collapse; table-layout:fixed; }
-.req-form-page .rqf-criteria th:nth-child(1) { width:32px; }
-.req-form-page .rqf-criteria th:nth-child(3) { width:22%; }
-.req-form-page .rqf-criteria th:nth-child(5) { width:96px; }
-.req-form-page .rqf-criteria th:nth-child(6) { width:72px; }
-.req-form-page .rqf-criteria th:nth-child(7) { width:44px; }
-.req-form-page .rqf-criteria :is(.form-input, .form-select) { width:100%; min-width:0; }
-.req-form-page .rqf-criteria th { padding:var(--s2); border-bottom:1px solid var(--line); color:var(--muted); font-size:var(--font-xs); font-weight:600; text-align:left; white-space:nowrap; }
-.req-form-page .rqf-criteria td { padding:var(--s2); border-bottom:1px solid var(--line); vertical-align:middle; }
-.req-form-page .rqf-criteria .row-index { width:32px; color:var(--muted); }
-.req-form-page .rqf-criteria .rqf-weight { text-align:right; }
-.req-form-page .rqf-remove { width:36px; height:36px; border:0; border-radius:var(--radius-md); background:transparent; color:var(--muted); font-size:var(--font-lg); cursor:pointer; }
-.req-form-page .rqf-remove:hover { background:var(--error-soft); color:var(--error); }
-.req-form-page .rqf-add { justify-self:start; }
-
-/* Công tắc "Bắt buộc" */
-.req-form-page .rqf-switch { position:relative; display:inline-flex; cursor:pointer; }
-.req-form-page .rqf-switch input { position:absolute; opacity:0; width:1px; min-height:0; }
-.req-form-page .rqf-switch span { width:38px; height:22px; border-radius:var(--radius-full); background:var(--control-line); transition:background var(--transition); }
-.req-form-page .rqf-switch span::after { content:""; position:absolute; top:3px; left:3px; width:16px; height:16px; border-radius:50%; background:var(--surface); box-shadow:var(--shadow-sm); transition:left var(--transition); }
-.req-form-page .rqf-switch input[type="checkbox"]:checked ~ span { background:var(--brand); }
-.req-form-page .rqf-switch input[type="checkbox"]:checked ~ span::after { left:19px; }
-.req-form-page .rqf-switch input[type="checkbox"]:focus-visible ~ span { outline:3px solid var(--focus); outline-offset:2px; }
-
-/* Thanh tổng trọng số: vàng = thiếu, xanh = đủ 100%, đỏ = thừa */
-.req-form-page .rqf-weight-box { display:grid; gap:var(--s2); padding:var(--s3) var(--s4); border:1px solid var(--line); border-radius:var(--radius-md); background:var(--surface-subtle); }
-.req-form-page .rqf-weight-top { display:flex; flex-wrap:wrap; justify-content:space-between; gap:var(--s2); font-size:var(--font-sm); }
-.req-form-page #rqf-weight-state { color:var(--warning); font-weight:600; }
-.req-form-page .rqf-weight-bar { height:8px; border-radius:var(--radius-full); background:var(--line); overflow:hidden; }
-.req-form-page #rqf-weight-fill { display:block; height:100%; width:0; background:var(--warning); transition:width var(--transition); }
-.req-form-page .rqf-weight-box.is-ok #rqf-weight-fill { background:var(--brand); }
-.req-form-page .rqf-weight-box.is-ok #rqf-weight-state { color:var(--brand-dark); }
-.req-form-page .rqf-weight-box.is-over #rqf-weight-fill { background:var(--error); }
-.req-form-page .rqf-weight-box.is-over #rqf-weight-state { color:var(--error); }
-.req-form-page .rqf-link { justify-self:start; padding:0; border:0; background:none; color:var(--brand-dark); font-size:var(--font-sm); font-weight:600; text-decoration:underline; cursor:pointer; }
 
 /* ----- Cột phải: checklist + nút ----- */
 .req-form-page .rqf-rail { position:sticky; top:calc(var(--topbar-h) + var(--s4)); display:grid; gap:var(--s4); }

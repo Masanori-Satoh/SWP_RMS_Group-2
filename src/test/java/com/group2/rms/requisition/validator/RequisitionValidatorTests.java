@@ -1,7 +1,6 @@
 package com.group2.rms.requisition.validator;
 
 import com.group2.rms.requisition.dto.RequisitionRequest;
-import com.group2.rms.requisition.dto.ScreeningCriteriaRequest;
 import com.group2.rms.requisition.exception.RequisitionValidationException;
 
 import org.junit.jupiter.api.DisplayName;
@@ -56,20 +55,12 @@ class RequisitionValidatorTests {
                 .reasonForHiring("Expansion")
                 .jobDescription("Develop software")
                 .requirementDetails("Experience")
-                .screeningCriteria(new ArrayList<>(List.of(
-                        ScreeningCriteriaRequest.builder()
-                                .criteriaName("Java")
-                                .criteriaType("Skill")
-                                .requiredValue("Two years")
-                                .weight(new BigDecimal("100"))
-                                .build())))
                 .build();
     }
 
     private RequisitionRequest emptyDraft() {
         RequisitionRequest d = new RequisitionRequest();
         d.setAction("draft");
-        d.setScreeningCriteria(new ArrayList<>());
         return d;
     }
 
@@ -86,21 +77,6 @@ class RequisitionValidatorTests {
         d.setEmploymentType("Full-time");
         d.setWorkModel("On-site");
         return d;
-    }
-
-    /**
-     * Một dòng tiêu chí điền đủ trường (CriteriaName, CriteriaType, RequiredValue,
-     * Weight đều NOT NULL).
-     */
-    private ScreeningCriteriaRequest criterion(String name, String weight) {
-        return ScreeningCriteriaRequest.builder()
-                .criteriaName(name).criteriaType("Skill").requiredValue("Có kinh nghiệm")
-                .weight(new BigDecimal(weight)).build();
-    }
-
-    private ScreeningCriteriaRequest withId(ScreeningCriteriaRequest c, int id) {
-        c.setCriteriaId(id);
-        return c;
     }
 
     private RequisitionValidationException expectFail(RequisitionRequest req) {
@@ -155,25 +131,6 @@ class RequisitionValidatorTests {
     }
 
     @Test
-    @DisplayName("Nháp có dòng tiêu chí điền dở -> Báo lỗi dòng đó")
-    void validate_shouldReject_whenDraftHasHalfFilledCriteriaRow() {
-        var d = minimalDraft();
-        d.setScreeningCriteria(new ArrayList<>(List.of(
-                ScreeningCriteriaRequest.builder().criteriaName("Partial").weight(new BigDecimal("20")).build())));
-        var errors = expectFail(d).getErrors();
-        assertTrue(errors.containsKey("screeningCriteria[0].criteriaType"));
-        assertTrue(errors.containsKey("screeningCriteria[0].requiredValue"));
-    }
-
-    @Test
-    @DisplayName("Nháp có tiêu chí đủ trường, tổng trọng số < 100 -> Hợp lệ")
-    void validate_shouldPass_whenDraftCriteriaTotalIsBelow100() {
-        var d = minimalDraft();
-        d.setScreeningCriteria(new ArrayList<>(List.of(criterion("Partial", "20"))));
-        expectPass(d);
-    }
-
-    @Test
     @DisplayName("Nháp không chọn giới tính -> Tự gán Any")
     void validate_shouldDefaultGenderToAny_whenDraftGenderIsNull() {
         var d = minimalDraft();
@@ -193,8 +150,6 @@ class RequisitionValidatorTests {
     @DisplayName("Gửi duyệt với dữ liệu nháp tối thiểu -> Báo lỗi")
     void validate_shouldReject_whenMinimalDraftIsSubmitted() {
         var d = minimalDraft();
-        d.setScreeningCriteria(new ArrayList<>(List.of(
-                ScreeningCriteriaRequest.builder().criteriaName("Partial").weight(new BigDecimal("20")).build())));
         d.setAction("submit");
         expectFail(d);
     }
@@ -631,39 +586,6 @@ class RequisitionValidatorTests {
         expectPass(d);
     }
 
-    @Test
-    @DisplayName("Tên tiêu chí đúng giới hạn -> Hợp lệ")
-    void validate_shouldPass_whenCriteriaNameLengthEqualsLimit() {
-        var d = valid();
-        d.getScreeningCriteria().get(0).setCriteriaName("x".repeat(RequisitionValidator.CRITERIA_NAME_CHAR_LIMIT));
-        expectPass(d);
-    }
-
-    @Test
-    @DisplayName("Tên tiêu chí vượt giới hạn 1 ký tự -> Báo lỗi")
-    void validate_shouldReject_whenCriteriaNameExceedsLimitByOne() {
-        var d = valid();
-        d.getScreeningCriteria().get(0).setCriteriaName("x".repeat(RequisitionValidator.CRITERIA_NAME_CHAR_LIMIT + 1));
-        assertTrue(expectFail(d).getErrors().containsKey("screeningCriteria[0].criteriaName"));
-    }
-
-    @Test
-    @DisplayName("Giá trị yêu cầu của tiêu chí đúng giới hạn ký tự -> Hợp lệ")
-    void validate_shouldPass_whenCriteriaRequiredValueLengthEqualsLimit() {
-        var d = valid();
-        d.getScreeningCriteria().get(0).setRequiredValue("x".repeat(RequisitionValidator.SHORT_FIELD_CHAR_LIMIT));
-        expectPass(d);
-    }
-
-    @Test
-    @DisplayName("Giá trị yêu cầu của tiêu chí vượt giới hạn 1 ký tự -> Báo lỗi đúng ô")
-    void validate_shouldReject_whenCriteriaRequiredValueExceedsLimitByOne() {
-        var d = valid();
-        d.getScreeningCriteria().get(0).setRequiredValue("x".repeat(RequisitionValidator.SHORT_FIELD_CHAR_LIMIT + 1));
-        assertEquals("Nội dung quá " + RequisitionValidator.SHORT_FIELD_CHAR_LIMIT + " ký tự",
-                expectFail(d).getErrors().get("screeningCriteria[0].requiredValue"));
-    }
-
     // VAL-011 — Salary và độ chính xác thập phân
 
     @Test
@@ -787,354 +709,19 @@ class RequisitionValidatorTests {
 
     // VAL-013 — Danh sách tiêu chí và dòng trắng
 
-    @Test
-    @DisplayName("Danh sách tiêu chí null -> Thành danh sách rỗng, nháp hợp lệ")
-    void validate_shouldUseEmptyList_whenCriteriaListIsNull() {
-        var d = minimalDraft();
-        d.setScreeningCriteria(null);
-        expectPass(d);
-        assertNotNull(d.getScreeningCriteria());
-    }
-
-    @Test
-    @DisplayName("Gửi duyệt không có tiêu chí -> Báo lỗi")
-    void validate_shouldReject_whenSubmitHasNoCriteria() {
-        var d = valid();
-        d.setScreeningCriteria(new ArrayList<>());
-        assertTrue(expectFail(d).getErrors().containsKey("screeningCriteria"));
-    }
-
-    @Test
-    @DisplayName("Đúng 50 tiêu chí (biên) -> Hợp lệ")
-    void validate_shouldPass_whenCriteriaCountEqualsLimit() {
-        var d = minimalDraft();
-        var list = new ArrayList<ScreeningCriteriaRequest>();
-        for (int i = 0; i < 50; i++)
-            list.add(criterion("C" + i, "1"));
-        d.setScreeningCriteria(list);
-        expectPass(d);
-    }
-
-    @Test
-    @DisplayName("51 tiêu chí -> Báo lỗi")
-    void validate_shouldReject_whenCriteriaCountExceedsLimit() {
-        var d = minimalDraft();
-        var list = new ArrayList<ScreeningCriteriaRequest>();
-        for (int i = 0; i <= 50; i++)
-            list.add(ScreeningCriteriaRequest.builder().criteriaName("C" + i).build());
-        d.setScreeningCriteria(list);
-        assertTrue(expectFail(d).getErrors().containsKey("screeningCriteria"));
-    }
-
-    @Test
-    @DisplayName("Dòng tiêu chí null (gửi giả) -> Báo lỗi")
-    void validate_shouldReject_whenCriteriaRowIsNull() {
-        var d = minimalDraft();
-        var list = new ArrayList<ScreeningCriteriaRequest>();
-        list.add(null);
-        d.setScreeningCriteria(list);
-        assertTrue(expectFail(d).getErrors().containsKey("screeningCriteria"));
-    }
-
-    @Test
-    @DisplayName("Nháp có dòng tiêu chí trống -> Bỏ qua dòng đó")
-    void validate_shouldSkipBlankRow_whenDraft() {
-        var d = minimalDraft();
-        d.setScreeningCriteria(new ArrayList<>(List.of(
-                ScreeningCriteriaRequest.builder().criteriaName("  ").criteriaType(null)
-                        .requiredValue("").isMandatory(false).build())));
-        expectPass(d);
-    }
-
     // VAL-014 — Các field của một tiêu chí
-
-    @Test
-    @DisplayName("Tiêu chí thiếu tên -> Báo lỗi")
-    void validate_shouldReject_whenCriteriaNameIsMissing() {
-        var d = valid();
-        d.getScreeningCriteria().get(0).setCriteriaName(null);
-        assertTrue(expectFail(d).getErrors().containsKey("screeningCriteria[0].criteriaName"));
-    }
-
-    @Test
-    @DisplayName("Tiêu chí thiếu loại -> Báo lỗi")
-    void validate_shouldReject_whenCriteriaTypeIsMissing() {
-        var d = valid();
-        d.getScreeningCriteria().get(0).setCriteriaType(null);
-        assertTrue(expectFail(d).getErrors().containsKey("screeningCriteria[0].criteriaType"));
-    }
-
-    @Test
-    @DisplayName("Tiêu chí thiếu giá trị yêu cầu -> Báo lỗi")
-    void validate_shouldReject_whenCriteriaRequiredValueIsMissing() {
-        var d = valid();
-        d.getScreeningCriteria().get(0).setRequiredValue(null);
-        assertTrue(expectFail(d).getErrors().containsKey("screeningCriteria[0].requiredValue"));
-    }
-
-    @Test
-    @DisplayName("Tiêu chí thiếu trọng số -> Báo lỗi")
-    void validate_shouldReject_whenCriteriaWeightIsMissing() {
-        var d = valid();
-        d.getScreeningCriteria().get(0).setWeight(null);
-        assertTrue(expectFail(d).getErrors().containsKey("screeningCriteria[0].weight"));
-    }
-
-    @ParameterizedTest
-    @ValueSource(strings = { "Education", "Experience", "Skill", "Knockout" })
-    @DisplayName("Loại tiêu chí trong danh mục -> Hợp lệ")
-    void validate_shouldPass_whenCriteriaTypeIsInList(String type) {
-        var d = valid();
-        d.getScreeningCriteria().get(0).setCriteriaType(type);
-        expectPass(d);
-    }
-
-    @Test
-    @DisplayName("Loại tiêu chí ngoài danh mục -> Báo lỗi")
-    void validate_shouldReject_whenCriteriaTypeIsNotInList() {
-        var d = valid();
-        d.getScreeningCriteria().get(0).setCriteriaType("Language");
-        assertTrue(expectFail(d).getErrors().containsKey("screeningCriteria[0].criteriaType"));
-    }
 
     // VAL-015 — Tên tiêu chí trùng
 
-    @Test
-    @DisplayName("Hai tiêu chí trùng tên -> Báo lỗi")
-    void validate_shouldReject_whenCriteriaNamesAreDuplicated() {
-        var d = valid();
-        d.getScreeningCriteria().add(ScreeningCriteriaRequest.builder()
-                .criteriaName("Java").criteriaType("Skill").requiredValue("Three years")
-                .weight(new BigDecimal("0")).build());
-        assertTrue(expectFail(d).getErrors().containsKey("screeningCriteria[1].criteriaName"));
-    }
-
-    @Test
-    @DisplayName("Hai tiêu chí trùng tên khác hoa / thường -> Báo lỗi")
-    void validate_shouldReject_whenCriteriaNamesDifferOnlyInCase() {
-        var d = valid();
-        d.getScreeningCriteria().add(ScreeningCriteriaRequest.builder()
-                .criteriaName(" java ").criteriaType("Skill").requiredValue("Three years")
-                .weight(new BigDecimal("50")).build());
-        assertTrue(expectFail(d).getErrors().containsKey("screeningCriteria[1].criteriaName"));
-    }
-
-    @Test
-    @DisplayName("Hai tiêu chí khác tên -> Hợp lệ")
-    void validate_shouldPass_whenCriteriaNamesAreDistinct() {
-        var d = valid();
-        d.setScreeningCriteria(new ArrayList<>(List.of(
-                ScreeningCriteriaRequest.builder().criteriaName("Java").criteriaType("Skill")
-                        .requiredValue("Two years").weight(new BigDecimal("60")).build(),
-                ScreeningCriteriaRequest.builder().criteriaName("Spring Boot").criteriaType("Skill")
-                        .requiredValue("One year").weight(new BigDecimal("40")).build())));
-        expectPass(d);
-    }
-
     // VAL-016 — ID tiêu chí trùng
-
-    @Test
-    @DisplayName("Một criteriaId gửi hai lần (ID giả) -> Báo lỗi")
-    void validate_shouldReject_whenCriteriaIdIsSentTwice() {
-        var d = minimalDraft();
-        d.setScreeningCriteria(new ArrayList<>(List.of(
-                ScreeningCriteriaRequest.builder().criteriaId(5).criteriaName("Java")
-                        .criteriaType("Skill").requiredValue("Two years").weight(new BigDecimal("100")).build(),
-                ScreeningCriteriaRequest.builder().criteriaId(5).criteriaName("Spring")
-                        .criteriaType("Skill").requiredValue("One year").weight(new BigDecimal("50")).build())));
-        var e = expectFail(d);
-        assertTrue(e.getErrors().keySet().stream().anyMatch(k -> k.startsWith("screeningCriteria[1]")));
-    }
-
-    @Test
-    @DisplayName("Các criteriaId khác nhau -> Hợp lệ")
-    void validate_shouldPass_whenCriteriaIdsAreDistinct() {
-        var d = minimalDraft();
-        d.setScreeningCriteria(new ArrayList<>(List.of(
-                withId(criterion("Java", "50"), 1),
-                withId(criterion("Python", "50"), 2))));
-        expectPass(d);
-    }
 
     // VAL-017 — Giới hạn weight
 
-    @Test
-    @DisplayName("Gửi duyệt với trọng số 0 -> Báo lỗi")
-    void validate_shouldReject_whenSubmitWeightIsZero() {
-        var d = valid();
-        d.getScreeningCriteria().get(0).setWeight(BigDecimal.ZERO);
-        assertTrue(expectFail(d).getErrors().containsKey("screeningCriteria[0].weight"));
-    }
-
-    @Test
-    @DisplayName("Gửi duyệt với trọng số âm -> Báo lỗi")
-    void validate_shouldReject_whenSubmitWeightIsNegative() {
-        var d = valid();
-        d.getScreeningCriteria().get(0).setWeight(new BigDecimal("-1"));
-        assertTrue(expectFail(d).getErrors().containsKey("screeningCriteria[0].weight"));
-    }
-
-    @Test
-    @DisplayName("Gửi duyệt với trọng số 100 (biên) -> Hợp lệ")
-    void validate_shouldPass_whenSubmitWeightIs100() {
-        var d = valid();
-        d.getScreeningCriteria().get(0).setWeight(new BigDecimal("100"));
-        expectPass(d);
-    }
-
-    @Test
-    @DisplayName("Gửi duyệt với trọng số > 100 -> Báo lỗi")
-    void validate_shouldReject_whenSubmitWeightExceeds100() {
-        var d = valid();
-        d.getScreeningCriteria().get(0).setWeight(new BigDecimal("100.01"));
-        assertTrue(expectFail(d).getErrors().containsKey("screeningCriteria[0].weight"));
-    }
-
-    @Test
-    @DisplayName("Trọng số 3 chữ số thập phân -> Báo lỗi")
-    void validate_shouldReject_whenWeightHasThreeDecimals() {
-        var d = valid();
-        d.getScreeningCriteria().get(0).setWeight(new BigDecimal("33.333"));
-        assertTrue(expectFail(d).getErrors().containsKey("screeningCriteria[0].weight"));
-    }
-
-    @Test
-    @DisplayName("Trọng số 2 chữ số thập phân -> Hợp lệ")
-    void validate_shouldPass_whenWeightHasTwoDecimals() {
-        var d = valid();
-        d.getScreeningCriteria().get(0).setWeight(new BigDecimal("100.00"));
-        expectPass(d);
-    }
-
-    @Test
-    @DisplayName("Nháp với trọng số 0 -> Báo lỗi")
-    void validate_shouldReject_whenDraftWeightIsZero() {
-        var d = minimalDraft();
-        d.setScreeningCriteria(new ArrayList<>(List.of(
-                ScreeningCriteriaRequest.builder().criteriaName("Java").weight(BigDecimal.ZERO).build())));
-        assertTrue(expectFail(d).getErrors().containsKey("screeningCriteria[0].weight"));
-    }
-
-    @Test
-    @DisplayName("Nháp với trọng số 100 -> Hợp lệ")
-    void validate_shouldPass_whenDraftWeightIs100() {
-        var d = minimalDraft();
-        d.setScreeningCriteria(new ArrayList<>(List.of(
-                criterion("Java", "100"))));
-        expectPass(d);
-    }
-
-    @Test
-    @DisplayName("Nháp với trọng số > 100 -> Báo lỗi")
-    void validate_shouldReject_whenDraftWeightExceeds100() {
-        var d = minimalDraft();
-        d.setScreeningCriteria(new ArrayList<>(List.of(
-                criterion("Java", "100.01"))));
-        assertEquals("Trọng số phải từ 0.01 đến 100 với tối đa hai chữ số thập phân.",
-                expectFail(d).getErrors().get("screeningCriteria[0].weight"));
-    }
-
     // VAL-018 — Tổng weight khi Submit
-
-    @Test
-    @DisplayName("Gửi duyệt tổng trọng số < 100 -> Báo lỗi")
-    void validate_shouldReject_whenSubmitTotalWeightIsBelow100() {
-        var d = valid();
-        d.getScreeningCriteria().get(0).setWeight(new BigDecimal("99.99"));
-        assertTrue(expectFail(d).getErrors().containsKey("screeningCriteria"));
-    }
-
-    @Test
-    @DisplayName("Gửi duyệt tổng trọng số > 100 -> Báo lỗi")
-    void validate_shouldReject_whenSubmitTotalWeightIsAbove100() {
-        var d = valid();
-        d.setScreeningCriteria(new ArrayList<>(List.of(
-                ScreeningCriteriaRequest.builder().criteriaName("Java").criteriaType("Skill")
-                        .requiredValue("Two years").weight(new BigDecimal("60")).build(),
-                ScreeningCriteriaRequest.builder().criteriaName("Spring").criteriaType("Skill")
-                        .requiredValue("One year").weight(new BigDecimal("60")).build())));
-        assertTrue(expectFail(d).getErrors().containsKey("screeningCriteria"));
-    }
-
-    @Test
-    @DisplayName("Gửi duyệt tổng trọng số đúng 100 -> Hợp lệ")
-    void validate_shouldPass_whenSubmitTotalWeightIsExactly100() {
-        var d = valid();
-        d.setScreeningCriteria(new ArrayList<>(List.of(
-                ScreeningCriteriaRequest.builder().criteriaName("Java").criteriaType("Skill")
-                        .requiredValue("Two years").weight(new BigDecimal("60.00")).build(),
-                ScreeningCriteriaRequest.builder().criteriaName("Spring").criteriaType("Skill")
-                        .requiredValue("One year").weight(new BigDecimal("40.00")).build())));
-        expectPass(d);
-    }
 
     // VAL-019 — Weight khi Draft
 
-    @Test
-    @DisplayName("Nháp tổng trọng số khác 100 -> Hợp lệ")
-    void validate_shouldPass_whenDraftTotalWeightIsNot100() {
-        var d = minimalDraft();
-        d.setScreeningCriteria(new ArrayList<>(List.of(
-                criterion("Java", "30"))));
-        expectPass(d);
-    }
-
-    @Test
-    @DisplayName("Nháp với trọng số 0.01 (biên) -> Hợp lệ")
-    void validate_shouldPass_whenDraftWeightIsMinimumPositive() {
-        var d = minimalDraft();
-        d.setScreeningCriteria(new ArrayList<>(List.of(
-                criterion("Java", "0.01"))));
-        expectPass(d);
-    }
-
-    @Test
-    @DisplayName("Trọng số > 100 -> Báo lỗi cả nháp lẫn gửi duyệt")
-    void validate_shouldReject_whenWeightExceeds100InDraftOrSubmit() {
-        var submit = valid();
-        submit.getScreeningCriteria().get(0).setWeight(new BigDecimal("101"));
-        assertTrue(expectFail(submit).getErrors().containsKey("screeningCriteria[0].weight"));
-
-        var draft = minimalDraft();
-        draft.setScreeningCriteria(new ArrayList<>(List.of(
-                criterion("Java", "101"))));
-        assertTrue(expectFail(draft).getErrors().containsKey("screeningCriteria[0].weight"));
-    }
-
     // VAL-020 — Mandatory và nhận diện dòng trắng
-
-    @Test
-    @DisplayName("Dòng chỉ tick Bắt buộc -> Không phải dòng trống, phải điền đủ")
-    void validate_shouldRequireFields_whenRowIsOnlyMarkedMandatory() {
-        var d = minimalDraft();
-        d.setScreeningCriteria(new ArrayList<>(List.of(
-                ScreeningCriteriaRequest.builder()
-                        .criteriaName(null).criteriaType(null).requiredValue(null)
-                        .isMandatory(true).build())));
-        // Bật "Bắt buộc" nghĩa là dòng đã được nhập → phải điền đủ (các cột NOT NULL),
-        // kể cả khi lưu nháp
-        assertTrue(expectFail(d).getErrors().containsKey("screeningCriteria[0].criteriaName"));
-    }
-
-    @Test
-    @DisplayName("Dòng trống, không tick Bắt buộc -> Bỏ qua khi lưu nháp")
-    void validate_shouldSkipRow_whenRowIsBlankAndNotMandatory() {
-        var d = minimalDraft();
-        d.setScreeningCriteria(new ArrayList<>(List.of(
-                ScreeningCriteriaRequest.builder()
-                        .criteriaName("  ").criteriaType(null).requiredValue("  ")
-                        .isMandatory(false).build())));
-        expectPass(d);
-    }
-
-    @Test
-    @DisplayName("Gửi duyệt có dòng Bắt buộc -> Phải điền đủ")
-    void validate_shouldRequireAllFields_whenSubmitHasMandatoryRow() {
-        var d = valid();
-        d.getScreeningCriteria().get(0).setIsMandatory(true);
-        d.getScreeningCriteria().get(0).setRequiredValue(null);
-        assertTrue(expectFail(d).getErrors().containsKey("screeningCriteria[0].requiredValue"));
-    }
 
     // Multi-error and utility tests ----------------------------------------
 
@@ -1175,27 +762,6 @@ class RequisitionValidatorTests {
     @DisplayName("cleanString giữ khoảng trắng ở giữa")
     void cleanString_shouldKeepInnerSpaces_whenInputHasInnerSpaces() {
         assertEquals("hello world", RequisitionValidator.cleanString("  hello world  "));
-    }
-
-    @Test
-    @DisplayName("Dòng toàn null, không bắt buộc -> Là dòng trống")
-    void isBlankCriteria_shouldReturnTrue_whenAllFieldsAreNullAndNotMandatory() {
-        assertTrue(RequisitionValidator.isBlankCriteria(ScreeningCriteriaRequest.builder()
-                .criteriaName(null).criteriaType(null).requiredValue(null).isMandatory(false).build()));
-    }
-
-    @Test
-    @DisplayName("Dòng có tick Bắt buộc -> Không phải dòng trống")
-    void isBlankCriteria_shouldReturnFalse_whenMarkedMandatory() {
-        assertFalse(RequisitionValidator.isBlankCriteria(ScreeningCriteriaRequest.builder()
-                .criteriaName(null).criteriaType(null).requiredValue(null).isMandatory(true).build()));
-    }
-
-    @Test
-    @DisplayName("Dòng có tên -> Không phải dòng trống")
-    void isBlankCriteria_shouldReturnFalse_whenNameIsPresent() {
-        assertFalse(RequisitionValidator.isBlankCriteria(ScreeningCriteriaRequest.builder()
-                .criteriaName("Java").criteriaType(null).requiredValue(null).isMandatory(false).build()));
     }
 
     @CsvSource({

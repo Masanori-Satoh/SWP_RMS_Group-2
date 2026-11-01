@@ -9,7 +9,6 @@ import com.group2.rms.candidate.application.pipeline.repository.ApplicationPipel
 import com.group2.rms.candidate.talentpool.repository.TalentPoolApplicationRepository;
 import com.group2.rms.candidate.domain.repository.CandidateRepository;
 import com.group2.rms.candidate.domain.entity.Application;
-import com.group2.rms.candidate.application.submission.ApplicationSubmittedEvent;
 import com.group2.rms.candidate.talentpool.service.TalentPoolService;
 import com.group2.rms.candidate.talentpool.exception.TalentPoolException;
 import com.group2.rms.dashboard.shared.DashboardMetricsRepository;
@@ -95,7 +94,7 @@ class TalentPoolFlowIntegrationTests {
         return applications.findFirstByCandidate_CandidateIdAndJobPosting_JobPostingIdAndApplicationStatus(
                 f.source().getCandidate().getCandidateId(), f.target().getJobPostingId(), "HM_Suggested").orElseThrow().getApplicationId();
     }
-    private List<Integer> formalIds() { return pipelineQueries.findPipelineIds(true, null, null, null, null, null, "newest"); }
+    private List<Integer> formalIds() { return pipelineQueries.findPipelineIds(true, null, null, null, null, null); }
 
     private int recommend(Fixture f) throws Exception {
         mvc.perform(post("/talent-pool/jobs/" + f.target().getJobPostingId() + "/recommend")
@@ -312,7 +311,6 @@ class TalentPoolFlowIntegrationTests {
         assertEquals(sourceStatus,applications.findById(sourceId).orElseThrow().getApplicationStatus());
         assertTrue(formalIds().contains(id));
         assertFalse(poolApplications.findSuggestionsByJobPostingId(jobId).stream().anyMatch(a -> a.getApplicationId().equals(id)));
-        assertEquals(1, events.stream(ApplicationSubmittedEvent.class).filter(e -> e.applicationId().equals(id)).count());
         assertThrows(ApplicationStatusException.class, () -> statusService.requireScheduleable(id));
         assertFalse(applications.findEligibleForInterview().stream().anyMatch(a -> a.getApplicationId().equals(id)));
         // A second upload cannot create another application or replace the confirmed CV.

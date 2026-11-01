@@ -18,7 +18,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.HashSet;
@@ -44,29 +43,8 @@ class ApplicationPipelineQueryTests {
     @Autowired EntityManager entityManager;
 
     @Test
-    void recruiterScopeListsEveryApplicationOnceWithBestScoreFirst() {
-        List<Integer> ids = ids(ApplicationScope.ALL, null, null, ApplicationSearch.SORT_SCORE);
-        List<ApplicationPipelineResponse> rows = search(ApplicationScope.ALL, null, null, ApplicationSearch.SORT_SCORE);
-
-        long formalCount = applications.findAll().stream().filter(a -> !"HM_Suggested".equals(a.getApplicationStatus()))
-                .filter(a -> pipelineQueries.countTalentPoolCancellation(a.getApplicationId()) == 0).count();
-        assertEquals(formalCount, ids.size());
-        assertEquals(ids.size(), new HashSet<>(ids).size(), "mỗi đơn đúng một dòng dù có nhiều lần AI chấm");
-        int firstUnscored = rows.stream().map(ApplicationPipelineResponse::aiMatchScore).toList().indexOf(null);
-        if (firstUnscored >= 0) {
-            assertTrue(rows.subList(firstUnscored, rows.size()).stream().allMatch(r -> r.aiMatchScore() == null),
-                    "đơn chưa có điểm xếp cuối");
-        }
-        List<BigDecimal> scores = rows.stream().map(ApplicationPipelineResponse::aiMatchScore)
-                .filter(Objects::nonNull).toList();
-        for (int i = 1; i < scores.size(); i++) {
-            assertTrue(scores.get(i - 1).compareTo(scores.get(i)) >= 0, "điểm giảm dần tại vị trí " + i);
-        }
-    }
-
-    @Test
     void newestSortOrdersBySubmissionDate() {
-        List<ApplicationPipelineResponse> rows = search(ApplicationScope.ALL, null, null, ApplicationSearch.SORT_NEWEST);
+        List<ApplicationPipelineResponse> rows = search(ApplicationScope.ALL, null, null, null);
 
         for (int i = 1; i < rows.size(); i++) {
             assertFalse(rows.get(i - 1).submissionDate().isBefore(rows.get(i).submissionDate()));
@@ -80,8 +58,8 @@ class ApplicationPipelineQueryTests {
         Integer ownDepartmentId = manager.getDepartment() == null ? null : manager.getDepartment().getDepartmentId();
         ApplicationScope scope = ApplicationScope.hiringManager(manager.getUserId(), ownDepartmentId);
 
-        List<Integer> mine = ids(scope, null, null, ApplicationSearch.SORT_SCORE);
-        List<Integer> expected = ids(ApplicationScope.ALL, null, null, ApplicationSearch.SORT_SCORE).stream()
+        List<Integer> mine = ids(scope, null, null, null);
+        List<Integer> expected = ids(ApplicationScope.ALL, null, null, null).stream()
                 .filter(id -> {
                     var department = applications.findDetailById(id).orElseThrow()
                             .getJobPosting().getRequisition().getDepartment();
@@ -99,14 +77,14 @@ class ApplicationPipelineQueryTests {
 
     @Test
     void keywordAndStatusFiltersNarrowTheList() {
-        ApplicationPipelineResponse any = search(ApplicationScope.ALL, null, null, ApplicationSearch.SORT_SCORE)
+        ApplicationPipelineResponse any = search(ApplicationScope.ALL, null, null, null)
                 .getFirst();
         String keyword = any.email().substring(0, any.email().indexOf('@')).toUpperCase();
 
         List<ApplicationPipelineResponse> byKeyword = search(ApplicationScope.ALL, keyword, null,
-                ApplicationSearch.SORT_SCORE);
+                null);
         List<ApplicationPipelineResponse> byStatus = search(ApplicationScope.ALL, null, "Rejected",
-                ApplicationSearch.SORT_SCORE);
+                null);
 
         assertTrue(byKeyword.stream().anyMatch(r -> r.applicationId().equals(any.applicationId())));
         assertTrue(byStatus.stream().allMatch(r -> r.applicationStatus().equals("Rejected")));
@@ -116,8 +94,7 @@ class ApplicationPipelineQueryTests {
     void jobPostingFilterKeepsOnlyApplicationsOfThatPosting() {
         JobPostingOption posting = pipelineQueries.findPostingOptions(true, null, null).getFirst();
 
-        List<Integer> ids = pipelineQueries.findPipelineIds(true, null, null, posting.jobPostingId(), null, null,
-                ApplicationSearch.SORT_SCORE);
+        List<Integer> ids = pipelineQueries.findPipelineIds(true, null, null, posting.jobPostingId(), null, null);
 
         assertFalse(ids.isEmpty());
         ids.forEach(id -> assertEquals(posting.jobPostingId(),
@@ -135,7 +112,7 @@ class ApplicationPipelineQueryTests {
     /** Seed không khớp trạng thái (đơn {@code Offered} chưa chắc có offer), nên tìm đơn đã tuyển có offer thật. */
     @Test
     void timelineQueriesReadInterviewAndOfferTables() {
-        Integer withOffer = search(ApplicationScope.ALL, null, "Hired", ApplicationSearch.SORT_SCORE).stream()
+        Integer withOffer = search(ApplicationScope.ALL, null, "Hired", null).stream()
                 .map(ApplicationPipelineResponse::applicationId)
                 .filter(id -> !pipelineQueries.findOfferEvents(id).isEmpty())
                 .findFirst().orElseThrow(() -> new AssertionError("DB local không có đơn Hired nào có offer"));
@@ -172,7 +149,7 @@ class ApplicationPipelineQueryTests {
     @Test
     void progressFactsMatchInterviewAndOfferTables() {
         List<ApplicationPipelineResponse> pipeline = search(ApplicationScope.ALL, null, null,
-                ApplicationSearch.SORT_NEWEST);
+                null);
         Map<Integer, String> statusById = pipeline.stream().collect(Collectors.toMap(
                 ApplicationPipelineResponse::applicationId, ApplicationPipelineResponse::applicationStatus));
 
@@ -223,11 +200,11 @@ class ApplicationPipelineQueryTests {
     @Test
     @Transactional
     void transitionOnlyMovesApplicationsStillInExpectedStatus() {
-        Integer id = ids(ApplicationScope.ALL, null, "AI_Screened", ApplicationSearch.SORT_SCORE).getFirst();
+        Integer id = ids(ApplicationScope.ALL, null, "Applied", null).getFirst();
 
         assertEquals(0, applications.transition(id, List.of("HR_Passed"), "HM_Passed"), "sai trạng thái nguồn: không đổi");
-        assertEquals(1, applications.transition(id, List.of("Applied", "AI_Screened"), "HR_Passed"));
-        assertEquals(0, applications.transition(id, List.of("Applied", "AI_Screened"), "HR_Passed"),
+        assertEquals(1, applications.transition(id, List.of("Applied"), "HR_Passed"));
+        assertEquals(0, applications.transition(id, List.of("Applied"), "HR_Passed"),
                 "lần thứ hai (người duyệt sau): không đè");
         entityManager.clear();
         Application moved = applications.findById(id).orElseThrow();
@@ -237,7 +214,7 @@ class ApplicationPipelineQueryTests {
 
     private List<Integer> ids(ApplicationScope scope, String keyword, String status, String sort) {
         return pipelineQueries.findPipelineIds(scope.allDepartments(), scope.managerUserId(), scope.departmentId(),
-                null, status, keyword, sort);
+                null, status, keyword);
     }
 
     /** Các dòng đúng thứ tự của {@link #ids}, tối đa 2000 đơn đầu (giới hạn tham số của SQL Server). */

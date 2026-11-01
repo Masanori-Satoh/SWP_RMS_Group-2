@@ -111,7 +111,7 @@ class MyApplicationServiceTests {
         when(myApplications.findMyInterviews(USER_ID)).thenReturn(List.of(
                 new InterviewRow(210, now.plusHours(22), "Offline_Office", "Scheduled", now.minusMinutes(30))));
         when(myApplications.findMyApplicationMarks(USER_ID)).thenReturn(List.of(
-                new MarkRow(44, "Withdrawn", "AI_Screened", now.minusDays(2))));
+                new MarkRow(44, "Withdrawn", "Applied", now.minusDays(2))));
 
         List<MyApplicationResponse> cards = service.list(null).applications();
 
@@ -262,7 +262,7 @@ class MyApplicationServiceTests {
     }
 
     @ParameterizedTest
-    @ValueSource(strings = {"Applied", "AI_Screened"})
+    @ValueSource(strings = {"Applied"})
     void withdrawRejectsEarlyApplicationAndRecordsWithdrawal(String status) {
         when(myApplications.findOwnedById(ID, USER_ID)).thenReturn(Optional.of(application(ID, status)));
         when(applications.transition(ID, MyApplicationService.WITHDRAWABLE_STATUSES, "Rejected")).thenReturn(1);

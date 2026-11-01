@@ -97,8 +97,7 @@ class InternalDashboardIntegrationTests {
                 .title(title).hiringManager(owner).department(department).approvalStatus(status)
                 .submittedAt(now.minusDays(9)).recruitmentRound(round).originalRequisition(original)
                 .hiringType("Replacement").numberOfPositions(3).employmentType("Full-time").gender("Any")
-                .workModel("On-site").jobDescription("Mô tả kiểm thử").requirementDetails("Yêu cầu kiểm thử")
-                .screeningCriteria(new ArrayList<>()).build());
+                .workModel("On-site").jobDescription("Mô tả kiểm thử").requirementDetails("Yêu cầu kiểm thử").build());
     }
 
     private User saveDirector(String username) {

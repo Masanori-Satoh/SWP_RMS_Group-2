@@ -138,11 +138,11 @@ class EmailMonitoringServiceTests {
     }
 
     @Test
-    void readRowsDoNotProbeAndAiRemainsUnconfigured() {
+    void readRowsDoNotProbe() {
         var transport = mock(HttpProbeTransport.class);
         var service = new ApiMonitoringService(transport, monitoring);
-        assertEquals("Not check", service.rows().get(2).status());
-        assertEquals("Unconfigured", service.rows().get(1).status());
+        assertEquals(2, service.rows().size());
+        assertEquals("Not check", service.rows().get(1).status());
         verifyNoInteractions(transport);
     }
 

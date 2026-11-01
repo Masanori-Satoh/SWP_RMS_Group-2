@@ -6,7 +6,6 @@ import com.group2.rms.requisition.dto.RequisitionRequest;
 import com.group2.rms.requisition.dto.RequisitionResponse;
 import com.group2.rms.requisition.entity.JobRequisition;
 import com.group2.rms.requisition.entity.RequisitionApproval;
-import com.group2.rms.requisition.entity.ScreeningCriteria;
 import com.group2.rms.requisition.validator.RequisitionValidator;
 import com.group2.rms.user.entity.Department;
 import com.group2.rms.user.entity.Role;
@@ -65,7 +64,6 @@ class RequisitionMapperTests {
                 .employmentType("Full-time")
                 .workModel("Hybrid")
                 .gender("Any")
-                .screeningCriteria(new ArrayList<>())
                 .build();
     }
 
@@ -154,16 +152,12 @@ class RequisitionMapperTests {
         draft.setReasonForHiring("Mở rộng");
         draft.setJobDescription("Phát triển RMS");
         draft.setRequirementDetails("Spring Boot");
-        draft.getScreeningCriteria().add(ScreeningCriteria.builder().criteriaName("Java").criteriaType("Skill")
-                .requiredValue("2 năm").weight(new BigDecimal("100")).isMandatory(true).build());
 
         // Act
         RequisitionResponse detail = mapper.toDetail(draft, manager, null, false, List.of(), List.of());
 
         // Assert
         assertFalse(detail.incomplete());
-        assertEquals(new BigDecimal("1E+2"), detail.criteriaTotalWeight());
-        assertEquals("Kỹ năng", detail.screeningCriteria().get(0).criteriaTypeLabel());
     }
 
     @Test

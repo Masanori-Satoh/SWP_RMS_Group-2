@@ -164,9 +164,9 @@ class JobPostingControllerTests {
                 .createdAt(now.minusDays(11)).createdByName("Lê Thị Mai Lan").hiringManagerName("Lê Thu Trang")
                 .deadlineSoonBanner(true).deadlineCountdown(true)
                 .live(true).canManage(true).editable(true).pausable(true).closable(true).publicViewable(true)
-                .totalApplications(14).pendingApplications(9).aiPassedApplications(7).aiThreshold(new BigDecimal("70"))
+                .totalApplications(14).pendingApplications(9)
                 .interviewingApplications(2).hiredApplications(0)
-                .recentApplications(List.of(new RecentApplication(501, "Trần Quốc Bảo", new BigDecimal("84.5"), true,
+                .recentApplications(List.of(new RecentApplication(501, "Trần Quốc Bảo",
                         "Đang phỏng vấn", "badge--warning", now.minusDays(2))))
                 .rounds(List.of(
                         new PostingRound(29, 1, now.minusDays(60), now.minusDays(20), "Đã đóng", "neutral", 23, 0, false),

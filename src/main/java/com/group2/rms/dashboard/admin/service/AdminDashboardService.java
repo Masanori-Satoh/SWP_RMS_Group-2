@@ -67,8 +67,8 @@ public class AdminDashboardService {
                                 departmentSummary(),
                                 List.of(new DashboardBreakdownResponse("API và dịch vụ tích hợp", health)),
                                 List.of(new Shortcut("Quản lý phòng ban", "/admin/departments"),
-                                                new Shortcut("Giám sát API", "/admin/api-monitoring"),
-                                                new Shortcut("Cấu hình AI (chưa khả dụng)", null)),
+                                                // dunglt bổ sung: bỏ lối tắt "Cấu hình AI" (gỡ AI, 01/11)
+                                                new Shortcut("Giám sát API", "/admin/api-monitoring")),
                                 metrics.internalAccountsByRole(),
                                 monitorRows,
                                 new AdminDashboardResponse.CandidateSummary(metrics.countCandidates(),

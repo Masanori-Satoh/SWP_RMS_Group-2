@@ -75,7 +75,7 @@ class HrDashboardServiceTests {
     private ApplicationPipelineResponse application(int id, ApplicationStage stage, String owner, int days) {
         waitingSince.put(id, NOW.minusDays(days));
         ApplicationPipelineResponse row = new ApplicationPipelineResponse(id, "Ứng viên " + id, "a@b.c", "Java Dev",
-                NOW, "AI_Screened", "Chờ HR duyệt CV", "badge--warning", owner, null, false, false, false);
+                NOW, "Applied", "Chờ HR duyệt CV", "badge--warning", owner, false, false, false);
         List<ApplicationPipelineResponse> rows = new ArrayList<>(stageRows.get(stage));
         rows.add(row);
         stageRows.put(stage, rows);
@@ -152,7 +152,7 @@ class HrDashboardServiceTests {
         List<ApplicationPipelineResponse> many = new ArrayList<>();
         for (int id = 1; id <= 10_001; id++) {
             many.add(new ApplicationPipelineResponse(id, "Ứng viên " + id, "a@b.c", "Java Dev",
-                    NOW, "AI_Screened", "Chờ xử lý", "badge--warning", "Hệ thống", null,
+                    NOW, "Applied", "Chờ xử lý", "badge--warning", "Hệ thống",
                     false, false, false));
         }
         stageRows.put(ApplicationStage.APPLIED, many);

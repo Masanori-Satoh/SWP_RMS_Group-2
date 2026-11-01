@@ -32,15 +32,15 @@ class ApplicationStepperTests {
     void currentStageShowsDetailAndOwnerOthersShowNone() {
         List<StageItem> items = ApplicationStepper.items(progress(AWAITING_HR_REVIEW, "Chờ HR duyệt CV"));
 
-        assertEquals("Chờ HR duyệt CV · Đang chờ: HR", items.get(1).detail());
-        assertEquals(List.of(true, false, true, true, true),
+        assertEquals("Chờ HR duyệt CV · Đang chờ: HR", items.get(0).detail());
+        assertEquals(List.of(false, true, true, true, true),
                 items.stream().map(item -> item.detail() == null).toList());
     }
 
     @Test
     void firstAndLastStagesAreReachable() {
         assertEquals(List.of("current", "upcoming", "upcoming", "upcoming", "upcoming"),
-                states(ApplicationStepper.items(progress(AWAITING_AI, "Chờ AI chấm CV"))));
+                states(ApplicationStepper.items(progress(AWAITING_HR_REVIEW, "Chờ HR duyệt CV"))));
 
         List<StageItem> hired = ApplicationStepper.items(progress(HIRED_DONE, "Đã nhận việc"));
         assertEquals(List.of("done", "done", "done", "done", "current"), states(hired));
