@@ -1,11 +1,13 @@
 package com.group2.rms.offer.controller;
 
+import com.group2.rms.core.exception.ResourceNotFoundException;
 import com.group2.rms.offer.dto.CandidateOfferDeclineRequest;
 import com.group2.rms.offer.dto.CandidateOfferDetailResponse;
 import com.group2.rms.offer.exception.OfferResponseException;
 import com.group2.rms.offer.service.CandidateOfferService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
@@ -25,6 +27,7 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 @Controller
 @RequestMapping("/portal/offers")
 @RequiredArgsConstructor
+@Slf4j
 public class CandidateOfferController {
 
     private final CandidateOfferService candidateOffers;
@@ -57,8 +60,11 @@ public class CandidateOfferController {
                 return "redirect:/portal/offers/" + id;
             }
             return "redirect:/portal/offers/" + id + "?openDecline=true";
+        } catch (ResourceNotFoundException e) {
+            throw e;
         } catch (Exception e) {
-            redirect.addFlashAttribute("errorMessage", "Không thể xử lý yêu cầu: " + e.getMessage());
+            log.error("Lỗi khi mở giao diện từ chối thư mời #{}: ", id, e);
+            redirect.addFlashAttribute("errorMessage", "Đã xảy ra sự cố khi mở thư mời. Vui lòng thử lại sau.");
             return "redirect:/portal/offers/" + id;
         }
     }
@@ -75,10 +81,11 @@ public class CandidateOfferController {
             redirect.addFlashAttribute("congratsTitle", postingTitle);
         } catch (OfferResponseException e) {
             redirect.addFlashAttribute("errorMessage", e.getMessage());
-        } catch (com.group2.rms.core.exception.ResourceNotFoundException e) {
+        } catch (ResourceNotFoundException e) {
             throw e;
         } catch (Exception e) {
-            redirect.addFlashAttribute("errorMessage", "Đã xảy ra lỗi khi xử lý nhận việc: " + e.getMessage());
+            log.error("Lỗi không mong muốn khi ứng viên chấp nhận thư mời #{}: ", id, e);
+            redirect.addFlashAttribute("errorMessage", "Đã xảy ra sự cố trong quá trình xử lý. Vui lòng thử lại sau hoặc liên hệ Bộ phận Tuyển dụng.");
         }
         return fromDetail ? "redirect:/portal/offers/" + id : "redirect:/portal/offers";
     }
@@ -107,10 +114,11 @@ public class CandidateOfferController {
             }
         } catch (OfferResponseException e) {
             redirect.addFlashAttribute("errorMessage", e.getMessage());
-        } catch (com.group2.rms.core.exception.ResourceNotFoundException e) {
+        } catch (ResourceNotFoundException e) {
             throw e;
         } catch (Exception e) {
-            redirect.addFlashAttribute("errorMessage", "Đã xảy ra lỗi khi xử lý từ chối: " + e.getMessage());
+            log.error("Lỗi không mong muốn khi ứng viên từ chối thư mời #{}: ", id, e);
+            redirect.addFlashAttribute("errorMessage", "Đã xảy ra sự cố trong quá trình xử lý. Vui lòng thử lại sau hoặc liên hệ Bộ phận Tuyển dụng.");
         }
         return fromDetail ? "redirect:/portal/offers/" + id : "redirect:/portal/offers";
     }

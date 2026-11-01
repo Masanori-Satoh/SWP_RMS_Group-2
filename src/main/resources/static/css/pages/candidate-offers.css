@@ -348,7 +348,7 @@
 }
 
 .cof-breadcrumb__separator {
-  color: var(--line-strong, #cbd5e1);
+  color: var(--line);
   font-size: 13px;
   user-select: none;
 }
@@ -777,7 +777,7 @@
   padding: 8px 14px;
   border-radius: 10px;
   border: 1px solid var(--line);
-  background: var(--surface-sunken, #f8fafc);
+  background: var(--surface-subtle);
   transition: all 0.15s ease;
 }
 
@@ -786,22 +786,22 @@
 }
 
 .cof-meta-badge--countdown {
-  background: var(--warning-soft, #fef3c7);
+  background: var(--warning-soft);
   border-color: rgba(217, 119, 6, 0.3);
 }
 
 .cof-meta-badge--countdown .cof-meta-badge__icon {
-  color: var(--warning, #d97706);
+  color: var(--warning);
   background: var(--surface);
 }
 
 .cof-meta-badge--countdown .cof-meta-badge__val {
-  color: var(--warning, #b45309);
+  color: var(--warning);
   font-weight: 700;
 }
 
 .cof-meta-badge--status {
-  background: var(--surface-sunken, #f8fafc);
+  background: var(--surface-subtle);
 }
 
 .cof-meta-badge__icon {
@@ -865,7 +865,7 @@
 
 .cof-action-btn--accept {
   background: var(--brand);
-  color: var(--on-brand, #ffffff);
+  color: var(--on-brand);
   border: 1px solid var(--brand);
   box-shadow: 0 2px 6px rgba(46, 90, 69, 0.25);
 }
@@ -879,14 +879,14 @@
 
 .cof-action-btn--decline {
   background: var(--surface);
-  color: var(--error, #dc2626);
-  border: 1.5px solid var(--line-strong, #cbd5e1);
+  color: var(--error);
+  border: 1.5px solid var(--line);
 }
 
 .cof-action-btn--decline:hover {
-  background: var(--error-soft, #fef2f2);
-  border-color: var(--error, #dc2626);
-  color: var(--error, #dc2626);
+  background: var(--error-soft);
+  border-color: var(--error);
+  color: var(--error);
   transform: translateY(-1px);
 }
 
@@ -942,7 +942,7 @@
 }
 
 .cof-letterhead-divider {
-  color: var(--line-strong, #cbd5e1);
+  color: var(--line);
   font-size: 13px;
 }
 
@@ -965,7 +965,7 @@
 }
 
 .cof-paper-meta-dot {
-  color: var(--line-strong, #cbd5e1);
+  color: var(--line);
 }
 
 .cof-paper-rule {
@@ -1002,7 +1002,7 @@
 
 /* 3. Lời mở đầu thư ngỏ dạng Khung đón mừng trang trọng */
 .cof-paper-greeting-box {
-  background: var(--surface-sunken, #f8fafc);
+  background: var(--surface-subtle);
   border-left: 4px solid var(--brand);
   border-radius: 8px;
   padding: 22px 28px;
@@ -1170,7 +1170,7 @@
 }
 
 .cof-panel:hover {
-  border-color: var(--line-strong, #cbd5e1);
+  border-color: var(--line);
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.05);
 }
 
@@ -1179,7 +1179,7 @@
   align-items: center;
   gap: 12px;
   padding: 14px 18px;
-  background: var(--surface-sunken, #f8fafc);
+  background: var(--surface-subtle);
   border-bottom: 1px solid var(--line);
 }
 
@@ -1270,13 +1270,13 @@
 }
 
 .cof-salary-card--official {
-  background: linear-gradient(135deg, var(--brand-soft) 0%, #ffffff 100%);
+  background: linear-gradient(135deg, var(--brand-soft) 0%, var(--surface) 100%);
   border: 1.5px solid var(--brand);
   box-shadow: 0 2px 8px rgba(62, 113, 87, 0.08);
 }
 
 .cof-salary-card--probation {
-  background: var(--surface-sunken, #f8fafc);
+  background: var(--surface-subtle);
   border: 1px solid var(--line);
 }
 
@@ -1357,7 +1357,7 @@
   gap: 10px;
   padding: 8px 10px;
   border-radius: 8px;
-  background: var(--surface-sunken, #f8fafc);
+  background: var(--surface-subtle);
   transition: background 0.15s ease;
 }
 
@@ -1970,7 +1970,7 @@
   justify-content: center;
   background-color: var(--surface);
   border: 2px solid var(--line);
-  color: #fff;
+  color: var(--surface);
   margin-bottom: 6px;
   transition: var(--transition);
 }
@@ -2468,8 +2468,8 @@
   align-items: center;
   gap: var(--s2);
   font-size: 13px;
-  color: var(--warning, #a06325);
-  background: var(--warning-soft, #fff4e5);
+  color: var(--warning);
+  background: var(--warning-soft);
   border: 1px solid color-mix(in srgb, var(--warning) 25%, transparent);
   border-radius: var(--radius-sm);
   padding: var(--s2) var(--s3);
