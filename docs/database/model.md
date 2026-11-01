@@ -74,15 +74,6 @@ DirectorId;NOT NULL, FOREIGN KEY -> User.UserId;Director who approved it
 Status;NOT NULL;Approved / Rejected
 Comments;NULL;Director's remarks / rejection reason
 ApprovalDate;NOT NULL, DEFAULT SYSDATETIME();Time of approval
-3.8 ScreeningCriteria
-Column;Constraints;Notes
-CriteriaId;PRIMARY KEY, IDENTITY(1,1);Criteria identifier
-RequisitionId;NOT NULL, FOREIGN KEY -> JobRequisition.RequisitionId;Related requisition
-CriteriaName;NOT NULL;e.g. "React experience", "Bachelor's degree"
-CriteriaType;NOT NULL;Education, Experience, Skill, Knockout
-RequiredValue;NOT NULL;Minimum/required value
-Weight;NOT NULL, DEFAULT 1.00;AI scoring weight
-IsMandatory;NOT NULL, DEFAULT 0;1 = mandatory, 0 = optional
 3.9 JobPosting
 Column;Constraints;Notes
 JobPostingId;PRIMARY KEY, IDENTITY(1,1);Job posting identifier

@@ -160,50 +160,6 @@
                     </div>
                 </section>
 
-                <section class="card rqd-section adw-surface" aria-labelledby="rqd-h-criteria">
-                    <div class="rqd-section-head">
-                        <h2 id="rqd-h-criteria">Tiêu chí sàng lọc hồ sơ</h2>
-                        <span class="rqd-sub" th:text="|${#lists.size(req.screeningCriteria)} tiêu chí|">4 tiêu
-                            chí</span>
-                    </div>
-                    <div class="table-wrapper" role="region" aria-label="Tiêu chí sàng lọc" tabindex="0">
-                        <table class="rqd-criteria adw-data-table">
-                            <thead>
-                                <tr>
-                                    <th scope="col">Tiêu chí</th>
-                                    <th scope="col">Giá trị yêu cầu</th>
-                                    <th scope="col">Trọng số</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr th:each="criterion : ${req.screeningCriteria}">
-                                    <td>
-                                        <strong th:text="${criterion.criteriaName}">Kinh nghiệm Sales B2B</strong>
-                                        <div class="rqd-sub">
-                                            <span th:text="${criterion.criteriaTypeLabel}">Kinh nghiệm</span>
-                                            <span class="badge badge--danger" th:if="${criterion.isMandatory}">Bắt buộc</span>
-                                        </div>
-                                    </td>
-                                    <td th:text="${criterion.requiredValue}">≥ 2 năm</td>
-                                    <td>
-                                        <span class="rqd-weight">
-                                            <progress max="100" th:value="${criterion.weight}"
-                                                aria-hidden="true"></progress>
-                                            <span
-                                                th:text="|${criterion.weight.stripTrailingZeros().toPlainString()}%|">40%</span>
-                                        </span>
-                                    </td>
-                                </tr>
-                                <tr th:if="${#lists.isEmpty(req.screeningCriteria)}">
-                                    <td colspan="3" class="rqd-empty">Chưa có tiêu chí sàng lọc nào.</td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
-                    <p class="rqd-sub" th:unless="${#lists.isEmpty(req.screeningCriteria)}"
-                        th:text="|Tổng trọng số: ${req.criteriaTotalWeight.toPlainString()}%. Hồ sơ trượt tiêu chí bắt buộc sẽ bị AI đánh dấu không đạt.|">
-                        Tổng trọng số: 100%.</p>
-                </section>
             </div>
 
             <!-- ===== 5. CỘT PHẢI: quyết định của Giám đốc, tin tuyển dụng, ý kiến, lịch sử ===== -->

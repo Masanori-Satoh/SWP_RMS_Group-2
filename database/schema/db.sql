@@ -224,32 +224,6 @@ CREATE TABLE RequisitionApproval (
 GO
 
 -- =============================================================================
--- 3.8 SCREENING CRITERIA (Tiêu chí sàng lọc CV)
--- =============================================================================
-CREATE TABLE ScreeningCriteria (
-    CriteriaId INT IDENTITY(1,1) PRIMARY KEY,
-    RequisitionId INT NOT NULL,
-    CriteriaName NVARCHAR(150) NOT NULL,
-    CriteriaType NVARCHAR(30) NOT NULL,
-    RequiredValue NVARCHAR(255) NOT NULL,
-    [Weight] DECIMAL(5,2) NOT NULL CONSTRAINT DF_ScreeningCriteria_Weight DEFAULT 100.00,
-    IsMandatory BIT NOT NULL CONSTRAINT DF_ScreeningCriteria_IsMandatory DEFAULT 0,
-
-    CONSTRAINT FK_ScreeningCriteria_Requisition
-        FOREIGN KEY (RequisitionId) REFERENCES JobRequisition(RequisitionId),
-
-    CONSTRAINT CK_ScreeningCriteria_Type
-        CHECK (CriteriaType IN (N'Education', N'Experience', N'Skill', N'Knockout')),
-
-    CONSTRAINT CK_ScreeningCriteria_Weight
-        CHECK ([Weight] > 0),
-
-    CONSTRAINT UQ_ScreeningCriteria_Requisition_Name
-        UNIQUE (RequisitionId, CriteriaName)
-);
-GO
-
--- =============================================================================
 -- 3.9 JOB POSTING (Tin tuyển dụng công khai)
 -- =============================================================================
 
@@ -665,7 +639,6 @@ GO
 -- =============================================================================
 CREATE NONCLUSTERED INDEX IX_RequisitionApproval_RequisitionId ON RequisitionApproval(RequisitionId);
 CREATE NONCLUSTERED INDEX IX_RequisitionApproval_DirectorId ON RequisitionApproval(DirectorId);
-CREATE NONCLUSTERED INDEX IX_ScreeningCriteria_RequisitionId ON ScreeningCriteria(RequisitionId);
 CREATE NONCLUSTERED INDEX IX_Candidate_IsPotential ON Candidate(IsPotential) WHERE IsPotential = 1;
 CREATE NONCLUSTERED INDEX IX_Application_CandidateId ON Application(CandidateId);
 CREATE NONCLUSTERED INDEX IX_Application_JobPostingId ON Application(JobPostingId);

@@ -10,7 +10,6 @@
 --   2. 19 requisition: 13 Approved, 2 Draft, 2 Pending_Director, 2 Rejected
 --   3. 12 tin tuyển dụng: 9 Published còn hạn (hiện trên Jobs Board), 1 Published đã hết hạn,
 --      1 Closed, 1 Paused; 1 requisition Approved chưa có tin (để HR tạo tin)
---   4. Tiêu chí sàng lọc cho 17 requisition (đạt chuẩn 100% trọng số theo quy tắc nghiệp vụ)
 --   4.1 Lịch sử thao tác (AuditLog) cho toàn bộ 19 requisition
 --   5. 22 đơn ứng tuyển trên 4 tin mới (đủ trạng thái Applied -> HM_Passed, Rejected ở vòng sàng lọc)
 --   6. AppliedCvUrl của mọi đơn trỏ về CV mẫu trong src/main/resources/static/samples/cv/
@@ -140,51 +139,6 @@ INSERT INTO RequisitionApproval (RequisitionId, DirectorId, [Status], Comments, 
 INSERT INTO RequisitionApproval (RequisitionId, DirectorId, [Status], Comments, ApprovalDate) VALUES (@r17, @director, N'Approved', N'Đồng ý tuyển BA cho các module mới.', '2026-10-03 10:00:00');
 INSERT INTO RequisitionApproval (RequisitionId, DirectorId, [Status], Comments, ApprovalDate) VALUES (@r22, @director, N'Rejected', N'Chưa nằm trong định hướng sản phẩm năm 2027. Đề nghị nghiên cứu thêm tính khả thi trước khi đề xuất lại.', '2026-09-27 10:00:00');
 INSERT INTO RequisitionApproval (RequisitionId, DirectorId, [Status], Comments, ApprovalDate) VALUES (@r23, @director, N'Rejected', N'Ngân sách sự kiện quý 1 chưa được duyệt. Đề nghị gộp vào kế hoạch marketing chung.', '2026-09-28 09:00:00');
-
--- =============================================================================
--- 4. SCREENING CRITERIA
--- =============================================================================
-INSERT INTO ScreeningCriteria (RequisitionId, CriteriaName, CriteriaType, RequiredValue, [Weight], IsMandatory) VALUES (@r5, N'Kinh nghiệm Java & Spring Boot', N'Experience', N'>= 1 năm', 57.00, 1);
-INSERT INTO ScreeningCriteria (RequisitionId, CriteriaName, CriteriaType, RequiredValue, [Weight], IsMandatory) VALUES (@r5, N'Kiến thức SQL', N'Skill', N'SQL Server hoặc MySQL', 29.00, 0);
-INSERT INTO ScreeningCriteria (RequisitionId, CriteriaName, CriteriaType, RequiredValue, [Weight], IsMandatory) VALUES (@r5, N'Docker cơ bản', N'Skill', N'Docker', 14.00, 0);
-INSERT INTO ScreeningCriteria (RequisitionId, CriteriaName, CriteriaType, RequiredValue, [Weight], IsMandatory) VALUES (@r6, N'Kinh nghiệm DevOps', N'Experience', N'>= 3 năm', 50.00, 1);
-INSERT INTO ScreeningCriteria (RequisitionId, CriteriaName, CriteriaType, RequiredValue, [Weight], IsMandatory) VALUES (@r6, N'AWS & Kubernetes', N'Skill', N'AWS, Kubernetes, Terraform', 50.00, 1);
-INSERT INTO ScreeningCriteria (RequisitionId, CriteriaName, CriteriaType, RequiredValue, [Weight], IsMandatory) VALUES (@r7, N'Kinh nghiệm Flutter', N'Experience', N'>= 2 năm', 67.00, 1);
-INSERT INTO ScreeningCriteria (RequisitionId, CriteriaName, CriteriaType, RequiredValue, [Weight], IsMandatory) VALUES (@r7, N'Ứng dụng đã phát hành', N'Knockout', N'Ít nhất 1 ứng dụng trên store', 33.00, 1);
-INSERT INTO ScreeningCriteria (RequisitionId, CriteriaName, CriteriaType, RequiredValue, [Weight], IsMandatory) VALUES (@r8, N'Sinh viên ngành CNTT', N'Education', N'Năm 3 trở lên', 50.00, 1);
-INSERT INTO ScreeningCriteria (RequisitionId, CriteriaName, CriteriaType, RequiredValue, [Weight], IsMandatory) VALUES (@r8, N'Ngôn ngữ lập trình', N'Skill', N'Java hoặc JavaScript', 50.00, 0);
-INSERT INTO ScreeningCriteria (RequisitionId, CriteriaName, CriteriaType, RequiredValue, [Weight], IsMandatory) VALUES (@r9, N'Kinh nghiệm Digital Marketing B2B', N'Experience', N'>= 2 năm', 57.00, 1);
-INSERT INTO ScreeningCriteria (RequisitionId, CriteriaName, CriteriaType, RequiredValue, [Weight], IsMandatory) VALUES (@r9, N'Công cụ quảng cáo', N'Skill', N'Google Ads, Meta Ads', 43.00, 0);
-INSERT INTO ScreeningCriteria (RequisitionId, CriteriaName, CriteriaType, RequiredValue, [Weight], IsMandatory) VALUES (@r10, N'Kỹ năng giao tiếp qua điện thoại', N'Skill', N'Giọng nói rõ ràng', 100.00, 1);
-INSERT INTO ScreeningCriteria (RequisitionId, CriteriaName, CriteriaType, RequiredValue, [Weight], IsMandatory) VALUES (@r11, N'Kinh nghiệm kế toán tổng hợp', N'Experience', N'>= 3 năm', 50.00, 1);
-INSERT INTO ScreeningCriteria (RequisitionId, CriteriaName, CriteriaType, RequiredValue, [Weight], IsMandatory) VALUES (@r11, N'Phần mềm kế toán', N'Skill', N'MISA, Excel', 25.00, 0);
-INSERT INTO ScreeningCriteria (RequisitionId, CriteriaName, CriteriaType, RequiredValue, [Weight], IsMandatory) VALUES (@r11, N'Trình độ chuyên môn', N'Education', N'Cử nhân Kế toán/Tài chính', 25.00, 1);
-INSERT INTO ScreeningCriteria (RequisitionId, CriteriaName, CriteriaType, RequiredValue, [Weight], IsMandatory) VALUES (@r12, N'Kinh nghiệm UI/UX', N'Experience', N'>= 2 năm', 45.00, 1);
-INSERT INTO ScreeningCriteria (RequisitionId, CriteriaName, CriteriaType, RequiredValue, [Weight], IsMandatory) VALUES (@r12, N'Portfolio', N'Knockout', N'Có portfolio sản phẩm thực tế', 22.00, 1);
-INSERT INTO ScreeningCriteria (RequisitionId, CriteriaName, CriteriaType, RequiredValue, [Weight], IsMandatory) VALUES (@r12, N'Figma', N'Skill', N'Figma, Design System', 33.00, 0);
-INSERT INTO ScreeningCriteria (RequisitionId, CriteriaName, CriteriaType, RequiredValue, [Weight], IsMandatory) VALUES (@r13, N'Kinh nghiệm Product Owner/BA', N'Experience', N'>= 3 năm', 67.00, 1);
-INSERT INTO ScreeningCriteria (RequisitionId, CriteriaName, CriteriaType, RequiredValue, [Weight], IsMandatory) VALUES (@r13, N'Scrum', N'Skill', N'Scrum, viết user story', 33.00, 0);
-INSERT INTO ScreeningCriteria (RequisitionId, CriteriaName, CriteriaType, RequiredValue, [Weight], IsMandatory) VALUES (@r14, N'Sinh viên ngành CNTT / Toán tin', N'Education', N'Năm 3 trở lên', 50.00, 1);
-INSERT INTO ScreeningCriteria (RequisitionId, CriteriaName, CriteriaType, RequiredValue, [Weight], IsMandatory) VALUES (@r14, N'Tư duy logic & Kiểm thử cơ bản', N'Skill', N'Viết test case, tư duy logic', 50.00, 0);
-INSERT INTO ScreeningCriteria (RequisitionId, CriteriaName, CriteriaType, RequiredValue, [Weight], IsMandatory) VALUES (@r15, N'Kinh nghiệm phân tích tài chính', N'Experience', N'>= 2 năm', 50.00, 1);
-INSERT INTO ScreeningCriteria (RequisitionId, CriteriaName, CriteriaType, RequiredValue, [Weight], IsMandatory) VALUES (@r15, N'Kỹ năng Excel & Power BI', N'Skill', N'Excel, Power BI, mô hình tài chính', 30.00, 0);
-INSERT INTO ScreeningCriteria (RequisitionId, CriteriaName, CriteriaType, RequiredValue, [Weight], IsMandatory) VALUES (@r15, N'Bằng cấp chuyên ngành Tài chính / Kế toán', N'Education', N'Đại học chuyên ngành', 20.00, 1);
-INSERT INTO ScreeningCriteria (RequisitionId, CriteriaName, CriteriaType, RequiredValue, [Weight], IsMandatory) VALUES (@r16, N'Kinh nghiệm Data Engineer & ETL', N'Experience', N'>= 2 năm', 50.00, 1);
-INSERT INTO ScreeningCriteria (RequisitionId, CriteriaName, CriteriaType, RequiredValue, [Weight], IsMandatory) VALUES (@r16, N'Thành thạo SQL & Python', N'Skill', N'SQL Server/PostgreSQL, Python', 30.00, 1);
-INSERT INTO ScreeningCriteria (RequisitionId, CriteriaName, CriteriaType, RequiredValue, [Weight], IsMandatory) VALUES (@r16, N'Kiến thức Data Warehouse & Airflow', N'Skill', N'DWH, Apache Airflow', 20.00, 0);
-INSERT INTO ScreeningCriteria (RequisitionId, CriteriaName, CriteriaType, RequiredValue, [Weight], IsMandatory) VALUES (@r17, N'Kinh nghiệm Business Analyst phần mềm', N'Experience', N'>= 2 năm', 50.00, 1);
-INSERT INTO ScreeningCriteria (RequisitionId, CriteriaName, CriteriaType, RequiredValue, [Weight], IsMandatory) VALUES (@r17, N'Kỹ năng Use Case & BPMN', N'Skill', N'Use Case, User Story, BPMN', 30.00, 1);
-INSERT INTO ScreeningCriteria (RequisitionId, CriteriaName, CriteriaType, RequiredValue, [Weight], IsMandatory) VALUES (@r17, N'Trình độ Đại học', N'Education', N'Đại học', 20.00, 0);
-INSERT INTO ScreeningCriteria (RequisitionId, CriteriaName, CriteriaType, RequiredValue, [Weight], IsMandatory) VALUES (@r20, N'Kinh nghiệm bán hàng B2B phần mềm', N'Experience', N'>= 4 năm', 40.00, 1);
-INSERT INTO ScreeningCriteria (RequisitionId, CriteriaName, CriteriaType, RequiredValue, [Weight], IsMandatory) VALUES (@r20, N'Kinh nghiệm quản lý khách hàng lớn (Key Account)', N'Experience', N'>= 2 năm', 40.00, 1);
-INSERT INTO ScreeningCriteria (RequisitionId, CriteriaName, CriteriaType, RequiredValue, [Weight], IsMandatory) VALUES (@r20, N'Kỹ năng thương lượng & đàm phán cấp cao', N'Skill', N'Đàm phán hợp đồng, thuyết trình', 20.00, 0);
-INSERT INTO ScreeningCriteria (RequisitionId, CriteriaName, CriteriaType, RequiredValue, [Weight], IsMandatory) VALUES (@r21, N'Kinh nghiệm phân tích dữ liệu sản phẩm', N'Experience', N'>= 2 năm', 50.00, 1);
-INSERT INTO ScreeningCriteria (RequisitionId, CriteriaName, CriteriaType, RequiredValue, [Weight], IsMandatory) VALUES (@r21, N'Thành thạo SQL & BI Dashboard', N'Skill', N'SQL, Power BI hoặc Tableau', 30.00, 1);
-INSERT INTO ScreeningCriteria (RequisitionId, CriteriaName, CriteriaType, RequiredValue, [Weight], IsMandatory) VALUES (@r21, N'Phân tích phễu & A/B testing', N'Skill', N'A/B Testing, Funnel Analysis', 20.00, 0);
-INSERT INTO ScreeningCriteria (RequisitionId, CriteriaName, CriteriaType, RequiredValue, [Weight], IsMandatory) VALUES (@r22, N'Kinh nghiệm lập trình Solidity & Smart Contract', N'Experience', N'>= 2 năm', 60.00, 1);
-INSERT INTO ScreeningCriteria (RequisitionId, CriteriaName, CriteriaType, RequiredValue, [Weight], IsMandatory) VALUES (@r22, N'Kiến thức Web3 & tích hợp ví điện tử', N'Skill', N'Web3.js, Ethers.js', 40.00, 0);
-INSERT INTO ScreeningCriteria (RequisitionId, CriteriaName, CriteriaType, RequiredValue, [Weight], IsMandatory) VALUES (@r23, N'Kinh nghiệm tổ chức sự kiện B2B', N'Experience', N'>= 2 năm', 60.00, 1);
-INSERT INTO ScreeningCriteria (RequisitionId, CriteriaName, CriteriaType, RequiredValue, [Weight], IsMandatory) VALUES (@r23, N'Kỹ năng điều phối & quản lý ngân sách sự kiện', N'Skill', N'Quản lý sự kiện, Điều phối vendor', 40.00, 0);
 
 -- =============================================================================
 -- 4.1 AUDIT LOG CHO JOB REQUISITION (Lịch sử thao tác cho các yêu cầu tuyển dụng)

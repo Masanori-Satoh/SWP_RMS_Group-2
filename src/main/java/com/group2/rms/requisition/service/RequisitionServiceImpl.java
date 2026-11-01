@@ -7,10 +7,8 @@ import com.group2.rms.jobposting.repository.JobPostingRepository;
 import com.group2.rms.notification.service.NotificationService;
 import com.group2.rms.requisition.dto.RequisitionRequest;
 import com.group2.rms.requisition.dto.RequisitionResponse;
-import com.group2.rms.requisition.dto.ScreeningCriteriaRequest;
 import com.group2.rms.requisition.entity.JobRequisition;
 import com.group2.rms.requisition.entity.RequisitionApproval;
-import com.group2.rms.requisition.entity.ScreeningCriteria;
 import com.group2.rms.requisition.exception.RequisitionValidationException;
 import com.group2.rms.requisition.repository.JobRequisitionRepository;
 import com.group2.rms.requisition.repository.RequisitionApprovalRepository;
@@ -26,14 +24,9 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Clock;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Set;
-import java.util.UUID;
 
 /*
  * SERVICE: nghiệp vụ yêu cầu tuyển dụng (tạo, sửa, xóa, duyệt, rút lại, sao chép, xem chi tiết).
@@ -95,10 +88,6 @@ public class RequisitionServiceImpl implements RequisitionService {
         requireCopyableSource(jobRequisition);
 
         RequisitionRequest copiedRequest = mapper.toEditForm(jobRequisition);
-        // Reset criteria IDs để khi tạo mới sẽ sinh bản ghi mới
-        for (ScreeningCriteriaRequest criterion : copiedRequest.getScreeningCriteria()) {
-            criterion.setCriteriaId(null);
-        }
 
         // Đợt kế tiếp chỉ để hiển thị; server tính lại khi lưu
         JobRequisition root = rootOf(jobRequisition);
@@ -133,25 +122,11 @@ public class RequisitionServiceImpl implements RequisitionService {
         requireNoOtherDraft(request, null,
                 "Bạn đang có một bản nháp cho vị trí này trong phòng ban. Vui lòng hoàn thiện bản nháp hiện có.");
 
-        // Rule: Tiêu chí mới không được chứa ID đã tồn tại
-        for (ScreeningCriteriaRequest criteriaRow : request.getScreeningCriteria()) {
-            if (criteriaRow.getCriteriaId() != null) {
-                throw createValidationException("screeningCriteria", "Tiêu chí mới không được tham chiếu bản ghi có sẵn.");
-            }
-        }
-
         JobRequisition jobRequisition = new JobRequisition();
         jobRequisition.setHiringManager(currentUser);
         jobRequisition.setCreatedBy(currentUser);
-        jobRequisition.setScreeningCriteria(new ArrayList<>());
         assignRecruitmentRound(jobRequisition, request, currentUser);
         applyDataToEntity(jobRequisition, request);
-
-        for (ScreeningCriteriaRequest criteriaRow : request.getScreeningCriteria()) {
-            if (!RequisitionValidator.isBlankCriteria(criteriaRow)) {
-                jobRequisition.getScreeningCriteria().add(buildCriterionEntity(jobRequisition, criteriaRow));
-            }
-        }
 
         // Rule: Xác định trạng thái ban đầu (Draft, Pending_Director hoặc Approved nếu Giám đốc gửi)
         applySavedStatus(jobRequisition, request.getAction(), currentUser);
@@ -194,7 +169,6 @@ public class RequisitionServiceImpl implements RequisitionService {
         requireNoOtherDraft(request, id, "Bạn đang có một bản nháp khác cho vị trí này trong phòng ban.");
 
         Map<String, String> before = auditLogger.snapshot(jobRequisition);
-        synchronizeCriteria(jobRequisition, request.getScreeningCriteria());
         applyDataToEntity(jobRequisition, request);
 
         // Rule: bản sao đổi tên vị trí hoặc phòng ban thì thành yêu cầu mới ở đợt 1
@@ -342,57 +316,6 @@ public class RequisitionServiceImpl implements RequisitionService {
         }
     }
 
-    private void synchronizeCriteria(JobRequisition jobRequisition, List<ScreeningCriteriaRequest> inputCriteriaList) {
-        // Bỏ các dòng tiêu chí để trống hoàn toàn
-        List<ScreeningCriteriaRequest> validCriteriaList = new ArrayList<>();
-        for (ScreeningCriteriaRequest criteriaRow : inputCriteriaList) {
-            if (!RequisitionValidator.isBlankCriteria(criteriaRow)) {
-                validCriteriaList.add(criteriaRow);
-            }
-        }
-
-        Map<Integer, ScreeningCriteria> existingCriteriaMap = new HashMap<>();
-        for (ScreeningCriteria criterion : jobRequisition.getScreeningCriteria()) {
-            existingCriteriaMap.put(criterion.getCriteriaId(), criterion);
-        }
-
-        // Rule: Chỉ sửa được tiêu chí của chính yêu cầu này; gom id các tiêu chí được giữ lại
-        Set<Integer> keptCriteriaIds = new HashSet<>();
-        for (ScreeningCriteriaRequest criteriaRow : validCriteriaList) {
-            Integer criteriaId = criteriaRow.getCriteriaId();
-            if (criteriaId == null) {
-                continue;
-            }
-            if (!existingCriteriaMap.containsKey(criteriaId)) {
-                throw createValidationException("screeningCriteria", "Một tiêu chí không thuộc về yêu cầu này.");
-            }
-            keptCriteriaIds.add(criteriaId);
-        }
-
-        boolean hasChanged = jobRequisition.getScreeningCriteria().removeIf(c -> !keptCriteriaIds.contains(c.getCriteriaId()));
-
-        // Giải phóng tên cũ tránh xung đột unique name trước khi chèn mới
-        for (ScreeningCriteriaRequest criteriaRow : validCriteriaList) {
-            ScreeningCriteria existingCriterion = existingCriteriaMap.get(criteriaRow.getCriteriaId());
-            if (existingCriterion != null && !Objects.equals(existingCriterion.getCriteriaName(), criteriaRow.getCriteriaName())) {
-                existingCriterion.setCriteriaName("__rename_" + UUID.randomUUID());
-                hasChanged = true;
-            }
-        }
-        if (hasChanged) {
-            requisitions.flush();
-        }
-
-        for (ScreeningCriteriaRequest criteriaRow : validCriteriaList) {
-            ScreeningCriteria existingCriterion = existingCriteriaMap.get(criteriaRow.getCriteriaId());
-            if (existingCriterion == null) {
-                jobRequisition.getScreeningCriteria().add(buildCriterionEntity(jobRequisition, criteriaRow));
-            } else {
-                copyCriterionProperties(existingCriterion, criteriaRow);
-            }
-        }
-    }
-
     /** Rule: bản sao cùng tên vị trí và phòng ban thì nối vào phiếu đợt 1, số đợt = max + 1; khác thì đợt 1. */
     private void assignRecruitmentRound(JobRequisition jobRequisition, RequisitionRequest request, User currentUser) {
         if (request.getOriginalRequisitionId() == null) {
@@ -473,21 +396,6 @@ public class RequisitionServiceImpl implements RequisitionService {
         approvals.save(approval);
         notificationService.notifyRequisitionApproved(approval);
         return true;
-    }
-
-    private ScreeningCriteria buildCriterionEntity(JobRequisition jobRequisition, ScreeningCriteriaRequest criterionRequest) {
-        ScreeningCriteria criterion = new ScreeningCriteria();
-        criterion.setRequisition(jobRequisition);
-        copyCriterionProperties(criterion, criterionRequest);
-        return criterion;
-    }
-
-    private void copyCriterionProperties(ScreeningCriteria criterion, ScreeningCriteriaRequest source) {
-        criterion.setCriteriaName(source.getCriteriaName());
-        criterion.setCriteriaType(source.getCriteriaType());
-        criterion.setRequiredValue(source.getRequiredValue());
-        criterion.setWeight(source.getWeight());
-        criterion.setIsMandatory(Boolean.TRUE.equals(source.getIsMandatory()));
     }
 
     private void applyDataToEntity(JobRequisition jobRequisition, RequisitionRequest request) {

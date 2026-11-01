@@ -1,7 +1,6 @@
 package com.group2.rms.requisition.validator;
 
 import com.group2.rms.requisition.dto.RequisitionRequest;
-import com.group2.rms.requisition.dto.ScreeningCriteriaRequest;
 import com.group2.rms.requisition.exception.RequisitionValidationException;
 
 import lombok.RequiredArgsConstructor;
@@ -9,14 +8,9 @@ import org.springframework.stereotype.Component;
 
 import java.math.BigDecimal;
 import java.time.Clock;
-import java.time.LocalDate;
-import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
-import java.util.Set;
 
 /**
  * Validator nghiệp vụ cho Yêu cầu tuyển dụng (Job Requisition).
@@ -33,7 +27,6 @@ public class RequisitionValidator {
     public static final int TITLE_CHAR_LIMIT = 200;
     public static final int TEXT_FIELD_CHAR_LIMIT = 2000;
     public static final int SHORT_FIELD_CHAR_LIMIT = 255;
-    public static final int CRITERIA_NAME_CHAR_LIMIT = 150;
     public static final int COMMENT_CHAR_LIMIT = 1000;
     public static final String PLACEHOLDER_TITLE = "Untitled requisition";
     public static final int PROBATION_MIN_DAYS = 1;
@@ -42,25 +35,18 @@ public class RequisitionValidator {
     public static final int POSITIONS_MAX = 30;
     public static final String SALARY_MAX_TEXT = "1000000000";
     public static final BigDecimal SALARY_MAX = new BigDecimal(SALARY_MAX_TEXT);
-    public static final int MAX_CRITERIA_LIMIT = 50;
-    /** Trọng số tối đa của một tiêu chí và tổng trọng số khi gửi duyệt (%). */
-    public static final String WEIGHT_MAX_TEXT = "100";
-    public static final BigDecimal REQUIRED_TOTAL_WEIGHT = new BigDecimal(WEIGHT_MAX_TEXT);
 
     // Câu lỗi dùng chung cho annotation trên DTO và validate()
     public static final String TITLE_TOO_LONG = "Nội dung quá " + TITLE_CHAR_LIMIT + " ký tự";
     public static final String SHORT_FIELD_TOO_LONG = "Nội dung quá " + SHORT_FIELD_CHAR_LIMIT + " ký tự";
-    public static final String CRITERIA_NAME_TOO_LONG = "Nội dung quá " + CRITERIA_NAME_CHAR_LIMIT + " ký tự";
     public static final String PROBATION_RANGE_MESSAGE = "Thời gian thử việc phải từ " + PROBATION_MIN_DAYS + " đến "
             + PROBATION_MAX_DAYS + " ngày.";
     public static final String POSITIONS_RANGE_MESSAGE = "Số lượng cần tuyển phải từ " + POSITIONS_MIN + " đến "
             + POSITIONS_MAX + " người.";
     public static final String SALARY_FORMAT_MESSAGE = "Mức lương phải lớn hơn 0 với tối đa 2 chữ số thập phân.";
     public static final String SALARY_MAX_MESSAGE = "Mức lương không được vượt quá 1.000.000.000 VND/tháng.";
-    public static final String WEIGHT_MESSAGE = "Trọng số phải từ 0.01 đến 100 với tối đa hai chữ số thập phân.";
 
     public static final List<String> EMPLOYMENT_TYPES = List.of("Full-time", "Part-time", "Internship", "Contract");
-    public static final List<String> CRITERIA_TYPES = List.of("Education", "Experience", "Skill", "Knockout");
     public static final List<String> GENDERS = List.of("Any", "Male", "Female");
     public static final List<String> WORK_MODELS = List.of("On-site", "Remote", "Hybrid");
     public static final String GENDER_ANY = "Any";
@@ -144,73 +130,6 @@ public class RequisitionValidator {
             errors.put("maxSalary", "Mức lương tối đa phải lớn hơn hoặc bằng mức lương tối thiểu.");
         }
 
-        // Rule: Kiểm tra danh sách tiêu chí sàng lọc AI
-        if (requisitionRequest.getScreeningCriteria() == null) {
-            requisitionRequest.setScreeningCriteria(new ArrayList<>());
-        }
-        if (requisitionRequest.getScreeningCriteria().size() > MAX_CRITERIA_LIMIT) {
-            errors.put("screeningCriteria", "Chỉ được thêm tối đa " + MAX_CRITERIA_LIMIT + " tiêu chí.");
-        }
-
-        Set<String> criteriaNames = new HashSet<>();
-        Set<Integer> criteriaIds = new HashSet<>();
-        BigDecimal totalWeight = BigDecimal.ZERO;
-        int validCriteriaCount = 0;
-
-        for (int index = 0; index < requisitionRequest.getScreeningCriteria().size(); index++) {
-            ScreeningCriteriaRequest criteriaRow = requisitionRequest.getScreeningCriteria().get(index);
-            String fieldPrefix = "screeningCriteria[" + index + "].";
-
-            if (criteriaRow == null) {
-                errors.put("screeningCriteria", "Tiêu chí không hợp lệ.");
-                continue;
-            }
-
-            criteriaRow.setCriteriaName(cleanString(criteriaRow.getCriteriaName()));
-            criteriaRow.setCriteriaType(cleanString(criteriaRow.getCriteriaType()));
-            criteriaRow.setRequiredValue(cleanString(criteriaRow.getRequiredValue()));
-
-            // Nếu là bản nháp và dòng tiêu chí trống thì bỏ qua
-            if (isBlankCriteria(criteriaRow) && !isSubmitAction) {
-                continue;
-            }
-
-            validCriteriaCount++;
-            // Rule: dòng tiêu chí đã bắt đầu nhập thì phải điền đủ, kể cả khi lưu nháp
-            validateTextField(errors, fieldPrefix + "criteriaName", criteriaRow.getCriteriaName(),
-                    CRITERIA_NAME_CHAR_LIMIT, true);
-            validateTextField(errors, fieldPrefix + "requiredValue", criteriaRow.getRequiredValue(),
-                    SHORT_FIELD_CHAR_LIMIT, true);
-            validateChoiceField(errors, fieldPrefix + "criteriaType", criteriaRow.getCriteriaType(), CRITERIA_TYPES,
-                    true);
-
-            // Rule: Tên các tiêu chí sàng lọc không được trùng lặp
-            if (criteriaRow.getCriteriaName() != null
-                    && !criteriaNames.add(criteriaRow.getCriteriaName().toLowerCase(Locale.ROOT))) {
-                errors.put(fieldPrefix + "criteriaName", "Tên các tiêu chí không được trùng nhau.");
-            }
-            if (criteriaRow.getCriteriaId() != null && !criteriaIds.add(criteriaRow.getCriteriaId())) {
-                errors.put(fieldPrefix + "criteriaName", "Tiêu chí đã được gửi hai lần.");
-            }
-
-            // Rule: trọng số mỗi tiêu chí 0.01–100%, tối đa 2 chữ số thập phân (cả khi lưu nháp)
-            BigDecimal weight = criteriaRow.getWeight();
-            if (weight == null) {
-                errors.put(fieldPrefix + "weight", "Vui lòng nhập trọng số.");
-            } else {
-                if (weight.signum() <= 0 || weight.compareTo(REQUIRED_TOTAL_WEIGHT) > 0
-                        || weight.stripTrailingZeros().scale() > 2) {
-                    errors.put(fieldPrefix + "weight", WEIGHT_MESSAGE);
-                }
-                totalWeight = totalWeight.add(weight);
-            }
-        }
-
-        // Rule: gửi duyệt phải có ít nhất 1 tiêu chí và tổng trọng số đúng 100%
-        if (isSubmitAction && (validCriteriaCount == 0 || totalWeight.compareTo(REQUIRED_TOTAL_WEIGHT) != 0)) {
-            errors.put("screeningCriteria", "Vui lòng thêm đầy đủ tiêu chí với tổng trọng số đúng bằng 100%.");
-        }
-
         if (!errors.isEmpty()) {
             throw new RequisitionValidationException(errors);
         }
@@ -223,13 +142,6 @@ public class RequisitionValidator {
     public static String cleanMultiline(String textValue) {
         String cleaned = cleanString(textValue);
         return cleaned == null ? null : cleaned.replace("\r\n", "\n");
-    }
-
-    public static boolean isBlankCriteria(ScreeningCriteriaRequest criteria) {
-        return cleanString(criteria.getCriteriaName()) == null
-                && cleanString(criteria.getCriteriaType()) == null
-                && cleanString(criteria.getRequiredValue()) == null
-                && !Boolean.TRUE.equals(criteria.getIsMandatory());
     }
 
     private void validateTextField(Map<String, String> errorsMap, String fieldKey, String textValue, int maxLength,

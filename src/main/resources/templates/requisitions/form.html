@@ -284,127 +284,6 @@
                         </div>
                     </section>
 
-                    <!-- ===== 4. TIÊU CHÍ SÀNG LỌC HỒ SƠ ===== -->
-                    <section class="rqf-section" id="rqf-criteria" aria-labelledby="rqf-h-criteria">
-                        <div class="rqf-section-head">
-                            <h2 id="rqf-h-criteria">Tiêu chí sàng lọc hồ sơ <span class="required-asterisk">*</span>
-                            </h2>
-                            <p class="rqf-hint">AI dùng các tiêu chí này để chấm điểm CV. Tổng trọng số phải đúng 100%
-                                khi gửi duyệt.</p>
-                        </div>
-                        <small class="field-error"
-                            th:text="${#fields.hasErrors('screeningCriteria')} ? ${#strings.listJoin(#fields.errors('screeningCriteria'), '; ')} : ''"></small>
-
-                        <div class="table-wrapper" role="region" aria-label="Bảng tiêu chí sàng lọc" tabindex="0">
-                            <table class="rqf-criteria adw-data-table">
-                                <thead>
-                                    <tr>
-                                        <th scope="col">#</th>
-                                        <th scope="col">Tiêu chí <span class="required-asterisk">*</span></th>
-                                        <th scope="col">Loại <span class="required-asterisk">*</span></th>
-                                        <th scope="col">Giá trị yêu cầu <span class="required-asterisk">*</span></th>
-                                        <th scope="col">Trọng số (%) <span class="required-asterisk">*</span></th>
-                                        <th scope="col">Bắt buộc</th>
-                                        <th scope="col"><span class="sr-only">Xóa</span></th>
-                                    </tr>
-                                </thead>
-                                <tbody id="criteria-rows">
-                                    <tr th:each="criterion, row : *{screeningCriteria}">
-                                        <td class="row-index" th:text="${row.count}">1</td>
-                                        <td>
-                                            <input type="hidden"
-                                                th:field="*{screeningCriteria[__${row.index}__].criteriaId}">
-                                            <input class="form-input"
-                                                th:field="*{screeningCriteria[__${row.index}__].criteriaName}"
-                                                placeholder="VD: Kinh nghiệm Java" maxlength="150">
-                                        </td>
-                                        <td>
-                                            <select class="form-select"
-                                                th:field="*{screeningCriteria[__${row.index}__].criteriaType}">
-                                                <option value="">Chọn loại</option>
-                                                <option value="Education">Học vấn</option>
-                                                <option value="Experience">Kinh nghiệm</option>
-                                                <option value="Skill">Kỹ năng</option>
-                                                <option value="Knockout">Điều kiện loại trừ</option>
-                                            </select>
-                                        </td>
-                                        <td>
-                                            <input class="form-input"
-                                                th:field="*{screeningCriteria[__${row.index}__].requiredValue}"
-                                                placeholder="VD: ≥ 3 năm" maxlength="255">
-                                        </td>
-                                        <td>
-                                            <input class="form-input rqf-weight" type="number"
-                                                th:field="*{screeningCriteria[__${row.index}__].weight}" min="0.01"
-                                                max="100" step="0.01" inputmode="decimal">
-                                        </td>
-                                        <td>
-                                            <label class="rqf-switch">
-                                                <input type="checkbox"
-                                                    th:field="*{screeningCriteria[__${row.index}__].isMandatory}">
-                                                <span aria-hidden="true"></span>
-                                            </label>
-                                        </td>
-                                        <td>
-                                            <button type="button" class="rqf-remove" data-remove-criterion
-                                                aria-label="Xóa tiêu chí">×</button>
-                                        </td>
-                                    </tr>
-                                </tbody>
-                            </table>
-                        </div>
-
-                        <!-- Mẫu một dòng tiêu chí mới: JS sao chép khi bấm "+ Thêm tiêu chí" rồi đánh lại chỉ số [0], [1]... -->
-                        <template id="criteria-template">
-                            <tr>
-                                <td class="row-index"></td>
-                                <td>
-                                    <input type="hidden" name="screeningCriteria[__INDEX__].criteriaId">
-                                    <input class="form-input" name="screeningCriteria[__INDEX__].criteriaName"
-                                        placeholder="VD: Kinh nghiệm Java" maxlength="150">
-                                </td>
-                                <td>
-                                    <select class="form-select" name="screeningCriteria[__INDEX__].criteriaType">
-                                        <option value="">Chọn loại</option>
-                                        <option value="Education">Học vấn</option>
-                                        <option value="Experience">Kinh nghiệm</option>
-                                        <option value="Skill">Kỹ năng</option>
-                                        <option value="Knockout">Điều kiện loại trừ</option>
-                                    </select>
-                                </td>
-                                <td><input class="form-input" name="screeningCriteria[__INDEX__].requiredValue"
-                                        placeholder="VD: ≥ 3 năm" maxlength="255"></td>
-                                <td><input class="form-input rqf-weight" type="number"
-                                        name="screeningCriteria[__INDEX__].weight" min="0.01" max="100" step="0.01"
-                                        inputmode="decimal"></td>
-                                <td>
-                                    <label class="rqf-switch">
-                                        <input type="hidden" name="_screeningCriteria[__INDEX__].isMandatory"
-                                            value="on">
-                                        <input type="checkbox" name="screeningCriteria[__INDEX__].isMandatory"
-                                            value="true">
-                                        <span aria-hidden="true"></span>
-                                    </label>
-                                </td>
-                                <td><button type="button" class="rqf-remove" data-remove-criterion
-                                        aria-label="Xóa tiêu chí">×</button></td>
-                            </tr>
-                        </template>
-
-                        <button type="button" class="btn btn--outline btn--sm rqf-add" id="btn-add-criteria">+ Thêm tiêu
-                            chí</button>
-
-                        <!-- Tổng trọng số cập nhật ngay khi gõ (JS); server vẫn kiểm tra lại đúng 100% khi gửi duyệt -->
-                        <div class="rqf-weight-box" id="rqf-weight-box" aria-live="polite">
-                            <div class="rqf-weight-top">
-                                <span>Tổng trọng số: <strong id="rqf-weight-total">0%</strong> / 100%</span>
-                                <span id="rqf-weight-state"></span>
-                            </div>
-                            <div class="rqf-weight-bar"><span id="rqf-weight-fill"></span></div>
-                            <button type="button" class="rqf-link" id="rqf-split-weight">Chia đều trọng số</button>
-                        </div>
-                        <p class="field-error" id="criteria-error" role="alert" hidden></p>
-                    </section>
                 </div>
             </div>
 
@@ -412,7 +291,7 @@
             <aside class="rqf-rail" aria-label="Tình trạng biểu mẫu">
                 <section class="card rqf-rail-card adw-surface">
                     <h2 class="rqf-rail-title">Sẵn sàng gửi duyệt</h2>
-                    <p class="rqf-hint" id="rqf-progress">0/10 mục bắt buộc đã xong</p>
+                    <p class="rqf-hint" id="rqf-progress">0/9 mục bắt buộc đã xong</p>
                     <!-- JS điền danh sách: mỗi mục là link nhảy tới trường tương ứng -->
                     <ul class="rqf-checklist" id="rqf-checklist"></ul>
                 </section>
@@ -454,7 +333,7 @@
         <th:block th:replace="~{fragments/ui/admin-workspace :: scripts}"></th:block>
         <!-- text-limit.js: báo lỗi đỏ "Nội dung quá N ký tự" khi gõ / dán vượt maxlength -->
         <script th:src="@{/js/text-limit.js}" defer></script>
-        <!-- requisition-form.js: kiểm tra nhập liệu, bảng tiêu chí, checklist, bước xác nhận -->
+        <!-- requisition-form.js: kiểm tra nhập liệu, checklist, bước xác nhận -->
         <script th:src="@{/js/pages/requisition-form.js}" defer></script>
     </th:block>
 </body>

@@ -272,37 +272,6 @@ for req_id, dir_id, st, com, ap_dt in req_approvals:
     )
 lines.append("")
 
-# 8. SCREENING CRITERIA (3-4 per requisition, total 14)
-lines.append("-- =============================================================================")
-lines.append("-- 8. SCREENING CRITERIA (Weighted AI Screening Criteria for 4 Positions)")
-lines.append("-- =============================================================================")
-screening_criteria = [
-    # Req 1: Java
-    (1, "Trình độ Đại học chuyên ngành CNTT / Phần mềm", "Education", "Đại học", 1.00, 1),
-    (1, "Kinh nghiệm Java & Spring Boot", "Experience", ">= 3 năm", 2.00, 1),
-    (1, "Kiến thức SQL Server & Database Optimization", "Skill", "SQL Server, Redis", 1.50, 0),
-    (1, "Kiến thức Microservices & Docker", "Skill", "Docker, REST API", 1.00, 0),
-    # Req 2: React
-    (2, "Bằng cử nhân CNTT hoặc chứng chỉ lập trình Frontend uy tín", "Education", "Đại học / Cao đẳng", 1.00, 0),
-    (2, "Kinh nghiệm phát triển ReactJS & TypeScript", "Experience", ">= 2 năm", 2.00, 1),
-    (2, "Kỹ năng State Management & UI Component Styling", "Skill", "Redux/Zustand, CSS", 1.50, 0),
-    # Req 3: QA
-    (3, "Bằng cấp chuyên ngành CNTT hoặc Toán tin ứng dụng", "Education", "Đại học", 1.00, 0),
-    (3, "Kinh nghiệm Automation Test với Selenium/Playwright", "Experience", ">= 2 năm", 2.00, 1),
-    (3, "Kỹ năng kiểm thử API & Performance Testing", "Skill", "Postman, k6, JMeter", 1.50, 0),
-    (3, "Cam kết làm việc onsite tại Hà Nội", "Knockout", "Hà Nội", 1.00, 1),
-    # Req 4: Sales B2B
-    (4, "Tốt nghiệp Cao đẳng/Đại học chuyên ngành QTKD/Kinh tế/CNTT", "Education", "Cao đẳng / Đại học", 1.00, 0),
-    (4, "Kinh nghiệm Sales B2B giải pháp phần mềm", "Experience", ">= 1 năm", 2.00, 1),
-    (4, "Kỹ năng thuyết trình, đàm phán và giao tiếp tự tin", "Skill", "Giao tiếp, Đàm phán", 1.50, 1)
-]
-for r_id, c_name, c_type, req_val, weight, is_man in screening_criteria:
-    lines.append(
-        f"INSERT INTO ScreeningCriteria (RequisitionId, CriteriaName, CriteriaType, RequiredValue, [Weight], IsMandatory) "
-        f"VALUES ({r_id}, N'{c_name}', N'{c_type}', N'{req_val}', {weight:.2f}, {is_man});"
-    )
-lines.append("")
-
 # 9. JOB POSTING (4 Published postings)
 lines.append("-- =============================================================================")
 lines.append("-- 9. JOB POSTING (4 Published Job Postings Active from 2026-09-25 to 2026-12-31)")
@@ -752,7 +721,6 @@ lines.append("UNION ALL SELECT 'AuditLog', COUNT(*) FROM AuditLog")
 lines.append("UNION ALL SELECT 'SystemConfig', COUNT(*) FROM SystemConfig")
 lines.append("UNION ALL SELECT 'JobRequisition', COUNT(*) FROM JobRequisition")
 lines.append("UNION ALL SELECT 'RequisitionApproval', COUNT(*) FROM RequisitionApproval")
-lines.append("UNION ALL SELECT 'ScreeningCriteria', COUNT(*) FROM ScreeningCriteria")
 lines.append("UNION ALL SELECT 'JobPosting', COUNT(*) FROM JobPosting")
 lines.append("UNION ALL SELECT 'Candidate', COUNT(*) FROM Candidate")
 lines.append("UNION ALL SELECT 'Application', COUNT(*) FROM Application")
@@ -775,7 +743,6 @@ lines.append("    IF (SELECT COUNT(*) FROM AuditLog) = 0 SET @EmptyTables = @Emp
 lines.append("    IF (SELECT COUNT(*) FROM SystemConfig) = 0 SET @EmptyTables = @EmptyTables + 1;")
 lines.append("    IF (SELECT COUNT(*) FROM JobRequisition) = 0 SET @EmptyTables = @EmptyTables + 1;")
 lines.append("    IF (SELECT COUNT(*) FROM RequisitionApproval) = 0 SET @EmptyTables = @EmptyTables + 1;")
-lines.append("    IF (SELECT COUNT(*) FROM ScreeningCriteria) = 0 SET @EmptyTables = @EmptyTables + 1;")
 lines.append("    IF (SELECT COUNT(*) FROM JobPosting) = 0 SET @EmptyTables = @EmptyTables + 1;")
 lines.append("    IF (SELECT COUNT(*) FROM Candidate) = 0 SET @EmptyTables = @EmptyTables + 1;")
 lines.append("    IF (SELECT COUNT(*) FROM Application) = 0 SET @EmptyTables = @EmptyTables + 1;")

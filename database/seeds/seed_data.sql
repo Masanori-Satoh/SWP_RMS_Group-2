@@ -96,24 +96,6 @@ INSERT INTO RequisitionApproval (RequisitionId, DirectorId, [Status], Comments, 
 INSERT INTO RequisitionApproval (RequisitionId, DirectorId, [Status], Comments, ApprovalDate) VALUES (4, 2, N'Approved', N'Phê duyệt mở 2 vị trí Business Development mở rộng tệp khách hàng B2B.', '2026-09-18 09:30:00');
 
 -- =============================================================================
--- 8. SCREENING CRITERIA (Weighted AI Screening Criteria for 4 Positions)
--- =============================================================================
-INSERT INTO ScreeningCriteria (RequisitionId, CriteriaName, CriteriaType, RequiredValue, [Weight], IsMandatory) VALUES (1, N'Trình độ Đại học chuyên ngành CNTT / Phần mềm', N'Education', N'Đại học', 18.00, 1);
-INSERT INTO ScreeningCriteria (RequisitionId, CriteriaName, CriteriaType, RequiredValue, [Weight], IsMandatory) VALUES (1, N'Kinh nghiệm Java & Spring Boot', N'Experience', N'>= 3 năm', 37.00, 1);
-INSERT INTO ScreeningCriteria (RequisitionId, CriteriaName, CriteriaType, RequiredValue, [Weight], IsMandatory) VALUES (1, N'Kiến thức SQL Server & Database Optimization', N'Skill', N'SQL Server, Redis', 27.00, 0);
-INSERT INTO ScreeningCriteria (RequisitionId, CriteriaName, CriteriaType, RequiredValue, [Weight], IsMandatory) VALUES (1, N'Kiến thức Microservices & Docker', N'Skill', N'Docker, REST API', 18.00, 0);
-INSERT INTO ScreeningCriteria (RequisitionId, CriteriaName, CriteriaType, RequiredValue, [Weight], IsMandatory) VALUES (2, N'Bằng cử nhân CNTT hoặc chứng chỉ lập trình Frontend uy tín', N'Education', N'Đại học / Cao đẳng', 22.00, 0);
-INSERT INTO ScreeningCriteria (RequisitionId, CriteriaName, CriteriaType, RequiredValue, [Weight], IsMandatory) VALUES (2, N'Kinh nghiệm phát triển ReactJS & TypeScript', N'Experience', N'>= 2 năm', 45.00, 1);
-INSERT INTO ScreeningCriteria (RequisitionId, CriteriaName, CriteriaType, RequiredValue, [Weight], IsMandatory) VALUES (2, N'Kỹ năng State Management & UI Component Styling', N'Skill', N'Redux/Zustand, CSS', 33.00, 0);
-INSERT INTO ScreeningCriteria (RequisitionId, CriteriaName, CriteriaType, RequiredValue, [Weight], IsMandatory) VALUES (3, N'Bằng cấp chuyên ngành CNTT hoặc Toán tin ứng dụng', N'Education', N'Đại học', 18.00, 0);
-INSERT INTO ScreeningCriteria (RequisitionId, CriteriaName, CriteriaType, RequiredValue, [Weight], IsMandatory) VALUES (3, N'Kinh nghiệm Automation Test với Selenium/Playwright', N'Experience', N'>= 2 năm', 37.00, 1);
-INSERT INTO ScreeningCriteria (RequisitionId, CriteriaName, CriteriaType, RequiredValue, [Weight], IsMandatory) VALUES (3, N'Kỹ năng kiểm thử API & Performance Testing', N'Skill', N'Postman, k6, JMeter', 27.00, 0);
-INSERT INTO ScreeningCriteria (RequisitionId, CriteriaName, CriteriaType, RequiredValue, [Weight], IsMandatory) VALUES (3, N'Cam kết làm việc onsite tại Hà Nội', N'Knockout', N'Hà Nội', 18.00, 1);
-INSERT INTO ScreeningCriteria (RequisitionId, CriteriaName, CriteriaType, RequiredValue, [Weight], IsMandatory) VALUES (4, N'Tốt nghiệp Cao đẳng/Đại học chuyên ngành QTKD/Kinh tế/CNTT', N'Education', N'Cao đẳng / Đại học', 22.00, 0);
-INSERT INTO ScreeningCriteria (RequisitionId, CriteriaName, CriteriaType, RequiredValue, [Weight], IsMandatory) VALUES (4, N'Kinh nghiệm Sales B2B giải pháp phần mềm', N'Experience', N'>= 1 năm', 45.00, 1);
-INSERT INTO ScreeningCriteria (RequisitionId, CriteriaName, CriteriaType, RequiredValue, [Weight], IsMandatory) VALUES (4, N'Kỹ năng thuyết trình, đàm phán và giao tiếp tự tin', N'Skill', N'Giao tiếp, Đàm phán', 33.00, 1);
-
--- =============================================================================
 -- 9. JOB POSTING (4 Published Job Postings Active from 2026-09-25 to 2026-12-31)
 -- =============================================================================
 INSERT INTO JobPosting (RequisitionId, PostingNo, PostingTitle, JobDescription, JobRequirements, Benefits, SalaryDisplay, NumberOfPositionsDisplay, WorkLocation, PostingDate, ApplicationDeadline, PostingStatus, CreatedBy, CreatedAt) VALUES (1, 1, N'Senior Java Backend Engineer (Spring Boot / Microservices)', N'Chúng tôi tìm kiếm Senior Java Engineer tham gia xây dựng nền tảng quản trị tuyển dụng và nhân sự RMS hiệu năng cao.', N'- Tối thiểu 3 năm làm việc với Java, Spring Boot, Hibernate
