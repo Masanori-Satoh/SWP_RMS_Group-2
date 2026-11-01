@@ -6,7 +6,7 @@
 -- Mật khẩu tài khoản mới: 12345678
 --
 -- Nội dung:
---   1. 2 phòng ban mới (Finance & Accounting, Product & Design) + 2 Hiring Manager
+--   1. 2 phòng ban mới (Tài chính – Kế toán, Sản phẩm & Thiết kế) + 2 Hiring Manager
 --   2. 19 requisition: 13 Approved, 2 Draft, 2 Pending_Director, 2 Rejected
 --   3. 12 tin tuyển dụng: 9 Published còn hạn (hiện trên Jobs Board), 1 Published đã hết hạn,
 --      1 Closed, 1 Paused; 1 requisition Approved chưa có tin (để HR tạo tin)
@@ -39,8 +39,8 @@ DECLARE @hrLan INT = (SELECT UserId FROM [User] WHERE Username = N'hr_lan');
 DECLARE @hrQuang INT = (SELECT UserId FROM [User] WHERE Username = N'hr_quang');
 DECLARE @hmTuan INT = (SELECT UserId FROM [User] WHERE Username = N'hm_tuan');
 DECLARE @hmHuong INT = (SELECT UserId FROM [User] WHERE Username = N'hm_huong');
-DECLARE @deptEng INT = (SELECT DepartmentId FROM Department WHERE DepartmentName = N'Engineering');
-DECLARE @deptSales INT = (SELECT DepartmentId FROM Department WHERE DepartmentName = N'Sales & Marketing');
+DECLARE @deptEng INT = (SELECT DepartmentId FROM Department WHERE DepartmentName = N'Kỹ thuật');
+DECLARE @deptSales INT = (SELECT DepartmentId FROM Department WHERE DepartmentName = N'Kinh doanh & Marketing');
 IF @roleHM IS NULL OR @director IS NULL OR @hrLan IS NULL OR @hrQuang IS NULL OR @hmTuan IS NULL
    OR @hmHuong IS NULL OR @deptEng IS NULL OR @deptSales IS NULL
     THROW 50001, N'Thiếu dữ liệu nền. Hãy chạy seed_data.sql trước.', 1;
@@ -49,9 +49,9 @@ IF @roleHM IS NULL OR @director IS NULL OR @hrLan IS NULL OR @hrQuang IS NULL OR
 -- 1. PHÒNG BAN MỚI + HIRING MANAGER
 -- =============================================================================
 DECLARE @deptFin INT, @deptProd INT, @hmKhanh INT, @hmTrang INT;
-INSERT INTO Department (DepartmentName, ManagerId, DepartmentStatus) VALUES (N'Finance & Accounting', NULL, N'Active');
+INSERT INTO Department (DepartmentName, ManagerId, DepartmentStatus) VALUES (N'Tài chính – Kế toán', NULL, N'Active');
 SET @deptFin = SCOPE_IDENTITY();
-INSERT INTO Department (DepartmentName, ManagerId, DepartmentStatus) VALUES (N'Product & Design', NULL, N'Active');
+INSERT INTO Department (DepartmentName, ManagerId, DepartmentStatus) VALUES (N'Sản phẩm & Thiết kế', NULL, N'Active');
 SET @deptProd = SCOPE_IDENTITY();
 INSERT INTO [User] (RoleId, Username, PasswordHash, Email, FullName, PhoneNumber, AvatarUrl, DepartmentId, AccountStatus, CreatedAt) VALUES (@roleHM, N'hm_khanh', @pwd, N'khanh.do@rms-tech.vn', N'Đỗ Minh Khánh', N'0906111222', N'https://ui-avatars.com/api/?name=Đỗ+Minh+Khánh&background=0D8ABC&color=fff', @deptFin, N'Active', '2026-09-01 09:00:00');
 SET @hmKhanh = SCOPE_IDENTITY();

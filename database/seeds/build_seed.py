@@ -112,7 +112,7 @@ lines.append("")
 lines.append("-- =============================================================================")
 lines.append("-- 2. DEPARTMENT (3 SME Departments)")
 lines.append("-- =============================================================================")
-depts = ["Engineering", "Sales & Marketing", "Human Resources"]
+depts = ["Kỹ thuật", "Kinh doanh & Marketing", "Nhân sự"]
 for d in depts:
     lines.append(f"INSERT INTO Department (DepartmentName, ManagerId, DepartmentStatus) VALUES (N'{d}', NULL, N'Active');")
 lines.append("")
@@ -157,7 +157,7 @@ for role_id, uname, email, fname, phone, dept_id, created_at in internal_users:
     )
 
 lines.append("")
-lines.append("-- Update Department Managers (Engineering -> hm_tuan (5), Sales -> hm_huong (6), HR -> director (2))")
+lines.append("-- Update Department Managers (Kỹ thuật -> hm_tuan (5), Kinh doanh & Marketing -> hm_huong (6), Nhân sự -> director (2))")
 lines.append("UPDATE Department SET ManagerId = 5 WHERE DepartmentId = 1;")
 lines.append("UPDATE Department SET ManagerId = 6 WHERE DepartmentId = 2;")
 lines.append("UPDATE Department SET ManagerId = 2 WHERE DepartmentId = 3;")
@@ -183,9 +183,9 @@ lines.append("-- 5. AUDIT LOG (18 SME System Activity Logs Prior to 2026-09-30)"
 lines.append("-- =============================================================================")
 audit_logs = [
     (1, "LOGIN", "User", "1", None, "User logged in successfully", "192.168.1.10", "2026-08-01 08:05:00"),
-    (1, "CREATE", "Department", "1", None, "Created Department Engineering", "192.168.1.10", "2026-08-01 08:10:00"),
-    (1, "CREATE", "Department", "2", None, "Created Department Sales & Marketing", "192.168.1.10", "2026-08-01 08:12:00"),
-    (1, "CREATE", "Department", "3", None, "Created Department Human Resources", "192.168.1.10", "2026-08-01 08:15:00"),
+    (1, "CREATE", "Department", "1", None, "Đã tạo phòng ban Kỹ thuật", "192.168.1.10", "2026-08-01 08:10:00"),
+    (1, "CREATE", "Department", "2", None, "Đã tạo phòng ban Kinh doanh & Marketing", "192.168.1.10", "2026-08-01 08:12:00"),
+    (1, "CREATE", "Department", "3", None, "Đã tạo phòng ban Nhân sự", "192.168.1.10", "2026-08-01 08:15:00"),
     (1, "CREATE", "User", "2", None, "Created director account", "192.168.1.10", "2026-08-01 08:35:00"),
     (2, "LOGIN", "User", "2", None, "Director initial login", "192.168.1.15", "2026-08-02 09:00:00"),
     (1, "CREATE", "SystemConfig", "AI_SCREENING_ENDPOINT", None, "Initialized AI endpoint", "192.168.1.10", "2026-09-01 08:05:00"),
@@ -593,7 +593,7 @@ for day_idx in range(num_days):
     # 6. Interview Flow (InterviewSchedule, InterviewPanel, InterviewEvaluation, InterviewFinalResult) (for Stage 3 & 4: ~30%)
     # UserId mapping:
     # HR: 3 (hr_lan), 4 (hr_quang)
-    # HM: 5 (hm_tuan - Engineering), 6 (hm_huong - Sales)
+    # HM: 5 (hm_tuan - Kỹ thuật), 6 (hm_huong - Kinh doanh & Marketing)
     # Interviewer: 7 (interviewer_nam - Java), 8 (interviewer_viet - Frontend), 9 (interviewer_thao - QA), 10 (interviewer_trung - Sales)
     # Director: 2 (director)
     for c in day_cands:

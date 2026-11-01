@@ -28,9 +28,9 @@ INSERT INTO [Role] (RoleName, [Description]) VALUES (N'Candidate', N'Ứng viên
 -- =============================================================================
 -- 2. DEPARTMENT (3 SME Departments)
 -- =============================================================================
-INSERT INTO Department (DepartmentName, ManagerId, DepartmentStatus) VALUES (N'Engineering', NULL, N'Active');
-INSERT INTO Department (DepartmentName, ManagerId, DepartmentStatus) VALUES (N'Sales & Marketing', NULL, N'Active');
-INSERT INTO Department (DepartmentName, ManagerId, DepartmentStatus) VALUES (N'Human Resources', NULL, N'Active');
+INSERT INTO Department (DepartmentName, ManagerId, DepartmentStatus) VALUES (N'Kỹ thuật', NULL, N'Active');
+INSERT INTO Department (DepartmentName, ManagerId, DepartmentStatus) VALUES (N'Kinh doanh & Marketing', NULL, N'Active');
+INSERT INTO Department (DepartmentName, ManagerId, DepartmentStatus) VALUES (N'Nhân sự', NULL, N'Active');
 
 -- =============================================================================
 -- 3. INTERNAL USERS (12 Accounts: Admin, Director, 2 HR, 2 HM, 2 Interviewers, 4 Interviewers-role)
@@ -48,7 +48,7 @@ INSERT INTO [User] (RoleId, Username, PasswordHash, Email, FullName, PhoneNumber
 INSERT INTO [User] (RoleId, Username, PasswordHash, Email, FullName, PhoneNumber, AvatarUrl, DepartmentId, AccountStatus, CreatedAt) VALUES (5, N'interviewer_thao', N'$2a$10$p.RWJeHxArmCbQBg3GNXEew66veoolEXULwkrjzeoof8Me1dAD8PO', N'thao.ngo@rms-tech.vn', N'Ngô Phương Thảo', N'0909012345', N'https://ui-avatars.com/api/?name=Ngô+Phương+Thảo&background=0D8ABC&color=fff', 1, N'Active', '2026-08-15 09:30:00');
 INSERT INTO [User] (RoleId, Username, PasswordHash, Email, FullName, PhoneNumber, AvatarUrl, DepartmentId, AccountStatus, CreatedAt) VALUES (5, N'interviewer_trung', N'$2a$10$p.RWJeHxArmCbQBg3GNXEew66veoolEXULwkrjzeoof8Me1dAD8PO', N'trung.dang@rms-tech.vn', N'Đặng Thành Trung', N'0909123456', N'https://ui-avatars.com/api/?name=Đặng+Thành+Trung&background=0D8ABC&color=fff', 2, N'Active', '2026-08-15 10:00:00');
 
--- Update Department Managers (Engineering -> hm_tuan (5), Sales -> hm_huong (6), HR -> director (2))
+-- Update Department Managers (Kỹ thuật -> hm_tuan (5), Kinh doanh & Marketing -> hm_huong (6), Nhân sự -> director (2))
 UPDATE Department SET ManagerId = 5 WHERE DepartmentId = 1;
 UPDATE Department SET ManagerId = 6 WHERE DepartmentId = 2;
 UPDATE Department SET ManagerId = 2 WHERE DepartmentId = 3;
@@ -65,9 +65,9 @@ INSERT INTO SystemConfig (ConfigKey, ConfigValue, [Description], UpdatedAt) VALU
 -- 5. AUDIT LOG (18 SME System Activity Logs Prior to 2026-09-30)
 -- =============================================================================
 INSERT INTO AuditLog (UserId, [Action], EntityName, EntityId, OldValue, NewValue, IpAddress, [Timestamp]) VALUES (1, N'LOGIN', N'User', N'1', NULL, N'User logged in successfully', N'192.168.1.10', '2026-08-01 08:05:00');
-INSERT INTO AuditLog (UserId, [Action], EntityName, EntityId, OldValue, NewValue, IpAddress, [Timestamp]) VALUES (1, N'CREATE', N'Department', N'1', NULL, N'Created Department Engineering', N'192.168.1.10', '2026-08-01 08:10:00');
-INSERT INTO AuditLog (UserId, [Action], EntityName, EntityId, OldValue, NewValue, IpAddress, [Timestamp]) VALUES (1, N'CREATE', N'Department', N'2', NULL, N'Created Department Sales & Marketing', N'192.168.1.10', '2026-08-01 08:12:00');
-INSERT INTO AuditLog (UserId, [Action], EntityName, EntityId, OldValue, NewValue, IpAddress, [Timestamp]) VALUES (1, N'CREATE', N'Department', N'3', NULL, N'Created Department Human Resources', N'192.168.1.10', '2026-08-01 08:15:00');
+INSERT INTO AuditLog (UserId, [Action], EntityName, EntityId, OldValue, NewValue, IpAddress, [Timestamp]) VALUES (1, N'CREATE', N'Department', N'1', NULL, N'Đã tạo phòng ban Kỹ thuật', N'192.168.1.10', '2026-08-01 08:10:00');
+INSERT INTO AuditLog (UserId, [Action], EntityName, EntityId, OldValue, NewValue, IpAddress, [Timestamp]) VALUES (1, N'CREATE', N'Department', N'2', NULL, N'Đã tạo phòng ban Kinh doanh & Marketing', N'192.168.1.10', '2026-08-01 08:12:00');
+INSERT INTO AuditLog (UserId, [Action], EntityName, EntityId, OldValue, NewValue, IpAddress, [Timestamp]) VALUES (1, N'CREATE', N'Department', N'3', NULL, N'Đã tạo phòng ban Nhân sự', N'192.168.1.10', '2026-08-01 08:15:00');
 INSERT INTO AuditLog (UserId, [Action], EntityName, EntityId, OldValue, NewValue, IpAddress, [Timestamp]) VALUES (1, N'CREATE', N'User', N'2', NULL, N'Created director account', N'192.168.1.10', '2026-08-01 08:35:00');
 INSERT INTO AuditLog (UserId, [Action], EntityName, EntityId, OldValue, NewValue, IpAddress, [Timestamp]) VALUES (2, N'LOGIN', N'User', N'2', NULL, N'Director initial login', N'192.168.1.15', '2026-08-02 09:00:00');
 INSERT INTO AuditLog (UserId, [Action], EntityName, EntityId, OldValue, NewValue, IpAddress, [Timestamp]) VALUES (1, N'CREATE', N'SystemConfig', N'AI_SCREENING_ENDPOINT', NULL, N'Initialized AI endpoint', N'192.168.1.10', '2026-09-01 08:05:00');
