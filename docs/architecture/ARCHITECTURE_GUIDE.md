@@ -208,7 +208,7 @@ Phân quyền URL nằm tập trung trong `core/config/SecurityConfig` (chưa d�
 | `/offers/**` | `HR`, `DIRECTOR` |
 | `/requisitions/**` | `HIRING_MANAGER`, `DIRECTOR`, `HR` |
 | `/internal/job-postings/*/close` | `HR` |
-| `/internal/job-postings/create`, `/internal/job-postings/dashboard` | `HR` |
+| `/internal/job-postings/create` | `HR` |
 | `GET /internal/job-postings`, `GET /internal/job-postings/*` (danh sách, chi tiết) | `HR`, `HIRING_MANAGER`, `DIRECTOR` (HM, Director không xem tin nháp; kiểm tra ở `JobPostingServiceImpl`) |
 | Mọi thao tác ghi còn lại `/internal/job-postings/**` | `HR` |
 | `/applications/**` | `HR`, `HIRING_MANAGER`, `DIRECTOR` |

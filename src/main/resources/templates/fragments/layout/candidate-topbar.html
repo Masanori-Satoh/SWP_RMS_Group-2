@@ -6,26 +6,34 @@
     FRAGMENTS/LAYOUT/CANDIDATE-TOPBAR.HTML
     =============================================================================
     Topbar của ứng viên trong layout/internal (dunglt chốt 2026-10-20; menu thêm 2026-10-27, ux.md mục 0):
-    ứng viên không có sidebar.
-      Logo (về /) | Vị trí tuyển dụng · Đơn của tôi | chuông + avatar (về /portal/profile) + Đăng xuất
-    Menu dùng chung với topbar công khai (fragments/layout/candidate-nav). "Đơn của tôi" sáng ở trang đơn, chi tiết
-    đơn, lịch phỏng vấn (/portal/interviews) và thư mời (/portal/offers): hai trang sau mở từ nút trên thẻ đơn.
-    .candidate-topbar__nav giãn (flex: 1) đẩy góc người dùng sang phải; màn hẹp xuống hàng thứ hai.
+    ứng viên không có sidebar. Kiểu "khối nổi" cùng topbar công khai (2026-10-31): hai đảo giống landing, /jobs
+      Đảo trái: logo (về /) | nút "Vị trí đang tuyển"     Đảo phải: chuông + avatar + Đăng xuất
+    Bỏ mục "Đơn của tôi" trên topbar (dunglt 31/10): trang chi tiết đơn có link quay lại riêng.
+    .public-topbar cố định và không nhận chuột (topbar.css); chỉ các đảo nhận chuột.
     CSS: static/css/candidate-shell.css (+ topbar.css qua workspace.css). Người dùng lấy từ topbarUser (TopbarUserAdvice).
     =============================================================================
 -->
   <header th:fragment="topbar(activeMenu)" class="public-topbar candidate-topbar" th:with="viewer=${topbarUser}">
     <div class="public-topbar__inner candidate-topbar__inner">
-      <a th:replace="~{fragments/brand :: wordmark('TUYỂN DỤNG')}"></a>
+      <div class="public-brand-island">
+        <a th:replace="~{fragments/brand :: wordmark('TUYỂN DỤNG')}"></a>
+        <span class="public-island-divider" aria-hidden="true"></span>
+        <nav class="candidate-topbar__nav" aria-label="Điều hướng ứng viên">
+          <a class="public-jobs-btn" th:href="@{/jobs}" title="Xem toàn bộ danh sách vị trí đang tuyển">
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <rect x="2" y="7" width="20" height="14" rx="2" ry="2"/>
+              <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/>
+            </svg>
+            <span>Vị trí đang tuyển</span>
+          </a>
+        </nav>
+      </div>
 
-      <nav class="candidate-topbar__nav" aria-label="Điều hướng ứng viên"
-           th:with="onMyApplications=${activeMenu == 'applications' or activeMenu == 'interviews' or activeMenu == 'offers'}">
-        <th:block th:replace="~{fragments/layout/candidate-nav :: links(${onMyApplications ? 'applications' : ''})}"></th:block>
-      </nav>
-
-      <div class="public-topbar__actions">
-        <div
-          th:replace="~{fragments/layout/topbar-user :: actions(${viewer.fullName}, ${viewer.email}, ${viewer.roleName}, ${viewer.avatarUrl}, 'workspace')}">
+      <div class="public-actions-cluster">
+        <div class="public-user-island">
+          <div
+            th:replace="~{fragments/layout/topbar-user :: actions(${viewer.fullName}, ${viewer.email}, ${viewer.roleName}, ${viewer.avatarUrl}, 'workspace')}">
+          </div>
         </div>
       </div>
     </div>

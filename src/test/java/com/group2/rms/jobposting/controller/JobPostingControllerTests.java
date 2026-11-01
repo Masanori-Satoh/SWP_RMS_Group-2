@@ -11,7 +11,7 @@ import com.group2.rms.jobposting.dto.InternalJobPostingDetailResponse;
 import com.group2.rms.jobposting.dto.InternalJobPostingDetailResponse.PostingRound;
 import com.group2.rms.jobposting.dto.InternalJobPostingDetailResponse.RecentApplication;
 import com.group2.rms.jobposting.dto.InternalJobPostingResponse;
-import com.group2.rms.jobposting.dto.JobPostingCreateRequest;
+import com.group2.rms.jobposting.dto.JobPostingRequest;
 import com.group2.rms.jobposting.dto.JobPostingFilterOptions;
 import com.group2.rms.jobposting.dto.JobPostingListResponse;
 import com.group2.rms.jobposting.dto.JobPostingSearchRequest;
@@ -236,16 +236,16 @@ class JobPostingControllerTests {
 
     @Test
     @WithMockUser(username = "hr_officer", roles = "HR")
-    @DisplayName("GET form tạo với requisitionId -> View form, có postingDto, giới hạn độ dài và 'hôm nay' từ validator")
+    @DisplayName("GET form tạo với requisitionId -> View form, có form, giới hạn độ dài và 'hôm nay' từ validator")
     void showCreateForm_shouldRenderForm_whenRequisitionIsValid() throws Exception {
-        JobPostingCreateRequest dto = JobPostingCreateRequest.builder().requisitionId(101).postingTitle("Java Developer")
+        JobPostingRequest dto = JobPostingRequest.builder().requisitionId(101).postingTitle("Java Developer")
                 .draftOrNew(true).build();
         when(service.prepareCreateForm(eq(101), any(User.class))).thenReturn(dto);
 
         mvc.perform(get(BASE + "/create").param("requisitionId", "101"))
                 .andExpect(status().isOk())
                 .andExpect(view().name("job-postings/create"))
-                .andExpect(model().attributeExists("postingDto", "requisitionChoices"))
+                .andExpect(model().attributeExists("form", "requisitionChoices"))
                 .andExpect(model().attribute("titleLimit", JobPostingValidator.TITLE_LIMIT))
                 .andExpect(model().attribute("today", LocalDate.of(2026, 10, 18)));
     }
@@ -279,7 +279,7 @@ class JobPostingControllerTests {
     @WithMockUser(username = "hr_officer", roles = "HR")
     @DisplayName("GET form sửa -> Dùng chung template form, không có ô 'Đổi yêu cầu'")
     void showEditForm_shouldRenderSharedForm() throws Exception {
-        JobPostingCreateRequest dto = JobPostingCreateRequest.builder().jobPostingId(99).requisitionId(101)
+        JobPostingRequest dto = JobPostingRequest.builder().jobPostingId(99).requisitionId(101)
                 .postingTitle("Java Developer").live(true).build();
         when(service.prepareEditForm(eq(99), any(User.class))).thenReturn(dto);
 
@@ -295,23 +295,23 @@ class JobPostingControllerTests {
     @DisplayName("POST tạo: lỗi theo ô từ service -> Hiện lại form, lỗi đúng ô; trường lạ (postingStatus, draftOrNew) bị bỏ qua")
     void createJobPosting_shouldRerenderFormWithFieldError_whenServiceRejects() throws Exception {
         // Arrange
-        when(service.createAndPublishJobPosting(any(JobPostingCreateRequest.class), any(User.class)))
+        when(service.createAndPublishJobPosting(any(JobPostingRequest.class), any(User.class)))
                 .thenThrow(new JobPostingValidationException(Map.of("applicationDeadline", "Vui lòng chọn hạn nộp hồ sơ.")));
-        when(service.restoreSourceInfo(any(JobPostingCreateRequest.class), any(User.class)))
+        when(service.restoreSourceInfo(any(JobPostingRequest.class), any(User.class)))
                 .thenAnswer(invocation -> invocation.getArgument(0));
 
         // Act + Assert
         mvc.perform(post(BASE + "/create").with(csrf())
                         .param("requisitionId", "101").param("postingTitle", "Java Developer")
-                        .param("salaryMode", JobPostingCreateRequest.SALARY_NEGOTIABLE)
+                        .param("salaryMode", JobPostingRequest.SALARY_NEGOTIABLE)
                         .param("action", JobPostingValidator.ACTION_PUBLISH)
                         // Không có trong whitelist của binder: không được nhận
                         .param("draftOrNew", "false").param("live", "true"))
                 .andExpect(status().isOk())
                 .andExpect(view().name("job-postings/create"))
-                .andExpect(model().attributeHasFieldErrors("postingDto", "applicationDeadline"));
+                .andExpect(model().attributeHasFieldErrors("form", "applicationDeadline"));
 
-        ArgumentCaptor<JobPostingCreateRequest> captor = ArgumentCaptor.forClass(JobPostingCreateRequest.class);
+        ArgumentCaptor<JobPostingRequest> captor = ArgumentCaptor.forClass(JobPostingRequest.class);
         verify(service).createAndPublishJobPosting(captor.capture(), any(User.class));
         assertFalse(captor.getValue().isLive(), "Trường trạng thái form do server tính, không nhận từ form");
     }
@@ -320,7 +320,7 @@ class JobPostingControllerTests {
     @WithMockUser(username = "hr_officer", roles = "HR")
     @DisplayName("POST tạo: tiêu đề TITLE_LIMIT + 1 ký tự (Bean Validation) -> Lỗi ở ô tiêu đề, không gọi service tạo")
     void createJobPosting_shouldRejectBeforeService_whenTitleIsTooLong() throws Exception {
-        when(service.restoreSourceInfo(any(JobPostingCreateRequest.class), any(User.class)))
+        when(service.restoreSourceInfo(any(JobPostingRequest.class), any(User.class)))
                 .thenAnswer(invocation -> invocation.getArgument(0));
 
         mvc.perform(post(BASE + "/create").with(csrf())
@@ -328,7 +328,7 @@ class JobPostingControllerTests {
                         .param("postingTitle", "a".repeat(JobPostingValidator.TITLE_LIMIT + 1)))
                 .andExpect(status().isOk())
                 .andExpect(view().name("job-postings/create"))
-                .andExpect(model().attributeHasFieldErrorCode("postingDto", "postingTitle", "Size"));
+                .andExpect(model().attributeHasFieldErrorCode("form", "postingTitle", "Size"));
         verify(service, never()).createJobPosting(any(), any());
         verify(service, never()).createAndPublishJobPosting(any(), any());
     }
@@ -337,7 +337,7 @@ class JobPostingControllerTests {
     @WithMockUser(username = "hr_officer", roles = "HR")
     @DisplayName("POST tạo (lưu nháp) -> Sang trang chi tiết tin, flash 'Đã lưu bản nháp'")
     void createJobPosting_shouldRedirectToDetail_whenDraftIsSaved() throws Exception {
-        when(service.createJobPosting(any(JobPostingCreateRequest.class), any(User.class))).thenReturn(55);
+        when(service.createJobPosting(any(JobPostingRequest.class), any(User.class))).thenReturn(55);
 
         mvc.perform(post(BASE + "/create").with(csrf())
                         .param("requisitionId", "101").param("action", JobPostingValidator.ACTION_DRAFT))
@@ -351,7 +351,7 @@ class JobPostingControllerTests {
     @WithMockUser(username = "hr_officer", roles = "HR")
     @DisplayName("POST tạo và đăng -> Flash thông báo ứng viên có thể nộp ngay")
     void createJobPosting_shouldShowPublishedMessage() throws Exception {
-        when(service.createAndPublishJobPosting(any(JobPostingCreateRequest.class), any(User.class))).thenReturn(56);
+        when(service.createAndPublishJobPosting(any(JobPostingRequest.class), any(User.class))).thenReturn(56);
 
         mvc.perform(post(BASE + "/create").with(csrf())
                         .param("requisitionId", "101").param("action", JobPostingValidator.ACTION_PUBLISH))
@@ -368,7 +368,7 @@ class JobPostingControllerTests {
                         .param("action", JobPostingValidator.ACTION_PUBLISH))
                 .andExpect(redirectedUrl(BASE + "/9"));
 
-        verify(service).updateAndPublishJobPosting(eq(9), any(JobPostingCreateRequest.class), eq(hrUser));
+        verify(service).updateAndPublishJobPosting(eq(9), any(JobPostingRequest.class), eq(hrUser));
         verify(service, never()).updateJobPosting(anyInt(), any(), any());
     }
 

@@ -23,7 +23,7 @@
      * 1. QUY TẮC KIỂM TRA TỪNG TRƯỜNG
      *    requiredForDraft: bắt buộc cả khi lưu nháp (cột NOT NULL trong DB)
      *    requiredForSubmit: bắt buộc khi gửi duyệt
-     *    check(value): kiểm tra định dạng, trả về câu lỗi hoặc '' nếu hợp lệ
+     *    errorOf(value): kiểm tra định dạng, trả về câu lỗi hoặc '' nếu hợp lệ
      * ------------------------------------------------------------------------- */
     // Ngày hôm nay dạng yyyy-MM-dd theo giờ máy người dùng.
     // Không dùng toISOString(): hàm đó trả ngày theo giờ UTC, từ 0h đến 7h sáng ở Việt Nam sẽ ra ngày hôm qua.
@@ -38,7 +38,7 @@
         {
             id: 'numberOfPositions', label: 'Số lượng', section: 'rqf-position', requiredForDraft: true,
             // Giới hạn đọc từ min/max của ô nhập (server truyền xuống từ RequisitionValidator.POSITIONS_MIN/MAX)
-            check: value => {
+            errorOf: value => {
                 const input = document.getElementById('numberOfPositions');
                 const min = Number(input.min) || 1;
                 const max = Number(input.max) || 30;
@@ -62,7 +62,7 @@
     }
 
     /** Lấy giá trị một trường; với nhóm radio thì lấy ô đang được chọn. */
-    function valueOf(rule) {
+    function readFieldValue(rule) {
         if (rule.radio) {
             const checked = form.querySelector(`input[name="${rule.id}"]:checked`);
             return checked ? checked.value : '';
@@ -86,7 +86,7 @@
 
     /** Kiểm tra một trường theo hành động (draft / submit). Trả về true nếu hợp lệ. */
     function validateField(rule, action) {
-        const value = valueOf(rule);
+        const value = readFieldValue(rule);
         const required = rule.requiredForDraft || (action === 'submit' && rule.requiredForSubmit);
         let message = '';
 
@@ -103,9 +103,9 @@
                 message = 'Vui lòng nhập trường này.';
             }
         } else if (value) {
-            // check: luôn kiểm tra; checkOnSubmit: chỉ kiểm tra khi gửi duyệt
-            message = (rule.check ? rule.check(value) : '')
-                || (action === 'submit' && rule.checkOnSubmit ? rule.checkOnSubmit(value) : '');
+            // errorOf: luôn kiểm tra; submitErrorOf: chỉ kiểm tra khi gửi duyệt
+            message = (rule.errorOf ? rule.errorOf(value) : '')
+                || (action === 'submit' && rule.submitErrorOf ? rule.submitErrorOf(value) : '');
         }
         showError(rule.id, message);
         return !message;
@@ -144,10 +144,10 @@
         input.setSelectionRange(newCursor, newCursor);
     }
 
-    function parseSalary(val) {
-        if (!val) return null;
+    function parseSalary(text) {
+        if (!text) return null;
         // Bỏ dấu chấm ngăn cách hàng nghìn: "20.000.000" → 20000000
-        const cleaned = String(val).replace(/\./g, '').trim();
+        const cleaned = String(text).replace(/\./g, '').trim();
         if (!cleaned) return null;
         const num = Number(cleaned);
         return isNaN(num) ? null : num;
@@ -270,14 +270,14 @@
         const counter = document.getElementById(textarea.id + '-count');
         if (!counter) return;
         const max = textarea.getAttribute('maxlength') || '2000';
-        const update = () => {
+        const updateCounter = () => {
             counter.textContent = `${textarea.value.length}/${max}`;
         };
-        textarea.addEventListener('input', update);
-        textarea.addEventListener('keyup', update);
-        textarea.addEventListener('change', update);
-        textarea.addEventListener('paste', () => setTimeout(update, 0));
-        update();
+        textarea.addEventListener('input', updateCounter);
+        textarea.addEventListener('keyup', updateCounter);
+        textarea.addEventListener('change', updateCounter);
+        textarea.addEventListener('paste', () => setTimeout(updateCounter, 0));
+        updateCounter();
     });
 
     /* -------------------------------------------------------------------------
@@ -397,9 +397,9 @@
      * ------------------------------------------------------------------------- */
     function refreshChecklist() {
         const isFieldDone = rule => {
-            const val = valueOf(rule);
-            if (!val) return false;
-            if (rule.check) return !rule.check(val);
+            const value = readFieldValue(rule);
+            if (!value) return false;
+            if (rule.errorOf) return !rule.errorOf(value);
             return true;
         };
         const items = FIELD_RULES.map(rule => ({ label: rule.label, target: rule.radio ? rule.id + '-group' : rule.id, done: isFieldDone(rule) }));

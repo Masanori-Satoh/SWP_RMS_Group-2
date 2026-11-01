@@ -1,0 +1,84 @@
+/* =============================================================================
+   PAGES/INTERVIEW-WORKSPACE.CSS — Module Interview dùng giao diện Admin workspace (adw-)
+   Nạp bởi: interview/list.html, interview/form.html, interview/result.html, interview/candidate-list.html
+   Cùng cách làm với Offer (offer-workspace.css): trang bật marker .adw-page, nhúng
+   fragments/ui/admin-workspace :: scene + scripts. Khung, tiêu đề adw-title, bề mặt adw-surface,
+   bảng adw-data-table đã có trong components.css; file này chỉ chỉnh bố cục riêng của Interview.
+   Chỉ dùng token (tokens.css), không màu hex, không !important.
+   Tiền tố class: ivw-
+   ============================================================================= */
+
+/* --- Tiêu đề trang: nút thao tác nằm cùng hàng, xuống hàng khi hẹp ------------------- */
+.ivw-heading .iv-header-actions {
+  margin-left: auto;
+}
+
+.ivw-heading .iv-header-actions .btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--s2);
+}
+
+/* --- Bề mặt dữ liệu: nền đặc, trạng thái rỗng cùng ngôn ngữ với các thẻ khác ----------- */
+.rms-app .ivw-page .iv-empty.adw-surface {
+  border-style: solid;
+  padding: var(--s8) var(--s6);
+}
+
+.rms-app .ivw-page .iv-empty__title {
+  font-family: var(--sans);
+  font-weight: 700;
+  color: var(--brand-dark);
+}
+
+/* --- Bảng lịch phỏng vấn của ứng viên: bảng cuộn trong khung, bo góc theo bề mặt ----------- */
+.rms-app .ivw-page .ivw-table-surface {
+  overflow-x: auto;
+  padding: 0;
+}
+
+.rms-app .ivw-page .ivw-table-surface .table {
+  margin: 0;
+}
+
+/* --- Danh sách lịch (HR/Director/HM/Interviewer): thẻ và khung lọc nổi trên nền workspace -- */
+.rms-app .ivw-page .il-filter,
+.rms-app .ivw-page .il-card {
+  background: var(--surface);
+}
+
+.rms-app .ivw-page .il-card {
+  transition: border-color .15s ease, box-shadow .15s ease;
+}
+
+.rms-app .ivw-page .il-card:hover {
+  border-color: var(--brand);
+  box-shadow: var(--shadow-lg);
+}
+
+/* --- Form tạo/sửa lịch: dàn đủ bề ngang workspace như form Offer, ô nhập vẫn đọc được ------ */
+.rms-app .ivw-page .if-form {
+  width: 100%;
+  padding: var(--s6);
+}
+
+.rms-app .ivw-page .if-form .form-actions {
+  margin-top: var(--s6);
+}
+
+/* --- Trang kết quả: tiêu đề thẻ và các thẻ cùng chuẩn bề mặt workspace ------------------- */
+.rms-app .ivw-page .ir-layout .card.adw-surface {
+  overflow: hidden;
+}
+
+@media (max-width: 768px) {
+  .rms-app .ivw-page .if-form {
+    padding: var(--s4);
+  }
+
+  .ivw-heading .iv-header-actions {
+    margin-left: 0;
+    width: 100%;
+  }
+}

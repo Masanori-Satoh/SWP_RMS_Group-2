@@ -17,6 +17,7 @@ import com.group2.rms.interview.service.InterviewSchedulingServiceImpl;
 import com.group2.rms.user.entity.Role;
 import com.group2.rms.user.entity.User;
 import com.group2.rms.user.repository.UserRepository;
+import com.group2.rms.notification.service.NotificationService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -27,6 +28,7 @@ import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
 class InterviewSchedulingServiceTests {
@@ -37,6 +39,7 @@ class InterviewSchedulingServiceTests {
     private UserRepository userRepository;
     private com.group2.rms.interview.service.InterviewTimeValidationService interviewTimeValidationService;
     private ApplicationStatusService applicationStatusService; // dunglt bổ sung
+    private NotificationService notificationService; // hoangnh bổ sung
     private InterviewSchedulingServiceImpl service;
 
     private User hrUser;
@@ -53,6 +56,7 @@ class InterviewSchedulingServiceTests {
         userRepository = mock(UserRepository.class);
         interviewTimeValidationService = new com.group2.rms.interview.service.InterviewTimeValidationService(interviewScheduleRepository);
         applicationStatusService = mock(ApplicationStatusService.class); // dunglt bổ sung
+        notificationService = mock(NotificationService.class); // hoangnh bổ sung
 
         service = new InterviewSchedulingServiceImpl(
                 interviewScheduleRepository,
@@ -60,7 +64,8 @@ class InterviewSchedulingServiceTests {
                 applicationRepository,
                 userRepository,
                 interviewTimeValidationService,
-                applicationStatusService // dunglt bổ sung
+                applicationStatusService, // dunglt bổ sung
+                notificationService // hoangnh bổ sung
         );
 
         hrUser = User.builder()
@@ -189,6 +194,7 @@ class InterviewSchedulingServiceTests {
         InterviewScheduleResponse response = service.updateSchedule(103L, request, 1);
 
         assertEquals(2, response.interviewers().size());
+        verify(notificationService).notifyInterviewRescheduled(existing, hrUser);
     }
 
     @Test
@@ -292,6 +298,7 @@ class InterviewSchedulingServiceTests {
         service.createSchedule(request, 1);
 
         verify(applicationStatusService).onInterviewScheduled(10);
+        verify(notificationService).notifyInterviewScheduled(any(InterviewSchedule.class), eq(hrUser));
 
         InterviewScheduleRequest selfAssigned = InterviewScheduleRequest.builder()
                 .applicationId(10)
@@ -302,7 +309,38 @@ class InterviewSchedulingServiceTests {
                 .build();
         assertThrows(InterviewStatusException.class, () -> service.createSchedule(selfAssigned, 1));
         verify(applicationStatusService, times(2)).requireScheduleable(application.getApplicationId());
-        verifyNoMoreInteractions(applicationStatusService);
+        verifyNoMoreInteractions(applicationStatusService, notificationService);
+    }
+
+    @Test
+    @DisplayName("Hủy lịch đang Scheduled -> Cancelled và báo hội đồng + ứng viên; lịch đã Completed -> lỗi, không báo")
+    void cancelScheduleNotifiesOnlyOnSuccess() {
+        InterviewSchedule scheduled = InterviewSchedule.builder()
+                .interviewId(300L)
+                .application(application)
+                .interviewStatus(InterviewStatus.Scheduled)
+                .startTime(LocalDateTime.now().plusDays(1))
+                .endTime(LocalDateTime.now().plusDays(1).plusHours(1))
+                .build();
+        when(interviewScheduleRepository.findByIdWithDetails(300L)).thenReturn(Optional.of(scheduled));
+        when(interviewScheduleRepository.save(any(InterviewSchedule.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        service.cancelSchedule(300L, "Ứng viên bận", 1);
+
+        assertEquals(InterviewStatus.Cancelled, scheduled.getInterviewStatus());
+        verify(notificationService).notifyInterviewCancelled(scheduled, hrUser, "Ứng viên bận");
+
+        InterviewSchedule completed = InterviewSchedule.builder()
+                .interviewId(301L)
+                .application(application)
+                .interviewStatus(InterviewStatus.Completed)
+                .startTime(LocalDateTime.now().minusDays(1))
+                .endTime(LocalDateTime.now().minusDays(1).plusHours(1))
+                .build();
+        when(interviewScheduleRepository.findByIdWithDetails(301L)).thenReturn(Optional.of(completed));
+
+        assertThrows(InterviewStatusException.class, () -> service.cancelSchedule(301L, "x", 1));
+        verifyNoMoreInteractions(notificationService);
     }
 
     @Test
@@ -384,6 +422,7 @@ class InterviewSchedulingServiceTests {
         assertThrows(InterviewStatusException.class, () ->
                 service.updateSchedule(200L, request, 1)
         );
+        verifyNoInteractions(notificationService);
     }
 
     @Test

@@ -8,10 +8,8 @@ import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.Objects;
 
-/**
- * Nơi duy nhất đổi giá trị của tin tuyển dụng (trạng thái, nhóm hạn nộp, dòng audit log) sang chữ tiếng Việt
- * và tông màu badge. Template chỉ đọc kết quả đã tính sẵn, không tự so sánh chuỗi trạng thái.
- * Giá trị trạng thái nằm ở JobPostingAccess (STATUS_*).
+/*
+ * LABELS: đổi giá trị của tin (trạng thái, hạn nộp, audit) sang chữ tiếng Việt và tông màu badge.
  */
 public final class JobPostingLabels {
 
@@ -71,17 +69,6 @@ public final class JobPostingLabels {
         };
     }
 
-    /** Class badge của trang Bảng điều khiển HR (hr-dashboard.css): hr-badge-published | draft | closed. */
-    public static String dashboardBadge(String viewStatus) {
-        if (JobPostingAccess.STATUS_PUBLISHED.equals(viewStatus)) {
-            return "hr-badge-published";
-        }
-        if (JobPostingAccess.STATUS_DRAFT.equals(viewStatus)) {
-            return "hr-badge-draft";
-        }
-        return "hr-badge-closed";
-    }
-
     public static String deadlineFilterLabel(String value) {
         if (value == null) {
             return "";
@@ -94,10 +81,7 @@ public final class JobPostingLabels {
         };
     }
 
-    /**
-     * Nhóm hạn nộp để tô màu cột / hiện cảnh báo: past (đã qua), soon (còn ≤ 7 ngày), open.
-     * Tin đã đóng hoặc không có hạn nộp → null (không tô màu, không nhắc "còn N ngày").
-     */
+    /** Nhóm hạn nộp past / soon / open; tin đã đóng hoặc không có hạn nộp thì null. */
     public static String deadlineState(String viewStatus, LocalDateTime deadline, LocalDateTime now) {
         if (deadline == null || JobPostingAccess.STATUS_CLOSED.equals(viewStatus)) {
             return null;

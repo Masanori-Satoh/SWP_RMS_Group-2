@@ -7,13 +7,12 @@ import com.group2.rms.candidate.talentpool.service.TalentPoolService;
 import com.group2.rms.core.dto.FilterOption;
 import com.group2.rms.core.exception.ResourceNotFoundException;
 import com.group2.rms.jobposting.dto.InternalJobPostingDetailResponse;
-import com.group2.rms.jobposting.dto.JobPostingCreateRequest;
-import com.group2.rms.jobposting.dto.JobPostingDashboardResponse;
+import com.group2.rms.jobposting.dto.JobPostingRequest;
 import com.group2.rms.jobposting.entity.JobPosting;
 import com.group2.rms.jobposting.exception.JobPostingValidationException;
 import com.group2.rms.jobposting.repository.JobPostingRepository;
 import com.group2.rms.jobposting.validator.JobPostingValidator;
-import com.group2.rms.notification.NotificationService;
+import com.group2.rms.notification.service.NotificationService;
 import com.group2.rms.requisition.entity.JobRequisition;
 import com.group2.rms.requisition.repository.JobRequisitionRepository;
 import com.group2.rms.requisition.service.RequisitionAccess;
@@ -43,7 +42,6 @@ import java.util.Optional;
 import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -115,13 +113,13 @@ class JobPostingServiceTests {
     // ----- Hàm hỗ trợ -----
 
     /** Form hợp lệ: lương thỏa thuận, không hiện số lượng, hạn nộp 30 ngày sau, đăng ngay. */
-    private static JobPostingCreateRequest validForm(String action) {
-        return JobPostingCreateRequest.builder()
+    private static JobPostingRequest validForm(String action) {
+        return JobPostingRequest.builder()
                 .requisitionId(101)
                 .postingTitle("Key Account Manager")
                 .jobDescription("Chăm sóc khách hàng")
                 .jobRequirements("2 năm kinh nghiệm")
-                .salaryMode(JobPostingCreateRequest.SALARY_NEGOTIABLE)
+                .salaryMode(JobPostingRequest.SALARY_NEGOTIABLE)
                 .showPositions(false)
                 .applicationDeadline(TODAY.plusDays(30))
                 .action(action)
@@ -140,8 +138,8 @@ class JobPostingServiceTests {
         return posting;
     }
 
-    private JobPostingCreateRequest editForm(int id, String action) {
-        JobPostingCreateRequest form = validForm(action);
+    private JobPostingRequest editForm(int id, String action) {
+        JobPostingRequest form = validForm(action);
         form.setJobPostingId(id);
         return form;
     }
@@ -176,8 +174,8 @@ class JobPostingServiceTests {
             // Arrange
             requisitionCanBeLocked();
             when(postings.findMaxPostingNo(101)).thenReturn(1);
-            JobPostingCreateRequest form = validForm(JobPostingValidator.ACTION_DRAFT);
-            form.setSalaryMode(JobPostingCreateRequest.SALARY_RANGE);
+            JobPostingRequest form = validForm(JobPostingValidator.ACTION_DRAFT);
+            form.setSalaryMode(JobPostingRequest.SALARY_RANGE);
             form.setNumberOfPositionsDisplay("99 người");
 
             // Act
@@ -247,7 +245,7 @@ class JobPostingServiceTests {
         @DisplayName("Đăng với hạn nộp hôm qua -> Lỗi theo ô, không lưu, không audit, không thông báo")
         void createAndPublishJobPosting_shouldReject_whenDeadlineIsInPast() {
             requisitionCanBeLocked();
-            JobPostingCreateRequest form = validForm(JobPostingValidator.ACTION_PUBLISH);
+            JobPostingRequest form = validForm(JobPostingValidator.ACTION_PUBLISH);
             form.setApplicationDeadline(TODAY.minusDays(1));
 
             JobPostingValidationException exception = assertThrows(JobPostingValidationException.class,
@@ -260,7 +258,7 @@ class JobPostingServiceTests {
         @Test
         @DisplayName("Form tạo bị sửa có jobPostingId (ID giả) -> Lỗi, không khóa yêu cầu")
         void createJobPosting_shouldReject_whenFormCarriesPostingId() {
-            JobPostingCreateRequest form = validForm(JobPostingValidator.ACTION_DRAFT);
+            JobPostingRequest form = validForm(JobPostingValidator.ACTION_DRAFT);
             form.setJobPostingId(999);
 
             assertThrows(JobPostingValidationException.class, () -> service.createJobPosting(form, hr));
@@ -281,7 +279,7 @@ class JobPostingServiceTests {
             // Arrange
             LocalDateTime postedAt = NOW.minusDays(5);
             JobPosting live = existingPosting(9, JobPostingAccess.STATUS_PUBLISHED, postedAt);
-            JobPostingCreateRequest form = editForm(9, JobPostingValidator.ACTION_DRAFT);
+            JobPostingRequest form = editForm(9, JobPostingValidator.ACTION_DRAFT);
             form.setPostingTitle("Key Account Manager (B2B)");
 
             // Act
@@ -313,7 +311,7 @@ class JobPostingServiceTests {
         void updateJobPosting_shouldKeepPausedOrReopen_dependingOnAction() {
             // Arrange
             JobPosting paused = existingPosting(11, JobPostingAccess.STATUS_PAUSED, NOW.minusDays(10));
-            JobPostingCreateRequest form = editForm(11, JobPostingValidator.ACTION_DRAFT);
+            JobPostingRequest form = editForm(11, JobPostingValidator.ACTION_DRAFT);
             form.setBenefits("- Lương tháng 13");
 
             // Act + Assert: lưu thay đổi
@@ -332,7 +330,7 @@ class JobPostingServiceTests {
         @DisplayName("Sửa tin đã đóng -> Lỗi, nội dung và trạng thái giữ nguyên, không lưu")
         void updateJobPosting_shouldReject_whenPostingIsClosed() {
             JobPosting closed = existingPosting(12, JobPostingAccess.STATUS_CLOSED, NOW.minusDays(40));
-            JobPostingCreateRequest form = editForm(12, JobPostingValidator.ACTION_DRAFT);
+            JobPostingRequest form = editForm(12, JobPostingValidator.ACTION_DRAFT);
             form.setPostingTitle("Đổi tiêu đề");
 
             assertThrows(JobPostingValidationException.class, () -> service.updateJobPosting(12, form, hr));
@@ -346,7 +344,7 @@ class JobPostingServiceTests {
         @DisplayName("Form sửa gửi requisitionId của yêu cầu khác (ID giả) -> Lỗi, không lưu")
         void updateJobPosting_shouldReject_whenRequisitionIdIsTampered() {
             existingPosting(13, JobPostingAccess.STATUS_DRAFT, null);
-            JobPostingCreateRequest form = editForm(13, JobPostingValidator.ACTION_DRAFT);
+            JobPostingRequest form = editForm(13, JobPostingValidator.ACTION_DRAFT);
             form.setRequisitionId(999);
 
             assertThrows(JobPostingValidationException.class, () -> service.updateJobPosting(13, form, hr));
@@ -413,10 +411,12 @@ class JobPostingServiceTests {
             JobPosting published = existingPosting(26, JobPostingAccess.STATUS_PUBLISHED, NOW.minusDays(1));
             service.pauseJobPosting(26, hr);
             assertEquals(JobPostingAccess.STATUS_PAUSED, published.getPostingStatus());
+            verify(notificationService).notifyJobPostingPaused(published, hr);
 
             JobPosting draft = existingPosting(27, JobPostingAccess.STATUS_DRAFT, null);
             assertThrows(JobPostingValidationException.class, () -> service.pauseJobPosting(27, hr));
             assertEquals(JobPostingAccess.STATUS_DRAFT, draft.getPostingStatus());
+            verify(notificationService, never()).notifyJobPostingPaused(draft, hr);
         }
 
         @Test
@@ -425,15 +425,19 @@ class JobPostingServiceTests {
             doThrow(new AccessDeniedException("x")).when(access).requireCloseAny(hr);
 
             assertThrows(AccessDeniedException.class, () -> service.closeJobPosting(28, hr));
-            verifyNoInteractions(talentPoolService);
+            verifyNoInteractions(talentPoolService, notificationService);
         }
 
         @Test
-        @DisplayName("HR đóng tin -> Giao cho TalentPoolService#closeJob")
+        @DisplayName("HR đóng tin -> Giao cho TalentPoolService#closeJob rồi báo HM")
         void closeJobPosting_shouldDelegateToTalentPool_whenViewerIsHr() {
+            JobPosting posting = existingPosting(28, JobPostingAccess.STATUS_PUBLISHED, NOW.minusDays(1));
+
             service.closeJobPosting(28, hr);
 
-            verify(talentPoolService).closeJob(28);
+            InOrder order = inOrder(talentPoolService, notificationService);
+            order.verify(talentPoolService).closeJob(28);
+            order.verify(notificationService).notifyJobPostingClosed(posting, hr);
         }
 
         @Test
@@ -549,7 +553,7 @@ class JobPostingServiceTests {
             when(requisitions.findById(101)).thenReturn(Optional.of(requisition));
             when(postings.findMaxPostingNo(101)).thenReturn(1);
 
-            JobPostingCreateRequest form = service.prepareCreateForm(101, hr);
+            JobPostingRequest form = service.prepareCreateForm(101, hr);
 
             assertEquals(2, form.getPostingNo());
             assertEquals("Key Account Manager", form.getPostingTitle());
@@ -576,12 +580,12 @@ class JobPostingServiceTests {
             when(postings.findMaxPostingNo(101)).thenReturn(2);
 
             // Act
-            JobPostingCreateRequest form = service.prepareRepostForm(50, hr);
+            JobPostingRequest form = service.prepareRepostForm(50, hr);
 
             // Assert
             assertNull(form.getJobPostingId(), "Là tin mới");
             assertEquals(3, form.getPostingNo());
-            assertEquals(JobPostingCreateRequest.SALARY_CUSTOM, form.getSalaryMode());
+            assertEquals(JobPostingRequest.SALARY_CUSTOM, form.getSalaryMode());
             assertEquals("- Lương tháng 13", form.getBenefits());
 
             existingPosting(51, JobPostingAccess.STATUS_PAUSED, NOW.minusDays(3));
@@ -619,32 +623,6 @@ class JobPostingServiceTests {
             assertEquals("Tester · REQ-0102", choices.get(1).label());
             verify(postings, times(1)).findMaxPostingNoByRequisitionIds(anyCollection());
             verify(postings, never()).findMaxPostingNo(anyInt());
-        }
-
-        @Test
-        @DisplayName("Bảng điều khiển -> Đếm bằng SQL (không tải mọi tin), tỷ lệ phòng ban theo tổng số tin")
-        void getDashboard_shouldUseCountQueries() {
-            // Arrange
-            when(postings.countWithOpenDeadline(JobPostingAccess.STATUS_PUBLISHED, NOW)).thenReturn(3L);
-            when(postings.countByPostingStatus(JobPostingAccess.STATUS_DRAFT)).thenReturn(2L);
-            when(postings.countByPostingStatus(JobPostingAccess.STATUS_CLOSED)).thenReturn(4L);
-            when(postings.countWithPassedDeadline(JobPostingAccess.STATUS_PUBLISHED, NOW)).thenReturn(1L);
-            when(postings.count()).thenReturn(10L);
-            when(postings.countByDepartment()).thenReturn(List.<Object[]>of(new Object[] {"Sales", 4L}));
-            when(postings.findRecent(any(Pageable.class))).thenReturn(List.of());
-            when(postings.findRequisitionIdsWithPostingStatusIn(any())).thenReturn(Set.of(101));
-            when(requisitions.findWithDepartmentByApprovalStatusOrderByCreatedAtDesc(any())).thenReturn(List.of(requisition));
-
-            // Act
-            JobPostingDashboardResponse dashboard = service.getDashboard(hr);
-
-            // Assert
-            assertEquals(3, dashboard.activeCount());
-            assertEquals(2, dashboard.draftCount());
-            assertEquals(5, dashboard.closedCount());
-            assertEquals(40, dashboard.departmentStats().get(0).percentage());
-            assertTrue(dashboard.requisitionsAwaitingPosting().isEmpty(), "Yêu cầu đã có tin đang mở thì không chờ đăng");
-            verify(postings, never()).findAll();
         }
     }
 }

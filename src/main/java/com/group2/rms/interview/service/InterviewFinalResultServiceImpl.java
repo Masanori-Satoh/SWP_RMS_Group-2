@@ -1,6 +1,7 @@
 package com.group2.rms.interview.service;
 
 import com.group2.rms.candidate.domain.entity.Application;
+import com.group2.rms.requisition.entity.JobRequisition;
 import com.group2.rms.candidate.domain.rule.ApplicationStatusService;
 import com.group2.rms.core.exception.ResourceNotFoundException;
 import com.group2.rms.core.security.CurrentUserService;
@@ -13,6 +14,7 @@ import com.group2.rms.interview.exception.InterviewStatusException;
 import com.group2.rms.interview.repository.InterviewEvaluationRepository;
 import com.group2.rms.interview.repository.InterviewFinalResultRepository;
 import com.group2.rms.interview.repository.InterviewScheduleRepository;
+import com.group2.rms.notification.service.NotificationService;
 import com.group2.rms.requisition.service.RequisitionAccess;
 import com.group2.rms.user.entity.User;
 import lombok.RequiredArgsConstructor;
@@ -28,7 +30,8 @@ import java.util.stream.Collectors;
 
 /**
  * Chốt kết quả phỏng vấn:
- * - Chỉ Hiring Manager quản lý phòng ban của yêu cầu tuyển dụng (cùng quy tắc bước duyệt hồ sơ).
+ * - Người chốt: Hiring Manager quản lý phòng ban của yêu cầu tuyển dụng đối với vị trí thông thường;
+ *   hoặc Giám đốc (Director) khi tuyển vị trí Hiring Manager (Phương án 2: yêu cầu do Giám đốc tạo).
  * - Mỗi lịch một kết quả (UQ_InterviewFinalResult_Interview). Passed/Failed là cuối cùng;
  *   Considering được chốt lại sau, giữ nguyên ConsideredAt.
  * - Trong 24h sau giờ kết thúc phải đủ phiếu của hội đồng; sau 24h chốt tự do. Các hạn khác chỉ cảnh báo.
@@ -46,6 +49,8 @@ public class InterviewFinalResultServiceImpl implements InterviewFinalResultServ
     // dunglt bổ sung: đổi trạng thái hồ sơ theo kết quả (module candidate, chiều interview → candidate)
     private final ApplicationStatusService applicationStatusService;
     private final InterviewEvaluationRepository interviewEvaluationRepository;
+    // hoangnh bổ sung: thông báo in-app cho HR
+    private final NotificationService notificationService;
     private final Clock clock;
 
     @Override
@@ -55,6 +60,9 @@ public class InterviewFinalResultServiceImpl implements InterviewFinalResultServ
                 .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy lịch phỏng vấn với mã: " + interviewId));
 
         if (!isDecisionMaker(hiringManager, schedule)) {
+            if (requiresDirectorDecision(schedule)) {
+                throw new AccessDeniedException("Chỉ Giám đốc mới được chốt kết quả phỏng vấn cho vị trí Hiring Manager.");
+            }
             throw new AccessDeniedException("Chỉ Hiring Manager phụ trách phòng ban của vị trí này mới được chốt kết quả.");
         }
 
@@ -108,14 +116,38 @@ public class InterviewFinalResultServiceImpl implements InterviewFinalResultServ
         } else {
             applicationStatusService.onInterviewDecided(applicationId, InterviewFinalResult.PASSED.equals(decision));
         }
+        // hoangnh bổ sung: báo HR kết quả để lập offer / đóng hồ sơ
+        notificationService.notifyInterviewResultDecided(schedule, hiringManager, decision);
 
-        log.info("Hiring Manager #{} chốt kết quả {} cho lịch phỏng vấn #{}.",
+        log.info("Người dùng #{} chốt kết quả {} cho lịch phỏng vấn #{}.",
                 hiringManager.getUserId(), request.finalDecision(), interviewId);
     }
 
     @Override
+    public boolean requiresDirectorDecision(InterviewSchedule schedule) {
+        if (schedule == null) {
+            return false;
+        }
+        Application application = schedule.getApplication();
+        if (application == null || application.getJobPosting() == null) {
+            return false;
+        }
+        JobRequisition requisition = application.getJobPosting().getRequisition();
+        if (requisition == null || requisition.getCreatedBy() == null) {
+            return false;
+        }
+        return CurrentUserService.hasRole(requisition.getCreatedBy(), RequisitionAccess.ROLE_DIRECTOR);
+    }
+
+    @Override
     public boolean isDecisionMaker(User user, InterviewSchedule schedule) {
-        if (user == null || !CurrentUserService.hasRole(user, RequisitionAccess.ROLE_HIRING_MANAGER)) {
+        if (user == null || schedule == null) {
+            return false;
+        }
+        if (requiresDirectorDecision(schedule)) {
+            return CurrentUserService.hasRole(user, RequisitionAccess.ROLE_DIRECTOR);
+        }
+        if (!CurrentUserService.hasRole(user, RequisitionAccess.ROLE_HIRING_MANAGER)) {
             return false;
         }
         Application application = schedule.getApplication();

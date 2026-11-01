@@ -37,27 +37,7 @@ public class DashboardListRepository {
 
     // ===== Hiring Manager =====
 
-    /** Yêu cầu do HM này phụ trách, mới cập nhật lên đầu. */
-    public List<RequisitionRow> recentRequisitions(int userId, int limit) {
-        List<Object[]> rows = entityManager.createQuery("select r.requisitionId, r.requisitionCode, r.title, "
-                        + "r.numberOfPositions, r.approvalStatus, coalesce(r.updatedAt, r.createdAt) "
-                        + "from JobRequisition r where r.hiringManager.userId = :userId "
-                        + "order by coalesce(r.updatedAt, r.createdAt) desc, r.requisitionId desc", Object[].class)
-                .setParameter("userId", userId)
-                .setMaxResults(limit)
-                .getResultList();
-        List<RequisitionRow> result = new ArrayList<>();
-        for (Object[] row : rows) {
-            result.add(new RequisitionRow((Integer) row[0], (String) row[1], (String) row[2],
-                    (Integer) row[3], (String) row[4], (LocalDateTime) row[5]));
-        }
-        return result;
-    }
-
-    /**
-     * Yêu cầu HM phải tự làm tiếp: bị từ chối (sửa lại) và bản nháp (gửi duyệt).
-     * Bị từ chối xếp trước, trong mỗi nhóm mới cập nhật lên đầu.
-     */
+    /** Yêu cầu bị từ chối (xếp trước) và bản nháp của HM, mới cập nhật lên đầu. */
     public List<AttentionRow> requisitionsNeedingAttention(int userId) {
         List<Object[]> rows = entityManager.createQuery("select r.requisitionId, r.requisitionCode, r.title, "
                         + "r.approvalStatus, r.submittedAt from JobRequisition r "
@@ -87,10 +67,7 @@ public class DashboardListRepository {
         return result;
     }
 
-    /**
-     * Yêu cầu đang tuyển (Approved) trong phạm vi HM (do HM phụ trách, thuộc phòng ban HM hoặc phòng ban HM
-     * quản lý), kèm số hồ sơ đã nhận việc / đang phỏng vấn / đã có offer. Mới nhất lên đầu.
-     */
+    /** Yêu cầu đang tuyển trong phạm vi HM, kèm số đã nhận việc / đang phỏng vấn / đã có offer. */
     public List<ProgressRow> hiringProgress(int userId, Integer departmentId) {
         List<Object[]> rows = entityManager.createQuery("select r.requisitionId, r.requisitionCode, r.title, "
                         + "r.numberOfPositions, "
@@ -118,17 +95,16 @@ public class DashboardListRepository {
 
     // ===== Lịch phỏng vấn =====
 
-    /** Lịch còn hiệu lực của phòng ban, bắt đầu trong [from, to), sớm nhất lên đầu. */
-    public List<InterviewRow> departmentInterviews(Integer departmentId, LocalDateTime from, LocalDateTime to,
-            int limit) {
-        if (departmentId == null) {
-            return List.of();
-        }
+    /** Lịch còn hiệu lực của phòng HM thuộc hoặc làm trưởng phòng, bắt đầu trong [from, to), sớm nhất lên đầu. */
+    public List<InterviewRow> departmentInterviews(int userId, Integer departmentId, LocalDateTime from,
+            LocalDateTime to, int limit) {
         TypedQuery<Object[]> query = entityManager.createQuery(INTERVIEW_SELECT
-                + "where j.requisition.department.departmentId = :departmentId "
+                + "join j.requisition r left join r.department d left join d.manager m "
+                + "where (m.userId = :userId or d.departmentId = :departmentId) "
                 + "and i.startTime >= :from and i.startTime < :to "
                 + "and i.interviewStatus in " + InternalMetricsRepository.ACTIVE_INTERVIEW_STATUSES + " "
                 + "order by i.startTime asc, i.interviewId asc", Object[].class);
+        query.setParameter("userId", userId);
         query.setParameter("departmentId", departmentId);
         query.setParameter("from", from);
         query.setParameter("to", to);
@@ -195,27 +171,6 @@ public class DashboardListRepository {
         for (Object[] row : rows) {
             result.add(new AwaitingPostingRow((Integer) row[0], (String) row[1], (String) row[2],
                     (LocalDateTime) row[3]));
-        }
-        return result;
-    }
-
-    /** Tin đang nhận hồ sơ công khai (đã tới ngày đăng, chưa quá hạn nộp) kèm số vị trí và hồ sơ. */
-    public List<OpenPostingRow> openPostings(LocalDateTime now) {
-        List<Object[]> rows = entityManager.createQuery("select j.jobPostingId, j.postingTitle, d.departmentName, "
-                        + "r.numberOfPositions, j.applicationDeadline, j.postingStatus, "
-                        + "(select count(a) from Application a where a.jobPosting = j and " + FORMAL_FILTER + ") "
-                        + "from JobPosting j join j.requisition r left join r.department d "
-                        + "where j.postingStatus = :published "
-                        + "and (j.postingDate is null or j.postingDate <= :now) "
-                        + "and (j.applicationDeadline is null or j.applicationDeadline >= :now) "
-                        + "order by j.jobPostingId asc", Object[].class)
-                .setParameter("published", JobPostingAccess.STATUS_PUBLISHED)
-                .setParameter("now", now)
-                .getResultList();
-        List<OpenPostingRow> result = new ArrayList<>();
-        for (Object[] row : rows) {
-            result.add(new OpenPostingRow((Integer) row[0], (String) row[1], (String) row[2], (Integer) row[3],
-                    (LocalDateTime) row[4], (String) row[5], toLong(row[6])));
         }
         return result;
     }
@@ -315,10 +270,6 @@ public class DashboardListRepository {
         return ((Number) value).longValue();
     }
 
-    public record RequisitionRow(int requisitionId, String requisitionCode, String title, int numberOfPositions,
-            String approvalStatus, LocalDateTime updatedAt) {
-    }
-
     public record AttentionRow(int requisitionId, String requisitionCode, String title, String approvalStatus,
             LocalDateTime submittedAt, String rejectComment) {
     }
@@ -338,10 +289,6 @@ public class DashboardListRepository {
 
     public record AwaitingPostingRow(int requisitionId, String requisitionCode, String title,
             LocalDateTime waitingSince) {
-    }
-
-    public record OpenPostingRow(int jobPostingId, String postingTitle, String departmentName,
-            int numberOfPositions, LocalDateTime applicationDeadline, String postingStatus, long applications) {
     }
 
     public record PendingRequisitionRow(int requisitionId, String requisitionCode, String title,

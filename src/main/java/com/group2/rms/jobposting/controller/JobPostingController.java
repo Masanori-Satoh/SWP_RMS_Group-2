@@ -6,8 +6,7 @@ import com.group2.rms.candidate.talentpool.service.RecruitmentEmailService;
 import com.group2.rms.candidate.talentpool.service.TalentPoolService;
 import com.group2.rms.core.util.FilterLinks;
 import com.group2.rms.jobposting.dto.InternalJobPostingDetailResponse;
-import com.group2.rms.jobposting.dto.JobPostingCreateRequest;
-import com.group2.rms.jobposting.dto.JobPostingDashboardResponse;
+import com.group2.rms.jobposting.dto.JobPostingRequest;
 import com.group2.rms.jobposting.dto.JobPostingSearchRequest;
 import com.group2.rms.jobposting.exception.JobPostingValidationException;
 import com.group2.rms.jobposting.service.JobPostingAccess;
@@ -34,13 +33,8 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import java.util.List;
 import java.util.Set;
 
-/**
- * Màn tin tuyển dụng nội bộ (/internal/job-postings): danh sách, bảng điều khiển HR, form tạo / sửa,
- * trang chi tiết và các nút chuyển trạng thái.
- *
- * Chỉ nhận request → gọi service → chọn view / redirect / flash. Không so sánh role, không tự đổi trạng thái:
- * quyền ở JobPostingAccess (service gọi), cờ hiển thị có sẵn trong DTO. Chỉ bắt JobPostingValidationException
- * (và lỗi của module talent pool khi đóng tin); không tìm thấy / không có quyền để GlobalExceptionHandler trả 404 / 403.
+/*
+ * CONTROLLER: màn tin tuyển dụng nội bộ (danh sách, form tạo / sửa, chi tiết, nút chuyển trạng thái).
  */
 @Controller
 @RequestMapping("/internal/job-postings")
@@ -75,22 +69,15 @@ public class JobPostingController {
         model.addAttribute("activeMenu", "job-postings");
     }
 
-    /**
-     * Chỉ nhận từ form các trường HR được nhập (CLAUDE.md §22). Thông tin yêu cầu nguồn, trạng thái, ngày đăng,
-     * người tạo... không bao giờ lấy từ form: service điền lại từ DB.
-     */
-    @InitBinder("postingDto")
+    /** Chỉ nhận các ô HR được nhập (CLAUDE.md §22); thông tin nguồn, trạng thái do service lấy từ DB. */
+    @InitBinder("form")
     void formBinder(WebDataBinder binder) {
         binder.setAllowedFields("jobPostingId", "requisitionId", "postingTitle", "jobDescription", "jobRequirements",
                 "benefits", "workLocation", "salaryMode", "salaryCustom", "showPositions", "numberOfPositionsDisplay",
                 "applicationDeadline", "action");
     }
 
-    /**
-     * Màn danh sách. Mọi tham số trên URL (?q=...&status=...&page=...) được Spring gom vào JobPostingSearchRequest;
-     * list service lo phân quyền, làm sạch bộ lọc, truy vấn và đếm hồ sơ.
-     * BindingResult để giá trị sai định dạng (ví dụ ?page=abc) chỉ bị bỏ qua thay vì làm lỗi cả trang.
-     */
+    /** Màn danh sách; tham số sai định dạng trên URL (?page=abc) chỉ bị bỏ qua, không lỗi trang. */
     @GetMapping
     public String listJobPostings(@ModelAttribute("searchRequest") JobPostingSearchRequest searchRequest,
             BindingResult invalidParams, HttpServletRequest request, Model model) {
@@ -101,36 +88,20 @@ public class JobPostingController {
         return "job-postings/list";
     }
 
-    @GetMapping("/dashboard")
-    public String hrDashboard(Model model) {
-        JobPostingDashboardResponse dashboard = jobPostingService.getDashboard(access.actor());
-        model.addAttribute("activePostingsCount", dashboard.activeCount());
-        model.addAttribute("draftPostingsCount", dashboard.draftCount());
-        model.addAttribute("pendingReqsCount", dashboard.requisitionsAwaitingPosting().size());
-        model.addAttribute("closedPostingsCount", dashboard.closedCount());
-        model.addAttribute("deptStats", dashboard.departmentStats());
-        model.addAttribute("reqsAwaitingPosting", dashboard.requisitionsAwaitingPosting());
-        model.addAttribute("recentPostings", dashboard.recentPostings());
-        return "job-postings/dashboard";
-    }
-
-    /**
-     * Form tạo tin, luôn mở từ một yêu cầu đã duyệt (requisitionId). Ô "Đổi yêu cầu" gọi lại URL này với
-     * requisitionId khác. fromPostingId: "Đăng lại" một tin đã đóng (nội dung lấy từ tin đó).
-     */
+    /** Form tạo tin từ yêu cầu đã duyệt; fromPostingId = "Đăng lại" từ một tin đã đóng. */
     @GetMapping("/create")
     public String showCreateForm(@RequestParam(value = "requisitionId", required = false) Integer requisitionId,
             @RequestParam(value = "fromPostingId", required = false) Integer fromPostingId,
             Model model, RedirectAttributes flash) {
         User currentUser = access.actor();
         try {
-            JobPostingCreateRequest dto;
+            JobPostingRequest form;
             if (fromPostingId != null) {
-                dto = jobPostingService.prepareRepostForm(fromPostingId, currentUser);
+                form = jobPostingService.prepareRepostForm(fromPostingId, currentUser);
             } else {
-                dto = jobPostingService.prepareCreateForm(requisitionId, currentUser);
+                form = jobPostingService.prepareCreateForm(requisitionId, currentUser);
             }
-            return form(model, dto, currentUser);
+            return renderForm(model, form, currentUser);
         } catch (JobPostingValidationException e) {
             flash.addFlashAttribute("errorMessage", e.getMessage());
             if (fromPostingId != null) {
@@ -143,53 +114,53 @@ public class JobPostingController {
     @GetMapping("/{id}/edit")
     public String showEditForm(@PathVariable("id") Integer id, Model model) {
         User currentUser = access.actor();
-        return form(model, jobPostingService.prepareEditForm(id, currentUser), currentUser);
+        return renderForm(model, jobPostingService.prepareEditForm(id, currentUser), currentUser);
     }
 
     /** Lưu nháp (action=draft) hoặc đăng ngay (action=publish) tin mới. */
     @PostMapping("/create")
-    public String createJobPosting(@Valid @ModelAttribute("postingDto") JobPostingCreateRequest request,
+    public String createJobPosting(@Valid @ModelAttribute("form") JobPostingRequest form,
             BindingResult errors, Model model, RedirectAttributes flash) {
         User currentUser = access.actor();
         if (!errors.hasErrors()) {
             try {
-                boolean isPublish = JobPostingValidator.isPublish(request.getAction());
+                boolean isPublish = JobPostingValidator.isPublish(form.getAction());
                 Integer id;
                 if (isPublish) {
-                    id = jobPostingService.createAndPublishJobPosting(request, currentUser);
+                    id = jobPostingService.createAndPublishJobPosting(form, currentUser);
                 } else {
-                    id = jobPostingService.createJobPosting(request, currentUser);
+                    id = jobPostingService.createJobPosting(form, currentUser);
                 }
-                flash.addFlashAttribute("successMessage", savedMessage(request, isPublish, true));
+                flash.addFlashAttribute("successMessage", savedMessage(form, isPublish, true));
                 return redirectToDetail(id);
             } catch (JobPostingValidationException e) {
                 addErrors(errors, e);
             }
         }
-        return form(model, jobPostingService.restoreSourceInfo(request, currentUser), currentUser);
+        return renderForm(model, jobPostingService.restoreSourceInfo(form, currentUser), currentUser);
     }
 
     /** Lưu thay đổi (action=draft) hoặc đăng / mở lại (action=publish) tin đã có. */
     @PostMapping("/{id}/edit")
     public String updateJobPosting(@PathVariable Integer id,
-            @Valid @ModelAttribute("postingDto") JobPostingCreateRequest request,
+            @Valid @ModelAttribute("form") JobPostingRequest form,
             BindingResult errors, Model model, RedirectAttributes flash) {
         User currentUser = access.actor();
         if (!errors.hasErrors()) {
             try {
-                boolean isPublish = JobPostingValidator.isPublish(request.getAction());
+                boolean isPublish = JobPostingValidator.isPublish(form.getAction());
                 if (isPublish) {
-                    jobPostingService.updateAndPublishJobPosting(id, request, currentUser);
+                    jobPostingService.updateAndPublishJobPosting(id, form, currentUser);
                 } else {
-                    jobPostingService.updateJobPosting(id, request, currentUser);
+                    jobPostingService.updateJobPosting(id, form, currentUser);
                 }
-                flash.addFlashAttribute("successMessage", savedMessage(request, isPublish, false));
+                flash.addFlashAttribute("successMessage", savedMessage(form, isPublish, false));
                 return redirectToDetail(id);
             } catch (JobPostingValidationException e) {
                 addErrors(errors, e);
             }
         }
-        return form(model, jobPostingService.restoreSourceInfo(request, currentUser), currentUser);
+        return renderForm(model, jobPostingService.restoreSourceInfo(form, currentUser), currentUser);
     }
 
     @PostMapping("/{id}/publish")
@@ -257,9 +228,9 @@ public class JobPostingController {
     // ----- Các hàm nhỏ -----
 
     /** Mọi đường hiển thị form (tạo, sửa, đăng lại, hiện lại khi lỗi) đều đi qua đây. */
-    private String form(Model model, JobPostingCreateRequest dto, User currentUser) {
-        boolean isEdit = dto.getJobPostingId() != null;
-        model.addAttribute("postingDto", dto);
+    private String renderForm(Model model, JobPostingRequest form, User currentUser) {
+        boolean isEdit = form.getJobPostingId() != null;
+        model.addAttribute("form", form);
         model.addAttribute("isEdit", isEdit);
         // Ô "Đổi yêu cầu" chỉ có khi tạo mới (tin đã tạo không đổi được yêu cầu nguồn, CLAUDE.md §22)
         if (isEdit) {
@@ -295,7 +266,7 @@ public class JobPostingController {
         });
     }
 
-    private String savedMessage(JobPostingCreateRequest request, boolean isPublish, boolean isCreated) {
+    private String savedMessage(JobPostingRequest request, boolean isPublish, boolean isCreated) {
         if (!isPublish && isCreated) {
             return "Đã lưu bản nháp tin tuyển dụng.";
         }

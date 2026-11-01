@@ -11,14 +11,8 @@ import org.springframework.stereotype.Component;
 import java.util.List;
 import java.util.Set;
 
-/**
- * Luật "ai được làm gì" với tin tuyển dụng, và các giá trị trạng thái tin (CK_JobPosting_Status).
- *
- * - canX(...) là hàm thuần: chỉ đọc role, phòng ban, trạng thái → test không cần DB.
- *   Thông tin cần truy vấn (tin đã có hồ sơ chưa, yêu cầu còn tin đang mở không) do service tra trước rồi truyền vào.
- * - requireX(...) gọi canX và ném AccessDeniedException (trang 403).
- * - Cờ quyền cho giao diện (editable, closable...) do JobPostingMapper gắn vào DTO bằng các hàm canX ở đây.
- * Không lo: chữ hiển thị (JobPostingLabels), kiểm tra dữ liệu form (JobPostingValidator).
+/*
+ * ACCESS: luật "ai được làm gì" với tin (canX trả boolean, requireX ném 403) và hằng trạng thái tin.
  */
 @Component
 @RequiredArgsConstructor
@@ -89,7 +83,7 @@ public class JobPostingAccess {
     }
 
     /** Được vào màn tin tuyển dụng nội bộ: HR, Hiring Manager, Director (Director chỉ xem). */
-    public boolean canRead(User user) {
+    public boolean canAccessPostings(User user) {
         return READER_ROLES.contains(role(user));
     }
 
@@ -102,12 +96,9 @@ public class JobPostingAccess {
         return TALENT_POOL_ROLES.contains(role(user));
     }
 
-    /**
-     * Xem một tin cụ thể: phải là người được vào màn tin; HM chỉ xem tin phòng mình;
-     * HM và Director không xem tin nháp (rule D5, kể cả khi gõ thẳng URL).
-     */
+    /** Rule (D5): HM chỉ xem tin phòng mình; HM và Director không xem tin nháp. */
     public boolean canView(User user, JobPosting posting) {
-        if (!canRead(user)) {
+        if (!canAccessPostings(user)) {
             return false;
         }
         JobRequisition requisition = posting.getRequisition();
@@ -144,11 +135,7 @@ public class JobPostingAccess {
         return canManage(user) && STATUS_DRAFT.equals(viewStatus) && !hasApplications;
     }
 
-    /**
-     * "Đăng lại" (D10): tin đã đóng, yêu cầu nguồn vẫn Approved và chưa có tin nào đang mở.
-     *
-     * @param hasOpenPosting yêu cầu nguồn đang có tin Draft / Published / Paused (service tra trước)
-     */
+    /** Rule (D10): đăng lại khi tin đã đóng, yêu cầu vẫn Approved và chưa có tin nào đang mở. */
     public boolean canRepost(User user, String viewStatus, JobRequisition requisition, boolean hasOpenPosting) {
         return canManage(user) && STATUS_CLOSED.equals(viewStatus) && requisition != null
                 && RequisitionAccess.STATUS_APPROVED.equals(requisition.getApprovalStatus()) && !hasOpenPosting;
@@ -162,8 +149,8 @@ public class JobPostingAccess {
         }
     }
 
-    public void requireRead(User user) {
-        if (!canRead(user)) {
+    public void requireAccessPostings(User user) {
+        if (!canAccessPostings(user)) {
             throw new AccessDeniedException("Bạn không có quyền xem tin tuyển dụng.");
         }
     }
@@ -175,7 +162,7 @@ public class JobPostingAccess {
     }
 
     public void requireView(User user, JobPosting posting) {
-        requireRead(user);
+        requireAccessPostings(user);
         if (!canView(user, posting)) {
             throw new AccessDeniedException("Bạn không có quyền xem tin tuyển dụng này.");
         }

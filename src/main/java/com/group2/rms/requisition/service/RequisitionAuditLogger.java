@@ -15,11 +15,8 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-/**
- * Ghi và đọc audit log (bảng AuditLog) của Yêu cầu tuyển dụng.
- *
- * Gom về một chỗ để: tên entity "JobRequisition" chỉ viết một lần, và cách mô tả thay đổi
- * ("Số lượng cần tuyển: 2 → 3") giống nhau ở mọi thao tác.
+/*
+ * AUDIT: ghi và đọc audit log của yêu cầu, mô tả thay đổi dạng "tên: cũ → mới".
  */
 @Component
 @RequiredArgsConstructor
@@ -58,10 +55,7 @@ public class RequisitionAuditLogger {
         return audit.findByEntityNameAndEntityIdOrderByTimestampDesc(ENTITY_NAME, requisitionId.toString());
     }
 
-    /**
-     * "Ảnh chụp" các trường người dùng nhìn thấy, để so sánh trước / sau khi sửa.
-     * Key là tên trường tiếng Việt, value là giá trị dạng chữ (null = chưa nhập).
-     */
+    /** Giá trị các trường người dùng thấy (key tiếng Việt), để so trước / sau khi sửa. */
     public Map<String, String> snapshot(JobRequisition jobRequisition) {
         Map<String, String> snapshot = new LinkedHashMap<>();
         snapshot.put("Chức danh công việc", jobRequisition.getTitle());

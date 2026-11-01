@@ -2,12 +2,8 @@ package com.group2.rms.requisition.service;
 
 import org.springframework.data.domain.Sort;
 
-/**
- * Danh sách các cách sắp xếp được phép ở màn danh sách yêu cầu (whitelist).
- * Giá trị lạ trên URL luôn quay về mặc định NEWEST, không bao giờ dùng thẳng tên cột từ client.
- *
- * Mỗi cách sắp xếp có thêm requisitionId làm tiêu chí phụ,
- * để hai dòng trùng giá trị vẫn có thứ tự ổn định giữa các trang.
+/*
+ * SORT: whitelist cách sắp xếp màn danh sách yêu cầu; giá trị lạ trên URL quay về NEWEST.
  */
 public enum RequisitionSort {
 

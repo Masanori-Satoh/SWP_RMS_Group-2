@@ -2,10 +2,8 @@ package com.group2.rms.jobposting.service;
 
 import org.springframework.data.domain.Sort;
 
-/**
- * Các cách sắp xếp màn danh sách tin tuyển dụng (whitelist: giá trị lạ trên URL quay về NEWEST).
- * MOST_APPLICATIONS không sắp được bằng cột của bảng JobPosting, nên toSort() trả unsorted
- * và service dùng JobPostingSpecifications#orderByApplicationCount thay thế.
+/*
+ * SORT: whitelist cách sắp xếp màn danh sách tin; giá trị lạ trên URL quay về NEWEST.
  */
 public enum JobPostingSort {
     NEWEST("newest", "Mới đăng nhất",

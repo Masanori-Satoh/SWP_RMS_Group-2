@@ -69,7 +69,7 @@ class RequisitionIntegrationTests {
         @Autowired
         private RoleRepository roles;
         @Autowired
-        private com.group2.rms.notification.NotificationRepository notifications;
+        private com.group2.rms.notification.repository.NotificationRepository notifications;
         @Autowired
         private EntityManager entityManager;
         @Autowired

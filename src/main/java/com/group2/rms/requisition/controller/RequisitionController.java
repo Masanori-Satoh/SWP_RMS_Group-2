@@ -32,6 +32,9 @@ import java.beans.PropertyEditorSupport;
 import java.math.BigDecimal;
 import java.util.Locale;
 
+/*
+ * CONTROLLER: màn /requisitions (danh sách, form tạo / sửa / sao chép, chi tiết, gửi duyệt, duyệt, rút, xóa); nghiệp vụ ở RequisitionService.
+ */
 @Controller
 @RequestMapping("/requisitions")
 @RequiredArgsConstructor
@@ -47,11 +50,10 @@ public class RequisitionController {
     private final RequisitionValidator validator;
     private final DepartmentRepository departments;
 
-    @InitBinder("requisitionDto")
+    @InitBinder("form")
     void binder(WebDataBinder binder) {
         binder.setAutoGrowCollectionLimit(50);
-        // departmentId chỉ có tác dụng với Giám đốc (service ghi đè cho vai trò khác);
-        // originalTitle chỉ để form hiển thị số đợt, service không dùng
+        // departmentId chỉ có tác dụng với Giám đốc; originalTitle chỉ để form hiện số đợt
         binder.setAllowedFields("action", "title", "departmentId", "originalTitle", "numberOfPositions", "employmentType", "minSalary",
                 "maxSalary",
                 "gender", "workLocation", "workModel", "probationDays", "reasonForHiring", "hiringType", "originalRequisitionId",
@@ -83,7 +85,9 @@ public class RequisitionController {
             @Override
             public String getAsText() {
                 BigDecimal value = (BigDecimal) getValue();
-                if (value == null) return "";
+                if (value == null) {
+                    return "";
+                }
                 if (value.stripTrailingZeros().scale() <= 0) {
                     return String.format(Locale.US, "%,d", value.toBigInteger()).replace(',', '.');
                 }
@@ -109,8 +113,7 @@ public class RequisitionController {
         model.addAttribute("list", listService.getListPage(searchRequest));
         // Tạo link "bỏ một bộ lọc" cho các chip, giữ nguyên các tham số khác đang có trên URL
         model.addAttribute("filterLinks", new FilterLinks(request.getRequestURI(), request.getQueryString()));
-        // Trang đã dùng layout/internal: activeMenu làm sáng mục menu ở sidebar,
-        // bodyClass gắn lên <body> để CSS cũ của trang (.req-app, .req-list-page) vẫn áp dụng
+        // activeMenu làm sáng menu sidebar, bodyClass giữ CSS cũ của trang
         model.addAttribute("activeMenu", "requisitions");
         model.addAttribute("bodyClass", "req-app req-list-page");
         return "requisitions/list";
@@ -123,48 +126,48 @@ public class RequisitionController {
         // Rule: Chỉ Hiring Manager / Director mới được tạo yêu cầu
         access.requireCreate(currentUser);
 
-        RequisitionRequest requisitionRequest = new RequisitionRequest();
+        RequisitionRequest form = new RequisitionRequest();
 
         // các trường bắt buộc trong db
-        requisitionRequest.setNumberOfPositions(1);
-        requisitionRequest.setRecruitmentRound(1);
-        requisitionRequest.setEmploymentType("Full-time");
-        requisitionRequest.setWorkModel("On-site");
-        requisitionRequest.setGender(RequisitionValidator.GENDER_ANY);
+        form.setNumberOfPositions(1);
+        form.setRecruitmentRound(1);
+        form.setEmploymentType("Full-time");
+        form.setWorkModel("On-site");
+        form.setGender(RequisitionValidator.GENDER_ANY);
         // Giám đốc tự chọn phòng ban trên form nên không điền sẵn
         if (currentUser.getDepartment() != null && !access.isDirector(currentUser)) {
-            requisitionRequest.setDepartmentId(currentUser.getDepartment().getDepartmentId());
+            form.setDepartmentId(currentUser.getDepartment().getDepartmentId());
         }
-        requisitionRequest.getScreeningCriteria()
+        form.getScreeningCriteria()
                 .add(ScreeningCriteriaRequest.builder().weight(new BigDecimal("100")).isMandatory(false).build());
 
-        model.addAttribute("requisitionDto", requisitionRequest);
-        return form(model, false, null);
+        model.addAttribute("form", form);
+        return renderForm(model, false, null);
     }
 
     @GetMapping("/copy/{id}")
     public String copy(@PathVariable Integer id, Model model) {
-        model.addAttribute("requisitionDto", service.copy(id));
+        model.addAttribute("form", service.copy(id));
         model.addAttribute("copyNotice", "Đã sao chép vào biểu mẫu mới. Biểu mẫu chưa được lưu cho đến khi bạn chọn Lưu bản nháp hoặc "
                 + (access.isDirector(access.actor()) ? "Phê duyệt trực tiếp." : "Gửi Giám đốc duyệt."));
-        return form(model, false, null);
+        return renderForm(model, false, null);
     }
 
     @GetMapping("/edit/{id}")
     public String edit(@PathVariable Integer id, Model model) {
-        model.addAttribute("requisitionDto", service.getRequestDtoById(id));
-        return form(model, true, id);
+        model.addAttribute("form", service.prepareEditForm(id));
+        return renderForm(model, true, id);
     }
 
     @PostMapping("/create")
-    public String create(@Valid @ModelAttribute("requisitionDto") RequisitionRequest requisitionRequest, BindingResult errors, Model model,
+    public String create(@Valid @ModelAttribute("form") RequisitionRequest form, BindingResult errors, Model model,
             RedirectAttributes flash) {
         // Rule: Xác thực quyền tạo trước khi xử lý nghiệp vụ
         access.requireCreate(access.actor());
         if (!errors.hasErrors()) {
             try {
-                Integer requisitionId = service.createRequisition(requisitionRequest);
-                flash.addFlashAttribute("successMessage", savedMessage(requisitionRequest.getAction()));
+                Integer requisitionId = service.createRequisition(form);
+                flash.addFlashAttribute("successMessage", savedMessage(form.getAction()));
                 return "redirect:/requisitions/" + requisitionId;
             } catch (RequisitionValidationException e) {
                 addErrors(errors, e);
@@ -172,16 +175,16 @@ public class RequisitionController {
                 errors.reject("storage", STORAGE_ERROR);
             }
         }
-        return form(model, false, null);
+        return renderForm(model, false, null);
     }
 
     @PostMapping("/edit/{id}")
-    public String update(@PathVariable Integer id, @Valid @ModelAttribute("requisitionDto") RequisitionRequest requisitionRequest,
+    public String update(@PathVariable Integer id, @Valid @ModelAttribute("form") RequisitionRequest form,
             BindingResult errors, Model model, RedirectAttributes flash) {
         if (!errors.hasErrors()) {
             try {
-                service.updateRequisition(id, requisitionRequest);
-                flash.addFlashAttribute("successMessage", savedMessage(requisitionRequest.getAction()));
+                service.updateRequisition(id, form);
+                flash.addFlashAttribute("successMessage", savedMessage(form.getAction()));
                 return "redirect:/requisitions/" + id;
             } catch (RequisitionValidationException e) {
                 addErrors(errors, e);
@@ -189,7 +192,7 @@ public class RequisitionController {
                 errors.reject("storage", STORAGE_ERROR);
             }
         }
-        return form(model, true, id);
+        return renderForm(model, true, id);
     }
 
     @PostMapping("/delete/{id}")
@@ -258,19 +261,19 @@ public class RequisitionController {
     }
 
     /** Mọi đường hiển thị form (tạo, sửa, sao chép, render lại khi có lỗi) đều đi qua hàm này. */
-    private String form(Model model, boolean edit, Integer id) {
+    private String renderForm(Model model, boolean edit, Integer id) {
         model.addAttribute("isEdit", edit);
         model.addAttribute("requisitionId", id);
         // Giám đốc: tự chọn phòng ban và nút gửi là "Phê duyệt trực tiếp"
         model.addAttribute("directApprove", access.isDirector(access.actor()));
-        options(model);
+        addFormOptions(model);
         // Trang dùng layout/internal: làm sáng menu + gắn class để CSS của trang áp dụng
         model.addAttribute("activeMenu", "requisitions");
         model.addAttribute("bodyClass", "req-app req-form-page");
         return "requisitions/form";
     }
 
-    private void options(Model model) {
+    private void addFormOptions(Model model) {
         model.addAttribute("departments", departments.findAll());
         model.addAttribute("employmentTypes", RequisitionValidator.EMPLOYMENT_TYPES);
         model.addAttribute("criteriaTypes", RequisitionValidator.CRITERIA_TYPES);
@@ -283,6 +286,6 @@ public class RequisitionController {
     }
 
     private void addErrors(BindingResult errors, RequisitionValidationException e) {
-        e.getErrors().forEach((k, v) -> errors.rejectValue(k, "invalid", v));
+        e.getErrors().forEach((field, message) -> errors.rejectValue(field, "invalid", message));
     }
 }

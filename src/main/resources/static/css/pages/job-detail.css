@@ -4,6 +4,12 @@
    nguyên components.css. Chỉ dùng token của tokens.css.
    ============================================================================= */
 
+/* Nền .adw-scene phủ vùng main; khoảng đệm dưới topbar nổi lấy từ .public-main-content */
+.jd-page {
+  position: relative;
+  isolation: isolate;
+}
+
 .job-detail-layout {
   display: grid;
   grid-template-columns: 1fr 340px;
@@ -83,7 +89,7 @@
   background: var(--surface);
   border: 1px solid var(--line);
   border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-sm);
+  box-shadow: var(--shadow-md);
 }
 
 .summary-card h3 {
@@ -147,6 +153,7 @@
 .job-detail-alert {
   flex-wrap: wrap;
   margin-bottom: var(--s6);
+  box-shadow: var(--shadow-sm);
 }
 
 /* "Xem đơn đã nộp →" trong alert sau khi nộp: sát phải, xuống dòng nguyên cụm khi hẹp. */
@@ -196,9 +203,10 @@
   font-weight: 600;
   text-decoration: none;
   padding: 8px 16px;
-  border-radius: var(--radius-md);
+  border-radius: var(--radius-full);
   background: var(--surface);
   border: 1px solid var(--line);
+  box-shadow: var(--shadow-sm);
   margin-bottom: 24px;
   transition: var(--transition);
 }
@@ -223,7 +231,7 @@
   background: var(--surface);
   border: 1px solid var(--line);
   border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-sm);
+  box-shadow: var(--shadow-md);
   margin-bottom: 28px;
 }
 
@@ -271,7 +279,7 @@
   background: var(--surface);
   border: 1px solid var(--line);
   border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-sm);
+  box-shadow: var(--shadow-md);
   margin-bottom: 24px;
 }
 
@@ -281,7 +289,7 @@
   background: var(--surface);
   border: 1px solid var(--line);
   border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-sm);
+  box-shadow: var(--shadow-md);
 }
 
 .support-card h4 {

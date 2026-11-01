@@ -270,6 +270,42 @@ class InterviewResultWebTests {
     }
 
     @Test
+    void directorSeesFinalizeButtonForHiringManagerPositionWhileHiringManagerDoesNot() throws Exception {
+        when(resultService.getResult(eq(7L), argThat(u -> u.getUserId() == 13)))
+                .thenReturn(result(true, false, null, false, true));
+        when(resultService.getResult(eq(7L), argThat(u -> u.getUserId() == 40)))
+                .thenReturn(result(true, false, null, false, false));
+
+        mvc.perform(get("/interviews/7/result").with(as(13, "director", "Director")))
+                .andExpect(status().isOk())
+                .andExpect(content().string(containsString("data-dialog-open=\"ifr-dialog\"")))
+                .andExpect(content().string(containsString("id=\"ifr-dialog\"")));
+
+        mvc.perform(get("/interviews/7/result").with(as(40, "hm_khanh", "Hiring Manager")))
+                .andExpect(status().isOk())
+                .andExpect(content().string(not(containsString("data-dialog-open=\"ifr-dialog\""))))
+                .andExpect(content().string(not(containsString("id=\"ifr-dialog\""))));
+    }
+
+    @Test
+    void hiringManagerSeesFinalizeButtonForNormalPositionWhileDirectorDoesNot() throws Exception {
+        when(resultService.getResult(eq(7L), argThat(u -> u.getUserId() == 40)))
+                .thenReturn(result(true, false, null, false, true));
+        when(resultService.getResult(eq(7L), argThat(u -> u.getUserId() == 13)))
+                .thenReturn(result(true, false, null, false, false));
+
+        mvc.perform(get("/interviews/7/result").with(as(40, "hm_khanh", "Hiring Manager")))
+                .andExpect(status().isOk())
+                .andExpect(content().string(containsString("data-dialog-open=\"ifr-dialog\"")))
+                .andExpect(content().string(containsString("id=\"ifr-dialog\"")));
+
+        mvc.perform(get("/interviews/7/result").with(as(13, "director", "Director")))
+                .andExpect(status().isOk())
+                .andExpect(content().string(not(containsString("data-dialog-open=\"ifr-dialog\""))))
+                .andExpect(content().string(not(containsString("id=\"ifr-dialog\""))));
+    }
+
+    @Test
     void hiringManagerFinalizesResult() throws Exception {
         mvc.perform(post("/interviews/7/final-result").with(as(40, "hm_khanh", "Hiring Manager")).with(csrf())
                         .contentType(MediaType.APPLICATION_JSON)

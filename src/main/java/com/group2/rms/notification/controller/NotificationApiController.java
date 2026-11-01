@@ -1,5 +1,7 @@
-package com.group2.rms.notification;
+package com.group2.rms.notification.controller;
 
+import com.group2.rms.notification.dto.NotificationResponse;
+import com.group2.rms.notification.service.NotificationService;
 import com.group2.rms.user.entity.User;
 import com.group2.rms.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -9,11 +11,18 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
 import java.util.Map;
 
+/*
+ * API CONTROLLER: JSON cho chuông thông báo trên topbar (số chưa đọc, danh sách gần đây, đánh dấu đã đọc).
+ */
 @Slf4j
 @RestController
 @RequestMapping("/api/notifications")
