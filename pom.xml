@@ -76,6 +76,12 @@
             <artifactId>spring-boot-starter-mail</artifactId>
         </dependency>
 
+        <!-- ===== WEBSOCKET (STOMP): đẩy thông báo in-app tức thời ===== -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-websocket</artifactId>
+        </dependency>
+
         <!-- ===== APACHE POI (EXCEL GENERATION) ===== -->
         <dependency>
             <groupId>org.apache.poi</groupId>

@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/internal(activeMenu='audit-logs',role='System Admin')}">
+<head>
+    <title>Lịch sử hoạt động hệ thống · Mộc RMS</title>
+    <th:block layout:fragment="styles">
+        <link rel="stylesheet" th:href="@{/css/pages/admin-surfaces.css}">
+        <link rel="stylesheet" th:href="@{/css/pages/audit-log.css}">
+    </th:block>
+</head>
+<body>
+<main id="main" layout:fragment="content" class="page-content container ads-page adw-page aul-page" tabindex="-1">
+    <th:block th:replace="~{fragments/ui/admin-workspace :: scene}"></th:block>
+    <header class="page-header adw-heading aul-heading">
+        <div><h1 class="page-title adw-title">Lịch sử hoạt động hệ thống</h1>
+            <p>Theo dõi và tra cứu các hoạt động đã được ghi nhận trong hệ thống RMS.</p></div>
+    </header>
+    <form class="aul-filters adw-surface" th:action="@{/admin/audit-logs}" method="get" aria-label="Bộ lọc lịch sử hoạt động">
+        <div class="aul-field"><label for="audit-from">Từ ngày</label><input class="form-control" id="audit-from" type="date" name="from" th:value="${from}" th:attr="aria-invalid=${filterError != null},aria-describedby=${filterError != null ? 'audit-filter-error' : null}"></div>
+        <div class="aul-field"><label for="audit-to">Đến ngày</label><input class="form-control" id="audit-to" type="date" name="to" th:value="${to}" th:attr="aria-invalid=${filterError != null},aria-describedby=${filterError != null ? 'audit-filter-error' : null}"></div>
+        <div class="aul-field"><label for="audit-actor">Người thực hiện</label><select class="form-select" id="audit-actor" name="actorId"><option value="">Tất cả</option><option th:each="actor : ${actors}" th:value="${actor.id}" th:text="|${actor.name} (#${actor.id})|" th:selected="${actor.id == actorId}"></option></select></div>
+        <div class="aul-field"><label for="audit-action">Hành động</label><select class="form-select" id="audit-action" name="action"><option value="">Tất cả</option><option th:each="item : ${actions}" th:value="${item.value}" th:text="${item.label}" th:selected="${item.value == action}"></option></select></div>
+        <div class="aul-field"><label for="audit-entity">Đối tượng</label><select class="form-select" id="audit-entity" name="entity"><option value="">Tất cả</option><option th:each="item : ${entities}" th:value="${item.value}" th:text="${item.label}" th:selected="${item.value == entity}"></option></select></div>
+        <div class="aul-field aul-search"><label for="audit-search">Tìm kiếm</label><input class="form-control" id="audit-search" type="search" name="search" th:value="${search}" maxlength="100" placeholder="Người dùng, đối tượng hoặc ID"></div>
+        <div class="aul-filter-actions"><a class="btn btn--secondary" th:href="@{/admin/audit-logs}">Đặt lại</a><button class="btn btn--primary" type="submit">Tìm kiếm</button></div>
+        <p id="audit-filter-error" class="aul-error" th:if="${filterError != null}" th:text="${filterError}" role="alert"></p>
+    </form>
+    <section class="aul-results adw-surface" aria-labelledby="audit-list-title">
+        <header class="aul-list-heading"><h2 id="audit-list-title" class="adw-panel-title">Danh sách lịch sử hoạt động</h2><p th:text="|Tổng ${logs.totalElements} bản ghi|"></p></header>
+        <div class="table-wrapper aul-scroll" tabindex="0" role="region" aria-labelledby="audit-list-title">
+            <table class="table adw-data-table aul-table">
+                <caption class="sr-only">Lịch sử hoạt động, mới nhất trước. Cuộn ngang để xem đầy đủ các cột.</caption>
+                <thead><tr><th scope="col">Thời gian</th><th scope="col">Người thực hiện</th><th scope="col">Hành động</th><th scope="col">Đối tượng</th><th scope="col">ID</th><th scope="col">Nội dung cũ</th><th scope="col">Nội dung mới</th></tr></thead>
+                <tbody>
+                <tr th:each="row : ${logs}">
+                    <td class="aul-time"><time th:datetime="${row.timestamp}" th:text="${#temporals.format(row.timestamp, 'dd/MM/yyyy HH:mm:ss')}"></time></td>
+                    <td><span th:replace="~{admin/audit-log :: actor(name=${row.performedBy},initials=${row.initials()})}"></span></td>
+                    <td><span th:replace="~{admin/audit-log :: actionBadge(action=${row.action},label=${row.actionLabel()})}"></span></td>
+                    <td><div th:replace="~{admin/audit-log :: target(row=${row})}"></div></td><td class="aul-id" th:text="${row.entityId}"></td>
+                    <td class="aul-value"><span class="aul-content aul-content--old" th:if="${row.oldContent() != null}" th:text="${row.oldContent()}"></span><span class="aul-dash" th:unless="${row.oldContent() != null}">—</span></td>
+                    <td class="aul-value"><span class="aul-content" th:if="${row.newContent() != null}" th:classappend="|aul-content--${row.contentTone()}|" th:text="${row.newContent()}"></span><span class="aul-dash" th:unless="${row.newContent() != null}">—</span></td>
+                </tr>
+                <tr th:if="${logs.empty}"><td colspan="7" class="aul-empty" th:text="${filterError != null ? 'Hãy điều chỉnh khoảng ngày để tra cứu.' : 'Chưa có hoạt động phù hợp. Hãy thử thay đổi bộ lọc.'}"></td></tr>
+                </tbody>
+            </table>
+        </div>
+        <div class="aul-pagination" th:if="${logs.totalPages > 1}"><nav th:replace="~{fragments/ui/pagination :: paged(page=${logs})}"></nav></div>
+    </section>
+</main>
+<span th:fragment="actor(name,initials)" class="aul-actor"><span class="aul-avatar" aria-hidden="true" th:text="${initials}"></span><span th:text="${name}"></span></span>
+<div th:fragment="target(row)" class="aul-target">
+    <span class="aul-entity"><svg aria-hidden="true" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path th:d="${row.entityIcon()}"></path></svg><span th:text="${row.entityLabel()}"></span></span>
+    <span class="aul-target-name" title="Tên đối tượng theo dữ liệu hiện tại" th:classappend="${row.targetName == null ? 'aul-target-name--missing' : ''}" th:text="${row.targetDescription()}"></span>
+</div>
+<span th:fragment="actionBadge(action,label)" class="badge aul-action" th:attr="data-action=${action}" th:classappend="${action == 'CREATE' ? 'badge--success' : (action == 'DELETE' ? 'badge--danger' : (action == 'UPDATE' ? 'badge--info' : 'badge--neutral'))}">
+    <svg aria-hidden="true" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" th:switch="${action}">
+        <path th:case="'CREATE'" d="M12 8v8M8 12h8M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0"></path>
+        <path th:case="'UPDATE'" d="m16 3 5 5M4 15 15.5 3.5a3.54 3.54 0 0 1 5 5L9 20l-6 1 1-6Z"></path>
+        <path th:case="'DELETE'" d="M3 6h18M9 6V3h6v3M5 6l1 15h12l1-15M10 10v7M14 10v7"></path>
+        <path th:case="'LOGIN'" d="M14 3H4v18h10M10 12h12M18 8l4 4-4 4"></path>
+        <path th:case="*" d="M5 5h14v14H5zM8 9h8M8 13h5"></path>
+    </svg><span th:text="${label}"></span>
+</span>
+<th:block layout:fragment="scripts"><th:block th:replace="~{fragments/ui/admin-workspace :: scripts}"></th:block></th:block>
+</body>
+</html>

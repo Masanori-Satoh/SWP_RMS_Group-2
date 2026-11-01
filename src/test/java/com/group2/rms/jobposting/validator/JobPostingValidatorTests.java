@@ -1,6 +1,6 @@
 package com.group2.rms.jobposting.validator;
 
-import com.group2.rms.jobposting.dto.JobPostingCreateRequest;
+import com.group2.rms.jobposting.dto.JobPostingRequest;
 import com.group2.rms.jobposting.entity.JobPosting;
 import com.group2.rms.jobposting.exception.JobPostingValidationException;
 import com.group2.rms.jobposting.service.JobPostingAccess;
@@ -42,20 +42,20 @@ class JobPostingValidatorTests {
     private final JobPostingValidator validator = new JobPostingValidator(CLOCK);
 
     /** Form hợp lệ tối thiểu: đủ 3 ô bắt buộc, lương thỏa thuận, không hiện số lượng, hạn nộp 30 ngày sau. */
-    private static JobPostingCreateRequest validForm(String action) {
-        return JobPostingCreateRequest.builder()
+    private static JobPostingRequest validForm(String action) {
+        return JobPostingRequest.builder()
                 .requisitionId(101)
                 .postingTitle("  Key Account Manager  ")
                 .jobDescription("Chăm sóc khách hàng\r\nĐàm phán hợp đồng")
                 .jobRequirements("2 năm kinh nghiệm")
-                .salaryMode(JobPostingCreateRequest.SALARY_NEGOTIABLE)
+                .salaryMode(JobPostingRequest.SALARY_NEGOTIABLE)
                 .showPositions(false)
                 .applicationDeadline(TODAY.plusDays(30))
                 .action(action)
                 .build();
     }
 
-    private Map<String, String> errorsOf(JobPostingCreateRequest form, boolean publishing) {
+    private Map<String, String> errorsOf(JobPostingRequest form, boolean publishing) {
         JobPostingValidationException exception = assertThrows(JobPostingValidationException.class,
                 () -> validator.normalizeAndValidate(form, publishing));
         return exception.getFieldErrors();
@@ -72,7 +72,7 @@ class JobPostingValidatorTests {
         @DisplayName("Form hợp lệ -> Không lỗi; tiêu đề được trim, \\r\\n đổi thành \\n")
         void normalizeAndValidate_shouldCleanText_whenFormIsValid() {
             // Arrange
-            JobPostingCreateRequest form = validForm(JobPostingValidator.ACTION_PUBLISH);
+            JobPostingRequest form = validForm(JobPostingValidator.ACTION_PUBLISH);
 
             // Act
             validator.normalizeAndValidate(form, true);
@@ -87,7 +87,7 @@ class JobPostingValidatorTests {
         @ValueSource(strings = {"   "})
         @DisplayName("Tiêu đề null / rỗng / chỉ khoảng trắng -> Lỗi ở ô tiêu đề, kể cả khi lưu nháp")
         void normalizeAndValidate_shouldRequireTitle_whenTitleIsBlank(String title) {
-            JobPostingCreateRequest form = validForm(JobPostingValidator.ACTION_DRAFT);
+            JobPostingRequest form = validForm(JobPostingValidator.ACTION_DRAFT);
             form.setPostingTitle(title);
 
             assertEquals("Vui lòng nhập tiêu đề tin.", errorsOf(form, false).get("postingTitle"));
@@ -96,7 +96,7 @@ class JobPostingValidatorTests {
         @Test
         @DisplayName("Thiếu mô tả và yêu cầu khi lưu nháp -> Lỗi ở cả hai ô (cột NOT NULL), báo một lượt")
         void normalizeAndValidate_shouldCollectAllErrors_whenDraftMissesRequiredTexts() {
-            JobPostingCreateRequest form = validForm(JobPostingValidator.ACTION_DRAFT);
+            JobPostingRequest form = validForm(JobPostingValidator.ACTION_DRAFT);
             form.setJobDescription(null);
             form.setJobRequirements("");
 
@@ -109,11 +109,11 @@ class JobPostingValidatorTests {
         @Test
         @DisplayName("Tiêu đề đúng TITLE_LIMIT ký tự -> Hợp lệ; TITLE_LIMIT + 1 -> Lỗi")
         void normalizeAndValidate_shouldEnforceTitleLimit_atBoundary() {
-            JobPostingCreateRequest atLimit = validForm(JobPostingValidator.ACTION_DRAFT);
+            JobPostingRequest atLimit = validForm(JobPostingValidator.ACTION_DRAFT);
             atLimit.setPostingTitle("a".repeat(JobPostingValidator.TITLE_LIMIT));
             assertDoesNotThrow(() -> validator.normalizeAndValidate(atLimit, false));
 
-            JobPostingCreateRequest overLimit = validForm(JobPostingValidator.ACTION_DRAFT);
+            JobPostingRequest overLimit = validForm(JobPostingValidator.ACTION_DRAFT);
             overLimit.setPostingTitle("a".repeat(JobPostingValidator.TITLE_LIMIT + 1));
             assertEquals(JobPostingValidator.TITLE_TOO_LONG, errorsOf(overLimit, false).get("postingTitle"));
         }
@@ -121,7 +121,7 @@ class JobPostingValidatorTests {
         @Test
         @DisplayName("Mô tả có \\r\\n: đếm độ dài sau khi đổi về \\n -> không bị chặn oan")
         void normalizeAndValidate_shouldCountLengthAfterNormalizing_whenTextHasCrLf() {
-            JobPostingCreateRequest form = validForm(JobPostingValidator.ACTION_DRAFT);
+            JobPostingRequest form = validForm(JobPostingValidator.ACTION_DRAFT);
             // 2 ký tự mỗi dòng trước khi chuẩn hóa → vượt TEXT_LIMIT; sau chuẩn hóa còn đúng TEXT_LIMIT - 1
             form.setJobDescription("a\r\n".repeat(JobPostingValidator.TEXT_LIMIT / 2 - 1) + "a");
 
@@ -145,8 +145,8 @@ class JobPostingValidatorTests {
         @Test
         @DisplayName("Lương 'Tự nhập' chỉ khoảng trắng, bật số lượng mà để trống -> Lỗi đúng từng ô")
         void normalizeAndValidate_shouldRequireCustomTexts_whenOptionsAreOn() {
-            JobPostingCreateRequest form = validForm(JobPostingValidator.ACTION_PUBLISH);
-            form.setSalaryMode(JobPostingCreateRequest.SALARY_CUSTOM);
+            JobPostingRequest form = validForm(JobPostingValidator.ACTION_PUBLISH);
+            form.setSalaryMode(JobPostingRequest.SALARY_CUSTOM);
             form.setSalaryCustom("  ");
             form.setShowPositions(true);
             form.setNumberOfPositionsDisplay("");
@@ -162,7 +162,7 @@ class JobPostingValidatorTests {
         @ValueSource(strings = {"RANGE", "hack"})
         @DisplayName("Lựa chọn lương thiếu / sai hoa thường / ngoài danh mục -> Lỗi, không NullPointerException")
         void normalizeAndValidate_shouldRejectSalaryMode_whenOutsideCatalog(String salaryMode) {
-            JobPostingCreateRequest form = validForm(JobPostingValidator.ACTION_PUBLISH);
+            JobPostingRequest form = validForm(JobPostingValidator.ACTION_PUBLISH);
             form.setSalaryMode(salaryMode);
 
             assertTrue(errorsOf(form, true).containsKey("salaryMode"));
@@ -179,11 +179,11 @@ class JobPostingValidatorTests {
         @Test
         @DisplayName("D6: đăng tin thiếu hạn nộp -> Lỗi; lưu nháp thiếu hạn nộp -> Hợp lệ")
         void normalizeAndValidate_shouldRequireDeadline_onlyWhenPublishing() {
-            JobPostingCreateRequest publish = validForm(JobPostingValidator.ACTION_PUBLISH);
+            JobPostingRequest publish = validForm(JobPostingValidator.ACTION_PUBLISH);
             publish.setApplicationDeadline(null);
             assertEquals("Vui lòng chọn hạn nộp hồ sơ.", errorsOf(publish, true).get("applicationDeadline"));
 
-            JobPostingCreateRequest draft = validForm(JobPostingValidator.ACTION_DRAFT);
+            JobPostingRequest draft = validForm(JobPostingValidator.ACTION_DRAFT);
             draft.setApplicationDeadline(null);
             assertDoesNotThrow(() -> validator.normalizeAndValidate(draft, false));
         }
@@ -191,12 +191,12 @@ class JobPostingValidatorTests {
         @Test
         @DisplayName("Hạn nộp hôm qua -> Lỗi; hôm nay (cuối ngày, biên) -> Hợp lệ")
         void normalizeAndValidate_shouldAcceptToday_andRejectYesterday() {
-            JobPostingCreateRequest yesterday = validForm(JobPostingValidator.ACTION_PUBLISH);
+            JobPostingRequest yesterday = validForm(JobPostingValidator.ACTION_PUBLISH);
             yesterday.setApplicationDeadline(TODAY.minusDays(1));
             assertEquals("Hạn nộp hồ sơ phải từ hôm nay trở đi.",
                     errorsOf(yesterday, true).get("applicationDeadline"));
 
-            JobPostingCreateRequest today = validForm(JobPostingValidator.ACTION_PUBLISH);
+            JobPostingRequest today = validForm(JobPostingValidator.ACTION_PUBLISH);
             today.setApplicationDeadline(TODAY);
             assertDoesNotThrow(() -> validator.normalizeAndValidate(today, true));
         }
@@ -213,7 +213,7 @@ class JobPostingValidatorTests {
         @Test
         @DisplayName("Hạn nộp lưu là cuối ngày đã chọn (23:59:59); chưa chọn -> null")
         void deadlineOf_shouldUseEndOfDay() {
-            JobPostingCreateRequest form = validForm(JobPostingValidator.ACTION_DRAFT);
+            JobPostingRequest form = validForm(JobPostingValidator.ACTION_DRAFT);
             assertEquals(TODAY.plusDays(30).atTime(23, 59, 59), validator.deadlineOf(form));
 
             form.setApplicationDeadline(null);

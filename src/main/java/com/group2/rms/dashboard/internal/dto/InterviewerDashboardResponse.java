@@ -5,22 +5,24 @@ import java.util.List;
 
 /*
  * DTO: toàn bộ dữ liệu dashboard Interviewer (dashboard/sections/interviewer.html).
- * nextInterview = null khi 7 ngày tới không có buổi nào; weekStart là thứ Hai của tuần đang xem.
+ * weekStart là thứ Hai của tuần đang xem.
  */
 public record InterviewerDashboardResponse(
         String roleName,
         String fullName,
         List<DashboardMetricResponse> kpis,
-        DashboardInterviewItem nextInterview,
-        long minutesUntilNext,
         List<EvaluationItem> pendingEvaluations,
         List<WeekDayItem> week,
-        LocalDate weekStart,
-        int weekInterviewCount) implements DashboardResponse {
+        LocalDate weekStart) implements DashboardResponse {
 
     @Override
     public String section() {
         return "interviewer";
+    }
+
+    @Override
+    public boolean hasCharts() {
+        return false;
     }
 
     public LocalDate weekEnd() {

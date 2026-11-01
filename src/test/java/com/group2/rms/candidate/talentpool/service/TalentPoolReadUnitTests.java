@@ -65,6 +65,64 @@ class TalentPoolReadUnitTests {
             .submissionDate(at).build();
 
     @Test
+    void candidateNoteApplicationContextRequiresMatchingCandidateAndViewPermission() {
+        when(currentUser.requireUser()).thenReturn(hr);
+        when(applications.findDetailById(100)).thenReturn(Optional.of(application));
+        service.validateNoteApplication(8, 100);
+        verify(applicationAccess).requireView(hr, application);
+        assertThrows(AccessDeniedException.class, () -> service.validateNoteApplication(999, 100));
+        doThrow(new AccessDeniedException("Denied")).when(applicationAccess).requireView(hr, application);
+        assertThrows(AccessDeniedException.class, () -> service.validateNoteApplication(8, 100));
+    }
+
+    @Test
+    void unmarkedDetailCanBeReloadedThroughAnAuthorizedSourceApplication() {
+        when(currentUser.requireUser()).thenReturn(hr);
+        when(candidates.findById(8)).thenReturn(Optional.of(candidate));
+        when(applications.findDetailById(100)).thenReturn(Optional.of(application));
+        candidate.setPotential(false);
+        var detail = service.detail(8, 100);
+        assertEquals(false, detail.potential());
+        assertEquals("HM_Suggested", application.getApplicationStatus());
+        verify(applicationAccess).requireView(hr, application);
+        assertEquals("https://example.test/cv.pdf", service.cv(8, 100, null, 100).redirectUrl());
+        verify(applicationAccess, times(2)).requireView(hr, application);
+    }
+
+    @Test
+    void sourceApplicationCannotExposeAnotherUnmarkedCandidate() {
+        when(currentUser.requireUser()).thenReturn(hm);
+        when(candidates.findById(8)).thenReturn(Optional.of(candidate));
+        candidate.setPotential(false);
+        var unrelated = Application.builder().applicationId(200)
+                .candidate(Candidate.builder().candidateId(99).build()).build();
+        when(applications.findDetailById(200)).thenReturn(Optional.of(unrelated));
+        assertThrows(AccessDeniedException.class, () -> service.detail(8, 200));
+        verify(poolApplications, never()).findPreviousCvByCandidateId(any());
+    }
+
+    @Test
+    void unmarkedDetailStillEnforcesSourceApplicationPermissions() {
+        when(currentUser.requireUser()).thenReturn(hm);
+        when(candidates.findById(8)).thenReturn(Optional.of(candidate));
+        when(applications.findDetailById(100)).thenReturn(Optional.of(application));
+        candidate.setPotential(false);
+        doThrow(new AccessDeniedException("Forbidden")).when(applicationAccess).requireView(hm, application);
+        assertThrows(AccessDeniedException.class, () -> service.detail(8, 100));
+        verify(poolApplications, never()).findPreviousCvByCandidateId(any());
+    }
+
+    @Test
+    void profileToggleUsesOnlyAnApplicationTheViewerCanAccess() {
+        when(currentUser.requireUser()).thenReturn(hm);
+        var outsideDepartment = Application.builder().applicationId(200).candidate(candidate).build();
+        when(applications.findByCandidate_CandidateIdOrderByApplicationIdDesc(8))
+                .thenReturn(List.of(outsideDepartment, application));
+        when(applicationAccess.canView(hm, application)).thenReturn(true);
+        assertEquals(100, service.bookmarkSource(8));
+    }
+
+    @Test
     @DisplayName("POOL-TalentPoolReadUnitTests-01 | HR đọc vai trò người xem")
     void viewerRole_hr_returnsRole() {
         // Given: HR đọc vai trò người xem.
@@ -257,6 +315,11 @@ class TalentPoolReadUnitTests {
         when(currentUser.requireUser()).thenReturn(hr);
         when(candidates.findById(8)).thenReturn(Optional.of(candidate));
         when(applications.findDetailById(100)).thenReturn(Optional.of(application));
+        when(notes.save(any())).thenAnswer(invocation -> {
+            TalentPoolNote note = invocation.getArgument(0);
+            note.setNoteId(4);
+            return note;
+        });
         // When: Gọi nghiệp vụ cần kiểm tra với dữ liệu đã chuẩn bị.
         var result = service.saveBookmark(100, new TalentPoolBookmarkRequest("x".repeat(1000)));
         // Then: Kiểm tra kết quả và số lần gọi repository theo đúng ca này.
@@ -861,8 +924,19 @@ class TalentPoolReadUnitTests {
         assertEquals(hr, note.getAuthor());
         assertEquals(at, note.getCreatedAt());
         verify(notes).save(note);
+        verify(audit).record(hr.getUserId(), "UPDATE", "TalentPoolNote", 3, "Ứng viên #8\nCũ", "Ứng viên #8\nĐã sửa");
         service.deleteNote(8, 3);
         verify(notes).delete(note);
+        verify(audit).record(hr.getUserId(), "DELETE", "TalentPoolNote", 3, "Ứng viên #8\nĐã sửa", null);
+    }
+
+    @Test void unchangedNoteCreatesNoAuditEntry() {
+        when(currentUser.requireUser()).thenReturn(hr);
+        var note = TalentPoolNote.builder().noteId(3).candidate(candidate).author(hr).noteContent("Ghi chú").build();
+        when(notes.findById(3)).thenReturn(Optional.of(note));
+        service.updateNote(8, 3, new TalentPoolNoteRequest("  Ghi chú  "));
+        verifyNoInteractions(audit);
+        verify(notes, never()).save(any());
     }
 
     @Test

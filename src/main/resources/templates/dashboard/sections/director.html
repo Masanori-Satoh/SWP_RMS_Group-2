@@ -3,14 +3,14 @@
 <body>
 <!-- Dashboard Giám đốc (toàn công ty); dashboard/index.html chèn vào theo dashboard.section. -->
 <th:block th:fragment="content(dashboard)">
-    <div th:replace="~{dashboard/fragments :: pageHeader('Bảng điều khiển', 'Toàn công ty · 30 ngày gần nhất')}"></div>
+    <div th:replace="~{dashboard/fragments :: pageHeader('Bảng điều khiển', null)}"></div>
 
-    <th:block th:replace="~{dashboard/fragments :: kpis(${dashboard.kpis})}"></th:block>
+    <div class="dash-role-kpis" th:insert="~{dashboard/fragments :: kpis(${dashboard.kpis})}"></div>
 
     <section class="card dash-panel dash-panel--priority adw-surface" aria-labelledby="dr-requisitions-title">
         <div class="dash-panel__heading">
             <h2 id="dr-requisitions-title" class="dash-panel__title">
-                <svg th:replace="~{dashboard/fragments :: icon('inbox')}"></svg>Yêu cầu chờ duyệt
+                <svg th:replace="~{dashboard/fragments :: icon('inbox')}"></svg>Yêu cầu tuyển dụng chờ duyệt
             </h2>
             <a class="dash-link" th:href="@{/requisitions}">Xem tất cả</a>
         </div>
@@ -62,7 +62,7 @@
         <section class="card dash-panel adw-surface" aria-labelledby="dr-offers-title">
             <div class="dash-panel__heading">
                 <h2 id="dr-offers-title" class="dash-panel__title">
-                    <svg th:replace="~{dashboard/fragments :: icon('banknote')}"></svg>Đề nghị chờ duyệt
+                    <svg th:replace="~{dashboard/fragments :: icon('banknote')}"></svg>Đề nghị tuyển dụng chờ duyệt
                 </h2>
                 <a class="dash-link" th:href="@{/offers}">Xem tất cả</a>
             </div>
@@ -91,33 +91,19 @@
                     <svg th:replace="~{dashboard/fragments :: icon('building')}"></svg>Yêu cầu đang mở theo phòng ban
                 </h2>
             </div>
-            <p class="dash-panel__sub">Toàn công ty, gồm cả yêu cầu bạn không trực tiếp duyệt.</p>
             <p class="dash-empty" th:if="${#lists.isEmpty(dashboard.openByDepartment)}">Chưa có yêu cầu đang mở.</p>
             <th:block th:unless="${#lists.isEmpty(dashboard.openByDepartment)}">
-                <ul th:replace="~{dashboard/fragments :: barChart(${dashboard.openByDepartment})}"></ul>
+                <div th:replace="~{dashboard/fragments :: chartCanvas('departments', 'dash-chart--departments')}"></div>
+                <!-- Dữ liệu biểu đồ; cũng là bản đọc được khi không có JavaScript -->
+                <ul class="dash-chart-data" data-chart-data>
+                    <li th:each="department : ${dashboard.openByDepartment}" data-chart-point
+                        th:data-label="${department.departmentName}"
+                        th:data-pending="${department.pending}" th:data-approved="${department.approved}"
+                        th:text="|${department.departmentName}: ${department.pending} chờ duyệt, ${department.approved} đã duyệt|">Phòng ban: 0 chờ duyệt, 0 đã duyệt</li>
+                </ul>
             </th:block>
         </section>
     </div>
-
-    <section class="card dash-panel adw-surface" aria-labelledby="dr-decisions-title">
-        <div class="dash-panel__heading">
-            <h2 id="dr-decisions-title" class="dash-panel__title">
-                <svg th:replace="~{dashboard/fragments :: icon('history')}"></svg>Quyết định gần đây
-            </h2>
-        </div>
-        <p class="dash-empty" th:if="${#lists.isEmpty(dashboard.recentDecisions)}">Bạn chưa có quyết định nào.</p>
-        <ul class="dash-work" th:unless="${#lists.isEmpty(dashboard.recentDecisions)}">
-            <li th:each="decision : ${dashboard.recentDecisions}" class="dash-work__item">
-                <div class="dash-work__body">
-                    <p class="dash-work__title" th:text="${decision.title}">Tiêu đề</p>
-                    <p class="dash-work__detail" th:text="${decision.typeLabel}">Yêu cầu tuyển dụng</p>
-                </div>
-                <time class="dash-cell-meta" th:if="${decision.decidedAt != null}" th:datetime="${decision.decidedAt}"
-                      th:text="${#temporals.format(decision.decidedAt, 'dd/MM/yyyy HH:mm')}">01/01/2026 09:00</time>
-                <span class="badge" th:classappend="|badge--${decision.statusTone}|" th:text="${decision.statusLabel}">Đã duyệt</span>
-            </li>
-        </ul>
-    </section>
 </th:block>
 </body>
 </html>

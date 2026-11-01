@@ -170,6 +170,7 @@ a.tpw-contact-line:focus-visible { outline: 3px solid var(--focus); outline-offs
 .rms-app .adw-page.tpw-page .tpw-profile-title { margin: 0; font-size: 28px; line-height: 1.25; }
 .tpw-profile-title::after { content: none; }
 .tpw-page .tpw-name-badge { display: inline-flex; align-items: center; margin: 0; gap: 6px; padding: 4px 12px; font-size: 13px; font-weight: 600; }
+.tpw-state-row { margin-top: var(--s3); }
 .tpw-contact-chips { display: flex; flex-wrap: wrap; gap: var(--s2); margin: 0; padding: 0; list-style: none; }
 .tpw-contact-chip { display: inline-flex; align-items: center; gap: var(--s2); min-height: 34px; max-width: 100%; padding: 4px var(--s3); border: 1px solid var(--line); border-radius: var(--radius-md); background: var(--surface-subtle); color: var(--ink); font-size: 14px; overflow-wrap: anywhere; }
 .tpw-contact-chip svg { flex-shrink: 0; color: var(--brand-dark); }
@@ -359,4 +360,17 @@ a.tpw-contact-line:focus-visible { outline: 3px solid var(--focus); outline-offs
   .tpw-filter-control { max-width: none; flex: 1 1 auto; }
   .tpw-page .tpw-filter-submit { flex: 1 1 auto; }
   .tpw-page .tpw-pool-table { min-width: 760px; }
+}
+
+/* Align the Talent Pool profile with the application detail workspace. */
+.tpw-main-stack > .tpw-profile { margin-bottom: 0; }
+.tpw-side-stack .tpw-info-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.tpw-side-stack .tpw-info-item { padding: var(--s3); }
+.tpw-side-stack .tpw-info-icon { display: none; }
+.tpw-side-stack .tpw-info-item::before { content: none; }
+.tpw-side-stack .tpw-info-item:nth-child(n) { border-top: 0; }
+.tpw-side-stack .tpw-info-item:nth-child(n + 3) { border-top: 1px solid var(--line); }
+@media (max-width: 480px) {
+  .tpw-side-stack .tpw-info-grid { grid-template-columns: minmax(0, 1fr); }
+  .tpw-side-stack .tpw-info-item + .tpw-info-item { border-top: 1px solid var(--line); }
 }

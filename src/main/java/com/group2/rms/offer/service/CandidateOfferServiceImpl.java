@@ -31,14 +31,14 @@ public class CandidateOfferServiceImpl implements CandidateOfferService {
     private final CandidateOfferRepository offers;
     private final CurrentUserService currentUserService;
     private final ApplicationStatusService applicationStatusService;
-    private final com.group2.rms.notification.NotificationService systemNotificationService;
+    private final com.group2.rms.notification.service.NotificationService systemNotificationService;
     private final Clock clock;
 
     @org.springframework.beans.factory.annotation.Autowired
     public CandidateOfferServiceImpl(CandidateOfferRepository offers,
                                     CurrentUserService currentUserService,
                                     ApplicationStatusService applicationStatusService,
-                                    com.group2.rms.notification.NotificationService systemNotificationService,
+                                    com.group2.rms.notification.service.NotificationService systemNotificationService,
                                     Clock clock) {
         this.offers = offers;
         this.currentUserService = currentUserService;

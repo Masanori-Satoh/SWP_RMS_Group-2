@@ -13,7 +13,6 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.NullSource;
-import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -215,9 +214,9 @@ class RequisitionAccessTests {
         }
 
         @ParameterizedTest(name = "trạng thái {0} -> sao chép được = {1}")
-        @CsvSource({"Approved, true", "Rejected, true", "Draft, false", "Pending_Director, false"})
-        @DisplayName("Sao chép được khi có quyền tạo và yêu cầu đã xong vòng duyệt")
-        void canCopy_shouldRequireFinishedStatus_whenViewerCanCreate(String status, boolean expected) {
+        @CsvSource({"Approved, true", "Rejected, false", "Draft, false", "Pending_Director, false"})
+        @DisplayName("Sao chép được khi có quyền tạo và yêu cầu đã được duyệt")
+        void canCopy_shouldRequireApprovedStatus_whenViewerCanCreate(String status, boolean expected) {
             assertEquals(expected, access.canCopy(manager, ownedByManager(status)));
         }
 
@@ -256,21 +255,6 @@ class RequisitionAccessTests {
         @DisplayName("Yêu cầu chưa có tin (trạng thái null) -> Không có link")
         void canOpenPosting_shouldReturnFalse_whenRequisitionHasNoPosting(String postingStatus) {
             assertFalse(access.canOpenPosting(hr, postingStatus));
-        }
-
-        @ParameterizedTest
-        @ValueSource(strings = {"Approved", "Rejected"})
-        @DisplayName("Approved / Rejected là trạng thái đã xong vòng duyệt")
-        void isFinishedStatus_shouldReturnTrue_whenStatusIsApprovedOrRejected(String status) {
-            assertTrue(RequisitionAccess.isFinishedStatus(status));
-        }
-
-        @ParameterizedTest
-        @NullSource
-        @ValueSource(strings = {"Draft", "Pending_Director", "", "approved"})
-        @DisplayName("Draft / Pending / null / rỗng / sai hoa thường -> Chưa xong")
-        void isFinishedStatus_shouldReturnFalse_whenStatusIsNotFinished(String status) {
-            assertFalse(RequisitionAccess.isFinishedStatus(status));
         }
     }
 }

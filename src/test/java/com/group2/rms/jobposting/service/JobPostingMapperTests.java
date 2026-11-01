@@ -5,7 +5,7 @@ import com.group2.rms.jobposting.dto.InternalJobPostingDetailResponse;
 import com.group2.rms.jobposting.dto.InternalJobPostingDetailResponse.ActivityHistoryItem;
 import com.group2.rms.jobposting.dto.InternalJobPostingDetailResponse.ApplicationStats;
 import com.group2.rms.jobposting.dto.InternalJobPostingResponse;
-import com.group2.rms.jobposting.dto.JobPostingCreateRequest;
+import com.group2.rms.jobposting.dto.JobPostingRequest;
 import com.group2.rms.jobposting.entity.JobPosting;
 import com.group2.rms.jobposting.validator.JobPostingValidator;
 import com.group2.rms.requisition.entity.JobRequisition;
@@ -270,12 +270,12 @@ class JobPostingMapperTests {
                     .isMandatory(true).build());
 
             // Act
-            JobPostingCreateRequest form = mapper.toCreateForm(requisition, 1);
+            JobPostingRequest form = mapper.toCreateForm(requisition, 1);
 
             // Assert
             assertEquals(5, form.getRequisitionId());
             assertEquals("Java Dev", form.getPostingTitle());
-            assertEquals(JobPostingCreateRequest.SALARY_RANGE, form.getSalaryMode());
+            assertEquals(JobPostingRequest.SALARY_RANGE, form.getSalaryMode());
             assertEquals("20 – 30 triệu VND/tháng", form.getSalaryRangeLabel());
             assertEquals("2 người", form.getNumberOfPositionsDisplay());
             assertEquals(NOW.toLocalDate().plusDays(JobPostingValidator.DEFAULT_DEADLINE_DAYS), form.getApplicationDeadline());
@@ -291,7 +291,7 @@ class JobPostingMapperTests {
             requisition.setMinSalary(null);
             requisition.setMaxSalary(null);
 
-            assertEquals(JobPostingCreateRequest.SALARY_NEGOTIABLE, mapper.toCreateForm(requisition, 1).getSalaryMode());
+            assertEquals(JobPostingRequest.SALARY_NEGOTIABLE, mapper.toCreateForm(requisition, 1).getSalaryMode());
         }
 
         @Test
@@ -304,11 +304,11 @@ class JobPostingMapperTests {
             posting.setSalaryDisplay("Lên đến 30 triệu + hoa hồng");
 
             // Act
-            JobPostingCreateRequest form = mapper.toEditForm(posting);
+            JobPostingRequest form = mapper.toEditForm(posting);
 
             // Assert
             assertEquals(11, form.getJobPostingId());
-            assertEquals(JobPostingCreateRequest.SALARY_CUSTOM, form.getSalaryMode());
+            assertEquals(JobPostingRequest.SALARY_CUSTOM, form.getSalaryMode());
             assertEquals("Lên đến 30 triệu + hoa hồng", form.getSalaryCustom());
             assertEquals(Boolean.FALSE, form.getShowPositions());
             assertTrue(form.isLive());
@@ -322,9 +322,9 @@ class JobPostingMapperTests {
             JobPosting posting = posting(JobPostingAccess.STATUS_PAUSED, NOW.minusDays(3), NOW.plusDays(10));
             posting.setSalaryDisplay(JobPostingLabels.SALARY_NEGOTIABLE_OLD_SPELLING);
 
-            JobPostingCreateRequest form = mapper.toEditForm(posting);
+            JobPostingRequest form = mapper.toEditForm(posting);
 
-            assertEquals(JobPostingCreateRequest.SALARY_NEGOTIABLE, form.getSalaryMode());
+            assertEquals(JobPostingRequest.SALARY_NEGOTIABLE, form.getSalaryMode());
             assertTrue(form.isPaused() && form.isLive());
         }
     }

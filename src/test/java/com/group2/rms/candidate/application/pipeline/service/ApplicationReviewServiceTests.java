@@ -10,6 +10,7 @@ import com.group2.rms.candidate.domain.repository.ApplicationReviewRepository;
 import com.group2.rms.candidate.infra.ai.AiScreeningOutcome;
 import com.group2.rms.candidate.application.screening.AiScreeningService;
 import com.group2.rms.core.exception.ResourceNotFoundException;
+import com.group2.rms.notification.service.NotificationService;
 import com.group2.rms.user.entity.User;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -42,13 +43,14 @@ class ApplicationReviewServiceTests {
     @Mock ApplicationReviewRepository reviews;
     @Mock ApplicationAccess access;
     @Mock AiScreeningService aiScreeningService;
+    @Mock NotificationService notificationService;
 
     private ApplicationReviewService service;
     private final User actor = User.builder().userId(1).fullName("Lan HR").build();
 
     @BeforeEach
     void setUp() {
-        service = new ApplicationReviewService(applications, reviews, access, aiScreeningService);
+        service = new ApplicationReviewService(applications, reviews, access, aiScreeningService, notificationService);
         when(access.actor()).thenReturn(actor);
     }
 
@@ -67,17 +69,20 @@ class ApplicationReviewServiceTests {
         assertEquals("Pass", saved.getDecision());
         assertEquals("Hợp vị trí", saved.getComments());
         assertEquals("Đã chuyển hồ sơ cho trưởng bộ phận.", message);
+        verify(notificationService).notifyApplicationAwaitingHiringManager(application, actor);
+        verify(notificationService, never()).notifyApplicationReadyForInterview(any(), any());
     }
 
     @Test
     void hiringManagerPassApprovesForInterview() {
-        reviewable("HR_Passed");
+        Application application = reviewable("HR_Passed");
         when(applications.transition(ID, Set.of("HR_Passed"), "HM_Passed")).thenReturn(1);
 
         String message = service.review(ID, new ApplicationReviewRequest("Pass", null));
 
         assertEquals("HiringManager", savedReview().getReviewerRole());
         assertEquals("Đã duyệt hồ sơ. HR có thể lên lịch phỏng vấn.", message);
+        verify(notificationService).notifyApplicationReadyForInterview(application, actor);
     }
 
     /** Q2.3: HM vắng thì Director duyệt thay ở bước HM; lượt duyệt ghi vai trò Director (lịch sử hiện "Giám đốc"). */
@@ -115,6 +120,7 @@ class ApplicationReviewServiceTests {
 
         assertEquals("Fail", savedReview().getDecision());
         assertNull(savedReview().getComments(), "nhận xét rỗng lưu null");
+        verifyNoInteractions(notificationService);
     }
 
     @Test
@@ -125,6 +131,7 @@ class ApplicationReviewServiceTests {
 
         assertEquals("Hold", savedReview().getDecision());
         verify(applications, never()).transition(anyInt(), any(), any());
+        verifyNoInteractions(notificationService);
     }
 
     @Test

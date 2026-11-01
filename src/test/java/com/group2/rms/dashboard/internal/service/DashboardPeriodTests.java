@@ -8,7 +8,6 @@ import org.junit.jupiter.params.provider.NullAndEmptySource;
 import org.junit.jupiter.params.provider.ValueSource;
 
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
@@ -20,17 +19,6 @@ class DashboardPeriodTests {
 
     private static final LocalDate WEDNESDAY = LocalDate.of(2026, 10, 28);
     private static final LocalDate MONDAY = LocalDate.of(2026, 10, 26);
-
-    @Test
-    @DisplayName("Kỳ hiện tại = 30 ngày trước tới nay; kỳ trước = 60 tới 30 ngày trước")
-    void currentFromAndPreviousFrom_shouldBeThirtyAndSixtyDaysBack() {
-        // Arrange
-        LocalDateTime now = WEDNESDAY.atTime(9, 0);
-
-        // Act + Assert
-        assertEquals(now.minusDays(30), DashboardPeriod.currentFrom(now));
-        assertEquals(now.minusDays(60), DashboardPeriod.previousFrom(now));
-    }
 
     @ParameterizedTest(name = "{0} so với {1} -> {2}")
     @CsvSource({"12,10,↑ 20%", "8,10,↓ 20%", "10,10,0%", "5,0,Mới"})
@@ -56,13 +44,11 @@ class DashboardPeriodTests {
     }
 
     @Test
-    @DisplayName("Tỷ lệ làm tròn; mẫu số 0 -> null; chênh lệch tính bằng điểm")
-    void percentAndPointChange_shouldRoundAndHandleZero() {
+    @DisplayName("Tỷ lệ làm tròn; mẫu số 0 -> null")
+    void percent_shouldRoundAndReturnNull_whenWholeIsZero() {
         // Act + Assert
         assertEquals(67, DashboardPeriod.percent(2, 3));
         assertNull(DashboardPeriod.percent(0, 0));
-        assertEquals("↓ 5 điểm", DashboardPeriod.pointChangeText(80, 85));
-        assertNull(DashboardPeriod.pointChangeText(80, null));
     }
 
     @ParameterizedTest(name = "\"{0}\" -> tuần hiện tại")

@@ -137,7 +137,8 @@ public class SecurityConfig {
                                                 .hasAnyAuthority("ROLE_HR", "ROLE_DIRECTOR")
                                                 // authenticaed require for dashboard notification
                                                 .requestMatchers("/dashboard", "/dashboard/**", "/notifications",
-                                                                "/notifications/**", "/api/notifications", "/api/notifications/**")
+                                                                "/notifications/**", "/api/notifications", "/api/notifications/**",
+                                                                WebSocketConfig.ENDPOINT)
                                                 .authenticated()
                                                 .requestMatchers("/requisitions", "/requisitions/**")
                                                 .hasAnyAuthority("ROLE_HIRING_MANAGER", "ROLE_DIRECTOR", "ROLE_HR")
@@ -151,7 +152,7 @@ public class SecurityConfig {
                                                 .hasAuthority("ROLE_HIRING_MANAGER")
                                                 .requestMatchers("/talent-pool", "/talent-pool/**")
                                                 .hasAnyAuthority("ROLE_HR", "ROLE_HIRING_MANAGER")
-                                                .requestMatchers("/internal/job-postings/create", "/internal/job-postings/dashboard")
+                                                .requestMatchers("/internal/job-postings/create")
                                                 .hasAuthority("ROLE_HR")
                                                 // Xem danh sách / chi tiết tin: thêm Director (chỉ xem, không thao tác); service ẩn tin nháp với HM, Director
                                                 .requestMatchers(HttpMethod.GET, "/internal/job-postings", "/internal/job-postings/*")

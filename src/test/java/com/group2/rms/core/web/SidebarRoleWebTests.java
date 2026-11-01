@@ -15,8 +15,8 @@ import com.group2.rms.core.security.CurrentUserService;
 import com.group2.rms.core.security.DatabaseUserDetailsService;
 import com.group2.rms.interview.controller.CandidateInterviewController;
 import com.group2.rms.interview.service.InterviewSchedulingService;
-import com.group2.rms.notification.NotificationController;
-import com.group2.rms.notification.NotificationService;
+import com.group2.rms.notification.controller.NotificationController;
+import com.group2.rms.notification.service.NotificationService;
 import com.group2.rms.offer.controller.CandidateOfferController;
 import com.group2.rms.offer.service.CandidateOfferService;
 import com.group2.rms.user.entity.Role;
@@ -85,11 +85,9 @@ class SidebarRoleWebTests {
 
             assertFalse(nav.contains("href=\"/applications\""), page + ": lộ menu HR /applications");
             assertFalse(nav.contains("href=\"/offers\""), page + ": lộ menu HR /offers");
-            // ux.md mục 0: menu 2 mục (fragments/layout/candidate-nav)
-            assertTrue(nav.contains("href=\"/jobs\""), page + ": thiếu mục Vị trí tuyển dụng");
-            assertTrue(nav.contains("href=\"/portal/applications\""), page + ": thiếu mục Đơn của tôi");
-            // "Đơn của tôi" sáng ở trang đơn, lịch phỏng vấn, thư mời; không sáng ở thông báo
-            assertEquals(!"/notifications".equals(page), nav.contains("aria-current=\"page\">Đơn của tôi"), page);
+            // Topbar khối nổi (dunglt 31/10): chỉ còn nút Vị trí đang tuyển, bỏ mục Đơn của tôi
+            assertTrue(nav.contains("href=\"/jobs\""), page + ": thiếu nút Vị trí đang tuyển");
+            assertFalse(nav.contains("href=\"/portal/applications\""), page + ": còn mục Đơn của tôi trên topbar");
         }
     }
 

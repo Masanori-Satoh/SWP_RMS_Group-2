@@ -1,6 +1,6 @@
 package com.group2.rms.jobposting.validator;
 
-import com.group2.rms.jobposting.dto.JobPostingCreateRequest;
+import com.group2.rms.jobposting.dto.JobPostingRequest;
 import com.group2.rms.jobposting.entity.JobPosting;
 import com.group2.rms.jobposting.exception.JobPostingValidationException;
 import com.group2.rms.jobposting.service.JobPostingAccess;
@@ -19,10 +19,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-/**
- * Quy tắc kiểm tra dữ liệu của tin tuyển dụng (tầng 3, AG §2.4). JS ở form (pages/job-posting-form.js) viết GIỐNG
- * các quy tắc này để người dùng thấy lỗi sớm, nhưng server mới là nơi quyết định.
- * Không kiểm tra quyền (JobPostingAccess). Giới hạn / câu lỗi để public để DTO, controller, template và test dùng chung.
+/*
+ * VALIDATOR: quy tắc dữ liệu của tin (tầng 3); JS ở form viết giống để báo lỗi sớm.
  */
 @Component
 @RequiredArgsConstructor
@@ -54,8 +52,8 @@ public class JobPostingValidator {
     public static final String POSITIONS_TEXT_TOO_LONG = "Nội dung quá " + POSITIONS_TEXT_LIMIT + " ký tự";
 
     private static final Set<String> ACTIONS = Set.of(ACTION_DRAFT, ACTION_PUBLISH);
-    private static final List<String> SALARY_MODES = List.of(JobPostingCreateRequest.SALARY_RANGE,
-            JobPostingCreateRequest.SALARY_NEGOTIABLE, JobPostingCreateRequest.SALARY_CUSTOM);
+    private static final List<String> SALARY_MODES = List.of(JobPostingRequest.SALARY_RANGE,
+            JobPostingRequest.SALARY_NEGOTIABLE, JobPostingRequest.SALARY_CUSTOM);
 
     /** Đồng hồ dùng chung (core/config/ClockConfig); test truyền Clock.fixed để cố định "bây giờ". */
     private final Clock clock;
@@ -101,14 +99,8 @@ public class JobPostingValidator {
         }
     }
 
-    /**
-     * Làm sạch rồi kiểm tra toàn bộ form. Lỗi nào cũng gom vào một map (tên ô → câu lỗi) rồi ném một lần,
-     * để người dùng thấy hết lỗi cùng lúc. Có sửa DTO (trim chuỗi, đổi \r\n thành \n).
-     *
-     * @param request     dữ liệu form
-     * @param publishing  true khi tin sẽ / đang hiển thị cho ứng viên (đăng tin, hoặc sửa tin đã đăng): bắt buộc hạn nộp
-     */
-    public void normalizeAndValidate(JobPostingCreateRequest request, boolean publishing) {
+    /** Làm sạch rồi kiểm tra cả form, gom mọi lỗi ném một lần; publishing = bắt buộc hạn nộp. */
+    public void normalizeAndValidate(JobPostingRequest request, boolean publishing) {
         LocalDateTime now = LocalDateTime.now(clock);
         normalize(request);
         Map<String, String> errors = new LinkedHashMap<>();
@@ -125,11 +117,10 @@ public class JobPostingValidator {
         maxLength(errors, "benefits", request.getBenefits(), TEXT_LIMIT);
         maxLength(errors, "workLocation", request.getWorkLocation(), LOCATION_LIMIT);
 
-        // Rule: mức lương hiển thị là 1 trong 3 lựa chọn; "Tự nhập" thì phải có nội dung
-        // (List.of(...).contains(null) ném NullPointerException nên kiểm tra null trước)
+        // Rule: lương là 1 trong 3 lựa chọn, "Tự nhập" phải có nội dung (kiểm tra null trước contains)
         if (request.getSalaryMode() == null || !SALARY_MODES.contains(request.getSalaryMode())) {
             errors.put("salaryMode", "Vui lòng chọn cách hiển thị mức lương.");
-        } else if (JobPostingCreateRequest.SALARY_CUSTOM.equals(request.getSalaryMode())) {
+        } else if (JobPostingRequest.SALARY_CUSTOM.equals(request.getSalaryMode())) {
             requireText(errors, "salaryCustom", request.getSalaryCustom(), SALARY_TEXT_LIMIT,
                     "Nhập mức lương hiển thị hoặc chọn một lựa chọn khác.");
         }
@@ -148,7 +139,7 @@ public class JobPostingValidator {
     }
 
     /** Hạn nộp lưu vào DB: cuối ngày đã chọn; null nếu chưa chọn. */
-    public LocalDateTime deadlineOf(JobPostingCreateRequest request) {
+    public LocalDateTime deadlineOf(JobPostingRequest request) {
         if (request.getApplicationDeadline() == null) {
             return null;
         }
@@ -157,7 +148,7 @@ public class JobPostingValidator {
 
     // ----- Các hàm nhỏ -----
 
-    private void normalize(JobPostingCreateRequest request) {
+    private void normalize(JobPostingRequest request) {
         request.setPostingTitle(RequisitionValidator.cleanString(request.getPostingTitle()));
         request.setJobDescription(RequisitionValidator.cleanMultiline(request.getJobDescription()));
         request.setJobRequirements(RequisitionValidator.cleanMultiline(request.getJobRequirements()));
@@ -168,7 +159,7 @@ public class JobPostingValidator {
     }
 
     /** Rule (D6): đăng tin bắt buộc có hạn nộp; hạn nộp phải sau ngày đăng (CK_JobPosting_Deadline). */
-    private void validateDeadline(Map<String, String> errors, JobPostingCreateRequest request, boolean publishing,
+    private void validateDeadline(Map<String, String> errors, JobPostingRequest request, boolean publishing,
             LocalDateTime now) {
         LocalDateTime deadline = deadlineOf(request);
         if (deadline == null) {

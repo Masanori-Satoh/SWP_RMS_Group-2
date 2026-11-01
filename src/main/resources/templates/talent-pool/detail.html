@@ -12,6 +12,13 @@
 <body>
 <main id="main" layout:fragment="content" class="page-content container app-page tp-detail-page tpw-page adw-page" tabindex="-1">
     <th:block th:replace="~{fragments/ui/admin-workspace :: scene}"></th:block>
+
+
+    <th:block th:replace="~{fragments/ui/flash-toast :: flashToast(${successMessage}, ${errorMessage})}"></th:block>
+    <p th:unless="${detail.potential}" class="alert alert--info">Ứng viên đã được bỏ khỏi kho tiềm năng. Hồ sơ, CV và lịch sử ghi chú vẫn được giữ lại.</p>
+
+    <div class="tp-detail-workspace tpw-detail-grid">
+        <div class="tpw-main-stack">
     <header class="card tp-profile adw-surface tpw-profile">
         <div class="tp-profile-identity tpw-profile-identity">
             <span class="tp-profile-avatar tpw-avatar tpw-avatar--profile" aria-hidden="true" th:with="parts=${#strings.arraySplit(detail.candidate.fullName ?: '', ' ')}"
@@ -19,10 +26,12 @@
             <div class="tp-profile-info">
                 <div class="tpw-name-row">
                     <h1 class="page-title tp-profile-title adw-title tpw-profile-title" th:text="${detail.candidate.fullName}"></h1>
-                    <span th:if="${recommendation == null}" class="badge badge--success tp-profile-badge tpw-status tpw-name-badge" data-tpw-tone="success">
+                    <th:block th:if="${bookmarkSourceId != null}">
+                        <span th:replace="~{talent-pool/potential-toggle :: toggle(applicationId=${bookmarkSourceId},candidateName=${detail.candidate.fullName},saved=${detail.potential},keepSource=${true})}"></span>
+                    </th:block>
+                    <span th:if="${recommendation == null and bookmarkSourceId == null}" class="badge badge--success tp-profile-badge tpw-status tpw-name-badge" data-tpw-tone="success">
                         <svg viewBox="0 0 24 24" width="15" height="15" fill="currentColor" aria-hidden="true"><path d="m12 2.8 2.8 5.7 6.3.9-4.6 4.4 1.1 6.2L12 17.1 6.4 20l1.1-6.2L2.9 9.4l6.3-.9Z"/></svg>Ứng viên tiềm năng
                     </span>
-                    <span th:if="${recommendation != null}" class="badge tp-profile-badge tpw-status tpw-name-badge" th:attr="data-tpw-tone=${recommendation.pending ? 'warning' : 'neutral'}" th:classappend="${recommendation.pending ? 'badge--warning' : 'badge--neutral'}" th:text="${recommendation.statusLabel}"></span>
                 </div>
                 <ul class="tpw-contact-chips" aria-label="Thông tin liên hệ">
                     <li class="tpw-contact-chip">
@@ -33,11 +42,10 @@
                         <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2Z"/></svg>
                         <span th:text="${detail.candidate.phoneNumber ?: 'Chưa có số điện thoại'}"></span>
                     </li>
-                    <li th:if="${recommendation != null}" class="tpw-contact-chip">
-                        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="m12 2.8 2.8 5.7 6.3.9-4.6 4.4 1.1 6.2L12 17.1 6.4 20l1.1-6.2L2.9 9.4l6.3-.9Z"/></svg>
-                        <span th:text="${detail.potential ? 'Đã lưu tiềm năng' : 'Đã bỏ lưu tiềm năng'}"></span>
-                    </li>
                 </ul>
+                <div th:if="${recommendation != null}" class="tpw-state-row">
+                    <span class="badge tp-profile-badge tpw-status" th:attr="data-tpw-tone=${recommendation.pending ? 'warning' : 'neutral'}" th:classappend="${recommendation.pending ? 'badge--warning' : 'badge--neutral'}" th:text="${recommendation.statusLabel}"></span>
+                </div>
             </div>
             <div class="tpw-profile-actions">
                 <a class="btn btn--secondary btn--sm" th:href="@{${backUrl}}" data-pool-back>
@@ -51,54 +59,6 @@
         </div>
     </header>
 
-    <th:block th:replace="~{fragments/ui/flash-toast :: flashToast(${successMessage}, ${errorMessage})}"></th:block>
-
-    <div class="tp-detail-workspace tpw-detail-grid">
-        <div class="tpw-main-stack">
-            <section class="card adw-surface tpw-candidate-info" aria-labelledby="tp-candidate-info-title">
-                <div class="tpw-info-heading">
-                    <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg>
-                    <h2 id="tp-candidate-info-title" class="card-title adw-panel-title tpw-section-title">Thông tin ứng viên</h2>
-                </div>
-                <dl class="tpw-info-grid">
-                    <div class="tpw-info-item">
-                        <dt><span class="tpw-info-icon" aria-hidden="true"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg></span><span>Ngày sinh</span></dt>
-                        <dd><time th:if="${detail.dateOfBirth != null}" th:datetime="${detail.dateOfBirth}" th:text="${#temporals.format(detail.dateOfBirth, 'dd/MM/yyyy')}"></time><span th:if="${detail.dateOfBirth == null}" class="tpw-info-empty">Chưa có thông tin</span></dd>
-                    </div>
-                    <div class="tpw-info-item">
-                        <dt><span class="tpw-info-icon" aria-hidden="true"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><circle cx="12" cy="7" r="4"/><path d="M4 21v-3a8 8 0 0 1 16 0v3Z"/></svg></span><span>Giới tính</span></dt>
-                        <dd th:with="value=${#strings.trim(detail.gender)}" th:text="${#strings.isEmpty(value) ? 'Chưa có thông tin' : value}" th:classappend="${#strings.isEmpty(value) ? 'tpw-info-empty' : ''}"></dd>
-                    </div>
-                    <div class="tpw-info-item">
-                        <dt><span class="tpw-info-icon" aria-hidden="true"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M20 10c0 6-8 12-8 12S4 16 4 10a8 8 0 1 1 16 0Z"/><circle cx="12" cy="10" r="2.5"/></svg></span><span>Địa chỉ</span></dt>
-                        <dd th:with="value=${#strings.trim(detail.address)}" th:text="${#strings.isEmpty(value) ? 'Chưa có thông tin' : value}" th:classappend="${#strings.isEmpty(value) ? 'tpw-info-empty' : ''}"></dd>
-                    </div>
-                    <div class="tpw-info-item">
-                        <dt><span class="tpw-info-icon" aria-hidden="true"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><circle cx="12" cy="12" r="9"/><ellipse cx="12" cy="12" rx="4" ry="9"/><path d="M3 12h18"/></svg></span><span>Nguồn ứng viên</span></dt>
-                        <dd th:with="value=${#strings.trim(detail.candidateSource)}" th:text="${#strings.isEmpty(value) ? 'Chưa có thông tin' : value}" th:classappend="${#strings.isEmpty(value) ? 'tpw-info-empty' : ''}"></dd>
-                    </div>
-                    <div class="tpw-info-item">
-                        <dt><span class="tpw-info-icon" aria-hidden="true"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="m10 13 4-4M8 16l-1 1a4 4 0 0 1-6-6l4-4a4 4 0 0 1 6 0m2 1 1-1a4 4 0 0 1 6 6l-4 4a4 4 0 0 1-6 0"/></svg></span><span>LinkedIn</span></dt>
-                        <dd th:with="url=${#strings.trim(detail.linkedInUrl)},lower=${#strings.toLowerCase(url)},hasValue=${!#strings.isEmpty(url)},web=${hasValue and (#strings.startsWith(lower, 'https://') or #strings.startsWith(lower, 'http://'))}">
-                            <a th:if="${web}" class="tpw-info-link" th:href="${url}" th:title="${url}" target="_blank" rel="noopener noreferrer" th:attr="aria-label=|LinkedIn của ${detail.candidate.fullName} (mở trong tab mới)|">
-                                <span th:text="${url}"></span><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M14 3h7v7M21 3 10 14M10 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-5"/></svg>
-                            </a>
-                            <span th:if="${hasValue and !web}" th:text="${url}"></span>
-                            <span th:unless="${hasValue}" class="tpw-info-empty">Chưa có thông tin</span>
-                        </dd>
-                    </div>
-                    <div class="tpw-info-item">
-                        <dt><span class="tpw-info-icon" aria-hidden="true"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><rect x="3" y="7" width="18" height="14" rx="2"/><path d="M8 7V3h8v4M3 12a20 20 0 0 0 18 0M10 13h4"/></svg></span><span>Portfolio</span></dt>
-                        <dd th:with="url=${#strings.trim(detail.portfolioUrl)},lower=${#strings.toLowerCase(url)},hasValue=${!#strings.isEmpty(url)},web=${hasValue and (#strings.startsWith(lower, 'https://') or #strings.startsWith(lower, 'http://'))}">
-                            <a th:if="${web}" class="tpw-info-link" th:href="${url}" th:title="${url}" target="_blank" rel="noopener noreferrer" th:attr="aria-label=|Portfolio của ${detail.candidate.fullName} (mở trong tab mới)|">
-                                <span th:text="${url}"></span><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M14 3h7v7M21 3 10 14M10 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-5"/></svg>
-                            </a>
-                            <span th:if="${hasValue and !web}" th:text="${url}"></span>
-                            <span th:unless="${hasValue}" class="tpw-info-empty">Chưa có thông tin</span>
-                        </dd>
-                    </div>
-                </dl>
-            </section>
 
             <section class="card adw-surface tpw-panel tpw-cv-panel" aria-labelledby="tp-cv-history-title" aria-describedby="tp-cv-history-desc">
                 <div class="tpw-section-head tpw-cv-head">
@@ -144,8 +104,8 @@
                             <td><span class="badge tpw-cv-status" th:attr="data-tone=${cv.statusTone()}" th:text="${cv.statusLabel()}"></span></td>
                             <td class="tpw-cv-action">
                                 <button type="button" class="btn btn--secondary btn--sm tp-cv-open tpw-cv-open" data-app-preview data-hide-detail-link="true" aria-haspopup="dialog" aria-controls="app-preview"
-                                        th:with="cvUrl=@{/talent-pool/{id}/cv/{appId}(id=${detail.candidate.candidateId},appId=${cv.applicationId})}"
-                                        th:attr="aria-label=|Xem CV ${cv.jobTitle} của ${detail.candidate.fullName}|,data-name=${detail.candidate.fullName},data-job=${cv.jobTitle},data-cv-url=${recommendation != null ? cvUrl + '?recommendationId=' + recommendation.applicationId : cvUrl},data-detail-url=@{/talent-pool/{id}(id=${detail.candidate.candidateId})}">
+                                        th:with="cvUrl=@{/talent-pool/{id}/cv/{appId}(id=${detail.candidate.candidateId},appId=${cv.applicationId},sourceApplicationId=${bookmarkSourceId},recommendationId=${recommendation != null ? recommendation.applicationId : null})}"
+                                        th:attr="aria-label=|Xem CV ${cv.jobTitle} của ${detail.candidate.fullName}|,data-name=${detail.candidate.fullName},data-job=${cv.jobTitle},data-cv-url=${cvUrl},data-detail-url=@{/talent-pool/{id}(id=${detail.candidate.candidateId})}">
                                     <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12Z"/><circle cx="12" cy="12" r="3"/></svg>Xem CV
                                 </button>
                             </td>
@@ -155,15 +115,59 @@
                 </div>
                 <footer th:if="${cvHistory.totalPages > 1}" class="tpw-section-foot tpw-cv-footer">
                     <nav th:if="${cvHistory.totalPages > 1}" class="tpw-cv-pagination" aria-label="Phân trang lịch sử ứng tuyển">
-                        <a th:if="${cvHistory.hasPrevious()}" class="btn btn--secondary btn--sm" aria-label="Trang CV trước" th:href="@{/talent-pool/{id}(id=${detail.candidate.candidateId},cvPage=${cvHistory.number - 1},jobPostingId=${jobPostingId},recommendationId=${recommendation != null ? recommendation.applicationId : null},keyword=${filter.keyword},markedBy=${filter.markedBy},sourceJobId=${filter.sourceJobId},page=${sourcePage})}">Trước</a>
+                        <a th:if="${cvHistory.hasPrevious()}" class="btn btn--secondary btn--sm" aria-label="Trang CV trước" th:href="@{/talent-pool/{id}(id=${detail.candidate.candidateId},cvPage=${cvHistory.number - 1},jobPostingId=${jobPostingId},sourceApplicationId=${bookmarkSourceId},recommendationId=${recommendation != null ? recommendation.applicationId : null},keyword=${filter.keyword},markedBy=${filter.markedBy},sourceJobId=${filter.sourceJobId},page=${sourcePage})}">Trước</a>
                         <span th:text="|${cvHistory.number + 1} / ${cvHistory.totalPages}|" aria-current="page"></span>
-                        <a th:if="${cvHistory.hasNext()}" class="btn btn--secondary btn--sm" aria-label="Trang CV tiếp theo" th:href="@{/talent-pool/{id}(id=${detail.candidate.candidateId},cvPage=${cvHistory.number + 1},jobPostingId=${jobPostingId},recommendationId=${recommendation != null ? recommendation.applicationId : null},keyword=${filter.keyword},markedBy=${filter.markedBy},sourceJobId=${filter.sourceJobId},page=${sourcePage})}">Sau</a>
+                        <a th:if="${cvHistory.hasNext()}" class="btn btn--secondary btn--sm" aria-label="Trang CV tiếp theo" th:href="@{/talent-pool/{id}(id=${detail.candidate.candidateId},cvPage=${cvHistory.number + 1},jobPostingId=${jobPostingId},sourceApplicationId=${bookmarkSourceId},recommendationId=${recommendation != null ? recommendation.applicationId : null},keyword=${filter.keyword},markedBy=${filter.markedBy},sourceJobId=${filter.sourceJobId},page=${sourcePage})}">Sau</a>
                     </nav>
                 </footer>
             </section>
         </div>
 
         <div class="tp-detail-sidebar tpw-side-stack">
+            <section class="card adw-surface tpw-candidate-info" aria-labelledby="tp-candidate-info-title">
+                <div class="tpw-info-heading">
+                    <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg>
+                    <h2 id="tp-candidate-info-title" class="card-title adw-panel-title tpw-section-title">Thông tin ứng viên</h2>
+                </div>
+                <dl class="tpw-info-grid">
+                    <div class="tpw-info-item">
+                        <dt><span class="tpw-info-icon" aria-hidden="true"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg></span><span>Ngày sinh</span></dt>
+                        <dd><time th:if="${detail.dateOfBirth != null}" th:datetime="${detail.dateOfBirth}" th:text="${#temporals.format(detail.dateOfBirth, 'dd/MM/yyyy')}"></time><span th:if="${detail.dateOfBirth == null}" class="tpw-info-empty">Chưa có thông tin</span></dd>
+                    </div>
+                    <div class="tpw-info-item">
+                        <dt><span class="tpw-info-icon" aria-hidden="true"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><circle cx="12" cy="7" r="4"/><path d="M4 21v-3a8 8 0 0 1 16 0v3Z"/></svg></span><span>Giới tính</span></dt>
+                        <dd th:with="value=${#strings.trim(detail.gender)}" th:text="${#strings.isEmpty(value) ? 'Chưa có thông tin' : value}" th:classappend="${#strings.isEmpty(value) ? 'tpw-info-empty' : ''}"></dd>
+                    </div>
+                    <div class="tpw-info-item">
+                        <dt><span class="tpw-info-icon" aria-hidden="true"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M20 10c0 6-8 12-8 12S4 16 4 10a8 8 0 1 1 16 0Z"/><circle cx="12" cy="10" r="2.5"/></svg></span><span>Địa chỉ</span></dt>
+                        <dd th:with="value=${#strings.trim(detail.address)}" th:text="${#strings.isEmpty(value) ? 'Chưa có thông tin' : value}" th:classappend="${#strings.isEmpty(value) ? 'tpw-info-empty' : ''}"></dd>
+                    </div>
+                    <div class="tpw-info-item">
+                        <dt><span class="tpw-info-icon" aria-hidden="true"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><circle cx="12" cy="12" r="9"/><ellipse cx="12" cy="12" rx="4" ry="9"/><path d="M3 12h18"/></svg></span><span>Nguồn ứng viên</span></dt>
+                        <dd th:with="value=${#strings.trim(detail.candidateSource)}" th:text="${#strings.isEmpty(value) ? 'Chưa có thông tin' : value}" th:classappend="${#strings.isEmpty(value) ? 'tpw-info-empty' : ''}"></dd>
+                    </div>
+                    <div class="tpw-info-item">
+                        <dt><span class="tpw-info-icon" aria-hidden="true"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="m10 13 4-4M8 16l-1 1a4 4 0 0 1-6-6l4-4a4 4 0 0 1 6 0m2 1 1-1a4 4 0 0 1 6 6l-4 4a4 4 0 0 1-6 0"/></svg></span><span>LinkedIn</span></dt>
+                        <dd th:with="url=${#strings.trim(detail.linkedInUrl)},lower=${#strings.toLowerCase(url)},hasValue=${!#strings.isEmpty(url)},web=${hasValue and (#strings.startsWith(lower, 'https://') or #strings.startsWith(lower, 'http://'))}">
+                            <a th:if="${web}" class="tpw-info-link" th:href="${url}" th:title="${url}" target="_blank" rel="noopener noreferrer" th:attr="aria-label=|LinkedIn của ${detail.candidate.fullName} (mở trong tab mới)|">
+                                <span th:text="${url}"></span><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M14 3h7v7M21 3 10 14M10 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-5"/></svg>
+                            </a>
+                            <span th:if="${hasValue and !web}" th:text="${url}"></span>
+                            <span th:unless="${hasValue}" class="tpw-info-empty">Chưa có thông tin</span>
+                        </dd>
+                    </div>
+                    <div class="tpw-info-item">
+                        <dt><span class="tpw-info-icon" aria-hidden="true"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><rect x="3" y="7" width="18" height="14" rx="2"/><path d="M8 7V3h8v4M3 12a20 20 0 0 0 18 0M10 13h4"/></svg></span><span>Portfolio</span></dt>
+                        <dd th:with="url=${#strings.trim(detail.portfolioUrl)},lower=${#strings.toLowerCase(url)},hasValue=${!#strings.isEmpty(url)},web=${hasValue and (#strings.startsWith(lower, 'https://') or #strings.startsWith(lower, 'http://'))}">
+                            <a th:if="${web}" class="tpw-info-link" th:href="${url}" th:title="${url}" target="_blank" rel="noopener noreferrer" th:attr="aria-label=|Portfolio của ${detail.candidate.fullName} (mở trong tab mới)|">
+                                <span th:text="${url}"></span><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M14 3h7v7M21 3 10 14M10 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-5"/></svg>
+                            </a>
+                            <span th:if="${hasValue and !web}" th:text="${url}"></span>
+                            <span th:unless="${hasValue}" class="tpw-info-empty">Chưa có thông tin</span>
+                        </dd>
+                    </div>
+                </dl>
+            </section>
             <section th:if="${recommendation != null}" class="card adw-surface tpw-panel tp-decision tpw-decision" aria-labelledby="tp-decision-title">
                 <div>
                     <h2 id="tp-decision-title" class="card-title adw-panel-title tpw-section-title">Quyết định của Hiring Manager</h2>
@@ -173,57 +177,12 @@
                 <p th:if="${recommendation.pending and !recommendation.canDecide}" class="tpw-section-desc">Đang chờ HM phản hồi hoặc tin không còn nhận gợi ý.</p>
             </section>
 
-            <section class="card adw-surface tpw-panel tpw-notes-panel" aria-labelledby="tp-note-history-title">
-                <div class="tpw-section-head">
-                    <span class="tpw-section-icon" aria-hidden="true"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 4h16v12H9l-5 4V4Z M8 8h8 M8 12h6"/></svg></span>
-                    <div class="tpw-section-copy">
-                        <h2 id="tp-note-history-title" class="card-title adw-panel-title tpw-section-title" th:text="|Ghi chú đánh giá nội bộ (${#lists.size(detail.notes)})|">Ghi chú đánh giá nội bộ</h2>
-                    </div>
-                </div>
-                <div class="tpw-notes-body">
-                    <div th:if="${#lists.isEmpty(detail.notes)}" class="tpw-empty-state tp-detail-empty">
-                        <span class="tpw-empty-icon" aria-hidden="true"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M14 2H5v20h14V7ZM14 2v6h5M8 12h8M8 16h6"/></svg></span>
-                        <p class="tpw-empty-title">Chưa có ghi chú đánh giá.</p>
-                        <p th:if="${detail.potential}" class="tpw-empty-hint">Thêm ghi chú để lưu lại nhận xét, đánh giá về ứng viên này.</p>
-                    </div>
-                    <ul th:unless="${#lists.isEmpty(detail.notes)}" class="tp-notes-feed" aria-label="Ghi chú mới nhất trước">
-                        <li th:each="note : ${detail.notes}" class="tp-feed-item" data-note-item>
-                            <span class="tp-feed-avatar" aria-hidden="true" th:with="parts=${#strings.arraySplit(note.author ?: '', ' ')}"
-                                  th:text="${#arrays.length(parts) > 0 ? #strings.toUpperCase(#strings.substring(parts[0], 0, 1) + (#arrays.length(parts) > 1 ? #strings.substring(parts[#arrays.length(parts) - 1], 0, 1) : '')) : ''}"></span>
-                            <div class="tp-feed-content">
-                                <div class="tpw-note-header">
-                                    <div class="tpw-note-identity"><strong class="tp-feed-author" th:text="${note.author}"></strong><span class="tpw-note-role" th:if="${note.authorRole != null}" th:text="${note.authorRole == 'HR' ? 'Nhân sự' : note.authorRole}"></span></div>
-                                    <time class="tp-feed-time" th:datetime="${#temporals.formatISO(note.createdAt)}" th:text="${#temporals.format(note.createdAt, 'dd/MM/yyyy HH:mm')}"></time>
-                                    <details th:if="${detail.potential and note.owned}" class="tpw-note-menu">
-                                        <summary th:attr="aria-label=|Thao tác ghi chú của ${note.author}|"><svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor" aria-hidden="true"><circle cx="5" cy="12" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="19" cy="12" r="1.5"/></svg></summary>
-                                        <div class="tpw-note-menu-items">
-                                            <button type="button" data-note-edit>Sửa</button>
-                                            <form method="post" data-note-delete th:action="@{/talent-pool/{id}/notes/{noteId}/delete(id=${detail.candidate.candidateId},noteId=${note.id},cvPage=${cvHistory.number},jobPostingId=${jobPostingId},recommendationId=${recommendation != null ? recommendation.applicationId : null},keyword=${filter.keyword},markedBy=${filter.markedBy},sourceJobId=${filter.sourceJobId},page=${sourcePage})}"><button type="submit">Xóa</button></form>
-                                        </div>
-                                    </details>
-                                </div>
-                                <p class="tp-feed-body" data-note-text th:hidden="${editingNoteId != null and editingNoteId == note.id}" th:text="${note.content}"></p>
-                                <form th:if="${detail.potential and note.owned}" class="tpw-note-edit-form" data-note-edit-form method="post" th:hidden="${editingNoteId == null or editingNoteId != note.id}" th:action="@{/talent-pool/{id}/notes/{noteId}/edit(id=${detail.candidate.candidateId},noteId=${note.id},cvPage=${cvHistory.number},jobPostingId=${jobPostingId},recommendationId=${recommendation != null ? recommendation.applicationId : null},keyword=${filter.keyword},markedBy=${filter.markedBy},sourceJobId=${filter.sourceJobId},page=${sourcePage})}">
-                                    <label class="form-label" th:for="|edit-note-${note.id}|">Sửa ghi chú</label>
-                                    <textarea class="form-textarea" th:id="|edit-note-${note.id}|" name="content" rows="3" maxlength="1000" required th:text="${editingNoteId != null and editingNoteId == note.id ? editNoteDraft : note.content}"></textarea>
-                                    <div class="tpw-note-edit-actions"><button class="btn btn--secondary btn--sm" type="button" data-note-cancel>Hủy</button><button class="btn btn--primary btn--sm" type="submit">Lưu thay đổi</button></div>
-                                </form>
-                            </div>
-                        </li>
-                    </ul>
-                </div>
-                <form th:if="${detail.potential}" class="tp-note-form" data-pool-note method="post" th:action="@{/talent-pool/{id}/notes(id=${detail.candidate.candidateId},cvPage=${cvHistory.number},jobPostingId=${jobPostingId},keyword=${filter.keyword},markedBy=${filter.markedBy},sourceJobId=${filter.sourceJobId},page=${sourcePage},recommendationId=${recommendation != null ? recommendation.applicationId : null})}">
-                    <label class="form-label tpw-note-label" for="content">Thêm ghi chú</label>
-                    <textarea class="form-textarea tp-note-input" id="content" name="content" rows="4" maxlength="1000" required placeholder="Nhập nhận xét của bạn…" th:text="${noteDraft}"></textarea>
-                    <p class="tpw-note-counter" data-note-counter aria-live="off">0/1000</p>
-                    <div class="tp-note-actions"><button class="btn btn--primary btn--sm" type="submit"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M5 3h11l3 3v15H5Z M8 3v6h8V3 M8 21v-7h8v7"/></svg><span data-label>Lưu ghi chú</span></button></div>
-                </form>
-            </section>
+            <section th:replace="~{talent-pool/candidate-notes :: panel(candidateId=${detail.candidate.candidateId},potential=${detail.potential},notes=${detail.notes},returnApplicationId=${null},jobPostingId=${jobPostingId},cvPage=${cvHistory.number},recommendationId=${recommendation != null ? recommendation.applicationId : null},filter=${filter},sourcePage=${sourcePage})}"></section>
         </div>
     </div>
     <dialog th:replace="~{candidate/application-dialogs :: preview}"></dialog>
 </main>
 <th:block layout:fragment="scripts">
-    <th:block th:replace="~{fragments/ui/admin-workspace :: scripts}"></th:block><script th:src="@{/js/pages/applications.js}" defer></script><script th:src="@{/js/pages/talent-pool-recommendations.js}" defer></script><script th:src="@{/js/pages/flash-toast.js}" defer></script><script th:src="@{/js/pages/talent-pool-detail.js}" defer></script></th:block>
+    <th:block th:replace="~{fragments/ui/admin-workspace :: scripts}"></th:block><script th:src="@{/js/pages/applications.js}" defer></script><script th:src="@{/js/pages/talent-pool-recommendations.js}" defer></script><script th:src="@{/js/pages/flash-toast.js}" defer></script><script th:src="@{/js/pages/talent-pool-detail.js}" defer></script><script th:src="@{/js/pages/potential-candidate-toggle.js}" defer></script></th:block>
 </body>
 </html>

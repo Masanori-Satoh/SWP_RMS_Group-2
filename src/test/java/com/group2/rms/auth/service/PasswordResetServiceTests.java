@@ -39,13 +39,14 @@ class PasswordResetServiceTests {
     private PasswordEncoder encoder;
 
     private PasswordResetService service;
+    @Mock private com.group2.rms.user.service.UserAuditLogger audit;
     private User account;
     private AccountSnapshotResponse snapshot;
 
     @BeforeEach
     void setUp() {
         Clock clock = Clock.fixed(NOW, ZoneOffset.UTC);
-        service = new PasswordResetService(users, encoder, clock);
+        service = new PasswordResetService(users, encoder, clock, audit);
         account = User.builder().userId(7).email(EMAIL)
                 .passwordHash("old-hash").accountStatus("Active").build();
         snapshot = new AccountSnapshotResponse(7, EMAIL, "old-hash");
@@ -247,6 +248,7 @@ class PasswordResetServiceTests {
         verify(users, times(1)).findByIdForUpdate(7);
         verify(encoder, times(1)).encode("NewPass123!");
         verify(users, times(1)).saveAndFlush(account);
+        verify(audit).record(account, "UPDATE", "User", 7, null, "Đặt lại mật khẩu thành công");
     }
 
     @Test
@@ -263,6 +265,7 @@ class PasswordResetServiceTests {
         assertEquals("RESET_REQUEST_INVALID", error.getErrorCode());
         assertEquals("old-hash", account.getPasswordHash());
         verify(users, times(0)).saveAndFlush(any(User.class));
+        org.mockito.Mockito.verifyNoInteractions(audit);
     }
 
     @Test

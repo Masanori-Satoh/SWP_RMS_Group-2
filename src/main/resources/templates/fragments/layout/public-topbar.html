@@ -4,65 +4,130 @@
 <!--
     FRAGMENTS/LAYOUT/PUBLIC-TOPBAR.HTML
     =============================================================================
-    Topbar công khai dùng chung cho landing (candidate/landing.html) và layout/public (jobs board, job-detail).
-    CSS: static/css/topbar.css (trang chứa phải nạp). JS: static/js/public-topbar.js.
-    Tham số:
-      - activeNav: mục menu đang chọn khi tải trang: 'jobs' (jobs board, job-detail) hoặc '' (landing:
-                   các mục 'process', 'culture', 'perks' tự sáng theo section khi cuộn)
-      - onLanding: true nếu đang ở trang landing (menu cuộn tới section trong trang),
-                   false ở trang khác (menu dẫn về landing kèm #section)
-    Người dùng lấy từ model attribute topbarUser (TopbarUserAdvice), giống topbar nội bộ.
-    Ứng viên đã đăng nhập ở màn hẹp: hàng thứ hai "Vị trí tuyển dụng · Đơn của tôi" (fragments/layout/candidate-nav).
+    Topbar công khai phong cách "khối nổi" (Floating Islands), đồng bộ với Admin Workspace (adw-).
+    Dùng chung cho:
+      - Landing page (candidate/landing.html, onLanding = true)
+      - Layout công khai: Job board, Job detail (layout/public.html, onLanding = false)
+    CSS: static/css/topbar.css. JS: static/js/public-topbar.js.
+    Cấu trúc các khối nổi (Islands):
+      - Đảo 1 (Góc trên cùng bên trái): Logo "mộc. TUYỂN DỤNG" + Nút "Vị trí đang tuyển"
+      - Đảo 2 & 3 (Góc trên cùng bên phải):
+          * Đã đăng nhập: Nút Bảng điều khiển / Đơn ứng tuyển (Đảo 2) + Khối thông tin người dùng (Đảo 3)
+          * Chưa đăng nhập: Khối Đăng nhập / Tạo tài khoản ứng viên
+      - Đảo cuộn dọc (Sát mép trái, chỉ hiện ở Trang chủ):
+          * [🔥] Việc làm Hot (#featured)
+          * [🔄] Quy trình (#process)
+          * [🌿] Văn hóa Mộc (#culture)
+          * [🎁] Chế độ đãi ngộ (#perks)
     =============================================================================
 -->
 <header th:fragment="topbar(activeNav, onLanding)" class="public-topbar"
+        th:classappend="${onLanding} ? 'public-topbar--landing'"
         th:with="viewer=${topbarUser}">
   <div class="public-topbar__inner">
-    <a th:replace="~{fragments/brand :: wordmark('TUYỂN DỤNG')}"></a>
-
-    <nav class="public-topbar__nav" aria-label="Điều hướng trang tuyển dụng" data-public-nav>
-      <!-- Jobs Board là trang riêng (/jobs), không phải section của landing -->
-      <a class="public-topbar__link" th:href="@{/jobs}"
+    <!-- ĐẢO 1 (Góc trên cùng bên trái): Khối Thương hiệu & Chuyển trang -->
+    <div class="public-brand-island">
+      <a th:replace="~{fragments/brand :: wordmark('TUYỂN DỤNG')}"></a>
+      <span class="public-island-divider" aria-hidden="true"></span>
+      <a class="public-jobs-btn" th:href="@{/jobs}"
          th:classappend="${activeNav == 'jobs'} ? 'active'"
-         th:attr="aria-current=${activeNav == 'jobs' ? 'page' : null}">Vị trí tuyển dụng</a>
-      <a class="public-topbar__link" data-section="process"
-         th:href="${onLanding} ? '#process' : @{/#process}"
-         th:classappend="${activeNav == 'process'} ? 'active'"
-         th:attr="aria-current=${activeNav == 'process' ? 'location' : null}">Quy trình</a>
-      <a class="public-topbar__link" data-section="culture"
-         th:href="${onLanding} ? '#culture' : @{/#culture}"
-         th:classappend="${activeNav == 'culture'} ? 'active'"
-         th:attr="aria-current=${activeNav == 'culture' ? 'location' : null}">Văn hóa Mộc</a>
-      <a class="public-topbar__link" data-section="perks"
-         th:href="${onLanding} ? '#perks' : @{/#perks}"
-         th:classappend="${activeNav == 'perks'} ? 'active'"
-         th:attr="aria-current=${activeNav == 'perks' ? 'location' : null}">Chế độ đãi ngộ</a>
-    </nav>
+         th:attr="aria-current=${activeNav == 'jobs' ? 'page' : null}"
+         title="Xem toàn bộ danh sách vị trí đang tuyển">
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <rect x="2" y="7" width="20" height="14" rx="2" ry="2"/>
+          <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/>
+        </svg>
+        <span>Vị trí đang tuyển</span>
+      </a>
+    </div>
 
-    <div class="public-topbar__actions">
-      <!-- Khách chưa đăng nhập -->
-      <th:block th:if="${viewer == null}">
-        <a th:href="@{/login}" class="topbar-btn">Đăng nhập</a>
-        <a th:href="@{/register}" class="topbar-btn topbar-btn--primary">Tạo tài khoản ứng viên</a>
-      </th:block>
+    <!-- CỤM ĐẢO GÓC TRÊN CÙNG BÊN PHẢI (Tài khoản & Bảng điều khiển) -->
+    <div class="public-actions-cluster">
+      <!-- Khách chưa đăng nhập: Khối Đăng nhập / Đăng ký cùng kiểu dáng khối nổi -->
+      <div th:if="${viewer == null}" class="public-auth-island">
+        <a th:href="@{/login}" class="public-auth-link">Đăng nhập</a>
+        <a th:href="@{/register}" class="public-auth-btn">Tạo tài khoản ứng viên</a>
+      </div>
 
-      <!-- Đã đăng nhập: góc phải dùng chung với topbar nội bộ (fragments/layout/topbar-user) -->
+      <!-- Đã đăng nhập: Đảo 2 (Nút Bảng điều khiển / Đơn ứng tuyển) + Đảo 3 (Khối thông tin người dùng) -->
       <th:block th:if="${viewer != null}">
-        <!-- Ứng viên không có dashboard riêng: nút dẫn thẳng tới đơn của mình -->
-        <a th:href="${viewer.roleName == 'Candidate'} ? @{/portal/applications} : @{/dashboard}"
-           class="topbar-btn topbar-btn--primary public-topbar__dashboard"><span
-           th:text="${viewer.roleName == 'Candidate' ? 'Đơn ứng tuyển của tôi' : 'Bảng điều khiển'}">Bảng điều khiển</span> &rarr;</a>
-        <div th:replace="~{fragments/layout/topbar-user :: actions(${viewer.fullName}, ${viewer.email}, ${viewer.roleName}, ${viewer.avatarUrl}, 'public')}"></div>
+        <!-- Đảo 2: Nút Bảng điều khiển (với Nhân sự/Nội bộ) hoặc Đơn ứng tuyển (với Ứng viên) -->
+        <a th:if="${viewer.roleName != 'Candidate'}"
+           th:href="@{/dashboard}"
+           class="public-dashboard-island"
+           title="Mở Bảng điều khiển quản trị">
+          <span>Bảng điều khiển</span>
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <line x1="5" y1="12" x2="19" y2="12"></line>
+            <polyline points="12 5 19 12 12 19"></polyline>
+          </svg>
+        </a>
+        <a th:if="${viewer.roleName == 'Candidate'}"
+           th:href="@{/portal/applications}"
+           class="public-dashboard-island"
+           title="Mở danh sách đơn ứng tuyển của tôi">
+          <span>Đơn ứng tuyển</span>
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <line x1="5" y1="12" x2="19" y2="12"></line>
+            <polyline points="12 5 19 12 12 19"></polyline>
+          </svg>
+        </a>
+
+        <!-- Đảo 3: Khối thông tin người dùng nguyên vẹn từ layout nội bộ -->
+        <div class="public-user-island">
+          <div th:replace="~{fragments/layout/topbar-user :: actions(${viewer.fullName}, ${viewer.email}, ${viewer.roleName}, ${viewer.avatarUrl}, 'public')}"></div>
+        </div>
       </th:block>
     </div>
 
-    <!-- Ứng viên, màn hẹp (≤ 1299px, khi menu trên bị ẩn): hàng thứ hai cùng 2 mục với topbar ứng viên
-         (fragments/layout/candidate-nav), thay nút "Đơn ứng tuyển của tôi →". Màn rộng: ẩn (topbar.css). -->
+    <!-- Hàng điều hướng ứng viên cho mobile/màn hẹp (giữ tương thích kiểm thử) -->
     <nav th:if="${viewer != null and viewer.roleName == 'Candidate'}" class="public-topbar__candidate-nav"
          aria-label="Điều hướng ứng viên">
       <th:block th:replace="~{fragments/layout/candidate-nav :: links(${activeNav == 'jobs' ? 'jobs' : ''})}"></th:block>
     </nav>
   </div>
+
+  <!-- ĐẢO CUỘN DỌC 4 MỤC (Cạnh trái màn hình — Chỉ hiện ở Trang chủ) -->
+  <nav th:if="${onLanding}" class="public-scroll-rail" aria-label="Điều hướng các mục trang chủ" data-public-nav>
+    <a class="public-scroll-item" data-section="featured" href="#featured" title="Việc làm Hot" aria-label="Việc làm Hot">
+      <span class="public-scroll-icon" aria-hidden="true">
+        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"/>
+        </svg>
+      </span>
+      <span class="public-scroll-label">Việc làm Hot</span>
+    </a>
+    <a class="public-scroll-item" data-section="process" href="#process" title="Quy trình tuyển dụng" aria-label="Quy trình">
+      <span class="public-scroll-icon" aria-hidden="true">
+        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/>
+        </svg>
+      </span>
+      <span class="public-scroll-label">Quy trình</span>
+    </a>
+    <a class="public-scroll-item" data-section="culture" href="#culture" title="Văn hóa Mộc" aria-label="Văn hóa Mộc">
+      <span class="public-scroll-icon" aria-hidden="true">
+        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10Z"/>
+          <path d="M2 21c0-3 1.85-5.36 5.08-6C9.5 14.52 12 13 13 12"/>
+        </svg>
+      </span>
+      <span class="public-scroll-label">Văn hóa Mộc</span>
+    </a>
+    <a class="public-scroll-item" data-section="perks" href="#perks" title="Chế độ đãi ngộ" aria-label="Chế độ đãi ngộ">
+      <span class="public-scroll-icon" aria-hidden="true">
+        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="20 12 20 22 4 22 4 12"/>
+          <rect x="2" y="7" width="20" height="5"/>
+          <line x1="12" y1="22" x2="12" y2="7"/>
+          <path d="M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7z"/>
+          <path d="M12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z"/>
+        </svg>
+      </span>
+      <span class="public-scroll-label">Chế độ đãi ngộ</span>
+    </a>
+  </nav>
+
   <script defer th:src="@{/js/public-topbar.js}"></script>
 </header>
 </body>

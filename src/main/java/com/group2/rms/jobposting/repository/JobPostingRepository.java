@@ -1,7 +1,7 @@
 package com.group2.rms.jobposting.repository;
 
+import com.group2.rms.candidate.domain.repository.ApplicationRepository;
 import com.group2.rms.jobposting.entity.JobPosting;
-import com.group2.rms.user.entity.User;
 import jakarta.persistence.LockModeType;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -21,11 +21,8 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 
-/**
- * Truy cập bảng JobPosting (và các câu đếm hồ sơ của tin).
- * Không chứa business rule: giá trị trạng thái truyền vào bằng tham số (JobPostingAccess.STATUS_*).
- * Các hàm findForUpdate, existsByRequisition_RequisitionId, findTopBy..., findLatestByRequisitionIds,
- * findPublishedJobs, findOpenPostings còn được module requisition / candidate / career gọi: đổi chữ ký phải báo nhóm.
+/*
+ * REPOSITORY: bảng JobPosting; vài hàm được module requisition / candidate / career gọi, đổi chữ ký phải báo nhóm.
  */
 @Repository
 public interface JobPostingRepository extends JpaRepository<JobPosting, Integer>, JpaSpecificationExecutor<JobPosting> {
@@ -35,10 +32,7 @@ public interface JobPostingRepository extends JpaRepository<JobPosting, Integer>
     @Query("select j from JobPosting j where j.jobPostingId = :id")
     Optional<JobPosting> findForUpdate(@Param("id") Integer id);
 
-    /**
-     * Màn danh sách: lấy luôn yêu cầu nguồn, phòng ban, người tạo trong cùng câu SELECT,
-     * để mỗi dòng không phải chạy thêm câu lấy tên phòng ban / người tạo (chống N+1).
-     */
+    /** Màn danh sách: lấy kèm yêu cầu, phòng ban, người tạo trong cùng câu (chống N+1). */
     @Override
     @EntityGraph(attributePaths = {"requisition", "requisition.department", "createdBy"})
     Page<JobPosting> findAll(Specification<JobPosting> spec, Pageable pageable);
@@ -59,10 +53,7 @@ public interface JobPostingRepository extends JpaRepository<JobPosting, Integer>
 
     Optional<JobPosting> findTopByRequisition_RequisitionIdOrderByJobPostingIdDesc(Integer requisitionId);
 
-    /**
-     * Tin MỚI NHẤT (JobPostingId lớn nhất) của nhiều yêu cầu trong 1 câu (tránh N+1 ở màn danh sách yêu cầu).
-     * Yêu cầu chưa có tin thì không có dòng nào.
-     */
+    /** Tin mới nhất của nhiều yêu cầu trong 1 câu (chống N+1); yêu cầu chưa có tin thì không có dòng. */
     @Query("SELECT p FROM JobPosting p WHERE p.requisition.requisitionId IN :requisitionIds "
             + "AND p.jobPostingId = (SELECT MAX(p2.jobPostingId) FROM JobPosting p2 WHERE p2.requisition = p.requisition)")
     List<JobPosting> findLatestByRequisitionIds(@Param("requisitionIds") Collection<Integer> requisitionIds);
@@ -81,10 +72,7 @@ public interface JobPostingRepository extends JpaRepository<JobPosting, Integer>
 
     // ----- Đếm hồ sơ (gộp cho cả trang, tránh N+1) -----
 
-    /**
-     * Đếm hồ sơ của nhiều tin trong 1 câu.
-     * Mỗi dòng: [jobPostingId, tổng số hồ sơ, số hồ sơ có trạng thái newStatus (chưa ai xử lý)].
-     */
+    /** Mỗi dòng: [jobPostingId, tổng số hồ sơ, số hồ sơ ở trạng thái newStatus]. */
     @Query("""
             SELECT a.jobPosting.jobPostingId, COUNT(a),
                    SUM(CASE WHEN a.applicationStatus = :newStatus THEN 1 ELSE 0 END)
@@ -107,28 +95,36 @@ public interface JobPostingRepository extends JpaRepository<JobPosting, Integer>
 
     // ----- Số liệu cho trang chi tiết tin -----
 
+    /**
+     * Các câu đếm / liệt kê dưới đây chỉ tính đơn ứng tuyển chính thức: bỏ đề xuất của HM, gợi ý của HR
+     * (xem ở khối Ứng viên tiềm năng) và đề xuất đã huỷ, cùng bộ lọc với danh sách /applications.
+     */
+
     /** Số hồ sơ của một tin theo từng trạng thái. Mỗi dòng: [ApplicationStatus, số hồ sơ]. */
     @Query("SELECT a.applicationStatus, COUNT(a) FROM Application a "
-            + "WHERE a.jobPosting.jobPostingId = :postingId GROUP BY a.applicationStatus")
+            + "WHERE a.jobPosting.jobPostingId = :postingId AND " + ApplicationRepository.FORMAL_FILTER
+            + " GROUP BY a.applicationStatus")
     List<Object[]> countApplicationsByStatus(@Param("postingId") Integer postingId);
 
     /** Số hồ sơ nộp từ một thời điểm trở đi (ví dụ trong 7 ngày gần nhất). */
-    @Query("SELECT COUNT(a) FROM Application a WHERE a.jobPosting.jobPostingId = :postingId AND a.submissionDate >= :since")
+    @Query("SELECT COUNT(a) FROM Application a WHERE a.jobPosting.jobPostingId = :postingId AND a.submissionDate >= :since AND "
+            + ApplicationRepository.FORMAL_FILTER)
     long countApplicationsSince(@Param("postingId") Integer postingId, @Param("since") LocalDateTime since);
 
     /** Số hồ sơ có điểm AI (lần chấm mới nhất) từ ngưỡng trở lên. */
     @Query("""
-            SELECT COUNT(r) FROM AIScreeningResult r
-            WHERE r.application.jobPosting.jobPostingId = :postingId
+            SELECT COUNT(r) FROM AIScreeningResult r JOIN r.application a
+            WHERE a.jobPosting.jobPostingId = :postingId
               AND r.aiMatchScore >= :threshold
               AND r.screenedAt = (SELECT MAX(r2.screenedAt) FROM AIScreeningResult r2 WHERE r2.application = r.application)
-            """)
+            """ + " AND " + ApplicationRepository.FORMAL_FILTER)
     long countApplicationsWithAiScoreAtLeast(@Param("postingId") Integer postingId,
             @Param("threshold") BigDecimal threshold);
 
     /** Hồ sơ mới nhất của tin. Mỗi dòng: [applicationId, tên ứng viên, ApplicationStatus, ngày nộp]. */
     @Query("SELECT a.applicationId, a.candidate.account.fullName, a.applicationStatus, a.submissionDate "
-            + "FROM Application a WHERE a.jobPosting.jobPostingId = :postingId ORDER BY a.submissionDate DESC")
+            + "FROM Application a WHERE a.jobPosting.jobPostingId = :postingId AND " + ApplicationRepository.FORMAL_FILTER
+            + " ORDER BY a.submissionDate DESC")
     List<Object[]> findRecentApplications(@Param("postingId") Integer postingId, Pageable pageable);
 
     /** Điểm AI lần chấm mới nhất của các hồ sơ. Mỗi dòng: [applicationId, điểm]. */
@@ -142,38 +138,6 @@ public interface JobPostingRepository extends JpaRepository<JobPosting, Integer>
     /** Giá trị một khóa cấu hình hệ thống (bảng SystemConfig), ví dụ AI_SCORE_THRESHOLD. */
     @Query("SELECT c.configValue FROM SystemConfig c WHERE c.configKey = :configKey")
     Optional<String> findConfigValue(@Param("configKey") String configKey);
-
-    // ----- Bảng điều khiển HR (đếm bằng SQL, không tải mọi tin lên bộ nhớ) -----
-
-    long countByPostingStatus(String postingStatus);
-
-    /** Tin ở trạng thái cho trước, còn hạn nộp tại thời điểm now (hoặc không có hạn nộp). */
-    @Query("""
-            SELECT COUNT(p) FROM JobPosting p
-            WHERE p.postingStatus = :status AND (p.applicationDeadline IS NULL OR p.applicationDeadline > :now)
-            """)
-    long countWithOpenDeadline(@Param("status") String status, @Param("now") LocalDateTime now);
-
-    /** Tin ở trạng thái cho trước nhưng đã quá hạn nộp tại thời điểm now. */
-    @Query("""
-            SELECT COUNT(p) FROM JobPosting p
-            WHERE p.postingStatus = :status AND p.applicationDeadline IS NOT NULL AND p.applicationDeadline <= :now
-            """)
-    long countWithPassedDeadline(@Param("status") String status, @Param("now") LocalDateTime now);
-
-    /** Số tin theo phòng ban, nhiều nhất trước. Mỗi dòng: [tên phòng ban, số tin]. */
-    @Query("""
-            SELECT d.departmentName, COUNT(p)
-            FROM JobPosting p JOIN p.requisition r JOIN r.department d
-            GROUP BY d.departmentName
-            ORDER BY COUNT(p) DESC
-            """)
-    List<Object[]> countByDepartment();
-
-    /** Tin mới đăng (hoặc mới tạo nếu chưa đăng) gần nhất, kèm phòng ban trong cùng câu. */
-    @EntityGraph(attributePaths = {"requisition", "requisition.department"})
-    @Query("SELECT p FROM JobPosting p ORDER BY COALESCE(p.postingDate, p.createdAt) DESC, p.jobPostingId DESC")
-    List<JobPosting> findRecent(Pageable pageable);
 
     // ----- Trang tuyển dụng công khai (module career) -----
 

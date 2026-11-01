@@ -25,10 +25,7 @@ import java.util.Set;
 @RequiredArgsConstructor
 public class RequisitionValidator {
 
-    /**
-     * Hai nút trên form: "Lưu bản nháp" gửi action=draft, "Gửi duyệt" gửi
-     * action=submit.
-     */
+    /** Hai nút trên form: "Lưu bản nháp" gửi action=draft, "Gửi duyệt" gửi action=submit. */
     public static final String ACTION_DRAFT = "draft";
     public static final String ACTION_SUBMIT = "submit";
 
@@ -50,8 +47,7 @@ public class RequisitionValidator {
     public static final String WEIGHT_MAX_TEXT = "100";
     public static final BigDecimal REQUIRED_TOTAL_WEIGHT = new BigDecimal(WEIGHT_MAX_TEXT);
 
-    // Câu lỗi dùng chung giữa annotation trên DTO (Bean Validation) và validate()
-    // bên dưới
+    // Câu lỗi dùng chung cho annotation trên DTO và validate()
     public static final String TITLE_TOO_LONG = "Nội dung quá " + TITLE_CHAR_LIMIT + " ký tự";
     public static final String SHORT_FIELD_TOO_LONG = "Nội dung quá " + SHORT_FIELD_CHAR_LIMIT + " ký tự";
     public static final String CRITERIA_NAME_TOO_LONG = "Nội dung quá " + CRITERIA_NAME_CHAR_LIMIT + " ký tự";
@@ -70,10 +66,7 @@ public class RequisitionValidator {
     public static final String GENDER_ANY = "Any";
     public static final List<String> HIRING_TYPES = List.of("New", "Replacement");
 
-    /**
-     * Đồng hồ dùng chung (core/config/ClockConfig); test truyền Clock.fixed để cố
-     * định "hôm nay".
-     */
+    /** Đồng hồ dùng chung (ClockConfig); test truyền Clock.fixed để cố định "hôm nay". */
     private final Clock clock;
 
     /** Người dùng bấm "Gửi duyệt" (không phải "Lưu bản nháp"). */
@@ -106,8 +99,7 @@ public class RequisitionValidator {
             requisitionRequest.setGender(GENDER_ANY);
         }
 
-        // Rule: Kiểm tra độ dài và trường bắt buộc cho các thông tin văn bản.
-        // Tên vị trí bắt buộc cả khi lưu nháp
+        // Rule: tên vị trí bắt buộc cả khi lưu nháp
         validateTextField(errors, "title", requisitionRequest.getTitle(), TITLE_CHAR_LIMIT, true);
         validateTextField(errors, "reasonForHiring", requisitionRequest.getReasonForHiring(), REASON_CHAR_LIMIT,
                 isSubmitAction);
@@ -124,8 +116,7 @@ public class RequisitionValidator {
         validateTextField(errors, "workLocation", requisitionRequest.getWorkLocation(), SHORT_FIELD_CHAR_LIMIT,
                 isSubmitAction);
 
-        // Rule: Thời gian thử việc không bắt buộc; nếu nhập thì là số ngày từ
-        // PROBATION_MIN_DAYS đến PROBATION_MAX_DAYS
+        // Rule: thử việc không bắt buộc; nếu nhập thì từ PROBATION_MIN_DAYS đến PROBATION_MAX_DAYS ngày
         Integer probationDays = requisitionRequest.getProbationDays();
         if (probationDays != null && (probationDays < PROBATION_MIN_DAYS || probationDays > PROBATION_MAX_DAYS)) {
             errors.put("probationDays", PROBATION_RANGE_MESSAGE);
@@ -185,8 +176,7 @@ public class RequisitionValidator {
             }
 
             validCriteriaCount++;
-            // Rule: Dòng tiêu chí đã bắt đầu nhập thì phải điền đủ, kể cả khi lưu nháp
-            // Dòng để trống hoàn toàn thì đã được bỏ qua ở trên.
+            // Rule: dòng tiêu chí đã bắt đầu nhập thì phải điền đủ, kể cả khi lưu nháp
             validateTextField(errors, fieldPrefix + "criteriaName", criteriaRow.getCriteriaName(),
                     CRITERIA_NAME_CHAR_LIMIT, true);
             validateTextField(errors, fieldPrefix + "requiredValue", criteriaRow.getRequiredValue(),
@@ -203,8 +193,7 @@ public class RequisitionValidator {
                 errors.put(fieldPrefix + "criteriaName", "Tiêu chí đã được gửi hai lần.");
             }
 
-            // Rule: Trọng số mỗi tiêu chí từ 0.01 đến 100%, tối đa 2 chữ số thập phân
-            // Áp dụng cả khi lưu nháp: một tiêu chí không thể chiếm quá 100% tổng điểm.
+            // Rule: trọng số mỗi tiêu chí 0.01–100%, tối đa 2 chữ số thập phân (cả khi lưu nháp)
             BigDecimal weight = criteriaRow.getWeight();
             if (weight == null) {
                 errors.put(fieldPrefix + "weight", "Vui lòng nhập trọng số.");
@@ -217,8 +206,7 @@ public class RequisitionValidator {
             }
         }
 
-        // Rule: Khi nộp duyệt, phải có ít nhất 1 tiêu chí và tổng trọng số đúng bằng
-        // 100%
+        // Rule: gửi duyệt phải có ít nhất 1 tiêu chí và tổng trọng số đúng 100%
         if (isSubmitAction && (validCriteriaCount == 0 || totalWeight.compareTo(REQUIRED_TOTAL_WEIGHT) != 0)) {
             errors.put("screeningCriteria", "Vui lòng thêm đầy đủ tiêu chí với tổng trọng số đúng bằng 100%.");
         }
@@ -267,10 +255,7 @@ public class RequisitionValidator {
         }
     }
 
-    /**
-     * Lương (không bắt buộc): nếu nhập thì từ 1 đến SALARY_MAX VND/tháng, tối đa 2
-     * chữ số thập phân.
-     */
+    /** Lương không bắt buộc; nếu nhập thì từ 1 đến SALARY_MAX VND/tháng, tối đa 2 chữ số thập phân. */
     private void validateMoneyField(Map<String, String> errorsMap, String fieldKey, BigDecimal amount) {
         if (amount == null) {
             return;

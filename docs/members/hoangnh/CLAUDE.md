@@ -88,7 +88,7 @@ Spring Boot 3.5, Java 21, Spring Security, Spring Data JPA trên **SQL Server**,
 ```text
 com.group2.rms/
 ├── core/            ← dùng chung toàn hệ thống, KHÔNG chứa nghiệp vụ
-├── notification/                              ← module nhỏ (< 10 file): để phẳng
+├── notification/                              ← đủ 10 file: controller/ service/ repository/ entity/ dto/ (Messages soạn chữ, Labels dịch EventType)
 ├── dashboard/                                 ← chia hộp: DashboardEntryController (/dashboard → redirect theo role)
 │   ├── shared/      DashboardAccess, DashboardMetricsRepository, DTO dùng chung
 │   ├── admin/       controller/ service/ dto/        (/dashboard/admin)

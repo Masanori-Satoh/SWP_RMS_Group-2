@@ -6,42 +6,44 @@
 <!--
     INTERVIEW/LIST.HTML — Lịch phỏng vấn (/interviews, InterviewSchedulingController#listInterviews)
     Lọc theo lịch mini, khoảng thời gian, vị trí, cấp bậc, trạng thái, người phỏng vấn: chạy phía client (js/interview-list.js).
-    Dựng bằng catalog: page-header, card, badge, btn, alert, form-input/form-select, confirm-dialog.
-    CSS riêng: css/pages/interview-common.css (iv-) + css/interview-list.css (il-).
+    Dựng bằng catalog: card, badge, btn, form-input/form-select, confirm-dialog, flash-toast.
+    Giao diện Admin workspace (adw-) như Offer/Yêu cầu tuyển dụng: scene + scripts của fragments/ui/admin-workspace.
+    CSS riêng: css/pages/interview-common.css (iv-) + css/interview-list.css (il-) + css/pages/interview-workspace.css (ivw-).
 -->
 <head>
     <title>Lịch phỏng vấn</title>
     <th:block layout:fragment="styles">
         <link rel="stylesheet" th:href="@{/css/pages/interview-common.css}">
         <link rel="stylesheet" th:href="@{/css/interview-list.css}">
+        <link rel="stylesheet" th:href="@{/css/pages/interview-workspace.css}">
+        <link rel="stylesheet" th:href="@{/css/pages/flash-toast.css}">
     </th:block>
 </head>
 <body>
-<main id="main" layout:fragment="content" class="page-content container il-page" tabindex="-1">
+<main id="main" layout:fragment="content" class="page-content container adw-page ivw-page il-page" tabindex="-1">
+    <th:block th:replace="~{fragments/ui/admin-workspace :: scene}"></th:block>
 
-    <div class="page-header">
-        <div>
-            <h1 class="page-title">Lịch phỏng vấn</h1>
-            <p class="page-subtitle" th:if="${!isCandidateView}">Quản lý và theo dõi toàn bộ buổi phỏng vấn tuyển dụng.</p>
-            <p class="page-subtitle" th:if="${isCandidateView}">Theo dõi thời gian và thông tin các buổi phỏng vấn của bạn.</p>
-        </div>
+    <div class="adw-heading ivw-heading">
+        <h1 class="page-title adw-title">Lịch phỏng vấn</h1>
         <div class="iv-header-actions" th:if="${canCreate}">
-            <a th:href="@{/interviews/new}" class="btn btn--primary" id="btn-create-interview">+ Tạo lịch phỏng vấn</a>
+            <a th:href="@{/interviews/new}" class="btn btn--primary" id="btn-create-interview">
+                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                <span>Tạo lịch phỏng vấn</span>
+            </a>
         </div>
     </div>
 
-    <div th:if="${successMessage}" class="alert alert--success" role="status" th:text="${successMessage}">Thao tác thành công.</div>
-    <div th:if="${errorMessage}" class="alert alert--danger" role="alert" th:text="${errorMessage}">Đã xảy ra lỗi.</div>
+    <th:block th:replace="~{fragments/ui/flash-toast :: flashToast(${successMessage}, ${errorMessage})}"></th:block>
 
     <!-- Chưa có lịch nào (dữ liệu từ server) -->
-    <div th:if="${#lists.isEmpty(schedules)}" class="iv-empty">
+    <div th:if="${#lists.isEmpty(schedules)}" class="iv-empty adw-surface">
         <h2 class="iv-empty__title">Chưa có lịch phỏng vấn nào</h2>
         <p class="iv-empty__desc" th:if="${canCreate}">Bấm “Tạo lịch phỏng vấn” để lên lịch cho một hồ sơ ứng tuyển.</p>
         <p class="iv-empty__desc" th:unless="${canCreate}">Khi bạn được xếp vào hội đồng phỏng vấn, buổi phỏng vấn sẽ hiện ở đây.</p>
     </div>
 
     <!-- Bộ lọc + lịch mini -->
-    <section th:unless="${#lists.isEmpty(schedules)}" class="card il-filter" id="filter-dashboard" aria-label="Bộ lọc lịch phỏng vấn">
+    <section th:unless="${#lists.isEmpty(schedules)}" class="card il-filter adw-surface" id="filter-dashboard" aria-label="Bộ lọc lịch phỏng vấn">
         <div class="il-filter__body" id="filter-body">
             <div class="il-calendar" aria-label="Lịch tháng">
                 <div class="il-calendar__head">
@@ -132,7 +134,7 @@
 
     <!-- Danh sách lịch -->
     <div th:unless="${#lists.isEmpty(schedules)}" class="il-grid">
-        <article class="card il-card" th:each="s : ${schedules}"
+        <article class="card il-card adw-surface" th:each="s : ${schedules}"
                  th:data-id="${s.interviewId}"
                  th:data-date="${#temporals.format(s.startTime, 'yyyy-MM-dd')}"
                  th:data-job="${s.jobPostingTitle != null ? s.jobPostingTitle : ''}"
@@ -258,6 +260,8 @@
 </main>
 <th:block layout:fragment="scripts">
     <script defer th:src="@{/js/interview-list.js}"></script>
+    <script defer th:src="@{/js/pages/flash-toast.js}"></script>
+    <th:block th:replace="~{fragments/ui/admin-workspace :: scripts}"></th:block>
 </th:block>
 </body>
 </html>

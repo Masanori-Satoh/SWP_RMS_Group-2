@@ -20,7 +20,7 @@ class AccountListCoverageTests {
     private final RoleRepository roles = mock(RoleRepository.class);
     private final DepartmentRepository departments = mock(DepartmentRepository.class);
     private final CandidateRepository candidates = mock(CandidateRepository.class);
-    private final AccountListService service = new AccountListService(users, roles, departments, candidates);
+    private final AccountListService service = new AccountListService(users, roles, departments, candidates, org.mockito.Mockito.mock(com.group2.rms.user.service.UserAuditLogger.class));
 
     @Test
     @DisplayName("ACCOUNT-LIST-01 | Sort Null: dùng thứ tự và phân trang ổn định")

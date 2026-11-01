@@ -10,7 +10,8 @@
     </th:block>
 </head>
 <body>
-<main id="main" layout:fragment="content" class="section">
+<main id="main" layout:fragment="content" class="public-main-content adw-page section jd-page">
+    <th:block th:replace="~{fragments/ui/admin-workspace :: scene}"></th:block>
     <div class="container">
 
         <!-- Breadcrumb / Quay lại danh sách việc làm -->
@@ -40,7 +41,7 @@
             <!-- Cột nội dung chi tiết -->
             <div class="job-content">
                 <!-- Header Card của Job -->
-                <div class="job-header-card">
+                <div class="job-header-card adw-surface">
                     <div class="job-header-badges">
                         <span class="badge badge--neutral" th:text="${job.departmentName}">Phòng Engineering</span>
                         <span class="badge badge--neutral" th:text="${job.employmentType}">Full-time</span>
@@ -73,19 +74,19 @@
                 </div>
 
                 <!-- Mục 1: Mô tả công việc -->
-                <div class="job-section-card">
+                <div class="job-section-card adw-surface">
                     <h3 class="section-title">Mô tả công việc</h3>
                     <div class="rich-text" th:utext="${job.jobDescription}">Nội dung mô tả...</div>
                 </div>
 
                 <!-- Mục 2: Yêu cầu ứng viên -->
-                <div class="job-section-card">
+                <div class="job-section-card adw-surface">
                     <h3 class="section-title">Yêu cầu ứng viên</h3>
                     <div class="rich-text" th:utext="${job.jobRequirements}">Nội dung yêu cầu...</div>
                 </div>
 
                 <!-- Mục 3: Quyền lợi -->
-                <div class="job-section-card" th:if="${job.benefits != null}">
+                <div class="job-section-card adw-surface" th:if="${job.benefits != null}">
                     <h3 class="section-title">Quyền lợi</h3>
                     <div class="rich-text" th:utext="${job.benefits}">Nội dung quyền lợi...</div>
                 </div>
@@ -93,7 +94,7 @@
 
             <!-- Cột tóm tắt vị trí tuyển dụng -->
             <aside class="job-sidebar">
-                <div class="base-card summary-card card">
+                <div class="base-card summary-card card adw-surface">
                     <h3>Tóm tắt vị trí</h3>
                     <ul class="summary-list">
                         <li>
@@ -158,7 +159,7 @@
                 </div>
 
                 <!-- Thẻ hỗ trợ ứng viên -->
-                <div class="support-card">
+                <div class="support-card adw-surface">
                     <h4>Cần hỗ trợ về vị trí này?</h4>
                     <p>Bộ phận Tuyển dụng Mộc sẵn sàng giải đáp mọi thắc mắc của bạn về quy trình và tiêu chí đánh giá.</p>
                     <a href="mailto:careers@moc.com" class="btn btn--outline btn--sm w-full">Gửi email hỗ trợ</a>

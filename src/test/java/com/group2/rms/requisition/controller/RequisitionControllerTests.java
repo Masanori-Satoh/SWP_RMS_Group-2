@@ -185,7 +185,7 @@ class RequisitionControllerTests {
                                 .andExpect(status().isOk())
                                 .andExpect(view().name("requisitions/form"))
                                 .andExpect(model().attribute("isEdit", false))
-                                .andExpect(model().attributeExists("requisitionDto"));
+                                .andExpect(model().attributeExists("form"));
         }
 
         @Test
@@ -281,7 +281,7 @@ class RequisitionControllerTests {
                                 .param("minSalary", "hai mươi triệu"))
                                 .andExpect(status().isOk())
                                 .andExpect(view().name("requisitions/form"))
-                                .andExpect(model().attributeHasFieldErrors("requisitionDto", "minSalary"));
+                                .andExpect(model().attributeHasFieldErrors("form", "minSalary"));
                 verify(service, never()).createRequisition(any());
         }
 
@@ -296,7 +296,7 @@ class RequisitionControllerTests {
                                 .param("title", "a".repeat(RequisitionValidator.TITLE_CHAR_LIMIT + 1)))
                                 .andExpect(status().isOk())
                                 .andExpect(view().name("requisitions/form"))
-                                .andExpect(model().attributeHasFieldErrorCode("requisitionDto", "title", "Size"));
+                                .andExpect(model().attributeHasFieldErrorCode("form", "title", "Size"));
                 verify(service, never()).createRequisition(any());
         }
 
@@ -312,7 +312,7 @@ class RequisitionControllerTests {
                                 .param("screeningCriteria[0].weight", "150"))
                                 .andExpect(status().isOk())
                                 .andExpect(view().name("requisitions/form"))
-                                .andExpect(model().attributeHasFieldErrors("requisitionDto",
+                                .andExpect(model().attributeHasFieldErrors("form",
                                                 "numberOfPositions", "maxSalary", "screeningCriteria[0].weight"));
                 verify(service, never()).createRequisition(any());
         }
@@ -342,7 +342,7 @@ class RequisitionControllerTests {
                                 .param("probationDays", String.valueOf(RequisitionValidator.PROBATION_MAX_DAYS + 1)))
                                 .andExpect(status().isOk())
                                 .andExpect(view().name("requisitions/form"))
-                                .andExpect(model().attributeHasFieldErrors("requisitionDto", "probationDays"));
+                                .andExpect(model().attributeHasFieldErrors("form", "probationDays"));
                 verify(service, never()).updateRequisition(any(), any());
         }
 
@@ -375,7 +375,7 @@ class RequisitionControllerTests {
                 mvc.perform(post("/requisitions/create").with(csrf()).param("action", RequisitionValidator.ACTION_SUBMIT))
                                 .andExpect(status().isOk())
                                 .andExpect(view().name("requisitions/form"))
-                                .andExpect(model().attributeHasFieldErrors("requisitionDto", "title"));
+                                .andExpect(model().attributeHasFieldErrors("form", "title"));
         }
 
         @Test

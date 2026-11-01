@@ -38,6 +38,8 @@ import static org.mockito.Mockito.doReturn;
 @AutoConfigureMockMvc
 @Transactional(readOnly = true)
 class AdminDashboardIntegrationTests {
+    @Autowired com.group2.rms.admin.service.AuditLogService audit;
+    @Autowired com.group2.rms.admin.repository.AuditLogTargetRepository auditTargets;
     @MockitoSpyBean AdminDashboardService dashboard;
     @Autowired DashboardMetricsRepository metrics;
     @Autowired UserRepository users;
@@ -45,6 +47,48 @@ class AdminDashboardIntegrationTests {
     @Autowired JdbcTemplate jdbc;
     @Autowired MockMvc mvc;
     private User admin;
+
+    @Test void auditLogQueriesMatchExistingDatabaseRowsWithoutWrites() {
+        var page = audit.search(null, null, null, "", "", "", 0);
+        assertEquals(jdbc.queryForObject("SELECT COUNT_BIG(*) FROM AuditLog", Long.class), page.getTotalElements());
+        var actors = audit.actors();
+        assertEquals(jdbc.queryForObject("SELECT COUNT(DISTINCT UserId) FROM AuditLog", Integer.class), actors.size());
+        assertEquals(jdbc.queryForObject("SELECT COUNT(DISTINCT EntityName) FROM AuditLog", Integer.class), audit.entities().size());
+        if (!actors.isEmpty()) {
+            int actorId = actors.getFirst().getId();
+            assertEquals(jdbc.queryForObject("SELECT COUNT_BIG(*) FROM AuditLog WHERE UserId=?", Long.class, actorId),
+                    audit.search(null, null, actorId, "", "", "", 0).getTotalElements());
+        }
+        if (!page.isEmpty()) {
+            var day = page.getContent().getFirst().timestamp().toLocalDate();
+            assertEquals(jdbc.queryForObject("SELECT COUNT_BIG(*) FROM AuditLog WHERE [Timestamp]>=? AND [Timestamp]<?",
+                    Long.class, Timestamp.valueOf(day.atStartOfDay()), Timestamp.valueOf(day.plusDays(1).atStartOfDay())),
+                    audit.search(day, day, null, "", "", "", 0).getTotalElements());
+        }
+    }
+
+    @Test void auditTargetNamesResolveAcrossExistingEntityTypesWithoutWrites() {
+        var tables = java.util.Map.of("User", "UserId", "Department", "DepartmentId", "Candidate", "CandidateId",
+                "Application", "ApplicationId", "JobRequisition", "RequisitionId", "JobPosting", "JobPostingId",
+                "TalentPoolNote", "NoteId", "InterviewSchedule", "InterviewId", "SystemConfig", "ConfigKey");
+        var fixtures = new java.util.ArrayList<com.group2.rms.admin.entity.AuditLog>();
+        var existing = new java.util.HashSet<com.group2.rms.admin.repository.AuditLogTargetRepository.Target>();
+        tables.forEach((table, column) -> {
+            var ids = jdbc.queryForList("SELECT TOP 1 " + column + " FROM [" + table + "] ORDER BY " + column, String.class);
+            String id = ids.isEmpty() ? (table.equals("SystemConfig") ? "__missing__" : "2147483647") : ids.getFirst();
+            fixtures.add(com.group2.rms.admin.entity.AuditLog.builder().entityName(table).entityId(id).build());
+            if (!ids.isEmpty()) existing.add(new com.group2.rms.admin.repository.AuditLogTargetRepository.Target(table, id));
+        });
+        var names = auditTargets.findNames(fixtures);
+        for (var target : existing) assertNotNull(names.get(target), target.toString());
+        var app = fixtures.stream().filter(log -> log.getEntityName().equals("Application")).findFirst().orElseThrow();
+        if (existing.contains(new com.group2.rms.admin.repository.AuditLogTargetRepository.Target("Application", app.getEntityId()))) {
+            String expected = jdbc.queryForObject("SELECT CONCAT(u.FullName,N' · ',j.PostingTitle) FROM Application a "
+                    + "JOIN Candidate c ON c.CandidateId=a.CandidateId JOIN [User] u ON u.UserId=c.UserId "
+                    + "JOIN JobPosting j ON j.JobPostingId=a.JobPostingId WHERE a.ApplicationId=?", String.class, Integer.valueOf(app.getEntityId()));
+            assertEquals(expected, names.get(new com.group2.rms.admin.repository.AuditLogTargetRepository.Target("Application", app.getEntityId())));
+        }
+    }
 
     @BeforeEach
     void currentAdmin() {
@@ -97,8 +141,8 @@ class AdminDashboardIntegrationTests {
         if (first != null) {
             var at = first.toLocalDateTime();
             assertEquals(jdbc.queryForObject("SELECT COUNT_BIG(*) FROM Candidate WHERE CreatedAt=?", Long.class, first),
-                    metrics.candidatesCreatedBetween(at, at), "Both time boundaries are inclusive");
-            assertEquals(0, metrics.candidatesCreatedBetween(at.minusDays(1), at.minusSeconds(1)),
+                    metrics.countCandidatesCreatedBetween(at, at), "Both time boundaries are inclusive");
+            assertEquals(0, metrics.countCandidatesCreatedBetween(at.minusDays(1), at.minusSeconds(1)),
                     "A window before the first profile returns zero");
         }
     }

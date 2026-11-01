@@ -16,6 +16,7 @@ import com.group2.rms.interview.repository.InterviewFinalResultRepository;
 import com.group2.rms.interview.repository.InterviewScheduleRepository;
 import com.group2.rms.interview.service.InterviewFinalResultServiceImpl;
 import com.group2.rms.jobposting.entity.JobPosting;
+import com.group2.rms.notification.service.NotificationService;
 import com.group2.rms.requisition.entity.JobRequisition;
 import com.group2.rms.requisition.service.RequisitionAccess;
 import com.group2.rms.user.entity.Role;
@@ -37,6 +38,7 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.ArgumentMatchers.anyInt;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
 class InterviewFinalResultServiceTests {
@@ -48,6 +50,7 @@ class InterviewFinalResultServiceTests {
     private RequisitionAccess requisitionAccess;
     private ApplicationStatusService applicationStatusService; // dunglt bổ sung
     private InterviewEvaluationRepository interviewEvaluationRepository;
+    private NotificationService notificationService; // hoangnh bổ sung
     private InterviewFinalResultServiceImpl service;
 
     private User hiringManager;
@@ -60,10 +63,11 @@ class InterviewFinalResultServiceTests {
         requisitionAccess = mock(RequisitionAccess.class);
         applicationStatusService = mock(ApplicationStatusService.class); // dunglt bổ sung
         interviewEvaluationRepository = mock(InterviewEvaluationRepository.class);
+        notificationService = mock(NotificationService.class); // hoangnh bổ sung
         service = new InterviewFinalResultServiceImpl(
                 interviewScheduleRepository, interviewFinalResultRepository, requisitionAccess,
                 applicationStatusService, // dunglt bổ sung
-                interviewEvaluationRepository, java.time.Clock.systemDefaultZone());
+                interviewEvaluationRepository, notificationService, java.time.Clock.systemDefaultZone());
 
         hiringManager = user(40, "Hoa HM", "Hiring Manager");
         requisition = JobRequisition.builder().build();
@@ -132,14 +136,16 @@ class InterviewFinalResultServiceTests {
         schedule(InterviewStatus.Scheduled, LocalDateTime.now().minusHours(2));
         service.decide(INTERVIEW_ID, passed(), hiringManager);
         verify(applicationStatusService).onInterviewDecided(100, true);
+        verify(notificationService).notifyInterviewResultDecided(any(InterviewSchedule.class), eq(hiringManager), eq("Passed"));
 
         schedule(InterviewStatus.Completed, LocalDateTime.now().minusDays(1));
         service.decide(INTERVIEW_ID, new SubmitFinalResultRequest("Failed", null, null), hiringManager);
         verify(applicationStatusService).onInterviewDecided(100, false);
+        verify(notificationService).notifyInterviewResultDecided(any(InterviewSchedule.class), eq(hiringManager), eq("Failed"));
 
         schedule(InterviewStatus.Cancelled, LocalDateTime.now().minusDays(1));
         assertThrows(InterviewFinalResultException.class, () -> service.decide(INTERVIEW_ID, passed(), hiringManager));
-        verifyNoMoreInteractions(applicationStatusService);
+        verifyNoMoreInteractions(applicationStatusService, notificationService);
     }
 
     @Test
@@ -201,7 +207,7 @@ class InterviewFinalResultServiceTests {
     private InterviewFinalResultServiceImpl serviceAtNow() {
         Clock fixed = Clock.fixed(NOW.atZone(ZoneId.systemDefault()).toInstant(), ZoneId.systemDefault());
         return new InterviewFinalResultServiceImpl(interviewScheduleRepository, interviewFinalResultRepository,
-                requisitionAccess, applicationStatusService, interviewEvaluationRepository, fixed);
+                requisitionAccess, applicationStatusService, interviewEvaluationRepository, notificationService, fixed);
     }
 
     /** Lịch có hội đồng 2 người, kết thúc lúc endTime; submitted = số người đã nộp phiếu. */
@@ -313,5 +319,96 @@ class InterviewFinalResultServiceTests {
         assertThrows(InterviewFinalResultException.class,
                 () -> serviceAtNow().decide(INTERVIEW_ID, considering(), hiringManager));
         verify(interviewFinalResultRepository, never()).save(any());
+    }
+
+    // ===== Bổ sung theo Phương án 2: Tuyển Hiring Manager (yêu cầu do Director tạo) =====
+
+    @Test
+    @DisplayName("Tuyển HM (yêu cầu do Director tạo): Director được chốt kết quả, lưu hiringManager = Director")
+    void directorFinalizesInterviewForHiringManagerPosition() {
+        User director = user(50, "Hoang Director", "Director");
+        JobRequisition hmRequisition = JobRequisition.builder().createdBy(director).build();
+        Application application = Application.builder()
+                .applicationId(101)
+                .jobPosting(JobPosting.builder().jobPostingId(6).postingTitle("Hiring Manager").requisition(hmRequisition).build())
+                .build();
+        InterviewSchedule hmSchedule = InterviewSchedule.builder()
+                .interviewId(15L)
+                .application(application)
+                .interviewFormat(InterviewFormat.Online_GoogleMeet)
+                .interviewStatus(InterviewStatus.Scheduled)
+                .startTime(LocalDateTime.now().minusHours(2))
+                .endTime(LocalDateTime.now().minusHours(1))
+                .build();
+        when(interviewScheduleRepository.findByIdWithDetails(15L)).thenReturn(Optional.of(hmSchedule));
+
+        assertTrue(service.requiresDirectorDecision(hmSchedule));
+        assertTrue(service.isDecisionMaker(director, hmSchedule));
+
+        service.decide(15L, passed(), director);
+
+        ArgumentCaptor<InterviewFinalResult> saved = ArgumentCaptor.forClass(InterviewFinalResult.class);
+        verify(interviewFinalResultRepository).save(saved.capture());
+        assertEquals("Passed", saved.getValue().getFinalDecision());
+        assertEquals(director, saved.getValue().getHiringManager());
+        assertEquals(InterviewStatus.Completed, hmSchedule.getInterviewStatus());
+        verify(applicationStatusService).onInterviewDecided(101, true);
+    }
+
+    @Test
+    @DisplayName("Tuyển HM (yêu cầu do Director tạo): HM phụ trách phòng ban bị từ chối với thông báo riêng")
+    void hiringManagerCannotFinalizeInterviewForHiringManagerPosition() {
+        User director = user(50, "Hoang Director", "Director");
+        JobRequisition hmRequisition = JobRequisition.builder().createdBy(director).build();
+        Application application = Application.builder()
+                .applicationId(102)
+                .jobPosting(JobPosting.builder().jobPostingId(7).postingTitle("Hiring Manager").requisition(hmRequisition).build())
+                .build();
+        InterviewSchedule hmSchedule = InterviewSchedule.builder()
+                .interviewId(16L)
+                .application(application)
+                .interviewFormat(InterviewFormat.Online_GoogleMeet)
+                .interviewStatus(InterviewStatus.Scheduled)
+                .startTime(LocalDateTime.now().minusHours(2))
+                .endTime(LocalDateTime.now().minusHours(1))
+                .build();
+        when(interviewScheduleRepository.findByIdWithDetails(16L)).thenReturn(Optional.of(hmSchedule));
+        when(requisitionAccess.inManagedDepartment(hiringManager, hmRequisition)).thenReturn(true);
+
+        assertTrue(service.requiresDirectorDecision(hmSchedule));
+        assertFalse(service.isDecisionMaker(hiringManager, hmSchedule));
+
+        AccessDeniedException ex = assertThrows(AccessDeniedException.class,
+                () -> service.decide(16L, passed(), hiringManager));
+        assertEquals("Chỉ Giám đốc mới được chốt kết quả phỏng vấn cho vị trí Hiring Manager.", ex.getMessage());
+        verify(interviewFinalResultRepository, never()).save(any());
+    }
+
+    @Test
+    @DisplayName("Tuyển HM (yêu cầu do Director tạo): HR và Interviewer không được chốt")
+    void hrAndInterviewerCannotFinalizeInterviewForHiringManagerPosition() {
+        User director = user(50, "Hoang Director", "Director");
+        JobRequisition hmRequisition = JobRequisition.builder().createdBy(director).build();
+        Application application = Application.builder()
+                .applicationId(103)
+                .jobPosting(JobPosting.builder().jobPostingId(8).postingTitle("Hiring Manager").requisition(hmRequisition).build())
+                .build();
+        InterviewSchedule hmSchedule = InterviewSchedule.builder()
+                .interviewId(17L)
+                .application(application)
+                .interviewFormat(InterviewFormat.Online_GoogleMeet)
+                .interviewStatus(InterviewStatus.Scheduled)
+                .startTime(LocalDateTime.now().minusHours(2))
+                .endTime(LocalDateTime.now().minusHours(1))
+                .build();
+        when(interviewScheduleRepository.findByIdWithDetails(17L)).thenReturn(Optional.of(hmSchedule));
+
+        User hr = user(1, "Lan HR", "HR");
+        User interviewer = user(11, "Minh IV", "Interviewer");
+
+        assertFalse(service.isDecisionMaker(hr, hmSchedule));
+        assertFalse(service.isDecisionMaker(interviewer, hmSchedule));
+        assertThrows(AccessDeniedException.class, () -> service.decide(17L, passed(), hr));
+        assertThrows(AccessDeniedException.class, () -> service.decide(17L, passed(), interviewer));
     }
 }

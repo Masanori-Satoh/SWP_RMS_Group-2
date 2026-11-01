@@ -10,4 +10,9 @@ public interface DashboardResponse {
     String fullName();
 
     String section();
+
+    /** true = trang có biểu đồ, cần nạp Chart.js và internal-dashboard.js. */
+    default boolean hasCharts() {
+        return true;
+    }
 }

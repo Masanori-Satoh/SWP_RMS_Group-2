@@ -18,6 +18,10 @@
     </main>
     <th:block layout:fragment="scripts">
         <th:block th:replace="~{fragments/ui/admin-workspace :: scripts}"></th:block>
+        <th:block th:if="${dashboard.hasCharts()}">
+            <script defer th:src="@{/js/vendor/chart.umd.min.js}"></script>
+            <script defer th:src="@{/js/pages/internal-dashboard.js}"></script>
+        </th:block>
     </th:block>
 </body>
 

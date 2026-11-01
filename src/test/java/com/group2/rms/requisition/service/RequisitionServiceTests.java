@@ -4,7 +4,7 @@ import com.group2.rms.admin.entity.AuditLog;
 import com.group2.rms.admin.repository.AuditLogRepository;
 import com.group2.rms.core.exception.ResourceNotFoundException;
 import com.group2.rms.jobposting.repository.JobPostingRepository;
-import com.group2.rms.notification.NotificationService;
+import com.group2.rms.notification.service.NotificationService;
 import com.group2.rms.requisition.dto.RequisitionRequest;
 import com.group2.rms.requisition.dto.ScreeningCriteriaRequest;
 import com.group2.rms.requisition.entity.JobRequisition;
@@ -278,6 +278,17 @@ class RequisitionServiceTests {
         }
 
         @Test
+        @DisplayName("Gửi duyệt khi phòng có bản nháp khác cùng tên -> Vẫn gửi được (chỉ chặn trùng khi lưu nháp)")
+        void createRequisition_shouldSubmit_whenOtherDraftWithSameTitleExists() {
+            // Act
+            service.createRequisition(submit("Java Engineer"));
+
+            // Assert
+            assertEquals(RequisitionAccess.STATUS_PENDING_DIRECTOR, savedRequisition().getApprovalStatus());
+            verify(requisitions, never()).existsDraftByTitleAndDepartment(any(), any(), any());
+        }
+
+        @Test
         @DisplayName("Tài khoản chưa có phòng ban -> Báo lỗi dễ hiểu, không lưu")
         void createRequisition_shouldReject_whenCreatorHasNoDepartment() {
             // Arrange
@@ -359,6 +370,8 @@ class RequisitionServiceTests {
             assertEquals(RequisitionAccess.STATUS_APPROVED, approval.getValue().getStatus());
             assertSame(manager, approval.getValue().getDirector());
             assertEquals("Tạo yêu cầu: Sales Lead · Approved (Giám đốc phê duyệt trực tiếp)", savedAudit().getNewValue());
+            // HR cần biết để tạo tin, giống như khi Giám đốc duyệt yêu cầu của HM
+            verify(notificationService).notifyRequisitionApproved(approval.getValue());
         }
 
         @Test
@@ -465,10 +478,32 @@ class RequisitionServiceTests {
             verify(requisitions, never()).findMaxRoundInChain(any());
         }
 
+        @Test
+        @DisplayName("Giám đốc sao chép rồi chọn phòng ban khác -> Yêu cầu mới ở đợt 1, không nối chuỗi phòng cũ")
+        void createRequisition_shouldResetToRound1_whenDirectorCopiesToAnotherDepartment() {
+            // Arrange
+            Department sales = Department.builder().departmentId(2).departmentName("Sales").departmentStatus("Active").build();
+            when(departments.findById(2)).thenReturn(Optional.of(sales));
+            when(access.isDirector(manager)).thenReturn(true);
+            RequisitionRequest request = draft("Java Engineer");
+            request.setOriginalRequisitionId(80);
+            request.setDepartmentId(2);
+
+            // Act
+            service.createRequisition(request);
+
+            // Assert
+            JobRequisition saved = savedRequisition();
+            assertNull(saved.getOriginalRequisition());
+            assertEquals(1, saved.getRecruitmentRound());
+            verify(requisitions, never()).findMaxRoundInChain(any());
+        }
+
         @ParameterizedTest(name = "phiếu nguồn {0}")
-        @ValueSource(strings = {RequisitionAccess.STATUS_DRAFT, RequisitionAccess.STATUS_PENDING_DIRECTOR})
-        @DisplayName("Phiếu nguồn chưa xong vòng duyệt -> Không sao chép được (sai trạng thái)")
-        void createRequisition_shouldReject_whenCopySourceIsNotFinished(String status) {
+        @ValueSource(strings = {RequisitionAccess.STATUS_DRAFT, RequisitionAccess.STATUS_PENDING_DIRECTOR,
+                RequisitionAccess.STATUS_REJECTED})
+        @DisplayName("Phiếu nguồn chưa được duyệt -> Không sao chép được (sai trạng thái)")
+        void createRequisition_shouldReject_whenCopySourceIsNotApproved(String status) {
             // Arrange
             root.setApprovalStatus(status);
             RequisitionRequest request = draft("Java Engineer");
@@ -666,9 +701,10 @@ class RequisitionServiceTests {
         }
 
         @ParameterizedTest(name = "phiếu {0}")
-        @ValueSource(strings = {RequisitionAccess.STATUS_DRAFT, RequisitionAccess.STATUS_PENDING_DIRECTOR})
-        @DisplayName("Sao chép yêu cầu chưa xong vòng duyệt -> Báo lỗi (sai trạng thái)")
-        void copy_shouldReject_whenSourceIsNotFinished(String status) {
+        @ValueSource(strings = {RequisitionAccess.STATUS_DRAFT, RequisitionAccess.STATUS_PENDING_DIRECTOR,
+                RequisitionAccess.STATUS_REJECTED})
+        @DisplayName("Sao chép yêu cầu chưa được duyệt -> Báo lỗi (bị từ chối thì sửa và gửi lại)")
+        void copy_shouldReject_whenSourceIsNotApproved(String status) {
             // Arrange
             requisitionWithStatus(80, status);
 
@@ -731,6 +767,16 @@ class RequisitionServiceTests {
             assertEquals("Status: Pending_Director → Approved\nÝ kiến Giám đốc: Looks good", savedAudit().getNewValue());
             verify(notificationService).notifyRequisitionApproved(decision.getValue());
             verify(notificationService, never()).notifyRequisitionRejected(any());
+        }
+
+        @Test
+        @DisplayName("Giám đốc duyệt -> Ghi updatedAt = lúc duyệt (dashboard HR tính số ngày chờ tạo tin từ mốc này)")
+        void decide_shouldSetUpdatedAt_whenDirectorDecides() {
+            // Act
+            service.decide(50, true, null);
+
+            // Assert
+            assertEquals(NOW, pending.getUpdatedAt());
         }
 
         @Test
@@ -830,6 +876,8 @@ class RequisitionServiceTests {
             // Assert
             assertEquals(RequisitionAccess.STATUS_DRAFT, requisition.getApprovalStatus());
             assertEquals("Status: Pending_Director → Draft (rút lại)", savedAudit().getNewValue());
+            verify(notificationService).markRequisitionPendingRead(55);
+            verify(notificationService).notifyRequisitionWithdrawn(requisition, manager);
         }
 
         @Test
@@ -842,7 +890,7 @@ class RequisitionServiceTests {
             // Act + Assert
             assertThrows(AccessDeniedException.class, () -> service.withdraw(56));
             assertEquals(RequisitionAccess.STATUS_PENDING_DIRECTOR, requisition.getApprovalStatus());
-            verifyNoInteractions(audit);
+            verifyNoInteractions(audit, notificationService);
         }
 
         @Test

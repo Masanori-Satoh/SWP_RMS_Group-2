@@ -9,7 +9,5 @@ public record EvaluationItem(
         String candidateName,
         String positionTitle,
         LocalDateTime interviewEnd,
-        String waitText,
-        String waitTone,
         String href) {
 }

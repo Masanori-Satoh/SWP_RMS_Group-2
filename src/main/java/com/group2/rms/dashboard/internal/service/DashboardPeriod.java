@@ -2,7 +2,6 @@ package com.group2.rms.dashboard.internal.service;
 
 import java.time.DayOfWeek;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.time.format.DateTimeParseException;
 import java.time.temporal.TemporalAdjusters;
 
@@ -19,16 +18,6 @@ public final class DashboardPeriod {
         // Chỉ chứa hàm static, không tạo đối tượng
     }
 
-    /** Đầu kỳ hiện tại: [currentFrom, now). */
-    public static LocalDateTime currentFrom(LocalDateTime now) {
-        return now.minusDays(WINDOW_DAYS);
-    }
-
-    /** Đầu kỳ trước: [previousFrom, currentFrom). */
-    public static LocalDateTime previousFrom(LocalDateTime now) {
-        return now.minusDays(WINDOW_DAYS * 2L);
-    }
-
     /** Mũi tên % so với kỳ trước: "↑ 19%", "↓ 5%", "0%". Kỳ trước bằng 0 thì không so được. */
     public static String changeText(long current, long previous) {
         if (previous == 0) {
@@ -39,15 +28,6 @@ public final class DashboardPeriod {
         }
         long percent = Math.round((current - previous) * 100.0 / previous);
         return arrow(percent) + Math.abs(percent) + "%";
-    }
-
-    /** Chênh lệch giữa hai tỷ lệ phần trăm, tính bằng điểm: "↑ 7 điểm". */
-    public static String pointChangeText(Integer currentPercent, Integer previousPercent) {
-        if (currentPercent == null || previousPercent == null) {
-            return null;
-        }
-        int points = currentPercent - previousPercent;
-        return arrow(points) + Math.abs(points) + " điểm";
     }
 
     /** Tăng = tốt (xanh), giảm = xấu (đỏ). Mọi KPI dòng chảy hiện có đều theo chiều này. */
@@ -69,10 +49,7 @@ public final class DashboardPeriod {
         return (int) Math.round(part * 100.0 / whole);
     }
 
-    /**
-     * Thứ Hai của tuần cần xem. Rule (D13): giá trị lạ hoặc trống thì quay về tuần hiện tại,
-     * ngày bất kỳ trong tuần cũng được đưa về thứ Hai.
-     */
+    /** Rule (D13): thứ Hai của tuần cần xem; giá trị lạ hoặc trống thì về tuần hiện tại. */
     public static LocalDate weekStart(String requestedDay, LocalDate today) {
         LocalDate day = today;
         if (requestedDay != null && !requestedDay.isBlank()) {

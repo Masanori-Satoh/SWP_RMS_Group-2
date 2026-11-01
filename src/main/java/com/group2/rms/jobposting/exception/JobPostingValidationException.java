@@ -4,10 +4,8 @@ import com.group2.rms.core.exception.BaseBusinessException;
 
 import java.util.Map;
 
-/**
- * Lỗi nghiệp vụ của tin tuyển dụng.
- * - Lỗi chung (không gắn với ô nào): dùng constructor nhận một câu, ví dụ "Chỉ tin nháp mới được xóa."
- * - Lỗi theo ô của form: dùng constructor nhận map tên ô → câu lỗi, controller đưa từng lỗi về cạnh ô đó.
+/*
+ * EXCEPTION: lỗi nghiệp vụ của tin; lỗi chung là một câu, lỗi theo ô là map tên ô → câu lỗi.
  */
 public class JobPostingValidationException extends BaseBusinessException {
 

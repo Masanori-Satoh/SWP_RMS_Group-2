@@ -6,46 +6,58 @@
 <!--
     CANDIDATE/APPLICATIONS.HTML — Danh sách hồ sơ ứng tuyển (/applications, SRS 5.1.22)
     HR, Director, Admin: "Danh sách ứng viên" (mọi đơn). Hiring Manager: "Hồ sơ của phòng ban bạn" (mọi đơn phòng mình, duyệt đơn HR đã chuyển).
-    Dựng bằng catalog: page-header, card, form-*, btn, badge, table-wrapper/table, more-menu,
-    fragments/ui/stages :: stageBar (lọc theo giai đoạn), fragments/ui/pagination :: paged.
+    Đồng bộ layout Admin Workspace (adw-): scene background, adw-heading, adw-surface cards, adw-data-table,
+    fragments/ui/stages :: stageBar (lọc theo giai đoạn), fragments/ui/flash-toast :: flashToast,
+    fragments/ui/pagination :: paged.
     CSS riêng: static/css/pages/applications.css (tiền tố app-).
 -->
 <head>
     <title>Hồ sơ ứng tuyển</title>
     <th:block layout:fragment="styles">
+        <link rel="stylesheet" th:href="@{/css/pages/flash-toast.css}">
         <link rel="stylesheet" th:href="@{/css/pages/applications.css}">
     </th:block>
 </head>
 <body>
-<main id="main" layout:fragment="content" class="page-content container app-page" tabindex="-1"
+<main id="main" layout:fragment="content" class="page-content container adw-page app-page" tabindex="-1"
       th:with="search=${result.search}, page=${result.applications}">
 
-    <div class="page-header">
+    <th:block th:replace="~{fragments/ui/admin-workspace :: scene}"></th:block>
+
+    <div class="page-header adw-heading app-header">
         <div th:if="${result.postingTitle != null}">
-            <h1 class="page-title" th:text="|Hồ sơ cho tin: ${result.postingTitle}|">Hồ sơ cho tin: Java Developer</h1>
+            <h1 class="page-title adw-title" th:text="|Hồ sơ cho tin: ${result.postingTitle}|">Hồ sơ cho tin: Java Developer</h1>
             <p class="page-subtitle" th:text="${result.departmentView}
                     ? 'Mọi hồ sơ nộp vào tin này; bạn duyệt hồ sơ HR đã chuyển.'
                     : 'Số đếm và danh sách chỉ tính hồ sơ của tin này.'">Số đếm và danh sách chỉ tính hồ sơ của tin này.</p>
         </div>
         <div th:if="${result.postingTitle == null and result.departmentView}">
-            <h1 class="page-title">Hồ sơ của phòng ban bạn</h1>
+            <h1 class="page-title adw-title">Hồ sơ của phòng ban bạn</h1>
             <p class="page-subtitle">Mọi hồ sơ nộp vào phòng ban của bạn; bạn duyệt hồ sơ HR đã chuyển.</p>
         </div>
         <div th:if="${result.postingTitle == null and !result.departmentView}">
-            <h1 class="page-title">Danh sách ứng viên</h1>
+            <h1 class="page-title adw-title">Danh sách ứng viên</h1>
             <p class="page-subtitle">Xếp theo điểm AI; chọn hồ sơ đạt để chuyển cho trưởng bộ phận.</p>
         </div>
         <a th:if="${result.postingTitle != null and result.canOpenJobPosting}"
            th:href="@{/internal/job-postings/{id}(id=${search.jobPostingId})}"
-           class="btn btn--secondary">← Về tin tuyển dụng</a>
+           class="btn btn--secondary app-back-btn">
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg>
+            <span>← Về tin tuyển dụng</span>
+        </a>
     </div>
 
+    <!-- Thông báo nổi Flash Toast -->
+    <th:block th:replace="~{fragments/ui/flash-toast :: flashToast(${successMessage}, ${errorMessage ?: failureMessage})}"></th:block>
+
     <!-- Lọc: GET, giữ trên URL để phân trang và quay lại vẫn đúng -->
-    <form th:action="@{/applications}" method="get" class="card app-filter" role="search" aria-label="Lọc hồ sơ ứng tuyển">
+    <form th:action="@{/applications}" method="get" class="card app-filter adw-surface" role="search" aria-label="Lọc hồ sơ ứng tuyển">
         <div class="form-group">
             <label class="form-label" for="app-keyword">Ứng viên</label>
-            <input id="app-keyword" type="search" name="keyword" class="form-input" maxlength="100"
-                   th:value="${search.keyword}" placeholder="Họ tên hoặc email" autocomplete="off">
+            <div class="app-search-input-wrap">
+                <input id="app-keyword" type="search" name="keyword" class="form-input" maxlength="100"
+                       th:value="${search.keyword}" placeholder="Họ tên hoặc email" autocomplete="off">
+            </div>
         </div>
         <div class="form-group">
             <label class="form-label" for="app-job">Vị trí</label>
@@ -64,94 +76,132 @@
         </div>
         <div class="app-filter__actions">
             <input th:if="${search.stage != null}" type="hidden" name="stage" th:value="${search.stage}">
-            <button type="submit" class="btn btn--primary">Lọc</button>
+            <button type="submit" class="btn btn--primary">
+                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+                <span>Lọc</span>
+            </button>
         </div>
     </form>
 
     <!-- Giai đoạn: link thường, số đếm theo cùng phạm vi + bộ lọc ở trên -->
     <nav th:replace="~{fragments/ui/stages :: stageBar(items=${stageItems}, mode='tabs')}"></nav>
 
-    <div class="app-results">
-        <p class="app-results__count"><strong th:text="${page.totalElements}">0</strong> hồ sơ</p>
-        <a th:if="${search.keyword != null or search.jobPostingId != null or search.status != null
-                     or search.stage != null}"
-           th:href="@{/applications}" class="btn btn--secondary btn--sm">Xóa bộ lọc</a>
-    </div>
+    <!-- Danh sách hồ sơ ứng tuyển -->
+    <section class="card adw-surface app-list-card" aria-labelledby="applications-list-title">
+        <header class="app-list-header">
+            <div class="app-list-header__identity">
+                <span class="app-list-header__icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+                </span>
+                <h2 id="applications-list-title" class="adw-panel-title">Danh sách hồ sơ ứng tuyển</h2>
+            </div>
+            <div class="app-results">
+                <span class="badge badge--neutral app-results__count"><strong th:text="${page.totalElements}">0</strong> hồ sơ</span>
+                <a th:if="${search.keyword != null or search.jobPostingId != null or search.status != null
+                             or search.stage != null}"
+                   th:href="@{/applications}" class="btn btn--secondary btn--sm app-clear-filter-btn">Xóa bộ lọc</a>
+            </div>
+        </header>
 
-    <div th:if="${page.isEmpty()}" class="card app-empty">
-        <h2 class="app-empty__title">Chưa có hồ sơ phù hợp</h2>
-        <p class="app-empty__desc text-muted" th:if="${result.departmentView}">Chưa có hồ sơ nào nộp vào phòng ban của bạn.</p>
-        <p class="app-empty__desc text-muted" th:unless="${result.departmentView}">Hãy thử bỏ bớt điều kiện lọc.</p>
-    </div>
+        <div th:if="${page.isEmpty()}" class="app-empty">
+            <div class="app-empty__icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24" width="48" height="48" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="9" y1="15" x2="15" y2="15"/></svg>
+            </div>
+            <h2 class="app-empty__title">Chưa có hồ sơ phù hợp</h2>
+            <p class="app-empty__desc text-muted" th:if="${result.departmentView}">Chưa có hồ sơ nào nộp vào phòng ban của bạn.</p>
+            <p class="app-empty__desc text-muted" th:unless="${result.departmentView}">Hãy thử bỏ bớt điều kiện lọc.</p>
+        </div>
 
-    <div th:unless="${page.isEmpty()}" class="table-wrapper">
-        <table class="table app-table">
-            <thead>
-            <tr>
-                <th scope="col" class="app-col-num">STT</th>
-                <th scope="col" class="app-col-candidate">Ứng viên</th>
-                <th scope="col" class="app-col-job">Vị trí</th>
-                <th scope="col" class="app-col-date">Ngày nộp</th>
-                <th scope="col" class="app-col-score">Điểm AI</th>
-                <th scope="col" class="app-col-status">Trạng thái</th>
-                <th scope="col" class="app-col-actions app-table__actions-head">Thao tác</th>
-            </tr>
-            </thead>
-            <tbody>
-            <tr th:each="row, stat : ${page.content}" th:attr="data-app-row=${row.applicationId}">
-                <td class="app-col-num" th:text="${page.number * page.size + stat.count}"></td>
-                <td class="app-col-candidate">
-                    <strong class="app-candidate__name" th:text="${row.fullName}">Nguyễn Văn An</strong>
-                    <span class="badge badge--success" data-app-saved-badge th:hidden="${!row.isPotential}" title="Đã lưu vào kho tiềm năng toàn hệ thống">Tiềm năng</span>
-                    <span class="app-candidate__email" th:text="${row.email}">an@example.com</span>
-                </td>
-                <td class="app-col-job" th:text="${row.postingTitle}">Java Developer</td>
-                <td class="app-col-date" th:text="${#temporals.format(row.submissionDate, 'dd/MM/yyyy')}">10/10/2026</td>
-                <td class="app-col-score">
-                    <strong th:if="${row.aiMatchScore != null}" class="app-score"
-                            th:text="${#numbers.formatDecimal(row.aiMatchScore, 1, 0)}">79</strong>
-                    <span th:if="${row.aiMatchScore == null}" class="app-score app-score--empty"
-                          th:text="${row.applicationStatus == 'Applied' ? 'Chờ AI chấm' : '—'}">Chờ AI chấm</span>
-                </td>
-                <td class="app-col-status">
-                    <span class="badge" th:classappend="${row.statusBadge}" th:text="${row.statusLabel}">Chờ HR duyệt CV</span>
-                    <span th:if="${row.ownerLabel != null}" class="app-owner" th:text="|Đang chờ: ${row.ownerLabel}|">Đang chờ: HR</span>
-                </td>
-                <td class="app-col-actions app-table__actions">
-                    <div class="app-row-actions">
-                    <button type="button" class="btn btn--secondary btn--sm app-icon-button" data-app-preview aria-haspopup="dialog" aria-controls="app-preview"
-                            title="Xem nhanh CV" th:attr="aria-label=|Xem nhanh CV của ${row.fullName}|,data-name=${row.fullName},data-job=${row.postingTitle},data-cv-url=@{/applications/{id}/cv(id=${row.applicationId})},data-detail-url=@{/applications/{id}(id=${row.applicationId})}">
-                        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12Z"/><circle cx="12" cy="12" r="3"/></svg>
-                    </button>
-                    <button th:if="${viewerRole == 'HR' or viewerRole == 'Hiring Manager'}" type="button"
-                            class="btn btn--secondary btn--sm app-icon-button app-bookmark-button" data-app-bookmark aria-haspopup="dialog" aria-controls="app-bookmark"
-                            th:classappend="${row.isPotential ? 'app-bookmark-button--saved' : ''}"
-                            th:title="${row.isPotential ? 'Đã lưu vào kho tiềm năng' : 'Lưu vào kho ứng viên tiềm năng'}"
-                            th:attr="aria-label=|${row.isPotential ? 'Xem ghi chú chung của' : 'Lưu ứng viên'} ${row.fullName}|,data-saved=${row.isPotential},data-candidate-key=${row.email},data-name=${row.fullName},data-job=${row.postingTitle},data-bookmark-url=@{/talent-pool/applications/{id}/bookmark(id=${row.applicationId})},data-application-id=${row.applicationId}">
-                        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M6 3h12v18l-6-4-6 4V3Z"/></svg>
-                    </button>
-                    <a th:href="@{/applications/{id}(id=${row.applicationId})}" class="btn btn--secondary btn--sm app-icon-button"
-                       title="Xem chi tiết" th:attr="aria-label=|Xem chi tiết hồ sơ của ${row.fullName}|">
-                        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M14 3H5v18h14V8Z M14 3v5h5 M8 12h8 M8 16h6"/></svg>
-                    </a>
-                    <a th:if="${row.canScheduleInterview}" class="btn btn--secondary btn--sm app-icon-button" title="Lên lịch phỏng vấn"
-                       th:attr="aria-label=|Lên lịch phỏng vấn cho ${row.fullName}|" th:href="@{/interviews/new(applicationId=${row.applicationId})}">
-                        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M7 3v4 M17 3v4 M3 10h18 M12 13v5 M9.5 15.5h5"/></svg>
-                    </a>
-                    <a th:if="${row.canCreateOffer}" class="btn btn--secondary btn--sm app-icon-button" title="Tạo đề xuất nhận việc"
-                       th:attr="aria-label=|Tạo đề xuất nhận việc cho ${row.fullName}|" th:href="@{/offers/create(applicationId=${row.applicationId})}">
-                        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 6 9 7 9-7"/></svg>
-                    </a>
-                    </div>
-                </td>
-            </tr>
-            </tbody>
-        </table>
-    </div>
+        <div th:unless="${page.isEmpty()}" class="table-wrapper app-table-wrapper" role="region" aria-label="Danh sách hồ sơ ứng tuyển" tabindex="0">
+            <table class="table app-table adw-data-table">
+                <thead>
+                <tr>
+                    <th scope="col" class="app-col-num">STT</th>
+                    <th scope="col" class="app-col-candidate">Ứng viên</th>
+                    <th scope="col" class="app-col-job">Vị trí</th>
+                    <th scope="col" class="app-col-date">Ngày nộp</th>
+                    <th scope="col" class="app-col-score">Điểm AI</th>
+                    <th scope="col" class="app-col-status">Trạng thái</th>
+                    <th scope="col" class="app-col-actions app-table__actions-head">Thao tác</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="row, stat : ${page.content}" th:attr="data-app-row=${row.applicationId}">
+                    <td class="app-col-num" th:text="${page.number * page.size + stat.count}"></td>
+                    <td class="app-col-candidate">
+                        <div class="app-candidate-cell">
+                            <span class="app-candidate-avatar" aria-hidden="true" th:with="parts=${#strings.arraySplit(row.fullName ?: '', ' ')}"
+                                  th:text="${#arrays.length(parts) > 0 ? #strings.toUpperCase(#strings.substring(parts[0], 0, 1) + (#arrays.length(parts) > 1 ? #strings.substring(parts[#arrays.length(parts) - 1], 0, 1) : '')) : '?'}"></span>
+                            <div class="app-candidate-info">
+                                <div class="app-candidate-title-line">
+                                    <a th:href="@{/applications/{id}(id=${row.applicationId})}" class="app-candidate__name-link">
+                                        <strong class="app-candidate__name" th:text="${row.fullName}">Nguyễn Văn An</strong>
+                                    </a>
+                                    <span class="badge badge--success" data-app-saved-badge th:hidden="${!row.isPotential}" title="Đã lưu vào kho tiềm năng toàn hệ thống">Tiềm năng</span>
+                                </div>
+                                <a th:href="|mailto:${row.email}|" class="app-candidate__email" th:text="${row.email}">an@example.com</a>
+                            </div>
+                        </div>
+                    </td>
+                    <td class="app-col-job" th:text="${row.postingTitle}">Java Developer</td>
+                    <td class="app-col-date" th:text="${#temporals.format(row.submissionDate, 'dd/MM/yyyy')}">10/10/2026</td>
+                    <td class="app-col-score">
+                        <div th:if="${row.aiMatchScore != null}" class="app-score-badge"
+                             th:classappend="${row.aiMatchScore >= 80 ? 'app-score-badge--high' : (row.aiMatchScore >= 60 ? 'app-score-badge--mid' : 'app-score-badge--low')}">
+                            <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="m12 3-1.9 5.8a2 2 0 0 1-1.3 1.3L3 12l5.8 1.9a2 2 0 0 1 1.3 1.3L12 21l1.9-5.8a2 2 0 0 1 1.3-1.3L21 12l-5.8-1.9a2 2 0 0 1-1.3-1.3Z"/></svg>
+                            <strong class="app-score" th:text="${#numbers.formatDecimal(row.aiMatchScore, 1, 0)}">79</strong>
+                        </div>
+                        <span th:if="${row.aiMatchScore == null}" class="app-score app-score--empty"
+                              th:text="${row.applicationStatus == 'Applied' ? 'Chờ AI chấm' : '—'}">Chờ AI chấm</span>
+                    </td>
+                    <td class="app-col-status">
+                        <div class="app-status-cell">
+                            <span class="badge" th:classappend="${row.statusBadge}" th:text="${row.statusLabel}">Chờ HR duyệt CV</span>
+                            <span th:if="${row.ownerLabel != null}" class="app-owner" th:text="|Đang chờ: ${row.ownerLabel}|">Đang chờ: HR</span>
+                        </div>
+                    </td>
+                    <td class="app-col-actions app-table__actions">
+                        <div class="app-row-actions">
+                        <button type="button" class="btn btn--secondary btn--sm app-icon-button" data-app-preview aria-haspopup="dialog" aria-controls="app-preview"
+                                title="Xem nhanh CV" th:attr="aria-label=|Xem nhanh CV của ${row.fullName}|,data-name=${row.fullName},data-job=${row.postingTitle},data-cv-url=@{/applications/{id}/cv(id=${row.applicationId})},data-detail-url=@{/applications/{id}(id=${row.applicationId})}">
+                            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12Z"/><circle cx="12" cy="12" r="3"/></svg>
+                        </button>
+                        <th:block th:if="${viewerRole == 'HR' or viewerRole == 'Hiring Manager'}">
+                            <span th:replace="~{talent-pool/potential-toggle :: toggle(applicationId=${row.applicationId},candidateName=${row.fullName},saved=${row.isPotential},keepSource=${false})}"></span>
+                        </th:block>
+                        <a th:href="@{/applications/{id}(id=${row.applicationId})}" class="btn btn--secondary btn--sm app-icon-button"
+                           title="Xem chi tiết" th:attr="aria-label=|Xem chi tiết hồ sơ của ${row.fullName}|">
+                            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M14 3H5v18h14V8Z M14 3v5h5 M8 12h8 M8 16h6"/></svg>
+                        </a>
+                        <a th:if="${row.canScheduleInterview}" class="btn btn--secondary btn--sm app-icon-button" title="Lên lịch phỏng vấn"
+                           th:attr="aria-label=|Lên lịch phỏng vấn cho ${row.fullName}|" th:href="@{/interviews/new(applicationId=${row.applicationId})}">
+                            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M7 3v4 M17 3v4 M3 10h18 M12 13v5 M9.5 15.5h5"/></svg>
+                        </a>
+                        <a th:if="${row.canCreateOffer}" class="btn btn--secondary btn--sm app-icon-button" title="Tạo đề xuất nhận việc"
+                           th:attr="aria-label=|Tạo đề xuất nhận việc cho ${row.fullName}|" th:href="@{/offers/create(applicationId=${row.applicationId})}">
+                            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 6 9 7 9-7"/></svg>
+                        </a>
+                        </div>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
 
-    <nav th:replace="~{fragments/ui/pagination :: paged(page=${page})}"></nav>
-    <th:block th:replace="~{candidate/application-dialogs :: dialogs(canBookmark=${viewerRole == 'HR' or viewerRole == 'Hiring Manager'})}"></th:block>
+        <!-- Phân trang tích hợp chân bảng -->
+        <div class="app-pagination-wrap">
+            <nav th:replace="~{fragments/ui/pagination :: paged(page=${page})}"></nav>
+        </div>
+    </section>
+
+    <!-- Modal xem nhanh CV -->
+    <th:block th:replace="~{candidate/application-dialogs :: preview}"></th:block>
 </main>
-<th:block layout:fragment="scripts"><script th:src="@{/js/pages/applications.js}" defer></script></th:block>
+<th:block layout:fragment="scripts">
+    <script th:src="@{/js/pages/flash-toast.js}" defer></script>
+    <script th:src="@{/js/pages/admin-workspace.js}" defer></script>
+    <script th:src="@{/js/pages/applications.js}" defer></script>
+    <script th:src="@{/js/pages/potential-candidate-toggle.js}" defer></script>
+</th:block>
 </body>
 </html>

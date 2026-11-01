@@ -70,6 +70,8 @@ public interface ApplicationRepository extends JpaRepository<Application, Intege
 
         boolean existsByCandidate_CandidateIdAndJobPosting_JobPostingId(Integer candidateId, Integer jobPostingId);
 
+        List<Application> findByCandidate_CandidateIdOrderByApplicationIdDesc(Integer candidateId);
+
         boolean existsByJobPosting_JobPostingId(Integer jobPostingId);
 
         /**
@@ -172,6 +174,17 @@ public interface ApplicationRepository extends JpaRepository<Application, Intege
                         AND a.jobPosting.jobPostingId = :jobPostingId
                         """ + " AND " + FORMAL_FILTER)
         boolean existsActiveByCandidateAndJobPosting(@Param("candidateId") Integer candidateId,
+                        @Param("jobPostingId") Integer jobPostingId);
+
+        /** BR-CAN-01: đã nộp vào bất kỳ tin nào của cùng đợt (Requisition) với tin này thì coi như đã ứng tuyển. */
+        @Query("""
+                        select case when count(a) > 0 then true else false end
+                        from Application a
+                        where a.candidate.candidateId = :candidateId
+                        and a.jobPosting.requisition.requisitionId = (select jp.requisition.requisitionId
+                            from JobPosting jp where jp.jobPostingId = :jobPostingId)
+                        """ + " and " + FORMAL_FILTER)
+        boolean existsActiveByCandidateInSameRequisition(@Param("candidateId") Integer candidateId,
                         @Param("jobPostingId") Integer jobPostingId);
 
         @Query("select count(a) from Application a where a.applicationId = :id and a.applicationStatus = 'HM_Suggested' and " + PENDING_HR_RECOMMENDATION)

@@ -8,7 +8,7 @@
    cùng màu, phân biệt bằng hình (✓ vs vòng bao chấm). Đơn dừng: bước đã tới vẫn ✓, cả thanh xám mờ, chữ thành badge. Đơn gấp: --warning.
    Trạng thái dựa vào [data-state], [data-tone], [data-urgent], [aria-current] (bẫy "__" của Thymeleaf).
 
-   Font: sans của khung ứng viên (Plus Jakarta Sans, css/candidate-shell.css).
+   Font: --sans của tokens.css (như trang nội bộ). Tiêu đề, phụ đề, tab dùng xanh thương hiệu cho dễ đọc trên nền ảnh mờ.
    Thang chữ: 24px tiêu đề trang · 17px tên vị trí · 15px chữ trạng thái · 13.5px ghi chú, tab, link ·
               12.5px dòng gấp · 12px phòng ban / ngày / mã, nhãn bước
    Tiền tố class: myapp-
@@ -27,8 +27,13 @@
   font-size: 24px;
   font-weight: 700;
   letter-spacing: -0.01em;
-  color: var(--myapp-text-main);
+  color: var(--myapp-primary);
   overflow-wrap: anywhere;
+}
+
+.myapp-page .page-subtitle {
+  color: var(--myapp-primary);
+  font-weight: 500;
 }
 
 .myapp-icon {
@@ -72,10 +77,8 @@
   align-items: center;
   gap: var(--s2);
   padding: var(--s2) var(--s4);
-  border: 1px solid transparent;
-  border-radius: var(--radius-full);
-  background-color: transparent;
-  color: var(--myapp-text-muted);
+  border-bottom: 2px solid transparent;
+  color: var(--myapp-primary);
   font-size: var(--font-sm);
   font-weight: 600;
   text-decoration: none;
@@ -84,8 +87,7 @@
 }
 
 .myapp-tab:hover {
-  background-color: var(--neutral-soft);
-  color: var(--myapp-text-main);
+  border-bottom-color: var(--myapp-primary-light);
 }
 
 .myapp-tab:focus-visible {
@@ -102,8 +104,7 @@
 .myapp-tab__count {
   padding: 1px 8px;
   border-radius: var(--radius-full);
-  background-color: var(--neutral-soft);
-  color: var(--muted);
+  background-color: var(--surface);
   font-size: 12px;
   font-weight: 700;
 }

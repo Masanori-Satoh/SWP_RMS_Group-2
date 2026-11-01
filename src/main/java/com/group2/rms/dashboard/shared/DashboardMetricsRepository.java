@@ -22,27 +22,23 @@ public class DashboardMetricsRepository {
         this.entityManager = entityManager;
     }
 
-    public long accounts() {
+    public long countAccounts() {
         return count("select count(u) from User u", Map.of());
     }
 
     /** Candidate profiles, independent of account status and number of applications. */
-    public long candidates() {
+    public long countCandidates() {
         return count("select count(c) from Candidate c", Map.of());
     }
 
     /** Inclusive rolling window; the upper bound excludes future-dated imported profiles. */
-    public long candidatesCreatedBetween(LocalDateTime from, LocalDateTime to) {
+    public long countCandidatesCreatedBetween(LocalDateTime from, LocalDateTime to) {
         return count("select count(c) from Candidate c where c.createdAt >= :from and c.createdAt <= :to",
                 Map.of("from", from, "to", to));
     }
 
     public List<StatusCount> departmentStatuses() {
         return statuses("select d.departmentStatus, count(d) from Department d group by d.departmentStatus", Map.of());
-    }
-
-    public long accountsWithStatus(String status) {
-        return count("select count(u) from User u where u.accountStatus = :status", Map.of("status", status));
     }
 
     public List<StatusCount> internalAccountStatuses() {
@@ -67,7 +63,7 @@ public class DashboardMetricsRepository {
     }
 
     /** Tổng số hồ sơ chính thức (không tính HM_Suggested và hồ sơ Talent Pool đã hủy). */
-    public long applications() {
+    public long countApplications() {
         return count("select count(a) from Application a where " + FORMAL_FILTER, Map.of());
     }
 
