@@ -116,7 +116,9 @@ public class TalentPoolService {
     }
 
     public TalentPoolDetailResponse detail(Integer id, Integer sourceApplicationId) {
+        //get current user
         User user = actor();
+        //get ccandidate form application
         Candidate candidate = candidate(id);
         if (!candidate.isPotential()) {
             if (sourceApplicationId == null)
@@ -138,19 +140,24 @@ public class TalentPoolService {
                 .map(Application::getApplicationId).findFirst().orElse(null);
     }
 
-    /** Validate the application return context before a candidate note is changed. */
+    
     public void validateNoteApplication(Integer candidateId, Integer applicationId) {
+        // check comment match candidate and permission of current user
         requireBookmarkSource(actor(), candidateId, applicationId);
     }
 
     private void requireBookmarkSource(User user, Integer candidateId, Integer applicationId) {
+        //get application by id
         Application source = application(applicationId);
+        //check if application not belong to candidate
         if (!source.getCandidate().getCandidateId().equals(candidateId))
             throw new AccessDeniedException("Hồ sơ không thuộc ứng viên này.");
+        //check if user not access to application
         applicationAccess.requireView(user, source);
     }
 
     public List<TalentPoolNoteResponse> notesFor(Integer id) {
+        //get current role
         User viewer = actor();
         return notes.findByCandidate_CandidateIdOrderByCreatedAtDescNoteIdDesc(id).stream()
                 .map(n -> new TalentPoolNoteResponse(n.getNoteId(), n.getAuthor().getFullName(), n.getNoteContent(),
@@ -170,18 +177,26 @@ public class TalentPoolService {
     }
 
     public String pendingRecommendationUrl(Integer id) {
+        //check if Hr recommend
         if (applications.countPendingHrRecommendation(id) == 0)
             return null;
+        //get current user
         User user = actor();
+        //get application by ID
         Application a = application(id);
+        //check permision to recommend
         requireTarget(user, a.getJobPosting());
+        //return url of candidate detail
         return "/talent-pool/" + a.getCandidate().getCandidateId() + "?recommendationId=" + id;
     }
 
     @Transactional
     public void markPotential(Integer applicationId) {
+        //get current user
         User user = actor();
+        //get application by ID
         Application application = application(applicationId);
+        //check permision to maark
         applicationAccess.requireView(user, application);
         Candidate candidate = application.getCandidate();
         if (!candidate.isPotential()) {
@@ -192,22 +207,26 @@ public class TalentPoolService {
     }
 
     public TalentPoolBookmarkResponse bookmark(Integer applicationId) {
+
+        //check current user
         User user = actor();
         Application application = application(applicationId);
+
+        //check permission to mark
         applicationAccess.requireView(user, application);
         Candidate candidate = application.getCandidate();
         return new TalentPoolBookmarkResponse(candidate.getCandidateId(), candidate.isPotential(),
                 notesFor(candidate.getCandidateId()));
     }
 
-    /**
-     * Remove only the shared bookmark; applications, CVs and note history remain
-     * intact.
-     */
+   
     @Transactional
     public TalentPoolBookmarkResponse removeBookmark(Integer applicationId) {
+        //get current user
         User user = actor();
+        //get application by ID
         Application application = application(applicationId);
+        //check permission to remove
         applicationAccess.requireView(user, application);
         Candidate candidate = application.getCandidate();
         if (candidate.isPotential()) {
@@ -225,10 +244,12 @@ public class TalentPoolService {
     @Transactional
     public TalentPoolBookmarkResponse saveBookmark(Integer applicationId, TalentPoolBookmarkRequest request) {
         String content = request.content() == null ? "" : request.content().strip();
+        //check note exceed max
         if (content.length() > 1000)
             throw new TalentPoolException("Ghi chú tối đa 1000 ký tự.");
         markPotential(applicationId);
         Candidate candidate = application(applicationId).getCandidate();
+        //check if has note
         if (!content.isEmpty())
             addNote(candidate.getCandidateId(), new TalentPoolNoteRequest(content));
         return bookmark(applicationId);
@@ -236,12 +257,17 @@ public class TalentPoolService {
 
     @Transactional
     public void addNote(Integer candidateId, TalentPoolNoteRequest request) {
+        //get current user
         User user = actor();
+        //get candidate by ID
         Candidate candidate = candidate(candidateId);
+        //check if candidate is potential
         if (!candidate.isPotential())
             throw new TalentPoolException("Hãy đánh dấu ứng viên tiềm năng trước khi thêm ghi chú.");
+        //save note
         TalentPoolNote saved = notes.save(TalentPoolNote.builder().candidate(candidate).author(user).noteContent(request.content().strip())
                 .build());
+        //record audit
         audit.record(user.getUserId(), "CREATE", "TalentPoolNote", saved.getNoteId(), null,
                 "Ứng viên #" + candidateId + "\n" + saved.getNoteContent());
     }
@@ -477,9 +503,13 @@ public class TalentPoolService {
     }
 
     public List<TalentPoolRecommendationResponse> recommendations(Integer jobId) {
+        //get current usser
         User user = actor();
+        //get job
         JobPosting target = job(jobId, false);
+        //check permission
         requireTarget(user, target);
+        //find HR recommendations for job
         return poolApplications.findHrRecommendations(jobId).stream().map(a -> recommendationResponse(a, user))
                 .toList();
     }
@@ -487,20 +517,25 @@ public class TalentPoolService {
     public TalentPoolRecommendationResponse recommendation(Integer id, Integer candidateId) {
         // get current user
         User user = actor();
+        //get application by ID
         Application a = application(id);
+        //check permission
         requireTarget(user, a.getJobPosting());
+        //check if application not belong to candidate
         if (!a.getCandidate().getCandidateId().equals(candidateId)
                 || !audit.has("Application", id, "TalentPoolHrRecommended")
                 || audit.has("Application", id, "TalentPoolHrWithdrawn"))
             throw new ResourceNotFoundException("Không tìm thấy gợi ý cho ứng viên này.");
         return recommendationResponse(a, user);
     }
-
+    
     private TalentPoolRecommendationResponse recommendationResponse(Application a, User user) {
         var history = reviews.findWithReviewerByApplicationId(a.getApplicationId());
+        //get origin HR's recommendation
         var origin = history.stream().filter(r -> "HR".equals(r.getReviewerRole()) && "Hold".equals(r.getDecision()))
                 .min(Comparator.comparing(ApplicationReview::getReviewId))
                 .orElseThrow(() -> new TalentPoolException("Gợi ý thiếu thông tin người gửi. Cần kiểm tra dữ liệu."));
+        //get decision of hiring manager
         var decision = history.stream().filter(r -> "HiringManager".equals(r.getReviewerRole())
                 && Set.of("Pass", "Fail").contains(r.getDecision()))
                 .min(Comparator.comparing(ApplicationReview::getReviewId));
@@ -522,9 +557,12 @@ public class TalentPoolService {
     }
 
     public TalentPoolRecommendationResponse recommendationForDecision(Integer id) {
+        //get current user
         User user = actor();
+        //check if user is Hiring Manager
         if (!CurrentUserService.hasRole(user, "Hiring Manager"))
             throw new AccessDeniedException("Chỉ HM được phản hồi gợi ý.");
+        //get application
         Application a = application(id);
         return recommendation(id, a.getCandidate().getCandidateId());
     }
@@ -593,6 +631,7 @@ public class TalentPoolService {
         if (applications.existsActiveByCandidateAndJobPosting(application.getCandidate().getCandidateId(),
                 application.getJobPosting().getJobPostingId()))
             throw new TalentPoolException("Ứng viên đã có hồ sơ chính thức cho tin này.");
+        //check old cv
         requireCv(application.getAppliedCvUrl());
         if (applications.promoteSuggestionToHmPassed(id) != 1)
             throw new TalentPoolException("Đề xuất đã được xử lý. Vui lòng tải lại trang.");
