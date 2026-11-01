@@ -6,10 +6,8 @@ import com.group2.rms.core.exception.ResourceNotFoundException;
 import com.group2.rms.jobposting.repository.JobPostingRepository;
 import com.group2.rms.notification.service.NotificationService;
 import com.group2.rms.requisition.dto.RequisitionRequest;
-import com.group2.rms.requisition.dto.ScreeningCriteriaRequest;
 import com.group2.rms.requisition.entity.JobRequisition;
 import com.group2.rms.requisition.entity.RequisitionApproval;
-import com.group2.rms.requisition.entity.ScreeningCriteria;
 import com.group2.rms.requisition.exception.RequisitionValidationException;
 import com.group2.rms.requisition.repository.JobRequisitionRepository;
 import com.group2.rms.requisition.repository.RequisitionApprovalRepository;
@@ -142,7 +140,6 @@ class RequisitionServiceTests {
                 .approvalStatus(status)
                 .hiringManager(manager)
                 .department(itDepartment)
-                .screeningCriteria(new ArrayList<>())
                 .build();
         lenient().when(requisitions.findForUpdate(id)).thenReturn(Optional.of(requisition));
         lenient().when(requisitions.findById(id)).thenReturn(Optional.of(requisition));
@@ -175,9 +172,6 @@ class RequisitionServiceTests {
                     .reasonForHiring("Expansion")
                     .jobDescription("Develop RMS")
                     .requirementDetails("Spring Boot, SQL")
-                    .screeningCriteria(new ArrayList<>(List.of(ScreeningCriteriaRequest.builder()
-                            .criteriaName("Java").criteriaType("Skill").requiredValue("2+ years")
-                            .weight(new BigDecimal("50.00")).isMandatory(true).build())))
                     .build();
 
             // Act
@@ -198,11 +192,6 @@ class RequisitionServiceTests {
             assertEquals(new BigDecimal("20000000"), saved.getMinSalary());
             assertEquals(new BigDecimal("35000000"), saved.getMaxSalary());
 
-            assertEquals(1, saved.getScreeningCriteria().size());
-            ScreeningCriteria criterion = saved.getScreeningCriteria().get(0);
-            assertEquals("Java", criterion.getCriteriaName());
-            assertSame(saved, criterion.getRequisition());
-
             AuditLog log = savedAudit();
             assertEquals(RequisitionAuditLogger.ACTION_CREATE, log.getAction());
             assertEquals("JobRequisition", log.getEntityName());
@@ -220,46 +209,9 @@ class RequisitionServiceTests {
             JobRequisition saved = savedRequisition();
             assertEquals("Kế toán tổng hợp", saved.getTitle());
             assertSame(itDepartment, saved.getDepartment());
-            assertTrue(saved.getScreeningCriteria().isEmpty());
             assertEquals("", saved.getJobDescription());
             assertEquals("", saved.getRequirementDetails());
             assertEquals("REQ-0101", saved.getRequisitionCode());
-        }
-
-        @Test
-        @DisplayName("Dòng tiêu chí chỉ có khoảng trắng -> Bị bỏ qua, không lưu")
-        void createRequisition_shouldSkipCriteriaRow_whenRowIsSpaceOnly() {
-            // Arrange
-            RequisitionRequest request = draft("Tester");
-            request.setScreeningCriteria(new ArrayList<>(List.of(
-                    ScreeningCriteriaRequest.builder().criteriaName("QA").build(),
-                    ScreeningCriteriaRequest.builder().criteriaName("   ").build())));
-
-            // Act
-            service.createRequisition(request);
-
-            // Assert
-            JobRequisition saved = savedRequisition();
-            assertEquals(1, saved.getScreeningCriteria().size());
-            assertEquals("QA", saved.getScreeningCriteria().get(0).getCriteriaName());
-        }
-
-        @Test
-        @DisplayName("Tiêu chí mới mang criteriaId có sẵn (ID giả) -> Báo lỗi, không lưu, không audit")
-        void createRequisition_shouldReject_whenNewCriteriaHasForgedId() {
-            // Arrange
-            RequisitionRequest request = draft("Java Engineer");
-            request.setScreeningCriteria(new ArrayList<>(List.of(
-                    ScreeningCriteriaRequest.builder().criteriaId(99).criteriaName("Java").build())));
-
-            // Act
-            RequisitionValidationException error = assertThrows(RequisitionValidationException.class,
-                    () -> service.createRequisition(request));
-
-            // Assert
-            assertTrue(error.getErrors().containsKey("screeningCriteria"));
-            verify(requisitions, never()).saveAndFlush(any());
-            verifyNoInteractions(audit);
         }
 
         @Test
@@ -634,24 +586,6 @@ class RequisitionServiceTests {
         }
 
         @Test
-        @DisplayName("Sửa tiêu chí bằng criteriaId của yêu cầu khác (ID giả) -> Báo lỗi, không ghi audit")
-        void updateRequisition_shouldReject_whenCriteriaIdBelongsToAnotherRequisition() {
-            // Arrange
-            requisitionWithStatus(73, RequisitionAccess.STATUS_DRAFT);
-            RequisitionRequest request = draft("Senior Java");
-            request.setScreeningCriteria(new ArrayList<>(List.of(
-                    ScreeningCriteriaRequest.builder().criteriaId(999).criteriaName("Java").build())));
-
-            // Act
-            RequisitionValidationException error = assertThrows(RequisitionValidationException.class,
-                    () -> service.updateRequisition(73, request));
-
-            // Assert
-            assertEquals("Một tiêu chí không thuộc về yêu cầu này.", error.getErrors().get("screeningCriteria"));
-            verifyNoInteractions(audit);
-        }
-
-        @Test
         @DisplayName("Không có quyền sửa (sai người / sai trạng thái) -> AccessDenied, không validate")
         void updateRequisition_shouldThrowAccessDenied_whenViewerCannotEdit() {
             // Arrange
@@ -687,14 +621,12 @@ class RequisitionServiceTests {
         void copy_shouldClearCriteriaIdsAndSuggestNextRound_whenSourceIsApproved() {
             // Arrange
             JobRequisition source = requisitionWithStatus(80, RequisitionAccess.STATUS_APPROVED);
-            source.getScreeningCriteria().add(ScreeningCriteria.builder().criteriaId(5).criteriaName("Java").build());
             when(requisitions.findMaxRoundInChain(80)).thenReturn(1);
 
             // Act
             RequisitionRequest copied = service.copy(80);
 
             // Assert
-            assertNull(copied.getScreeningCriteria().get(0).getCriteriaId());
             assertEquals(80, copied.getOriginalRequisitionId());
             assertEquals(2, copied.getRecruitmentRound());
             verify(requisitions, never()).saveAndFlush(any());

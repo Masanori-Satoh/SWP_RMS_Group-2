@@ -7,7 +7,7 @@ import java.util.List;
 
 /**
  * Một đơn của "Đơn của tôi": thẻ trên danh sách và nội dung trang chi tiết. Thanh 4 bước, chữ trạng thái kèm một dòng
- * giải thích, việc tiếp theo, việc gấp và hành trình. Không có điểm AI, nhận xét, người duyệt hay offer nội bộ (GBR-02).
+ * giải thích, việc tiếp theo, việc gấp và hành trình. Không có nhận xét, người duyệt hay offer nội bộ (GBR-02).
  *
  * @param departmentName    phòng ban của yêu cầu tuyển
  * @param applicationCode   mã hiển thị {@code #CAN-0042} (id đệm 4 số), không lưu DB

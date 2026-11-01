@@ -9,7 +9,6 @@ import com.group2.rms.requisition.dto.RequisitionListResponse;
 import com.group2.rms.requisition.dto.RequisitionRequest;
 import com.group2.rms.requisition.dto.RequisitionResponse;
 import com.group2.rms.requisition.dto.RequisitionSearchRequest;
-import com.group2.rms.requisition.dto.ScreeningCriteriaResponse;
 import com.group2.rms.requisition.exception.RequisitionValidationException;
 import com.group2.rms.requisition.service.RequisitionAccess;
 import com.group2.rms.requisition.service.RequisitionListService;
@@ -204,12 +203,8 @@ class RequisitionControllerTests {
         @DisplayName("GET /requisitions/{id} -> View chi tiết với model req, đọc được trường của record (tiêu chí bắt buộc)")
         void detail_shouldRenderDetailView_whenRequisitionExists() throws Exception {
                 // Arrange
-                ScreeningCriteriaResponse mandatory = ScreeningCriteriaResponse.builder().criteriaId(1)
-                                .criteriaName("Java").criteriaTypeLabel("Kỹ năng").requiredValue("2 năm")
-                                .weight(new BigDecimal("100")).isMandatory(true).build();
                 RequisitionResponse detail = RequisitionResponse.builder().requisitionId(1).requisitionCode("REQ-0001")
                                 .recruitmentRound(1).title("Backend Engineer").approvalStatus(RequisitionAccess.STATUS_DRAFT)
-                                .screeningCriteria(List.of(mandatory)).criteriaTotalWeight(new BigDecimal("100"))
                                 .approvals(List.of()).activityLog(List.of()).build();
                 when(service.getById(1)).thenReturn(detail);
 

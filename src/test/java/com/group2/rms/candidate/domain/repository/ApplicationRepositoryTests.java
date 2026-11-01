@@ -22,7 +22,6 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -83,7 +82,7 @@ class ApplicationRepositoryTests {
                 .originalRequisition(original).numberOfPositions(1).employmentType("Full-time").gender("Any")
                 .workModel("On-site").jobDescription("Integration-test responsibilities")
                 .requirementDetails("Integration-test requirements").approvalStatus(RequisitionAccess.STATUS_APPROVED)
-                .hiringManager(hiringManager).department(department).screeningCriteria(new ArrayList<>()).build());
+                .hiringManager(hiringManager).department(department).build());
     }
 
     private JobPosting savedPosting(JobRequisition requisition, int postingNo, String status, User hr) {

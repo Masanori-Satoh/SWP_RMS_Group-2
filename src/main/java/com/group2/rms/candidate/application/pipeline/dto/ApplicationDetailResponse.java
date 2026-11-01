@@ -8,7 +8,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 /**
- * Chi tiết một hồ sơ cho người tuyển dụng (5.1.23). Chứa điểm AI và nhận xét nội bộ:
+ * Chi tiết một hồ sơ cho người tuyển dụng (5.1.23). Chứa nhận xét nội bộ:
  * không bao giờ dùng DTO này cho màn của ứng viên (SRS GBR-02).
  *
  * @param dateOfBirth ngày sinh, giới tính, địa chỉ do ứng viên tự khai ở hồ sơ cá nhân (Q7.5); {@code null} nếu chưa khai

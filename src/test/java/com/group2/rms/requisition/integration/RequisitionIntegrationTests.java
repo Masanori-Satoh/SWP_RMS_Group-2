@@ -5,7 +5,6 @@ import com.group2.rms.jobposting.repository.JobPostingRepository;
 import com.group2.rms.requisition.dto.RequisitionRequest;
 import com.group2.rms.requisition.dto.RequisitionResponse;
 import com.group2.rms.requisition.dto.RequisitionSearchRequest;
-import com.group2.rms.requisition.dto.ScreeningCriteriaRequest;
 import com.group2.rms.requisition.entity.JobRequisition;
 import com.group2.rms.requisition.repository.JobRequisitionRepository;
 import com.group2.rms.requisition.repository.RequisitionApprovalRepository;
@@ -111,8 +110,7 @@ class RequisitionIntegrationTests {
                                 .gender("Any")
                                 .workModel("On-site")
                                 .jobDescription("Integration-test responsibilities")
-                                .requirementDetails("Integration-test requirements")
-                                .screeningCriteria(new ArrayList<>());
+                                .requirementDetails("Integration-test requirements");
         }
 
         private JobRequisition saveRequisition(String title, User creator, Department inDepartment, String status) {
@@ -147,9 +145,6 @@ class RequisitionIntegrationTests {
                                 .workModel("On-site")
                                 .jobDescription("Integration-test responsibilities")
                                 .requirementDetails("Integration-test requirements")
-                                .screeningCriteria(new ArrayList<>(List.of(ScreeningCriteriaRequest.builder()
-                                                .criteriaName("Spring Boot").criteriaType("Skill").requiredValue("2 years")
-                                                .weight(new BigDecimal("100.00")).isMandatory(true).build())))
                                 .build();
 
                 // Act
@@ -161,7 +156,6 @@ class RequisitionIntegrationTests {
                 assertEquals("Integration Java Dev", saved.getTitle());
                 assertEquals(hiringManager.getUserId(), saved.getHiringManager().getUserId());
                 assertEquals(department.getDepartmentId(), saved.getDepartment().getDepartmentId());
-                assertEquals(1, saved.getScreeningCriteria().size());
                 assertEquals(String.format("REQ-%04d", id), saved.getRequisitionCode());
         }
 
@@ -259,9 +253,6 @@ class RequisitionIntegrationTests {
                                 .jobDescription("DevOps responsibilities")
                                 .requirementDetails("DevOps requirements")
                                 .reasonForHiring("Dự án mở rộng cần thêm DevOps")
-                                .screeningCriteria(new ArrayList<>(List.of(ScreeningCriteriaRequest.builder()
-                                                .criteriaName("Docker").criteriaType("Skill").requiredValue("2 years")
-                                                .weight(new BigDecimal("100.00")).isMandatory(true).build())))
                                 .build();
 
                 // Act

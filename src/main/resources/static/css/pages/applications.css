@@ -2,7 +2,7 @@
    PAGES/APPLICATIONS.CSS — Hồ sơ ứng tuyển (/applications, candidate/applications.html;
    /applications/{id}, candidate/application-detail.html)
    Chỉ chứa phần catalog chưa có: bố cục form lọc, thanh kết quả, ô ứng viên, dòng "Đang chờ",
-   điểm AI, cột thao tác, trạng thái rỗng, modal xem CV và ghi chú ứng viên tiềm năng.
+   cột thao tác, trạng thái rỗng, modal xem CV và ghi chú ứng viên tiềm năng.
    Tiền tố class: app-
    ============================================================================= */
 

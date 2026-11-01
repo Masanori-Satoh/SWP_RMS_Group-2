@@ -7,7 +7,6 @@ import com.group2.rms.candidate.application.pipeline.dto.ApplicationReviewReques
 import com.group2.rms.candidate.application.pipeline.dto.ApplicationSearch;
 import com.group2.rms.candidate.application.pipeline.dto.JobPostingOption;
 import com.group2.rms.candidate.application.pipeline.exception.ApplicationReviewException;
-import com.group2.rms.candidate.infra.ai.AiScreeningOutcome;
 import com.group2.rms.candidate.infra.cv.ApplicationCv;
 import com.group2.rms.candidate.application.pipeline.service.ApplicationPipelineService;
 import com.group2.rms.candidate.application.pipeline.service.ApplicationReviewService;
@@ -312,7 +311,7 @@ class ApplicationPipelineWebTests {
     @Test
     void recruiterSeesCandidateListWithRowActions() throws Exception {
         when(pipeline.list(any(), any())).thenReturn(listOf(false, "HR",
-                row(298, "AI_Screened", "79.34", false, false),
+                row(298, "Applied", "79.34", false, false),
                 row(120, "HM_Passed", "88.10", true, true),
                 row(293, "Applied", null, false, false)));
 
@@ -342,7 +341,7 @@ class ApplicationPipelineWebTests {
         Map<ApplicationStage, Long> counts = zeroCounts();
         counts.put(ApplicationStage.INTERVIEW, 4L);
         counts.put(ApplicationStage.CLOSED, 2L);
-        ApplicationSearch search = new ApplicationSearch(6, null, "Võ", "newest", "INTERVIEW").normalized();
+        ApplicationSearch search = new ApplicationSearch(6, null, "Võ", "INTERVIEW").normalized();
         when(pipeline.list(any(), any())).thenReturn(new ApplicationListResponse(
                 new PageImpl<>(List.of(row(120, "HM_Passed", "88.10", true, false)), Pageable.ofSize(20), 4),
                 counts, List.of(), search, null, true, false, "HR"));
@@ -386,7 +385,7 @@ class ApplicationPipelineWebTests {
     /** Nghiệm thu PR 4: lọc theo tin thì tiêu đề là tên tin; HR có link quay lại trang tin, HM thì không. */
     @Test
     void postingFilterShowsPostingTitleAndBackLinkOnlyWhenAllowed() throws Exception {
-        ApplicationSearch search = new ApplicationSearch(6, null, null, "score", null).normalized();
+        ApplicationSearch search = new ApplicationSearch(6, null, null, null).normalized();
         when(pipeline.list(any(), any())).thenReturn(new ApplicationListResponse(
                 new PageImpl<>(List.of(), Pageable.ofSize(20), 0), zeroCounts(), List.of(), search,
                 "Digital Marketing Executive", true, false, "HR"));
@@ -427,7 +426,7 @@ class ApplicationPipelineWebTests {
                 .andExpect(status().isOk());
 
         // "sort" cũng bị Spring Data đọc vào Pageable; service bỏ qua sort của Pageable nên chỉ so trang + cỡ trang.
-        verify(pipeline).list(eq(new ApplicationSearch(6, "Rejected", "an.vo", "newest", "INTERVIEW")),
+        verify(pipeline).list(eq(new ApplicationSearch(6, "Rejected", "an.vo", "INTERVIEW")),
                 argThat(p -> p.getPageNumber() == 2 && p.getPageSize() == 20));
     }
 
@@ -542,18 +541,6 @@ class ApplicationPipelineWebTests {
                 .andExpect(content().string(not(containsString("id=\"apd-consent-form\""))))
                 .andReturn().getResponse().getContentAsString();
         java.nio.file.Files.writeString(fixtures.resolve("review-director.html"), director);
-    }
-
-    @Test
-    void applicationWithoutAiResultShowsEmptyStateBesideJourney() throws Exception {
-        when(pipeline.detail(298)).thenReturn(detail(false, true, null, false, false, null, "Applied", null));
-        mvc.perform(get("/applications/298").with(as("hr_lan", "HR")))
-                .andExpect(status().isOk())
-                .andExpect(content().string(containsString("Chưa có điểm AI")))
-                .andExpect(content().string(containsString("stage-bar--stepper")))
-                .andExpect(content().string(not(containsString("Chưa sàng lọc AI"))))
-                .andExpect(content().string(not(containsString("<dt>LinkedIn</dt>"))))
-                .andExpect(content().string(not(containsString("<dt>Portfolio</dt>"))));
     }
 
     @Test
@@ -693,7 +680,7 @@ class ApplicationPipelineWebTests {
     /** Q7.5: người tuyển dụng thấy ngày sinh, giới tính, địa chỉ; trống thì không hiện dòng. */
     @Test
     void detailShowsDateOfBirthGenderAndAddressWhenKnown() throws Exception {
-        when(pipeline.detail(298)).thenReturn(detail(false, false, null, false, false, null, "AI_Screened", null,
+        when(pipeline.detail(298)).thenReturn(detail(false, false, null, false, false, null, "Applied", null,
                 "Hiring Manager", true));
         mvc.perform(get("/applications/298").with(as("hm_tuan", "Hiring Manager")))
                 .andExpect(status().isOk())
@@ -702,7 +689,7 @@ class ApplicationPipelineWebTests {
                 .andExpect(content().string(containsString("<dt>Giới tính</dt><dd>Nữ</dd>")))
                 .andExpect(content().string(containsString("<dt>Địa chỉ</dt><dd>Số 88 Láng Hạ, Đống Đa, Hà Nội</dd>")));
 
-        when(pipeline.detail(298)).thenReturn(detail(false, false, null, false, false, null, "AI_Screened", null,
+        when(pipeline.detail(298)).thenReturn(detail(false, false, null, false, false, null, "Applied", null,
                 "Hiring Manager", false));
         mvc.perform(get("/applications/298").with(as("hm_tuan", "Hiring Manager")))
                 .andExpect(status().isOk())
@@ -799,20 +786,6 @@ class ApplicationPipelineWebTests {
                 .andExpect(redirectedUrl("/applications/298"))
                 .andExpect(flash().attribute("successMessage",
                         "Đã duyệt thay trưởng bộ phận. HR có thể lên lịch phỏng vấn."));
-    }
-
-    @Test
-    void rescreenShowsNewScoreOrReason() throws Exception {
-        when(reviewService.rescreen(293)).thenReturn(new AiScreeningOutcome(new BigDecimal("71.2")));
-        when(reviewService.rescreen(120)).thenThrow(
-                new ApplicationReviewException(null, "Chỉ chấm lại AI khi hồ sơ chưa qua vòng nhân sự."));
-
-        mvc.perform(post("/applications/293/ai-screening").with(as("hr_lan", "HR")).with(csrf()))
-                .andExpect(redirectedUrl("/applications/293"))
-                .andExpect(flash().attribute("successMessage", "Đã chấm lại AI: 71,20 điểm."));
-        mvc.perform(post("/applications/120/ai-screening").with(as("hr_lan", "HR")).with(csrf()))
-                .andExpect(redirectedUrl("/applications/120"))
-                .andExpect(flash().attribute("errorMessage", "Chỉ chấm lại AI khi hồ sơ chưa qua vòng nhân sự."));
     }
 
     // ------------------------------------------------------------------ dữ liệu mẫu
@@ -1109,7 +1082,7 @@ class ApplicationPipelineWebTests {
         Page<ApplicationPipelineResponse> page = new PageImpl<>(List.of(rows), Pageable.ofSize(20), rows.length);
         return new ApplicationListResponse(page, zeroCounts(),
                 List.of(new JobPostingOption(6, "Digital Marketing Executive")),
-                new ApplicationSearch(null, null, null, "score", null).normalized(), null, true, departmentView,
+                new ApplicationSearch(null, null, null, null).normalized(), null, true, departmentView,
                 viewerRole);
     }
 
@@ -1162,14 +1135,14 @@ class ApplicationPipelineWebTests {
                 personalFacts ? java.time.LocalDate.of(1995, 8, 17) : null, personalFacts ? "Nữ" : null,
                 personalFacts ? "Số 88 Láng Hạ, Đống Đa, Hà Nội" : "  ",
                 7, "REQ-007", 12, "Digital Marketing Executive", "Sales & Marketing", SUBMITTED,
-                status, ApplicationStatusLabels.label(status), ApplicationStatusLabels.badge(status), aiMatchScore, aiMatchScore == null ? null : SUBMITTED.plusMinutes(1),
+                status, ApplicationStatusLabels.label(status), ApplicationStatusLabels.badge(status),
                 List.of(new TimelineItem(SUBMITTED.plusDays(1), "HR: Đạt", "Lan HR", "Hợp vị trí", "success"),
                         new TimelineItem(SUBMITTED, "Nộp hồ sơ", "An Võ", null, "neutral")),
                 List.of(new StageItem("APPLIED", "Ứng tuyển", null, null, "done", null, false),
                         new StageItem("INTERVIEW", "Phỏng vấn", null, null, "current",
                                 "Chờ xếp lịch phỏng vấn · Đang chờ: HR", false)),
                 interviewId,
-                new ApplicationDetailResponse.Actions(review, rescreen, nextSteps, nextSteps, openJobPosting),
+                new ApplicationDetailResponse.Actions(review, nextSteps, nextSteps, openJobPosting),
                 viewerRole, "HM_Suggested".equals(status));
     }
 
@@ -1178,7 +1151,7 @@ class ApplicationPipelineWebTests {
         return new ApplicationPipelineResponse(id, "An Võ", "an.vo@example.com", "Digital Marketing Executive",
                 SUBMITTED, status, ApplicationStatusLabels.label(status), ApplicationStatusLabels.badge(status),
                 "Applied".equals(status) ? null : "HR",
-                score == null ? null : new BigDecimal(score), schedule, offer, false);
+                schedule, offer, false);
     }
 
     @Test

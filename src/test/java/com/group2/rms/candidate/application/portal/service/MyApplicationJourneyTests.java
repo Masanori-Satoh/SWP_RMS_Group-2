@@ -36,7 +36,7 @@ class MyApplicationJourneyTests {
     @Nested
     class Table {
         @ParameterizedTest
-        @ValueSource(strings = {"Applied", "AI_Screened", "HR_Passed", "HM_Passed"})
+        @ValueSource(strings = {"Applied", "HR_Passed", "HM_Passed"})
         void row01_internalReviewWithoutSchedule_showsSubmittedOnly(String status) {
             View view = resolve(facts(status));
 
@@ -81,7 +81,7 @@ class MyApplicationJourneyTests {
 
         @Test
         void row06_withdrawn_stopsAtTheStepItWasInWithWithdrawalDate() {
-            View view = resolve(facts("Rejected").marks(mark("Withdrawn", "AI_Screened", LocalDateTime.of(2026, 10, 5, 14, 0))));
+            View view = resolve(facts("Rejected").marks(mark("Withdrawn", "Applied", LocalDateTime.of(2026, 10, 5, 14, 0))));
 
             assertStatus(view, "Đã tự rút hồ sơ", "Bạn đã rút hồ sơ ngày 05/10.", "neutral", null, null);
             assertSteps(view, "done", "upcoming", "upcoming", "upcoming");
@@ -115,7 +115,7 @@ class MyApplicationJourneyTests {
 
         @Test
         void row08_postingClosed_pointsToOpenJobs() {
-            View view = resolve(facts("Rejected").marks(mark("PostingClosed", "AI_Screened", PAST)));
+            View view = resolve(facts("Rejected").marks(mark("PostingClosed", "Applied", PAST)));
 
             assertStatus(view, "Vị trí đã ngừng tuyển",
                     "Công ty đã ngừng tuyển vị trí này nên hồ sơ của bạn dừng lại. Bạn có thể ứng tuyển vị trí khác.",
@@ -144,7 +144,7 @@ class MyApplicationJourneyTests {
 
         @Test
         void withdrawalMarkOnAnApplicationStillInFlowIsIgnored() {
-            View view = resolve(facts("AI_Screened").marks(mark("Withdrawn", "AI_Screened", PAST)));
+            View view = resolve(facts("Applied").marks(mark("Withdrawn", "Applied", PAST)));
 
             assertEquals("Đã nộp CV", view.statusLabel());
         }

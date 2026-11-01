@@ -95,7 +95,7 @@ class SidebarRoleWebTests {
     void recruiterKeepsRecruiterSidebar() throws Exception {
         when(pipeline.list(any(), any())).thenReturn(new ApplicationListResponse(
                 new PageImpl<>(List.of(), Pageable.ofSize(20), 0), zeroCounts(), List.of(),
-                new ApplicationSearch(null, null, null, "score", null).normalized(), null, true, false, "HR"));
+                new ApplicationSearch(null, null, null, null).normalized(), null, true, false, "HR"));
 
         String sidebar = sidebar("/applications", as(account("hr_lan", "HR")));
         assertTrue(sidebar.contains("href=\"/applications\""));
@@ -121,7 +121,7 @@ class SidebarRoleWebTests {
 
         when(pipeline.list(any(), any())).thenReturn(new ApplicationListResponse(
                 new PageImpl<>(List.of(), Pageable.ofSize(20), 0), zeroCounts(), List.of(),
-                new ApplicationSearch(null, null, null, "score", null).normalized(), null, true, false, "HR"));
+                new ApplicationSearch(null, null, null, null).normalized(), null, true, false, "HR"));
         assertFalse(render("/applications", as(account("hr_lan", "HR"))).contains("class=\"site-footer\""),
                 "trang nhân sự không có footer công khai");
     }

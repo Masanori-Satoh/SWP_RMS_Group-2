@@ -431,7 +431,7 @@ for day_idx in range(num_days):
         # 10% Offer (Passed)
         # 20% Interviewing
         # 30% Review (HR/HM Passed or Rejected at review)
-        # 40% AI Screened / Applied
+        # 40% Applied (chờ HR sàng lọc)
         funnel_rand = random.random()
         
         all_candidates_data.append({
@@ -489,7 +489,7 @@ for day_idx in range(num_days):
         linkedin = f"https://linkedin.com/in/{c['username'].replace('.', '-')}"
         github = f"https://github.com/{c['username'].replace('.', '')}" if c['posting_id'] in [1, 2, 3] else "NULL"
         gh_sql = f"N'{github}'" if github != "NULL" else "NULL"
-        # IsPotential: ứng viên có điểm AI cao (>= 80) hoặc vào được vòng phỏng vấn đều là potential
+        # IsPotential: ứng viên vào được vòng phỏng vấn trở lên là potential
         is_potential = 1 if c.get('funnel_rand', 1) < 0.30 else 0
         lines.append(
             f"INSERT INTO Candidate (UserId, DateOfBirth, Gender, Address, LinkedInUrl, PortfolioUrl, CandidateSource, IsPotential, CreatedAt) "

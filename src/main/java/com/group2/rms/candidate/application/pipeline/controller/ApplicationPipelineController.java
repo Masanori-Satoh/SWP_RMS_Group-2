@@ -33,7 +33,7 @@ import java.util.Optional;
 import java.util.Set;
 
 /**
- * Hồ sơ ứng tuyển cho người tuyển dụng: danh sách (5.1.22), chi tiết, CV, duyệt và chấm lại AI (5.1.23). Quyền theo vai trò ở {@code SecurityConfig},
+ * Hồ sơ ứng tuyển cho người tuyển dụng: danh sách (5.1.22), chi tiết, CV và duyệt (5.1.23). Quyền theo vai trò ở {@code SecurityConfig},
  * phạm vi từng người (HM chỉ thấy phòng ban mình) ở {@code ApplicationAccess}.
  */
 @Controller

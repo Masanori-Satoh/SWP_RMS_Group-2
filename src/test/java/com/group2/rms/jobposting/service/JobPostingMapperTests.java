@@ -9,7 +9,6 @@ import com.group2.rms.jobposting.dto.JobPostingRequest;
 import com.group2.rms.jobposting.entity.JobPosting;
 import com.group2.rms.jobposting.validator.JobPostingValidator;
 import com.group2.rms.requisition.entity.JobRequisition;
-import com.group2.rms.requisition.entity.ScreeningCriteria;
 import com.group2.rms.requisition.service.RequisitionAccess;
 import com.group2.rms.user.entity.Department;
 import com.group2.rms.user.entity.Role;
@@ -64,8 +63,7 @@ class JobPostingMapperTests {
                 .department(Department.builder().departmentId(1).departmentName("Engineering").build())
                 .numberOfPositions(2).recruitmentRound(1).workLocation("Hà Nội")
                 .jobDescription("Lập trình backend").requirementDetails("2 năm Spring Boot")
-                .minSalary(new BigDecimal("20000000")).maxSalary(new BigDecimal("30000000"))
-                .screeningCriteria(new ArrayList<>()).build();
+                .minSalary(new BigDecimal("20000000")).maxSalary(new BigDecimal("30000000")).build();
     }
 
     // ----- Hàm hỗ trợ -----
@@ -81,7 +79,7 @@ class JobPostingMapperTests {
     }
 
     private InternalJobPostingDetailResponse detail(JobPosting posting, User viewer) {
-        return mapper.toDetail(posting, viewer, NOW, false, false, ApplicationStats.empty(BigDecimal.TEN),
+        return mapper.toDetail(posting, viewer, NOW, false, false, ApplicationStats.empty(),
                 List.of(), List.of());
     }
 
@@ -266,8 +264,6 @@ class JobPostingMapperTests {
         @DisplayName("Form tạo -> Điền sẵn từ yêu cầu: lương 'Theo yêu cầu', hiện '2 người', hạn nộp hôm nay + 30, nháp")
         void toCreateForm_shouldPrefillFromRequisition() {
             // Arrange
-            requisition.getScreeningCriteria().add(ScreeningCriteria.builder().criteriaName("Java").requiredValue("2 năm")
-                    .isMandatory(true).build());
 
             // Act
             JobPostingRequest form = mapper.toCreateForm(requisition, 1);
