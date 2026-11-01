@@ -213,7 +213,8 @@ class RequisitionControllerTests {
                                 .andExpect(status().isOk())
                                 .andExpect(view().name("requisitions/detail"))
                                 .andExpect(model().attributeExists("req"))
-                                .andExpect(content().string(containsString("rqd-criteria")));
+                                .andExpect(content().string(containsString("Backend Engineer")))
+                                .andExpect(content().string(not(containsString("rqd-criteria"))));
         }
 
         @Test
@@ -302,13 +303,11 @@ class RequisitionControllerTests {
                 mvc.perform(post("/requisitions/create").with(csrf())
                                 .param("action", RequisitionValidator.ACTION_DRAFT).param("title", "New Dev")
                                 .param("numberOfPositions", String.valueOf(RequisitionValidator.POSITIONS_MAX + 1))
-                                .param("maxSalary", "1000000001")
-                                .param("screeningCriteria[0].criteriaName", "Java")
-                                .param("screeningCriteria[0].weight", "150"))
+                                .param("maxSalary", "1000000001"))
                                 .andExpect(status().isOk())
                                 .andExpect(view().name("requisitions/form"))
                                 .andExpect(model().attributeHasFieldErrors("form",
-                                                "numberOfPositions", "maxSalary", "screeningCriteria[0].weight"));
+                                                "numberOfPositions", "maxSalary"));
                 verify(service, never()).createRequisition(any());
         }
 

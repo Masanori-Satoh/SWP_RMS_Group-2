@@ -259,7 +259,7 @@ class ApplicationPipelineServiceTests {
     }
 
     @Test
-    void detailMapsLatestScoreActionsAndTimelineNewestFirst() {
+    void detailMapsActionsAndTimelineNewestFirst() {
         Application application = application();
         when(applications.findDetailById(ID)).thenReturn(Optional.of(application));
         when(reviews.findWithReviewerByApplicationId(ID)).thenReturn(List.of(ApplicationReview.builder()
@@ -281,13 +281,13 @@ class ApplicationPipelineServiceTests {
         assertEquals("REQ-007", detail.requisitionCode());
         assertEquals("Sales & Marketing", detail.departmentName());
         assertEquals("Chờ HR duyệt CV", detail.statusLabel());
-        assertEquals(List.of("done", "current", "upcoming", "upcoming", "upcoming"),
+        assertEquals(List.of("current", "upcoming", "upcoming", "upcoming", "upcoming"),
                 detail.stepper().stream().map(StageItem::state).toList());
-        assertEquals("Chờ HR duyệt CV · Đang chờ: HR", detail.stepper().get(1).detail());
+        assertEquals("Chờ HR duyệt CV · Đang chờ: HR", detail.stepper().get(0).detail());
         assertNull(detail.interviewId(), "chưa có lịch phỏng vấn");
         assertEquals(new ApplicationDetailResponse.Actions(true, false, false, true), detail.actions());
         assertEquals(List.of("Offer: Draft", "Kết quả phỏng vấn: Đạt", "Lịch phỏng vấn: Scheduled", "HR: Đạt",
-                        "AI chấm điểm: 79,34", "AI chấm điểm: 60,00", "Nộp hồ sơ"),
+                        "Nộp hồ sơ"),
                 detail.timeline().stream().map(TimelineItem::title).toList());
         assertEquals("success", detail.timeline().get(1).tone());
         TimelineItem review = detail.timeline().get(3);

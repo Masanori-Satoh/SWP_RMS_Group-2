@@ -324,8 +324,8 @@ class ApplicationPipelineWebTests {
                 .andExpect(content().string(not(containsString("Hồ sơ của phòng ban bạn"))))
                 .andExpect(content().string(containsString("href=\"/applications/298\"")))
                 .andExpect(content().string(containsString("data-cv-url=\"/applications/298/cv\"")))
-                .andExpect(content().string(containsString(">79<")))
-                .andExpect(content().string(containsString("Chờ AI chấm")))
+                .andExpect(content().string(not(containsString("Điểm AI"))))
+                .andExpect(content().string(not(containsString("name=\"sort\""))))
                 .andExpect(content().string(containsString("badge--warning")))
                 .andExpect(content().string(containsString("href=\"/interviews/new?applicationId=120\"")))
                 .andExpect(content().string(containsString("href=\"/offers/create?applicationId=120\"")))
@@ -364,8 +364,8 @@ class ApplicationPipelineWebTests {
                 items.stream().map(StageItem::offFlow).toList());
         assertEquals(List.of("upcoming", "upcoming", "upcoming", "current", "upcoming", "upcoming", "upcoming"),
                 items.stream().map(StageItem::state).toList());
-        assertEquals("/applications?jobPostingId=6&keyword=V%C3%B5&sort=newest", items.get(0).href());
-        assertEquals("/applications?jobPostingId=6&keyword=V%C3%B5&sort=newest&stage=CLOSED", items.get(6).href());
+        assertEquals("/applications?jobPostingId=6&keyword=V%C3%B5", items.get(0).href());
+        assertEquals("/applications?jobPostingId=6&keyword=V%C3%B5&stage=CLOSED", items.get(6).href());
     }
 
     @Test
@@ -445,7 +445,7 @@ class ApplicationPipelineWebTests {
                 .andExpect(content().string(containsString("Yêu cầu tuyển dụng REQ-007")))
                 .andExpect(content().string(containsString("href=\"/internal/job-postings/12\"")))
                 .andExpect(content().string(containsString("src=\"/applications/298/cv#view=FitH&amp;navpanes=0\"")))
-                .andExpect(content().string(containsString(">79,34/100<")))
+                .andExpect(content().string(not(containsString("/100<"))))
                 .andExpect(content().string(containsString("HR: Đạt")))
                 .andExpect(content().string(containsString("Hợp vị trí")))
                 .andExpect(content().string(containsString("href=\"https://linkedin.com/in/an-vo\"")))
@@ -467,7 +467,7 @@ class ApplicationPipelineWebTests {
                 .andExpect(content().string(containsString("Đề xuất #298")))
                 .andExpect(content().string(containsString("Đề xuất đang chờ ứng viên đồng ý.")))
                 .andExpect(content().string(containsString("Hành trình đề xuất")))
-                .andExpect(content().string(containsString("Chưa sàng lọc AI")))
+                .andExpect(content().string(not(containsString("sàng lọc AI"))))
                 .andExpect(content().string(containsString("aria-label=\"Tiến độ đề xuất\"")))
                 .andExpect(content().string(not(containsString(">Sàng lọc CV<"))))
                 .andExpect(content().string(not(containsString("stage-bar--stepper"))))
@@ -476,13 +476,13 @@ class ApplicationPipelineWebTests {
     }
 
     @Test
-    void detailWorkspacePlacesContactNotesAndActivityBesideCvAndAiNearJourney() throws Exception {
+    void detailWorkspacePlacesContactNotesAndActivityBesideCv() throws Exception {
         when(pipeline.detail(298)).thenReturn(detail(false, true, "https://linkedin.com/in/an-vo", false, true, null));
         String html = mvc.perform(get("/applications/298").with(as("hr_lan", "HR")))
                 .andExpect(status().isOk())
                 .andExpect(content().string(containsString("href=\"mailto:an.vo@example.com\"")))
                 .andExpect(content().string(containsString("href=\"tel:0901 234 567\"")))
-                .andExpect(content().string(containsString("action=\"/applications/298/ai-screening\"")))
+                .andExpect(content().string(not(containsString("/ai-screening"))))
                 .andExpect(content().string(containsString("Hành trình hoạt động")))
                 .andExpect(content().string(not(containsString("id=\"app-ai-title\""))))
                 .andReturn().getResponse().getContentAsString();
@@ -628,7 +628,7 @@ class ApplicationPipelineWebTests {
     // ------------------------------------------------------------------ duyệt + chấm lại
 
     @Test
-    void reviewerSeesReviewFormRescreenButtonAndCurrentStep() throws Exception {
+    void reviewerSeesReviewFormAndCurrentStep() throws Exception {
         when(pipeline.detail(298)).thenReturn(detail(false, true, null, true, true));
 
         mvc.perform(get("/applications/298").with(as("hr_lan", "HR")))
@@ -638,7 +638,7 @@ class ApplicationPipelineWebTests {
                 .andExpect(content().string(containsString("name=\"decision\" value=\"Pass\"")))
                 .andExpect(content().string(containsString("name=\"decision\" value=\"Hold\"")))
                 .andExpect(content().string(containsString("name=\"decision\" value=\"Fail\"")))
-                .andExpect(content().string(containsString("action=\"/applications/298/ai-screening\"")))
+                .andExpect(content().string(not(containsString("/ai-screening"))))
                 .andExpect(content().string(containsString("name=\"_csrf\"")));
     }
 

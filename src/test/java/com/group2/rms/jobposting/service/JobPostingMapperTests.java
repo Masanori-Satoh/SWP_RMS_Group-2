@@ -276,7 +276,7 @@ class JobPostingMapperTests {
             assertEquals("2 người", form.getNumberOfPositionsDisplay());
             assertEquals(NOW.toLocalDate().plusDays(JobPostingValidator.DEFAULT_DEADLINE_DAYS), form.getApplicationDeadline());
             assertEquals(JobPostingValidator.ACTION_DRAFT, form.getAction());
-            assertEquals("2 năm Spring Boot\n\nTiêu chí bắt buộc:\n- Java: 2 năm", form.getJobRequirements());
+            assertEquals("2 năm Spring Boot", form.getJobRequirements());
             assertTrue(form.isDraftOrNew());
             assertFalse(form.isLive());
         }

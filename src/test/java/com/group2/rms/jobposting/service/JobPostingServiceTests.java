@@ -481,7 +481,7 @@ class JobPostingServiceTests {
             // Arrange
             existingPosting(40, JobPostingAccess.STATUS_PUBLISHED, NOW.minusDays(10));
             when(postings.countApplicationsByStatus(40)).thenReturn(List.of(
-                    new Object[] {"Applied", 4L}, new Object[] {"Applied", 5L}, new Object[] {"Interviewing", 2L},
+                    new Object[] {"Applied", 9L}, new Object[] {"Interviewing", 2L},
                     new Object[] {"Hired", 1L}, new Object[] {"Rejected", 2L}));
             when(postings.countApplicationsSince(40, NOW.minusDays(7))).thenReturn(2L);
             when(postings.findRecentApplications(eq(40), any(Pageable.class))).thenReturn(List.of());
