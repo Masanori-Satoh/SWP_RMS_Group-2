@@ -10,7 +10,6 @@ import com.group2.rms.core.exception.ResourceNotFoundException;
 import com.group2.rms.jobposting.entity.JobPosting;
 import com.group2.rms.jobposting.repository.JobPostingRepository;
 import lombok.RequiredArgsConstructor;
-import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.support.TransactionSynchronization;
@@ -36,7 +35,6 @@ public class ApplicationSubmissionService {
     private final JobPostingRepository jobPostings;
     private final CvFileValidator cvFileValidator;
     private final CvStorage cvStorage;
-    private final ApplicationEventPublisher events;
 
     @Transactional
     public Integer apply(String username, Integer jobPostingId, MultipartFile cvFile) {
@@ -75,7 +73,6 @@ public class ApplicationSubmissionService {
             saved = applications.save(Application.builder().candidate(candidate).jobPosting(job)
                     .appliedCvUrl(stored.url()).applicationStatus(INITIAL_STATUS).build());
         }
-        events.publishEvent(new ApplicationSubmittedEvent(saved.getApplicationId()));
         return saved.getApplicationId();
     }
 

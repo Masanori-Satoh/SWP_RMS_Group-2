@@ -348,7 +348,6 @@ CREATE TABLE Application (
     AppliedCvUrl NVARCHAR(500) NOT NULL,
     SubmissionDate DATETIME2 NOT NULL CONSTRAINT DF_Application_SubmissionDate DEFAULT SYSDATETIME(),
     ApplicationStatus NVARCHAR(30) NOT NULL CONSTRAINT DF_Application_Status DEFAULT N'Applied',
-    OverallScore DECIMAL(5,2) NULL,
     CreatedAt DATETIME2 NOT NULL CONSTRAINT DF_Application_CreatedAt DEFAULT SYSDATETIME(),
     UpdatedAt DATETIME2 NULL,
 
@@ -361,7 +360,6 @@ CREATE TABLE Application (
     CONSTRAINT CK_Application_Status
         CHECK (ApplicationStatus IN (
             N'Applied',
-            N'AI_Screened',
             N'HR_Passed',
             N'HM_Passed',
             --new status for HM SUGGEST
@@ -397,23 +395,6 @@ CREATE TABLE ApplicationReview (
 
     CONSTRAINT CK_ApplicationReview_Decision
         CHECK (Decision IN (N'Pass', N'Fail', N'Hold'))
-);
-GO
-
--- =============================================================================
--- 3.13 AI SCREENING RESULT (Kết quả AI chấm điểm và so khớp CV)
--- =============================================================================
-CREATE TABLE AIScreeningResult (
-    AIScreeningId INT IDENTITY(1,1) PRIMARY KEY,
-    ApplicationId INT NOT NULL,
-    AIMatchScore DECIMAL(5,2) NOT NULL,
-    ScreenedAt DATETIME2 NOT NULL CONSTRAINT DF_AIScreeningResult_ScreenedAt DEFAULT SYSDATETIME(),
-
-    CONSTRAINT FK_AIScreeningResult_Application
-        FOREIGN KEY (ApplicationId) REFERENCES Application(ApplicationId),
-
-    CONSTRAINT CK_AIScreeningResult_Score
-        CHECK (AIMatchScore >= 0 AND AIMatchScore <= 100)
 );
 GO
 

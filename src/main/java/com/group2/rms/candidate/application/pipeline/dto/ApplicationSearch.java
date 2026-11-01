@@ -10,13 +10,10 @@ import java.util.Arrays;
  * Giá trị lạ không báo lỗi mà bị bỏ qua: đây là bộ lọc, không phải form nhập liệu.
  *
  * @param status trạng thái lưu DB; giữ để link cũ không gãy (trang lọc bằng {@code stage})
- * @param sort   {@code score} (mặc định: điểm AI cao nhất) hoặc {@code newest}
  * @param stage  tên một {@link ApplicationStage} (ví dụ {@code INTERVIEW})
  */
-public record ApplicationSearch(Integer jobPostingId, String status, String keyword, String sort, String stage) {
+public record ApplicationSearch(Integer jobPostingId, String status, String keyword, String stage) {
 
-    public static final String SORT_SCORE = "score";
-    public static final String SORT_NEWEST = "newest";
     static final int KEYWORD_MAX_LENGTH = 100;
 
     public ApplicationSearch normalized() {
@@ -25,10 +22,9 @@ public record ApplicationSearch(Integer jobPostingId, String status, String keyw
         if (cleanKeyword != null && cleanKeyword.length() > KEYWORD_MAX_LENGTH) {
             cleanKeyword = cleanKeyword.substring(0, KEYWORD_MAX_LENGTH);
         }
-        String cleanSort = SORT_NEWEST.equals(sort) ? SORT_NEWEST : SORT_SCORE;
         String cleanStage = Arrays.stream(ApplicationStage.values()).map(Enum::name)
                 .filter(name -> name.equals(stage)).findFirst().orElse(null);
-        return new ApplicationSearch(jobPostingId, cleanStatus, cleanKeyword, cleanSort, cleanStage);
+        return new ApplicationSearch(jobPostingId, cleanStatus, cleanKeyword, cleanStage);
     }
 
     /** Giai đoạn đang lọc; {@code null} nếu không lọc (gọi trên bản đã {@link #normalized()}). */

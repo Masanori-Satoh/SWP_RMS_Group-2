@@ -181,7 +181,7 @@ public final class MyApplicationJourney {
                     offer == null ? null : "Xem thư mời", offerHref(offer));
             case "Offered" -> offered(offer);
             case "HM_Passed", "Interviewing" -> interviewing(facts.interviews(), now);
-            case "Applied", "AI_Screened", "HR_Passed" -> submitted();
+            case "Applied", "HR_Passed" -> submitted();
             // Trạng thái lạ (ngoài CK_Application_Status): không đoán, chỉ báo đang xử lý.
             default -> new Status(Round.SUBMIT, Mode.IN_FLOW, "Đang xử lý", null, "neutral", null, null);
         };

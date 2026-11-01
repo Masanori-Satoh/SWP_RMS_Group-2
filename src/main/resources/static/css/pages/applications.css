@@ -259,47 +259,6 @@
   white-space: nowrap;
 }
 
-.app-col-score {
-  text-align: center;
-  white-space: nowrap;
-}
-
-.app-score-badge {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--s1);
-  padding: 2px 10px;
-  border-radius: var(--radius-full);
-  font-size: 13px;
-}
-
-.app-score-badge--high {
-  background: var(--success-soft);
-  color: var(--success);
-}
-
-.app-score-badge--mid {
-  background: var(--warning-soft);
-  color: var(--warning);
-}
-
-.app-score-badge--low {
-  background: var(--neutral-soft);
-  color: var(--neutral);
-}
-
-.app-score {
-  font-weight: 700;
-  font-variant-numeric: tabular-nums;
-}
-
-.app-score--empty {
-  font-weight: 400;
-  font-size: 13px;
-  color: var(--muted);
-  white-space: nowrap;
-}
-
 .app-status-cell {
   display: flex;
   flex-direction: column;
@@ -399,10 +358,6 @@
 .app-journey__head { display: flex; align-items: flex-start; justify-content: space-between; flex-wrap: wrap; gap: var(--s3) var(--s6); margin-bottom: var(--s4); }
 .app-journey__title, .app-workspace-title { font-family: var(--sans); font-size: var(--font-lg); }
 .app-journey__title { margin: 0; }
-.app-journey__ai { display: flex; flex-wrap: wrap; align-items: center; justify-content: flex-end; gap: var(--s2) var(--s3); color: var(--brand-dark); font-size: var(--font-sm); }
-.app-journey__score { display: flex; align-items: center; gap: var(--s2); margin: 0; }
-.app-journey__time { color: var(--muted); font-size: var(--font-xs); }
-.app-journey__hint { margin: var(--s3) 0 0; color: var(--muted); font-size: var(--font-xs); }
 .app-proposal-progress { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--s3); padding: 0; margin: 0; list-style: none; }
 .app-proposal-progress li { display: flex; flex-direction: column; gap: var(--s1); min-width: 0; font-size: var(--font-sm); overflow-wrap: anywhere; }
 .app-proposal-progress li::before { content: ''; height: 4px; border-radius: var(--radius-sm); background: var(--brand-soft); margin-bottom: var(--s2); }
@@ -519,22 +474,6 @@
   overflow-wrap: anywhere;
 }
 
-.app-ai__score {
-  margin: 0;
-  color: var(--muted);
-}
-
-.app-ai__score strong {
-  font-size: var(--font-xl);
-  color: var(--ink);
-}
-
-.app-ai__meta,
-.app-ai__note {
-  margin: var(--s2) 0 0;
-  font-size: 13px;
-}
-
 /* Thẻ thao tác ngay dưới thanh tiến độ: form duyệt CV + link sang trang interview/offer. */
 .app-actions {
   margin-bottom: 0;
@@ -559,10 +498,6 @@
   display: flex;
   flex-wrap: wrap;
   gap: var(--s2);
-}
-
-.app-ai__rescreen {
-  margin-top: var(--s4);
 }
 
 /* Shared bookmarks and preview use the same feature dialogs on list and detail. */
@@ -609,25 +544,17 @@
   font-variant-numeric: tabular-nums;
 }
 
-.app-col-score,
+.app-col-status,
 .app-table th:nth-child(5),
 .app-table td:nth-child(5) {
-  width: 95px;
-  text-align: center;
-  white-space: nowrap;
-}
-
-.app-col-status,
-.app-table th:nth-child(6),
-.app-table td:nth-child(6) {
   width: 20%;
   min-width: 160px;
   text-align: left;
 }
 
 .app-col-actions,
-.app-table th:nth-child(7),
-.app-table td:nth-child(7),
+.app-table th:nth-child(6),
+.app-table td:nth-child(6),
 .app-table__actions-head,
 .app-table__actions {
   width: 140px;
@@ -1110,7 +1037,6 @@
     width: 100%;
     justify-content: space-between;
   }
-  .app-journey__ai { justify-content: flex-start; }
   .app-proposal-progress { grid-template-columns: 1fr; }
   .app-detail-page .app-cv__frame { height: 65vh; min-height: 360px; }
   .app-filter {

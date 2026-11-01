@@ -2,7 +2,6 @@ package com.group2.rms.jobposting.dto;
 
 import lombok.Builder;
 
-import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -73,16 +72,15 @@ public record InternalJobPostingDetailResponse(
         long totalApplications,
         long applicationsLast7Days,
         long pendingApplications,
-        long aiPassedApplications,
-        BigDecimal aiThreshold,
+        long passedCvRoundApplications,
         long interviewingApplications,
         long hiredApplications,
         List<RecentApplication> recentApplications,
         List<PostingRound> rounds) {
 
-    /** Hồ sơ gần đây: điểm AI null = chưa chấm. */
-    public record RecentApplication(Integer applicationId, String candidateName, BigDecimal aiScore,
-            boolean aiPassed, String statusLabel, String statusBadge, LocalDateTime submittedAt) {
+    /** Hồ sơ gần đây. */
+    public record RecentApplication(Integer applicationId, String candidateName,
+            String statusLabel, String statusBadge, LocalDateTime submittedAt) {
     }
 
     /** Một lần đăng của yêu cầu. */
@@ -97,12 +95,12 @@ public record InternalJobPostingDetailResponse(
 
     /** Số liệu hồ sơ của tin, service tra rồi truyền cho JobPostingMapper#toDetail. */
     @Builder
-    public record ApplicationStats(long total, long last7Days, long pending, long aiPassed, BigDecimal aiThreshold,
+    public record ApplicationStats(long total, long last7Days, long pending, long passedCvRound,
             long interviewing, long hired, List<RecentApplication> recent) {
 
         /** Tin chưa lên trang tuyển dụng: chưa có số liệu. */
-        public static ApplicationStats empty(BigDecimal aiThreshold) {
-            return new ApplicationStats(0, 0, 0, 0, aiThreshold, 0, 0, List.of());
+        public static ApplicationStats empty() {
+            return new ApplicationStats(0, 0, 0, 0, 0, 0, List.of());
         }
     }
 }

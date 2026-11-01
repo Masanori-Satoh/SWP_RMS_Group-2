@@ -14,7 +14,6 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
-import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.Collection;
 import java.util.List;
@@ -111,33 +110,11 @@ public interface JobPostingRepository extends JpaRepository<JobPosting, Integer>
             + ApplicationRepository.FORMAL_FILTER)
     long countApplicationsSince(@Param("postingId") Integer postingId, @Param("since") LocalDateTime since);
 
-    /** Số hồ sơ có điểm AI (lần chấm mới nhất) từ ngưỡng trở lên. */
-    @Query("""
-            SELECT COUNT(r) FROM AIScreeningResult r JOIN r.application a
-            WHERE a.jobPosting.jobPostingId = :postingId
-              AND r.aiMatchScore >= :threshold
-              AND r.screenedAt = (SELECT MAX(r2.screenedAt) FROM AIScreeningResult r2 WHERE r2.application = r.application)
-            """ + " AND " + ApplicationRepository.FORMAL_FILTER)
-    long countApplicationsWithAiScoreAtLeast(@Param("postingId") Integer postingId,
-            @Param("threshold") BigDecimal threshold);
-
     /** Hồ sơ mới nhất của tin. Mỗi dòng: [applicationId, tên ứng viên, ApplicationStatus, ngày nộp]. */
     @Query("SELECT a.applicationId, a.candidate.account.fullName, a.applicationStatus, a.submissionDate "
             + "FROM Application a WHERE a.jobPosting.jobPostingId = :postingId AND " + ApplicationRepository.FORMAL_FILTER
             + " ORDER BY a.submissionDate DESC")
     List<Object[]> findRecentApplications(@Param("postingId") Integer postingId, Pageable pageable);
-
-    /** Điểm AI lần chấm mới nhất của các hồ sơ. Mỗi dòng: [applicationId, điểm]. */
-    @Query("""
-            SELECT r.application.applicationId, r.aiMatchScore FROM AIScreeningResult r
-            WHERE r.application.applicationId IN :applicationIds
-              AND r.screenedAt = (SELECT MAX(r2.screenedAt) FROM AIScreeningResult r2 WHERE r2.application = r.application)
-            """)
-    List<Object[]> findLatestAiScores(@Param("applicationIds") Collection<Integer> applicationIds);
-
-    /** Giá trị một khóa cấu hình hệ thống (bảng SystemConfig), ví dụ AI_SCORE_THRESHOLD. */
-    @Query("SELECT c.configValue FROM SystemConfig c WHERE c.configKey = :configKey")
-    Optional<String> findConfigValue(@Param("configKey") String configKey);
 
     // ----- Trang tuyển dụng công khai (module career) -----
 
