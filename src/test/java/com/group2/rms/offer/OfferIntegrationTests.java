@@ -28,9 +28,11 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
@@ -119,11 +121,43 @@ class OfferIntegrationTests {
         when(offerService.getAllOffersForHr(any(), any(), any(), any()))
                 .thenReturn(new PageImpl<>(Collections.emptyList()));
         when(offerService.getPassedCandidatesForOffer()).thenReturn(Collections.emptyList());
+        when(offerService.getOfferStats()).thenReturn(Map.of(
+                "statTotal", 10L,
+                "statPending", 2L,
+                "statApproved", 3L,
+                "statSent", 4L,
+                "statAccepted", 1L
+        ));
 
         mvc.perform(get("/offers"))
                 .andExpect(status().isOk())
                 .andExpect(view().name("offers/list"))
-                .andExpect(model().attributeExists("offers", "statPending"));
+                .andExpect(model().attributeExists("offers", "statTotal", "statPending"))
+                .andExpect(model().attribute("statTotal", 10L))
+                .andExpect(model().attribute("currentStatus", "ALL"));
+    }
+
+    @Test
+    @DisplayName("IT-01b GET /offers?status=Sent_Candidate: Lọc theo status và giữ nguyên statTotal toàn cục")
+    @WithMockUser(username = "hr_specialist", roles = {"HR"})
+    void it01b_listOffers_withStatusFilter_returnsFilteredViewAndPreservesGlobalStats() throws Exception {
+        when(offerService.getAllOffersForHr(any(), eq("Sent_Candidate"), any(), any()))
+                .thenReturn(new PageImpl<>(Collections.emptyList(), org.springframework.data.domain.PageRequest.of(0, 10), 0));
+        when(offerService.getPassedCandidatesForOffer()).thenReturn(Collections.emptyList());
+        when(offerService.getOfferStats()).thenReturn(Map.of(
+                "statTotal", 15L,
+                "statPending", 1L,
+                "statApproved", 2L,
+                "statSent", 5L,
+                "statAccepted", 3L
+        ));
+
+        mvc.perform(get("/offers").param("status", "Sent_Candidate"))
+                .andExpect(status().isOk())
+                .andExpect(view().name("offers/list"))
+                .andExpect(model().attribute("statTotal", 15L))
+                .andExpect(model().attribute("currentStatus", "Sent_Candidate"))
+                .andExpect(model().attribute("totalElements", 0L));
     }
 
     @Test
@@ -500,5 +534,41 @@ class OfferIntegrationTests {
                 .andExpect(status().isOk())
                 .andExpect(model().attribute("currentPage", 0));
     }
-}
 
+    @Test
+    @DisplayName("IT-25 GET /offers/{id}/edit: HR xem form chỉnh sửa Offer thành công (view offers/form, HTTP 200)")
+    @WithMockUser(username = "hr_specialist", roles = {"HR"})
+    void it25_getOfferEditForm_returnsOkView() throws Exception {
+        UpdateOfferRequest req = UpdateOfferRequest.builder()
+                .offeredPositionTitle("Frontend ReactJS Developer")
+                .proposedSalary(new BigDecimal("25000000"))
+                .probationSalary(new BigDecimal("21250000"))
+                .probationDays(60)
+                .responsePeriodDays(5)
+                .expectedStartDate(LocalDate.now().plusDays(10))
+                .workLocation("Ha Noi")
+                .benefitsPackage("Bonus")
+                .build();
+
+        OfferDetailResponse detail = OfferDetailResponse.builder()
+                .offerId(11)
+                .candidateName("Đinh Văn Hiếu")
+                .candidateEmail("hieu.van.dinh@gmail.com")
+                .candidatePhone("0931604451")
+                .appliedPosition("Frontend ReactJS Developer")
+                .departmentName("Engineering")
+                .requisitionId(2)
+                .offerStatus("Draft")
+                .build();
+
+        when(offerService.getUpdateOfferRequestById(eq(11))).thenReturn(req);
+        when(offerService.getOfferDetailForHr(eq(11))).thenReturn(detail);
+
+        mvc.perform(get("/offers/11/edit"))
+                .andExpect(status().isOk())
+                .andExpect(view().name("offers/form"))
+                .andExpect(model().attribute("isEdit", true))
+                .andExpect(model().attribute("isLockedCandidate", false))
+                .andExpect(model().attributeExists("offerDto", "detail"));
+    }
+}
