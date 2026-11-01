@@ -127,6 +127,7 @@ public class OfferController {
         List<PassedCandidateResponse> passedCandidates = offerService.getPassedCandidatesForOffer();
 
         Map<String, Long> stats = offerService.getOfferStats();
+        model.addAttribute("statTotal", stats.getOrDefault("statTotal", 0L));
         model.addAttribute("statPending", stats.getOrDefault("statPending", 0L));
         model.addAttribute("statApproved", stats.getOrDefault("statApproved", 0L));
         model.addAttribute("statSent", stats.getOrDefault("statSent", 0L));

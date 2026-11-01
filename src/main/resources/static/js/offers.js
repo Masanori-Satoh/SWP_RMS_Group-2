@@ -40,6 +40,15 @@ function handleFilterSearch() {
     applyOfferFilters();
 }
 
+function filterOffersByStatus(status) {
+    const statusFilter = document.getElementById('statusFilter');
+    if (statusFilter) {
+        statusFilter.value = status || 'ALL';
+    }
+    applyOfferFilters();
+}
+window.filterOffersByStatus = filterOffersByStatus;
+
 function clearSearchInput() {
     const searchInput = document.getElementById('searchInput');
     if (searchInput) {

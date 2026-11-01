@@ -378,6 +378,7 @@ public class OfferServiceImpl implements OfferService {
     @Transactional(readOnly = true)
     public Map<String, Long> getOfferStats() {
         Map<String, Long> stats = new HashMap<>();
+        stats.put("statTotal", offerProposalRepository.countActiveOffers());
         stats.put("statPending", offerProposalRepository.countPendingDirector());
         stats.put("statApproved", offerProposalRepository.countDirectorApproved());
         stats.put("statSent", offerProposalRepository.countSentCandidate());

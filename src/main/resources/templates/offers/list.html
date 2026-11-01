@@ -36,17 +36,23 @@
 
     <!-- Stats Overview Cards -->
     <div class="offers-stats-grid ofw-stats-grid">
-        <div class="offer-stat-card adw-surface ofw-stat-card">
+        <button type="button" class="offer-stat-card adw-surface ofw-stat-card"
+                onclick="filterOffersByStatus('ALL')"
+                th:classappend="${currentStatus == 'ALL' or currentStatus == null or currentStatus == ''} ? ' ofw-stat-card--active' : ''"
+                th:attr="aria-pressed=${currentStatus == 'ALL' or currentStatus == null or currentStatus == '' ? 'true' : 'false'}">
             <div class="ofw-stat-label">Tổng đề xuất</div>
             <div class="ofw-stat-bottom">
                 <div class="ofw-stat-icon stat-icon-brand">
                     <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><line x1="9" y1="15" x2="15" y2="15"/></svg>
                 </div>
-                <div class="ofw-stat-value" id="statTotal" th:text="${totalElements}">0</div>
+                <div class="ofw-stat-value" id="statTotal" th:text="${statTotal}">0</div>
             </div>
-        </div>
+        </button>
 
-        <div class="offer-stat-card adw-surface ofw-stat-card">
+        <button type="button" class="offer-stat-card adw-surface ofw-stat-card"
+                onclick="filterOffersByStatus('Pending_Director')"
+                th:classappend="${currentStatus == 'Pending_Director'} ? ' ofw-stat-card--active' : ''"
+                th:attr="aria-pressed=${currentStatus == 'Pending_Director' ? 'true' : 'false'}">
             <div class="ofw-stat-label">Chờ Giám đốc duyệt</div>
             <div class="ofw-stat-bottom">
                 <div class="ofw-stat-icon stat-icon-amber">
@@ -54,9 +60,12 @@
                 </div>
                 <div class="ofw-stat-value" id="statPending" th:text="${statPending}">0</div>
             </div>
-        </div>
+        </button>
 
-        <div class="offer-stat-card adw-surface ofw-stat-card">
+        <button type="button" class="offer-stat-card adw-surface ofw-stat-card"
+                onclick="filterOffersByStatus('Director_Approved')"
+                th:classappend="${currentStatus == 'Director_Approved' or currentStatus == 'Approved'} ? ' ofw-stat-card--active' : ''"
+                th:attr="aria-pressed=${currentStatus == 'Director_Approved' or currentStatus == 'Approved' ? 'true' : 'false'}">
             <div class="ofw-stat-label">Giám đốc đã duyệt</div>
             <div class="ofw-stat-bottom">
                 <div class="ofw-stat-icon stat-icon-green">
@@ -64,9 +73,12 @@
                 </div>
                 <div class="ofw-stat-value" id="statApproved" th:text="${statApproved}">0</div>
             </div>
-        </div>
+        </button>
 
-        <div class="offer-stat-card adw-surface ofw-stat-card">
+        <button type="button" class="offer-stat-card adw-surface ofw-stat-card"
+                onclick="filterOffersByStatus('Sent_Candidate')"
+                th:classappend="${currentStatus == 'Sent_Candidate'} ? ' ofw-stat-card--active' : ''"
+                th:attr="aria-pressed=${currentStatus == 'Sent_Candidate' ? 'true' : 'false'}">
             <div class="ofw-stat-label">Đã gửi thư mời</div>
             <div class="ofw-stat-bottom">
                 <div class="ofw-stat-icon stat-icon-blue">
@@ -74,9 +86,12 @@
                 </div>
                 <div class="ofw-stat-value" id="statSent" th:text="${statSent}">0</div>
             </div>
-        </div>
+        </button>
 
-        <div class="offer-stat-card adw-surface ofw-stat-card">
+        <button type="button" class="offer-stat-card adw-surface ofw-stat-card"
+                onclick="filterOffersByStatus('Accepted')"
+                th:classappend="${currentStatus == 'Accepted'} ? ' ofw-stat-card--active' : ''"
+                th:attr="aria-pressed=${currentStatus == 'Accepted' ? 'true' : 'false'}">
             <div class="ofw-stat-label">Ứng viên đã nhận việc</div>
             <div class="ofw-stat-bottom">
                 <div class="ofw-stat-icon stat-icon-emerald">
@@ -84,7 +99,7 @@
                 </div>
                 <div class="ofw-stat-value" id="statAccepted" th:text="${statAccepted}">0</div>
             </div>
-        </div>
+        </button>
     </div>
 
     <!-- Filter Toolbar -->
