@@ -312,7 +312,7 @@ public class OfferController {
             OfferResponse updated = offerService.updateOfferByHr(id, updateRequest);
             boolean isDraft = Boolean.TRUE.equals(updateRequest.getIsDraft());
             String msg = isDraft
-                    ? "Cập nhật bản thảo đề xuất nhận việc thành công!"
+                    ? "Cập nhật bản nháp đề xuất nhận việc thành công!"
                     : "Đã nộp trình đề xuất nhận việc lên Giám đốc thành công!";
             return ResponseEntity.ok(new ApiResponse<>(true, msg, updated));
         } catch (BaseBusinessException e) {
@@ -352,7 +352,7 @@ public class OfferController {
             offerService.updateOfferByHr(id, updateRequest);
             boolean isDraft = Boolean.TRUE.equals(updateRequest.getIsDraft());
             flash.addFlashAttribute("successMessage", isDraft
-                    ? "Cập nhật bản thảo đề xuất nhận việc thành công!"
+                    ? "Cập nhật bản nháp đề xuất nhận việc thành công!"
                     : "Đã nộp trình đề xuất nhận việc lên Giám đốc thành công!");
             return "redirect:/offers/" + id;
         } catch (BaseBusinessException e) {
@@ -374,14 +374,14 @@ public class OfferController {
     public ResponseEntity<ApiResponse<Void>> deleteOfferJson(@PathVariable Integer id) {
         try {
             offerService.deleteDraftOfferByHr(id);
-            return ResponseEntity.ok(new ApiResponse<>(true, "Đã xóa bản thảo đề xuất nhận việc thành công."));
+            return ResponseEntity.ok(new ApiResponse<>(true, "Đã xóa bản nháp đề xuất nhận việc thành công."));
         } catch (BaseBusinessException e) {
             HttpStatus status = (e instanceof ResourceNotFoundException) ? HttpStatus.NOT_FOUND : HttpStatus.BAD_REQUEST;
             return ResponseEntity.status(status).body(new ApiResponse<>(false, e.getMessage()));
         } catch (Exception e) {
-            log.error("Lỗi không mong muốn khi xóa bản thảo Offer ID {}: {}", id, e.getMessage(), e);
+            log.error("Lỗi không mong muốn khi xóa bản nháp Offer ID {}: {}", id, e.getMessage(), e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(new ApiResponse<>(false, "Đã xảy ra lỗi hệ thống khi xóa bản thảo đề xuất nhận việc."));
+                    .body(new ApiResponse<>(false, "Đã xảy ra lỗi hệ thống khi xóa bản nháp đề xuất nhận việc."));
         }
     }
 
@@ -392,7 +392,7 @@ public class OfferController {
     public String deleteOffer(@PathVariable Integer id, RedirectAttributes flash) {
         try {
             offerService.deleteDraftOfferByHr(id);
-            flash.addFlashAttribute("successMessage", "Đã xóa bản thảo đề xuất nhận việc thành công.");
+            flash.addFlashAttribute("successMessage", "Đã xóa bản nháp đề xuất nhận việc thành công.");
         } catch (BaseBusinessException e) {
             flash.addFlashAttribute("errorMessage", e.getMessage());
         }
@@ -414,7 +414,7 @@ public class OfferController {
             HttpStatus status = (e instanceof ResourceNotFoundException) ? HttpStatus.NOT_FOUND : HttpStatus.BAD_REQUEST;
             return ResponseEntity.status(status).body(new ApiResponse<>(false, e.getMessage()));
         } catch (Exception e) {
-            log.error("Lỗi không mong muốn khi phát hành Offer ID {}: {}", id, e.getMessage(), e);
+            log.error("Lỗi không mong muốn khi phát hành thư mời nhận việc ID {}: {}", id, e.getMessage(), e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(new ApiResponse<>(false, "Đã xảy ra lỗi hệ thống khi phát hành thư mời nhận việc."));
         }
@@ -451,7 +451,7 @@ public class OfferController {
             HttpStatus status = (e instanceof ResourceNotFoundException) ? HttpStatus.NOT_FOUND : HttpStatus.BAD_REQUEST;
             return ResponseEntity.status(status).body(new ApiResponse<>(false, e.getMessage()));
         } catch (Exception e) {
-            log.error("Lỗi không mong muốn khi phê duyệt Offer ID {}: {}", id, e.getMessage(), e);
+            log.error("Lỗi không mong muốn khi phê duyệt đề xuất nhận việc ID {}: {}", id, e.getMessage(), e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(new ApiResponse<>(false, "Đã xảy ra lỗi hệ thống khi phê duyệt đề xuất nhận việc."));
         }
@@ -472,7 +472,7 @@ public class OfferController {
             HttpStatus status = (e instanceof ResourceNotFoundException) ? HttpStatus.NOT_FOUND : HttpStatus.BAD_REQUEST;
             return ResponseEntity.status(status).body(new ApiResponse<>(false, e.getMessage()));
         } catch (Exception e) {
-            log.error("Lỗi không mong muốn khi từ chối Offer ID {}: {}", id, e.getMessage(), e);
+            log.error("Lỗi không mong muốn khi từ chối đề xuất nhận việc ID {}: {}", id, e.getMessage(), e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(new ApiResponse<>(false, "Đã xảy ra lỗi hệ thống khi từ chối đề xuất nhận việc."));
         }

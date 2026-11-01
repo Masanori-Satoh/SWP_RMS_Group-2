@@ -32,4 +32,8 @@ public record CandidateOfferResponse(
                 expectedStartDate, workLocation, benefitsPackage, statusLabel, statusBadge,
                 canRespond, null, null);
     }
+
+    public boolean isExpired() {
+        return "Đã quá hạn phản hồi".equals(statusLabel);
+    }
 }

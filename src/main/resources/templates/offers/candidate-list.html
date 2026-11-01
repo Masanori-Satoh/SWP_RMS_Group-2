@@ -16,10 +16,25 @@
     <title>Thư mời nhận việc</title>
     <th:block layout:fragment="styles">
         <link rel="stylesheet" th:href="@{/css/pages/candidate-offers.css}">
+        <link rel="stylesheet" th:href="@{/css/pages/flash-toast.css}">
     </th:block>
 </head>
 <body>
 <main id="main" layout:fragment="content" class="page-content container" tabindex="-1">
+
+    <!-- FLASH MESSAGES (Căn giữa thanh topbar ngang hàng thông tin người dùng) -->
+    <th:block th:replace="~{fragments/ui/flash-toast :: flashToast(${successMessage}, ${errorMessage})}"></th:block>
+
+    <nav class="cof-breadcrumb no-print" aria-label="Đường dẫn">
+        <div class="cof-breadcrumb__inner">
+            <a th:href="@{/portal/applications}" class="cof-breadcrumb__link">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+                <span>Đơn ứng tuyển</span>
+            </a>
+            <span class="cof-breadcrumb__separator" aria-hidden="true">/</span>
+            <span class="cof-breadcrumb__current">Danh sách Thư mời nhận việc</span>
+        </div>
+    </nav>
 
     <div class="page-header">
         <div>
@@ -28,35 +43,7 @@
         </div>
     </div>
 
-    <!-- Modal Chấp nhận thư mời thành công (Mockup) -->
-    <div th:if="${decisionType == 'ACCEPTED'}" id="cof-accept-success-modal" class="cof-accept-success-backdrop" role="dialog" aria-modal="true" aria-labelledby="cof-success-modal-title">
-        <div class="cof-accept-success-modal">
-            <button type="button" class="cof-accept-success-close" aria-label="Đóng" onclick="closeAcceptSuccessModal()">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <line x1="18" y1="6" x2="6" y2="18"></line>
-                    <line x1="6" y1="6" x2="18" y2="18"></line>
-                </svg>
-            </button>
-            <div class="cof-accept-success-badge">
-                <svg width="84" height="84" viewBox="0 0 84 84" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <line x1="42" y1="5" x2="42" y2="11" stroke="#15803d" stroke-width="2.5" stroke-linecap="round"/>
-                    <line x1="56" y1="11" x2="52" y2="16" stroke="#15803d" stroke-width="2.5" stroke-linecap="round"/>
-                    <line x1="68" y1="21" x2="62" y2="24" stroke="#15803d" stroke-width="2.5" stroke-linecap="round"/>
-                    <line x1="74" y1="35" x2="68" y2="35" stroke="#15803d" stroke-width="2.5" stroke-linecap="round"/>
-                    <circle cx="42" cy="46" r="32" fill="#e8f5e9"/>
-                    <circle cx="42" cy="46" r="20" fill="#1e7e48"/>
-                    <path d="M35 46.5L39.5 51L49 41.5" stroke="#ffffff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
-                </svg>
-            </div>
-            <h2 id="cof-success-modal-title" class="cof-accept-success-title">Chấp nhận thư mời thành công</h2>
-            <p class="cof-accept-success-desc">
-                Bạn đã xác nhận đồng ý với thư mời làm việc cho vị trí
-                <span class="cof-accept-success-position" th:text="${congratsTitle != null ? congratsTitle + '.' : ''}">Senior Java Backend Engineer.</span>
-            </p>
-        </div>
-    </div>
-
-    <!-- Thông báo phản hồi hệ thống -->
+    <!-- Thông báo phản hồi hệ thống (Nếu có) -->
 
     <div th:if="${decisionType == 'DECLINED'}" class="alert alert--neutral cof-system-banner" role="status">
         <div class="cof-system-banner__header">
@@ -70,8 +57,7 @@
             Cảm ơn bạn đã quan tâm và đồng hành cùng Mộc RMS trong suốt quá trình tuyển dụng. Chúc bạn luôn thành công!
         </p>
     </div>
-    <div th:if="${successMessage != null and decisionType == null}" class="alert alert--success" role="status" th:text="${successMessage}">Bạn đã đồng ý nhận việc.</div>
-    <div th:if="${errorMessage}" class="alert alert--danger" role="alert" th:text="${errorMessage}">Không thể trả lời thư mời.</div>
+
 
     <div th:if="${#lists.isEmpty(offers)}" class="card cof-empty">
         <h2 class="cof-empty__title">Bạn chưa nhận được thư mời nào</h2>
@@ -134,13 +120,13 @@
 
             <footer class="cof-card__footer">
                 <div class="cof-card__status-desc">
-                    <span th:if="${offer.statusLabel == 'Đã nhận việc' or offer.statusLabel == 'Đã nhận offer'}" class="cof-status-note cof-status-note--success">
+                    <span th:if="${offer.statusLabel == 'Đã nhận việc'}" class="cof-status-note cof-status-note--success">
                         <span aria-hidden="true">✓</span> Bạn đã đồng ý nhận lời mời làm việc này.
                     </span>
                     <span th:if="${offer.statusLabel == 'Đã từ chối'}" class="cof-status-note cof-status-note--declined text-muted">
                         <span aria-hidden="true">✕</span> Bạn đã từ chối thư mời làm việc này.
                     </span>
-                    <span th:if="${offer.statusLabel == 'Đã quá hạn phản hồi'}" class="cof-status-note text-danger">
+                    <span th:if="${offer.expired}" class="cof-status-note text-danger">
                         <span aria-hidden="true">⏱</span>
                         <th:block th:if="${offer.responseDeadline != null}">
                             Thư mời đã quá thời hạn phản hồi (<span th:text="${#temporals.format(offer.responseDeadline, 'HH:mm dd/MM/yyyy')}">17:00 15/10/2026</span>).
@@ -165,12 +151,12 @@
                         <form th:action="@{/portal/offers/{id}/decline(id=${offer.offerId})}" method="post"
                               class="cof-form" data-offer-form="decline"
                               th:attr="data-posting-title=${offer.postingTitle}">
-                            <button type="submit" class="btn btn--outline btn--sm cof-btn">Từ chối</button>
+                            <button type="submit" class="btn btn--outline btn--sm cof-btn">Từ chối thư mời</button>
                         </form>
                         <form th:action="@{/portal/offers/{id}/accept(id=${offer.offerId})}" method="post"
                               class="cof-form" data-offer-form="accept"
                               th:attr="data-posting-title=${offer.postingTitle}">
-                            <button type="submit" class="btn btn--primary btn--sm cof-btn">Chấp nhận</button>
+                            <button type="submit" class="btn btn--primary btn--sm cof-btn">Đồng ý nhận việc</button>
                         </form>
                     </th:block>
                     <a th:href="@{/portal/offers/{id}(id=${offer.offerId})}" class="btn btn--secondary btn--sm cof-btn">Xem chi tiết</a>
@@ -222,6 +208,7 @@
     </dialog>
 </main>
 <th:block layout:fragment="scripts">
+    <script defer th:src="@{/js/pages/flash-toast.js}"></script>
     <script defer th:src="@{/js/pages/candidate-offers.js}"></script>
 </th:block>
 </body>
