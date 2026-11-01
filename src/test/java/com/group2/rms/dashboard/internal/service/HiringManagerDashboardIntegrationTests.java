@@ -3,7 +3,6 @@ package com.group2.rms.dashboard.internal.service;
 import com.group2.rms.dashboard.internal.repository.DashboardListRepository;
 import com.group2.rms.dashboard.internal.repository.DashboardListRepository.AttentionRow;
 import com.group2.rms.dashboard.internal.repository.DashboardListRepository.ProgressRow;
-import com.group2.rms.dashboard.internal.repository.DashboardListRepository.RequisitionRow;
 import com.group2.rms.dashboard.internal.repository.InternalMetricsRepository;
 import com.group2.rms.requisition.entity.JobRequisition;
 import com.group2.rms.requisition.entity.RequisitionApproval;
@@ -35,8 +34,6 @@ import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -129,22 +126,24 @@ class HiringManagerDashboardIntegrationTests {
     }
 
     @Test
-    @DisplayName("Chờ duyệt: đếm đúng yêu cầu của HM, ngày gửi sớm nhất; không có yêu cầu chờ -> null")
-    void pendingQueries_shouldReturnCountAndOldestSubmittedAt() {
+    @DisplayName("Chờ duyệt: đếm mọi yêu cầu chờ duyệt trong phạm vi HM, khớp danh sách /requisitions")
+    void countPendingRequisitionsInScope_shouldCountWholeDepartment_likeRequisitionList() {
         // Arrange
-        assertNull(metrics.oldestOwnPendingSubmittedAt(hiringManager.getUserId()));
+        long before = metrics.countPendingRequisitionsInScope(hiringManager.getUserId(), department.getDepartmentId());
         saveRequisition("Chờ lâu kiểm thử", RequisitionAccess.STATUS_PENDING_DIRECTOR, now.minusDays(10));
         saveRequisition("Chờ mới kiểm thử", RequisitionAccess.STATUS_PENDING_DIRECTOR, now.minusDays(1));
+        JobRequisition colleague = saveRequisition("Của người khác cùng phòng", RequisitionAccess.STATUS_PENDING_DIRECTOR,
+                now.minusDays(2));
+        colleague.setHiringManager(director);
+        saveRequisition("Nháp không tính", RequisitionAccess.STATUS_DRAFT, null);
+        entityManager.flush();
         entityManager.clear();
 
         // Act
-        long pending = metrics.ownPendingRequisitions(hiringManager.getUserId());
-        LocalDateTime oldest = metrics.oldestOwnPendingSubmittedAt(hiringManager.getUserId());
+        long pending = metrics.countPendingRequisitionsInScope(hiringManager.getUserId(), department.getDepartmentId());
 
-        // Assert
-        assertEquals(2, pending);
-        assertNotNull(oldest);
-        assertEquals(now.minusDays(10).toLocalDate(), oldest.toLocalDate());
+        // Assert: cả yêu cầu của người khác trong phòng, giống màn /requisitions của HM
+        assertEquals(before + 3, pending);
     }
 
     @Test
@@ -169,38 +168,38 @@ class HiringManagerDashboardIntegrationTests {
     }
 
     @Test
-    @DisplayName("Yêu cầu cần theo dõi: chỉ của HM này, tối đa limit dòng, có số lượng và trạng thái")
-    void recentRequisitions_shouldReturnOwnRowsWithinLimit() {
-        // Arrange
-        for (int i = 1; i <= 6; i++) {
-            saveRequisition("Gần đây kiểm thử " + i, RequisitionAccess.STATUS_DRAFT, null);
-        }
-        entityManager.clear();
-
-        // Act
-        List<RequisitionRow> rows = lists.recentRequisitions(hiringManager.getUserId(),
-                HiringManagerDashboardService.LIST_LIMIT);
-
-        // Assert
-        assertEquals(HiringManagerDashboardService.LIST_LIMIT, rows.size());
-        assertTrue(rows.stream().allMatch(row -> row.title().startsWith("Gần đây kiểm thử")));
-        assertEquals(2, rows.getFirst().numberOfPositions());
-    }
-
-    @Test
-    @DisplayName("Số liệu phòng ban: câu đếm hồ sơ / phỏng vấn chạy được trên SQL Server; không có phòng ban -> 0 / rỗng")
+    @DisplayName("Số liệu phòng ban: câu đếm tin đã đăng / phỏng vấn chạy được trên SQL Server; không có phòng ban -> 0 / rỗng")
     void departmentQueries_shouldRunOnSqlServer() {
         // Act + Assert
-        assertTrue(metrics.departmentApplicationsBetween(hiringManager.getUserId(), department.getDepartmentId(),
-                now.minusDays(30), now) >= 0);
-        assertTrue(metrics.completedDepartmentInterviewsBetween(department.getDepartmentId(), now.minusDays(30), now) >= 0);
-        assertEquals(0, metrics.completedDepartmentInterviewsBetween(null, now.minusDays(30), now));
-        assertTrue(lists.departmentInterviews(null, now, now.plusDays(7), 5).isEmpty());
-        lists.departmentInterviews(department.getDepartmentId(), now, now.plusDays(7), 5);
+        int outsider = -1;
+        assertTrue(metrics.countPostedDepartmentRequisitions(hiringManager.getUserId(), department.getDepartmentId()) >= 0);
+        assertTrue(metrics.countUpcomingDepartmentInterviews(outsider, department.getDepartmentId(), now, now.plusDays(7)) >= 0);
+        assertEquals(0, metrics.countUpcomingDepartmentInterviews(outsider, null, now, now.plusDays(7)));
+        assertTrue(lists.departmentInterviews(outsider, null, now, now.plusDays(7), 5).isEmpty());
+        lists.departmentInterviews(outsider, department.getDepartmentId(), now, now.plusDays(7), 5);
     }
 
     @Test
-    @DisplayName("HM mở /dashboard/internal -> KPI có icon, Cần bạn xử lý có lý do từ chối, Tiến độ theo vị trí; không JavaScript biểu đồ")
+    @DisplayName("HM là trưởng phòng nhưng tài khoản chưa gán phòng -> Vẫn thấy lịch phỏng vấn của phòng mình quản lý")
+    void departmentInterviews_shouldIncludeManagedDepartment_whenHiringManagerHasNoDepartment() {
+        // Arrange
+        hiringManager.setDepartment(null);
+        department.setManager(hiringManager);
+        entityManager.flush();
+        int outsider = -1;
+        LocalDateTime to = now.plusDays(30);
+
+        // Act
+        long managedCount = metrics.countUpcomingDepartmentInterviews(hiringManager.getUserId(), null, now, to);
+        int managedRows = lists.departmentInterviews(hiringManager.getUserId(), null, now, to, 100).size();
+
+        // Assert: bằng đúng số của phòng đó khi tra theo id phòng
+        assertEquals(metrics.countUpcomingDepartmentInterviews(outsider, department.getDepartmentId(), now, to), managedCount);
+        assertEquals(lists.departmentInterviews(outsider, department.getDepartmentId(), now, to, 100).size(), managedRows);
+    }
+
+    @Test
+    @DisplayName("HM mở /dashboard/internal -> KPI có icon, Việc cần xử lý có lý do từ chối, Tiến độ theo vị trí vẽ bằng Chart.js")
     void dashboard_shouldRenderHiringManagerSections_whenHiringManagerLogsIn() throws Exception {
         // Arrange
         JobRequisition rejected = saveRequisition("Từ chối hiển thị", RequisitionAccess.STATUS_REJECTED, now.minusDays(2));
@@ -217,15 +216,20 @@ class HiringManagerDashboardIntegrationTests {
         assertTrue(html.contains("dash-kpi__icon"));
         assertTrue(java.util.regex.Pattern.compile("(?s)<svg\\b[^>]*class=\"dash-icon\"[^>]*>\\s*<path\\b[^>]*\\bd=\"[^\"]+\"")
                 .matcher(html).find(), "Dashboard icons must render a non-empty SVG path");
-        assertTrue(html.contains("Đã tuyển / cần tuyển"));
-        assertTrue(html.contains("Cần bạn xử lý"));
+        assertTrue(html.contains("Yêu cầu chờ Giám đốc duyệt"));
+        assertTrue(html.contains("Yêu cầu đã đăng tuyển"));
+        assertTrue(html.contains("Buổi phỏng vấn sắp tới"));
+        assertFalse(html.contains("Vị trí thiếu ứng viên"));
+        assertTrue(html.contains("Việc cần xử lý"));
         assertTrue(html.contains("Cần bổ sung mô tả công việc"));
         assertTrue(html.contains("/requisitions/edit/" + rejected.getRequisitionId()));
         assertTrue(html.contains("Tiến độ tuyển theo vị trí"));
         assertTrue(html.contains("Vị trí đang tuyển hiển thị"));
-        assertTrue(html.contains("Yêu cầu cần theo dõi"));
+        assertFalse(html.contains("Yêu cầu cần theo dõi"));
         assertFalse(html.contains("Pipeline ứng viên"));
-        assertFalse(html.contains("chart.umd.min.js"));
+        assertTrue(html.contains("data-chart=\"progress\""));
+        assertTrue(html.contains("chart.umd.min.js"));
+        assertTrue(html.contains("internal-dashboard.js"));
         assertFalse(html.contains("recruitment-dashboard.js"));
     }
 }

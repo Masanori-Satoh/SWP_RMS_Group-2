@@ -100,7 +100,7 @@
         if (!groups.length) return;
         const selector = panel.querySelector('select');
         const formatPercent = new Intl.NumberFormat('vi-VN', { maximumFractionDigits: 1 });
-        const restore = () => {
+        const showFallbackBars = () => {
             groups.forEach((group) => { group.hidden = false; });
             panel.querySelector('.adm-scope-control').hidden = true;
             panel.querySelector('[data-chart-fallback]').hidden = false;
@@ -133,9 +133,9 @@
             panel.querySelector('.adm-scope-control').hidden = false;
             panel.querySelector('[data-chart-fallback]').hidden = true;
             selector.addEventListener('change', () => {
-                try { selectGroup(); } catch (_error) { restore(); }
+                try { selectGroup(); } catch (_error) { showFallbackBars(); }
             });
-        } catch (_error) { restore(); }
+        } catch (_error) { showFallbackBars(); }
     }
 
     function setupRoles() {

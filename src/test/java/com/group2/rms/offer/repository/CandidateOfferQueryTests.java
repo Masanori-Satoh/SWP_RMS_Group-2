@@ -88,7 +88,7 @@ class CandidateOfferQueryTests {
         assertEquals(0, offers.answerIfSent(offerId, "Accepted"));
     }
 
-    @Autowired com.group2.rms.notification.NotificationService notifService;
+    @Autowired com.group2.rms.notification.service.NotificationService notifService;
     @Autowired com.group2.rms.user.repository.UserRepository userRepo;
 
     @Test

@@ -11,24 +11,15 @@ import org.springframework.format.annotation.DateTimeFormat;
 
 import java.time.LocalDate;
 
-/**
- * Dữ liệu form Tạo / Sửa tin tuyển dụng (job-postings/create.html).
- *
- * Chỉ các trường trong whitelist của JobPostingController#formBinder được nhận từ form
- * (requisitionId, nội dung tin, cách hiển thị lương / số lượng, hạn nộp, cách đăng, action).
- * Các trường còn lại là thông tin yêu cầu nguồn và trạng thái form để HIỂN THỊ, luôn do service điền lại từ DB
- * (người dùng sửa trên trình duyệt cũng không có tác dụng).
- *
- * Annotation là tầng 2 (Bean Validation, AG §2.4): chỉ chặn ô một dòng quá dài. Bắt buộc / lựa chọn / ngày
- * do JobPostingValidator kiểm tra (phân biệt lưu nháp và đăng tin). Ô nhiều dòng không đặt @Size vì trình duyệt
- * gửi xuống dòng là \r\n (2 ký tự), validator đếm sau khi đổi về \n.
+/*
+ * DTO: form tạo / sửa tin; chỉ các ô trong whitelist của controller được nhận, phần còn lại service điền từ DB.
  */
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class JobPostingCreateRequest {
+public class JobPostingRequest {
 
     // Lựa chọn "Mức lương hiển thị"
     public static final String SALARY_RANGE = "range";

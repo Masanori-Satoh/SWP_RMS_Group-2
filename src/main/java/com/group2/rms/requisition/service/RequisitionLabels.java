@@ -32,6 +32,14 @@ public final class RequisitionLabels {
         return String.format(REQUISITION_CODE_FORMAT, requisitionId);
     }
 
+    /** Mã đã lưu; yêu cầu cũ chưa có mã thì sinh lại từ id. */
+    public static String requisitionCode(Integer requisitionId, String savedCode) {
+        if (savedCode == null || savedCode.isBlank()) {
+            return requisitionCode(requisitionId);
+        }
+        return savedCode;
+    }
+
     /** Trạng thái duyệt của yêu cầu (JobRequisition.ApprovalStatus). */
     public static String approvalStatus(String status) {
         if (RequisitionAccess.STATUS_DRAFT.equals(status)) {
@@ -49,11 +57,7 @@ public final class RequisitionLabels {
         return status;
     }
 
-    /**
-     * "Tông màu" của badge trạng thái duyệt, khớp với các class trong catalog:
-     * badge--success (xanh), badge--warning (vàng), badge--danger (đỏ), badge--neutral (xám).
-     * Service chỉ trả về ý nghĩa (success/warning...), template tự ghép thành class "badge--...".
-     */
+    /** Tông badge trạng thái duyệt (success / warning / danger / neutral); template ghép thành "badge--...". */
     public static String approvalTone(String status) {
         if (RequisitionAccess.STATUS_APPROVED.equals(status)) {
             return "success";
@@ -148,10 +152,7 @@ public final class RequisitionLabels {
         return type == null ? "—" : type;
     }
 
-    /**
-     * Mức lương từ MinSalary / MaxSalary, đổi sang đơn vị triệu cho dễ đọc.
-     * Ví dụ: 20000000 và 30000000 → "20 – 30 triệu VND/tháng"; không nhập gì → "Thỏa thuận".
-     */
+    /** Lương theo đơn vị triệu: "20 – 30 triệu VND/tháng"; không nhập thì "Thỏa thuận". */
     public static String salary(BigDecimal min, BigDecimal max) {
         if (min == null && max == null) {
             return "Thỏa thuận";
@@ -175,11 +176,7 @@ public final class RequisitionLabels {
         return days == null ? "Không thử việc" : days + " ngày";
     }
 
-    /**
-     * Văn bản nhiều dòng do người dùng nhập → HTML an toàn để hiển thị bằng th:utext (theo ARCHITECTURE_GUIDE §6.3).
-     * BẮT BUỘC escape trước (đổi < > & " thành mã HTML) rồi mới thay xuống dòng bằng <br/>,
-     * nếu không người dùng có thể chèn mã độc (XSS) vào nội dung yêu cầu.
-     */
+    /** Văn bản nhiều dòng → HTML: escape trước rồi mới đổi xuống dòng thành <br/> (chống XSS). */
     public static String multilineHtml(String text) {
         if (text == null || text.isBlank()) {
             return null;

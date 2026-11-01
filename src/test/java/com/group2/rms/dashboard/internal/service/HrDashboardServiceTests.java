@@ -4,17 +4,13 @@ import com.group2.rms.candidate.application.pipeline.dto.ApplicationListResponse
 import com.group2.rms.candidate.application.pipeline.dto.ApplicationPipelineResponse;
 import com.group2.rms.candidate.application.pipeline.service.ApplicationPipelineService;
 import com.group2.rms.candidate.domain.rule.ApplicationStage;
-import com.group2.rms.dashboard.internal.dto.DashboardBarResponse;
-import com.group2.rms.dashboard.internal.dto.DashboardColumnResponse;
+import com.group2.rms.dashboard.internal.dto.WeeklyApplicationItem;
 import com.group2.rms.dashboard.internal.dto.DashboardMetricResponse;
 import com.group2.rms.dashboard.internal.dto.DashboardWorkItem;
 import com.group2.rms.dashboard.internal.dto.HrDashboardResponse;
-import com.group2.rms.dashboard.internal.dto.OpenPostingItem;
 import com.group2.rms.dashboard.internal.repository.DashboardListRepository;
 import com.group2.rms.dashboard.internal.repository.DashboardListRepository.AwaitingPostingRow;
-import com.group2.rms.dashboard.internal.repository.DashboardListRepository.OpenPostingRow;
 import com.group2.rms.dashboard.internal.repository.InternalMetricsRepository;
-import com.group2.rms.jobposting.service.JobPostingAccess;
 import com.group2.rms.user.entity.Role;
 import com.group2.rms.user.entity.User;
 import org.junit.jupiter.api.BeforeEach;
@@ -34,7 +30,6 @@ import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.argThat;
@@ -122,30 +117,33 @@ class HrDashboardServiceTests {
     }
 
     @Test
-    @DisplayName("KPI chờ quá 3 ngày chỉ đếm hồ sơ HR cầm bóng, không cộng yêu cầu tạo tin")
-    void build_shouldCountScreeningAndOverdue_whenHrWorkExists() {
+    @DisplayName("HR có đúng 3 KPI: hồ sơ chưa sàng lọc, tin đăng hôm nay, hồ sơ chờ lên lịch phỏng vấn (chỉ HR cầm bóng)")
+    void build_shouldReturnThreeKpis_whenApplicationsAndPostingsExist() {
         // Arrange
-        application(1, ApplicationStage.SCREENING, HrDashboardService.HR_OWNER, 6);
-        application(2, ApplicationStage.SCREENING, HrDashboardService.HR_OWNER, 1);
-        application(3, ApplicationStage.SCREENING, "Trưởng bộ phận", 10);
-        when(lists.requisitionsAwaitingPosting()).thenReturn(List.of(
-                new AwaitingPostingRow(40, "REQ-0040", "Kế toán", NOW.minusDays(8))));
+        application(1, ApplicationStage.APPLIED, "Hệ thống", 2);
+        application(2, ApplicationStage.APPLIED, "Hệ thống", 1);
+        application(3, ApplicationStage.SCREENING, HrDashboardService.HR_OWNER, 6);
+        application(4, ApplicationStage.INTERVIEW, HrDashboardService.HR_OWNER, 3);
+        application(5, ApplicationStage.INTERVIEW, "Hội đồng", 1);
+        when(metrics.countPublishedPostingsBetween(NOW.toLocalDate().atStartOfDay(), NOW)).thenReturn(5L);
 
         // Act
         List<DashboardMetricResponse> kpis = build().kpis();
 
         // Assert
-        assertEquals("2", kpis.get(1).value());
-        assertEquals("Lâu nhất: 6 ngày", kpis.get(1).detail());
-        assertEquals("warning", kpis.get(1).tone());
-        assertEquals("1", kpis.get(2).value());
-        assertEquals("Hồ sơ chờ quá 3 ngày", kpis.get(2).title());
-        assertEquals("/applications", kpis.get(2).href());
-        assertEquals("danger", kpis.get(2).tone());
+        assertEquals(List.of("Hồ sơ chờ sàng lọc", "Tin mới đăng trong ngày", "Hồ sơ chờ lên lịch phỏng vấn"),
+                kpis.stream().map(DashboardMetricResponse::title).toList());
+        assertEquals(List.of("2", "5", "1"), kpis.stream().map(DashboardMetricResponse::value).toList());
+        assertEquals(List.of("Chưa được sàng lọc", "Đã đăng hôm nay", "Chưa xếp lịch"),
+                kpis.stream().map(DashboardMetricResponse::detail).toList());
+        assertEquals("/applications?stage=APPLIED", kpis.get(0).href());
+        assertEquals("/internal/job-postings?status=Published&postedFrom=2026-10-28&postedTo=2026-10-28",
+                kpis.get(1).href());
+        assertEquals("/applications?stage=INTERVIEW", kpis.get(2).href());
     }
 
     @Test
-    @DisplayName("Giai đoạn hơn 10.000 hồ sơ không bị cắt khỏi biểu đồ và yêu cầu pipeline trả đủ")
+    @DisplayName("Giai đoạn hơn 10.000 hồ sơ không bị cắt khỏi KPI và yêu cầu pipeline trả đủ")
     void build_shouldRequestAllStageRows_whenStageExceedsOldLimit() {
         List<ApplicationPipelineResponse> many = new ArrayList<>();
         for (int id = 1; id <= 10_001; id++) {
@@ -157,35 +155,14 @@ class HrDashboardServiceTests {
 
         HrDashboardResponse result = build();
 
-        assertEquals(10_001, result.waitingStages().get(0).count());
+        assertEquals("10001", result.kpis().get(0).value());
         verify(applicationPipeline).list(
                 argThat(search -> search != null && ApplicationStage.APPLIED.name().equals(search.stage())),
                 argThat(pageable -> pageable != null && pageable.getPageSize() == Integer.MAX_VALUE));
     }
 
     @Test
-    @DisplayName("Hồ sơ đang chờ: 4 thanh theo thứ tự tab, chữ phụ = số hồ sơ chờ từ 3 ngày, giai đoạn 0 không có chữ phụ")
-    void build_shouldBuildStageBarsWithOverdueNote_whenApplicationsWaiting() {
-        // Arrange
-        application(1, ApplicationStage.APPLIED, "Hệ thống", 4);
-        application(2, ApplicationStage.APPLIED, "Hệ thống", 0);
-
-        // Act
-        List<DashboardBarResponse> bars = build().waitingStages();
-
-        // Assert
-        assertEquals(4, bars.size());
-        assertEquals(ApplicationStage.APPLIED.label(), bars.get(0).label());
-        assertEquals(2, bars.get(0).count());
-        assertEquals("1 chờ quá 3 ngày", bars.get(0).note());
-        assertEquals("warning", bars.get(0).noteTone());
-        assertEquals("2 hồ sơ ở " + ApplicationStage.APPLIED.label() + " · 1 chờ quá 3 ngày · toàn công ty", bars.get(0).hint());
-        assertEquals("/applications?stage=APPLIED", bars.get(0).href());
-        assertNull(bars.get(1).note());
-    }
-
-    @Test
-    @DisplayName("Xu hướng: 8 cột theo tuần từ thứ Hai, cột cao nhất bậc 10, cột cuối là tuần này")
+    @DisplayName("Xu hướng: 8 điểm theo tuần từ thứ Hai, điểm cuối là tuần này")
     void build_shouldBucketApplicationsByWeek_whenDatesGiven() {
         // Arrange — thứ Hai tuần này là 26/10, tuần đầu là 07/09
         when(metrics.applicationDates(any(), any())).thenReturn(List.of(
@@ -195,59 +172,15 @@ class HrDashboardServiceTests {
 
         // Act
         HrDashboardResponse result = build();
-        List<DashboardColumnResponse> columns = result.weeklyApplications();
+        List<WeeklyApplicationItem> weeks = result.weeklyApplications();
 
         // Assert
-        assertEquals(8, columns.size());
-        assertEquals("07/09", columns.get(0).label());
-        assertEquals(1, columns.get(0).count());
-        assertEquals(5, columns.get(0).level());
-        assertEquals(2, columns.get(7).count());
-        assertEquals(10, columns.get(7).level());
-        assertTrue(columns.get(7).current());
-        assertEquals("Tuần 26/10 – 01/11: 2 hồ sơ mới · toàn công ty", columns.get(7).hint());
-        assertEquals("4 tuần gần nhất: 2 hồ sơ · ↑ 100%", result.trendSummary());
+        assertEquals(8, weeks.size());
+        assertEquals("07/09", weeks.get(0).weekLabel());
+        assertEquals(1, weeks.get(0).count());
+        assertEquals(0, weeks.get(1).count());
+        assertEquals(2, weeks.get(7).count());
+        assertEquals("Tuần 26/10 – 01/11", weeks.get(7).rangeLabel());
     }
 
-    @Test
-    @DisplayName("Hạn nộp là hôm nay -> badge đỏ 'Hết hạn hôm nay'")
-    void build_shouldMarkDeadlineToday_whenPostingClosesToday() {
-        // Arrange
-        when(lists.openPostings(NOW)).thenReturn(List.of(
-                new OpenPostingRow(1, "Java Dev", "Kỹ thuật", 1, NOW.plusHours(8), JobPostingAccess.STATUS_PUBLISHED, 9)));
-
-        // Act
-        OpenPostingItem posting = build().openPostings().get(0);
-
-        // Assert
-        assertEquals("Hết hạn hôm nay", posting.deadlineText());
-        assertEquals("danger", posting.deadlineTone());
-    }
-
-    @Test
-    @DisplayName("Tin đang mở: ít hồ sơ / vị trí lên đầu; trạng thái lấy từ PostingStatus; còn ≤ 7 ngày -> badge 'Còn N ngày'")
-    void build_shouldSortAndLabelOpenPostings_whenPostingsOpen() {
-        // Arrange
-        when(lists.openPostings(NOW)).thenReturn(List.of(
-                new OpenPostingRow(1, "Java Dev", "Kỹ thuật", 2, NOW.plusDays(20), JobPostingAccess.STATUS_PUBLISHED, 40),
-                new OpenPostingRow(2, "Kế toán", null, 2, NOW.plusDays(20), JobPostingAccess.STATUS_PUBLISHED, 6),
-                new OpenPostingRow(3, "Marketing", "Marketing", 1, NOW.plusDays(3), JobPostingAccess.STATUS_PUBLISHED, 12)));
-
-        // Act
-        HrDashboardResponse result = build();
-        List<OpenPostingItem> postings = result.openPostings();
-
-        // Assert
-        assertEquals(3, result.openPostingCount());
-        assertEquals("Kế toán", postings.get(0).title());
-        assertEquals("Đang đăng", postings.get(0).statusLabel());
-        assertEquals("Chưa xác định", postings.get(0).departmentName());
-        assertEquals("Marketing", postings.get(1).title());
-        assertEquals("Đang đăng", postings.get(1).statusLabel());
-        assertEquals("Còn 3 ngày", postings.get(1).deadlineText());
-        assertEquals("warning", postings.get(1).deadlineTone());
-        assertEquals("Đang đăng", postings.get(2).statusLabel());
-        assertNull(postings.get(2).deadlineText());
-        assertEquals(40, postings.get(0).applicationsMax());
-    }
 }

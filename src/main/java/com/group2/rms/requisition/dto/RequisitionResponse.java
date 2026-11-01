@@ -9,10 +9,8 @@ import java.util.List;
 
 import lombok.Builder;
 
-/**
- * Một yêu cầu tuyển dụng đã dựng sẵn cho màn danh sách (một dòng) và màn chi tiết.
- * Mọi giá trị (nhãn, cờ quyền, mốc thời gian) do RequisitionMapper tính một lần; template chỉ đọc.
- * Màn chi tiết dùng toBuilder() từ dòng danh sách rồi thêm các trường "chỉ có ở màn Chi tiết".
+/*
+ * DTO: một yêu cầu cho màn danh sách và chi tiết; nhãn và cờ quyền do RequisitionMapper tính sẵn.
  */
 @Builder(toBuilder = true)
 public record RequisitionResponse(

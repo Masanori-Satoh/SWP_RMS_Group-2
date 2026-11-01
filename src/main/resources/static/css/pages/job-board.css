@@ -6,7 +6,14 @@
    ============================================================================= */
 
 .jb-page {
-  padding-block: var(--s8) var(--s12);
+  /* Giữ khoảng đệm dưới topbar nổi của .public-main-content; scene (.adw-scene) phủ đúng vùng main */
+  position: relative;
+  isolation: isolate;
+  padding-bottom: var(--s12);
+}
+
+.jb-page .page-header {
+  margin-bottom: var(--s6);
 }
 
 /* Form tìm kiếm: từ khóa rộng gấp đôi, 2 ô chọn, nút bấm thẳng hàng đáy */
@@ -15,11 +22,39 @@
   grid-template-columns: 2fr 1fr 1fr auto;
   gap: var(--s4);
   align-items: end;
+  padding: var(--s5) var(--s6);
   margin-bottom: var(--s6);
 }
 
 .jb-search .form-group {
   margin-bottom: 0;
+}
+
+.jb-search .form-label {
+  display: block;
+  margin-bottom: var(--s2);
+  font-size: var(--font-sm);
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.jb-search .form-input,
+.jb-search .form-select {
+  width: 100%;
+  height: var(--input-h);
+  box-sizing: border-box;
+}
+
+.jb-search .form-input:focus,
+.jb-search .form-select:focus {
+  border-color: var(--brand);
+  outline: 2px solid var(--brand);
+  outline-offset: -1px;
+}
+
+.jb-search__submit .btn {
+  height: var(--btn-h);
+  white-space: nowrap;
 }
 
 .jb-results {
@@ -28,7 +63,8 @@
   justify-content: space-between;
   flex-wrap: wrap;
   gap: var(--s3);
-  margin-bottom: var(--s4);
+  padding: var(--s3) var(--s5);
+  margin-bottom: var(--s6);
 }
 
 .jb-results__count {
@@ -37,7 +73,14 @@
 }
 
 .jb-results__count strong {
-  color: var(--ink);
+  display: inline-block;
+  min-width: var(--s6);
+  padding: var(--s1) var(--s3);
+  border-radius: var(--radius-full);
+  background: var(--brand-soft);
+  color: var(--brand-dark);
+  text-align: center;
+  font-variant-numeric: tabular-nums;
 }
 
 .jb-empty {
@@ -58,8 +101,29 @@
   margin: 0 0 var(--s2);
 }
 
+/* Thẻ việc làm nổi trên ảnh nền: chỉ ghi đè trong lưới của trang này, không đụng landing */
+.jb-grid .job-modern-card {
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+  box-shadow: var(--shadow-md);
+  transition: transform 150ms ease, box-shadow 150ms ease;
+}
+
+.jb-grid .job-modern-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-lg);
+}
+
 .jb-page .pagination-wrapper {
-  margin-top: var(--s8);
+  width: fit-content;
+  max-width: 100%;
+  margin: var(--s8) auto 0;
+  padding: var(--s2) var(--s4);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+  box-shadow: var(--shadow-sm);
 }
 
 @media (max-width: 992px) {

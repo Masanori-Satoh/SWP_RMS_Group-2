@@ -71,8 +71,8 @@ public class AdminDashboardService {
                                                 new Shortcut("Cấu hình AI (chưa khả dụng)", null)),
                                 metrics.internalAccountsByRole(),
                                 monitorRows,
-                                new AdminDashboardResponse.CandidateSummary(metrics.candidates(),
-                                                metrics.candidatesCreatedBetween(from, to), from, to,
+                                new AdminDashboardResponse.CandidateSummary(metrics.countCandidates(),
+                                                metrics.countCandidatesCreatedBetween(from, to), from, to,
                                                 ZoneId.systemDefault().getId()));
         }
 

@@ -23,6 +23,7 @@
 > | 2 | `database/seeds/seed_data.sql` | Dữ liệu mẫu nền | Không chạy lại (trùng khóa) |
 > | 3 | `database/seeds/seed_extra_jobs_and_pipeline.sql` | Phòng ban, tin tuyển dụng, hồ sơ bổ sung | An toàn (tự bỏ qua nếu đã chạy) |
 > | 4 | `database/seeds/seed_application_flow_fix.sql` | Đưa `Application.ApplicationStatus` về đúng luồng theo dữ liệu phỏng vấn và offer | An toàn (chỉ sửa hồ sơ còn lệch) |
+> | 5 | `database/seeds/seed_dashboard_demo.sql` | Dời ngày theo hôm nay để dashboard nội bộ đủ số: hồ sơ 8 tuần qua, 3 offer chờ Giám đốc duyệt, Hired trong tháng, tin đăng hôm nay | An toàn (bước nào đủ thì bỏ qua); chạy lại trước buổi demo |
 >
 > Không chạy lại `build_seed.py`: script này không còn sinh đúng `seed_data.sql`.
 

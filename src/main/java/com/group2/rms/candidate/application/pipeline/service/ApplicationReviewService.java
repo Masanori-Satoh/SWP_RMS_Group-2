@@ -12,6 +12,7 @@ import com.group2.rms.candidate.domain.rule.ApplicationAccess;
 import com.group2.rms.candidate.domain.rule.ApplicationStatusLabels;
 import com.group2.rms.candidate.domain.rule.ApplicationStatusService;
 import com.group2.rms.core.exception.ResourceNotFoundException;
+import com.group2.rms.notification.service.NotificationService;
 import com.group2.rms.user.entity.User;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.access.AccessDeniedException;
@@ -38,6 +39,7 @@ public class ApplicationReviewService {
     private final ApplicationReviewRepository reviews;
     private final ApplicationAccess access;
     private final AiScreeningService aiScreeningService;
+    private final NotificationService notificationService;
 
     /** @return thông báo thành công để hiện trên trang chi tiết */
     @Transactional
@@ -75,6 +77,14 @@ public class ApplicationReviewService {
             if (applications.transition(applicationId, from, target) == 0) {
                 throw new ApplicationReviewException(null,
                         "Hồ sơ vừa được người khác xử lý. Vui lòng tải lại trang.");
+            }
+        }
+        // hoangnh bổ sung: Đạt thì báo người làm bước tiếp theo
+        if ("Pass".equals(decision)) {
+            if (hrStep) {
+                notificationService.notifyApplicationAwaitingHiringManager(application, actor);
+            } else {
+                notificationService.notifyApplicationReadyForInterview(application, actor);
             }
         }
         return switch (decision) {

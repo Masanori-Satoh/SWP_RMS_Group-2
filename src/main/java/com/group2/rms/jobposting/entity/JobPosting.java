@@ -92,10 +92,7 @@ public class JobPosting extends BaseEntity {
     @JoinColumn(name = "CreatedBy", nullable = false, referencedColumnName = "UserId")
     private User createdBy;
 
-    /**
-     * Ứng viên thấy được tin này chưa: đang đăng (Published) VÀ đã tới giờ đăng.
-     * Dữ liệu cũ có PostingDate ở tương lai vẫn chưa hiển thị cho tới khi được xử lý.
-     */
+    /** Ứng viên thấy tin khi đang đăng (Published) và đã tới giờ đăng. */
     public boolean isVisibleToCandidates(LocalDateTime now) {
         return JobPostingAccess.STATUS_PUBLISHED.equals(postingStatus) && (postingDate == null || !postingDate.isAfter(now));
     }

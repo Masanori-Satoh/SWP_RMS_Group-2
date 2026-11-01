@@ -3,18 +3,27 @@ package com.group2.rms.requisition.entity;
 import com.group2.rms.core.base.BaseEntity;
 import com.group2.rms.user.entity.Department;
 import com.group2.rms.user.entity.User;
-import jakarta.persistence.*;
-import lombok.*;
+import jakarta.persistence.CascadeType;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToMany;
+import jakarta.persistence.Table;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 import java.math.BigDecimal;
 
-/**
- * 3.6 JobRequisition - Yêu cầu tuyển dụng do Hiring Manager tạo.
- * ApprovalStatus: Draft, Pending_Director, Approved, Rejected (luồng hiện tại không dùng Closed / Cancelled)
- * Đợt tuyển: đợt 1 có originalRequisition = null; đợt > 1 trỏ về phiếu đợt 1 (CK_JobRequisition_RoundOrigin).
- * EmploymentType: Full-time, Part-time, Internship, Contract
- * Mã yêu cầu (RequisitionCode) do service sinh sau lần lưu đầu: REQ-0025 = "REQ-" + RequisitionId đệm 4 chữ số.
- * nullable = false khớp các cột NOT NULL trong database/schema/db.sql (chỉ là mô tả, DB mới là nơi ràng buộc thật).
+/*
+ * ENTITY: yêu cầu tuyển dụng; đợt 1 không có phiếu gốc, đợt sau trỏ về phiếu đợt 1.
  */
 @Entity
 @Table(name = "JobRequisition")

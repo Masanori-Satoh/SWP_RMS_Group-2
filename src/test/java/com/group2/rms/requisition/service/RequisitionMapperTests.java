@@ -232,14 +232,14 @@ class RequisitionMapperTests {
 
     @Test
     @DisplayName("Đợt 2 trỏ về phiếu gốc -> DTO form mang tên phiếu gốc và phòng ban")
-    void toRequestDto_shouldCarryOriginalTitleAndDepartment_whenRequisitionIsLaterRound() {
+    void toEditForm_shouldCarryOriginalTitleAndDepartment_whenRequisitionIsLaterRound() {
         // Arrange
         JobRequisition round2 = requisition(RequisitionAccess.STATUS_DRAFT);
         round2.setRecruitmentRound(2);
         round2.setOriginalRequisition(JobRequisition.builder().requisitionId(1).title("Java Engineer").build());
 
         // Act
-        RequisitionRequest form = mapper.toRequestDto(round2);
+        RequisitionRequest form = mapper.toEditForm(round2);
 
         // Assert
         assertEquals("Java Engineer", form.getOriginalTitle());

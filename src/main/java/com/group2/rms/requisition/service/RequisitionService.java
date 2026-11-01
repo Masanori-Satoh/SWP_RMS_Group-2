@@ -10,13 +10,13 @@ import com.group2.rms.requisition.dto.RequisitionResponse;
 public interface RequisitionService {
     RequisitionResponse getById(Integer id);
 
-    RequisitionRequest getRequestDtoById(Integer id);
+    RequisitionRequest prepareEditForm(Integer id);
 
     RequisitionRequest copy(Integer id);
 
-    Integer createRequisition(RequisitionRequest dto);
+    Integer createRequisition(RequisitionRequest request);
 
-    void updateRequisition(Integer id, RequisitionRequest dto);
+    void updateRequisition(Integer id, RequisitionRequest request);
 
     void deleteRequisition(Integer id);
 

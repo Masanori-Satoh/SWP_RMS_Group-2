@@ -16,6 +16,7 @@ import com.group2.rms.interview.repository.InterviewFinalResultRepository;
 import com.group2.rms.interview.repository.InterviewScheduleRepository;
 import com.group2.rms.interview.service.InterviewFinalResultServiceImpl;
 import com.group2.rms.jobposting.entity.JobPosting;
+import com.group2.rms.notification.service.NotificationService;
 import com.group2.rms.requisition.entity.JobRequisition;
 import com.group2.rms.requisition.service.RequisitionAccess;
 import com.group2.rms.user.entity.Role;
@@ -37,6 +38,7 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.ArgumentMatchers.anyInt;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
 class InterviewFinalResultServiceTests {
@@ -48,6 +50,7 @@ class InterviewFinalResultServiceTests {
     private RequisitionAccess requisitionAccess;
     private ApplicationStatusService applicationStatusService; // dunglt bổ sung
     private InterviewEvaluationRepository interviewEvaluationRepository;
+    private NotificationService notificationService; // hoangnh bổ sung
     private InterviewFinalResultServiceImpl service;
 
     private User hiringManager;
@@ -60,10 +63,11 @@ class InterviewFinalResultServiceTests {
         requisitionAccess = mock(RequisitionAccess.class);
         applicationStatusService = mock(ApplicationStatusService.class); // dunglt bổ sung
         interviewEvaluationRepository = mock(InterviewEvaluationRepository.class);
+        notificationService = mock(NotificationService.class); // hoangnh bổ sung
         service = new InterviewFinalResultServiceImpl(
                 interviewScheduleRepository, interviewFinalResultRepository, requisitionAccess,
                 applicationStatusService, // dunglt bổ sung
-                interviewEvaluationRepository, java.time.Clock.systemDefaultZone());
+                interviewEvaluationRepository, notificationService, java.time.Clock.systemDefaultZone());
 
         hiringManager = user(40, "Hoa HM", "Hiring Manager");
         requisition = JobRequisition.builder().build();
@@ -132,14 +136,16 @@ class InterviewFinalResultServiceTests {
         schedule(InterviewStatus.Scheduled, LocalDateTime.now().minusHours(2));
         service.decide(INTERVIEW_ID, passed(), hiringManager);
         verify(applicationStatusService).onInterviewDecided(100, true);
+        verify(notificationService).notifyInterviewResultDecided(any(InterviewSchedule.class), eq(hiringManager), eq("Passed"));
 
         schedule(InterviewStatus.Completed, LocalDateTime.now().minusDays(1));
         service.decide(INTERVIEW_ID, new SubmitFinalResultRequest("Failed", null, null), hiringManager);
         verify(applicationStatusService).onInterviewDecided(100, false);
+        verify(notificationService).notifyInterviewResultDecided(any(InterviewSchedule.class), eq(hiringManager), eq("Failed"));
 
         schedule(InterviewStatus.Cancelled, LocalDateTime.now().minusDays(1));
         assertThrows(InterviewFinalResultException.class, () -> service.decide(INTERVIEW_ID, passed(), hiringManager));
-        verifyNoMoreInteractions(applicationStatusService);
+        verifyNoMoreInteractions(applicationStatusService, notificationService);
     }
 
     @Test
@@ -201,7 +207,7 @@ class InterviewFinalResultServiceTests {
     private InterviewFinalResultServiceImpl serviceAtNow() {
         Clock fixed = Clock.fixed(NOW.atZone(ZoneId.systemDefault()).toInstant(), ZoneId.systemDefault());
         return new InterviewFinalResultServiceImpl(interviewScheduleRepository, interviewFinalResultRepository,
-                requisitionAccess, applicationStatusService, interviewEvaluationRepository, fixed);
+                requisitionAccess, applicationStatusService, interviewEvaluationRepository, notificationService, fixed);
     }
 
     /** Lịch có hội đồng 2 người, kết thúc lúc endTime; submitted = số người đã nộp phiếu. */

@@ -25,14 +25,8 @@ import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * Chuyển entity Yêu cầu tuyển dụng sang DTO cho form, màn danh sách và màn chi tiết.
- *
- * Mapper KHÔNG truy vấn DB: dữ liệu liên quan (tin mới nhất, lịch sử duyệt, audit log...)
- * do service tra trước rồi truyền vào. Nhờ vậy:
- * - màn danh sách tra 1 lần cho cả trang (không N+1),
- * - test mapper chỉ cần tạo entity bằng builder, không cần mock repository.
- * Cờ quyền (editable, deletable...) đều hỏi RequisitionAccess, mapper không tự so sánh role.
+/*
+ * MAPPER: entity yêu cầu → DTO cho form, danh sách, chi tiết; không truy vấn DB.
  */
 @Component
 @RequiredArgsConstructor
@@ -42,11 +36,9 @@ public class RequisitionMapper {
     private final RequisitionValidator validator;
     private final Clock clock;
 
-    // ===================================================================================
-    // FORM: entity → DTO của form tạo / sửa / sao chép
-    // ===================================================================================
+    // ----- Form tạo / sửa / sao chép -----
 
-    public RequisitionRequest toRequestDto(JobRequisition jobRequisition) {
+    public RequisitionRequest toEditForm(JobRequisition jobRequisition) {
         List<ScreeningCriteriaRequest> criteriaList = new ArrayList<>();
         for (ScreeningCriteria criterion : jobRequisition.getScreeningCriteria()) {
             criteriaList.add(ScreeningCriteriaRequest.builder()
@@ -89,16 +81,9 @@ public class RequisitionMapper {
                 .build();
     }
 
-    // ===================================================================================
-    // MÀN DANH SÁCH: một dòng của bảng
-    // ===================================================================================
+    // ----- Màn danh sách -----
 
-    /**
-     * Một dòng ở màn danh sách: thông tin chính, nhãn tiếng Việt và cờ quyền cho menu ⋯.
-     *
-     * @param latestPosting tin tuyển dụng mới nhất của yêu cầu, null = chưa có tin
-     * @param hasLaterRound đã có đợt tuyển sau sao chép từ yêu cầu này chưa (chặn xóa)
-     */
+    /** Một dòng danh sách kèm cờ quyền cho menu ⋯; latestPosting null = chưa có tin. */
     public RequisitionResponse toListRow(JobRequisition jobRequisition, User viewer,
             JobPosting latestPosting, boolean hasLaterRound) {
         String approvalStatus = jobRequisition.getApprovalStatus();
@@ -108,10 +93,8 @@ public class RequisitionMapper {
         if (jobRequisition.getDepartment() != null) {
             departmentName = jobRequisition.getDepartment().getDepartmentName();
         }
-        String requisitionCode = jobRequisition.getRequisitionCode();
-        if (requisitionCode == null) {
-            requisitionCode = RequisitionLabels.requisitionCode(jobRequisition.getRequisitionId());
-        }
+        String requisitionCode = RequisitionLabels.requisitionCode(jobRequisition.getRequisitionId(),
+                jobRequisition.getRequisitionCode());
 
         RequisitionResponse.RequisitionResponseBuilder row = RequisitionResponse.builder()
                 .requisitionId(jobRequisition.getRequisitionId())
@@ -154,14 +137,9 @@ public class RequisitionMapper {
                 .build();
     }
 
-    // ===================================================================================
-    // MÀN CHI TIẾT: dòng danh sách + nội dung đầy đủ, tiêu chí, lịch sử duyệt, hoạt động
-    // ===================================================================================
+    // ----- Màn chi tiết -----
 
-    /**
-     * @param approvalHistory các lần duyệt, mới nhất trước
-     * @param activityLogs    audit log của yêu cầu, mới nhất trước
-     */
+    /** Trang chi tiết; lịch sử duyệt và audit đều mới nhất trước. */
     public RequisitionResponse toDetail(JobRequisition jobRequisition, User viewer, JobPosting latestPosting,
             boolean hasLaterRound, List<RequisitionApproval> approvalHistory, List<AuditLog> activityLogs) {
         String approvalStatus = jobRequisition.getApprovalStatus();
@@ -212,7 +190,7 @@ public class RequisitionMapper {
 
     /** Chạy thử validator như lúc bấm "Gửi duyệt": không có lỗi nghĩa là bản nháp đã đủ thông tin. */
     private boolean isReadyToSubmit(JobRequisition jobRequisition) {
-        RequisitionRequest submissionCheck = toRequestDto(jobRequisition);
+        RequisitionRequest submissionCheck = toEditForm(jobRequisition);
         submissionCheck.setAction(RequisitionValidator.ACTION_SUBMIT);
         try {
             validator.validate(submissionCheck);

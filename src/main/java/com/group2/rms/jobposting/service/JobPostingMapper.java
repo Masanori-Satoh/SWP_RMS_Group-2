@@ -6,8 +6,7 @@ import com.group2.rms.jobposting.dto.InternalJobPostingDetailResponse.ActivityHi
 import com.group2.rms.jobposting.dto.InternalJobPostingDetailResponse.ApplicationStats;
 import com.group2.rms.jobposting.dto.InternalJobPostingDetailResponse.PostingRound;
 import com.group2.rms.jobposting.dto.InternalJobPostingResponse;
-import com.group2.rms.jobposting.dto.JobPostingCreateRequest;
-import com.group2.rms.jobposting.dto.JobPostingDashboardResponse;
+import com.group2.rms.jobposting.dto.JobPostingRequest;
 import com.group2.rms.jobposting.entity.JobPosting;
 import com.group2.rms.jobposting.validator.JobPostingValidator;
 import com.group2.rms.requisition.entity.JobRequisition;
@@ -24,12 +23,8 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Objects;
 
-/**
- * Chuyển entity tin tuyển dụng sang DTO cho màn danh sách, trang chi tiết, form tạo / sửa và bảng điều khiển.
- *
- * Mapper KHÔNG truy vấn DB: số hồ sơ, lịch sử audit, các lần đăng... do service tra trước rồi truyền vào
- * (màn danh sách tra 1 lần cho cả trang, test mapper không cần mock repository).
- * Cờ quyền (editable, closable...) đều hỏi JobPostingAccess; nhãn tiếng Việt lấy từ JobPostingLabels / RequisitionLabels.
+/*
+ * MAPPER: entity tin → DTO cho danh sách, chi tiết, form; không truy vấn DB.
  */
 @Component
 @RequiredArgsConstructor
@@ -41,16 +36,9 @@ public class JobPostingMapper {
     private final JobPostingAccess access;
     private final JobPostingValidator validator;
 
-    // ===================================================================================
-    // MÀN DANH SÁCH
-    // ===================================================================================
+    // ----- Màn danh sách -----
 
-    /**
-     * Một dòng của bảng: nhãn, số ngày, cờ thao tác đều tính ở đây để template chỉ việc đọc.
-     *
-     * @param totalApplications tổng số hồ sơ của tin
-     * @param newApplications   số hồ sơ chưa ai xử lý
-     */
+    /** Một dòng của bảng; nhãn và cờ thao tác tính sẵn để template chỉ đọc. */
     public InternalJobPostingResponse toListRow(JobPosting posting, User viewer, long totalApplications,
             long newApplications, LocalDateTime now) {
         String viewStatus = posting.getPostingStatus();
@@ -89,17 +77,9 @@ public class JobPostingMapper {
                 .build();
     }
 
-    // ===================================================================================
-    // TRANG CHI TIẾT
-    // ===================================================================================
+    // ----- Trang chi tiết -----
 
-    /**
-     * @param hasApplications tin đã có hồ sơ ứng tuyển (chặn xóa)
-     * @param hasOpenPosting  yêu cầu nguồn đang có tin Draft / Published / Paused (quyết định nút "Đăng lại")
-     * @param stats           số liệu hồ sơ (rỗng nếu tin chưa lên trang tuyển dụng)
-     * @param rounds          các lần đăng của cùng yêu cầu
-     * @param activityLogs    audit log của tin, mới nhất trước
-     */
+    /** Trang chi tiết; hasOpenPosting quyết định nút "Đăng lại", stats rỗng nếu tin chưa đăng. */
     public InternalJobPostingDetailResponse toDetail(JobPosting posting, User viewer, LocalDateTime now,
             boolean hasApplications, boolean hasOpenPosting, ApplicationStats stats, List<PostingRound> rounds,
             List<AuditLog> activityLogs) {
@@ -206,10 +186,7 @@ public class JobPostingMapper {
                 round.getJobPostingId().equals(currentId));
     }
 
-    /**
-     * Mục "Lịch sử": audit log theo thứ tự thời gian. Tin cũ (seed) chưa có audit log thì dựng tạm
-     * từ CreatedAt / UpdatedAt / PostingDate để mục này không trống.
-     */
+    /** Lịch sử theo thời gian; tin cũ chưa có audit thì dựng tạm từ ngày tạo / sửa / đăng. */
     public List<ActivityHistoryItem> toActivityHistory(JobPosting posting, List<AuditLog> logs) {
         List<ActivityHistoryItem> history = new ArrayList<>();
         if (logs != null && !logs.isEmpty()) {
@@ -237,18 +214,11 @@ public class JobPostingMapper {
         return history;
     }
 
-    // ===================================================================================
-    // FORM TẠO / SỬA
-    // ===================================================================================
+    // ----- Form tạo / sửa -----
 
-    /**
-     * Form tạo tin mới từ yêu cầu đã duyệt: thông tin yêu cầu (chỉ đọc) + giá trị điền sẵn
-     * (HR sửa lại cho hấp dẫn ứng viên).
-     *
-     * @param postingNo lần đăng của tin mới (= số lần đăng lớn nhất + 1)
-     */
-    public JobPostingCreateRequest toCreateForm(JobRequisition requisition, int postingNo) {
-        JobPostingCreateRequest form = new JobPostingCreateRequest();
+    /** Form tạo tin từ yêu cầu đã duyệt, điền sẵn nội dung; postingNo = lần đăng lớn nhất + 1. */
+    public JobPostingRequest toCreateForm(JobRequisition requisition, int postingNo) {
+        JobPostingRequest form = new JobPostingRequest();
         fillSourceInfo(form, requisition);
         form.setPostingNo(postingNo);
         form.setDraftOrNew(true);
@@ -260,9 +230,9 @@ public class JobPostingMapper {
         form.setBenefits("");
         boolean hasSalary = requisition.getMinSalary() != null || requisition.getMaxSalary() != null;
         if (hasSalary) {
-            form.setSalaryMode(JobPostingCreateRequest.SALARY_RANGE);
+            form.setSalaryMode(JobPostingRequest.SALARY_RANGE);
         } else {
-            form.setSalaryMode(JobPostingCreateRequest.SALARY_NEGOTIABLE);
+            form.setSalaryMode(JobPostingRequest.SALARY_NEGOTIABLE);
         }
         form.setShowPositions(true);
         String positions = "";
@@ -276,8 +246,8 @@ public class JobPostingMapper {
     }
 
     /** Form sửa một tin có sẵn: nội dung tin và trạng thái form. */
-    public JobPostingCreateRequest toEditForm(JobPosting posting) {
-        JobPostingCreateRequest form = toCreateForm(posting.getRequisition(), posting.getPostingNo());
+    public JobPostingRequest toEditForm(JobPosting posting) {
+        JobPostingRequest form = toCreateForm(posting.getRequisition(), posting.getPostingNo());
         form.setJobPostingId(posting.getJobPostingId());
         fillFormState(form, posting);
         copyPostingContent(form, posting);
@@ -291,7 +261,7 @@ public class JobPostingMapper {
     }
 
     /** Trạng thái form theo trạng thái hiện tại của tin. */
-    public void fillFormState(JobPostingCreateRequest form, JobPosting posting) {
+    public void fillFormState(JobPostingRequest form, JobPosting posting) {
         String viewStatus = posting.getPostingStatus();
         form.setPostingNo(posting.getPostingNo());
         form.setDraftOrNew(JobPostingAccess.STATUS_DRAFT.equals(viewStatus));
@@ -300,7 +270,7 @@ public class JobPostingMapper {
     }
 
     /** Trạng thái form khi tạo tin mới (hoặc hiện lại form tạo bị lỗi). */
-    public void fillNewFormState(JobPostingCreateRequest form, int postingNo) {
+    public void fillNewFormState(JobPostingRequest form, int postingNo) {
         form.setPostingNo(postingNo);
         form.setDraftOrNew(true);
         form.setPaused(false);
@@ -308,7 +278,7 @@ public class JobPostingMapper {
     }
 
     /** Thông tin yêu cầu nguồn (chỉ hiển thị) và các giá trị gốc cho nút "Khôi phục bản gốc". Luôn nạp lại từ DB. */
-    public void fillSourceInfo(JobPostingCreateRequest form, JobRequisition requisition) {
+    public void fillSourceInfo(JobPostingRequest form, JobRequisition requisition) {
         form.setRequisitionId(requisition.getRequisitionId());
         form.setRequisitionCode(requisition.getRequisitionCode());
         form.setRequisitionTitle(requisition.getTitle());
@@ -328,7 +298,7 @@ public class JobPostingMapper {
     }
 
     /** Chép nội dung một tin có sẵn vào form (dùng cho "Chỉnh sửa" và "Đăng lại"). */
-    public void copyPostingContent(JobPostingCreateRequest form, JobPosting posting) {
+    public void copyPostingContent(JobPostingRequest form, JobPosting posting) {
         form.setPostingTitle(posting.getPostingTitle());
         form.setJobDescription(posting.getJobDescription());
         form.setJobRequirements(posting.getJobRequirements());
@@ -338,12 +308,12 @@ public class JobPostingMapper {
         // Nhận lại lựa chọn lương từ chuỗi đã lưu
         String salary = posting.getSalaryDisplay();
         if (salary != null && salary.equals(form.getSalaryRangeLabel())) {
-            form.setSalaryMode(JobPostingCreateRequest.SALARY_RANGE);
+            form.setSalaryMode(JobPostingRequest.SALARY_RANGE);
         } else if (salary == null || JobPostingLabels.SALARY_NEGOTIABLE.equalsIgnoreCase(salary)
                 || JobPostingLabels.SALARY_NEGOTIABLE_OLD_SPELLING.equalsIgnoreCase(salary)) {
-            form.setSalaryMode(JobPostingCreateRequest.SALARY_NEGOTIABLE);
+            form.setSalaryMode(JobPostingRequest.SALARY_NEGOTIABLE);
         } else {
-            form.setSalaryMode(JobPostingCreateRequest.SALARY_CUSTOM);
+            form.setSalaryMode(JobPostingRequest.SALARY_CUSTOM);
             form.setSalaryCustom(salary);
         }
 
@@ -352,32 +322,6 @@ public class JobPostingMapper {
         if (showPositions) {
             form.setNumberOfPositionsDisplay(posting.getNumberOfPositionsDisplay());
         }
-    }
-
-    // ===================================================================================
-    // BẢNG ĐIỀU KHIỂN HR
-    // ===================================================================================
-
-    public JobPostingDashboardResponse.RecentPosting toRecentPosting(JobPosting posting) {
-        String viewStatus = posting.getPostingStatus();
-        String departmentName = null;
-        if (posting.getRequisition() != null && posting.getRequisition().getDepartment() != null) {
-            departmentName = posting.getRequisition().getDepartment().getDepartmentName();
-        }
-        return new JobPostingDashboardResponse.RecentPosting(posting.getJobPostingId(), posting.getPostingTitle(),
-                departmentName, JobPostingLabels.statusLabel(viewStatus), JobPostingLabels.dashboardBadge(viewStatus),
-                JobPostingAccess.STATUS_DRAFT.equals(posting.getPostingStatus()),
-                posting.getApplicationDeadline(), posting.getPostingDate());
-    }
-
-    public JobPostingDashboardResponse.AwaitingRequisition toAwaitingRequisition(JobRequisition requisition) {
-        String departmentName = null;
-        if (requisition.getDepartment() != null) {
-            departmentName = requisition.getDepartment().getDepartmentName();
-        }
-        return new JobPostingDashboardResponse.AwaitingRequisition(requisition.getRequisitionId(),
-                requisition.getTitle(), requisition.getRequisitionCode(), departmentName,
-                requisition.getRecruitmentRound());
     }
 
     // ----- Các hàm nhỏ -----

@@ -11,6 +11,7 @@ import com.group2.rms.jobposting.entity.JobPosting;
 import com.group2.rms.jobposting.repository.JobPostingRepository;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -192,16 +193,19 @@ class ApplicationSubmissionServiceTests {
     }
 
     @Test
-    void duplicateApplicationIsRejected() {
+    @DisplayName("Đã nộp vào một tin cùng đợt (kể cả tin Đăng lại) -> Báo lỗi, không lưu file, không tạo đơn")
+    void apply_shouldReject_whenCandidateAppliedInSameRequisition() {
+        // Arrange
         givenCandidate();
         givenJob(job("Published", null));
-        when(applications.existsActiveByCandidateAndJobPosting(CANDIDATE_ID, JOB_ID))
-                .thenReturn(true);
+        when(applications.existsActiveByCandidateInSameRequisition(CANDIDATE_ID, JOB_ID)).thenReturn(true);
 
+        // Act
         ApplicationSubmissionException e = assertThrows(ApplicationSubmissionException.class,
                 () -> service.apply(USERNAME, JOB_ID, PDF));
 
-        assertEquals("Bạn đã ứng tuyển vị trí này.", e.getMessage());
+        // Assert
+        assertEquals(ApplicationSubmissionService.ALREADY_APPLIED_MESSAGE, e.getMessage());
         assertNothingStored();
     }
 
@@ -234,11 +238,13 @@ class ApplicationSubmissionServiceTests {
     }
 
     @Test
-    void hasAppliedReflectsExistingApplication() {
+    @DisplayName("Đã nộp vào một tin cùng đợt -> Trang tin hiện đã ứng tuyển")
+    void hasApplied_shouldBeTrue_whenCandidateAppliedInSameRequisition() {
+        // Arrange
         givenCandidate();
-        when(applications.existsActiveByCandidateAndJobPosting(CANDIDATE_ID, JOB_ID))
-                .thenReturn(true);
+        when(applications.existsActiveByCandidateInSameRequisition(CANDIDATE_ID, JOB_ID)).thenReturn(true);
 
+        // Act + Assert
         assertTrue(service.hasApplied(USERNAME, JOB_ID));
     }
 

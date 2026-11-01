@@ -1,23 +1,34 @@
-package com.group2.rms.notification;
+package com.group2.rms.notification.service;
 
+import com.group2.rms.notification.dto.NotificationResponse;
+import com.group2.rms.notification.entity.Notification;
+import com.group2.rms.notification.repository.NotificationRepository;
 import com.group2.rms.candidate.domain.entity.Application;
 import com.group2.rms.candidate.domain.entity.Candidate;
 import com.group2.rms.core.exception.ResourceNotFoundException;
 import com.group2.rms.requisition.entity.JobRequisition;
 import com.group2.rms.requisition.entity.RequisitionApproval;
 import com.group2.rms.user.entity.User;
+import org.junit.jupiter.api.Nested;
+import com.group2.rms.jobposting.entity.JobPosting;
+import com.group2.rms.interview.entity.InterviewFormat;
+import com.group2.rms.interview.entity.InterviewSchedule;
+import com.group2.rms.interview.entity.RoleInPanel;
+import com.group2.rms.user.entity.Department;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 
+import java.time.Clock;
+import java.time.Instant;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.List;
 import java.util.Optional;
 
@@ -27,7 +38,7 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
-class NotificationServiceImplTest {
+class NotificationServiceImplTests {
 
     @Mock
     private NotificationRepository notificationRepository;
@@ -35,7 +46,12 @@ class NotificationServiceImplTest {
     @Mock
     private com.group2.rms.user.repository.UserRepository userRepository;
 
-    @InjectMocks
+    @Mock
+    private org.springframework.context.ApplicationEventPublisher events;
+
+    // 30/10/2026 08:00 giờ Việt Nam
+    private static final Clock CLOCK = Clock.fixed(Instant.parse("2026-10-30T01:00:00Z"), ZoneId.of("Asia/Ho_Chi_Minh"));
+
     private NotificationServiceImpl notificationService;
 
     private User manager;
@@ -45,6 +61,7 @@ class NotificationServiceImplTest {
 
     @BeforeEach
     void setUp() {
+        notificationService = new NotificationServiceImpl(notificationRepository, userRepository, events, CLOCK);
         manager = User.builder().userId(10).username("hm").fullName("Hiring Manager A").build();
         director = User.builder().userId(20).username("director").fullName("Director B").build();
         requisition = JobRequisition.builder()
@@ -97,6 +114,17 @@ class NotificationServiceImplTest {
         notificationService.notifyRequisitionRejected(rejection);
 
         verify(notificationRepository, never()).save(any());
+        verifyNoInteractions(events);
+    }
+
+    @Test
+    @DisplayName("saveIfNotDuplicate: lưu thông báo mới -> Phát sự kiện để đẩy WebSocket cho đúng người nhận")
+    void saveIfNotDuplicate_shouldPublishPushEvent_whenSaved() {
+        // Act
+        notificationService.notifyRequisitionRejected(rejection);
+
+        // Assert
+        verify(events).publishEvent(new NotificationPushListener.Created(10, "hm"));
     }
 
     @Test
@@ -321,7 +349,7 @@ class NotificationServiceImplTest {
         assertFalse(saved.getIsRead());
         assertTrue(saved.getTitle().contains("Huỳnh Hoàng Trung"));
         assertTrue(saved.getContent().contains("Đã nhận việc"));
-        assertTrue(saved.getEventId().startsWith("OFFER_RESP_ACC_1_"));
+        assertEquals("OFFER_RESP_ACC_1", saved.getEventId());
     }
 
     @Test
@@ -359,7 +387,7 @@ class NotificationServiceImplTest {
         assertFalse(saved.getIsRead());
         assertTrue(saved.getTitle().contains("Huỳnh Hoàng Trung"));
         assertTrue(saved.getContent().contains("Mức đãi ngộ chưa đạt kỳ vọng"));
-        assertTrue(saved.getEventId().startsWith("OFFER_RESP_DEC_1_"));
+        assertEquals("OFFER_RESP_DEC_1", saved.getEventId());
     }
 
     @Test
@@ -687,5 +715,287 @@ class NotificationServiceImplTest {
         notificationService.notifyRequisitionApproved(RequisitionApproval.builder().build());
 
         verify(notificationRepository, never()).save(any());
+    }
+
+    @Test
+    @DisplayName("notifyRequisitionApproved: HR đang hoạt động cũng nhận thông báo để tạo tin, kể cả khi Giám đốc tự duyệt")
+    void notifyRequisitionApproved_shouldNotifyActiveHrs_whenRequisitionApproved() {
+        // Arrange
+        requisition.setHiringManager(director);
+        User hr = User.builder().userId(30).username("hr").fullName("HR C").build();
+        RequisitionApproval approval = RequisitionApproval.builder()
+                .approvalId(16).requisition(requisition).director(director).status("Approved").build();
+        when(userRepository.findAllActiveHrs()).thenReturn(List.of(hr));
+
+        // Act
+        notificationService.notifyRequisitionApproved(approval);
+
+        // Assert
+        ArgumentCaptor<Notification> captor = ArgumentCaptor.forClass(Notification.class);
+        verify(notificationRepository, times(1)).save(captor.capture());
+        Notification saved = captor.getValue();
+        assertEquals(hr, saved.getRecipient());
+        assertEquals("REQUISITION_APPROVED", saved.getEventType());
+        assertEquals("/internal/job-postings/create?requisitionId=101", saved.getLinkUrl());
+        assertEquals("REQ_APPROVE_16", saved.getEventId());
+    }
+
+    @Test
+    @DisplayName("notifyRequisitionApproved: thiếu ngày duyệt -> Lấy giờ từ Clock, không dùng giờ máy")
+    void notifyRequisitionApproved_shouldUseClock_whenApprovalDateMissing() {
+        // Arrange
+        RequisitionApproval approval = RequisitionApproval.builder()
+                .approvalId(17).requisition(requisition).director(director).status("Approved").build();
+
+        // Act
+        notificationService.notifyRequisitionApproved(approval);
+
+        // Assert
+        ArgumentCaptor<Notification> captor = ArgumentCaptor.forClass(Notification.class);
+        verify(notificationRepository).save(captor.capture());
+        assertTrue(captor.getValue().getContent().contains("30/10/2026 08:00"));
+    }
+
+    @Test
+    @DisplayName("notifyOfferResponseFromCandidate: gọi lại cùng phản hồi -> Cùng eventId (chống trùng được)")
+    void notifyOfferResponseFromCandidate_shouldUseStableEventId_whenCalledTwice() {
+        // Arrange
+        User hrUser = User.builder().userId(15).username("hr.user").fullName("Lê Thị HR").build();
+        com.group2.rms.offer.entity.OfferProposal offer = com.group2.rms.offer.entity.OfferProposal.builder()
+                .offerId(3).offeredPositionTitle("Tester").proposedBy(hrUser).build();
+
+        // Act
+        notificationService.notifyOfferResponseFromCandidate(offer, true, null);
+        notificationService.notifyOfferResponseFromCandidate(offer, true, null);
+
+        // Assert
+        verify(notificationRepository, times(2)).existsByRecipient_UserIdAndEventId(15, "OFFER_RESP_ACC_3");
+    }
+
+    @Test
+    @DisplayName("markRequisitionPendingRead: rút lại yêu cầu -> Đánh dấu đã đọc thông báo chờ duyệt của yêu cầu đó")
+    void markRequisitionPendingRead_shouldMarkPendingDirectorNotifications() {
+        // Act
+        notificationService.markRequisitionPendingRead(101);
+
+        // Assert
+        verify(notificationRepository).markReadByEvent("REQUISITION_PENDING_DIRECTOR", "101",
+                LocalDateTime.of(2026, 10, 30, 8, 0));
+    }
+
+    // =========================================================================
+    // N1–N7: rút yêu cầu, tạm dừng / đóng tin, duyệt hồ sơ, lịch và kết quả phỏng vấn
+    // =========================================================================
+
+    @Nested
+    @DisplayName("Thông báo luồng bổ sung N1–N7")
+    class WorkflowNotifications {
+
+        private final User hr = User.builder().userId(30).fullName("Lan HR").build();
+        private final User otherHr = User.builder().userId(31).fullName("Quang HR").build();
+        private final User interviewer = User.builder().userId(40).fullName("Minh Interviewer").build();
+        private final User candidateUser = User.builder().userId(50).fullName("Nguyễn Văn Ứng").build();
+
+        private JobPosting posting() {
+            return JobPosting.builder().jobPostingId(77).postingTitle("Java Developer").requisition(requisition).build();
+        }
+
+        private Application application() {
+            return Application.builder().applicationId(88)
+                    .candidate(Candidate.builder().candidateId(5).account(candidateUser).build())
+                    .jobPosting(posting()).build();
+        }
+
+        private InterviewSchedule schedule() {
+            InterviewSchedule schedule = InterviewSchedule.builder()
+                    .interviewId(9L).application(application())
+                    .interviewFormat(InterviewFormat.Offline_Office)
+                    .startTime(LocalDateTime.of(2026, 11, 2, 9, 0)).endTime(LocalDateTime.of(2026, 11, 2, 10, 0))
+                    .locationOrLink("Phòng 301").build();
+            schedule.addPanelMember(interviewer, RoleInPanel.Interviewer);
+            schedule.addPanelMember(hr, RoleInPanel.HR);
+            return schedule;
+        }
+
+        private List<Notification> savedNotifications(int count) {
+            ArgumentCaptor<Notification> captor = ArgumentCaptor.forClass(Notification.class);
+            verify(notificationRepository, times(count)).save(captor.capture());
+            return captor.getAllValues();
+        }
+
+        @Test
+        @DisplayName("notifyRequisitionWithdrawn: HM rút yêu cầu -> Mọi Giám đốc nhận thông báo, link về yêu cầu")
+        void notifyRequisitionWithdrawn_shouldNotifyAllDirectors_whenManagerWithdraws() {
+            // Arrange
+            User otherDirector = User.builder().userId(21).fullName("Director C").build();
+            when(userRepository.findAllActiveDirectors()).thenReturn(List.of(director, otherDirector));
+
+            // Act
+            notificationService.notifyRequisitionWithdrawn(requisition, manager);
+
+            // Assert
+            List<Notification> saved = savedNotifications(2);
+            assertEquals(List.of(director, otherDirector), saved.stream().map(Notification::getRecipient).toList());
+            assertEquals("REQUISITION_WITHDRAWN", saved.get(0).getEventType());
+            assertEquals("/requisitions/101", saved.get(0).getLinkUrl());
+            assertTrue(saved.get(0).getContent().contains("Hiring Manager A"));
+        }
+
+        @Test
+        @DisplayName("notifyRequisitionWithdrawn: Giám đốc tự rút yêu cầu của mình -> Không báo cho chính mình")
+        void notifyRequisitionWithdrawn_shouldSkipActor_whenDirectorWithdraws() {
+            // Arrange
+            when(userRepository.findAllActiveDirectors()).thenReturn(List.of(director));
+
+            // Act
+            notificationService.notifyRequisitionWithdrawn(requisition, director);
+
+            // Assert
+            verify(notificationRepository, never()).save(any());
+        }
+
+        @Test
+        @DisplayName("notifyJobPostingPaused / Closed: HR tạm dừng, đóng tin -> HM chủ yêu cầu nhận, link tin nội bộ")
+        void notifyJobPostingPausedAndClosed_shouldNotifyRequisitionOwner() {
+            // Act
+            notificationService.notifyJobPostingPaused(posting(), hr);
+            notificationService.notifyJobPostingClosed(posting(), hr);
+
+            // Assert
+            List<Notification> saved = savedNotifications(2);
+            assertEquals(manager, saved.get(0).getRecipient());
+            assertEquals("JOB_POSTING_PAUSED", saved.get(0).getEventType());
+            assertEquals("JOB_POSTING_CLOSED", saved.get(1).getEventType());
+            assertEquals("/internal/job-postings/77", saved.get(1).getLinkUrl());
+            assertTrue(saved.get(1).getContent().startsWith("Lan HR đã đóng"));
+        }
+
+        @Test
+        @DisplayName("notifyJobPostingPaused: chính HM tạm dừng -> Không báo cho chính mình")
+        void notifyJobPostingPaused_shouldSkip_whenActorIsOwner() {
+            // Act
+            notificationService.notifyJobPostingPaused(posting(), manager);
+
+            // Assert
+            verify(notificationRepository, never()).save(any());
+        }
+
+        @Test
+        @DisplayName("notifyApplicationAwaitingHiringManager: HR chấm Đạt -> HM chủ yêu cầu và trưởng phòng (khác người) đều nhận")
+        void notifyApplicationAwaitingHiringManager_shouldNotifyOwnerAndDepartmentManager() {
+            // Arrange
+            User departmentHead = User.builder().userId(11).fullName("Trưởng phòng D").build();
+            requisition.setDepartment(Department.builder().departmentId(3).departmentName("IT").manager(departmentHead).build());
+
+            // Act
+            notificationService.notifyApplicationAwaitingHiringManager(application(), hr);
+
+            // Assert
+            List<Notification> saved = savedNotifications(2);
+            assertEquals(List.of(manager, departmentHead), saved.stream().map(Notification::getRecipient).toList());
+            assertEquals("APPLICATION_HR_PASSED", saved.get(0).getEventType());
+            assertEquals("/applications/88", saved.get(0).getLinkUrl());
+            assertEquals("APP_HR_PASS_88", saved.get(0).getEventId());
+            assertTrue(saved.get(0).getContent().contains("Nguyễn Văn Ứng"));
+        }
+
+        @Test
+        @DisplayName("notifyApplicationAwaitingHiringManager: HM chủ cũng là trưởng phòng -> Chỉ một thông báo")
+        void notifyApplicationAwaitingHiringManager_shouldNotDuplicate_whenOwnerIsDepartmentManager() {
+            // Arrange
+            requisition.setDepartment(Department.builder().departmentId(3).departmentName("IT").manager(manager).build());
+
+            // Act
+            notificationService.notifyApplicationAwaitingHiringManager(application(), hr);
+
+            // Assert
+            assertEquals(manager, savedNotifications(1).get(0).getRecipient());
+        }
+
+        @Test
+        @DisplayName("notifyApplicationReadyForInterview: HM chấm Đạt -> Mọi HR nhận, link về hồ sơ")
+        void notifyApplicationReadyForInterview_shouldNotifyAllHrs() {
+            // Arrange
+            when(userRepository.findAllActiveHrs()).thenReturn(List.of(hr, otherHr));
+
+            // Act
+            notificationService.notifyApplicationReadyForInterview(application(), manager);
+
+            // Assert
+            List<Notification> saved = savedNotifications(2);
+            assertEquals(List.of(hr, otherHr), saved.stream().map(Notification::getRecipient).toList());
+            assertEquals("APPLICATION_HM_PASSED", saved.get(0).getEventType());
+            assertEquals("APP_HM_PASS_88", saved.get(0).getEventId());
+            assertEquals(manager, saved.get(0).getActor());
+        }
+
+        @Test
+        @DisplayName("notifyInterviewScheduled: HR tạo lịch -> Hội đồng (trừ HR tạo) và ứng viên nhận, link đúng phía")
+        void notifyInterviewScheduled_shouldNotifyPanelAndCandidate_exceptActor() {
+            // Act
+            notificationService.notifyInterviewScheduled(schedule(), hr);
+
+            // Assert
+            List<Notification> saved = savedNotifications(2);
+            Notification panel = saved.get(0);
+            Notification candidate = saved.get(1);
+            assertEquals(interviewer, panel.getRecipient());
+            assertEquals("/interviews", panel.getLinkUrl());
+            assertTrue(panel.getContent().contains("02/11/2026 09:00 – 10:00"));
+            assertTrue(panel.getContent().contains("Phòng 301"));
+            assertEquals(candidateUser, candidate.getRecipient());
+            assertEquals("/portal/interviews", candidate.getLinkUrl());
+            assertEquals("INTERVIEW_SCHEDULED", candidate.getEventType());
+            assertEquals("INT_SCHED_9", candidate.getEventId());
+        }
+
+        @Test
+        @DisplayName("notifyInterviewCancelled: có lý do -> Lý do chỉ ghi cho hội đồng, ứng viên không thấy")
+        void notifyInterviewCancelled_shouldShowReasonOnlyToPanel() {
+            // Act
+            notificationService.notifyInterviewCancelled(schedule(), hr, "Ứng viên xin dời");
+
+            // Assert
+            List<Notification> saved = savedNotifications(2);
+            assertTrue(saved.get(0).getContent().contains("Ứng viên xin dời"));
+            assertFalse(saved.get(1).getContent().contains("Ứng viên xin dời"));
+            assertEquals("INTERVIEW_CANCELLED", saved.get(1).getEventType());
+        }
+
+        @Test
+        @DisplayName("notifyInterviewRescheduled: đổi lịch -> eventId kèm thời điểm đổi (mỗi lần đổi một thông báo)")
+        void notifyInterviewRescheduled_shouldUseTimeInEventId() {
+            // Act
+            notificationService.notifyInterviewRescheduled(schedule(), hr);
+
+            // Assert
+            assertEquals("INT_RESCHED_9_202610300800000000000", savedNotifications(2).get(0).getEventId());
+        }
+
+        @Test
+        @DisplayName("notifyInterviewResultDecided: HM chốt Đạt -> Mọi HR nhận, nội dung có kết quả tiếng Việt")
+        void notifyInterviewResultDecided_shouldNotifyHrsWithLabel() {
+            // Arrange
+            when(userRepository.findAllActiveHrs()).thenReturn(List.of(hr));
+
+            // Act
+            notificationService.notifyInterviewResultDecided(schedule(), manager, "Passed");
+
+            // Assert
+            Notification saved = savedNotifications(1).get(0);
+            assertEquals(hr, saved.getRecipient());
+            assertEquals("/interviews/9/result", saved.getLinkUrl());
+            assertEquals("INT_RESULT_9_Passed", saved.getEventId());
+            assertTrue(saved.getContent().endsWith(": Đạt."));
+        }
+
+        @Test
+        @DisplayName("NotificationLabels: loại đã khai báo có nhãn và tông; loại lạ -> Ẩn badge, tông neutral")
+        void notificationLabels_shouldTranslateKnownTypes() {
+            assertEquals("Hủy lịch phỏng vấn", NotificationLabels.eventLabel("INTERVIEW_CANCELLED"));
+            assertEquals("danger", NotificationLabels.eventTone("INTERVIEW_CANCELLED"));
+            assertNull(NotificationLabels.eventLabel("UNKNOWN"));
+            assertEquals("neutral", NotificationLabels.eventTone(null));
+        }
     }
 }

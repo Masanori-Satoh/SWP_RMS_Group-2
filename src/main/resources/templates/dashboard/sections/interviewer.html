@@ -3,25 +3,9 @@
 <body>
 <!-- Dashboard Interviewer (chỉ lịch được phân công); dashboard/index.html chèn vào theo dashboard.section. -->
 <th:block th:fragment="content(dashboard)">
-    <div th:replace="~{dashboard/fragments :: pageHeader('Bảng điều khiển', 'Lịch phỏng vấn được phân công cho bạn')}"></div>
+    <div th:replace="~{dashboard/fragments :: pageHeader('Bảng điều khiển', null)}"></div>
 
-    <th:block th:replace="~{dashboard/fragments :: kpis(${dashboard.kpis})}"></th:block>
-
-    <section class="card dash-next adw-surface" th:if="${dashboard.nextInterview != null}" aria-labelledby="iv-next-title"
-             th:with="next=${dashboard.nextInterview}">
-        <div class="dash-next__time">
-            <span th:text="${#temporals.format(next.startTime, 'dd/MM')}">01/01</span>
-            <strong th:text="${#temporals.format(next.startTime, 'HH:mm')}">14:00</strong>
-        </div>
-        <div class="dash-next__body">
-            <h2 id="iv-next-title" class="dash-next__title"
-                th:text="${dashboard.minutesUntilNext > 0 ? 'Buổi tiếp theo · còn ' + dashboard.minutesUntilNext + ' phút' : 'Buổi tiếp theo · đang diễn ra'}">Buổi tiếp theo</h2>
-            <strong class="dash-next__name" th:text="${next.candidateName}">Ứng viên</strong>
-            <span class="dash-next__meta"
-                  th:text="|${next.positionTitle} · ${#temporals.format(next.startTime, 'HH:mm')}–${#temporals.format(next.endTime, 'HH:mm')} · ${next.location ?: next.formatLabel}|">Vị trí · giờ · nơi</span>
-        </div>
-        <a class="btn btn--primary" th:href="@{${next.href}}">Mở lịch phỏng vấn</a>
-    </section>
+    <div class="dash-role-kpis" th:insert="~{dashboard/fragments :: kpis(${dashboard.kpis})}"></div>
 
     <section class="card dash-panel dash-panel--priority adw-surface" aria-labelledby="iv-evaluations-title">
         <div class="dash-panel__heading">
@@ -38,9 +22,6 @@
                     <p class="dash-work__detail" th:if="${evaluation.interviewEnd != null}"
                        th:text="|Phỏng vấn ${#temporals.format(evaluation.interviewEnd, 'dd/MM HH:mm')}|">Phỏng vấn 01/01 09:00</p>
                 </div>
-                <span class="badge" th:classappend="|badge--${evaluation.waitTone}|">
-                    <span class="sr-only">Đã chờ </span><span th:text="${evaluation.waitText}">0 ngày</span>
-                </span>
                 <a class="btn btn--secondary btn--sm" th:href="@{${evaluation.href}}">Gửi đánh giá</a>
             </li>
         </ul>
@@ -50,10 +31,10 @@
         <div class="dash-panel__heading">
             <div>
                 <h2 id="iv-week-title" class="dash-panel__title">
-                    <svg th:replace="~{dashboard/fragments :: icon('calendarDays')}"></svg>Lịch tuần
+                    <svg th:replace="~{dashboard/fragments :: icon('calendarDays')}"></svg>Lịch phỏng vấn
                 </h2>
                 <p class="dash-panel__sub"
-                   th:text="|${#temporals.format(dashboard.weekStart, 'dd/MM')} – ${#temporals.format(dashboard.weekEnd, 'dd/MM/yyyy')} · ${dashboard.weekInterviewCount} buổi|">26/10 – 01/11/2026 · 0 buổi</p>
+                   th:text="|${#temporals.format(dashboard.weekStart, 'dd/MM')} – ${#temporals.format(dashboard.weekEnd, 'dd/MM/yyyy')}|">26/10 – 01/11/2026</p>
             </div>
             <nav class="dash-week-nav" aria-label="Chuyển tuần">
                 <a class="btn btn--secondary btn--sm" th:href="@{/dashboard/internal(week=${dashboard.previousWeek})}"
