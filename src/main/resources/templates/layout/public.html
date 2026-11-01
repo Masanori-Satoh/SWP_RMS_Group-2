@@ -12,7 +12,7 @@
 <body>
     <th:block layout:fragment="base-content">
         <!-- 1. Topbar công khai dùng chung với landing (fragments/layout/public-topbar.html) -->
-        <header th:replace="~{fragments/layout/public-topbar :: topbar('jobs', false)}"></header>
+        <header th:replace="~{fragments/layout/public-topbar :: topbar(${publicNav ?: 'jobs'}, false)}"></header>
 
         <!-- 2. Ruột trang công khai -->
         <main id="main" layout:fragment="content" class="public-main-content">

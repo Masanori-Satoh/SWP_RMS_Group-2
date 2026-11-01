@@ -21,10 +21,16 @@
     <th:block th:replace="~{fragments/ui/admin-workspace :: scene}"></th:block>
     <div class="container">
 
-        <div class="page-header adw-heading">
+        <!-- Tiêu đề + số kết quả cùng một hàng (bỏ thẻ "Tìm thấy..." riêng) -->
+        <div class="page-header jb-header">
             <div>
-                <h1 class="page-title adw-title">Vị trí đang tuyển</h1>
+                <h1 class="page-title jb-title">Vị trí đang tuyển</h1>
                 <p class="page-subtitle">Tìm vị trí phù hợp theo từ khóa, phòng ban và hình thức làm việc.</p>
+            </div>
+            <div class="jb-results">
+                <p class="jb-results__count"><strong th:text="${jobsPage.totalElements}">0</strong> vị trí đang tuyển</p>
+                <a th:if="${selectedKeyword != null or selectedDept != null or selectedType != null}"
+                   th:href="@{/jobs}" class="btn btn--secondary btn--sm">Xóa bộ lọc</a>
             </div>
         </div>
 
@@ -58,13 +64,6 @@
                 <button type="submit" class="btn btn--primary">Tìm kiếm</button>
             </div>
         </form>
-
-        <!-- Thanh kết quả -->
-        <div class="jb-results adw-surface">
-            <p class="jb-results__count">Tìm thấy <strong th:text="${jobsPage.totalElements}">0</strong> vị trí đang tuyển</p>
-            <a th:if="${selectedKeyword != null or selectedDept != null or selectedType != null}"
-               th:href="@{/jobs}" class="btn btn--secondary btn--sm">Xóa bộ lọc</a>
-        </div>
 
         <!-- Không có kết quả -->
         <div th:if="${jobsPage.isEmpty()}" class="card jb-empty adw-surface">

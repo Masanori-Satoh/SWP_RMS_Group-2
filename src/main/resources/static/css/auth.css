@@ -20,7 +20,7 @@ body.auth-page {
   display: grid;
   align-items: start;
   min-height: calc(100svh - var(--topbar-h));
-  padding-block: clamp(40px, 4vw, 68px) var(--s16);
+  padding-block: calc(var(--topbar-h) + var(--s8)) var(--s16);
 }
 .auth-shell {
   display: grid;
@@ -131,10 +131,45 @@ body.auth-page {
 .auth-register .auth-intro { font-size: var(--font-sm); }
 .auth-register .auth-form { row-gap: 18px; }
 .auth-register .auth-card h1 { font-size: 28px; }
-/* Hide the current-page action while retaining the canonical public header. */
-.auth-login .public-topbar__actions > a[href$="/login"],
-.auth-register .public-topbar__actions > a[href$="/register"] { display: none; }
-.auth-login .public-topbar__actions > a[href$="/register"] { display: inline-flex; max-width: 50vw; white-space: normal; text-align: center; }
+/* Thanh trên gọn (dunglt bổ sung): logo + "Về trang chủ", cùng kiểu đảo kính của topbar công khai. */
+.auth-topbar {
+  position: absolute;
+  inset: 0 0 auto;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s3);
+  padding: var(--s4);
+}
+.auth-topbar__island {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s2);
+  min-height: 56px;
+  padding: 0 18px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  background: color-mix(in srgb, var(--surface) 92%, transparent);
+  backdrop-filter: blur(14px);
+  box-shadow: var(--shadow-sm);
+}
+.auth-topbar__home {
+  color: var(--brand-dark);
+  font-size: var(--font-sm);
+  font-weight: 600;
+  text-decoration: none;
+  transition: var(--transition);
+}
+.auth-topbar__home:hover { background: var(--brand-soft); }
+.auth-topbar__home:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
+.auth-topbar__home .auth-icon { transform: scaleX(-1); }
+.auth-topbar__home { white-space: nowrap; }
+@media (max-width: 480px) {
+  .auth-topbar { padding: var(--s3); }
+  .auth-topbar__island { min-height: 48px; padding: 0 var(--s3); }
+  .auth-topbar .brand-sub { display: none; }
+}
 @media (max-width: 1200px) {
   .auth-container { width: calc(100% - var(--s8) * 2); }
   .auth-shell { grid-template-columns: minmax(0, 1fr) minmax(400px, 480px); }
@@ -145,7 +180,7 @@ body.auth-page {
 }
 @media (max-width: 992px) {
   .auth-container { width: min(calc(100% - var(--s8)), 650px); }
-  .auth-stage { padding-block: var(--s8) var(--s12); }
+  .auth-stage { padding-block: calc(var(--topbar-h) + var(--s4)) var(--s12); }
   .auth-shell { grid-template-columns: minmax(0, 1fr); gap: var(--s6); }
   .auth-story { padding: var(--s6); border-radius: 15px; background: color-mix(in srgb, var(--brand-dark) 94%, transparent); }
   .auth-eyebrow { margin-bottom: var(--s3); color: var(--brand-caption); font-size: 11px; }

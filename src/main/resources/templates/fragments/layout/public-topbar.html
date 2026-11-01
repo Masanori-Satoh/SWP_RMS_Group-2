@@ -39,6 +39,19 @@
         </svg>
         <span>Vị trí đang tuyển</span>
       </a>
+      <!-- Trang chi tiết tin (/jobs/{id}): thêm mục đang sáng, "Vị trí đang tuyển" thành đường quay lại danh sách -->
+      <th:block th:if="${activeNav == 'job-detail'}">
+        <svg class="public-nav-sep" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <polyline points="9 6 15 12 9 18"/>
+        </svg>
+        <span class="public-jobs-btn" aria-current="page">
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9Z"/>
+            <path d="M14 3v6h6M8 13h8M8 17h5"/>
+          </svg>
+          <span>Chi tiết vị trí</span>
+        </span>
+      </th:block>
     </div>
 
     <!-- CỤM ĐẢO GÓC TRÊN CÙNG BÊN PHẢI (Tài khoản & Bảng điều khiển) -->
@@ -83,7 +96,7 @@
     <!-- Hàng điều hướng ứng viên cho mobile/màn hẹp (giữ tương thích kiểm thử) -->
     <nav th:if="${viewer != null and viewer.roleName == 'Candidate'}" class="public-topbar__candidate-nav"
          aria-label="Điều hướng ứng viên">
-      <th:block th:replace="~{fragments/layout/candidate-nav :: links(${activeNav == 'jobs' ? 'jobs' : ''})}"></th:block>
+      <th:block th:replace="~{fragments/layout/candidate-nav :: links(${activeNav == 'jobs' or activeNav == 'job-detail' ? 'jobs' : ''})}"></th:block>
     </nav>
   </div>
 

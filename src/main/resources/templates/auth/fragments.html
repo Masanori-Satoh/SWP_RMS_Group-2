@@ -20,7 +20,11 @@
   </th:block>
   <th:block th:fragment="header">
     <a class="skip-link" href="#main">Đến nội dung chính</a>
-    <header th:replace="~{fragments/layout/public-topbar :: topbar('', false)}"></header>
+    <!-- dunglt bổ sung: thanh gọn thay topbar công khai; nút Đăng nhập/Đăng ký đã có ở tab trong thẻ, tránh lặp -->
+    <header class="auth-topbar">
+      <div class="auth-topbar__island"><a th:replace="~{fragments/brand :: wordmark('TUYỂN DỤNG')}"></a></div>
+      <a class="auth-topbar__island auth-topbar__home" th:href="@{/}"><svg th:replace="~{auth/fragments :: icon('arrow')}"></svg>Về trang chủ</a>
+    </header>
   </th:block>
   <nav th:fragment="tabs(active)" class="auth-tabs" aria-label="Tài khoản Mộc">
     <a class="auth-tab" th:href="@{/login}" th:attr="aria-current=${active == 'login' ? 'page' : null}">Đăng nhập</a>
