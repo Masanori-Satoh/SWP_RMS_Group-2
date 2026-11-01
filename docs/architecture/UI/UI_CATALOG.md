@@ -630,3 +630,22 @@ sidebar; không bỏ hướng dẫn nhập liệu hoặc liên kết Hủy trong
 - Chuẩn hóa toàn bộ pop-up xác nhận sang native HTML5 `<dialog class="confirm-dialog">` và hệ thống thông báo Flash Toast (`flash-toast.css` / `flash-toast.js`), loại bỏ hoàn toàn CDN SweetAlert2 và các lệnh `alert()` native của trình duyệt.
 - Chi tiết file change và kiểm thử:
   [work log](../../management/work_logs/2026-10-31-director-offer-ui-sync.md).
+
+
+### Cập nhật 31/10/2026 — Interview dùng giao diện workspace Admin (`ivw-`)
+
+- Bốn trang của module Interview (`interview/list`, `form`, `result`, `candidate-list`) tiếp tục decorate
+  `layout/internal`, bật giao diện Admin workspace opt-in qua marker `.adw-page ivw-page`,
+  `fragments/ui/admin-workspace :: scene` và `:: scripts`. Controller, route, quyền và dữ liệu giữ nguyên.
+- Tiêu đề trang dùng `.adw-heading` + `.adw-title`; bỏ breadcrumb và dòng mô tả phụ (vị trí, giờ phỏng vấn đã có trong
+  thẻ "Thông tin buổi phỏng vấn"). Nút thao tác (`.iv-header-actions`) nằm cùng hàng tiêu đề.
+- Khung lọc, thẻ lịch (`il-card`), form (`if-form`), các thẻ trang kết quả (`ir-`) và bảng của ứng viên dùng `.adw-surface`;
+  tiêu đề thẻ ở trang kết quả dùng `.adw-panel-heading` + `.adw-panel-title`; bảng dùng `.adw-data-table`.
+- Thông báo sau thao tác (tạo/sửa/hủy lịch; gửi phiếu; chốt kết quả) dùng `fragments/ui/flash-toast :: flashToast`.
+  Ở trang kết quả, câu thông báo từ `?evaluated` / `?finalized` được tính bằng `th:with` vì Thymeleaf 3.1 cấm đọc
+  `${param}` trong tham số fragment. Cảnh báo nghiệp vụ (chưa tới giờ, quá hạn chốt...) vẫn là `.alert`.
+- Lỗi nghiệp vụ đầu form dùng `.adw-validation-summary`. Form dàn đủ bề ngang workspace như form Offer.
+- `pages/interview-workspace.css` (tiền tố `ivw-`) chỉ chỉnh bố cục riêng: hàng tiêu đề, trạng thái rỗng, khung bảng,
+  hiệu ứng hover của thẻ lịch, padding form. Chỉ dùng token, không hex, không `!important`.
+- Giữ nguyên mọi `id`, `name`, `data-*` mà `interview-list.js`, `interview-form.js`, `pages/interview-result.js` và các
+  test dùng. Hộp thoại Đánh giá / Chốt kết quả / Hủy lịch giữ nguyên markup.

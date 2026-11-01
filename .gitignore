@@ -147,5 +147,7 @@ playwright/
 .playwright/
 
 
+integration-test/
+
 # Visual Paradigm auto-backups
 *.vpp.bak_*
