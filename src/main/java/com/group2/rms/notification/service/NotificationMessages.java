@@ -114,6 +114,17 @@ public final class NotificationMessages {
                 posting.getPostingTitle(), requisitionCode(posting.getRequisition()), hrName, displayTime(postingDate), deadline);
     }
 
+    public static String jobPostingReopenedContent(JobPosting posting, String hrName, LocalDateTime postingDate) {
+        String deadline = "Không giới hạn";
+        LocalDateTime applicationDeadline = posting.getApplicationDeadline();
+        if (applicationDeadline != null) {
+            deadline = applicationDeadline.format(DISPLAY_DATE);
+        }
+        return String.format(
+                "Tin tuyển dụng \"%s\" (cho %s) đã được %s mở lại vào lúc %s (Hạn nộp hồ sơ: %s). Ứng viên có thể xem và nộp hồ sơ trở lại.",
+                posting.getPostingTitle(), requisitionCode(posting.getRequisition()), hrName, displayTime(postingDate), deadline);
+    }
+
     public static String jobPostingPausedContent(JobPosting posting, String actorName, LocalDateTime now) {
         return String.format(
                 "%s đã tạm dừng tin tuyển dụng \"%s\" vào lúc %s. Tin bị ẩn khỏi trang tuyển dụng và tạm ngừng nhận hồ sơ.",

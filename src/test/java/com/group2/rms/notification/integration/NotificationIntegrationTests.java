@@ -337,14 +337,14 @@ class NotificationIntegrationTests {
 
         @Test
         @WithMockUser(username = "it_noti_a", roles = "HIRING_MANAGER")
-        @DisplayName("API đánh dấu đã đọc id của người khác -> 400 success=false, thông báo vẫn chưa đọc")
-        void markAsRead_shouldReturnBadRequest_whenApiCalledWithOtherUsersId() throws Exception {
+        @DisplayName("API đánh dấu đã đọc id của người khác -> 404 success=false, thông báo vẫn chưa đọc")
+        void markAsRead_shouldReturnNotFound_whenApiCalledWithOtherUsersId() throws Exception {
             // Arrange
             Notification otherUsersNotification = saveNotification(unreadNotification(userB, "Của B"));
 
             // Act
             mvc.perform(post("/api/notifications/{id}/read", otherUsersNotification.getNotificationId()))
-                    .andExpect(status().isBadRequest())
+                    .andExpect(status().isNotFound())
                     .andExpect(jsonPath("$.success").value(false));
 
             // Assert

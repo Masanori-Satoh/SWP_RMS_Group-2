@@ -169,6 +169,35 @@ class NotificationServiceImplTests {
     }
 
     @Test
+    @DisplayName("notifyJobPostingReopened: Tiêu đề 'Tin tuyển dụng đã mở lại', eventType và eventId riêng")
+    void notifyJobPostingReopened_success() {
+        com.group2.rms.jobposting.entity.JobPosting posting = com.group2.rms.jobposting.entity.JobPosting.builder()
+                .jobPostingId(51)
+                .postingTitle("Content Creator")
+                .requisition(requisition)
+                .postingDate(LocalDateTime.of(2026, 10, 5, 14, 0, 0, 123456700))
+                .applicationDeadline(LocalDateTime.of(2026, 11, 30, 23, 59, 59))
+                .build();
+        User hr = User.builder().userId(30).fullName("HR Nguyen Van C").build();
+
+        when(notificationRepository.existsByRecipient_UserIdAndEventId(eq(10), any())).thenReturn(false);
+
+        notificationService.notifyJobPostingReopened(posting, hr);
+
+        ArgumentCaptor<Notification> captor = ArgumentCaptor.forClass(Notification.class);
+        verify(notificationRepository).save(captor.capture());
+
+        Notification saved = captor.getValue();
+        assertEquals(manager, saved.getRecipient());
+        assertEquals("Tin tuyển dụng đã mở lại: Content Creator", saved.getTitle());
+        assertEquals("JOB_POSTING_REOPENED", saved.getEventType());
+        assertEquals("/internal/job-postings/51", saved.getLinkUrl());
+        assertTrue(saved.getContent().contains("mở lại"));
+        assertTrue(saved.getContent().contains("30/11/2026"));
+        assertEquals("JOB_REOPEN_51_202610051400001234567", saved.getEventId());
+    }
+
+    @Test
     @DisplayName("notifyJobPostingPublished: Idempotent - Nếu cùng eventId đã tồn tại thì bỏ qua")
     void notifyJobPostingPublished_idempotent_skipsDuplicate() {
         com.group2.rms.jobposting.entity.JobPosting posting = com.group2.rms.jobposting.entity.JobPosting.builder()

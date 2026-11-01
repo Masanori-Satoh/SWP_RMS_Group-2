@@ -32,9 +32,9 @@
 
       if (diffMins < 1) return 'Vừa xong';
       if (diffMins < 60) return `${diffMins} phút trước`;
-      if (diffHours < 24 && date.getDate() === now.getDate()) return `${timeStr} hôm nay`;
-      if (diffDays === 1 || (diffDays < 2 && date.getDate() === now.getDate() - 1)) return `Hôm qua, ${timeStr}`;
-      if (diffDays < 7) return `${diffDays} ngày trước`;
+      if (diffHours < 24) return `${diffHours} giờ trước`;
+      const days = Math.max(1, diffDays);
+      if (days < 30) return `${days} ngày trước`;
       return `${timeStr}, ${dateStr}`;
     } catch (e) {
       return isoString;

@@ -29,6 +29,9 @@ public interface NotificationService {
 
     void notifyJobPostingPublished(JobPosting posting, User hr);
 
+    /** Báo cho HM chủ yêu cầu nguồn khi tin được mở lại (tin tạm dừng đăng lại, hoặc đăng lại sau khi đã đóng). */
+    void notifyJobPostingReopened(JobPosting posting, User hr);
+
     /** Báo cho HM chủ yêu cầu nguồn khi tin bị tạm dừng. */
     void notifyJobPostingPaused(JobPosting posting, User actor);
 
