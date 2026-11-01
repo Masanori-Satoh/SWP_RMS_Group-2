@@ -486,3 +486,14 @@ Nhằm đảm bảo chất lượng code và phòng ngừa lỗi hồi quy (regr
 - [x] System test Dashboard (`system-test.md` phần D, 5 ca): 4 PASS, **1 FAIL** (ST-DB-03).
 - [ ] **FAIL ST-DB-03:** thẻ HR "Tin mới đăng trong ngày" dẫn tới `/internal/job-postings?status=Published&postedFrom=…&postedTo=…` nhưng danh sách bỏ bộ lọc ngày (`showPostedDate = false`) → hiện mọi tin đang đăng. Cần chốt: bật bộ lọc ngày đăng cho HR, hoặc đổi link thẻ.
 - [ ] Nhận xét dashboard: HR "Xem tất cả" không gồm yêu cầu chờ đăng tin; thẻ "Hồ sơ chờ lên lịch" ≠ tab Phỏng vấn; Giám đốc gọi offer bằng hai tên khác nhau.
+- [x] Dashboard Giám đốc theo ảnh mới: 2 danh sách chờ duyệt cạnh nhau (nút "Xem và duyệt", đề nghị có ô chữ viết tắt), biểu đồ phòng ban full chiều ngang, tooltip "Phòng ban · N yêu cầu".
+- [x] Thông báo mở lại tin: tin tạm dừng đăng lại hoặc đăng lại sau khi đóng (PostingNo > 1) gửi "Tin tuyển dụng đã mở lại: [Title]" (JOB_POSTING_REOPENED) thay vì "đã phát hành".
+- [x] NotificationIntegrationTests.markAsRead_shouldReturnNotFound_whenApiCalledWithOtherUsersId: cập nhật kỳ vọng 404 cho thông báo của người khác theo NotificationApiController.
+- [x] Ô lọc "Hạn nộp" (HR/HM/Giám đốc) chỉ còn Tất cả / Còn hạn / Đã quá hạn; "Còn hạn" = chưa quá hạn hoặc không có hạn (gồm cả tin sắp hết hạn).
+- [x] Tạo tin từ yêu cầu chưa duyệt / URL `?requisitionId={1753}`: không còn trang lỗi Tomcat 400; quay về danh sách tin và báo "Chỉ có thể đăng tin từ yêu cầu đã được phê duyệt." (relaxed-query-chars `{}` + controller lấy phần số của mã).
+- [x] Form tin tuyển dụng báo lỗi khi rời ô (giống form yêu cầu): `checkField` cho từng ô, ô đang lỗi tự kiểm tra lại khi sửa; ô còn "Nội dung quá N ký tự" thì không cho lưu (trước đây tiêu đề 201 ký tự vẫn lưu nháp được). Test case validate tin: 4/4 PASS trên app.
+- [x] Form tin: bỏ dòng "Nhận hồ sơ trong N ngày, đến hết …" dưới ô Hạn nộp (xóa `#deadline-help`, `renderDeadlineHelp`, `daysBetween`).
+- [x] URL gõ tay `/internal/job-postings/{1689}/edit` (và `/{1689}`) không còn lỗi 500: controller nhận id dạng chuỗi, lấy phần số bằng `parseId` (đổi tên từ `parseRequisitionId`). Tin đã đóng → "Tin đã đóng không thể chỉnh sửa."; mã không có số → "Mã tin tuyển dụng không hợp lệ.".
+- [x] `create?fromPostingId={1873}` (tin đang đăng) không còn lỗi 500: `fromPostingId` cũng qua `parseId` → quay về trang tin + toast "Chỉ tin đã đóng mới đăng lại được."; `fromPostingId=abc` → danh sách tin + "Mã tin tuyển dụng không hợp lệ.".
+- [x] Chạy trên app 3 ca: xóa nháp đã được đăng ở tab khác, đăng nháp quá hạn nộp, đăng nháp không hạn nộp → 3/3 PASS (dữ liệu test: nháp 1876, 1877 và tin 1878 trên yêu cầu 13/14/16).
+- [ ] Rà trang lỗi: tab cũ thao tác tin đã bị xóa → trang 404 giao diện "Mộc Careers"; CSRF hết hạn → 403 "Forbidden" tiếng Anh; GET vào URL chỉ POST → trang "500" dù mã 405; `/requisitions/{13}`, `/requisitions/abc`, `edit/{13}`, `copy/{13}` → 500 → chờ chốt cách sửa.

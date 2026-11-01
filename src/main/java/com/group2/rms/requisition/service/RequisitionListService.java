@@ -73,7 +73,10 @@ public class RequisitionListService {
     private final RequisitionAccess access;
     private final RequisitionMapper mapper;
 
-    /** Màn danh sách theo 4 bước: ô lọc theo role → làm sạch bộ lọc → truy vấn → chip bộ lọc. */
+    /**
+     * Màn danh sách theo 4 bước: ô lọc theo role → làm sạch bộ lọc → truy vấn →
+     * chip bộ lọc.
+     */
     public RequisitionListResponse getListPage(RequisitionSearchRequest rawFilter) {
         User currentUser = access.actor();
         RequisitionFilterOptions options = buildFilterOptions(currentUser);
@@ -83,7 +86,9 @@ public class RequisitionListService {
         return new RequisitionListResponse(page, filter, options, chips);
     }
 
-    /** Rule: phạm vi theo role, khớp requireView; mọi bộ lọc khác nối AND vào đây. */
+    /**
+     * Rule: phạm vi theo role, khớp requireView; mọi bộ lọc khác nối AND vào đây.
+     */
     private Specification<JobRequisition> scope(User currentUser) {
         String role = access.role(currentUser);
         if (RequisitionAccess.ROLE_HIRING_MANAGER.equals(role)) {
@@ -94,7 +99,8 @@ public class RequisitionListService {
                         department.join("manager", JoinType.LEFT).get("userId"), currentUser.getUserId());
                 Predicate myDepartment = cb.disjunction();
                 if (currentUser.getDepartment() != null) {
-                    myDepartment = cb.equal(department.get("departmentId"), currentUser.getDepartment().getDepartmentId());
+                    myDepartment = cb.equal(department.get("departmentId"),
+                            currentUser.getDepartment().getDepartmentId());
                 }
                 return cb.or(createdByMe, iManageDepartment, myDepartment);
             };
@@ -105,16 +111,21 @@ public class RequisitionListService {
         if (RequisitionAccess.ROLE_HR.equals(role)) {
             return (root, query, cb) -> cb.equal(root.get("approvalStatus"), RequisitionAccess.STATUS_APPROVED);
         }
-        throw new org.springframework.security.access.AccessDeniedException("Vai trò không có quyền xem yêu cầu tuyển dụng.");
+        throw new org.springframework.security.access.AccessDeniedException(
+                "Vai trò không có quyền xem yêu cầu tuyển dụng.");
     }
 
-    /** Bước 1: mỗi role được thấy những ô lọc nào (đúng bảng đã chốt trong wireframe). */
+    /**
+     * Bước 1: mỗi role được thấy những ô lọc nào (đúng bảng đã chốt trong
+     * wireframe).
+     */
     private RequisitionFilterOptions buildFilterOptions(User currentUser) {
         String role = access.role(currentUser);
         List<FilterOption> sorts = sortOptions();
 
         if (RequisitionAccess.ROLE_HIRING_MANAGER.equals(role)) {
-            // HM không có ô phòng ban và ô "Người tạo" (danh sách người tạo sẽ lộ tên người ngoài phạm vi)
+            // HM không có ô phòng ban và ô "Người tạo" (danh sách người tạo sẽ lộ tên người
+            // ngoài phạm vi)
             return new RequisitionFilterOptions(true, true, false, false, true,
                     statusOptions(ALL_STATUSES), postingOptions(), List.of(), List.of(), sorts);
         }
@@ -125,25 +136,32 @@ public class RequisitionListService {
                     creatorOptions(STATUSES_WITHOUT_DRAFT), sorts);
         }
         if (RequisitionAccess.ROLE_HR.equals(role)) {
-            // HR chỉ thấy yêu cầu Đã duyệt nên lọc trạng thái là thừa; HR cần lọc theo tin tuyển dụng
+            // HR chỉ thấy yêu cầu Đã duyệt nên lọc trạng thái là thừa; HR cần lọc theo tin
+            // tuyển dụng
             List<String> approvedOnly = List.of(RequisitionAccess.STATUS_APPROVED);
             return new RequisitionFilterOptions(false, true, true, true, false,
                     List.of(), postingOptions(), departmentOptions(), creatorOptions(approvedOnly), sorts);
         }
-        throw new org.springframework.security.access.AccessDeniedException("Vai trò không có quyền xem yêu cầu tuyển dụng.");
+        throw new org.springframework.security.access.AccessDeniedException(
+                "Vai trò không có quyền xem yêu cầu tuyển dụng.");
     }
 
-    /** Bước 2: giá trị trên URL mà role không được dùng hoặc không có trong lựa chọn thì bỏ qua. */
+    /**
+     * Bước 2: giá trị trên URL mà role không được dùng hoặc không có trong lựa chọn
+     * thì bỏ qua.
+     */
     private RequisitionSearchRequest normalizeFilter(RequisitionSearchRequest raw, RequisitionFilterOptions options) {
         String keyword = ListFilters.cleanKeyword(raw.q());
 
-        // Trạng thái duyệt: không lọc sẵn cho role nào (Director vào trang cũng thấy tất cả)
+        // Trạng thái duyệt: không lọc sẵn cho role nào (Director vào trang cũng thấy
+        // tất cả)
         List<String> statuses = null;
         if (options.showStatus()) {
             statuses = ListFilters.keepAllowedValues(raw.status(), options.statuses()).stream().limit(1).toList();
         }
 
-        // Các ô lọc một giá trị: chỉ giữ khi role có ô đó và giá trị nằm trong danh sách lựa chọn
+        // Các ô lọc một giá trị: chỉ giữ khi role có ô đó và giá trị nằm trong danh
+        // sách lựa chọn
         String posting = null;
         if (options.showPosting() && ListFilters.isAllowedValue(raw.posting(), options.postings())) {
             posting = raw.posting();
@@ -210,12 +228,14 @@ public class RequisitionListService {
         Sort sort = RequisitionSort.fromParam(filter.sort()).toSort();
         Page<JobRequisition> result = requisitions.findAll(where, PageRequest.of(filter.page(), filter.size(), sort));
 
-        // Rule: gõ số trang vượt quá tổng số trang thì tự lùi về trang cuối thay vì hiện bảng trống
+        // Rule: gõ số trang vượt quá tổng số trang thì tự lùi về trang cuối thay vì
+        // hiện bảng trống
         if (result.getTotalPages() > 0 && result.getNumber() >= result.getTotalPages()) {
             result = requisitions.findAll(where, PageRequest.of(result.getTotalPages() - 1, filter.size(), sort));
         }
 
-        // Tránh N+1: tra tin mới nhất và "đã có đợt sau" cho CẢ TRANG bằng 2 câu, thay vì vài câu cho mỗi dòng
+        // Tránh N+1: tra tin mới nhất và "đã có đợt sau" cho CẢ TRANG bằng 2 câu, thay
+        // vì vài câu cho mỗi dòng
         List<Integer> ids = new ArrayList<>();
         for (JobRequisition jobRequisition : result.getContent()) {
             ids.add(jobRequisition.getRequisitionId());
@@ -228,7 +248,10 @@ public class RequisitionListService {
                 idsWithLaterRounds.contains(jobRequisition.getRequisitionId())));
     }
 
-    /** RequisitionId → tin tuyển dụng mới nhất của yêu cầu đó (yêu cầu chưa có tin thì không có trong map). */
+    /**
+     * RequisitionId → tin tuyển dụng mới nhất của yêu cầu đó (yêu cầu chưa có tin
+     * thì không có trong map).
+     */
     private Map<Integer, JobPosting> latestPostingsOf(List<Integer> requisitionIds) {
         Map<Integer, JobPosting> latestByRequisition = new HashMap<>();
         if (requisitionIds.isEmpty()) {
@@ -317,7 +340,10 @@ public class RequisitionListService {
         return options;
     }
 
-    /** Chỉ liệt kê HM có yêu cầu ở các trạng thái người xem được thấy, không lộ tên người ngoài phạm vi. */
+    /**
+     * Chỉ liệt kê HM có yêu cầu ở các trạng thái người xem được thấy, không lộ tên
+     * người ngoài phạm vi.
+     */
     private List<FilterOption> creatorOptions(List<String> visibleStatuses) {
         List<FilterOption> options = new ArrayList<>();
         for (User creator : requisitions.findCreatorsWithStatusIn(visibleStatuses)) {
