@@ -639,7 +639,7 @@ for day_idx in range(num_days):
                 # InterviewFinalResult (1-1 with InterviewSchedule)
                 final_decision = "Passed" if is_passed else "Failed"
                 hm_final_id = 6 if c["posting_id"] == 4 else 5
-                final_comments = f"Tổng hợp kết quả phỏng vấn ứng viên {c['full_name']}: Đạt yêu cầu đầu vào, đề xuất gửi thư mời nhận việc (Offer)." if is_passed else f"Ứng viên {c['full_name']} chưa đạt yêu cầu về chiều sâu chuyên môn ở vòng phỏng vấn kỹ thuật."
+                final_comments = f"Tổng hợp kết quả phỏng vấn ứng viên {c['full_name']}: Đạt yêu cầu đầu vào, đề xuất gửi thư mời nhận việc." if is_passed else f"Ứng viên {c['full_name']} chưa đạt yêu cầu về chiều sâu chuyên môn ở vòng phỏng vấn kỹ thuật."
                 
                 pos_titles = {
                     1: "Senior Java Backend Engineer",

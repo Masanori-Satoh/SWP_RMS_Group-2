@@ -27,7 +27,7 @@
     <form id="offerForm" th:object="${offerDto}"
           th:action="${isEdit ? '/offers/' + offerId + '/edit' : '/offers/create'}"
           method="post">
-      <input type="hidden" name="isLockedCandidate" th:value="${isLockedCandidate ? 'true' : 'false'}">
+      <input type="hidden" name="isLockedCandidate" th:value="${isLockedCandidate != null and isLockedCandidate ? 'true' : 'false'}">
 
       <!-- VALIDATION SUMMARY ALERT -->
       <div th:if="${#fields.hasAnyErrors()}" class="adw-validation-summary ofw-validation-summary" role="alert" tabindex="-1">

@@ -378,6 +378,7 @@ public class OfferServiceImpl implements OfferService {
     @Transactional(readOnly = true)
     public Map<String, Long> getOfferStats() {
         Map<String, Long> stats = new HashMap<>();
+        stats.put("statTotal", offerProposalRepository.countActiveOffers());
         stats.put("statPending", offerProposalRepository.countPendingDirector());
         stats.put("statApproved", offerProposalRepository.countDirectorApproved());
         stats.put("statSent", offerProposalRepository.countSentCandidate());
@@ -930,7 +931,10 @@ public class OfferServiceImpl implements OfferService {
                 } else if ("Director_Approved".equalsIgnoreCase(s) || "Approved".equalsIgnoreCase(s)) {
                     predicates.add(builder.or(
                             builder.equal(builder.lower(root.get("offerStatus")), "director_approved"),
-                            builder.equal(builder.lower(root.get("offerStatus")), "approved")
+                            builder.equal(builder.lower(root.get("offerStatus")), "approved"),
+                            builder.equal(builder.lower(root.get("offerStatus")), "sent_candidate"),
+                            builder.equal(builder.lower(root.get("offerStatus")), "accepted"),
+                            builder.equal(builder.lower(root.get("offerStatus")), "declined")
                     ));
                 } else if ("Director_Rejected".equalsIgnoreCase(s) || "Rejected".equalsIgnoreCase(s)) {
                     predicates.add(builder.or(
