@@ -8,7 +8,7 @@ import java.time.LocalDateTime;
 /**
  * 3.6 SystemConfig - Cấu hình hệ thống dạng key-value.
  * Primary Key là ConfigKey (String) thay vì IDENTITY.
- * Ví dụ: AI_SCREENING_ENDPOINT, EMAIL_SMTP
+ * Ví dụ: SMTP_HOST, SME_COMPANY_NAME
  */
 @Entity
 @Table(name = "SystemConfig")
