@@ -554,21 +554,23 @@
   transform: translateY(-1px);
 }
 
-/* ĐẢO CUỘN DỌC 4 MỤC (Cạnh trái màn hình — Chỉ hiện ở Trang chủ)
+/* THANH MỤC LỤC 4 MỤC (Thanh ngang viên thuốc, giữa trang ngay dưới topbar — Chỉ hiện ở Trang chủ; dunglt 01/11)
    Luôn hiển thị đầy đủ Icon + Chữ (KHÔNG TỰ ẨN CHỮ), kiểu dáng chuẩn menu dọc nội bộ */
 .public-scroll-rail {
   position: fixed;
-  left: var(--s4, 16px);
-  top: calc(var(--s4, 16px) + 68px);
+  left: 50%;
+  /* Dưới hàng đảo trên cùng (cao tối đa 69px khi đã đăng nhập) */
+  top: calc(var(--s4, 16px) + 69px + var(--s3, 12px));
+  transform: translateX(-50%);
   z-index: 95;
   display: flex;
-  flex-direction: column;
-  gap: 5px;
-  padding: 8px;
-  width: 196px;
+  flex-direction: row;
+  gap: 4px;
+  padding: 5px;
+  width: max-content;
   box-sizing: border-box;
   border: 1px solid var(--line);
-  border-radius: var(--radius-lg, 16px);
+  border-radius: 9999px;
   background: color-mix(in srgb, var(--surface, #ffffff) 96%, transparent);
   backdrop-filter: blur(14px);
   -webkit-backdrop-filter: blur(14px);
@@ -586,10 +588,10 @@
   display: flex;
   align-items: center;
   gap: 12px;
-  height: 42px;
-  min-height: 42px;
-  padding: 0 12px;
-  border-radius: 10px;
+  height: 40px;
+  min-height: 40px;
+  padding: 0 16px 0 12px;
+  border-radius: 9999px;
   text-decoration: none;
   color: var(--ink);
   white-space: nowrap;
@@ -636,7 +638,7 @@
   background: var(--brand-soft) !important;
   color: var(--brand-dark) !important;
   font-weight: 600;
-  box-shadow: inset 3.5px 0 0 var(--brand);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--brand) 35%, transparent);
 }
 
 .public-scroll-item.active .public-scroll-icon,
@@ -742,6 +744,13 @@
 /* Bấm menu cuộn tới section: chừa chỗ cho khoảng nổi */
 :root:has(.public-topbar) {
   scroll-padding-top: 80px;
+}
+
+/* Trang chủ có thêm thanh mục lục dưới topbar */
+@media (min-width: 861px) {
+  :root:has(.public-scroll-rail) {
+    scroll-padding-top: 168px;
+  }
 }
 
 

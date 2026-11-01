@@ -1297,14 +1297,9 @@ body {
   }
 }
 
-/* Chừa lề bên trái để không bị viên đảo cuộn 196px che khuất nội dung */
-@media (min-width: 1025px) and (max-width: 1400px) {
-  .lp-hero-inner {
-    padding-left: 140px;
-  }
-}
-@media (min-width: 1401px) {
-  .lp-hero-inner {
-    padding-left: 100px;
+/* Chừa chỗ phía trên cho thanh mục lục ngang dưới topbar (fragments/layout/public-topbar, chỉ hiện > 860px) */
+@media (min-width: 861px) {
+  .lp-hero-copy {
+    padding-top: 168px;
   }
 }
